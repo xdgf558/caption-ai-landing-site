@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" role="img" aria-label="A set of lifestyle AI app cards">
+  <rect width="900" height="720" fill="#f5efe7"/>
+  <circle cx="170" cy="145" r="74" fill="#d95d45" opacity=".18"/>
+  <circle cx="760" cy="560" r="96" fill="#08796d" opacity=".16"/>
+  <rect x="140" y="110" width="280" height="420" rx="38" fill="#1f2d29"/>
+  <rect x="164" y="148" width="232" height="330" rx="20" fill="#fffaf4"/>
+  <rect x="190" y="178" width="180" height="120" rx="14" fill="#f2c7a4"/>
+  <circle cx="230" cy="222" r="28" fill="#fff6e9"/>
+  <path d="M190 282c40-46 80-48 118-4 23-28 43-30 62 0v20H190v-16Z" fill="#08796d" opacity=".75"/>
+  <rect x="190" y="328" width="140" height="14" rx="7" fill="#1f2d29"/>
+  <rect x="190" y="358" width="170" height="12" rx="6" fill="#64736d" opacity=".55"/>
+  <rect x="190" y="384" width="118" height="12" rx="6" fill="#64736d" opacity=".45"/>
+  <rect x="430" y="190" width="300" height="210" rx="28" fill="#ffffff" stroke="#e4dbd0" stroke-width="4"/>
+  <rect x="466" y="232" width="172" height="18" rx="9" fill="#1f2d29"/>
+  <rect x="466" y="272" width="216" height="14" rx="7" fill="#64736d" opacity=".55"/>
+  <rect x="466" y="304" width="180" height="14" rx="7" fill="#64736d" opacity=".42"/>
+  <rect x="466" y="342" width="110" height="36" rx="8" fill="#08796d"/>
+  <rect x="530" y="430" width="220" height="130" rx="24" fill="#5067b4" opacity=".9"/>
+  <path d="M570 488c40-46 86-44 126 2" fill="none" stroke="#fffaf4" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="618" cy="468" r="16" fill="#fffaf4"/>
+</svg>

@@ -1,0 +1,85 @@
+---
+interface Props {
+  id: string;
+  title: string;
+  description: string;
+  formUrl: string;
+  product: string;
+  locale: 'en' | 'ja' | 'zh-Hant';
+  platform: 'ios' | 'android';
+  privacyPath: string;
+  buttonLabel: string;
+}
+
+const { id, title, description, formUrl, product, locale, platform, privacyPath, buttonLabel } = Astro.props;
+const isRealTally = formUrl.startsWith('https://tally.so/');
+const privacyPrefix =
+  locale === 'ja' ? '送信前に ' : locale === 'zh-Hant' ? '送出前，請先閱讀' : 'Before joining, review the ';
+const privacyLabel =
+  locale === 'ja' ? 'プライバシーポリシー' : locale === 'zh-Hant' ? '隱私政策' : 'privacy policy';
+const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale === 'zh-Hant' ? '。' : '.';
+---
+
+<section class="waitlist-panel" id={id}>
+  <div>
+    <p class="section-kicker">{platform === 'ios' ? 'iOS waitlist' : 'Android updates'}</p>
+    <h2>{title}</h2>
+    <p>{description}</p>
+    <p class="form-privacy">
+      {privacyPrefix}
+      <a href={privacyPath}>{privacyLabel}</a>
+      {privacySuffix}
+    </p>
+  </div>
+
+  {isRealTally ? (
+    <iframe
+      class="tally-frame js-tally-frame"
+      data-base-url={formUrl}
+      data-product={product}
+      data-locale={locale}
+      data-platform={platform}
+      title={title}
+      loading="lazy"
+    ></iframe>
+  ) : (
+    <form class="mock-form" aria-label={title}>
+      <label for={`${id}-email`}>Email</label>
+      <input id={`${id}-email`} name="email" type="email" placeholder="name@example.com" />
+      <input type="hidden" name="product" value={product} />
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="platform" value={platform} />
+      <input type="hidden" name="utm_source" value="" />
+      <input type="hidden" name="utm_medium" value="" />
+      <input type="hidden" name="utm_campaign" value="" />
+      <input type="hidden" name="utm_content" value="" />
+      <input type="hidden" name="landing_path" value={Astro.url.pathname} />
+      <button class="button button-primary" type="button">{buttonLabel}</button>
+      <p class="placeholder-note">
+        {locale === 'ja'
+          ? 'Tally の実フォーム URL を設定すると、この場所に埋め込みフォームが表示されます。'
+          : locale === 'zh-Hant'
+            ? '設定正式的 Tally 表單 URL 後，這裡會顯示嵌入式等待名單表單。'
+          : 'Replace the Tally placeholder URL to show the embedded waitlist form here.'}
+      </p>
+    </form>
+  )}
+</section>
+
+<script>
+  document.querySelectorAll('.js-tally-frame').forEach((frame) => {
+    if (!(frame instanceof HTMLIFrameElement)) return;
+    const baseUrl = frame.dataset.baseUrl;
+    if (!baseUrl) return;
+    const params = new URLSearchParams(window.location.search);
+    params.set('product', frame.dataset.product || '');
+    params.set('locale', frame.dataset.locale || '');
+    params.set('platform', frame.dataset.platform || '');
+    params.set('landing_path', window.location.pathname);
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].forEach((key) => {
+      if (!params.has(key)) params.set(key, '');
+    });
+    const separator = baseUrl.includes('?') ? '&' : '?';
+    frame.src = `${baseUrl}${separator}${params.toString()}`;
+  });
+</script>

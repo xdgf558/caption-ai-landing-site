@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BrandHero from '../../components/BrandHero.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { brandEn } from '../../data/copy/brand.en';
+import { captionAiProduct } from '../../data/products/caption-ai';
+---
+
+<BaseLayout
+  title="AI Apps for Everyday Creativity"
+  description="Simple AI lifestyle apps for creating, polishing, and sharing everyday moments."
+  lang="en"
+  canonicalPath="/en/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/' },
+    { hrefLang: 'en', href: '/en/' },
+    { hrefLang: 'ja', href: '/ja/' },
+    { hrefLang: 'x-default', href: '/' }
+  ]}
+>
+  <BrandHero copy={brandEn.hero} />
+
+  <section class="page-section">
+    <div class="section-heading">
+      <p class="section-kicker">Current product</p>
+      <h2>Our first app is currently in development.</h2>
+      <p>
+        The brand layer is ready for more products later, but this first version keeps the focus on Caption AI.
+      </p>
+    </div>
+    <ProductCard
+      title={brandEn.productCard.title}
+      description={brandEn.productCard.description}
+      href={captionAiProduct.productPath}
+      image={captionAiProduct.assets.screenshot}
+      cta="View Caption AI"
+    />
+  </section>
+
+  <section class="page-section split-section">
+    <div class="section-heading compact">
+      <p class="section-kicker">Direction</p>
+      <h2>Lightweight by design.</h2>
+    </div>
+    <div class="text-stack">
+      {brandEn.principles.map((item) => <p>{item}</p>)}
+      <p>
+        Each app will have separate download, privacy, support, terms, and waitlist paths so future launches do not get mixed together.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

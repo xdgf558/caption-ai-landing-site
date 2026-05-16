@@ -1,0 +1,32 @@
+---
+interface Props {
+  copy: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    primaryCta: string;
+    secondaryCta: string;
+  };
+  image: string;
+  imageAlt: string;
+  primaryHref: string;
+  secondaryHref: string;
+}
+
+const { copy, image, imageAlt, primaryHref, secondaryHref } = Astro.props;
+---
+
+<section class="hero product-hero">
+  <div class="hero-copy">
+    <p class="eyebrow">{copy.eyebrow}</p>
+    <h1>{copy.title}</h1>
+    <p class="hero-subtitle">{copy.subtitle}</p>
+    <div class="button-row">
+      <a class="button button-primary" href={primaryHref}>{copy.primaryCta}</a>
+      <a class="button button-secondary" href={secondaryHref}>{copy.secondaryCta}</a>
+    </div>
+  </div>
+  <div class="phone-visual">
+    <img src={image} alt={imageAlt} width="420" height="640" />
+  </div>
+</section>

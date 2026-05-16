@@ -1,0 +1,67 @@
+---
+import ProductLayout from '../../../layouts/ProductLayout.astro';
+import ProductHero from '../../../components/ProductHero.astro';
+import UseCaseSection from '../../../components/UseCaseSection.astro';
+import HowItWorks from '../../../components/HowItWorks.astro';
+import FeatureGrid from '../../../components/FeatureGrid.astro';
+import WaitlistForm from '../../../components/WaitlistForm.astro';
+import DownloadButtons from '../../../components/DownloadButtons.astro';
+import FAQ from '../../../components/FAQ.astro';
+import { captionAiProduct } from '../../../data/products/caption-ai';
+import { captionAiEn } from '../../../data/copy/caption-ai.en';
+import { captionAiFaqEn } from '../../../data/faqs/caption-ai.en';
+---
+
+<ProductLayout
+  title={captionAiEn.seo.title}
+  description={captionAiEn.seo.description}
+  lang="en"
+  canonicalPath="/apps/caption-ai/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/' }
+  ]}
+>
+  <ProductHero
+    copy={captionAiEn.hero}
+    image={captionAiProduct.assets.hero}
+    imageAlt="Caption AI mobile app mockup for caption drafts"
+    primaryHref="#waitlist-ios"
+    secondaryHref="/apps/caption-ai/android/"
+  />
+  <UseCaseSection
+    title="Everyday scenes, easier wording."
+    description="Start with the photos people already take: breakfast, coffee, walks, travel, outfits, pets, and small lifestyle moments."
+    scenes={captionAiEn.scenes}
+  />
+  <HowItWorks title="How Caption AI works" steps={captionAiEn.steps} />
+  <FeatureGrid title="Who it helps" items={captionAiEn.audiences} />
+  <WaitlistForm
+    id="waitlist-ios"
+    title="Join the iOS waitlist"
+    description="Be first to hear when early testing opens. The form will record product=caption-ai, locale=en, and platform=ios."
+    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
+    product={captionAiProduct.id}
+    locale="en"
+    platform="ios"
+    privacyPath="/apps/caption-ai/privacy/"
+    buttonLabel="Join waitlist"
+  />
+  <section class="page-section split-section">
+    <div class="section-heading compact">
+      <p class="section-kicker">Privacy</p>
+      <h2>Private by design.</h2>
+    </div>
+    <p class="large-copy">{captionAiEn.privacy}</p>
+  </section>
+  <DownloadButtons
+    ios={captionAiProduct.platforms.ios}
+    android={captionAiProduct.platforms.android}
+    locale="en"
+    iosWaitlistHref="#waitlist-ios"
+    androidWaitlistHref="/apps/caption-ai/android/"
+  />
+  <FAQ title="Questions before launch" items={captionAiFaqEn} />
+</ProductLayout>

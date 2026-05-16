@@ -1,0 +1,27 @@
+---
+import LegalLayout from '../../../../layouts/LegalLayout.astro';
+import { legalNoticeJa, privacyJa } from '../../../../data/legal/caption-ai';
+---
+
+<LegalLayout
+  title="Caption AI プライバシーポリシー"
+  description="Caption AI の先行案内、ウェブサイト、今後のアプリに関するプライバシーポリシー草案です。"
+  lang="ja"
+  canonicalPath="/ja/apps/caption-ai/privacy/"
+  notice={legalNoticeJa}
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/privacy/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/privacy/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/privacy/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/privacy/' }
+  ]}
+>
+  <div class="legal-content">
+    {privacyJa.map((section) => (
+      <section>
+        <h2>{section.heading}</h2>
+        <p>{section.body}</p>
+      </section>
+    ))}
+  </div>
+</LegalLayout>

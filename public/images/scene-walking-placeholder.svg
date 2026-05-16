@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 320" role="img" aria-label="Walking scene">
+  <rect width="520" height="320" fill="#f5efe7"/>
+  <circle cx="390" cy="82" r="38" fill="#d95d45" opacity=".35"/>
+  <path d="M64 244c82-68 148-72 226-10 68-52 118-54 168 2" fill="none" stroke="#08796d" stroke-width="28" stroke-linecap="round" opacity=".78"/>
+  <path d="M66 250h388" stroke="#d7b68b" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="198" cy="138" r="26" fill="#1f2d29"/>
+  <path d="M198 164v54M198 184l-42 34M198 184l44 34M198 218l-32 50M198 218l42 48" fill="none" stroke="#1f2d29" stroke-width="12" stroke-linecap="round"/>
+  <rect x="286" y="122" width="112" height="70" rx="14" fill="#ffffff" stroke="#e4dbd0" stroke-width="5"/>
+  <rect x="306" y="146" width="72" height="9" rx="5" fill="#5067b4"/>
+  <rect x="306" y="166" width="54" height="8" rx="4" fill="#64736d" opacity=".45"/>
+</svg>

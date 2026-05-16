@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 760" role="img" aria-label="Caption AI phone mockup">
+  <rect width="520" height="760" fill="#fffaf4"/>
+  <rect x="86" y="42" width="348" height="676" rx="56" fill="#1f2d29"/>
+  <rect x="112" y="82" width="296" height="588" rx="34" fill="#ffffff"/>
+  <rect x="188" y="104" width="144" height="16" rx="8" fill="#1f2d29"/>
+  <rect x="138" y="146" width="244" height="184" rx="22" fill="#f2c7a4"/>
+  <circle cx="190" cy="196" r="28" fill="#fff6e9"/>
+  <path d="M138 298c42-54 89-55 134-2 28-34 60-34 110 2v32H138v-32Z" fill="#08796d" opacity=".78"/>
+  <text x="138" y="378" fill="#1f2d29" font-family="Arial, sans-serif" font-size="24" font-weight="700">Caption drafts</text>
+  <rect x="138" y="404" width="244" height="58" rx="12" fill="#edf6f3"/>
+  <rect x="158" y="424" width="198" height="10" rx="5" fill="#08796d"/>
+  <rect x="158" y="442" width="150" height="9" rx="5" fill="#08796d" opacity=".55"/>
+  <rect x="138" y="478" width="244" height="58" rx="12" fill="#fff3df"/>
+  <rect x="158" y="498" width="184" height="10" rx="5" fill="#d95d45"/>
+  <rect x="158" y="516" width="130" height="9" rx="5" fill="#d95d45" opacity=".55"/>
+  <rect x="138" y="562" width="108" height="42" rx="8" fill="#08796d"/>
+  <rect x="260" y="562" width="122" height="42" rx="8" fill="#ffffff" stroke="#e4dbd0" stroke-width="3"/>
+</svg>

@@ -1,0 +1,23 @@
+---
+interface Props {
+  title: string;
+  steps: string[];
+}
+
+const { title, steps } = Astro.props;
+---
+
+<section class="page-section split-section">
+  <div class="section-heading compact">
+    <p class="section-kicker">Flow</p>
+    <h2>{title}</h2>
+  </div>
+  <ol class="step-list">
+    {steps.map((step, index) => (
+      <li>
+        <span>{String(index + 1).padStart(2, '0')}</span>
+        <strong>{step}</strong>
+      </li>
+    ))}
+  </ol>
+</section>

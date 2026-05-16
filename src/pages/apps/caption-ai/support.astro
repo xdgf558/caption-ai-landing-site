@@ -1,0 +1,33 @@
+---
+import ProductLayout from '../../../layouts/ProductLayout.astro';
+import FAQ from '../../../components/FAQ.astro';
+import { captionAiProduct } from '../../../data/products/caption-ai';
+import { captionAiFaqEn } from '../../../data/faqs/caption-ai.en';
+---
+
+<ProductLayout
+  title="Caption AI Support"
+  description="Get help with Caption AI, send feedback, and review privacy and terms links."
+  lang="en"
+  canonicalPath="/apps/caption-ai/support/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/support/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/support/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/support/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/support/' }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">Support</p>
+    <h1>How to get help with Caption AI.</h1>
+    <p>
+      For product feedback, bug reports, or waitlist deletion requests, email <a href={`mailto:${captionAiProduct.supportEmail}`}>{captionAiProduct.supportEmail}</a> and mention Caption AI.
+    </p>
+    <div class="button-row">
+      <a class="button button-primary" href={`mailto:${captionAiProduct.supportEmail}?subject=Caption%20AI%20support`}>Email support</a>
+      <a class="button button-secondary" href="/apps/caption-ai/privacy/">Privacy policy</a>
+      <a class="button button-secondary" href="/apps/caption-ai/terms/">Terms</a>
+    </div>
+  </section>
+  <FAQ title="Support FAQ" items={captionAiFaqEn} />
+</ProductLayout>

@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BrandHero from '../../components/BrandHero.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { brandJa } from '../../data/copy/brand.ja';
+import { captionAiProduct } from '../../data/products/caption-ai';
+---
+
+<BaseLayout
+  title="Caption AI"
+  description="写真に合うキャプションを提案する AI アプリ Caption AI の日本語ページです。"
+  lang="ja"
+  canonicalPath="/ja/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/' },
+    { hrefLang: 'en', href: '/en/' },
+    { hrefLang: 'ja', href: '/ja/' },
+    { hrefLang: 'x-default', href: '/' }
+  ]}
+>
+  <BrandHero
+    copy={brandJa.hero}
+    primaryHref={captionAiProduct.jaProductPath}
+    secondaryHref="/ja/apps/caption-ai/download/"
+  />
+
+  <section class="page-section">
+    <div class="section-heading">
+      <p class="section-kicker">現在の製品</p>
+      <h2>最初の App は現在開発中です。</h2>
+      <p>
+        将来の複数 App 展開に備えつつ、最初のバージョンでは Caption AI に集中します。
+      </p>
+    </div>
+    <ProductCard
+      title={brandJa.productCard.title}
+      description={brandJa.productCard.description}
+      href={captionAiProduct.jaProductPath}
+      image={captionAiProduct.assets.screenshot}
+      cta="Caption AI を見る"
+      kicker="開発中の最初の App"
+    />
+  </section>
+
+  <section class="page-section split-section">
+    <div class="section-heading compact">
+      <p class="section-kicker">方針</p>
+      <h2>軽さと信頼を大切に。</h2>
+    </div>
+    <div class="text-stack">
+      <p>
+        各 App に独立したダウンロード、プライバシー、サポート、利用規約、先行案内の導線を用意します。
+      </p>
+      <p>
+        日本語ページでも、ブランドホームと Caption AI の各ページを行き来しやすい構成にしています。
+      </p>
+    </div>
+  </section>
+</BaseLayout>

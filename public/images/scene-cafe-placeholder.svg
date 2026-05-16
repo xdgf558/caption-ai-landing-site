@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 320" role="img" aria-label="Cafe lifestyle scene">
+  <rect width="520" height="320" fill="#edf6f3"/>
+  <rect x="48" y="58" width="424" height="210" rx="24" fill="#ffffff" stroke="#cbded9" stroke-width="6"/>
+  <rect x="90" y="102" width="128" height="120" rx="18" fill="#5067b4" opacity=".9"/>
+  <circle cx="154" cy="142" r="28" fill="#fffaf4"/>
+  <path d="M103 208c42-54 84-56 128 0" fill="none" stroke="#fffaf4" stroke-width="16" stroke-linecap="round"/>
+  <rect x="260" y="110" width="170" height="18" rx="9" fill="#1f2d29"/>
+  <rect x="260" y="154" width="140" height="12" rx="6" fill="#64736d" opacity=".55"/>
+  <rect x="260" y="184" width="118" height="12" rx="6" fill="#64736d" opacity=".4"/>
+  <rect x="260" y="218" width="98" height="34" rx="8" fill="#08796d"/>
+</svg>

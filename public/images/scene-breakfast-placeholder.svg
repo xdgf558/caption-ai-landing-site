@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 320" role="img" aria-label="Breakfast and coffee scene">
+  <rect width="520" height="320" fill="#fff3df"/>
+  <rect x="55" y="190" width="410" height="54" rx="8" fill="#d7b68b"/>
+  <circle cx="182" cy="154" r="72" fill="#fffaf4" stroke="#e4dbd0" stroke-width="8"/>
+  <circle cx="182" cy="154" r="42" fill="#f2c7a4"/>
+  <path d="M150 154h64" stroke="#d95d45" stroke-width="10" stroke-linecap="round"/>
+  <rect x="292" y="100" width="92" height="82" rx="16" fill="#ffffff" stroke="#e4dbd0" stroke-width="7"/>
+  <path d="M384 124h24c22 0 22 34 0 34h-24" fill="none" stroke="#e4dbd0" stroke-width="8"/>
+  <ellipse cx="338" cy="114" rx="34" ry="10" fill="#7b4b35"/>
+  <path d="M304 78c-16-20 14-25 0-44M338 78c-14-20 15-25 0-44" fill="none" stroke="#64736d" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+</svg>

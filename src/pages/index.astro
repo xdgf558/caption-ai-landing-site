@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BrandHero from '../components/BrandHero.astro';
+import ProductCard from '../components/ProductCard.astro';
+import { brandZhHant } from '../data/copy/brand.zh-Hant';
+import { captionAiProduct } from '../data/products/caption-ai';
+---
+
+<BaseLayout
+  title="為日常靈感打造的 AI App"
+  description="輕量 AI 生活應用，幫助使用者更快整理、潤色並分享日常片刻。"
+  lang="zh-Hant"
+  canonicalPath="/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/' },
+    { hrefLang: 'en', href: '/en/' },
+    { hrefLang: 'ja', href: '/ja/' },
+    { hrefLang: 'x-default', href: '/' }
+  ]}
+>
+  <BrandHero
+    copy={brandZhHant.hero}
+    primaryHref={captionAiProduct.zhHantProductPath}
+    secondaryHref="/zh-hant/apps/caption-ai/download/"
+  />
+
+  <section class="page-section">
+    <div class="section-heading">
+      <p class="section-kicker">目前產品</p>
+      <h2>第一款 App 目前正在開發中。</h2>
+      <p>
+        品牌架構已為未來更多 App 預留空間，但第一版會專注在 Caption AI。
+      </p>
+    </div>
+    <ProductCard
+      title={brandZhHant.productCard.title}
+      description={brandZhHant.productCard.description}
+      href={captionAiProduct.zhHantProductPath}
+      image={captionAiProduct.assets.screenshot}
+      cta="查看 Caption AI"
+      kicker="第一款開發中 App"
+    />
+  </section>
+
+  <section class="page-section split-section">
+    <div class="section-heading compact">
+      <p class="section-kicker">方向</p>
+      <h2>以輕量和信任為優先。</h2>
+    </div>
+    <div class="text-stack">
+      {brandZhHant.principles.map((item) => <p>{item}</p>)}
+      <p>
+        每款 App 都會有獨立的下載、隱私、支援、條款與等待名單路徑，避免未來多產品上線時資料混在一起。
+      </p>
+    </div>
+  </section>
+</BaseLayout>

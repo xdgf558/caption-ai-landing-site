@@ -1,0 +1,35 @@
+---
+import ProductLayout from './ProductLayout.astro';
+import LegalNotice from '../components/LegalNotice.astro';
+
+interface AlternateLink {
+  hrefLang: string;
+  href: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  lang?: 'en' | 'ja' | 'zh-Hant';
+  canonicalPath: string;
+  notice: string;
+  alternates?: AlternateLink[];
+}
+
+const { title, description, lang = 'zh-Hant', canonicalPath, notice, alternates = [] } = Astro.props;
+---
+
+<ProductLayout
+  title={title}
+  description={description}
+  lang={lang}
+  canonicalPath={canonicalPath}
+  alternates={alternates}
+>
+  <section class="page-shell legal-shell">
+    <div class="section-kicker">{lang === 'ja' ? 'Caption AI' : 'Caption AI'}</div>
+    <h1>{title}</h1>
+    <LegalNotice text={notice} />
+    <slot />
+  </section>
+</ProductLayout>

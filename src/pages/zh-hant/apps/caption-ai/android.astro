@@ -1,0 +1,42 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import WaitlistForm from '../../../../components/WaitlistForm.astro';
+import { captionAiProduct } from '../../../../data/products/caption-ai';
+---
+
+<ProductLayout
+  title="Android 版本即將推出"
+  description="加入 Caption AI Android 通知名單，協助驗證 Android 需求。"
+  lang="zh-Hant"
+  canonicalPath="/zh-hant/apps/caption-ai/android/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/android/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/android/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/android/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/android/' }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">Android</p>
+    <h1>Android 版本即將推出。</h1>
+    <p>
+      目前優先開發 iOS 版本，同時也在評估 Android 需求。加入名單後，Android 版本準備測試時我們會寄送通知。
+    </p>
+    <ul class="check-list">
+      <li>hidden field 會包含 product=caption-ai 和 platform=android。</li>
+      <li>未來正式表單可選填國家或地區、常用社群平台和最想使用的功能。</li>
+      <li>目前不承諾具體上線日期。</li>
+    </ul>
+  </section>
+  <WaitlistForm
+    id="waitlist-android"
+    title="接收 Android 版本通知"
+    description="告訴我們你想使用 Android 版本，這會幫助判斷後續開發優先順序。"
+    formUrl={captionAiProduct.platforms.android.waitlistFormUrl}
+    product={captionAiProduct.id}
+    locale="zh-Hant"
+    platform="android"
+    privacyPath="/zh-hant/apps/caption-ai/privacy/"
+    buttonLabel="接收 Android 通知"
+  />
+</ProductLayout>

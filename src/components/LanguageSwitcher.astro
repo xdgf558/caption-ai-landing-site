@@ -1,0 +1,22 @@
+---
+interface Props {
+  lang?: 'en' | 'ja' | 'zh-Hant';
+}
+
+const { lang = 'zh-Hant' } = Astro.props;
+const path = Astro.url.pathname;
+const normalizedPath = path === '/en/' || path === '/zh-hant/' || path === '/ja/' ? '/' : path;
+const productPath = normalizedPath
+  .replace(/^\/ja(?=\/apps\/caption-ai)/, '')
+  .replace(/^\/zh-hant(?=\/apps\/caption-ai)/, '');
+const isProduct = productPath.startsWith('/apps/caption-ai');
+const enPath = isProduct ? productPath : '/en/';
+const jaPath = isProduct ? `/ja${productPath}` : '/ja/';
+const zhPath = isProduct ? `/zh-hant${productPath}` : '/';
+---
+
+<div class="language-switcher" aria-label="Language switcher">
+  <a class={lang === 'zh-Hant' ? 'active' : ''} href={zhPath} hreflang="zh-Hant">繁中</a>
+  <a class={lang === 'en' ? 'active' : ''} href={enPath} hreflang="en">EN</a>
+  <a class={lang === 'ja' ? 'active' : ''} href={jaPath} hreflang="ja">日本語</a>
+</div>

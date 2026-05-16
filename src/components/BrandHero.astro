@@ -1,0 +1,30 @@
+---
+interface Props {
+  copy: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    primaryCta: string;
+    secondaryCta: string;
+  };
+  primaryHref?: string;
+  secondaryHref?: string;
+}
+
+const { copy, primaryHref = '/apps/caption-ai/', secondaryHref = '/apps/caption-ai/download/' } = Astro.props;
+---
+
+<section class="hero brand-hero">
+  <div class="hero-copy">
+    <p class="eyebrow">{copy.eyebrow}</p>
+    <h1>{copy.title}</h1>
+    <p class="hero-subtitle">{copy.subtitle}</p>
+    <div class="button-row">
+      <a class="button button-primary" href={primaryHref}>{copy.primaryCta}</a>
+      <a class="button button-secondary" href={secondaryHref}>{copy.secondaryCta}</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <img src="/images/brand-hero-placeholder.svg" alt="Lifestyle app cards for everyday AI tools" width="620" height="520" />
+  </div>
+</section>

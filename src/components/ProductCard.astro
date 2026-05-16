@@ -1,0 +1,22 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  href: string;
+  image: string;
+  cta?: string;
+  kicker?: string;
+}
+
+const { title, description, href, image, cta = 'View product', kicker = 'First app in development' } = Astro.props;
+---
+
+<article class="product-card">
+  <img src={image} alt={`${title} preview`} width="520" height="360" />
+  <div>
+    <p class="section-kicker">{kicker}</p>
+    <h2>{title}</h2>
+    <p>{description}</p>
+    <a class="text-link" href={href}>{cta}</a>
+  </div>
+</article>

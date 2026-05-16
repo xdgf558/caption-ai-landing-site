@@ -1,0 +1,23 @@
+---
+interface Props {
+  title: string;
+  items: string[];
+}
+
+const { title, items } = Astro.props;
+---
+
+<section class="page-section">
+  <div class="section-heading">
+    <p class="section-kicker">Built for</p>
+    <h2>{title}</h2>
+  </div>
+  <div class="feature-grid">
+    {items.map((item) => (
+      <div class="feature-tile">
+        <span aria-hidden="true"></span>
+        <p>{item}</p>
+      </div>
+    ))}
+  </div>
+</section>

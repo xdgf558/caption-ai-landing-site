@@ -1,0 +1,48 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import WaitlistForm from '../../../../components/WaitlistForm.astro';
+import DownloadButtons from '../../../../components/DownloadButtons.astro';
+import UseCaseSection from '../../../../components/UseCaseSection.astro';
+import { captionAiProduct } from '../../../../data/products/caption-ai';
+import { captionAiZhHant } from '../../../../data/copy/caption-ai.zh-Hant';
+---
+
+<ProductLayout
+  title="App 即將推出"
+  description="加入 Caption AI iOS 等待名單，或接收 Android 版本更新通知。"
+  lang="zh-Hant"
+  canonicalPath="/zh-hant/apps/caption-ai/download/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/download/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/download/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/download/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/download/' }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">Download</p>
+    <h1>App 即將推出。</h1>
+    <p>
+      Caption AI 尚未在 App Store 或 Google Play 上架。加入等待名單後，我們會優先寄送早期測試與上架通知。
+    </p>
+  </section>
+  <DownloadButtons
+    ios={captionAiProduct.platforms.ios}
+    android={captionAiProduct.platforms.android}
+    locale="zh-Hant"
+    iosWaitlistHref="#waitlist-ios"
+    androidWaitlistHref="/zh-hant/apps/caption-ai/android/"
+  />
+  <WaitlistForm
+    id="waitlist-ios"
+    title="加入 iOS 等待名單"
+    description="當 Caption AI 準備開放測試時，我們會寄送早期通知。"
+    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
+    product={captionAiProduct.id}
+    locale="zh-Hant"
+    platform="ios"
+    privacyPath="/zh-hant/apps/caption-ai/privacy/"
+    buttonLabel="加入等待名單"
+  />
+  <UseCaseSection title="圍繞日常分享而設計" scenes={captionAiZhHant.scenes} />
+</ProductLayout>

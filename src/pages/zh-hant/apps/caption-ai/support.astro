@@ -1,0 +1,33 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import FAQ from '../../../../components/FAQ.astro';
+import { captionAiProduct } from '../../../../data/products/caption-ai';
+import { captionAiFaqZhHant } from '../../../../data/faqs/caption-ai.zh-Hant';
+---
+
+<ProductLayout
+  title="Caption AI 支援"
+  description="取得 Caption AI 協助、寄送回饋，並查看隱私政策與服務條款連結。"
+  lang="zh-Hant"
+  canonicalPath="/zh-hant/apps/caption-ai/support/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/support/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/support/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/support/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/support/' }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">Support</p>
+    <h1>Caption AI 支援。</h1>
+    <p>
+      若要寄送產品回饋、問題回報或等待名單刪除請求，請寄信到 <a href={`mailto:${captionAiProduct.supportEmail}`}>{captionAiProduct.supportEmail}</a>，並註明 Caption AI。
+    </p>
+    <div class="button-row">
+      <a class="button button-primary" href={`mailto:${captionAiProduct.supportEmail}?subject=Caption%20AI%20support`}>寄信給支援</a>
+      <a class="button button-secondary" href="/zh-hant/apps/caption-ai/privacy/">隱私政策</a>
+      <a class="button button-secondary" href="/zh-hant/apps/caption-ai/terms/">服務條款</a>
+    </div>
+  </section>
+  <FAQ title="支援常見問題" items={captionAiFaqZhHant} />
+</ProductLayout>

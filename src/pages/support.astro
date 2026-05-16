@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../data/site';
+---
+
+<BaseLayout
+  title="Support"
+  description="Support entry point for Everyday AI Apps products."
+  lang="en"
+  canonicalPath="/support/"
+>
+  <section class="page-shell">
+    <p class="section-kicker">Support</p>
+    <h1>Support for current products.</h1>
+    <p>
+      For help, feedback, or waitlist deletion requests, use the product support page and mention the product name.
+    </p>
+    <div class="link-panel">
+      <a href="/apps/caption-ai/support/">Caption AI Support</a>
+      <a href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://example.com/</loc></url>
+  <url><loc>https://example.com/en/</loc></url>
+  <url><loc>https://example.com/about/</loc></url>
+  <url><loc>https://example.com/apps/</loc></url>
+  <url><loc>https://example.com/apps/caption-ai/</loc></url>
+  <url><loc>https://example.com/apps/caption-ai/download/</loc></url>
+  <url><loc>https://example.com/apps/caption-ai/android/</loc></url>
+  <url><loc>https://example.com/apps/caption-ai/privacy/</loc></url>
+  <url><loc>https://example.com/apps/caption-ai/support/</loc></url>
+  <url><loc>https://example.com/apps/caption-ai/terms/</loc></url>
+  <url><loc>https://example.com/zh-hant/</loc></url>
+  <url><loc>https://example.com/zh-hant/apps/caption-ai/</loc></url>
+  <url><loc>https://example.com/zh-hant/apps/caption-ai/download/</loc></url>
+  <url><loc>https://example.com/zh-hant/apps/caption-ai/android/</loc></url>
+  <url><loc>https://example.com/zh-hant/apps/caption-ai/privacy/</loc></url>
+  <url><loc>https://example.com/zh-hant/apps/caption-ai/support/</loc></url>
+  <url><loc>https://example.com/zh-hant/apps/caption-ai/terms/</loc></url>
+  <url><loc>https://example.com/ja/</loc></url>
+  <url><loc>https://example.com/ja/apps/caption-ai/</loc></url>
+  <url><loc>https://example.com/ja/apps/caption-ai/download/</loc></url>
+  <url><loc>https://example.com/ja/apps/caption-ai/android/</loc></url>
+  <url><loc>https://example.com/ja/apps/caption-ai/privacy/</loc></url>
+  <url><loc>https://example.com/ja/apps/caption-ai/support/</loc></url>
+  <url><loc>https://example.com/ja/apps/caption-ai/terms/</loc></url>
+  <url><loc>https://example.com/privacy/</loc></url>
+  <url><loc>https://example.com/support/</loc></url>
+  <url><loc>https://example.com/terms/</loc></url>
+  <url><loc>https://example.com/download/</loc></url>
+  <url><loc>https://example.com/android/</loc></url>
+</urlset>

@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { brandEn } from '../../data/copy/brand.en';
+import { captionAiProduct } from '../../data/products/caption-ai';
+---
+
+<BaseLayout
+  title="Apps"
+  description="Browse AI lifestyle and productivity apps from Everyday AI Apps."
+  lang="en"
+  canonicalPath="/apps/"
+>
+  <section class="page-shell">
+    <p class="section-kicker">Apps</p>
+    <h1>One product now, room for more later.</h1>
+    <p>
+      This page is structured for a multi-app brand. Today it highlights Caption AI, while future apps can be added with their own product configuration and pages.
+    </p>
+  </section>
+  <section class="page-section">
+    <ProductCard
+      title={brandEn.productCard.title}
+      description={brandEn.productCard.description}
+      href={captionAiProduct.productPath}
+      image={captionAiProduct.assets.screenshot}
+      cta="View product"
+    />
+  </section>
+</BaseLayout>

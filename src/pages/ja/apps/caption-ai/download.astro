@@ -1,0 +1,48 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import WaitlistForm from '../../../../components/WaitlistForm.astro';
+import DownloadButtons from '../../../../components/DownloadButtons.astro';
+import UseCaseSection from '../../../../components/UseCaseSection.astro';
+import { captionAiProduct } from '../../../../data/products/caption-ai';
+import { captionAiJa } from '../../../../data/copy/caption-ai.ja';
+---
+
+<ProductLayout
+  title="アプリは準備中です"
+  description="Caption AI の iOS 先行案内と Android 版のお知らせを受け取れます。"
+  lang="ja"
+  canonicalPath="/ja/apps/caption-ai/download/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/download/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/download/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/download/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/download/' }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">Download</p>
+    <h1>アプリは準備中です。</h1>
+    <p>
+      Caption AI はまだ App Store や Google Play には公開されていません。準備ができたら、先行案内リストに登録した方へお知らせします。
+    </p>
+  </section>
+  <DownloadButtons
+    ios={captionAiProduct.platforms.ios}
+    android={captionAiProduct.platforms.android}
+    locale="ja"
+    iosWaitlistHref="#waitlist-ios"
+    androidWaitlistHref="/ja/apps/caption-ai/android/"
+  />
+  <WaitlistForm
+    id="waitlist-ios"
+    title="iOS の先行案内を受け取る"
+    description="Caption AI のテスト準備ができたらお知らせします。"
+    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
+    product={captionAiProduct.id}
+    locale="ja"
+    platform="ios"
+    privacyPath="/ja/apps/caption-ai/privacy/"
+    buttonLabel="先行案内を受け取る"
+  />
+  <UseCaseSection title="日常の投稿を助けるアプリ" scenes={captionAiJa.scenes} />
+</ProductLayout>

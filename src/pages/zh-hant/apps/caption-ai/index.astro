@@ -1,0 +1,67 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import ProductHero from '../../../../components/ProductHero.astro';
+import UseCaseSection from '../../../../components/UseCaseSection.astro';
+import HowItWorks from '../../../../components/HowItWorks.astro';
+import FeatureGrid from '../../../../components/FeatureGrid.astro';
+import WaitlistForm from '../../../../components/WaitlistForm.astro';
+import DownloadButtons from '../../../../components/DownloadButtons.astro';
+import FAQ from '../../../../components/FAQ.astro';
+import { captionAiProduct } from '../../../../data/products/caption-ai';
+import { captionAiZhHant } from '../../../../data/copy/caption-ai.zh-Hant';
+import { captionAiFaqZhHant } from '../../../../data/faqs/caption-ai.zh-Hant';
+---
+
+<ProductLayout
+  title={captionAiZhHant.seo.title}
+  description={captionAiZhHant.seo.description}
+  lang="zh-Hant"
+  canonicalPath="/zh-hant/apps/caption-ai/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/' }
+  ]}
+>
+  <ProductHero
+    copy={captionAiZhHant.hero}
+    image={captionAiProduct.assets.hero}
+    imageAlt="Caption AI 手機畫面示意圖"
+    primaryHref="#waitlist-ios"
+    secondaryHref="/zh-hant/apps/caption-ai/android/"
+  />
+  <UseCaseSection
+    title="日常場景，文案更容易開始。"
+    description="從大家本來就會拍的照片開始：早餐、咖啡、散步、旅行、穿搭、寵物和生活片刻。"
+    scenes={captionAiZhHant.scenes}
+  />
+  <HowItWorks title="Caption AI 如何運作" steps={captionAiZhHant.steps} />
+  <FeatureGrid title="適合哪些人" items={captionAiZhHant.audiences} />
+  <WaitlistForm
+    id="waitlist-ios"
+    title="加入 iOS 等待名單"
+    description="搶先收到早期測試通知。表單會預留 product=caption-ai、locale=zh-Hant、platform=ios。"
+    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
+    product={captionAiProduct.id}
+    locale="zh-Hant"
+    platform="ios"
+    privacyPath="/zh-hant/apps/caption-ai/privacy/"
+    buttonLabel="加入等待名單"
+  />
+  <section class="page-section split-section">
+    <div class="section-heading compact">
+      <p class="section-kicker">Privacy</p>
+      <h2>以隱私為設計前提。</h2>
+    </div>
+    <p class="large-copy">{captionAiZhHant.privacy}</p>
+  </section>
+  <DownloadButtons
+    ios={captionAiProduct.platforms.ios}
+    android={captionAiProduct.platforms.android}
+    locale="zh-Hant"
+    iosWaitlistHref="#waitlist-ios"
+    androidWaitlistHref="/zh-hant/apps/caption-ai/android/"
+  />
+  <FAQ title="上架前常見問題" items={captionAiFaqZhHant} />
+</ProductLayout>

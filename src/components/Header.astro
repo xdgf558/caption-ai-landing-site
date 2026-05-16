@@ -1,0 +1,48 @@
+---
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import {
+  brandNavigation,
+  jaBrandNavigation,
+  jaProductNavigation,
+  productNavigation,
+  zhBrandNavigation,
+  zhProductNavigation
+} from '../data/navigation';
+
+interface Props {
+  lang?: 'en' | 'ja' | 'zh-Hant';
+}
+
+const { lang = 'zh-Hant' } = Astro.props;
+const path = Astro.url.pathname;
+const isProduct = path.includes('/apps/caption-ai');
+const nav = isProduct
+  ? lang === 'ja'
+    ? jaProductNavigation
+    : lang === 'zh-Hant'
+      ? zhProductNavigation
+      : productNavigation
+  : lang === 'zh-Hant'
+    ? zhBrandNavigation
+    : lang === 'ja'
+      ? jaBrandNavigation
+    : brandNavigation;
+const homeHref = lang === 'ja' ? '/ja/' : lang === 'en' ? '/en/' : '/';
+const ariaLabel =
+  lang === 'ja' ? 'メインナビゲーション' : lang === 'zh-Hant' ? '主要導覽' : 'Main navigation';
+---
+
+<header class="site-header">
+  <nav class="nav-wrap" aria-label={ariaLabel}>
+    <a class="brand-mark" href={homeHref} aria-label="Everyday AI Apps home">
+      <span class="brand-icon" aria-hidden="true">EA</span>
+      <span>Everyday AI Apps</span>
+    </a>
+    <div class="nav-links">
+      {nav.map((item) => (
+        <a href={item.href}>{item.label}</a>
+      ))}
+    </div>
+    <LanguageSwitcher lang={lang} />
+  </nav>
+</header>

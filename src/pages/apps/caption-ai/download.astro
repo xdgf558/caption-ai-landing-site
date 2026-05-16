@@ -1,0 +1,48 @@
+---
+import ProductLayout from '../../../layouts/ProductLayout.astro';
+import WaitlistForm from '../../../components/WaitlistForm.astro';
+import DownloadButtons from '../../../components/DownloadButtons.astro';
+import UseCaseSection from '../../../components/UseCaseSection.astro';
+import { captionAiProduct } from '../../../data/products/caption-ai';
+import { captionAiEn } from '../../../data/copy/caption-ai.en';
+---
+
+<ProductLayout
+  title="The app is coming soon"
+  description="Join the Caption AI iOS waitlist and get Android updates before public launch."
+  lang="en"
+  canonicalPath="/apps/caption-ai/download/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/download/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/download/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/download/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/download/' }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">Download</p>
+    <h1>The app is coming soon.</h1>
+    <p>
+      Caption AI is not listed in the App Store or Google Play yet. Join the waitlist and we will prioritize early testing updates.
+    </p>
+  </section>
+  <DownloadButtons
+    ios={captionAiProduct.platforms.ios}
+    android={captionAiProduct.platforms.android}
+    locale="en"
+    iosWaitlistHref="#waitlist-ios"
+    androidWaitlistHref="/apps/caption-ai/android/"
+  />
+  <WaitlistForm
+    id="waitlist-ios"
+    title="Join the iOS waitlist"
+    description="Get early access updates when Caption AI is ready for testing."
+    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
+    product={captionAiProduct.id}
+    locale="en"
+    platform="ios"
+    privacyPath="/apps/caption-ai/privacy/"
+    buttonLabel="Join waitlist"
+  />
+  <UseCaseSection title="Built around daily sharing" scenes={captionAiEn.scenes} />
+</ProductLayout>
