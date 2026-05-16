@@ -6,9 +6,9 @@ export const captionAiEn = {
   },
   hero: {
     eyebrow: 'Caption AI',
-    title: 'Turn everyday photos into captions worth sharing.',
+    title: 'Take a photo. Get better captions. Share faster.',
     subtitle:
-      'Take a photo of breakfast, coffee, a walk, a trip, or a small everyday moment. Caption AI helps you create polished captions, lightly enhance the image, and share faster.',
+      'Take a photo of breakfast, coffee, a walk, a pet, a trip, or an outfit. Caption AI helps you generate social-ready captions and gradually learn the way you like to write.',
     primaryCta: 'Join the iOS waitlist',
     secondaryCta: 'Get Android updates'
   },
@@ -40,10 +40,12 @@ export const captionAiEn = {
     'Share to your favorite platform'
   ],
   audiences: [
-    'People who post everyday lifestyle photos',
-    'Creators who want caption drafts faster',
-    'Travelers, cafe lovers, outfit posters, and pet owners',
-    'Bilingual users who want English and Japanese support'
+    'Photo-based caption generation',
+    'Breakfast, cafe, walking, pet, travel, and outfit scenes',
+    'On-device AI first where possible',
+    'Personal style learning from ratings and choices',
+    'Share-ready output for social posts',
+    'Privacy-friendly design'
   ],
   privacy:
     'Your photos and preferences should stay private by design. The first version prioritizes on-device processing where possible and clearly labels any cloud AI features before upload.'

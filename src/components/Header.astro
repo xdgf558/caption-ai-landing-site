@@ -27,20 +27,28 @@ const nav = isProduct
     : lang === 'ja'
       ? jaBrandNavigation
     : brandNavigation;
-const homeHref = lang === 'ja' ? '/ja/' : lang === 'en' ? '/en/' : '/';
+const homeHref = '/';
 const ariaLabel =
   lang === 'ja' ? 'メインナビゲーション' : lang === 'zh-Hant' ? '主要導覽' : 'Main navigation';
+const brandLabel = 'Station Cat';
 ---
 
 <header class="site-header">
   <nav class="nav-wrap" aria-label={ariaLabel}>
-    <a class="brand-mark" href={homeHref} aria-label="Everyday AI Apps home">
-      <span class="brand-icon" aria-hidden="true">EA</span>
-      <span>Everyday AI Apps</span>
+    <a class="brand-mark" href={homeHref} aria-label="Station Cat home">
+      <span class="brand-icon" aria-hidden="true">SC</span>
+      <span>{brandLabel}</span>
     </a>
     <div class="nav-links">
       {nav.map((item) => (
-        <a href={item.href}>{item.label}</a>
+        <a
+          class={item.mobileHidden ? 'mobile-hide' : ''}
+          href={item.href}
+          target={item.href.startsWith('http') ? '_blank' : undefined}
+          rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+        >
+          {item.label}
+        </a>
       ))}
     </div>
     <LanguageSwitcher lang={lang} />

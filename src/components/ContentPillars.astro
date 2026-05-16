@@ -1,0 +1,34 @@
+---
+interface Pillar {
+  title: string;
+  description: string;
+  icon: string;
+}
+
+interface Props {
+  id?: string;
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  items: Pillar[];
+}
+
+const { id, eyebrow, title, description, items } = Astro.props;
+---
+
+<section id={id} class="station-section">
+  <div class="station-section__heading">
+    {eyebrow && <p class="station-kicker">{eyebrow}</p>}
+    <h2>{title}</h2>
+    {description && <p>{description}</p>}
+  </div>
+  <div class="station-pillar-grid">
+    {items.map((item) => (
+      <article class="station-glass-card">
+        <span class="station-card-icon" aria-hidden="true">{item.icon}</span>
+        <h3>{item.title}</h3>
+        <p>{item.description}</p>
+      </article>
+    ))}
+  </div>
+</section>

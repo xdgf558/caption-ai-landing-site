@@ -1,22 +1,22 @@
 export const brandNavigation = [
-  { label: 'Apps', href: '/apps/' },
-  { label: 'Privacy', href: '/privacy/' },
-  { label: 'Support', href: '/support/' },
-  { label: 'Terms', href: '/terms/' }
+  { label: 'Apps', href: '/apps/caption-ai/' },
+  { label: 'Notes', href: '#experiments', mobileHidden: true },
+  { label: 'About', href: '#about', mobileHidden: true },
+  { label: 'Follow on X', href: 'https://x.com/stationcat' }
 ];
 
 export const zhBrandNavigation = [
-  { label: '產品', href: '/zh-hant/apps/caption-ai/' },
-  { label: '下載', href: '/zh-hant/apps/caption-ai/download/' },
-  { label: '隱私', href: '/zh-hant/apps/caption-ai/privacy/' },
-  { label: '支援', href: '/zh-hant/apps/caption-ai/support/' }
+  { label: 'Apps', href: '/apps/caption-ai/' },
+  { label: 'Notes', href: '#experiments', mobileHidden: true },
+  { label: 'About', href: '#about', mobileHidden: true },
+  { label: 'Follow on X', href: 'https://x.com/stationcat' }
 ];
 
 export const jaBrandNavigation = [
-  { label: '製品', href: '/ja/apps/caption-ai/' },
-  { label: 'ダウンロード', href: '/ja/apps/caption-ai/download/' },
-  { label: 'プライバシー', href: '/ja/apps/caption-ai/privacy/' },
-  { label: 'サポート', href: '/ja/apps/caption-ai/support/' }
+  { label: 'Apps', href: '/apps/caption-ai/' },
+  { label: 'Notes', href: '#experiments', mobileHidden: true },
+  { label: 'About', href: '#about', mobileHidden: true },
+  { label: 'Follow on X', href: 'https://x.com/stationcat' }
 ];
 
 export const productNavigation = [

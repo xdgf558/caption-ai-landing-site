@@ -1,16 +1,42 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import BrandHero from '../../components/BrandHero.astro';
-import ProductCard from '../../components/ProductCard.astro';
-import { brandJa } from '../../data/copy/brand.ja';
-import { captionAiProduct } from '../../data/products/caption-ai';
+import HeroSection from '../../components/HeroSection.astro';
+import ContentPillars from '../../components/ContentPillars.astro';
+import AppCard from '../../components/AppCard.astro';
+import CreatorNote from '../../components/CreatorNote.astro';
+import CTASection from '../../components/CTASection.astro';
+
+const xUrl = 'https://x.com/stationcat';
+
+const heroCards = [
+  { icon: 'cat', title: 'Cats', text: '窓辺、ソファ、日常の小さな気配。' },
+  { icon: 'meal', title: 'Meals', text: '朝食、コーヒー、食卓の記録。' },
+  { icon: 'AI', title: 'AI Tools', text: '日常の共有を助ける小さなAIツール。' },
+  { icon: 'idea', title: 'Ideas', text: '少し不思議で、でも気になるアイデア。' }
+];
+
+const pillars = [
+  { icon: 'cat', title: 'Cats', description: '猫と日常の小さな相棒を記録します。' },
+  { icon: 'meal', title: 'Meals', description: '朝食、食卓、コーヒー、生活の小さな場面。' },
+  { icon: 'signal', title: 'Signals', description: 'テクノロジー、情報、AIの変化から見えるサイン。' },
+  { icon: 'spark', title: 'Odd Ideas', description: '不思議な考え、プロダクト実験、突然のひらめき。' }
+];
+
+const experiments = [
+  { icon: 'AI', title: 'AI caption generation', description: '日常写真を共有しやすい言葉に変える実験。' },
+  { icon: 'local', title: 'On-device AI experiments', description: 'より軽く、よりプライベートなAI体験を探ります。' },
+  { icon: 'photo', title: 'Photo understanding', description: '朝食、猫、散歩、旅の空気を読み取る方向。' },
+  { icon: 'voice', title: 'Personal style learning', description: '生成結果を自分の言葉に近づけていく試み。' },
+  { icon: 'lang', title: 'Multi-language sharing', description: '小さなアイデアを複数言語で共有しやすくします。' }
+];
 ---
 
 <BaseLayout
-  title="Caption AI"
-  description="写真に合うキャプションを提案する AI アプリ Caption AI の日本語ページです。"
+  title="Station Cat"
+  description="猫、食卓、AIツール、少し不思議なアイデアを記録する小さな場所。"
   lang="ja"
   canonicalPath="/ja/"
+  bodyClass="station-home"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/' },
     { hrefLang: 'en', href: '/en/' },
@@ -18,42 +44,81 @@ import { captionAiProduct } from '../../data/products/caption-ai';
     { hrefLang: 'x-default', href: '/' }
   ]}
 >
-  <BrandHero
-    copy={brandJa.hero}
-    primaryHref={captionAiProduct.jaProductPath}
-    secondaryHref="/ja/apps/caption-ai/download/"
+  <HeroSection
+    eyebrow="Station Cat"
+    title="猫、食卓、AIツール、少し不思議なアイデアを記録する小さな場所。"
+    subtitle="日常の写真をもっと楽しく共有するためのAIアプリや、個人で作っている小さなプロダクトを紹介しています。"
+    ctas={[
+      { label: 'アプリを見る', href: '/ja/apps/caption-ai/', variant: 'primary' },
+      { label: 'Xでフォロー', href: xUrl, variant: 'secondary' },
+      { label: '順番待ちに登録', href: '/ja/apps/caption-ai/download/', variant: 'ghost' }
+    ]}
+    cards={heroCards}
+    tags={['Cats', 'Meals', 'AI Tools', 'Strange Ideas']}
   />
 
-  <section class="page-section">
-    <div class="section-heading">
-      <p class="section-kicker">現在の製品</p>
-      <h2>最初の App は現在開発中です。</h2>
-      <p>
-        将来の複数 App 展開に備えつつ、最初のバージョンでは Caption AI に集中します。
-      </p>
+  <section id="about" class="station-section station-about">
+    <div class="station-section__heading">
+      <p class="station-kicker">What is Station Cat?</p>
+      <h2>大きな会社のページではなく、個人の小さな創作ステーションです。</h2>
     </div>
-    <ProductCard
-      title={brandJa.productCard.title}
-      description={brandJa.productCard.description}
-      href={captionAiProduct.jaProductPath}
-      image={captionAiProduct.assets.screenshot}
-      cta="Caption AI を見る"
-      kicker="開発中の最初の App"
+    <div class="station-about__copy">
+      <p>Station Cat は、猫、食卓、インターネットのサイン、AIで作る小さなツールについての場所です。</p>
+      <p>あたたかく、好奇心があり、少しだけ変な個人スタジオのように育てています。</p>
+    </div>
+  </section>
+
+  <ContentPillars
+    eyebrow="Content pillars"
+    title="ここに集まるもの"
+    description="猫、食卓、AIツール、気になるサインが、夜の駅の小さな灯りのように並びます。"
+    items={pillars}
+  />
+
+  <section id="apps" class="station-section">
+    <div class="station-section__heading">
+      <p class="station-kicker">Apps from Station Cat</p>
+      <h2>日常の創作を助ける小さなAIツール。</h2>
+      <p>最初のアプリは Caption AI です。詳しい機能、プライバシー、ダウンロード案内は製品ページに分けています。</p>
+    </div>
+    <AppCard
+      eyebrow="Current app"
+      title="Caption AI"
+      subtitle="Turn everyday photos into shareable captions."
+      description="朝食、コーヒー、散歩、ペット、旅行の写真から、共有しやすいキャプションを作り、少しずつ好みの表現に近づけます。"
+      href="/ja/apps/caption-ai/"
+      waitlistHref="/ja/apps/caption-ai/download/"
+      ctaLabel="アプリを見る"
+      waitlistLabel="順番待ちに登録"
+      status="最初の開発中アプリ"
     />
   </section>
 
-  <section class="page-section split-section">
-    <div class="section-heading compact">
-      <p class="section-kicker">方針</p>
-      <h2>軽さと信頼を大切に。</h2>
-    </div>
-    <div class="text-stack">
-      <p>
-        各 App に独立したダウンロード、プライバシー、サポート、利用規約、先行案内の導線を用意します。
-      </p>
-      <p>
-        日本語ページでも、ブランドホームと Caption AI の各ページを行き来しやすい構成にしています。
-      </p>
-    </div>
-  </section>
+  <CreatorNote
+    eyebrow="A note from Station Cat"
+    title="小さなものも、ちゃんと言葉にしたい。"
+    paragraphs={[
+      '朝食の写真、窓辺の猫、散歩中に浮かんだ変な考え、投稿を少し楽にしてくれる道具。そういう小さなものが好きです。',
+      'AI が日常の瞬間を表現しやすくするなら、それはただのツールではなく、静かな創作の相棒にもなります。'
+    ]}
+  />
+
+  <ContentPillars
+    id="experiments"
+    eyebrow="Latest experiments"
+    title="いま試していること"
+    description="重いブログではなく、育ち始めた方向を小さく並べています。"
+    items={experiments}
+  />
+
+  <CTASection
+    eyebrow="Follow the build"
+    title="制作の途中を見に来てください。"
+    description="Station Cat はまだ育っています。猫、アプリ、AI実験、食卓、少し不思議なアイデアを共有していきます。"
+    ctas={[
+      { label: 'Follow on X', href: xUrl, variant: 'primary' },
+      { label: 'View Caption AI', href: '/ja/apps/caption-ai/', variant: 'secondary' },
+      { label: 'Join Android Waitlist', href: '/android/', variant: 'ghost' }
+    ]}
+  />
 </BaseLayout>

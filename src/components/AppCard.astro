@@ -1,0 +1,49 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  href: string;
+  waitlistHref: string;
+  ctaLabel: string;
+  waitlistLabel: string;
+  status?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  subtitle,
+  description,
+  href,
+  waitlistHref,
+  ctaLabel,
+  waitlistLabel,
+  status = 'In development'
+} = Astro.props;
+---
+
+<article class="station-app-card">
+  <div class="station-app-card__visual" aria-hidden="true">
+    <div class="station-phone">
+      <span></span>
+      <div class="station-photo"></div>
+      <p>caption draft</p>
+    </div>
+    <div class="station-note-card">AI + everyday photo</div>
+  </div>
+  <div class="station-app-card__copy">
+    {eyebrow && <p class="station-kicker">{eyebrow}</p>}
+    <div>
+      <h3>{title}</h3>
+      <p class="station-app-subtitle">{subtitle}</p>
+    </div>
+    <p>{description}</p>
+    <span class="station-status">{status}</span>
+    <div class="station-actions">
+      <a class="station-button station-button--primary" href={href}>{ctaLabel}</a>
+      <a class="station-button station-button--secondary" href={waitlistHref}>{waitlistLabel}</a>
+    </div>
+  </div>
+</article>

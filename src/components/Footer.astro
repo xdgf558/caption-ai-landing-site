@@ -10,36 +10,42 @@ const year = new Date().getFullYear();
 const links =
   lang === 'ja'
     ? [
+        { label: 'Caption AI', href: '/ja/apps/caption-ai/' },
         { label: 'プライバシー', href: '/ja/apps/caption-ai/privacy/' },
         { label: 'サポート', href: '/ja/apps/caption-ai/support/' },
-        { label: '利用規約', href: '/ja/apps/caption-ai/terms/' }
+        { label: '利用規約', href: '/ja/apps/caption-ai/terms/' },
+        { label: 'Android Waitlist', href: '/android/' }
       ]
     : lang === 'zh-Hant'
       ? [
+          { label: 'Caption AI', href: '/zh-hant/apps/caption-ai/' },
           { label: '隱私政策', href: '/zh-hant/apps/caption-ai/privacy/' },
           { label: '支援', href: '/zh-hant/apps/caption-ai/support/' },
-          { label: '服務條款', href: '/zh-hant/apps/caption-ai/terms/' }
+          { label: '服務條款', href: '/zh-hant/apps/caption-ai/terms/' },
+          { label: 'Android Waitlist', href: '/android/' }
         ]
     : [
-        { label: 'Privacy', href: '/privacy/' },
-        { label: 'Support', href: '/support/' },
-        { label: 'Terms', href: '/terms/' }
+        { label: 'Caption AI', href: '/apps/caption-ai/' },
+        { label: 'Privacy', href: '/apps/caption-ai/privacy/' },
+        { label: 'Support', href: '/apps/caption-ai/support/' },
+        { label: 'Terms', href: '/apps/caption-ai/terms/' },
+        { label: 'Android Waitlist', href: '/android/' }
       ];
 ---
 
 <footer class="site-footer">
   <div class="footer-grid">
     <div>
-      <a class="brand-mark footer-brand" href={lang === 'ja' ? '/ja/' : lang === 'en' ? '/en/' : '/'}>
-        <span class="brand-icon" aria-hidden="true">EA</span>
+      <a class="brand-mark footer-brand" href="/">
+        <span class="brand-icon" aria-hidden="true">SC</span>
         <span>{siteConfig.name}</span>
       </a>
       <p>
         {lang === 'ja'
-          ? '日常の創作と共有を助ける、軽くて信頼できる AI アプリを開発しています。'
+          ? 'Cats, meals, AI tools, and strange ideas.'
           : lang === 'zh-Hant'
-            ? '我們開發輕量、可信任的 AI 生活與創作應用，幫助日常照片與想法更容易分享。'
-          : 'Simple AI lifestyle apps for everyday creativity, sharing, and personal expression.'}
+            ? 'Cats, meals, AI tools, and strange ideas.'
+          : 'Cats, meals, AI tools, and strange ideas.'}
       </p>
     </div>
     <div class="footer-links">
@@ -49,5 +55,5 @@ const links =
       <a href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>
     </div>
   </div>
-  <p class="fine-print">&copy; {year} {siteConfig.legalName}. {lang === 'ja' ? 'All rights reserved.' : 'All rights reserved.'}</p>
+  <p class="fine-print">&copy; {year} {siteConfig.legalName}. Built by an independent creator.</p>
 </footer>

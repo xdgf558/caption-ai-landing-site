@@ -1,0 +1,19 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  paragraphs: string[];
+}
+
+const { eyebrow, title, paragraphs } = Astro.props;
+---
+
+<section class="station-note-section">
+  <div class="station-note-paper">
+    {eyebrow && <p class="station-kicker">{eyebrow}</p>}
+    <h2>{title}</h2>
+    <div class="station-note-text">
+      {paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+    </div>
+  </div>
+</section>

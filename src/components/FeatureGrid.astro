@@ -2,14 +2,15 @@
 interface Props {
   title: string;
   items: string[];
+  kicker?: string;
 }
 
-const { title, items } = Astro.props;
+const { title, items, kicker = 'Built for' } = Astro.props;
 ---
 
 <section class="page-section">
   <div class="section-heading">
-    <p class="section-kicker">Built for</p>
+    <p class="section-kicker">{kicker}</p>
     <h2>{title}</h2>
   </div>
   <div class="feature-grid">

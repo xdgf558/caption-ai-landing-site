@@ -37,7 +37,7 @@ import { captionAiFaqEn } from '../../../data/faqs/caption-ai.en';
     scenes={captionAiEn.scenes}
   />
   <HowItWorks title="How Caption AI works" steps={captionAiEn.steps} />
-  <FeatureGrid title="Who it helps" items={captionAiEn.audiences} />
+  <FeatureGrid kicker="Features" title="What it does" items={captionAiEn.audiences} />
   <WaitlistForm
     id="waitlist-ios"
     title="Join the iOS waitlist"
@@ -64,4 +64,7 @@ import { captionAiFaqEn } from '../../../data/faqs/caption-ai.en';
     androidWaitlistHref="/apps/caption-ai/android/"
   />
   <FAQ title="Questions before launch" items={captionAiFaqEn} />
+  <section class="page-section maker-note">
+    <p>Made by Station Cat, an independent creator studio.</p>
+  </section>
 </ProductLayout>

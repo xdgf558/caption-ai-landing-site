@@ -1,0 +1,60 @@
+---
+interface HeroCard {
+  title: string;
+  text: string;
+  icon: string;
+}
+
+interface HeroCta {
+  label: string;
+  href: string;
+  variant?: 'primary' | 'secondary' | 'ghost';
+}
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  ctas: HeroCta[];
+  cards: HeroCard[];
+  tags: string[];
+}
+
+const { eyebrow, title, subtitle, ctas, cards, tags } = Astro.props;
+---
+
+<section class="station-hero">
+  <div class="station-hero__copy">
+    <p class="station-kicker">{eyebrow}</p>
+    <h1>{title}</h1>
+    <p class="station-lede">{subtitle}</p>
+    <div class="station-actions">
+      {ctas.map((cta) => (
+        <a class={`station-button station-button--${cta.variant ?? 'secondary'}`} href={cta.href}>
+          {cta.label}
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <div class="station-board" aria-label="Station Cat creative board">
+    <div class="station-board__header">
+      <span class="station-light" aria-hidden="true"></span>
+      <span>creative station</span>
+    </div>
+    <div class="station-card-stack">
+      {cards.map((card) => (
+        <article class="station-mini-card">
+          <span aria-hidden="true">{card.icon}</span>
+          <div>
+            <h2>{card.title}</h2>
+            <p>{card.text}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+    <div class="station-tag-row" aria-label="Station Cat topics">
+      {tags.map((tag) => <span>{tag}</span>)}
+    </div>
+  </div>
+</section>

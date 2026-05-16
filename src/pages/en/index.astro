@@ -1,16 +1,42 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import BrandHero from '../../components/BrandHero.astro';
-import ProductCard from '../../components/ProductCard.astro';
-import { brandEn } from '../../data/copy/brand.en';
-import { captionAiProduct } from '../../data/products/caption-ai';
+import HeroSection from '../../components/HeroSection.astro';
+import ContentPillars from '../../components/ContentPillars.astro';
+import AppCard from '../../components/AppCard.astro';
+import CreatorNote from '../../components/CreatorNote.astro';
+import CTASection from '../../components/CTASection.astro';
+
+const xUrl = 'https://x.com/stationcat';
+
+const heroCards = [
+  { icon: 'cat', title: 'Cat log', text: 'Window seats, soft paws, and tiny daily opinions.' },
+  { icon: 'meal', title: 'Table notes', text: 'Breakfast, coffee, meals, and small scenes worth saving.' },
+  { icon: 'AI', title: 'Tool bench', text: 'Simple AI products for everyday creativity.' },
+  { icon: 'idea', title: 'Odd signals', text: 'Internet signals and strange little thoughts from the walk home.' }
+];
+
+const pillars = [
+  { icon: 'cat', title: 'Cats', description: 'Small companions and soft evidence that the day happened.' },
+  { icon: 'meal', title: 'Meals', description: 'Breakfast, table photos, coffee, and everyday fragments.' },
+  { icon: 'signal', title: 'Signals', description: 'Technology, internet shifts, markets, and AI changes worth noticing.' },
+  { icon: 'spark', title: 'Odd Ideas', description: 'Weird thoughts, product experiments, and sudden little sparks.' }
+];
+
+const experiments = [
+  { icon: 'AI', title: 'AI caption generation', description: 'Turning everyday photos into words that feel ready to share.' },
+  { icon: 'local', title: 'On-device AI experiments', description: 'Exploring private, lightweight flows before reaching for the cloud.' },
+  { icon: 'photo', title: 'Photo understanding', description: 'Reading the mood of breakfast, cats, walks, coffee, and travel.' },
+  { icon: 'voice', title: 'Personal style learning', description: 'Helping drafts move closer to your own voice over time.' },
+  { icon: 'lang', title: 'Multi-language sharing', description: 'Keeping small ideas portable across languages.' }
+];
 ---
 
 <BaseLayout
-  title="AI Apps for Everyday Creativity"
-  description="Simple AI lifestyle apps for creating, polishing, and sharing everyday moments."
+  title="Station Cat"
+  description="A small creative station for cats, meals, AI tools, internet signals, and curious ideas."
   lang="en"
   canonicalPath="/en/"
+  bodyClass="station-home"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/' },
     { hrefLang: 'en', href: '/en/' },
@@ -18,35 +44,87 @@ import { captionAiProduct } from '../../data/products/caption-ai';
     { hrefLang: 'x-default', href: '/' }
   ]}
 >
-  <BrandHero copy={brandEn.hero} />
+  <HeroSection
+    eyebrow="Station Cat"
+    title="A small creative station for cats, food, AI tools, and curious ideas."
+    subtitle="I make simple AI products for everyday sharing, while documenting cats, meals, internet signals, and strange little thoughts."
+    ctas={[
+      { label: 'Explore Apps', href: '/apps/caption-ai/', variant: 'primary' },
+      { label: 'Follow on X', href: xUrl, variant: 'secondary' },
+      { label: 'Join Waitlist', href: '/apps/caption-ai/download/', variant: 'ghost' }
+    ]}
+    cards={heroCards}
+    tags={['Cats', 'Meals', 'AI Tools', 'Strange Ideas']}
+  />
 
-  <section class="page-section">
-    <div class="section-heading">
-      <p class="section-kicker">Current product</p>
-      <h2>Our first app is currently in development.</h2>
+  <section id="about" class="station-section station-about">
+    <div class="station-section__heading">
+      <p class="station-kicker">What is Station Cat?</p>
+      <h2>A personal creative station, not a big-company product page.</h2>
+    </div>
+    <div class="station-about__copy">
       <p>
-        The brand layer is ready for more products later, but this first version keeps the focus on Caption AI.
+        Station Cat is about cats, everyday meals, internet signals, and AI-made tools.
+      </p>
+      <p>
+        It should feel like a small independent creator studio: warm, curious, useful, and just a little strange in the best way.
       </p>
     </div>
-    <ProductCard
-      title={brandEn.productCard.title}
-      description={brandEn.productCard.description}
-      href={captionAiProduct.productPath}
-      image={captionAiProduct.assets.screenshot}
-      cta="View Caption AI"
+  </section>
+
+  <ContentPillars
+    eyebrow="Content pillars"
+    title="What shows up here?"
+    description="Cats, table notes, AI tools, and curious signals meet under a soft night-station light."
+    items={pillars}
+  />
+
+  <section id="apps" class="station-section">
+    <div class="station-section__heading">
+      <p class="station-kicker">Apps from Station Cat</p>
+      <h2>Small AI tools built around everyday creativity.</h2>
+      <p>
+        The first app is Caption AI. This home page keeps the story broad; the product page handles features, privacy, downloads, and waitlists.
+      </p>
+    </div>
+    <AppCard
+      eyebrow="Current app"
+      title="Caption AI"
+      subtitle="Turn everyday photos into shareable captions."
+      description="Take breakfast, coffee, walking, pet, or travel photos and generate social-ready captions that gradually learn your preferred style."
+      href="/apps/caption-ai/"
+      waitlistHref="/apps/caption-ai/download/"
+      ctaLabel="View App"
+      waitlistLabel="Join Waitlist"
+      status="First app in development"
     />
   </section>
 
-  <section class="page-section split-section">
-    <div class="section-heading compact">
-      <p class="section-kicker">Direction</p>
-      <h2>Lightweight by design.</h2>
-    </div>
-    <div class="text-stack">
-      {brandEn.principles.map((item) => <p>{item}</p>)}
-      <p>
-        Each app will have separate download, privacy, support, terms, and waitlist paths so future launches do not get mixed together.
-      </p>
-    </div>
-  </section>
+  <CreatorNote
+    eyebrow="A note from Station Cat"
+    title="Small things are worth sharing well."
+    paragraphs={[
+      'I like small things that make everyday life easier to share: a good breakfast photo, a cat sitting near the window, a weird thought that appears during a walk, or a tool that helps you post without overthinking.',
+      'If AI can help people express those moments with less friction, it becomes more than software. It becomes a quiet creative companion.'
+    ]}
+  />
+
+  <ContentPillars
+    id="experiments"
+    eyebrow="Latest experiments"
+    title="What is being tested"
+    description="No heavy blog system yet. Just a small board for directions that are starting to grow."
+    items={experiments}
+  />
+
+  <CTASection
+    eyebrow="Follow the build"
+    title="Follow the build."
+    description="Station Cat is still evolving. Follow along for cats, apps, AI experiments, and strange ideas."
+    ctas={[
+      { label: 'Follow on X', href: xUrl, variant: 'primary' },
+      { label: 'View Caption AI', href: '/apps/caption-ai/', variant: 'secondary' },
+      { label: 'Join Android Waitlist', href: '/android/', variant: 'ghost' }
+    ]}
+  />
 </BaseLayout>

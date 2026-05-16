@@ -16,6 +16,7 @@ interface Props {
   canonicalPath?: string;
   ogImage?: string;
   alternates?: AlternateLink[];
+  bodyClass?: string;
 }
 
 const {
@@ -24,7 +25,8 @@ const {
   lang = 'zh-Hant',
   canonicalPath = Astro.url.pathname,
   ogImage = siteConfig.ogImage,
-  alternates = []
+  alternates = [],
+  bodyClass
 } = Astro.props;
 
 const fullTitle = title.includes(siteConfig.name)
@@ -56,7 +58,7 @@ const ogImageUrl = new URL(ogImage, siteConfig.baseUrl).toString();
     <meta name="twitter:image" content={ogImageUrl} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
-  <body>
+  <body class={bodyClass}>
     <a class="skip-link" href="#main">{lang === 'ja' ? '本文へ移動' : lang === 'zh-Hant' ? '跳到主要內容' : 'Skip to content'}</a>
     <Header lang={lang} />
     <main id="main">

@@ -1,0 +1,31 @@
+---
+interface Cta {
+  label: string;
+  href: string;
+  variant?: 'primary' | 'secondary' | 'ghost';
+}
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  description: string;
+  ctas: Cta[];
+}
+
+const { eyebrow, title, description, ctas } = Astro.props;
+---
+
+<section class="station-cta-section">
+  <div>
+    {eyebrow && <p class="station-kicker">{eyebrow}</p>}
+    <h2>{title}</h2>
+    <p>{description}</p>
+  </div>
+  <div class="station-actions">
+    {ctas.map((cta) => (
+      <a class={`station-button station-button--${cta.variant ?? 'secondary'}`} href={cta.href}>
+        {cta.label}
+      </a>
+    ))}
+  </div>
+</section>
