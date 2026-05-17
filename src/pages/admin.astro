@@ -100,9 +100,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </label>
 
         <div class="button-row">
-          <button class="button button-primary" type="submit">保存 Devlog</button>
+          <button class="button button-primary" id="devlog-save" type="submit">保存 Devlog</button>
           <a class="button button-secondary" href="/devlog/">查看博客</a>
         </div>
+        <div class="admin-inline-status" id="devlog-save-status" role="status" aria-live="polite" hidden></div>
       </form>
 
       <form class="admin-panel admin-editor" id="xworks-editor" hidden>
@@ -194,6 +195,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <button class="button button-primary" id="xwork-save" type="submit">保存 X Work</button>
           <button class="button button-danger" id="work-delete" type="button">刪除 X Work</button>
         </div>
+        <div class="admin-inline-status" id="xwork-save-status" role="status" aria-live="polite" hidden></div>
       </form>
     </div>
   </section>
@@ -230,7 +232,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         draft: document.getElementById('post-draft'),
         description: document.getElementById('post-description'),
         tags: document.getElementById('post-tags'),
-        body: document.getElementById('post-body')
+        body: document.getElementById('post-body'),
+        saveButton: document.getElementById('devlog-save'),
+        saveStatus: document.getElementById('devlog-save-status')
       },
       work: {
         slug: document.getElementById('work-slug'),
@@ -247,7 +251,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         body: document.getElementById('work-body'),
         previewButton: document.getElementById('work-preview-button'),
         preview: document.getElementById('work-preview'),
-        deleteButton: document.getElementById('work-delete')
+        deleteButton: document.getElementById('work-delete'),
+        saveButton: document.getElementById('xwork-save'),
+        saveStatus: document.getElementById('xwork-save-status')
       }
     };
 
@@ -276,6 +282,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const setStatus = (message, tone = 'neutral') => {
       elements.status.textContent = message;
       elements.status.dataset.tone = tone;
+    };
+
+    const setInlineStatus = (contentType, message, tone = 'neutral') => {
+      const target = contentType === 'devlog' ? elements.devlog.saveStatus : elements.work.saveStatus;
+      target.textContent = message;
+      target.dataset.tone = tone;
+      target.hidden = !message;
+    };
+
+    const setSaving = (contentType, isSaving) => {
+      const button = contentType === 'devlog' ? elements.devlog.saveButton : elements.work.saveButton;
+      button.disabled = isSaving;
+      button.textContent = isSaving
+        ? contentType === 'devlog'
+          ? '正在保存 Devlog...'
+          : '正在保存 X Work...'
+        : contentType === 'devlog'
+          ? '保存 Devlog'
+          : '保存 X Work';
+
+      if (contentType === 'xworks') {
+        elements.work.deleteButton.disabled = isSaving;
+      }
+    };
+
+    const fieldLabel = (field) => {
+      const label = field.closest('label');
+      if (!label) return field.name || '必填字段';
+      return Array.from(label.childNodes)
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent.trim())
+        .find(Boolean) || field.name || '必填字段';
     };
 
     const token = () => elements.token.value.trim();
@@ -504,6 +542,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       fields.description.value = '';
       fields.tags.value = '';
       fields.body.value = '';
+      setInlineStatus('devlog', '');
       setStatus('正在撰寫新 Devlog。');
     };
 
@@ -524,6 +563,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       fields.body.value = '';
       fields.preview.textContent = '请粘贴一条 X 原帖链接。';
       fields.preview.dataset.tone = '';
+      setInlineStatus('xworks', '');
       setStatus('正在撰寫新 X Work。');
     };
 
@@ -754,6 +794,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       state.devlog = { sha: result.content.sha, path, slugTouched: true };
       setStatus('Devlog 已保存。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
       await loadDevlogPosts();
+      setStatus('Devlog 已保存。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
     };
 
     const saveXWork = async () => {
@@ -783,6 +824,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       state.xworks = { sha: result.content.sha, path, slugTouched: true };
       setStatus('X Work 已保存。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
       await loadXWorks();
+      setStatus('X Work 已保存。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
     };
 
     const deleteXWorkFile = async (path, sha, slug) => {
@@ -913,13 +955,45 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     elements.devlogForm.addEventListener('submit', (event) => {
       event.preventDefault();
-      saveDevlogPost().catch((error) => setStatus(error.message, 'error'));
+      setInlineStatus('devlog', '正在保存 Devlog 到 GitHub...', 'neutral');
+      setSaving('devlog', true);
+      saveDevlogPost()
+        .then(() => setInlineStatus('devlog', `Devlog 已保存。${new Date().toLocaleTimeString()}`, 'success'))
+        .catch((error) => {
+          setStatus(error.message, 'error');
+          setInlineStatus('devlog', error.message, 'error');
+        })
+        .finally(() => setSaving('devlog', false));
     });
 
     elements.xworksForm.addEventListener('submit', (event) => {
       event.preventDefault();
-      saveXWork().catch((error) => setStatus(error.message, 'error'));
+      setInlineStatus('xworks', '正在保存 X Work 到 GitHub...', 'neutral');
+      setSaving('xworks', true);
+      saveXWork()
+        .then(() => setInlineStatus('xworks', `X Work 已保存。${new Date().toLocaleTimeString()}`, 'success'))
+        .catch((error) => {
+          setStatus(error.message, 'error');
+          setInlineStatus('xworks', error.message, 'error');
+        })
+        .finally(() => setSaving('xworks', false));
     });
+
+    elements.devlogForm.addEventListener(
+      'invalid',
+      (event) => {
+        setInlineStatus('devlog', `请先填写：${fieldLabel(event.target)}。`, 'error');
+      },
+      true
+    );
+
+    elements.xworksForm.addEventListener(
+      'invalid',
+      (event) => {
+        setInlineStatus('xworks', `请先填写：${fieldLabel(event.target)}。`, 'error');
+      },
+      true
+    );
 
     resetDevlogForm();
     resetXWorkForm();

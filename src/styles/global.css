@@ -298,6 +298,12 @@ ol {
   color: var(--teal);
 }
 
+.button:disabled,
+.button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
 .page-section {
   padding-bottom: 72px;
   padding-top: 20px;
@@ -1812,6 +1818,29 @@ ol {
 }
 
 .admin-status[data-tone="error"] {
+  border-color: rgba(248, 113, 113, 0.38);
+  color: #fecaca;
+}
+
+.admin-inline-status {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #cbd5e1;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+  padding: 12px 14px;
+}
+
+.admin-inline-status[data-tone="success"] {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.34);
+  color: #bbf7d0;
+}
+
+.admin-inline-status[data-tone="error"] {
+  background: rgba(248, 113, 113, 0.1);
   border-color: rgba(248, 113, 113, 0.38);
   color: #fecaca;
 }
