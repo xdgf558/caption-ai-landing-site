@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: 'Station Cat',
   legalName: 'Station Cat',
-  baseUrl: 'https://example.com',
+  baseUrl: 'https://wwwstationcat.org',
   defaultLocale: 'zh-Hant',
   supportEmail: 'brodstem@protonmail.com',
   ogImage: '/images/brand-hero-placeholder.svg',
