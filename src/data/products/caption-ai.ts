@@ -8,12 +8,12 @@ export const captionAiProduct = {
     ios: {
       status: 'coming-soon',
       appStoreUrl: '',
-      waitlistFormUrl: 'TALLY_IOS_FORM_URL'
+      waitlistFormUrl: '/api/waitlist'
     },
     android: {
       status: 'waitlist',
       googlePlayUrl: '',
-      waitlistFormUrl: 'TALLY_ANDROID_FORM_URL'
+      waitlistFormUrl: '/api/waitlist'
     }
   },
   locales: ['zh-Hant', 'zh-Hans', 'en', 'ja'],

@@ -14,6 +14,7 @@ interface Props {
 
 const { id, title, description, formUrl, product, locale, platform, privacyPath, buttonLabel, source = '' } = Astro.props;
 const isRealTally = formUrl.startsWith('https://tally.so/');
+const isApiForm = formUrl.startsWith('/api/');
 const privacyPrefix =
   locale === 'ja'
     ? '送信前に '
@@ -39,7 +40,23 @@ const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale 
     </p>
   </div>
 
-  {isRealTally ? (
+  {isApiForm ? (
+    <form class="mock-form js-waitlist-form" aria-label={title} data-endpoint={formUrl}>
+      <label for={`${id}-email`}>Email</label>
+      <input id={`${id}-email`} name="email" type="email" autocomplete="email" required placeholder="name@example.com" />
+      <input type="hidden" name="product" value={product} />
+      <input type="hidden" name="source" value={source} />
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="platform" value={platform} />
+      <input type="hidden" name="utm_source" value="" />
+      <input type="hidden" name="utm_medium" value="" />
+      <input type="hidden" name="utm_campaign" value="" />
+      <input type="hidden" name="utm_content" value="" />
+      <input type="hidden" name="landing_path" value={Astro.url.pathname} />
+      <button class="button button-primary" type="submit">{buttonLabel}</button>
+      <p class="waitlist-result" aria-live="polite" hidden></p>
+    </form>
+  ) : isRealTally ? (
     <iframe
       class="tally-frame js-tally-frame"
       data-base-url={formUrl}
@@ -78,6 +95,96 @@ const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale 
 </section>
 
 <script>
+  const resultCopy = {
+    en: {
+      loading: 'Submitting...',
+      invite: 'You are on the test list. Open TestFlight:',
+      waitlisted: 'You are on the waitlist. We will email you when the next round opens.',
+      error: 'Something went wrong. Please try again later.',
+      open: 'Open TestFlight'
+    },
+    ja: {
+      loading: '送信中...',
+      invite: 'テスト参加枠を確保しました。TestFlight を開いてください:',
+      waitlisted: '順番待ちに登録しました。次の枠が開いたらメールでお知らせします。',
+      error: '送信できませんでした。時間をおいて再度お試しください。',
+      open: 'TestFlight を開く'
+    },
+    'zh-Hant': {
+      loading: '送出中...',
+      invite: '你已取得本輪測試名額，請開啟 TestFlight：',
+      waitlisted: '已加入等待名單。下一輪測試開放時，我們會寄信通知你。',
+      error: '送出失敗，請稍後再試。',
+      open: '開啟 TestFlight'
+    },
+    'zh-Hans': {
+      loading: '提交中...',
+      invite: '你已获得本轮测试名额，请打开 TestFlight：',
+      waitlisted: '已加入等待名单。下一轮测试开放时，我们会发邮件通知你。',
+      error: '提交失败，请稍后再试。',
+      open: '打开 TestFlight'
+    }
+  };
+
+  document.querySelectorAll('.js-waitlist-form').forEach((form) => {
+    if (!(form instanceof HTMLFormElement)) return;
+    const result = form.querySelector('.waitlist-result');
+    const button = form.querySelector('button[type="submit"]');
+    const copy = resultCopy[form.elements.locale?.value] || resultCopy.en;
+
+    const setResult = (html, tone = 'neutral') => {
+      if (!(result instanceof HTMLElement)) return;
+      result.hidden = false;
+      result.dataset.tone = tone;
+      result.innerHTML = html;
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!(button instanceof HTMLButtonElement)) return;
+      const endpoint = form.dataset.endpoint;
+      if (!endpoint) return;
+
+      const params = new URLSearchParams(window.location.search);
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].forEach((key) => {
+        const input = form.elements.namedItem(key);
+        if (input instanceof HTMLInputElement) input.value = params.get(key) || '';
+      });
+      const landingPath = form.elements.namedItem('landing_path');
+      if (landingPath instanceof HTMLInputElement) landingPath.value = window.location.pathname;
+
+      button.disabled = true;
+      setResult(copy.loading);
+
+      try {
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || copy.error);
+        }
+
+        if (data.status === 'invite' && data.publicLink) {
+          setResult(
+            `${copy.invite}<br /><a class="button button-secondary" href="${data.publicLink}" target="_blank" rel="noopener noreferrer">${copy.open}</a>`,
+            'success'
+          );
+        } else {
+          setResult(data.message || copy.waitlisted, 'success');
+        }
+      } catch (error) {
+        setResult(error instanceof Error ? error.message : copy.error, 'error');
+      } finally {
+        button.disabled = false;
+      }
+    });
+  });
+
   document.querySelectorAll('.js-tally-frame').forEach((frame) => {
     if (!(frame instanceof HTMLIFrameElement)) return;
     const baseUrl = frame.dataset.baseUrl;

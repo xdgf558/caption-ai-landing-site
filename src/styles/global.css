@@ -464,6 +464,26 @@ ol {
   font-size: 14px;
 }
 
+.waitlist-result {
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 8px;
+  color: var(--muted);
+  margin: 0;
+  padding: 12px;
+}
+
+.waitlist-result[data-tone='success'] {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #d1fae5;
+}
+
+.waitlist-result[data-tone='error'] {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #fecaca;
+}
+
 .tally-frame {
   background: white;
   border: 1px solid #cbded9;

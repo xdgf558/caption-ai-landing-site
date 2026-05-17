@@ -1,0 +1,165 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Waitlist Settings"
+  description="Configure SnapCopy waitlist and TestFlight distribution."
+  lang="zh-Hant"
+  canonicalPath="/admin/waitlist/"
+  bodyClass="station-home"
+>
+  <section class="admin-shell">
+    <div class="admin-heading">
+      <p class="station-kicker">Admin</p>
+      <h1>等待名單與 TestFlight 分發</h1>
+      <p>
+        這裡用來設定 SnapCopy 的本輪 TestFlight public link 和名額上限。此頁受 Cloudflare Access 保護。
+      </p>
+      <div class="button-row">
+        <a class="button button-secondary" href="/admin/">返回內容管理</a>
+      </div>
+    </div>
+
+    <div class="admin-panel admin-editor">
+      <div class="admin-form-grid">
+        <label>
+          平台
+          <select id="waitlist-platform">
+            <option value="ios">iOS TestFlight</option>
+            <option value="android">Android</option>
+          </select>
+        </label>
+        <label>
+          本輪名額
+          <input id="waitlist-capacity" type="number" min="0" placeholder="30" />
+        </label>
+      </div>
+
+      <label>
+        TestFlight public link
+        <input id="waitlist-public-link" placeholder="https://testflight.apple.com/join/xxxxxxx" />
+      </label>
+
+      <label class="admin-checkbox">
+        <input id="waitlist-active" type="checkbox" />
+        開啟自動分發
+      </label>
+
+      <label class="admin-checkbox">
+        <input id="waitlist-reset" type="checkbox" />
+        重置本輪已分發人數
+      </label>
+
+      <div class="button-row">
+        <button class="button button-primary" id="waitlist-save" type="button">保存分發設定</button>
+        <button class="button button-secondary" id="waitlist-refresh" type="button">重新讀取</button>
+      </div>
+
+      <div class="admin-inline-status" id="waitlist-status" role="status" aria-live="polite"></div>
+
+      <div class="admin-preview-panel">
+        <p class="station-kicker">Current status</p>
+        <div class="admin-post-list" id="waitlist-summary"></div>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    const els = {
+      platform: document.getElementById('waitlist-platform'),
+      capacity: document.getElementById('waitlist-capacity'),
+      publicLink: document.getElementById('waitlist-public-link'),
+      active: document.getElementById('waitlist-active'),
+      reset: document.getElementById('waitlist-reset'),
+      save: document.getElementById('waitlist-save'),
+      refresh: document.getElementById('waitlist-refresh'),
+      status: document.getElementById('waitlist-status'),
+      summary: document.getElementById('waitlist-summary')
+    };
+
+    let settings = [];
+    let counts = [];
+
+    const setStatus = (message, tone = 'neutral') => {
+      els.status.textContent = message;
+      els.status.dataset.tone = tone;
+    };
+
+    const currentSetting = () => settings.find((item) => item.platform === els.platform.value);
+    const currentCount = () => counts.find((item) => item.platform === els.platform.value);
+
+    const renderForm = () => {
+      const setting = currentSetting();
+      if (!setting) return;
+      els.publicLink.value = setting.public_link || '';
+      els.capacity.value = String(setting.capacity ?? 0);
+      els.active.checked = Boolean(setting.is_active);
+      els.reset.checked = false;
+    };
+
+    const renderSummary = () => {
+      els.summary.innerHTML = '';
+      settings.forEach((setting) => {
+        const count = counts.find((item) => item.platform === setting.platform) || {};
+        const row = document.createElement('article');
+        row.className = 'admin-work-row';
+        const main = document.createElement('div');
+        main.className = 'admin-work-row__main';
+        const title = document.createElement('h3');
+        title.textContent = setting.platform === 'ios' ? 'iOS TestFlight' : 'Android';
+        const meta = document.createElement('p');
+        meta.textContent = [
+          setting.is_active ? 'active' : 'paused',
+          `capacity ${setting.capacity || 0}`,
+          `distributed ${setting.distributed_count || 0}`,
+          `entries ${count.total || 0}`
+        ].join(' · ');
+        const link = document.createElement('p');
+        link.textContent = setting.public_link || 'No public link';
+        main.append(title, meta, link);
+        row.append(main);
+        els.summary.append(row);
+      });
+    };
+
+    const loadSettings = async () => {
+      setStatus('正在讀取等待名單設定...');
+      const response = await fetch('/admin/api/waitlist/settings');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取失敗');
+      settings = data.settings || [];
+      counts = data.counts || [];
+      renderForm();
+      renderSummary();
+      setStatus('等待名單設定已載入。', 'success');
+    };
+
+    const saveSettings = async () => {
+      setStatus('正在保存設定...');
+      const response = await fetch('/admin/api/waitlist/settings', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          platform: els.platform.value,
+          publicLink: els.publicLink.value.trim(),
+          capacity: Number(els.capacity.value || 0),
+          isActive: els.active.checked,
+          resetCount: els.reset.checked
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '保存失敗');
+      settings = data.settings || [];
+      counts = data.counts || [];
+      renderForm();
+      renderSummary();
+      setStatus('設定已保存。新的等待名單提交會立即使用這個分發規則。', 'success');
+    };
+
+    els.platform.addEventListener('change', renderForm);
+    els.refresh.addEventListener('click', () => loadSettings().catch((error) => setStatus(error.message, 'error')));
+    els.save.addEventListener('click', () => saveSettings().catch((error) => setStatus(error.message, 'error')));
+    loadSettings().catch((error) => setStatus(error.message, 'error'));
+  </script>
+</BaseLayout>
