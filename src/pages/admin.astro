@@ -174,7 +174,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           </label>
         </div>
         <p class="fine-print">
-          保存 X Work 時會自動設為 published，並自動加入首頁精選。重新部署後會出現在首頁 Latest from X。
+          保存 X Work 時會自動設為 published，並自動加入首頁精選。Cloudflare Workers 自動部署完成後會出現在首頁 Latest from X。
         </p>
 
         <label>
@@ -801,9 +801,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       });
 
       state.devlog = { sha: result.content.sha, path, slugTouched: true };
-      setStatus('Devlog 已保存。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
+      setStatus('Devlog 已保存。Cloudflare Workers 會在 GitHub 更新後自動部署。', 'success');
       await loadDevlogPosts();
-      setStatus('Devlog 已保存。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
+      setStatus('Devlog 已保存。Cloudflare Workers 會在 GitHub 更新後自動部署。', 'success');
     };
 
     const saveXWork = async () => {
@@ -831,9 +831,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       });
 
       state.xworks = { sha: result.content.sha, path, slugTouched: true };
-      setStatus('X Work 已保存为 published，并已加入首页精选。重新部署後會出現在首頁 Latest from X。', 'success');
+      setStatus('X Work 已保存为 published，并已加入首页精选。Cloudflare Workers 自动部署完成后会出现在首页 Latest from X。', 'success');
       await loadXWorks();
-      setStatus('X Work 已保存为 published，并已加入首页精选。重新部署後會出現在首頁 Latest from X。', 'success');
+      setStatus('X Work 已保存为 published，并已加入首页精选。Cloudflare Workers 自动部署完成后会出现在首页 Latest from X。', 'success');
     };
 
     const deleteXWorkFile = async (path, sha, slug) => {
@@ -859,7 +859,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         resetXWorkForm();
       }
 
-      setStatus('X Work 已刪除。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
+      setStatus('X Work 已刪除。Cloudflare Workers 會在 GitHub 更新後自動部署。', 'success');
       await loadXWorks();
     };
 
