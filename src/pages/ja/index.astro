@@ -6,7 +6,7 @@ import AppCard from '../../components/AppCard.astro';
 import CreatorNote from '../../components/CreatorNote.astro';
 import CTASection from '../../components/CTASection.astro';
 
-const xUrl = 'https://x.com/stationcat';
+const xUrl = 'https://x.com/bketck';
 
 const heroCards = [
   { icon: 'cat', title: 'Cats', text: '窓辺、ソファ、日常の小さな気配。' },
@@ -39,6 +39,7 @@ const experiments = [
   bodyClass="station-home"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/' },
     { hrefLang: 'en', href: '/en/' },
     { hrefLang: 'ja', href: '/ja/' },
     { hrefLang: 'x-default', href: '/' }
@@ -79,11 +80,11 @@ const experiments = [
     <div class="station-section__heading">
       <p class="station-kicker">Apps from Station Cat</p>
       <h2>日常の創作を助ける小さなAIツール。</h2>
-      <p>最初のアプリは Caption AI です。詳しい機能、プライバシー、ダウンロード案内は製品ページに分けています。</p>
+      <p>最初のアプリは SnapCopy です。詳しい機能、プライバシー、ダウンロード案内は製品ページに分けています。</p>
     </div>
     <AppCard
       eyebrow="Current app"
-      title="Caption AI"
+      title="SnapCopy"
       subtitle="Turn everyday photos into shareable captions."
       description="朝食、コーヒー、散歩、ペット、旅行の写真から、共有しやすいキャプションを作り、少しずつ好みの表現に近づけます。"
       href="/ja/apps/caption-ai/"
@@ -117,7 +118,7 @@ const experiments = [
     description="Station Cat はまだ育っています。猫、アプリ、AI実験、食卓、少し不思議なアイデアを共有していきます。"
     ctas={[
       { label: 'Follow on X', href: xUrl, variant: 'primary' },
-      { label: 'View Caption AI', href: '/ja/apps/caption-ai/', variant: 'secondary' },
+      { label: 'View SnapCopy', href: '/ja/apps/caption-ai/', variant: 'secondary' },
       { label: 'Join Android Waitlist', href: '/android/', variant: 'ghost' }
     ]}
   />

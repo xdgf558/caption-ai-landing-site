@@ -5,19 +5,26 @@ interface Props {
   description: string;
   formUrl: string;
   product: string;
-  locale: 'en' | 'ja' | 'zh-Hant';
+  locale: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
   platform: 'ios' | 'android';
   privacyPath: string;
   buttonLabel: string;
+  source?: string;
 }
 
-const { id, title, description, formUrl, product, locale, platform, privacyPath, buttonLabel } = Astro.props;
+const { id, title, description, formUrl, product, locale, platform, privacyPath, buttonLabel, source = '' } = Astro.props;
 const isRealTally = formUrl.startsWith('https://tally.so/');
 const privacyPrefix =
-  locale === 'ja' ? '送信前に ' : locale === 'zh-Hant' ? '送出前，請先閱讀' : 'Before joining, review the ';
+  locale === 'ja'
+    ? '送信前に '
+    : locale === 'zh-Hant'
+      ? '送出前，請先閱讀'
+      : locale === 'zh-Hans'
+        ? '提交前，请先阅读'
+      : 'Before joining, review the ';
 const privacyLabel =
-  locale === 'ja' ? 'プライバシーポリシー' : locale === 'zh-Hant' ? '隱私政策' : 'privacy policy';
-const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale === 'zh-Hant' ? '。' : '.';
+  locale === 'ja' ? 'プライバシーポリシー' : locale === 'zh-Hant' ? '隱私政策' : locale === 'zh-Hans' ? '隐私政策' : 'privacy policy';
+const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale === 'zh-Hant' || locale === 'zh-Hans' ? '。' : '.';
 ---
 
 <section class="waitlist-panel" id={id}>
@@ -39,6 +46,7 @@ const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale 
       data-product={product}
       data-locale={locale}
       data-platform={platform}
+      data-source={source}
       title={title}
       loading="lazy"
     ></iframe>
@@ -47,6 +55,7 @@ const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale 
       <label for={`${id}-email`}>Email</label>
       <input id={`${id}-email`} name="email" type="email" placeholder="name@example.com" />
       <input type="hidden" name="product" value={product} />
+      <input type="hidden" name="source" value={source} />
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="platform" value={platform} />
       <input type="hidden" name="utm_source" value="" />
@@ -60,6 +69,8 @@ const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale 
           ? 'Tally の実フォーム URL を設定すると、この場所に埋め込みフォームが表示されます。'
           : locale === 'zh-Hant'
             ? '設定正式的 Tally 表單 URL 後，這裡會顯示嵌入式等待名單表單。'
+          : locale === 'zh-Hans'
+            ? '设置正式的 Tally 表单 URL 后，这里会显示嵌入式等待名单表单。'
           : 'Replace the Tally placeholder URL to show the embedded waitlist form here.'}
       </p>
     </form>
@@ -75,6 +86,7 @@ const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale 
     params.set('product', frame.dataset.product || '');
     params.set('locale', frame.dataset.locale || '');
     params.set('platform', frame.dataset.platform || '');
+    if (!params.has('source')) params.set('source', frame.dataset.source || '');
     params.set('landing_path', window.location.pathname);
     ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].forEach((key) => {
       if (!params.has(key)) params.set(key, '');

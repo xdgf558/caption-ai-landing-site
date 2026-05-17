@@ -5,12 +5,14 @@ import {
   jaBrandNavigation,
   jaProductNavigation,
   productNavigation,
+  zhHansBrandNavigation,
+  zhHansProductNavigation,
   zhBrandNavigation,
   zhProductNavigation
 } from '../data/navigation';
 
 interface Props {
-  lang?: 'en' | 'ja' | 'zh-Hant';
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
 }
 
 const { lang = 'zh-Hant' } = Astro.props;
@@ -21,15 +23,25 @@ const nav = isProduct
     ? jaProductNavigation
     : lang === 'zh-Hant'
       ? zhProductNavigation
+      : lang === 'zh-Hans'
+        ? zhHansProductNavigation
       : productNavigation
   : lang === 'zh-Hant'
     ? zhBrandNavigation
+    : lang === 'zh-Hans'
+      ? zhHansBrandNavigation
     : lang === 'ja'
       ? jaBrandNavigation
     : brandNavigation;
 const homeHref = '/';
 const ariaLabel =
-  lang === 'ja' ? 'メインナビゲーション' : lang === 'zh-Hant' ? '主要導覽' : 'Main navigation';
+  lang === 'ja'
+    ? 'メインナビゲーション'
+    : lang === 'zh-Hant'
+      ? '主要導覽'
+      : lang === 'zh-Hans'
+        ? '主要导航'
+      : 'Main navigation';
 const brandLabel = 'Station Cat';
 ---
 

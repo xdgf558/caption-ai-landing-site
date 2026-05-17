@@ -1,22 +1,51 @@
 ---
 interface Props {
-  lang?: 'en' | 'ja' | 'zh-Hant';
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
 }
 
 const { lang = 'zh-Hant' } = Astro.props;
 const path = Astro.url.pathname;
-const normalizedPath = path === '/en/' || path === '/zh-hant/' || path === '/ja/' ? '/' : path;
+const normalizedPath = path === '/en/' || path === '/zh-hant/' || path === '/zh-hans/' || path === '/ja/' ? '/' : path;
 const productPath = normalizedPath
   .replace(/^\/ja(?=\/apps\/caption-ai)/, '')
-  .replace(/^\/zh-hant(?=\/apps\/caption-ai)/, '');
+  .replace(/^\/zh-hant(?=\/apps\/caption-ai)/, '')
+  .replace(/^\/zh-hans(?=\/apps\/caption-ai)/, '');
+const devlogPath = normalizedPath
+  .replace(/^\/ja(?=\/devlog)/, '')
+  .replace(/^\/en(?=\/devlog)/, '')
+  .replace(/^\/zh-hant(?=\/devlog)/, '')
+  .replace(/^\/zh-hans(?=\/devlog)/, '');
+const worksPath = normalizedPath
+  .replace(/^\/ja(?=\/works)/, '')
+  .replace(/^\/en(?=\/works)/, '')
+  .replace(/^\/zh-hant(?=\/works)/, '')
+  .replace(/^\/zh-hans(?=\/works)/, '');
 const isProduct = productPath.startsWith('/apps/caption-ai');
-const enPath = isProduct ? productPath : '/en/';
-const jaPath = isProduct ? `/ja${productPath}` : '/ja/';
-const zhPath = isProduct ? `/zh-hant${productPath}` : '/';
+const isDevlog = devlogPath.startsWith('/devlog');
+const isWorks = worksPath.startsWith('/works');
+const enPath = isProduct ? productPath : isDevlog ? `/en${devlogPath}` : isWorks ? worksPath : '/en/';
+const jaPath = isProduct ? `/ja${productPath}` : isDevlog ? `/ja${devlogPath}` : isWorks ? `/ja${worksPath}` : '/ja/';
+const zhHantPath = isProduct ? `/zh-hant${productPath}` : isDevlog ? devlogPath : isWorks ? `/zh-hant${worksPath}` : '/';
+const zhHansPath = isProduct ? `/zh-hans${productPath}` : isDevlog ? `/zh-hans${devlogPath}` : isWorks ? `/zh-hans${worksPath}` : '/zh-hans/';
+const currentLabel = lang === 'zh-Hans' ? '简中' : lang === 'en' ? 'EN' : lang === 'ja' ? '日本語' : '繁中';
 ---
 
-<div class="language-switcher" aria-label="Language switcher">
-  <a class={lang === 'zh-Hant' ? 'active' : ''} href={zhPath} hreflang="zh-Hant">繁中</a>
-  <a class={lang === 'en' ? 'active' : ''} href={enPath} hreflang="en">EN</a>
-  <a class={lang === 'ja' ? 'active' : ''} href={jaPath} hreflang="ja">日本語</a>
+<div class="language-switcher language-switcher--select">
+  <label class="sr-only" for="language-select">Language</label>
+  <select id="language-select" class="language-select" aria-label="Language" title={currentLabel}>
+    <option value={zhHantPath} selected={lang === 'zh-Hant'}>繁中</option>
+    <option value={zhHansPath} selected={lang === 'zh-Hans'}>简中</option>
+    <option value={enPath} selected={lang === 'en'}>EN</option>
+    <option value={jaPath} selected={lang === 'ja'}>日本語</option>
+  </select>
 </div>
+
+<script>
+  document.querySelectorAll('.language-select').forEach((select) => {
+    select.addEventListener('change', () => {
+      if (select instanceof HTMLSelectElement && select.value) {
+        window.location.href = select.value;
+      }
+    });
+  });
+</script>

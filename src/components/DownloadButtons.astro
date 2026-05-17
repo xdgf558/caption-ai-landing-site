@@ -8,14 +8,14 @@ interface PlatformConfig {
 interface Props {
   ios: PlatformConfig;
   android: PlatformConfig;
-  locale: 'en' | 'ja' | 'zh-Hant';
+  locale: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
   iosWaitlistHref: string;
   androidWaitlistHref: string;
 }
 
 const { ios, android, locale, iosWaitlistHref, androidWaitlistHref } = Astro.props;
 const isJa = locale === 'ja';
-const isZh = locale === 'zh-Hant';
+const isZh = locale === 'zh-Hant' || locale === 'zh-Hans';
 const iosAvailable = ios.status === 'available' && Boolean(ios.appStoreUrl);
 const androidAvailable = android.status === 'available' && Boolean(android.googlePlayUrl);
 ---
@@ -26,14 +26,16 @@ const androidAvailable = android.status === 'available' && Boolean(android.googl
     {isJa
       ? '現在は公開前のため、正式なストアリンクは表示していません。'
       : isZh
-        ? '目前尚未正式上架，因此網站不會顯示假的商店下載連結。'
+        ? locale === 'zh-Hans'
+          ? '目前尚未正式上架，因此网站不会显示假的商店下载链接。'
+          : '目前尚未正式上架，因此網站不會顯示假的商店下載連結。'
       : 'The app is not listed yet, so this site does not show fake store links.'}
   </p>
   <div class="button-row">
     {iosAvailable ? (
       <a class="button button-primary" href={ios.appStoreUrl}>{isJa ? 'App Store を開く' : isZh ? '開啟 App Store' : 'Open App Store'}</a>
     ) : (
-      <a class="button button-primary" href={iosWaitlistHref}>{isJa ? 'iOS の先行案内' : isZh ? '加入 iOS 等待名單' : 'Join iOS waitlist'}</a>
+      <a class="button button-primary" href={iosWaitlistHref}>{isJa ? 'iOS の先行案内' : isZh ? locale === 'zh-Hans' ? '加入 iOS 等待名单' : '加入 iOS 等待名單' : 'Join iOS waitlist'}</a>
     )}
     {androidAvailable ? (
       <a class="button button-secondary" href={android.googlePlayUrl}>{isJa ? 'Google Play を開く' : isZh ? '開啟 Google Play' : 'Open Google Play'}</a>
@@ -45,7 +47,9 @@ const androidAvailable = android.status === 'available' && Boolean(android.googl
     {isJa
       ? '上架後は公式ストア素材と実リンクを設定ファイルに追加します。'
       : isZh
-        ? '上架後，再依官方規範加入正式商店素材與真實 campaign 連結。'
+        ? locale === 'zh-Hans'
+          ? '上架后，再按官方规范加入正式商店素材与真实 campaign 链接。'
+          : '上架後，再依官方規範加入正式商店素材與真實 campaign 連結。'
       : 'After launch, add official store badges and real campaign links in the product config.'}
   </p>
 </div>

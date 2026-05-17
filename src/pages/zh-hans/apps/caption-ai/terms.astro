@@ -1,0 +1,28 @@
+---
+import LegalLayout from '../../../../layouts/LegalLayout.astro';
+import { legalNoticeZhHans, termsZhHans } from '../../../../data/legal/caption-ai';
+---
+
+<LegalLayout
+  title="SnapCopy 服务条款"
+  description="SnapCopy 网站、等待名单与未来 App 使用的服务条款草案。"
+  lang="zh-Hans"
+  canonicalPath="/zh-hans/apps/caption-ai/terms/"
+  notice={legalNoticeZhHans}
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/terms/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/terms/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/terms/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/terms/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/terms/' }
+  ]}
+>
+  <div class="legal-content">
+    {termsZhHans.map((section) => (
+      <section>
+        <h2>{section.heading}</h2>
+        <p>{section.body}</p>
+      </section>
+    ))}
+  </div>
+</LegalLayout>

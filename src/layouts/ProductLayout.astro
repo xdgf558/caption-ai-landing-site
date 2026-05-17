@@ -9,12 +9,13 @@ interface AlternateLink {
 interface Props {
   title: string;
   description: string;
-  lang?: 'en' | 'ja' | 'zh-Hant';
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
   canonicalPath: string;
   alternates?: AlternateLink[];
+  bodyClass?: string;
 }
 
-const { title, description, lang = 'zh-Hant', canonicalPath, alternates = [] } = Astro.props;
+const { title, description, lang = 'zh-Hant', canonicalPath, alternates = [], bodyClass } = Astro.props;
 ---
 
 <BaseLayout
@@ -24,6 +25,7 @@ const { title, description, lang = 'zh-Hant', canonicalPath, alternates = [] } =
   canonicalPath={canonicalPath}
   alternates={alternates}
   ogImage="/images/caption-ai-hero-phone-placeholder.svg"
+  bodyClass={bodyClass}
 >
   <slot />
 </BaseLayout>

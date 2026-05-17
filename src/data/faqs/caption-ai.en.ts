@@ -1,37 +1,32 @@
 export const captionAiFaqEn = [
   {
-    question: 'What does Caption AI do?',
+    question: 'Does SnapCopy post to social platforms automatically?',
     answer:
-      'Caption AI helps turn everyday photos into caption ideas for social posts, personal updates, and small lifestyle moments.'
+      'No. The app helps you create captions and prepare shareable content. You stay in control of what you copy or share.'
   },
   {
-    question: 'Is the app available now?',
+    question: 'Does it work offline?',
     answer:
-      'Not yet. The first version is in development, and the current website collects early access interest.'
+      'The product is designed around Apple on-device AI where available. Some future enhanced features may require internet access.'
   },
   {
     question: 'Does it upload my photos?',
     answer:
-      'The first version prioritizes on-device processing where possible. If cloud AI features are added, the app will clearly explain them before upload.'
+      'The product direction is on-device first. If any future cloud-enhanced feature needs upload, the app should clearly explain that before use. The privacy page should always reflect the current implementation.'
+  },
+  {
+    question: 'Can I use it for Instagram, X, Threads, TikTok, or other platforms?',
+    answer:
+      'Yes. The app is designed to generate social-ready captions that can be copied or shared through the iOS share sheet.'
+  },
+  {
+    question: 'Will it support Japanese and other languages?',
+    answer:
+      'Multi-language support is planned, starting with English, Japanese, Traditional Chinese, and Simplified Chinese website pages.'
   },
   {
     question: 'Will there be an Android version?',
     answer:
-      'We are exploring Android demand. Join the Android list and we will send updates when testing is ready.'
-  },
-  {
-    question: 'Can I use it in Japanese?',
-    answer:
-      'Japanese support is planned, and the product pages already include English and Japanese content.'
-  },
-  {
-    question: 'How do I request deletion of my waitlist email?',
-    answer:
-      'Email support@example.com and mention Caption AI. We will remove your waitlist email from the active list.'
-  },
-  {
-    question: 'How do I report a bug?',
-    answer:
-      'After the app is available for testing, send the device model, app version, and a short description to support@example.com.'
+      'Android is planned after the iOS version is tested. You can join the Android waitlist.'
   }
 ];

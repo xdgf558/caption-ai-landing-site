@@ -9,11 +9,12 @@ import { captionAiZhHant } from '../../../../data/copy/caption-ai.zh-Hant';
 
 <ProductLayout
   title="App 即將推出"
-  description="加入 Caption AI iOS 等待名單，或接收 Android 版本更新通知。"
+  description="加入 SnapCopy iOS 等待名單，或接收 Android 版本更新通知。"
   lang="zh-Hant"
   canonicalPath="/zh-hant/apps/caption-ai/download/"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/download/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/download/' },
     { hrefLang: 'en', href: '/apps/caption-ai/download/' },
     { hrefLang: 'ja', href: '/ja/apps/caption-ai/download/' },
     { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/download/' }
@@ -21,28 +22,33 @@ import { captionAiZhHant } from '../../../../data/copy/caption-ai.zh-Hant';
 >
   <section class="page-shell">
     <p class="section-kicker">Download</p>
-    <h1>App 即將推出。</h1>
+    <h1>SnapCopy 即將登上 iPhone。</h1>
     <p>
-      Caption AI 尚未在 App Store 或 Google Play 上架。加入等待名單後，我們會優先寄送早期測試與上架通知。
+      加入等待名單，取得 TestFlight、App Store 上架和新功能更新。
     </p>
+    <div class="button-row">
+      <a class="button button-primary" href="#waitlist-ios">加入 iOS 等待名單</a>
+      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">加入 Android 等待名單</a>
+    </div>
   </section>
   <DownloadButtons
     ios={captionAiProduct.platforms.ios}
     android={captionAiProduct.platforms.android}
     locale="zh-Hant"
     iosWaitlistHref="#waitlist-ios"
-    androidWaitlistHref="/zh-hant/apps/caption-ai/android/"
+    androidWaitlistHref="/android/?product=snapcopy&source=download-page&campaign=android-waitlist"
   />
   <WaitlistForm
     id="waitlist-ios"
     title="加入 iOS 等待名單"
-    description="當 Caption AI 準備開放測試時，我們會寄送早期通知。"
+    description="當 SnapCopy 準備開放測試時，我們會寄送早期通知。"
     formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
     product={captionAiProduct.id}
     locale="zh-Hant"
     platform="ios"
     privacyPath="/zh-hant/apps/caption-ai/privacy/"
     buttonLabel="加入等待名單"
+    source="download-page"
   />
   <UseCaseSection title="圍繞日常分享而設計" scenes={captionAiZhHant.scenes} />
 </ProductLayout>

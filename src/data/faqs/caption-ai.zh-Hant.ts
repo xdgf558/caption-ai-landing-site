@@ -1,37 +1,32 @@
 export const captionAiFaqZhHant = [
   {
-    question: 'Caption AI 是做什麼的？',
+    question: 'SnapCopy 會自動幫我發到社群平台嗎？',
     answer:
-      'Caption AI 會協助把日常照片轉成適合社群貼文、生活紀錄或個人分享的文案草稿。'
+      '不會。App 會協助你產生文案和準備可分享內容，但你仍然掌控要複製或分享什麼。'
   },
   {
-    question: 'App 現在可以下載嗎？',
+    question: '它可以離線使用嗎？',
     answer:
-      '還不行。第一版正在開發中，目前網站先收集早期測試與上架通知名單。'
+      '產品方向是優先使用 Apple 裝置端 AI。未來某些增強功能可能需要網路。'
   },
   {
     question: '它會上傳我的照片嗎？',
     answer:
-      '第一版會盡可能優先採用裝置端處理。若未來加入雲端 AI 功能，App 會在上傳前清楚告知。'
+      '目前產品方向是裝置端優先。若未來任何雲端增強功能需要上傳，App 應在使用前清楚說明；隱私政策也會反映最新實作。'
   },
   {
-    question: '會有 Android 版嗎？',
+    question: '可以用在 Instagram、X、Threads、TikTok 或其他平台嗎？',
     answer:
-      '目前正在評估 Android 需求。加入 Android 通知名單後，測試準備好時會寄送更新。'
+      '可以。App 會產生適合社群分享的文案，讓你複製或透過 iOS 分享流程使用。'
   },
   {
-    question: '可以使用日文或英文嗎？',
+    question: '會支援日文和其他語言嗎？',
     answer:
-      '產品規劃支援英文與日文文案，網站目前也提供繁體中文、英文與日文頁面。'
+      '多語言支援正在規劃中。網站目前已提供英文、日文、繁體中文和簡體中文頁面。'
   },
   {
-    question: '如何刪除等待名單中的 Email？',
+    question: '會有 Android 版本嗎？',
     answer:
-      '請寄信到 support@example.com，並在信中註明 Caption AI 與刪除等待名單 Email 的需求。'
-  },
-  {
-    question: '如何回報問題？',
-    answer:
-      '測試版開放後，請將裝置型號、App 版本與問題描述寄到 support@example.com。'
+      'Android 版本會在 iOS 測試後規劃。你可以先加入 Android 等待名單。'
   }
 ];

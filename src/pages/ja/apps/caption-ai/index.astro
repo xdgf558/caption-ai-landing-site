@@ -1,15 +1,18 @@
 ---
 import ProductLayout from '../../../../layouts/ProductLayout.astro';
-import ProductHero from '../../../../components/ProductHero.astro';
-import UseCaseSection from '../../../../components/UseCaseSection.astro';
-import HowItWorks from '../../../../components/HowItWorks.astro';
-import FeatureGrid from '../../../../components/FeatureGrid.astro';
-import WaitlistForm from '../../../../components/WaitlistForm.astro';
-import DownloadButtons from '../../../../components/DownloadButtons.astro';
-import FAQ from '../../../../components/FAQ.astro';
-import { captionAiProduct } from '../../../../data/products/caption-ai';
+import CaptionAiLanding from '../../../../components/CaptionAiLanding.astro';
 import { captionAiJa } from '../../../../data/copy/caption-ai.ja';
 import { captionAiFaqJa } from '../../../../data/faqs/caption-ai.ja';
+
+const links = {
+  download: '/ja/apps/caption-ai/download/?product=snapcopy&source=product-page&campaign=hero',
+  platformDownload: '/ja/apps/caption-ai/download/?product=snapcopy&source=product-page&campaign=platform',
+  downloadBox: '/ja/apps/caption-ai/download/?product=snapcopy&source=product-page&campaign=download-box',
+  finalDownload: '/ja/apps/caption-ai/download/?product=snapcopy&source=product-page&campaign=final-cta',
+  privacy: '/ja/apps/caption-ai/privacy/?product=snapcopy&source=product-page&campaign=hero-privacy',
+  android: '/android/?product=snapcopy&source=product-page&campaign=android-waitlist',
+  follow: 'https://x.com/bketck'
+};
 ---
 
 <ProductLayout
@@ -17,51 +20,14 @@ import { captionAiFaqJa } from '../../../../data/faqs/caption-ai.ja';
   description={captionAiJa.seo.description}
   lang="ja"
   canonicalPath="/ja/apps/caption-ai/"
+  bodyClass="caption-product-page"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/' },
     { hrefLang: 'en', href: '/apps/caption-ai/' },
     { hrefLang: 'ja', href: '/ja/apps/caption-ai/' },
     { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/' }
   ]}
 >
-  <ProductHero
-    copy={captionAiJa.hero}
-    image={captionAiProduct.assets.hero}
-    imageAlt="Caption AI のスマートフォン画面モックアップ"
-    primaryHref="#waitlist-ios"
-    secondaryHref="/ja/apps/caption-ai/android/"
-  />
-  <UseCaseSection
-    title="日常の写真に、言葉を添えやすく。"
-    description="カフェ、散歩、旅行、コーデ、ペットなど、よく撮る写真から始められます。"
-    scenes={captionAiJa.scenes}
-  />
-  <HowItWorks title="Caption AI の流れ" steps={captionAiJa.steps} />
-  <FeatureGrid title="こんな人に" items={captionAiJa.audiences} />
-  <WaitlistForm
-    id="waitlist-ios"
-    title="iOS の先行案内を受け取る"
-    description="テスト準備ができたらお知らせします。フォームには product=caption-ai、locale=ja、platform=ios を記録できるようにしています。"
-    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
-    product={captionAiProduct.id}
-    locale="ja"
-    platform="ios"
-    privacyPath="/ja/apps/caption-ai/privacy/"
-    buttonLabel="先行案内を受け取る"
-  />
-  <section class="page-section split-section">
-    <div class="section-heading compact">
-      <p class="section-kicker">Privacy</p>
-      <h2>プライバシーを大切に。</h2>
-    </div>
-    <p class="large-copy">{captionAiJa.privacy}</p>
-  </section>
-  <DownloadButtons
-    ios={captionAiProduct.platforms.ios}
-    android={captionAiProduct.platforms.android}
-    locale="ja"
-    iosWaitlistHref="#waitlist-ios"
-    androidWaitlistHref="/ja/apps/caption-ai/android/"
-  />
-  <FAQ title="よくある質問" items={captionAiFaqJa} />
+  <CaptionAiLanding copy={captionAiJa} faqItems={captionAiFaqJa} locale="ja" links={links} />
 </ProductLayout>

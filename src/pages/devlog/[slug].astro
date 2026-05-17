@@ -1,0 +1,48 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { devlogCopy, devlogPath, devlogSlug, formatDevlogDate } from '../../data/devlog';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('devlog', ({ data }) => !data.draft && data.language === 'zh-Hant');
+
+  return posts.map((post) => ({
+    params: { slug: devlogSlug(post) },
+    props: { post }
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const lang = 'zh-Hant';
+const copy = devlogCopy[lang];
+const slug = devlogSlug(post);
+---
+
+<BaseLayout
+  title={`${post.data.title} | ${copy.titleSuffix}`}
+  description={post.data.description}
+  lang={lang}
+  canonicalPath={`/devlog/${slug}/`}
+  bodyClass="station-home"
+>
+  <article class="devlog-post">
+    <a class="devlog-back" href={devlogPath(lang)}>{copy.back}</a>
+    <header class="devlog-post__header">
+      <div class="devlog-card__meta">
+        <time datetime={post.data.pubDate.toISOString()}>{formatDevlogDate(post.data.pubDate, lang)}</time>
+        <span>{copy.statuses[post.data.status]}</span>
+      </div>
+      <h1>{post.data.title}</h1>
+      <p>{post.data.description}</p>
+      {post.data.tags.length > 0 && (
+        <div class="devlog-tags">
+          {post.data.tags.map((tag) => <span>{tag}</span>)}
+        </div>
+      )}
+    </header>
+    <div class="devlog-content">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

@@ -1,0 +1,54 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import WaitlistForm from '../../../../components/WaitlistForm.astro';
+import DownloadButtons from '../../../../components/DownloadButtons.astro';
+import UseCaseSection from '../../../../components/UseCaseSection.astro';
+import { captionAiProduct } from '../../../../data/products/caption-ai';
+import { captionAiZhHans } from '../../../../data/copy/caption-ai.zh-Hans';
+---
+
+<ProductLayout
+  title="App 即将推出"
+  description="加入 SnapCopy iOS 等待名单，或接收 Android 版本更新通知。"
+  lang="zh-Hans"
+  canonicalPath="/zh-hans/apps/caption-ai/download/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/download/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/download/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/download/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/download/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/download/' }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">Download</p>
+    <h1>SnapCopy 即将登上 iPhone。</h1>
+    <p>
+      加入等待名单，获取 TestFlight、App Store 上架和新功能更新。
+    </p>
+    <div class="button-row">
+      <a class="button button-primary" href="#waitlist-ios">加入 iOS 等待名单</a>
+      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">加入 Android 等待名单</a>
+    </div>
+  </section>
+  <DownloadButtons
+    ios={captionAiProduct.platforms.ios}
+    android={captionAiProduct.platforms.android}
+    locale="zh-Hans"
+    iosWaitlistHref="#waitlist-ios"
+    androidWaitlistHref="/android/?product=snapcopy&source=download-page&campaign=android-waitlist"
+  />
+  <WaitlistForm
+    id="waitlist-ios"
+    title="加入 iOS 等待名单"
+    description="当 SnapCopy 准备开放测试时，我们会发送早期通知。"
+    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
+    product={captionAiProduct.id}
+    locale="zh-Hans"
+    platform="ios"
+    privacyPath="/zh-hans/apps/caption-ai/privacy/"
+    buttonLabel="加入等待名单"
+    source="download-page"
+  />
+  <UseCaseSection title="围绕日常分享而设计" scenes={captionAiZhHans.scenes} />
+</ProductLayout>

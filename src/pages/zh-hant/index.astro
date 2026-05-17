@@ -6,7 +6,7 @@ import AppCard from '../../components/AppCard.astro';
 import CreatorNote from '../../components/CreatorNote.astro';
 import CTASection from '../../components/CTASection.astro';
 
-const xUrl = 'https://x.com/stationcat';
+const xUrl = 'https://x.com/bketck';
 
 const heroCards = [
   { icon: 'cat', title: 'Cat log', text: '窗邊、沙發和一些很有主見的小動靜。' },
@@ -39,6 +39,7 @@ const experiments = [
   bodyClass="station-home"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/zh-hant/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/' },
     { hrefLang: 'en', href: '/en/' },
     { hrefLang: 'ja', href: '/ja/' },
     { hrefLang: 'x-default', href: '/' }
@@ -79,11 +80,11 @@ const experiments = [
     <div class="station-section__heading">
       <p class="station-kicker">Apps from Station Cat</p>
       <h2>圍繞日常創作做的小 AI 工具。</h2>
-      <p>首個產品是 Caption AI。首頁只放入口和方向，真正的功能、場景、隱私和等待名單會留在產品頁。</p>
+      <p>首個產品是 SnapCopy。首頁只放入口和方向，真正的功能、場景、隱私和等待名單會留在產品頁。</p>
     </div>
     <AppCard
       eyebrow="Current app"
-      title="Caption AI"
+      title="SnapCopy"
       subtitle="Turn everyday photos into shareable captions."
       description="拍下早餐、咖啡、散步、寵物或旅行場景，生成適合社交平台分享的文案，並逐漸學習你的表達偏好。"
       href="/zh-hant/apps/caption-ai/"
@@ -117,7 +118,7 @@ const experiments = [
     description="Station Cat 還在演化。這裡會繼續出現貓、App、AI 實驗、飯桌和一些奇怪但有趣的想法。"
     ctas={[
       { label: 'Follow on X', href: xUrl, variant: 'primary' },
-      { label: 'View Caption AI', href: '/zh-hant/apps/caption-ai/', variant: 'secondary' },
+      { label: 'View SnapCopy', href: '/zh-hant/apps/caption-ai/', variant: 'secondary' },
       { label: 'Join Android Waitlist', href: '/android/', variant: 'ghost' }
     ]}
   />

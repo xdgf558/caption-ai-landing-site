@@ -1,23 +1,28 @@
 ---
 interface Props {
   title: string;
-  items: string[];
+  items: Array<string | { title: string; description: string }>;
   kicker?: string;
+  description?: string;
 }
 
-const { title, items, kicker = 'Built for' } = Astro.props;
+const { title, items, kicker = 'Built for', description } = Astro.props;
 ---
 
 <section class="page-section">
   <div class="section-heading">
     <p class="section-kicker">{kicker}</p>
     <h2>{title}</h2>
+    {description && <p>{description}</p>}
   </div>
   <div class="feature-grid">
     {items.map((item) => (
       <div class="feature-tile">
         <span aria-hidden="true"></span>
-        <p>{item}</p>
+        <div>
+          <strong>{typeof item === 'string' ? item : item.title}</strong>
+          {typeof item !== 'string' && <p>{item.description}</p>}
+        </div>
       </div>
     ))}
   </div>

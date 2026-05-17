@@ -10,7 +10,7 @@ interface AlternateLink {
 interface Props {
   title: string;
   description: string;
-  lang?: 'en' | 'ja' | 'zh-Hant';
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
   canonicalPath: string;
   notice: string;
   alternates?: AlternateLink[];
@@ -27,7 +27,7 @@ const { title, description, lang = 'zh-Hant', canonicalPath, notice, alternates 
   alternates={alternates}
 >
   <section class="page-shell legal-shell">
-    <div class="section-kicker">{lang === 'ja' ? 'Caption AI' : 'Caption AI'}</div>
+    <div class="section-kicker">{lang === 'ja' ? 'SnapCopy' : 'SnapCopy'}</div>
     <h1>{title}</h1>
     <LegalNotice text={notice} />
     <slot />

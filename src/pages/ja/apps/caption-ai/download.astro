@@ -9,11 +9,12 @@ import { captionAiJa } from '../../../../data/copy/caption-ai.ja';
 
 <ProductLayout
   title="アプリは準備中です"
-  description="Caption AI の iOS 先行案内と Android 版のお知らせを受け取れます。"
+  description="SnapCopy の iOS 先行案内と Android 版のお知らせを受け取れます。"
   lang="ja"
   canonicalPath="/ja/apps/caption-ai/download/"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/download/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/download/' },
     { hrefLang: 'en', href: '/apps/caption-ai/download/' },
     { hrefLang: 'ja', href: '/ja/apps/caption-ai/download/' },
     { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/download/' }
@@ -21,28 +22,33 @@ import { captionAiJa } from '../../../../data/copy/caption-ai.ja';
 >
   <section class="page-shell">
     <p class="section-kicker">Download</p>
-    <h1>アプリは準備中です。</h1>
+    <h1>SnapCopy は iPhone 向けに準備中です。</h1>
     <p>
-      Caption AI はまだ App Store や Google Play には公開されていません。準備ができたら、先行案内リストに登録した方へお知らせします。
+      TestFlight、App Store 公開、新機能のお知らせを受け取るには、順番待ちに登録してください。
     </p>
+    <div class="button-row">
+      <a class="button button-primary" href="#waitlist-ios">iOSの順番待ちに登録</a>
+      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">Androidの順番待ちに登録</a>
+    </div>
   </section>
   <DownloadButtons
     ios={captionAiProduct.platforms.ios}
     android={captionAiProduct.platforms.android}
     locale="ja"
     iosWaitlistHref="#waitlist-ios"
-    androidWaitlistHref="/ja/apps/caption-ai/android/"
+    androidWaitlistHref="/android/?product=snapcopy&source=download-page&campaign=android-waitlist"
   />
   <WaitlistForm
     id="waitlist-ios"
     title="iOS の先行案内を受け取る"
-    description="Caption AI のテスト準備ができたらお知らせします。"
+    description="SnapCopy のテスト準備ができたらお知らせします。"
     formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
     product={captionAiProduct.id}
     locale="ja"
     platform="ios"
     privacyPath="/ja/apps/caption-ai/privacy/"
     buttonLabel="先行案内を受け取る"
+    source="download-page"
   />
   <UseCaseSection title="日常の投稿を助けるアプリ" scenes={captionAiJa.scenes} />
 </ProductLayout>

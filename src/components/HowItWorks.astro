@@ -1,22 +1,26 @@
 ---
 interface Props {
   title: string;
-  steps: string[];
+  steps: Array<string | { title: string; description: string }>;
+  kicker?: string;
 }
 
-const { title, steps } = Astro.props;
+const { title, steps, kicker = 'Flow' } = Astro.props;
 ---
 
 <section class="page-section split-section">
   <div class="section-heading compact">
-    <p class="section-kicker">Flow</p>
+    <p class="section-kicker">{kicker}</p>
     <h2>{title}</h2>
   </div>
   <ol class="step-list">
     {steps.map((step, index) => (
       <li>
         <span>{String(index + 1).padStart(2, '0')}</span>
-        <strong>{step}</strong>
+        <div>
+          <strong>{typeof step === 'string' ? step : step.title}</strong>
+          {typeof step !== 'string' && <p>{step.description}</p>}
+        </div>
       </li>
     ))}
   </ol>

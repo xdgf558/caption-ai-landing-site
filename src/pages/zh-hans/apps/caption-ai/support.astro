@@ -1,0 +1,63 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import FAQ from '../../../../components/FAQ.astro';
+import { captionAiProduct } from '../../../../data/products/caption-ai';
+
+const supportFaqZhHans = [
+  {
+    question: 'App 生成的文案不够准确怎么办？',
+    answer: '请发来照片类型、选择的语气，以及你觉得不准确的地方。这些反馈会帮助改善场景理解和文案质量。'
+  },
+  {
+    question: '照片场景识别错了，可以反馈吗？',
+    answer: '可以。场景识别是目前的开发重点，早餐、咖啡、散步、宠物、旅行或穿搭等识别错误示例都很有帮助。'
+  },
+  {
+    question: '我要怎么分享文案？',
+    answer: '你可以复制生成的文案，或在功能开放后使用 iOS 分享流程。SnapCopy 不会自动帮你发布到社交平台。'
+  },
+  {
+    question: '我要怎么给文案反馈？',
+    answer: '功能开放后可以使用 App 内的评分或反馈控制，也可以发邮件说明你期待的文案风格。'
+  },
+  {
+    question: '如何加入 Android 等待名单？',
+    answer: '可以使用网站上的 Android 等待名单链接，后续 Android 测试开放时会收到更新。'
+  }
+];
+---
+
+<ProductLayout
+  title="SnapCopy 支持"
+  description="获取 SnapCopy 帮助、发送反馈，并查看隐私政策与服务条款链接。"
+  lang="zh-Hans"
+  canonicalPath="/zh-hans/apps/caption-ai/support/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/support/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/support/' },
+    { hrefLang: 'en', href: '/apps/caption-ai/support/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/support/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/support/' }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">Support</p>
+    <h1>SnapCopy 支持。</h1>
+    <p>
+      如果要发送产品反馈、问题报告或等待名单删除请求，请发邮件到 <a href={`mailto:${captionAiProduct.supportEmail}`}>{captionAiProduct.supportEmail}</a>，并注明 SnapCopy。
+    </p>
+    <ul class="check-list">
+      <li>反馈错误或不准确的文案结果。</li>
+      <li>建议功能或新的文案风格。</li>
+      <li>询问隐私问题，或要求删除等待名单数据。</li>
+      <li>测试开放后发送 TestFlight 反馈。</li>
+      <li>询问 App Store 上架或 Android 等待名单更新。</li>
+    </ul>
+    <div class="button-row">
+      <a class="button button-primary" href={`mailto:${captionAiProduct.supportEmail}?subject=Caption%20AI%20support`}>发送邮件给支持</a>
+      <a class="button button-secondary" href="/zh-hans/apps/caption-ai/privacy/">隐私政策</a>
+      <a class="button button-secondary" href="/zh-hans/apps/caption-ai/terms/">服务条款</a>
+    </div>
+  </section>
+  <FAQ title="支持常见问题" items={supportFaqZhHans} />
+</ProductLayout>

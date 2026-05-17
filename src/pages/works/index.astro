@@ -1,0 +1,28 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WorksPage from '../../components/WorksPage.astro';
+import { getSortedWorks, worksCopy } from '../../data/works';
+
+const xUrl = 'https://x.com/bketck';
+const copy = worksCopy.en;
+const publishedWorks = getSortedWorks(await getCollection('xworks'));
+const featuredWorks = publishedWorks.filter((work) => work.data.featured);
+---
+
+<BaseLayout
+  title={copy.title}
+  description={copy.description}
+  lang="en"
+  canonicalPath="/works/"
+  bodyClass="station-home"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/works/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/works/' },
+    { hrefLang: 'en', href: '/works/' },
+    { hrefLang: 'ja', href: '/ja/works/' },
+    { hrefLang: 'x-default', href: '/zh-hant/works/' }
+  ]}
+>
+  <WorksPage copy={copy} lang="en" canonicalPath="/works/" featuredWorks={featuredWorks} publishedWorks={publishedWorks} xUrl={xUrl} />
+</BaseLayout>

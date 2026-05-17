@@ -2,16 +2,39 @@
 import ProductLayout from '../../../../layouts/ProductLayout.astro';
 import FAQ from '../../../../components/FAQ.astro';
 import { captionAiProduct } from '../../../../data/products/caption-ai';
-import { captionAiFaqJa } from '../../../../data/faqs/caption-ai.ja';
+
+const supportFaqJa = [
+  {
+    question: 'キャプションが正確ではない場合はどうすればいいですか？',
+    answer: '写真の種類、選んだトーン、期待と違った点をメールで送ってください。シーン理解とキャプション品質の改善に役立ちます。'
+  },
+  {
+    question: '写真のシーン認識が間違っている場合、報告できますか？',
+    answer: 'はい。シーン認識は現在の開発重点なので、朝食、カフェ、散歩、ペット、旅行、服装などの誤認識例は特に参考になります。'
+  },
+  {
+    question: 'キャプションはどうやって共有しますか？',
+    answer: '生成したキャプションをコピーするか、対応後は iOS の共有フローを使えます。SnapCopy が自動でSNSに投稿することはありません。'
+  },
+  {
+    question: 'キャプションへのフィードバックはどう送れますか？',
+    answer: 'アプリ内の評価やフィードバック機能が使える場合はそこから送れます。期待する文体をメールで伝えることもできます。'
+  },
+  {
+    question: 'Android の順番待ちにはどう参加できますか？',
+    answer: 'サイト上の Android 順番待ちリンクから登録すると、Android テスト開始時に更新を受け取れます。'
+  }
+];
 ---
 
 <ProductLayout
-  title="Caption AI サポート"
-  description="Caption AI のお問い合わせ、フィードバック、プライバシー、規約へのリンクです。"
+  title="SnapCopy サポート"
+  description="SnapCopy のお問い合わせ、フィードバック、プライバシー、規約へのリンクです。"
   lang="ja"
   canonicalPath="/ja/apps/caption-ai/support/"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/support/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/support/' },
     { hrefLang: 'en', href: '/apps/caption-ai/support/' },
     { hrefLang: 'ja', href: '/ja/apps/caption-ai/support/' },
     { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/support/' }
@@ -19,15 +42,22 @@ import { captionAiFaqJa } from '../../../../data/faqs/caption-ai.ja';
 >
   <section class="page-shell">
     <p class="section-kicker">Support</p>
-    <h1>Caption AI のサポート。</h1>
+    <h1>SnapCopy のサポート。</h1>
     <p>
-      フィードバック、不具合報告、先行案内メールの削除希望は、本文に Caption AI と書いて <a href={`mailto:${captionAiProduct.supportEmail}`}>{captionAiProduct.supportEmail}</a> までお送りください。
+      フィードバック、不具合報告、先行案内メールの削除希望は、本文に SnapCopy と書いて <a href={`mailto:${captionAiProduct.supportEmail}`}>{captionAiProduct.supportEmail}</a> までお送りください。
     </p>
+    <ul class="check-list">
+      <li>不具合や不正確なキャプション結果の報告。</li>
+      <li>機能や新しいキャプションスタイルの提案。</li>
+      <li>プライバシーに関する質問、順番待ち情報の削除依頼。</li>
+      <li>テスト公開後の TestFlight フィードバック。</li>
+      <li>App Store 公開や Android 順番待ちに関する問い合わせ。</li>
+    </ul>
     <div class="button-row">
       <a class="button button-primary" href={`mailto:${captionAiProduct.supportEmail}?subject=Caption%20AI%20support`}>メールする</a>
       <a class="button button-secondary" href="/ja/apps/caption-ai/privacy/">プライバシー</a>
       <a class="button button-secondary" href="/ja/apps/caption-ai/terms/">利用規約</a>
     </div>
   </section>
-  <FAQ title="よくある質問" items={captionAiFaqJa} />
+  <FAQ title="よくある質問" items={supportFaqJa} />
 </ProductLayout>

@@ -9,11 +9,12 @@ import { captionAiEn } from '../../../data/copy/caption-ai.en';
 
 <ProductLayout
   title="The app is coming soon"
-  description="Join the Caption AI iOS waitlist and get Android updates before public launch."
+  description="Join the SnapCopy iOS waitlist and get Android updates before public launch."
   lang="en"
   canonicalPath="/apps/caption-ai/download/"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/download/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/download/' },
     { hrefLang: 'en', href: '/apps/caption-ai/download/' },
     { hrefLang: 'ja', href: '/ja/apps/caption-ai/download/' },
     { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/download/' }
@@ -21,28 +22,33 @@ import { captionAiEn } from '../../../data/copy/caption-ai.en';
 >
   <section class="page-shell">
     <p class="section-kicker">Download</p>
-    <h1>The app is coming soon.</h1>
+    <h1>SnapCopy is coming to iPhone.</h1>
     <p>
-      Caption AI is not listed in the App Store or Google Play yet. Join the waitlist and we will prioritize early testing updates.
+      Join the waitlist to get updates about TestFlight, App Store launch, and new features.
     </p>
+    <div class="button-row">
+      <a class="button button-primary" href="#waitlist-ios">Join iOS Waitlist</a>
+      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">Join Android Waitlist</a>
+    </div>
   </section>
   <DownloadButtons
     ios={captionAiProduct.platforms.ios}
     android={captionAiProduct.platforms.android}
     locale="en"
     iosWaitlistHref="#waitlist-ios"
-    androidWaitlistHref="/apps/caption-ai/android/"
+    androidWaitlistHref="/android/?product=snapcopy&source=download-page&campaign=android-waitlist"
   />
   <WaitlistForm
     id="waitlist-ios"
     title="Join the iOS waitlist"
-    description="Get early access updates when Caption AI is ready for testing."
+    description="Get early access updates when SnapCopy is ready for testing."
     formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
     product={captionAiProduct.id}
     locale="en"
     platform="ios"
     privacyPath="/apps/caption-ai/privacy/"
     buttonLabel="Join waitlist"
+    source="download-page"
   />
   <UseCaseSection title="Built around daily sharing" scenes={captionAiEn.scenes} />
 </ProductLayout>

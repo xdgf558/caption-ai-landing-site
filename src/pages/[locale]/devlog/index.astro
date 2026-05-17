@@ -1,0 +1,61 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { devlogCopy, devlogLocales, devlogPath, devlogSlug, formatDevlogDate, pathLocaleToLang } from '../../../data/devlog';
+
+export function getStaticPaths() {
+  return devlogLocales
+    .filter(({ lang }) => lang !== 'zh-Hant')
+    .map(({ lang, pathLocale }) => ({
+      params: { locale: pathLocale },
+      props: { lang }
+    }));
+}
+
+const { lang } = Astro.props;
+const copy = devlogCopy[lang];
+const posts = (await getCollection('devlog', ({ data }) => !data.draft && data.language === lang))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const localeParam = Astro.params.locale || '';
+const routeLang = pathLocaleToLang(localeParam);
+---
+
+<BaseLayout
+  title={copy.title}
+  description={copy.description}
+  lang={routeLang}
+  canonicalPath={devlogPath(routeLang)}
+  bodyClass="station-home"
+>
+  <section class="devlog-hero">
+    <div class="devlog-hero__copy">
+      <p class="station-kicker">{copy.eyebrow}</p>
+      <h1>{copy.heroTitle}</h1>
+      <p>{copy.heroDescription}</p>
+    </div>
+    <div class="devlog-hero__panel">
+      <span>{copy.buildNotes}</span>
+      <strong>{posts.length}</strong>
+      <p>{copy.postCount}</p>
+    </div>
+  </section>
+
+  <section class="devlog-list" aria-label={copy.postsLabel}>
+    {posts.length === 0 && <p>{copy.empty}</p>}
+    {posts.map((post) => (
+      <article class="devlog-card">
+        <div class="devlog-card__meta">
+          <time datetime={post.data.pubDate.toISOString()}>{formatDevlogDate(post.data.pubDate, routeLang)}</time>
+          <span>{copy.statuses[post.data.status]}</span>
+        </div>
+        <h2><a href={devlogPath(routeLang, devlogSlug(post))}>{post.data.title}</a></h2>
+        <p>{post.data.description}</p>
+        {post.data.tags.length > 0 && (
+          <div class="devlog-tags">
+            {post.data.tags.map((tag) => <span>{tag}</span>)}
+          </div>
+        )}
+      </article>
+    ))}
+  </section>
+</BaseLayout>

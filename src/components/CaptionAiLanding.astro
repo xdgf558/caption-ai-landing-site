@@ -1,0 +1,163 @@
+---
+import ProductHero from './ProductHero.astro';
+import HowItWorks from './HowItWorks.astro';
+import FeatureGrid from './FeatureGrid.astro';
+import WaitlistForm from './WaitlistForm.astro';
+import DownloadButtons from './DownloadButtons.astro';
+import FAQ from './FAQ.astro';
+import { captionAiProduct } from '../data/products/caption-ai';
+
+interface LinkSet {
+  download: string;
+  platformDownload?: string;
+  downloadBox?: string;
+  finalDownload?: string;
+  privacy: string;
+  android: string;
+  follow: string;
+}
+
+interface Props {
+  copy: any;
+  faqItems: Array<{ question: string; answer: string }>;
+  locale: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+  links: LinkSet;
+}
+
+const { copy, faqItems, locale, links } = Astro.props;
+const platformDownload = links.platformDownload ?? links.download;
+const downloadBox = links.downloadBox ?? platformDownload;
+const finalDownload = links.finalDownload ?? links.download;
+---
+
+<ProductHero
+  copy={copy.hero}
+  imageAlt={copy.visual.alt}
+  primaryHref={links.download}
+  secondaryHref={links.privacy}
+  visual={copy.visual}
+/>
+
+<HowItWorks title={copy.howItWorks.title} steps={copy.howItWorks.steps} />
+
+<FeatureGrid
+  kicker={copy.features.kicker}
+  title={copy.features.title}
+  items={copy.features.items}
+/>
+
+<section class="page-section product-focus-section">
+  <div class="section-heading">
+    <p class="section-kicker">{copy.focus.kicker}</p>
+    <h2>{copy.focus.title}</h2>
+    <p>{copy.focus.description}</p>
+  </div>
+  <div class="roadmap-grid">
+    {copy.focus.roadmap.map((item) => (
+      <article>
+        <span>{item.label}</span>
+        <p>{item.text}</p>
+      </article>
+    ))}
+  </div>
+</section>
+
+<FeatureGrid
+  kicker={copy.useCases.kicker}
+  title={copy.useCases.title}
+  items={copy.useCases.items}
+/>
+
+<section class="page-section style-section">
+  <div class="section-heading">
+    <p class="section-kicker">{copy.personalization.kicker}</p>
+    <h2>{copy.personalization.title}</h2>
+    <p>{copy.personalization.description}</p>
+  </div>
+  <div class="style-example">
+    <div>
+      <span>{copy.personalization.likeLabel}</span>
+      <strong>{copy.personalization.like}</strong>
+    </div>
+    <div>
+      <span>{copy.personalization.resultLabel}</span>
+      <strong>{copy.personalization.result}</strong>
+    </div>
+  </div>
+</section>
+
+<section class="page-section privacy-highlight">
+  <div class="section-heading">
+    <p class="section-kicker">{copy.privacySection.kicker}</p>
+    <h2>{copy.privacySection.title}</h2>
+    <p>{copy.privacySection.description}</p>
+  </div>
+  <div class="feature-grid">
+    {copy.privacySection.items.map((item) => (
+      <div class="feature-tile">
+        <span aria-hidden="true"></span>
+        <div>
+          <strong>{item}</strong>
+        </div>
+      </div>
+    ))}
+  </div>
+  <div class="button-row">
+    <a class="button button-secondary" href={links.privacy}>{copy.privacySection.cta}</a>
+  </div>
+</section>
+
+<section class="page-section platform-section">
+  <div class="section-heading">
+    <p class="section-kicker">{copy.platform.kicker}</p>
+    <h2>{copy.platform.title}</h2>
+    <p>{copy.platform.description}</p>
+  </div>
+  <div class="button-row">
+    <a class="button button-primary" href={platformDownload}>{copy.platform.iosCta}</a>
+    <a class="button button-secondary" href={links.android}>{copy.platform.androidCta}</a>
+  </div>
+</section>
+
+<WaitlistForm
+  id="waitlist-ios"
+  title={copy.waitlist.title}
+  description={copy.waitlist.description}
+  formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
+  product={captionAiProduct.id}
+  locale={locale}
+  platform="ios"
+  privacyPath={links.privacy}
+  buttonLabel={copy.waitlist.button}
+  source="product-page"
+/>
+
+<DownloadButtons
+  ios={captionAiProduct.platforms.ios}
+  android={captionAiProduct.platforms.android}
+  locale={locale}
+  iosWaitlistHref={downloadBox}
+  androidWaitlistHref={links.android}
+/>
+
+<FAQ title={copy.faqTitle} items={faqItems} />
+
+<section class="page-section final-product-cta">
+  <div>
+    <p class="section-kicker">{copy.finalCta.kicker}</p>
+    <h2>{copy.finalCta.title}</h2>
+    <p>{copy.finalCta.description}</p>
+  </div>
+  <div class="button-row">
+    <a class="button button-primary" href={finalDownload}>{copy.finalCta.primary}</a>
+    <a class="button button-secondary" href={links.follow}>{copy.finalCta.secondary}</a>
+  </div>
+</section>
+
+<section class="page-section maker-note">
+  <p>{copy.makerNote}</p>
+  <div class="button-row">
+    <a class="button button-secondary" href="/">Visit Station Cat</a>
+    <a class="button button-secondary" href="/works/">See Works</a>
+  </div>
+</section>

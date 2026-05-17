@@ -1,7 +1,7 @@
 export const captionAiProduct = {
-  id: 'caption-ai',
+  id: 'snapcopy',
   slug: 'caption-ai',
-  name: 'Caption AI',
+  name: 'SnapCopy',
   workingName: 'AI 生活文案生成器',
   status: 'waitlist',
   platforms: {
@@ -16,17 +16,17 @@ export const captionAiProduct = {
       waitlistFormUrl: 'TALLY_ANDROID_FORM_URL'
     }
   },
-  locales: ['zh-Hant', 'en', 'ja'],
+  locales: ['zh-Hant', 'zh-Hans', 'en', 'ja'],
   defaultLocale: 'zh-Hant',
   productPath: '/apps/caption-ai/',
   zhHantProductPath: '/zh-hant/apps/caption-ai/',
   jaProductPath: '/ja/apps/caption-ai/',
-  supportEmail: 'support@example.com',
+  supportEmail: 'brodstem@protonmail.com',
   appStoreCampaignBaseUrl: '',
   googlePlayCampaignBaseUrl: '',
   useCases: ['breakfast', 'cafe', 'walking', 'travel', 'outfit', 'pet'],
   hiddenFormFields: {
-    product: 'caption-ai'
+    product: 'snapcopy'
   },
   assets: {
     hero: '/images/caption-ai-hero-phone-placeholder.svg',

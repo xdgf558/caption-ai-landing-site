@@ -1,0 +1,928 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Station Cat Admin"
+  description="Station Cat development blog and X works admin editor."
+  lang="zh-Hant"
+  canonicalPath="/admin/"
+  bodyClass="station-home"
+>
+  <section class="admin-shell">
+    <div class="admin-heading">
+      <p class="station-kicker">Admin</p>
+      <h1>Station Cat 內容管理</h1>
+      <p>
+        使用 GitHub fine-grained token 更新 <code>src/content/devlog</code> 和 <code>src/content/xworks</code> 裡的 Markdown。Token 只保存在當前頁面，不會寫入網站或 localStorage。
+      </p>
+    </div>
+
+    <div class="admin-grid">
+      <aside class="admin-panel admin-sidebar">
+        <label for="admin-token">GitHub Token</label>
+        <input id="admin-token" type="password" autocomplete="off" placeholder="github_pat_..." />
+        <p class="fine-print">
+          請使用只授權目前 repo 的 GitHub fine-grained token。權限只需要 Contents: Read and write。不要把 token 分享給別人。
+        </p>
+
+        <div class="admin-tabs" role="tablist" aria-label="Content type">
+          <button class="admin-tab is-active" id="tab-devlog" type="button" data-admin-tab="devlog">Devlog</button>
+          <button class="admin-tab" id="tab-xworks" type="button" data-admin-tab="xworks">X Works</button>
+        </div>
+
+        <div class="button-row">
+          <button class="button button-primary" id="admin-load" type="button">读取 Devlog</button>
+          <button class="button button-secondary" id="admin-new" type="button">新 Devlog</button>
+        </div>
+        <div class="admin-status" id="admin-status" role="status">等待連接 GitHub。</div>
+
+        <div class="admin-list-panel" id="devlog-list-panel">
+          <p class="station-kicker">Devlog files</p>
+          <div class="admin-post-list" id="admin-post-list" aria-label="Existing devlog posts"></div>
+        </div>
+
+        <div class="admin-list-panel" id="xworks-list-panel" hidden>
+          <p class="station-kicker">X Works files</p>
+          <div class="admin-post-list" id="xworks-list" aria-label="Existing X works"></div>
+        </div>
+      </aside>
+
+      <form class="admin-panel admin-editor" id="devlog-editor">
+        <div class="admin-form-grid">
+          <label>
+            標題
+            <input id="post-title" name="title" required placeholder="例如：SnapCopy 第一次等待名單測試" />
+          </label>
+          <label>
+            Slug
+            <input id="post-slug" name="slug" required placeholder="2026-05-17-snapcopy-update" />
+          </label>
+          <label>
+            日期
+            <input id="post-date" name="pubDate" type="date" required />
+          </label>
+          <label>
+            狀態
+            <select id="post-status" name="status">
+              <option value="building">開發中</option>
+              <option value="shipped">已完成</option>
+              <option value="note">記錄</option>
+              <option value="maintenance">維護</option>
+            </select>
+          </label>
+          <label>
+            語言
+            <select id="post-language" name="language">
+              <option value="zh-Hant">繁中</option>
+              <option value="zh-Hans">简中</option>
+              <option value="en">EN</option>
+              <option value="ja">日本語</option>
+            </select>
+          </label>
+          <label class="admin-checkbox">
+            <input id="post-draft" name="draft" type="checkbox" />
+            存為草稿
+          </label>
+        </div>
+
+        <label>
+          摘要
+          <textarea id="post-description" name="description" rows="3" required placeholder="一句話說明這次更新。"></textarea>
+        </label>
+        <label>
+          Tags
+          <input id="post-tags" name="tags" placeholder="SnapCopy, Website, App Store" />
+        </label>
+        <label>
+          內容
+          <textarea id="post-body" name="body" rows="16" required placeholder="用 Markdown 寫開發進度、上架記錄或產品實驗。"></textarea>
+        </label>
+
+        <div class="button-row">
+          <button class="button button-primary" type="submit">保存 Devlog</button>
+          <a class="button button-secondary" href="/devlog/">查看博客</a>
+        </div>
+      </form>
+
+      <form class="admin-panel admin-editor" id="xworks-editor" hidden>
+        <div class="admin-form-grid">
+          <label>
+            标题
+            <input id="work-title" name="title" required placeholder="AI cat experiment" />
+          </label>
+          <label>
+            Slug
+            <input id="work-slug" name="slug" required placeholder="2026-05-17-ai-cat-experiment" />
+          </label>
+          <label>
+            简介
+            <input id="work-description" name="description" required placeholder="一句话说明这个 X 作品" />
+          </label>
+          <label>
+            X 原帖链接
+            <input id="work-x-url" name="xUrl" required placeholder="https://x.com/bketck/status/1234567890" />
+          </label>
+          <label>
+            类型
+            <select id="work-type" name="type">
+              <option value="video">video</option>
+              <option value="post">post</option>
+              <option value="image">image</option>
+              <option value="thread">thread</option>
+            </select>
+          </label>
+          <label>
+            标签
+            <input id="work-tags" name="tags" list="work-tag-options" placeholder="AI Creation, Cats, Meals" />
+            <datalist id="work-tag-options">
+              <option value="AI Creation"></option>
+              <option value="Cats"></option>
+              <option value="Meals"></option>
+              <option value="App Build"></option>
+              <option value="Strange Ideas"></option>
+              <option value="Notes"></option>
+            </datalist>
+          </label>
+          <label>
+            语言
+            <select id="work-language" name="language">
+              <option value="en">en</option>
+              <option value="ja">ja</option>
+              <option value="zh-hant">zh-hant</option>
+            </select>
+          </label>
+          <label class="admin-checkbox">
+            <input id="work-featured" name="featured" type="checkbox" />
+            首页精选
+          </label>
+          <label>
+            状态
+            <select id="work-status" name="status">
+              <option value="draft">draft</option>
+              <option value="published">published</option>
+            </select>
+          </label>
+          <label>
+            排序
+            <input id="work-sort-order" name="sortOrder" type="number" placeholder="10" value="10" />
+          </label>
+          <label>
+            发布时间
+            <input id="work-published-at" name="publishedAt" type="datetime-local" />
+          </label>
+        </div>
+
+        <label>
+          补充说明
+          <textarea id="work-body" name="body" rows="8" placeholder="可選 Markdown 正文"></textarea>
+        </label>
+
+        <div class="admin-preview-panel">
+          <div>
+            <p class="station-kicker">X Embed Preview</p>
+            <h2>X Embed Preview</h2>
+          </div>
+          <div class="button-row">
+            <button class="button button-secondary" id="work-preview-button" type="button">Preview embed</button>
+            <a class="button button-secondary" href="/works/">查看 Works</a>
+          </div>
+          <div class="admin-preview" id="work-preview">请粘贴一条 X 原帖链接。</div>
+        </div>
+
+        <div class="button-row">
+          <button class="button button-primary" id="xwork-save" type="submit">保存 X Work</button>
+          <button class="button button-danger" id="work-delete" type="button">刪除 X Work</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <script is:inline>
+    const repo = {
+      owner: 'xdgf558',
+      name: 'caption-ai-landing-site',
+      branch: 'main',
+      folders: {
+        devlog: 'src/content/devlog',
+        xworks: 'src/content/xworks'
+      }
+    };
+
+    const elements = {
+      token: document.getElementById('admin-token'),
+      load: document.getElementById('admin-load'),
+      newItem: document.getElementById('admin-new'),
+      status: document.getElementById('admin-status'),
+      tabs: Array.from(document.querySelectorAll('[data-admin-tab]')),
+      devlogListPanel: document.getElementById('devlog-list-panel'),
+      xworksListPanel: document.getElementById('xworks-list-panel'),
+      devlogList: document.getElementById('admin-post-list'),
+      xworksList: document.getElementById('xworks-list'),
+      devlogForm: document.getElementById('devlog-editor'),
+      xworksForm: document.getElementById('xworks-editor'),
+      devlog: {
+        title: document.getElementById('post-title'),
+        slug: document.getElementById('post-slug'),
+        date: document.getElementById('post-date'),
+        statusField: document.getElementById('post-status'),
+        language: document.getElementById('post-language'),
+        draft: document.getElementById('post-draft'),
+        description: document.getElementById('post-description'),
+        tags: document.getElementById('post-tags'),
+        body: document.getElementById('post-body')
+      },
+      work: {
+        slug: document.getElementById('work-slug'),
+        title: document.getElementById('work-title'),
+        xUrl: document.getElementById('work-x-url'),
+        type: document.getElementById('work-type'),
+        language: document.getElementById('work-language'),
+        statusField: document.getElementById('work-status'),
+        sortOrder: document.getElementById('work-sort-order'),
+        publishedAt: document.getElementById('work-published-at'),
+        featured: document.getElementById('work-featured'),
+        description: document.getElementById('work-description'),
+        tags: document.getElementById('work-tags'),
+        body: document.getElementById('work-body'),
+        previewButton: document.getElementById('work-preview-button'),
+        preview: document.getElementById('work-preview'),
+        deleteButton: document.getElementById('work-delete')
+      }
+    };
+
+    let activeContentType = 'devlog';
+    const state = {
+      devlog: { sha: '', path: '', slugTouched: false },
+      xworks: { sha: '', path: '', slugTouched: false }
+    };
+
+    const today = () => new Date().toISOString().slice(0, 10);
+    const nowLocal = () => new Date().toISOString().slice(0, 16);
+
+    const toDatetimeLocal = (value) => {
+      if (!value) return nowLocal();
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return nowLocal();
+      return date.toISOString().slice(0, 16);
+    };
+
+    const toIso = (value) => {
+      if (!value) return new Date().toISOString();
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+    };
+
+    const setStatus = (message, tone = 'neutral') => {
+      elements.status.textContent = message;
+      elements.status.dataset.tone = tone;
+    };
+
+    const token = () => elements.token.value.trim();
+
+    const requireToken = () => {
+      const value = token();
+      if (!value) {
+        throw new Error('請先輸入 GitHub token。');
+      }
+      return value;
+    };
+
+    const githubErrorMessage = (status, fallback) => {
+      if (status === 401) return 'GitHub token 無效或已過期。請重新建立 fine-grained token。';
+      if (status === 403) return 'GitHub denied access. Check that your fine-grained token has Contents: Read and write permission for this repository.';
+      if (status === 404) return 'Could not find the target repository, branch, or content path.';
+      if (status === 429) return 'GitHub API rate limit reached. Please wait and try again.';
+      return fallback || `GitHub request failed: ${status}`;
+    };
+
+    const githubFetch = async (url, options = {}) => {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${requireToken()}`,
+          'X-GitHub-Api-Version': '2022-11-28',
+          ...(options.headers || {})
+        }
+      });
+
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({}));
+        const error = new Error(githubErrorMessage(response.status, detail.message));
+        error.status = response.status;
+        throw error;
+      }
+
+      return response.json();
+    };
+
+    const apiUrl = (path) =>
+      `https://api.github.com/repos/${repo.owner}/${repo.name}/contents/${path}?ref=${repo.branch}`;
+
+    const contentUrl = (path) =>
+      `https://api.github.com/repos/${repo.owner}/${repo.name}/contents/${path}`;
+
+    const verifyRepoAccess = async () => {
+      await githubFetch(apiUrl(''));
+    };
+
+    const readContentFolder = async (folder) => {
+      try {
+        const files = await githubFetch(apiUrl(folder));
+        return Array.isArray(files) ? files : [];
+      } catch (error) {
+        if (error.status === 404) {
+          await verifyRepoAccess();
+          return [];
+        }
+
+        throw error;
+      }
+    };
+
+    const renderEmptyList = (target, message) => {
+      target.innerHTML = '';
+      const empty = document.createElement('p');
+      empty.className = 'admin-empty-list';
+      empty.textContent = message;
+      target.append(empty);
+    };
+
+    const toSlug = (value, fallback = 'entry') => {
+      const ascii = value
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      return ascii || `${fallback}-${Date.now()}`;
+    };
+
+    const toBase64 = (value) => {
+      const bytes = new TextEncoder().encode(value);
+      let binary = '';
+      bytes.forEach((byte) => {
+        binary += String.fromCharCode(byte);
+      });
+      return btoa(binary);
+    };
+
+    const fromBase64 = (value) => {
+      const binary = atob(value.replace(/\n/g, ''));
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    };
+
+    const yamlString = (value) => JSON.stringify(value || '');
+
+    const splitTags = (value) =>
+      value
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+
+    const yamlTags = (tags) => {
+      if (!tags.length) return 'tags: []';
+      return `tags:\n${tags.map((tag) => `  - ${yamlString(tag)}`).join('\n')}`;
+    };
+
+    const parseScalar = (value) => {
+      const trimmed = value.trim();
+      if (trimmed === 'true') return true;
+      if (trimmed === 'false') return false;
+      if (trimmed === '[]') return [];
+      if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
+      try {
+        return JSON.parse(trimmed);
+      } catch {
+        return trimmed;
+      }
+    };
+
+    const parseMarkdown = (markdown) => {
+      const match = markdown.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+      if (!match) {
+        return { frontmatter: {}, body: markdown };
+      }
+
+      const frontmatter = {};
+      const lines = match[1].split('\n');
+
+      for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
+        const separator = line.indexOf(':');
+        if (separator === -1 || line.startsWith('  ')) continue;
+
+        const key = line.slice(0, separator).trim();
+        const value = line.slice(separator + 1).trim();
+
+        if (!value) {
+          const items = [];
+          while (lines[index + 1]?.startsWith('  - ')) {
+            index += 1;
+            items.push(parseScalar(lines[index].replace(/^  - /, '')));
+          }
+          frontmatter[key] = items;
+        } else {
+          frontmatter[key] = parseScalar(value);
+        }
+      }
+
+      return { frontmatter, body: match[2].trim() };
+    };
+
+    const validateXPostUrl = (input) => {
+      const value = input.trim();
+      if (!value) {
+        return { valid: false, message: '请粘贴一条 X 原帖链接。' };
+      }
+
+      try {
+        const url = new URL(value);
+        const hostname = url.hostname.replace(/^www\./, '');
+        const allowedHosts = ['x.com', 'twitter.com'];
+        const parts = url.pathname.split('/').filter(Boolean);
+
+        if (!allowedHosts.includes(hostname)) {
+          return { valid: false, message: '请输入有效的 x.com 或 twitter.com 帖子链接。' };
+        }
+
+        if (!parts.includes('status')) {
+          return { valid: false, message: '请输入具体 X 帖子链接，而不是个人主页链接。' };
+        }
+
+        const statusIndex = parts.indexOf('status');
+        if (!parts[statusIndex + 1]) {
+          return { valid: false, message: '请输入有效的 x.com 或 twitter.com 帖子链接。' };
+        }
+
+        return { valid: true, message: '' };
+      } catch {
+        return { valid: false, message: '请输入有效的 x.com 或 twitter.com 帖子链接。' };
+      }
+    };
+
+    const buildDevlogMarkdown = () => {
+      const fields = elements.devlog;
+      const slug = fields.slug.value.trim();
+      const data = {
+        title: fields.title.value.trim(),
+        postSlug: slug,
+        description: fields.description.value.trim(),
+        pubDate: fields.date.value,
+        status: fields.statusField.value,
+        language: fields.language.value,
+        tags: splitTags(fields.tags.value),
+        draft: fields.draft.checked
+      };
+
+      return `---\ntitle: ${yamlString(data.title)}\npostSlug: ${yamlString(data.postSlug)}\ndescription: ${yamlString(data.description)}\npubDate: ${yamlString(data.pubDate)}\nstatus: ${yamlString(data.status)}\nlanguage: ${yamlString(data.language)}\ntags: ${JSON.stringify(data.tags)}\ndraft: ${data.draft}\n---\n\n${fields.body.value.trim()}\n`;
+    };
+
+    const buildXWorkMarkdown = () => {
+      const fields = elements.work;
+      const xUrl = fields.xUrl.value.trim();
+      const validation = validateXPostUrl(xUrl);
+      if (!validation.valid) {
+        throw new Error(validation.message);
+      }
+
+      const tags = splitTags(fields.tags.value);
+      return `---\ntitle: ${yamlString(fields.title.value.trim())}\ndescription: ${yamlString(fields.description.value.trim())}\nxUrl: ${yamlString(xUrl)}\ntype: ${yamlString(fields.type.value)}\n${yamlTags(tags)}\nlanguage: ${yamlString(fields.language.value)}\nfeatured: ${fields.featured.checked}\nstatus: ${yamlString(fields.statusField.value)}\nsortOrder: ${Number(fields.sortOrder.value || 10)}\npublishedAt: ${yamlString(toIso(fields.publishedAt.value))}\n---\n\n${fields.body.value.trim()}\n`;
+    };
+
+    const resetDevlogForm = () => {
+      state.devlog = { sha: '', path: '', slugTouched: false };
+      const fields = elements.devlog;
+      fields.title.value = '';
+      fields.slug.value = '';
+      fields.date.value = today();
+      fields.statusField.value = 'building';
+      fields.language.value = 'zh-Hant';
+      fields.draft.checked = false;
+      fields.description.value = '';
+      fields.tags.value = '';
+      fields.body.value = '';
+      setStatus('正在撰寫新 Devlog。');
+    };
+
+    const resetXWorkForm = () => {
+      state.xworks = { sha: '', path: '', slugTouched: false };
+      const fields = elements.work;
+      fields.slug.value = '';
+      fields.title.value = '';
+      fields.xUrl.value = '';
+      fields.type.value = 'post';
+      fields.language.value = 'en';
+      fields.statusField.value = 'draft';
+      fields.sortOrder.value = '10';
+      fields.publishedAt.value = nowLocal();
+      fields.featured.checked = false;
+      fields.description.value = '';
+      fields.tags.value = '';
+      fields.body.value = '';
+      fields.preview.textContent = '请粘贴一条 X 原帖链接。';
+      fields.preview.dataset.tone = '';
+      setStatus('正在撰寫新 X Work。');
+    };
+
+    const fillDevlogForm = ({ path, sha, markdown }) => {
+      const { frontmatter, body } = parseMarkdown(markdown);
+      const fields = elements.devlog;
+      state.devlog = { sha, path, slugTouched: true };
+      fields.title.value = frontmatter.title || '';
+      fields.slug.value = frontmatter.postSlug || path.split('/').pop().replace(/\.(zh-Hant|zh-Hans|en|ja)?\.?md$/i, '');
+      fields.date.value = frontmatter.pubDate || today();
+      fields.statusField.value = frontmatter.status || 'note';
+      fields.language.value = frontmatter.language || 'zh-Hant';
+      fields.draft.checked = Boolean(frontmatter.draft);
+      fields.description.value = frontmatter.description || '';
+      fields.tags.value = Array.isArray(frontmatter.tags) ? frontmatter.tags.join(', ') : '';
+      fields.body.value = body;
+      setStatus(`已載入 Devlog：${fields.slug.value}。`, 'success');
+    };
+
+    const fillXWorkForm = ({ path, sha, markdown }) => {
+      const { frontmatter, body } = parseMarkdown(markdown);
+      const fields = elements.work;
+      state.xworks = { sha, path, slugTouched: true };
+      fields.slug.value = path.split('/').pop().replace(/\.md$/i, '');
+      fields.title.value = frontmatter.title || '';
+      fields.description.value = frontmatter.description || '';
+      fields.xUrl.value = frontmatter.xUrl || '';
+      fields.type.value = frontmatter.type || 'post';
+      fields.tags.value = Array.isArray(frontmatter.tags) ? frontmatter.tags.join(', ') : '';
+      fields.language.value = frontmatter.language || 'en';
+      fields.featured.checked = Boolean(frontmatter.featured);
+      fields.statusField.value = frontmatter.status || 'draft';
+      fields.sortOrder.value = String(frontmatter.sortOrder ?? 100);
+      fields.publishedAt.value = toDatetimeLocal(frontmatter.publishedAt);
+      fields.body.value = body;
+      renderXPreview();
+      setStatus(`已載入 X Work：${fields.slug.value}。`, 'success');
+    };
+
+    const setActiveContentType = (contentType) => {
+      activeContentType = contentType;
+      const isDevlog = contentType === 'devlog';
+      elements.tabs.forEach((button) => {
+        const active = button.dataset.adminTab === contentType;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-selected', String(active));
+      });
+      elements.devlogForm.hidden = !isDevlog;
+      elements.xworksForm.hidden = isDevlog;
+      elements.devlogListPanel.hidden = !isDevlog;
+      elements.xworksListPanel.hidden = isDevlog;
+      elements.load.textContent = isDevlog ? '读取 Devlog' : '读取 X Works';
+      elements.newItem.textContent = isDevlog ? '新 Devlog' : '新 X Work';
+      setStatus(isDevlog ? '已切換到 Devlog 管理。' : '已切換到 X Works 管理。');
+    };
+
+    const renderFileButton = ({ file, target, onOpen, meta }) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'admin-post-button';
+      button.innerHTML = '';
+      const name = document.createElement('span');
+      name.textContent = file.name.replace(/\.md$/, '');
+      button.append(name);
+      if (meta) {
+        const small = document.createElement('small');
+        small.textContent = meta;
+        button.append(small);
+      }
+      button.addEventListener('click', onOpen);
+      target.append(button);
+    };
+
+    const renderXWorkListItem = ({ file, entry, markdown }) => {
+      const { frontmatter } = parseMarkdown(markdown);
+      const slug = file.name.replace(/\.md$/, '');
+      const item = document.createElement('article');
+      item.className = 'admin-work-row';
+
+      const main = document.createElement('div');
+      main.className = 'admin-work-row__main';
+
+      const title = document.createElement('h3');
+      title.textContent = frontmatter.title || slug;
+
+      const meta = document.createElement('p');
+      meta.textContent = [
+        frontmatter.status || 'draft',
+        frontmatter.featured ? 'featured' : 'not featured',
+        frontmatter.language || 'en',
+        frontmatter.publishedAt || 'no publishedAt'
+      ].join(' · ');
+
+      const xUrl = document.createElement('a');
+      xUrl.href = frontmatter.xUrl || '#';
+      xUrl.target = '_blank';
+      xUrl.rel = 'noopener noreferrer';
+      xUrl.textContent = frontmatter.xUrl || 'no xUrl';
+
+      main.append(title, meta, xUrl);
+
+      const actions = document.createElement('div');
+      actions.className = 'admin-work-row__actions';
+
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'button button-secondary';
+      edit.textContent = '編輯';
+      edit.addEventListener('click', () => {
+        fillXWorkForm({ path: file.path, sha: entry.sha, markdown });
+        elements.xworksForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      const preview = document.createElement('button');
+      preview.type = 'button';
+      preview.className = 'button button-secondary';
+      preview.textContent = '預覽';
+      preview.addEventListener('click', () => {
+        fillXWorkForm({ path: file.path, sha: entry.sha, markdown });
+        renderXPreview();
+        elements.work.preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'button button-danger';
+      remove.textContent = '刪除';
+      remove.addEventListener('click', () => {
+        deleteXWorkFile(file.path, entry.sha, slug).catch((error) => setStatus(error.message, 'error'));
+      });
+
+      actions.append(edit, preview, remove);
+      item.append(main, actions);
+      elements.xworksList.append(item);
+    };
+
+    const loadDevlogPosts = async () => {
+      setStatus('正在讀取 Devlog 列表...');
+      const files = await readContentFolder(repo.folders.devlog);
+      elements.devlogList.innerHTML = '';
+
+      if (!files.length) {
+        renderEmptyList(elements.devlogList, `远端还没有 ${repo.folders.devlog} 目录或 Markdown 文件。你可以直接保存第一篇 Devlog。`);
+        setStatus(`远端还没有 ${repo.folders.devlog} 内容；保存第一篇后会自动创建。`, 'success');
+        return;
+      }
+
+      files
+        .filter((file) => file.name.endsWith('.md'))
+        .sort((a, b) => b.name.localeCompare(a.name))
+        .forEach((file) => {
+          renderFileButton({
+            file,
+            target: elements.devlogList,
+            onOpen: async () => {
+              setStatus(`正在讀取 ${file.name}...`);
+              const entry = await githubFetch(apiUrl(file.path));
+              fillDevlogForm({
+                path: file.path,
+                sha: entry.sha,
+                markdown: fromBase64(entry.content)
+              });
+            }
+          });
+        });
+
+      const count = files.filter((file) => file.name.endsWith('.md')).length;
+      if (!count) {
+        renderEmptyList(elements.devlogList, `远端 ${repo.folders.devlog} 目录里还没有 Markdown 文件。`);
+      }
+
+      setStatus(`已讀取 ${count} 個 Devlog 檔案。`, 'success');
+    };
+
+    const loadXWorks = async () => {
+      setStatus('正在讀取 X Works 列表...');
+      const files = await readContentFolder(repo.folders.xworks);
+      elements.xworksList.innerHTML = '';
+
+      const markdownFiles = files.filter((entry) => entry.name.endsWith('.md')).sort((a, b) => b.name.localeCompare(a.name));
+      if (!markdownFiles.length) {
+        renderEmptyList(
+          elements.xworksList,
+          `远端还没有 ${repo.folders.xworks} Markdown 文件。填好右侧表单后点击“保存 X Work”，会写入 src/content/xworks/{slug}.md。`
+        );
+        setStatus('还没有远端 X Works。读取只是读取已保存内容；要添加当前 X 链接，请点击“保存 X Work”。', 'success');
+        return;
+      }
+
+      for (const file of markdownFiles) {
+        const entry = await githubFetch(apiUrl(file.path));
+        renderXWorkListItem({
+          file,
+          entry,
+          markdown: fromBase64(entry.content)
+        });
+      }
+
+      setStatus(`已讀取 ${markdownFiles.length} 個 X Works 檔案。`, 'success');
+    };
+
+    const saveDevlogPost = async () => {
+      const fields = elements.devlog;
+      const slug = fields.slug.value.trim() || `${today()}-${toSlug(fields.title.value, 'devlog')}`;
+      fields.slug.value = slug;
+      const language = fields.language.value;
+      const filename = language === 'zh-Hant' ? `${slug}.md` : `${slug}.${language}.md`;
+      const path = `${repo.folders.devlog}/${filename}`;
+      const body = {
+        message: `${state.devlog.sha ? 'Update' : 'Create'} devlog: ${fields.title.value.trim() || slug}`,
+        content: toBase64(buildDevlogMarkdown()),
+        branch: repo.branch
+      };
+
+      if (state.devlog.sha && state.devlog.path === path) {
+        body.sha = state.devlog.sha;
+      } else {
+        const existing = await githubFetch(apiUrl(path)).catch(() => null);
+        if (existing?.sha) body.sha = existing.sha;
+      }
+
+      setStatus('正在保存 Devlog 到 GitHub...');
+      const result = await githubFetch(contentUrl(path), {
+        method: 'PUT',
+        body: JSON.stringify(body)
+      });
+
+      state.devlog = { sha: result.content.sha, path, slugTouched: true };
+      setStatus('Devlog 已保存。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
+      await loadDevlogPosts();
+    };
+
+    const saveXWork = async () => {
+      const fields = elements.work;
+      const slug = fields.slug.value.trim() || `${today()}-${toSlug(fields.title.value, 'x-work')}`;
+      fields.slug.value = slug;
+      const path = `${repo.folders.xworks}/${slug}.md`;
+      const body = {
+        message: `${state.xworks.sha ? 'Update' : 'Add'} X work: ${fields.title.value.trim() || slug}`,
+        content: toBase64(buildXWorkMarkdown()),
+        branch: repo.branch
+      };
+
+      if (state.xworks.sha && state.xworks.path === path) {
+        body.sha = state.xworks.sha;
+      } else {
+        const existing = await githubFetch(apiUrl(path)).catch(() => null);
+        if (existing?.sha) body.sha = existing.sha;
+      }
+
+      setStatus('正在保存 X Work 到 GitHub...');
+      const result = await githubFetch(contentUrl(path), {
+        method: 'PUT',
+        body: JSON.stringify(body)
+      });
+
+      state.xworks = { sha: result.content.sha, path, slugTouched: true };
+      setStatus('X Work 已保存。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
+      await loadXWorks();
+    };
+
+    const deleteXWorkFile = async (path, sha, slug) => {
+      if (!window.confirm(`確定刪除 ${slug}？這會從 GitHub 移除對應 Markdown 檔案。`)) {
+        return;
+      }
+
+      if (!sha) {
+        throw new Error('File sha missing during delete.');
+      }
+
+      setStatus('正在刪除 X Work...');
+      await githubFetch(contentUrl(path), {
+        method: 'DELETE',
+        body: JSON.stringify({
+          message: `Delete X work: ${slug}`,
+          sha,
+          branch: repo.branch
+        })
+      });
+
+      if (state.xworks.path === path) {
+        resetXWorkForm();
+      }
+
+      setStatus('X Work 已刪除。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
+      await loadXWorks();
+    };
+
+    const deleteXWork = async () => {
+      const slug = elements.work.slug.value.trim();
+      const path = state.xworks.path || `${repo.folders.xworks}/${slug}.md`;
+      if (!slug) {
+        setStatus('請先選擇或輸入要刪除的 X Work。', 'error');
+        return;
+      }
+
+      const existing = state.xworks.sha ? { sha: state.xworks.sha } : await githubFetch(apiUrl(path));
+      await deleteXWorkFile(path, existing?.sha, slug);
+    };
+
+    const loadXWidgets = () => {
+      if (!document.querySelector('script[src="https://platform.twitter.com/widgets.js"]')) {
+        window.__stationCatXWidgetsLoaded = true;
+        const script = document.createElement('script');
+        script.src = 'https://platform.twitter.com/widgets.js';
+        script.async = true;
+        script.charset = 'utf-8';
+        document.body.appendChild(script);
+      } else {
+        window.twttr?.widgets?.load?.();
+      }
+    };
+
+    const renderXPreview = () => {
+      const xUrl = elements.work.xUrl.value.trim();
+      const validation = validateXPostUrl(xUrl);
+      elements.work.preview.innerHTML = '';
+
+      if (!validation.valid) {
+        elements.work.preview.textContent = validation.message;
+        elements.work.preview.dataset.tone = xUrl ? 'error' : '';
+        return;
+      }
+
+      elements.work.preview.dataset.tone = 'success';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'x-embed-wrapper';
+
+      const blockquote = document.createElement('blockquote');
+      blockquote.className = 'twitter-tweet';
+      blockquote.dataset.theme = 'dark';
+      const embedLink = document.createElement('a');
+      embedLink.href = xUrl;
+      blockquote.append(embedLink);
+
+      const fallback = document.createElement('a');
+      fallback.className = 'x-fallback-link';
+      fallback.href = xUrl;
+      fallback.target = '_blank';
+      fallback.rel = 'noopener noreferrer';
+      fallback.textContent = 'Watch on X';
+
+      wrapper.append(blockquote, fallback);
+      elements.work.preview.append(wrapper);
+      loadXWidgets();
+    };
+
+    elements.tabs.forEach((button) => {
+      button.addEventListener('click', () => setActiveContentType(button.dataset.adminTab));
+    });
+
+    elements.load.addEventListener('click', () => {
+      const action = activeContentType === 'devlog' ? loadDevlogPosts : loadXWorks;
+      action().catch((error) => setStatus(error.message, 'error'));
+    });
+
+    elements.newItem.addEventListener('click', () => {
+      if (activeContentType === 'devlog') resetDevlogForm();
+      else resetXWorkForm();
+    });
+
+    elements.devlog.title.addEventListener('input', () => {
+      if (!state.devlog.sha && !state.devlog.slugTouched) {
+        elements.devlog.slug.value = `${today()}-${toSlug(elements.devlog.title.value, 'devlog')}`;
+      }
+    });
+
+    elements.devlog.slug.addEventListener('input', () => {
+      state.devlog.slugTouched = true;
+    });
+
+    elements.work.title.addEventListener('input', () => {
+      if (!state.xworks.sha && !state.xworks.slugTouched) {
+        elements.work.slug.value = `${today()}-${toSlug(elements.work.title.value, 'x-work')}`;
+      }
+    });
+
+    elements.work.slug.addEventListener('input', () => {
+      state.xworks.slugTouched = true;
+    });
+
+    elements.work.xUrl.addEventListener('input', renderXPreview);
+    elements.work.previewButton.addEventListener('click', renderXPreview);
+    elements.work.deleteButton.addEventListener('click', () => {
+      deleteXWork().catch((error) => setStatus(error.message, 'error'));
+    });
+
+    elements.devlogForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      saveDevlogPost().catch((error) => setStatus(error.message, 'error'));
+    });
+
+    elements.xworksForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      saveXWork().catch((error) => setStatus(error.message, 'error'));
+    });
+
+    resetDevlogForm();
+    resetXWorkForm();
+    setActiveContentType('devlog');
+  </script>
+</BaseLayout>

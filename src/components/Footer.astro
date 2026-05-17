@@ -2,7 +2,7 @@
 import { siteConfig } from '../data/site';
 
 interface Props {
-  lang?: 'en' | 'ja' | 'zh-Hant';
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
 }
 
 const { lang = 'zh-Hant' } = Astro.props;
@@ -10,26 +10,46 @@ const year = new Date().getFullYear();
 const links =
   lang === 'ja'
     ? [
-        { label: 'Caption AI', href: '/ja/apps/caption-ai/' },
+        { label: 'SnapCopy', href: '/ja/apps/caption-ai/' },
+        { label: '作品', href: '/ja/works/' },
+        { label: '開発ログ', href: '/ja/devlog/' },
         { label: 'プライバシー', href: '/ja/apps/caption-ai/privacy/' },
         { label: 'サポート', href: '/ja/apps/caption-ai/support/' },
         { label: '利用規約', href: '/ja/apps/caption-ai/terms/' },
-        { label: 'Android Waitlist', href: '/android/' }
+        { label: 'Android Waitlist', href: '/android/' },
+        { label: 'X', href: 'https://x.com/bketck' }
       ]
     : lang === 'zh-Hant'
       ? [
-          { label: 'Caption AI', href: '/zh-hant/apps/caption-ai/' },
+          { label: 'SnapCopy', href: '/zh-hant/apps/caption-ai/' },
+          { label: '作品集', href: '/zh-hant/works/' },
+          { label: '開發博客', href: '/devlog/' },
           { label: '隱私政策', href: '/zh-hant/apps/caption-ai/privacy/' },
           { label: '支援', href: '/zh-hant/apps/caption-ai/support/' },
           { label: '服務條款', href: '/zh-hant/apps/caption-ai/terms/' },
-          { label: 'Android Waitlist', href: '/android/' }
+          { label: 'Android Waitlist', href: '/android/' },
+          { label: 'X', href: 'https://x.com/bketck' }
+        ]
+    : lang === 'zh-Hans'
+      ? [
+          { label: 'SnapCopy', href: '/zh-hans/apps/caption-ai/' },
+          { label: '作品集', href: '/zh-hans/works/' },
+          { label: '开发博客', href: '/zh-hans/devlog/' },
+          { label: '隐私政策', href: '/zh-hans/apps/caption-ai/privacy/' },
+          { label: '支持', href: '/zh-hans/apps/caption-ai/support/' },
+          { label: '服务条款', href: '/zh-hans/apps/caption-ai/terms/' },
+          { label: 'Android Waitlist', href: '/android/' },
+          { label: 'X', href: 'https://x.com/bketck' }
         ]
     : [
-        { label: 'Caption AI', href: '/apps/caption-ai/' },
+        { label: 'SnapCopy', href: '/apps/caption-ai/' },
+        { label: 'Works', href: '/works/' },
+        { label: 'Dev Blog', href: '/en/devlog/' },
         { label: 'Privacy', href: '/apps/caption-ai/privacy/' },
         { label: 'Support', href: '/apps/caption-ai/support/' },
         { label: 'Terms', href: '/apps/caption-ai/terms/' },
-        { label: 'Android Waitlist', href: '/android/' }
+        { label: 'Android Waitlist', href: '/android/' },
+        { label: 'X', href: 'https://x.com/bketck' }
       ];
 ---
 

@@ -4,11 +4,11 @@ export const brandEn = {
     title: 'AI apps for everyday creativity.',
     subtitle:
       'We build simple tools that help people create, polish, and share everyday moments faster.',
-    primaryCta: 'View Caption AI',
+    primaryCta: 'View SnapCopy',
     secondaryCta: 'Join the waitlist'
   },
   productCard: {
-    title: 'Caption AI',
+    title: 'SnapCopy',
     description:
       'Turn breakfast, coffee, walks, travel, outfits, pets, and everyday photos into share-ready captions.'
   },

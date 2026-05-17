@@ -3,10 +3,10 @@ export const siteConfig = {
   legalName: 'Station Cat',
   baseUrl: 'https://example.com',
   defaultLocale: 'zh-Hant',
-  supportEmail: 'support@example.com',
+  supportEmail: 'brodstem@protonmail.com',
   ogImage: '/images/brand-hero-placeholder.svg',
   description:
     'A small creative station for cats, meals, AI tools, and curious ideas.'
 };
 
-export type Locale = 'en' | 'ja' | 'zh-Hant';
+export type Locale = 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';

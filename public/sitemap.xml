@@ -2,7 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://example.com/</loc></url>
   <url><loc>https://example.com/en/</loc></url>
+  <url><loc>https://example.com/en/works/</loc></url>
+  <url><loc>https://example.com/en/devlog/</loc></url>
+  <url><loc>https://example.com/en/devlog/2026-05-17-station-cat-homepage/</loc></url>
+  <url><loc>https://example.com/devlog/</loc></url>
+  <url><loc>https://example.com/devlog/2026-05-17-station-cat-homepage/</loc></url>
   <url><loc>https://example.com/about/</loc></url>
+  <url><loc>https://example.com/works/</loc></url>
   <url><loc>https://example.com/apps/</loc></url>
   <url><loc>https://example.com/apps/caption-ai/</loc></url>
   <url><loc>https://example.com/apps/caption-ai/download/</loc></url>
@@ -11,13 +17,27 @@
   <url><loc>https://example.com/apps/caption-ai/support/</loc></url>
   <url><loc>https://example.com/apps/caption-ai/terms/</loc></url>
   <url><loc>https://example.com/zh-hant/</loc></url>
+  <url><loc>https://example.com/zh-hant/works/</loc></url>
   <url><loc>https://example.com/zh-hant/apps/caption-ai/</loc></url>
   <url><loc>https://example.com/zh-hant/apps/caption-ai/download/</loc></url>
   <url><loc>https://example.com/zh-hant/apps/caption-ai/android/</loc></url>
   <url><loc>https://example.com/zh-hant/apps/caption-ai/privacy/</loc></url>
   <url><loc>https://example.com/zh-hant/apps/caption-ai/support/</loc></url>
   <url><loc>https://example.com/zh-hant/apps/caption-ai/terms/</loc></url>
+  <url><loc>https://example.com/zh-hans/</loc></url>
+  <url><loc>https://example.com/zh-hans/works/</loc></url>
+  <url><loc>https://example.com/zh-hans/devlog/</loc></url>
+  <url><loc>https://example.com/zh-hans/devlog/2026-05-17-station-cat-homepage/</loc></url>
+  <url><loc>https://example.com/zh-hans/apps/caption-ai/</loc></url>
+  <url><loc>https://example.com/zh-hans/apps/caption-ai/download/</loc></url>
+  <url><loc>https://example.com/zh-hans/apps/caption-ai/android/</loc></url>
+  <url><loc>https://example.com/zh-hans/apps/caption-ai/privacy/</loc></url>
+  <url><loc>https://example.com/zh-hans/apps/caption-ai/support/</loc></url>
+  <url><loc>https://example.com/zh-hans/apps/caption-ai/terms/</loc></url>
   <url><loc>https://example.com/ja/</loc></url>
+  <url><loc>https://example.com/ja/works/</loc></url>
+  <url><loc>https://example.com/ja/devlog/</loc></url>
+  <url><loc>https://example.com/ja/devlog/2026-05-17-station-cat-homepage/</loc></url>
   <url><loc>https://example.com/ja/apps/caption-ai/</loc></url>
   <url><loc>https://example.com/ja/apps/caption-ai/download/</loc></url>
   <url><loc>https://example.com/ja/apps/caption-ai/android/</loc></url>

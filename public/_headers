@@ -1,0 +1,7 @@
+/admin
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Cache-Control: no-store
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Cache-Control: no-store

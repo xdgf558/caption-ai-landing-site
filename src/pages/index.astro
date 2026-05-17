@@ -1,12 +1,23 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroSection from '../components/HeroSection.astro';
 import ContentPillars from '../components/ContentPillars.astro';
 import AppCard from '../components/AppCard.astro';
 import CreatorNote from '../components/CreatorNote.astro';
 import CTASection from '../components/CTASection.astro';
+import XWorkCard from '../components/XWorkCard.astro';
 
-const xUrl = 'https://x.com/stationcat';
+const xUrl = 'https://x.com/bketck';
+const allWorks = await getCollection('xworks');
+const featuredWorks = allWorks
+  .filter((work) => work.data.status === 'published' && work.data.featured)
+  .sort((a, b) => {
+    const orderDiff = a.data.sortOrder - b.data.sortOrder;
+    if (orderDiff !== 0) return orderDiff;
+    return new Date(b.data.publishedAt ?? 0).getTime() - new Date(a.data.publishedAt ?? 0).getTime();
+  })
+  .slice(0, 3);
 
 const heroCards = [
   { icon: 'cat', title: 'Cat log', text: '窗邊、沙發和一些很有主見的小動靜。' },
@@ -39,6 +50,7 @@ const experiments = [
   bodyClass="station-home"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/' },
     { hrefLang: 'en', href: '/en/' },
     { hrefLang: 'ja', href: '/ja/' },
     { hrefLang: 'x-default', href: '/' }
@@ -84,12 +96,12 @@ const experiments = [
       <p class="station-kicker">Apps from Station Cat</p>
       <h2>圍繞日常創作做的小 AI 工具。</h2>
       <p>
-        首個產品是 Caption AI。首頁只放入口和方向，真正的功能、場景、隱私和等待名單會留在產品頁。
+        首個產品是 SnapCopy。首頁只放入口和方向，真正的功能、場景、隱私和等待名單會留在產品頁。
       </p>
     </div>
     <AppCard
       eyebrow="Current app"
-      title="Caption AI"
+      title="SnapCopy"
       subtitle="Turn everyday photos into shareable captions."
       description="拍下早餐、咖啡、散步、寵物或旅行場景，生成適合社交平台分享的文案，並逐漸學習你的表達偏好。"
       href="/apps/caption-ai/"
@@ -109,6 +121,35 @@ const experiments = [
     ]}
   />
 
+  <section id="works" class="station-section station-x-latest">
+    <div class="station-section__heading">
+      <p class="station-kicker">Latest from X</p>
+      <h2>來自 X 的近期作品和想法。</h2>
+      <p>A few recent posts, videos, AI experiments, cats, meals, and strange ideas from Station Cat.</p>
+    </div>
+    {featuredWorks.length > 0 ? (
+      <div class="x-work-grid x-work-grid--featured">
+        {featuredWorks.map((work) => (
+          <XWorkCard
+            title={work.data.title}
+            description={work.data.description}
+            xUrl={work.data.xUrl}
+            type={work.data.type}
+            tags={work.data.tags}
+            publishedAt={work.data.publishedAt}
+            compact
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="empty-state">New works will appear here soon.</p>
+    )}
+    <div class="button-row">
+      <a class="button button-primary" href="/works/">View all works</a>
+      <a class="button button-secondary" href={xUrl} target="_blank" rel="noopener noreferrer">Follow on X</a>
+    </div>
+  </section>
+
   <ContentPillars
     id="experiments"
     eyebrow="Latest experiments"
@@ -123,7 +164,7 @@ const experiments = [
     description="Station Cat 還在演化。這裡會繼續出現貓、App、AI 實驗、飯桌和一些奇怪但有趣的想法。"
     ctas={[
       { label: 'Follow on X', href: xUrl, variant: 'primary' },
-      { label: 'View Caption AI', href: '/apps/caption-ai/', variant: 'secondary' },
+      { label: 'View SnapCopy', href: '/apps/caption-ai/', variant: 'secondary' },
       { label: 'Join Android Waitlist', href: '/android/', variant: 'ghost' }
     ]}
   />

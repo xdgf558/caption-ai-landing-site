@@ -1,0 +1,112 @@
+---
+import XWorkCard from './XWorkCard.astro';
+
+interface Copy {
+  title: string;
+  description: string;
+  eyebrow: string;
+  heroTitle: string;
+  heroDescription: string;
+  heroNote: string;
+  follow: string;
+  visit: string;
+  featuredEyebrow: string;
+  featuredTitle: string;
+  featuredEmpty: string;
+  allEyebrow: string;
+  allTitle: string;
+  allEmpty: string;
+  ctaTitle: string;
+  ctaDescription: string;
+  viewApp: string;
+  watch: string;
+  embedFallback: string;
+  invalid: string;
+}
+
+interface Props {
+  copy: Copy;
+  lang: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+  canonicalPath: string;
+  featuredWorks: any[];
+  publishedWorks: any[];
+  xUrl: string;
+}
+
+const { copy, lang, canonicalPath, featuredWorks, publishedWorks, xUrl } = Astro.props;
+const dateLocale = lang === 'ja' ? 'ja' : lang === 'zh-Hant' ? 'zh-Hant' : lang === 'zh-Hans' ? 'zh-Hans' : 'en';
+---
+
+<section class="works-hero">
+  <p class="station-kicker">{copy.eyebrow}</p>
+  <h1>{copy.heroTitle}</h1>
+  <p>{copy.heroDescription}</p>
+  <p class="fine-print">{copy.heroNote}</p>
+  <div class="button-row">
+    <a class="button button-primary" href={xUrl} target="_blank" rel="noopener noreferrer">{copy.follow}</a>
+    <a class="button button-secondary" href={lang === 'zh-Hant' ? '/' : lang === 'en' ? '/en/' : lang === 'ja' ? '/ja/' : '/zh-hans/'}>{copy.visit}</a>
+  </div>
+</section>
+
+<section class="station-section">
+  <div class="station-section__heading">
+    <p class="station-kicker">{copy.featuredEyebrow}</p>
+    <h2>{copy.featuredTitle}</h2>
+  </div>
+  {featuredWorks.length > 0 ? (
+    <div class="x-work-grid">
+      {featuredWorks.map((work) => (
+        <XWorkCard
+          title={work.data.title}
+          description={work.data.description}
+          xUrl={work.data.xUrl}
+          type={work.data.type}
+          tags={work.data.tags}
+          publishedAt={work.data.publishedAt}
+          watchLabel={copy.watch}
+          embedFallbackLabel={copy.embedFallback}
+          invalidLabel={copy.invalid}
+          dateLocale={dateLocale}
+        />
+      ))}
+    </div>
+  ) : (
+    <p class="empty-state">{copy.featuredEmpty}</p>
+  )}
+</section>
+
+<section class="station-section">
+  <div class="station-section__heading">
+    <p class="station-kicker">{copy.allEyebrow}</p>
+    <h2>{copy.allTitle}</h2>
+  </div>
+  {publishedWorks.length > 0 ? (
+    <div class="x-work-grid">
+      {publishedWorks.map((work) => (
+        <XWorkCard
+          title={work.data.title}
+          description={work.data.description}
+          xUrl={work.data.xUrl}
+          type={work.data.type}
+          tags={work.data.tags}
+          publishedAt={work.data.publishedAt}
+          watchLabel={copy.watch}
+          embedFallbackLabel={copy.embedFallback}
+          invalidLabel={copy.invalid}
+          dateLocale={dateLocale}
+        />
+      ))}
+    </div>
+  ) : (
+    <p class="empty-state">{copy.allEmpty}</p>
+  )}
+</section>
+
+<section class="station-section works-cta">
+  <h2>{copy.ctaTitle}</h2>
+  <p>{copy.ctaDescription}</p>
+  <div class="button-row">
+    <a class="button button-primary" href={xUrl} target="_blank" rel="noopener noreferrer">{copy.follow}</a>
+    <a class="button button-secondary" href="/apps/caption-ai/">{copy.viewApp}</a>
+  </div>
+</section>
