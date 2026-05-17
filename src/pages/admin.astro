@@ -173,6 +173,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <input id="work-published-at" name="publishedAt" type="datetime-local" />
           </label>
         </div>
+        <p class="fine-print">
+          保存 X Work 時會自動設為 published，並自動加入首頁精選。重新部署後會出現在首頁 Latest from X。
+        </p>
 
         <label>
           补充说明
@@ -518,8 +521,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       return `---\ntitle: ${yamlString(data.title)}\npostSlug: ${yamlString(data.postSlug)}\ndescription: ${yamlString(data.description)}\npubDate: ${yamlString(data.pubDate)}\nstatus: ${yamlString(data.status)}\nlanguage: ${yamlString(data.language)}\ntags: ${JSON.stringify(data.tags)}\ndraft: ${data.draft}\n---\n\n${fields.body.value.trim()}\n`;
     };
 
+    const publishXWorkByDefault = () => {
+      elements.work.featured.checked = true;
+      elements.work.statusField.value = 'published';
+    };
+
     const buildXWorkMarkdown = () => {
       const fields = elements.work;
+      publishXWorkByDefault();
       const xUrl = fields.xUrl.value.trim();
       const validation = validateXPostUrl(xUrl);
       if (!validation.valid) {
@@ -554,10 +563,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       fields.xUrl.value = '';
       fields.type.value = 'post';
       fields.language.value = 'en';
-      fields.statusField.value = 'draft';
+      fields.statusField.value = 'published';
       fields.sortOrder.value = '10';
       fields.publishedAt.value = nowLocal();
-      fields.featured.checked = false;
+      fields.featured.checked = true;
       fields.description.value = '';
       fields.tags.value = '';
       fields.body.value = '';
@@ -822,9 +831,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       });
 
       state.xworks = { sha: result.content.sha, path, slugTouched: true };
-      setStatus('X Work 已保存。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
+      setStatus('X Work 已保存为 published，并已加入首页精选。重新部署後會出現在首頁 Latest from X。', 'success');
       await loadXWorks();
-      setStatus('X Work 已保存。Cloudflare Pages 會在 GitHub 更新後自動重新部署。', 'success');
+      setStatus('X Work 已保存为 published，并已加入首页精选。重新部署後會出現在首頁 Latest from X。', 'success');
     };
 
     const deleteXWorkFile = async (path, sha, slug) => {
