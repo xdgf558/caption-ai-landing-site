@@ -1,17 +1,17 @@
 ---
-title: "Caption AI 進入測試階段：一張照片，試著生成更適合分享的文案"
-postSlug: "2026-05-17-caption-ai-testing"
-description: "Caption AI 已經進入 TestFlight 測試階段。這是一款圍繞日常照片、場景識別和社群文案生成的小工具，目前重點測試圖片理解、文案貼合度、複製分享和評分回饋。"
+title: "snapCopy 進入測試階段：一張照片，試著生成更適合分享的文案"
+postSlug: "2026-05-17-snapcopy-testing"
+description: "snapCopy 已經進入 TestFlight 測試階段。這是一款圍繞日常照片、場景識別和社群文案生成的小工具，目前重點測試圖片理解、文案貼合度、複製分享和評分回饋。"
 pubDate: "2026-05-17"
 status: "testing"
 language: "zh-Hant"
-tags: ["Caption AI", "App Build", "AI Tools", "TestFlight", "Station Cat"]
+tags: ["snapCopy", "App Build", "AI Tools", "TestFlight", "Station Cat"]
 draft: false
 ---
 
-# Caption AI 進入測試階段：一張照片，試著生成更適合分享的文案
+# snapCopy 進入測試階段：一張照片，試著生成更適合分享的文案
 
-今天，Station Cat 的第一個小 App，**Caption AI**，正式進入測試階段了。
+今天，Station Cat 的第一個小 App，**snapCopy**，正式進入測試階段了。
 
 它的想法其實很簡單。
 
@@ -23,7 +23,7 @@ draft: false
 
 **這張圖到底配什麼文案？**
 
-Caption AI 想解決的就是這個小問題。
+snapCopy 想解決的就是這個小問題。
 
 ## 它現在能做什麼
 
@@ -90,7 +90,7 @@ App 會嘗試識別照片裡的場景。
 比如你喜歡短句、輕鬆、帶一點幽默感。  
 或者你喜歡更安靜、更日系、更適合日常記錄的表達。
 
-這個方向還在早期測試中，但它是 Caption AI 後面很重要的一部分。
+這個方向還在早期測試中，但它是 snapCopy 後面很重要的一部分。
 
 ## 為什麼先用本機 AI
 
@@ -113,7 +113,7 @@ App 會嘗試識別照片裡的場景。
 
 ## 我希望它最後變成什麼樣
 
-我希望 Caption AI 不是一個冷冰冰的「文案機器」。
+我希望 snapCopy 不是一個冷冰冰的「文案機器」。
 
 它應該更像一個懂你風格的小工具。
 
@@ -147,7 +147,7 @@ Android 等待名單
 
 ## 如果你想測試
 
-Caption AI 目前還在 TestFlight 測試階段。
+snapCopy 目前還在 TestFlight 測試階段。
 
 如果你也經常拍早餐、咖啡、貓、散步、旅行、街景或一些奇怪但想分享的小瞬間，可以加入等待名單。
 
@@ -162,4 +162,4 @@ Caption AI 目前還在 TestFlight 測試階段。
 飯桌會繼續出現。  
 奇怪想法也會繼續冒出來。
 
-Caption AI 也會繼續慢慢長大。
+snapCopy 也會繼續慢慢長大。

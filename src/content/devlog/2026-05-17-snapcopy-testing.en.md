@@ -1,17 +1,17 @@
 ---
-title: "Caption AI Enters Testing: One Photo, Better Captions for Sharing"
-postSlug: "2026-05-17-caption-ai-testing"
-description: "Caption AI has entered TestFlight testing. It is a small tool built around everyday photos, scene recognition, and social caption generation, with the current test focused on image understanding, caption fit, copy and share flows, and rating feedback."
+title: "snapCopy Enters Testing: One Photo, Better Captions for Sharing"
+postSlug: "2026-05-17-snapcopy-testing"
+description: "snapCopy has entered TestFlight testing. It is a small tool built around everyday photos, scene recognition, and social caption generation, with the current test focused on image understanding, caption fit, copy and share flows, and rating feedback."
 pubDate: "2026-05-17"
 status: "testing"
 language: "en"
-tags: ["Caption AI", "App Build", "AI Tools", "TestFlight", "Station Cat"]
+tags: ["snapCopy", "App Build", "AI Tools", "TestFlight", "Station Cat"]
 draft: false
 ---
 
-# Caption AI Enters Testing: One Photo, Better Captions for Sharing
+# snapCopy Enters Testing: One Photo, Better Captions for Sharing
 
-Today, Station Cat's first small app, **Caption AI**, officially entered testing.
+Today, Station Cat's first small app, **snapCopy**, officially entered testing.
 
 The idea is simple.
 
@@ -23,7 +23,7 @@ The photo is already there, but the last step gets stuck:
 
 **What caption should go with this image?**
 
-That is the small problem Caption AI is trying to solve.
+That is the small problem snapCopy is trying to solve.
 
 ## What It Can Do Right Now
 
@@ -90,7 +90,7 @@ Over time, the app should gradually remember your preferences.
 Maybe you like short sentences, a relaxed tone, and a little humor.  
 Or maybe you prefer quieter, more Japanese-inspired wording that feels better for daily records.
 
-This direction is still early, but it is an important part of where Caption AI should go next.
+This direction is still early, but it is an important part of where snapCopy should go next.
 
 ## Why Start With On-Device AI
 
@@ -113,7 +113,7 @@ Cloud enhancement involves cost, privacy notices, and usage limits, so it will b
 
 ## What I Hope It Becomes
 
-I do not want Caption AI to become a cold "caption machine."
+I do not want snapCopy to become a cold "caption machine."
 
 It should feel more like a small tool that understands your style.
 
@@ -147,7 +147,7 @@ Preparation for official release
 
 ## If You Want to Test
 
-Caption AI is currently in TestFlight testing.
+snapCopy is currently in TestFlight testing.
 
 If you often take photos of breakfast, coffee, cats, walks, travel, street views, or strange little moments you still want to share, you can join the waitlist.
 
@@ -162,4 +162,4 @@ The cat will keep looking out the window.
 The table will keep appearing.  
 Strange ideas will keep popping up.
 
-Caption AI will keep growing too.
+snapCopy will keep growing too.
