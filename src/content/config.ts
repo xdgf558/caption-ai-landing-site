@@ -8,7 +8,7 @@ const devlog = defineCollection({
     description: z.string(),
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
-    status: z.enum(['building', 'shipped', 'note', 'maintenance']).default('note'),
+    status: z.enum(['building', 'testing', 'shipped', 'note', 'maintenance']).default('note'),
     language: z.enum(['zh-Hant', 'zh-Hans', 'en', 'ja']).default('zh-Hant'),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false)

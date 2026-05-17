@@ -23,6 +23,7 @@ export const devlogCopy = {
     titleSuffix: 'Station Cat 開發博客',
     statuses: {
       building: '開發中',
+      testing: '測試中',
       shipped: '已完成',
       note: '記錄',
       maintenance: '維護'
@@ -43,6 +44,7 @@ export const devlogCopy = {
     titleSuffix: 'Station Cat 开发博客',
     statuses: {
       building: '开发中',
+      testing: '测试中',
       shipped: '已完成',
       note: '记录',
       maintenance: '维护'
@@ -63,6 +65,7 @@ export const devlogCopy = {
     titleSuffix: 'Station Cat Dev Blog',
     statuses: {
       building: 'Building',
+      testing: 'Testing',
       shipped: 'Shipped',
       note: 'Note',
       maintenance: 'Maintenance'
@@ -83,6 +86,7 @@ export const devlogCopy = {
     titleSuffix: 'Station Cat 開発ログ',
     statuses: {
       building: '開発中',
+      testing: 'テスト中',
       shipped: '公開済み',
       note: 'メモ',
       maintenance: 'メンテナンス'
@@ -100,7 +104,7 @@ export const devlogCopy = {
   empty: string;
   back: string;
   titleSuffix: string;
-  statuses: Record<'building' | 'shipped' | 'note' | 'maintenance', string>;
+  statuses: Record<'building' | 'testing' | 'shipped' | 'note' | 'maintenance', string>;
 }>;
 
 export const devlogPathPrefix = {
