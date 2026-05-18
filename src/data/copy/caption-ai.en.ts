@@ -10,7 +10,7 @@ export const captionAiEn = {
     title: 'Take a photo. Get better captions. Share faster.',
     subtitle:
       'SnapCopy helps you turn everyday photos into social-ready captions. Breakfast, coffee, walks, pets, travel, outfits, and daily moments can become easier to post with captions that match the scene and your personal style.',
-    primaryCta: 'Join iOS Waitlist',
+    primaryCta: 'Join the iOS Test',
     secondaryCta: 'View Privacy Design'
   },
   visual: {
@@ -122,23 +122,23 @@ export const captionAiEn = {
   },
   platform: {
     kicker: 'Availability',
-    title: 'iOS first. More platforms later.',
+    title: 'iOS is now in its first closed testing round.',
     description:
-      'SnapCopy is being developed for iPhone first. Android interest is being collected through a waitlist while the iOS version is tested and improved.',
-    iosCta: 'Join iOS Waitlist',
-    androidCta: 'Join Android Waitlist'
+      'SnapCopy is currently in its first iOS closed testing round. Android interest is being collected through an updates list while the iOS version is tested and improved.',
+    iosCta: 'Join the iOS Test',
+    androidCta: 'Get Android Updates'
   },
   waitlist: {
-    title: 'Join the iOS waitlist',
-    description: 'Get updates about TestFlight, App Store launch, and new features as SnapCopy moves toward iPhone.',
-    button: 'Join iOS Waitlist'
+    title: 'Join the iOS closed test',
+    description: 'SnapCopy is currently in its first testing round. Enter your email and, if this round still has slots, you will receive the TestFlight entry link.',
+    button: 'Join the Test'
   },
   faqTitle: 'Questions before launch',
   finalCta: {
     kicker: 'iOS launch',
     title: 'Make everyday photos easier to share.',
-    description: 'Join the waitlist and follow the build as SnapCopy moves toward its iOS launch.',
-    primary: 'Join iOS Waitlist',
+    description: 'SnapCopy is currently in its first closed testing round. Join the test and help shape the app before launch.',
+    primary: 'Join the Test',
     secondary: 'Follow Station Cat'
   },
   makerNote: 'Made by Station Cat, an independent creator studio.',

@@ -10,7 +10,7 @@ export const captionAiZhHant = {
     title: '拍下日常，快速生成更適合分享的文案。',
     subtitle:
       '早餐、咖啡、散步、寵物、旅行、穿搭和日常片刻，都可以變成更容易發布的社交文案。SnapCopy 會根據照片場景和你的偏好，提供更貼近日常語氣的文案選項。',
-    primaryCta: '加入 iOS 等待名單',
+    primaryCta: '參與 iOS 測試',
     secondaryCta: '查看隱私設計'
   },
   visual: {
@@ -87,22 +87,22 @@ export const captionAiZhHant = {
   },
   platform: {
     kicker: 'Availability',
-    title: 'iOS 優先，其他平台之後加入。',
-    description: 'SnapCopy 會先為 iPhone 開發。Android 需求會透過等待名單收集，等 iOS 版本測試和改善後再安排。',
-    iosCta: '加入 iOS 等待名單',
-    androidCta: '加入 Android 等待名單'
+    title: 'iOS 已進入第一輪封閉測試。',
+    description: 'SnapCopy 目前正在第一輪 iOS 封閉測試中。Android 需求會先透過通知名單收集，等 iOS 版本測試和改善後再安排。',
+    iosCta: '參與 iOS 測試',
+    androidCta: '取得 Android 通知'
   },
   waitlist: {
-    title: '加入 iOS 等待名單',
-    description: '取得 TestFlight、App Store 上架和新功能通知。',
-    button: '加入 iOS 等待名單'
+    title: '參與 iOS 封閉測試',
+    description: 'SnapCopy 目前正在第一輪測試中。填寫 Email 後，如果本輪仍有測試名額，系統會提供 TestFlight 測試入口。',
+    button: '參與測試'
   },
   faqTitle: '上架前常見問題',
   finalCta: {
     kicker: 'iOS launch',
     title: '讓日常照片更容易分享。',
-    description: '加入等待名單，跟著 SnapCopy 一起走向 iOS 上架。',
-    primary: '加入 iOS 等待名單',
+    description: 'SnapCopy 目前正在第一輪封閉測試中，歡迎參與測試並跟著產品一起完善。',
+    primary: '參與測試',
     secondary: '追蹤 Station Cat'
   },
   makerNote: 'Made by Station Cat, an independent creator studio.',

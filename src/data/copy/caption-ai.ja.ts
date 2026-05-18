@@ -10,7 +10,7 @@ export const captionAiJa = {
     title: '写真にぴったりの言葉を、すぐに。',
     subtitle:
       '朝食、カフェ、散歩、ペット、旅行、日常の写真から、SNSに使いやすいキャプションを作成します。写真の雰囲気を読み取り、あなたの好みに合わせた言葉を提案することを目指しています。',
-    primaryCta: 'iOSの順番待ちに登録',
+    primaryCta: 'iOS テストに参加',
     secondaryCta: 'プライバシーを見る'
   },
   visual: {
@@ -87,23 +87,23 @@ export const captionAiJa = {
   },
   platform: {
     kicker: 'Availability',
-    title: 'まずは iOS。ほかのプラットフォームはその後に。',
+    title: 'iOS は第1回クローズドテスト中です。',
     description:
-      'SnapCopy は iPhone 向けに先行開発しています。Android 版への関心は、iOS 版のテストと改善を進めながら順番待ちで受け付けています。',
-    iosCta: 'iOSの順番待ちに登録',
-    androidCta: 'Androidの順番待ちに登録'
+      'SnapCopy は現在、第1回 iOS クローズドテスト中です。Android 版への関心は、iOS 版のテストと改善を進めながら通知リストで受け付けています。',
+    iosCta: 'iOS テストに参加',
+    androidCta: 'Android のお知らせ'
   },
   waitlist: {
-    title: 'iOS の順番待ちに登録',
-    description: 'TestFlight、App Store 公開、新機能のお知らせを受け取れます。',
-    button: '順番待ちに登録'
+    title: 'iOS クローズドテストに参加',
+    description: 'SnapCopy は現在、第1回テスト中です。メールアドレスを入力すると、今回の枠が残っている場合に TestFlight の入口を案内します。',
+    button: 'テストに参加'
   },
   faqTitle: '公開前のよくある質問',
   finalCta: {
     kicker: 'iOS launch',
     title: '日常の写真を、もっと投稿しやすく。',
-    description: 'iOS 公開に向けた進捗を受け取りながら、SnapCopy の開発を見守れます。',
-    primary: 'iOSの順番待ちに登録',
+    description: 'SnapCopy は現在、第1回クローズドテスト中です。テストに参加して、公開前の改善に協力できます。',
+    primary: 'テストに参加',
     secondary: 'Station Cat をフォロー'
   },
   makerNote: 'Made by Station Cat, an independent creator studio.',
