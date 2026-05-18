@@ -8,8 +8,8 @@ import { captionAiJa } from '../../../../data/copy/caption-ai.ja';
 ---
 
 <ProductLayout
-  title="アプリは準備中です"
-  description="SnapCopy の iOS 先行案内と Android 版のお知らせを受け取れます。"
+  title="SnapCopy クローズドテスト"
+  description="SnapCopy は第1回クローズドテストに入りました。必要な方はテストに参加できます。"
   lang="ja"
   canonicalPath="/ja/apps/caption-ai/download/"
   alternates={[
@@ -22,13 +22,13 @@ import { captionAiJa } from '../../../../data/copy/caption-ai.ja';
 >
   <section class="page-shell">
     <p class="section-kicker">Download</p>
-    <h1>SnapCopy は iPhone 向けに準備中です。</h1>
+    <h1>SnapCopy は第1回クローズドテスト中です。</h1>
     <p>
-      TestFlight、App Store 公開、新機能のお知らせを受け取るには、順番待ちに登録してください。
+      テスト枠が必要な方は、下の「テストに参加」をクリックしてください。
     </p>
     <div class="button-row">
-      <a class="button button-primary" href="#waitlist-ios">iOSの順番待ちに登録</a>
-      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">Androidの順番待ちに登録</a>
+      <a class="button button-primary" href="#waitlist-ios">テストに参加</a>
+      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">Android のお知らせ</a>
     </div>
   </section>
   <DownloadButtons
@@ -40,14 +40,14 @@ import { captionAiJa } from '../../../../data/copy/caption-ai.ja';
   />
   <WaitlistForm
     id="waitlist-ios"
-    title="iOS の先行案内を受け取る"
-    description="SnapCopy のテスト準備ができたらお知らせします。"
+    title="iOS クローズドテストに参加"
+    description="メールアドレスを入力してください。今回のテスト枠が残っている場合、TestFlight の入口を案内します。"
     formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
     product={captionAiProduct.id}
     locale="ja"
     platform="ios"
     privacyPath="/ja/apps/caption-ai/privacy/"
-    buttonLabel="先行案内を受け取る"
+    buttonLabel="テストに参加"
     source="download-page"
   />
   <UseCaseSection title="日常の投稿を助けるアプリ" scenes={captionAiJa.scenes} />

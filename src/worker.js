@@ -169,7 +169,7 @@ const handleWaitlistSubmit = async (request, env) => {
       return json({
         ok: true,
         status: 'invite',
-        message: 'You are on the test list. Open the TestFlight link below.',
+        message: 'Your test slot is ready. Open the TestFlight link below.',
         publicLink: allocation.public_link,
         capacity: allocation.capacity,
         distributedCount: allocation.distributed_count
@@ -182,7 +182,7 @@ const handleWaitlistSubmit = async (request, env) => {
     status: 'waitlisted',
     message:
       data.platform === 'ios'
-        ? 'You are on the waitlist. The current TestFlight round is full or not open yet.'
+        ? 'Your test request was received. The current TestFlight round is full or not open yet.'
         : 'You are on the Android updates list.',
     capacity: setting?.capacity ?? 0,
     distributedCount: setting?.distributed_count ?? 0

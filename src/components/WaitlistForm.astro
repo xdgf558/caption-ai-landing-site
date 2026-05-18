@@ -22,7 +22,7 @@ const privacyPrefix =
       ? '送出前，請先閱讀'
       : locale === 'zh-Hans'
         ? '提交前，请先阅读'
-      : 'Before joining, review the ';
+      : 'Before joining the test, review the ';
 const privacyLabel =
   locale === 'ja' ? 'プライバシーポリシー' : locale === 'zh-Hant' ? '隱私政策' : locale === 'zh-Hans' ? '隐私政策' : 'privacy policy';
 const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale === 'zh-Hant' || locale === 'zh-Hans' ? '。' : '.';
@@ -30,7 +30,23 @@ const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale 
 
 <section class="waitlist-panel" id={id}>
   <div>
-    <p class="section-kicker">{platform === 'ios' ? 'iOS waitlist' : 'Android updates'}</p>
+    <p class="section-kicker">{
+      platform === 'ios'
+        ? locale === 'ja'
+          ? 'iOS クローズドテスト'
+          : locale === 'zh-Hant'
+            ? 'iOS 封閉測試'
+            : locale === 'zh-Hans'
+              ? 'iOS 封闭测试'
+              : 'iOS closed test'
+        : locale === 'ja'
+          ? 'Android のお知らせ'
+          : locale === 'zh-Hant'
+            ? 'Android 通知'
+            : locale === 'zh-Hans'
+              ? 'Android 通知'
+              : 'Android updates'
+    }</p>
     <h2>{title}</h2>
     <p>{description}</p>
     <p class="form-privacy">
@@ -85,9 +101,9 @@ const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale 
         {locale === 'ja'
           ? 'Tally の実フォーム URL を設定すると、この場所に埋め込みフォームが表示されます。'
           : locale === 'zh-Hant'
-            ? '設定正式的 Tally 表單 URL 後，這裡會顯示嵌入式等待名單表單。'
+            ? '設定正式的 Tally 表單 URL 後，這裡會顯示嵌入式測試申請表單。'
           : locale === 'zh-Hans'
-            ? '设置正式的 Tally 表单 URL 后，这里会显示嵌入式等待名单表单。'
+            ? '设置正式的 Tally 表单 URL 后，这里会显示嵌入式测试申请表单。'
           : 'Replace the Tally placeholder URL to show the embedded waitlist form here.'}
       </p>
     </form>
@@ -99,28 +115,28 @@ const privacySuffix = locale === 'ja' ? ' をご確認ください。' : locale 
     en: {
       loading: 'Submitting...',
       invite: 'You are on the test list. Open TestFlight:',
-      waitlisted: 'You are on the waitlist. We will email you when the next round opens.',
+      waitlisted: 'Your test request was received. We will email you when the next round opens.',
       error: 'Something went wrong. Please try again later.',
       open: 'Open TestFlight'
     },
     ja: {
       loading: '送信中...',
       invite: 'テスト参加枠を確保しました。TestFlight を開いてください:',
-      waitlisted: '順番待ちに登録しました。次の枠が開いたらメールでお知らせします。',
+      waitlisted: 'テスト申請を受け付けました。次の枠が開いたらメールでお知らせします。',
       error: '送信できませんでした。時間をおいて再度お試しください。',
       open: 'TestFlight を開く'
     },
     'zh-Hant': {
       loading: '送出中...',
       invite: '你已取得本輪測試名額，請開啟 TestFlight：',
-      waitlisted: '已加入等待名單。下一輪測試開放時，我們會寄信通知你。',
+      waitlisted: '已收到測試申請。下一輪測試開放時，我們會寄信通知你。',
       error: '送出失敗，請稍後再試。',
       open: '開啟 TestFlight'
     },
     'zh-Hans': {
       loading: '提交中...',
       invite: '你已获得本轮测试名额，请打开 TestFlight：',
-      waitlisted: '已加入等待名单。下一轮测试开放时，我们会发邮件通知你。',
+      waitlisted: '已收到测试申请。下一轮测试开放时，我们会发邮件通知你。',
       error: '提交失败，请稍后再试。',
       open: '打开 TestFlight'
     }

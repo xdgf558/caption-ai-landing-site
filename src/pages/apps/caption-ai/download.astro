@@ -8,8 +8,8 @@ import { captionAiEn } from '../../../data/copy/caption-ai.en';
 ---
 
 <ProductLayout
-  title="The app is coming soon"
-  description="Join the SnapCopy iOS waitlist and get Android updates before public launch."
+  title="SnapCopy closed beta"
+  description="SnapCopy has entered its first closed testing round. Join the test if you need access."
   lang="en"
   canonicalPath="/apps/caption-ai/download/"
   alternates={[
@@ -22,13 +22,13 @@ import { captionAiEn } from '../../../data/copy/caption-ai.en';
 >
   <section class="page-shell">
     <p class="section-kicker">Download</p>
-    <h1>SnapCopy is coming to iPhone.</h1>
+    <h1>SnapCopy is in its first closed testing round.</h1>
     <p>
-      Join the waitlist to get updates about TestFlight, App Store launch, and new features.
+      If you need access, click Join the Test below.
     </p>
     <div class="button-row">
-      <a class="button button-primary" href="#waitlist-ios">Join iOS Waitlist</a>
-      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">Join Android Waitlist</a>
+      <a class="button button-primary" href="#waitlist-ios">Join the Test</a>
+      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">Get Android Updates</a>
     </div>
   </section>
   <DownloadButtons
@@ -40,14 +40,14 @@ import { captionAiEn } from '../../../data/copy/caption-ai.en';
   />
   <WaitlistForm
     id="waitlist-ios"
-    title="Join the iOS waitlist"
-    description="Get early access updates when SnapCopy is ready for testing."
+    title="Join the iOS closed test"
+    description="Enter your email. If this round still has testing slots, you will receive the TestFlight entry link."
     formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
     product={captionAiProduct.id}
     locale="en"
     platform="ios"
     privacyPath="/apps/caption-ai/privacy/"
-    buttonLabel="Join waitlist"
+    buttonLabel="Join the Test"
     source="download-page"
   />
   <UseCaseSection title="Built around daily sharing" scenes={captionAiEn.scenes} />

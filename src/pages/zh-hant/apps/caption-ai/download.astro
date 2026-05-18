@@ -8,8 +8,8 @@ import { captionAiZhHant } from '../../../../data/copy/caption-ai.zh-Hant';
 ---
 
 <ProductLayout
-  title="App 即將推出"
-  description="加入 SnapCopy iOS 等待名單，或接收 Android 版本更新通知。"
+  title="SnapCopy 第一輪封閉測試"
+  description="SnapCopy 已經進入第一輪封閉測試。需要測試名額的使用者，可以點擊參與測試。"
   lang="zh-Hant"
   canonicalPath="/zh-hant/apps/caption-ai/download/"
   alternates={[
@@ -22,13 +22,13 @@ import { captionAiZhHant } from '../../../../data/copy/caption-ai.zh-Hant';
 >
   <section class="page-shell">
     <p class="section-kicker">Download</p>
-    <h1>SnapCopy 即將登上 iPhone。</h1>
+    <h1>SnapCopy 已進入第一輪封閉測試。</h1>
     <p>
-      加入等待名單，取得 TestFlight、App Store 上架和新功能更新。
+      需要測試名額的使用者，請點擊下面的「參與測試」。
     </p>
     <div class="button-row">
-      <a class="button button-primary" href="#waitlist-ios">加入 iOS 等待名單</a>
-      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">加入 Android 等待名單</a>
+      <a class="button button-primary" href="#waitlist-ios">參與測試</a>
+      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">取得 Android 通知</a>
     </div>
   </section>
   <DownloadButtons
@@ -40,14 +40,14 @@ import { captionAiZhHant } from '../../../../data/copy/caption-ai.zh-Hant';
   />
   <WaitlistForm
     id="waitlist-ios"
-    title="加入 iOS 等待名單"
-    description="當 SnapCopy 準備開放測試時，我們會寄送早期通知。"
+    title="參與 iOS 封閉測試"
+    description="填寫 Email 後，如果本輪仍有測試名額，系統會提供 TestFlight 測試入口。"
     formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
     product={captionAiProduct.id}
     locale="zh-Hant"
     platform="ios"
     privacyPath="/zh-hant/apps/caption-ai/privacy/"
-    buttonLabel="加入等待名單"
+    buttonLabel="參與測試"
     source="download-page"
   />
   <UseCaseSection title="圍繞日常分享而設計" scenes={captionAiZhHant.scenes} />
