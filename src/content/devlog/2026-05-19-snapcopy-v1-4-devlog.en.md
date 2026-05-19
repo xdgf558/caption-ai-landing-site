@@ -1,225 +1,204 @@
 ---
-title: "snapCopy V1.4 Dev Log: Smoothing Out the Small Frictions in Round One"
+title: "snapCopy V1.4 Dev Log: Cleaning the Foundation for Photo Understanding"
 postSlug: "2026-05-19-snapcopy-v1-4-devlog"
-description: "snapCopy V1.4 is a cleanup release during the first closed testing round, focused on photo understanding, caption flow, language preferences, copy/share actions, and TestFlight feedback."
+description: "snapCopy V1.4 is not a flashy feature release. It focuses on the foundation behind photo understanding: the first cleanup pass for the v1 training images, 249 usable images kept, 11 removed, and a clearer dataset flow for future Core ML scene recognition."
 pubDate: "2026-05-19"
 status: "testing"
 language: "en"
-tags: ["snapCopy", "App Build", "V1.4", "TestFlight", "AI Tools", "Station Cat"]
+tags: ["snapCopy", "App Build", "V1.4", "TestFlight", "AI Tools", "Scene Recognition", "Station Cat"]
 draft: false
 ---
 
-# snapCopy V1.4 Dev Log: Smoothing Out the Small Frictions in Round One
+# snapCopy V1.4 Dev Log: Cleaning the Foundation for Photo Understanding
 
-After snapCopy entered its first closed testing round, the feedback became very practical.
+For V1.4, I did not start by adding a shiny new button.
 
-Most of it was not about huge feature requests.
+This is not the kind of release where people open the app and immediately see a big new feature.
 
-Not “can this become an all-in-one social media assistant.”  
-Not “can it support every platform, tone, and language at once.”
+More accurately, this version works on a quiet but important foundation for snapCopy:
 
-More often, the feedback was about small but important frictions:
+**photo understanding.**
 
-After choosing a photo, can the app understand it more reliably?  
-Before generating captions, can people see what the app thinks is in the image?  
-When language and preferences change, can the output feel closer to the way someone actually posts?  
-When a caption is useful, can it be copied, shared, or saved quickly?  
-When it is not useful, can the next attempt feel natural instead of broken?
+snapCopy has a simple goal: take a photo, then help you write a caption that is easier to share.
 
-So V1.4 is not a “big feature” release.
+But the first step is not really “writing.”
 
-It is more like picking small stones out of the path during the first round of testing.
+The first step is:
 
-## The Main Goal: Make the Flow Feel Smoother
+**did the app understand the photo at all?**
 
-snapCopy has a short core flow:
+If the photo is coffee, it should not treat it like a random desk image.
+If it is a street scene from a walk, it should not write breakfast captions.
+If there is a cat in the photo, it should not cover the moment with a loud template.
 
-Choose a photo.  
-Understand the scene.  
-Generate a few captions that fit.  
-Copy, share, save, or try another one.
+So V1.4 is a quieter release.
 
-It sounds simple, but each step affects the next one.
+It cleans up the first batch of images used to train and evaluate scene recognition.
 
-If the image understanding is unclear, captions become generic.  
-If scene labels are vague, people do not know what the app understood.  
-If the result feels too templated, speed alone does not make it useful.  
-If the final actions feel awkward, the whole flow starts to hesitate.
+## Cleaning 260 v1 Training Images
 
-V1.4 is mainly about tightening that path.
+snapCopy already had a first v1 image set with 260 images.
 
-I want the app to feel less like “generate once and stop” and more like:
+They were organized into 13 everyday scene categories:
 
-“It is actually looking at this photo.”  
-“These captions at least belong next to the image.”  
-“If I do not like this one, I can quickly try another.”
+breakfast, cafe, walking, street, travel, pet, outfit, fitness, sunset, home, work, food, and unknown.
 
-## Photo Understanding Is a Little More Visible
+These categories are ordinary, which is exactly the point. They are the kinds of photos snapCopy will actually see.
 
-In this version, the photo understanding layer is easier to see.
+But datasets have one small problem that can become a big problem:
 
-When the app reads a photo, it tries to identify a scene first: pets, coffee, breakfast, walking, travel, table scenes, or other everyday moments.
+**if the wrong images are inside, the model learns the wrong thing.**
 
-Previously, this happened more quietly in the background.
+A prompt screenshot should not be treated as breakfast.
+A dog photo should not sit inside a walking category.
+A travel photo that is really a street scene should probably be labeled street.
+Generated instruction cards should not become training examples for real-life photos.
 
-During testing, I realized that for an early AI tool, showing the app’s judgment matters.
+If those samples stay in the set, the model does not get smarter.
 
-If it is right, people trust the result more.  
-If it is wrong, people can understand where the problem starts.
+It gets confused.
 
-So V1.4 shows scene information, confidence, and a few interpretation clues more clearly.
+So this version starts with one manual cleanup pass.
 
-This is not about throwing technical details at people. It is about making the generation process feel less like a black box.
+## Cleanup Result
 
-A cat photo should not be treated as just “an image.”  
-It might be pet, indoor, warm light, quiet, landscape, everyday moment.
+After the first pass:
 
-The clearer those details are, the less likely the caption is to drift away from the photo.
+- The original 260 images were not deleted or overwritten.
+- 249 images were kept for future training.
+- 11 images were removed from the clean training set, mostly prompt screenshots or data-card artifacts.
+- A few mislabeled images were corrected.
+- Low-light, compressed, and slightly blurry images were kept when they looked like realistic user photos, with quality notes attached.
 
-## Captions Are Moving Toward “Actually Usable”
+I like this approach.
 
-Caption generation has two easy failure modes.
+snapCopy is not only for perfect photos.
 
-One is being too empty.
+Real photos are often a little dark, a little soft, or a little plain.
+Breakfast does not always look like a menu shot.
+Desks are not always tidy.
+Cats do not wait for composition.
 
-No matter what the photo is, the app writes:
+If a model only sees clean, pretty demo images, it can become fragile in real use.
 
-“Remember to live well today.”
+So this cleanup is not about turning the dataset into a beautiful photo album.
 
-That kind of sentence can work, but it does not carry much of the image.
+It is about making the dataset:
 
-The other failure mode is trying too hard.
+**trusted, traceable, and ready to grow.**
 
-A cat resting by the door does not need a loud viral caption. It should still feel like an everyday post.
+## A More Repeatable Dataset Flow
 
-V1.4 tries to bring captions closer to the image and closer to daily life.
+V1.4 also makes the dataset work more structured.
 
-Every sentence does not need to be amazing.  
-But it should carry a little of what the photo feels like.
+Now the project has:
 
-If the cat is by the doorway, the caption can be quieter.  
-If it is coffee and breakfast, it can be softer.  
-If it is a walking scene, it can be more relaxed.
+- a v1 raw manifest
+- a v1 clean manifest
+- per-class contact sheets
+- a cleanup report
+- a trainable v1_clean directory
+- a v2 dataset expansion plan
+- a Create ML training guide
+- a model evaluation template
+- App-side Core ML integration notes
 
-snapCopy is not trying to turn you into someone else.
+None of this looks like an app feature.
 
-It is just helping organize the sentence you almost know how to say, but do not feel like writing from scratch.
+But for a small AI tool, it matters.
 
-## Language and Preferences Matter More Than Expected
+Future model improvements should not depend only on “it feels better.”
 
-V1.4 also cleans up language and preference settings.
+The project should be able to answer:
 
-This became more important than I expected.
+Which data did this version use?
+Which images were kept?
+Which images were excluded?
+Which labels were corrected?
+Why were some low-light or blurry samples kept?
+What will the next model be compared against?
 
-The app interface language and the caption generation language are not the same thing.
+When those questions have answers, photo understanding starts to have a real foundation.
 
-Someone may want to use the app in Traditional Chinese but generate English captions.  
-Someone else may use Simplified Chinese in the interface but want Japanese or a more casual daily tone when posting.  
-Some people simply want the app to remember their preferred style instead of starting over every time.
+## Preparing the App Side
 
-So this version makes language and preferences clearer.
+This release was not only about folders.
 
-It is not a complete personal style system yet, but the direction is clearer:
+The app side is also prepared for a future local scene model.
 
-Copied captions, shared captions, saved captions, and disliked results can all become signals for future preference learning.
+snapCopy now has a clearer place for a Core ML custom scene classifier.
 
-These signals do not need to feel heavy.
+When a trained scene model is ready, it can work together with Apple Vision, OCR, and rule-based signals.
 
-They are more like small daily hints:
+The direction is:
 
-You often use this kind of sentence.  
-You do not seem to like this tone.  
-This length fits you better.  
-This platform needs a cleaner style.
+When Core ML is available, the local model becomes the main signal.
+Vision labels, OCR, and user corrections help refine the result.
+When no model is bundled, the app still falls back to the current Vision rules and OCR flow.
+In other words, the app should not break just because a model is not ready yet.
 
-## In Round One, Filling Every Feature Is Not the Point
+I also updated the photo understanding diagnostic view so future model testing has better clues:
 
-My thinking about snapCopy has become more restrained.
+Core ML Top-3 predictions, final scene, confidence, manual scene suggestion, local evaluation state, and caption rating state.
 
-At the beginning, it was tempting to add everything.
+This is not a feature for every user.
 
-More platforms.  
-More templates.  
-More styles.  
-More languages.  
-More impressive-looking AI options.
+It is more like a small lamp during development.
 
-But the first testing round has been reminding me of something else:
+When a caption does not match the photo, I can look back and ask:
 
-**Make the shortest path feel good first.**
+Was the photo misunderstood?
+Was the scene right, but the caption drifted?
+Was the model confidence too low, and should the user choose a scene manually?
 
-If someone only wants to post one photo, the app should interrupt as little as possible.
+## Why This Belongs in the Dev Log
 
-Do not ask for too many settings.  
-Do not explain too much.  
-Do not turn a small tool into a heavy dashboard.
+From the outside, V1.4 may not look very loud.
 
-It should stay quiet.
+But for snapCopy, this step matters.
 
-Like someone gently saying after you take a photo:
+It decides whether future captions can feel like they were written while looking at the photo, not pasted from a template.
 
-“This one could be written like this.”
+A coffee photo is not only coffee.
 
-If you like it, use it.  
-If not, try another.
+It may be morning, a table, warm light, a quiet pause before the day starts.
 
-## What V1.4 Focuses On
+A cat photo is not only a pet.
 
-This version mainly touches:
+It may be a window, low light, a lazy posture, one second that happened to be caught.
 
-Photo scene understanding display  
-Image style options  
-Platform and caption length choices  
-Generated caption card actions  
-Copy, share, save, and try another  
-Interface language and caption language settings  
-On-device AI usage hints  
-Daily usage and testing status display  
-First-round TestFlight feedback
+If photo understanding can hold a few more of those details, the captions have a better chance of staying close to the image.
 
-Many parts are not final yet.
+That is what V1.4 is trying to make possible.
 
-Some copy will keep changing.  
-Some buttons still need real-use feedback.  
-Some AI judgments will still be wrong.
+## Next
 
-But V1.4 makes snapCopy feel more like a small tool people can open every day, not just a demo.
+Next, I want to train a new scene classifier using the cleaned v1_clean dataset.
 
-## What I Will Watch Next
+This model does not need to be complicated yet.
 
-Next, I will keep watching:
+I first want to see:
 
-Which photos are most often misunderstood.  
-Which scenes lead to empty captions.  
-Which kinds of sentences people copy most.  
-Whether dislikes come from length, blandness, or a tone that does not feel personal.  
-Whether language settings and generation language feel intuitive.  
-Whether the TestFlight distribution and website testing flow feel smooth.
+Can it separate everyday scenes reliably?
+Which categories are easy to confuse?
+Does the cleaned data make evaluation more stable?
+Do low-light, compressed, or blurry samples hurt the model, or help it handle real photos?
+After the model is connected to the app, do captions become closer to the photo?
 
-These are small questions.
+If the result is useful, I will expand toward v2.
 
-But small tools grow through small questions.
+v2 will need more photos, more edge cases, and stricter evaluation.
 
-First, make one path work.  
-Then make it feel less awkward.  
-Only after that, add more branches.
+But for now, the first foundation is in place.
 
-## A Small Note
+It is not flashy.
 
-V1.4 is not a huge release.
+It is a bit like tidying a drawer.
 
-But it is a step from “this can be shown” toward “this can be tested.”
+But reliable everyday tools often begin in those quiet places.
 
-It is still early, and it still has many rough edges.
+snapCopy will keep growing slowly:
 
-That is exactly why the first closed testing round matters.
-
-The app needs to run through real photos, real posting moments, and real hesitation.
-
-If it can help someone spend one less minute stuck on a caption and share one more photo they almost gave up on, V1.4 is moving in the right direction.
-
-Cats will keep showing up in photos.  
-Breakfast and coffee will keep showing up too.  
-Small strange ideas that might be useful will keep appearing.
-
-snapCopy will keep growing through those tiny everyday moments.
+understand the photo first,
+write closer captions next,
+and eventually help people share small moments with a little less friction.
