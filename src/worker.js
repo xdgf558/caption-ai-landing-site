@@ -18,6 +18,14 @@ const cleanPlatform = (value) => {
   return platform === 'android' ? 'android' : 'ios';
 };
 
+const toHex = (buffer) =>
+  [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+
+const sha256Hex = async (value) => {
+  const encoded = new TextEncoder().encode(value);
+  return toHex(await crypto.subtle.digest('SHA-256', encoded));
+};
+
 const getSetting = (db, product, platform) =>
   db
     .prepare(
@@ -269,13 +277,109 @@ const downloadFiles = {
   '/downloads/stationcat-radar/StationCat-Radar-0.1.0-arm64.dmg': {
     key: 'stationcat-radar/0.1.0/StationCat-Radar-0.1.0-arm64.dmg',
     filename: 'StationCat-Radar-0.1.0-arm64.dmg',
-    contentType: 'application/x-apple-diskimage'
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'stationcat-radar-0.1.0-arm64'
   }
+};
+
+const downloadLimitConfig = {
+  dailyLimit: 5,
+  windowLimit: 2,
+  windowSeconds: 600
+};
+
+const rateLimitResponse = (message, retryAfterSeconds) =>
+  new Response(message, {
+    status: 429,
+    headers: {
+      'content-type': 'text/plain; charset=utf-8',
+      'retry-after': String(retryAfterSeconds),
+      'cache-control': 'no-store'
+    }
+  });
+
+const checkDownloadLimit = async (request, env, file) => {
+  if (request.method === 'HEAD') {
+    return null;
+  }
+
+  if (!env.WAITLIST_DB) {
+    return null;
+  }
+
+  const ip =
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown';
+  const userAgent = cleanText(request.headers.get('user-agent'), 200);
+  const now = new Date();
+  const dayKey = now.toISOString().slice(0, 10);
+  const windowKey = Math.floor(now.getTime() / 1000 / downloadLimitConfig.windowSeconds);
+  const ipHash = await sha256Hex(`${ip}|${userAgent}`);
+  const db = env.WAITLIST_DB;
+
+  await db
+    .prepare(
+      `DELETE FROM download_rate_limits
+       WHERE updated_at < datetime('now', '-14 days')`
+    )
+    .run();
+
+  const existing = await db
+    .prepare(
+      `SELECT daily_count, window_count, window_key
+       FROM download_rate_limits
+       WHERE download_key = ? AND ip_hash = ? AND day_key = ?`
+    )
+    .bind(file.limitKey, ipHash, dayKey)
+    .first();
+
+  const dailyCount = Number(existing?.daily_count || 0);
+  const windowCount = Number(existing?.window_key) === windowKey ? Number(existing?.window_count || 0) : 0;
+
+  if (dailyCount >= downloadLimitConfig.dailyLimit) {
+    return rateLimitResponse(
+      'Daily download limit reached. Please try again tomorrow.',
+      24 * 60 * 60
+    );
+  }
+
+  if (windowCount >= downloadLimitConfig.windowLimit) {
+    return rateLimitResponse(
+      'Too many download attempts. Please wait a few minutes and try again.',
+      downloadLimitConfig.windowSeconds
+    );
+  }
+
+  await db
+    .prepare(
+      `INSERT INTO download_rate_limits (
+        download_key, ip_hash, day_key, window_key, daily_count, window_count, updated_at
+      )
+      VALUES (?, ?, ?, ?, 1, 1, CURRENT_TIMESTAMP)
+      ON CONFLICT(download_key, ip_hash, day_key) DO UPDATE SET
+        daily_count = daily_count + 1,
+        window_count = CASE
+          WHEN window_key = excluded.window_key THEN window_count + 1
+          ELSE 1
+        END,
+        window_key = excluded.window_key,
+        updated_at = CURRENT_TIMESTAMP`
+    )
+    .bind(file.limitKey, ipHash, dayKey, windowKey)
+    .run();
+
+  return null;
 };
 
 const handleR2Download = async (request, env, file) => {
   if (!env.DOWNLOADS_BUCKET) {
     return new Response('Downloads bucket is not configured.', { status: 503 });
+  }
+
+  const limitResponse = await checkDownloadLimit(request, env, file);
+  if (limitResponse) {
+    return limitResponse;
   }
 
   const object = await env.DOWNLOADS_BUCKET.get(file.key);
