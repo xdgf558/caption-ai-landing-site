@@ -1,5 +1,5 @@
 export const brandNavigation = [
-  { label: 'Apps', href: '/apps/caption-ai/' },
+  { label: 'Apps', href: '/apps/' },
   { label: 'Works', href: '/works/' },
   { label: 'Dev Blog', href: '/en/devlog/' },
   { label: 'About', href: '/#about', mobileHidden: true },
@@ -7,7 +7,7 @@ export const brandNavigation = [
 ];
 
 export const zhBrandNavigation = [
-  { label: 'Apps', href: '/zh-hant/apps/caption-ai/' },
+  { label: 'Apps', href: '/zh-hant/apps/' },
   { label: '作品集', href: '/zh-hant/works/' },
   { label: '開發博客', href: '/devlog/' },
   { label: 'About', href: '/#about', mobileHidden: true },
@@ -15,7 +15,7 @@ export const zhBrandNavigation = [
 ];
 
 export const zhHansBrandNavigation = [
-  { label: 'Apps', href: '/zh-hans/apps/caption-ai/' },
+  { label: 'Apps', href: '/zh-hans/apps/' },
   { label: '作品集', href: '/zh-hans/works/' },
   { label: '开发博客', href: '/zh-hans/devlog/' },
   { label: 'About', href: '/zh-hans/#about', mobileHidden: true },
@@ -23,7 +23,7 @@ export const zhHansBrandNavigation = [
 ];
 
 export const jaBrandNavigation = [
-  { label: 'Apps', href: '/ja/apps/caption-ai/' },
+  { label: 'Apps', href: '/ja/apps/' },
   { label: '作品', href: '/ja/works/' },
   { label: '開発ログ', href: '/ja/devlog/' },
   { label: 'About', href: '/ja/#about', mobileHidden: true },

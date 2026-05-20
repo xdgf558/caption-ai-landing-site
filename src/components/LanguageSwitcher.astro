@@ -6,10 +6,11 @@ interface Props {
 const { lang = 'zh-Hant' } = Astro.props;
 const path = Astro.url.pathname;
 const normalizedPath = path === '/en/' || path === '/zh-hant/' || path === '/zh-hans/' || path === '/ja/' ? '/' : path;
-const productPath = normalizedPath
-  .replace(/^\/ja(?=\/apps\/caption-ai)/, '')
-  .replace(/^\/zh-hant(?=\/apps\/caption-ai)/, '')
-  .replace(/^\/zh-hans(?=\/apps\/caption-ai)/, '');
+const appsPath = normalizedPath
+  .replace(/^\/ja(?=\/apps)/, '')
+  .replace(/^\/en(?=\/apps)/, '')
+  .replace(/^\/zh-hant(?=\/apps)/, '')
+  .replace(/^\/zh-hans(?=\/apps)/, '');
 const devlogPath = normalizedPath
   .replace(/^\/ja(?=\/devlog)/, '')
   .replace(/^\/en(?=\/devlog)/, '')
@@ -20,13 +21,13 @@ const worksPath = normalizedPath
   .replace(/^\/en(?=\/works)/, '')
   .replace(/^\/zh-hant(?=\/works)/, '')
   .replace(/^\/zh-hans(?=\/works)/, '');
-const isProduct = productPath.startsWith('/apps/caption-ai');
+const isApps = appsPath.startsWith('/apps');
 const isDevlog = devlogPath.startsWith('/devlog');
 const isWorks = worksPath.startsWith('/works');
-const enPath = isProduct ? productPath : isDevlog ? `/en${devlogPath}` : isWorks ? worksPath : '/en/';
-const jaPath = isProduct ? `/ja${productPath}` : isDevlog ? `/ja${devlogPath}` : isWorks ? `/ja${worksPath}` : '/ja/';
-const zhHantPath = isProduct ? `/zh-hant${productPath}` : isDevlog ? devlogPath : isWorks ? `/zh-hant${worksPath}` : '/';
-const zhHansPath = isProduct ? `/zh-hans${productPath}` : isDevlog ? `/zh-hans${devlogPath}` : isWorks ? `/zh-hans${worksPath}` : '/zh-hans/';
+const enPath = isApps ? appsPath : isDevlog ? `/en${devlogPath}` : isWorks ? worksPath : '/en/';
+const jaPath = isApps ? `/ja${appsPath}` : isDevlog ? `/ja${devlogPath}` : isWorks ? `/ja${worksPath}` : '/ja/';
+const zhHantPath = isApps ? `/zh-hant${appsPath}` : isDevlog ? devlogPath : isWorks ? `/zh-hant${worksPath}` : '/';
+const zhHansPath = isApps ? `/zh-hans${appsPath}` : isDevlog ? `/zh-hans${devlogPath}` : isWorks ? `/zh-hans${worksPath}` : '/zh-hans/';
 const currentLabel = lang === 'zh-Hans' ? '简中' : lang === 'en' ? 'EN' : lang === 'ja' ? '日本語' : '繁中';
 ---
 

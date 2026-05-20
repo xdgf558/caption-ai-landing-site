@@ -9,6 +9,10 @@ interface Props {
   ctaLabel: string;
   waitlistLabel: string;
   status?: string;
+  image?: string;
+  imageAlt?: string;
+  visualNote?: string;
+  phoneLabel?: string;
 }
 
 const {
@@ -20,18 +24,26 @@ const {
   waitlistHref,
   ctaLabel,
   waitlistLabel,
-  status = 'In development'
+  status = 'In development',
+  image,
+  imageAlt = `${title} preview`,
+  visualNote = 'AI + everyday photo',
+  phoneLabel = 'caption draft'
 } = Astro.props;
 ---
 
 <article class="station-app-card">
   <div class="station-app-card__visual" aria-hidden="true">
-    <div class="station-phone">
-      <span></span>
-      <div class="station-photo"></div>
-      <p>caption draft</p>
-    </div>
-    <div class="station-note-card">AI + everyday photo</div>
+    {image ? (
+      <img class="station-app-preview" src={image} alt={imageAlt} width="1040" height="720" />
+    ) : (
+      <div class="station-phone">
+        <span></span>
+        <div class="station-photo"></div>
+        <p>{phoneLabel}</p>
+      </div>
+    )}
+    <div class="station-note-card">{visualNote}</div>
   </div>
   <div class="station-app-card__copy">
     {eyebrow && <p class="station-kicker">{eyebrow}</p>}

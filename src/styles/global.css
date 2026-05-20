@@ -350,6 +350,181 @@ ol {
   width: 100%;
 }
 
+.product-list {
+  display: grid;
+  gap: 22px;
+}
+
+.radar-page {
+  background: #07111b;
+}
+
+.radar-page .site-header {
+  background: rgba(7, 17, 27, 0.94);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.radar-page .brand-mark,
+.radar-page .nav-links a {
+  color: #f8fafc;
+}
+
+.radar-page .nav-links a:hover {
+  color: #38bdf8;
+}
+
+.radar-page .language-select {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+}
+
+.radar-page .site-footer {
+  color: #f8fafc;
+}
+
+.radar-page .site-footer p,
+.radar-page .footer-links a {
+  color: rgba(248, 250, 252, 0.72);
+}
+
+.radar-page .footer-links a:hover {
+  color: #38bdf8;
+}
+
+.radar-hero {
+  align-items: center;
+  display: grid;
+  gap: 36px;
+  margin: 0 auto;
+  max-width: var(--max);
+  min-height: calc(100vh - 72px);
+  padding: 72px 20px 88px;
+}
+
+.radar-hero h1,
+.radar-hero h2,
+.radar-page .page-section h2 {
+  color: #f8fafc;
+}
+
+.radar-hero p,
+.radar-page .page-section p,
+.radar-page .page-section li {
+  color: rgba(226, 232, 240, 0.76);
+}
+
+.radar-hero__copy {
+  display: grid;
+  gap: 20px;
+}
+
+.radar-hero__copy .section-kicker {
+  color: #38bdf8;
+}
+
+.radar-preview-card {
+  background:
+    radial-gradient(circle at 18% 10%, rgba(56, 189, 248, 0.24), transparent 28%),
+    radial-gradient(circle at 92% 6%, rgba(249, 168, 212, 0.22), transparent 34%),
+    rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 24px;
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.28);
+  padding: 16px;
+}
+
+.radar-preview-card img {
+  border-radius: 16px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+}
+
+.radar-feature-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.radar-feature-grid article,
+.radar-note-panel {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 18px;
+}
+
+.radar-feature-grid article {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+}
+
+.radar-feature-grid h3 {
+  color: #f8fafc;
+}
+
+.radar-note-panel {
+  display: grid;
+  gap: 24px;
+  padding: 28px;
+}
+
+.radar-note-panel ul {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+}
+
+.radar-note-panel li {
+  border-left: 3px solid #38bdf8;
+  padding-left: 14px;
+}
+
+.radar-download-box {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.radar-meta-list {
+  display: grid;
+  gap: 12px;
+}
+
+.radar-meta-list div {
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding-bottom: 12px;
+}
+
+.radar-meta-list dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.radar-meta-list dd {
+  color: var(--ink);
+  font-weight: 800;
+  margin: 0;
+  text-align: right;
+}
+
+.checksum-block {
+  display: grid;
+  gap: 10px;
+}
+
+.checksum-block code {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  display: block;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  padding: 12px;
+}
+
 .scene-grid,
 .feature-grid {
   display: grid;
@@ -962,6 +1137,10 @@ ol {
   padding: 18px;
 }
 
+.station-app-card + .station-app-card {
+  margin-top: 18px;
+}
+
 .station-app-card__visual {
   align-items: center;
   background:
@@ -1001,6 +1180,11 @@ ol {
     linear-gradient(145deg, #f9a8d4 0 40%, #38bdf8 41% 100%);
   border-radius: 14px;
   min-height: 96px;
+}
+
+.station-app-preview {
+  border-radius: 16px;
+  box-shadow: 0 26px 44px rgba(0, 0, 0, 0.24);
 }
 
 .station-phone p {
@@ -2089,6 +2273,7 @@ button.button {
   }
 
   .caption-product-page .feature-grid,
+  .radar-feature-grid,
   .roadmap-grid,
   .style-example,
   .final-product-cta {
@@ -2134,8 +2319,13 @@ button.button {
   .station-hero,
   .station-about,
   .station-app-card,
-  .station-cta-section {
+  .station-cta-section,
+  .radar-hero {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .radar-feature-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .station-pillar-grid {

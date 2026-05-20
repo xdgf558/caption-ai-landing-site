@@ -61,7 +61,7 @@ const experiments = [
     title="一個記錄貓咪、飯桌、資訊和奇怪想法的小站。"
     subtitle="這裡會放我的 AI 創作、生活記錄、產品實驗和正在開發的 App。如果你也喜歡貓、日常分享、AI 工具和一點點奇怪的靈感，歡迎常來看看。"
     ctas={[
-      { label: '查看正在開發的 App', href: '/zh-hant/apps/caption-ai/', variant: 'primary' },
+      { label: '查看正在開發的 App', href: '/zh-hant/apps/', variant: 'primary' },
       { label: '關注我的 X', href: xUrl, variant: 'secondary' },
       { label: '參與測試', href: '/zh-hant/apps/caption-ai/download/', variant: 'ghost' }
     ]}
@@ -94,9 +94,9 @@ const experiments = [
   <section id="apps" class="station-section">
     <div class="station-section__heading">
       <p class="station-kicker">Apps from Station Cat</p>
-      <h2>圍繞日常創作做的小 AI 工具。</h2>
+      <h2>圍繞日常創作做的小工具。</h2>
       <p>
-        首個產品是 SnapCopy。首頁只放入口和方向，真正的功能、場景、隱私和第一輪測試資訊會留在產品頁。
+        這裡先放正在測試和可以下載的 App 入口。詳細功能、使用場景和下載資訊會留在各自的產品頁。
       </p>
     </div>
     <AppCard
@@ -109,6 +109,19 @@ const experiments = [
       ctaLabel="查看 App"
       waitlistLabel="參與測試"
       status="第一輪封閉測試中"
+    />
+    <AppCard
+      eyebrow="Mac app"
+      title="StationCat Radar"
+      subtitle="Public signals for X creators."
+      description="追蹤公開資訊、RSS、AI 研究和你關心的關鍵詞，整理成更容易開始創作的 X 選題方向。"
+      href="/zh-hant/apps/stationcat-radar/"
+      waitlistHref="/zh-hant/apps/stationcat-radar/download/"
+      ctaLabel="查看 App"
+      waitlistLabel="下載 Mac 版本"
+      status="Mac 測試版 0.1.0"
+      image="/images/stationcat-radar-preview.svg"
+      visualNote="Mac creator radar"
     />
   </section>
 

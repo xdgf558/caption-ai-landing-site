@@ -13,6 +13,10 @@ binding = "WAITLIST_DB"
 database_name = "station-cat-waitlist"
 database_id = "c4a8cb1a-6a94-4e8f-a6fb-a734afafca63"
 
+[[r2_buckets]]
+binding = "DOWNLOADS_BUCKET"
+bucket_name = "station-cat-downloads"
+
 [[routes]]
 pattern = "wwwstationcat.org"
 custom_domain = true

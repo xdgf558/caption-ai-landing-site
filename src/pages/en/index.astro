@@ -50,7 +50,7 @@ const experiments = [
     title="A small creative station for cats, food, AI tools, and curious ideas."
     subtitle="I make simple AI products for everyday sharing, while documenting cats, meals, internet signals, and strange little thoughts."
     ctas={[
-      { label: 'Explore Apps', href: '/apps/caption-ai/', variant: 'primary' },
+      { label: 'Explore Apps', href: '/apps/', variant: 'primary' },
       { label: 'Follow on X', href: xUrl, variant: 'secondary' },
       { label: 'Join Waitlist', href: '/apps/caption-ai/download/', variant: 'ghost' }
     ]}
@@ -83,9 +83,9 @@ const experiments = [
   <section id="apps" class="station-section">
     <div class="station-section__heading">
       <p class="station-kicker">Apps from Station Cat</p>
-      <h2>Small AI tools built around everyday creativity.</h2>
+      <h2>Small tools built around everyday creativity.</h2>
       <p>
-        The first app is SnapCopy. This home page keeps the story broad; the product page handles features, privacy, downloads, and waitlists.
+        This section keeps the app entry points clear. Details, use cases, privacy notes, and download information stay on each product page.
       </p>
     </div>
     <AppCard
@@ -96,8 +96,21 @@ const experiments = [
       href="/apps/caption-ai/"
       waitlistHref="/apps/caption-ai/download/"
       ctaLabel="View App"
-      waitlistLabel="Join Waitlist"
-      status="First app in development"
+      waitlistLabel="Join the Test"
+      status="First closed testing round"
+    />
+    <AppCard
+      eyebrow="Mac app"
+      title="StationCat Radar"
+      subtitle="Public signals for X creators."
+      description="Track public sources, RSS, AI research, and keyword pools, then turn useful signals into clearer X content angles."
+      href="/apps/stationcat-radar/"
+      waitlistHref="/apps/stationcat-radar/download/"
+      ctaLabel="View App"
+      waitlistLabel="Download for Mac"
+      status="Mac test build 0.1.0"
+      image="/images/stationcat-radar-preview.svg"
+      visualNote="Mac creator radar"
     />
   </section>
 

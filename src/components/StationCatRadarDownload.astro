@@ -1,0 +1,131 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { stationCatRadarProduct } from '../data/products/stationcat-radar';
+
+interface Props {
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+}
+
+const { lang = 'zh-Hant' } = Astro.props;
+
+const copy = {
+  'zh-Hant': {
+    title: '下載 StationCat Radar',
+    description: '下載 StationCat Radar 0.1.0 Apple Silicon Mac 測試版。',
+    kicker: 'Mac Download',
+    headline: '下載 StationCat Radar for Mac。',
+    intro: '目前提供 Apple Silicon 測試版 DMG。下載後打開 DMG，把 App 拖到 Applications 即可安裝。',
+    button: '下載 DMG',
+    back: '返回產品頁',
+    backHref: stationCatRadarProduct.zhHantProductPath,
+    installTitle: '安裝與版本資訊',
+    checksum: '檔案校驗值',
+    warning: '這是早期測試版。請只從 Station Cat 官方網站下載，首次打開時按 macOS 提示確認。'
+  },
+  'zh-Hans': {
+    title: '下载 StationCat Radar',
+    description: '下载 StationCat Radar 0.1.0 Apple Silicon Mac 测试版。',
+    kicker: 'Mac Download',
+    headline: '下载 StationCat Radar for Mac。',
+    intro: '目前提供 Apple Silicon 测试版 DMG。下载后打开 DMG，把 App 拖到 Applications 即可安装。',
+    button: '下载 DMG',
+    back: '返回产品页',
+    backHref: stationCatRadarProduct.zhHansProductPath,
+    installTitle: '安装与版本信息',
+    checksum: '文件校验值',
+    warning: '这是早期测试版。请只从 Station Cat 官方网站下载，首次打开时按 macOS 提示确认。'
+  },
+  en: {
+    title: 'Download StationCat Radar',
+    description: 'Download the StationCat Radar 0.1.0 Apple Silicon Mac test build.',
+    kicker: 'Mac Download',
+    headline: 'Download StationCat Radar for Mac.',
+    intro: 'The current build is an Apple Silicon DMG. Open the DMG, then drag the app into Applications.',
+    button: 'Download DMG',
+    back: 'Back to product page',
+    backHref: stationCatRadarProduct.productPath,
+    installTitle: 'Install and version info',
+    checksum: 'File checksum',
+    warning: 'This is an early test build. Download it only from the official Station Cat site and follow macOS first-open prompts.'
+  },
+  ja: {
+    title: 'StationCat Radar をダウンロード',
+    description: 'StationCat Radar 0.1.0 Apple Silicon Mac テスト版をダウンロードできます。',
+    kicker: 'Mac Download',
+    headline: 'StationCat Radar for Mac をダウンロード。',
+    intro: '現在のビルドは Apple Silicon 向け DMG です。DMG を開き、アプリを Applications にドラッグしてください。',
+    button: 'DMG をダウンロード',
+    back: '製品ページへ戻る',
+    backHref: stationCatRadarProduct.jaProductPath,
+    installTitle: 'インストールとバージョン情報',
+    checksum: 'ファイルチェックサム',
+    warning: 'これは早期テスト版です。Station Cat 公式サイトからのみダウンロードし、macOS の確認に従って開いてください。'
+  }
+}[lang];
+
+const canonicalPath =
+  lang === 'zh-Hant'
+    ? stationCatRadarProduct.zhHantDownloadPagePath
+    : lang === 'zh-Hans'
+      ? stationCatRadarProduct.zhHansDownloadPagePath
+      : lang === 'ja'
+        ? stationCatRadarProduct.jaDownloadPagePath
+        : stationCatRadarProduct.downloadPagePath;
+---
+
+<BaseLayout
+  title={copy.title}
+  description={copy.description}
+  lang={lang}
+  canonicalPath={canonicalPath}
+  ogImage={stationCatRadarProduct.assets.screenshot}
+  alternates={[
+    { hrefLang: 'zh-Hant', href: stationCatRadarProduct.zhHantDownloadPagePath },
+    { hrefLang: 'zh-Hans', href: stationCatRadarProduct.zhHansDownloadPagePath },
+    { hrefLang: 'en', href: stationCatRadarProduct.downloadPagePath },
+    { hrefLang: 'ja', href: stationCatRadarProduct.jaDownloadPagePath },
+    { hrefLang: 'x-default', href: stationCatRadarProduct.zhHantDownloadPagePath }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">{copy.kicker}</p>
+    <h1>{copy.headline}</h1>
+    <p>{copy.intro}</p>
+    <div class="button-row">
+      <a class="button button-primary" href={stationCatRadarProduct.downloadPath}>{copy.button}</a>
+      <a class="button button-secondary" href={copy.backHref}>{copy.back}</a>
+    </div>
+  </section>
+
+  <section class="download-box radar-download-box">
+    <h2>{copy.installTitle}</h2>
+    <dl class="radar-meta-list">
+      <div>
+        <dt>Version</dt>
+        <dd>{stationCatRadarProduct.version}</dd>
+      </div>
+      <div>
+        <dt>Platform</dt>
+        <dd>{stationCatRadarProduct.platform}</dd>
+      </div>
+      <div>
+        <dt>Architecture</dt>
+        <dd>{stationCatRadarProduct.architecture}</dd>
+      </div>
+      <div>
+        <dt>Minimum system</dt>
+        <dd>{stationCatRadarProduct.minimumSystem}</dd>
+      </div>
+      <div>
+        <dt>File size</dt>
+        <dd>{stationCatRadarProduct.fileSize}</dd>
+      </div>
+    </dl>
+    <div class="checksum-block">
+      <strong>{copy.checksum}</strong>
+      <code>{stationCatRadarProduct.sha256}</code>
+    </div>
+    <p>{copy.warning}</p>
+  </section>
+</BaseLayout>
+

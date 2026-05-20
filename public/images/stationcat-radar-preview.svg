@@ -1,0 +1,42 @@
+<svg width="1040" height="720" viewBox="0 0 1040 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1040" height="720" rx="40" fill="#06111B"/>
+  <rect x="36" y="36" width="968" height="648" rx="28" fill="#F7FAFC"/>
+  <rect x="36" y="36" width="968" height="72" rx="28" fill="#0B1721"/>
+  <circle cx="78" cy="72" r="10" fill="#F9A8D4"/>
+  <circle cx="110" cy="72" r="10" fill="#FACC15"/>
+  <circle cx="142" cy="72" r="10" fill="#38BDF8"/>
+  <text x="190" y="80" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="28" font-weight="800">StationCat Radar</text>
+  <rect x="76" y="148" width="888" height="96" rx="18" fill="#FFFFFF" stroke="#D7E3E5"/>
+  <text x="108" y="188" fill="#13231F" font-family="Arial, sans-serif" font-size="30" font-weight="800">今日熱點</text>
+  <text x="108" y="220" fill="#5E6F6A" font-family="Arial, sans-serif" font-size="18">從公開資料源整理適合 X 創作的內容方向。</text>
+  <rect x="774" y="168" width="150" height="48" rx="12" fill="#2F8074"/>
+  <text x="810" y="199" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="18" font-weight="800">更新熱點</text>
+  <rect x="76" y="278" width="888" height="76" rx="16" fill="#FFFFFF" stroke="#D7E3E5"/>
+  <rect x="106" y="302" width="76" height="28" rx="14" fill="#D9F4EF"/>
+  <text x="124" y="322" fill="#2F8074" font-family="Arial, sans-serif" font-size="14" font-weight="800">AI</text>
+  <text x="206" y="310" fill="#13231F" font-family="Arial, sans-serif" font-size="22" font-weight="800">AI 研究動態正在變成下一波創作素材</text>
+  <text x="206" y="336" fill="#5E6F6A" font-family="Arial, sans-serif" font-size="15">推薦角度：用生活化語言拆解一個新工具，降低理解門檻。</text>
+  <rect x="806" y="298" width="118" height="38" rx="10" fill="#EAF7FF"/>
+  <text x="834" y="323" fill="#0A6CA8" font-family="Arial, sans-serif" font-size="15" font-weight="800">生成提示</text>
+  <rect x="76" y="380" width="888" height="76" rx="16" fill="#FFFFFF" stroke="#D7E3E5"/>
+  <rect x="106" y="404" width="76" height="28" rx="14" fill="#FFF7D6"/>
+  <text x="124" y="424" fill="#8A6800" font-family="Arial, sans-serif" font-size="14" font-weight="800">RSS</text>
+  <text x="206" y="412" fill="#13231F" font-family="Arial, sans-serif" font-size="22" font-weight="800">小眾工具更新，適合整理成創作者筆記</text>
+  <text x="206" y="438" fill="#5E6F6A" font-family="Arial, sans-serif" font-size="15">推薦角度：從實際使用場景出發，而不是只列功能。</text>
+  <rect x="806" y="400" width="118" height="38" rx="10" fill="#FCE7F3"/>
+  <text x="834" y="425" fill="#A21E5A" font-family="Arial, sans-serif" font-size="15" font-weight="800">收藏</text>
+  <rect x="76" y="482" width="888" height="76" rx="16" fill="#FFFFFF" stroke="#D7E3E5"/>
+  <rect x="106" y="506" width="76" height="28" rx="14" fill="#EAF7FF"/>
+  <text x="124" y="526" fill="#0A6CA8" font-family="Arial, sans-serif" font-size="14" font-weight="800">HN</text>
+  <text x="206" y="514" fill="#13231F" font-family="Arial, sans-serif" font-size="22" font-weight="800">新的內容趨勢正在升溫</text>
+  <text x="206" y="540" fill="#5E6F6A" font-family="Arial, sans-serif" font-size="15">推薦角度：適合做成一條帶觀點的 X 短帖。</text>
+  <rect x="806" y="502" width="118" height="38" rx="10" fill="#EAF7FF"/>
+  <text x="834" y="527" fill="#0A6CA8" font-family="Arial, sans-serif" font-size="15" font-weight="800">查看詳情</text>
+  <rect x="76" y="594" width="260" height="46" rx="12" fill="#EEF7F6"/>
+  <text x="104" y="623" fill="#2F8074" font-family="Arial, sans-serif" font-size="16" font-weight="800">Keyword Pool</text>
+  <rect x="362" y="594" width="260" height="46" rx="12" fill="#F7F0FF"/>
+  <text x="390" y="623" fill="#7C3AED" font-family="Arial, sans-serif" font-size="16" font-weight="800">AI Research Radar</text>
+  <rect x="648" y="594" width="276" height="46" rx="12" fill="#FFF7D6"/>
+  <text x="676" y="623" fill="#8A6800" font-family="Arial, sans-serif" font-size="16" font-weight="800">RSS Manager</text>
+</svg>
+

@@ -265,9 +265,43 @@ const handleUpdateSettings = async (request, env) => {
   return handleGetSettings(env);
 };
 
+const downloadFiles = {
+  '/downloads/stationcat-radar/StationCat-Radar-0.1.0-arm64.dmg': {
+    key: 'stationcat-radar/0.1.0/StationCat-Radar-0.1.0-arm64.dmg',
+    filename: 'StationCat-Radar-0.1.0-arm64.dmg',
+    contentType: 'application/x-apple-diskimage'
+  }
+};
+
+const handleR2Download = async (request, env, file) => {
+  if (!env.DOWNLOADS_BUCKET) {
+    return new Response('Downloads bucket is not configured.', { status: 503 });
+  }
+
+  const object = await env.DOWNLOADS_BUCKET.get(file.key);
+
+  if (!object) {
+    return new Response('Download file not found.', { status: 404 });
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('content-type', file.contentType);
+  headers.set('content-disposition', `attachment; filename="${file.filename}"`);
+  headers.set('cache-control', 'public, max-age=3600');
+  headers.set('etag', object.httpEtag);
+
+  return new Response(request.method === 'HEAD' ? null : object.body, { headers });
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const downloadFile = downloadFiles[url.pathname];
+
+    if (downloadFile && (request.method === 'GET' || request.method === 'HEAD')) {
+      return handleR2Download(request, env, downloadFile);
+    }
 
     if (request.method === 'POST' && url.pathname === '/api/waitlist') {
       return handleWaitlistSubmit(request, env);

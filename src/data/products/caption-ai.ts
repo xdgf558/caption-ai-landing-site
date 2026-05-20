@@ -20,6 +20,7 @@ export const captionAiProduct = {
   defaultLocale: 'zh-Hant',
   productPath: '/apps/caption-ai/',
   zhHantProductPath: '/zh-hant/apps/caption-ai/',
+  zhHansProductPath: '/zh-hans/apps/caption-ai/',
   jaProductPath: '/ja/apps/caption-ai/',
   supportEmail: 'brodstem@protonmail.com',
   appStoreCampaignBaseUrl: '',
