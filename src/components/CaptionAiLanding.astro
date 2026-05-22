@@ -28,6 +28,38 @@ const { copy, faqItems, locale, links } = Astro.props;
 const platformDownload = links.platformDownload ?? links.download;
 const downloadBox = links.downloadBox ?? platformDownload;
 const finalDownload = links.finalDownload ?? links.download;
+const stationCatHref =
+  locale === 'ja'
+    ? '/ja/'
+    : locale === 'zh-Hant'
+      ? '/'
+      : locale === 'zh-Hans'
+        ? '/zh-hans/'
+        : '/en/';
+const worksHref =
+  locale === 'ja'
+    ? '/ja/works/'
+    : locale === 'zh-Hant'
+      ? '/zh-hant/works/'
+      : locale === 'zh-Hans'
+        ? '/zh-hans/works/'
+        : '/works/';
+const stationCatLabel =
+  locale === 'ja'
+    ? 'Station Cat へ'
+    : locale === 'zh-Hant'
+      ? '回到 Station Cat'
+      : locale === 'zh-Hans'
+        ? '回到 Station Cat'
+        : 'Visit Station Cat';
+const worksLabel =
+  locale === 'ja'
+    ? '作品を見る'
+    : locale === 'zh-Hant'
+      ? '查看作品集'
+      : locale === 'zh-Hans'
+        ? '查看作品集'
+        : 'See Works';
 ---
 
 <ProductHero
@@ -157,7 +189,7 @@ const finalDownload = links.finalDownload ?? links.download;
 <section class="page-section maker-note">
   <p>{copy.makerNote}</p>
   <div class="button-row">
-    <a class="button button-secondary" href="/">Visit Station Cat</a>
-    <a class="button button-secondary" href="/works/">See Works</a>
+    <a class="button button-secondary" href={stationCatHref}>{stationCatLabel}</a>
+    <a class="button button-secondary" href={worksHref}>{worksLabel}</a>
   </div>
 </section>
