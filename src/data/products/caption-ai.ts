@@ -1,12 +1,13 @@
-export const captionAiProduct = {
+// Legacy file and route names stay as caption-ai so existing URLs do not break.
+export const snapCopyProduct = {
   id: 'snapcopy',
   slug: 'caption-ai',
   name: 'SnapCopy',
   workingName: 'AI 生活文案生成器',
-  status: 'waitlist',
+  status: 'closed-beta',
   platforms: {
     ios: {
-      status: 'coming-soon',
+      status: 'closed-beta',
       appStoreUrl: '',
       waitlistFormUrl: '/api/waitlist'
     },
@@ -40,4 +41,7 @@ export const captionAiProduct = {
   }
 } as const;
 
+export const captionAiProduct = snapCopyProduct;
+
+export type SnapCopyProduct = typeof snapCopyProduct;
 export type CaptionAiProduct = typeof captionAiProduct;

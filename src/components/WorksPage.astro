@@ -35,6 +35,14 @@ interface Props {
 
 const { copy, lang, canonicalPath, featuredWorks, publishedWorks, xUrl } = Astro.props;
 const dateLocale = lang === 'ja' ? 'ja' : lang === 'zh-Hant' ? 'zh-Hant' : lang === 'zh-Hans' ? 'zh-Hans' : 'en';
+const snapCopyHref =
+  lang === 'ja'
+    ? '/ja/apps/caption-ai/'
+    : lang === 'zh-Hant'
+      ? '/zh-hant/apps/caption-ai/'
+      : lang === 'zh-Hans'
+        ? '/zh-hans/apps/caption-ai/'
+        : '/apps/caption-ai/';
 ---
 
 <section class="works-hero">
@@ -107,6 +115,6 @@ const dateLocale = lang === 'ja' ? 'ja' : lang === 'zh-Hant' ? 'zh-Hant' : lang 
   <p>{copy.ctaDescription}</p>
   <div class="button-row">
     <a class="button button-primary" href={xUrl} target="_blank" rel="noopener noreferrer">{copy.follow}</a>
-    <a class="button button-secondary" href="/apps/caption-ai/">{copy.viewApp}</a>
+    <a class="button button-secondary" href={snapCopyHref}>{copy.viewApp}</a>
   </div>
 </section>
