@@ -36,7 +36,7 @@ const experiments = [
   description="Station Cat 是一个记录猫咪、饭桌、资讯、AI 创作和奇怪想法的个人创作小站。"
   lang="zh-Hans"
   canonicalPath="/zh-hans/"
-  bodyClass="station-home"
+  bodyClass="station-home station-landing-home"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/' },
     { hrefLang: 'zh-Hans', href: '/zh-hans/' },
@@ -52,10 +52,12 @@ const experiments = [
     ctas={[
       { label: '查看正在开发的 App', href: '/zh-hans/apps/', variant: 'primary' },
       { label: '关注我的 X', href: xUrl, variant: 'secondary' },
-      { label: '加入等待名单', href: '/zh-hans/apps/caption-ai/download/', variant: 'ghost' }
+      { label: '参与测试', href: '/zh-hans/apps/caption-ai/download/', variant: 'ghost' }
     ]}
     cards={heroCards}
     tags={['Cats', 'Meals', 'AI Tools', 'Strange Ideas']}
+    portraitSrc="/images/home/station-cat-dog.png"
+    portraitAlt="Station Cat dog mascot"
   />
 
   <section id="about" class="station-section station-about">

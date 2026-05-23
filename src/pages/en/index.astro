@@ -36,7 +36,7 @@ const experiments = [
   description="A small creative station for cats, meals, AI tools, internet signals, and curious ideas."
   lang="en"
   canonicalPath="/en/"
-  bodyClass="station-home"
+  bodyClass="station-home station-landing-home"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/' },
     { hrefLang: 'zh-Hans', href: '/zh-hans/' },
@@ -52,10 +52,12 @@ const experiments = [
     ctas={[
       { label: 'Explore Apps', href: '/apps/', variant: 'primary' },
       { label: 'Follow on X', href: xUrl, variant: 'secondary' },
-      { label: 'Join Waitlist', href: '/apps/caption-ai/download/', variant: 'ghost' }
+      { label: 'Join the Test', href: '/apps/caption-ai/download/', variant: 'ghost' }
     ]}
     cards={heroCards}
     tags={['Cats', 'Meals', 'AI Tools', 'Strange Ideas']}
+    portraitSrc="/images/home/station-cat-dog.png"
+    portraitAlt="Station Cat dog mascot"
   />
 
   <section id="about" class="station-section station-about">

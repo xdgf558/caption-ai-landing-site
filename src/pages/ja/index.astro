@@ -36,7 +36,7 @@ const experiments = [
   description="猫、食卓、AIツール、少し不思議なアイデアを記録する小さな場所。"
   lang="ja"
   canonicalPath="/ja/"
-  bodyClass="station-home"
+  bodyClass="station-home station-landing-home"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/' },
     { hrefLang: 'zh-Hans', href: '/zh-hans/' },
@@ -52,10 +52,12 @@ const experiments = [
     ctas={[
       { label: 'アプリを見る', href: '/ja/apps/', variant: 'primary' },
       { label: 'Xでフォロー', href: xUrl, variant: 'secondary' },
-      { label: '順番待ちに登録', href: '/ja/apps/caption-ai/download/', variant: 'ghost' }
+      { label: 'テストに参加', href: '/ja/apps/caption-ai/download/', variant: 'ghost' }
     ]}
     cards={heroCards}
     tags={['Cats', 'Meals', 'AI Tools', 'Strange Ideas']}
+    portraitSrc="/images/home/station-cat-dog.png"
+    portraitAlt="Station Cat dog mascot"
   />
 
   <section id="about" class="station-section station-about">

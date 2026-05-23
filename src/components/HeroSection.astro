@@ -18,22 +18,35 @@ interface Props {
   ctas: HeroCta[];
   cards: HeroCard[];
   tags: string[];
+  portraitSrc?: string;
+  portraitAlt?: string;
 }
 
-const { eyebrow, title, subtitle, ctas, cards, tags } = Astro.props;
+const { eyebrow, title, subtitle, ctas, cards, tags, portraitSrc, portraitAlt = '' } = Astro.props;
 ---
 
 <section class="station-hero">
-  <div class="station-hero__copy">
-    <p class="station-kicker">{eyebrow}</p>
-    <h1>{title}</h1>
-    <p class="station-lede">{subtitle}</p>
-    <div class="station-actions">
-      {ctas.map((cta) => (
-        <a class={`station-button station-button--${cta.variant ?? 'secondary'}`} href={cta.href}>
-          {cta.label}
-        </a>
-      ))}
+  <div class={`station-hero__intro${portraitSrc ? ' station-hero__intro--with-portrait' : ''}`}>
+    {portraitSrc && (
+      <div class="station-portrait">
+        <img src={portraitSrc} alt={portraitAlt} width="760" height="760" loading="eager" />
+        <span class="station-portrait__spark station-portrait__spark--one" aria-hidden="true">+</span>
+        <span class="station-portrait__spark station-portrait__spark--two" aria-hidden="true">*</span>
+        <span class="station-portrait__spark station-portrait__spark--three" aria-hidden="true">♡</span>
+        <span class="station-portrait__paw" aria-hidden="true">paw</span>
+      </div>
+    )}
+    <div class="station-hero__copy">
+      <p class="station-kicker">{eyebrow}</p>
+      <h1>{title}</h1>
+      <p class="station-lede">{subtitle}</p>
+      <div class="station-actions">
+        {ctas.map((cta) => (
+          <a class={`station-button station-button--${cta.variant ?? 'secondary'}`} href={cta.href}>
+            {cta.label}
+          </a>
+        ))}
+      </div>
     </div>
   </div>
 
