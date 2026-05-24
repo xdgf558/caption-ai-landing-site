@@ -1,251 +1,220 @@
-# Landing Site
+# Station Cat Landing Site
 
-This is the static multi-product website for Everyday AI Apps. The first product is `caption-ai` (Caption AI), an AI lifestyle caption app in development.
+這是 Station Cat 的官方靜態網站專案，使用 Astro 建置，部署到 Cloudflare Workers。網站目前承載個人品牌首頁、多產品入口、SnapCopy 產品頁、StationCat Radar 下載頁、作品集、開發博客、管理後台，以及 TestFlight / Android 測試名單相關頁面。
 
-The default language is Traditional Chinese. Opening `/` shows the Traditional Chinese brand home page.
+目前正式網域：
 
-## What is included
+```text
+https://wwwstationcat.org/
+```
 
-- Traditional Chinese brand home page: `/`
-- English brand home page: `/en/`
-- Product list: `/apps/`
-- Caption AI Traditional Chinese pages:
-  - `/zh-hant/apps/caption-ai/`
-  - `/zh-hant/apps/caption-ai/download/`
-  - `/zh-hant/apps/caption-ai/android/`
-  - `/zh-hant/apps/caption-ai/privacy/`
-  - `/zh-hant/apps/caption-ai/support/`
-  - `/zh-hant/apps/caption-ai/terms/`
-- Caption AI English pages:
-  - `/apps/caption-ai/`
-  - `/apps/caption-ai/download/`
-  - `/apps/caption-ai/android/`
-  - `/apps/caption-ai/privacy/`
-  - `/apps/caption-ai/support/`
-  - `/apps/caption-ai/terms/`
-- Caption AI Japanese pages:
-  - `/ja/apps/caption-ai/`
-  - `/ja/apps/caption-ai/download/`
-  - `/ja/apps/caption-ai/android/`
-  - `/ja/apps/caption-ai/privacy/`
-  - `/ja/apps/caption-ai/support/`
-  - `/ja/apps/caption-ai/terms/`
-- Brand entry pages:
-  - `/privacy/`
-  - `/support/`
-  - `/terms/`
-- Compatibility entry pages:
-  - `/download/`
-  - `/android/`
-- SEO basics:
-  - page titles
-  - meta descriptions
-  - Open Graph tags
-  - Twitter card tags
-  - canonical URLs
-  - Traditional Chinese/English/Japanese hreflang links on product pages
-  - `robots.txt`
-  - `sitemap.xml`
+## 專案狀態
 
-## Local setup
+- 預設語言：繁體中文
+- 主要品牌：Station Cat
+- 主要產品：SnapCopy
+- Mac 產品：StationCat Radar
+- 部署平台：Cloudflare Workers
+- 表單與測試名單：Cloudflare Workers + D1
+- Mac 檔案下載：Cloudflare R2
+- 管理後台：GitHub Contents API 寫入 Markdown 內容
 
-Open Terminal, go to this folder, then run:
+## 重要路徑
+
+### 品牌首頁
+
+```text
+/
+/zh-hant/
+/zh-hans/
+/en/
+/ja/
+```
+
+### Apps
+
+```text
+/apps/
+/zh-hant/apps/
+/zh-hans/apps/
+/en/apps/
+/ja/apps/
+```
+
+### SnapCopy
+
+```text
+/apps/caption-ai/
+/apps/caption-ai/download/
+/apps/caption-ai/android/
+/apps/caption-ai/privacy/
+/apps/caption-ai/support/
+/apps/caption-ai/terms/
+
+/zh-hant/apps/caption-ai/
+/zh-hant/apps/caption-ai/download/
+/zh-hant/apps/caption-ai/android/
+/zh-hant/apps/caption-ai/privacy/
+/zh-hant/apps/caption-ai/support/
+/zh-hant/apps/caption-ai/terms/
+
+/zh-hans/apps/caption-ai/
+/ja/apps/caption-ai/
+```
+
+> 注意：路由仍保留 `caption-ai`，這是為了避免舊連結失效；頁面品牌名稱已更新為 SnapCopy。
+
+### StationCat Radar
+
+```text
+/apps/stationcat-radar/
+/apps/stationcat-radar/download/
+/zh-hant/apps/stationcat-radar/
+/zh-hant/apps/stationcat-radar/download/
+/zh-hans/apps/stationcat-radar/
+/ja/apps/stationcat-radar/
+```
+
+### 作品集與開發博客
+
+```text
+/works/
+/zh-hant/works/
+/zh-hans/works/
+/ja/works/
+
+/devlog/
+/en/devlog/
+/zh-hans/devlog/
+/ja/devlog/
+```
+
+### 管理後台
+
+```text
+/admin/
+/admin/waitlist/
+```
+
+正式環境中的 `/admin/` 應透過 Cloudflare Access 限制，只允許指定管理員 Email 驗證後進入。
+
+## 本地開發
+
+進入專案資料夾：
 
 ```bash
-cd /Users/shaola/Downloads/软件开发相关/多品牌网站开发相关/landing-site
+cd /Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site
+```
+
+安裝依賴：
+
+```bash
 npm install
+```
+
+啟動開發伺服器：
+
+```bash
 npm run dev
 ```
 
-After `npm run dev`, open:
-
-```text
-http://localhost:4321
-```
-
-You should see the brand home page. Important pages to check:
+開啟：
 
 ```text
 http://localhost:4321/
-http://localhost:4321/en/
-http://localhost:4321/apps/
-http://localhost:4321/zh-hant/apps/caption-ai/
-http://localhost:4321/zh-hant/apps/caption-ai/download/
-http://localhost:4321/zh-hant/apps/caption-ai/android/
-http://localhost:4321/zh-hant/apps/caption-ai/privacy/
-http://localhost:4321/zh-hant/apps/caption-ai/support/
-http://localhost:4321/zh-hant/apps/caption-ai/terms/
-http://localhost:4321/apps/caption-ai/
-http://localhost:4321/apps/caption-ai/download/
-http://localhost:4321/apps/caption-ai/android/
-http://localhost:4321/apps/caption-ai/privacy/
-http://localhost:4321/apps/caption-ai/support/
-http://localhost:4321/apps/caption-ai/terms/
-http://localhost:4321/ja/apps/caption-ai/
-http://localhost:4321/ja/apps/caption-ai/download/
-http://localhost:4321/ja/apps/caption-ai/android/
-http://localhost:4321/ja/apps/caption-ai/privacy/
-http://localhost:4321/ja/apps/caption-ai/support/
-http://localhost:4321/ja/apps/caption-ai/terms/
-http://localhost:4321/privacy/
-http://localhost:4321/support/
-http://localhost:4321/terms/
-http://localhost:4321/robots.txt
-http://localhost:4321/sitemap.xml
 ```
 
-If something fails, copy the red error block from Terminal and send it to Codex.
+## 建置檢查
 
-## Build check
-
-Before deploying, run:
+每次部署前建議先執行：
 
 ```bash
 npm run build
 ```
 
-You should see a successful build and a new `dist` folder. Cloudflare Pages should use this `dist` folder as the output directory.
+成功後會產生 `dist/`，Cloudflare Workers 會讀取這個目錄中的靜態資產。
 
-## Mobile check for beginners
+## 部署
 
-1. Open `http://localhost:4321/zh-hant/apps/caption-ai/` in Chrome or Safari.
-2. Right click the page and choose `Inspect`.
-3. Click the phone/tablet icon in the developer tools.
-4. Choose an iPhone size.
-5. Check that navigation wraps cleanly, buttons are tappable, and Traditional Chinese/Japanese text does not overflow.
+目前使用 Wrangler 部署到 Cloudflare Workers：
 
-Also check:
+```bash
+npx --yes wrangler@latest deploy
+```
+
+部署成功後會更新：
 
 ```text
-http://localhost:4321/
-http://localhost:4321/zh-hant/apps/caption-ai/
-http://localhost:4321/ja/apps/caption-ai/
+https://wwwstationcat.org/
 ```
 
-## Replacing Tally waitlist links
+## 內容管理
 
-The current form URLs are placeholders in:
+### Devlog
+
+開發博客內容存放於：
 
 ```text
-src/data/products/caption-ai.ts
+src/content/devlog/
 ```
 
-Replace these values:
+### X Works
 
-```ts
-waitlistFormUrl: 'TALLY_IOS_FORM_URL'
-waitlistFormUrl: 'TALLY_ANDROID_FORM_URL'
-```
-
-with real Tally form URLs, for example:
-
-```ts
-waitlistFormUrl: 'https://tally.so/r/yourFormId'
-```
-
-The embedded form URL automatically adds these hidden fields:
+作品集內容存放於：
 
 ```text
-product
-locale
-platform
-utm_source
-utm_medium
-utm_campaign
-utm_content
-landing_path
+src/content/xworks/
 ```
 
-In Tally, create matching hidden fields with the same names.
+已發布內容需要：
 
-## Replacing App Store and Google Play links
+```yaml
+status: "published"
+```
 
-Do not add fake store links before launch.
+首頁精選需要：
 
-When Caption AI is live, edit:
+```yaml
+featured: true
+```
+
+## Cloudflare 資源
+
+目前專案會使用這些 Cloudflare binding：
 
 ```text
-src/data/products/caption-ai.ts
+WAITLIST_DB        D1 Database
+DOWNLOADS_BUCKET   R2 Bucket
+ASSETS             Static assets
 ```
 
-For iOS:
-
-```ts
-ios: {
-  status: 'available',
-  appStoreUrl: 'https://apps.apple.com/...'
-}
-```
-
-For Android:
-
-```ts
-android: {
-  status: 'available',
-  googlePlayUrl: 'https://play.google.com/store/apps/details?id=...'
-}
-```
-
-After launch, add official App Store and Google Play badge assets according to Apple and Google marketing guidelines. Do not draw a fake badge yourself.
-
-## Cloudflare Pages deployment
-
-Codex cannot log into your Cloudflare account for you, so do this manually:
-
-1. Create a GitHub repository for this `landing-site` folder.
-2. Push the code to GitHub.
-3. Open Cloudflare Dashboard.
-4. Go to `Workers & Pages`.
-5. Click `Create`.
-6. Choose `Pages`.
-7. Connect your GitHub repository.
-8. Set build command:
+相關設定在：
 
 ```text
-npm run build
+wrangler.toml
+migrations/
+src/worker.js
 ```
 
-9. Set output directory:
+## GitHub 分支保護建議
 
-```text
-dist
-```
+`main` 分支應至少啟用：
 
-10. Deploy.
-11. Open the generated `pages.dev` URL and check the same pages listed above.
+- 禁止刪除分支
+- 禁止 force push
+- 不強制 Pull Request
+- 暫時不強制 status checks
 
-When you buy a custom domain later, add it in the Cloudflare Pages `Custom domains` area.
+未來若加入 GitHub Actions，可再啟用 `Require status checks to pass before merging`，並要求 `npm run build` 通過後才能合併。
 
-## Updating the production domain
+## 授權狀態
 
-Before real deployment, replace `https://example.com` in:
+這個 GitHub repository 目前是 **Public**，代表任何人都可以瀏覽程式碼。
 
-```text
-astro.config.mjs
-src/data/site.ts
-public/robots.txt
-public/sitemap.xml
-```
+但目前專案沒有 `LICENSE` 文件，因此嚴格來說它還不是一個已授權的開源專案。沒有授權條款時，其他人通常不能合法複製、修改、重新散布或商業使用這份程式碼。
 
-Use your real domain or your Cloudflare Pages URL. This makes canonical URLs, sitemap, and social previews correct.
+如果之後希望它成為真正的開源專案，可以新增 MIT、Apache-2.0、GPL 等授權文件；如果只是想讓網站程式碼公開可見，但不希望別人拿去使用，可以暫時維持沒有 LICENSE。
 
-## Adding a second app later
+## 隱私與法務提醒
 
-When you add another app, do not put it inside the Caption AI pages. Use the same structure:
-
-1. Create a new product config in `src/data/products/`.
-2. Create English copy in `src/data/copy/`.
-3. Create Japanese copy only if that app needs Japanese pages.
-4. Create Traditional Chinese copy if the app should appear in the default language experience.
-5. Create FAQ data in `src/data/faqs/`.
-6. Create privacy and terms drafts in `src/data/legal/`.
-7. Add pages under `/apps/new-app/`.
-8. Add Traditional Chinese pages under `/zh-hant/apps/new-app/`.
-9. Add Japanese pages under `/ja/apps/new-app/` if needed.
-10. Update `/apps/` and the home page product list.
-11. Update `public/sitemap.xml`.
-12. Make sure the waitlist hidden field uses the new product id, not `caption-ai`.
-
-## Important privacy note
-
-The privacy policy and terms are practical drafts. Before App Store submission, commercialization, paid features, analytics, email marketing, or cloud AI uploads, review them against the real app data flow and local legal requirements.
+目前網站中的隱私政策與服務條款是實務草案。若 App 正式上架、加入付費功能、分析工具、Email 行銷、雲端 AI 處理或第三方 SDK，應依照實際資料流程重新檢查。
