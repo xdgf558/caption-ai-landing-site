@@ -1,14 +1,16 @@
 # Station Cat Landing Site
 
-這是 Station Cat 的官方靜態網站專案，使用 Astro 建置，部署到 Cloudflare Workers。網站目前承載個人品牌首頁、多產品入口、SnapCopy 產品頁、StationCat Radar 下載頁、作品集、開發博客、管理後台，以及 TestFlight / Android 測試名單相關頁面。
+這是 Station Cat 的官方網站專案，使用 Astro 建置，部署到 Cloudflare Workers。
 
-目前正式網域：
+網站承載 Station Cat 的個人品牌首頁、多產品入口、SnapCopy 產品頁、StationCat Radar 下載頁、作品集、開發博客、管理後台，以及 TestFlight / Android 測試名單相關頁面。
+
+正式網域：
 
 ```text
 https://wwwstationcat.org/
 ```
 
-## 專案狀態
+## 專案概覽
 
 - 預設語言：繁體中文
 - 主要品牌：Station Cat
@@ -19,168 +21,42 @@ https://wwwstationcat.org/
 - Mac 檔案下載：Cloudflare R2
 - 管理後台：GitHub Contents API 寫入 Markdown 內容
 
-## 重要路徑
+## 站點內容
 
-### 品牌首頁
-
-```text
-/
-/zh-hant/
-/zh-hans/
-/en/
-/ja/
-```
-
-### Apps
-
-```text
-/apps/
-/zh-hant/apps/
-/zh-hans/apps/
-/en/apps/
-/ja/apps/
-```
-
-### SnapCopy
-
-```text
-/apps/caption-ai/
-/apps/caption-ai/download/
-/apps/caption-ai/android/
-/apps/caption-ai/privacy/
-/apps/caption-ai/support/
-/apps/caption-ai/terms/
-
-/zh-hant/apps/caption-ai/
-/zh-hant/apps/caption-ai/download/
-/zh-hant/apps/caption-ai/android/
-/zh-hant/apps/caption-ai/privacy/
-/zh-hant/apps/caption-ai/support/
-/zh-hant/apps/caption-ai/terms/
-
-/zh-hans/apps/caption-ai/
-/ja/apps/caption-ai/
-```
-
-> 注意：路由仍保留 `caption-ai`，這是為了避免舊連結失效；頁面品牌名稱已更新為 SnapCopy。
-
-### StationCat Radar
-
-```text
-/apps/stationcat-radar/
-/apps/stationcat-radar/download/
-/zh-hant/apps/stationcat-radar/
-/zh-hant/apps/stationcat-radar/download/
-/zh-hans/apps/stationcat-radar/
-/ja/apps/stationcat-radar/
-```
-
-### 作品集與開發博客
-
-```text
-/works/
-/zh-hant/works/
-/zh-hans/works/
-/ja/works/
-
-/devlog/
-/en/devlog/
-/zh-hans/devlog/
-/ja/devlog/
-```
-
-### 管理後台
-
-```text
-/admin/
-/admin/waitlist/
-```
-
-正式環境中的 `/admin/` 應透過 Cloudflare Access 限制，只允許指定管理員 Email 驗證後進入。
+- 品牌首頁：Station Cat 的個人創作入口，預設為繁體中文。
+- Apps：展示目前正在開發和發布的產品。
+- SnapCopy：AI 生活文案生成器。路由仍保留 `/apps/caption-ai/`，用來兼容早期連結。
+- StationCat Radar：macOS 小工具下載頁。
+- 作品集：收錄來自 X 的創作、實驗和發布記錄。
+- 開發博客：記錄產品進度、測試階段和版本更新。
+- 管理後台：用 GitHub Contents API 管理 Markdown 內容；正式環境由 Cloudflare Access 保護。
 
 ## 本地開發
 
-進入專案資料夾：
-
-```bash
-cd /Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site
-```
-
-安裝依賴：
-
 ```bash
 npm install
-```
-
-啟動開發伺服器：
-
-```bash
 npm run dev
 ```
 
-開啟：
-
-```text
-http://localhost:4321/
-```
-
-## 建置檢查
-
-每次部署前建議先執行：
+## 建置與部署
 
 ```bash
 npm run build
-```
-
-成功後會產生 `dist/`，Cloudflare Workers 會讀取這個目錄中的靜態資產。
-
-## 部署
-
-目前使用 Wrangler 部署到 Cloudflare Workers：
-
-```bash
 npx --yes wrangler@latest deploy
 ```
 
-部署成功後會更新：
-
-```text
-https://wwwstationcat.org/
-```
+Cloudflare Workers 會使用 `dist/` 中的靜態資產，並透過 `src/worker.js` 處理表單、下載和等待名單相關請求。
 
 ## 內容管理
 
-### Devlog
-
-開發博客內容存放於：
-
-```text
-src/content/devlog/
-```
-
-### X Works
-
-作品集內容存放於：
-
-```text
-src/content/xworks/
-```
-
-已發布內容需要：
-
-```yaml
-status: "published"
-```
-
-首頁精選需要：
-
-```yaml
-featured: true
-```
+- 開發博客：`src/content/devlog/`
+- X Works：`src/content/xworks/`
+- 已發布內容使用 `status: "published"`
+- 首頁精選內容使用 `featured: true`
 
 ## Cloudflare 資源
 
-目前專案會使用這些 Cloudflare binding：
+目前專案使用的主要 Cloudflare binding：
 
 ```text
 WAITLIST_DB        D1 Database
@@ -188,32 +64,15 @@ DOWNLOADS_BUCKET   R2 Bucket
 ASSETS             Static assets
 ```
 
-相關設定在：
+相關配置位於 `wrangler.toml`、`migrations/` 和 `src/worker.js`。
 
-```text
-wrangler.toml
-migrations/
-src/worker.js
-```
+## 授權
 
-## GitHub 分支保護建議
+本專案的程式碼以 MIT License 開源，詳見 [LICENSE](./LICENSE)。
 
-`main` 分支應至少啟用：
+MIT 授權僅適用於本 repository 中的軟體程式碼與相關開發文件。
 
-- 禁止刪除分支
-- 禁止 force push
-- 不強制 Pull Request
-- 暫時不強制 status checks
-
-未來若加入 GitHub Actions，可再啟用 `Require status checks to pass before merging`，並要求 `npm run build` 通過後才能合併。
-
-## 授權狀態
-
-這個 GitHub repository 目前是 **Public**，代表任何人都可以瀏覽程式碼。
-
-但目前專案沒有 `LICENSE` 文件，因此嚴格來說它還不是一個已授權的開源專案。沒有授權條款時，其他人通常不能合法複製、修改、重新散布或商業使用這份程式碼。
-
-如果之後希望它成為真正的開源專案，可以新增 MIT、Apache-2.0、GPL 等授權文件；如果只是想讓網站程式碼公開可見，但不希望別人拿去使用，可以暫時維持沒有 LICENSE。
+Station Cat 品牌名稱、Logo、圖片、截圖、文章、頁面文案、產品描述、社群作品、法律文本與其他內容資產不包含在 MIT 授權範圍內。未經書面同意，不得複製、修改、再發布或用於商業、品牌、行銷與二次創作用途。
 
 ## 隱私與法務提醒
 
