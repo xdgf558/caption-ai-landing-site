@@ -345,9 +345,35 @@ ol {
   padding: 0 24px 28px;
 }
 
-.product-card img {
+.product-card__media {
   background: var(--surface-soft);
+  display: grid;
+  min-height: 260px;
+  overflow: hidden;
+}
+
+.product-card__media--preview img {
+  height: 100%;
+  object-fit: cover;
   width: 100%;
+}
+
+.product-card__media--icon {
+  background:
+    radial-gradient(circle at 30% 22%, rgba(249, 168, 212, 0.32), transparent 34%),
+    radial-gradient(circle at 78% 80%, rgba(210, 232, 198, 0.6), transparent 32%),
+    linear-gradient(135deg, #fff7f4 0%, #f7e3eb 48%, #eef7ed 100%);
+  place-items: center;
+  padding: clamp(40px, 7vw, 78px);
+}
+
+.product-card__media--icon img {
+  aspect-ratio: 1;
+  border-radius: 26%;
+  box-shadow: 0 22px 44px rgba(126, 45, 82, 0.2);
+  height: auto;
+  max-width: 220px;
+  width: min(48%, 220px);
 }
 
 .product-list {

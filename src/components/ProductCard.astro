@@ -4,15 +4,33 @@ interface Props {
   description: string;
   href: string;
   image: string;
+  imageAlt?: string;
+  imageVariant?: 'preview' | 'icon';
   cta?: string;
   kicker?: string;
 }
 
-const { title, description, href, image, cta = 'View product', kicker = 'First app in development' } = Astro.props;
+const {
+  title,
+  description,
+  href,
+  image,
+  imageAlt = `${title} preview`,
+  imageVariant = 'preview',
+  cta = 'View product',
+  kicker = 'First app in development'
+} = Astro.props;
 ---
 
-<article class="product-card">
-  <img src={image} alt={`${title} preview`} width="520" height="360" />
+<article class={`product-card product-card--${imageVariant}`}>
+  <div class={`product-card__media product-card__media--${imageVariant}`}>
+    <img
+      src={image}
+      alt={imageAlt}
+      width={imageVariant === 'icon' ? 512 : 520}
+      height={imageVariant === 'icon' ? 512 : 360}
+    />
+  </div>
   <div>
     <p class="section-kicker">{kicker}</p>
     <h2>{title}</h2>

@@ -31,6 +31,7 @@ export const snapCopyProduct = {
     product: 'snapcopy'
   },
   assets: {
+    icon: '/images/apps/snapcopy-app-icon.png',
     hero: '/images/caption-ai-hero-phone-placeholder.svg',
     screenshot: '/images/caption-ai-screenshot-placeholder.svg',
     scenes: {
