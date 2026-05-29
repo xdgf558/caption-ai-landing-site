@@ -1,0 +1,493 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { snapCopyProduct } from '../data/products/caption-ai';
+import { stationCatRadarProduct } from '../data/products/stationcat-radar';
+
+type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
+type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'app' | 'radar';
+
+interface Props {
+  lang?: Locale;
+  canonicalPath?: string;
+}
+
+const { lang = 'zh-Hant', canonicalPath = '/' } = Astro.props;
+const xUrl = 'https://x.com/bketck';
+const stationLogoPath = '/images/home/station-cat-logo.png';
+
+const icons: Record<IconName, string> = {
+  cat: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 13 8 5l6 5h4l6-5 1 8"/><path d="M7 14c0 8 5 12 9 12s9-4 9-12"/><path d="M12 16h.1M20 16h.1"/><path d="M14 20h4M16 18v3"/></svg>`,
+  cup: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 12h13v7a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6Z"/><path d="M21 14h2a3 3 0 0 1 0 6h-2"/><path d="M10 8c0-2 2-2 2-4M16 8c0-2 2-2 2-4"/><path d="M7 27h17"/></svg>`,
+  signal: `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="3"/><path d="M10 22a8.5 8.5 0 0 1 0-12M22 10a8.5 8.5 0 0 1 0 12"/><path d="M6 26a14 14 0 0 1 0-20M26 6a14 14 0 0 1 0 20"/></svg>`,
+  wrench: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="m20 6 3 3-6 6 6 6-3 3-6-6-6 6-3-3 6-6-6-6 3-3 6 6Z"/></svg>`,
+  note: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 5h13l3 3v19H8Z"/><path d="M21 5v5h5M12 14h10M12 19h10M12 24h6"/></svg>`,
+  camera: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 11h5l2-3h6l2 3h5v15H6Z"/><circle cx="16" cy="18" r="5"/><path d="M23 14h.1"/></svg>`,
+  app: `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="5" width="18" height="22" rx="5"/><path d="M13 9h6M13 23h6"/><path d="M12 15h8M12 18h5"/></svg>`,
+  radar: `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="10"/><path d="M16 16 23 9"/><path d="M16 6v4M16 22v4M6 16h4M22 16h4"/><circle cx="16" cy="16" r="2"/></svg>`
+};
+
+const copy = {
+  'zh-Hant': {
+    title: 'Station Cat',
+    description: 'Station Cat 是一座深夜還亮著燈的個人小站，收集貓、早餐、公開信號、工具、開發日誌和奇怪想法。',
+    logoCaption: '個人創作小站',
+    logoAlt: 'Station Cat 品牌 Logo',
+    heroTitle: '一座深夜還亮著的小站。',
+    heroText: '我在這裡收集貓、早餐、公開信號和正在長出來的小工具。有些內容會變成 App，有些只是飯桌邊的一句話。',
+    primaryCta: '看正在做的工具',
+    secondaryCta: '翻最近的站台筆記',
+    boardLabel: 'Station Board',
+    boardItems: [
+      { type: 'polaroid', title: 'Cat log', text: '窗邊值班、尾巴晃動和一些很有主見的小動靜。', stamp: 'cat' },
+      { type: 'receipt', title: 'Breakfast receipt', text: '咖啡、吐司、盤子邊緣，以及今天早上的一點光。', stamp: 'meal' },
+      { type: 'signal', title: 'Signal strip', text: '公開資料源、科技變化、AI 新聞和市場上的微弱信號。', stamp: 'signal' },
+      { type: 'snapcopy', title: 'SnapCopy', text: '一張照片，整理成更容易分享的一句話。', stamp: 'tool' }
+    ],
+    aboutKicker: 'About the station',
+    aboutTitle: '不是公司展廳，而是一張還沒收起來的工作桌。',
+    aboutText: '這裡會放生活記錄、產品草稿、測試中的 App、X 作品和開發日誌。內容可以很小，但希望每一張紙條都有人的溫度。',
+    todayKicker: 'Today at the Station',
+    todayTitle: '今天站台上放著什麼。',
+    todayIntro: '貓、飯桌、信號和工具會以不同的紙片形式出現，像一面慢慢貼滿的小公告牆。',
+    stationCards: [
+      { icon: 'cat', title: 'Cat log', text: '像拍立得一樣記錄窗邊、沙發和日常裡的小陪伴。' },
+      { icon: 'cup', title: 'Table notes', text: '早餐、咖啡、飯桌筆記，以及值得慢慢吃完的一天。' },
+      { icon: 'signal', title: 'Signal board', text: '公開資訊、網路變化和創作者可能用得上的小信號。' },
+      { icon: 'wrench', title: 'Tool bench', text: '獨立 App、測試版、開發草稿和還在打磨的小工具。' }
+    ],
+    toolsKicker: 'Tools on the bench',
+    toolsTitle: '正在桌上慢慢長出來的工具。',
+    toolsIntro: '首頁只放入口和狀態，詳細功能、下載、隱私和測試說明會留在各自產品頁。',
+    viewApp: 'View App',
+    joinTest: 'Join Test',
+    downloadMac: 'Download for Mac',
+    snapcopyDesc: '把日常照片變成更容易分享的一句話。',
+    radarDesc: '把公開資料源和關鍵詞整理成創作者選題方向。',
+    snapcopyStatus: 'closed testing',
+    radarStatus: 'Mac test build 0.1.0',
+    notesKicker: 'Recent notes',
+    notesTitle: '貼在站台牆上的近期紙條。',
+    notesIntro: '從 X 精選中挑幾張最近的紙條，保留一點現場感。',
+    viewOnX: 'View on X',
+    emptyNotes: '近期紙條很快會貼上來。',
+    buildKicker: 'Build log',
+    buildTitle: '最近的開發筆記。',
+    buildIntro: '像翻一本 notebook，看看小工具是怎麼慢慢變清楚的。',
+    readNote: 'Read note',
+    emptyBuild: '開發筆記很快會更新。',
+    closingTitle: '這座小站還在慢慢長大。',
+    closingText: '來看貓、看早餐、看工具，也看一點奇怪想法如何變成產品。',
+    follow: 'Follow on X',
+    viewSnapCopy: 'View SnapCopy',
+    android: 'Join Android Waitlist',
+    dateLocale: 'zh-Hant'
+  },
+  'zh-Hans': {
+    title: 'Station Cat',
+    description: 'Station Cat 是一座深夜还亮着灯的个人小站，收集猫、早餐、公开信号、工具、开发日志和奇怪想法。',
+    logoCaption: '个人创作小站',
+    logoAlt: 'Station Cat 品牌 Logo',
+    heroTitle: '一座深夜还亮着的小站。',
+    heroText: '我在这里收集猫、早餐、公开信号和正在长出来的小工具。有些内容会变成 App，有些只是饭桌边的一句话。',
+    primaryCta: '看正在做的工具',
+    secondaryCta: '翻最近的站台笔记',
+    boardLabel: 'Station Board',
+    boardItems: [
+      { type: 'polaroid', title: 'Cat log', text: '窗边值班、尾巴晃动和一些很有主见的小动静。', stamp: 'cat' },
+      { type: 'receipt', title: 'Breakfast receipt', text: '咖啡、吐司、盘子边缘，以及今天早上的一点光。', stamp: 'meal' },
+      { type: 'signal', title: 'Signal strip', text: '公开资料源、科技变化、AI 新闻和市场上的微弱信号。', stamp: 'signal' },
+      { type: 'snapcopy', title: 'SnapCopy', text: '一张照片，整理成更容易分享的一句话。', stamp: 'tool' }
+    ],
+    aboutKicker: 'About the station',
+    aboutTitle: '不是公司展厅，而是一张还没收起来的工作桌。',
+    aboutText: '这里会放生活记录、产品草稿、测试中的 App、X 作品和开发日志。内容可以很小，但希望每一张纸条都有人的温度。',
+    todayKicker: 'Today at the Station',
+    todayTitle: '今天站台上放着什么。',
+    todayIntro: '猫、饭桌、信号和工具会以不同的纸片形式出现，像一面慢慢贴满的小公告墙。',
+    stationCards: [
+      { icon: 'cat', title: 'Cat log', text: '像拍立得一样记录窗边、沙发和日常里的小陪伴。' },
+      { icon: 'cup', title: 'Table notes', text: '早餐、咖啡、饭桌笔记，以及值得慢慢吃完的一天。' },
+      { icon: 'signal', title: 'Signal board', text: '公开资讯、网络变化和创作者可能用得上的小信号。' },
+      { icon: 'wrench', title: 'Tool bench', text: '独立 App、测试版、开发草稿和还在打磨的小工具。' }
+    ],
+    toolsKicker: 'Tools on the bench',
+    toolsTitle: '正在桌上慢慢长出来的工具。',
+    toolsIntro: '首页只放入口和状态，详细功能、下载、隐私和测试说明会留在各自产品页。',
+    viewApp: 'View App',
+    joinTest: 'Join Test',
+    downloadMac: 'Download for Mac',
+    snapcopyDesc: '把日常照片变成更容易分享的一句话。',
+    radarDesc: '把公开资料源和关键词整理成创作者选题方向。',
+    snapcopyStatus: 'closed testing',
+    radarStatus: 'Mac test build 0.1.0',
+    notesKicker: 'Recent notes',
+    notesTitle: '贴在站台墙上的近期纸条。',
+    notesIntro: '从 X 精选中挑几张最近的纸条，保留一点现场感。',
+    viewOnX: 'View on X',
+    emptyNotes: '近期纸条很快会贴上来。',
+    buildKicker: 'Build log',
+    buildTitle: '最近的开发笔记。',
+    buildIntro: '像翻一本 notebook，看看小工具是怎么慢慢变清楚的。',
+    readNote: 'Read note',
+    emptyBuild: '开发笔记很快会更新。',
+    closingTitle: '这座小站还在慢慢长大。',
+    closingText: '来看猫、看早餐、看工具，也看一点奇怪想法如何变成产品。',
+    follow: 'Follow on X',
+    viewSnapCopy: 'View SnapCopy',
+    android: 'Join Android Waitlist',
+    dateLocale: 'zh-Hans'
+  },
+  en: {
+    title: 'Station Cat',
+    description: 'Station Cat is a late-night personal station for cats, breakfast, public signals, small tools, build logs, and strange ideas.',
+    logoCaption: 'Independent creator station',
+    logoAlt: 'Station Cat brand logo',
+    heroTitle: 'A small station still lit late at night.',
+    heroText: 'I collect cats, breakfast, public signals, and small tools that are still growing here. Some notes become apps. Some stay as a sentence beside the table.',
+    primaryCta: 'See the tools',
+    secondaryCta: 'Read station notes',
+    boardLabel: 'Station Board',
+    boardItems: [
+      { type: 'polaroid', title: 'Cat log', text: 'Window shifts, tail movement, and tiny daily opinions.', stamp: 'cat' },
+      { type: 'receipt', title: 'Breakfast receipt', text: 'Coffee, toast, plate edges, and a little morning light.', stamp: 'meal' },
+      { type: 'signal', title: 'Signal strip', text: 'Public sources, tech changes, AI news, and faint market signals.', stamp: 'signal' },
+      { type: 'snapcopy', title: 'SnapCopy', text: 'One photo, shaped into a sentence that is easier to share.', stamp: 'tool' }
+    ],
+    aboutKicker: 'About the station',
+    aboutTitle: 'Not a company showroom. More like a desk that is still in use.',
+    aboutText: 'This site holds life notes, product drafts, apps in testing, X works, and build logs. The pieces can be small, but each note should still feel human.',
+    todayKicker: 'Today at the Station',
+    todayTitle: 'What is on the platform today.',
+    todayIntro: 'Cats, table notes, signals, and tools show up as different paper scraps on a slowly growing station wall.',
+    stationCards: [
+      { icon: 'cat', title: 'Cat log', text: 'Polaroid-like notes for window seats, sofas, and small companions.' },
+      { icon: 'cup', title: 'Table notes', text: 'Breakfast, coffee, table notes, and a day worth finishing slowly.' },
+      { icon: 'signal', title: 'Signal board', text: 'Public information, internet shifts, and small signals for creators.' },
+      { icon: 'wrench', title: 'Tool bench', text: 'Independent apps, test builds, product drafts, and tools still being sanded down.' }
+    ],
+    toolsKicker: 'Tools on the bench',
+    toolsTitle: 'Small tools growing on the desk.',
+    toolsIntro: 'The homepage keeps entries and status clear. Details, downloads, privacy, and testing notes stay on each product page.',
+    viewApp: 'View App',
+    joinTest: 'Join Test',
+    downloadMac: 'Download for Mac',
+    snapcopyDesc: 'Turn everyday photos into a sentence that is easier to share.',
+    radarDesc: 'Turn public sources and keywords into clearer directions for creator topics.',
+    snapcopyStatus: 'closed testing',
+    radarStatus: 'Mac test build 0.1.0',
+    notesKicker: 'Recent notes',
+    notesTitle: 'Small notes pinned to the station wall.',
+    notesIntro: 'A few recent selected X notes, kept with a little field texture.',
+    viewOnX: 'View on X',
+    emptyNotes: 'Recent notes will appear here soon.',
+    buildKicker: 'Build log',
+    buildTitle: 'Recent build notes.',
+    buildIntro: 'Like opening a notebook to see how small tools slowly become clearer.',
+    readNote: 'Read note',
+    emptyBuild: 'Build notes will appear here soon.',
+    closingTitle: 'This small station is still growing.',
+    closingText: 'Come by for cats, breakfast, tools, and a few strange ideas becoming products.',
+    follow: 'Follow on X',
+    viewSnapCopy: 'View SnapCopy',
+    android: 'Join Android Waitlist',
+    dateLocale: 'en'
+  },
+  ja: {
+    title: 'Station Cat',
+    description: 'Station Cat は、猫、朝食、公開シグナル、小さなツール、開発ログ、少し不思議なアイデアを集める深夜の小さな場所です。',
+    logoCaption: '個人クリエイターの小さな場所',
+    logoAlt: 'Station Cat ブランドロゴ',
+    heroTitle: '夜遅くまで灯りがついている小さな場所。',
+    heroText: 'ここでは猫、朝食、公開シグナル、育ちかけの小さなツールを集めています。アプリになるものもあれば、食卓のそばの一文で終わるものもあります。',
+    primaryCta: '作っているツールを見る',
+    secondaryCta: '最近のノートを見る',
+    boardLabel: 'Station Board',
+    boardItems: [
+      { type: 'polaroid', title: 'Cat log', text: '窓辺の当番、しっぽの動き、日常の小さな気配。', stamp: 'cat' },
+      { type: 'receipt', title: 'Breakfast receipt', text: 'コーヒー、トースト、お皿の端、朝の少しの光。', stamp: 'meal' },
+      { type: 'signal', title: 'Signal strip', text: '公開情報、技術の変化、AIニュース、市場の小さなサイン。', stamp: 'signal' },
+      { type: 'snapcopy', title: 'SnapCopy', text: '一枚の写真を、共有しやすい一文に整えます。', stamp: 'tool' }
+    ],
+    aboutKicker: 'About the station',
+    aboutTitle: '会社のショールームではなく、まだ片付けていない机のような場所。',
+    aboutText: '生活の記録、プロダクトの下書き、テスト中のアプリ、X の作品、開発ログを置いています。小さな内容でも、人の温度が残る紙片にしたいと思っています。',
+    todayKicker: 'Today at the Station',
+    todayTitle: '今日のホームに置いてあるもの。',
+    todayIntro: '猫、食卓、シグナル、ツールが、それぞれ違う紙片として小さな掲示板に増えていきます。',
+    stationCards: [
+      { icon: 'cat', title: 'Cat log', text: '窓辺、ソファ、日常の小さな相棒をポラロイドのように記録します。' },
+      { icon: 'cup', title: 'Table notes', text: '朝食、コーヒー、食卓のメモ、ゆっくり食べ終えたい一日。' },
+      { icon: 'signal', title: 'Signal board', text: '公開情報、ネットの変化、クリエイターに役立つ小さなサイン。' },
+      { icon: 'wrench', title: 'Tool bench', text: '個人アプリ、テスト版、開発メモ、まだ磨いている小さなツール。' }
+    ],
+    toolsKicker: 'Tools on the bench',
+    toolsTitle: '机の上で少しずつ育っているツール。',
+    toolsIntro: 'ホームには入口と状態だけを置き、詳しい機能、ダウンロード、プライバシー、テスト情報は各製品ページにまとめます。',
+    viewApp: 'View App',
+    joinTest: 'Join Test',
+    downloadMac: 'Download for Mac',
+    snapcopyDesc: '日常写真を、共有しやすい一文に変えます。',
+    radarDesc: '公開情報源とキーワードを、クリエイター向けのテーマに整理します。',
+    snapcopyStatus: 'closed testing',
+    radarStatus: 'Mac test build 0.1.0',
+    notesKicker: 'Recent notes',
+    notesTitle: '駅の壁に貼った最近の紙片。',
+    notesIntro: 'X から選んだ最近のノートを少しだけ並べます。',
+    viewOnX: 'View on X',
+    emptyNotes: '最近のノートはまもなく追加されます。',
+    buildKicker: 'Build log',
+    buildTitle: '最近の開発ノート。',
+    buildIntro: '小さなツールが少しずつ形になる様子を notebook のように残します。',
+    readNote: 'Read note',
+    emptyBuild: '開発ノートはまもなく更新されます。',
+    closingTitle: 'この小さな場所は、まだ少しずつ育っています。',
+    closingText: '猫、朝食、ツール、そして少し不思議なアイデアがプロダクトになる途中を見に来てください。',
+    follow: 'Follow on X',
+    viewSnapCopy: 'View SnapCopy',
+    android: 'Join Android Waitlist',
+    dateLocale: 'ja'
+  }
+}[lang];
+
+const paths = {
+  'zh-Hant': {
+    apps: '/zh-hant/apps/',
+    notes: '/zh-hant/works/',
+    snapcopy: snapCopyProduct.zhHantProductPath,
+    snapcopyTest: '/zh-hant/apps/caption-ai/download/',
+    radar: stationCatRadarProduct.zhHantProductPath,
+    radarDownload: '/zh-hant/apps/stationcat-radar/download/',
+    devlogPrefix: '/devlog/'
+  },
+  'zh-Hans': {
+    apps: '/zh-hans/apps/',
+    notes: '/zh-hans/works/',
+    snapcopy: snapCopyProduct.zhHansProductPath,
+    snapcopyTest: '/zh-hans/apps/caption-ai/download/',
+    radar: stationCatRadarProduct.zhHansProductPath,
+    radarDownload: '/zh-hans/apps/stationcat-radar/download/',
+    devlogPrefix: '/zh-hans/devlog/'
+  },
+  en: {
+    apps: '/apps/',
+    notes: '/works/',
+    snapcopy: snapCopyProduct.productPath,
+    snapcopyTest: '/apps/caption-ai/download/',
+    radar: stationCatRadarProduct.productPath,
+    radarDownload: '/apps/stationcat-radar/download/',
+    devlogPrefix: '/en/devlog/'
+  },
+  ja: {
+    apps: '/ja/apps/',
+    notes: '/ja/works/',
+    snapcopy: snapCopyProduct.jaProductPath,
+    snapcopyTest: '/ja/apps/caption-ai/download/',
+    radar: stationCatRadarProduct.jaProductPath,
+    radarDownload: '/ja/apps/stationcat-radar/download/',
+    devlogPrefix: '/ja/devlog/'
+  }
+}[lang];
+
+const workLanguage = lang === 'ja' ? 'ja' : lang === 'en' ? 'en' : 'zh-hant';
+const devlogLanguage = lang;
+
+const allWorks = await getCollection('xworks');
+const recentWorks = allWorks
+  .filter((work) => work.data.status === 'published' && work.data.featured && work.data.language === workLanguage)
+  .sort((a, b) => new Date(b.data.publishedAt ?? 0).getTime() - new Date(a.data.publishedAt ?? 0).getTime())
+  .slice(0, 3);
+
+const allDevlog = await getCollection('devlog');
+const recentDevlog = allDevlog
+  .filter((post) => !post.data.draft && post.data.language === devlogLanguage)
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
+  .slice(0, 3);
+
+const formatDate = (value?: string | Date) => {
+  if (!value) return '';
+  const date = value instanceof Date ? value : new Date(value);
+  return new Intl.DateTimeFormat(copy.dateLocale, { year: 'numeric', month: 'short', day: 'numeric' }).format(date);
+};
+
+const devlogHref = (post: (typeof recentDevlog)[number]) => {
+  const slug = post.data.postSlug ?? post.slug;
+  return `${paths.devlogPrefix}${slug}/`;
+};
+---
+
+<BaseLayout
+  title={copy.title}
+  description={copy.description}
+  lang={lang}
+  canonicalPath={canonicalPath}
+  bodyClass="station-home station-home-v2"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/' },
+    { hrefLang: 'en', href: '/en/' },
+    { hrefLang: 'ja', href: '/ja/' },
+    { hrefLang: 'x-default', href: '/' }
+  ]}
+>
+  <section class="paper-hero">
+    <div class="paper-hero__copy">
+      <div class="station-logo-lockup">
+        <img src={stationLogoPath} alt={copy.logoAlt} width="998" height="970" />
+        <div class="station-logo-lockup__text">
+          <p class="paper-kicker">Station Cat</p>
+          <p class="station-logo-lockup__caption">{copy.logoCaption}</p>
+        </div>
+      </div>
+      <h1>{copy.heroTitle}</h1>
+      <p class="paper-lede">{copy.heroText}</p>
+      <div class="paper-actions" aria-label="Primary actions">
+        <a class="ticket-button ticket-button--primary" href={paths.apps}>{copy.primaryCta}</a>
+        <a class="ticket-button ticket-button--secondary" href="#recent-notes">{copy.secondaryCta}</a>
+      </div>
+    </div>
+
+    <aside class="station-board-v2" aria-label={copy.boardLabel}>
+      <div class="station-board-v2__rail">
+        <span>SC</span>
+        <span>{copy.boardLabel}</span>
+      </div>
+      <div class="station-board-v2__pinboard">
+        {copy.boardItems.map((item) => (
+          <article class={`station-scrap station-scrap--${item.type}`}>
+            {item.type === 'polaroid' && (
+              <img class="station-scrap__photo" src={stationLogoPath} alt={copy.logoAlt} width="998" height="970" loading="lazy" />
+            )}
+            <span class="paper-stamp">{item.stamp}</span>
+            <h2>{item.title}</h2>
+            <p>{item.text}</p>
+          </article>
+        ))}
+      </div>
+    </aside>
+  </section>
+
+  <section id="about" class="paper-section about-ticket">
+    <p class="paper-kicker">{copy.aboutKicker}</p>
+    <h2>{copy.aboutTitle}</h2>
+    <p>{copy.aboutText}</p>
+  </section>
+
+  <section class="paper-section">
+    <div class="paper-section__heading">
+      <p class="paper-kicker">{copy.todayKicker}</p>
+      <h2>{copy.todayTitle}</h2>
+      <p>{copy.todayIntro}</p>
+    </div>
+    <div class="station-day-grid">
+      {copy.stationCards.map((card, index) => (
+        <article class={`station-day-card station-day-card--${index + 1}`}>
+          <span class="line-icon" set:html={icons[card.icon as IconName]} />
+          <h3>{card.title}</h3>
+          <p>{card.text}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section id="apps" class="paper-section">
+    <div class="paper-section__heading">
+      <p class="paper-kicker">{copy.toolsKicker}</p>
+      <h2>{copy.toolsTitle}</h2>
+      <p>{copy.toolsIntro}</p>
+    </div>
+    <div class="bench-grid">
+      <article class="bench-card">
+        <div class="bench-card__icon bench-card__icon--snapcopy">
+          <img src={snapCopyProduct.assets.icon} alt="SnapCopy app icon" width="512" height="512" loading="lazy" />
+        </div>
+        <div class="bench-card__copy">
+          <span class="paper-stamp">{copy.snapcopyStatus}</span>
+          <h3>SnapCopy</h3>
+          <p>{copy.snapcopyDesc}</p>
+          <div class="paper-actions">
+            <a class="ticket-button ticket-button--primary" href={paths.snapcopy}>{copy.viewApp}</a>
+            <a class="ticket-button ticket-button--secondary" href={paths.snapcopyTest}>{copy.joinTest}</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="bench-card">
+        <div class="bench-card__icon bench-card__icon--radar">
+          <span class="line-icon line-icon--large" set:html={icons.radar} />
+        </div>
+        <div class="bench-card__copy">
+          <span class="paper-stamp">{copy.radarStatus}</span>
+          <h3>StationCat Radar</h3>
+          <p>{copy.radarDesc}</p>
+          <div class="paper-actions">
+            <a class="ticket-button ticket-button--primary" href={paths.radar}>{copy.viewApp}</a>
+            <a class="ticket-button ticket-button--secondary" href={paths.radarDownload}>{copy.downloadMac}</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="recent-notes" class="paper-section">
+    <div class="paper-section__heading">
+      <p class="paper-kicker">{copy.notesKicker}</p>
+      <h2>{copy.notesTitle}</h2>
+      <p>{copy.notesIntro}</p>
+    </div>
+    {recentWorks.length > 0 ? (
+      <div class="wall-note-grid">
+        {recentWorks.map((work, index) => (
+          <article class={`wall-note wall-note--${index + 1}`}>
+            <div class="wall-note__meta">
+              <span class="paper-stamp">{work.data.type}</span>
+              {work.data.publishedAt && <time datetime={work.data.publishedAt}>{formatDate(work.data.publishedAt)}</time>}
+            </div>
+            <h3>{work.data.title}</h3>
+            {work.data.description && <p>{work.data.description}</p>}
+            <a class="paper-link" href={work.data.xUrl} target="_blank" rel="noopener noreferrer">{copy.viewOnX}</a>
+          </article>
+        ))}
+      </div>
+    ) : (
+      <p class="paper-empty">{copy.emptyNotes}</p>
+    )}
+  </section>
+
+  <section class="paper-section">
+    <div class="paper-section__heading">
+      <p class="paper-kicker">{copy.buildKicker}</p>
+      <h2>{copy.buildTitle}</h2>
+      <p>{copy.buildIntro}</p>
+    </div>
+    {recentDevlog.length > 0 ? (
+      <div class="build-log-list">
+        {recentDevlog.map((post) => (
+          <article class="build-log-row">
+            <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+            <span class="paper-stamp">{post.data.status}</span>
+            <div>
+              <h3><a href={devlogHref(post)}>{post.data.title}</a></h3>
+              <p>{post.data.description}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    ) : (
+      <p class="paper-empty">{copy.emptyBuild}</p>
+    )}
+  </section>
+
+  <section class="paper-closing">
+    <div>
+      <p class="paper-kicker">Station Cat</p>
+      <h2>{copy.closingTitle}</h2>
+      <p>{copy.closingText}</p>
+    </div>
+    <div class="paper-actions">
+      <a class="ticket-button ticket-button--primary" href={xUrl} target="_blank" rel="noopener noreferrer">{copy.follow}</a>
+      <a class="ticket-button ticket-button--secondary" href={paths.snapcopy}>{copy.viewSnapCopy}</a>
+      <a class="ticket-button ticket-button--secondary" href="/android/">{copy.android}</a>
+    </div>
+  </section>
+</BaseLayout>
