@@ -34,6 +34,13 @@ const fullTitle = title.includes(siteConfig.name)
   : `${title} | ${siteConfig.name}`;
 const canonicalUrl = new URL(canonicalPath, siteConfig.baseUrl).toString();
 const ogImageUrl = new URL(ogImage, siteConfig.baseUrl).toString();
+const isAdminPage = Astro.url.pathname.startsWith('/admin');
+const shouldUsePaperTheme = !isAdminPage && !bodyClass?.includes('station-home-v2');
+const resolvedBodyClass = [
+  isAdminPage ? 'admin-page' : '',
+  shouldUsePaperTheme ? 'station-paper-page' : '',
+  bodyClass
+].filter(Boolean).join(' ');
 ---
 
 <!doctype html>
@@ -58,7 +65,7 @@ const ogImageUrl = new URL(ogImage, siteConfig.baseUrl).toString();
     <meta name="twitter:image" content={ogImageUrl} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
-  <body class={bodyClass}>
+  <body class={resolvedBodyClass}>
     <a class="skip-link" href="#main">{lang === 'ja' ? '本文へ移動' : lang === 'zh-Hant' ? '跳到主要內容' : lang === 'zh-Hans' ? '跳到主要内容' : 'Skip to content'}</a>
     <Header lang={lang} />
     <main id="main">
