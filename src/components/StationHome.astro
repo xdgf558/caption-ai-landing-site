@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { snapCopyProduct } from '../data/products/caption-ai';
 import { stationCatRadarProduct } from '../data/products/stationcat-radar';
+import { xFollowCleanerProduct } from '../data/products/x-follow-cleaner';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
 type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'app' | 'radar';
@@ -62,10 +63,13 @@ const copy = {
     viewApp: 'View App',
     joinTest: 'Join Test',
     downloadMac: 'Download for Mac',
+    downloadExtension: 'Download ZIP',
     snapcopyDesc: '把日常照片變成更容易分享的一句話。',
     radarDesc: '把公開資料源和關鍵詞整理成創作者選題方向。',
+    followCleanerDesc: '低頻檢查 X 關注列表，本地保存結果，並匯出 CSV / JSON。',
     snapcopyStatus: 'closed testing',
     radarStatus: 'Mac test build 0.1.0',
+    followCleanerStatus: 'Chrome extension v0.2.0',
     notesKicker: 'Recent notes',
     notesTitle: '貼在站台牆上的近期紙條。',
     notesIntro: '從 X 精選中挑幾張最近的紙條，保留一點現場感。',
@@ -117,10 +121,13 @@ const copy = {
     viewApp: 'View App',
     joinTest: 'Join Test',
     downloadMac: 'Download for Mac',
+    downloadExtension: 'Download ZIP',
     snapcopyDesc: '把日常照片变成更容易分享的一句话。',
     radarDesc: '把公开资料源和关键词整理成创作者选题方向。',
+    followCleanerDesc: '低频检查 X 关注列表，本地保存结果，并导出 CSV / JSON。',
     snapcopyStatus: 'closed testing',
     radarStatus: 'Mac test build 0.1.0',
+    followCleanerStatus: 'Chrome extension v0.2.0',
     notesKicker: 'Recent notes',
     notesTitle: '贴在站台墙上的近期纸条。',
     notesIntro: '从 X 精选中挑几张最近的纸条，保留一点现场感。',
@@ -172,10 +179,13 @@ const copy = {
     viewApp: 'View App',
     joinTest: 'Join Test',
     downloadMac: 'Download for Mac',
+    downloadExtension: 'Download ZIP',
     snapcopyDesc: 'Turn everyday photos into a sentence that is easier to share.',
     radarDesc: 'Turn public sources and keywords into clearer directions for creator topics.',
+    followCleanerDesc: 'Review your X following list locally and export CSV / JSON results.',
     snapcopyStatus: 'closed testing',
     radarStatus: 'Mac test build 0.1.0',
+    followCleanerStatus: 'Chrome extension v0.2.0',
     notesKicker: 'Recent notes',
     notesTitle: 'Small notes pinned to the station wall.',
     notesIntro: 'A few recent selected X notes, kept with a little field texture.',
@@ -227,10 +237,13 @@ const copy = {
     viewApp: 'View App',
     joinTest: 'Join Test',
     downloadMac: 'Download for Mac',
+    downloadExtension: 'Download ZIP',
     snapcopyDesc: '日常写真を、共有しやすい一文に変えます。',
     radarDesc: '公開情報源とキーワードを、クリエイター向けのテーマに整理します。',
+    followCleanerDesc: 'X のフォロー一覧をローカルで見直し、CSV / JSON で書き出します。',
     snapcopyStatus: 'closed testing',
     radarStatus: 'Mac test build 0.1.0',
+    followCleanerStatus: 'Chrome extension v0.2.0',
     notesKicker: 'Recent notes',
     notesTitle: '駅の壁に貼った最近の紙片。',
     notesIntro: 'X から選んだ最近のノートを少しだけ並べます。',
@@ -258,6 +271,8 @@ const paths = {
     snapcopyTest: '/zh-hant/apps/caption-ai/download/',
     radar: stationCatRadarProduct.zhHantProductPath,
     radarDownload: '/zh-hant/apps/stationcat-radar/download/',
+    followCleaner: xFollowCleanerProduct.zhHantProductPath,
+    followCleanerDownload: xFollowCleanerProduct.downloadUrl,
     devlogPrefix: '/devlog/'
   },
   'zh-Hans': {
@@ -267,6 +282,8 @@ const paths = {
     snapcopyTest: '/zh-hans/apps/caption-ai/download/',
     radar: stationCatRadarProduct.zhHansProductPath,
     radarDownload: '/zh-hans/apps/stationcat-radar/download/',
+    followCleaner: xFollowCleanerProduct.zhHansProductPath,
+    followCleanerDownload: xFollowCleanerProduct.downloadUrl,
     devlogPrefix: '/zh-hans/devlog/'
   },
   en: {
@@ -276,6 +293,8 @@ const paths = {
     snapcopyTest: '/apps/caption-ai/download/',
     radar: stationCatRadarProduct.productPath,
     radarDownload: '/apps/stationcat-radar/download/',
+    followCleaner: xFollowCleanerProduct.productPath,
+    followCleanerDownload: xFollowCleanerProduct.downloadUrl,
     devlogPrefix: '/en/devlog/'
   },
   ja: {
@@ -285,6 +304,8 @@ const paths = {
     snapcopyTest: '/ja/apps/caption-ai/download/',
     radar: stationCatRadarProduct.jaProductPath,
     radarDownload: '/ja/apps/stationcat-radar/download/',
+    followCleaner: xFollowCleanerProduct.jaProductPath,
+    followCleanerDownload: xFollowCleanerProduct.downloadUrl,
     devlogPrefix: '/ja/devlog/'
   }
 }[lang];
@@ -423,6 +444,21 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
           <div class="paper-actions">
             <a class="ticket-button ticket-button--primary" href={paths.radar}>{copy.viewApp}</a>
             <a class="ticket-button ticket-button--secondary" href={paths.radarDownload}>{copy.downloadMac}</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="bench-card">
+        <div class="bench-card__icon">
+          <span class="line-icon line-icon--large" set:html={icons.app} />
+        </div>
+        <div class="bench-card__copy">
+          <span class="paper-stamp">{copy.followCleanerStatus}</span>
+          <h3>X Follow Cleaner</h3>
+          <p>{copy.followCleanerDesc}</p>
+          <div class="paper-actions">
+            <a class="ticket-button ticket-button--primary" href={paths.followCleaner}>{copy.viewApp}</a>
+            <a class="ticket-button ticket-button--secondary" href={paths.followCleanerDownload}>{copy.downloadExtension}</a>
           </div>
         </div>
       </article>

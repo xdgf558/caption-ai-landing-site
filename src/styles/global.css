@@ -3752,6 +3752,26 @@ body.station-paper-page {
   margin-bottom: 60px;
 }
 
+.station-paper-page .follow-cleaner-panels {
+  align-items: stretch;
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.station-paper-page .follow-cleaner-preview {
+  background: #f1e4d4;
+}
+
+.station-paper-page .follow-cleaner-preview img {
+  border-radius: 14px;
+  box-shadow: 0 12px 24px rgba(34, 27, 22, 0.14);
+}
+
+.station-paper-page .follow-cleaner-release {
+  margin-bottom: 56px;
+}
+
 .station-paper-page .mock-form input,
 .station-paper-page .mock-form textarea {
   background: #fffaf1;
@@ -3878,6 +3898,10 @@ body.station-paper-page {
   .station-paper-page .x-work-card,
   .station-paper-page .radar-feature-grid article {
     transform: none;
+  }
+
+  .station-paper-page .follow-cleaner-panels {
+    grid-template-columns: 1fr;
   }
 
   .station-paper-page .button-row {
