@@ -4,9 +4,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { snapCopyProduct } from '../data/products/caption-ai';
 import { stationCatRadarProduct } from '../data/products/stationcat-radar';
 import { xFollowCleanerProduct } from '../data/products/x-follow-cleaner';
+import { storyCatProduct } from '../data/products/storycat';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
-type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'app' | 'radar';
+type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'app' | 'radar' | 'book';
 
 interface Props {
   lang?: Locale;
@@ -25,7 +26,8 @@ const icons: Record<IconName, string> = {
   note: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 5h13l3 3v19H8Z"/><path d="M21 5v5h5M12 14h10M12 19h10M12 24h6"/></svg>`,
   camera: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 11h5l2-3h6l2 3h5v15H6Z"/><circle cx="16" cy="18" r="5"/><path d="M23 14h.1"/></svg>`,
   app: `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="5" width="18" height="22" rx="5"/><path d="M13 9h6M13 23h6"/><path d="M12 15h8M12 18h5"/></svg>`,
-  radar: `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="10"/><path d="M16 16 23 9"/><path d="M16 6v4M16 22v4M6 16h4M22 16h4"/><circle cx="16" cy="16" r="2"/></svg>`
+  radar: `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="10"/><path d="M16 16 23 9"/><path d="M16 6v4M16 22v4M6 16h4M22 16h4"/><circle cx="16" cy="16" r="2"/></svg>`,
+  book: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 6h9a5 5 0 0 1 5 5v16H12a5 5 0 0 0-5 5Z"/><path d="M25 6h-4a5 5 0 0 0-5 5v16h9Z"/><path d="M11 12h5M11 17h4M21 12h2M21 17h2"/></svg>`
 };
 
 const copy = {
@@ -65,9 +67,11 @@ const copy = {
     downloadMac: 'Download for Mac',
     downloadExtension: 'Download ZIP',
     snapcopyDesc: '把日常照片變成更容易分享的一句話。',
+    storycatDesc: '建立主角、選擇模板，進入一部會回應你的 AI 互動故事。',
     radarDesc: '把公開資料源和關鍵詞整理成創作者選題方向。',
     followCleanerDesc: '低頻檢查 X 關注列表，本地保存結果，並匯出 CSV / JSON。',
     snapcopyStatus: 'closed testing',
+    storycatStatus: 'iOS testing soon',
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Recent notes',
@@ -123,9 +127,11 @@ const copy = {
     downloadMac: 'Download for Mac',
     downloadExtension: 'Download ZIP',
     snapcopyDesc: '把日常照片变成更容易分享的一句话。',
+    storycatDesc: '创建主角、选择模板，进入一部会回应你的 AI 互动故事。',
     radarDesc: '把公开资料源和关键词整理成创作者选题方向。',
     followCleanerDesc: '低频检查 X 关注列表，本地保存结果，并导出 CSV / JSON。',
     snapcopyStatus: 'closed testing',
+    storycatStatus: 'iOS testing soon',
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Recent notes',
@@ -181,9 +187,11 @@ const copy = {
     downloadMac: 'Download for Mac',
     downloadExtension: 'Download ZIP',
     snapcopyDesc: 'Turn everyday photos into a sentence that is easier to share.',
+    storycatDesc: 'Create a protagonist and enter a playable AI story that responds to your choices.',
     radarDesc: 'Turn public sources and keywords into clearer directions for creator topics.',
     followCleanerDesc: 'Review your X following list locally and export CSV / JSON results.',
     snapcopyStatus: 'closed testing',
+    storycatStatus: 'iOS testing soon',
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Recent notes',
@@ -239,9 +247,11 @@ const copy = {
     downloadMac: 'Download for Mac',
     downloadExtension: 'Download ZIP',
     snapcopyDesc: '日常写真を、共有しやすい一文に変えます。',
+    storycatDesc: '主人公を作り、選択に反応する AI 物語に入ります。',
     radarDesc: '公開情報源とキーワードを、クリエイター向けのテーマに整理します。',
     followCleanerDesc: 'X のフォロー一覧をローカルで見直し、CSV / JSON で書き出します。',
     snapcopyStatus: 'closed testing',
+    storycatStatus: 'iOS testing soon',
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Recent notes',
@@ -269,6 +279,8 @@ const paths = {
     notes: '/zh-hant/works/',
     snapcopy: snapCopyProduct.zhHantProductPath,
     snapcopyTest: '/zh-hant/apps/caption-ai/download/',
+    storycat: storyCatProduct.zhHantProductPath,
+    storycatTest: `${storyCatProduct.zhHantProductPath}${storyCatProduct.testFlightAnchor}`,
     radar: stationCatRadarProduct.zhHantProductPath,
     radarDownload: '/zh-hant/apps/stationcat-radar/download/',
     followCleaner: xFollowCleanerProduct.zhHantProductPath,
@@ -280,6 +292,8 @@ const paths = {
     notes: '/zh-hans/works/',
     snapcopy: snapCopyProduct.zhHansProductPath,
     snapcopyTest: '/zh-hans/apps/caption-ai/download/',
+    storycat: storyCatProduct.zhHansProductPath,
+    storycatTest: `${storyCatProduct.zhHansProductPath}${storyCatProduct.testFlightAnchor}`,
     radar: stationCatRadarProduct.zhHansProductPath,
     radarDownload: '/zh-hans/apps/stationcat-radar/download/',
     followCleaner: xFollowCleanerProduct.zhHansProductPath,
@@ -291,6 +305,8 @@ const paths = {
     notes: '/works/',
     snapcopy: snapCopyProduct.productPath,
     snapcopyTest: '/apps/caption-ai/download/',
+    storycat: storyCatProduct.productPath,
+    storycatTest: `${storyCatProduct.productPath}${storyCatProduct.testFlightAnchor}`,
     radar: stationCatRadarProduct.productPath,
     radarDownload: '/apps/stationcat-radar/download/',
     followCleaner: xFollowCleanerProduct.productPath,
@@ -302,6 +318,8 @@ const paths = {
     notes: '/ja/works/',
     snapcopy: snapCopyProduct.jaProductPath,
     snapcopyTest: '/ja/apps/caption-ai/download/',
+    storycat: storyCatProduct.jaProductPath,
+    storycatTest: `${storyCatProduct.jaProductPath}${storyCatProduct.testFlightAnchor}`,
     radar: stationCatRadarProduct.jaProductPath,
     radarDownload: '/ja/apps/stationcat-radar/download/',
     followCleaner: xFollowCleanerProduct.jaProductPath,
@@ -429,6 +447,21 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
           <div class="paper-actions">
             <a class="ticket-button ticket-button--primary" href={paths.snapcopy}>{copy.viewApp}</a>
             <a class="ticket-button ticket-button--secondary" href={paths.snapcopyTest}>{copy.joinTest}</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="bench-card">
+        <div class="bench-card__icon bench-card__icon--storycat">
+          <span class="line-icon line-icon--large" set:html={icons.book} />
+        </div>
+        <div class="bench-card__copy">
+          <span class="paper-stamp">{copy.storycatStatus}</span>
+          <h3>StoryCat</h3>
+          <p>{copy.storycatDesc}</p>
+          <div class="paper-actions">
+            <a class="ticket-button ticket-button--primary" href={paths.storycat}>{copy.viewApp}</a>
+            <a class="ticket-button ticket-button--secondary" href={paths.storycatTest}>{copy.joinTest}</a>
           </div>
         </div>
       </article>

@@ -7,6 +7,8 @@ interface Props {
   imageAlt?: string;
   imageVariant?: 'preview' | 'icon';
   cta?: string;
+  secondaryHref?: string;
+  secondaryCta?: string;
   kicker?: string;
 }
 
@@ -18,6 +20,8 @@ const {
   imageAlt = `${title} preview`,
   imageVariant = 'preview',
   cta = 'View product',
+  secondaryHref,
+  secondaryCta,
   kicker = 'First app in development'
 } = Astro.props;
 ---
@@ -35,6 +39,9 @@ const {
     <p class="section-kicker">{kicker}</p>
     <h2>{title}</h2>
     <p>{description}</p>
-    <a class="text-link" href={href}>{cta}</a>
+    <div class="product-card__actions">
+      <a class="text-link" href={href}>{cta}</a>
+      {secondaryHref && secondaryCta && <a class="text-link" href={secondaryHref}>{secondaryCta}</a>}
+    </div>
   </div>
 </article>
