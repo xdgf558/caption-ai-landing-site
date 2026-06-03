@@ -3041,6 +3041,13 @@ button.button {
   color: #2e5b4e;
 }
 
+.bench-card__icon--storycat img {
+  border-radius: 26%;
+  box-shadow: 0 16px 28px rgba(80, 55, 35, 0.16);
+  max-width: 160px;
+  width: 46%;
+}
+
 .bench-card__copy {
   display: grid;
   gap: 13px;

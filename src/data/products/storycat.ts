@@ -18,7 +18,8 @@ export const storyCatProduct = {
   jaProductPath: '/ja/apps/storycat/',
   testFlightAnchor: '#testflight',
   assets: {
-    preview: '/images/storycat-preview.svg'
+    icon: '/images/storycat-icon.png',
+    preview: '/images/storycat-icon.png'
   }
 } as const;
 
