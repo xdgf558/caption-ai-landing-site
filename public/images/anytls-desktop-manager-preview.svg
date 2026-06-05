@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 720" role="img" aria-labelledby="title desc">
+  <title id="title">AnyTLS Desktop Manager preview</title>
+  <desc id="desc">A cautious desktop utility preview with configuration cards and connection status.</desc>
+  <rect width="1040" height="720" rx="34" fill="#f8f1e7"/>
+  <rect x="92" y="80" width="856" height="560" rx="28" fill="#221b16" opacity=".08"/>
+  <rect x="126" y="112" width="788" height="496" rx="26" fill="#fffaf2" stroke="#d8c8b8" stroke-width="4"/>
+  <rect x="126" y="112" width="788" height="72" rx="26" fill="#2e5b4e"/>
+  <circle cx="168" cy="148" r="10" fill="#f0a94a"/>
+  <circle cx="202" cy="148" r="10" fill="#ddb7a0"/>
+  <circle cx="236" cy="148" r="10" fill="#4b6d7b"/>
+  <text x="278" y="157" fill="#fffaf2" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="25" font-weight="800">AnyTLS Desktop Manager</text>
+
+  <rect x="168" y="226" width="304" height="118" rx="18" fill="#f8f1e7" stroke="#d8c8b8" stroke-width="3"/>
+  <text x="196" y="272" fill="#221b16" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" font-weight="800">Local profiles</text>
+  <text x="196" y="308" fill="#6f6258" font-family="Arial, sans-serif" font-size="20">Manage saved endpoint notes</text>
+
+  <rect x="522" y="226" width="304" height="118" rx="18" fill="#f8f1e7" stroke="#d8c8b8" stroke-width="3"/>
+  <text x="550" y="272" fill="#221b16" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" font-weight="800">Connection check</text>
+  <text x="550" y="308" fill="#6f6258" font-family="Arial, sans-serif" font-size="20">Verify before daily use</text>
+
+  <rect x="168" y="388" width="658" height="132" rx="20" fill="#f8f1e7" stroke="#d8c8b8" stroke-width="3"/>
+  <path d="M214 454h100m70 0h100m70 0h100" stroke="#2e5b4e" stroke-width="12" stroke-linecap="round" opacity=".85"/>
+  <circle cx="214" cy="454" r="30" fill="#4b6d7b"/>
+  <circle cx="384" cy="454" r="30" fill="#f0a94a"/>
+  <circle cx="554" cy="454" r="30" fill="#ddb7a0"/>
+  <text x="188" y="566" fill="#6f6258" font-family="Arial, sans-serif" font-size="19">For authorized, personal or team-managed environments only.</text>
+
+  <rect x="700" y="128" width="214" height="56" rx="24" fill="#f0a94a"/>
+  <text x="728" y="164" fill="#221b16" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" font-weight="800">Windows x64</text>
+</svg>

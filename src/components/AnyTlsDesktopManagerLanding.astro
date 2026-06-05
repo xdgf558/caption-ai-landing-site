@@ -1,0 +1,223 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { anyTlsDesktopManagerProduct } from '../data/products/anytls-desktop-manager';
+
+interface Props {
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+}
+
+const { lang = 'zh-Hant' } = Astro.props;
+
+const copy = {
+  'zh-Hant': {
+    title: 'AnyTLS Desktop Manager',
+    eyebrow: 'Windows Test Build',
+    headline: '用一個桌面小工具，整理你被授權管理的 AnyTLS 配置。',
+    intro:
+      'AnyTLS Desktop Manager 是一個早期 Windows 桌面測試版，用來幫你在本機整理、查看和管理自己的 AnyTLS 相關配置。它適合個人學習、內部測試和你明確有權管理的環境，不應用於未授權的網路、帳號、服務或第三方系統。',
+    primary: '下載 Windows x64 安裝包',
+    secondary: '返回 Apps',
+    secondaryHref: '/zh-hant/apps/',
+    featuresTitle: '可以謹慎用在哪裡',
+    features: [
+      ['本機配置整理', '把常用配置、連線資訊和備註集中放在桌面端，減少手動翻找。'],
+      ['測試環境管理', '適合管理你自己搭建或團隊授權的測試節點與設定。'],
+      ['日常狀態檢查', '在使用前確認配置是否完整、版本是否對應、備註是否清楚。'],
+      ['保留操作邊界', '頁面和軟體都不鼓勵、也不提供未授權訪問、規避限制或侵犯第三方服務的用途。']
+    ],
+    notesTitle: '下載前請先確認',
+    notes: [
+      `目前版本：${anyTlsDesktopManagerProduct.version}`,
+      `${anyTlsDesktopManagerProduct.platform} ${anyTlsDesktopManagerProduct.architecture}，${anyTlsDesktopManagerProduct.minimumSystem}`,
+      '這是早期測試版，可能會有錯誤、相容性問題或未完善的介面。',
+      '請只在你擁有或已獲授權管理的系統、伺服器和網路環境中使用。',
+      '請遵守所在地法律、服務條款、組織政策和網路管理規範。'
+    ],
+    metaTitle: '版本與檔案資訊',
+    checksum: 'SHA-256',
+    warning: 'Windows 可能會提示未知發布者或安全確認。下載後請核對來源和校驗值，再自行決定是否安裝。'
+  },
+  'zh-Hans': {
+    title: 'AnyTLS Desktop Manager',
+    eyebrow: 'Windows Test Build',
+    headline: '用一个桌面小工具，整理你被授权管理的 AnyTLS 配置。',
+    intro:
+      'AnyTLS Desktop Manager 是一个早期 Windows 桌面测试版，用来帮你在本机整理、查看和管理自己的 AnyTLS 相关配置。它适合个人学习、内部测试和你明确有权管理的环境，不应用于未授权的网络、账号、服务或第三方系统。',
+    primary: '下载 Windows x64 安装包',
+    secondary: '返回 Apps',
+    secondaryHref: '/zh-hans/apps/',
+    featuresTitle: '可以谨慎用在哪里',
+    features: [
+      ['本机配置整理', '把常用配置、连接信息和备注集中放在桌面端，减少手动翻找。'],
+      ['测试环境管理', '适合管理你自己搭建或团队授权的测试节点与设置。'],
+      ['日常状态检查', '在使用前确认配置是否完整、版本是否对应、备注是否清楚。'],
+      ['保留操作边界', '页面和软件都不鼓励、也不提供未授权访问、规避限制或侵犯第三方服务的用途。']
+    ],
+    notesTitle: '下载前请先确认',
+    notes: [
+      `当前版本：${anyTlsDesktopManagerProduct.version}`,
+      `${anyTlsDesktopManagerProduct.platform} ${anyTlsDesktopManagerProduct.architecture}，${anyTlsDesktopManagerProduct.minimumSystem}`,
+      '这是早期测试版，可能会有错误、兼容性问题或未完善的界面。',
+      '请只在你拥有或已获授权管理的系统、服务器和网络环境中使用。',
+      '请遵守所在地法律、服务条款、组织政策和网络管理规范。'
+    ],
+    metaTitle: '版本与文件信息',
+    checksum: 'SHA-256',
+    warning: 'Windows 可能会提示未知发布者或安全确认。下载后请核对来源和校验值，再自行决定是否安装。'
+  },
+  en: {
+    title: 'AnyTLS Desktop Manager',
+    eyebrow: 'Windows Test Build',
+    headline: 'A desktop utility for AnyTLS configurations you are authorized to manage.',
+    intro:
+      'AnyTLS Desktop Manager is an early Windows desktop test build for organizing, reviewing, and managing your own AnyTLS-related configuration notes locally. It is intended for personal learning, internal testing, and environments you are explicitly authorized to manage. It is not intended for unauthorized access, bypassing restrictions, or interfering with third-party systems.',
+    primary: 'Download Windows x64 installer',
+    secondary: 'Back to Apps',
+    secondaryHref: '/apps/',
+    featuresTitle: 'Careful use cases',
+    features: [
+      ['Local configuration notes', 'Keep frequently used profiles, connection details, and notes in one desktop workspace.'],
+      ['Authorized test environments', 'Manage settings for servers, systems, or networks you own or are permitted to administer.'],
+      ['Daily readiness checks', 'Review whether a profile is complete, versioned, and clearly documented before use.'],
+      ['Clear boundaries', 'The page and software do not encourage or provide unauthorized access, restriction bypassing, or misuse of third-party services.']
+    ],
+    notesTitle: 'Before downloading',
+    notes: [
+      `Current version: ${anyTlsDesktopManagerProduct.version}`,
+      `${anyTlsDesktopManagerProduct.platform} ${anyTlsDesktopManagerProduct.architecture}, ${anyTlsDesktopManagerProduct.minimumSystem}`,
+      'This is an early test build and may contain bugs, compatibility issues, or unfinished UI.',
+      'Use it only with systems, servers, and networks you own or are authorized to manage.',
+      'Follow applicable laws, service terms, organizational policies, and network administration rules.'
+    ],
+    metaTitle: 'Version and file info',
+    checksum: 'SHA-256',
+    warning: 'Windows may show an unknown publisher or security prompt. Verify the source and checksum before deciding whether to install.'
+  },
+  ja: {
+    title: 'AnyTLS Desktop Manager',
+    eyebrow: 'Windows Test Build',
+    headline: '管理権限のある AnyTLS 設定を整理するためのデスクトップツール。',
+    intro:
+      'AnyTLS Desktop Manager は、AnyTLS 関連の設定メモをローカルで整理・確認・管理するための Windows 向け早期テスト版です。個人学習、内部テスト、自分または所属組織が明確に管理権限を持つ環境での利用を想定しています。未承認アクセス、制限回避、第三者システムへの干渉を目的としたものではありません。',
+    primary: 'Windows x64 インストーラーをダウンロード',
+    secondary: 'Apps に戻る',
+    secondaryHref: '/ja/apps/',
+    featuresTitle: '慎重に使う場面',
+    features: [
+      ['ローカル設定の整理', 'よく使うプロファイル、接続情報、メモをデスクトップ上でまとめます。'],
+      ['承認済みテスト環境', '自分またはチームが管理を許可されたサーバーやネットワーク設定を扱います。'],
+      ['日常の確認', '利用前に設定、バージョン、メモが分かりやすいか確認します。'],
+      ['利用範囲を明確に', 'このページとソフトウェアは、未承認アクセス、制限回避、第三者サービスの不正利用を推奨しません。']
+    ],
+    notesTitle: 'ダウンロード前の確認',
+    notes: [
+      `現在のバージョン：${anyTlsDesktopManagerProduct.version}`,
+      `${anyTlsDesktopManagerProduct.platform} ${anyTlsDesktopManagerProduct.architecture}、${anyTlsDesktopManagerProduct.minimumSystem}`,
+      'これは早期テスト版であり、不具合、互換性の問題、未完成の UI が含まれる可能性があります。',
+      '自分が所有している、または管理を許可されたシステム、サーバー、ネットワークでのみ使用してください。',
+      '適用される法律、サービス規約、組織ポリシー、ネットワーク管理ルールに従ってください。'
+    ],
+    metaTitle: 'バージョンとファイル情報',
+    checksum: 'SHA-256',
+    warning: 'Windows が不明な発行元やセキュリティ確認を表示する場合があります。インストール前に配布元とチェックサムを確認してください。'
+  }
+}[lang];
+
+const canonicalPath =
+  lang === 'zh-Hant'
+    ? anyTlsDesktopManagerProduct.zhHantProductPath
+    : lang === 'zh-Hans'
+      ? anyTlsDesktopManagerProduct.zhHansProductPath
+      : lang === 'ja'
+        ? anyTlsDesktopManagerProduct.jaProductPath
+        : anyTlsDesktopManagerProduct.productPath;
+---
+
+<BaseLayout
+  title={`${copy.title} for Windows`}
+  description={copy.intro}
+  lang={lang}
+  canonicalPath={canonicalPath}
+  ogImage={anyTlsDesktopManagerProduct.assets.screenshot}
+  bodyClass="station-paper-page radar-page"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: anyTlsDesktopManagerProduct.zhHantProductPath },
+    { hrefLang: 'zh-Hans', href: anyTlsDesktopManagerProduct.zhHansProductPath },
+    { hrefLang: 'en', href: anyTlsDesktopManagerProduct.productPath },
+    { hrefLang: 'ja', href: anyTlsDesktopManagerProduct.jaProductPath },
+    { hrefLang: 'x-default', href: anyTlsDesktopManagerProduct.zhHantProductPath }
+  ]}
+>
+  <section class="radar-hero">
+    <div class="radar-hero__copy">
+      <p class="section-kicker">{copy.eyebrow}</p>
+      <h1>{copy.headline}</h1>
+      <p>{copy.intro}</p>
+      <div class="button-row">
+        <a class="button button-primary" href={anyTlsDesktopManagerProduct.downloadPath}>{copy.primary}</a>
+        <a class="button button-secondary" href={copy.secondaryHref}>{copy.secondary}</a>
+      </div>
+    </div>
+    <div class="radar-preview-card" aria-label="AnyTLS Desktop Manager app preview">
+      <img src={anyTlsDesktopManagerProduct.assets.screenshot} alt="AnyTLS Desktop Manager interface preview" width="1040" height="720" />
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="section-heading">
+      <p class="section-kicker">Use carefully</p>
+      <h2>{copy.featuresTitle}</h2>
+    </div>
+    <div class="radar-feature-grid">
+      {copy.features.map(([title, text]) => (
+        <article>
+          <h3>{title}</h3>
+          <p>{text}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="radar-note-panel">
+      <div>
+        <p class="section-kicker">Version {anyTlsDesktopManagerProduct.version}</p>
+        <h2>{copy.notesTitle}</h2>
+      </div>
+      <ul>
+        {copy.notes.map((note) => <li>{note}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="download-box radar-download-box">
+    <h2>{copy.metaTitle}</h2>
+    <dl class="radar-meta-list">
+      <div>
+        <dt>Version</dt>
+        <dd>{anyTlsDesktopManagerProduct.version}</dd>
+      </div>
+      <div>
+        <dt>Platform</dt>
+        <dd>{anyTlsDesktopManagerProduct.platform}</dd>
+      </div>
+      <div>
+        <dt>Architecture</dt>
+        <dd>{anyTlsDesktopManagerProduct.architecture}</dd>
+      </div>
+      <div>
+        <dt>Minimum system</dt>
+        <dd>{anyTlsDesktopManagerProduct.minimumSystem}</dd>
+      </div>
+      <div>
+        <dt>File size</dt>
+        <dd>{anyTlsDesktopManagerProduct.fileSize}</dd>
+      </div>
+    </dl>
+    <div class="checksum-block">
+      <strong>{copy.checksum}</strong>
+      <code>{anyTlsDesktopManagerProduct.sha256}</code>
+    </div>
+    <p>{copy.warning}</p>
+  </section>
+</BaseLayout>

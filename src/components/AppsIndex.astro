@@ -5,6 +5,7 @@ import { captionAiProduct } from '../data/products/caption-ai';
 import { stationCatRadarProduct } from '../data/products/stationcat-radar';
 import { xFollowCleanerProduct } from '../data/products/x-follow-cleaner';
 import { storyCatProduct } from '../data/products/storycat';
+import { anyTlsDesktopManagerProduct } from '../data/products/anytls-desktop-manager';
 
 interface Props {
   lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
@@ -18,7 +19,7 @@ const copy = {
     description: 'Station Cat 正在開發和發布的小工具。',
     kicker: 'Station Cat Apps',
     heading: '小而實用的創作工具。',
-    intro: '這裡會放 Station Cat 正在開發、測試和發布的 App。現在有生活文案工具 SnapCopy、AI 互動故事 StoryCat、創作者資訊工具 StationCat Radar，也有整理 X 關注列表的 Chrome 擴充功能。',
+    intro: '這裡會放 Station Cat 正在開發、測試和發布的 App。現在有生活文案工具 SnapCopy、AI 互動故事 StoryCat、創作者資訊工具 StationCat Radar、Windows 配置管理小工具，也有整理 X 關注列表的 Chrome 擴充功能。',
     snapcopyKicker: 'iOS app in closed testing',
     snapcopyDescription: '把早餐、咖啡、散步、寵物、旅行和日常照片，變成更適合分享的文案。',
     snapcopyCta: '查看 SnapCopy',
@@ -29,6 +30,9 @@ const copy = {
     radarKicker: 'Mac app download',
     radarDescription: '追蹤公開資訊、RSS、AI 研究和關鍵詞，整理更適合 X 創作的內容方向。',
     radarCta: '查看 Radar',
+    anytlsKicker: 'Windows test build',
+    anytlsDescription: '整理你擁有或被授權管理的 AnyTLS 配置、連線資訊和本機備註。',
+    anytlsCta: '查看 AnyTLS Manager',
     followCleanerKicker: 'Chrome extension',
     followCleanerDescription: '低頻檢查 X 關注列表，本地保存結果，並支援 CSV / JSON 匯出。',
     followCleanerCta: '查看 X Follow Cleaner'
@@ -38,7 +42,7 @@ const copy = {
     description: 'Station Cat 正在开发和发布的小工具。',
     kicker: 'Station Cat Apps',
     heading: '小而实用的创作工具。',
-    intro: '这里会放 Station Cat 正在开发、测试和发布的 App。现在有生活文案工具 SnapCopy、AI 互动故事 StoryCat、创作者资讯工具 StationCat Radar，也有整理 X 关注列表的 Chrome 扩展。',
+    intro: '这里会放 Station Cat 正在开发、测试和发布的 App。现在有生活文案工具 SnapCopy、AI 互动故事 StoryCat、创作者资讯工具 StationCat Radar、Windows 配置管理小工具，也有整理 X 关注列表的 Chrome 扩展。',
     snapcopyKicker: 'iOS app in closed testing',
     snapcopyDescription: '把早餐、咖啡、散步、宠物、旅行和日常照片，变成更适合分享的文案。',
     snapcopyCta: '查看 SnapCopy',
@@ -49,6 +53,9 @@ const copy = {
     radarKicker: 'Mac app download',
     radarDescription: '追踪公开资讯、RSS、AI 研究和关键词，整理更适合 X 创作的内容方向。',
     radarCta: '查看 Radar',
+    anytlsKicker: 'Windows test build',
+    anytlsDescription: '整理你拥有或被授权管理的 AnyTLS 配置、连接信息和本机备注。',
+    anytlsCta: '查看 AnyTLS Manager',
     followCleanerKicker: 'Chrome extension',
     followCleanerDescription: '低频检查 X 关注列表，本地保存结果，并支持 CSV / JSON 导出。',
     followCleanerCta: '查看 X Follow Cleaner'
@@ -58,7 +65,7 @@ const copy = {
     description: 'Small tools built and published by Station Cat.',
     kicker: 'Station Cat Apps',
     heading: 'Small tools for everyday creativity.',
-    intro: 'This is where Station Cat collects apps in development, testing, and public release: SnapCopy for everyday captions, StoryCat for playable AI fiction, StationCat Radar for creator research on Mac, and a Chrome extension for calmer X follow-list reviews.',
+    intro: 'This is where Station Cat collects apps in development, testing, and public release: SnapCopy for everyday captions, StoryCat for playable AI fiction, StationCat Radar for creator research on Mac, a Windows configuration manager, and a Chrome extension for calmer X follow-list reviews.',
     snapcopyKicker: 'iOS app in closed testing',
     snapcopyDescription: 'Turn breakfast, coffee, walks, pets, travel, and daily photos into captions that are easier to share.',
     snapcopyCta: 'View SnapCopy',
@@ -69,6 +76,9 @@ const copy = {
     radarKicker: 'Mac app download',
     radarDescription: 'Track public signals, RSS, AI research, and keywords to shape better X content ideas.',
     radarCta: 'View Radar',
+    anytlsKicker: 'Windows test build',
+    anytlsDescription: 'Organize AnyTLS configurations, connection details, and local notes for environments you are authorized to manage.',
+    anytlsCta: 'View AnyTLS Manager',
     followCleanerKicker: 'Chrome extension',
     followCleanerDescription: 'Review your X following list at a low frequency, keep results locally, and export CSV / JSON files.',
     followCleanerCta: 'View X Follow Cleaner'
@@ -78,7 +88,7 @@ const copy = {
     description: 'Station Cat が作っている小さなツール。',
     kicker: 'Station Cat Apps',
     heading: '日常の創作を少し軽くするツール。',
-    intro: 'Station Cat が開発・テスト・公開しているアプリをまとめています。日常写真向けの SnapCopy、AI で遊べる物語 StoryCat、Mac 向けの StationCat Radar、X のフォロー一覧を見直す Chrome 拡張があります。',
+    intro: 'Station Cat が開発・テスト・公開しているアプリをまとめています。日常写真向けの SnapCopy、AI で遊べる物語 StoryCat、Mac 向けの StationCat Radar、Windows 向け設定管理ツール、X のフォロー一覧を見直す Chrome 拡張があります。',
     snapcopyKicker: 'iOS app in closed testing',
     snapcopyDescription: '朝食、コーヒー、散歩、ペット、旅行、日常写真を、共有しやすいキャプションにします。',
     snapcopyCta: 'SnapCopy を見る',
@@ -89,6 +99,9 @@ const copy = {
     radarKicker: 'Mac app download',
     radarDescription: '公開情報、RSS、AI リサーチ、キーワードを追い、X 向けの投稿アイデアに整理します。',
     radarCta: 'Radar を見る',
+    anytlsKicker: 'Windows test build',
+    anytlsDescription: '管理権限のある AnyTLS 設定、接続情報、ローカルメモを整理します。',
+    anytlsCta: 'AnyTLS Manager を見る',
     followCleanerKicker: 'Chrome extension',
     followCleanerDescription: 'X のフォロー一覧を低頻度で確認し、結果をローカル保存して CSV / JSON で書き出します。',
     followCleanerCta: 'X Follow Cleaner を見る'
@@ -101,6 +114,7 @@ const paths = {
     snapcopy: captionAiProduct.zhHantProductPath,
     storycat: storyCatProduct.zhHantProductPath,
     radar: stationCatRadarProduct.zhHantProductPath,
+    anytls: anyTlsDesktopManagerProduct.zhHantProductPath,
     followCleaner: xFollowCleanerProduct.zhHantProductPath
   },
   'zh-Hans': {
@@ -108,6 +122,7 @@ const paths = {
     snapcopy: captionAiProduct.zhHansProductPath,
     storycat: storyCatProduct.zhHansProductPath,
     radar: stationCatRadarProduct.zhHansProductPath,
+    anytls: anyTlsDesktopManagerProduct.zhHansProductPath,
     followCleaner: xFollowCleanerProduct.zhHansProductPath
   },
   en: {
@@ -115,6 +130,7 @@ const paths = {
     snapcopy: captionAiProduct.productPath,
     storycat: storyCatProduct.productPath,
     radar: stationCatRadarProduct.productPath,
+    anytls: anyTlsDesktopManagerProduct.productPath,
     followCleaner: xFollowCleanerProduct.productPath
   },
   ja: {
@@ -122,6 +138,7 @@ const paths = {
     snapcopy: captionAiProduct.jaProductPath,
     storycat: storyCatProduct.jaProductPath,
     radar: stationCatRadarProduct.jaProductPath,
+    anytls: anyTlsDesktopManagerProduct.jaProductPath,
     followCleaner: xFollowCleanerProduct.jaProductPath
   }
 }[lang];
@@ -175,6 +192,14 @@ const paths = {
       image={stationCatRadarProduct.assets.screenshot}
       cta={copy.radarCta}
       kicker={copy.radarKicker}
+    />
+    <ProductCard
+      title="AnyTLS Desktop Manager"
+      description={copy.anytlsDescription}
+      href={paths.anytls}
+      image={anyTlsDesktopManagerProduct.assets.screenshot}
+      cta={copy.anytlsCta}
+      kicker={copy.anytlsKicker}
     />
     <ProductCard
       title="X Follow Cleaner"
