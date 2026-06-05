@@ -285,6 +285,12 @@ const downloadFiles = {
     filename: 'AnyTLS-Desktop-Manager-Setup-0.1.0-x64.exe',
     contentType: 'application/octet-stream',
     limitKey: 'anytls-desktop-manager-0.1.0-x64'
+  },
+  '/downloads/anytls-desktop-manager/AnyTLS-Desktop-Manager-0.2.0-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.0/AnyTLS-Desktop-Manager-0.2.0-arm64.dmg',
+    filename: 'AnyTLS-Desktop-Manager-0.2.0-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'anytls-desktop-manager-0.2.0-arm64'
   }
 };
 

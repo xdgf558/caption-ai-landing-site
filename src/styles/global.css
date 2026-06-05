@@ -558,6 +558,40 @@ ol {
   padding: 12px;
 }
 
+.anytls-icon-preview {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 360px;
+}
+
+.anytls-icon-preview img {
+  height: auto;
+  max-width: min(320px, 72%);
+}
+
+.anytls-download-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.anytls-download-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.anytls-download-card h3 {
+  margin: 0;
+}
+
+.anytls-download-card .button {
+  justify-self: start;
+}
+
 .scene-grid,
 .feature-grid {
   display: grid;
@@ -4110,6 +4144,14 @@ body.station-paper-page {
   .station-paper-page .radar-hero {
     padding-bottom: 48px;
     padding-top: 42px;
+  }
+
+  .anytls-download-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .anytls-icon-preview {
+    min-height: 260px;
   }
 
   .station-paper-page .page-shell,
