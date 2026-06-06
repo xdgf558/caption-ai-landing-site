@@ -12,7 +12,7 @@ export const anyTlsDesktopManagerProduct = {
       architecture: 'arm64',
       minimumSystem: 'macOS 12 or later',
       fileSize: '116 MB',
-      sha256: '47170c443dd54ad24cf37f22d8e92e10ab6b0727a8cbed78830f4c0b5a0e8111',
+      sha256: 'ed10677f16f7b03f46e77ec611497ee02a5d40fc78ca0f7342f3a0c17636cf45',
       downloadPath: '/downloads/nodepilot/NodePilot-0.2.8-arm64.dmg',
       r2ObjectKey: 'anytls-desktop-manager/0.2.8/NodePilot-0.2.8-arm64.dmg'
     },
@@ -24,7 +24,7 @@ export const anyTlsDesktopManagerProduct = {
       architecture: 'x64',
       minimumSystem: 'Windows 10 or later',
       fileSize: '90 MB',
-      sha256: '508ec7ff712804136fd9cd2eecb8c28868aead11dacd0b71daccaac5ffeb40cf',
+      sha256: '813075325245f4ee921406f9864c7b70727cb282d77c19b66f3b7ae64586e050',
       downloadPath: '/downloads/nodepilot/NodePilot-Setup-0.2.8-x64.exe',
       r2ObjectKey: 'anytls-desktop-manager/0.2.8/NodePilot-Setup-0.2.8-x64.exe'
     }
