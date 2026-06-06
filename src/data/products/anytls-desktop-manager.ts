@@ -1,38 +1,38 @@
 export const anyTlsDesktopManagerProduct = {
   id: 'anytls-desktop-manager',
   slug: 'anytls-desktop-manager',
-  name: 'AnyTLS Desktop Manager',
-  latestVersion: '0.2.0',
+  name: 'NodePilot',
+  latestVersion: '0.2.8',
   downloads: [
     {
       id: 'mac-arm64',
       label: 'macOS Apple Silicon',
-      version: '0.2.0',
+      version: '0.2.8',
       platform: 'macOS',
       architecture: 'arm64',
       minimumSystem: 'macOS 12 or later',
-      fileSize: '112 MB',
-      sha256: '5b7ff72d53465a8bd0b21c4448ae32558d26ff6c388f2163079f3942701685a6',
-      downloadPath: '/downloads/anytls-desktop-manager/AnyTLS-Desktop-Manager-0.2.0-arm64.dmg',
-      r2ObjectKey: 'anytls-desktop-manager/0.2.0/AnyTLS-Desktop-Manager-0.2.0-arm64.dmg'
+      fileSize: '116 MB',
+      sha256: '47170c443dd54ad24cf37f22d8e92e10ab6b0727a8cbed78830f4c0b5a0e8111',
+      downloadPath: '/downloads/nodepilot/NodePilot-0.2.8-arm64.dmg',
+      r2ObjectKey: 'anytls-desktop-manager/0.2.8/NodePilot-0.2.8-arm64.dmg'
     },
     {
       id: 'windows-x64',
       label: 'Windows x64',
-      version: '0.1.0',
+      version: '0.2.8',
       platform: 'Windows',
       architecture: 'x64',
       minimumSystem: 'Windows 10 or later',
-      fileSize: '89 MB',
-      sha256: 'acaeea7444baa2935ae1f4e8582135cde574793ddae7e798127846feb66cfbe9',
-      downloadPath: '/downloads/anytls-desktop-manager/AnyTLS-Desktop-Manager-Setup-0.1.0-x64.exe',
-      r2ObjectKey: 'anytls-desktop-manager/0.1.0/AnyTLS-Desktop-Manager-Setup-0.1.0-x64.exe'
+      fileSize: '90 MB',
+      sha256: '508ec7ff712804136fd9cd2eecb8c28868aead11dacd0b71daccaac5ffeb40cf',
+      downloadPath: '/downloads/nodepilot/NodePilot-Setup-0.2.8-x64.exe',
+      r2ObjectKey: 'anytls-desktop-manager/0.2.8/NodePilot-Setup-0.2.8-x64.exe'
     }
   ],
-  productPath: '/apps/anytls-desktop-manager/',
-  zhHantProductPath: '/zh-hant/apps/anytls-desktop-manager/',
-  zhHansProductPath: '/zh-hans/apps/anytls-desktop-manager/',
-  jaProductPath: '/ja/apps/anytls-desktop-manager/',
+  productPath: '/apps/nodepilot/',
+  zhHantProductPath: '/zh-hant/apps/nodepilot/',
+  zhHansProductPath: '/zh-hans/apps/nodepilot/',
+  jaProductPath: '/ja/apps/nodepilot/',
   assets: {
     icon: '/images/apps/anytls-desktop-manager-icon.png',
     screenshot: '/images/anytls-desktop-manager-preview.svg'

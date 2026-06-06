@@ -291,6 +291,30 @@ const downloadFiles = {
     filename: 'AnyTLS-Desktop-Manager-0.2.0-arm64.dmg',
     contentType: 'application/x-apple-diskimage',
     limitKey: 'anytls-desktop-manager-0.2.0-arm64'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-0.2.8-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.8/NodePilot-0.2.8-arm64.dmg',
+    filename: 'NodePilot-0.2.8-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.8-arm64'
+  },
+  '/downloads/nodepilot/NodePilot-0.2.8-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.8/NodePilot-0.2.8-arm64.dmg',
+    filename: 'NodePilot-0.2.8-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.8-arm64'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-Setup-0.2.8-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.8/NodePilot-Setup-0.2.8-x64.exe',
+    filename: 'NodePilot-Setup-0.2.8-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.8-x64'
+  },
+  '/downloads/nodepilot/NodePilot-Setup-0.2.8-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.8/NodePilot-Setup-0.2.8-x64.exe',
+    filename: 'NodePilot-Setup-0.2.8-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.8-x64'
   }
 };
 
@@ -298,6 +322,17 @@ const downloadLimitConfig = {
   dailyLimit: 5,
   windowLimit: 2,
   windowSeconds: 600
+};
+
+const pageRedirects = {
+  '/apps/anytls-desktop-manager': '/apps/nodepilot/',
+  '/apps/anytls-desktop-manager/': '/apps/nodepilot/',
+  '/zh-hant/apps/anytls-desktop-manager': '/zh-hant/apps/nodepilot/',
+  '/zh-hant/apps/anytls-desktop-manager/': '/zh-hant/apps/nodepilot/',
+  '/zh-hans/apps/anytls-desktop-manager': '/zh-hans/apps/nodepilot/',
+  '/zh-hans/apps/anytls-desktop-manager/': '/zh-hans/apps/nodepilot/',
+  '/ja/apps/anytls-desktop-manager': '/ja/apps/nodepilot/',
+  '/ja/apps/anytls-desktop-manager/': '/ja/apps/nodepilot/'
 };
 
 const rateLimitResponse = (message, retryAfterSeconds) =>
@@ -414,6 +449,11 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const downloadFile = downloadFiles[url.pathname];
+    const redirectPath = pageRedirects[url.pathname];
+
+    if (redirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
+      return Response.redirect(new URL(redirectPath, url.origin).toString(), 301);
+    }
 
     if (downloadFile && (request.method === 'GET' || request.method === 'HEAD')) {
       return handleR2Download(request, env, downloadFile);
