@@ -2,31 +2,31 @@ export const anyTlsDesktopManagerProduct = {
   id: 'anytls-desktop-manager',
   slug: 'anytls-desktop-manager',
   name: 'NodePilot',
-  latestVersion: '0.2.8',
+  latestVersion: '0.2.9',
   downloads: [
     {
       id: 'mac-arm64',
       label: 'macOS Apple Silicon',
-      version: '0.2.8',
+      version: '0.2.9',
       platform: 'macOS',
       architecture: 'arm64',
       minimumSystem: 'macOS 12 or later',
-      fileSize: '116 MB',
-      sha256: 'ed10677f16f7b03f46e77ec611497ee02a5d40fc78ca0f7342f3a0c17636cf45',
-      downloadPath: '/downloads/nodepilot/NodePilot-0.2.8-arm64.dmg',
-      r2ObjectKey: 'anytls-desktop-manager/0.2.8/NodePilot-0.2.8-arm64.dmg'
+      fileSize: '117 MB',
+      sha256: 'c75067335060e2d1681195056a54c8cd87962be7a04b6118a330a0d74773b0da',
+      downloadPath: '/downloads/nodepilot/NodePilot-0.2.9-arm64.dmg',
+      r2ObjectKey: 'anytls-desktop-manager/0.2.9/NodePilot-0.2.9-arm64.dmg'
     },
     {
       id: 'windows-x64',
       label: 'Windows x64',
-      version: '0.2.8',
+      version: '0.2.9',
       platform: 'Windows',
       architecture: 'x64',
       minimumSystem: 'Windows 10 or later',
-      fileSize: '90 MB',
-      sha256: '813075325245f4ee921406f9864c7b70727cb282d77c19b66f3b7ae64586e050',
-      downloadPath: '/downloads/nodepilot/NodePilot-Setup-0.2.8-x64.exe',
-      r2ObjectKey: 'anytls-desktop-manager/0.2.8/NodePilot-Setup-0.2.8-x64.exe'
+      fileSize: '91 MB',
+      sha256: '67a9b1720161e7caf8a3994d78c976967a6c272eb38d20525f52b67f1a4fe28f',
+      downloadPath: '/downloads/nodepilot/NodePilot-Setup-0.2.9-x64.exe',
+      r2ObjectKey: 'anytls-desktop-manager/0.2.9/NodePilot-Setup-0.2.9-x64.exe'
     }
   ],
   productPath: '/apps/nodepilot/',
