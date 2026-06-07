@@ -342,6 +342,17 @@ const downloadFiles = {
   }
 };
 
+const externalDownloadRedirects = {
+  '/downloads/nodepilot/NodePilot-latest-arm64.dmg':
+    'https://github.com/xdgf558/anytls-desktop-manager/releases/latest/download/NodePilot-latest-arm64.dmg',
+  '/downloads/anytls-desktop-manager/NodePilot-latest-arm64.dmg':
+    'https://github.com/xdgf558/anytls-desktop-manager/releases/latest/download/NodePilot-latest-arm64.dmg',
+  '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe':
+    'https://github.com/xdgf558/anytls-desktop-manager/releases/latest/download/NodePilot-Setup-latest-x64.exe',
+  '/downloads/anytls-desktop-manager/NodePilot-Setup-latest-x64.exe':
+    'https://github.com/xdgf558/anytls-desktop-manager/releases/latest/download/NodePilot-Setup-latest-x64.exe'
+};
+
 const downloadLimitConfig = {
   dailyLimit: 5,
   windowLimit: 2,
@@ -473,10 +484,15 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const downloadFile = downloadFiles[url.pathname];
+    const externalDownloadRedirect = externalDownloadRedirects[url.pathname];
     const redirectPath = pageRedirects[url.pathname];
 
     if (redirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
       return Response.redirect(new URL(redirectPath, url.origin).toString(), 301);
+    }
+
+    if (externalDownloadRedirect && (request.method === 'GET' || request.method === 'HEAD')) {
+      return Response.redirect(externalDownloadRedirect, 302);
     }
 
     if (downloadFile && (request.method === 'GET' || request.method === 'HEAD')) {
