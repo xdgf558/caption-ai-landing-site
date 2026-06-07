@@ -344,13 +344,13 @@ const downloadFiles = {
 
 const externalDownloadRedirects = {
   '/downloads/nodepilot/NodePilot-latest-arm64.dmg':
-    'https://github.com/xdgf558/anytls-desktop-manager/releases/latest/download/NodePilot-latest-arm64.dmg',
+    'https://github.com/xdgf558/anytls-desktop-manager/releases/download/v0.2.11/NodePilot-0.2.11-arm64.dmg',
   '/downloads/anytls-desktop-manager/NodePilot-latest-arm64.dmg':
-    'https://github.com/xdgf558/anytls-desktop-manager/releases/latest/download/NodePilot-latest-arm64.dmg',
+    'https://github.com/xdgf558/anytls-desktop-manager/releases/download/v0.2.11/NodePilot-0.2.11-arm64.dmg',
   '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe':
-    'https://github.com/xdgf558/anytls-desktop-manager/releases/latest/download/NodePilot-Setup-latest-x64.exe',
+    'https://github.com/xdgf558/anytls-desktop-manager/releases/download/v0.2.11/NodePilot-Setup-0.2.11-x64.exe',
   '/downloads/anytls-desktop-manager/NodePilot-Setup-latest-x64.exe':
-    'https://github.com/xdgf558/anytls-desktop-manager/releases/latest/download/NodePilot-Setup-latest-x64.exe'
+    'https://github.com/xdgf558/anytls-desktop-manager/releases/download/v0.2.11/NodePilot-Setup-0.2.11-x64.exe'
 };
 
 const downloadLimitConfig = {
