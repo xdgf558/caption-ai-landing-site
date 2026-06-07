@@ -3881,6 +3881,60 @@ body.station-paper-page {
   color: #6f6257;
 }
 
+.station-paper-page.radar-page .radar-hero h1,
+.station-paper-page.radar-page .radar-hero h2,
+.station-paper-page.radar-page .page-section h2,
+.station-paper-page.radar-page .download-box h2,
+.station-paper-page.radar-page .anytls-download-card h3 {
+  color: #221b16;
+}
+
+.station-paper-page.radar-page .radar-hero p,
+.station-paper-page.radar-page .page-section p,
+.station-paper-page.radar-page .page-section li,
+.station-paper-page.radar-page .anytls-download-card p {
+  color: #4a3f37;
+}
+
+.station-paper-page.radar-page .section-kicker,
+.station-paper-page.radar-page .radar-hero__copy .section-kicker,
+.station-paper-page.radar-page .page-section .section-kicker,
+.station-paper-page.radar-page .download-box .section-kicker {
+  color: #245247;
+}
+
+.station-paper-page.radar-page .radar-feature-grid article,
+.station-paper-page.radar-page .radar-note-panel,
+.station-paper-page.radar-page .download-box,
+.station-paper-page.radar-page .anytls-download-card {
+  background: rgba(255, 250, 241, 0.96);
+  border-color: #bfae9d;
+}
+
+.station-paper-page.radar-page .radar-feature-grid h3,
+.station-paper-page.radar-page .radar-note-panel li,
+.station-paper-page.radar-page .radar-meta-list dd {
+  color: #221b16;
+}
+
+.station-paper-page.radar-page .radar-note-panel li {
+  border-left-color: #2e5b4e;
+}
+
+.station-paper-page.radar-page .radar-meta-list dt {
+  color: #5a4c41;
+}
+
+.station-paper-page.radar-page .checksum-block strong {
+  color: #221b16;
+}
+
+.station-paper-page.radar-page .checksum-block code {
+  background: #f1e4d4;
+  border-color: #cbb8a6;
+  color: #221b16;
+}
+
 .storycat-page .storycat-hero,
 .storycat-page .storycat-section {
   margin-left: auto;
