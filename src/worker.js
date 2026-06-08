@@ -281,16 +281,28 @@ const downloadFiles = {
     limitKey: 'stationcat-radar-0.1.0-arm64'
   },
   '/downloads/nodepilot/NodePilot-latest-arm64.dmg': {
-    key: 'anytls-desktop-manager/0.2.16/NodePilot-0.2.16-arm64.dmg',
-    filename: 'NodePilot-0.2.16-arm64.dmg',
+    key: 'anytls-desktop-manager/0.2.17/NodePilot-0.2.17-arm64.dmg',
+    filename: 'NodePilot-0.2.17-arm64.dmg',
     contentType: 'application/x-apple-diskimage',
-    limitKey: 'nodepilot-0.2.16-arm64'
+    limitKey: 'nodepilot-0.2.17-arm64'
   },
   '/downloads/anytls-desktop-manager/NodePilot-latest-arm64.dmg': {
-    key: 'anytls-desktop-manager/0.2.16/NodePilot-0.2.16-arm64.dmg',
-    filename: 'NodePilot-0.2.16-arm64.dmg',
+    key: 'anytls-desktop-manager/0.2.17/NodePilot-0.2.17-arm64.dmg',
+    filename: 'NodePilot-0.2.17-arm64.dmg',
     contentType: 'application/x-apple-diskimage',
-    limitKey: 'nodepilot-0.2.16-arm64'
+    limitKey: 'nodepilot-0.2.17-arm64'
+  },
+  '/downloads/nodepilot/NodePilot-0.2.17-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.17/NodePilot-0.2.17-arm64.dmg',
+    filename: 'NodePilot-0.2.17-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.17-arm64'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-0.2.17-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.17/NodePilot-0.2.17-arm64.dmg',
+    filename: 'NodePilot-0.2.17-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.17-arm64'
   },
   '/downloads/nodepilot/NodePilot-0.2.16-arm64.dmg': {
     key: 'anytls-desktop-manager/0.2.16/NodePilot-0.2.16-arm64.dmg',
@@ -323,16 +335,28 @@ const downloadFiles = {
     limitKey: 'nodepilot-0.2.12-arm64'
   },
   '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe': {
-    key: 'anytls-desktop-manager/0.2.16/NodePilot-Setup-0.2.16-x64.exe',
-    filename: 'NodePilot-Setup-0.2.16-x64.exe',
+    key: 'anytls-desktop-manager/0.2.17/NodePilot-Setup-0.2.17-x64.exe',
+    filename: 'NodePilot-Setup-0.2.17-x64.exe',
     contentType: 'application/octet-stream',
-    limitKey: 'nodepilot-0.2.16-x64'
+    limitKey: 'nodepilot-0.2.17-x64'
   },
   '/downloads/anytls-desktop-manager/NodePilot-Setup-latest-x64.exe': {
-    key: 'anytls-desktop-manager/0.2.16/NodePilot-Setup-0.2.16-x64.exe',
-    filename: 'NodePilot-Setup-0.2.16-x64.exe',
+    key: 'anytls-desktop-manager/0.2.17/NodePilot-Setup-0.2.17-x64.exe',
+    filename: 'NodePilot-Setup-0.2.17-x64.exe',
     contentType: 'application/octet-stream',
-    limitKey: 'nodepilot-0.2.16-x64'
+    limitKey: 'nodepilot-0.2.17-x64'
+  },
+  '/downloads/nodepilot/NodePilot-Setup-0.2.17-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.17/NodePilot-Setup-0.2.17-x64.exe',
+    filename: 'NodePilot-Setup-0.2.17-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.17-x64'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-Setup-0.2.17-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.17/NodePilot-Setup-0.2.17-x64.exe',
+    filename: 'NodePilot-Setup-0.2.17-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.17-x64'
   },
   '/downloads/nodepilot/NodePilot-Setup-0.2.16-x64.exe': {
     key: 'anytls-desktop-manager/0.2.16/NodePilot-Setup-0.2.16-x64.exe',
