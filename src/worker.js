@@ -280,6 +280,42 @@ const downloadFiles = {
     contentType: 'application/x-apple-diskimage',
     limitKey: 'stationcat-radar-0.1.0-arm64'
   },
+  '/downloads/nodepilot/NodePilot-latest-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.12/NodePilot-0.2.12-arm64.dmg',
+    filename: 'NodePilot-0.2.12-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.12-arm64'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-latest-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.12/NodePilot-0.2.12-arm64.dmg',
+    filename: 'NodePilot-0.2.12-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.12-arm64'
+  },
+  '/downloads/nodepilot/NodePilot-0.2.12-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.12/NodePilot-0.2.12-arm64.dmg',
+    filename: 'NodePilot-0.2.12-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.12-arm64'
+  },
+  '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.12/NodePilot-Setup-0.2.12-x64.exe',
+    filename: 'NodePilot-Setup-0.2.12-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.12-x64'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-Setup-latest-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.12/NodePilot-Setup-0.2.12-x64.exe',
+    filename: 'NodePilot-Setup-0.2.12-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.12-x64'
+  },
+  '/downloads/nodepilot/NodePilot-Setup-0.2.12-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.12/NodePilot-Setup-0.2.12-x64.exe',
+    filename: 'NodePilot-Setup-0.2.12-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.12-x64'
+  },
   '/downloads/anytls-desktop-manager/AnyTLS-Desktop-Manager-Setup-0.1.0-x64.exe': {
     key: 'anytls-desktop-manager/0.1.0/AnyTLS-Desktop-Manager-Setup-0.1.0-x64.exe',
     filename: 'AnyTLS-Desktop-Manager-Setup-0.1.0-x64.exe',
@@ -342,16 +378,7 @@ const downloadFiles = {
   }
 };
 
-const externalDownloadRedirects = {
-  '/downloads/nodepilot/NodePilot-latest-arm64.dmg':
-    'https://github.com/xdgf558/anytls-desktop-manager/releases/download/v0.2.12/NodePilot-0.2.12-arm64.dmg',
-  '/downloads/anytls-desktop-manager/NodePilot-latest-arm64.dmg':
-    'https://github.com/xdgf558/anytls-desktop-manager/releases/download/v0.2.12/NodePilot-0.2.12-arm64.dmg',
-  '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe':
-    'https://github.com/xdgf558/anytls-desktop-manager/releases/download/v0.2.12/NodePilot-Setup-0.2.12-x64.exe',
-  '/downloads/anytls-desktop-manager/NodePilot-Setup-latest-x64.exe':
-    'https://github.com/xdgf558/anytls-desktop-manager/releases/download/v0.2.12/NodePilot-Setup-0.2.12-x64.exe'
-};
+const externalDownloadRedirects = {};
 
 const downloadLimitConfig = {
   dailyLimit: 5,
