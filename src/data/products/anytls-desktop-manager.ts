@@ -23,7 +23,7 @@ export const anyTlsDesktopManagerProduct = {
       architecture: 'x64',
       minimumSystem: 'Windows 10 or later',
       fileSize: '96.3 MB',
-      sha256: '261d7bbbfa18a8d980aecc56d2989862fe64cc143ca248dea9f7ad927b091407',
+      sha256: 'b4033f827e4878a8a78040a0bc3177108be29f3b86dcdc70992e012a9249cdea',
       downloadPath: '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe'
     }
   ],
