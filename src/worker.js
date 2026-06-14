@@ -280,6 +280,28 @@ const downloadFiles = {
     contentType: 'application/x-apple-diskimage',
     limitKey: 'stationcat-radar-0.1.0-arm64'
   },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-mac-arm64.dmg': {
+    key: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-mac-arm64.dmg',
+    filename: 'SimpleCut-Pro-0.1.14-mac-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'simplecut-pro-0.1.14-mac-arm64-dmg'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-mac-arm64.dmg.blockmap': {
+    key: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-mac-arm64.dmg.blockmap',
+    filename: 'SimpleCut-Pro-0.1.14-mac-arm64.dmg.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-mac-arm64.zip': {
+    key: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-mac-arm64.zip',
+    filename: 'SimpleCut-Pro-0.1.14-mac-arm64.zip',
+    contentType: 'application/zip',
+    limitKey: 'simplecut-pro-0.1.14-mac-arm64-zip'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-mac-arm64.zip.blockmap': {
+    key: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-mac-arm64.zip.blockmap',
+    filename: 'SimpleCut-Pro-0.1.14-mac-arm64.zip.blockmap',
+    contentType: 'application/octet-stream'
+  },
   '/downloads/simplecut-pro/SimpleCut-Pro-0.1.13-mac-arm64.dmg': {
     key: 'simplecut-pro/0.1.13/SimpleCut-Pro-0.1.13-mac-arm64.dmg',
     filename: 'SimpleCut-Pro-0.1.13-mac-arm64.dmg',
@@ -381,10 +403,21 @@ const downloadFiles = {
     contentType: 'application/octet-stream'
   },
   '/downloads/simplecut-pro/latest-mac.yml': {
-    key: 'simplecut-pro/0.1.13/latest-mac.yml',
+    key: 'simplecut-pro/0.1.14/latest-mac.yml',
     filename: 'latest-mac.yml',
     contentType: 'text/yaml; charset=utf-8',
     cacheControl: 'public, max-age=60'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-win-x64.exe': {
+    key: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-win-x64.exe',
+    filename: 'SimpleCut-Pro-0.1.14-win-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'simplecut-pro-0.1.14-win-x64-exe'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-win-x64.exe.blockmap': {
+    key: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-win-x64.exe.blockmap',
+    filename: 'SimpleCut-Pro-0.1.14-win-x64.exe.blockmap',
+    contentType: 'application/octet-stream'
   },
   '/downloads/simplecut-pro/SimpleCut-Pro-0.1.13-win-x64.exe': {
     key: 'simplecut-pro/0.1.13/SimpleCut-Pro-0.1.13-win-x64.exe',
@@ -442,7 +475,7 @@ const downloadFiles = {
     contentType: 'application/octet-stream'
   },
   '/downloads/simplecut-pro/latest.yml': {
-    key: 'simplecut-pro/0.1.13/latest.yml',
+    key: 'simplecut-pro/0.1.14/latest.yml',
     filename: 'latest.yml',
     contentType: 'text/yaml; charset=utf-8',
     cacheControl: 'public, max-age=60'
