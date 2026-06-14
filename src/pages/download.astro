@@ -1,19 +1,54 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { simpleCutProProduct } from '../data/products/simplecut-pro';
 ---
 
 <BaseLayout
   title="Download"
-  description="Download entry point for current Everyday AI Apps products."
+  description="Download current Station Cat apps, including SimpleCut Pro for macOS and Windows."
   lang="en"
   canonicalPath="/download/"
 >
   <section class="page-shell">
     <p class="section-kicker">Download</p>
-    <h1>Download current products.</h1>
+    <h1>Download current Station Cat products.</h1>
     <p>
-      SnapCopy is currently in development. The active download page collects early access interest until official store links are ready.
+      SimpleCut Pro 0.1.10 is available now for macOS Apple Silicon and Windows x64. Update metadata and blockmaps are hosted in the same public folder for the upcoming auto-update flow.
     </p>
-    <a class="button button-primary" href="/apps/caption-ai/download/">Open SnapCopy download page</a>
+    <div class="button-row">
+      <a class="button button-primary" href={simpleCutProProduct.downloads[0].downloadPath}>Download macOS DMG</a>
+      <a class="button button-secondary" href={simpleCutProProduct.downloads[1].downloadPath}>Download Windows installer</a>
+      <a class="button button-secondary" href={simpleCutProProduct.downloadPagePath}>Open SimpleCut Pro download page</a>
+    </div>
+  </section>
+
+  <section class="download-box radar-download-box">
+    <h2>SimpleCut Pro 0.1.10</h2>
+    <div class="anytls-download-grid">
+      {simpleCutProProduct.downloads.map((download) => (
+        <article class="anytls-download-card">
+          <div>
+            <p class="section-kicker">{download.label}</p>
+            <h3>{download.platform} {download.architecture}</h3>
+          </div>
+          <dl class="radar-meta-list">
+            <div>
+              <dt>Minimum system</dt>
+              <dd>{download.minimumSystem}</dd>
+            </div>
+            <div>
+              <dt>File size</dt>
+              <dd>{download.fileSize}</dd>
+            </div>
+          </dl>
+          <a class="button button-primary" href={download.downloadPath}>
+            {download.id === 'mac-arm64-dmg' ? 'Download macOS DMG' : 'Download Windows installer'}
+          </a>
+        </article>
+      ))}
+    </div>
+    <p>
+      macOS is Apple-notarized and the DMG is stapled. Windows may show a first-run security confirmation.
+    </p>
   </section>
 </BaseLayout>

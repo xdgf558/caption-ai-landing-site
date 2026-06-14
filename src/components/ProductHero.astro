@@ -20,14 +20,26 @@ interface Props {
 }
 
 const { copy, image, imageAlt, primaryHref, secondaryHref, visual } = Astro.props;
+const appIcon = '/images/apps/snapcopy-app-icon.png';
+const displayName = copy.productName ?? copy.eyebrow;
 ---
 
 <section class="hero product-hero">
   <div class="hero-copy">
-    <p class="eyebrow">{copy.eyebrow}</p>
-    {copy.productName && <p class="product-name">{copy.productName}</p>}
+    <div class="product-lockup">
+      <img class="product-lockup__icon" src={appIcon} alt="" width="512" height="512" />
+      <div>
+        <p class="eyebrow">{copy.eyebrow}</p>
+        {copy.productName && <p class="product-name">{copy.productName}</p>}
+      </div>
+    </div>
     <h1>{copy.title}</h1>
     <p class="hero-subtitle">{copy.subtitle}</p>
+    {visual && (
+      <div class="caption-hero-chips">
+        {visual.chips.map((chip) => <span>{chip}</span>)}
+      </div>
+    )}
     <div class="button-row">
       <a class="button button-primary" href={primaryHref}>{copy.primaryCta}</a>
       <a class="button button-secondary" href={secondaryHref}>{copy.secondaryCta}</a>
@@ -37,12 +49,19 @@ const { copy, image, imageAlt, primaryHref, secondaryHref, visual } = Astro.prop
     {visual ? (
       <div class="caption-phone" role="img" aria-label={imageAlt}>
         <div class="caption-phone__screen">
+          <div class="caption-app-topbar">
+            <img src={appIcon} alt="" width="512" height="512" />
+            <div>
+              <strong>{displayName}</strong>
+              <span>{visual.detected}</span>
+            </div>
+          </div>
           <div class="caption-photo">
             <span class="caption-photo__sun"></span>
             <span class="caption-photo__cup"></span>
             <span class="caption-photo__table"></span>
+            <span class="caption-photo__label">{visual.chips[1] ?? visual.chips[0]}</span>
           </div>
-          <div class="caption-detected">{visual.detected}</div>
           <div class="caption-output-list">
             {visual.captions.map((caption, index) => (
               <div class="caption-output-card">

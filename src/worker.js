@@ -280,17 +280,154 @@ const downloadFiles = {
     contentType: 'application/x-apple-diskimage',
     limitKey: 'stationcat-radar-0.1.0-arm64'
   },
-  '/downloads/nodepilot/NodePilot-latest-arm64.dmg': {
-    key: 'anytls-desktop-manager/0.2.17/NodePilot-0.2.17-arm64.dmg',
-    filename: 'NodePilot-0.2.17-arm64.dmg',
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.10-mac-arm64.dmg': {
+    key: 'simplecut-pro/0.1.10/SimpleCut-Pro-0.1.10-mac-arm64.dmg',
+    filename: 'SimpleCut-Pro-0.1.10-mac-arm64.dmg',
     contentType: 'application/x-apple-diskimage',
-    limitKey: 'nodepilot-0.2.17-arm64'
+    limitKey: 'simplecut-pro-0.1.10-mac-arm64-dmg'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.10-mac-arm64.dmg.blockmap': {
+    key: 'simplecut-pro/0.1.10/SimpleCut-Pro-0.1.10-mac-arm64.dmg.blockmap',
+    filename: 'SimpleCut-Pro-0.1.10-mac-arm64.dmg.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.10-mac-arm64.zip': {
+    key: 'simplecut-pro/0.1.10/SimpleCut-Pro-0.1.10-mac-arm64.zip',
+    filename: 'SimpleCut-Pro-0.1.10-mac-arm64.zip',
+    contentType: 'application/zip',
+    limitKey: 'simplecut-pro-0.1.10-mac-arm64-zip'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.10-mac-arm64.zip.blockmap': {
+    key: 'simplecut-pro/0.1.10/SimpleCut-Pro-0.1.10-mac-arm64.zip.blockmap',
+    filename: 'SimpleCut-Pro-0.1.10-mac-arm64.zip.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.7-mac-arm64.dmg': {
+    key: 'simplecut-pro/0.1.7/SimpleCut-Pro-0.1.7-mac-arm64.dmg',
+    filename: 'SimpleCut-Pro-0.1.7-mac-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'simplecut-pro-0.1.7-mac-arm64-dmg'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.7-mac-arm64.zip': {
+    key: 'simplecut-pro/0.1.7/SimpleCut-Pro-0.1.7-mac-arm64.zip',
+    filename: 'SimpleCut-Pro-0.1.7-mac-arm64.zip',
+    contentType: 'application/zip',
+    limitKey: 'simplecut-pro-0.1.7-mac-arm64-zip'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.7-mac-arm64.zip.blockmap': {
+    key: 'simplecut-pro/0.1.7/SimpleCut-Pro-0.1.7-mac-arm64.zip.blockmap',
+    filename: 'SimpleCut-Pro-0.1.7-mac-arm64.zip.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.6-mac-arm64.dmg': {
+    key: 'simplecut-pro/0.1.6/SimpleCut-Pro-0.1.6-mac-arm64.dmg',
+    filename: 'SimpleCut-Pro-0.1.6-mac-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'simplecut-pro-0.1.6-mac-arm64-dmg'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.6-mac-arm64.zip': {
+    key: 'simplecut-pro/0.1.6/SimpleCut-Pro-0.1.6-mac-arm64.zip',
+    filename: 'SimpleCut-Pro-0.1.6-mac-arm64.zip',
+    contentType: 'application/zip',
+    limitKey: 'simplecut-pro-0.1.6-mac-arm64-zip'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.6-mac-arm64.zip.blockmap': {
+    key: 'simplecut-pro/0.1.6/SimpleCut-Pro-0.1.6-mac-arm64.zip.blockmap',
+    filename: 'SimpleCut-Pro-0.1.6-mac-arm64.zip.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/simplecut-pro/latest-mac.yml': {
+    key: 'simplecut-pro/0.1.10/latest-mac.yml',
+    filename: 'latest-mac.yml',
+    contentType: 'text/yaml; charset=utf-8',
+    cacheControl: 'public, max-age=60'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.10-win-x64.exe': {
+    key: 'simplecut-pro/0.1.10/SimpleCut-Pro-0.1.10-win-x64.exe',
+    filename: 'SimpleCut-Pro-0.1.10-win-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'simplecut-pro-0.1.10-win-x64-exe'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.10-win-x64.exe.blockmap': {
+    key: 'simplecut-pro/0.1.10/SimpleCut-Pro-0.1.10-win-x64.exe.blockmap',
+    filename: 'SimpleCut-Pro-0.1.10-win-x64.exe.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.7-win-x64.exe': {
+    key: 'simplecut-pro/0.1.7/SimpleCut-Pro-0.1.7-win-x64.exe',
+    filename: 'SimpleCut-Pro-0.1.7-win-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'simplecut-pro-0.1.7-win-x64-exe'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.7-win-x64.exe.blockmap': {
+    key: 'simplecut-pro/0.1.7/SimpleCut-Pro-0.1.7-win-x64.exe.blockmap',
+    filename: 'SimpleCut-Pro-0.1.7-win-x64.exe.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.6-win-x64.exe': {
+    key: 'simplecut-pro/0.1.6/SimpleCut-Pro-0.1.6-win-x64.exe',
+    filename: 'SimpleCut-Pro-0.1.6-win-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'simplecut-pro-0.1.6-win-x64-exe'
+  },
+  '/downloads/simplecut-pro/SimpleCut-Pro-0.1.6-win-x64.exe.blockmap': {
+    key: 'simplecut-pro/0.1.6/SimpleCut-Pro-0.1.6-win-x64.exe.blockmap',
+    filename: 'SimpleCut-Pro-0.1.6-win-x64.exe.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/simplecut-pro/latest.yml': {
+    key: 'simplecut-pro/0.1.10/latest.yml',
+    filename: 'latest.yml',
+    contentType: 'text/yaml; charset=utf-8',
+    cacheControl: 'public, max-age=60'
+  },
+  '/downloads/nodepilot/NodePilot-latest-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-arm64.dmg',
+    filename: 'NodePilot-0.2.18-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.18-arm64'
   },
   '/downloads/anytls-desktop-manager/NodePilot-latest-arm64.dmg': {
-    key: 'anytls-desktop-manager/0.2.17/NodePilot-0.2.17-arm64.dmg',
-    filename: 'NodePilot-0.2.17-arm64.dmg',
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-arm64.dmg',
+    filename: 'NodePilot-0.2.18-arm64.dmg',
     contentType: 'application/x-apple-diskimage',
-    limitKey: 'nodepilot-0.2.17-arm64'
+    limitKey: 'nodepilot-0.2.18-arm64'
+  },
+  '/downloads/nodepilot/NodePilot-0.2.18-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-arm64.dmg',
+    filename: 'NodePilot-0.2.18-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.18-arm64'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-0.2.18-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-arm64.dmg',
+    filename: 'NodePilot-0.2.18-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.18-arm64'
+  },
+  '/downloads/nodepilot/NodePilot-latest-mac-arm64.zip': {
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-mac-arm64.zip',
+    filename: 'NodePilot-0.2.18-mac-arm64.zip',
+    contentType: 'application/zip',
+    limitKey: 'nodepilot-0.2.18-mac-arm64-zip'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-latest-mac-arm64.zip': {
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-mac-arm64.zip',
+    filename: 'NodePilot-0.2.18-mac-arm64.zip',
+    contentType: 'application/zip',
+    limitKey: 'nodepilot-0.2.18-mac-arm64-zip'
+  },
+  '/downloads/nodepilot/NodePilot-0.2.18-mac-arm64.zip': {
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-mac-arm64.zip',
+    filename: 'NodePilot-0.2.18-mac-arm64.zip',
+    contentType: 'application/zip',
+    limitKey: 'nodepilot-0.2.18-mac-arm64-zip'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-0.2.18-mac-arm64.zip': {
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-mac-arm64.zip',
+    filename: 'NodePilot-0.2.18-mac-arm64.zip',
+    contentType: 'application/zip',
+    limitKey: 'nodepilot-0.2.18-mac-arm64-zip'
   },
   '/downloads/nodepilot/NodePilot-0.2.17-arm64.dmg': {
     key: 'anytls-desktop-manager/0.2.17/NodePilot-0.2.17-arm64.dmg',
@@ -335,16 +472,28 @@ const downloadFiles = {
     limitKey: 'nodepilot-0.2.12-arm64'
   },
   '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe': {
-    key: 'anytls-desktop-manager/0.2.17/NodePilot-Setup-0.2.17-x64.exe',
-    filename: 'NodePilot-Setup-0.2.17-x64.exe',
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-Setup-0.2.18-x64.exe',
+    filename: 'NodePilot-Setup-0.2.18-x64.exe',
     contentType: 'application/octet-stream',
-    limitKey: 'nodepilot-0.2.17-x64'
+    limitKey: 'nodepilot-0.2.18-x64'
   },
   '/downloads/anytls-desktop-manager/NodePilot-Setup-latest-x64.exe': {
-    key: 'anytls-desktop-manager/0.2.17/NodePilot-Setup-0.2.17-x64.exe',
-    filename: 'NodePilot-Setup-0.2.17-x64.exe',
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-Setup-0.2.18-x64.exe',
+    filename: 'NodePilot-Setup-0.2.18-x64.exe',
     contentType: 'application/octet-stream',
-    limitKey: 'nodepilot-0.2.17-x64'
+    limitKey: 'nodepilot-0.2.18-x64'
+  },
+  '/downloads/nodepilot/NodePilot-Setup-0.2.18-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-Setup-0.2.18-x64.exe',
+    filename: 'NodePilot-Setup-0.2.18-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.18-x64'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-Setup-0.2.18-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.18/NodePilot-Setup-0.2.18-x64.exe',
+    filename: 'NodePilot-Setup-0.2.18-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.18-x64'
   },
   '/downloads/nodepilot/NodePilot-Setup-0.2.17-x64.exe': {
     key: 'anytls-desktop-manager/0.2.17/NodePilot-Setup-0.2.17-x64.exe',
@@ -459,6 +608,8 @@ const downloadLimitConfig = {
 };
 
 const pageRedirects = {
+  '/downloads/simplecut-pro': '/zh-hans/apps/simplecut-pro/download/',
+  '/downloads/simplecut-pro/': '/zh-hans/apps/simplecut-pro/download/',
   '/apps/anytls-desktop-manager': '/apps/nodepilot/',
   '/apps/anytls-desktop-manager/': '/apps/nodepilot/',
   '/zh-hant/apps/anytls-desktop-manager': '/zh-hant/apps/nodepilot/',
@@ -480,7 +631,7 @@ const rateLimitResponse = (message, retryAfterSeconds) =>
   });
 
 const checkDownloadLimit = async (request, env, file) => {
-  if (request.method === 'HEAD') {
+  if (!file.limitKey || request.method === 'HEAD') {
     return null;
   }
 
@@ -573,7 +724,7 @@ const handleR2Download = async (request, env, file) => {
   object.writeHttpMetadata(headers);
   headers.set('content-type', file.contentType);
   headers.set('content-disposition', `attachment; filename="${file.filename}"`);
-  headers.set('cache-control', 'public, max-age=3600');
+  headers.set('cache-control', file.cacheControl || 'public, max-age=3600');
   headers.set('etag', object.httpEtag);
 
   return new Response(request.method === 'HEAD' ? null : object.body, { headers });
