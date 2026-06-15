@@ -11,8 +11,8 @@ export const anyTlsDesktopManagerProduct = {
       platform: 'macOS',
       architecture: 'arm64',
       minimumSystem: 'macOS 12 or later',
-      fileSize: '124.9 MB',
-      sha256: '8b6527e164c39ac7bcb63307af5223049cfc4c58f4570f5a4a41ab8f956bcd25',
+      fileSize: '119.3 MB',
+      sha256: '7a10eddba4aea171a5b56ed9332d4d935a26e632eb7fde6a5b8819d29719af4b',
       downloadPath: '/downloads/nodepilot/NodePilot-latest-arm64.dmg'
     },
     {
@@ -22,8 +22,8 @@ export const anyTlsDesktopManagerProduct = {
       platform: 'Windows',
       architecture: 'x64',
       minimumSystem: 'Windows 10 or later',
-      fileSize: '96.4 MB',
-      sha256: '1e0d00abf5a52896f864c15a0226bc271f88437f004318dc6526d035efdfa69b',
+      fileSize: '92.2 MB',
+      sha256: 'a6dbf31eb061282a105f732d4733c7c9f0a7e911903cd2441abaf4667279b72f',
       downloadPath: '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe'
     }
   ],
