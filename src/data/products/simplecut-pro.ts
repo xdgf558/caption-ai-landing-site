@@ -2,89 +2,80 @@ export const simpleCutProProduct = {
   id: 'simplecut-pro',
   slug: 'simplecut-pro',
   name: 'SimpleCut Pro',
-  latestVersion: 'v0.1.14',
-  releaseDate: '2026-06-14',
+  latestVersion: 'v0.1.16',
+  releaseDate: '2026-06-15',
   updateFeedUrl: 'https://wwwstationcat.org/downloads/simplecut-pro/',
   downloads: [
     {
       id: 'mac-arm64-dmg',
       label: 'macOS Apple Silicon',
-      version: '0.1.14',
+      version: '0.1.16',
       platform: 'macOS',
       architecture: 'arm64',
       minimumSystem: 'macOS 12 or later',
       fileSize: '197.1 MB',
-      sha256: '9c38c7729e81e967d8fe7d938602f1a2c6f15ebb5d9a8e9a290f428554a1c89b',
-      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-mac-arm64.dmg',
-      r2ObjectKey: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-mac-arm64.dmg'
+      sha256: '1f8ff1fd32fe665c106588563d7a5455a472eca41732f3c00c7aa8616cc852c7',
+      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.16-mac-arm64.dmg',
+      r2ObjectKey: 'simplecut-pro/0.1.16/SimpleCut-Pro-0.1.16-mac-arm64.dmg'
     },
     {
       id: 'windows-x64-exe',
       label: 'Windows x64',
-      version: '0.1.14',
+      version: '0.1.16',
       platform: 'Windows',
       architecture: 'x64',
       minimumSystem: 'Windows 10 or later',
       fileSize: '146.7 MB',
-      sha256: 'e8a2731cc3529ad561e1a30a93dacf6d46e960a967f2e9fdbfe87408b39350c6',
-      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-win-x64.exe',
-      r2ObjectKey: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-win-x64.exe'
+      sha256: 'c5c8bc2c2c5fe5518129550340d6cb9cfe44366ddd725fbb8e6b21691ff44c03',
+      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.16-win-x64.exe',
+      r2ObjectKey: 'simplecut-pro/0.1.16/SimpleCut-Pro-0.1.16-win-x64.exe'
     }
   ],
   updateFiles: [
     {
       id: 'mac-zip',
       label: 'macOS auto-update ZIP',
-      filename: 'SimpleCut-Pro-0.1.14-mac-arm64.zip',
+      filename: 'SimpleCut-Pro-0.1.16-mac-arm64.zip',
       fileSize: '195.0 MB',
-      sha256: '2dc72bb73fe1e512ca7fb832f4824081a1640b6f5960683c075270676c746158',
-      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-mac-arm64.zip',
-      r2ObjectKey: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-mac-arm64.zip'
-    },
-    {
-      id: 'mac-dmg-blockmap',
-      label: 'macOS DMG blockmap',
-      filename: 'SimpleCut-Pro-0.1.14-mac-arm64.dmg.blockmap',
-      fileSize: '211 KB',
-      sha256: '1503503b7dd7e3e6ec5d45ede5d5f31a865be52acab7941b73cec93709ca7dfd',
-      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-mac-arm64.dmg.blockmap',
-      r2ObjectKey: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-mac-arm64.dmg.blockmap'
+      sha256: '88aa5cfcaf04c24603c9ee5ec3c545dfa927da26bc6eb40bcfad328e095aa3f3',
+      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.16-mac-arm64.zip',
+      r2ObjectKey: 'simplecut-pro/0.1.16/SimpleCut-Pro-0.1.16-mac-arm64.zip'
     },
     {
       id: 'mac-zip-blockmap',
       label: 'macOS ZIP blockmap',
-      filename: 'SimpleCut-Pro-0.1.14-mac-arm64.zip.blockmap',
-      fileSize: '210 KB',
-      sha256: 'da21e328bf1f0beed99ea043fe62675753a90ba50f01b8f7b023107243dcc017',
-      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-mac-arm64.zip.blockmap',
-      r2ObjectKey: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-mac-arm64.zip.blockmap'
+      filename: 'SimpleCut-Pro-0.1.16-mac-arm64.zip.blockmap',
+      fileSize: '211 KB',
+      sha256: '2e54e3984ac4bff7990ead83c4dd3e2b4e99c499fdb30eed07eccf4f63919941',
+      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.16-mac-arm64.zip.blockmap',
+      r2ObjectKey: 'simplecut-pro/0.1.16/SimpleCut-Pro-0.1.16-mac-arm64.zip.blockmap'
     },
     {
       id: 'latest-mac',
       label: 'macOS update feed',
       filename: 'latest-mac.yml',
       fileSize: '531 B',
-      sha256: '3cdedad208b89de24dfe8a332285879781da40372d15dd37ae9890f3c982f4aa',
+      sha256: '32552fee67fea01ae36f007bf616442e8fbc765b3f300353ae4b068298540ab4',
       downloadPath: '/downloads/simplecut-pro/latest-mac.yml',
-      r2ObjectKey: 'simplecut-pro/0.1.14/latest-mac.yml'
+      r2ObjectKey: 'simplecut-pro/0.1.16/latest-mac.yml'
     },
     {
       id: 'windows-exe-blockmap',
       label: 'Windows installer blockmap',
-      filename: 'SimpleCut-Pro-0.1.14-win-x64.exe.blockmap',
+      filename: 'SimpleCut-Pro-0.1.16-win-x64.exe.blockmap',
       fileSize: '159 KB',
-      sha256: 'aaa2e0742ffbb8522ac3c0c2faf53aa2fb61abde6b427242e28c743194d402fc',
-      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.14-win-x64.exe.blockmap',
-      r2ObjectKey: 'simplecut-pro/0.1.14/SimpleCut-Pro-0.1.14-win-x64.exe.blockmap'
+      sha256: '0395e1f99330e86466df30fd35a4df7e7addd454d6ee7088006f85f688e1f04d',
+      downloadPath: '/downloads/simplecut-pro/SimpleCut-Pro-0.1.16-win-x64.exe.blockmap',
+      r2ObjectKey: 'simplecut-pro/0.1.16/SimpleCut-Pro-0.1.16-win-x64.exe.blockmap'
     },
     {
       id: 'latest-windows',
       label: 'Windows update feed',
       filename: 'latest.yml',
       fileSize: '362 B',
-      sha256: 'bdd3cd6581e8ec957c11e44d18f241ee9894a8e4b23a43afd0a3a99c8d370fd0',
+      sha256: 'ac20430b4bd2c48ae87c00ed2dcdfcb6b4f80513a5c664aaa2c37e17147ab837',
       downloadPath: '/downloads/simplecut-pro/latest.yml',
-      r2ObjectKey: 'simplecut-pro/0.1.14/latest.yml'
+      r2ObjectKey: 'simplecut-pro/0.1.16/latest.yml'
     }
   ],
   productPath: '/apps/simplecut-pro/',
