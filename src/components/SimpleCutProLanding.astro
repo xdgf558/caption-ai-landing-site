@@ -8,6 +8,7 @@ interface Props {
 
 const { lang = 'zh-Hant' } = Astro.props;
 const [macDownload, windowsDownload] = simpleCutProProduct.downloads;
+const currentVersion = simpleCutProProduct.latestVersion.replace(/^v/, '');
 
 const copy = {
   'zh-Hant': {
@@ -26,9 +27,9 @@ const copy = {
       ['時間線剪輯', '把影片與音訊素材放到時間線，做分段、刪除範圍和位置調整。'],
       ['音訊與轉場', '支援音訊拖拽對齊、淡入淡出、邊緣裁剪和常用畫面轉場。'],
       ['預覽與匯出', '可以在桌面端預覽片段、檢查轉場，再用本機 FFmpeg 流程匯出。'],
-      ['線上更新準備', '0.1.18 已更新下載與更新 metadata，後續版本會透過同一下載目錄提供更新資訊。']
+      ['線上更新準備', `${currentVersion} 已更新下載與更新 metadata，後續版本會透過同一下載目錄提供更新資訊。`]
     ],
-    releaseTitle: '0.1.18 發布狀態',
+    releaseTitle: `${currentVersion} 發布狀態`,
     releaseNotes: [
       'macOS 和 Windows 安裝包已更新；macOS 安裝時請以系統安全提示為準。',
       'Windows x64 安裝包已生成。',
@@ -51,9 +52,9 @@ const copy = {
       ['时间线剪辑', '把视频与音频素材放到时间线，做分段、删除范围和位置调整。'],
       ['音频与转场', '支持音频拖拽对齐、淡入淡出、边缘裁剪和常用画面转场。'],
       ['预览与导出', '可以在桌面端预览片段、检查转场，再用本机 FFmpeg 流程导出。'],
-      ['在线更新准备', '0.1.18 已更新下载与更新 metadata，后续版本会通过同一下载目录提供更新信息。']
+      ['在线更新准备', `${currentVersion} 已更新下载与更新 metadata，后续版本会通过同一下载目录提供更新信息。`]
     ],
-    releaseTitle: '0.1.18 发布状态',
+    releaseTitle: `${currentVersion} 发布状态`,
     releaseNotes: [
       'macOS 和 Windows 安装包已更新；macOS 安装时请以系统安全提示为准。',
       'Windows x64 安装包已生成。',
@@ -76,9 +77,9 @@ const copy = {
       ['Timeline editing', 'Place video and audio clips on a timeline, split clips, delete ranges, and adjust positions.'],
       ['Audio and transitions', 'Use audio alignment, fade handles, edge trimming, and common visual transitions.'],
       ['Preview and export', 'Preview edits on desktop, check transitions, then export through a local FFmpeg workflow.'],
-      ['Update feed ready', 'Version 0.1.18 refreshes the download and update metadata. Future releases will use the same public download folder.']
+      ['Update feed ready', `Version ${currentVersion} refreshes the download and update metadata. Future releases will use the same public download folder.`]
     ],
-    releaseTitle: '0.1.18 release state',
+    releaseTitle: `${currentVersion} release state`,
     releaseNotes: [
       'The macOS and Windows installers have been refreshed; follow macOS system security prompts for this build.',
       'The Windows x64 installer has been generated.',
@@ -101,9 +102,9 @@ const copy = {
       ['タイムライン編集', '動画と音声素材を並べ、分割、範囲削除、位置調整を行えます。'],
       ['音声とトランジション', '音声の位置合わせ、フェード、端のトリム、基本的な画面転換を扱えます。'],
       ['プレビューと書き出し', 'デスクトップ上で編集を確認し、ローカルの FFmpeg ワークフローで書き出します。'],
-      ['更新フィード対応', '0.1.18 ではダウンロードと更新 metadata を更新し、今後のリリースも同じ公開フォルダを使います。']
+      ['更新フィード対応', `${currentVersion} ではダウンロードと更新 metadata を更新し、今後のリリースも同じ公開フォルダを使います。`]
     ],
-    releaseTitle: '0.1.18 の公開状態',
+    releaseTitle: `${currentVersion} の公開状態`,
     releaseNotes: [
       'macOS 版と Windows 版を更新しました。macOS のインストール時はシステムの安全確認に従ってください。',
       'Windows x64 インストーラーを生成済みです。',

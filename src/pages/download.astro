@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { simpleCutProProduct } from '../data/products/simplecut-pro';
+
+const currentVersion = simpleCutProProduct.latestVersion.replace(/^v/, '');
 ---
 
 <BaseLayout
@@ -13,7 +15,7 @@ import { simpleCutProProduct } from '../data/products/simplecut-pro';
     <p class="section-kicker">Download</p>
     <h1>Download current Station Cat products.</h1>
     <p>
-      SimpleCut Pro 0.1.18 is available now for macOS Apple Silicon and Windows x64. Update metadata and blockmaps are hosted in the same public folder for the upcoming auto-update flow.
+      SimpleCut Pro {currentVersion} is available now for macOS Apple Silicon and Windows x64. Update metadata and blockmaps are hosted in the same public folder for the upcoming auto-update flow.
     </p>
     <div class="button-row">
       <a class="button button-primary" href={simpleCutProProduct.downloads[0].downloadPath}>Download macOS DMG</a>
@@ -23,7 +25,7 @@ import { simpleCutProProduct } from '../data/products/simplecut-pro';
   </section>
 
   <section class="download-box radar-download-box">
-    <h2>SimpleCut Pro 0.1.18</h2>
+    <h2>SimpleCut Pro {currentVersion}</h2>
     <div class="anytls-download-grid">
       {simpleCutProProduct.downloads.map((download) => (
         <article class="anytls-download-card">

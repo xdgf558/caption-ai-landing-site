@@ -18,6 +18,7 @@ interface Props {
 const { lang = 'zh-Hant', canonicalPath = '/' } = Astro.props;
 const xUrl = 'https://x.com/bketck';
 const stationLogoPath = '/images/home/station-cat-logo.png';
+const currentVersion = simpleCutProProduct.latestVersion.replace(/^v/, '');
 
 const icons: Record<IconName, string> = {
   cat: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 13 8 5l6 5h4l6-5 1 8"/><path d="M7 14c0 8 5 12 9 12s9-4 9-12"/><path d="M12 16h.1M20 16h.1"/><path d="M14 20h4M16 18v3"/></svg>`,
@@ -74,7 +75,7 @@ const copy = {
     followCleanerDesc: '低頻檢查 X 關注列表，本地保存結果，並匯出 CSV / JSON。',
     snapcopyStatus: 'closed testing',
     storycatStatus: 'iOS testing soon',
-    simplecutStatus: 'desktop release 0.1.18',
+    simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: '查看工具',
     simplecutDownload: '下載版本',
     radarStatus: 'Mac test build 0.1.0',
@@ -138,7 +139,7 @@ const copy = {
     followCleanerDesc: '低频检查 X 关注列表，本地保存结果，并导出 CSV / JSON。',
     snapcopyStatus: 'closed testing',
     storycatStatus: 'iOS testing soon',
-    simplecutStatus: 'desktop release 0.1.18',
+    simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: '查看工具',
     simplecutDownload: '下载版本',
     radarStatus: 'Mac test build 0.1.0',
@@ -202,7 +203,7 @@ const copy = {
     followCleanerDesc: 'Review your X following list locally and export CSV / JSON results.',
     snapcopyStatus: 'closed testing',
     storycatStatus: 'iOS testing soon',
-    simplecutStatus: 'desktop release 0.1.18',
+    simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: 'View App',
     simplecutDownload: 'Download',
     radarStatus: 'Mac test build 0.1.0',
@@ -266,7 +267,7 @@ const copy = {
     followCleanerDesc: 'X のフォロー一覧をローカルで見直し、CSV / JSON で書き出します。',
     snapcopyStatus: 'closed testing',
     storycatStatus: 'iOS testing soon',
-    simplecutStatus: 'desktop release 0.1.18',
+    simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: 'アプリを見る',
     simplecutDownload: 'ダウンロード',
     radarStatus: 'Mac test build 0.1.0',
