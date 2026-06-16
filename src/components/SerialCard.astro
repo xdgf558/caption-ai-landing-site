@@ -1,0 +1,66 @@
+---
+import type { SerialEntry, SiteLocale } from '../data/serials';
+import { getPriceModeLabel, getSeriesHref, getSerialStatusLabel } from '../data/serials';
+
+interface CopyShape {
+  accessLabel: string;
+  chapterLabel: string;
+  freeLabel: string;
+  latestLabel: string;
+  openSeries: string;
+  scheduleLabel: string;
+}
+
+interface Props {
+  serial: SerialEntry;
+  locale: SiteLocale;
+  basePath: string;
+  copy: CopyShape;
+}
+
+const { serial, locale, basePath, copy } = Astro.props;
+const href = getSeriesHref(basePath, serial.data.seriesSlug);
+const latestLabel = serial.data.latestChapterNumber
+  ? `${copy.latestLabel} ${serial.data.latestChapterNumber}`
+  : serial.data.availabilityNote;
+---
+
+<article class="serial-card">
+  <div class="serial-card__header">
+    <span class="paper-stamp">{getSerialStatusLabel(serial.data.status, locale)}</span>
+  </div>
+
+  <div class="serial-card__copy">
+    <h3><a href={href}>{serial.data.title}</a></h3>
+    <p>{serial.data.tagline}</p>
+  </div>
+
+  <dl class="serial-card__meta">
+    <div>
+      <dt>{copy.accessLabel}</dt>
+      <dd>{getPriceModeLabel(serial.data.priceMode, locale)}</dd>
+    </div>
+    <div>
+      <dt>{copy.freeLabel}</dt>
+      <dd>{serial.data.freeChapters}</dd>
+    </div>
+    <div>
+      <dt>{copy.scheduleLabel}</dt>
+      <dd>{serial.data.updateSchedule ?? '-'}</dd>
+    </div>
+    <div>
+      <dt>{copy.latestLabel}</dt>
+      <dd>{latestLabel ?? '-'}</dd>
+    </div>
+  </dl>
+
+  {serial.data.tags.length > 0 && (
+    <div class="station-tag-row">
+      {serial.data.tags.map((tag) => <span>{tag}</span>)}
+    </div>
+  )}
+
+  <div class="button-row">
+    <a class="button button-secondary" href={href}>{copy.openSeries}</a>
+  </div>
+</article>

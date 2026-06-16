@@ -3825,6 +3825,222 @@ body.station-paper-page {
   background: #2e5b4e;
 }
 
+.serial-card-grid,
+.serial-detail-grid,
+.serial-chapter-list {
+  display: grid;
+  gap: 18px;
+}
+
+.serial-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.serial-feature-card {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.6fr);
+  padding: 24px;
+}
+
+.serial-feature-card__copy,
+.serial-detail-card,
+.serial-reader-shell__header {
+  display: grid;
+  gap: 16px;
+}
+
+.serial-feature-card__meta,
+.serial-detail-hero__meta,
+.serial-reader-shell__meta,
+.serial-reader-shell__crumbs {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.serial-feature-card__facts,
+.serial-card__meta {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.serial-feature-card__facts span,
+.serial-card__meta dt,
+.serial-detail-card--meta span,
+.serial-chapter-card__footer span,
+.serial-reader-shell__meta span,
+.serial-reader-shell__meta time,
+.serial-chapter-card time,
+.serial-reader-shell__crumbs span {
+  color: #6f6257;
+  font-size: 13px;
+}
+
+.serial-card,
+.serial-detail-card,
+.serial-chapter-card,
+.serial-empty-panel,
+.serial-reader-shell {
+  padding: 22px;
+}
+
+.serial-card__header,
+.serial-chapter-card__header,
+.serial-chapter-card__footer {
+  align-items: start;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.serial-card__copy {
+  display: grid;
+  gap: 10px;
+}
+
+.serial-card__meta dd,
+.serial-detail-card--meta strong,
+.serial-feature-card__facts strong,
+.serial-feature-card__aside p {
+  color: #221b16;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.serial-feature-card__aside {
+  align-content: start;
+  display: grid;
+  gap: 14px;
+}
+
+.serial-feature-card__stamp {
+  align-items: center;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  display: inline-flex;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 28px;
+  font-weight: 900;
+  justify-content: center;
+  max-width: 90px;
+}
+
+.serial-detail-grid {
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.6fr);
+}
+
+.serial-detail-card--meta {
+  align-content: start;
+}
+
+.serial-reader-shell__body {
+  margin-top: 10px;
+}
+
+.serial-reader-shell__footer {
+  margin-top: 26px;
+}
+
+.serial-prose {
+  display: grid;
+  gap: 16px;
+}
+
+.serial-prose p {
+  line-height: 1.85;
+  margin: 0;
+}
+
+.station-paper-page .serial-card,
+.station-paper-page .serial-feature-card,
+.station-paper-page .serial-detail-card,
+.station-paper-page .serial-chapter-card,
+.station-paper-page .serial-empty-panel,
+.station-paper-page .serial-reader-shell {
+  background: #fffaf1;
+  border: 1px solid #d8c8b8;
+  border-radius: 12px;
+  box-shadow: 0 16px 34px rgba(80, 55, 35, 0.12);
+}
+
+.station-paper-page .serial-card,
+.station-paper-page .serial-chapter-card {
+  transform: rotate(-0.35deg);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.station-paper-page .serial-card:nth-child(even),
+.station-paper-page .serial-chapter-card:nth-child(even) {
+  transform: rotate(0.35deg);
+}
+
+.station-paper-page .serial-card:hover,
+.station-paper-page .serial-chapter-card:hover {
+  box-shadow: 0 18px 34px rgba(80, 55, 35, 0.15);
+  transform: translateY(-3px) rotate(0deg);
+}
+
+.station-paper-page .serial-card__copy h3 a,
+.station-paper-page .serial-chapter-card h3,
+.station-paper-page .serial-reader-shell h1,
+.station-paper-page .serial-feature-card h2,
+.station-paper-page .serial-detail-card h2 {
+  color: #221b16;
+}
+
+.station-paper-page .serial-card__copy h3 a:hover,
+.station-paper-page .serial-card__copy h3 a:focus-visible {
+  color: #2e5b4e;
+}
+
+.station-paper-page .serial-card__header .paper-stamp,
+.station-paper-page .serial-detail-hero__meta .paper-stamp,
+.station-paper-page .serial-feature-card__meta .paper-stamp {
+  margin-right: 2px;
+}
+
+.station-paper-page .serial-feature-card__stamp {
+  background: #2e5b4e;
+  border: 2px solid #221b16;
+  box-shadow: 5px 5px 0 rgba(34, 27, 22, 0.16);
+  color: #fffaf1;
+}
+
+.station-paper-page .serial-reader-shell__crumbs,
+.station-paper-page .serial-reader-shell__meta,
+.station-paper-page .serial-chapter-card__footer span,
+.station-paper-page .serial-chapter-card time {
+  color: #6f6257;
+}
+
+.station-paper-page .serial-empty-panel {
+  border-style: dashed;
+  text-align: center;
+}
+
+.station-paper-page .serial-prose p,
+.station-paper-page .serial-feature-card p,
+.station-paper-page .serial-card p,
+.station-paper-page .serial-detail-card p,
+.station-paper-page .serial-chapter-card p {
+  color: #5f534a;
+}
+
+.station-paper-page .serial-reader-shell__header p,
+.station-paper-page .serial-reader-shell__body p {
+  color: #221b16;
+}
+
+.station-paper-page .serial-prose blockquote {
+  border-left: 3px solid #d8c8b8;
+  margin: 0;
+  padding-left: 16px;
+}
+
 .station-paper-page .waitlist-panel {
   border-left: 8px solid #2e5b4e;
   margin-bottom: 60px;

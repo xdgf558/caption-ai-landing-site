@@ -1,20 +1,24 @@
 ---
 import { getCollection } from 'astro:content';
+import SerialsHubPage from '../../../components/SerialsHubPage.astro';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import WorksPage from '../../../components/WorksPage.astro';
-import { getSortedWorks, worksCopy } from '../../../data/works';
+import { getLatestChapter, getPublishedChapters, getVisibleSerials, serialsCopy } from '../../../data/serials';
 
-const xUrl = 'https://x.com/bketck';
-const copy = worksCopy.ja;
-const publishedWorks = getSortedWorks(await getCollection('xworks'));
-const featuredWorks = publishedWorks.filter((work) => work.data.featured);
+const locale = 'ja';
+const basePath = '/ja/works/';
+const copy = serialsCopy[locale];
+const serials = getVisibleSerials(await getCollection('serials'));
+const featuredSerial = serials.find((serial) => serial.data.featured) ?? serials[0];
+const featuredLatestChapter = featuredSerial
+  ? getLatestChapter(getPublishedChapters(await getCollection('serialChapters'), featuredSerial.data.seriesSlug))
+  : undefined;
 ---
 
 <BaseLayout
   title={copy.title}
   description={copy.description}
   lang="ja"
-  canonicalPath="/ja/works/"
+  canonicalPath={basePath}
   bodyClass="station-home"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/zh-hant/works/' },
@@ -24,5 +28,5 @@ const featuredWorks = publishedWorks.filter((work) => work.data.featured);
     { hrefLang: 'x-default', href: '/zh-hant/works/' }
   ]}
 >
-  <WorksPage copy={copy} lang="ja" canonicalPath="/ja/works/" featuredWorks={featuredWorks} publishedWorks={publishedWorks} xUrl={xUrl} />
+  <SerialsHubPage basePath={basePath} copy={copy} featuredLatestChapter={featuredLatestChapter} featuredSerial={featuredSerial} locale={locale} serials={serials} />
 </BaseLayout>

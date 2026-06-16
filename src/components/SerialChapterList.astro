@@ -1,0 +1,51 @@
+---
+import type { SerialChapterEntry } from '../data/serials';
+import { getChapterHref } from '../data/serials';
+
+interface CopyShape {
+  chapterEmpty: string;
+  chapterLabel: string;
+  chapterWordCount: string;
+  readChapter: string;
+}
+
+interface Props {
+  chapters: SerialChapterEntry[];
+  copy: CopyShape;
+  basePath: string;
+  seriesSlug: string;
+}
+
+const { chapters, copy, basePath, seriesSlug } = Astro.props;
+---
+
+{chapters.length > 0 ? (
+  <div class="serial-chapter-list">
+    {chapters.map((chapter) => (
+      <article class="serial-chapter-card">
+        <div class="serial-chapter-card__header">
+          <div>
+            <p class="station-kicker">
+              {copy.chapterLabel} {chapter.data.chapterNumber}
+            </p>
+            <h3>{chapter.data.title}</h3>
+          </div>
+          {chapter.data.publishedAt && (
+            <time datetime={chapter.data.publishedAt.toISOString()}>
+              {chapter.data.publishedAt.toLocaleDateString(chapter.data.language)}
+            </time>
+          )}
+        </div>
+        <p>{chapter.data.excerpt}</p>
+        <div class="serial-chapter-card__footer">
+          {chapter.data.wordCount && <span>{chapter.data.wordCount} {copy.chapterWordCount}</span>}
+          <a class="paper-link" href={getChapterHref(basePath, seriesSlug, chapter.data.chapterSlug)}>{copy.readChapter}</a>
+        </div>
+      </article>
+    ))}
+  </div>
+) : (
+  <div class="serial-empty-panel">
+    <p>{copy.chapterEmpty}</p>
+  </div>
+)}
