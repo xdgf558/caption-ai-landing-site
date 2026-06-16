@@ -1,0 +1,48 @@
+---
+import { getCollection, render } from 'astro:content';
+import SerialDetailPage from '../../../components/SerialDetailPage.astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getLatestChapter, getPublishedChapters, getVisibleSerials, serialsCopy } from '../../../data/serials';
+
+export async function getStaticPaths() {
+  const serials = getVisibleSerials(await getCollection('serials'));
+  return serials.map((serial) => ({
+    params: { series: serial.data.seriesSlug },
+    props: { serial }
+  }));
+}
+
+const locale = 'en';
+const basePath = '/works/';
+const copy = serialsCopy[locale];
+const { serial } = Astro.props;
+const chapterContent = getPublishedChapters(await getCollection('serialChapters'), serial.data.seriesSlug);
+const latestChapter = getLatestChapter(chapterContent);
+const { Content } = await render(serial);
+---
+
+<BaseLayout
+  title={`${serial.data.title} | ${copy.title}`}
+  description={serial.data.description}
+  lang="en"
+  canonicalPath={`${basePath}${serial.data.seriesSlug}/`}
+  bodyClass="station-home"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: `/zh-hant/works/${serial.data.seriesSlug}/` },
+    { hrefLang: 'zh-Hans', href: `/zh-hans/works/${serial.data.seriesSlug}/` },
+    { hrefLang: 'en', href: `${basePath}${serial.data.seriesSlug}/` },
+    { hrefLang: 'ja', href: `/ja/works/${serial.data.seriesSlug}/` },
+    { hrefLang: 'x-default', href: `/zh-hant/works/${serial.data.seriesSlug}/` }
+  ]}
+>
+  <SerialDetailPage
+    basePath={basePath}
+    chapterContent={chapterContent}
+    copy={copy}
+    homePath="/en/"
+    latestChapter={latestChapter}
+    locale={locale}
+    serial={serial}
+    Content={Content}
+  />
+</BaseLayout>

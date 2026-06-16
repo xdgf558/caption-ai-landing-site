@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLatestChapter, getPublishedChapters, getSerialStatusLabel, getVisibleSerials } from '../data/serials';
 import { snapCopyProduct } from '../data/products/caption-ai';
 import { stationCatRadarProduct } from '../data/products/stationcat-radar';
 import { xFollowCleanerProduct } from '../data/products/x-follow-cleaner';
@@ -41,7 +42,7 @@ const copy = {
     heroTitle: '一座深夜還亮著的小站。',
     heroText: '我在這裡收集貓、早餐、公開信號和正在長出來的小工具。有些內容會變成 App，有些只是飯桌邊的一句話。',
     primaryCta: '看正在做的工具',
-    secondaryCta: '翻最近的站台筆記',
+    secondaryCta: '看正在連載的小說',
     boardLabel: 'Station Board',
     boardItems: [
       { type: 'polaroid', title: 'Cat log', text: '窗邊值班、尾巴晃動和一些很有主見的小動靜。', stamp: 'cat' },
@@ -51,7 +52,7 @@ const copy = {
     ],
     aboutKicker: 'About the station',
     aboutTitle: '一張 0 基礎程式員的日常工作桌。',
-    aboutText: '這裡會記錄我從 0 開始學開發、做產品、踩坑和重新理解技術的過程。也會放日常觀察、測試中的 App、X 作品，以及一些把想法慢慢做出來的筆記。',
+    aboutText: '這裡會記錄我從 0 開始學開發、做產品、踩坑和重新理解技術的過程。也會放日常觀察、測試中的 App、長篇小說連載，以及一些把想法慢慢做出來的筆記。',
     todayKicker: 'Today at the Station',
     todayTitle: '今天站台上放著什麼。',
     todayIntro: '貓、飯桌、信號和工具會以不同的紙片形式出現，像一面慢慢貼滿的小公告牆。',
@@ -80,11 +81,11 @@ const copy = {
     simplecutDownload: '下載版本',
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
-    notesKicker: 'Recent notes',
-    notesTitle: '貼在站台牆上的近期紙條。',
-    notesIntro: '從 X 精選中挑幾張最近的紙條，保留一點現場感。',
-    viewOnX: 'View on X',
-    emptyNotes: '近期紙條很快會貼上來。',
+    notesKicker: 'Serial fiction',
+    notesTitle: '正在準備與連載中的小說。',
+    notesIntro: '這裡先放小說入口、更新狀態和最近一章，讓作品能按順序慢慢長出來。',
+    viewOnX: '打開作品',
+    emptyNotes: '第一部長篇小說很快會出現在這裡。',
     buildKicker: 'Build log',
     buildTitle: '最近的開發筆記。',
     buildIntro: '像翻一本 notebook，看看小工具是怎麼慢慢變清楚的。',
@@ -105,7 +106,7 @@ const copy = {
     heroTitle: '一座深夜还亮着的小站。',
     heroText: '我在这里收集猫、早餐、公开信号和正在长出来的小工具。有些内容会变成 App，有些只是饭桌边的一句话。',
     primaryCta: '看正在做的工具',
-    secondaryCta: '翻最近的站台笔记',
+    secondaryCta: '看正在连载的小说',
     boardLabel: 'Station Board',
     boardItems: [
       { type: 'polaroid', title: 'Cat log', text: '窗边值班、尾巴晃动和一些很有主见的小动静。', stamp: 'cat' },
@@ -115,7 +116,7 @@ const copy = {
     ],
     aboutKicker: 'About the station',
     aboutTitle: '一张 0 基础程序员的日常工作桌。',
-    aboutText: '这里会记录我从 0 开始学开发、做产品、踩坑和重新理解技术的过程。也会放日常观察、测试中的 App、X 作品，以及一些把想法慢慢做出来的笔记。',
+    aboutText: '这里会记录我从 0 开始学开发、做产品、踩坑和重新理解技术的过程。也会放日常观察、测试中的 App、长篇小说连载，以及一些把想法慢慢做出来的笔记。',
     todayKicker: 'Today at the Station',
     todayTitle: '今天站台上放着什么。',
     todayIntro: '猫、饭桌、信号和工具会以不同的纸片形式出现，像一面慢慢贴满的小公告墙。',
@@ -144,11 +145,11 @@ const copy = {
     simplecutDownload: '下载版本',
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
-    notesKicker: 'Recent notes',
-    notesTitle: '贴在站台墙上的近期纸条。',
-    notesIntro: '从 X 精选中挑几张最近的纸条，保留一点现场感。',
-    viewOnX: 'View on X',
-    emptyNotes: '近期纸条很快会贴上来。',
+    notesKicker: 'Serial fiction',
+    notesTitle: '正在准备与连载中的小说。',
+    notesIntro: '这里先放小说入口、更新状态和最近一章，让作品能按顺序慢慢长出来。',
+    viewOnX: '打开作品',
+    emptyNotes: '第一部长篇小说很快会出现在这里。',
     buildKicker: 'Build log',
     buildTitle: '最近的开发笔记。',
     buildIntro: '像翻一本 notebook，看看小工具是怎么慢慢变清楚的。',
@@ -169,7 +170,7 @@ const copy = {
     heroTitle: 'A small station still lit late at night.',
     heroText: 'I collect cats, breakfast, public signals, and small tools that are still growing here. Some notes become apps. Some stay as a sentence beside the table.',
     primaryCta: 'See the tools',
-    secondaryCta: 'Read station notes',
+    secondaryCta: 'See the fiction shelf',
     boardLabel: 'Station Board',
     boardItems: [
       { type: 'polaroid', title: 'Cat log', text: 'Window shifts, tail movement, and tiny daily opinions.', stamp: 'cat' },
@@ -179,7 +180,7 @@ const copy = {
     ],
     aboutKicker: 'About the station',
     aboutTitle: 'A daily desk of a programmer starting from zero.',
-    aboutText: 'This is where I record learning development from scratch, building products, hitting rough edges, and slowly changing how I understand software. It also keeps daily notes, test apps, X works, and small thoughts turning into real things.',
+    aboutText: 'This is where I record learning development from scratch, building products, hitting rough edges, and slowly changing how I understand software. It also keeps daily notes, test apps, serial fiction, and small thoughts turning into real things.',
     todayKicker: 'Today at the Station',
     todayTitle: 'What is on the platform today.',
     todayIntro: 'Cats, table notes, signals, and tools show up as different paper scraps on a slowly growing station wall.',
@@ -208,11 +209,11 @@ const copy = {
     simplecutDownload: 'Download',
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
-    notesKicker: 'Recent notes',
-    notesTitle: 'Small notes pinned to the station wall.',
-    notesIntro: 'A few recent selected X notes, kept with a little field texture.',
-    viewOnX: 'View on X',
-    emptyNotes: 'Recent notes will appear here soon.',
+    notesKicker: 'Serial fiction',
+    notesTitle: 'Long-form stories on the shelf.',
+    notesIntro: 'This section keeps the active serial, its latest chapter, and the current reading status in one place.',
+    viewOnX: 'Open series',
+    emptyNotes: 'The first serial will appear here soon.',
     buildKicker: 'Build log',
     buildTitle: 'Recent build notes.',
     buildIntro: 'Like opening a notebook to see how small tools slowly become clearer.',
@@ -233,7 +234,7 @@ const copy = {
     heroTitle: '夜遅くまで灯りがついている小さな場所。',
     heroText: 'ここでは猫、朝食、公開シグナル、育ちかけの小さなツールを集めています。アプリになるものもあれば、食卓のそばの一文で終わるものもあります。',
     primaryCta: '作っているツールを見る',
-    secondaryCta: '最近のノートを見る',
+    secondaryCta: '連載小説を見る',
     boardLabel: 'Station Board',
     boardItems: [
       { type: 'polaroid', title: 'Cat log', text: '窓辺の当番、しっぽの動き、日常の小さな気配。', stamp: 'cat' },
@@ -243,7 +244,7 @@ const copy = {
     ],
     aboutKicker: 'About the station',
     aboutTitle: 'ゼロから始めたプログラマーの日常の作業机。',
-    aboutText: 'ここでは、ゼロから開発を学び、プロダクトを作り、つまずきながらソフトウェアへの理解を少しずつ変えていく過程を記録しています。日常のメモ、テスト中のアプリ、X の作品、アイデアを形にする途中のノートも置いています。',
+    aboutText: 'ここでは、ゼロから開発を学び、プロダクトを作り、つまずきながらソフトウェアへの理解を少しずつ変えていく過程を記録しています。日常のメモ、テスト中のアプリ、長編連載、アイデアを形にする途中のノートも置いています。',
     todayKicker: 'Today at the Station',
     todayTitle: '今日のホームに置いてあるもの。',
     todayIntro: '猫、食卓、シグナル、ツールが、それぞれ違う紙片として小さな掲示板に増えていきます。',
@@ -272,11 +273,11 @@ const copy = {
     simplecutDownload: 'ダウンロード',
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
-    notesKicker: 'Recent notes',
-    notesTitle: '駅の壁に貼った最近の紙片。',
-    notesIntro: 'X から選んだ最近のノートを少しだけ並べます。',
-    viewOnX: 'View on X',
-    emptyNotes: '最近のノートはまもなく追加されます。',
+    notesKicker: 'Serial fiction',
+    notesTitle: '連載小説の棚。',
+    notesIntro: 'ここに作品入口、更新状態、最新章をまとめて置いていきます。',
+    viewOnX: '作品を見る',
+    emptyNotes: '最初の連載はまもなくここに並びます。',
     buildKicker: 'Build log',
     buildTitle: '最近の開発ノート。',
     buildIntro: '小さなツールが少しずつ形になる様子を notebook のように残します。',
@@ -354,14 +355,18 @@ const paths = {
   }
 }[lang];
 
-const workLanguage = lang === 'ja' ? 'ja' : lang === 'en' ? 'en' : 'zh-hant';
 const devlogLanguage = lang;
 
-const allWorks = await getCollection('xworks');
-const recentWorks = allWorks
-  .filter((work) => work.data.status === 'published' && work.data.featured && work.data.language === workLanguage)
-  .sort((a, b) => new Date(b.data.publishedAt ?? 0).getTime() - new Date(a.data.publishedAt ?? 0).getTime())
-  .slice(0, 3);
+const allSerialChapters = await getCollection('serialChapters');
+const recentWorks = getVisibleSerials(await getCollection('serials'))
+  .slice(0, 3)
+  .map((serial) => {
+    const chapters = getPublishedChapters(allSerialChapters, serial.data.seriesSlug);
+    return {
+      serial,
+      latestChapter: getLatestChapter(chapters)
+    };
+  });
 
 const allDevlog = await getCollection('devlog');
 const recentDevlog = allDevlog
@@ -378,6 +383,19 @@ const formatDate = (value?: string | Date) => {
 const devlogHref = (post: (typeof recentDevlog)[number]) => {
   const slug = post.data.postSlug ?? post.slug;
   return `${paths.devlogPrefix}${slug}/`;
+};
+
+const latestChapterText = (chapter?: (typeof recentWorks)[number]['latestChapter']) => {
+  if (!chapter) return '';
+  const prefix =
+    lang === 'ja'
+      ? `最新章 ${chapter.data.chapterNumber}`
+      : lang === 'zh-Hant'
+        ? `最新章 ${chapter.data.chapterNumber}`
+        : lang === 'zh-Hans'
+          ? `最新章 ${chapter.data.chapterNumber}`
+          : `Latest chapter ${chapter.data.chapterNumber}`;
+  return `${prefix}: ${chapter.data.title}`;
 };
 ---
 
@@ -547,15 +565,20 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
     </div>
     {recentWorks.length > 0 ? (
       <div class="wall-note-grid">
-        {recentWorks.map((work, index) => (
+        {recentWorks.map(({ serial, latestChapter }, index) => (
           <article class={`wall-note wall-note--${index + 1}`}>
             <div class="wall-note__meta">
-              <span class="paper-stamp">{work.data.type}</span>
-              {work.data.publishedAt && <time datetime={work.data.publishedAt}>{formatDate(work.data.publishedAt)}</time>}
+              <span class="paper-stamp">{getSerialStatusLabel(serial.data.status, lang)}</span>
+              <time datetime={(serial.data.updatedAt ?? serial.data.publishedAt).toISOString()}>
+                {formatDate(serial.data.updatedAt ?? serial.data.publishedAt)}
+              </time>
             </div>
-            <h3>{work.data.title}</h3>
-            {work.data.description && <p>{work.data.description}</p>}
-            <a class="paper-link" href={work.data.xUrl} target="_blank" rel="noopener noreferrer">{copy.viewOnX}</a>
+            <h3>{serial.data.title}</h3>
+            <p>{serial.data.description}</p>
+            <p class="fine-print">
+              {latestChapter ? latestChapterText(latestChapter) : serial.data.availabilityNote}
+            </p>
+            <a class="paper-link" href={`${paths.notes}${serial.data.seriesSlug}/`}>{copy.viewOnX}</a>
           </article>
         ))}
       </div>

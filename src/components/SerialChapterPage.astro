@@ -1,0 +1,67 @@
+---
+import type { SerialChapterEntry, SerialEntry } from '../data/serials';
+import { getChapterHref, getSeriesHref } from '../data/serials';
+
+interface CopyShape {
+  chapterBack: string;
+  chapterLabel: string;
+  chapterWordCount: string;
+  nextChapter: string;
+  previousChapter: string;
+  readLatest: string;
+}
+
+interface Props {
+  basePath: string;
+  chapter: SerialChapterEntry;
+  copy: CopyShape;
+  nextChapter?: SerialChapterEntry;
+  previousChapter?: SerialChapterEntry;
+  serial: SerialEntry;
+  Content: any;
+}
+
+const { basePath, chapter, copy, nextChapter, previousChapter, serial, Content } = Astro.props;
+const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
+---
+
+<div class="page-shell serial-reader-shell">
+  <div class="serial-reader-shell__crumbs">
+    <a class="text-link" href={seriesHref}>{copy.chapterBack}</a>
+    <span>/</span>
+    <span>{serial.data.title}</span>
+  </div>
+
+  <header class="serial-reader-shell__header">
+    <p class="station-kicker">{copy.chapterLabel} {chapter.data.chapterNumber}</p>
+    <h1>{chapter.data.title}</h1>
+    <div class="serial-reader-shell__meta">
+      {chapter.data.publishedAt && (
+        <time datetime={chapter.data.publishedAt.toISOString()}>
+          {chapter.data.publishedAt.toLocaleDateString(chapter.data.language)}
+        </time>
+      )}
+      {chapter.data.wordCount && <span>{chapter.data.wordCount} {copy.chapterWordCount}</span>}
+    </div>
+    <p>{chapter.data.excerpt}</p>
+  </header>
+
+  <article class="serial-prose serial-reader-shell__body">
+    <Content />
+  </article>
+
+  <footer class="serial-reader-shell__footer">
+    <div class="button-row">
+      {previousChapter ? (
+        <a class="button button-secondary" href={getChapterHref(basePath, serial.data.seriesSlug, previousChapter.data.chapterSlug)}>{copy.previousChapter}</a>
+      ) : (
+        <a class="button button-secondary" href={seriesHref}>{copy.chapterBack}</a>
+      )}
+      {nextChapter ? (
+        <a class="button button-primary" href={getChapterHref(basePath, serial.data.seriesSlug, nextChapter.data.chapterSlug)}>{copy.nextChapter}</a>
+      ) : (
+        <a class="button button-primary" href={seriesHref}>{copy.readLatest}</a>
+      )}
+    </div>
+  </footer>
+</div>

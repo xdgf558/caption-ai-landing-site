@@ -1,0 +1,98 @@
+---
+import type { SerialChapterEntry, SerialEntry, SiteLocale } from '../data/serials';
+import { getChapterHref, getPriceModeLabel, getSeriesHref, getSerialStatusLabel } from '../data/serials';
+import SerialChapterList from './SerialChapterList.astro';
+
+interface CopyShape {
+  accessLabel: string;
+  backHome: string;
+  backShelf: string;
+  chapterEmpty: string;
+  chapterEyebrow: string;
+  chapterLabel: string;
+  chapterTitle: string;
+  chapterWordCount: string;
+  freeLabel: string;
+  latestFallback: string;
+  latestLabel: string;
+  openSeries: string;
+  readChapter: string;
+  readLatest: string;
+  scheduleLabel: string;
+  seriesCtaNote: string;
+  statusLabel: string;
+  synopsisEyebrow: string;
+  synopsisTitle: string;
+}
+
+interface Props {
+  basePath: string;
+  chapterContent: SerialChapterEntry[];
+  copy: CopyShape;
+  homePath: string;
+  latestChapter?: SerialChapterEntry;
+  locale: SiteLocale;
+  serial: SerialEntry;
+  Content: any;
+}
+
+const { basePath, chapterContent, copy, homePath, latestChapter, locale, serial, Content } = Astro.props;
+const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
+---
+
+<section class="works-hero serial-detail-hero">
+  <p class="station-kicker">{copy.statusLabel}</p>
+  <h1>{serial.data.title}</h1>
+  <p>{serial.data.tagline}</p>
+  <div class="serial-detail-hero__meta">
+    <span class="paper-stamp">{getSerialStatusLabel(serial.data.status, locale)}</span>
+    <span>{copy.accessLabel}: {getPriceModeLabel(serial.data.priceMode, locale)}</span>
+    <span>{copy.freeLabel}: {serial.data.freeChapters}</span>
+  </div>
+  <div class="button-row">
+    {latestChapter ? (
+      <a class="button button-primary" href={getChapterHref(basePath, serial.data.seriesSlug, latestChapter.data.chapterSlug)}>{copy.readLatest}</a>
+    ) : (
+      <a class="button button-primary" href={basePath}>{copy.backShelf}</a>
+    )}
+    <a class="button button-secondary" href={homePath}>{copy.backHome}</a>
+  </div>
+  <p class="fine-print">{serial.data.availabilityNote ?? copy.seriesCtaNote}</p>
+</section>
+
+<section class="station-section serial-detail-grid">
+  <div class="serial-detail-card">
+    <p class="station-kicker">{copy.synopsisEyebrow}</p>
+    <h2>{copy.synopsisTitle}</h2>
+    <div class="serial-prose">
+      <Content />
+    </div>
+  </div>
+
+  <div class="serial-detail-card serial-detail-card--meta">
+    <div>
+      <span>{copy.scheduleLabel}</span>
+      <strong>{serial.data.updateSchedule ?? '-'}</strong>
+    </div>
+    <div>
+      <span>{copy.latestLabel}</span>
+      <strong>
+        {latestChapter
+          ? `${latestChapter.data.chapterNumber}. ${latestChapter.data.title}`
+          : copy.latestFallback}
+      </strong>
+    </div>
+    <div>
+      <span>{copy.accessLabel}</span>
+      <strong>{getPriceModeLabel(serial.data.priceMode, locale)}</strong>
+    </div>
+  </div>
+</section>
+
+<section class="station-section">
+  <div class="station-section__heading">
+    <p class="station-kicker">{copy.chapterEyebrow}</p>
+    <h2>{copy.chapterTitle}</h2>
+  </div>
+  <SerialChapterList chapters={chapterContent} copy={copy} basePath={basePath} seriesSlug={serial.data.seriesSlug} />
+</section>

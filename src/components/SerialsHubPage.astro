@@ -1,0 +1,125 @@
+---
+import type { SerialChapterEntry, SerialEntry, SiteLocale } from '../data/serials';
+import { getChapterHref, getPriceModeLabel, getSeriesHref, getSerialStatusLabel } from '../data/serials';
+import SerialCard from './SerialCard.astro';
+
+interface CopyShape {
+  accessLabel: string;
+  description: string;
+  eyebrow: string;
+  featuredEmpty: string;
+  featuredEyebrow: string;
+  featuredTitle: string;
+  freeLabel: string;
+  heroDescription: string;
+  heroNote: string;
+  heroPrimary: string;
+  heroSecondary: string;
+  heroTitle: string;
+  latestFallback: string;
+  latestLabel: string;
+  openSeries: string;
+  readLatest: string;
+  scheduleLabel: string;
+  shelfEmpty: string;
+  shelfEyebrow: string;
+  shelfTitle: string;
+  statusLabel: string;
+}
+
+interface Props {
+  basePath: string;
+  copy: CopyShape;
+  featuredLatestChapter?: SerialChapterEntry;
+  featuredSerial?: SerialEntry;
+  locale: SiteLocale;
+  serials: SerialEntry[];
+}
+
+const { basePath, copy, featuredLatestChapter, featuredSerial, locale, serials } = Astro.props;
+---
+
+<section class="works-hero serials-hero">
+  <p class="station-kicker">{copy.eyebrow}</p>
+  <h1>{copy.heroTitle}</h1>
+  <p>{copy.heroDescription}</p>
+  <p class="fine-print">{copy.heroNote}</p>
+  <div class="button-row">
+    {featuredSerial ? (
+      <a class="button button-primary" href={getSeriesHref(basePath, featuredSerial.data.seriesSlug)}>{copy.heroPrimary}</a>
+    ) : (
+      <a class="button button-primary" href="#serial-shelf">{copy.heroSecondary}</a>
+    )}
+    <a class="button button-secondary" href="#serial-shelf">{copy.heroSecondary}</a>
+  </div>
+</section>
+
+<section class="station-section">
+  <div class="station-section__heading">
+    <p class="station-kicker">{copy.featuredEyebrow}</p>
+    <h2>{copy.featuredTitle}</h2>
+  </div>
+  {featuredSerial ? (
+    <article class="serial-feature-card">
+      <div class="serial-feature-card__copy">
+        <div class="serial-feature-card__meta">
+          <span class="paper-stamp">{getSerialStatusLabel(featuredSerial.data.status, locale)}</span>
+          <span>{copy.accessLabel}: {getPriceModeLabel(featuredSerial.data.priceMode, locale)}</span>
+        </div>
+        <h2>{featuredSerial.data.title}</h2>
+        <p>{featuredSerial.data.description}</p>
+        <div class="serial-feature-card__facts">
+          <div>
+            <span>{copy.scheduleLabel}</span>
+            <strong>{featuredSerial.data.updateSchedule ?? '-'}</strong>
+          </div>
+          <div>
+            <span>{copy.freeLabel}</span>
+            <strong>{featuredSerial.data.freeChapters}</strong>
+          </div>
+          <div>
+            <span>{copy.latestLabel}</span>
+            <strong>
+              {featuredLatestChapter
+                ? `${featuredLatestChapter.data.chapterNumber}. ${featuredLatestChapter.data.title}`
+                : copy.latestFallback}
+            </strong>
+          </div>
+        </div>
+        <div class="button-row">
+          <a class="button button-primary" href={getSeriesHref(basePath, featuredSerial.data.seriesSlug)}>{copy.openSeries}</a>
+          {featuredLatestChapter && (
+            <a
+              class="button button-secondary"
+              href={getChapterHref(basePath, featuredSerial.data.seriesSlug, featuredLatestChapter.data.chapterSlug)}
+            >
+              {copy.readLatest}
+            </a>
+          )}
+        </div>
+      </div>
+      <div class="serial-feature-card__aside">
+        <div class="serial-feature-card__stamp">SC</div>
+        <p>{featuredSerial.data.tagline}</p>
+      </div>
+    </article>
+  ) : (
+    <p class="empty-state">{copy.featuredEmpty}</p>
+  )}
+</section>
+
+<section id="serial-shelf" class="station-section">
+  <div class="station-section__heading">
+    <p class="station-kicker">{copy.shelfEyebrow}</p>
+    <h2>{copy.shelfTitle}</h2>
+  </div>
+  {serials.length > 0 ? (
+    <div class="serial-card-grid">
+      {serials.map((serial) => (
+        <SerialCard serial={serial} locale={locale} basePath={basePath} copy={copy} />
+      ))}
+    </div>
+  ) : (
+    <p class="empty-state">{copy.shelfEmpty}</p>
+  )}
+</section>
