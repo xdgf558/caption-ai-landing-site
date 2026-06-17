@@ -1,6 +1,6 @@
 ---
 import type { SerialChapterEntry, SerialEntry, SiteLocale } from '../data/serials';
-import { formatChapterNumber, getChapterHref, getPriceModeLabel, getSerialStatusLabel } from '../data/serials';
+import { formatChapterNumber, getChapterHref, getPriceModeLabel, getSerialStatusLabel, getSeriesHref } from '../data/serials';
 import SerialChapterList from './SerialChapterList.astro';
 
 interface CopyShape {
@@ -42,6 +42,53 @@ interface Props {
 
 const { basePath, chapterContent, copy, firstChapter, latestChapter, locale, serial, Content } = Astro.props;
 const coverText = serial.data.coverLabel ?? serial.data.title;
+const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
+const tipAmounts = serial.data.tipAmounts?.length ? serial.data.tipAmounts : [3, 5, 10];
+const tipCurrency = serial.data.tipCurrency || 'USD';
+const formatPaymentAmount = (amount: number, currency: string) =>
+  new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+const supportCopy = {
+  en: {
+    eyebrow: 'Support',
+    title: 'Support this serial',
+    body: 'Send a small tip through NOWPayments. Tips help keep the serial running, but do not unlock paid chapters.',
+    button: 'Tip',
+    working: 'Creating payment link...',
+    ready: 'Opening NOWPayments...',
+    disabled: 'Checkout is not configured yet.',
+    failed: 'Could not create the payment link.'
+  },
+  ja: {
+    eyebrow: 'サポート',
+    title: 'この連載を応援する',
+    body: 'NOWPayments で小さな支援を送れます。打賞は連載継続の応援で、有料章の解放とは別扱いです。',
+    button: '支援',
+    working: '支払いリンクを作成しています...',
+    ready: 'NOWPayments を開いています...',
+    disabled: '支払い設定はまだ有効ではありません。',
+    failed: '支払いリンクを作成できませんでした。'
+  },
+  'zh-Hant': {
+    eyebrow: '支持',
+    title: '支持這部連載',
+    body: '可以透過 NOWPayments 給一筆小額打賞。打賞用來支持連載繼續寫下去，不等同於解鎖付費章節。',
+    button: '打賞',
+    working: '正在建立支付連結...',
+    ready: '正在打開 NOWPayments...',
+    disabled: '支付通道尚未配置完成。',
+    failed: '支付連結建立失敗。'
+  },
+  'zh-Hans': {
+    eyebrow: '支持',
+    title: '支持这部连载',
+    body: '可以通过 NOWPayments 给一笔小额打赏。打赏用于支持连载继续写下去，不等同于解锁付费章节。',
+    button: '打赏',
+    working: '正在建立支付链接...',
+    ready: '正在打开 NOWPayments...',
+    disabled: '支付通道尚未配置完成。',
+    failed: '支付链接建立失败。'
+  }
+}[locale];
 ---
 
 <section class="works-hero serial-detail-hero">
@@ -121,6 +168,29 @@ const coverText = serial.data.coverLabel ?? serial.data.title;
   </div>
 </section>
 
+<section
+  class="station-section serial-support-section"
+  data-serial-tip-panel
+  data-series-slug={serial.data.seriesSlug}
+  data-currency={tipCurrency}
+  data-locale={locale}
+  data-return-path={seriesHref}
+>
+  <div class="station-section__heading">
+    <p class="station-kicker">{supportCopy.eyebrow}</p>
+    <h2>{supportCopy.title}</h2>
+    <p>{supportCopy.body}</p>
+  </div>
+  <div class="serial-tip-actions">
+    {tipAmounts.map((amount) => (
+      <button class="button button-secondary" type="button" data-tip-amount={amount}>
+        {supportCopy.button} {formatPaymentAmount(amount, tipCurrency)}
+      </button>
+    ))}
+  </div>
+  <div class="reader-status" data-serial-tip-status role="status" aria-live="polite"></div>
+</section>
+
 <section class="station-section">
   <div class="station-section__heading">
     <p class="station-kicker">{copy.chapterEyebrow}</p>
@@ -128,3 +198,55 @@ const coverText = serial.data.coverLabel ?? serial.data.title;
   </div>
   <SerialChapterList chapters={chapterContent} copy={copy} basePath={basePath} seriesSlug={serial.data.seriesSlug} locale={locale} />
 </section>
+
+<script define:vars={{ supportCopy }}>
+  const tipPanel = document.querySelector('[data-serial-tip-panel]');
+  const tipStatus = tipPanel?.querySelector('[data-serial-tip-status]');
+  const tipButtons = tipPanel ? Array.from(tipPanel.querySelectorAll('[data-tip-amount]')) : [];
+
+  const setTipStatus = (message, tone = 'neutral') => {
+    if (!tipStatus) return;
+    tipStatus.textContent = message;
+    tipStatus.dataset.tone = tone;
+  };
+
+  const setTipButtonsDisabled = (disabled) => {
+    tipButtons.forEach((button) => {
+      button.disabled = disabled;
+    });
+  };
+
+  tipButtons.forEach((button) => {
+    button.addEventListener('click', async () => {
+      if (!tipPanel) return;
+      setTipButtonsDisabled(true);
+      setTipStatus(supportCopy.working, 'neutral');
+
+      try {
+        const response = await fetch('/api/novels/payments/checkout', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            orderType: 'tip',
+            seriesSlug: tipPanel.dataset.seriesSlug,
+            amount: button.dataset.tipAmount,
+            priceCurrency: tipPanel.dataset.currency,
+            locale: tipPanel.dataset.locale,
+            returnPath: tipPanel.dataset.returnPath
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          if (data.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(supportCopy.disabled);
+          throw new Error(data.message || supportCopy.failed);
+        }
+        if (!data.paymentUrl) throw new Error(supportCopy.failed);
+        setTipStatus(supportCopy.ready, 'success');
+        window.location.href = data.paymentUrl;
+      } catch (error) {
+        setTipStatus(error.message || supportCopy.failed, 'error');
+        setTipButtonsDisabled(false);
+      }
+    });
+  });
+</script>

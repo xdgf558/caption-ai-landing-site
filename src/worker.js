@@ -155,6 +155,7 @@ const nowPaymentsWebhookPath = '/api/novels/webhooks/nowpayments';
 const nowPaymentsSupportedCurrencies = ['USDTTRC20', 'USDTERC20', 'USDC', 'BTC', 'ETH'];
 const novelOrderStatuses = ['draft', 'waiting', 'confirming', 'confirmed', 'finished', 'failed', 'expired', 'refunded', 'unknown'];
 const novelPaymentGrantStatuses = ['confirmed', 'finished'];
+const novelCheckoutPath = '/api/novels/payments/checkout';
 
 const timingSafeEqualString = (left, right) => {
   const leftValue = String(left || '');
@@ -228,6 +229,41 @@ const mapNowPaymentsStatus = (value) => {
 };
 
 const normalizePaymentValue = (value, maxLength = 80) => cleanText(value, maxLength);
+
+const normalizePriceAmount = (value, fallback = null) => {
+  const amount = Number.parseFloat(String(value ?? '').trim());
+  if (!Number.isFinite(amount) || amount <= 0) return fallback;
+  return Math.round(amount * 100) / 100;
+};
+
+const normalizeFiatCurrency = (value, fallback = 'USD') => {
+  const currency = cleanText(value, 12).toUpperCase();
+  return currency === 'USD' ? 'USD' : fallback;
+};
+
+const normalizePayCurrency = (value) => {
+  const currency = cleanText(value, 24).toUpperCase();
+  return nowPaymentsSupportedCurrencies.includes(currency) ? currency : '';
+};
+
+const amountToStorage = (amount) => {
+  const number = normalizePriceAmount(amount, 0);
+  return number.toFixed(2);
+};
+
+const paymentReturnUrl = (request, path, state, orderToken) => {
+  const url = new URL(cleanRedirectPath(path, '/library/'), new URL(request.url).origin);
+  url.searchParams.set('payment', state);
+  url.searchParams.set('order', orderToken);
+  return url.toString();
+};
+
+const getCheckoutPrices = (env) => ({
+  chapter: normalizePriceAmount(env.NOVEL_CHAPTER_PRICE_USD, 1.99),
+  supporter: normalizePriceAmount(env.NOVEL_SUPPORTER_PRICE_USD, 4.99),
+  tipMin: normalizePriceAmount(env.NOVEL_TIP_MIN_USD, 1),
+  tipMax: normalizePriceAmount(env.NOVEL_TIP_MAX_USD, 500)
+});
 
 const extractNowPaymentsEvent = (payload) => {
   const providerStatus = normalizePaymentValue(payload.payment_status || payload.status, 80).toLowerCase();
@@ -1295,6 +1331,7 @@ const handleNovelLibrary = async (request, env) => {
 
 const handleNovelPaymentsStatus = async (request, env) => {
   const config = getNowPaymentsConfig(env, request);
+  const checkoutEnabled = config.hasApiKey && config.hasIpnSecret;
   return json({
     ok: true,
     provider: nowPaymentsProvider,
@@ -1305,12 +1342,282 @@ const handleNovelPaymentsStatus = async (request, env) => {
     },
     callbackPath: nowPaymentsWebhookPath,
     callbackUrl: config.callbackUrl,
-    publicCheckoutEnabled: false,
+    checkoutPath: novelCheckoutPath,
+    publicCheckoutEnabled: checkoutEnabled,
     supportedCurrencies: nowPaymentsSupportedCurrencies,
     orderStatuses: novelOrderStatuses,
     grantStatuses: novelPaymentGrantStatuses,
-    note: 'Stage 5A exposes payment readiness only. Public checkout and automatic entitlement grants are staged separately.'
+    note: checkoutEnabled
+      ? 'Stage 5B checkout can create NOWPayments invoices. Automatic entitlement grants are staged separately.'
+      : 'Checkout stays disabled until NOWPAYMENTS_API_KEY and NOWPAYMENTS_IPN_SECRET are configured.'
   });
+};
+
+const createNowPaymentsInvoice = async (env, request, invoice) => {
+  const config = getNowPaymentsConfig(env, request);
+  const response = await fetch(`${config.apiBase}/invoice`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': String(env.NOWPAYMENTS_API_KEY || '').trim()
+    },
+    body: JSON.stringify(invoice)
+  });
+
+  const text = await response.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { message: text };
+  }
+
+  if (!response.ok) {
+    const message = cleanText(data.message || data.error || 'NOWPayments invoice creation failed.', 300);
+    throw new Error(message || 'NOWPayments invoice creation failed.');
+  }
+
+  return data;
+};
+
+const normalizeCheckoutPayload = (payload, session, env) => {
+  const rawOrderType = cleanText(payload.orderType, 40).toLowerCase();
+  const orderType = rawOrderType === 'tip' ? 'tip' : rawOrderType === 'supporter' ? 'supporter' : 'chapter';
+  const seriesSlug = cleanSlug(payload.seriesSlug);
+  const chapterSlug = orderType === 'chapter' ? cleanSlug(payload.chapterSlug) : '';
+  const prices = getCheckoutPrices(env);
+  const priceCurrency = normalizeFiatCurrency(payload.priceCurrency, 'USD');
+  const payCurrency = normalizePayCurrency(payload.payCurrency);
+  const returnPath = cleanRedirectPath(payload.returnPath, seriesSlug ? `/zh-hant/works/${seriesSlug}/` : '/library/');
+
+  if (!seriesSlug) {
+    throw new Error('seriesSlug is required.');
+  }
+
+  if (orderType === 'chapter' && !chapterSlug) {
+    throw new Error('chapterSlug is required for chapter checkout.');
+  }
+
+  if (orderType !== 'tip' && !session) {
+    const error = new Error('Please sign in before unlocking paid reading.');
+    error.code = 'SIGN_IN_REQUIRED';
+    throw error;
+  }
+
+  let priceAmount = orderType === 'chapter' ? prices.chapter : prices.supporter;
+  if (orderType === 'tip') {
+    priceAmount = normalizePriceAmount(payload.amount, 5);
+    priceAmount = Math.min(Math.max(priceAmount, prices.tipMin), prices.tipMax);
+  }
+
+  const entitlementScope = orderType === 'chapter' ? 'chapter' : orderType === 'supporter' ? 'series' : '';
+  const entitlementAccessLevel = orderType === 'chapter' ? 'paid' : orderType === 'supporter' ? 'supporter' : '';
+  const description =
+    orderType === 'tip'
+      ? `Station Cat novel tip: ${seriesSlug}`
+      : orderType === 'supporter'
+        ? `Station Cat supporter unlock: ${seriesSlug}`
+        : `Station Cat chapter unlock: ${seriesSlug}/${chapterSlug}`;
+
+  return {
+    chapterSlug,
+    description,
+    entitlementAccessLevel,
+    entitlementScope,
+    locale: cleanText(payload.locale, 20),
+    message: cleanText(payload.message, 500),
+    orderType,
+    payCurrency,
+    priceAmount,
+    priceCurrency,
+    returnPath,
+    seriesSlug
+  };
+};
+
+const insertNovelCheckoutOrder = async (db, session, checkout, orderToken) =>
+  db
+    .prepare(
+      `INSERT INTO novel_orders (
+        order_token, account_id, provider, provider_order_id, order_type,
+        series_slug, chapter_slug, entitlement_scope, entitlement_access_level,
+        price_amount, price_currency, pay_currency, status, customer_email, metadata_json
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      RETURNING *`
+    )
+    .bind(
+      orderToken,
+      session?.account_id || null,
+      nowPaymentsProvider,
+      orderToken,
+      checkout.orderType,
+      checkout.seriesSlug,
+      checkout.chapterSlug,
+      checkout.entitlementScope,
+      checkout.entitlementAccessLevel,
+      amountToStorage(checkout.priceAmount),
+      checkout.priceCurrency,
+      checkout.payCurrency,
+      'draft',
+      session?.email || '',
+      JSON.stringify({
+        locale: checkout.locale,
+        message: checkout.message,
+        returnPath: checkout.returnPath
+      })
+    )
+    .first();
+
+const insertNovelTipDraft = async (db, session, order, checkout) => {
+  if (checkout.orderType !== 'tip') return null;
+  return db
+    .prepare(
+      `INSERT INTO novel_tips (
+        order_id, account_id, provider, provider_order_id, series_slug,
+        amount, currency, message, status, metadata_json
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      RETURNING *`
+    )
+    .bind(
+      order.id,
+      session?.account_id || null,
+      nowPaymentsProvider,
+      order.order_token,
+      checkout.seriesSlug,
+      amountToStorage(checkout.priceAmount),
+      checkout.priceCurrency,
+      checkout.message,
+      'draft',
+      JSON.stringify({ locale: checkout.locale, returnPath: checkout.returnPath })
+    )
+    .first();
+};
+
+const updateNovelCheckoutOrder = async (db, orderId, invoice, status = 'waiting') =>
+  db
+    .prepare(
+      `UPDATE novel_orders
+       SET provider_invoice_id = CASE WHEN ? <> '' THEN ? ELSE provider_invoice_id END,
+           provider_order_id = CASE WHEN ? <> '' THEN ? ELSE provider_order_id END,
+           payment_url = CASE WHEN ? <> '' THEN ? ELSE payment_url END,
+           status = ?,
+           provider_status = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?
+       RETURNING *`
+    )
+    .bind(
+      normalizePaymentValue(invoice.id, 120),
+      normalizePaymentValue(invoice.id, 120),
+      normalizePaymentValue(invoice.order_id, 200),
+      normalizePaymentValue(invoice.order_id, 200),
+      normalizePaymentValue(invoice.invoice_url || invoice.payment_url, 500),
+      normalizePaymentValue(invoice.invoice_url || invoice.payment_url, 500),
+      status,
+      normalizePaymentValue(invoice.payment_status || invoice.status || status, 80),
+      orderId
+    )
+    .first();
+
+const updateNovelTipFromOrder = async (db, order, status = order.status) =>
+  db
+    .prepare(
+      `UPDATE novel_tips
+       SET provider_order_id = ?,
+           provider_payment_id = ?,
+           status = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE order_id = ?`
+    )
+    .bind(order.provider_order_id, order.provider_payment_id, status, order.id)
+    .run();
+
+const markNovelCheckoutOrderFailed = async (db, orderId, message) =>
+  db
+    .prepare(
+      `UPDATE novel_orders
+       SET status = 'failed',
+           provider_status = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?
+       RETURNING *`
+    )
+    .bind(cleanText(message, 200) || 'invoice_failed', orderId)
+    .first();
+
+const handleNovelCheckout = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const config = getNowPaymentsConfig(env, request);
+  if (!config.hasApiKey || !config.hasIpnSecret) {
+    return json(
+      {
+        ok: false,
+        code: 'PAYMENT_PROVIDER_NOT_CONFIGURED',
+        message: 'NOWPayments checkout is not configured yet.'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const session = await getReaderFromSession(request, env);
+  let checkout;
+  try {
+    checkout = normalizeCheckoutPayload(payload, session, env);
+  } catch (error) {
+    const status = error.code === 'SIGN_IN_REQUIRED' ? 401 : 400;
+    return json({ ok: false, code: error.code || 'INVALID_CHECKOUT', message: error.message }, { status });
+  }
+
+  const orderToken = `sc-${randomToken(18).toLowerCase()}`;
+  const order = await insertNovelCheckoutOrder(db, session, checkout, orderToken);
+  await insertNovelTipDraft(db, session, order, checkout);
+
+  try {
+    const invoice = await createNowPaymentsInvoice(env, request, {
+      price_amount: checkout.priceAmount,
+      price_currency: checkout.priceCurrency,
+      order_id: orderToken,
+      order_description: checkout.description,
+      ipn_callback_url: config.callbackUrl,
+      success_url: paymentReturnUrl(request, checkout.returnPath, 'success', orderToken),
+      cancel_url: paymentReturnUrl(request, checkout.returnPath, 'cancelled', orderToken),
+      ...(checkout.payCurrency ? { pay_currency: checkout.payCurrency } : {})
+    });
+
+    const updatedOrder = await updateNovelCheckoutOrder(db, order.id, invoice, 'waiting');
+    if (checkout.orderType === 'tip') await updateNovelTipFromOrder(db, updatedOrder, 'waiting');
+
+    return json({
+      ok: true,
+      provider: nowPaymentsProvider,
+      checkoutEnabled: true,
+      paymentUrl: updatedOrder.payment_url,
+      order: novelOrderToJson(updatedOrder)
+    });
+  } catch (error) {
+    const failedOrder = await markNovelCheckoutOrderFailed(db, order.id, error.message);
+    if (checkout.orderType === 'tip') await updateNovelTipFromOrder(db, failedOrder, 'failed');
+    return json(
+      {
+        ok: false,
+        code: 'NOWPAYMENTS_INVOICE_FAILED',
+        message: error.message || 'NOWPayments invoice creation failed.',
+        order: novelOrderToJson(failedOrder)
+      },
+      { status: 502 }
+    );
+  }
 };
 
 const findNovelOrderByNowPaymentsEvent = async (db, event) => {
@@ -1443,6 +1750,9 @@ const handleNowPaymentsWebhook = async (request, env) => {
   let updatedOrder = null;
   if (order) {
     updatedOrder = await updateNovelOrderFromNowPaymentsEvent(db, order.id, event);
+    if (updatedOrder.order_type === 'tip') {
+      await updateNovelTipFromOrder(db, updatedOrder, event.status);
+    }
   }
 
   return json({
@@ -2225,6 +2535,10 @@ export default {
 
     if (request.method === 'GET' && url.pathname === '/api/novels/payments/status') {
       return handleNovelPaymentsStatus(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === novelCheckoutPath) {
+      return handleNovelCheckout(request, env);
     }
 
     if (request.method === 'POST' && url.pathname === nowPaymentsWebhookPath) {
