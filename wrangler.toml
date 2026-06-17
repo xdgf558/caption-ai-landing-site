@@ -4,6 +4,11 @@ main = "src/worker.js"
 workers_dev = false
 preview_urls = false
 
+[vars]
+ADMIN_ALLOWED_EMAILS = "brodstem@protonmail.com"
+CF_ACCESS_TEAM_DOMAIN = "misty-limit-82d5.cloudflareaccess.com"
+CF_ACCESS_AUD = "9b7bb7ce53bf630feea9b85e8911b34fa4647c7146b6c81d9958695c2c5fea73"
+
 [assets]
 directory = "./dist"
 binding = "ASSETS"
