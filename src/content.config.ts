@@ -34,12 +34,22 @@ const serials = defineCollection({
     featured: z.boolean().default(false),
     priceMode: z.enum(['free', 'tip-optional', 'chapter-paid', 'volume-paid', 'member']).default('free'),
     freeChapters: z.number().default(0),
+    tipsEnabled: z.boolean().default(true),
     tipAmounts: z.array(z.number()).default([3, 5, 10]),
     tipCurrency: z.string().default('USD'),
     chapterPriceAmount: z.number().optional(),
     chapterPriceCurrency: z.string().default('USD'),
     supporterPriceAmount: z.number().optional(),
     supporterPriceCurrency: z.string().default('USD'),
+    bundlePurchasesEnabled: z.boolean().default(false),
+    chapterBundleDiscounts: z
+      .array(
+        z.object({
+          chapters: z.number(),
+          discountPercent: z.number()
+        })
+      )
+      .default([]),
     latestChapterSlug: z.string().optional(),
     latestChapterNumber: z.number().optional(),
     totalPlannedChapters: z.number().optional(),

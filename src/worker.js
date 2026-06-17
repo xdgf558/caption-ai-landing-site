@@ -1,3 +1,5 @@
+import { novelPaymentConfig } from './generated/novelPaymentConfig.js';
+
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
     ...init,
@@ -156,6 +158,7 @@ const nowPaymentsSupportedCurrencies = ['USDTTRC20', 'USDTERC20', 'USDC', 'BTC',
 const novelOrderStatuses = ['draft', 'waiting', 'confirming', 'confirmed', 'finished', 'failed', 'expired', 'refunded', 'unknown'];
 const novelPaymentGrantStatuses = ['confirmed', 'finished'];
 const novelCheckoutPath = '/api/novels/payments/checkout';
+const novelBundleOrderType = 'chapter-bundle';
 
 const timingSafeEqualString = (left, right) => {
   const leftValue = String(left || '');
@@ -264,6 +267,125 @@ const getCheckoutPrices = (env) => ({
   tipMin: normalizePriceAmount(env.NOVEL_TIP_MIN_USD, 1),
   tipMax: normalizePriceAmount(env.NOVEL_TIP_MAX_USD, 500)
 });
+
+const normalizePositiveInteger = (value, fallback = 0) => {
+  const number = Number.parseInt(String(value ?? '').trim(), 10);
+  return Number.isFinite(number) && number >= 0 ? number : fallback;
+};
+
+const normalizeBundleDiscounts = (discounts) =>
+  (Array.isArray(discounts) ? discounts : [])
+    .map((discount) => ({
+      chapters: normalizePositiveInteger(discount?.chapters, 0),
+      discountPercent: normalizePriceAmount(discount?.discountPercent, 0)
+    }))
+    .filter((discount) => discount.chapters > 1 && discount.discountPercent > 0 && discount.discountPercent < 100)
+    .sort((a, b) => a.chapters - b.chapters || a.discountPercent - b.discountPercent);
+
+const getSeriesPaymentSettings = (seriesSlug, env) => {
+  const defaults = getCheckoutPrices(env);
+  const settings = novelPaymentConfig?.series?.[seriesSlug];
+  if (!settings) {
+    return {
+      seriesSlug,
+      source: 'env-default',
+      tipsEnabled: true,
+      tipAmounts: [3, 5, 10],
+      tipCurrency: 'USD',
+      chapterPriceAmount: defaults.chapter,
+      chapterPriceCurrency: 'USD',
+      supporterPriceAmount: defaults.supporter,
+      supporterPriceCurrency: 'USD',
+      bundlePurchasesEnabled: false,
+      chapterBundleDiscounts: [],
+      chapters: []
+    };
+  }
+
+  const tipAmounts = (Array.isArray(settings.tipAmounts) ? settings.tipAmounts : [])
+    .map((amount) => normalizePriceAmount(amount, null))
+    .filter((amount) => amount && amount > 0);
+
+  return {
+    seriesSlug,
+    source: 'serial-config',
+    tipsEnabled: settings.tipsEnabled !== false,
+    tipAmounts: tipAmounts.length ? tipAmounts : [3, 5, 10],
+    tipCurrency: normalizeFiatCurrency(settings.tipCurrency, 'USD'),
+    chapterPriceAmount: normalizePriceAmount(settings.chapterPriceAmount, defaults.chapter),
+    chapterPriceCurrency: normalizeFiatCurrency(settings.chapterPriceCurrency, 'USD'),
+    supporterPriceAmount: normalizePriceAmount(settings.supporterPriceAmount, defaults.supporter),
+    supporterPriceCurrency: normalizeFiatCurrency(settings.supporterPriceCurrency, 'USD'),
+    bundlePurchasesEnabled: Boolean(settings.bundlePurchasesEnabled),
+    chapterBundleDiscounts: normalizeBundleDiscounts(settings.chapterBundleDiscounts),
+    chapters: (Array.isArray(settings.chapters) ? settings.chapters : [])
+      .map((chapter) => ({
+        chapterSlug: cleanSlug(chapter?.chapterSlug),
+        chapterNumber: normalizePositiveInteger(chapter?.chapterNumber, 0),
+        access: chapter?.access === 'supporter' ? 'supporter' : chapter?.access === 'paid' ? 'paid' : 'free',
+        status: chapter?.status === 'published' ? 'published' : chapter?.status === 'scheduled' ? 'scheduled' : 'draft'
+      }))
+      .filter((chapter) => chapter.chapterSlug)
+      .sort((a, b) => a.chapterNumber - b.chapterNumber || a.chapterSlug.localeCompare(b.chapterSlug))
+  };
+};
+
+const getConfiguredTipAmount = (settings, amount) => {
+  const requested = normalizePriceAmount(amount, null);
+  if (!requested) return settings.tipAmounts[0] || 5;
+  return settings.tipAmounts.find((tipAmount) => Math.abs(tipAmount - requested) < 0.001) || null;
+};
+
+const getBundleCheckoutDetails = (settings, payload, chapterSlug) => {
+  const bundleChapters = normalizePositiveInteger(payload.bundleChapters || payload.chapterCount, 0);
+  const rule = settings.chapterBundleDiscounts.find((discount) => discount.chapters === bundleChapters);
+  if (!settings.bundlePurchasesEnabled || !rule) {
+    const error = new Error('Bundle checkout is not enabled for this serial.');
+    error.code = 'BUNDLE_NOT_AVAILABLE';
+    throw error;
+  }
+
+  const paidChapters = settings.chapters.filter((chapter) => chapter.status === 'published' && chapter.access === 'paid');
+  const startIndex = paidChapters.findIndex((chapter) => chapter.chapterSlug === chapterSlug);
+  const bundleChapterSlugs =
+    startIndex >= 0 ? paidChapters.slice(startIndex, startIndex + rule.chapters).map((chapter) => chapter.chapterSlug) : [];
+  if (bundleChapterSlugs.length !== rule.chapters) {
+    const error = new Error('Not enough paid chapters are available for this bundle.');
+    error.code = 'BUNDLE_NOT_AVAILABLE';
+    throw error;
+  }
+
+  const requestedSlugs = Array.isArray(payload.chapterSlugs)
+    ? payload.chapterSlugs.map((slug) => cleanSlug(slug)).filter(Boolean)
+    : [];
+  if (requestedSlugs.length && requestedSlugs.join('|') !== bundleChapterSlugs.join('|')) {
+    const error = new Error('Bundle chapter list does not match the configured reading order.');
+    error.code = 'INVALID_BUNDLE_CHAPTERS';
+    throw error;
+  }
+
+  const unitPriceAmount = settings.chapterPriceAmount;
+  const subtotalAmount = Math.round(unitPriceAmount * rule.chapters * 100) / 100;
+  const priceAmount = Math.round(subtotalAmount * (100 - rule.discountPercent)) / 100;
+
+  return {
+    bundleChapterCount: rule.chapters,
+    bundleChapterSlugs,
+    bundleDiscountPercent: rule.discountPercent,
+    priceAmount: normalizePriceAmount(priceAmount, unitPriceAmount),
+    subtotalAmount,
+    unitPriceAmount
+  };
+};
+
+const parseOrderMetadata = (order) => {
+  try {
+    const metadata = JSON.parse(order?.metadata_json || '{}');
+    return metadata && typeof metadata === 'object' ? metadata : {};
+  } catch {
+    return {};
+  }
+};
 
 const extractNowPaymentsEvent = (payload) => {
   const providerStatus = normalizePaymentValue(payload.payment_status || payload.status, 80).toLowerCase();
@@ -1383,11 +1505,17 @@ const createNowPaymentsInvoice = async (env, request, invoice) => {
 
 const normalizeCheckoutPayload = (payload, session, env) => {
   const rawOrderType = cleanText(payload.orderType, 40).toLowerCase();
-  const orderType = rawOrderType === 'tip' ? 'tip' : rawOrderType === 'supporter' ? 'supporter' : 'chapter';
+  const orderType =
+    rawOrderType === 'tip'
+      ? 'tip'
+      : rawOrderType === 'supporter'
+        ? 'supporter'
+        : rawOrderType === novelBundleOrderType || rawOrderType === 'bundle'
+          ? novelBundleOrderType
+          : 'chapter';
   const seriesSlug = cleanSlug(payload.seriesSlug);
-  const chapterSlug = orderType === 'chapter' ? cleanSlug(payload.chapterSlug) : '';
+  const chapterSlug = orderType === 'chapter' || orderType === novelBundleOrderType ? cleanSlug(payload.chapterSlug) : '';
   const prices = getCheckoutPrices(env);
-  const priceCurrency = normalizeFiatCurrency(payload.priceCurrency, 'USD');
   const payCurrency = normalizePayCurrency(payload.payCurrency);
   const returnPath = cleanRedirectPath(payload.returnPath, seriesSlug ? `/zh-hant/works/${seriesSlug}/` : '/library/');
 
@@ -1395,7 +1523,7 @@ const normalizeCheckoutPayload = (payload, session, env) => {
     throw new Error('seriesSlug is required.');
   }
 
-  if (orderType === 'chapter' && !chapterSlug) {
+  if ((orderType === 'chapter' || orderType === novelBundleOrderType) && !chapterSlug) {
     throw new Error('chapterSlug is required for chapter checkout.');
   }
 
@@ -1405,22 +1533,54 @@ const normalizeCheckoutPayload = (payload, session, env) => {
     throw error;
   }
 
-  let priceAmount = orderType === 'chapter' ? prices.chapter : prices.supporter;
+  const settings = getSeriesPaymentSettings(seriesSlug, env);
+  let priceAmount = settings.chapterPriceAmount;
+  let priceCurrency = settings.chapterPriceCurrency;
+  let bundleDetails = null;
+
   if (orderType === 'tip') {
-    priceAmount = normalizePriceAmount(payload.amount, 5);
-    priceAmount = Math.min(Math.max(priceAmount, prices.tipMin), prices.tipMax);
+    if (!settings.tipsEnabled) {
+      const error = new Error('Tips are disabled for this serial.');
+      error.code = 'TIPS_DISABLED';
+      throw error;
+    }
+
+    priceAmount = getConfiguredTipAmount(settings, payload.amount);
+    if (!priceAmount) {
+      const error = new Error('Tip amount is not configured for this serial.');
+      error.code = 'TIP_AMOUNT_NOT_CONFIGURED';
+      throw error;
+    }
+    if (priceAmount < prices.tipMin || priceAmount > prices.tipMax) {
+      const error = new Error('Tip amount is outside the configured payment limits.');
+      error.code = 'TIP_AMOUNT_OUT_OF_RANGE';
+      throw error;
+    }
+    priceCurrency = settings.tipCurrency;
+  } else if (orderType === 'supporter') {
+    priceAmount = settings.supporterPriceAmount;
+    priceCurrency = settings.supporterPriceCurrency;
+  } else if (orderType === novelBundleOrderType) {
+    bundleDetails = getBundleCheckoutDetails(settings, payload, chapterSlug);
+    priceAmount = bundleDetails.priceAmount;
+    priceCurrency = settings.chapterPriceCurrency;
   }
 
-  const entitlementScope = orderType === 'chapter' ? 'chapter' : orderType === 'supporter' ? 'series' : '';
-  const entitlementAccessLevel = orderType === 'chapter' ? 'paid' : orderType === 'supporter' ? 'supporter' : '';
+  const entitlementScope =
+    orderType === 'chapter' || orderType === novelBundleOrderType ? 'chapter' : orderType === 'supporter' ? 'series' : '';
+  const entitlementAccessLevel =
+    orderType === 'chapter' || orderType === novelBundleOrderType ? 'paid' : orderType === 'supporter' ? 'supporter' : '';
   const description =
     orderType === 'tip'
       ? `Station Cat novel tip: ${seriesSlug}`
       : orderType === 'supporter'
         ? `Station Cat supporter unlock: ${seriesSlug}`
-        : `Station Cat chapter unlock: ${seriesSlug}/${chapterSlug}`;
+        : orderType === novelBundleOrderType
+          ? `Station Cat bundle unlock: ${seriesSlug}/${chapterSlug} (${bundleDetails.bundleChapterCount} chapters)`
+          : `Station Cat chapter unlock: ${seriesSlug}/${chapterSlug}`;
 
   return {
+    bundleDetails,
     chapterSlug,
     description,
     entitlementAccessLevel,
@@ -1431,6 +1591,7 @@ const normalizeCheckoutPayload = (payload, session, env) => {
     payCurrency,
     priceAmount,
     priceCurrency,
+    pricingSource: settings.source,
     returnPath,
     seriesSlug
   };
@@ -1463,8 +1624,14 @@ const insertNovelCheckoutOrder = async (db, session, checkout, orderToken) =>
       'draft',
       session?.email || '',
       JSON.stringify({
+        bundleChapterCount: checkout.bundleDetails?.bundleChapterCount || 0,
+        bundleChapterSlugs: checkout.bundleDetails?.bundleChapterSlugs || [],
+        bundleDiscountPercent: checkout.bundleDetails?.bundleDiscountPercent || 0,
         locale: checkout.locale,
         message: checkout.message,
+        pricingSource: checkout.pricingSource,
+        subtotalAmount: checkout.bundleDetails ? amountToStorage(checkout.bundleDetails.subtotalAmount) : '',
+        unitPriceAmount: checkout.bundleDetails ? amountToStorage(checkout.bundleDetails.unitPriceAmount) : '',
         returnPath: checkout.returnPath
       })
     )
@@ -1717,30 +1884,8 @@ const updateNovelOrderFromNowPaymentsEvent = async (db, orderId, event) =>
     )
     .first();
 
-const grantNovelEntitlementFromOrder = async (db, order) => {
-  if (!order) return { granted: false, reason: 'order_not_found' };
-  if (order.order_type === 'tip') return { granted: false, reason: 'tip_order' };
-  if (!novelPaymentGrantStatuses.includes(order.status)) {
-    return { granted: false, reason: 'status_not_grantable' };
-  }
-  if (!order.account_id) return { granted: false, reason: 'missing_reader_account' };
-
-  const seriesSlug = cleanSlug(order.series_slug);
-  const scope = order.entitlement_scope === 'series' ? 'series' : 'chapter';
-  const chapterSlug = scope === 'chapter' ? cleanSlug(order.chapter_slug) : '';
-  const accessLevel =
-    order.entitlement_access_level === 'supporter'
-      ? 'supporter'
-      : order.entitlement_access_level === 'all'
-        ? 'all'
-        : 'paid';
-
-  if (!seriesSlug) return { granted: false, reason: 'missing_series_slug' };
-  if (scope === 'chapter' && !chapterSlug) return { granted: false, reason: 'missing_chapter_slug' };
-
-  const sourceRef = order.order_token || order.provider_payment_id || order.provider_order_id || `order-${order.id}`;
-  const note = `Automatically granted from NOWPayments ${order.status} order ${sourceRef}.`;
-  const entitlement = await db
+const upsertNovelEntitlement = async (db, data) =>
+  db
     .prepare(
       `INSERT INTO novel_entitlements (
         account_id, series_slug, chapter_slug, scope, access_level, source, source_ref,
@@ -1765,26 +1910,77 @@ const grantNovelEntitlementFromOrder = async (db, order) => {
       RETURNING *`
     )
     .bind(
-      order.account_id,
-      seriesSlug,
-      chapterSlug,
-      scope,
-      accessLevel,
+      data.accountId,
+      data.seriesSlug,
+      data.chapterSlug,
+      data.scope,
+      data.accessLevel,
       nowPaymentsProvider,
-      sourceRef,
-      note,
+      data.sourceRef,
+      data.note,
       nowPaymentsProvider
     )
     .first();
 
+const grantNovelEntitlementFromOrder = async (db, order) => {
+  if (!order) return { granted: false, reason: 'order_not_found' };
+  if (order.order_type === 'tip') return { granted: false, reason: 'tip_order' };
+  if (!novelPaymentGrantStatuses.includes(order.status)) {
+    return { granted: false, reason: 'status_not_grantable' };
+  }
+  if (!order.account_id) return { granted: false, reason: 'missing_reader_account' };
+
+  const seriesSlug = cleanSlug(order.series_slug);
+  const scope = order.entitlement_scope === 'series' ? 'series' : 'chapter';
+  const chapterSlug = scope === 'chapter' ? cleanSlug(order.chapter_slug) : '';
+  const accessLevel =
+    order.entitlement_access_level === 'supporter'
+      ? 'supporter'
+      : order.entitlement_access_level === 'all'
+        ? 'all'
+        : 'paid';
+
+  if (!seriesSlug) return { granted: false, reason: 'missing_series_slug' };
+  if (scope === 'chapter' && !chapterSlug) return { granted: false, reason: 'missing_chapter_slug' };
+
+  const sourceRef = order.order_token || order.provider_payment_id || order.provider_order_id || `order-${order.id}`;
+  const note = `Automatically granted from NOWPayments ${order.status} order ${sourceRef}.`;
+  const metadata = parseOrderMetadata(order);
+  const bundleChapterSlugs =
+    order.order_type === novelBundleOrderType && Array.isArray(metadata.bundleChapterSlugs)
+      ? metadata.bundleChapterSlugs.map((slug) => cleanSlug(slug)).filter(Boolean)
+      : [];
+  const grantChapterSlugs = bundleChapterSlugs.length ? Array.from(new Set(bundleChapterSlugs)) : [chapterSlug];
+  const entitlements = [];
+
+  for (const targetChapterSlug of grantChapterSlugs) {
+    if (scope === 'chapter' && !targetChapterSlug) continue;
+    entitlements.push(
+      await upsertNovelEntitlement(db, {
+        accountId: order.account_id,
+        seriesSlug,
+        chapterSlug: scope === 'chapter' ? targetChapterSlug : '',
+        scope,
+        accessLevel,
+        sourceRef,
+        note
+      })
+    );
+  }
+
+  if (!entitlements.length) {
+    return { granted: false, reason: 'missing_chapter_slug' };
+  }
+
   return {
     accessLevel,
-    entitlement,
+    entitlement: entitlements[0],
+    entitlements,
     granted: true,
     reason: 'granted',
     scope,
     seriesSlug,
-    chapterSlug
+    chapterSlug: entitlements[0].chapter_slug
   };
 };
 
@@ -1845,7 +2041,8 @@ const handleNowPaymentsWebhook = async (request, env) => {
     entitlementGrant: {
       granted: Boolean(entitlementGrant.granted),
       reason: entitlementGrant.reason,
-      entitlement: entitlementGrant.entitlement ? entitlementToJson(entitlementGrant.entitlement) : null
+      entitlement: entitlementGrant.entitlement ? entitlementToJson(entitlementGrant.entitlement) : null,
+      entitlements: (entitlementGrant.entitlements || []).map(entitlementToJson)
     },
     order: updatedOrder ? novelOrderToJson(updatedOrder) : null
   });

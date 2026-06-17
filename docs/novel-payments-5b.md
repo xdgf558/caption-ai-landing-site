@@ -98,7 +98,9 @@ NOWPAYMENTS_IPN_SECRET
 
 ## 可选价格环境变量
 
-Worker 会使用这些默认价格创建购买型订单：
+Worker 会优先使用小说 Markdown 里的收费设置创建购买型订单。部署前的 `npm run build` 会运行 `scripts/build-novel-payment-config.mjs`，把 `src/content/serials` 和 `src/content/serialChapters` 生成到 `src/generated/novelPaymentConfig.js`，Worker 会读取这个生成配置。
+
+这些环境变量现在只作为兜底价格和打赏上下限：
 
 ```text
 NOVEL_CHAPTER_PRICE_USD=1.99
@@ -107,7 +109,7 @@ NOVEL_TIP_MIN_USD=1
 NOVEL_TIP_MAX_USD=500
 ```
 
-作品 Markdown 里的价格字段用于页面展示和后续管理：
+作品 Markdown 里的价格字段会同时影响页面展示和 Worker checkout：
 
 ```yaml
 tipAmounts:
@@ -119,7 +121,13 @@ chapterPriceAmount: 1.99
 chapterPriceCurrency: "USD"
 supporterPriceAmount: 4.99
 supporterPriceCurrency: "USD"
+bundlePurchasesEnabled: true
+chapterBundleDiscounts:
+  - chapters: 5
+    discountPercent: 10
 ```
+
+多章购买使用 `orderType: "chapter-bundle"`。Worker 不信任前端传入的金额，会按生成配置里的单章价格、折扣规则和已发布付费章节顺序重新计算 invoice 金额；IPN 达到 `confirmed` / `finished` 后，会为 bundle 内的每个章节写入 `novel_entitlements`。
 
 ## 验证建议
 
@@ -132,5 +140,5 @@ supporterPriceCurrency: "USD"
 
 - 打赏按钮应创建 `tip` 订单并跳转 NOWPayments
 - 付费章节按钮应要求读者先登录
-- 登录后应创建 `chapter` 或 `supporter` 订单并跳转 NOWPayments
-- 支付完成后的自动授权仍应等 5C
+- 登录后应创建 `chapter`、`chapter-bundle` 或 `supporter` 订单并跳转 NOWPayments
+- 支付完成后的 IPN 应把订单更新为 `confirmed` / `finished`，并写入对应阅读授权

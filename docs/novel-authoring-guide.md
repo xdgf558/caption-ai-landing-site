@@ -82,15 +82,41 @@ src/content/serialChapters/deng-hai-liang-zhe-002-city-after-midnight.md
 
 ## 阅读权限字段
 
-当前阶段仍然是静态展示，不做真实支付拦截。
-
-但章节可以先标记未来阅读方式：
+章节可以标记阅读方式：
 
 - `free`：免费
-- `paid`：未来付费章节
-- `supporter`：未来支持者章节
+- `paid`：付费章节
+- `supporter`：支持者章节
 
-这些字段会在目录和章节页展示，为后续 NOWPayments 和账户系统预留位置。
+`paid` / `supporter` 章节会走读者账户、NOWPayments 订单和授权检查。
+
+## 小说收费设置
+
+Admin 的 `連載小說` 面板里已经有可视化收费设置。它会更新小说资料 Markdown 的这些字段：
+
+- `priceMode`：免费、免费 + 打赏、单章购买、分卷购买或会员阅读
+- `freeChapters`：展示用免费章节数
+- `tipsEnabled`：是否显示作品页打赏区
+- `tipAmounts` / `tipCurrency`：打赏金额和币种
+- `chapterPriceAmount` / `chapterPriceCurrency`：单章解锁价格
+- `supporterPriceAmount` / `supporterPriceCurrency`：支持者解锁价格
+- `bundlePurchasesEnabled`：是否开启多章折扣配置
+- `chapterBundleDiscounts`：一次购买多章的折扣规则
+
+这些字段不只是页面展示。`npm run build` 会先运行 `scripts/build-novel-payment-config.mjs`，把小说 Markdown 和章节顺序生成到 `src/generated/novelPaymentConfig.js`。Worker 创建 NOWPayments 订单时会读取这个生成配置，并以它作为单章、支持者、打赏按钮和多章折扣的价格来源。
+
+多章折扣配置示例：
+
+```yaml
+bundlePurchasesEnabled: true
+chapterBundleDiscounts:
+  - chapters: 5
+    discountPercent: 10
+  - chapters: 10
+    discountPercent: 18
+```
+
+开启多章购买后，读者在某个付费章节可以一次解锁从当前章开始、按章节顺序排列的后续多章。Worker 会重新计算应付金额，并在 IPN `confirmed` / `finished` 后为这些章节逐条写入阅读授权。
 
 ## 发布检查
 
