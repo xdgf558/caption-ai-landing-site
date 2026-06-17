@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout
   title="Station Cat Admin"
-  description="Station Cat content, X works, and serial fiction admin editor."
+  description="Station Cat content and serial fiction admin editor."
   lang="zh-Hant"
   canonicalPath="/admin/"
   bodyClass="station-home"
@@ -14,7 +14,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <p class="station-kicker">Admin</p>
       <h1>Station Cat 內容管理</h1>
       <p>
-        使用 GitHub fine-grained token 更新 <code>src/content/devlog</code>、<code>src/content/xworks</code>、<code>src/content/serials</code> 和 <code>src/content/serialChapters</code> 裡的 Markdown。Token 只保存在當前頁面，不會寫入網站或 localStorage。
+        使用 GitHub fine-grained token 更新 <code>src/content/devlog</code>、<code>src/content/serials</code> 和 <code>src/content/serialChapters</code> 裡的 Markdown。Token 只保存在當前頁面，不會寫入網站或 localStorage。
       </p>
     </div>
 
@@ -28,7 +28,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
         <div class="admin-tabs" role="tablist" aria-label="Content type">
           <button class="admin-tab is-active" id="tab-devlog" type="button" data-admin-tab="devlog">Devlog</button>
-          <button class="admin-tab" id="tab-xworks" type="button" data-admin-tab="xworks">X Works</button>
           <button class="admin-tab" id="tab-serials" type="button" data-admin-tab="serials">連載小說</button>
         </div>
 
@@ -44,11 +43,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <div class="admin-list-panel" id="devlog-list-panel">
           <p class="station-kicker">Devlog files</p>
           <div class="admin-post-list" id="admin-post-list" aria-label="Existing devlog posts"></div>
-        </div>
-
-        <div class="admin-list-panel" id="xworks-list-panel" hidden>
-          <p class="station-kicker">X Works files</p>
-          <div class="admin-post-list" id="xworks-list" aria-label="Existing X works"></div>
         </div>
 
         <div class="admin-list-panel" id="serials-list-panel" hidden>
@@ -125,101 +119,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <div class="admin-inline-status" id="devlog-save-status" role="status" aria-live="polite" hidden></div>
       </form>
 
-      <form class="admin-panel admin-editor" id="xworks-editor" hidden>
-        <div class="admin-form-grid">
-          <label>
-            标题
-            <input id="work-title" name="title" required placeholder="AI cat experiment" />
-          </label>
-          <label>
-            Slug
-            <input id="work-slug" name="slug" required placeholder="2026-05-17-ai-cat-experiment" />
-          </label>
-          <label>
-            简介
-            <input id="work-description" name="description" required placeholder="一句话说明这个 X 作品" />
-          </label>
-          <label>
-            X 原帖链接
-            <input id="work-x-url" name="xUrl" required placeholder="https://x.com/bketck/status/1234567890" />
-          </label>
-          <label>
-            类型
-            <select id="work-type" name="type">
-              <option value="video">video</option>
-              <option value="post">post</option>
-              <option value="image">image</option>
-              <option value="thread">thread</option>
-            </select>
-          </label>
-          <label>
-            标签
-            <input id="work-tags" name="tags" list="work-tag-options" placeholder="AI Creation, Cats, Meals" />
-            <datalist id="work-tag-options">
-              <option value="AI Creation"></option>
-              <option value="Cats"></option>
-              <option value="Meals"></option>
-              <option value="App Build"></option>
-              <option value="Strange Ideas"></option>
-              <option value="Notes"></option>
-            </datalist>
-          </label>
-          <label>
-            语言
-            <select id="work-language" name="language">
-              <option value="en">en</option>
-              <option value="ja">ja</option>
-              <option value="zh-hant">zh-hant</option>
-            </select>
-          </label>
-          <label class="admin-checkbox">
-            <input id="work-featured" name="featured" type="checkbox" />
-            首页精选
-          </label>
-          <label>
-            状态
-            <select id="work-status" name="status">
-              <option value="draft">draft</option>
-              <option value="published">published</option>
-            </select>
-          </label>
-          <label>
-            排序
-            <input id="work-sort-order" name="sortOrder" type="number" placeholder="10" value="10" />
-          </label>
-          <label>
-            发布时间
-            <input id="work-published-at" name="publishedAt" type="datetime-local" />
-          </label>
-        </div>
-        <p class="fine-print">
-          保存 X Work 時會自動設為 published，並自動加入首頁精選。Cloudflare Workers 自動部署完成後會出現在首頁 Latest from X。
-        </p>
-
-        <label>
-          补充说明
-          <textarea id="work-body" name="body" rows="8" placeholder="可選 Markdown 正文"></textarea>
-        </label>
-
-        <div class="admin-preview-panel">
-          <div>
-            <p class="station-kicker">X Embed Preview</p>
-            <h2>X Embed Preview</h2>
-          </div>
-          <div class="button-row">
-            <button class="button button-secondary" id="work-preview-button" type="button">Preview embed</button>
-            <a class="button button-secondary" href="/works/">查看 Works</a>
-          </div>
-          <div class="admin-preview" id="work-preview">请粘贴一条 X 原帖链接。</div>
-        </div>
-
-        <div class="button-row">
-          <button class="button button-primary" id="xwork-save" type="submit">保存 X Work</button>
-          <button class="button button-danger" id="work-delete" type="button">刪除 X Work</button>
-        </div>
-        <div class="admin-inline-status" id="xwork-save-status" role="status" aria-live="polite" hidden></div>
-      </form>
-
       <form class="admin-panel admin-editor" id="serials-editor" hidden>
         <div class="admin-form-grid">
           <label>
@@ -284,7 +183,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       branch: 'main',
       folders: {
         devlog: 'src/content/devlog',
-        xworks: 'src/content/xworks',
         serials: 'src/content/serials',
         serialChapters: 'src/content/serialChapters'
       }
@@ -297,14 +195,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       status: document.getElementById('admin-status'),
       tabs: Array.from(document.querySelectorAll('[data-admin-tab]')),
       devlogListPanel: document.getElementById('devlog-list-panel'),
-      xworksListPanel: document.getElementById('xworks-list-panel'),
       serialsListPanel: document.getElementById('serials-list-panel'),
       devlogList: document.getElementById('admin-post-list'),
-      xworksList: document.getElementById('xworks-list'),
       serialSeriesList: document.getElementById('serial-series-list'),
       serialChaptersList: document.getElementById('serial-chapters-list'),
       devlogForm: document.getElementById('devlog-editor'),
-      xworksForm: document.getElementById('xworks-editor'),
       serialsForm: document.getElementById('serials-editor'),
       devlog: {
         title: document.getElementById('post-title'),
@@ -318,25 +213,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         body: document.getElementById('post-body'),
         saveButton: document.getElementById('devlog-save'),
         saveStatus: document.getElementById('devlog-save-status')
-      },
-      work: {
-        slug: document.getElementById('work-slug'),
-        title: document.getElementById('work-title'),
-        xUrl: document.getElementById('work-x-url'),
-        type: document.getElementById('work-type'),
-        language: document.getElementById('work-language'),
-        statusField: document.getElementById('work-status'),
-        sortOrder: document.getElementById('work-sort-order'),
-        publishedAt: document.getElementById('work-published-at'),
-        featured: document.getElementById('work-featured'),
-        description: document.getElementById('work-description'),
-        tags: document.getElementById('work-tags'),
-        body: document.getElementById('work-body'),
-        previewButton: document.getElementById('work-preview-button'),
-        preview: document.getElementById('work-preview'),
-        deleteButton: document.getElementById('work-delete'),
-        saveButton: document.getElementById('xwork-save'),
-        saveStatus: document.getElementById('xwork-save-status')
       },
       serial: {
         kind: document.getElementById('serial-kind'),
@@ -356,25 +232,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     let activeContentType = 'devlog';
     const state = {
       devlog: { sha: '', path: '', slugTouched: false },
-      xworks: { sha: '', path: '', slugTouched: false },
       serials: { sha: '', path: '', kind: 'series' }
     };
 
     const today = () => new Date().toISOString().slice(0, 10);
-    const nowLocal = () => new Date().toISOString().slice(0, 16);
-
-    const toDatetimeLocal = (value) => {
-      if (!value) return nowLocal();
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return nowLocal();
-      return date.toISOString().slice(0, 16);
-    };
-
-    const toIso = (value) => {
-      if (!value) return new Date().toISOString();
-      const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
-    };
 
     const setStatus = (message, tone = 'neutral') => {
       elements.status.textContent = message;
@@ -384,7 +245,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const setInlineStatus = (contentType, message, tone = 'neutral') => {
       const targets = {
         devlog: elements.devlog.saveStatus,
-        xworks: elements.work.saveStatus,
         serials: elements.serial.saveStatus
       };
       const target = targets[contentType];
@@ -397,22 +257,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const setSaving = (contentType, isSaving) => {
       const saveLabels = {
         devlog: ['保存 Devlog', '正在保存 Devlog...'],
-        xworks: ['保存 X Work', '正在保存 X Work...'],
         serials: ['保存小说 Markdown', '正在保存小说 Markdown...']
       };
       const buttons = {
         devlog: elements.devlog.saveButton,
-        xworks: elements.work.saveButton,
         serials: elements.serial.saveButton
       };
       const button = buttons[contentType];
       if (!button) return;
       button.disabled = isSaving;
       button.textContent = isSaving ? saveLabels[contentType][1] : saveLabels[contentType][0];
-
-      if (contentType === 'xworks') {
-        elements.work.deleteButton.disabled = isSaving;
-      }
     };
 
     const fieldLabel = (field) => {
@@ -527,11 +381,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .split(',')
         .map((tag) => tag.trim())
         .filter(Boolean);
-
-    const yamlTags = (tags) => {
-      if (!tags.length) return 'tags: []';
-      return `tags:\n${tags.map((tag) => `  - ${yamlString(tag)}`).join('\n')}`;
-    };
 
     const parseScalar = (value) => {
       const trimmed = value.trim();
@@ -693,37 +542,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return result;
       };
 
-    const validateXPostUrl = (input) => {
-      const value = input.trim();
-      if (!value) {
-        return { valid: false, message: '请粘贴一条 X 原帖链接。' };
-      }
-
-      try {
-        const url = new URL(value);
-        const hostname = url.hostname.replace(/^www\./, '');
-        const allowedHosts = ['x.com', 'twitter.com'];
-        const parts = url.pathname.split('/').filter(Boolean);
-
-        if (!allowedHosts.includes(hostname)) {
-          return { valid: false, message: '请输入有效的 x.com 或 twitter.com 帖子链接。' };
-        }
-
-        if (!parts.includes('status')) {
-          return { valid: false, message: '请输入具体 X 帖子链接，而不是个人主页链接。' };
-        }
-
-        const statusIndex = parts.indexOf('status');
-        if (!parts[statusIndex + 1]) {
-          return { valid: false, message: '请输入有效的 x.com 或 twitter.com 帖子链接。' };
-        }
-
-        return { valid: true, message: '' };
-      } catch {
-        return { valid: false, message: '请输入有效的 x.com 或 twitter.com 帖子链接。' };
-      }
-    };
-
     const buildDevlogMarkdown = () => {
       const fields = elements.devlog;
       const slug = fields.slug.value.trim();
@@ -741,24 +559,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       return `---\ntitle: ${yamlString(data.title)}\npostSlug: ${yamlString(data.postSlug)}\ndescription: ${yamlString(data.description)}\npubDate: ${yamlString(data.pubDate)}\nstatus: ${yamlString(data.status)}\nlanguage: ${yamlString(data.language)}\ntags: ${JSON.stringify(data.tags)}\ndraft: ${data.draft}\n---\n\n${fields.body.value.trim()}\n`;
     };
 
-    const publishXWorkByDefault = () => {
-      elements.work.featured.checked = true;
-      elements.work.statusField.value = 'published';
-    };
-
-    const buildXWorkMarkdown = () => {
-      const fields = elements.work;
-      publishXWorkByDefault();
-      const xUrl = fields.xUrl.value.trim();
-      const validation = validateXPostUrl(xUrl);
-      if (!validation.valid) {
-        throw new Error(validation.message);
-      }
-
-      const tags = splitTags(fields.tags.value);
-      return `---\ntitle: ${yamlString(fields.title.value.trim())}\ndescription: ${yamlString(fields.description.value.trim())}\nxUrl: ${yamlString(xUrl)}\ntype: ${yamlString(fields.type.value)}\n${yamlTags(tags)}\nlanguage: ${yamlString(fields.language.value)}\nfeatured: ${fields.featured.checked}\nstatus: ${yamlString(fields.statusField.value)}\nsortOrder: ${Number(fields.sortOrder.value || 10)}\npublishedAt: ${yamlString(toIso(fields.publishedAt.value))}\n---\n\n${fields.body.value.trim()}\n`;
-    };
-
     const resetDevlogForm = () => {
       state.devlog = { sha: '', path: '', slugTouched: false };
       const fields = elements.devlog;
@@ -774,27 +574,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       setInlineStatus('devlog', '');
       setStatus('正在撰寫新 Devlog。');
     };
-
-      const resetXWorkForm = () => {
-        state.xworks = { sha: '', path: '', slugTouched: false };
-        const fields = elements.work;
-      fields.slug.value = '';
-      fields.title.value = '';
-      fields.xUrl.value = '';
-      fields.type.value = 'post';
-      fields.language.value = 'en';
-      fields.statusField.value = 'published';
-      fields.sortOrder.value = '10';
-      fields.publishedAt.value = nowLocal();
-      fields.featured.checked = true;
-      fields.description.value = '';
-      fields.tags.value = '';
-      fields.body.value = '';
-      fields.preview.textContent = '请粘贴一条 X 原帖链接。';
-      fields.preview.dataset.tone = '';
-      setInlineStatus('xworks', '');
-        setStatus('正在撰寫新 X Work。');
-      };
 
       const resetSerialImportForm = (kind = elements.serial.kind.value || 'series') => {
         state.serials = { sha: '', path: '', kind };
@@ -826,26 +605,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       setStatus(`已載入 Devlog：${fields.slug.value}。`, 'success');
     };
 
-      const fillXWorkForm = ({ path, sha, markdown }) => {
-        const { frontmatter, body } = parseMarkdown(markdown);
-        const fields = elements.work;
-      state.xworks = { sha, path, slugTouched: true };
-      fields.slug.value = path.split('/').pop().replace(/\.md$/i, '');
-      fields.title.value = frontmatter.title || '';
-      fields.description.value = frontmatter.description || '';
-      fields.xUrl.value = frontmatter.xUrl || '';
-      fields.type.value = frontmatter.type || 'post';
-      fields.tags.value = Array.isArray(frontmatter.tags) ? frontmatter.tags.join(', ') : '';
-      fields.language.value = frontmatter.language || 'en';
-      fields.featured.checked = Boolean(frontmatter.featured);
-      fields.statusField.value = frontmatter.status || 'draft';
-      fields.sortOrder.value = String(frontmatter.sortOrder ?? 100);
-      fields.publishedAt.value = toDatetimeLocal(frontmatter.publishedAt);
-      fields.body.value = body;
-        renderXPreview();
-        setStatus(`已載入 X Work：${fields.slug.value}。`, 'success');
-      };
-
       const fillSerialImportForm = ({ path, sha, markdown }) => {
         const fields = elements.serial;
         fields.markdown.value = markdown.trim();
@@ -864,11 +623,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             newItem: '新 Devlog',
             status: '已切換到 Devlog 管理。'
           },
-          xworks: {
-            load: '读取 X Works',
-            newItem: '新 X Work',
-            status: '已切換到 X Works 管理。'
-          },
           serials: {
             load: '读取连载小说',
             newItem: '新小说 Markdown',
@@ -881,10 +635,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           button.setAttribute('aria-selected', String(active));
         });
         elements.devlogForm.hidden = contentType !== 'devlog';
-        elements.xworksForm.hidden = contentType !== 'xworks';
         elements.serialsForm.hidden = contentType !== 'serials';
         elements.devlogListPanel.hidden = contentType !== 'devlog';
-        elements.xworksListPanel.hidden = contentType !== 'xworks';
         elements.serialsListPanel.hidden = contentType !== 'serials';
         elements.load.textContent = labels[contentType].load;
         elements.newItem.textContent = labels[contentType].newItem;
@@ -907,69 +659,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       button.addEventListener('click', onOpen);
       target.append(button);
     };
-
-      const renderXWorkListItem = ({ file, entry, markdown }) => {
-        const { frontmatter } = parseMarkdown(markdown);
-        const slug = file.name.replace(/\.md$/, '');
-      const item = document.createElement('article');
-      item.className = 'admin-work-row';
-
-      const main = document.createElement('div');
-      main.className = 'admin-work-row__main';
-
-      const title = document.createElement('h3');
-      title.textContent = frontmatter.title || slug;
-
-      const meta = document.createElement('p');
-      meta.textContent = [
-        frontmatter.status || 'draft',
-        frontmatter.featured ? 'featured' : 'not featured',
-        frontmatter.language || 'en',
-        frontmatter.publishedAt || 'no publishedAt'
-      ].join(' · ');
-
-      const xUrl = document.createElement('a');
-      xUrl.href = frontmatter.xUrl || '#';
-      xUrl.target = '_blank';
-      xUrl.rel = 'noopener noreferrer';
-      xUrl.textContent = frontmatter.xUrl || 'no xUrl';
-
-      main.append(title, meta, xUrl);
-
-      const actions = document.createElement('div');
-      actions.className = 'admin-work-row__actions';
-
-      const edit = document.createElement('button');
-      edit.type = 'button';
-      edit.className = 'button button-secondary';
-      edit.textContent = '編輯';
-      edit.addEventListener('click', () => {
-        fillXWorkForm({ path: file.path, sha: entry.sha, markdown });
-        elements.xworksForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-
-      const preview = document.createElement('button');
-      preview.type = 'button';
-      preview.className = 'button button-secondary';
-      preview.textContent = '預覽';
-      preview.addEventListener('click', () => {
-        fillXWorkForm({ path: file.path, sha: entry.sha, markdown });
-        renderXPreview();
-        elements.work.preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'button button-danger';
-      remove.textContent = '刪除';
-      remove.addEventListener('click', () => {
-        deleteXWorkFile(file.path, entry.sha, slug).catch((error) => setStatus(error.message, 'error'));
-      });
-
-      actions.append(edit, preview, remove);
-        item.append(main, actions);
-        elements.xworksList.append(item);
-      };
 
       const renderSerialListItem = ({ file, entry, markdown, kind, target }) => {
         const { frontmatter } = parseMarkdown(markdown);
@@ -1032,33 +721,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       setStatus(`已讀取 ${count} 個 Devlog 檔案。`, 'success');
     };
-
-      const loadXWorks = async () => {
-        setStatus('正在讀取 X Works 列表...');
-        const files = await readContentFolder(repo.folders.xworks);
-        elements.xworksList.innerHTML = '';
-
-      const markdownFiles = files.filter((entry) => entry.name.endsWith('.md')).sort((a, b) => b.name.localeCompare(a.name));
-      if (!markdownFiles.length) {
-        renderEmptyList(
-          elements.xworksList,
-          `远端还没有 ${repo.folders.xworks} Markdown 文件。填好右侧表单后点击“保存 X Work”，会写入 src/content/xworks/{slug}.md。`
-        );
-        setStatus('还没有远端 X Works。读取只是读取已保存内容；要添加当前 X 链接，请点击“保存 X Work”。', 'success');
-        return;
-      }
-
-      for (const file of markdownFiles) {
-        const entry = await githubFetch(apiUrl(file.path));
-        renderXWorkListItem({
-          file,
-          entry,
-          markdown: fromBase64(entry.content)
-        });
-      }
-
-        setStatus(`已讀取 ${markdownFiles.length} 個 X Works 檔案。`, 'success');
-      };
 
       const loadSerials = async () => {
         setStatus('正在读取连载小说列表...');
@@ -1137,36 +799,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       setStatus('Devlog 已保存。Cloudflare Workers 會在 GitHub 更新後自動部署。', 'success');
     };
 
-      const saveXWork = async () => {
-        const fields = elements.work;
-        const slug = fields.slug.value.trim() || `${today()}-${toSlug(fields.title.value, 'x-work')}`;
-      fields.slug.value = slug;
-      const path = `${repo.folders.xworks}/${slug}.md`;
-      const body = {
-        message: `${state.xworks.sha ? 'Update' : 'Add'} X work: ${fields.title.value.trim() || slug}`,
-        content: toBase64(buildXWorkMarkdown()),
-        branch: repo.branch
-      };
-
-      if (state.xworks.sha && state.xworks.path === path) {
-        body.sha = state.xworks.sha;
-      } else {
-        const existing = await githubFetch(apiUrl(path)).catch(() => null);
-        if (existing?.sha) body.sha = existing.sha;
-      }
-
-      setStatus('正在保存 X Work 到 GitHub...');
-      const result = await githubFetch(contentUrl(path), {
-        method: 'PUT',
-        body: JSON.stringify(body)
-      });
-
-      state.xworks = { sha: result.content.sha, path, slugTouched: true };
-      setStatus('X Work 已保存为 published，并已加入首页精选。Cloudflare Workers 自动部署完成后会出现在首页 Latest from X。', 'success');
-        await loadXWorks();
-        setStatus('X Work 已保存为 published，并已加入首页精选。Cloudflare Workers 自动部署完成后会出现在首页 Latest from X。', 'success');
-      };
-
       const saveSerialMarkdown = async () => {
         const parsed = parseSerialImport({ sync: false });
         const path = parsed.path;
@@ -1197,92 +829,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         setStatus(`${serialKindLabel(parsed.kind)}已保存。Cloudflare Workers 會在 GitHub 更新後自動部署。`, 'success');
       };
 
-    const deleteXWorkFile = async (path, sha, slug) => {
-      if (!window.confirm(`確定刪除 ${slug}？這會從 GitHub 移除對應 Markdown 檔案。`)) {
-        return;
-      }
-
-      if (!sha) {
-        throw new Error('File sha missing during delete.');
-      }
-
-      setStatus('正在刪除 X Work...');
-      await githubFetch(contentUrl(path), {
-        method: 'DELETE',
-        body: JSON.stringify({
-          message: `Delete X work: ${slug}`,
-          sha,
-          branch: repo.branch
-        })
-      });
-
-      if (state.xworks.path === path) {
-        resetXWorkForm();
-      }
-
-      setStatus('X Work 已刪除。Cloudflare Workers 會在 GitHub 更新後自動部署。', 'success');
-      await loadXWorks();
-    };
-
-    const deleteXWork = async () => {
-      const slug = elements.work.slug.value.trim();
-      const path = state.xworks.path || `${repo.folders.xworks}/${slug}.md`;
-      if (!slug) {
-        setStatus('請先選擇或輸入要刪除的 X Work。', 'error');
-        return;
-      }
-
-      const existing = state.xworks.sha ? { sha: state.xworks.sha } : await githubFetch(apiUrl(path));
-      await deleteXWorkFile(path, existing?.sha, slug);
-    };
-
-    const loadXWidgets = () => {
-      if (!document.querySelector('script[src="https://platform.twitter.com/widgets.js"]')) {
-        window.__stationCatXWidgetsLoaded = true;
-        const script = document.createElement('script');
-        script.src = 'https://platform.twitter.com/widgets.js';
-        script.async = true;
-        script.charset = 'utf-8';
-        document.body.appendChild(script);
-      } else {
-        window.twttr?.widgets?.load?.();
-      }
-    };
-
-    const renderXPreview = () => {
-      const xUrl = elements.work.xUrl.value.trim();
-      const validation = validateXPostUrl(xUrl);
-      elements.work.preview.innerHTML = '';
-
-      if (!validation.valid) {
-        elements.work.preview.textContent = validation.message;
-        elements.work.preview.dataset.tone = xUrl ? 'error' : '';
-        return;
-      }
-
-      elements.work.preview.dataset.tone = 'success';
-      const wrapper = document.createElement('div');
-      wrapper.className = 'x-embed-wrapper';
-
-      const blockquote = document.createElement('blockquote');
-      blockquote.className = 'twitter-tweet';
-      blockquote.dataset.theme = 'dark';
-      const embedLink = document.createElement('a');
-      embedLink.href = xUrl;
-      blockquote.append(embedLink);
-
-      const fallback = document.createElement('a');
-      fallback.className = 'x-fallback-link';
-      fallback.href = xUrl;
-      fallback.target = '_blank';
-      fallback.rel = 'noopener noreferrer';
-      fallback.textContent = 'Watch on X';
-
-      wrapper.append(blockquote, fallback);
-      elements.work.preview.append(wrapper);
-      loadXWidgets();
-    };
-
     elements.tabs.forEach((button) => {
       button.addEventListener('click', () => setActiveContentType(button.dataset.adminTab));
     });
@@ -1290,7 +836,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       elements.load.addEventListener('click', () => {
         const actions = {
           devlog: loadDevlogPosts,
-          xworks: loadXWorks,
           serials: loadSerials
         };
         const action = actions[activeContentType];
@@ -1299,7 +844,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       elements.newItem.addEventListener('click', () => {
         if (activeContentType === 'devlog') resetDevlogForm();
-        else if (activeContentType === 'xworks') resetXWorkForm();
         else resetSerialImportForm();
       });
 
@@ -1312,22 +856,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     elements.devlog.slug.addEventListener('input', () => {
       state.devlog.slugTouched = true;
     });
-
-    elements.work.title.addEventListener('input', () => {
-      if (!state.xworks.sha && !state.xworks.slugTouched) {
-        elements.work.slug.value = `${today()}-${toSlug(elements.work.title.value, 'x-work')}`;
-      }
-    });
-
-    elements.work.slug.addEventListener('input', () => {
-      state.xworks.slugTouched = true;
-    });
-
-    elements.work.xUrl.addEventListener('input', renderXPreview);
-    elements.work.previewButton.addEventListener('click', renderXPreview);
-      elements.work.deleteButton.addEventListener('click', () => {
-        deleteXWork().catch((error) => setStatus(error.message, 'error'));
-      });
 
     elements.serial.kind.addEventListener('change', () => {
       if (!state.serials.sha) {
@@ -1380,19 +908,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .finally(() => setSaving('devlog', false));
     });
 
-      elements.xworksForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        setInlineStatus('xworks', '正在保存 X Work 到 GitHub...', 'neutral');
-      setSaving('xworks', true);
-      saveXWork()
-        .then(() => setInlineStatus('xworks', `X Work 已保存。${new Date().toLocaleTimeString()}`, 'success'))
-        .catch((error) => {
-          setStatus(error.message, 'error');
-          setInlineStatus('xworks', error.message, 'error');
-        })
-          .finally(() => setSaving('xworks', false));
-      });
-
       elements.serialsForm.addEventListener('submit', (event) => {
         event.preventDefault();
         setInlineStatus('serials', '正在保存小说 Markdown 到 GitHub...', 'neutral');
@@ -1416,14 +931,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       true
     );
 
-      elements.xworksForm.addEventListener(
-        'invalid',
-        (event) => {
-        setInlineStatus('xworks', `请先填写：${fieldLabel(event.target)}。`, 'error');
-      },
-        true
-      );
-
       elements.serialsForm.addEventListener(
         'invalid',
         (event) => {
@@ -1433,7 +940,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       );
 
       resetDevlogForm();
-      resetXWorkForm();
       resetSerialImportForm('series');
       setActiveContentType('devlog');
   </script>
