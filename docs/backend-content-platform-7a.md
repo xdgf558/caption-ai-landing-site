@@ -37,7 +37,7 @@ Existing tables stay in place:
 
 ### R2
 
-Stage 7A defines the key layout but does not require a production bucket migration yet.
+Stage 7A defined the key layout before the bucket was wired into production. Stage 7B adds the dedicated `CONTENT_BUCKET` binding.
 
 ```text
 content/blog/{locale}/{slug}/body.md
@@ -145,4 +145,4 @@ Before using body upload in production:
 3. Deploy after confirming the bucket exists.
 4. Keep `/admin/api/content/*` covered by Cloudflare Access.
 
-Stage 7A intentionally does not add the binding yet, so current deploys do not fail because of a missing bucket.
+Stage 7B now adds this binding for protected chapter delivery. Deployments after 7B require the `station-cat-content` bucket to exist.

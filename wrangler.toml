@@ -17,6 +17,10 @@ database_id = "c4a8cb1a-6a94-4e8f-a6fb-a734afafca63"
 binding = "DOWNLOADS_BUCKET"
 bucket_name = "station-cat-downloads"
 
+[[r2_buckets]]
+binding = "CONTENT_BUCKET"
+bucket_name = "station-cat-content"
+
 [[routes]]
 pattern = "wwwstationcat.org"
 custom_domain = true

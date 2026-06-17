@@ -224,9 +224,9 @@
 2. 校验 slug、语言、发布时间、章节顺序和 SEO 数据。
 3. 移除旧 GitHub token 写 Markdown 后台。
 
-## 当前执行：阶段 7A
+## 当前执行：阶段 7B
 
-阶段 7A 正在建立后端内容模型和迁移基础。详细文档见 [backend-content-platform-7a.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/backend-content-platform-7a.md:1)。
+阶段 7A 已完成后端内容模型和迁移基础。当前进入 7B，把受保护章节正文从 Worker 生成模块迁移到 R2，由 Worker 在授权后从 `CONTENT_BUCKET` 读取。详细文档见 [protected-content-r2-7b.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/protected-content-r2-7b.md:1)。
 
 ## 已完成：阶段 6C
 
