@@ -1,4 +1,4 @@
-const ADMIN_PATH_PATTERN = /^\/admin(?:\/|$)/;
+const ADMIN_PATH_PATTERN = /^\/admin(?:-v2)?(?:\/|$)/;
 const DEFAULT_ADMIN_EMAIL = 'brodstem@protonmail.com';
 
 export async function onRequest(context) {

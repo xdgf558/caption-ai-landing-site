@@ -1,0 +1,1092 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Station Cat Admin 2.0"
+  description="Station Cat backend content platform for serial fiction, devlog publishing, pricing, orders, entitlements, and audit logs."
+  lang="zh-Hant"
+  canonicalPath="/admin-v2/"
+  bodyClass="station-home admin-v2-page"
+>
+  <section class="admin-v2-shell">
+    <header class="admin-v2-heading">
+      <div>
+        <p class="station-kicker">Admin 2.0</p>
+        <h1>Station Cat 后台内容平台</h1>
+      </div>
+      <div class="admin-v2-heading__actions">
+        <a class="button button-secondary" href="/admin/">旧后台</a>
+        <a class="button button-secondary" href="/zh-hant/works/">小说页</a>
+        <a class="button button-secondary" href="/devlog/">博客页</a>
+      </div>
+    </header>
+
+    <div class="admin-v2-status" id="admin-v2-status" role="status" aria-live="polite">
+      正在连接后端内容平台。
+    </div>
+
+    <div class="admin-v2-grid">
+      <aside class="admin-v2-panel admin-v2-sidebar">
+        <div class="admin-v2-tabs" role="tablist" aria-label="Admin sections">
+          <button class="admin-v2-tab is-active" type="button" data-admin-v2-tab="content">内容</button>
+          <button class="admin-v2-tab" type="button" data-admin-v2-tab="commerce">订单</button>
+          <button class="admin-v2-tab" type="button" data-admin-v2-tab="access">授权</button>
+          <button class="admin-v2-tab" type="button" data-admin-v2-tab="audit">审计</button>
+        </div>
+
+        <section class="admin-v2-sidebar-section" data-admin-v2-panel="content-sidebar">
+          <div class="admin-v2-filter-grid">
+            <label>
+              类型
+              <select id="content-filter-type">
+                <option value="">全部</option>
+                <option value="blog_post">Blog / Devlog</option>
+                <option value="novel_series">小说作品</option>
+                <option value="novel_chapter">小说章节</option>
+              </select>
+            </label>
+            <label>
+              状态
+              <select id="content-filter-status">
+                <option value="">全部</option>
+                <option value="draft">草稿</option>
+                <option value="scheduled">定时</option>
+                <option value="published">已发布</option>
+                <option value="archived">归档</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button class="button button-primary" id="content-refresh" type="button">刷新内容</button>
+          </div>
+          <div class="button-row">
+            <button class="button button-secondary" type="button" data-new-entry="blog_post">新 Blog</button>
+            <button class="button button-secondary" type="button" data-new-entry="novel_series">新作品</button>
+            <button class="button button-secondary" type="button" data-new-entry="novel_chapter">新章节</button>
+          </div>
+          <div class="admin-v2-list" id="content-list" aria-label="Backend content entries"></div>
+        </section>
+
+        <section class="admin-v2-sidebar-section" data-admin-v2-panel="commerce-sidebar" hidden>
+          <label>
+            订单状态
+            <select id="orders-status">
+              <option value="">全部</option>
+              <option value="waiting">waiting</option>
+              <option value="confirming">confirming</option>
+              <option value="confirmed">confirmed</option>
+              <option value="finished">finished</option>
+              <option value="failed">failed</option>
+              <option value="expired">expired</option>
+              <option value="refunded">refunded</option>
+            </select>
+          </label>
+          <button class="button button-primary" id="orders-refresh" type="button">刷新订单</button>
+        </section>
+
+        <section class="admin-v2-sidebar-section" data-admin-v2-panel="access-sidebar" hidden>
+          <label>
+            读者 Email
+            <input id="access-email-filter" type="email" placeholder="reader@example.com" />
+          </label>
+          <button class="button button-primary" id="access-refresh" type="button">查询授权</button>
+        </section>
+
+        <section class="admin-v2-sidebar-section" data-admin-v2-panel="audit-sidebar" hidden>
+          <label>
+            目标类型
+            <input id="audit-target-type" placeholder="blog_post / novel_chapter" />
+          </label>
+          <label>
+            目标 Slug
+            <input id="audit-target-slug" placeholder="series/chapter 或 slug" />
+          </label>
+          <button class="button button-primary" id="audit-refresh" type="button">刷新审计</button>
+        </section>
+      </aside>
+
+      <div class="admin-v2-main">
+        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="content-main">
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">Content Editor</p>
+              <h2 id="editor-heading">创建后端内容</h2>
+            </div>
+            <div class="admin-v2-badges">
+              <span id="schema-stage">Stage 7C</span>
+              <span id="storage-badge">R2 未确认</span>
+            </div>
+          </div>
+
+          <form id="content-form" class="admin-v2-form">
+            <input id="content-entry-id" type="hidden" />
+            <div class="admin-v2-form-grid">
+              <label>
+                内容类型
+                <select id="content-entry-type" required>
+                  <option value="blog_post">Blog / Devlog</option>
+                  <option value="novel_series">小说作品</option>
+                  <option value="novel_chapter">小说章节</option>
+                </select>
+              </label>
+              <label>
+                语言
+                <select id="content-locale" required>
+                  <option value="zh-Hant">繁中</option>
+                  <option value="zh-Hans">简中</option>
+                  <option value="en">English</option>
+                  <option value="ja">日本語</option>
+                </select>
+              </label>
+              <label>
+                状态
+                <select id="content-status">
+                  <option value="draft">草稿</option>
+                  <option value="scheduled">定时</option>
+                  <option value="published">发布</option>
+                  <option value="archived">归档</option>
+                </select>
+              </label>
+              <label>
+                可见性
+                <select id="content-visibility">
+                  <option value="public">公开</option>
+                  <option value="unlisted">隐藏链接</option>
+                  <option value="private">私有</option>
+                </select>
+              </label>
+              <label>
+                Slug
+                <input id="content-slug" required placeholder="post-or-chapter-slug" />
+              </label>
+              <label>
+                父级 seriesSlug
+                <input id="content-parent-slug" placeholder="novel-series-slug" />
+              </label>
+              <label>
+                标题
+                <input id="content-title" required placeholder="内容标题" />
+              </label>
+              <label>
+                副标题
+                <input id="content-subtitle" placeholder="可选副标题" />
+              </label>
+              <label>
+                作者
+                <input id="content-author" placeholder="Station Cat" />
+              </label>
+              <label>
+                Tags
+                <input id="content-tags" placeholder="Novel, Devlog, Station Cat" />
+              </label>
+              <label>
+                章节序号
+                <input id="content-chapter-number" type="number" min="1" step="1" placeholder="1" />
+              </label>
+              <label>
+                分卷标题
+                <input id="content-volume-title" placeholder="第一卷" />
+              </label>
+              <label>
+                发布时间
+                <input id="content-published-at" type="datetime-local" />
+              </label>
+              <label>
+                排序
+                <input id="content-sort-order" type="number" min="0" step="1" value="0" />
+              </label>
+              <label class="admin-checkbox">
+                <input id="content-featured" type="checkbox" />
+                首页或书架精选
+              </label>
+            </div>
+
+            <label>
+              描述
+              <textarea id="content-description" rows="3" placeholder="用于列表、SEO 和分享卡片的说明。"></textarea>
+            </label>
+            <label>
+              摘要
+              <textarea id="content-excerpt" rows="3" placeholder="可选短摘要。"></textarea>
+            </label>
+
+            <section class="admin-v2-subpanel">
+              <div class="admin-v2-section-heading">
+                <div>
+                  <p class="station-kicker">Pricing</p>
+                  <h3>收费、打赏与多章折扣</h3>
+                </div>
+              </div>
+              <div class="admin-v2-form-grid">
+                <label>
+                  访问级别
+                  <select id="content-access-level">
+                    <option value="free">免费</option>
+                    <option value="paid">付费</option>
+                    <option value="supporter">支持者</option>
+                    <option value="member">会员</option>
+                  </select>
+                </label>
+                <label>
+                  收费模式
+                  <select id="pricing-mode">
+                    <option value="free">免费阅读</option>
+                    <option value="tip-optional">免费 + 打赏</option>
+                    <option value="chapter-paid">单章购买</option>
+                    <option value="volume-paid">分卷购买</option>
+                    <option value="member">会员阅读</option>
+                  </select>
+                </label>
+                <label>
+                  免费章节数
+                  <input id="pricing-free-chapters" type="number" min="0" step="1" value="0" />
+                </label>
+                <label>
+                  单章价格 USD
+                  <input id="pricing-chapter-price" type="number" min="0" step="0.01" placeholder="0.30" />
+                </label>
+                <label>
+                  单章阅读点
+                  <input id="pricing-chapter-credits" type="number" min="0" step="1" placeholder="30" />
+                </label>
+                <label class="admin-checkbox">
+                  <input id="pricing-tips-enabled" type="checkbox" />
+                  开启打赏
+                </label>
+                <label>
+                  打赏金额 USD
+                  <input id="pricing-tip-amounts" placeholder="1, 3, 5" />
+                </label>
+                <label class="admin-checkbox">
+                  <input id="pricing-bundles-enabled" type="checkbox" />
+                  开启多章折扣
+                </label>
+                <label>
+                  多章折扣
+                  <input id="pricing-bundles" placeholder="5:10, 10:20" />
+                </label>
+              </div>
+            </section>
+
+            <section class="admin-v2-subpanel">
+              <div class="admin-v2-section-heading">
+                <div>
+                  <p class="station-kicker">Media</p>
+                  <h3>封面、导入备份与来源</h3>
+                </div>
+              </div>
+              <div class="admin-v2-form-grid">
+                <label>
+                  Cover R2 Key
+                  <input id="content-cover-r2-key" placeholder="content/media/covers/name.webp" />
+                </label>
+                <label>
+                  Cover Alt
+                  <input id="content-cover-alt" placeholder="封面描述" />
+                </label>
+                <label>
+                  Source Ref
+                  <input id="content-source-ref" placeholder="legacy markdown path or import id" />
+                </label>
+                <label>
+                  Revision Summary
+                  <input id="content-revision-summary" placeholder="本次修改说明" />
+                </label>
+              </div>
+            </section>
+
+            <section class="admin-v2-subpanel">
+              <div class="admin-v2-section-heading">
+                <div>
+                  <p class="station-kicker">Markdown</p>
+                  <h3>导入、预览与正文</h3>
+                </div>
+                <div class="button-row">
+                  <label class="button button-secondary admin-file-button" for="content-file">导入 Markdown</label>
+                  <input class="admin-file-input" id="content-file" type="file" accept=".md,.markdown,text/markdown,text/plain" />
+                  <button class="button button-secondary" id="content-preview-button" type="button">刷新预览</button>
+                </div>
+              </div>
+              <textarea id="content-markdown" rows="18" spellcheck="false" placeholder="这里写正文 Markdown。导入带 frontmatter 的文件时，系统会自动填入上面的字段。"></textarea>
+              <div class="admin-v2-preview" id="content-preview">等待输入正文。</div>
+            </section>
+
+            <div class="button-row">
+              <button class="button button-primary" id="content-save" type="submit">保存到后端内容平台</button>
+              <button class="button button-secondary" id="content-reset" type="button">清空表单</button>
+            </div>
+            <div class="admin-inline-status" id="content-save-status" role="status" aria-live="polite" hidden></div>
+          </form>
+
+          <section class="admin-v2-subpanel">
+            <div class="admin-v2-section-heading">
+              <div>
+                <p class="station-kicker">History</p>
+                <h3>修订记录</h3>
+              </div>
+            </div>
+            <div class="admin-v2-list admin-v2-list--compact" id="revision-list"></div>
+          </section>
+        </section>
+
+        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="commerce-main" hidden>
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">Orders</p>
+              <h2>订单与收入排查</h2>
+            </div>
+          </div>
+          <div class="admin-v2-table-list" id="orders-list"></div>
+        </section>
+
+        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="access-main" hidden>
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">Entitlements</p>
+              <h2>读者授权</h2>
+            </div>
+          </div>
+          <form class="admin-v2-form" id="access-form">
+            <div class="admin-v2-form-grid">
+              <label>
+                读者 Email
+                <input id="access-email" type="email" required placeholder="reader@example.com" />
+              </label>
+              <label>
+                seriesSlug
+                <input id="access-series-slug" required placeholder="deng-hai-liang-zhe" />
+              </label>
+              <label>
+                授权范围
+                <select id="access-scope">
+                  <option value="chapter">单章</option>
+                  <option value="series">整本作品</option>
+                </select>
+              </label>
+              <label>
+                chapterSlug
+                <input id="access-chapter-slug" placeholder="prologue-light" />
+              </label>
+              <label>
+                权限级别
+                <select id="access-level">
+                  <option value="paid">付费</option>
+                  <option value="supporter">支持者</option>
+                  <option value="all">全部</option>
+                </select>
+              </label>
+              <label>
+                到期时间
+                <input id="access-expires-at" type="datetime-local" />
+              </label>
+            </div>
+            <label>
+              备注
+              <textarea id="access-note" rows="3" placeholder="手动补单、测试授权或客服处理说明。"></textarea>
+            </label>
+            <button class="button button-primary" type="submit">发放授权</button>
+          </form>
+          <div class="admin-v2-table-list" id="access-list"></div>
+        </section>
+
+        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="audit-main" hidden>
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">Audit</p>
+              <h2>后台审计日志</h2>
+            </div>
+          </div>
+          <div class="admin-v2-table-list" id="audit-list"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+    const elements = {
+      status: $('#admin-v2-status'),
+      stage: $('#schema-stage'),
+      storageBadge: $('#storage-badge'),
+      tabs: $$('[data-admin-v2-tab]'),
+      panels: $$('[data-admin-v2-panel]'),
+      contentList: $('#content-list'),
+      revisionList: $('#revision-list'),
+      ordersList: $('#orders-list'),
+      accessList: $('#access-list'),
+      auditList: $('#audit-list'),
+      contentForm: $('#content-form'),
+      accessForm: $('#access-form'),
+      saveStatus: $('#content-save-status'),
+      editorHeading: $('#editor-heading'),
+      preview: $('#content-preview'),
+      fields: {
+        id: $('#content-entry-id'),
+        entryType: $('#content-entry-type'),
+        locale: $('#content-locale'),
+        status: $('#content-status'),
+        visibility: $('#content-visibility'),
+        slug: $('#content-slug'),
+        parentSlug: $('#content-parent-slug'),
+        title: $('#content-title'),
+        subtitle: $('#content-subtitle'),
+        author: $('#content-author'),
+        tags: $('#content-tags'),
+        chapterNumber: $('#content-chapter-number'),
+        volumeTitle: $('#content-volume-title'),
+        publishedAt: $('#content-published-at'),
+        sortOrder: $('#content-sort-order'),
+        featured: $('#content-featured'),
+        description: $('#content-description'),
+        excerpt: $('#content-excerpt'),
+        accessLevel: $('#content-access-level'),
+        pricingMode: $('#pricing-mode'),
+        freeChapters: $('#pricing-free-chapters'),
+        chapterPrice: $('#pricing-chapter-price'),
+        chapterCredits: $('#pricing-chapter-credits'),
+        tipsEnabled: $('#pricing-tips-enabled'),
+        tipAmounts: $('#pricing-tip-amounts'),
+        bundlesEnabled: $('#pricing-bundles-enabled'),
+        bundles: $('#pricing-bundles'),
+        coverR2Key: $('#content-cover-r2-key'),
+        coverAlt: $('#content-cover-alt'),
+        sourceRef: $('#content-source-ref'),
+        revisionSummary: $('#content-revision-summary'),
+        markdown: $('#content-markdown'),
+        file: $('#content-file')
+      },
+      filters: {
+        type: $('#content-filter-type'),
+        status: $('#content-filter-status'),
+        orderStatus: $('#orders-status'),
+        accessEmail: $('#access-email-filter'),
+        auditTargetType: $('#audit-target-type'),
+        auditTargetSlug: $('#audit-target-slug')
+      },
+      access: {
+        email: $('#access-email'),
+        seriesSlug: $('#access-series-slug'),
+        scope: $('#access-scope'),
+        chapterSlug: $('#access-chapter-slug'),
+        accessLevel: $('#access-level'),
+        expiresAt: $('#access-expires-at'),
+        note: $('#access-note')
+      }
+    };
+
+    const state = {
+      entries: [],
+      selectedEntryId: 0,
+      schema: null
+    };
+
+    const setStatus = (message, tone = 'neutral') => {
+      elements.status.textContent = message;
+      elements.status.dataset.tone = tone;
+    };
+
+    const setSaveStatus = (message, tone = 'neutral') => {
+      elements.saveStatus.textContent = message;
+      elements.saveStatus.dataset.tone = tone;
+      elements.saveStatus.hidden = !message;
+    };
+
+    const apiJson = async (path, options = {}) => {
+      const response = await fetch(path, {
+        ...options,
+        headers: {
+          'content-type': 'application/json',
+          ...(options.headers || {})
+        }
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.ok === false) {
+        throw new Error(payload.message || `Request failed: ${response.status}`);
+      }
+      return payload;
+    };
+
+    const escapeHtml = (value) =>
+      String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+    const splitTags = (value) =>
+      String(value || '')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+    const slugify = (value, fallback = 'entry') => {
+      const slug = String(value || '')
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      return slug || `${fallback}-${Date.now()}`;
+    };
+
+    const toDatetimeLocal = (value) => {
+      if (!value) return '';
+      const date = new Date(value.includes('T') ? value : value.replace(' ', 'T'));
+      if (Number.isNaN(date.getTime())) return '';
+      const offset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+    };
+
+    const parseYamlScalar = (value) => {
+      const trimmed = String(value || '').trim();
+      if (!trimmed) return '';
+      if (trimmed === 'true') return true;
+      if (trimmed === 'false') return false;
+      if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
+      return trimmed.replace(/^['"]|['"]$/g, '');
+    };
+
+    const parseMarkdownDocument = (markdown) => {
+      const normalized = String(markdown || '').replace(/\r\n/g, '\n');
+      const match = normalized.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+      if (!match) return { frontmatter: {}, body: normalized.trim() };
+
+      const frontmatter = {};
+      const lines = match[1].split('\n');
+      for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
+        if (!line || line.startsWith('  ')) continue;
+        const separator = line.indexOf(':');
+        if (separator === -1) continue;
+        const key = line.slice(0, separator).trim();
+        const value = line.slice(separator + 1).trim();
+
+        if (value) {
+          frontmatter[key] = parseYamlScalar(value);
+          continue;
+        }
+
+        const items = [];
+        while (lines[index + 1]?.startsWith('  - ')) {
+          index += 1;
+          items.push(parseYamlScalar(lines[index].replace(/^  - /, '')));
+        }
+        frontmatter[key] = items;
+      }
+
+      return { frontmatter, body: match[2].trim() };
+    };
+
+    const detectEntryType = (frontmatter) => {
+      if (frontmatter.chapterSlug || frontmatter.chapterNumber || frontmatter.number) return 'novel_chapter';
+      if (frontmatter.seriesSlug || frontmatter.updateSchedule || frontmatter.latestChapterSlug) return 'novel_series';
+      return 'blog_post';
+    };
+
+    const normalizeBackendStatus = (frontmatter) => {
+      if (frontmatter.draft === true) return 'draft';
+      if (['draft', 'scheduled', 'published', 'archived'].includes(frontmatter.status)) return frontmatter.status;
+      return 'published';
+    };
+
+    const formatBundleRules = (value) =>
+      String(value || '')
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part) => {
+          const [minimumChapters, discountPercent] = part.split(':').map((item) => Number.parseInt(item.trim(), 10));
+          return Number.isFinite(minimumChapters) && Number.isFinite(discountPercent)
+            ? { minimumChapters, discountPercent }
+            : null;
+        })
+        .filter(Boolean);
+
+    const bundleRulesToInput = (rules) =>
+      Array.isArray(rules)
+        ? rules.map((rule) => `${rule.minimumChapters}:${rule.discountPercent}`).join(', ')
+        : '';
+
+    const renderMarkdownToHtml = (markdown) => {
+      const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
+      const html = [];
+      let listOpen = false;
+
+      const closeList = () => {
+        if (listOpen) {
+          html.push('</ul>');
+          listOpen = false;
+        }
+      };
+
+      lines.forEach((line) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          closeList();
+          return;
+        }
+        if (trimmed.startsWith('### ')) {
+          closeList();
+          html.push(`<h3>${escapeHtml(trimmed.slice(4))}</h3>`);
+          return;
+        }
+        if (trimmed.startsWith('## ')) {
+          closeList();
+          html.push(`<h2>${escapeHtml(trimmed.slice(3))}</h2>`);
+          return;
+        }
+        if (trimmed.startsWith('# ')) {
+          closeList();
+          html.push(`<h1>${escapeHtml(trimmed.slice(2))}</h1>`);
+          return;
+        }
+        if (/^[-*]\s+/.test(trimmed)) {
+          if (!listOpen) {
+            html.push('<ul>');
+            listOpen = true;
+          }
+          html.push(`<li>${escapeHtml(trimmed.replace(/^[-*]\s+/, ''))}</li>`);
+          return;
+        }
+        closeList();
+        html.push(`<p>${escapeHtml(trimmed)}</p>`);
+      });
+
+      closeList();
+      return html.join('\n');
+    };
+
+    const renderPreview = () => {
+      const markdown = elements.fields.markdown.value.trim();
+      if (!markdown) {
+        elements.preview.textContent = '等待输入正文。';
+        return '';
+      }
+      const html = renderMarkdownToHtml(markdown);
+      elements.preview.innerHTML = html;
+      return html;
+    };
+
+    const countWords = (value) => {
+      const text = String(value || '').trim();
+      if (!text) return 0;
+      const latin = text.match(/[A-Za-z0-9]+/g) || [];
+      const cjk = text.match(/[\u3400-\u9fff]/g) || [];
+      return latin.length + cjk.length;
+    };
+
+    const fillFormFromEntry = (entry, body = {}) => {
+      state.selectedEntryId = entry?.id || 0;
+      elements.editorHeading.textContent = entry?.id ? `编辑：${entry.title}` : '创建后端内容';
+      elements.fields.id.value = entry?.id || '';
+      elements.fields.entryType.value = entry?.entryType || 'blog_post';
+      elements.fields.locale.value = entry?.locale || 'zh-Hant';
+      elements.fields.status.value = entry?.status || 'draft';
+      elements.fields.visibility.value = entry?.visibility || 'public';
+      elements.fields.slug.value = entry?.slug || '';
+      elements.fields.parentSlug.value = entry?.parentSlug || '';
+      elements.fields.title.value = entry?.title || '';
+      elements.fields.subtitle.value = entry?.subtitle || '';
+      elements.fields.author.value = entry?.authorName || 'Station Cat';
+      elements.fields.tags.value = (entry?.tags || []).join(', ');
+      elements.fields.chapterNumber.value = entry?.chapterNumber || '';
+      elements.fields.volumeTitle.value = entry?.volumeTitle || '';
+      elements.fields.publishedAt.value = toDatetimeLocal(entry?.publishedAt);
+      elements.fields.sortOrder.value = entry?.sortOrder || 0;
+      elements.fields.featured.checked = Boolean(entry?.featured);
+      elements.fields.description.value = entry?.description || '';
+      elements.fields.excerpt.value = entry?.excerpt || '';
+      elements.fields.accessLevel.value = entry?.accessLevel || 'free';
+      elements.fields.coverR2Key.value = entry?.coverR2Key || '';
+      elements.fields.coverAlt.value = entry?.coverAlt || '';
+      elements.fields.sourceRef.value = entry?.sourceRef || '';
+      elements.fields.revisionSummary.value = '';
+      elements.fields.markdown.value = body.markdown || '';
+
+      const pricing = entry?.pricing || {};
+      elements.fields.pricingMode.value = pricing.mode || 'free';
+      elements.fields.freeChapters.value = pricing.freeChapters || 0;
+      elements.fields.chapterPrice.value = pricing.chapterPriceAmount || '';
+      elements.fields.chapterCredits.value = pricing.chapterCredits || '';
+      elements.fields.tipsEnabled.checked = Boolean(pricing.tipsEnabled);
+      elements.fields.tipAmounts.value = Array.isArray(pricing.tipAmounts) ? pricing.tipAmounts.join(', ') : '';
+      elements.fields.bundlesEnabled.checked = Boolean(pricing.bundlePurchasesEnabled);
+      elements.fields.bundles.value = bundleRulesToInput(pricing.chapterBundleDiscounts);
+
+      renderPreview();
+      updateConditionalFields();
+    };
+
+    const resetForm = (entryType = 'blog_post') => {
+      fillFormFromEntry({
+        entryType,
+        locale: 'zh-Hant',
+        status: 'draft',
+        visibility: 'public',
+        accessLevel: 'free',
+        authorName: 'Station Cat',
+        tags: [],
+        pricing: { mode: 'free', freeChapters: 0 },
+        sortOrder: 0
+      });
+      setSaveStatus('');
+    };
+
+    const updateConditionalFields = () => {
+      const isChapter = elements.fields.entryType.value === 'novel_chapter';
+      elements.fields.parentSlug.closest('label').hidden = !isChapter;
+      elements.fields.chapterNumber.closest('label').hidden = !isChapter;
+      elements.fields.volumeTitle.closest('label').hidden = !isChapter;
+      elements.fields.parentSlug.required = isChapter;
+      elements.fields.chapterNumber.required = isChapter;
+    };
+
+    const entryTypeLabel = (type) => ({
+      blog_post: 'Blog',
+      novel_series: '作品',
+      novel_chapter: '章节'
+    })[type] || type;
+
+    const renderEmpty = (target, message) => {
+      target.innerHTML = `<p class="admin-empty-list">${escapeHtml(message)}</p>`;
+    };
+
+    const renderContentList = () => {
+      if (!state.entries.length) {
+        renderEmpty(elements.contentList, '还没有后端内容记录。');
+        return;
+      }
+
+      elements.contentList.innerHTML = '';
+      state.entries.forEach((entry) => {
+        const button = document.createElement('button');
+        button.className = `admin-v2-entry${entry.id === state.selectedEntryId ? ' is-active' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `
+          <span>${escapeHtml(entry.title)}</span>
+          <small>${entryTypeLabel(entry.entryType)} · ${entry.locale} · ${entry.status} · ${entry.accessLevel}</small>
+          <small>${escapeHtml(entry.parentSlug ? `${entry.parentSlug}/${entry.slug}` : entry.slug)}</small>
+        `;
+        button.addEventListener('click', () => loadEntryForEdit(entry.id));
+        elements.contentList.append(button);
+      });
+    };
+
+    const loadSchema = async () => {
+      const schema = await apiJson('/admin/api/content/schema');
+      state.schema = schema;
+      elements.stage.textContent = `Stage ${schema.stage}`;
+      elements.storageBadge.textContent = schema.storage?.contentBucketConfigured ? 'R2 已连接' : 'R2 未配置';
+      elements.storageBadge.dataset.tone = schema.storage?.contentBucketConfigured ? 'success' : 'error';
+    };
+
+    const loadEntries = async () => {
+      const params = new URLSearchParams();
+      if (elements.filters.type.value) params.set('type', elements.filters.type.value);
+      if (elements.filters.status.value) params.set('status', elements.filters.status.value);
+      const payload = await apiJson(`/admin/api/content/entries?${params.toString()}`);
+      state.entries = payload.entries || [];
+      renderContentList();
+      setStatus(`已载入 ${state.entries.length} 条后端内容。`, 'success');
+    };
+
+    const loadEntryForEdit = async (id) => {
+      setStatus('正在读取正文。');
+      const payload = await apiJson(`/admin/api/content/body?id=${encodeURIComponent(id)}`);
+      fillFormFromEntry(payload.entry, payload.body);
+      await loadRevisions(id);
+      renderContentList();
+      setStatus(`已载入：${payload.entry.title}`, 'success');
+    };
+
+    const loadRevisions = async (id = state.selectedEntryId) => {
+      if (!id) {
+        renderEmpty(elements.revisionList, '保存后会显示修订记录。');
+        return;
+      }
+      const payload = await apiJson(`/admin/api/content/revisions?id=${encodeURIComponent(id)}`);
+      const revisions = payload.revisions || [];
+      if (!revisions.length) {
+        renderEmpty(elements.revisionList, '暂无修订记录。');
+        return;
+      }
+      elements.revisionList.innerHTML = revisions.map((revision) => `
+        <article class="admin-v2-row">
+          <strong>#${revision.revisionNumber} · ${escapeHtml(revision.status)}</strong>
+          <span>${escapeHtml(revision.summary || '未填写修订说明')}</span>
+          <small>${escapeHtml(revision.createdBy || 'admin')} · ${escapeHtml(revision.createdAt || '')}</small>
+        </article>
+      `).join('');
+    };
+
+    const buildPayload = () => {
+      const markdown = elements.fields.markdown.value.trim();
+      const html = renderPreview();
+      const wordCount = countWords(markdown);
+      const entryType = elements.fields.entryType.value;
+      const slug = elements.fields.slug.value.trim() || slugify(elements.fields.title.value, entryType);
+
+      return {
+        id: elements.fields.id.value || undefined,
+        entryType,
+        locale: elements.fields.locale.value,
+        status: elements.fields.status.value,
+        visibility: elements.fields.visibility.value,
+        accessLevel: elements.fields.accessLevel.value,
+        slug,
+        parentSlug: entryType === 'novel_chapter' ? elements.fields.parentSlug.value.trim() : '',
+        title: elements.fields.title.value.trim(),
+        subtitle: elements.fields.subtitle.value.trim(),
+        authorName: elements.fields.author.value.trim() || 'Station Cat',
+        tags: splitTags(elements.fields.tags.value),
+        chapterNumber: elements.fields.chapterNumber.value ? Number(elements.fields.chapterNumber.value) : undefined,
+        volumeTitle: elements.fields.volumeTitle.value.trim(),
+        publishedAt: elements.fields.publishedAt.value,
+        sortOrder: Number(elements.fields.sortOrder.value || 0),
+        featured: elements.fields.featured.checked,
+        description: elements.fields.description.value.trim(),
+        excerpt: elements.fields.excerpt.value.trim(),
+        coverR2Key: elements.fields.coverR2Key.value.trim(),
+        coverAlt: elements.fields.coverAlt.value.trim(),
+        sourceRef: elements.fields.sourceRef.value.trim(),
+        revisionSummary: elements.fields.revisionSummary.value.trim(),
+        markdown,
+        html,
+        wordCount,
+        readingMinutes: Math.max(1, Math.ceil(wordCount / 450)),
+        pricing: {
+          mode: elements.fields.pricingMode.value,
+          freeChapters: Number(elements.fields.freeChapters.value || 0),
+          chapterPriceAmount: elements.fields.chapterPrice.value ? Number(elements.fields.chapterPrice.value) : 0,
+          chapterPriceCurrency: 'USD',
+          chapterCredits: elements.fields.chapterCredits.value ? Number(elements.fields.chapterCredits.value) : 0,
+          tipsEnabled: elements.fields.tipsEnabled.checked,
+          tipAmounts: splitTags(elements.fields.tipAmounts.value).map(Number).filter(Number.isFinite),
+          tipCurrency: 'USD',
+          bundlePurchasesEnabled: elements.fields.bundlesEnabled.checked,
+          chapterBundleDiscounts: formatBundleRules(elements.fields.bundles.value)
+        },
+        metadata: {
+          adminVersion: '7C',
+          importedFromAdminV2: true
+        }
+      };
+    };
+
+    const saveContent = async (event) => {
+      event.preventDefault();
+      const payload = buildPayload();
+      if (!payload.title || !payload.slug) {
+        setSaveStatus('标题和 Slug 必填。', 'error');
+        return;
+      }
+      if (payload.entryType === 'novel_chapter' && (!payload.parentSlug || !payload.chapterNumber)) {
+        setSaveStatus('小说章节需要 seriesSlug 和章节序号。', 'error');
+        return;
+      }
+
+      $('#content-save').disabled = true;
+      setSaveStatus('正在保存到 D1 / R2。');
+      try {
+        const result = await apiJson('/admin/api/content/entries', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        setSaveStatus(`保存成功，修订 #${result.revisionNumber}。`, 'success');
+        fillFormFromEntry(result.entry, { markdown: payload.markdown, html: payload.html });
+        await Promise.all([loadEntries(), loadRevisions(result.entry.id), loadAuditLogs()]);
+      } catch (error) {
+        setSaveStatus(error.message, 'error');
+      } finally {
+        $('#content-save').disabled = false;
+      }
+    };
+
+    const applyImportedMarkdown = (markdown) => {
+      const parsed = parseMarkdownDocument(markdown);
+      const frontmatter = parsed.frontmatter;
+      const entryType = detectEntryType(frontmatter);
+      resetForm(entryType);
+
+      elements.fields.entryType.value = entryType;
+      elements.fields.locale.value = frontmatter.language || frontmatter.locale || 'zh-Hant';
+      elements.fields.status.value = normalizeBackendStatus(frontmatter);
+      elements.fields.title.value = frontmatter.title || '';
+      elements.fields.subtitle.value = frontmatter.subtitle || frontmatter.tagline || '';
+      elements.fields.description.value = frontmatter.description || '';
+      elements.fields.excerpt.value = frontmatter.excerpt || '';
+      elements.fields.author.value = frontmatter.author || 'Station Cat';
+      elements.fields.tags.value = Array.isArray(frontmatter.tags) ? frontmatter.tags.join(', ') : '';
+      elements.fields.slug.value = frontmatter.chapterSlug || frontmatter.slug || frontmatter.seriesSlug || slugify(frontmatter.title, entryType);
+      elements.fields.parentSlug.value = frontmatter.seriesSlug || frontmatter.parentSlug || '';
+      elements.fields.chapterNumber.value = frontmatter.chapterNumber || frontmatter.number || '';
+      elements.fields.publishedAt.value = toDatetimeLocal(frontmatter.publishedAt || frontmatter.pubDate || '');
+      elements.fields.coverR2Key.value = frontmatter.coverImage || '';
+      elements.fields.coverAlt.value = frontmatter.coverAlt || '';
+      elements.fields.accessLevel.value = frontmatter.access || frontmatter.accessLevel || 'free';
+      elements.fields.pricingMode.value = frontmatter.priceMode || 'free';
+      elements.fields.freeChapters.value = frontmatter.freeChapters || 0;
+      elements.fields.tipsEnabled.checked = Boolean(frontmatter.tipsEnabled);
+      elements.fields.markdown.value = parsed.body;
+      elements.fields.sourceRef.value = 'markdown-import';
+      elements.fields.revisionSummary.value = 'Imported from Markdown file';
+
+      updateConditionalFields();
+      renderPreview();
+      setSaveStatus('Markdown 已导入，检查字段后即可保存。', 'success');
+    };
+
+    const loadOrders = async () => {
+      const params = new URLSearchParams({ limit: '80' });
+      if (elements.filters.orderStatus.value) params.set('status', elements.filters.orderStatus.value);
+      const payload = await apiJson(`/admin/api/novels/payments/orders?${params.toString()}`);
+      const orders = payload.orders || [];
+      if (!orders.length) {
+        renderEmpty(elements.ordersList, '暂无订单。');
+        return;
+      }
+      elements.ordersList.innerHTML = orders.map((order) => `
+        <article class="admin-v2-row">
+          <strong>${escapeHtml(order.orderToken || order.providerPaymentId || `#${order.id}`)}</strong>
+          <span>${escapeHtml(order.status)} · ${escapeHtml(order.orderType)} · ${escapeHtml(order.amountUsd || '')} USD</span>
+          <small>${escapeHtml(order.email || order.accountEmail || '')} · ${escapeHtml(order.seriesSlug || '')} ${escapeHtml(order.chapterSlug || '')}</small>
+        </article>
+      `).join('');
+    };
+
+    const loadEntitlements = async () => {
+      const params = new URLSearchParams();
+      const email = elements.filters.accessEmail.value.trim();
+      if (email) params.set('email', email);
+      const payload = await apiJson(`/admin/api/novels/entitlements?${params.toString()}`);
+      renderEntitlements(payload.entitlements || []);
+    };
+
+    const renderEntitlements = (entitlements) => {
+      if (!entitlements.length) {
+        renderEmpty(elements.accessList, '暂无授权。');
+        return;
+      }
+      elements.accessList.innerHTML = '';
+      entitlements.forEach((entitlement) => {
+        const row = document.createElement('article');
+        row.className = 'admin-v2-row';
+        row.innerHTML = `
+          <strong>${escapeHtml(entitlement.email || '')}</strong>
+          <span>${escapeHtml(entitlement.seriesSlug)} · ${escapeHtml(entitlement.scope)} · ${escapeHtml(entitlement.accessLevel)}</span>
+          <small>${escapeHtml(entitlement.chapterSlug || 'series')} · ${entitlement.revokedAt ? '已撤销' : '有效'} · ${escapeHtml(entitlement.grantedAt || '')}</small>
+        `;
+        if (!entitlement.revokedAt) {
+          const revoke = document.createElement('button');
+          revoke.className = 'button button-danger';
+          revoke.type = 'button';
+          revoke.textContent = '撤销';
+          revoke.addEventListener('click', () => revokeEntitlement(entitlement));
+          row.append(revoke);
+        }
+        elements.accessList.append(row);
+      });
+    };
+
+    const grantEntitlement = async (event) => {
+      event.preventDefault();
+      const payload = {
+        email: elements.access.email.value.trim(),
+        seriesSlug: elements.access.seriesSlug.value.trim(),
+        scope: elements.access.scope.value,
+        chapterSlug: elements.access.chapterSlug.value.trim(),
+        accessLevel: elements.access.accessLevel.value,
+        expiresAt: elements.access.expiresAt.value,
+        note: elements.access.note.value.trim(),
+        source: 'admin-v2',
+        sourceRef: 'manual-grant',
+        grantedBy: 'admin-v2'
+      };
+      const result = await apiJson('/admin/api/novels/entitlements/grant', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      elements.filters.accessEmail.value = payload.email;
+      renderEntitlements(result.entitlements || []);
+      setStatus('授权已发放。', 'success');
+    };
+
+    const revokeEntitlement = async (entitlement) => {
+      const result = await apiJson('/admin/api/novels/entitlements/revoke', {
+        method: 'POST',
+        body: JSON.stringify({ id: entitlement.id, email: entitlement.email })
+      });
+      renderEntitlements(result.entitlements || []);
+      setStatus('授权已撤销。', 'success');
+    };
+
+    const loadAuditLogs = async () => {
+      const params = new URLSearchParams({ limit: '60' });
+      if (elements.filters.auditTargetType.value.trim()) params.set('targetType', elements.filters.auditTargetType.value.trim());
+      if (elements.filters.auditTargetSlug.value.trim()) params.set('targetSlug', elements.filters.auditTargetSlug.value.trim());
+      const payload = await apiJson(`/admin/api/content/audit-logs?${params.toString()}`);
+      const logs = payload.logs || [];
+      if (!logs.length) {
+        renderEmpty(elements.auditList, '暂无审计日志。');
+        return;
+      }
+      elements.auditList.innerHTML = logs.map((log) => `
+        <article class="admin-v2-row">
+          <strong>${escapeHtml(log.action)}</strong>
+          <span>${escapeHtml(log.targetType)} · ${escapeHtml(log.targetSlug)}</span>
+          <small>${escapeHtml(log.actorEmail || 'admin')} · ${escapeHtml(log.createdAt || '')}</small>
+        </article>
+      `).join('');
+    };
+
+    const switchTab = async (name) => {
+      elements.tabs.forEach((tab) => tab.classList.toggle('is-active', tab.dataset.adminV2Tab === name));
+      elements.panels.forEach((panel) => {
+        const expected = panel.dataset.adminV2Panel.startsWith(`${name}-`);
+        panel.hidden = !expected;
+      });
+      if (name === 'commerce') await loadOrders();
+      if (name === 'access') await loadEntitlements();
+      if (name === 'audit') await loadAuditLogs();
+    };
+
+    elements.tabs.forEach((tab) => tab.addEventListener('click', () => switchTab(tab.dataset.adminV2Tab)));
+    elements.contentForm.addEventListener('submit', saveContent);
+    elements.accessForm.addEventListener('submit', grantEntitlement);
+    $('#content-refresh').addEventListener('click', loadEntries);
+    $('#orders-refresh').addEventListener('click', loadOrders);
+    $('#access-refresh').addEventListener('click', loadEntitlements);
+    $('#audit-refresh').addEventListener('click', loadAuditLogs);
+    $('#content-reset').addEventListener('click', () => resetForm(elements.fields.entryType.value));
+    $('#content-preview-button').addEventListener('click', renderPreview);
+    elements.fields.entryType.addEventListener('change', updateConditionalFields);
+    elements.fields.title.addEventListener('input', () => {
+      if (!elements.fields.slug.value.trim()) elements.fields.slug.value = slugify(elements.fields.title.value, elements.fields.entryType.value);
+    });
+    elements.fields.file.addEventListener('change', async () => {
+      const [file] = elements.fields.file.files || [];
+      if (!file) return;
+      applyImportedMarkdown(await file.text());
+      elements.fields.file.value = '';
+    });
+    $$('[data-new-entry]').forEach((button) => {
+      button.addEventListener('click', () => resetForm(button.dataset.newEntry));
+    });
+
+    const boot = async () => {
+      try {
+        resetForm('blog_post');
+        await loadSchema();
+        await Promise.all([loadEntries(), loadRevisions(), loadAuditLogs()]);
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    };
+
+    boot();
+  </script>
+</BaseLayout>

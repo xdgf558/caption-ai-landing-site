@@ -26,7 +26,7 @@ const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 const readerSessionCookieName = 'station_cat_reader_session';
 const readerSessionMaxAge = 60 * 60 * 24 * 30;
-const adminPathPattern = /^\/admin(?:\/|$)/;
+const adminPathPattern = /^\/admin(?:-v2)?(?:\/|$)/;
 const defaultAdminEmail = 'brodstem@protonmail.com';
 
 const cleanText = (value, maxLength = 500) => String(value || '').trim().slice(0, maxLength);
@@ -3188,8 +3188,8 @@ const handleAdminListNovelOrders = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '7B',
-    purpose: 'Backend content model foundation plus R2-backed protected chapter bodies.',
+    stage: '7C',
+    purpose: 'Admin 2.0 content management for novels, chapters, blog/devlog, pricing, orders, entitlements, and audit review.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -3209,7 +3209,7 @@ const handleAdminContentSchema = async (env) =>
         'admin_audit_logs'
       ],
       protectedContent: 'Paid/supporter chapter HTML is loaded from CONTENT_BUCKET after entitlement checks.',
-      nextStages: ['7C Admin 2.0 UI for novels and blog/devlog']
+      nextStages: ['7D dynamic frontend content reads', '7E backend pricing rules']
     }
   });
 
@@ -3310,6 +3310,167 @@ const handleAdminListContentEntries = async (request, env) => {
     entries: (response.results || []).map(contentEntryToJson),
     storage: getContentStorageDescriptor(env)
   });
+};
+
+const parseContentEntryId = (request) => {
+  const url = new URL(request.url);
+  const id = Number.parseInt(url.searchParams.get('id') || url.searchParams.get('entryId') || '', 10);
+  return Number.isFinite(id) && id > 0 ? id : 0;
+};
+
+const readContentObjectText = async (bucket, key, label) => {
+  if (!key) return '';
+  const object = await bucket.get(key);
+  if (!object) return '';
+  if (object.size && object.size > 2_000_000) {
+    const error = new Error(`${label} is too large to load in Admin 2.0.`);
+    error.code = 'CONTENT_OBJECT_TOO_LARGE';
+    throw error;
+  }
+  return object.text();
+};
+
+const handleAdminGetContentBody = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_TABLES_NOT_READY',
+        message: 'Content tables are not initialized. Apply migration 0007_backend_content_platform.sql before editing.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const id = parseContentEntryId(request);
+  if (!id) return privateJson({ ok: false, code: 'CONTENT_ENTRY_ID_REQUIRED', message: 'A valid entry id is required.' }, { status: 400 });
+
+  const entry = await db.prepare('SELECT * FROM content_entries WHERE id = ?').bind(id).first();
+  if (!entry) return privateJson({ ok: false, code: 'CONTENT_ENTRY_NOT_FOUND', message: 'Content entry not found.' }, { status: 404 });
+
+  const bucket = getContentBucket(env);
+  if (!bucket && (entry.markdown_r2_key || entry.html_r2_key)) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_BUCKET_NOT_CONFIGURED',
+        message: 'CONTENT_BUCKET is not configured, so stored body text cannot be loaded.'
+      },
+      { status: 503 }
+    );
+  }
+
+  try {
+    const [markdown, html] = bucket
+      ? await Promise.all([
+          readContentObjectText(bucket, entry.markdown_r2_key, 'Markdown body'),
+          readContentObjectText(bucket, entry.html_r2_key, 'HTML body')
+        ])
+      : ['', ''];
+
+    return privateJson({
+      ok: true,
+      entry: contentEntryToJson(entry),
+      body: {
+        markdown,
+        html,
+        markdownR2Key: entry.markdown_r2_key,
+        htmlR2Key: entry.html_r2_key
+      }
+    });
+  } catch (error) {
+    return privateJson({ ok: false, code: error.code || 'CONTENT_BODY_READ_FAILED', message: error.message }, { status: 500 });
+  }
+};
+
+const revisionToJson = (row) => ({
+  id: row.id,
+  entryId: row.entry_id,
+  revisionNumber: row.revision_number,
+  status: row.status,
+  title: row.title,
+  summary: row.summary,
+  metadata: parseStoredJson(row.metadata_json, {}),
+  pricing: parseStoredJson(row.pricing_json, {}),
+  markdownR2Key: row.markdown_r2_key,
+  htmlR2Key: row.html_r2_key,
+  createdBy: row.created_by,
+  createdAt: row.created_at
+});
+
+const handleAdminListContentRevisions = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson({ ok: true, setupRequired: true, revisions: [] });
+  }
+
+  const id = parseContentEntryId(request);
+  if (!id) return privateJson({ ok: false, code: 'CONTENT_ENTRY_ID_REQUIRED', message: 'A valid entry id is required.' }, { status: 400 });
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM content_revisions
+       WHERE entry_id = ?
+       ORDER BY revision_number DESC
+       LIMIT 30`
+    )
+    .bind(id)
+    .all();
+
+  return privateJson({ ok: true, revisions: (response.results || []).map(revisionToJson) });
+};
+
+const auditLogToJson = (row) => ({
+  id: row.id,
+  actorEmail: row.actor_email,
+  action: row.action,
+  targetType: row.target_type,
+  targetId: row.target_id,
+  targetSlug: row.target_slug,
+  metadata: parseStoredJson(row.metadata_json, {}),
+  createdAt: row.created_at
+});
+
+const handleAdminListAuditLogs = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson({ ok: true, setupRequired: true, logs: [] });
+  }
+
+  const url = new URL(request.url);
+  const targetType = cleanText(url.searchParams.get('targetType'), 80);
+  const targetSlug = cleanText(url.searchParams.get('targetSlug'), 240);
+  const limit = Math.min(Math.max(Number.parseInt(url.searchParams.get('limit') || '40', 10) || 40, 1), 100);
+  const clauses = [];
+  const params = [];
+
+  if (targetType) {
+    clauses.push('target_type = ?');
+    params.push(targetType);
+  }
+
+  if (targetSlug) {
+    clauses.push('target_slug = ?');
+    params.push(targetSlug);
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM admin_audit_logs
+       ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
+       ORDER BY created_at DESC, id DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+
+  return privateJson({ ok: true, logs: (response.results || []).map(auditLogToJson) });
 };
 
 const uploadContentBodies = async (env, entry) => {
@@ -3516,7 +3677,7 @@ const handlePublicContentEntries = async (request, env) => {
       ok: true,
       setupRequired: true,
       source: 'backend-content-platform',
-      stage: '7A',
+      stage: '7C',
       entries: []
     });
   }
@@ -3546,7 +3707,7 @@ const handlePublicContentEntries = async (request, env) => {
   return json({
     ok: true,
     source: 'backend-content-platform',
-    stage: '7B',
+    stage: '7C',
     entries: (response.results || []).map(contentEntryToJson)
   });
 };
@@ -4316,6 +4477,21 @@ export default {
 
     if (url.pathname === '/admin/api/content/schema') {
       if (request.method === 'GET') return handleAdminContentSchema(env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/body') {
+      if (request.method === 'GET') return handleAdminGetContentBody(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/revisions') {
+      if (request.method === 'GET') return handleAdminListContentRevisions(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/audit-logs') {
+      if (request.method === 'GET') return handleAdminListAuditLogs(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

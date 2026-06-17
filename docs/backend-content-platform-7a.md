@@ -133,7 +133,7 @@ member
 1. Keep current `src/content/devlog`, `src/content/serials`, and `src/content/serialChapters` as the public source.
 2. Start writing new backend content entries through Admin 2.0 APIs.
 3. In Stage 7B, move protected chapter bodies from generated Worker modules to R2-backed reads.
-4. In Stage 7C, build Admin 2.0 for novels and blog/devlog.
+4. Stage 7C adds `/admin-v2/` for novels, chapters, blog/devlog, orders, entitlements, revisions, and audit logs.
 5. In Stage 7G, migrate legacy Markdown files into D1/R2 and remove the old GitHub-token authoring flow.
 
 ## Production Setup Still Needed
