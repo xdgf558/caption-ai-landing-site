@@ -15,22 +15,6 @@ const devlog = defineCollection({
   })
 });
 
-const xworks = defineCollection({
-  type: 'content',
-  schema: z.object({
-    title: z.string(),
-    description: z.string().optional(),
-    xUrl: z.string().url(),
-    type: z.enum(['video', 'post', 'image', 'thread']).default('post'),
-    tags: z.array(z.string()).default([]),
-    language: z.enum(['en', 'ja', 'zh-hant']).default('en'),
-    featured: z.boolean().default(false),
-    status: z.enum(['draft', 'published']).default('draft'),
-    sortOrder: z.number().default(100),
-    publishedAt: z.string().optional()
-  })
-});
-
 const serials = defineCollection({
   type: 'content',
   schema: z.object({
@@ -80,4 +64,4 @@ const serialChapters = defineCollection({
   })
 });
 
-export const collections = { devlog, xworks, serials, serialChapters };
+export const collections = { devlog, serials, serialChapters };

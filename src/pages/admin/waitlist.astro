@@ -103,9 +103,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       settings.forEach((setting) => {
         const count = counts.find((item) => item.platform === setting.platform) || {};
         const row = document.createElement('article');
-        row.className = 'admin-work-row';
+        row.className = 'admin-file-row';
         const main = document.createElement('div');
-        main.className = 'admin-work-row__main';
+        main.className = 'admin-file-row__main';
         const title = document.createElement('h3');
         title.textContent = setting.platform === 'ios' ? 'iOS TestFlight' : 'Android';
         const meta = document.createElement('p');
