@@ -33,6 +33,8 @@ Domain: your production domain
 Path: /admin*
 ```
 
+This route must cover both admin pages and admin API routes, including `/admin/api/novels/entitlements`.
+
 If Cloudflare does not match `/admin*` as expected, create two Access applications or rules:
 
 ```text

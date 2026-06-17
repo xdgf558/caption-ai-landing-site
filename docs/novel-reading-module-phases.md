@@ -172,18 +172,17 @@
 - 读者通知与催更订阅
 - 付费阅读说明、退款边界、支持邮箱流程
 
-## 当前执行：阶段 4A
+## 当前执行：阶段 4B
 
-阶段 1 到阶段 3 已经完成并上线。当前进入阶段 4A，先把读者账户、magic link 登录、session cookie 和 `/library/` 空书库搭起来。
+阶段 4A 已经完成并合并到 `main`。当前进入阶段 4B，重点是把“读者账号”和“可读内容”连接起来。
 
 这次先做：
 
-1. 新增 `reader_accounts`、`reader_login_tokens`、`reader_sessions`
-2. 新增 `/api/readers/magic-link`
-3. 新增 `/api/readers/verify`
-4. 新增 `/api/readers/session`
-5. 新增 `/api/readers/logout`
-6. 新增 `/library/` 页面
-7. 连载小说页增加“我的书库”入口
+1. 新增 `novel_entitlements`
+2. 新增 `/api/novels/access`
+3. 新增 `/api/novels/library`
+4. 新增管理员手动授权入口
+5. `/library/` 展示已解锁内容
+6. 付费 / 支持者章节显示锁定状态，并通过 Worker 查询权限
 
-阶段 4A 暂不做真实阅读权限发放。阶段 4B 再接 `novel_entitlements`、管理员手动授权和已解锁内容列表。
+阶段 4B 暂不接真实 NOWPayments 订单、打赏记录和 webhook。阶段 5 再把支付成功后的发放逻辑写入同一张 `novel_entitlements` 表。

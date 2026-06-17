@@ -29,6 +29,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <div class="admin-tabs" role="tablist" aria-label="Content type">
           <button class="admin-tab is-active" id="tab-devlog" type="button" data-admin-tab="devlog">Devlog</button>
           <button class="admin-tab" id="tab-serials" type="button" data-admin-tab="serials">連載小說</button>
+          <button class="admin-tab" id="tab-reader-access" type="button" data-admin-tab="readerAccess">讀者授權</button>
         </div>
 
         <div class="button-row">
@@ -57,6 +58,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               <div class="admin-post-list" id="serial-chapters-list" aria-label="Existing serial chapter files"></div>
             </div>
           </div>
+        </div>
+
+        <div class="admin-list-panel" id="reader-access-list-panel" hidden>
+          <p class="station-kicker">Reader access</p>
+          <p class="fine-print">手動授權會寫入 D1 的 <code>novel_entitlements</code>，供書庫和章節頁權限判斷使用。</p>
+          <div class="admin-post-list" id="reader-entitlements-list" aria-label="Reader entitlements"></div>
         </div>
       </aside>
 
@@ -173,6 +180,53 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
         <div class="admin-inline-status" id="serial-save-status" role="status" aria-live="polite" hidden></div>
       </form>
+
+      <form class="admin-panel admin-editor" id="reader-access-editor" hidden>
+        <div class="admin-form-grid">
+          <label>
+            讀者 Email
+            <input id="reader-access-email" name="email" type="email" required placeholder="reader@example.com" />
+          </label>
+          <label>
+            seriesSlug
+            <input id="reader-access-series" name="seriesSlug" required placeholder="deng-hai-liang-zhe" />
+          </label>
+          <label>
+            授權範圍
+            <select id="reader-access-scope" name="scope">
+              <option value="chapter">單章</option>
+              <option value="series">整本作品</option>
+            </select>
+          </label>
+          <label>
+            chapterSlug
+            <input id="reader-access-chapter" name="chapterSlug" placeholder="prologue-light" />
+          </label>
+          <label>
+            權限類型
+            <select id="reader-access-level" name="accessLevel">
+              <option value="paid">付費章節</option>
+              <option value="supporter">支持者內容</option>
+              <option value="all">全部權限</option>
+            </select>
+          </label>
+          <label>
+            到期時間
+            <input id="reader-access-expires" name="expiresAt" type="datetime-local" />
+          </label>
+        </div>
+        <label>
+          備註
+          <textarea id="reader-access-note" name="note" rows="4" placeholder="例如：4B 本地測試授權，或手動補發權限。"></textarea>
+        </label>
+        <div class="button-row">
+          <button class="button button-primary" id="reader-access-save" type="submit">保存讀者授權</button>
+          <button class="button button-secondary" id="reader-access-load-email" type="button">查看此 Email 權限</button>
+          <a class="button button-secondary" href="/library/">查看書庫</a>
+        </div>
+        <div class="admin-preview" id="reader-access-preview">輸入讀者 Email 和作品 / 章節後，可以手動發放閱讀權限。</div>
+        <div class="admin-inline-status" id="reader-access-save-status" role="status" aria-live="polite" hidden></div>
+      </form>
     </div>
   </section>
 
@@ -196,11 +250,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       tabs: Array.from(document.querySelectorAll('[data-admin-tab]')),
       devlogListPanel: document.getElementById('devlog-list-panel'),
       serialsListPanel: document.getElementById('serials-list-panel'),
+      readerAccessListPanel: document.getElementById('reader-access-list-panel'),
       devlogList: document.getElementById('admin-post-list'),
       serialSeriesList: document.getElementById('serial-series-list'),
       serialChaptersList: document.getElementById('serial-chapters-list'),
+      readerEntitlementsList: document.getElementById('reader-entitlements-list'),
       devlogForm: document.getElementById('devlog-editor'),
       serialsForm: document.getElementById('serials-editor'),
+      readerAccessForm: document.getElementById('reader-access-editor'),
       devlog: {
         title: document.getElementById('post-title'),
         slug: document.getElementById('post-slug'),
@@ -226,13 +283,27 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         preview: document.getElementById('serial-preview'),
         saveButton: document.getElementById('serial-save'),
         saveStatus: document.getElementById('serial-save-status')
+      },
+      readerAccess: {
+        email: document.getElementById('reader-access-email'),
+        seriesSlug: document.getElementById('reader-access-series'),
+        scope: document.getElementById('reader-access-scope'),
+        chapterSlug: document.getElementById('reader-access-chapter'),
+        accessLevel: document.getElementById('reader-access-level'),
+        expiresAt: document.getElementById('reader-access-expires'),
+        note: document.getElementById('reader-access-note'),
+        loadEmailButton: document.getElementById('reader-access-load-email'),
+        preview: document.getElementById('reader-access-preview'),
+        saveButton: document.getElementById('reader-access-save'),
+        saveStatus: document.getElementById('reader-access-save-status')
       }
     };
 
     let activeContentType = 'devlog';
     const state = {
       devlog: { sha: '', path: '', slugTouched: false },
-      serials: { sha: '', path: '', kind: 'series' }
+      serials: { sha: '', path: '', kind: 'series' },
+      readerAccess: { lastEmail: '' }
     };
 
     const today = () => new Date().toISOString().slice(0, 10);
@@ -245,7 +316,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const setInlineStatus = (contentType, message, tone = 'neutral') => {
       const targets = {
         devlog: elements.devlog.saveStatus,
-        serials: elements.serial.saveStatus
+        serials: elements.serial.saveStatus,
+        readerAccess: elements.readerAccess.saveStatus
       };
       const target = targets[contentType];
       if (!target) return;
@@ -257,11 +329,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const setSaving = (contentType, isSaving) => {
       const saveLabels = {
         devlog: ['保存 Devlog', '正在保存 Devlog...'],
-        serials: ['保存小说 Markdown', '正在保存小说 Markdown...']
+        serials: ['保存小说 Markdown', '正在保存小说 Markdown...'],
+        readerAccess: ['保存讀者授權', '正在保存讀者授權...']
       };
       const buttons = {
         devlog: elements.devlog.saveButton,
-        serials: elements.serial.saveButton
+        serials: elements.serial.saveButton,
+        readerAccess: elements.readerAccess.saveButton
       };
       const button = buttons[contentType];
       if (!button) return;
@@ -627,6 +701,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             load: '读取连载小说',
             newItem: '新小说 Markdown',
             status: '已切換到连载小说管理。'
+          },
+          readerAccess: {
+            load: '讀取讀者授權',
+            newItem: '新讀者授權',
+            status: '已切換到讀者授權管理。'
           }
         };
         elements.tabs.forEach((button) => {
@@ -636,8 +715,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         });
         elements.devlogForm.hidden = contentType !== 'devlog';
         elements.serialsForm.hidden = contentType !== 'serials';
+        elements.readerAccessForm.hidden = contentType !== 'readerAccess';
         elements.devlogListPanel.hidden = contentType !== 'devlog';
         elements.serialsListPanel.hidden = contentType !== 'serials';
+        elements.readerAccessListPanel.hidden = contentType !== 'readerAccess';
         elements.load.textContent = labels[contentType].load;
         elements.newItem.textContent = labels[contentType].newItem;
         setStatus(labels[contentType].status);
@@ -682,6 +763,153 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             elements.serialsForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         });
+      };
+
+      const apiFetch = async (url, options = {}) => {
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'content-type': 'application/json',
+            ...(options.headers || {})
+          }
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || `Request failed: ${response.status}`);
+        }
+        return data;
+      };
+
+      const readerScopeLabel = (scope) => (scope === 'series' ? '整本作品' : '單章');
+
+      const readerAccessLabel = (level) => {
+        if (level === 'all') return '全部權限';
+        if (level === 'supporter') return '支持者內容';
+        return '付費章節';
+      };
+
+      const renderReaderEntitlements = (items = []) => {
+        elements.readerEntitlementsList.innerHTML = '';
+
+        if (!items.length) {
+          renderEmptyList(elements.readerEntitlementsList, '目前沒有符合條件的讀者授權。');
+          return;
+        }
+
+        items.forEach((item) => {
+          const row = document.createElement('div');
+          row.className = 'admin-file-row';
+
+          const main = document.createElement('div');
+          main.className = 'admin-file-row__main';
+
+          const title = document.createElement('h3');
+          title.textContent = `${item.email || 'reader'} · ${readerAccessLabel(item.accessLevel)}`;
+
+          const target = document.createElement('p');
+          target.textContent = item.scope === 'series'
+            ? `${item.seriesSlug} · ${readerScopeLabel(item.scope)}`
+            : `${item.seriesSlug} / ${item.chapterSlug} · ${readerScopeLabel(item.scope)}`;
+
+          const meta = document.createElement('p');
+          const stateText = item.revokedAt ? `已撤銷 ${item.revokedAt}` : `有效 · ${item.grantedAt || item.createdAt}`;
+          meta.textContent = `${stateText}${item.expiresAt ? ` · 到期 ${item.expiresAt}` : ''}`;
+
+          main.append(title, target, meta);
+
+          if (item.note) {
+            const note = document.createElement('p');
+            note.textContent = item.note;
+            main.append(note);
+          }
+
+          const actions = document.createElement('div');
+          actions.className = 'admin-file-row__actions';
+
+          const revoke = document.createElement('button');
+          revoke.type = 'button';
+          revoke.className = 'button button-danger';
+          revoke.textContent = item.revokedAt ? '已撤銷' : '撤銷';
+          revoke.disabled = Boolean(item.revokedAt);
+          revoke.addEventListener('click', async () => {
+            revoke.disabled = true;
+            try {
+              const data = await apiFetch('/admin/api/novels/entitlements/revoke', {
+                method: 'POST',
+                body: JSON.stringify({ id: item.id, email: elements.readerAccess.email.value.trim() })
+              });
+              renderReaderEntitlements(data.entitlements || []);
+              setInlineStatus('readerAccess', '授權已撤銷。', 'success');
+            } catch (error) {
+              revoke.disabled = false;
+              setInlineStatus('readerAccess', error.message, 'error');
+            }
+          });
+
+          actions.append(revoke);
+          row.append(main, actions);
+          elements.readerEntitlementsList.append(row);
+        });
+      };
+
+      const syncReaderScope = () => {
+        const isSeries = elements.readerAccess.scope.value === 'series';
+        elements.readerAccess.chapterSlug.disabled = isSeries;
+        elements.readerAccess.chapterSlug.required = !isSeries;
+        if (isSeries) elements.readerAccess.chapterSlug.value = '';
+      };
+
+      const resetReaderAccessForm = () => {
+        const fields = elements.readerAccess;
+        fields.email.value = fields.email.value || state.readerAccess.lastEmail || '';
+        fields.seriesSlug.value = 'deng-hai-liang-zhe';
+        fields.scope.value = 'chapter';
+        fields.chapterSlug.value = 'prologue-light';
+        fields.accessLevel.value = 'paid';
+        fields.expiresAt.value = '';
+        fields.note.value = '4B manual access test';
+        fields.preview.textContent = '輸入讀者 Email 和作品 / 章節後，可以手動發放閱讀權限。';
+        fields.preview.dataset.tone = '';
+        syncReaderScope();
+        setInlineStatus('readerAccess', '');
+        setStatus('正在建立新的讀者授權。');
+      };
+
+      const loadReaderEntitlements = async () => {
+        const email = elements.readerAccess.email.value.trim();
+        state.readerAccess.lastEmail = email;
+        const query = email ? `?email=${encodeURIComponent(email)}` : '';
+        setStatus(email ? `正在讀取 ${email} 的授權...` : '正在讀取最近的讀者授權...');
+        const data = await apiFetch(`/admin/api/novels/entitlements${query}`, {
+          headers: { accept: 'application/json' }
+        });
+        renderReaderEntitlements(data.entitlements || []);
+        setStatus(`已讀取 ${(data.entitlements || []).length} 筆讀者授權。`, 'success');
+      };
+
+      const saveReaderEntitlement = async () => {
+        const fields = elements.readerAccess;
+        const payload = {
+          email: fields.email.value.trim(),
+          seriesSlug: fields.seriesSlug.value.trim(),
+          scope: fields.scope.value,
+          chapterSlug: fields.chapterSlug.value.trim(),
+          accessLevel: fields.accessLevel.value,
+          expiresAt: fields.expiresAt.value,
+          note: fields.note.value.trim()
+        };
+
+        const data = await apiFetch('/admin/api/novels/entitlements/grant', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        state.readerAccess.lastEmail = payload.email;
+        renderReaderEntitlements(data.entitlements || []);
+        const target = payload.scope === 'series' ? payload.seriesSlug : `${payload.seriesSlug}/${payload.chapterSlug}`;
+        fields.preview.textContent = `已授權 ${payload.email} 讀取 ${target}。`;
+        fields.preview.dataset.tone = 'success';
+        setStatus('讀者授權已保存到 D1。', 'success');
       };
 
     const loadDevlogPosts = async () => {
@@ -836,7 +1064,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       elements.load.addEventListener('click', () => {
         const actions = {
           devlog: loadDevlogPosts,
-          serials: loadSerials
+          serials: loadSerials,
+          readerAccess: loadReaderEntitlements
         };
         const action = actions[activeContentType];
         action().catch((error) => setStatus(error.message, 'error'));
@@ -844,7 +1073,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       elements.newItem.addEventListener('click', () => {
         if (activeContentType === 'devlog') resetDevlogForm();
-        else resetSerialImportForm();
+        else if (activeContentType === 'serials') resetSerialImportForm();
+        else resetReaderAccessForm();
       });
 
     elements.devlog.title.addEventListener('input', () => {
@@ -861,6 +1091,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       if (!state.serials.sha) {
         resetSerialImportForm(elements.serial.kind.value);
       }
+    });
+
+    elements.readerAccess.scope.addEventListener('change', syncReaderScope);
+
+    elements.readerAccess.loadEmailButton.addEventListener('click', () => {
+      loadReaderEntitlements().catch((error) => {
+        setStatus(error.message, 'error');
+        setInlineStatus('readerAccess', error.message, 'error');
+      });
     });
 
     elements.serial.file.addEventListener('change', async () => {
@@ -923,6 +1162,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           .finally(() => setSaving('serials', false));
       });
 
+      elements.readerAccessForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        setInlineStatus('readerAccess', '正在保存讀者授權到 D1...', 'neutral');
+        setSaving('readerAccess', true);
+        saveReaderEntitlement()
+          .then(() => setInlineStatus('readerAccess', `讀者授權已保存。${new Date().toLocaleTimeString()}`, 'success'))
+          .catch((error) => {
+            setStatus(error.message, 'error');
+            elements.readerAccess.preview.textContent = error.message;
+            elements.readerAccess.preview.dataset.tone = 'error';
+            setInlineStatus('readerAccess', error.message, 'error');
+          })
+          .finally(() => setSaving('readerAccess', false));
+      });
+
     elements.devlogForm.addEventListener(
       'invalid',
       (event) => {
@@ -939,8 +1193,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         true
       );
 
+      elements.readerAccessForm.addEventListener(
+        'invalid',
+        (event) => {
+          setInlineStatus('readerAccess', `請先填寫：${fieldLabel(event.target)}。`, 'error');
+        },
+        true
+      );
+
       resetDevlogForm();
       resetSerialImportForm('series');
+      resetReaderAccessForm();
       setActiveContentType('devlog');
   </script>
 </BaseLayout>

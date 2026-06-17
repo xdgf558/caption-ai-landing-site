@@ -88,6 +88,45 @@ const cleanRedirectPath = (value, fallback = '/library/') => {
   return path;
 };
 
+const cleanSlug = (value, maxLength = 120) =>
+  cleanText(value, maxLength)
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const toSqlTimestamp = (value) => {
+  const raw = cleanText(value, 80);
+  if (!raw) return null;
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().replace('T', ' ').slice(0, 19);
+};
+
+const entitlementToJson = (row) => ({
+  id: row.id,
+  accountId: row.account_id,
+  email: row.email,
+  seriesSlug: row.series_slug,
+  chapterSlug: row.chapter_slug,
+  scope: row.scope,
+  accessLevel: row.access_level,
+  source: row.source,
+  sourceRef: row.source_ref,
+  note: row.note,
+  grantedBy: row.granted_by,
+  grantedAt: row.granted_at,
+  expiresAt: row.expires_at,
+  revokedAt: row.revoked_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const acceptableAccessLevels = (access) => {
+  if (access === 'supporter') return ['all', 'supporter'];
+  if (access === 'paid') return ['all', 'paid'];
+  return ['all'];
+};
+
 const getSetting = (db, product, platform) =>
   db
     .prepare(
@@ -624,6 +663,283 @@ const handleReaderLogout = async (request, env) => {
       }
     }
   );
+};
+
+const normalizeEntitlementPayload = (payload) => {
+  const email = cleanText(payload.email, 254);
+  const normalizedEmail = normalizeEmail(email);
+  const seriesSlug = cleanSlug(payload.seriesSlug);
+  const scope = payload.scope === 'series' ? 'series' : 'chapter';
+  const chapterSlug = scope === 'chapter' ? cleanSlug(payload.chapterSlug) : '';
+  const allowedAccess = new Set(['paid', 'supporter', 'all']);
+  const accessLevel = allowedAccess.has(payload.accessLevel) ? payload.accessLevel : 'paid';
+  const expiresAt = toSqlTimestamp(payload.expiresAt);
+
+  if (!isEmail(normalizedEmail)) {
+    throw new Error('Please enter a valid reader email.');
+  }
+
+  if (!seriesSlug) {
+    throw new Error('seriesSlug is required.');
+  }
+
+  if (scope === 'chapter' && !chapterSlug) {
+    throw new Error('chapterSlug is required for chapter grants.');
+  }
+
+  if (payload.expiresAt && !expiresAt) {
+    throw new Error('expiresAt must be a valid date or empty.');
+  }
+
+  return {
+    accessLevel,
+    chapterSlug,
+    email,
+    expiresAt,
+    grantedBy: cleanText(payload.grantedBy || 'admin', 120) || 'admin',
+    normalizedEmail,
+    note: cleanText(payload.note, 1000),
+    scope,
+    seriesSlug,
+    source: cleanText(payload.source || 'manual', 60) || 'manual',
+    sourceRef: cleanText(payload.sourceRef, 200)
+  };
+};
+
+const listNovelEntitlements = async (db, normalizedEmail = '') => {
+  const hasEmailFilter = Boolean(normalizedEmail);
+  const response = hasEmailFilter
+    ? await db
+        .prepare(
+          `SELECT
+            novel_entitlements.*,
+            reader_accounts.email
+           FROM novel_entitlements
+           INNER JOIN reader_accounts ON reader_accounts.id = novel_entitlements.account_id
+           WHERE reader_accounts.normalized_email = ?
+           ORDER BY novel_entitlements.updated_at DESC
+           LIMIT 100`
+        )
+        .bind(normalizedEmail)
+        .all()
+    : await db
+        .prepare(
+          `SELECT
+            novel_entitlements.*,
+            reader_accounts.email
+           FROM novel_entitlements
+           INNER JOIN reader_accounts ON reader_accounts.id = novel_entitlements.account_id
+           ORDER BY novel_entitlements.updated_at DESC
+           LIMIT 100`
+        )
+        .all();
+
+  return (response.results || []).map(entitlementToJson);
+};
+
+const handleAdminListNovelEntitlements = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const url = new URL(request.url);
+  const normalizedEmail = normalizeEmail(url.searchParams.get('email'));
+  if (normalizedEmail && !isEmail(normalizedEmail)) {
+    return json({ ok: false, message: 'Please enter a valid reader email.' }, { status: 400 });
+  }
+
+  const entitlements = await listNovelEntitlements(db, normalizedEmail);
+  return json({ ok: true, entitlements });
+};
+
+const handleAdminGrantNovelEntitlement = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  let data;
+  try {
+    data = normalizeEntitlementPayload(payload);
+  } catch (error) {
+    return json({ ok: false, message: error.message }, { status: 400 });
+  }
+
+  const account = await upsertReaderAccount(db, data.email, data.normalizedEmail);
+  const entitlement = await db
+    .prepare(
+      `INSERT INTO novel_entitlements (
+        account_id, series_slug, chapter_slug, scope, access_level, source, source_ref,
+        note, granted_by, expires_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(account_id, series_slug, chapter_slug, scope, access_level, source)
+      DO UPDATE SET
+        source_ref = excluded.source_ref,
+        note = excluded.note,
+        granted_by = excluded.granted_by,
+        granted_at = CURRENT_TIMESTAMP,
+        expires_at = excluded.expires_at,
+        revoked_at = NULL,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *`
+    )
+    .bind(
+      account.id,
+      data.seriesSlug,
+      data.chapterSlug,
+      data.scope,
+      data.accessLevel,
+      data.source,
+      data.sourceRef,
+      data.note,
+      data.grantedBy,
+      data.expiresAt
+    )
+    .first();
+
+  return json({
+    ok: true,
+    entitlement: entitlementToJson({ ...entitlement, email: account.email }),
+    entitlements: await listNovelEntitlements(db, data.normalizedEmail)
+  });
+};
+
+const handleAdminRevokeNovelEntitlement = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const id = Number.parseInt(payload.id, 10);
+  if (!Number.isFinite(id) || id < 1) {
+    return json({ ok: false, message: 'A valid entitlement id is required.' }, { status: 400 });
+  }
+
+  await db
+    .prepare(
+      `UPDATE novel_entitlements
+       SET revoked_at = CURRENT_TIMESTAMP,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .bind(id)
+    .run();
+
+  const normalizedEmail = normalizeEmail(payload.email);
+  return json({
+    ok: true,
+    entitlements: await listNovelEntitlements(db, isEmail(normalizedEmail) ? normalizedEmail : '')
+  });
+};
+
+const findActiveNovelEntitlement = async (db, accountId, seriesSlug, chapterSlug, accessRequired) => {
+  const levels = acceptableAccessLevels(accessRequired);
+  return db
+    .prepare(
+      `SELECT *
+       FROM novel_entitlements
+       WHERE account_id = ?
+         AND series_slug = ?
+         AND revoked_at IS NULL
+         AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+         AND access_level IN (?, ?)
+         AND (
+           (scope = 'series' AND chapter_slug = '')
+           OR (scope = 'chapter' AND chapter_slug = ?)
+         )
+       ORDER BY
+         CASE WHEN scope = 'chapter' THEN 0 ELSE 1 END,
+         updated_at DESC
+       LIMIT 1`
+    )
+    .bind(accountId, seriesSlug, levels[0], levels[1] || levels[0], chapterSlug)
+    .first();
+};
+
+const handleNovelAccessCheck = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const url = new URL(request.url);
+  const seriesSlug = cleanSlug(url.searchParams.get('series'));
+  const chapterSlug = cleanSlug(url.searchParams.get('chapter'));
+  const accessRequired = url.searchParams.get('access') === 'supporter' ? 'supporter' : url.searchParams.get('access') === 'free' ? 'free' : 'paid';
+
+  if (!seriesSlug || !chapterSlug) {
+    return json({ ok: false, message: 'series and chapter are required.' }, { status: 400 });
+  }
+
+  if (accessRequired === 'free') {
+    return json({ ok: true, authenticated: false, allowed: true, accessRequired, reason: 'free' });
+  }
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json({
+      ok: true,
+      authenticated: false,
+      allowed: false,
+      accessRequired,
+      reason: 'sign_in_required'
+    });
+  }
+
+  const entitlement = await findActiveNovelEntitlement(db, session.account_id, seriesSlug, chapterSlug, accessRequired);
+  return json({
+    ok: true,
+    authenticated: true,
+    allowed: Boolean(entitlement),
+    accessRequired,
+    reason: entitlement ? 'entitled' : 'entitlement_required',
+    account: {
+      id: session.account_id,
+      email: session.email
+    },
+    entitlement: entitlement ? entitlementToJson({ ...entitlement, email: session.email }) : null
+  });
+};
+
+const handleNovelLibrary = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json({ ok: true, authenticated: false, entitlements: [] });
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM novel_entitlements
+       WHERE account_id = ?
+         AND revoked_at IS NULL
+         AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+       ORDER BY series_slug ASC, scope ASC, chapter_slug ASC, updated_at DESC
+       LIMIT 200`
+    )
+    .bind(session.account_id)
+    .all();
+
+  return json({
+    ok: true,
+    authenticated: true,
+    account: {
+      id: session.account_id,
+      email: session.email
+    },
+    entitlements: (response.results || []).map((row) => entitlementToJson({ ...row, email: session.email }))
+  });
 };
 
 const downloadFiles = {
@@ -1336,6 +1652,27 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/readers/logout') {
       return handleReaderLogout(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/novels/access') {
+      return handleNovelAccessCheck(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/novels/library') {
+      return handleNovelLibrary(request, env);
+    }
+
+    if (url.pathname === '/admin/api/novels/entitlements') {
+      if (request.method === 'GET') return handleAdminListNovelEntitlements(request, env);
+      return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (request.method === 'POST' && url.pathname === '/admin/api/novels/entitlements/grant') {
+      return handleAdminGrantNovelEntitlement(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/admin/api/novels/entitlements/revoke') {
+      return handleAdminRevokeNovelEntitlement(request, env);
     }
 
     if (url.pathname === '/admin/api/waitlist/settings') {
