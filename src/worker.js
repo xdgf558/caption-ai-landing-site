@@ -694,6 +694,125 @@ const getContentStorageDescriptor = (env) => ({
   }
 });
 
+const localePathSegments = {
+  en: 'en',
+  ja: 'ja',
+  'zh-Hant': 'zh-hant',
+  'zh-Hans': 'zh-hans'
+};
+
+const pathSegmentLocales = {
+  en: 'en',
+  ja: 'ja',
+  'zh-hant': 'zh-Hant',
+  'zh-hans': 'zh-Hans'
+};
+
+const dynamicContentCopy = {
+  en: {
+    access: 'Access',
+    allSerials: 'All serials',
+    author: 'Author',
+    backDevlog: 'Back to Dev Blog',
+    backSeries: 'Back to series',
+    chapter: 'Chapter',
+    chapters: 'Chapters',
+    devlogDescription: 'Development updates, product experiments, launch notes, and creative records from Station Cat.',
+    devlogTitle: 'Station Cat Dev Blog',
+    free: 'Free',
+    lockedBody: 'Sign in from the library to check whether this account can read the chapter.',
+    lockedTitle: 'This chapter is reserved for unlocked readers.',
+    read: 'Read',
+    readFirst: 'Read from chapter one',
+    readLatest: 'Read latest chapter',
+    serialsDescription: 'A quiet reading shelf for long-form fiction published on Station Cat.',
+    serialsTitle: 'Station Cat Serials',
+    signIn: 'Open my library',
+    status: 'Status',
+    words: 'words'
+  },
+  ja: {
+    access: '公開方式',
+    allSerials: '連載一覧',
+    author: '作者',
+    backDevlog: '開発ログへ戻る',
+    backSeries: '作品ページへ',
+    chapter: '第',
+    chapters: '章一覧',
+    devlogDescription: 'Station Cat の開発進捗、プロダクト実験、公開準備、制作メモ。',
+    devlogTitle: 'Station Cat 開発ログ',
+    free: '無料',
+    lockedBody: '本棚にログインして、このアカウントで読めるか確認してください。',
+    lockedTitle: 'この章は解放済み読者向けです。',
+    read: '読む',
+    readFirst: '第一章から読む',
+    readLatest: '最新章を読む',
+    serialsDescription: 'Station Cat で公開していく長編小説のための、小さな読書棚です。',
+    serialsTitle: 'Station Cat 連載小説',
+    signIn: '本棚を開く',
+    status: '更新状態',
+    words: '語'
+  },
+  'zh-Hant': {
+    access: '閱讀方式',
+    allSerials: '全部連載',
+    author: '作者',
+    backDevlog: '返回開發博客',
+    backSeries: '回到作品頁',
+    chapter: '第',
+    chapters: '章節列表',
+    devlogDescription: 'Station Cat 的開發進度、產品實驗、上架準備和創作記錄。',
+    devlogTitle: 'Station Cat 開發博客',
+    free: '免費',
+    lockedBody: '請先從書庫登入，確認這個帳戶是否可以閱讀本章。',
+    lockedTitle: '這一章保留給已解鎖讀者。',
+    read: '閱讀',
+    readFirst: '從第一章開始',
+    readLatest: '閱讀最新章',
+    serialsDescription: '一個放長篇小說、更新順序和後續讀者支持入口的小書架。',
+    serialsTitle: 'Station Cat 連載小說',
+    signIn: '打開我的書庫',
+    status: '更新狀態',
+    words: '字'
+  },
+  'zh-Hans': {
+    access: '阅读方式',
+    allSerials: '全部连载',
+    author: '作者',
+    backDevlog: '返回开发博客',
+    backSeries: '回到作品页',
+    chapter: '第',
+    chapters: '章节列表',
+    devlogDescription: 'Station Cat 的开发进度、产品实验、上架准备和创作记录。',
+    devlogTitle: 'Station Cat 开发博客',
+    free: '免费',
+    lockedBody: '请先从书库登录，确认这个账户是否可以阅读本章。',
+    lockedTitle: '这一章保留给已解锁读者。',
+    read: '阅读',
+    readFirst: '从第一章开始',
+    readLatest: '阅读最新章',
+    serialsDescription: '一个放长篇小说、更新顺序和后续读者支持入口的小书架。',
+    serialsTitle: 'Station Cat 连载小说',
+    signIn: '打开我的书库',
+    status: '更新状态',
+    words: '字'
+  }
+};
+
+const dynamicContentStatusLabels = {
+  archived: 'Archived',
+  draft: 'Draft',
+  published: 'Published',
+  scheduled: 'Scheduled'
+};
+
+const dynamicAccessLabels = {
+  free: 'Free',
+  member: 'Members',
+  paid: 'Paid',
+  supporter: 'Supporters'
+};
+
 const normalizeContentPayload = (payload = {}) => {
   const entryType = normalizeContentEntryType(payload.entryType || payload.type);
   const locale = normalizeContentLocale(payload.locale || payload.language);
@@ -1818,6 +1937,50 @@ const protectedChapterToJson = (entry) => ({
 const getProtectedChapterContent = (seriesSlug, chapterSlug) =>
   protectedSerialContent?.chapters?.[`${seriesSlug}/${chapterSlug}`] || null;
 
+const getBackendProtectedChapterContent = async (env, seriesSlug, chapterSlug, locale = '') => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureContentTablesReady(db))) return null;
+
+  const requestedLocale = cleanText(locale, 20);
+  const localeClause = requestedLocale && contentLocales.has(requestedLocale) ? 'AND locale = ?' : '';
+  const params = [seriesSlug, chapterSlug];
+  if (localeClause) params.push(requestedLocale);
+
+  const row = await db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       WHERE entry_type = 'novel_chapter'
+         AND parent_slug = ?
+         AND slug = ?
+         AND status = 'published'
+         AND visibility IN ('public', 'unlisted')
+         AND access_level IN ('paid', 'supporter', 'member')
+         ${localeClause}
+       ORDER BY
+         CASE WHEN access_level = 'supporter' THEN 0 ELSE 1 END,
+         COALESCE(published_at, updated_at) DESC,
+         id DESC
+       LIMIT 1`
+    )
+    .bind(...params)
+    .first();
+
+  if (!row) return null;
+  return {
+    access: row.access_level === 'supporter' ? 'supporter' : 'paid',
+    chapterNumber: row.chapter_number,
+    chapterSlug: row.slug,
+    excerpt: row.excerpt || row.description,
+    headings: [],
+    htmlR2Key: row.html_r2_key,
+    language: row.locale,
+    seriesSlug: row.parent_slug,
+    source: 'backend-content-platform',
+    title: row.title
+  };
+};
+
 const getProtectedChapterHtml = async (env, chapter) => {
   const bucket = getContentBucket(env);
   if (!bucket) {
@@ -1855,11 +2018,12 @@ const handleProtectedChapterContent = async (request, env) => {
   const url = new URL(request.url);
   const seriesSlug = cleanSlug(url.searchParams.get('series'));
   const chapterSlug = cleanSlug(url.searchParams.get('chapter'));
+  const locale = cleanText(url.searchParams.get('locale'), 20);
   if (!seriesSlug || !chapterSlug) {
     return privateJson({ ok: false, message: 'series and chapter are required.' }, { status: 400 });
   }
 
-  const chapter = getProtectedChapterContent(seriesSlug, chapterSlug);
+  const chapter = getProtectedChapterContent(seriesSlug, chapterSlug) || (await getBackendProtectedChapterContent(env, seriesSlug, chapterSlug, locale));
   if (!chapter) {
     return privateJson(
       {
@@ -3188,8 +3352,8 @@ const handleAdminListNovelOrders = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '7C',
-    purpose: 'Admin 2.0 content management for novels, chapters, blog/devlog, pricing, orders, entitlements, and audit review.',
+    stage: '7D',
+    purpose: 'Dynamic frontend content reads for backend-published novels, chapters, and Blog/Devlog entries.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -3209,7 +3373,8 @@ const handleAdminContentSchema = async (env) =>
         'admin_audit_logs'
       ],
       protectedContent: 'Paid/supporter chapter HTML is loaded from CONTENT_BUCKET after entitlement checks.',
-      nextStages: ['7D dynamic frontend content reads', '7E backend pricing rules']
+      dynamicFrontend: 'Published backend content can render public Blog and serial pages without a site rebuild.',
+      nextStages: ['7E backend pricing rules', '7F fuller order/account/entitlement management']
     }
   });
 
@@ -3677,7 +3842,7 @@ const handlePublicContentEntries = async (request, env) => {
       ok: true,
       setupRequired: true,
       source: 'backend-content-platform',
-      stage: '7C',
+      stage: '7D',
       entries: []
     });
   }
@@ -3707,9 +3872,537 @@ const handlePublicContentEntries = async (request, env) => {
   return json({
     ok: true,
     source: 'backend-content-platform',
-    stage: '7C',
+    stage: '7D',
     entries: (response.results || []).map(contentEntryToJson)
   });
+};
+
+const publicContentResponse = (body, init = {}) =>
+  json(body, {
+    ...init,
+    headers: {
+      'cache-control': 'no-store',
+      ...(init.headers || {})
+    }
+  });
+
+const getPublishedContentEntry = async (db, options) => {
+  const entryType = cleanText(options.entryType, 40);
+  const locale = normalizeContentLocale(options.locale);
+  const slug = cleanSlug(options.slug, 160);
+  const parentSlug = cleanSlug(options.parentSlug || '', 160);
+  if (!entryType || !slug) return null;
+
+  return db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       WHERE entry_type = ?
+         AND locale = ?
+         AND slug = ?
+         AND parent_slug = ?
+         AND status = 'published'
+         AND visibility IN ('public', 'unlisted')
+       ORDER BY COALESCE(published_at, updated_at) DESC, id DESC
+       LIMIT 1`
+    )
+    .bind(entryType, locale, slug, parentSlug)
+    .first();
+};
+
+const listPublishedContentEntries = async (db, options) => {
+  const entryType = cleanText(options.entryType, 40);
+  const locale = normalizeContentLocale(options.locale);
+  const parentSlug = cleanSlug(options.parentSlug || '', 160);
+  const limit = Math.min(Math.max(Number.parseInt(options.limit || '50', 10) || 50, 1), 100);
+  const params = [entryType, locale];
+  let parentClause = '';
+
+  if (options.parentSlug !== undefined) {
+    parentClause = 'AND parent_slug = ?';
+    params.push(parentSlug);
+  }
+
+  const orderClause =
+    entryType === 'novel_chapter'
+      ? 'chapter_number ASC, sort_order ASC, COALESCE(published_at, updated_at) ASC, id ASC'
+      : 'featured DESC, sort_order ASC, COALESCE(published_at, updated_at) DESC, id DESC';
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       WHERE entry_type = ?
+         AND locale = ?
+         ${parentClause}
+         AND status = 'published'
+         AND visibility IN ('public', 'unlisted')
+       ORDER BY ${orderClause}
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+
+  return response.results || [];
+};
+
+const renderSimpleMarkdownToHtml = (markdown) => {
+  const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
+  const output = [];
+  let listOpen = false;
+
+  const closeList = () => {
+    if (listOpen) {
+      output.push('</ul>');
+      listOpen = false;
+    }
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      closeList();
+      continue;
+    }
+
+    if (trimmed.startsWith('### ')) {
+      closeList();
+      output.push(`<h3>${escapeHtml(trimmed.slice(4))}</h3>`);
+      continue;
+    }
+
+    if (trimmed.startsWith('## ')) {
+      closeList();
+      output.push(`<h2>${escapeHtml(trimmed.slice(3))}</h2>`);
+      continue;
+    }
+
+    if (trimmed.startsWith('# ')) {
+      closeList();
+      output.push(`<h1>${escapeHtml(trimmed.slice(2))}</h1>`);
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(trimmed)) {
+      if (!listOpen) {
+        output.push('<ul>');
+        listOpen = true;
+      }
+      output.push(`<li>${escapeHtml(trimmed.replace(/^[-*]\s+/, ''))}</li>`);
+      continue;
+    }
+
+    closeList();
+    output.push(`<p>${escapeHtml(trimmed)}</p>`);
+  }
+
+  closeList();
+  return output.join('\n');
+};
+
+const readPublicEntryBody = async (env, row) => {
+  if (!row) return { html: '', source: 'none' };
+  if (row.access_level !== 'free') return { html: '', source: 'protected' };
+
+  const bucket = getContentBucket(env);
+  if (!bucket) return { html: '', source: 'missing-bucket' };
+
+  const html = await readContentObjectText(bucket, row.html_r2_key, 'HTML body');
+  if (html) return { html, source: 'html-r2' };
+
+  const markdown = await readContentObjectText(bucket, row.markdown_r2_key, 'Markdown body');
+  if (markdown) return { html: renderSimpleMarkdownToHtml(markdown), source: 'markdown-r2' };
+
+  return { html: '', source: 'empty' };
+};
+
+const handlePublicContentBody = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return publicContentResponse({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return publicContentResponse({ ok: false, code: 'CONTENT_TABLES_NOT_READY', message: 'Content tables are not initialized.' }, { status: 503 });
+  }
+
+  const url = new URL(request.url);
+  let entryType;
+  try {
+    entryType = normalizeContentEntryType(url.searchParams.get('type') || url.searchParams.get('entryType'));
+  } catch (error) {
+    return publicContentResponse({ ok: false, code: error.code || 'CONTENT_TYPE_INVALID', message: error.message }, { status: 400 });
+  }
+
+  const locale = normalizeContentLocale(url.searchParams.get('locale') || url.searchParams.get('language'));
+  const slug = cleanSlug(url.searchParams.get('slug') || url.searchParams.get('chapter'), 160);
+  const parentSlug = cleanSlug(url.searchParams.get('parentSlug') || url.searchParams.get('series'), 160);
+  if (!slug) return publicContentResponse({ ok: false, code: 'CONTENT_SLUG_REQUIRED', message: 'A slug is required.' }, { status: 400 });
+
+  const entry = await getPublishedContentEntry(db, { entryType, locale, parentSlug, slug });
+  if (!entry) return publicContentResponse({ ok: false, code: 'CONTENT_NOT_FOUND', message: 'Content was not found.' }, { status: 404 });
+  if (entry.access_level !== 'free') {
+    return publicContentResponse(
+      {
+        ok: false,
+        code: 'CONTENT_PROTECTED',
+        entry: contentEntryToJson(entry),
+        message: 'This content is protected.'
+      },
+      { status: 403 }
+    );
+  }
+
+  const body = await readPublicEntryBody(env, entry);
+  return publicContentResponse({
+    ok: true,
+    entry: contentEntryToJson(entry),
+    content: {
+      html: body.html,
+      source: body.source
+    }
+  });
+};
+
+const getPathWithLocale = (locale, routeName) => {
+  const segment = localePathSegments[locale];
+  if (routeName === 'works' && locale === 'en') return '/works/';
+  if (routeName === 'devlog' && locale === 'zh-Hant') return '/devlog/';
+  return `/${segment}/${routeName}/`;
+};
+
+const parseDynamicContentRoute = (pathname) => {
+  const normalizedPath = pathname.replace(/\/+$/, '') || '/';
+  const segments = normalizedPath.split('/').filter(Boolean);
+  if (!segments.length) return null;
+
+  let locale = null;
+  let offset = 0;
+  let hasLocalePrefix = false;
+  if (pathSegmentLocales[segments[0]]) {
+    locale = pathSegmentLocales[segments[0]];
+    offset = 1;
+    hasLocalePrefix = true;
+  }
+
+  const section = segments[offset];
+  if (section === 'devlog') {
+    locale = locale || 'zh-Hant';
+    return {
+      basePath: getPathWithLocale(locale, 'devlog'),
+      kind: segments[offset + 1] ? 'devlog-post' : 'devlog-index',
+      locale,
+      slug: cleanSlug(segments[offset + 1] || '', 160)
+    };
+  }
+
+  if (section === 'works') {
+    locale = locale || 'en';
+    return {
+      basePath: hasLocalePrefix ? getPathWithLocale(locale, 'works') : '/works/',
+      chapterSlug: cleanSlug(segments[offset + 2] || '', 160),
+      kind: segments[offset + 2] ? 'novel-chapter' : segments[offset + 1] ? 'novel-series' : 'novel-index',
+      locale,
+      seriesSlug: cleanSlug(segments[offset + 1] || '', 160)
+    };
+  }
+
+  return null;
+};
+
+const formatContentDate = (value, locale) => {
+  const raw = cleanText(value, 80);
+  if (!raw) return '';
+  const date = new Date(raw.replace(' ', 'T'));
+  if (Number.isNaN(date.getTime())) return raw;
+  return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'short', day: 'numeric' }).format(date);
+};
+
+const dynamicCanonicalPath = (route) => {
+  if (route.kind === 'devlog-index') return route.basePath;
+  if (route.kind === 'devlog-post') return `${route.basePath}${route.slug}/`;
+  if (route.kind === 'novel-index') return route.basePath;
+  if (route.kind === 'novel-series') return `${route.basePath}${route.seriesSlug}/`;
+  if (route.kind === 'novel-chapter') return `${route.basePath}${route.seriesSlug}/${route.chapterSlug}/`;
+  return '/';
+};
+
+const dynamicHtmlShell = ({ body, canonicalPath, description, lang, title }) => `<!doctype html>
+<html lang="${escapeHtml(lang)}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${escapeHtml(title)} | Station Cat</title>
+    <meta name="description" content="${escapeHtml(description)}">
+    <link rel="canonical" href="https://wwwstationcat.org${escapeHtml(canonicalPath)}">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+      :root { color-scheme: light; --bg: #fffaf4; --surface: #ffffff; --soft: #f5efe7; --ink: #1f2d29; --muted: #64736d; --line: #e4dbd0; --teal: #08796d; --coral: #d95d45; }
+      * { box-sizing: border-box; }
+      body { background: var(--bg); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; margin: 0; }
+      a { color: inherit; }
+      .shell { margin: 0 auto; max-width: 1120px; padding: 28px 20px 72px; }
+      .topbar { align-items: center; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; margin-bottom: 44px; padding: 16px 0; }
+      .brand { align-items: center; display: inline-flex; font-weight: 900; gap: 10px; text-decoration: none; }
+      .brand span:first-child { align-items: center; background: var(--ink); border-radius: 8px; color: #fff; display: inline-flex; height: 34px; justify-content: center; width: 34px; }
+      .nav { display: flex; flex-wrap: wrap; gap: 12px; }
+      .nav a, .text-link { color: var(--muted); font-size: 15px; font-weight: 800; text-decoration: none; }
+      .nav a:hover, .text-link:hover { color: var(--teal); }
+      .hero, .section { display: grid; gap: 18px; margin-bottom: 48px; }
+      .kicker { color: var(--teal); font-size: 12px; font-weight: 950; letter-spacing: .08em; margin: 0; text-transform: uppercase; }
+      h1, h2, h3 { color: var(--ink); line-height: 1.08; margin: 0; text-wrap: balance; }
+      h1 { font-size: clamp(36px, 7vw, 72px); max-width: 920px; }
+      h2 { font-size: clamp(28px, 4vw, 42px); }
+      h3 { font-size: 22px; }
+      p { color: var(--muted); font-size: 17px; line-height: 1.75; margin: 0; overflow-wrap: anywhere; }
+      .meta { color: var(--muted); display: flex; flex-wrap: wrap; font-size: 14px; font-weight: 800; gap: 10px; }
+      .pill { background: var(--soft); border: 1px solid var(--line); border-radius: 999px; color: var(--ink); padding: 7px 10px; }
+      .grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card, .panel, .gate { background: rgba(255,255,255,.72); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 50px rgba(44,39,33,.08); display: grid; gap: 12px; padding: 18px; }
+      .card { text-decoration: none; }
+      .card:hover { border-color: rgba(8,121,109,.35); transform: translateY(-1px); }
+      .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
+      .button { align-items: center; border: 1px solid var(--ink); border-radius: 8px; display: inline-flex; font-weight: 900; justify-content: center; min-height: 44px; padding: 10px 14px; text-decoration: none; }
+      .button-primary { background: var(--ink); color: #fff; }
+      .button-secondary { background: #fff; color: var(--ink); }
+      .prose { background: rgba(255,255,255,.68); border: 1px solid var(--line); border-radius: 16px; display: grid; gap: 18px; padding: clamp(20px, 4vw, 42px); }
+      .prose h1 { font-size: 34px; }
+      .prose h2 { font-size: 28px; margin-top: 12px; }
+      .prose h3 { font-size: 22px; margin-top: 8px; }
+      .prose ul { display: grid; gap: 8px; margin: 0; padding-left: 22px; }
+      .prose li { color: var(--muted); font-size: 17px; line-height: 1.75; }
+      .status { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 15px; font-weight: 800; padding: 12px; }
+      .status[data-tone="success"] { border-color: rgba(8,121,109,.32); color: var(--teal); }
+      .status[data-tone="error"] { border-color: rgba(217,93,69,.4); color: var(--coral); }
+      @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .topbar { align-items: flex-start; flex-direction: column; } }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/"><span>SC</span><span>Station Cat</span></a>
+        <nav class="nav">
+          <a href="/zh-hant/works/">連載小說</a>
+          <a href="/devlog/">開發博客</a>
+          <a href="/apps/">Apps</a>
+          <a href="https://x.com/bketck">Follow on X</a>
+        </nav>
+      </header>
+      ${body}
+    </main>
+  </body>
+</html>`;
+
+const dynamicHtmlResponse = (request, payload, init = {}) =>
+  new Response(request.method === 'HEAD' ? null : dynamicHtmlShell(payload), {
+    ...init,
+    headers: {
+      'cache-control': 'no-store',
+      'content-type': 'text/html; charset=utf-8',
+      ...(init.headers || {})
+    }
+  });
+
+const renderDynamicDevlogPost = (route, post, body) => {
+  const copy = dynamicContentCopy[route.locale];
+  return `<article class="section">
+      <a class="text-link" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.backDevlog)}</a>
+      <header class="hero">
+        <div class="meta">
+          <span class="pill">${escapeHtml(formatContentDate(post.published_at || post.updated_at, route.locale))}</span>
+          <span>${escapeHtml(dynamicContentStatusLabels[post.status] || post.status)}</span>
+        </div>
+        <h1>${escapeHtml(post.title)}</h1>
+        <p>${escapeHtml(post.description || post.excerpt)}</p>
+      </header>
+      <div class="prose">${body.html || `<p>${escapeHtml(post.excerpt || post.description)}</p>`}</div>
+    </article>`;
+};
+
+const renderChapterCards = (route, chapters) => {
+  const copy = dynamicContentCopy[route.locale];
+  if (!chapters.length) return `<p>${escapeHtml(copy.chapters)}</p>`;
+  return chapters
+    .map(
+      (chapter) => `<a class="card" href="${escapeHtml(`${route.basePath}${chapter.parent_slug}/${chapter.slug}/`)}">
+        <div class="meta">
+          <span class="pill">${escapeHtml(copy.chapter)} ${escapeHtml(String(chapter.chapter_number || ''))}</span>
+          <span>${escapeHtml(dynamicAccessLabels[chapter.access_level] || chapter.access_level)}</span>
+        </div>
+        <h3>${escapeHtml(chapter.title)}</h3>
+        <p>${escapeHtml(chapter.excerpt || chapter.description)}</p>
+      </a>`
+    )
+    .join('');
+};
+
+const renderDynamicNovelSeries = (route, serial, body, chapters) => {
+  const copy = dynamicContentCopy[route.locale];
+  const firstChapter = chapters[0];
+  const latestChapter = chapters[chapters.length - 1];
+  return `<section class="hero">
+      <p class="kicker">${escapeHtml(copy.status)}</p>
+      <h1>${escapeHtml(serial.title)}</h1>
+      <p>${escapeHtml(serial.subtitle || serial.description)}</p>
+      <div class="meta">
+        <span class="pill">${escapeHtml(copy.author)}: ${escapeHtml(serial.author_name || 'Station Cat')}</span>
+        <span>${escapeHtml(copy.access)}: ${escapeHtml(dynamicAccessLabels[serial.access_level] || serial.access_level)}</span>
+      </div>
+      <div class="button-row">
+        ${firstChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${firstChapter.slug}/`)}">${escapeHtml(copy.readFirst)}</a>` : ''}
+        ${latestChapter && latestChapter.slug !== firstChapter?.slug ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${latestChapter.slug}/`)}">${escapeHtml(copy.readLatest)}</a>` : ''}
+        <a class="button button-secondary" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.allSerials)}</a>
+      </div>
+    </section>
+    <section class="section">
+      <div class="prose">${body.html || `<p>${escapeHtml(serial.excerpt || serial.description)}</p>`}</div>
+    </section>
+    <section class="section">
+      <p class="kicker">${escapeHtml(copy.chapters)}</p>
+      <div class="grid">${renderChapterCards(route, chapters)}</div>
+    </section>`;
+};
+
+const renderDynamicNovelChapter = (route, serial, chapter, body, chapters) => {
+  const copy = dynamicContentCopy[route.locale];
+  const currentIndex = chapters.findIndex((entry) => entry.slug === chapter.slug);
+  const previousChapter = currentIndex > 0 ? chapters[currentIndex - 1] : null;
+  const nextChapter = currentIndex >= 0 ? chapters[currentIndex + 1] : null;
+  const isProtected = chapter.access_level !== 'free';
+  const content = isProtected
+    ? `<section class="gate" data-serial-access-gate data-series-slug="${escapeHtml(chapter.parent_slug)}" data-chapter-slug="${escapeHtml(chapter.slug)}" data-access="${escapeHtml(chapter.access_level)}" data-locale="${escapeHtml(route.locale)}">
+        <p class="kicker">${escapeHtml(dynamicAccessLabels[chapter.access_level] || chapter.access_level)}</p>
+        <h2>${escapeHtml(copy.lockedTitle)}</h2>
+        <p>${escapeHtml(copy.lockedBody)}</p>
+        <div class="status" data-serial-access-status>Checking access...</div>
+        <div class="button-row">
+          <a class="button button-primary" href="/library/">${escapeHtml(copy.signIn)}</a>
+          <a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>
+        </div>
+      </section>
+      <article class="prose" data-protected-chapter-body hidden></article>
+      <script>
+        (() => {
+          const gate = document.querySelector('[data-serial-access-gate]');
+          const status = gate?.querySelector('[data-serial-access-status]');
+          const body = document.querySelector('[data-protected-chapter-body]');
+          const setStatus = (message, tone = 'neutral') => {
+            if (!status) return;
+            status.textContent = message;
+            status.dataset.tone = tone;
+          };
+          const load = async () => {
+            if (!gate || !body) return;
+            const accessParams = new URLSearchParams({
+              access: gate.dataset.access,
+              chapter: gate.dataset.chapterSlug,
+              series: gate.dataset.seriesSlug
+            });
+            const access = await fetch('/api/novels/access?' + accessParams.toString()).then((res) => res.json());
+            if (!access.allowed) {
+              setStatus(access.authenticated ? 'This account has not unlocked this chapter yet.' : 'Please sign in before reading this chapter.', 'error');
+              return;
+            }
+            setStatus('Access confirmed. Loading the chapter...', 'success');
+            const contentParams = new URLSearchParams({
+              chapter: gate.dataset.chapterSlug,
+              locale: gate.dataset.locale,
+              series: gate.dataset.seriesSlug
+            });
+            const response = await fetch('/api/novels/chapters/protected-content?' + contentParams.toString());
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) throw new Error(payload.message || 'Could not load chapter.');
+            body.innerHTML = payload.content.html;
+            body.hidden = false;
+            gate.hidden = true;
+          };
+          load().catch((error) => setStatus(error.message || 'Could not load chapter.', 'error'));
+        })();
+      </script>`
+    : `<article class="prose">${body.html || `<p>${escapeHtml(chapter.excerpt || chapter.description)}</p>`}</article>`;
+
+  return `<article class="section">
+      <a class="text-link" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>
+      <header class="hero">
+        <div class="meta">
+          <span class="pill">${escapeHtml(copy.chapter)} ${escapeHtml(String(chapter.chapter_number || ''))}</span>
+          <span>${escapeHtml(copy.access)}: ${escapeHtml(dynamicAccessLabels[chapter.access_level] || chapter.access_level)}</span>
+          ${chapter.word_count ? `<span>${escapeHtml(String(chapter.word_count))} ${escapeHtml(copy.words)}</span>` : ''}
+        </div>
+        <h1>${escapeHtml(chapter.title)}</h1>
+        <p>${escapeHtml(chapter.excerpt || chapter.description)}</p>
+      </header>
+      ${content}
+      <footer class="section">
+        <div class="button-row">
+          ${previousChapter ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${previousChapter.slug}/`)}">Previous</a>` : `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>`}
+          ${nextChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${nextChapter.slug}/`)}">Next</a>` : `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>`}
+        </div>
+      </footer>
+    </article>`;
+};
+
+const handleDynamicFrontendContent = async (request, env) => {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return null;
+  const url = new URL(request.url);
+  const route = parseDynamicContentRoute(url.pathname);
+  if (!route) return null;
+  if (route.kind === 'devlog-index' || route.kind === 'novel-index') return null;
+
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureContentTablesReady(db))) return null;
+
+  if (route.kind === 'devlog-post') {
+    const post = await getPublishedContentEntry(db, { entryType: 'blog_post', locale: route.locale, slug: route.slug });
+    if (!post) return null;
+    const body = await readPublicEntryBody(env, post);
+    return dynamicHtmlResponse(request, {
+      body: renderDynamicDevlogPost(route, post, body),
+      canonicalPath: dynamicCanonicalPath(route),
+      description: post.description || post.excerpt,
+      lang: route.locale,
+      title: post.title
+    });
+  }
+
+  if (route.kind === 'novel-series') {
+    const serial = await getPublishedContentEntry(db, { entryType: 'novel_series', locale: route.locale, slug: route.seriesSlug });
+    if (!serial) return null;
+    const [body, chapters] = await Promise.all([
+      readPublicEntryBody(env, serial),
+      listPublishedContentEntries(db, { entryType: 'novel_chapter', locale: route.locale, parentSlug: serial.slug, limit: 100 })
+    ]);
+    return dynamicHtmlResponse(request, {
+      body: renderDynamicNovelSeries(route, serial, body, chapters),
+      canonicalPath: dynamicCanonicalPath(route),
+      description: serial.description || serial.excerpt,
+      lang: route.locale,
+      title: serial.title
+    });
+  }
+
+  if (route.kind === 'novel-chapter') {
+    const [serial, chapter] = await Promise.all([
+      getPublishedContentEntry(db, { entryType: 'novel_series', locale: route.locale, slug: route.seriesSlug }),
+      getPublishedContentEntry(db, {
+        entryType: 'novel_chapter',
+        locale: route.locale,
+        parentSlug: route.seriesSlug,
+        slug: route.chapterSlug
+      })
+    ]);
+    if (!serial || !chapter) return null;
+    const [body, chapters] = await Promise.all([
+      readPublicEntryBody(env, chapter),
+      listPublishedContentEntries(db, { entryType: 'novel_chapter', locale: route.locale, parentSlug: route.seriesSlug, limit: 100 })
+    ]);
+    return dynamicHtmlResponse(request, {
+      body: renderDynamicNovelChapter(route, serial, chapter, body, chapters),
+      canonicalPath: dynamicCanonicalPath(route),
+      description: chapter.description || chapter.excerpt,
+      lang: route.locale,
+      title: `${chapter.title} | ${serial.title}`
+    });
+  }
+
+  return null;
 };
 
 const downloadFiles = {
@@ -4458,6 +5151,10 @@ export default {
       return handlePublicContentEntries(request, env);
     }
 
+    if (request.method === 'GET' && url.pathname === '/api/content/body') {
+      return handlePublicContentBody(request, env);
+    }
+
     if (request.method === 'POST' && url.pathname === '/api/novels/credits/unlock') {
       return handleReaderCreditUnlock(request, env);
     }
@@ -4519,6 +5216,9 @@ export default {
       if (request.method === 'POST') return handleUpdateSettings(request, env);
       return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
+
+    const dynamicContentResponse = await handleDynamicFrontendContent(request, env);
+    if (dynamicContentResponse) return dynamicContentResponse;
 
     if (env.ASSETS) {
       const assetResponse = await env.ASSETS.fetch(request);

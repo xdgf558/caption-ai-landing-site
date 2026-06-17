@@ -224,11 +224,11 @@
 2. 校验 slug、语言、发布时间、章节顺序和 SEO 数据。
 3. 移除旧 GitHub token 写 Markdown 后台。
 
-## 当前执行：阶段 7C
+## 当前执行：阶段 7D
 
-阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2。当前进入 7C，新增 `/admin-v2/` 后台内容平台，先覆盖小说作品、小说章节、Blog/Devlog 的创建、编辑、导入、预览和发布，并集中显示订单、授权、修订与审计记录。旧 `/admin/` GitHub token Markdown 流暂时保留，等 7G 完成旧内容迁移后再下线。
+阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台。当前进入 7D，把前台小说和 Blog/Devlog 逐步接入后端内容：索引页继续保留静态内容并追加后端发布条目，后端详情页由 Worker 动态渲染，已发布内容不再需要为了每次更新重新部署网站。
 
-详细文档见 [admin-v2-content-platform-7c.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/admin-v2-content-platform-7c.md:1)。
+详细文档见 [dynamic-frontend-content-7d.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/dynamic-frontend-content-7d.md:1)。
 
 ## 已完成：阶段 6C
 

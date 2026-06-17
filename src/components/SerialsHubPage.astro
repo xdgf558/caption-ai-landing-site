@@ -1,6 +1,7 @@
 ---
 import type { SerialChapterEntry, SerialEntry, SiteLocale } from '../data/serials';
 import { formatChapterNumber, getChapterHref, getPriceModeLabel, getSeriesHref, getSerialStatusLabel } from '../data/serials';
+import BackendContentShelf from './BackendContentShelf.astro';
 import SerialCard from './SerialCard.astro';
 
 interface CopyShape {
@@ -41,6 +42,37 @@ interface Props {
 
 const { basePath, copy, featuredLatestChapter, featuredSerial, locale, serials } = Astro.props;
 const featuredCoverText = featuredSerial?.data.coverLabel ?? featuredSerial?.data.title;
+const staticSerialSlugs = serials.map((serial) => serial.data.seriesSlug);
+const backendShelfCopy = {
+  en: {
+    empty: 'No backend-published serials are waiting outside the static shelf.',
+    eyebrow: 'New from Admin',
+    readLabel: copy.openSeries,
+    sourceLabel: 'Admin 2.0',
+    title: 'New backend-published serials.'
+  },
+  ja: {
+    empty: '管理画面から追加された連載はまだありません。',
+    eyebrow: '管理画面から追加',
+    readLabel: copy.openSeries,
+    sourceLabel: 'Admin 2.0',
+    title: '新しく公開された連載。'
+  },
+  'zh-Hant': {
+    empty: '目前沒有額外從後台發布的連載。',
+    eyebrow: '後台新發布',
+    readLabel: copy.openSeries,
+    sourceLabel: 'Admin 2.0',
+    title: '從後台即時發布的連載。'
+  },
+  'zh-Hans': {
+    empty: '目前没有额外从后台发布的连载。',
+    eyebrow: '后台新发布',
+    readLabel: copy.openSeries,
+    sourceLabel: 'Admin 2.0',
+    title: '从后台即时发布的连载。'
+  }
+};
 ---
 
 <section class="works-hero serials-hero">
@@ -144,4 +176,11 @@ const featuredCoverText = featuredSerial?.data.coverLabel ?? featuredSerial?.dat
   ) : (
     <p class="empty-state">{copy.shelfEmpty}</p>
   )}
+  <BackendContentShelf
+    basePath={basePath}
+    copy={backendShelfCopy[locale]}
+    entryType="novel_series"
+    existingSlugs={staticSerialSlugs}
+    locale={locale}
+  />
 </section>

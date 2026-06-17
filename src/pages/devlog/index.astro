@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import BackendContentShelf from '../../components/BackendContentShelf.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { devlogCopy, devlogPath, devlogSlug, formatDevlogDate } from '../../data/devlog';
 
@@ -7,6 +8,14 @@ const lang = 'zh-Hant';
 const copy = devlogCopy[lang];
 const posts = (await getCollection('devlog', ({ data }) => !data.draft && data.language === lang))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const staticPostSlugs = posts.map((post) => devlogSlug(post));
+const backendShelfCopy = {
+  empty: '目前沒有額外從後台發布的開發記錄。',
+  eyebrow: '後台新發布',
+  readLabel: '閱讀',
+  sourceLabel: 'Admin 2.0',
+  title: '從後台即時發布的開發記錄。'
+};
 ---
 
 <BaseLayout
@@ -46,5 +55,12 @@ const posts = (await getCollection('devlog', ({ data }) => !data.draft && data.l
         )}
       </article>
     ))}
+    <BackendContentShelf
+      basePath="/devlog/"
+      copy={backendShelfCopy}
+      entryType="blog_post"
+      existingSlugs={staticPostSlugs}
+      locale={lang}
+    />
   </section>
 </BaseLayout>
