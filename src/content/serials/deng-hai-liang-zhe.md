@@ -1,7 +1,9 @@
 ---
 title: "燈還亮著"
 seriesSlug: "deng-hai-liang-zhe"
+author: "Station Cat"
 description: "一個放長篇小說、更新節奏和後續支持入口的固定位置，從深夜站台的第一盞燈開始。"
+subtitle: "第一部長篇連載的試讀入口"
 tagline: "深夜、站台、記憶，和一部正要慢慢展開的長篇故事。"
 status: "serializing"
 language: "zh-Hant"
@@ -10,14 +12,17 @@ tags:
   - "Long novel"
   - "Night station"
   - "Serial fiction"
+coverLabel: "燈還亮著"
+coverAlt: "燈還亮著小說封面佔位圖"
 featured: true
 priceMode: "free"
 freeChapters: 3
 latestChapterSlug: "prologue-light"
 latestChapterNumber: 1
+totalPlannedChapters: 36
 availabilityNote: "第一版先開放免費閱讀，後續再接入打賞和付費解鎖。"
 publishedAt: 2026-06-16
-updatedAt: 2026-06-16
+updatedAt: 2026-06-17
 ---
 
 這會是 Station Cat 第一部長篇小說的固定入口。

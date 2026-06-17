@@ -69,6 +69,29 @@ const priceModeLabels: Record<SiteLocale, Record<SerialEntry['data']['priceMode'
   }
 };
 
+const chapterAccessLabels: Record<SiteLocale, Record<SerialChapterEntry['data']['access'], string>> = {
+  en: {
+    free: 'Free',
+    paid: 'Paid',
+    supporter: 'Supporters'
+  },
+  ja: {
+    free: '無料',
+    paid: '有料',
+    supporter: '支援者向け'
+  },
+  'zh-Hant': {
+    free: '免費',
+    paid: '付費',
+    supporter: '支持者'
+  },
+  'zh-Hans': {
+    free: '免费',
+    paid: '付费',
+    supporter: '支持者'
+  }
+};
+
 export const serialsCopy = {
   en: {
     navLabel: 'Serials',
@@ -92,16 +115,21 @@ export const serialsCopy = {
     readFirst: 'Read from chapter one',
     backShelf: 'Back to shelf',
     backHome: 'Back to Station Cat',
+    authorLabel: 'Author',
     synopsisEyebrow: 'Synopsis',
     synopsisTitle: 'What this work is holding onto.',
     chapterEyebrow: 'Reading order',
     chapterLabel: 'Chapter',
+    chapterUnitLabel: '',
     chapterTitle: 'Published chapters',
     chapterEmpty: 'The first chapter is still being prepared.',
     latestLabel: 'Latest',
     scheduleLabel: 'Schedule',
     accessLabel: 'Access',
     freeLabel: 'Free chapters',
+    plannedLabel: 'Planned',
+    volumeLabel: 'Volume',
+    readingTimeLabel: 'min read',
     statusLabel: 'Status',
     chapterWordCount: 'words',
     previousChapter: 'Previous chapter',
@@ -132,16 +160,21 @@ export const serialsCopy = {
     readFirst: '第一章から読む',
     backShelf: '棚に戻る',
     backHome: 'Station Cat に戻る',
+    authorLabel: '作者',
     synopsisEyebrow: '作品紹介',
     synopsisTitle: 'この物語の入り口。',
     chapterEyebrow: '章順',
     chapterLabel: '第',
+    chapterUnitLabel: '章',
     chapterTitle: '公開済みの章',
     chapterEmpty: '第一章はまだ準備中です。',
     latestLabel: '最新章',
     scheduleLabel: '更新予定',
     accessLabel: '公開方式',
     freeLabel: '無料章数',
+    plannedLabel: '予定章数',
+    volumeLabel: '巻',
+    readingTimeLabel: '分で読めます',
     statusLabel: '更新状態',
     chapterWordCount: '語',
     previousChapter: '前の章',
@@ -172,16 +205,21 @@ export const serialsCopy = {
     readFirst: '從第一章開始',
     backShelf: '回到書架',
     backHome: '回到 Station Cat',
+    authorLabel: '作者',
     synopsisEyebrow: '作品簡介',
     synopsisTitle: '這部作品目前的入口。',
     chapterEyebrow: '章節順序',
     chapterLabel: '第',
+    chapterUnitLabel: '章',
     chapterTitle: '已公開章節',
     chapterEmpty: '第一章還在整理中。',
     latestLabel: '最新章',
     scheduleLabel: '更新節奏',
     accessLabel: '閱讀方式',
     freeLabel: '免費章數',
+    plannedLabel: '預計章數',
+    volumeLabel: '卷',
+    readingTimeLabel: '分鐘閱讀',
     statusLabel: '更新狀態',
     chapterWordCount: '字',
     previousChapter: '上一章',
@@ -212,16 +250,21 @@ export const serialsCopy = {
     readFirst: '从第一章开始',
     backShelf: '回到书架',
     backHome: '回到 Station Cat',
+    authorLabel: '作者',
     synopsisEyebrow: '作品简介',
     synopsisTitle: '这部作品目前的入口。',
     chapterEyebrow: '章节顺序',
     chapterLabel: '第',
+    chapterUnitLabel: '章',
     chapterTitle: '已公开章节',
     chapterEmpty: '第一章还在整理中。',
     latestLabel: '最新章',
     scheduleLabel: '更新节奏',
     accessLabel: '阅读方式',
     freeLabel: '免费章数',
+    plannedLabel: '预计章数',
+    volumeLabel: '卷',
+    readingTimeLabel: '分钟阅读',
     statusLabel: '更新状态',
     chapterWordCount: '字',
     previousChapter: '上一章',
@@ -235,6 +278,9 @@ export const serialsCopy = {
 export const getSerialStatusLabel = (status: SerialEntry['data']['status'], locale: SiteLocale) => serialStatusLabels[locale][status];
 
 export const getPriceModeLabel = (priceMode: SerialEntry['data']['priceMode'], locale: SiteLocale) => priceModeLabels[locale][priceMode];
+
+export const getChapterAccessLabel = (access: SerialChapterEntry['data']['access'], locale: SiteLocale) =>
+  chapterAccessLabels[locale][access];
 
 export const getVisibleSerials = (serials: SerialEntry[]) =>
   [...serials].sort((a, b) => {
@@ -254,6 +300,30 @@ export const getPublishedChapters = (chapters: SerialChapterEntry[], seriesSlug:
 export const getLatestChapter = (chapters: SerialChapterEntry[]) => {
   if (chapters.length === 0) return undefined;
   return [...chapters].sort((a, b) => b.data.chapterNumber - a.data.chapterNumber)[0];
+};
+
+export const getFirstChapter = (chapters: SerialChapterEntry[]) => {
+  if (chapters.length === 0) return undefined;
+  return [...chapters].sort((a, b) => a.data.chapterNumber - b.data.chapterNumber)[0];
+};
+
+export const formatChapterNumber = (chapterNumber: number, locale: SiteLocale) => {
+  if (locale === 'zh-Hant' || locale === 'zh-Hans') {
+    return `第${chapterNumber}章`;
+  }
+
+  if (locale === 'ja') {
+    return `第${chapterNumber}章`;
+  }
+
+  return `Chapter ${chapterNumber}`;
+};
+
+export const formatReadingMinutes = (minutes: number | undefined, locale: SiteLocale) => {
+  if (!minutes) return '';
+  if (locale === 'zh-Hant' || locale === 'zh-Hans') return `${minutes} 分鐘閱讀`;
+  if (locale === 'ja') return `${minutes}分で読めます`;
+  return `${minutes} min read`;
 };
 
 export const getSeriesHref = (basePath: string, seriesSlug: string) => `${basePath}${seriesSlug}/`;
