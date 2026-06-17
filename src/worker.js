@@ -149,6 +149,131 @@ const acceptableAccessLevels = (access) => {
   return ['all'];
 };
 
+const nowPaymentsProvider = 'nowpayments';
+const nowPaymentsDefaultApiBase = 'https://api.nowpayments.io/v1';
+const nowPaymentsWebhookPath = '/api/novels/webhooks/nowpayments';
+const nowPaymentsSupportedCurrencies = ['USDTTRC20', 'USDTERC20', 'USDC', 'BTC', 'ETH'];
+const novelOrderStatuses = ['draft', 'waiting', 'confirming', 'confirmed', 'finished', 'failed', 'expired', 'refunded', 'unknown'];
+const novelPaymentGrantStatuses = ['confirmed', 'finished'];
+
+const timingSafeEqualString = (left, right) => {
+  const leftValue = String(left || '');
+  const rightValue = String(right || '');
+  if (leftValue.length !== rightValue.length) return false;
+
+  let result = 0;
+  for (let index = 0; index < leftValue.length; index += 1) {
+    result |= leftValue.charCodeAt(index) ^ rightValue.charCodeAt(index);
+  }
+  return result === 0;
+};
+
+const hmacSha512Hex = async (secret, value) => {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-512' },
+    false,
+    ['sign']
+  );
+  return toHex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)));
+};
+
+const sortObjectDeep = (value) => {
+  if (Array.isArray(value)) return value.map(sortObjectDeep);
+  if (!value || typeof value !== 'object') return value;
+
+  return Object.keys(value)
+    .sort()
+    .reduce((sorted, key) => {
+      sorted[key] = sortObjectDeep(value[key]);
+      return sorted;
+    }, {});
+};
+
+const stableJsonStringify = (value) => JSON.stringify(sortObjectDeep(value));
+
+const verifyNowPaymentsSignature = async (payload, signature, secret) => {
+  if (!secret || !signature) return false;
+  const expected = await hmacSha512Hex(secret, stableJsonStringify(payload));
+  return timingSafeEqualString(expected.toLowerCase(), String(signature).trim().toLowerCase());
+};
+
+const getNowPaymentsConfig = (env, request) => {
+  const origin = new URL(request.url).origin;
+  const apiBase = cleanText(env.NOWPAYMENTS_API_BASE || nowPaymentsDefaultApiBase, 200).replace(/\/+$/, '');
+  const callbackUrl = cleanText(
+    env.NOWPAYMENTS_IPN_CALLBACK_URL || `${origin}${nowPaymentsWebhookPath}`,
+    300
+  );
+
+  return {
+    apiBase: apiBase || nowPaymentsDefaultApiBase,
+    callbackUrl,
+    hasApiKey: Boolean(String(env.NOWPAYMENTS_API_KEY || '').trim()),
+    hasIpnSecret: Boolean(String(env.NOWPAYMENTS_IPN_SECRET || '').trim())
+  };
+};
+
+const mapNowPaymentsStatus = (value) => {
+  const status = cleanText(value, 80).toLowerCase();
+  if (status === 'finished') return 'finished';
+  if (status === 'confirmed' || status === 'sending') return 'confirmed';
+  if (status === 'confirming' || status === 'partially_paid') return 'confirming';
+  if (status === 'waiting') return 'waiting';
+  if (status === 'failed') return 'failed';
+  if (status === 'expired') return 'expired';
+  if (status === 'refunded') return 'refunded';
+  return status || 'unknown';
+};
+
+const normalizePaymentValue = (value, maxLength = 80) => cleanText(value, maxLength);
+
+const extractNowPaymentsEvent = (payload) => {
+  const providerStatus = normalizePaymentValue(payload.payment_status || payload.status, 80).toLowerCase();
+  return {
+    providerOrderId: normalizePaymentValue(payload.order_id || payload.orderId, 200),
+    providerPaymentId: normalizePaymentValue(payload.payment_id || payload.paymentId, 120),
+    providerInvoiceId: normalizePaymentValue(payload.invoice_id || payload.invoiceId, 120),
+    providerStatus,
+    status: mapNowPaymentsStatus(providerStatus),
+    priceAmount: normalizePaymentValue(payload.price_amount || payload.priceAmount, 60),
+    priceCurrency: normalizePaymentValue(payload.price_currency || payload.priceCurrency, 24).toUpperCase(),
+    payAmount: normalizePaymentValue(payload.pay_amount || payload.payAmount || payload.actually_paid, 60),
+    payCurrency: normalizePaymentValue(payload.pay_currency || payload.payCurrency, 24).toUpperCase()
+  };
+};
+
+const novelOrderToJson = (row) => ({
+  id: row.id,
+  orderToken: row.order_token,
+  accountId: row.account_id,
+  accountEmail: row.account_email || row.email || '',
+  provider: row.provider,
+  providerOrderId: row.provider_order_id,
+  providerPaymentId: row.provider_payment_id,
+  providerInvoiceId: row.provider_invoice_id,
+  orderType: row.order_type,
+  seriesSlug: row.series_slug,
+  chapterSlug: row.chapter_slug,
+  entitlementScope: row.entitlement_scope,
+  entitlementAccessLevel: row.entitlement_access_level,
+  priceAmount: row.price_amount,
+  priceCurrency: row.price_currency,
+  payAmount: row.pay_amount,
+  payCurrency: row.pay_currency,
+  paymentUrl: row.payment_url,
+  status: row.status,
+  providerStatus: row.provider_status,
+  customerEmail: row.customer_email,
+  metadataJson: row.metadata_json,
+  expiresAt: row.expires_at,
+  confirmedAt: row.confirmed_at,
+  finishedAt: row.finished_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
 const splitEnvList = (value) =>
   String(value || '')
     .split(',')
@@ -1168,6 +1293,210 @@ const handleNovelLibrary = async (request, env) => {
   });
 };
 
+const handleNovelPaymentsStatus = async (request, env) => {
+  const config = getNowPaymentsConfig(env, request);
+  return json({
+    ok: true,
+    provider: nowPaymentsProvider,
+    configured: {
+      apiKey: config.hasApiKey,
+      ipnSecret: config.hasIpnSecret,
+      database: Boolean(env.WAITLIST_DB)
+    },
+    callbackPath: nowPaymentsWebhookPath,
+    callbackUrl: config.callbackUrl,
+    publicCheckoutEnabled: false,
+    supportedCurrencies: nowPaymentsSupportedCurrencies,
+    orderStatuses: novelOrderStatuses,
+    grantStatuses: novelPaymentGrantStatuses,
+    note: 'Stage 5A exposes payment readiness only. Public checkout and automatic entitlement grants are staged separately.'
+  });
+};
+
+const findNovelOrderByNowPaymentsEvent = async (db, event) => {
+  if (!event.providerOrderId && !event.providerPaymentId) return null;
+
+  return db
+    .prepare(
+      `SELECT *
+       FROM novel_orders
+       WHERE provider = ?
+         AND (
+           order_token = ?
+           OR (? <> '' AND provider_order_id = ?)
+           OR (? <> '' AND provider_payment_id = ?)
+         )
+       ORDER BY updated_at DESC
+       LIMIT 1`
+    )
+    .bind(
+      nowPaymentsProvider,
+      event.providerOrderId,
+      event.providerOrderId,
+      event.providerOrderId,
+      event.providerPaymentId,
+      event.providerPaymentId
+    )
+    .first();
+};
+
+const insertNovelPaymentEvent = async (db, event, payload, orderId = null) =>
+  db
+    .prepare(
+      `INSERT INTO novel_payment_events (
+        provider, order_id, provider_order_id, provider_payment_id, event_type,
+        status, signature_valid, payload_json
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(
+      nowPaymentsProvider,
+      orderId,
+      event.providerOrderId,
+      event.providerPaymentId,
+      'ipn',
+      event.providerStatus || event.status,
+      1,
+      JSON.stringify(payload)
+    )
+    .run();
+
+const updateNovelOrderFromNowPaymentsEvent = async (db, orderId, event) =>
+  db
+    .prepare(
+      `UPDATE novel_orders
+       SET provider_order_id = CASE WHEN ? <> '' THEN ? ELSE provider_order_id END,
+           provider_payment_id = CASE WHEN ? <> '' THEN ? ELSE provider_payment_id END,
+           provider_invoice_id = CASE WHEN ? <> '' THEN ? ELSE provider_invoice_id END,
+           price_amount = CASE WHEN ? <> '' THEN ? ELSE price_amount END,
+           price_currency = CASE WHEN ? <> '' THEN ? ELSE price_currency END,
+           pay_amount = CASE WHEN ? <> '' THEN ? ELSE pay_amount END,
+           pay_currency = CASE WHEN ? <> '' THEN ? ELSE pay_currency END,
+           status = ?,
+           provider_status = ?,
+           confirmed_at = CASE
+             WHEN ? IN ('confirmed', 'finished') AND confirmed_at IS NULL THEN CURRENT_TIMESTAMP
+             ELSE confirmed_at
+           END,
+           finished_at = CASE
+             WHEN ? = 'finished' AND finished_at IS NULL THEN CURRENT_TIMESTAMP
+             ELSE finished_at
+           END,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?
+       RETURNING *`
+    )
+    .bind(
+      event.providerOrderId,
+      event.providerOrderId,
+      event.providerPaymentId,
+      event.providerPaymentId,
+      event.providerInvoiceId,
+      event.providerInvoiceId,
+      event.priceAmount,
+      event.priceAmount,
+      event.priceCurrency,
+      event.priceCurrency,
+      event.payAmount,
+      event.payAmount,
+      event.payCurrency,
+      event.payCurrency,
+      event.status,
+      event.providerStatus,
+      event.status,
+      event.status,
+      orderId
+    )
+    .first();
+
+const handleNowPaymentsWebhook = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const ipnSecret = String(env.NOWPAYMENTS_IPN_SECRET || '').trim();
+  if (!ipnSecret) {
+    return json({ ok: false, message: 'NOWPayments IPN secret is not configured.' }, { status: 503 });
+  }
+
+  const rawBody = await request.text();
+  if (!rawBody || rawBody.length > 256000) {
+    return json({ ok: false, message: 'Invalid NOWPayments payload.' }, { status: 400 });
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return json({ ok: false, message: 'Invalid NOWPayments JSON payload.' }, { status: 400 });
+  }
+
+  const signature = request.headers.get('x-nowpayments-sig') || '';
+  const isValid = await verifyNowPaymentsSignature(payload, signature, ipnSecret);
+  if (!isValid) {
+    return json({ ok: false, message: 'Invalid NOWPayments signature.' }, { status: 401 });
+  }
+
+  const event = extractNowPaymentsEvent(payload);
+  const order = await findNovelOrderByNowPaymentsEvent(db, event);
+  await insertNovelPaymentEvent(db, event, payload, order?.id || null);
+
+  let updatedOrder = null;
+  if (order) {
+    updatedOrder = await updateNovelOrderFromNowPaymentsEvent(db, order.id, event);
+  }
+
+  return json({
+    ok: true,
+    matched: Boolean(order),
+    provider: nowPaymentsProvider,
+    payment: {
+      status: event.status,
+      providerStatus: event.providerStatus,
+      providerOrderId: event.providerOrderId,
+      providerPaymentId: event.providerPaymentId
+    },
+    entitlementGrantEnabled: false,
+    order: updatedOrder ? novelOrderToJson(updatedOrder) : null
+  });
+};
+
+const handleAdminListNovelOrders = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const url = new URL(request.url);
+  const status = cleanText(url.searchParams.get('status'), 40).toLowerCase();
+  const limit = Math.min(Math.max(Number.parseInt(url.searchParams.get('limit') || '50', 10) || 50, 1), 100);
+
+  const response = status
+    ? await db
+        .prepare(
+          `SELECT novel_orders.*, reader_accounts.email AS account_email
+           FROM novel_orders
+           LEFT JOIN reader_accounts ON reader_accounts.id = novel_orders.account_id
+           WHERE novel_orders.status = ?
+           ORDER BY novel_orders.updated_at DESC
+           LIMIT ?`
+        )
+        .bind(status, limit)
+        .all()
+    : await db
+        .prepare(
+          `SELECT novel_orders.*, reader_accounts.email AS account_email
+           FROM novel_orders
+           LEFT JOIN reader_accounts ON reader_accounts.id = novel_orders.account_id
+           ORDER BY novel_orders.updated_at DESC
+           LIMIT ?`
+        )
+        .bind(limit)
+        .all();
+
+  return json({
+    ok: true,
+    orders: (response.results || []).map(novelOrderToJson)
+  });
+};
+
 const downloadFiles = {
   '/downloads/stationcat-radar/StationCat-Radar-0.1.0-arm64.dmg': {
     key: 'stationcat-radar/0.1.0/StationCat-Radar-0.1.0-arm64.dmg',
@@ -1892,6 +2221,19 @@ export default {
 
     if (request.method === 'GET' && url.pathname === '/api/novels/library') {
       return handleNovelLibrary(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/novels/payments/status') {
+      return handleNovelPaymentsStatus(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === nowPaymentsWebhookPath) {
+      return handleNowPaymentsWebhook(request, env);
+    }
+
+    if (url.pathname === '/admin/api/novels/payments/orders') {
+      if (request.method === 'GET') return handleAdminListNovelOrders(request, env);
+      return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
     if (url.pathname === '/admin/api/novels/entitlements') {

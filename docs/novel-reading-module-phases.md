@@ -172,17 +172,18 @@
 - 读者通知与催更订阅
 - 付费阅读说明、退款边界、支持邮箱流程
 
-## 当前执行：阶段 4B
+## 当前执行：阶段 5A
 
-阶段 4A 已经完成并合并到 `main`。当前进入阶段 4B，重点是把“读者账号”和“可读内容”连接起来。
+阶段 4B 已经完成并合并到 `main`。当前进入阶段 5A，重点是先建立 NOWPayments 支付底座，不急着开放公开购买入口。
 
 这次先做：
 
-1. 新增 `novel_entitlements`
-2. 新增 `/api/novels/access`
-3. 新增 `/api/novels/library`
-4. 新增管理员手动授权入口
-5. `/library/` 展示已解锁内容
-6. 付费 / 支持者章节显示锁定状态，并通过 Worker 查询权限
+1. 新增 `novel_orders`
+2. 新增 `novel_tips`
+3. 新增 `novel_payment_events`
+4. 新增 `/api/novels/payments/status`
+5. 新增 `/api/novels/webhooks/nowpayments`
+6. 新增 `/admin/api/novels/payments/orders`
+7. 完成 NOWPayments IPN Secret 验签和订单状态同步基础
 
-阶段 4B 暂不接真实 NOWPayments 订单、打赏记录和 webhook。阶段 5 再把支付成功后的发放逻辑写入同一张 `novel_entitlements` 表。
+阶段 5A 暂不接小说页公开 checkout、打赏按钮和支付成功自动授权。后续 5B / 5C 再接真实创建订单、打赏入口、`confirmed / finished` 后自动写入 `novel_entitlements`。
