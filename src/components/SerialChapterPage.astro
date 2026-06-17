@@ -16,6 +16,7 @@ interface CopyShape {
 interface Props {
   basePath: string;
   chapter: SerialChapterEntry;
+  chapterList: SerialChapterEntry[];
   copy: CopyShape;
   locale: SiteLocale;
   nextChapter?: SerialChapterEntry;
@@ -24,7 +25,7 @@ interface Props {
   Content: any;
 }
 
-const { basePath, chapter, copy, locale, nextChapter, previousChapter, serial, Content } = Astro.props;
+const { basePath, chapter, chapterList, copy, locale, nextChapter, previousChapter, serial, Content } = Astro.props;
 const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
 const isProtectedChapter = chapter.data.access !== 'free';
 const unlockOrderType = chapter.data.access === 'supporter' ? 'supporter' : 'chapter';
@@ -40,6 +41,28 @@ const formattedUnlockAmount = new Intl.NumberFormat(locale, {
   style: 'currency',
   currency: unlockCurrency
 }).format(unlockAmount);
+const currentChapterIndex = chapterList.findIndex((entry) => entry.data.chapterSlug === chapter.data.chapterSlug);
+const paidChaptersFromCurrent =
+  currentChapterIndex >= 0 ? chapterList.slice(currentChapterIndex).filter((entry) => entry.data.access === 'paid') : [];
+const roundPaymentAmount = (amount: number) => Math.round(amount * 100) / 100;
+const bundleUnlockOptions =
+  unlockOrderType === 'chapter' && serial.data.bundlePurchasesEnabled
+    ? (serial.data.chapterBundleDiscounts ?? [])
+        .map((discount) => {
+          const chapterCount = Math.trunc(discount.chapters);
+          if (chapterCount <= 1 || discount.discountPercent <= 0 || paidChaptersFromCurrent.length < chapterCount) return null;
+          const chapterSlugs = paidChaptersFromCurrent.slice(0, chapterCount).map((entry) => entry.data.chapterSlug);
+          const subtotalAmount = unlockAmount * chapterCount;
+          const priceAmount = roundPaymentAmount(subtotalAmount * (100 - discount.discountPercent) / 100);
+          return {
+            chapterCount,
+            chapterSlugs,
+            discountPercent: discount.discountPercent,
+            formattedAmount: new Intl.NumberFormat(locale, { style: 'currency', currency: unlockCurrency }).format(priceAmount)
+          };
+        })
+        .filter(Boolean)
+    : [];
 const accessGateCopy = {
   en: {
     title: 'This chapter is reserved for unlocked readers.',
@@ -50,6 +73,9 @@ const accessGateCopy = {
     signIn: 'Sign in to my library',
     library: 'Open my library',
     unlock: 'Unlock',
+    bundle: 'Unlock',
+    bundleUnit: ' chapters',
+    bundleOff: 'off',
     creating: 'Creating checkout...',
     opening: 'Opening NOWPayments...',
     signInRequired: 'Please sign in before unlocking paid reading.',
@@ -65,6 +91,9 @@ const accessGateCopy = {
     signIn: '本棚にログイン',
     library: '本棚を開く',
     unlock: '解放する',
+    bundle: '解放',
+    bundleUnit: '章',
+    bundleOff: 'OFF',
     creating: 'チェックアウトを作成しています...',
     opening: 'NOWPayments を開いています...',
     signInRequired: '有料閲覧を解放する前にログインしてください。',
@@ -80,6 +109,9 @@ const accessGateCopy = {
     signIn: '登入我的書庫',
     library: '打開我的書庫',
     unlock: '解鎖',
+    bundle: '解鎖',
+    bundleUnit: ' 章',
+    bundleOff: '折扣',
     creating: '正在建立支付訂單...',
     opening: '正在打開 NOWPayments...',
     signInRequired: '請先登入，再解鎖付費閱讀。',
@@ -95,6 +127,9 @@ const accessGateCopy = {
     signIn: '登录我的书库',
     library: '打开我的书库',
     unlock: '解锁',
+    bundle: '解锁',
+    bundleUnit: ' 章',
+    bundleOff: '折扣',
     creating: '正在建立支付订单...',
     opening: '正在打开 NOWPayments...',
     signInRequired: '请先登录，再解锁付费阅读。',
@@ -147,9 +182,21 @@ const accessGateCopy = {
       </div>
       <div class="button-row">
         <a class="button button-primary" href="/library/">{accessGateCopy.signIn}</a>
-        <button class="button button-secondary" type="button" data-serial-unlock>
+        <button class="button button-secondary" type="button" data-serial-unlock data-order-type={unlockOrderType}>
           {accessGateCopy.unlock} {formattedUnlockAmount}
         </button>
+        {bundleUnlockOptions.map((option) => (
+          <button
+            class="button button-secondary"
+            type="button"
+            data-serial-unlock
+            data-order-type="chapter-bundle"
+            data-bundle-chapters={option.chapterCount}
+            data-chapter-slugs={option.chapterSlugs.join(',')}
+          >
+            {accessGateCopy.bundle} {option.chapterCount}{accessGateCopy.bundleUnit} · {option.formattedAmount} · {option.discountPercent}% {accessGateCopy.bundleOff}
+          </button>
+        ))}
         <a class="button button-secondary" href={seriesHref}>{copy.chapterBack}</a>
       </div>
     </section>
@@ -179,12 +226,18 @@ const accessGateCopy = {
   <script define:vars={{ accessGateCopy }}>
     const gate = document.querySelector('[data-serial-access-gate]');
     const status = gate?.querySelector('[data-serial-access-status]');
-    const unlockButton = gate?.querySelector('[data-serial-unlock]');
+    const unlockButtons = gate ? Array.from(gate.querySelectorAll('[data-serial-unlock]')) : [];
 
     const setGateStatus = (message, tone = 'neutral') => {
       if (!status) return;
       status.textContent = message;
       status.dataset.tone = tone;
+    };
+
+    const setUnlockButtonsDisabled = (disabled) => {
+      unlockButtons.forEach((button) => {
+        button.disabled = disabled;
+      });
     };
 
     const checkAccess = async () => {
@@ -207,40 +260,52 @@ const accessGateCopy = {
       }
     };
 
-    unlockButton?.addEventListener('click', async () => {
-      if (!gate) return;
-      unlockButton.disabled = true;
-      setGateStatus(accessGateCopy.creating, 'neutral');
+    unlockButtons.forEach((button) => {
+      button.addEventListener('click', async () => {
+        if (!gate) return;
+        setUnlockButtonsDisabled(true);
+        setGateStatus(accessGateCopy.creating, 'neutral');
 
-      try {
-        const response = await fetch('/api/novels/payments/checkout', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            orderType: gate.dataset.orderType,
-            seriesSlug: gate.dataset.seriesSlug,
-            chapterSlug: gate.dataset.chapterSlug,
-            locale: gate.dataset.locale,
-            returnPath: gate.dataset.returnPath
-          })
-        });
-        const data = await response.json();
-        if (!response.ok || !data.ok) {
-          if (data.code === 'SIGN_IN_REQUIRED') {
-            setGateStatus(accessGateCopy.signInRequired, 'error');
-            window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname)}`;
-            return;
-          }
-          if (data.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(accessGateCopy.disabled);
-          throw new Error(data.message || accessGateCopy.failed);
+        const orderType = button.dataset.orderType || gate.dataset.orderType;
+        const payload = {
+          orderType,
+          seriesSlug: gate.dataset.seriesSlug,
+          chapterSlug: gate.dataset.chapterSlug,
+          locale: gate.dataset.locale,
+          returnPath: gate.dataset.returnPath
+        };
+        if (orderType === 'chapter-bundle') {
+          payload.bundleChapters = button.dataset.bundleChapters;
+          payload.chapterSlugs = String(button.dataset.chapterSlugs || '')
+            .split(',')
+            .map((slug) => slug.trim())
+            .filter(Boolean);
         }
-        if (!data.paymentUrl) throw new Error(accessGateCopy.failed);
-        setGateStatus(accessGateCopy.opening, 'success');
-        window.location.href = data.paymentUrl;
-      } catch (error) {
-        setGateStatus(error.message || accessGateCopy.failed, 'error');
-        unlockButton.disabled = false;
-      }
+
+        try {
+          const response = await fetch('/api/novels/payments/checkout', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await response.json();
+          if (!response.ok || !data.ok) {
+            if (data.code === 'SIGN_IN_REQUIRED') {
+              setGateStatus(accessGateCopy.signInRequired, 'error');
+              window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname)}`;
+              return;
+            }
+            if (data.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(accessGateCopy.disabled);
+            throw new Error(data.message || accessGateCopy.failed);
+          }
+          if (!data.paymentUrl) throw new Error(accessGateCopy.failed);
+          setGateStatus(accessGateCopy.opening, 'success');
+          window.location.href = data.paymentUrl;
+        } catch (error) {
+          setGateStatus(error.message || accessGateCopy.failed, 'error');
+          setUnlockButtonsDisabled(false);
+        }
+      });
     });
 
     checkAccess().catch((error) => setGateStatus(error.message || accessGateCopy.denied, 'error'));

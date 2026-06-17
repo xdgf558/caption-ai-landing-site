@@ -103,6 +103,8 @@ Admin 的 `連載小說` 面板里已经有可视化收费设置。它会更新�
 - `bundlePurchasesEnabled`：是否开启多章折扣配置
 - `chapterBundleDiscounts`：一次购买多章的折扣规则
 
+这些字段不只是页面展示。`npm run build` 会先运行 `scripts/build-novel-payment-config.mjs`，把小说 Markdown 和章节顺序生成到 `src/generated/novelPaymentConfig.js`。Worker 创建 NOWPayments 订单时会读取这个生成配置，并以它作为单章、支持者、打赏按钮和多章折扣的价格来源。
+
 多章折扣配置示例：
 
 ```yaml
@@ -113,6 +115,8 @@ chapterBundleDiscounts:
   - chapters: 10
     discountPercent: 18
 ```
+
+开启多章购买后，读者在某个付费章节可以一次解锁从当前章开始、按章节顺序排列的后续多章。Worker 会重新计算应付金额，并在 IPN `confirmed` / `finished` 后为这些章节逐条写入阅读授权。
 
 ## 发布检查
 
