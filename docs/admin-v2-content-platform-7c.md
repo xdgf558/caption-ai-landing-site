@@ -59,6 +59,25 @@ The Worker and Pages middleware now protect both admin route families:
 
 Cloudflare Access should also be configured with matching paths. If the dashboard does not treat wildcard matching as expected, create explicit applications or path rules for `/admin`, `/admin/*`, `/admin-v2`, and `/admin-v2/*`.
 
+## Production Verification After Deploy
+
+After merging and deploying Stage 7C, verify the admin boundary before using the new editor with real content:
+
+1. Open a private browser session and visit `/admin-v2/`.
+2. Confirm Cloudflare Access appears before the Admin 2.0 page loads.
+3. Request these URLs without a valid Access session and confirm they redirect to Access or return an admin access denial:
+
+```text
+/admin-v2/
+/admin/api/content/schema
+/admin/api/content/entries
+/admin/api/content/body?id=1
+/admin/api/content/revisions?id=1
+/admin/api/content/audit-logs
+```
+
+Do not enter real content in Admin 2.0 until unauthenticated access to the editor and write APIs is blocked in production.
+
 ## Content Body Behavior
 
 When Admin 2.0 saves content:
@@ -91,5 +110,7 @@ Stage 7E will promote these rules into the frontend purchase experience and, whe
 ## Current Boundary
 
 Stage 7C does not yet make public novel or Blog pages dynamic. Existing static Astro pages remain the public source of truth until Stage 7D.
+
+Stage 7D should convert the public reading and Blog/Devlog surfaces to read backend-published content from the Worker APIs, while retaining static Astro content as a rollback path. The target outcome is immediate publishing from Admin 2.0 without a GitHub commit or site redeploy for routine chapters and posts.
 
 Stage 7C also does not remove legacy Markdown content or the old `/admin/` page. That cleanup belongs to Stage 7G.
