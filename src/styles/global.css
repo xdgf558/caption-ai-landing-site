@@ -3976,6 +3976,23 @@ body.station-paper-page {
   margin-top: 26px;
 }
 
+.serial-support-section {
+  display: grid;
+  gap: 18px;
+}
+
+.serial-tip-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.serial-tip-actions .button,
+.serial-access-gate .button {
+  min-height: 46px;
+}
+
 .serial-prose {
   display: grid;
   gap: 16px;

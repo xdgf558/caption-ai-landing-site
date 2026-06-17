@@ -145,6 +145,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const query = new URLSearchParams(window.location.search);
+    const redirectPath = (() => {
+      const value = query.get('returnTo') || '/library/';
+      if (!value.startsWith('/') || value.startsWith('//')) return '/library/';
+      return value;
+    })();
+
     if (query.get('login') === 'success') {
       setStatus('登入成功，正在載入書庫。', 'success');
     } else if (query.get('login') === 'invalid') {
@@ -162,7 +168,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
             email: emailInput.value,
-            redirectPath: '/library/'
+            redirectPath
           })
         });
         const data = await response.json();

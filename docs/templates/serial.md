@@ -17,6 +17,15 @@ coverAlt: "小说封面描述"
 featured: false
 priceMode: "free"
 freeChapters: 3
+tipAmounts:
+  - 3
+  - 5
+  - 10
+tipCurrency: "USD"
+chapterPriceAmount: 1.99
+chapterPriceCurrency: "USD"
+supporterPriceAmount: 4.99
+supporterPriceCurrency: "USD"
 latestChapterSlug: ""
 latestChapterNumber: 0
 totalPlannedChapters: 0

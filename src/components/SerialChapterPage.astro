@@ -27,42 +27,79 @@ interface Props {
 const { basePath, chapter, copy, locale, nextChapter, previousChapter, serial, Content } = Astro.props;
 const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
 const isProtectedChapter = chapter.data.access !== 'free';
+const unlockOrderType = chapter.data.access === 'supporter' ? 'supporter' : 'chapter';
+const unlockAmount =
+  unlockOrderType === 'supporter'
+    ? serial.data.supporterPriceAmount ?? 4.99
+    : serial.data.chapterPriceAmount ?? 1.99;
+const unlockCurrency =
+  unlockOrderType === 'supporter'
+    ? serial.data.supporterPriceCurrency ?? 'USD'
+    : serial.data.chapterPriceCurrency ?? 'USD';
+const formattedUnlockAmount = new Intl.NumberFormat(locale, {
+  style: 'currency',
+  currency: unlockCurrency
+}).format(unlockAmount);
 const accessGateCopy = {
   en: {
     title: 'This chapter is reserved for unlocked readers.',
-    body: 'Sign in to check whether this account has access. Stage 4B stores the entitlement in D1, so it can follow the reader across devices.',
+    body: 'Sign in to check this account, or create a NOWPayments order to unlock access after payment confirmation.',
     checking: 'Checking access...',
-    allowed: 'Access confirmed. Protected chapter delivery will use this entitlement path in the payment stage.',
+    allowed: 'Access confirmed. Protected chapter delivery will use this entitlement path in the next step.',
     denied: 'This account has not unlocked this chapter yet.',
     signIn: 'Sign in to my library',
-    library: 'Open my library'
+    library: 'Open my library',
+    unlock: 'Unlock',
+    creating: 'Creating checkout...',
+    opening: 'Opening NOWPayments...',
+    signInRequired: 'Please sign in before unlocking paid reading.',
+    disabled: 'Checkout is not configured yet.',
+    failed: 'Could not create checkout.'
   },
   ja: {
     title: 'この章は解放済み読者向けです。',
-    body: 'ログインすると、このアカウントに閲覧権限があるか確認できます。4B では権限を D1 に保存し、端末を変えても引き継げるようにします。',
+    body: 'ログインして権限を確認するか、NOWPayments の注文を作成して支払い確認後の解放に進めます。',
     checking: '権限を確認しています...',
-    allowed: '権限を確認しました。保護された本文配信は支払い段階でこの権限経路に接続します。',
+    allowed: '権限を確認しました。保護された本文配信は次の段階でこの経路に接続します。',
     denied: 'このアカウントではまだこの章が解放されていません。',
     signIn: '本棚にログイン',
-    library: '本棚を開く'
+    library: '本棚を開く',
+    unlock: '解放する',
+    creating: 'チェックアウトを作成しています...',
+    opening: 'NOWPayments を開いています...',
+    signInRequired: '有料閲覧を解放する前にログインしてください。',
+    disabled: '支払い設定はまだ有効ではありません。',
+    failed: 'チェックアウトを作成できませんでした。'
   },
   'zh-Hant': {
     title: '這一章保留給已解鎖讀者。',
-    body: '登入後可以確認這個帳戶是否已有閱讀權限。4B 會把權限寫進 D1，之後換裝置也能找回。',
+    body: '可以先登入確認帳戶是否已有權限，也可以建立 NOWPayments 訂單，等支付確認後再解鎖。',
     checking: '正在確認閱讀權限...',
-    allowed: '權限已確認。受保護正文的交付會在支付階段接上這條權限路徑。',
+    allowed: '權限已確認。受保護正文的交付會在下一步接上這條權限路徑。',
     denied: '這個帳戶尚未解鎖本章。',
     signIn: '登入我的書庫',
-    library: '打開我的書庫'
+    library: '打開我的書庫',
+    unlock: '解鎖',
+    creating: '正在建立支付訂單...',
+    opening: '正在打開 NOWPayments...',
+    signInRequired: '請先登入，再解鎖付費閱讀。',
+    disabled: '支付通道尚未配置完成。',
+    failed: '支付訂單建立失敗。'
   },
   'zh-Hans': {
     title: '这一章保留给已解锁读者。',
-    body: '登录后可以确认这个账户是否已有阅读权限。4B 会把权限写进 D1，之后换设备也能找回。',
+    body: '可以先登录确认账户是否已有权限，也可以建立 NOWPayments 订单，等支付确认后再解锁。',
     checking: '正在确认阅读权限...',
-    allowed: '权限已确认。受保护正文的交付会在支付阶段接上这条权限路径。',
+    allowed: '权限已确认。受保护正文的交付会在下一步接上这条权限路径。',
     denied: '这个账户尚未解锁本章。',
     signIn: '登录我的书库',
-    library: '打开我的书库'
+    library: '打开我的书库',
+    unlock: '解锁',
+    creating: '正在建立支付订单...',
+    opening: '正在打开 NOWPayments...',
+    signInRequired: '请先登录，再解锁付费阅读。',
+    disabled: '支付通道尚未配置完成。',
+    failed: '支付订单建立失败。'
   }
 }[locale];
 ---
@@ -98,6 +135,9 @@ const accessGateCopy = {
       data-series-slug={serial.data.seriesSlug}
       data-chapter-slug={chapter.data.chapterSlug}
       data-access={chapter.data.access}
+      data-order-type={unlockOrderType}
+      data-locale={locale}
+      data-return-path={getChapterHref(basePath, serial.data.seriesSlug, chapter.data.chapterSlug)}
     >
       <p class="station-kicker">{getChapterAccessLabel(chapter.data.access, locale)}</p>
       <h2>{accessGateCopy.title}</h2>
@@ -107,6 +147,9 @@ const accessGateCopy = {
       </div>
       <div class="button-row">
         <a class="button button-primary" href="/library/">{accessGateCopy.signIn}</a>
+        <button class="button button-secondary" type="button" data-serial-unlock>
+          {accessGateCopy.unlock} {formattedUnlockAmount}
+        </button>
         <a class="button button-secondary" href={seriesHref}>{copy.chapterBack}</a>
       </div>
     </section>
@@ -136,6 +179,7 @@ const accessGateCopy = {
   <script define:vars={{ accessGateCopy }}>
     const gate = document.querySelector('[data-serial-access-gate]');
     const status = gate?.querySelector('[data-serial-access-status]');
+    const unlockButton = gate?.querySelector('[data-serial-unlock]');
 
     const setGateStatus = (message, tone = 'neutral') => {
       if (!status) return;
@@ -162,6 +206,42 @@ const accessGateCopy = {
         setGateStatus(accessGateCopy.denied, 'error');
       }
     };
+
+    unlockButton?.addEventListener('click', async () => {
+      if (!gate) return;
+      unlockButton.disabled = true;
+      setGateStatus(accessGateCopy.creating, 'neutral');
+
+      try {
+        const response = await fetch('/api/novels/payments/checkout', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            orderType: gate.dataset.orderType,
+            seriesSlug: gate.dataset.seriesSlug,
+            chapterSlug: gate.dataset.chapterSlug,
+            locale: gate.dataset.locale,
+            returnPath: gate.dataset.returnPath
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          if (data.code === 'SIGN_IN_REQUIRED') {
+            setGateStatus(accessGateCopy.signInRequired, 'error');
+            window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname)}`;
+            return;
+          }
+          if (data.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(accessGateCopy.disabled);
+          throw new Error(data.message || accessGateCopy.failed);
+        }
+        if (!data.paymentUrl) throw new Error(accessGateCopy.failed);
+        setGateStatus(accessGateCopy.opening, 'success');
+        window.location.href = data.paymentUrl;
+      } catch (error) {
+        setGateStatus(error.message || accessGateCopy.failed, 'error');
+        unlockButton.disabled = false;
+      }
+    });
 
     checkAccess().catch((error) => setGateStatus(error.message || accessGateCopy.denied, 'error'));
   </script>
