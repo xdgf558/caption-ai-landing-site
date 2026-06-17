@@ -4061,6 +4061,204 @@ const handlePublicContentBody = async (request, env) => {
   });
 };
 
+const contentPreviewTimestamp = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
+
+const contentPreviewRowFromEntry = (entry) => ({
+  access_level: entry.accessLevel,
+  author_name: entry.authorName,
+  chapter_number: entry.chapterNumber,
+  description: entry.description,
+  excerpt: entry.excerpt,
+  parent_slug: entry.parentSlug,
+  published_at: entry.publishedAt || entry.scheduledAt || contentPreviewTimestamp(),
+  slug: entry.slug,
+  sort_order: entry.sortOrder,
+  status: entry.status,
+  subtitle: entry.subtitle,
+  title: entry.title,
+  updated_at: contentPreviewTimestamp(),
+  word_count: entry.wordCount
+});
+
+const getPreviewBody = (entry) => ({
+  html: entry.html || renderSimpleMarkdownToHtml(entry.markdown),
+  source: 'admin-preview'
+});
+
+const getPreviewBasePath = (entry) => getPathWithLocale(entry.locale, entry.entryType === 'blog_post' ? 'devlog' : 'works');
+
+const getAnyPreviewContentEntry = async (env, options) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureContentTablesReady(db))) return null;
+
+  const entryType = cleanText(options.entryType, 40);
+  const locale = normalizeContentLocale(options.locale);
+  const slug = cleanSlug(options.slug, 160);
+  const parentSlug = cleanSlug(options.parentSlug || '', 160);
+  if (!entryType || !slug) return null;
+
+  return db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       WHERE entry_type = ?
+         AND locale = ?
+         AND slug = ?
+         AND parent_slug = ?
+       ORDER BY updated_at DESC, id DESC
+       LIMIT 1`
+    )
+    .bind(entryType, locale, slug, parentSlug)
+    .first();
+};
+
+const mergePreviewChapter = (chapters, previewChapter) => {
+  const rows = new Map((chapters || []).map((chapter) => [chapter.slug, chapter]));
+  rows.set(previewChapter.slug, previewChapter);
+  return [...rows.values()].sort((left, right) => {
+    const leftNumber = normalizePositiveInteger(left.chapter_number, 0);
+    const rightNumber = normalizePositiveInteger(right.chapter_number, 0);
+    if (leftNumber !== rightNumber) return leftNumber - rightNumber;
+    return cleanText(left.slug, 160).localeCompare(cleanText(right.slug, 160));
+  });
+};
+
+const previewRouteFromEntry = (entry) => {
+  const basePath = getPreviewBasePath(entry);
+  if (entry.entryType === 'blog_post') {
+    return { basePath, kind: 'devlog-post', locale: entry.locale, slug: entry.slug };
+  }
+  if (entry.entryType === 'novel_series') {
+    return { basePath, kind: 'novel-series', locale: entry.locale, seriesSlug: entry.slug };
+  }
+  return {
+    basePath,
+    chapterSlug: entry.slug,
+    kind: 'novel-chapter',
+    locale: entry.locale,
+    seriesSlug: entry.parentSlug
+  };
+};
+
+const addPreviewBanner = (entry, body) => `<section class="status" data-tone="success">
+    Admin Preview · ${escapeHtml(entry.entryType)} · ${escapeHtml(entry.status)} · This page is not publicly published by this preview.
+  </section>
+  ${body}`;
+
+const renderAdminContentPreview = async (entry, env) => {
+  const row = contentPreviewRowFromEntry(entry);
+  const route = previewRouteFromEntry(entry);
+  const body = getPreviewBody(entry);
+
+  if (entry.entryType === 'blog_post') {
+    return {
+      body: addPreviewBanner(entry, renderDynamicDevlogPost(route, row, body)),
+      canonicalPath: dynamicCanonicalPath(route),
+      description: entry.description || entry.excerpt,
+      lang: entry.locale,
+      robots: 'noindex, nofollow',
+      title: `[Preview] ${entry.title}`
+    };
+  }
+
+  if (entry.entryType === 'novel_series') {
+    const chapters =
+      env.WAITLIST_DB && (await ensureContentTablesReady(env.WAITLIST_DB))
+        ? await listPublishedContentEntries(env.WAITLIST_DB, {
+            entryType: 'novel_chapter',
+            locale: entry.locale,
+            parentSlug: entry.slug,
+            limit: 100
+          })
+        : [];
+    return {
+      body: addPreviewBanner(entry, renderDynamicNovelSeries(route, row, body, chapters)),
+      canonicalPath: dynamicCanonicalPath(route),
+      description: entry.description || entry.excerpt,
+      lang: entry.locale,
+      robots: 'noindex, nofollow',
+      title: `[Preview] ${entry.title}`
+    };
+  }
+
+  const storedSeries = entry.parentSlug
+    ? await getAnyPreviewContentEntry(env, {
+        entryType: 'novel_series',
+        locale: entry.locale,
+        slug: entry.parentSlug
+      })
+    : null;
+  const series =
+    storedSeries ||
+    contentPreviewRowFromEntry({
+      ...entry,
+      accessLevel: 'free',
+      authorName: entry.authorName,
+      chapterNumber: null,
+      description: `Preview parent series for ${entry.parentSlug || entry.slug}.`,
+      excerpt: '',
+      parentSlug: '',
+      slug: entry.parentSlug || 'preview-series',
+      sortOrder: 0,
+      subtitle: '',
+      title: entry.parentSlug || 'Preview Series',
+      wordCount: 0
+    });
+  const storedChapters =
+    env.WAITLIST_DB && entry.parentSlug && (await ensureContentTablesReady(env.WAITLIST_DB))
+      ? await listPublishedContentEntries(env.WAITLIST_DB, {
+          entryType: 'novel_chapter',
+          locale: entry.locale,
+          parentSlug: entry.parentSlug,
+          limit: 100
+        })
+      : [];
+  const chapters = mergePreviewChapter(storedChapters, row);
+
+  return {
+    body: addPreviewBanner(entry, renderDynamicNovelChapter(route, series, row, body, chapters)),
+    canonicalPath: dynamicCanonicalPath(route),
+    description: entry.description || entry.excerpt,
+    lang: entry.locale,
+    robots: 'noindex, nofollow',
+    title: `[Preview] ${entry.title} | ${series.title}`
+  };
+};
+
+const handleAdminContentPreview = async (request, env) => {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const markdownLength = typeof payload.markdown === 'string' ? payload.markdown.length : 0;
+  const htmlLength = typeof payload.html === 'string' ? payload.html.length : 0;
+  if (markdownLength > 2_000_000 || htmlLength > 2_000_000) {
+    return privateJson({ ok: false, code: 'CONTENT_PREVIEW_TOO_LARGE', message: 'Preview content is too large.' }, { status: 413 });
+  }
+
+  let entry;
+  try {
+    entry = normalizeContentPayload(payload);
+  } catch (error) {
+    return privateJson({ ok: false, code: error.code || 'CONTENT_PREVIEW_INVALID', message: error.message }, { status: 400 });
+  }
+
+  try {
+    return withPrivateHeaders(
+      dynamicHtmlResponse(request, await renderAdminContentPreview(entry, env), {
+        headers: {
+          'content-security-policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self';"
+        }
+      })
+    );
+  } catch (error) {
+    return privateJson({ ok: false, code: error.code || 'CONTENT_PREVIEW_FAILED', message: error.message }, { status: 500 });
+  }
+};
+
 const getPathWithLocale = (locale, routeName) => {
   const segment = localePathSegments[locale];
   if (routeName === 'works' && locale === 'en') return '/works/';
@@ -4124,13 +4322,14 @@ const dynamicCanonicalPath = (route) => {
   return '/';
 };
 
-const dynamicHtmlShell = ({ body, canonicalPath, description, lang, title }) => `<!doctype html>
+const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '', title }) => `<!doctype html>
 <html lang="${escapeHtml(lang)}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${escapeHtml(title)} | Station Cat</title>
     <meta name="description" content="${escapeHtml(description)}">
+    ${robots ? `<meta name="robots" content="${escapeHtml(robots)}">` : ''}
     <link rel="canonical" href="https://wwwstationcat.org${escapeHtml(canonicalPath)}">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <style>
@@ -5189,6 +5388,11 @@ export default {
 
     if (url.pathname === '/admin/api/content/audit-logs') {
       if (request.method === 'GET') return handleAdminListAuditLogs(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/preview') {
+      if (request.method === 'POST') return handleAdminContentPreview(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

@@ -21,6 +21,16 @@ GET /api/content/body?type=novel_chapter&locale=zh-Hant&series={seriesSlug}&chap
 
 `/api/content/body` only returns body HTML for `accessLevel: "free"`. Protected chapter text must continue through the reader session and entitlement-protected endpoint.
 
+## Admin Preview API
+
+Admin 2.0 can preview unpublished content without writing to D1/R2:
+
+```text
+POST /admin/api/content/preview
+```
+
+The request body uses the same normalized content payload as `/admin/api/content/entries`. The Worker returns a complete no-index, no-store HTML page using the same dynamic frontend rendering helpers as public detail pages. This endpoint must stay behind Cloudflare Access with the other `/admin/api/content/*` routes.
+
 ## Dynamic Routes
 
 The Worker can render backend-published detail pages for:
@@ -46,6 +56,8 @@ This is intentional. Stage 7D should be reversible by unpublishing backend entri
 
 - `member` access currently maps to the same entitlement path as `paid` because the existing `novel_entitlements` model supports `paid`, `supporter`, and `all`.
 - Backend index content is appended to static pages, not merged server-side with old Markdown content.
+- Dynamic backend pages and preview responses currently use `no-store` to keep Admin 2.0 publishing immediately visible during validation.
+- A future performance pass can add CDN `Cache-Control` for public/free content with a short TTL or stale-while-revalidate window once the publish and rollback flow is stable.
 - Legacy Markdown migration remains Stage 7G.
 - Full backend pricing consumption remains Stage 7E.
 - Fuller order/account/entitlement management remains Stage 7F.

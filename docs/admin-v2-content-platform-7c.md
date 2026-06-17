@@ -42,6 +42,7 @@ Stage 7C adds:
 GET /admin/api/content/body?id={entryId}
 GET /admin/api/content/revisions?id={entryId}
 GET /admin/api/content/audit-logs
+POST /admin/api/content/preview
 ```
 
 These APIs are nested below `/admin/api/` so the existing Cloudflare Access rule continues to protect them.
@@ -74,6 +75,7 @@ After merging and deploying Stage 7C, verify the admin boundary before using the
 /admin/api/content/body?id=1
 /admin/api/content/revisions?id=1
 /admin/api/content/audit-logs
+/admin/api/content/preview
 ```
 
 Do not enter real content in Admin 2.0 until unauthenticated access to the editor and write APIs is blocked in production.

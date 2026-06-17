@@ -306,6 +306,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <label class="button button-secondary admin-file-button" for="content-file">导入 Markdown</label>
                   <input class="admin-file-input" id="content-file" type="file" accept=".md,.markdown,text/markdown,text/plain" />
                   <button class="button button-secondary" id="content-preview-button" type="button">刷新预览</button>
+                  <button class="button button-primary" id="content-worker-preview-button" type="button">打开 Worker 预览</button>
                 </div>
               </div>
               <textarea id="content-markdown" rows="18" spellcheck="false" placeholder="这里写正文 Markdown。导入带 frontmatter 的文件时，系统会自动填入上面的字段。"></textarea>
@@ -906,6 +907,59 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     };
 
+    const openWorkerPreview = async () => {
+      const payload = buildPayload();
+      if (!payload.title || !payload.slug) {
+        setSaveStatus('标题和 Slug 必填，才能打开 Worker 预览。', 'error');
+        return;
+      }
+      if (payload.entryType === 'novel_chapter' && (!payload.parentSlug || !payload.chapterNumber)) {
+        setSaveStatus('小说章节预览需要 seriesSlug 和章节序号。', 'error');
+        return;
+      }
+
+      const previewWindow = window.open('', '_blank');
+      if (!previewWindow) {
+        setSaveStatus('浏览器阻止了预览窗口，请允许弹窗后重试。', 'error');
+        return;
+      }
+      previewWindow.document.write('<!doctype html><title>Station Cat Preview</title><p style="font-family: system-ui; padding: 24px;">正在生成 Worker 预览...</p>');
+      previewWindow.document.close();
+
+      const button = $('#content-worker-preview-button');
+      button.disabled = true;
+      setSaveStatus('正在生成 Worker 预览。');
+      try {
+        const response = await fetch('/admin/api/content/preview', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const contentType = response.headers.get('content-type') || '';
+        const text = await response.text();
+        if (!response.ok) {
+          let message = `Preview failed: ${response.status}`;
+          if (contentType.includes('application/json')) {
+            try {
+              message = JSON.parse(text).message || message;
+            } catch {}
+          }
+          throw new Error(message);
+        }
+        previewWindow.document.open();
+        previewWindow.document.write(text);
+        previewWindow.document.close();
+        setSaveStatus('Worker 预览已打开。', 'success');
+      } catch (error) {
+        previewWindow.document.open();
+        previewWindow.document.write(`<!doctype html><title>Preview Error</title><p style="font-family: system-ui; padding: 24px;">${escapeHtml(error.message)}</p>`);
+        previewWindow.document.close();
+        setSaveStatus(error.message, 'error');
+      } finally {
+        button.disabled = false;
+      }
+    };
+
     const applyImportedMarkdown = (markdown) => {
       const parsed = parseMarkdownDocument(markdown);
       const frontmatter = parsed.frontmatter;
@@ -1063,6 +1117,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#audit-refresh').addEventListener('click', loadAuditLogs);
     $('#content-reset').addEventListener('click', () => resetForm(elements.fields.entryType.value));
     $('#content-preview-button').addEventListener('click', renderPreview);
+    $('#content-worker-preview-button').addEventListener('click', openWorkerPreview);
     elements.fields.entryType.addEventListener('change', updateConditionalFields);
     elements.fields.title.addEventListener('input', () => {
       if (!elements.fields.slug.value.trim()) elements.fields.slug.value = slugify(elements.fields.title.value, elements.fields.entryType.value);
