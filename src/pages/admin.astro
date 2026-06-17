@@ -261,6 +261,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <h2>小说 Markdown 导入预览</h2>
           </div>
           <div class="button-row">
+            <label class="button button-secondary admin-file-button" for="serial-file">选择 Markdown 文件</label>
+            <input class="admin-file-input" id="serial-file" name="file" type="file" accept=".md,.markdown,text/markdown,text/plain" />
             <button class="button button-secondary" id="serial-parse-button" type="button">解析 Markdown</button>
             <a class="button button-secondary" href="/zh-hant/works/">查看小说页</a>
           </div>
@@ -343,6 +345,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         chapterNumber: document.getElementById('serial-chapter-number'),
         chapterSlug: document.getElementById('serial-chapter-slug'),
         markdown: document.getElementById('serial-markdown'),
+        file: document.getElementById('serial-file'),
         parseButton: document.getElementById('serial-parse-button'),
         preview: document.getElementById('serial-preview'),
         saveButton: document.getElementById('serial-save'),
@@ -1326,15 +1329,36 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         deleteXWork().catch((error) => setStatus(error.message, 'error'));
       });
 
-      elements.serial.kind.addEventListener('change', () => {
-        if (!state.serials.sha) {
-          resetSerialImportForm(elements.serial.kind.value);
-        }
-      });
+    elements.serial.kind.addEventListener('change', () => {
+      if (!state.serials.sha) {
+        resetSerialImportForm(elements.serial.kind.value);
+      }
+    });
 
-      elements.serial.parseButton.addEventListener('click', () => {
-        try {
-          parseSerialImport();
+    elements.serial.file.addEventListener('change', async () => {
+      const selectedFile = elements.serial.file.files?.[0];
+      if (!selectedFile) return;
+
+      try {
+        const markdown = await selectedFile.text();
+        state.serials = { sha: '', path: '', kind: elements.serial.kind.value };
+        elements.serial.path.value = '';
+        elements.serial.markdown.value = markdown;
+        parseSerialImport();
+        setStatus(`已导入本地文件：${selectedFile.name}。`, 'success');
+        setInlineStatus('serials', '本地 Markdown 文件已读取并解析通过，可以保存。', 'success');
+      } catch (error) {
+        elements.serial.preview.textContent = error.message;
+        elements.serial.preview.dataset.tone = 'error';
+        setInlineStatus('serials', error.message, 'error');
+      } finally {
+        elements.serial.file.value = '';
+      }
+    });
+
+    elements.serial.parseButton.addEventListener('click', () => {
+      try {
+        parseSerialImport();
           setInlineStatus('serials', 'Markdown 解析通过，可以保存。', 'success');
         } catch (error) {
           elements.serial.preview.textContent = error.message;

@@ -94,7 +94,7 @@
 ### 阶段 3 本轮执行范围
 
 - 在 `/admin/` 增加 `連載小說` 管理入口
-- 支持直接粘贴完整 Markdown
+- 支持直接粘贴完整 Markdown，或选择本地 `.md` 文件导入
 - 自动识别小说资料和章节正文
 - 自动推导默认保存路径
 - 允许读取远端 `src/content/serials` 和 `src/content/serialChapters` 已有文件继续编辑

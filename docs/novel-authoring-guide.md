@@ -35,7 +35,7 @@ src/content/serialChapters/deng-hai-liang-zhe-002-city-after-midnight.md
 2. 输入只授权当前 repo 的 GitHub fine-grained token，权限需要 Contents: Read and write。
 3. 切到 `連載小說`。
 4. 点击 `新小说 Markdown`。
-5. 选择 `小说资料`，粘贴完整 Markdown。
+5. 选择 `小说资料`，粘贴完整 Markdown，或点击 `选择 Markdown 文件` 读取本地 `.md` 文件。
 6. 点击 `解析 Markdown`，确认目标路径是 `src/content/serials/{seriesSlug}.md`。
 7. 点击 `保存小说 Markdown`。
 
@@ -53,7 +53,7 @@ src/content/serialChapters/deng-hai-liang-zhe-002-city-after-midnight.md
 
 1. 打开 `/admin/` 并切到 `連載小說`。
 2. 点击 `新小说 Markdown`。
-3. 选择 `章节正文`，粘贴完整章节 Markdown。
+3. 选择 `章节正文`，粘贴完整章节 Markdown，或点击 `选择 Markdown 文件` 读取本地 `.md` 文件。
 4. 点击 `解析 Markdown`，确认目标路径是 `src/content/serialChapters/{seriesSlug}-{number}-{chapterSlug}.md`。
 5. 点击 `保存小说 Markdown`。
 

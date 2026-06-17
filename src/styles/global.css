@@ -2227,6 +2227,18 @@ ol {
   gap: 14px;
 }
 
+.admin-file-button {
+  cursor: pointer;
+}
+
+.admin-file-input {
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  width: 1px;
+}
+
 .admin-post-button {
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.12);
