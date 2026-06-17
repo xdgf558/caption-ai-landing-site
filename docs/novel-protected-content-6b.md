@@ -2,6 +2,8 @@
 
 阶段 6B 把“权限判断”推进到“已授权读者真正看到付费正文”。
 
+> Update: 阶段 7B 已把受保护正文从 `src/generated/protectedSerialContent.js` 迁移到 R2。本文记录的是 6B 的旧实现背景；当前实现细节见 [protected-content-r2-7b.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/protected-content-r2-7b.md:1)。
+
 ## 目标
 
 - 未授权读者只看到章节门禁、登录、充值和购买入口

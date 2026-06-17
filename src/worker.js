@@ -1818,6 +1818,36 @@ const protectedChapterToJson = (entry) => ({
 const getProtectedChapterContent = (seriesSlug, chapterSlug) =>
   protectedSerialContent?.chapters?.[`${seriesSlug}/${chapterSlug}`] || null;
 
+const getProtectedChapterHtml = async (env, chapter) => {
+  const bucket = getContentBucket(env);
+  if (!bucket) {
+    const error = new Error('Protected chapter content bucket is not configured.');
+    error.code = 'CONTENT_BUCKET_NOT_CONFIGURED';
+    throw error;
+  }
+
+  const key = cleanText(chapter?.htmlR2Key, 500);
+  if (!key) {
+    const error = new Error('Protected chapter content key is missing.');
+    error.code = 'PROTECTED_CONTENT_KEY_MISSING';
+    throw error;
+  }
+
+  const object = await bucket.get(key);
+  if (!object) {
+    const error = new Error('Protected chapter content object was not found.');
+    error.code = 'PROTECTED_CONTENT_OBJECT_NOT_FOUND';
+    throw error;
+  }
+
+  return {
+    etag: object.httpEtag || '',
+    html: await object.text(),
+    key,
+    uploadedAt: object.uploaded ? object.uploaded.toISOString() : ''
+  };
+};
+
 const handleProtectedChapterContent = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
@@ -1874,6 +1904,30 @@ const handleProtectedChapterContent = async (request, env) => {
     );
   }
 
+  let protectedHtml;
+  try {
+    protectedHtml = await getProtectedChapterHtml(env, chapter);
+  } catch (error) {
+    const missingObject = error.code === 'PROTECTED_CONTENT_OBJECT_NOT_FOUND';
+    return privateJson(
+      {
+        ok: false,
+        authenticated: true,
+        allowed: true,
+        code: error.code || 'PROTECTED_CONTENT_R2_ERROR',
+        message: missingObject
+          ? 'Protected chapter content has not been uploaded yet.'
+          : error.message || 'Protected chapter content is not available.',
+        account: {
+          id: session.account_id,
+          email: session.email
+        },
+        chapter: protectedChapterToJson(chapter)
+      },
+      { status: missingObject ? 404 : 503 }
+    );
+  }
+
   return privateJson({
     ok: true,
     authenticated: true,
@@ -1884,8 +1938,11 @@ const handleProtectedChapterContent = async (request, env) => {
     },
     chapter: protectedChapterToJson(chapter),
     content: {
+      etag: protectedHtml.etag,
       headings: chapter.headings || [],
-      html: chapter.html
+      html: protectedHtml.html,
+      source: 'r2',
+      uploadedAt: protectedHtml.uploadedAt
     },
     entitlement: entitlementToJson({ ...entitlement, email: session.email })
   });
@@ -3131,8 +3188,8 @@ const handleAdminListNovelOrders = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '7A',
-    purpose: 'Backend content model foundation for Admin 2.0.',
+    stage: '7B',
+    purpose: 'Backend content model foundation plus R2-backed protected chapter bodies.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -3151,7 +3208,8 @@ const handleAdminContentSchema = async (env) =>
         'content_pricing_rules',
         'admin_audit_logs'
       ],
-      nextStages: ['7B protected chapter bodies in R2', '7C Admin 2.0 UI for novels and blog/devlog']
+      protectedContent: 'Paid/supporter chapter HTML is loaded from CONTENT_BUCKET after entitlement checks.',
+      nextStages: ['7C Admin 2.0 UI for novels and blog/devlog']
     }
   });
 
@@ -3488,7 +3546,7 @@ const handlePublicContentEntries = async (request, env) => {
   return json({
     ok: true,
     source: 'backend-content-platform',
-    stage: '7A',
+    stage: '7B',
     entries: (response.results || []).map(contentEntryToJson)
   });
 };
