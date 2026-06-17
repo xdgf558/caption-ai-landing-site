@@ -2,6 +2,8 @@
 
 The Station Cat admin page is a static Astro page. Real email verification must be enforced by Cloudflare Access at the edge, not by JavaScript in the browser.
 
+The Worker also fails closed for `/admin*` when Cloudflare Access environment variables are missing or the Access JWT is invalid. Local `localhost` development is allowed through so the admin UI can still be tested with Wrangler.
+
 Use this setup after the site is deployed to Cloudflare Pages.
 
 ## Goal
@@ -14,7 +16,7 @@ brodstem@protonmail.com
 
 Everyone else should be blocked before the admin page loads.
 
-This repository also includes `functions/_middleware.js`. On Cloudflare Pages it verifies the Cloudflare Access JWT for `/admin/` and fails closed if Access is not configured.
+This repository includes both a Worker-level guard in `src/worker.js` and `functions/_middleware.js` for Pages-style deployments. Both verify the Cloudflare Access JWT for `/admin*` and fail closed if Access is not configured.
 
 ## Cloudflare Zero Trust Setup
 
@@ -68,7 +70,7 @@ Where to find them:
 - `CF_ACCESS_TEAM_DOMAIN`: your Zero Trust team domain, usually visible in the Access app and shaped like `your-team.cloudflareaccess.com`.
 - `CF_ACCESS_AUD`: the `Application Audience (AUD) Tag` from the Access application page.
 
-The middleware uses these values to verify that the request really came through Cloudflare Access and that the signed-in email is allowed.
+The Worker guard and middleware use these values to verify that the request really came through Cloudflare Access and that the signed-in email is allowed.
 
 ## Test
 
@@ -86,9 +88,10 @@ This repo also includes:
 
 - No public navigation link to `/admin/`.
 - `public/_headers` rules to mark `/admin` and `/admin/*` as `noindex` and `no-store`.
-- `functions/_middleware.js` to verify Cloudflare Access JWTs for `/admin/` on Cloudflare Pages.
+- Worker-level admin guard in `src/worker.js` for `/admin*`.
+- `functions/_middleware.js` to verify Cloudflare Access JWTs for `/admin/` on Cloudflare Pages-style deployments.
 
-The headers and hidden links are not a replacement for Cloudflare Access. The middleware is a defense-in-depth check and requires the Access application plus the environment variables above.
+The headers and hidden links are not a replacement for Cloudflare Access. The Worker guard and middleware are defense-in-depth checks and require the Access application plus the environment variables above.
 
 ## References
 

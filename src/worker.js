@@ -13,6 +13,8 @@ const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 const readerSessionCookieName = 'station_cat_reader_session';
 const readerSessionMaxAge = 60 * 60 * 24 * 30;
+const adminPathPattern = /^\/admin(?:\/|$)/;
+const defaultAdminEmail = 'brodstem@protonmail.com';
 
 const cleanText = (value, maxLength = 500) => String(value || '').trim().slice(0, maxLength);
 
@@ -88,6 +90,26 @@ const cleanRedirectPath = (value, fallback = '/library/') => {
   return path;
 };
 
+const isLocalHostnameRequest = (request) => {
+  const { hostname } = new URL(request.url);
+  const host = request.headers.get('host') || '';
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === '[::1]' ||
+    host.startsWith('localhost:') ||
+    host.startsWith('127.0.0.1:') ||
+    host.startsWith('[::1]:')
+  );
+};
+
+const hasLocalAdminBypass = (env) => {
+  if (env.ADMIN_ACCESS_LOCAL_BYPASS !== '1') return false;
+  const debugOrigin = String(env.READER_AUTH_DEBUG_ORIGIN || '').trim();
+  return /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(debugOrigin);
+};
+
 const cleanSlug = (value, maxLength = 120) =>
   cleanText(value, maxLength)
     .toLowerCase()
@@ -125,6 +147,210 @@ const acceptableAccessLevels = (access) => {
   if (access === 'supporter') return ['all', 'supporter'];
   if (access === 'paid') return ['all', 'paid'];
   return ['all'];
+};
+
+const splitEnvList = (value) =>
+  String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const normalizeAccessTeamDomain = (value) => {
+  const trimmed = String(value || '').trim().replace(/\/+$/, '');
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed.toLowerCase();
+  if (trimmed.includes('.')) return `https://${trimmed}`.toLowerCase();
+  return `https://${trimmed}.cloudflareaccess.com`.toLowerCase();
+};
+
+const getAdminAccessConfig = (env) => {
+  const teamDomain = normalizeAccessTeamDomain(
+    env.CF_ACCESS_TEAM_DOMAIN || env.CLOUDFLARE_ACCESS_TEAM_DOMAIN || ''
+  );
+  const audiences = splitEnvList(env.CF_ACCESS_AUD || env.CLOUDFLARE_ACCESS_AUD || '');
+  const allowedEmails = new Set(
+    splitEnvList(env.ADMIN_ALLOWED_EMAILS || defaultAdminEmail).map((email) => email.toLowerCase())
+  );
+
+  return {
+    allowedEmails,
+    audiences,
+    isConfigured: Boolean(teamDomain && audiences.length && allowedEmails.size),
+    teamDomain
+  };
+};
+
+const getAccessToken = (request) => {
+  const headerToken = request.headers.get('Cf-Access-Jwt-Assertion');
+  if (headerToken) return headerToken.trim();
+
+  const cookieHeader = request.headers.get('Cookie') || '';
+  const cookieToken = cookieHeader
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith('CF_Authorization='));
+
+  return cookieToken ? decodeURIComponent(cookieToken.split('=').slice(1).join('=')) : '';
+};
+
+const decodeBase64Url = (value) => {
+  const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return bytes;
+};
+
+const decodeJwtPart = (part) => JSON.parse(new TextDecoder().decode(decodeBase64Url(part)));
+
+const payloadHasAudience = (payloadAudience, expectedAudience) => {
+  if (Array.isArray(payloadAudience)) return payloadAudience.includes(expectedAudience);
+  return payloadAudience === expectedAudience;
+};
+
+const getAccessJwk = async (teamDomain, kid) => {
+  const response = await fetch(`${teamDomain}/cdn-cgi/access/certs`, {
+    cf: { cacheEverything: true, cacheTtl: 3600 }
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to load Cloudflare Access certificates');
+  }
+
+  const jwks = await response.json();
+  const jwk = jwks.keys?.find((key) => key.kid === kid);
+  if (!jwk) throw new Error('Cloudflare Access signing key not found');
+  return jwk;
+};
+
+const verifyAccessJwt = async (token, config) => {
+  const parts = token.split('.');
+  if (parts.length !== 3) throw new Error('Invalid JWT format');
+
+  const [encodedHeader, encodedPayload, encodedSignature] = parts;
+  const header = decodeJwtPart(encodedHeader);
+  const payload = decodeJwtPart(encodedPayload);
+
+  if (header.alg !== 'RS256' || !header.kid) {
+    throw new Error('Unsupported JWT header');
+  }
+
+  if (!config.audiences.some((audience) => payloadHasAudience(payload.aud, audience))) {
+    throw new Error('Invalid JWT audience');
+  }
+
+  if (normalizeAccessTeamDomain(payload.iss || '') !== config.teamDomain) {
+    throw new Error('Invalid JWT issuer');
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (!Number.isFinite(payload.exp) || payload.exp <= now) {
+    throw new Error('JWT expired');
+  }
+
+  if (Number.isFinite(payload.nbf) && payload.nbf > now + 60) {
+    throw new Error('JWT not active yet');
+  }
+
+  const jwk = await getAccessJwk(config.teamDomain, header.kid);
+  const key = await crypto.subtle.importKey(
+    'jwk',
+    jwk,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['verify']
+  );
+
+  const valid = await crypto.subtle.verify(
+    'RSASSA-PKCS1-v1_5',
+    key,
+    decodeBase64Url(encodedSignature),
+    new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`)
+  );
+
+  if (!valid) throw new Error('Invalid JWT signature');
+  return payload;
+};
+
+const escapeHtml = (value) =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+const withPrivateHeaders = (response) => {
+  const headers = new Headers(response.headers);
+  headers.set('Cache-Control', 'no-store');
+  headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+
+  return new Response(response.body, {
+    headers,
+    status: response.status,
+    statusText: response.statusText
+  });
+};
+
+const denyAdminAccess = (status, message) =>
+  new Response(
+    `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Access</title>
+  </head>
+  <body>
+    <main>
+      <h1>Admin access protected</h1>
+      <p>${escapeHtml(message)}</p>
+    </main>
+  </body>
+</html>`,
+    {
+      status,
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': 'text/html; charset=utf-8',
+        'X-Robots-Tag': 'noindex, nofollow, noarchive'
+      }
+    }
+  );
+
+const enforceAdminAccess = async (request, env) => {
+  if (isLocalHostnameRequest(request) || hasLocalAdminBypass(env)) return null;
+
+  const config = getAdminAccessConfig(env);
+  if (!config.isConfigured) {
+    return denyAdminAccess(
+      503,
+      'Admin access is locked until Cloudflare Access environment variables are configured.'
+    );
+  }
+
+  const token = getAccessToken(request);
+  if (!token) {
+    return denyAdminAccess(401, 'Cloudflare Access sign-in is required for this admin route.');
+  }
+
+  try {
+    const payload = await verifyAccessJwt(token, config);
+    const email = normalizeEmail(payload.email);
+    if (!email || !config.allowedEmails.has(email)) {
+      return denyAdminAccess(403, 'This email is not allowed to open the admin route.');
+    }
+  } catch (error) {
+    console.error('admin_access_denied', { message: error?.message });
+    return denyAdminAccess(401, 'Cloudflare Access token is invalid or expired.');
+  }
+
+  return null;
 };
 
 const getSetting = (db, product, platform) =>
@@ -1618,9 +1844,15 @@ const handleR2Download = async (request, env, file) => {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const isAdminRequest = adminPathPattern.test(url.pathname);
     const downloadFile = downloadFiles[url.pathname];
     const externalDownloadRedirect = externalDownloadRedirects[url.pathname];
     const redirectPath = pageRedirects[url.pathname];
+
+    if (isAdminRequest) {
+      const adminAccessResponse = await enforceAdminAccess(request, env);
+      if (adminAccessResponse) return adminAccessResponse;
+    }
 
     if (redirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
       return Response.redirect(new URL(redirectPath, url.origin).toString(), 301);
@@ -1682,7 +1914,8 @@ export default {
     }
 
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+      const assetResponse = await env.ASSETS.fetch(request);
+      return isAdminRequest ? withPrivateHeaders(assetResponse) : assetResponse;
     }
 
     return new Response('Not found', { status: 404 });

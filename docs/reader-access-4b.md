@@ -43,6 +43,8 @@
 
 保存后，读者用同一个 Email 登录 `/library/` 就能看到对应的已解锁内容。
 
+管理员授权 API 位于 `/admin/api/novels/entitlements*`。生产环境必须由 Cloudflare Access 保护 `/admin*`，同时 Worker 会校验 Cloudflare Access JWT；如果缺少 Access 环境变量或 JWT 无效，生产请求会被拒绝。本地 `localhost` 开发会放行，方便 Wrangler 验证。
+
 ## 章节页门控
 
 免费章节仍然静态展示正文。
