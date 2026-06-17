@@ -12,7 +12,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <p class="station-kicker">Reader Library</p>
     <h1>我的書庫</h1>
     <p>用 Email 登入後，之後在不同裝置上也可以找回已解鎖的小說、章節和支持者內容。</p>
-    <p class="fine-print">目前是 4A：先建立讀者帳戶和登入狀態。已購、打賞和付費解鎖會在下一階段接上。</p>
+    <p class="fine-print">目前是 4B：已接上讀者權限和已解鎖內容列表。NOWPayments 自動發放會在下一階段接入同一套權限表。</p>
   </section>
 
   <section class="station-section reader-library-grid">
@@ -44,9 +44,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p class="station-kicker">Library</p>
       <h2>已解鎖內容</h2>
     </div>
-    <div class="reader-empty-shelf">
-      <h3>書庫已準備好，等待下一階段接入權限。</h3>
-      <p>4B 會把「手動授權」和 `novel_entitlements` 接上；之後 NOWPayments 支付成功後，也會寫入同一套權限表。</p>
+    <div class="reader-library-list" id="reader-library-list"></div>
+    <div class="reader-empty-shelf" id="reader-library-empty">
+      <h3>目前還沒有已解鎖內容。</h3>
+      <p>登入後，這裡會顯示管理員手動授權或之後由 NOWPayments 支付成功發放的章節 / 作品權限。</p>
       <a class="button button-secondary" href="/zh-hant/works/">回到連載小說</a>
     </div>
   </section>
@@ -60,6 +61,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const accountEmail = document.getElementById('reader-account-email');
     const logoutButton = document.getElementById('reader-logout');
     const libraryContent = document.getElementById('reader-library-content');
+    const libraryList = document.getElementById('reader-library-list');
+    const libraryEmpty = document.getElementById('reader-library-empty');
 
     const setStatus = (message, tone = 'neutral') => {
       statusBox.textContent = message;
@@ -74,11 +77,71 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       accountEmail.textContent = signedIn ? session.account.email : '';
     };
 
+    const entitlementTitle = (item) => {
+      const target = item.scope === 'series'
+        ? item.seriesSlug
+        : `${item.seriesSlug} / ${item.chapterSlug}`;
+      const access = item.accessLevel === 'all' ? '全部權限' : item.accessLevel === 'supporter' ? '支持者內容' : '付費內容';
+      return `${target} · ${access}`;
+    };
+
+    const entitlementHref = (item) => {
+      if (item.scope === 'series') return `/zh-hant/works/${item.seriesSlug}/`;
+      return `/zh-hant/works/${item.seriesSlug}/${item.chapterSlug}/`;
+    };
+
+    const renderLibrary = (items) => {
+      libraryList.innerHTML = '';
+      libraryEmpty.hidden = items.length > 0;
+
+      items.forEach((item) => {
+        const card = document.createElement('article');
+        card.className = 'reader-library-card';
+
+        const title = document.createElement('h3');
+        title.textContent = entitlementTitle(item);
+
+        const meta = document.createElement('p');
+        meta.textContent = `${item.source === 'manual' ? '手動授權' : item.source} · ${item.grantedAt || '已授權'}`;
+
+        const link = document.createElement('a');
+        link.className = 'paper-link';
+        link.href = entitlementHref(item);
+        link.textContent = item.scope === 'series' ? '打開作品' : '打開章節';
+
+        if (item.expiresAt) {
+          const expires = document.createElement('p');
+          expires.className = 'fine-print';
+          expires.textContent = `有效至 ${item.expiresAt}`;
+          card.append(title, meta, expires, link);
+        } else {
+          card.append(title, meta, link);
+        }
+
+        if (item.note) {
+          const note = document.createElement('p');
+          note.className = 'fine-print';
+          note.textContent = item.note;
+          card.append(note);
+        }
+
+        libraryList.append(card);
+      });
+    };
+
+    const loadLibrary = async () => {
+      const response = await fetch('/api/novels/library');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取書庫失敗。');
+      renderLibrary(data.entitlements || []);
+    };
+
     const loadSession = async () => {
       const response = await fetch('/api/readers/session');
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.message || '讀取登入狀態失敗。');
       setSignedIn(data);
+      if (data.authenticated) await loadLibrary();
     };
 
     const query = new URLSearchParams(window.location.search);
@@ -129,6 +192,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       try {
         await fetch('/api/readers/logout', { method: 'POST' });
         setSignedIn({ authenticated: false });
+        renderLibrary([]);
         setStatus('已登出。', 'success');
       } finally {
         logoutButton.disabled = false;

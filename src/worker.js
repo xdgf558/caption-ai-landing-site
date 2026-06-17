@@ -13,6 +13,8 @@ const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 const readerSessionCookieName = 'station_cat_reader_session';
 const readerSessionMaxAge = 60 * 60 * 24 * 30;
+const adminPathPattern = /^\/admin(?:\/|$)/;
+const defaultAdminEmail = 'brodstem@protonmail.com';
 
 const cleanText = (value, maxLength = 500) => String(value || '').trim().slice(0, maxLength);
 
@@ -86,6 +88,269 @@ const cleanRedirectPath = (value, fallback = '/library/') => {
   const path = cleanText(value, 300);
   if (!path || !path.startsWith('/') || path.startsWith('//')) return fallback;
   return path;
+};
+
+const isLocalHostnameRequest = (request) => {
+  const { hostname } = new URL(request.url);
+  const host = request.headers.get('host') || '';
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === '[::1]' ||
+    host.startsWith('localhost:') ||
+    host.startsWith('127.0.0.1:') ||
+    host.startsWith('[::1]:')
+  );
+};
+
+const hasLocalAdminBypass = (env) => {
+  if (env.ADMIN_ACCESS_LOCAL_BYPASS !== '1') return false;
+  const debugOrigin = String(env.READER_AUTH_DEBUG_ORIGIN || '').trim();
+  return /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(debugOrigin);
+};
+
+const cleanSlug = (value, maxLength = 120) =>
+  cleanText(value, maxLength)
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const toSqlTimestamp = (value) => {
+  const raw = cleanText(value, 80);
+  if (!raw) return null;
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().replace('T', ' ').slice(0, 19);
+};
+
+const entitlementToJson = (row) => ({
+  id: row.id,
+  accountId: row.account_id,
+  email: row.email,
+  seriesSlug: row.series_slug,
+  chapterSlug: row.chapter_slug,
+  scope: row.scope,
+  accessLevel: row.access_level,
+  source: row.source,
+  sourceRef: row.source_ref,
+  note: row.note,
+  grantedBy: row.granted_by,
+  grantedAt: row.granted_at,
+  expiresAt: row.expires_at,
+  revokedAt: row.revoked_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const acceptableAccessLevels = (access) => {
+  if (access === 'supporter') return ['all', 'supporter'];
+  if (access === 'paid') return ['all', 'paid'];
+  return ['all'];
+};
+
+const splitEnvList = (value) =>
+  String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const normalizeAccessTeamDomain = (value) => {
+  const trimmed = String(value || '').trim().replace(/\/+$/, '');
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed.toLowerCase();
+  if (trimmed.includes('.')) return `https://${trimmed}`.toLowerCase();
+  return `https://${trimmed}.cloudflareaccess.com`.toLowerCase();
+};
+
+const getAdminAccessConfig = (env) => {
+  const teamDomain = normalizeAccessTeamDomain(
+    env.CF_ACCESS_TEAM_DOMAIN || env.CLOUDFLARE_ACCESS_TEAM_DOMAIN || ''
+  );
+  const audiences = splitEnvList(env.CF_ACCESS_AUD || env.CLOUDFLARE_ACCESS_AUD || '');
+  const allowedEmails = new Set(
+    splitEnvList(env.ADMIN_ALLOWED_EMAILS || defaultAdminEmail).map((email) => email.toLowerCase())
+  );
+
+  return {
+    allowedEmails,
+    audiences,
+    isConfigured: Boolean(teamDomain && audiences.length && allowedEmails.size),
+    teamDomain
+  };
+};
+
+const getAccessToken = (request) => {
+  const headerToken = request.headers.get('Cf-Access-Jwt-Assertion');
+  if (headerToken) return headerToken.trim();
+
+  const cookieHeader = request.headers.get('Cookie') || '';
+  const cookieToken = cookieHeader
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith('CF_Authorization='));
+
+  return cookieToken ? decodeURIComponent(cookieToken.split('=').slice(1).join('=')) : '';
+};
+
+const decodeBase64Url = (value) => {
+  const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return bytes;
+};
+
+const decodeJwtPart = (part) => JSON.parse(new TextDecoder().decode(decodeBase64Url(part)));
+
+const payloadHasAudience = (payloadAudience, expectedAudience) => {
+  if (Array.isArray(payloadAudience)) return payloadAudience.includes(expectedAudience);
+  return payloadAudience === expectedAudience;
+};
+
+const getAccessJwk = async (teamDomain, kid) => {
+  const response = await fetch(`${teamDomain}/cdn-cgi/access/certs`, {
+    cf: { cacheEverything: true, cacheTtl: 3600 }
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to load Cloudflare Access certificates');
+  }
+
+  const jwks = await response.json();
+  const jwk = jwks.keys?.find((key) => key.kid === kid);
+  if (!jwk) throw new Error('Cloudflare Access signing key not found');
+  return jwk;
+};
+
+const verifyAccessJwt = async (token, config) => {
+  const parts = token.split('.');
+  if (parts.length !== 3) throw new Error('Invalid JWT format');
+
+  const [encodedHeader, encodedPayload, encodedSignature] = parts;
+  const header = decodeJwtPart(encodedHeader);
+  const payload = decodeJwtPart(encodedPayload);
+
+  if (header.alg !== 'RS256' || !header.kid) {
+    throw new Error('Unsupported JWT header');
+  }
+
+  if (!config.audiences.some((audience) => payloadHasAudience(payload.aud, audience))) {
+    throw new Error('Invalid JWT audience');
+  }
+
+  if (normalizeAccessTeamDomain(payload.iss || '') !== config.teamDomain) {
+    throw new Error('Invalid JWT issuer');
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (!Number.isFinite(payload.exp) || payload.exp <= now) {
+    throw new Error('JWT expired');
+  }
+
+  if (Number.isFinite(payload.nbf) && payload.nbf > now + 60) {
+    throw new Error('JWT not active yet');
+  }
+
+  const jwk = await getAccessJwk(config.teamDomain, header.kid);
+  const key = await crypto.subtle.importKey(
+    'jwk',
+    jwk,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['verify']
+  );
+
+  const valid = await crypto.subtle.verify(
+    'RSASSA-PKCS1-v1_5',
+    key,
+    decodeBase64Url(encodedSignature),
+    new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`)
+  );
+
+  if (!valid) throw new Error('Invalid JWT signature');
+  return payload;
+};
+
+const escapeHtml = (value) =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+const withPrivateHeaders = (response) => {
+  const headers = new Headers(response.headers);
+  headers.set('Cache-Control', 'no-store');
+  headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+
+  return new Response(response.body, {
+    headers,
+    status: response.status,
+    statusText: response.statusText
+  });
+};
+
+const denyAdminAccess = (status, message) =>
+  new Response(
+    `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Access</title>
+  </head>
+  <body>
+    <main>
+      <h1>Admin access protected</h1>
+      <p>${escapeHtml(message)}</p>
+    </main>
+  </body>
+</html>`,
+    {
+      status,
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': 'text/html; charset=utf-8',
+        'X-Robots-Tag': 'noindex, nofollow, noarchive'
+      }
+    }
+  );
+
+const enforceAdminAccess = async (request, env) => {
+  if (isLocalHostnameRequest(request) || hasLocalAdminBypass(env)) return null;
+
+  const config = getAdminAccessConfig(env);
+  if (!config.isConfigured) {
+    return denyAdminAccess(
+      503,
+      'Admin access is locked until Cloudflare Access environment variables are configured.'
+    );
+  }
+
+  const token = getAccessToken(request);
+  if (!token) {
+    return denyAdminAccess(401, 'Cloudflare Access sign-in is required for this admin route.');
+  }
+
+  try {
+    const payload = await verifyAccessJwt(token, config);
+    const email = normalizeEmail(payload.email);
+    if (!email || !config.allowedEmails.has(email)) {
+      return denyAdminAccess(403, 'This email is not allowed to open the admin route.');
+    }
+  } catch (error) {
+    console.error('admin_access_denied', { message: error?.message });
+    return denyAdminAccess(401, 'Cloudflare Access token is invalid or expired.');
+  }
+
+  return null;
 };
 
 const getSetting = (db, product, platform) =>
@@ -624,6 +889,283 @@ const handleReaderLogout = async (request, env) => {
       }
     }
   );
+};
+
+const normalizeEntitlementPayload = (payload) => {
+  const email = cleanText(payload.email, 254);
+  const normalizedEmail = normalizeEmail(email);
+  const seriesSlug = cleanSlug(payload.seriesSlug);
+  const scope = payload.scope === 'series' ? 'series' : 'chapter';
+  const chapterSlug = scope === 'chapter' ? cleanSlug(payload.chapterSlug) : '';
+  const allowedAccess = new Set(['paid', 'supporter', 'all']);
+  const accessLevel = allowedAccess.has(payload.accessLevel) ? payload.accessLevel : 'paid';
+  const expiresAt = toSqlTimestamp(payload.expiresAt);
+
+  if (!isEmail(normalizedEmail)) {
+    throw new Error('Please enter a valid reader email.');
+  }
+
+  if (!seriesSlug) {
+    throw new Error('seriesSlug is required.');
+  }
+
+  if (scope === 'chapter' && !chapterSlug) {
+    throw new Error('chapterSlug is required for chapter grants.');
+  }
+
+  if (payload.expiresAt && !expiresAt) {
+    throw new Error('expiresAt must be a valid date or empty.');
+  }
+
+  return {
+    accessLevel,
+    chapterSlug,
+    email,
+    expiresAt,
+    grantedBy: cleanText(payload.grantedBy || 'admin', 120) || 'admin',
+    normalizedEmail,
+    note: cleanText(payload.note, 1000),
+    scope,
+    seriesSlug,
+    source: cleanText(payload.source || 'manual', 60) || 'manual',
+    sourceRef: cleanText(payload.sourceRef, 200)
+  };
+};
+
+const listNovelEntitlements = async (db, normalizedEmail = '') => {
+  const hasEmailFilter = Boolean(normalizedEmail);
+  const response = hasEmailFilter
+    ? await db
+        .prepare(
+          `SELECT
+            novel_entitlements.*,
+            reader_accounts.email
+           FROM novel_entitlements
+           INNER JOIN reader_accounts ON reader_accounts.id = novel_entitlements.account_id
+           WHERE reader_accounts.normalized_email = ?
+           ORDER BY novel_entitlements.updated_at DESC
+           LIMIT 100`
+        )
+        .bind(normalizedEmail)
+        .all()
+    : await db
+        .prepare(
+          `SELECT
+            novel_entitlements.*,
+            reader_accounts.email
+           FROM novel_entitlements
+           INNER JOIN reader_accounts ON reader_accounts.id = novel_entitlements.account_id
+           ORDER BY novel_entitlements.updated_at DESC
+           LIMIT 100`
+        )
+        .all();
+
+  return (response.results || []).map(entitlementToJson);
+};
+
+const handleAdminListNovelEntitlements = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const url = new URL(request.url);
+  const normalizedEmail = normalizeEmail(url.searchParams.get('email'));
+  if (normalizedEmail && !isEmail(normalizedEmail)) {
+    return json({ ok: false, message: 'Please enter a valid reader email.' }, { status: 400 });
+  }
+
+  const entitlements = await listNovelEntitlements(db, normalizedEmail);
+  return json({ ok: true, entitlements });
+};
+
+const handleAdminGrantNovelEntitlement = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  let data;
+  try {
+    data = normalizeEntitlementPayload(payload);
+  } catch (error) {
+    return json({ ok: false, message: error.message }, { status: 400 });
+  }
+
+  const account = await upsertReaderAccount(db, data.email, data.normalizedEmail);
+  const entitlement = await db
+    .prepare(
+      `INSERT INTO novel_entitlements (
+        account_id, series_slug, chapter_slug, scope, access_level, source, source_ref,
+        note, granted_by, expires_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(account_id, series_slug, chapter_slug, scope, access_level, source)
+      DO UPDATE SET
+        source_ref = excluded.source_ref,
+        note = excluded.note,
+        granted_by = excluded.granted_by,
+        granted_at = CURRENT_TIMESTAMP,
+        expires_at = excluded.expires_at,
+        revoked_at = NULL,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *`
+    )
+    .bind(
+      account.id,
+      data.seriesSlug,
+      data.chapterSlug,
+      data.scope,
+      data.accessLevel,
+      data.source,
+      data.sourceRef,
+      data.note,
+      data.grantedBy,
+      data.expiresAt
+    )
+    .first();
+
+  return json({
+    ok: true,
+    entitlement: entitlementToJson({ ...entitlement, email: account.email }),
+    entitlements: await listNovelEntitlements(db, data.normalizedEmail)
+  });
+};
+
+const handleAdminRevokeNovelEntitlement = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const id = Number.parseInt(payload.id, 10);
+  if (!Number.isFinite(id) || id < 1) {
+    return json({ ok: false, message: 'A valid entitlement id is required.' }, { status: 400 });
+  }
+
+  await db
+    .prepare(
+      `UPDATE novel_entitlements
+       SET revoked_at = CURRENT_TIMESTAMP,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .bind(id)
+    .run();
+
+  const normalizedEmail = normalizeEmail(payload.email);
+  return json({
+    ok: true,
+    entitlements: await listNovelEntitlements(db, isEmail(normalizedEmail) ? normalizedEmail : '')
+  });
+};
+
+const findActiveNovelEntitlement = async (db, accountId, seriesSlug, chapterSlug, accessRequired) => {
+  const levels = acceptableAccessLevels(accessRequired);
+  return db
+    .prepare(
+      `SELECT *
+       FROM novel_entitlements
+       WHERE account_id = ?
+         AND series_slug = ?
+         AND revoked_at IS NULL
+         AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+         AND access_level IN (?, ?)
+         AND (
+           (scope = 'series' AND chapter_slug = '')
+           OR (scope = 'chapter' AND chapter_slug = ?)
+         )
+       ORDER BY
+         CASE WHEN scope = 'chapter' THEN 0 ELSE 1 END,
+         updated_at DESC
+       LIMIT 1`
+    )
+    .bind(accountId, seriesSlug, levels[0], levels[1] || levels[0], chapterSlug)
+    .first();
+};
+
+const handleNovelAccessCheck = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const url = new URL(request.url);
+  const seriesSlug = cleanSlug(url.searchParams.get('series'));
+  const chapterSlug = cleanSlug(url.searchParams.get('chapter'));
+  const accessRequired = url.searchParams.get('access') === 'supporter' ? 'supporter' : url.searchParams.get('access') === 'free' ? 'free' : 'paid';
+
+  if (!seriesSlug || !chapterSlug) {
+    return json({ ok: false, message: 'series and chapter are required.' }, { status: 400 });
+  }
+
+  if (accessRequired === 'free') {
+    return json({ ok: true, authenticated: false, allowed: true, accessRequired, reason: 'free' });
+  }
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json({
+      ok: true,
+      authenticated: false,
+      allowed: false,
+      accessRequired,
+      reason: 'sign_in_required'
+    });
+  }
+
+  const entitlement = await findActiveNovelEntitlement(db, session.account_id, seriesSlug, chapterSlug, accessRequired);
+  return json({
+    ok: true,
+    authenticated: true,
+    allowed: Boolean(entitlement),
+    accessRequired,
+    reason: entitlement ? 'entitled' : 'entitlement_required',
+    account: {
+      id: session.account_id,
+      email: session.email
+    },
+    entitlement: entitlement ? entitlementToJson({ ...entitlement, email: session.email }) : null
+  });
+};
+
+const handleNovelLibrary = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json({ ok: true, authenticated: false, entitlements: [] });
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM novel_entitlements
+       WHERE account_id = ?
+         AND revoked_at IS NULL
+         AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+       ORDER BY series_slug ASC, scope ASC, chapter_slug ASC, updated_at DESC
+       LIMIT 200`
+    )
+    .bind(session.account_id)
+    .all();
+
+  return json({
+    ok: true,
+    authenticated: true,
+    account: {
+      id: session.account_id,
+      email: session.email
+    },
+    entitlements: (response.results || []).map((row) => entitlementToJson({ ...row, email: session.email }))
+  });
 };
 
 const downloadFiles = {
@@ -1302,9 +1844,15 @@ const handleR2Download = async (request, env, file) => {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const isAdminRequest = adminPathPattern.test(url.pathname);
     const downloadFile = downloadFiles[url.pathname];
     const externalDownloadRedirect = externalDownloadRedirects[url.pathname];
     const redirectPath = pageRedirects[url.pathname];
+
+    if (isAdminRequest) {
+      const adminAccessResponse = await enforceAdminAccess(request, env);
+      if (adminAccessResponse) return adminAccessResponse;
+    }
 
     if (redirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
       return Response.redirect(new URL(redirectPath, url.origin).toString(), 301);
@@ -1338,6 +1886,27 @@ export default {
       return handleReaderLogout(request, env);
     }
 
+    if (request.method === 'GET' && url.pathname === '/api/novels/access') {
+      return handleNovelAccessCheck(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/novels/library') {
+      return handleNovelLibrary(request, env);
+    }
+
+    if (url.pathname === '/admin/api/novels/entitlements') {
+      if (request.method === 'GET') return handleAdminListNovelEntitlements(request, env);
+      return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (request.method === 'POST' && url.pathname === '/admin/api/novels/entitlements/grant') {
+      return handleAdminGrantNovelEntitlement(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/admin/api/novels/entitlements/revoke') {
+      return handleAdminRevokeNovelEntitlement(request, env);
+    }
+
     if (url.pathname === '/admin/api/waitlist/settings') {
       if (request.method === 'GET') return handleGetSettings(env);
       if (request.method === 'POST') return handleUpdateSettings(request, env);
@@ -1345,7 +1914,8 @@ export default {
     }
 
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+      const assetResponse = await env.ASSETS.fetch(request);
+      return isAdminRequest ? withPrivateHeaders(assetResponse) : assetResponse;
     }
 
     return new Response('Not found', { status: 404 });

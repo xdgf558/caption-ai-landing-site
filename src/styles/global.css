@@ -2029,7 +2029,7 @@ ol {
   border-radius: 14px;
   display: grid;
   gap: 6px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 5px;
 }
 
@@ -2409,6 +2409,10 @@ button.button {
   }
 
   .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tabs {
     grid-template-columns: 1fr;
   }
 
@@ -4092,7 +4096,9 @@ body.station-paper-page {
 }
 
 .reader-panel,
-.reader-empty-shelf {
+.reader-empty-shelf,
+.reader-library-card,
+.serial-access-gate {
   display: grid;
   gap: 16px;
 }
@@ -4162,12 +4168,43 @@ body.station-paper-page {
 }
 
 .station-paper-page .reader-panel,
-.station-paper-page .reader-empty-shelf {
+.station-paper-page .reader-empty-shelf,
+.station-paper-page .reader-library-card,
+.station-paper-page .serial-access-gate {
   background: #fffaf1;
   border: 1px solid #d8c8b8;
   border-radius: 12px;
   box-shadow: 0 16px 34px rgba(80, 55, 35, 0.12);
   padding: 22px;
+}
+
+.reader-library-list {
+  display: grid;
+  gap: 14px;
+}
+
+.reader-library-card h3,
+.reader-library-card p,
+.serial-access-gate h2,
+.serial-access-gate p {
+  margin: 0;
+}
+
+.reader-library-card h3,
+.serial-access-gate h2 {
+  color: #221b16;
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.18;
+}
+
+.reader-library-card p,
+.serial-access-gate p {
+  color: #5d5148;
+  line-height: 1.7;
+}
+
+.serial-access-gate {
+  margin-top: 24px;
 }
 
 .station-paper-page .waitlist-panel {

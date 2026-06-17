@@ -26,6 +26,45 @@ interface Props {
 
 const { basePath, chapter, copy, locale, nextChapter, previousChapter, serial, Content } = Astro.props;
 const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
+const isProtectedChapter = chapter.data.access !== 'free';
+const accessGateCopy = {
+  en: {
+    title: 'This chapter is reserved for unlocked readers.',
+    body: 'Sign in to check whether this account has access. Stage 4B stores the entitlement in D1, so it can follow the reader across devices.',
+    checking: 'Checking access...',
+    allowed: 'Access confirmed. Protected chapter delivery will use this entitlement path in the payment stage.',
+    denied: 'This account has not unlocked this chapter yet.',
+    signIn: 'Sign in to my library',
+    library: 'Open my library'
+  },
+  ja: {
+    title: 'この章は解放済み読者向けです。',
+    body: 'ログインすると、このアカウントに閲覧権限があるか確認できます。4B では権限を D1 に保存し、端末を変えても引き継げるようにします。',
+    checking: '権限を確認しています...',
+    allowed: '権限を確認しました。保護された本文配信は支払い段階でこの権限経路に接続します。',
+    denied: 'このアカウントではまだこの章が解放されていません。',
+    signIn: '本棚にログイン',
+    library: '本棚を開く'
+  },
+  'zh-Hant': {
+    title: '這一章保留給已解鎖讀者。',
+    body: '登入後可以確認這個帳戶是否已有閱讀權限。4B 會把權限寫進 D1，之後換裝置也能找回。',
+    checking: '正在確認閱讀權限...',
+    allowed: '權限已確認。受保護正文的交付會在支付階段接上這條權限路徑。',
+    denied: '這個帳戶尚未解鎖本章。',
+    signIn: '登入我的書庫',
+    library: '打開我的書庫'
+  },
+  'zh-Hans': {
+    title: '这一章保留给已解锁读者。',
+    body: '登录后可以确认这个账户是否已有阅读权限。4B 会把权限写进 D1，之后换设备也能找回。',
+    checking: '正在确认阅读权限...',
+    allowed: '权限已确认。受保护正文的交付会在支付阶段接上这条权限路径。',
+    denied: '这个账户尚未解锁本章。',
+    signIn: '登录我的书库',
+    library: '打开我的书库'
+  }
+}[locale];
 ---
 
 <div class="page-shell serial-reader-shell">
@@ -52,9 +91,30 @@ const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
     <p>{chapter.data.excerpt}</p>
   </header>
 
-  <article class="serial-prose serial-reader-shell__body">
-    <Content />
-  </article>
+  {isProtectedChapter ? (
+    <section
+      class="serial-access-gate"
+      data-serial-access-gate
+      data-series-slug={serial.data.seriesSlug}
+      data-chapter-slug={chapter.data.chapterSlug}
+      data-access={chapter.data.access}
+    >
+      <p class="station-kicker">{getChapterAccessLabel(chapter.data.access, locale)}</p>
+      <h2>{accessGateCopy.title}</h2>
+      <p>{accessGateCopy.body}</p>
+      <div class="reader-status" data-serial-access-status role="status" aria-live="polite">
+        {accessGateCopy.checking}
+      </div>
+      <div class="button-row">
+        <a class="button button-primary" href="/library/">{accessGateCopy.signIn}</a>
+        <a class="button button-secondary" href={seriesHref}>{copy.chapterBack}</a>
+      </div>
+    </section>
+  ) : (
+    <article class="serial-prose serial-reader-shell__body">
+      <Content />
+    </article>
+  )}
 
   <footer class="serial-reader-shell__footer">
     <div class="button-row">
@@ -71,3 +131,38 @@ const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
     </div>
   </footer>
 </div>
+
+{isProtectedChapter && (
+  <script define:vars={{ accessGateCopy }}>
+    const gate = document.querySelector('[data-serial-access-gate]');
+    const status = gate?.querySelector('[data-serial-access-status]');
+
+    const setGateStatus = (message, tone = 'neutral') => {
+      if (!status) return;
+      status.textContent = message;
+      status.dataset.tone = tone;
+    };
+
+    const checkAccess = async () => {
+      if (!gate) return;
+      const query = new URLSearchParams({
+        series: gate.dataset.seriesSlug,
+        chapter: gate.dataset.chapterSlug,
+        access: gate.dataset.access
+      });
+      const response = await fetch(`/api/novels/access?${query.toString()}`);
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || accessGateCopy.denied);
+
+      if (data.allowed) {
+        setGateStatus(accessGateCopy.allowed, 'success');
+      } else if (data.reason === 'sign_in_required') {
+        setGateStatus(accessGateCopy.body, 'neutral');
+      } else {
+        setGateStatus(accessGateCopy.denied, 'error');
+      }
+    };
+
+    checkAccess().catch((error) => setGateStatus(error.message || accessGateCopy.denied, 'error'));
+  </script>
+)}
