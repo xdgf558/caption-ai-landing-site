@@ -35,7 +35,14 @@ Domain: your production domain
 Path: /admin*
 ```
 
-This route must cover both admin pages and admin API routes, including `/admin/api/novels/entitlements`.
+This route must cover both admin pages and admin API routes, including:
+
+```text
+/admin/api/content/schema
+/admin/api/content/entries
+/admin/api/novels/entitlements
+/admin/api/novels/payments/orders
+```
 
 If Cloudflare does not match `/admin*` as expected, create two Access applications or rules:
 
@@ -90,6 +97,7 @@ This repo also includes:
 - `public/_headers` rules to mark `/admin` and `/admin/*` as `noindex` and `no-store`.
 - Worker-level admin guard in `src/worker.js` for `/admin*`.
 - `functions/_middleware.js` to verify Cloudflare Access JWTs for `/admin/` on Cloudflare Pages-style deployments.
+- Stage 7A backend content APIs under `/admin/api/content/*` are intentionally nested below `/admin` so the same Access rule covers Admin 2.0 content operations.
 
 The headers and hidden links are not a replacement for Cloudflare Access. The Worker guard and middleware are defense-in-depth checks and require the Access application plus the environment variables above.
 

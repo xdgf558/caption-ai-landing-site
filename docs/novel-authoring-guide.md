@@ -1,6 +1,12 @@
 # Station Cat 小说连载发布指南
 
-当前采用 Git 内容流：小说和章节都用 Markdown 文件管理，网站构建时自动生成书架、作品页和章节页。阶段三开始，`/admin/` 后台可以直接导入完整 Markdown，不必每次手动进入仓库改文件。
+当前处于过渡期。
+
+已经上线的小说和章节仍使用 Git 内容流：小说和章节都用 Markdown 文件管理，网站构建时自动生成书架、作品页和章节页。阶段三开始，`/admin/` 后台可以直接导入完整 Markdown，不必每次手动进入仓库改文件。
+
+阶段 7 开始建设后端内容平台。长期目标是让小说章节和网站 Blog/Devlog 都通过 Admin 2.0 发布，正文进入 R2，元数据、收费规则、导入记录和审计日志进入 D1。旧的 GitHub token 写 Markdown 后台会在迁移完成后下线。
+
+后端化设计见 [backend-content-platform-7a.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/backend-content-platform-7a.md:1)。
 
 ## 目录
 
