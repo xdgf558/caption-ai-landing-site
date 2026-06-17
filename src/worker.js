@@ -159,6 +159,11 @@ const novelOrderStatuses = ['draft', 'waiting', 'confirming', 'confirmed', 'fini
 const novelPaymentGrantStatuses = ['confirmed', 'finished'];
 const novelCheckoutPath = '/api/novels/payments/checkout';
 const novelBundleOrderType = 'chapter-bundle';
+const novelCreditPackOrderType = 'credit-pack';
+const novelCreditSource = 'reader-credits';
+const novelCreditUnitLabel = 'SC Credits';
+const novelCreditLedgerTopupSource = 'nowpayments-credit-pack';
+const novelCreditLedgerUnlockSource = 'chapter-credit-unlock';
 
 const timingSafeEqualString = (left, right) => {
   const leftValue = String(left || '');
@@ -281,6 +286,66 @@ const normalizeBundleDiscounts = (discounts) =>
     }))
     .filter((discount) => discount.chapters > 1 && discount.discountPercent > 0 && discount.discountPercent < 100)
     .sort((a, b) => a.chapters - b.chapters || a.discountPercent - b.discountPercent);
+
+const normalizeCreditPack = (pack) => {
+  const credits = normalizePositiveInteger(pack?.credits, 0);
+  const priceAmount = normalizePriceAmount(pack?.priceAmount, null);
+  if (!credits || !priceAmount) return null;
+  return {
+    credits,
+    priceAmount,
+    priceCurrency: normalizeFiatCurrency(pack?.priceCurrency, 'USD'),
+    label: cleanText(pack?.label || `${credits} ${novelCreditUnitLabel}`, 80)
+  };
+};
+
+const parseCreditPacksEnv = (value) =>
+  String(value || '')
+    .split(',')
+    .map((item) => {
+      const [credits, priceAmount, label] = item.split(':');
+      return normalizeCreditPack({
+        credits,
+        priceAmount,
+        label: label ? label.replace(/_/g, ' ') : ''
+      });
+    })
+    .filter(Boolean);
+
+const getReaderCreditConfig = (env) => {
+  const envPacks = parseCreditPacksEnv(env.NOVEL_CREDIT_PACKS);
+  const packs = (envPacks.length
+    ? envPacks
+    : [
+        { credits: 10, priceAmount: 1, priceCurrency: 'USD', label: '10 SC Credits' },
+        { credits: 60, priceAmount: 5, priceCurrency: 'USD', label: '60 SC Credits' },
+        { credits: 130, priceAmount: 10, priceCurrency: 'USD', label: '130 SC Credits' }
+      ])
+    .map(normalizeCreditPack)
+    .filter(Boolean)
+    .sort((a, b) => a.priceAmount - b.priceAmount || a.credits - b.credits);
+
+  return {
+    chapterCostCredits: Math.max(1, normalizePositiveInteger(env.NOVEL_CHAPTER_CREDIT_COST, 1)),
+    unitLabel: cleanText(env.NOVEL_CREDIT_UNIT_LABEL || novelCreditUnitLabel, 40) || novelCreditUnitLabel,
+    packs
+  };
+};
+
+const findReaderCreditPack = (env, requestedCredits) => {
+  const config = getReaderCreditConfig(env);
+  const credits = normalizePositiveInteger(requestedCredits, 0);
+  const pack = config.packs.find((candidate) => candidate.credits === credits) || null;
+  if (!pack) {
+    const error = new Error('The selected reading credit pack is not available.');
+    error.code = 'CREDIT_PACK_NOT_AVAILABLE';
+    throw error;
+  }
+  return {
+    ...pack,
+    unitLabel: config.unitLabel
+  };
+};
 
 const getSeriesPaymentSettings = (seriesSlug, env) => {
   const defaults = getCheckoutPrices(env);
@@ -430,6 +495,31 @@ const novelOrderToJson = (row) => ({
   finishedAt: row.finished_at,
   createdAt: row.created_at,
   updatedAt: row.updated_at
+});
+
+const readerCreditAccountToJson = (row, config) => ({
+  accountId: row.account_id,
+  balanceCredits: normalizePositiveInteger(row.balance_credits, 0),
+  lifetimePurchasedCredits: normalizePositiveInteger(row.lifetime_purchased_credits, 0),
+  lifetimeSpentCredits: normalizePositiveInteger(row.lifetime_spent_credits, 0),
+  unitLabel: row.currency_label || config.unitLabel,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const readerCreditLedgerToJson = (row) => ({
+  id: row.id,
+  accountId: row.account_id,
+  entryType: row.entry_type,
+  creditsDelta: normalizePositiveInteger(Math.abs(row.credits_delta), 0) * (Number(row.credits_delta) < 0 ? -1 : 1),
+  balanceAfter: normalizePositiveInteger(row.balance_after, 0),
+  source: row.source,
+  sourceRef: row.source_ref,
+  seriesSlug: row.series_slug,
+  chapterSlug: row.chapter_slug,
+  note: row.note,
+  metadataJson: row.metadata_json,
+  createdAt: row.created_at
 });
 
 const splitEnvList = (value) =>
@@ -1451,6 +1541,343 @@ const handleNovelLibrary = async (request, env) => {
   });
 };
 
+const ensureReaderCreditAccount = async (db, accountId, config) => {
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO reader_credit_accounts (account_id, currency_label)
+       VALUES (?, ?)`
+    )
+    .bind(accountId, config.unitLabel)
+    .run();
+
+  return db
+    .prepare(
+      `SELECT *
+       FROM reader_credit_accounts
+       WHERE account_id = ?`
+    )
+    .bind(accountId)
+    .first();
+};
+
+const getReaderCreditLedger = async (db, accountId, limit = 20) => {
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM reader_credit_ledger
+       WHERE account_id = ?
+       ORDER BY created_at DESC, id DESC
+       LIMIT ?`
+    )
+    .bind(accountId, Math.min(Math.max(limit, 1), 50))
+    .all();
+
+  return (response.results || []).map(readerCreditLedgerToJson);
+};
+
+const getReaderCreditSummary = async (db, accountId, env) => {
+  const config = getReaderCreditConfig(env);
+  const account = await ensureReaderCreditAccount(db, accountId, config);
+  const ledger = await getReaderCreditLedger(db, accountId);
+
+  return {
+    account: readerCreditAccountToJson(account, config),
+    chapterCostCredits: config.chapterCostCredits,
+    packs: config.packs.map((pack) => ({
+      credits: pack.credits,
+      priceAmount: amountToStorage(pack.priceAmount),
+      priceCurrency: pack.priceCurrency,
+      label: pack.label
+    })),
+    ledger
+  };
+};
+
+const handleReaderCredits = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const config = getReaderCreditConfig(env);
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json({
+      ok: true,
+      authenticated: false,
+      chapterCostCredits: config.chapterCostCredits,
+      packs: config.packs.map((pack) => ({
+        credits: pack.credits,
+        priceAmount: amountToStorage(pack.priceAmount),
+        priceCurrency: pack.priceCurrency,
+        label: pack.label
+      }))
+    });
+  }
+
+  const summary = await getReaderCreditSummary(db, session.account_id, env);
+  return json({
+    ok: true,
+    authenticated: true,
+    account: {
+      id: session.account_id,
+      email: session.email
+    },
+    ...summary
+  });
+};
+
+const hasCreditTopupLedger = async (db, accountId, sourceRef) =>
+  db
+    .prepare(
+      `SELECT *
+       FROM reader_credit_ledger
+       WHERE account_id = ?
+         AND entry_type = 'topup'
+         AND source = ?
+         AND source_ref = ?
+       LIMIT 1`
+    )
+    .bind(accountId, novelCreditLedgerTopupSource, sourceRef)
+    .first();
+
+const recordReaderCreditTopup = async (db, accountId, credits, sourceRef, note, metadata, config) => {
+  const account = await ensureReaderCreditAccount(db, accountId, config);
+  const updatedAccount = await db
+    .prepare(
+      `UPDATE reader_credit_accounts
+       SET balance_credits = balance_credits + ?,
+           lifetime_purchased_credits = lifetime_purchased_credits + ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE account_id = ?
+       RETURNING *`
+    )
+    .bind(credits, credits, account.account_id)
+    .first();
+
+  const ledger = await db
+    .prepare(
+      `INSERT INTO reader_credit_ledger (
+        account_id, entry_type, credits_delta, balance_after, source, source_ref,
+        series_slug, chapter_slug, note, metadata_json
+      )
+      VALUES (?, 'topup', ?, ?, ?, ?, '', '', ?, ?)
+      RETURNING *`
+    )
+    .bind(
+      account.account_id,
+      credits,
+      updatedAccount.balance_credits,
+      novelCreditLedgerTopupSource,
+      sourceRef,
+      note,
+      JSON.stringify(metadata || {})
+    )
+    .first();
+
+  return {
+    account: updatedAccount,
+    ledger
+  };
+};
+
+const applyCreditTopupFromOrder = async (db, order, env) => {
+  if (!order) return { credited: false, reason: 'order_not_found' };
+  if (order.order_type !== novelCreditPackOrderType) return { credited: false, reason: 'not_credit_pack_order' };
+  if (!novelPaymentGrantStatuses.includes(order.status)) return { credited: false, reason: 'status_not_creditable' };
+  if (!order.account_id) return { credited: false, reason: 'missing_reader_account' };
+
+  const metadata = parseOrderMetadata(order);
+  const credits = normalizePositiveInteger(metadata.creditPackCredits, 0);
+  if (!credits) return { credited: false, reason: 'missing_credit_pack_metadata' };
+
+  const sourceRef = order.order_token || order.provider_payment_id || order.provider_order_id || `order-${order.id}`;
+  const existing = await hasCreditTopupLedger(db, order.account_id, sourceRef);
+  if (existing) {
+    return {
+      credited: false,
+      reason: 'already_credited',
+      ledger: existing
+    };
+  }
+
+  const config = getReaderCreditConfig(env);
+  const note = `Automatically credited from NOWPayments ${order.status} order ${sourceRef}.`;
+  const result = await recordReaderCreditTopup(db, order.account_id, credits, sourceRef, note, metadata, config);
+
+  return {
+    credited: true,
+    reason: 'credited',
+    account: result.account,
+    ledger: result.ledger,
+    credits
+  };
+};
+
+const normalizeCreditUnlockPayload = (payload, env) => {
+  const seriesSlug = cleanSlug(payload.seriesSlug);
+  const chapterSlug = cleanSlug(payload.chapterSlug);
+  const accessRequired = payload.access === 'supporter' ? 'supporter' : 'paid';
+
+  if (!seriesSlug || !chapterSlug) {
+    const error = new Error('seriesSlug and chapterSlug are required.');
+    error.code = 'INVALID_CREDIT_UNLOCK';
+    throw error;
+  }
+  if (accessRequired !== 'paid') {
+    const error = new Error('Reading credits can only unlock paid chapters in this stage.');
+    error.code = 'CREDIT_UNLOCK_SCOPE_NOT_SUPPORTED';
+    throw error;
+  }
+
+  return {
+    accessRequired,
+    chapterSlug,
+    costCredits: getReaderCreditConfig(env).chapterCostCredits,
+    seriesSlug
+  };
+};
+
+const spendReaderCreditsForChapter = async (db, accountId, unlock, env) => {
+  const config = getReaderCreditConfig(env);
+  await ensureReaderCreditAccount(db, accountId, config);
+
+  const updatedAccount = await db
+    .prepare(
+      `UPDATE reader_credit_accounts
+       SET balance_credits = balance_credits - ?,
+           lifetime_spent_credits = lifetime_spent_credits + ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE account_id = ?
+         AND balance_credits >= ?
+       RETURNING *`
+    )
+    .bind(unlock.costCredits, unlock.costCredits, accountId, unlock.costCredits)
+    .first();
+
+  if (!updatedAccount) {
+    const summary = await getReaderCreditSummary(db, accountId, env);
+    const error = new Error('Insufficient reading credits.');
+    error.code = 'INSUFFICIENT_CREDITS';
+    error.summary = summary;
+    throw error;
+  }
+
+  const sourceRef = `${unlock.seriesSlug}/${unlock.chapterSlug}`;
+  const ledger = await db
+    .prepare(
+      `INSERT INTO reader_credit_ledger (
+        account_id, entry_type, credits_delta, balance_after, source, source_ref,
+        series_slug, chapter_slug, note, metadata_json
+      )
+      VALUES (?, 'spend', ?, ?, ?, ?, ?, ?, ?, ?)
+      RETURNING *`
+    )
+    .bind(
+      accountId,
+      -unlock.costCredits,
+      updatedAccount.balance_credits,
+      novelCreditLedgerUnlockSource,
+      sourceRef,
+      unlock.seriesSlug,
+      unlock.chapterSlug,
+      `Unlocked paid chapter with ${unlock.costCredits} ${config.unitLabel}.`,
+      JSON.stringify({ costCredits: unlock.costCredits })
+    )
+    .first();
+
+  return {
+    account: updatedAccount,
+    ledger
+  };
+};
+
+const handleReaderCreditUnlock = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json(
+      {
+        ok: false,
+        code: 'SIGN_IN_REQUIRED',
+        message: 'Please sign in before using reading credits.'
+      },
+      { status: 401 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  let unlock;
+  try {
+    unlock = normalizeCreditUnlockPayload(payload, env);
+  } catch (error) {
+    return json({ ok: false, code: error.code || 'INVALID_CREDIT_UNLOCK', message: error.message }, { status: 400 });
+  }
+
+  const existingEntitlement = await findActiveNovelEntitlement(
+    db,
+    session.account_id,
+    unlock.seriesSlug,
+    unlock.chapterSlug,
+    unlock.accessRequired
+  );
+  if (existingEntitlement) {
+    const summary = await getReaderCreditSummary(db, session.account_id, env);
+    return json({
+      ok: true,
+      alreadyUnlocked: true,
+      charged: false,
+      entitlement: entitlementToJson({ ...existingEntitlement, email: session.email }),
+      ...summary
+    });
+  }
+
+  let spend;
+  try {
+    spend = await spendReaderCreditsForChapter(db, session.account_id, unlock, env);
+  } catch (error) {
+    const status = error.code === 'INSUFFICIENT_CREDITS' ? 402 : 400;
+    return json(
+      {
+        ok: false,
+        code: error.code || 'CREDIT_SPEND_FAILED',
+        message: error.message,
+        ...(error.summary || {})
+      },
+      { status }
+    );
+  }
+
+  const entitlement = await upsertNovelEntitlement(db, {
+    accountId: session.account_id,
+    seriesSlug: unlock.seriesSlug,
+    chapterSlug: unlock.chapterSlug,
+    scope: 'chapter',
+    accessLevel: 'paid',
+    source: novelCreditSource,
+    sourceRef: `credit-ledger-${spend.ledger.id}`,
+    note: `Unlocked with ${unlock.costCredits} ${getReaderCreditConfig(env).unitLabel}.`,
+    grantedBy: novelCreditSource
+  });
+  const summary = await getReaderCreditSummary(db, session.account_id, env);
+
+  return json({
+    ok: true,
+    alreadyUnlocked: false,
+    charged: true,
+    costCredits: unlock.costCredits,
+    ledger: readerCreditLedgerToJson(spend.ledger),
+    entitlement: entitlementToJson({ ...entitlement, email: session.email }),
+    ...summary
+  });
+};
+
 const handleNovelPaymentsStatus = async (request, env) => {
   const config = getNowPaymentsConfig(env, request);
   const checkoutEnabled = config.hasApiKey && config.hasIpnSecret;
@@ -1466,6 +1893,17 @@ const handleNovelPaymentsStatus = async (request, env) => {
     callbackUrl: config.callbackUrl,
     checkoutPath: novelCheckoutPath,
     publicCheckoutEnabled: checkoutEnabled,
+    readerCredits: {
+      enabled: checkoutEnabled,
+      unitLabel: getReaderCreditConfig(env).unitLabel,
+      chapterCostCredits: getReaderCreditConfig(env).chapterCostCredits,
+      packs: getReaderCreditConfig(env).packs.map((pack) => ({
+        credits: pack.credits,
+        priceAmount: amountToStorage(pack.priceAmount),
+        priceCurrency: pack.priceCurrency,
+        label: pack.label
+      }))
+    },
     automaticEntitlementGrants: true,
     supportedCurrencies: nowPaymentsSupportedCurrencies,
     orderStatuses: novelOrderStatuses,
@@ -1510,16 +1948,21 @@ const normalizeCheckoutPayload = (payload, session, env) => {
       ? 'tip'
       : rawOrderType === 'supporter'
         ? 'supporter'
-        : rawOrderType === novelBundleOrderType || rawOrderType === 'bundle'
-          ? novelBundleOrderType
-          : 'chapter';
+        : rawOrderType === novelCreditPackOrderType || rawOrderType === 'credits'
+          ? novelCreditPackOrderType
+          : rawOrderType === novelBundleOrderType || rawOrderType === 'bundle'
+            ? novelBundleOrderType
+            : 'chapter';
   const seriesSlug = cleanSlug(payload.seriesSlug);
   const chapterSlug = orderType === 'chapter' || orderType === novelBundleOrderType ? cleanSlug(payload.chapterSlug) : '';
   const prices = getCheckoutPrices(env);
   const payCurrency = normalizePayCurrency(payload.payCurrency);
-  const returnPath = cleanRedirectPath(payload.returnPath, seriesSlug ? `/zh-hant/works/${seriesSlug}/` : '/library/');
+  const returnPath = cleanRedirectPath(
+    payload.returnPath,
+    orderType === novelCreditPackOrderType ? '/library/' : seriesSlug ? `/zh-hant/works/${seriesSlug}/` : '/library/'
+  );
 
-  if (!seriesSlug) {
+  if (orderType !== novelCreditPackOrderType && !seriesSlug) {
     throw new Error('seriesSlug is required.');
   }
 
@@ -1531,6 +1974,27 @@ const normalizeCheckoutPayload = (payload, session, env) => {
     const error = new Error('Please sign in before unlocking paid reading.');
     error.code = 'SIGN_IN_REQUIRED';
     throw error;
+  }
+
+  if (orderType === novelCreditPackOrderType) {
+    const creditPack = findReaderCreditPack(env, payload.credits || payload.packCredits);
+    return {
+      bundleDetails: null,
+      chapterSlug: '',
+      creditPack,
+      description: `Station Cat reading credits: ${creditPack.credits} ${creditPack.unitLabel}`,
+      entitlementAccessLevel: '',
+      entitlementScope: '',
+      locale: cleanText(payload.locale, 20),
+      message: '',
+      orderType,
+      payCurrency,
+      priceAmount: creditPack.priceAmount,
+      priceCurrency: creditPack.priceCurrency,
+      pricingSource: 'reader-credit-pack',
+      returnPath,
+      seriesSlug: ''
+    };
   }
 
   const settings = getSeriesPaymentSettings(seriesSlug, env);
@@ -1627,9 +2091,14 @@ const insertNovelCheckoutOrder = async (db, session, checkout, orderToken) =>
         bundleChapterCount: checkout.bundleDetails?.bundleChapterCount || 0,
         bundleChapterSlugs: checkout.bundleDetails?.bundleChapterSlugs || [],
         bundleDiscountPercent: checkout.bundleDetails?.bundleDiscountPercent || 0,
+        creditPackCredits: checkout.creditPack?.credits || 0,
+        creditPackUnitLabel: checkout.creditPack?.unitLabel || '',
         locale: checkout.locale,
         message: checkout.message,
         pricingSource: checkout.pricingSource,
+        pricePerCredit: checkout.creditPack?.credits
+          ? amountToStorage(checkout.priceAmount / checkout.creditPack.credits)
+          : '',
         subtotalAmount: checkout.bundleDetails ? amountToStorage(checkout.bundleDetails.subtotalAmount) : '',
         unitPriceAmount: checkout.bundleDetails ? amountToStorage(checkout.bundleDetails.unitPriceAmount) : '',
         returnPath: checkout.returnPath
@@ -1884,8 +2353,10 @@ const updateNovelOrderFromNowPaymentsEvent = async (db, orderId, event) =>
     )
     .first();
 
-const upsertNovelEntitlement = async (db, data) =>
-  db
+const upsertNovelEntitlement = async (db, data) => {
+  const source = cleanText(data.source || nowPaymentsProvider, 60) || nowPaymentsProvider;
+  const grantedBy = cleanText(data.grantedBy || source, 120) || source;
+  return db
     .prepare(
       `INSERT INTO novel_entitlements (
         account_id, series_slug, chapter_slug, scope, access_level, source, source_ref,
@@ -1915,12 +2386,13 @@ const upsertNovelEntitlement = async (db, data) =>
       data.chapterSlug,
       data.scope,
       data.accessLevel,
-      nowPaymentsProvider,
+      source,
       data.sourceRef,
       data.note,
-      nowPaymentsProvider
+      grantedBy
     )
     .first();
+};
 
 const grantNovelEntitlementFromOrder = async (db, order) => {
   if (!order) return { granted: false, reason: 'order_not_found' };
@@ -2017,13 +2489,19 @@ const handleNowPaymentsWebhook = async (request, env) => {
 
   let updatedOrder = null;
   let entitlementGrant = { granted: false, reason: order ? 'not_processed' : 'order_not_found' };
+  let creditGrant = { credited: false, reason: order ? 'not_processed' : 'order_not_found' };
   if (order) {
     updatedOrder = await updateNovelOrderFromNowPaymentsEvent(db, order.id, event);
     if (updatedOrder.order_type === 'tip') {
       await updateNovelTipFromOrder(db, updatedOrder, event.status);
       entitlementGrant = { granted: false, reason: 'tip_order' };
+      creditGrant = { credited: false, reason: 'tip_order' };
+    } else if (updatedOrder.order_type === novelCreditPackOrderType) {
+      entitlementGrant = { granted: false, reason: 'credit_pack_order' };
+      creditGrant = await applyCreditTopupFromOrder(db, updatedOrder, env);
     } else {
       entitlementGrant = await grantNovelEntitlementFromOrder(db, updatedOrder);
+      creditGrant = { credited: false, reason: 'reading_order' };
     }
   }
 
@@ -2043,6 +2521,16 @@ const handleNowPaymentsWebhook = async (request, env) => {
       reason: entitlementGrant.reason,
       entitlement: entitlementGrant.entitlement ? entitlementToJson(entitlementGrant.entitlement) : null,
       entitlements: (entitlementGrant.entitlements || []).map(entitlementToJson)
+    },
+    creditGrantEnabled: true,
+    creditGrant: {
+      credited: Boolean(creditGrant.credited),
+      reason: creditGrant.reason,
+      credits: creditGrant.credits || 0,
+      account: creditGrant.account
+        ? readerCreditAccountToJson(creditGrant.account, getReaderCreditConfig(env))
+        : null,
+      ledger: creditGrant.ledger ? readerCreditLedgerToJson(creditGrant.ledger) : null
     },
     order: updatedOrder ? novelOrderToJson(updatedOrder) : null
   });
@@ -2803,6 +3291,10 @@ export default {
       return handleReaderLogout(request, env);
     }
 
+    if (request.method === 'GET' && url.pathname === '/api/readers/credits') {
+      return handleReaderCredits(request, env);
+    }
+
     if (request.method === 'GET' && url.pathname === '/api/novels/access') {
       return handleNovelAccessCheck(request, env);
     }
@@ -2813,6 +3305,10 @@ export default {
 
     if (request.method === 'GET' && url.pathname === '/api/novels/payments/status') {
       return handleNovelPaymentsStatus(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/novels/credits/unlock') {
+      return handleReaderCreditUnlock(request, env);
     }
 
     if (request.method === 'POST' && url.pathname === novelCheckoutPath) {

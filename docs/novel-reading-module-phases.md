@@ -172,17 +172,37 @@
 - 读者通知与催更订阅
 - 付费阅读说明、退款边界、支持邮箱流程
 
-## 当前执行：阶段 5C
+## 当前执行：阶段 6A
 
-阶段 5B 已经完成并合并到 `main`。当前进入阶段 5C，重点是把 NOWPayments 已确认订单自动发放到 `novel_entitlements`。
+阶段 5C 已完成 NOWPayments IPN 自动发放阅读权限。阶段 6 开始把付费阅读产品化，先做账户余额 / 阅读点数模式，避免单章直接走 0.1 USD 级别加密支付带来的最小支付金额和确认体验问题。
 
-这次先做：
+### 阶段 6A：阅读点数余额模式
 
-1. 在 `/api/novels/webhooks/nowpayments` 更新订单状态后判断是否可发放权限
-2. `chapter` 订单在 `confirmed / finished` 后发放单章 `paid` 权限
-3. `supporter` 订单在 `confirmed / finished` 后发放整本作品 `supporter` 权限
-4. `tip` 订单只更新打赏状态，不发放阅读权限
-5. 重复 IPN 通过 `ON CONFLICT` 幂等处理
-6. webhook 响应返回 `entitlementGrant`，方便调试和后续后台展示
+1. 新增 `reader_credit_accounts`
+2. 新增 `reader_credit_ledger`
+3. 支持 `credit-pack` NOWPayments checkout
+4. IPN `confirmed / finished` 后自动给读者账户入账
+5. `/api/readers/credits` 查询余额、充值包和流水
+6. `/api/novels/credits/unlock` 扣点并写入 `novel_entitlements`
+7. `/library/` 增加阅读点数充值 UI
+8. 付费章节门禁增加“用阅读点解锁”
 
-阶段 5C 暂不做受保护正文交付和退款后的自动回收。后续再把正文交付、退款复核、订单详情页拆出去做。
+### 阶段 6B：付费章节正文真正解锁显示
+
+当前权限链路能判断 `allowed: true`，但受保护章节页面仍主要是门禁提示。6B 要让已授权读者真正看到付费正文，未授权读者只看到购买入口。
+
+### 阶段 6C：真实小额支付回归
+
+在生产环境用 NOWPayments 做一笔真实小额订单，从下单、支付、IPN 到自动入账 / 授权完整验证。
+
+### 阶段 6D：订单 / 收入后台管理
+
+把基础订单和授权 API 扩展成 Admin 里的订单列表、筛选、状态查看、充值流水和失败订单排查。
+
+### 阶段 6E：购买后体验
+
+完善支付成功返回页、订单处理中提示、已购买章节入口、书库里的“继续阅读”。
+
+### 阶段 6F：付费规则细化
+
+继续细化免费前几章自动判断、会员 / 整本 / 分卷模式、已购买多章后的价格提示。
