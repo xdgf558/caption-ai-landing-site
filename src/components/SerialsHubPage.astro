@@ -19,6 +19,7 @@ interface CopyShape {
   heroTitle: string;
   latestFallback: string;
   latestLabel: string;
+  libraryLabel: string;
   openSeries: string;
   readLatest: string;
   plannedLabel: string;
@@ -54,6 +55,7 @@ const featuredCoverText = featuredSerial?.data.coverLabel ?? featuredSerial?.dat
       <a class="button button-primary" href="#serial-shelf">{copy.heroSecondary}</a>
     )}
     <a class="button button-secondary" href="#serial-shelf">{copy.heroSecondary}</a>
+    <a class="button button-secondary" href="/library/">{copy.libraryLabel}</a>
   </div>
 </section>
 

@@ -2,7 +2,7 @@
 
 這是 Station Cat 的官方網站專案，使用 Astro 建置，部署到 Cloudflare Workers。
 
-網站承載 Station Cat 的個人品牌首頁、多產品入口、SnapCopy 產品頁、StationCat Radar 下載頁、連載小說、開發博客、管理後台，以及 TestFlight / Android 測試名單相關頁面。
+網站承載 Station Cat 的個人品牌首頁、多產品入口、SnapCopy 產品頁、StationCat Radar 下載頁、連載小說、讀者書庫、開發博客、管理後台，以及 TestFlight / Android 測試名單相關頁面。
 
 正式網域：
 
@@ -28,6 +28,7 @@ https://wwwstationcat.org/
 - SnapCopy：AI 生活文案生成器。路由仍保留 `/apps/caption-ai/`，用來兼容早期連結。
 - StationCat Radar：macOS 小工具下載頁。
 - 連載小說：發布長篇小說、作品資料和章節正文，後續可接入打賞與付費閱讀。
+- 讀者書庫：讀者帳戶與 magic link 登入入口，後續承接已購和已解鎖內容。
 - 開發博客：記錄產品進度、測試階段和版本更新。
 - 管理後台：用 GitHub Contents API 管理 Markdown 內容；正式環境由 Cloudflare Access 保護。
 
@@ -52,6 +53,7 @@ Cloudflare Workers 會使用 `dist/` 中的靜態資產，並透過 `src/worker.
 - 開發博客：`src/content/devlog/`
 - 連載小說資料：`src/content/serials/`
 - 連載小說章節：`src/content/serialChapters/`
+- 讀者帳戶、登入 token 和 session：Cloudflare D1 migrations
 - 已發布內容使用 `status: "published"`
 - 首頁精選內容使用 `featured: true`
 
