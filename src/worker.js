@@ -545,6 +545,280 @@ const novelPaymentEventToJson = (row) => ({
   receivedAt: row.received_at
 });
 
+const contentEntryTypes = new Set(['blog_post', 'novel_series', 'novel_chapter']);
+const contentLocales = new Set(['zh-Hant', 'zh-Hans', 'en', 'ja']);
+const contentStatuses = new Set(['draft', 'scheduled', 'published', 'archived']);
+const contentVisibilities = new Set(['public', 'unlisted', 'private']);
+const contentAccessLevels = new Set(['free', 'paid', 'supporter', 'member']);
+const contentBodyFormats = new Set(['markdown', 'html']);
+
+const parseStoredJson = (value, fallback) => {
+  try {
+    const parsed = JSON.parse(value || '');
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const normalizeJsonObject = (value) =>
+  value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+
+const normalizeStringArray = (value, maxItems = 20) => {
+  const items = Array.isArray(value)
+    ? value
+    : String(value || '')
+        .split(',')
+        .map((item) => item.trim());
+
+  return items
+    .map((item) => cleanText(item, 80))
+    .filter(Boolean)
+    .slice(0, maxItems);
+};
+
+const normalizeContentLocale = (value) => {
+  const locale = cleanText(value || 'zh-Hant', 20);
+  return contentLocales.has(locale) ? locale : 'zh-Hant';
+};
+
+const normalizeContentStatus = (value) => {
+  const status = cleanText(value || 'draft', 30).toLowerCase();
+  return contentStatuses.has(status) ? status : 'draft';
+};
+
+const normalizeContentVisibility = (value) => {
+  const visibility = cleanText(value || 'public', 30).toLowerCase();
+  return contentVisibilities.has(visibility) ? visibility : 'public';
+};
+
+const normalizeContentAccessLevel = (value) => {
+  const accessLevel = cleanText(value || 'free', 30).toLowerCase();
+  return contentAccessLevels.has(accessLevel) ? accessLevel : 'free';
+};
+
+const normalizeContentBodyFormat = (value) => {
+  const format = cleanText(value || 'markdown', 30).toLowerCase();
+  return contentBodyFormats.has(format) ? format : 'markdown';
+};
+
+const normalizeContentEntryType = (value) => {
+  const entryType = cleanText(value, 40).toLowerCase().replace(/-/g, '_');
+  if (!contentEntryTypes.has(entryType)) {
+    const error = new Error('Unsupported content entry type.');
+    error.code = 'INVALID_CONTENT_TYPE';
+    throw error;
+  }
+  return entryType;
+};
+
+const paddedChapterNumber = (value) => String(normalizePositiveInteger(value, 0)).padStart(3, '0');
+
+const buildContentR2Keys = (entry) => {
+  if (entry.entryType === 'novel_chapter') {
+    const chapterPart = `${paddedChapterNumber(entry.chapterNumber)}-${entry.slug}`;
+    const base = `content/novels/${entry.parentSlug}/chapters/${chapterPart}/${entry.locale}`;
+    return {
+      markdown: `${base}/body.md`,
+      html: `${base}/body.html`
+    };
+  }
+
+  if (entry.entryType === 'novel_series') {
+    const base = `content/novels/${entry.slug}/series/${entry.locale}`;
+    return {
+      markdown: `${base}/body.md`,
+      html: `${base}/body.html`
+    };
+  }
+
+  const base = `content/blog/${entry.locale}/${entry.slug}`;
+  return {
+    markdown: `${base}/body.md`,
+    html: `${base}/body.html`
+  };
+};
+
+const contentEntryToJson = (row) => ({
+  id: row.id,
+  entryType: row.entry_type,
+  locale: row.locale,
+  slug: row.slug,
+  parentSlug: row.parent_slug,
+  title: row.title,
+  subtitle: row.subtitle,
+  description: row.description,
+  excerpt: row.excerpt,
+  status: row.status,
+  visibility: row.visibility,
+  accessLevel: row.access_level,
+  authorName: row.author_name,
+  featured: Boolean(row.featured),
+  sortOrder: normalizePositiveInteger(row.sort_order, 0),
+  chapterNumber: row.chapter_number,
+  volumeTitle: row.volume_title,
+  tags: parseStoredJson(row.tags_json, []),
+  seo: parseStoredJson(row.seo_json, {}),
+  metadata: parseStoredJson(row.metadata_json, {}),
+  pricing: parseStoredJson(row.pricing_json, {}),
+  bodyFormat: row.body_format,
+  markdownR2Key: row.markdown_r2_key,
+  htmlR2Key: row.html_r2_key,
+  importR2Key: row.import_r2_key,
+  coverR2Key: row.cover_r2_key,
+  coverAlt: row.cover_alt,
+  wordCount: normalizePositiveInteger(row.word_count, 0),
+  readingMinutes: normalizePositiveInteger(row.reading_minutes, 0),
+  sourceKind: row.source_kind,
+  sourceRef: row.source_ref,
+  scheduledAt: row.scheduled_at,
+  publishedAt: row.published_at,
+  archivedAt: row.archived_at,
+  createdBy: row.created_by,
+  updatedBy: row.updated_by,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const getContentBucket = (env) => env.CONTENT_BUCKET || null;
+
+const getContentStorageDescriptor = (env) => ({
+  contentBucketConfigured: Boolean(getContentBucket(env)),
+  r2KeyConventions: {
+    blogPostMarkdown: 'content/blog/{locale}/{slug}/body.md',
+    blogPostHtml: 'content/blog/{locale}/{slug}/body.html',
+    novelSeriesMarkdown: 'content/novels/{seriesSlug}/series/{locale}/body.md',
+    novelChapterMarkdown: 'content/novels/{seriesSlug}/chapters/{chapterNumber}-{chapterSlug}/{locale}/body.md',
+    novelChapterHtml: 'content/novels/{seriesSlug}/chapters/{chapterNumber}-{chapterSlug}/{locale}/body.html',
+    importBackup: 'content/imports/{yyyy}/{mm}/{importId}-{filename}'
+  }
+});
+
+const normalizeContentPayload = (payload = {}) => {
+  const entryType = normalizeContentEntryType(payload.entryType || payload.type);
+  const locale = normalizeContentLocale(payload.locale || payload.language);
+  const slug = cleanSlug(payload.slug || payload.chapterSlug || payload.postSlug, 160);
+  const parentSlug = cleanSlug(payload.parentSlug || payload.seriesSlug, 160);
+  const title = cleanText(payload.title, 240);
+  const chapterNumber =
+    entryType === 'novel_chapter' ? Math.max(1, normalizePositiveInteger(payload.chapterNumber, 0)) : null;
+
+  if (!slug) {
+    const error = new Error('A slug is required.');
+    error.code = 'CONTENT_SLUG_REQUIRED';
+    throw error;
+  }
+
+  if (!title) {
+    const error = new Error('A title is required.');
+    error.code = 'CONTENT_TITLE_REQUIRED';
+    throw error;
+  }
+
+  if (entryType === 'novel_chapter' && !parentSlug) {
+    const error = new Error('A parent series slug is required for novel chapters.');
+    error.code = 'CONTENT_PARENT_REQUIRED';
+    throw error;
+  }
+
+  if (entryType !== 'novel_chapter' && parentSlug) {
+    const error = new Error('Only novel chapters can use parentSlug in the backend content model.');
+    error.code = 'CONTENT_PARENT_NOT_ALLOWED';
+    throw error;
+  }
+
+  const entry = {
+    accessLevel: normalizeContentAccessLevel(payload.accessLevel || payload.access),
+    authorName: cleanText(payload.authorName || payload.author || 'Station Cat', 160) || 'Station Cat',
+    bodyFormat: normalizeContentBodyFormat(payload.bodyFormat),
+    chapterNumber,
+    coverAlt: cleanText(payload.coverAlt, 300),
+    coverR2Key: cleanText(payload.coverR2Key, 500),
+    createdBy: cleanText(payload.createdBy, 160),
+    description: cleanText(payload.description, 1200),
+    entryType,
+    excerpt: cleanText(payload.excerpt, 1000),
+    featured: payload.featured ? 1 : 0,
+    html: typeof payload.html === 'string' ? payload.html : '',
+    htmlR2Key: cleanText(payload.htmlR2Key, 500),
+    importR2Key: cleanText(payload.importR2Key, 500),
+    locale,
+    markdown: typeof payload.markdown === 'string' ? payload.markdown : '',
+    markdownR2Key: cleanText(payload.markdownR2Key, 500),
+    metadata: normalizeJsonObject(payload.metadata),
+    parentSlug,
+    pricing: normalizeJsonObject(payload.pricing),
+    publishedAt: toSqlTimestamp(payload.publishedAt),
+    scheduledAt: toSqlTimestamp(payload.scheduledAt),
+    seo: normalizeJsonObject(payload.seo),
+    slug,
+    sortOrder: normalizePositiveInteger(payload.sortOrder, 0),
+    sourceKind: cleanText(payload.sourceKind || 'backend', 40) || 'backend',
+    sourceRef: cleanText(payload.sourceRef, 300),
+    status: normalizeContentStatus(payload.status),
+    subtitle: cleanText(payload.subtitle || payload.tagline, 400),
+    tags: normalizeStringArray(payload.tags),
+    title,
+    updatedBy: cleanText(payload.updatedBy, 160),
+    visibility: normalizeContentVisibility(payload.visibility),
+    volumeTitle: cleanText(payload.volumeTitle || payload.volume, 240),
+    wordCount: normalizePositiveInteger(payload.wordCount, 0),
+    readingMinutes: normalizePositiveInteger(payload.readingMinutes, 0)
+  };
+
+  const keys = buildContentR2Keys(entry);
+  if (!entry.markdownR2Key) entry.markdownR2Key = keys.markdown;
+  if (!entry.htmlR2Key) entry.htmlR2Key = keys.html;
+
+  return entry;
+};
+
+const getAdminActorEmail = async (request, env) => {
+  if (isLocalHostnameRequest(request) || hasLocalAdminBypass(env)) return 'local-admin';
+  const explicitEmail = normalizeEmail(request.headers.get('Cf-Access-Authenticated-User-Email'));
+  if (explicitEmail) return explicitEmail;
+
+  const token = getAccessToken(request);
+  if (!token) return '';
+  try {
+    const payload = await verifyAccessJwt(token, getAdminAccessConfig(env));
+    return normalizeEmail(payload.email);
+  } catch {
+    return '';
+  }
+};
+
+const insertAdminAuditLog = async (db, data) => {
+  await db
+    .prepare(
+      `INSERT INTO admin_audit_logs (
+        actor_email, action, target_type, target_id, target_slug, metadata_json
+      )
+      VALUES (?, ?, ?, ?, ?, ?)`
+    )
+    .bind(
+      cleanText(data.actorEmail, 254),
+      cleanText(data.action, 120),
+      cleanText(data.targetType, 80),
+      cleanText(data.targetId, 80),
+      cleanText(data.targetSlug, 240),
+      JSON.stringify(normalizeJsonObject(data.metadata))
+    )
+    .run();
+};
+
+const isMissingContentTablesError = (error) => /no such table: (content_|admin_audit_logs)/i.test(error?.message || '');
+
+const ensureContentTablesReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM content_entries LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingContentTablesError(error)) return false;
+    throw error;
+  }
+};
+
 const splitEnvList = (value) =>
   String(value || '')
     .split(',')
@@ -2854,6 +3128,371 @@ const handleAdminListNovelOrders = async (request, env) => {
   });
 };
 
+const handleAdminContentSchema = async (env) =>
+  privateJson({
+    ok: true,
+    stage: '7A',
+    purpose: 'Backend content model foundation for Admin 2.0.',
+    entries: {
+      entryTypes: [...contentEntryTypes],
+      locales: [...contentLocales],
+      statuses: [...contentStatuses],
+      visibilities: [...contentVisibilities],
+      accessLevels: [...contentAccessLevels],
+      bodyFormats: [...contentBodyFormats]
+    },
+    storage: getContentStorageDescriptor(env),
+    migration: {
+      currentStaticSources: ['src/content/devlog', 'src/content/serials', 'src/content/serialChapters'],
+      backendTables: [
+        'content_entries',
+        'content_revisions',
+        'content_imports',
+        'content_pricing_rules',
+        'admin_audit_logs'
+      ],
+      nextStages: ['7B protected chapter bodies in R2', '7C Admin 2.0 UI for novels and blog/devlog']
+    }
+  });
+
+const buildContentEntriesQuery = (url, options = {}) => {
+  const entryType = cleanText(url.searchParams.get('type') || url.searchParams.get('entryType'), 40)
+    .toLowerCase()
+    .replace(/-/g, '_');
+  const locale = cleanText(url.searchParams.get('locale') || url.searchParams.get('language'), 20);
+  const status = cleanText(url.searchParams.get('status'), 30).toLowerCase();
+  const parentSlug = cleanSlug(url.searchParams.get('parentSlug') || url.searchParams.get('series'));
+  const limit = Math.min(Math.max(Number.parseInt(url.searchParams.get('limit') || '50', 10) || 50, 1), 100);
+
+  const clauses = [];
+  const params = [];
+
+  if (entryType) {
+    if (!contentEntryTypes.has(entryType)) {
+      const error = new Error('Unsupported content entry type.');
+      error.code = 'INVALID_CONTENT_TYPE';
+      throw error;
+    }
+    clauses.push('entry_type = ?');
+    params.push(entryType);
+  }
+
+  if (locale) {
+    if (!contentLocales.has(locale)) {
+      const error = new Error('Unsupported content locale.');
+      error.code = 'INVALID_CONTENT_LOCALE';
+      throw error;
+    }
+    clauses.push('locale = ?');
+    params.push(locale);
+  }
+
+  if (status) {
+    if (!contentStatuses.has(status)) {
+      const error = new Error('Unsupported content status.');
+      error.code = 'INVALID_CONTENT_STATUS';
+      throw error;
+    }
+    clauses.push('status = ?');
+    params.push(status);
+  } else if (options.publicOnly) {
+    clauses.push("status = 'published'");
+  }
+
+  if (options.publicOnly) {
+    clauses.push("visibility IN ('public', 'unlisted')");
+  }
+
+  if (parentSlug) {
+    clauses.push('parent_slug = ?');
+    params.push(parentSlug);
+  }
+
+  return {
+    limit,
+    params,
+    where: clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''
+  };
+};
+
+const handleAdminListContentEntries = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson({
+      ok: true,
+      setupRequired: true,
+      message: 'Content tables are not initialized. Apply migration 0007_backend_content_platform.sql.',
+      entries: [],
+      storage: getContentStorageDescriptor(env)
+    });
+  }
+
+  const url = new URL(request.url);
+  let query;
+  try {
+    query = buildContentEntriesQuery(url);
+  } catch (error) {
+    return privateJson({ ok: false, code: error.code || 'CONTENT_QUERY_INVALID', message: error.message }, { status: 400 });
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       ${query.where}
+       ORDER BY updated_at DESC, id DESC
+       LIMIT ?`
+    )
+    .bind(...query.params, query.limit)
+    .all();
+
+  return privateJson({
+    ok: true,
+    entries: (response.results || []).map(contentEntryToJson),
+    storage: getContentStorageDescriptor(env)
+  });
+};
+
+const uploadContentBodies = async (env, entry) => {
+  const bucket = getContentBucket(env);
+  const hasMarkdown = entry.markdown.length > 0;
+  const hasHtml = entry.html.length > 0;
+
+  if (!hasMarkdown && !hasHtml) return;
+  if (!bucket) {
+    const error = new Error('CONTENT_BUCKET is not configured, so body upload is disabled.');
+    error.code = 'CONTENT_BUCKET_NOT_CONFIGURED';
+    throw error;
+  }
+
+  if (hasMarkdown) {
+    await bucket.put(entry.markdownR2Key, entry.markdown, {
+      httpMetadata: { contentType: 'text/markdown; charset=utf-8' }
+    });
+  }
+
+  if (hasHtml) {
+    await bucket.put(entry.htmlR2Key, entry.html, {
+      httpMetadata: { contentType: 'text/html; charset=utf-8' }
+    });
+  }
+};
+
+const handleAdminUpsertContentEntry = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_TABLES_NOT_READY',
+        message: 'Content tables are not initialized. Apply migration 0007_backend_content_platform.sql before saving.'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  let entry;
+  try {
+    entry = normalizeContentPayload(payload);
+  } catch (error) {
+    return privateJson({ ok: false, code: error.code || 'CONTENT_INVALID', message: error.message }, { status: 400 });
+  }
+
+  const actorEmail = (await getAdminActorEmail(request, env)) || entry.updatedBy || entry.createdBy || 'admin';
+  entry.createdBy = entry.createdBy || actorEmail;
+  entry.updatedBy = actorEmail;
+
+  try {
+    await uploadContentBodies(env, entry);
+  } catch (error) {
+    return privateJson({ ok: false, code: error.code || 'CONTENT_UPLOAD_FAILED', message: error.message }, { status: 503 });
+  }
+
+  const saved = await db
+    .prepare(
+      `INSERT INTO content_entries (
+        entry_type, locale, slug, parent_slug, title, subtitle, description, excerpt,
+        status, visibility, access_level, author_name, featured, sort_order, chapter_number,
+        volume_title, tags_json, seo_json, metadata_json, pricing_json, body_format,
+        markdown_r2_key, html_r2_key, import_r2_key, cover_r2_key, cover_alt,
+        word_count, reading_minutes, source_kind, source_ref, scheduled_at, published_at,
+        created_by, updated_by
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(entry_type, locale, parent_slug, slug)
+      DO UPDATE SET
+        title = excluded.title,
+        subtitle = excluded.subtitle,
+        description = excluded.description,
+        excerpt = excluded.excerpt,
+        status = excluded.status,
+        visibility = excluded.visibility,
+        access_level = excluded.access_level,
+        author_name = excluded.author_name,
+        featured = excluded.featured,
+        sort_order = excluded.sort_order,
+        chapter_number = excluded.chapter_number,
+        volume_title = excluded.volume_title,
+        tags_json = excluded.tags_json,
+        seo_json = excluded.seo_json,
+        metadata_json = excluded.metadata_json,
+        pricing_json = excluded.pricing_json,
+        body_format = excluded.body_format,
+        markdown_r2_key = excluded.markdown_r2_key,
+        html_r2_key = excluded.html_r2_key,
+        import_r2_key = excluded.import_r2_key,
+        cover_r2_key = excluded.cover_r2_key,
+        cover_alt = excluded.cover_alt,
+        word_count = excluded.word_count,
+        reading_minutes = excluded.reading_minutes,
+        source_kind = excluded.source_kind,
+        source_ref = excluded.source_ref,
+        scheduled_at = excluded.scheduled_at,
+        published_at = excluded.published_at,
+        archived_at = CASE WHEN excluded.status = 'archived' THEN CURRENT_TIMESTAMP ELSE content_entries.archived_at END,
+        updated_by = excluded.updated_by,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *`
+    )
+    .bind(
+      entry.entryType,
+      entry.locale,
+      entry.slug,
+      entry.parentSlug,
+      entry.title,
+      entry.subtitle,
+      entry.description,
+      entry.excerpt,
+      entry.status,
+      entry.visibility,
+      entry.accessLevel,
+      entry.authorName,
+      entry.featured,
+      entry.sortOrder,
+      entry.chapterNumber,
+      entry.volumeTitle,
+      JSON.stringify(entry.tags),
+      JSON.stringify(entry.seo),
+      JSON.stringify(entry.metadata),
+      JSON.stringify(entry.pricing),
+      entry.bodyFormat,
+      entry.markdownR2Key,
+      entry.htmlR2Key,
+      entry.importR2Key,
+      entry.coverR2Key,
+      entry.coverAlt,
+      entry.wordCount,
+      entry.readingMinutes,
+      entry.sourceKind,
+      entry.sourceRef,
+      entry.scheduledAt,
+      entry.publishedAt,
+      entry.createdBy,
+      entry.updatedBy
+    )
+    .first();
+
+  const revisionNumberRow = await db
+    .prepare(`SELECT COALESCE(MAX(revision_number), 0) + 1 AS revision_number FROM content_revisions WHERE entry_id = ?`)
+    .bind(saved.id)
+    .first();
+  const revisionNumber = normalizePositiveInteger(revisionNumberRow?.revision_number, 1) || 1;
+
+  await db
+    .prepare(
+      `INSERT INTO content_revisions (
+        entry_id, revision_number, status, title, summary, metadata_json, pricing_json,
+        markdown_r2_key, html_r2_key, created_by
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(
+      saved.id,
+      revisionNumber,
+      saved.status,
+      saved.title,
+      cleanText(payload.revisionSummary, 500),
+      saved.metadata_json,
+      saved.pricing_json,
+      saved.markdown_r2_key,
+      saved.html_r2_key,
+      actorEmail
+    )
+    .run();
+
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: 'content_entry_upsert',
+    targetType: saved.entry_type,
+    targetId: String(saved.id),
+    targetSlug: `${saved.parent_slug ? `${saved.parent_slug}/` : ''}${saved.slug}`,
+    metadata: {
+      locale: saved.locale,
+      revisionNumber,
+      status: saved.status
+    }
+  });
+
+  return privateJson({
+    ok: true,
+    entry: contentEntryToJson(saved),
+    revisionNumber,
+    storage: getContentStorageDescriptor(env)
+  });
+};
+
+const handlePublicContentEntries = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return json({
+      ok: true,
+      setupRequired: true,
+      source: 'backend-content-platform',
+      stage: '7A',
+      entries: []
+    });
+  }
+
+  const url = new URL(request.url);
+  let query;
+  try {
+    query = buildContentEntriesQuery(url, { publicOnly: true });
+  } catch (error) {
+    return json({ ok: false, code: error.code || 'CONTENT_QUERY_INVALID', message: error.message }, { status: 400 });
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       ${query.where}
+       ORDER BY
+         COALESCE(published_at, updated_at) DESC,
+         sort_order ASC,
+         id DESC
+       LIMIT ?`
+    )
+    .bind(...query.params, query.limit)
+    .all();
+
+  return json({
+    ok: true,
+    source: 'backend-content-platform',
+    stage: '7A',
+    entries: (response.results || []).map(contentEntryToJson)
+  });
+};
+
 const downloadFiles = {
   '/downloads/stationcat-radar/StationCat-Radar-0.1.0-arm64.dmg': {
     key: 'stationcat-radar/0.1.0/StationCat-Radar-0.1.0-arm64.dmg',
@@ -3596,6 +4235,10 @@ export default {
       return handleNovelPaymentOrderStatus(request, env);
     }
 
+    if (request.method === 'GET' && url.pathname === '/api/content/entries') {
+      return handlePublicContentEntries(request, env);
+    }
+
     if (request.method === 'POST' && url.pathname === '/api/novels/credits/unlock') {
       return handleReaderCreditUnlock(request, env);
     }
@@ -3611,6 +4254,17 @@ export default {
     if (url.pathname === '/admin/api/novels/payments/orders') {
       if (request.method === 'GET') return handleAdminListNovelOrders(request, env);
       return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/schema') {
+      if (request.method === 'GET') return handleAdminContentSchema(env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/entries') {
+      if (request.method === 'GET') return handleAdminListContentEntries(request, env);
+      if (request.method === 'POST') return handleAdminUpsertContentEntry(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
     if (url.pathname === '/admin/api/novels/entitlements') {
