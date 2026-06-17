@@ -114,13 +114,21 @@
 
 开始让读者拥有“已购 / 已解锁 / 已打赏”身份。
 
-### 范围
+### 阶段 4A：账户与会话
 
 - 邮箱 + magic link 登录
 - `reader_accounts`
 - `reader_sessions`
-- `novel_entitlements`
 - `/library/` 已购书库
+- 登录状态查询与退出登录
+- 本地开发调试登录链接
+
+### 阶段 4B：权限与书库内容
+
+- `novel_entitlements`
+- 付费 / 支持者章节的权限判断
+- `/library/` 已解锁内容列表
+- 管理员手动授权测试入口
 
 ### 验收标准
 
@@ -164,17 +172,18 @@
 - 读者通知与催更订阅
 - 付费阅读说明、退款边界、支持邮箱流程
 
-## 当前执行：阶段 2
+## 当前执行：阶段 4A
 
-阶段 1 已经完成并上线。当前进入阶段 2，也就是把“结构可用”推进到“可以稳定发文”。
+阶段 1 到阶段 3 已经完成并上线。当前进入阶段 4A，先把读者账户、magic link 登录、session cookie 和 `/library/` 空书库搭起来。
 
 这次先做：
 
-1. 建立小说和章节 Markdown 模板
-2. 固定 Slug、章节编号和文件命名规则
-3. 扩展 `serials` / `serialChapters` frontmatter 字段
-4. 让作品页支持封面、作者、计划章数、第一章入口
-5. 让章节页和目录显示卷名、阅读方式、预计阅读时间
-6. 继续保留静态内容发布，不接账户和付费墙
+1. 新增 `reader_accounts`、`reader_login_tokens`、`reader_sessions`
+2. 新增 `/api/readers/magic-link`
+3. 新增 `/api/readers/verify`
+4. 新增 `/api/readers/session`
+5. 新增 `/api/readers/logout`
+6. 新增 `/library/` 页面
+7. 连载小说页增加“我的书库”入口
 
-等这一步稳了，再把你的真实小说名、封面和前几章正文替换进来。
+阶段 4A 暂不做真实阅读权限发放。阶段 4B 再接 `novel_entitlements`、管理员手动授权和已解锁内容列表。

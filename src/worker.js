@@ -11,6 +11,9 @@ const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 
 const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
+const readerSessionCookieName = 'station_cat_reader_session';
+const readerSessionMaxAge = 60 * 60 * 24 * 30;
+
 const cleanText = (value, maxLength = 500) => String(value || '').trim().slice(0, maxLength);
 
 const cleanPlatform = (value) => {
@@ -24,6 +27,65 @@ const toHex = (buffer) =>
 const sha256Hex = async (value) => {
   const encoded = new TextEncoder().encode(value);
   return toHex(await crypto.subtle.digest('SHA-256', encoded));
+};
+
+const randomToken = (byteLength = 32) => {
+  const bytes = new Uint8Array(byteLength);
+  crypto.getRandomValues(bytes);
+  let raw = '';
+  bytes.forEach((byte) => {
+    raw += String.fromCharCode(byte);
+  });
+  return btoa(raw).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+};
+
+const isLocalRequest = (request, env) => {
+  const { hostname } = new URL(request.url);
+  const host = request.headers.get('host') || '';
+  return (
+    env.READER_AUTH_DEBUG_LINKS === '1' ||
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === '[::1]' ||
+    host.startsWith('localhost:') ||
+    host.startsWith('127.0.0.1:') ||
+    host.startsWith('[::1]:')
+  );
+};
+
+const getCookie = (request, name) => {
+  const cookieHeader = request.headers.get('cookie') || '';
+  const cookies = cookieHeader.split(';').map((cookie) => cookie.trim());
+  for (const cookie of cookies) {
+    const separatorIndex = cookie.indexOf('=');
+    if (separatorIndex === -1) continue;
+    if (cookie.slice(0, separatorIndex) === name) {
+      return cookie.slice(separatorIndex + 1);
+    }
+  }
+  return '';
+};
+
+const makeCookie = (name, value, request, options = {}) => {
+  const isSecure = new URL(request.url).protocol === 'https:';
+  const parts = [
+    `${name}=${value}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+    `Max-Age=${options.maxAge ?? readerSessionMaxAge}`
+  ];
+  if (isSecure) parts.push('Secure');
+  return parts.join('; ');
+};
+
+const clearCookie = (name, request) => makeCookie(name, '', request, { maxAge: 0 });
+
+const cleanRedirectPath = (value, fallback = '/library/') => {
+  const path = cleanText(value, 300);
+  if (!path || !path.startsWith('/') || path.startsWith('//')) return fallback;
+  return path;
 };
 
 const getSetting = (db, product, platform) =>
@@ -271,6 +333,297 @@ const handleUpdateSettings = async (request, env) => {
   }
 
   return handleGetSettings(env);
+};
+
+const upsertReaderAccount = async (db, email, normalizedEmail) =>
+  db
+    .prepare(
+      `INSERT INTO reader_accounts (email, normalized_email)
+       VALUES (?, ?)
+       ON CONFLICT(normalized_email) DO UPDATE SET
+         email = excluded.email,
+         updated_at = CURRENT_TIMESTAMP
+       RETURNING id, email, normalized_email, status, created_at`
+    )
+    .bind(email, normalizedEmail)
+    .first();
+
+const sendReaderLoginEmail = async (env, email, loginUrl) => {
+  const configured = Boolean(env.EMAIL && typeof env.EMAIL.send === 'function');
+  if (!configured) {
+    return { configured: false, sent: false };
+  }
+
+  const fromEmail = env.READER_EMAIL_FROM || 'noreply@wwwstationcat.org';
+  const fromName = env.READER_EMAIL_FROM_NAME || 'Station Cat';
+  const subject = 'Sign in to Station Cat Library';
+  const text = [
+    'Use this secure link to sign in to your Station Cat reader library:',
+    '',
+    loginUrl,
+    '',
+    'This link expires in 15 minutes. If you did not request it, you can ignore this email.'
+  ].join('\n');
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #111827;">
+      <h1 style="font-size: 20px;">Sign in to Station Cat Library</h1>
+      <p>Use this secure link to open your reader library:</p>
+      <p><a href="${loginUrl}" style="display: inline-block; background: #2e5b4e; color: #fffaf1; padding: 12px 16px; border-radius: 8px; text-decoration: none;">Open my library</a></p>
+      <p style="color: #6b7280;">This link expires in 15 minutes. If you did not request it, you can ignore this email.</p>
+    </div>
+  `;
+
+  try {
+    await env.EMAIL.send({
+      to: email,
+      from: { email: fromEmail, name: fromName },
+      subject,
+      text,
+      html
+    });
+    return { configured: true, sent: true };
+  } catch (error) {
+    console.error('reader_login_email_failed', {
+      code: error?.code,
+      message: error?.message
+    });
+    return { configured: true, sent: false, error: error?.message || 'Email delivery failed.' };
+  }
+};
+
+const handleReaderMagicLinkRequest = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const normalizedEmail = normalizeEmail(payload.email);
+  if (!isEmail(normalizedEmail)) {
+    return json({ ok: false, message: 'Please enter a valid email address.' }, { status: 400 });
+  }
+
+  const email = cleanText(payload.email, 254);
+  const account = await upsertReaderAccount(db, email, normalizedEmail);
+  const rawToken = randomToken();
+  const tokenHash = await sha256Hex(rawToken);
+  const userAgent = cleanText(request.headers.get('user-agent'), 300);
+  const ipHash = await sha256Hex(request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || 'local');
+
+  await db.batch([
+    db
+      .prepare(
+        `UPDATE reader_login_tokens
+         SET consumed_at = CURRENT_TIMESTAMP
+         WHERE account_id = ? AND consumed_at IS NULL`
+      )
+      .bind(account.id),
+    db
+      .prepare(
+        `INSERT INTO reader_login_tokens (
+          account_id, normalized_email, token_hash, expires_at, request_ip_hash, user_agent
+        )
+        VALUES (?, ?, ?, datetime('now', '+15 minutes'), ?, ?)`
+      )
+      .bind(account.id, normalizedEmail, tokenHash, ipHash, userAgent)
+  ]);
+
+  const debugOrigin = env.READER_AUTH_DEBUG_LINKS === '1' ? env.READER_AUTH_DEBUG_ORIGIN : '';
+  const loginUrl = new URL('/api/readers/verify', debugOrigin || request.url);
+  loginUrl.searchParams.set('token', rawToken);
+  loginUrl.searchParams.set('redirect', cleanRedirectPath(payload.redirectPath));
+  const delivery = await sendReaderLoginEmail(env, email, loginUrl.toString());
+  const debugLoginUrl = isLocalRequest(request, env) ? loginUrl.toString() : '';
+
+  if (!delivery.configured && !debugLoginUrl) {
+    return json(
+      {
+        ok: false,
+        message: 'Reader login email delivery is not configured yet.',
+        delivery
+      },
+      { status: 503 }
+    );
+  }
+
+  if (delivery.configured && !delivery.sent) {
+    return json(
+      {
+        ok: false,
+        message: 'The login email could not be sent. Please try again later.',
+        delivery
+      },
+      { status: 502 }
+    );
+  }
+
+  return json({
+    ok: true,
+    message: delivery.sent
+      ? 'Check your email for the secure sign-in link.'
+      : 'Local reader login link generated.',
+    delivery,
+    debugLoginUrl
+  });
+};
+
+const getReaderFromSession = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return null;
+
+  const sessionToken = getCookie(request, readerSessionCookieName);
+  if (!sessionToken) return null;
+
+  const sessionHash = await sha256Hex(sessionToken);
+  const session = await db
+    .prepare(
+      `SELECT
+        reader_sessions.id AS session_id,
+        reader_sessions.expires_at AS session_expires_at,
+        reader_accounts.id AS account_id,
+        reader_accounts.email,
+        reader_accounts.normalized_email,
+        reader_accounts.created_at AS account_created_at
+       FROM reader_sessions
+       INNER JOIN reader_accounts ON reader_accounts.id = reader_sessions.account_id
+       WHERE reader_sessions.session_hash = ?
+         AND reader_sessions.revoked_at IS NULL
+         AND reader_sessions.expires_at > CURRENT_TIMESTAMP
+         AND reader_accounts.status = 'active'
+       LIMIT 1`
+    )
+    .bind(sessionHash)
+    .first();
+
+  if (!session) return null;
+
+  await db
+    .prepare(`UPDATE reader_sessions SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?`)
+    .bind(session.session_id)
+    .run();
+
+  return session;
+};
+
+const handleReaderSession = async (request, env) => {
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json({ ok: true, authenticated: false });
+  }
+
+  return json({
+    ok: true,
+    authenticated: true,
+    account: {
+      id: session.account_id,
+      email: session.email,
+      normalizedEmail: session.normalized_email,
+      createdAt: session.account_created_at
+    },
+    session: {
+      expiresAt: session.session_expires_at
+    }
+  });
+};
+
+const handleReaderVerify = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return new Response('Reader database is not configured.', { status: 500 });
+
+  const url = new URL(request.url);
+  const rawToken = cleanText(url.searchParams.get('token'), 300);
+  const redirectPath = cleanRedirectPath(url.searchParams.get('redirect'));
+  const failureUrl = new URL('/library/', url.origin);
+  failureUrl.searchParams.set('login', 'invalid');
+
+  if (!rawToken) {
+    return Response.redirect(failureUrl.toString(), 302);
+  }
+
+  const tokenHash = await sha256Hex(rawToken);
+  const loginToken = await db
+    .prepare(
+      `SELECT id, account_id
+       FROM reader_login_tokens
+       WHERE token_hash = ?
+         AND consumed_at IS NULL
+         AND expires_at > CURRENT_TIMESTAMP
+       LIMIT 1`
+    )
+    .bind(tokenHash)
+    .first();
+
+  if (!loginToken) {
+    return Response.redirect(failureUrl.toString(), 302);
+  }
+
+  const sessionToken = randomToken();
+  const sessionHash = await sha256Hex(sessionToken);
+  const userAgent = cleanText(request.headers.get('user-agent'), 300);
+
+  await db.batch([
+    db
+      .prepare(
+        `UPDATE reader_login_tokens
+         SET consumed_at = CURRENT_TIMESTAMP
+         WHERE id = ?`
+      )
+      .bind(loginToken.id),
+    db
+      .prepare(
+        `UPDATE reader_accounts
+         SET last_login_at = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`
+      )
+      .bind(loginToken.account_id),
+    db
+      .prepare(
+        `INSERT INTO reader_sessions (account_id, session_hash, expires_at, user_agent)
+         VALUES (?, ?, datetime('now', '+30 days'), ?)`
+      )
+      .bind(loginToken.account_id, sessionHash, userAgent)
+  ]);
+
+  const successUrl = new URL(redirectPath, url.origin);
+  successUrl.searchParams.set('login', 'success');
+  return new Response(null, {
+    status: 302,
+    headers: {
+      location: successUrl.toString(),
+      'set-cookie': makeCookie(readerSessionCookieName, sessionToken, request)
+    }
+  });
+};
+
+const handleReaderLogout = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  const sessionToken = getCookie(request, readerSessionCookieName);
+
+  if (db && sessionToken) {
+    const sessionHash = await sha256Hex(sessionToken);
+    await db
+      .prepare(
+        `UPDATE reader_sessions
+         SET revoked_at = CURRENT_TIMESTAMP
+         WHERE session_hash = ? AND revoked_at IS NULL`
+      )
+      .bind(sessionHash)
+      .run();
+  }
+
+  return json(
+    { ok: true, authenticated: false },
+    {
+      headers: {
+        'set-cookie': clearCookie(readerSessionCookieName, request)
+      }
+    }
+  );
 };
 
 const downloadFiles = {
@@ -967,6 +1320,22 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/waitlist') {
       return handleWaitlistSubmit(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/readers/magic-link') {
+      return handleReaderMagicLinkRequest(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/readers/verify') {
+      return handleReaderVerify(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/readers/session') {
+      return handleReaderSession(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/readers/logout') {
+      return handleReaderLogout(request, env);
     }
 
     if (url.pathname === '/admin/api/waitlist/settings') {

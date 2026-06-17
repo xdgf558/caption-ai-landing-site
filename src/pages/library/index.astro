@@ -1,0 +1,140 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="我的書庫"
+  description="Station Cat 讀者書庫，用於管理已解鎖的小說、章節和後續支持者內容。"
+  lang="zh-Hant"
+  canonicalPath="/library/"
+>
+  <section class="works-hero reader-library-hero">
+    <p class="station-kicker">Reader Library</p>
+    <h1>我的書庫</h1>
+    <p>用 Email 登入後，之後在不同裝置上也可以找回已解鎖的小說、章節和支持者內容。</p>
+    <p class="fine-print">目前是 4A：先建立讀者帳戶和登入狀態。已購、打賞和付費解鎖會在下一階段接上。</p>
+  </section>
+
+  <section class="station-section reader-library-grid">
+    <form class="reader-panel reader-login-panel" id="reader-login-form">
+      <div>
+        <p class="station-kicker">Sign in</p>
+        <h2>寄送登入連結</h2>
+      </div>
+      <label>
+        Email
+        <input id="reader-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" />
+      </label>
+      <button class="button button-primary" id="reader-login-submit" type="submit">寄送登入連結</button>
+      <div class="reader-status" id="reader-login-status" role="status" aria-live="polite"></div>
+    </form>
+
+    <div class="reader-panel reader-account-panel" id="reader-account-panel" hidden>
+      <div>
+        <p class="station-kicker">Account</p>
+        <h2>已登入</h2>
+      </div>
+      <p id="reader-account-email" class="reader-account-email"></p>
+      <button class="button button-secondary" id="reader-logout" type="button">登出</button>
+    </div>
+  </section>
+
+  <section class="station-section reader-library-content" id="reader-library-content" hidden>
+    <div class="station-section__heading">
+      <p class="station-kicker">Library</p>
+      <h2>已解鎖內容</h2>
+    </div>
+    <div class="reader-empty-shelf">
+      <h3>書庫已準備好，等待下一階段接入權限。</h3>
+      <p>4B 會把「手動授權」和 `novel_entitlements` 接上；之後 NOWPayments 支付成功後，也會寫入同一套權限表。</p>
+      <a class="button button-secondary" href="/zh-hant/works/">回到連載小說</a>
+    </div>
+  </section>
+
+  <script>
+    const form = document.getElementById('reader-login-form');
+    const emailInput = document.getElementById('reader-email');
+    const submitButton = document.getElementById('reader-login-submit');
+    const statusBox = document.getElementById('reader-login-status');
+    const accountPanel = document.getElementById('reader-account-panel');
+    const accountEmail = document.getElementById('reader-account-email');
+    const logoutButton = document.getElementById('reader-logout');
+    const libraryContent = document.getElementById('reader-library-content');
+
+    const setStatus = (message, tone = 'neutral') => {
+      statusBox.textContent = message;
+      statusBox.dataset.tone = tone;
+    };
+
+    const setSignedIn = (session) => {
+      const signedIn = Boolean(session?.authenticated);
+      form.hidden = signedIn;
+      accountPanel.hidden = !signedIn;
+      libraryContent.hidden = !signedIn;
+      accountEmail.textContent = signedIn ? session.account.email : '';
+    };
+
+    const loadSession = async () => {
+      const response = await fetch('/api/readers/session');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取登入狀態失敗。');
+      setSignedIn(data);
+    };
+
+    const query = new URLSearchParams(window.location.search);
+    if (query.get('login') === 'success') {
+      setStatus('登入成功，正在載入書庫。', 'success');
+    } else if (query.get('login') === 'invalid') {
+      setStatus('登入連結已失效，請重新寄送。', 'error');
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      submitButton.disabled = true;
+      setStatus('正在建立登入連結...', 'neutral');
+
+      try {
+        const response = await fetch('/api/readers/magic-link', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailInput.value,
+            redirectPath: '/library/'
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '登入連結寄送失敗。');
+
+        if (data.debugLoginUrl) {
+          statusBox.innerHTML = '';
+          const text = document.createElement('span');
+          text.textContent = '本地測試登入連結已建立：';
+          const link = document.createElement('a');
+          link.href = data.debugLoginUrl;
+          link.textContent = '開啟書庫';
+          statusBox.append(text, link);
+          statusBox.dataset.tone = 'success';
+        } else {
+          setStatus(data.message || '請查看 Email 裡的登入連結。', 'success');
+        }
+      } catch (error) {
+        setStatus(error.message || '登入連結寄送失敗。', 'error');
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    logoutButton.addEventListener('click', async () => {
+      logoutButton.disabled = true;
+      try {
+        await fetch('/api/readers/logout', { method: 'POST' });
+        setSignedIn({ authenticated: false });
+        setStatus('已登出。', 'success');
+      } finally {
+        logoutButton.disabled = false;
+      }
+    });
+
+    loadSession().catch((error) => setStatus(error.message, 'error'));
+  </script>
+</BaseLayout>
