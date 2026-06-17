@@ -325,6 +325,7 @@ const accessGateCopy = {
 
       protectedBody.innerHTML = data.content.html;
       protectedBody.hidden = false;
+      requestAnimationFrame(() => protectedBody.classList.add('protected-chapter-body--ready'));
       gate.hidden = true;
       setCreditStatus(accessGateCopy.contentReady, 'success');
     };
