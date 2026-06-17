@@ -2,7 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import SerialDetailPage from '../../../../components/SerialDetailPage.astro';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
-import { getLatestChapter, getPublishedChapters, getVisibleSerials, serialsCopy } from '../../../../data/serials';
+import { getFirstChapter, getLatestChapter, getPublishedChapters, getVisibleSerials, serialsCopy } from '../../../../data/serials';
 
 export async function getStaticPaths() {
   const serials = getVisibleSerials(await getCollection('serials'));
@@ -17,6 +17,7 @@ const basePath = '/ja/works/';
 const copy = serialsCopy[locale];
 const { serial } = Astro.props;
 const chapterContent = getPublishedChapters(await getCollection('serialChapters'), serial.data.seriesSlug);
+const firstChapter = getFirstChapter(chapterContent);
 const latestChapter = getLatestChapter(chapterContent);
 const { Content } = await render(serial);
 ---
@@ -39,6 +40,7 @@ const { Content } = await render(serial);
     basePath={basePath}
     chapterContent={chapterContent}
     copy={copy}
+    firstChapter={firstChapter}
     homePath="/ja/"
     latestChapter={latestChapter}
     locale={locale}

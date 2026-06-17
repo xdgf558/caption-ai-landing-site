@@ -1,22 +1,25 @@
 ---
-import type { SerialChapterEntry } from '../data/serials';
-import { getChapterHref } from '../data/serials';
+import type { SerialChapterEntry, SiteLocale } from '../data/serials';
+import { formatChapterNumber, formatReadingMinutes, getChapterAccessLabel, getChapterHref } from '../data/serials';
 
 interface CopyShape {
+  accessLabel: string;
   chapterEmpty: string;
   chapterLabel: string;
   chapterWordCount: string;
   readChapter: string;
+  volumeLabel: string;
 }
 
 interface Props {
   chapters: SerialChapterEntry[];
   copy: CopyShape;
   basePath: string;
+  locale: SiteLocale;
   seriesSlug: string;
 }
 
-const { chapters, copy, basePath, seriesSlug } = Astro.props;
+const { chapters, copy, basePath, locale, seriesSlug } = Astro.props;
 ---
 
 {chapters.length > 0 ? (
@@ -26,19 +29,24 @@ const { chapters, copy, basePath, seriesSlug } = Astro.props;
         <div class="serial-chapter-card__header">
           <div>
             <p class="station-kicker">
-              {copy.chapterLabel} {chapter.data.chapterNumber}
+              {formatChapterNumber(chapter.data.chapterNumber, locale)}
             </p>
             <h3>{chapter.data.title}</h3>
           </div>
           {chapter.data.publishedAt && (
             <time datetime={chapter.data.publishedAt.toISOString()}>
-              {chapter.data.publishedAt.toLocaleDateString(chapter.data.language)}
+              {chapter.data.publishedAt.toLocaleDateString(locale)}
             </time>
           )}
         </div>
         <p>{chapter.data.excerpt}</p>
         <div class="serial-chapter-card__footer">
-          {chapter.data.wordCount && <span>{chapter.data.wordCount} {copy.chapterWordCount}</span>}
+          <div class="serial-chapter-card__facts">
+            {chapter.data.volume && <span>{copy.volumeLabel}: {chapter.data.volume}</span>}
+            <span>{copy.accessLabel}: {getChapterAccessLabel(chapter.data.access, locale)}</span>
+            {chapter.data.readingMinutes && <span>{formatReadingMinutes(chapter.data.readingMinutes, locale)}</span>}
+            {chapter.data.wordCount && <span>{`${chapter.data.wordCount} ${copy.chapterWordCount}`}</span>}
+          </div>
           <a class="paper-link" href={getChapterHref(basePath, seriesSlug, chapter.data.chapterSlug)}>{copy.readChapter}</a>
         </div>
       </article>

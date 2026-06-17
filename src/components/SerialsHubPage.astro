@@ -1,10 +1,11 @@
 ---
 import type { SerialChapterEntry, SerialEntry, SiteLocale } from '../data/serials';
-import { getChapterHref, getPriceModeLabel, getSeriesHref, getSerialStatusLabel } from '../data/serials';
+import { formatChapterNumber, getChapterHref, getPriceModeLabel, getSeriesHref, getSerialStatusLabel } from '../data/serials';
 import SerialCard from './SerialCard.astro';
 
 interface CopyShape {
   accessLabel: string;
+  authorLabel: string;
   description: string;
   eyebrow: string;
   featuredEmpty: string;
@@ -20,6 +21,7 @@ interface CopyShape {
   latestLabel: string;
   openSeries: string;
   readLatest: string;
+  plannedLabel: string;
   scheduleLabel: string;
   shelfEmpty: string;
   shelfEyebrow: string;
@@ -37,6 +39,7 @@ interface Props {
 }
 
 const { basePath, copy, featuredLatestChapter, featuredSerial, locale, serials } = Astro.props;
+const featuredCoverText = featuredSerial?.data.coverLabel ?? featuredSerial?.data.title;
 ---
 
 <section class="works-hero serials-hero">
@@ -64,9 +67,11 @@ const { basePath, copy, featuredLatestChapter, featuredSerial, locale, serials }
       <div class="serial-feature-card__copy">
         <div class="serial-feature-card__meta">
           <span class="paper-stamp">{getSerialStatusLabel(featuredSerial.data.status, locale)}</span>
+          <span>{copy.authorLabel}: {featuredSerial.data.author}</span>
           <span>{copy.accessLabel}: {getPriceModeLabel(featuredSerial.data.priceMode, locale)}</span>
         </div>
         <h2>{featuredSerial.data.title}</h2>
+        {featuredSerial.data.subtitle && <p class="fine-print">{featuredSerial.data.subtitle}</p>}
         <p>{featuredSerial.data.description}</p>
         <div class="serial-feature-card__facts">
           <div>
@@ -81,10 +86,16 @@ const { basePath, copy, featuredLatestChapter, featuredSerial, locale, serials }
             <span>{copy.latestLabel}</span>
             <strong>
               {featuredLatestChapter
-                ? `${featuredLatestChapter.data.chapterNumber}. ${featuredLatestChapter.data.title}`
+                ? `${formatChapterNumber(featuredLatestChapter.data.chapterNumber, locale)} ${featuredLatestChapter.data.title}`
                 : copy.latestFallback}
             </strong>
           </div>
+          {featuredSerial.data.totalPlannedChapters && (
+            <div>
+              <span>{copy.plannedLabel}</span>
+              <strong>{featuredSerial.data.totalPlannedChapters}</strong>
+            </div>
+          )}
         </div>
         <div class="button-row">
           <a class="button button-primary" href={getSeriesHref(basePath, featuredSerial.data.seriesSlug)}>{copy.openSeries}</a>
@@ -99,7 +110,16 @@ const { basePath, copy, featuredLatestChapter, featuredSerial, locale, serials }
         </div>
       </div>
       <div class="serial-feature-card__aside">
-        <div class="serial-feature-card__stamp">SC</div>
+        <div class="serial-cover serial-feature-card__cover">
+          {featuredSerial.data.coverImage ? (
+            <img src={featuredSerial.data.coverImage} alt={featuredSerial.data.coverAlt ?? `${featuredSerial.data.title} cover`} loading="lazy" />
+          ) : (
+            <>
+              <span class="serial-cover__mark">SC</span>
+              <strong>{featuredCoverText}</strong>
+            </>
+          )}
+        </div>
         <p>{featuredSerial.data.tagline}</p>
       </div>
     </article>

@@ -7,8 +7,11 @@ excerpt: "深夜的站台不大，最後一盞燈還亮著，像替這部長篇�
 status: "published"
 access: "free"
 language: "zh-Hant"
+volume: "第一卷：夜站"
 wordCount: 164
+readingMinutes: 2
 publishedAt: 2026-06-16
+updatedAt: 2026-06-17
 ---
 
 深夜的站台不大，最後一盞燈還亮著。

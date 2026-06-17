@@ -3843,8 +3843,16 @@ body.station-paper-page {
   padding: 24px;
 }
 
+.serial-detail-hero {
+  align-items: center;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.38fr);
+}
+
 .serial-feature-card__copy,
 .serial-detail-card,
+.serial-detail-hero__copy,
 .serial-reader-shell__header {
   display: grid;
   gap: 16px;
@@ -3887,6 +3895,50 @@ body.station-paper-page {
   padding: 22px;
 }
 
+.serial-cover {
+  align-items: end;
+  aspect-ratio: 3 / 4;
+  display: grid;
+  min-height: 220px;
+  overflow: hidden;
+  padding: 18px;
+  position: relative;
+  text-decoration: none;
+}
+
+.serial-cover img {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+}
+
+.serial-cover__mark {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0;
+  position: relative;
+  text-transform: uppercase;
+}
+
+.serial-cover strong {
+  font-size: 24px;
+  line-height: 1.15;
+  position: relative;
+}
+
+.serial-card__cover {
+  margin-bottom: 16px;
+  min-height: 230px;
+}
+
+.serial-detail-hero__cover,
+.serial-feature-card__cover {
+  min-height: 280px;
+}
+
 .serial-card__header,
 .serial-chapter-card__header,
 .serial-chapter-card__footer {
@@ -3894,6 +3946,13 @@ body.station-paper-page {
   display: flex;
   gap: 14px;
   justify-content: space-between;
+}
+
+.serial-chapter-card__facts {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
 }
 
 .serial-card__copy {
@@ -3960,7 +4019,8 @@ body.station-paper-page {
 .station-paper-page .serial-detail-card,
 .station-paper-page .serial-chapter-card,
 .station-paper-page .serial-empty-panel,
-.station-paper-page .serial-reader-shell {
+.station-paper-page .serial-reader-shell,
+.station-paper-page .serial-cover {
   background: #fffaf1;
   border: 1px solid #d8c8b8;
   border-radius: 12px;
@@ -3988,7 +4048,8 @@ body.station-paper-page {
 .station-paper-page .serial-chapter-card h3,
 .station-paper-page .serial-reader-shell h1,
 .station-paper-page .serial-feature-card h2,
-.station-paper-page .serial-detail-card h2 {
+.station-paper-page .serial-detail-card h2,
+.station-paper-page .serial-cover strong {
   color: #221b16;
 }
 
@@ -4008,6 +4069,20 @@ body.station-paper-page {
   border: 2px solid #221b16;
   box-shadow: 5px 5px 0 rgba(34, 27, 22, 0.16);
   color: #fffaf1;
+}
+
+.station-paper-page .serial-cover {
+  background:
+    linear-gradient(135deg, rgba(46, 91, 78, 0.12), transparent 36%),
+    linear-gradient(90deg, rgba(34, 27, 22, 0.08) 1px, transparent 1px),
+    #f1e4d4;
+  background-size: auto, 18px 18px, auto;
+  border: 2px solid #221b16;
+  box-shadow: 6px 6px 0 rgba(34, 27, 22, 0.16);
+}
+
+.station-paper-page .serial-cover__mark {
+  color: #2e5b4e;
 }
 
 .station-paper-page .serial-reader-shell__crumbs,
@@ -4846,6 +4921,25 @@ body.station-paper-page.caption-product-page {
   .station-paper-page .works-hero {
     margin-top: 26px;
     padding: 22px;
+  }
+
+  .serial-card-grid,
+  .serial-detail-grid,
+  .serial-feature-card,
+  .serial-detail-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .serial-card__header,
+  .serial-chapter-card__header,
+  .serial-chapter-card__footer {
+    flex-direction: column;
+  }
+
+  .serial-card__cover,
+  .serial-detail-hero__cover,
+  .serial-feature-card__cover {
+    min-height: 220px;
   }
 
   .station-paper-page .phone-visual,
