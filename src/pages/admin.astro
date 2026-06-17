@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout
   title="Station Cat Admin"
-  description="Station Cat development blog and X works admin editor."
+  description="Station Cat content, X works, and serial fiction admin editor."
   lang="zh-Hant"
   canonicalPath="/admin/"
   bodyClass="station-home"
@@ -14,7 +14,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <p class="station-kicker">Admin</p>
       <h1>Station Cat 內容管理</h1>
       <p>
-        使用 GitHub fine-grained token 更新 <code>src/content/devlog</code> 和 <code>src/content/xworks</code> 裡的 Markdown。Token 只保存在當前頁面，不會寫入網站或 localStorage。
+        使用 GitHub fine-grained token 更新 <code>src/content/devlog</code>、<code>src/content/xworks</code>、<code>src/content/serials</code> 和 <code>src/content/serialChapters</code> 裡的 Markdown。Token 只保存在當前頁面，不會寫入網站或 localStorage。
       </p>
     </div>
 
@@ -29,6 +29,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <div class="admin-tabs" role="tablist" aria-label="Content type">
           <button class="admin-tab is-active" id="tab-devlog" type="button" data-admin-tab="devlog">Devlog</button>
           <button class="admin-tab" id="tab-xworks" type="button" data-admin-tab="xworks">X Works</button>
+          <button class="admin-tab" id="tab-serials" type="button" data-admin-tab="serials">連載小說</button>
         </div>
 
         <div class="button-row">
@@ -48,6 +49,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <div class="admin-list-panel" id="xworks-list-panel" hidden>
           <p class="station-kicker">X Works files</p>
           <div class="admin-post-list" id="xworks-list" aria-label="Existing X works"></div>
+        </div>
+
+        <div class="admin-list-panel" id="serials-list-panel" hidden>
+          <p class="station-kicker">Serial files</p>
+          <div class="admin-list-split">
+            <div>
+              <p class="fine-print">小說資料</p>
+              <div class="admin-post-list" id="serial-series-list" aria-label="Existing serial metadata files"></div>
+            </div>
+            <div>
+              <p class="fine-print">章節正文</p>
+              <div class="admin-post-list" id="serial-chapters-list" aria-label="Existing serial chapter files"></div>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -204,6 +219,59 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
         <div class="admin-inline-status" id="xwork-save-status" role="status" aria-live="polite" hidden></div>
       </form>
+
+      <form class="admin-panel admin-editor" id="serials-editor" hidden>
+        <div class="admin-form-grid">
+          <label>
+            导入类型
+            <select id="serial-kind" name="kind">
+              <option value="series">小说资料</option>
+              <option value="chapter">章节正文</option>
+            </select>
+          </label>
+          <label>
+            目标路径
+            <input id="serial-path" name="path" required placeholder="src/content/serials/novel-slug.md" />
+          </label>
+          <label>
+            seriesSlug
+            <input id="serial-series-slug" name="seriesSlug" required placeholder="novel-slug" />
+          </label>
+          <label>
+            章节序号
+            <input id="serial-chapter-number" name="chapterNumber" type="number" min="1" placeholder="1" />
+          </label>
+          <label>
+            chapterSlug
+            <input id="serial-chapter-slug" name="chapterSlug" placeholder="chapter-slug" />
+          </label>
+        </div>
+        <p class="fine-print">
+          直接粘贴完整 Markdown。小说资料写入 <code>{'src/content/serials/{seriesSlug}.md'}</code>，章节正文写入 <code>{'src/content/serialChapters/{seriesSlug}-{number}-{chapterSlug}.md'}</code>。保存后 GitHub 会触发网站自动部署。
+        </p>
+
+        <label>
+          Markdown
+          <textarea id="serial-markdown" name="markdown" rows="24" required spellcheck="false" placeholder="请粘贴包含 frontmatter 的完整 Markdown。"></textarea>
+        </label>
+
+        <div class="admin-preview-panel">
+          <div>
+            <p class="station-kicker">Import Preview</p>
+            <h2>小说 Markdown 导入预览</h2>
+          </div>
+          <div class="button-row">
+            <button class="button button-secondary" id="serial-parse-button" type="button">解析 Markdown</button>
+            <a class="button button-secondary" href="/zh-hant/works/">查看小说页</a>
+          </div>
+          <div class="admin-preview" id="serial-preview">粘贴小说或章节 Markdown 后点击解析。</div>
+        </div>
+
+        <div class="button-row">
+          <button class="button button-primary" id="serial-save" type="submit">保存小说 Markdown</button>
+        </div>
+        <div class="admin-inline-status" id="serial-save-status" role="status" aria-live="polite" hidden></div>
+      </form>
     </div>
   </section>
 
@@ -214,7 +282,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       branch: 'main',
       folders: {
         devlog: 'src/content/devlog',
-        xworks: 'src/content/xworks'
+        xworks: 'src/content/xworks',
+        serials: 'src/content/serials',
+        serialChapters: 'src/content/serialChapters'
       }
     };
 
@@ -226,10 +296,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       tabs: Array.from(document.querySelectorAll('[data-admin-tab]')),
       devlogListPanel: document.getElementById('devlog-list-panel'),
       xworksListPanel: document.getElementById('xworks-list-panel'),
+      serialsListPanel: document.getElementById('serials-list-panel'),
       devlogList: document.getElementById('admin-post-list'),
       xworksList: document.getElementById('xworks-list'),
+      serialSeriesList: document.getElementById('serial-series-list'),
+      serialChaptersList: document.getElementById('serial-chapters-list'),
       devlogForm: document.getElementById('devlog-editor'),
       xworksForm: document.getElementById('xworks-editor'),
+      serialsForm: document.getElementById('serials-editor'),
       devlog: {
         title: document.getElementById('post-title'),
         slug: document.getElementById('post-slug'),
@@ -261,13 +335,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         deleteButton: document.getElementById('work-delete'),
         saveButton: document.getElementById('xwork-save'),
         saveStatus: document.getElementById('xwork-save-status')
+      },
+      serial: {
+        kind: document.getElementById('serial-kind'),
+        path: document.getElementById('serial-path'),
+        seriesSlug: document.getElementById('serial-series-slug'),
+        chapterNumber: document.getElementById('serial-chapter-number'),
+        chapterSlug: document.getElementById('serial-chapter-slug'),
+        markdown: document.getElementById('serial-markdown'),
+        parseButton: document.getElementById('serial-parse-button'),
+        preview: document.getElementById('serial-preview'),
+        saveButton: document.getElementById('serial-save'),
+        saveStatus: document.getElementById('serial-save-status')
       }
     };
 
     let activeContentType = 'devlog';
     const state = {
       devlog: { sha: '', path: '', slugTouched: false },
-      xworks: { sha: '', path: '', slugTouched: false }
+      xworks: { sha: '', path: '', slugTouched: false },
+      serials: { sha: '', path: '', kind: 'series' }
     };
 
     const today = () => new Date().toISOString().slice(0, 10);
@@ -292,22 +379,33 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     };
 
     const setInlineStatus = (contentType, message, tone = 'neutral') => {
-      const target = contentType === 'devlog' ? elements.devlog.saveStatus : elements.work.saveStatus;
+      const targets = {
+        devlog: elements.devlog.saveStatus,
+        xworks: elements.work.saveStatus,
+        serials: elements.serial.saveStatus
+      };
+      const target = targets[contentType];
+      if (!target) return;
       target.textContent = message;
       target.dataset.tone = tone;
       target.hidden = !message;
     };
 
     const setSaving = (contentType, isSaving) => {
-      const button = contentType === 'devlog' ? elements.devlog.saveButton : elements.work.saveButton;
+      const saveLabels = {
+        devlog: ['保存 Devlog', '正在保存 Devlog...'],
+        xworks: ['保存 X Work', '正在保存 X Work...'],
+        serials: ['保存小说 Markdown', '正在保存小说 Markdown...']
+      };
+      const buttons = {
+        devlog: elements.devlog.saveButton,
+        xworks: elements.work.saveButton,
+        serials: elements.serial.saveButton
+      };
+      const button = buttons[contentType];
+      if (!button) return;
       button.disabled = isSaving;
-      button.textContent = isSaving
-        ? contentType === 'devlog'
-          ? '正在保存 Devlog...'
-          : '正在保存 X Work...'
-        : contentType === 'devlog'
-          ? '保存 Devlog'
-          : '保存 X Work';
+      button.textContent = isSaving ? saveLabels[contentType][1] : saveLabels[contentType][0];
 
       if (contentType === 'xworks') {
         elements.work.deleteButton.disabled = isSaving;
@@ -445,10 +543,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       }
     };
 
-    const parseMarkdown = (markdown) => {
-      const match = markdown.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-      if (!match) {
-        return { frontmatter: {}, body: markdown };
+      const parseMarkdown = (markdown) => {
+        const match = markdown.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+        if (!match) {
+          return { frontmatter: {}, body: markdown };
       }
 
       const frontmatter = {};
@@ -474,8 +572,123 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         }
       }
 
-      return { frontmatter, body: match[2].trim() };
-    };
+        return { frontmatter, body: match[2].trim() };
+      };
+
+      const serialKindLabel = (kind) => (kind === 'chapter' ? '章节正文' : '小说资料');
+
+      const padChapterNumber = (value) => String(Math.max(1, Number(value) || 1)).padStart(3, '0');
+
+      const inferSerialKind = (frontmatter, fallback = 'series') => {
+        if (frontmatter.chapterSlug || frontmatter.chapterNumber) return 'chapter';
+        if (frontmatter.tagline || frontmatter.priceMode || frontmatter.latestChapterSlug) return 'series';
+        return fallback;
+      };
+
+      const serialPathFromParts = ({ kind, seriesSlug, chapterNumber, chapterSlug }) => {
+        if (kind === 'chapter') {
+          return `${repo.folders.serialChapters}/${seriesSlug}-${padChapterNumber(chapterNumber)}-${chapterSlug}.md`;
+        }
+
+        return `${repo.folders.serials}/${seriesSlug}.md`;
+      };
+
+      const serialTemplate = (kind) => {
+        const date = today();
+        if (kind === 'chapter') {
+          return `---\nseriesSlug: "novel-slug"\nchapterNumber: 1\nchapterSlug: "chapter-slug"\ntitle: "第一章：章节标题"\nexcerpt: "一到两句话概括本章，用于目录和章节页摘要。"\nstatus: "draft"\naccess: "free"\nlanguage: "zh-Hant"\nvolume: "第一卷：卷名"\nwordCount: 0\nreadingMinutes: 0\npublishedAt: ${date}\nupdatedAt: ${date}\n---\n\n这里写章节正文。\n`;
+        }
+
+        return `---\ntitle: "小说标题"\nseriesSlug: "novel-slug"\nauthor: "Station Cat"\ndescription: "一句较完整的作品介绍，用于 SEO、书架页和分享卡片。"\nsubtitle: "可选副标题"\ntagline: "更短的一句话钩子，显示在作品页和卡片上。"\nstatus: "planned"\nlanguage: "zh-Hant"\nupdateSchedule: "每周二 / 周五更新，或先写不定期。"\ntags:\n  - "Long novel"\n  - "Serial fiction"\ncoverImage: ""\ncoverLabel: "封面短标题"\ncoverAlt: "小说封面描述"\nfeatured: false\npriceMode: "free"\nfreeChapters: 3\nlatestChapterSlug: ""\nlatestChapterNumber: 0\ntotalPlannedChapters: 0\navailabilityNote: "当前阶段先开放免费阅读，后续再接入打赏和付费解锁。"\npublishedAt: ${date}\nupdatedAt: ${date}\n---\n\n这里写作品简介正文。\n`;
+      };
+
+      const renderSerialPreview = ({ kind, frontmatter, path, body }) => {
+        elements.serial.preview.innerHTML = '';
+        elements.serial.preview.dataset.tone = 'success';
+
+        const summary = document.createElement('div');
+        summary.className = 'admin-import-summary';
+
+        const title = document.createElement('h3');
+        title.textContent = frontmatter.title || serialKindLabel(kind);
+
+        const meta = document.createElement('p');
+        meta.textContent = kind === 'chapter'
+          ? `${frontmatter.seriesSlug || 'no seriesSlug'} · 第 ${frontmatter.chapterNumber || '?'} 章 · ${frontmatter.status || 'draft'} · ${frontmatter.access || 'free'}`
+          : `${frontmatter.seriesSlug || 'no seriesSlug'} · ${frontmatter.status || 'planned'} · ${frontmatter.language || 'zh-Hant'} · ${frontmatter.priceMode || 'free'}`;
+
+        const targetPath = document.createElement('code');
+        targetPath.textContent = path;
+
+        const bodyInfo = document.createElement('p');
+        bodyInfo.textContent = `正文长度约 ${body.length} 个字符。`;
+
+        summary.append(title, meta, targetPath, bodyInfo);
+        elements.serial.preview.append(summary);
+      };
+
+      const parseSerialImport = ({ sync = true } = {}) => {
+        const fields = elements.serial;
+        const markdown = fields.markdown.value.replace(/\r\n/g, '\n').trim();
+        if (!markdown) {
+          throw new Error('请先粘贴小说或章节 Markdown。');
+        }
+
+        if (!markdown.startsWith('---')) {
+          throw new Error('Markdown 需要包含 YAML frontmatter，并以 --- 开头。');
+        }
+
+        const { frontmatter, body } = parseMarkdown(markdown);
+        if (!Object.keys(frontmatter).length) {
+          throw new Error('没有解析到 frontmatter，请检查开头和结尾的 ---。');
+        }
+
+        const kind = inferSerialKind(frontmatter, fields.kind.value);
+        const seriesSlug = toSlug(frontmatter.seriesSlug || fields.seriesSlug.value, 'novel-slug');
+        const chapterNumber = Number(frontmatter.chapterNumber || fields.chapterNumber.value || 1);
+        const chapterSlug = toSlug(frontmatter.chapterSlug || fields.chapterSlug.value || frontmatter.title, 'chapter-slug');
+        const calculatedPath = serialPathFromParts({ kind, seriesSlug, chapterNumber, chapterSlug });
+        const expectedFolder = kind === 'chapter' ? repo.folders.serialChapters : repo.folders.serials;
+        const currentPath = fields.path.value.trim();
+        const path = currentPath && currentPath.startsWith(`${expectedFolder}/`) ? currentPath : calculatedPath;
+
+        if (sync) {
+          fields.kind.value = kind;
+          fields.seriesSlug.value = seriesSlug;
+          fields.chapterNumber.value = kind === 'chapter' ? String(chapterNumber) : '';
+          fields.chapterSlug.value = kind === 'chapter' ? chapterSlug : '';
+          fields.path.value = path;
+        }
+
+        const missing = kind === 'chapter'
+          ? ['seriesSlug', 'chapterNumber', 'chapterSlug', 'title', 'excerpt'].filter((key) => frontmatter[key] === undefined || frontmatter[key] === '')
+          : ['title', 'seriesSlug', 'description', 'tagline', 'publishedAt'].filter((key) => frontmatter[key] === undefined || frontmatter[key] === '');
+
+        if (missing.length) {
+          throw new Error(`${serialKindLabel(kind)} 缺少必要字段：${missing.join(', ')}。`);
+        }
+
+        if (!path.endsWith('.md')) {
+          throw new Error('目标路径必须以 .md 结尾。');
+        }
+
+        if (!path.startsWith(`${expectedFolder}/`)) {
+          throw new Error(`${serialKindLabel(kind)} 应保存到 ${expectedFolder}/。`);
+        }
+
+        const result = {
+          kind,
+          frontmatter,
+          body,
+          path,
+          markdown: `${markdown}\n`,
+          seriesSlug,
+          chapterNumber,
+          chapterSlug
+        };
+        renderSerialPreview(result);
+        return result;
+      };
 
     const validateXPostUrl = (input) => {
       const value = input.trim();
@@ -559,9 +772,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       setStatus('正在撰寫新 Devlog。');
     };
 
-    const resetXWorkForm = () => {
-      state.xworks = { sha: '', path: '', slugTouched: false };
-      const fields = elements.work;
+      const resetXWorkForm = () => {
+        state.xworks = { sha: '', path: '', slugTouched: false };
+        const fields = elements.work;
       fields.slug.value = '';
       fields.title.value = '';
       fields.xUrl.value = '';
@@ -577,8 +790,22 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       fields.preview.textContent = '请粘贴一条 X 原帖链接。';
       fields.preview.dataset.tone = '';
       setInlineStatus('xworks', '');
-      setStatus('正在撰寫新 X Work。');
-    };
+        setStatus('正在撰寫新 X Work。');
+      };
+
+      const resetSerialImportForm = (kind = elements.serial.kind.value || 'series') => {
+        state.serials = { sha: '', path: '', kind };
+        const fields = elements.serial;
+        fields.kind.value = kind;
+        fields.path.value = '';
+        fields.seriesSlug.value = '';
+        fields.chapterNumber.value = '';
+        fields.chapterSlug.value = '';
+        fields.markdown.value = serialTemplate(kind);
+        setInlineStatus('serials', '');
+        parseSerialImport();
+        setStatus(`正在导入新的${serialKindLabel(kind)}。`);
+      };
 
     const fillDevlogForm = ({ path, sha, markdown }) => {
       const { frontmatter, body } = parseMarkdown(markdown);
@@ -596,9 +823,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       setStatus(`已載入 Devlog：${fields.slug.value}。`, 'success');
     };
 
-    const fillXWorkForm = ({ path, sha, markdown }) => {
-      const { frontmatter, body } = parseMarkdown(markdown);
-      const fields = elements.work;
+      const fillXWorkForm = ({ path, sha, markdown }) => {
+        const { frontmatter, body } = parseMarkdown(markdown);
+        const fields = elements.work;
       state.xworks = { sha, path, slugTouched: true };
       fields.slug.value = path.split('/').pop().replace(/\.md$/i, '');
       fields.title.value = frontmatter.title || '';
@@ -612,26 +839,54 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       fields.sortOrder.value = String(frontmatter.sortOrder ?? 100);
       fields.publishedAt.value = toDatetimeLocal(frontmatter.publishedAt);
       fields.body.value = body;
-      renderXPreview();
-      setStatus(`已載入 X Work：${fields.slug.value}。`, 'success');
-    };
+        renderXPreview();
+        setStatus(`已載入 X Work：${fields.slug.value}。`, 'success');
+      };
 
-    const setActiveContentType = (contentType) => {
-      activeContentType = contentType;
-      const isDevlog = contentType === 'devlog';
-      elements.tabs.forEach((button) => {
-        const active = button.dataset.adminTab === contentType;
-        button.classList.toggle('is-active', active);
-        button.setAttribute('aria-selected', String(active));
-      });
-      elements.devlogForm.hidden = !isDevlog;
-      elements.xworksForm.hidden = isDevlog;
-      elements.devlogListPanel.hidden = !isDevlog;
-      elements.xworksListPanel.hidden = isDevlog;
-      elements.load.textContent = isDevlog ? '读取 Devlog' : '读取 X Works';
-      elements.newItem.textContent = isDevlog ? '新 Devlog' : '新 X Work';
-      setStatus(isDevlog ? '已切換到 Devlog 管理。' : '已切換到 X Works 管理。');
-    };
+      const fillSerialImportForm = ({ path, sha, markdown }) => {
+        const fields = elements.serial;
+        fields.markdown.value = markdown.trim();
+        const parsed = parseSerialImport();
+        fields.path.value = path;
+        state.serials = { sha, path, kind: parsed.kind };
+        renderSerialPreview({ ...parsed, path });
+        setStatus(`已载入${serialKindLabel(parsed.kind)}：${path.split('/').pop()}。`, 'success');
+      };
+
+      const setActiveContentType = (contentType) => {
+        activeContentType = contentType;
+        const labels = {
+          devlog: {
+            load: '读取 Devlog',
+            newItem: '新 Devlog',
+            status: '已切換到 Devlog 管理。'
+          },
+          xworks: {
+            load: '读取 X Works',
+            newItem: '新 X Work',
+            status: '已切換到 X Works 管理。'
+          },
+          serials: {
+            load: '读取连载小说',
+            newItem: '新小说 Markdown',
+            status: '已切換到连载小说管理。'
+          }
+        };
+        elements.tabs.forEach((button) => {
+          const active = button.dataset.adminTab === contentType;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-selected', String(active));
+        });
+        elements.devlogForm.hidden = contentType !== 'devlog';
+        elements.xworksForm.hidden = contentType !== 'xworks';
+        elements.serialsForm.hidden = contentType !== 'serials';
+        elements.devlogListPanel.hidden = contentType !== 'devlog';
+        elements.xworksListPanel.hidden = contentType !== 'xworks';
+        elements.serialsListPanel.hidden = contentType !== 'serials';
+        elements.load.textContent = labels[contentType].load;
+        elements.newItem.textContent = labels[contentType].newItem;
+        setStatus(labels[contentType].status);
+      };
 
     const renderFileButton = ({ file, target, onOpen, meta }) => {
       const button = document.createElement('button');
@@ -650,9 +905,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       target.append(button);
     };
 
-    const renderXWorkListItem = ({ file, entry, markdown }) => {
-      const { frontmatter } = parseMarkdown(markdown);
-      const slug = file.name.replace(/\.md$/, '');
+      const renderXWorkListItem = ({ file, entry, markdown }) => {
+        const { frontmatter } = parseMarkdown(markdown);
+        const slug = file.name.replace(/\.md$/, '');
       const item = document.createElement('article');
       item.className = 'admin-work-row';
 
@@ -709,9 +964,33 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       });
 
       actions.append(edit, preview, remove);
-      item.append(main, actions);
-      elements.xworksList.append(item);
-    };
+        item.append(main, actions);
+        elements.xworksList.append(item);
+      };
+
+      const renderSerialListItem = ({ file, entry, markdown, kind, target }) => {
+        const { frontmatter } = parseMarkdown(markdown);
+        const meta = kind === 'chapter'
+          ? `${frontmatter.seriesSlug || 'no seriesSlug'} · 第 ${frontmatter.chapterNumber || '?'} 章 · ${frontmatter.status || 'draft'}`
+          : `${frontmatter.seriesSlug || file.name.replace(/\.md$/, '')} · ${frontmatter.status || 'planned'}`;
+
+        renderFileButton({
+          file: {
+            ...file,
+            name: frontmatter.title ? `${frontmatter.title}.md` : file.name
+          },
+          target,
+          meta,
+          onOpen: () => {
+            fillSerialImportForm({
+              path: file.path,
+              sha: entry.sha,
+              markdown
+            });
+            elements.serialsForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      };
 
     const loadDevlogPosts = async () => {
       setStatus('正在讀取 Devlog 列表...');
@@ -751,10 +1030,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       setStatus(`已讀取 ${count} 個 Devlog 檔案。`, 'success');
     };
 
-    const loadXWorks = async () => {
-      setStatus('正在讀取 X Works 列表...');
-      const files = await readContentFolder(repo.folders.xworks);
-      elements.xworksList.innerHTML = '';
+      const loadXWorks = async () => {
+        setStatus('正在讀取 X Works 列表...');
+        const files = await readContentFolder(repo.folders.xworks);
+        elements.xworksList.innerHTML = '';
 
       const markdownFiles = files.filter((entry) => entry.name.endsWith('.md')).sort((a, b) => b.name.localeCompare(a.name));
       if (!markdownFiles.length) {
@@ -775,8 +1054,53 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         });
       }
 
-      setStatus(`已讀取 ${markdownFiles.length} 個 X Works 檔案。`, 'success');
-    };
+        setStatus(`已讀取 ${markdownFiles.length} 個 X Works 檔案。`, 'success');
+      };
+
+      const loadSerials = async () => {
+        setStatus('正在读取连载小说列表...');
+        const [seriesFiles, chapterFiles] = await Promise.all([
+          readContentFolder(repo.folders.serials),
+          readContentFolder(repo.folders.serialChapters)
+        ]);
+        elements.serialSeriesList.innerHTML = '';
+        elements.serialChaptersList.innerHTML = '';
+
+        const markdownSeries = seriesFiles.filter((entry) => entry.name.endsWith('.md')).sort((a, b) => a.name.localeCompare(b.name));
+        const markdownChapters = chapterFiles.filter((entry) => entry.name.endsWith('.md')).sort((a, b) => a.name.localeCompare(b.name));
+
+        if (!markdownSeries.length) {
+          renderEmptyList(elements.serialSeriesList, `远端还没有 ${repo.folders.serials} Markdown 文件。保存一本小说资料后会自动创建。`);
+        }
+
+        if (!markdownChapters.length) {
+          renderEmptyList(elements.serialChaptersList, `远端还没有 ${repo.folders.serialChapters} Markdown 文件。保存一章正文后会自动创建。`);
+        }
+
+        for (const file of markdownSeries) {
+          const entry = await githubFetch(apiUrl(file.path));
+          renderSerialListItem({
+            file,
+            entry,
+            markdown: fromBase64(entry.content),
+            kind: 'series',
+            target: elements.serialSeriesList
+          });
+        }
+
+        for (const file of markdownChapters) {
+          const entry = await githubFetch(apiUrl(file.path));
+          renderSerialListItem({
+            file,
+            entry,
+            markdown: fromBase64(entry.content),
+            kind: 'chapter',
+            target: elements.serialChaptersList
+          });
+        }
+
+        setStatus(`已读取 ${markdownSeries.length} 本小说资料、${markdownChapters.length} 个章节文件。`, 'success');
+      };
 
     const saveDevlogPost = async () => {
       const fields = elements.devlog;
@@ -810,9 +1134,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       setStatus('Devlog 已保存。Cloudflare Workers 會在 GitHub 更新後自動部署。', 'success');
     };
 
-    const saveXWork = async () => {
-      const fields = elements.work;
-      const slug = fields.slug.value.trim() || `${today()}-${toSlug(fields.title.value, 'x-work')}`;
+      const saveXWork = async () => {
+        const fields = elements.work;
+        const slug = fields.slug.value.trim() || `${today()}-${toSlug(fields.title.value, 'x-work')}`;
       fields.slug.value = slug;
       const path = `${repo.folders.xworks}/${slug}.md`;
       const body = {
@@ -836,9 +1160,39 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       state.xworks = { sha: result.content.sha, path, slugTouched: true };
       setStatus('X Work 已保存为 published，并已加入首页精选。Cloudflare Workers 自动部署完成后会出现在首页 Latest from X。', 'success');
-      await loadXWorks();
-      setStatus('X Work 已保存为 published，并已加入首页精选。Cloudflare Workers 自动部署完成后会出现在首页 Latest from X。', 'success');
-    };
+        await loadXWorks();
+        setStatus('X Work 已保存为 published，并已加入首页精选。Cloudflare Workers 自动部署完成后会出现在首页 Latest from X。', 'success');
+      };
+
+      const saveSerialMarkdown = async () => {
+        const parsed = parseSerialImport({ sync: false });
+        const path = parsed.path;
+        elements.serial.path.value = path;
+        const title = parsed.frontmatter.title || path.split('/').pop().replace(/\.md$/i, '');
+        const body = {
+          message: `${state.serials.sha && state.serials.path === path ? 'Update' : 'Import'} ${parsed.kind === 'chapter' ? 'serial chapter' : 'serial'}: ${title}`,
+          content: toBase64(parsed.markdown),
+          branch: repo.branch
+        };
+
+        if (state.serials.sha && state.serials.path === path) {
+          body.sha = state.serials.sha;
+        } else {
+          const existing = await githubFetch(apiUrl(path)).catch(() => null);
+          if (existing?.sha) body.sha = existing.sha;
+        }
+
+        setStatus(`正在保存${serialKindLabel(parsed.kind)}到 GitHub...`);
+        const result = await githubFetch(contentUrl(path), {
+          method: 'PUT',
+          body: JSON.stringify(body)
+        });
+
+        state.serials = { sha: result.content.sha, path, kind: parsed.kind };
+        setStatus(`${serialKindLabel(parsed.kind)}已保存。Cloudflare Workers 會在 GitHub 更新後自動部署。`, 'success');
+        await loadSerials();
+        setStatus(`${serialKindLabel(parsed.kind)}已保存。Cloudflare Workers 會在 GitHub 更新後自動部署。`, 'success');
+      };
 
     const deleteXWorkFile = async (path, sha, slug) => {
       if (!window.confirm(`確定刪除 ${slug}？這會從 GitHub 移除對應 Markdown 檔案。`)) {
@@ -930,15 +1284,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       button.addEventListener('click', () => setActiveContentType(button.dataset.adminTab));
     });
 
-    elements.load.addEventListener('click', () => {
-      const action = activeContentType === 'devlog' ? loadDevlogPosts : loadXWorks;
-      action().catch((error) => setStatus(error.message, 'error'));
-    });
+      elements.load.addEventListener('click', () => {
+        const actions = {
+          devlog: loadDevlogPosts,
+          xworks: loadXWorks,
+          serials: loadSerials
+        };
+        const action = actions[activeContentType];
+        action().catch((error) => setStatus(error.message, 'error'));
+      });
 
-    elements.newItem.addEventListener('click', () => {
-      if (activeContentType === 'devlog') resetDevlogForm();
-      else resetXWorkForm();
-    });
+      elements.newItem.addEventListener('click', () => {
+        if (activeContentType === 'devlog') resetDevlogForm();
+        else if (activeContentType === 'xworks') resetXWorkForm();
+        else resetSerialImportForm();
+      });
 
     elements.devlog.title.addEventListener('input', () => {
       if (!state.devlog.sha && !state.devlog.slugTouched) {
@@ -962,9 +1322,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     elements.work.xUrl.addEventListener('input', renderXPreview);
     elements.work.previewButton.addEventListener('click', renderXPreview);
-    elements.work.deleteButton.addEventListener('click', () => {
-      deleteXWork().catch((error) => setStatus(error.message, 'error'));
-    });
+      elements.work.deleteButton.addEventListener('click', () => {
+        deleteXWork().catch((error) => setStatus(error.message, 'error'));
+      });
+
+      elements.serial.kind.addEventListener('change', () => {
+        if (!state.serials.sha) {
+          resetSerialImportForm(elements.serial.kind.value);
+        }
+      });
+
+      elements.serial.parseButton.addEventListener('click', () => {
+        try {
+          parseSerialImport();
+          setInlineStatus('serials', 'Markdown 解析通过，可以保存。', 'success');
+        } catch (error) {
+          elements.serial.preview.textContent = error.message;
+          elements.serial.preview.dataset.tone = 'error';
+          setInlineStatus('serials', error.message, 'error');
+        }
+      });
 
     elements.devlogForm.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -979,9 +1356,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .finally(() => setSaving('devlog', false));
     });
 
-    elements.xworksForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      setInlineStatus('xworks', '正在保存 X Work 到 GitHub...', 'neutral');
+      elements.xworksForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        setInlineStatus('xworks', '正在保存 X Work 到 GitHub...', 'neutral');
       setSaving('xworks', true);
       saveXWork()
         .then(() => setInlineStatus('xworks', `X Work 已保存。${new Date().toLocaleTimeString()}`, 'success'))
@@ -989,8 +1366,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           setStatus(error.message, 'error');
           setInlineStatus('xworks', error.message, 'error');
         })
-        .finally(() => setSaving('xworks', false));
-    });
+          .finally(() => setSaving('xworks', false));
+      });
+
+      elements.serialsForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        setInlineStatus('serials', '正在保存小说 Markdown 到 GitHub...', 'neutral');
+        setSaving('serials', true);
+        saveSerialMarkdown()
+          .then(() => setInlineStatus('serials', `小说 Markdown 已保存。${new Date().toLocaleTimeString()}`, 'success'))
+          .catch((error) => {
+            setStatus(error.message, 'error');
+            elements.serial.preview.textContent = error.message;
+            elements.serial.preview.dataset.tone = 'error';
+            setInlineStatus('serials', error.message, 'error');
+          })
+          .finally(() => setSaving('serials', false));
+      });
 
     elements.devlogForm.addEventListener(
       'invalid',
@@ -1000,16 +1392,25 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       true
     );
 
-    elements.xworksForm.addEventListener(
-      'invalid',
-      (event) => {
+      elements.xworksForm.addEventListener(
+        'invalid',
+        (event) => {
         setInlineStatus('xworks', `请先填写：${fieldLabel(event.target)}。`, 'error');
       },
-      true
-    );
+        true
+      );
 
-    resetDevlogForm();
-    resetXWorkForm();
-    setActiveContentType('devlog');
+      elements.serialsForm.addEventListener(
+        'invalid',
+        (event) => {
+          setInlineStatus('serials', `请先填写：${fieldLabel(event.target)}。`, 'error');
+        },
+        true
+      );
+
+      resetDevlogForm();
+      resetXWorkForm();
+      resetSerialImportForm('series');
+      setActiveContentType('devlog');
   </script>
 </BaseLayout>

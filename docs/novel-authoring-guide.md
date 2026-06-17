@@ -1,6 +1,6 @@
 # Station Cat 小说连载发布指南
 
-阶段二先采用 Git 内容流：小说和章节都用 Markdown 文件管理，网站构建时自动生成书架、作品页和章节页。
+当前采用 Git 内容流：小说和章节都用 Markdown 文件管理，网站构建时自动生成书架、作品页和章节页。阶段三开始，`/admin/` 后台可以直接导入完整 Markdown，不必每次手动进入仓库改文件。
 
 ## 目录
 
@@ -29,6 +29,18 @@ src/content/serialChapters/deng-hai-liang-zhe-002-city-after-midnight.md
 
 ## 新增一本小说
 
+### 后台导入
+
+1. 打开 `/admin/`。
+2. 输入只授权当前 repo 的 GitHub fine-grained token，权限需要 Contents: Read and write。
+3. 切到 `連載小說`。
+4. 点击 `新小说 Markdown`。
+5. 选择 `小说资料`，粘贴完整 Markdown。
+6. 点击 `解析 Markdown`，确认目标路径是 `src/content/serials/{seriesSlug}.md`。
+7. 点击 `保存小说 Markdown`。
+
+### 手动文件
+
 1. 复制 [serial.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/templates/serial.md:1)。
 2. 放到 `src/content/serials/{seriesSlug}.md`。
 3. 填好 `title`、`seriesSlug`、`author`、`description`、`tagline`、`status`。
@@ -36,6 +48,16 @@ src/content/serialChapters/deng-hai-liang-zhe-002-city-after-midnight.md
 5. `latestChapterSlug` 和 `latestChapterNumber` 跟最新已发布章节保持一致。
 
 ## 新增一章
+
+### 后台导入
+
+1. 打开 `/admin/` 并切到 `連載小說`。
+2. 点击 `新小说 Markdown`。
+3. 选择 `章节正文`，粘贴完整章节 Markdown。
+4. 点击 `解析 Markdown`，确认目标路径是 `src/content/serialChapters/{seriesSlug}-{number}-{chapterSlug}.md`。
+5. 点击 `保存小说 Markdown`。
+
+### 手动文件
 
 1. 复制 [serial-chapter.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/templates/serial-chapter.md:1)。
 2. 放到 `src/content/serialChapters/{seriesSlug}-{number}-{chapterSlug}.md`。
@@ -70,7 +92,7 @@ src/content/serialChapters/deng-hai-liang-zhe-002-city-after-midnight.md
 
 这些字段会在目录和章节页展示，为后续 NOWPayments 和账户系统预留位置。
 
-## 阶段二发布检查
+## 发布检查
 
 每次新增或修改小说内容后，至少跑：
 

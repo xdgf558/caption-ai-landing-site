@@ -91,6 +91,23 @@
 
 先做路线 A，不要太早上自建 CMS。
 
+### 阶段 3 本轮执行范围
+
+- 在 `/admin/` 增加 `連載小說` 管理入口
+- 支持直接粘贴完整 Markdown
+- 自动识别小说资料和章节正文
+- 自动推导默认保存路径
+- 允许读取远端 `src/content/serials` 和 `src/content/serialChapters` 已有文件继续编辑
+- 保存时通过 GitHub Contents API 写回 `main`，继续沿用 GitHub 到 Cloudflare 的自动部署
+
+### 暂不包含
+
+- 读者账户
+- D1 / R2 内容后台
+- 富文本编辑器
+- NOWPayments 权限发放
+- 章节草稿预览站
+
 ## 阶段 4：读者账户与书库
 
 ### 目标

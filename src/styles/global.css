@@ -2113,7 +2113,7 @@ ol {
   border-radius: 14px;
   display: grid;
   gap: 6px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 5px;
 }
 
@@ -2220,6 +2220,11 @@ ol {
 .admin-list-panel {
   display: grid;
   gap: 10px;
+}
+
+.admin-list-split {
+  display: grid;
+  gap: 14px;
 }
 
 .admin-post-button {
@@ -2342,6 +2347,35 @@ button.button {
 .admin-preview[data-tone="error"] {
   border-color: rgba(248, 113, 113, 0.38);
   color: #fecaca;
+}
+
+.admin-preview[data-tone="success"] {
+  border-color: rgba(74, 222, 128, 0.28);
+}
+
+.admin-import-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-import-summary h3,
+.admin-import-summary p {
+  margin: 0;
+}
+
+.admin-import-summary h3 {
+  color: #f8fafc;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.admin-import-summary code {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #7dd3fc;
+  overflow-wrap: anywhere;
+  padding: 8px 10px;
 }
 
 @media (max-width: 760px) {
