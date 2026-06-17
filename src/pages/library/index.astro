@@ -12,7 +12,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <p class="station-kicker">Reader Library</p>
     <h1>我的書庫</h1>
     <p>用 Email 登入後，之後在不同裝置上也可以找回已解鎖的小說、章節和支持者內容。</p>
-    <p class="fine-print">目前是 4B：已接上讀者權限和已解鎖內容列表。NOWPayments 自動發放會在下一階段接入同一套權限表。</p>
+    <p class="fine-print">閱讀點數已接入 NOWPayments 充值和 D1 餘額流水。小額單章消費會先從站內點數扣除，再寫入同一套閱讀權限表。</p>
   </section>
 
   <section class="station-section reader-library-grid">
@@ -37,6 +37,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p id="reader-account-email" class="reader-account-email"></p>
       <button class="button button-secondary" id="reader-logout" type="button">登出</button>
     </div>
+
+    <div class="reader-panel reader-credits-panel" id="reader-credits-panel" hidden>
+      <div>
+        <p class="station-kicker">Reading Credits</p>
+        <h2>閱讀點數</h2>
+      </div>
+      <p class="reader-credit-balance" id="reader-credit-balance">0 SC Credits</p>
+      <p class="fine-print" id="reader-credit-cost">目前單章付費內容會扣除 1 點。</p>
+      <div class="reader-credit-packs" id="reader-credit-packs"></div>
+      <div class="reader-status" id="reader-credit-status" role="status" aria-live="polite"></div>
+    </div>
   </section>
 
   <section class="station-section reader-library-content" id="reader-library-content" hidden>
@@ -60,6 +71,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const accountPanel = document.getElementById('reader-account-panel');
     const accountEmail = document.getElementById('reader-account-email');
     const logoutButton = document.getElementById('reader-logout');
+    const creditsPanel = document.getElementById('reader-credits-panel');
+    const creditBalance = document.getElementById('reader-credit-balance');
+    const creditCost = document.getElementById('reader-credit-cost');
+    const creditPacks = document.getElementById('reader-credit-packs');
+    const creditStatus = document.getElementById('reader-credit-status');
     const libraryContent = document.getElementById('reader-library-content');
     const libraryList = document.getElementById('reader-library-list');
     const libraryEmpty = document.getElementById('reader-library-empty');
@@ -73,6 +89,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const signedIn = Boolean(session?.authenticated);
       form.hidden = signedIn;
       accountPanel.hidden = !signedIn;
+      creditsPanel.hidden = !signedIn;
       libraryContent.hidden = !signedIn;
       accountEmail.textContent = signedIn ? session.account.email : '';
     };
@@ -136,12 +153,43 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       renderLibrary(data.entitlements || []);
     };
 
+    const setCreditStatus = (message, tone = 'neutral') => {
+      creditStatus.textContent = message;
+      creditStatus.dataset.tone = tone;
+    };
+
+    const renderCreditPacks = (packs) => {
+      creditPacks.innerHTML = '';
+      packs.forEach((pack) => {
+        const button = document.createElement('button');
+        button.className = 'button button-secondary reader-credit-pack-button';
+        button.type = 'button';
+        button.dataset.credits = pack.credits;
+        button.textContent = `${pack.label || `${pack.credits} SC Credits`} · ${pack.priceAmount} ${pack.priceCurrency}`;
+        creditPacks.append(button);
+      });
+    };
+
+    const loadCredits = async () => {
+      const response = await fetch('/api/readers/credits');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取閱讀點數失敗。');
+      if (!data.authenticated) return;
+
+      const unitLabel = data.account?.unitLabel || 'SC Credits';
+      creditBalance.textContent = `${data.account?.balanceCredits || 0} ${unitLabel}`;
+      creditCost.textContent = `目前單章付費內容會扣除 ${data.chapterCostCredits || 1} 點。`;
+      renderCreditPacks(data.packs || []);
+    };
+
     const loadSession = async () => {
       const response = await fetch('/api/readers/session');
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.message || '讀取登入狀態失敗。');
       setSignedIn(data);
-      if (data.authenticated) await loadLibrary();
+      if (data.authenticated) {
+        await Promise.all([loadLibrary(), loadCredits()]);
+      }
     };
 
     const query = new URLSearchParams(window.location.search);
@@ -155,6 +203,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setStatus('登入成功，正在載入書庫。', 'success');
     } else if (query.get('login') === 'invalid') {
       setStatus('登入連結已失效，請重新寄送。', 'error');
+    }
+
+    if (query.get('payment') === 'success') {
+      setCreditStatus('支付已返回網站。NOWPayments 確認後，閱讀點數會自動入帳；如果還沒看到，稍後刷新即可。', 'success');
+    } else if (query.get('payment') === 'cancelled') {
+      setCreditStatus('支付已取消，閱讀點數沒有變動。', 'error');
     }
 
     form.addEventListener('submit', async (event) => {
@@ -199,9 +253,45 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         await fetch('/api/readers/logout', { method: 'POST' });
         setSignedIn({ authenticated: false });
         renderLibrary([]);
+        renderCreditPacks([]);
+        creditBalance.textContent = '0 SC Credits';
         setStatus('已登出。', 'success');
       } finally {
         logoutButton.disabled = false;
+      }
+    });
+
+    creditPacks.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-credits]');
+      if (!button) return;
+
+      const buttons = Array.from(creditPacks.querySelectorAll('button'));
+      buttons.forEach((item) => {
+        item.disabled = true;
+      });
+      setCreditStatus('正在建立閱讀點數充值訂單...', 'neutral');
+
+      try {
+        const response = await fetch('/api/novels/payments/checkout', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            orderType: 'credit-pack',
+            credits: Number.parseInt(button.dataset.credits || '0', 10),
+            locale: 'zh-Hant',
+            returnPath: '/library/'
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '充值訂單建立失敗。');
+        if (!data.paymentUrl) throw new Error('NOWPayments 支付連結尚未生成。');
+        setCreditStatus('正在打開 NOWPayments...', 'success');
+        window.location.href = data.paymentUrl;
+      } catch (error) {
+        setCreditStatus(error.message || '充值訂單建立失敗。', 'error');
+        buttons.forEach((item) => {
+          item.disabled = false;
+        });
       }
     });
 

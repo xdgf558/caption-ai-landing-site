@@ -76,6 +76,12 @@ const accessGateCopy = {
     bundle: 'Unlock',
     bundleUnit: ' chapters',
     bundleOff: 'off',
+    creditUnlock: 'Use reading credits',
+    creditTopUp: 'Top up credits',
+    creditLoading: 'Checking reading credits...',
+    creditReady: 'Reading credits are ready.',
+    creditUnlocked: 'Unlocked with reading credits. Access has been saved to your library.',
+    creditInsufficient: 'Not enough reading credits. Top up in the library first.',
     creating: 'Creating checkout...',
     opening: 'Opening NOWPayments...',
     signInRequired: 'Please sign in before unlocking paid reading.',
@@ -94,6 +100,12 @@ const accessGateCopy = {
     bundle: '解放',
     bundleUnit: '章',
     bundleOff: 'OFF',
+    creditUnlock: '読書ポイントで解放',
+    creditTopUp: 'ポイントを追加',
+    creditLoading: '読書ポイントを確認しています...',
+    creditReady: '読書ポイントを確認しました。',
+    creditUnlocked: '読書ポイントで解放しました。本棚に権限を保存しました。',
+    creditInsufficient: '読書ポイントが足りません。先に本棚で追加してください。',
     creating: 'チェックアウトを作成しています...',
     opening: 'NOWPayments を開いています...',
     signInRequired: '有料閲覧を解放する前にログインしてください。',
@@ -112,6 +124,12 @@ const accessGateCopy = {
     bundle: '解鎖',
     bundleUnit: ' 章',
     bundleOff: '折扣',
+    creditUnlock: '用閱讀點解鎖',
+    creditTopUp: '充值閱讀點',
+    creditLoading: '正在確認閱讀點數...',
+    creditReady: '閱讀點數已就緒。',
+    creditUnlocked: '已用閱讀點解鎖，權限已保存到書庫。',
+    creditInsufficient: '閱讀點數不足，請先到書庫充值。',
     creating: '正在建立支付訂單...',
     opening: '正在打開 NOWPayments...',
     signInRequired: '請先登入，再解鎖付費閱讀。',
@@ -130,6 +148,12 @@ const accessGateCopy = {
     bundle: '解锁',
     bundleUnit: ' 章',
     bundleOff: '折扣',
+    creditUnlock: '用阅读点解锁',
+    creditTopUp: '充值阅读点',
+    creditLoading: '正在确认阅读点数...',
+    creditReady: '阅读点数已就绪。',
+    creditUnlocked: '已用阅读点解锁，权限已保存到书库。',
+    creditInsufficient: '阅读点数不足，请先到书库充值。',
     creating: '正在建立支付订单...',
     opening: '正在打开 NOWPayments...',
     signInRequired: '请先登录，再解锁付费阅读。',
@@ -180,8 +204,16 @@ const accessGateCopy = {
       <div class="reader-status" data-serial-access-status role="status" aria-live="polite">
         {accessGateCopy.checking}
       </div>
+      {unlockOrderType === 'chapter' && (
+        <div class="reader-status" data-serial-credit-status role="status" aria-live="polite"></div>
+      )}
       <div class="button-row">
         <a class="button button-primary" href="/library/">{accessGateCopy.signIn}</a>
+        {unlockOrderType === 'chapter' && (
+          <button class="button button-secondary" type="button" data-serial-credit-unlock>
+            {accessGateCopy.creditUnlock}
+          </button>
+        )}
         <button class="button button-secondary" type="button" data-serial-unlock data-order-type={unlockOrderType}>
           {accessGateCopy.unlock} {formattedUnlockAmount}
         </button>
@@ -197,6 +229,7 @@ const accessGateCopy = {
             {accessGateCopy.bundle} {option.chapterCount}{accessGateCopy.bundleUnit} · {option.formattedAmount} · {option.discountPercent}% {accessGateCopy.bundleOff}
           </button>
         ))}
+        {unlockOrderType === 'chapter' && <a class="button button-secondary" href="/library/">{accessGateCopy.creditTopUp}</a>}
         <a class="button button-secondary" href={seriesHref}>{copy.chapterBack}</a>
       </div>
     </section>
@@ -226,7 +259,9 @@ const accessGateCopy = {
   <script define:vars={{ accessGateCopy }}>
     const gate = document.querySelector('[data-serial-access-gate]');
     const status = gate?.querySelector('[data-serial-access-status]');
+    const creditStatus = gate?.querySelector('[data-serial-credit-status]');
     const unlockButtons = gate ? Array.from(gate.querySelectorAll('[data-serial-unlock]')) : [];
+    const creditUnlockButton = gate?.querySelector('[data-serial-credit-unlock]');
 
     const setGateStatus = (message, tone = 'neutral') => {
       if (!status) return;
@@ -234,10 +269,33 @@ const accessGateCopy = {
       status.dataset.tone = tone;
     };
 
+    const setCreditStatus = (message, tone = 'neutral') => {
+      if (!creditStatus) return;
+      creditStatus.textContent = message;
+      creditStatus.dataset.tone = tone;
+    };
+
     const setUnlockButtonsDisabled = (disabled) => {
       unlockButtons.forEach((button) => {
         button.disabled = disabled;
       });
+      if (creditUnlockButton) creditUnlockButton.disabled = disabled;
+    };
+
+    const loadCreditSummary = async () => {
+      if (!creditStatus) return;
+      setCreditStatus(accessGateCopy.creditLoading, 'neutral');
+      const response = await fetch('/api/readers/credits');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || accessGateCopy.failed);
+      if (!data.authenticated) {
+        setCreditStatus('', 'neutral');
+        return;
+      }
+      const unitLabel = data.account?.unitLabel || 'SC Credits';
+      const balance = data.account?.balanceCredits || 0;
+      const cost = data.chapterCostCredits || 1;
+      setCreditStatus(`${accessGateCopy.creditReady} ${balance} ${unitLabel} · ${cost} / chapter`, 'success');
     };
 
     const checkAccess = async () => {
@@ -253,12 +311,52 @@ const accessGateCopy = {
 
       if (data.allowed) {
         setGateStatus(accessGateCopy.allowed, 'success');
+        setUnlockButtonsDisabled(true);
+        setCreditStatus('', 'neutral');
       } else if (data.reason === 'sign_in_required') {
         setGateStatus(accessGateCopy.body, 'neutral');
+        setCreditStatus('', 'neutral');
       } else {
         setGateStatus(accessGateCopy.denied, 'error');
+        await loadCreditSummary();
       }
     };
+
+    if (creditUnlockButton) {
+      creditUnlockButton.addEventListener('click', async () => {
+        if (!gate) return;
+        setUnlockButtonsDisabled(true);
+        setCreditStatus(accessGateCopy.creditLoading, 'neutral');
+
+        try {
+          const response = await fetch('/api/novels/credits/unlock', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              seriesSlug: gate.dataset.seriesSlug,
+              chapterSlug: gate.dataset.chapterSlug,
+              access: gate.dataset.access
+            })
+          });
+          const data = await response.json();
+          if (!response.ok || !data.ok) {
+            if (data.code === 'SIGN_IN_REQUIRED') {
+              setGateStatus(accessGateCopy.signInRequired, 'error');
+              window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname)}`;
+              return;
+            }
+            if (data.code === 'INSUFFICIENT_CREDITS') throw new Error(accessGateCopy.creditInsufficient);
+            throw new Error(data.message || accessGateCopy.failed);
+          }
+
+          setGateStatus(accessGateCopy.allowed, 'success');
+          setCreditStatus(accessGateCopy.creditUnlocked, 'success');
+        } catch (error) {
+          setCreditStatus(error.message || accessGateCopy.failed, 'error');
+          setUnlockButtonsDisabled(false);
+        }
+      });
+    }
 
     unlockButtons.forEach((button) => {
       button.addEventListener('click', async () => {

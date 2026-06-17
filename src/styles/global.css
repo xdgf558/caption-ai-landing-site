@@ -4240,6 +4240,25 @@ body.station-paper-page {
   overflow-wrap: anywhere;
 }
 
+.reader-credit-balance {
+  color: #221b16;
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1;
+  margin: 0;
+}
+
+.reader-credit-packs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.reader-credit-pack-button {
+  min-height: 44px;
+}
+
 .station-paper-page .reader-panel,
 .station-paper-page .reader-empty-shelf,
 .station-paper-page .reader-library-card,
