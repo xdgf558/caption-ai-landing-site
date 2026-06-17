@@ -17,6 +17,7 @@ coverAlt: "小说封面描述"
 featured: false
 priceMode: "free"
 freeChapters: 3
+tipsEnabled: true
 tipAmounts:
   - 3
   - 5
@@ -26,6 +27,12 @@ chapterPriceAmount: 1.99
 chapterPriceCurrency: "USD"
 supporterPriceAmount: 4.99
 supporterPriceCurrency: "USD"
+bundlePurchasesEnabled: false
+chapterBundleDiscounts:
+  - chapters: 5
+    discountPercent: 10
+  - chapters: 10
+    discountPercent: 18
 latestChapterSlug: ""
 latestChapterNumber: 0
 totalPlannedChapters: 0

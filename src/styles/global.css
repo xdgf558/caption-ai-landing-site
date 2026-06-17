@@ -2104,6 +2104,53 @@ ol {
   width: auto;
 }
 
+.admin-pricing-panel {
+  background: rgba(15, 23, 42, 0.42);
+  border: 1px solid rgba(125, 211, 252, 0.2);
+  border-radius: 18px;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.admin-pricing-panel h2,
+.admin-pricing-panel h3,
+.admin-pricing-panel p {
+  margin: 0;
+}
+
+.admin-pricing-panel[hidden] {
+  display: none;
+}
+
+.admin-bundle-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-bundle-editor__heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.admin-bundle-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-bundle-row {
+  align-items: end;
+  background: rgba(5, 7, 10, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  padding: 12px;
+}
+
 .admin-status {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -2409,6 +2456,15 @@ button.button {
   }
 
   .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-bundle-editor__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-bundle-row {
     grid-template-columns: 1fr;
   }
 

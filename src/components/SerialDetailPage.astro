@@ -45,6 +45,7 @@ const coverText = serial.data.coverLabel ?? serial.data.title;
 const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
 const tipAmounts = serial.data.tipAmounts?.length ? serial.data.tipAmounts : [3, 5, 10];
 const tipCurrency = serial.data.tipCurrency || 'USD';
+const tipsEnabled = serial.data.tipsEnabled !== false;
 const formatPaymentAmount = (amount: number, currency: string) =>
   new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
 const supportCopy = {
@@ -168,28 +169,30 @@ const supportCopy = {
   </div>
 </section>
 
-<section
-  class="station-section serial-support-section"
-  data-serial-tip-panel
-  data-series-slug={serial.data.seriesSlug}
-  data-currency={tipCurrency}
-  data-locale={locale}
-  data-return-path={seriesHref}
->
-  <div class="station-section__heading">
-    <p class="station-kicker">{supportCopy.eyebrow}</p>
-    <h2>{supportCopy.title}</h2>
-    <p>{supportCopy.body}</p>
-  </div>
-  <div class="serial-tip-actions">
-    {tipAmounts.map((amount) => (
-      <button class="button button-secondary" type="button" data-tip-amount={amount}>
-        {supportCopy.button} {formatPaymentAmount(amount, tipCurrency)}
-      </button>
-    ))}
-  </div>
-  <div class="reader-status" data-serial-tip-status role="status" aria-live="polite"></div>
-</section>
+{tipsEnabled && (
+  <section
+    class="station-section serial-support-section"
+    data-serial-tip-panel
+    data-series-slug={serial.data.seriesSlug}
+    data-currency={tipCurrency}
+    data-locale={locale}
+    data-return-path={seriesHref}
+  >
+    <div class="station-section__heading">
+      <p class="station-kicker">{supportCopy.eyebrow}</p>
+      <h2>{supportCopy.title}</h2>
+      <p>{supportCopy.body}</p>
+    </div>
+    <div class="serial-tip-actions">
+      {tipAmounts.map((amount) => (
+        <button class="button button-secondary" type="button" data-tip-amount={amount}>
+          {supportCopy.button} {formatPaymentAmount(amount, tipCurrency)}
+        </button>
+      ))}
+    </div>
+    <div class="reader-status" data-serial-tip-status role="status" aria-live="polite"></div>
+  </section>
+)}
 
 <section class="station-section">
   <div class="station-section__heading">
@@ -199,54 +202,56 @@ const supportCopy = {
   <SerialChapterList chapters={chapterContent} copy={copy} basePath={basePath} seriesSlug={serial.data.seriesSlug} locale={locale} />
 </section>
 
-<script define:vars={{ supportCopy }}>
-  const tipPanel = document.querySelector('[data-serial-tip-panel]');
-  const tipStatus = tipPanel?.querySelector('[data-serial-tip-status]');
-  const tipButtons = tipPanel ? Array.from(tipPanel.querySelectorAll('[data-tip-amount]')) : [];
+{tipsEnabled && (
+  <script define:vars={{ supportCopy }}>
+    const tipPanel = document.querySelector('[data-serial-tip-panel]');
+    const tipStatus = tipPanel?.querySelector('[data-serial-tip-status]');
+    const tipButtons = tipPanel ? Array.from(tipPanel.querySelectorAll('[data-tip-amount]')) : [];
 
-  const setTipStatus = (message, tone = 'neutral') => {
-    if (!tipStatus) return;
-    tipStatus.textContent = message;
-    tipStatus.dataset.tone = tone;
-  };
+    const setTipStatus = (message, tone = 'neutral') => {
+      if (!tipStatus) return;
+      tipStatus.textContent = message;
+      tipStatus.dataset.tone = tone;
+    };
 
-  const setTipButtonsDisabled = (disabled) => {
+    const setTipButtonsDisabled = (disabled) => {
+      tipButtons.forEach((button) => {
+        button.disabled = disabled;
+      });
+    };
+
     tipButtons.forEach((button) => {
-      button.disabled = disabled;
-    });
-  };
+      button.addEventListener('click', async () => {
+        if (!tipPanel) return;
+        setTipButtonsDisabled(true);
+        setTipStatus(supportCopy.working, 'neutral');
 
-  tipButtons.forEach((button) => {
-    button.addEventListener('click', async () => {
-      if (!tipPanel) return;
-      setTipButtonsDisabled(true);
-      setTipStatus(supportCopy.working, 'neutral');
-
-      try {
-        const response = await fetch('/api/novels/payments/checkout', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            orderType: 'tip',
-            seriesSlug: tipPanel.dataset.seriesSlug,
-            amount: button.dataset.tipAmount,
-            priceCurrency: tipPanel.dataset.currency,
-            locale: tipPanel.dataset.locale,
-            returnPath: tipPanel.dataset.returnPath
-          })
-        });
-        const data = await response.json();
-        if (!response.ok || !data.ok) {
-          if (data.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(supportCopy.disabled);
-          throw new Error(data.message || supportCopy.failed);
+        try {
+          const response = await fetch('/api/novels/payments/checkout', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              orderType: 'tip',
+              seriesSlug: tipPanel.dataset.seriesSlug,
+              amount: button.dataset.tipAmount,
+              priceCurrency: tipPanel.dataset.currency,
+              locale: tipPanel.dataset.locale,
+              returnPath: tipPanel.dataset.returnPath
+            })
+          });
+          const data = await response.json();
+          if (!response.ok || !data.ok) {
+            if (data.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(supportCopy.disabled);
+            throw new Error(data.message || supportCopy.failed);
+          }
+          if (!data.paymentUrl) throw new Error(supportCopy.failed);
+          setTipStatus(supportCopy.ready, 'success');
+          window.location.href = data.paymentUrl;
+        } catch (error) {
+          setTipStatus(error.message || supportCopy.failed, 'error');
+          setTipButtonsDisabled(false);
         }
-        if (!data.paymentUrl) throw new Error(supportCopy.failed);
-        setTipStatus(supportCopy.ready, 'success');
-        window.location.href = data.paymentUrl;
-      } catch (error) {
-        setTipStatus(error.message || supportCopy.failed, 'error');
-        setTipButtonsDisabled(false);
-      }
+      });
     });
-  });
-</script>
+  </script>
+)}

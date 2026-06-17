@@ -156,6 +156,85 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           直接粘贴完整 Markdown。小说资料写入 <code>{'src/content/serials/{seriesSlug}.md'}</code>，章节正文写入 <code>{'src/content/serialChapters/{seriesSlug}-{number}-{chapterSlug}.md'}</code>。保存后 GitHub 会触发网站自动部署。
         </p>
 
+        <section class="admin-pricing-panel" id="serial-pricing-panel">
+          <div>
+            <p class="station-kicker">Pricing</p>
+            <h2>小说收费设置</h2>
+            <p class="fine-print">这里会直接更新小说资料 Markdown 的 frontmatter。章节是否锁定仍在章节 Markdown 的 <code>access</code> 字段里设置。</p>
+          </div>
+
+          <div class="admin-form-grid">
+            <label>
+              收费模式
+              <select id="serial-price-mode" name="priceMode">
+                <option value="free">免费阅读</option>
+                <option value="tip-optional">免费 + 打赏</option>
+                <option value="chapter-paid">单章购买</option>
+                <option value="volume-paid">分卷购买</option>
+                <option value="member">会员阅读</option>
+              </select>
+            </label>
+            <label>
+              免费章节数
+              <input id="serial-free-chapters" name="freeChapters" type="number" min="0" step="1" />
+            </label>
+            <label class="admin-checkbox">
+              <input id="serial-tips-enabled" name="tipsEnabled" type="checkbox" />
+              开启打赏
+            </label>
+            <label>
+              打赏金额
+              <input id="serial-tip-amounts" name="tipAmounts" placeholder="3, 5, 10" />
+            </label>
+            <label>
+              打赏币种
+              <select id="serial-tip-currency" name="tipCurrency">
+                <option value="USD">USD</option>
+              </select>
+            </label>
+            <label>
+              单章价格
+              <input id="serial-chapter-price-amount" name="chapterPriceAmount" type="number" min="0" step="0.01" />
+            </label>
+            <label>
+              单章币种
+              <select id="serial-chapter-price-currency" name="chapterPriceCurrency">
+                <option value="USD">USD</option>
+              </select>
+            </label>
+            <label>
+              支持者价格
+              <input id="serial-supporter-price-amount" name="supporterPriceAmount" type="number" min="0" step="0.01" />
+            </label>
+            <label>
+              支持者币种
+              <select id="serial-supporter-price-currency" name="supporterPriceCurrency">
+                <option value="USD">USD</option>
+              </select>
+            </label>
+            <label class="admin-checkbox">
+              <input id="serial-bundles-enabled" name="bundlePurchasesEnabled" type="checkbox" />
+              开启多章折扣
+            </label>
+          </div>
+
+          <div class="admin-bundle-editor">
+            <div class="admin-bundle-editor__heading">
+              <div>
+                <p class="station-kicker">Bundle Discount</p>
+                <h3>一次购买多章折扣</h3>
+              </div>
+              <button class="button button-secondary" id="serial-bundle-add" type="button">新增折扣</button>
+            </div>
+            <div class="admin-bundle-list" id="serial-bundle-list"></div>
+          </div>
+
+          <div class="button-row">
+            <button class="button button-secondary" id="serial-pricing-apply" type="button">套用收费设置到 Markdown</button>
+          </div>
+          <div class="admin-inline-status" id="serial-pricing-status" role="status" aria-live="polite" hidden></div>
+        </section>
+
         <label>
           Markdown
           <textarea id="serial-markdown" name="markdown" rows="24" required spellcheck="false" placeholder="请粘贴包含 frontmatter 的完整 Markdown。"></textarea>
@@ -282,7 +361,22 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         parseButton: document.getElementById('serial-parse-button'),
         preview: document.getElementById('serial-preview'),
         saveButton: document.getElementById('serial-save'),
-        saveStatus: document.getElementById('serial-save-status')
+        saveStatus: document.getElementById('serial-save-status'),
+        pricingPanel: document.getElementById('serial-pricing-panel'),
+        pricingStatus: document.getElementById('serial-pricing-status'),
+        priceMode: document.getElementById('serial-price-mode'),
+        freeChapters: document.getElementById('serial-free-chapters'),
+        tipsEnabled: document.getElementById('serial-tips-enabled'),
+        tipAmounts: document.getElementById('serial-tip-amounts'),
+        tipCurrency: document.getElementById('serial-tip-currency'),
+        chapterPriceAmount: document.getElementById('serial-chapter-price-amount'),
+        chapterPriceCurrency: document.getElementById('serial-chapter-price-currency'),
+        supporterPriceAmount: document.getElementById('serial-supporter-price-amount'),
+        supporterPriceCurrency: document.getElementById('serial-supporter-price-currency'),
+        bundlesEnabled: document.getElementById('serial-bundles-enabled'),
+        bundleList: document.getElementById('serial-bundle-list'),
+        bundleAddButton: document.getElementById('serial-bundle-add'),
+        pricingApplyButton: document.getElementById('serial-pricing-apply')
       },
       readerAccess: {
         email: document.getElementById('reader-access-email'),
@@ -469,10 +563,43 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       }
     };
 
-      const parseMarkdown = (markdown) => {
-        const match = markdown.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-        if (!match) {
-          return { frontmatter: {}, body: markdown };
+    const parseKeyValue = (line) => {
+      const separator = line.indexOf(':');
+      if (separator === -1) return null;
+      return {
+        key: line.slice(0, separator).trim(),
+        value: line.slice(separator + 1).trim()
+      };
+    };
+
+    const parseListBlock = (lines, index) => {
+      const items = [];
+
+      while (lines[index + 1]?.startsWith('  - ')) {
+        index += 1;
+        const itemText = lines[index].replace(/^  - /, '');
+        const firstPair = parseKeyValue(itemText);
+
+        if (firstPair) {
+          const item = { [firstPair.key]: parseScalar(firstPair.value) };
+          while (lines[index + 1]?.startsWith('    ')) {
+            index += 1;
+            const nestedPair = parseKeyValue(lines[index].trim());
+            if (nestedPair) item[nestedPair.key] = parseScalar(nestedPair.value);
+          }
+          items.push(item);
+        } else {
+          items.push(parseScalar(itemText));
+        }
+      }
+
+      return { items, index };
+    };
+
+    const parseMarkdown = (markdown) => {
+      const match = markdown.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+      if (!match) {
+        return { frontmatter: {}, body: markdown };
       }
 
       const frontmatter = {};
@@ -480,26 +607,111 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       for (let index = 0; index < lines.length; index += 1) {
         const line = lines[index];
-        const separator = line.indexOf(':');
-        if (separator === -1 || line.startsWith('  ')) continue;
+        if (line.startsWith('  ')) continue;
+        const pair = parseKeyValue(line);
+        if (!pair) continue;
 
-        const key = line.slice(0, separator).trim();
-        const value = line.slice(separator + 1).trim();
+        const { key, value } = pair;
 
         if (!value) {
-          const items = [];
-          while (lines[index + 1]?.startsWith('  - ')) {
-            index += 1;
-            items.push(parseScalar(lines[index].replace(/^  - /, '')));
-          }
+          const listBlock = parseListBlock(lines, index);
+          const items = listBlock.items;
+          index = listBlock.index;
           frontmatter[key] = items;
         } else {
           frontmatter[key] = parseScalar(value);
         }
       }
 
-        return { frontmatter, body: match[2].trim() };
-      };
+      return { frontmatter, body: match[2].trim() };
+    };
+
+    const pricingFieldOrder = [
+      'priceMode',
+      'freeChapters',
+      'tipsEnabled',
+      'tipAmounts',
+      'tipCurrency',
+      'chapterPriceAmount',
+      'chapterPriceCurrency',
+      'supporterPriceAmount',
+      'supporterPriceCurrency',
+      'bundlePurchasesEnabled',
+      'chapterBundleDiscounts'
+    ];
+
+    const pricingFieldSet = new Set(pricingFieldOrder);
+
+    const formatYamlScalar = (value) => {
+      if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '0';
+      if (typeof value === 'boolean') return value ? 'true' : 'false';
+      return JSON.stringify(value ?? '');
+    };
+
+    const formatYamlBlock = (key, value) => {
+      if (Array.isArray(value)) {
+        if (!value.length) return `${key}: []`;
+        const lines = [`${key}:`];
+        value.forEach((item) => {
+          if (item && typeof item === 'object' && !Array.isArray(item)) {
+            const entries = Object.entries(item);
+            if (!entries.length) return;
+            const [firstKey, firstValue] = entries[0];
+            lines.push(`  - ${firstKey}: ${formatYamlScalar(firstValue)}`);
+            entries.slice(1).forEach(([nestedKey, nestedValue]) => {
+              lines.push(`    ${nestedKey}: ${formatYamlScalar(nestedValue)}`);
+            });
+          } else {
+            lines.push(`  - ${formatYamlScalar(item)}`);
+          }
+        });
+        return lines.join('\n');
+      }
+
+      return `${key}: ${formatYamlScalar(value)}`;
+    };
+
+    const pricingYamlBlock = (updates) =>
+      pricingFieldOrder
+        .filter((key) => Object.prototype.hasOwnProperty.call(updates, key))
+        .map((key) => formatYamlBlock(key, updates[key]));
+
+    const updateMarkdownFrontmatter = (markdown, updates) => {
+      const normalized = markdown.replace(/\r\n/g, '\n').trim();
+      const match = normalized.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+      if (!match) throw new Error('Markdown 需要包含 YAML frontmatter。');
+
+      const lines = match[1].split('\n');
+      const output = [];
+      const pricingBlocks = pricingYamlBlock(updates);
+      let insertedPricing = false;
+
+      for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
+        const pair = line.startsWith('  ') ? null : parseKeyValue(line);
+        const isPricingField = pair && pricingFieldSet.has(pair.key);
+
+        if (isPricingField) {
+          if (!insertedPricing) {
+            output.push(...pricingBlocks);
+            insertedPricing = true;
+          }
+          while (lines[index + 1]?.startsWith('  ')) index += 1;
+          continue;
+        }
+
+        if (!insertedPricing && pair?.key === 'latestChapterSlug') {
+          output.push(...pricingBlocks);
+          insertedPricing = true;
+        }
+
+        output.push(line);
+      }
+
+      if (!insertedPricing) output.push(...pricingBlocks);
+
+      return `---\n${output.join('\n')}\n---\n\n${match[2].trim()}\n`;
+    };
 
       const serialKindLabel = (kind) => (kind === 'chapter' ? '章节正文' : '小说资料');
 
@@ -525,7 +737,166 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           return `---\nseriesSlug: "novel-slug"\nchapterNumber: 1\nchapterSlug: "chapter-slug"\ntitle: "第一章：章节标题"\nexcerpt: "一到两句话概括本章，用于目录和章节页摘要。"\nstatus: "draft"\naccess: "free"\nlanguage: "zh-Hant"\nvolume: "第一卷：卷名"\nwordCount: 0\nreadingMinutes: 0\npublishedAt: ${date}\nupdatedAt: ${date}\n---\n\n这里写章节正文。\n`;
         }
 
-        return `---\ntitle: "小说标题"\nseriesSlug: "novel-slug"\nauthor: "Station Cat"\ndescription: "一句较完整的作品介绍，用于 SEO、书架页和分享卡片。"\nsubtitle: "可选副标题"\ntagline: "更短的一句话钩子，显示在作品页和卡片上。"\nstatus: "planned"\nlanguage: "zh-Hant"\nupdateSchedule: "每周二 / 周五更新，或先写不定期。"\ntags:\n  - "Long novel"\n  - "Serial fiction"\ncoverImage: ""\ncoverLabel: "封面短标题"\ncoverAlt: "小说封面描述"\nfeatured: false\npriceMode: "free"\nfreeChapters: 3\ntipAmounts:\n  - 3\n  - 5\n  - 10\ntipCurrency: "USD"\nchapterPriceAmount: 1.99\nchapterPriceCurrency: "USD"\nsupporterPriceAmount: 4.99\nsupporterPriceCurrency: "USD"\nlatestChapterSlug: ""\nlatestChapterNumber: 0\ntotalPlannedChapters: 0\navailabilityNote: "当前阶段先开放免费阅读，后续再接入打赏和付费解锁。"\npublishedAt: ${date}\nupdatedAt: ${date}\n---\n\n这里写作品简介正文。\n`;
+        return `---\ntitle: "小说标题"\nseriesSlug: "novel-slug"\nauthor: "Station Cat"\ndescription: "一句较完整的作品介绍，用于 SEO、书架页和分享卡片。"\nsubtitle: "可选副标题"\ntagline: "更短的一句话钩子，显示在作品页和卡片上。"\nstatus: "planned"\nlanguage: "zh-Hant"\nupdateSchedule: "每周二 / 周五更新，或先写不定期。"\ntags:\n  - "Long novel"\n  - "Serial fiction"\ncoverImage: ""\ncoverLabel: "封面短标题"\ncoverAlt: "小说封面描述"\nfeatured: false\npriceMode: "free"\nfreeChapters: 3\ntipsEnabled: true\ntipAmounts:\n  - 3\n  - 5\n  - 10\ntipCurrency: "USD"\nchapterPriceAmount: 1.99\nchapterPriceCurrency: "USD"\nsupporterPriceAmount: 4.99\nsupporterPriceCurrency: "USD"\nbundlePurchasesEnabled: false\nchapterBundleDiscounts:\n  - chapters: 5\n    discountPercent: 10\n  - chapters: 10\n    discountPercent: 18\nlatestChapterSlug: ""\nlatestChapterNumber: 0\ntotalPlannedChapters: 0\navailabilityNote: "当前阶段先开放免费阅读，后续再接入打赏和付费解锁。"\npublishedAt: ${date}\nupdatedAt: ${date}\n---\n\n这里写作品简介正文。\n`;
+      };
+
+      const priceModeOptions = ['free', 'tip-optional', 'chapter-paid', 'volume-paid', 'member'];
+
+      const normalizePositiveNumber = (value, fallback) => {
+        const number = Number(value);
+        return Number.isFinite(number) && number >= 0 ? Math.round(number * 100) / 100 : fallback;
+      };
+
+      const normalizePositiveInteger = (value, fallback) => {
+        const number = Number(value);
+        return Number.isFinite(number) && number >= 0 ? Math.round(number) : fallback;
+      };
+
+      const normalizeTipAmounts = (value) => {
+        const values = Array.isArray(value)
+          ? value
+          : String(value || '')
+            .split(',')
+            .map((item) => item.trim());
+        const amounts = values
+          .map((item) => normalizePositiveNumber(item, 0))
+          .filter((amount) => amount > 0);
+        return amounts.length ? [...new Set(amounts)] : [3, 5, 10];
+      };
+
+      const normalizeBundleDiscounts = (value) => {
+        const rows = Array.isArray(value) ? value : [];
+        return rows
+          .map((row) => ({
+            chapters: normalizePositiveInteger(row?.chapters, 0),
+            discountPercent: normalizePositiveNumber(row?.discountPercent, 0)
+          }))
+          .filter((row) => row.chapters > 1 && row.discountPercent > 0)
+          .map((row) => ({
+            chapters: row.chapters,
+            discountPercent: Math.min(row.discountPercent, 95)
+          }))
+          .sort((a, b) => a.chapters - b.chapters);
+      };
+
+      const setPricingStatus = (message, tone = 'neutral') => {
+        elements.serial.pricingStatus.textContent = message;
+        elements.serial.pricingStatus.dataset.tone = tone;
+        elements.serial.pricingStatus.hidden = !message;
+      };
+
+      const setSerialPricingVisibility = (kind) => {
+        const isSeries = kind === 'series';
+        elements.serial.pricingPanel.hidden = !isSeries;
+        Array.from(elements.serial.pricingPanel.querySelectorAll('input, select, button')).forEach((control) => {
+          control.disabled = !isSeries;
+        });
+      };
+
+      const addBundleDiscountRow = ({ chapters = 5, discountPercent = 10 } = {}) => {
+        const row = document.createElement('div');
+        row.className = 'admin-bundle-row';
+        row.dataset.bundleRow = 'true';
+
+        const chapterLabel = document.createElement('label');
+        chapterLabel.textContent = '购买章节数';
+        const chapterInput = document.createElement('input');
+        chapterInput.type = 'number';
+        chapterInput.min = '2';
+        chapterInput.step = '1';
+        chapterInput.value = String(chapters);
+        chapterInput.dataset.bundleChapters = 'true';
+        chapterLabel.append(chapterInput);
+
+        const discountLabel = document.createElement('label');
+        discountLabel.textContent = '折扣比例 (%)';
+        const discountInput = document.createElement('input');
+        discountInput.type = 'number';
+        discountInput.min = '1';
+        discountInput.max = '95';
+        discountInput.step = '1';
+        discountInput.value = String(discountPercent);
+        discountInput.dataset.bundleDiscount = 'true';
+        discountLabel.append(discountInput);
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'button button-secondary';
+        removeButton.type = 'button';
+        removeButton.textContent = '移除';
+        removeButton.addEventListener('click', () => {
+          row.remove();
+          if (!elements.serial.bundleList.querySelector('[data-bundle-row]')) {
+            addBundleDiscountRow();
+          }
+        });
+
+        row.append(chapterLabel, discountLabel, removeButton);
+        elements.serial.bundleList.append(row);
+      };
+
+      const renderBundleDiscountRows = (discounts) => {
+        elements.serial.bundleList.innerHTML = '';
+        const rows = discounts.length ? discounts : [{ chapters: 5, discountPercent: 10 }];
+        rows.forEach((row) => addBundleDiscountRow(row));
+      };
+
+      const syncPricingControls = (frontmatter, kind) => {
+        setSerialPricingVisibility(kind);
+        if (kind !== 'series') {
+          setPricingStatus('');
+          return;
+        }
+
+        elements.serial.priceMode.value = priceModeOptions.includes(frontmatter.priceMode) ? frontmatter.priceMode : 'free';
+        elements.serial.freeChapters.value = String(normalizePositiveInteger(frontmatter.freeChapters, 0));
+        elements.serial.tipsEnabled.checked = frontmatter.tipsEnabled !== false;
+        elements.serial.tipAmounts.value = normalizeTipAmounts(frontmatter.tipAmounts).join(', ');
+        elements.serial.tipCurrency.value = frontmatter.tipCurrency || 'USD';
+        elements.serial.chapterPriceAmount.value = String(normalizePositiveNumber(frontmatter.chapterPriceAmount, 1.99));
+        elements.serial.chapterPriceCurrency.value = frontmatter.chapterPriceCurrency || 'USD';
+        elements.serial.supporterPriceAmount.value = String(normalizePositiveNumber(frontmatter.supporterPriceAmount, 4.99));
+        elements.serial.supporterPriceCurrency.value = frontmatter.supporterPriceCurrency || 'USD';
+        elements.serial.bundlesEnabled.checked = Boolean(frontmatter.bundlePurchasesEnabled);
+        renderBundleDiscountRows(normalizeBundleDiscounts(frontmatter.chapterBundleDiscounts));
+        setPricingStatus('收费设置已从小说 Markdown 读取。', 'success');
+      };
+
+      const pricingSettingsFromControls = () => {
+        const discounts = normalizeBundleDiscounts(
+          Array.from(elements.serial.bundleList.querySelectorAll('[data-bundle-row]')).map((row) => ({
+            chapters: row.querySelector('[data-bundle-chapters]')?.value,
+            discountPercent: row.querySelector('[data-bundle-discount]')?.value
+          }))
+        );
+
+        return {
+          priceMode: elements.serial.priceMode.value,
+          freeChapters: normalizePositiveInteger(elements.serial.freeChapters.value, 0),
+          tipsEnabled: elements.serial.tipsEnabled.checked,
+          tipAmounts: normalizeTipAmounts(elements.serial.tipAmounts.value),
+          tipCurrency: elements.serial.tipCurrency.value || 'USD',
+          chapterPriceAmount: normalizePositiveNumber(elements.serial.chapterPriceAmount.value, 1.99),
+          chapterPriceCurrency: elements.serial.chapterPriceCurrency.value || 'USD',
+          supporterPriceAmount: normalizePositiveNumber(elements.serial.supporterPriceAmount.value, 4.99),
+          supporterPriceCurrency: elements.serial.supporterPriceCurrency.value || 'USD',
+          bundlePurchasesEnabled: elements.serial.bundlesEnabled.checked,
+          chapterBundleDiscounts: discounts
+        };
+      };
+
+      const applyPricingSettingsToMarkdown = ({ silent = false } = {}) => {
+        const parsed = parseSerialImport({ sync: false });
+        if (parsed.kind !== 'series') {
+          throw new Error('收费设置只能套用到小说资料 Markdown，不能套用到章节正文。');
+        }
+
+        elements.serial.markdown.value = updateMarkdownFrontmatter(elements.serial.markdown.value, pricingSettingsFromControls());
+        const updated = parseSerialImport();
+        if (!silent) {
+          setPricingStatus('收费设置已套用到 Markdown，可以保存。', 'success');
+          setInlineStatus('serials', '收费设置已套用到 Markdown，可以保存。', 'success');
+        }
+        return updated;
       };
 
       const renderSerialPreview = ({ kind, frontmatter, path, body }) => {
@@ -584,6 +955,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           fields.chapterNumber.value = kind === 'chapter' ? String(chapterNumber) : '';
           fields.chapterSlug.value = kind === 'chapter' ? chapterSlug : '';
           fields.path.value = path;
+          syncPricingControls(frontmatter, kind);
         }
 
         const missing = kind === 'chapter'
@@ -660,6 +1032,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         fields.markdown.value = serialTemplate(kind);
         setInlineStatus('serials', '');
         parseSerialImport();
+        if (kind !== 'series') setPricingStatus('');
         setStatus(`正在导入新的${serialKindLabel(kind)}。`);
       };
 
@@ -1028,6 +1401,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     };
 
       const saveSerialMarkdown = async () => {
+        const firstPass = parseSerialImport({ sync: false });
+        if (firstPass.kind === 'series') {
+          applyPricingSettingsToMarkdown({ silent: true });
+        }
         const parsed = parseSerialImport({ sync: false });
         const path = parsed.path;
         elements.serial.path.value = path;
@@ -1088,8 +1465,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     });
 
     elements.serial.kind.addEventListener('change', () => {
+      setSerialPricingVisibility(elements.serial.kind.value);
       if (!state.serials.sha) {
         resetSerialImportForm(elements.serial.kind.value);
+      }
+    });
+
+    elements.serial.bundleAddButton.addEventListener('click', () => {
+      addBundleDiscountRow();
+      setPricingStatus('已新增一条多章折扣，保存前会写入 Markdown。');
+    });
+
+    elements.serial.pricingApplyButton.addEventListener('click', () => {
+      try {
+        applyPricingSettingsToMarkdown();
+      } catch (error) {
+        setPricingStatus(error.message, 'error');
+        setInlineStatus('serials', error.message, 'error');
       }
     });
 

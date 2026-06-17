@@ -82,15 +82,37 @@ src/content/serialChapters/deng-hai-liang-zhe-002-city-after-midnight.md
 
 ## 阅读权限字段
 
-当前阶段仍然是静态展示，不做真实支付拦截。
-
-但章节可以先标记未来阅读方式：
+章节可以标记阅读方式：
 
 - `free`：免费
-- `paid`：未来付费章节
-- `supporter`：未来支持者章节
+- `paid`：付费章节
+- `supporter`：支持者章节
 
-这些字段会在目录和章节页展示，为后续 NOWPayments 和账户系统预留位置。
+`paid` / `supporter` 章节会走读者账户、NOWPayments 订单和授权检查。
+
+## 小说收费设置
+
+Admin 的 `連載小說` 面板里已经有可视化收费设置。它会更新小说资料 Markdown 的这些字段：
+
+- `priceMode`：免费、免费 + 打赏、单章购买、分卷购买或会员阅读
+- `freeChapters`：展示用免费章节数
+- `tipsEnabled`：是否显示作品页打赏区
+- `tipAmounts` / `tipCurrency`：打赏金额和币种
+- `chapterPriceAmount` / `chapterPriceCurrency`：单章解锁价格
+- `supporterPriceAmount` / `supporterPriceCurrency`：支持者解锁价格
+- `bundlePurchasesEnabled`：是否开启多章折扣配置
+- `chapterBundleDiscounts`：一次购买多章的折扣规则
+
+多章折扣配置示例：
+
+```yaml
+bundlePurchasesEnabled: true
+chapterBundleDiscounts:
+  - chapters: 5
+    discountPercent: 10
+  - chapters: 10
+    discountPercent: 18
+```
 
 ## 发布检查
 
