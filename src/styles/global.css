@@ -4028,6 +4028,17 @@ body.station-paper-page {
   margin-top: 10px;
 }
 
+.protected-chapter-body {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.protected-chapter-body--ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .serial-reader-shell__footer {
   margin-top: 26px;
 }

@@ -1,10 +1,21 @@
 import { novelPaymentConfig } from './generated/novelPaymentConfig.js';
+import { protectedSerialContent } from './generated/protectedSerialContent.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
     ...init,
     headers: {
       'content-type': 'application/json; charset=utf-8',
+      ...(init.headers || {})
+    }
+  });
+
+const privateJson = (body, init = {}) =>
+  json(body, {
+    ...init,
+    headers: {
+      'cache-control': 'no-store',
+      'x-robots-tag': 'noindex',
       ...(init.headers || {})
     }
   });
@@ -1505,6 +1516,92 @@ const handleNovelAccessCheck = async (request, env) => {
       email: session.email
     },
     entitlement: entitlement ? entitlementToJson({ ...entitlement, email: session.email }) : null
+  });
+};
+
+const protectedChapterToJson = (entry) => ({
+  access: entry.access,
+  chapterNumber: entry.chapterNumber,
+  chapterSlug: entry.chapterSlug,
+  excerpt: entry.excerpt,
+  language: entry.language,
+  seriesSlug: entry.seriesSlug,
+  title: entry.title
+});
+
+const getProtectedChapterContent = (seriesSlug, chapterSlug) =>
+  protectedSerialContent?.chapters?.[`${seriesSlug}/${chapterSlug}`] || null;
+
+const handleProtectedChapterContent = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const url = new URL(request.url);
+  const seriesSlug = cleanSlug(url.searchParams.get('series'));
+  const chapterSlug = cleanSlug(url.searchParams.get('chapter'));
+  if (!seriesSlug || !chapterSlug) {
+    return privateJson({ ok: false, message: 'series and chapter are required.' }, { status: 400 });
+  }
+
+  const chapter = getProtectedChapterContent(seriesSlug, chapterSlug);
+  if (!chapter) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'PROTECTED_CONTENT_NOT_FOUND',
+        message: 'Protected chapter content is not available.'
+      },
+      { status: 404 }
+    );
+  }
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return privateJson(
+      {
+        ok: false,
+        authenticated: false,
+        allowed: false,
+        code: 'SIGN_IN_REQUIRED',
+        message: 'Please sign in before reading this protected chapter.'
+      },
+      { status: 401 }
+    );
+  }
+
+  const accessRequired = chapter.access === 'supporter' ? 'supporter' : 'paid';
+  const entitlement = await findActiveNovelEntitlement(db, session.account_id, seriesSlug, chapterSlug, accessRequired);
+  if (!entitlement) {
+    return privateJson(
+      {
+        ok: false,
+        authenticated: true,
+        allowed: false,
+        code: 'ENTITLEMENT_REQUIRED',
+        message: 'This account has not unlocked this chapter yet.',
+        account: {
+          id: session.account_id,
+          email: session.email
+        }
+      },
+      { status: 403 }
+    );
+  }
+
+  return privateJson({
+    ok: true,
+    authenticated: true,
+    allowed: true,
+    account: {
+      id: session.account_id,
+      email: session.email
+    },
+    chapter: protectedChapterToJson(chapter),
+    content: {
+      headings: chapter.headings || [],
+      html: chapter.html
+    },
+    entitlement: entitlementToJson({ ...entitlement, email: session.email })
   });
 };
 
@@ -3297,6 +3394,10 @@ export default {
 
     if (request.method === 'GET' && url.pathname === '/api/novels/access') {
       return handleNovelAccessCheck(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/novels/chapters/protected-content') {
+      return handleProtectedChapterContent(request, env);
     }
 
     if (request.method === 'GET' && url.pathname === '/api/novels/library') {

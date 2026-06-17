@@ -68,7 +68,7 @@ const accessGateCopy = {
     title: 'This chapter is reserved for unlocked readers.',
     body: 'Sign in to check this account, or create a NOWPayments order to unlock access after payment confirmation.',
     checking: 'Checking access...',
-    allowed: 'Access confirmed. Protected chapter delivery will use this entitlement path in the next step.',
+    allowed: 'Access confirmed. Loading the chapter...',
     denied: 'This account has not unlocked this chapter yet.',
     signIn: 'Sign in to my library',
     library: 'Open my library',
@@ -82,6 +82,8 @@ const accessGateCopy = {
     creditReady: 'Reading credits are ready.',
     creditUnlocked: 'Unlocked with reading credits. Access has been saved to your library.',
     creditInsufficient: 'Not enough reading credits. Top up in the library first.',
+    contentReady: 'Chapter loaded.',
+    contentFailed: 'Could not load the protected chapter. Please refresh or open your library again.',
     creating: 'Creating checkout...',
     opening: 'Opening NOWPayments...',
     signInRequired: 'Please sign in before unlocking paid reading.',
@@ -92,7 +94,7 @@ const accessGateCopy = {
     title: 'この章は解放済み読者向けです。',
     body: 'ログインして権限を確認するか、NOWPayments の注文を作成して支払い確認後の解放に進めます。',
     checking: '権限を確認しています...',
-    allowed: '権限を確認しました。保護された本文配信は次の段階でこの経路に接続します。',
+    allowed: '権限を確認しました。本文を読み込んでいます...',
     denied: 'このアカウントではまだこの章が解放されていません。',
     signIn: '本棚にログイン',
     library: '本棚を開く',
@@ -106,6 +108,8 @@ const accessGateCopy = {
     creditReady: '読書ポイントを確認しました。',
     creditUnlocked: '読書ポイントで解放しました。本棚に権限を保存しました。',
     creditInsufficient: '読書ポイントが足りません。先に本棚で追加してください。',
+    contentReady: '本文を読み込みました。',
+    contentFailed: '保護された本文を読み込めませんでした。本棚から開き直すか、ページを更新してください。',
     creating: 'チェックアウトを作成しています...',
     opening: 'NOWPayments を開いています...',
     signInRequired: '有料閲覧を解放する前にログインしてください。',
@@ -116,7 +120,7 @@ const accessGateCopy = {
     title: '這一章保留給已解鎖讀者。',
     body: '可以先登入確認帳戶是否已有權限，也可以建立 NOWPayments 訂單，等支付確認後再解鎖。',
     checking: '正在確認閱讀權限...',
-    allowed: '權限已確認。受保護正文的交付會在下一步接上這條權限路徑。',
+    allowed: '權限已確認，正在載入正文...',
     denied: '這個帳戶尚未解鎖本章。',
     signIn: '登入我的書庫',
     library: '打開我的書庫',
@@ -130,6 +134,8 @@ const accessGateCopy = {
     creditReady: '閱讀點數已就緒。',
     creditUnlocked: '已用閱讀點解鎖，權限已保存到書庫。',
     creditInsufficient: '閱讀點數不足，請先到書庫充值。',
+    contentReady: '正文已載入。',
+    contentFailed: '受保護正文載入失敗，請重新整理，或從書庫再打開一次。',
     creating: '正在建立支付訂單...',
     opening: '正在打開 NOWPayments...',
     signInRequired: '請先登入，再解鎖付費閱讀。',
@@ -140,7 +146,7 @@ const accessGateCopy = {
     title: '这一章保留给已解锁读者。',
     body: '可以先登录确认账户是否已有权限，也可以建立 NOWPayments 订单，等支付确认后再解锁。',
     checking: '正在确认阅读权限...',
-    allowed: '权限已确认。受保护正文的交付会在下一步接上这条权限路径。',
+    allowed: '权限已确认，正在加载正文...',
     denied: '这个账户尚未解锁本章。',
     signIn: '登录我的书库',
     library: '打开我的书库',
@@ -154,6 +160,8 @@ const accessGateCopy = {
     creditReady: '阅读点数已就绪。',
     creditUnlocked: '已用阅读点解锁，权限已保存到书库。',
     creditInsufficient: '阅读点数不足，请先到书库充值。',
+    contentReady: '正文已加载。',
+    contentFailed: '受保护正文加载失败，请刷新，或从书库再打开一次。',
     creating: '正在建立支付订单...',
     opening: '正在打开 NOWPayments...',
     signInRequired: '请先登录，再解锁付费阅读。',
@@ -233,6 +241,7 @@ const accessGateCopy = {
         <a class="button button-secondary" href={seriesHref}>{copy.chapterBack}</a>
       </div>
     </section>
+    <article class="serial-prose serial-reader-shell__body protected-chapter-body" data-protected-chapter-body hidden></article>
   ) : (
     <article class="serial-prose serial-reader-shell__body">
       <Content />
@@ -262,6 +271,7 @@ const accessGateCopy = {
     const creditStatus = gate?.querySelector('[data-serial-credit-status]');
     const unlockButtons = gate ? Array.from(gate.querySelectorAll('[data-serial-unlock]')) : [];
     const creditUnlockButton = gate?.querySelector('[data-serial-credit-unlock]');
+    const protectedBody = document.querySelector('[data-protected-chapter-body]');
 
     const setGateStatus = (message, tone = 'neutral') => {
       if (!status) return;
@@ -298,6 +308,28 @@ const accessGateCopy = {
       setCreditStatus(`${accessGateCopy.creditReady} ${balance} ${unitLabel} · ${cost} / chapter`, 'success');
     };
 
+    const loadProtectedContent = async () => {
+      if (!gate || !protectedBody) return;
+      setGateStatus(accessGateCopy.allowed, 'success');
+      const query = new URLSearchParams({
+        series: gate.dataset.seriesSlug,
+        chapter: gate.dataset.chapterSlug
+      });
+      const response = await fetch(`/api/novels/chapters/protected-content?${query.toString()}`, {
+        headers: { accept: 'application/json' }
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok || !data.content?.html) {
+        throw new Error(data.message || accessGateCopy.contentFailed);
+      }
+
+      protectedBody.innerHTML = data.content.html;
+      protectedBody.hidden = false;
+      requestAnimationFrame(() => protectedBody.classList.add('protected-chapter-body--ready'));
+      gate.hidden = true;
+      setCreditStatus(accessGateCopy.contentReady, 'success');
+    };
+
     const checkAccess = async () => {
       if (!gate) return;
       const query = new URLSearchParams({
@@ -310,9 +342,8 @@ const accessGateCopy = {
       if (!response.ok || !data.ok) throw new Error(data.message || accessGateCopy.denied);
 
       if (data.allowed) {
-        setGateStatus(accessGateCopy.allowed, 'success');
         setUnlockButtonsDisabled(true);
-        setCreditStatus('', 'neutral');
+        await loadProtectedContent();
       } else if (data.reason === 'sign_in_required') {
         setGateStatus(accessGateCopy.body, 'neutral');
         setCreditStatus('', 'neutral');
@@ -349,8 +380,8 @@ const accessGateCopy = {
             throw new Error(data.message || accessGateCopy.failed);
           }
 
-          setGateStatus(accessGateCopy.allowed, 'success');
           setCreditStatus(accessGateCopy.creditUnlocked, 'success');
+          await loadProtectedContent();
         } catch (error) {
           setCreditStatus(error.message || accessGateCopy.failed, 'error');
           setUnlockButtonsDisabled(false);
@@ -406,6 +437,9 @@ const accessGateCopy = {
       });
     });
 
-    checkAccess().catch((error) => setGateStatus(error.message || accessGateCopy.denied, 'error'));
+    checkAccess().catch((error) => {
+      setGateStatus(error.message || accessGateCopy.denied, 'error');
+      setCreditStatus(accessGateCopy.contentFailed, 'error');
+    });
   </script>
 )}
