@@ -172,18 +172,17 @@
 - 读者通知与催更订阅
 - 付费阅读说明、退款边界、支持邮箱流程
 
-## 当前执行：阶段 5B
+## 当前执行：阶段 5C
 
-阶段 5A 已经完成并合并到 `main`。当前进入阶段 5B，重点是让读者可以创建 NOWPayments checkout，并把订单写入 D1。
+阶段 5B 已经完成并合并到 `main`。当前进入阶段 5C，重点是把 NOWPayments 已确认订单自动发放到 `novel_entitlements`。
 
 这次先做：
 
-1. 新增 `/api/novels/payments/checkout`
-2. 作品页新增打赏入口
-3. 付费 / 支持者章节新增解锁订单入口
-4. 创建 checkout 前先写入 `novel_orders`
-5. 打赏订单同步写入 `novel_tips`
-6. 调用 NOWPayments Invoice API，返回 `invoice_url`
-7. 读者未登录时从章节页跳转到 `/library/?returnTo=...`
+1. 在 `/api/novels/webhooks/nowpayments` 更新订单状态后判断是否可发放权限
+2. `chapter` 订单在 `confirmed / finished` 后发放单章 `paid` 权限
+3. `supporter` 订单在 `confirmed / finished` 后发放整本作品 `supporter` 权限
+4. `tip` 订单只更新打赏状态，不发放阅读权限
+5. 重复 IPN 通过 `ON CONFLICT` 幂等处理
+6. webhook 响应返回 `entitlementGrant`，方便调试和后续后台展示
 
-阶段 5B 暂不做支付成功自动授权和受保护正文交付。后续 5C 再把 `confirmed / finished` 的订单自动写入 `novel_entitlements`。
+阶段 5C 暂不做受保护正文交付和退款后的自动回收。后续再把正文交付、退款复核、订单详情页拆出去做。

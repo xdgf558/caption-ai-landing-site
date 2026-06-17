@@ -1,7 +1,7 @@
 # Current Phase
 
-Novel reading module phase 5B: NOWPayments checkout creation.
+Novel reading module phase 5C: NOWPayments automatic entitlement grants.
 
-Current task: add public checkout creation for serial tips and paid/supporter chapter unlocks, write local orders before calling NOWPayments, and redirect readers to the returned invoice URL.
+Current task: grant reading entitlements automatically when signed NOWPayments IPN events move reading orders to confirmed or finished.
 
-Out of scope for 5B: automatic entitlement grants, protected paid-body delivery, refund automation, and entitlement revocation after refund.
+Out of scope for 5C: protected paid-body delivery, refund automation, entitlement revocation after refund, and reader-facing order detail pages.

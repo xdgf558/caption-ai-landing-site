@@ -1344,11 +1344,12 @@ const handleNovelPaymentsStatus = async (request, env) => {
     callbackUrl: config.callbackUrl,
     checkoutPath: novelCheckoutPath,
     publicCheckoutEnabled: checkoutEnabled,
+    automaticEntitlementGrants: true,
     supportedCurrencies: nowPaymentsSupportedCurrencies,
     orderStatuses: novelOrderStatuses,
     grantStatuses: novelPaymentGrantStatuses,
     note: checkoutEnabled
-      ? 'Stage 5B checkout can create NOWPayments invoices. Automatic entitlement grants are staged separately.'
+      ? 'Stage 5C grants reading entitlements after confirmed or finished NOWPayments reading orders.'
       : 'Checkout stays disabled until NOWPAYMENTS_API_KEY and NOWPAYMENTS_IPN_SECRET are configured.'
   });
 };
@@ -1716,6 +1717,77 @@ const updateNovelOrderFromNowPaymentsEvent = async (db, orderId, event) =>
     )
     .first();
 
+const grantNovelEntitlementFromOrder = async (db, order) => {
+  if (!order) return { granted: false, reason: 'order_not_found' };
+  if (order.order_type === 'tip') return { granted: false, reason: 'tip_order' };
+  if (!novelPaymentGrantStatuses.includes(order.status)) {
+    return { granted: false, reason: 'status_not_grantable' };
+  }
+  if (!order.account_id) return { granted: false, reason: 'missing_reader_account' };
+
+  const seriesSlug = cleanSlug(order.series_slug);
+  const scope = order.entitlement_scope === 'series' ? 'series' : 'chapter';
+  const chapterSlug = scope === 'chapter' ? cleanSlug(order.chapter_slug) : '';
+  const accessLevel =
+    order.entitlement_access_level === 'supporter'
+      ? 'supporter'
+      : order.entitlement_access_level === 'all'
+        ? 'all'
+        : 'paid';
+
+  if (!seriesSlug) return { granted: false, reason: 'missing_series_slug' };
+  if (scope === 'chapter' && !chapterSlug) return { granted: false, reason: 'missing_chapter_slug' };
+
+  const sourceRef = order.order_token || order.provider_payment_id || order.provider_order_id || `order-${order.id}`;
+  const note = `Automatically granted from NOWPayments ${order.status} order ${sourceRef}.`;
+  const entitlement = await db
+    .prepare(
+      `INSERT INTO novel_entitlements (
+        account_id, series_slug, chapter_slug, scope, access_level, source, source_ref,
+        note, granted_by, expires_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
+      ON CONFLICT(account_id, series_slug, chapter_slug, scope, access_level, source)
+      DO UPDATE SET
+        source_ref = excluded.source_ref,
+        note = excluded.note,
+        granted_by = excluded.granted_by,
+        granted_at = CASE
+          WHEN novel_entitlements.source_ref <> excluded.source_ref THEN CURRENT_TIMESTAMP
+          ELSE novel_entitlements.granted_at
+        END,
+        expires_at = NULL,
+        revoked_at = CASE
+          WHEN novel_entitlements.source_ref <> excluded.source_ref THEN NULL
+          ELSE novel_entitlements.revoked_at
+        END,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *`
+    )
+    .bind(
+      order.account_id,
+      seriesSlug,
+      chapterSlug,
+      scope,
+      accessLevel,
+      nowPaymentsProvider,
+      sourceRef,
+      note,
+      nowPaymentsProvider
+    )
+    .first();
+
+  return {
+    accessLevel,
+    entitlement,
+    granted: true,
+    reason: 'granted',
+    scope,
+    seriesSlug,
+    chapterSlug
+  };
+};
+
 const handleNowPaymentsWebhook = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
@@ -1748,10 +1820,14 @@ const handleNowPaymentsWebhook = async (request, env) => {
   await insertNovelPaymentEvent(db, event, payload, order?.id || null);
 
   let updatedOrder = null;
+  let entitlementGrant = { granted: false, reason: order ? 'not_processed' : 'order_not_found' };
   if (order) {
     updatedOrder = await updateNovelOrderFromNowPaymentsEvent(db, order.id, event);
     if (updatedOrder.order_type === 'tip') {
       await updateNovelTipFromOrder(db, updatedOrder, event.status);
+      entitlementGrant = { granted: false, reason: 'tip_order' };
+    } else {
+      entitlementGrant = await grantNovelEntitlementFromOrder(db, updatedOrder);
     }
   }
 
@@ -1765,7 +1841,12 @@ const handleNowPaymentsWebhook = async (request, env) => {
       providerOrderId: event.providerOrderId,
       providerPaymentId: event.providerPaymentId
     },
-    entitlementGrantEnabled: false,
+    entitlementGrantEnabled: true,
+    entitlementGrant: {
+      granted: Boolean(entitlementGrant.granted),
+      reason: entitlementGrant.reason,
+      entitlement: entitlementGrant.entitlement ? entitlementToJson(entitlementGrant.entitlement) : null
+    },
     order: updatedOrder ? novelOrderToJson(updatedOrder) : null
   });
 };
