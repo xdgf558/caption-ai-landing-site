@@ -84,6 +84,11 @@ const accessGateCopy = {
     creditInsufficient: 'Not enough reading credits. Top up in the library first.',
     contentReady: 'Chapter loaded.',
     contentFailed: 'Could not load the protected chapter. Please refresh or open your library again.',
+    paymentReturned: 'Payment returned to the site. Checking the order...',
+    paymentPending: 'Waiting for NOWPayments confirmation. This page will refresh access automatically.',
+    paymentConfirmed: 'Payment confirmed. Updating access...',
+    paymentNeedsReview: 'Payment is confirmed, but access has not been granted yet. Please keep this order for support.',
+    paymentFailed: 'The payment is not complete. Please try again or open your library.',
     creating: 'Creating checkout...',
     opening: 'Opening NOWPayments...',
     signInRequired: 'Please sign in before unlocking paid reading.',
@@ -110,6 +115,11 @@ const accessGateCopy = {
     creditInsufficient: '読書ポイントが足りません。先に本棚で追加してください。',
     contentReady: '本文を読み込みました。',
     contentFailed: '保護された本文を読み込めませんでした。本棚から開き直すか、ページを更新してください。',
+    paymentReturned: '支払いがサイトに戻りました。注文を確認しています...',
+    paymentPending: 'NOWPayments の確認を待っています。権限は自動で再確認されます。',
+    paymentConfirmed: '支払いを確認しました。権限を更新しています...',
+    paymentNeedsReview: '支払いは確認済みですが、権限がまだ反映されていません。注文情報を保管してください。',
+    paymentFailed: '支払いは完了していません。もう一度試すか、本棚を開いてください。',
     creating: 'チェックアウトを作成しています...',
     opening: 'NOWPayments を開いています...',
     signInRequired: '有料閲覧を解放する前にログインしてください。',
@@ -136,6 +146,11 @@ const accessGateCopy = {
     creditInsufficient: '閱讀點數不足，請先到書庫充值。',
     contentReady: '正文已載入。',
     contentFailed: '受保護正文載入失敗，請重新整理，或從書庫再打開一次。',
+    paymentReturned: '支付已返回網站，正在核對訂單狀態...',
+    paymentPending: '正在等待 NOWPayments 確認，確認後會自動重新檢查閱讀權限。',
+    paymentConfirmed: '支付已確認，正在更新閱讀權限...',
+    paymentNeedsReview: '支付已確認，但閱讀權限尚未寫入，請保留這筆訂單供後台排查。',
+    paymentFailed: '支付尚未完成，請重新嘗試，或打開書庫查看訂單狀態。',
     creating: '正在建立支付訂單...',
     opening: '正在打開 NOWPayments...',
     signInRequired: '請先登入，再解鎖付費閱讀。',
@@ -162,6 +177,11 @@ const accessGateCopy = {
     creditInsufficient: '阅读点数不足，请先到书库充值。',
     contentReady: '正文已加载。',
     contentFailed: '受保护正文加载失败，请刷新，或从书库再打开一次。',
+    paymentReturned: '支付已返回网站，正在核对订单状态...',
+    paymentPending: '正在等待 NOWPayments 确认，确认后会自动重新检查阅读权限。',
+    paymentConfirmed: '支付已确认，正在更新阅读权限...',
+    paymentNeedsReview: '支付已确认，但阅读权限尚未写入，请保留这笔订单供后台排查。',
+    paymentFailed: '支付尚未完成，请重新尝试，或打开书库查看订单状态。',
     creating: '正在建立支付订单...',
     opening: '正在打开 NOWPayments...',
     signInRequired: '请先登录，再解锁付费阅读。',
@@ -330,6 +350,10 @@ const accessGateCopy = {
       setCreditStatus(accessGateCopy.contentReady, 'success');
     };
 
+    const wait = (milliseconds) => new Promise((resolve) => {
+      window.setTimeout(resolve, milliseconds);
+    });
+
     const checkAccess = async () => {
       if (!gate) return;
       const query = new URLSearchParams({
@@ -351,6 +375,50 @@ const accessGateCopy = {
         setGateStatus(accessGateCopy.denied, 'error');
         await loadCreditSummary();
       }
+    };
+
+    const refreshReturnedPaymentOrder = async () => {
+      const query = new URLSearchParams(window.location.search);
+      const orderToken = query.get('order') || '';
+      if (query.get('payment') !== 'success' || !orderToken) return false;
+
+      setUnlockButtonsDisabled(true);
+      setGateStatus(accessGateCopy.paymentReturned, 'neutral');
+
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        const response = await fetch(`/api/novels/payments/order?order=${encodeURIComponent(orderToken)}`);
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || accessGateCopy.failed);
+
+        const fulfillment = data.fulfillment || {};
+        const orderStatus = data.order?.status || '';
+        if (fulfillment.complete) {
+          setGateStatus(accessGateCopy.paymentConfirmed, 'success');
+          await checkAccess();
+          return true;
+        }
+
+        if (fulfillment.needsReview) {
+          setGateStatus(accessGateCopy.paymentNeedsReview, 'error');
+          setUnlockButtonsDisabled(false);
+          return true;
+        }
+
+        if (['failed', 'expired', 'refunded'].includes(orderStatus)) {
+          setGateStatus(accessGateCopy.paymentFailed, 'error');
+          setUnlockButtonsDisabled(false);
+          return true;
+        }
+
+        setGateStatus(accessGateCopy.paymentPending, 'neutral');
+        if (!fulfillment.nextCheckSeconds) break;
+        await wait(fulfillment.nextCheckSeconds * 1000);
+      }
+
+      setGateStatus(accessGateCopy.paymentPending, 'neutral');
+      setUnlockButtonsDisabled(false);
+      await loadCreditSummary();
+      return true;
     };
 
     if (creditUnlockButton) {
@@ -437,9 +505,14 @@ const accessGateCopy = {
       });
     });
 
-    checkAccess().catch((error) => {
-      setGateStatus(error.message || accessGateCopy.denied, 'error');
-      setCreditStatus(accessGateCopy.contentFailed, 'error');
-    });
+    refreshReturnedPaymentOrder()
+      .then((handled) => {
+        if (!handled) return checkAccess();
+        return null;
+      })
+      .catch((error) => {
+        setGateStatus(error.message || accessGateCopy.denied, 'error');
+        setCreditStatus(accessGateCopy.contentFailed, 'error');
+      });
   </script>
 )}

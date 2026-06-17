@@ -533,6 +533,18 @@ const readerCreditLedgerToJson = (row) => ({
   createdAt: row.created_at
 });
 
+const novelPaymentEventToJson = (row) => ({
+  id: row.id,
+  provider: row.provider,
+  orderId: row.order_id,
+  providerOrderId: row.provider_order_id,
+  providerPaymentId: row.provider_payment_id,
+  eventType: row.event_type,
+  status: row.status,
+  signatureValid: Boolean(row.signature_valid),
+  receivedAt: row.received_at
+});
+
 const splitEnvList = (value) =>
   String(value || '')
     .split(',')
@@ -2633,6 +2645,178 @@ const handleNowPaymentsWebhook = async (request, env) => {
   });
 };
 
+const findNovelOrderByToken = async (db, orderToken) =>
+  db
+    .prepare(
+      `SELECT novel_orders.*, reader_accounts.email AS account_email
+       FROM novel_orders
+       LEFT JOIN reader_accounts ON reader_accounts.id = novel_orders.account_id
+       WHERE novel_orders.order_token = ?
+       LIMIT 1`
+    )
+    .bind(orderToken)
+    .first();
+
+const listNovelPaymentEventsForOrder = async (db, orderId) => {
+  const response = await db
+    .prepare(
+      `SELECT id, provider, order_id, provider_order_id, provider_payment_id, event_type,
+              status, signature_valid, received_at
+       FROM novel_payment_events
+       WHERE order_id = ?
+       ORDER BY received_at DESC, id DESC
+       LIMIT 10`
+    )
+    .bind(orderId)
+    .all();
+
+  return (response.results || []).map(novelPaymentEventToJson);
+};
+
+const listNovelEntitlementsForOrder = async (db, order) => {
+  if (!order?.account_id || !order?.order_token) return [];
+  const response = await db
+    .prepare(
+      `SELECT novel_entitlements.*, reader_accounts.email
+       FROM novel_entitlements
+       LEFT JOIN reader_accounts ON reader_accounts.id = novel_entitlements.account_id
+       WHERE novel_entitlements.account_id = ?
+         AND novel_entitlements.source_ref = ?
+       ORDER BY novel_entitlements.updated_at DESC, novel_entitlements.id DESC
+       LIMIT 20`
+    )
+    .bind(order.account_id, order.order_token)
+    .all();
+
+  return (response.results || []).map(entitlementToJson);
+};
+
+const listReaderCreditLedgerForOrder = async (db, order) => {
+  if (!order?.account_id || !order?.order_token) return [];
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM reader_credit_ledger
+       WHERE account_id = ?
+         AND source = ?
+         AND source_ref = ?
+       ORDER BY created_at DESC, id DESC
+       LIMIT 10`
+    )
+    .bind(order.account_id, novelCreditLedgerTopupSource, order.order_token)
+    .all();
+
+  return (response.results || []).map(readerCreditLedgerToJson);
+};
+
+const summarizeNovelPaymentFulfillment = async (db, order) => {
+  const paymentFinal = ['confirmed', 'finished', 'failed', 'expired', 'refunded'].includes(order.status);
+  const paymentGrantable = novelPaymentGrantStatuses.includes(order.status);
+  const waitingReason = paymentFinal ? `payment_${order.status}` : 'waiting_for_ipn';
+
+  if (order.order_type === 'tip') {
+    return {
+      complete: paymentGrantable,
+      kind: 'tip',
+      needsReview: false,
+      pending: !paymentFinal,
+      reason: paymentGrantable ? 'tip_confirmed' : paymentFinal ? `tip_${order.status}` : waitingReason,
+      entitlements: [],
+      creditLedger: []
+    };
+  }
+
+  if (order.order_type === novelCreditPackOrderType) {
+    const creditLedger = await listReaderCreditLedgerForOrder(db, order);
+    const complete = creditLedger.length > 0;
+    return {
+      complete,
+      kind: novelCreditPackOrderType,
+      needsReview: paymentGrantable && !complete,
+      pending: !paymentFinal,
+      reason: complete ? 'credits_credited' : paymentGrantable ? 'credit_topup_not_found' : waitingReason,
+      entitlements: [],
+      creditLedger
+    };
+  }
+
+  const entitlements = await listNovelEntitlementsForOrder(db, order);
+  const complete = entitlements.length > 0;
+  return {
+    complete,
+    kind: order.order_type,
+    needsReview: paymentGrantable && !complete,
+    pending: !paymentFinal,
+    reason: complete ? 'entitlement_granted' : paymentGrantable ? 'entitlement_not_found' : waitingReason,
+    entitlements,
+    creditLedger: []
+  };
+};
+
+const handleNovelPaymentOrderStatus = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const url = new URL(request.url);
+  const orderToken = cleanText(url.searchParams.get('order') || url.searchParams.get('orderToken'), 80);
+  if (!orderToken) {
+    return privateJson({ ok: false, code: 'ORDER_REQUIRED', message: 'order is required.' }, { status: 400 });
+  }
+
+  const order = await findNovelOrderByToken(db, orderToken);
+  if (!order) {
+    return privateJson({ ok: false, code: 'ORDER_NOT_FOUND', message: 'Order was not found.' }, { status: 404 });
+  }
+
+  const session = await getReaderFromSession(request, env);
+  if (order.account_id && !session) {
+    return privateJson(
+      {
+        ok: false,
+        authenticated: false,
+        code: 'SIGN_IN_REQUIRED',
+        message: 'Please sign in to view this order.'
+      },
+      { status: 401 }
+    );
+  }
+
+  if (order.account_id && session.account_id !== order.account_id) {
+    return privateJson(
+      {
+        ok: false,
+        authenticated: true,
+        code: 'ORDER_ACCOUNT_MISMATCH',
+        message: 'This order belongs to another reader account.'
+      },
+      { status: 403 }
+    );
+  }
+
+  const [events, fulfillment] = await Promise.all([
+    listNovelPaymentEventsForOrder(db, order.id),
+    summarizeNovelPaymentFulfillment(db, order)
+  ]);
+
+  return privateJson({
+    ok: true,
+    authenticated: Boolean(session),
+    account: session
+      ? {
+          id: session.account_id,
+          email: session.email
+        }
+      : null,
+    provider: nowPaymentsProvider,
+    order: novelOrderToJson(order),
+    events,
+    fulfillment: {
+      ...fulfillment,
+      nextCheckSeconds: fulfillment.complete || fulfillment.needsReview || !fulfillment.pending ? 0 : 5
+    }
+  });
+};
+
 const handleAdminListNovelOrders = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
@@ -3406,6 +3590,10 @@ export default {
 
     if (request.method === 'GET' && url.pathname === '/api/novels/payments/status') {
       return handleNovelPaymentsStatus(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/novels/payments/order') {
+      return handleNovelPaymentOrderStatus(request, env);
     }
 
     if (request.method === 'POST' && url.pathname === '/api/novels/credits/unlock') {
