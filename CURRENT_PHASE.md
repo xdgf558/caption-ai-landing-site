@@ -1,7 +1,7 @@
 # Current Phase
 
-Phase 5: StoryCat TestFlight Link Connected
+Novel reading module phase 5A: NOWPayments payment foundation.
 
-Current task: StoryCat product test page has been added to the existing Astro site, connected to homepage and Apps entry points, and the real TestFlight public link has been configured.
+Current task: add the D1 payment tables, NOWPayments readiness/status endpoint, signed IPN webhook event capture, matched order status updates, and admin-only order listing.
 
-Current TestFlight public link: `https://testflight.apple.com/join/VF222edq`.
+Out of scope for 5A: public checkout UI, donation buttons, order creation UI/API, automatic entitlement grants, and protected paid-body delivery.
