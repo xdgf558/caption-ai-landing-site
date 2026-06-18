@@ -2,24 +2,21 @@
 
 Stage 7G retires the old GitHub-token Markdown authoring path and moves routine Blog/Devlog plus serialized novel publishing into Admin 2.0.
 
+Current status: production migration has completed. The one-time migration tab, `/admin/api/content/legacy-migration` endpoint, generated manifest, and build script have been removed from the active Worker bundle.
+
 ## What Changed
 
-- `scripts/build-legacy-content-manifest.mjs` reads legacy Markdown from:
+- Stage 7G originally generated a legacy manifest from:
   - `src/content/devlog`
   - `src/content/serials`
   - `src/content/serialChapters`
-- The build now generates `src/generated/legacyContentManifest.js`.
-- Admin 2.0 has a new `迁移` tab.
-- The Worker exposes a protected admin endpoint:
-
-```text
-GET  /admin/api/content/legacy-migration
-POST /admin/api/content/legacy-migration
-```
-
+- The production migration wrote legacy metadata to D1 and legacy Markdown/HTML bodies to R2.
+- The temporary migration UI and Worker endpoint were removed after verification.
 - The old `/admin/` page no longer exposes the GitHub fine-grained-token editor. It now points administrators to `/admin-v2/`.
 
-## Migration Flow
+## Historical Migration Flow
+
+The active Admin 2.0 interface no longer exposes this flow. During 7G rollout, the temporary process was:
 
 1. Open `/admin-v2/`.
 2. Switch to `迁移`.
@@ -37,7 +34,7 @@ The execution path writes:
 - pricing rules to `content_pricing_rules`
 - audit rows to `admin_audit_logs`
 
-The import is idempotent. Running it again updates the same backend entries by `(entry_type, locale, parent_slug, slug)` instead of creating duplicates.
+The importer was idempotent. Running it again updated the same backend entries by `(entry_type, locale, parent_slug, slug)` instead of creating duplicates.
 
 ## Safety Boundary
 
@@ -51,22 +48,13 @@ Stage 7G does retire the old authoring UI:
 
 ## Pricing Boundary
 
-Legacy serial pricing is migrated so existing site behavior can continue after the move to D1/R2.
+Legacy serial pricing was migrated so existing site behavior can continue after the move to D1/R2.
 
 Future NovelForge one-click import should not overwrite pricing. Pricing should stay controlled by Admin 2.0.
 
 ## Access Boundary
 
-`/admin/api/content/legacy-migration` is under the existing `/admin/api/*` route family. Production Cloudflare Access must continue to protect:
-
-```text
-/admin
-/admin/*
-/admin-v2
-/admin-v2/*
-```
-
-Verify unauthenticated requests to `/admin/api/content/legacy-migration` redirect to Access before executing production migration.
+The temporary migration endpoint has been removed. Cloudflare Access must still protect `/admin`, `/admin/*`, `/admin-v2`, and `/admin-v2/*` for all active admin pages and APIs.
 
 ## Rollback
 
@@ -74,21 +62,21 @@ If migrated content has a problem:
 
 1. Unpublish or archive the affected backend entries in Admin 2.0.
 2. The dynamic Worker frontend will stop rendering those backend entries.
-3. Static Astro pages and legacy Markdown remain in the repo as a fallback until a later cleanup stage removes them.
+3. Static Astro pages and legacy Markdown remain in the repo as a fallback unless a later archival cleanup removes them.
 
 ## Post-Migration Cleanup
 
-`src/generated/legacyContentManifest.js` intentionally includes the full legacy Markdown and rendered HTML bodies so the production Worker can run the one-time D1/R2 migration without external files.
+Completed cleanup:
 
-This increases the Worker bundle size while 7G is active. After production migration is verified and the backend entries are stable, run a cleanup stage that:
+1. Removed the `legacyContentManifest` import and migration route from `src/worker.js`.
+2. Deleted the generated `src/generated/legacyContentManifest.js` file.
+3. Removed the `scripts/build-legacy-content-manifest.mjs` build step.
+4. Removed the Admin 2.0 `迁移` tab and controls.
+5. Kept old Markdown files as repository history and rollback references.
 
-1. Removes the `legacyContentManifest` import and migration route from `src/worker.js`.
-2. Deletes or stops generating `src/generated/legacyContentManifest.js`.
-3. Keeps the old Markdown files only if they are still needed as repository history or rollback references.
+## Production Verification Completed
 
-## Production Verification
-
-After deployment:
+After 7G deployment:
 
 1. Visit `/admin-v2/` and confirm Cloudflare Access appears.
 2. Scan and dry-run migration from the `迁移` tab.
@@ -98,3 +86,5 @@ After deployment:
 6. Confirm migrated serial and chapter entries appear in Admin 2.0.
 7. Open one migrated serial route and one migrated chapter route.
 8. Visit `/admin/` and confirm it is a retirement notice, not a GitHub-token editor.
+
+After cleanup deployment, verify `/admin-v2/` no longer shows a migration tab and `/admin/api/content/legacy-migration` is no longer routed by the Worker.

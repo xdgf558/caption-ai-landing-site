@@ -126,4 +126,4 @@ Stage 7C does not yet make public novel or Blog pages dynamic. Existing static A
 
 Stage 7D should convert the public reading and Blog/Devlog surfaces to read backend-published content from the Worker APIs, while retaining static Astro content as a rollback path. The target outcome is immediate publishing from Admin 2.0 without a GitHub commit or site redeploy for routine chapters and posts.
 
-Stage 7G adds the legacy Markdown migration flow and replaces the old `/admin/` authoring page with a retirement notice. The repository Markdown files remain as rollback history until a later cleanup stage.
+Stage 7G added the legacy Markdown migration flow and replaced the old `/admin/` authoring page with a retirement notice. After production migration completed, the one-time migration UI, API route, generated manifest, and build step were removed. The repository Markdown files remain as rollback history.

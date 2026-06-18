@@ -239,14 +239,15 @@
 2. 校验 slug、语言、发布时间、章节顺序和 SEO 数据。
 3. 移除旧 GitHub token 写 Markdown 后台。
 4. 在 Admin 2.0 提供扫描、模拟和执行迁移的受保护入口。
+5. 生产迁移完成后，移除一次性迁移入口、迁移 API、构建脚本和旧正文 Manifest。
 
 当前实现见 [legacy-content-migration-7g.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/legacy-content-migration-7g.md:1)。
 
-## 当前执行：阶段 7G
+## 当前执行：7G 已完成，准备阶段 7H
 
-阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台，阶段 7D 已让前台小说和 Blog/Devlog 支持读取后端发布内容，阶段 7E 已把收费规则和前台购买入口切到后端规则优先，阶段 7F 已把订单、账户、余额、授权和审计管理集中到 Admin 2.0。当前进入 7G，把旧 Markdown 内容迁入 D1/R2，并退役旧 GitHub Token 作者后台。
+阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台，阶段 7D 已让前台小说和 Blog/Devlog 支持读取后端发布内容，阶段 7E 已把收费规则和前台购买入口切到后端规则优先，阶段 7F 已把订单、账户、余额、授权和审计管理集中到 Admin 2.0。阶段 7G 已把旧 Markdown 内容迁入 D1/R2，并退役旧 GitHub Token 作者后台。生产迁移完成后，一次性迁移入口和 Worker Manifest 已清理。
 
-详细文档见 [legacy-content-migration-7g.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/legacy-content-migration-7g.md:1)。
+下一步进入 7H：Admin 2.0 封面 / 图片上传，使用 R2 管理小说封面和后续内容配图。
 
 ## 已完成：阶段 6C
 

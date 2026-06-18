@@ -1,16 +1,15 @@
 # Current Phase
 
-Novel reading module phase 7G: legacy Markdown migration and old authoring path retirement.
+Novel reading module post-7G cleanup: legacy migration tooling has been removed after production migration.
 
-Current task: make Admin 2.0 the operating center for routine content publishing.
+Current task: keep Admin 2.0 as the operating center for routine content publishing and prepare Stage 7H media management.
 
-7G adds:
+7G is complete:
 
-1. A generated legacy content manifest built from `src/content/devlog`, `src/content/serials`, and `src/content/serialChapters`.
-2. A protected Admin API at `/admin/api/content/legacy-migration` for scanning, dry-running, and executing migration into D1/R2.
-3. An Admin 2.0 migration tab that shows create/update counts before writing anything.
-4. Import batch records in `content_imports`, revision rows, pricing rule sync, and audit logs for migrated entries.
-5. A retired `/admin/` page that points content work to `/admin-v2/` instead of exposing the old GitHub-token Markdown editor.
+1. Legacy Blog/Devlog, serial metadata, and serial chapter Markdown have been imported into D1/R2.
+2. The old GitHub-token Markdown editor at `/admin/` has been retired.
+3. The one-time legacy migration endpoint, Admin 2.0 migration tab, build script, and generated manifest have been removed from the Worker bundle.
+4. Old `src/content` Markdown files remain in the repository as history and rollback references.
 
 Product direction:
 
@@ -18,6 +17,7 @@ Product direction:
 - GitHub remains for site/app code, not routine chapter or blog publishing.
 - Pricing rules stay editable in Admin 2.0; future NovelForge import should not overwrite pricing automatically.
 
-Out of scope for 7G: cover image upload and NovelForge one-click import. Cover upload is tracked as a later 7H media-management option; NovelForge import belongs to a future Stage 8.
+Next stages:
 
-Post-migration cleanup: `src/generated/legacyContentManifest.js` contains full legacy bodies and is expected to increase the Worker bundle while 7G migration is active. After production migration has been executed and spot-checked, remove the manifest import, migration route, and generated file in a cleanup stage.
+- 7H: cover image and media upload in Admin 2.0, backed by R2.
+- Stage 8: NovelForge one-click import API and Admin 2.0 import review flow.
