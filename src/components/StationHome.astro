@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getLatestChapter, getPublishedChapters, getSerialStatusLabel, getVisibleSerials } from '../data/serials';
 import { snapCopyProduct } from '../data/products/caption-ai';
 import { stationCatRadarProduct } from '../data/products/stationcat-radar';
 import { xFollowCleanerProduct } from '../data/products/x-follow-cleaner';
@@ -82,9 +81,13 @@ const copy = {
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Serial fiction',
-    notesTitle: '正在準備與連載中的小說。',
-    notesIntro: '這裡先放小說入口、更新狀態和最近一章，讓作品能按順序慢慢長出來。',
+    notesTitle: '正在連載：《离线未来》。',
+    notesIntro: '第一部長篇已經放上站台。這裡保留作品入口、最新章節和閱讀狀態，後續更新會從 Admin 2.0 直接發布。',
     viewOnX: '打開作品',
+    readFirstChapter: '閱讀第一章',
+    openSeries: '作品頁',
+    latestChapterLabel: '最新章',
+    freeChaptersLabel: '前 20 章免費',
     emptyNotes: '第一部長篇小說很快會出現在這裡。',
     buildKicker: 'Build log',
     buildTitle: '最近的開發筆記。',
@@ -146,9 +149,13 @@ const copy = {
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Serial fiction',
-    notesTitle: '正在准备与连载中的小说。',
-    notesIntro: '这里先放小说入口、更新状态和最近一章，让作品能按顺序慢慢长出来。',
+    notesTitle: '正在连载：《离线未来》。',
+    notesIntro: '第一部长篇已经放上站台。这里保留作品入口、最新章节和阅读状态，后续更新会从 Admin 2.0 直接发布。',
     viewOnX: '打开作品',
+    readFirstChapter: '阅读第一章',
+    openSeries: '作品页',
+    latestChapterLabel: '最新章',
+    freeChaptersLabel: '前 20 章免费',
     emptyNotes: '第一部长篇小说很快会出现在这里。',
     buildKicker: 'Build log',
     buildTitle: '最近的开发笔记。',
@@ -210,9 +217,13 @@ const copy = {
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Serial fiction',
-    notesTitle: 'Long-form stories on the shelf.',
-    notesIntro: 'This section keeps the active serial, its latest chapter, and the current reading status in one place.',
+    notesTitle: 'Now serializing: Offline Future.',
+    notesIntro: 'The first long-form story is now live. This shelf keeps the series entry, latest chapter, and reading status in one place.',
     viewOnX: 'Open series',
+    readFirstChapter: 'Read chapter one',
+    openSeries: 'Series page',
+    latestChapterLabel: 'Latest chapter',
+    freeChaptersLabel: 'First 20 chapters free',
     emptyNotes: 'The first serial will appear here soon.',
     buildKicker: 'Build log',
     buildTitle: 'Recent build notes.',
@@ -274,9 +285,13 @@ const copy = {
     radarStatus: 'Mac test build 0.1.0',
     followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Serial fiction',
-    notesTitle: '連載小説の棚。',
-    notesIntro: 'ここに作品入口、更新状態、最新章をまとめて置いていきます。',
+    notesTitle: '連載中：Offline Future。',
+    notesIntro: '最初の長編小説を公開しました。作品ページ、最新章、読書ステータスをここにまとめます。',
     viewOnX: '作品を見る',
+    readFirstChapter: '第1章を読む',
+    openSeries: '作品ページ',
+    latestChapterLabel: '最新章',
+    freeChaptersLabel: '最初の20章は無料',
     emptyNotes: '最初の連載はまもなくここに並びます。',
     buildKicker: 'Build log',
     buildTitle: '最近の開発ノート。',
@@ -355,18 +370,26 @@ const paths = {
   }
 }[lang];
 
-const devlogLanguage = lang;
+const mediaUrlForKey = (key: string) => `/api/content/media?key=${encodeURIComponent(key)}`;
+const homeSerial = {
+  coverAlt: '《离线未来》封面，1999 年旧房间、CRT 电脑和离线 AI 重启。',
+  coverUrl: mediaUrlForKey('content/media/covers/2026/06/cmqjfju1300008z3wyh66ynvw-offline-future-cover.png'),
+  description:
+    lang === 'en'
+      ? 'A 1999 room, a CRT computer, a local AI that should not wake up yet, and a second chance that starts with the sound of an old fan.'
+      : lang === 'ja'
+        ? '1999年の部屋、CRTモニター、まだ目覚めるはずのないオフラインAI。古い扇風機の音から、もう一度やり直す物語が始まります。'
+        : '故事從 1999 年的一個夜晚開始：風扇、舊電腦、未連網的房間，和一個本不該在那個年代醒來的 AI。',
+  firstChapterHref: '/zh-hant/works/cmqjfju1300008z3wyh66ynvw/chap-offline-future-001/',
+  href: '/zh-hant/works/cmqjfju1300008z3wyh66ynvw/',
+  latest: lang === 'en' ? 'Chapter 1: 1999年的风扇声' : lang === 'ja' ? '第1章：1999年的风扇声' : '第 1 章：1999年的风扇声',
+  status: lang === 'zh-Hans' ? '连载中' : lang === 'en' ? 'Serializing' : '連載中',
+  subtitle: '1999 · Offline AI · Rebirth',
+  title: '离线未来'
+};
+const labelSeparator = lang === 'en' ? ': ' : '：';
 
-const allSerialChapters = await getCollection('serialChapters');
-const recentWorks = getVisibleSerials(await getCollection('serials'))
-  .slice(0, 3)
-  .map((serial) => {
-    const chapters = getPublishedChapters(allSerialChapters, serial.data.seriesSlug);
-    return {
-      serial,
-      latestChapter: getLatestChapter(chapters)
-    };
-  });
+const devlogLanguage = lang;
 
 const allDevlog = await getCollection('devlog');
 const recentDevlog = allDevlog
@@ -383,19 +406,6 @@ const formatDate = (value?: string | Date) => {
 const devlogHref = (post: (typeof recentDevlog)[number]) => {
   const slug = post.data.postSlug ?? post.slug;
   return `${paths.devlogPrefix}${slug}/`;
-};
-
-const latestChapterText = (chapter?: (typeof recentWorks)[number]['latestChapter']) => {
-  if (!chapter) return '';
-  const prefix =
-    lang === 'ja'
-      ? `最新章 ${chapter.data.chapterNumber}`
-      : lang === 'zh-Hant'
-        ? `最新章 ${chapter.data.chapterNumber}`
-        : lang === 'zh-Hans'
-          ? `最新章 ${chapter.data.chapterNumber}`
-          : `Latest chapter ${chapter.data.chapterNumber}`;
-  return `${prefix}: ${chapter.data.title}`;
 };
 ---
 
@@ -563,28 +573,27 @@ const latestChapterText = (chapter?: (typeof recentWorks)[number]['latestChapter
       <h2>{copy.notesTitle}</h2>
       <p>{copy.notesIntro}</p>
     </div>
-    {recentWorks.length > 0 ? (
-      <div class="wall-note-grid">
-        {recentWorks.map(({ serial, latestChapter }, index) => (
-          <article class={`wall-note wall-note--${index + 1}`}>
-            <div class="wall-note__meta">
-              <span class="paper-stamp">{getSerialStatusLabel(serial.data.status, lang)}</span>
-              <time datetime={(serial.data.updatedAt ?? serial.data.publishedAt).toISOString()}>
-                {formatDate(serial.data.updatedAt ?? serial.data.publishedAt)}
-              </time>
-            </div>
-            <h3>{serial.data.title}</h3>
-            <p>{serial.data.description}</p>
-            <p class="fine-print">
-              {latestChapter ? latestChapterText(latestChapter) : serial.data.availabilityNote}
-            </p>
-            <a class="paper-link" href={`${paths.notes}${serial.data.seriesSlug}/`}>{copy.viewOnX}</a>
-          </article>
-        ))}
+    <article class="home-serial-card">
+      <a class="home-serial-card__cover" href={homeSerial.href} aria-label={homeSerial.title}>
+        <img src={homeSerial.coverUrl} alt={homeSerial.coverAlt} loading="lazy" />
+      </a>
+      <div class="home-serial-card__copy">
+        <div class="wall-note__meta">
+          <span class="paper-stamp">{homeSerial.status}</span>
+          <span>{homeSerial.subtitle}</span>
+        </div>
+        <h3>{homeSerial.title}</h3>
+        <p>{homeSerial.description}</p>
+        <div class="home-serial-card__facts">
+          <span>{copy.latestChapterLabel}{labelSeparator}{homeSerial.latest}</span>
+          <span>{copy.freeChaptersLabel}</span>
+        </div>
+        <div class="paper-actions">
+          <a class="ticket-button ticket-button--primary" href={homeSerial.firstChapterHref}>{copy.readFirstChapter}</a>
+          <a class="ticket-button ticket-button--secondary" href={homeSerial.href}>{copy.openSeries}</a>
+        </div>
       </div>
-    ) : (
-      <p class="paper-empty">{copy.emptyNotes}</p>
-    )}
+    </article>
   </section>
 
   <section class="paper-section">
