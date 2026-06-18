@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS admin_content_settings (
+  setting_key TEXT PRIMARY KEY,
+  setting_json TEXT NOT NULL DEFAULT '{}',
+  updated_by TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

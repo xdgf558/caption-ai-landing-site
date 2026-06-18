@@ -69,6 +69,7 @@ These routes must cover both admin pages and admin API routes, including:
 /admin/api/content/revisions
 /admin/api/content/audit-logs
 /admin/api/content/pricing-rules
+/admin/api/content/pricing-defaults
 /admin/api/content/preview
 /admin/api/novels/entitlements
 /admin/api/novels/entitlements/grant

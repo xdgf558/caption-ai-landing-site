@@ -114,6 +114,10 @@ src/content/serialChapters/deng-hai-liang-zhe-002-city-after-midnight.md
 
 Admin 2.0 的 `Pricing` 区域是小说收费规则的主入口。它会保存到 D1 `content_pricing_rules`，并供前台 `/api/novels/pricing`、NOWPayments 下单和阅读点解锁使用。
 
+如果后续新作品都要沿用同一套收费规则，先在 `Pricing` 区域配置好价格、免费章节数、阅读点、打赏和多章折扣，再点击侧栏 `收费模板` 里的 `保存当前为默认`。之后点击 `新作品` 时，Admin 2.0 会自动填入这套默认规则。
+
+默认模板只会自动填入新建的小说作品，不会自动覆盖已存在作品或章节。需要更新旧作品时，先载入作品，再点击 `套用默认`，最后点击 `保存到后端内容平台`。
+
 - `priceMode`：免费、免费 + 打赏、单章购买、分卷购买或会员阅读
 - `freeChapters`：展示用免费章节数
 - `tipsEnabled`：是否显示作品页打赏区

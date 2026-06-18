@@ -263,11 +263,22 @@
 
 当前实现见 [novelforge-import-api-8a.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/novelforge-import-api-8a.md:1)。
 
-## 当前执行：8A NovelForge 一键导入 API
+### 阶段 8B：Admin 2.0 收费模板 / 默认规则
+
+1. 新增 D1 `admin_content_settings` 表，用来保存 Admin 2.0 的全局内容设置。
+2. 在 Admin 2.0 内容侧栏新增 `收费模板` 卡片。
+3. 管理员可以把当前收费面板保存为新作品默认规则。
+4. 管理员可以一键把默认模板套用到当前编辑表单。
+5. 新建 `小说作品` 时自动带入默认收费模板。
+6. 已存在作品和章节不会被默认模板自动覆盖，必须手动套用并保存。
+
+当前实现见 [admin-pricing-defaults-8b.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/admin-pricing-defaults-8b.md:1)。
+
+## 当前执行：8B Admin 2.0 收费模板 / 默认规则
 
 阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台，阶段 7D 已让前台小说和 Blog/Devlog 支持读取后端发布内容，阶段 7E 已把收费规则和前台购买入口切到后端规则优先，阶段 7F 已把订单、账户、余额、授权和审计管理集中到 Admin 2.0。阶段 7G 已把旧 Markdown 内容迁入 D1/R2，并退役旧 GitHub Token 作者后台。生产迁移完成后，一次性迁移入口和 Worker Manifest 已清理。
 
-7H 已完成 Admin 2.0 封面图片上传、R2 媒体读取和前台封面展示。8A 正在把 NovelForge AI 的一键导入接入同一条 D1/R2 内容发布链路。
+7H 已完成 Admin 2.0 封面图片上传、R2 媒体读取和前台封面展示。8A 已把 NovelForge AI 的一键导入接入同一条 D1/R2 内容发布链路。8B 正在把小说收费规则沉淀为可复用的 Admin 2.0 默认模板。
 
 ## 已完成：阶段 6C
 

@@ -13,6 +13,7 @@ Implemented in this stage:
 - Static serial detail tip panels refresh tip amounts and can hide when backend tips are disabled.
 - Dynamic backend chapter pages render credit unlock, single chapter, supporter, and bundle purchase buttons from backend pricing.
 - Admin 2.0 shows an effective pricing preview that reads the same public pricing API after content is loaded or saved.
+- Stage 8B adds an Admin 2.0 pricing default template for newly created serial works; saved content still resolves through `content_pricing_rules`.
 
 ## Resolution Order
 

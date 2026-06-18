@@ -908,6 +908,7 @@ const contentStatuses = new Set(['draft', 'scheduled', 'published', 'archived'])
 const contentVisibilities = new Set(['public', 'unlisted', 'private']);
 const contentAccessLevels = new Set(['free', 'paid', 'supporter', 'member']);
 const contentBodyFormats = new Set(['markdown', 'html']);
+const contentPricingDefaultsSettingKey = 'content.pricing-defaults.v1';
 const novelForgeImportContract = 'station-cat-novelforge-import';
 const novelForgeImportContractHeader = 'station-cat-novelforge-import.v1';
 const novelForgePackageFormat = 'novelforge-standard-publish-package';
@@ -983,6 +984,14 @@ const normalizeContentVisibility = (value) => {
 const normalizeContentAccessLevel = (value) => {
   const accessLevel = cleanText(value || 'free', 30).toLowerCase();
   return contentAccessLevels.has(accessLevel) ? accessLevel : 'free';
+};
+
+const normalizeContentPricingDefaults = (value = {}) => {
+  const defaults = normalizeJsonObject(value);
+  return {
+    accessLevel: normalizeContentAccessLevel(defaults.accessLevel || defaults.access),
+    pricing: normalizeContentPricing(defaults.pricing || defaults)
+  };
 };
 
 const normalizeContentBodyFormat = (value) => {
@@ -1610,6 +1619,7 @@ const listContentPricingRules = async (db, options = {}) => {
 };
 
 const isMissingContentTablesError = (error) => /no such table: (content_|admin_audit_logs)/i.test(error?.message || '');
+const isMissingAdminContentSettingsError = (error) => /no such table: admin_content_settings/i.test(error?.message || '');
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -1617,6 +1627,16 @@ const ensureContentTablesReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingContentTablesError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureAdminContentSettingsReady = async (db) => {
+  try {
+    await db.prepare('SELECT setting_key FROM admin_content_settings LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingAdminContentSettingsError(error)) return false;
     throw error;
   }
 };
@@ -4508,8 +4528,8 @@ const handleAdminAdjustReaderCredits = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '8A',
-    purpose: 'Backend content management, media upload, pricing, order, reader account, credit, entitlement, audit, and NovelForge import operations centered in Admin 2.0.',
+    stage: '8B',
+    purpose: 'Backend content management, media upload, pricing defaults, order, reader account, credit, entitlement, audit, and NovelForge import operations centered in Admin 2.0.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -4540,6 +4560,7 @@ const handleAdminContentSchema = async (env) =>
         'content_revisions',
         'content_imports',
         'content_pricing_rules',
+        'admin_content_settings',
         'admin_audit_logs'
       ],
       legacyMigration: 'Completed. The one-time legacy Markdown migration endpoint and manifest have been removed from the Worker bundle.',
@@ -4549,8 +4570,9 @@ const handleAdminContentSchema = async (env) =>
       commerceAdmin: 'Admin 2.0 can inspect orders, reader accounts, credit ledger, entitlements, and rerun paid-order fulfillment.',
       mediaUpload: 'Admin 2.0 uploads cover images into CONTENT_BUCKET under content/media/covers.',
       novelForgeImport: 'NovelForge can publish projects, chapters, and cover metadata through POST /api/novelforge/import with a dedicated Bearer token.',
+      pricingDefaults: 'Admin 2.0 stores global novel pricing defaults in admin_content_settings and applies them to newly created series.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
-      nextStages: ['8B Admin 2.0 import review and retry flow']
+      nextStages: ['8C Admin 2.0 import review and retry flow']
     }
   });
 
@@ -5000,6 +5022,116 @@ const handleAdminListContentPricingRules = async (request, env) => {
     ok: true,
     pricingRules,
     stage: '7E-A'
+  });
+};
+
+const getDefaultContentPricingTemplate = () =>
+  normalizeContentPricingDefaults({
+    accessLevel: 'free',
+    pricing: {
+      mode: 'free',
+      freeChapters: 0
+    }
+  });
+
+const contentPricingDefaultsToJson = (row) => {
+  const template = row?.setting_json
+    ? normalizeContentPricingDefaults(parseStoredJson(row.setting_json, {}))
+    : getDefaultContentPricingTemplate();
+  return {
+    ...template,
+    isConfigured: Boolean(row),
+    updatedAt: row?.updated_at || '',
+    updatedBy: row?.updated_by || ''
+  };
+};
+
+const getContentPricingDefaultsRow = (db) =>
+  db
+    .prepare(
+      `SELECT setting_key, setting_json, updated_by, created_at, updated_at
+       FROM admin_content_settings
+       WHERE setting_key = ?`
+    )
+    .bind(contentPricingDefaultsSettingKey)
+    .first();
+
+const handleAdminGetContentPricingDefaults = async (env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureAdminContentSettingsReady(db))) {
+    return privateJson({
+      ok: true,
+      setupRequired: true,
+      message: 'Admin content settings are not initialized. Apply migration 0008_admin_content_settings.sql.',
+      template: contentPricingDefaultsToJson(null)
+    });
+  }
+
+  const row = await getContentPricingDefaultsRow(db);
+  return privateJson({
+    ok: true,
+    setupRequired: false,
+    stage: '8B',
+    template: contentPricingDefaultsToJson(row)
+  });
+};
+
+const handleAdminUpdateContentPricingDefaults = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureAdminContentSettingsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'ADMIN_CONTENT_SETTINGS_NOT_READY',
+        message: 'Admin content settings are not initialized. Apply migration 0008_admin_content_settings.sql before saving defaults.'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const template = normalizeContentPricingDefaults(payload);
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  const row = await db
+    .prepare(
+      `INSERT INTO admin_content_settings (setting_key, setting_json, updated_by)
+       VALUES (?, ?, ?)
+       ON CONFLICT(setting_key)
+       DO UPDATE SET
+         setting_json = excluded.setting_json,
+         updated_by = excluded.updated_by,
+         updated_at = CURRENT_TIMESTAMP
+       RETURNING setting_key, setting_json, updated_by, created_at, updated_at`
+    )
+    .bind(contentPricingDefaultsSettingKey, JSON.stringify(template), actorEmail)
+    .first();
+
+  if (await ensureContentTablesReady(db)) {
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: 'content_pricing_defaults_update',
+      targetType: 'admin_content_setting',
+      targetId: contentPricingDefaultsSettingKey,
+      targetSlug: contentPricingDefaultsSettingKey,
+      metadata: {
+        accessLevel: template.accessLevel,
+        pricing: template.pricing
+      }
+    });
+  }
+
+  return privateJson({
+    ok: true,
+    stage: '8B',
+    template: contentPricingDefaultsToJson(row)
   });
 };
 
@@ -7730,6 +7862,12 @@ export default {
 
     if (url.pathname === '/admin/api/content/pricing-rules') {
       if (request.method === 'GET') return handleAdminListContentPricingRules(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/pricing-defaults') {
+      if (request.method === 'GET') return handleAdminGetContentPricingDefaults(env);
+      if (request.method === 'POST') return handleAdminUpdateContentPricingDefaults(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
