@@ -1,5 +1,6 @@
 import { novelPaymentConfig } from './generated/novelPaymentConfig.js';
 import { protectedSerialContent } from './generated/protectedSerialContent.js';
+import { legacyContentManifest } from './generated/legacyContentManifest.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -4407,8 +4408,8 @@ const handleAdminAdjustReaderCredits = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '7F',
-    purpose: 'Backend content management with pricing, order, reader account, credit, entitlement, and audit operations centered in Admin 2.0.',
+    stage: '7G',
+    purpose: 'Backend content management with legacy Markdown migration, pricing, order, reader account, credit, entitlement, and audit operations centered in Admin 2.0.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -4445,7 +4446,14 @@ const handleAdminContentSchema = async (env) =>
       dynamicFrontend: 'Published backend content can render public Blog and serial pages without a site rebuild.',
       checkoutPricing: 'Reader-facing checkout resolves content_pricing_rules before generated static config and env defaults.',
       commerceAdmin: 'Admin 2.0 can inspect orders, reader accounts, credit ledger, entitlements, and rerun paid-order fulfillment.',
-      nextStages: ['7G legacy Markdown migration', '7H media cover upload']
+      legacyManifest: {
+        generatedAt: legacyContentManifest.generatedAt || '',
+        source: legacyContentManifest.source || 'src/content legacy Markdown',
+        totals: legacyContentManifest.totals || {},
+        entries: Array.isArray(legacyContentManifest.entries) ? legacyContentManifest.entries.length : 0
+      },
+      oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
+      nextStages: ['7H media cover upload', '8A NovelForge import API']
     }
   });
 
@@ -4760,43 +4768,12 @@ const uploadContentBodies = async (env, entry) => {
   }
 };
 
-const handleAdminUpsertContentEntry = async (request, env) => {
-  const db = env.WAITLIST_DB;
-  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
-  if (!(await ensureContentTablesReady(db))) {
-    return privateJson(
-      {
-        ok: false,
-        code: 'CONTENT_TABLES_NOT_READY',
-        message: 'Content tables are not initialized. Apply migration 0007_backend_content_platform.sql before saving.'
-      },
-      { status: 503 }
-    );
-  }
-
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid request body.' }, { status: 400 });
-  }
-
-  let entry;
-  try {
-    entry = normalizeContentPayload(payload);
-  } catch (error) {
-    return privateJson({ ok: false, code: error.code || 'CONTENT_INVALID', message: error.message }, { status: 400 });
-  }
-
-  const actorEmail = (await getAdminActorEmail(request, env)) || entry.updatedBy || entry.createdBy || 'admin';
+const persistContentEntry = async (db, env, entry, options = {}) => {
+  const actorEmail = cleanText(options.actorEmail, 254) || entry.updatedBy || entry.createdBy || 'admin';
   entry.createdBy = entry.createdBy || actorEmail;
   entry.updatedBy = actorEmail;
 
-  try {
-    await uploadContentBodies(env, entry);
-  } catch (error) {
-    return privateJson({ ok: false, code: error.code || 'CONTENT_UPLOAD_FAILED', message: error.message }, { status: 503 });
-  }
+  await uploadContentBodies(env, entry);
 
   const saved = await db
     .prepare(
@@ -4903,7 +4880,7 @@ const handleAdminUpsertContentEntry = async (request, env) => {
       revisionNumber,
       saved.status,
       saved.title,
-      cleanText(payload.revisionSummary, 500),
+      cleanText(options.revisionSummary, 500),
       saved.metadata_json,
       saved.pricing_json,
       saved.markdown_r2_key,
@@ -4914,7 +4891,7 @@ const handleAdminUpsertContentEntry = async (request, env) => {
 
   await insertAdminAuditLog(db, {
     actorEmail,
-    action: 'content_entry_upsert',
+    action: cleanText(options.auditAction || 'content_entry_upsert', 120),
     targetType: saved.entry_type,
     targetId: String(saved.id),
     targetSlug: `${saved.parent_slug ? `${saved.parent_slug}/` : ''}${saved.slug}`,
@@ -4922,17 +4899,318 @@ const handleAdminUpsertContentEntry = async (request, env) => {
       locale: saved.locale,
       pricingRules: pricingRules.length,
       revisionNumber,
-      status: saved.status
+      status: saved.status,
+      ...normalizeJsonObject(options.auditMetadata)
+    }
+  });
+
+  return { pricingRules, revisionNumber, saved };
+};
+
+const handleAdminUpsertContentEntry = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_TABLES_NOT_READY',
+        message: 'Content tables are not initialized. Apply migration 0007_backend_content_platform.sql before saving.'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  let entry;
+  try {
+    entry = normalizeContentPayload(payload);
+  } catch (error) {
+    return privateJson({ ok: false, code: error.code || 'CONTENT_INVALID', message: error.message }, { status: 400 });
+  }
+
+  try {
+    const actorEmail = (await getAdminActorEmail(request, env)) || entry.updatedBy || entry.createdBy || 'admin';
+    const { pricingRules, revisionNumber, saved } = await persistContentEntry(db, env, entry, {
+      actorEmail,
+      revisionSummary: payload.revisionSummary
+    });
+
+    return privateJson({
+      ok: true,
+      entry: contentEntryToJson(saved),
+      pricingRules,
+      revisionNumber,
+      storage: getContentStorageDescriptor(env)
+    });
+  } catch (error) {
+    return privateJson({ ok: false, code: error.code || 'CONTENT_UPLOAD_FAILED', message: error.message }, { status: 503 });
+  }
+};
+
+const legacyContentEntries = () => (Array.isArray(legacyContentManifest.entries) ? legacyContentManifest.entries : []);
+
+const legacyContentIdentityKey = (entry) =>
+  [entry.entryType, entry.locale, entry.parentSlug || '', entry.slug].map((part) => cleanText(part, 180)).join(':');
+
+const loadLegacyContentExistingState = async (db) => {
+  const response = await db
+    .prepare(
+      `SELECT id, entry_type, locale, parent_slug, slug, source_kind, source_ref, updated_at
+       FROM content_entries
+       WHERE source_kind = 'legacy-markdown'
+          OR source_ref LIKE 'src/content/%'`
+    )
+    .all();
+
+  const byIdentity = new Map();
+  const bySourceRef = new Map();
+  for (const row of response.results || []) {
+    const summary = {
+      id: row.id,
+      sourceKind: row.source_kind,
+      sourceRef: row.source_ref,
+      updatedAt: row.updated_at
+    };
+    byIdentity.set(
+      legacyContentIdentityKey({
+        entryType: row.entry_type,
+        locale: row.locale,
+        parentSlug: row.parent_slug,
+        slug: row.slug
+      }),
+      summary
+    );
+    if (row.source_ref) bySourceRef.set(row.source_ref, summary);
+  }
+
+  return { byIdentity, bySourceRef };
+};
+
+const summarizeLegacyContentEntry = (entry, existingState) => {
+  const existing = existingState.byIdentity.get(legacyContentIdentityKey(entry)) || existingState.bySourceRef.get(entry.sourceRef);
+  return {
+    action: existing ? 'update' : 'create',
+    entryType: entry.entryType,
+    existingId: existing?.id || 0,
+    locale: entry.locale,
+    parentSlug: entry.parentSlug || '',
+    sourceRef: entry.sourceRef,
+    status: entry.status,
+    title: entry.title,
+    slug: entry.slug
+  };
+};
+
+const handleAdminLegacyContentMigration = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_TABLES_NOT_READY',
+        message: 'Content tables are not initialized. Apply migration 0007_backend_content_platform.sql before migration.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const entries = legacyContentEntries();
+  const existingState = await loadLegacyContentExistingState(db);
+  const summaries = entries.map((entry) => summarizeLegacyContentEntry(entry, existingState));
+  const baseStats = summaries.reduce(
+    (stats, entry) => {
+      stats.total += 1;
+      stats[entry.action === 'update' ? 'updates' : 'creates'] += 1;
+      stats.byType[entry.entryType] = (stats.byType[entry.entryType] || 0) + 1;
+      return stats;
+    },
+    { byType: {}, creates: 0, total: 0, updates: 0 }
+  );
+
+  if (request.method === 'GET') {
+    return privateJson({
+      ok: true,
+      stage: '7G',
+      manifest: {
+        generatedAt: legacyContentManifest.generatedAt || '',
+        source: legacyContentManifest.source || 'src/content legacy Markdown',
+        totals: legacyContentManifest.totals || {},
+        entries: entries.length
+      },
+      stats: baseStats,
+      entries: summaries,
+      storage: getContentStorageDescriptor(env)
+    });
+  }
+
+  let payload = {};
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const execute = payload.execute === true || payload.mode === 'execute';
+  if (!execute) {
+    return privateJson({
+      ok: true,
+      dryRun: true,
+      stage: '7G',
+      message: 'Dry run complete. Send execute: true to import legacy Markdown into D1/R2.',
+      stats: baseStats,
+      entries: summaries
+    });
+  }
+
+  const bucket = getContentBucket(env);
+  if (!bucket) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_BUCKET_NOT_CONFIGURED',
+        message: 'CONTENT_BUCKET is required before importing legacy Markdown bodies.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  const timestamp = new Date().toISOString();
+  const importR2Key = `content/imports/legacy-markdown/${timestamp.slice(0, 10)}/${Date.now()}-legacy-content-manifest.json`;
+  await bucket.put(
+    importR2Key,
+    JSON.stringify(
+      {
+        generatedAt: legacyContentManifest.generatedAt || '',
+        importedAt: timestamp,
+        importedBy: actorEmail,
+        source: legacyContentManifest.source || 'src/content legacy Markdown',
+        totals: legacyContentManifest.totals || {},
+        entries: summaries
+      },
+      null,
+      2
+    ),
+    { httpMetadata: { contentType: 'application/json; charset=utf-8' } }
+  );
+
+  const importRow = await db
+    .prepare(
+      `INSERT INTO content_imports (
+        import_type, filename, r2_key, status, entries_created, entries_updated,
+        warnings_json, errors_json, created_by
+      )
+      VALUES ('legacy-markdown', 'legacy-content-manifest.js', ?, 'running', 0, 0, '[]', '[]', ?)
+      RETURNING *`
+    )
+    .bind(importR2Key, actorEmail)
+    .first();
+
+  const result = {
+    created: 0,
+    entries: [],
+    errors: [],
+    importId: importRow?.id || 0,
+    importR2Key,
+    total: entries.length,
+    updated: 0,
+    warnings: []
+  };
+
+  for (const item of entries) {
+    const summary = summarizeLegacyContentEntry(item, existingState);
+    try {
+      const entry = normalizeContentPayload({
+        ...item,
+        importR2Key,
+        metadata: {
+          ...normalizeJsonObject(item.metadata),
+          legacyManifestGeneratedAt: legacyContentManifest.generatedAt || '',
+          legacyMigrationImportId: result.importId,
+          legacyMigrationStage: '7G'
+        },
+        sourceKind: 'legacy-markdown'
+      });
+      const { revisionNumber, saved } = await persistContentEntry(db, env, entry, {
+        actorEmail,
+        auditAction: 'content_legacy_markdown_import',
+        auditMetadata: {
+          importId: result.importId,
+          sourceRef: item.sourceRef,
+          previousAction: summary.action
+        },
+        revisionSummary: item.revisionSummary || `Imported legacy Markdown from ${item.sourceRef}`
+      });
+      if (summary.action === 'update') result.updated += 1;
+      else result.created += 1;
+      result.entries.push({
+        ...summary,
+        action: summary.action,
+        id: saved.id,
+        revisionNumber
+      });
+    } catch (error) {
+      result.errors.push({
+        ...summary,
+        code: error.code || 'LEGACY_IMPORT_ENTRY_FAILED',
+        message: error.message || 'Legacy import failed.'
+      });
+    }
+  }
+
+  const finalStatus = result.errors.length ? (result.entries.length ? 'completed_with_errors' : 'failed') : 'completed';
+  await db
+    .prepare(
+      `UPDATE content_imports
+       SET status = ?,
+           entries_created = ?,
+           entries_updated = ?,
+           warnings_json = ?,
+           errors_json = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .bind(
+      finalStatus,
+      result.created,
+      result.updated,
+      JSON.stringify(result.warnings),
+      JSON.stringify(result.errors),
+      result.importId
+    )
+    .run();
+
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: 'content_legacy_markdown_import_complete',
+    targetType: 'content_import',
+    targetId: String(result.importId),
+    targetSlug: 'legacy-markdown',
+    metadata: {
+      created: result.created,
+      errors: result.errors.length,
+      importR2Key,
+      status: finalStatus,
+      total: result.total,
+      updated: result.updated
     }
   });
 
   return privateJson({
     ok: true,
-    entry: contentEntryToJson(saved),
-    pricingRules,
-    revisionNumber,
-    storage: getContentStorageDescriptor(env)
-  });
+    hasErrors: result.errors.length > 0,
+    stage: '7G',
+    status: finalStatus,
+    ...result
+  }, result.errors.length ? { status: 207 } : {});
 };
 
 const handlePublicContentEntries = async (request, env) => {
@@ -6767,6 +7045,11 @@ export default {
 
     if (url.pathname === '/admin/api/content/preview') {
       if (request.method === 'POST') return handleAdminContentPreview(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/legacy-migration') {
+      if (request.method === 'GET' || request.method === 'POST') return handleAdminLegacyContentMigration(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

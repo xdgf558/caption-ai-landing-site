@@ -2,7 +2,7 @@
 
 Stage 7C introduces a new backend-first admin surface at `/admin-v2/`.
 
-The old `/admin/` GitHub-token Markdown editor remains available during validation. It should only be removed after Stage 7G migrates legacy Markdown into D1/R2 and confirms the new publishing flow is stable.
+The old `/admin/` GitHub-token Markdown editor remained available during initial validation. Stage 7G retires that editor and routes routine publishing through Admin 2.0.
 
 ## Goals
 
@@ -26,6 +26,7 @@ The page has four primary areas:
 - Reader accounts: inspect balances, credit ledger, recent orders, and entitlements.
 - Entitlements: query, grant, and revoke reader access with audit logs.
 - Audit: read `admin_audit_logs` for content and commerce operations.
+- Migration: scan, dry-run, and import legacy `src/content` Markdown into D1/R2.
 
 ## New Admin APIs
 
@@ -125,4 +126,4 @@ Stage 7C does not yet make public novel or Blog pages dynamic. Existing static A
 
 Stage 7D should convert the public reading and Blog/Devlog surfaces to read backend-published content from the Worker APIs, while retaining static Astro content as a rollback path. The target outcome is immediate publishing from Admin 2.0 without a GitHub commit or site redeploy for routine chapters and posts.
 
-Stage 7C also does not remove legacy Markdown content or the old `/admin/` page. That cleanup belongs to Stage 7G.
+Stage 7G adds the legacy Markdown migration flow and replaces the old `/admin/` authoring page with a retirement notice. The repository Markdown files remain as rollback history until a later cleanup stage.

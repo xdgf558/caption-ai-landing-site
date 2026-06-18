@@ -2,7 +2,7 @@
 
 Stage 7F makes Admin 2.0 the operating center for reader commerce support.
 
-The old `/admin/` GitHub-token Markdown editor remains available only during migration. New admin features should be added to `/admin-v2/` and backed by Worker admin APIs under `/admin/api/...`.
+Stage 7G retires the old `/admin/` GitHub-token Markdown editor. New admin features should be added to `/admin-v2/` and backed by Worker admin APIs under `/admin/api/...`.
 
 ## Scope
 
@@ -18,10 +18,10 @@ The old `/admin/` GitHub-token Markdown editor remains available only during mig
 
 7F does not:
 
-- Migrate old Markdown content into D1/R2. That remains Stage 7G.
-- Remove the old `/admin/` page. That remains Stage 7G after migration validation.
 - Upload cover images. That is tracked as a later 7H media-management option.
 - Mark unpaid orders as paid. Non-confirmed support cases should use manual entitlement grant or manual credit adjustment.
+
+Stage 7G later added legacy Markdown migration and retired the old `/admin/` authoring page.
 
 ## Admin APIs
 

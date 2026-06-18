@@ -1,14 +1,14 @@
 # Station Cat 小说连载发布指南
 
-当前处于过渡期。
+当前发布入口是 Admin 2.0。
 
-已经上线的小说和章节仍使用 Git 内容流：小说和章节都用 Markdown 文件管理，网站构建时自动生成书架、作品页和章节页。阶段三开始，`/admin/` 后台可以直接导入完整 Markdown，不必每次手动进入仓库改文件。
+阶段 7G 后，旧 `/admin/` GitHub Token Markdown 编辑器已经退役。小说章节和网站 Blog/Devlog 的日常发布都应通过 `/admin-v2/` 完成：正文进入 R2，元数据、收费规则、导入记录和审计日志进入 D1。
 
-阶段 7 开始建设后端内容平台。长期目标是让小说章节和网站 Blog/Devlog 都通过 Admin 2.0 发布，正文进入 R2，元数据、收费规则、导入记录和审计日志进入 D1。旧的 GitHub token 写 Markdown 后台会在迁移完成后下线。
+旧 `src/content` Markdown 文件仍保留为历史和回滚来源。需要批量迁移时，在 Admin 2.0 的 `迁移` 页签里先扫描、模拟，再执行导入。
 
-后端化设计见 [backend-content-platform-7a.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/backend-content-platform-7a.md:1)。
+后端化设计见 [backend-content-platform-7a.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/backend-content-platform-7a.md:1)，迁移流程见 [legacy-content-migration-7g.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/legacy-content-migration-7g.md:1)。
 
-## 目录
+## 历史 Markdown 目录
 
 ```text
 src/content/serials/
@@ -35,38 +35,40 @@ src/content/serialChapters/deng-hai-liang-zhe-002-city-after-midnight.md
 
 ## 新增一本小说
 
-### 后台导入
+### Admin 2.0
 
-1. 打开 `/admin/`。
-2. 输入只授权当前 repo 的 GitHub fine-grained token，权限需要 Contents: Read and write。
-3. 切到 `連載小說`。
-4. 点击 `新小说 Markdown`。
-5. 选择 `小说资料`，粘贴完整 Markdown，或点击 `选择 Markdown 文件` 读取本地 `.md` 文件。
-6. 点击 `解析 Markdown`，确认目标路径是 `src/content/serials/{seriesSlug}.md`。
-7. 点击 `保存小说 Markdown`。
+1. 打开 `/admin-v2/`。
+2. 在 `内容` 页签点击 `新作品`。
+3. 填写标题、Slug、语言、简介、标签、状态和可见性。
+4. 在 Markdown 正文区写作品介绍，或点击 `导入 Markdown` 读取本地 `.md` 文件。
+5. 在 `Pricing` 区域设置免费/付费/打赏/多章折扣规则。
+6. 点击 `打开 Worker 预览` 检查页面。
+7. 点击 `保存到后端内容平台`。
 
-### 手动文件
+### Markdown 模板参考
 
 1. 复制 [serial.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/templates/serial.md:1)。
-2. 放到 `src/content/serials/{seriesSlug}.md`。
+2. 在本地填写后，通过 Admin 2.0 的 `导入 Markdown` 读取。
 3. 填好 `title`、`seriesSlug`、`author`、`description`、`tagline`、`status`。
 4. 如果这本书要在首页和书架页主推，把 `featured` 设为 `true`。
 5. `latestChapterSlug` 和 `latestChapterNumber` 跟最新已发布章节保持一致。
 
 ## 新增一章
 
-### 后台导入
+### Admin 2.0
 
-1. 打开 `/admin/` 并切到 `連載小說`。
-2. 点击 `新小说 Markdown`。
-3. 选择 `章节正文`，粘贴完整章节 Markdown，或点击 `选择 Markdown 文件` 读取本地 `.md` 文件。
-4. 点击 `解析 Markdown`，确认目标路径是 `src/content/serialChapters/{seriesSlug}-{number}-{chapterSlug}.md`。
-5. 点击 `保存小说 Markdown`。
+1. 打开 `/admin-v2/`。
+2. 在 `内容` 页签点击 `新章节`。
+3. 填写 `seriesSlug`、章节 Slug、章节序号、标题、摘要、访问级别和发布时间。
+4. 在 Markdown 正文区写章节正文，或点击 `导入 Markdown` 读取本地 `.md` 文件。
+5. 付费章节把访问级别设为 `paid` 或 `supporter`。
+6. 点击 `打开 Worker 预览` 检查门禁或正文展示。
+7. 点击 `保存到后端内容平台`。
 
-### 手动文件
+### Markdown 模板参考
 
 1. 复制 [serial-chapter.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/templates/serial-chapter.md:1)。
-2. 放到 `src/content/serialChapters/{seriesSlug}-{number}-{chapterSlug}.md`。
+2. 在本地填写后，通过 Admin 2.0 的 `导入 Markdown` 读取。
 3. `seriesSlug` 必须和小说文件一致。
 4. `chapterNumber` 决定目录和上一章 / 下一章顺序。
 5. 只有 `status: "published"` 的章节会出现在前台。
@@ -98,7 +100,7 @@ src/content/serialChapters/deng-hai-liang-zhe-002-city-after-midnight.md
 
 ## 小说收费设置
 
-Admin 的 `連載小說` 面板里已经有可视化收费设置。它会更新小说资料 Markdown 的这些字段：
+Admin 2.0 的 `Pricing` 区域是小说收费规则的主入口。它会保存到 D1 `content_pricing_rules`，并供前台 `/api/novels/pricing`、NOWPayments 下单和阅读点解锁使用。
 
 - `priceMode`：免费、免费 + 打赏、单章购买、分卷购买或会员阅读
 - `freeChapters`：展示用免费章节数
@@ -109,7 +111,7 @@ Admin 的 `連載小說` 面板里已经有可视化收费设置。它会更新�
 - `bundlePurchasesEnabled`：是否开启多章折扣配置
 - `chapterBundleDiscounts`：一次购买多章的折扣规则
 
-这些字段不只是页面展示。`npm run build` 会先运行 `scripts/build-novel-payment-config.mjs`，把小说 Markdown 和章节顺序生成到 `src/generated/novelPaymentConfig.js`。Worker 创建 NOWPayments 订单时会读取这个生成配置，并以它作为单章、支持者、打赏按钮和多章折扣的价格来源。
+这些规则不再依赖 GitHub Markdown 发布。保存内容后，可以在 Admin 2.0 的 `生效价格预览` 中读取公共 pricing API，确认前台展示和后台设置一致。
 
 多章折扣配置示例：
 
@@ -126,11 +128,11 @@ chapterBundleDiscounts:
 
 ## 发布检查
 
-每次新增或修改小说内容后，至少跑：
+代码变更后至少跑：
 
 ```bash
 npm run build
 git diff --check
 ```
 
-如果页面结构、章节顺序、上一章 / 下一章都正确，再开 PR 审查。
+日常内容发布不需要重新部署代码。通过 Admin 2.0 保存并预览即可；如果是生产内容，先确认 Cloudflare Access 正常保护 `/admin-v2/` 和 `/admin/api/*`。

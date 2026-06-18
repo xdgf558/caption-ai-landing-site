@@ -52,6 +52,7 @@ These routes must cover both admin pages and admin API routes, including:
 /admin/api/content/audit-logs
 /admin/api/content/pricing-rules
 /admin/api/content/preview
+/admin/api/content/legacy-migration
 /admin/api/novels/entitlements
 /admin/api/novels/entitlements/grant
 /admin/api/novels/entitlements/revoke
@@ -120,7 +121,8 @@ This repo also includes:
 - Worker-level admin guard in `src/worker.js` for `/admin*` and `/admin-v2*`.
 - `functions/_middleware.js` to verify Cloudflare Access JWTs for `/admin/` and `/admin-v2/` on Cloudflare Pages-style deployments.
 - Stage 7A backend content APIs under `/admin/api/content/*` are intentionally nested below `/admin` so the same Access rule covers Admin 2.0 content operations.
-- Stage 7F reader/order/credit APIs under `/admin/api/novels/*` follow the same Admin 2.0 rule. New admin functionality should use Admin 2.0 and these protected admin APIs rather than adding capabilities to the old GitHub-token editor.
+- Stage 7F reader/order/credit APIs under `/admin/api/novels/*` follow the same Admin 2.0 rule.
+- Stage 7G legacy migration APIs under `/admin/api/content/legacy-migration` follow the same Admin 2.0 rule, and the old GitHub-token editor at `/admin/` has been retired.
 
 The headers and hidden links are not a replacement for Cloudflare Access. The Worker guard and middleware are defense-in-depth checks and require the Access application plus the environment variables above.
 
