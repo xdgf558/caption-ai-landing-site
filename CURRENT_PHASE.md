@@ -1,13 +1,13 @@
 # Current Phase
 
-Novel reading module Stage 8A: NovelForge one-click import API.
+Novel reading module Stage 8B: Admin 2.0 pricing defaults.
 
-7H is complete:
+8A is complete:
 
-1. Admin 2.0 can upload cover images into `CONTENT_BUCKET`.
-2. Uploaded covers use the R2 key convention `content/media/covers/{yyyy}/{mm}/{slug}-{timestamp}-{token}.{ext}`.
-3. Content entries continue to store `cover_r2_key` and `cover_alt`; no schema migration is required.
-4. Public dynamic content APIs expose `coverUrl`, and dynamic Blog / serial cards render covers when available.
+1. `POST /api/novelforge/import` is available for NovelForge AI.
+2. The import API uses `NOVELFORGE_PUBLISH_TOKEN` Bearer authentication.
+3. Imported projects save as `novel_series`; imported chapters save as `novel_chapter`.
+4. NovelForge receives stable remote IDs, Admin 2.0 preview links, public publish links, and per-item status results.
 
 Product direction:
 
@@ -16,15 +16,15 @@ Product direction:
 - Pricing rules stay editable in Admin 2.0; NovelForge import must not overwrite pricing automatically.
 - External publishing tools should write into the same D1/R2 backend content platform as Admin 2.0.
 
-8A scope:
+8B scope:
 
-1. Add `POST /api/novelforge/import` for NovelForge AI.
-2. Authenticate the import API with a dedicated `NOVELFORGE_PUBLISH_TOKEN` Bearer token.
-3. Accept the `station-cat-novelforge-import.v1` contract and `novelforge-standard-publish-package` payload.
-4. Import project metadata as `novel_series` and chapter bodies as `novel_chapter`.
-5. Store bodies in `CONTENT_BUCKET`, metadata in D1, and import audit records in `content_imports` / `admin_audit_logs`.
-6. Return stable remote IDs, Admin 2.0 preview links, public publish links, and per-item status results.
+1. Add an Admin 2.0 pricing template panel.
+2. Store global novel pricing defaults in D1 `admin_content_settings`.
+3. Allow admins to save the current pricing panel as the default template.
+4. Allow admins to apply the default template to the current form.
+5. Automatically apply the default template when creating a new `novel_series`.
+6. Keep existing entries unchanged unless the admin explicitly saves them.
 
 Next stages:
 
-- Stage 8B: Admin 2.0 NovelForge import review, retry, and conflict-resolution flow.
+- Stage 8C: Admin 2.0 NovelForge import review, retry, and conflict-resolution flow.
