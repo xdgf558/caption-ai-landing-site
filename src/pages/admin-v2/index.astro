@@ -34,7 +34,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="accounts">账户</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="access">授权</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="audit">审计</button>
-            <button class="admin-v2-tab" type="button" data-admin-v2-tab="migration">迁移</button>
         </div>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="content-sidebar">
@@ -146,18 +145,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <button class="button button-primary" id="audit-refresh" type="button">刷新审计</button>
         </section>
 
-        <section class="admin-v2-sidebar-section" data-admin-v2-panel="migration-sidebar" hidden>
-          <p class="admin-empty-list">
-            将旧的 <code>src/content</code> Markdown 批量导入 D1/R2。先扫描和模拟，确认后再执行。
-          </p>
-          <div class="button-row">
-            <button class="button button-primary" id="legacy-scan" type="button">扫描旧内容</button>
-          </div>
-          <div class="button-row">
-            <button class="button button-secondary" id="legacy-dry-run" type="button">模拟迁移</button>
-            <button class="button button-danger" id="legacy-execute" type="button">执行迁移</button>
-          </div>
-        </section>
       </aside>
 
       <div class="admin-v2-main">
@@ -362,7 +349,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 </label>
                 <label>
                   Source Ref
-                  <input id="content-source-ref" placeholder="legacy markdown path or import id" />
+                  <input id="content-source-ref" placeholder="source path, import id, or external reference" />
                 </label>
                 <label>
                   Revision Summary
@@ -496,25 +483,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div class="admin-v2-table-list" id="audit-list"></div>
         </section>
 
-        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="migration-main" hidden>
-          <div class="admin-v2-section-heading">
-            <div>
-              <p class="station-kicker">Stage 7G</p>
-              <h2>旧 Markdown 内容迁移</h2>
-            </div>
-            <span class="admin-status-pill">Admin 2.0 Source</span>
-          </div>
-          <div class="admin-v2-subpanel">
-            <p>
-              这个迁移只把旧博客、小说资料和章节正文写入后端内容平台。它不会删除仓库里的历史 Markdown，也不会自动修改读者定价。迁移完成后，日常发布应该从 Admin 2.0 继续。
-            </p>
-            <div class="admin-v2-migration-summary" id="legacy-summary">
-              等待扫描旧内容。
-            </div>
-            <div class="admin-inline-status" id="legacy-status" role="status" aria-live="polite" hidden></div>
-          </div>
-          <div class="admin-v2-table-list" id="legacy-list"></div>
-        </section>
       </div>
     </div>
   </section>
@@ -537,9 +505,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       accountDetail: $('#account-detail'),
       accessList: $('#access-list'),
       auditList: $('#audit-list'),
-      legacyList: $('#legacy-list'),
-      legacySummary: $('#legacy-summary'),
-      legacyStatus: $('#legacy-status'),
       contentForm: $('#content-form'),
       accessForm: $('#access-form'),
       saveStatus: $('#content-save-status'),
@@ -598,11 +563,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         auditTargetType: $('#audit-target-type'),
         auditTargetSlug: $('#audit-target-slug')
       },
-      legacy: {
-        scan: $('#legacy-scan'),
-        dryRun: $('#legacy-dry-run'),
-        execute: $('#legacy-execute')
-      },
       access: {
         email: $('#access-email'),
         seriesSlug: $('#access-series-slug'),
@@ -639,12 +599,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.effectivePricingStatus.textContent = message;
       elements.effectivePricingStatus.dataset.tone = tone;
       elements.effectivePricingStatus.hidden = !message;
-    };
-
-    const setLegacyStatus = (message, tone = 'neutral') => {
-      elements.legacyStatus.textContent = message;
-      elements.legacyStatus.dataset.tone = tone;
-      elements.legacyStatus.hidden = !message;
     };
 
     const apiJson = async (path, options = {}) => {
@@ -1639,79 +1593,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       `).join('');
     };
 
-    const entryActionLabel = (action) => (action === 'update' ? '更新' : '创建');
-
-    const renderLegacyMigration = (payload) => {
-      const stats = payload.stats || {
-        byType: {},
-        creates: payload.created || 0,
-        total: payload.total || 0,
-        updates: payload.updated || 0
-      };
-      const manifest = payload.manifest || {};
-      const typeLines = Object.entries(stats.byType || {})
-        .map(([type, count]) => `${entryTypeLabel(type)} ${count}`)
-        .join(' · ');
-      elements.legacySummary.innerHTML = `
-        <div class="admin-detail-grid">
-          <article><span>总数</span><strong>${escapeHtml(String(stats.total || manifest.entries || 0))}</strong></article>
-          <article><span>将创建</span><strong>${escapeHtml(String(stats.creates || payload.created || 0))}</strong></article>
-          <article><span>将更新</span><strong>${escapeHtml(String(stats.updates || payload.updated || 0))}</strong></article>
-          <article><span>Manifest</span><strong>${escapeHtml((manifest.generatedAt || '').slice(0, 10) || 'generated')}</strong></article>
-        </div>
-        <p>${escapeHtml(typeLines || '暂无类型统计')}</p>
-        ${payload.importId ? `<p><strong>Import #${escapeHtml(String(payload.importId))}</strong> · ${escapeHtml(payload.status || '')}</p>` : ''}
-      `;
-
-      const entries = payload.entries || [];
-      if (!entries.length) {
-        renderEmpty(elements.legacyList, '没有可迁移的旧内容。');
-        return;
-      }
-
-      elements.legacyList.innerHTML = entries.map((entry) => `
-        <article class="admin-v2-row">
-          <strong>${escapeHtml(entry.title || entry.slug)}</strong>
-          <span>${escapeHtml(entryTypeLabel(entry.entryType))} · ${escapeHtml(entry.locale)} · ${escapeHtml(entryActionLabel(entry.action))} · ${escapeHtml(entry.status || '')}</span>
-          <small>${escapeHtml(entry.parentSlug ? `${entry.parentSlug}/${entry.slug}` : entry.slug)} · ${escapeHtml(entry.sourceRef || '')}</small>
-        </article>
-      `).join('');
-    };
-
-    const loadLegacyMigration = async () => {
-      setLegacyStatus('正在扫描 legacy manifest。');
-      const payload = await apiJson('/admin/api/content/legacy-migration');
-      renderLegacyMigration(payload);
-      setLegacyStatus(`已扫描 ${payload.stats?.total || 0} 条旧内容。`, 'success');
-    };
-
-    const runLegacyMigration = async ({ execute = false } = {}) => {
-      if (execute && !window.confirm('确认执行旧 Markdown 迁移？这会写入 D1、R2、修订记录和审计日志。')) {
-        return;
-      }
-      const button = execute ? elements.legacy.execute : elements.legacy.dryRun;
-      button.disabled = true;
-      setLegacyStatus(execute ? '正在执行迁移，写入 D1 / R2。' : '正在模拟迁移。');
-      try {
-        const payload = await apiJson('/admin/api/content/legacy-migration', {
-          method: 'POST',
-          body: JSON.stringify(execute ? { execute: true } : { dryRun: true })
-        });
-        renderLegacyMigration(payload);
-        setLegacyStatus(
-          execute
-            ? `迁移完成：创建 ${payload.created || 0}，更新 ${payload.updated || 0}，错误 ${payload.errors?.length || 0}。`
-            : `模拟完成：将创建 ${payload.stats?.creates || 0}，将更新 ${payload.stats?.updates || 0}。`,
-          payload.errors?.length ? 'error' : 'success'
-        );
-        if (execute) await Promise.all([loadEntries(), loadAuditLogs()]);
-      } catch (error) {
-        setLegacyStatus(error.message, 'error');
-      } finally {
-        button.disabled = false;
-      }
-    };
-
     const switchTab = async (name) => {
       elements.tabs.forEach((tab) => tab.classList.toggle('is-active', tab.dataset.adminV2Tab === name));
       elements.panels.forEach((panel) => {
@@ -1722,7 +1603,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (name === 'accounts') await loadAccounts();
       if (name === 'access') await loadEntitlements();
       if (name === 'audit') await loadAuditLogs();
-      if (name === 'migration') await loadLegacyMigration();
     };
 
     elements.tabs.forEach((tab) => tab.addEventListener('click', () => switchTab(tab.dataset.adminV2Tab)));
@@ -1733,9 +1613,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#accounts-refresh').addEventListener('click', loadAccounts);
     $('#access-refresh').addEventListener('click', loadEntitlements);
     $('#audit-refresh').addEventListener('click', loadAuditLogs);
-    elements.legacy.scan.addEventListener('click', loadLegacyMigration);
-    elements.legacy.dryRun.addEventListener('click', () => runLegacyMigration({ execute: false }));
-    elements.legacy.execute.addEventListener('click', () => runLegacyMigration({ execute: true }));
     $('#content-reset').addEventListener('click', () => resetForm(elements.fields.entryType.value));
     $('#content-preview-button').addEventListener('click', renderPreview);
     $('#content-worker-preview-button').addEventListener('click', openWorkerPreview);

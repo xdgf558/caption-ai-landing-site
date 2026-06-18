@@ -4,7 +4,7 @@
 
 阶段 7G 后，旧 `/admin/` GitHub Token Markdown 编辑器已经退役。小说章节和网站 Blog/Devlog 的日常发布都应通过 `/admin-v2/` 完成：正文进入 R2，元数据、收费规则、导入记录和审计日志进入 D1。
 
-旧 `src/content` Markdown 文件仍保留为历史和回滚来源。需要批量迁移时，在 Admin 2.0 的 `迁移` 页签里先扫描、模拟，再执行导入。
+旧 `src/content` Markdown 文件仍保留为历史和回滚来源。7G 批量迁移已经完成；Admin 2.0 的一次性迁移页签和迁移 API 已清理，后续日常发布不再使用旧 Markdown 导入流程。
 
 后端化设计见 [backend-content-platform-7a.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/backend-content-platform-7a.md:1)，迁移流程见 [legacy-content-migration-7g.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/legacy-content-migration-7g.md:1)。
 
