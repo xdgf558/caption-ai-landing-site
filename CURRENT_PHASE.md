@@ -1,7 +1,14 @@
 # Current Phase
 
-Novel reading module phase 7E-A: backend pricing rule storage.
+Novel reading module phase 7E-B: frontend checkout consumes backend pricing rules.
 
-Current task: keep Admin 2.0 pricing controls in D1 by syncing `content_entries.pricing_json` into normalized `content_pricing_rules` rows whenever content is saved.
+Current task: make reader-facing gates, tip buttons, reading-credit unlocks, and NOWPayments checkout resolve pricing from backend D1 rules first.
 
-Out of scope for 7E-A: reader-facing checkout consumption, balance deduction pricing, public purchase UI changes, and fuller order/account/entitlement management.
+Pricing resolution order:
+
+1. `content_pricing_rules`
+2. `content_entries.pricing_json`
+3. Generated legacy `novelPaymentConfig`
+4. Environment defaults
+
+Out of scope for 7E-B: full order/account/entitlement management UI, old Markdown admin removal, and bulk static content migration.

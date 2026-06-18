@@ -312,6 +312,53 @@ const accessGateCopy = {
       if (creditUnlockButton) creditUnlockButton.disabled = disabled;
     };
 
+    const formatPaymentAmount = (amount, currency) => {
+      const parsedAmount = Number.parseFloat(String(amount || ''));
+      if (!Number.isFinite(parsedAmount)) return '';
+      try {
+        return new Intl.NumberFormat(gate?.dataset.locale || 'zh-Hant', { style: 'currency', currency }).format(parsedAmount);
+      } catch {
+        return `${parsedAmount.toFixed(2)} ${currency}`;
+      }
+    };
+
+    const refreshPricing = async () => {
+      if (!gate) return;
+      const query = new URLSearchParams({
+        series: gate.dataset.seriesSlug,
+        chapter: gate.dataset.chapterSlug,
+        locale: gate.dataset.locale
+      });
+      const response = await fetch(`/api/novels/pricing?${query.toString()}`);
+      const data = await response.json();
+      if (!response.ok || !data.ok || !data.pricing) return;
+
+      const pricing = data.pricing;
+      const bundleOptions = Array.isArray(pricing.bundleOptions) ? pricing.bundleOptions : [];
+      const bundleByCount = new Map(bundleOptions.map((option) => [String(option.chapterCount), option]));
+      unlockButtons.forEach((button) => {
+        const orderType = button.dataset.orderType || gate.dataset.orderType;
+        if (orderType === 'chapter') {
+          button.textContent = `${accessGateCopy.unlock} ${formatPaymentAmount(pricing.chapterPriceAmount, pricing.chapterPriceCurrency)}`;
+        } else if (orderType === 'supporter') {
+          button.textContent = `${accessGateCopy.unlock} ${formatPaymentAmount(pricing.supporterPriceAmount, pricing.supporterPriceCurrency)}`;
+        } else if (orderType === 'chapter-bundle') {
+          const option = bundleByCount.get(String(button.dataset.bundleChapters || ''));
+          if (option) {
+            button.dataset.chapterSlugs = (option.chapterSlugs || []).join(',');
+            button.textContent = `${accessGateCopy.bundle} ${option.chapterCount}${accessGateCopy.bundleUnit} · ${formatPaymentAmount(option.priceAmount, option.priceCurrency)} · ${option.discountPercent}% ${accessGateCopy.bundleOff}`;
+            button.hidden = false;
+          } else {
+            button.hidden = true;
+          }
+        }
+      });
+
+      if (creditUnlockButton && pricing.chapterCredits) {
+        creditUnlockButton.textContent = `${accessGateCopy.creditUnlock} · ${pricing.chapterCredits}`;
+      }
+    };
+
     const loadCreditSummary = async () => {
       if (!creditStatus) return;
       setCreditStatus(accessGateCopy.creditLoading, 'neutral');
@@ -434,7 +481,8 @@ const accessGateCopy = {
             body: JSON.stringify({
               seriesSlug: gate.dataset.seriesSlug,
               chapterSlug: gate.dataset.chapterSlug,
-              access: gate.dataset.access
+              access: gate.dataset.access,
+              locale: gate.dataset.locale
             })
           });
           const data = await response.json();
@@ -505,7 +553,9 @@ const accessGateCopy = {
       });
     });
 
-    refreshReturnedPaymentOrder()
+    refreshPricing()
+      .catch(() => null)
+      .then(refreshReturnedPaymentOrder)
       .then((handled) => {
         if (!handled) return checkAccess();
         return null;

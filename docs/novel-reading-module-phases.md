@@ -222,6 +222,7 @@
 
 - 章节门禁、购买按钮和 NOWPayments 下单改为优先读取 `content_pricing_rules`。
 - 余额支付和多章购买价格提示使用后台规则计算。
+- 公开 `/api/novels/pricing` 返回前台展示所需的最终生效规则。
 
 ### 阶段 7F：订单 / 账户 / 授权管理后台化
 
@@ -235,11 +236,11 @@
 2. 校验 slug、语言、发布时间、章节顺序和 SEO 数据。
 3. 移除旧 GitHub token 写 Markdown 后台。
 
-## 当前执行：阶段 7D
+## 当前执行：阶段 7E-B
 
-阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台。当前进入 7D，把前台小说和 Blog/Devlog 逐步接入后端内容：索引页继续保留静态内容并追加后端发布条目，后端详情页由 Worker 动态渲染，已发布内容不再需要为了每次更新重新部署网站。
+阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台，阶段 7D 已让前台小说和 Blog/Devlog 支持读取后端发布内容。当前进入 7E-B，把前台购买入口、阅读点扣除和 NOWPayments 下单改为优先消费后台收费规则。
 
-详细文档见 [dynamic-frontend-content-7d.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/dynamic-frontend-content-7d.md:1)。
+详细文档见 [backend-pricing-checkout-7e-b.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/backend-pricing-checkout-7e-b.md:1)。
 
 ## 已完成：阶段 6C
 

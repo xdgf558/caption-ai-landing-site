@@ -421,22 +421,27 @@ const findReaderCreditPack = (env, requestedCredits) => {
   };
 };
 
-const getSeriesPaymentSettings = (seriesSlug, env) => {
+const getStaticSeriesPaymentSettings = (seriesSlug, env) => {
   const defaults = getCheckoutPrices(env);
   const settings = novelPaymentConfig?.series?.[seriesSlug];
+  const readerCreditConfig = getReaderCreditConfig(env);
   if (!settings) {
     return {
       seriesSlug,
       source: 'env-default',
+      priceMode: 'chapter-paid',
+      freeChapters: 0,
       tipsEnabled: true,
       tipAmounts: [3, 5, 10],
       tipCurrency: 'USD',
       chapterPriceAmount: defaults.chapter,
       chapterPriceCurrency: 'USD',
+      chapterCredits: readerCreditConfig.chapterCostCredits,
       supporterPriceAmount: defaults.supporter,
       supporterPriceCurrency: 'USD',
       bundlePurchasesEnabled: false,
       chapterBundleDiscounts: [],
+      creditPacks: readerCreditConfig.packs,
       chapters: []
     };
   }
@@ -448,15 +453,19 @@ const getSeriesPaymentSettings = (seriesSlug, env) => {
   return {
     seriesSlug,
     source: 'serial-config',
+    priceMode: normalizeContentPricingMode(settings.priceMode),
+    freeChapters: normalizePositiveInteger(settings.freeChapters, 0),
     tipsEnabled: settings.tipsEnabled !== false,
     tipAmounts: tipAmounts.length ? tipAmounts : [3, 5, 10],
     tipCurrency: normalizeFiatCurrency(settings.tipCurrency, 'USD'),
     chapterPriceAmount: normalizePriceAmount(settings.chapterPriceAmount, defaults.chapter),
     chapterPriceCurrency: normalizeFiatCurrency(settings.chapterPriceCurrency, 'USD'),
+    chapterCredits: readerCreditConfig.chapterCostCredits,
     supporterPriceAmount: normalizePriceAmount(settings.supporterPriceAmount, defaults.supporter),
     supporterPriceCurrency: normalizeFiatCurrency(settings.supporterPriceCurrency, 'USD'),
     bundlePurchasesEnabled: Boolean(settings.bundlePurchasesEnabled),
     chapterBundleDiscounts: normalizeBundleDiscounts(settings.chapterBundleDiscounts),
+    creditPacks: readerCreditConfig.packs,
     chapters: (Array.isArray(settings.chapters) ? settings.chapters : [])
       .map((chapter) => ({
         chapterSlug: cleanSlug(chapter?.chapterSlug),
@@ -467,6 +476,216 @@ const getSeriesPaymentSettings = (seriesSlug, env) => {
       .filter((chapter) => chapter.chapterSlug)
       .sort((a, b) => a.chapterNumber - b.chapterNumber || a.chapterSlug.localeCompare(b.chapterSlug))
   };
+};
+
+const paymentBundleDiscountsFromContentPricing = (pricing) =>
+  normalizeContentBundleDiscounts(pricing.chapterBundleDiscounts).map((rule) => ({
+    chapters: rule.minimumChapters,
+    discountPercent: rule.discountPercent
+  }));
+
+const applyContentPricingSnapshot = (settings, pricingSnapshot, source) => {
+  const rawPricing = normalizeJsonObject(pricingSnapshot);
+  const pricing = normalizeContentPricing(rawPricing);
+  const has = (key) => Object.prototype.hasOwnProperty.call(rawPricing, key);
+  const next = { ...settings, source };
+
+  if (has('mode') || has('priceMode')) next.priceMode = pricing.mode;
+  if (has('freeChapters')) next.freeChapters = pricing.freeChapters;
+  if (pricing.chapterPriceAmount > 0) next.chapterPriceAmount = pricing.chapterPriceAmount;
+  if (has('chapterPriceCurrency')) next.chapterPriceCurrency = pricing.chapterPriceCurrency;
+  if (pricing.chapterCredits > 0) next.chapterCredits = pricing.chapterCredits;
+  if (pricing.supporterPriceAmount > 0) next.supporterPriceAmount = pricing.supporterPriceAmount;
+  if (has('supporterPriceCurrency')) next.supporterPriceCurrency = pricing.supporterPriceCurrency;
+  if (has('tipsEnabled')) next.tipsEnabled = pricing.tipsEnabled;
+  if (pricing.tipAmounts.length) next.tipAmounts = pricing.tipAmounts;
+  if (has('tipCurrency')) next.tipCurrency = pricing.tipCurrency;
+  if (has('bundlePurchasesEnabled')) next.bundlePurchasesEnabled = pricing.bundlePurchasesEnabled;
+  if (pricing.chapterBundleDiscounts.length) {
+    next.chapterBundleDiscounts = paymentBundleDiscountsFromContentPricing(pricing);
+  }
+  if (pricing.creditPacks.length) next.creditPacks = pricing.creditPacks;
+
+  return next;
+};
+
+const ruleAmount = (rule, fallback = null) => normalizePriceAmount(rule?.amount, fallback);
+
+const pricingRuleMode = (rule) => normalizeContentPricingMode(rule?.metadata?.mode || rule?.label);
+
+const getScopedPricingRules = (rules, chapterSlug = '') => {
+  const normalizedChapterSlug = cleanSlug(chapterSlug, 160);
+  const enabledRules = (Array.isArray(rules) ? rules : []).filter((rule) => rule?.isEnabled);
+  return enabledRules
+    .filter((rule) => !rule.chapterSlug || (normalizedChapterSlug && rule.chapterSlug === normalizedChapterSlug))
+    .sort((left, right) => {
+      const leftScore = left.chapterSlug && left.chapterSlug === normalizedChapterSlug ? 0 : 1;
+      const rightScore = right.chapterSlug && right.chapterSlug === normalizedChapterSlug ? 0 : 1;
+      return leftScore - rightScore || left.entryId - right.entryId || left.id - right.id;
+    });
+};
+
+const pickScopedPricingRule = (rules, ruleType, chapterSlug = '') =>
+  getScopedPricingRules(rules, chapterSlug).find((rule) => rule.ruleType === ruleType) || null;
+
+const pickValuedScopedPricingRule = (rules, ruleType, chapterSlug, isValued) =>
+  getScopedPricingRules(rules, chapterSlug).find((rule) => rule.ruleType === ruleType && isValued(rule)) || null;
+
+const listScopedPricingRules = (rules, ruleType, chapterSlug = '') => {
+  const normalizedChapterSlug = cleanSlug(chapterSlug, 160);
+  const scopedRules = getScopedPricingRules(rules, normalizedChapterSlug).filter((rule) => rule.ruleType === ruleType);
+  const exactRules = scopedRules.filter((rule) => normalizedChapterSlug && rule.chapterSlug === normalizedChapterSlug);
+  return exactRules.length ? exactRules : scopedRules.filter((rule) => !rule.chapterSlug);
+};
+
+const applyContentPricingRules = (settings, rules, chapterSlug = '') => {
+  const scopedRules = getScopedPricingRules(rules, chapterSlug);
+  if (!scopedRules.length) return settings;
+
+  const next = { ...settings, source: 'backend-pricing-rules' };
+  const modeRule = pickScopedPricingRule(scopedRules, 'pricing_mode', chapterSlug);
+  if (modeRule) next.priceMode = pricingRuleMode(modeRule);
+
+  const freeChaptersRule = pickScopedPricingRule(scopedRules, 'free_chapters', chapterSlug);
+  if (freeChaptersRule) next.freeChapters = normalizePositiveInteger(freeChaptersRule.minimumChapters, 0);
+
+  const chapterPriceRule =
+    pickValuedScopedPricingRule(
+      scopedRules,
+      'chapter_price',
+      chapterSlug,
+      (rule) => Boolean(ruleAmount(rule, null)) || rule.credits > 0
+    ) || pickScopedPricingRule(scopedRules, 'chapter_price', chapterSlug);
+  if (chapterPriceRule) {
+    const amount = ruleAmount(chapterPriceRule, null);
+    if (amount) next.chapterPriceAmount = amount;
+    if (chapterPriceRule.currency) next.chapterPriceCurrency = normalizeFiatCurrency(chapterPriceRule.currency, next.chapterPriceCurrency);
+    if (chapterPriceRule.credits > 0) next.chapterCredits = chapterPriceRule.credits;
+  }
+
+  const supporterPriceRule =
+    pickValuedScopedPricingRule(scopedRules, 'supporter_price', chapterSlug, (rule) => Boolean(ruleAmount(rule, null))) ||
+    pickScopedPricingRule(scopedRules, 'supporter_price', chapterSlug);
+  if (supporterPriceRule) {
+    const amount = ruleAmount(supporterPriceRule, null);
+    if (amount) next.supporterPriceAmount = amount;
+    if (supporterPriceRule.currency) {
+      next.supporterPriceCurrency = normalizeFiatCurrency(supporterPriceRule.currency, next.supporterPriceCurrency);
+    }
+  }
+
+  const tipRules = listScopedPricingRules(scopedRules, 'tip_amount', chapterSlug);
+  if (tipRules.length) {
+    next.tipsEnabled = true;
+    next.tipAmounts = Array.from(new Set(tipRules.map((rule) => ruleAmount(rule, null)).filter(Boolean))).sort((a, b) => a - b);
+    next.tipCurrency = normalizeFiatCurrency(tipRules[0]?.currency, next.tipCurrency);
+  }
+
+  const bundleRules = listScopedPricingRules(scopedRules, 'bundle_discount', chapterSlug);
+  if (bundleRules.length) {
+    next.bundlePurchasesEnabled = bundleRules.some((rule) => rule.isEnabled);
+    next.chapterBundleDiscounts = bundleRules
+      .map((rule) => ({
+        chapters: normalizePositiveInteger(rule.minimumChapters, 0),
+        discountPercent: normalizePriceAmount(rule.discountPercent, 0)
+      }))
+      .filter((rule) => rule.chapters > 1 && rule.discountPercent > 0 && rule.discountPercent < 100)
+      .sort((left, right) => left.chapters - right.chapters || left.discountPercent - right.discountPercent);
+  }
+
+  const creditPackRules = listScopedPricingRules(scopedRules, 'credit_pack', chapterSlug);
+  if (creditPackRules.length) {
+    next.creditPacks = creditPackRules
+      .map((rule) =>
+        normalizeCreditPack({
+          credits: rule.credits,
+          label: rule.label,
+          priceAmount: rule.amount,
+          priceCurrency: rule.currency
+        })
+      )
+      .filter(Boolean);
+  }
+
+  return next;
+};
+
+const selectPublishedSeriesContentEntry = async (db, seriesSlug, locale = '') => {
+  const normalizedSeriesSlug = cleanSlug(seriesSlug, 160);
+  const normalizedLocale = cleanText(locale, 20);
+  if (!normalizedSeriesSlug) return null;
+
+  return db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       WHERE entry_type = 'novel_series'
+         AND slug = ?
+         AND status = 'published'
+         AND visibility IN ('public', 'unlisted')
+       ORDER BY CASE WHEN locale = ? THEN 0 ELSE 1 END, updated_at DESC, id DESC
+       LIMIT 1`
+    )
+    .bind(normalizedSeriesSlug, normalizedLocale)
+    .first();
+};
+
+const backendChaptersToPaymentChapters = (chapters) =>
+  (Array.isArray(chapters) ? chapters : [])
+    .map((chapter) => ({
+      chapterSlug: cleanSlug(chapter.slug, 160),
+      chapterNumber: normalizePositiveInteger(chapter.chapter_number, 0),
+      access:
+        chapter.access_level === 'supporter'
+          ? 'supporter'
+          : chapter.access_level === 'paid' || chapter.access_level === 'member'
+            ? 'paid'
+            : 'free',
+      status: 'published'
+    }))
+    .filter((chapter) => chapter.chapterSlug)
+    .sort((a, b) => a.chapterNumber - b.chapterNumber || a.chapterSlug.localeCompare(b.chapterSlug));
+
+const getBackendSeriesPaymentSettings = async (db, seriesSlug, env, options = {}) => {
+  if (!db) return null;
+
+  const tablesReady = await ensureContentTablesReady(db);
+  if (!tablesReady) return null;
+
+  const seriesEntry = await selectPublishedSeriesContentEntry(db, seriesSlug, options.locale);
+  if (!seriesEntry) return null;
+
+  const fallback = getStaticSeriesPaymentSettings(seriesSlug, env);
+  const [chapters, rules] = await Promise.all([
+    listPublishedContentEntries(db, {
+      entryType: 'novel_chapter',
+      locale: seriesEntry.locale,
+      parentSlug: seriesEntry.slug,
+      limit: 100
+    }),
+    listContentPricingRules(db, { seriesSlug: seriesEntry.slug, limit: 200 })
+  ]);
+  const backendChapters = backendChaptersToPaymentChapters(chapters);
+  const snapshotSettings = applyContentPricingSnapshot(
+    {
+      ...fallback,
+      chapters: backendChapters.length ? backendChapters : fallback.chapters
+    },
+    parseStoredJson(seriesEntry.pricing_json, {}),
+    'backend-pricing-json'
+  );
+
+  return applyContentPricingRules(snapshotSettings, rules, options.chapterSlug);
+};
+
+const resolveSeriesPaymentSettings = async (db, seriesSlug, env, options = {}) => {
+  try {
+    const backendSettings = await getBackendSeriesPaymentSettings(db, seriesSlug, env, options);
+    if (backendSettings) return backendSettings;
+  } catch (error) {
+    if (!isMissingContentTablesError(error)) throw error;
+  }
+  return getStaticSeriesPaymentSettings(seriesSlug, env);
 };
 
 const getConfiguredTipAmount = (settings, amount) => {
@@ -514,6 +733,53 @@ const getBundleCheckoutDetails = (settings, payload, chapterSlug) => {
     priceAmount: normalizePriceAmount(priceAmount, unitPriceAmount),
     subtotalAmount,
     unitPriceAmount
+  };
+};
+
+const getBundlePricingOptions = (settings, chapterSlug) =>
+  (settings.chapterBundleDiscounts || [])
+    .map((rule) => {
+      try {
+        return getBundleCheckoutDetails(settings, { bundleChapters: rule.chapters }, chapterSlug);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+const paymentSettingsToPublicJson = (settings, options = {}) => {
+  const chapterSlug = cleanSlug(options.chapterSlug, 160);
+  const bundleOptions = chapterSlug ? getBundlePricingOptions(settings, chapterSlug) : [];
+  return {
+    seriesSlug: settings.seriesSlug,
+    source: settings.source,
+    priceMode: settings.priceMode,
+    freeChapters: settings.freeChapters,
+    tipsEnabled: Boolean(settings.tipsEnabled),
+    tipAmounts: settings.tipAmounts.map((amount) => amountToStorage(amount)),
+    tipCurrency: settings.tipCurrency,
+    chapterPriceAmount: amountToStorage(settings.chapterPriceAmount),
+    chapterPriceCurrency: settings.chapterPriceCurrency,
+    chapterCredits: Math.max(1, normalizePositiveInteger(settings.chapterCredits, 1)),
+    supporterPriceAmount: amountToStorage(settings.supporterPriceAmount),
+    supporterPriceCurrency: settings.supporterPriceCurrency,
+    bundlePurchasesEnabled: Boolean(settings.bundlePurchasesEnabled),
+    chapterBundleDiscounts: settings.chapterBundleDiscounts,
+    bundleOptions: bundleOptions.map((option) => ({
+      chapterCount: option.bundleChapterCount,
+      chapterSlugs: option.bundleChapterSlugs,
+      discountPercent: option.bundleDiscountPercent,
+      priceAmount: amountToStorage(option.priceAmount),
+      priceCurrency: settings.chapterPriceCurrency,
+      subtotalAmount: amountToStorage(option.subtotalAmount),
+      unitPriceAmount: amountToStorage(option.unitPriceAmount)
+    })),
+    creditPacks: (settings.creditPacks || []).map((pack) => ({
+      credits: pack.credits,
+      label: pack.label,
+      priceAmount: amountToStorage(pack.priceAmount),
+      priceCurrency: pack.priceCurrency
+    }))
   };
 };
 
@@ -2604,7 +2870,7 @@ const applyCreditTopupFromOrder = async (db, order, env) => {
   };
 };
 
-const normalizeCreditUnlockPayload = (payload, env) => {
+const normalizeCreditUnlockPayload = async (payload, env, db) => {
   const seriesSlug = cleanSlug(payload.seriesSlug);
   const chapterSlug = cleanSlug(payload.chapterSlug);
   const accessRequired = payload.access === 'supporter' ? 'supporter' : 'paid';
@@ -2620,10 +2886,16 @@ const normalizeCreditUnlockPayload = (payload, env) => {
     throw error;
   }
 
+  const settings = await resolveSeriesPaymentSettings(db, seriesSlug, env, {
+    chapterSlug,
+    locale: payload.locale
+  });
+
   return {
     accessRequired,
     chapterSlug,
-    costCredits: getReaderCreditConfig(env).chapterCostCredits,
+    costCredits: Math.max(1, normalizePositiveInteger(settings.chapterCredits, getReaderCreditConfig(env).chapterCostCredits)),
+    pricingSource: settings.source,
     seriesSlug
   };
 };
@@ -2672,7 +2944,7 @@ const spendReaderCreditsForChapter = async (db, accountId, unlock, env) => {
       unlock.seriesSlug,
       unlock.chapterSlug,
       `Unlocked paid chapter with ${unlock.costCredits} ${config.unitLabel}.`,
-      JSON.stringify({ costCredits: unlock.costCredits })
+      JSON.stringify({ costCredits: unlock.costCredits, pricingSource: unlock.pricingSource })
     )
     .first();
 
@@ -2707,7 +2979,7 @@ const handleReaderCreditUnlock = async (request, env) => {
 
   let unlock;
   try {
-    unlock = normalizeCreditUnlockPayload(payload, env);
+    unlock = await normalizeCreditUnlockPayload(payload, env, db);
   } catch (error) {
     return json({ ok: false, code: error.code || 'INVALID_CREDIT_UNLOCK', message: error.message }, { status: 400 });
   }
@@ -2764,6 +3036,7 @@ const handleReaderCreditUnlock = async (request, env) => {
     alreadyUnlocked: false,
     charged: true,
     costCredits: unlock.costCredits,
+    pricingSource: unlock.pricingSource,
     ledger: readerCreditLedgerToJson(spend.ledger),
     entitlement: entitlementToJson({ ...entitlement, email: session.email }),
     ...summary
@@ -2833,7 +3106,7 @@ const createNowPaymentsInvoice = async (env, request, invoice) => {
   return data;
 };
 
-const normalizeCheckoutPayload = (payload, session, env) => {
+const normalizeCheckoutPayload = async (payload, session, env, db) => {
   const rawOrderType = cleanText(payload.orderType, 40).toLowerCase();
   const orderType =
     rawOrderType === 'tip'
@@ -2849,6 +3122,7 @@ const normalizeCheckoutPayload = (payload, session, env) => {
   const chapterSlug = orderType === 'chapter' || orderType === novelBundleOrderType ? cleanSlug(payload.chapterSlug) : '';
   const prices = getCheckoutPrices(env);
   const payCurrency = normalizePayCurrency(payload.payCurrency);
+  const locale = cleanText(payload.locale, 20);
   const returnPath = cleanRedirectPath(
     payload.returnPath,
     orderType === novelCreditPackOrderType ? '/library/' : seriesSlug ? `/zh-hant/works/${seriesSlug}/` : '/library/'
@@ -2869,7 +3143,21 @@ const normalizeCheckoutPayload = (payload, session, env) => {
   }
 
   if (orderType === novelCreditPackOrderType) {
-    const creditPack = findReaderCreditPack(env, payload.credits || payload.packCredits);
+    let pricingSource = 'reader-credit-pack';
+    let creditPack = null;
+    if (seriesSlug) {
+      const settings = await resolveSeriesPaymentSettings(db, seriesSlug, env, { locale });
+      const credits = normalizePositiveInteger(payload.credits || payload.packCredits, 0);
+      const configuredPack = (settings.creditPacks || []).find((candidate) => candidate.credits === credits) || null;
+      if (configuredPack) {
+        creditPack = {
+          ...configuredPack,
+          unitLabel: getReaderCreditConfig(env).unitLabel
+        };
+        pricingSource = settings.source;
+      }
+    }
+    creditPack = creditPack || findReaderCreditPack(env, payload.credits || payload.packCredits);
     return {
       bundleDetails: null,
       chapterSlug: '',
@@ -2877,19 +3165,19 @@ const normalizeCheckoutPayload = (payload, session, env) => {
       description: `Station Cat reading credits: ${creditPack.credits} ${creditPack.unitLabel}`,
       entitlementAccessLevel: '',
       entitlementScope: '',
-      locale: cleanText(payload.locale, 20),
+      locale,
       message: '',
       orderType,
       payCurrency,
       priceAmount: creditPack.priceAmount,
       priceCurrency: creditPack.priceCurrency,
-      pricingSource: 'reader-credit-pack',
+      pricingSource,
       returnPath,
-      seriesSlug: ''
+      seriesSlug
     };
   }
 
-  const settings = getSeriesPaymentSettings(seriesSlug, env);
+  const settings = await resolveSeriesPaymentSettings(db, seriesSlug, env, { chapterSlug, locale });
   let priceAmount = settings.chapterPriceAmount;
   let priceCurrency = settings.chapterPriceCurrency;
   let bundleDetails = null;
@@ -2941,7 +3229,7 @@ const normalizeCheckoutPayload = (payload, session, env) => {
     description,
     entitlementAccessLevel,
     entitlementScope,
-    locale: cleanText(payload.locale, 20),
+    locale,
     message: cleanText(payload.message, 500),
     orderType,
     payCurrency,
@@ -3102,7 +3390,7 @@ const handleNovelCheckout = async (request, env) => {
   const session = await getReaderFromSession(request, env);
   let checkout;
   try {
-    checkout = normalizeCheckoutPayload(payload, session, env);
+    checkout = await normalizeCheckoutPayload(payload, session, env, db);
   } catch (error) {
     const status = error.code === 'SIGN_IN_REQUIRED' ? 401 : 400;
     return json({ ok: false, code: error.code || 'INVALID_CHECKOUT', message: error.message }, { status });
@@ -3640,8 +3928,8 @@ const handleAdminListNovelOrders = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '7E-A',
-    purpose: 'Backend content management with persisted pricing rules for novels, chapters, and Blog/Devlog entries.',
+    stage: '7E-B',
+    purpose: 'Backend content management with persisted pricing rules consumed by reader-facing checkout.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -3676,7 +3964,8 @@ const handleAdminContentSchema = async (env) =>
       ],
       protectedContent: 'Paid/supporter chapter HTML is loaded from CONTENT_BUCKET after entitlement checks.',
       dynamicFrontend: 'Published backend content can render public Blog and serial pages without a site rebuild.',
-      nextStages: ['7E-B frontend checkout reads backend pricing rules', '7F fuller order/account/entitlement management']
+      checkoutPricing: 'Reader-facing checkout resolves content_pricing_rules before generated static config and env defaults.',
+      nextStages: ['7F fuller order/account/entitlement management']
     }
   });
 
@@ -4218,6 +4507,23 @@ const publicContentResponse = (body, init = {}) =>
     }
   });
 
+const handlePublicNovelPricing = async (request, env) => {
+  const url = new URL(request.url);
+  const seriesSlug = cleanSlug(url.searchParams.get('seriesSlug') || url.searchParams.get('series'), 160);
+  const chapterSlug = cleanSlug(url.searchParams.get('chapterSlug') || url.searchParams.get('chapter'), 160);
+  const locale = cleanText(url.searchParams.get('locale') || url.searchParams.get('language'), 20);
+  if (!seriesSlug) {
+    return publicContentResponse({ ok: false, code: 'SERIES_REQUIRED', message: 'series is required.' }, { status: 400 });
+  }
+
+  const settings = await resolveSeriesPaymentSettings(env.WAITLIST_DB, seriesSlug, env, { chapterSlug, locale });
+  return publicContentResponse({
+    ok: true,
+    pricing: paymentSettingsToPublicJson(settings, { chapterSlug }),
+    stage: '7E-B'
+  });
+};
+
 const getPublishedContentEntry = async (db, options) => {
   const entryType = cleanText(options.entryType, 40);
   const locale = normalizeContentLocale(options.locale);
@@ -4548,7 +4854,7 @@ const renderAdminContentPreview = async (entry, env) => {
   const chapters = mergePreviewChapter(storedChapters, row);
 
   return {
-    body: addPreviewBanner(entry, renderDynamicNovelChapter(route, series, row, body, chapters)),
+    body: addPreviewBanner(entry, renderDynamicNovelChapter(route, series, row, body, chapters, getStaticSeriesPaymentSettings(series.slug, env))),
     canonicalPath: dynamicCanonicalPath(route),
     description: entry.description || entry.excerpt,
     lang: entry.locale,
@@ -4764,6 +5070,134 @@ const renderChapterCards = (route, chapters) => {
     .join('');
 };
 
+const dynamicPaymentCopy = {
+  en: {
+    allowed: 'Access confirmed. Loading the chapter...',
+    backSeries: 'Back to series',
+    bundle: 'Unlock',
+    bundleOff: 'off',
+    bundleUnit: ' chapters',
+    checking: 'Checking access...',
+    contentFailed: 'Could not load the protected chapter.',
+    creditInsufficient: 'Not enough reading credits. Top up in the library first.',
+    creditTopUp: 'Top up credits',
+    creditUnlock: 'Use reading credits',
+    denied: 'This account has not unlocked this chapter yet.',
+    disabled: 'Checkout is not configured yet.',
+    failed: 'Could not create checkout.',
+    library: 'Open my library',
+    opening: 'Opening NOWPayments...',
+    signIn: 'Sign in to my library',
+    signInRequired: 'Please sign in before unlocking paid reading.',
+    unlock: 'Unlock'
+  },
+  ja: {
+    allowed: '権限を確認しました。本文を読み込んでいます...',
+    backSeries: '作品ページへ',
+    bundle: '解放',
+    bundleOff: 'OFF',
+    bundleUnit: '章',
+    checking: '権限を確認しています...',
+    contentFailed: '保護された本文を読み込めません。',
+    creditInsufficient: '読書ポイントが足りません。先に本棚で追加してください。',
+    creditTopUp: 'ポイントを追加',
+    creditUnlock: '読書ポイントで解放',
+    denied: 'このアカウントではまだこの章が解放されていません。',
+    disabled: '支払い設定はまだ有効ではありません。',
+    failed: 'チェックアウトを作成できませんでした。',
+    library: '本棚を開く',
+    opening: 'NOWPayments を開いています...',
+    signIn: '本棚にログイン',
+    signInRequired: '有料閲覧を解放する前にログインしてください。',
+    unlock: '解放する'
+  },
+  'zh-Hant': {
+    allowed: '權限已確認，正在載入正文...',
+    backSeries: '回到作品頁',
+    bundle: '解鎖',
+    bundleOff: '折扣',
+    bundleUnit: ' 章',
+    checking: '正在確認閱讀權限...',
+    contentFailed: '受保護正文載入失敗。',
+    creditInsufficient: '閱讀點數不足，請先到書庫充值。',
+    creditTopUp: '充值閱讀點',
+    creditUnlock: '用閱讀點解鎖',
+    denied: '這個帳戶尚未解鎖本章。',
+    disabled: '支付通道尚未配置完成。',
+    failed: '支付訂單建立失敗。',
+    library: '打開我的書庫',
+    opening: '正在打開 NOWPayments...',
+    signIn: '登入我的書庫',
+    signInRequired: '請先登入，再解鎖付費閱讀。',
+    unlock: '解鎖'
+  },
+  'zh-Hans': {
+    allowed: '权限已确认，正在加载正文...',
+    backSeries: '回到作品页',
+    bundle: '解锁',
+    bundleOff: '折扣',
+    bundleUnit: ' 章',
+    checking: '正在确认阅读权限...',
+    contentFailed: '受保护正文加载失败。',
+    creditInsufficient: '阅读点数不足，请先到书库充值。',
+    creditTopUp: '充值阅读点',
+    creditUnlock: '用阅读点解锁',
+    denied: '这个账户尚未解锁本章。',
+    disabled: '支付通道尚未配置完成。',
+    failed: '支付订单建立失败。',
+    library: '打开我的书库',
+    opening: '正在打开 NOWPayments...',
+    signIn: '登录我的书库',
+    signInRequired: '请先登录，再解锁付费阅读。',
+    unlock: '解锁'
+  }
+};
+
+const formatPaymentAmountForLocale = (amount, currency, locale) => {
+  try {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  } catch {
+    return `${amountToStorage(amount)} ${currency}`;
+  }
+};
+
+const renderDynamicUnlockButtons = (route, serial, chapter, settings) => {
+  const copy = dynamicPaymentCopy[route.locale];
+  const orderType = chapter.access_level === 'supporter' ? 'supporter' : 'chapter';
+  const unlockAmount = orderType === 'supporter' ? settings.supporterPriceAmount : settings.chapterPriceAmount;
+  const unlockCurrency = orderType === 'supporter' ? settings.supporterPriceCurrency : settings.chapterPriceCurrency;
+  const bundleOptions = orderType === 'chapter' ? getBundlePricingOptions(settings, chapter.slug) : [];
+  const bundleButtons = bundleOptions
+    .map(
+      (option) => `<button
+          class="button button-secondary"
+          type="button"
+          data-serial-unlock
+          data-order-type="${escapeHtml(novelBundleOrderType)}"
+          data-bundle-chapters="${escapeHtml(String(option.bundleChapterCount))}"
+          data-chapter-slugs="${escapeHtml(option.bundleChapterSlugs.join(','))}"
+        >
+          ${escapeHtml(copy.bundle)} ${escapeHtml(String(option.bundleChapterCount))}${escapeHtml(copy.bundleUnit)} · ${escapeHtml(formatPaymentAmountForLocale(option.priceAmount, settings.chapterPriceCurrency, route.locale))} · ${escapeHtml(String(option.bundleDiscountPercent))}% ${escapeHtml(copy.bundleOff)}
+        </button>`
+    )
+    .join('');
+
+  return `<div class="button-row">
+      <a class="button button-primary" href="/library/">${escapeHtml(copy.signIn)}</a>
+      ${
+        orderType === 'chapter'
+          ? `<button class="button button-secondary" type="button" data-serial-credit-unlock>${escapeHtml(copy.creditUnlock)} · ${escapeHtml(String(settings.chapterCredits))}</button>`
+          : ''
+      }
+      <button class="button button-secondary" type="button" data-serial-unlock data-order-type="${escapeHtml(orderType)}">
+        ${escapeHtml(copy.unlock)} ${escapeHtml(formatPaymentAmountForLocale(unlockAmount, unlockCurrency, route.locale))}
+      </button>
+      ${bundleButtons}
+      ${orderType === 'chapter' ? `<a class="button button-secondary" href="/library/">${escapeHtml(copy.creditTopUp)}</a>` : ''}
+      <a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>
+    </div>`;
+};
+
 const renderDynamicNovelSeries = (route, serial, body, chapters) => {
   const copy = dynamicContentCopy[route.locale];
   const firstChapter = chapters[0];
@@ -4791,47 +5225,50 @@ const renderDynamicNovelSeries = (route, serial, body, chapters) => {
     </section>`;
 };
 
-const renderDynamicNovelChapter = (route, serial, chapter, body, chapters) => {
+const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, paymentSettings) => {
   const copy = dynamicContentCopy[route.locale];
+  const paymentCopy = dynamicPaymentCopy[route.locale];
   const currentIndex = chapters.findIndex((entry) => entry.slug === chapter.slug);
   const previousChapter = currentIndex > 0 ? chapters[currentIndex - 1] : null;
   const nextChapter = currentIndex >= 0 ? chapters[currentIndex + 1] : null;
   const isProtected = chapter.access_level !== 'free';
   const content = isProtected
-    ? `<section class="gate" data-serial-access-gate data-series-slug="${escapeHtml(chapter.parent_slug)}" data-chapter-slug="${escapeHtml(chapter.slug)}" data-access="${escapeHtml(chapter.access_level)}" data-locale="${escapeHtml(route.locale)}">
+    ? `<section class="gate" data-serial-access-gate data-series-slug="${escapeHtml(chapter.parent_slug)}" data-chapter-slug="${escapeHtml(chapter.slug)}" data-access="${escapeHtml(chapter.access_level)}" data-locale="${escapeHtml(route.locale)}" data-return-path="${escapeHtml(dynamicCanonicalPath(route))}">
         <p class="kicker">${escapeHtml(dynamicAccessLabels[chapter.access_level] || chapter.access_level)}</p>
         <h2>${escapeHtml(copy.lockedTitle)}</h2>
         <p>${escapeHtml(copy.lockedBody)}</p>
-        <div class="status" data-serial-access-status>Checking access...</div>
-        <div class="button-row">
-          <a class="button button-primary" href="/library/">${escapeHtml(copy.signIn)}</a>
-          <a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>
-        </div>
+        <div class="status" data-serial-access-status>${escapeHtml(paymentCopy.checking)}</div>
+        <div class="status" data-serial-credit-status></div>
+        ${renderDynamicUnlockButtons(route, serial, chapter, paymentSettings)}
       </section>
       <article class="prose" data-protected-chapter-body hidden></article>
       <script>
         (() => {
           const gate = document.querySelector('[data-serial-access-gate]');
           const status = gate?.querySelector('[data-serial-access-status]');
+          const creditStatus = gate?.querySelector('[data-serial-credit-status]');
           const body = document.querySelector('[data-protected-chapter-body]');
+          const unlockButtons = gate ? Array.from(gate.querySelectorAll('[data-serial-unlock]')) : [];
+          const creditUnlockButton = gate?.querySelector('[data-serial-credit-unlock]');
           const setStatus = (message, tone = 'neutral') => {
             if (!status) return;
             status.textContent = message;
             status.dataset.tone = tone;
           };
-          const load = async () => {
-            if (!gate || !body) return;
-            const accessParams = new URLSearchParams({
-              access: gate.dataset.access,
-              chapter: gate.dataset.chapterSlug,
-              series: gate.dataset.seriesSlug
+          const setCreditStatus = (message, tone = 'neutral') => {
+            if (!creditStatus) return;
+            creditStatus.textContent = message;
+            creditStatus.dataset.tone = tone;
+          };
+          const setButtonsDisabled = (disabled) => {
+            unlockButtons.forEach((button) => {
+              button.disabled = disabled;
             });
-            const access = await fetch('/api/novels/access?' + accessParams.toString()).then((res) => res.json());
-            if (!access.allowed) {
-              setStatus(access.authenticated ? 'This account has not unlocked this chapter yet.' : 'Please sign in before reading this chapter.', 'error');
-              return;
-            }
-            setStatus('Access confirmed. Loading the chapter...', 'success');
+            if (creditUnlockButton) creditUnlockButton.disabled = disabled;
+          };
+          const loadProtectedContent = async () => {
+            if (!gate || !body) return;
+            setStatus(${JSON.stringify(paymentCopy.allowed)}, 'success');
             const contentParams = new URLSearchParams({
               chapter: gate.dataset.chapterSlug,
               locale: gate.dataset.locale,
@@ -4839,12 +5276,102 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters) => {
             });
             const response = await fetch('/api/novels/chapters/protected-content?' + contentParams.toString());
             const payload = await response.json();
-            if (!response.ok || !payload.ok) throw new Error(payload.message || 'Could not load chapter.');
+            if (!response.ok || !payload.ok) throw new Error(payload.message || ${JSON.stringify(paymentCopy.contentFailed)});
             body.innerHTML = payload.content.html;
             body.hidden = false;
             gate.hidden = true;
           };
-          load().catch((error) => setStatus(error.message || 'Could not load chapter.', 'error'));
+          const checkAccess = async () => {
+            if (!gate) return;
+            const accessParams = new URLSearchParams({
+              access: gate.dataset.access,
+              chapter: gate.dataset.chapterSlug,
+              series: gate.dataset.seriesSlug
+            });
+            const response = await fetch('/api/novels/access?' + accessParams.toString());
+            const access = await response.json();
+            if (!response.ok || !access.ok) throw new Error(access.message || ${JSON.stringify(paymentCopy.denied)});
+            if (access.allowed) {
+              setButtonsDisabled(true);
+              await loadProtectedContent();
+              return;
+            }
+            setStatus(access.authenticated ? ${JSON.stringify(paymentCopy.denied)} : ${JSON.stringify(copy.lockedBody)}, access.authenticated ? 'error' : 'neutral');
+          };
+          if (creditUnlockButton) {
+            creditUnlockButton.addEventListener('click', async () => {
+              if (!gate) return;
+              setButtonsDisabled(true);
+              setCreditStatus(${JSON.stringify(paymentCopy.checking)}, 'neutral');
+              try {
+                const response = await fetch('/api/novels/credits/unlock', {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({
+                    seriesSlug: gate.dataset.seriesSlug,
+                    chapterSlug: gate.dataset.chapterSlug,
+                    access: gate.dataset.access,
+                    locale: gate.dataset.locale
+                  })
+                });
+                const payload = await response.json();
+                if (!response.ok || !payload.ok) {
+                  if (payload.code === 'SIGN_IN_REQUIRED') {
+                    window.location.href = '/library/?returnTo=' + encodeURIComponent(window.location.pathname);
+                    return;
+                  }
+                  if (payload.code === 'INSUFFICIENT_CREDITS') throw new Error(${JSON.stringify(paymentCopy.creditInsufficient)});
+                  throw new Error(payload.message || ${JSON.stringify(paymentCopy.failed)});
+                }
+                await loadProtectedContent();
+              } catch (error) {
+                setCreditStatus(error.message || ${JSON.stringify(paymentCopy.failed)}, 'error');
+                setButtonsDisabled(false);
+              }
+            });
+          }
+          unlockButtons.forEach((button) => {
+            button.addEventListener('click', async () => {
+              if (!gate) return;
+              setButtonsDisabled(true);
+              setStatus(${JSON.stringify(paymentCopy.checking)}, 'neutral');
+              const orderType = button.dataset.orderType || 'chapter';
+              const checkoutPayload = {
+                orderType,
+                seriesSlug: gate.dataset.seriesSlug,
+                chapterSlug: gate.dataset.chapterSlug,
+                locale: gate.dataset.locale,
+                returnPath: gate.dataset.returnPath
+              };
+              if (orderType === ${JSON.stringify(novelBundleOrderType)}) {
+                checkoutPayload.bundleChapters = button.dataset.bundleChapters;
+                checkoutPayload.chapterSlugs = String(button.dataset.chapterSlugs || '').split(',').map((slug) => slug.trim()).filter(Boolean);
+              }
+              try {
+                const response = await fetch(${JSON.stringify(novelCheckoutPath)}, {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify(checkoutPayload)
+                });
+                const payload = await response.json();
+                if (!response.ok || !payload.ok) {
+                  if (payload.code === 'SIGN_IN_REQUIRED') {
+                    window.location.href = '/library/?returnTo=' + encodeURIComponent(window.location.pathname);
+                    return;
+                  }
+                  if (payload.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(${JSON.stringify(paymentCopy.disabled)});
+                  throw new Error(payload.message || ${JSON.stringify(paymentCopy.failed)});
+                }
+                if (!payload.paymentUrl) throw new Error(${JSON.stringify(paymentCopy.failed)});
+                setStatus(${JSON.stringify(paymentCopy.opening)}, 'success');
+                window.location.href = payload.paymentUrl;
+              } catch (error) {
+                setStatus(error.message || ${JSON.stringify(paymentCopy.failed)}, 'error');
+                setButtonsDisabled(false);
+              }
+            });
+          });
+          checkAccess().catch((error) => setStatus(error.message || ${JSON.stringify(paymentCopy.contentFailed)}, 'error'));
         })();
       </script>`
     : `<article class="prose">${body.html || `<p>${escapeHtml(chapter.excerpt || chapter.description)}</p>`}</article>`;
@@ -4920,12 +5447,13 @@ const handleDynamicFrontendContent = async (request, env) => {
       })
     ]);
     if (!serial || !chapter) return null;
-    const [body, chapters] = await Promise.all([
+    const [body, chapters, paymentSettings] = await Promise.all([
       readPublicEntryBody(env, chapter),
-      listPublishedContentEntries(db, { entryType: 'novel_chapter', locale: route.locale, parentSlug: route.seriesSlug, limit: 100 })
+      listPublishedContentEntries(db, { entryType: 'novel_chapter', locale: route.locale, parentSlug: route.seriesSlug, limit: 100 }),
+      resolveSeriesPaymentSettings(db, route.seriesSlug, env, { chapterSlug: route.chapterSlug, locale: route.locale })
     ]);
     return dynamicHtmlResponse(request, {
-      body: renderDynamicNovelChapter(route, serial, chapter, body, chapters),
+      body: renderDynamicNovelChapter(route, serial, chapter, body, chapters, paymentSettings),
       canonicalPath: dynamicCanonicalPath(route),
       description: chapter.description || chapter.excerpt,
       lang: route.locale,
@@ -5676,6 +6204,10 @@ export default {
 
     if (request.method === 'GET' && url.pathname === '/api/novels/payments/order') {
       return handleNovelPaymentOrderStatus(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/novels/pricing') {
+      return handlePublicNovelPricing(request, env);
     }
 
     if (request.method === 'GET' && url.pathname === '/api/content/entries') {

@@ -52,7 +52,7 @@ limit
 
 This route is an Admin route and must stay covered by Cloudflare Access.
 
-## Next
+## Follow-up
 
 Stage 7E-B should update checkout and reader-facing gates to resolve pricing in this order:
 
@@ -60,3 +60,5 @@ Stage 7E-B should update checkout and reader-facing gates to resolve pricing in 
 2. `content_entries.pricing_json`
 3. Generated legacy `novelPaymentConfig`
 4. Environment defaults
+
+Implemented in [backend-pricing-checkout-7e-b.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/backend-pricing-checkout-7e-b.md:1).

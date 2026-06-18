@@ -206,7 +206,8 @@ const supportCopy = {
   <script define:vars={{ supportCopy }}>
     const tipPanel = document.querySelector('[data-serial-tip-panel]');
     const tipStatus = tipPanel?.querySelector('[data-serial-tip-status]');
-    const tipButtons = tipPanel ? Array.from(tipPanel.querySelectorAll('[data-tip-amount]')) : [];
+    const tipActions = tipPanel?.querySelector('.serial-tip-actions');
+    let tipButtons = tipPanel ? Array.from(tipPanel.querySelectorAll('[data-tip-amount]')) : [];
 
     const setTipStatus = (message, tone = 'neutral') => {
       if (!tipStatus) return;
@@ -220,38 +221,85 @@ const supportCopy = {
       });
     };
 
-    tipButtons.forEach((button) => {
-      button.addEventListener('click', async () => {
-        if (!tipPanel) return;
-        setTipButtonsDisabled(true);
-        setTipStatus(supportCopy.working, 'neutral');
+    const formatPaymentAmount = (amount, currency) => {
+      const parsedAmount = Number.parseFloat(String(amount || ''));
+      if (!Number.isFinite(parsedAmount)) return '';
+      try {
+        return new Intl.NumberFormat(tipPanel?.dataset.locale || 'zh-Hant', { style: 'currency', currency }).format(parsedAmount);
+      } catch {
+        return `${parsedAmount.toFixed(2)} ${currency}`;
+      }
+    };
 
-        try {
-          const response = await fetch('/api/novels/payments/checkout', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({
-              orderType: 'tip',
-              seriesSlug: tipPanel.dataset.seriesSlug,
-              amount: button.dataset.tipAmount,
-              priceCurrency: tipPanel.dataset.currency,
-              locale: tipPanel.dataset.locale,
-              returnPath: tipPanel.dataset.returnPath
-            })
-          });
-          const data = await response.json();
-          if (!response.ok || !data.ok) {
-            if (data.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(supportCopy.disabled);
-            throw new Error(data.message || supportCopy.failed);
-          }
-          if (!data.paymentUrl) throw new Error(supportCopy.failed);
-          setTipStatus(supportCopy.ready, 'success');
-          window.location.href = data.paymentUrl;
-        } catch (error) {
-          setTipStatus(error.message || supportCopy.failed, 'error');
-          setTipButtonsDisabled(false);
-        }
+    const refreshTipPricing = async () => {
+      if (!tipPanel) return;
+      const query = new URLSearchParams({
+        series: tipPanel.dataset.seriesSlug,
+        locale: tipPanel.dataset.locale
       });
-    });
+      const response = await fetch(`/api/novels/pricing?${query.toString()}`);
+      const data = await response.json();
+      if (!response.ok || !data.ok || !data.pricing) return;
+      const pricing = data.pricing;
+      if (!pricing.tipsEnabled) {
+        tipPanel.hidden = true;
+        return;
+      }
+      tipPanel.dataset.currency = pricing.tipCurrency || tipPanel.dataset.currency;
+      const amounts = Array.isArray(pricing.tipAmounts) ? pricing.tipAmounts : [];
+      if (!tipActions || !amounts.length) return;
+      tipActions.innerHTML = '';
+      amounts.forEach((amount) => {
+        const button = document.createElement('button');
+        button.className = 'button button-secondary';
+        button.type = 'button';
+        button.dataset.tipAmount = amount;
+        button.textContent = `${supportCopy.button} ${formatPaymentAmount(amount, tipPanel.dataset.currency)}`;
+        tipActions.append(button);
+      });
+      tipButtons = Array.from(tipActions.querySelectorAll('[data-tip-amount]'));
+    };
+
+    const bindTipButtons = () => {
+      tipButtons.forEach((button) => {
+        if (button.dataset.tipBound === 'true') return;
+        button.dataset.tipBound = 'true';
+        button.addEventListener('click', async () => {
+          if (!tipPanel) return;
+          setTipButtonsDisabled(true);
+          setTipStatus(supportCopy.working, 'neutral');
+
+          try {
+            const response = await fetch('/api/novels/payments/checkout', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                orderType: 'tip',
+                seriesSlug: tipPanel.dataset.seriesSlug,
+                amount: button.dataset.tipAmount,
+                priceCurrency: tipPanel.dataset.currency,
+                locale: tipPanel.dataset.locale,
+                returnPath: tipPanel.dataset.returnPath
+              })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) {
+              if (data.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(supportCopy.disabled);
+              throw new Error(data.message || supportCopy.failed);
+            }
+            if (!data.paymentUrl) throw new Error(supportCopy.failed);
+            setTipStatus(supportCopy.ready, 'success');
+            window.location.href = data.paymentUrl;
+          } catch (error) {
+            setTipStatus(error.message || supportCopy.failed, 'error');
+            setTipButtonsDisabled(false);
+          }
+        });
+      });
+    };
+
+    refreshTipPricing()
+      .catch(() => null)
+      .then(bindTipButtons);
   </script>
 )}

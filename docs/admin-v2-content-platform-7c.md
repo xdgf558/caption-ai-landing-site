@@ -114,7 +114,7 @@ Admin 2.0 writes pricing controls into `content_entries.pricing_json`:
 
 Stage 7E-A promotes these settings into `content_pricing_rules` whenever a content entry is saved. The content row still keeps the full `pricing_json` snapshot, while the rules table now stores normalized rows for pricing mode, free chapters, chapter price, supporter price, tip amounts, bundle discounts, and credit packs.
 
-Stage 7E-B will make the frontend checkout flow consume these backend rules directly.
+Stage 7E-B makes the frontend checkout flow consume these backend rules directly through `/api/novels/pricing`, NOWPayments checkout, and reading-credit unlocks.
 
 ## Current Boundary
 
