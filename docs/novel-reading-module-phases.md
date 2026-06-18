@@ -89,7 +89,7 @@
 
 ### 当前建议
 
-先做路线 A，不要太早上自建 CMS。
+历史执行时先做了路线 A。阶段 7G 后，当前发布入口已切到路线 B：Admin 2.0 + Worker API + D1/R2。
 
 ### 阶段 3 本轮执行范围
 
@@ -238,12 +238,15 @@
 1. 把现有 `src/content/devlog`、`src/content/serials`、`src/content/serialChapters` 导入 D1 / R2。
 2. 校验 slug、语言、发布时间、章节顺序和 SEO 数据。
 3. 移除旧 GitHub token 写 Markdown 后台。
+4. 在 Admin 2.0 提供扫描、模拟和执行迁移的受保护入口。
 
-## 当前执行：阶段 7F
+当前实现见 [legacy-content-migration-7g.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/legacy-content-migration-7g.md:1)。
 
-阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台，阶段 7D 已让前台小说和 Blog/Devlog 支持读取后端发布内容，阶段 7E 已把收费规则和前台购买入口切到后端规则优先。当前进入 7F，把订单、账户、余额、授权和审计管理集中到 Admin 2.0。
+## 当前执行：阶段 7G
 
-详细文档见 [order-account-admin-7f.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/order-account-admin-7f.md:1)。
+阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台，阶段 7D 已让前台小说和 Blog/Devlog 支持读取后端发布内容，阶段 7E 已把收费规则和前台购买入口切到后端规则优先，阶段 7F 已把订单、账户、余额、授权和审计管理集中到 Admin 2.0。当前进入 7G，把旧 Markdown 内容迁入 D1/R2，并退役旧 GitHub Token 作者后台。
+
+详细文档见 [legacy-content-migration-7g.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/legacy-content-migration-7g.md:1)。
 
 ## 已完成：阶段 6C
 

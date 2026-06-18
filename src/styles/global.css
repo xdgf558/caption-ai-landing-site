@@ -2467,7 +2467,7 @@ button.button {
   border-radius: 14px;
   display: grid;
   gap: 6px;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   padding: 5px;
 }
 
