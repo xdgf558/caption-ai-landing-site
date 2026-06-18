@@ -2730,6 +2730,32 @@ button.button {
   color: #dbeafe;
 }
 
+.admin-import-code {
+  background: rgba(2, 6, 23, 0.52);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  color: #bae6fd;
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1.45;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 3px 6px;
+  vertical-align: middle;
+}
+
+.admin-import-review {
+  align-content: start;
+}
+
+.admin-import-entry {
+  gap: 10px;
+}
+
+.admin-import-actions {
+  margin-top: 2px;
+}
+
 .admin-pricing-warning {
   color: #fde68a !important;
 }
