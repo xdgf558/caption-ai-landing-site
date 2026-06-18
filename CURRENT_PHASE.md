@@ -19,3 +19,5 @@ Product direction:
 - Pricing rules stay editable in Admin 2.0; future NovelForge import should not overwrite pricing automatically.
 
 Out of scope for 7G: cover image upload and NovelForge one-click import. Cover upload is tracked as a later 7H media-management option; NovelForge import belongs to a future Stage 8.
+
+Post-migration cleanup: `src/generated/legacyContentManifest.js` contains full legacy bodies and is expected to increase the Worker bundle while 7G migration is active. After production migration has been executed and spot-checked, remove the manifest import, migration route, and generated file in a cleanup stage.

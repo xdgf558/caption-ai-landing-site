@@ -76,6 +76,16 @@ If migrated content has a problem:
 2. The dynamic Worker frontend will stop rendering those backend entries.
 3. Static Astro pages and legacy Markdown remain in the repo as a fallback until a later cleanup stage removes them.
 
+## Post-Migration Cleanup
+
+`src/generated/legacyContentManifest.js` intentionally includes the full legacy Markdown and rendered HTML bodies so the production Worker can run the one-time D1/R2 migration without external files.
+
+This increases the Worker bundle size while 7G is active. After production migration is verified and the backend entries are stable, run a cleanup stage that:
+
+1. Removes the `legacyContentManifest` import and migration route from `src/worker.js`.
+2. Deletes or stops generating `src/generated/legacyContentManifest.js`.
+3. Keeps the old Markdown files only if they are still needed as repository history or rollback references.
+
 ## Production Verification
 
 After deployment:
