@@ -12,6 +12,7 @@ Implemented in this stage:
 - Static serial chapter gates refresh button labels from the public pricing API.
 - Static serial detail tip panels refresh tip amounts and can hide when backend tips are disabled.
 - Dynamic backend chapter pages render credit unlock, single chapter, supporter, and bundle purchase buttons from backend pricing.
+- Admin 2.0 shows an effective pricing preview that reads the same public pricing API after content is loaded or saved.
 
 ## Resolution Order
 
@@ -64,3 +65,4 @@ For local Wrangler regression:
 2. Request `/api/novels/pricing?series={slug}&chapter={chapterSlug}` and confirm `source` is `backend-pricing-rules`.
 3. Create a chapter checkout and confirm the saved order metadata contains `pricingSource: "backend-pricing-rules"`.
 4. Unlock a paid chapter with reading credits and confirm the ledger metadata uses the backend credit cost.
+5. In Admin 2.0, load or save the same series/chapter and confirm the effective pricing preview matches the public API response.

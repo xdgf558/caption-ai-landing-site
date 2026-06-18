@@ -275,6 +275,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <input id="pricing-bundles" placeholder="5:10, 10:20" />
                 </label>
               </div>
+              <section class="admin-effective-pricing" aria-labelledby="effective-pricing-title">
+                <div class="admin-v2-section-heading">
+                  <div>
+                    <p class="station-kicker">Effective Pricing</p>
+                    <h4 id="effective-pricing-title">生效价格预览</h4>
+                  </div>
+                  <button class="button button-secondary" id="pricing-effective-refresh" type="button">读取生效价格</button>
+                </div>
+                <div class="admin-pricing-preview" id="pricing-effective-preview">
+                  保存或载入小说作品 / 章节后，这里会读取公共 pricing API 的最终返回结果。
+                </div>
+                <div class="admin-inline-status" id="pricing-effective-status" role="status" aria-live="polite" hidden></div>
+              </section>
             </section>
 
             <section class="admin-v2-subpanel">
@@ -430,6 +443,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       contentForm: $('#content-form'),
       accessForm: $('#access-form'),
       saveStatus: $('#content-save-status'),
+      effectivePricingPreview: $('#pricing-effective-preview'),
+      effectivePricingStatus: $('#pricing-effective-status'),
+      effectivePricingRefresh: $('#pricing-effective-refresh'),
       editorHeading: $('#editor-heading'),
       preview: $('#content-preview'),
       fields: {
@@ -503,6 +519,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.saveStatus.textContent = message;
       elements.saveStatus.dataset.tone = tone;
       elements.saveStatus.hidden = !message;
+    };
+
+    const setEffectivePricingStatus = (message, tone = 'neutral') => {
+      elements.effectivePricingStatus.textContent = message;
+      elements.effectivePricingStatus.dataset.tone = tone;
+      elements.effectivePricingStatus.hidden = !message;
     };
 
     const apiJson = async (path, options = {}) => {
@@ -642,6 +664,122 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         ? packs.map((pack) => `${pack.credits}:${pack.priceAmount}${pack.label ? `:${pack.label}` : ''}`).join(', ')
         : '';
 
+    const formatMoney = (amount, currency = 'USD') => {
+      const parsedAmount = Number.parseFloat(String(amount || ''));
+      if (!Number.isFinite(parsedAmount)) return '未设置';
+      try {
+        return new Intl.NumberFormat(elements.fields.locale.value || 'zh-Hant', { style: 'currency', currency }).format(parsedAmount);
+      } catch {
+        return `${parsedAmount.toFixed(2)} ${currency}`;
+      }
+    };
+
+    const pricingSourceLabel = (source) => ({
+      'backend-pricing-rules': 'D1 规则表',
+      'backend-pricing-json': 'D1 内容 JSON',
+      'serial-config': '旧 Markdown 生成配置',
+      'env-default': '环境默认值'
+    })[source] || source || '未知';
+
+    const getEffectivePricingContext = () => {
+      const entryType = elements.fields.entryType.value;
+      const seriesSlug = entryType === 'novel_chapter'
+        ? elements.fields.parentSlug.value.trim()
+        : entryType === 'novel_series'
+          ? elements.fields.slug.value.trim()
+          : '';
+      const chapterSlug = entryType === 'novel_chapter' ? elements.fields.slug.value.trim() : '';
+      return {
+        chapterSlug,
+        entryType,
+        locale: elements.fields.locale.value,
+        seriesSlug,
+        status: elements.fields.status.value,
+        visibility: elements.fields.visibility.value
+      };
+    };
+
+    const renderEffectivePricing = (pricing, context) => {
+      const tips = Array.isArray(pricing.tipAmounts) && pricing.tipAmounts.length
+        ? `${pricing.tipAmounts.map((amount) => formatMoney(amount, pricing.tipCurrency)).join(' / ')}`
+        : pricing.tipsEnabled ? '已开启，但未配置金额' : '关闭';
+      const bundles = Array.isArray(pricing.bundleOptions) && pricing.bundleOptions.length
+        ? pricing.bundleOptions.map((option) => `${option.chapterCount} 章 ${formatMoney(option.priceAmount, option.priceCurrency)}，${option.discountPercent}% 折扣`).join('；')
+        : Array.isArray(pricing.chapterBundleDiscounts) && pricing.chapterBundleDiscounts.length
+          ? pricing.chapterBundleDiscounts.map((rule) => `${rule.chapters} 章 ${rule.discountPercent}% 折扣`).join('；')
+          : '未开启';
+      const creditPacks = Array.isArray(pricing.creditPacks) && pricing.creditPacks.length
+        ? pricing.creditPacks.map((pack) => `${pack.label || `${pack.credits} 点`} ${formatMoney(pack.priceAmount, pack.priceCurrency)}`).join('；')
+        : '未配置';
+      const warnings = [];
+      if (context.status !== 'published' || context.visibility === 'private') {
+        warnings.push('公共 API 只读取已发布且非私有内容；当前内容未发布或私有时，预览可能显示旧规则或降级规则。');
+      }
+      if (pricing.source !== 'backend-pricing-rules') {
+        warnings.push(`当前未命中 D1 规则表，实际来源为：${pricingSourceLabel(pricing.source)}。`);
+      }
+
+      elements.effectivePricingPreview.innerHTML = `
+        <div class="admin-pricing-summary">
+          <article>
+            <span>规则来源</span>
+            <strong>${escapeHtml(pricingSourceLabel(pricing.source))}</strong>
+            <small>${escapeHtml(context.seriesSlug)}${context.chapterSlug ? ` / ${escapeHtml(context.chapterSlug)}` : ''}</small>
+          </article>
+          <article>
+            <span>收费模式</span>
+            <strong>${escapeHtml(pricing.priceMode || 'free')}</strong>
+            <small>免费章节：${escapeHtml(String(pricing.freeChapters ?? 0))}</small>
+          </article>
+          <article>
+            <span>单章</span>
+            <strong>${escapeHtml(formatMoney(pricing.chapterPriceAmount, pricing.chapterPriceCurrency))}</strong>
+            <small>${escapeHtml(String(pricing.chapterCredits || 1))} 阅读点 / 章</small>
+          </article>
+          <article>
+            <span>支持者</span>
+            <strong>${escapeHtml(formatMoney(pricing.supporterPriceAmount, pricing.supporterPriceCurrency))}</strong>
+            <small>series 级别解锁</small>
+          </article>
+        </div>
+        <div class="admin-pricing-lines">
+          <p><strong>打赏：</strong>${escapeHtml(tips)}</p>
+          <p><strong>多章折扣：</strong>${escapeHtml(bundles)}</p>
+          <p><strong>阅读点包：</strong>${escapeHtml(creditPacks)}</p>
+          ${warnings.map((warning) => `<p class="admin-pricing-warning">${escapeHtml(warning)}</p>`).join('')}
+        </div>
+      `;
+    };
+
+    const resetEffectivePricingPreview = (message = '保存或载入小说作品 / 章节后，这里会读取公共 pricing API 的最终返回结果。') => {
+      elements.effectivePricingPreview.textContent = message;
+      setEffectivePricingStatus('');
+    };
+
+    const refreshEffectivePricingPreview = async ({ silent = false } = {}) => {
+      const context = getEffectivePricingContext();
+      if (!context.seriesSlug) {
+        resetEffectivePricingPreview('Blog / Devlog 不使用小说收费规则。');
+        return;
+      }
+
+      const params = new URLSearchParams({
+        series: context.seriesSlug,
+        locale: context.locale
+      });
+      if (context.chapterSlug) params.set('chapter', context.chapterSlug);
+      if (!silent) setEffectivePricingStatus('正在读取公共 pricing API。');
+
+      try {
+        const payload = await apiJson(`/api/novels/pricing?${params.toString()}`);
+        renderEffectivePricing(payload.pricing || {}, context);
+        setEffectivePricingStatus(`已读取公共 API：${pricingSourceLabel(payload.pricing?.source)}。`, 'success');
+      } catch (error) {
+        elements.effectivePricingPreview.textContent = '公共 pricing API 读取失败。';
+        setEffectivePricingStatus(error.message, 'error');
+      }
+    };
+
     const renderMarkdownToHtml = (markdown) => {
       const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
       const html = [];
@@ -752,6 +890,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       renderPreview();
       updateConditionalFields();
+      resetEffectivePricingPreview();
     };
 
     const resetForm = (entryType = 'blog_post') => {
@@ -767,6 +906,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         sortOrder: 0
       });
       setSaveStatus('');
+      resetEffectivePricingPreview();
     };
 
     const updateConditionalFields = () => {
@@ -835,6 +975,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       renderContentList();
       const pricingRules = Array.isArray(payload.pricingRules) ? payload.pricingRules.length : 0;
       setStatus(`已载入：${payload.entry.title}，收费规则 ${pricingRules} 条。`, 'success');
+      await refreshEffectivePricingPreview({ silent: true });
     };
 
     const loadRevisions = async (id = state.selectedEntryId) => {
@@ -936,6 +1077,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const pricingRules = Array.isArray(result.pricingRules) ? result.pricingRules.length : 0;
         setSaveStatus(`保存成功，修订 #${result.revisionNumber}，同步 ${pricingRules} 条收费规则。`, 'success');
         fillFormFromEntry(result.entry, { markdown: payload.markdown, html: payload.html });
+        await refreshEffectivePricingPreview({ silent: true });
         await Promise.all([loadEntries(), loadRevisions(result.entry.id), loadAuditLogs()]);
       } catch (error) {
         setSaveStatus(error.message, 'error');
@@ -1162,6 +1304,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#content-reset').addEventListener('click', () => resetForm(elements.fields.entryType.value));
     $('#content-preview-button').addEventListener('click', renderPreview);
     $('#content-worker-preview-button').addEventListener('click', openWorkerPreview);
+    elements.effectivePricingRefresh.addEventListener('click', () => refreshEffectivePricingPreview());
     elements.fields.entryType.addEventListener('change', updateConditionalFields);
     elements.fields.title.addEventListener('input', () => {
       if (!elements.fields.slug.value.trim()) elements.fields.slug.value = slugify(elements.fields.title.value, elements.fields.entryType.value);

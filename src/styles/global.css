@@ -2585,6 +2585,76 @@ button.button {
   padding: 16px;
 }
 
+.admin-effective-pricing {
+  background: rgba(2, 6, 23, 0.46);
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 14px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.admin-effective-pricing h4 {
+  color: #f8fafc;
+  font-size: 18px;
+  margin: 0;
+}
+
+.admin-pricing-preview {
+  color: #cbd5e1;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-pricing-summary {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-pricing-summary article {
+  background: rgba(15, 23, 42, 0.76);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  display: grid;
+  gap: 5px;
+  min-height: 94px;
+  padding: 12px;
+}
+
+.admin-pricing-summary span,
+.admin-pricing-summary small,
+.admin-pricing-lines p {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.admin-pricing-summary strong {
+  color: #f8fafc;
+  font-size: 18px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.admin-pricing-lines {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-pricing-lines p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-pricing-lines strong {
+  color: #dbeafe;
+}
+
+.admin-pricing-warning {
+  color: #fde68a !important;
+}
+
 .admin-v2-workspace h2,
 .admin-v2-workspace h3,
 .admin-v2-workspace p {
@@ -2786,6 +2856,10 @@ button.button {
   .admin-form-grid,
   .admin-v2-form-grid,
   .admin-v2-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-pricing-summary {
     grid-template-columns: 1fr;
   }
 
