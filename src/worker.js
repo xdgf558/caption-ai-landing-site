@@ -31,6 +31,54 @@ const defaultAdminEmail = 'brodstem@protonmail.com';
 
 const cleanText = (value, maxLength = 500) => String(value || '').trim().slice(0, maxLength);
 
+const stripInlineMarkdown = (value) =>
+  String(value || '')
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[`*_~]+/g, '')
+    .replace(/\\([\\`*_{}\[\]()#+\-.!|>])/g, '$1')
+    .trim();
+
+const plainTextFromMarkdown = (value, maxLength = 500) => {
+  const normalized = String(value || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/^---\n[\s\S]*?\n---\n?/, '\n');
+  const plainLines = [];
+  const headingFallback = [];
+  let inFence = false;
+
+  for (const line of normalized.split('\n')) {
+    let trimmed = line.trim();
+    if (!trimmed) continue;
+
+    if (/^```|^~~~/.test(trimmed)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    if (/^\|?[\s:|-]+\|?$/.test(trimmed)) continue;
+
+    const heading = trimmed.match(/^#{1,6}\s+(.+)$/);
+    if (heading) {
+      const text = stripInlineMarkdown(heading[1]);
+      if (text) headingFallback.push(text);
+      continue;
+    }
+
+    trimmed = trimmed
+      .replace(/^>\s?/, '')
+      .replace(/^[-*+]\s+/, '')
+      .replace(/^\d+[.)]\s+/, '');
+
+    const text = stripInlineMarkdown(trimmed);
+    if (text) plainLines.push(text);
+  }
+
+  const plain = (plainLines.length ? plainLines : headingFallback).join(' ').replace(/\s+/g, ' ');
+  return cleanText(plain, maxLength);
+};
+
 const cleanPlatform = (value) => {
   const platform = String(value || '').trim().toLowerCase();
   return platform === 'android' ? 'android' : 'ios';
@@ -937,6 +985,14 @@ const firstCleanText = (values, maxLength = 500) => {
   return '';
 };
 
+const firstPlainSummary = (values, maxLength = 500) => {
+  for (const value of values) {
+    const text = plainTextFromMarkdown(value, maxLength);
+    if (text) return text;
+  }
+  return '';
+};
+
 const normalizeMaybeNumber = (value, fallback = null) => {
   const number = Number.parseInt(String(value ?? '').trim(), 10);
   return Number.isFinite(number) ? number : fallback;
@@ -950,8 +1006,7 @@ const countContentWords = (value) => {
   return latin.length + cjk.length;
 };
 
-const excerptFromText = (value, maxLength = 260) =>
-  cleanText(String(value || '').replace(/\s+/g, ' '), maxLength);
+const excerptFromText = (value, maxLength = 260) => plainTextFromMarkdown(value, maxLength);
 
 const normalizeStringArray = (value, maxItems = 20) => {
   const items = Array.isArray(value)
@@ -2769,7 +2824,7 @@ const getBackendProtectedChapterContent = async (env, seriesSlug, chapterSlug, l
     access: row.access_level === 'supporter' ? 'supporter' : 'paid',
     chapterNumber: row.chapter_number,
     chapterSlug: row.slug,
-    excerpt: row.excerpt || row.description,
+    excerpt: firstPlainSummary([row.excerpt, row.description], 420),
     headings: [],
     htmlR2Key: row.html_r2_key,
     language: row.locale,
@@ -5924,7 +5979,7 @@ const buildNovelForgeSeriesPayload = ({ coverPayload, existing, item, mode, proj
   const explicitSlug = firstCleanText([projectPayload.slug, projectPayload.seriesSlug], 160);
   const slug = cleanSlug(explicitSlug || existing?.slug || projectId || title, 160) || `work-${Date.now()}`;
   const locale = normalizeContentLocale(projectPayload.locale || projectPayload.language || publishPackage.locale);
-  const description = firstCleanText([projectPayload.description, projectPayload.summary, publishPackage.project?.description], 1200);
+  const description = firstPlainSummary([projectPayload.description, projectPayload.summary, publishPackage.project?.description], 1200);
   const cover = normalizeJsonObject(coverPayload);
   const coverR2Key =
     firstCleanText([cover.coverR2Key, cover.r2Key, cover.imageUrl, projectPayload.coverR2Key, projectPayload.coverImage], 500) ||
@@ -6004,7 +6059,7 @@ const buildNovelForgeChapterPayload = ({ chapterPayload, existing, item, mode, p
     mode === 'publish'
       ? firstCleanText([existing?.published_at, chapterPayload.updatedAt, publishPackage.generatedAt, new Date().toISOString()], 80)
       : '';
-  const excerpt = firstCleanText([chapterPayload.excerpt, chapterPayload.summary, excerptFromText(body)], 1000);
+  const excerpt = firstPlainSummary([chapterPayload.excerpt, chapterPayload.summary, excerptFromText(body)], 1000);
   const wordCount = normalizePositiveInteger(chapterPayload.wordCount, countContentWords(body));
 
   return {
@@ -6622,7 +6677,7 @@ const renderAdminContentPreview = async (entry, env) => {
     return {
       body: addPreviewBanner(entry, renderDynamicDevlogPost(route, row, body)),
       canonicalPath: dynamicCanonicalPath(route),
-      description: entry.description || entry.excerpt,
+      description: firstPlainSummary([entry.description, entry.excerpt], 260),
       lang: entry.locale,
       robots: 'noindex, nofollow',
       title: `[Preview] ${entry.title}`
@@ -6642,7 +6697,7 @@ const renderAdminContentPreview = async (entry, env) => {
     return {
       body: addPreviewBanner(entry, renderDynamicNovelSeries(route, row, body, chapters)),
       canonicalPath: dynamicCanonicalPath(route),
-      description: entry.description || entry.excerpt,
+      description: firstPlainSummary([entry.description, entry.excerpt], 260),
       lang: entry.locale,
       robots: 'noindex, nofollow',
       title: `[Preview] ${entry.title}`
@@ -6686,7 +6741,7 @@ const renderAdminContentPreview = async (entry, env) => {
   return {
     body: addPreviewBanner(entry, renderDynamicNovelChapter(route, series, row, body, chapters, getStaticSeriesPaymentSettings(series.slug, env))),
     canonicalPath: dynamicCanonicalPath(route),
-    description: entry.description || entry.excerpt,
+    description: firstPlainSummary([entry.description, entry.excerpt], 260),
     lang: entry.locale,
     robots: 'noindex, nofollow',
     title: `[Preview] ${entry.title} | ${series.title}`
@@ -6898,6 +6953,8 @@ const renderDynamicCover = (entry, options = {}) => {
 
 const renderDynamicDevlogPost = (route, post, body) => {
   const copy = dynamicContentCopy[route.locale];
+  const summary = firstPlainSummary([post.description, post.excerpt], 420);
+  const fallbackBody = firstPlainSummary([post.excerpt, post.description], 1200);
   return `<article class="section">
       <a class="text-link" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.backDevlog)}</a>
       <header class="hero">
@@ -6906,10 +6963,10 @@ const renderDynamicDevlogPost = (route, post, body) => {
           <span>${escapeHtml(dynamicContentStatusLabels[post.status] || post.status)}</span>
         </div>
         <h1>${escapeHtml(post.title)}</h1>
-        <p>${escapeHtml(post.description || post.excerpt)}</p>
+        ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
         ${renderDynamicCover(post)}
       </header>
-      <div class="prose">${body.html || `<p>${escapeHtml(post.excerpt || post.description)}</p>`}</div>
+      <div class="prose">${body.html || `<p>${escapeHtml(fallbackBody)}</p>`}</div>
     </article>`;
 };
 
@@ -6918,14 +6975,17 @@ const renderChapterCards = (route, chapters) => {
   if (!chapters.length) return `<p>${escapeHtml(copy.chapters)}</p>`;
   return chapters
     .map(
-      (chapter) => `<a class="card" href="${escapeHtml(`${route.basePath}${chapter.parent_slug}/${chapter.slug}/`)}">
+      (chapter) => {
+        const summary = firstPlainSummary([chapter.excerpt, chapter.description], 260);
+        return `<a class="card" href="${escapeHtml(`${route.basePath}${chapter.parent_slug}/${chapter.slug}/`)}">
         <div class="meta">
           <span class="pill">${escapeHtml(copy.chapter)} ${escapeHtml(String(chapter.chapter_number || ''))}</span>
           <span>${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
         </div>
         <h3>${escapeHtml(chapter.title)}</h3>
-        <p>${escapeHtml(chapter.excerpt || chapter.description)}</p>
-      </a>`
+        ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
+      </a>`;
+      }
     )
     .join('');
 };
@@ -7062,11 +7122,13 @@ const renderDynamicNovelSeries = (route, serial, body, chapters) => {
   const copy = dynamicContentCopy[route.locale];
   const firstChapter = chapters[0];
   const latestChapter = chapters[chapters.length - 1];
+  const summary = firstPlainSummary([serial.subtitle, serial.description, serial.excerpt], 420);
+  const fallbackBody = firstPlainSummary([serial.excerpt, serial.description], 1200);
   return `<section class="hero hero--novel">
       <div class="hero-copy">
         <p class="kicker">${escapeHtml(copy.status)}</p>
         <h1>${escapeHtml(serial.title)}</h1>
-        <p>${escapeHtml(serial.subtitle || serial.description)}</p>
+        ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
         <div class="meta">
           <span class="pill">${escapeHtml(copy.author)}: ${escapeHtml(serial.author_name || 'Station Cat')}</span>
           <span>${escapeHtml(copy.access)}: ${escapeHtml(getDynamicAccessLabel(serial.access_level, route.locale))}</span>
@@ -7080,7 +7142,7 @@ const renderDynamicNovelSeries = (route, serial, body, chapters) => {
       ${renderDynamicCover(serial, { variant: 'book' })}
     </section>
     <section class="section">
-      <div class="prose">${body.html || `<p>${escapeHtml(serial.excerpt || serial.description)}</p>`}</div>
+      <div class="prose">${body.html || `<p>${escapeHtml(fallbackBody)}</p>`}</div>
     </section>
     <section class="section">
       <p class="kicker">${escapeHtml(copy.chapters)}</p>
@@ -7095,6 +7157,8 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
   const previousChapter = currentIndex > 0 ? chapters[currentIndex - 1] : null;
   const nextChapter = currentIndex >= 0 ? chapters[currentIndex + 1] : null;
   const isProtected = chapter.access_level !== 'free';
+  const summary = firstPlainSummary([chapter.excerpt, chapter.description], 420);
+  const fallbackBody = firstPlainSummary([chapter.excerpt, chapter.description], 1200);
   const content = isProtected
     ? `<section class="gate" data-serial-access-gate data-series-slug="${escapeHtml(chapter.parent_slug)}" data-chapter-slug="${escapeHtml(chapter.slug)}" data-access="${escapeHtml(chapter.access_level)}" data-locale="${escapeHtml(route.locale)}" data-return-path="${escapeHtml(dynamicCanonicalPath(route))}">
         <p class="kicker">${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</p>
@@ -7238,7 +7302,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
           checkAccess().catch((error) => setStatus(error.message || ${JSON.stringify(paymentCopy.contentFailed)}, 'error'));
         })();
       </script>`
-    : `<article class="prose prose--reader">${body.html || `<p>${escapeHtml(chapter.excerpt || chapter.description)}</p>`}</article>`;
+    : `<article class="prose prose--reader">${body.html || `<p>${escapeHtml(fallbackBody)}</p>`}</article>`;
 
   return `<article class="section">
       <a class="text-link" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>
@@ -7249,7 +7313,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
           ${chapter.word_count ? `<span>${escapeHtml(String(chapter.word_count))} ${escapeHtml(copy.words)}</span>` : ''}
         </div>
         <h1>${escapeHtml(chapter.title)}</h1>
-        <p>${escapeHtml(chapter.excerpt || chapter.description)}</p>
+        ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
       </header>
       ${content}
       <footer class="section">
@@ -7278,7 +7342,7 @@ const handleDynamicFrontendContent = async (request, env) => {
     return dynamicHtmlResponse(request, {
       body: renderDynamicDevlogPost(route, post, body),
       canonicalPath: dynamicCanonicalPath(route),
-      description: post.description || post.excerpt,
+      description: firstPlainSummary([post.description, post.excerpt], 260),
       lang: route.locale,
       title: post.title
     });
@@ -7294,7 +7358,7 @@ const handleDynamicFrontendContent = async (request, env) => {
     return dynamicHtmlResponse(request, {
       body: renderDynamicNovelSeries(route, serial, body, chapters),
       canonicalPath: dynamicCanonicalPath(route),
-      description: serial.description || serial.excerpt,
+      description: firstPlainSummary([serial.description, serial.excerpt], 260),
       lang: route.locale,
       title: serial.title
     });
@@ -7319,7 +7383,7 @@ const handleDynamicFrontendContent = async (request, env) => {
     return dynamicHtmlResponse(request, {
       body: renderDynamicNovelChapter(route, serial, chapter, body, chapters, paymentSettings),
       canonicalPath: dynamicCanonicalPath(route),
-      description: chapter.description || chapter.excerpt,
+      description: firstPlainSummary([chapter.description, chapter.excerpt], 260),
       lang: route.locale,
       title: `${chapter.title} | ${serial.title}`
     });
