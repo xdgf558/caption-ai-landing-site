@@ -6,6 +6,23 @@ The Worker also fails closed for `/admin*` and `/admin-v2*` when Cloudflare Acce
 
 Use this setup after the site is deployed to Cloudflare Pages.
 
+## External Publishing API
+
+Stage 8A adds a machine-to-machine import endpoint for NovelForge AI:
+
+```text
+/api/novelforge/import
+```
+
+Do not put this endpoint behind the Cloudflare Access browser login policy. NovelForge runs outside the browser admin session and authenticates with:
+
+```http
+Authorization: Bearer <NOVELFORGE_PUBLISH_TOKEN>
+X-NovelForge-Contract: station-cat-novelforge-import.v1
+```
+
+The token must be configured as a Cloudflare secret or environment variable named `NOVELFORGE_PUBLISH_TOKEN`. Admin pages and admin APIs still require Cloudflare Access; the NovelForge import API uses its own token boundary and returns `401` for missing or invalid tokens.
+
 ## Goal
 
 Only allow this email to open `/admin/` and `/admin-v2/`:

@@ -1748,7 +1748,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       try {
         resetForm('blog_post');
         await loadSchema();
-        await Promise.all([loadEntries(), loadRevisions(), loadAuditLogs()]);
+        await loadEntries();
+        const initialContentId = Number.parseInt(new URLSearchParams(window.location.search).get('contentId') || '', 10);
+        if (Number.isFinite(initialContentId) && initialContentId > 0) {
+          await loadEntryForEdit(initialContentId);
+        } else {
+          await loadRevisions();
+        }
+        await loadAuditLogs();
       } catch (error) {
         setStatus(error.message, 'error');
       }
