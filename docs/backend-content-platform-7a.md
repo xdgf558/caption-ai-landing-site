@@ -85,6 +85,15 @@ POST /admin/api/content/entries
 
 `POST /admin/api/content/entries` upserts metadata into `content_entries`, creates a `content_revisions` record, and writes an `admin_audit_logs` row. If the payload includes `markdown` or `html`, the request requires `CONTENT_BUCKET`.
 
+Stage 7H extends the content platform with cover media upload:
+
+```text
+POST /admin/api/content/media
+GET  /api/content/media?key={r2Key}
+```
+
+See [admin-v2-media-upload-7h.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/admin-v2-media-upload-7h.md:1).
+
 ### Public
 
 ```text
