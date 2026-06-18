@@ -908,6 +908,10 @@ const contentStatuses = new Set(['draft', 'scheduled', 'published', 'archived'])
 const contentVisibilities = new Set(['public', 'unlisted', 'private']);
 const contentAccessLevels = new Set(['free', 'paid', 'supporter', 'member']);
 const contentBodyFormats = new Set(['markdown', 'html']);
+const novelForgeImportContract = 'station-cat-novelforge-import';
+const novelForgeImportContractHeader = 'station-cat-novelforge-import.v1';
+const novelForgePackageFormat = 'novelforge-standard-publish-package';
+const maxNovelForgeImportBytes = 8 * 1024 * 1024;
 
 const parseStoredJson = (value, fallback) => {
   try {
@@ -920,6 +924,33 @@ const parseStoredJson = (value, fallback) => {
 
 const normalizeJsonObject = (value) =>
   value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+
+const isPlainRecord = (value) =>
+  value && typeof value === 'object' && !Array.isArray(value);
+
+const firstCleanText = (values, maxLength = 500) => {
+  for (const value of values) {
+    const text = cleanText(value, maxLength);
+    if (text) return text;
+  }
+  return '';
+};
+
+const normalizeMaybeNumber = (value, fallback = null) => {
+  const number = Number.parseInt(String(value ?? '').trim(), 10);
+  return Number.isFinite(number) ? number : fallback;
+};
+
+const countContentWords = (value) => {
+  const text = String(value || '').trim();
+  if (!text) return 0;
+  const latin = text.match(/[A-Za-z0-9]+/g) || [];
+  const cjk = text.match(/[\u3400-\u9fff]/g) || [];
+  return latin.length + cjk.length;
+};
+
+const excerptFromText = (value, maxLength = 260) =>
+  cleanText(String(value || '').replace(/\s+/g, ' '), maxLength);
 
 const normalizeStringArray = (value, maxItems = 20) => {
   const items = Array.isArray(value)
@@ -1083,6 +1114,28 @@ const contentEntryToJson = (row) => ({
   createdAt: row.created_at,
   updatedAt: row.updated_at
 });
+
+const novelForgeRemoteIdForEntry = (row) => {
+  if (!row?.id) return '';
+  if (row.entry_type === 'novel_series') return `work_${row.id}`;
+  if (row.entry_type === 'novel_chapter') return `chapter_${row.id}`;
+  return `content_${row.id}`;
+};
+
+const novelForgeCoverRemoteIdForSeries = (row) => (row?.id ? `cover_${row.id}` : '');
+
+const parseNovelForgeRemoteEntryId = (remoteId, entryType) => {
+  const value = cleanText(remoteId, 100);
+  if (!value) return 0;
+  const patterns = entryType === 'novel_series'
+    ? [/^work_(\d+)$/i, /^cover_(\d+)$/i, /^novel_series:(\d+)$/i, /^content_entry:(\d+)$/i]
+    : [/^chapter_(\d+)$/i, /^novel_chapter:(\d+)$/i, /^content_entry:(\d+)$/i];
+  for (const pattern of patterns) {
+    const match = value.match(pattern);
+    if (match) return normalizePositiveInteger(match[1], 0);
+  }
+  return 0;
+};
 
 const getContentBucket = (env) => env.CONTENT_BUCKET || null;
 
@@ -4455,8 +4508,8 @@ const handleAdminAdjustReaderCredits = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '7H',
-    purpose: 'Backend content management, media upload, pricing, order, reader account, credit, entitlement, and audit operations centered in Admin 2.0.',
+    stage: '8A',
+    purpose: 'Backend content management, media upload, pricing, order, reader account, credit, entitlement, audit, and NovelForge import operations centered in Admin 2.0.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -4495,8 +4548,9 @@ const handleAdminContentSchema = async (env) =>
       checkoutPricing: 'Reader-facing checkout resolves content_pricing_rules before generated static config and env defaults.',
       commerceAdmin: 'Admin 2.0 can inspect orders, reader accounts, credit ledger, entitlements, and rerun paid-order fulfillment.',
       mediaUpload: 'Admin 2.0 uploads cover images into CONTENT_BUCKET under content/media/covers.',
+      novelForgeImport: 'NovelForge can publish projects, chapters, and cover metadata through POST /api/novelforge/import with a dedicated Bearer token.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
-      nextStages: ['8A NovelForge import API']
+      nextStages: ['8B Admin 2.0 import review and retry flow']
     }
   });
 
@@ -5157,6 +5211,663 @@ const handleAdminUpsertContentEntry = async (request, env) => {
     });
   } catch (error) {
     return privateJson({ ok: false, code: error.code || 'CONTENT_UPLOAD_FAILED', message: error.message }, { status: 503 });
+  }
+};
+
+const novelForgeImportJson = (body, init = {}) =>
+  json(body, {
+    ...init,
+    headers: {
+      'cache-control': 'no-store',
+      ...(init.headers || {})
+    }
+  });
+
+const novelForgeImportError = (message, { code = 'NOVELFORGE_IMPORT_ERROR', errors = [], status = 400 } = {}) =>
+  novelForgeImportJson(
+    {
+      ok: false,
+      error: {
+        code,
+        message
+      },
+      errors: errors.map((error) => (typeof error === 'string' ? { message: error } : error))
+    },
+    { status }
+  );
+
+const requireNovelForgePublishToken = (request, env) => {
+  const expected = cleanText(env.NOVELFORGE_PUBLISH_TOKEN, 1000);
+  if (!expected) {
+    return novelForgeImportError('NovelForge publish token is not configured.', {
+      code: 'NOVELFORGE_TOKEN_NOT_CONFIGURED',
+      status: 503
+    });
+  }
+
+  const authorization = request.headers.get('authorization') || '';
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  const received = cleanText(match?.[1], 1000);
+  if (!received || !timingSafeEqualString(received, expected)) {
+    return novelForgeImportError('Invalid publish token.', {
+      code: 'NOVELFORGE_TOKEN_INVALID',
+      status: 401
+    });
+  }
+
+  const contractHeader = cleanText(request.headers.get('x-novelforge-contract'), 80);
+  if (contractHeader && contractHeader !== novelForgeImportContractHeader) {
+    return novelForgeImportError('Unsupported NovelForge contract header.', {
+      code: 'NOVELFORGE_CONTRACT_HEADER_UNSUPPORTED',
+      status: 400
+    });
+  }
+
+  return null;
+};
+
+const readNovelForgeImportPayload = async (request) => {
+  const contentLength = Number.parseInt(request.headers.get('content-length') || '0', 10);
+  if (contentLength > maxNovelForgeImportBytes) {
+    const error = new Error('NovelForge import request is too large.');
+    error.code = 'NOVELFORGE_IMPORT_TOO_LARGE';
+    error.status = 413;
+    throw error;
+  }
+
+  const bodyText = await request.text();
+  if (bodyText.length > maxNovelForgeImportBytes) {
+    const error = new Error('NovelForge import request is too large.');
+    error.code = 'NOVELFORGE_IMPORT_TOO_LARGE';
+    error.status = 413;
+    throw error;
+  }
+
+  try {
+    return {
+      bodyText,
+      payload: JSON.parse(bodyText)
+    };
+  } catch {
+    const error = new Error('Invalid JSON request body.');
+    error.code = 'INVALID_JSON';
+    error.status = 400;
+    throw error;
+  }
+};
+
+const normalizeNovelForgeMode = (value) => (cleanText(value, 20).toLowerCase() === 'publish' ? 'publish' : 'draft');
+
+const normalizeNovelForgeChangedItems = (payload) => {
+  if (Array.isArray(payload.changedItems)) {
+    return payload.changedItems.filter(isPlainRecord);
+  }
+
+  if (payload.onlyChanged !== false) return [];
+  const publishPackage = normalizeJsonObject(payload.publishPackage);
+  const project = normalizeJsonObject(publishPackage.project);
+  const cover = normalizeJsonObject(publishPackage.cover);
+  const chapters = Array.isArray(publishPackage.chapters) ? publishPackage.chapters.filter(isPlainRecord) : [];
+
+  return [
+    {
+      changeType: 'create',
+      contentHash: '',
+      label: `小说元信息：${cleanText(project.title, 120) || 'Untitled work'}`,
+      localId: cleanText(project.id, 120) || 'project',
+      localType: 'project',
+      payload: {
+        ...project,
+        pricingSuggestion: normalizeJsonObject(publishPackage.pricingSuggestion)
+      },
+      remoteId: null
+    },
+    {
+      changeType: 'create',
+      contentHash: '',
+      label: '封面图与封面提示词',
+      localId: `${cleanText(project.id, 120) || 'project'}:cover`,
+      localType: 'cover',
+      payload: cover,
+      remoteId: null
+    },
+    ...chapters.map((chapter) => ({
+      changeType: 'create',
+      contentHash: '',
+      label: `第 ${chapter.chapterNumber ?? '?'} 章：${cleanText(chapter.title, 120) || 'Untitled chapter'}`,
+      localId: cleanText(chapter.id, 120) || `chapter-${chapter.chapterNumber || crypto.randomUUID()}`,
+      localType: 'chapter',
+      payload: chapter,
+      remoteId: null
+    }))
+  ];
+};
+
+const validateNovelForgeImportPayload = (payload) => {
+  if (!isPlainRecord(payload)) {
+    const error = new Error('NovelForge import payload must be an object.');
+    error.code = 'NOVELFORGE_PAYLOAD_INVALID';
+    error.status = 400;
+    throw error;
+  }
+
+  if (payload.contract !== novelForgeImportContract || Number(payload.contractVersion) !== 1) {
+    const error = new Error('Unsupported NovelForge import contract.');
+    error.code = 'NOVELFORGE_CONTRACT_UNSUPPORTED';
+    error.status = 400;
+    throw error;
+  }
+
+  const publishPackage = normalizeJsonObject(payload.publishPackage);
+  if (publishPackage.format !== novelForgePackageFormat || Number(publishPackage.version) !== 1) {
+    const error = new Error('Unsupported NovelForge publish package format.');
+    error.code = 'NOVELFORGE_PACKAGE_UNSUPPORTED';
+    error.status = 400;
+    throw error;
+  }
+
+  if (!isPlainRecord(publishPackage.project)) {
+    const error = new Error('NovelForge publish package is missing project metadata.');
+    error.code = 'NOVELFORGE_PROJECT_REQUIRED';
+    error.status = 400;
+    throw error;
+  }
+
+  return {
+    changedItems: normalizeNovelForgeChangedItems(payload),
+    mode: normalizeNovelForgeMode(payload.mode),
+    publishPackage,
+    requestId: cleanText(payload.requestId || `novelforge:${crypto.randomUUID()}`, 160)
+  };
+};
+
+const getNovelForgeItemPayload = (item, fallback = {}) => (isPlainRecord(item?.payload) ? item.payload : fallback);
+
+const getNovelForgeItemByType = (items, type) =>
+  items.find((item) => cleanText(item.localType, 40).toLowerCase() === type) || null;
+
+const getNovelForgeItemsByType = (items, type) =>
+  items.filter((item) => cleanText(item.localType, 40).toLowerCase() === type);
+
+const getNovelForgeBody = (payload) => {
+  const values = [payload.body, payload.markdown, payload.finalText, payload.content, payload.text];
+  for (const value of values) {
+    if (typeof value !== 'string') continue;
+    const body = value.trim();
+    if (body) return body.slice(0, 2_000_000);
+  }
+  return '';
+};
+
+const novelForgePublicSeriesUrl = (origin, locale, slug) => {
+  const segment = localePathSegments[normalizeContentLocale(locale)] || 'zh-hant';
+  return `${origin}/${segment}/works/${slug}/`;
+};
+
+const novelForgePreviewUrl = (origin, entryId) => `${origin}/admin-v2/?contentId=${encodeURIComponent(String(entryId))}`;
+
+const findContentEntryById = async (db, id, entryType) => {
+  if (!id) return null;
+  return db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       WHERE id = ?
+         AND entry_type = ?
+       LIMIT 1`
+    )
+    .bind(id, entryType)
+    .first();
+};
+
+const findContentEntryByIdentity = async (db, entry) =>
+  db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       WHERE entry_type = ?
+         AND locale = ?
+         AND parent_slug = ?
+         AND slug = ?
+       LIMIT 1`
+    )
+    .bind(entry.entryType, entry.locale, entry.parentSlug, entry.slug)
+    .first();
+
+const findExistingNovelForgeEntry = async (db, remoteId, entry) => {
+  const remoteEntryId = parseNovelForgeRemoteEntryId(remoteId, entry.entryType);
+  const byId = remoteEntryId ? await findContentEntryById(db, remoteEntryId, entry.entryType) : null;
+  if (byId) return byId;
+  return findContentEntryByIdentity(db, entry);
+};
+
+const buildNovelForgeImportBackupKey = (requestId) => {
+  const now = new Date();
+  const year = now.toISOString().slice(0, 4);
+  const month = now.toISOString().slice(5, 7);
+  const safeRequestId = cleanSlug(requestId, 120) || 'novelforge-import';
+  const token = (crypto.randomUUID?.() || randomToken(12)).replace(/-/g, '').slice(0, 12);
+  return `content/imports/novelforge/${year}/${month}/${safeRequestId}-${Date.now()}-${token}.json`;
+};
+
+const createNovelForgeImportRecord = async (db, data) =>
+  db
+    .prepare(
+      `INSERT INTO content_imports (
+        import_type, filename, r2_key, status, warnings_json, errors_json, created_by
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      RETURNING *`
+    )
+    .bind(
+      'novelforge',
+      cleanText(data.requestId, 240),
+      cleanText(data.r2Key, 500),
+      'processing',
+      '[]',
+      '[]',
+      cleanText(data.actorEmail || 'novelforge-api', 160)
+    )
+    .first();
+
+const updateNovelForgeImportRecord = async (db, id, data) => {
+  if (!id) return;
+  await db
+    .prepare(
+      `UPDATE content_imports
+       SET status = ?,
+           entries_created = ?,
+           entries_updated = ?,
+           warnings_json = ?,
+           errors_json = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .bind(
+      cleanText(data.status, 80),
+      normalizePositiveInteger(data.entriesCreated, 0),
+      normalizePositiveInteger(data.entriesUpdated, 0),
+      JSON.stringify(Array.isArray(data.warnings) ? data.warnings : []),
+      JSON.stringify(Array.isArray(data.errors) ? data.errors : []),
+      id
+    )
+    .run();
+};
+
+const uploadNovelForgeImportBackup = async (env, requestId, bodyText) => {
+  const bucket = getContentBucket(env);
+  if (!bucket) return '';
+  const key = buildNovelForgeImportBackupKey(requestId);
+  await bucket.put(key, bodyText, {
+    httpMetadata: { contentType: 'application/json; charset=utf-8' }
+  });
+  return key;
+};
+
+const buildNovelForgeSeriesPayload = ({ coverPayload, existing, item, mode, projectPayload, publishPackage, requestId }) => {
+  const existingMetadata = parseStoredJson(existing?.metadata_json, {});
+  const pricingSuggestion = normalizeJsonObject(projectPayload.pricingSuggestion || publishPackage.pricingSuggestion);
+  const projectId = firstCleanText([projectPayload.id, publishPackage.project?.id, item?.localId], 120) || 'project';
+  const title = firstCleanText([projectPayload.title, publishPackage.project?.title, projectId], 240) || 'Untitled novel';
+  const explicitSlug = firstCleanText([projectPayload.slug, projectPayload.seriesSlug], 160);
+  const slug = cleanSlug(explicitSlug || existing?.slug || projectId || title, 160) || `work-${Date.now()}`;
+  const locale = normalizeContentLocale(projectPayload.locale || projectPayload.language || publishPackage.locale);
+  const description = firstCleanText([projectPayload.description, projectPayload.summary, publishPackage.project?.description], 1200);
+  const cover = normalizeJsonObject(coverPayload);
+  const coverR2Key =
+    firstCleanText([cover.coverR2Key, cover.r2Key, cover.imageUrl, projectPayload.coverR2Key, projectPayload.coverImage], 500) ||
+    existing?.cover_r2_key ||
+    '';
+  const coverAlt =
+    firstCleanText([cover.coverAlt, cover.alt, projectPayload.coverAlt, `${title} 封面`], 300) ||
+    existing?.cover_alt ||
+    '';
+  const status = mode === 'publish' ? 'published' : 'draft';
+  const publishedAt =
+    mode === 'publish'
+      ? firstCleanText([existing?.published_at, publishPackage.generatedAt, new Date().toISOString()], 80)
+      : '';
+  const tags = normalizeStringArray([
+    projectPayload.genre,
+    projectPayload.platform,
+    projectPayload.targetAudience
+  ]);
+
+  return {
+    accessLevel: existing?.access_level || 'free',
+    authorName: firstCleanText([projectPayload.authorName, projectPayload.author], 160) || existing?.author_name || 'Station Cat',
+    coverAlt,
+    coverR2Key,
+    description,
+    entryType: 'novel_series',
+    excerpt: description,
+    html: description ? renderSimpleMarkdownToHtml(description) : '',
+    locale,
+    markdown: description,
+    metadata: {
+      ...existingMetadata,
+      novelforge: {
+        contentHash: cleanText(item?.contentHash, 140),
+        cover: {
+          imagePath: cleanText(cover.imagePath, 500),
+          imageUrl: cleanText(cover.imageUrl, 500),
+          prompt: cleanText(cover.prompt, 1000),
+          status: cleanText(cover.status, 80)
+        },
+        generatedAt: cleanText(publishPackage.generatedAt, 80),
+        localId: cleanText(item?.localId || projectId, 140),
+        packageVersion: normalizePositiveInteger(publishPackage.version, 1),
+        pricingSuggestion,
+        projectId,
+        requestId
+      }
+    },
+    pricing: parseStoredJson(existing?.pricing_json, {}),
+    publishedAt,
+    slug,
+    sourceKind: 'novelforge',
+    sourceRef: requestId,
+    status,
+    subtitle: firstCleanText([projectPayload.genre, projectPayload.targetAudience, projectPayload.platform], 400),
+    tags,
+    title,
+    visibility: existing?.visibility || 'public',
+    wordCount: normalizePositiveInteger(projectPayload.totalWordTarget, 0)
+  };
+};
+
+const buildNovelForgeChapterPayload = ({ chapterPayload, existing, item, mode, publishPackage, requestId, series }) => {
+  const existingMetadata = parseStoredJson(existing?.metadata_json, {});
+  const body = getNovelForgeBody(chapterPayload);
+  const chapterNumber =
+    normalizeMaybeNumber(chapterPayload.chapterNumber, null) ??
+    normalizeMaybeNumber(chapterPayload.number, null) ??
+    normalizeMaybeNumber(existing?.chapter_number, null);
+  const localId = firstCleanText([chapterPayload.id, item?.localId], 120) || `chapter-${chapterNumber || Date.now()}`;
+  const title = firstCleanText([chapterPayload.title, item?.label, localId], 240) || 'Untitled chapter';
+  const explicitSlug = firstCleanText([chapterPayload.slug, chapterPayload.chapterSlug], 160);
+  const slug = cleanSlug(explicitSlug || existing?.slug || localId || title, 160) || `chapter-${chapterNumber || Date.now()}`;
+  const status = mode === 'publish' ? 'published' : 'draft';
+  const publishedAt =
+    mode === 'publish'
+      ? firstCleanText([existing?.published_at, chapterPayload.updatedAt, publishPackage.generatedAt, new Date().toISOString()], 80)
+      : '';
+  const excerpt = firstCleanText([chapterPayload.excerpt, chapterPayload.summary, excerptFromText(body)], 1000);
+  const wordCount = normalizePositiveInteger(chapterPayload.wordCount, countContentWords(body));
+
+  return {
+    accessLevel: existing?.access_level || 'free',
+    authorName: series.author_name || 'Station Cat',
+    chapterNumber: chapterNumber || 1,
+    description: excerpt,
+    entryType: 'novel_chapter',
+    excerpt,
+    html: renderSimpleMarkdownToHtml(body),
+    locale: series.locale,
+    markdown: body,
+    metadata: {
+      ...existingMetadata,
+      novelforge: {
+        contentHash: cleanText(item?.contentHash, 140),
+        generatedAt: cleanText(publishPackage.generatedAt, 80),
+        localId,
+        packageVersion: normalizePositiveInteger(publishPackage.version, 1),
+        requestId,
+        sourceStatus: cleanText(chapterPayload.status, 80)
+      }
+    },
+    parentSlug: series.slug,
+    pricing: parseStoredJson(existing?.pricing_json, {}),
+    publishedAt,
+    readingMinutes: Math.max(1, Math.ceil(wordCount / 450)),
+    slug,
+    sourceKind: 'novelforge',
+    sourceRef: requestId,
+    status,
+    title,
+    visibility: existing?.visibility || 'public',
+    wordCount
+  };
+};
+
+const resultForNovelForgeItem = ({ item, message, remoteId, status }) => ({
+  localType: cleanText(item?.localType, 40),
+  localId: cleanText(item?.localId, 140),
+  message,
+  remoteId: remoteId || null,
+  status
+});
+
+const handleNovelForgeImport = async (request, env) => {
+  const tokenError = requireNovelForgePublishToken(request, env);
+  if (tokenError) return tokenError;
+
+  const db = env.WAITLIST_DB;
+  if (!db) return novelForgeImportError('Content database is not configured.', { code: 'CONTENT_DATABASE_NOT_CONFIGURED', status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return novelForgeImportError('Content tables are not initialized.', { code: 'CONTENT_TABLES_NOT_READY', status: 503 });
+  }
+
+  let bodyText;
+  let normalized;
+  try {
+    const readResult = await readNovelForgeImportPayload(request);
+    bodyText = readResult.bodyText;
+    normalized = validateNovelForgeImportPayload(readResult.payload);
+  } catch (error) {
+    return novelForgeImportError(error.message, {
+      code: error.code || 'NOVELFORGE_IMPORT_INVALID',
+      status: error.status || 400
+    });
+  }
+
+  const actorEmail = 'novelforge-api';
+  let importRecord = null;
+  const warnings = [];
+  const errors = [];
+  const itemResults = [];
+  let entriesCreated = 0;
+  let entriesUpdated = 0;
+
+  try {
+    const backupKey = await uploadNovelForgeImportBackup(env, normalized.requestId, bodyText);
+    importRecord = await createNovelForgeImportRecord(db, {
+      actorEmail,
+      requestId: normalized.requestId,
+      r2Key: backupKey
+    });
+
+    const projectItem = getNovelForgeItemByType(normalized.changedItems, 'project');
+    const coverItem = getNovelForgeItemByType(normalized.changedItems, 'cover');
+    const chapterItems = getNovelForgeItemsByType(normalized.changedItems, 'chapter');
+    const unsupportedItems = normalized.changedItems.filter((item) => !['project', 'cover', 'chapter'].includes(cleanText(item.localType, 40)));
+    const projectPayload = {
+      ...normalizeJsonObject(normalized.publishPackage.project),
+      ...getNovelForgeItemPayload(projectItem, {}),
+      pricingSuggestion: normalizeJsonObject(
+        getNovelForgeItemPayload(projectItem, {}).pricingSuggestion || normalized.publishPackage.pricingSuggestion
+      )
+    };
+    const coverPayload = {
+      ...normalizeJsonObject(normalized.publishPackage.cover),
+      ...getNovelForgeItemPayload(coverItem, {})
+    };
+
+    const initialSeriesEntry = normalizeContentPayload(
+      buildNovelForgeSeriesPayload({
+        coverPayload,
+        existing: null,
+        item: projectItem || coverItem,
+        mode: normalized.mode,
+        projectPayload,
+        publishPackage: normalized.publishPackage,
+        requestId: normalized.requestId
+      })
+    );
+    let existingSeries = await findExistingNovelForgeEntry(db, projectItem?.remoteId || coverItem?.remoteId, initialSeriesEntry);
+    let series = existingSeries;
+
+    if (projectItem || coverItem || !series) {
+      const seriesEntry = normalizeContentPayload(
+        buildNovelForgeSeriesPayload({
+          coverPayload,
+          existing: existingSeries,
+          item: projectItem || coverItem,
+          mode: normalized.mode,
+          projectPayload,
+          publishPackage: normalized.publishPackage,
+          requestId: normalized.requestId
+        })
+      );
+      const { saved } = await persistContentEntry(db, env, seriesEntry, {
+        actorEmail,
+        auditAction: 'novelforge_import_series',
+        auditMetadata: {
+          importId: importRecord?.id,
+          mode: normalized.mode,
+          requestId: normalized.requestId
+        },
+        revisionSummary: `NovelForge import ${normalized.requestId}`
+      });
+      series = saved;
+      if (existingSeries) entriesUpdated += 1;
+      else entriesCreated += 1;
+    }
+
+    if (projectItem) {
+      itemResults.push(
+        resultForNovelForgeItem({
+          item: projectItem,
+          message: existingSeries ? 'Project metadata updated.' : 'Project metadata imported.',
+          remoteId: novelForgeRemoteIdForEntry(series),
+          status: existingSeries ? 'updated' : 'created'
+        })
+      );
+    }
+
+    if (coverItem) {
+      itemResults.push(
+        resultForNovelForgeItem({
+          item: coverItem,
+          message: coverPayload.imageUrl || coverPayload.coverR2Key || coverPayload.r2Key
+            ? 'Cover metadata linked to the series.'
+            : 'Cover prompt accepted; no image asset was provided.',
+          remoteId: novelForgeCoverRemoteIdForSeries(series),
+          status: 'updated'
+        })
+      );
+    }
+
+    for (const chapterItem of chapterItems) {
+      const chapterPayload = getNovelForgeItemPayload(chapterItem, {});
+      const body = getNovelForgeBody(chapterPayload);
+      if (!body) {
+        warnings.push(`Skipped empty chapter: ${cleanText(chapterItem.label || chapterItem.localId, 160)}`);
+        itemResults.push(
+          resultForNovelForgeItem({
+            item: chapterItem,
+            message: 'Chapter body is empty.',
+            remoteId: chapterItem.remoteId || null,
+            status: 'skipped'
+          })
+        );
+        continue;
+      }
+
+      const initialChapterEntry = normalizeContentPayload(
+        buildNovelForgeChapterPayload({
+          chapterPayload,
+          existing: null,
+          item: chapterItem,
+          mode: normalized.mode,
+          publishPackage: normalized.publishPackage,
+          requestId: normalized.requestId,
+          series
+        })
+      );
+      const existingChapter = await findExistingNovelForgeEntry(db, chapterItem.remoteId, initialChapterEntry);
+      const chapterEntry = normalizeContentPayload(
+        buildNovelForgeChapterPayload({
+          chapterPayload,
+          existing: existingChapter,
+          item: chapterItem,
+          mode: normalized.mode,
+          publishPackage: normalized.publishPackage,
+          requestId: normalized.requestId,
+          series
+        })
+      );
+      const { saved } = await persistContentEntry(db, env, chapterEntry, {
+        actorEmail,
+        auditAction: 'novelforge_import_chapter',
+        auditMetadata: {
+          importId: importRecord?.id,
+          mode: normalized.mode,
+          requestId: normalized.requestId,
+          seriesSlug: series.slug
+        },
+        revisionSummary: `NovelForge import ${normalized.requestId}`
+      });
+      if (existingChapter) entriesUpdated += 1;
+      else entriesCreated += 1;
+      itemResults.push(
+        resultForNovelForgeItem({
+          item: chapterItem,
+          message: existingChapter ? 'Chapter updated.' : 'Chapter imported.',
+          remoteId: novelForgeRemoteIdForEntry(saved),
+          status: existingChapter ? 'updated' : 'created'
+        })
+      );
+    }
+
+    unsupportedItems.forEach((item) => {
+      warnings.push(`Unsupported NovelForge item type: ${cleanText(item.localType, 80)}`);
+      itemResults.push(
+        resultForNovelForgeItem({
+          item,
+          message: 'Unsupported item type.',
+          remoteId: item.remoteId || null,
+          status: 'skipped'
+        })
+      );
+    });
+
+    await updateNovelForgeImportRecord(db, importRecord?.id, {
+      entriesCreated,
+      entriesUpdated,
+      errors,
+      status: warnings.length ? 'completed_with_warnings' : 'completed',
+      warnings
+    });
+
+    const origin = new URL(request.url).origin;
+    return novelForgeImportJson({
+      ok: true,
+      remoteBookId: novelForgeRemoteIdForEntry(series),
+      previewUrl: novelForgePreviewUrl(origin, series.id),
+      publishUrl: novelForgePublicSeriesUrl(origin, series.locale, series.slug),
+      message: normalized.mode === 'publish' ? 'Imported and published.' : 'Imported as draft.',
+      items: itemResults,
+      requestId: normalized.requestId,
+      remoteIds: {
+        cover: novelForgeCoverRemoteIdForSeries(series),
+        project: novelForgeRemoteIdForEntry(series)
+      }
+    });
+  } catch (error) {
+    errors.push(error.message || 'NovelForge import failed.');
+    await updateNovelForgeImportRecord(db, importRecord?.id, {
+      entriesCreated,
+      entriesUpdated,
+      errors,
+      status: 'failed',
+      warnings
+    });
+    return novelForgeImportError(error.message || 'NovelForge import failed.', {
+      code: error.code || 'NOVELFORGE_IMPORT_FAILED',
+      errors,
+      status: error.status || 500
+    });
   }
 };
 
@@ -6940,6 +7651,14 @@ export default {
 
     if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/api/content/media') {
       return handlePublicContentMedia(request, env);
+    }
+
+    if (url.pathname === '/api/novelforge/import') {
+      if (request.method === 'POST') return handleNovelForgeImport(request, env);
+      return novelForgeImportError('Method not allowed.', {
+        code: 'METHOD_NOT_ALLOWED',
+        status: 405
+      });
     }
 
     if (request.method === 'POST' && url.pathname === '/api/novels/credits/unlock') {

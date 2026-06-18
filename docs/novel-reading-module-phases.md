@@ -252,11 +252,22 @@
 
 当前实现见 [admin-v2-media-upload-7h.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/admin-v2-media-upload-7h.md:1)。
 
-## 当前执行：7H 封面上传
+### 阶段 8A：NovelForge 一键导入 API
+
+1. 新增 `POST /api/novelforge/import`，供 NovelForge AI 直接把小说项目、章节和封面元数据写入网站后端。
+2. 使用专用 `NOVELFORGE_PUBLISH_TOKEN` Bearer Token 保护接口，不复用 Admin 2.0 的浏览器登录态。
+3. 默认以草稿导入；只有请求显式传入 `mode: "publish"` 时才发布。
+4. 导入项目保存为 `novel_series`，章节保存为 `novel_chapter`，正文进入 R2 `CONTENT_BUCKET`。
+5. 后台收费规则继续由 Admin 2.0 管理，NovelForge 的 `pricingSuggestion` 只作为元数据建议保存，不自动覆盖生效价格。
+6. 返回 NovelForge 可持久化的远端 ID、Admin 2.0 预览链接、前台发布链接和每个条目的导入状态。
+
+当前实现见 [novelforge-import-api-8a.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/novelforge-import-api-8a.md:1)。
+
+## 当前执行：8A NovelForge 一键导入 API
 
 阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台，阶段 7D 已让前台小说和 Blog/Devlog 支持读取后端发布内容，阶段 7E 已把收费规则和前台购买入口切到后端规则优先，阶段 7F 已把订单、账户、余额、授权和审计管理集中到 Admin 2.0。阶段 7G 已把旧 Markdown 内容迁入 D1/R2，并退役旧 GitHub Token 作者后台。生产迁移完成后，一次性迁移入口和 Worker Manifest 已清理。
 
-7H 正在把 Admin 2.0 的封面图片上传、R2 媒体读取和前台封面展示接入同一条内容发布链路。
+7H 已完成 Admin 2.0 封面图片上传、R2 媒体读取和前台封面展示。8A 正在把 NovelForge AI 的一键导入接入同一条 D1/R2 内容发布链路。
 
 ## 已完成：阶段 6C
 

@@ -8,6 +8,18 @@
 
 后端化设计见 [backend-content-platform-7a.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/backend-content-platform-7a.md:1)，迁移流程见 [legacy-content-migration-7g.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/legacy-content-migration-7g.md:1)。
 
+## NovelForge 一键导入
+
+阶段 8A 后，NovelForge AI 可以通过网站后端 API 直接导入小说项目、章节正文和封面元数据：
+
+```text
+POST /api/novelforge/import
+```
+
+导入接口默认保存草稿，返回 Admin 2.0 预览链接和前台发布链接。详细契约见 [novelforge-import-api-8a.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/novelforge-import-api-8a.md:1)。
+
+收费规则仍然在 Admin 2.0 的 `Pricing` 区域设置。NovelForge 请求里的 `pricingSuggestion` 只作为导入元数据保存，不会自动覆盖正式价格。
+
 ## 历史 Markdown 目录
 
 ```text
