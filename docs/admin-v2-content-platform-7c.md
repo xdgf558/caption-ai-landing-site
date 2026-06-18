@@ -42,11 +42,14 @@ Stage 7C adds:
 
 ```text
 GET /admin/api/content/body?id={entryId}
+POST /admin/api/content/media
 GET /admin/api/content/revisions?id={entryId}
 GET /admin/api/content/audit-logs
 GET /admin/api/content/pricing-rules?entryId={entryId}
 POST /admin/api/content/preview
 ```
+
+Stage 7H adds media upload to the same Admin 2.0 content API family. See [admin-v2-media-upload-7h.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/admin-v2-media-upload-7h.md:1).
 
 These APIs are nested below `/admin/api/` so the existing Cloudflare Access rule continues to protect them.
 
@@ -76,6 +79,7 @@ After merging and deploying Stage 7C, verify the admin boundary before using the
 /admin/api/content/schema
 /admin/api/content/entries
 /admin/api/content/body?id=1
+/admin/api/content/media
 /admin/api/content/revisions?id=1
 /admin/api/content/audit-logs
 /admin/api/content/pricing-rules?entryId=1

@@ -338,6 +338,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <h3>封面、导入备份与来源</h3>
                 </div>
               </div>
+              <div class="admin-media-upload">
+                <div>
+                  <strong>封面图片</strong>
+                  <span>支持 JPG、PNG、WebP、GIF、AVIF，单张不超过 5MB。</span>
+                </div>
+                <div class="button-row">
+                  <label class="button button-secondary admin-file-button" for="content-cover-file">选择封面图片</label>
+                  <input class="admin-file-input" id="content-cover-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" />
+                  <button class="button button-primary" id="content-cover-upload" type="button">上传封面</button>
+                  <a class="button button-secondary" id="content-cover-open" href="#" target="_blank" rel="noreferrer" hidden>打开封面</a>
+                </div>
+                <figure class="admin-cover-preview" id="content-cover-preview" hidden></figure>
+                <div class="admin-inline-status" id="content-cover-status" role="status" aria-live="polite" hidden></div>
+              </div>
               <div class="admin-v2-form-grid">
                 <label>
                   Cover R2 Key
@@ -511,6 +525,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       effectivePricingPreview: $('#pricing-effective-preview'),
       effectivePricingStatus: $('#pricing-effective-status'),
       effectivePricingRefresh: $('#pricing-effective-refresh'),
+      coverOpen: $('#content-cover-open'),
+      coverPreview: $('#content-cover-preview'),
+      coverStatus: $('#content-cover-status'),
+      coverUpload: $('#content-cover-upload'),
       editorHeading: $('#editor-heading'),
       preview: $('#content-preview'),
       fields: {
@@ -543,6 +561,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         tipAmounts: $('#pricing-tip-amounts'),
         bundlesEnabled: $('#pricing-bundles-enabled'),
         bundles: $('#pricing-bundles'),
+        coverFile: $('#content-cover-file'),
         coverR2Key: $('#content-cover-r2-key'),
         coverAlt: $('#content-cover-alt'),
         sourceRef: $('#content-source-ref'),
@@ -601,6 +620,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.effectivePricingStatus.hidden = !message;
     };
 
+    const setCoverStatus = (message, tone = 'neutral') => {
+      elements.coverStatus.textContent = message;
+      elements.coverStatus.dataset.tone = tone;
+      elements.coverStatus.hidden = !message;
+    };
+
     const apiJson = async (path, options = {}) => {
       const response = await fetch(path, {
         ...options,
@@ -608,6 +633,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           'content-type': 'application/json',
           ...(options.headers || {})
         }
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.ok === false) {
+        throw new Error(payload.message || `Request failed: ${response.status}`);
+      }
+      return payload;
+    };
+
+    const apiFormData = async (path, formData, options = {}) => {
+      const response = await fetch(path, {
+        method: 'POST',
+        ...options,
+        body: formData
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || payload.ok === false) {
@@ -943,6 +981,70 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       return latin.length + cjk.length;
     };
 
+    const mediaUrlFromKey = (value) => {
+      const key = String(value || '').trim();
+      if (!key) return '';
+      if (/^https?:\/\//i.test(key) || key.startsWith('/')) return key;
+      return `/api/content/media?key=${encodeURIComponent(key)}`;
+    };
+
+    const renderCoverPreview = () => {
+      const key = elements.fields.coverR2Key.value.trim();
+      const url = mediaUrlFromKey(key);
+      elements.coverOpen.hidden = !url;
+      elements.coverOpen.href = url || '#';
+      if (!url) {
+        elements.coverPreview.hidden = true;
+        elements.coverPreview.innerHTML = '';
+        return;
+      }
+
+      const alt = elements.fields.coverAlt.value.trim() || elements.fields.title.value.trim() || 'Content cover';
+      elements.coverPreview.innerHTML = `
+        <img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" />
+        <figcaption>${escapeHtml(key)}</figcaption>
+      `;
+      elements.coverPreview.hidden = false;
+    };
+
+    const uploadCoverImage = async () => {
+      const [file] = elements.fields.coverFile.files || [];
+      if (!file) {
+        setCoverStatus('请先选择一张封面图片。', 'error');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setCoverStatus('封面图片不能超过 5MB。', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      const entryType = elements.fields.entryType.value;
+      const title = elements.fields.title.value.trim();
+      const slug = elements.fields.slug.value.trim() || slugify(title || file.name, entryType);
+      formData.append('file', file);
+      formData.append('mediaKind', 'covers');
+      formData.append('slug', slug);
+      formData.append('title', title);
+
+      elements.coverUpload.disabled = true;
+      setCoverStatus('正在上传封面到 R2。');
+      try {
+        const payload = await apiFormData('/admin/api/content/media', formData);
+        elements.fields.coverR2Key.value = payload.media?.key || '';
+        if (!elements.fields.coverAlt.value.trim()) {
+          elements.fields.coverAlt.value = title ? `${title} 封面` : file.name;
+        }
+        elements.fields.coverFile.value = '';
+        renderCoverPreview();
+        setCoverStatus('封面已上传，保存内容后生效。', 'success');
+      } catch (error) {
+        setCoverStatus(error.message, 'error');
+      } finally {
+        elements.coverUpload.disabled = false;
+      }
+    };
+
     const fillFormFromEntry = (entry, body = {}) => {
       state.selectedEntryId = entry?.id || 0;
       elements.editorHeading.textContent = entry?.id ? `编辑：${entry.title}` : '创建后端内容';
@@ -970,6 +1072,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.fields.sourceRef.value = entry?.sourceRef || '';
       elements.fields.revisionSummary.value = '';
       elements.fields.markdown.value = body.markdown || '';
+      elements.fields.coverFile.value = '';
 
       const pricing = entry?.pricing || {};
       elements.fields.pricingMode.value = pricing.mode || 'free';
@@ -984,6 +1087,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.fields.bundles.value = bundleRulesToInput(pricing.chapterBundleDiscounts);
 
       renderPreview();
+      renderCoverPreview();
+      setCoverStatus('');
       updateConditionalFields();
       resetEffectivePricingPreview();
     };
@@ -1272,6 +1377,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       updateConditionalFields();
       renderPreview();
+      renderCoverPreview();
       setSaveStatus('Markdown 已导入，检查字段后即可保存。', 'success');
     };
 
@@ -1616,10 +1722,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#content-reset').addEventListener('click', () => resetForm(elements.fields.entryType.value));
     $('#content-preview-button').addEventListener('click', renderPreview);
     $('#content-worker-preview-button').addEventListener('click', openWorkerPreview);
+    elements.coverUpload.addEventListener('click', uploadCoverImage);
     elements.effectivePricingRefresh.addEventListener('click', () => refreshEffectivePricingPreview());
     elements.fields.entryType.addEventListener('change', updateConditionalFields);
     elements.fields.title.addEventListener('input', () => {
       if (!elements.fields.slug.value.trim()) elements.fields.slug.value = slugify(elements.fields.title.value, elements.fields.entryType.value);
+    });
+    elements.fields.coverR2Key.addEventListener('input', renderCoverPreview);
+    elements.fields.coverAlt.addEventListener('input', renderCoverPreview);
+    elements.fields.coverFile.addEventListener('change', () => {
+      const [file] = elements.fields.coverFile.files || [];
+      setCoverStatus(file ? `已选择：${file.name}，点击上传封面。` : '');
     });
     elements.fields.file.addEventListener('change', async () => {
       const [file] = elements.fields.file.files || [];

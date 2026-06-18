@@ -48,6 +48,7 @@ These routes must cover both admin pages and admin API routes, including:
 /admin/api/content/schema
 /admin/api/content/entries
 /admin/api/content/body
+/admin/api/content/media
 /admin/api/content/revisions
 /admin/api/content/audit-logs
 /admin/api/content/pricing-rules

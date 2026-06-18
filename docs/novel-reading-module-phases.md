@@ -243,11 +243,20 @@
 
 当前实现见 [legacy-content-migration-7g.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/legacy-content-migration-7g.md:1)。
 
-## 当前执行：7G 已完成，准备阶段 7H
+### 阶段 7H：Admin 2.0 封面与媒体上传
+
+1. Admin 2.0 支持直接上传封面图片到 R2，不再要求手动准备封面 R2 key。
+2. 内容条目继续使用 `cover_r2_key` 和 `cover_alt` 字段，避免新增数据库迁移。
+3. 公开内容 API 返回 `coverUrl`，动态 Blog / 连载小说列表和详情页在有封面时自动展示。
+4. 上传 API 保持在 `/admin/api/content/media` 下，必须继续受 Cloudflare Access 保护。
+
+当前实现见 [admin-v2-media-upload-7h.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/admin-v2-media-upload-7h.md:1)。
+
+## 当前执行：7H 封面上传
 
 阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台，阶段 7D 已让前台小说和 Blog/Devlog 支持读取后端发布内容，阶段 7E 已把收费规则和前台购买入口切到后端规则优先，阶段 7F 已把订单、账户、余额、授权和审计管理集中到 Admin 2.0。阶段 7G 已把旧 Markdown 内容迁入 D1/R2，并退役旧 GitHub Token 作者后台。生产迁移完成后，一次性迁移入口和 Worker Manifest 已清理。
 
-下一步进入 7H：Admin 2.0 封面 / 图片上传，使用 R2 管理小说封面和后续内容配图。
+7H 正在把 Admin 2.0 的封面图片上传、R2 媒体读取和前台封面展示接入同一条内容发布链路。
 
 ## 已完成：阶段 6C
 

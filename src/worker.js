@@ -996,6 +996,52 @@ const buildContentR2Keys = (entry) => {
   };
 };
 
+const contentMediaKeyPrefix = 'content/media/';
+const contentMediaKinds = new Set(['covers', 'inline']);
+const contentImageTypes = new Map([
+  ['image/jpeg', 'jpg'],
+  ['image/png', 'png'],
+  ['image/webp', 'webp'],
+  ['image/gif', 'gif'],
+  ['image/avif', 'avif']
+]);
+const maxContentImageBytes = 5 * 1024 * 1024;
+const maxContentImageRequestBytes = maxContentImageBytes + 1024 * 1024;
+
+const isSafeContentMediaKey = (value) => {
+  const key = cleanText(value, 500);
+  return (
+    key.startsWith(contentMediaKeyPrefix) &&
+    key.length <= 500 &&
+    !key.includes('..') &&
+    !key.includes('\\') &&
+    !key.includes('//') &&
+    /^[A-Za-z0-9._~/-]+$/.test(key)
+  );
+};
+
+const contentMediaUrl = (value) => {
+  const key = cleanText(value, 500);
+  if (!key) return '';
+  if (/^https?:\/\//i.test(key) || key.startsWith('/')) return key;
+  if (!isSafeContentMediaKey(key)) return '';
+  return `/api/content/media?key=${encodeURIComponent(key)}`;
+};
+
+const buildContentMediaKey = ({ contentType, filename, kind, slug }) => {
+  const normalizedKind = contentMediaKinds.has(kind) ? kind : 'covers';
+  const extension =
+    contentImageTypes.get(contentType) ||
+    cleanSlug(String(filename || '').split('.').pop(), 12) ||
+    'bin';
+  const now = new Date();
+  const year = now.toISOString().slice(0, 4);
+  const month = now.toISOString().slice(5, 7);
+  const safeSlug = cleanSlug(slug || filename || 'media', 90) || 'media';
+  const token = (crypto.randomUUID?.() || randomToken(12)).replace(/-/g, '').slice(0, 12);
+  return `${contentMediaKeyPrefix}${normalizedKind}/${year}/${month}/${safeSlug}-${Date.now()}-${token}.${extension}`;
+};
+
 const contentEntryToJson = (row) => ({
   id: row.id,
   entryType: row.entry_type,
@@ -1023,6 +1069,7 @@ const contentEntryToJson = (row) => ({
   htmlR2Key: row.html_r2_key,
   importR2Key: row.import_r2_key,
   coverR2Key: row.cover_r2_key,
+  coverUrl: contentMediaUrl(row.cover_r2_key),
   coverAlt: row.cover_alt,
   wordCount: normalizePositiveInteger(row.word_count, 0),
   readingMinutes: normalizePositiveInteger(row.reading_minutes, 0),
@@ -1047,7 +1094,8 @@ const getContentStorageDescriptor = (env) => ({
     novelSeriesMarkdown: 'content/novels/{seriesSlug}/series/{locale}/body.md',
     novelChapterMarkdown: 'content/novels/{seriesSlug}/chapters/{chapterNumber}-{chapterSlug}/{locale}/body.md',
     novelChapterHtml: 'content/novels/{seriesSlug}/chapters/{chapterNumber}-{chapterSlug}/{locale}/body.html',
-    importBackup: 'content/imports/{yyyy}/{mm}/{importId}-{filename}'
+    importBackup: 'content/imports/{yyyy}/{mm}/{importId}-{filename}',
+    coverImage: 'content/media/covers/{yyyy}/{mm}/{slug}-{timestamp}-{token}.{ext}'
   }
 });
 
@@ -4407,8 +4455,8 @@ const handleAdminAdjustReaderCredits = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '7G Cleanup',
-    purpose: 'Backend content management, pricing, order, reader account, credit, entitlement, and audit operations centered in Admin 2.0.',
+    stage: '7H',
+    purpose: 'Backend content management, media upload, pricing, order, reader account, credit, entitlement, and audit operations centered in Admin 2.0.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -4446,10 +4494,174 @@ const handleAdminContentSchema = async (env) =>
       dynamicFrontend: 'Published backend content can render public Blog and serial pages without a site rebuild.',
       checkoutPricing: 'Reader-facing checkout resolves content_pricing_rules before generated static config and env defaults.',
       commerceAdmin: 'Admin 2.0 can inspect orders, reader accounts, credit ledger, entitlements, and rerun paid-order fulfillment.',
+      mediaUpload: 'Admin 2.0 uploads cover images into CONTENT_BUCKET under content/media/covers.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
-      nextStages: ['7H media cover upload', '8A NovelForge import API']
+      nextStages: ['8A NovelForge import API']
     }
   });
+
+const handleAdminUploadContentMedia = async (request, env) => {
+  const bucket = getContentBucket(env);
+  if (!bucket) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_BUCKET_NOT_CONFIGURED',
+        message: 'CONTENT_BUCKET is not configured, so media upload is disabled.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const contentLength = Number.parseInt(request.headers.get('content-length') || '0', 10);
+  if (contentLength > maxContentImageRequestBytes) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_MEDIA_TOO_LARGE',
+        message: 'Cover image uploads are limited to 5MB.'
+      },
+      { status: 413 }
+    );
+  }
+
+  let formData;
+  try {
+    formData = await request.formData();
+  } catch {
+    return privateJson({ ok: false, code: 'CONTENT_MEDIA_FORM_INVALID', message: 'Invalid media upload form.' }, { status: 400 });
+  }
+
+  const file = formData.get('file');
+  if (!file || typeof file.arrayBuffer !== 'function' || typeof file.size !== 'number') {
+    return privateJson({ ok: false, code: 'CONTENT_MEDIA_FILE_REQUIRED', message: 'Please choose an image file.' }, { status: 400 });
+  }
+
+  if (file.size <= 0) {
+    return privateJson({ ok: false, code: 'CONTENT_MEDIA_EMPTY', message: 'The selected image file is empty.' }, { status: 400 });
+  }
+
+  if (file.size > maxContentImageBytes) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_MEDIA_TOO_LARGE',
+        message: 'Cover image uploads are limited to 5MB.'
+      },
+      { status: 413 }
+    );
+  }
+
+  const contentType = cleanText(file.type, 80).toLowerCase();
+  if (!contentImageTypes.has(contentType)) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_MEDIA_TYPE_UNSUPPORTED',
+        message: 'Please upload a JPG, PNG, WebP, GIF, or AVIF image.'
+      },
+      { status: 415 }
+    );
+  }
+
+  const mediaKind = cleanSlug(formData.get('mediaKind') || 'covers', 20);
+  const title = cleanText(formData.get('title'), 160);
+  const slug = cleanSlug(formData.get('slug') || title || file.name || 'media', 100);
+  const key = buildContentMediaKey({
+    contentType,
+    filename: file.name,
+    kind: mediaKind,
+    slug
+  });
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+
+  let object;
+  try {
+    object = await bucket.put(key, file, {
+      httpMetadata: {
+        cacheControl: 'public, max-age=31536000, immutable',
+        contentType
+      },
+      customMetadata: {
+        originalFilename: cleanText(file.name, 180),
+        uploadedBy: actorEmail,
+        uploadedFrom: 'admin-v2'
+      }
+    });
+  } catch (error) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_MEDIA_UPLOAD_FAILED',
+        message: error.message || 'Media upload failed.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const db = env.WAITLIST_DB;
+  if (db && (await ensureContentTablesReady(db))) {
+    try {
+      await insertAdminAuditLog(db, {
+        actorEmail,
+        action: 'content_media_upload',
+        targetType: 'content_media',
+        targetId: key,
+        targetSlug: key,
+        metadata: {
+          contentType,
+          filename: cleanText(file.name, 180),
+          mediaKind: contentMediaKinds.has(mediaKind) ? mediaKind : 'covers',
+          size: file.size
+        }
+      });
+    } catch {
+      // Media upload should not fail just because audit logging is unavailable.
+    }
+  }
+
+  return privateJson({
+    ok: true,
+    media: {
+      contentType,
+      key,
+      size: file.size,
+      uploadedAt: object?.uploaded ? object.uploaded.toISOString() : '',
+      url: contentMediaUrl(key)
+    }
+  });
+};
+
+const handlePublicContentMedia = async (request, env) => {
+  const bucket = getContentBucket(env);
+  if (!bucket) return new Response('Content media bucket is not configured.', { status: 503 });
+
+  const url = new URL(request.url);
+  const key = cleanText(url.searchParams.get('key'), 500);
+  if (!isSafeContentMediaKey(key)) {
+    return new Response('Invalid content media key.', {
+      status: 400,
+      headers: { 'content-type': 'text/plain; charset=utf-8' }
+    });
+  }
+
+  const object = await bucket.get(key);
+  if (!object) {
+    return new Response('Content media not found.', {
+      status: 404,
+      headers: { 'content-type': 'text/plain; charset=utf-8' }
+    });
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  if (!headers.get('content-type')) headers.set('content-type', 'application/octet-stream');
+  if (!headers.get('cache-control')) headers.set('cache-control', 'public, max-age=86400');
+  if (object.httpEtag) headers.set('etag', object.httpEtag);
+  headers.set('x-content-type-options', 'nosniff');
+
+  return new Response(request.method === 'HEAD' ? null : object.body, { headers });
+};
 
 const buildContentEntriesQuery = (url, options = {}) => {
   const entryType = cleanText(url.searchParams.get('type') || url.searchParams.get('entryType'), 40)
@@ -5198,6 +5410,8 @@ const contentPreviewRowFromEntry = (entry) => ({
   access_level: entry.accessLevel,
   author_name: entry.authorName,
   chapter_number: entry.chapterNumber,
+  cover_alt: entry.coverAlt,
+  cover_r2_key: entry.coverR2Key,
   description: entry.description,
   excerpt: entry.excerpt,
   parent_slug: entry.parentSlug,
@@ -5488,6 +5702,8 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .card, .panel, .gate { background: rgba(255,255,255,.72); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 50px rgba(44,39,33,.08); display: grid; gap: 12px; padding: 18px; }
       .card { text-decoration: none; }
       .card:hover { border-color: rgba(8,121,109,.35); transform: translateY(-1px); }
+      .hero-cover { aspect-ratio: 16 / 10; background: var(--soft); border: 1px solid var(--line); border-radius: 14px; margin: 6px 0 0; max-width: 780px; overflow: hidden; }
+      .hero-cover img { display: block; height: 100%; object-fit: cover; width: 100%; }
       .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
       .button { align-items: center; border: 1px solid var(--ink); border-radius: 8px; display: inline-flex; font-weight: 900; justify-content: center; min-height: 44px; padding: 10px 14px; text-decoration: none; }
       .button-primary { background: var(--ink); color: #fff; }
@@ -5530,6 +5746,15 @@ const dynamicHtmlResponse = (request, payload, init = {}) =>
     }
   });
 
+const renderDynamicCover = (entry) => {
+  const url = contentMediaUrl(entry.cover_r2_key);
+  if (!url) return '';
+  const alt = entry.cover_alt || `${entry.title} cover`;
+  return `<figure class="hero-cover">
+      <img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="eager" />
+    </figure>`;
+};
+
 const renderDynamicDevlogPost = (route, post, body) => {
   const copy = dynamicContentCopy[route.locale];
   return `<article class="section">
@@ -5541,6 +5766,7 @@ const renderDynamicDevlogPost = (route, post, body) => {
         </div>
         <h1>${escapeHtml(post.title)}</h1>
         <p>${escapeHtml(post.description || post.excerpt)}</p>
+        ${renderDynamicCover(post)}
       </header>
       <div class="prose">${body.html || `<p>${escapeHtml(post.excerpt || post.description)}</p>`}</div>
     </article>`;
@@ -5703,6 +5929,7 @@ const renderDynamicNovelSeries = (route, serial, body, chapters) => {
         <span class="pill">${escapeHtml(copy.author)}: ${escapeHtml(serial.author_name || 'Station Cat')}</span>
         <span>${escapeHtml(copy.access)}: ${escapeHtml(dynamicAccessLabels[serial.access_level] || serial.access_level)}</span>
       </div>
+      ${renderDynamicCover(serial)}
       <div class="button-row">
         ${firstChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${firstChapter.slug}/`)}">${escapeHtml(copy.readFirst)}</a>` : ''}
         ${latestChapter && latestChapter.slug !== firstChapter?.slug ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${latestChapter.slug}/`)}">${escapeHtml(copy.readLatest)}</a>` : ''}
@@ -6711,6 +6938,10 @@ export default {
       return handlePublicContentBody(request, env);
     }
 
+    if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/api/content/media') {
+      return handlePublicContentMedia(request, env);
+    }
+
     if (request.method === 'POST' && url.pathname === '/api/novels/credits/unlock') {
       return handleReaderCreditUnlock(request, env);
     }
@@ -6760,6 +6991,11 @@ export default {
 
     if (url.pathname === '/admin/api/content/body') {
       if (request.method === 'GET') return handleAdminGetContentBody(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/media') {
+      if (request.method === 'POST') return handleAdminUploadContentMedia(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

@@ -18,7 +18,7 @@ Stage 7G retires the old `/admin/` GitHub-token Markdown editor. New admin featu
 
 7F does not:
 
-- Upload cover images. That is tracked as a later 7H media-management option.
+- Upload cover images. Stage 7H adds cover upload and preview in Admin 2.0.
 - Mark unpaid orders as paid. Non-confirmed support cases should use manual entitlement grant or manual credit adjustment.
 
 Stage 7G later added legacy Markdown migration and retired the old `/admin/` authoring page.
