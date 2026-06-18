@@ -1124,6 +1124,19 @@ const contentEntryToJson = (row) => ({
   updatedAt: row.updated_at
 });
 
+const contentEntryPublicPath = (row) => {
+  if (!row) return '';
+  const locale = normalizeContentLocale(row.locale);
+  const basePath = row.entry_type === 'blog_post'
+    ? getPathWithLocale(locale, 'devlog')
+    : getPathWithLocale(locale, 'works');
+
+  if (row.entry_type === 'blog_post') return `${basePath}${row.slug}/`;
+  if (row.entry_type === 'novel_series') return `${basePath}${row.slug}/`;
+  if (row.entry_type === 'novel_chapter' && row.parent_slug) return `${basePath}${row.parent_slug}/${row.slug}/`;
+  return '';
+};
+
 const novelForgeRemoteIdForEntry = (row) => {
   if (!row?.id) return '';
   if (row.entry_type === 'novel_series') return `work_${row.id}`;
@@ -4528,8 +4541,8 @@ const handleAdminAdjustReaderCredits = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '8B',
-    purpose: 'Backend content management, media upload, pricing defaults, order, reader account, credit, entitlement, audit, and NovelForge import operations centered in Admin 2.0.',
+    stage: '8C',
+    purpose: 'Backend content management, media upload, pricing defaults, order, reader account, credit, entitlement, audit, and NovelForge import review operations centered in Admin 2.0.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -4570,9 +4583,10 @@ const handleAdminContentSchema = async (env) =>
       commerceAdmin: 'Admin 2.0 can inspect orders, reader accounts, credit ledger, entitlements, and rerun paid-order fulfillment.',
       mediaUpload: 'Admin 2.0 uploads cover images into CONTENT_BUCKET under content/media/covers.',
       novelForgeImport: 'NovelForge can publish projects, chapters, and cover metadata through POST /api/novelforge/import with a dedicated Bearer token.',
+      novelForgeImportReview: 'Admin 2.0 can review NovelForge import batches, inspect linked entries, and publish imported drafts after review.',
       pricingDefaults: 'Admin 2.0 stores global novel pricing defaults in admin_content_settings and applies them to newly created series.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
-      nextStages: ['8C Admin 2.0 import review and retry flow']
+      nextStages: ['8D optional retry tools and richer NovelForge source diagnostics']
     }
   });
 
@@ -4835,6 +4849,239 @@ const handleAdminListContentEntries = async (request, env) => {
     ok: true,
     entries: (response.results || []).map(contentEntryToJson),
     storage: getContentStorageDescriptor(env)
+  });
+};
+
+const contentImportToJson = (row, entries = [], origin = '') => {
+  const normalizedEntries = entries.map((entry) => {
+    const publicPath = contentEntryPublicPath(entry);
+    return {
+      ...contentEntryToJson(entry),
+      adminUrl: `/admin-v2/?contentId=${encodeURIComponent(String(entry.id))}`,
+      coverRemoteId: entry.entry_type === 'novel_series' ? novelForgeCoverRemoteIdForSeries(entry) : '',
+      publicPath,
+      publicUrl: publicPath ? `${origin}${publicPath}` : '',
+      remoteId: novelForgeRemoteIdForEntry(entry)
+    };
+  });
+  const series = normalizedEntries.find((entry) => entry.entryType === 'novel_series') || null;
+  const chapterCount = normalizedEntries.filter((entry) => entry.entryType === 'novel_chapter').length;
+  const draftCount = normalizedEntries.filter((entry) => ['draft', 'scheduled'].includes(entry.status)).length;
+  const publishedCount = normalizedEntries.filter((entry) => entry.status === 'published').length;
+
+  return {
+    id: row.id,
+    importType: row.import_type,
+    requestId: row.filename,
+    filename: row.filename,
+    r2Key: row.r2_key,
+    status: row.status,
+    entriesCreated: normalizePositiveInteger(row.entries_created, 0),
+    entriesUpdated: normalizePositiveInteger(row.entries_updated, 0),
+    warnings: parseStoredJson(row.warnings_json, []),
+    errors: parseStoredJson(row.errors_json, []),
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    entries: normalizedEntries,
+    summary: {
+      chapterCount,
+      draftCount,
+      entryCount: normalizedEntries.length,
+      publishedCount,
+      seriesSlug: series?.slug || '',
+      seriesTitle: series?.title || '',
+      pricing: series?.pricing || {}
+    }
+  };
+};
+
+const listEntriesForContentImports = async (db, importRows) => {
+  const refs = [...new Set(importRows.map((row) => cleanText(row.filename, 240)).filter(Boolean))];
+  if (!refs.length) return new Map();
+
+  const placeholders = refs.map(() => '?').join(', ');
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       WHERE source_kind = 'novelforge'
+         AND source_ref IN (${placeholders})
+       ORDER BY
+         source_ref ASC,
+         CASE entry_type
+           WHEN 'novel_series' THEN 0
+           WHEN 'novel_chapter' THEN 1
+           ELSE 2
+         END ASC,
+         chapter_number ASC,
+         updated_at DESC,
+         id ASC`
+    )
+    .bind(...refs)
+    .all();
+
+  const byRef = new Map(refs.map((ref) => [ref, []]));
+  (response.results || []).forEach((entry) => {
+    if (!byRef.has(entry.source_ref)) byRef.set(entry.source_ref, []);
+    byRef.get(entry.source_ref).push(entry);
+  });
+  return byRef;
+};
+
+const handleAdminListContentImports = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson({
+      ok: true,
+      setupRequired: true,
+      message: 'Content tables are not initialized. Apply migration 0007_backend_content_platform.sql.',
+      imports: []
+    });
+  }
+
+  const url = new URL(request.url);
+  const importType = cleanText(url.searchParams.get('type') || 'novelforge', 40).toLowerCase();
+  if (!/^[a-z0-9_-]+$/.test(importType)) {
+    return privateJson({ ok: false, code: 'CONTENT_IMPORT_TYPE_INVALID', message: 'Unsupported import type.' }, { status: 400 });
+  }
+  const importId = normalizePositiveInteger(url.searchParams.get('id'), 0);
+  const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 30), 1), 80);
+  const clauses = ['import_type = ?'];
+  const params = [importType];
+  if (importId) {
+    clauses.push('id = ?');
+    params.push(importId);
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM content_imports
+       WHERE ${clauses.join(' AND ')}
+       ORDER BY updated_at DESC, id DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+
+  const importRows = response.results || [];
+  const entriesByRef = await listEntriesForContentImports(db, importRows);
+  const origin = new URL(request.url).origin;
+  return privateJson({
+    ok: true,
+    imports: importRows.map((row) => contentImportToJson(row, entriesByRef.get(row.filename) || [], origin)),
+    stage: '8C'
+  });
+};
+
+const handleAdminReviewContentImport = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_TABLES_NOT_READY',
+        message: 'Content tables are not initialized. Apply migration 0007_backend_content_platform.sql before reviewing imports.'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const action = cleanText(payload.action || 'publish', 40).toLowerCase();
+  if (action !== 'publish') {
+    return privateJson({ ok: false, code: 'CONTENT_IMPORT_ACTION_UNSUPPORTED', message: 'Unsupported import review action.' }, { status: 400 });
+  }
+
+  const importId = normalizePositiveInteger(payload.importId || payload.id, 0);
+  if (!importId) {
+    return privateJson({ ok: false, code: 'CONTENT_IMPORT_ID_REQUIRED', message: 'A valid import id is required.' }, { status: 400 });
+  }
+
+  const importRow = await db
+    .prepare(
+      `SELECT *
+       FROM content_imports
+       WHERE id = ?
+         AND import_type = 'novelforge'
+       LIMIT 1`
+    )
+    .bind(importId)
+    .first();
+  if (!importRow) {
+    return privateJson({ ok: false, code: 'CONTENT_IMPORT_NOT_FOUND', message: 'NovelForge import was not found.' }, { status: 404 });
+  }
+
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  const beforeResponse = await db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       WHERE source_kind = 'novelforge'
+         AND source_ref = ?
+       ORDER BY
+         CASE entry_type
+           WHEN 'novel_series' THEN 0
+           WHEN 'novel_chapter' THEN 1
+           ELSE 2
+         END ASC,
+         chapter_number ASC,
+         id ASC`
+    )
+    .bind(importRow.filename)
+    .all();
+  const beforeEntries = beforeResponse.results || [];
+  const publishableEntries = beforeEntries.filter((entry) => ['draft', 'scheduled'].includes(entry.status));
+
+  if (publishableEntries.length) {
+    await db
+      .prepare(
+        `UPDATE content_entries
+         SET status = 'published',
+             visibility = CASE WHEN visibility = 'private' THEN 'public' ELSE visibility END,
+             published_at = COALESCE(published_at, CURRENT_TIMESTAMP),
+             updated_by = ?,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE source_kind = 'novelforge'
+           AND source_ref = ?
+           AND status IN ('draft', 'scheduled')`
+      )
+      .bind(actorEmail, importRow.filename)
+      .run();
+  }
+
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: 'novelforge_import_publish_reviewed_drafts',
+    targetType: 'content_import',
+    targetId: String(importRow.id),
+    targetSlug: importRow.filename,
+    metadata: {
+      publishedEntryIds: publishableEntries.map((entry) => entry.id),
+      publishedEntries: publishableEntries.length,
+      requestId: importRow.filename
+    }
+  });
+
+  const entriesByRef = await listEntriesForContentImports(db, [importRow]);
+  const origin = new URL(request.url).origin;
+  return privateJson({
+    ok: true,
+    import: contentImportToJson(importRow, entriesByRef.get(importRow.filename) || [], origin),
+    message: publishableEntries.length
+      ? `Published ${publishableEntries.length} imported draft entries.`
+      : 'No draft entries were waiting for publication.',
+    publishedEntries: publishableEntries.length,
+    stage: '8C'
   });
 };
 
@@ -7868,6 +8115,16 @@ export default {
     if (url.pathname === '/admin/api/content/pricing-defaults') {
       if (request.method === 'GET') return handleAdminGetContentPricingDefaults(env);
       if (request.method === 'POST') return handleAdminUpdateContentPricingDefaults(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/imports') {
+      if (request.method === 'GET') return handleAdminListContentImports(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/imports/review') {
+      if (request.method === 'POST') return handleAdminReviewContentImport(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

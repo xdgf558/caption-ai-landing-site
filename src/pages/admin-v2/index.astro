@@ -30,6 +30,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <aside class="admin-v2-panel admin-v2-sidebar">
         <div class="admin-v2-tabs" role="tablist" aria-label="Admin sections">
             <button class="admin-v2-tab is-active" type="button" data-admin-v2-tab="content">内容</button>
+            <button class="admin-v2-tab" type="button" data-admin-v2-tab="imports">导入审核</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="commerce">订单</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="accounts">账户</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="access">授权</button>
@@ -80,6 +81,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <div class="admin-inline-status" id="pricing-defaults-status" role="status" aria-live="polite" hidden></div>
           </section>
           <div class="admin-v2-list" id="content-list" aria-label="Backend content entries"></div>
+        </section>
+
+        <section class="admin-v2-sidebar-section" data-admin-v2-panel="imports-sidebar" hidden>
+          <div class="button-row">
+            <button class="button button-primary" id="imports-refresh" type="button">刷新导入</button>
+          </div>
+          <section class="admin-template-panel" aria-labelledby="import-review-help-title">
+            <div>
+              <p class="station-kicker">NovelForge</p>
+              <h3 id="import-review-help-title">导入 Review</h3>
+              <p>从 NovelForge 导入后，先在这里核对作品、章节、封面和收费摘要，再进入内容编辑器做最终调整。</p>
+            </div>
+          </section>
+          <div class="admin-v2-list" id="imports-list" aria-label="NovelForge imports"></div>
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="commerce-sidebar" hidden>
@@ -420,6 +435,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </section>
         </section>
 
+        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="imports-main" hidden>
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">NovelForge Review</p>
+              <h2>导入批次审核</h2>
+            </div>
+            <div class="admin-v2-badges">
+              <span>Stage 8C</span>
+              <span>Review before publish</span>
+            </div>
+          </div>
+          <section class="admin-v2-subpanel admin-import-review" id="import-detail">
+            <p class="admin-empty-list">选择一个 NovelForge 导入批次查看详情。</p>
+          </section>
+        </section>
+
         <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="commerce-main" hidden>
           <div class="admin-v2-section-heading">
             <div>
@@ -526,6 +557,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       panels: $$('[data-admin-v2-panel]'),
       contentList: $('#content-list'),
       revisionList: $('#revision-list'),
+      importsList: $('#imports-list'),
+      importDetail: $('#import-detail'),
       ordersList: $('#orders-list'),
       orderDetail: $('#order-detail'),
       accountsList: $('#accounts-list'),
@@ -613,9 +646,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const state = {
       entries: [],
+      imports: [],
       orders: [],
       accounts: [],
       selectedEntryId: 0,
+      selectedImportId: 0,
       selectedOrderToken: '',
       selectedAccountId: 0,
       pricingDefaults: null,
@@ -1234,6 +1269,163 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
     };
 
+    const importStatusTone = (status) => {
+      if (['completed', 'completed_with_warnings', 'reviewed'].includes(status)) return 'success';
+      if (['failed'].includes(status)) return 'error';
+      return 'neutral';
+    };
+
+    const importTitle = (item) => item?.summary?.seriesTitle || item?.requestId || `Import #${item?.id || ''}`;
+
+    const importPricingSummary = (item) => {
+      const pricing = item?.summary?.pricing || {};
+      const bundles = pricing.bundlePurchasesEnabled && Array.isArray(pricing.chapterBundleDiscounts) && pricing.chapterBundleDiscounts.length
+        ? pricing.chapterBundleDiscounts.map((rule) => `${rule.minimumChapters}章 ${rule.discountPercent}% off`).join('，')
+        : '多章折扣未开启';
+      const creditPacks = Array.isArray(pricing.creditPacks) && pricing.creditPacks.length
+        ? pricing.creditPacks.map((pack) => `${pack.credits}点/${formatMoney(pack.priceAmount, pack.priceCurrency || 'USD')}`).join('，')
+        : '阅读点包未配置';
+      return `${pricing.mode || 'free'} · 免费 ${pricing.freeChapters || 0} 章 · 单章 ${formatMoney(pricing.chapterPriceAmount || 0, pricing.chapterPriceCurrency || 'USD')} / ${pricing.chapterCredits || 0} 点 · ${bundles} · ${creditPacks}`;
+    };
+
+    const renderImportList = () => {
+      if (!state.imports.length) {
+        renderEmpty(elements.importsList, '暂无 NovelForge 导入记录。');
+        elements.importDetail.innerHTML = '<p class="admin-empty-list">NovelForge 软件导入后，这里会出现可审核批次。</p>';
+        return;
+      }
+
+      elements.importsList.innerHTML = '';
+      state.imports.forEach((item) => {
+        const button = document.createElement('button');
+        button.className = `admin-v2-entry${item.id === state.selectedImportId ? ' is-active' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `
+          <span>${escapeHtml(importTitle(item))}</span>
+          <small>${escapeHtml(item.status)} · ${escapeHtml(formatDate(item.updatedAt))}</small>
+          <small>${escapeHtml(String(item.summary?.entryCount || 0))} 条内容 · 草稿 ${escapeHtml(String(item.summary?.draftCount || 0))} · 警告 ${escapeHtml(String(item.warnings?.length || 0))}</small>
+        `;
+        button.addEventListener('click', () => {
+          state.selectedImportId = item.id;
+          renderImportList();
+          renderImportDetail();
+        });
+        elements.importsList.append(button);
+      });
+    };
+
+    const renderImportDetail = () => {
+      const item = state.imports.find((entry) => entry.id === state.selectedImportId) || state.imports[0];
+      if (!item) {
+        elements.importDetail.innerHTML = '<p class="admin-empty-list">选择一个 NovelForge 导入批次查看详情。</p>';
+        return;
+      }
+      state.selectedImportId = item.id;
+      const entries = item.entries || [];
+      const warnings = item.warnings || [];
+      const errors = item.errors || [];
+      const canPublish = (item.summary?.draftCount || 0) > 0;
+      elements.importDetail.innerHTML = `
+        <div class="admin-v2-section-heading">
+          <div>
+            <p class="station-kicker">Import #${escapeHtml(String(item.id))}</p>
+            <h3>${escapeHtml(importTitle(item))}</h3>
+          </div>
+          <span class="admin-status-pill" data-tone="${importStatusTone(item.status)}">${escapeHtml(item.status)}</span>
+        </div>
+        <div class="admin-detail-grid">
+          <article><span>内容</span><strong>${escapeHtml(String(item.summary?.entryCount || 0))}</strong><small>章节 ${escapeHtml(String(item.summary?.chapterCount || 0))}</small></article>
+          <article><span>草稿</span><strong>${escapeHtml(String(item.summary?.draftCount || 0))}</strong><small>可批量发布</small></article>
+          <article><span>更新</span><strong>${escapeHtml(String(item.entriesUpdated || 0))}</strong><small>创建 ${escapeHtml(String(item.entriesCreated || 0))}</small></article>
+          <article><span>时间</span><strong>${escapeHtml(formatDate(item.updatedAt) || '-')}</strong><small>${escapeHtml(formatDate(item.createdAt) || '')}</small></article>
+        </div>
+        <div class="admin-pricing-lines">
+          <p><strong>Request ID：</strong><code class="admin-import-code">${escapeHtml(item.requestId || '')}</code></p>
+          <p><strong>导入备份：</strong><code class="admin-import-code">${escapeHtml(item.r2Key || '未写入 R2 备份')}</code></p>
+          <p><strong>收费摘要：</strong>${escapeHtml(importPricingSummary(item))}</p>
+          ${warnings.map((warning) => `<p class="admin-pricing-warning"><strong>Warning：</strong>${escapeHtml(warning.message || warning)}</p>`).join('')}
+          ${errors.map((error) => `<p class="admin-pricing-warning"><strong>Error：</strong>${escapeHtml(error.message || error)}</p>`).join('')}
+        </div>
+        <div class="button-row">
+          <button class="button button-primary" id="import-publish-drafts" type="button" ${canPublish ? '' : 'disabled'}>发布本批草稿</button>
+          <button class="button button-secondary" id="import-detail-refresh" type="button">刷新本批次</button>
+        </div>
+        <section class="admin-detail-section">
+          <h4>关联内容</h4>
+          ${entries.length ? entries.map((entry) => `
+            <article class="admin-v2-row admin-import-entry">
+              <strong>${escapeHtml(entry.title || entry.slug)}</strong>
+              <span>${escapeHtml(entryTypeLabel(entry.entryType))} · ${escapeHtml(entry.locale)} · ${escapeHtml(entry.status)} · ${escapeHtml(entry.accessLevel)}</span>
+              <small>${escapeHtml(entry.parentSlug ? `${entry.parentSlug}/${entry.slug}` : entry.slug)} · ${escapeHtml(entry.remoteId || '')}${entry.coverRemoteId ? ` · ${escapeHtml(entry.coverRemoteId)}` : ''}</small>
+              <div class="button-row admin-import-actions">
+                <button class="button button-secondary" type="button" data-import-edit-id="${escapeHtml(String(entry.id))}">编辑</button>
+                <a class="button button-secondary" href="${escapeHtml(entry.adminUrl)}">后台链接</a>
+                ${entry.publicUrl ? `<a class="button button-secondary" href="${escapeHtml(entry.publicUrl)}" target="_blank" rel="noreferrer">公开页</a>` : ''}
+              </div>
+            </article>
+          `).join('') : '<p class="admin-empty-list">这条导入记录没有找到关联内容。</p>'}
+        </section>
+      `;
+
+      $('#import-publish-drafts')?.addEventListener('click', publishSelectedImport);
+      $('#import-detail-refresh')?.addEventListener('click', () => loadImportReviews({ importId: item.id }));
+      $$('[data-import-edit-id]').forEach((button) => {
+        button.addEventListener('click', () => openImportEntryForEdit(button.dataset.importEditId));
+      });
+    };
+
+    const loadImportReviews = async ({ importId = 0 } = {}) => {
+      const params = new URLSearchParams({ type: 'novelforge', limit: '50' });
+      if (importId) params.set('id', String(importId));
+      const payload = await apiJson(`/admin/api/content/imports?${params.toString()}`);
+      if (importId) {
+        const [updatedImport] = payload.imports || [];
+        if (updatedImport) {
+          state.imports = state.imports.map((item) => (item.id === updatedImport.id ? updatedImport : item));
+          if (!state.imports.find((item) => item.id === updatedImport.id)) state.imports.unshift(updatedImport);
+        }
+      } else {
+        state.imports = payload.imports || [];
+        if (!state.imports.find((item) => item.id === state.selectedImportId)) {
+          state.selectedImportId = state.imports[0]?.id || 0;
+        }
+      }
+      renderImportList();
+      renderImportDetail();
+      setStatus(`已载入 ${state.imports.length} 个 NovelForge 导入批次。`, 'success');
+    };
+
+    const publishSelectedImport = async () => {
+      if (!state.selectedImportId) return;
+      const button = $('#import-publish-drafts');
+      if (button) button.disabled = true;
+      setStatus('正在发布这批 NovelForge 草稿。');
+      try {
+        const payload = await apiJson('/admin/api/content/imports/review', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'publish', importId: state.selectedImportId })
+        });
+        if (payload.import) {
+          state.imports = state.imports.map((item) => (item.id === payload.import.id ? payload.import : item));
+        }
+        renderImportList();
+        renderImportDetail();
+        await Promise.all([loadEntries(), loadAuditLogs()]);
+        setStatus(payload.message || '导入草稿已发布。', 'success');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      } finally {
+        if (button) button.disabled = false;
+      }
+    };
+
+    const openImportEntryForEdit = async (entryId) => {
+      const id = Number.parseInt(entryId || '', 10);
+      if (!Number.isFinite(id) || id <= 0) return;
+      await switchTab('content');
+      await loadEntryForEdit(id);
+    };
+
     const loadSchema = async () => {
       const schema = await apiJson('/admin/api/content/schema');
       state.schema = schema;
@@ -1368,7 +1560,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         readingMinutes: Math.max(1, Math.ceil(wordCount / 450)),
         pricing: buildPricingPayload(),
         metadata: {
-          adminVersion: '8B',
+          adminVersion: '8C',
           importedFromAdminV2: true
         }
       };
@@ -1824,6 +2016,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const expected = panel.dataset.adminV2Panel.startsWith(`${name}-`);
         panel.hidden = !expected;
       });
+      if (name === 'imports') await loadImportReviews();
       if (name === 'commerce') await loadOrders();
       if (name === 'accounts') await loadAccounts();
       if (name === 'access') await loadEntitlements();
@@ -1834,6 +2027,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     elements.contentForm.addEventListener('submit', saveContent);
     elements.accessForm.addEventListener('submit', grantEntitlement);
     $('#content-refresh').addEventListener('click', loadEntries);
+    $('#imports-refresh').addEventListener('click', () => loadImportReviews());
     $('#orders-refresh').addEventListener('click', loadOrders);
     $('#accounts-refresh').addEventListener('click', loadAccounts);
     $('#access-refresh').addEventListener('click', loadEntitlements);
