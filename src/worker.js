@@ -298,6 +298,69 @@ const normalizeBundleDiscounts = (discounts) =>
     .filter((discount) => discount.chapters > 1 && discount.discountPercent > 0 && discount.discountPercent < 100)
     .sort((a, b) => a.chapters - b.chapters || a.discountPercent - b.discountPercent);
 
+const contentPricingModes = new Set(['free', 'tip-optional', 'chapter-paid', 'volume-paid', 'member']);
+
+const normalizeContentPricingMode = (value) => {
+  const mode = cleanText(value, 40).toLowerCase();
+  return contentPricingModes.has(mode) ? mode : 'free';
+};
+
+const normalizeContentTipAmounts = (value) => {
+  const amounts = (Array.isArray(value) ? value : [])
+    .map((amount) => normalizePriceAmount(amount, null))
+    .filter((amount) => amount && amount > 0);
+  return Array.from(new Set(amounts)).sort((a, b) => a - b);
+};
+
+const normalizeContentBundleDiscounts = (value) =>
+  (Array.isArray(value) ? value : [])
+    .map((item) => ({
+      minimumChapters: normalizePositiveInteger(item?.minimumChapters ?? item?.chapters, 0),
+      discountPercent: normalizePriceAmount(item?.discountPercent, 0)
+    }))
+    .filter((item) => item.minimumChapters > 1 && item.discountPercent > 0 && item.discountPercent < 100)
+    .sort((a, b) => a.minimumChapters - b.minimumChapters || a.discountPercent - b.discountPercent);
+
+const normalizeContentCreditPacks = (value) =>
+  (Array.isArray(value) ? value : [])
+    .map((pack) => {
+      const credits = normalizePositiveInteger(pack?.credits, 0);
+      const priceAmount = normalizePriceAmount(pack?.priceAmount, null);
+      if (!credits || !priceAmount) return null;
+      return {
+        credits,
+        label: cleanText(pack?.label || `${credits} ${novelCreditUnitLabel}`, 80),
+        priceAmount,
+        priceCurrency: normalizeFiatCurrency(pack?.priceCurrency, 'USD')
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.priceAmount - b.priceAmount || a.credits - b.credits);
+
+const normalizeContentPricing = (value = {}) => {
+  const pricing = normalizeJsonObject(value);
+  const mode = normalizeContentPricingMode(pricing.mode || pricing.priceMode);
+  const tipAmounts = normalizeContentTipAmounts(pricing.tipAmounts);
+  const chapterBundleDiscounts = normalizeContentBundleDiscounts(pricing.chapterBundleDiscounts);
+  const creditPacks = normalizeContentCreditPacks(pricing.creditPacks || pricing.readerCreditPacks);
+
+  return {
+    mode,
+    freeChapters: normalizePositiveInteger(pricing.freeChapters, 0),
+    chapterPriceAmount: normalizePriceAmount(pricing.chapterPriceAmount, 0) || 0,
+    chapterPriceCurrency: normalizeFiatCurrency(pricing.chapterPriceCurrency, 'USD'),
+    chapterCredits: normalizePositiveInteger(pricing.chapterCredits, 0),
+    supporterPriceAmount: normalizePriceAmount(pricing.supporterPriceAmount, 0) || 0,
+    supporterPriceCurrency: normalizeFiatCurrency(pricing.supporterPriceCurrency, 'USD'),
+    tipsEnabled: Boolean(pricing.tipsEnabled),
+    tipAmounts,
+    tipCurrency: normalizeFiatCurrency(pricing.tipCurrency, 'USD'),
+    bundlePurchasesEnabled: Boolean(pricing.bundlePurchasesEnabled),
+    chapterBundleDiscounts,
+    creditPacks
+  };
+};
+
 const normalizeCreditPack = (pack) => {
   const credits = normalizePositiveInteger(pack?.credits, 0);
   const priceAmount = normalizePriceAmount(pack?.priceAmount, null);
@@ -866,7 +929,7 @@ const normalizeContentPayload = (payload = {}) => {
     markdownR2Key: cleanText(payload.markdownR2Key, 500),
     metadata: normalizeJsonObject(payload.metadata),
     parentSlug,
-    pricing: normalizeJsonObject(payload.pricing),
+    pricing: normalizeContentPricing(payload.pricing),
     publishedAt: toSqlTimestamp(payload.publishedAt),
     scheduledAt: toSqlTimestamp(payload.scheduledAt),
     seo: normalizeJsonObject(payload.seo),
@@ -924,6 +987,231 @@ const insertAdminAuditLog = async (db, data) => {
       JSON.stringify(normalizeJsonObject(data.metadata))
     )
     .run();
+};
+
+const contentPricingRuleToJson = (row) => ({
+  id: row.id,
+  entryId: row.entry_id,
+  scopeType: row.scope_type,
+  entryType: row.entry_type,
+  seriesSlug: row.series_slug,
+  chapterSlug: row.chapter_slug,
+  ruleType: row.rule_type,
+  label: row.label,
+  amount: row.amount,
+  currency: row.currency,
+  credits: normalizePositiveInteger(row.credits, 0),
+  discountPercent: normalizePositiveInteger(row.discount_percent, 0),
+  minimumChapters: normalizePositiveInteger(row.minimum_chapters, 0),
+  isEnabled: Boolean(row.is_enabled),
+  metadata: parseStoredJson(row.metadata_json, {}),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const getContentPricingScope = (entry) => ({
+  chapterSlug: entry.entry_type === 'novel_chapter' ? entry.slug : '',
+  entryType: entry.entry_type,
+  scopeType: 'entry',
+  seriesSlug: entry.entry_type === 'novel_chapter' ? entry.parent_slug : entry.entry_type === 'novel_series' ? entry.slug : ''
+});
+
+const makeContentPricingRule = (entry, overrides = {}) => {
+  const scope = getContentPricingScope(entry);
+  return {
+    amount: '',
+    credits: 0,
+    currency: 'USD',
+    discountPercent: 0,
+    entryId: entry.id,
+    isEnabled: true,
+    label: '',
+    metadata: {},
+    minimumChapters: 0,
+    ruleType: '',
+    ...scope,
+    ...overrides
+  };
+};
+
+const buildContentPricingRuleRows = (entry) => {
+  const pricing = normalizeContentPricing(parseStoredJson(entry.pricing_json, {}));
+  const rows = [
+    makeContentPricingRule(entry, {
+      isEnabled: true,
+      label: pricing.mode,
+      metadata: { mode: pricing.mode },
+      ruleType: 'pricing_mode'
+    })
+  ];
+
+  if (entry.entry_type === 'novel_series' && pricing.freeChapters > 0) {
+    rows.push(
+      makeContentPricingRule(entry, {
+        isEnabled: true,
+        label: `${pricing.freeChapters} free chapters`,
+        metadata: { mode: pricing.mode },
+        minimumChapters: pricing.freeChapters,
+        ruleType: 'free_chapters'
+      })
+    );
+  }
+
+  if (pricing.chapterPriceAmount > 0 || pricing.chapterCredits > 0 || ['chapter-paid', 'volume-paid'].includes(pricing.mode)) {
+    rows.push(
+      makeContentPricingRule(entry, {
+        amount: pricing.chapterPriceAmount > 0 ? amountToStorage(pricing.chapterPriceAmount) : '',
+        credits: pricing.chapterCredits,
+        currency: pricing.chapterPriceCurrency,
+        isEnabled: pricing.mode !== 'free' || pricing.chapterPriceAmount > 0 || pricing.chapterCredits > 0,
+        label: 'Single chapter',
+        metadata: { mode: pricing.mode },
+        minimumChapters: 1,
+        ruleType: 'chapter_price'
+      })
+    );
+  }
+
+  if (pricing.supporterPriceAmount > 0) {
+    rows.push(
+      makeContentPricingRule(entry, {
+        amount: amountToStorage(pricing.supporterPriceAmount),
+        currency: pricing.supporterPriceCurrency,
+        isEnabled: ['member', 'tip-optional', 'chapter-paid', 'volume-paid'].includes(pricing.mode),
+        label: 'Supporter unlock',
+        metadata: { mode: pricing.mode },
+        ruleType: 'supporter_price'
+      })
+    );
+  }
+
+  pricing.tipAmounts.forEach((amount) => {
+    rows.push(
+      makeContentPricingRule(entry, {
+        amount: amountToStorage(amount),
+        currency: pricing.tipCurrency,
+        isEnabled: pricing.tipsEnabled,
+        label: `Tip ${amountToStorage(amount)} ${pricing.tipCurrency}`,
+        metadata: { mode: pricing.mode },
+        ruleType: 'tip_amount'
+      })
+    );
+  });
+
+  pricing.chapterBundleDiscounts.forEach((rule) => {
+    rows.push(
+      makeContentPricingRule(entry, {
+        currency: pricing.chapterPriceCurrency,
+        discountPercent: Math.round(rule.discountPercent),
+        isEnabled: pricing.bundlePurchasesEnabled,
+        label: `${rule.minimumChapters} chapters · ${rule.discountPercent}% off`,
+        metadata: { mode: pricing.mode },
+        minimumChapters: rule.minimumChapters,
+        ruleType: 'bundle_discount'
+      })
+    );
+  });
+
+  pricing.creditPacks.forEach((pack) => {
+    rows.push(
+      makeContentPricingRule(entry, {
+        amount: amountToStorage(pack.priceAmount),
+        credits: pack.credits,
+        currency: pack.priceCurrency,
+        isEnabled: true,
+        label: pack.label,
+        metadata: { mode: pricing.mode },
+        ruleType: 'credit_pack'
+      })
+    );
+  });
+
+  return rows;
+};
+
+const syncContentPricingRules = async (db, entry) => {
+  await db.prepare('DELETE FROM content_pricing_rules WHERE entry_id = ?').bind(entry.id).run();
+
+  const rows = buildContentPricingRuleRows(entry);
+  if (!rows.length) return [];
+
+  const insertStatement = db.prepare(
+    `INSERT INTO content_pricing_rules (
+      entry_id, scope_type, entry_type, series_slug, chapter_slug, rule_type,
+      label, amount, currency, credits, discount_percent, minimum_chapters,
+      is_enabled, metadata_json
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    RETURNING *`
+  );
+
+  await db.batch(
+    rows.map((rule) =>
+      insertStatement.bind(
+        rule.entryId,
+        rule.scopeType,
+        rule.entryType,
+        rule.seriesSlug,
+        rule.chapterSlug,
+        rule.ruleType,
+        rule.label,
+        rule.amount,
+        rule.currency,
+        rule.credits,
+        rule.discountPercent,
+        rule.minimumChapters,
+        rule.isEnabled ? 1 : 0,
+        JSON.stringify(normalizeJsonObject(rule.metadata))
+      )
+    )
+  );
+
+  return listContentPricingRules(db, { entryId: entry.id });
+};
+
+const listContentPricingRules = async (db, options = {}) => {
+  const entryId = normalizePositiveInteger(options.entryId, 0);
+  const seriesSlug = cleanSlug(options.seriesSlug, 160);
+  const chapterSlug = cleanSlug(options.chapterSlug, 160);
+  const entryType = cleanText(options.entryType, 40).toLowerCase().replace(/-/g, '_');
+  const ruleType = cleanText(options.ruleType, 80).toLowerCase().replace(/-/g, '_');
+  const limit = Math.min(Math.max(normalizePositiveInteger(options.limit, 100), 1), 200);
+  const clauses = [];
+  const params = [];
+
+  if (entryId) {
+    clauses.push('entry_id = ?');
+    params.push(entryId);
+  }
+  if (entryType) {
+    clauses.push('entry_type = ?');
+    params.push(entryType);
+  }
+  if (seriesSlug) {
+    clauses.push('series_slug = ?');
+    params.push(seriesSlug);
+  }
+  if (chapterSlug) {
+    clauses.push('chapter_slug = ?');
+    params.push(chapterSlug);
+  }
+  if (ruleType) {
+    clauses.push('rule_type = ?');
+    params.push(ruleType);
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM content_pricing_rules
+       ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
+       ORDER BY entry_id DESC, rule_type ASC, minimum_chapters ASC, amount ASC, id ASC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+
+  return (response.results || []).map(contentPricingRuleToJson);
 };
 
 const isMissingContentTablesError = (error) => /no such table: (content_|admin_audit_logs)/i.test(error?.message || '');
@@ -3352,8 +3640,8 @@ const handleAdminListNovelOrders = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '7D',
-    purpose: 'Dynamic frontend content reads for backend-published novels, chapters, and Blog/Devlog entries.',
+    stage: '7E-A',
+    purpose: 'Backend content management with persisted pricing rules for novels, chapters, and Blog/Devlog entries.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -3361,6 +3649,20 @@ const handleAdminContentSchema = async (env) =>
       visibilities: [...contentVisibilities],
       accessLevels: [...contentAccessLevels],
       bodyFormats: [...contentBodyFormats]
+    },
+    pricing: {
+      modes: [...contentPricingModes],
+      currencies: ['USD'],
+      ruleTypes: [
+        'pricing_mode',
+        'free_chapters',
+        'chapter_price',
+        'supporter_price',
+        'tip_amount',
+        'bundle_discount',
+        'credit_pack'
+      ],
+      source: 'content_pricing_rules'
     },
     storage: getContentStorageDescriptor(env),
     migration: {
@@ -3374,7 +3676,7 @@ const handleAdminContentSchema = async (env) =>
       ],
       protectedContent: 'Paid/supporter chapter HTML is loaded from CONTENT_BUCKET after entitlement checks.',
       dynamicFrontend: 'Published backend content can render public Blog and serial pages without a site rebuild.',
-      nextStages: ['7E backend pricing rules', '7F fuller order/account/entitlement management']
+      nextStages: ['7E-B frontend checkout reads backend pricing rules', '7F fuller order/account/entitlement management']
     }
   });
 
@@ -3534,6 +3836,7 @@ const handleAdminGetContentBody = async (request, env) => {
           readContentObjectText(bucket, entry.html_r2_key, 'HTML body')
         ])
       : ['', ''];
+    const pricingRules = await listContentPricingRules(db, { entryId: entry.id });
 
     return privateJson({
       ok: true,
@@ -3543,7 +3846,8 @@ const handleAdminGetContentBody = async (request, env) => {
         html,
         markdownR2Key: entry.markdown_r2_key,
         htmlR2Key: entry.html_r2_key
-      }
+      },
+      pricingRules
     });
   } catch (error) {
     return privateJson({ ok: false, code: error.code || 'CONTENT_BODY_READ_FAILED', message: error.message }, { status: 500 });
@@ -3636,6 +3940,30 @@ const handleAdminListAuditLogs = async (request, env) => {
     .all();
 
   return privateJson({ ok: true, logs: (response.results || []).map(auditLogToJson) });
+};
+
+const handleAdminListContentPricingRules = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson({ ok: true, setupRequired: true, pricingRules: [] });
+  }
+
+  const url = new URL(request.url);
+  const pricingRules = await listContentPricingRules(db, {
+    chapterSlug: url.searchParams.get('chapterSlug') || url.searchParams.get('chapter'),
+    entryId: url.searchParams.get('entryId') || url.searchParams.get('id'),
+    entryType: url.searchParams.get('entryType') || url.searchParams.get('type'),
+    limit: url.searchParams.get('limit'),
+    ruleType: url.searchParams.get('ruleType'),
+    seriesSlug: url.searchParams.get('seriesSlug') || url.searchParams.get('series')
+  });
+
+  return privateJson({
+    ok: true,
+    pricingRules,
+    stage: '7E-A'
+  });
 };
 
 const uploadContentBodies = async (env, entry) => {
@@ -3785,6 +4113,8 @@ const handleAdminUpsertContentEntry = async (request, env) => {
     )
     .first();
 
+  const pricingRules = await syncContentPricingRules(db, saved);
+
   const revisionNumberRow = await db
     .prepare(`SELECT COALESCE(MAX(revision_number), 0) + 1 AS revision_number FROM content_revisions WHERE entry_id = ?`)
     .bind(saved.id)
@@ -3821,6 +4151,7 @@ const handleAdminUpsertContentEntry = async (request, env) => {
     targetSlug: `${saved.parent_slug ? `${saved.parent_slug}/` : ''}${saved.slug}`,
     metadata: {
       locale: saved.locale,
+      pricingRules: pricingRules.length,
       revisionNumber,
       status: saved.status
     }
@@ -3829,6 +4160,7 @@ const handleAdminUpsertContentEntry = async (request, env) => {
   return privateJson({
     ok: true,
     entry: contentEntryToJson(saved),
+    pricingRules,
     revisionNumber,
     storage: getContentStorageDescriptor(env)
   });
@@ -5388,6 +5720,11 @@ export default {
 
     if (url.pathname === '/admin/api/content/audit-logs') {
       if (request.method === 'GET') return handleAdminListAuditLogs(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/content/pricing-rules') {
+      if (request.method === 'GET') return handleAdminListContentPricingRules(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

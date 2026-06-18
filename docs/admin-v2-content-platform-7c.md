@@ -42,6 +42,7 @@ Stage 7C adds:
 GET /admin/api/content/body?id={entryId}
 GET /admin/api/content/revisions?id={entryId}
 GET /admin/api/content/audit-logs
+GET /admin/api/content/pricing-rules?entryId={entryId}
 POST /admin/api/content/preview
 ```
 
@@ -75,6 +76,7 @@ After merging and deploying Stage 7C, verify the admin boundary before using the
 /admin/api/content/body?id=1
 /admin/api/content/revisions?id=1
 /admin/api/content/audit-logs
+/admin/api/content/pricing-rules?entryId=1
 /admin/api/content/preview
 ```
 
@@ -106,8 +108,13 @@ Admin 2.0 writes pricing controls into `content_entries.pricing_json`:
 - `tipCurrency`
 - `bundlePurchasesEnabled`
 - `chapterBundleDiscounts`
+- `supporterPriceAmount`
+- `supporterPriceCurrency`
+- `creditPacks`
 
-Stage 7E will promote these rules into the frontend purchase experience and, where needed, the generic `content_pricing_rules` table.
+Stage 7E-A promotes these settings into `content_pricing_rules` whenever a content entry is saved. The content row still keeps the full `pricing_json` snapshot, while the rules table now stores normalized rows for pricing mode, free chapters, chapter price, supporter price, tip amounts, bundle discounts, and credit packs.
+
+Stage 7E-B will make the frontend checkout flow consume these backend rules directly.
 
 ## Current Boundary
 

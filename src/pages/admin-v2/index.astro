@@ -247,8 +247,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <input id="pricing-chapter-price" type="number" min="0" step="0.01" placeholder="0.30" />
                 </label>
                 <label>
+                  支持者价格 USD
+                  <input id="pricing-supporter-price" type="number" min="0" step="0.01" placeholder="4.99" />
+                </label>
+                <label>
                   单章阅读点
                   <input id="pricing-chapter-credits" type="number" min="0" step="1" placeholder="30" />
+                </label>
+                <label>
+                  阅读点包
+                  <input id="pricing-credit-packs" placeholder="10:1, 60:5, 130:10" />
                 </label>
                 <label class="admin-checkbox">
                   <input id="pricing-tips-enabled" type="checkbox" />
@@ -447,7 +455,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         pricingMode: $('#pricing-mode'),
         freeChapters: $('#pricing-free-chapters'),
         chapterPrice: $('#pricing-chapter-price'),
+        supporterPrice: $('#pricing-supporter-price'),
         chapterCredits: $('#pricing-chapter-credits'),
+        creditPacks: $('#pricing-credit-packs'),
         tipsEnabled: $('#pricing-tips-enabled'),
         tipAmounts: $('#pricing-tip-amounts'),
         bundlesEnabled: $('#pricing-bundles-enabled'),
@@ -612,6 +622,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         ? rules.map((rule) => `${rule.minimumChapters}:${rule.discountPercent}`).join(', ')
         : '';
 
+    const formatCreditPacks = (value) =>
+      String(value || '')
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part) => {
+          const [credits, priceAmount, label] = part.split(':').map((item) => item.trim());
+          const normalizedCredits = Number.parseInt(credits, 10);
+          const normalizedPrice = Number.parseFloat(priceAmount);
+          return Number.isFinite(normalizedCredits) && Number.isFinite(normalizedPrice)
+            ? { credits: normalizedCredits, priceAmount: normalizedPrice, priceCurrency: 'USD', label: label || `${normalizedCredits} SC Credits` }
+            : null;
+        })
+        .filter(Boolean);
+
+    const creditPacksToInput = (packs) =>
+      Array.isArray(packs)
+        ? packs.map((pack) => `${pack.credits}:${pack.priceAmount}${pack.label ? `:${pack.label}` : ''}`).join(', ')
+        : '';
+
     const renderMarkdownToHtml = (markdown) => {
       const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
       const html = [];
@@ -712,7 +742,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.fields.pricingMode.value = pricing.mode || 'free';
       elements.fields.freeChapters.value = pricing.freeChapters || 0;
       elements.fields.chapterPrice.value = pricing.chapterPriceAmount || '';
+      elements.fields.supporterPrice.value = pricing.supporterPriceAmount || '';
       elements.fields.chapterCredits.value = pricing.chapterCredits || '';
+      elements.fields.creditPacks.value = creditPacksToInput(pricing.creditPacks);
       elements.fields.tipsEnabled.checked = Boolean(pricing.tipsEnabled);
       elements.fields.tipAmounts.value = Array.isArray(pricing.tipAmounts) ? pricing.tipAmounts.join(', ') : '';
       elements.fields.bundlesEnabled.checked = Boolean(pricing.bundlePurchasesEnabled);
@@ -801,7 +833,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       fillFormFromEntry(payload.entry, payload.body);
       await loadRevisions(id);
       renderContentList();
-      setStatus(`已载入：${payload.entry.title}`, 'success');
+      const pricingRules = Array.isArray(payload.pricingRules) ? payload.pricingRules.length : 0;
+      setStatus(`已载入：${payload.entry.title}，收费规则 ${pricingRules} 条。`, 'success');
     };
 
     const loadRevisions = async (id = state.selectedEntryId) => {
@@ -865,14 +898,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           chapterPriceAmount: elements.fields.chapterPrice.value ? Number(elements.fields.chapterPrice.value) : 0,
           chapterPriceCurrency: 'USD',
           chapterCredits: elements.fields.chapterCredits.value ? Number(elements.fields.chapterCredits.value) : 0,
+          supporterPriceAmount: elements.fields.supporterPrice.value ? Number(elements.fields.supporterPrice.value) : 0,
+          supporterPriceCurrency: 'USD',
           tipsEnabled: elements.fields.tipsEnabled.checked,
           tipAmounts: splitTags(elements.fields.tipAmounts.value).map(Number).filter(Number.isFinite),
           tipCurrency: 'USD',
           bundlePurchasesEnabled: elements.fields.bundlesEnabled.checked,
-          chapterBundleDiscounts: formatBundleRules(elements.fields.bundles.value)
+          chapterBundleDiscounts: formatBundleRules(elements.fields.bundles.value),
+          creditPacks: formatCreditPacks(elements.fields.creditPacks.value)
         },
         metadata: {
-          adminVersion: '7C',
+          adminVersion: '7E-A',
           importedFromAdminV2: true
         }
       };
@@ -897,7 +933,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           method: 'POST',
           body: JSON.stringify(payload)
         });
-        setSaveStatus(`保存成功，修订 #${result.revisionNumber}。`, 'success');
+        const pricingRules = Array.isArray(result.pricingRules) ? result.pricingRules.length : 0;
+        setSaveStatus(`保存成功，修订 #${result.revisionNumber}，同步 ${pricingRules} 条收费规则。`, 'success');
         fillFormFromEntry(result.entry, { markdown: payload.markdown, html: payload.html });
         await Promise.all([loadEntries(), loadRevisions(result.entry.id), loadAuditLogs()]);
       } catch (error) {
@@ -984,7 +1021,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.fields.accessLevel.value = frontmatter.access || frontmatter.accessLevel || 'free';
       elements.fields.pricingMode.value = frontmatter.priceMode || 'free';
       elements.fields.freeChapters.value = frontmatter.freeChapters || 0;
+      elements.fields.chapterPrice.value = frontmatter.chapterPriceAmount || '';
+      elements.fields.supporterPrice.value = frontmatter.supporterPriceAmount || '';
+      elements.fields.chapterCredits.value = frontmatter.chapterCredits || '';
       elements.fields.tipsEnabled.checked = Boolean(frontmatter.tipsEnabled);
+      elements.fields.tipAmounts.value = Array.isArray(frontmatter.tipAmounts) ? frontmatter.tipAmounts.join(', ') : '';
+      elements.fields.bundlesEnabled.checked = Boolean(frontmatter.bundlePurchasesEnabled);
+      elements.fields.bundles.value = bundleRulesToInput(frontmatter.chapterBundleDiscounts);
+      elements.fields.creditPacks.value = creditPacksToInput(frontmatter.creditPacks || frontmatter.readerCreditPacks);
       elements.fields.markdown.value = parsed.body;
       elements.fields.sourceRef.value = 'markdown-import';
       elements.fields.revisionSummary.value = 'Imported from Markdown file';
