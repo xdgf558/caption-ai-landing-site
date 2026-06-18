@@ -175,6 +175,8 @@ const novelCreditSource = 'reader-credits';
 const novelCreditUnitLabel = 'SC Credits';
 const novelCreditLedgerTopupSource = 'nowpayments-credit-pack';
 const novelCreditLedgerUnlockSource = 'chapter-credit-unlock';
+const novelAdminSource = 'admin-v2';
+const novelAdminManualCreditSource = 'admin-v2-manual-credit';
 
 const timingSafeEqualString = (left, right) => {
   const leftValue = String(left || '');
@@ -860,6 +862,32 @@ const readerCreditLedgerToJson = (row) => ({
   note: row.note,
   metadataJson: row.metadata_json,
   createdAt: row.created_at
+});
+
+const readerAccountToAdminJson = (row, config = getReaderCreditConfig({})) => ({
+  id: row.id,
+  email: row.email,
+  normalizedEmail: row.normalized_email,
+  displayName: row.display_name,
+  status: row.status,
+  lastLoginAt: row.last_login_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+  creditAccount: {
+    accountId: row.id,
+    balanceCredits: normalizePositiveInteger(row.balance_credits, 0),
+    lifetimePurchasedCredits: normalizePositiveInteger(row.lifetime_purchased_credits, 0),
+    lifetimeSpentCredits: normalizePositiveInteger(row.lifetime_spent_credits, 0),
+    unitLabel: row.currency_label || config.unitLabel,
+    createdAt: row.credit_created_at || '',
+    updatedAt: row.credit_updated_at || ''
+  },
+  stats: {
+    orderCount: normalizePositiveInteger(row.order_count, 0),
+    activeEntitlementCount: normalizePositiveInteger(row.active_entitlement_count, 0),
+    ledgerCount: normalizePositiveInteger(row.ledger_count, 0),
+    latestOrderAt: row.latest_order_at || ''
+  }
 });
 
 const novelPaymentEventToJson = (row) => ({
@@ -2308,34 +2336,34 @@ const listNovelEntitlements = async (db, normalizedEmail = '') => {
 
 const handleAdminListNovelEntitlements = async (request, env) => {
   const db = env.WAITLIST_DB;
-  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
 
   const url = new URL(request.url);
   const normalizedEmail = normalizeEmail(url.searchParams.get('email'));
   if (normalizedEmail && !isEmail(normalizedEmail)) {
-    return json({ ok: false, message: 'Please enter a valid reader email.' }, { status: 400 });
+    return privateJson({ ok: false, message: 'Please enter a valid reader email.' }, { status: 400 });
   }
 
   const entitlements = await listNovelEntitlements(db, normalizedEmail);
-  return json({ ok: true, entitlements });
+  return privateJson({ ok: true, entitlements });
 };
 
 const handleAdminGrantNovelEntitlement = async (request, env) => {
   const db = env.WAITLIST_DB;
-  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
 
   let payload;
   try {
     payload = await request.json();
   } catch {
-    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
   }
 
   let data;
   try {
     data = normalizeEntitlementPayload(payload);
   } catch (error) {
-    return json({ ok: false, message: error.message }, { status: 400 });
+    return privateJson({ ok: false, message: error.message }, { status: 400 });
   }
 
   const account = await upsertReaderAccount(db, data.email, data.normalizedEmail);
@@ -2371,7 +2399,26 @@ const handleAdminGrantNovelEntitlement = async (request, env) => {
     )
     .first();
 
-  return json({
+  const actorEmail = (await getAdminActorEmail(request, env)) || data.grantedBy || 'admin';
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: 'novel_entitlement.grant',
+    targetType: 'novel_entitlement',
+    targetId: String(entitlement.id),
+    targetSlug: `${data.seriesSlug}${data.chapterSlug ? `/${data.chapterSlug}` : ''}`,
+    metadata: {
+      accountId: account.id,
+      email: account.email,
+      scope: data.scope,
+      accessLevel: data.accessLevel,
+      source: data.source,
+      sourceRef: data.sourceRef,
+      expiresAt: data.expiresAt,
+      note: data.note
+    }
+  });
+
+  return privateJson({
     ok: true,
     entitlement: entitlementToJson({ ...entitlement, email: account.email }),
     entitlements: await listNovelEntitlements(db, data.normalizedEmail)
@@ -2380,19 +2427,31 @@ const handleAdminGrantNovelEntitlement = async (request, env) => {
 
 const handleAdminRevokeNovelEntitlement = async (request, env) => {
   const db = env.WAITLIST_DB;
-  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
 
   let payload;
   try {
     payload = await request.json();
   } catch {
-    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
   }
 
   const id = Number.parseInt(payload.id, 10);
   if (!Number.isFinite(id) || id < 1) {
-    return json({ ok: false, message: 'A valid entitlement id is required.' }, { status: 400 });
+    return privateJson({ ok: false, message: 'A valid entitlement id is required.' }, { status: 400 });
   }
+
+  const existing = await db
+    .prepare(
+      `SELECT novel_entitlements.*, reader_accounts.email
+       FROM novel_entitlements
+       LEFT JOIN reader_accounts ON reader_accounts.id = novel_entitlements.account_id
+       WHERE novel_entitlements.id = ?
+       LIMIT 1`
+    )
+    .bind(id)
+    .first();
+  if (!existing) return privateJson({ ok: false, message: 'Entitlement was not found.' }, { status: 404 });
 
   await db
     .prepare(
@@ -2404,8 +2463,26 @@ const handleAdminRevokeNovelEntitlement = async (request, env) => {
     .bind(id)
     .run();
 
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: 'novel_entitlement.revoke',
+    targetType: 'novel_entitlement',
+    targetId: String(id),
+    targetSlug: `${existing.series_slug}${existing.chapter_slug ? `/${existing.chapter_slug}` : ''}`,
+    metadata: {
+      accountId: existing.account_id,
+      email: existing.email,
+      scope: existing.scope,
+      accessLevel: existing.access_level,
+      source: existing.source,
+      sourceRef: existing.source_ref,
+      note: cleanText(payload.note, 500)
+    }
+  });
+
   const normalizedEmail = normalizeEmail(payload.email);
-  return json({
+  return privateJson({
     ok: true,
     entitlements: await listNovelEntitlements(db, isEmail(normalizedEmail) ? normalizedEmail : '')
   });
@@ -3894,30 +3971,45 @@ const handleAdminListNovelOrders = async (request, env) => {
 
   const url = new URL(request.url);
   const status = cleanText(url.searchParams.get('status'), 40).toLowerCase();
+  const orderType = cleanText(url.searchParams.get('orderType') || url.searchParams.get('type'), 40).toLowerCase();
+  const normalizedEmail = normalizeEmail(url.searchParams.get('email'));
+  const seriesSlug = cleanSlug(url.searchParams.get('series') || url.searchParams.get('seriesSlug'));
   const limit = Math.min(Math.max(Number.parseInt(url.searchParams.get('limit') || '50', 10) || 50, 1), 100);
 
-  const response = status
-    ? await db
-        .prepare(
-          `SELECT novel_orders.*, reader_accounts.email AS account_email
-           FROM novel_orders
-           LEFT JOIN reader_accounts ON reader_accounts.id = novel_orders.account_id
-           WHERE novel_orders.status = ?
-           ORDER BY novel_orders.updated_at DESC
-           LIMIT ?`
-        )
-        .bind(status, limit)
-        .all()
-    : await db
-        .prepare(
-          `SELECT novel_orders.*, reader_accounts.email AS account_email
-           FROM novel_orders
-           LEFT JOIN reader_accounts ON reader_accounts.id = novel_orders.account_id
-           ORDER BY novel_orders.updated_at DESC
-           LIMIT ?`
-        )
-        .bind(limit)
-        .all();
+  if (normalizedEmail && !isEmail(normalizedEmail)) {
+    return privateJson({ ok: false, message: 'Please enter a valid reader email.' }, { status: 400 });
+  }
+
+  const clauses = [];
+  const params = [];
+  if (status) {
+    clauses.push('novel_orders.status = ?');
+    params.push(status);
+  }
+  if (orderType) {
+    clauses.push('novel_orders.order_type = ?');
+    params.push(orderType);
+  }
+  if (normalizedEmail) {
+    clauses.push('reader_accounts.normalized_email = ?');
+    params.push(normalizedEmail);
+  }
+  if (seriesSlug) {
+    clauses.push('novel_orders.series_slug = ?');
+    params.push(seriesSlug);
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT novel_orders.*, reader_accounts.email AS account_email
+       FROM novel_orders
+       LEFT JOIN reader_accounts ON reader_accounts.id = novel_orders.account_id
+       ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
+       ORDER BY novel_orders.updated_at DESC, novel_orders.id DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
 
   return json({
     ok: true,
@@ -3925,11 +4017,398 @@ const handleAdminListNovelOrders = async (request, env) => {
   });
 };
 
+const findNovelOrderByAdminIdentifier = async (db, identifier) => {
+  const id = Number.parseInt(identifier?.id || identifier?.orderId || '', 10);
+  const orderToken = cleanText(identifier?.orderToken || identifier?.order || '', 100);
+  if (!id && !orderToken) return null;
+
+  return db
+    .prepare(
+      `SELECT novel_orders.*, reader_accounts.email AS account_email
+       FROM novel_orders
+       LEFT JOIN reader_accounts ON reader_accounts.id = novel_orders.account_id
+       WHERE (? > 0 AND novel_orders.id = ?)
+          OR (? <> '' AND novel_orders.order_token = ?)
+       LIMIT 1`
+    )
+    .bind(id || 0, id || 0, orderToken, orderToken)
+    .first();
+};
+
+const buildAdminOrderDetail = async (db, order) => {
+  const [events, fulfillment] = await Promise.all([
+    listNovelPaymentEventsForOrder(db, order.id),
+    summarizeNovelPaymentFulfillment(db, order)
+  ]);
+  return {
+    order: novelOrderToJson(order),
+    events,
+    fulfillment: {
+      ...fulfillment,
+      nextCheckSeconds: 0
+    }
+  };
+};
+
+const handleAdminGetNovelOrder = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const url = new URL(request.url);
+  const order = await findNovelOrderByAdminIdentifier(db, {
+    id: url.searchParams.get('id') || url.searchParams.get('orderId'),
+    orderToken: url.searchParams.get('order') || url.searchParams.get('orderToken')
+  });
+  if (!order) return privateJson({ ok: false, code: 'ORDER_NOT_FOUND', message: 'Order was not found.' }, { status: 404 });
+
+  return privateJson({
+    ok: true,
+    ...(await buildAdminOrderDetail(db, order))
+  });
+};
+
+const handleAdminFulfillNovelOrder = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const order = await findNovelOrderByAdminIdentifier(db, payload);
+  if (!order) return privateJson({ ok: false, code: 'ORDER_NOT_FOUND', message: 'Order was not found.' }, { status: 404 });
+  if (!order.account_id) {
+    return privateJson({ ok: false, code: 'ORDER_ACCOUNT_REQUIRED', message: 'This order is not linked to a reader account.' }, { status: 409 });
+  }
+  if (!novelPaymentGrantStatuses.includes(order.status)) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'ORDER_NOT_GRANTABLE',
+        message: 'Only confirmed or finished orders can be fulfilled automatically. Use manual entitlement or credit adjustment for support cases.'
+      },
+      { status: 409 }
+    );
+  }
+
+  const result =
+    order.order_type === novelCreditPackOrderType
+      ? { creditGrant: await applyCreditTopupFromOrder(db, order, env), entitlementGrant: { granted: false, reason: 'credit_pack_order' } }
+      : { entitlementGrant: await grantNovelEntitlementFromOrder(db, order), creditGrant: { credited: false, reason: 'reading_order' } };
+
+  const orderSourceRef = order.order_token || order.provider_payment_id || order.provider_order_id || `order-${order.id}`;
+  if (result.entitlementGrant.granted) {
+    await db
+      .prepare(
+        `UPDATE novel_entitlements
+         SET revoked_at = NULL,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE account_id = ?
+           AND source_ref = ?`
+      )
+      .bind(order.account_id, orderSourceRef)
+      .run();
+  }
+
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: 'novel_order.fulfill',
+    targetType: 'novel_order',
+    targetId: String(order.id),
+    targetSlug: order.order_token,
+    metadata: {
+      orderType: order.order_type,
+      status: order.status,
+      accountId: order.account_id,
+      restoredSourceRef: result.entitlementGrant.granted ? orderSourceRef : '',
+      entitlementGrant: result.entitlementGrant,
+      creditGrant: result.creditGrant
+    }
+  });
+
+  const refreshedOrder = await findNovelOrderByAdminIdentifier(db, { id: order.id });
+  return privateJson({
+    ok: true,
+    ...result,
+    ...(await buildAdminOrderDetail(db, refreshedOrder || order))
+  });
+};
+
+const handleAdminListReaderAccounts = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const url = new URL(request.url);
+  const normalizedEmail = normalizeEmail(url.searchParams.get('email'));
+  const status = cleanText(url.searchParams.get('status'), 40).toLowerCase();
+  const limit = Math.min(Math.max(Number.parseInt(url.searchParams.get('limit') || '50', 10) || 50, 1), 100);
+  if (normalizedEmail && !isEmail(normalizedEmail)) {
+    return privateJson({ ok: false, message: 'Please enter a valid reader email.' }, { status: 400 });
+  }
+
+  const clauses = [];
+  const params = [];
+  if (normalizedEmail) {
+    clauses.push('reader_accounts.normalized_email = ?');
+    params.push(normalizedEmail);
+  }
+  if (status) {
+    clauses.push('reader_accounts.status = ?');
+    params.push(status);
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT
+        reader_accounts.*,
+        reader_credit_accounts.balance_credits,
+        reader_credit_accounts.lifetime_purchased_credits,
+        reader_credit_accounts.lifetime_spent_credits,
+        reader_credit_accounts.currency_label,
+        reader_credit_accounts.created_at AS credit_created_at,
+        reader_credit_accounts.updated_at AS credit_updated_at,
+        (SELECT COUNT(*) FROM novel_orders WHERE novel_orders.account_id = reader_accounts.id) AS order_count,
+        (SELECT COUNT(*) FROM novel_entitlements
+         WHERE novel_entitlements.account_id = reader_accounts.id
+           AND novel_entitlements.revoked_at IS NULL
+           AND (novel_entitlements.expires_at IS NULL OR novel_entitlements.expires_at > CURRENT_TIMESTAMP)) AS active_entitlement_count,
+        (SELECT COUNT(*) FROM reader_credit_ledger WHERE reader_credit_ledger.account_id = reader_accounts.id) AS ledger_count,
+        (SELECT MAX(updated_at) FROM novel_orders WHERE novel_orders.account_id = reader_accounts.id) AS latest_order_at
+       FROM reader_accounts
+       LEFT JOIN reader_credit_accounts ON reader_credit_accounts.account_id = reader_accounts.id
+       ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
+       ORDER BY reader_accounts.updated_at DESC, reader_accounts.id DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+
+  const config = getReaderCreditConfig(env);
+  return privateJson({
+    ok: true,
+    accounts: (response.results || []).map((row) => readerAccountToAdminJson(row, config))
+  });
+};
+
+const findReaderAccountByAdminIdentifier = async (db, identifier) => {
+  const id = Number.parseInt(identifier?.id || identifier?.accountId || '', 10);
+  const normalizedEmail = normalizeEmail(identifier?.email);
+  if (!id && !normalizedEmail) return null;
+  if (normalizedEmail && !isEmail(normalizedEmail)) return null;
+
+  return db
+    .prepare(
+      `SELECT reader_accounts.*
+       FROM reader_accounts
+       WHERE (? > 0 AND reader_accounts.id = ?)
+          OR (? <> '' AND reader_accounts.normalized_email = ?)
+       LIMIT 1`
+    )
+    .bind(id || 0, id || 0, normalizedEmail, normalizedEmail)
+    .first();
+};
+
+const getAdminReaderAccountRow = async (db, accountId) =>
+  db
+    .prepare(
+      `SELECT
+        reader_accounts.*,
+        reader_credit_accounts.balance_credits,
+        reader_credit_accounts.lifetime_purchased_credits,
+        reader_credit_accounts.lifetime_spent_credits,
+        reader_credit_accounts.currency_label,
+        reader_credit_accounts.created_at AS credit_created_at,
+        reader_credit_accounts.updated_at AS credit_updated_at,
+        (SELECT COUNT(*) FROM novel_orders WHERE novel_orders.account_id = reader_accounts.id) AS order_count,
+        (SELECT COUNT(*) FROM novel_entitlements
+         WHERE novel_entitlements.account_id = reader_accounts.id
+           AND novel_entitlements.revoked_at IS NULL
+           AND (novel_entitlements.expires_at IS NULL OR novel_entitlements.expires_at > CURRENT_TIMESTAMP)) AS active_entitlement_count,
+        (SELECT COUNT(*) FROM reader_credit_ledger WHERE reader_credit_ledger.account_id = reader_accounts.id) AS ledger_count,
+        (SELECT MAX(updated_at) FROM novel_orders WHERE novel_orders.account_id = reader_accounts.id) AS latest_order_at
+       FROM reader_accounts
+       LEFT JOIN reader_credit_accounts ON reader_credit_accounts.account_id = reader_accounts.id
+       WHERE reader_accounts.id = ?
+       LIMIT 1`
+    )
+    .bind(accountId)
+    .first();
+
+const listNovelOrdersForAccount = async (db, accountId) => {
+  const response = await db
+    .prepare(
+      `SELECT novel_orders.*, reader_accounts.email AS account_email
+       FROM novel_orders
+       LEFT JOIN reader_accounts ON reader_accounts.id = novel_orders.account_id
+       WHERE novel_orders.account_id = ?
+       ORDER BY novel_orders.updated_at DESC, novel_orders.id DESC
+       LIMIT 20`
+    )
+    .bind(accountId)
+    .all();
+  return (response.results || []).map(novelOrderToJson);
+};
+
+const handleAdminGetReaderAccount = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const url = new URL(request.url);
+  const account = await findReaderAccountByAdminIdentifier(db, {
+    id: url.searchParams.get('id') || url.searchParams.get('accountId'),
+    email: url.searchParams.get('email')
+  });
+  if (!account) return privateJson({ ok: false, code: 'READER_ACCOUNT_NOT_FOUND', message: 'Reader account was not found.' }, { status: 404 });
+
+  await ensureReaderCreditAccount(db, account.id, getReaderCreditConfig(env));
+  const [row, creditSummary, entitlements, orders] = await Promise.all([
+    getAdminReaderAccountRow(db, account.id),
+    getReaderCreditSummary(db, account.id, env),
+    listNovelEntitlements(db, account.normalized_email),
+    listNovelOrdersForAccount(db, account.id)
+  ]);
+
+  return privateJson({
+    ok: true,
+    account: readerAccountToAdminJson(row, getReaderCreditConfig(env)),
+    credits: creditSummary.account,
+    creditLedger: creditSummary.ledger,
+    entitlements,
+    orders
+  });
+};
+
+const handleAdminAdjustReaderCredits = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const creditsDelta = Number.parseInt(payload.creditsDelta || payload.delta || '', 10);
+  if (!Number.isFinite(creditsDelta) || creditsDelta === 0) {
+    return privateJson({ ok: false, message: 'creditsDelta must be a non-zero integer.' }, { status: 400 });
+  }
+  const note = cleanText(payload.note, 1000);
+  if (!note) return privateJson({ ok: false, message: 'A note is required for manual credit adjustments.' }, { status: 400 });
+
+  let account = await findReaderAccountByAdminIdentifier(db, payload);
+  const normalizedEmail = normalizeEmail(payload.email);
+  if (!account && isEmail(normalizedEmail)) {
+    account = await upsertReaderAccount(db, payload.email, normalizedEmail);
+  }
+  if (!account) return privateJson({ ok: false, code: 'READER_ACCOUNT_NOT_FOUND', message: 'Reader account was not found.' }, { status: 404 });
+
+  await ensureReaderCreditAccount(db, account.id, getReaderCreditConfig(env));
+  const sourceRef = cleanText(payload.sourceRef, 120) || `manual-credit-${randomToken(12)}`;
+  const updatedAccount = creditsDelta > 0
+    ? await db
+        .prepare(
+          `UPDATE reader_credit_accounts
+           SET balance_credits = balance_credits + ?,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE account_id = ?
+           RETURNING *`
+        )
+        .bind(creditsDelta, account.id)
+        .first()
+    : await db
+        .prepare(
+          `UPDATE reader_credit_accounts
+           SET balance_credits = balance_credits + ?,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE account_id = ?
+             AND balance_credits >= ?
+           RETURNING *`
+        )
+        .bind(creditsDelta, account.id, Math.abs(creditsDelta))
+        .first();
+
+  if (!updatedAccount) {
+    const summary = await getReaderCreditSummary(db, account.id, env);
+    return privateJson(
+      {
+        ok: false,
+        code: 'INSUFFICIENT_CREDITS',
+        message: 'Manual deduction would make the reader balance negative.',
+        ...summary
+      },
+      { status: 409 }
+    );
+  }
+
+  const ledger = await db
+    .prepare(
+      `INSERT INTO reader_credit_ledger (
+        account_id, entry_type, credits_delta, balance_after, source, source_ref,
+        series_slug, chapter_slug, note, metadata_json
+      )
+      VALUES (?, 'admin_adjustment', ?, ?, ?, ?, ?, ?, ?, ?)
+      RETURNING *`
+    )
+    .bind(
+      account.id,
+      creditsDelta,
+      updatedAccount.balance_credits,
+      novelAdminManualCreditSource,
+      sourceRef,
+      cleanSlug(payload.seriesSlug),
+      cleanSlug(payload.chapterSlug),
+      note,
+      JSON.stringify({
+        actor: await getAdminActorEmail(request, env),
+        reason: cleanText(payload.reason, 120),
+        source: novelAdminSource
+      })
+    )
+    .first();
+
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: 'reader_credits.adjust',
+    targetType: 'reader_account',
+    targetId: String(account.id),
+    targetSlug: account.normalized_email,
+    metadata: {
+      creditsDelta,
+      balanceAfter: updatedAccount.balance_credits,
+      ledgerId: ledger.id,
+      note
+    }
+  });
+
+  const [row, creditSummary, entitlements, orders] = await Promise.all([
+    getAdminReaderAccountRow(db, account.id),
+    getReaderCreditSummary(db, account.id, env),
+    listNovelEntitlements(db, account.normalized_email),
+    listNovelOrdersForAccount(db, account.id)
+  ]);
+
+  return privateJson({
+    ok: true,
+    ledger: readerCreditLedgerToJson(ledger),
+    account: readerAccountToAdminJson(row, getReaderCreditConfig(env)),
+    credits: creditSummary.account,
+    creditLedger: creditSummary.ledger,
+    entitlements,
+    orders
+  });
+};
+
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '7E-B',
-    purpose: 'Backend content management with persisted pricing rules consumed by reader-facing checkout.',
+    stage: '7F',
+    purpose: 'Backend content management with pricing, order, reader account, credit, entitlement, and audit operations centered in Admin 2.0.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -3965,7 +4444,8 @@ const handleAdminContentSchema = async (env) =>
       protectedContent: 'Paid/supporter chapter HTML is loaded from CONTENT_BUCKET after entitlement checks.',
       dynamicFrontend: 'Published backend content can render public Blog and serial pages without a site rebuild.',
       checkoutPricing: 'Reader-facing checkout resolves content_pricing_rules before generated static config and env defaults.',
-      nextStages: ['7F fuller order/account/entitlement management']
+      commerceAdmin: 'Admin 2.0 can inspect orders, reader accounts, credit ledger, entitlements, and rerun paid-order fulfillment.',
+      nextStages: ['7G legacy Markdown migration', '7H media cover upload']
     }
   });
 
@@ -6233,6 +6713,31 @@ export default {
     if (url.pathname === '/admin/api/novels/payments/orders') {
       if (request.method === 'GET') return handleAdminListNovelOrders(request, env);
       return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/novels/payments/order') {
+      if (request.method === 'GET') return handleAdminGetNovelOrder(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/novels/payments/orders/fulfill') {
+      if (request.method === 'POST') return handleAdminFulfillNovelOrder(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/novels/readers/accounts') {
+      if (request.method === 'GET') return handleAdminListReaderAccounts(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/novels/readers/account') {
+      if (request.method === 'GET') return handleAdminGetReaderAccount(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/novels/readers/credits/adjust') {
+      if (request.method === 'POST') return handleAdminAdjustReaderCredits(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
     if (url.pathname === '/admin/api/content/schema') {

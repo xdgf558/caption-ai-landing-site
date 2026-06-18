@@ -22,9 +22,10 @@ The old `/admin/` GitHub-token Markdown editor remains available during validati
 The page has four primary areas:
 
 - Content: list, create, edit, import Markdown, preview, and publish backend content entries.
-- Orders: read the existing novel payment order API for payment troubleshooting.
-- Entitlements: query, grant, and revoke reader access.
-- Audit: read `admin_audit_logs` for backend content operations.
+- Orders: filter orders, inspect payment events, and rerun eligible paid-order fulfillment.
+- Reader accounts: inspect balances, credit ledger, recent orders, and entitlements.
+- Entitlements: query, grant, and revoke reader access with audit logs.
+- Audit: read `admin_audit_logs` for content and commerce operations.
 
 ## New Admin APIs
 
@@ -115,6 +116,8 @@ Admin 2.0 writes pricing controls into `content_entries.pricing_json`:
 Stage 7E-A promotes these settings into `content_pricing_rules` whenever a content entry is saved. The content row still keeps the full `pricing_json` snapshot, while the rules table now stores normalized rows for pricing mode, free chapters, chapter price, supporter price, tip amounts, bundle discounts, and credit packs.
 
 Stage 7E-B makes the frontend checkout flow consume these backend rules directly through `/api/novels/pricing`, NOWPayments checkout, and reading-credit unlocks.
+
+Stage 7F expands Admin 2.0 into the main commerce support surface for reader accounts, orders, credit ledger, entitlement management, fulfillment retry, and audit visibility. New admin functionality should be built here rather than added to the old `/admin/` GitHub-token Markdown editor.
 
 ## Current Boundary
 

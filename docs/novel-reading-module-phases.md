@@ -229,6 +229,9 @@
 1. 完整订单列表、筛选、失败订单排查。
 2. 读者账户、余额、流水、授权记录管理。
 3. 手动补单、手动授权、撤销授权全部进入审计日志。
+4. 新功能全部进入 Admin 2.0；旧 `/admin/` 只保留迁移期兼容，不再扩展新能力。
+
+当前实现见 [order-account-admin-7f.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/order-account-admin-7f.md:1)。
 
 ### 阶段 7G：旧 Markdown 内容迁移与旧后台下线
 
@@ -236,11 +239,11 @@
 2. 校验 slug、语言、发布时间、章节顺序和 SEO 数据。
 3. 移除旧 GitHub token 写 Markdown 后台。
 
-## 当前执行：阶段 7E-B
+## 当前执行：阶段 7F
 
-阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台，阶段 7D 已让前台小说和 Blog/Devlog 支持读取后端发布内容。当前进入 7E-B，把前台购买入口、阅读点扣除和 NOWPayments 下单改为优先消费后台收费规则。
+阶段 7A 已完成后端内容模型和迁移基础，阶段 7B 已把受保护章节正文读取迁移到 R2，阶段 7C 已新增 `/admin-v2/` 后台内容平台，阶段 7D 已让前台小说和 Blog/Devlog 支持读取后端发布内容，阶段 7E 已把收费规则和前台购买入口切到后端规则优先。当前进入 7F，把订单、账户、余额、授权和审计管理集中到 Admin 2.0。
 
-详细文档见 [backend-pricing-checkout-7e-b.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/backend-pricing-checkout-7e-b.md:1)。
+详细文档见 [order-account-admin-7f.md](/Users/shaola/Downloads/软件开发/多品牌网站开发相关/landing-site/docs/order-account-admin-7f.md:1)。
 
 ## 已完成：阶段 6C
 
