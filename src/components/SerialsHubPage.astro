@@ -22,6 +22,7 @@ interface CopyShape {
   latestLabel: string;
   libraryLabel: string;
   openSeries: string;
+  readFirst: string;
   readLatest: string;
   plannedLabel: string;
   scheduleLabel: string;
@@ -43,6 +44,27 @@ interface Props {
 const { basePath, copy, featuredLatestChapter, featuredSerial, locale, serials } = Astro.props;
 const featuredCoverText = featuredSerial?.data.coverLabel ?? featuredSerial?.data.title;
 const staticSerialSlugs = serials.map((serial) => serial.data.seriesSlug);
+const mediaUrlForKey = (key: string) => `/api/content/media?key=${encodeURIComponent(key)}`;
+const backendSpotlightByLocale = {
+  'zh-Hant': {
+    accessLabel: '付費連載',
+    author: 'Station Cat',
+    coverAlt: '《离线未来》封面，1999 年舊房間、CRT 電腦和離線 AI 重啟。',
+    coverUrl: mediaUrlForKey('content/media/covers/2026/06/cmqjfju1300008z3wyh66ynvw-offline-future-cover.png'),
+    description:
+      '故事從 1999 年的一個夜晚開始：風扇、舊電腦、未連網的房間，和一個本不該在那個年代醒來的 AI。',
+    firstChapterHref: `${basePath}cmqjfju1300008z3wyh66ynvw/chap-offline-future-001/`,
+    freeChapters: '前 20 章',
+    href: `${basePath}cmqjfju1300008z3wyh66ynvw/`,
+    latest: '第 1 章 1999年的风扇声',
+    schedule: '不定期連載，完成後會同步更新章節順序',
+    status: '連載中',
+    subtitle: '1999 · Offline AI · Rebirth',
+    tagline: '離線 AI、舊年代電腦、記憶和一次慢慢展開的重啟。',
+    title: '离线未来'
+  }
+} as const;
+const backendSpotlight = backendSpotlightByLocale[locale as keyof typeof backendSpotlightByLocale];
 const backendShelfCopy = {
   en: {
     empty: 'No backend-published serials are waiting outside the static shelf.',
@@ -59,11 +81,11 @@ const backendShelfCopy = {
     title: '新しく公開された連載。'
   },
   'zh-Hant': {
-    empty: '目前沒有額外從後台發布的連載。',
-    eyebrow: '後台新發布',
+    empty: '目前沒有更多後台發布的連載。',
+    eyebrow: '已上架',
     readLabel: copy.openSeries,
-    sourceLabel: 'Admin 2.0',
-    title: '從後台即時發布的連載。'
+    sourceLabel: '連載中',
+    title: '目前可以閱讀的作品。'
   },
   'zh-Hans': {
     empty: '目前没有额外从后台发布的连载。',
@@ -76,19 +98,29 @@ const backendShelfCopy = {
 ---
 
 <section class="works-hero serials-hero">
-  <p class="station-kicker">{copy.eyebrow}</p>
-  <h1>{copy.heroTitle}</h1>
-  <p>{copy.heroDescription}</p>
-  <p class="fine-print">{copy.heroNote}</p>
-  <div class="button-row">
-    {featuredSerial ? (
-      <a class="button button-primary" href={getSeriesHref(basePath, featuredSerial.data.seriesSlug)}>{copy.heroPrimary}</a>
-    ) : (
-      <a class="button button-primary" href="#serial-shelf">{copy.heroSecondary}</a>
-    )}
-    <a class="button button-secondary" href="#serial-shelf">{copy.heroSecondary}</a>
-    <a class="button button-secondary" href="/library/">{copy.libraryLabel}</a>
+  <div class="serials-hero__copy">
+    <p class="station-kicker">{copy.eyebrow}</p>
+    <h1>{copy.heroTitle}</h1>
+    <p>{copy.heroDescription}</p>
+    <p class="fine-print">{copy.heroNote}</p>
+    <div class="button-row">
+      {featuredSerial ? (
+        <a class="button button-primary" href={getSeriesHref(basePath, featuredSerial.data.seriesSlug)}>{copy.heroPrimary}</a>
+      ) : backendSpotlight ? (
+        <a class="button button-primary" href={backendSpotlight.firstChapterHref}>{copy.heroPrimary}</a>
+      ) : (
+        <a class="button button-primary" href="#serial-shelf">{copy.heroSecondary}</a>
+      )}
+      {backendSpotlight && <a class="button button-secondary" href={backendSpotlight.href}>{copy.heroSecondary}</a>}
+      {!backendSpotlight && <a class="button button-secondary" href="#serial-shelf">{copy.heroSecondary}</a>}
+      <a class="button button-secondary" href="/library/">{copy.libraryLabel}</a>
+    </div>
   </div>
+  {backendSpotlight && (
+    <a class="serial-cover serials-hero__cover" href={backendSpotlight.href} aria-label={backendSpotlight.title}>
+      <img src={backendSpotlight.coverUrl} alt={backendSpotlight.coverAlt} loading="eager" />
+    </a>
+  )}
 </section>
 
 <section class="station-section">
@@ -157,6 +189,47 @@ const backendShelfCopy = {
         <p>{featuredSerial.data.tagline}</p>
       </div>
     </article>
+  ) : backendSpotlight ? (
+    <article class="serial-feature-card serial-feature-card--backend">
+      <div class="serial-feature-card__copy">
+        <div class="serial-feature-card__meta">
+          <span class="paper-stamp">{backendSpotlight.status}</span>
+          <span>{copy.authorLabel}: {backendSpotlight.author}</span>
+          <span>{copy.accessLabel}: {backendSpotlight.accessLabel}</span>
+        </div>
+        <h2>{backendSpotlight.title}</h2>
+        <p class="fine-print">{backendSpotlight.subtitle}</p>
+        <p>{backendSpotlight.description}</p>
+        <div class="serial-feature-card__facts">
+          <div>
+            <span>{copy.scheduleLabel}</span>
+            <strong>{backendSpotlight.schedule}</strong>
+          </div>
+          <div>
+            <span>{copy.freeLabel}</span>
+            <strong>{backendSpotlight.freeChapters}</strong>
+          </div>
+          <div>
+            <span>{copy.latestLabel}</span>
+            <strong>{backendSpotlight.latest}</strong>
+          </div>
+          <div>
+            <span>{copy.accessLabel}</span>
+            <strong>第 21 章起 0.1 USD / 1 閱讀點</strong>
+          </div>
+        </div>
+        <div class="button-row">
+          <a class="button button-primary" href={backendSpotlight.firstChapterHref}>{copy.readFirst}</a>
+          <a class="button button-secondary" href={backendSpotlight.href}>{copy.openSeries}</a>
+        </div>
+      </div>
+      <div class="serial-feature-card__aside">
+        <a class="serial-cover serial-feature-card__cover" href={backendSpotlight.href} aria-label={backendSpotlight.title}>
+          <img src={backendSpotlight.coverUrl} alt={backendSpotlight.coverAlt} loading="lazy" />
+        </a>
+        <p>{backendSpotlight.tagline}</p>
+      </div>
+    </article>
   ) : (
     <p class="empty-state">{copy.featuredEmpty}</p>
   )}
@@ -173,9 +246,9 @@ const backendShelfCopy = {
         <SerialCard serial={serial} locale={locale} basePath={basePath} copy={copy} />
       ))}
     </div>
-  ) : (
+  ) : !backendSpotlight ? (
     <p class="empty-state">{copy.shelfEmpty}</p>
-  )}
+  ) : null}
   <BackendContentShelf
     basePath={basePath}
     copy={backendShelfCopy[locale]}

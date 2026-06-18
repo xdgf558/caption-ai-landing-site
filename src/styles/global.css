@@ -4485,6 +4485,27 @@ body.station-paper-page {
   padding: 24px;
 }
 
+.serials-hero {
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 340px);
+}
+
+.serials-hero__copy {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.serials-hero__copy p {
+  max-width: 760px;
+}
+
+.serials-hero__cover {
+  aspect-ratio: 2 / 3;
+  min-height: 360px;
+  padding: 0;
+}
+
 .serial-detail-hero {
   align-items: center;
   display: grid;
@@ -4574,6 +4595,10 @@ body.station-paper-page {
 .serial-card__cover {
   margin-bottom: 16px;
   min-height: 230px;
+}
+
+.serial-feature-card--backend .serial-feature-card__cover {
+  aspect-ratio: 2 / 3;
 }
 
 .serial-detail-hero__cover,
@@ -4699,19 +4724,19 @@ body.station-paper-page {
 
 .station-paper-page .serial-card,
 .station-paper-page .serial-chapter-card {
-  transform: rotate(-0.35deg);
+  transform: none;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .station-paper-page .serial-card:nth-child(even),
 .station-paper-page .serial-chapter-card:nth-child(even) {
-  transform: rotate(0.35deg);
+  transform: none;
 }
 
 .station-paper-page .serial-card:hover,
 .station-paper-page .serial-chapter-card:hover {
   box-shadow: 0 18px 34px rgba(80, 55, 35, 0.15);
-  transform: translateY(-3px) rotate(0deg);
+  transform: translateY(-3px);
 }
 
 .station-paper-page .serial-card__copy h3 a,
@@ -5731,9 +5756,16 @@ body.station-paper-page.caption-product-page {
     padding: 22px;
   }
 
+  .station-paper-page .works-hero h1 {
+    font-size: 31px;
+    line-height: 1.14;
+    overflow-wrap: anywhere;
+  }
+
   .serial-card-grid,
   .serial-detail-grid,
   .serial-feature-card,
+  .serials-hero,
   .serial-detail-hero,
   .reader-library-grid {
     grid-template-columns: 1fr;
@@ -5749,6 +5781,12 @@ body.station-paper-page.caption-product-page {
   .serial-detail-hero__cover,
   .serial-feature-card__cover {
     min-height: 220px;
+  }
+
+  .serials-hero__cover {
+    justify-self: center;
+    min-height: 0;
+    width: min(72vw, 250px);
   }
 
   .station-paper-page .phone-visual,

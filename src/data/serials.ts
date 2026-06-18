@@ -1,4 +1,5 @@
 import type { CollectionEntry } from 'astro:content';
+import { existsSync } from 'node:fs';
 
 export type SiteLocale = 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
 export type SerialEntry = CollectionEntry<'serials'>;
@@ -187,21 +188,21 @@ export const serialsCopy = {
   },
   'zh-Hant': {
     navLabel: '連載小說',
-    title: 'Station Cat 連載小說',
-    description: '一個放長篇小說、更新順序和後續讀者支持入口的小書架。',
+    title: '離線未來｜Station Cat 連載小說',
+    description: 'Station Cat 的長篇連載小說入口。目前主連載為《离线未来》，保留作品介紹、章節順序、閱讀入口和後續付費規則。',
     eyebrow: '連載小說',
-    heroTitle: '給長篇小說的一個閱讀書架。',
-    heroDescription: '原本的作品集模組，先被改造成長篇連載入口，讓小說、章節順序和後續支持功能都能有固定位置。',
-    heroNote: '第一版先維持輕量：小說書架、作品頁、章節頁，先把閱讀秩序搭起來。',
-    heroPrimary: '打開主推作品',
-    heroSecondary: '看全部書架',
+    heroTitle: '《离线未来》正在連載。',
+    heroDescription: '1999 年，一台離線舊電腦裡的 AI 重新醒來。這裡是 Station Cat 長篇小說的固定入口，會保留作品說明、章節順序、更新狀態和後續付費閱讀規則。',
+    heroNote: '目前先公開首章與作品頁。前 20 章免費閱讀，第 21 章開始會按閱讀點或單章購買解鎖。',
+    heroPrimary: '開始閱讀',
+    heroSecondary: '查看章節',
     libraryLabel: '我的書庫',
-    featuredEyebrow: '主推作品',
-    featuredTitle: '目前正在準備的長篇作品。',
-    shelfEyebrow: '書架',
-    shelfTitle: '目前公開的連載。',
+    featuredEyebrow: '主推長篇',
+    featuredTitle: '當前連載。',
+    shelfEyebrow: '作品書架',
+    shelfTitle: '已發布的長篇連載。',
     featuredEmpty: '主推作品很快會出現在這裡。',
-    shelfEmpty: '小說書架正在整理中。',
+    shelfEmpty: '目前沒有可公開閱讀的連載。',
     openSeries: '打開作品',
     readChapter: '閱讀章節',
     readLatest: '閱讀最新章',
@@ -286,8 +287,10 @@ export const getPriceModeLabel = (priceMode: SerialEntry['data']['priceMode'], l
 export const getChapterAccessLabel = (access: SerialChapterEntry['data']['access'], locale: SiteLocale) =>
   chapterAccessLabels[locale][access];
 
+const contentSourceExists = (entry: { filePath?: string }) => !entry.filePath || existsSync(entry.filePath);
+
 export const getVisibleSerials = (serials: SerialEntry[]) =>
-  [...serials].sort((a, b) => {
+  serials.filter(contentSourceExists).sort((a, b) => {
     if (a.data.featured !== b.data.featured) {
       return a.data.featured ? -1 : 1;
     }
@@ -298,7 +301,7 @@ export const getVisibleSerials = (serials: SerialEntry[]) =>
 
 export const getPublishedChapters = (chapters: SerialChapterEntry[], seriesSlug: string) =>
   chapters
-    .filter((chapter) => chapter.data.seriesSlug === seriesSlug && chapter.data.status === 'published')
+    .filter((chapter) => contentSourceExists(chapter) && chapter.data.seriesSlug === seriesSlug && chapter.data.status === 'published')
     .sort((a, b) => a.data.chapterNumber - b.data.chapterNumber);
 
 export const getLatestChapter = (chapters: SerialChapterEntry[]) => {

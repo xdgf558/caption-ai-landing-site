@@ -28,7 +28,7 @@ const config = {
 const configJson = JSON.stringify(config).replace(/</g, '\\u003c');
 ---
 
-<section class="backend-content-shelf" data-backend-content-shelf hidden>
+<section class={`backend-content-shelf backend-content-shelf--${entryType}`} data-backend-content-shelf hidden>
   <div class="station-section__heading">
     <p class="station-kicker">{copy.eyebrow}</p>
     <h2>{copy.title}</h2>
@@ -60,27 +60,39 @@ const configJson = JSON.stringify(config).replace(/</g, '\\u003c');
       }).format(date);
     };
 
+    const accessLabels = {
+      en: { free: 'Free', member: 'Members', paid: 'Paid', supporter: 'Supporters' },
+      ja: { free: '無料', member: 'メンバー', paid: '有料', supporter: '支援者向け' },
+      'zh-Hant': { free: '免費', member: '會員', paid: '付費', supporter: '支持者' },
+      'zh-Hans': { free: '免费', member: '会员', paid: '付费', supporter: '支持者' }
+    };
+
+    const formatAccess = (value, locale) => accessLabels[locale]?.[value] || value;
+
     const cardHref = (config, entry) => `${config.basePath}${entry.slug}/`;
 
     const renderCard = (config, entry) => {
       const copy = config.copy;
       const date = formatDate(entry.publishedAt || entry.updatedAt, config.locale);
-      const meta = [date, entry.authorName, entry.accessLevel].filter(Boolean);
+      const meta = [date, entry.authorName, formatAccess(entry.accessLevel, config.locale)].filter(Boolean);
       const href = cardHref(config, entry);
+      const isNovel = config.entryType === 'novel_series';
       const cover = entry.coverUrl
-        ? `<a class="backend-content-card__cover" href="${escapeHtml(href)}">
+        ? `<a class="backend-content-card__cover${isNovel ? ' backend-content-card__cover--book' : ''}" href="${escapeHtml(href)}">
             <img src="${escapeHtml(entry.coverUrl)}" alt="${escapeHtml(entry.coverAlt || `${entry.title} cover`)}" loading="lazy" />
           </a>`
         : '';
-      return `<article class="backend-content-card">
+      return `<article class="backend-content-card${isNovel ? ' backend-content-card--novel' : ''}">
         ${cover}
-        <div class="backend-content-card__meta">
-          <span>${escapeHtml(copy.sourceLabel)}</span>
-          ${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}
+        <div class="backend-content-card__body">
+          <div class="backend-content-card__meta">
+            <span>${escapeHtml(copy.sourceLabel)}</span>
+            ${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}
+          </div>
+          <h3><a href="${escapeHtml(href)}">${escapeHtml(entry.title)}</a></h3>
+          <p>${escapeHtml(entry.description || entry.excerpt || '')}</p>
+          <a class="paper-link" href="${escapeHtml(href)}">${escapeHtml(copy.readLabel)}</a>
         </div>
-        <h3><a href="${escapeHtml(href)}">${escapeHtml(entry.title)}</a></h3>
-        <p>${escapeHtml(entry.description || entry.excerpt || '')}</p>
-        <a class="paper-link" href="${escapeHtml(href)}">${escapeHtml(copy.readLabel)}</a>
       </article>`;
     };
 
@@ -149,6 +161,17 @@ const configJson = JSON.stringify(config).replace(/</g, '\\u003c');
     padding: 20px;
   }
 
+  .backend-content-card--novel {
+    align-items: start;
+    grid-template-columns: minmax(130px, 180px) minmax(0, 1fr);
+  }
+
+  .backend-content-card__body {
+    align-content: start;
+    display: grid;
+    gap: 12px;
+  }
+
   .backend-content-card h3 {
     font-size: clamp(1.2rem, 2.5vw, 1.55rem);
     margin: 0;
@@ -166,6 +189,11 @@ const configJson = JSON.stringify(config).replace(/</g, '\\u003c');
     display: block;
     margin: -6px -6px 2px;
     overflow: hidden;
+  }
+
+  .backend-content-card__cover--book {
+    aspect-ratio: 2 / 3;
+    margin: 0;
   }
 
   .backend-content-card__cover img {
@@ -196,6 +224,16 @@ const configJson = JSON.stringify(config).replace(/</g, '\\u003c');
   @media (max-width: 720px) {
     .backend-content-shelf__grid {
       grid-template-columns: 1fr;
+    }
+
+    .backend-content-card--novel {
+      grid-template-columns: 1fr;
+    }
+
+    .backend-content-card__cover--book {
+      justify-self: center;
+      max-width: 220px;
+      width: min(70vw, 220px);
     }
   }
 </style>

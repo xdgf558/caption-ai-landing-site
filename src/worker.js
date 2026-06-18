@@ -1202,6 +1202,8 @@ const dynamicContentCopy = {
     free: 'Free',
     lockedBody: 'Sign in from the library to check whether this account can read the chapter.',
     lockedTitle: 'This chapter is reserved for unlocked readers.',
+    nextChapter: 'Next chapter',
+    previousChapter: 'Previous chapter',
     read: 'Read',
     readFirst: 'Read from chapter one',
     readLatest: 'Read latest chapter',
@@ -1224,6 +1226,8 @@ const dynamicContentCopy = {
     free: '無料',
     lockedBody: '本棚にログインして、このアカウントで読めるか確認してください。',
     lockedTitle: 'この章は解放済み読者向けです。',
+    nextChapter: '次の章',
+    previousChapter: '前の章',
     read: '読む',
     readFirst: '第一章から読む',
     readLatest: '最新章を読む',
@@ -1246,6 +1250,8 @@ const dynamicContentCopy = {
     free: '免費',
     lockedBody: '請先從書庫登入，確認這個帳戶是否可以閱讀本章。',
     lockedTitle: '這一章保留給已解鎖讀者。',
+    nextChapter: '下一章',
+    previousChapter: '上一章',
     read: '閱讀',
     readFirst: '從第一章開始',
     readLatest: '閱讀最新章',
@@ -1268,6 +1274,8 @@ const dynamicContentCopy = {
     free: '免费',
     lockedBody: '请先从书库登录，确认这个账户是否可以阅读本章。',
     lockedTitle: '这一章保留给已解锁读者。',
+    nextChapter: '下一章',
+    previousChapter: '上一章',
     read: '阅读',
     readFirst: '从第一章开始',
     readLatest: '阅读最新章',
@@ -1292,6 +1300,31 @@ const dynamicAccessLabels = {
   paid: 'Paid',
   supporter: 'Supporters'
 };
+
+const dynamicAccessLabelsByLocale = {
+  en: dynamicAccessLabels,
+  ja: {
+    free: '無料',
+    member: 'メンバー',
+    paid: '有料',
+    supporter: '支援者向け'
+  },
+  'zh-Hant': {
+    free: '免費',
+    member: '會員',
+    paid: '付費',
+    supporter: '支持者'
+  },
+  'zh-Hans': {
+    free: '免费',
+    member: '会员',
+    paid: '付费',
+    supporter: '支持者'
+  }
+};
+
+const getDynamicAccessLabel = (accessLevel, locale) =>
+  dynamicAccessLabelsByLocale[locale]?.[accessLevel] || dynamicAccessLabels[accessLevel] || accessLevel;
 
 const normalizeContentPayload = (payload = {}) => {
   const entryType = normalizeContentEntryType(payload.entryType || payload.type);
@@ -6780,6 +6813,9 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .nav a, .text-link { color: var(--muted); font-size: 15px; font-weight: 800; text-decoration: none; }
       .nav a:hover, .text-link:hover { color: var(--teal); }
       .hero, .section { display: grid; gap: 18px; margin-bottom: 48px; }
+      .hero--novel { align-items: center; grid-template-columns: minmax(0, 1fr) minmax(220px, 320px); }
+      .hero--chapter { margin-left: auto; margin-right: auto; max-width: 820px; width: 100%; }
+      .hero-copy { display: grid; gap: 18px; }
       .kicker { color: var(--teal); font-size: 12px; font-weight: 950; letter-spacing: .08em; margin: 0; text-transform: uppercase; }
       h1, h2, h3 { color: var(--ink); line-height: 1.08; margin: 0; text-wrap: balance; }
       h1 { font-size: clamp(36px, 7vw, 72px); max-width: 920px; }
@@ -6793,6 +6829,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .card { text-decoration: none; }
       .card:hover { border-color: rgba(8,121,109,.35); transform: translateY(-1px); }
       .hero-cover { aspect-ratio: 16 / 10; background: var(--soft); border: 1px solid var(--line); border-radius: 14px; margin: 6px 0 0; max-width: 780px; overflow: hidden; }
+      .hero-cover--book { aspect-ratio: 2 / 3; border-radius: 10px; box-shadow: 0 18px 44px rgba(23, 30, 27, .18); margin: 0; max-width: 320px; width: 100%; }
       .hero-cover img { display: block; height: 100%; object-fit: cover; width: 100%; }
       .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
       .button { align-items: center; border: 1px solid var(--ink); border-radius: 8px; display: inline-flex; font-weight: 900; justify-content: center; min-height: 44px; padding: 10px 14px; text-decoration: none; }
@@ -6802,12 +6839,25 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .prose h1 { font-size: 34px; }
       .prose h2 { font-size: 28px; margin-top: 12px; }
       .prose h3 { font-size: 22px; margin-top: 8px; }
+      .prose p { color: #283631; overflow-wrap: break-word; }
       .prose ul { display: grid; gap: 8px; margin: 0; padding-left: 22px; }
       .prose li { color: var(--muted); font-size: 17px; line-height: 1.75; }
+      .prose--reader { margin-left: auto; margin-right: auto; max-width: 760px; width: 100%; }
+      .prose--reader p { font-size: clamp(18px, 4.5vw, 20px); line-height: 1.95; }
+      .prose--protected { opacity: 0; transform: translateY(8px); transition: opacity 180ms ease, transform 180ms ease; }
+      .prose--protected.prose--ready { opacity: 1; transform: translateY(0); }
       .status { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 15px; font-weight: 800; padding: 12px; }
       .status[data-tone="success"] { border-color: rgba(8,121,109,.32); color: var(--teal); }
       .status[data-tone="error"] { border-color: rgba(217,93,69,.4); color: var(--coral); }
-      @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .topbar { align-items: flex-start; flex-direction: column; } }
+      @media (max-width: 760px) {
+        .shell { padding: 18px 14px 56px; }
+        .grid, .hero--novel { grid-template-columns: 1fr; }
+        .topbar { align-items: flex-start; flex-direction: column; margin-bottom: 28px; }
+        .hero-cover--book { justify-self: center; max-width: 240px; }
+        .button-row { align-items: stretch; flex-direction: column; }
+        .button { width: 100%; }
+        .prose { border-radius: 10px; padding: 18px 16px; }
+      }
     </style>
   </head>
   <body>
@@ -6836,11 +6886,12 @@ const dynamicHtmlResponse = (request, payload, init = {}) =>
     }
   });
 
-const renderDynamicCover = (entry) => {
+const renderDynamicCover = (entry, options = {}) => {
   const url = contentMediaUrl(entry.cover_r2_key);
   if (!url) return '';
   const alt = entry.cover_alt || `${entry.title} cover`;
-  return `<figure class="hero-cover">
+  const variantClass = options.variant === 'book' ? ' hero-cover--book' : '';
+  return `<figure class="hero-cover${variantClass}">
       <img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="eager" />
     </figure>`;
 };
@@ -6870,7 +6921,7 @@ const renderChapterCards = (route, chapters) => {
       (chapter) => `<a class="card" href="${escapeHtml(`${route.basePath}${chapter.parent_slug}/${chapter.slug}/`)}">
         <div class="meta">
           <span class="pill">${escapeHtml(copy.chapter)} ${escapeHtml(String(chapter.chapter_number || ''))}</span>
-          <span>${escapeHtml(dynamicAccessLabels[chapter.access_level] || chapter.access_level)}</span>
+          <span>${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
         </div>
         <h3>${escapeHtml(chapter.title)}</h3>
         <p>${escapeHtml(chapter.excerpt || chapter.description)}</p>
@@ -7011,20 +7062,22 @@ const renderDynamicNovelSeries = (route, serial, body, chapters) => {
   const copy = dynamicContentCopy[route.locale];
   const firstChapter = chapters[0];
   const latestChapter = chapters[chapters.length - 1];
-  return `<section class="hero">
-      <p class="kicker">${escapeHtml(copy.status)}</p>
-      <h1>${escapeHtml(serial.title)}</h1>
-      <p>${escapeHtml(serial.subtitle || serial.description)}</p>
-      <div class="meta">
-        <span class="pill">${escapeHtml(copy.author)}: ${escapeHtml(serial.author_name || 'Station Cat')}</span>
-        <span>${escapeHtml(copy.access)}: ${escapeHtml(dynamicAccessLabels[serial.access_level] || serial.access_level)}</span>
+  return `<section class="hero hero--novel">
+      <div class="hero-copy">
+        <p class="kicker">${escapeHtml(copy.status)}</p>
+        <h1>${escapeHtml(serial.title)}</h1>
+        <p>${escapeHtml(serial.subtitle || serial.description)}</p>
+        <div class="meta">
+          <span class="pill">${escapeHtml(copy.author)}: ${escapeHtml(serial.author_name || 'Station Cat')}</span>
+          <span>${escapeHtml(copy.access)}: ${escapeHtml(getDynamicAccessLabel(serial.access_level, route.locale))}</span>
+        </div>
+        <div class="button-row">
+          ${firstChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${firstChapter.slug}/`)}">${escapeHtml(copy.readFirst)}</a>` : ''}
+          ${latestChapter && latestChapter.slug !== firstChapter?.slug ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${latestChapter.slug}/`)}">${escapeHtml(copy.readLatest)}</a>` : ''}
+          <a class="button button-secondary" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.allSerials)}</a>
+        </div>
       </div>
-      ${renderDynamicCover(serial)}
-      <div class="button-row">
-        ${firstChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${firstChapter.slug}/`)}">${escapeHtml(copy.readFirst)}</a>` : ''}
-        ${latestChapter && latestChapter.slug !== firstChapter?.slug ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${latestChapter.slug}/`)}">${escapeHtml(copy.readLatest)}</a>` : ''}
-        <a class="button button-secondary" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.allSerials)}</a>
-      </div>
+      ${renderDynamicCover(serial, { variant: 'book' })}
     </section>
     <section class="section">
       <div class="prose">${body.html || `<p>${escapeHtml(serial.excerpt || serial.description)}</p>`}</div>
@@ -7044,14 +7097,14 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
   const isProtected = chapter.access_level !== 'free';
   const content = isProtected
     ? `<section class="gate" data-serial-access-gate data-series-slug="${escapeHtml(chapter.parent_slug)}" data-chapter-slug="${escapeHtml(chapter.slug)}" data-access="${escapeHtml(chapter.access_level)}" data-locale="${escapeHtml(route.locale)}" data-return-path="${escapeHtml(dynamicCanonicalPath(route))}">
-        <p class="kicker">${escapeHtml(dynamicAccessLabels[chapter.access_level] || chapter.access_level)}</p>
+        <p class="kicker">${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</p>
         <h2>${escapeHtml(copy.lockedTitle)}</h2>
         <p>${escapeHtml(copy.lockedBody)}</p>
         <div class="status" data-serial-access-status>${escapeHtml(paymentCopy.checking)}</div>
         <div class="status" data-serial-credit-status></div>
         ${renderDynamicUnlockButtons(route, serial, chapter, paymentSettings)}
       </section>
-      <article class="prose" data-protected-chapter-body hidden></article>
+      <article class="prose prose--reader prose--protected" data-protected-chapter-body hidden></article>
       <script>
         (() => {
           const gate = document.querySelector('[data-serial-access-gate]');
@@ -7089,6 +7142,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
             if (!response.ok || !payload.ok) throw new Error(payload.message || ${JSON.stringify(paymentCopy.contentFailed)});
             body.innerHTML = payload.content.html;
             body.hidden = false;
+            body.classList.add('prose--ready');
             gate.hidden = true;
           };
           const checkAccess = async () => {
@@ -7184,14 +7238,14 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
           checkAccess().catch((error) => setStatus(error.message || ${JSON.stringify(paymentCopy.contentFailed)}, 'error'));
         })();
       </script>`
-    : `<article class="prose">${body.html || `<p>${escapeHtml(chapter.excerpt || chapter.description)}</p>`}</article>`;
+    : `<article class="prose prose--reader">${body.html || `<p>${escapeHtml(chapter.excerpt || chapter.description)}</p>`}</article>`;
 
   return `<article class="section">
       <a class="text-link" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>
-      <header class="hero">
+      <header class="hero hero--chapter">
         <div class="meta">
           <span class="pill">${escapeHtml(copy.chapter)} ${escapeHtml(String(chapter.chapter_number || ''))}</span>
-          <span>${escapeHtml(copy.access)}: ${escapeHtml(dynamicAccessLabels[chapter.access_level] || chapter.access_level)}</span>
+          <span>${escapeHtml(copy.access)}: ${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
           ${chapter.word_count ? `<span>${escapeHtml(String(chapter.word_count))} ${escapeHtml(copy.words)}</span>` : ''}
         </div>
         <h1>${escapeHtml(chapter.title)}</h1>
@@ -7200,8 +7254,8 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
       ${content}
       <footer class="section">
         <div class="button-row">
-          ${previousChapter ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${previousChapter.slug}/`)}">Previous</a>` : `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>`}
-          ${nextChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${nextChapter.slug}/`)}">Next</a>` : `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>`}
+          ${previousChapter ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${previousChapter.slug}/`)}">${escapeHtml(copy.previousChapter)}</a>` : `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>`}
+          ${nextChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${nextChapter.slug}/`)}">${escapeHtml(copy.nextChapter)}</a>` : `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>`}
         </div>
       </footer>
     </article>`;
