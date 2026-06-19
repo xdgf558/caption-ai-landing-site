@@ -8,6 +8,8 @@ preview_urls = false
 ADMIN_ALLOWED_EMAILS = "brodstem@protonmail.com"
 CF_ACCESS_TEAM_DOMAIN = "misty-limit-82d5.cloudflareaccess.com"
 CF_ACCESS_AUD = "9b7bb7ce53bf630feea9b85e8911b34fa4647c7146b6c81d9958695c2c5fea73"
+READER_EMAIL_FROM = "noreply@wwwstationcat.org"
+READER_EMAIL_FROM_NAME = "Station Cat"
 
 [assets]
 directory = "./dist"
@@ -25,6 +27,10 @@ bucket_name = "station-cat-downloads"
 [[r2_buckets]]
 binding = "CONTENT_BUCKET"
 bucket_name = "station-cat-content"
+
+[[send_email]]
+name = "EMAIL"
+allowed_sender_addresses = ["noreply@wwwstationcat.org"]
 
 [[routes]]
 pattern = "wwwstationcat.org"
