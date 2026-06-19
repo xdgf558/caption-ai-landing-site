@@ -7309,7 +7309,6 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
       <a class="text-link" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>
       <header class="hero hero--chapter">
         <div class="meta">
-          <span class="pill">${escapeHtml(copy.chapter)} ${escapeHtml(String(chapter.chapter_number || ''))}</span>
           <span>${escapeHtml(copy.access)}: ${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
           ${chapter.word_count ? `<span>${escapeHtml(String(chapter.word_count))} ${escapeHtml(copy.words)}</span>` : ''}
         </div>

@@ -1,6 +1,6 @@
 ---
 import type { SerialChapterEntry, SerialEntry, SiteLocale } from '../data/serials';
-import { formatChapterNumber, formatReadingMinutes, getChapterAccessLabel, getChapterHref, getSeriesHref } from '../data/serials';
+import { formatReadingMinutes, getChapterAccessLabel, getChapterHref, getSeriesHref } from '../data/serials';
 
 interface CopyShape {
   accessLabel: string;
@@ -199,7 +199,6 @@ const accessGateCopy = {
   </div>
 
   <header class="serial-reader-shell__header">
-    <p class="station-kicker">{formatChapterNumber(chapter.data.chapterNumber, locale)}</p>
     <h1>{chapter.data.title}</h1>
     <div class="serial-reader-shell__meta">
       {chapter.data.publishedAt && (
