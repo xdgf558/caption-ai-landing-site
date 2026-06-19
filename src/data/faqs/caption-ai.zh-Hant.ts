@@ -7,12 +7,12 @@ export const captionAiFaqZhHant = [
   {
     question: '它可以離線使用嗎？',
     answer:
-      '產品方向是優先使用 Apple 裝置端 AI。未來某些增強功能可能需要網路。'
+      'SnapCopy 會優先使用 Apple 裝置端 AI 和本機能力。雲端增強等部分功能需要網路連線。'
   },
   {
     question: '它會上傳我的照片嗎？',
     answer:
-      '目前產品方向是裝置端優先。若未來任何雲端增強功能需要上傳，App 應在使用前清楚說明；隱私政策也會反映最新實作。'
+      '核心流程以本機處理為優先。當你選擇使用雲端增強時，App 會在使用前說明，並上傳壓縮圖片用於理解畫面與生成結果；不保存原圖。'
   },
   {
     question: '可以用在 Instagram、X、Threads、TikTok 或其他平台嗎？',
@@ -27,6 +27,6 @@ export const captionAiFaqZhHant = [
   {
     question: '會有 Android 版本嗎？',
     answer:
-      'Android 版本會在 iOS 測試後規劃。你可以先加入 Android 等待名單。'
+      'Android 版本仍在規劃中。你可以先加入 Android 等待名單。'
   }
 ];

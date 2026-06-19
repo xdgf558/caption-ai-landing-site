@@ -10,7 +10,7 @@ export const captionAiJa = {
     title: '写真にぴったりの言葉を、すぐに。',
     subtitle:
       '朝食、カフェ、散歩、ペット、旅行、日常の写真から、SNSに使いやすいキャプションを作成します。写真の雰囲気を読み取り、あなたの好みに合わせた言葉を提案することを目指しています。',
-    primaryCta: 'iOS テストに参加',
+    primaryCta: 'App Store で入手',
     secondaryCta: 'プライバシーを見る'
   },
   visual: {
@@ -41,18 +41,18 @@ export const captionAiJa = {
       { title: 'オンデバイス AI 優先', description: '利用できる場合は Apple のオンデバイス AI を優先する設計です。' },
       { title: '好みに合わせた学習', description: '評価や選択をもとに、やさしい、短い、少し面白い、雰囲気のある表現へ近づけます。' },
       { title: '共有しやすい流れ', description: 'キャプションをコピーしたり、写真と一緒にいつものアプリへ持っていきやすくします。' },
-      { title: 'プライバシーに配慮', description: '最初の方向性として、ローカル処理とわかりやすい選択を重視しています。' }
+      { title: 'プライバシーに配慮', description: '主要な流れはローカル処理を優先し、クラウド強化を使う場合は明確に案内します。' }
     ]
   },
   focus: {
     kicker: 'Current focus',
-    title: '現在の重点：写真理解の精度を上げること',
+    title: '現在の重点：安定した写真理解と共有フロー',
     description:
-      'よいキャプションは、写真の内容をきちんと理解するところから始まります。現在は、写真に何が写っているかをより正確に捉え、文章生成前のコンテキストを整えることに重点を置いています。',
+      'SnapCopy は App Store で公開されています。現在は、撮影、写真選択、シーン理解、キャプション作成、コピー、共有、評価の流れをより安定させることに重点を置いています。',
     roadmap: [
-      { label: 'Now', text: '写真理解、シーン検出、キャプション用コンテキスト作成' },
-      { label: 'Next', text: 'キャプションスタイル改善、評価に基づくパーソナライズ、共有フローの強化' },
-      { label: 'Later', text: '画像補正、多言語キャプション、Android 版、任意のクラウド強化 AI' }
+      { label: 'Now', text: 'App Store 版、写真理解、シーン検出、キャプション作成、コピーと共有' },
+      { label: 'Next', text: 'キャプションスタイル改善、評価に基づくパーソナライズ、クラウド強化の安定性' },
+      { label: 'Later', text: '画像補正、多言語キャプション、Android 版' }
     ]
   },
   useCases: {
@@ -81,29 +81,29 @@ export const captionAiJa = {
     kicker: 'Privacy',
     title: 'プライバシーを意識した設計',
     description:
-      'SnapCopy はオンデバイス AI 優先の方向で開発しています。可能な範囲で日常のキャプション生成を端末内に留めることを目指し、将来クラウド強化機能を追加する場合は、写真やプロンプトが端末外へ送信されるタイミングを明確に案内します。',
-    items: ['オンデバイス AI 優先', '将来のクラウド機能は明確な選択', '自動投稿はしません', '製品専用のプライバシーページ'],
+      'SnapCopy はオンデバイス AI 優先の設計です。クラウド強化を選択した場合は、圧縮画像がシーン理解と結果生成のために送信されることを明確に案内します。',
+    items: ['オンデバイス AI 優先', 'クラウド強化はユーザーが選択', '自動投稿はしません', '製品専用のプライバシーページ'],
     cta: 'プライバシーポリシーを見る'
   },
   platform: {
     kicker: 'Availability',
-    title: 'iOS は第1回クローズドテスト中です。',
+    title: 'iOS 版は App Store で公開中です。',
     description:
-      'SnapCopy は現在、第1回 iOS クローズドテスト中です。Android 版への関心は、iOS 版のテストと改善を進めながら通知リストで受け付けています。',
-    iosCta: 'iOS テストに参加',
+      'iPhone と iPad では、App Store から SnapCopy を入手できます。Android 版は準備中で、通知リストに参加できます。',
+    iosCta: 'App Store で入手',
     androidCta: 'Android のお知らせ'
   },
   waitlist: {
-    title: 'iOS クローズドテストに参加',
-    description: 'SnapCopy は現在、第1回テスト中です。メールアドレスを入力すると、今回の枠が残っている場合に TestFlight の入口を案内します。',
-    button: 'テストに参加'
+    title: 'App Store で入手',
+    description: 'SnapCopy は App Store で公開されており、iPhone と iPad で利用できます。',
+    button: 'App Store で入手'
   },
-  faqTitle: '公開前のよくある質問',
+  faqTitle: 'よくある質問',
   finalCta: {
     kicker: 'iOS launch',
     title: '日常の写真を、もっと投稿しやすく。',
-    description: 'SnapCopy は現在、第1回クローズドテスト中です。テストに参加して、公開前の改善に協力できます。',
-    primary: 'テストに参加',
+    description: 'SnapCopy は App Store で公開されています。写真を選ぶだけで、投稿しやすいキャプション作成を手伝います。',
+    primary: 'App Store で入手',
     secondary: 'Station Cat をフォロー'
   },
   makerNote: 'Made by Station Cat, an independent creator studio.',
@@ -115,5 +115,5 @@ export const captionAiJa = {
   steps: ['写真を選ぶ', 'シーンを理解する', 'キャプションを作成する', 'コピー、共有、評価する'],
   audiences: ['写真からキャプション作成', '日常シーンに対応', 'オンデバイス AI 優先', '好みに合わせた学習', '共有しやすい流れ', 'プライバシーに配慮'],
   privacy:
-    'SnapCopy はオンデバイス AI 優先の方向で開発しています。将来クラウド強化機能を追加する場合は、写真やプロンプトが端末外へ送信されるタイミングを明確に案内します。'
+    'SnapCopy はオンデバイス AI 優先の設計です。クラウド強化を使う場合は、圧縮画像が結果生成のために送信されることを明確に案内します。'
 };

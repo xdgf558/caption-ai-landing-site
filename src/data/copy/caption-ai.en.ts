@@ -10,7 +10,7 @@ export const captionAiEn = {
     title: 'Take a photo. Get better captions. Share faster.',
     subtitle:
       'SnapCopy helps you turn everyday photos into social-ready captions. Breakfast, coffee, walks, pets, travel, outfits, and daily moments can become easier to post with captions that match the scene and your personal style.',
-    primaryCta: 'Join the iOS Test',
+    primaryCta: 'Download on App Store',
     secondaryCta: 'View Privacy Design'
   },
   visual: {
@@ -70,19 +70,19 @@ export const captionAiEn = {
       },
       {
         title: 'Privacy-friendly design',
-        description: 'The first product direction prioritizes local processing and clear privacy choices.'
+        description: 'Core flows prioritize local processing, with clear prompts when cloud enhancement is used.'
       }
     ]
   },
   focus: {
     kicker: 'Current focus',
-    title: 'Current focus: better photo understanding',
+    title: 'Current focus: stable photo understanding and sharing',
     description:
-      'The app is being improved around photo understanding. Better captions start with better scene recognition, so the current development focus is detecting what is actually in the photo and building clearer context before generating text.',
+      'SnapCopy is now available on the App Store. The current focus is keeping the capture, photo selection, scene understanding, caption generation, copy, share, and rating flow stable.',
     roadmap: [
-      { label: 'Now', text: 'Photo understanding, scene detection, caption context building' },
-      { label: 'Next', text: 'Better caption styles, rating-based personalization, stronger sharing flow' },
-      { label: 'Later', text: 'Advanced image enhancement, multi-language captions, Android version, optional cloud-enhanced AI' }
+      { label: 'Now', text: 'App Store version, photo understanding, scene detection, caption generation, copy and share' },
+      { label: 'Next', text: 'Better caption styles, rating-based personalization, cloud enhancement stability' },
+      { label: 'Later', text: 'Advanced image enhancement, multi-language captions, Android version' }
     ]
   },
   useCases: {
@@ -111,10 +111,10 @@ export const captionAiEn = {
     kicker: 'Privacy',
     title: 'Designed with privacy in mind',
     description:
-      'SnapCopy is being built around an on-device AI first approach. The goal is to keep everyday caption generation local whenever possible. If future enhanced cloud AI features are added, the app should clearly explain when a photo or prompt is sent outside the device.',
+      'SnapCopy is designed around an on-device AI first approach. When you choose cloud enhancement, the app explains that a compressed image is uploaded to understand the scene and generate results.',
     items: [
       'On-device AI first',
-      'Clear user choice for future cloud features',
+      'User choice for cloud enhancement',
       'No hidden social posting',
       'Product-specific privacy page'
     ],
@@ -122,23 +122,23 @@ export const captionAiEn = {
   },
   platform: {
     kicker: 'Availability',
-    title: 'iOS is now in its first closed testing round.',
+    title: 'The iOS version is now on the App Store.',
     description:
-      'SnapCopy is currently in its first iOS closed testing round. Android interest is being collected through an updates list while the iOS version is tested and improved.',
-    iosCta: 'Join the iOS Test',
+      'SnapCopy is available on the App Store for iPhone and iPad. Android is still planned, and you can join the update list.',
+    iosCta: 'Download on App Store',
     androidCta: 'Get Android Updates'
   },
   waitlist: {
-    title: 'Join the iOS closed test',
-    description: 'SnapCopy is currently in its first testing round. Enter your email and, if this round still has slots, you will receive the TestFlight entry link.',
-    button: 'Join the Test'
+    title: 'Download on App Store',
+    description: 'SnapCopy is available on the App Store for iPhone and iPad.',
+    button: 'Download on App Store'
   },
-  faqTitle: 'Questions before launch',
+  faqTitle: 'Questions',
   finalCta: {
     kicker: 'iOS launch',
     title: 'Make everyday photos easier to share.',
-    description: 'SnapCopy is currently in its first closed testing round. Join the test and help shape the app before launch.',
-    primary: 'Join the Test',
+    description: 'SnapCopy is now available on the App Store. Choose a photo and let it help you write a caption that is ready to share.',
+    primary: 'Download on App Store',
     secondary: 'Follow Station Cat'
   },
   makerNote: 'Made by Station Cat, an independent creator studio.',
@@ -174,5 +174,5 @@ export const captionAiEn = {
     'Privacy-friendly design'
   ],
   privacy:
-    'SnapCopy is being built around an on-device AI first approach. If future enhanced cloud AI features are added, the app should clearly explain when a photo or prompt is sent outside the device.'
+    'SnapCopy is designed around an on-device AI first approach. When cloud enhancement is used, the app explains that a compressed image is uploaded to generate results.'
 };

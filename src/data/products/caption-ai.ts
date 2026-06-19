@@ -4,11 +4,11 @@ export const snapCopyProduct = {
   slug: 'caption-ai',
   name: 'SnapCopy',
   workingName: 'AI 生活文案生成器',
-  status: 'closed-beta',
+  status: 'available',
   platforms: {
     ios: {
-      status: 'closed-beta',
-      appStoreUrl: '',
+      status: 'available',
+      appStoreUrl: 'https://apps.apple.com/app/id6769939265',
       waitlistFormUrl: '/api/waitlist'
     },
     android: {

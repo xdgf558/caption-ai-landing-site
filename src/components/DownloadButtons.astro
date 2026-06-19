@@ -23,7 +23,15 @@ const androidAvailable = android.status === 'available' && Boolean(android.googl
 <div class="download-box">
   <h2>{isJa ? 'ダウンロード' : isZh ? '下載' : 'Download'}</h2>
   <p>
-    {isJa
+    {iosAvailable
+      ? isJa
+        ? 'iPhone と iPad では、App Store から SnapCopy を入手できます。Android 版は準備中です。'
+        : isZh
+          ? locale === 'zh-Hans'
+            ? 'iPhone 和 iPad 用户现在可以从 App Store 获取 SnapCopy。Android 版本仍在规划中，可先加入通知名单。'
+            : 'iPhone 和 iPad 使用者現在可以從 App Store 取得 SnapCopy。Android 版本仍在規劃中，可先加入通知名單。'
+          : 'SnapCopy is now available on the App Store for iPhone and iPad. Android is still planned; you can join the update list.'
+      : isJa
       ? 'SnapCopy は第1回クローズドテスト中です。テスト枠が必要な方は、下の「テストに参加」をクリックしてください。'
       : isZh
         ? locale === 'zh-Hans'
@@ -33,7 +41,7 @@ const androidAvailable = android.status === 'available' && Boolean(android.googl
   </p>
   <div class="button-row">
     {iosAvailable ? (
-      <a class="button button-primary" href={ios.appStoreUrl}>{isJa ? 'App Store を開く' : isZh ? '開啟 App Store' : 'Open App Store'}</a>
+      <a class="button button-primary" href={ios.appStoreUrl}>{isJa ? 'App Store で入手' : isZh ? locale === 'zh-Hans' ? 'App Store 下载' : 'App Store 下載' : 'Download on App Store'}</a>
     ) : (
       <a class="button button-primary" href={iosWaitlistHref}>{isJa ? 'テストに参加' : isZh ? locale === 'zh-Hans' ? '参与测试' : '參與測試' : 'Join the Test'}</a>
     )}
@@ -44,7 +52,15 @@ const androidAvailable = android.status === 'available' && Boolean(android.googl
     )}
   </div>
   <p class="fine-print">
-    {isJa
+    {iosAvailable
+      ? isJa
+        ? 'クラウド強化を使用する場合、圧縮画像が結果生成のために送信されます。元画像は保存しません。'
+        : isZh
+          ? locale === 'zh-Hans'
+            ? '使用云端增强时，会上传压缩图片用于理解画面并生成结果，不保存原图。'
+            : '使用雲端增強時，會上傳壓縮圖片用於理解畫面並生成結果，不保存原圖。'
+          : 'When cloud enhancement is used, a compressed image is uploaded to understand the scene and generate results. Original photos are not stored.'
+      : isJa
       ? '正式公開後は、公式ストア素材と実リンクを設定ファイルに追加します。'
       : isZh
         ? locale === 'zh-Hans'

@@ -10,7 +10,7 @@ export const captionAiZhHans = {
     title: '拍下日常，快速生成更适合分享的文案。',
     subtitle:
       '早餐、咖啡、散步、宠物、旅行、穿搭和日常片刻，都可以变成更容易发布的社交文案。SnapCopy 会根据照片场景和你的偏好，提供更贴近日常语气的文案选项。',
-    primaryCta: '参与 iOS 测试',
+    primaryCta: 'App Store 下载',
     secondaryCta: '查看隐私设计'
   },
   visual: {
@@ -41,18 +41,18 @@ export const captionAiZhHans = {
       { title: '设备端 AI 优先', description: '在可用情况下，文案生成会优先采用 Apple 设备端 AI。' },
       { title: '个人风格学习', description: '评分和选择会帮助 App 理解你偏好温柔、幽默、短句、美感或特定平台语气。' },
       { title: '更快分享', description: '更快复制文案，或把照片和文案带到常用社交 App。' },
-      { title: '重视隐私', description: '第一版方向优先考虑本地处理和清楚的隐私选择。' }
+      { title: '重视隐私', description: '核心流程优先采用本机处理；使用云端增强时会清楚提示。' }
     ]
   },
   focus: {
     kicker: 'Current focus',
-    title: '当前重点：更好的照片理解',
+    title: '当前重点：稳定的照片理解与分享流程',
     description:
-      'SnapCopy 正在优先改善照片理解。更好的文案要从更准确的场景识别开始，所以当前开发重点是判断照片里真正出现的内容，并建立更清楚的文案上下文。',
+      'SnapCopy 已在 App Store 上架。当前重点是让拍照、选图、场景理解、文案生成、复制分享和评分反馈的主流程更稳定。',
     roadmap: [
-      { label: 'Now', text: '照片理解、场景识别、文案上下文建立' },
-      { label: 'Next', text: '更好的文案风格、基于评分的个性化、更顺畅的分享流程' },
-      { label: 'Later', text: '进阶图片美化、多语言文案、Android 版本、可选的云端增强 AI' }
+      { label: 'Now', text: 'App Store 版本、照片理解、场景识别、文案生成、复制分享' },
+      { label: 'Next', text: '更好的文案风格、基于评分的个性化、云端增强稳定性' },
+      { label: 'Later', text: '进阶图片美化、多语言文案、Android 版本' }
     ]
   },
   useCases: {
@@ -81,28 +81,28 @@ export const captionAiZhHans = {
     kicker: 'Privacy',
     title: '以隐私为设计前提',
     description:
-      'SnapCopy 正在以设备端 AI 优先的方向开发。目标是在可行时让日常文案生成留在本机；如果未来加入云端增强功能，App 应清楚说明照片或提示何时会离开设备。',
-    items: ['设备端 AI 优先', '未来云端功能需清楚选择', '不会偷偷自动发文', '产品专属隐私政策'],
+      'SnapCopy 以设备端 AI 优先为设计方向。当你选择使用云端增强时，App 会清楚说明压缩图片会被上传用于理解画面并生成结果。',
+    items: ['设备端 AI 优先', '云端增强需由用户选择', '不会偷偷自动发文', '产品专属隐私政策'],
     cta: '阅读隐私政策'
   },
   platform: {
     kicker: 'Availability',
-    title: 'iOS 已进入第一轮封闭测试。',
-    description: 'SnapCopy 目前正在第一轮 iOS 封闭测试中。Android 需求会先通过通知名单收集，等 iOS 版本测试和改善后再安排。',
-    iosCta: '参与 iOS 测试',
+    title: 'iOS 版本已在 App Store 上架。',
+    description: 'iPhone 和 iPad 用户可以从 App Store 获取 SnapCopy。Android 版本仍在规划中，可先加入通知名单。',
+    iosCta: 'App Store 下载',
     androidCta: '获取 Android 通知'
   },
   waitlist: {
-    title: '参与 iOS 封闭测试',
-    description: 'SnapCopy 目前正在第一轮测试中。填写 Email 后，如果本轮仍有测试名额，系统会提供 TestFlight 测试入口。',
-    button: '参与测试'
+    title: 'App Store 下载',
+    description: 'SnapCopy 已在 App Store 上架，iPhone 和 iPad 用户可以直接获取。',
+    button: 'App Store 下载'
   },
-  faqTitle: '上架前常见问题',
+  faqTitle: '常见问题',
   finalCta: {
     kicker: 'iOS launch',
     title: '让日常照片更容易分享。',
-    description: 'SnapCopy 目前正在第一轮封闭测试中，欢迎参与测试并跟着产品一起完善。',
-    primary: '参与测试',
+    description: 'SnapCopy 已在 App Store 上架。选择一张照片，让它帮你生成适合发布的文案。',
+    primary: 'App Store 下载',
     secondary: '追踪 Station Cat'
   },
   makerNote: 'Made by Station Cat, an independent creator studio.',
@@ -114,5 +114,5 @@ export const captionAiZhHans = {
   steps: ['选择照片', '理解场景', '生成文案', '复制、分享与评分'],
   audiences: ['照片生成文案', '日常场景理解', '设备端 AI 优先', '个人风格学习', '更快分享', '重视隐私'],
   privacy:
-    'SnapCopy 正在以设备端 AI 优先的方向开发。如果未来加入云端增强功能，App 应清楚说明照片或提示何时会离开设备。'
+    'SnapCopy 以设备端 AI 优先为设计方向。使用云端增强时，App 会清楚说明压缩图片会被上传用于生成结果。'
 };

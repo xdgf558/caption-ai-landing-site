@@ -1,6 +1,5 @@
 ---
 import ProductLayout from '../../../../layouts/ProductLayout.astro';
-import WaitlistForm from '../../../../components/WaitlistForm.astro';
 import DownloadButtons from '../../../../components/DownloadButtons.astro';
 import UseCaseSection from '../../../../components/UseCaseSection.astro';
 import { captionAiProduct } from '../../../../data/products/caption-ai';
@@ -8,8 +7,8 @@ import { captionAiZhHans } from '../../../../data/copy/caption-ai.zh-Hans';
 ---
 
 <ProductLayout
-  title="SnapCopy 第一轮封闭测试"
-  description="SnapCopy 已经进入第一轮封闭测试。需要测试名额的用户，可以点击参与测试。"
+  title="SnapCopy App Store 下载"
+  description="SnapCopy 已在 App Store 上架。iPhone 和 iPad 用户可以直接获取。"
   lang="zh-Hans"
   canonicalPath="/zh-hans/apps/caption-ai/download/"
   alternates={[
@@ -22,12 +21,12 @@ import { captionAiZhHans } from '../../../../data/copy/caption-ai.zh-Hans';
 >
   <section class="page-shell">
     <p class="section-kicker">Download</p>
-    <h1>SnapCopy 已进入第一轮封闭测试。</h1>
+    <h1>SnapCopy 已在 App Store 上架。</h1>
     <p>
-      需要测试名额的用户，请点击下面的「参与测试」。
+      iPhone 和 iPad 用户可以直接前往 App Store 下载 SnapCopy。Android 版本仍在规划中，可先加入通知名单。
     </p>
     <div class="button-row">
-      <a class="button button-primary" href="#waitlist-ios">参与测试</a>
+      <a class="button button-primary" href={captionAiProduct.platforms.ios.appStoreUrl}>App Store 下载</a>
       <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">获取 Android 通知</a>
     </div>
   </section>
@@ -37,18 +36,6 @@ import { captionAiZhHans } from '../../../../data/copy/caption-ai.zh-Hans';
     locale="zh-Hans"
     iosWaitlistHref="#waitlist-ios"
     androidWaitlistHref="/android/?product=snapcopy&source=download-page&campaign=android-waitlist"
-  />
-  <WaitlistForm
-    id="waitlist-ios"
-    title="参与 iOS 封闭测试"
-    description="填写 Email 后，如果本轮仍有测试名额，系统会提供 TestFlight 测试入口。"
-    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
-    product={captionAiProduct.id}
-    locale="zh-Hans"
-    platform="ios"
-    privacyPath="/zh-hans/apps/caption-ai/privacy/"
-    buttonLabel="参与测试"
-    source="download-page"
   />
   <UseCaseSection title="围绕日常分享而设计" scenes={captionAiZhHans.scenes} />
 </ProductLayout>

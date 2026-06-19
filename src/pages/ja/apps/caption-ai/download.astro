@@ -1,6 +1,5 @@
 ---
 import ProductLayout from '../../../../layouts/ProductLayout.astro';
-import WaitlistForm from '../../../../components/WaitlistForm.astro';
 import DownloadButtons from '../../../../components/DownloadButtons.astro';
 import UseCaseSection from '../../../../components/UseCaseSection.astro';
 import { captionAiProduct } from '../../../../data/products/caption-ai';
@@ -8,8 +7,8 @@ import { captionAiJa } from '../../../../data/copy/caption-ai.ja';
 ---
 
 <ProductLayout
-  title="SnapCopy クローズドテスト"
-  description="SnapCopy は第1回クローズドテストに入りました。必要な方はテストに参加できます。"
+  title="SnapCopy を App Store で入手"
+  description="SnapCopy は App Store で公開されています。iPhone と iPad で利用できます。"
   lang="ja"
   canonicalPath="/ja/apps/caption-ai/download/"
   alternates={[
@@ -22,12 +21,12 @@ import { captionAiJa } from '../../../../data/copy/caption-ai.ja';
 >
   <section class="page-shell">
     <p class="section-kicker">Download</p>
-    <h1>SnapCopy は第1回クローズドテスト中です。</h1>
+    <h1>SnapCopy は App Store で公開中です。</h1>
     <p>
-      テスト枠が必要な方は、下の「テストに参加」をクリックしてください。
+      iPhone と iPad では、App Store から SnapCopy を入手できます。Android 版は準備中で、通知リストに参加できます。
     </p>
     <div class="button-row">
-      <a class="button button-primary" href="#waitlist-ios">テストに参加</a>
+      <a class="button button-primary" href={captionAiProduct.platforms.ios.appStoreUrl}>App Store で入手</a>
       <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">Android のお知らせ</a>
     </div>
   </section>
@@ -37,18 +36,6 @@ import { captionAiJa } from '../../../../data/copy/caption-ai.ja';
     locale="ja"
     iosWaitlistHref="#waitlist-ios"
     androidWaitlistHref="/android/?product=snapcopy&source=download-page&campaign=android-waitlist"
-  />
-  <WaitlistForm
-    id="waitlist-ios"
-    title="iOS クローズドテストに参加"
-    description="メールアドレスを入力してください。今回のテスト枠が残っている場合、TestFlight の入口を案内します。"
-    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
-    product={captionAiProduct.id}
-    locale="ja"
-    platform="ios"
-    privacyPath="/ja/apps/caption-ai/privacy/"
-    buttonLabel="テストに参加"
-    source="download-page"
   />
   <UseCaseSection title="日常の投稿を助けるアプリ" scenes={captionAiJa.scenes} />
 </ProductLayout>

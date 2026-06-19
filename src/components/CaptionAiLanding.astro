@@ -25,9 +25,15 @@ interface Props {
 }
 
 const { copy, faqItems, locale, links } = Astro.props;
+const iosAvailable =
+  captionAiProduct.platforms.ios.status === 'available' && Boolean(captionAiProduct.platforms.ios.appStoreUrl);
+const appStoreHref = captionAiProduct.platforms.ios.appStoreUrl;
 const platformDownload = links.platformDownload ?? links.download;
 const downloadBox = links.downloadBox ?? platformDownload;
 const finalDownload = links.finalDownload ?? links.download;
+const primaryDownload = iosAvailable ? appStoreHref : links.download;
+const platformHref = iosAvailable ? appStoreHref : platformDownload;
+const finalHref = iosAvailable ? appStoreHref : finalDownload;
 const stationCatHref =
   locale === 'ja'
     ? '/ja/'
@@ -65,7 +71,7 @@ const worksLabel =
 <ProductHero
   copy={copy.hero}
   imageAlt={copy.visual.alt}
-  primaryHref={links.download}
+  primaryHref={primaryDownload}
   secondaryHref={links.privacy}
   visual={copy.visual}
 />
@@ -146,23 +152,25 @@ const worksLabel =
     <p>{copy.platform.description}</p>
   </div>
   <div class="button-row">
-    <a class="button button-primary" href={platformDownload}>{copy.platform.iosCta}</a>
+    <a class="button button-primary" href={platformHref}>{copy.platform.iosCta}</a>
     <a class="button button-secondary" href={links.android}>{copy.platform.androidCta}</a>
   </div>
 </section>
 
-<WaitlistForm
-  id="waitlist-ios"
-  title={copy.waitlist.title}
-  description={copy.waitlist.description}
-  formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
-  product={captionAiProduct.id}
-  locale={locale}
-  platform="ios"
-  privacyPath={links.privacy}
-  buttonLabel={copy.waitlist.button}
-  source="product-page"
-/>
+{!iosAvailable && (
+  <WaitlistForm
+    id="waitlist-ios"
+    title={copy.waitlist.title}
+    description={copy.waitlist.description}
+    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
+    product={captionAiProduct.id}
+    locale={locale}
+    platform="ios"
+    privacyPath={links.privacy}
+    buttonLabel={copy.waitlist.button}
+    source="product-page"
+  />
+)}
 
 <DownloadButtons
   ios={captionAiProduct.platforms.ios}
@@ -181,7 +189,7 @@ const worksLabel =
     <p>{copy.finalCta.description}</p>
   </div>
   <div class="button-row">
-    <a class="button button-primary" href={finalDownload}>{copy.finalCta.primary}</a>
+    <a class="button button-primary" href={finalHref}>{copy.finalCta.primary}</a>
     <a class="button button-secondary" href={links.follow}>{copy.finalCta.secondary}</a>
   </div>
 </section>

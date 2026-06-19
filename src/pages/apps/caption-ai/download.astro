@@ -1,6 +1,5 @@
 ---
 import ProductLayout from '../../../layouts/ProductLayout.astro';
-import WaitlistForm from '../../../components/WaitlistForm.astro';
 import DownloadButtons from '../../../components/DownloadButtons.astro';
 import UseCaseSection from '../../../components/UseCaseSection.astro';
 import { captionAiProduct } from '../../../data/products/caption-ai';
@@ -8,8 +7,8 @@ import { captionAiEn } from '../../../data/copy/caption-ai.en';
 ---
 
 <ProductLayout
-  title="SnapCopy closed beta"
-  description="SnapCopy has entered its first closed testing round. Join the test if you need access."
+  title="Download SnapCopy on the App Store"
+  description="SnapCopy is available on the App Store for iPhone and iPad."
   lang="en"
   canonicalPath="/apps/caption-ai/download/"
   alternates={[
@@ -22,12 +21,12 @@ import { captionAiEn } from '../../../data/copy/caption-ai.en';
 >
   <section class="page-shell">
     <p class="section-kicker">Download</p>
-    <h1>SnapCopy is in its first closed testing round.</h1>
+    <h1>SnapCopy is now on the App Store.</h1>
     <p>
-      If you need access, click Join the Test below.
+      iPhone and iPad users can get SnapCopy from the App Store. Android is still planned, and you can join the update list.
     </p>
     <div class="button-row">
-      <a class="button button-primary" href="#waitlist-ios">Join the Test</a>
+      <a class="button button-primary" href={captionAiProduct.platforms.ios.appStoreUrl}>Download on App Store</a>
       <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">Get Android Updates</a>
     </div>
   </section>
@@ -37,18 +36,6 @@ import { captionAiEn } from '../../../data/copy/caption-ai.en';
     locale="en"
     iosWaitlistHref="#waitlist-ios"
     androidWaitlistHref="/android/?product=snapcopy&source=download-page&campaign=android-waitlist"
-  />
-  <WaitlistForm
-    id="waitlist-ios"
-    title="Join the iOS closed test"
-    description="Enter your email. If this round still has testing slots, you will receive the TestFlight entry link."
-    formUrl={captionAiProduct.platforms.ios.waitlistFormUrl}
-    product={captionAiProduct.id}
-    locale="en"
-    platform="ios"
-    privacyPath="/apps/caption-ai/privacy/"
-    buttonLabel="Join the Test"
-    source="download-page"
   />
   <UseCaseSection title="Built around daily sharing" scenes={captionAiEn.scenes} />
 </ProductLayout>
