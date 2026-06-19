@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS reader_password_credentials (
   normalized_username TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   password_salt TEXT NOT NULL,
-  password_iterations INTEGER NOT NULL DEFAULT 150000,
+  password_iterations INTEGER NOT NULL DEFAULT 100000,
   password_algorithm TEXT NOT NULL DEFAULT 'PBKDF2-SHA256',
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,

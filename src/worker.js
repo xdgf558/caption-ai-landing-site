@@ -27,7 +27,7 @@ const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const readerSessionCookieName = 'station_cat_reader_session';
 const readerSessionMaxAge = 60 * 60 * 24 * 30;
 const readerPasswordAlgorithm = 'PBKDF2-SHA256';
-const readerPasswordIterations = 150000;
+const readerPasswordIterations = 100000;
 const adminPathPattern = /^\/admin(?:-v2)?(?:\/|$)/;
 const defaultAdminEmail = 'brodstem@protonmail.com';
 
