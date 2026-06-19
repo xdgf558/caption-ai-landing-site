@@ -11,21 +11,50 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   <section class="works-hero reader-library-hero">
     <p class="station-kicker">Reader Library</p>
     <h1>我的書庫</h1>
-    <p>用 Email 登入後，之後在不同裝置上也可以找回閱讀點數、會員狀態、已解鎖內容和保存過的書籤。</p>
+    <p>註冊會員账号後，之後在不同裝置上也可以找回閱讀點數、會員狀態、已解鎖內容和保存過的書籤。</p>
     <p class="fine-print">閱讀點數已接入 NOWPayments 充值和 D1 餘額流水。小額單章消費會先從站內點數扣除，再寫入同一套閱讀權限表。</p>
   </section>
 
   <section class="station-section reader-library-grid">
     <form class="reader-panel reader-login-panel" id="reader-login-form">
       <div>
-        <p class="station-kicker">Sign in</p>
-        <h2>寄送登入連結</h2>
+        <p class="station-kicker">Member Account</p>
+        <h2 id="reader-auth-title">會員登入</h2>
       </div>
-      <label>
-        Email
-        <input id="reader-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" />
-      </label>
-      <button class="button button-primary" id="reader-login-submit" type="submit">寄送登入連結</button>
+      <div class="reader-auth-switch" role="tablist" aria-label="會員登入方式">
+        <button class="reader-auth-switch__button is-active" type="button" data-auth-mode="login" aria-selected="true">登入</button>
+        <button class="reader-auth-switch__button" type="button" data-auth-mode="register" aria-selected="false">註冊</button>
+      </div>
+      <div class="reader-auth-fields" id="reader-login-fields">
+        <label>
+          用户名或 Email
+          <input id="reader-identifier" name="identifier" type="text" autocomplete="username" placeholder="username@example.com" />
+        </label>
+        <label>
+          密码
+          <input id="reader-password" name="password" type="password" autocomplete="current-password" placeholder="至少 8 个字符" />
+        </label>
+      </div>
+      <div class="reader-auth-fields" id="reader-register-fields" hidden>
+        <label>
+          用户名
+          <input id="reader-username" name="username" type="text" autocomplete="username" placeholder="stationcat" />
+        </label>
+        <label>
+          Email
+          <input id="reader-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" />
+        </label>
+        <label>
+          密码
+          <input id="reader-register-password" name="register-password" type="password" autocomplete="new-password" placeholder="至少 8 个字符" />
+        </label>
+        <label>
+          确认密码
+          <input id="reader-register-password-confirm" name="register-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入密码" />
+        </label>
+      </div>
+      <p class="fine-print">注册后会自动登入。密码只会以加盐哈希形式保存，不会明文写入数据库。</p>
+      <button class="button button-primary" id="reader-login-submit" type="submit">登入書庫</button>
       <div class="reader-status" id="reader-login-status" role="status" aria-live="polite"></div>
     </form>
 
@@ -87,7 +116,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   <script>
     const form = document.getElementById('reader-login-form');
+    const authTitle = document.getElementById('reader-auth-title');
+    const authModeButtons = Array.from(document.querySelectorAll('[data-auth-mode]'));
+    const loginFields = document.getElementById('reader-login-fields');
+    const registerFields = document.getElementById('reader-register-fields');
+    const identifierInput = document.getElementById('reader-identifier');
+    const loginPasswordInput = document.getElementById('reader-password');
+    const usernameInput = document.getElementById('reader-username');
     const emailInput = document.getElementById('reader-email');
+    const registerPasswordInput = document.getElementById('reader-register-password');
+    const registerPasswordConfirmInput = document.getElementById('reader-register-password-confirm');
     const submitButton = document.getElementById('reader-login-submit');
     const statusBox = document.getElementById('reader-login-status');
     const accountPanel = document.getElementById('reader-account-panel');
@@ -108,10 +146,35 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const libraryEmpty = document.getElementById('reader-library-empty');
     const bookmarkList = document.getElementById('reader-bookmark-list');
     const bookmarkEmpty = document.getElementById('reader-bookmark-empty');
+    let authMode = 'login';
 
     const setStatus = (message, tone = 'neutral') => {
       statusBox.textContent = message;
       statusBox.dataset.tone = tone;
+    };
+
+    const setFieldState = (fields, enabled) => {
+      fields.forEach((field) => {
+        field.disabled = !enabled;
+      });
+    };
+
+    const setAuthMode = (mode) => {
+      authMode = mode === 'register' ? 'register' : 'login';
+      const isRegister = authMode === 'register';
+
+      authTitle.textContent = isRegister ? '會員註冊' : '會員登入';
+      submitButton.textContent = isRegister ? '註冊並登入' : '登入書庫';
+      loginFields.hidden = isRegister;
+      registerFields.hidden = !isRegister;
+      setFieldState([identifierInput, loginPasswordInput], !isRegister);
+      setFieldState([usernameInput, emailInput, registerPasswordInput, registerPasswordConfirmInput], isRegister);
+      authModeButtons.forEach((button) => {
+        const selected = button.dataset.authMode === authMode;
+        button.classList.toggle('is-active', selected);
+        button.setAttribute('aria-selected', selected ? 'true' : 'false');
+      });
+      setStatus('');
     };
 
     const setSignedIn = (session) => {
@@ -121,7 +184,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       creditsPanel.hidden = !signedIn;
       membershipPanel.hidden = !signedIn;
       libraryContent.hidden = !signedIn;
-      accountEmail.textContent = signedIn ? session.account.email : '';
+      accountEmail.textContent = signedIn
+        ? `${session.account.displayName || session.account.username || session.account.email} · ${session.account.email}`
+        : '';
     };
 
     const entitlementTitle = (item) => {
@@ -372,37 +437,50 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setCreditStatus('支付已取消，閱讀點數沒有變動。', 'error');
     }
 
+    authModeButtons.forEach((button) => {
+      button.addEventListener('click', () => setAuthMode(button.dataset.authMode));
+    });
+
+    const loadReaderHome = async () => {
+      await Promise.all([loadLibrary(), loadCredits(), loadBookmarks()]);
+    };
+
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       submitButton.disabled = true;
-      setStatus('正在建立登入連結...', 'neutral');
+      setStatus(authMode === 'register' ? '正在建立會員账号...' : '正在登入...', 'neutral');
 
       try {
-        const response = await fetch('/api/readers/magic-link', {
+        const body = authMode === 'register'
+          ? {
+              username: usernameInput.value,
+              email: emailInput.value,
+              password: registerPasswordInput.value,
+              confirmPassword: registerPasswordConfirmInput.value,
+              redirectPath
+            }
+          : {
+              identifier: identifierInput.value,
+              password: loginPasswordInput.value,
+              redirectPath
+            };
+
+        const response = await fetch(authMode === 'register' ? '/api/readers/register' : '/api/readers/login', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            email: emailInput.value,
-            redirectPath
-          })
+          body: JSON.stringify(body)
         });
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.message || '登入連結寄送失敗。');
+        if (!response.ok || !data.ok) throw new Error(data.message || '登入失敗。');
 
-        if (data.debugLoginUrl) {
-          statusBox.innerHTML = '';
-          const text = document.createElement('span');
-          text.textContent = '本地測試登入連結已建立：';
-          const link = document.createElement('a');
-          link.href = data.debugLoginUrl;
-          link.textContent = '開啟書庫';
-          statusBox.append(text, link);
-          statusBox.dataset.tone = 'success';
-        } else {
-          setStatus(data.message || '請查看 Email 裡的登入連結。', 'success');
+        setStatus(data.message || '已登入。', 'success');
+        setSignedIn(data);
+        await loadReaderHome();
+        if (redirectPath && redirectPath !== '/library/' && redirectPath !== window.location.pathname) {
+          window.location.href = redirectPath;
         }
       } catch (error) {
-        setStatus(error.message || '登入連結寄送失敗。', 'error');
+        setStatus(error.message || '登入失敗。', 'error');
       } finally {
         submitButton.disabled = false;
       }
@@ -418,6 +496,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         renderCreditPacks([]);
         creditBalance.textContent = '0 SC Credits';
         renderMembership(null, { enabled: true, membershipCreditCost: 10, membershipDurationMonths: 1 }, { balanceCredits: 0, unitLabel: 'SC Credits' });
+        setAuthMode('login');
         setStatus('已登出。', 'success');
       } finally {
         logoutButton.disabled = false;
@@ -476,6 +555,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         membershipRedeem.disabled = false;
       }
     });
+
+    setAuthMode('login');
 
     loadSession()
       .then(refreshReturnedPaymentOrder)

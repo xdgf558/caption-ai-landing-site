@@ -5180,6 +5180,39 @@ body.station-paper-page {
   gap: 16px;
 }
 
+.reader-auth-switch {
+  background: #f1e4d4;
+  border: 1px solid #d8c8b8;
+  border-radius: 12px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 6px;
+}
+
+.reader-auth-switch__button {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: #5d5148;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 950;
+  min-height: 42px;
+  padding: 8px 10px;
+}
+
+.reader-auth-switch__button.is-active {
+  background: #2e5b4e;
+  color: #fffaf1;
+}
+
+.reader-auth-fields {
+  display: grid;
+  gap: 14px;
+}
+
 .reader-panel label {
   color: #5d5148;
   display: grid;

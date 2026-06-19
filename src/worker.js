@@ -26,6 +26,8 @@ const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 const readerSessionCookieName = 'station_cat_reader_session';
 const readerSessionMaxAge = 60 * 60 * 24 * 30;
+const readerPasswordAlgorithm = 'PBKDF2-SHA256';
+const readerPasswordIterations = 150000;
 const adminPathPattern = /^\/admin(?:-v2)?(?:\/|$)/;
 const defaultAdminEmail = 'brodstem@protonmail.com';
 
@@ -101,6 +103,44 @@ const randomToken = (byteLength = 32) => {
     raw += String.fromCharCode(byte);
   });
   return btoa(raw).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+};
+
+const randomHex = (byteLength = 24) => {
+  const bytes = new Uint8Array(byteLength);
+  crypto.getRandomValues(bytes);
+  return toHex(bytes);
+};
+
+const normalizeUsername = (value) => String(value || '').trim().toLowerCase();
+
+const isValidReaderUsername = (value) => /^[\p{L}\p{N}_-]{3,32}$/u.test(String(value || '').trim());
+
+const isValidReaderPassword = (value) => {
+  const password = String(value || '');
+  return password.length >= 8 && password.length <= 128;
+};
+
+const hashReaderPassword = async (password, salt, iterations = readerPasswordIterations) => {
+  const encodedPassword = new TextEncoder().encode(String(password || ''));
+  const encodedSalt = new TextEncoder().encode(String(salt || ''));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encodedPassword,
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits']
+  );
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      hash: 'SHA-256',
+      salt: encodedSalt,
+      iterations
+    },
+    keyMaterial,
+    256
+  );
+  return toHex(derivedBits);
 };
 
 const isLocalRequest = (request, env) => {
@@ -1897,6 +1937,7 @@ const isMissingContentTablesError = (error) => /no such table: (content_|admin_a
 const isMissingAdminContentSettingsError = (error) => /no such table: admin_content_settings/i.test(error?.message || '');
 const isMissingReaderMembershipsError = (error) => /no such table: reader_memberships/i.test(error?.message || '');
 const isMissingReaderBookmarksError = (error) => /no such table: reader_bookmarks/i.test(error?.message || '');
+const isMissingReaderPasswordCredentialsError = (error) => /no such table: reader_password_credentials/i.test(error?.message || '');
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -1934,6 +1975,16 @@ const ensureReaderBookmarksReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingReaderBookmarksError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureReaderPasswordCredentialsReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM reader_password_credentials LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingReaderPasswordCredentialsError(error)) return false;
     throw error;
   }
 };
@@ -2463,6 +2514,306 @@ const sendReaderLoginEmail = async (env, email, loginUrl) => {
   }
 };
 
+const readerAccountAuthJson = (account) => ({
+  id: account.account_id || account.id,
+  email: account.email,
+  normalizedEmail: account.normalized_email,
+  username: account.username || '',
+  displayName: account.display_name || account.username || account.email,
+  createdAt: account.account_created_at || account.created_at
+});
+
+const createReaderSession = async (db, accountId, request) => {
+  const sessionToken = randomToken();
+  const sessionHash = await sha256Hex(sessionToken);
+  const userAgent = cleanText(request.headers.get('user-agent'), 300);
+
+  await db.batch([
+    db
+      .prepare(
+        `UPDATE reader_accounts
+         SET last_login_at = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`
+      )
+      .bind(accountId),
+    db
+      .prepare(
+        `INSERT INTO reader_sessions (account_id, session_hash, expires_at, user_agent)
+         VALUES (?, ?, datetime('now', '+30 days'), ?)`
+      )
+      .bind(accountId, sessionHash, userAgent)
+  ]);
+
+  return sessionToken;
+};
+
+const normalizeReaderRegisterPayload = (payload) => {
+  const username = cleanText(payload.username, 40);
+  const normalizedUsername = normalizeUsername(username);
+  const email = cleanText(payload.email, 254);
+  const normalizedEmail = normalizeEmail(email);
+  const password = String(payload.password || '');
+  const confirmPassword = String(payload.confirmPassword || payload.passwordConfirm || '');
+
+  if (!isValidReaderUsername(username)) {
+    throw new Error('用户名需要 3-32 个字符，只能使用文字、数字、下划线或横线。');
+  }
+  if (!isEmail(normalizedEmail)) {
+    throw new Error('请输入有效的 Email。');
+  }
+  if (!isValidReaderPassword(password)) {
+    throw new Error('密码需要 8-128 个字符。');
+  }
+  if (confirmPassword && confirmPassword !== password) {
+    throw new Error('两次输入的密码不一致。');
+  }
+
+  return {
+    email,
+    normalizedEmail,
+    normalizedUsername,
+    password,
+    username
+  };
+};
+
+const handleReaderRegister = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  if (!(await ensureReaderPasswordCredentialsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'READER_PASSWORD_AUTH_NOT_READY',
+        message: '会员注册数据表尚未初始化，请先应用 0011_reader_password_credentials.sql。'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  let data;
+  try {
+    data = normalizeReaderRegisterPayload(payload);
+  } catch (error) {
+    return privateJson({ ok: false, message: error.message }, { status: 400 });
+  }
+
+  const existingUsername = await db
+    .prepare(
+      `SELECT account_id
+       FROM reader_password_credentials
+       WHERE normalized_username = ?
+       LIMIT 1`
+    )
+    .bind(data.normalizedUsername)
+    .first();
+  if (existingUsername) {
+    return privateJson({ ok: false, code: 'USERNAME_TAKEN', message: '这个用户名已经被使用。' }, { status: 409 });
+  }
+
+  const existingAccount = await db
+    .prepare(
+      `SELECT id, email, normalized_email, display_name, status, created_at
+       FROM reader_accounts
+       WHERE normalized_email = ?
+       LIMIT 1`
+    )
+    .bind(data.normalizedEmail)
+    .first();
+
+  if (existingAccount?.status && existingAccount.status !== 'active') {
+    return privateJson({ ok: false, message: '这个账号当前不可登录。' }, { status: 403 });
+  }
+
+  if (existingAccount) {
+    const existingCredential = await db
+      .prepare(
+        `SELECT id
+         FROM reader_password_credentials
+         WHERE account_id = ?
+         LIMIT 1`
+      )
+      .bind(existingAccount.id)
+      .first();
+    if (existingCredential) {
+      return privateJson({ ok: false, code: 'EMAIL_TAKEN', message: '这个 Email 已经注册，请直接登录。' }, { status: 409 });
+    }
+  }
+
+  const account = existingAccount || (await upsertReaderAccount(db, data.email, data.normalizedEmail));
+  const salt = randomHex();
+  const passwordHash = await hashReaderPassword(data.password, salt, readerPasswordIterations);
+
+  try {
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE reader_accounts
+           SET email = ?,
+               display_name = ?,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?`
+        )
+        .bind(data.email, data.username, account.id),
+      db
+        .prepare(
+          `INSERT INTO reader_password_credentials (
+            account_id, username, normalized_username, password_hash, password_salt,
+            password_iterations, password_algorithm
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?)`
+        )
+        .bind(
+          account.id,
+          data.username,
+          data.normalizedUsername,
+          passwordHash,
+          salt,
+          readerPasswordIterations,
+          readerPasswordAlgorithm
+        )
+    ]);
+  } catch (error) {
+    if (/UNIQUE constraint failed/i.test(error?.message || '')) {
+      return privateJson({ ok: false, message: '这个用户名或 Email 已经注册。' }, { status: 409 });
+    }
+    throw error;
+  }
+
+  const sessionToken = await createReaderSession(db, account.id, request);
+  return privateJson(
+    {
+      ok: true,
+      authenticated: true,
+      message: '注册成功，已登入书库。',
+      account: readerAccountAuthJson({
+        ...account,
+        display_name: data.username,
+        username: data.username
+      })
+    },
+    {
+      headers: {
+        'set-cookie': makeCookie(readerSessionCookieName, sessionToken, request)
+      }
+    }
+  );
+};
+
+const handleReaderLogin = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  if (!(await ensureReaderPasswordCredentialsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'READER_PASSWORD_AUTH_NOT_READY',
+        message: '会员登录数据表尚未初始化，请先应用 0011_reader_password_credentials.sql。'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const identifier = cleanText(payload.identifier || payload.email || payload.username, 254);
+  const password = String(payload.password || '');
+  if (!identifier || !password) {
+    return privateJson({ ok: false, message: '请输入用户名 / Email 和密码。' }, { status: 400 });
+  }
+
+  const credential = isEmail(normalizeEmail(identifier))
+    ? await db
+        .prepare(
+          `SELECT
+            reader_accounts.id,
+            reader_accounts.email,
+            reader_accounts.normalized_email,
+            reader_accounts.display_name,
+            reader_accounts.status,
+            reader_accounts.created_at,
+            reader_password_credentials.username,
+            reader_password_credentials.password_hash,
+            reader_password_credentials.password_salt,
+            reader_password_credentials.password_iterations,
+            reader_password_credentials.password_algorithm
+           FROM reader_accounts
+           INNER JOIN reader_password_credentials
+             ON reader_password_credentials.account_id = reader_accounts.id
+           WHERE reader_accounts.normalized_email = ?
+             AND reader_accounts.status = 'active'
+           LIMIT 1`
+        )
+        .bind(normalizeEmail(identifier))
+        .first()
+    : await db
+        .prepare(
+          `SELECT
+            reader_accounts.id,
+            reader_accounts.email,
+            reader_accounts.normalized_email,
+            reader_accounts.display_name,
+            reader_accounts.status,
+            reader_accounts.created_at,
+            reader_password_credentials.username,
+            reader_password_credentials.password_hash,
+            reader_password_credentials.password_salt,
+            reader_password_credentials.password_iterations,
+            reader_password_credentials.password_algorithm
+           FROM reader_password_credentials
+           INNER JOIN reader_accounts
+             ON reader_accounts.id = reader_password_credentials.account_id
+           WHERE reader_password_credentials.normalized_username = ?
+             AND reader_accounts.status = 'active'
+           LIMIT 1`
+        )
+        .bind(normalizeUsername(identifier))
+        .first();
+
+  if (!credential || credential.password_algorithm !== readerPasswordAlgorithm) {
+    return privateJson({ ok: false, message: '用户名或密码不正确。' }, { status: 401 });
+  }
+
+  const passwordHash = await hashReaderPassword(
+    password,
+    credential.password_salt,
+    Number(credential.password_iterations || readerPasswordIterations)
+  );
+  if (!timingSafeEqualString(passwordHash, credential.password_hash)) {
+    return privateJson({ ok: false, message: '用户名或密码不正确。' }, { status: 401 });
+  }
+
+  const sessionToken = await createReaderSession(db, credential.id, request);
+  return privateJson(
+    {
+      ok: true,
+      authenticated: true,
+      message: '登录成功。',
+      account: readerAccountAuthJson(credential)
+    },
+    {
+      headers: {
+        'set-cookie': makeCookie(readerSessionCookieName, sessionToken, request)
+      }
+    }
+  );
+};
+
 const handleReaderMagicLinkRequest = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
@@ -2559,9 +2910,12 @@ const getReaderFromSession = async (request, env) => {
         reader_accounts.id AS account_id,
         reader_accounts.email,
         reader_accounts.normalized_email,
+        reader_accounts.display_name,
+        reader_password_credentials.username,
         reader_accounts.created_at AS account_created_at
        FROM reader_sessions
        INNER JOIN reader_accounts ON reader_accounts.id = reader_sessions.account_id
+       LEFT JOIN reader_password_credentials ON reader_password_credentials.account_id = reader_accounts.id
        WHERE reader_sessions.session_hash = ?
          AND reader_sessions.revoked_at IS NULL
          AND reader_sessions.expires_at > CURRENT_TIMESTAMP
@@ -2594,6 +2948,8 @@ const handleReaderSession = async (request, env) => {
       id: session.account_id,
       email: session.email,
       normalizedEmail: session.normalized_email,
+      username: session.username || '',
+      displayName: session.display_name || session.username || session.email,
       createdAt: session.account_created_at
     },
     session: {
@@ -8790,6 +9146,14 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/readers/magic-link') {
       return handleReaderMagicLinkRequest(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/readers/register') {
+      return handleReaderRegister(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/readers/login') {
+      return handleReaderLogin(request, env);
     }
 
     if (request.method === 'GET' && url.pathname === '/api/readers/verify') {
