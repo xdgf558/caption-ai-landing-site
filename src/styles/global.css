@@ -4564,6 +4564,174 @@ body.station-paper-page {
   padding: 24px;
 }
 
+.serials-bookshelf {
+  gap: 26px;
+}
+
+.serials-bookshelf__intro {
+  display: grid;
+  gap: 14px;
+}
+
+.serials-bookshelf__intro p {
+  max-width: 780px;
+}
+
+.serials-bookshelf__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.serials-bookshelf__filters button {
+  background: #fffaf1;
+  border: 1px solid #d8c8b8;
+  border-radius: 999px;
+  color: #5f534a;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  min-height: 36px;
+  padding: 7px 13px;
+}
+
+.serials-bookshelf__filters button:hover,
+.serials-bookshelf__filters button:focus-visible,
+.serials-bookshelf__filters button.is-active {
+  background: #2e5b4e;
+  border-color: #2e5b4e;
+  color: #fffaf1;
+}
+
+.serials-bookshelf__body {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(220px, 0.38fr) minmax(0, 1fr);
+}
+
+.serials-bookshelf__rail {
+  align-content: start;
+  border-left: 4px solid #2e5b4e;
+  display: grid;
+  gap: 10px;
+  padding-left: 14px;
+}
+
+.serials-bookshelf__book {
+  background:
+    linear-gradient(90deg, rgba(34, 27, 22, 0.12), transparent 22%),
+    #f1e4d4;
+  border: 1px solid #c8b7a6;
+  border-radius: 6px;
+  box-shadow: 4px 4px 0 rgba(34, 27, 22, 0.1);
+  color: #221b16;
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 5px;
+  min-height: 72px;
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.serials-bookshelf__book:hover,
+.serials-bookshelf__book:focus-visible,
+.serials-bookshelf__book.is-active {
+  border-color: #2e5b4e;
+  box-shadow: 5px 5px 0 rgba(46, 91, 78, 0.18);
+  transform: translateY(-1px);
+}
+
+.serials-bookshelf__book span {
+  color: #2e5b4e;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.serials-bookshelf__book strong {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.serials-bookshelf__empty {
+  border: 1px dashed #d8c8b8;
+  border-radius: 8px;
+  color: #6f6257;
+  font-size: 14px;
+  font-weight: 800;
+  margin: 0;
+  padding: 14px;
+}
+
+.serials-bookshelf__previews {
+  min-width: 0;
+}
+
+.serials-bookshelf__preview {
+  align-items: start;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(100px, 148px) minmax(0, 1fr);
+}
+
+.serials-bookshelf__preview[hidden] {
+  display: none;
+}
+
+.serials-bookshelf__thumb {
+  aspect-ratio: 2 / 3;
+  background: #f1e4d4;
+  border: 2px solid #221b16;
+  border-radius: 8px;
+  box-shadow: 5px 5px 0 rgba(34, 27, 22, 0.14);
+  display: block;
+  max-width: 148px;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.serials-bookshelf__thumb img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.serials-bookshelf__thumb strong {
+  color: #221b16;
+  display: block;
+  padding: 14px;
+}
+
+.serials-bookshelf__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.serials-bookshelf__copy h2 {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1.06;
+  margin: 0;
+}
+
+.serials-bookshelf__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.serials-bookshelf__meta span {
+  background: rgba(46, 91, 78, 0.1);
+  border: 1px solid rgba(46, 91, 78, 0.18);
+  border-radius: 999px;
+  color: #2e5b4e;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 9px;
+}
+
 .serials-hero {
   align-items: center;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 340px);
@@ -5845,6 +6013,8 @@ body.station-paper-page.caption-product-page {
   .serial-detail-grid,
   .serial-feature-card,
   .serials-hero,
+  .serials-bookshelf__body,
+  .serials-bookshelf__preview,
   .serial-detail-hero,
   .reader-library-grid {
     grid-template-columns: 1fr;
@@ -5866,6 +6036,19 @@ body.station-paper-page.caption-product-page {
     justify-self: center;
     min-height: 0;
     width: min(72vw, 250px);
+  }
+
+  .serials-bookshelf__rail {
+    border-left-width: 0;
+    border-top: 4px solid #2e5b4e;
+    padding-left: 0;
+    padding-top: 14px;
+  }
+
+  .serials-bookshelf__thumb {
+    justify-self: center;
+    max-width: 150px;
+    width: min(44vw, 150px);
   }
 
   .station-paper-page .phone-visual,

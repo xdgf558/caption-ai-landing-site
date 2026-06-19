@@ -65,6 +65,89 @@ const backendSpotlightByLocale = {
   }
 } as const;
 const backendSpotlight = backendSpotlightByLocale[locale as keyof typeof backendSpotlightByLocale];
+const bookshelfCopyByLocale = {
+  en: {
+    all: 'All',
+    categories: ['Time travel', 'Sci-fi', 'Fantasy', 'AI'],
+    empty: 'No books in this category yet.',
+    eyebrow: 'Serial fiction shelf',
+    intro: 'Pick a category, then switch between long-form stories as the shelf grows.',
+    openSeries: 'Open book',
+    readFirst: 'Start reading',
+    shelfLabel: 'Books on shelf',
+    title: 'Station Cat long-form shelf'
+  },
+  ja: {
+    all: 'すべて',
+    categories: ['タイムトラベル', 'SF', 'ファンタジー', 'AI'],
+    empty: 'この分類の作品はまだありません。',
+    eyebrow: '連載棚',
+    intro: '分類を選び、今後増える長編をこの棚から切り替えて読めます。',
+    openSeries: '作品を開く',
+    readFirst: '読み始める',
+    shelfLabel: '本棚',
+    title: 'Station Cat 長編棚'
+  },
+  'zh-Hant': {
+    all: '全部',
+    categories: ['穿越', '科幻', '奇幻', 'AI'],
+    empty: '這個分類還在等下一本書上架。',
+    eyebrow: '長篇書架',
+    intro: '以後新書上架後，可以先按分類篩選，再點書脊切換作品。現在先從《离线未来》開始。',
+    openSeries: '打開作品',
+    readFirst: '開始閱讀',
+    shelfLabel: '書架',
+    title: 'Station Cat 長篇小說書架'
+  },
+  'zh-Hans': {
+    all: '全部',
+    categories: ['穿越', '科幻', '奇幻', 'AI'],
+    empty: '这个分类还在等下一本书上架。',
+    eyebrow: '长篇书架',
+    intro: '以后新书上架后，可以先按分类筛选，再点书脊切换作品。现在先从《离线未来》开始。',
+    openSeries: '打开作品',
+    readFirst: '开始阅读',
+    shelfLabel: '书架',
+    title: 'Station Cat 长篇小说书架'
+  }
+} as const;
+const bookshelfCopy = bookshelfCopyByLocale[locale];
+const backendBookshelfItem = backendSpotlight && {
+  accessLabel: backendSpotlight.accessLabel,
+  category: '穿越',
+  categories: ['穿越', '科幻', 'AI'],
+  coverAlt: backendSpotlight.coverAlt,
+  coverUrl: backendSpotlight.coverUrl,
+  description: backendSpotlight.description,
+  firstChapterHref: backendSpotlight.firstChapterHref,
+  href: backendSpotlight.href,
+  id: 'offline-future',
+  latest: backendSpotlight.latest,
+  status: backendSpotlight.status,
+  subtitle: backendSpotlight.subtitle,
+  title: backendSpotlight.title
+};
+const featuredBookshelfItem = featuredSerial && {
+  accessLabel: getPriceModeLabel(featuredSerial.data.priceMode, locale),
+  category: featuredSerial.data.tags?.[0] ?? copy.accessLabel,
+  categories: featuredSerial.data.tags ?? [],
+  coverAlt: featuredSerial.data.coverAlt ?? `${featuredSerial.data.title} cover`,
+  coverUrl: featuredSerial.data.coverImage ?? '',
+  description: featuredSerial.data.description,
+  firstChapterHref: featuredLatestChapter
+    ? getChapterHref(basePath, featuredSerial.data.seriesSlug, featuredLatestChapter.data.chapterSlug)
+    : getSeriesHref(basePath, featuredSerial.data.seriesSlug),
+  href: getSeriesHref(basePath, featuredSerial.data.seriesSlug),
+  id: featuredSerial.data.seriesSlug,
+  latest: featuredLatestChapter
+    ? `${formatChapterNumber(featuredLatestChapter.data.chapterNumber, locale)} ${featuredLatestChapter.data.title}`
+    : copy.latestFallback,
+  status: getSerialStatusLabel(featuredSerial.data.status, locale),
+  subtitle: featuredSerial.data.subtitle ?? '',
+  title: featuredSerial.data.title
+};
+const bookshelfItems = [backendBookshelfItem, featuredBookshelfItem].filter(Boolean);
+const bookshelfJson = JSON.stringify({ empty: bookshelfCopy.empty }).replace(/</g, '\\u003c');
 const backendShelfCopy = {
   en: {
     empty: 'No backend-published serials are waiting outside the static shelf.',
@@ -97,31 +180,122 @@ const backendShelfCopy = {
 };
 ---
 
-<section class="works-hero serials-hero">
-  <div class="serials-hero__copy">
-    <p class="station-kicker">{copy.eyebrow}</p>
-    <h1>{copy.heroTitle}</h1>
-    <p>{copy.heroDescription}</p>
-    <p class="fine-print">{copy.heroNote}</p>
-    <div class="button-row">
-      {featuredSerial ? (
-        <a class="button button-primary" href={getSeriesHref(basePath, featuredSerial.data.seriesSlug)}>{copy.heroPrimary}</a>
-      ) : backendSpotlight ? (
-        <a class="button button-primary" href={backendSpotlight.firstChapterHref}>{copy.heroPrimary}</a>
-      ) : (
-        <a class="button button-primary" href="#serial-shelf">{copy.heroSecondary}</a>
-      )}
-      {backendSpotlight && <a class="button button-secondary" href={backendSpotlight.href}>{copy.heroSecondary}</a>}
-      {!backendSpotlight && <a class="button button-secondary" href="#serial-shelf">{copy.heroSecondary}</a>}
-      <a class="button button-secondary" href="/library/">{copy.libraryLabel}</a>
+{bookshelfItems.length > 0 ? (
+  <section class="works-hero serials-bookshelf" data-serials-bookshelf>
+    <div class="serials-bookshelf__intro">
+      <p class="station-kicker">{bookshelfCopy.eyebrow}</p>
+      <h1>{bookshelfCopy.title}</h1>
+      <p>{bookshelfCopy.intro}</p>
+      <div class="serials-bookshelf__filters" aria-label="小說分類">
+        <button class="is-active" type="button" data-bookshelf-filter="all">{bookshelfCopy.all}</button>
+        {bookshelfCopy.categories.map((category) => (
+          <button type="button" data-bookshelf-filter={category}>{category}</button>
+        ))}
+      </div>
     </div>
-  </div>
-  {backendSpotlight && (
-    <a class="serial-cover serials-hero__cover" href={backendSpotlight.href} aria-label={backendSpotlight.title}>
-      <img src={backendSpotlight.coverUrl} alt={backendSpotlight.coverAlt} loading="eager" />
-    </a>
-  )}
-</section>
+
+    <div class="serials-bookshelf__body">
+      <div class="serials-bookshelf__rail" aria-label={bookshelfCopy.shelfLabel}>
+        {bookshelfItems.map((book, index) => (
+          <button
+            class={`serials-bookshelf__book${index === 0 ? ' is-active' : ''}`}
+            type="button"
+            data-bookshelf-book={book.id}
+            data-bookshelf-categories={book.categories.join(',')}
+          >
+            <span>{book.category}</span>
+            <strong>{book.title}</strong>
+          </button>
+        ))}
+        <p class="serials-bookshelf__empty" data-bookshelf-empty hidden>{bookshelfCopy.empty}</p>
+      </div>
+
+      <div class="serials-bookshelf__previews">
+        {bookshelfItems.map((book, index) => (
+          <article class={`serials-bookshelf__preview${index === 0 ? ' is-active' : ''}`} data-bookshelf-preview={book.id} hidden={index !== 0}>
+            <a class="serials-bookshelf__thumb" href={book.href} aria-label={book.title}>
+              {book.coverUrl ? (
+                <img src={book.coverUrl} alt={book.coverAlt} loading={index === 0 ? 'eager' : 'lazy'} />
+              ) : (
+                <strong>{book.title}</strong>
+              )}
+            </a>
+            <div class="serials-bookshelf__copy">
+              <div class="serials-bookshelf__meta">
+                <span>{book.status}</span>
+                <span>{book.accessLabel}</span>
+                <span>{book.latest}</span>
+              </div>
+              <h2>{book.title}</h2>
+              {book.subtitle && <p class="fine-print">{book.subtitle}</p>}
+              <p>{book.description}</p>
+              <div class="button-row">
+                <a class="button button-primary" href={book.firstChapterHref}>{bookshelfCopy.readFirst}</a>
+                <a class="button button-secondary" href={book.href}>{bookshelfCopy.openSeries}</a>
+                <a class="button button-secondary" href="/library/">{copy.libraryLabel}</a>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+    <script type="application/json" data-bookshelf-copy set:html={bookshelfJson} />
+  </section>
+) : (
+  <section class="works-hero serials-hero">
+    <div class="serials-hero__copy">
+      <p class="station-kicker">{copy.eyebrow}</p>
+      <h1>{copy.heroTitle}</h1>
+      <p>{copy.heroDescription}</p>
+      <p class="fine-print">{copy.heroNote}</p>
+      <div class="button-row">
+        <a class="button button-primary" href="#serial-shelf">{copy.heroSecondary}</a>
+        <a class="button button-secondary" href="/library/">{copy.libraryLabel}</a>
+      </div>
+    </div>
+  </section>
+)}
+
+<script is:inline>
+  (() => {
+    const shelves = document.querySelectorAll('[data-serials-bookshelf]');
+    shelves.forEach((shelf) => {
+      const filters = Array.from(shelf.querySelectorAll('[data-bookshelf-filter]'));
+      const books = Array.from(shelf.querySelectorAll('[data-bookshelf-book]'));
+      const previews = Array.from(shelf.querySelectorAll('[data-bookshelf-preview]'));
+      const empty = shelf.querySelector('[data-bookshelf-empty]');
+
+      const setActiveBook = (id) => {
+        books.forEach((book) => book.classList.toggle('is-active', book.dataset.bookshelfBook === id));
+        previews.forEach((preview) => {
+          const active = preview.dataset.bookshelfPreview === id;
+          preview.classList.toggle('is-active', active);
+          preview.hidden = !active;
+        });
+      };
+
+      const applyFilter = (category) => {
+        filters.forEach((filter) => filter.classList.toggle('is-active', filter.dataset.bookshelfFilter === category));
+        let firstVisible = '';
+        books.forEach((book) => {
+          const categories = String(book.dataset.bookshelfCategories || '').split(',').map((item) => item.trim());
+          const visible = category === 'all' || categories.includes(category);
+          book.hidden = !visible;
+          if (visible && !firstVisible) firstVisible = book.dataset.bookshelfBook || '';
+        });
+        if (empty) empty.hidden = Boolean(firstVisible);
+        if (firstVisible) setActiveBook(firstVisible);
+      };
+
+      books.forEach((book) => {
+        book.addEventListener('click', () => setActiveBook(book.dataset.bookshelfBook || ''));
+      });
+      filters.forEach((filter) => {
+        filter.addEventListener('click', () => applyFilter(filter.dataset.bookshelfFilter || 'all'));
+      });
+    });
+  })();
+</script>
 
 <section class="station-section">
   <div class="station-section__heading">
