@@ -67,6 +67,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <button class="button button-secondary" type="button" data-new-entry="novel_series">新作品</button>
             <button class="button button-secondary" type="button" data-new-entry="novel_chapter">新章节</button>
           </div>
+          <div class="admin-v2-list" id="content-list" aria-label="Backend content entries"></div>
           <section class="admin-template-panel" aria-labelledby="pricing-defaults-title">
             <div>
               <p class="station-kicker">Pricing Template</p>
@@ -80,7 +81,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <button class="button button-primary" id="pricing-defaults-save" type="button">保存当前为默认</button>
             <div class="admin-inline-status" id="pricing-defaults-status" role="status" aria-live="polite" hidden></div>
           </section>
-          <div class="admin-v2-list" id="content-list" aria-label="Backend content entries"></div>
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="imports-sidebar" hidden>
@@ -1482,13 +1482,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setPricingDefaultsStatus('已套用默认模板到当前表单。', 'success');
     };
 
-    const loadEntries = async () => {
+    const loadEntries = async ({ autoSelect = false } = {}) => {
       const params = new URLSearchParams();
       if (elements.filters.type.value) params.set('type', elements.filters.type.value);
       if (elements.filters.status.value) params.set('status', elements.filters.status.value);
       const payload = await apiJson(`/admin/api/content/entries?${params.toString()}`);
       state.entries = payload.entries || [];
+      const selectedEntryStillVisible = state.entries.some((entry) => entry.id === state.selectedEntryId);
       renderContentList();
+      if (autoSelect && state.entries.length) {
+        const entryId = selectedEntryStillVisible && state.selectedEntryId ? state.selectedEntryId : state.entries[0].id;
+        await loadEntryForEdit(entryId);
+        return;
+      }
       setStatus(`已载入 ${state.entries.length} 条后端内容。`, 'success');
     };
 
@@ -2026,7 +2032,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     elements.tabs.forEach((tab) => tab.addEventListener('click', () => switchTab(tab.dataset.adminV2Tab)));
     elements.contentForm.addEventListener('submit', saveContent);
     elements.accessForm.addEventListener('submit', grantEntitlement);
-    $('#content-refresh').addEventListener('click', loadEntries);
+    $('#content-refresh').addEventListener('click', () => loadEntries({ autoSelect: true }));
     $('#imports-refresh').addEventListener('click', () => loadImportReviews());
     $('#orders-refresh').addEventListener('click', loadOrders);
     $('#accounts-refresh').addEventListener('click', loadAccounts);
