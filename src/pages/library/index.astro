@@ -12,7 +12,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <p class="station-kicker">Reader Library</p>
     <h1>我的書庫</h1>
     <p>註冊會員账号後，之後在不同裝置上也可以找回閱讀點數、會員狀態、已解鎖內容和保存過的書籤。</p>
-    <p class="fine-print">閱讀點數已接入 NOWPayments 充值和 D1 餘額流水。小額單章消費會先從站內點數扣除，再寫入同一套閱讀權限表。</p>
   </section>
 
   <section class="station-section reader-library-grid">
@@ -53,7 +52,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <input id="reader-register-password-confirm" name="register-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入密码" />
         </label>
       </div>
-      <p class="fine-print">注册后会自动登入。密码只会以加盐哈希形式保存，不会明文写入数据库。</p>
       <button class="button button-primary" id="reader-login-submit" type="submit">登入書庫</button>
       <div class="reader-status" id="reader-login-status" role="status" aria-live="polite"></div>
     </form>
