@@ -277,8 +277,10 @@ const accessGateCopy = {
       )}
       {nextChapter ? (
         <a class="button button-primary" href={getChapterHref(basePath, serial.data.seriesSlug, nextChapter.data.chapterSlug)}>{copy.nextChapter}</a>
+      ) : previousChapter ? (
+        <a class="button button-primary" href={seriesHref}>{copy.chapterBack}</a>
       ) : (
-        <a class="button button-primary" href={seriesHref}>{copy.readLatest}</a>
+        null
       )}
     </div>
   </footer>
