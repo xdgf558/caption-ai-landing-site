@@ -11,7 +11,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   <section class="works-hero reader-library-hero">
     <p class="station-kicker">Reader Library</p>
     <h1>我的書庫</h1>
-    <p>用 Email 登入後，之後在不同裝置上也可以找回已解鎖的小說、章節和支持者內容。</p>
+    <p>用 Email 登入後，之後在不同裝置上也可以找回閱讀點數、會員狀態、已解鎖內容和保存過的書籤。</p>
     <p class="fine-print">閱讀點數已接入 NOWPayments 充值和 D1 餘額流水。小額單章消費會先從站內點數扣除，再寫入同一套閱讀權限表。</p>
   </section>
 
@@ -48,9 +48,31 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <div class="reader-credit-packs" id="reader-credit-packs"></div>
       <div class="reader-status" id="reader-credit-status" role="status" aria-live="polite"></div>
     </div>
+
+    <div class="reader-panel reader-membership-panel" id="reader-membership-panel" hidden>
+      <div>
+        <p class="station-kicker">Membership</p>
+        <h2>會員閱讀</h2>
+      </div>
+      <p class="reader-membership-state" id="reader-membership-state">尚未開通會員。</p>
+      <p class="fine-print" id="reader-membership-rule">10 點可兌換 1 個月會員，會員可閱讀收費章節。</p>
+      <button class="button button-primary" id="reader-membership-redeem" type="button">用閱讀點兌換會員</button>
+      <div class="reader-status" id="reader-membership-status" role="status" aria-live="polite"></div>
+    </div>
   </section>
 
   <section class="station-section reader-library-content" id="reader-library-content" hidden>
+    <div class="station-section__heading">
+      <p class="station-kicker">Bookmarks</p>
+      <h2>繼續閱讀</h2>
+    </div>
+    <div class="reader-library-list" id="reader-bookmark-list"></div>
+    <div class="reader-empty-shelf" id="reader-bookmark-empty">
+      <h3>目前還沒有保存書籤。</h3>
+      <p>打開小說章節後，點擊「保存書籤」，下次就可以從這裡接著閱讀。</p>
+      <a class="button button-secondary" href="/zh-hant/works/">去看連載小說</a>
+    </div>
+
     <div class="station-section__heading">
       <p class="station-kicker">Library</p>
       <h2>已解鎖內容</h2>
@@ -76,9 +98,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const creditCost = document.getElementById('reader-credit-cost');
     const creditPacks = document.getElementById('reader-credit-packs');
     const creditStatus = document.getElementById('reader-credit-status');
+    const membershipPanel = document.getElementById('reader-membership-panel');
+    const membershipState = document.getElementById('reader-membership-state');
+    const membershipRule = document.getElementById('reader-membership-rule');
+    const membershipRedeem = document.getElementById('reader-membership-redeem');
+    const membershipStatus = document.getElementById('reader-membership-status');
     const libraryContent = document.getElementById('reader-library-content');
     const libraryList = document.getElementById('reader-library-list');
     const libraryEmpty = document.getElementById('reader-library-empty');
+    const bookmarkList = document.getElementById('reader-bookmark-list');
+    const bookmarkEmpty = document.getElementById('reader-bookmark-empty');
 
     const setStatus = (message, tone = 'neutral') => {
       statusBox.textContent = message;
@@ -90,6 +119,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       form.hidden = signedIn;
       accountPanel.hidden = !signedIn;
       creditsPanel.hidden = !signedIn;
+      membershipPanel.hidden = !signedIn;
       libraryContent.hidden = !signedIn;
       accountEmail.textContent = signedIn ? session.account.email : '';
     };
@@ -146,6 +176,37 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
     };
 
+    const renderBookmarks = (items) => {
+      bookmarkList.innerHTML = '';
+      bookmarkEmpty.hidden = items.length > 0;
+
+      items.forEach((item) => {
+        const card = document.createElement('article');
+        card.className = 'reader-library-card reader-bookmark-card';
+
+        const title = document.createElement('h3');
+        title.textContent = item.chapterTitle || item.chapterSlug;
+
+        const meta = document.createElement('p');
+        const progress = Number.parseInt(item.progressPercent || 0, 10);
+        meta.textContent = `${item.seriesTitle || item.seriesSlug} · ${progress > 0 ? `已讀到 ${progress}%` : '已保存位置'} · ${formatLocalDate(item.updatedAt)}`;
+
+        const link = document.createElement('a');
+        link.className = 'paper-link';
+        link.href = item.sourcePath || `/zh-hant/works/${item.seriesSlug}/${item.chapterSlug}/`;
+        link.textContent = '繼續閱讀';
+
+        card.append(title, meta, link);
+        if (item.note) {
+          const note = document.createElement('p');
+          note.className = 'fine-print';
+          note.textContent = item.note;
+          card.append(note);
+        }
+        bookmarkList.append(card);
+      });
+    };
+
     const loadLibrary = async () => {
       const response = await fetch('/api/novels/library');
       const data = await response.json();
@@ -153,9 +214,36 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       renderLibrary(data.entitlements || []);
     };
 
+    const loadBookmarks = async () => {
+      const response = await fetch('/api/readers/bookmarks');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取書籤失敗。');
+      if (!data.authenticated) return;
+      renderBookmarks(data.bookmarks || []);
+      if (data.setupRequired) {
+        const warning = document.createElement('p');
+        warning.className = 'reader-status';
+        warning.dataset.tone = 'error';
+        warning.textContent = data.message || '書籤資料表尚未初始化。';
+        bookmarkList.append(warning);
+      }
+    };
+
     const setCreditStatus = (message, tone = 'neutral') => {
       creditStatus.textContent = message;
       creditStatus.dataset.tone = tone;
+    };
+
+    const setMembershipStatus = (message, tone = 'neutral') => {
+      membershipStatus.textContent = message;
+      membershipStatus.dataset.tone = tone;
+    };
+
+    const formatLocalDate = (value) => {
+      if (!value) return '';
+      const date = new Date(String(value).replace(' ', 'T'));
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleString('zh-Hant', { dateStyle: 'medium', timeStyle: 'short' });
     };
 
     const renderCreditPacks = (packs) => {
@@ -170,6 +258,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
     };
 
+    const renderMembership = (membership, settings, creditAccount) => {
+      const cost = settings?.membershipCreditCost || 10;
+      const months = settings?.membershipDurationMonths || 1;
+      const unitLabel = settings?.unitLabel || creditAccount?.unitLabel || 'SC Credits';
+      const coversPaid = settings?.membershipCoversPaidContent !== false;
+      membershipRule.textContent = `${cost} 點可兌換 ${months} 個月會員，${coversPaid ? '會員可閱讀收費章節。' : '目前會員不覆蓋收費章節。'}`;
+      membershipRedeem.textContent = `用 ${cost} 點兌換 ${months} 個月會員`;
+      membershipRedeem.hidden = settings?.enabled === false;
+      membershipRedeem.disabled = settings?.enabled === false || (creditAccount?.balanceCredits || 0) < cost;
+      if (membership?.active) {
+        membershipState.textContent = `會員有效至 ${formatLocalDate(membership.expiresAt)}。`;
+      } else {
+        membershipState.textContent = `尚未開通會員。当前余额 ${creditAccount?.balanceCredits || 0} ${unitLabel}。`;
+      }
+      if (settings?.enabled === false) {
+        setMembershipStatus('會員兌換目前未開啟。', 'neutral');
+      } else if ((creditAccount?.balanceCredits || 0) < cost) {
+        setMembershipStatus('閱讀點不足，請先充值點數。', 'neutral');
+      } else {
+        setMembershipStatus('');
+      }
+    };
+
     const loadCredits = async () => {
       const response = await fetch('/api/readers/credits');
       const data = await response.json();
@@ -180,6 +291,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       creditBalance.textContent = `${data.account?.balanceCredits || 0} ${unitLabel}`;
       creditCost.textContent = `目前單章付費內容會扣除 ${data.chapterCostCredits || 1} 點。`;
       renderCreditPacks(data.packs || []);
+      renderMembership(data.membership, data.membershipSettings, data.account);
     };
 
     const wait = (milliseconds) => new Promise((resolve) => {
@@ -235,7 +347,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (!response.ok || !data.ok) throw new Error(data.message || '讀取登入狀態失敗。');
       setSignedIn(data);
       if (data.authenticated) {
-        await Promise.all([loadLibrary(), loadCredits()]);
+        await Promise.all([loadLibrary(), loadCredits(), loadBookmarks()]);
       }
     };
 
@@ -302,8 +414,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         await fetch('/api/readers/logout', { method: 'POST' });
         setSignedIn({ authenticated: false });
         renderLibrary([]);
+        renderBookmarks([]);
         renderCreditPacks([]);
         creditBalance.textContent = '0 SC Credits';
+        renderMembership(null, { enabled: true, membershipCreditCost: 10, membershipDurationMonths: 1 }, { balanceCredits: 0, unitLabel: 'SC Credits' });
         setStatus('已登出。', 'success');
       } finally {
         logoutButton.disabled = false;
@@ -341,6 +455,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         buttons.forEach((item) => {
           item.disabled = false;
         });
+      }
+    });
+
+    membershipRedeem.addEventListener('click', async () => {
+      membershipRedeem.disabled = true;
+      setMembershipStatus('正在兌換會員...', 'neutral');
+
+      try {
+        const response = await fetch('/api/readers/membership/redeem', { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          if (data.code === 'INSUFFICIENT_CREDITS') throw new Error('閱讀點不足，請先充值點數。');
+          throw new Error(data.message || '會員兌換失敗。');
+        }
+        setMembershipStatus('會員已開通，收費章節可直接閱讀。', 'success');
+        await Promise.all([loadLibrary(), loadCredits()]);
+      } catch (error) {
+        setMembershipStatus(error.message || '會員兌換失敗。', 'error');
+        membershipRedeem.disabled = false;
       }
     });
 

@@ -27,46 +27,43 @@ interface Props {
 
 const { basePath, chapter, chapterList, copy, locale, nextChapter, previousChapter, serial, Content } = Astro.props;
 const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
+const chapterHref = getChapterHref(basePath, serial.data.seriesSlug, chapter.data.chapterSlug);
 const isProtectedChapter = chapter.data.access !== 'free';
 const unlockOrderType = chapter.data.access === 'supporter' ? 'supporter' : 'chapter';
-const unlockAmount =
-  unlockOrderType === 'supporter'
-    ? serial.data.supporterPriceAmount ?? 4.99
-    : serial.data.chapterPriceAmount ?? 1.99;
-const unlockCurrency =
-  unlockOrderType === 'supporter'
-    ? serial.data.supporterPriceCurrency ?? 'USD'
-    : serial.data.chapterPriceCurrency ?? 'USD';
-const formattedUnlockAmount = new Intl.NumberFormat(locale, {
-  style: 'currency',
-  currency: unlockCurrency
-}).format(unlockAmount);
-const currentChapterIndex = chapterList.findIndex((entry) => entry.data.chapterSlug === chapter.data.chapterSlug);
-const paidChaptersFromCurrent =
-  currentChapterIndex >= 0 ? chapterList.slice(currentChapterIndex).filter((entry) => entry.data.access === 'paid') : [];
-const roundPaymentAmount = (amount: number) => Math.round(amount * 100) / 100;
-const bundleUnlockOptions =
-  unlockOrderType === 'chapter' && serial.data.bundlePurchasesEnabled
-    ? (serial.data.chapterBundleDiscounts ?? [])
-        .map((discount) => {
-          const chapterCount = Math.trunc(discount.chapters);
-          if (chapterCount <= 1 || discount.discountPercent <= 0 || paidChaptersFromCurrent.length < chapterCount) return null;
-          const chapterSlugs = paidChaptersFromCurrent.slice(0, chapterCount).map((entry) => entry.data.chapterSlug);
-          const subtotalAmount = unlockAmount * chapterCount;
-          const priceAmount = roundPaymentAmount(subtotalAmount * (100 - discount.discountPercent) / 100);
-          return {
-            chapterCount,
-            chapterSlugs,
-            discountPercent: discount.discountPercent,
-            formattedAmount: new Intl.NumberFormat(locale, { style: 'currency', currency: unlockCurrency }).format(priceAmount)
-          };
-        })
-        .filter(Boolean)
-    : [];
+const bookmarkCopy = {
+  en: {
+    save: 'Save bookmark',
+    saving: 'Saving bookmark...',
+    saved: 'Bookmark saved. You can continue from the library next time.',
+    signInRequired: 'Please sign in before saving a bookmark.',
+    failed: 'Could not save bookmark.'
+  },
+  ja: {
+    save: 'しおりを保存',
+    saving: 'しおりを保存しています...',
+    saved: 'しおりを保存しました。次回は本棚から続きが読めます。',
+    signInRequired: 'しおりを保存する前にログインしてください。',
+    failed: 'しおりを保存できませんでした。'
+  },
+  'zh-Hant': {
+    save: '保存書籤',
+    saving: '正在保存書籤...',
+    saved: '書籤已保存，下次可以從書庫繼續閱讀。',
+    signInRequired: '請先登入，再保存書籤。',
+    failed: '書籤保存失敗。'
+  },
+  'zh-Hans': {
+    save: '保存书签',
+    saving: '正在保存书签...',
+    saved: '书签已保存，下次可以从书库继续阅读。',
+    signInRequired: '请先登录，再保存书签。',
+    failed: '书签保存失败。'
+  }
+}[locale];
 const accessGateCopy = {
   en: {
     title: 'This chapter is reserved for unlocked readers.',
-    body: 'Sign in to check this account, or create a NOWPayments order to unlock access after payment confirmation.',
+    body: 'Sign in to check this account, use reading credits to unlock this chapter, or redeem a membership from the library.',
     checking: 'Checking access...',
     allowed: 'Access confirmed. Loading the chapter...',
     denied: 'This account has not unlocked this chapter yet.',
@@ -97,7 +94,7 @@ const accessGateCopy = {
   },
   ja: {
     title: 'この章は解放済み読者向けです。',
-    body: 'ログインして権限を確認するか、NOWPayments の注文を作成して支払い確認後の解放に進めます。',
+    body: 'ログインして権限を確認するか、読書ポイントでこの章を解放します。会員は本棚から交換できます。',
     checking: '権限を確認しています...',
     allowed: '権限を確認しました。本文を読み込んでいます...',
     denied: 'このアカウントではまだこの章が解放されていません。',
@@ -128,7 +125,7 @@ const accessGateCopy = {
   },
   'zh-Hant': {
     title: '這一章保留給已解鎖讀者。',
-    body: '可以先登入確認帳戶是否已有權限，也可以建立 NOWPayments 訂單，等支付確認後再解鎖。',
+    body: '可以先登入確認帳戶是否已有權限，也可以用閱讀點解鎖本章，或到書庫兌換會員。',
     checking: '正在確認閱讀權限...',
     allowed: '權限已確認，正在載入正文...',
     denied: '這個帳戶尚未解鎖本章。',
@@ -159,7 +156,7 @@ const accessGateCopy = {
   },
   'zh-Hans': {
     title: '这一章保留给已解锁读者。',
-    body: '可以先登录确认账户是否已有权限，也可以建立 NOWPayments 订单，等支付确认后再解锁。',
+    body: '可以先登录确认账户是否已有权限，也可以用阅读点解锁本章，或到书库兑换会员。',
     checking: '正在确认阅读权限...',
     allowed: '权限已确认，正在加载正文...',
     denied: '这个账户尚未解锁本章。',
@@ -241,21 +238,6 @@ const accessGateCopy = {
             {accessGateCopy.creditUnlock}
           </button>
         )}
-        <button class="button button-secondary" type="button" data-serial-unlock data-order-type={unlockOrderType}>
-          {accessGateCopy.unlock} {formattedUnlockAmount}
-        </button>
-        {bundleUnlockOptions.map((option) => (
-          <button
-            class="button button-secondary"
-            type="button"
-            data-serial-unlock
-            data-order-type="chapter-bundle"
-            data-bundle-chapters={option.chapterCount}
-            data-chapter-slugs={option.chapterSlugs.join(',')}
-          >
-            {accessGateCopy.bundle} {option.chapterCount}{accessGateCopy.bundleUnit} · {option.formattedAmount} · {option.discountPercent}% {accessGateCopy.bundleOff}
-          </button>
-        ))}
         {unlockOrderType === 'chapter' && <a class="button button-secondary" href="/library/">{accessGateCopy.creditTopUp}</a>}
         <a class="button button-secondary" href={seriesHref}>{copy.chapterBack}</a>
       </div>
@@ -281,9 +263,68 @@ const accessGateCopy = {
       ) : (
         null
       )}
+      <button class="button button-secondary" type="button" data-reader-bookmark-save>{bookmarkCopy.save}</button>
     </div>
+    <div class="reader-status serial-bookmark-status" data-reader-bookmark-status role="status" aria-live="polite"></div>
   </footer>
 </div>
+
+<script define:vars={{ bookmarkCopy, bookmarkData: {
+  chapterSlug: chapter.data.chapterSlug,
+  chapterTitle: chapter.data.title,
+  locale,
+  seriesSlug: serial.data.seriesSlug,
+  seriesTitle: serial.data.title,
+  sourcePath: chapterHref
+} }}>
+  const bookmarkButton = document.querySelector('[data-reader-bookmark-save]');
+  const bookmarkStatus = document.querySelector('[data-reader-bookmark-status]');
+
+  const setBookmarkStatus = (message, tone = 'neutral') => {
+    if (!bookmarkStatus) return;
+    bookmarkStatus.textContent = message;
+    bookmarkStatus.dataset.tone = tone;
+  };
+
+  const currentProgressPercent = () => {
+    const documentElement = document.documentElement;
+    const scrollTop = window.scrollY || documentElement.scrollTop || 0;
+    const scrollable = Math.max(1, documentElement.scrollHeight - window.innerHeight);
+    return Math.max(0, Math.min(100, Math.round((scrollTop / scrollable) * 100)));
+  };
+
+  bookmarkButton?.addEventListener('click', async () => {
+    bookmarkButton.disabled = true;
+    setBookmarkStatus(bookmarkCopy.saving, 'neutral');
+    const progressPercent = currentProgressPercent();
+
+    try {
+      const response = await fetch('/api/readers/bookmarks', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          ...bookmarkData,
+          progressPercent,
+          positionLabel: `${progressPercent}%`
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        if (data.code === 'SIGN_IN_REQUIRED') {
+          setBookmarkStatus(bookmarkCopy.signInRequired, 'error');
+          window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname)}`;
+          return;
+        }
+        throw new Error(data.message || bookmarkCopy.failed);
+      }
+      setBookmarkStatus(bookmarkCopy.saved, 'success');
+    } catch (error) {
+      setBookmarkStatus(error.message || bookmarkCopy.failed, 'error');
+    } finally {
+      bookmarkButton.disabled = false;
+    }
+  });
+</script>
 
 {isProtectedChapter && (
   <script define:vars={{ accessGateCopy }}>

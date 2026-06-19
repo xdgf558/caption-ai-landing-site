@@ -224,8 +224,16 @@ const novelCreditSource = 'reader-credits';
 const novelCreditUnitLabel = 'SC Credits';
 const novelCreditLedgerTopupSource = 'nowpayments-credit-pack';
 const novelCreditLedgerUnlockSource = 'chapter-credit-unlock';
+const novelCreditLedgerMembershipSource = 'reader-membership-redeem';
 const novelAdminSource = 'admin-v2';
 const novelAdminManualCreditSource = 'admin-v2-manual-credit';
+const defaultReaderCreditPacks = [
+  { credits: 10, priceAmount: 1, priceCurrency: 'USD', label: '10 SC Credits' },
+  { credits: 50, priceAmount: 5, priceCurrency: 'USD', label: '50 SC Credits' },
+  { credits: 100, priceAmount: 10, priceCurrency: 'USD', label: '100 SC Credits' }
+];
+const defaultMembershipCreditCost = 10;
+const defaultMembershipMonths = 1;
 
 const timingSafeEqualString = (left, right) => {
   const leftValue = String(left || '');
@@ -394,6 +402,14 @@ const normalizeContentPricing = (value = {}) => {
   const tipAmounts = normalizeContentTipAmounts(pricing.tipAmounts);
   const chapterBundleDiscounts = normalizeContentBundleDiscounts(pricing.chapterBundleDiscounts);
   const creditPacks = normalizeContentCreditPacks(pricing.creditPacks || pricing.readerCreditPacks);
+  const membershipCreditCost = normalizePositiveInteger(
+    pricing.membershipCreditCost ?? pricing.subscriptionCreditCost,
+    defaultMembershipCreditCost
+  );
+  const membershipDurationMonths = normalizePositiveInteger(
+    pricing.membershipDurationMonths ?? pricing.subscriptionMonths,
+    defaultMembershipMonths
+  );
 
   return {
     mode,
@@ -408,7 +424,12 @@ const normalizeContentPricing = (value = {}) => {
     tipCurrency: normalizeFiatCurrency(pricing.tipCurrency, 'USD'),
     bundlePurchasesEnabled: Boolean(pricing.bundlePurchasesEnabled),
     chapterBundleDiscounts,
-    creditPacks
+    creditPacks,
+    directChapterCheckoutEnabled: Boolean(pricing.directChapterCheckoutEnabled),
+    subscriptionEnabled: pricing.subscriptionEnabled !== false,
+    membershipCreditCost: Math.max(1, membershipCreditCost || defaultMembershipCreditCost),
+    membershipDurationMonths: Math.max(1, membershipDurationMonths || defaultMembershipMonths),
+    membershipCoversPaidContent: pricing.membershipCoversPaidContent !== false
   };
 };
 
@@ -439,13 +460,7 @@ const parseCreditPacksEnv = (value) =>
 
 const getReaderCreditConfig = (env) => {
   const envPacks = parseCreditPacksEnv(env.NOVEL_CREDIT_PACKS);
-  const packs = (envPacks.length
-    ? envPacks
-    : [
-        { credits: 10, priceAmount: 1, priceCurrency: 'USD', label: '10 SC Credits' },
-        { credits: 60, priceAmount: 5, priceCurrency: 'USD', label: '60 SC Credits' },
-        { credits: 130, priceAmount: 10, priceCurrency: 'USD', label: '130 SC Credits' }
-      ])
+  const packs = (envPacks.length ? envPacks : defaultReaderCreditPacks)
     .map(normalizeCreditPack)
     .filter(Boolean)
     .sort((a, b) => a.priceAmount - b.priceAmount || a.credits - b.credits);
@@ -493,6 +508,11 @@ const getStaticSeriesPaymentSettings = (seriesSlug, env) => {
       bundlePurchasesEnabled: false,
       chapterBundleDiscounts: [],
       creditPacks: readerCreditConfig.packs,
+      directChapterCheckoutEnabled: false,
+      subscriptionEnabled: true,
+      membershipCreditCost: defaultMembershipCreditCost,
+      membershipDurationMonths: defaultMembershipMonths,
+      membershipCoversPaidContent: true,
       chapters: []
     };
   }
@@ -517,6 +537,11 @@ const getStaticSeriesPaymentSettings = (seriesSlug, env) => {
     bundlePurchasesEnabled: Boolean(settings.bundlePurchasesEnabled),
     chapterBundleDiscounts: normalizeBundleDiscounts(settings.chapterBundleDiscounts),
     creditPacks: readerCreditConfig.packs,
+    directChapterCheckoutEnabled: false,
+    subscriptionEnabled: true,
+    membershipCreditCost: defaultMembershipCreditCost,
+    membershipDurationMonths: defaultMembershipMonths,
+    membershipCoversPaidContent: true,
     chapters: (Array.isArray(settings.chapters) ? settings.chapters : [])
       .map((chapter) => ({
         chapterSlug: cleanSlug(chapter?.chapterSlug),
@@ -556,6 +581,11 @@ const applyContentPricingSnapshot = (settings, pricingSnapshot, source) => {
     next.chapterBundleDiscounts = paymentBundleDiscountsFromContentPricing(pricing);
   }
   if (pricing.creditPacks.length) next.creditPacks = pricing.creditPacks;
+  if (has('directChapterCheckoutEnabled')) next.directChapterCheckoutEnabled = pricing.directChapterCheckoutEnabled;
+  if (has('subscriptionEnabled')) next.subscriptionEnabled = pricing.subscriptionEnabled;
+  if (has('membershipCreditCost') || has('subscriptionCreditCost')) next.membershipCreditCost = pricing.membershipCreditCost;
+  if (has('membershipDurationMonths') || has('subscriptionMonths')) next.membershipDurationMonths = pricing.membershipDurationMonths;
+  if (has('membershipCoversPaidContent')) next.membershipCoversPaidContent = pricing.membershipCoversPaidContent;
 
   return next;
 };
@@ -729,14 +759,36 @@ const getBackendSeriesPaymentSettings = async (db, seriesSlug, env, options = {}
   return applyContentPricingRules(snapshotSettings, rules, options.chapterSlug);
 };
 
+const applyConfiguredPricingDefaultsToSettings = async (db, settings) => {
+  if (!db || !settings) return settings;
+  try {
+    if (!(await ensureAdminContentSettingsReady(db))) return settings;
+    const row = await getContentPricingDefaultsRow(db);
+    if (!row) return settings;
+    const template = normalizeContentPricingDefaults(parseStoredJson(row.setting_json, {}));
+    const merged = applyContentPricingSnapshot(settings, template.pricing, 'global-pricing-defaults');
+    return {
+      ...merged,
+      accessLevel: template.accessLevel,
+      globalPricingUpdatedAt: row.updated_at || '',
+      globalPricingUpdatedBy: row.updated_by || ''
+    };
+  } catch (error) {
+    if (isMissingContentTablesError(error)) return settings;
+    if (String(error?.message || '').includes('no such table')) return settings;
+    throw error;
+  }
+};
+
 const resolveSeriesPaymentSettings = async (db, seriesSlug, env, options = {}) => {
+  let settings = null;
   try {
     const backendSettings = await getBackendSeriesPaymentSettings(db, seriesSlug, env, options);
-    if (backendSettings) return backendSettings;
+    if (backendSettings) settings = backendSettings;
   } catch (error) {
     if (!isMissingContentTablesError(error)) throw error;
   }
-  return getStaticSeriesPaymentSettings(seriesSlug, env);
+  return applyConfiguredPricingDefaultsToSettings(db, settings || getStaticSeriesPaymentSettings(seriesSlug, env));
 };
 
 const getConfiguredTipAmount = (settings, amount) => {
@@ -816,6 +868,11 @@ const paymentSettingsToPublicJson = (settings, options = {}) => {
     supporterPriceCurrency: settings.supporterPriceCurrency,
     bundlePurchasesEnabled: Boolean(settings.bundlePurchasesEnabled),
     chapterBundleDiscounts: settings.chapterBundleDiscounts,
+    directChapterCheckoutEnabled: Boolean(settings.directChapterCheckoutEnabled),
+    subscriptionEnabled: settings.subscriptionEnabled !== false,
+    membershipCreditCost: Math.max(1, normalizePositiveInteger(settings.membershipCreditCost, defaultMembershipCreditCost)),
+    membershipDurationMonths: Math.max(1, normalizePositiveInteger(settings.membershipDurationMonths, defaultMembershipMonths)),
+    membershipCoversPaidContent: settings.membershipCoversPaidContent !== false,
     bundleOptions: bundleOptions.map((option) => ({
       chapterCount: option.bundleChapterCount,
       chapterSlugs: option.bundleChapterSlugs,
@@ -912,6 +969,122 @@ const readerCreditLedgerToJson = (row) => ({
   metadataJson: row.metadata_json,
   createdAt: row.created_at
 });
+
+const readerBookmarkToJson = (row) => ({
+  id: row.id,
+  accountId: row.account_id,
+  seriesSlug: row.series_slug,
+  chapterSlug: row.chapter_slug,
+  seriesTitle: row.series_title,
+  chapterTitle: row.chapter_title,
+  locale: row.locale,
+  sourcePath: row.source_path,
+  progressPercent: normalizePositiveInteger(row.progress_percent, 0),
+  positionLabel: row.position_label,
+  note: row.note,
+  metadata: parseStoredJson(row.metadata_json, {}),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const readerMembershipToJson = (row) => row
+  ? {
+      accountId: row.account_id,
+      membershipLevel: row.membership_level,
+      source: row.source,
+      sourceRef: row.source_ref,
+      startedAt: row.started_at,
+      expiresAt: row.expires_at,
+      lastRedeemedAt: row.last_redeemed_at,
+      active: !row.expires_at || new Date(String(row.expires_at).replace(' ', 'T')).getTime() > Date.now(),
+      metadata: parseStoredJson(row.metadata_json, {}),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }
+  : null;
+
+const getActiveReaderMembership = async (db, accountId) => {
+  if (!db || !(await ensureReaderMembershipsReady(db))) return null;
+  return db
+    .prepare(
+      `SELECT *
+       FROM reader_memberships
+       WHERE account_id = ?
+         AND expires_at > CURRENT_TIMESTAMP
+       LIMIT 1`
+    )
+    .bind(accountId)
+    .first();
+};
+
+const getReaderMembershipSettings = async (db, env) => {
+  const config = getReaderCreditConfig(env);
+  let pricing = getDefaultContentPricingTemplate().pricing;
+  try {
+    if (db && (await ensureAdminContentSettingsReady(db))) {
+      const row = await getContentPricingDefaultsRow(db);
+      if (row) pricing = contentPricingDefaultsToJson(row).pricing;
+    }
+  } catch (error) {
+    if (!isMissingAdminContentSettingsError(error)) throw error;
+  }
+
+  return {
+    enabled: pricing.subscriptionEnabled !== false,
+    membershipCreditCost: Math.max(1, normalizePositiveInteger(pricing.membershipCreditCost, defaultMembershipCreditCost)),
+    membershipDurationMonths: Math.max(1, normalizePositiveInteger(pricing.membershipDurationMonths, defaultMembershipMonths)),
+    membershipCoversPaidContent: pricing.membershipCoversPaidContent !== false,
+    unitLabel: config.unitLabel
+  };
+};
+
+const getConfiguredReaderCreditPacks = async (db, env) => {
+  const config = getReaderCreditConfig(env);
+  try {
+    if (db && (await ensureAdminContentSettingsReady(db))) {
+      const row = await getContentPricingDefaultsRow(db);
+      if (row) {
+        const packs = contentPricingDefaultsToJson(row).pricing.creditPacks || [];
+        if (packs.length) return packs;
+      }
+    }
+  } catch (error) {
+    if (!isMissingAdminContentSettingsError(error)) throw error;
+  }
+  return config.packs;
+};
+
+const getConfiguredChapterCostCredits = async (db, env) => {
+  const config = getReaderCreditConfig(env);
+  try {
+    if (db && (await ensureAdminContentSettingsReady(db))) {
+      const row = await getContentPricingDefaultsRow(db);
+      if (row) {
+        const pricing = contentPricingDefaultsToJson(row).pricing;
+        return Math.max(1, normalizePositiveInteger(pricing.chapterCredits, config.chapterCostCredits));
+      }
+    }
+  } catch (error) {
+    if (!isMissingAdminContentSettingsError(error)) throw error;
+  }
+  return config.chapterCostCredits;
+};
+
+const findConfiguredReaderCreditPack = async (db, env, requestedCredits) => {
+  const config = getReaderCreditConfig(env);
+  const credits = normalizePositiveInteger(requestedCredits, 0);
+  const packs = await getConfiguredReaderCreditPacks(db, env);
+  const pack = packs.find((candidate) => candidate.credits === credits) || null;
+  if (!pack) {
+    const error = new Error('The selected reading credit pack is not available.');
+    error.code = 'CREDIT_PACK_NOT_AVAILABLE';
+    throw error;
+  }
+  return {
+    ...pack,
+    unitLabel: config.unitLabel
+  };
+};
 
 const readerAccountToAdminJson = (row, config = getReaderCreditConfig({})) => ({
   id: row.id,
@@ -1722,6 +1895,8 @@ const listContentPricingRules = async (db, options = {}) => {
 
 const isMissingContentTablesError = (error) => /no such table: (content_|admin_audit_logs)/i.test(error?.message || '');
 const isMissingAdminContentSettingsError = (error) => /no such table: admin_content_settings/i.test(error?.message || '');
+const isMissingReaderMembershipsError = (error) => /no such table: reader_memberships/i.test(error?.message || '');
+const isMissingReaderBookmarksError = (error) => /no such table: reader_bookmarks/i.test(error?.message || '');
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -1739,6 +1914,26 @@ const ensureAdminContentSettingsReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingAdminContentSettingsError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureReaderMembershipsReady = async (db) => {
+  try {
+    await db.prepare('SELECT account_id FROM reader_memberships LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingReaderMembershipsError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureReaderBookmarksReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM reader_bookmarks LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingReaderBookmarksError(error)) return false;
     throw error;
   }
 };
@@ -1878,6 +2073,24 @@ const escapeHtml = (value) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+
+const scriptJson = (value) =>
+  JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (char) => {
+    switch (char) {
+      case '<':
+        return '\\u003c';
+      case '>':
+        return '\\u003e';
+      case '&':
+        return '\\u0026';
+      case '\u2028':
+        return '\\u2028';
+      case '\u2029':
+        return '\\u2029';
+      default:
+        return char;
+    }
+  });
 
 const withPrivateHeaders = (response) => {
   const headers = new Headers(response.headers);
@@ -2763,6 +2976,28 @@ const handleNovelAccessCheck = async (request, env) => {
     });
   }
 
+  const [membershipSettings, membership] = accessRequired === 'paid'
+    ? await Promise.all([
+        getReaderMembershipSettings(db, env),
+        getActiveReaderMembership(db, session.account_id)
+      ])
+    : [{ membershipCoversPaidContent: false }, null];
+  if (membership && membershipSettings.enabled && membershipSettings.membershipCoversPaidContent) {
+    return json({
+      ok: true,
+      authenticated: true,
+      allowed: true,
+      accessRequired,
+      reason: 'membership_active',
+      account: {
+        id: session.account_id,
+        email: session.email
+      },
+      membership: readerMembershipToJson(membership),
+      entitlement: null
+    });
+  }
+
   const entitlement = await findActiveNovelEntitlement(db, session.account_id, seriesSlug, chapterSlug, accessRequired);
   return json({
     ok: true,
@@ -2904,8 +3139,15 @@ const handleProtectedChapterContent = async (request, env) => {
   }
 
   const accessRequired = chapter.access === 'supporter' ? 'supporter' : 'paid';
+  const [membershipSettings, membership] = accessRequired === 'paid'
+    ? await Promise.all([
+        getReaderMembershipSettings(db, env),
+        getActiveReaderMembership(db, session.account_id)
+      ])
+    : [{ membershipCoversPaidContent: false }, null];
   const entitlement = await findActiveNovelEntitlement(db, session.account_id, seriesSlug, chapterSlug, accessRequired);
-  if (!entitlement) {
+  const membershipAllowed = Boolean(membership && membershipSettings.enabled && membershipSettings.membershipCoversPaidContent);
+  if (!entitlement && !membershipAllowed) {
     return privateJson(
       {
         ok: false,
@@ -2962,7 +3204,8 @@ const handleProtectedChapterContent = async (request, env) => {
       source: 'r2',
       uploadedAt: protectedHtml.uploadedAt
     },
-    entitlement: entitlementToJson({ ...entitlement, email: session.email })
+    entitlement: entitlement ? entitlementToJson({ ...entitlement, email: session.email }) : null,
+    membership: membershipAllowed ? readerMembershipToJson(membership) : null
   });
 };
 
@@ -2995,6 +3238,7 @@ const handleNovelLibrary = async (request, env) => {
       id: session.account_id,
       email: session.email
     },
+    membership: readerMembershipToJson(await getActiveReaderMembership(db, session.account_id)),
     entitlements: (response.results || []).map((row) => entitlementToJson({ ...row, email: session.email }))
   });
 };
@@ -3036,17 +3280,25 @@ const getReaderCreditLedger = async (db, accountId, limit = 20) => {
 const getReaderCreditSummary = async (db, accountId, env) => {
   const config = getReaderCreditConfig(env);
   const account = await ensureReaderCreditAccount(db, accountId, config);
-  const ledger = await getReaderCreditLedger(db, accountId);
+  const [ledger, membership, membershipSettings, packs, chapterCostCredits] = await Promise.all([
+    getReaderCreditLedger(db, accountId),
+    getActiveReaderMembership(db, accountId),
+    getReaderMembershipSettings(db, env),
+    getConfiguredReaderCreditPacks(db, env),
+    getConfiguredChapterCostCredits(db, env)
+  ]);
 
   return {
     account: readerCreditAccountToJson(account, config),
-    chapterCostCredits: config.chapterCostCredits,
-    packs: config.packs.map((pack) => ({
+    chapterCostCredits,
+    packs: packs.map((pack) => ({
       credits: pack.credits,
       priceAmount: amountToStorage(pack.priceAmount),
       priceCurrency: pack.priceCurrency,
       label: pack.label
     })),
+    membership: readerMembershipToJson(membership),
+    membershipSettings,
     ledger
   };
 };
@@ -3055,19 +3307,24 @@ const handleReaderCredits = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
 
-  const config = getReaderCreditConfig(env);
+  const [packs, chapterCostCredits, membershipSettings] = await Promise.all([
+    getConfiguredReaderCreditPacks(db, env),
+    getConfiguredChapterCostCredits(db, env),
+    getReaderMembershipSettings(db, env)
+  ]);
   const session = await getReaderFromSession(request, env);
   if (!session) {
     return json({
       ok: true,
       authenticated: false,
-      chapterCostCredits: config.chapterCostCredits,
-      packs: config.packs.map((pack) => ({
+      chapterCostCredits,
+      packs: packs.map((pack) => ({
         credits: pack.credits,
         priceAmount: amountToStorage(pack.priceAmount),
         priceCurrency: pack.priceCurrency,
         label: pack.label
-      }))
+      })),
+      membershipSettings
     });
   }
 
@@ -3075,6 +3332,341 @@ const handleReaderCredits = async (request, env) => {
   return json({
     ok: true,
     authenticated: true,
+    account: {
+      id: session.account_id,
+      email: session.email
+    },
+    ...summary
+  });
+};
+
+const listReaderBookmarks = async (db, accountId, limit = 30) => {
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM reader_bookmarks
+       WHERE account_id = ?
+       ORDER BY updated_at DESC, id DESC
+       LIMIT ?`
+    )
+    .bind(accountId, Math.min(Math.max(normalizePositiveInteger(limit, 30), 1), 80))
+    .all();
+
+  return (response.results || []).map(readerBookmarkToJson);
+};
+
+const normalizeReaderBookmarkPayload = (payload) => {
+  const seriesSlug = cleanSlug(payload.seriesSlug || payload.series);
+  const chapterSlug = cleanSlug(payload.chapterSlug || payload.chapter);
+  if (!seriesSlug || !chapterSlug) {
+    const error = new Error('seriesSlug and chapterSlug are required.');
+    error.code = 'INVALID_BOOKMARK_TARGET';
+    throw error;
+  }
+
+  const fallbackPath = `/zh-hant/works/${seriesSlug}/${chapterSlug}/`;
+  const rawProgress = Number.parseInt(payload.progressPercent ?? payload.progress ?? '', 10);
+  const progressPercent = Number.isFinite(rawProgress) ? Math.max(0, Math.min(100, rawProgress)) : 0;
+
+  return {
+    chapterSlug,
+    chapterTitle: cleanText(payload.chapterTitle || payload.title, 240),
+    locale: normalizeContentLocale(payload.locale || 'zh-Hant'),
+    metadata: normalizeJsonObject(payload.metadata),
+    note: cleanText(payload.note, 500),
+    positionLabel: cleanText(payload.positionLabel, 120),
+    progressPercent,
+    seriesSlug,
+    seriesTitle: cleanText(payload.seriesTitle, 240),
+    sourcePath: cleanRedirectPath(payload.sourcePath || payload.path, fallbackPath)
+  };
+};
+
+const handleReaderBookmarks = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json({
+      ok: true,
+      authenticated: false,
+      bookmarks: []
+    });
+  }
+
+  if (!(await ensureReaderBookmarksReady(db))) {
+    return json({
+      ok: true,
+      authenticated: true,
+      setupRequired: true,
+      message: 'Reader bookmarks are not initialized. Apply migration 0010_reader_bookmarks.sql.',
+      account: {
+        id: session.account_id,
+        email: session.email
+      },
+      bookmarks: []
+    });
+  }
+
+  const url = new URL(request.url);
+  const bookmarks = await listReaderBookmarks(db, session.account_id, url.searchParams.get('limit'));
+  return json({
+    ok: true,
+    authenticated: true,
+    setupRequired: false,
+    account: {
+      id: session.account_id,
+      email: session.email
+    },
+    bookmarks
+  });
+};
+
+const handleReaderBookmarkSave = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json(
+      {
+        ok: false,
+        code: 'SIGN_IN_REQUIRED',
+        message: 'Please sign in before saving a bookmark.'
+      },
+      { status: 401 }
+    );
+  }
+
+  if (!(await ensureReaderBookmarksReady(db))) {
+    return json(
+      {
+        ok: false,
+        code: 'READER_BOOKMARKS_NOT_READY',
+        message: 'Reader bookmarks are not initialized. Apply migration 0010_reader_bookmarks.sql.'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ ok: false, code: 'INVALID_JSON', message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  let bookmark;
+  try {
+    bookmark = normalizeReaderBookmarkPayload(payload);
+  } catch (error) {
+    return json({ ok: false, code: error.code || 'INVALID_BOOKMARK', message: error.message }, { status: 400 });
+  }
+
+  const row = await db
+    .prepare(
+      `INSERT INTO reader_bookmarks (
+        account_id, series_slug, chapter_slug, series_title, chapter_title, locale,
+        source_path, progress_percent, position_label, note, metadata_json
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(account_id, series_slug, chapter_slug)
+      DO UPDATE SET
+        series_title = excluded.series_title,
+        chapter_title = excluded.chapter_title,
+        locale = excluded.locale,
+        source_path = excluded.source_path,
+        progress_percent = excluded.progress_percent,
+        position_label = excluded.position_label,
+        note = excluded.note,
+        metadata_json = excluded.metadata_json,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *`
+    )
+    .bind(
+      session.account_id,
+      bookmark.seriesSlug,
+      bookmark.chapterSlug,
+      bookmark.seriesTitle,
+      bookmark.chapterTitle,
+      bookmark.locale,
+      bookmark.sourcePath,
+      bookmark.progressPercent,
+      bookmark.positionLabel,
+      bookmark.note,
+      JSON.stringify(bookmark.metadata)
+    )
+    .first();
+
+  return json({
+    ok: true,
+    authenticated: true,
+    bookmark: readerBookmarkToJson(row),
+    bookmarks: await listReaderBookmarks(db, session.account_id),
+    account: {
+      id: session.account_id,
+      email: session.email
+    }
+  });
+};
+
+const redeemReaderMembershipWithCredits = async (db, accountId, env) => {
+  if (!(await ensureReaderMembershipsReady(db))) {
+    const error = new Error('Reader memberships are not initialized. Apply migration 0009_reader_memberships.sql.');
+    error.code = 'READER_MEMBERSHIPS_NOT_READY';
+    throw error;
+  }
+
+  const settings = await getReaderMembershipSettings(db, env);
+  if (!settings.enabled) {
+    const error = new Error('Membership redemption is disabled.');
+    error.code = 'MEMBERSHIP_DISABLED';
+    throw error;
+  }
+
+  const config = getReaderCreditConfig(env);
+  await ensureReaderCreditAccount(db, accountId, config);
+  const costCredits = Math.max(1, settings.membershipCreditCost);
+  const months = Math.max(1, settings.membershipDurationMonths);
+  const sourceRef = `membership-${randomToken(12).toLowerCase()}`;
+
+  const updatedAccount = await db
+    .prepare(
+      `UPDATE reader_credit_accounts
+       SET balance_credits = balance_credits - ?,
+           lifetime_spent_credits = lifetime_spent_credits + ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE account_id = ?
+         AND balance_credits >= ?
+       RETURNING *`
+    )
+    .bind(costCredits, costCredits, accountId, costCredits)
+    .first();
+
+  if (!updatedAccount) {
+    const summary = await getReaderCreditSummary(db, accountId, env);
+    const error = new Error('Insufficient reading credits for membership.');
+    error.code = 'INSUFFICIENT_CREDITS';
+    error.summary = summary;
+    throw error;
+  }
+
+  const monthModifier = `+${months} month`;
+  const membership = await db
+    .prepare(
+      `INSERT INTO reader_memberships (
+        account_id, membership_level, source, source_ref, started_at, expires_at,
+        last_redeemed_at, metadata_json
+      )
+      VALUES (?, 'member', ?, ?, CURRENT_TIMESTAMP, datetime(CURRENT_TIMESTAMP, ?), CURRENT_TIMESTAMP, ?)
+      ON CONFLICT(account_id)
+      DO UPDATE SET
+        membership_level = 'member',
+        source = excluded.source,
+        source_ref = excluded.source_ref,
+        expires_at = datetime(
+          CASE
+            WHEN reader_memberships.expires_at > CURRENT_TIMESTAMP THEN reader_memberships.expires_at
+            ELSE CURRENT_TIMESTAMP
+          END,
+          ?
+        ),
+        last_redeemed_at = CURRENT_TIMESTAMP,
+        metadata_json = excluded.metadata_json,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *`
+    )
+    .bind(
+      accountId,
+      novelCreditLedgerMembershipSource,
+      sourceRef,
+      monthModifier,
+      JSON.stringify({
+        costCredits,
+        months,
+        membershipCoversPaidContent: settings.membershipCoversPaidContent
+      }),
+      monthModifier
+    )
+    .first();
+
+  const ledger = await db
+    .prepare(
+      `INSERT INTO reader_credit_ledger (
+        account_id, entry_type, credits_delta, balance_after, source, source_ref,
+        series_slug, chapter_slug, note, metadata_json
+      )
+      VALUES (?, 'membership_redeem', ?, ?, ?, ?, '', '', ?, ?)
+      RETURNING *`
+    )
+    .bind(
+      accountId,
+      -costCredits,
+      updatedAccount.balance_credits,
+      novelCreditLedgerMembershipSource,
+      sourceRef,
+      `Redeemed ${months} month membership with ${costCredits} ${config.unitLabel}.`,
+      JSON.stringify({
+        costCredits,
+        months,
+        expiresAt: membership.expires_at
+      })
+    )
+    .first();
+
+  return {
+    account: updatedAccount,
+    ledger,
+    membership,
+    settings
+  };
+};
+
+const handleReaderMembershipRedeem = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json(
+      {
+        ok: false,
+        code: 'SIGN_IN_REQUIRED',
+        message: 'Please sign in before redeeming membership.'
+      },
+      { status: 401 }
+    );
+  }
+
+  let redeem;
+  try {
+    redeem = await redeemReaderMembershipWithCredits(db, session.account_id, env);
+  } catch (error) {
+    const status =
+      error.code === 'INSUFFICIENT_CREDITS'
+        ? 402
+        : error.code === 'READER_MEMBERSHIPS_NOT_READY'
+          ? 503
+          : 400;
+    return json(
+      {
+        ok: false,
+        code: error.code || 'MEMBERSHIP_REDEEM_FAILED',
+        message: error.message,
+        ...(error.summary || {})
+      },
+      { status }
+    );
+  }
+
+  const summary = await getReaderCreditSummary(db, session.account_id, env);
+  return json({
+    ok: true,
+    redeemed: true,
+    costCredits: redeem.settings.membershipCreditCost,
+    membership: readerMembershipToJson(redeem.membership),
+    ledger: readerCreditLedgerToJson(redeem.ledger),
     account: {
       id: session.account_id,
       email: session.email
@@ -3346,6 +3938,15 @@ const handleReaderCreditUnlock = async (request, env) => {
 const handleNovelPaymentsStatus = async (request, env) => {
   const config = getNowPaymentsConfig(env, request);
   const checkoutEnabled = config.hasApiKey && config.hasIpnSecret;
+  const db = env.WAITLIST_DB;
+  const creditPacks = db ? await getConfiguredReaderCreditPacks(db, env) : getReaderCreditConfig(env).packs;
+  const membershipSettings = db ? await getReaderMembershipSettings(db, env) : {
+    enabled: true,
+    membershipCreditCost: defaultMembershipCreditCost,
+    membershipDurationMonths: defaultMembershipMonths,
+    membershipCoversPaidContent: true,
+    unitLabel: getReaderCreditConfig(env).unitLabel
+  };
   return json({
     ok: true,
     provider: nowPaymentsProvider,
@@ -3361,13 +3962,14 @@ const handleNovelPaymentsStatus = async (request, env) => {
     readerCredits: {
       enabled: checkoutEnabled,
       unitLabel: getReaderCreditConfig(env).unitLabel,
-      chapterCostCredits: getReaderCreditConfig(env).chapterCostCredits,
-      packs: getReaderCreditConfig(env).packs.map((pack) => ({
+      chapterCostCredits: db ? await getConfiguredChapterCostCredits(db, env) : getReaderCreditConfig(env).chapterCostCredits,
+      packs: creditPacks.map((pack) => ({
         credits: pack.credits,
         priceAmount: amountToStorage(pack.priceAmount),
         priceCurrency: pack.priceCurrency,
         label: pack.label
-      }))
+      })),
+      membership: membershipSettings
     },
     automaticEntitlementGrants: true,
     supportedCurrencies: nowPaymentsSupportedCurrencies,
@@ -3432,6 +4034,12 @@ const normalizeCheckoutPayload = async (payload, session, env, db) => {
     throw new Error('seriesSlug is required.');
   }
 
+  if (orderType !== novelCreditPackOrderType && orderType !== 'tip') {
+    const error = new Error('Direct USD unlocks are disabled. Please buy reading credits, then unlock chapters with credits.');
+    error.code = 'DIRECT_USD_UNLOCK_DISABLED';
+    throw error;
+  }
+
   if ((orderType === 'chapter' || orderType === novelBundleOrderType) && !chapterSlug) {
     throw new Error('chapterSlug is required for chapter checkout.');
   }
@@ -3457,7 +4065,7 @@ const normalizeCheckoutPayload = async (payload, session, env, db) => {
         pricingSource = settings.source;
       }
     }
-    creditPack = creditPack || findReaderCreditPack(env, payload.credits || payload.packCredits);
+    creditPack = creditPack || (await findConfiguredReaderCreditPack(db, env, payload.credits || payload.packCredits));
     return {
       bundleDetails: null,
       chapterSlug: '',
@@ -4488,11 +5096,12 @@ const handleAdminGetReaderAccount = async (request, env) => {
   if (!account) return privateJson({ ok: false, code: 'READER_ACCOUNT_NOT_FOUND', message: 'Reader account was not found.' }, { status: 404 });
 
   await ensureReaderCreditAccount(db, account.id, getReaderCreditConfig(env));
-  const [row, creditSummary, entitlements, orders] = await Promise.all([
+  const [row, creditSummary, entitlements, orders, membership] = await Promise.all([
     getAdminReaderAccountRow(db, account.id),
     getReaderCreditSummary(db, account.id, env),
     listNovelEntitlements(db, account.normalized_email),
-    listNovelOrdersForAccount(db, account.id)
+    listNovelOrdersForAccount(db, account.id),
+    getActiveReaderMembership(db, account.id)
   ]);
 
   return privateJson({
@@ -4500,6 +5109,8 @@ const handleAdminGetReaderAccount = async (request, env) => {
     account: readerAccountToAdminJson(row, getReaderCreditConfig(env)),
     credits: creditSummary.account,
     creditLedger: creditSummary.ledger,
+    membership: readerMembershipToJson(membership),
+    membershipSettings: creditSummary.membershipSettings,
     entitlements,
     orders
   });
@@ -4609,11 +5220,12 @@ const handleAdminAdjustReaderCredits = async (request, env) => {
     }
   });
 
-  const [row, creditSummary, entitlements, orders] = await Promise.all([
+  const [row, creditSummary, entitlements, orders, membership] = await Promise.all([
     getAdminReaderAccountRow(db, account.id),
     getReaderCreditSummary(db, account.id, env),
     listNovelEntitlements(db, account.normalized_email),
-    listNovelOrdersForAccount(db, account.id)
+    listNovelOrdersForAccount(db, account.id),
+    getActiveReaderMembership(db, account.id)
   ]);
 
   return privateJson({
@@ -4622,6 +5234,8 @@ const handleAdminAdjustReaderCredits = async (request, env) => {
     account: readerAccountToAdminJson(row, getReaderCreditConfig(env)),
     credits: creditSummary.account,
     creditLedger: creditSummary.ledger,
+    membership: readerMembershipToJson(membership),
+    membershipSettings: creditSummary.membershipSettings,
     entitlements,
     orders
   });
@@ -4630,8 +5244,8 @@ const handleAdminAdjustReaderCredits = async (request, env) => {
 const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
-    stage: '8C',
-    purpose: 'Backend content management, media upload, pricing defaults, order, reader account, credit, entitlement, audit, and NovelForge import review operations centered in Admin 2.0.',
+    stage: '8D',
+    purpose: 'Backend content management, media upload, global reading-credit pricing, reader membership, order, reader account, credit, entitlement, audit, and NovelForge import review operations centered in Admin 2.0.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -4650,9 +5264,10 @@ const handleAdminContentSchema = async (env) =>
         'supporter_price',
         'tip_amount',
         'bundle_discount',
-        'credit_pack'
+        'credit_pack',
+        'membership_redeem'
       ],
-      source: 'content_pricing_rules'
+      source: 'global admin_content_settings, then content_pricing_rules'
     },
     storage: getContentStorageDescriptor(env),
     migration: {
@@ -4663,17 +5278,20 @@ const handleAdminContentSchema = async (env) =>
         'content_imports',
         'content_pricing_rules',
         'admin_content_settings',
+        'reader_bookmarks',
         'admin_audit_logs'
       ],
       legacyMigration: 'Completed. The one-time legacy Markdown migration endpoint and manifest have been removed from the Worker bundle.',
       protectedContent: 'Paid/supporter chapter HTML is loaded from CONTENT_BUCKET after entitlement checks.',
       dynamicFrontend: 'Published backend content can render public Blog and serial pages without a site rebuild.',
-      checkoutPricing: 'Reader-facing checkout resolves content_pricing_rules before generated static config and env defaults.',
+      checkoutPricing: 'Reader-facing checkout only sells reading-credit packs through NOWPayments. Paid chapters unlock with credits or active membership.',
       commerceAdmin: 'Admin 2.0 can inspect orders, reader accounts, credit ledger, entitlements, and rerun paid-order fulfillment.',
       mediaUpload: 'Admin 2.0 uploads cover images into CONTENT_BUCKET under content/media/covers.',
       novelForgeImport: 'NovelForge can publish projects, chapters, and cover metadata through POST /api/novelforge/import with a dedicated Bearer token.',
       novelForgeImportReview: 'Admin 2.0 can review NovelForge import batches, inspect linked entries, and publish imported drafts after review.',
-      pricingDefaults: 'Admin 2.0 stores global novel pricing defaults in admin_content_settings and applies them to newly created series.',
+      pricingDefaults: 'Admin 2.0 stores global novel pricing defaults in admin_content_settings. Saved pricing applies to all books and chapters.',
+      readerMemberships: '10 reading credits can redeem a monthly membership by default. Active members can read paid chapters.',
+      readerBookmarks: 'Reader accounts can save chapter bookmarks and continue reading from the library.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
       nextStages: ['8D optional retry tools and richer NovelForge source diagnostics']
     }
@@ -5363,10 +5981,18 @@ const handleAdminListContentPricingRules = async (request, env) => {
 
 const getDefaultContentPricingTemplate = () =>
   normalizeContentPricingDefaults({
-    accessLevel: 'free',
+    accessLevel: 'paid',
     pricing: {
-      mode: 'free',
-      freeChapters: 0
+      mode: 'chapter-paid',
+      freeChapters: 20,
+      chapterCredits: 1,
+      chapterPriceAmount: 0,
+      creditPacks: defaultReaderCreditPacks,
+      directChapterCheckoutEnabled: false,
+      subscriptionEnabled: true,
+      membershipCreditCost: defaultMembershipCreditCost,
+      membershipDurationMonths: defaultMembershipMonths,
+      membershipCoversPaidContent: true
     }
   });
 
@@ -7074,34 +7700,40 @@ const dynamicPaymentCopy = {
   }
 };
 
-const formatPaymentAmountForLocale = (amount, currency, locale) => {
-  try {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
-  } catch {
-    return `${amountToStorage(amount)} ${currency}`;
+const dynamicBookmarkCopy = {
+  en: {
+    failed: 'Could not save bookmark.',
+    save: 'Save bookmark',
+    saved: 'Bookmark saved. You can continue from the library next time.',
+    saving: 'Saving bookmark...',
+    signInRequired: 'Please sign in before saving a bookmark.'
+  },
+  ja: {
+    failed: 'しおりを保存できませんでした。',
+    save: 'しおりを保存',
+    saved: 'しおりを保存しました。次回は本棚から続きが読めます。',
+    saving: 'しおりを保存しています...',
+    signInRequired: 'しおりを保存する前にログインしてください。'
+  },
+  'zh-Hant': {
+    failed: '書籤保存失敗。',
+    save: '保存書籤',
+    saved: '書籤已保存，下次可以從書庫繼續閱讀。',
+    saving: '正在保存書籤...',
+    signInRequired: '請先登入，再保存書籤。'
+  },
+  'zh-Hans': {
+    failed: '书签保存失败。',
+    save: '保存书签',
+    saved: '书签已保存，下次可以从书库继续阅读。',
+    saving: '正在保存书签...',
+    signInRequired: '请先登录，再保存书签。'
   }
 };
 
 const renderDynamicUnlockButtons = (route, serial, chapter, settings) => {
   const copy = dynamicPaymentCopy[route.locale];
   const orderType = chapter.access_level === 'supporter' ? 'supporter' : 'chapter';
-  const unlockAmount = orderType === 'supporter' ? settings.supporterPriceAmount : settings.chapterPriceAmount;
-  const unlockCurrency = orderType === 'supporter' ? settings.supporterPriceCurrency : settings.chapterPriceCurrency;
-  const bundleOptions = orderType === 'chapter' ? getBundlePricingOptions(settings, chapter.slug) : [];
-  const bundleButtons = bundleOptions
-    .map(
-      (option) => `<button
-          class="button button-secondary"
-          type="button"
-          data-serial-unlock
-          data-order-type="${escapeHtml(novelBundleOrderType)}"
-          data-bundle-chapters="${escapeHtml(String(option.bundleChapterCount))}"
-          data-chapter-slugs="${escapeHtml(option.bundleChapterSlugs.join(','))}"
-        >
-          ${escapeHtml(copy.bundle)} ${escapeHtml(String(option.bundleChapterCount))}${escapeHtml(copy.bundleUnit)} · ${escapeHtml(formatPaymentAmountForLocale(option.priceAmount, settings.chapterPriceCurrency, route.locale))} · ${escapeHtml(String(option.bundleDiscountPercent))}% ${escapeHtml(copy.bundleOff)}
-        </button>`
-    )
-    .join('');
 
   return `<div class="button-row">
       <a class="button button-primary" href="/library/">${escapeHtml(copy.signIn)}</a>
@@ -7110,13 +7742,71 @@ const renderDynamicUnlockButtons = (route, serial, chapter, settings) => {
           ? `<button class="button button-secondary" type="button" data-serial-credit-unlock>${escapeHtml(copy.creditUnlock)} · ${escapeHtml(String(settings.chapterCredits))}</button>`
           : ''
       }
-      <button class="button button-secondary" type="button" data-serial-unlock data-order-type="${escapeHtml(orderType)}">
-        ${escapeHtml(copy.unlock)} ${escapeHtml(formatPaymentAmountForLocale(unlockAmount, unlockCurrency, route.locale))}
-      </button>
-      ${bundleButtons}
       ${orderType === 'chapter' ? `<a class="button button-secondary" href="/library/">${escapeHtml(copy.creditTopUp)}</a>` : ''}
       <a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>
     </div>`;
+};
+
+const renderDynamicBookmarkScript = (route, serial, chapter) => {
+  const copy = dynamicBookmarkCopy[route.locale] || dynamicBookmarkCopy['zh-Hant'];
+  const bookmarkData = {
+    chapterSlug: chapter.slug,
+    chapterTitle: chapter.title,
+    locale: route.locale,
+    seriesSlug: serial.slug,
+    seriesTitle: serial.title,
+    sourcePath: dynamicCanonicalPath(route)
+  };
+
+  return `<script>
+    (() => {
+      const bookmarkButton = document.querySelector('[data-reader-bookmark-save]');
+      const bookmarkStatus = document.querySelector('[data-reader-bookmark-status]');
+      const bookmarkCopy = ${scriptJson(copy)};
+      const bookmarkData = ${scriptJson(bookmarkData)};
+      const setBookmarkStatus = (message, tone = 'neutral') => {
+        if (!bookmarkStatus) return;
+        bookmarkStatus.textContent = message;
+        bookmarkStatus.dataset.tone = tone;
+      };
+      const currentProgressPercent = () => {
+        const documentElement = document.documentElement;
+        const scrollTop = window.scrollY || documentElement.scrollTop || 0;
+        const scrollable = Math.max(1, documentElement.scrollHeight - window.innerHeight);
+        return Math.max(0, Math.min(100, Math.round((scrollTop / scrollable) * 100)));
+      };
+      bookmarkButton?.addEventListener('click', async () => {
+        bookmarkButton.disabled = true;
+        setBookmarkStatus(bookmarkCopy.saving, 'neutral');
+        const progressPercent = currentProgressPercent();
+        try {
+          const response = await fetch('/api/readers/bookmarks', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              ...bookmarkData,
+              progressPercent,
+              positionLabel: progressPercent + '%'
+            })
+          });
+          const data = await response.json();
+          if (!response.ok || !data.ok) {
+            if (data.code === 'SIGN_IN_REQUIRED') {
+              setBookmarkStatus(bookmarkCopy.signInRequired, 'error');
+              window.location.href = '/library/?returnTo=' + encodeURIComponent(window.location.pathname);
+              return;
+            }
+            throw new Error(data.message || bookmarkCopy.failed);
+          }
+          setBookmarkStatus(bookmarkCopy.saved, 'success');
+        } catch (error) {
+          setBookmarkStatus(error.message || bookmarkCopy.failed, 'error');
+        } finally {
+          bookmarkButton.disabled = false;
+        }
+      });
+    })();
+  </script>`;
 };
 
 const renderDynamicNovelSeries = (route, serial, body, chapters) => {
@@ -7158,6 +7848,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
   const previousChapter = currentIndex > 0 ? chapters[currentIndex - 1] : null;
   const nextChapter = currentIndex >= 0 ? chapters[currentIndex + 1] : null;
   const isProtected = chapter.access_level !== 'free';
+  const bookmarkCopy = dynamicBookmarkCopy[route.locale] || dynamicBookmarkCopy['zh-Hant'];
   const summary = firstPlainSummary([chapter.excerpt, chapter.description], 420);
   const fallbackBody = firstPlainSummary([chapter.excerpt, chapter.description], 1200);
   const content = isProtected
@@ -7320,8 +8011,11 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
         <div class="button-row">
           ${previousChapter ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${previousChapter.slug}/`)}">${escapeHtml(copy.previousChapter)}</a>` : `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>`}
           ${nextChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${nextChapter.slug}/`)}">${escapeHtml(copy.nextChapter)}</a>` : previousChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>` : ''}
+          <button class="button button-secondary" type="button" data-reader-bookmark-save>${escapeHtml(bookmarkCopy.save)}</button>
         </div>
+        <div class="reader-status serial-bookmark-status" data-reader-bookmark-status role="status" aria-live="polite"></div>
       </footer>
+      ${renderDynamicBookmarkScript(route, serial, chapter)}
     </article>`;
 };
 
@@ -8112,6 +8806,16 @@ export default {
 
     if (request.method === 'GET' && url.pathname === '/api/readers/credits') {
       return handleReaderCredits(request, env);
+    }
+
+    if (url.pathname === '/api/readers/bookmarks') {
+      if (request.method === 'GET') return handleReaderBookmarks(request, env);
+      if (request.method === 'POST') return handleReaderBookmarkSave(request, env);
+      return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/readers/membership/redeem') {
+      return handleReaderMembershipRedeem(request, env);
     }
 
     if (request.method === 'GET' && url.pathname === '/api/novels/access') {

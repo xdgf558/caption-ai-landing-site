@@ -2457,8 +2457,49 @@ button.button {
 }
 
 .admin-v2-sidebar {
+  cursor: grab;
+  max-height: calc(100svh - 112px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   position: sticky;
+  scrollbar-gutter: stable;
+  touch-action: pan-y;
   top: 92px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-v2-sidebar.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.admin-v2-sidebar.is-dragging * {
+  cursor: grabbing;
+}
+
+.admin-v2-sidebar :is(a, button, input, select, textarea, label, summary, [role="button"]) {
+  cursor: revert;
+  touch-action: manipulation;
+}
+
+.admin-v2-sidebar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.admin-v2-sidebar::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.28);
+  border-radius: 999px;
+}
+
+.admin-v2-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(125, 211, 252, 0.36);
+  border: 2px solid rgba(2, 6, 23, 0.38);
+  border-radius: 999px;
+}
+
+.admin-v2-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(125, 211, 252, 0.58);
 }
 
 .admin-v2-tabs {
@@ -2525,6 +2566,40 @@ button.button {
 .admin-v2-panel textarea:focus {
   border-color: #38bdf8;
   outline: 2px solid rgba(56, 189, 248, 0.28);
+}
+
+.admin-v2-panel .admin-checkbox {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.admin-v2-panel .admin-checkbox input[type="checkbox"] {
+  appearance: none;
+  background: rgba(2, 6, 23, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 6px;
+  cursor: pointer;
+  flex: 0 0 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  width: 20px;
+}
+
+.admin-v2-panel .admin-checkbox input[type="checkbox"]:checked {
+  background-color: #38bdf8;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 18 18' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 9.2 7.2 12.4 14 5.6' fill='none' stroke='%23020617' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border-color: #38bdf8;
+}
+
+.admin-v2-panel .admin-checkbox input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(56, 189, 248, 0.42);
+  outline-offset: 3px;
 }
 
 .admin-v2-shell .button-secondary {
@@ -2608,6 +2683,37 @@ button.button {
   color: #a7b6cc;
   font-size: 13px;
   line-height: 1.55;
+}
+
+.admin-template-note {
+  color: #93a4bb;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.admin-global-pricing-panel {
+  border-color: rgba(56, 189, 248, 0.34);
+}
+
+.admin-global-pricing-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-global-pricing-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-global-pricing-panel label {
+  font-size: 12px;
+  gap: 6px;
+}
+
+.admin-global-pricing-panel input,
+.admin-global-pricing-panel select {
+  min-height: 40px;
+  padding: 8px 10px;
 }
 
 .admin-effective-pricing {
@@ -3066,6 +3172,7 @@ button.button {
   }
 
   .admin-v2-sidebar {
+    max-height: min(78svh, 680px);
     position: static;
   }
 
@@ -5143,6 +5250,15 @@ body.station-paper-page {
   font-weight: 950;
   letter-spacing: 0;
   line-height: 1;
+  margin: 0;
+}
+
+.reader-membership-state {
+  color: #221b16;
+  font-size: clamp(22px, 4vw, 32px);
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1.18;
   margin: 0;
 }
 

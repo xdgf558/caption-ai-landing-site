@@ -27,7 +27,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     </div>
 
     <div class="admin-v2-grid">
-      <aside class="admin-v2-panel admin-v2-sidebar">
+      <aside class="admin-v2-panel admin-v2-sidebar" data-admin-v2-scroll-panel>
         <div class="admin-v2-tabs" role="tablist" aria-label="Admin sections">
             <button class="admin-v2-tab is-active" type="button" data-admin-v2-tab="content">内容</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="imports">导入审核</button>
@@ -38,6 +38,76 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="content-sidebar">
+          <section class="admin-template-panel admin-global-pricing-panel" aria-labelledby="pricing-defaults-title">
+            <div>
+              <p class="station-kicker">Global Pricing</p>
+              <h3 id="pricing-defaults-title">全局收费规则</h3>
+              <p id="pricing-defaults-summary">正在读取默认收费规则。</p>
+              <p class="admin-template-note">保存后对全部书籍和收费章节生效。章节不再直接用 USD 购买，只能先充值阅读点再解锁。</p>
+            </div>
+            <div class="admin-global-pricing-grid">
+              <label>
+                访问级别
+                <select id="global-access-level">
+                  <option value="free">免费</option>
+                  <option value="paid">付费</option>
+                  <option value="member">会员</option>
+                </select>
+              </label>
+              <label>
+                收费模式
+                <select id="global-pricing-mode">
+                  <option value="free">免费阅读</option>
+                  <option value="tip-optional">免费 + 打赏</option>
+                  <option value="chapter-paid">阅读点解锁</option>
+                  <option value="member">会员阅读</option>
+                </select>
+              </label>
+              <label>
+                免费章节数
+                <input id="global-pricing-free-chapters" type="number" min="0" step="1" value="20" />
+              </label>
+              <label>
+                每章阅读点
+                <input id="global-pricing-chapter-credits" type="number" min="1" step="1" value="1" />
+              </label>
+              <label class="admin-global-pricing-wide">
+                点数包
+                <input id="global-pricing-credit-packs" placeholder="10:1, 50:5, 100:10" />
+              </label>
+              <label class="admin-checkbox">
+                <input id="global-subscription-enabled" type="checkbox" checked />
+                开启会员兑换
+              </label>
+              <label>
+                会员点数/月
+                <input id="global-membership-credit-cost" type="number" min="1" step="1" value="10" />
+              </label>
+              <label>
+                兑换月数
+                <input id="global-membership-months" type="number" min="1" step="1" value="1" />
+              </label>
+              <label class="admin-checkbox">
+                <input id="global-membership-covers-paid" type="checkbox" checked />
+                会员免费看收费内容
+              </label>
+              <label class="admin-checkbox">
+                <input id="global-tips-enabled" type="checkbox" />
+                开启打赏
+              </label>
+              <label class="admin-global-pricing-wide">
+                打赏金额 USD
+                <input id="global-pricing-tip-amounts" placeholder="1, 3, 5" />
+              </label>
+            </div>
+            <div class="button-row">
+              <button class="button button-primary" id="pricing-defaults-save" type="button">保存全局收费</button>
+              <button class="button button-secondary" id="pricing-defaults-apply" type="button">套用到当前编辑</button>
+              <button class="button button-secondary" id="pricing-defaults-refresh" type="button">刷新</button>
+            </div>
+            <div class="admin-inline-status" id="pricing-defaults-status" role="status" aria-live="polite" hidden></div>
+          </section>
+
           <div class="admin-v2-filter-grid">
             <label>
               类型
@@ -68,19 +138,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <button class="button button-secondary" type="button" data-new-entry="novel_chapter">新章节</button>
           </div>
           <div class="admin-v2-list" id="content-list" aria-label="Backend content entries"></div>
-          <section class="admin-template-panel" aria-labelledby="pricing-defaults-title">
-            <div>
-              <p class="station-kicker">Pricing Template</p>
-              <h3 id="pricing-defaults-title">收费模板</h3>
-              <p id="pricing-defaults-summary">正在读取默认收费规则。</p>
-            </div>
-            <div class="button-row">
-              <button class="button button-secondary" id="pricing-defaults-apply" type="button">套用默认</button>
-              <button class="button button-secondary" id="pricing-defaults-refresh" type="button">刷新模板</button>
-            </div>
-            <button class="button button-primary" id="pricing-defaults-save" type="button">保存当前为默认</button>
-            <div class="admin-inline-status" id="pricing-defaults-status" role="status" aria-live="polite" hidden></div>
-          </section>
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="imports-sidebar" hidden>
@@ -283,8 +340,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <section class="admin-v2-subpanel">
               <div class="admin-v2-section-heading">
                 <div>
-                  <p class="station-kicker">Pricing</p>
-                  <h3>收费、打赏与多章折扣</h3>
+                  <p class="station-kicker">Entry Override</p>
+                  <h3>单篇收费覆盖（可选）</h3>
+                  <p class="admin-template-note">全局收费规则请在左上角保存。章节 USD 直购已停用，收费章节统一用阅读点或会员阅读。</p>
                 </div>
               </div>
               <div class="admin-v2-form-grid">
@@ -312,20 +370,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <input id="pricing-free-chapters" type="number" min="0" step="1" value="0" />
                 </label>
                 <label>
-                  单章价格 USD
-                  <input id="pricing-chapter-price" type="number" min="0" step="0.01" placeholder="0.30" />
+                  单章价格 USD（已停用）
+                  <input id="pricing-chapter-price" type="number" min="0" step="0.01" placeholder="已停用" disabled />
                 </label>
                 <label>
-                  支持者价格 USD
-                  <input id="pricing-supporter-price" type="number" min="0" step="0.01" placeholder="4.99" />
+                  支持者价格 USD（已停用）
+                  <input id="pricing-supporter-price" type="number" min="0" step="0.01" placeholder="已停用" disabled />
                 </label>
                 <label>
                   单章阅读点
-                  <input id="pricing-chapter-credits" type="number" min="0" step="1" placeholder="30" />
+                  <input id="pricing-chapter-credits" type="number" min="1" step="1" placeholder="1" />
                 </label>
                 <label>
                   阅读点包
-                  <input id="pricing-credit-packs" placeholder="10:1, 60:5, 130:10" />
+                  <input id="pricing-credit-packs" placeholder="10:1, 50:5, 100:10" />
                 </label>
                 <label class="admin-checkbox">
                   <input id="pricing-tips-enabled" type="checkbox" />
@@ -553,6 +611,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       status: $('#admin-v2-status'),
       stage: $('#schema-stage'),
       storageBadge: $('#storage-badge'),
+      sidebar: $('[data-admin-v2-scroll-panel]'),
       tabs: $$('[data-admin-v2-tab]'),
       panels: $$('[data-admin-v2-panel]'),
       contentList: $('#content-list'),
@@ -576,6 +635,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       pricingDefaultsSave: $('#pricing-defaults-save'),
       pricingDefaultsStatus: $('#pricing-defaults-status'),
       pricingDefaultsSummary: $('#pricing-defaults-summary'),
+      globalPricing: {
+        accessLevel: $('#global-access-level'),
+        pricingMode: $('#global-pricing-mode'),
+        freeChapters: $('#global-pricing-free-chapters'),
+        chapterCredits: $('#global-pricing-chapter-credits'),
+        creditPacks: $('#global-pricing-credit-packs'),
+        subscriptionEnabled: $('#global-subscription-enabled'),
+        membershipCreditCost: $('#global-membership-credit-cost'),
+        membershipMonths: $('#global-membership-months'),
+        membershipCoversPaid: $('#global-membership-covers-paid'),
+        tipsEnabled: $('#global-tips-enabled'),
+        tipAmounts: $('#global-pricing-tip-amounts')
+      },
       coverOpen: $('#content-cover-open'),
       coverPreview: $('#content-cover-preview'),
       coverStatus: $('#content-cover-status'),
@@ -657,6 +729,51 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       pricingDefaultsSetupRequired: false,
       schema: null
     };
+
+    const setupDragScroll = (panel) => {
+      if (!panel) return;
+
+      const interactiveSelector = 'a, button, input, select, textarea, label, summary, [role="button"], [contenteditable="true"]';
+      let isDragging = false;
+      let startY = 0;
+      let startScrollTop = 0;
+
+      const stopDragging = (event) => {
+        if (!isDragging) return;
+        isDragging = false;
+        panel.classList.remove('is-dragging');
+        if (event?.pointerId !== undefined && panel.hasPointerCapture?.(event.pointerId)) {
+          panel.releasePointerCapture(event.pointerId);
+        }
+      };
+
+      panel.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        if (event.target.closest(interactiveSelector)) return;
+        if (panel.scrollHeight <= panel.clientHeight) return;
+
+        isDragging = true;
+        startY = event.clientY;
+        startScrollTop = panel.scrollTop;
+        panel.classList.add('is-dragging');
+        panel.setPointerCapture?.(event.pointerId);
+      });
+
+      panel.addEventListener('pointermove', (event) => {
+        if (!isDragging) return;
+        const deltaY = event.clientY - startY;
+        if (Math.abs(deltaY) > 2) {
+          event.preventDefault();
+        }
+        panel.scrollTop = startScrollTop - deltaY;
+      });
+
+      panel.addEventListener('pointerup', stopDragging);
+      panel.addEventListener('pointercancel', stopDragging);
+      panel.addEventListener('lostpointercapture', stopDragging);
+    };
+
+    setupDragScroll(elements.sidebar);
 
     const setStatus = (message, tone = 'neutral') => {
       elements.status.textContent = message;
@@ -838,13 +955,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         : '';
 
     const emptyPricingDefaults = () => ({
-      accessLevel: 'free',
+      accessLevel: 'paid',
       pricing: {
-        mode: 'free',
-        freeChapters: 0,
+        mode: 'chapter-paid',
+        freeChapters: 20,
         chapterPriceAmount: 0,
         chapterPriceCurrency: 'USD',
-        chapterCredits: 0,
+        chapterCredits: 1,
         supporterPriceAmount: 0,
         supporterPriceCurrency: 'USD',
         tipsEnabled: false,
@@ -852,38 +969,88 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         tipCurrency: 'USD',
         bundlePurchasesEnabled: false,
         chapterBundleDiscounts: [],
-        creditPacks: []
+        creditPacks: [
+          { credits: 10, priceAmount: 1, priceCurrency: 'USD', label: '10 SC Credits' },
+          { credits: 50, priceAmount: 5, priceCurrency: 'USD', label: '50 SC Credits' },
+          { credits: 100, priceAmount: 10, priceCurrency: 'USD', label: '100 SC Credits' }
+        ],
+        directChapterCheckoutEnabled: false,
+        subscriptionEnabled: true,
+        membershipCreditCost: 10,
+        membershipDurationMonths: 1,
+        membershipCoversPaidContent: true
       }
     });
 
     const buildPricingPayload = () => ({
       mode: elements.fields.pricingMode.value,
       freeChapters: Number(elements.fields.freeChapters.value || 0),
-      chapterPriceAmount: elements.fields.chapterPrice.value ? Number(elements.fields.chapterPrice.value) : 0,
+      chapterPriceAmount: 0,
       chapterPriceCurrency: 'USD',
-      chapterCredits: elements.fields.chapterCredits.value ? Number(elements.fields.chapterCredits.value) : 0,
-      supporterPriceAmount: elements.fields.supporterPrice.value ? Number(elements.fields.supporterPrice.value) : 0,
+      chapterCredits: elements.fields.chapterCredits.value ? Number(elements.fields.chapterCredits.value) : 1,
+      supporterPriceAmount: 0,
       supporterPriceCurrency: 'USD',
       tipsEnabled: elements.fields.tipsEnabled.checked,
       tipAmounts: splitTags(elements.fields.tipAmounts.value).map(Number).filter(Number.isFinite),
       tipCurrency: 'USD',
       bundlePurchasesEnabled: elements.fields.bundlesEnabled.checked,
       chapterBundleDiscounts: formatBundleRules(elements.fields.bundles.value),
-      creditPacks: formatCreditPacks(elements.fields.creditPacks.value)
+      creditPacks: formatCreditPacks(elements.fields.creditPacks.value),
+      directChapterCheckoutEnabled: false,
+      subscriptionEnabled: true,
+      membershipCreditCost: 10,
+      membershipDurationMonths: 1,
+      membershipCoversPaidContent: true
+    });
+
+    const buildGlobalPricingPayload = () => ({
+      mode: elements.globalPricing.pricingMode.value,
+      freeChapters: Number(elements.globalPricing.freeChapters.value || 0),
+      chapterPriceAmount: 0,
+      chapterPriceCurrency: 'USD',
+      chapterCredits: Math.max(1, Number(elements.globalPricing.chapterCredits.value || 1)),
+      supporterPriceAmount: 0,
+      supporterPriceCurrency: 'USD',
+      tipsEnabled: elements.globalPricing.tipsEnabled.checked,
+      tipAmounts: splitTags(elements.globalPricing.tipAmounts.value).map(Number).filter(Number.isFinite),
+      tipCurrency: 'USD',
+      bundlePurchasesEnabled: false,
+      chapterBundleDiscounts: [],
+      creditPacks: formatCreditPacks(elements.globalPricing.creditPacks.value),
+      directChapterCheckoutEnabled: false,
+      subscriptionEnabled: elements.globalPricing.subscriptionEnabled.checked,
+      membershipCreditCost: Math.max(1, Number(elements.globalPricing.membershipCreditCost.value || 10)),
+      membershipDurationMonths: Math.max(1, Number(elements.globalPricing.membershipMonths.value || 1)),
+      membershipCoversPaidContent: elements.globalPricing.membershipCoversPaid.checked
     });
 
     const applyPricingToFields = (pricing = {}, accessLevel = 'free') => {
       elements.fields.accessLevel.value = accessLevel || 'free';
       elements.fields.pricingMode.value = pricing.mode || 'free';
       elements.fields.freeChapters.value = pricing.freeChapters || 0;
-      elements.fields.chapterPrice.value = pricing.chapterPriceAmount || '';
-      elements.fields.supporterPrice.value = pricing.supporterPriceAmount || '';
-      elements.fields.chapterCredits.value = pricing.chapterCredits || '';
+      elements.fields.chapterPrice.value = '';
+      elements.fields.supporterPrice.value = '';
+      elements.fields.chapterCredits.value = pricing.chapterCredits || 1;
       elements.fields.creditPacks.value = creditPacksToInput(pricing.creditPacks);
       elements.fields.tipsEnabled.checked = Boolean(pricing.tipsEnabled);
       elements.fields.tipAmounts.value = Array.isArray(pricing.tipAmounts) ? pricing.tipAmounts.join(', ') : '';
       elements.fields.bundlesEnabled.checked = Boolean(pricing.bundlePurchasesEnabled);
       elements.fields.bundles.value = bundleRulesToInput(pricing.chapterBundleDiscounts);
+    };
+
+    const applyPricingToGlobalControls = (template = getPricingDefaults()) => {
+      const pricing = template.pricing || {};
+      elements.globalPricing.accessLevel.value = template.accessLevel || 'paid';
+      elements.globalPricing.pricingMode.value = pricing.mode || 'chapter-paid';
+      elements.globalPricing.freeChapters.value = pricing.freeChapters ?? 20;
+      elements.globalPricing.chapterCredits.value = pricing.chapterCredits || 1;
+      elements.globalPricing.creditPacks.value = creditPacksToInput(pricing.creditPacks?.length ? pricing.creditPacks : emptyPricingDefaults().pricing.creditPacks);
+      elements.globalPricing.subscriptionEnabled.checked = pricing.subscriptionEnabled !== false;
+      elements.globalPricing.membershipCreditCost.value = pricing.membershipCreditCost || 10;
+      elements.globalPricing.membershipMonths.value = pricing.membershipDurationMonths || 1;
+      elements.globalPricing.membershipCoversPaid.checked = pricing.membershipCoversPaidContent !== false;
+      elements.globalPricing.tipsEnabled.checked = Boolean(pricing.tipsEnabled);
+      elements.globalPricing.tipAmounts.value = Array.isArray(pricing.tipAmounts) ? pricing.tipAmounts.join(', ') : '';
     };
 
     const getPricingDefaults = () => state.pricingDefaults || emptyPricingDefaults();
@@ -896,13 +1063,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const bundles = pricing.bundlePurchasesEnabled && Array.isArray(pricing.chapterBundleDiscounts) && pricing.chapterBundleDiscounts.length
         ? pricing.chapterBundleDiscounts.map((rule) => `${rule.minimumChapters}章-${rule.discountPercent}%`).join('，')
         : '多章折扣关闭';
-      return `${template.accessLevel || 'free'} · ${pricing.mode || 'free'} · 免费 ${pricing.freeChapters || 0} 章 · 单章 ${pricing.chapterPriceAmount || 0} USD / ${pricing.chapterCredits || 0} 点 · ${tips} · ${bundles}`;
+      const packs = Array.isArray(pricing.creditPacks) && pricing.creditPacks.length
+        ? pricing.creditPacks.map((pack) => `${pack.credits}点=${pack.priceAmount}${pack.priceCurrency || 'USD'}`).join('，')
+        : '未设置点数包';
+      const membership = pricing.subscriptionEnabled !== false
+        ? `会员 ${pricing.membershipCreditCost || 10} 点 / ${pricing.membershipDurationMonths || 1} 个月`
+        : '会员关闭';
+      return `${template.accessLevel || 'paid'} · ${pricing.mode || 'chapter-paid'} · 免费 ${pricing.freeChapters || 0} 章 · 每章 ${pricing.chapterCredits || 1} 点 · ${packs} · ${membership} · ${tips} · ${bundles}`;
     };
 
     const renderPricingDefaults = () => {
       const template = getPricingDefaults();
-      const prefix = template.isConfigured ? '当前默认：' : '尚未保存默认，当前使用空白免费模板：';
+      const prefix = template.isConfigured ? '当前全局：' : '尚未保存全局规则，当前使用推荐默认：';
       elements.pricingDefaultsSummary.textContent = `${prefix}${pricingTemplateSummary(template)}`;
+      applyPricingToGlobalControls(template);
     };
 
     const formatMoney = (amount, currency = 'USD') => {
@@ -937,6 +1111,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const orderTitle = (order) => order.orderToken || order.providerPaymentId || `#${order.id}`;
 
     const pricingSourceLabel = (source) => ({
+      'global-pricing-defaults': '全局收费规则',
       'backend-pricing-rules': 'D1 规则表',
       'backend-pricing-json': 'D1 内容 JSON',
       'serial-config': '旧 Markdown 生成配置',
@@ -973,11 +1148,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const creditPacks = Array.isArray(pricing.creditPacks) && pricing.creditPacks.length
         ? pricing.creditPacks.map((pack) => `${pack.label || `${pack.credits} 点`} ${formatMoney(pack.priceAmount, pack.priceCurrency)}`).join('；')
         : '未配置';
+      const membership = pricing.subscriptionEnabled !== false
+        ? `${pricing.membershipCreditCost || 10} 点兑换 ${pricing.membershipDurationMonths || 1} 个月，${pricing.membershipCoversPaidContent === false ? '不覆盖收费章节' : '覆盖收费章节'}`
+        : '未开启';
       const warnings = [];
       if (context.status !== 'published' || context.visibility === 'private') {
         warnings.push('公共 API 只读取已发布且非私有内容；当前内容未发布或私有时，预览可能显示旧规则或降级规则。');
       }
-      if (pricing.source !== 'backend-pricing-rules') {
+      if (!['backend-pricing-rules', 'global-pricing-defaults'].includes(pricing.source)) {
         warnings.push(`当前未命中 D1 规则表，实际来源为：${pricingSourceLabel(pricing.source)}。`);
       }
 
@@ -994,20 +1172,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <small>免费章节：${escapeHtml(String(pricing.freeChapters ?? 0))}</small>
           </article>
           <article>
-            <span>单章</span>
-            <strong>${escapeHtml(formatMoney(pricing.chapterPriceAmount, pricing.chapterPriceCurrency))}</strong>
-            <small>${escapeHtml(String(pricing.chapterCredits || 1))} 阅读点 / 章</small>
+            <span>收费章节</span>
+            <strong>${escapeHtml(String(pricing.chapterCredits || 1))} 点 / 章</strong>
+            <small>直接 USD 解锁已停用</small>
           </article>
           <article>
-            <span>支持者</span>
-            <strong>${escapeHtml(formatMoney(pricing.supporterPriceAmount, pricing.supporterPriceCurrency))}</strong>
-            <small>series 级别解锁</small>
+            <span>会员</span>
+            <strong>${escapeHtml(pricing.subscriptionEnabled === false ? '关闭' : `${pricing.membershipCreditCost || 10} 点`)}</strong>
+            <small>${escapeHtml(pricing.subscriptionEnabled === false ? '不开放兑换' : `${pricing.membershipDurationMonths || 1} 个月会员`)}</small>
           </article>
         </div>
         <div class="admin-pricing-lines">
           <p><strong>打赏：</strong>${escapeHtml(tips)}</p>
           <p><strong>多章折扣：</strong>${escapeHtml(bundles)}</p>
           <p><strong>阅读点包：</strong>${escapeHtml(creditPacks)}</p>
+          <p><strong>会员兑换：</strong>${escapeHtml(membership)}</p>
           ${warnings.map((warning) => `<p class="admin-pricing-warning">${escapeHtml(warning)}</p>`).join('')}
         </div>
       `;
@@ -1213,7 +1392,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const resetForm = (entryType = 'blog_post') => {
-      const pricingDefaults = entryType === 'novel_series' ? getPricingDefaults() : emptyPricingDefaults();
+      const pricingDefaults = entryType === 'novel_series' || entryType === 'novel_chapter'
+        ? getPricingDefaults()
+        : emptyPricingDefaults();
       fillFormFromEntry({
         entryType,
         locale: 'zh-Hant',
@@ -1285,7 +1466,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const creditPacks = Array.isArray(pricing.creditPacks) && pricing.creditPacks.length
         ? pricing.creditPacks.map((pack) => `${pack.credits}点/${formatMoney(pack.priceAmount, pack.priceCurrency || 'USD')}`).join('，')
         : '阅读点包未配置';
-      return `${pricing.mode || 'free'} · 免费 ${pricing.freeChapters || 0} 章 · 单章 ${formatMoney(pricing.chapterPriceAmount || 0, pricing.chapterPriceCurrency || 'USD')} / ${pricing.chapterCredits || 0} 点 · ${bundles} · ${creditPacks}`;
+      const membership = pricing.subscriptionEnabled !== false
+        ? `会员 ${pricing.membershipCreditCost || 10} 点/${pricing.membershipDurationMonths || 1}个月`
+        : '会员关闭';
+      return `${pricing.mode || 'free'} · 免费 ${pricing.freeChapters || 0} 章 · ${pricing.chapterCredits || 1} 点/章 · ${membership} · ${bundles} · ${creditPacks}`;
     };
 
     const renderImportList = () => {
@@ -1455,19 +1639,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const savePricingDefaults = async () => {
       elements.pricingDefaultsSave.disabled = true;
-      setPricingDefaultsStatus('正在保存当前收费面板为默认模板。');
+      setPricingDefaultsStatus('正在保存全局收费规则。');
       try {
         const payload = await apiJson('/admin/api/content/pricing-defaults', {
           method: 'POST',
           body: JSON.stringify({
-            accessLevel: elements.fields.accessLevel.value,
-            pricing: buildPricingPayload()
+            accessLevel: elements.globalPricing.accessLevel.value,
+            pricing: buildGlobalPricingPayload()
           })
         });
         state.pricingDefaults = payload.template || emptyPricingDefaults();
         state.pricingDefaultsSetupRequired = false;
         renderPricingDefaults();
-        setPricingDefaultsStatus('已保存为新作品默认收费模板。', 'success');
+        applyPricingDefaults();
+        setPricingDefaultsStatus('全局收费规则已保存，并会对全部书籍生效。', 'success');
       } catch (error) {
         setPricingDefaultsStatus(error.message, 'error');
       } finally {
@@ -1478,8 +1663,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const applyPricingDefaults = () => {
       const template = getPricingDefaults();
       applyPricingToFields(template.pricing, template.accessLevel);
-      resetEffectivePricingPreview('已套用默认收费模板，保存内容后才会同步到 D1 规则表。');
-      setPricingDefaultsStatus('已套用默认模板到当前表单。', 'success');
+      resetEffectivePricingPreview('已套用全局收费规则到当前编辑表单。全局规则保存后会直接影响所有书籍。');
+      setPricingDefaultsStatus('已套用全局规则到当前表单。', 'success');
     };
 
     const loadEntries = async ({ autoSelect = false } = {}) => {
@@ -1825,6 +2010,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const renderAccountDetail = (detail) => {
       const account = detail.account || {};
       const credits = detail.credits || account.creditAccount || {};
+      const membership = detail.membership || null;
+      const membershipSettings = detail.membershipSettings || {};
       const ledger = detail.creditLedger || [];
       const entitlements = detail.entitlements || [];
       const orders = detail.orders || [];
@@ -1840,6 +2027,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <article><span>余额</span><strong>${escapeHtml(String(credits.balanceCredits || 0))}</strong></article>
           <article><span>累计购买</span><strong>${escapeHtml(String(credits.lifetimePurchasedCredits || 0))}</strong></article>
           <article><span>累计消耗</span><strong>${escapeHtml(String(credits.lifetimeSpentCredits || 0))}</strong></article>
+          <article><span>会员</span><strong>${escapeHtml(membership?.active ? '有效' : '未开通')}</strong><small>${escapeHtml(membership?.expiresAt ? `至 ${formatDate(membership.expiresAt)}` : `${membershipSettings.membershipCreditCost || 10} 点/月`)}</small></article>
           <article><span>有效授权</span><strong>${escapeHtml(String(account.stats?.activeEntitlementCount || entitlements.filter((item) => !item.revokedAt).length))}</strong></article>
         </div>
         <form class="admin-v2-form admin-credit-form" id="credit-adjust-form">
