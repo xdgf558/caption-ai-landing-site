@@ -28,6 +28,14 @@ const readerSessionCookieName = 'station_cat_reader_session';
 const readerSessionMaxAge = 60 * 60 * 24 * 30;
 const readerPasswordAlgorithm = 'PBKDF2-SHA256';
 const readerPasswordIterations = 100000;
+const readerTotpIssuer = 'Station Cat';
+const readerTotpPeriodSeconds = 30;
+const readerTotpDigits = 6;
+const readerTotpResetFailureMessage = '账号或二步验证码不正确。';
+const readerTotpResetLockedMessage = '尝试次数过多，请稍后再试。';
+const readerTotpResetFailureThreshold = 5;
+const readerTotpResetBaseLockSeconds = 60;
+const readerTotpResetMaxLockSeconds = 15 * 60;
 const adminPathPattern = /^\/admin(?:-v2)?(?:\/|$)/;
 const defaultAdminEmail = 'brodstem@protonmail.com';
 
@@ -93,6 +101,32 @@ const toHex = (buffer) =>
 const sha256Hex = async (value) => {
   const encoded = new TextEncoder().encode(value);
   return toHex(await crypto.subtle.digest('SHA-256', encoded));
+};
+
+const hmacSha256Hex = async (value, secret) => {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  return toHex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)));
+};
+
+const getD1ChangeCount = (result) => Number(result?.meta?.changes ?? result?.changes ?? 0);
+
+const getRequestClientHashes = async (request) => {
+  const ip =
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown';
+  const userAgent = cleanText(request.headers.get('user-agent'), 200);
+  const [ipHash, ipUaHash] = await Promise.all([
+    sha256Hex(ip),
+    sha256Hex(`${ip}|${userAgent}`)
+  ]);
+  return { ipHash, ipUaHash };
 };
 
 const randomToken = (byteLength = 32) => {
@@ -274,6 +308,7 @@ const defaultReaderCreditPacks = [
 ];
 const defaultMembershipCreditCost = 10;
 const defaultMembershipMonths = 1;
+const base32Alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
 const timingSafeEqualString = (left, right) => {
   const leftValue = String(left || '');
@@ -286,6 +321,127 @@ const timingSafeEqualString = (left, right) => {
   }
   return result === 0;
 };
+
+const bytesToBase32 = (bytes) => {
+  let bits = 0;
+  let value = 0;
+  let output = '';
+
+  for (const byte of bytes) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      output += base32Alphabet[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+
+  if (bits > 0) {
+    output += base32Alphabet[(value << (5 - bits)) & 31];
+  }
+
+  return output;
+};
+
+const randomTotpSecretBase32 = (byteLength = 20) => {
+  const bytes = new Uint8Array(byteLength);
+  crypto.getRandomValues(bytes);
+  return bytesToBase32(bytes);
+};
+
+const base32ToBytes = (value) => {
+  const normalized = String(value || '').replace(/[\s=-]/g, '').toUpperCase();
+  let bits = 0;
+  let buffer = 0;
+  const bytes = [];
+
+  for (const char of normalized) {
+    const index = base32Alphabet.indexOf(char);
+    if (index < 0) throw new Error('Invalid TOTP secret.');
+    buffer = (buffer << 5) | index;
+    bits += 5;
+    if (bits >= 8) {
+      bytes.push((buffer >>> (bits - 8)) & 255);
+      bits -= 8;
+    }
+  }
+
+  return new Uint8Array(bytes);
+};
+
+const normalizeTotpCode = (value) => String(value || '').replace(/\s+/g, '');
+
+const getTotpStep = (timestamp = Date.now()) => Math.floor(timestamp / 1000 / readerTotpPeriodSeconds);
+
+const hotpCode = async (secretBase32, counter) => {
+  const keyBytes = base32ToBytes(secretBase32);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyBytes,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign']
+  );
+  const counterBuffer = new ArrayBuffer(8);
+  const counterView = new DataView(counterBuffer);
+  const counterBigInt = BigInt(counter);
+  counterView.setUint32(0, Number((counterBigInt >> 32n) & 0xffffffffn));
+  counterView.setUint32(4, Number(counterBigInt & 0xffffffffn));
+
+  const digest = new Uint8Array(await crypto.subtle.sign('HMAC', key, counterBuffer));
+  const offset = digest[digest.length - 1] & 0x0f;
+  const binary =
+    ((digest[offset] & 0x7f) << 24) |
+    ((digest[offset + 1] & 0xff) << 16) |
+    ((digest[offset + 2] & 0xff) << 8) |
+    (digest[offset + 3] & 0xff);
+  const otp = binary % 10 ** readerTotpDigits;
+  return String(otp).padStart(readerTotpDigits, '0');
+};
+
+const verifyTotpCode = async (secretBase32, code, options = {}) => {
+  const normalizedCode = normalizeTotpCode(code);
+  if (!new RegExp(`^\\d{${readerTotpDigits}}$`).test(normalizedCode)) {
+    return { ok: false, reason: 'invalid-format' };
+  }
+
+  const windowSize = Number.isInteger(options.windowSize) ? Math.max(0, options.windowSize) : 1;
+  const lastUsedStep =
+    options.lastUsedStep !== null && options.lastUsedStep !== undefined && Number.isFinite(Number(options.lastUsedStep))
+      ? Number(options.lastUsedStep)
+      : null;
+  const currentStep = getTotpStep();
+
+  for (let step = currentStep - windowSize; step <= currentStep + windowSize; step += 1) {
+    if (step < 0) continue;
+    const expected = await hotpCode(secretBase32, step);
+    if (timingSafeEqualString(expected, normalizedCode)) {
+      if (lastUsedStep !== null && step <= lastUsedStep) {
+        return { ok: false, reason: 'reused-code', step };
+      }
+      return { ok: true, step };
+    }
+  }
+
+  return { ok: false, reason: 'invalid-code' };
+};
+
+const makeTotpOtpAuthUrl = (account, secretBase32) => {
+  const label = `${readerTotpIssuer}:${account.email || account.username || account.account_id || account.id}`;
+  const url = new URL(`otpauth://totp/${encodeURIComponent(label)}`);
+  url.searchParams.set('secret', secretBase32);
+  url.searchParams.set('issuer', readerTotpIssuer);
+  url.searchParams.set('algorithm', 'SHA1');
+  url.searchParams.set('digits', String(readerTotpDigits));
+  url.searchParams.set('period', String(readerTotpPeriodSeconds));
+  return url.toString();
+};
+
+const readerTotpAuthJson = (credential) => ({
+  enabled: Boolean(credential?.enabled_at && !credential?.disabled_at),
+  verifiedAt: credential?.verified_at || '',
+  enabledAt: credential?.enabled_at || ''
+});
 
 const hmacSha512Hex = async (secret, value) => {
   const key = await crypto.subtle.importKey(
@@ -1938,6 +2094,9 @@ const isMissingAdminContentSettingsError = (error) => /no such table: admin_cont
 const isMissingReaderMembershipsError = (error) => /no such table: reader_memberships/i.test(error?.message || '');
 const isMissingReaderBookmarksError = (error) => /no such table: reader_bookmarks/i.test(error?.message || '');
 const isMissingReaderPasswordCredentialsError = (error) => /no such table: reader_password_credentials/i.test(error?.message || '');
+const isMissingReaderTotpCredentialsError = (error) => /no such table: reader_totp_credentials/i.test(error?.message || '');
+const isMissingReaderTotpResetAttemptsError = (error) =>
+  /no such table: reader_totp_reset_attempts/i.test(error?.message || '');
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -1985,6 +2144,26 @@ const ensureReaderPasswordCredentialsReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingReaderPasswordCredentialsError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureReaderTotpCredentialsReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM reader_totp_credentials LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingReaderTotpCredentialsError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureReaderTotpResetAttemptsReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM reader_totp_reset_attempts LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingReaderTotpResetAttemptsError(error)) return false;
     throw error;
   }
 };
@@ -2591,6 +2770,212 @@ const createReaderSession = async (db, accountId, request) => {
   return sessionToken;
 };
 
+const getReaderTotpCredential = async (db, accountId) =>
+  db
+    .prepare(
+      `SELECT *
+       FROM reader_totp_credentials
+       WHERE account_id = ?
+       LIMIT 1`
+    )
+    .bind(accountId)
+    .first();
+
+const isReaderTotpEnabled = (credential) => Boolean(credential?.enabled_at && !credential?.disabled_at);
+
+const consumeReaderTotpStep = async (db, accountId, step) => {
+  const result = await db
+    .prepare(
+      `UPDATE reader_totp_credentials
+       SET last_used_step = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE account_id = ?
+         AND enabled_at IS NOT NULL
+         AND disabled_at IS NULL
+         AND (last_used_step IS NULL OR last_used_step < ?)`
+    )
+    .bind(step, accountId, step)
+    .run();
+  return getD1ChangeCount(result) > 0;
+};
+
+const verifyAndConsumeReaderTotpCode = async (db, accountId, code, options = {}) => {
+  const credential = await getReaderTotpCredential(db, accountId);
+  if (!isReaderTotpEnabled(credential)) {
+    return {
+      ok: false,
+      status: options.unboundStatus || 409,
+      message: options.unboundMessage || '这个账号还没有绑定二步验证器。'
+    };
+  }
+
+  const verification = await verifyTotpCode(credential.secret_base32, code, {
+    lastUsedStep: credential.last_used_step
+  });
+  if (!verification.ok) {
+    return {
+      ok: false,
+      status: options.invalidStatus || 401,
+      message: options.invalidMessage || '二步验证码不正确或已过期。',
+      reason: verification.reason
+    };
+  }
+
+  const consumed = await consumeReaderTotpStep(db, accountId, verification.step);
+  if (!consumed) {
+    return {
+      ok: false,
+      status: options.reusedStatus || 409,
+      message: options.reusedMessage || '二步验证码已使用，请等待下一组验证码。',
+      reason: 'concurrent-reuse'
+    };
+  }
+
+  return { ok: true, step: verification.step };
+};
+
+const normalizeReaderResetIdentifier = (identifier) => {
+  const email = normalizeEmail(identifier);
+  return isEmail(email) ? email : normalizeUsername(identifier);
+};
+
+const getReaderTotpResetIdentifierHash = async (normalizedIdentifier, env = {}) => {
+  if (!normalizedIdentifier) return '';
+  const secret = String(env?.READER_TOTP_RESET_KEY_SECRET || '').trim();
+  return secret ? hmacSha256Hex(normalizedIdentifier, secret) : sha256Hex(normalizedIdentifier);
+};
+
+const getReaderTotpResetLimitKeys = ({ identifierHash, ipHash, ipUaHash, accountId }) => {
+  const keys = [];
+  if (identifierHash && ipHash) {
+    keys.push({ scope: 'identifier_ip', key: `${identifierHash}:${ipHash}` });
+  }
+  if (ipHash) keys.push({ scope: 'ip', key: ipHash });
+  if (ipUaHash) keys.push({ scope: 'ip_ua', key: ipUaHash });
+  if (accountId) keys.push({ scope: 'account', key: String(accountId) });
+  return keys;
+};
+
+const shouldSampleReaderTotpResetCleanup = (limitKeys, nowEpoch = Math.floor(Date.now() / 1000)) => {
+  const primaryKey = limitKeys.find((limitKey) => limitKey.scope === 'identifier_ip')?.key || limitKeys[0]?.key;
+  if (!primaryKey) return false;
+  const cleanupWindow = Math.floor(nowEpoch / 3600);
+  let hash = 2166136261;
+  for (const char of `${primaryKey}:${cleanupWindow}`) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  return hash % 100 === 0;
+};
+
+const cleanupReaderTotpResetAttempts = async (db) =>
+  db
+    .prepare(
+      `DELETE FROM reader_totp_reset_attempts
+       WHERE id IN (
+         SELECT id
+         FROM reader_totp_reset_attempts
+         WHERE updated_at < datetime('now', '-14 days')
+         ORDER BY updated_at
+         LIMIT 200
+       )`
+    )
+    .run();
+
+const reserveReaderTotpResetAttempt = async (
+  db,
+  limitKeys,
+  nowEpoch = Math.floor(Date.now() / 1000),
+  options = {}
+) => {
+  if (options.cleanup === true || shouldSampleReaderTotpResetCleanup(limitKeys, nowEpoch)) {
+    await cleanupReaderTotpResetAttempts(db);
+  }
+
+  let retryAfterSeconds = 0;
+  for (const limitKey of limitKeys) {
+    await db
+      .prepare(
+        `INSERT INTO reader_totp_reset_attempts (
+          scope, scope_key, failure_count, locked_until_epoch, last_failed_epoch, updated_at
+        )
+        VALUES (?, ?, 1, 0, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(scope, scope_key) DO UPDATE SET
+          failure_count = reader_totp_reset_attempts.failure_count + 1,
+          last_failed_epoch = excluded.last_failed_epoch,
+          updated_at = CURRENT_TIMESTAMP`
+      )
+      .bind(limitKey.scope, limitKey.key, nowEpoch)
+      .run();
+
+    const attempt = await db
+      .prepare(
+        `SELECT failure_count, locked_until_epoch
+         FROM reader_totp_reset_attempts
+         WHERE scope = ? AND scope_key = ?
+         LIMIT 1`
+      )
+      .bind(limitKey.scope, limitKey.key)
+      .first();
+    const failureCount = Number(attempt?.failure_count || 0);
+    const lockedUntil = Number(attempt?.locked_until_epoch || 0);
+    if (lockedUntil > nowEpoch) {
+      retryAfterSeconds = Math.max(retryAfterSeconds, lockedUntil - nowEpoch);
+      continue;
+    }
+    if (failureCount <= readerTotpResetFailureThreshold) continue;
+
+    const lockSeconds =
+      Math.min(
+        readerTotpResetMaxLockSeconds,
+        readerTotpResetBaseLockSeconds *
+          2 ** Math.min(failureCount - readerTotpResetFailureThreshold - 1, 4)
+      );
+    const nextLockedUntil = nowEpoch + lockSeconds;
+    await db
+      .prepare(
+        `UPDATE reader_totp_reset_attempts
+         SET locked_until_epoch = ?,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE scope = ? AND scope_key = ?
+           AND locked_until_epoch < ?`
+      )
+      .bind(nextLockedUntil, limitKey.scope, limitKey.key, nextLockedUntil)
+      .run();
+    retryAfterSeconds = Math.max(retryAfterSeconds, lockSeconds);
+  }
+
+  if (retryAfterSeconds > 0) {
+    return { ok: false, retryAfterSeconds };
+  }
+  return { ok: true, retryAfterSeconds: 0 };
+};
+
+const clearReaderTotpResetFailures = async (db, limitKeys) => {
+  if (!limitKeys.length) return;
+  await db.batch(
+    limitKeys.map((limitKey) =>
+      db
+        .prepare(
+          `DELETE FROM reader_totp_reset_attempts
+           WHERE scope = ? AND scope_key = ?`
+        )
+        .bind(limitKey.scope, limitKey.key)
+    )
+  );
+};
+
+const readerTotpResetRateLimitResponse = (retryAfterSeconds) =>
+  privateJson(
+    { ok: false, message: readerTotpResetLockedMessage },
+    {
+      status: 429,
+      headers: {
+        'retry-after': String(Math.max(1, retryAfterSeconds || readerTotpResetBaseLockSeconds))
+      }
+    }
+  );
+
 const normalizeReaderRegisterPayload = (payload) => {
   const username = cleanText(payload.username, 40);
   const normalizedUsername = normalizeUsername(username);
@@ -2857,6 +3242,162 @@ const handleReaderLogin = async (request, env) => {
   );
 };
 
+const handleReaderTotpStatus = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) return privateJson({ ok: true, authenticated: false });
+
+  if (!(await ensureReaderTotpCredentialsReady(db))) {
+    return privateJson({
+      ok: true,
+      authenticated: true,
+      setupRequired: true,
+      message: '二步验证数据表尚未初始化。',
+      totp: { enabled: false, verifiedAt: '', enabledAt: '' }
+    });
+  }
+
+  const credential = await getReaderTotpCredential(db, session.account_id);
+  return privateJson({
+    ok: true,
+    authenticated: true,
+    totp: readerTotpAuthJson(credential)
+  });
+};
+
+const handleReaderTotpSetup = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return privateJson({ ok: false, message: '请先登入会员中心。' }, { status: 401 });
+  }
+
+  if (!(await ensureReaderTotpCredentialsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'READER_TOTP_NOT_READY',
+        message: '二步验证数据表尚未初始化，请先应用 0012_reader_totp_credentials.sql。'
+      },
+      { status: 503 }
+    );
+  }
+
+  const existing = await getReaderTotpCredential(db, session.account_id);
+  if (isReaderTotpEnabled(existing)) {
+    return privateJson({
+      ok: true,
+      message: '这个账号已经绑定二步验证器。',
+      totp: readerTotpAuthJson(existing)
+    });
+  }
+
+  const secretBase32 = randomTotpSecretBase32();
+  const label = session.email || session.username || `reader-${session.account_id}`;
+  await db
+    .prepare(
+      `INSERT INTO reader_totp_credentials (
+        account_id, secret_base32, issuer, label, verified_at, enabled_at, disabled_at, last_used_step
+      )
+      VALUES (?, ?, ?, ?, NULL, NULL, NULL, NULL)
+      ON CONFLICT(account_id) DO UPDATE SET
+        secret_base32 = excluded.secret_base32,
+        issuer = excluded.issuer,
+        label = excluded.label,
+        verified_at = NULL,
+        enabled_at = NULL,
+        disabled_at = NULL,
+        last_used_step = NULL,
+        updated_at = CURRENT_TIMESTAMP`
+    )
+    .bind(session.account_id, secretBase32, readerTotpIssuer, label)
+    .run();
+
+  return privateJson({
+    ok: true,
+    message: '请在 Google Authenticator 中添加密钥，然后输入 6 位验证码完成绑定。',
+    setup: {
+      issuer: readerTotpIssuer,
+      label,
+      secretBase32,
+      otpauthUrl: makeTotpOtpAuthUrl(session, secretBase32),
+      periodSeconds: readerTotpPeriodSeconds,
+      digits: readerTotpDigits
+    },
+    totp: { enabled: false, verifiedAt: '', enabledAt: '' }
+  });
+};
+
+const handleReaderTotpConfirm = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return privateJson({ ok: false, message: '请先登入会员中心。' }, { status: 401 });
+  }
+
+  if (!(await ensureReaderTotpCredentialsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'READER_TOTP_NOT_READY',
+        message: '二步验证数据表尚未初始化，请先应用 0012_reader_totp_credentials.sql。'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const code = normalizeTotpCode(payload.code || payload.totpCode);
+  const credential = await getReaderTotpCredential(db, session.account_id);
+  if (!credential) {
+    return privateJson({ ok: false, message: '请先生成二步验证密钥。' }, { status: 400 });
+  }
+  if (isReaderTotpEnabled(credential)) {
+    return privateJson({
+      ok: true,
+      message: '二步验证器已经启用。',
+      totp: readerTotpAuthJson(credential)
+    });
+  }
+
+  const verification = await verifyTotpCode(credential.secret_base32, code);
+  if (!verification.ok) {
+    return privateJson({ ok: false, message: '二步验证码不正确或已过期。' }, { status: 401 });
+  }
+
+  await db
+    .prepare(
+      `UPDATE reader_totp_credentials
+       SET verified_at = CURRENT_TIMESTAMP,
+           enabled_at = CURRENT_TIMESTAMP,
+           disabled_at = NULL,
+           last_used_step = NULL,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE account_id = ?`
+    )
+    .bind(session.account_id)
+    .run();
+
+  const updated = await getReaderTotpCredential(db, session.account_id);
+  return privateJson({
+    ok: true,
+    message: '二步验证器已绑定。之后重置或修改密码时可以使用 6 位验证码。',
+    totp: readerTotpAuthJson(updated)
+  });
+};
+
 const handleReaderPasswordResetRequest = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
@@ -2872,96 +3413,14 @@ const handleReaderPasswordResetRequest = async (request, env) => {
     );
   }
 
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
-  }
-
-  const normalizedEmail = normalizeEmail(payload.email);
-  const genericMessage = '如果这个 Email 已注册，系统会发送密码重置链接。';
-  if (!isEmail(normalizedEmail)) {
-    return privateJson({ ok: false, message: '请输入有效的 Email。' }, { status: 400 });
-  }
-
-  const account = await db
-    .prepare(
-      `SELECT reader_accounts.id, reader_accounts.email
-       FROM reader_accounts
-       INNER JOIN reader_password_credentials
-         ON reader_password_credentials.account_id = reader_accounts.id
-       WHERE reader_accounts.normalized_email = ?
-         AND reader_accounts.status = 'active'
-       LIMIT 1`
-    )
-    .bind(normalizedEmail)
-    .first();
-
-  if (!account) {
-    return privateJson({ ok: true, message: genericMessage });
-  }
-
-  const rawToken = randomToken();
-  const tokenHash = await sha256Hex(rawToken);
-  const userAgent = cleanText(request.headers.get('user-agent'), 300);
-  const ipHash = await sha256Hex(request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || 'local');
-
-  await db.batch([
-    db
-      .prepare(
-        `UPDATE reader_login_tokens
-         SET consumed_at = CURRENT_TIMESTAMP
-         WHERE account_id = ?
-           AND purpose = 'password-reset'
-           AND consumed_at IS NULL`
-      )
-      .bind(account.id),
-    db
-      .prepare(
-        `INSERT INTO reader_login_tokens (
-          account_id, normalized_email, token_hash, purpose, expires_at, request_ip_hash, user_agent
-        )
-        VALUES (?, ?, ?, 'password-reset', datetime('now', '+30 minutes'), ?, ?)`
-      )
-      .bind(account.id, normalizedEmail, tokenHash, ipHash, userAgent)
-  ]);
-
-  const debugOrigin = env.READER_AUTH_DEBUG_LINKS === '1' ? env.READER_AUTH_DEBUG_ORIGIN : '';
-  const resetUrl = new URL('/library/', debugOrigin || request.url);
-  resetUrl.searchParams.set('resetToken', rawToken);
-  resetUrl.searchParams.set('resetEmail', normalizedEmail);
-  const delivery = await sendReaderPasswordResetEmail(env, account.email, resetUrl.toString());
-  const debugResetUrl = isLocalRequest(request, env) ? resetUrl.toString() : '';
-
-  if (!delivery.configured && !debugResetUrl) {
-    return privateJson(
-      {
-        ok: false,
-        message: '密码重置邮件尚未配置。请稍后再试。',
-        delivery
-      },
-      { status: 503 }
-    );
-  }
-
-  if (delivery.configured && !delivery.sent) {
-    return privateJson(
-      {
-        ok: false,
-        message: '密码重置邮件发送失败，请稍后再试。',
-        delivery
-      },
-      { status: 502 }
-    );
-  }
-
-  return privateJson({
-    ok: true,
-    message: delivery.sent ? genericMessage : '本地密码重置链接已生成。',
-    delivery,
-    debugResetUrl
-  });
+  return privateJson(
+    {
+      ok: false,
+      code: 'EMAIL_PASSWORD_RESET_DISABLED',
+      message: '密码重置已改用二步验证码。请使用用户名或 Email、6 位验证码和新密码完成重置。'
+    },
+    { status: 410 }
+  );
 };
 
 const handleReaderPasswordResetConfirm = async (request, env) => {
@@ -2989,14 +3448,178 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
   const rawToken = cleanText(payload.token, 300);
   const password = String(payload.password || '');
   const confirmPassword = String(payload.confirmPassword || payload.passwordConfirm || '');
-  if (!rawToken) {
-    return privateJson({ ok: false, message: '密码重置链接无效，请重新申请。' }, { status: 400 });
-  }
   if (!isValidReaderPassword(password)) {
     return privateJson({ ok: false, message: '新密码需要 8-128 个字符。' }, { status: 400 });
   }
   if (confirmPassword && confirmPassword !== password) {
     return privateJson({ ok: false, message: '两次输入的新密码不一致。' }, { status: 400 });
+  }
+
+  if (!rawToken) {
+    if (!(await ensureReaderTotpCredentialsReady(db))) {
+      return privateJson(
+        {
+          ok: false,
+          code: 'READER_TOTP_NOT_READY',
+          message: '二步验证数据表尚未初始化，请先应用 0012_reader_totp_credentials.sql。'
+        },
+        { status: 503 }
+      );
+    }
+    if (!(await ensureReaderTotpResetAttemptsReady(db))) {
+      return privateJson(
+        {
+          ok: false,
+          code: 'READER_TOTP_RESET_ATTEMPTS_NOT_READY',
+          message: '二步验证重置限流表尚未初始化，请先应用 0013_reader_totp_reset_attempts.sql。'
+        },
+        { status: 503 }
+      );
+    }
+
+    const identifier = cleanText(payload.identifier || payload.email || payload.username, 254);
+    const code = normalizeTotpCode(payload.totpCode || payload.code);
+    if (!identifier || !code) {
+      return privateJson({ ok: false, message: '请输入用户名 / Email 和二步验证码。' }, { status: 400 });
+    }
+
+    const normalizedIdentifier = normalizeReaderResetIdentifier(identifier);
+    const identifierHash = await getReaderTotpResetIdentifierHash(normalizedIdentifier, env);
+    const { ipHash, ipUaHash } = await getRequestClientHashes(request);
+    let limitKeys = getReaderTotpResetLimitKeys({ identifierHash, ipHash, ipUaHash });
+    const baseLimit = await reserveReaderTotpResetAttempt(db, limitKeys);
+    if (!baseLimit.ok) return readerTotpResetRateLimitResponse(baseLimit.retryAfterSeconds);
+
+    const failTotpReset = (status = 401) =>
+      privateJson({ ok: false, message: readerTotpResetFailureMessage }, { status });
+
+    const resetAccount = isEmail(normalizeEmail(identifier))
+      ? await db
+          .prepare(
+            `SELECT
+              reader_accounts.id,
+              reader_accounts.email,
+              reader_accounts.normalized_email,
+              reader_accounts.display_name,
+              reader_accounts.created_at,
+              reader_password_credentials.username,
+              reader_totp_credentials.secret_base32,
+              reader_totp_credentials.enabled_at,
+              reader_totp_credentials.disabled_at,
+              reader_totp_credentials.last_used_step
+             FROM reader_accounts
+             INNER JOIN reader_password_credentials
+               ON reader_password_credentials.account_id = reader_accounts.id
+             LEFT JOIN reader_totp_credentials
+               ON reader_totp_credentials.account_id = reader_accounts.id
+             WHERE reader_accounts.normalized_email = ?
+               AND reader_accounts.status = 'active'
+             LIMIT 1`
+          )
+          .bind(normalizeEmail(identifier))
+          .first()
+      : await db
+          .prepare(
+            `SELECT
+              reader_accounts.id,
+              reader_accounts.email,
+              reader_accounts.normalized_email,
+              reader_accounts.display_name,
+              reader_accounts.created_at,
+              reader_password_credentials.username,
+              reader_totp_credentials.secret_base32,
+              reader_totp_credentials.enabled_at,
+              reader_totp_credentials.disabled_at,
+              reader_totp_credentials.last_used_step
+             FROM reader_password_credentials
+             INNER JOIN reader_accounts
+               ON reader_accounts.id = reader_password_credentials.account_id
+             LEFT JOIN reader_totp_credentials
+               ON reader_totp_credentials.account_id = reader_accounts.id
+             WHERE reader_password_credentials.normalized_username = ?
+               AND reader_accounts.status = 'active'
+             LIMIT 1`
+          )
+          .bind(normalizeUsername(identifier))
+          .first();
+
+    if (!resetAccount) {
+      return failTotpReset();
+    }
+
+    limitKeys = getReaderTotpResetLimitKeys({
+      identifierHash,
+      ipHash,
+      ipUaHash,
+      accountId: resetAccount.id
+    });
+    const accountLimit = await reserveReaderTotpResetAttempt(db, [{ scope: 'account', key: String(resetAccount.id) }]);
+    if (!accountLimit.ok) return readerTotpResetRateLimitResponse(accountLimit.retryAfterSeconds);
+
+    if (!isReaderTotpEnabled(resetAccount)) {
+      return failTotpReset();
+    }
+
+    const totpCheck = await verifyAndConsumeReaderTotpCode(db, resetAccount.id, code, {
+      unboundStatus: 401,
+      unboundMessage: readerTotpResetFailureMessage,
+      invalidStatus: 401,
+      invalidMessage: readerTotpResetFailureMessage,
+      reusedStatus: 401,
+      reusedMessage: readerTotpResetFailureMessage
+    });
+    if (!totpCheck.ok) {
+      return failTotpReset(totpCheck.status || 401);
+    }
+
+    const salt = randomHex();
+    const passwordHash = await hashReaderPassword(password, salt, readerPasswordIterations);
+
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE reader_password_credentials
+           SET password_hash = ?,
+               password_salt = ?,
+               password_iterations = ?,
+               password_algorithm = ?,
+               last_password_change_at = CURRENT_TIMESTAMP,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE account_id = ?`
+        )
+        .bind(passwordHash, salt, readerPasswordIterations, readerPasswordAlgorithm, resetAccount.id),
+      db
+        .prepare(
+          `UPDATE reader_sessions
+           SET revoked_at = CURRENT_TIMESTAMP
+           WHERE account_id = ?
+             AND revoked_at IS NULL`
+        )
+        .bind(resetAccount.id)
+    ]);
+    await clearReaderTotpResetFailures(db, limitKeys);
+
+    const sessionToken = await createReaderSession(db, resetAccount.id, request);
+    return privateJson(
+      {
+        ok: true,
+        authenticated: true,
+        message: '密码已重置，已登入会员中心。',
+        account: readerAccountAuthJson({
+          account_id: resetAccount.id,
+          email: resetAccount.email,
+          normalized_email: resetAccount.normalized_email,
+          display_name: resetAccount.display_name,
+          username: resetAccount.username,
+          account_created_at: resetAccount.created_at
+        })
+      },
+      {
+        headers: {
+          'set-cookie': makeCookie(readerSessionCookieName, sessionToken, request)
+        }
+      }
+    );
   }
 
   const tokenHash = await sha256Hex(rawToken);
@@ -3135,10 +3758,20 @@ const handleReaderPasswordChange = async (request, env) => {
     return privateJson({ ok: false, message: '当前密码不正确。' }, { status: 401 });
   }
 
+  if (await ensureReaderTotpCredentialsReady(db)) {
+    const totpCredential = await getReaderTotpCredential(db, session.account_id);
+    if (isReaderTotpEnabled(totpCredential)) {
+      const totpCheck = await verifyAndConsumeReaderTotpCode(db, session.account_id, payload.totpCode || payload.code);
+      if (!totpCheck.ok) {
+        return privateJson({ ok: false, message: totpCheck.message }, { status: totpCheck.status });
+      }
+    }
+  }
+
   const salt = randomHex();
   const passwordHash = await hashReaderPassword(password, salt, readerPasswordIterations);
 
-  await db.batch([
+  const statements = [
     db
       .prepare(
         `UPDATE reader_password_credentials
@@ -3160,7 +3793,8 @@ const handleReaderPasswordChange = async (request, env) => {
            AND revoked_at IS NULL`
       )
       .bind(session.account_id, session.session_id)
-  ]);
+  ];
+  await db.batch(statements);
 
   return privateJson({ ok: true, message: '密码已更新。' });
 };
@@ -9471,6 +10105,29 @@ const handleR2Download = async (request, env, file) => {
   return new Response(request.method === 'HEAD' ? null : object.body, { headers });
 };
 
+export const __readerTotpTestHooks = {
+  base32ToBytes,
+  bytesToBase32,
+  getD1ChangeCount,
+  getReaderTotpResetLimitKeys,
+  getReaderTotpResetIdentifierHash,
+  getRequestClientHashes,
+  getTotpStep,
+  handleReaderPasswordResetConfirm,
+  hmacSha256Hex,
+  hotpCode,
+  normalizeTotpCode,
+  readerTotpResetFailureMessage,
+  readerTotpResetFailureThreshold,
+  readerTotpResetLockedMessage,
+  reserveReaderTotpResetAttempt,
+  sha256Hex,
+  shouldSampleReaderTotpResetCleanup,
+  timingSafeEqualString,
+  verifyAndConsumeReaderTotpCode,
+  verifyTotpCode
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -9522,6 +10179,18 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/readers/password/change') {
       return handleReaderPasswordChange(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/readers/totp/status') {
+      return handleReaderTotpStatus(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/readers/totp/setup') {
+      return handleReaderTotpSetup(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/readers/totp/confirm') {
+      return handleReaderTotpConfirm(request, env);
     }
 
     if (request.method === 'GET' && url.pathname === '/api/readers/verify') {
