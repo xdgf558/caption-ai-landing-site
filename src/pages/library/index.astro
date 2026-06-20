@@ -55,11 +55,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </div>
       <div class="reader-auth-fields" id="reader-reset-fields" hidden>
         <label>
-          Email
-          <input id="reader-reset-email" name="reset-email" type="email" autocomplete="email" placeholder="you@example.com" />
+          用户名或 Email
+          <input id="reader-reset-identifier" name="reset-identifier" type="text" autocomplete="username" placeholder="username@example.com" />
         </label>
-      </div>
-      <div class="reader-auth-fields" id="reader-reset-confirm-fields" hidden>
+        <label>
+          二步验证码
+          <input id="reader-reset-totp-code" name="reset-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="6 位数字" />
+        </label>
         <label>
           新密码
           <input id="reader-reset-password" name="reset-password" type="password" autocomplete="new-password" placeholder="至少 8 个字符" />
@@ -68,6 +70,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           确认新密码
           <input id="reader-reset-password-confirm" name="reset-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入新密码" />
         </label>
+        <p class="fine-print">只有已绑定 Google Authenticator / 二步验证器的账号，可以用验证码重置密码。</p>
       </div>
       <button class="button button-primary" id="reader-login-submit" type="submit">登入會員中心</button>
       <div class="reader-status" id="reader-login-status" role="status" aria-live="polite"></div>
@@ -93,10 +96,40 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           确认新密码
           <input id="reader-new-password-confirm" name="new-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入新密码" />
         </label>
+        <label>
+          二步验证码
+          <input id="reader-password-totp-code" name="password-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="已绑定时必填" />
+        </label>
         <button class="button button-secondary" id="reader-password-submit" type="submit">更新密碼</button>
         <div class="reader-status" id="reader-password-status" role="status" aria-live="polite"></div>
       </form>
       <button class="button button-secondary" id="reader-logout" type="button">登出</button>
+    </div>
+
+    <div class="reader-panel reader-totp-panel" id="reader-totp-panel" hidden>
+      <div>
+        <p class="station-kicker">Authenticator</p>
+        <h2>二步验证器</h2>
+      </div>
+      <p class="reader-totp-state" id="reader-totp-state">正在读取绑定状态。</p>
+      <button class="button button-primary" id="reader-totp-setup" type="button">绑定 Google Authenticator</button>
+      <div class="reader-totp-setup-box" id="reader-totp-setup-box" hidden>
+        <p class="fine-print">打开 Google Authenticator，选择添加账号，然后使用“输入设置密钥”。</p>
+        <label>
+          设置密钥
+          <input id="reader-totp-secret" type="text" readonly />
+        </label>
+        <label>
+          otpauth URI
+          <textarea id="reader-totp-uri" readonly rows="3"></textarea>
+        </label>
+        <label>
+          6 位验证码
+          <input id="reader-totp-confirm-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Google Authenticator 当前数字" />
+        </label>
+        <button class="button button-secondary" id="reader-totp-confirm" type="button">确认绑定</button>
+      </div>
+      <div class="reader-status" id="reader-totp-status" role="status" aria-live="polite"></div>
     </div>
 
     <div class="reader-panel reader-credits-panel" id="reader-credits-panel" hidden>
@@ -164,14 +197,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const loginFields = document.getElementById('reader-login-fields');
     const registerFields = document.getElementById('reader-register-fields');
     const resetFields = document.getElementById('reader-reset-fields');
-    const resetConfirmFields = document.getElementById('reader-reset-confirm-fields');
     const identifierInput = document.getElementById('reader-identifier');
     const loginPasswordInput = document.getElementById('reader-password');
     const usernameInput = document.getElementById('reader-username');
     const emailInput = document.getElementById('reader-email');
     const registerPasswordInput = document.getElementById('reader-register-password');
     const registerPasswordConfirmInput = document.getElementById('reader-register-password-confirm');
-    const resetEmailInput = document.getElementById('reader-reset-email');
+    const resetIdentifierInput = document.getElementById('reader-reset-identifier');
+    const resetTotpCodeInput = document.getElementById('reader-reset-totp-code');
     const resetPasswordInput = document.getElementById('reader-reset-password');
     const resetPasswordConfirmInput = document.getElementById('reader-reset-password-confirm');
     const submitButton = document.getElementById('reader-login-submit');
@@ -182,9 +215,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const currentPasswordInput = document.getElementById('reader-current-password');
     const newPasswordInput = document.getElementById('reader-new-password');
     const newPasswordConfirmInput = document.getElementById('reader-new-password-confirm');
+    const passwordTotpCodeInput = document.getElementById('reader-password-totp-code');
     const passwordSubmitButton = document.getElementById('reader-password-submit');
     const passwordStatus = document.getElementById('reader-password-status');
     const logoutButton = document.getElementById('reader-logout');
+    const totpPanel = document.getElementById('reader-totp-panel');
+    const totpState = document.getElementById('reader-totp-state');
+    const totpSetupButton = document.getElementById('reader-totp-setup');
+    const totpSetupBox = document.getElementById('reader-totp-setup-box');
+    const totpSecretInput = document.getElementById('reader-totp-secret');
+    const totpUriInput = document.getElementById('reader-totp-uri');
+    const totpConfirmCodeInput = document.getElementById('reader-totp-confirm-code');
+    const totpConfirmButton = document.getElementById('reader-totp-confirm');
+    const totpStatus = document.getElementById('reader-totp-status');
     const creditsPanel = document.getElementById('reader-credits-panel');
     const creditBalance = document.getElementById('reader-credit-balance');
     const creditCost = document.getElementById('reader-credit-cost');
@@ -213,6 +256,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       passwordStatus.dataset.tone = tone;
     };
 
+    const setTotpStatus = (message, tone = 'neutral') => {
+      totpStatus.textContent = message;
+      totpStatus.dataset.tone = tone;
+    };
+
     const setFieldState = (fields, enabled) => {
       fields.forEach((field) => {
         field.disabled = !enabled;
@@ -220,33 +268,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const setAuthMode = (mode) => {
-      authMode = ['register', 'reset', 'resetConfirm'].includes(mode) ? mode : 'login';
+      authMode = ['register', 'reset'].includes(mode) ? mode : 'login';
       const isRegister = authMode === 'register';
       const isReset = authMode === 'reset';
-      const isResetConfirm = authMode === 'resetConfirm';
 
       authTitle.textContent = isRegister
         ? '會員註冊'
         : isReset
           ? '重置密碼'
-          : isResetConfirm
-            ? '設定新密碼'
-            : '會員登入';
+          : '會員登入';
       submitButton.textContent = isRegister
         ? '註冊並登入'
         : isReset
-          ? '寄送重置連結'
-          : isResetConfirm
-            ? '更新密碼'
-            : '登入會員中心';
-      loginFields.hidden = isRegister || isReset || isResetConfirm;
+          ? '用验证码重置密码'
+          : '登入會員中心';
+      loginFields.hidden = isRegister || isReset;
       registerFields.hidden = !isRegister;
       resetFields.hidden = !isReset;
-      resetConfirmFields.hidden = !isResetConfirm;
       setFieldState([identifierInput, loginPasswordInput], authMode === 'login');
       setFieldState([usernameInput, emailInput, registerPasswordInput, registerPasswordConfirmInput], isRegister);
-      setFieldState([resetEmailInput], isReset);
-      setFieldState([resetPasswordInput, resetPasswordConfirmInput], isResetConfirm);
+      setFieldState([resetIdentifierInput, resetTotpCodeInput, resetPasswordInput, resetPasswordConfirmInput], isReset);
       authModeButtons.forEach((button) => {
         const selected = button.dataset.authMode === authMode;
         button.classList.toggle('is-active', selected);
@@ -259,6 +300,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const signedIn = Boolean(session?.authenticated);
       form.hidden = signedIn;
       accountPanel.hidden = !signedIn;
+      totpPanel.hidden = !signedIn;
       creditsPanel.hidden = !signedIn;
       membershipPanel.hidden = !signedIn;
       libraryContent.hidden = !signedIn;
@@ -424,6 +466,35 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     };
 
+    const renderTotpStatus = (totp) => {
+      const enabled = Boolean(totp?.enabled);
+      totpState.textContent = enabled
+        ? '二步验证器已绑定。后续修改或重置密码时，需要输入 6 位验证码。'
+        : '尚未绑定二步验证器。绑定后，可以不用邮件，直接用验证码重置密码。';
+      totpSetupButton.hidden = enabled;
+      passwordTotpCodeInput.placeholder = enabled ? '6 位数字' : '未绑定时可留空';
+      totpSetupBox.hidden = true;
+      if (!enabled) {
+        totpSecretInput.value = '';
+        totpUriInput.value = '';
+        totpConfirmCodeInput.value = '';
+      }
+    };
+
+    const loadTotpStatus = async () => {
+      const response = await fetch('/api/readers/totp/status');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '读取二步验证状态失败。');
+      if (!data.authenticated) return;
+      if (data.setupRequired) {
+        renderTotpStatus({ enabled: false });
+        setTotpStatus(data.message || '二步验证数据表尚未初始化。', 'error');
+        return;
+      }
+      renderTotpStatus(data.totp || { enabled: false });
+      setTotpStatus('');
+    };
+
     const loadCredits = async () => {
       const response = await fetch('/api/readers/credits');
       const data = await response.json();
@@ -492,12 +563,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (!response.ok || !data.ok) throw new Error(data.message || '讀取登入狀態失敗。');
       setSignedIn(data);
       if (data.authenticated) {
-        await Promise.all([loadLibrary(), loadCredits(), loadBookmarks()]);
+        await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), loadTotpStatus()]);
       }
     };
 
     const query = new URLSearchParams(window.location.search);
-    const resetToken = query.get('resetToken') || '';
     const redirectPath = (() => {
       const value = query.get('returnTo') || '/library/';
       if (!value.startsWith('/') || value.startsWith('//')) return '/library/';
@@ -508,8 +578,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setStatus('登入成功，正在載入會員中心。', 'success');
     } else if (query.get('login') === 'invalid') {
       setStatus('登入連結已失效，請重新寄送。', 'error');
-    } else if (resetToken) {
-      setStatus('請設定新的會員密碼。', 'neutral');
     }
 
     if (query.get('payment') === 'success' && query.get('order')) {
@@ -525,7 +593,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     });
 
     const loadReaderHome = async () => {
-      await Promise.all([loadLibrary(), loadCredits(), loadBookmarks()]);
+      await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), loadTotpStatus()]);
     };
 
     form.addEventListener('submit', async (event) => {
@@ -535,9 +603,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         authMode === 'register'
           ? '正在建立會員账号...'
           : authMode === 'reset'
-            ? '正在寄送密碼重置連結...'
-            : authMode === 'resetConfirm'
-              ? '正在更新密碼...'
+            ? '正在验证二步验证码并重置密码...'
               : '正在登入...',
         'neutral'
       );
@@ -560,14 +626,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             redirectPath
           };
         } else if (authMode === 'reset') {
-          endpoint = '/api/readers/password-reset/request';
-          body = {
-            email: resetEmailInput.value
-          };
-        } else if (authMode === 'resetConfirm') {
           endpoint = '/api/readers/password-reset/confirm';
           body = {
-            token: resetToken,
+            identifier: resetIdentifierInput.value,
+            totpCode: resetTotpCodeInput.value,
             password: resetPasswordInput.value,
             confirmPassword: resetPasswordConfirmInput.value
           };
@@ -581,14 +643,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.message || '登入失敗。');
 
-        if (authMode === 'reset') {
-          setStatus(data.message || '如果这个 Email 已注册，系统会发送密码重置链接。', 'success');
-          return;
-        }
-
         setStatus(data.message || '已登入。', 'success');
         setSignedIn(data);
-        if (authMode === 'resetConfirm') {
+        if (authMode === 'reset') {
           window.history.replaceState({}, '', '/library/');
         }
         await loadReaderHome();
@@ -610,6 +667,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         renderLibrary([]);
         renderBookmarks([]);
         renderCreditPacks([]);
+        renderTotpStatus({ enabled: false });
+        setTotpStatus('');
         creditBalance.textContent = '0 SC Credits';
         renderMembership(null, { enabled: true, membershipCreditCost: 10, membershipDurationMonths: 1 }, { balanceCredits: 0, unitLabel: 'SC Credits' });
         setAuthMode('login');
@@ -631,7 +690,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           body: JSON.stringify({
             currentPassword: currentPasswordInput.value,
             password: newPasswordInput.value,
-            confirmPassword: newPasswordConfirmInput.value
+            confirmPassword: newPasswordConfirmInput.value,
+            totpCode: passwordTotpCodeInput.value
           })
         });
         const data = await response.json();
@@ -639,11 +699,61 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         currentPasswordInput.value = '';
         newPasswordInput.value = '';
         newPasswordConfirmInput.value = '';
+        passwordTotpCodeInput.value = '';
         setPasswordStatus(data.message || '密碼已更新。', 'success');
       } catch (error) {
         setPasswordStatus(error.message || '密碼更新失敗。', 'error');
       } finally {
         passwordSubmitButton.disabled = false;
+      }
+    });
+
+    totpSetupButton.addEventListener('click', async () => {
+      totpSetupButton.disabled = true;
+      setTotpStatus('正在生成二步验证密钥...', 'neutral');
+
+      try {
+        const response = await fetch('/api/readers/totp/setup', { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '二步验证密钥生成失败。');
+
+        if (data.setup) {
+          totpSecretInput.value = data.setup.secretBase32 || '';
+          totpUriInput.value = data.setup.otpauthUrl || '';
+          totpSetupBox.hidden = false;
+          totpConfirmCodeInput.focus();
+          setTotpStatus('请把设置密钥添加到 Google Authenticator，再输入当前 6 位验证码完成绑定。', 'neutral');
+        } else {
+          renderTotpStatus(data.totp || { enabled: false });
+          setTotpStatus(data.message || '二步验证状态已更新。', data.totp?.enabled ? 'success' : 'neutral');
+        }
+      } catch (error) {
+        setTotpStatus(error.message || '二步验证密钥生成失败。', 'error');
+      } finally {
+        totpSetupButton.disabled = false;
+      }
+    });
+
+    totpConfirmButton.addEventListener('click', async () => {
+      totpConfirmButton.disabled = true;
+      setTotpStatus('正在确认验证码...', 'neutral');
+
+      try {
+        const response = await fetch('/api/readers/totp/confirm', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            code: totpConfirmCodeInput.value
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '二步验证绑定失败。');
+        renderTotpStatus(data.totp || { enabled: true });
+        setTotpStatus(data.message || '二步验证器已绑定。', 'success');
+      } catch (error) {
+        setTotpStatus(error.message || '二步验证绑定失败。', 'error');
+      } finally {
+        totpConfirmButton.disabled = false;
       }
     });
 
@@ -701,14 +811,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     });
 
-    if (query.get('resetEmail')) {
-      resetEmailInput.value = query.get('resetEmail');
-    }
-
-    setAuthMode(resetToken ? 'resetConfirm' : 'login');
-    if (resetToken) {
-      setStatus('請設定新的會員密碼。', 'neutral');
-    }
+    setAuthMode('login');
 
     loadSession()
       .then(refreshReturnedPaymentOrder)

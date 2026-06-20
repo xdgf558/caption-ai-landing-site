@@ -5226,7 +5226,8 @@ body.station-paper-page {
   gap: 8px;
 }
 
-.reader-panel input {
+.reader-panel input,
+.reader-panel textarea {
   background: #fffaf1;
   border: 2px solid #d8c8b8;
   border-radius: 10px;
@@ -5236,7 +5237,13 @@ body.station-paper-page {
   padding: 10px 12px;
 }
 
-.reader-panel input:focus {
+.reader-panel textarea {
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.reader-panel input:focus,
+.reader-panel textarea:focus {
   border-color: #2e5b4e;
   outline: 3px solid rgba(46, 91, 78, 0.16);
 }
@@ -5293,6 +5300,19 @@ body.station-paper-page {
   color: #221b16;
   font-size: 20px;
   margin: 0;
+}
+
+.reader-totp-state {
+  color: #5d5148;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.reader-totp-setup-box {
+  border-top: 1px dashed #d8c8b8;
+  display: grid;
+  gap: 14px;
+  padding-top: 16px;
 }
 
 .reader-credit-balance {
