@@ -254,7 +254,7 @@ const acceptableAccessLevels = (access) => {
 const nowPaymentsProvider = 'nowpayments';
 const nowPaymentsDefaultApiBase = 'https://api.nowpayments.io/v1';
 const nowPaymentsWebhookPath = '/api/novels/webhooks/nowpayments';
-const nowPaymentsSupportedCurrencies = ['USDTTRC20', 'USDTERC20', 'USDC', 'BTC', 'ETH'];
+const nowPaymentsSupportedCurrencies = ['USDTTRC20', 'USDTBSC'];
 const novelOrderStatuses = ['draft', 'waiting', 'confirming', 'confirmed', 'finished', 'failed', 'expired', 'refunded', 'unknown'];
 const novelPaymentGrantStatuses = ['confirmed', 'finished'];
 const novelCheckoutPath = '/api/novels/payments/checkout';

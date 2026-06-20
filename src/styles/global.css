@@ -5291,6 +5291,15 @@ body.station-paper-page {
   margin: 0;
 }
 
+.reader-pay-currency-field {
+  display: grid;
+  gap: 8px;
+}
+
+.reader-pay-currency-field select {
+  min-height: 48px;
+}
+
 .reader-membership-state {
   color: #221b16;
   font-size: clamp(22px, 4vw, 32px);

@@ -72,6 +72,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </div>
       <p class="reader-credit-balance" id="reader-credit-balance">0 SC Credits</p>
       <p class="fine-print" id="reader-credit-cost">目前單章付費內容會扣除 1 點。</p>
+      <label class="reader-pay-currency-field">
+        支付網路
+        <select id="reader-pay-currency">
+          <option value="USDTTRC20">USDT TRC20</option>
+          <option value="USDTBSC">USDT BSC</option>
+        </select>
+      </label>
       <div class="reader-credit-packs" id="reader-credit-packs"></div>
       <div class="reader-status" id="reader-credit-status" role="status" aria-live="polite"></div>
     </div>
@@ -132,6 +139,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const creditsPanel = document.getElementById('reader-credits-panel');
     const creditBalance = document.getElementById('reader-credit-balance');
     const creditCost = document.getElementById('reader-credit-cost');
+    const payCurrencySelect = document.getElementById('reader-pay-currency');
     const creditPacks = document.getElementById('reader-credit-packs');
     const creditStatus = document.getElementById('reader-credit-status');
     const membershipPanel = document.getElementById('reader-membership-panel');
@@ -519,6 +527,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             orderType: 'credit-pack',
             credits: Number.parseInt(button.dataset.credits || '0', 10),
             locale: 'zh-Hant',
+            payCurrency: payCurrencySelect.value,
             returnPath: '/library/'
           })
         });
