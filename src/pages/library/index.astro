@@ -54,11 +54,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </label>
       </div>
       <div class="reader-auth-fields" id="reader-reset-fields" hidden>
-        <label>
+        <label id="reader-reset-identifier-field">
           用户名或 Email
           <input id="reader-reset-identifier" name="reset-identifier" type="text" autocomplete="username" placeholder="username@example.com" />
         </label>
-        <label>
+        <label id="reader-reset-totp-field">
           二步验证码
           <input id="reader-reset-totp-code" name="reset-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="6 位数字" />
         </label>
@@ -70,7 +70,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           确认新密码
           <input id="reader-reset-password-confirm" name="reset-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入新密码" />
         </label>
-        <p class="fine-print">只有已绑定 Google Authenticator / 二步验证器的账号，可以用验证码重置密码。</p>
+        <p class="fine-print" id="reader-reset-help">只有已绑定 Google Authenticator / 二步验证器的账号，可以用验证码重置密码。</p>
       </div>
       <button class="button button-primary" id="reader-login-submit" type="submit">登入會員中心</button>
       <div class="reader-status" id="reader-login-status" role="status" aria-live="polite"></div>
@@ -204,9 +204,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const registerPasswordInput = document.getElementById('reader-register-password');
     const registerPasswordConfirmInput = document.getElementById('reader-register-password-confirm');
     const resetIdentifierInput = document.getElementById('reader-reset-identifier');
+    const resetIdentifierField = document.getElementById('reader-reset-identifier-field');
     const resetTotpCodeInput = document.getElementById('reader-reset-totp-code');
+    const resetTotpField = document.getElementById('reader-reset-totp-field');
     const resetPasswordInput = document.getElementById('reader-reset-password');
     const resetPasswordConfirmInput = document.getElementById('reader-reset-password-confirm');
+    const resetHelp = document.getElementById('reader-reset-help');
     const submitButton = document.getElementById('reader-login-submit');
     const statusBox = document.getElementById('reader-login-status');
     const accountPanel = document.getElementById('reader-account-panel');
@@ -268,28 +271,41 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const setAuthMode = (mode) => {
-      authMode = ['register', 'reset'].includes(mode) ? mode : 'login';
+      authMode = ['register', 'reset', 'legacyReset'].includes(mode) ? mode : 'login';
       const isRegister = authMode === 'register';
       const isReset = authMode === 'reset';
+      const isLegacyReset = authMode === 'legacyReset';
+      const showsReset = isReset || isLegacyReset;
 
       authTitle.textContent = isRegister
         ? '會員註冊'
-        : isReset
-          ? '重置密碼'
+        : showsReset
+          ? isLegacyReset
+            ? '設定新密碼'
+            : '重置密碼'
           : '會員登入';
       submitButton.textContent = isRegister
         ? '註冊並登入'
-        : isReset
-          ? '用验证码重置密码'
+        : showsReset
+          ? isLegacyReset
+            ? '更新密碼'
+            : '用验证码重置密码'
           : '登入會員中心';
-      loginFields.hidden = isRegister || isReset;
+      loginFields.hidden = isRegister || showsReset;
       registerFields.hidden = !isRegister;
-      resetFields.hidden = !isReset;
+      resetFields.hidden = !showsReset;
+      resetIdentifierField.hidden = isLegacyReset;
+      resetTotpField.hidden = isLegacyReset;
+      resetHelp.textContent = isLegacyReset
+        ? '请为旧密码重置链接设置新的会员密码。'
+        : '只有已绑定 Google Authenticator / 二步验证器的账号，可以用验证码重置密码。';
       setFieldState([identifierInput, loginPasswordInput], authMode === 'login');
       setFieldState([usernameInput, emailInput, registerPasswordInput, registerPasswordConfirmInput], isRegister);
-      setFieldState([resetIdentifierInput, resetTotpCodeInput, resetPasswordInput, resetPasswordConfirmInput], isReset);
+      setFieldState([resetIdentifierInput, resetTotpCodeInput], isReset);
+      setFieldState([resetPasswordInput, resetPasswordConfirmInput], showsReset);
       authModeButtons.forEach((button) => {
-        const selected = button.dataset.authMode === authMode;
+        const visibleMode = isLegacyReset ? 'reset' : authMode;
+        const selected = button.dataset.authMode === visibleMode;
         button.classList.toggle('is-active', selected);
         button.setAttribute('aria-selected', selected ? 'true' : 'false');
       });
@@ -495,6 +511,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setTotpStatus('');
     };
 
+    const safeLoadTotpStatus = async () => {
+      try {
+        await loadTotpStatus();
+      } catch (error) {
+        renderTotpStatus({ enabled: false });
+        setTotpStatus(error.message || '读取二步验证状态失败。', 'error');
+      }
+    };
+
     const loadCredits = async () => {
       const response = await fetch('/api/readers/credits');
       const data = await response.json();
@@ -563,21 +588,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (!response.ok || !data.ok) throw new Error(data.message || '讀取登入狀態失敗。');
       setSignedIn(data);
       if (data.authenticated) {
-        await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), loadTotpStatus()]);
+        await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), safeLoadTotpStatus()]);
       }
     };
 
     const query = new URLSearchParams(window.location.search);
+    const resetToken = query.get('resetToken') || '';
+    const resetEmail = query.get('resetEmail') || '';
     const redirectPath = (() => {
       const value = query.get('returnTo') || '/library/';
       if (!value.startsWith('/') || value.startsWith('//')) return '/library/';
       return value;
     })();
 
+    if (resetEmail) {
+      resetIdentifierInput.value = resetEmail;
+    }
+
     if (query.get('login') === 'success') {
       setStatus('登入成功，正在載入會員中心。', 'success');
     } else if (query.get('login') === 'invalid') {
       setStatus('登入連結已失效，請重新寄送。', 'error');
+    } else if (resetToken) {
+      setStatus('请设置新的会员密码。', 'neutral');
     }
 
     if (query.get('payment') === 'success' && query.get('order')) {
@@ -593,7 +626,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     });
 
     const loadReaderHome = async () => {
-      await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), loadTotpStatus()]);
+      await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), safeLoadTotpStatus()]);
     };
 
     form.addEventListener('submit', async (event) => {
@@ -602,7 +635,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setStatus(
         authMode === 'register'
           ? '正在建立會員账号...'
-          : authMode === 'reset'
+          : authMode === 'legacyReset'
+            ? '正在更新密码...'
+            : authMode === 'reset'
             ? '正在验证二步验证码并重置密码...'
               : '正在登入...',
         'neutral'
@@ -633,6 +668,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             password: resetPasswordInput.value,
             confirmPassword: resetPasswordConfirmInput.value
           };
+        } else if (authMode === 'legacyReset') {
+          endpoint = '/api/readers/password-reset/confirm';
+          body = {
+            token: resetToken,
+            password: resetPasswordInput.value,
+            confirmPassword: resetPasswordConfirmInput.value
+          };
         }
 
         const response = await fetch(endpoint, {
@@ -645,7 +687,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
         setStatus(data.message || '已登入。', 'success');
         setSignedIn(data);
-        if (authMode === 'reset') {
+        if (authMode === 'reset' || authMode === 'legacyReset') {
           window.history.replaceState({}, '', '/library/');
         }
         await loadReaderHome();
@@ -811,7 +853,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     });
 
-    setAuthMode('login');
+    setAuthMode(resetToken ? 'legacyReset' : 'login');
+    if (resetToken) {
+      setStatus('请设置新的会员密码。', 'neutral');
+    }
 
     loadSession()
       .then(refreshReturnedPaymentOrder)

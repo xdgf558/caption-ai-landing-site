@@ -31,6 +31,11 @@ const readerPasswordIterations = 100000;
 const readerTotpIssuer = 'Station Cat';
 const readerTotpPeriodSeconds = 30;
 const readerTotpDigits = 6;
+const readerTotpResetFailureMessage = '账号或二步验证码不正确。';
+const readerTotpResetLockedMessage = '尝试次数过多，请稍后再试。';
+const readerTotpResetFailureThreshold = 5;
+const readerTotpResetBaseLockSeconds = 60;
+const readerTotpResetMaxLockSeconds = 15 * 60;
 const adminPathPattern = /^\/admin(?:-v2)?(?:\/|$)/;
 const defaultAdminEmail = 'brodstem@protonmail.com';
 
@@ -96,6 +101,17 @@ const toHex = (buffer) =>
 const sha256Hex = async (value) => {
   const encoded = new TextEncoder().encode(value);
   return toHex(await crypto.subtle.digest('SHA-256', encoded));
+};
+
+const getD1ChangeCount = (result) => Number(result?.meta?.changes ?? result?.changes ?? 0);
+
+const getRequestIpHash = async (request) => {
+  const ip =
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown';
+  const userAgent = cleanText(request.headers.get('user-agent'), 200);
+  return sha256Hex(`${ip}|${userAgent}`);
 };
 
 const randomToken = (byteLength = 32) => {
@@ -2064,6 +2080,8 @@ const isMissingReaderMembershipsError = (error) => /no such table: reader_member
 const isMissingReaderBookmarksError = (error) => /no such table: reader_bookmarks/i.test(error?.message || '');
 const isMissingReaderPasswordCredentialsError = (error) => /no such table: reader_password_credentials/i.test(error?.message || '');
 const isMissingReaderTotpCredentialsError = (error) => /no such table: reader_totp_credentials/i.test(error?.message || '');
+const isMissingReaderTotpResetAttemptsError = (error) =>
+  /no such table: reader_totp_reset_attempts/i.test(error?.message || '');
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -2121,6 +2139,16 @@ const ensureReaderTotpCredentialsReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingReaderTotpCredentialsError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureReaderTotpResetAttemptsReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM reader_totp_reset_attempts LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingReaderTotpResetAttemptsError(error)) return false;
     throw error;
   }
 };
@@ -2740,32 +2768,171 @@ const getReaderTotpCredential = async (db, accountId) =>
 
 const isReaderTotpEnabled = (credential) => Boolean(credential?.enabled_at && !credential?.disabled_at);
 
-const requireReaderTotpCode = async (db, accountId, code) => {
+const consumeReaderTotpStep = async (db, accountId, step) => {
+  const result = await db
+    .prepare(
+      `UPDATE reader_totp_credentials
+       SET last_used_step = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE account_id = ?
+         AND enabled_at IS NOT NULL
+         AND disabled_at IS NULL
+         AND (last_used_step IS NULL OR last_used_step < ?)`
+    )
+    .bind(step, accountId, step)
+    .run();
+  return getD1ChangeCount(result) > 0;
+};
+
+const verifyAndConsumeReaderTotpCode = async (db, accountId, code, options = {}) => {
   const credential = await getReaderTotpCredential(db, accountId);
   if (!isReaderTotpEnabled(credential)) {
-    return { ok: false, status: 409, message: '这个账号还没有绑定二步验证器。' };
+    return {
+      ok: false,
+      status: options.unboundStatus || 409,
+      message: options.unboundMessage || '这个账号还没有绑定二步验证器。'
+    };
   }
 
   const verification = await verifyTotpCode(credential.secret_base32, code, {
     lastUsedStep: credential.last_used_step
   });
   if (!verification.ok) {
-    return { ok: false, status: 401, message: '二步验证码不正确或已过期。' };
+    return {
+      ok: false,
+      status: options.invalidStatus || 401,
+      message: options.invalidMessage || '二步验证码不正确或已过期。',
+      reason: verification.reason
+    };
   }
 
-  return {
-    ok: true,
-    step: verification.step,
-    updateStatement: db
-      .prepare(
-        `UPDATE reader_totp_credentials
-         SET last_used_step = ?,
-             updated_at = CURRENT_TIMESTAMP
-         WHERE account_id = ?`
-      )
-      .bind(verification.step, accountId)
-  };
+  const consumed = await consumeReaderTotpStep(db, accountId, verification.step);
+  if (!consumed) {
+    return {
+      ok: false,
+      status: options.reusedStatus || 409,
+      message: options.reusedMessage || '二步验证码已使用，请等待下一组验证码。',
+      reason: 'concurrent-reuse'
+    };
+  }
+
+  return { ok: true, step: verification.step };
 };
+
+const normalizeReaderResetIdentifier = (identifier) => {
+  const email = normalizeEmail(identifier);
+  return isEmail(email) ? email : normalizeUsername(identifier);
+};
+
+const getReaderTotpResetLimitKeys = ({ normalizedIdentifier, ipHash, accountId }) => {
+  const keys = [];
+  if (normalizedIdentifier && ipHash) {
+    keys.push({ scope: 'identifier_ip', key: `${normalizedIdentifier}:${ipHash}` });
+  }
+  if (ipHash) keys.push({ scope: 'ip', key: ipHash });
+  if (accountId) keys.push({ scope: 'account', key: String(accountId) });
+  return keys;
+};
+
+const checkReaderTotpResetRateLimit = async (db, limitKeys, nowEpoch = Math.floor(Date.now() / 1000)) => {
+  let retryAfterSeconds = 0;
+  for (const limitKey of limitKeys) {
+    const attempt = await db
+      .prepare(
+        `SELECT locked_until_epoch
+         FROM reader_totp_reset_attempts
+         WHERE scope = ? AND scope_key = ?
+         LIMIT 1`
+      )
+      .bind(limitKey.scope, limitKey.key)
+      .first();
+    const lockedUntil = Number(attempt?.locked_until_epoch || 0);
+    if (lockedUntil > nowEpoch) {
+      retryAfterSeconds = Math.max(retryAfterSeconds, lockedUntil - nowEpoch);
+    }
+  }
+
+  if (retryAfterSeconds > 0) {
+    return { ok: false, retryAfterSeconds };
+  }
+  return { ok: true, retryAfterSeconds: 0 };
+};
+
+const recordReaderTotpResetFailure = async (db, limitKeys, nowEpoch = Math.floor(Date.now() / 1000)) => {
+  await db
+    .prepare(
+      `DELETE FROM reader_totp_reset_attempts
+       WHERE updated_at < datetime('now', '-14 days')`
+    )
+    .run();
+
+  const statements = [];
+  for (const limitKey of limitKeys) {
+    const existing = await db
+      .prepare(
+        `SELECT failure_count, locked_until_epoch
+         FROM reader_totp_reset_attempts
+         WHERE scope = ? AND scope_key = ?
+         LIMIT 1`
+      )
+      .bind(limitKey.scope, limitKey.key)
+      .first();
+    const nextFailureCount = Number(existing?.failure_count || 0) + 1;
+    const lockSeconds =
+      nextFailureCount >= readerTotpResetFailureThreshold
+        ? Math.min(
+            readerTotpResetMaxLockSeconds,
+            readerTotpResetBaseLockSeconds *
+              2 ** Math.min(nextFailureCount - readerTotpResetFailureThreshold, 4)
+          )
+        : 0;
+    const lockedUntil = lockSeconds
+      ? nowEpoch + lockSeconds
+      : Math.max(Number(existing?.locked_until_epoch || 0), 0);
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO reader_totp_reset_attempts (
+            scope, scope_key, failure_count, locked_until_epoch, last_failed_epoch, updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+          ON CONFLICT(scope, scope_key) DO UPDATE SET
+            failure_count = excluded.failure_count,
+            locked_until_epoch = excluded.locked_until_epoch,
+            last_failed_epoch = excluded.last_failed_epoch,
+            updated_at = CURRENT_TIMESTAMP`
+        )
+        .bind(limitKey.scope, limitKey.key, nextFailureCount, lockedUntil, nowEpoch)
+    );
+  }
+
+  if (statements.length) await db.batch(statements);
+};
+
+const clearReaderTotpResetFailures = async (db, limitKeys) => {
+  if (!limitKeys.length) return;
+  await db.batch(
+    limitKeys.map((limitKey) =>
+      db
+        .prepare(
+          `DELETE FROM reader_totp_reset_attempts
+           WHERE scope = ? AND scope_key = ?`
+        )
+        .bind(limitKey.scope, limitKey.key)
+    )
+  );
+};
+
+const readerTotpResetRateLimitResponse = (retryAfterSeconds) =>
+  privateJson(
+    { ok: false, message: readerTotpResetLockedMessage },
+    {
+      status: 429,
+      headers: {
+        'retry-after': String(Math.max(1, retryAfterSeconds || readerTotpResetBaseLockSeconds))
+      }
+    }
+  );
 
 const normalizeReaderRegisterPayload = (payload) => {
   const username = cleanText(payload.username, 40);
@@ -3174,11 +3341,11 @@ const handleReaderTotpConfirm = async (request, env) => {
        SET verified_at = CURRENT_TIMESTAMP,
            enabled_at = CURRENT_TIMESTAMP,
            disabled_at = NULL,
-           last_used_step = ?,
+           last_used_step = NULL,
            updated_at = CURRENT_TIMESTAMP
        WHERE account_id = ?`
     )
-    .bind(verification.step, session.account_id)
+    .bind(session.account_id)
     .run();
 
   const updated = await getReaderTotpCredential(db, session.account_id);
@@ -3257,12 +3424,33 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
         { status: 503 }
       );
     }
+    if (!(await ensureReaderTotpResetAttemptsReady(db))) {
+      return privateJson(
+        {
+          ok: false,
+          code: 'READER_TOTP_RESET_ATTEMPTS_NOT_READY',
+          message: '二步验证重置限流表尚未初始化，请先应用 0013_reader_totp_reset_attempts.sql。'
+        },
+        { status: 503 }
+      );
+    }
 
     const identifier = cleanText(payload.identifier || payload.email || payload.username, 254);
     const code = normalizeTotpCode(payload.totpCode || payload.code);
     if (!identifier || !code) {
       return privateJson({ ok: false, message: '请输入用户名 / Email 和二步验证码。' }, { status: 400 });
     }
+
+    const normalizedIdentifier = normalizeReaderResetIdentifier(identifier);
+    const ipHash = await getRequestIpHash(request);
+    let limitKeys = getReaderTotpResetLimitKeys({ normalizedIdentifier, ipHash });
+    const baseLimit = await checkReaderTotpResetRateLimit(db, limitKeys);
+    if (!baseLimit.ok) return readerTotpResetRateLimitResponse(baseLimit.retryAfterSeconds);
+
+    const failTotpReset = async (status = 401) => {
+      await recordReaderTotpResetFailure(db, limitKeys);
+      return privateJson({ ok: false, message: readerTotpResetFailureMessage }, { status });
+    };
 
     const resetAccount = isEmail(normalizeEmail(identifier))
       ? await db
@@ -3315,18 +3503,31 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
           .first();
 
     if (!resetAccount) {
-      return privateJson({ ok: false, message: '账号或二步验证码不正确。' }, { status: 401 });
+      return failTotpReset();
     }
+
+    limitKeys = getReaderTotpResetLimitKeys({
+      normalizedIdentifier,
+      ipHash,
+      accountId: resetAccount.id
+    });
+    const accountLimit = await checkReaderTotpResetRateLimit(db, limitKeys);
+    if (!accountLimit.ok) return readerTotpResetRateLimitResponse(accountLimit.retryAfterSeconds);
 
     if (!isReaderTotpEnabled(resetAccount)) {
-      return privateJson({ ok: false, message: '这个账号还没有绑定二步验证器，无法用验证码重置密码。' }, { status: 409 });
+      return failTotpReset();
     }
 
-    const verification = await verifyTotpCode(resetAccount.secret_base32, code, {
-      lastUsedStep: resetAccount.last_used_step
+    const totpCheck = await verifyAndConsumeReaderTotpCode(db, resetAccount.id, code, {
+      unboundStatus: 401,
+      unboundMessage: readerTotpResetFailureMessage,
+      invalidStatus: 401,
+      invalidMessage: readerTotpResetFailureMessage,
+      reusedStatus: 401,
+      reusedMessage: readerTotpResetFailureMessage
     });
-    if (!verification.ok) {
-      return privateJson({ ok: false, message: '账号或二步验证码不正确。' }, { status: 401 });
+    if (!totpCheck.ok) {
+      return failTotpReset(totpCheck.status || 401);
     }
 
     const salt = randomHex();
@@ -3347,14 +3548,6 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
         .bind(passwordHash, salt, readerPasswordIterations, readerPasswordAlgorithm, resetAccount.id),
       db
         .prepare(
-          `UPDATE reader_totp_credentials
-           SET last_used_step = ?,
-               updated_at = CURRENT_TIMESTAMP
-           WHERE account_id = ?`
-        )
-        .bind(verification.step, resetAccount.id),
-      db
-        .prepare(
           `UPDATE reader_sessions
            SET revoked_at = CURRENT_TIMESTAMP
            WHERE account_id = ?
@@ -3362,6 +3555,7 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
         )
         .bind(resetAccount.id)
     ]);
+    await clearReaderTotpResetFailures(db, limitKeys);
 
     const sessionToken = await createReaderSession(db, resetAccount.id, request);
     return privateJson(
@@ -3522,15 +3716,13 @@ const handleReaderPasswordChange = async (request, env) => {
     return privateJson({ ok: false, message: '当前密码不正确。' }, { status: 401 });
   }
 
-  let totpUpdateStatement = null;
   if (await ensureReaderTotpCredentialsReady(db)) {
     const totpCredential = await getReaderTotpCredential(db, session.account_id);
     if (isReaderTotpEnabled(totpCredential)) {
-      const totpCheck = await requireReaderTotpCode(db, session.account_id, payload.totpCode || payload.code);
+      const totpCheck = await verifyAndConsumeReaderTotpCode(db, session.account_id, payload.totpCode || payload.code);
       if (!totpCheck.ok) {
         return privateJson({ ok: false, message: totpCheck.message }, { status: totpCheck.status });
       }
-      totpUpdateStatement = totpCheck.updateStatement;
     }
   }
 
@@ -3560,7 +3752,6 @@ const handleReaderPasswordChange = async (request, env) => {
       )
       .bind(session.account_id, session.session_id)
   ];
-  if (totpUpdateStatement) statements.push(totpUpdateStatement);
   await db.batch(statements);
 
   return privateJson({ ok: true, message: '密码已更新。' });
@@ -9870,6 +10061,18 @@ const handleR2Download = async (request, env, file) => {
   headers.set('etag', object.httpEtag);
 
   return new Response(request.method === 'HEAD' ? null : object.body, { headers });
+};
+
+export const __readerTotpTestHooks = {
+  base32ToBytes,
+  bytesToBase32,
+  getD1ChangeCount,
+  getTotpStep,
+  hotpCode,
+  normalizeTotpCode,
+  readerTotpResetFailureMessage,
+  timingSafeEqualString,
+  verifyTotpCode
 };
 
 export default {
