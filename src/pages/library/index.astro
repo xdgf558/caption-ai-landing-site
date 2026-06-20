@@ -382,19 +382,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         return 'NOWPayments 已確認，閱讀權限已更新。';
       }
       if (fulfillment.needsReview) {
-        return `訂單狀態已是 ${order.status || 'confirmed'}，但還沒找到入帳或授權結果，請保留這筆訂單供後台排查。`;
+        return '支付已確認，正在寫入閱讀點數。如果幾分鐘後仍未入帳，請保留訂單給後台排查。';
       }
       if (['failed', 'expired', 'refunded'].includes(order.status)) {
         return `訂單狀態：${order.status}，閱讀點數沒有更新。`;
       }
-      return `訂單狀態：${order.status || 'waiting'}，正在等待 NOWPayments IPN 確認。`;
+      if (order.status === 'confirming') return '已收到支付，正在等待區塊鏈確認。確認完成後會自動入帳。';
+      if (['confirmed', 'finished'].includes(order.status)) return '支付已確認，正在更新你的閱讀點數。';
+      return '已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。';
     };
 
     const refreshReturnedPaymentOrder = async () => {
       const orderToken = query.get('order') || '';
       if (query.get('payment') !== 'success' || !orderToken) return;
 
-      setCreditStatus('支付已返回網站，正在核對訂單狀態...', 'neutral');
+      setCreditStatus('已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。', 'neutral');
       for (let attempt = 0; attempt < 12; attempt += 1) {
         const response = await fetch(`/api/novels/payments/order?order=${encodeURIComponent(orderToken)}`);
         const data = await response.json();
@@ -413,7 +415,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         await wait(fulfillment.nextCheckSeconds * 1000);
       }
 
-      setCreditStatus('仍在等待 NOWPayments 確認。稍後刷新書庫即可看到最新狀態。', 'neutral');
+      setCreditStatus('仍在等待區塊鏈確認。你可以稍後刷新書庫，確認後閱讀點數會自動入帳。', 'neutral');
     };
 
     const loadSession = async () => {
@@ -440,9 +442,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     }
 
     if (query.get('payment') === 'success' && query.get('order')) {
-      setCreditStatus('支付已返回網站，正在核對訂單狀態...', 'neutral');
+      setCreditStatus('已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。', 'neutral');
     } else if (query.get('payment') === 'success') {
-      setCreditStatus('支付已返回網站。NOWPayments 確認後，閱讀點數會自動入帳；如果還沒看到，稍後刷新即可。', 'success');
+      setCreditStatus('支付已返回網站。區塊鏈確認完成後，閱讀點數會自動入帳；如果還沒看到，稍後刷新即可。', 'success');
     } else if (query.get('payment') === 'cancelled') {
       setCreditStatus('支付已取消，閱讀點數沒有變動。', 'error');
     }
@@ -538,7 +540,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.message || '充值訂單建立失敗。');
         if (!data.paymentUrl) throw new Error('NOWPayments 支付連結尚未生成。');
-        setCreditStatus('正在打開 NOWPayments...', 'success');
+        setCreditStatus('正在打開 NOWPayments。完成支付後回到書庫，系統會等待區塊鏈確認並自動入帳。', 'success');
         window.location.href = data.paymentUrl;
       } catch (error) {
         setCreditStatus(error.message || '充值訂單建立失敗。', 'error');
