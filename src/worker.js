@@ -105,13 +105,17 @@ const sha256Hex = async (value) => {
 
 const getD1ChangeCount = (result) => Number(result?.meta?.changes ?? result?.changes ?? 0);
 
-const getRequestIpHash = async (request) => {
+const getRequestClientHashes = async (request) => {
   const ip =
     request.headers.get('cf-connecting-ip') ||
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     'unknown';
   const userAgent = cleanText(request.headers.get('user-agent'), 200);
-  return sha256Hex(`${ip}|${userAgent}`);
+  const [ipHash, ipUaHash] = await Promise.all([
+    sha256Hex(ip),
+    sha256Hex(`${ip}|${userAgent}`)
+  ]);
+  return { ipHash, ipUaHash };
 };
 
 const randomToken = (byteLength = 32) => {
@@ -2824,41 +2828,18 @@ const normalizeReaderResetIdentifier = (identifier) => {
   return isEmail(email) ? email : normalizeUsername(identifier);
 };
 
-const getReaderTotpResetLimitKeys = ({ normalizedIdentifier, ipHash, accountId }) => {
+const getReaderTotpResetLimitKeys = ({ normalizedIdentifier, ipHash, ipUaHash, accountId }) => {
   const keys = [];
   if (normalizedIdentifier && ipHash) {
     keys.push({ scope: 'identifier_ip', key: `${normalizedIdentifier}:${ipHash}` });
   }
   if (ipHash) keys.push({ scope: 'ip', key: ipHash });
+  if (ipUaHash) keys.push({ scope: 'ip_ua', key: ipUaHash });
   if (accountId) keys.push({ scope: 'account', key: String(accountId) });
   return keys;
 };
 
-const checkReaderTotpResetRateLimit = async (db, limitKeys, nowEpoch = Math.floor(Date.now() / 1000)) => {
-  let retryAfterSeconds = 0;
-  for (const limitKey of limitKeys) {
-    const attempt = await db
-      .prepare(
-        `SELECT locked_until_epoch
-         FROM reader_totp_reset_attempts
-         WHERE scope = ? AND scope_key = ?
-         LIMIT 1`
-      )
-      .bind(limitKey.scope, limitKey.key)
-      .first();
-    const lockedUntil = Number(attempt?.locked_until_epoch || 0);
-    if (lockedUntil > nowEpoch) {
-      retryAfterSeconds = Math.max(retryAfterSeconds, lockedUntil - nowEpoch);
-    }
-  }
-
-  if (retryAfterSeconds > 0) {
-    return { ok: false, retryAfterSeconds };
-  }
-  return { ok: true, retryAfterSeconds: 0 };
-};
-
-const recordReaderTotpResetFailure = async (db, limitKeys, nowEpoch = Math.floor(Date.now() / 1000)) => {
+const reserveReaderTotpResetAttempt = async (db, limitKeys, nowEpoch = Math.floor(Date.now() / 1000)) => {
   await db
     .prepare(
       `DELETE FROM reader_totp_reset_attempts
@@ -2866,9 +2847,23 @@ const recordReaderTotpResetFailure = async (db, limitKeys, nowEpoch = Math.floor
     )
     .run();
 
-  const statements = [];
+  let retryAfterSeconds = 0;
   for (const limitKey of limitKeys) {
-    const existing = await db
+    await db
+      .prepare(
+        `INSERT INTO reader_totp_reset_attempts (
+          scope, scope_key, failure_count, locked_until_epoch, last_failed_epoch, updated_at
+        )
+        VALUES (?, ?, 1, 0, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(scope, scope_key) DO UPDATE SET
+          failure_count = reader_totp_reset_attempts.failure_count + 1,
+          last_failed_epoch = excluded.last_failed_epoch,
+          updated_at = CURRENT_TIMESTAMP`
+      )
+      .bind(limitKey.scope, limitKey.key, nowEpoch)
+      .run();
+
+    const attempt = await db
       .prepare(
         `SELECT failure_count, locked_until_epoch
          FROM reader_totp_reset_attempts
@@ -2877,36 +2872,38 @@ const recordReaderTotpResetFailure = async (db, limitKeys, nowEpoch = Math.floor
       )
       .bind(limitKey.scope, limitKey.key)
       .first();
-    const nextFailureCount = Number(existing?.failure_count || 0) + 1;
+    const failureCount = Number(attempt?.failure_count || 0);
+    const lockedUntil = Number(attempt?.locked_until_epoch || 0);
+    if (lockedUntil > nowEpoch) {
+      retryAfterSeconds = Math.max(retryAfterSeconds, lockedUntil - nowEpoch);
+      continue;
+    }
+    if (failureCount <= readerTotpResetFailureThreshold) continue;
+
     const lockSeconds =
-      nextFailureCount >= readerTotpResetFailureThreshold
-        ? Math.min(
-            readerTotpResetMaxLockSeconds,
-            readerTotpResetBaseLockSeconds *
-              2 ** Math.min(nextFailureCount - readerTotpResetFailureThreshold, 4)
-          )
-        : 0;
-    const lockedUntil = lockSeconds
-      ? nowEpoch + lockSeconds
-      : Math.max(Number(existing?.locked_until_epoch || 0), 0);
-    statements.push(
-      db
-        .prepare(
-          `INSERT INTO reader_totp_reset_attempts (
-            scope, scope_key, failure_count, locked_until_epoch, last_failed_epoch, updated_at
-          )
-          VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-          ON CONFLICT(scope, scope_key) DO UPDATE SET
-            failure_count = excluded.failure_count,
-            locked_until_epoch = excluded.locked_until_epoch,
-            last_failed_epoch = excluded.last_failed_epoch,
-            updated_at = CURRENT_TIMESTAMP`
-        )
-        .bind(limitKey.scope, limitKey.key, nextFailureCount, lockedUntil, nowEpoch)
-    );
+      Math.min(
+        readerTotpResetMaxLockSeconds,
+        readerTotpResetBaseLockSeconds *
+          2 ** Math.min(failureCount - readerTotpResetFailureThreshold - 1, 4)
+      );
+    const nextLockedUntil = nowEpoch + lockSeconds;
+    await db
+      .prepare(
+        `UPDATE reader_totp_reset_attempts
+         SET locked_until_epoch = ?,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE scope = ? AND scope_key = ?
+           AND locked_until_epoch < ?`
+      )
+      .bind(nextLockedUntil, limitKey.scope, limitKey.key, nextLockedUntil)
+      .run();
+    retryAfterSeconds = Math.max(retryAfterSeconds, lockSeconds);
   }
 
-  if (statements.length) await db.batch(statements);
+  if (retryAfterSeconds > 0) {
+    return { ok: false, retryAfterSeconds };
+  }
+  return { ok: true, retryAfterSeconds: 0 };
 };
 
 const clearReaderTotpResetFailures = async (db, limitKeys) => {
@@ -3442,15 +3439,13 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
     }
 
     const normalizedIdentifier = normalizeReaderResetIdentifier(identifier);
-    const ipHash = await getRequestIpHash(request);
-    let limitKeys = getReaderTotpResetLimitKeys({ normalizedIdentifier, ipHash });
-    const baseLimit = await checkReaderTotpResetRateLimit(db, limitKeys);
+    const { ipHash, ipUaHash } = await getRequestClientHashes(request);
+    let limitKeys = getReaderTotpResetLimitKeys({ normalizedIdentifier, ipHash, ipUaHash });
+    const baseLimit = await reserveReaderTotpResetAttempt(db, limitKeys);
     if (!baseLimit.ok) return readerTotpResetRateLimitResponse(baseLimit.retryAfterSeconds);
 
-    const failTotpReset = async (status = 401) => {
-      await recordReaderTotpResetFailure(db, limitKeys);
-      return privateJson({ ok: false, message: readerTotpResetFailureMessage }, { status });
-    };
+    const failTotpReset = (status = 401) =>
+      privateJson({ ok: false, message: readerTotpResetFailureMessage }, { status });
 
     const resetAccount = isEmail(normalizeEmail(identifier))
       ? await db
@@ -3509,9 +3504,10 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
     limitKeys = getReaderTotpResetLimitKeys({
       normalizedIdentifier,
       ipHash,
+      ipUaHash,
       accountId: resetAccount.id
     });
-    const accountLimit = await checkReaderTotpResetRateLimit(db, limitKeys);
+    const accountLimit = await reserveReaderTotpResetAttempt(db, [{ scope: 'account', key: String(resetAccount.id) }]);
     if (!accountLimit.ok) return readerTotpResetRateLimitResponse(accountLimit.retryAfterSeconds);
 
     if (!isReaderTotpEnabled(resetAccount)) {
@@ -10067,11 +10063,19 @@ export const __readerTotpTestHooks = {
   base32ToBytes,
   bytesToBase32,
   getD1ChangeCount,
+  getReaderTotpResetLimitKeys,
+  getRequestClientHashes,
   getTotpStep,
+  handleReaderPasswordResetConfirm,
   hotpCode,
   normalizeTotpCode,
   readerTotpResetFailureMessage,
+  readerTotpResetFailureThreshold,
+  readerTotpResetLockedMessage,
+  reserveReaderTotpResetAttempt,
+  sha256Hex,
   timingSafeEqualString,
+  verifyAndConsumeReaderTotpCode,
   verifyTotpCode
 };
 
