@@ -114,15 +114,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p class="reader-totp-state" id="reader-totp-state">正在读取绑定状态。</p>
       <button class="button button-primary" id="reader-totp-setup" type="button">绑定 Google Authenticator</button>
       <div class="reader-totp-setup-box" id="reader-totp-setup-box" hidden>
-        <p class="fine-print">打开 Google Authenticator，选择添加账号，然后使用“输入设置密钥”。</p>
-        <label>
-          设置密钥
-          <input id="reader-totp-secret" type="text" readonly />
-        </label>
-        <label>
-          otpauth URI
-          <textarea id="reader-totp-uri" readonly rows="3"></textarea>
-        </label>
+        <div class="reader-totp-qr-card" id="reader-totp-qr-card" hidden>
+          <div class="reader-totp-qr" id="reader-totp-qr" aria-label="Google Authenticator 绑定二维码"></div>
+          <p class="fine-print">打开 Google Authenticator，点击加号，选择“扫描二维码”。</p>
+        </div>
+        <details class="reader-totp-manual">
+          <summary>无法扫码时，手动输入设置密钥</summary>
+          <label>
+            设置密钥
+            <input id="reader-totp-secret" type="text" readonly />
+          </label>
+          <label>
+            otpauth URI
+            <textarea id="reader-totp-uri" readonly rows="3"></textarea>
+          </label>
+        </details>
         <label>
           6 位验证码
           <input id="reader-totp-confirm-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Google Authenticator 当前数字" />
@@ -191,6 +197,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   </section>
 
   <script>
+    import qrcode from 'qrcode-generator';
+
     const form = document.getElementById('reader-login-form');
     const authTitle = document.getElementById('reader-auth-title');
     const authModeButtons = Array.from(document.querySelectorAll('[data-auth-mode]'));
@@ -226,6 +234,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const totpState = document.getElementById('reader-totp-state');
     const totpSetupButton = document.getElementById('reader-totp-setup');
     const totpSetupBox = document.getElementById('reader-totp-setup-box');
+    const totpQrCard = document.getElementById('reader-totp-qr-card');
+    const totpQr = document.getElementById('reader-totp-qr');
     const totpSecretInput = document.getElementById('reader-totp-secret');
     const totpUriInput = document.getElementById('reader-totp-uri');
     const totpConfirmCodeInput = document.getElementById('reader-totp-confirm-code');
@@ -490,6 +500,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       totpSetupButton.hidden = enabled;
       passwordTotpCodeInput.placeholder = enabled ? '6 位数字' : '未绑定时可留空';
       totpSetupBox.hidden = true;
+      renderTotpQrCode('');
       if (!enabled) {
         totpSecretInput.value = '';
         totpUriInput.value = '';
@@ -517,6 +528,30 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       } catch (error) {
         renderTotpStatus({ enabled: false });
         setTotpStatus(error.message || '读取二步验证状态失败。', 'error');
+      }
+    };
+
+    const renderTotpQrCode = (otpauthUrl) => {
+      totpQr.innerHTML = '';
+      totpQrCard.hidden = true;
+      if (!otpauthUrl) return true;
+
+      try {
+        const qr = qrcode(0, 'M');
+        qr.addData(otpauthUrl);
+        qr.make();
+        totpQr.innerHTML = qr.createSvgTag(5, 3);
+        const svg = totpQr.querySelector('svg');
+        if (svg) {
+          svg.setAttribute('role', 'img');
+          svg.setAttribute('aria-label', 'Google Authenticator 绑定二维码');
+          svg.removeAttribute('width');
+          svg.removeAttribute('height');
+        }
+        totpQrCard.hidden = false;
+        return true;
+      } catch (error) {
+        return false;
       }
     };
 
@@ -762,9 +797,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         if (data.setup) {
           totpSecretInput.value = data.setup.secretBase32 || '';
           totpUriInput.value = data.setup.otpauthUrl || '';
+          const qrReady = renderTotpQrCode(data.setup.otpauthUrl || '');
           totpSetupBox.hidden = false;
-          totpConfirmCodeInput.focus();
-          setTotpStatus('请把设置密钥添加到 Google Authenticator，再输入当前 6 位验证码完成绑定。', 'neutral');
+          setTotpStatus(
+            qrReady
+              ? '请用 Google Authenticator 扫描二维码，再输入当前 6 位验证码完成绑定。'
+              : '二维码生成失败，请展开手动密钥完成绑定。',
+            qrReady ? 'neutral' : 'error'
+          );
         } else {
           renderTotpStatus(data.totp || { enabled: false });
           setTotpStatus(data.message || '二步验证状态已更新。', data.totp?.enabled ? 'success' : 'neutral');

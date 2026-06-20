@@ -5315,6 +5315,56 @@ body.station-paper-page {
   padding-top: 16px;
 }
 
+.reader-totp-qr-card {
+  align-items: center;
+  background: #fffaf1;
+  border: 2px solid #d8c8b8;
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 16px;
+  text-align: center;
+}
+
+.reader-totp-qr {
+  background: #ffffff;
+  border: 1px solid #eadfd1;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(34, 27, 22, 0.08);
+  display: grid;
+  min-height: 184px;
+  min-width: 184px;
+  padding: 10px;
+  place-items: center;
+}
+
+.reader-totp-qr svg {
+  display: block;
+  height: min(62vw, 184px);
+  max-height: 184px;
+  max-width: 184px;
+  width: min(62vw, 184px);
+}
+
+.reader-totp-manual {
+  border: 1px dashed #d8c8b8;
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.reader-totp-manual summary {
+  color: #2e5b4e;
+  cursor: pointer;
+  font-weight: 950;
+}
+
+.reader-totp-manual[open] summary {
+  margin-bottom: 10px;
+}
+
 .reader-credit-balance {
   color: #221b16;
   font-size: clamp(28px, 5vw, 42px);
