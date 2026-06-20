@@ -5021,6 +5021,11 @@ body.station-paper-page {
   margin-top: 10px;
 }
 
+.serial-reader-shell__body > h1:first-child,
+.serial-reader-shell__body > h2:first-child {
+  display: none;
+}
+
 .protected-chapter-body {
   opacity: 0;
   transform: translateY(8px);

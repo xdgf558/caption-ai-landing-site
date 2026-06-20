@@ -3556,7 +3556,7 @@ const handleProtectedChapterContent = async (request, env) => {
     content: {
       etag: protectedHtml.etag,
       headings: chapter.headings || [],
-      html: protectedHtml.html,
+      html: stripLeadingReaderHeadingHtml(protectedHtml.html),
       source: 'r2',
       uploadedAt: protectedHtml.uploadedAt
     },
@@ -7504,6 +7504,9 @@ const renderSimpleMarkdownToHtml = (markdown) => {
   return output.join('\n');
 };
 
+const stripLeadingReaderHeadingHtml = (html) =>
+  String(html || '').replace(/^\s*<h[12]\b[^>]*>[\s\S]*?<\/h[12]>\s*/i, '');
+
 const readPublicEntryBody = async (env, row) => {
   if (!row) return { html: '', source: 'none' };
   if (row.access_level !== 'free') return { html: '', source: 'protected' };
@@ -7512,10 +7515,10 @@ const readPublicEntryBody = async (env, row) => {
   if (!bucket) return { html: '', source: 'missing-bucket' };
 
   const html = await readContentObjectText(bucket, row.html_r2_key, 'HTML body');
-  if (html) return { html, source: 'html-r2' };
+  if (html) return { html: stripLeadingReaderHeadingHtml(html), source: 'html-r2' };
 
   const markdown = await readContentObjectText(bucket, row.markdown_r2_key, 'Markdown body');
-  if (markdown) return { html: renderSimpleMarkdownToHtml(markdown), source: 'markdown-r2' };
+  if (markdown) return { html: stripLeadingReaderHeadingHtml(renderSimpleMarkdownToHtml(markdown)), source: 'markdown-r2' };
 
   return { html: '', source: 'empty' };
 };
