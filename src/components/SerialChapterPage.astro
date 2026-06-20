@@ -208,7 +208,6 @@ const accessGateCopy = {
       {chapter.data.readingMinutes && <span>{formatReadingMinutes(chapter.data.readingMinutes, locale)}</span>}
       {chapter.data.wordCount && <span>{`${chapter.data.wordCount} ${copy.chapterWordCount}`}</span>}
     </div>
-    <p>{chapter.data.excerpt}</p>
   </header>
 
   {isProtectedChapter ? (

@@ -8205,7 +8205,6 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
   const nextChapter = currentIndex >= 0 ? chapters[currentIndex + 1] : null;
   const isProtected = chapter.access_level !== 'free';
   const bookmarkCopy = dynamicBookmarkCopy[route.locale] || dynamicBookmarkCopy['zh-Hant'];
-  const summary = firstPlainSummary([chapter.excerpt, chapter.description], 420);
   const fallbackBody = firstPlainSummary([chapter.excerpt, chapter.description], 1200);
   const content = isProtected
     ? `<section class="gate" data-serial-access-gate data-series-slug="${escapeHtml(chapter.parent_slug)}" data-chapter-slug="${escapeHtml(chapter.slug)}" data-access="${escapeHtml(chapter.access_level)}" data-locale="${escapeHtml(route.locale)}" data-return-path="${escapeHtml(dynamicCanonicalPath(route))}">
@@ -8360,7 +8359,6 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
           ${chapter.word_count ? `<span>${escapeHtml(String(chapter.word_count))} ${escapeHtml(copy.words)}</span>` : ''}
         </div>
         <h1>${escapeHtml(chapter.title)}</h1>
-        ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
       </header>
       ${content}
       <footer class="section">
