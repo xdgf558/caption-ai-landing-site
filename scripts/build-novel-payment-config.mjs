@@ -95,8 +95,17 @@ const splitMarkdown = (markdown, filePath) => {
   };
 };
 
+const readMarkdownFiles = async (dir) => {
+  try {
+    return (await readdir(dir)).filter((file) => file.endsWith('.md')).sort();
+  } catch (error) {
+    if (error?.code === 'ENOENT') return [];
+    throw error;
+  }
+};
+
 const readMarkdownFrontmatters = async (dir) => {
-  const files = (await readdir(dir)).filter((file) => file.endsWith('.md')).sort();
+  const files = await readMarkdownFiles(dir);
   return Promise.all(
     files.map(async (file) => {
       const filePath = path.join(dir, file);
@@ -109,7 +118,7 @@ const readMarkdownFrontmatters = async (dir) => {
 };
 
 const readMarkdownEntries = async (dir) => {
-  const files = (await readdir(dir)).filter((file) => file.endsWith('.md')).sort();
+  const files = await readMarkdownFiles(dir);
   return Promise.all(
     files.map(async (file) => {
       const filePath = path.join(dir, file);
