@@ -302,6 +302,20 @@ assert.equal(sameIpDifferentUaA.ipHash, sameIpDifferentUaB.ipHash);
 assert.notEqual(sameIpDifferentUaA.ipUaHash, sameIpDifferentUaB.ipUaHash);
 
 const identifierHash = await hooks.sha256Hex('reader@example.com');
+const secretIdentifierHash = await hooks.getReaderTotpResetIdentifierHash('reader@example.com', {
+  READER_TOTP_RESET_KEY_SECRET: 'test-secret'
+});
+assert.equal(
+  secretIdentifierHash,
+  await hooks.hmacSha256Hex('reader@example.com', 'test-secret')
+);
+assert.equal(
+  secretIdentifierHash,
+  await hooks.getReaderTotpResetIdentifierHash('reader@example.com', {
+    READER_TOTP_RESET_KEY_SECRET: 'test-secret'
+  })
+);
+assert.notEqual(secretIdentifierHash, identifierHash);
 const limitKeys = hooks.getReaderTotpResetLimitKeys({
   identifierHash,
   ipHash: sameIpDifferentUaA.ipHash,
@@ -333,6 +347,20 @@ assert.equal(
   [...readyDb.attempts.values()].some((attempt) => attempt.scope_key.includes('reader@example.com')),
   false
 );
+
+const hmacKeyDb = new FakeD1();
+response = await hooks.handleReaderPasswordResetConfirm(resetRequest(resetBody()), {
+  WAITLIST_DB: hmacKeyDb,
+  READER_TOTP_RESET_KEY_SECRET: 'test-secret'
+});
+parsed = await parseJson(response);
+assert.equal(parsed.status, 401);
+const hmacIdentifierAttempt = [...hmacKeyDb.attempts.values()].find(
+  (attempt) => attempt.scope === 'identifier_ip'
+);
+assert.equal(hmacIdentifierAttempt.scope_key.includes('reader@example.com'), false);
+assert.equal(hmacIdentifierAttempt.scope_key.includes(secretIdentifierHash), true);
+assert.equal(hmacIdentifierAttempt.scope_key.includes(identifierHash), false);
 
 const unboundDb = new FakeD1();
 unboundDb.addAccount({ totp: { enabled: false } });
@@ -443,5 +471,16 @@ const migration = await readFile(
 assert.match(migration, /reader_totp_reset_attempts/);
 assert.match(migration, /UNIQUE\(scope, scope_key\)/);
 assert.match(migration, /idx_reader_totp_reset_attempts_updated_at/);
+
+const buildPaymentConfigScript = await readFile(
+  new URL('../scripts/build-novel-payment-config.mjs', import.meta.url),
+  'utf8'
+);
+assert.match(buildPaymentConfigScript, /ALLOW_EMPTY_SERIAL_CONTENT === '1'/);
+assert.match(buildPaymentConfigScript, /console\.warn/);
+assert.doesNotMatch(buildPaymentConfigScript, /if \(error\?\.code === 'ENOENT'\) return \[\]/);
+
+const ciWorkflow = await readFile(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+assert.match(ciWorkflow, /ALLOW_EMPTY_SERIAL_CONTENT:\s+"1"/);
 
 console.log('reader TOTP tests passed');

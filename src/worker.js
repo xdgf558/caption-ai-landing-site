@@ -103,6 +103,17 @@ const sha256Hex = async (value) => {
   return toHex(await crypto.subtle.digest('SHA-256', encoded));
 };
 
+const hmacSha256Hex = async (value, secret) => {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  return toHex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)));
+};
+
 const getD1ChangeCount = (result) => Number(result?.meta?.changes ?? result?.changes ?? 0);
 
 const getRequestClientHashes = async (request) => {
@@ -2828,6 +2839,12 @@ const normalizeReaderResetIdentifier = (identifier) => {
   return isEmail(email) ? email : normalizeUsername(identifier);
 };
 
+const getReaderTotpResetIdentifierHash = async (normalizedIdentifier, env = {}) => {
+  if (!normalizedIdentifier) return '';
+  const secret = String(env?.READER_TOTP_RESET_KEY_SECRET || '').trim();
+  return secret ? hmacSha256Hex(normalizedIdentifier, secret) : sha256Hex(normalizedIdentifier);
+};
+
 const getReaderTotpResetLimitKeys = ({ identifierHash, ipHash, ipUaHash, accountId }) => {
   const keys = [];
   if (identifierHash && ipHash) {
@@ -3467,7 +3484,7 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
     }
 
     const normalizedIdentifier = normalizeReaderResetIdentifier(identifier);
-    const identifierHash = normalizedIdentifier ? await sha256Hex(normalizedIdentifier) : '';
+    const identifierHash = await getReaderTotpResetIdentifierHash(normalizedIdentifier, env);
     const { ipHash, ipUaHash } = await getRequestClientHashes(request);
     let limitKeys = getReaderTotpResetLimitKeys({ identifierHash, ipHash, ipUaHash });
     const baseLimit = await reserveReaderTotpResetAttempt(db, limitKeys);
@@ -10093,9 +10110,11 @@ export const __readerTotpTestHooks = {
   bytesToBase32,
   getD1ChangeCount,
   getReaderTotpResetLimitKeys,
+  getReaderTotpResetIdentifierHash,
   getRequestClientHashes,
   getTotpStep,
   handleReaderPasswordResetConfirm,
+  hmacSha256Hex,
   hotpCode,
   normalizeTotpCode,
   readerTotpResetFailureMessage,

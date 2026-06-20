@@ -13,6 +13,7 @@ const protectedContentBuildDir = path.join(rootDir, '.generated/protected-serial
 const protectedContentFilesDir = path.join(protectedContentBuildDir, 'files');
 const protectedContentManifestPath = path.join(protectedContentBuildDir, 'manifest.json');
 const protectedContentBucketName = 'station-cat-content';
+const allowEmptySerialContent = process.env.ALLOW_EMPTY_SERIAL_CONTENT === '1';
 
 const cleanSlug = (value, maxLength = 120) =>
   String(value || '')
@@ -99,7 +100,12 @@ const readMarkdownFiles = async (dir) => {
   try {
     return (await readdir(dir)).filter((file) => file.endsWith('.md')).sort();
   } catch (error) {
-    if (error?.code === 'ENOENT') return [];
+    if (error?.code === 'ENOENT' && allowEmptySerialContent) {
+      console.warn(
+        `Content directory is missing and ALLOW_EMPTY_SERIAL_CONTENT=1 is set: ${path.relative(rootDir, dir)}`
+      );
+      return [];
+    }
     throw error;
   }
 };

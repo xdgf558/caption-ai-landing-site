@@ -27,3 +27,5 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          ALLOW_EMPTY_SERIAL_CONTENT: "1"
