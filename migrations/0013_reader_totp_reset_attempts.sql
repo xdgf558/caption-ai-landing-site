@@ -12,3 +12,6 @@ CREATE TABLE IF NOT EXISTS reader_totp_reset_attempts (
 
 CREATE INDEX IF NOT EXISTS idx_reader_totp_reset_attempts_scope
   ON reader_totp_reset_attempts (scope, scope_key, locked_until_epoch);
+
+CREATE INDEX IF NOT EXISTS idx_reader_totp_reset_attempts_updated_at
+  ON reader_totp_reset_attempts (updated_at);

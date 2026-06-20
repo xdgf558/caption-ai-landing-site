@@ -43,6 +43,7 @@ class FakeD1 {
     this.accountsByUsername = new Map();
     this.tokensByHash = new Map();
     this.attempts = new Map();
+    this.cleanupRuns = 0;
     this.passwordUpdates = 0;
     this.revokedSessions = 0;
     this.sessions = [];
@@ -166,7 +167,8 @@ class FakeD1 {
   }
 
   async run(sql, params) {
-    if (/DELETE FROM reader_totp_reset_attempts\s+WHERE updated_at/.test(sql)) {
+    if (/DELETE FROM reader_totp_reset_attempts\s+WHERE id IN/.test(sql)) {
+      this.cleanupRuns += 1;
       return { meta: { changes: 0 } };
     }
     if (/INSERT INTO reader_totp_reset_attempts/.test(sql)) {
@@ -299,6 +301,21 @@ const sameIpDifferentUaB = await hooks.getRequestClientHashes(
 assert.equal(sameIpDifferentUaA.ipHash, sameIpDifferentUaB.ipHash);
 assert.notEqual(sameIpDifferentUaA.ipUaHash, sameIpDifferentUaB.ipUaHash);
 
+const identifierHash = await hooks.sha256Hex('reader@example.com');
+const limitKeys = hooks.getReaderTotpResetLimitKeys({
+  identifierHash,
+  ipHash: sameIpDifferentUaA.ipHash,
+  ipUaHash: sameIpDifferentUaA.ipUaHash
+});
+assert.equal(limitKeys.some((limitKey) => limitKey.key.includes('reader@example.com')), false);
+assert.equal(limitKeys.some((limitKey) => limitKey.key.includes(identifierHash)), true);
+
+const cleanupDb = new FakeD1();
+await hooks.reserveReaderTotpResetAttempt(cleanupDb, limitKeys, 1, { cleanup: false });
+assert.equal(cleanupDb.cleanupRuns, 0);
+await hooks.reserveReaderTotpResetAttempt(cleanupDb, limitKeys, 1, { cleanup: true });
+assert.equal(cleanupDb.cleanupRuns, 1);
+
 const missingAttemptsDb = new FakeD1({ totpResetAttemptsReady: false });
 let response = await hooks.handleReaderPasswordResetConfirm(resetRequest(resetBody()), {
   WAITLIST_DB: missingAttemptsDb
@@ -312,6 +329,10 @@ response = await hooks.handleReaderPasswordResetConfirm(resetRequest(resetBody()
 parsed = await parseJson(response);
 assert.equal(parsed.status, 401);
 assert.deepEqual(parsed.body, genericFailure);
+assert.equal(
+  [...readyDb.attempts.values()].some((attempt) => attempt.scope_key.includes('reader@example.com')),
+  false
+);
 
 const unboundDb = new FakeD1();
 unboundDb.addAccount({ totp: { enabled: false } });
@@ -409,6 +430,8 @@ const workerSource = await readFile(new URL('../src/worker.js', import.meta.url)
 assert.match(workerSource, /reader_totp_reset_attempts/);
 assert.match(workerSource, /reserveReaderTotpResetAttempt/);
 assert.match(workerSource, /failure_count = reader_totp_reset_attempts\.failure_count \+ 1/);
+assert.match(workerSource, /shouldSampleReaderTotpResetCleanup/);
+assert.match(workerSource, /LIMIT 200/);
 assert.match(workerSource, /last_used_step IS NULL OR last_used_step < \?/);
 assert.match(workerSource, /unboundMessage: readerTotpResetFailureMessage/);
 assert.doesNotMatch(workerSource, /无法用验证码重置密码/);
@@ -419,5 +442,6 @@ const migration = await readFile(
 );
 assert.match(migration, /reader_totp_reset_attempts/);
 assert.match(migration, /UNIQUE\(scope, scope_key\)/);
+assert.match(migration, /idx_reader_totp_reset_attempts_updated_at/);
 
 console.log('reader TOTP tests passed');

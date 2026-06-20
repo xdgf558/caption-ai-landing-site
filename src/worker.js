@@ -2828,10 +2828,10 @@ const normalizeReaderResetIdentifier = (identifier) => {
   return isEmail(email) ? email : normalizeUsername(identifier);
 };
 
-const getReaderTotpResetLimitKeys = ({ normalizedIdentifier, ipHash, ipUaHash, accountId }) => {
+const getReaderTotpResetLimitKeys = ({ identifierHash, ipHash, ipUaHash, accountId }) => {
   const keys = [];
-  if (normalizedIdentifier && ipHash) {
-    keys.push({ scope: 'identifier_ip', key: `${normalizedIdentifier}:${ipHash}` });
+  if (identifierHash && ipHash) {
+    keys.push({ scope: 'identifier_ip', key: `${identifierHash}:${ipHash}` });
   }
   if (ipHash) keys.push({ scope: 'ip', key: ipHash });
   if (ipUaHash) keys.push({ scope: 'ip_ua', key: ipUaHash });
@@ -2839,13 +2839,41 @@ const getReaderTotpResetLimitKeys = ({ normalizedIdentifier, ipHash, ipUaHash, a
   return keys;
 };
 
-const reserveReaderTotpResetAttempt = async (db, limitKeys, nowEpoch = Math.floor(Date.now() / 1000)) => {
-  await db
+const shouldSampleReaderTotpResetCleanup = (limitKeys, nowEpoch = Math.floor(Date.now() / 1000)) => {
+  const primaryKey = limitKeys.find((limitKey) => limitKey.scope === 'identifier_ip')?.key || limitKeys[0]?.key;
+  if (!primaryKey) return false;
+  const cleanupWindow = Math.floor(nowEpoch / 3600);
+  let hash = 2166136261;
+  for (const char of `${primaryKey}:${cleanupWindow}`) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  return hash % 100 === 0;
+};
+
+const cleanupReaderTotpResetAttempts = async (db) =>
+  db
     .prepare(
       `DELETE FROM reader_totp_reset_attempts
-       WHERE updated_at < datetime('now', '-14 days')`
+       WHERE id IN (
+         SELECT id
+         FROM reader_totp_reset_attempts
+         WHERE updated_at < datetime('now', '-14 days')
+         ORDER BY updated_at
+         LIMIT 200
+       )`
     )
     .run();
+
+const reserveReaderTotpResetAttempt = async (
+  db,
+  limitKeys,
+  nowEpoch = Math.floor(Date.now() / 1000),
+  options = {}
+) => {
+  if (options.cleanup === true || shouldSampleReaderTotpResetCleanup(limitKeys, nowEpoch)) {
+    await cleanupReaderTotpResetAttempts(db);
+  }
 
   let retryAfterSeconds = 0;
   for (const limitKey of limitKeys) {
@@ -3439,8 +3467,9 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
     }
 
     const normalizedIdentifier = normalizeReaderResetIdentifier(identifier);
+    const identifierHash = normalizedIdentifier ? await sha256Hex(normalizedIdentifier) : '';
     const { ipHash, ipUaHash } = await getRequestClientHashes(request);
-    let limitKeys = getReaderTotpResetLimitKeys({ normalizedIdentifier, ipHash, ipUaHash });
+    let limitKeys = getReaderTotpResetLimitKeys({ identifierHash, ipHash, ipUaHash });
     const baseLimit = await reserveReaderTotpResetAttempt(db, limitKeys);
     if (!baseLimit.ok) return readerTotpResetRateLimitResponse(baseLimit.retryAfterSeconds);
 
@@ -3502,7 +3531,7 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
     }
 
     limitKeys = getReaderTotpResetLimitKeys({
-      normalizedIdentifier,
+      identifierHash,
       ipHash,
       ipUaHash,
       accountId: resetAccount.id
@@ -10074,6 +10103,7 @@ export const __readerTotpTestHooks = {
   readerTotpResetLockedMessage,
   reserveReaderTotpResetAttempt,
   sha256Hex,
+  shouldSampleReaderTotpResetCleanup,
   timingSafeEqualString,
   verifyAndConsumeReaderTotpCode,
   verifyTotpCode
