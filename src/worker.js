@@ -1469,7 +1469,7 @@ const dynamicContentCopy = {
     devlogDescription: 'Development updates, product experiments, launch notes, and creative records from Station Cat.',
     devlogTitle: 'Station Cat Dev Blog',
     free: 'Free',
-    lockedBody: 'Sign in from the library to check whether this account can read the chapter.',
+    lockedBody: 'Sign in from Member Center to check whether this account can read the chapter.',
     lockedTitle: 'This chapter is reserved for unlocked readers.',
     nextChapter: 'Next chapter',
     previousChapter: 'Previous chapter',
@@ -1478,7 +1478,7 @@ const dynamicContentCopy = {
     readLatest: 'Read latest chapter',
     serialsDescription: 'A quiet reading shelf for long-form fiction published on Station Cat.',
     serialsTitle: 'Station Cat Serials',
-    signIn: 'Open my library',
+    signIn: 'Open Member Center',
     status: 'Status',
     words: 'words'
   },
@@ -1517,7 +1517,7 @@ const dynamicContentCopy = {
     devlogDescription: 'Station Cat 的開發進度、產品實驗、上架準備和創作記錄。',
     devlogTitle: 'Station Cat 開發博客',
     free: '免費',
-    lockedBody: '請先從書庫登入，確認這個帳戶是否可以閱讀本章。',
+    lockedBody: '請先從會員中心登入，確認這個帳戶是否可以閱讀本章。',
     lockedTitle: '這一章保留給已解鎖讀者。',
     nextChapter: '下一章',
     previousChapter: '上一章',
@@ -1526,7 +1526,7 @@ const dynamicContentCopy = {
     readLatest: '閱讀最新章',
     serialsDescription: '一個放長篇小說、更新順序和後續讀者支持入口的小書架。',
     serialsTitle: 'Station Cat 連載小說',
-    signIn: '打開我的書庫',
+    signIn: '打開會員中心',
     status: '更新狀態',
     words: '字'
   },
@@ -1541,7 +1541,7 @@ const dynamicContentCopy = {
     devlogDescription: 'Station Cat 的开发进度、产品实验、上架准备和创作记录。',
     devlogTitle: 'Station Cat 开发博客',
     free: '免费',
-    lockedBody: '请先从书库登录，确认这个账户是否可以阅读本章。',
+    lockedBody: '请先从会员中心登录，确认这个账户是否可以阅读本章。',
     lockedTitle: '这一章保留给已解锁读者。',
     nextChapter: '下一章',
     previousChapter: '上一章',
@@ -1550,7 +1550,7 @@ const dynamicContentCopy = {
     readLatest: '阅读最新章',
     serialsDescription: '一个放长篇小说、更新顺序和后续读者支持入口的小书架。',
     serialsTitle: 'Station Cat 连载小说',
-    signIn: '打开我的书库',
+    signIn: '打开会员中心',
     status: '更新状态',
     words: '字'
   }
@@ -2479,20 +2479,20 @@ const sendReaderLoginEmail = async (env, email, loginUrl) => {
 
   const fromEmail = env.READER_EMAIL_FROM || 'noreply@wwwstationcat.org';
   const fromName = env.READER_EMAIL_FROM_NAME || 'Station Cat';
-  const subject = 'Sign in to Station Cat Library';
+  const subject = '登入 Station Cat 會員中心';
   const text = [
-    'Use this secure link to sign in to your Station Cat reader library:',
+    '請使用下面的安全連結登入 Station Cat 會員中心：',
     '',
     loginUrl,
     '',
-    'This link expires in 15 minutes. If you did not request it, you can ignore this email.'
+    '這個連結會在 15 分鐘後失效。如果不是你本人操作，可以忽略這封信。'
   ].join('\n');
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #111827;">
-      <h1 style="font-size: 20px;">Sign in to Station Cat Library</h1>
-      <p>Use this secure link to open your reader library:</p>
-      <p><a href="${loginUrl}" style="display: inline-block; background: #2e5b4e; color: #fffaf1; padding: 12px 16px; border-radius: 8px; text-decoration: none;">Open my library</a></p>
-      <p style="color: #6b7280;">This link expires in 15 minutes. If you did not request it, you can ignore this email.</p>
+      <h1 style="font-size: 20px;">登入 Station Cat 會員中心</h1>
+      <p>請使用下面的安全連結登入你的會員中心：</p>
+      <p><a href="${loginUrl}" style="display: inline-block; background: #2e5b4e; color: #fffaf1; padding: 12px 16px; border-radius: 8px; text-decoration: none;">登入會員中心</a></p>
+      <p style="color: #6b7280;">這個連結會在 15 分鐘後失效。如果不是你本人操作，可以忽略這封信。</p>
     </div>
   `;
 
@@ -2507,6 +2507,49 @@ const sendReaderLoginEmail = async (env, email, loginUrl) => {
     return { configured: true, sent: true };
   } catch (error) {
     console.error('reader_login_email_failed', {
+      code: error?.code,
+      message: error?.message
+    });
+    return { configured: true, sent: false, error: error?.message || 'Email delivery failed.' };
+  }
+};
+
+const sendReaderPasswordResetEmail = async (env, email, resetUrl) => {
+  const configured = Boolean(env.EMAIL && typeof env.EMAIL.send === 'function');
+  if (!configured) {
+    return { configured: false, sent: false };
+  }
+
+  const fromEmail = env.READER_EMAIL_FROM || 'noreply@wwwstationcat.org';
+  const fromName = env.READER_EMAIL_FROM_NAME || 'Station Cat';
+  const subject = '重置 Station Cat 會員密碼';
+  const text = [
+    '請使用下面的安全連結重置你的 Station Cat 會員密碼：',
+    '',
+    resetUrl,
+    '',
+    '這個連結會在 30 分鐘後失效。如果不是你本人操作，可以忽略這封信。'
+  ].join('\n');
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #111827;">
+      <h1 style="font-size: 20px;">重置 Station Cat 會員密碼</h1>
+      <p>請使用下面的安全連結設定新的會員密碼：</p>
+      <p><a href="${resetUrl}" style="display: inline-block; background: #2e5b4e; color: #fffaf1; padding: 12px 16px; border-radius: 8px; text-decoration: none;">重置密碼</a></p>
+      <p style="color: #6b7280;">這個連結會在 30 分鐘後失效。如果不是你本人操作，可以忽略這封信。</p>
+    </div>
+  `;
+
+  try {
+    await env.EMAIL.send({
+      to: email,
+      from: { email: fromEmail, name: fromName },
+      subject,
+      text,
+      html
+    });
+    return { configured: true, sent: true };
+  } catch (error) {
+    console.error('reader_password_reset_email_failed', {
       code: error?.code,
       message: error?.message
     });
@@ -2694,7 +2737,7 @@ const handleReaderRegister = async (request, env) => {
     {
       ok: true,
       authenticated: true,
-      message: '注册成功，已登入书库。',
+      message: '注册成功，已登入会员中心。',
       account: readerAccountAuthJson({
         ...account,
         display_name: data.username,
@@ -2814,6 +2857,314 @@ const handleReaderLogin = async (request, env) => {
   );
 };
 
+const handleReaderPasswordResetRequest = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  if (!(await ensureReaderPasswordCredentialsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'READER_PASSWORD_AUTH_NOT_READY',
+        message: '会员密码数据表尚未初始化。'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const normalizedEmail = normalizeEmail(payload.email);
+  const genericMessage = '如果这个 Email 已注册，系统会发送密码重置链接。';
+  if (!isEmail(normalizedEmail)) {
+    return privateJson({ ok: false, message: '请输入有效的 Email。' }, { status: 400 });
+  }
+
+  const account = await db
+    .prepare(
+      `SELECT reader_accounts.id, reader_accounts.email
+       FROM reader_accounts
+       INNER JOIN reader_password_credentials
+         ON reader_password_credentials.account_id = reader_accounts.id
+       WHERE reader_accounts.normalized_email = ?
+         AND reader_accounts.status = 'active'
+       LIMIT 1`
+    )
+    .bind(normalizedEmail)
+    .first();
+
+  if (!account) {
+    return privateJson({ ok: true, message: genericMessage });
+  }
+
+  const rawToken = randomToken();
+  const tokenHash = await sha256Hex(rawToken);
+  const userAgent = cleanText(request.headers.get('user-agent'), 300);
+  const ipHash = await sha256Hex(request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || 'local');
+
+  await db.batch([
+    db
+      .prepare(
+        `UPDATE reader_login_tokens
+         SET consumed_at = CURRENT_TIMESTAMP
+         WHERE account_id = ?
+           AND purpose = 'password-reset'
+           AND consumed_at IS NULL`
+      )
+      .bind(account.id),
+    db
+      .prepare(
+        `INSERT INTO reader_login_tokens (
+          account_id, normalized_email, token_hash, purpose, expires_at, request_ip_hash, user_agent
+        )
+        VALUES (?, ?, ?, 'password-reset', datetime('now', '+30 minutes'), ?, ?)`
+      )
+      .bind(account.id, normalizedEmail, tokenHash, ipHash, userAgent)
+  ]);
+
+  const debugOrigin = env.READER_AUTH_DEBUG_LINKS === '1' ? env.READER_AUTH_DEBUG_ORIGIN : '';
+  const resetUrl = new URL('/library/', debugOrigin || request.url);
+  resetUrl.searchParams.set('resetToken', rawToken);
+  resetUrl.searchParams.set('resetEmail', normalizedEmail);
+  const delivery = await sendReaderPasswordResetEmail(env, account.email, resetUrl.toString());
+  const debugResetUrl = isLocalRequest(request, env) ? resetUrl.toString() : '';
+
+  if (!delivery.configured && !debugResetUrl) {
+    return privateJson(
+      {
+        ok: false,
+        message: '密码重置邮件尚未配置。请稍后再试。',
+        delivery
+      },
+      { status: 503 }
+    );
+  }
+
+  if (delivery.configured && !delivery.sent) {
+    return privateJson(
+      {
+        ok: false,
+        message: '密码重置邮件发送失败，请稍后再试。',
+        delivery
+      },
+      { status: 502 }
+    );
+  }
+
+  return privateJson({
+    ok: true,
+    message: delivery.sent ? genericMessage : '本地密码重置链接已生成。',
+    delivery,
+    debugResetUrl
+  });
+};
+
+const handleReaderPasswordResetConfirm = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  if (!(await ensureReaderPasswordCredentialsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'READER_PASSWORD_AUTH_NOT_READY',
+        message: '会员密码数据表尚未初始化。'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const rawToken = cleanText(payload.token, 300);
+  const password = String(payload.password || '');
+  const confirmPassword = String(payload.confirmPassword || payload.passwordConfirm || '');
+  if (!rawToken) {
+    return privateJson({ ok: false, message: '密码重置链接无效，请重新申请。' }, { status: 400 });
+  }
+  if (!isValidReaderPassword(password)) {
+    return privateJson({ ok: false, message: '新密码需要 8-128 个字符。' }, { status: 400 });
+  }
+  if (confirmPassword && confirmPassword !== password) {
+    return privateJson({ ok: false, message: '两次输入的新密码不一致。' }, { status: 400 });
+  }
+
+  const tokenHash = await sha256Hex(rawToken);
+  const resetToken = await db
+    .prepare(
+      `SELECT
+        reader_login_tokens.id,
+        reader_login_tokens.account_id,
+        reader_accounts.email,
+        reader_accounts.normalized_email,
+        reader_accounts.display_name,
+        reader_accounts.created_at,
+        reader_password_credentials.username
+       FROM reader_login_tokens
+       INNER JOIN reader_accounts ON reader_accounts.id = reader_login_tokens.account_id
+       INNER JOIN reader_password_credentials ON reader_password_credentials.account_id = reader_accounts.id
+       WHERE reader_login_tokens.token_hash = ?
+         AND reader_login_tokens.purpose = 'password-reset'
+         AND reader_login_tokens.consumed_at IS NULL
+         AND reader_login_tokens.expires_at > CURRENT_TIMESTAMP
+         AND reader_accounts.status = 'active'
+       LIMIT 1`
+    )
+    .bind(tokenHash)
+    .first();
+
+  if (!resetToken) {
+    return privateJson({ ok: false, message: '密码重置链接已失效，请重新申请。' }, { status: 401 });
+  }
+
+  const salt = randomHex();
+  const passwordHash = await hashReaderPassword(password, salt, readerPasswordIterations);
+
+  await db.batch([
+    db
+      .prepare(
+        `UPDATE reader_login_tokens
+         SET consumed_at = CURRENT_TIMESTAMP
+         WHERE id = ?`
+      )
+      .bind(resetToken.id),
+    db
+      .prepare(
+        `UPDATE reader_password_credentials
+         SET password_hash = ?,
+             password_salt = ?,
+             password_iterations = ?,
+             password_algorithm = ?,
+             last_password_change_at = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE account_id = ?`
+      )
+      .bind(passwordHash, salt, readerPasswordIterations, readerPasswordAlgorithm, resetToken.account_id),
+    db
+      .prepare(
+        `UPDATE reader_sessions
+         SET revoked_at = CURRENT_TIMESTAMP
+         WHERE account_id = ?
+           AND revoked_at IS NULL`
+      )
+      .bind(resetToken.account_id)
+  ]);
+
+  const sessionToken = await createReaderSession(db, resetToken.account_id, request);
+  return privateJson(
+    {
+      ok: true,
+      authenticated: true,
+      message: '密码已更新，已登入会员中心。',
+      account: readerAccountAuthJson({
+        account_id: resetToken.account_id,
+        email: resetToken.email,
+        normalized_email: resetToken.normalized_email,
+        display_name: resetToken.display_name,
+        username: resetToken.username,
+        account_created_at: resetToken.created_at
+      })
+    },
+    {
+      headers: {
+        'set-cookie': makeCookie(readerSessionCookieName, sessionToken, request)
+      }
+    }
+  );
+};
+
+const handleReaderPasswordChange = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return privateJson({ ok: false, message: '请先登入会员中心。' }, { status: 401 });
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const currentPassword = String(payload.currentPassword || '');
+  const password = String(payload.password || payload.newPassword || '');
+  const confirmPassword = String(payload.confirmPassword || payload.passwordConfirm || '');
+  if (!currentPassword) {
+    return privateJson({ ok: false, message: '请输入当前密码。' }, { status: 400 });
+  }
+  if (!isValidReaderPassword(password)) {
+    return privateJson({ ok: false, message: '新密码需要 8-128 个字符。' }, { status: 400 });
+  }
+  if (confirmPassword && confirmPassword !== password) {
+    return privateJson({ ok: false, message: '两次输入的新密码不一致。' }, { status: 400 });
+  }
+
+  const credential = await db
+    .prepare(
+      `SELECT password_hash, password_salt, password_iterations, password_algorithm
+       FROM reader_password_credentials
+       WHERE account_id = ?
+       LIMIT 1`
+    )
+    .bind(session.account_id)
+    .first();
+
+  if (!credential || credential.password_algorithm !== readerPasswordAlgorithm) {
+    return privateJson({ ok: false, message: '当前账号暂时无法修改密码，请使用重置密码。' }, { status: 400 });
+  }
+
+  const currentHash = await hashReaderPassword(
+    currentPassword,
+    credential.password_salt,
+    Number(credential.password_iterations || readerPasswordIterations)
+  );
+  if (!timingSafeEqualString(currentHash, credential.password_hash)) {
+    return privateJson({ ok: false, message: '当前密码不正确。' }, { status: 401 });
+  }
+
+  const salt = randomHex();
+  const passwordHash = await hashReaderPassword(password, salt, readerPasswordIterations);
+
+  await db.batch([
+    db
+      .prepare(
+        `UPDATE reader_password_credentials
+         SET password_hash = ?,
+             password_salt = ?,
+             password_iterations = ?,
+             password_algorithm = ?,
+             last_password_change_at = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE account_id = ?`
+      )
+      .bind(passwordHash, salt, readerPasswordIterations, readerPasswordAlgorithm, session.account_id),
+    db
+      .prepare(
+        `UPDATE reader_sessions
+         SET revoked_at = CURRENT_TIMESTAMP
+         WHERE account_id = ?
+           AND id <> ?
+           AND revoked_at IS NULL`
+      )
+      .bind(session.account_id, session.session_id)
+  ]);
+
+  return privateJson({ ok: true, message: '密码已更新。' });
+};
+
 const handleReaderMagicLinkRequest = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
@@ -2842,15 +3193,17 @@ const handleReaderMagicLinkRequest = async (request, env) => {
       .prepare(
         `UPDATE reader_login_tokens
          SET consumed_at = CURRENT_TIMESTAMP
-         WHERE account_id = ? AND consumed_at IS NULL`
+         WHERE account_id = ?
+           AND purpose = 'login'
+           AND consumed_at IS NULL`
       )
       .bind(account.id),
     db
       .prepare(
         `INSERT INTO reader_login_tokens (
-          account_id, normalized_email, token_hash, expires_at, request_ip_hash, user_agent
+          account_id, normalized_email, token_hash, purpose, expires_at, request_ip_hash, user_agent
         )
-        VALUES (?, ?, ?, datetime('now', '+15 minutes'), ?, ?)`
+        VALUES (?, ?, ?, 'login', datetime('now', '+15 minutes'), ?, ?)`
       )
       .bind(account.id, normalizedEmail, tokenHash, ipHash, userAgent)
   ]);
@@ -2978,6 +3331,7 @@ const handleReaderVerify = async (request, env) => {
       `SELECT id, account_id
        FROM reader_login_tokens
        WHERE token_hash = ?
+         AND purpose = 'login'
          AND consumed_at IS NULL
          AND expires_at > CURRENT_TIMESTAMP
        LIMIT 1`
@@ -5647,7 +6001,7 @@ const handleAdminContentSchema = async (env) =>
       novelForgeImportReview: 'Admin 2.0 can review NovelForge import batches, inspect linked entries, and publish imported drafts after review.',
       pricingDefaults: 'Admin 2.0 stores global novel pricing defaults in admin_content_settings. Saved pricing applies to all books and chapters.',
       readerMemberships: '10 reading credits can redeem a monthly membership by default. Active members can read paid chapters.',
-      readerBookmarks: 'Reader accounts can save chapter bookmarks and continue reading from the library.',
+      readerBookmarks: 'Reader accounts can save chapter bookmarks and continue reading from Member Center.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
       nextStages: ['8D optional retry tools and richer NovelForge source diagnostics']
     }
@@ -7909,6 +8263,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
           <a href="/zh-hant/works/">連載小說</a>
           <a href="/devlog/">開發博客</a>
           <a href="/apps/">Apps</a>
+          <a href="/library/">會員登入</a>
           <a href="https://x.com/bketck">Follow on X</a>
         </nav>
       </header>
@@ -7985,15 +8340,15 @@ const dynamicPaymentCopy = {
     bundleUnit: ' chapters',
     checking: 'Checking access...',
     contentFailed: 'Could not load the protected chapter.',
-    creditInsufficient: 'Not enough reading credits. Top up in the library first.',
+    creditInsufficient: 'Not enough reading credits. Top up in Member Center first.',
     creditTopUp: 'Top up credits',
     creditUnlock: 'Use reading credits',
     denied: 'This account has not unlocked this chapter yet.',
     disabled: 'Checkout is not configured yet.',
     failed: 'Could not create checkout.',
-    library: 'Open my library',
+    library: 'Open Member Center',
     opening: 'Opening NOWPayments...',
-    signIn: 'Sign in to my library',
+    signIn: 'Sign in to Member Center',
     signInRequired: 'Please sign in before unlocking paid reading.',
     unlock: 'Unlock'
   },
@@ -8025,15 +8380,15 @@ const dynamicPaymentCopy = {
     bundleUnit: ' 章',
     checking: '正在確認閱讀權限...',
     contentFailed: '受保護正文載入失敗。',
-    creditInsufficient: '閱讀點數不足，請先到書庫充值。',
+    creditInsufficient: '閱讀點數不足，請先到會員中心充值。',
     creditTopUp: '充值閱讀點',
     creditUnlock: '用閱讀點解鎖',
     denied: '這個帳戶尚未解鎖本章。',
     disabled: '支付通道尚未配置完成。',
     failed: '支付訂單建立失敗。',
-    library: '打開我的書庫',
+    library: '打開會員中心',
     opening: '正在打開 NOWPayments...',
-    signIn: '登入我的書庫',
+    signIn: '登入會員中心',
     signInRequired: '請先登入，再解鎖付費閱讀。',
     unlock: '解鎖'
   },
@@ -8045,15 +8400,15 @@ const dynamicPaymentCopy = {
     bundleUnit: ' 章',
     checking: '正在确认阅读权限...',
     contentFailed: '受保护正文加载失败。',
-    creditInsufficient: '阅读点数不足，请先到书库充值。',
+    creditInsufficient: '阅读点数不足，请先到会员中心充值。',
     creditTopUp: '充值阅读点',
     creditUnlock: '用阅读点解锁',
     denied: '这个账户尚未解锁本章。',
     disabled: '支付通道尚未配置完成。',
     failed: '支付订单建立失败。',
-    library: '打开我的书库',
+    library: '打开会员中心',
     opening: '正在打开 NOWPayments...',
-    signIn: '登录我的书库',
+    signIn: '登录会员中心',
     signInRequired: '请先登录，再解锁付费阅读。',
     unlock: '解锁'
   }
@@ -8063,7 +8418,7 @@ const dynamicBookmarkCopy = {
   en: {
     failed: 'Could not save bookmark.',
     save: 'Save bookmark',
-    saved: 'Bookmark saved. You can continue from the library next time.',
+    saved: 'Bookmark saved. You can continue from Member Center next time.',
     saving: 'Saving bookmark...',
     signInRequired: 'Please sign in before saving a bookmark.'
   },
@@ -8077,14 +8432,14 @@ const dynamicBookmarkCopy = {
   'zh-Hant': {
     failed: '書籤保存失敗。',
     save: '保存書籤',
-    saved: '書籤已保存，下次可以從書庫繼續閱讀。',
+    saved: '書籤已保存，下次可以從會員中心繼續閱讀。',
     saving: '正在保存書籤...',
     signInRequired: '請先登入，再保存書籤。'
   },
   'zh-Hans': {
     failed: '书签保存失败。',
     save: '保存书签',
-    saved: '书签已保存，下次可以从书库继续阅读。',
+    saved: '书签已保存，下次可以从会员中心继续阅读。',
     saving: '正在保存书签...',
     signInRequired: '请先登录，再保存书签。'
   }
@@ -9155,6 +9510,18 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/readers/login') {
       return handleReaderLogin(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/readers/password-reset/request') {
+      return handleReaderPasswordResetRequest(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/readers/password-reset/confirm') {
+      return handleReaderPasswordResetConfirm(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/readers/password/change') {
+      return handleReaderPasswordChange(request, env);
     }
 
     if (request.method === 'GET' && url.pathname === '/api/readers/verify') {

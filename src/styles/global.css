@@ -5191,7 +5191,7 @@ body.station-paper-page {
   border-radius: 12px;
   display: grid;
   gap: 6px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 6px;
 }
 
@@ -5280,6 +5280,19 @@ body.station-paper-page {
   font-weight: 900;
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.reader-password-form {
+  border-top: 1px dashed #d8c8b8;
+  display: grid;
+  gap: 14px;
+  padding-top: 16px;
+}
+
+.reader-password-form h3 {
+  color: #221b16;
+  font-size: 20px;
+  margin: 0;
 }
 
 .reader-credit-balance {

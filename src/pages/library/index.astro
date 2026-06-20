@@ -3,15 +3,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout
-  title="我的書庫"
-  description="Station Cat 讀者書庫，用於管理已解鎖的小說、章節和後續支持者內容。"
+  title="會員中心"
+  description="Station Cat 會員中心，用於登入、管理閱讀點數、會員狀態、已解鎖內容和書籤。"
   lang="zh-Hant"
   canonicalPath="/library/"
 >
   <section class="works-hero reader-library-hero">
-    <p class="station-kicker">Reader Library</p>
-    <h1>我的書庫</h1>
-    <p>註冊會員账号後，之後在不同裝置上也可以找回閱讀點數、會員狀態、已解鎖內容和保存過的書籤。</p>
+    <p class="station-kicker">Member Center</p>
+    <h1>會員中心</h1>
+    <p>登入會員账号後，可以管理閱讀點數、會員狀態、已解鎖內容和保存過的書籤。</p>
   </section>
 
   <section class="station-section reader-library-grid">
@@ -23,6 +23,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <div class="reader-auth-switch" role="tablist" aria-label="會員登入方式">
         <button class="reader-auth-switch__button is-active" type="button" data-auth-mode="login" aria-selected="true">登入</button>
         <button class="reader-auth-switch__button" type="button" data-auth-mode="register" aria-selected="false">註冊</button>
+        <button class="reader-auth-switch__button" type="button" data-auth-mode="reset" aria-selected="false">重置密碼</button>
       </div>
       <div class="reader-auth-fields" id="reader-login-fields">
         <label>
@@ -52,7 +53,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <input id="reader-register-password-confirm" name="register-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入密码" />
         </label>
       </div>
-      <button class="button button-primary" id="reader-login-submit" type="submit">登入書庫</button>
+      <div class="reader-auth-fields" id="reader-reset-fields" hidden>
+        <label>
+          Email
+          <input id="reader-reset-email" name="reset-email" type="email" autocomplete="email" placeholder="you@example.com" />
+        </label>
+      </div>
+      <div class="reader-auth-fields" id="reader-reset-confirm-fields" hidden>
+        <label>
+          新密码
+          <input id="reader-reset-password" name="reset-password" type="password" autocomplete="new-password" placeholder="至少 8 个字符" />
+        </label>
+        <label>
+          确认新密码
+          <input id="reader-reset-password-confirm" name="reset-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入新密码" />
+        </label>
+      </div>
+      <button class="button button-primary" id="reader-login-submit" type="submit">登入會員中心</button>
       <div class="reader-status" id="reader-login-status" role="status" aria-live="polite"></div>
     </form>
 
@@ -62,6 +79,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <h2>已登入</h2>
       </div>
       <p id="reader-account-email" class="reader-account-email"></p>
+      <form class="reader-password-form" id="reader-password-form">
+        <h3>修改密碼</h3>
+        <label>
+          当前密码
+          <input id="reader-current-password" name="current-password" type="password" autocomplete="current-password" placeholder="当前密码" />
+        </label>
+        <label>
+          新密码
+          <input id="reader-new-password" name="new-password" type="password" autocomplete="new-password" placeholder="至少 8 个字符" />
+        </label>
+        <label>
+          确认新密码
+          <input id="reader-new-password-confirm" name="new-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入新密码" />
+        </label>
+        <button class="button button-secondary" id="reader-password-submit" type="submit">更新密碼</button>
+        <div class="reader-status" id="reader-password-status" role="status" aria-live="polite"></div>
+      </form>
       <button class="button button-secondary" id="reader-logout" type="button">登出</button>
     </div>
 
@@ -112,7 +146,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     </div>
 
     <div class="station-section__heading">
-      <p class="station-kicker">Library</p>
+      <p class="station-kicker">Unlocked Content</p>
       <h2>已解鎖內容</h2>
     </div>
     <div class="reader-library-list" id="reader-library-list"></div>
@@ -129,16 +163,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const authModeButtons = Array.from(document.querySelectorAll('[data-auth-mode]'));
     const loginFields = document.getElementById('reader-login-fields');
     const registerFields = document.getElementById('reader-register-fields');
+    const resetFields = document.getElementById('reader-reset-fields');
+    const resetConfirmFields = document.getElementById('reader-reset-confirm-fields');
     const identifierInput = document.getElementById('reader-identifier');
     const loginPasswordInput = document.getElementById('reader-password');
     const usernameInput = document.getElementById('reader-username');
     const emailInput = document.getElementById('reader-email');
     const registerPasswordInput = document.getElementById('reader-register-password');
     const registerPasswordConfirmInput = document.getElementById('reader-register-password-confirm');
+    const resetEmailInput = document.getElementById('reader-reset-email');
+    const resetPasswordInput = document.getElementById('reader-reset-password');
+    const resetPasswordConfirmInput = document.getElementById('reader-reset-password-confirm');
     const submitButton = document.getElementById('reader-login-submit');
     const statusBox = document.getElementById('reader-login-status');
     const accountPanel = document.getElementById('reader-account-panel');
     const accountEmail = document.getElementById('reader-account-email');
+    const passwordForm = document.getElementById('reader-password-form');
+    const currentPasswordInput = document.getElementById('reader-current-password');
+    const newPasswordInput = document.getElementById('reader-new-password');
+    const newPasswordConfirmInput = document.getElementById('reader-new-password-confirm');
+    const passwordSubmitButton = document.getElementById('reader-password-submit');
+    const passwordStatus = document.getElementById('reader-password-status');
     const logoutButton = document.getElementById('reader-logout');
     const creditsPanel = document.getElementById('reader-credits-panel');
     const creditBalance = document.getElementById('reader-credit-balance');
@@ -163,6 +208,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       statusBox.dataset.tone = tone;
     };
 
+    const setPasswordStatus = (message, tone = 'neutral') => {
+      passwordStatus.textContent = message;
+      passwordStatus.dataset.tone = tone;
+    };
+
     const setFieldState = (fields, enabled) => {
       fields.forEach((field) => {
         field.disabled = !enabled;
@@ -170,15 +220,33 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const setAuthMode = (mode) => {
-      authMode = mode === 'register' ? 'register' : 'login';
+      authMode = ['register', 'reset', 'resetConfirm'].includes(mode) ? mode : 'login';
       const isRegister = authMode === 'register';
+      const isReset = authMode === 'reset';
+      const isResetConfirm = authMode === 'resetConfirm';
 
-      authTitle.textContent = isRegister ? '會員註冊' : '會員登入';
-      submitButton.textContent = isRegister ? '註冊並登入' : '登入書庫';
-      loginFields.hidden = isRegister;
+      authTitle.textContent = isRegister
+        ? '會員註冊'
+        : isReset
+          ? '重置密碼'
+          : isResetConfirm
+            ? '設定新密碼'
+            : '會員登入';
+      submitButton.textContent = isRegister
+        ? '註冊並登入'
+        : isReset
+          ? '寄送重置連結'
+          : isResetConfirm
+            ? '更新密碼'
+            : '登入會員中心';
+      loginFields.hidden = isRegister || isReset || isResetConfirm;
       registerFields.hidden = !isRegister;
-      setFieldState([identifierInput, loginPasswordInput], !isRegister);
+      resetFields.hidden = !isReset;
+      resetConfirmFields.hidden = !isResetConfirm;
+      setFieldState([identifierInput, loginPasswordInput], authMode === 'login');
       setFieldState([usernameInput, emailInput, registerPasswordInput, registerPasswordConfirmInput], isRegister);
+      setFieldState([resetEmailInput], isReset);
+      setFieldState([resetPasswordInput, resetPasswordConfirmInput], isResetConfirm);
       authModeButtons.forEach((button) => {
         const selected = button.dataset.authMode === authMode;
         button.classList.toggle('is-active', selected);
@@ -285,7 +353,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const loadLibrary = async () => {
       const response = await fetch('/api/novels/library');
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.message || '讀取書庫失敗。');
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取會員資料失敗。');
       renderLibrary(data.entitlements || []);
     };
 
@@ -415,7 +483,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         await wait(fulfillment.nextCheckSeconds * 1000);
       }
 
-      setCreditStatus('仍在等待區塊鏈確認。你可以稍後刷新書庫，確認後閱讀點數會自動入帳。', 'neutral');
+      setCreditStatus('仍在等待區塊鏈確認。你可以稍後刷新會員中心，確認後閱讀點數會自動入帳。', 'neutral');
     };
 
     const loadSession = async () => {
@@ -429,6 +497,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const query = new URLSearchParams(window.location.search);
+    const resetToken = query.get('resetToken') || '';
     const redirectPath = (() => {
       const value = query.get('returnTo') || '/library/';
       if (!value.startsWith('/') || value.startsWith('//')) return '/library/';
@@ -436,9 +505,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     })();
 
     if (query.get('login') === 'success') {
-      setStatus('登入成功，正在載入書庫。', 'success');
+      setStatus('登入成功，正在載入會員中心。', 'success');
     } else if (query.get('login') === 'invalid') {
       setStatus('登入連結已失效，請重新寄送。', 'error');
+    } else if (resetToken) {
+      setStatus('請設定新的會員密碼。', 'neutral');
     }
 
     if (query.get('payment') === 'success' && query.get('order')) {
@@ -460,24 +531,49 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       submitButton.disabled = true;
-      setStatus(authMode === 'register' ? '正在建立會員账号...' : '正在登入...', 'neutral');
+      setStatus(
+        authMode === 'register'
+          ? '正在建立會員账号...'
+          : authMode === 'reset'
+            ? '正在寄送密碼重置連結...'
+            : authMode === 'resetConfirm'
+              ? '正在更新密碼...'
+              : '正在登入...',
+        'neutral'
+      );
 
       try {
-        const body = authMode === 'register'
-          ? {
-              username: usernameInput.value,
-              email: emailInput.value,
-              password: registerPasswordInput.value,
-              confirmPassword: registerPasswordConfirmInput.value,
-              redirectPath
-            }
-          : {
-              identifier: identifierInput.value,
-              password: loginPasswordInput.value,
-              redirectPath
-            };
+        let endpoint = '/api/readers/login';
+        let body = {
+          identifier: identifierInput.value,
+          password: loginPasswordInput.value,
+          redirectPath
+        };
 
-        const response = await fetch(authMode === 'register' ? '/api/readers/register' : '/api/readers/login', {
+        if (authMode === 'register') {
+          endpoint = '/api/readers/register';
+          body = {
+            username: usernameInput.value,
+            email: emailInput.value,
+            password: registerPasswordInput.value,
+            confirmPassword: registerPasswordConfirmInput.value,
+            redirectPath
+          };
+        } else if (authMode === 'reset') {
+          endpoint = '/api/readers/password-reset/request';
+          body = {
+            email: resetEmailInput.value
+          };
+        } else if (authMode === 'resetConfirm') {
+          endpoint = '/api/readers/password-reset/confirm';
+          body = {
+            token: resetToken,
+            password: resetPasswordInput.value,
+            confirmPassword: resetPasswordConfirmInput.value
+          };
+        }
+
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(body)
@@ -485,8 +581,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.message || '登入失敗。');
 
+        if (authMode === 'reset') {
+          setStatus(data.message || '如果这个 Email 已注册，系统会发送密码重置链接。', 'success');
+          return;
+        }
+
         setStatus(data.message || '已登入。', 'success');
         setSignedIn(data);
+        if (authMode === 'resetConfirm') {
+          window.history.replaceState({}, '', '/library/');
+        }
         await loadReaderHome();
         if (redirectPath && redirectPath !== '/library/' && redirectPath !== window.location.pathname) {
           window.location.href = redirectPath;
@@ -515,6 +619,34 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     });
 
+    passwordForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      passwordSubmitButton.disabled = true;
+      setPasswordStatus('正在更新密碼...', 'neutral');
+
+      try {
+        const response = await fetch('/api/readers/password/change', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            currentPassword: currentPasswordInput.value,
+            password: newPasswordInput.value,
+            confirmPassword: newPasswordConfirmInput.value
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '密碼更新失敗。');
+        currentPasswordInput.value = '';
+        newPasswordInput.value = '';
+        newPasswordConfirmInput.value = '';
+        setPasswordStatus(data.message || '密碼已更新。', 'success');
+      } catch (error) {
+        setPasswordStatus(error.message || '密碼更新失敗。', 'error');
+      } finally {
+        passwordSubmitButton.disabled = false;
+      }
+    });
+
     creditPacks.addEventListener('click', async (event) => {
       const button = event.target.closest('[data-credits]');
       if (!button) return;
@@ -540,7 +672,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.message || '充值訂單建立失敗。');
         if (!data.paymentUrl) throw new Error('NOWPayments 支付連結尚未生成。');
-        setCreditStatus('正在打開 NOWPayments。完成支付後回到書庫，系統會等待區塊鏈確認並自動入帳。', 'success');
+        setCreditStatus('正在打開 NOWPayments。完成支付後回到會員中心，系統會等待區塊鏈確認並自動入帳。', 'success');
         window.location.href = data.paymentUrl;
       } catch (error) {
         setCreditStatus(error.message || '充值訂單建立失敗。', 'error');
@@ -569,7 +701,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     });
 
-    setAuthMode('login');
+    if (query.get('resetEmail')) {
+      resetEmailInput.value = query.get('resetEmail');
+    }
+
+    setAuthMode(resetToken ? 'resetConfirm' : 'login');
+    if (resetToken) {
+      setStatus('請設定新的會員密碼。', 'neutral');
+    }
 
     loadSession()
       .then(refreshReturnedPaymentOrder)
