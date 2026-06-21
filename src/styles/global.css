@@ -4595,17 +4595,71 @@ body.station-paper-page {
   text-transform: uppercase;
 }
 
-.station-paper-page .devlog-hero__panel {
-  background: #2e5b4e;
-  border: 2px solid #221b16;
-  border-radius: 12px;
-  box-shadow: 5px 5px 0 rgba(34, 27, 22, 0.18);
+.station-paper-page .devlog-hero .station-kicker {
+  background: #e8f3eb;
+  border: 1px solid rgba(46, 91, 78, 0.24);
+  border-radius: 999px;
+  color: #21443a;
+  justify-self: start;
+  padding: 5px 10px;
 }
 
-.station-paper-page .devlog-hero__panel span,
-.station-paper-page .devlog-hero__panel strong,
+.station-paper-page .devlog-hero__copy h1 {
+  color: #1f1712;
+}
+
+.station-paper-page .devlog-hero__copy p {
+  color: #3f332b;
+  font-weight: 700;
+}
+
+.station-paper-page .devlog-hero__panel {
+  background:
+    linear-gradient(90deg, rgba(46, 91, 78, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(46, 91, 78, 0.06) 1px, transparent 1px),
+    #f6ead9;
+  background-size: 18px 18px;
+  border: 2px solid #2e5b4e;
+  border-radius: 12px;
+  box-shadow: 6px 6px 0 rgba(46, 91, 78, 0.18);
+}
+
+.station-paper-page .devlog-hero__panel span {
+  color: #21443a;
+}
+
+.station-paper-page .devlog-hero__panel strong {
+  color: #1f1712;
+}
+
+.station-paper-page .devlog-hero__panel p,
 .station-paper-page .devlog-hero__panel a {
+  color: #2e5b4e;
+  font-weight: 950;
+}
+
+.station-paper-page .devlog-card {
+  border: 2px solid #d8c8b8;
+}
+
+.station-paper-page .devlog-card p {
+  color: #3f332b;
+  font-weight: 650;
+}
+
+.station-paper-page .devlog-card__meta {
+  color: #4a3f37;
+}
+
+.station-paper-page .devlog-card__meta span {
+  background: #2e5b4e;
   color: #fffaf1;
+}
+
+.station-paper-page .devlog-tags span {
+  background: #e8f3eb;
+  border-color: #6c9a88;
+  color: #21443a;
 }
 
 .station-paper-page .devlog-back,
