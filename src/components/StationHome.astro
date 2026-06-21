@@ -54,7 +54,7 @@ const copy = {
     aboutText: '這裡會記錄我從 0 開始學開發、做產品、踩坑和重新理解技術的過程。也會放日常觀察、測試中的 App、長篇小說連載，以及一些把想法慢慢做出來的筆記。',
     todayKicker: 'Today at the Station',
     todayTitle: '今天站台上放著什麼。',
-    todayIntro: '貓、飯桌、信號和工具會以不同的紙片形式出現，像一面慢慢貼滿的小公告牆。',
+    todayIntro: '',
     stationCards: [
       { icon: 'cat', title: 'Cat log', text: '像拍立得一樣記錄窗邊、沙發和日常裡的小陪伴。' },
       { icon: 'cup', title: 'Table notes', text: '早餐、咖啡、飯桌筆記，以及值得慢慢吃完的一天。' },
@@ -63,7 +63,7 @@ const copy = {
     ],
     toolsKicker: 'Tools on the bench',
     toolsTitle: '正在桌上慢慢長出來的工具。',
-    toolsIntro: '首頁只放入口和狀態，詳細功能、下載、隱私和支援資訊會留在各自產品頁。',
+    toolsIntro: '',
     viewApp: 'View App',
     joinTest: 'Join Test',
     downloadMac: 'Download for Mac',
@@ -82,7 +82,7 @@ const copy = {
     followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Serial fiction',
     notesTitle: '正在連載：《离线未来》。',
-    notesIntro: '第一部長篇已經放上站台。這裡保留作品入口、最新章節和閱讀狀態，後續更新會從 Admin 2.0 直接發布。',
+    notesIntro: '',
     viewOnX: '打開作品',
     readFirstChapter: '閱讀第一章',
     openSeries: '作品頁',
@@ -91,7 +91,7 @@ const copy = {
     emptyNotes: '第一部長篇小說很快會出現在這裡。',
     buildKicker: 'Build log',
     buildTitle: '最近的開發筆記。',
-    buildIntro: '像翻一本 notebook，看看小工具是怎麼慢慢變清楚的。',
+    buildIntro: '',
     readNote: 'Read note',
     emptyBuild: '開發筆記很快會更新。',
     closingTitle: '這座小站還在慢慢長大。',
@@ -470,7 +470,7 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
     <div class="paper-section__heading">
       <p class="paper-kicker">{copy.todayKicker}</p>
       <h2>{copy.todayTitle}</h2>
-      <p>{copy.todayIntro}</p>
+      {copy.todayIntro && <p>{copy.todayIntro}</p>}
     </div>
     <div class="station-day-grid">
       {copy.stationCards.map((card, index) => (
@@ -487,7 +487,7 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
     <div class="paper-section__heading">
       <p class="paper-kicker">{copy.toolsKicker}</p>
       <h2>{copy.toolsTitle}</h2>
-      <p>{copy.toolsIntro}</p>
+      {copy.toolsIntro && <p>{copy.toolsIntro}</p>}
     </div>
     <div class="bench-grid">
       <article class="bench-card">
@@ -571,7 +571,7 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
     <div class="paper-section__heading">
       <p class="paper-kicker">{copy.notesKicker}</p>
       <h2>{copy.notesTitle}</h2>
-      <p>{copy.notesIntro}</p>
+      {copy.notesIntro && <p>{copy.notesIntro}</p>}
     </div>
     <article class="home-serial-card">
       <a class="home-serial-card__cover" href={homeSerial.href} aria-label={homeSerial.title}>
@@ -600,7 +600,7 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
     <div class="paper-section__heading">
       <p class="paper-kicker">{copy.buildKicker}</p>
       <h2>{copy.buildTitle}</h2>
-      <p>{copy.buildIntro}</p>
+      {copy.buildIntro && <p>{copy.buildIntro}</p>}
     </div>
     {recentDevlog.length > 0 ? (
       <div class="build-log-list">
