@@ -1750,6 +1750,34 @@ const dynamicAccessLabelsByLocale = {
   }
 };
 
+const chineseNumerals = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+
+const formatChineseChapterNumber = (value) => {
+  const number = normalizePositiveInteger(value, 0);
+  if (!number) return '';
+  if (number < 10) return chineseNumerals[number];
+  if (number < 20) return `十${number % 10 ? chineseNumerals[number % 10] : ''}`;
+  if (number < 100) {
+    const tens = Math.floor(number / 10);
+    const ones = number % 10;
+    return `${chineseNumerals[tens]}十${ones ? chineseNumerals[ones] : ''}`;
+  }
+  if (number < 1000) {
+    const hundreds = Math.floor(number / 100);
+    const remainder = number % 100;
+    if (!remainder) return `${chineseNumerals[hundreds]}百`;
+    return `${chineseNumerals[hundreds]}百${remainder < 10 ? '零' : ''}${formatChineseChapterNumber(remainder)}`;
+  }
+  return String(number);
+};
+
+const formatDynamicChapterNumber = (chapterNumber, locale) => {
+  if (locale === 'zh-Hant' || locale === 'zh-Hans' || locale === 'ja') {
+    return `第${formatChineseChapterNumber(chapterNumber)}章`;
+  }
+  return `Chapter ${normalizePositiveInteger(chapterNumber, 0) || ''}`.trim();
+};
+
 const getDynamicAccessLabel = (accessLevel, locale) =>
   dynamicAccessLabelsByLocale[locale]?.[accessLevel] || dynamicAccessLabels[accessLevel] || accessLevel;
 
@@ -9003,7 +9031,7 @@ const renderChapterCards = (route, chapters) => {
         const summary = firstPlainSummary([chapter.excerpt, chapter.description], 260);
         return `<a class="card" href="${escapeHtml(`${route.basePath}${chapter.parent_slug}/${chapter.slug}/`)}">
         <div class="meta">
-          <span class="pill">${escapeHtml(copy.chapter)} ${escapeHtml(String(chapter.chapter_number || ''))}</span>
+          <span class="pill">${escapeHtml(formatDynamicChapterNumber(chapter.chapter_number, route.locale))}</span>
           <span>${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
         </div>
         <h3>${escapeHtml(chapter.title)}</h3>

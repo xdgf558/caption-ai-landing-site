@@ -314,13 +314,34 @@ export const getFirstChapter = (chapters: SerialChapterEntry[]) => {
   return [...chapters].sort((a, b) => a.data.chapterNumber - b.data.chapterNumber)[0];
 };
 
+const chineseNumerals = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+
+const formatChineseChapterNumber = (chapterNumber: number): string => {
+  const number = Math.max(0, Math.floor(Number(chapterNumber) || 0));
+  if (!number) return '';
+  if (number < 10) return chineseNumerals[number];
+  if (number < 20) return `十${number % 10 ? chineseNumerals[number % 10] : ''}`;
+  if (number < 100) {
+    const tens = Math.floor(number / 10);
+    const ones = number % 10;
+    return `${chineseNumerals[tens]}十${ones ? chineseNumerals[ones] : ''}`;
+  }
+  if (number < 1000) {
+    const hundreds = Math.floor(number / 100);
+    const remainder = number % 100;
+    if (!remainder) return `${chineseNumerals[hundreds]}百`;
+    return `${chineseNumerals[hundreds]}百${remainder < 10 ? '零' : ''}${formatChineseChapterNumber(remainder)}`;
+  }
+  return String(number);
+};
+
 export const formatChapterNumber = (chapterNumber: number, locale: SiteLocale) => {
   if (locale === 'zh-Hant' || locale === 'zh-Hans') {
-    return `第${chapterNumber}章`;
+    return `第${formatChineseChapterNumber(chapterNumber)}章`;
   }
 
   if (locale === 'ja') {
-    return `第${chapterNumber}章`;
+    return `第${formatChineseChapterNumber(chapterNumber)}章`;
   }
 
   return `Chapter ${chapterNumber}`;
