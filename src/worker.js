@@ -291,6 +291,8 @@ const nowPaymentsWebhookPath = '/api/novels/webhooks/nowpayments';
 const nowPaymentsSupportedCurrencies = ['USDTBSC', 'USDTERC20', 'USDC', 'USDCMATIC', 'USDTARB', 'FDUSDBSC'];
 const novelOrderStatuses = ['draft', 'waiting', 'confirming', 'confirmed', 'finished', 'failed', 'expired', 'refunded', 'unknown'];
 const novelPaymentGrantStatuses = ['confirmed', 'finished'];
+const staleUnfinishedNovelOrderStatuses = ['draft', 'waiting', 'unknown'];
+const staleUnfinishedNovelOrderHours = 12;
 const novelCheckoutPath = '/api/novels/payments/checkout';
 const novelBundleOrderType = 'chapter-bundle';
 const novelCreditPackOrderType = 'credit-pack';
@@ -6140,9 +6142,54 @@ const handleNovelPaymentOrderStatus = async (request, env) => {
   });
 };
 
+const cleanupStaleUnfinishedNovelOrders = async (db) => {
+  const staleOrderWhere = `status IN (${staleUnfinishedNovelOrderStatuses.map(() => '?').join(', ')})
+       AND created_at < datetime('now', '-${staleUnfinishedNovelOrderHours} hours')`;
+  const countRow = await db
+    .prepare(`SELECT COUNT(*) AS count FROM novel_orders WHERE ${staleOrderWhere}`)
+    .bind(...staleUnfinishedNovelOrderStatuses)
+    .first();
+  const staleCount = Number(countRow?.count || 0);
+  if (!staleCount) {
+    return {
+      deleted: 0,
+      olderThanHours: staleUnfinishedNovelOrderHours,
+      statuses: staleUnfinishedNovelOrderStatuses
+    };
+  }
+
+  const eventDelete = db
+    .prepare(
+      `DELETE FROM novel_payment_events
+       WHERE order_id IN (
+         SELECT id FROM novel_orders WHERE ${staleOrderWhere}
+       )`
+    )
+    .bind(...staleUnfinishedNovelOrderStatuses);
+  const tipDelete = db
+    .prepare(
+      `DELETE FROM novel_tips
+       WHERE order_id IN (
+         SELECT id FROM novel_orders WHERE ${staleOrderWhere}
+       )`
+    )
+    .bind(...staleUnfinishedNovelOrderStatuses);
+  const orderDelete = db
+    .prepare(`DELETE FROM novel_orders WHERE ${staleOrderWhere}`)
+    .bind(...staleUnfinishedNovelOrderStatuses);
+  const results = await db.batch([eventDelete, tipDelete, orderDelete]);
+
+  return {
+    deleted: getD1ChangeCount(results[2]) || staleCount,
+    olderThanHours: staleUnfinishedNovelOrderHours,
+    statuses: staleUnfinishedNovelOrderStatuses
+  };
+};
+
 const handleAdminListNovelOrders = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  const cleanup = await cleanupStaleUnfinishedNovelOrders(db);
 
   const url = new URL(request.url);
   const status = cleanText(url.searchParams.get('status'), 40).toLowerCase();
@@ -6188,6 +6235,7 @@ const handleAdminListNovelOrders = async (request, env) => {
 
   return json({
     ok: true,
+    cleanup,
     orders: (response.results || []).map(novelOrderToJson)
   });
 };
@@ -6228,6 +6276,7 @@ const buildAdminOrderDetail = async (db, order) => {
 const handleAdminGetNovelOrder = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  await cleanupStaleUnfinishedNovelOrders(db);
 
   const url = new URL(request.url);
   const order = await findNovelOrderByAdminIdentifier(db, {

@@ -1891,10 +1891,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (elements.filters.orderSeries.value.trim()) params.set('series', elements.filters.orderSeries.value.trim());
       const payload = await apiJson(`/admin/api/novels/payments/orders?${params.toString()}`);
       const orders = payload.orders || [];
+      const cleanup = payload.cleanup || {};
+      const cleanupMessage = cleanup.deleted
+        ? `，已自动清理 ${cleanup.deleted} 笔超过 ${cleanup.olderThanHours || 12} 小时的未完成订单。`
+        : '';
       state.orders = orders;
       if (!orders.length) {
         renderEmpty(elements.ordersList, '暂无订单。');
         elements.orderDetail.innerHTML = '<p class="admin-empty-list">没有可查看的订单详情。</p>';
+        setStatus(`暂无订单${cleanupMessage}`, 'success');
         return;
       }
       elements.ordersList.innerHTML = '';
@@ -1910,7 +1915,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         button.addEventListener('click', () => loadOrderDetail(order.orderToken || order.id));
         elements.ordersList.append(button);
       });
-      setStatus(`已载入 ${orders.length} 笔订单。`, 'success');
+      setStatus(`已载入 ${orders.length} 笔订单${cleanupMessage}`, 'success');
     };
 
     const renderOrderDetail = (detail) => {
