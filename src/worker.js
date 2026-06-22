@@ -10180,6 +10180,11 @@ export const __readerTotpTestHooks = {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.protocol === 'http:' && !isLocalRequest(request, env)) {
+      url.protocol = 'https:';
+      return Response.redirect(url.toString(), 301);
+    }
+
     const isAdminRequest = adminPathPattern.test(url.pathname);
     const downloadFile = downloadFiles[url.pathname];
     const externalDownloadRedirect = externalDownloadRedirects[url.pathname];
