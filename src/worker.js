@@ -8975,6 +8975,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
           <a href="/devlog/">開發博客</a>
           <a href="/apps/">Apps</a>
           <a href="/library/">會員登入</a>
+          <a href="/about/">About</a>
           <a href="https://x.com/bketck">Follow on X</a>
         </nav>
       </header>

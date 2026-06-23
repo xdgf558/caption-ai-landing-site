@@ -3,20 +3,120 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout
-  title="About"
-  description="Everyday AI Apps builds simple AI lifestyle and productivity tools for everyday creativity."
-  lang="en"
+  title="關於 Station Cat"
+  description="Station Cat 是一座個人創作小站，記錄從零開始做產品、寫小說、整理工具和觀察日常的過程。"
+  lang="zh-Hant"
   canonicalPath="/about/"
 >
-  <section class="page-shell">
-    <p class="section-kicker">About</p>
-    <h1>Small AI tools for everyday creative routines.</h1>
-    <p>
-      Everyday AI Apps is a lightweight product home for simple AI lifestyle and productivity apps. The first product is SnapCopy, a mobile app in development for turning everyday photos into share-ready captions.
+  <section class="page-shell about-page-hero">
+    <p class="section-kicker">About Station Cat</p>
+    <h1>這是一座深夜還亮著的小站。</h1>
+    <p class="about-page-lede">
+      Station Cat 是我的個人創作小站。這裡放正在打磨的小工具、長篇小說連載、開發筆記，也放一些從日常裡慢慢長出來的觀察。
     </p>
     <div class="button-row">
-      <a class="button button-primary" href="/apps/caption-ai/">View SnapCopy</a>
-      <a class="button button-secondary" href="/apps/">Browse apps</a>
+      <a class="button button-primary" href="/zh-hant/works/">看連載小說</a>
+      <a class="button button-secondary" href="/zh-hant/apps/">看正在做的工具</a>
+      <a class="button button-secondary" href="/devlog/">看開發博客</a>
+    </div>
+  </section>
+
+  <section class="station-section about-page-grid" aria-label="Station Cat content">
+    <article>
+      <p class="station-kicker">Novel Shelf</p>
+      <h2>長篇小說會在這裡連載。</h2>
+      <p>
+        第一部長篇《离线未来》已經開始更新。之後這裡會慢慢變成一個作品書架，讀者可以按章節閱讀、保存進度，使用閱讀點數或會員功能支持想追下去的故事。
+      </p>
+    </article>
+
+    <article>
+      <p class="station-kicker">Tool Bench</p>
+      <h2>小工具也會繼續長出來。</h2>
+      <p>
+        SnapCopy、SimpleCut Pro、StoryCat、StationCat Radar 這些工具都從很小的需求開始。它們不追求一開始就很龐大，而是先把某個日常動作做順。
+      </p>
+    </article>
+
+    <article>
+      <p class="station-kicker">Build Log</p>
+      <h2>開發過程會被留下來。</h2>
+      <p>
+        我會把功能更新、踩坑、產品調整和一些想法寫進開發博客。它不是正式公告欄，更像一張工作桌上的便條紙，記錄事情怎麼一步步變清楚。
+      </p>
+    </article>
+  </section>
+
+  <section class="station-section about-page-note">
+    <p class="station-kicker">Why Station Cat</p>
+    <h2>它不是一個公司頁，更像一個正在施工的個人工作室。</h2>
+    <p>
+      我從零開始學開發，也從零開始把想法做成可以使用的東西。Station Cat 會保留這個過程裡比較真實的一面：有些功能會成熟，有些想法會被放下，有些故事會慢慢寫長。
+    </p>
+    <p>
+      如果你喜歡這裡的工具、小說或開發筆記，可以從會員中心登入，追連載、保存書籤，或在作品更新時回來看看。
+    </p>
+    <div class="button-row">
+      <a class="button button-primary" href="/library/">會員登入</a>
+      <a class="button button-secondary" href="https://x.com/bketck">Follow on X</a>
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .about-page-hero {
+    display: grid;
+    gap: 18px;
+  }
+
+  .about-page-lede {
+    color: #4a3f37;
+    font-size: clamp(18px, 2vw, 22px);
+    line-height: 1.8;
+    max-width: 760px;
+  }
+
+  .about-page-grid {
+    align-items: stretch;
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .about-page-grid article,
+  .about-page-note {
+    background: #fffaf1;
+    border: 1px solid #dfd0bf;
+    border-radius: 8px;
+    box-shadow: 0 16px 34px rgba(80, 55, 35, 0.1);
+    padding: 22px;
+  }
+
+  .about-page-grid h2,
+  .about-page-note h2 {
+    color: #241c18;
+    font-size: clamp(25px, 3vw, 38px);
+    letter-spacing: 0;
+    line-height: 1.15;
+    margin: 0 0 12px;
+  }
+
+  .about-page-grid p:not(.station-kicker),
+  .about-page-note p:not(.station-kicker) {
+    color: #4a3f37;
+    font-size: 17px;
+    line-height: 1.8;
+  }
+
+  .about-page-note {
+    border-left: 8px solid #2e5b4e;
+    display: grid;
+    gap: 12px;
+  }
+
+  @media (max-width: 860px) {
+    .about-page-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
