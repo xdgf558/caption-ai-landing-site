@@ -8934,6 +8934,12 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .card, .panel, .gate { background: rgba(255,255,255,.72); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 50px rgba(44,39,33,.08); display: grid; gap: 12px; padding: 18px; }
       .card { text-decoration: none; }
       .card:hover { border-color: rgba(8,121,109,.35); transform: translateY(-1px); }
+      .chapter-list { gap: 10px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+      .chapter-card { gap: 7px; min-height: 0; padding: 12px 14px; }
+      .chapter-card .meta { align-items: center; gap: 6px; }
+      .chapter-card .pill { padding: 5px 8px; }
+      .chapter-card h3 { font-size: 18px; line-height: 1.25; }
+      .chapter-card p { display: -webkit-box; font-size: 14px; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
       .hero-cover { aspect-ratio: 16 / 10; background: var(--soft); border: 1px solid var(--line); border-radius: 14px; margin: 6px 0 0; max-width: 780px; overflow: hidden; }
       .hero-cover--book { aspect-ratio: 2 / 3; border-radius: 10px; box-shadow: 0 18px 44px rgba(23, 30, 27, .18); margin: 0; max-width: 320px; width: 100%; }
       .hero-cover img { display: block; height: 100%; object-fit: cover; width: 100%; }
@@ -8958,6 +8964,8 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       @media (max-width: 760px) {
         .shell { padding: 18px 14px 56px; }
         .grid, .hero--novel { grid-template-columns: 1fr; }
+        .chapter-list { gap: 8px; }
+        .chapter-card { padding: 12px; }
         .topbar { align-items: flex-start; flex-direction: column; margin-bottom: 28px; }
         .hero-cover--book { justify-self: center; max-width: 240px; }
         .button-row { align-items: stretch; flex-direction: column; }
@@ -9029,8 +9037,8 @@ const renderChapterCards = (route, chapters) => {
   return chapters
     .map(
       (chapter) => {
-        const summary = firstPlainSummary([chapter.excerpt, chapter.description], 260);
-        return `<a class="card" href="${escapeHtml(`${route.basePath}${chapter.parent_slug}/${chapter.slug}/`)}">
+        const summary = firstPlainSummary([chapter.excerpt, chapter.description], 120);
+        return `<a class="card chapter-card" href="${escapeHtml(`${route.basePath}${chapter.parent_slug}/${chapter.slug}/`)}">
         <div class="meta">
           <span class="pill">${escapeHtml(formatDynamicChapterNumber(chapter.chapter_number, route.locale))}</span>
           <span>${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
@@ -9263,7 +9271,7 @@ const renderDynamicNovelSeries = (route, serial, body, chapters) => {
     </section>
     <section class="section">
       <p class="kicker">${escapeHtml(copy.chapters)}</p>
-      <div class="grid">${renderChapterCards(route, chapters)}</div>
+      <div class="grid chapter-list">${renderChapterCards(route, chapters)}</div>
     </section>`;
 };
 

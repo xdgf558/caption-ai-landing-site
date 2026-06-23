@@ -4718,6 +4718,11 @@ body.station-paper-page {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.serial-chapter-list {
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
 .serial-feature-card {
   display: grid;
   gap: 22px;
@@ -4966,6 +4971,11 @@ body.station-paper-page {
   padding: 22px;
 }
 
+.serial-chapter-card {
+  gap: 10px;
+  padding: 16px;
+}
+
 .serial-cover {
   align-items: end;
   aspect-ratio: 3 / 4;
@@ -5161,6 +5171,11 @@ body.station-paper-page {
   color: #221b16;
 }
 
+.station-paper-page .serial-chapter-card h3 {
+  font-size: 21px;
+  line-height: 1.25;
+}
+
 .station-paper-page .serial-card__copy h3 a:hover,
 .station-paper-page .serial-card__copy h3 a:focus-visible {
   color: #2e5b4e;
@@ -5211,6 +5226,15 @@ body.station-paper-page {
 .station-paper-page .serial-detail-card p,
 .station-paper-page .serial-chapter-card p {
   color: #5f534a;
+}
+
+.station-paper-page .serial-chapter-card > p {
+  display: -webkit-box;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .station-paper-page .serial-reader-shell__header p,
