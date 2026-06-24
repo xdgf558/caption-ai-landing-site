@@ -334,8 +334,15 @@ const backendShelfCopy = {
         target.textContent = `${formatChapterNumber(latest.chapterNumber, locale)} ${latest.title}`;
       });
     };
+    const runWhenDomReady = (callback) => {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback, { once: true });
+        return;
+      }
+      callback();
+    };
 
-    hydrateBackendLatestChapters();
+    runWhenDomReady(hydrateBackendLatestChapters);
 
     shelves.forEach((shelf) => {
       const filters = Array.from(shelf.querySelectorAll('[data-bookshelf-filter]'));
