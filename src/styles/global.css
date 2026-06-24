@@ -5132,6 +5132,10 @@ body.station-paper-page {
   margin: 0;
 }
 
+.serial-prose [id^="sc-bookmark-block-"] {
+  scroll-margin-top: 24px;
+}
+
 .station-paper-page .serial-card,
 .station-paper-page .serial-feature-card,
 .station-paper-page .serial-detail-card,
