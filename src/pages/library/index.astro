@@ -391,6 +391,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       bookmarkList.innerHTML = '';
       bookmarkEmpty.hidden = items.length > 0;
 
+      const bookmarkHref = (item) => {
+        const fallbackPath = `/zh-hant/works/${item.seriesSlug}/${item.chapterSlug}/`;
+        const sourcePath = item.sourcePath || fallbackPath;
+        const anchorId = item.metadata?.anchorId;
+        if (anchorId && !sourcePath.includes('#')) {
+          return `${sourcePath}#${encodeURIComponent(anchorId)}`;
+        }
+        return sourcePath;
+      };
+
       items.forEach((item) => {
         const card = document.createElement('article');
         card.className = 'reader-library-card reader-bookmark-card';
@@ -400,11 +410,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
         const meta = document.createElement('p');
         const progress = Number.parseInt(item.progressPercent || 0, 10);
-        meta.textContent = `${item.seriesTitle || item.seriesSlug} · ${progress > 0 ? `已讀到 ${progress}%` : '已保存位置'} · ${formatLocalDate(item.updatedAt)}`;
+        const position = item.positionLabel || (progress > 0 ? `已讀到 ${progress}%` : '已保存位置');
+        meta.textContent = `${item.seriesTitle || item.seriesSlug} · ${position} · ${formatLocalDate(item.updatedAt)}`;
 
         const link = document.createElement('a');
         link.className = 'paper-link';
-        link.href = item.sourcePath || `/zh-hant/works/${item.seriesSlug}/${item.chapterSlug}/`;
+        link.href = bookmarkHref(item);
         link.textContent = '繼續閱讀';
 
         card.append(title, meta, link);

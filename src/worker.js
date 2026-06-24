@@ -4729,6 +4729,18 @@ const listReaderBookmarks = async (db, accountId, limit = 30) => {
   return (response.results || []).map(readerBookmarkToJson);
 };
 
+const normalizeReaderBookmarkMetadata = (payload) => {
+  const metadata = normalizeJsonObject(payload.metadata);
+  const rawAnchorId = cleanText(metadata.anchorId || payload.anchorId, 80);
+  const anchorId = /^sc-bookmark-block-\d{1,5}$/.test(rawAnchorId) ? rawAnchorId : '';
+  const rawBlockIndex = Number.parseInt(metadata.blockIndex ?? payload.blockIndex ?? '', 10);
+  const blockIndex = Number.isFinite(rawBlockIndex) && rawBlockIndex >= 0 ? Math.min(rawBlockIndex, 99999) : null;
+  return {
+    ...(anchorId ? { anchorId } : {}),
+    ...(blockIndex !== null ? { blockIndex } : {})
+  };
+};
+
 const normalizeReaderBookmarkPayload = (payload) => {
   const seriesSlug = cleanSlug(payload.seriesSlug || payload.series);
   const chapterSlug = cleanSlug(payload.chapterSlug || payload.chapter);
@@ -4746,7 +4758,7 @@ const normalizeReaderBookmarkPayload = (payload) => {
     chapterSlug,
     chapterTitle: cleanText(payload.chapterTitle || payload.title, 240),
     locale: normalizeContentLocale(payload.locale || 'zh-Hant'),
-    metadata: normalizeJsonObject(payload.metadata),
+    metadata: normalizeReaderBookmarkMetadata(payload),
     note: cleanText(payload.note, 500),
     positionLabel: cleanText(payload.positionLabel, 120),
     progressPercent,
@@ -8956,6 +8968,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .prose li { color: var(--muted); font-size: 17px; line-height: 1.75; }
       .prose--reader { margin-left: auto; margin-right: auto; max-width: 760px; width: 100%; }
       .prose--reader p { font-size: clamp(18px, 4.5vw, 20px); line-height: 1.95; }
+      .prose--reader [id^="sc-bookmark-block-"] { scroll-margin-top: 24px; }
       .prose--protected { opacity: 0; transform: translateY(8px); transition: opacity 180ms ease, transform 180ms ease; }
       .prose--protected.prose--ready { opacity: 1; transform: translateY(0); }
       .status { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 15px; font-weight: 800; padding: 12px; }
@@ -9198,29 +9211,90 @@ const renderDynamicBookmarkScript = (route, serial, chapter) => {
       const bookmarkStatus = document.querySelector('[data-reader-bookmark-status]');
       const bookmarkCopy = ${scriptJson(copy)};
       const bookmarkData = ${scriptJson(bookmarkData)};
+      const anchorPrefix = 'sc-bookmark-block-';
       const setBookmarkStatus = (message, tone = 'neutral') => {
         if (!bookmarkStatus) return;
         bookmarkStatus.textContent = message;
         bookmarkStatus.dataset.tone = tone;
       };
-      const currentProgressPercent = () => {
-        const documentElement = document.documentElement;
-        const scrollTop = window.scrollY || documentElement.scrollTop || 0;
-        const scrollable = Math.max(1, documentElement.scrollHeight - window.innerHeight);
-        return Math.max(0, Math.min(100, Math.round((scrollTop / scrollable) * 100)));
+      const getReaderBody = () =>
+        document.querySelector('[data-reader-body]:not([hidden])') ||
+        document.querySelector('[data-protected-chapter-body]:not([hidden])') ||
+        document.querySelector('.prose--reader');
+      const getReadableBlocks = (body) =>
+        Array.from(body?.querySelectorAll('p, h2, h3, blockquote, li') || [])
+          .filter((node) => node.textContent.trim().length > 0);
+      const initializeBookmarkAnchors = (body = getReaderBody(), options = {}) => {
+        const blocks = getReadableBlocks(body);
+        blocks.forEach((block, index) => {
+          if (!block.id || block.id.startsWith(anchorPrefix)) {
+            block.id = anchorPrefix + String(index + 1);
+          }
+        });
+        if (options.restore) restoreBookmarkPosition(body);
+        return blocks;
       };
+      const progressPercentForBody = (body) => {
+        if (!body) return 0;
+        const rect = body.getBoundingClientRect();
+        const total = Math.max(1, body.scrollHeight - window.innerHeight * 0.55);
+        const read = Math.max(0, -rect.top + window.innerHeight * 0.18);
+        return Math.max(0, Math.min(100, Math.round((read / total) * 100)));
+      };
+      const restoreBookmarkPosition = (body = getReaderBody()) => {
+        if (!body || !window.location.hash.startsWith('#' + anchorPrefix)) return;
+        initializeBookmarkAnchors(body);
+        const anchorId = decodeURIComponent(window.location.hash.slice(1));
+        const target = document.getElementById(anchorId);
+        if (target) {
+          window.setTimeout(() => target.scrollIntoView({ block: 'start' }), 60);
+        }
+      };
+      const currentBookmarkPosition = () => {
+        const body = getReaderBody();
+        const blocks = initializeBookmarkAnchors(body);
+        const progressPercent = progressPercentForBody(body);
+        const targetLine = window.innerHeight * 0.22;
+        const currentBlock = blocks.reduce((best, block) => {
+          const distance = Math.abs(block.getBoundingClientRect().top - targetLine);
+          return !best || distance < best.distance ? { block, distance } : best;
+        }, null)?.block;
+        const blockIndex = currentBlock ? blocks.indexOf(currentBlock) : -1;
+        const anchorId = currentBlock?.id || '';
+        const sourcePath = anchorId
+          ? window.location.pathname + '#' + encodeURIComponent(anchorId)
+          : window.location.pathname;
+        return {
+          anchorId,
+          blockIndex,
+          progressPercent,
+          sourcePath,
+          positionLabel: blockIndex >= 0 ? '第 ' + String(blockIndex + 1) + ' 段 · ' + String(progressPercent) + '%' : String(progressPercent) + '%'
+        };
+      };
+      window.stationCatReaderBookmarks = {
+        init: initializeBookmarkAnchors,
+        restore: restoreBookmarkPosition
+      };
+      initializeBookmarkAnchors(getReaderBody(), { restore: true });
+      window.addEventListener('load', () => initializeBookmarkAnchors(getReaderBody(), { restore: true }), { once: true });
       bookmarkButton?.addEventListener('click', async () => {
         bookmarkButton.disabled = true;
         setBookmarkStatus(bookmarkCopy.saving, 'neutral');
-        const progressPercent = currentProgressPercent();
+        const bookmarkPosition = currentBookmarkPosition();
         try {
           const response = await fetch('/api/readers/bookmarks', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
               ...bookmarkData,
-              progressPercent,
-              positionLabel: progressPercent + '%'
+              metadata: {
+                anchorId: bookmarkPosition.anchorId,
+                blockIndex: bookmarkPosition.blockIndex
+              },
+              progressPercent: bookmarkPosition.progressPercent,
+              positionLabel: bookmarkPosition.positionLabel,
+              sourcePath: bookmarkPosition.sourcePath
             })
           });
           const data = await response.json();
@@ -9293,7 +9367,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
         <div class="status" data-serial-credit-status></div>
         ${renderDynamicUnlockButtons(route, serial, chapter, paymentSettings)}
       </section>
-      <article class="prose prose--reader prose--protected" data-protected-chapter-body hidden></article>
+      <article class="prose prose--reader prose--protected" data-protected-chapter-body data-reader-body hidden></article>
       <script>
         (() => {
           const gate = document.querySelector('[data-serial-access-gate]');
@@ -9331,6 +9405,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
             if (!response.ok || !payload.ok) throw new Error(payload.message || ${JSON.stringify(paymentCopy.contentFailed)});
             body.innerHTML = payload.content.html;
             body.hidden = false;
+            window.stationCatReaderBookmarks?.init?.(body, { restore: true });
             body.classList.add('prose--ready');
             gate.hidden = true;
           };
@@ -9427,7 +9502,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
           checkAccess().catch((error) => setStatus(error.message || ${JSON.stringify(paymentCopy.contentFailed)}, 'error'));
         })();
       </script>`
-    : `<article class="prose prose--reader">${body.html || `<p>${escapeHtml(fallbackBody)}</p>`}</article>`;
+    : `<article class="prose prose--reader" data-reader-body>${body.html || `<p>${escapeHtml(fallbackBody)}</p>`}</article>`;
 
   return `<article class="section">
       <a class="text-link" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>

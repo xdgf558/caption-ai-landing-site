@@ -241,9 +241,9 @@ const accessGateCopy = {
         <a class="button button-secondary" href={seriesHref}>{copy.chapterBack}</a>
       </div>
     </section>
-    <article class="serial-prose serial-reader-shell__body protected-chapter-body" data-protected-chapter-body hidden></article>
+    <article class="serial-prose serial-reader-shell__body protected-chapter-body" data-protected-chapter-body data-reader-body hidden></article>
   ) : (
-    <article class="serial-prose serial-reader-shell__body">
+    <article class="serial-prose serial-reader-shell__body" data-reader-body>
       <Content />
     </article>
   )}
@@ -278,6 +278,7 @@ const accessGateCopy = {
 } }}>
   const bookmarkButton = document.querySelector('[data-reader-bookmark-save]');
   const bookmarkStatus = document.querySelector('[data-reader-bookmark-status]');
+  const anchorPrefix = 'sc-bookmark-block-';
 
   const setBookmarkStatus = (message, tone = 'neutral') => {
     if (!bookmarkStatus) return;
@@ -285,17 +286,79 @@ const accessGateCopy = {
     bookmarkStatus.dataset.tone = tone;
   };
 
-  const currentProgressPercent = () => {
-    const documentElement = document.documentElement;
-    const scrollTop = window.scrollY || documentElement.scrollTop || 0;
-    const scrollable = Math.max(1, documentElement.scrollHeight - window.innerHeight);
-    return Math.max(0, Math.min(100, Math.round((scrollTop / scrollable) * 100)));
+  const getReaderBody = () =>
+    document.querySelector('[data-reader-body]:not([hidden])') ||
+    document.querySelector('[data-protected-chapter-body]:not([hidden])') ||
+    document.querySelector('.serial-reader-shell__body');
+
+  const getReadableBlocks = (body) =>
+    Array.from(body?.querySelectorAll('p, h2, h3, blockquote, li') || [])
+      .filter((node) => node.textContent.trim().length > 0);
+
+  const restoreBookmarkPosition = (body = getReaderBody()) => {
+    if (!body || !window.location.hash.startsWith(`#${anchorPrefix}`)) return;
+    initializeBookmarkAnchors(body);
+    const anchorId = decodeURIComponent(window.location.hash.slice(1));
+    const target = document.getElementById(anchorId);
+    if (target) {
+      window.setTimeout(() => target.scrollIntoView({ block: 'start' }), 60);
+    }
   };
+
+  const initializeBookmarkAnchors = (body = getReaderBody(), options = {}) => {
+    const blocks = getReadableBlocks(body);
+    blocks.forEach((block, index) => {
+      if (!block.id || block.id.startsWith(anchorPrefix)) {
+        block.id = `${anchorPrefix}${index + 1}`;
+      }
+    });
+    if (options.restore) restoreBookmarkPosition(body);
+    return blocks;
+  };
+
+  const progressPercentForBody = (body) => {
+    if (!body) return 0;
+    const rect = body.getBoundingClientRect();
+    const total = Math.max(1, body.scrollHeight - window.innerHeight * 0.55);
+    const read = Math.max(0, -rect.top + window.innerHeight * 0.18);
+    return Math.max(0, Math.min(100, Math.round((read / total) * 100)));
+  };
+
+  const currentBookmarkPosition = () => {
+    const body = getReaderBody();
+    const blocks = initializeBookmarkAnchors(body);
+    const progressPercent = progressPercentForBody(body);
+    const targetLine = window.innerHeight * 0.22;
+    const currentBlock = blocks.reduce((best, block) => {
+      const distance = Math.abs(block.getBoundingClientRect().top - targetLine);
+      return !best || distance < best.distance ? { block, distance } : best;
+    }, null)?.block;
+    const blockIndex = currentBlock ? blocks.indexOf(currentBlock) : -1;
+    const anchorId = currentBlock?.id || '';
+    const sourcePath = anchorId
+      ? `${window.location.pathname}#${encodeURIComponent(anchorId)}`
+      : window.location.pathname;
+    return {
+      anchorId,
+      blockIndex,
+      progressPercent,
+      sourcePath,
+      positionLabel: blockIndex >= 0 ? `第 ${blockIndex + 1} 段 · ${progressPercent}%` : `${progressPercent}%`
+    };
+  };
+
+  window.stationCatReaderBookmarks = {
+    init: initializeBookmarkAnchors,
+    restore: restoreBookmarkPosition
+  };
+
+  initializeBookmarkAnchors(getReaderBody(), { restore: true });
+  window.addEventListener('load', () => initializeBookmarkAnchors(getReaderBody(), { restore: true }), { once: true });
 
   bookmarkButton?.addEventListener('click', async () => {
     bookmarkButton.disabled = true;
     setBookmarkStatus(bookmarkCopy.saving, 'neutral');
-    const progressPercent = currentProgressPercent();
+    const bookmarkPosition = currentBookmarkPosition();
 
     try {
       const response = await fetch('/api/readers/bookmarks', {
@@ -303,8 +366,13 @@ const accessGateCopy = {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           ...bookmarkData,
-          progressPercent,
-          positionLabel: `${progressPercent}%`
+          metadata: {
+            anchorId: bookmarkPosition.anchorId,
+            blockIndex: bookmarkPosition.blockIndex
+          },
+          progressPercent: bookmarkPosition.progressPercent,
+          positionLabel: bookmarkPosition.positionLabel,
+          sourcePath: bookmarkPosition.sourcePath
         })
       });
       const data = await response.json();
@@ -433,6 +501,7 @@ const accessGateCopy = {
 
       protectedBody.innerHTML = data.content.html;
       protectedBody.hidden = false;
+      window.stationCatReaderBookmarks?.init?.(protectedBody, { restore: true });
       requestAnimationFrame(() => protectedBody.classList.add('protected-chapter-body--ready'));
       gate.hidden = true;
       setCreditStatus(accessGateCopy.contentReady, 'success');
