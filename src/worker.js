@@ -8974,8 +8974,10 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .status { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 15px; font-weight: 800; padding: 12px; }
       .status[data-tone="success"] { border-color: rgba(8,121,109,.32); color: var(--teal); }
       .status[data-tone="error"] { border-color: rgba(217,93,69,.4); color: var(--coral); }
+      .reader-bookmark-fab, .reader-bookmark-toast { display: none; }
+      .reader-bookmark-toast { background: rgba(255,255,255,.96); border-color: rgba(8,121,109,.32); box-shadow: 0 18px 50px rgba(44,39,33,.12); color: var(--ink); font-weight: 900; left: max(16px, env(safe-area-inset-left)); position: fixed; right: max(16px, env(safe-area-inset-right)); text-align: center; z-index: 50; }
       @media (max-width: 760px) {
-        .shell { padding: 18px 14px 56px; }
+        .shell { padding: 18px 14px 96px; }
         .grid, .hero--novel { grid-template-columns: 1fr; }
         .chapter-list { gap: 8px; }
         .chapter-card { padding: 12px; }
@@ -8984,6 +8986,9 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
         .button-row { align-items: stretch; flex-direction: column; }
         .button { width: 100%; }
         .prose { border-radius: 10px; padding: 18px 16px; }
+        .reader-bookmark-fab { bottom: calc(16px + env(safe-area-inset-bottom)); display: inline-flex; left: auto; min-width: 132px; position: fixed; right: max(16px, env(safe-area-inset-right)); width: auto; z-index: 51; }
+        .reader-bookmark-toast { bottom: calc(76px + env(safe-area-inset-bottom)); display: block; }
+        .reader-bookmark-toast[hidden] { display: none; }
       }
     </style>
   </head>
@@ -9152,6 +9157,7 @@ const dynamicBookmarkCopy = {
     failed: 'Could not save bookmark.',
     save: 'Save bookmark',
     saved: 'Bookmark saved. You can continue from Member Center next time.',
+    shortcutTitle: 'Press B to save reading position',
     saving: 'Saving bookmark...',
     signInRequired: 'Please sign in before saving a bookmark.'
   },
@@ -9159,6 +9165,7 @@ const dynamicBookmarkCopy = {
     failed: 'しおりを保存できませんでした。',
     save: 'しおりを保存',
     saved: 'しおりを保存しました。次回は本棚から続きが読めます。',
+    shortcutTitle: 'B キーで読書位置を保存',
     saving: 'しおりを保存しています...',
     signInRequired: 'しおりを保存する前にログインしてください。'
   },
@@ -9166,6 +9173,7 @@ const dynamicBookmarkCopy = {
     failed: '書籤保存失敗。',
     save: '保存書籤',
     saved: '書籤已保存，下次可以從會員中心繼續閱讀。',
+    shortcutTitle: '按 B 保存閱讀位置',
     saving: '正在保存書籤...',
     signInRequired: '請先登入，再保存書籤。'
   },
@@ -9173,6 +9181,7 @@ const dynamicBookmarkCopy = {
     failed: '书签保存失败。',
     save: '保存书签',
     saved: '书签已保存，下次可以从会员中心继续阅读。',
+    shortcutTitle: '按 B 保存阅读位置',
     saving: '正在保存书签...',
     signInRequired: '请先登录，再保存书签。'
   }
@@ -9207,15 +9216,41 @@ const renderDynamicBookmarkScript = (route, serial, chapter) => {
 
   return `<script>
     (() => {
-      const bookmarkButton = document.querySelector('[data-reader-bookmark-save]');
       const bookmarkStatus = document.querySelector('[data-reader-bookmark-status]');
+      const bookmarkToast = document.querySelector('[data-reader-bookmark-toast]');
       const bookmarkCopy = ${scriptJson(copy)};
       const bookmarkData = ${scriptJson(bookmarkData)};
       const anchorPrefix = 'sc-bookmark-block-';
+      let bookmarkToastTimer;
+      const getBookmarkButtons = () => Array.from(document.querySelectorAll('[data-reader-bookmark-save]'));
+      const clearBookmarkToastTimer = () => {
+        window.clearTimeout(bookmarkToastTimer);
+      };
       const setBookmarkStatus = (message, tone = 'neutral') => {
         if (!bookmarkStatus) return;
         bookmarkStatus.textContent = message;
         bookmarkStatus.dataset.tone = tone;
+        if (bookmarkToast) {
+          window.clearTimeout(bookmarkToastTimer);
+          bookmarkToast.textContent = message;
+          bookmarkToast.dataset.tone = tone;
+          bookmarkToast.hidden = false;
+          if (tone !== 'neutral') {
+            bookmarkToastTimer = window.setTimeout(() => {
+              bookmarkToast.hidden = true;
+            }, 2600);
+          }
+        }
+      };
+      const setBookmarkButtonsDisabled = (disabled) => {
+        getBookmarkButtons().forEach((button) => {
+          button.disabled = disabled;
+          button.setAttribute('aria-busy', disabled ? 'true' : 'false');
+        });
+      };
+      const isEditableTarget = (target) => {
+        if (!(target instanceof HTMLElement)) return false;
+        return Boolean(target.closest('input, textarea, select, button, [contenteditable="true"]'));
       };
       const getReaderBody = () =>
         document.querySelector('[data-reader-body]:not([hidden])') ||
@@ -9278,8 +9313,10 @@ const renderDynamicBookmarkScript = (route, serial, chapter) => {
       };
       initializeBookmarkAnchors(getReaderBody(), { restore: true });
       window.addEventListener('load', () => initializeBookmarkAnchors(getReaderBody(), { restore: true }), { once: true });
-      bookmarkButton?.addEventListener('click', async () => {
-        bookmarkButton.disabled = true;
+      window.addEventListener('pagehide', clearBookmarkToastTimer, { once: true });
+      const saveBookmark = async () => {
+        if (getBookmarkButtons().some((button) => button.disabled)) return;
+        setBookmarkButtonsDisabled(true);
         setBookmarkStatus(bookmarkCopy.saving, 'neutral');
         const bookmarkPosition = currentBookmarkPosition();
         try {
@@ -9310,8 +9347,24 @@ const renderDynamicBookmarkScript = (route, serial, chapter) => {
         } catch (error) {
           setBookmarkStatus(error.message || bookmarkCopy.failed, 'error');
         } finally {
-          bookmarkButton.disabled = false;
+          setBookmarkButtonsDisabled(false);
         }
+      };
+      document.addEventListener('click', (event) => {
+        const trigger = event.target instanceof HTMLElement
+          ? event.target.closest('[data-reader-bookmark-save]')
+          : null;
+        if (!trigger) return;
+        event.preventDefault();
+        saveBookmark();
+      });
+      window.addEventListener('keydown', (event) => {
+        if (event.isComposing) return;
+        if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+        if (event.key.toLowerCase() !== 'b') return;
+        if (isEditableTarget(event.target)) return;
+        event.preventDefault();
+        saveBookmark();
       });
     })();
   </script>`;
@@ -9518,10 +9571,12 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
         <div class="button-row">
           ${previousChapter ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${previousChapter.slug}/`)}">${escapeHtml(copy.previousChapter)}</a>` : `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>`}
           ${nextChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${nextChapter.slug}/`)}">${escapeHtml(copy.nextChapter)}</a>` : previousChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>` : ''}
-          <button class="button button-secondary" type="button" data-reader-bookmark-save>${escapeHtml(bookmarkCopy.save)}</button>
+          <button class="button button-secondary" type="button" data-reader-bookmark-save aria-keyshortcuts="B" title="${escapeHtml(bookmarkCopy.shortcutTitle)}">${escapeHtml(bookmarkCopy.save)}</button>
         </div>
         <div class="reader-status serial-bookmark-status" data-reader-bookmark-status role="status" aria-live="polite"></div>
       </footer>
+      <button class="button button-primary reader-bookmark-fab" type="button" data-reader-bookmark-save aria-label="${escapeHtml(bookmarkCopy.save)}" aria-keyshortcuts="B" title="${escapeHtml(bookmarkCopy.shortcutTitle)}">${escapeHtml(bookmarkCopy.save)}</button>
+      <div class="status reader-bookmark-toast" data-reader-bookmark-toast role="status" aria-live="polite" hidden></div>
       ${renderDynamicBookmarkScript(route, serial, chapter)}
     </article>`;
 };
