@@ -465,6 +465,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <h3>导入、预览与正文</h3>
                 </div>
                 <div class="button-row">
+                  <button class="button button-primary" type="submit" data-content-save-button>保存到后端内容平台</button>
                   <label class="button button-secondary admin-file-button" for="content-file">导入 Markdown</label>
                   <input class="admin-file-input" id="content-file" type="file" accept=".md,.markdown,text/markdown,text/plain" />
                   <button class="button button-secondary" id="content-preview-button" type="button">刷新预览</button>
@@ -476,7 +477,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </section>
 
             <div class="button-row">
-              <button class="button button-primary" id="content-save" type="submit">保存到后端内容平台</button>
+              <button class="button button-primary" id="content-save" type="submit" data-content-save-button>保存到后端内容平台</button>
               <button class="button button-secondary" id="content-reset" type="button">清空表单</button>
             </div>
             <div class="admin-inline-status" id="content-save-status" role="status" aria-live="polite" hidden></div>
@@ -1757,6 +1758,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       };
     };
 
+    const setContentSaveButtonsDisabled = (disabled) => {
+      $$('[data-content-save-button]').forEach((button) => {
+        button.disabled = disabled;
+        button.setAttribute('aria-busy', disabled ? 'true' : 'false');
+      });
+    };
+
     const saveContent = async (event) => {
       event.preventDefault();
       const payload = buildPayload();
@@ -1769,7 +1777,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         return;
       }
 
-      $('#content-save').disabled = true;
+      setContentSaveButtonsDisabled(true);
       setSaveStatus('正在保存到 D1 / R2。');
       try {
         const result = await apiJson('/admin/api/content/entries', {
@@ -1784,7 +1792,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       } catch (error) {
         setSaveStatus(error.message, 'error');
       } finally {
-        $('#content-save').disabled = false;
+        setContentSaveButtonsDisabled(false);
       }
     };
 
