@@ -9157,6 +9157,7 @@ const dynamicBookmarkCopy = {
     failed: 'Could not save bookmark.',
     save: 'Save bookmark',
     saved: 'Bookmark saved. You can continue from Member Center next time.',
+    shortcutTitle: 'Press B to save reading position',
     saving: 'Saving bookmark...',
     signInRequired: 'Please sign in before saving a bookmark.'
   },
@@ -9164,6 +9165,7 @@ const dynamicBookmarkCopy = {
     failed: 'しおりを保存できませんでした。',
     save: 'しおりを保存',
     saved: 'しおりを保存しました。次回は本棚から続きが読めます。',
+    shortcutTitle: 'B キーで読書位置を保存',
     saving: 'しおりを保存しています...',
     signInRequired: 'しおりを保存する前にログインしてください。'
   },
@@ -9171,6 +9173,7 @@ const dynamicBookmarkCopy = {
     failed: '書籤保存失敗。',
     save: '保存書籤',
     saved: '書籤已保存，下次可以從會員中心繼續閱讀。',
+    shortcutTitle: '按 B 保存閱讀位置',
     saving: '正在保存書籤...',
     signInRequired: '請先登入，再保存書籤。'
   },
@@ -9178,6 +9181,7 @@ const dynamicBookmarkCopy = {
     failed: '书签保存失败。',
     save: '保存书签',
     saved: '书签已保存，下次可以从会员中心继续阅读。',
+    shortcutTitle: '按 B 保存阅读位置',
     saving: '正在保存书签...',
     signInRequired: '请先登录，再保存书签。'
   }
@@ -9567,11 +9571,11 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
         <div class="button-row">
           ${previousChapter ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${previousChapter.slug}/`)}">${escapeHtml(copy.previousChapter)}</a>` : `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>`}
           ${nextChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${nextChapter.slug}/`)}">${escapeHtml(copy.nextChapter)}</a>` : previousChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>` : ''}
-          <button class="button button-secondary" type="button" data-reader-bookmark-save>${escapeHtml(bookmarkCopy.save)}</button>
+          <button class="button button-secondary" type="button" data-reader-bookmark-save aria-keyshortcuts="B" title="${escapeHtml(bookmarkCopy.shortcutTitle)}">${escapeHtml(bookmarkCopy.save)}</button>
         </div>
         <div class="reader-status serial-bookmark-status" data-reader-bookmark-status role="status" aria-live="polite"></div>
       </footer>
-      <button class="button button-primary reader-bookmark-fab" type="button" data-reader-bookmark-save aria-label="${escapeHtml(bookmarkCopy.save)}">${escapeHtml(bookmarkCopy.save)}</button>
+      <button class="button button-primary reader-bookmark-fab" type="button" data-reader-bookmark-save aria-label="${escapeHtml(bookmarkCopy.save)}" aria-keyshortcuts="B" title="${escapeHtml(bookmarkCopy.shortcutTitle)}">${escapeHtml(bookmarkCopy.save)}</button>
       <div class="status reader-bookmark-toast" data-reader-bookmark-toast role="status" aria-live="polite" hidden></div>
       ${renderDynamicBookmarkScript(route, serial, chapter)}
     </article>`;

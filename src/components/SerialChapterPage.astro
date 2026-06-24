@@ -33,6 +33,7 @@ const unlockOrderType = chapter.data.access === 'supporter' ? 'supporter' : 'cha
 const bookmarkCopy = {
   en: {
     save: 'Save bookmark',
+    shortcutTitle: 'Press B to save reading position',
     saving: 'Saving bookmark...',
     saved: 'Bookmark saved. You can continue from Member Center next time.',
     signInRequired: 'Please sign in before saving a bookmark.',
@@ -40,6 +41,7 @@ const bookmarkCopy = {
   },
   ja: {
     save: 'しおりを保存',
+    shortcutTitle: 'B キーで読書位置を保存',
     saving: 'しおりを保存しています...',
     saved: 'しおりを保存しました。次回は本棚から続きが読めます。',
     signInRequired: 'しおりを保存する前にログインしてください。',
@@ -47,6 +49,7 @@ const bookmarkCopy = {
   },
   'zh-Hant': {
     save: '保存書籤',
+    shortcutTitle: '按 B 保存閱讀位置',
     saving: '正在保存書籤...',
     saved: '書籤已保存，下次可以從會員中心繼續閱讀。',
     signInRequired: '請先登入，再保存書籤。',
@@ -54,6 +57,7 @@ const bookmarkCopy = {
   },
   'zh-Hans': {
     save: '保存书签',
+    shortcutTitle: '按 B 保存阅读位置',
     saving: '正在保存书签...',
     saved: '书签已保存，下次可以从会员中心继续阅读。',
     signInRequired: '请先登录，再保存书签。',
@@ -262,7 +266,7 @@ const accessGateCopy = {
       ) : (
         null
       )}
-      <button class="button button-secondary" type="button" data-reader-bookmark-save>{bookmarkCopy.save}</button>
+      <button class="button button-secondary" type="button" data-reader-bookmark-save aria-keyshortcuts="B" title={bookmarkCopy.shortcutTitle}>{bookmarkCopy.save}</button>
     </div>
     <div class="reader-status serial-bookmark-status" data-reader-bookmark-status role="status" aria-live="polite"></div>
   </footer>
@@ -271,6 +275,8 @@ const accessGateCopy = {
     type="button"
     data-reader-bookmark-save
     aria-label={bookmarkCopy.save}
+    aria-keyshortcuts="B"
+    title={bookmarkCopy.shortcutTitle}
   >
     {bookmarkCopy.save}
   </button>
