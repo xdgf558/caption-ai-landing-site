@@ -5105,6 +5105,36 @@ body.station-paper-page {
   margin-top: 26px;
 }
 
+.serial-bookmark-fab,
+.serial-bookmark-toast {
+  display: none;
+}
+
+.serial-bookmark-toast {
+  background: #fffaf1;
+  border: 1px solid #2e5b4e;
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 rgba(34, 27, 22, 0.16);
+  color: #221b16;
+  font-weight: 800;
+  left: max(16px, env(safe-area-inset-left));
+  padding: 10px 12px;
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  text-align: center;
+  z-index: 50;
+}
+
+.serial-bookmark-toast[data-tone="success"] {
+  border-color: #2e5b4e;
+  color: #2e5b4e;
+}
+
+.serial-bookmark-toast[data-tone="error"] {
+  border-color: #b85c45;
+  color: #9d3f2d;
+}
+
 .serial-support-section {
   display: grid;
   gap: 18px;
@@ -6406,6 +6436,30 @@ body.station-paper-page.caption-product-page {
 
   .station-paper-page .button-row .button {
     width: 100%;
+  }
+
+  .station-paper-page .serial-reader-shell {
+    padding-bottom: 92px;
+  }
+
+  .station-paper-page .serial-bookmark-fab {
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    display: inline-flex;
+    left: auto;
+    min-width: 132px;
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right));
+    width: auto;
+    z-index: 51;
+  }
+
+  .station-paper-page .serial-bookmark-toast {
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    display: block;
+  }
+
+  .station-paper-page .serial-bookmark-toast[hidden] {
+    display: none;
   }
 }
 

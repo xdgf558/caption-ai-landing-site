@@ -266,6 +266,15 @@ const accessGateCopy = {
     </div>
     <div class="reader-status serial-bookmark-status" data-reader-bookmark-status role="status" aria-live="polite"></div>
   </footer>
+  <button
+    class="button button-primary serial-bookmark-fab"
+    type="button"
+    data-reader-bookmark-save
+    aria-label={bookmarkCopy.save}
+  >
+    {bookmarkCopy.save}
+  </button>
+  <div class="reader-status serial-bookmark-toast" data-reader-bookmark-toast role="status" aria-live="polite" hidden></div>
 </div>
 
 <script define:vars={{ bookmarkCopy, bookmarkData: {
@@ -276,14 +285,45 @@ const accessGateCopy = {
   seriesTitle: serial.data.title,
   sourcePath: chapterHref
 } }}>
-  const bookmarkButton = document.querySelector('[data-reader-bookmark-save]');
   const bookmarkStatus = document.querySelector('[data-reader-bookmark-status]');
+  const bookmarkToast = document.querySelector('[data-reader-bookmark-toast]');
   const anchorPrefix = 'sc-bookmark-block-';
+  let bookmarkToastTimer;
+
+  const getBookmarkButtons = () => Array.from(document.querySelectorAll('[data-reader-bookmark-save]'));
+
+  const clearBookmarkToastTimer = () => {
+    window.clearTimeout(bookmarkToastTimer);
+  };
 
   const setBookmarkStatus = (message, tone = 'neutral') => {
     if (!bookmarkStatus) return;
     bookmarkStatus.textContent = message;
     bookmarkStatus.dataset.tone = tone;
+
+    if (bookmarkToast) {
+      window.clearTimeout(bookmarkToastTimer);
+      bookmarkToast.textContent = message;
+      bookmarkToast.dataset.tone = tone;
+      bookmarkToast.hidden = false;
+      if (tone !== 'neutral') {
+        bookmarkToastTimer = window.setTimeout(() => {
+          bookmarkToast.hidden = true;
+        }, 2600);
+      }
+    }
+  };
+
+  const setBookmarkButtonsDisabled = (disabled) => {
+    getBookmarkButtons().forEach((button) => {
+      button.disabled = disabled;
+      button.setAttribute('aria-busy', disabled ? 'true' : 'false');
+    });
+  };
+
+  const isEditableTarget = (target) => {
+    if (!(target instanceof HTMLElement)) return false;
+    return Boolean(target.closest('input, textarea, select, button, [contenteditable="true"]'));
   };
 
   const getReaderBody = () =>
@@ -354,9 +394,11 @@ const accessGateCopy = {
 
   initializeBookmarkAnchors(getReaderBody(), { restore: true });
   window.addEventListener('load', () => initializeBookmarkAnchors(getReaderBody(), { restore: true }), { once: true });
+  window.addEventListener('pagehide', clearBookmarkToastTimer, { once: true });
 
-  bookmarkButton?.addEventListener('click', async () => {
-    bookmarkButton.disabled = true;
+  const saveBookmark = async () => {
+    if (getBookmarkButtons().some((button) => button.disabled)) return;
+    setBookmarkButtonsDisabled(true);
     setBookmarkStatus(bookmarkCopy.saving, 'neutral');
     const bookmarkPosition = currentBookmarkPosition();
 
@@ -388,8 +430,26 @@ const accessGateCopy = {
     } catch (error) {
       setBookmarkStatus(error.message || bookmarkCopy.failed, 'error');
     } finally {
-      bookmarkButton.disabled = false;
+      setBookmarkButtonsDisabled(false);
     }
+  };
+
+  document.addEventListener('click', (event) => {
+    const trigger = event.target instanceof HTMLElement
+      ? event.target.closest('[data-reader-bookmark-save]')
+      : null;
+    if (!trigger) return;
+    event.preventDefault();
+    saveBookmark();
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.isComposing) return;
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+    if (event.key.toLowerCase() !== 'b') return;
+    if (isEditableTarget(event.target)) return;
+    event.preventDefault();
+    saveBookmark();
   });
 </script>
 
