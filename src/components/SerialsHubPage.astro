@@ -58,6 +58,7 @@ const backendSpotlightByLocale = {
     href: `${basePath}cmqjfju1300008z3wyh66ynvw/`,
     latest: '第 1 章 1999年的风扇声',
     schedule: '不定期連載，完成後會同步更新章節順序',
+    seriesSlug: 'cmqjfju1300008z3wyh66ynvw',
     status: '連載中',
     subtitle: '1999 · Offline AI · Rebirth',
     tagline: '離線 AI、舊年代電腦、記憶和一次慢慢展開的重啟。',
@@ -122,7 +123,10 @@ const backendBookshelfItem = backendSpotlight && {
   firstChapterHref: backendSpotlight.firstChapterHref,
   href: backendSpotlight.href,
   id: 'offline-future',
+  isBackend: true,
   latest: backendSpotlight.latest,
+  locale,
+  seriesSlug: backendSpotlight.seriesSlug,
   status: backendSpotlight.status,
   subtitle: backendSpotlight.subtitle,
   title: backendSpotlight.title
@@ -139,9 +143,12 @@ const featuredBookshelfItem = featuredSerial && {
     : getSeriesHref(basePath, featuredSerial.data.seriesSlug),
   href: getSeriesHref(basePath, featuredSerial.data.seriesSlug),
   id: featuredSerial.data.seriesSlug,
+  isBackend: false,
   latest: featuredLatestChapter
     ? `${formatChapterNumber(featuredLatestChapter.data.chapterNumber, locale)} ${featuredLatestChapter.data.title}`
     : copy.latestFallback,
+  locale,
+  seriesSlug: featuredSerial.data.seriesSlug,
   status: getSerialStatusLabel(featuredSerial.data.status, locale),
   subtitle: featuredSerial.data.subtitle ?? '',
   title: featuredSerial.data.title
@@ -224,7 +231,12 @@ const backendShelfCopy = {
               <div class="serials-bookshelf__meta">
                 <span>{book.status}</span>
                 <span>{book.accessLabel}</span>
-                <span>{book.latest}</span>
+                <span
+                  data-backend-latest-series={book.isBackend ? book.seriesSlug : undefined}
+                  data-backend-latest-locale={book.isBackend ? book.locale : undefined}
+                >
+                  {book.latest}
+                </span>
               </div>
               <h2>{book.title}</h2>
               {book.subtitle && <p class="fine-print">{book.subtitle}</p>}
@@ -259,6 +271,72 @@ const backendShelfCopy = {
 <script is:inline>
   (() => {
     const shelves = document.querySelectorAll('[data-serials-bookshelf]');
+    const chineseNumerals = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    const formatChineseChapterNumber = (value) => {
+      const number = Math.max(0, Math.floor(Number(value) || 0));
+      if (!number) return '';
+      if (number < 10) return chineseNumerals[number];
+      if (number < 20) return `十${number % 10 ? chineseNumerals[number % 10] : ''}`;
+      if (number < 100) {
+        const tens = Math.floor(number / 10);
+        const ones = number % 10;
+        return `${chineseNumerals[tens]}十${ones ? chineseNumerals[ones] : ''}`;
+      }
+      if (number < 1000) {
+        const hundreds = Math.floor(number / 100);
+        const remainder = number % 100;
+        if (!remainder) return `${chineseNumerals[hundreds]}百`;
+        return `${chineseNumerals[hundreds]}百${remainder < 10 ? '零' : ''}${formatChineseChapterNumber(remainder)}`;
+      }
+      return String(number);
+    };
+    const formatChapterNumber = (chapterNumber, locale) => {
+      if (locale === 'zh-Hant' || locale === 'zh-Hans' || locale === 'ja') {
+        return `第${formatChineseChapterNumber(chapterNumber)}章`;
+      }
+      return `Chapter ${Math.max(0, Math.floor(Number(chapterNumber) || 0))}`;
+    };
+    const latestChapterCache = new Map();
+    const getLatestBackendChapter = async (seriesSlug, locale) => {
+      const cacheKey = `${locale}:${seriesSlug}`;
+      if (latestChapterCache.has(cacheKey)) return latestChapterCache.get(cacheKey);
+
+      const params = new URLSearchParams({
+        entryType: 'novel_chapter',
+        locale,
+        limit: '100',
+        parentSlug: seriesSlug
+      });
+      const latestPromise = fetch(`/api/content/entries?${params.toString()}`)
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload) => {
+          if (!payload?.ok || !Array.isArray(payload.entries)) return null;
+          return payload.entries.reduce((latest, entry) => {
+            const chapterNumber = Number(entry.chapterNumber) || 0;
+            const latestNumber = Number(latest?.chapterNumber) || 0;
+            if (!latest || chapterNumber > latestNumber) return entry;
+            if (chapterNumber === latestNumber && String(entry.slug || '').localeCompare(String(latest.slug || '')) > 0) return entry;
+            return latest;
+          }, null);
+        })
+        .catch(() => null);
+      latestChapterCache.set(cacheKey, latestPromise);
+      return latestPromise;
+    };
+    const hydrateBackendLatestChapters = () => {
+      const targets = Array.from(document.querySelectorAll('[data-backend-latest-series]'));
+      targets.forEach(async (target) => {
+        const seriesSlug = target.dataset.backendLatestSeries || '';
+        const locale = target.dataset.backendLatestLocale || 'zh-Hant';
+        if (!seriesSlug) return;
+        const latest = await getLatestBackendChapter(seriesSlug, locale);
+        if (!latest?.chapterNumber || !latest.title) return;
+        target.textContent = `${formatChapterNumber(latest.chapterNumber, locale)} ${latest.title}`;
+      });
+    };
+
+    hydrateBackendLatestChapters();
+
     shelves.forEach((shelf) => {
       const filters = Array.from(shelf.querySelectorAll('[data-bookshelf-filter]'));
       const books = Array.from(shelf.querySelectorAll('[data-bookshelf-book]'));
@@ -385,7 +463,12 @@ const backendShelfCopy = {
           </div>
           <div>
             <span>{copy.latestLabel}</span>
-            <strong>{backendSpotlight.latest}</strong>
+            <strong
+              data-backend-latest-series={backendSpotlight.seriesSlug}
+              data-backend-latest-locale={locale}
+            >
+              {backendSpotlight.latest}
+            </strong>
           </div>
           <div>
             <span>{copy.accessLabel}</span>
