@@ -23,5 +23,13 @@ assert.ok(
   source.includes('target.textContent = `${formatChapterNumber(latest.chapterNumber, locale)} ${latest.title}`;'),
   'Backend latest chapter hydration should update the visible latest chapter label.'
 );
+assert.ok(
+  source.includes("document.addEventListener('DOMContentLoaded', callback, { once: true })"),
+  'Backend latest chapter hydration should wait until the whole page DOM is ready.'
+);
+assert.ok(
+  source.includes('runWhenDomReady(hydrateBackendLatestChapters);'),
+  'Backend latest chapter hydration should run through the DOM-ready helper.'
+);
 
 console.log('serials hub latest chapter tests passed');
