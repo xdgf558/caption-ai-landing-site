@@ -9,7 +9,7 @@
     "dev": "astro dev --host 0.0.0.0",
     "build": "npm run build:novel-payment-config && astro build",
     "preview": "astro preview --host 0.0.0.0",
-    "test": "node scripts/test-reader-totp.mjs && node scripts/test-reader-bookmark-shortcut.mjs"
+    "test": "node scripts/test-reader-totp.mjs && node scripts/test-reader-bookmark-shortcut.mjs && node scripts/test-serials-hub-latest.mjs"
   },
   "dependencies": {
     "astro": "^5.0.0",
