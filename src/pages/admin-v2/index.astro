@@ -1534,6 +1534,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <div class="button-row">
           <button class="button button-primary" id="import-publish-drafts" type="button" ${canPublish ? '' : 'disabled'}>发布本批草稿</button>
           <button class="button button-secondary" id="import-detail-refresh" type="button">刷新本批次</button>
+          <button class="button button-secondary" id="import-delete-record" type="button">删除导入记录</button>
         </div>
         <section class="admin-detail-section">
           <h4>关联内容</h4>
@@ -1554,6 +1555,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       $('#import-publish-drafts')?.addEventListener('click', publishSelectedImport);
       $('#import-detail-refresh')?.addEventListener('click', () => loadImportReviews({ importId: item.id }));
+      $('#import-delete-record')?.addEventListener('click', deleteSelectedImport);
       $$('[data-import-edit-id]').forEach((button) => {
         button.addEventListener('click', () => openImportEntryForEdit(button.dataset.importEditId));
       });
@@ -1597,6 +1599,35 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         renderImportDetail();
         await Promise.all([loadEntries(), loadAuditLogs()]);
         setStatus(payload.message || '导入草稿已发布。', 'success');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      } finally {
+        if (button) button.disabled = false;
+      }
+    };
+
+    const deleteSelectedImport = async () => {
+      if (!state.selectedImportId) return;
+      const item = state.imports.find((entry) => entry.id === state.selectedImportId);
+      const title = importTitle(item);
+      const confirmed = window.confirm(`确定删除导入记录「${title}」吗？已导入的作品和章节不会被删除。`);
+      if (!confirmed) return;
+
+      const button = $('#import-delete-record');
+      if (button) button.disabled = true;
+      setStatus('正在删除导入记录。');
+      try {
+        const payload = await apiJson('/admin/api/content/imports/review', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'delete', importId: state.selectedImportId })
+        });
+        const deletedImportId = payload.deletedImportId || state.selectedImportId;
+        state.imports = state.imports.filter((entry) => entry.id !== deletedImportId);
+        state.selectedImportId = state.imports[0]?.id || 0;
+        renderImportList();
+        renderImportDetail();
+        await loadAuditLogs();
+        setStatus(payload.message || '导入记录已删除。', 'success');
       } catch (error) {
         setStatus(error.message, 'error');
       } finally {

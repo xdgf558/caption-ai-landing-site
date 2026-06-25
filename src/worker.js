@@ -7138,7 +7138,7 @@ const handleAdminReviewContentImport = async (request, env) => {
   }
 
   const action = cleanText(payload.action || 'publish', 40).toLowerCase();
-  if (action !== 'publish') {
+  if (!['publish', 'delete'].includes(action)) {
     return privateJson({ ok: false, code: 'CONTENT_IMPORT_ACTION_UNSUPPORTED', message: 'Unsupported import review action.' }, { status: 400 });
   }
 
@@ -7162,6 +7162,42 @@ const handleAdminReviewContentImport = async (request, env) => {
   }
 
   const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  if (action === 'delete') {
+    const entriesByRef = await listEntriesForContentImports(db, [importRow]);
+    const linkedEntries = entriesByRef.get(importRow.filename) || [];
+    await db
+      .prepare(
+        `DELETE FROM content_imports
+         WHERE id = ?
+           AND import_type = 'novelforge'`
+      )
+      .bind(importRow.id)
+      .run();
+
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: 'novelforge_import_deleted_review_record',
+      targetType: 'content_import',
+      targetId: String(importRow.id),
+      targetSlug: importRow.filename,
+      metadata: {
+        linkedEntryIds: linkedEntries.map((entry) => entry.id),
+        linkedEntries: linkedEntries.length,
+        requestId: importRow.filename,
+        r2Key: importRow.r2_key,
+        status: importRow.status
+      }
+    });
+
+    return privateJson({
+      ok: true,
+      deletedImportId: importRow.id,
+      linkedEntries: linkedEntries.length,
+      message: `Deleted NovelForge import record #${importRow.id}. Linked content entries were kept.`,
+      stage: '8C'
+    });
+  }
+
   const beforeResponse = await db
     .prepare(
       `SELECT *
