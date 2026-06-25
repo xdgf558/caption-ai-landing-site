@@ -5530,6 +5530,33 @@ body.station-paper-page {
   gap: 14px;
 }
 
+.reader-bookmark-hint {
+  background: #f1e4d4;
+  border: 1px dashed #d8c8b8;
+  border-radius: 10px;
+  color: #5d5148;
+  line-height: 1.7;
+  margin: 10px 0 0;
+  max-width: 760px;
+  padding: 10px 12px;
+}
+
+.reader-bookmark-hint kbd {
+  background: #fffaf1;
+  border: 1px solid #c8b6a5;
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  color: #221b16;
+  display: inline-block;
+  font: inherit;
+  font-weight: 950;
+  line-height: 1;
+  margin: 0 2px;
+  min-width: 24px;
+  padding: 4px 7px;
+  text-align: center;
+}
+
 .reader-library-card h3,
 .reader-library-card p,
 .serial-access-gate h2,
