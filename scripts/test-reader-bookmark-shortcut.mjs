@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const astroSource = await readFile(new URL('../src/components/SerialChapterPage.astro', import.meta.url), 'utf8');
+const librarySource = await readFile(new URL('../src/pages/library/index.astro', import.meta.url), 'utf8');
+const globalCssSource = await readFile(new URL('../src/styles/global.css', import.meta.url), 'utf8');
 const workerSource = await readFile(new URL('../src/worker.js', import.meta.url), 'utf8');
 
 const count = (source, pattern) => (source.match(pattern) || []).length;
@@ -30,6 +32,18 @@ assert.ok(
 assert.ok(
   astroSource.includes("window.addEventListener('pagehide', clearBookmarkToastTimer"),
   'Astro bookmark toast timer should be cleared on pagehide.'
+);
+assert.ok(
+  librarySource.includes('reader-bookmark-hint') && librarySource.includes('按 <kbd>B</kbd> 可保存目前閱讀位置'),
+  'Member Center should explain the B shortcut in the bookmarks section.'
+);
+assert.ok(
+  librarySource.includes('手機可點右下角「保存書籤」按鈕'),
+  'Member Center bookmark hint should mention the mobile save button.'
+);
+assert.ok(
+  globalCssSource.includes('.reader-bookmark-hint') && globalCssSource.includes('.reader-bookmark-hint kbd'),
+  'Member Center bookmark shortcut hint should have visible hint and keycap styling.'
 );
 
 assert.ok(
