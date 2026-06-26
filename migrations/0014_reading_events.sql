@@ -30,3 +30,9 @@ CREATE INDEX IF NOT EXISTS idx_reading_events_session_created
 
 CREATE INDEX IF NOT EXISTS idx_reading_events_type_created
   ON reading_events (event_type, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_reading_events_ip_created
+  ON reading_events (ip_hash, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_reading_events_user_agent_created
+  ON reading_events (user_agent_hash, created_at);

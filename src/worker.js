@@ -316,10 +316,13 @@ const novelReadingEventTypes = new Set([
   'like',
   'bookmark',
   'comment_open',
-  'comment_post'
+  'comment_draft'
 ]);
 const novelReadingEventMaxBatchSize = 20;
 const novelReadingEventMaxMetadataKeys = 20;
+const novelReadingEventRateLimitWindowSeconds = 60;
+const novelReadingEventClientRateLimitPerMinute = 120;
+const novelReadingEventSessionRateLimitPerMinute = 60;
 const defaultReaderCreditPacks = [
   { credits: 10, priceAmount: 1, priceCurrency: 'USD', label: '10 SC Credits' },
   { credits: 50, priceAmount: 5, priceCurrency: 'USD', label: '50 SC Credits' },
@@ -5014,6 +5017,53 @@ const normalizeReadingEventPayload = (payload, options = {}) => {
   };
 };
 
+const countRecentReadingEventsByUserAgent = async (db, userAgentHash) => {
+  const row = await db
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM reading_events
+       WHERE user_agent_hash = ?
+         AND created_at >= datetime('now', '-' || ? || ' seconds')`
+    )
+    .bind(userAgentHash, novelReadingEventRateLimitWindowSeconds)
+    .first();
+  return Math.max(0, Number(row?.count || 0));
+};
+
+const countRecentReadingEventsBySession = async (db, sessionId) => {
+  const row = await db
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM reading_events
+       WHERE session_id = ?
+         AND created_at >= datetime('now', '-' || ? || ' seconds')`
+    )
+    .bind(sessionId, novelReadingEventRateLimitWindowSeconds)
+    .first();
+  return Math.max(0, Number(row?.count || 0));
+};
+
+const checkNovelReadingEventRateLimit = async (db, events, clientHashes) => {
+  const clientRecentCount = await countRecentReadingEventsByUserAgent(db, clientHashes.ipUaHash);
+  if (clientRecentCount + events.length > novelReadingEventClientRateLimitPerMinute) {
+    return { limited: true, scope: 'client', retryAfterSeconds: novelReadingEventRateLimitWindowSeconds };
+  }
+
+  const eventsBySession = new Map();
+  events.forEach((event) => {
+    eventsBySession.set(event.sessionId, (eventsBySession.get(event.sessionId) || 0) + 1);
+  });
+
+  for (const [sessionId, incomingCount] of eventsBySession) {
+    const sessionRecentCount = await countRecentReadingEventsBySession(db, sessionId);
+    if (sessionRecentCount + incomingCount > novelReadingEventSessionRateLimitPerMinute) {
+      return { limited: true, scope: 'session', retryAfterSeconds: novelReadingEventRateLimitWindowSeconds };
+    }
+  }
+
+  return { limited: false, scope: '', retryAfterSeconds: 0 };
+};
+
 const handleNovelReadingEvents = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return json({ ok: false, code: 'READING_EVENTS_DB_NOT_CONFIGURED', message: 'Reading events database is not configured.' }, { status: 500 });
@@ -5059,6 +5109,22 @@ const handleNovelReadingEvents = async (request, env) => {
     );
   } catch (error) {
     return json({ ok: false, code: error.code || 'INVALID_READING_EVENT', message: error.message }, { status: 400 });
+  }
+
+  const rateLimit = await checkNovelReadingEventRateLimit(db, events, clientHashes);
+  if (rateLimit.limited) {
+    return json(
+      {
+        ok: false,
+        accepted: 0,
+        code: 'READING_EVENTS_RATE_LIMITED',
+        message: 'Too many reading events. Please retry shortly.'
+      },
+      {
+        status: 429,
+        headers: { 'retry-after': String(rateLimit.retryAfterSeconds) }
+      }
+    );
   }
 
   const statements = events.map((event) =>
@@ -9574,6 +9640,8 @@ const renderDynamicReadingEventsScript = (route, serial, chapter) => {
       let readingIdleTimer;
       let readingScrollFrame = 0;
       let readingMaxDepth = 0;
+      let readingOpened = false;
+      let readingBodyObserver;
       let lastScrollTrackAt = 0;
       let lastScrollProgress = -1;
       const createReadingId = (prefix) => {
@@ -9592,9 +9660,7 @@ const renderDynamicReadingEventsScript = (route, serial, chapter) => {
         readingSessionId = createReadingId('r');
       }
       const getReaderBodyForEvents = () =>
-        document.querySelector('[data-reader-body]:not([hidden])') ||
-        document.querySelector('[data-protected-chapter-body]:not([hidden])') ||
-        document.querySelector('.prose--reader');
+        document.querySelector('[data-reader-body]:not([hidden])');
       const getReadableBlocksForEvents = (body) =>
         Array.from(body?.querySelectorAll('p, h2, h3, blockquote, li') || [])
           .filter((node) => node.textContent.trim().length > 0);
@@ -9651,8 +9717,12 @@ const renderDynamicReadingEventsScript = (route, serial, chapter) => {
           value: eventData.value
         }, options);
       };
-      window.stationCatReadingEvents = { track: trackReadingEvent };
+      window.stationCatReadingEvents = {
+        openWhenReady: () => openReadingSession(),
+        track: trackReadingEvent
+      };
       const markReadingActivity = () => {
+        if (!readingOpened) return;
         if (readingPaused) {
           readingPaused = false;
           trackReadingEvent('reading_resume');
@@ -9664,6 +9734,7 @@ const renderDynamicReadingEventsScript = (route, serial, chapter) => {
         }, 45000);
       };
       const handleReadingScroll = () => {
+        if (!readingOpened) return;
         markReadingActivity();
         if (readingScrollFrame) return;
         readingScrollFrame = window.requestAnimationFrame(() => {
@@ -9688,6 +9759,31 @@ const renderDynamicReadingEventsScript = (route, serial, chapter) => {
           }
         });
       };
+      const openReadingSession = () => {
+        if (readingOpened) return true;
+        if (!getReaderBodyForEvents()) return false;
+        readingOpened = true;
+        if (readingBodyObserver) {
+          readingBodyObserver.disconnect();
+          readingBodyObserver = null;
+        }
+        trackReadingEvent('chapter_open');
+        markReadingActivity();
+        return true;
+      };
+      const watchForReaderBody = () => {
+        if (openReadingSession()) return;
+        if (typeof MutationObserver !== 'function' || !document.body) return;
+        readingBodyObserver = new MutationObserver(() => {
+          openReadingSession();
+        });
+        readingBodyObserver.observe(document.body, {
+          attributes: true,
+          attributeFilter: ['hidden'],
+          childList: true,
+          subtree: true
+        });
+      };
       document.addEventListener('click', (event) => {
         const target = event.target instanceof HTMLElement ? event.target.closest('[data-reader-nav]') : null;
         if (!target) return;
@@ -9701,17 +9797,22 @@ const renderDynamicReadingEventsScript = (route, serial, chapter) => {
       });
       window.addEventListener('scroll', handleReadingScroll, { passive: true });
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') markReadingActivity();
+        if (document.visibilityState === 'visible') {
+          if (!openReadingSession()) return;
+          markReadingActivity();
+        }
       });
       window.addEventListener('pagehide', () => {
         window.clearTimeout(readingIdleTimer);
-        trackReadingEvent('chapter_close', {
-          value: readingMaxDepth,
-          metadata: { maxDepth: readingMaxDepth }
-        }, { beacon: true, keepalive: true });
+        if (readingBodyObserver) readingBodyObserver.disconnect();
+        if (readingOpened) {
+          trackReadingEvent('chapter_close', {
+            value: readingMaxDepth,
+            metadata: { maxDepth: readingMaxDepth }
+          }, { beacon: true, keepalive: true });
+        }
       }, { once: true });
-      trackReadingEvent('chapter_open');
-      markReadingActivity();
+      watchForReaderBody();
     })();
   </script>`;
 };
@@ -9787,7 +9888,7 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
           window.clearTimeout(commentPostTimer);
           if (commentLength > 0) {
             commentPostTimer = window.setTimeout(() => {
-              window.stationCatReadingEvents?.track?.('comment_post', {
+              window.stationCatReadingEvents?.track?.('comment_draft', {
                 value: commentLength,
                 metadata: { length: commentLength }
               });
@@ -10076,6 +10177,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
             body.innerHTML = payload.content.html;
             body.hidden = false;
             window.stationCatReaderBookmarks?.init?.(body, { restore: true });
+            window.stationCatReadingEvents?.openWhenReady?.();
             body.classList.add('prose--ready');
             gate.hidden = true;
           };

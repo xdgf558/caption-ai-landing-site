@@ -20,6 +20,12 @@ class MockBoundStatement {
       if (this.db.missingReadingEvents) throw new Error('D1_ERROR: no such table: reading_events');
       return null;
     }
+    if (/SELECT COUNT\(\*\) AS count\s+FROM reading_events\s+WHERE user_agent_hash = \?/i.test(this.sql)) {
+      return { count: this.db.clientRecentCount };
+    }
+    if (/SELECT COUNT\(\*\) AS count\s+FROM reading_events\s+WHERE session_id = \?/i.test(this.sql)) {
+      return { count: this.db.sessionRecentCount };
+    }
     return null;
   }
 
@@ -46,8 +52,10 @@ class MockStatement {
 
 class MockDb {
   constructor(options = {}) {
+    this.clientRecentCount = Number(options.clientRecentCount || 0);
     this.executed = [];
     this.missingReadingEvents = Boolean(options.missingReadingEvents);
+    this.sessionRecentCount = Number(options.sessionRecentCount || 0);
   }
 
   prepare(sql) {
@@ -65,6 +73,7 @@ assert.match(migrationSource, /CREATE TABLE IF NOT EXISTS reading_events/);
 assert.match(migrationSource, /client_event_id TEXT NOT NULL UNIQUE/);
 assert.match(migrationSource, /user_agent_hash TEXT NOT NULL DEFAULT ''/);
 assert.match(migrationSource, /idx_reading_events_chapter_created/);
+assert.match(migrationSource, /idx_reading_events_user_agent_created/);
 
 const astroSource = read('src/components/SerialChapterPage.astro');
 assert.match(astroSource, /readingEventsEndpoint = '\/api\/novels\/reading-events'/);
@@ -75,7 +84,14 @@ assert.match(astroSource, /trackReadingEvent\('reading_pause'\)/);
 assert.match(astroSource, /trackReadingEvent\('reading_resume'\)/);
 assert.match(astroSource, /data-reader-nav="next"/);
 assert.match(astroSource, /window\.stationCatReadingEvents\?\.track\?\.\('bookmark'/);
-assert.match(astroSource, /window\.stationCatReadingEvents\?\.track\?\.\('comment_post'/);
+assert.match(astroSource, /window\.stationCatReadingEvents\?\.track\?\.\('comment_draft'/);
+assert.doesNotMatch(astroSource, /comment_post/);
+const astroReadingScript = astroSource.slice(
+  astroSource.indexOf("const readingEventsEndpoint = '/api/novels/reading-events'"),
+  astroSource.indexOf('const protectedBody = document.querySelector')
+);
+assert.doesNotMatch(astroReadingScript, /serial-reader-shell__body/);
+assert.match(astroReadingScript, /openWhenReady/);
 
 const workerSource = read('src/worker.js');
 assert.match(workerSource, /const novelReadingEventsPath = '\/api\/novels\/reading-events'/);
@@ -83,6 +99,13 @@ assert.match(workerSource, /const novelReadingEventTypes = new Set/);
 assert.match(workerSource, /renderDynamicReadingEventsScript/);
 assert.match(workerSource, /data-reader-nav="prev"/);
 assert.match(workerSource, /handleNovelReadingEvents/);
+assert.match(workerSource, /READING_EVENTS_RATE_LIMITED/);
+const workerReadingScript = workerSource.slice(
+  workerSource.indexOf('const renderDynamicReadingEventsScript'),
+  workerSource.indexOf('const renderDynamicReaderInteractions')
+);
+assert.doesNotMatch(workerReadingScript, /prose--reader/);
+assert.match(workerReadingScript, /openWhenReady/);
 
 const normalized = hooks.normalizeReadingEventPayload({
   blockIndex: 42,
@@ -175,6 +198,22 @@ const invalidResponse = await hooks.handleNovelReadingEvents(
   { WAITLIST_DB: new MockDb() }
 );
 assert.equal(invalidResponse.status, 400);
+
+const rateLimitedResponse = await hooks.handleNovelReadingEvents(
+  new Request('https://wwwstationcat.org/api/novels/reading-events', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'user-agent': 'reader-test',
+      'cf-connecting-ip': '203.0.113.10'
+    },
+    body: JSON.stringify({ eventType: 'chapter_open', seriesSlug: 'book', chapterSlug: 'ch1', sessionId: 'session-abc' })
+  }),
+  { WAITLIST_DB: new MockDb({ sessionRecentCount: 60 }) }
+);
+assert.equal(rateLimitedResponse.status, 429);
+assert.equal(rateLimitedResponse.headers.get('retry-after'), '60');
+assert.equal((await rateLimitedResponse.json()).code, 'READING_EVENTS_RATE_LIMITED');
 
 const missingResponse = await hooks.handleNovelReadingEvents(
   new Request('https://wwwstationcat.org/api/novels/reading-events', {
