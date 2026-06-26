@@ -356,4 +356,7 @@ export const formatReadingMinutes = (minutes: number | undefined, locale: SiteLo
 
 export const getSeriesHref = (basePath: string, seriesSlug: string) => `${basePath}${seriesSlug}/`;
 
-export const getChapterHref = (basePath: string, seriesSlug: string, chapterSlug: string) => `${basePath}${seriesSlug}/${chapterSlug}/`;
+export const getChapterHref = (basePath: string, seriesSlug: string, chapterSlug: string) =>
+  basePath === '/novel/'
+    ? `${basePath}${seriesSlug}/chapter/${chapterSlug}/`
+    : `${basePath}${seriesSlug}/${chapterSlug}/`;

@@ -1,0 +1,47 @@
+---
+import { getCollection, render } from 'astro:content';
+import SerialDetailPage from '../../../components/SerialDetailPage.astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getFirstChapter, getLatestChapter, getPublishedChapters, getVisibleSerials, serialsCopy } from '../../../data/serials';
+
+export async function getStaticPaths() {
+  const serials = getVisibleSerials(await getCollection('serials'));
+  return serials.map((serial) => ({
+    params: { bookId: serial.data.seriesSlug },
+    props: { serial }
+  }));
+}
+
+const locale = 'zh-Hant';
+const basePath = '/novel/';
+const copy = serialsCopy[locale];
+const { serial } = Astro.props;
+const chapterContent = getPublishedChapters(await getCollection('serialChapters'), serial.data.seriesSlug);
+const firstChapter = getFirstChapter(chapterContent);
+const latestChapter = getLatestChapter(chapterContent);
+const { Content } = await render(serial);
+---
+
+<BaseLayout
+  title={`${serial.data.title} | ${copy.title}`}
+  description={serial.data.description}
+  lang="zh-Hant"
+  canonicalPath={`${basePath}${serial.data.seriesSlug}/`}
+  bodyClass="station-home"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: `${basePath}${serial.data.seriesSlug}/` },
+    { hrefLang: 'x-default', href: `${basePath}${serial.data.seriesSlug}/` }
+  ]}
+>
+  <SerialDetailPage
+    basePath={basePath}
+    chapterContent={chapterContent}
+    copy={copy}
+    firstChapter={firstChapter}
+    homePath="/"
+    latestChapter={latestChapter}
+    locale={locale}
+    serial={serial}
+    Content={Content}
+  />
+</BaseLayout>

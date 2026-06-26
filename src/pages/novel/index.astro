@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import SerialsHubPage from '../../components/SerialsHubPage.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLatestChapter, getPublishedChapters, getVisibleSerials, serialsCopy } from '../../data/serials';
+
+const locale = 'zh-Hant';
+const basePath = '/novel/';
+const copy = serialsCopy[locale];
+const serials = getVisibleSerials(await getCollection('serials'));
+const featuredSerial = serials.find((serial) => serial.data.featured) ?? serials[0];
+const featuredLatestChapter = featuredSerial
+  ? getLatestChapter(getPublishedChapters(await getCollection('serialChapters'), featuredSerial.data.seriesSlug))
+  : undefined;
+---
+
+<BaseLayout
+  title={copy.title}
+  description={copy.description}
+  lang="zh-Hant"
+  canonicalPath={basePath}
+  bodyClass="station-home"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/novel/' },
+    { hrefLang: 'x-default', href: '/novel/' }
+  ]}
+>
+  <SerialsHubPage basePath={basePath} copy={copy} featuredLatestChapter={featuredLatestChapter} featuredSerial={featuredSerial} locale={locale} serials={serials} />
+</BaseLayout>

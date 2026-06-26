@@ -29,6 +29,7 @@ const { basePath, chapter, chapterList, copy, locale, nextChapter, previousChapt
 const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
 const chapterHref = getChapterHref(basePath, serial.data.seriesSlug, chapter.data.chapterSlug);
 const isProtectedChapter = chapter.data.access !== 'free';
+const isNovelV2Reader = basePath === '/novel/';
 const unlockOrderType = chapter.data.access === 'supporter' ? 'supporter' : 'chapter';
 const bookmarkCopy = {
   en: {
@@ -62,6 +63,52 @@ const bookmarkCopy = {
     saved: '书签已保存，下次可以从会员中心继续阅读。',
     signInRequired: '请先登录，再保存书签。',
     failed: '书签保存失败。'
+  }
+}[locale];
+const interactionCopy = {
+  en: {
+    eyebrow: 'Reader actions',
+    title: 'Keep your reaction here',
+    body: 'Like this chapter, save your reading point, or keep a private comment draft for later.',
+    like: 'Like',
+    liked: 'Liked',
+    comment: 'Comment',
+    commentLabel: 'Private comment draft',
+    commentPlaceholder: 'Write a note about this chapter...',
+    commentSaved: 'Draft saved on this device.'
+  },
+  ja: {
+    eyebrow: '読者アクション',
+    title: '反応をここに残す',
+    body: 'この章にいいねを付けたり、読書位置を保存したり、コメントの下書きを残せます。',
+    like: 'いいね',
+    liked: 'いいね済み',
+    comment: 'コメント',
+    commentLabel: '非公開コメント下書き',
+    commentPlaceholder: 'この章についてメモを書く...',
+    commentSaved: 'この端末に下書きを保存しました。'
+  },
+  'zh-Hant': {
+    eyebrow: '讀者互動',
+    title: '把反應先留在這裡',
+    body: '可以喜歡本章、保存目前閱讀位置，也可以先寫一段自己的評論草稿。',
+    like: '喜歡',
+    liked: '已喜歡',
+    comment: '評論',
+    commentLabel: '私人評論草稿',
+    commentPlaceholder: '寫下你對這章的想法...',
+    commentSaved: '草稿已保存在這台裝置。'
+  },
+  'zh-Hans': {
+    eyebrow: '读者互动',
+    title: '把反应先留在这里',
+    body: '可以喜欢本章、保存目前阅读位置，也可以先写一段自己的评论草稿。',
+    like: '喜欢',
+    liked: '已喜欢',
+    comment: '评论',
+    commentLabel: '私人评论草稿',
+    commentPlaceholder: '写下你对这章的想法...',
+    commentSaved: '草稿已保存在这台设备。'
   }
 }[locale];
 const accessGateCopy = {
@@ -253,6 +300,28 @@ const accessGateCopy = {
   )}
 
   <footer class="serial-reader-shell__footer">
+    {isNovelV2Reader && (
+      <section class="serial-reader-interactions" data-reader-v2-interactions>
+        <div>
+          <p class="station-kicker">{interactionCopy.eyebrow}</p>
+          <h2>{interactionCopy.title}</h2>
+          <p>{interactionCopy.body}</p>
+        </div>
+        <div class="button-row">
+          <button class="button button-secondary" type="button" data-reader-like aria-pressed="false">
+            {interactionCopy.like}
+          </button>
+          <button class="button button-secondary" type="button" data-reader-comment-toggle aria-expanded="false" aria-controls="reader-comment-panel">
+            {interactionCopy.comment}
+          </button>
+        </div>
+        <div class="reader-comment-panel" id="reader-comment-panel" data-reader-comment-panel hidden>
+          <label for="reader-comment-draft">{interactionCopy.commentLabel}</label>
+          <textarea id="reader-comment-draft" data-reader-comment-draft rows="4" placeholder={interactionCopy.commentPlaceholder}></textarea>
+          <div class="reader-status" data-reader-comment-status role="status" aria-live="polite"></div>
+        </div>
+      </section>
+    )}
     <div class="button-row">
       {previousChapter ? (
         <a class="button button-secondary" href={getChapterHref(basePath, serial.data.seriesSlug, previousChapter.data.chapterSlug)}>{copy.previousChapter}</a>
@@ -458,6 +527,66 @@ const accessGateCopy = {
     saveBookmark();
   });
 </script>
+
+{isNovelV2Reader && (
+  <script define:vars={{ interactionCopy, interactionKey: `${serial.data.seriesSlug}:${chapter.data.chapterSlug}` }}>
+    const interactionPanel = document.querySelector('[data-reader-v2-interactions]');
+    const likeButton = interactionPanel?.querySelector('[data-reader-like]');
+    const commentToggle = interactionPanel?.querySelector('[data-reader-comment-toggle]');
+    const commentPanel = interactionPanel?.querySelector('[data-reader-comment-panel]');
+    const commentDraft = interactionPanel?.querySelector('[data-reader-comment-draft]');
+    const commentStatus = interactionPanel?.querySelector('[data-reader-comment-status]');
+    const storagePrefix = `stationcat:novel-v2:${interactionKey}`;
+    const likedKey = `${storagePrefix}:liked`;
+    const commentKey = `${storagePrefix}:comment-draft`;
+
+    const setLikedState = (liked) => {
+      if (!likeButton) return;
+      likeButton.setAttribute('aria-pressed', liked ? 'true' : 'false');
+      likeButton.textContent = liked ? interactionCopy.liked : interactionCopy.like;
+    };
+
+    try {
+      setLikedState(window.localStorage.getItem(likedKey) === '1');
+      if (commentDraft) commentDraft.value = window.localStorage.getItem(commentKey) || '';
+    } catch {
+      setLikedState(false);
+    }
+
+    likeButton?.addEventListener('click', () => {
+      const nextLiked = likeButton.getAttribute('aria-pressed') !== 'true';
+      setLikedState(nextLiked);
+      try {
+        window.localStorage.setItem(likedKey, nextLiked ? '1' : '0');
+      } catch {
+        // Local interaction can still work without persistence.
+      }
+    });
+
+    commentToggle?.addEventListener('click', () => {
+      if (!commentPanel) return;
+      const expanded = commentPanel.hidden;
+      commentPanel.hidden = !expanded;
+      commentToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      if (expanded) commentDraft?.focus();
+    });
+
+    commentDraft?.addEventListener('input', () => {
+      try {
+        window.localStorage.setItem(commentKey, commentDraft.value);
+        if (commentStatus) {
+          commentStatus.textContent = interactionCopy.commentSaved;
+          commentStatus.dataset.tone = 'success';
+        }
+      } catch {
+        if (commentStatus) {
+          commentStatus.textContent = '';
+          commentStatus.dataset.tone = 'neutral';
+        }
+      }
+    });
+  </script>
+)}
 
 {isProtectedChapter && (
   <script define:vars={{ accessGateCopy }}>
