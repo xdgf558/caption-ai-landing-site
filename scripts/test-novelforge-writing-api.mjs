@@ -242,7 +242,11 @@ const chapterResponse = await hooks.handleNovelForgeAnalytics(
 const chapterBody = await chapterResponse.json();
 assert.equal(chapterResponse.status, 200);
 assert.equal(chapterBody.chapter.remoteId, 'chapter_8');
+assert.equal(chapterBody.chapter.paths.public, '/novel/book/chapter/ch8/');
+assert.equal(chapterBody.chapter.paths.legacy, '/zh-hant/works/book/ch8/');
 assert.equal(chapterBody.chapter.paths.readerV2, '/novel/book/chapter/ch8/');
+assert.equal(chapterBody.chapter.urls.public, 'https://wwwstationcat.org/novel/book/chapter/ch8/');
+assert.equal(chapterBody.chapter.urls.legacy, 'https://wwwstationcat.org/zh-hant/works/book/ch8/');
 assert.equal(chapterBody.stats.windowDays, 7);
 assert.equal(chapterBody.stats.chapterSlug, 'ch8');
 

@@ -86,7 +86,7 @@ If `changedItems` is omitted and `onlyChanged` is `false`, the Worker expands th
   "ok": true,
   "remoteBookId": "work_123",
   "previewUrl": "https://wwwstationcat.org/admin-v2/?contentId=123",
-  "publishUrl": "https://wwwstationcat.org/zh-hant/works/novel-slug/",
+  "publishUrl": "https://wwwstationcat.org/novel/novel-slug/",
   "message": "Imported as draft.",
   "items": [
     {
@@ -148,13 +148,10 @@ The Admin 2.0 page reads `contentId` on boot and opens the imported item for rev
 Publish link:
 
 ```text
-https://wwwstationcat.org/{localeSegment}/works/{seriesSlug}/
+https://wwwstationcat.org/novel/{seriesSlug}/
 ```
 
-Current locale segment examples:
-
-- `zh-Hant` -> `/zh-hant/`
-- `en` -> `/`
+Novel publish links now use the V2 reader entry without a locale prefix. Older `/works/` links remain compatibility redirects.
 
 ## Remote ID Rules
 
