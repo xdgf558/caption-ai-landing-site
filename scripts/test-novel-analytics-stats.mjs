@@ -118,7 +118,7 @@ class MockBoundStatement {
           { count: 1, event_type: 'chapter_close' },
           { count: 1, event_type: 'like' },
           { count: 1, event_type: 'bookmark' },
-          { count: 1, event_type: 'comment_draft' }
+          { count: 1, event_type: 'comment_submit' }
         ]
       };
     }
@@ -221,7 +221,7 @@ const metrics = hooks.buildNovelChapterStatsMetrics({
     { count: 2, event_type: 'chapter_open' },
     { count: 1, event_type: 'like' },
     { count: 1, event_type: 'bookmark' },
-    { count: 1, event_type: 'comment_draft' }
+    { count: 1, event_type: 'comment_submit' }
   ],
   locale: 'zh-Hant',
   seriesSlug: 'book',

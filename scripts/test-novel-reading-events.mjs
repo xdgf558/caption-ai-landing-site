@@ -85,6 +85,8 @@ assert.match(astroSource, /trackReadingEvent\('reading_resume'\)/);
 assert.match(astroSource, /data-reader-nav="next"/);
 assert.match(astroSource, /window\.stationCatReadingEvents\?\.track\?\.\('bookmark'/);
 assert.match(astroSource, /window\.stationCatReadingEvents\?\.track\?\.\('comment_draft'/);
+assert.match(astroSource, /sessionId: \(\) => readingSessionId/);
+assert.match(astroSource, /commentSubmitEndpoint = '\/api\/readers\/comments'/);
 assert.doesNotMatch(astroSource, /comment_post/);
 const astroReadingScript = astroSource.slice(
   astroSource.indexOf("const readingEventsEndpoint = '/api/novels/reading-events'"),
@@ -96,6 +98,7 @@ assert.match(astroReadingScript, /openWhenReady/);
 const workerSource = read('src/worker.js');
 assert.match(workerSource, /const novelReadingEventsPath = '\/api\/novels\/reading-events'/);
 assert.match(workerSource, /const novelReadingEventTypes = new Set/);
+assert.match(workerSource, /'comment_submit'/);
 assert.match(workerSource, /renderDynamicReadingEventsScript/);
 assert.match(workerSource, /data-reader-nav="prev"/);
 assert.match(workerSource, /handleNovelReadingEvents/);
@@ -106,6 +109,7 @@ const workerReadingScript = workerSource.slice(
 );
 assert.doesNotMatch(workerReadingScript, /prose--reader/);
 assert.match(workerReadingScript, /openWhenReady/);
+assert.match(workerReadingScript, /sessionId: \(\) => readingSessionId/);
 
 const normalized = hooks.normalizeReadingEventPayload({
   blockIndex: 42,

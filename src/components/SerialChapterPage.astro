@@ -69,46 +69,82 @@ const interactionCopy = {
   en: {
     eyebrow: 'Reader actions',
     title: 'Keep your reaction here',
-    body: 'Like this chapter, save your reading point, or keep a private comment draft for later.',
+    body: 'Like this chapter, save your reading point, or submit a comment for review.',
     like: 'Like',
     liked: 'Liked',
     comment: 'Comment',
-    commentLabel: 'Private comment draft',
+    commentLabel: 'Comment',
     commentPlaceholder: 'Write a note about this chapter...',
-    commentSaved: 'Draft saved on this device.'
+    commentSaved: 'Draft saved on this device.',
+    commentSubmit: 'Submit comment',
+    commentSubmitting: 'Submitting comment...',
+    commentSubmitted: 'Comment submitted. It will appear after review.',
+    commentFailed: 'Could not load comments.',
+    commentSignInRequired: 'Please sign in before submitting a comment.',
+    commentTooShort: 'Write at least 2 characters before submitting.',
+    commentsTitle: 'Reader comments',
+    commentLoading: 'Loading comments...',
+    commentEmpty: 'No public comments yet.'
   },
   ja: {
     eyebrow: '読者アクション',
     title: '反応をここに残す',
-    body: 'この章にいいねを付けたり、読書位置を保存したり、コメントの下書きを残せます。',
+    body: 'この章にいいねを付けたり、読書位置を保存したり、レビュー用コメントを送れます。',
     like: 'いいね',
     liked: 'いいね済み',
     comment: 'コメント',
-    commentLabel: '非公開コメント下書き',
+    commentLabel: 'コメント',
     commentPlaceholder: 'この章についてメモを書く...',
-    commentSaved: 'この端末に下書きを保存しました。'
+    commentSaved: 'この端末に下書きを保存しました。',
+    commentSubmit: 'コメントを送信',
+    commentSubmitting: 'コメントを送信しています...',
+    commentSubmitted: 'コメントを送信しました。確認後に表示されます。',
+    commentFailed: 'コメントを読み込めませんでした。',
+    commentSignInRequired: 'コメントを送る前にログインしてください。',
+    commentTooShort: '2文字以上入力してから送信してください。',
+    commentsTitle: '読者コメント',
+    commentLoading: 'コメントを読み込んでいます...',
+    commentEmpty: '公開コメントはまだありません。'
   },
   'zh-Hant': {
     eyebrow: '讀者互動',
     title: '把反應先留在這裡',
-    body: '可以喜歡本章、保存目前閱讀位置，也可以先寫一段自己的評論草稿。',
+    body: '可以喜歡本章、保存目前閱讀位置，也可以提交評論，審核通過後公開展示。',
     like: '喜歡',
     liked: '已喜歡',
     comment: '評論',
-    commentLabel: '私人評論草稿',
+    commentLabel: '評論內容',
     commentPlaceholder: '寫下你對這章的想法...',
-    commentSaved: '草稿已保存在這台裝置。'
+    commentSaved: '草稿已保存在這台裝置。',
+    commentSubmit: '提交評論',
+    commentSubmitting: '正在提交評論...',
+    commentSubmitted: '評論已提交，審核通過後會展示。',
+    commentFailed: '評論載入失敗。',
+    commentSignInRequired: '請先登入會員，再提交評論。',
+    commentTooShort: '至少寫 2 個字再提交。',
+    commentsTitle: '讀者評論',
+    commentLoading: '正在載入評論...',
+    commentEmpty: '目前還沒有公開評論。'
   },
   'zh-Hans': {
     eyebrow: '读者互动',
     title: '把反应先留在这里',
-    body: '可以喜欢本章、保存目前阅读位置，也可以先写一段自己的评论草稿。',
+    body: '可以喜欢本章、保存目前阅读位置，也可以提交评论，审核通过后公开展示。',
     like: '喜欢',
     liked: '已喜欢',
     comment: '评论',
-    commentLabel: '私人评论草稿',
+    commentLabel: '评论内容',
     commentPlaceholder: '写下你对这章的想法...',
-    commentSaved: '草稿已保存在这台设备。'
+    commentSaved: '草稿已保存在这台设备。',
+    commentSubmit: '提交评论',
+    commentSubmitting: '正在提交评论...',
+    commentSubmitted: '评论已提交，审核通过后会展示。',
+    commentFailed: '评论加载失败。',
+    commentSignInRequired: '请先登录会员，再提交评论。',
+    commentTooShort: '至少写 2 个字再提交。',
+    commentsTitle: '读者评论',
+    commentLoading: '正在加载评论...',
+    commentEmpty: '目前还没有公开评论。'
   }
 }[locale];
 const accessGateCopy = {
@@ -318,8 +354,17 @@ const accessGateCopy = {
         <div class="reader-comment-panel" id="reader-comment-panel" data-reader-comment-panel hidden>
           <label for="reader-comment-draft">{interactionCopy.commentLabel}</label>
           <textarea id="reader-comment-draft" data-reader-comment-draft rows="4" placeholder={interactionCopy.commentPlaceholder}></textarea>
+          <div class="button-row">
+            <button class="button button-primary" type="button" data-reader-comment-submit>{interactionCopy.commentSubmit}</button>
+          </div>
           <div class="reader-status" data-reader-comment-status role="status" aria-live="polite"></div>
         </div>
+        <section class="reader-comments" aria-labelledby="reader-comments-title">
+          <h3 id="reader-comments-title">{interactionCopy.commentsTitle}</h3>
+          <div class="reader-comments-list" data-reader-comments-list>
+            <p class="reader-status">{interactionCopy.commentLoading}</p>
+          </div>
+        </section>
       </section>
     )}
     <div class="button-row">
@@ -538,17 +583,81 @@ const accessGateCopy = {
 </script>
 
 {isNovelV2Reader && (
-  <script define:vars={{ interactionCopy, interactionKey: `${serial.data.seriesSlug}:${chapter.data.chapterSlug}` }}>
+  <script define:vars={{ interactionCopy, interactionKey: `${serial.data.seriesSlug}:${chapter.data.chapterSlug}`, commentData: {
+    chapterSlug: chapter.data.chapterSlug,
+    locale,
+    seriesSlug: serial.data.seriesSlug,
+    sourcePath: chapterHref
+  } }}>
     const interactionPanel = document.querySelector('[data-reader-v2-interactions]');
+    const commentsEndpoint = '/api/novels/comments';
+    const commentSubmitEndpoint = '/api/readers/comments';
     const likeButton = interactionPanel?.querySelector('[data-reader-like]');
     const commentToggle = interactionPanel?.querySelector('[data-reader-comment-toggle]');
     const commentPanel = interactionPanel?.querySelector('[data-reader-comment-panel]');
     const commentDraft = interactionPanel?.querySelector('[data-reader-comment-draft]');
+    const commentSubmit = interactionPanel?.querySelector('[data-reader-comment-submit]');
     const commentStatus = interactionPanel?.querySelector('[data-reader-comment-status]');
+    const commentsList = interactionPanel?.querySelector('[data-reader-comments-list]');
     const storagePrefix = `stationcat:novel-v2:${interactionKey}`;
     const likedKey = `${storagePrefix}:liked`;
     const commentKey = `${storagePrefix}:comment-draft`;
     let commentPostTimer;
+
+    const escapeClientHtml = (value) => String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+    const formatClientDate = (value) => {
+      if (!value) return '';
+      const date = new Date(String(value).includes('T') ? value : `${String(value).replace(' ', 'T')}Z`);
+      if (Number.isNaN(date.getTime())) return '';
+      return date.toLocaleString(document.documentElement.lang || undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    };
+
+    const setCommentStatus = (message, tone = 'neutral') => {
+      if (!commentStatus) return;
+      commentStatus.textContent = message || '';
+      commentStatus.dataset.tone = tone;
+    };
+
+    const renderComments = (comments) => {
+      if (!commentsList) return;
+      if (!comments.length) {
+        commentsList.innerHTML = `<p class="reader-status">${escapeClientHtml(interactionCopy.commentEmpty)}</p>`;
+        return;
+      }
+      commentsList.innerHTML = comments.map((comment) => `
+        <article class="reader-comment-item">
+          <div>
+            <strong>${escapeClientHtml(comment.displayName || '读者')}</strong>
+            <time>${escapeClientHtml(formatClientDate(comment.createdAt))}</time>
+          </div>
+          <p>${escapeClientHtml(comment.body).replace(/\n/g, '<br>')}</p>
+        </article>
+      `).join('');
+    };
+
+    const loadComments = async () => {
+      if (!commentsList) return;
+      commentsList.innerHTML = `<p class="reader-status">${escapeClientHtml(interactionCopy.commentLoading)}</p>`;
+      const params = new URLSearchParams({
+        chapterSlug: commentData.chapterSlug,
+        locale: commentData.locale,
+        seriesSlug: commentData.seriesSlug
+      });
+      try {
+        const response = await fetch(`${commentsEndpoint}?${params.toString()}`);
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) throw new Error(payload.message || 'Failed');
+        renderComments(payload.comments || []);
+      } catch {
+        commentsList.innerHTML = `<p class="reader-status" data-tone="error">${escapeClientHtml(interactionCopy.commentFailed)}</p>`;
+      }
+    };
 
     const setLikedState = (liked) => {
       if (!likeButton) return;
@@ -601,18 +710,54 @@ const accessGateCopy = {
       }
       try {
         window.localStorage.setItem(commentKey, commentDraft.value);
-        if (commentStatus) {
-          commentStatus.textContent = interactionCopy.commentSaved;
-          commentStatus.dataset.tone = 'success';
-        }
+        setCommentStatus(interactionCopy.commentSaved, 'success');
       } catch {
-        if (commentStatus) {
-          commentStatus.textContent = '';
-          commentStatus.dataset.tone = 'neutral';
-        }
+        setCommentStatus('', 'neutral');
       }
     });
 
+    commentSubmit?.addEventListener('click', async () => {
+      const body = commentDraft?.value.trim() || '';
+      if (body.length < 2) {
+        setCommentStatus(interactionCopy.commentTooShort, 'error');
+        return;
+      }
+      commentSubmit.disabled = true;
+      setCommentStatus(interactionCopy.commentSubmitting, 'neutral');
+      try {
+        const response = await fetch(commentSubmitEndpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            ...commentData,
+            body,
+            sessionId: window.stationCatReadingEvents?.sessionId?.() || '',
+            sourcePath: window.location.pathname + window.location.hash
+          })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (response.status === 401 || payload.code === 'SIGN_IN_REQUIRED') {
+          setCommentStatus(interactionCopy.commentSignInRequired, 'error');
+          window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`;
+          return;
+        }
+        if (!response.ok || payload.ok === false) throw new Error(payload.message || interactionCopy.commentFailed);
+        if (commentDraft) commentDraft.value = '';
+        try {
+          window.localStorage.removeItem(commentKey);
+        } catch {
+          // Ignore unavailable localStorage.
+        }
+        setCommentStatus(payload.message || interactionCopy.commentSubmitted, 'success');
+        await loadComments();
+      } catch (error) {
+        setCommentStatus(error.message || interactionCopy.commentFailed, 'error');
+      } finally {
+        commentSubmit.disabled = false;
+      }
+    });
+
+    loadComments();
     window.addEventListener('pagehide', () => window.clearTimeout(commentPostTimer), { once: true });
   </script>
 )}
@@ -725,6 +870,7 @@ const accessGateCopy = {
 
     window.stationCatReadingEvents = {
       openWhenReady: () => openReadingSession(),
+      sessionId: () => readingSessionId,
       track: trackReadingEvent
     };
 

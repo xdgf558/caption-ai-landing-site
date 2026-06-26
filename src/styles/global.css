@@ -5212,6 +5212,49 @@ body.station-paper-page {
   resize: vertical;
 }
 
+.reader-comments {
+  display: grid;
+  gap: 10px;
+}
+
+.reader-comments h3 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.reader-comments-list {
+  display: grid;
+  gap: 10px;
+}
+
+.reader-comment-item {
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid #d4c5b3;
+  border-radius: 12px;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.reader-comment-item div {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.reader-comment-item time {
+  color: #5f6e68;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.reader-comment-item p {
+  color: #221b16;
+  line-height: 1.7;
+}
+
 .serial-bookmark-fab,
 .serial-bookmark-toast {
   display: none;

@@ -316,13 +316,19 @@ const novelReadingEventTypes = new Set([
   'like',
   'bookmark',
   'comment_open',
-  'comment_draft'
+  'comment_draft',
+  'comment_submit'
 ]);
 const novelReadingEventMaxBatchSize = 20;
 const novelReadingEventMaxMetadataKeys = 20;
 const novelReadingEventRateLimitWindowSeconds = 60;
 const novelReadingEventClientRateLimitPerMinute = 120;
 const novelReadingEventSessionRateLimitPerMinute = 60;
+const readerCommentStatuses = new Set(['pending', 'approved', 'hidden', 'deleted']);
+const readerCommentMinBodyLength = 2;
+const readerCommentMaxBodyLength = 1200;
+const readerCommentSubmitWindowSeconds = 60;
+const readerCommentSubmitLimitPerMinute = 5;
 const novelStatsDefaultSinceDays = 30;
 const novelStatsMaxAggregateTargets = 80;
 const defaultReaderCreditPacks = [
@@ -1344,6 +1350,42 @@ const novelPaymentEventToJson = (row) => ({
   receivedAt: row.received_at
 });
 
+const readerCommentPublicName = (row) => {
+  const displayName = cleanText(row.display_name, 80);
+  if (displayName) return displayName;
+  const username = cleanText(row.username, 80);
+  if (username) return username;
+  const email = normalizeEmail(row.email);
+  const localPart = cleanText(email.split('@')[0], 40);
+  return localPart ? `${localPart.slice(0, 2)}***` : '读者';
+};
+
+const readerCommentToJson = (row, options = {}) => {
+  const admin = Boolean(options.admin);
+  const comment = {
+    id: row.id,
+    seriesSlug: row.series_slug,
+    chapterSlug: row.chapter_slug,
+    locale: row.locale,
+    body: row.body,
+    status: row.status,
+    displayName: readerCommentPublicName(row),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+  if (admin) {
+    comment.accountId = row.account_id;
+    comment.email = row.email || '';
+    comment.username = row.username || '';
+    comment.sourcePath = row.source_path || '';
+    comment.reviewedBy = row.reviewed_by || '';
+    comment.reviewedAt = row.reviewed_at || '';
+    comment.hiddenReason = row.hidden_reason || '';
+    comment.metadata = parseStoredJson(row.metadata_json, {});
+  }
+  return comment;
+};
+
 const contentEntryTypes = new Set(['blog_post', 'novel_series', 'novel_chapter']);
 const contentLocales = new Set(['zh-Hant', 'zh-Hans', 'en', 'ja']);
 const contentStatuses = new Set(['draft', 'scheduled', 'published', 'archived']);
@@ -2165,6 +2207,7 @@ const isMissingReaderTotpCredentialsError = (error) => /no such table: reader_to
 const isMissingReaderTotpResetAttemptsError = (error) =>
   /no such table: reader_totp_reset_attempts/i.test(error?.message || '');
 const isMissingReadingEventsError = (error) => /no such table: reading_events/i.test(error?.message || '');
+const isMissingReaderCommentsError = (error) => /no such table: reader_comments/i.test(error?.message || '');
 const isMissingChapterStatsError = (error) => /no such table: chapter_stats/i.test(error?.message || '');
 const isMissingAiInsightsError = (error) => /no such table: ai_insights/i.test(error?.message || '');
 
@@ -2214,6 +2257,16 @@ const ensureReadingEventsReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingReadingEventsError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureReaderCommentsReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM reader_comments LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingReaderCommentsError(error)) return false;
     throw error;
   }
 };
@@ -5103,6 +5156,254 @@ const checkNovelReadingEventRateLimit = async (db, events, clientHashes) => {
   return { limited: false, scope: '', retryAfterSeconds: 0 };
 };
 
+const normalizeReaderCommentBody = (value) => {
+  const body = String(value || '')
+    .replace(/\r\n?/g, '\n')
+    .trim();
+  if (body.length < readerCommentMinBodyLength) {
+    const error = new Error('评论内容太短。');
+    error.code = 'READER_COMMENT_TOO_SHORT';
+    throw error;
+  }
+  if (body.length > readerCommentMaxBodyLength) {
+    const error = new Error(`评论最多 ${readerCommentMaxBodyLength} 个字符。`);
+    error.code = 'READER_COMMENT_TOO_LONG';
+    throw error;
+  }
+  return body;
+};
+
+const selectReaderCommentById = async (db, id) =>
+  db
+    .prepare(
+      `SELECT
+        reader_comments.*,
+        reader_accounts.email,
+        reader_accounts.display_name,
+        reader_password_credentials.username
+       FROM reader_comments
+       INNER JOIN reader_accounts ON reader_accounts.id = reader_comments.account_id
+       LEFT JOIN reader_password_credentials ON reader_password_credentials.account_id = reader_accounts.id
+       WHERE reader_comments.id = ?
+       LIMIT 1`
+    )
+    .bind(id)
+    .first();
+
+const insertCommentSubmitReadingEvent = async (db, request, session, payload, comment, clientHashes) => {
+  if (!(await ensureReadingEventsReady(db))) return;
+  const event = normalizeReadingEventPayload(
+    {
+      blockIndex: payload.blockIndex,
+      chapterSlug: comment.chapter_slug,
+      clientEventId: `comment:${comment.id}`,
+      durationMs: payload.durationMs,
+      eventType: 'comment_submit',
+      locale: comment.locale,
+      metadata: {
+        commentId: comment.id,
+        length: comment.body.length,
+        status: comment.status
+      },
+      progressPercent: payload.progressPercent,
+      seriesSlug: comment.series_slug,
+      sessionId: payload.sessionId,
+      sourcePath: payload.sourcePath || comment.source_path,
+      value: comment.body.length
+    },
+    {
+      chapterSlug: comment.chapter_slug,
+      locale: comment.locale,
+      seriesSlug: comment.series_slug,
+      sourcePath: comment.source_path
+    }
+  );
+  await db
+    .prepare(
+      `INSERT INTO reading_events (
+        client_event_id, account_id, session_id, series_slug, chapter_slug, locale,
+        event_type, event_value, progress_percent, block_index, duration_ms,
+        source_path, metadata_json, ip_hash, user_agent_hash
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(client_event_id) DO NOTHING`
+    )
+    .bind(
+      event.clientEventId,
+      session.account_id,
+      event.sessionId,
+      event.seriesSlug,
+      event.chapterSlug,
+      event.locale,
+      event.eventType,
+      event.eventValue,
+      event.progressPercent,
+      event.blockIndex,
+      event.durationMs,
+      event.sourcePath,
+      JSON.stringify(event.metadata),
+      clientHashes.ipHash,
+      clientHashes.ipUaHash
+    )
+    .run();
+};
+
+const handlePublicNovelComments = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: true, comments: [], setupRequired: true });
+  if (!(await ensureReaderCommentsReady(db))) {
+    return json({ ok: true, comments: [], setupRequired: true });
+  }
+
+  const url = new URL(request.url);
+  const seriesSlug = cleanSlug(url.searchParams.get('seriesSlug') || url.searchParams.get('series'), 160);
+  const chapterSlug = cleanSlug(url.searchParams.get('chapterSlug') || url.searchParams.get('chapter'), 160);
+  const locale = normalizeContentLocale(url.searchParams.get('locale') || 'zh-Hant');
+  const limit = Math.min(Math.max(Number.parseInt(url.searchParams.get('limit') || '30', 10) || 30, 1), 50);
+  if (!seriesSlug || !chapterSlug) {
+    return json({ ok: false, message: 'seriesSlug and chapterSlug are required.' }, { status: 400 });
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT
+        reader_comments.*,
+        reader_accounts.email,
+        reader_accounts.display_name,
+        reader_password_credentials.username
+       FROM reader_comments
+       INNER JOIN reader_accounts ON reader_accounts.id = reader_comments.account_id
+       LEFT JOIN reader_password_credentials ON reader_password_credentials.account_id = reader_accounts.id
+       WHERE reader_comments.series_slug = ?
+         AND reader_comments.chapter_slug = ?
+         AND reader_comments.locale = ?
+         AND reader_comments.status = 'approved'
+       ORDER BY reader_comments.created_at DESC, reader_comments.id DESC
+       LIMIT ?`
+    )
+    .bind(seriesSlug, chapterSlug, locale, limit)
+    .all();
+
+  return json({
+    ok: true,
+    comments: (response.results || []).map((row) => readerCommentToJson(row))
+  });
+};
+
+const handleReaderCommentSubmit = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!(await ensureReaderCommentsReady(db))) {
+    return json(
+      {
+        ok: false,
+        code: 'READER_COMMENTS_NOT_READY',
+        message: 'Reader comments are not initialized. Apply migration 0017_reader_comments.sql.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json(
+      {
+        ok: false,
+        code: 'SIGN_IN_REQUIRED',
+        message: '请先登入会员账号，再提交评论。'
+      },
+      { status: 401 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const seriesSlug = cleanSlug(payload.seriesSlug || payload.series, 160);
+  const chapterSlug = cleanSlug(payload.chapterSlug || payload.chapter, 160);
+  const locale = normalizeContentLocale(payload.locale || 'zh-Hant');
+  if (!seriesSlug || !chapterSlug) {
+    return json({ ok: false, message: 'seriesSlug and chapterSlug are required.' }, { status: 400 });
+  }
+
+  const recentCommentRow = await db
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM reader_comments
+       WHERE account_id = ?
+         AND created_at >= datetime('now', '-' || ? || ' seconds')`
+    )
+    .bind(session.account_id, readerCommentSubmitWindowSeconds)
+    .first();
+  if (normalizePositiveInteger(recentCommentRow?.count, 0) >= readerCommentSubmitLimitPerMinute) {
+    return json(
+      {
+        ok: false,
+        code: 'READER_COMMENT_RATE_LIMITED',
+        message: '评论提交太频繁，请稍后再试。'
+      },
+      {
+        status: 429,
+        headers: { 'retry-after': String(readerCommentSubmitWindowSeconds) }
+      }
+    );
+  }
+
+  let body;
+  try {
+    body = normalizeReaderCommentBody(payload.body || payload.comment);
+  } catch (error) {
+    return json({ ok: false, code: error.code || 'INVALID_COMMENT', message: error.message }, { status: 400 });
+  }
+
+  const clientHashes = await getRequestClientHashes(request);
+  const id = `rc_${randomHex(16)}`;
+  const sourcePath = cleanRedirectPath(payload.sourcePath || payload.path, `/novel/${seriesSlug}/chapter/${chapterSlug}/`);
+  const metadata = normalizeReadingEventMetadata({
+    userAgentWidth: normalizeNullableInteger(payload.viewportWidth, { min: 0, max: 10000 }),
+    readerVersion: 'v2'
+  });
+  await db
+    .prepare(
+      `INSERT INTO reader_comments (
+        id, account_id, series_slug, chapter_slug, locale, body, status,
+        source_path, metadata_json, ip_hash, user_agent_hash
+      )
+      VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`
+    )
+    .bind(
+      id,
+      session.account_id,
+      seriesSlug,
+      chapterSlug,
+      locale,
+      body,
+      sourcePath,
+      JSON.stringify(metadata),
+      clientHashes.ipHash,
+      clientHashes.ipUaHash
+    )
+    .run();
+
+  const comment = await selectReaderCommentById(db, id);
+  try {
+    await insertCommentSubmitReadingEvent(db, request, session, payload, comment, clientHashes);
+  } catch (error) {
+    if (!isMissingReadingEventsError(error)) throw error;
+  }
+
+  return json({
+    ok: true,
+    comment: readerCommentToJson(comment),
+    moderationRequired: true,
+    message: '评论已提交，审核通过后会展示。'
+  });
+};
+
 const handleNovelReadingEvents = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return json({ ok: false, code: 'READING_EVENTS_DB_NOT_CONFIGURED', message: 'Reading events database is not configured.' }, { status: 500 });
@@ -5334,7 +5635,7 @@ const buildNovelChapterStatsMetrics = ({
     bookmarkCount: normalizePositiveInteger(eventCounts.get('bookmark'), 0),
     chapterSlug,
     closeCount: normalizePositiveInteger(eventCounts.get('chapter_close'), 0),
-    commentCount: normalizePositiveInteger(eventCounts.get('comment_draft'), 0),
+    commentCount: normalizePositiveInteger(eventCounts.get('comment_submit'), 0),
     completionCount: completedSessions,
     completionRate: roundRatio(completionRate),
     dropOffPoints,
@@ -5417,7 +5718,7 @@ const buildNovelAiInsightFromStats = (stat = {}) => {
   if (engagementScore >= 0.65) {
     strongPoints.push('互动分表现稳定，内容具备继续追读信号');
   } else if (uniqueSessions > 0) {
-    weakPoints.push('互动分偏弱，点赞、书签或评论草稿信号不足');
+    weakPoints.push('互动分偏弱，点赞、书签或评论提交信号不足');
     suggestions.push('在章节末尾增加更明确的情绪钩子，让读者有保存或继续下一章的理由。');
   }
 
@@ -5442,7 +5743,7 @@ const buildNovelAiInsightFromStats = (stat = {}) => {
 
   if (bookmarkCount > 0) strongPoints.push('有读者保存书签，说明章节具备回看或续读价值');
   if (likeCount > 0) strongPoints.push('已有喜欢反馈，情绪点或人物表现有命中读者');
-  if (commentCount > 0) strongPoints.push('评论草稿出现，读者有表达想法的意愿');
+  if (commentCount > 0) strongPoints.push('已有真实评论提交，读者有表达想法的意愿');
 
   const riskLevel = completionRate < 0.35 || dropOffRate >= 0.7 ? 'high' : engagementScore < 0.45 ? 'medium' : 'normal';
   const mainPopularity = Math.min(1, engagementScore * 0.55 + completionRate * 0.35 + Math.min(bookmarkCount / Math.max(uniqueSessions, 1), 1) * 0.1);
@@ -5615,7 +5916,7 @@ const aggregateNovelChapterStats = async (db, target, options = {}) => {
           MAX(CASE WHEN event_type = 'chapter_close' AND duration_ms IS NOT NULL THEN duration_ms ELSE 0 END) AS close_duration_ms,
           SUM(CASE WHEN event_type = 'like' THEN 1 ELSE 0 END) AS like_count,
           SUM(CASE WHEN event_type = 'bookmark' THEN 1 ELSE 0 END) AS bookmark_count,
-          SUM(CASE WHEN event_type = 'comment_draft' THEN 1 ELSE 0 END) AS comment_count
+          SUM(CASE WHEN event_type = 'comment_submit' THEN 1 ELSE 0 END) AS comment_count
          FROM reading_events
          WHERE ${whereSql}
          GROUP BY session_id`
@@ -7565,6 +7866,158 @@ const handleAdminListReaderAccounts = async (request, env) => {
   return privateJson({
     ok: true,
     accounts: (response.results || []).map((row) => readerAccountToAdminJson(row, config))
+  });
+};
+
+const handleAdminListReaderComments = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!(await ensureReaderCommentsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'READER_COMMENTS_NOT_READY',
+        message: 'Reader comments are not initialized. Apply migration 0017_reader_comments.sql.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const url = new URL(request.url);
+  const status = cleanText(url.searchParams.get('status'), 40).toLowerCase();
+  const seriesSlug = cleanSlug(url.searchParams.get('seriesSlug') || url.searchParams.get('series'), 160);
+  const chapterSlug = cleanSlug(url.searchParams.get('chapterSlug') || url.searchParams.get('chapter'), 160);
+  const normalizedEmail = normalizeEmail(url.searchParams.get('email'));
+  const limit = Math.min(Math.max(Number.parseInt(url.searchParams.get('limit') || '80', 10) || 80, 1), 120);
+  if (status && !readerCommentStatuses.has(status)) {
+    return privateJson({ ok: false, message: 'Invalid comment status.' }, { status: 400 });
+  }
+  if (normalizedEmail && !isEmail(normalizedEmail)) {
+    return privateJson({ ok: false, message: 'Please enter a valid reader email.' }, { status: 400 });
+  }
+
+  const clauses = [];
+  const params = [];
+  if (status) {
+    clauses.push('reader_comments.status = ?');
+    params.push(status);
+  } else {
+    clauses.push("reader_comments.status <> 'deleted'");
+  }
+  if (seriesSlug) {
+    clauses.push('reader_comments.series_slug = ?');
+    params.push(seriesSlug);
+  }
+  if (chapterSlug) {
+    clauses.push('reader_comments.chapter_slug = ?');
+    params.push(chapterSlug);
+  }
+  if (normalizedEmail) {
+    clauses.push('reader_accounts.normalized_email = ?');
+    params.push(normalizedEmail);
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT
+        reader_comments.*,
+        reader_accounts.email,
+        reader_accounts.display_name,
+        reader_password_credentials.username
+       FROM reader_comments
+       INNER JOIN reader_accounts ON reader_accounts.id = reader_comments.account_id
+       LEFT JOIN reader_password_credentials ON reader_password_credentials.account_id = reader_accounts.id
+       WHERE ${clauses.join(' AND ')}
+       ORDER BY
+         CASE reader_comments.status
+           WHEN 'pending' THEN 0
+           WHEN 'approved' THEN 1
+           WHEN 'hidden' THEN 2
+           ELSE 3
+         END,
+         reader_comments.updated_at DESC,
+         reader_comments.id DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+
+  return privateJson({
+    ok: true,
+    comments: (response.results || []).map((row) => readerCommentToJson(row, { admin: true }))
+  });
+};
+
+const handleAdminModerateReaderComment = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!(await ensureReaderCommentsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'READER_COMMENTS_NOT_READY',
+        message: 'Reader comments are not initialized. Apply migration 0017_reader_comments.sql.'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const id = cleanText(payload.id, 80);
+  const action = cleanText(payload.action, 40).toLowerCase();
+  const statusByAction = {
+    approve: 'approved',
+    hide: 'hidden',
+    delete: 'deleted'
+  };
+  const nextStatus = statusByAction[action];
+  if (!id || !nextStatus) {
+    return privateJson({ ok: false, message: 'A valid comment id and moderation action are required.' }, { status: 400 });
+  }
+
+  const existing = await selectReaderCommentById(db, id);
+  if (!existing) return privateJson({ ok: false, message: 'Comment was not found.' }, { status: 404 });
+
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  const hiddenReason = action === 'approve' ? '' : cleanText(payload.note || payload.reason, 500);
+  await db
+    .prepare(
+      `UPDATE reader_comments
+       SET status = ?,
+           reviewed_by = ?,
+           reviewed_at = CURRENT_TIMESTAMP,
+           hidden_reason = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .bind(nextStatus, actorEmail, hiddenReason, id)
+    .run();
+
+  const updated = await selectReaderCommentById(db, id);
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: `reader_comment.${action}`,
+    targetType: 'reader_comment',
+    targetId: id,
+    targetSlug: `${existing.series_slug}/${existing.chapter_slug}`,
+    metadata: {
+      accountId: existing.account_id,
+      email: existing.email,
+      previousStatus: existing.status,
+      status: nextStatus,
+      note: hiddenReason
+    }
+  });
+
+  return privateJson({
+    ok: true,
+    comment: readerCommentToJson(updated, { admin: true })
   });
 };
 
@@ -10629,6 +11082,13 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .reader-comment-panel[hidden] { display: none; }
       .reader-comment-panel label { color: var(--teal); font-size: 13px; font-weight: 900; text-transform: uppercase; }
       .reader-comment-panel textarea { background: #fff; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); font: inherit; line-height: 1.7; min-height: 112px; padding: 12px; resize: vertical; }
+      .reader-comments { display: grid; gap: 10px; }
+      .reader-comments h3 { font-size: 18px; margin: 0; }
+      .reader-comments-list { display: grid; gap: 10px; }
+      .reader-comment-item { background: rgba(255,255,255,.74); border: 1px solid var(--line); border-radius: 12px; display: grid; gap: 8px; padding: 12px; }
+      .reader-comment-item div { align-items: baseline; display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; }
+      .reader-comment-item time { color: var(--muted); font-size: 12px; font-weight: 800; }
+      .reader-comment-item p { color: var(--ink); line-height: 1.7; }
       .reader-bookmark-fab, .reader-bookmark-toast { display: none; }
       .reader-bookmark-toast { background: rgba(255,255,255,.96); border-color: rgba(8,121,109,.32); box-shadow: 0 18px 50px rgba(44,39,33,.12); color: var(--ink); font-weight: 900; left: max(16px, env(safe-area-inset-left)); position: fixed; right: max(16px, env(safe-area-inset-right)); text-align: center; z-index: 50; }
       @media (max-width: 760px) {
@@ -10844,44 +11304,80 @@ const dynamicBookmarkCopy = {
 
 const dynamicReaderInteractionCopy = {
   en: {
-    body: 'Like this chapter, save your reading point, or keep a private comment draft for later.',
+    body: 'Like this chapter, save your reading point, or submit a comment for review.',
     comment: 'Comment',
-    commentLabel: 'Private comment draft',
+    commentEmpty: 'No public comments yet.',
+    commentFailed: 'Could not load comments.',
+    commentLabel: 'Comment',
+    commentLoading: 'Loading comments...',
     commentPlaceholder: 'Write a note about this chapter...',
     commentSaved: 'Draft saved on this device.',
+    commentSignInRequired: 'Please sign in before submitting a comment.',
+    commentSubmitted: 'Comment submitted. It will appear after review.',
+    commentSubmitting: 'Submitting comment...',
+    commentsTitle: 'Reader comments',
+    commentSubmit: 'Submit comment',
+    commentTooShort: 'Write at least 2 characters before submitting.',
     eyebrow: 'Reader actions',
     like: 'Like',
     liked: 'Liked',
     title: 'Keep your reaction here'
   },
   ja: {
-    body: 'この章にいいねを付けたり、読書位置を保存したり、コメントの下書きを残せます。',
+    body: 'この章にいいねを付けたり、読書位置を保存したり、レビュー用コメントを送れます。',
     comment: 'コメント',
-    commentLabel: '非公開コメント下書き',
+    commentEmpty: '公開コメントはまだありません。',
+    commentFailed: 'コメントを読み込めませんでした。',
+    commentLabel: 'コメント',
+    commentLoading: 'コメントを読み込んでいます...',
     commentPlaceholder: 'この章についてメモを書く...',
     commentSaved: 'この端末に下書きを保存しました。',
+    commentSignInRequired: 'コメントを送る前にログインしてください。',
+    commentSubmitted: 'コメントを送信しました。確認後に表示されます。',
+    commentSubmitting: 'コメントを送信しています...',
+    commentsTitle: '読者コメント',
+    commentSubmit: 'コメントを送信',
+    commentTooShort: '2文字以上入力してから送信してください。',
     eyebrow: '読者アクション',
     like: 'いいね',
     liked: 'いいね済み',
     title: '反応をここに残す'
   },
   'zh-Hant': {
-    body: '可以喜歡本章、保存目前閱讀位置，也可以先寫一段自己的評論草稿。',
+    body: '可以喜歡本章、保存目前閱讀位置，也可以提交評論，審核通過後公開展示。',
     comment: '評論',
-    commentLabel: '私人評論草稿',
+    commentEmpty: '目前還沒有公開評論。',
+    commentFailed: '評論載入失敗。',
+    commentLabel: '評論內容',
+    commentLoading: '正在載入評論...',
     commentPlaceholder: '寫下你對這章的想法...',
     commentSaved: '草稿已保存在這台裝置。',
+    commentSignInRequired: '請先登入會員，再提交評論。',
+    commentSubmitted: '評論已提交，審核通過後會展示。',
+    commentSubmitting: '正在提交評論...',
+    commentsTitle: '讀者評論',
+    commentSubmit: '提交評論',
+    commentTooShort: '至少寫 2 個字再提交。',
     eyebrow: '讀者互動',
     like: '喜歡',
     liked: '已喜歡',
     title: '把反應先留在這裡'
   },
   'zh-Hans': {
-    body: '可以喜欢本章、保存目前阅读位置，也可以先写一段自己的评论草稿。',
+    body: '可以喜欢本章、保存目前阅读位置，也可以提交评论，审核通过后公开展示。',
     comment: '评论',
-    commentLabel: '私人评论草稿',
+    commentEmpty: '目前还没有公开评论。',
+    commentFailed: '评论加载失败。',
+    commentLabel: '评论内容',
+    commentLoading: '正在加载评论...',
     commentPlaceholder: '写下你对这章的想法...',
     commentSaved: '草稿已保存在这台设备。',
+    commentSignInRequired: '请先登录会员，再提交评论。',
+    commentSubmitted: '评论已提交，审核通过后会展示。',
+    commentSubmitting: '正在提交评论...',
+    commentsTitle: '读者评论',
+    commentSubmit: '提交评论',
+    commentTooShort: '至少写 2 个字再提交。',
     eyebrow: '读者互动',
     like: '喜欢',
     liked: '已喜欢',
@@ -11008,6 +11504,7 @@ const renderDynamicReadingEventsScript = (route, serial, chapter) => {
       };
       window.stationCatReadingEvents = {
         openWhenReady: () => openReadingSession(),
+        sessionId: () => readingSessionId,
         track: trackReadingEvent
       };
       const markReadingActivity = () => {
@@ -11110,6 +11607,12 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
   if (route.readerVersion !== 'v2') return '';
   const copy = dynamicReaderInteractionCopy[route.locale] || dynamicReaderInteractionCopy['zh-Hant'];
   const interactionKey = `${serial.slug}:${chapter.slug}`;
+  const commentData = {
+    chapterSlug: chapter.slug,
+    locale: route.locale,
+    seriesSlug: serial.slug,
+    sourcePath: dynamicCanonicalPath(route)
+  };
   return `<section class="reader-interactions" data-reader-v2-interactions>
       <div>
         <p class="kicker">${escapeHtml(copy.eyebrow)}</p>
@@ -11123,23 +11626,85 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
       <div class="reader-comment-panel" id="reader-comment-panel" data-reader-comment-panel hidden>
         <label for="reader-comment-draft">${escapeHtml(copy.commentLabel)}</label>
         <textarea id="reader-comment-draft" data-reader-comment-draft rows="4" placeholder="${escapeHtml(copy.commentPlaceholder)}"></textarea>
+        <div class="button-row">
+          <button class="button button-primary" type="button" data-reader-comment-submit>${escapeHtml(copy.commentSubmit)}</button>
+        </div>
         <div class="status" data-reader-comment-status role="status" aria-live="polite"></div>
       </div>
+      <section class="reader-comments" aria-labelledby="reader-comments-title">
+        <h3 id="reader-comments-title">${escapeHtml(copy.commentsTitle)}</h3>
+        <div class="reader-comments-list" data-reader-comments-list>
+          <p class="status">${escapeHtml(copy.commentLoading)}</p>
+        </div>
+      </section>
     </section>
     <script>
       (() => {
         const interactionPanel = document.querySelector('[data-reader-v2-interactions]');
         const interactionCopy = ${scriptJson(copy)};
+        const commentData = ${scriptJson(commentData)};
+        const commentsEndpoint = '/api/novels/comments';
+        const commentSubmitEndpoint = '/api/readers/comments';
         const interactionKey = ${scriptJson(interactionKey)};
         const likeButton = interactionPanel?.querySelector('[data-reader-like]');
         const commentToggle = interactionPanel?.querySelector('[data-reader-comment-toggle]');
         const commentPanel = interactionPanel?.querySelector('[data-reader-comment-panel]');
         const commentDraft = interactionPanel?.querySelector('[data-reader-comment-draft]');
+        const commentSubmit = interactionPanel?.querySelector('[data-reader-comment-submit]');
         const commentStatus = interactionPanel?.querySelector('[data-reader-comment-status]');
+        const commentsList = interactionPanel?.querySelector('[data-reader-comments-list]');
         const storagePrefix = 'stationcat:novel-v2:' + interactionKey;
         const likedKey = storagePrefix + ':liked';
         const commentKey = storagePrefix + ':comment-draft';
         let commentPostTimer;
+        const escapeClientHtml = (value) => String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+        const formatClientDate = (value) => {
+          if (!value) return '';
+          const date = new Date(String(value).includes('T') ? value : String(value).replace(' ', 'T') + 'Z');
+          if (Number.isNaN(date.getTime())) return '';
+          return date.toLocaleString(document.documentElement.lang || undefined, { dateStyle: 'medium', timeStyle: 'short' });
+        };
+        const setCommentStatus = (message, tone = 'neutral') => {
+          if (!commentStatus) return;
+          commentStatus.textContent = message || '';
+          commentStatus.dataset.tone = tone;
+        };
+        const renderComments = (comments) => {
+          if (!commentsList) return;
+          if (!comments.length) {
+            commentsList.innerHTML = '<p class="status">' + escapeClientHtml(interactionCopy.commentEmpty) + '</p>';
+            return;
+          }
+          commentsList.innerHTML = comments.map((comment) =>
+            '<article class="reader-comment-item">' +
+              '<div><strong>' + escapeClientHtml(comment.displayName || '读者') + '</strong>' +
+              '<time>' + escapeClientHtml(formatClientDate(comment.createdAt)) + '</time></div>' +
+              '<p>' + escapeClientHtml(comment.body).replace(/\\n/g, '<br>') + '</p>' +
+            '</article>'
+          ).join('');
+        };
+        const loadComments = async () => {
+          if (!commentsList) return;
+          commentsList.innerHTML = '<p class="status">' + escapeClientHtml(interactionCopy.commentLoading) + '</p>';
+          const params = new URLSearchParams({
+            chapterSlug: commentData.chapterSlug,
+            locale: commentData.locale,
+            seriesSlug: commentData.seriesSlug
+          });
+          try {
+            const response = await fetch(commentsEndpoint + '?' + params.toString());
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.ok === false) throw new Error(payload.message || 'Failed');
+            renderComments(payload.comments || []);
+          } catch {
+            commentsList.innerHTML = '<p class="status" data-tone="error">' + escapeClientHtml(interactionCopy.commentFailed) + '</p>';
+          }
+        };
         const setLikedState = (liked) => {
           if (!likeButton) return;
           likeButton.setAttribute('aria-pressed', liked ? 'true' : 'false');
@@ -11185,17 +11750,50 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
           }
           try {
             window.localStorage.setItem(commentKey, commentDraft.value);
-            if (commentStatus) {
-              commentStatus.textContent = interactionCopy.commentSaved;
-              commentStatus.dataset.tone = 'success';
-            }
+            setCommentStatus(interactionCopy.commentSaved, 'success');
           } catch {
-            if (commentStatus) {
-              commentStatus.textContent = '';
-              commentStatus.dataset.tone = 'neutral';
-            }
+            setCommentStatus('', 'neutral');
           }
         });
+        commentSubmit?.addEventListener('click', async () => {
+          const body = commentDraft?.value.trim() || '';
+          if (body.length < 2) {
+            setCommentStatus(interactionCopy.commentTooShort, 'error');
+            return;
+          }
+          commentSubmit.disabled = true;
+          setCommentStatus(interactionCopy.commentSubmitting, 'neutral');
+          try {
+            const response = await fetch(commentSubmitEndpoint, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                ...commentData,
+                body,
+                sessionId: window.stationCatReadingEvents?.sessionId?.() || '',
+                sourcePath: window.location.pathname + window.location.hash
+              })
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (response.status === 401 || payload.code === 'SIGN_IN_REQUIRED') {
+              setCommentStatus(interactionCopy.commentSignInRequired, 'error');
+              window.location.href = '/library/?returnTo=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
+              return;
+            }
+            if (!response.ok || payload.ok === false) throw new Error(payload.message || interactionCopy.commentFailed);
+            if (commentDraft) commentDraft.value = '';
+            try {
+              window.localStorage.removeItem(commentKey);
+            } catch {}
+            setCommentStatus(payload.message || interactionCopy.commentSubmitted, 'success');
+            await loadComments();
+          } catch (error) {
+            setCommentStatus(error.message || interactionCopy.commentFailed, 'error');
+          } finally {
+            commentSubmit.disabled = false;
+          }
+        });
+        loadComments();
         window.addEventListener('pagehide', () => window.clearTimeout(commentPostTimer), { once: true });
       })();
     </script>`;
@@ -12372,8 +12970,12 @@ export const __readerTotpTestHooks = {
   handleAdminGenerateNovelAiInsights,
   handleAdminListNovelAiInsights,
   handleAdminListNovelAnalyticsStats,
+  handleAdminListReaderComments,
+  handleAdminModerateReaderComment,
   handleNovelForgeAnalytics,
+  handlePublicNovelComments,
   handleNovelReadingEvents,
+  handleReaderCommentSubmit,
   handleReaderPasswordResetConfirm,
   hmacSha256Hex,
   hotpCode,
@@ -12382,6 +12984,7 @@ export const __readerTotpTestHooks = {
   dynamicSeriesPath,
   normalizeTotpCode,
   normalizeReadingEventPayload,
+  readerCommentToJson,
   parseNovelForgeAnalyticsRoute,
   parseDynamicContentRoute,
   readerTotpResetFailureMessage,
@@ -12496,6 +13099,10 @@ export default {
       return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
+    if (request.method === 'POST' && url.pathname === '/api/readers/comments') {
+      return handleReaderCommentSubmit(request, env);
+    }
+
     if (request.method === 'POST' && url.pathname === '/api/readers/membership/redeem') {
       return handleReaderMembershipRedeem(request, env);
     }
@@ -12522,6 +13129,10 @@ export default {
 
     if (request.method === 'GET' && url.pathname === '/api/novels/pricing') {
       return handlePublicNovelPricing(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/novels/comments') {
+      return handlePublicNovelComments(request, env);
     }
 
     if (request.method === 'GET' && url.pathname === '/api/content/entries') {
@@ -12586,6 +13197,16 @@ export default {
 
     if (url.pathname === '/admin/api/novels/analytics/insights/generate') {
       if (request.method === 'POST') return handleAdminGenerateNovelAiInsights(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/novels/comments') {
+      if (request.method === 'GET') return handleAdminListReaderComments(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/novels/comments/moderate') {
+      if (request.method === 'POST') return handleAdminModerateReaderComment(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

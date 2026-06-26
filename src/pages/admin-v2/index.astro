@@ -34,6 +34,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="commerce">订单</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="accounts">账户</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="analytics">统计</button>
+            <button class="admin-v2-tab" type="button" data-admin-v2-tab="comments">评论</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="access">授权</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="audit">审计</button>
         </div>
@@ -241,6 +242,32 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <p>聚合 Novel V2 阅读事件，查看章节完成率、平均阅读时间、流失位置和互动分，并生成章节 AI Insight。</p>
             </div>
           </section>
+        </section>
+
+        <section class="admin-v2-sidebar-section" data-admin-v2-panel="comments-sidebar" hidden>
+          <label>
+            评论状态
+            <select id="comments-status">
+              <option value="pending" selected>待审核</option>
+              <option value="approved">已通过</option>
+              <option value="hidden">已隐藏</option>
+              <option value="deleted">已删除</option>
+              <option value="">全部未删除</option>
+            </select>
+          </label>
+          <label>
+            seriesSlug
+            <input id="comments-series" placeholder="cmqjfju1300008z3wyh66ynvw" />
+          </label>
+          <label>
+            chapterSlug
+            <input id="comments-chapter" placeholder="可选" />
+          </label>
+          <label>
+            读者 Email
+            <input id="comments-email" type="email" placeholder="reader@example.com" />
+          </label>
+          <button class="button button-primary" id="comments-refresh" type="button">刷新评论</button>
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="access-sidebar" hidden>
@@ -597,6 +624,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </section>
 
+        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="comments-main" hidden>
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">Reader Comments</p>
+              <h2>章节评论审核</h2>
+            </div>
+          </div>
+          <div class="admin-commerce-grid">
+            <div class="admin-v2-table-list" id="comments-list"></div>
+            <section class="admin-v2-subpanel admin-detail-panel" id="comment-detail">
+              <p class="admin-empty-list">选择一条评论查看正文并进行审核。</p>
+            </section>
+          </div>
+        </section>
+
         <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="access-main" hidden>
           <div class="admin-v2-section-heading">
             <div>
@@ -684,6 +726,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       analyticsDetail: $('#analytics-detail'),
       analyticsSummary: $('#analytics-summary'),
       analyticsUpdated: $('#analytics-updated'),
+      commentsList: $('#comments-list'),
+      commentDetail: $('#comment-detail'),
       accessList: $('#access-list'),
       auditList: $('#audit-list'),
       contentForm: $('#content-form'),
@@ -766,6 +810,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         analyticsSeries: $('#analytics-series'),
         analyticsChapter: $('#analytics-chapter'),
         analyticsDays: $('#analytics-days'),
+        commentsStatus: $('#comments-status'),
+        commentsSeries: $('#comments-series'),
+        commentsChapter: $('#comments-chapter'),
+        commentsEmail: $('#comments-email'),
         accessEmail: $('#access-email-filter'),
         auditTargetType: $('#audit-target-type'),
         auditTargetSlug: $('#audit-target-slug')
@@ -788,11 +836,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       accounts: [],
       analyticsStats: [],
       analyticsInsights: [],
+      comments: [],
       selectedEntryId: 0,
       selectedImportId: 0,
       selectedOrderToken: '',
       selectedAccountId: 0,
       selectedAnalyticsKey: '',
+      selectedCommentId: '',
       pricingDefaults: null,
       pricingDefaultsSetupRequired: false,
       schema: null
@@ -2366,7 +2416,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div class="admin-pricing-lines">
             <p><strong>喜欢：</strong>${escapeHtml(String(stat.likeCount || 0))}</p>
             <p><strong>书签：</strong>${escapeHtml(String(stat.bookmarkCount || 0))}</p>
-            <p><strong>评论草稿：</strong>${escapeHtml(String(stat.commentCount || 0))}</p>
+            <p><strong>评论提交：</strong>${escapeHtml(String(stat.commentCount || 0))}</p>
             <p><strong>事件窗口：</strong>${escapeHtml(formatDate(stat.eventWindowStart) || '-')} - ${escapeHtml(formatDate(stat.eventWindowEnd) || '-')}</p>
           </div>
           <a class="button button-secondary" href="/novel/${escapeHtml(stat.seriesSlug)}/chapter/${escapeHtml(stat.chapterSlug)}/" target="_blank" rel="noreferrer">打开 V2 阅读页</a>
@@ -2463,6 +2513,119 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
       setStatus(`已生成 ${result.generated || 0} 条 AI Insight。`, 'success');
       await Promise.all([loadAnalyticsStats(), loadAuditLogs()]);
+    };
+
+    const commentStatusTone = (status) => {
+      if (status === 'approved') return 'success';
+      if (status === 'pending') return 'warning';
+      if (status === 'hidden' || status === 'deleted') return 'error';
+      return 'neutral';
+    };
+
+    const buildCommentParams = () => {
+      const params = new URLSearchParams({ limit: '80' });
+      if (elements.filters.commentsStatus.value) params.set('status', elements.filters.commentsStatus.value);
+      if (elements.filters.commentsSeries.value.trim()) params.set('seriesSlug', elements.filters.commentsSeries.value.trim());
+      if (elements.filters.commentsChapter.value.trim()) params.set('chapterSlug', elements.filters.commentsChapter.value.trim());
+      if (elements.filters.commentsEmail.value.trim()) params.set('email', elements.filters.commentsEmail.value.trim());
+      return params;
+    };
+
+    const renderCommentDetail = (comment) => {
+      if (!comment) {
+        elements.commentDetail.innerHTML = '<p class="admin-empty-list">选择一条评论查看正文并进行审核。</p>';
+        return;
+      }
+      const canApprove = comment.status !== 'approved';
+      const canHide = comment.status !== 'hidden';
+      const canDelete = comment.status !== 'deleted';
+      elements.commentDetail.innerHTML = `
+        <div class="admin-v2-section-heading">
+          <div>
+            <p class="station-kicker">Comment Detail</p>
+            <h3>${escapeHtml(comment.displayName || comment.email || '读者')}</h3>
+          </div>
+          <span class="admin-status-pill" data-tone="${commentStatusTone(comment.status)}">${escapeHtml(comment.status || '')}</span>
+        </div>
+        <div class="admin-detail-grid">
+          <article><span>读者</span><strong>${escapeHtml(comment.email || '')}</strong><small>${escapeHtml(comment.username || '')}</small></article>
+          <article><span>章节</span><strong>${escapeHtml(comment.chapterSlug || '')}</strong><small>${escapeHtml(comment.seriesSlug || '')}</small></article>
+          <article><span>提交</span><strong>${escapeHtml(formatDate(comment.createdAt) || '-')}</strong><small>${escapeHtml(comment.locale || '')}</small></article>
+          <article><span>审核</span><strong>${escapeHtml(formatDate(comment.reviewedAt) || '-')}</strong><small>${escapeHtml(comment.reviewedBy || '')}</small></article>
+        </div>
+        <section class="admin-detail-section">
+          <h4>评论正文</h4>
+          <p class="admin-empty-list">${escapeHtml(comment.body || '').replace(/\n/g, '<br>')}</p>
+        </section>
+        ${comment.hiddenReason ? `<section class="admin-detail-section"><h4>处理说明</h4><p class="admin-empty-list">${escapeHtml(comment.hiddenReason)}</p></section>` : ''}
+        <section class="admin-detail-section">
+          <h4>来源</h4>
+          <div class="admin-pricing-lines">
+            <p><strong>路径：</strong>${escapeHtml(comment.sourcePath || '')}</p>
+            <p><strong>ID：</strong>${escapeHtml(comment.id || '')}</p>
+          </div>
+        </section>
+        <label>
+          审核说明
+          <textarea id="comment-moderation-note" rows="3" placeholder="隐藏或删除时建议写原因。"></textarea>
+        </label>
+        <div class="button-row">
+          <button class="button button-primary" type="button" data-comment-action="approve" ${canApprove ? '' : 'disabled'}>批准公开</button>
+          <button class="button button-secondary" type="button" data-comment-action="hide" ${canHide ? '' : 'disabled'}>隐藏</button>
+          <button class="button button-secondary" type="button" data-comment-action="delete" ${canDelete ? '' : 'disabled'}>删除</button>
+          <a class="button button-secondary" href="/novel/${escapeHtml(comment.seriesSlug)}/chapter/${escapeHtml(comment.chapterSlug)}/" target="_blank" rel="noreferrer">打开章节</a>
+        </div>
+      `;
+      elements.commentDetail.querySelectorAll('[data-comment-action]').forEach((button) => {
+        button.addEventListener('click', () => moderateComment(comment, button.dataset.commentAction));
+      });
+    };
+
+    const renderComments = (comments) => {
+      if (!comments.length) {
+        renderEmpty(elements.commentsList, '暂无评论。');
+        renderCommentDetail(null);
+        return;
+      }
+      elements.commentsList.innerHTML = '';
+      comments.forEach((comment) => {
+        const button = document.createElement('button');
+        button.className = `admin-v2-entry${comment.id === state.selectedCommentId ? ' is-active' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `
+          <span>${escapeHtml(comment.displayName || comment.email || '读者')}</span>
+          <small>${escapeHtml(comment.status)} · ${escapeHtml(comment.seriesSlug || '')}/${escapeHtml(comment.chapterSlug || '')}</small>
+          <small>${escapeHtml((comment.body || '').slice(0, 90))}${(comment.body || '').length > 90 ? '...' : ''}</small>
+        `;
+        button.addEventListener('click', () => {
+          state.selectedCommentId = comment.id;
+          renderComments(state.comments);
+          renderCommentDetail(comment);
+        });
+        elements.commentsList.append(button);
+      });
+      const selected = comments.find((comment) => comment.id === state.selectedCommentId) || comments[0];
+      state.selectedCommentId = selected.id;
+      renderCommentDetail(selected);
+    };
+
+    const loadComments = async () => {
+      const payload = await apiJson(`/admin/api/novels/comments?${buildCommentParams().toString()}`);
+      state.comments = payload.comments || [];
+      renderComments(state.comments);
+      setStatus(`已载入 ${state.comments.length} 条读者评论。`, 'success');
+    };
+
+    const moderateComment = async (comment, action) => {
+      const note = $('#comment-moderation-note')?.value.trim() || '';
+      const result = await apiJson('/admin/api/novels/comments/moderate', {
+        method: 'POST',
+        body: JSON.stringify({ id: comment.id, action, note })
+      });
+      const updated = result.comment;
+      state.selectedCommentId = updated?.id || comment.id;
+      await Promise.all([loadComments(), loadAuditLogs()]);
+      setStatus('评论审核状态已更新。', 'success');
     };
 
     const loadEntitlements = async () => {
@@ -2562,6 +2725,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (name === 'commerce') await loadOrders();
       if (name === 'accounts') await loadAccounts();
       if (name === 'analytics') await loadAnalyticsStats();
+      if (name === 'comments') await loadComments();
       if (name === 'access') await loadEntitlements();
       if (name === 'audit') await loadAuditLogs();
     };
@@ -2576,6 +2740,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#analytics-refresh').addEventListener('click', loadAnalyticsStats);
     $('#analytics-aggregate').addEventListener('click', aggregateAnalytics);
     $('#analytics-generate-insights').addEventListener('click', generateAnalyticsInsights);
+    $('#comments-refresh').addEventListener('click', loadComments);
     $('#access-refresh').addEventListener('click', loadEntitlements);
     $('#audit-refresh').addEventListener('click', loadAuditLogs);
     $('#content-reset').addEventListener('click', () => resetForm(elements.fields.entryType.value));
