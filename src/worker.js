@@ -8914,18 +8914,45 @@ const parseDynamicContentRoute = (pathname) => {
   }
 
   if (section === 'novel') {
-    locale = locale || 'zh-Hant';
+    if (hasLocalePrefix) return null;
     const seriesSlug = cleanSlug(segments[offset + 1] || '', 160);
-    const chapterSlug = segments[offset + 2] === 'chapter' ? cleanSlug(segments[offset + 3] || '', 160) : '';
-    return {
+    const chapterSegment = segments[offset + 2];
+    const chapterSlug = cleanSlug(segments[offset + 3] || '', 160);
+    const segmentCount = segments.length - offset;
+    const baseRoute = {
       basePath: '/novel/',
-      chapterPathSegment: 'chapter',
-      chapterSlug,
-      kind: chapterSlug ? 'novel-chapter' : seriesSlug ? 'novel-series' : 'novel-index',
-      locale,
+      chapterSlug: '',
+      locale: 'zh-Hant',
       readerVersion: 'v2',
-      seriesSlug
+      seriesSlug: ''
     };
+
+    if (segmentCount === 1) {
+      return {
+        ...baseRoute,
+        kind: 'novel-index'
+      };
+    }
+
+    if (segmentCount === 2 && seriesSlug) {
+      return {
+        ...baseRoute,
+        kind: 'novel-series',
+        seriesSlug
+      };
+    }
+
+    if (segmentCount === 4 && seriesSlug && chapterSegment === 'chapter' && chapterSlug) {
+      return {
+        ...baseRoute,
+        chapterPathSegment: 'chapter',
+        chapterSlug,
+        kind: 'novel-chapter',
+        seriesSlug
+      };
+    }
+
+    return null;
   }
 
   if (section === 'works') {
@@ -8961,10 +8988,12 @@ const dynamicCanonicalPath = (route) => {
 
 const dynamicSeriesPath = (route, seriesSlug) => `${route.basePath}${seriesSlug}/`;
 
-const dynamicChapterPath = (route, seriesSlug, chapterSlug) =>
-  route.chapterPathSegment
-    ? `${route.basePath}${seriesSlug}/${route.chapterPathSegment}/${chapterSlug}/`
+const dynamicChapterPath = (route, seriesSlug, chapterSlug) => {
+  const chapterPathSegment = route.chapterPathSegment || (route.readerVersion === 'v2' ? 'chapter' : '');
+  return chapterPathSegment
+    ? `${route.basePath}${seriesSlug}/${chapterPathSegment}/${chapterSlug}/`
     : `${route.basePath}${seriesSlug}/${chapterSlug}/`;
+};
 
 const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '', title }) => `<!doctype html>
 <html lang="${escapeHtml(lang)}">
@@ -10522,11 +10551,17 @@ export const __readerTotpTestHooks = {
   handleReaderPasswordResetConfirm,
   hmacSha256Hex,
   hotpCode,
+  dynamicCanonicalPath,
+  dynamicChapterPath,
+  dynamicSeriesPath,
   normalizeTotpCode,
+  parseDynamicContentRoute,
   readerTotpResetFailureMessage,
   readerTotpResetFailureThreshold,
   readerTotpResetLockedMessage,
   reserveReaderTotpResetAttempt,
+  renderDynamicNovelSeries,
+  renderDynamicNovelChapter,
   sha256Hex,
   shouldSampleReaderTotpResetCleanup,
   timingSafeEqualString,
