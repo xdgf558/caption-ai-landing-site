@@ -6,10 +6,10 @@ export type SerialEntry = CollectionEntry<'serials'>;
 export type SerialChapterEntry = CollectionEntry<'serialChapters'>;
 
 export const worksRootByLocale: Record<SiteLocale, string> = {
-  en: '/works/',
-  ja: '/ja/works/',
-  'zh-Hant': '/zh-hant/works/',
-  'zh-Hans': '/zh-hans/works/'
+  en: '/novel/',
+  ja: '/novel/',
+  'zh-Hant': '/novel/',
+  'zh-Hans': '/novel/'
 };
 
 const serialStatusLabels: Record<SiteLocale, Record<SerialEntry['data']['status'], string>> = {

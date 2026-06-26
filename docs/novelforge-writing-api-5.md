@@ -69,10 +69,12 @@ GET /api/novelforge/analytics/trend?seriesSlug=book&windowDays=30&limit=50
     "parentSlug": "book",
     "title": "Chapter Eight",
     "paths": {
+      "public": "/novel/book/chapter/ch8/",
       "legacy": "/zh-hant/works/book/ch8/",
       "readerV2": "/novel/book/chapter/ch8/"
     },
     "urls": {
+      "public": "https://wwwstationcat.org/novel/book/chapter/ch8/",
       "legacy": "https://wwwstationcat.org/zh-hant/works/book/ch8/",
       "readerV2": "https://wwwstationcat.org/novel/book/chapter/ch8/",
       "preview": "https://wwwstationcat.org/admin-v2/?contentId=8"

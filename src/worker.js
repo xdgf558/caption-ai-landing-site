@@ -1574,19 +1574,6 @@ const contentEntryToJson = (row) => ({
   updatedAt: row.updated_at
 });
 
-const contentEntryPublicPath = (row) => {
-  if (!row) return '';
-  const locale = normalizeContentLocale(row.locale);
-  const basePath = row.entry_type === 'blog_post'
-    ? getPathWithLocale(locale, 'devlog')
-    : getPathWithLocale(locale, 'works');
-
-  if (row.entry_type === 'blog_post') return `${basePath}${row.slug}/`;
-  if (row.entry_type === 'novel_series') return `${basePath}${row.slug}/`;
-  if (row.entry_type === 'novel_chapter' && row.parent_slug) return `${basePath}${row.parent_slug}/${row.slug}/`;
-  return '';
-};
-
 const contentEntryNovelV2Path = (row) => {
   if (!row) return '';
   if (row.entry_type === 'novel_series' && row.slug) return `/novel/${row.slug}/`;
@@ -1594,6 +1581,24 @@ const contentEntryNovelV2Path = (row) => {
     return `/novel/${row.parent_slug}/chapter/${row.slug}/`;
   }
   return '';
+};
+
+const contentEntryLegacyWorksPath = (row) => {
+  if (!row) return '';
+  const locale = normalizeContentLocale(row.locale);
+  const basePath = getPathWithLocale(locale, 'works');
+  if (row.entry_type === 'novel_series' && row.slug) return `${basePath}${row.slug}/`;
+  if (row.entry_type === 'novel_chapter' && row.parent_slug && row.slug) {
+    return `${basePath}${row.parent_slug}/${row.slug}/`;
+  }
+  return '';
+};
+
+const contentEntryPublicPath = (row) => {
+  if (!row) return '';
+  const locale = normalizeContentLocale(row.locale);
+  if (row.entry_type === 'blog_post') return `${getPathWithLocale(locale, 'devlog')}${row.slug}/`;
+  return contentEntryNovelV2Path(row);
 };
 
 const novelForgeRemoteIdForEntry = (row) => {
@@ -4815,7 +4820,7 @@ const normalizeReaderBookmarkPayload = (payload) => {
     throw error;
   }
 
-  const fallbackPath = `/zh-hant/works/${seriesSlug}/${chapterSlug}/`;
+  const fallbackPath = `/novel/${seriesSlug}/chapter/${chapterSlug}/`;
   const rawProgress = Number.parseInt(payload.progressPercent ?? payload.progress ?? '', 10);
   const progressPercent = Number.isFinite(rawProgress) ? Math.max(0, Math.min(100, rawProgress)) : 0;
 
@@ -6518,7 +6523,7 @@ const normalizeCheckoutPayload = async (payload, session, env, db) => {
   const locale = cleanText(payload.locale, 20);
   const returnPath = cleanRedirectPath(
     payload.returnPath,
-    orderType === novelCreditPackOrderType ? '/library/' : seriesSlug ? `/zh-hant/works/${seriesSlug}/` : '/library/'
+    orderType === novelCreditPackOrderType ? '/library/' : seriesSlug ? `/novel/${seriesSlug}/` : '/library/'
   );
 
   if (orderType !== novelCreditPackOrderType && !seriesSlug) {
@@ -9083,9 +9088,8 @@ const getNovelForgeBody = (payload) => {
   return '';
 };
 
-const novelForgePublicSeriesUrl = (origin, locale, slug) => {
-  const segment = localePathSegments[normalizeContentLocale(locale)] || 'zh-hant';
-  return `${origin}/${segment}/works/${slug}/`;
+const novelForgePublicSeriesUrl = (origin, _locale, slug) => {
+  return `${origin}/novel/${slug}/`;
 };
 
 const novelForgePreviewUrl = (origin, entryId) => `${origin}/admin-v2/?contentId=${encodeURIComponent(String(entryId))}`;
@@ -9265,6 +9269,7 @@ const novelForgeAnalyticsEntryToJson = (entry, request) => {
   if (!entry) return null;
   const origin = originFromRequest(request);
   const publicPath = contentEntryPublicPath(entry);
+  const legacyPath = contentEntryLegacyWorksPath(entry);
   const readerV2Path = contentEntryNovelV2Path(entry);
 
   return {
@@ -9281,11 +9286,13 @@ const novelForgeAnalyticsEntryToJson = (entry, request) => {
     wordCount: normalizePositiveInteger(entry.word_count, 0),
     updatedAt: entry.updated_at || '',
     paths: {
-      legacy: publicPath,
+      public: publicPath,
+      legacy: legacyPath,
       readerV2: readerV2Path
     },
     urls: {
-      legacy: withOrigin(origin, publicPath),
+      public: withOrigin(origin, publicPath),
+      legacy: withOrigin(origin, legacyPath),
       preview: entry.id ? novelForgePreviewUrl(origin, entry.id) : '',
       readerV2: withOrigin(origin, readerV2Path)
     }
@@ -10488,13 +10495,35 @@ const parseDynamicContentRoute = (pathname) => {
 
   if (section === 'works') {
     locale = locale || 'en';
-    return {
-      basePath: hasLocalePrefix ? getPathWithLocale(locale, 'works') : '/works/',
-      chapterSlug: cleanSlug(segments[offset + 2] || '', 160),
-      kind: segments[offset + 2] ? 'novel-chapter' : segments[offset + 1] ? 'novel-series' : 'novel-index',
+    const basePath = hasLocalePrefix ? getPathWithLocale(locale, 'works') : '/works/';
+    const seriesSlug = cleanSlug(segments[offset + 1] || '', 160);
+    const chapterSlug = cleanSlug(segments[offset + 2] || '', 160);
+    const segmentCount = segments.length - offset;
+    const baseRoute = {
+      basePath,
+      chapterSlug: '',
+      kind: 'novel-index',
       locale,
-      seriesSlug: cleanSlug(segments[offset + 1] || '', 160)
+      seriesSlug: ''
     };
+
+    if (segmentCount === 1) return baseRoute;
+    if (segmentCount === 2 && seriesSlug) {
+      return {
+        ...baseRoute,
+        kind: 'novel-series',
+        seriesSlug
+      };
+    }
+    if (segmentCount === 3 && seriesSlug && chapterSlug) {
+      return {
+        ...baseRoute,
+        chapterSlug,
+        kind: 'novel-chapter',
+        seriesSlug
+      };
+    }
+    return null;
   }
 
   return null;
@@ -10623,7 +10652,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       <header class="topbar">
         <a class="brand" href="/"><span>SC</span><span>Station Cat</span></a>
         <nav class="nav">
-          <a href="/zh-hant/works/">連載小說</a>
+          <a href="/novel/">連載小說</a>
           <a href="/devlog/">開發博客</a>
           <a href="/apps/">Apps</a>
           <a href="/library/">會員登入</a>
@@ -12192,6 +12221,28 @@ const pageRedirects = {
   '/ja/apps/anytls-desktop-manager/': '/ja/apps/nodepilot/'
 };
 
+const getLegacyWorksRedirectPath = (pathname) => {
+  const normalizedPath = pathname.replace(/\/+$/, '') || '/';
+  const segments = normalizedPath.split('/').filter(Boolean);
+  if (!segments.length) return '';
+
+  let offset = 0;
+  if (pathSegmentLocales[segments[0]]) {
+    offset = 1;
+  }
+
+  if (segments[offset] !== 'works') return '';
+
+  const segmentCount = segments.length - offset;
+  const seriesSlug = cleanSlug(segments[offset + 1] || '', 160);
+  const chapterSlug = cleanSlug(segments[offset + 2] || '', 160);
+
+  if (segmentCount === 1) return '/novel/';
+  if (segmentCount === 2 && seriesSlug) return `/novel/${seriesSlug}/`;
+  if (segmentCount === 3 && seriesSlug && chapterSlug) return `/novel/${seriesSlug}/chapter/${chapterSlug}/`;
+  return '';
+};
+
 const rateLimitResponse = (message, retryAfterSeconds) =>
   new Response(message, {
     status: 429,
@@ -12308,7 +12359,11 @@ export const __readerTotpTestHooks = {
   buildNovelAiInsightFromStats,
   buildNovelChapterStatsMetrics,
   bytesToBase32,
+  contentEntryLegacyWorksPath,
+  contentEntryNovelV2Path,
+  contentEntryPublicPath,
   getD1ChangeCount,
+  getLegacyWorksRedirectPath,
   getReaderTotpResetLimitKeys,
   getReaderTotpResetIdentifierHash,
   getRequestClientHashes,
@@ -12354,10 +12409,17 @@ export default {
     const downloadFile = downloadFiles[url.pathname];
     const externalDownloadRedirect = externalDownloadRedirects[url.pathname];
     const redirectPath = pageRedirects[url.pathname];
+    const legacyWorksRedirectPath = getLegacyWorksRedirectPath(url.pathname);
 
     if (isAdminRequest) {
       const adminAccessResponse = await enforceAdminAccess(request, env);
       if (adminAccessResponse) return adminAccessResponse;
+    }
+
+    if (legacyWorksRedirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
+      const redirectUrl = new URL(legacyWorksRedirectPath, url.origin);
+      redirectUrl.search = url.search;
+      return Response.redirect(redirectUrl.toString(), 301);
     }
 
     if (redirectPath && (request.method === 'GET' || request.method === 'HEAD')) {

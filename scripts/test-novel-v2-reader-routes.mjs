@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
-import { __readerTotpTestHooks as hooks } from '../src/worker.js';
+import worker, { __readerTotpTestHooks as hooks } from '../src/worker.js';
 
 const root = join(fileURLToPath(new URL('..', import.meta.url)));
 const read = (path) => readFileSync(join(root, path), 'utf8');
@@ -118,6 +118,15 @@ assert.equal(hooks.parseDynamicContentRoute('/novel/book/chapter/'), null);
 assert.equal(hooks.parseDynamicContentRoute('/novel/book/chapter/ch1/extra/'), null);
 assert.equal(hooks.parseDynamicContentRoute('/en/novel/book/chapter/ch1/'), null);
 assert.equal(hooks.parseDynamicContentRoute('/zh-hant/novel/book/chapter/ch1/'), null);
+assert.equal(hooks.parseDynamicContentRoute('/works/book/ch1/extra/'), null);
+
+assert.equal(hooks.getLegacyWorksRedirectPath('/works/'), '/novel/');
+assert.equal(hooks.getLegacyWorksRedirectPath('/en/works/'), '/novel/');
+assert.equal(hooks.getLegacyWorksRedirectPath('/zh-hant/works/'), '/novel/');
+assert.equal(hooks.getLegacyWorksRedirectPath('/zh-hans/works/book/'), '/novel/book/');
+assert.equal(hooks.getLegacyWorksRedirectPath('/ja/works/book/ch1/'), '/novel/book/chapter/ch1/');
+assert.equal(hooks.getLegacyWorksRedirectPath('/works/book/ch1/extra/'), '');
+assert.equal(hooks.getLegacyWorksRedirectPath('/novel/book/chapter/ch1/'), '');
 
 assert.equal(hooks.dynamicCanonicalPath(novelChapterRoute), '/novel/book/chapter/ch1/');
 assert.equal(hooks.dynamicSeriesPath(novelChapterRoute, 'book'), '/novel/book/');
@@ -125,6 +134,23 @@ assert.equal(hooks.dynamicChapterPath(novelChapterRoute, 'book', 'ch2'), '/novel
 
 const worksChapterRoute = hooks.parseDynamicContentRoute('/works/book/ch1/');
 assert.equal(hooks.dynamicChapterPath(worksChapterRoute, 'book', 'ch2'), '/works/book/ch2/');
+
+const contentSeriesRow = { entry_type: 'novel_series', locale: 'zh-Hant', slug: 'book' };
+const contentChapterRow = { entry_type: 'novel_chapter', locale: 'zh-Hant', parent_slug: 'book', slug: 'ch1' };
+assert.equal(hooks.contentEntryPublicPath(contentSeriesRow), '/novel/book/');
+assert.equal(hooks.contentEntryPublicPath(contentChapterRow), '/novel/book/chapter/ch1/');
+assert.equal(hooks.contentEntryLegacyWorksPath(contentSeriesRow), '/zh-hant/works/book/');
+assert.equal(hooks.contentEntryLegacyWorksPath(contentChapterRow), '/zh-hant/works/book/ch1/');
+
+const legacyRedirectResponse = await worker.fetch(
+  new Request('https://wwwstationcat.org/zh-hant/works/book/ch1/?a=1'),
+  {}
+);
+assert.equal(legacyRedirectResponse.status, 301);
+assert.equal(
+  legacyRedirectResponse.headers.get('location'),
+  'https://wwwstationcat.org/novel/book/chapter/ch1/?a=1'
+);
 
 const serial = {
   access_level: 'paid',

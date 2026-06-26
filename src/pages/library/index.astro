@@ -182,7 +182,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <div class="reader-empty-shelf" id="reader-bookmark-empty">
       <h3>目前還沒有保存書籤。</h3>
       <p>打開小說章節後，點擊「保存書籤」，下次就可以從這裡接著閱讀。</p>
-      <a class="button button-secondary" href="/zh-hant/works/">去看連載小說</a>
+      <a class="button button-secondary" href="/novel/">去看連載小說</a>
     </div>
 
     <div class="station-section__heading">
@@ -193,7 +193,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <div class="reader-empty-shelf" id="reader-library-empty">
       <h3>目前還沒有已解鎖內容。</h3>
       <p>登入後，這裡會顯示管理員手動授權或之後由 NOWPayments 支付成功發放的章節 / 作品權限。</p>
-      <a class="button button-secondary" href="/zh-hant/works/">回到連載小說</a>
+      <a class="button button-secondary" href="/novel/">回到連載小說</a>
     </div>
   </section>
 
@@ -345,8 +345,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const entitlementHref = (item) => {
-      if (item.scope === 'series') return `/zh-hant/works/${item.seriesSlug}/`;
-      return `/zh-hant/works/${item.seriesSlug}/${item.chapterSlug}/`;
+      if (item.scope === 'series') return `/novel/${item.seriesSlug}/`;
+      return `/novel/${item.seriesSlug}/chapter/${item.chapterSlug}/`;
     };
 
     const renderLibrary = (items) => {
@@ -393,7 +393,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       bookmarkEmpty.hidden = items.length > 0;
 
       const bookmarkHref = (item) => {
-        const fallbackPath = `/zh-hant/works/${item.seriesSlug}/${item.chapterSlug}/`;
+        const fallbackPath = `/novel/${item.seriesSlug}/chapter/${item.chapterSlug}/`;
         const sourcePath = item.sourcePath || fallbackPath;
         const anchorId = item.metadata?.anchorId;
         if (anchorId && !sourcePath.includes('#')) {
