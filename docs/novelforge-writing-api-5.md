@@ -23,12 +23,13 @@ GET /api/novelforge/analytics/chapter/:seriesSlug/:chapterSlug?windowDays=30
 GET /api/novelforge/analytics/chapter?seriesSlug=book&chapterSlug=ch8&windowDays=30
 ```
 
-`chapterIdOrSlug` 可以是 NovelForge 保存的远端 ID，例如 `chapter_8`，也可以是章节 slug。返回内容包括章节元信息、旧阅读路径、Novel V2 阅读路径和当前窗口的 `chapter_stats`。
+`chapterIdOrSlug` 单独使用时必须是 NovelForge 保存的远端 ID，例如 `chapter_8`。如果使用章节 slug，必须同时提供作品 slug：要么走 `/chapter/:seriesSlug/:chapterSlug`，要么走 `?seriesSlug=book&chapterSlug=ch8`。这样可以避免不同作品里同名章节 slug 拿错统计。返回内容包括章节元信息、旧阅读路径、Novel V2 阅读路径和当前窗口的 `chapter_stats`。
 
 ### 单章 AI Insight
 
 ```http
 GET /api/novelforge/analytics/insights/:chapterIdOrSlug?windowDays=30
+GET /api/novelforge/analytics/insights/:seriesSlug/:chapterSlug?windowDays=30
 GET /api/novelforge/analytics/insights?seriesSlug=book&chapterSlug=ch8&windowDays=30
 ```
 

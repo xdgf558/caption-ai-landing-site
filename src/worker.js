@@ -9142,9 +9142,12 @@ const parseNovelForgeAnalyticsRoute = (pathname) => {
 
   const resource = cleanText(segments[3], 40).toLowerCase();
   if (!['chapter', 'insights', 'trend'].includes(resource)) return null;
+  const identifierSegments = segments.slice(4).map(safeDecodePathSegment);
+  if (resource === 'trend' && identifierSegments.length > 1) return null;
+  if ((resource === 'chapter' || resource === 'insights') && identifierSegments.length > 2) return null;
 
   return {
-    identifier: segments.slice(4).map(safeDecodePathSegment).join('/'),
+    identifier: identifierSegments.join('/'),
     resource
   };
 };
@@ -9171,28 +9174,6 @@ const findContentEntryBySlug = async (db, { entryType, locale, parentSlug = '', 
        LIMIT 1`
     )
     .bind(normalizedEntryType, normalizedLocale, normalizedParentSlug, normalizedSlug)
-    .first();
-};
-
-const findNovelForgeChapterBySlugOnly = async (db, { chapterSlug, locale }) => {
-  const normalizedChapterSlug = cleanSlug(chapterSlug, 160);
-  const normalizedLocale = normalizeContentLocale(locale || 'zh-Hant');
-  if (!normalizedChapterSlug) return null;
-
-  return db
-    .prepare(
-      `SELECT *
-       FROM content_entries
-       WHERE entry_type = 'novel_chapter'
-         AND locale = ?
-         AND slug = ?
-       ORDER BY
-         CASE status WHEN 'published' THEN 0 WHEN 'scheduled' THEN 1 WHEN 'draft' THEN 2 ELSE 3 END,
-         COALESCE(published_at, updated_at) DESC,
-         id DESC
-       LIMIT 1`
-    )
-    .bind(normalizedLocale, normalizedChapterSlug)
     .first();
 };
 
@@ -9261,16 +9242,19 @@ const findNovelForgeChapterForAnalytics = async (db, options) => {
   const chapterSlug = cleanSlug(options.chapterSlug || parsedIdentifier.chapterSlug, 160);
   if (!chapterSlug) return null;
 
-  if (seriesSlug) {
-    return findContentEntryBySlug(db, {
-      entryType: 'novel_chapter',
-      locale,
-      parentSlug: seriesSlug,
-      slug: chapterSlug
-    });
+  if (!seriesSlug) {
+    const error = new Error('seriesSlug is required when resolving a NovelForge chapter by slug. Use seriesSlug + chapterSlug, /seriesSlug/chapterSlug, or a chapter_N remote ID.');
+    error.code = 'NOVELFORGE_SERIES_REQUIRED';
+    error.status = 400;
+    throw error;
   }
 
-  return findNovelForgeChapterBySlugOnly(db, { chapterSlug, locale });
+  return findContentEntryBySlug(db, {
+    entryType: 'novel_chapter',
+    locale,
+    parentSlug: seriesSlug,
+    slug: chapterSlug
+  });
 };
 
 const originFromRequest = (request) => new URL(request.url).origin;
@@ -9484,7 +9468,15 @@ const handleNovelForgeAnalytics = async (request, env, route) => {
     });
   }
 
-  const chapter = await findNovelForgeChapterForAnalytics(db, options);
+  let chapter;
+  try {
+    chapter = await findNovelForgeChapterForAnalytics(db, options);
+  } catch (error) {
+    return novelForgeImportError(error.message || 'NovelForge chapter lookup failed.', {
+      code: error.code || 'NOVELFORGE_CHAPTER_LOOKUP_FAILED',
+      status: error.status || 400
+    });
+  }
   if (!chapter) {
     return novelForgeImportError('NovelForge chapter was not found.', { code: 'NOVELFORGE_CHAPTER_NOT_FOUND', status: 404 });
   }

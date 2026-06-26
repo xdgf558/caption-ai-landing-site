@@ -206,6 +206,8 @@ assert.match(docsSource, /station-cat-novelforge-analytics\.v1/);
 
 const parsedRoute = hooks.parseNovelForgeAnalyticsRoute('/api/novelforge/analytics/chapter/book/ch8/');
 assert.deepEqual(parsedRoute, { identifier: 'book/ch8', resource: 'chapter' });
+assert.equal(hooks.parseNovelForgeAnalyticsRoute('/api/novelforge/analytics/chapter/book/ch8/extra'), null);
+assert.equal(hooks.parseNovelForgeAnalyticsRoute('/api/novelforge/analytics/trend/book/extra'), null);
 
 const env = { NOVELFORGE_PUBLISH_TOKEN: 'secret', WAITLIST_DB: new MockDb() };
 const authHeaders = {
@@ -242,6 +244,28 @@ assert.equal(chapterBody.chapter.remoteId, 'chapter_8');
 assert.equal(chapterBody.chapter.paths.readerV2, '/novel/book/chapter/ch8/');
 assert.equal(chapterBody.stats.windowDays, 7);
 assert.equal(chapterBody.stats.chapterSlug, 'ch8');
+
+const slugWithoutSeriesResponse = await hooks.handleNovelForgeAnalytics(
+  new Request('https://wwwstationcat.org/api/novelforge/analytics/chapter/ch8', {
+    headers: authHeaders
+  }),
+  env,
+  hooks.parseNovelForgeAnalyticsRoute('/api/novelforge/analytics/chapter/ch8')
+);
+const slugWithoutSeriesBody = await slugWithoutSeriesResponse.json();
+assert.equal(slugWithoutSeriesResponse.status, 400);
+assert.equal(slugWithoutSeriesBody.error.code, 'NOVELFORGE_SERIES_REQUIRED');
+
+const slugWithSeriesResponse = await hooks.handleNovelForgeAnalytics(
+  new Request('https://wwwstationcat.org/api/novelforge/analytics/chapter/ch8?seriesSlug=book&windowDays=7', {
+    headers: authHeaders
+  }),
+  env,
+  hooks.parseNovelForgeAnalyticsRoute('/api/novelforge/analytics/chapter/ch8')
+);
+const slugWithSeriesBody = await slugWithSeriesResponse.json();
+assert.equal(slugWithSeriesResponse.status, 200);
+assert.equal(slugWithSeriesBody.chapter.parentSlug, 'book');
 
 const insightsResponse = await hooks.handleNovelForgeAnalytics(
   new Request('https://wwwstationcat.org/api/novelforge/analytics/insights?seriesSlug=book&chapterSlug=ch8&windowDays=30', {
