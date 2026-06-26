@@ -79,6 +79,7 @@ const interactionCopy = {
     commentSubmit: 'Submit comment',
     commentSubmitting: 'Submitting comment...',
     commentSubmitted: 'Comment submitted. It will appear after review.',
+    commentAccessRequired: 'Unlock this chapter before reading or submitting comments.',
     commentFailed: 'Could not load comments.',
     commentSignInRequired: 'Please sign in before submitting a comment.',
     commentTooShort: 'Write at least 2 characters before submitting.',
@@ -99,6 +100,7 @@ const interactionCopy = {
     commentSubmit: 'コメントを送信',
     commentSubmitting: 'コメントを送信しています...',
     commentSubmitted: 'コメントを送信しました。確認後に表示されます。',
+    commentAccessRequired: 'この章を解放するとコメントを読んだり送信したりできます。',
     commentFailed: 'コメントを読み込めませんでした。',
     commentSignInRequired: 'コメントを送る前にログインしてください。',
     commentTooShort: '2文字以上入力してから送信してください。',
@@ -119,6 +121,7 @@ const interactionCopy = {
     commentSubmit: '提交評論',
     commentSubmitting: '正在提交評論...',
     commentSubmitted: '評論已提交，審核通過後會展示。',
+    commentAccessRequired: '解鎖本章後，可以查看或提交評論。',
     commentFailed: '評論載入失敗。',
     commentSignInRequired: '請先登入會員，再提交評論。',
     commentTooShort: '至少寫 2 個字再提交。',
@@ -139,6 +142,7 @@ const interactionCopy = {
     commentSubmit: '提交评论',
     commentSubmitting: '正在提交评论...',
     commentSubmitted: '评论已提交，审核通过后会展示。',
+    commentAccessRequired: '解锁本章后，可以查看或提交评论。',
     commentFailed: '评论加载失败。',
     commentSignInRequired: '请先登录会员，再提交评论。',
     commentTooShort: '至少写 2 个字再提交。',
@@ -652,6 +656,10 @@ const accessGateCopy = {
       try {
         const response = await fetch(`${commentsEndpoint}?${params.toString()}`);
         const payload = await response.json().catch(() => ({}));
+        if (response.status === 401 || response.status === 403 || payload.code === 'CHAPTER_COMMENT_ACCESS_REQUIRED') {
+          commentsList.innerHTML = `<p class="reader-status">${escapeClientHtml(interactionCopy.commentAccessRequired)}</p>`;
+          return;
+        }
         if (!response.ok || payload.ok === false) throw new Error(payload.message || 'Failed');
         renderComments(payload.comments || []);
       } catch {
@@ -739,6 +747,10 @@ const accessGateCopy = {
         if (response.status === 401 || payload.code === 'SIGN_IN_REQUIRED') {
           setCommentStatus(interactionCopy.commentSignInRequired, 'error');
           window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`;
+          return;
+        }
+        if (response.status === 403 || payload.code === 'CHAPTER_COMMENT_ACCESS_REQUIRED') {
+          setCommentStatus(interactionCopy.commentAccessRequired, 'error');
           return;
         }
         if (!response.ok || payload.ok === false) throw new Error(payload.message || interactionCopy.commentFailed);

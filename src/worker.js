@@ -316,9 +316,9 @@ const novelReadingEventTypes = new Set([
   'like',
   'bookmark',
   'comment_open',
-  'comment_draft',
-  'comment_submit'
+  'comment_draft'
 ]);
+const novelInternalReadingEventTypes = new Set([...novelReadingEventTypes, 'comment_submit']);
 const novelReadingEventMaxBatchSize = 20;
 const novelReadingEventMaxMetadataKeys = 20;
 const novelReadingEventRateLimitWindowSeconds = 60;
@@ -5066,7 +5066,8 @@ const normalizeNullableInteger = (value, options = {}) => {
 
 const normalizeReadingEventPayload = (payload, options = {}) => {
   const eventType = cleanText(payload.eventType || payload.event, 40).toLowerCase();
-  if (!novelReadingEventTypes.has(eventType)) {
+  const eventTypes = options.eventTypes || novelReadingEventTypes;
+  if (!eventTypes.has(eventType)) {
     const error = new Error('Unsupported reading event type.');
     error.code = 'INVALID_READING_EVENT_TYPE';
     throw error;
@@ -5190,6 +5191,96 @@ const selectReaderCommentById = async (db, id) =>
     .bind(id)
     .first();
 
+const getPublishedNovelChapterForComments = async (db, seriesSlug, chapterSlug, locale) => {
+  if (!(await ensureContentTablesReady(db))) {
+    const error = new Error('Content entries are not initialized.');
+    error.code = 'CONTENT_ENTRIES_NOT_READY';
+    throw error;
+  }
+
+  return db
+    .prepare(
+      `SELECT id, parent_slug, slug, locale, title, access_level
+       FROM content_entries
+       WHERE entry_type = 'novel_chapter'
+         AND parent_slug = ?
+         AND slug = ?
+         AND locale = ?
+         AND status = 'published'
+         AND visibility IN ('public', 'unlisted')
+       ORDER BY COALESCE(published_at, updated_at) DESC, id DESC
+       LIMIT 1`
+    )
+    .bind(seriesSlug, chapterSlug, locale)
+    .first();
+};
+
+const getNovelChapterAccessRequired = (chapter) => {
+  const accessLevel = cleanText(chapter?.access_level || 'free', 40).toLowerCase();
+  if (!accessLevel || accessLevel === 'free' || accessLevel === 'public') return 'free';
+  if (accessLevel === 'supporter') return 'supporter';
+  return 'paid';
+};
+
+const resolveReaderChapterAccessForComments = async (db, env, session, chapter) => {
+  const accessRequired = getNovelChapterAccessRequired(chapter);
+  if (accessRequired === 'free') {
+    return {
+      accessRequired,
+      allowed: true,
+      authenticated: Boolean(session),
+      protected: false,
+      reason: 'free'
+    };
+  }
+
+  if (!session) {
+    return {
+      accessRequired,
+      allowed: false,
+      authenticated: false,
+      protected: true,
+      reason: 'sign_in_required'
+    };
+  }
+
+  const [membershipSettings, membership] = accessRequired === 'paid'
+    ? await Promise.all([
+        getReaderMembershipSettings(db, env),
+        getActiveReaderMembership(db, session.account_id)
+      ])
+    : [{ membershipCoversPaidContent: false }, null];
+  const membershipAllowed = Boolean(membership && membershipSettings.enabled && membershipSettings.membershipCoversPaidContent);
+  if (membershipAllowed) {
+    return {
+      accessRequired,
+      allowed: true,
+      authenticated: true,
+      membership,
+      protected: true,
+      reason: 'membership_active'
+    };
+  }
+
+  const entitlement = await findActiveNovelEntitlement(db, session.account_id, chapter.parent_slug, chapter.slug, accessRequired);
+  return {
+    accessRequired,
+    allowed: Boolean(entitlement),
+    authenticated: true,
+    entitlement,
+    protected: true,
+    reason: entitlement ? 'entitled' : 'entitlement_required'
+  };
+};
+
+const commentAccessDeniedPayload = (access) => ({
+  accessRequired: access.accessRequired || 'paid',
+  comments: [],
+  ok: false,
+  protected: true,
+  reason: access.reason || 'entitlement_required'
+});
+
 const insertCommentSubmitReadingEvent = async (db, request, session, payload, comment, clientHashes) => {
   if (!(await ensureReadingEventsReady(db))) return;
   const event = normalizeReadingEventPayload(
@@ -5213,6 +5304,7 @@ const insertCommentSubmitReadingEvent = async (db, request, session, payload, co
     },
     {
       chapterSlug: comment.chapter_slug,
+      eventTypes: novelInternalReadingEventTypes,
       locale: comment.locale,
       seriesSlug: comment.series_slug,
       sourcePath: comment.source_path
@@ -5262,6 +5354,51 @@ const handlePublicNovelComments = async (request, env) => {
   const limit = Math.min(Math.max(Number.parseInt(url.searchParams.get('limit') || '30', 10) || 30, 1), 50);
   if (!seriesSlug || !chapterSlug) {
     return json({ ok: false, message: 'seriesSlug and chapterSlug are required.' }, { status: 400 });
+  }
+
+  let chapter;
+  try {
+    chapter = await getPublishedNovelChapterForComments(db, seriesSlug, chapterSlug, locale);
+  } catch (error) {
+    if (error.code === 'CONTENT_ENTRIES_NOT_READY') {
+      return json(
+        {
+          ok: false,
+          code: 'CONTENT_ENTRIES_NOT_READY',
+          comments: [],
+          message: 'Content entries are not initialized.'
+        },
+        { status: 503 }
+      );
+    }
+    throw error;
+  }
+  if (!chapter) {
+    return json(
+      {
+        ok: false,
+        code: 'COMMENT_CHAPTER_NOT_FOUND',
+        comments: [],
+        message: 'Chapter was not found.'
+      },
+      { status: 404 }
+    );
+  }
+
+  let access = await resolveReaderChapterAccessForComments(db, env, null, chapter);
+  if (access.protected) {
+    const session = await getReaderFromSession(request, env);
+    access = await resolveReaderChapterAccessForComments(db, env, session, chapter);
+    if (!access.allowed) {
+      return json(
+        {
+          ...commentAccessDeniedPayload(access),
+          code: access.authenticated ? 'CHAPTER_COMMENT_ACCESS_REQUIRED' : 'SIGN_IN_REQUIRED',
+          message: access.authenticated ? '解锁后可查看评论。' : '请先登入会员账号，再查看本章评论。'
+        },
+        { status: access.authenticated ? 403 : 401 }
+      );
+    }
   }
 
   const response = await db
@@ -5328,6 +5465,45 @@ const handleReaderCommentSubmit = async (request, env) => {
   const locale = normalizeContentLocale(payload.locale || 'zh-Hant');
   if (!seriesSlug || !chapterSlug) {
     return json({ ok: false, message: 'seriesSlug and chapterSlug are required.' }, { status: 400 });
+  }
+
+  let chapter;
+  try {
+    chapter = await getPublishedNovelChapterForComments(db, seriesSlug, chapterSlug, locale);
+  } catch (error) {
+    if (error.code === 'CONTENT_ENTRIES_NOT_READY') {
+      return json(
+        {
+          ok: false,
+          code: 'CONTENT_ENTRIES_NOT_READY',
+          message: 'Content entries are not initialized.'
+        },
+        { status: 503 }
+      );
+    }
+    throw error;
+  }
+  if (!chapter) {
+    return json(
+      {
+        ok: false,
+        code: 'COMMENT_CHAPTER_NOT_FOUND',
+        message: 'Chapter was not found.'
+      },
+      { status: 404 }
+    );
+  }
+
+  const access = await resolveReaderChapterAccessForComments(db, env, session, chapter);
+  if (!access.allowed) {
+    return json(
+      {
+        ...commentAccessDeniedPayload(access),
+        code: 'CHAPTER_COMMENT_ACCESS_REQUIRED',
+        message: '解锁后才可以提交本章评论。'
+      },
+      { status: 403 }
+    );
   }
 
   const recentCommentRow = await db
@@ -11306,6 +11482,7 @@ const dynamicReaderInteractionCopy = {
   en: {
     body: 'Like this chapter, save your reading point, or submit a comment for review.',
     comment: 'Comment',
+    commentAccessRequired: 'Unlock this chapter before reading or submitting comments.',
     commentEmpty: 'No public comments yet.',
     commentFailed: 'Could not load comments.',
     commentLabel: 'Comment',
@@ -11326,6 +11503,7 @@ const dynamicReaderInteractionCopy = {
   ja: {
     body: 'この章にいいねを付けたり、読書位置を保存したり、レビュー用コメントを送れます。',
     comment: 'コメント',
+    commentAccessRequired: 'この章を解放するとコメントを読んだり送信したりできます。',
     commentEmpty: '公開コメントはまだありません。',
     commentFailed: 'コメントを読み込めませんでした。',
     commentLabel: 'コメント',
@@ -11346,6 +11524,7 @@ const dynamicReaderInteractionCopy = {
   'zh-Hant': {
     body: '可以喜歡本章、保存目前閱讀位置，也可以提交評論，審核通過後公開展示。',
     comment: '評論',
+    commentAccessRequired: '解鎖本章後，可以查看或提交評論。',
     commentEmpty: '目前還沒有公開評論。',
     commentFailed: '評論載入失敗。',
     commentLabel: '評論內容',
@@ -11366,6 +11545,7 @@ const dynamicReaderInteractionCopy = {
   'zh-Hans': {
     body: '可以喜欢本章、保存目前阅读位置，也可以提交评论，审核通过后公开展示。',
     comment: '评论',
+    commentAccessRequired: '解锁本章后，可以查看或提交评论。',
     commentEmpty: '目前还没有公开评论。',
     commentFailed: '评论加载失败。',
     commentLabel: '评论内容',
@@ -11699,6 +11879,10 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
           try {
             const response = await fetch(commentsEndpoint + '?' + params.toString());
             const payload = await response.json().catch(() => ({}));
+            if (response.status === 401 || response.status === 403 || payload.code === 'CHAPTER_COMMENT_ACCESS_REQUIRED') {
+              commentsList.innerHTML = '<p class="status">' + escapeClientHtml(interactionCopy.commentAccessRequired) + '</p>';
+              return;
+            }
             if (!response.ok || payload.ok === false) throw new Error(payload.message || 'Failed');
             renderComments(payload.comments || []);
           } catch {
@@ -11778,6 +11962,10 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
             if (response.status === 401 || payload.code === 'SIGN_IN_REQUIRED') {
               setCommentStatus(interactionCopy.commentSignInRequired, 'error');
               window.location.href = '/library/?returnTo=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
+              return;
+            }
+            if (response.status === 403 || payload.code === 'CHAPTER_COMMENT_ACCESS_REQUIRED') {
+              setCommentStatus(interactionCopy.commentAccessRequired, 'error');
               return;
             }
             if (!response.ok || payload.ok === false) throw new Error(payload.message || interactionCopy.commentFailed);

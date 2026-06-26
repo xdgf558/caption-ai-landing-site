@@ -31,14 +31,41 @@ class MockBoundStatement {
       if (this.db.missingReaderComments) throw new Error('D1_ERROR: no such table: reader_comments');
       return null;
     }
+    if (/SELECT id FROM content_entries LIMIT 1/i.test(this.sql)) {
+      if (this.db.missingContentEntries) throw new Error('D1_ERROR: no such table: content_entries');
+      return null;
+    }
     if (/SELECT id FROM reading_events LIMIT 1/i.test(this.sql)) {
+      return null;
+    }
+    if (/SELECT account_id FROM reader_memberships LIMIT 1/i.test(this.sql)) {
+      return null;
+    }
+    if (/SELECT id FROM admin_content_settings LIMIT 1/i.test(this.sql)) {
       return null;
     }
     if (/SELECT COUNT\(\*\) AS count\s+FROM reader_comments\s+WHERE account_id = \?/i.test(this.sql)) {
       return { count: this.db.recentCommentCount };
     }
+    if (/FROM content_entries/i.test(this.sql) && /entry_type = 'novel_chapter'/i.test(this.sql)) {
+      if (this.db.missingChapter) return null;
+      return {
+        access_level: this.db.chapterAccessLevel,
+        id: 101,
+        locale: this.params[2] || 'zh-Hant',
+        parent_slug: this.params[0],
+        slug: this.params[1],
+        title: 'Test Chapter'
+      };
+    }
     if (/FROM reader_sessions/i.test(this.sql)) {
       return this.db.session || null;
+    }
+    if (/FROM reader_memberships\s+WHERE account_id = \?/i.test(this.sql)) {
+      return this.db.membership || null;
+    }
+    if (/FROM novel_entitlements/i.test(this.sql) && /WHERE account_id = \?/i.test(this.sql)) {
+      return this.db.entitlement || null;
     }
     if (/SELECT\s+reader_comments\.\*/i.test(this.sql) && /WHERE reader_comments\.id = \?/i.test(this.sql)) {
       return this.db.comments.get(this.params[0]) || null;
@@ -135,7 +162,12 @@ class MockStatement {
 class MockDb {
   constructor(options = {}) {
     this.auditLogs = [];
+    this.chapterAccessLevel = options.chapterAccessLevel || 'free';
     this.comments = new Map();
+    this.entitlement = options.entitlement || null;
+    this.membership = options.membership || null;
+    this.missingChapter = Boolean(options.missingChapter);
+    this.missingContentEntries = Boolean(options.missingContentEntries);
     this.missingReaderComments = Boolean(options.missingReaderComments);
     this.readingEvents = [];
     this.recentCommentCount = Number(options.recentCommentCount || 0);
@@ -223,12 +255,87 @@ assert.equal(submitPayload.comment.status, 'pending');
 assert.equal(db.readingEvents.length, 1);
 assert.equal(db.readingEvents[0].eventType, 'comment_submit');
 
+const protectedSubmitDb = new MockDb({ chapterAccessLevel: 'paid', session: account });
+const protectedSubmitResponse = await hooks.handleReaderCommentSubmit(
+  new Request('https://wwwstationcat.org/api/readers/comments', {
+    method: 'POST',
+    headers: {
+      cookie: 'station_cat_reader_session=test-session',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({ body: '还没解锁也想评论', chapterSlug: 'paid-ch1', seriesSlug: 'book' })
+  }),
+  { WAITLIST_DB: protectedSubmitDb }
+);
+assert.equal(protectedSubmitResponse.status, 403);
+assert.equal((await protectedSubmitResponse.json()).code, 'CHAPTER_COMMENT_ACCESS_REQUIRED');
+
+const protectedAuthorizedDb = new MockDb({
+  chapterAccessLevel: 'paid',
+  entitlement: {
+    access_level: 'paid',
+    account_id: account.account_id,
+    chapter_slug: 'paid-ch1',
+    id: 88,
+    scope: 'chapter',
+    series_slug: 'book'
+  },
+  session: account
+});
+const protectedAuthorizedResponse = await hooks.handleReaderCommentSubmit(
+  new Request('https://wwwstationcat.org/api/readers/comments', {
+    method: 'POST',
+    headers: {
+      cookie: 'station_cat_reader_session=test-session',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({ body: '解锁后评论正常。', chapterSlug: 'paid-ch1', seriesSlug: 'book' })
+  }),
+  { WAITLIST_DB: protectedAuthorizedDb }
+);
+assert.equal(protectedAuthorizedResponse.status, 200);
+assert.equal(protectedAuthorizedDb.readingEvents[0].eventType, 'comment_submit');
+
 const pendingComment = [...db.comments.values()][0];
 const publicEmpty = await hooks.handlePublicNovelComments(
   new Request('https://wwwstationcat.org/api/novels/comments?seriesSlug=book&chapterSlug=ch1'),
   { WAITLIST_DB: db }
 );
 assert.deepEqual((await publicEmpty.json()).comments, []);
+
+const protectedApprovedComment = {
+  account_id: account.account_id,
+  body: '这一段有剧透。',
+  chapter_slug: 'paid-ch1',
+  created_at: '2026-06-26 12:00:00',
+  display_name: account.display_name,
+  email: account.email,
+  hidden_reason: '',
+  id: 'rc_protected',
+  ip_hash: '',
+  locale: 'zh-Hant',
+  metadata_json: '{}',
+  reviewed_at: '',
+  reviewed_by: '',
+  series_slug: 'book',
+  source_path: '/novel/book/chapter/paid-ch1/',
+  status: 'approved',
+  updated_at: '2026-06-26 12:00:00',
+  user_agent_hash: '',
+  username: account.username
+};
+const protectedPublicDb = new MockDb({
+  chapterAccessLevel: 'paid',
+  comments: [protectedApprovedComment]
+});
+const protectedPublicResponse = await hooks.handlePublicNovelComments(
+  new Request('https://wwwstationcat.org/api/novels/comments?seriesSlug=book&chapterSlug=paid-ch1'),
+  { WAITLIST_DB: protectedPublicDb }
+);
+assert.equal(protectedPublicResponse.status, 401);
+const protectedPublicPayload = await protectedPublicResponse.json();
+assert.equal(protectedPublicPayload.code, 'SIGN_IN_REQUIRED');
+assert.deepEqual(protectedPublicPayload.comments, []);
 
 const moderateResponse = await hooks.handleAdminModerateReaderComment(
   new Request('http://localhost/admin/api/novels/comments/moderate', {

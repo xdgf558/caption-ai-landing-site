@@ -144,6 +144,10 @@ assert.throws(
   () => hooks.normalizeReadingEventPayload({ eventType: 'unknown', seriesSlug: 'book', chapterSlug: 'ch' }),
   /Unsupported reading event type/
 );
+assert.throws(
+  () => hooks.normalizeReadingEventPayload({ eventType: 'comment_submit', seriesSlug: 'book', chapterSlug: 'ch' }),
+  /Unsupported reading event type/
+);
 
 const db = new MockDb();
 const request = new Request('https://wwwstationcat.org/api/novels/reading-events', {
@@ -202,6 +206,17 @@ const invalidResponse = await hooks.handleNovelReadingEvents(
   { WAITLIST_DB: new MockDb() }
 );
 assert.equal(invalidResponse.status, 400);
+
+const forgedCommentSubmitResponse = await hooks.handleNovelReadingEvents(
+  new Request('https://wwwstationcat.org/api/novels/reading-events', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ eventType: 'comment_submit', seriesSlug: 'book', chapterSlug: 'ch1' })
+  }),
+  { WAITLIST_DB: new MockDb() }
+);
+assert.equal(forgedCommentSubmitResponse.status, 400);
+assert.equal((await forgedCommentSubmitResponse.json()).code, 'INVALID_READING_EVENT_TYPE');
 
 const rateLimitedResponse = await hooks.handleNovelReadingEvents(
   new Request('https://wwwstationcat.org/api/novels/reading-events', {
