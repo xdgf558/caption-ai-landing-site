@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS chapter_stats (
   series_slug TEXT NOT NULL,
   chapter_slug TEXT NOT NULL,
   locale TEXT NOT NULL DEFAULT 'zh-Hant',
+  window_days INTEGER NOT NULL DEFAULT 30,
   total_events INTEGER NOT NULL DEFAULT 0,
   unique_sessions INTEGER NOT NULL DEFAULT 0,
   account_readers INTEGER NOT NULL DEFAULT 0,
@@ -24,14 +25,14 @@ CREATE TABLE IF NOT EXISTS chapter_stats (
   calculated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE (series_slug, chapter_slug, locale)
+  UNIQUE (series_slug, chapter_slug, locale, window_days)
 );
 
 CREATE INDEX IF NOT EXISTS idx_chapter_stats_series_updated
-  ON chapter_stats (series_slug, updated_at);
+  ON chapter_stats (series_slug, window_days, updated_at);
 
 CREATE INDEX IF NOT EXISTS idx_chapter_stats_chapter
-  ON chapter_stats (series_slug, chapter_slug, locale);
+  ON chapter_stats (series_slug, chapter_slug, locale, window_days);
 
 CREATE INDEX IF NOT EXISTS idx_chapter_stats_engagement
   ON chapter_stats (engagement_score, completion_rate);

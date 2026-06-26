@@ -13,17 +13,19 @@ npx wrangler d1 migrations apply station-cat-waitlist --remote
 本阶段新增：
 
 - `migrations/0015_chapter_stats.sql`
-- `chapter_stats`：按 `series_slug + chapter_slug + locale` 保存聚合指标
+- `chapter_stats`：按 `series_slug + chapter_slug + locale + window_days` 保存聚合指标
 
 ## Admin APIs
 
 - `GET /admin/api/novels/analytics/stats`
   - 查询已聚合章节统计
-  - 支持 `seriesSlug`、`chapterSlug`、`limit`
+  - 支持 `seriesSlug`、`chapterSlug`、`windowDays` / `sinceDays`、`limit`
 
 - `POST /admin/api/novels/analytics/aggregate`
   - 从 `reading_events` 重新聚合统计
-  - 支持 `seriesSlug`、`chapterSlug`、`sinceDays`、`limit`
+  - 支持 `seriesSlug`、`chapterSlug`、`windowDays` / `sinceDays`、`limit`
+
+同一章节可以同时保留 7、30、90、365 天等不同窗口的聚合记录，后台列表只展示当前选择窗口的数据，避免混合口径。
 
 这些接口走现有 Admin 保护路径，不对普通读者开放。
 

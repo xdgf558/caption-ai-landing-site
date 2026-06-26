@@ -2243,16 +2243,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setStatus('阅读点余额已调整。', 'success');
     };
 
-    const analyticsKey = (stat) => `${stat.seriesSlug || ''}/${stat.chapterSlug || ''}/${stat.locale || ''}`;
+    const currentAnalyticsWindowDays = () => Number(elements.filters.analyticsDays.value || 30);
+
+    const analyticsKey = (stat) => `${stat.seriesSlug || ''}/${stat.chapterSlug || ''}/${stat.locale || ''}/${stat.windowDays || currentAnalyticsWindowDays()}`;
 
     const renderAnalyticsSummary = (summary = {}) => {
       elements.analyticsSummary.innerHTML = `
         <article><span>章节</span><strong>${escapeHtml(String(summary.chapterCount || 0))}</strong><small>已聚合章节</small></article>
         <article><span>阅读会话</span><strong>${escapeHtml(String(summary.uniqueSessions || 0))}</strong><small>${escapeHtml(String(summary.totalEvents || 0))} 条事件</small></article>
-        <article><span>完成率</span><strong>${escapeHtml(formatPercent(summary.avgCompletionRate))}</strong><small>平均完成率</small></article>
-        <article><span>互动分</span><strong>${escapeHtml(String(Math.round(Number(summary.avgEngagementScore || 0) * 100)))}</strong><small>0-100 综合分</small></article>
+        <article><span>完成率</span><strong>${escapeHtml(formatPercent(summary.avgCompletionRate))}</strong><small>章节平均完成率</small></article>
+        <article><span>互动分</span><strong>${escapeHtml(String(Math.round(Number(summary.avgEngagementScore || 0) * 100)))}</strong><small>章节平均综合分</small></article>
       `;
-      elements.analyticsUpdated.textContent = summary.latestUpdatedAt ? `更新 ${formatDate(summary.latestUpdatedAt)}` : '等待聚合';
+      const windowDays = Number(summary.windowDays || currentAnalyticsWindowDays());
+      elements.analyticsUpdated.textContent = summary.latestUpdatedAt
+        ? `${windowDays} 天窗口 · 更新 ${formatDate(summary.latestUpdatedAt)}`
+        : `${windowDays} 天窗口 · 等待聚合`;
     };
 
     const renderAnalyticsDetail = (stat) => {
@@ -2271,7 +2276,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <p class="station-kicker">Chapter Analytics</p>
             <h3>${escapeHtml(title)}</h3>
           </div>
-          <span class="admin-status-pill" data-tone="${Number(stat.engagementScore || 0) >= 0.6 ? 'success' : 'neutral'}">互动分 ${escapeHtml(String(Math.round(Number(stat.engagementScore || 0) * 100)))}</span>
+          <span class="admin-status-pill" data-tone="${Number(stat.engagementScore || 0) >= 0.6 ? 'success' : 'neutral'}">${escapeHtml(String(stat.windowDays || currentAnalyticsWindowDays()))} 天 · 互动分 ${escapeHtml(String(Math.round(Number(stat.engagementScore || 0) * 100)))}</span>
         </div>
         <div class="admin-detail-grid">
           <article><span>打开</span><strong>${escapeHtml(String(stat.openCount || 0))}</strong><small>chapter_open</small></article>
@@ -2331,7 +2336,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         button.type = 'button';
         button.innerHTML = `
           <span>${escapeHtml(stat.chapterNumber ? `第 ${stat.chapterNumber} 章 ` : '')}${escapeHtml(stat.title || stat.chapterSlug)}</span>
-          <small>${escapeHtml(stat.seriesTitle || stat.seriesSlug)} · 完成率 ${escapeHtml(formatPercent(stat.completionRate))} · 互动分 ${escapeHtml(String(Math.round(Number(stat.engagementScore || 0) * 100)))}</small>
+          <small>${escapeHtml(stat.seriesTitle || stat.seriesSlug)} · ${escapeHtml(String(stat.windowDays || currentAnalyticsWindowDays()))} 天 · 完成率 ${escapeHtml(formatPercent(stat.completionRate))} · 互动分 ${escapeHtml(String(Math.round(Number(stat.engagementScore || 0) * 100)))}</small>
           <small>${escapeHtml(String(stat.uniqueSessions || 0))} 会话 · ${escapeHtml(formatSeconds(stat.avgReadTimeSeconds))} · ${escapeHtml(formatDate(stat.updatedAt) || '')}</small>
         `;
         button.addEventListener('click', () => {
@@ -2350,6 +2355,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const params = new URLSearchParams({ limit: '80' });
       if (elements.filters.analyticsSeries.value.trim()) params.set('seriesSlug', elements.filters.analyticsSeries.value.trim());
       if (elements.filters.analyticsChapter.value.trim()) params.set('chapterSlug', elements.filters.analyticsChapter.value.trim());
+      params.set('windowDays', String(currentAnalyticsWindowDays()));
       const payload = await apiJson(`/admin/api/novels/analytics/stats?${params.toString()}`);
       state.analyticsStats = payload.stats || [];
       renderAnalyticsSummary(payload.summary || {});
@@ -2362,7 +2368,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         chapterSlug: elements.filters.analyticsChapter.value.trim(),
         limit: 80,
         seriesSlug: elements.filters.analyticsSeries.value.trim(),
-        sinceDays: Number(elements.filters.analyticsDays.value || 30)
+        sinceDays: currentAnalyticsWindowDays(),
+        windowDays: currentAnalyticsWindowDays()
       };
       const result = await apiJson('/admin/api/novels/analytics/aggregate', {
         method: 'POST',

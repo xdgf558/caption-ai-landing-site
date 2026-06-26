@@ -36,7 +36,8 @@ const statsRow = {
   title: 'Chapter One',
   total_events: 8,
   unique_sessions: 2,
-  updated_at: '2026-06-26 12:08:00'
+  updated_at: '2026-06-26 12:08:00',
+  window_days: 30
 };
 
 class MockBoundStatement {
@@ -67,27 +68,28 @@ class MockBoundStatement {
       this.db.upserted.push(this.params);
       return {
         ...statsRow,
-        account_readers: this.params[5],
-        avg_read_time_seconds: this.params[12],
-        avg_scroll_depth: this.params[13],
-        bookmark_count: this.params[10],
+        account_readers: this.params[6],
+        avg_read_time_seconds: this.params[13],
+        avg_scroll_depth: this.params[14],
+        bookmark_count: this.params[11],
         chapter_slug: this.params[1],
-        close_count: this.params[7],
-        comment_count: this.params[11],
-        completion_count: this.params[8],
-        completion_rate: this.params[14],
-        drop_off_points_json: this.params[18],
-        drop_off_rate: this.params[15],
-        engagement_score: this.params[16],
-        event_window_end: this.params[20],
-        event_window_start: this.params[19],
-        like_count: this.params[9],
+        close_count: this.params[8],
+        comment_count: this.params[12],
+        completion_count: this.params[9],
+        completion_rate: this.params[15],
+        drop_off_points_json: this.params[19],
+        drop_off_rate: this.params[16],
+        engagement_score: this.params[17],
+        event_window_end: this.params[21],
+        event_window_start: this.params[20],
+        like_count: this.params[10],
         locale: this.params[2],
-        open_count: this.params[6],
-        scroll_depth_distribution_json: this.params[17],
+        open_count: this.params[7],
+        scroll_depth_distribution_json: this.params[18],
         series_slug: this.params[0],
-        total_events: this.params[3],
-        unique_sessions: this.params[4]
+        total_events: this.params[4],
+        unique_sessions: this.params[5],
+        window_days: this.params[3]
       };
     }
     if (/COUNT\(\*\) AS chapter_count/i.test(this.sql) && /FROM chapter_stats/i.test(this.sql)) {
@@ -151,7 +153,8 @@ class MockBoundStatement {
       };
     }
     if (/SELECT\s+chapter_stats\.\*/i.test(this.sql)) {
-      return { results: [statsRow] };
+      this.db.statQueries.push({ params: this.params, sql: this.sql });
+      return { results: [{ ...statsRow, window_days: this.params[1] || 30 }] };
     }
     return { results: [] };
   }
@@ -182,6 +185,7 @@ class MockDb {
     this.missingChapterStats = Boolean(options.missingChapterStats);
     this.missingReadingEvents = Boolean(options.missingReadingEvents);
     this.runs = [];
+    this.statQueries = [];
     this.upserted = [];
   }
 
@@ -192,7 +196,8 @@ class MockDb {
 
 const migrationSource = read('migrations/0015_chapter_stats.sql');
 assert.match(migrationSource, /CREATE TABLE IF NOT EXISTS chapter_stats/);
-assert.match(migrationSource, /UNIQUE \(series_slug, chapter_slug, locale\)/);
+assert.match(migrationSource, /window_days INTEGER NOT NULL DEFAULT 30/);
+assert.match(migrationSource, /UNIQUE \(series_slug, chapter_slug, locale, window_days\)/);
 assert.match(migrationSource, /idx_chapter_stats_series_updated/);
 
 const workerSource = read('src/worker.js');
@@ -200,12 +205,15 @@ assert.match(workerSource, /handleAdminAggregateNovelAnalytics/);
 assert.match(workerSource, /handleAdminListNovelAnalyticsStats/);
 assert.match(workerSource, /CHAPTER_STATS_NOT_READY/);
 assert.match(workerSource, /INSERT INTO chapter_stats/);
+assert.match(workerSource, /ON CONFLICT\(series_slug, chapter_slug, locale, window_days\)/);
 
 const adminSource = read('src/pages/admin-v2/index.astro');
 assert.match(adminSource, /data-admin-v2-tab="analytics"/);
 assert.match(adminSource, /admin\/api\/novels\/analytics\/aggregate/);
 assert.match(adminSource, /admin\/api\/novels\/analytics\/stats/);
 assert.match(adminSource, /阅读事件统计/);
+assert.match(adminSource, /章节平均完成率/);
+assert.match(adminSource, /params\.set\('windowDays'/);
 
 const metrics = hooks.buildNovelChapterStatsMetrics({
   chapterSlug: 'ch1',
@@ -254,6 +262,7 @@ assert.equal(metrics.completionRate, 0.5);
 assert.equal(metrics.scrollDepthDistribution['90-100'], 1);
 assert.equal(metrics.dropOffPoints[0].position, 'first_half');
 assert.equal(metrics.likeCount, 1);
+assert.equal(metrics.windowDays, 30);
 
 const db = new MockDb();
 const aggregateResponse = await hooks.handleAdminAggregateNovelAnalytics(
@@ -267,19 +276,44 @@ const aggregateResponse = await hooks.handleAdminAggregateNovelAnalytics(
 const aggregateBody = await aggregateResponse.json();
 assert.equal(aggregateResponse.status, 200);
 assert.equal(aggregateBody.aggregated, 1);
+assert.equal(aggregateBody.windowDays, 30);
 assert.equal(db.upserted.length, 1);
 assert.equal(db.upserted[0][0], 'book');
 assert.equal(db.upserted[0][1], 'ch1');
+assert.equal(db.upserted[0][3], 30);
 
+const windowDb = new MockDb();
+await hooks.handleAdminAggregateNovelAnalytics(
+  new Request('https://wwwstationcat.org/admin/api/novels/analytics/aggregate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ seriesSlug: 'book', sinceDays: 7 })
+  }),
+  { ADMIN_ACCESS_LOCAL_BYPASS: '1', WAITLIST_DB: windowDb }
+);
+await hooks.handleAdminAggregateNovelAnalytics(
+  new Request('https://wwwstationcat.org/admin/api/novels/analytics/aggregate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ seriesSlug: 'book', sinceDays: 30 })
+  }),
+  { ADMIN_ACCESS_LOCAL_BYPASS: '1', WAITLIST_DB: windowDb }
+);
+assert.deepEqual(windowDb.upserted.map((params) => params[3]), [7, 30]);
+
+const listDb = new MockDb();
 const listResponse = await hooks.handleAdminListNovelAnalyticsStats(
-  new Request('https://wwwstationcat.org/admin/api/novels/analytics/stats?seriesSlug=book'),
-  { WAITLIST_DB: new MockDb() }
+  new Request('https://wwwstationcat.org/admin/api/novels/analytics/stats?seriesSlug=book&windowDays=7'),
+  { WAITLIST_DB: listDb }
 );
 const listBody = await listResponse.json();
 assert.equal(listResponse.status, 200);
 assert.equal(listBody.summary.chapterCount, 1);
+assert.equal(listBody.summary.windowDays, 7);
 assert.equal(listBody.stats[0].chapterSlug, 'ch1');
 assert.equal(listBody.stats[0].dropOffPoints[0].position, 'middle');
+assert.equal(listBody.stats[0].windowDays, 7);
+assert.equal(listDb.statQueries[0].params[1], 7);
 
 const missingStatsResponse = await hooks.handleAdminListNovelAnalyticsStats(
   new Request('https://wwwstationcat.org/admin/api/novels/analytics/stats'),

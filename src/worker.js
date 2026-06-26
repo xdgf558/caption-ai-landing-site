@@ -5214,7 +5214,18 @@ const severityFromRate = (rate) => {
   return 'low';
 };
 
-const buildNovelChapterStatsMetrics = ({ eventRows = [], sessionRows = [], windowRow = {}, seriesSlug = '', chapterSlug = '', locale = 'zh-Hant' }) => {
+const normalizeNovelAnalyticsWindowDays = (value) =>
+  Math.min(Math.max(normalizePositiveInteger(value, novelStatsDefaultSinceDays), 1), 365);
+
+const buildNovelChapterStatsMetrics = ({
+  eventRows = [],
+  sessionRows = [],
+  windowDays = novelStatsDefaultSinceDays,
+  windowRow = {},
+  seriesSlug = '',
+  chapterSlug = '',
+  locale = 'zh-Hant'
+}) => {
   const eventCounts = eventRows.reduce((map, row) => {
     map.set(row.event_type, Number(row.count || 0));
     return map;
@@ -5311,7 +5322,8 @@ const buildNovelChapterStatsMetrics = ({ eventRows = [], sessionRows = [], windo
     scrollDepthDistribution: depthDistribution,
     seriesSlug,
     totalEvents: normalizePositiveInteger(windowRow.total_events, 0),
-    uniqueSessions
+    uniqueSessions,
+    windowDays: normalizeNovelAnalyticsWindowDays(windowDays)
   };
 };
 
@@ -5320,6 +5332,7 @@ const chapterStatsToJson = (row) => ({
   seriesSlug: row.series_slug,
   chapterSlug: row.chapter_slug,
   locale: row.locale,
+  windowDays: normalizeNovelAnalyticsWindowDays(row.window_days),
   title: row.title || '',
   seriesTitle: row.series_title || '',
   chapterNumber: row.chapter_number,
@@ -5350,13 +5363,13 @@ const upsertChapterStats = async (db, metrics) =>
   db
     .prepare(
       `INSERT INTO chapter_stats (
-        series_slug, chapter_slug, locale, total_events, unique_sessions, account_readers,
+        series_slug, chapter_slug, locale, window_days, total_events, unique_sessions, account_readers,
         open_count, close_count, completion_count, like_count, bookmark_count, comment_count,
         avg_read_time_seconds, avg_scroll_depth, completion_rate, drop_off_rate, engagement_score,
         scroll_depth_distribution_json, drop_off_points_json, event_window_start, event_window_end
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(series_slug, chapter_slug, locale)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(series_slug, chapter_slug, locale, window_days)
       DO UPDATE SET
         total_events = excluded.total_events,
         unique_sessions = excluded.unique_sessions,
@@ -5384,6 +5397,7 @@ const upsertChapterStats = async (db, metrics) =>
       metrics.seriesSlug,
       metrics.chapterSlug,
       metrics.locale,
+      metrics.windowDays,
       metrics.totalEvents,
       metrics.uniqueSessions,
       metrics.accountReaders,
@@ -5409,10 +5423,10 @@ const aggregateNovelChapterStats = async (db, target, options = {}) => {
   const seriesSlug = cleanSlug(target.seriesSlug, 160);
   const chapterSlug = cleanSlug(target.chapterSlug, 160);
   const locale = normalizeContentLocale(target.locale || options.locale || 'zh-Hant');
-  const sinceDays = Math.min(Math.max(normalizePositiveInteger(options.sinceDays, novelStatsDefaultSinceDays), 1), 365);
+  const windowDays = normalizeNovelAnalyticsWindowDays(options.windowDays || options.sinceDays);
   if (!seriesSlug || !chapterSlug) return null;
 
-  const windowModifier = `-${sinceDays} days`;
+  const windowModifier = `-${windowDays} days`;
   const whereSql = `series_slug = ? AND chapter_slug = ? AND locale = ? AND created_at >= datetime('now', ?)`;
   const bindValues = [seriesSlug, chapterSlug, locale, windowModifier];
 
@@ -5467,6 +5481,7 @@ const aggregateNovelChapterStats = async (db, target, options = {}) => {
     locale,
     seriesSlug,
     sessionRows: sessionResponse.results || [],
+    windowDays,
     windowRow: windowRow || {}
   });
 
@@ -5479,9 +5494,9 @@ const findNovelAnalyticsTargets = async (db, options = {}) => {
   const chapterSlug = cleanSlug(options.chapterSlug, 160);
   const locale = normalizeContentLocale(options.locale || 'zh-Hant');
   const limit = Math.min(Math.max(normalizePositiveInteger(options.limit, novelStatsMaxAggregateTargets), 1), novelStatsMaxAggregateTargets);
-  const sinceDays = Math.min(Math.max(normalizePositiveInteger(options.sinceDays, novelStatsDefaultSinceDays), 1), 365);
+  const windowDays = normalizeNovelAnalyticsWindowDays(options.windowDays || options.sinceDays);
   const clauses = ['created_at >= datetime(\'now\', ?)'];
-  const params = [`-${sinceDays} days`];
+  const params = [`-${windowDays} days`];
 
   if (seriesSlug) {
     clauses.push('series_slug = ?');
@@ -5538,17 +5553,17 @@ const handleAdminAggregateNovelAnalytics = async (request, env) => {
     payload = {};
   }
 
-  const sinceDays = Math.min(Math.max(normalizePositiveInteger(payload.sinceDays, novelStatsDefaultSinceDays), 1), 365);
+  const windowDays = normalizeNovelAnalyticsWindowDays(payload.windowDays || payload.sinceDays);
   const targets = await findNovelAnalyticsTargets(db, {
     chapterSlug: payload.chapterSlug || payload.chapter,
     limit: payload.limit,
     locale: payload.locale,
     seriesSlug: payload.seriesSlug || payload.series,
-    sinceDays
+    windowDays
   });
   const rows = [];
   for (const target of targets) {
-    const row = await aggregateNovelChapterStats(db, target, { sinceDays });
+    const row = await aggregateNovelChapterStats(db, target, { windowDays });
     if (row) rows.push(row);
   }
 
@@ -5562,7 +5577,7 @@ const handleAdminAggregateNovelAnalytics = async (request, env) => {
     metadata: {
       aggregated: rows.length,
       requestedTargets: targets.length,
-      sinceDays
+      windowDays
     }
   });
 
@@ -5570,7 +5585,8 @@ const handleAdminAggregateNovelAnalytics = async (request, env) => {
     ok: true,
     aggregated: rows.length,
     requestedTargets: targets.length,
-    sinceDays,
+    sinceDays: windowDays,
+    windowDays,
     stats: rows.map(chapterStatsToJson)
   });
 };
@@ -5589,9 +5605,10 @@ const handleAdminListNovelAnalyticsStats = async (request, env) => {
   const seriesSlug = cleanSlug(url.searchParams.get('series') || url.searchParams.get('seriesSlug'), 160);
   const chapterSlug = cleanSlug(url.searchParams.get('chapter') || url.searchParams.get('chapterSlug'), 160);
   const locale = normalizeContentLocale(url.searchParams.get('locale') || 'zh-Hant');
+  const windowDays = normalizeNovelAnalyticsWindowDays(url.searchParams.get('windowDays') || url.searchParams.get('sinceDays'));
   const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 50), 1), 100);
-  const clauses = ['chapter_stats.locale = ?'];
-  const params = [locale];
+  const clauses = ['chapter_stats.locale = ?', 'chapter_stats.window_days = ?'];
+  const params = [locale, windowDays];
   if (seriesSlug) {
     clauses.push('chapter_stats.series_slug = ?');
     params.push(seriesSlug);
@@ -5654,7 +5671,8 @@ const handleAdminListNovelAnalyticsStats = async (request, env) => {
       latestUpdatedAt: summaryRow?.latest_updated_at || '',
       openCount: normalizePositiveInteger(summaryRow?.open_count, 0),
       totalEvents: normalizePositiveInteger(summaryRow?.total_events, 0),
-      uniqueSessions: normalizePositiveInteger(summaryRow?.unique_sessions, 0)
+      uniqueSessions: normalizePositiveInteger(summaryRow?.unique_sessions, 0),
+      windowDays
     },
     stats: (response.results || []).map(chapterStatsToJson)
   });
