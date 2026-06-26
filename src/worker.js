@@ -2151,6 +2151,7 @@ const isMissingReaderTotpResetAttemptsError = (error) =>
   /no such table: reader_totp_reset_attempts/i.test(error?.message || '');
 const isMissingReadingEventsError = (error) => /no such table: reading_events/i.test(error?.message || '');
 const isMissingChapterStatsError = (error) => /no such table: chapter_stats/i.test(error?.message || '');
+const isMissingAiInsightsError = (error) => /no such table: ai_insights/i.test(error?.message || '');
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -2208,6 +2209,16 @@ const ensureChapterStatsReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingChapterStatsError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureAiInsightsReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM ai_insights LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingAiInsightsError(error)) return false;
     throw error;
   }
 };
@@ -5359,6 +5370,114 @@ const chapterStatsToJson = (row) => ({
   updatedAt: row.updated_at
 });
 
+const normalizeInsightList = (items) => [...new Set((items || []).filter(Boolean))].slice(0, 5);
+
+const buildNovelAiInsightFromStats = (stat = {}) => {
+  const completionRate = Number(stat.completionRate || stat.completion_rate || 0);
+  const dropOffRate = Number(stat.dropOffRate || stat.drop_off_rate || 0);
+  const engagementScore = Number(stat.engagementScore || stat.engagement_score || 0);
+  const avgScrollDepth = Number(stat.avgScrollDepth || stat.avg_scroll_depth || 0);
+  const avgReadTimeSeconds = normalizePositiveInteger(stat.avgReadTimeSeconds || stat.avg_read_time_seconds, 0);
+  const uniqueSessions = normalizePositiveInteger(stat.uniqueSessions || stat.unique_sessions, 0);
+  const likeCount = normalizePositiveInteger(stat.likeCount || stat.like_count, 0);
+  const bookmarkCount = normalizePositiveInteger(stat.bookmarkCount || stat.bookmark_count, 0);
+  const commentCount = normalizePositiveInteger(stat.commentCount || stat.comment_count, 0);
+  const dropOffPoints = Array.isArray(stat.dropOffPoints) ? stat.dropOffPoints : parseStoredJson(stat.drop_off_points_json, []);
+  const topDropOff = dropOffPoints[0] || null;
+  const strongPoints = [];
+  const weakPoints = [];
+  const suggestions = [];
+
+  if (uniqueSessions <= 3) {
+    weakPoints.push('样本量偏小，建议继续观察更多阅读会话');
+    suggestions.push('先不要用这一章单独判断剧情问题，等数据超过 10 个会话后再复盘。');
+  }
+  if (completionRate >= 0.7) {
+    strongPoints.push('章节完成率较好，读者愿意读到后段');
+  } else if (completionRate < 0.35 && uniqueSessions > 0) {
+    weakPoints.push('完成率偏低，读者中途离开较多');
+    suggestions.push('检查开头到中段是否有过长铺垫，尽早抛出冲突或悬念。');
+  }
+
+  if (engagementScore >= 0.65) {
+    strongPoints.push('互动分表现稳定，内容具备继续追读信号');
+  } else if (uniqueSessions > 0) {
+    weakPoints.push('互动分偏弱，点赞、书签或评论草稿信号不足');
+    suggestions.push('在章节末尾增加更明确的情绪钩子，让读者有保存或继续下一章的理由。');
+  }
+
+  if (avgScrollDepth >= 75) {
+    strongPoints.push('平均阅读深度较高，章节整体可读性不错');
+  } else if (avgScrollDepth > 0 && avgScrollDepth < 45) {
+    weakPoints.push('平均阅读深度偏浅，前半段可能没有足够抓人');
+    suggestions.push('把人物目标、阻力和反转提前一点，减少进入主线前的解释性文字。');
+  }
+
+  if (topDropOff?.position) {
+    const label = topDropOff.label || topDropOff.position;
+    weakPoints.push(`${label}流失最明显`);
+    if (topDropOff.position === 'opening') {
+      suggestions.push('优先打磨开篇第一屏，让主角目标、危险或异常点更快出现。');
+    } else if (topDropOff.position === 'middle' || topDropOff.position === 'first_half') {
+      suggestions.push('中段可以增加一次选择、冲突或信息反转，避免读者在过渡段离开。');
+    } else {
+      suggestions.push('后段流失偏高时，检查结尾前是否有重复说明或节奏放缓。');
+    }
+  }
+
+  if (bookmarkCount > 0) strongPoints.push('有读者保存书签，说明章节具备回看或续读价值');
+  if (likeCount > 0) strongPoints.push('已有喜欢反馈，情绪点或人物表现有命中读者');
+  if (commentCount > 0) strongPoints.push('评论草稿出现，读者有表达想法的意愿');
+
+  const riskLevel = completionRate < 0.35 || dropOffRate >= 0.7 ? 'high' : engagementScore < 0.45 ? 'medium' : 'normal';
+  const mainPopularity = Math.min(1, engagementScore * 0.55 + completionRate * 0.35 + Math.min(bookmarkCount / Math.max(uniqueSessions, 1), 1) * 0.1);
+  const villainPopularity = Math.min(1, engagementScore * 0.45 + Math.min(commentCount / Math.max(uniqueSessions, 1), 1) * 0.25 + dropOffRate * 0.15 + 0.1);
+  const supportingPopularity = Math.min(1, engagementScore * 0.45 + Math.min(likeCount / Math.max(uniqueSessions, 1), 1) * 0.25 + completionRate * 0.2);
+
+  return {
+    character_popularity: {
+      main: roundRatio(mainPopularity),
+      supporting: roundRatio(supportingPopularity),
+      villain: roundRatio(villainPopularity)
+    },
+    evidence: {
+      avg_read_time_seconds: avgReadTimeSeconds,
+      avg_scroll_depth: Math.round(avgScrollDepth),
+      completion_rate: roundRatio(completionRate),
+      drop_off_points: dropOffPoints.slice(0, 3),
+      engagement_score: roundRatio(engagementScore),
+      unique_sessions: uniqueSessions
+    },
+    risk_level: riskLevel,
+    strong_points: normalizeInsightList(strongPoints.length ? strongPoints : ['暂未发现稳定强项，建议等待更多数据']),
+    suggestions: normalizeInsightList(suggestions.length ? suggestions : ['保持当前节奏，继续观察下一批阅读数据。']),
+    summary:
+      riskLevel === 'high'
+        ? '本章存在明显流失风险，优先检查开头和中段节奏。'
+        : riskLevel === 'medium'
+          ? '本章表现中等，有继续优化互动和停留时长的空间。'
+          : '本章阅读表现较稳定，可以作为后续章节节奏参考。',
+    weak_points: normalizeInsightList(weakPoints.length ? weakPoints : ['暂未发现明显弱点'])
+  };
+};
+
+const aiInsightToJson = (row) => ({
+  id: row.id,
+  seriesSlug: row.series_slug,
+  chapterSlug: row.chapter_slug,
+  locale: row.locale,
+  windowDays: normalizeNovelAnalyticsWindowDays(row.window_days),
+  title: row.title || '',
+  seriesTitle: row.series_title || '',
+  chapterNumber: row.chapter_number,
+  insight: parseStoredJson(row.insight_json, {}),
+  model: row.model || 'station-cat-insight-v1',
+  sourceStatsUpdatedAt: row.source_stats_updated_at || '',
+  generatedAt: row.generated_at || '',
+  createdAt: row.created_at || '',
+  updatedAt: row.updated_at || ''
+});
+
 const upsertChapterStats = async (db, metrics) =>
   db
     .prepare(
@@ -5416,6 +5535,33 @@ const upsertChapterStats = async (db, metrics) =>
       JSON.stringify(metrics.dropOffPoints),
       metrics.eventWindowStart,
       metrics.eventWindowEnd
+    )
+    .first();
+
+const upsertNovelAiInsight = async (db, stat, insight) =>
+  db
+    .prepare(
+      `INSERT INTO ai_insights (
+        series_slug, chapter_slug, locale, window_days, insight_json, model, source_stats_updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(series_slug, chapter_slug, locale, window_days)
+      DO UPDATE SET
+        insight_json = excluded.insight_json,
+        model = excluded.model,
+        source_stats_updated_at = excluded.source_stats_updated_at,
+        generated_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *`
+    )
+    .bind(
+      stat.seriesSlug,
+      stat.chapterSlug,
+      stat.locale,
+      stat.windowDays,
+      JSON.stringify(insight),
+      'station-cat-insight-v1',
+      stat.updatedAt || stat.calculatedAt || null
     )
     .first();
 
@@ -5675,6 +5821,174 @@ const handleAdminListNovelAnalyticsStats = async (request, env) => {
       windowDays
     },
     stats: (response.results || []).map(chapterStatsToJson)
+  });
+};
+
+const queryNovelStatsRowsForInsights = async (db, options = {}) => {
+  const seriesSlug = cleanSlug(options.seriesSlug || options.series, 160);
+  const chapterSlug = cleanSlug(options.chapterSlug || options.chapter, 160);
+  const locale = normalizeContentLocale(options.locale || 'zh-Hant');
+  const windowDays = normalizeNovelAnalyticsWindowDays(options.windowDays || options.sinceDays);
+  const limit = Math.min(Math.max(normalizePositiveInteger(options.limit, 50), 1), 100);
+  const clauses = ['chapter_stats.locale = ?', 'chapter_stats.window_days = ?'];
+  const params = [locale, windowDays];
+  if (seriesSlug) {
+    clauses.push('chapter_stats.series_slug = ?');
+    params.push(seriesSlug);
+  }
+  if (chapterSlug) {
+    clauses.push('chapter_stats.chapter_slug = ?');
+    params.push(chapterSlug);
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT
+        chapter_stats.*,
+        chapter_entries.title AS title,
+        chapter_entries.chapter_number AS chapter_number,
+        series_entries.title AS series_title
+       FROM chapter_stats
+       LEFT JOIN content_entries AS chapter_entries
+         ON chapter_entries.entry_type = 'novel_chapter'
+        AND chapter_entries.locale = chapter_stats.locale
+        AND chapter_entries.parent_slug = chapter_stats.series_slug
+        AND chapter_entries.slug = chapter_stats.chapter_slug
+       LEFT JOIN content_entries AS series_entries
+         ON series_entries.entry_type = 'novel_series'
+        AND series_entries.locale = chapter_stats.locale
+        AND series_entries.slug = chapter_stats.series_slug
+       WHERE ${clauses.join(' AND ')}
+       ORDER BY chapter_stats.updated_at DESC, chapter_stats.engagement_score DESC, chapter_stats.id DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+
+  return (response.results || []).map(chapterStatsToJson);
+};
+
+const handleAdminGenerateNovelAiInsights = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!(await ensureChapterStatsReady(db))) {
+    return privateJson(
+      { ok: false, code: 'CHAPTER_STATS_NOT_READY', message: 'Chapter stats are not initialized. Apply migration 0015_chapter_stats.sql.' },
+      { status: 503 }
+    );
+  }
+  if (!(await ensureAiInsightsReady(db))) {
+    return privateJson(
+      { ok: false, code: 'AI_INSIGHTS_NOT_READY', message: 'AI insights are not initialized. Apply migration 0016_ai_insights.sql.' },
+      { status: 503 }
+    );
+  }
+
+  let payload = {};
+  try {
+    payload = await request.json();
+  } catch {
+    payload = {};
+  }
+
+  const windowDays = normalizeNovelAnalyticsWindowDays(payload.windowDays || payload.sinceDays);
+  const stats = await queryNovelStatsRowsForInsights(db, {
+    chapterSlug: payload.chapterSlug || payload.chapter,
+    limit: payload.limit,
+    locale: payload.locale,
+    seriesSlug: payload.seriesSlug || payload.series,
+    windowDays
+  });
+  const rows = [];
+  for (const stat of stats) {
+    const insight = buildNovelAiInsightFromStats(stat);
+    const saved = await upsertNovelAiInsight(db, stat, insight);
+    rows.push({
+      ...saved,
+      chapter_number: stat.chapterNumber,
+      series_title: stat.seriesTitle,
+      title: stat.title
+    });
+  }
+
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: 'novel_analytics.ai_insights.generate',
+    targetType: 'ai_insights',
+    targetId: '',
+    targetSlug: cleanSlug(payload.seriesSlug || payload.series) || 'all',
+    metadata: {
+      generated: rows.length,
+      requestedStats: stats.length,
+      windowDays
+    }
+  });
+
+  return privateJson({
+    ok: true,
+    generated: rows.length,
+    requestedStats: stats.length,
+    windowDays,
+    insights: rows.map(aiInsightToJson)
+  });
+};
+
+const handleAdminListNovelAiInsights = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!(await ensureAiInsightsReady(db))) {
+    return privateJson(
+      { ok: false, code: 'AI_INSIGHTS_NOT_READY', message: 'AI insights are not initialized. Apply migration 0016_ai_insights.sql.' },
+      { status: 503 }
+    );
+  }
+
+  const url = new URL(request.url);
+  const seriesSlug = cleanSlug(url.searchParams.get('series') || url.searchParams.get('seriesSlug'), 160);
+  const chapterSlug = cleanSlug(url.searchParams.get('chapter') || url.searchParams.get('chapterSlug'), 160);
+  const locale = normalizeContentLocale(url.searchParams.get('locale') || 'zh-Hant');
+  const windowDays = normalizeNovelAnalyticsWindowDays(url.searchParams.get('windowDays') || url.searchParams.get('sinceDays'));
+  const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 50), 1), 100);
+  const clauses = ['ai_insights.locale = ?', 'ai_insights.window_days = ?'];
+  const params = [locale, windowDays];
+  if (seriesSlug) {
+    clauses.push('ai_insights.series_slug = ?');
+    params.push(seriesSlug);
+  }
+  if (chapterSlug) {
+    clauses.push('ai_insights.chapter_slug = ?');
+    params.push(chapterSlug);
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT
+        ai_insights.*,
+        chapter_entries.title AS title,
+        chapter_entries.chapter_number AS chapter_number,
+        series_entries.title AS series_title
+       FROM ai_insights
+       LEFT JOIN content_entries AS chapter_entries
+         ON chapter_entries.entry_type = 'novel_chapter'
+        AND chapter_entries.locale = ai_insights.locale
+        AND chapter_entries.parent_slug = ai_insights.series_slug
+        AND chapter_entries.slug = ai_insights.chapter_slug
+       LEFT JOIN content_entries AS series_entries
+         ON series_entries.entry_type = 'novel_series'
+        AND series_entries.locale = ai_insights.locale
+        AND series_entries.slug = ai_insights.series_slug
+       WHERE ${clauses.join(' AND ')}
+       ORDER BY ai_insights.generated_at DESC, ai_insights.updated_at DESC, ai_insights.id DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+
+  return privateJson({
+    ok: true,
+    insights: (response.results || []).map(aiInsightToJson),
+    windowDays
   });
 };
 
@@ -7495,6 +7809,7 @@ const handleAdminContentSchema = async (env) =>
         'reader_bookmarks',
         'reading_events',
         'chapter_stats',
+        'ai_insights',
         'admin_audit_logs'
       ],
       legacyMigration: 'Completed. The one-time legacy Markdown migration endpoint and manifest have been removed from the Worker bundle.',
@@ -7510,6 +7825,7 @@ const handleAdminContentSchema = async (env) =>
       readerBookmarks: 'Reader accounts can save chapter bookmarks and continue reading from Member Center.',
       readingEvents: 'Novel V2 reader pages can send chapter open, scroll depth, pause/resume, navigation, like, bookmark, and comment interaction events into reading_events.',
       readingAnalytics: 'Admin 2.0 can aggregate reading_events into chapter_stats for completion, drop-off, reading time, and engagement diagnostics.',
+      aiInsights: 'Admin 2.0 can generate structured AI-style chapter insights from chapter_stats into ai_insights.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
       nextStages: ['8D optional retry tools and richer NovelForge source diagnostics']
     }
@@ -11559,6 +11875,7 @@ const handleR2Download = async (request, env, file) => {
 export const __readerTotpTestHooks = {
   aggregateNovelChapterStats,
   base32ToBytes,
+  buildNovelAiInsightFromStats,
   buildNovelChapterStatsMetrics,
   bytesToBase32,
   getD1ChangeCount,
@@ -11567,6 +11884,8 @@ export const __readerTotpTestHooks = {
   getRequestClientHashes,
   getTotpStep,
   handleAdminAggregateNovelAnalytics,
+  handleAdminGenerateNovelAiInsights,
+  handleAdminListNovelAiInsights,
   handleAdminListNovelAnalyticsStats,
   handleNovelReadingEvents,
   handleReaderPasswordResetConfirm,
@@ -11754,6 +12073,16 @@ export default {
 
     if (url.pathname === '/admin/api/novels/analytics/aggregate') {
       if (request.method === 'POST') return handleAdminAggregateNovelAnalytics(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/novels/analytics/insights') {
+      if (request.method === 'GET') return handleAdminListNovelAiInsights(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/novels/analytics/insights/generate') {
+      if (request.method === 'POST') return handleAdminGenerateNovelAiInsights(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
