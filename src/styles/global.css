@@ -2947,6 +2947,40 @@ button.button {
   padding: 14px;
 }
 
+.admin-analytics-bars {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-analytics-bar {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 58px minmax(0, 1fr) 34px;
+}
+
+.admin-analytics-bar span,
+.admin-analytics-bar strong {
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.admin-analytics-bar div {
+  background: rgba(2, 6, 23, 0.62);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.admin-analytics-bar i {
+  background: linear-gradient(90deg, #38bdf8, #22c55e);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
 .admin-v2-workspace h2,
 .admin-v2-workspace h3,
 .admin-v2-workspace p {
