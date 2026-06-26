@@ -8913,6 +8913,21 @@ const parseDynamicContentRoute = (pathname) => {
     };
   }
 
+  if (section === 'novel') {
+    locale = locale || 'zh-Hant';
+    const seriesSlug = cleanSlug(segments[offset + 1] || '', 160);
+    const chapterSlug = segments[offset + 2] === 'chapter' ? cleanSlug(segments[offset + 3] || '', 160) : '';
+    return {
+      basePath: '/novel/',
+      chapterPathSegment: 'chapter',
+      chapterSlug,
+      kind: chapterSlug ? 'novel-chapter' : seriesSlug ? 'novel-series' : 'novel-index',
+      locale,
+      readerVersion: 'v2',
+      seriesSlug
+    };
+  }
+
   if (section === 'works') {
     locale = locale || 'en';
     return {
@@ -8939,10 +8954,17 @@ const dynamicCanonicalPath = (route) => {
   if (route.kind === 'devlog-index') return route.basePath;
   if (route.kind === 'devlog-post') return `${route.basePath}${route.slug}/`;
   if (route.kind === 'novel-index') return route.basePath;
-  if (route.kind === 'novel-series') return `${route.basePath}${route.seriesSlug}/`;
-  if (route.kind === 'novel-chapter') return `${route.basePath}${route.seriesSlug}/${route.chapterSlug}/`;
+  if (route.kind === 'novel-series') return dynamicSeriesPath(route, route.seriesSlug);
+  if (route.kind === 'novel-chapter') return dynamicChapterPath(route, route.seriesSlug, route.chapterSlug);
   return '/';
 };
+
+const dynamicSeriesPath = (route, seriesSlug) => `${route.basePath}${seriesSlug}/`;
+
+const dynamicChapterPath = (route, seriesSlug, chapterSlug) =>
+  route.chapterPathSegment
+    ? `${route.basePath}${seriesSlug}/${route.chapterPathSegment}/${chapterSlug}/`
+    : `${route.basePath}${seriesSlug}/${chapterSlug}/`;
 
 const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '', title }) => `<!doctype html>
 <html lang="${escapeHtml(lang)}">
@@ -9010,6 +9032,14 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .status { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 15px; font-weight: 800; padding: 12px; }
       .status[data-tone="success"] { border-color: rgba(8,121,109,.32); color: var(--teal); }
       .status[data-tone="error"] { border-color: rgba(217,93,69,.4); color: var(--coral); }
+      .reader-interactions { background: #fffaf1; border: 1px solid var(--line); border-radius: 14px; box-shadow: 4px 4px 0 rgba(34,27,22,.08); display: grid; gap: 16px; margin-bottom: 18px; padding: 18px; }
+      .reader-interactions h2 { font-size: 24px; margin: 0 0 6px; }
+      .reader-interactions p { color: var(--muted); margin: 0; }
+      .reader-interactions [aria-pressed="true"] { background: var(--teal); border-color: var(--ink); color: #fffaf1; }
+      .reader-comment-panel { display: grid; gap: 8px; }
+      .reader-comment-panel[hidden] { display: none; }
+      .reader-comment-panel label { color: var(--teal); font-size: 13px; font-weight: 900; text-transform: uppercase; }
+      .reader-comment-panel textarea { background: #fff; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); font: inherit; line-height: 1.7; min-height: 112px; padding: 12px; resize: vertical; }
       .reader-bookmark-fab, .reader-bookmark-toast { display: none; }
       .reader-bookmark-toast { background: rgba(255,255,255,.96); border-color: rgba(8,121,109,.32); box-shadow: 0 18px 50px rgba(44,39,33,.12); color: var(--ink); font-weight: 900; left: max(16px, env(safe-area-inset-left)); position: fixed; right: max(16px, env(safe-area-inset-right)); text-align: center; z-index: 50; }
       @media (max-width: 760px) {
@@ -9092,7 +9122,7 @@ const renderChapterCards = (route, chapters) => {
     .map(
       (chapter) => {
         const summary = firstPlainSummary([chapter.excerpt, chapter.description], 120);
-        return `<a class="card chapter-card" href="${escapeHtml(`${route.basePath}${chapter.parent_slug}/${chapter.slug}/`)}">
+        return `<a class="card chapter-card" href="${escapeHtml(dynamicChapterPath(route, chapter.parent_slug, chapter.slug))}">
         <div class="meta">
           <span class="pill">${escapeHtml(formatDynamicChapterNumber(chapter.chapter_number, route.locale))}</span>
           <span>${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
@@ -9223,6 +9253,53 @@ const dynamicBookmarkCopy = {
   }
 };
 
+const dynamicReaderInteractionCopy = {
+  en: {
+    body: 'Like this chapter, save your reading point, or keep a private comment draft for later.',
+    comment: 'Comment',
+    commentLabel: 'Private comment draft',
+    commentPlaceholder: 'Write a note about this chapter...',
+    commentSaved: 'Draft saved on this device.',
+    eyebrow: 'Reader actions',
+    like: 'Like',
+    liked: 'Liked',
+    title: 'Keep your reaction here'
+  },
+  ja: {
+    body: 'この章にいいねを付けたり、読書位置を保存したり、コメントの下書きを残せます。',
+    comment: 'コメント',
+    commentLabel: '非公開コメント下書き',
+    commentPlaceholder: 'この章についてメモを書く...',
+    commentSaved: 'この端末に下書きを保存しました。',
+    eyebrow: '読者アクション',
+    like: 'いいね',
+    liked: 'いいね済み',
+    title: '反応をここに残す'
+  },
+  'zh-Hant': {
+    body: '可以喜歡本章、保存目前閱讀位置，也可以先寫一段自己的評論草稿。',
+    comment: '評論',
+    commentLabel: '私人評論草稿',
+    commentPlaceholder: '寫下你對這章的想法...',
+    commentSaved: '草稿已保存在這台裝置。',
+    eyebrow: '讀者互動',
+    like: '喜歡',
+    liked: '已喜歡',
+    title: '把反應先留在這裡'
+  },
+  'zh-Hans': {
+    body: '可以喜欢本章、保存目前阅读位置，也可以先写一段自己的评论草稿。',
+    comment: '评论',
+    commentLabel: '私人评论草稿',
+    commentPlaceholder: '写下你对这章的想法...',
+    commentSaved: '草稿已保存在这台设备。',
+    eyebrow: '读者互动',
+    like: '喜欢',
+    liked: '已喜欢',
+    title: '把反应先留在这里'
+  }
+};
+
 const renderDynamicUnlockButtons = (route, serial, chapter, settings) => {
   const copy = dynamicPaymentCopy[route.locale];
   const orderType = chapter.access_level === 'supporter' ? 'supporter' : 'chapter';
@@ -9235,8 +9312,84 @@ const renderDynamicUnlockButtons = (route, serial, chapter, settings) => {
           : ''
       }
       ${orderType === 'chapter' ? `<a class="button button-secondary" href="/library/">${escapeHtml(copy.creditTopUp)}</a>` : ''}
-      <a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>
+      <a class="button button-secondary" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>
     </div>`;
+};
+
+const renderDynamicReaderInteractions = (route, serial, chapter) => {
+  if (route.readerVersion !== 'v2') return '';
+  const copy = dynamicReaderInteractionCopy[route.locale] || dynamicReaderInteractionCopy['zh-Hant'];
+  const interactionKey = `${serial.slug}:${chapter.slug}`;
+  return `<section class="reader-interactions" data-reader-v2-interactions>
+      <div>
+        <p class="kicker">${escapeHtml(copy.eyebrow)}</p>
+        <h2>${escapeHtml(copy.title)}</h2>
+        <p>${escapeHtml(copy.body)}</p>
+      </div>
+      <div class="button-row">
+        <button class="button button-secondary" type="button" data-reader-like aria-pressed="false">${escapeHtml(copy.like)}</button>
+        <button class="button button-secondary" type="button" data-reader-comment-toggle aria-expanded="false" aria-controls="reader-comment-panel">${escapeHtml(copy.comment)}</button>
+      </div>
+      <div class="reader-comment-panel" id="reader-comment-panel" data-reader-comment-panel hidden>
+        <label for="reader-comment-draft">${escapeHtml(copy.commentLabel)}</label>
+        <textarea id="reader-comment-draft" data-reader-comment-draft rows="4" placeholder="${escapeHtml(copy.commentPlaceholder)}"></textarea>
+        <div class="status" data-reader-comment-status role="status" aria-live="polite"></div>
+      </div>
+    </section>
+    <script>
+      (() => {
+        const interactionPanel = document.querySelector('[data-reader-v2-interactions]');
+        const interactionCopy = ${scriptJson(copy)};
+        const interactionKey = ${scriptJson(interactionKey)};
+        const likeButton = interactionPanel?.querySelector('[data-reader-like]');
+        const commentToggle = interactionPanel?.querySelector('[data-reader-comment-toggle]');
+        const commentPanel = interactionPanel?.querySelector('[data-reader-comment-panel]');
+        const commentDraft = interactionPanel?.querySelector('[data-reader-comment-draft]');
+        const commentStatus = interactionPanel?.querySelector('[data-reader-comment-status]');
+        const storagePrefix = 'stationcat:novel-v2:' + interactionKey;
+        const likedKey = storagePrefix + ':liked';
+        const commentKey = storagePrefix + ':comment-draft';
+        const setLikedState = (liked) => {
+          if (!likeButton) return;
+          likeButton.setAttribute('aria-pressed', liked ? 'true' : 'false');
+          likeButton.textContent = liked ? interactionCopy.liked : interactionCopy.like;
+        };
+        try {
+          setLikedState(window.localStorage.getItem(likedKey) === '1');
+          if (commentDraft) commentDraft.value = window.localStorage.getItem(commentKey) || '';
+        } catch {
+          setLikedState(false);
+        }
+        likeButton?.addEventListener('click', () => {
+          const nextLiked = likeButton.getAttribute('aria-pressed') !== 'true';
+          setLikedState(nextLiked);
+          try {
+            window.localStorage.setItem(likedKey, nextLiked ? '1' : '0');
+          } catch {}
+        });
+        commentToggle?.addEventListener('click', () => {
+          if (!commentPanel) return;
+          const expanded = commentPanel.hidden;
+          commentPanel.hidden = !expanded;
+          commentToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          if (expanded) commentDraft?.focus();
+        });
+        commentDraft?.addEventListener('input', () => {
+          try {
+            window.localStorage.setItem(commentKey, commentDraft.value);
+            if (commentStatus) {
+              commentStatus.textContent = interactionCopy.commentSaved;
+              commentStatus.dataset.tone = 'success';
+            }
+          } catch {
+            if (commentStatus) {
+              commentStatus.textContent = '';
+              commentStatus.dataset.tone = 'neutral';
+            }
+          }
+        });
+      })();
+    </script>`;
 };
 
 const renderDynamicBookmarkScript = (route, serial, chapter) => {
@@ -9422,8 +9575,8 @@ const renderDynamicNovelSeries = (route, serial, body, chapters) => {
           <span>${escapeHtml(copy.access)}: ${escapeHtml(getDynamicAccessLabel(serial.access_level, route.locale))}</span>
         </div>
         <div class="button-row">
-          ${firstChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${firstChapter.slug}/`)}">${escapeHtml(copy.readFirst)}</a>` : ''}
-          ${latestChapter && latestChapter.slug !== firstChapter?.slug ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${latestChapter.slug}/`)}">${escapeHtml(copy.readLatest)}</a>` : ''}
+          ${firstChapter ? `<a class="button button-primary" href="${escapeHtml(dynamicChapterPath(route, serial.slug, firstChapter.slug))}">${escapeHtml(copy.readFirst)}</a>` : ''}
+          ${latestChapter && latestChapter.slug !== firstChapter?.slug ? `<a class="button button-secondary" href="${escapeHtml(dynamicChapterPath(route, serial.slug, latestChapter.slug))}">${escapeHtml(copy.readLatest)}</a>` : ''}
           <a class="button button-secondary" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.allSerials)}</a>
         </div>
       </div>
@@ -9594,7 +9747,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
     : `<article class="prose prose--reader" data-reader-body>${body.html || `<p>${escapeHtml(fallbackBody)}</p>`}</article>`;
 
   return `<article class="section">
-      <a class="text-link" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>
+      <a class="text-link" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>
       <header class="hero hero--chapter">
         <div class="meta">
           <span>${escapeHtml(copy.access)}: ${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
@@ -9604,9 +9757,10 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
       </header>
       ${content}
       <footer class="section">
+        ${renderDynamicReaderInteractions(route, serial, chapter)}
         <div class="button-row">
-          ${previousChapter ? `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/${previousChapter.slug}/`)}">${escapeHtml(copy.previousChapter)}</a>` : `<a class="button button-secondary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>`}
-          ${nextChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/${nextChapter.slug}/`)}">${escapeHtml(copy.nextChapter)}</a>` : previousChapter ? `<a class="button button-primary" href="${escapeHtml(`${route.basePath}${serial.slug}/`)}">${escapeHtml(copy.backSeries)}</a>` : ''}
+          ${previousChapter ? `<a class="button button-secondary" href="${escapeHtml(dynamicChapterPath(route, serial.slug, previousChapter.slug))}">${escapeHtml(copy.previousChapter)}</a>` : `<a class="button button-secondary" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>`}
+          ${nextChapter ? `<a class="button button-primary" href="${escapeHtml(dynamicChapterPath(route, serial.slug, nextChapter.slug))}">${escapeHtml(copy.nextChapter)}</a>` : previousChapter ? `<a class="button button-primary" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>` : ''}
           <button class="button button-secondary" type="button" data-reader-bookmark-save aria-keyshortcuts="B" title="${escapeHtml(bookmarkCopy.shortcutTitle)}">${escapeHtml(bookmarkCopy.save)}</button>
         </div>
         <div class="reader-status serial-bookmark-status" data-reader-bookmark-status role="status" aria-live="polite"></div>

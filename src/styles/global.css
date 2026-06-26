@@ -5105,6 +5105,61 @@ body.station-paper-page {
   margin-top: 26px;
 }
 
+.serial-reader-interactions {
+  background: #fffaf1;
+  border: 1px solid #ded2c2;
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 rgba(34, 27, 22, 0.08);
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 18px;
+}
+
+.serial-reader-interactions h2 {
+  font-size: 24px;
+  margin: 0 0 6px;
+}
+
+.serial-reader-interactions p {
+  color: #5f6e68;
+  margin: 0;
+}
+
+.serial-reader-interactions [aria-pressed="true"] {
+  background: #2e5b4e;
+  border-color: #221b16;
+  color: #fffaf1;
+}
+
+.reader-comment-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.reader-comment-panel[hidden] {
+  display: none;
+}
+
+.reader-comment-panel label {
+  color: #2e5b4e;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.reader-comment-panel textarea {
+  background: #fff;
+  border: 1px solid #d4c5b3;
+  border-radius: 12px;
+  color: #221b16;
+  font: inherit;
+  line-height: 1.7;
+  min-height: 112px;
+  padding: 12px;
+  resize: vertical;
+}
+
 .serial-bookmark-fab,
 .serial-bookmark-toast {
   display: none;
