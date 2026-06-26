@@ -1353,6 +1353,7 @@ const contentBodyFormats = new Set(['markdown', 'html']);
 const contentPricingDefaultsSettingKey = 'content.pricing-defaults.v1';
 const novelForgeImportContract = 'station-cat-novelforge-import';
 const novelForgeImportContractHeader = 'station-cat-novelforge-import.v1';
+const novelForgeAnalyticsContractHeader = 'station-cat-novelforge-analytics.v1';
 const novelForgePackageFormat = 'novelforge-standard-publish-package';
 const maxNovelForgeImportBytes = 8 * 1024 * 1024;
 
@@ -1583,6 +1584,15 @@ const contentEntryPublicPath = (row) => {
   if (row.entry_type === 'blog_post') return `${basePath}${row.slug}/`;
   if (row.entry_type === 'novel_series') return `${basePath}${row.slug}/`;
   if (row.entry_type === 'novel_chapter' && row.parent_slug) return `${basePath}${row.parent_slug}/${row.slug}/`;
+  return '';
+};
+
+const contentEntryNovelV2Path = (row) => {
+  if (!row) return '';
+  if (row.entry_type === 'novel_series' && row.slug) return `/novel/${row.slug}/`;
+  if (row.entry_type === 'novel_chapter' && row.parent_slug && row.slug) {
+    return `/novel/${row.parent_slug}/chapter/${row.slug}/`;
+  }
   return '';
 };
 
@@ -7820,6 +7830,7 @@ const handleAdminContentSchema = async (env) =>
       mediaUpload: 'Admin 2.0 uploads cover images into CONTENT_BUCKET under content/media/covers.',
       novelForgeImport: 'NovelForge can publish projects, chapters, and cover metadata through POST /api/novelforge/import with a dedicated Bearer token.',
       novelForgeImportReview: 'Admin 2.0 can review NovelForge import batches, inspect linked entries, and publish imported drafts after review.',
+      novelForgeWritingApi: 'NovelForge can read chapter stats, AI insights, and book trends through GET /api/novelforge/analytics/* with the same Bearer token boundary.',
       pricingDefaults: 'Admin 2.0 stores global novel pricing defaults in admin_content_settings. Saved pricing applies to all books and chapters.',
       readerMemberships: '10 reading credits can redeem a monthly membership by default. Active members can read paid chapters.',
       readerBookmarks: 'Reader accounts can save chapter bookmarks and continue reading from Member Center.',
@@ -8900,7 +8911,7 @@ const novelForgeImportError = (message, { code = 'NOVELFORGE_IMPORT_ERROR', erro
     { status }
   );
 
-const requireNovelForgePublishToken = (request, env) => {
+const requireNovelForgePublishToken = (request, env, options = {}) => {
   const expected = cleanText(env.NOVELFORGE_PUBLISH_TOKEN, 1000);
   if (!expected) {
     return novelForgeImportError('NovelForge publish token is not configured.', {
@@ -8920,7 +8931,11 @@ const requireNovelForgePublishToken = (request, env) => {
   }
 
   const contractHeader = cleanText(request.headers.get('x-novelforge-contract'), 80);
-  if (contractHeader && contractHeader !== novelForgeImportContractHeader) {
+  const allowedContracts =
+    Array.isArray(options.allowedContracts) && options.allowedContracts.length
+      ? options.allowedContracts
+      : [novelForgeImportContractHeader];
+  if (contractHeader && !allowedContracts.includes(contractHeader)) {
     return novelForgeImportError('Unsupported NovelForge contract header.', {
       code: 'NOVELFORGE_CONTRACT_HEADER_UNSUPPORTED',
       status: 400
@@ -8929,6 +8944,11 @@ const requireNovelForgePublishToken = (request, env) => {
 
   return null;
 };
+
+const requireNovelForgeAnalyticsToken = (request, env) =>
+  requireNovelForgePublishToken(request, env, {
+    allowedContracts: [novelForgeImportContractHeader, novelForgeAnalyticsContractHeader]
+  });
 
 const readNovelForgeImportPayload = async (request) => {
   const contentLength = Number.parseInt(request.headers.get('content-length') || '0', 10);
@@ -9103,6 +9123,416 @@ const findExistingNovelForgeEntry = async (db, remoteId, entry) => {
   const byId = remoteEntryId ? await findContentEntryById(db, remoteEntryId, entry.entryType) : null;
   if (byId) return byId;
   return findContentEntryByIdentity(db, entry);
+};
+
+const safeDecodePathSegment = (segment) => {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+};
+
+const parseNovelForgeAnalyticsRoute = (pathname) => {
+  const segments = String(pathname || '')
+    .replace(/^\/+|\/+$/g, '')
+    .split('/')
+    .filter(Boolean);
+  if (segments[0] !== 'api' || segments[1] !== 'novelforge' || segments[2] !== 'analytics') return null;
+
+  const resource = cleanText(segments[3], 40).toLowerCase();
+  if (!['chapter', 'insights', 'trend'].includes(resource)) return null;
+  const identifierSegments = segments.slice(4).map(safeDecodePathSegment);
+  if (resource === 'trend' && identifierSegments.length > 1) return null;
+  if ((resource === 'chapter' || resource === 'insights') && identifierSegments.length > 2) return null;
+
+  return {
+    identifier: identifierSegments.join('/'),
+    resource
+  };
+};
+
+const findContentEntryBySlug = async (db, { entryType, locale, parentSlug = '', slug }) => {
+  const normalizedEntryType = cleanText(entryType, 40);
+  const normalizedLocale = normalizeContentLocale(locale || 'zh-Hant');
+  const normalizedParentSlug = cleanSlug(parentSlug || '', 160);
+  const normalizedSlug = cleanSlug(slug, 160);
+  if (!normalizedEntryType || !normalizedSlug) return null;
+
+  return db
+    .prepare(
+      `SELECT *
+       FROM content_entries
+       WHERE entry_type = ?
+         AND locale = ?
+         AND COALESCE(parent_slug, '') = ?
+         AND slug = ?
+       ORDER BY
+         CASE status WHEN 'published' THEN 0 WHEN 'scheduled' THEN 1 WHEN 'draft' THEN 2 ELSE 3 END,
+         COALESCE(published_at, updated_at) DESC,
+         id DESC
+       LIMIT 1`
+    )
+    .bind(normalizedEntryType, normalizedLocale, normalizedParentSlug, normalizedSlug)
+    .first();
+};
+
+const getNovelForgeAnalyticsOptions = (request, route) => {
+  const url = new URL(request.url);
+  const identifier = cleanText(
+    route.identifier ||
+      url.searchParams.get('id') ||
+      url.searchParams.get('remoteId') ||
+      url.searchParams.get('chapterId') ||
+      url.searchParams.get('bookId') ||
+      url.searchParams.get('seriesId') ||
+      '',
+    260
+  );
+
+  return {
+    chapterSlug: cleanSlug(url.searchParams.get('chapterSlug') || url.searchParams.get('chapter'), 160),
+    identifier,
+    limit: Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 50), 1), 100),
+    locale: normalizeContentLocale(url.searchParams.get('locale') || url.searchParams.get('language') || 'zh-Hant'),
+    seriesSlug: cleanSlug(url.searchParams.get('seriesSlug') || url.searchParams.get('series') || url.searchParams.get('bookSlug'), 160),
+    windowDays: normalizeNovelAnalyticsWindowDays(url.searchParams.get('windowDays') || url.searchParams.get('sinceDays'))
+  };
+};
+
+const splitNovelForgeSeriesChapterIdentifier = (identifier) => {
+  const parts = cleanText(identifier, 260)
+    .split('/')
+    .map((part) => cleanSlug(part, 160))
+    .filter(Boolean);
+  if (parts.length >= 2) return { chapterSlug: parts[1], seriesSlug: parts[0] };
+  return { chapterSlug: parts[0] || '', seriesSlug: '' };
+};
+
+const findNovelForgeSeriesForAnalytics = async (db, options) => {
+  const locale = normalizeContentLocale(options.locale || 'zh-Hant');
+  const identifier = cleanText(options.identifier, 260);
+  const remoteId = parseNovelForgeRemoteEntryId(identifier, 'novel_series');
+  if (remoteId) {
+    const byId = await findContentEntryById(db, remoteId, 'novel_series');
+    if (byId) return byId;
+  }
+
+  const seriesSlug = cleanSlug(options.seriesSlug || identifier, 160);
+  if (!seriesSlug) return null;
+  return findContentEntryBySlug(db, {
+    entryType: 'novel_series',
+    locale,
+    parentSlug: '',
+    slug: seriesSlug
+  });
+};
+
+const findNovelForgeChapterForAnalytics = async (db, options) => {
+  const locale = normalizeContentLocale(options.locale || 'zh-Hant');
+  const identifier = cleanText(options.identifier, 260);
+  const remoteId = parseNovelForgeRemoteEntryId(identifier, 'novel_chapter');
+  if (remoteId) {
+    const byId = await findContentEntryById(db, remoteId, 'novel_chapter');
+    if (byId) return byId;
+  }
+
+  const parsedIdentifier = splitNovelForgeSeriesChapterIdentifier(identifier);
+  const seriesSlug = cleanSlug(options.seriesSlug || parsedIdentifier.seriesSlug, 160);
+  const chapterSlug = cleanSlug(options.chapterSlug || parsedIdentifier.chapterSlug, 160);
+  if (!chapterSlug) return null;
+
+  if (!seriesSlug) {
+    const error = new Error('seriesSlug is required when resolving a NovelForge chapter by slug. Use seriesSlug + chapterSlug, /seriesSlug/chapterSlug, or a chapter_N remote ID.');
+    error.code = 'NOVELFORGE_SERIES_REQUIRED';
+    error.status = 400;
+    throw error;
+  }
+
+  return findContentEntryBySlug(db, {
+    entryType: 'novel_chapter',
+    locale,
+    parentSlug: seriesSlug,
+    slug: chapterSlug
+  });
+};
+
+const originFromRequest = (request) => new URL(request.url).origin;
+
+const withOrigin = (origin, path) => (path ? `${origin}${path}` : '');
+
+const novelForgeAnalyticsEntryToJson = (entry, request) => {
+  if (!entry) return null;
+  const origin = originFromRequest(request);
+  const publicPath = contentEntryPublicPath(entry);
+  const readerV2Path = contentEntryNovelV2Path(entry);
+
+  return {
+    id: entry.id,
+    remoteId: novelForgeRemoteIdForEntry(entry),
+    entryType: entry.entry_type,
+    locale: entry.locale,
+    slug: entry.slug,
+    parentSlug: entry.parent_slug || '',
+    title: entry.title || '',
+    chapterNumber: entry.chapter_number,
+    status: entry.status,
+    visibility: entry.visibility,
+    wordCount: normalizePositiveInteger(entry.word_count, 0),
+    updatedAt: entry.updated_at || '',
+    paths: {
+      legacy: publicPath,
+      readerV2: readerV2Path
+    },
+    urls: {
+      legacy: withOrigin(origin, publicPath),
+      preview: entry.id ? novelForgePreviewUrl(origin, entry.id) : '',
+      readerV2: withOrigin(origin, readerV2Path)
+    }
+  };
+};
+
+const queryNovelForgeChapterStatsRow = async (db, { chapterSlug, locale, seriesSlug, windowDays }) =>
+  db
+    .prepare(
+      `SELECT
+        chapter_stats.*,
+        chapter_entries.title AS title,
+        chapter_entries.chapter_number AS chapter_number,
+        series_entries.title AS series_title
+       FROM chapter_stats
+       LEFT JOIN content_entries AS chapter_entries
+         ON chapter_entries.entry_type = 'novel_chapter'
+        AND chapter_entries.locale = chapter_stats.locale
+        AND chapter_entries.parent_slug = chapter_stats.series_slug
+        AND chapter_entries.slug = chapter_stats.chapter_slug
+       LEFT JOIN content_entries AS series_entries
+         ON series_entries.entry_type = 'novel_series'
+        AND series_entries.locale = chapter_stats.locale
+        AND series_entries.slug = chapter_stats.series_slug
+       WHERE chapter_stats.series_slug = ?
+         AND chapter_stats.chapter_slug = ?
+         AND chapter_stats.locale = ?
+         AND chapter_stats.window_days = ?
+       ORDER BY chapter_stats.updated_at DESC, chapter_stats.id DESC
+       LIMIT 1`
+    )
+    .bind(seriesSlug, chapterSlug, locale, windowDays)
+    .first();
+
+const queryNovelForgeInsightRow = async (db, { chapterSlug, locale, seriesSlug, windowDays }) =>
+  db
+    .prepare(
+      `SELECT
+        ai_insights.*,
+        chapter_entries.title AS title,
+        chapter_entries.chapter_number AS chapter_number,
+        series_entries.title AS series_title
+       FROM ai_insights
+       LEFT JOIN content_entries AS chapter_entries
+         ON chapter_entries.entry_type = 'novel_chapter'
+        AND chapter_entries.locale = ai_insights.locale
+        AND chapter_entries.parent_slug = ai_insights.series_slug
+        AND chapter_entries.slug = ai_insights.chapter_slug
+       LEFT JOIN content_entries AS series_entries
+         ON series_entries.entry_type = 'novel_series'
+        AND series_entries.locale = ai_insights.locale
+        AND series_entries.slug = ai_insights.series_slug
+       WHERE ai_insights.series_slug = ?
+         AND ai_insights.chapter_slug = ?
+         AND ai_insights.locale = ?
+         AND ai_insights.window_days = ?
+       ORDER BY ai_insights.generated_at DESC, ai_insights.updated_at DESC, ai_insights.id DESC
+       LIMIT 1`
+    )
+    .bind(seriesSlug, chapterSlug, locale, windowDays)
+    .first();
+
+const queryNovelForgeSeriesTrendRows = async (db, { limit, locale, seriesSlug, windowDays }) => {
+  const response = await db
+    .prepare(
+      `SELECT
+        chapter_stats.*,
+        chapter_entries.title AS title,
+        chapter_entries.chapter_number AS chapter_number,
+        series_entries.title AS series_title
+       FROM chapter_stats
+       LEFT JOIN content_entries AS chapter_entries
+         ON chapter_entries.entry_type = 'novel_chapter'
+        AND chapter_entries.locale = chapter_stats.locale
+        AND chapter_entries.parent_slug = chapter_stats.series_slug
+        AND chapter_entries.slug = chapter_stats.chapter_slug
+       LEFT JOIN content_entries AS series_entries
+         ON series_entries.entry_type = 'novel_series'
+        AND series_entries.locale = chapter_stats.locale
+        AND series_entries.slug = chapter_stats.series_slug
+       WHERE chapter_stats.series_slug = ?
+         AND chapter_stats.locale = ?
+         AND chapter_stats.window_days = ?
+       ORDER BY
+         COALESCE(chapter_entries.chapter_number, 999999) ASC,
+         chapter_entries.sort_order ASC,
+         chapter_stats.updated_at DESC,
+         chapter_stats.id ASC
+       LIMIT ?`
+    )
+    .bind(seriesSlug, locale, windowDays, limit)
+    .all();
+
+  return response.results || [];
+};
+
+const queryNovelForgeSeriesTrendSummary = async (db, { locale, seriesSlug, windowDays }) =>
+  db
+    .prepare(
+      `SELECT
+        COUNT(*) AS chapter_count,
+        COALESCE(SUM(total_events), 0) AS total_events,
+        COALESCE(SUM(unique_sessions), 0) AS unique_sessions,
+        COALESCE(AVG(completion_rate), 0) AS avg_completion_rate,
+        COALESCE(AVG(engagement_score), 0) AS avg_engagement_score,
+        COALESCE(AVG(avg_read_time_seconds), 0) AS avg_read_time_seconds,
+        MAX(updated_at) AS latest_updated_at
+       FROM chapter_stats
+       WHERE series_slug = ?
+         AND locale = ?
+         AND window_days = ?`
+    )
+    .bind(seriesSlug, locale, windowDays)
+    .first();
+
+const novelForgeInsightWithFreshness = (insightRow, statsRow) => {
+  if (!insightRow) return null;
+  const insight = aiInsightToJson(insightRow);
+  const statsUpdatedAt = statsRow?.updated_at || '';
+  return {
+    ...insight,
+    stale: Boolean(statsUpdatedAt && insight.sourceStatsUpdatedAt && parseSqlTimestampMs(insight.sourceStatsUpdatedAt) < parseSqlTimestampMs(statsUpdatedAt)),
+    statsUpdatedAt
+  };
+};
+
+const handleNovelForgeAnalytics = async (request, env, route) => {
+  const tokenError = requireNovelForgeAnalyticsToken(request, env);
+  if (tokenError) return tokenError;
+
+  const db = env.WAITLIST_DB;
+  if (!db) return novelForgeImportError('Content database is not configured.', { code: 'CONTENT_DATABASE_NOT_CONFIGURED', status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return novelForgeImportError('Content tables are not initialized.', { code: 'CONTENT_TABLES_NOT_READY', status: 503 });
+  }
+
+  const options = getNovelForgeAnalyticsOptions(request, route);
+  if (route.resource === 'trend') {
+    if (!(await ensureChapterStatsReady(db))) {
+      return novelForgeImportError('Chapter stats are not initialized. Apply migration 0015_chapter_stats.sql.', {
+        code: 'CHAPTER_STATS_NOT_READY',
+        status: 503
+      });
+    }
+    const series = await findNovelForgeSeriesForAnalytics(db, options);
+    if (!series) {
+      return novelForgeImportError('NovelForge series was not found.', { code: 'NOVELFORGE_SERIES_NOT_FOUND', status: 404 });
+    }
+
+    const [summaryRow, trendRows] = await Promise.all([
+      queryNovelForgeSeriesTrendSummary(db, {
+        locale: series.locale,
+        seriesSlug: series.slug,
+        windowDays: options.windowDays
+      }),
+      queryNovelForgeSeriesTrendRows(db, {
+        limit: options.limit,
+        locale: series.locale,
+        seriesSlug: series.slug,
+        windowDays: options.windowDays
+      })
+    ]);
+
+    return novelForgeImportJson({
+      ok: true,
+      resource: 'trend',
+      series: novelForgeAnalyticsEntryToJson(series, request),
+      stage: 'novelforge-writing-api-5',
+      summary: {
+        avgCompletionRate: Number(summaryRow?.avg_completion_rate || 0),
+        avgEngagementScore: Number(summaryRow?.avg_engagement_score || 0),
+        avgReadTimeSeconds: Math.round(Number(summaryRow?.avg_read_time_seconds || 0)),
+        chapterCount: normalizePositiveInteger(summaryRow?.chapter_count, 0),
+        latestUpdatedAt: summaryRow?.latest_updated_at || '',
+        totalEvents: normalizePositiveInteger(summaryRow?.total_events, 0),
+        uniqueSessions: normalizePositiveInteger(summaryRow?.unique_sessions, 0)
+      },
+      trend: trendRows.map(chapterStatsToJson),
+      windowDays: options.windowDays
+    });
+  }
+
+  let chapter;
+  try {
+    chapter = await findNovelForgeChapterForAnalytics(db, options);
+  } catch (error) {
+    return novelForgeImportError(error.message || 'NovelForge chapter lookup failed.', {
+      code: error.code || 'NOVELFORGE_CHAPTER_LOOKUP_FAILED',
+      status: error.status || 400
+    });
+  }
+  if (!chapter) {
+    return novelForgeImportError('NovelForge chapter was not found.', { code: 'NOVELFORGE_CHAPTER_NOT_FOUND', status: 404 });
+  }
+
+  const chapterTarget = {
+    chapterSlug: chapter.slug,
+    locale: chapter.locale,
+    seriesSlug: chapter.parent_slug || '',
+    windowDays: options.windowDays
+  };
+
+  if (route.resource === 'chapter') {
+    if (!(await ensureChapterStatsReady(db))) {
+      return novelForgeImportError('Chapter stats are not initialized. Apply migration 0015_chapter_stats.sql.', {
+        code: 'CHAPTER_STATS_NOT_READY',
+        status: 503
+      });
+    }
+    const statsRow = chapterTarget.seriesSlug ? await queryNovelForgeChapterStatsRow(db, chapterTarget) : null;
+    return novelForgeImportJson({
+      ok: true,
+      chapter: novelForgeAnalyticsEntryToJson(chapter, request),
+      resource: 'chapter',
+      stage: 'novelforge-writing-api-5',
+      stats: statsRow ? chapterStatsToJson(statsRow) : null,
+      windowDays: options.windowDays
+    });
+  }
+
+  if (!(await ensureChapterStatsReady(db))) {
+    return novelForgeImportError('Chapter stats are not initialized. Apply migration 0015_chapter_stats.sql.', {
+      code: 'CHAPTER_STATS_NOT_READY',
+      status: 503
+    });
+  }
+  if (!(await ensureAiInsightsReady(db))) {
+    return novelForgeImportError('AI insights are not initialized. Apply migration 0016_ai_insights.sql.', {
+      code: 'AI_INSIGHTS_NOT_READY',
+      status: 503
+    });
+  }
+
+  const [insightRow, statsRow] = await Promise.all([
+    chapterTarget.seriesSlug ? queryNovelForgeInsightRow(db, chapterTarget) : null,
+    chapterTarget.seriesSlug ? queryNovelForgeChapterStatsRow(db, chapterTarget) : null
+  ]);
+
+  return novelForgeImportJson({
+    ok: true,
+    chapter: novelForgeAnalyticsEntryToJson(chapter, request),
+    insight: novelForgeInsightWithFreshness(insightRow, statsRow),
+    resource: 'insights',
+    stage: 'novelforge-writing-api-5',
+    stats: statsRow ? chapterStatsToJson(statsRow) : null,
+    windowDays: options.windowDays
+  });
 };
 
 const buildNovelForgeImportBackupKey = (requestId) => {
@@ -11887,6 +12317,7 @@ export const __readerTotpTestHooks = {
   handleAdminGenerateNovelAiInsights,
   handleAdminListNovelAiInsights,
   handleAdminListNovelAnalyticsStats,
+  handleNovelForgeAnalytics,
   handleNovelReadingEvents,
   handleReaderPasswordResetConfirm,
   hmacSha256Hex,
@@ -11896,6 +12327,7 @@ export const __readerTotpTestHooks = {
   dynamicSeriesPath,
   normalizeTotpCode,
   normalizeReadingEventPayload,
+  parseNovelForgeAnalyticsRoute,
   parseDynamicContentRoute,
   readerTotpResetFailureMessage,
   readerTotpResetFailureThreshold,
@@ -12044,6 +12476,15 @@ export default {
 
     if (url.pathname === '/api/novelforge/import') {
       if (request.method === 'POST') return handleNovelForgeImport(request, env);
+      return novelForgeImportError('Method not allowed.', {
+        code: 'METHOD_NOT_ALLOWED',
+        status: 405
+      });
+    }
+
+    const novelForgeAnalyticsRoute = parseNovelForgeAnalyticsRoute(url.pathname);
+    if (novelForgeAnalyticsRoute) {
+      if (request.method === 'GET') return handleNovelForgeAnalytics(request, env, novelForgeAnalyticsRoute);
       return novelForgeImportError('Method not allowed.', {
         code: 'METHOD_NOT_ALLOWED',
         status: 405
