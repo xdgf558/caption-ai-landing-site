@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
-import { __readerTotpTestHooks as hooks } from '../src/worker.js';
+import worker, { __readerTotpTestHooks as hooks } from '../src/worker.js';
 
 const root = join(fileURLToPath(new URL('..', import.meta.url)));
 const read = (path) => readFileSync(join(root, path), 'utf8');
@@ -141,6 +141,16 @@ assert.equal(hooks.contentEntryPublicPath(contentSeriesRow), '/novel/book/');
 assert.equal(hooks.contentEntryPublicPath(contentChapterRow), '/novel/book/chapter/ch1/');
 assert.equal(hooks.contentEntryLegacyWorksPath(contentSeriesRow), '/zh-hant/works/book/');
 assert.equal(hooks.contentEntryLegacyWorksPath(contentChapterRow), '/zh-hant/works/book/ch1/');
+
+const legacyRedirectResponse = await worker.fetch(
+  new Request('https://wwwstationcat.org/zh-hant/works/book/ch1/?a=1'),
+  {}
+);
+assert.equal(legacyRedirectResponse.status, 301);
+assert.equal(
+  legacyRedirectResponse.headers.get('location'),
+  'https://wwwstationcat.org/novel/book/chapter/ch1/?a=1'
+);
 
 const serial = {
   access_level: 'paid',
