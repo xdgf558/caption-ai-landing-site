@@ -294,6 +294,7 @@ const novelPaymentGrantStatuses = ['confirmed', 'finished'];
 const staleUnfinishedNovelOrderStatuses = ['draft', 'waiting', 'unknown'];
 const staleUnfinishedNovelOrderHours = 12;
 const novelCheckoutPath = '/api/novels/payments/checkout';
+const novelReadingEventsPath = '/api/novels/reading-events';
 const novelBundleOrderType = 'chapter-bundle';
 const novelCreditPackOrderType = 'credit-pack';
 const novelCreditSource = 'reader-credits';
@@ -303,6 +304,25 @@ const novelCreditLedgerUnlockSource = 'chapter-credit-unlock';
 const novelCreditLedgerMembershipSource = 'reader-membership-redeem';
 const novelAdminSource = 'admin-v2';
 const novelAdminManualCreditSource = 'admin-v2-manual-credit';
+const novelReadingEventTypes = new Set([
+  'chapter_open',
+  'chapter_close',
+  'scroll',
+  'scroll_depth',
+  'reading_pause',
+  'reading_resume',
+  'click_next',
+  'click_prev',
+  'like',
+  'bookmark',
+  'comment_open',
+  'comment_draft'
+]);
+const novelReadingEventMaxBatchSize = 20;
+const novelReadingEventMaxMetadataKeys = 20;
+const novelReadingEventRateLimitWindowSeconds = 60;
+const novelReadingEventClientRateLimitPerMinute = 120;
+const novelReadingEventSessionRateLimitPerMinute = 60;
 const defaultReaderCreditPacks = [
   { credits: 10, priceAmount: 1, priceCurrency: 'USD', label: '10 SC Credits' },
   { credits: 50, priceAmount: 5, priceCurrency: 'USD', label: '50 SC Credits' },
@@ -2127,6 +2147,7 @@ const isMissingReaderPasswordCredentialsError = (error) => /no such table: reade
 const isMissingReaderTotpCredentialsError = (error) => /no such table: reader_totp_credentials/i.test(error?.message || '');
 const isMissingReaderTotpResetAttemptsError = (error) =>
   /no such table: reader_totp_reset_attempts/i.test(error?.message || '');
+const isMissingReadingEventsError = (error) => /no such table: reading_events/i.test(error?.message || '');
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -2164,6 +2185,16 @@ const ensureReaderBookmarksReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingReaderBookmarksError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureReadingEventsReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM reading_events LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingReadingEventsError(error)) return false;
     throw error;
   }
 };
@@ -4897,6 +4928,244 @@ const handleReaderBookmarkSave = async (request, env) => {
   });
 };
 
+const normalizeReadingEventMetadata = (value) => {
+  const metadata = normalizeJsonObject(value);
+  const normalized = {};
+
+  for (const [rawKey, rawValue] of Object.entries(metadata).slice(0, novelReadingEventMaxMetadataKeys)) {
+    const key = cleanText(rawKey, 48).replace(/[^a-zA-Z0-9_.:-]+/g, '_');
+    if (!key) continue;
+
+    if (typeof rawValue === 'string') {
+      normalized[key] = cleanText(rawValue, 300);
+    } else if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
+      normalized[key] = rawValue;
+    } else if (typeof rawValue === 'boolean' || rawValue === null) {
+      normalized[key] = rawValue;
+    } else if (Array.isArray(rawValue)) {
+      normalized[key] = rawValue
+        .slice(0, 10)
+        .map((item) => {
+          if (typeof item === 'string') return cleanText(item, 120);
+          if (typeof item === 'number' && Number.isFinite(item)) return item;
+          if (typeof item === 'boolean' || item === null) return item;
+          return null;
+        })
+        .filter((item) => item !== null);
+    }
+  }
+
+  return normalized;
+};
+
+const normalizeNullableNumber = (value, options = {}) => {
+  if (value === undefined || value === null || value === '') return null;
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  const min = Number.isFinite(options.min) ? options.min : -1000000;
+  const max = Number.isFinite(options.max) ? options.max : 1000000;
+  return Math.max(min, Math.min(max, number));
+};
+
+const normalizeNullableInteger = (value, options = {}) => {
+  const number = normalizeNullableNumber(value, options);
+  return number === null ? null : Math.round(number);
+};
+
+const normalizeReadingEventPayload = (payload, options = {}) => {
+  const eventType = cleanText(payload.eventType || payload.event, 40).toLowerCase();
+  if (!novelReadingEventTypes.has(eventType)) {
+    const error = new Error('Unsupported reading event type.');
+    error.code = 'INVALID_READING_EVENT_TYPE';
+    throw error;
+  }
+
+  const seriesSlug = cleanSlug(payload.seriesSlug || payload.series || options.seriesSlug, 160);
+  const chapterSlug = cleanSlug(payload.chapterSlug || payload.chapter || options.chapterSlug, 160);
+  if (!seriesSlug || !chapterSlug) {
+    const error = new Error('seriesSlug and chapterSlug are required.');
+    error.code = 'INVALID_READING_EVENT_TARGET';
+    throw error;
+  }
+
+  const rawClientEventId = cleanText(payload.clientEventId || payload.eventId, 120);
+  const clientEventId = /^[a-zA-Z0-9:_-]{8,120}$/.test(rawClientEventId)
+    ? rawClientEventId
+    : `server-${randomHex(16)}`;
+  const rawSessionId = cleanText(payload.sessionId || payload.clientSessionId || options.sessionId, 120);
+  const sessionId = /^[a-zA-Z0-9:_-]{6,120}$/.test(rawSessionId) ? rawSessionId : `session-${randomHex(12)}`;
+  const locale = normalizeContentLocale(payload.locale || options.locale || 'zh-Hant');
+  const progressPercent = normalizeNullableInteger(payload.progressPercent ?? payload.progress, { min: 0, max: 100 });
+  const blockIndex = normalizeNullableInteger(payload.blockIndex, { min: 0, max: 99999 });
+  const durationMs = normalizeNullableInteger(payload.durationMs ?? payload.elapsedMs, { min: 0, max: 24 * 60 * 60 * 1000 });
+  const eventValue = normalizeNullableNumber(payload.value ?? payload.eventValue, { min: -1000000, max: 1000000 });
+  const sourcePath = cleanRedirectPath(payload.sourcePath || payload.path || options.sourcePath, `/novel/${seriesSlug}/chapter/${chapterSlug}/`);
+
+  return {
+    blockIndex,
+    chapterSlug,
+    clientEventId,
+    durationMs,
+    eventType,
+    eventValue,
+    locale,
+    metadata: normalizeReadingEventMetadata(payload.metadata),
+    progressPercent,
+    seriesSlug,
+    sessionId,
+    sourcePath
+  };
+};
+
+const countRecentReadingEventsByUserAgent = async (db, userAgentHash) => {
+  const row = await db
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM reading_events
+       WHERE user_agent_hash = ?
+         AND created_at >= datetime('now', '-' || ? || ' seconds')`
+    )
+    .bind(userAgentHash, novelReadingEventRateLimitWindowSeconds)
+    .first();
+  return Math.max(0, Number(row?.count || 0));
+};
+
+const countRecentReadingEventsBySession = async (db, sessionId) => {
+  const row = await db
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM reading_events
+       WHERE session_id = ?
+         AND created_at >= datetime('now', '-' || ? || ' seconds')`
+    )
+    .bind(sessionId, novelReadingEventRateLimitWindowSeconds)
+    .first();
+  return Math.max(0, Number(row?.count || 0));
+};
+
+const checkNovelReadingEventRateLimit = async (db, events, clientHashes) => {
+  const clientRecentCount = await countRecentReadingEventsByUserAgent(db, clientHashes.ipUaHash);
+  if (clientRecentCount + events.length > novelReadingEventClientRateLimitPerMinute) {
+    return { limited: true, scope: 'client', retryAfterSeconds: novelReadingEventRateLimitWindowSeconds };
+  }
+
+  const eventsBySession = new Map();
+  events.forEach((event) => {
+    eventsBySession.set(event.sessionId, (eventsBySession.get(event.sessionId) || 0) + 1);
+  });
+
+  for (const [sessionId, incomingCount] of eventsBySession) {
+    const sessionRecentCount = await countRecentReadingEventsBySession(db, sessionId);
+    if (sessionRecentCount + incomingCount > novelReadingEventSessionRateLimitPerMinute) {
+      return { limited: true, scope: 'session', retryAfterSeconds: novelReadingEventRateLimitWindowSeconds };
+    }
+  }
+
+  return { limited: false, scope: '', retryAfterSeconds: 0 };
+};
+
+const handleNovelReadingEvents = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, code: 'READING_EVENTS_DB_NOT_CONFIGURED', message: 'Reading events database is not configured.' }, { status: 500 });
+
+  if (!(await ensureReadingEventsReady(db))) {
+    return json(
+      {
+        ok: false,
+        code: 'READING_EVENTS_NOT_READY',
+        message: 'Reading events are not initialized. Apply migration 0014_reading_events.sql.'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ ok: false, code: 'INVALID_JSON', message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const rawEvents = Array.isArray(payload.events) ? payload.events : [payload];
+  const limitedEvents = rawEvents.slice(0, novelReadingEventMaxBatchSize);
+  if (!limitedEvents.length) {
+    return json({ ok: false, code: 'NO_READING_EVENTS', message: 'At least one reading event is required.' }, { status: 400 });
+  }
+
+  const [session, clientHashes] = await Promise.all([
+    getReaderFromSession(request, env),
+    getRequestClientHashes(request)
+  ]);
+  let events;
+  try {
+    events = limitedEvents.map((event) =>
+      normalizeReadingEventPayload(event, {
+        chapterSlug: payload.chapterSlug || payload.chapter,
+        locale: payload.locale,
+        seriesSlug: payload.seriesSlug || payload.series,
+        sessionId: payload.sessionId,
+        sourcePath: payload.sourcePath || payload.path
+      })
+    );
+  } catch (error) {
+    return json({ ok: false, code: error.code || 'INVALID_READING_EVENT', message: error.message }, { status: 400 });
+  }
+
+  const rateLimit = await checkNovelReadingEventRateLimit(db, events, clientHashes);
+  if (rateLimit.limited) {
+    return json(
+      {
+        ok: false,
+        accepted: 0,
+        code: 'READING_EVENTS_RATE_LIMITED',
+        message: 'Too many reading events. Please retry shortly.'
+      },
+      {
+        status: 429,
+        headers: { 'retry-after': String(rateLimit.retryAfterSeconds) }
+      }
+    );
+  }
+
+  const statements = events.map((event) =>
+    db
+      .prepare(
+        `INSERT INTO reading_events (
+          client_event_id, account_id, session_id, series_slug, chapter_slug, locale,
+          event_type, event_value, progress_percent, block_index, duration_ms,
+          source_path, metadata_json, ip_hash, user_agent_hash
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(client_event_id) DO NOTHING`
+      )
+      .bind(
+        event.clientEventId,
+        session?.account_id || null,
+        event.sessionId,
+        event.seriesSlug,
+        event.chapterSlug,
+        event.locale,
+        event.eventType,
+        event.eventValue,
+        event.progressPercent,
+        event.blockIndex,
+        event.durationMs,
+        event.sourcePath,
+        JSON.stringify(event.metadata),
+        clientHashes.ipHash,
+        clientHashes.ipUaHash
+      )
+  );
+
+  await db.batch(statements);
+
+  return json({
+    ok: true,
+    accepted: events.length,
+    truncated: rawEvents.length > events.length
+  });
+};
+
 const redeemReaderMembershipWithCredits = async (db, accountId, env) => {
   if (!(await ensureReaderMembershipsReady(db))) {
     const error = new Error('Reader memberships are not initialized. Apply migration 0009_reader_memberships.sql.');
@@ -6712,6 +6981,7 @@ const handleAdminContentSchema = async (env) =>
         'content_pricing_rules',
         'admin_content_settings',
         'reader_bookmarks',
+        'reading_events',
         'admin_audit_logs'
       ],
       legacyMigration: 'Completed. The one-time legacy Markdown migration endpoint and manifest have been removed from the Worker bundle.',
@@ -6725,6 +6995,7 @@ const handleAdminContentSchema = async (env) =>
       pricingDefaults: 'Admin 2.0 stores global novel pricing defaults in admin_content_settings. Saved pricing applies to all books and chapters.',
       readerMemberships: '10 reading credits can redeem a monthly membership by default. Active members can read paid chapters.',
       readerBookmarks: 'Reader accounts can save chapter bookmarks and continue reading from Member Center.',
+      readingEvents: 'Novel V2 reader pages can send chapter open, scroll depth, pause/resume, navigation, like, bookmark, and comment interaction events into reading_events.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
       nextStages: ['8D optional retry tools and richer NovelForge source diagnostics']
     }
@@ -9345,6 +9616,207 @@ const renderDynamicUnlockButtons = (route, serial, chapter, settings) => {
     </div>`;
 };
 
+const renderDynamicReadingEventsScript = (route, serial, chapter) => {
+  if (route.readerVersion !== 'v2') return '';
+  const readingEventsData = {
+    chapterSlug: chapter.slug,
+    chapterTitle: chapter.title,
+    locale: route.locale,
+    seriesSlug: serial.slug,
+    seriesTitle: serial.title,
+    sourcePath: dynamicCanonicalPath(route)
+  };
+
+  return `<script>
+    (() => {
+      const readingEventsEndpoint = ${scriptJson(novelReadingEventsPath)};
+      const readingEventsData = ${scriptJson(readingEventsData)};
+      const readingSessionStorageKey = 'stationcat:novel-v2:reading-session-id';
+      const readingStartTime = Date.now();
+      const scrollDepthThresholds = [25, 50, 75, 90, 100];
+      const reportedDepths = new Set();
+      let readingSessionId = '';
+      let readingPaused = false;
+      let readingIdleTimer;
+      let readingScrollFrame = 0;
+      let readingMaxDepth = 0;
+      let readingOpened = false;
+      let readingBodyObserver;
+      let lastScrollTrackAt = 0;
+      let lastScrollProgress = -1;
+      const createReadingId = (prefix) => {
+        const randomValue = typeof window.crypto?.randomUUID === 'function'
+          ? window.crypto.randomUUID()
+          : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+        return prefix + '-' + randomValue;
+      };
+      try {
+        readingSessionId = window.localStorage.getItem(readingSessionStorageKey) || '';
+        if (!readingSessionId) {
+          readingSessionId = createReadingId('r');
+          window.localStorage.setItem(readingSessionStorageKey, readingSessionId);
+        }
+      } catch {
+        readingSessionId = createReadingId('r');
+      }
+      const getReaderBodyForEvents = () =>
+        document.querySelector('[data-reader-body]:not([hidden])');
+      const getReadableBlocksForEvents = (body) =>
+        Array.from(body?.querySelectorAll('p, h2, h3, blockquote, li') || [])
+          .filter((node) => node.textContent.trim().length > 0);
+      const getReadingPosition = () => {
+        const body = getReaderBodyForEvents();
+        if (!body) return { blockIndex: null, progressPercent: 0 };
+        const rect = body.getBoundingClientRect();
+        const total = Math.max(1, body.scrollHeight - window.innerHeight * 0.55);
+        const read = Math.max(0, -rect.top + window.innerHeight * 0.18);
+        const progressPercent = Math.max(0, Math.min(100, Math.round((read / total) * 100)));
+        const blocks = getReadableBlocksForEvents(body);
+        const targetLine = window.innerHeight * 0.22;
+        const currentBlock = blocks.reduce((best, block) => {
+          const distance = Math.abs(block.getBoundingClientRect().top - targetLine);
+          return !best || distance < best.distance ? { block, distance } : best;
+        }, null)?.block;
+        const blockIndex = currentBlock ? blocks.indexOf(currentBlock) : null;
+        return { blockIndex, progressPercent };
+      };
+      const sendReadingPayload = (payload, options = {}) => {
+        const body = JSON.stringify(payload);
+        if (options.beacon && navigator.sendBeacon) {
+          try {
+            const blob = new Blob([body], { type: 'application/json' });
+            if (navigator.sendBeacon(readingEventsEndpoint, blob)) return;
+          } catch {}
+        }
+        fetch(readingEventsEndpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body,
+          keepalive: Boolean(options.keepalive)
+        }).catch(() => null);
+      };
+      const trackReadingEvent = (eventType, eventData = {}, options = {}) => {
+        const position = getReadingPosition();
+        readingMaxDepth = Math.max(readingMaxDepth, position.progressPercent || 0);
+        sendReadingPayload({
+          ...readingEventsData,
+          blockIndex: eventData.blockIndex ?? position.blockIndex,
+          clientEventId: createReadingId('e'),
+          durationMs: Date.now() - readingStartTime,
+          eventType,
+          metadata: {
+            readerVersion: 'v2',
+            viewportHeight: window.innerHeight,
+            viewportWidth: window.innerWidth,
+            visibilityState: document.visibilityState,
+            ...(eventData.metadata || {})
+          },
+          progressPercent: eventData.progressPercent ?? position.progressPercent,
+          sessionId: readingSessionId,
+          sourcePath: window.location.pathname + window.location.hash,
+          value: eventData.value
+        }, options);
+      };
+      window.stationCatReadingEvents = {
+        openWhenReady: () => openReadingSession(),
+        track: trackReadingEvent
+      };
+      const markReadingActivity = () => {
+        if (!readingOpened) return;
+        if (readingPaused) {
+          readingPaused = false;
+          trackReadingEvent('reading_resume');
+        }
+        window.clearTimeout(readingIdleTimer);
+        readingIdleTimer = window.setTimeout(() => {
+          readingPaused = true;
+          trackReadingEvent('reading_pause');
+        }, 45000);
+      };
+      const handleReadingScroll = () => {
+        if (!readingOpened) return;
+        markReadingActivity();
+        if (readingScrollFrame) return;
+        readingScrollFrame = window.requestAnimationFrame(() => {
+          readingScrollFrame = 0;
+          const { progressPercent } = getReadingPosition();
+          readingMaxDepth = Math.max(readingMaxDepth, progressPercent);
+          scrollDepthThresholds.forEach((threshold) => {
+            if (progressPercent >= threshold && !reportedDepths.has(threshold)) {
+              reportedDepths.add(threshold);
+              trackReadingEvent('scroll_depth', {
+                progressPercent,
+                value: threshold,
+                metadata: { threshold }
+              });
+            }
+          });
+          const now = Date.now();
+          if (now - lastScrollTrackAt >= 15000 && Math.abs(progressPercent - lastScrollProgress) >= 5) {
+            lastScrollTrackAt = now;
+            lastScrollProgress = progressPercent;
+            trackReadingEvent('scroll', { progressPercent, value: progressPercent });
+          }
+        });
+      };
+      const openReadingSession = () => {
+        if (readingOpened) return true;
+        if (!getReaderBodyForEvents()) return false;
+        readingOpened = true;
+        if (readingBodyObserver) {
+          readingBodyObserver.disconnect();
+          readingBodyObserver = null;
+        }
+        trackReadingEvent('chapter_open');
+        markReadingActivity();
+        return true;
+      };
+      const watchForReaderBody = () => {
+        if (openReadingSession()) return;
+        if (typeof MutationObserver !== 'function' || !document.body) return;
+        readingBodyObserver = new MutationObserver(() => {
+          openReadingSession();
+        });
+        readingBodyObserver.observe(document.body, {
+          attributes: true,
+          attributeFilter: ['hidden'],
+          childList: true,
+          subtree: true
+        });
+      };
+      document.addEventListener('click', (event) => {
+        const target = event.target instanceof HTMLElement ? event.target.closest('[data-reader-nav]') : null;
+        if (!target) return;
+        const direction = target.dataset.readerNav === 'prev' ? 'prev' : 'next';
+        trackReadingEvent(direction === 'prev' ? 'click_prev' : 'click_next', {
+          metadata: { href: target.getAttribute('href') || '' }
+        }, { beacon: true, keepalive: true });
+      });
+      ['pointerdown', 'keydown', 'touchstart'].forEach((eventName) => {
+        window.addEventListener(eventName, markReadingActivity, { passive: true });
+      });
+      window.addEventListener('scroll', handleReadingScroll, { passive: true });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          if (!openReadingSession()) return;
+          markReadingActivity();
+        }
+      });
+      window.addEventListener('pagehide', () => {
+        window.clearTimeout(readingIdleTimer);
+        if (readingBodyObserver) readingBodyObserver.disconnect();
+        if (readingOpened) {
+          trackReadingEvent('chapter_close', {
+            value: readingMaxDepth,
+            metadata: { maxDepth: readingMaxDepth }
+          }, { beacon: true, keepalive: true });
+        }
+      }, { once: true });
+      watchForReaderBody();
+    })();
+  </script>`;
+};
+
 const renderDynamicReaderInteractions = (route, serial, chapter) => {
   if (route.readerVersion !== 'v2') return '';
   const copy = dynamicReaderInteractionCopy[route.locale] || dynamicReaderInteractionCopy['zh-Hant'];
@@ -9378,6 +9850,7 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
         const storagePrefix = 'stationcat:novel-v2:' + interactionKey;
         const likedKey = storagePrefix + ':liked';
         const commentKey = storagePrefix + ':comment-draft';
+        let commentPostTimer;
         const setLikedState = (liked) => {
           if (!likeButton) return;
           likeButton.setAttribute('aria-pressed', liked ? 'true' : 'false');
@@ -9392,6 +9865,10 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
         likeButton?.addEventListener('click', () => {
           const nextLiked = likeButton.getAttribute('aria-pressed') !== 'true';
           setLikedState(nextLiked);
+          window.stationCatReadingEvents?.track?.('like', {
+            value: nextLiked ? 1 : 0,
+            metadata: { liked: nextLiked }
+          });
           try {
             window.localStorage.setItem(likedKey, nextLiked ? '1' : '0');
           } catch {}
@@ -9401,9 +9878,22 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
           const expanded = commentPanel.hidden;
           commentPanel.hidden = !expanded;
           commentToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          if (expanded) commentDraft?.focus();
+          if (expanded) {
+            window.stationCatReadingEvents?.track?.('comment_open');
+            commentDraft?.focus();
+          }
         });
         commentDraft?.addEventListener('input', () => {
+          const commentLength = commentDraft.value.trim().length;
+          window.clearTimeout(commentPostTimer);
+          if (commentLength > 0) {
+            commentPostTimer = window.setTimeout(() => {
+              window.stationCatReadingEvents?.track?.('comment_draft', {
+                value: commentLength,
+                metadata: { length: commentLength }
+              });
+            }, 1200);
+          }
           try {
             window.localStorage.setItem(commentKey, commentDraft.value);
             if (commentStatus) {
@@ -9417,6 +9907,7 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
             }
           }
         });
+        window.addEventListener('pagehide', () => window.clearTimeout(commentPostTimer), { once: true });
       })();
     </script>`;
 };
@@ -9562,6 +10053,15 @@ const renderDynamicBookmarkScript = (route, serial, chapter) => {
             throw new Error(data.message || bookmarkCopy.failed);
           }
           setBookmarkStatus(bookmarkCopy.saved, 'success');
+          window.stationCatReadingEvents?.track?.('bookmark', {
+            blockIndex: bookmarkPosition.blockIndex,
+            progressPercent: bookmarkPosition.progressPercent,
+            value: bookmarkPosition.progressPercent,
+            metadata: {
+              anchorId: bookmarkPosition.anchorId,
+              sourcePath: bookmarkPosition.sourcePath
+            }
+          });
         } catch (error) {
           setBookmarkStatus(error.message || bookmarkCopy.failed, 'error');
         } finally {
@@ -9677,6 +10177,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
             body.innerHTML = payload.content.html;
             body.hidden = false;
             window.stationCatReaderBookmarks?.init?.(body, { restore: true });
+            window.stationCatReadingEvents?.openWhenReady?.();
             body.classList.add('prose--ready');
             gate.hidden = true;
           };
@@ -9786,10 +10287,11 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
       </header>
       ${content}
       <footer class="section">
+        ${renderDynamicReadingEventsScript(route, serial, chapter)}
         ${renderDynamicReaderInteractions(route, serial, chapter)}
         <div class="button-row">
-          ${previousChapter ? `<a class="button button-secondary" href="${escapeHtml(dynamicChapterPath(route, serial.slug, previousChapter.slug))}">${escapeHtml(copy.previousChapter)}</a>` : `<a class="button button-secondary" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>`}
-          ${nextChapter ? `<a class="button button-primary" href="${escapeHtml(dynamicChapterPath(route, serial.slug, nextChapter.slug))}">${escapeHtml(copy.nextChapter)}</a>` : previousChapter ? `<a class="button button-primary" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>` : ''}
+          ${previousChapter ? `<a class="button button-secondary" href="${escapeHtml(dynamicChapterPath(route, serial.slug, previousChapter.slug))}" data-reader-nav="prev">${escapeHtml(copy.previousChapter)}</a>` : `<a class="button button-secondary" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>`}
+          ${nextChapter ? `<a class="button button-primary" href="${escapeHtml(dynamicChapterPath(route, serial.slug, nextChapter.slug))}" data-reader-nav="next">${escapeHtml(copy.nextChapter)}</a>` : previousChapter ? `<a class="button button-primary" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>` : ''}
           <button class="button button-secondary" type="button" data-reader-bookmark-save aria-keyshortcuts="B" title="${escapeHtml(bookmarkCopy.shortcutTitle)}">${escapeHtml(bookmarkCopy.save)}</button>
         </div>
         <div class="reader-status serial-bookmark-status" data-reader-bookmark-status role="status" aria-live="polite"></div>
@@ -10548,6 +11050,7 @@ export const __readerTotpTestHooks = {
   getReaderTotpResetIdentifierHash,
   getRequestClientHashes,
   getTotpStep,
+  handleNovelReadingEvents,
   handleReaderPasswordResetConfirm,
   hmacSha256Hex,
   hotpCode,
@@ -10555,6 +11058,7 @@ export const __readerTotpTestHooks = {
   dynamicChapterPath,
   dynamicSeriesPath,
   normalizeTotpCode,
+  normalizeReadingEventPayload,
   parseDynamicContentRoute,
   readerTotpResetFailureMessage,
   readerTotpResetFailureThreshold,
@@ -10719,6 +11223,10 @@ export default {
 
     if (request.method === 'POST' && url.pathname === nowPaymentsWebhookPath) {
       return handleNowPaymentsWebhook(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === novelReadingEventsPath) {
+      return handleNovelReadingEvents(request, env);
     }
 
     if (url.pathname === '/admin/api/novels/payments/orders') {
