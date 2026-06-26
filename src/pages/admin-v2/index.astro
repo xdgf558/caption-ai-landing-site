@@ -231,13 +231,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </label>
           <div class="button-row">
             <button class="button button-primary" id="analytics-aggregate" type="button">重新聚合</button>
+            <button class="button button-secondary" id="analytics-generate-insights" type="button">生成洞察</button>
             <button class="button button-secondary" id="analytics-refresh" type="button">刷新统计</button>
           </div>
           <section class="admin-template-panel" aria-labelledby="analytics-help-title">
             <div>
               <p class="station-kicker">Reader Analytics</p>
               <h3 id="analytics-help-title">阅读统计</h3>
-              <p>聚合 Novel V2 阅读事件，查看章节完成率、平均阅读时间、流失位置和互动分。</p>
+              <p>聚合 Novel V2 阅读事件，查看章节完成率、平均阅读时间、流失位置和互动分，并生成章节 AI Insight。</p>
             </div>
           </section>
         </section>
@@ -786,6 +787,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       orders: [],
       accounts: [],
       analyticsStats: [],
+      analyticsInsights: [],
       selectedEntryId: 0,
       selectedImportId: 0,
       selectedOrderToken: '',
@@ -2247,6 +2249,55 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const analyticsKey = (stat) => `${stat.seriesSlug || ''}/${stat.chapterSlug || ''}/${stat.locale || ''}/${stat.windowDays || currentAnalyticsWindowDays()}`;
 
+    const getAnalyticsInsightForStat = (stat) =>
+      state.analyticsInsights.find((insight) => analyticsKey(insight) === analyticsKey(stat));
+
+    const renderInsightItems = (items) => {
+      const list = Array.isArray(items) ? items : [];
+      return list.length
+        ? `<ul class="admin-v2-clean-list">${list.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+        : '<p class="admin-empty-list">暂无数据。</p>';
+    };
+
+    const renderAnalyticsInsightSection = (stat) => {
+      const insightRow = getAnalyticsInsightForStat(stat);
+      if (!insightRow) {
+        return `
+          <section class="admin-detail-section">
+            <h4>AI Insight</h4>
+            <p class="admin-empty-list">当前统计窗口还没有洞察。点击左侧“生成洞察”后会写入 ai_insights。</p>
+          </section>
+        `;
+      }
+      const insight = insightRow.insight || {};
+      const characterPopularity = insight.character_popularity || {};
+      return `
+        <section class="admin-detail-section">
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">AI Insight</p>
+              <h4>${escapeHtml(insight.summary || '章节洞察')}</h4>
+            </div>
+            <span class="admin-status-pill" data-tone="${insight.risk_level === 'high' ? 'error' : insight.risk_level === 'medium' ? 'warning' : 'success'}">${escapeHtml(insight.risk_level || 'normal')}</span>
+          </div>
+          <div class="admin-detail-grid">
+            <article><span>主角热度</span><strong>${escapeHtml(formatPercent(characterPopularity.main || 0))}</strong><small>估算</small></article>
+            <article><span>配角热度</span><strong>${escapeHtml(formatPercent(characterPopularity.supporting || 0))}</strong><small>估算</small></article>
+            <article><span>反派/冲突热度</span><strong>${escapeHtml(formatPercent(characterPopularity.villain || 0))}</strong><small>估算</small></article>
+            <article><span>生成时间</span><strong>${escapeHtml(formatDate(insightRow.generatedAt) || '-')}</strong><small>${escapeHtml(insightRow.model || '')}</small></article>
+          </div>
+          <div class="admin-pricing-lines">
+            <p><strong>强项</strong></p>
+            ${renderInsightItems(insight.strong_points)}
+            <p><strong>弱点</strong></p>
+            ${renderInsightItems(insight.weak_points)}
+            <p><strong>建议</strong></p>
+            ${renderInsightItems(insight.suggestions)}
+          </div>
+        </section>
+      `;
+    };
+
     const renderAnalyticsSummary = (summary = {}) => {
       elements.analyticsSummary.innerHTML = `
         <article><span>章节</span><strong>${escapeHtml(String(summary.chapterCount || 0))}</strong><small>已聚合章节</small></article>
@@ -2309,6 +2360,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </article>
           `).join('') : '<p class="admin-empty-list">暂无明显流失位置。</p>'}
         </section>
+        ${renderAnalyticsInsightSection(stat)}
         <section class="admin-detail-section">
           <h4>互动</h4>
           <div class="admin-pricing-lines">
@@ -2351,13 +2403,31 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       renderAnalyticsDetail(selected);
     };
 
-    const loadAnalyticsStats = async () => {
+    const buildAnalyticsParams = () => {
       const params = new URLSearchParams({ limit: '80' });
       if (elements.filters.analyticsSeries.value.trim()) params.set('seriesSlug', elements.filters.analyticsSeries.value.trim());
       if (elements.filters.analyticsChapter.value.trim()) params.set('chapterSlug', elements.filters.analyticsChapter.value.trim());
       params.set('windowDays', String(currentAnalyticsWindowDays()));
+      return params;
+    };
+
+    const loadAnalyticsInsights = async ({ silent = false } = {}) => {
+      try {
+        const payload = await apiJson(`/admin/api/novels/analytics/insights?${buildAnalyticsParams().toString()}`);
+        state.analyticsInsights = payload.insights || [];
+        return state.analyticsInsights;
+      } catch (error) {
+        state.analyticsInsights = [];
+        if (!silent) throw error;
+        return [];
+      }
+    };
+
+    const loadAnalyticsStats = async () => {
+      const params = buildAnalyticsParams();
       const payload = await apiJson(`/admin/api/novels/analytics/stats?${params.toString()}`);
       state.analyticsStats = payload.stats || [];
+      await loadAnalyticsInsights({ silent: true });
       renderAnalyticsSummary(payload.summary || {});
       renderAnalyticsList(state.analyticsStats);
       setStatus(`已载入 ${state.analyticsStats.length} 条章节统计。`, 'success');
@@ -2376,6 +2446,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         body: JSON.stringify(payload)
       });
       setStatus(`已聚合 ${result.aggregated || 0} 个章节统计。`, 'success');
+      await Promise.all([loadAnalyticsStats(), loadAuditLogs()]);
+    };
+
+    const generateAnalyticsInsights = async () => {
+      const payload = {
+        chapterSlug: elements.filters.analyticsChapter.value.trim(),
+        limit: 80,
+        seriesSlug: elements.filters.analyticsSeries.value.trim(),
+        sinceDays: currentAnalyticsWindowDays(),
+        windowDays: currentAnalyticsWindowDays()
+      };
+      const result = await apiJson('/admin/api/novels/analytics/insights/generate', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      setStatus(`已生成 ${result.generated || 0} 条 AI Insight。`, 'success');
       await Promise.all([loadAnalyticsStats(), loadAuditLogs()]);
     };
 
@@ -2489,6 +2575,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#accounts-refresh').addEventListener('click', loadAccounts);
     $('#analytics-refresh').addEventListener('click', loadAnalyticsStats);
     $('#analytics-aggregate').addEventListener('click', aggregateAnalytics);
+    $('#analytics-generate-insights').addEventListener('click', generateAnalyticsInsights);
     $('#access-refresh').addEventListener('click', loadEntitlements);
     $('#audit-refresh').addEventListener('click', loadAuditLogs);
     $('#content-reset').addEventListener('click', () => resetForm(elements.fields.entryType.value));

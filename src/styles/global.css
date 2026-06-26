@@ -2940,6 +2940,24 @@ button.button {
   color: #fecaca;
 }
 
+.admin-status-pill[data-tone="warning"] {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(251, 191, 36, 0.38);
+  color: #fde68a;
+}
+
+.admin-v2-clean-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.admin-v2-clean-list li {
+  color: rgba(219, 234, 254, 0.84);
+  line-height: 1.55;
+}
+
 .admin-credit-form {
   background: rgba(2, 6, 23, 0.42);
   border: 1px solid rgba(125, 211, 252, 0.16);
