@@ -203,6 +203,7 @@ assert.match(workerSource, /\/api\/novelforge\/analytics/);
 const docsSource = read('docs/novelforge-writing-api-5.md');
 assert.match(docsSource, /\/api\/novelforge\/analytics\/chapter/);
 assert.match(docsSource, /station-cat-novelforge-analytics\.v1/);
+assert.match(docsSource, /NOVELFORGE_SERIES_REQUIRED/);
 
 const parsedRoute = hooks.parseNovelForgeAnalyticsRoute('/api/novelforge/analytics/chapter/book/ch8/');
 assert.deepEqual(parsedRoute, { identifier: 'book/ch8', resource: 'chapter' });

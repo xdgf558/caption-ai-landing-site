@@ -96,6 +96,7 @@ GET /api/novelforge/analytics/trend?seriesSlug=book&windowDays=30&limit=50
 - `CHAPTER_STATS_NOT_READY`: 需要先应用 `migrations/0015_chapter_stats.sql`。
 - `AI_INSIGHTS_NOT_READY`: 需要先应用 `migrations/0016_ai_insights.sql`。
 - `NOVELFORGE_SERIES_NOT_FOUND`: 找不到对应作品。
+- `NOVELFORGE_SERIES_REQUIRED`: 使用章节 slug 查询时缺少作品 slug。请改用 `seriesSlug + chapterSlug`、`/seriesSlug/chapterSlug` 或 `chapter_N` 远端 ID。
 - `NOVELFORGE_CHAPTER_NOT_FOUND`: 找不到对应章节。
 
 ## Deployment Notes
