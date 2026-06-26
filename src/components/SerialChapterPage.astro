@@ -324,12 +324,12 @@ const accessGateCopy = {
     )}
     <div class="button-row">
       {previousChapter ? (
-        <a class="button button-secondary" href={getChapterHref(basePath, serial.data.seriesSlug, previousChapter.data.chapterSlug)}>{copy.previousChapter}</a>
+        <a class="button button-secondary" href={getChapterHref(basePath, serial.data.seriesSlug, previousChapter.data.chapterSlug)} data-reader-nav="prev">{copy.previousChapter}</a>
       ) : (
         <a class="button button-secondary" href={seriesHref}>{copy.chapterBack}</a>
       )}
       {nextChapter ? (
-        <a class="button button-primary" href={getChapterHref(basePath, serial.data.seriesSlug, nextChapter.data.chapterSlug)}>{copy.nextChapter}</a>
+        <a class="button button-primary" href={getChapterHref(basePath, serial.data.seriesSlug, nextChapter.data.chapterSlug)} data-reader-nav="next">{copy.nextChapter}</a>
       ) : previousChapter ? (
         <a class="button button-primary" href={seriesHref}>{copy.chapterBack}</a>
       ) : (
@@ -502,6 +502,15 @@ const accessGateCopy = {
         throw new Error(data.message || bookmarkCopy.failed);
       }
       setBookmarkStatus(bookmarkCopy.saved, 'success');
+      window.stationCatReadingEvents?.track?.('bookmark', {
+        blockIndex: bookmarkPosition.blockIndex,
+        progressPercent: bookmarkPosition.progressPercent,
+        value: bookmarkPosition.progressPercent,
+        metadata: {
+          anchorId: bookmarkPosition.anchorId,
+          sourcePath: bookmarkPosition.sourcePath
+        }
+      });
     } catch (error) {
       setBookmarkStatus(error.message || bookmarkCopy.failed, 'error');
     } finally {
@@ -539,6 +548,7 @@ const accessGateCopy = {
     const storagePrefix = `stationcat:novel-v2:${interactionKey}`;
     const likedKey = `${storagePrefix}:liked`;
     const commentKey = `${storagePrefix}:comment-draft`;
+    let commentPostTimer;
 
     const setLikedState = (liked) => {
       if (!likeButton) return;
@@ -556,6 +566,10 @@ const accessGateCopy = {
     likeButton?.addEventListener('click', () => {
       const nextLiked = likeButton.getAttribute('aria-pressed') !== 'true';
       setLikedState(nextLiked);
+      window.stationCatReadingEvents?.track?.('like', {
+        value: nextLiked ? 1 : 0,
+        metadata: { liked: nextLiked }
+      });
       try {
         window.localStorage.setItem(likedKey, nextLiked ? '1' : '0');
       } catch {
@@ -568,10 +582,23 @@ const accessGateCopy = {
       const expanded = commentPanel.hidden;
       commentPanel.hidden = !expanded;
       commentToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-      if (expanded) commentDraft?.focus();
+      if (expanded) {
+        window.stationCatReadingEvents?.track?.('comment_open');
+        commentDraft?.focus();
+      }
     });
 
     commentDraft?.addEventListener('input', () => {
+      const commentLength = commentDraft.value.trim().length;
+      window.clearTimeout(commentPostTimer);
+      if (commentLength > 0) {
+        commentPostTimer = window.setTimeout(() => {
+          window.stationCatReadingEvents?.track?.('comment_post', {
+            value: commentLength,
+            metadata: { length: commentLength }
+          });
+        }, 1200);
+      }
       try {
         window.localStorage.setItem(commentKey, commentDraft.value);
         if (commentStatus) {
@@ -585,6 +612,185 @@ const accessGateCopy = {
         }
       }
     });
+
+    window.addEventListener('pagehide', () => window.clearTimeout(commentPostTimer), { once: true });
+  </script>
+)}
+
+{isNovelV2Reader && (
+  <script define:vars={{ readingEventsData: {
+    chapterSlug: chapter.data.chapterSlug,
+    chapterTitle: chapter.data.title,
+    locale,
+    seriesSlug: serial.data.seriesSlug,
+    seriesTitle: serial.data.title,
+    sourcePath: chapterHref
+  } }}>
+    const readingEventsEndpoint = '/api/novels/reading-events';
+    const readingSessionStorageKey = 'stationcat:novel-v2:reading-session-id';
+    const readingStartTime = Date.now();
+    const scrollDepthThresholds = [25, 50, 75, 90, 100];
+    const reportedDepths = new Set();
+    let readingSessionId = '';
+    let readingPaused = false;
+    let readingIdleTimer;
+    let readingScrollFrame = 0;
+    let readingMaxDepth = 0;
+    let lastScrollTrackAt = 0;
+    let lastScrollProgress = -1;
+
+    const createReadingId = (prefix) => {
+      const randomValue = typeof window.crypto?.randomUUID === 'function'
+        ? window.crypto.randomUUID()
+        : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      return `${prefix}-${randomValue}`;
+    };
+
+    try {
+      readingSessionId = window.localStorage.getItem(readingSessionStorageKey) || '';
+      if (!readingSessionId) {
+        readingSessionId = createReadingId('r');
+        window.localStorage.setItem(readingSessionStorageKey, readingSessionId);
+      }
+    } catch {
+      readingSessionId = createReadingId('r');
+    }
+
+    const getReaderBodyForEvents = () =>
+      document.querySelector('[data-reader-body]:not([hidden])') ||
+      document.querySelector('[data-protected-chapter-body]:not([hidden])') ||
+      document.querySelector('.serial-reader-shell__body');
+
+    const getReadableBlocksForEvents = (body) =>
+      Array.from(body?.querySelectorAll('p, h2, h3, blockquote, li') || [])
+        .filter((node) => node.textContent.trim().length > 0);
+
+    const getReadingPosition = () => {
+      const body = getReaderBodyForEvents();
+      if (!body) return { blockIndex: null, progressPercent: 0 };
+      const rect = body.getBoundingClientRect();
+      const total = Math.max(1, body.scrollHeight - window.innerHeight * 0.55);
+      const read = Math.max(0, -rect.top + window.innerHeight * 0.18);
+      const progressPercent = Math.max(0, Math.min(100, Math.round((read / total) * 100)));
+      const blocks = getReadableBlocksForEvents(body);
+      const targetLine = window.innerHeight * 0.22;
+      const currentBlock = blocks.reduce((best, block) => {
+        const distance = Math.abs(block.getBoundingClientRect().top - targetLine);
+        return !best || distance < best.distance ? { block, distance } : best;
+      }, null)?.block;
+      const blockIndex = currentBlock ? blocks.indexOf(currentBlock) : null;
+      return { blockIndex, progressPercent };
+    };
+
+    const sendReadingPayload = (payload, options = {}) => {
+      const body = JSON.stringify(payload);
+      if (options.beacon && navigator.sendBeacon) {
+        try {
+          const blob = new Blob([body], { type: 'application/json' });
+          if (navigator.sendBeacon(readingEventsEndpoint, blob)) return;
+        } catch {
+          // Fall back to fetch below.
+        }
+      }
+      fetch(readingEventsEndpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body,
+        keepalive: Boolean(options.keepalive)
+      }).catch(() => null);
+    };
+
+    const trackReadingEvent = (eventType, eventData = {}, options = {}) => {
+      const position = getReadingPosition();
+      readingMaxDepth = Math.max(readingMaxDepth, position.progressPercent || 0);
+      sendReadingPayload({
+        ...readingEventsData,
+        blockIndex: eventData.blockIndex ?? position.blockIndex,
+        clientEventId: createReadingId('e'),
+        durationMs: Date.now() - readingStartTime,
+        eventType,
+        metadata: {
+          readerVersion: 'v2',
+          viewportHeight: window.innerHeight,
+          viewportWidth: window.innerWidth,
+          visibilityState: document.visibilityState,
+          ...(eventData.metadata || {})
+        },
+        progressPercent: eventData.progressPercent ?? position.progressPercent,
+        sessionId: readingSessionId,
+        sourcePath: window.location.pathname + window.location.hash,
+        value: eventData.value
+      }, options);
+    };
+
+    window.stationCatReadingEvents = {
+      track: trackReadingEvent
+    };
+
+    const markReadingActivity = () => {
+      if (readingPaused) {
+        readingPaused = false;
+        trackReadingEvent('reading_resume');
+      }
+      window.clearTimeout(readingIdleTimer);
+      readingIdleTimer = window.setTimeout(() => {
+        readingPaused = true;
+        trackReadingEvent('reading_pause');
+      }, 45000);
+    };
+
+    const handleReadingScroll = () => {
+      markReadingActivity();
+      if (readingScrollFrame) return;
+      readingScrollFrame = window.requestAnimationFrame(() => {
+        readingScrollFrame = 0;
+        const { progressPercent } = getReadingPosition();
+        readingMaxDepth = Math.max(readingMaxDepth, progressPercent);
+        scrollDepthThresholds.forEach((threshold) => {
+          if (progressPercent >= threshold && !reportedDepths.has(threshold)) {
+            reportedDepths.add(threshold);
+            trackReadingEvent('scroll_depth', {
+              progressPercent,
+              value: threshold,
+              metadata: { threshold }
+            });
+          }
+        });
+        const now = Date.now();
+        if (now - lastScrollTrackAt >= 15000 && Math.abs(progressPercent - lastScrollProgress) >= 5) {
+          lastScrollTrackAt = now;
+          lastScrollProgress = progressPercent;
+          trackReadingEvent('scroll', { progressPercent, value: progressPercent });
+        }
+      });
+    };
+
+    document.addEventListener('click', (event) => {
+      const target = event.target instanceof HTMLElement ? event.target.closest('[data-reader-nav]') : null;
+      if (!target) return;
+      const direction = target.dataset.readerNav === 'prev' ? 'prev' : 'next';
+      trackReadingEvent(direction === 'prev' ? 'click_prev' : 'click_next', {
+        metadata: { href: target.getAttribute('href') || '' }
+      }, { beacon: true, keepalive: true });
+    });
+
+    ['pointerdown', 'keydown', 'touchstart'].forEach((eventName) => {
+      window.addEventListener(eventName, markReadingActivity, { passive: true });
+    });
+    window.addEventListener('scroll', handleReadingScroll, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') markReadingActivity();
+    });
+    window.addEventListener('pagehide', () => {
+      window.clearTimeout(readingIdleTimer);
+      trackReadingEvent('chapter_close', {
+        value: readingMaxDepth,
+        metadata: { maxDepth: readingMaxDepth }
+      }, { beacon: true, keepalive: true });
+    }, { once: true });
+
+    trackReadingEvent('chapter_open');
+    markReadingActivity();
   </script>
 )}
 
