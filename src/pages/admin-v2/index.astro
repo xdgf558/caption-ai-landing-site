@@ -33,6 +33,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="imports">导入审核</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="commerce">订单</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="accounts">账户</button>
+            <button class="admin-v2-tab" type="button" data-admin-v2-tab="analytics">统计</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="access">授权</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="audit">审计</button>
         </div>
@@ -208,6 +209,37 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </select>
           </label>
           <button class="button button-primary" id="accounts-refresh" type="button">刷新账户</button>
+        </section>
+
+        <section class="admin-v2-sidebar-section" data-admin-v2-panel="analytics-sidebar" hidden>
+          <label>
+            seriesSlug
+            <input id="analytics-series" placeholder="cmqjfju1300008z3wyh66ynvw" />
+          </label>
+          <label>
+            chapterSlug
+            <input id="analytics-chapter" placeholder="可选，留空聚合全部章节" />
+          </label>
+          <label>
+            统计窗口
+            <select id="analytics-days">
+              <option value="7">最近 7 天</option>
+              <option value="30" selected>最近 30 天</option>
+              <option value="90">最近 90 天</option>
+              <option value="365">最近 365 天</option>
+            </select>
+          </label>
+          <div class="button-row">
+            <button class="button button-primary" id="analytics-aggregate" type="button">重新聚合</button>
+            <button class="button button-secondary" id="analytics-refresh" type="button">刷新统计</button>
+          </div>
+          <section class="admin-template-panel" aria-labelledby="analytics-help-title">
+            <div>
+              <p class="station-kicker">Reader Analytics</p>
+              <h3 id="analytics-help-title">阅读统计</h3>
+              <p>聚合 Novel V2 阅读事件，查看章节完成率、平均阅读时间、流失位置和互动分。</p>
+            </div>
+          </section>
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="access-sidebar" hidden>
@@ -540,6 +572,30 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </section>
 
+        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="analytics-main" hidden>
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">Reader Analytics</p>
+              <h2>阅读事件统计</h2>
+            </div>
+            <div class="admin-v2-badges">
+              <span id="analytics-updated">等待聚合</span>
+            </div>
+          </div>
+          <div class="admin-detail-grid" id="analytics-summary">
+            <article><span>章节</span><strong>0</strong></article>
+            <article><span>阅读会话</span><strong>0</strong></article>
+            <article><span>完成率</span><strong>0%</strong></article>
+            <article><span>互动分</span><strong>0</strong></article>
+          </div>
+          <div class="admin-commerce-grid">
+            <div class="admin-v2-table-list" id="analytics-list"></div>
+            <section class="admin-v2-subpanel admin-detail-panel" id="analytics-detail">
+              <p class="admin-empty-list">点击“重新聚合”生成统计，或选择一章查看流失点与滚动深度分布。</p>
+            </section>
+          </div>
+        </section>
+
         <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="access-main" hidden>
           <div class="admin-v2-section-heading">
             <div>
@@ -623,6 +679,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       orderDetail: $('#order-detail'),
       accountsList: $('#accounts-list'),
       accountDetail: $('#account-detail'),
+      analyticsList: $('#analytics-list'),
+      analyticsDetail: $('#analytics-detail'),
+      analyticsSummary: $('#analytics-summary'),
+      analyticsUpdated: $('#analytics-updated'),
       accessList: $('#access-list'),
       auditList: $('#audit-list'),
       contentForm: $('#content-form'),
@@ -702,6 +762,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         orderSeries: $('#orders-series'),
         accountEmail: $('#accounts-email-filter'),
         accountStatus: $('#accounts-status'),
+        analyticsSeries: $('#analytics-series'),
+        analyticsChapter: $('#analytics-chapter'),
+        analyticsDays: $('#analytics-days'),
         accessEmail: $('#access-email-filter'),
         auditTargetType: $('#audit-target-type'),
         auditTargetSlug: $('#audit-target-slug')
@@ -722,10 +785,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       imports: [],
       orders: [],
       accounts: [],
+      analyticsStats: [],
       selectedEntryId: 0,
       selectedImportId: 0,
       selectedOrderToken: '',
       selectedAccountId: 0,
+      selectedAnalyticsKey: '',
       pricingDefaults: null,
       pricingDefaultsSetupRequired: false,
       schema: null
@@ -1101,6 +1166,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const number = Number.parseInt(value || 0, 10);
       if (!Number.isFinite(number)) return '0';
       return number > 0 ? `+${number}` : String(number);
+    };
+
+    const formatPercent = (value) => {
+      const number = Number(value || 0);
+      if (!Number.isFinite(number)) return '0%';
+      return `${Math.round(number * 100)}%`;
+    };
+
+    const formatSeconds = (value) => {
+      const seconds = Math.max(0, Math.round(Number(value || 0)));
+      if (seconds < 60) return `${seconds}s`;
+      const minutes = Math.floor(seconds / 60);
+      const rest = seconds % 60;
+      if (minutes < 60) return rest ? `${minutes}m ${rest}s` : `${minutes}m`;
+      const hours = Math.floor(minutes / 60);
+      const minuteRest = minutes % 60;
+      return minuteRest ? `${hours}h ${minuteRest}m` : `${hours}h`;
     };
 
     const statusTone = (status) => {
@@ -2161,6 +2243,135 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setStatus('阅读点余额已调整。', 'success');
     };
 
+    const analyticsKey = (stat) => `${stat.seriesSlug || ''}/${stat.chapterSlug || ''}/${stat.locale || ''}`;
+
+    const renderAnalyticsSummary = (summary = {}) => {
+      elements.analyticsSummary.innerHTML = `
+        <article><span>章节</span><strong>${escapeHtml(String(summary.chapterCount || 0))}</strong><small>已聚合章节</small></article>
+        <article><span>阅读会话</span><strong>${escapeHtml(String(summary.uniqueSessions || 0))}</strong><small>${escapeHtml(String(summary.totalEvents || 0))} 条事件</small></article>
+        <article><span>完成率</span><strong>${escapeHtml(formatPercent(summary.avgCompletionRate))}</strong><small>平均完成率</small></article>
+        <article><span>互动分</span><strong>${escapeHtml(String(Math.round(Number(summary.avgEngagementScore || 0) * 100)))}</strong><small>0-100 综合分</small></article>
+      `;
+      elements.analyticsUpdated.textContent = summary.latestUpdatedAt ? `更新 ${formatDate(summary.latestUpdatedAt)}` : '等待聚合';
+    };
+
+    const renderAnalyticsDetail = (stat) => {
+      if (!stat) {
+        elements.analyticsDetail.innerHTML = '<p class="admin-empty-list">选择章节查看统计详情。</p>';
+        return;
+      }
+      const distribution = stat.scrollDepthDistribution || {};
+      const buckets = ['0-25', '26-50', '51-75', '76-89', '90-100'];
+      const maxBucketCount = Math.max(1, ...buckets.map((bucket) => Number(distribution[bucket] || 0)));
+      const dropOffPoints = stat.dropOffPoints || [];
+      const title = stat.title || stat.chapterSlug;
+      elements.analyticsDetail.innerHTML = `
+        <div class="admin-v2-section-heading">
+          <div>
+            <p class="station-kicker">Chapter Analytics</p>
+            <h3>${escapeHtml(title)}</h3>
+          </div>
+          <span class="admin-status-pill" data-tone="${Number(stat.engagementScore || 0) >= 0.6 ? 'success' : 'neutral'}">互动分 ${escapeHtml(String(Math.round(Number(stat.engagementScore || 0) * 100)))}</span>
+        </div>
+        <div class="admin-detail-grid">
+          <article><span>打开</span><strong>${escapeHtml(String(stat.openCount || 0))}</strong><small>chapter_open</small></article>
+          <article><span>完成率</span><strong>${escapeHtml(formatPercent(stat.completionRate))}</strong><small>${escapeHtml(String(stat.completionCount || 0))} 个完成会话</small></article>
+          <article><span>平均时长</span><strong>${escapeHtml(formatSeconds(stat.avgReadTimeSeconds))}</strong><small>按会话估算</small></article>
+          <article><span>平均深度</span><strong>${escapeHtml(String(Math.round(Number(stat.avgScrollDepth || 0))))}%</strong><small>最大阅读深度</small></article>
+        </div>
+        <section class="admin-detail-section">
+          <h4>滚动深度分布</h4>
+          <div class="admin-analytics-bars">
+            ${buckets.map((bucket) => {
+              const count = Number(distribution[bucket] || 0);
+              const width = Math.max(4, Math.round((count / maxBucketCount) * 100));
+              return `
+                <div class="admin-analytics-bar">
+                  <span>${escapeHtml(bucket)}%</span>
+                  <div><i style="width: ${width}%"></i></div>
+                  <strong>${escapeHtml(String(count))}</strong>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </section>
+        <section class="admin-detail-section">
+          <h4>流失位置</h4>
+          ${dropOffPoints.length ? dropOffPoints.map((point) => `
+            <article class="admin-v2-row">
+              <strong>${escapeHtml(point.label || point.position)} · ${escapeHtml(formatPercent(point.rate))}</strong>
+              <span>${escapeHtml(point.severity || 'low')} · ${escapeHtml(String(point.count || 0))} 个会话</span>
+            </article>
+          `).join('') : '<p class="admin-empty-list">暂无明显流失位置。</p>'}
+        </section>
+        <section class="admin-detail-section">
+          <h4>互动</h4>
+          <div class="admin-pricing-lines">
+            <p><strong>喜欢：</strong>${escapeHtml(String(stat.likeCount || 0))}</p>
+            <p><strong>书签：</strong>${escapeHtml(String(stat.bookmarkCount || 0))}</p>
+            <p><strong>评论草稿：</strong>${escapeHtml(String(stat.commentCount || 0))}</p>
+            <p><strong>事件窗口：</strong>${escapeHtml(formatDate(stat.eventWindowStart) || '-')} - ${escapeHtml(formatDate(stat.eventWindowEnd) || '-')}</p>
+          </div>
+          <a class="button button-secondary" href="/novel/${escapeHtml(stat.seriesSlug)}/chapter/${escapeHtml(stat.chapterSlug)}/" target="_blank" rel="noreferrer">打开 V2 阅读页</a>
+        </section>
+      `;
+    };
+
+    const renderAnalyticsList = (stats) => {
+      if (!stats.length) {
+        renderEmpty(elements.analyticsList, '暂无聚合统计。先点击“重新聚合”。');
+        renderAnalyticsDetail(null);
+        return;
+      }
+      elements.analyticsList.innerHTML = '';
+      stats.forEach((stat) => {
+        const key = analyticsKey(stat);
+        const button = document.createElement('button');
+        button.className = `admin-v2-entry${key === state.selectedAnalyticsKey ? ' is-active' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `
+          <span>${escapeHtml(stat.chapterNumber ? `第 ${stat.chapterNumber} 章 ` : '')}${escapeHtml(stat.title || stat.chapterSlug)}</span>
+          <small>${escapeHtml(stat.seriesTitle || stat.seriesSlug)} · 完成率 ${escapeHtml(formatPercent(stat.completionRate))} · 互动分 ${escapeHtml(String(Math.round(Number(stat.engagementScore || 0) * 100)))}</small>
+          <small>${escapeHtml(String(stat.uniqueSessions || 0))} 会话 · ${escapeHtml(formatSeconds(stat.avgReadTimeSeconds))} · ${escapeHtml(formatDate(stat.updatedAt) || '')}</small>
+        `;
+        button.addEventListener('click', () => {
+          state.selectedAnalyticsKey = key;
+          renderAnalyticsList(state.analyticsStats);
+          renderAnalyticsDetail(stat);
+        });
+        elements.analyticsList.append(button);
+      });
+      const selected = stats.find((stat) => analyticsKey(stat) === state.selectedAnalyticsKey) || stats[0];
+      state.selectedAnalyticsKey = analyticsKey(selected);
+      renderAnalyticsDetail(selected);
+    };
+
+    const loadAnalyticsStats = async () => {
+      const params = new URLSearchParams({ limit: '80' });
+      if (elements.filters.analyticsSeries.value.trim()) params.set('seriesSlug', elements.filters.analyticsSeries.value.trim());
+      if (elements.filters.analyticsChapter.value.trim()) params.set('chapterSlug', elements.filters.analyticsChapter.value.trim());
+      const payload = await apiJson(`/admin/api/novels/analytics/stats?${params.toString()}`);
+      state.analyticsStats = payload.stats || [];
+      renderAnalyticsSummary(payload.summary || {});
+      renderAnalyticsList(state.analyticsStats);
+      setStatus(`已载入 ${state.analyticsStats.length} 条章节统计。`, 'success');
+    };
+
+    const aggregateAnalytics = async () => {
+      const payload = {
+        chapterSlug: elements.filters.analyticsChapter.value.trim(),
+        limit: 80,
+        seriesSlug: elements.filters.analyticsSeries.value.trim(),
+        sinceDays: Number(elements.filters.analyticsDays.value || 30)
+      };
+      const result = await apiJson('/admin/api/novels/analytics/aggregate', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      setStatus(`已聚合 ${result.aggregated || 0} 个章节统计。`, 'success');
+      await Promise.all([loadAnalyticsStats(), loadAuditLogs()]);
+    };
+
     const loadEntitlements = async () => {
       const params = new URLSearchParams();
       const email = elements.filters.accessEmail.value.trim();
@@ -2257,6 +2468,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (name === 'imports') await loadImportReviews();
       if (name === 'commerce') await loadOrders();
       if (name === 'accounts') await loadAccounts();
+      if (name === 'analytics') await loadAnalyticsStats();
       if (name === 'access') await loadEntitlements();
       if (name === 'audit') await loadAuditLogs();
     };
@@ -2268,6 +2480,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#imports-refresh').addEventListener('click', () => loadImportReviews());
     $('#orders-refresh').addEventListener('click', loadOrders);
     $('#accounts-refresh').addEventListener('click', loadAccounts);
+    $('#analytics-refresh').addEventListener('click', loadAnalyticsStats);
+    $('#analytics-aggregate').addEventListener('click', aggregateAnalytics);
     $('#access-refresh').addEventListener('click', loadEntitlements);
     $('#audit-refresh').addEventListener('click', loadAuditLogs);
     $('#content-reset').addEventListener('click', () => resetForm(elements.fields.entryType.value));

@@ -323,6 +323,8 @@ const novelReadingEventMaxMetadataKeys = 20;
 const novelReadingEventRateLimitWindowSeconds = 60;
 const novelReadingEventClientRateLimitPerMinute = 120;
 const novelReadingEventSessionRateLimitPerMinute = 60;
+const novelStatsDefaultSinceDays = 30;
+const novelStatsMaxAggregateTargets = 80;
 const defaultReaderCreditPacks = [
   { credits: 10, priceAmount: 1, priceCurrency: 'USD', label: '10 SC Credits' },
   { credits: 50, priceAmount: 5, priceCurrency: 'USD', label: '50 SC Credits' },
@@ -2148,6 +2150,7 @@ const isMissingReaderTotpCredentialsError = (error) => /no such table: reader_to
 const isMissingReaderTotpResetAttemptsError = (error) =>
   /no such table: reader_totp_reset_attempts/i.test(error?.message || '');
 const isMissingReadingEventsError = (error) => /no such table: reading_events/i.test(error?.message || '');
+const isMissingChapterStatsError = (error) => /no such table: chapter_stats/i.test(error?.message || '');
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -2195,6 +2198,16 @@ const ensureReadingEventsReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingReadingEventsError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureChapterStatsReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM chapter_stats LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingChapterStatsError(error)) return false;
     throw error;
   }
 };
@@ -5166,6 +5179,487 @@ const handleNovelReadingEvents = async (request, env) => {
   });
 };
 
+const roundRatio = (value, digits = 4) => {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number)) return 0;
+  const factor = 10 ** digits;
+  return Math.round(number * factor) / factor;
+};
+
+const parseSqlTimestampMs = (value) => {
+  if (!value) return 0;
+  const normalized = String(value).includes('T') ? String(value) : `${String(value).replace(' ', 'T')}Z`;
+  const time = Date.parse(normalized);
+  return Number.isFinite(time) ? time : 0;
+};
+
+const readingDepthBucket = (depth) => {
+  if (depth >= 90) return '90-100';
+  if (depth >= 76) return '76-89';
+  if (depth >= 51) return '51-75';
+  if (depth >= 26) return '26-50';
+  return '0-25';
+};
+
+const readingDropOffPosition = (depth) => {
+  if (depth >= 76) return { position: 'late', label: '后段', order: 4 };
+  if (depth >= 51) return { position: 'middle', label: '中段', order: 3 };
+  if (depth >= 26) return { position: 'first_half', label: '前半段', order: 2 };
+  return { position: 'opening', label: '开头', order: 1 };
+};
+
+const severityFromRate = (rate) => {
+  if (rate >= 0.4) return 'high';
+  if (rate >= 0.2) return 'medium';
+  return 'low';
+};
+
+const buildNovelChapterStatsMetrics = ({ eventRows = [], sessionRows = [], windowRow = {}, seriesSlug = '', chapterSlug = '', locale = 'zh-Hant' }) => {
+  const eventCounts = eventRows.reduce((map, row) => {
+    map.set(row.event_type, Number(row.count || 0));
+    return map;
+  }, new Map());
+  const uniqueSessions = sessionRows.length;
+  const depthDistribution = {
+    '0-25': 0,
+    '26-50': 0,
+    '51-75': 0,
+    '76-89': 0,
+    '90-100': 0
+  };
+  const dropOffBuckets = new Map();
+
+  let completedSessions = 0;
+  let totalDepth = 0;
+  let totalReadSeconds = 0;
+  let timedSessions = 0;
+  let likeSessions = 0;
+  let bookmarkSessions = 0;
+  let commentSessions = 0;
+
+  sessionRows.forEach((row) => {
+    const maxDepth = Math.max(
+      normalizePositiveInteger(row.max_progress, 0),
+      normalizePositiveInteger(row.max_scroll_depth, 0),
+      normalizePositiveInteger(row.close_progress, 0)
+    );
+    const clampedDepth = Math.max(0, Math.min(100, maxDepth));
+    const completed = clampedDepth >= 90;
+    if (completed) completedSessions += 1;
+    totalDepth += clampedDepth;
+    depthDistribution[readingDepthBucket(clampedDepth)] += 1;
+
+    if (!completed) {
+      const dropOff = readingDropOffPosition(clampedDepth);
+      const current = dropOffBuckets.get(dropOff.position) || { ...dropOff, count: 0 };
+      current.count += 1;
+      dropOffBuckets.set(dropOff.position, current);
+    }
+
+    const closeDurationSeconds = Math.round(Math.max(0, normalizePositiveInteger(row.close_duration_ms, 0)) / 1000);
+    const firstMs = parseSqlTimestampMs(row.first_event_at);
+    const lastMs = parseSqlTimestampMs(row.last_event_at);
+    const observedSeconds = firstMs && lastMs && lastMs >= firstMs ? Math.round((lastMs - firstMs) / 1000) : 0;
+    const sessionSeconds = closeDurationSeconds || observedSeconds;
+    if (sessionSeconds > 0) {
+      totalReadSeconds += Math.min(sessionSeconds, 24 * 60 * 60);
+      timedSessions += 1;
+    }
+
+    if (Number(row.like_count || 0) > 0) likeSessions += 1;
+    if (Number(row.bookmark_count || 0) > 0) bookmarkSessions += 1;
+    if (Number(row.comment_count || 0) > 0) commentSessions += 1;
+  });
+
+  const completionRate = uniqueSessions ? completedSessions / uniqueSessions : 0;
+  const avgScrollDepth = uniqueSessions ? totalDepth / uniqueSessions : 0;
+  const likeRate = uniqueSessions ? likeSessions / uniqueSessions : 0;
+  const bookmarkRate = uniqueSessions ? bookmarkSessions / uniqueSessions : 0;
+  const commentRate = uniqueSessions ? commentSessions / uniqueSessions : 0;
+  const engagementScore = Math.min(
+    1,
+    completionRate * 0.45 + (avgScrollDepth / 100) * 0.25 + likeRate * 0.15 + bookmarkRate * 0.1 + commentRate * 0.05
+  );
+  const dropOffPoints = [...dropOffBuckets.values()]
+    .sort((left, right) => right.count - left.count || left.order - right.order)
+    .map((bucket) => ({
+      count: bucket.count,
+      label: bucket.label,
+      position: bucket.position,
+      rate: roundRatio(uniqueSessions ? bucket.count / uniqueSessions : 0),
+      severity: severityFromRate(uniqueSessions ? bucket.count / uniqueSessions : 0)
+    }));
+
+  return {
+    accountReaders: normalizePositiveInteger(windowRow.account_readers, 0),
+    avgReadTimeSeconds: timedSessions ? Math.round(totalReadSeconds / timedSessions) : 0,
+    avgScrollDepth: roundRatio(avgScrollDepth, 2),
+    bookmarkCount: normalizePositiveInteger(eventCounts.get('bookmark'), 0),
+    chapterSlug,
+    closeCount: normalizePositiveInteger(eventCounts.get('chapter_close'), 0),
+    commentCount: normalizePositiveInteger(eventCounts.get('comment_draft'), 0),
+    completionCount: completedSessions,
+    completionRate: roundRatio(completionRate),
+    dropOffPoints,
+    dropOffRate: roundRatio(1 - completionRate),
+    engagementScore: roundRatio(engagementScore),
+    eventWindowEnd: windowRow.event_window_end || null,
+    eventWindowStart: windowRow.event_window_start || null,
+    likeCount: normalizePositiveInteger(eventCounts.get('like'), 0),
+    locale,
+    openCount: normalizePositiveInteger(eventCounts.get('chapter_open'), 0),
+    scrollDepthDistribution: depthDistribution,
+    seriesSlug,
+    totalEvents: normalizePositiveInteger(windowRow.total_events, 0),
+    uniqueSessions
+  };
+};
+
+const chapterStatsToJson = (row) => ({
+  id: row.id,
+  seriesSlug: row.series_slug,
+  chapterSlug: row.chapter_slug,
+  locale: row.locale,
+  title: row.title || '',
+  seriesTitle: row.series_title || '',
+  chapterNumber: row.chapter_number,
+  totalEvents: normalizePositiveInteger(row.total_events, 0),
+  uniqueSessions: normalizePositiveInteger(row.unique_sessions, 0),
+  accountReaders: normalizePositiveInteger(row.account_readers, 0),
+  openCount: normalizePositiveInteger(row.open_count, 0),
+  closeCount: normalizePositiveInteger(row.close_count, 0),
+  completionCount: normalizePositiveInteger(row.completion_count, 0),
+  likeCount: normalizePositiveInteger(row.like_count, 0),
+  bookmarkCount: normalizePositiveInteger(row.bookmark_count, 0),
+  commentCount: normalizePositiveInteger(row.comment_count, 0),
+  avgReadTimeSeconds: normalizePositiveInteger(row.avg_read_time_seconds, 0),
+  avgScrollDepth: Number(row.avg_scroll_depth || 0),
+  completionRate: Number(row.completion_rate || 0),
+  dropOffRate: Number(row.drop_off_rate || 0),
+  engagementScore: Number(row.engagement_score || 0),
+  scrollDepthDistribution: parseStoredJson(row.scroll_depth_distribution_json, {}),
+  dropOffPoints: parseStoredJson(row.drop_off_points_json, []),
+  eventWindowStart: row.event_window_start,
+  eventWindowEnd: row.event_window_end,
+  calculatedAt: row.calculated_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const upsertChapterStats = async (db, metrics) =>
+  db
+    .prepare(
+      `INSERT INTO chapter_stats (
+        series_slug, chapter_slug, locale, total_events, unique_sessions, account_readers,
+        open_count, close_count, completion_count, like_count, bookmark_count, comment_count,
+        avg_read_time_seconds, avg_scroll_depth, completion_rate, drop_off_rate, engagement_score,
+        scroll_depth_distribution_json, drop_off_points_json, event_window_start, event_window_end
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(series_slug, chapter_slug, locale)
+      DO UPDATE SET
+        total_events = excluded.total_events,
+        unique_sessions = excluded.unique_sessions,
+        account_readers = excluded.account_readers,
+        open_count = excluded.open_count,
+        close_count = excluded.close_count,
+        completion_count = excluded.completion_count,
+        like_count = excluded.like_count,
+        bookmark_count = excluded.bookmark_count,
+        comment_count = excluded.comment_count,
+        avg_read_time_seconds = excluded.avg_read_time_seconds,
+        avg_scroll_depth = excluded.avg_scroll_depth,
+        completion_rate = excluded.completion_rate,
+        drop_off_rate = excluded.drop_off_rate,
+        engagement_score = excluded.engagement_score,
+        scroll_depth_distribution_json = excluded.scroll_depth_distribution_json,
+        drop_off_points_json = excluded.drop_off_points_json,
+        event_window_start = excluded.event_window_start,
+        event_window_end = excluded.event_window_end,
+        calculated_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *`
+    )
+    .bind(
+      metrics.seriesSlug,
+      metrics.chapterSlug,
+      metrics.locale,
+      metrics.totalEvents,
+      metrics.uniqueSessions,
+      metrics.accountReaders,
+      metrics.openCount,
+      metrics.closeCount,
+      metrics.completionCount,
+      metrics.likeCount,
+      metrics.bookmarkCount,
+      metrics.commentCount,
+      metrics.avgReadTimeSeconds,
+      metrics.avgScrollDepth,
+      metrics.completionRate,
+      metrics.dropOffRate,
+      metrics.engagementScore,
+      JSON.stringify(metrics.scrollDepthDistribution),
+      JSON.stringify(metrics.dropOffPoints),
+      metrics.eventWindowStart,
+      metrics.eventWindowEnd
+    )
+    .first();
+
+const aggregateNovelChapterStats = async (db, target, options = {}) => {
+  const seriesSlug = cleanSlug(target.seriesSlug, 160);
+  const chapterSlug = cleanSlug(target.chapterSlug, 160);
+  const locale = normalizeContentLocale(target.locale || options.locale || 'zh-Hant');
+  const sinceDays = Math.min(Math.max(normalizePositiveInteger(options.sinceDays, novelStatsDefaultSinceDays), 1), 365);
+  if (!seriesSlug || !chapterSlug) return null;
+
+  const windowModifier = `-${sinceDays} days`;
+  const whereSql = `series_slug = ? AND chapter_slug = ? AND locale = ? AND created_at >= datetime('now', ?)`;
+  const bindValues = [seriesSlug, chapterSlug, locale, windowModifier];
+
+  const [eventResponse, sessionResponse, windowRow] = await Promise.all([
+    db
+      .prepare(
+        `SELECT event_type, COUNT(*) AS count
+         FROM reading_events
+         WHERE ${whereSql}
+         GROUP BY event_type`
+      )
+      .bind(...bindValues)
+      .all(),
+    db
+      .prepare(
+        `SELECT
+          session_id,
+          COUNT(*) AS event_count,
+          MAX(CASE WHEN account_id IS NOT NULL THEN 1 ELSE 0 END) AS has_account,
+          MIN(created_at) AS first_event_at,
+          MAX(created_at) AS last_event_at,
+          MAX(COALESCE(progress_percent, 0)) AS max_progress,
+          MAX(CASE WHEN event_type = 'scroll_depth' THEN COALESCE(event_value, progress_percent, 0) ELSE 0 END) AS max_scroll_depth,
+          MAX(CASE WHEN event_type = 'chapter_close' THEN COALESCE(progress_percent, 0) ELSE 0 END) AS close_progress,
+          MAX(CASE WHEN event_type = 'chapter_close' AND duration_ms IS NOT NULL THEN duration_ms ELSE 0 END) AS close_duration_ms,
+          SUM(CASE WHEN event_type = 'like' THEN 1 ELSE 0 END) AS like_count,
+          SUM(CASE WHEN event_type = 'bookmark' THEN 1 ELSE 0 END) AS bookmark_count,
+          SUM(CASE WHEN event_type = 'comment_draft' THEN 1 ELSE 0 END) AS comment_count
+         FROM reading_events
+         WHERE ${whereSql}
+         GROUP BY session_id`
+      )
+      .bind(...bindValues)
+      .all(),
+    db
+      .prepare(
+        `SELECT
+          COUNT(*) AS total_events,
+          COUNT(DISTINCT account_id) AS account_readers,
+          MIN(created_at) AS event_window_start,
+          MAX(created_at) AS event_window_end
+         FROM reading_events
+         WHERE ${whereSql}`
+      )
+      .bind(...bindValues)
+      .first()
+  ]);
+
+  const metrics = buildNovelChapterStatsMetrics({
+    chapterSlug,
+    eventRows: eventResponse.results || [],
+    locale,
+    seriesSlug,
+    sessionRows: sessionResponse.results || [],
+    windowRow: windowRow || {}
+  });
+
+  if (!metrics.totalEvents) return null;
+  return upsertChapterStats(db, metrics);
+};
+
+const findNovelAnalyticsTargets = async (db, options = {}) => {
+  const seriesSlug = cleanSlug(options.seriesSlug, 160);
+  const chapterSlug = cleanSlug(options.chapterSlug, 160);
+  const locale = normalizeContentLocale(options.locale || 'zh-Hant');
+  const limit = Math.min(Math.max(normalizePositiveInteger(options.limit, novelStatsMaxAggregateTargets), 1), novelStatsMaxAggregateTargets);
+  const sinceDays = Math.min(Math.max(normalizePositiveInteger(options.sinceDays, novelStatsDefaultSinceDays), 1), 365);
+  const clauses = ['created_at >= datetime(\'now\', ?)'];
+  const params = [`-${sinceDays} days`];
+
+  if (seriesSlug) {
+    clauses.push('series_slug = ?');
+    params.push(seriesSlug);
+  }
+  if (chapterSlug) {
+    clauses.push('chapter_slug = ?');
+    params.push(chapterSlug);
+  }
+  if (locale) {
+    clauses.push('locale = ?');
+    params.push(locale);
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT series_slug, chapter_slug, locale, MAX(created_at) AS latest_event_at
+       FROM reading_events
+       WHERE ${clauses.join(' AND ')}
+       GROUP BY series_slug, chapter_slug, locale
+       ORDER BY latest_event_at DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+
+  return (response.results || []).map((row) => ({
+    chapterSlug: row.chapter_slug,
+    locale: row.locale,
+    seriesSlug: row.series_slug
+  }));
+};
+
+const handleAdminAggregateNovelAnalytics = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!(await ensureReadingEventsReady(db))) {
+    return privateJson(
+      { ok: false, code: 'READING_EVENTS_NOT_READY', message: 'Reading events are not initialized. Apply migration 0014_reading_events.sql.' },
+      { status: 503 }
+    );
+  }
+  if (!(await ensureChapterStatsReady(db))) {
+    return privateJson(
+      { ok: false, code: 'CHAPTER_STATS_NOT_READY', message: 'Chapter stats are not initialized. Apply migration 0015_chapter_stats.sql.' },
+      { status: 503 }
+    );
+  }
+
+  let payload = {};
+  try {
+    payload = await request.json();
+  } catch {
+    payload = {};
+  }
+
+  const sinceDays = Math.min(Math.max(normalizePositiveInteger(payload.sinceDays, novelStatsDefaultSinceDays), 1), 365);
+  const targets = await findNovelAnalyticsTargets(db, {
+    chapterSlug: payload.chapterSlug || payload.chapter,
+    limit: payload.limit,
+    locale: payload.locale,
+    seriesSlug: payload.seriesSlug || payload.series,
+    sinceDays
+  });
+  const rows = [];
+  for (const target of targets) {
+    const row = await aggregateNovelChapterStats(db, target, { sinceDays });
+    if (row) rows.push(row);
+  }
+
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: 'novel_analytics.aggregate',
+    targetType: 'chapter_stats',
+    targetId: '',
+    targetSlug: cleanSlug(payload.seriesSlug || payload.series) || 'all',
+    metadata: {
+      aggregated: rows.length,
+      requestedTargets: targets.length,
+      sinceDays
+    }
+  });
+
+  return privateJson({
+    ok: true,
+    aggregated: rows.length,
+    requestedTargets: targets.length,
+    sinceDays,
+    stats: rows.map(chapterStatsToJson)
+  });
+};
+
+const handleAdminListNovelAnalyticsStats = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!(await ensureChapterStatsReady(db))) {
+    return privateJson(
+      { ok: false, code: 'CHAPTER_STATS_NOT_READY', message: 'Chapter stats are not initialized. Apply migration 0015_chapter_stats.sql.' },
+      { status: 503 }
+    );
+  }
+
+  const url = new URL(request.url);
+  const seriesSlug = cleanSlug(url.searchParams.get('series') || url.searchParams.get('seriesSlug'), 160);
+  const chapterSlug = cleanSlug(url.searchParams.get('chapter') || url.searchParams.get('chapterSlug'), 160);
+  const locale = normalizeContentLocale(url.searchParams.get('locale') || 'zh-Hant');
+  const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 50), 1), 100);
+  const clauses = ['chapter_stats.locale = ?'];
+  const params = [locale];
+  if (seriesSlug) {
+    clauses.push('chapter_stats.series_slug = ?');
+    params.push(seriesSlug);
+  }
+  if (chapterSlug) {
+    clauses.push('chapter_stats.chapter_slug = ?');
+    params.push(chapterSlug);
+  }
+
+  const whereSql = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+  const [summaryRow, response] = await Promise.all([
+    db
+      .prepare(
+        `SELECT
+          COUNT(*) AS chapter_count,
+          COALESCE(SUM(total_events), 0) AS total_events,
+          COALESCE(SUM(unique_sessions), 0) AS unique_sessions,
+          COALESCE(SUM(open_count), 0) AS open_count,
+          COALESCE(AVG(completion_rate), 0) AS avg_completion_rate,
+          COALESCE(AVG(engagement_score), 0) AS avg_engagement_score,
+          COALESCE(AVG(avg_read_time_seconds), 0) AS avg_read_time_seconds,
+          MAX(updated_at) AS latest_updated_at
+         FROM chapter_stats
+         ${whereSql}`
+      )
+      .bind(...params)
+      .first(),
+    db
+      .prepare(
+        `SELECT
+          chapter_stats.*,
+          chapter_entries.title AS title,
+          chapter_entries.chapter_number AS chapter_number,
+          series_entries.title AS series_title
+         FROM chapter_stats
+         LEFT JOIN content_entries AS chapter_entries
+           ON chapter_entries.entry_type = 'novel_chapter'
+          AND chapter_entries.locale = chapter_stats.locale
+          AND chapter_entries.parent_slug = chapter_stats.series_slug
+          AND chapter_entries.slug = chapter_stats.chapter_slug
+         LEFT JOIN content_entries AS series_entries
+           ON series_entries.entry_type = 'novel_series'
+          AND series_entries.locale = chapter_stats.locale
+          AND series_entries.slug = chapter_stats.series_slug
+         ${whereSql}
+         ORDER BY chapter_stats.updated_at DESC, chapter_stats.engagement_score DESC, chapter_stats.id DESC
+         LIMIT ?`
+      )
+      .bind(...params, limit)
+      .all()
+  ]);
+
+  return privateJson({
+    ok: true,
+    summary: {
+      avgCompletionRate: Number(summaryRow?.avg_completion_rate || 0),
+      avgEngagementScore: Number(summaryRow?.avg_engagement_score || 0),
+      avgReadTimeSeconds: Math.round(Number(summaryRow?.avg_read_time_seconds || 0)),
+      chapterCount: normalizePositiveInteger(summaryRow?.chapter_count, 0),
+      latestUpdatedAt: summaryRow?.latest_updated_at || '',
+      openCount: normalizePositiveInteger(summaryRow?.open_count, 0),
+      totalEvents: normalizePositiveInteger(summaryRow?.total_events, 0),
+      uniqueSessions: normalizePositiveInteger(summaryRow?.unique_sessions, 0)
+    },
+    stats: (response.results || []).map(chapterStatsToJson)
+  });
+};
+
 const redeemReaderMembershipWithCredits = async (db, accountId, env) => {
   if (!(await ensureReaderMembershipsReady(db))) {
     const error = new Error('Reader memberships are not initialized. Apply migration 0009_reader_memberships.sql.');
@@ -6982,6 +7476,7 @@ const handleAdminContentSchema = async (env) =>
         'admin_content_settings',
         'reader_bookmarks',
         'reading_events',
+        'chapter_stats',
         'admin_audit_logs'
       ],
       legacyMigration: 'Completed. The one-time legacy Markdown migration endpoint and manifest have been removed from the Worker bundle.',
@@ -6996,6 +7491,7 @@ const handleAdminContentSchema = async (env) =>
       readerMemberships: '10 reading credits can redeem a monthly membership by default. Active members can read paid chapters.',
       readerBookmarks: 'Reader accounts can save chapter bookmarks and continue reading from Member Center.',
       readingEvents: 'Novel V2 reader pages can send chapter open, scroll depth, pause/resume, navigation, like, bookmark, and comment interaction events into reading_events.',
+      readingAnalytics: 'Admin 2.0 can aggregate reading_events into chapter_stats for completion, drop-off, reading time, and engagement diagnostics.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
       nextStages: ['8D optional retry tools and richer NovelForge source diagnostics']
     }
@@ -11043,13 +11539,17 @@ const handleR2Download = async (request, env, file) => {
 };
 
 export const __readerTotpTestHooks = {
+  aggregateNovelChapterStats,
   base32ToBytes,
+  buildNovelChapterStatsMetrics,
   bytesToBase32,
   getD1ChangeCount,
   getReaderTotpResetLimitKeys,
   getReaderTotpResetIdentifierHash,
   getRequestClientHashes,
   getTotpStep,
+  handleAdminAggregateNovelAnalytics,
+  handleAdminListNovelAnalyticsStats,
   handleNovelReadingEvents,
   handleReaderPasswordResetConfirm,
   hmacSha256Hex,
@@ -11227,6 +11727,16 @@ export default {
 
     if (request.method === 'POST' && url.pathname === novelReadingEventsPath) {
       return handleNovelReadingEvents(request, env);
+    }
+
+    if (url.pathname === '/admin/api/novels/analytics/stats') {
+      if (request.method === 'GET') return handleAdminListNovelAnalyticsStats(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/novels/analytics/aggregate') {
+      if (request.method === 'POST') return handleAdminAggregateNovelAnalytics(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
     if (url.pathname === '/admin/api/novels/payments/orders') {
