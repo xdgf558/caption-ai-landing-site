@@ -11540,7 +11540,7 @@ const dynamicReaderInteractionCopy = {
     eyebrow: '讀者互動',
     like: '喜歡',
     liked: '已喜歡',
-    title: '把反應先留在這裡'
+    title: '欢迎大家对本章内容进行评价'
   },
   'zh-Hans': {
     body: '可以喜欢本章、保存目前阅读位置，也可以提交评论，审核通过后公开展示。',
@@ -11561,7 +11561,7 @@ const dynamicReaderInteractionCopy = {
     eyebrow: '读者互动',
     like: '喜欢',
     liked: '已喜欢',
-    title: '把反应先留在这里'
+    title: '欢迎大家对本章内容进行评价'
   }
 };
 
