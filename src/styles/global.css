@@ -5707,6 +5707,26 @@ body.station-paper-page {
   text-align: center;
 }
 
+.reader-bookmark-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.reader-bookmark-delete {
+  background: #fffaf1;
+  border-color: #dc9b8c;
+  color: #8a3325;
+  min-height: 40px;
+  padding: 8px 12px;
+}
+
+.reader-bookmark-delete:hover {
+  background: #fff0ed;
+  color: #6f281d;
+}
+
 .reader-library-card h3,
 .reader-library-card p,
 .serial-access-gate h2,

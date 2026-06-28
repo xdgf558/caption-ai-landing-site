@@ -179,6 +179,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p class="reader-bookmark-hint">在章節閱讀頁按 <kbd>B</kbd> 可保存目前閱讀位置；手機可點右下角「保存書籤」按鈕。</p>
     </div>
     <div class="reader-library-list" id="reader-bookmark-list"></div>
+    <div class="reader-status" id="reader-bookmark-status" role="status" aria-live="polite"></div>
     <div class="reader-empty-shelf" id="reader-bookmark-empty">
       <h3>目前還沒有保存書籤。</h3>
       <p>打開小說章節後，點擊「保存書籤」，下次就可以從這裡接著閱讀。</p>
@@ -258,6 +259,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const libraryEmpty = document.getElementById('reader-library-empty');
     const bookmarkList = document.getElementById('reader-bookmark-list');
     const bookmarkEmpty = document.getElementById('reader-bookmark-empty');
+    const bookmarkStatus = document.getElementById('reader-bookmark-status');
     let authMode = 'login';
 
     const setStatus = (message, tone = 'neutral') => {
@@ -273,6 +275,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const setTotpStatus = (message, tone = 'neutral') => {
       totpStatus.textContent = message;
       totpStatus.dataset.tone = tone;
+    };
+
+    const setBookmarkStatus = (message, tone = 'neutral') => {
+      bookmarkStatus.textContent = message;
+      bookmarkStatus.dataset.tone = tone;
     };
 
     const setFieldState = (fields, enabled) => {
@@ -419,7 +426,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         link.href = bookmarkHref(item);
         link.textContent = '繼續閱讀';
 
-        card.append(title, meta, link);
+        const actions = document.createElement('div');
+        actions.className = 'reader-bookmark-actions';
+        actions.append(link);
+
+        const bookmarkId = Number.parseInt(item.id || '', 10);
+        if (Number.isFinite(bookmarkId) && bookmarkId > 0) {
+          const deleteButton = document.createElement('button');
+          deleteButton.className = 'button button-secondary reader-bookmark-delete';
+          deleteButton.type = 'button';
+          deleteButton.dataset.readerBookmarkDelete = String(bookmarkId);
+          deleteButton.textContent = '刪除書籤';
+          deleteButton.setAttribute('aria-label', `刪除「${item.chapterTitle || item.chapterSlug}」書籤`);
+          actions.append(deleteButton);
+        }
+
+        card.append(title, meta, actions);
         if (item.note) {
           const note = document.createElement('p');
           note.className = 'fine-print';
@@ -443,6 +465,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (!response.ok || !data.ok) throw new Error(data.message || '讀取書籤失敗。');
       if (!data.authenticated) return;
       renderBookmarks(data.bookmarks || []);
+      setBookmarkStatus('');
       if (data.setupRequired) {
         const warning = document.createElement('p');
         warning.className = 'reader-status';
@@ -451,6 +474,37 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         bookmarkList.append(warning);
       }
     };
+
+    bookmarkList.addEventListener('click', async (event) => {
+      const deleteButton = event.target instanceof HTMLElement
+        ? event.target.closest('[data-reader-bookmark-delete]')
+        : null;
+      if (!deleteButton) return;
+
+      const bookmarkId = deleteButton.dataset.readerBookmarkDelete;
+      if (!bookmarkId) return;
+
+      const previousText = deleteButton.textContent;
+      deleteButton.disabled = true;
+      deleteButton.textContent = '刪除中...';
+      setBookmarkStatus('正在刪除書籤...');
+
+      try {
+        const response = await fetch(`/api/readers/bookmarks?id=${encodeURIComponent(bookmarkId)}`, {
+          method: 'DELETE'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || '刪除書籤失敗。');
+        }
+        renderBookmarks(data.bookmarks || []);
+        setBookmarkStatus('書籤已刪除。', 'success');
+      } catch (error) {
+        deleteButton.disabled = false;
+        deleteButton.textContent = previousText || '刪除書籤';
+        setBookmarkStatus(error.message || '刪除書籤失敗。', 'error');
+      }
+    });
 
     const setCreditStatus = (message, tone = 'neutral') => {
       creditStatus.textContent = message;

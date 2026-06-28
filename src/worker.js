@@ -5020,6 +5020,89 @@ const handleReaderBookmarkSave = async (request, env) => {
   });
 };
 
+const getReaderBookmarkDeleteId = async (request) => {
+  const url = new URL(request.url);
+  const queryId = normalizePositiveInteger(url.searchParams.get('id'), 0);
+  if (queryId > 0) return queryId;
+
+  try {
+    const payload = await request.json();
+    return normalizePositiveInteger(payload.id || payload.bookmarkId, 0);
+  } catch {
+    return 0;
+  }
+};
+
+const handleReaderBookmarkDelete = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return json(
+      {
+        ok: false,
+        code: 'SIGN_IN_REQUIRED',
+        message: 'Please sign in before deleting a bookmark.'
+      },
+      { status: 401 }
+    );
+  }
+
+  if (!(await ensureReaderBookmarksReady(db))) {
+    return json(
+      {
+        ok: false,
+        code: 'READER_BOOKMARKS_NOT_READY',
+        message: 'Reader bookmarks are not initialized. Apply migration 0010_reader_bookmarks.sql.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const bookmarkId = await getReaderBookmarkDeleteId(request);
+  if (!bookmarkId) {
+    return json(
+      {
+        ok: false,
+        code: 'INVALID_BOOKMARK_ID',
+        message: 'A valid bookmark id is required.'
+      },
+      { status: 400 }
+    );
+  }
+
+  const result = await db
+    .prepare(
+      `DELETE FROM reader_bookmarks
+       WHERE id = ? AND account_id = ?`
+    )
+    .bind(bookmarkId, session.account_id)
+    .run();
+
+  if (getD1ChangeCount(result) < 1) {
+    return json(
+      {
+        ok: false,
+        code: 'BOOKMARK_NOT_FOUND',
+        message: 'Bookmark was not found.'
+      },
+      { status: 404 }
+    );
+  }
+
+  return json({
+    ok: true,
+    authenticated: true,
+    deletedBookmarkId: bookmarkId,
+    bookmarks: await listReaderBookmarks(db, session.account_id),
+    account: {
+      id: session.account_id,
+      email: session.email
+    }
+  });
+};
+
 const normalizeReadingEventMetadata = (value) => {
   const metadata = normalizeJsonObject(value);
   const normalized = {};
@@ -13164,6 +13247,7 @@ export const __readerTotpTestHooks = {
   handlePublicNovelComments,
   handleNovelReadingEvents,
   handleReaderCommentSubmit,
+  handleReaderBookmarkDelete,
   handleReaderPasswordResetConfirm,
   hmacSha256Hex,
   hotpCode,
@@ -13284,6 +13368,7 @@ export default {
     if (url.pathname === '/api/readers/bookmarks') {
       if (request.method === 'GET') return handleReaderBookmarks(request, env);
       if (request.method === 'POST') return handleReaderBookmarkSave(request, env);
+      if (request.method === 'DELETE') return handleReaderBookmarkDelete(request, env);
       return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

@@ -42,8 +42,20 @@ assert.ok(
   'Member Center bookmark hint should mention the mobile save button.'
 );
 assert.ok(
+  librarySource.includes('reader-bookmark-status') && librarySource.includes('data-reader-bookmark-delete'),
+  'Member Center bookmark list should expose per-bookmark delete controls and status feedback.'
+);
+assert.ok(
+  librarySource.includes("method: 'DELETE'") && librarySource.includes('/api/readers/bookmarks?id='),
+  'Member Center bookmark delete controls should call the reader bookmarks DELETE API.'
+);
+assert.ok(
   globalCssSource.includes('.reader-bookmark-hint') && globalCssSource.includes('.reader-bookmark-hint kbd'),
   'Member Center bookmark shortcut hint should have visible hint and keycap styling.'
+);
+assert.ok(
+  globalCssSource.includes('.reader-bookmark-actions') && globalCssSource.includes('.reader-bookmark-delete'),
+  'Member Center bookmark delete controls should have compact card actions styling.'
 );
 
 assert.ok(
@@ -65,6 +77,14 @@ assert.ok(
 assert.ok(
   workerSource.includes("window.addEventListener('pagehide', clearBookmarkToastTimer"),
   'Worker dynamic bookmark toast timer should be cleared on pagehide.'
+);
+assert.ok(
+  workerSource.includes('handleReaderBookmarkDelete') && workerSource.includes("request.method === 'DELETE'"),
+  'Worker should expose a DELETE endpoint for reader bookmarks.'
+);
+assert.ok(
+  workerSource.includes('WHERE id = ? AND account_id = ?'),
+  'Worker bookmark delete should be scoped to the signed-in account.'
 );
 
 console.log('reader bookmark shortcut tests passed');
