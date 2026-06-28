@@ -1396,6 +1396,7 @@ const contentPricingDefaultsSettingKey = 'content.pricing-defaults.v1';
 const novelForgeImportContract = 'station-cat-novelforge-import';
 const novelForgeImportContractHeader = 'station-cat-novelforge-import.v1';
 const novelForgeAnalyticsContractHeader = 'station-cat-novelforge-analytics.v1';
+const novelForgeContentContractHeader = 'station-cat-novelforge-content.v1';
 const novelForgePackageFormat = 'novelforge-standard-publish-package';
 const maxNovelForgeImportBytes = 8 * 1024 * 1024;
 
@@ -9667,6 +9668,11 @@ const requireNovelForgeAnalyticsToken = (request, env) =>
     allowedContracts: [novelForgeImportContractHeader, novelForgeAnalyticsContractHeader]
   });
 
+const requireNovelForgeContentToken = (request, env) =>
+  requireNovelForgePublishToken(request, env, {
+    allowedContracts: [novelForgeImportContractHeader, novelForgeAnalyticsContractHeader, novelForgeContentContractHeader]
+  });
+
 const readNovelForgeImportPayload = async (request) => {
   const contentLength = Number.parseInt(request.headers.get('content-length') || '0', 10);
   if (contentLength > maxNovelForgeImportBytes) {
@@ -9865,6 +9871,23 @@ const parseNovelForgeAnalyticsRoute = (pathname) => {
   return {
     identifier: identifierSegments.join('/'),
     resource
+  };
+};
+
+const parseNovelForgeChapterContentRoute = (pathname) => {
+  const segments = String(pathname || '')
+    .replace(/^\/+|\/+$/g, '')
+    .split('/')
+    .filter(Boolean);
+  if (segments[0] !== 'api' || segments[1] !== 'novelforge' || segments[2] !== 'chapters') return null;
+  if (segments[segments.length - 1] !== 'content') return null;
+
+  const identifierSegments = segments.slice(3, -1).map(safeDecodePathSegment);
+  if (identifierSegments.length < 1 || identifierSegments.length > 2) return null;
+
+  return {
+    identifier: identifierSegments.join('/'),
+    resource: 'chapter-content'
   };
 };
 
@@ -10129,6 +10152,120 @@ const novelForgeInsightWithFreshness = (insightRow, statsRow) => {
     stale: Boolean(statsUpdatedAt && insight.sourceStatsUpdatedAt && parseSqlTimestampMs(insight.sourceStatsUpdatedAt) < parseSqlTimestampMs(statsUpdatedAt)),
     statsUpdatedAt
   };
+};
+
+const decodeBasicHtmlEntities = (value) =>
+  String(value || '')
+    .replace(/&#(\d+);/g, (_, code) => {
+      const number = Number.parseInt(code, 10);
+      return Number.isFinite(number) && number >= 0 && number <= 0x10ffff ? String.fromCodePoint(number) : _;
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => {
+      const number = Number.parseInt(code, 16);
+      return Number.isFinite(number) && number >= 0 && number <= 0x10ffff ? String.fromCodePoint(number) : _;
+    })
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+const plainTextFromHtml = (html) =>
+  decodeBasicHtmlEntities(
+    stripLeadingReaderHeadingHtml(html)
+      .replace(/<\s*br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|section|article|h[1-6]|blockquote)>/gi, '\n\n')
+      .replace(/<li\b[^>]*>/gi, '- ')
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+  )
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+const toIsoTimestamp = (value) => {
+  const time = parseSqlTimestampMs(value);
+  return time ? new Date(time).toISOString() : cleanText(value, 80);
+};
+
+const readNovelForgeChapterContentBody = async (env, chapter) => {
+  const bucket = getContentBucket(env);
+  if (!bucket && (chapter.markdown_r2_key || chapter.html_r2_key)) {
+    const error = new Error('CONTENT_BUCKET is not configured, so chapter body text cannot be loaded.');
+    error.code = 'CONTENT_BUCKET_NOT_CONFIGURED';
+    error.status = 503;
+    throw error;
+  }
+
+  if (!bucket) return { body: '', bodyFormat: 'empty', source: 'empty' };
+
+  const markdown = await readContentObjectText(bucket, chapter.markdown_r2_key, 'Markdown body');
+  if (markdown) {
+    return {
+      body: markdown,
+      bodyFormat: 'markdown',
+      source: 'markdown-r2'
+    };
+  }
+
+  const html = await readContentObjectText(bucket, chapter.html_r2_key, 'HTML body');
+  if (html) {
+    return {
+      body: plainTextFromHtml(html),
+      bodyFormat: 'html-text',
+      source: 'html-r2'
+    };
+  }
+
+  return { body: '', bodyFormat: 'empty', source: 'empty' };
+};
+
+const handleNovelForgeChapterContent = async (request, env, route) => {
+  const tokenError = requireNovelForgeContentToken(request, env);
+  if (tokenError) return tokenError;
+
+  const db = env.WAITLIST_DB;
+  if (!db) return novelForgeImportError('Content database is not configured.', { code: 'CONTENT_DATABASE_NOT_CONFIGURED', status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return novelForgeImportError('Content tables are not initialized.', { code: 'CONTENT_TABLES_NOT_READY', status: 503 });
+  }
+
+  const options = getNovelForgeAnalyticsOptions(request, route);
+  let chapter;
+  try {
+    chapter = await findNovelForgeChapterForAnalytics(db, options);
+  } catch (error) {
+    return novelForgeImportError(error.message || 'NovelForge chapter lookup failed.', {
+      code: error.code || 'NOVELFORGE_CHAPTER_LOOKUP_FAILED',
+      status: error.status || 400
+    });
+  }
+  if (!chapter) {
+    return novelForgeImportError('NovelForge chapter was not found.', { code: 'NOVELFORGE_CHAPTER_NOT_FOUND', status: 404 });
+  }
+
+  try {
+    const body = await readNovelForgeChapterContentBody(env, chapter);
+    return novelForgeImportJson({
+      ok: true,
+      body: body.body,
+      bodyFormat: body.bodyFormat,
+      chapter: novelForgeAnalyticsEntryToJson(chapter, request),
+      id: novelForgeRemoteIdForEntry(chapter),
+      resource: 'chapter-content',
+      source: body.source,
+      stage: 'novelforge-writing-api-5',
+      status: chapter.status,
+      title: chapter.title || '',
+      updatedAt: toIsoTimestamp(chapter.updated_at || chapter.published_at || chapter.created_at)
+    });
+  } catch (error) {
+    return novelForgeImportError(error.message || 'NovelForge chapter content could not be loaded.', {
+      code: error.code || 'NOVELFORGE_CHAPTER_CONTENT_READ_FAILED',
+      status: error.status || 500
+    });
+  }
 };
 
 const handleNovelForgeAnalytics = async (request, env, route) => {
@@ -13244,6 +13381,7 @@ export const __readerTotpTestHooks = {
   handleAdminListReaderComments,
   handleAdminModerateReaderComment,
   handleNovelForgeAnalytics,
+  handleNovelForgeChapterContent,
   handlePublicNovelComments,
   handleNovelReadingEvents,
   handleReaderCommentSubmit,
@@ -13258,6 +13396,7 @@ export const __readerTotpTestHooks = {
   normalizeReadingEventPayload,
   readerCommentToJson,
   parseNovelForgeAnalyticsRoute,
+  parseNovelForgeChapterContentRoute,
   parseDynamicContentRoute,
   readerTotpResetFailureMessage,
   readerTotpResetFailureThreshold,
@@ -13422,6 +13561,15 @@ export default {
 
     if (url.pathname === '/api/novelforge/import') {
       if (request.method === 'POST') return handleNovelForgeImport(request, env);
+      return novelForgeImportError('Method not allowed.', {
+        code: 'METHOD_NOT_ALLOWED',
+        status: 405
+      });
+    }
+
+    const novelForgeChapterContentRoute = parseNovelForgeChapterContentRoute(url.pathname);
+    if (novelForgeChapterContentRoute) {
+      if (request.method === 'GET') return handleNovelForgeChapterContent(request, env, novelForgeChapterContentRoute);
       return novelForgeImportError('Method not allowed.', {
         code: 'METHOD_NOT_ALLOWED',
         status: 405
