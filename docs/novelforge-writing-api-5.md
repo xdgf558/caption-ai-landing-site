@@ -11,9 +11,33 @@ Authorization: Bearer <NOVELFORGE_PUBLISH_TOKEN>
 X-NovelForge-Contract: station-cat-novelforge-analytics.v1
 ```
 
-`X-NovelForge-Contract` 可以省略。为了兼容旧客户端，也接受 `station-cat-novelforge-import.v1`。如果传入其他 contract，会返回 `NOVELFORGE_CONTRACT_HEADER_UNSUPPORTED`。
+`X-NovelForge-Contract` 可以省略。为了兼容旧客户端，也接受 `station-cat-novelforge-import.v1`。章节正文接口也接受 `station-cat-novelforge-content.v1`。如果传入其他 contract，会返回 `NOVELFORGE_CONTRACT_HEADER_UNSUPPORTED`。
 
 ## Endpoints
+
+### 单章正文
+
+```http
+GET /api/novelforge/chapters/:chapterId/content
+GET /api/novelforge/chapters/:seriesSlug/:chapterSlug/content
+```
+
+`chapterId` 推荐使用网站返回给 NovelForge 的远端章节 ID，例如 `chapter_8`。也可以用 `:seriesSlug/:chapterSlug` 组合读取指定章节。接口会读取网站后端内容平台当前保存的正文，优先返回 R2 中的 Markdown；如果只有 HTML，会转换成适合软件端读取的纯文本。
+
+返回结构会在顶层直接提供软件端最常用字段：
+
+```json
+{
+  "ok": true,
+  "id": "chapter_8",
+  "title": "章节标题",
+  "body": "网站当前公开正文",
+  "status": "published",
+  "updatedAt": "2026-06-28T00:00:00.000Z",
+  "bodyFormat": "markdown",
+  "source": "markdown-r2"
+}
+```
 
 ### 单章统计
 
@@ -100,6 +124,8 @@ GET /api/novelforge/analytics/trend?seriesSlug=book&windowDays=30&limit=50
 - `NOVELFORGE_SERIES_NOT_FOUND`: 找不到对应作品。
 - `NOVELFORGE_SERIES_REQUIRED`: 使用章节 slug 查询时缺少作品 slug。请改用 `seriesSlug + chapterSlug`、`/seriesSlug/chapterSlug` 或 `chapter_N` 远端 ID。
 - `NOVELFORGE_CHAPTER_NOT_FOUND`: 找不到对应章节。
+- `CONTENT_BUCKET_NOT_CONFIGURED`: 章节正文保存在 R2，但生产环境没有配置 `CONTENT_BUCKET` 绑定。
+- `NOVELFORGE_CHAPTER_CONTENT_READ_FAILED`: 章节正文读取失败，通常是 R2 对象过大或临时不可读。
 
 ## Deployment Notes
 

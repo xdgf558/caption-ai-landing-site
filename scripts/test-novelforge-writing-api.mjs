@@ -29,8 +29,10 @@ const chapterRow = {
   chapter_number: 8,
   created_at: '2026-06-26 12:05:00',
   entry_type: 'novel_chapter',
+  html_r2_key: 'content/novels/book/chapters/008-ch8/zh-Hant/body.html',
   id: 8,
   locale: 'zh-Hant',
+  markdown_r2_key: 'content/novels/book/chapters/008-ch8/zh-Hant/body.md',
   parent_slug: 'book',
   slug: 'ch8',
   status: 'published',
@@ -194,26 +196,67 @@ class MockDb {
   }
 }
 
+class MockR2Object {
+  constructor(body) {
+    this.body = body;
+    this.size = Buffer.byteLength(body, 'utf8');
+  }
+
+  async text() {
+    return this.body;
+  }
+}
+
+class MockContentBucket {
+  constructor(objects = {}) {
+    this.objects = objects;
+  }
+
+  async get(key) {
+    const body = this.objects[key];
+    return typeof body === 'string' ? new MockR2Object(body) : null;
+  }
+}
+
 const workerSource = read('src/worker.js');
 assert.match(workerSource, /novelForgeAnalyticsContractHeader/);
+assert.match(workerSource, /novelForgeContentContractHeader/);
 assert.match(workerSource, /parseNovelForgeAnalyticsRoute/);
+assert.match(workerSource, /parseNovelForgeChapterContentRoute/);
 assert.match(workerSource, /handleNovelForgeAnalytics/);
+assert.match(workerSource, /handleNovelForgeChapterContent/);
 assert.match(workerSource, /\/api\/novelforge\/analytics/);
+assert.match(workerSource, /segments\[2\] !== 'chapters'/);
 
 const docsSource = read('docs/novelforge-writing-api-5.md');
 assert.match(docsSource, /\/api\/novelforge\/analytics\/chapter/);
+assert.match(docsSource, /\/api\/novelforge\/chapters\/:chapterId\/content/);
 assert.match(docsSource, /station-cat-novelforge-analytics\.v1/);
+assert.match(docsSource, /station-cat-novelforge-content\.v1/);
 assert.match(docsSource, /NOVELFORGE_SERIES_REQUIRED/);
 
 const parsedRoute = hooks.parseNovelForgeAnalyticsRoute('/api/novelforge/analytics/chapter/book/ch8/');
 assert.deepEqual(parsedRoute, { identifier: 'book/ch8', resource: 'chapter' });
 assert.equal(hooks.parseNovelForgeAnalyticsRoute('/api/novelforge/analytics/chapter/book/ch8/extra'), null);
 assert.equal(hooks.parseNovelForgeAnalyticsRoute('/api/novelforge/analytics/trend/book/extra'), null);
+assert.deepEqual(
+  hooks.parseNovelForgeChapterContentRoute('/api/novelforge/chapters/chapter_8/content'),
+  { identifier: 'chapter_8', resource: 'chapter-content' }
+);
+assert.deepEqual(
+  hooks.parseNovelForgeChapterContentRoute('/api/novelforge/chapters/book/ch8/content'),
+  { identifier: 'book/ch8', resource: 'chapter-content' }
+);
+assert.equal(hooks.parseNovelForgeChapterContentRoute('/api/novelforge/chapters/book/ch8/content/extra'), null);
 
 const env = { NOVELFORGE_PUBLISH_TOKEN: 'secret', WAITLIST_DB: new MockDb() };
 const authHeaders = {
   authorization: 'Bearer secret',
   'x-novelforge-contract': 'station-cat-novelforge-analytics.v1'
+};
+const contentHeaders = {
+  authorization: 'Bearer secret',
+  'x-novelforge-contract': 'station-cat-novelforge-content.v1'
 };
 
 const invalidAuthResponse = await hooks.handleNovelForgeAnalytics(
@@ -231,6 +274,36 @@ const invalidContractResponse = await hooks.handleNovelForgeAnalytics(
   hooks.parseNovelForgeAnalyticsRoute('/api/novelforge/analytics/chapter/chapter_8')
 );
 assert.equal(invalidContractResponse.status, 400);
+
+const invalidContentAuthResponse = await hooks.handleNovelForgeChapterContent(
+  new Request('https://wwwstationcat.org/api/novelforge/chapters/chapter_8/content'),
+  { NOVELFORGE_PUBLISH_TOKEN: 'secret', WAITLIST_DB: new MockDb(), CONTENT_BUCKET: new MockContentBucket() },
+  hooks.parseNovelForgeChapterContentRoute('/api/novelforge/chapters/chapter_8/content')
+);
+assert.equal(invalidContentAuthResponse.status, 401);
+
+const chapterContentResponse = await hooks.handleNovelForgeChapterContent(
+  new Request('https://wwwstationcat.org/api/novelforge/chapters/chapter_8/content', {
+    headers: contentHeaders
+  }),
+  {
+    NOVELFORGE_PUBLISH_TOKEN: 'secret',
+    WAITLIST_DB: new MockDb(),
+    CONTENT_BUCKET: new MockContentBucket({
+      'content/novels/book/chapters/008-ch8/zh-Hant/body.md': '# Chapter Eight\n\n网站当前公开正文。'
+    })
+  },
+  hooks.parseNovelForgeChapterContentRoute('/api/novelforge/chapters/chapter_8/content')
+);
+const chapterContentBody = await chapterContentResponse.json();
+assert.equal(chapterContentResponse.status, 200);
+assert.equal(chapterContentBody.id, 'chapter_8');
+assert.equal(chapterContentBody.title, 'Chapter Eight');
+assert.equal(chapterContentBody.status, 'published');
+assert.equal(chapterContentBody.updatedAt, '2026-06-26T12:05:00.000Z');
+assert.equal(chapterContentBody.body, '# Chapter Eight\n\n网站当前公开正文。');
+assert.equal(chapterContentBody.bodyFormat, 'markdown');
+assert.equal(chapterContentBody.chapter.remoteId, 'chapter_8');
 
 const chapterResponse = await hooks.handleNovelForgeAnalytics(
   new Request('https://wwwstationcat.org/api/novelforge/analytics/chapter/chapter_8?windowDays=7', {
