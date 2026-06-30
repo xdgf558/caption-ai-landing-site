@@ -69,7 +69,7 @@ const backendSpotlight = backendSpotlightByLocale[locale as keyof typeof backend
 const bookshelfCopyByLocale = {
   en: {
     all: 'All',
-    categories: ['Time travel', 'Sci-fi', 'Fantasy', 'AI'],
+    categories: ['Time travel', 'Sci-fi', 'Fantasy', 'Mystery', 'AI'],
     empty: 'No books in this category yet.',
     eyebrow: 'Serial fiction shelf',
     intro: 'Pick a category, then switch between long-form stories as the shelf grows.',
@@ -80,7 +80,7 @@ const bookshelfCopyByLocale = {
   },
   ja: {
     all: 'すべて',
-    categories: ['タイムトラベル', 'SF', 'ファンタジー', 'AI'],
+    categories: ['タイムトラベル', 'SF', 'ファンタジー', 'ミステリー', 'AI'],
     empty: 'この分類の作品はまだありません。',
     eyebrow: '連載棚',
     intro: '分類を選び、今後増える長編をこの棚から切り替えて読めます。',
@@ -91,7 +91,7 @@ const bookshelfCopyByLocale = {
   },
   'zh-Hant': {
     all: '全部',
-    categories: ['穿越', '科幻', '奇幻', 'AI'],
+    categories: ['穿越', '科幻', '奇幻', '悬疑', 'AI'],
     empty: '這個分類還在等下一本書上架。',
     eyebrow: '長篇書架',
     intro: '這是 Station Cat 的小說書架，會陸續上架各類小說。如果喜歡我的作品，歡迎訂閱觀看。',
@@ -102,7 +102,7 @@ const bookshelfCopyByLocale = {
   },
   'zh-Hans': {
     all: '全部',
-    categories: ['穿越', '科幻', '奇幻', 'AI'],
+    categories: ['穿越', '科幻', '奇幻', '悬疑', 'AI'],
     empty: '这个分类还在等下一本书上架。',
     eyebrow: '长篇书架',
     intro: '这是 Station Cat 的小说书架，会陆续上架各类小说。如果喜欢我的作品，欢迎订阅观看。',
@@ -154,7 +154,15 @@ const featuredBookshelfItem = featuredSerial && {
   title: featuredSerial.data.title
 };
 const bookshelfItems = [backendBookshelfItem, featuredBookshelfItem].filter(Boolean);
-const bookshelfJson = JSON.stringify({ empty: bookshelfCopy.empty }).replace(/</g, '\\u003c');
+const bookshelfJson = JSON.stringify({
+  basePath,
+  empty: bookshelfCopy.empty,
+  existingSlugs: bookshelfItems.map((book) => book.seriesSlug).filter(Boolean),
+  libraryLabel: copy.libraryLabel,
+  locale,
+  openSeries: bookshelfCopy.openSeries,
+  readFirst: bookshelfCopy.readFirst
+}).replace(/</g, '\\u003c');
 const backendShelfCopy = {
   en: {
     empty: 'No backend-published serials are waiting outside the static shelf.',
@@ -234,6 +242,7 @@ const backendShelfCopy = {
                 <span
                   data-backend-latest-series={book.isBackend ? book.seriesSlug : undefined}
                   data-backend-latest-locale={book.isBackend ? book.locale : undefined}
+                  data-backend-base-path={book.isBackend ? basePath : undefined}
                 >
                   {book.latest}
                 </span>
@@ -271,6 +280,13 @@ const backendShelfCopy = {
 <script is:inline>
   (() => {
     const shelves = document.querySelectorAll('[data-serials-bookshelf]');
+    const escapeHtml = (value) =>
+      String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
     const chineseNumerals = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
     const formatChineseChapterNumber = (value) => {
       const number = Math.max(0, Math.floor(Number(value) || 0));
@@ -296,10 +312,10 @@ const backendShelfCopy = {
       }
       return `Chapter ${Math.max(0, Math.floor(Number(chapterNumber) || 0))}`;
     };
-    const latestChapterCache = new Map();
-    const getLatestBackendChapter = async (seriesSlug, locale) => {
+    const chapterListCache = new Map();
+    const getBackendChapters = async (seriesSlug, locale) => {
       const cacheKey = `${locale}:${seriesSlug}`;
-      if (latestChapterCache.has(cacheKey)) return latestChapterCache.get(cacheKey);
+      if (chapterListCache.has(cacheKey)) return chapterListCache.get(cacheKey);
 
       const params = new URLSearchParams({
         entryType: 'novel_chapter',
@@ -307,31 +323,159 @@ const backendShelfCopy = {
         limit: '100',
         parentSlug: seriesSlug
       });
-      const latestPromise = fetch(`/api/content/entries?${params.toString()}`)
+      const chaptersPromise = fetch(`/api/content/entries?${params.toString()}`)
         .then((response) => (response.ok ? response.json() : null))
         .then((payload) => {
-          if (!payload?.ok || !Array.isArray(payload.entries)) return null;
-          return payload.entries.reduce((latest, entry) => {
-            const chapterNumber = Number(entry.chapterNumber) || 0;
-            const latestNumber = Number(latest?.chapterNumber) || 0;
-            if (!latest || chapterNumber > latestNumber) return entry;
-            if (chapterNumber === latestNumber && String(entry.slug || '').localeCompare(String(latest.slug || '')) > 0) return entry;
-            return latest;
-          }, null);
+          if (!payload?.ok || !Array.isArray(payload.entries)) return [];
+          return payload.entries
+            .slice()
+            .sort((left, right) => {
+              const leftNumber = Number(left.chapterNumber) || 0;
+              const rightNumber = Number(right.chapterNumber) || 0;
+              return leftNumber - rightNumber || String(left.slug || '').localeCompare(String(right.slug || ''));
+            });
         })
-        .catch(() => null);
-      latestChapterCache.set(cacheKey, latestPromise);
-      return latestPromise;
+        .catch(() => []);
+      chapterListCache.set(cacheKey, chaptersPromise);
+      return chaptersPromise;
+    };
+    const getLatestBackendChapter = async (seriesSlug, locale) => {
+      const chapters = await getBackendChapters(seriesSlug, locale);
+      return chapters.length ? chapters[chapters.length - 1] : null;
+    };
+    const getFirstBackendChapter = async (seriesSlug, locale) => {
+      const chapters = await getBackendChapters(seriesSlug, locale);
+      return chapters.length ? chapters[0] : null;
+    };
+    const getChapterHref = (basePath, seriesSlug, chapterSlug) =>
+      `${basePath}${encodeURIComponent(seriesSlug)}/chapter/${encodeURIComponent(chapterSlug)}/`;
+    const accessLabels = {
+      en: { free: 'Free', member: 'Members', paid: 'Paid', supporter: 'Supporters' },
+      ja: { free: '無料', member: 'メンバー', paid: '有料', supporter: '支援者向け' },
+      'zh-Hant': { free: '免費', member: '會員', paid: '付費', supporter: '支持者' },
+      'zh-Hans': { free: '免费', member: '会员', paid: '付费', supporter: '支持者' }
+    };
+    const formatAccess = (value, locale) => accessLabels[locale]?.[value] || value || '';
+    const categoryLabels = {
+      en: { ai: 'AI', fantasy: 'Fantasy', mystery: 'Mystery', scifi: 'Sci-fi', time: 'Time travel' },
+      ja: { ai: 'AI', fantasy: 'ファンタジー', mystery: 'ミステリー', scifi: 'SF', time: 'タイムトラベル' },
+      'zh-Hant': { ai: 'AI', fantasy: '奇幻', mystery: '悬疑', scifi: '科幻', time: '穿越' },
+      'zh-Hans': { ai: 'AI', fantasy: '奇幻', mystery: '悬疑', scifi: '科幻', time: '穿越' }
+    };
+    const inferBookshelfCategories = (entry, locale) => {
+      const labels = categoryLabels[locale] || categoryLabels['zh-Hant'];
+      const text = [entry.title, entry.subtitle, entry.description, entry.excerpt, ...(entry.tags || [])]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      const categories = [];
+      const add = (category) => {
+        if (category && !categories.includes(category)) categories.push(category);
+      };
+      if (/穿越|重生|time travel|rebirth/.test(text)) add(labels.time);
+      if (/科幻|sci[-\s]?fi|science fiction|未来|ai|人工智能|離線|离线|offline/.test(text)) add(labels.scifi);
+      if (/ai|人工智能|離線 ai|离线 ai|offline ai/.test(text)) add(labels.ai);
+      if (/奇幻|fantasy|玄幻|魔法/.test(text)) add(labels.fantasy);
+      if (/悬疑|懸疑|探案|推理|命案|大理寺|旧案|舊案|mystery|detective|case/.test(text)) add(labels.mystery);
+      return categories.length ? categories : [labels.fantasy];
+    };
+    const renderBackendBookshelfEntry = (entry, config) => {
+      const categories = inferBookshelfCategories(entry, config.locale);
+      const href = `${config.basePath}${encodeURIComponent(entry.slug)}/`;
+      const cover = entry.coverUrl
+        ? `<img src="${escapeHtml(entry.coverUrl)}" alt="${escapeHtml(entry.coverAlt || `${entry.title} cover`)}" loading="lazy" />`
+        : `<strong>${escapeHtml(entry.title)}</strong>`;
+      const status = config.locale === 'en' ? 'Serializing' : config.locale === 'ja' ? '連載中' : '連載中';
+      const accessLabel = formatAccess(entry.accessLevel, config.locale);
+      const subtitle = entry.subtitle ? `<p class="fine-print">${escapeHtml(entry.subtitle)}</p>` : '';
+      return {
+        previewHtml: `<article class="serials-bookshelf__preview" data-bookshelf-preview="${escapeHtml(entry.slug)}" hidden>
+            <a class="serials-bookshelf__thumb" href="${escapeHtml(href)}" aria-label="${escapeHtml(entry.title)}">${cover}</a>
+            <div class="serials-bookshelf__copy">
+              <div class="serials-bookshelf__meta">
+                <span>${escapeHtml(status)}</span>
+                <span>${escapeHtml(accessLabel)}</span>
+                <span data-backend-latest-series="${escapeHtml(entry.slug)}" data-backend-latest-locale="${escapeHtml(config.locale)}" data-backend-base-path="${escapeHtml(config.basePath)}">${escapeHtml(entry.latestLabel || '')}</span>
+              </div>
+              <h2>${escapeHtml(entry.title)}</h2>
+              ${subtitle}
+              <p>${escapeHtml(entry.description || entry.excerpt || '')}</p>
+              <div class="button-row">
+                <a class="button button-primary" href="${escapeHtml(href)}" data-backend-first-chapter-link="${escapeHtml(entry.slug)}">${escapeHtml(config.readFirst)}</a>
+                <a class="button button-secondary" href="${escapeHtml(href)}">${escapeHtml(config.openSeries)}</a>
+                <a class="button button-secondary" href="/library/">${escapeHtml(config.libraryLabel)}</a>
+              </div>
+            </div>
+          </article>`,
+        railHtml: `<button class="serials-bookshelf__book" type="button" data-bookshelf-book="${escapeHtml(entry.slug)}" data-bookshelf-categories="${escapeHtml(categories.join(','))}">
+            <span>${escapeHtml(categories[0])}</span>
+            <strong>${escapeHtml(entry.title)}</strong>
+          </button>`
+      };
+    };
+    const hydrateBackendBookshelfEntries = async (shelf) => {
+      const configNode = shelf.querySelector('[data-bookshelf-copy]');
+      const rail = shelf.querySelector('.serials-bookshelf__rail');
+      const previews = shelf.querySelector('.serials-bookshelf__previews');
+      if (!configNode || !rail || !previews) return;
+      let config;
+      try {
+        config = JSON.parse(configNode.textContent || '{}');
+      } catch {
+        return;
+      }
+      const existing = new Set(config.existingSlugs || []);
+      const params = new URLSearchParams({
+        entryType: 'novel_series',
+        locale: config.locale || 'zh-Hant',
+        limit: '30'
+      });
+      try {
+        const response = await fetch(`/api/content/entries?${params.toString()}`);
+        const payload = await response.json();
+        if (!response.ok || !payload?.ok || !Array.isArray(payload.entries)) return;
+        payload.entries
+          .filter((entry) => {
+            if (!entry?.slug || existing.has(entry.slug)) return false;
+            return !Array.from(shelf.querySelectorAll('[data-bookshelf-book]')).some(
+              (book) => book.dataset.bookshelfBook === entry.slug
+            );
+          })
+          .forEach((entry) => {
+            const html = renderBackendBookshelfEntry(entry, config);
+            rail.insertAdjacentHTML('beforeend', html.railHtml);
+            previews.insertAdjacentHTML('beforeend', html.previewHtml);
+            existing.add(entry.slug);
+          });
+        const activeFilter = shelf.querySelector('[data-bookshelf-filter].is-active')?.dataset.bookshelfFilter || 'all';
+        if (activeFilter !== 'all') {
+          Array.from(shelf.querySelectorAll('[data-bookshelf-book]')).forEach((book) => {
+            const categories = String(book.dataset.bookshelfCategories || '').split(',').map((item) => item.trim());
+            book.hidden = !categories.includes(activeFilter);
+          });
+        }
+        hydrateBackendLatestChapters();
+      } catch {
+        // The static shelf remains usable if the dynamic backend list cannot load.
+      }
     };
     const hydrateBackendLatestChapters = () => {
       const targets = Array.from(document.querySelectorAll('[data-backend-latest-series]'));
       targets.forEach(async (target) => {
         const seriesSlug = target.dataset.backendLatestSeries || '';
         const locale = target.dataset.backendLatestLocale || 'zh-Hant';
+        const basePath = target.dataset.backendBasePath || '/novel/';
         if (!seriesSlug) return;
         const latest = await getLatestBackendChapter(seriesSlug, locale);
-        if (!latest?.chapterNumber || !latest.title) return;
-        target.textContent = `${formatChapterNumber(latest.chapterNumber, locale)} ${latest.title}`;
+        if (latest?.chapterNumber && latest.title) {
+          target.textContent = `${formatChapterNumber(latest.chapterNumber, locale)} ${latest.title}`;
+        }
+        const first = await getFirstBackendChapter(seriesSlug, locale);
+        const preview = target.closest('[data-bookshelf-preview]');
+        const firstLink = preview?.querySelector('[data-backend-first-chapter-link]');
+        if (first?.slug && firstLink) {
+          firstLink.href = getChapterHref(basePath, seriesSlug, first.slug);
+        }
       });
     };
     const runWhenDomReady = (callback) => {
@@ -345,14 +489,15 @@ const backendShelfCopy = {
     runWhenDomReady(hydrateBackendLatestChapters);
 
     shelves.forEach((shelf) => {
-      const filters = Array.from(shelf.querySelectorAll('[data-bookshelf-filter]'));
-      const books = Array.from(shelf.querySelectorAll('[data-bookshelf-book]'));
-      const previews = Array.from(shelf.querySelectorAll('[data-bookshelf-preview]'));
+      hydrateBackendBookshelfEntries(shelf);
+      const getFilters = () => Array.from(shelf.querySelectorAll('[data-bookshelf-filter]'));
+      const getBooks = () => Array.from(shelf.querySelectorAll('[data-bookshelf-book]'));
+      const getPreviews = () => Array.from(shelf.querySelectorAll('[data-bookshelf-preview]'));
       const empty = shelf.querySelector('[data-bookshelf-empty]');
 
       const setActiveBook = (id) => {
-        books.forEach((book) => book.classList.toggle('is-active', book.dataset.bookshelfBook === id));
-        previews.forEach((preview) => {
+        getBooks().forEach((book) => book.classList.toggle('is-active', book.dataset.bookshelfBook === id));
+        getPreviews().forEach((preview) => {
           const active = preview.dataset.bookshelfPreview === id;
           preview.classList.toggle('is-active', active);
           preview.hidden = !active;
@@ -360,9 +505,9 @@ const backendShelfCopy = {
       };
 
       const applyFilter = (category) => {
-        filters.forEach((filter) => filter.classList.toggle('is-active', filter.dataset.bookshelfFilter === category));
+        getFilters().forEach((filter) => filter.classList.toggle('is-active', filter.dataset.bookshelfFilter === category));
         let firstVisible = '';
-        books.forEach((book) => {
+        getBooks().forEach((book) => {
           const categories = String(book.dataset.bookshelfCategories || '').split(',').map((item) => item.trim());
           const visible = category === 'all' || categories.includes(category);
           book.hidden = !visible;
@@ -372,11 +517,16 @@ const backendShelfCopy = {
         if (firstVisible) setActiveBook(firstVisible);
       };
 
-      books.forEach((book) => {
-        book.addEventListener('click', () => setActiveBook(book.dataset.bookshelfBook || ''));
-      });
-      filters.forEach((filter) => {
-        filter.addEventListener('click', () => applyFilter(filter.dataset.bookshelfFilter || 'all'));
+      shelf.addEventListener('click', (event) => {
+        const book = event.target.closest('[data-bookshelf-book]');
+        if (book && shelf.contains(book)) {
+          setActiveBook(book.dataset.bookshelfBook || '');
+          return;
+        }
+        const filter = event.target.closest('[data-bookshelf-filter]');
+        if (filter && shelf.contains(filter)) {
+          applyFilter(filter.dataset.bookshelfFilter || 'all');
+        }
       });
     });
   })();

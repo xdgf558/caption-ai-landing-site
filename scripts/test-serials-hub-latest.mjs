@@ -12,12 +12,20 @@ assert.ok(
   'Backend latest chapter hydration should request novel chapters.'
 );
 assert.ok(
+  source.includes("entryType: 'novel_series'"),
+  'Bookshelf hydration should request backend novel series for the top shelf.'
+);
+assert.ok(
+  source.includes('inferBookshelfCategories') && source.includes('悬疑'),
+  'Bookshelf hydration should infer categories, including mystery/suspense works.'
+);
+assert.ok(
   source.includes("parentSlug: seriesSlug"),
   'Backend latest chapter hydration should query chapters for the current series.'
 );
 assert.ok(
-  source.includes('chapterNumber > latestNumber'),
-  'Backend latest chapter hydration should pick the highest chapter number.'
+  source.includes('chapters.length ? chapters[chapters.length - 1] : null'),
+  'Backend latest chapter hydration should pick the highest sorted chapter number.'
 );
 assert.ok(
   source.includes('target.textContent = `${formatChapterNumber(latest.chapterNumber, locale)} ${latest.title}`;'),
