@@ -172,6 +172,20 @@ assert.match(seriesHtml, /href="\/novel\/book\/chapter\/ch1\/"/);
 assert.match(seriesHtml, /href="\/novel\/book\/chapter\/ch3\/"/);
 assert.match(seriesHtml, /href="\/novel\/"/);
 
+const manyChapters = Array.from({ length: 10 }, (_, index) => ({
+  access_level: 'free',
+  description: '',
+  excerpt: '',
+  parent_slug: 'book',
+  slug: `ch${index + 1}`,
+  title: `Chapter ${index + 1}`,
+  word_count: 10
+}));
+const paginatedSeriesHtml = hooks.renderDynamicNovelSeries(novelSeriesRoute, serial, { html: '<p>Body</p>' }, manyChapters);
+assert.match(paginatedSeriesHtml, /data-chapters-per-page="9"/);
+assert.match(paginatedSeriesHtml, /data-chapter-page="2" hidden/);
+assert.match(paginatedSeriesHtml, /data-chapter-page-button="2"/);
+
 const chapterHtml = hooks.renderDynamicNovelChapter(
   { ...novelChapterRoute, chapterSlug: 'ch2' },
   serial,

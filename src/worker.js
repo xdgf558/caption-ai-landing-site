@@ -11442,12 +11442,16 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .card, .panel, .gate { background: rgba(255,255,255,.72); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 50px rgba(44,39,33,.08); display: grid; gap: 12px; padding: 18px; }
       .card { text-decoration: none; }
       .card:hover { border-color: rgba(8,121,109,.35); transform: translateY(-1px); }
+      .chapter-list-shell { display: grid; gap: 14px; }
       .chapter-list { gap: 10px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
       .chapter-card { gap: 7px; min-height: 0; padding: 12px 14px; }
       .chapter-card .meta { align-items: center; gap: 6px; }
       .chapter-card .pill { padding: 5px 8px; }
       .chapter-card h3 { font-size: 18px; line-height: 1.25; }
       .chapter-card p { display: -webkit-box; font-size: 14px; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+      .chapter-pagination { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+      .chapter-pagination__button { align-items: center; background: rgba(255,255,255,.72); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); cursor: pointer; display: inline-flex; font: inherit; font-size: 14px; font-weight: 900; height: 34px; justify-content: center; min-width: 34px; padding: 0 10px; }
+      .chapter-pagination__button:hover, .chapter-pagination__button:focus-visible, .chapter-pagination__button.is-active { background: var(--teal); border-color: var(--ink); color: #fffaf1; }
       .hero-cover { aspect-ratio: 16 / 10; background: var(--soft); border: 1px solid var(--line); border-radius: 14px; margin: 6px 0 0; max-width: 780px; overflow: hidden; }
       .hero-cover--book { aspect-ratio: 2 / 3; border-radius: 10px; box-shadow: 0 18px 44px rgba(23, 30, 27, .18); margin: 0; max-width: 320px; width: 100%; }
       .hero-cover img { display: block; height: 100%; object-fit: cover; width: 100%; }
@@ -11492,6 +11496,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
         .grid, .hero--novel { grid-template-columns: 1fr; }
         .chapter-list { gap: 8px; }
         .chapter-card { padding: 12px; }
+        .chapter-pagination { justify-content: flex-start; }
         .topbar { align-items: flex-start; flex-direction: column; margin-bottom: 28px; }
         .hero-cover--book { justify-self: center; max-width: 240px; }
         .button-row { align-items: stretch; flex-direction: column; }
@@ -11560,14 +11565,18 @@ const renderDynamicDevlogPost = (route, post, body) => {
     </article>`;
 };
 
+const DYNAMIC_CHAPTERS_PER_PAGE = 9;
+
 const renderChapterCards = (route, chapters) => {
   const copy = dynamicContentCopy[route.locale];
   if (!chapters.length) return `<p>${escapeHtml(copy.chapters)}</p>`;
   return chapters
     .map(
-      (chapter) => {
+      (chapter, index) => {
         const summary = firstPlainSummary([chapter.excerpt, chapter.description], 120);
-        return `<a class="card chapter-card" href="${escapeHtml(dynamicChapterPath(route, chapter.parent_slug, chapter.slug))}">
+        const pageNumber = Math.floor(index / DYNAMIC_CHAPTERS_PER_PAGE) + 1;
+        const hiddenAttribute = pageNumber > 1 ? ' hidden' : '';
+        return `<a class="card chapter-card" href="${escapeHtml(dynamicChapterPath(route, chapter.parent_slug, chapter.slug))}" data-chapter-page="${pageNumber}"${hiddenAttribute}>
         <div class="meta">
           <span class="pill">${escapeHtml(formatDynamicChapterNumber(chapter.chapter_number, route.locale))}</span>
           <span>${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
@@ -11578,6 +11587,55 @@ const renderChapterCards = (route, chapters) => {
       }
     )
     .join('');
+};
+
+const renderChapterPagination = (chapters) => {
+  const totalPages = Math.ceil(chapters.length / DYNAMIC_CHAPTERS_PER_PAGE);
+  if (totalPages <= 1) return '';
+  return `<nav class="chapter-pagination" aria-label="章節分頁">
+      ${Array.from({ length: totalPages }, (_, index) => {
+        const pageNumber = index + 1;
+        const activeClass = pageNumber === 1 ? ' is-active' : '';
+        const current = pageNumber === 1 ? ' aria-current="page"' : '';
+        return `<button type="button" class="chapter-pagination__button${activeClass}" data-chapter-page-button="${pageNumber}"${current}>${pageNumber}</button>`;
+      }).join('')}
+    </nav>`;
+};
+
+const renderChapterPaginationScript = (chapters) => {
+  if (chapters.length <= DYNAMIC_CHAPTERS_PER_PAGE) return '';
+  return `<script>
+    (() => {
+      const roots = document.querySelectorAll('[data-chapter-pagination-root]');
+      roots.forEach((root) => {
+        const cards = Array.from(root.querySelectorAll('[data-chapter-page]'));
+        const buttons = Array.from(root.querySelectorAll('[data-chapter-page-button]'));
+        if (!cards.length || !buttons.length) return;
+        const setPage = (page) => {
+          cards.forEach((card) => {
+            card.hidden = card.dataset.chapterPage !== String(page);
+          });
+          buttons.forEach((button) => {
+            const isActive = button.dataset.chapterPageButton === String(page);
+            button.classList.toggle('is-active', isActive);
+            if (isActive) {
+              button.setAttribute('aria-current', 'page');
+            } else {
+              button.removeAttribute('aria-current');
+            }
+          });
+        };
+        buttons.forEach((button) => {
+          button.addEventListener('click', () => {
+            const page = Number(button.dataset.chapterPageButton || '1');
+            setPage(page);
+            root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        });
+        setPage(1);
+      });
+    })();
+  </script>`;
 };
 
 const dynamicPaymentCopy = {
@@ -12411,7 +12469,11 @@ const renderDynamicNovelSeries = (route, serial, body, chapters) => {
     </section>
     <section class="section">
       <p class="kicker">${escapeHtml(copy.chapters)}</p>
-      <div class="grid chapter-list">${renderChapterCards(route, chapters)}</div>
+      <div class="chapter-list-shell" data-chapter-pagination-root data-chapters-per-page="${DYNAMIC_CHAPTERS_PER_PAGE}">
+        <div class="grid chapter-list" data-chapter-pagination-list>${renderChapterCards(route, chapters)}</div>
+        ${renderChapterPagination(chapters)}
+      </div>
+      ${renderChapterPaginationScript(chapters)}
     </section>`;
 };
 

@@ -20,40 +20,100 @@ interface Props {
 }
 
 const { chapters, copy, basePath, locale, seriesSlug } = Astro.props;
+const chaptersPerPage = 9;
+const totalPages = Math.ceil(chapters.length / chaptersPerPage);
 ---
 
 {chapters.length > 0 ? (
-  <div class="serial-chapter-list">
-    {chapters.map((chapter) => (
-      <article class="serial-chapter-card">
-        <div class="serial-chapter-card__header">
-          <div>
-            <p class="station-kicker">
-              {formatChapterNumber(chapter.data.chapterNumber, locale)}
-            </p>
-            <h3>{chapter.data.title}</h3>
-          </div>
-          {chapter.data.publishedAt && (
-            <time datetime={chapter.data.publishedAt.toISOString()}>
-              {chapter.data.publishedAt.toLocaleDateString(locale)}
-            </time>
-          )}
-        </div>
-        <p>{chapter.data.excerpt}</p>
-        <div class="serial-chapter-card__footer">
-          <div class="serial-chapter-card__facts">
-            {chapter.data.volume && <span>{copy.volumeLabel}: {chapter.data.volume}</span>}
-            <span>{copy.accessLabel}: {getChapterAccessLabel(chapter.data.access, locale)}</span>
-            {chapter.data.readingMinutes && <span>{formatReadingMinutes(chapter.data.readingMinutes, locale)}</span>}
-            {chapter.data.wordCount && <span>{`${chapter.data.wordCount} ${copy.chapterWordCount}`}</span>}
-          </div>
-          <a class="paper-link" href={getChapterHref(basePath, seriesSlug, chapter.data.chapterSlug)}>{copy.readChapter}</a>
-        </div>
-      </article>
-    ))}
+  <div class="serial-chapter-list-shell" data-chapter-pagination-root data-chapters-per-page={chaptersPerPage}>
+    <div class="serial-chapter-list" data-chapter-pagination-list>
+      {chapters.map((chapter, index) => {
+        const pageNumber = Math.floor(index / chaptersPerPage) + 1;
+        return (
+          <article class="serial-chapter-card" data-chapter-page={pageNumber} hidden={pageNumber > 1}>
+            <div class="serial-chapter-card__header">
+              <div>
+                <p class="station-kicker">
+                  {formatChapterNumber(chapter.data.chapterNumber, locale)}
+                </p>
+                <h3>{chapter.data.title}</h3>
+              </div>
+              {chapter.data.publishedAt && (
+                <time datetime={chapter.data.publishedAt.toISOString()}>
+                  {chapter.data.publishedAt.toLocaleDateString(locale)}
+                </time>
+              )}
+            </div>
+            <p>{chapter.data.excerpt}</p>
+            <div class="serial-chapter-card__footer">
+              <div class="serial-chapter-card__facts">
+                {chapter.data.volume && <span>{copy.volumeLabel}: {chapter.data.volume}</span>}
+                <span>{copy.accessLabel}: {getChapterAccessLabel(chapter.data.access, locale)}</span>
+                {chapter.data.readingMinutes && <span>{formatReadingMinutes(chapter.data.readingMinutes, locale)}</span>}
+                {chapter.data.wordCount && <span>{`${chapter.data.wordCount} ${copy.chapterWordCount}`}</span>}
+              </div>
+              <a class="paper-link" href={getChapterHref(basePath, seriesSlug, chapter.data.chapterSlug)}>{copy.readChapter}</a>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+    {totalPages > 1 && (
+      <nav class="chapter-pagination" aria-label="章節分頁">
+        {Array.from({ length: totalPages }, (_, index) => {
+          const pageNumber = index + 1;
+          return (
+            <button
+              type="button"
+              class:list={['chapter-pagination__button', { 'is-active': pageNumber === 1 }]}
+              data-chapter-page-button={pageNumber}
+              aria-current={pageNumber === 1 ? 'page' : undefined}
+            >
+              {pageNumber}
+            </button>
+          );
+        })}
+      </nav>
+    )}
   </div>
 ) : (
   <div class="serial-empty-panel">
     <p>{copy.chapterEmpty}</p>
   </div>
 )}
+
+<script is:inline>
+  (() => {
+    const roots = document.querySelectorAll('[data-chapter-pagination-root]');
+    roots.forEach((root) => {
+      const cards = Array.from(root.querySelectorAll('[data-chapter-page]'));
+      const buttons = Array.from(root.querySelectorAll('[data-chapter-page-button]'));
+      if (!cards.length || !buttons.length) return;
+
+      const setPage = (page) => {
+        cards.forEach((card) => {
+          card.hidden = card.dataset.chapterPage !== String(page);
+        });
+        buttons.forEach((button) => {
+          const isActive = button.dataset.chapterPageButton === String(page);
+          button.classList.toggle('is-active', isActive);
+          if (isActive) {
+            button.setAttribute('aria-current', 'page');
+          } else {
+            button.removeAttribute('aria-current');
+          }
+        });
+      };
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const page = Number(button.dataset.chapterPageButton || '1');
+          setPage(page);
+          root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      setPage(1);
+    });
+  })();
+</script>

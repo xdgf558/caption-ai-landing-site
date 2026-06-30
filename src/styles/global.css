@@ -4761,6 +4761,44 @@ body.station-paper-page {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+.serial-chapter-list-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.chapter-pagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.chapter-pagination__button {
+  align-items: center;
+  background: #fffaf1;
+  border: 1px solid #d4c5b3;
+  border-radius: 8px;
+  color: #221b16;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  min-width: 34px;
+  padding: 0 10px;
+}
+
+.chapter-pagination__button:hover,
+.chapter-pagination__button:focus-visible,
+.chapter-pagination__button.is-active {
+  background: #2e5b4e;
+  border-color: #221b16;
+  color: #fffaf1;
+}
+
 .serial-feature-card {
   display: grid;
   gap: 22px;
@@ -6385,6 +6423,10 @@ body.station-paper-page.caption-product-page {
     justify-self: center;
     max-width: 150px;
     width: min(44vw, 150px);
+  }
+
+  .chapter-pagination {
+    justify-content: flex-start;
   }
 
   .station-paper-page .phone-visual,
