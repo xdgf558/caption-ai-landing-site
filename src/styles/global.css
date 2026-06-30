@@ -6383,6 +6383,44 @@ body.station-paper-page.caption-product-page {
     overflow-wrap: anywhere;
   }
 
+  .station-paper-page .serials-bookshelf {
+    gap: 18px;
+    overflow: hidden;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .serials-bookshelf__intro {
+    gap: 12px;
+  }
+
+  .serials-bookshelf__intro p {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .serials-bookshelf__filters {
+    flex-wrap: nowrap;
+    margin-left: -18px;
+    margin-right: -18px;
+    overflow-x: auto;
+    padding: 2px 18px 8px;
+    scroll-padding-inline: 18px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .serials-bookshelf__filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .serials-bookshelf__filters button {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 7px 12px;
+    white-space: nowrap;
+  }
+
   .serial-card-grid,
   .serial-detail-grid,
   .serial-feature-card,
@@ -6415,14 +6453,79 @@ body.station-paper-page.caption-product-page {
   .serials-bookshelf__rail {
     border-left-width: 0;
     border-top: 4px solid #2e5b4e;
+    display: flex;
+    gap: 10px;
+    margin-left: -18px;
+    margin-right: -18px;
+    overflow-x: auto;
     padding-left: 0;
-    padding-top: 14px;
+    padding: 12px 18px 7px;
+    scroll-padding-inline: 18px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .serials-bookshelf__rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .serials-bookshelf__book {
+    box-shadow: 3px 3px 0 rgba(34, 27, 22, 0.1);
+    flex: 0 0 min(74vw, 252px);
+    min-height: 66px;
+    padding: 11px 12px;
+  }
+
+  .serials-bookshelf__book:hover,
+  .serials-bookshelf__book:focus-visible,
+  .serials-bookshelf__book.is-active {
+    box-shadow: 4px 4px 0 rgba(46, 91, 78, 0.16);
+    transform: none;
+  }
+
+  .serials-bookshelf__book strong {
+    font-size: 16px;
+  }
+
+  .serials-bookshelf__previews {
+    min-width: 0;
+  }
+
+  .serials-bookshelf__preview {
+    gap: 14px;
   }
 
   .serials-bookshelf__thumb {
     justify-self: center;
-    max-width: 150px;
-    width: min(44vw, 150px);
+    max-width: 156px;
+    width: min(44vw, 156px);
+  }
+
+  .serials-bookshelf__copy {
+    gap: 10px;
+  }
+
+  .serials-bookshelf__copy h2 {
+    font-size: 32px;
+    line-height: 1.12;
+  }
+
+  .serials-bookshelf__copy > p {
+    display: -webkit-box;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+  }
+
+  .serials-bookshelf__meta {
+    gap: 6px;
+  }
+
+  .serials-bookshelf__meta span {
+    font-size: 11px;
+    padding: 5px 8px;
   }
 
   .chapter-pagination {

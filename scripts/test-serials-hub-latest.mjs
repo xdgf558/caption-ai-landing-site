@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('../src/components/SerialsHubPage.astro', import.meta.url), 'utf8');
+const styles = await readFile(new URL('../src/styles/global.css', import.meta.url), 'utf8');
 
 assert.ok(
   source.includes('data-backend-latest-series'),
@@ -38,6 +39,19 @@ assert.ok(
 assert.ok(
   source.includes('runWhenDomReady(hydrateBackendLatestChapters);'),
   'Backend latest chapter hydration should run through the DOM-ready helper.'
+);
+assert.ok(
+  styles.includes('.station-paper-page .serials-bookshelf') &&
+    styles.includes('.serials-bookshelf__filters') &&
+    styles.includes('overflow-x: auto') &&
+    styles.includes('scroll-padding-inline: 18px'),
+  'Mobile serial bookshelf should keep category controls horizontally scrollable.'
+);
+assert.ok(
+  styles.includes('.serials-bookshelf__book') &&
+    styles.includes('flex: 0 0 min(74vw, 252px)') &&
+    styles.includes('-webkit-line-clamp: 4'),
+  'Mobile serial bookshelf should use compact rail cards and clamp preview copy.'
 );
 
 console.log('serials hub latest chapter tests passed');
