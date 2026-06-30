@@ -4,7 +4,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { snapCopyProduct } from '../data/products/caption-ai';
 import { stationCatRadarProduct } from '../data/products/stationcat-radar';
 import { xFollowCleanerProduct } from '../data/products/x-follow-cleaner';
-import { storyCatProduct } from '../data/products/storycat';
 import { simpleCutProProduct } from '../data/products/simplecut-pro';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
@@ -69,12 +68,10 @@ const copy = {
     downloadMac: 'Download for Mac',
     downloadExtension: 'Download ZIP',
     snapcopyDesc: '把日常照片變成更容易分享的一句話。',
-    storycatDesc: '建立主角、選擇模板，進入一部會回應你的 AI 互動故事。',
     simplecutDesc: '在本機時間線剪切影片、對齊音訊、預覽轉場，並匯出輕量成片。',
     radarDesc: '把公開資料源和關鍵詞整理成創作者選題方向。',
     followCleanerDesc: '低頻檢查 X 關注列表，本地保存結果，並匯出 CSV / JSON。',
     snapcopyStatus: 'App Store 上架',
-    storycatStatus: 'iOS testing soon',
     simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: '查看工具',
     simplecutDownload: '下載版本',
@@ -137,12 +134,10 @@ const copy = {
     downloadMac: 'Download for Mac',
     downloadExtension: 'Download ZIP',
     snapcopyDesc: '把日常照片变成更容易分享的一句话。',
-    storycatDesc: '创建主角、选择模板，进入一部会回应你的 AI 互动故事。',
     simplecutDesc: '在本机时间线剪切视频、对齐音频、预览转场，并导出轻量成片。',
     radarDesc: '把公开资料源和关键词整理成创作者选题方向。',
     followCleanerDesc: '低频检查 X 关注列表，本地保存结果，并导出 CSV / JSON。',
     snapcopyStatus: 'App Store 上架',
-    storycatStatus: 'iOS testing soon',
     simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: '查看工具',
     simplecutDownload: '下载版本',
@@ -205,12 +200,10 @@ const copy = {
     downloadMac: 'Download for Mac',
     downloadExtension: 'Download ZIP',
     snapcopyDesc: 'Turn everyday photos into a sentence that is easier to share.',
-    storycatDesc: 'Create a protagonist and enter a playable AI story that responds to your choices.',
     simplecutDesc: 'Cut clips on a local timeline, align audio, preview transitions, and export lightweight edits.',
     radarDesc: 'Turn public sources and keywords into clearer directions for creator topics.',
     followCleanerDesc: 'Review your X following list locally and export CSV / JSON results.',
     snapcopyStatus: 'App Store release',
-    storycatStatus: 'iOS testing soon',
     simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: 'View App',
     simplecutDownload: 'Download',
@@ -273,12 +266,10 @@ const copy = {
     downloadMac: 'Download for Mac',
     downloadExtension: 'Download ZIP',
     snapcopyDesc: '日常写真を、共有しやすい一文に変えます。',
-    storycatDesc: '主人公を作り、選択に反応する AI 物語に入ります。',
     simplecutDesc: 'ローカルのタイムラインでカット、音声調整、転換確認、軽い動画書き出しを行えます。',
     radarDesc: '公開情報源とキーワードを、クリエイター向けのテーマに整理します。',
     followCleanerDesc: 'X のフォロー一覧をローカルで見直し、CSV / JSON で書き出します。',
     snapcopyStatus: 'App Store 公開中',
-    storycatStatus: 'iOS testing soon',
     simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: 'アプリを見る',
     simplecutDownload: 'ダウンロード',
@@ -313,8 +304,6 @@ const paths = {
     notes: '/novel/',
     snapcopy: snapCopyProduct.zhHantProductPath,
     snapcopyTest: '/zh-hant/apps/caption-ai/download/',
-    storycat: storyCatProduct.zhHantProductPath,
-    storycatTest: `${storyCatProduct.zhHantProductPath}${storyCatProduct.testFlightAnchor}`,
     simplecut: simpleCutProProduct.zhHantProductPath,
     simplecutDownload: simpleCutProProduct.zhHantDownloadPagePath,
     radar: stationCatRadarProduct.zhHantProductPath,
@@ -328,8 +317,6 @@ const paths = {
     notes: '/novel/',
     snapcopy: snapCopyProduct.zhHansProductPath,
     snapcopyTest: '/zh-hans/apps/caption-ai/download/',
-    storycat: storyCatProduct.zhHansProductPath,
-    storycatTest: `${storyCatProduct.zhHansProductPath}${storyCatProduct.testFlightAnchor}`,
     simplecut: simpleCutProProduct.zhHansProductPath,
     simplecutDownload: simpleCutProProduct.zhHansDownloadPagePath,
     radar: stationCatRadarProduct.zhHansProductPath,
@@ -343,8 +330,6 @@ const paths = {
     notes: '/novel/',
     snapcopy: snapCopyProduct.productPath,
     snapcopyTest: '/apps/caption-ai/download/',
-    storycat: storyCatProduct.productPath,
-    storycatTest: `${storyCatProduct.productPath}${storyCatProduct.testFlightAnchor}`,
     simplecut: simpleCutProProduct.productPath,
     simplecutDownload: simpleCutProProduct.downloadPagePath,
     radar: stationCatRadarProduct.productPath,
@@ -358,8 +343,6 @@ const paths = {
     notes: '/novel/',
     snapcopy: snapCopyProduct.jaProductPath,
     snapcopyTest: '/ja/apps/caption-ai/download/',
-    storycat: storyCatProduct.jaProductPath,
-    storycatTest: `${storyCatProduct.jaProductPath}${storyCatProduct.testFlightAnchor}`,
     simplecut: simpleCutProProduct.jaProductPath,
     simplecutDownload: simpleCutProProduct.jaDownloadPagePath,
     radar: stationCatRadarProduct.jaProductPath,
@@ -501,21 +484,6 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
           <div class="paper-actions">
             <a class="ticket-button ticket-button--primary" href={paths.snapcopy}>{copy.viewApp}</a>
             <a class="ticket-button ticket-button--secondary" href={paths.snapcopyTest}>{copy.joinTest}</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="bench-card">
-        <div class="bench-card__icon bench-card__icon--storycat">
-          <img src={storyCatProduct.assets.icon} alt="StoryCat app icon" width="368" height="370" loading="lazy" />
-        </div>
-        <div class="bench-card__copy">
-          <span class="paper-stamp">{copy.storycatStatus}</span>
-          <h3>StoryCat</h3>
-          <p>{copy.storycatDesc}</p>
-          <div class="paper-actions">
-            <a class="ticket-button ticket-button--primary" href={paths.storycat}>{copy.viewApp}</a>
-            <a class="ticket-button ticket-button--secondary" href={paths.storycatTest}>{copy.joinTest}</a>
           </div>
         </div>
       </article>
