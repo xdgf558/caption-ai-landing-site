@@ -1861,6 +1861,31 @@ const formatDynamicChapterNumber = (chapterNumber, locale) => {
 const getDynamicAccessLabel = (accessLevel, locale) =>
   dynamicAccessLabelsByLocale[locale]?.[accessLevel] || dynamicAccessLabels[accessLevel] || accessLevel;
 
+const getDynamicSeriesAccessSummary = (accessLevel, locale, paymentSettings = null) => {
+  const accessLabel = getDynamicAccessLabel(accessLevel, locale);
+  if (!paymentSettings || paymentSettings.priceMode === 'free') return accessLabel;
+
+  const freeChapters = normalizePositiveInteger(paymentSettings.freeChapters, 0);
+  const paidStartChapter = freeChapters + 1;
+  const chapterCredits = normalizePositiveInteger(paymentSettings.chapterCredits, 0);
+
+  if (paymentSettings.priceMode === 'chapter-paid' && freeChapters > 0 && chapterCredits > 0) {
+    if (locale === 'en') return `First ${freeChapters} chapters free, ${chapterCredits} credit / chapter from Chapter ${paidStartChapter}`;
+    if (locale === 'ja') return `第${paidStartChapter}章から ${chapterCredits} 読書ポイント / 章（最初の${freeChapters}章は無料）`;
+    if (locale === 'zh-Hans') return `前 ${freeChapters} 章免费，第 ${paidStartChapter} 章起 ${chapterCredits} 阅读点 / 章`;
+    return `前 ${freeChapters} 章免費，第 ${paidStartChapter} 章起 ${chapterCredits} 閱讀點 / 章`;
+  }
+
+  if (chapterCredits > 0 && accessLevel !== 'free') {
+    if (locale === 'en') return `${accessLabel} · ${chapterCredits} credit / chapter`;
+    if (locale === 'ja') return `${accessLabel} · ${chapterCredits} 読書ポイント / 章`;
+    if (locale === 'zh-Hans') return `${accessLabel} · ${chapterCredits} 阅读点 / 章`;
+    return `${accessLabel} · ${chapterCredits} 閱讀點 / 章`;
+  }
+
+  return accessLabel;
+};
+
 const normalizeContentPayload = (payload = {}) => {
   const entryType = normalizeContentEntryType(payload.entryType || payload.type);
   const locale = normalizeContentLocale(payload.locale || payload.language);
@@ -12441,12 +12466,13 @@ const renderDynamicBookmarkScript = (route, serial, chapter) => {
   </script>`;
 };
 
-const renderDynamicNovelSeries = (route, serial, body, chapters) => {
+const renderDynamicNovelSeries = (route, serial, body, chapters, paymentSettings = null) => {
   const copy = dynamicContentCopy[route.locale];
   const firstChapter = chapters[0];
   const latestChapter = chapters[chapters.length - 1];
   const summary = firstPlainSummary([serial.subtitle, serial.description, serial.excerpt], 420);
   const fallbackBody = firstPlainSummary([serial.excerpt, serial.description], 1200);
+  const accessSummary = getDynamicSeriesAccessSummary(serial.access_level, route.locale, paymentSettings);
   return `<section class="hero hero--novel">
       <div class="hero-copy">
         <p class="kicker">${escapeHtml(copy.status)}</p>
@@ -12454,7 +12480,7 @@ const renderDynamicNovelSeries = (route, serial, body, chapters) => {
         ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
         <div class="meta">
           <span class="pill">${escapeHtml(copy.author)}: ${escapeHtml(serial.author_name || 'Station Cat')}</span>
-          <span>${escapeHtml(copy.access)}: ${escapeHtml(getDynamicAccessLabel(serial.access_level, route.locale))}</span>
+          <span>${escapeHtml(copy.access)}: ${escapeHtml(accessSummary)}</span>
         </div>
         <div class="button-row">
           ${firstChapter ? `<a class="button button-primary" href="${escapeHtml(dynamicChapterPath(route, serial.slug, firstChapter.slug))}">${escapeHtml(copy.readFirst)}</a>` : ''}
@@ -12685,12 +12711,13 @@ const handleDynamicFrontendContent = async (request, env) => {
   if (route.kind === 'novel-series') {
     const serial = await getPublishedContentEntry(db, { entryType: 'novel_series', locale: route.locale, slug: route.seriesSlug });
     if (!serial) return null;
-    const [body, chapters] = await Promise.all([
+    const [body, chapters, paymentSettings] = await Promise.all([
       readPublicEntryBody(env, serial),
-      listPublishedContentEntries(db, { entryType: 'novel_chapter', locale: route.locale, parentSlug: serial.slug, limit: 100 })
+      listPublishedContentEntries(db, { entryType: 'novel_chapter', locale: route.locale, parentSlug: serial.slug, limit: 100 }),
+      resolveSeriesPaymentSettings(db, serial.slug, env, { locale: route.locale })
     ]);
     return dynamicHtmlResponse(request, {
-      body: renderDynamicNovelSeries(route, serial, body, chapters),
+      body: renderDynamicNovelSeries(route, serial, body, chapters, paymentSettings),
       canonicalPath: dynamicCanonicalPath(route),
       description: firstPlainSummary([serial.description, serial.excerpt], 260),
       lang: route.locale,

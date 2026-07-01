@@ -172,6 +172,13 @@ assert.match(seriesHtml, /href="\/novel\/book\/chapter\/ch1\/"/);
 assert.match(seriesHtml, /href="\/novel\/book\/chapter\/ch3\/"/);
 assert.match(seriesHtml, /href="\/novel\/"/);
 
+const pricedSeriesHtml = hooks.renderDynamicNovelSeries(novelSeriesRoute, serial, { html: '<p>Body</p>' }, chapters, {
+  freeChapters: 20,
+  priceMode: 'chapter-paid',
+  chapterCredits: 1
+});
+assert.match(pricedSeriesHtml, /前 20 章免費，第 21 章起 1 閱讀點 \/ 章/);
+
 const manyChapters = Array.from({ length: 10 }, (_, index) => ({
   access_level: 'free',
   description: '',
