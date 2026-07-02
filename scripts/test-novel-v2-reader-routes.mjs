@@ -116,7 +116,15 @@ assert.deepEqual(novelChapterRoute, {
 assert.equal(hooks.parseDynamicContentRoute('/novel/book/anything/'), null);
 assert.equal(hooks.parseDynamicContentRoute('/novel/book/chapter/'), null);
 assert.equal(hooks.parseDynamicContentRoute('/novel/book/chapter/ch1/extra/'), null);
-assert.equal(hooks.parseDynamicContentRoute('/en/novel/book/chapter/ch1/'), null);
+assert.deepEqual(hooks.parseDynamicContentRoute('/en/novel/book/chapter/ch1/'), {
+  basePath: '/en/novel/',
+  chapterPathSegment: 'chapter',
+  chapterSlug: 'ch1',
+  kind: 'novel-chapter',
+  locale: 'en',
+  readerVersion: 'v2',
+  seriesSlug: 'book'
+});
 assert.equal(hooks.parseDynamicContentRoute('/zh-hant/novel/book/chapter/ch1/'), null);
 assert.equal(hooks.parseDynamicContentRoute('/works/book/ch1/extra/'), null);
 
@@ -137,8 +145,12 @@ assert.equal(hooks.dynamicChapterPath(worksChapterRoute, 'book', 'ch2'), '/works
 
 const contentSeriesRow = { entry_type: 'novel_series', locale: 'zh-Hant', slug: 'book' };
 const contentChapterRow = { entry_type: 'novel_chapter', locale: 'zh-Hant', parent_slug: 'book', slug: 'ch1' };
+const englishContentSeriesRow = { entry_type: 'novel_series', locale: 'en', slug: 'book' };
+const englishContentChapterRow = { entry_type: 'novel_chapter', locale: 'en', parent_slug: 'book', slug: 'ch1' };
 assert.equal(hooks.contentEntryPublicPath(contentSeriesRow), '/novel/book/');
 assert.equal(hooks.contentEntryPublicPath(contentChapterRow), '/novel/book/chapter/ch1/');
+assert.equal(hooks.contentEntryPublicPath(englishContentSeriesRow), '/en/novel/book/');
+assert.equal(hooks.contentEntryPublicPath(englishContentChapterRow), '/en/novel/book/chapter/ch1/');
 assert.equal(hooks.contentEntryLegacyWorksPath(contentSeriesRow), '/zh-hant/works/book/');
 assert.equal(hooks.contentEntryLegacyWorksPath(contentChapterRow), '/zh-hant/works/book/ch1/');
 

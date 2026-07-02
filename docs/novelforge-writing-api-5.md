@@ -13,6 +13,12 @@ X-NovelForge-Contract: station-cat-novelforge-analytics.v1
 
 `X-NovelForge-Contract` 可以省略。为了兼容旧客户端，也接受 `station-cat-novelforge-import.v1`。章节正文接口也接受 `station-cat-novelforge-content.v1`。如果传入其他 contract，会返回 `NOVELFORGE_CONTRACT_HEADER_UNSUPPORTED`。
 
+英文翻译同步接口也使用同一个 Bearer token，并接受：
+
+```http
+X-NovelForge-Contract: station-cat-novelforge-translation.v1
+```
+
 ## Endpoints
 
 ### 单章正文
@@ -38,6 +44,54 @@ GET /api/novelforge/chapters/:seriesSlug/:chapterSlug/content
   "source": "markdown-r2"
 }
 ```
+
+### 英文翻译同步
+
+```http
+POST /api/novelforge/translations/english
+```
+
+这个接口会把已发布的中文小说内容同步生成英文版内容。英文版使用同一组作品 slug / 章节 slug，写入 `locale=en`，访问路径为：
+
+```text
+/en/novel/:seriesSlug/
+/en/novel/:seriesSlug/chapter/:chapterSlug/
+```
+
+请求体：
+
+```json
+{
+  "sourceLocale": "zh-Hant",
+  "seriesSlug": "cmqjfju1300008z3wyh66ynvw",
+  "chapterSlugs": ["chap-offline-future-001"],
+  "limit": 20,
+  "overwrite": false
+}
+```
+
+- `sourceLocale`: 源语言，默认 `zh-Hant`。
+- `seriesSlug`: 可选。传入后只同步指定作品。
+- `chapterSlug` / `chapterSlugs`: 可选。传入后只同步指定章节；系列信息仍会同步。
+- `limit`: 最多同步多少条内容，包含系列本身，默认 100。
+- `overwrite`: 已存在英文版时是否重新生成，默认 `false`。
+
+返回：
+
+```json
+{
+  "ok": true,
+  "sourceLocale": "zh-Hant",
+  "targetLocale": "en",
+  "model": "@cf/meta/llama-3.1-8b-instruct",
+  "translated": 3,
+  "skipped": 1,
+  "results": [],
+  "errors": []
+}
+```
+
+NovelForge 正常发布中文内容时，网站 Worker 会在发布响应后自动触发英文同步；这个 POST 接口主要用于手动回填、重新生成或软件端主动同步。
 
 ### 单章统计
 
@@ -117,6 +171,9 @@ GET /api/novelforge/analytics/trend?seriesSlug=book&windowDays=30&limit=50
 - `NOVELFORGE_TOKEN_NOT_CONFIGURED`: 生产环境没有配置 `NOVELFORGE_PUBLISH_TOKEN`。
 - `NOVELFORGE_TOKEN_INVALID`: Bearer token 缺失或不正确。
 - `NOVELFORGE_CONTRACT_HEADER_UNSUPPORTED`: contract header 不受支持。
+- `NOVEL_TRANSLATION_AI_NOT_CONFIGURED`: Workers AI 绑定或模型配置缺失。
+- `NOVEL_TRANSLATION_EMPTY`: AI 返回了空翻译结果。
+- `NOVEL_TRANSLATION_SYNC_FAILED`: 英文翻译同步失败。
 - `CONTENT_DATABASE_NOT_CONFIGURED`: D1 绑定缺失。
 - `CONTENT_TABLES_NOT_READY`: 内容表未初始化。
 - `CHAPTER_STATS_NOT_READY`: 需要先应用 `migrations/0015_chapter_stats.sql`。

@@ -1397,8 +1397,13 @@ const novelForgeImportContract = 'station-cat-novelforge-import';
 const novelForgeImportContractHeader = 'station-cat-novelforge-import.v1';
 const novelForgeAnalyticsContractHeader = 'station-cat-novelforge-analytics.v1';
 const novelForgeContentContractHeader = 'station-cat-novelforge-content.v1';
+const novelForgeTranslationContractHeader = 'station-cat-novelforge-translation.v1';
 const novelForgePackageFormat = 'novelforge-standard-publish-package';
 const maxNovelForgeImportBytes = 8 * 1024 * 1024;
+const defaultNovelTranslationModel = '@cf/meta/llama-3.1-8b-instruct';
+const defaultNovelTranslationSourceLocale = 'zh-Hant';
+const defaultNovelTranslationTargetLocale = 'en';
+const novelTranslationChunkMaxLength = 1800;
 
 const parseStoredJson = (value, fallback) => {
   try {
@@ -1619,9 +1624,10 @@ const contentEntryToJson = (row) => ({
 
 const contentEntryNovelV2Path = (row) => {
   if (!row) return '';
-  if (row.entry_type === 'novel_series' && row.slug) return `/novel/${row.slug}/`;
+  const basePath = novelV2BasePathForLocale(row.locale);
+  if (row.entry_type === 'novel_series' && row.slug) return `${basePath}${row.slug}/`;
   if (row.entry_type === 'novel_chapter' && row.parent_slug && row.slug) {
-    return `/novel/${row.parent_slug}/chapter/${row.slug}/`;
+    return `${basePath}${row.parent_slug}/chapter/${row.slug}/`;
   }
   return '';
 };
@@ -1652,6 +1658,14 @@ const novelForgeRemoteIdForEntry = (row) => {
 };
 
 const novelForgeCoverRemoteIdForSeries = (row) => (row?.id ? `cover_${row.id}` : '');
+
+const novelV2BasePathForLocale = (locale) => {
+  const normalized = normalizeContentLocale(locale);
+  if (normalized === 'zh-Hant') return '/novel/';
+  if (normalized === 'zh-Hans') return '/zh-hans/novel/';
+  if (normalized === 'ja') return '/ja/novel/';
+  return '/en/novel/';
+};
 
 const parseNovelForgeRemoteEntryId = (remoteId, entryType) => {
   const value = cleanText(remoteId, 100);
@@ -9698,6 +9712,13 @@ const requireNovelForgeContentToken = (request, env) =>
     allowedContracts: [novelForgeImportContractHeader, novelForgeAnalyticsContractHeader, novelForgeContentContractHeader]
   });
 
+const requireNovelForgeTranslationToken = (request, env) => {
+  if (isLocalHostnameRequest(request) && hasLocalAdminBypass(env)) return null;
+  return requireNovelForgePublishToken(request, env, {
+    allowedContracts: [novelForgeImportContractHeader, novelForgeTranslationContractHeader]
+  });
+};
+
 const readNovelForgeImportPayload = async (request) => {
   const contentLength = Number.parseInt(request.headers.get('content-length') || '0', 10);
   if (contentLength > maxNovelForgeImportBytes) {
@@ -9831,8 +9852,8 @@ const getNovelForgeBody = (payload) => {
   return '';
 };
 
-const novelForgePublicSeriesUrl = (origin, _locale, slug) => {
-  return `${origin}/novel/${slug}/`;
+const novelForgePublicSeriesUrl = (origin, locale, slug) => {
+  return `${origin}${novelV2BasePathForLocale(locale)}${slug}/`;
 };
 
 const novelForgePreviewUrl = (origin, entryId) => `${origin}/admin-v2/?contentId=${encodeURIComponent(String(entryId))}`;
@@ -10293,6 +10314,445 @@ const handleNovelForgeChapterContent = async (request, env, route) => {
   }
 };
 
+const getNovelTranslationModel = (env) =>
+  cleanText(env.NOVEL_TRANSLATION_MODEL || defaultNovelTranslationModel, 120) || defaultNovelTranslationModel;
+
+const isNovelTranslationAutoSyncEnabled = (env) => cleanText(env.NOVEL_TRANSLATION_AUTO_SYNC || '1', 10) !== '0';
+
+const extractAiText = (result) => {
+  if (typeof result === 'string') return result;
+  if (!result || typeof result !== 'object') return '';
+  return (
+    result.response ||
+    result.text ||
+    result.output_text ||
+    result.result?.response ||
+    result.result?.text ||
+    result.choices?.[0]?.message?.content ||
+    result.choices?.[0]?.text ||
+    ''
+  );
+};
+
+const stripAiTranslationWrapper = (value) =>
+  String(value || '')
+    .trim()
+    .replace(/^```(?:markdown|md|text)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
+
+const splitNovelTranslationChunks = (value, maxLength = novelTranslationChunkMaxLength) => {
+  const text = String(value || '').trim();
+  if (!text) return [];
+  const chunks = [];
+  const pushLongText = (segment) => {
+    let remaining = segment.trim();
+    while (remaining.length > maxLength) {
+      let cut = remaining.lastIndexOf('\n', maxLength);
+      if (cut < Math.floor(maxLength * 0.55)) cut = remaining.lastIndexOf('。', maxLength);
+      if (cut < Math.floor(maxLength * 0.55)) cut = remaining.lastIndexOf('.', maxLength);
+      if (cut < Math.floor(maxLength * 0.55)) cut = maxLength;
+      chunks.push(remaining.slice(0, cut).trim());
+      remaining = remaining.slice(cut).trim();
+    }
+    if (remaining) chunks.push(remaining);
+  };
+
+  const paragraphs = text.split(/\n{2,}/);
+  let current = '';
+  for (const paragraph of paragraphs) {
+    const trimmed = paragraph.trim();
+    if (!trimmed) continue;
+    if (trimmed.length > maxLength) {
+      if (current) {
+        chunks.push(current.trim());
+        current = '';
+      }
+      pushLongText(trimmed);
+      continue;
+    }
+    const next = current ? `${current}\n\n${trimmed}` : trimmed;
+    if (next.length > maxLength) {
+      if (current) chunks.push(current.trim());
+      current = trimmed;
+    } else {
+      current = next;
+    }
+  }
+  if (current) chunks.push(current.trim());
+  return chunks.filter(Boolean);
+};
+
+const translateNovelTextToEnglish = async (env, sourceText, options = {}) => {
+  const text = String(sourceText || '').trim();
+  if (!text) return '';
+  if (!env.AI || typeof env.AI.run !== 'function') {
+    const error = new Error('Workers AI is not configured for novel translation.');
+    error.code = 'NOVEL_TRANSLATION_AI_NOT_CONFIGURED';
+    error.status = 503;
+    throw error;
+  }
+
+  const model = getNovelTranslationModel(env);
+  const chunks = splitNovelTranslationChunks(text, normalizePositiveInteger(options.chunkMaxLength, novelTranslationChunkMaxLength));
+  const context = cleanText(options.context || 'Station Cat serial fiction', 300);
+  const field = cleanText(options.field || 'content', 80);
+  const translations = [];
+
+  for (const chunk of chunks) {
+    const prompt = [
+      'Translate the following Chinese web-novel text into natural English.',
+      'Preserve names, paragraph breaks, markdown headings/lists, timeline details, and the story voice.',
+      'Do not summarize, explain, add notes, or wrap the answer in code fences. Return only the English translation.',
+      `Context: ${context}`,
+      `Field: ${field}`,
+      'Text:',
+      chunk
+    ].join('\n\n');
+    const result = await env.AI.run(model, { prompt });
+    const translated = stripAiTranslationWrapper(extractAiText(result));
+    if (!translated) {
+      const error = new Error('Workers AI returned an empty translation.');
+      error.code = 'NOVEL_TRANSLATION_EMPTY';
+      error.status = 502;
+      throw error;
+    }
+    translations.push(translated);
+  }
+
+  return translations.join('\n\n').trim();
+};
+
+const readContentEntryTextBody = async (env, entry) => {
+  if (!entry) return { body: '', bodyFormat: 'empty', source: 'empty' };
+  if (entry.entry_type === 'novel_chapter') return readNovelForgeChapterContentBody(env, entry);
+
+  const bucket = getContentBucket(env);
+  if (!bucket && (entry.markdown_r2_key || entry.html_r2_key)) {
+    const error = new Error('CONTENT_BUCKET is not configured, so content body text cannot be loaded.');
+    error.code = 'CONTENT_BUCKET_NOT_CONFIGURED';
+    error.status = 503;
+    throw error;
+  }
+
+  if (!bucket) return { body: entry.description || entry.excerpt || '', bodyFormat: 'metadata', source: 'metadata' };
+
+  const markdown = await readContentObjectText(bucket, entry.markdown_r2_key, 'Markdown body');
+  if (markdown) return { body: markdown, bodyFormat: 'markdown', source: 'markdown-r2' };
+
+  const html = await readContentObjectText(bucket, entry.html_r2_key, 'HTML body');
+  if (html) return { body: plainTextFromHtml(html), bodyFormat: 'html-text', source: 'html-r2' };
+
+  return { body: entry.description || entry.excerpt || '', bodyFormat: 'metadata', source: 'metadata' };
+};
+
+const findTranslatedContentEntry = (db, sourceEntry, targetLocale = defaultNovelTranslationTargetLocale) =>
+  findContentEntryBySlug(db, {
+    entryType: sourceEntry.entry_type,
+    locale: targetLocale,
+    parentSlug: sourceEntry.parent_slug || '',
+    slug: sourceEntry.slug
+  });
+
+const translateContentEntryToEnglishPayload = async (env, sourceEntry) => {
+  const sourceBody = await readContentEntryTextBody(env, sourceEntry);
+  const sourceMetadata = parseStoredJson(sourceEntry.metadata_json, {});
+  const contextParts = [
+    sourceEntry.entry_type === 'novel_series' ? 'novel series metadata' : 'novel chapter',
+    sourceEntry.title,
+    sourceEntry.parent_slug ? `series ${sourceEntry.parent_slug}` : ''
+  ].filter(Boolean);
+  const context = contextParts.join(' · ');
+  const translatedTitle = await translateNovelTextToEnglish(env, sourceEntry.title, {
+    chunkMaxLength: 500,
+    context,
+    field: 'title'
+  });
+  const translatedSubtitle = sourceEntry.subtitle
+    ? await translateNovelTextToEnglish(env, sourceEntry.subtitle, {
+        chunkMaxLength: 700,
+        context,
+        field: 'subtitle'
+      })
+    : '';
+  const sourceMarkdown = sourceBody.body || sourceEntry.description || sourceEntry.excerpt || '';
+  const translatedMarkdown = sourceMarkdown
+    ? await translateNovelTextToEnglish(env, sourceMarkdown, {
+        context,
+        field: sourceEntry.entry_type === 'novel_series' ? 'series description' : 'chapter body'
+      })
+    : '';
+  const translatedDescription = firstPlainSummary([translatedMarkdown, translatedSubtitle], 1200);
+  const translatedExcerpt = firstPlainSummary([translatedMarkdown, translatedSubtitle], 1000);
+  const translatedWordCount = countContentWords(translatedMarkdown);
+  const now = new Date().toISOString();
+
+  return normalizeContentPayload({
+    accessLevel: sourceEntry.access_level,
+    authorName: sourceEntry.author_name || 'Station Cat',
+    bodyFormat: 'markdown',
+    chapterNumber: sourceEntry.chapter_number,
+    coverAlt: sourceEntry.cover_alt ? `${translatedTitle} cover` : '',
+    coverR2Key: sourceEntry.cover_r2_key,
+    description: translatedDescription,
+    entryType: sourceEntry.entry_type,
+    excerpt: translatedExcerpt,
+    featured: sourceEntry.featured,
+    html: translatedMarkdown ? renderSimpleMarkdownToHtml(translatedMarkdown) : '',
+    locale: defaultNovelTranslationTargetLocale,
+    markdown: translatedMarkdown,
+    metadata: {
+      ...sourceMetadata,
+      translation: {
+        generatedAt: now,
+        model: getNovelTranslationModel(env),
+        sourceEntryId: sourceEntry.id,
+        sourceLocale: sourceEntry.locale,
+        sourceUpdatedAt: sourceEntry.updated_at || '',
+        targetLocale: defaultNovelTranslationTargetLocale
+      }
+    },
+    parentSlug: sourceEntry.parent_slug || '',
+    pricing: parseStoredJson(sourceEntry.pricing_json, {}),
+    publishedAt: sourceEntry.published_at || now,
+    slug: sourceEntry.slug,
+    sortOrder: normalizePositiveInteger(sourceEntry.sort_order, 0),
+    sourceKind: 'translation',
+    sourceRef: `translation:${sourceEntry.id}`,
+    status: sourceEntry.status,
+    subtitle: translatedSubtitle,
+    tags: parseStoredJson(sourceEntry.tags_json, []),
+    title: translatedTitle,
+    visibility: sourceEntry.visibility || 'public',
+    volumeTitle: sourceEntry.volume_title
+      ? await translateNovelTextToEnglish(env, sourceEntry.volume_title, {
+          chunkMaxLength: 500,
+          context,
+          field: 'volume title'
+        })
+      : '',
+    wordCount: translatedWordCount || normalizePositiveInteger(sourceEntry.word_count, 0)
+  });
+};
+
+const translateAndPersistContentEntryToEnglish = async (db, env, sourceEntry, options = {}) => {
+  if (!sourceEntry || sourceEntry.locale === defaultNovelTranslationTargetLocale) {
+    return { entry: null, message: 'Source entry is already English.', status: 'skipped' };
+  }
+
+  const existing = await findTranslatedContentEntry(db, sourceEntry, defaultNovelTranslationTargetLocale);
+  if (existing && !options.overwrite) {
+    return {
+      entry: existing,
+      message: 'English translation already exists.',
+      status: 'skipped'
+    };
+  }
+
+  const translatedEntry = await translateContentEntryToEnglishPayload(env, sourceEntry);
+  const { saved } = await persistContentEntry(db, env, translatedEntry, {
+    actorEmail: options.actorEmail || 'translation-worker',
+    auditAction: 'novel_translation_sync',
+    auditMetadata: {
+      overwrite: Boolean(options.overwrite),
+      sourceEntryId: sourceEntry.id,
+      sourceLocale: sourceEntry.locale
+    },
+    revisionSummary: `English translation sync from entry #${sourceEntry.id}`
+  });
+
+  return {
+    entry: saved,
+    message: existing ? 'English translation updated.' : 'English translation created.',
+    status: existing ? 'updated' : 'created'
+  };
+};
+
+const getPublishedNovelSeriesForTranslation = async (db, options = {}) => {
+  const sourceLocale = normalizeContentLocale(options.sourceLocale || defaultNovelTranslationSourceLocale);
+  const seriesSlug = cleanSlug(options.seriesSlug || '', 160);
+  if (seriesSlug) {
+    const series = await getPublishedContentEntry(db, {
+      entryType: 'novel_series',
+      locale: sourceLocale,
+      slug: seriesSlug
+    });
+    return series ? [series] : [];
+  }
+  return listPublishedContentEntries(db, {
+    entryType: 'novel_series',
+    locale: sourceLocale,
+    limit: options.seriesLimit || 100
+  });
+};
+
+const getPublishedNovelChaptersForTranslation = async (db, options = {}) => {
+  const sourceLocale = normalizeContentLocale(options.sourceLocale || defaultNovelTranslationSourceLocale);
+  const seriesSlug = cleanSlug(options.seriesSlug || '', 160);
+  const chapterSlugs = [
+    ...(Array.isArray(options.chapterSlugs) ? options.chapterSlugs : []),
+    options.chapterSlug
+  ]
+    .map((slug) => cleanSlug(slug, 160))
+    .filter(Boolean);
+  if (!seriesSlug) return [];
+
+  if (chapterSlugs.length) {
+    const chapters = [];
+    for (const chapterSlug of chapterSlugs) {
+      const chapter = await getPublishedContentEntry(db, {
+        entryType: 'novel_chapter',
+        locale: sourceLocale,
+        parentSlug: seriesSlug,
+        slug: chapterSlug
+      });
+      if (chapter) chapters.push(chapter);
+    }
+    return chapters;
+  }
+
+  return listPublishedContentEntries(db, {
+    entryType: 'novel_chapter',
+    locale: sourceLocale,
+    parentSlug: seriesSlug,
+    limit: options.limit || 100
+  });
+};
+
+const syncPublishedNovelEnglishTranslations = async (env, options = {}) => {
+  const db = env.WAITLIST_DB;
+  if (!db) {
+    const error = new Error('Content database is not configured.');
+    error.code = 'CONTENT_DATABASE_NOT_CONFIGURED';
+    error.status = 500;
+    throw error;
+  }
+  if (!(await ensureContentTablesReady(db))) {
+    const error = new Error('Content tables are not initialized.');
+    error.code = 'CONTENT_TABLES_NOT_READY';
+    error.status = 503;
+    throw error;
+  }
+  if (!env.AI || typeof env.AI.run !== 'function') {
+    const error = new Error('Workers AI is not configured for novel translation.');
+    error.code = 'NOVEL_TRANSLATION_AI_NOT_CONFIGURED';
+    error.status = 503;
+    throw error;
+  }
+
+  const sourceLocale = normalizeContentLocale(options.sourceLocale || defaultNovelTranslationSourceLocale);
+  const limit = Math.min(Math.max(normalizePositiveInteger(options.limit, 100), 1), 200);
+  const results = [];
+  const errors = [];
+  let remaining = limit;
+
+  const sourceSeriesRows = await getPublishedNovelSeriesForTranslation(db, {
+    seriesLimit: limit,
+    seriesSlug: options.seriesSlug,
+    sourceLocale
+  });
+
+  for (const series of sourceSeriesRows) {
+    if (remaining <= 0) break;
+    try {
+      const result = await translateAndPersistContentEntryToEnglish(db, env, series, options);
+      results.push({
+        entryType: series.entry_type,
+        message: result.message,
+        parentSlug: series.parent_slug || '',
+        remoteId: novelForgeRemoteIdForEntry(result.entry),
+        slug: series.slug,
+        status: result.status,
+        title: result.entry?.title || series.title
+      });
+    } catch (error) {
+      errors.push({
+        entryType: series.entry_type,
+        message: error.message || 'Series translation failed.',
+        slug: series.slug
+      });
+    }
+    remaining -= 1;
+
+    const chapters = await getPublishedNovelChaptersForTranslation(db, {
+      chapterSlug: options.chapterSlug,
+      chapterSlugs: options.chapterSlugs,
+      limit: Math.min(100, Math.max(remaining, 1)),
+      seriesSlug: series.slug,
+      sourceLocale
+    });
+    for (const chapter of chapters) {
+      if (remaining <= 0) break;
+      try {
+        const result = await translateAndPersistContentEntryToEnglish(db, env, chapter, options);
+        results.push({
+          chapterNumber: chapter.chapter_number,
+          entryType: chapter.entry_type,
+          message: result.message,
+          parentSlug: chapter.parent_slug || '',
+          remoteId: novelForgeRemoteIdForEntry(result.entry),
+          slug: chapter.slug,
+          status: result.status,
+          title: result.entry?.title || chapter.title
+        });
+      } catch (error) {
+        errors.push({
+          chapterNumber: chapter.chapter_number,
+          entryType: chapter.entry_type,
+          message: error.message || 'Chapter translation failed.',
+          parentSlug: chapter.parent_slug || '',
+          slug: chapter.slug
+        });
+      }
+      remaining -= 1;
+    }
+  }
+
+  return {
+    errors,
+    limit,
+    model: getNovelTranslationModel(env),
+    results,
+    sourceLocale,
+    targetLocale: defaultNovelTranslationTargetLocale,
+    translated: results.filter((entry) => entry.status === 'created' || entry.status === 'updated').length,
+    skipped: results.filter((entry) => entry.status === 'skipped').length
+  };
+};
+
+const handleNovelForgeTranslationSync = async (request, env) => {
+  const tokenError = requireNovelForgeTranslationToken(request, env);
+  if (tokenError) return tokenError;
+
+  let payload = {};
+  try {
+    payload = await request.json();
+  } catch {
+    payload = {};
+  }
+
+  try {
+    const result = await syncPublishedNovelEnglishTranslations(env, {
+      actorEmail: 'translation-worker',
+      chapterSlug: payload.chapterSlug || payload.chapter,
+      chapterSlugs: payload.chapterSlugs,
+      limit: payload.limit,
+      overwrite: Boolean(payload.overwrite),
+      seriesSlug: payload.seriesSlug || payload.series,
+      sourceLocale: payload.sourceLocale || payload.locale || defaultNovelTranslationSourceLocale
+    });
+    return novelForgeImportJson({
+      ok: true,
+      ...result
+    });
+  } catch (error) {
+    return novelForgeImportError(error.message || 'Novel translation sync failed.', {
+      code: error.code || 'NOVEL_TRANSLATION_SYNC_FAILED',
+      status: error.status || 500
+    });
+  }
+};
+
 const handleNovelForgeAnalytics = async (request, env, route) => {
   const tokenError = requireNovelForgeAnalyticsToken(request, env);
   if (tokenError) return tokenError;
@@ -10613,7 +11073,7 @@ const resultForNovelForgeItem = ({ item, message, remoteId, status }) => ({
   status
 });
 
-const handleNovelForgeImport = async (request, env) => {
+const handleNovelForgeImport = async (request, env, ctx) => {
   const tokenError = requireNovelForgePublishToken(request, env);
   if (tokenError) return tokenError;
 
@@ -10643,6 +11103,7 @@ const handleNovelForgeImport = async (request, env) => {
   const itemResults = [];
   let entriesCreated = 0;
   let entriesUpdated = 0;
+  const importedChapterSlugs = [];
 
   try {
     const backupKey = await uploadNovelForgeImportBackup(env, normalized.requestId, bodyText);
@@ -10783,6 +11244,7 @@ const handleNovelForgeImport = async (request, env) => {
         },
         revisionSummary: `NovelForge import ${normalized.requestId}`
       });
+      if (saved.status === 'published') importedChapterSlugs.push(saved.slug);
       if (existingChapter) entriesUpdated += 1;
       else entriesCreated += 1;
       itemResults.push(
@@ -10816,6 +11278,26 @@ const handleNovelForgeImport = async (request, env) => {
     });
 
     const origin = new URL(request.url).origin;
+    if (
+      normalized.mode === 'publish' &&
+      series?.locale === defaultNovelTranslationSourceLocale &&
+      isNovelTranslationAutoSyncEnabled(env) &&
+      typeof ctx?.waitUntil === 'function'
+    ) {
+      ctx.waitUntil(
+        syncPublishedNovelEnglishTranslations(env, {
+          actorEmail,
+          chapterSlugs: importedChapterSlugs,
+          limit: Math.max(1, importedChapterSlugs.length + 1),
+          overwrite: true,
+          seriesSlug: series.slug,
+          sourceLocale: series.locale
+        }).catch((error) => {
+          console.error('Novel translation auto sync failed', error);
+        })
+      );
+    }
+
     return novelForgeImportJson({
       ok: true,
       remoteBookId: novelForgeRemoteIdForEntry(series),
@@ -11326,15 +11808,16 @@ const parseDynamicContentRoute = (pathname) => {
   }
 
   if (section === 'novel') {
-    if (hasLocalePrefix) return null;
+    locale = locale || 'zh-Hant';
+    if (hasLocalePrefix && locale !== defaultNovelTranslationTargetLocale) return null;
     const seriesSlug = cleanSlug(segments[offset + 1] || '', 160);
     const chapterSegment = segments[offset + 2];
     const chapterSlug = cleanSlug(segments[offset + 3] || '', 160);
     const segmentCount = segments.length - offset;
     const baseRoute = {
-      basePath: '/novel/',
+      basePath: hasLocalePrefix ? novelV2BasePathForLocale(locale) : '/novel/',
       chapterSlug: '',
-      locale: 'zh-Hant',
+      locale,
       readerVersion: 'v2',
       seriesSlug: ''
     };
@@ -11427,6 +11910,21 @@ const dynamicChapterPath = (route, seriesSlug, chapterSlug) => {
   return chapterPathSegment
     ? `${route.basePath}${seriesSlug}/${chapterPathSegment}/${chapterSlug}/`
     : `${route.basePath}${seriesSlug}/${chapterSlug}/`;
+};
+
+const dynamicNavCopy = {
+  en: {
+    apps: 'Apps',
+    devlog: 'Dev Blog',
+    member: 'Member Center',
+    serials: 'Serials'
+  },
+  'zh-Hant': {
+    apps: 'Apps',
+    devlog: '開發博客',
+    member: '會員登入',
+    serials: '連載小說'
+  }
 };
 
 const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '', title }) => `<!doctype html>
@@ -11538,10 +12036,10 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       <header class="topbar">
         <a class="brand" href="/"><span>SC</span><span>Station Cat</span></a>
         <nav class="nav">
-          <a href="/novel/">連載小說</a>
-          <a href="/devlog/">開發博客</a>
-          <a href="/apps/">Apps</a>
-          <a href="/library/">會員登入</a>
+          <a href="${escapeHtml(novelV2BasePathForLocale(lang))}">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).serials)}</a>
+          <a href="/devlog/">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).devlog)}</a>
+          <a href="/apps/">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).apps)}</a>
+          <a href="/library/">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).member)}</a>
           <a href="/about/">About</a>
           <a href="https://x.com/bketck">Follow on X</a>
         </nav>
@@ -11588,6 +12086,34 @@ const renderDynamicDevlogPost = (route, post, body) => {
       </header>
       <div class="prose">${body.html || `<p>${escapeHtml(fallbackBody)}</p>`}</div>
     </article>`;
+};
+
+const renderDynamicNovelIndex = (route, seriesRows) => {
+  const copy = dynamicContentCopy[route.locale];
+  const cards = seriesRows.length
+    ? seriesRows
+        .map((series) => {
+          const summary = firstPlainSummary([series.description, series.excerpt, series.subtitle], 220);
+          return `<a class="card" href="${escapeHtml(dynamicSeriesPath(route, series.slug))}">
+          <div class="meta">
+            <span class="pill">${escapeHtml(dynamicContentStatusLabels[series.status] || series.status)}</span>
+            <span>${escapeHtml(getDynamicAccessLabel(series.access_level, route.locale))}</span>
+          </div>
+          <h3>${escapeHtml(series.title)}</h3>
+          ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
+        </a>`;
+        })
+        .join('')
+    : `<p>${escapeHtml(copy.serialsDescription)}</p>`;
+
+  return `<section class="hero">
+      <p class="kicker">${escapeHtml(copy.allSerials)}</p>
+      <h1>${escapeHtml(copy.serialsTitle)}</h1>
+      <p>${escapeHtml(copy.serialsDescription)}</p>
+    </section>
+    <section class="section">
+      <div class="grid">${cards}</div>
+    </section>`;
 };
 
 const DYNAMIC_CHAPTERS_PER_PAGE = 9;
@@ -12690,10 +13216,21 @@ const handleDynamicFrontendContent = async (request, env) => {
   const url = new URL(request.url);
   const route = parseDynamicContentRoute(url.pathname);
   if (!route) return null;
-  if (route.kind === 'devlog-index' || route.kind === 'novel-index') return null;
+  if (route.kind === 'devlog-index' || (route.kind === 'novel-index' && route.locale === 'zh-Hant')) return null;
 
   const db = env.WAITLIST_DB;
   if (!db || !(await ensureContentTablesReady(db))) return null;
+
+  if (route.kind === 'novel-index') {
+    const seriesRows = await listPublishedContentEntries(db, { entryType: 'novel_series', locale: route.locale, limit: 100 });
+    return dynamicHtmlResponse(request, {
+      body: renderDynamicNovelIndex(route, seriesRows),
+      canonicalPath: dynamicCanonicalPath(route),
+      description: dynamicContentCopy[route.locale]?.serialsDescription || dynamicContentCopy['zh-Hant'].serialsDescription,
+      lang: route.locale,
+      title: dynamicContentCopy[route.locale]?.serialsTitle || dynamicContentCopy['zh-Hant'].serialsTitle
+    });
+  }
 
   if (route.kind === 'devlog-post') {
     const post = await getPublishedContentEntry(db, { entryType: 'blog_post', locale: route.locale, slug: route.slug });
@@ -13471,6 +14008,7 @@ export const __readerTotpTestHooks = {
   handleAdminModerateReaderComment,
   handleNovelForgeAnalytics,
   handleNovelForgeChapterContent,
+  handleNovelForgeTranslationSync,
   handlePublicNovelComments,
   handleNovelReadingEvents,
   handleReaderCommentSubmit,
@@ -13487,6 +14025,7 @@ export const __readerTotpTestHooks = {
   parseNovelForgeAnalyticsRoute,
   parseNovelForgeChapterContentRoute,
   parseDynamicContentRoute,
+  splitNovelTranslationChunks,
   readerTotpResetFailureMessage,
   readerTotpResetFailureThreshold,
   readerTotpResetLockedMessage,
@@ -13496,12 +14035,13 @@ export const __readerTotpTestHooks = {
   sha256Hex,
   shouldSampleReaderTotpResetCleanup,
   timingSafeEqualString,
+  translateNovelTextToEnglish,
   verifyAndConsumeReaderTotpCode,
   verifyTotpCode
 };
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.protocol === 'http:' && !isLocalRequest(request, env)) {
       url.protocol = 'https:';
@@ -13649,7 +14189,15 @@ export default {
     }
 
     if (url.pathname === '/api/novelforge/import') {
-      if (request.method === 'POST') return handleNovelForgeImport(request, env);
+      if (request.method === 'POST') return handleNovelForgeImport(request, env, ctx);
+      return novelForgeImportError('Method not allowed.', {
+        code: 'METHOD_NOT_ALLOWED',
+        status: 405
+      });
+    }
+
+    if (url.pathname === '/api/novelforge/translations/english') {
+      if (request.method === 'POST') return handleNovelForgeTranslationSync(request, env);
       return novelForgeImportError('Method not allowed.', {
         code: 'METHOD_NOT_ALLOWED',
         status: 405
