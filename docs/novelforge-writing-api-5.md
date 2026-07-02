@@ -83,7 +83,7 @@ POST /api/novelforge/translations/english
   "ok": true,
   "sourceLocale": "zh-Hant",
   "targetLocale": "en",
-  "model": "@cf/meta/llama-3.1-8b-instruct",
+  "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
   "translated": 3,
   "skipped": 1,
   "results": [],
