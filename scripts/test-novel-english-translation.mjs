@@ -20,8 +20,11 @@ assert.match(workerSource, /hasLocalAdminBypass\(env\)/, 'The local translation 
 assert.match(workerSource, /skipSeries/, 'Manual chapter backfills should be able to skip repeated series translation.');
 assert.match(workerSource, /novelTranslationChunkConcurrency = 3/, 'Long chapter translation should use bounded chunk concurrency.');
 assert.match(workerSource, /Luo Wenbin's Warning/, 'Known novel chapter titles should use curated English title overrides.');
+assert.match(workerSource, /status: 'draft'/, 'Machine-translated novel content should be saved as drafts by default.');
+assert.match(workerSource, /visibility: 'private'/, 'Machine-translated novel content should be private until reviewed.');
 assert.match(workerSource, /source_lang: 'zh'/, 'The default translation model should receive a source language.');
 assert.match(workerSource, /target_lang: 'en'/, 'The default translation model should receive a target language.');
+assert.match(workerSource, /messages: \[/, 'Chat translation models should use the Workers AI messages schema.');
 
 const chunks = hooks.splitNovelTranslationChunks(['第一段'.repeat(120), '第二段'.repeat(120)].join('\n\n'), 300);
 assert(chunks.length >= 2, 'Long novel text should be split before calling Workers AI.');
@@ -32,7 +35,7 @@ const translationEnv = {
   AI: {
     async run(model, input) {
       calls.push({ model, input });
-      return { translated_text: 'Hello, Station Cat.' };
+      return { response: 'Hello, Station Cat.' };
     }
   }
 };
@@ -45,21 +48,19 @@ const translated = await hooks.translateNovelTextToEnglish(translationEnv, '你�
 
 assert.equal(translated, 'Hello, Station Cat.');
 assert.equal(calls.length, 1);
-assert.equal(calls[0].model, '@cf/meta/m2m100-1.2b');
-assert.deepEqual(calls[0].input, {
-  source_lang: 'zh',
-  target_lang: 'en',
-  text: '你好，Station Cat。'
-});
+assert.equal(calls[0].model, '@cf/meta/llama-3.3-70b-instruct-fp8-fast');
+assert(Array.isArray(calls[0].input.messages), 'Default translation should use chat messages.');
+assert.equal(calls[0].input.temperature, 0.15);
+assert.match(calls[0].input.messages[0].content, /professional literary translator/);
 
 const env = {
   AI: {
     async run(model, input) {
       calls.push({ model, input });
-      return { response: '```markdown\nHello, Station Cat.\n```' };
+      return { translated_text: '```markdown\nHello, Station Cat.\n```' };
     }
   },
-  NOVEL_TRANSLATION_MODEL: '@cf/test/translator'
+  NOVEL_TRANSLATION_MODEL: '@cf/meta/m2m100-1.2b'
 };
 
 const fallbackTranslated = await hooks.translateNovelTextToEnglish(env, '你好，Station Cat。', {
@@ -70,8 +71,12 @@ const fallbackTranslated = await hooks.translateNovelTextToEnglish(env, '你好�
 
 assert.equal(fallbackTranslated, 'Hello, Station Cat.');
 assert.equal(calls.length, 2);
-assert.equal(calls[1].model, '@cf/test/translator');
-assert.match(calls[1].input.prompt, /Return only the English translation/);
+assert.equal(calls[1].model, '@cf/meta/m2m100-1.2b');
+assert.deepEqual(calls[1].input, {
+  source_lang: 'zh',
+  target_lang: 'en',
+  text: '你好，Station Cat。'
+});
 
 const englishIndexRoute = hooks.parseDynamicContentRoute('/en/novel/');
 assert.deepEqual(englishIndexRoute, {

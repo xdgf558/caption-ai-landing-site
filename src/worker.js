@@ -1400,7 +1400,7 @@ const novelForgeContentContractHeader = 'station-cat-novelforge-content.v1';
 const novelForgeTranslationContractHeader = 'station-cat-novelforge-translation.v1';
 const novelForgePackageFormat = 'novelforge-standard-publish-package';
 const maxNovelForgeImportBytes = 8 * 1024 * 1024;
-const defaultNovelTranslationModel = '@cf/meta/m2m100-1.2b';
+const defaultNovelTranslationModel = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 const defaultNovelTranslationSourceLocale = 'zh-Hant';
 const defaultNovelTranslationTargetLocale = 'en';
 const novelTranslationChunkMaxLength = 1800;
@@ -10437,15 +10437,23 @@ const translateNovelTextToEnglish = async (env, sourceText, options = {}) => {
           text: chunk
         }
       : {
-          prompt: [
-            'Translate the following Chinese web-novel text into natural English.',
-            'Preserve names, paragraph breaks, markdown headings/lists, timeline details, and the story voice.',
-            'Do not summarize, explain, add notes, or wrap the answer in code fences. Return only the English translation.',
-            `Context: ${context}`,
-            `Field: ${field}`,
-            'Text:',
-            chunk
-          ].join('\n\n')
+          messages: [
+            {
+              role: 'system',
+              content: [
+                'You are a professional literary translator for Chinese web fiction.',
+                'Translate into natural, readable English while preserving names, timeline details, paragraph breaks, markdown structure, and narrative voice.',
+                'Do not summarize, rewrite the plot, add explanations, add notes, repeat text, or wrap the answer in code fences.',
+                'Return only the English translation.'
+              ].join(' ')
+            },
+            {
+              role: 'user',
+              content: [`Context: ${context}`, `Field: ${field}`, 'Chinese text:', chunk].join('\n\n')
+            }
+          ],
+          temperature: 0.15,
+          max_tokens: 4096
         };
     const result = await env.AI.run(model, input);
     const translated = stripAiTranslationWrapper(extractAiText(result));
@@ -10572,11 +10580,11 @@ const translateContentEntryToEnglishPayload = async (env, sourceEntry) => {
     sortOrder: normalizePositiveInteger(sourceEntry.sort_order, 0),
     sourceKind: 'translation',
     sourceRef: `translation:${sourceEntry.id}`,
-    status: sourceEntry.status,
+    status: 'draft',
     subtitle: translatedSubtitle,
     tags: parseStoredJson(sourceEntry.tags_json, []),
     title: translatedTitle,
-    visibility: sourceEntry.visibility || 'public',
+    visibility: 'private',
     volumeTitle: sourceEntry.volume_title
       ? await translateNovelTextToEnglish(env, sourceEntry.volume_title, {
           chunkMaxLength: 500,

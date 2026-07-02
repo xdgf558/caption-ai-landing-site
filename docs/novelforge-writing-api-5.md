@@ -78,6 +78,8 @@ POST /api/novelforge/translations/english
 - `overwrite`: 已存在英文版时是否重新生成，默认 `false`。
 - `skipSeries`: 可选。手动逐章回填时可设为 `true`，只同步章节，不重复同步作品信息。
 
+生成的英文内容默认保存为 `draft` + `private`，需要人工审查和润色后再在后台发布。机器翻译不会自动公开到英文阅读页。
+
 返回：
 
 ```json
@@ -85,7 +87,7 @@ POST /api/novelforge/translations/english
   "ok": true,
   "sourceLocale": "zh-Hant",
   "targetLocale": "en",
-  "model": "@cf/meta/m2m100-1.2b",
+  "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
   "translated": 3,
   "skipped": 1,
   "results": [],
@@ -93,7 +95,7 @@ POST /api/novelforge/translations/english
 }
 ```
 
-NovelForge 正常发布中文内容时，网站 Worker 会在发布响应后自动触发英文同步；这个 POST 接口主要用于手动回填、重新生成或软件端主动同步。
+NovelForge 正常发布中文内容时，网站 Worker 会在发布响应后自动触发英文草稿同步；这个 POST 接口主要用于手动回填、重新生成或软件端主动同步。
 
 ### 单章统计
 
