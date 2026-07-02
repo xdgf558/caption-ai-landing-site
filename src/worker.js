@@ -1404,6 +1404,7 @@ const defaultNovelTranslationModel = '@cf/meta/m2m100-1.2b';
 const defaultNovelTranslationSourceLocale = 'zh-Hant';
 const defaultNovelTranslationTargetLocale = 'en';
 const novelTranslationChunkMaxLength = 1800;
+const novelTranslationChunkConcurrency = 3;
 
 const parseStoredJson = (value, fallback) => {
   try {
@@ -10413,9 +10414,7 @@ const translateNovelTextToEnglish = async (env, sourceText, options = {}) => {
   const chunks = splitNovelTranslationChunks(text, normalizePositiveInteger(options.chunkMaxLength, novelTranslationChunkMaxLength));
   const context = cleanText(options.context || 'Station Cat serial fiction', 300);
   const field = cleanText(options.field || 'content', 80);
-  const translations = [];
-
-  for (const chunk of chunks) {
+  const translateChunk = async (chunk) => {
     const input = isWorkersAiTranslationModel(model)
       ? {
           source_lang: 'zh',
@@ -10441,8 +10440,21 @@ const translateNovelTextToEnglish = async (env, sourceText, options = {}) => {
       error.status = 502;
       throw error;
     }
-    translations.push(translated);
-  }
+    return translated;
+  };
+
+  const translations = new Array(chunks.length);
+  let nextChunkIndex = 0;
+  const workerCount = Math.min(novelTranslationChunkConcurrency, chunks.length);
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (nextChunkIndex < chunks.length) {
+        const chunkIndex = nextChunkIndex;
+        nextChunkIndex += 1;
+        translations[chunkIndex] = await translateChunk(chunks[chunkIndex]);
+      }
+    })
+  );
 
   return translations.join('\n\n').trim();
 };
