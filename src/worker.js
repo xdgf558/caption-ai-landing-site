@@ -1400,7 +1400,7 @@ const novelForgeContentContractHeader = 'station-cat-novelforge-content.v1';
 const novelForgeTranslationContractHeader = 'station-cat-novelforge-translation.v1';
 const novelForgePackageFormat = 'novelforge-standard-publish-package';
 const maxNovelForgeImportBytes = 8 * 1024 * 1024;
-const defaultNovelTranslationModel = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+const defaultNovelTranslationModel = '@cf/meta/m2m100-1.2b';
 const defaultNovelTranslationSourceLocale = 'zh-Hant';
 const defaultNovelTranslationTargetLocale = 'en';
 const novelTranslationChunkMaxLength = 1800;
@@ -10329,9 +10329,17 @@ const extractAiText = (result) => {
   if (typeof result === 'string') return result;
   if (!result || typeof result !== 'object') return '';
   return (
+    result.translated_text ||
+    result.translatedText ||
+    result.translation ||
+    result.translation_text ||
     result.response ||
     result.text ||
     result.output_text ||
+    result.result?.translated_text ||
+    result.result?.translatedText ||
+    result.result?.translation ||
+    result.result?.translation_text ||
     result.result?.response ||
     result.result?.text ||
     result.choices?.[0]?.message?.content ||
@@ -10389,6 +10397,8 @@ const splitNovelTranslationChunks = (value, maxLength = novelTranslationChunkMax
   return chunks.filter(Boolean);
 };
 
+const isWorkersAiTranslationModel = (model) => String(model || '').includes('m2m100');
+
 const translateNovelTextToEnglish = async (env, sourceText, options = {}) => {
   const text = String(sourceText || '').trim();
   if (!text) return '';
@@ -10406,16 +10416,24 @@ const translateNovelTextToEnglish = async (env, sourceText, options = {}) => {
   const translations = [];
 
   for (const chunk of chunks) {
-    const prompt = [
-      'Translate the following Chinese web-novel text into natural English.',
-      'Preserve names, paragraph breaks, markdown headings/lists, timeline details, and the story voice.',
-      'Do not summarize, explain, add notes, or wrap the answer in code fences. Return only the English translation.',
-      `Context: ${context}`,
-      `Field: ${field}`,
-      'Text:',
-      chunk
-    ].join('\n\n');
-    const result = await env.AI.run(model, { prompt });
+    const input = isWorkersAiTranslationModel(model)
+      ? {
+          source_lang: 'zh',
+          target_lang: 'en',
+          text: chunk
+        }
+      : {
+          prompt: [
+            'Translate the following Chinese web-novel text into natural English.',
+            'Preserve names, paragraph breaks, markdown headings/lists, timeline details, and the story voice.',
+            'Do not summarize, explain, add notes, or wrap the answer in code fences. Return only the English translation.',
+            `Context: ${context}`,
+            `Field: ${field}`,
+            'Text:',
+            chunk
+          ].join('\n\n')
+        };
+    const result = await env.AI.run(model, input);
     const translated = stripAiTranslationWrapper(extractAiText(result));
     if (!translated) {
       const error = new Error('Workers AI returned an empty translation.');
@@ -10650,6 +10668,7 @@ const syncPublishedNovelEnglishTranslations = async (env, options = {}) => {
   const limit = Math.min(Math.max(normalizePositiveInteger(options.limit, 100), 1), 200);
   const results = [];
   const errors = [];
+  const skipSeries = Boolean(options.skipSeries);
   let remaining = limit;
 
   const sourceSeriesRows = await getPublishedNovelSeriesForTranslation(db, {
@@ -10660,25 +10679,27 @@ const syncPublishedNovelEnglishTranslations = async (env, options = {}) => {
 
   for (const series of sourceSeriesRows) {
     if (remaining <= 0) break;
-    try {
-      const result = await translateAndPersistContentEntryToEnglish(db, env, series, options);
-      results.push({
-        entryType: series.entry_type,
-        message: result.message,
-        parentSlug: series.parent_slug || '',
-        remoteId: novelForgeRemoteIdForEntry(result.entry),
-        slug: series.slug,
-        status: result.status,
-        title: result.entry?.title || series.title
-      });
-    } catch (error) {
-      errors.push({
-        entryType: series.entry_type,
-        message: error.message || 'Series translation failed.',
-        slug: series.slug
-      });
+    if (!skipSeries) {
+      try {
+        const result = await translateAndPersistContentEntryToEnglish(db, env, series, options);
+        results.push({
+          entryType: series.entry_type,
+          message: result.message,
+          parentSlug: series.parent_slug || '',
+          remoteId: novelForgeRemoteIdForEntry(result.entry),
+          slug: series.slug,
+          status: result.status,
+          title: result.entry?.title || series.title
+        });
+      } catch (error) {
+        errors.push({
+          entryType: series.entry_type,
+          message: error.message || 'Series translation failed.',
+          slug: series.slug
+        });
+      }
+      remaining -= 1;
     }
-    remaining -= 1;
 
     const chapters = await getPublishedNovelChaptersForTranslation(db, {
       chapterSlug: options.chapterSlug,
@@ -10745,6 +10766,7 @@ const handleNovelForgeTranslationSync = async (request, env) => {
       limit: payload.limit,
       overwrite: Boolean(payload.overwrite),
       seriesSlug: payload.seriesSlug || payload.series,
+      skipSeries: Boolean(payload.skipSeries),
       sourceLocale: payload.sourceLocale || payload.locale || defaultNovelTranslationSourceLocale
     });
     return novelForgeImportJson({

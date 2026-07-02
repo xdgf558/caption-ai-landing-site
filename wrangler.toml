@@ -10,7 +10,7 @@ CF_ACCESS_TEAM_DOMAIN = "misty-limit-82d5.cloudflareaccess.com"
 CF_ACCESS_AUD = "9b7bb7ce53bf630feea9b85e8911b34fa4647c7146b6c81d9958695c2c5fea73"
 READER_EMAIL_FROM = "noreply@wwwstationcat.org"
 READER_EMAIL_FROM_NAME = "Station Cat"
-NOVEL_TRANSLATION_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+NOVEL_TRANSLATION_MODEL = "@cf/meta/m2m100-1.2b"
 NOVEL_TRANSLATION_AUTO_SYNC = "1"
 
 [assets]

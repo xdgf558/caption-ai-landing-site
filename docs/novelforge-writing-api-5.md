@@ -66,7 +66,8 @@ POST /api/novelforge/translations/english
   "seriesSlug": "cmqjfju1300008z3wyh66ynvw",
   "chapterSlugs": ["chap-offline-future-001"],
   "limit": 20,
-  "overwrite": false
+  "overwrite": false,
+  "skipSeries": false
 }
 ```
 
@@ -75,6 +76,7 @@ POST /api/novelforge/translations/english
 - `chapterSlug` / `chapterSlugs`: 可选。传入后只同步指定章节；系列信息仍会同步。
 - `limit`: 最多同步多少条内容，包含系列本身，默认 100。
 - `overwrite`: 已存在英文版时是否重新生成，默认 `false`。
+- `skipSeries`: 可选。手动逐章回填时可设为 `true`，只同步章节，不重复同步作品信息。
 
 返回：
 
@@ -83,7 +85,7 @@ POST /api/novelforge/translations/english
   "ok": true,
   "sourceLocale": "zh-Hant",
   "targetLocale": "en",
-  "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "model": "@cf/meta/m2m100-1.2b",
   "translated": 3,
   "skipped": 1,
   "results": [],
