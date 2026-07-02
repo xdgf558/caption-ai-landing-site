@@ -1405,6 +1405,20 @@ const defaultNovelTranslationSourceLocale = 'zh-Hant';
 const defaultNovelTranslationTargetLocale = 'en';
 const novelTranslationChunkMaxLength = 1800;
 const novelTranslationChunkConcurrency = 3;
+const novelEnglishTitleOverrides = new Map([
+  ['离线未来', 'Offline Future'],
+  ['照夜寒舟录', 'Records of Night and Cold Boats'],
+  ['1999年的风扇声', 'The Fan Noise of 1999'],
+  ['谢勇出场', 'Xie Yong Appears'],
+  ['罗文斌的警告', "Luo Wenbin's Warning"],
+  ['第一堂课', 'The First Class'],
+  ['半个月', 'Half a Month'],
+  ['查分方案', 'The Score Lookup Plan'],
+  ['断供', 'Supply Cutoff'],
+  ['雨夜旧印', 'The Old Seal on a Rainy Night'],
+  ['碎布暗隙', 'The Hidden Gap in the Torn Cloth'],
+  ['墙痕对质', 'Confrontation at the Wall Marks']
+]);
 
 const parseStoredJson = (value, fallback) => {
   try {
@@ -10325,6 +10339,7 @@ const getNovelTranslationModel = (env) =>
   cleanText(env.NOVEL_TRANSLATION_MODEL || defaultNovelTranslationModel, 120) || defaultNovelTranslationModel;
 
 const isNovelTranslationAutoSyncEnabled = (env) => cleanText(env.NOVEL_TRANSLATION_AUTO_SYNC || '1', 10) !== '0';
+const getNovelEnglishTitleOverride = (title) => novelEnglishTitleOverrides.get(String(title || '').trim()) || '';
 
 const extractAiText = (result) => {
   if (typeof result === 'string') return result;
@@ -10499,11 +10514,13 @@ const translateContentEntryToEnglishPayload = async (env, sourceEntry) => {
     sourceEntry.parent_slug ? `series ${sourceEntry.parent_slug}` : ''
   ].filter(Boolean);
   const context = contextParts.join(' · ');
-  const translatedTitle = await translateNovelTextToEnglish(env, sourceEntry.title, {
-    chunkMaxLength: 500,
-    context,
-    field: 'title'
-  });
+  const translatedTitle =
+    getNovelEnglishTitleOverride(sourceEntry.title) ||
+    (await translateNovelTextToEnglish(env, sourceEntry.title, {
+      chunkMaxLength: 500,
+      context,
+      field: 'title'
+    }));
   const translatedSubtitle = sourceEntry.subtitle
     ? await translateNovelTextToEnglish(env, sourceEntry.subtitle, {
         chunkMaxLength: 700,

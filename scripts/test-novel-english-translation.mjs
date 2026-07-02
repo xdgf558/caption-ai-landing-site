@@ -19,6 +19,7 @@ assert.match(workerSource, /x-stationcat-local-admin-bypass/, 'Translation backf
 assert.match(workerSource, /hasLocalAdminBypass\(env\)/, 'The local translation bypass should depend on the existing local admin guard.');
 assert.match(workerSource, /skipSeries/, 'Manual chapter backfills should be able to skip repeated series translation.');
 assert.match(workerSource, /novelTranslationChunkConcurrency = 3/, 'Long chapter translation should use bounded chunk concurrency.');
+assert.match(workerSource, /Luo Wenbin's Warning/, 'Known novel chapter titles should use curated English title overrides.');
 assert.match(workerSource, /source_lang: 'zh'/, 'The default translation model should receive a source language.');
 assert.match(workerSource, /target_lang: 'en'/, 'The default translation model should receive a target language.');
 
