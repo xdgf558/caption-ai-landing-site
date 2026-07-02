@@ -15,6 +15,8 @@ assert.match(wranglerSource, /\[ai\]\s+binding = "AI"/, 'Wrangler should expose 
 assert.match(wranglerSource, /NOVEL_TRANSLATION_MODEL/, 'Wrangler should declare the novel translation model.');
 assert.match(workerSource, /\/api\/novelforge\/translations\/english/, 'Worker should expose the NovelForge translation sync endpoint.');
 assert.match(workerSource, /ctx\.waitUntil/, 'NovelForge import should trigger translation in the background.');
+assert.match(workerSource, /x-stationcat-local-admin-bypass/, 'Translation backfill should support a dev-only local bypass header.');
+assert.match(workerSource, /hasLocalAdminBypass\(env\)/, 'The local translation bypass should depend on the existing local admin guard.');
 
 const chunks = hooks.splitNovelTranslationChunks(['第一段'.repeat(120), '第二段'.repeat(120)].join('\n\n'), 300);
 assert(chunks.length >= 2, 'Long novel text should be split before calling Workers AI.');

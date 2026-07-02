@@ -9714,6 +9714,12 @@ const requireNovelForgeContentToken = (request, env) =>
 
 const requireNovelForgeTranslationToken = (request, env) => {
   if (isLocalHostnameRequest(request) && hasLocalAdminBypass(env)) return null;
+  if (
+    hasLocalAdminBypass(env) &&
+    cleanText(request.headers.get('x-stationcat-local-admin-bypass'), 80) === 'translation-sync'
+  ) {
+    return null;
+  }
   return requireNovelForgePublishToken(request, env, {
     allowedContracts: [novelForgeImportContractHeader, novelForgeTranslationContractHeader]
   });
