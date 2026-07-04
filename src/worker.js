@@ -12765,7 +12765,7 @@ const renderDynamicSignalIndex = (route, rows) => {
 const renderDynamicSignalBrief = (route, row, body) => {
   const copy = dynamicContentCopy[route.locale] || dynamicContentCopy['zh-Hant'];
   const meta = signalBriefMetadata(row);
-  const summary = firstPlainSummary([row.description, row.excerpt], 360);
+  const summary = firstPlainSummary([row.description, row.excerpt], 180);
   const fallbackBody = firstPlainSummary([row.excerpt, row.description], 1200);
   const canonicalPath = dynamicSignalPath(route, row.slug);
   const absoluteUrl = absoluteStationUrl(canonicalPath);
@@ -12789,9 +12789,7 @@ const renderDynamicSignalBrief = (route, row, body) => {
       </section>`
     : '';
 
-  const bodyHtml = body.markdown
-    ? stripLeadingReaderHeadingHtml(renderSignalMarkdownToHtml(body.markdown))
-    : body.html || `<p>${escapeHtml(fallbackBody)}</p>`;
+  const bodyHtml = body.markdown ? renderSignalMarkdownToHtml(body.markdown) : body.html || `<p>${escapeHtml(fallbackBody)}</p>`;
 
   return `<article class="signal-brief-layout">
       <a class="text-link" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.signalBack)}</a>
