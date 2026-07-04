@@ -1763,6 +1763,7 @@ const dynamicContentCopy = {
     signalEmpty: 'No public signal briefs yet.',
     signalEyebrow: 'Signal strip',
     signalLatest: 'Latest briefs',
+    signalReadMore: 'Read full brief',
     signalShare: 'Share to X',
     signalSources: 'Sources',
     signalTitle: 'Daily Priority Brief',
@@ -1797,6 +1798,7 @@ const dynamicContentCopy = {
     signalEmpty: '公開済みの簡報はまだありません。',
     signalEyebrow: 'Signal strip',
     signalLatest: '最新簡報',
+    signalReadMore: '全文を読む',
     signalShare: 'X で共有',
     signalSources: '出典',
     signalTitle: 'Daily Priority Brief',
@@ -1831,6 +1833,7 @@ const dynamicContentCopy = {
     signalEmpty: '目前還沒有公開簡報。',
     signalEyebrow: 'Signal strip',
     signalLatest: '最近簡報',
+    signalReadMore: '閱讀全文',
     signalShare: '分享到 X',
     signalSources: '來源',
     signalTitle: '每日信號簡報',
@@ -1865,6 +1868,7 @@ const dynamicContentCopy = {
     signalEmpty: '目前还没有公开简报。',
     signalEyebrow: 'Signal strip',
     signalLatest: '最近简报',
+    signalReadMore: '阅读全文',
     signalShare: '分享到 X',
     signalSources: '来源',
     signalTitle: '每日信号简报',
@@ -9249,9 +9253,28 @@ const parseSignalSourcesInput = (value) => {
     .slice(0, 12);
 };
 
+const signalNumberedHeadingPattern = /^(\d{1,3})[.)、]\s+(.{2,})$/;
+
+const extractSignalNumberedHeadings = (markdown) =>
+  String(markdown || '')
+    .split('\n')
+    .map((line) => cleanText(line.trim(), 220))
+    .filter((line) => signalNumberedHeadingPattern.test(line))
+    .slice(0, 8);
+
 const extractSignalSummaryBullets = (payload, markdown) => {
   const explicit = normalizeStringArray(payload.summaryBullets || payload.bullets || payload.highlights, 6);
   if (explicit.length) return explicit;
+  const numbered = extractSignalNumberedHeadings(markdown);
+  if (numbered.length) return numbered.slice(0, 6);
+  const headings = String(markdown || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => /^#{2,3}\s+/.test(line))
+    .map((line) => cleanText(line.replace(/^#{2,3}\s+/, ''), 180))
+    .filter(Boolean)
+    .slice(0, 6);
+  if (headings.length) return headings;
   return String(markdown || '')
     .split('\n')
     .map((line) => line.trim())
@@ -9259,6 +9282,66 @@ const extractSignalSummaryBullets = (payload, markdown) => {
     .map((line) => cleanText(line.replace(/^[-*]\s+/, ''), 180))
     .filter(Boolean)
     .slice(0, 6);
+};
+
+const renderSignalMarkdownToHtml = (markdown) => {
+  const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
+  const output = [];
+  let listOpen = false;
+
+  const closeList = () => {
+    if (listOpen) {
+      output.push('</ul>');
+      listOpen = false;
+    }
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      closeList();
+      continue;
+    }
+
+    if (trimmed.startsWith('### ')) {
+      closeList();
+      output.push(`<h3>${escapeHtml(trimmed.slice(4))}</h3>`);
+      continue;
+    }
+
+    if (trimmed.startsWith('## ')) {
+      closeList();
+      output.push(`<h2>${escapeHtml(trimmed.slice(3))}</h2>`);
+      continue;
+    }
+
+    if (trimmed.startsWith('# ')) {
+      closeList();
+      output.push(`<h1>${escapeHtml(trimmed.slice(2))}</h1>`);
+      continue;
+    }
+
+    if (signalNumberedHeadingPattern.test(trimmed)) {
+      closeList();
+      output.push(`<h2 class="signal-section-heading">${escapeHtml(trimmed)}</h2>`);
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(trimmed)) {
+      if (!listOpen) {
+        output.push('<ul>');
+        listOpen = true;
+      }
+      output.push(`<li>${escapeHtml(trimmed.replace(/^[-*]\s+/, ''))}</li>`);
+      continue;
+    }
+
+    closeList();
+    output.push(`<p>${escapeHtml(trimmed)}</p>`);
+  }
+
+  closeList();
+  return output.join('\n');
 };
 
 const handleAdminImportSignalBrief = async (request, env) => {
@@ -9300,7 +9383,7 @@ const handleAdminImportSignalBrief = async (request, env) => {
     cleanText(payload.requestId, 240) ||
     `signal-${slug}-${(crypto.randomUUID?.() || randomToken(12)).replace(/-/g, '').slice(0, 8)}`;
   const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
-  const html = renderSimpleMarkdownToHtml(markdown);
+  const html = renderSignalMarkdownToHtml(markdown);
   const wordCount = countContentWords(markdown);
   const summaryBullets = extractSignalSummaryBullets(payload, markdown);
   const sources = parseSignalSourcesInput(payload.sources || payload.sourcesText);
@@ -11861,18 +11944,35 @@ const renderSimpleMarkdownToHtml = (markdown) => {
 const stripLeadingReaderHeadingHtml = (html) =>
   String(html || '').replace(/^\s*<h[12]\b[^>]*>[\s\S]*?<\/h[12]>\s*/i, '');
 
-const readPublicEntryBody = async (env, row) => {
+const readPublicEntryBody = async (env, row, options = {}) => {
   if (!row) return { html: '', source: 'none' };
   if (row.access_level !== 'free') return { html: '', source: 'protected' };
 
   const bucket = getContentBucket(env);
   if (!bucket) return { html: '', source: 'missing-bucket' };
 
+  if (options.preferMarkdown) {
+    const markdown = await readContentObjectText(bucket, row.markdown_r2_key, 'Markdown body');
+    if (markdown) {
+      return {
+        html: stripLeadingReaderHeadingHtml(renderSimpleMarkdownToHtml(markdown)),
+        markdown,
+        source: 'markdown-r2'
+      };
+    }
+  }
+
   const html = await readContentObjectText(bucket, row.html_r2_key, 'HTML body');
   if (html) return { html: stripLeadingReaderHeadingHtml(html), source: 'html-r2' };
 
   const markdown = await readContentObjectText(bucket, row.markdown_r2_key, 'Markdown body');
-  if (markdown) return { html: stripLeadingReaderHeadingHtml(renderSimpleMarkdownToHtml(markdown)), source: 'markdown-r2' };
+  if (markdown) {
+    return {
+      html: stripLeadingReaderHeadingHtml(renderSimpleMarkdownToHtml(markdown)),
+      markdown,
+      source: 'markdown-r2'
+    };
+  }
 
   return { html: '', source: 'empty' };
 };
@@ -12456,11 +12556,15 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
       .signal-entry { min-height: 220px; }
       .signal-entry .meta { align-items: center; }
       .signal-entry h3 { font-size: 24px; line-height: 1.18; }
+      .signal-entry ul { display: grid; gap: 8px; margin: 4px 0 0; padding-left: 20px; }
+      .signal-entry li { color: var(--muted); font-size: 15px; line-height: 1.55; }
+      .signal-read-more { color: var(--teal); font-size: 14px; font-weight: 950; margin-top: 4px; }
       .signal-brief-layout { display: grid; gap: 24px; margin-left: auto; margin-right: auto; max-width: 900px; }
       .signal-share { align-items: center; background: var(--soft); border: 1px dashed var(--line); border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; padding: 14px; }
       .signal-source-list { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
       .signal-source-list a { color: var(--teal); font-weight: 900; }
       .signal-source-list small { color: var(--muted); display: block; margin-top: 2px; }
+      .signal-section-heading { border-top: 1px dashed var(--line); color: var(--ink); font-size: clamp(22px, 4vw, 30px); padding-top: 18px; }
       @media (max-width: 760px) {
         .shell { padding: 18px 14px 96px; }
         .grid, .hero--novel, .signal-hero { grid-template-columns: 1fr; }
@@ -12582,9 +12686,12 @@ const signalCategoryLabel = (category, locale) =>
 
 const signalBriefMetadata = (row) => {
   const metadata = parseStoredJson(row.metadata_json, {});
-  const summaryBullets = Array.isArray(metadata.summaryBullets)
+  let summaryBullets = Array.isArray(metadata.summaryBullets)
     ? metadata.summaryBullets.map((item) => cleanText(item, 180)).filter(Boolean).slice(0, 6)
     : [];
+  if (!summaryBullets.length && row.signalMarkdown) {
+    summaryBullets = extractSignalSummaryBullets({}, row.signalMarkdown);
+  }
   const sources = Array.isArray(metadata.sources)
     ? metadata.sources
         .map((source) => ({
@@ -12621,15 +12728,16 @@ const renderDynamicSignalIndex = (route, rows) => {
     ? rows
         .map((row) => {
           const meta = signalBriefMetadata(row);
-          const summary = firstPlainSummary([row.excerpt, row.description], 220);
+          const summary = firstPlainSummary([row.description, row.excerpt], 180);
           const bullets = meta.summaryBullets.length
-            ? `<ul>${meta.summaryBullets.slice(0, 3).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+            ? `<ul>${meta.summaryBullets.slice(0, 5).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
             : '';
           return `<a class="card signal-entry" href="${escapeHtml(dynamicSignalPath(route, row.slug))}">
               ${renderSignalBriefPills(route, row)}
               <h3>${escapeHtml(row.title)}</h3>
               ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
               ${bullets}
+              <span class="signal-read-more">${escapeHtml(copy.signalReadMore)} →</span>
             </a>`;
         })
         .join('')
@@ -12681,6 +12789,10 @@ const renderDynamicSignalBrief = (route, row, body) => {
       </section>`
     : '';
 
+  const bodyHtml = body.markdown
+    ? stripLeadingReaderHeadingHtml(renderSignalMarkdownToHtml(body.markdown))
+    : body.html || `<p>${escapeHtml(fallbackBody)}</p>`;
+
   return `<article class="signal-brief-layout">
       <a class="text-link" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.signalBack)}</a>
       <header class="hero">
@@ -12700,7 +12812,7 @@ const renderDynamicSignalBrief = (route, row, body) => {
           <button class="button button-secondary" type="button" data-signal-copy-link>${escapeHtml(copy.signalCopyLink)}</button>
         </div>
       </section>
-      <div class="prose">${body.html || `<p>${escapeHtml(fallbackBody)}</p>`}</div>
+      <div class="prose">${bodyHtml}</div>
       ${sourceList}
       <script>
         (() => {
@@ -12779,6 +12891,14 @@ const renderSignalShareCardSvg = (route, row) => {
     <text x="1058" y="560" fill="#52645e" font-family="Arial, sans-serif" font-size="22" font-weight="700" text-anchor="end">${escapeHtml(url)}</text>
   </svg>`;
 };
+
+const hydrateSignalIndexRows = async (env, rows) =>
+  Promise.all(
+    rows.map(async (row) => {
+      const body = await readPublicEntryBody(env, row, { preferMarkdown: true });
+      return body.markdown ? { ...row, signalMarkdown: body.markdown } : row;
+    })
+  );
 
 const renderDynamicNovelIndex = (route, seriesRows) => {
   const copy = dynamicContentCopy[route.locale];
@@ -13915,9 +14035,10 @@ const handleDynamicFrontendContent = async (request, env) => {
 
   if (route.kind === 'signal-index') {
     const rows = await listPublishedContentEntries(db, { entryType: 'signal_brief', locale: route.locale, limit: 50 });
+    const signalRows = request.method === 'HEAD' ? rows : await hydrateSignalIndexRows(env, rows);
     const copy = dynamicContentCopy[route.locale] || dynamicContentCopy['zh-Hant'];
     return dynamicHtmlResponse(request, {
-      body: renderDynamicSignalIndex(route, rows),
+      body: renderDynamicSignalIndex(route, signalRows),
       canonicalPath: dynamicCanonicalPath(route),
       description: copy.signalDescription,
       lang: route.locale,
@@ -13934,7 +14055,9 @@ const handleDynamicFrontendContent = async (request, env) => {
     if (!brief) return null;
 
     if (route.kind === 'signal-card') {
-      return new Response(request.method === 'HEAD' ? null : renderSignalShareCardSvg(route, brief), {
+      const body = request.method === 'HEAD' ? { markdown: '' } : await readPublicEntryBody(env, brief, { preferMarkdown: true });
+      const cardBrief = body.markdown ? { ...brief, signalMarkdown: body.markdown } : brief;
+      return new Response(request.method === 'HEAD' ? null : renderSignalShareCardSvg(route, cardBrief), {
         headers: {
           'cache-control': 'public, max-age=300',
           'content-type': 'image/svg+xml; charset=utf-8',
@@ -13943,7 +14066,7 @@ const handleDynamicFrontendContent = async (request, env) => {
       });
     }
 
-    const body = await readPublicEntryBody(env, brief);
+    const body = await readPublicEntryBody(env, brief, { preferMarkdown: true });
     return dynamicHtmlResponse(request, {
       body: renderDynamicSignalBrief(route, brief, body),
       canonicalPath: dynamicCanonicalPath(route),
@@ -14761,6 +14884,7 @@ export const __readerTotpTestHooks = {
   parseNovelForgeChapterContentRoute,
   parseDynamicContentRoute,
   parseSignalSourcesInput,
+  renderSignalMarkdownToHtml,
   renderDynamicSignalBrief,
   renderDynamicSignalIndex,
   splitNovelTranslationChunks,
