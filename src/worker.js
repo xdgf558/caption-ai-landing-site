@@ -9206,18 +9206,25 @@ const buildSignalImportBackupKey = (requestId) => {
   return `content/imports/signal/${year}/${month}/${safeRequestId}-${Date.now()}-${token}.json`;
 };
 
+const normalizeSignalSourceUrl = (value) => {
+  const url = cleanText(value, 500);
+  return /^https?:\/\//i.test(url) ? url : '';
+};
+
 const parseSignalSourcesInput = (value) => {
   if (Array.isArray(value)) {
     return value
       .map((source) => {
         if (typeof source === 'string') {
           const text = cleanText(source, 500);
-          return { label: text.replace(/^https?:\/\//i, ''), note: '', url: /^https?:\/\//i.test(text) ? text : '' };
+          const url = normalizeSignalSourceUrl(text);
+          return { label: url ? url.replace(/^https?:\/\//i, '') : text, note: '', url };
         }
+        const url = normalizeSignalSourceUrl(source?.url);
         return {
-          label: cleanText(source?.label || source?.title || source?.url, 160),
+          label: cleanText(source?.label || source?.title || url, 160),
           note: cleanText(source?.note || source?.description, 240),
-          url: cleanText(source?.url, 500)
+          url
         };
       })
       .filter((source) => source.label || source.url)
@@ -9230,12 +9237,12 @@ const parseSignalSourcesInput = (value) => {
     .filter(Boolean)
     .map((line) => {
       const [labelPart, urlPart, notePart] = line.split('|').map((part) => part.trim());
-      const directUrl = /^https?:\/\//i.test(labelPart) ? labelPart : '';
-      const url = directUrl || (/^https?:\/\//i.test(urlPart) ? urlPart : '');
+      const directUrl = normalizeSignalSourceUrl(labelPart);
+      const url = directUrl || normalizeSignalSourceUrl(urlPart);
       return {
         label: cleanText(directUrl ? directUrl.replace(/^https?:\/\//i, '') : labelPart, 160),
         note: cleanText(notePart || (!url && urlPart ? urlPart : ''), 240),
-        url: cleanText(url, 500)
+        url
       };
     })
     .filter((source) => source.label || source.url)
@@ -12581,9 +12588,9 @@ const signalBriefMetadata = (row) => {
   const sources = Array.isArray(metadata.sources)
     ? metadata.sources
         .map((source) => ({
-          label: cleanText(source?.label || source?.title || source?.url, 160),
+          label: cleanText(source?.label || source?.title || normalizeSignalSourceUrl(source?.url), 160),
           note: cleanText(source?.note || source?.description, 240),
-          url: cleanText(source?.url, 500)
+          url: normalizeSignalSourceUrl(source?.url)
         }))
         .filter((source) => source.label || source.url)
         .slice(0, 12)
@@ -14753,6 +14760,7 @@ export const __readerTotpTestHooks = {
   parseNovelForgeAnalyticsRoute,
   parseNovelForgeChapterContentRoute,
   parseDynamicContentRoute,
+  parseSignalSourcesInput,
   renderDynamicSignalBrief,
   renderDynamicSignalIndex,
   splitNovelTranslationChunks,

@@ -7,6 +7,7 @@ const {
   dynamicCanonicalPath,
   dynamicSignalCardPath,
   dynamicSignalPath,
+  parseSignalSourcesInput,
   parseDynamicContentRoute,
   renderDynamicSignalBrief,
   renderDynamicSignalIndex,
@@ -71,6 +72,18 @@ const svg = renderSignalShareCardSvg(cardRoute, signalRow);
 assert.match(svg, /^<svg/);
 assert.match(svg, /width="1200"/);
 assert.match(svg, /每日优先简报/);
+
+const sanitizedSources = parseSignalSourcesInput([
+  { label: 'Good', url: 'https://example.com/report' },
+  { label: 'Blocked', url: 'javascript:alert(1)' },
+  'ftp://example.com/file',
+  'Plain source note'
+]);
+assert.equal(sanitizedSources[0].url, 'https://example.com/report');
+assert.equal(sanitizedSources[1].label, 'Blocked');
+assert.equal(sanitizedSources[1].url, '');
+assert.equal(sanitizedSources[2].url, '');
+assert.equal(sanitizedSources[3].label, 'Plain source note');
 
 const adminSource = await readFile(new URL('../src/pages/admin-v2/index.astro', import.meta.url), 'utf8');
 assert.match(adminSource, /data-admin-v2-tab="signal"/);
