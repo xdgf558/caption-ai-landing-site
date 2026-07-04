@@ -310,7 +310,8 @@ const paths = {
     radarDownload: '/zh-hant/apps/stationcat-radar/download/',
     followCleaner: xFollowCleanerProduct.zhHantProductPath,
     followCleanerDownload: xFollowCleanerProduct.downloadUrl,
-    devlogPrefix: '/devlog/'
+    devlogPrefix: '/devlog/',
+    signal: '/signal/'
   },
   'zh-Hans': {
     apps: '/zh-hans/apps/',
@@ -323,7 +324,8 @@ const paths = {
     radarDownload: '/zh-hans/apps/stationcat-radar/download/',
     followCleaner: xFollowCleanerProduct.zhHansProductPath,
     followCleanerDownload: xFollowCleanerProduct.downloadUrl,
-    devlogPrefix: '/zh-hans/devlog/'
+    devlogPrefix: '/zh-hans/devlog/',
+    signal: '/zh-hans/signal/'
   },
   en: {
     apps: '/apps/',
@@ -336,7 +338,8 @@ const paths = {
     radarDownload: '/apps/stationcat-radar/download/',
     followCleaner: xFollowCleanerProduct.productPath,
     followCleanerDownload: xFollowCleanerProduct.downloadUrl,
-    devlogPrefix: '/en/devlog/'
+    devlogPrefix: '/en/devlog/',
+    signal: '/en/signal/'
   },
   ja: {
     apps: '/ja/apps/',
@@ -349,7 +352,8 @@ const paths = {
     radarDownload: '/ja/apps/stationcat-radar/download/',
     followCleaner: xFollowCleanerProduct.jaProductPath,
     followCleanerDownload: xFollowCleanerProduct.downloadUrl,
-    devlogPrefix: '/ja/devlog/'
+    devlogPrefix: '/ja/devlog/',
+    signal: '/ja/signal/'
   }
 }[lang];
 
@@ -430,14 +434,22 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
       </div>
       <div class="station-board-v2__pinboard">
         {copy.boardItems.map((item) => (
-          <article class={`station-scrap station-scrap--${item.type}`}>
-            {item.type === 'polaroid' && (
-              <img class="station-scrap__photo" src={stationLogoPath} alt={copy.logoAlt} width="998" height="970" loading="lazy" />
-            )}
-            <span class="paper-stamp">{item.stamp}</span>
-            <h2>{item.title}</h2>
-            <p>{item.text}</p>
-          </article>
+          item.type === 'signal' ? (
+            <a class={`station-scrap station-scrap--${item.type}`} href={paths.signal}>
+              <span class="paper-stamp">{item.stamp}</span>
+              <h2>{item.title}</h2>
+              <p>{item.text}</p>
+            </a>
+          ) : (
+            <article class={`station-scrap station-scrap--${item.type}`}>
+              {item.type === 'polaroid' && (
+                <img class="station-scrap__photo" src={stationLogoPath} alt={copy.logoAlt} width="998" height="970" loading="lazy" />
+              )}
+              <span class="paper-stamp">{item.stamp}</span>
+              <h2>{item.title}</h2>
+              <p>{item.text}</p>
+            </article>
+          )
         ))}
       </div>
     </aside>

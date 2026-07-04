@@ -1386,7 +1386,7 @@ const readerCommentToJson = (row, options = {}) => {
   return comment;
 };
 
-const contentEntryTypes = new Set(['blog_post', 'novel_series', 'novel_chapter']);
+const contentEntryTypes = new Set(['blog_post', 'novel_series', 'novel_chapter', 'signal_brief']);
 const contentLocales = new Set(['zh-Hant', 'zh-Hans', 'en', 'ja']);
 const contentStatuses = new Set(['draft', 'scheduled', 'published', 'archived']);
 const contentVisibilities = new Set(['public', 'unlisted', 'private']);
@@ -1542,6 +1542,14 @@ const buildContentR2Keys = (entry) => {
     };
   }
 
+  if (entry.entryType === 'signal_brief') {
+    const base = `content/signals/${entry.locale}/${entry.slug}`;
+    return {
+      markdown: `${base}/body.md`,
+      html: `${base}/body.html`
+    };
+  }
+
   const base = `content/blog/${entry.locale}/${entry.slug}`;
   return {
     markdown: `${base}/body.md`,
@@ -1662,6 +1670,7 @@ const contentEntryPublicPath = (row) => {
   if (!row) return '';
   const locale = normalizeContentLocale(row.locale);
   if (row.entry_type === 'blog_post') return `${getPathWithLocale(locale, 'devlog')}${row.slug}/`;
+  if (row.entry_type === 'signal_brief') return `${getPathWithLocale(locale, 'signal')}${row.slug}/`;
   return contentEntryNovelV2Path(row);
 };
 
@@ -1705,6 +1714,8 @@ const getContentStorageDescriptor = (env) => ({
     novelSeriesMarkdown: 'content/novels/{seriesSlug}/series/{locale}/body.md',
     novelChapterMarkdown: 'content/novels/{seriesSlug}/chapters/{chapterNumber}-{chapterSlug}/{locale}/body.md',
     novelChapterHtml: 'content/novels/{seriesSlug}/chapters/{chapterNumber}-{chapterSlug}/{locale}/body.html',
+    signalBriefMarkdown: 'content/signals/{locale}/{slug}/body.md',
+    signalBriefHtml: 'content/signals/{locale}/{slug}/body.html',
     importBackup: 'content/imports/{yyyy}/{mm}/{importId}-{filename}',
     coverImage: 'content/media/covers/{yyyy}/{mm}/{slug}-{timestamp}-{token}.{ext}'
   }
@@ -1745,6 +1756,16 @@ const dynamicContentCopy = {
     readLatest: 'Read latest chapter',
     serialsDescription: 'A quiet reading shelf for long-form fiction published on Station Cat.',
     serialsTitle: 'Station Cat Serials',
+    signalBack: 'Back to Signal strip',
+    signalCard: 'Open share card',
+    signalCopyLink: 'Copy link',
+    signalDescription: 'Daily technology, economy, AI, and market signals collected for Station Cat readers.',
+    signalEmpty: 'No public signal briefs yet.',
+    signalEyebrow: 'Signal strip',
+    signalLatest: 'Latest briefs',
+    signalShare: 'Share to X',
+    signalSources: 'Sources',
+    signalTitle: 'Daily Priority Brief',
     signIn: 'Open Member Center',
     status: 'Status',
     words: 'words'
@@ -1769,6 +1790,16 @@ const dynamicContentCopy = {
     readLatest: '最新章を読む',
     serialsDescription: 'Station Cat で公開していく長編小説のための、小さな読書棚です。',
     serialsTitle: 'Station Cat 連載小説',
+    signalBack: 'Signal strip へ戻る',
+    signalCard: '共有カードを開く',
+    signalCopyLink: 'リンクをコピー',
+    signalDescription: 'テクノロジー、経済、AI、市場の小さなシグナルを毎日まとめます。',
+    signalEmpty: '公開済みの簡報はまだありません。',
+    signalEyebrow: 'Signal strip',
+    signalLatest: '最新簡報',
+    signalShare: 'X で共有',
+    signalSources: '出典',
+    signalTitle: 'Daily Priority Brief',
     signIn: '本棚を開く',
     status: '更新状態',
     words: '語'
@@ -1793,6 +1824,16 @@ const dynamicContentCopy = {
     readLatest: '閱讀最新章',
     serialsDescription: '一個放長篇小說、更新順序和後續讀者支持入口的小書架。',
     serialsTitle: 'Station Cat 連載小說',
+    signalBack: '返回 Signal strip',
+    signalCard: '打開分享卡片',
+    signalCopyLink: '複製鏈接',
+    signalDescription: '每天整理科技、經濟、AI 和市場上的微弱信號，像貼在站台上的一條短訊紙帶。',
+    signalEmpty: '目前還沒有公開簡報。',
+    signalEyebrow: 'Signal strip',
+    signalLatest: '最近簡報',
+    signalShare: '分享到 X',
+    signalSources: '來源',
+    signalTitle: '每日信號簡報',
     signIn: '打開會員中心',
     status: '更新狀態',
     words: '字'
@@ -1817,6 +1858,16 @@ const dynamicContentCopy = {
     readLatest: '阅读最新章',
     serialsDescription: '一个放长篇小说、更新顺序和后续读者支持入口的小书架。',
     serialsTitle: 'Station Cat 连载小说',
+    signalBack: '返回 Signal strip',
+    signalCard: '打开分享卡片',
+    signalCopyLink: '复制链接',
+    signalDescription: '每天整理科技、经济、AI 和市场上的微弱信号，像贴在站台上的一条短讯纸带。',
+    signalEmpty: '目前还没有公开简报。',
+    signalEyebrow: 'Signal strip',
+    signalLatest: '最近简报',
+    signalShare: '分享到 X',
+    signalSources: '来源',
+    signalTitle: '每日信号简报',
     signIn: '打开会员中心',
     status: '更新状态',
     words: '字'
@@ -8609,6 +8660,7 @@ const handleAdminContentSchema = async (env) =>
       readingEvents: 'Novel V2 reader pages can send chapter open, scroll depth, pause/resume, navigation, like, bookmark, and comment interaction events into reading_events.',
       readingAnalytics: 'Admin 2.0 can aggregate reading_events into chapter_stats for completion, drop-off, reading time, and engagement diagnostics.',
       aiInsights: 'Admin 2.0 can generate structured AI-style chapter insights from chapter_stats into ai_insights.',
+      signalStrip: 'Admin 2.0 can import daily technology/economy Signal strip briefs into signal_brief entries and render public /signal/ pages with share-card images.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
       nextStages: ['8D optional retry tools and richer NovelForge source diagnostics']
     }
@@ -8929,7 +8981,7 @@ const listEntriesForContentImports = async (db, importRows) => {
     .prepare(
       `SELECT *
        FROM content_entries
-       WHERE source_kind = 'novelforge'
+       WHERE source_kind IN ('novelforge', 'signal_brief')
          AND source_ref IN (${placeholders})
        ORDER BY
          source_ref ASC,
@@ -9143,6 +9195,229 @@ const handleAdminReviewContentImport = async (request, env) => {
     publishedEntries: publishableEntries.length,
     stage: '8C'
   });
+};
+
+const buildSignalImportBackupKey = (requestId) => {
+  const now = new Date();
+  const year = now.toISOString().slice(0, 4);
+  const month = now.toISOString().slice(5, 7);
+  const safeRequestId = cleanSlug(requestId, 120) || 'signal-brief';
+  const token = (crypto.randomUUID?.() || randomToken(12)).replace(/-/g, '').slice(0, 12);
+  return `content/imports/signal/${year}/${month}/${safeRequestId}-${Date.now()}-${token}.json`;
+};
+
+const parseSignalSourcesInput = (value) => {
+  if (Array.isArray(value)) {
+    return value
+      .map((source) => {
+        if (typeof source === 'string') {
+          const text = cleanText(source, 500);
+          return { label: text.replace(/^https?:\/\//i, ''), note: '', url: /^https?:\/\//i.test(text) ? text : '' };
+        }
+        return {
+          label: cleanText(source?.label || source?.title || source?.url, 160),
+          note: cleanText(source?.note || source?.description, 240),
+          url: cleanText(source?.url, 500)
+        };
+      })
+      .filter((source) => source.label || source.url)
+      .slice(0, 12);
+  }
+
+  return String(value || '')
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [labelPart, urlPart, notePart] = line.split('|').map((part) => part.trim());
+      const directUrl = /^https?:\/\//i.test(labelPart) ? labelPart : '';
+      const url = directUrl || (/^https?:\/\//i.test(urlPart) ? urlPart : '');
+      return {
+        label: cleanText(directUrl ? directUrl.replace(/^https?:\/\//i, '') : labelPart, 160),
+        note: cleanText(notePart || (!url && urlPart ? urlPart : ''), 240),
+        url: cleanText(url, 500)
+      };
+    })
+    .filter((source) => source.label || source.url)
+    .slice(0, 12);
+};
+
+const extractSignalSummaryBullets = (payload, markdown) => {
+  const explicit = normalizeStringArray(payload.summaryBullets || payload.bullets || payload.highlights, 6);
+  if (explicit.length) return explicit;
+  return String(markdown || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => /^[-*]\s+/.test(line))
+    .map((line) => cleanText(line.replace(/^[-*]\s+/, ''), 180))
+    .filter(Boolean)
+    .slice(0, 6);
+};
+
+const handleAdminImportSignalBrief = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'CONTENT_TABLES_NOT_READY',
+        message: 'Content tables are not initialized. Apply migration 0007_backend_content_platform.sql before importing Signal briefs.'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid Signal import JSON.' }, { status: 400 });
+  }
+
+  const title = cleanText(payload.title, 240);
+  const markdown = typeof payload.markdown === 'string' ? payload.markdown.trim() : String(payload.body || '').trim();
+  if (!title) return privateJson({ ok: false, code: 'SIGNAL_TITLE_REQUIRED', message: '简报标题必填。' }, { status: 400 });
+  if (!markdown) return privateJson({ ok: false, code: 'SIGNAL_BODY_REQUIRED', message: '简报正文必填。' }, { status: 400 });
+  if (markdown.length > 2_000_000) {
+    return privateJson({ ok: false, code: 'SIGNAL_BODY_TOO_LARGE', message: '简报正文过大。' }, { status: 413 });
+  }
+
+  const locale = normalizeContentLocale(payload.locale || 'zh-Hant');
+  const briefDate = cleanText(payload.briefDate || new Date().toISOString().slice(0, 10), 40);
+  const category = normalizeSignalCategory(payload.category || payload.signalCategory || payload.subtitle);
+  const slugBase = cleanSlug(payload.slug || payload.briefSlug, 160);
+  const dateSlug = cleanSlug(briefDate, 40) || new Date().toISOString().slice(0, 10);
+  const slug = slugBase || `daily-brief-${dateSlug}`;
+  const requestId =
+    cleanText(payload.requestId, 240) ||
+    `signal-${slug}-${(crypto.randomUUID?.() || randomToken(12)).replace(/-/g, '').slice(0, 8)}`;
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  const html = renderSimpleMarkdownToHtml(markdown);
+  const wordCount = countContentWords(markdown);
+  const summaryBullets = extractSignalSummaryBullets(payload, markdown);
+  const sources = parseSignalSourcesInput(payload.sources || payload.sourcesText);
+  const description = cleanText(payload.description || firstPlainSummary([markdown], 360), 1200);
+  const excerpt = cleanText(payload.excerpt || firstPlainSummary([markdown], 260), 1000);
+  const existing = await db
+    .prepare(
+      `SELECT id
+       FROM content_entries
+       WHERE entry_type = 'signal_brief'
+         AND locale = ?
+         AND slug = ?
+         AND parent_slug = ''
+       LIMIT 1`
+    )
+    .bind(locale, slug)
+    .first();
+
+  const backupPayload = {
+    importedAt: new Date().toISOString(),
+    importedBy: actorEmail,
+    requestId,
+    signalBrief: {
+      briefDate,
+      category,
+      locale,
+      slug,
+      title
+    },
+    payload
+  };
+  let backupKey = '';
+  const bucket = getContentBucket(env);
+  if (bucket) {
+    backupKey = buildSignalImportBackupKey(requestId);
+    await bucket.put(backupKey, JSON.stringify(backupPayload, null, 2), {
+      httpMetadata: { contentType: 'application/json; charset=utf-8' }
+    });
+  }
+
+  const entry = normalizeContentPayload({
+    accessLevel: 'free',
+    authorName: payload.authorName || payload.author || 'Station Cat',
+    description,
+    entryType: 'signal_brief',
+    excerpt,
+    featured: Boolean(payload.featured),
+    html,
+    importR2Key: backupKey,
+    locale,
+    markdown,
+    metadata: {
+      adminVersion: 'signal-strip-1',
+      briefDate,
+      category,
+      importedFromAdminV2: true,
+      issue: cleanText(payload.issue, 80),
+      shareCardVersion: 1,
+      sources,
+      summaryBullets
+    },
+    publishedAt: payload.publishedAt || `${briefDate}T09:00`,
+    revisionSummary: payload.revisionSummary || 'Signal brief import',
+    slug,
+    sourceKind: 'signal_brief',
+    sourceRef: requestId,
+    status: payload.status || 'published',
+    subtitle: signalCategoryLabel(category, locale),
+    tags: payload.tags || ['Signal strip', signalCategoryLabel(category, locale)],
+    title,
+    visibility: 'public',
+    wordCount,
+    readingMinutes: Math.max(1, Math.ceil(wordCount / 450))
+  });
+
+  try {
+    const { saved, revisionNumber } = await persistContentEntry(db, env, entry, {
+      actorEmail,
+      auditAction: 'signal_brief_import',
+      auditMetadata: {
+        backupKey,
+        briefDate,
+        category,
+        requestId,
+        sources: sources.length,
+        summaryBullets: summaryBullets.length
+      },
+      revisionSummary: cleanText(payload.revisionSummary || 'Signal brief import', 500)
+    });
+
+    const importRow = await db
+      .prepare(
+        `INSERT INTO content_imports (
+          import_type, filename, r2_key, status, entries_created, entries_updated,
+          warnings_json, errors_json, created_by
+        )
+        VALUES ('signal_brief', ?, ?, 'completed', ?, ?, '[]', '[]', ?)
+        RETURNING *`
+      )
+      .bind(requestId, backupKey, existing ? 0 : 1, existing ? 1 : 0, actorEmail)
+      .first();
+    const origin = new URL(request.url).origin;
+    const publicPath = contentEntryPublicPath(saved);
+
+    return privateJson({
+      ok: true,
+      entry: contentEntryToJson(saved),
+      import: contentImportToJson(importRow, [saved], origin),
+      publicPath,
+      publicUrl: `${origin}${publicPath}`,
+      revisionNumber,
+      shareCardPath: `${publicPath}card.svg`,
+      stage: 'signal-strip-1'
+    });
+  } catch (error) {
+    return privateJson(
+      {
+        ok: false,
+        code: error.code || 'SIGNAL_IMPORT_FAILED',
+        message: error.message || 'Signal brief import failed.'
+      },
+      { status: error.code === 'CONTENT_BUCKET_NOT_CONFIGURED' ? 503 : 500 }
+    );
+  }
 };
 
 const parseContentEntryId = (request) => {
@@ -11649,7 +11924,10 @@ const contentPreviewRowFromEntry = (entry) => ({
   cover_alt: entry.coverAlt,
   cover_r2_key: entry.coverR2Key,
   description: entry.description,
+  entry_type: entry.entryType,
   excerpt: entry.excerpt,
+  locale: entry.locale,
+  metadata_json: JSON.stringify(normalizeJsonObject(entry.metadata)),
   parent_slug: entry.parentSlug,
   published_at: entry.publishedAt || entry.scheduledAt || contentPreviewTimestamp(),
   slug: entry.slug,
@@ -11666,7 +11944,11 @@ const getPreviewBody = (entry) => ({
   source: 'admin-preview'
 });
 
-const getPreviewBasePath = (entry) => getPathWithLocale(entry.locale, entry.entryType === 'blog_post' ? 'devlog' : 'works');
+const getPreviewBasePath = (entry) => {
+  if (entry.entryType === 'blog_post') return getPathWithLocale(entry.locale, 'devlog');
+  if (entry.entryType === 'signal_brief') return getPathWithLocale(entry.locale, 'signal');
+  return novelV2BasePathForLocale(entry.locale);
+};
 
 const getAnyPreviewContentEntry = async (env, options) => {
   const db = env.WAITLIST_DB;
@@ -11709,14 +11991,19 @@ const previewRouteFromEntry = (entry) => {
   if (entry.entryType === 'blog_post') {
     return { basePath, kind: 'devlog-post', locale: entry.locale, slug: entry.slug };
   }
+  if (entry.entryType === 'signal_brief') {
+    return { basePath, kind: 'signal-brief', locale: entry.locale, slug: entry.slug };
+  }
   if (entry.entryType === 'novel_series') {
-    return { basePath, kind: 'novel-series', locale: entry.locale, seriesSlug: entry.slug };
+    return { basePath, kind: 'novel-series', locale: entry.locale, readerVersion: 'v2', seriesSlug: entry.slug };
   }
   return {
     basePath,
+    chapterPathSegment: 'chapter',
     chapterSlug: entry.slug,
     kind: 'novel-chapter',
     locale: entry.locale,
+    readerVersion: 'v2',
     seriesSlug: entry.parentSlug
   };
 };
@@ -11737,6 +12024,18 @@ const renderAdminContentPreview = async (entry, env) => {
       canonicalPath: dynamicCanonicalPath(route),
       description: firstPlainSummary([entry.description, entry.excerpt], 260),
       lang: entry.locale,
+      robots: 'noindex, nofollow',
+      title: `[Preview] ${entry.title}`
+    };
+  }
+
+  if (entry.entryType === 'signal_brief') {
+    return {
+      body: addPreviewBanner(entry, renderDynamicSignalBrief(route, row, body)),
+      canonicalPath: dynamicCanonicalPath(route),
+      description: firstPlainSummary([entry.description, entry.excerpt], 260),
+      lang: entry.locale,
+      ogImage: dynamicSignalCardPath(route, entry.slug),
       robots: 'noindex, nofollow',
       title: `[Preview] ${entry.title}`
     };
@@ -11844,6 +12143,7 @@ const getPathWithLocale = (locale, routeName) => {
   const segment = localePathSegments[locale];
   if (routeName === 'works' && locale === 'en') return '/works/';
   if (routeName === 'devlog' && locale === 'zh-Hant') return '/devlog/';
+  if (routeName === 'signal' && locale === 'zh-Hant') return '/signal/';
   return `/${segment}/${routeName}/`;
 };
 
@@ -11915,6 +12215,40 @@ const parseDynamicContentRoute = (pathname) => {
     return null;
   }
 
+  if (section === 'signal') {
+    locale = locale || 'zh-Hant';
+    const slug = cleanSlug(segments[offset + 1] || '', 160);
+    const asset = cleanText(segments[offset + 2] || '', 80);
+    const segmentCount = segments.length - offset;
+    const baseRoute = {
+      basePath: hasLocalePrefix ? getPathWithLocale(locale, 'signal') : '/signal/',
+      kind: 'signal-index',
+      locale,
+      slug: ''
+    };
+
+    if (segmentCount === 1) return baseRoute;
+
+    if (segmentCount === 2 && slug) {
+      return {
+        ...baseRoute,
+        kind: 'signal-brief',
+        slug
+      };
+    }
+
+    if (segmentCount === 3 && slug && ['card.svg', 'share-card.svg'].includes(asset)) {
+      return {
+        ...baseRoute,
+        asset,
+        kind: 'signal-card',
+        slug
+      };
+    }
+
+    return null;
+  }
+
   if (section === 'works') {
     locale = locale || 'en';
     const basePath = hasLocalePrefix ? getPathWithLocale(locale, 'works') : '/works/';
@@ -11965,6 +12299,9 @@ const dynamicCanonicalPath = (route) => {
   if (route.kind === 'novel-index') return route.basePath;
   if (route.kind === 'novel-series') return dynamicSeriesPath(route, route.seriesSlug);
   if (route.kind === 'novel-chapter') return dynamicChapterPath(route, route.seriesSlug, route.chapterSlug);
+  if (route.kind === 'signal-index') return route.basePath;
+  if (route.kind === 'signal-brief') return dynamicSignalPath(route, route.slug);
+  if (route.kind === 'signal-card') return dynamicSignalCardPath(route, route.slug);
   return '/';
 };
 
@@ -11977,22 +12314,36 @@ const dynamicChapterPath = (route, seriesSlug, chapterSlug) => {
     : `${route.basePath}${seriesSlug}/${chapterSlug}/`;
 };
 
+const dynamicSignalPath = (route, slug) => `${route.basePath}${slug}/`;
+const dynamicSignalCardPath = (route, slug) => `${dynamicSignalPath(route, slug)}card.svg`;
+
 const dynamicNavCopy = {
   en: {
     apps: 'Apps',
     devlog: 'Dev Blog',
     member: 'Member Center',
-    serials: 'Serials'
+    serials: 'Serials',
+    signal: 'Signal strip'
   },
   'zh-Hant': {
     apps: 'Apps',
     devlog: '開發博客',
     member: '會員登入',
-    serials: '連載小說'
+    serials: '連載小說',
+    signal: '信號簡報'
   }
 };
 
-const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '', title }) => `<!doctype html>
+const absoluteStationUrl = (path) => {
+  const value = cleanText(path, 1000);
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://wwwstationcat.org${value.startsWith('/') ? value : `/${value}`}`;
+};
+
+const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = '', robots = '', title }) => {
+  const ogImageUrl = absoluteStationUrl(ogImage);
+  return `<!doctype html>
 <html lang="${escapeHtml(lang)}">
   <head>
     <meta charset="utf-8">
@@ -12001,6 +12352,15 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
     <meta name="description" content="${escapeHtml(description)}">
     ${robots ? `<meta name="robots" content="${escapeHtml(robots)}">` : ''}
     <link rel="canonical" href="https://wwwstationcat.org${escapeHtml(canonicalPath)}">
+    <meta property="og:title" content="${escapeHtml(title)} | Station Cat">
+    <meta property="og:description" content="${escapeHtml(description)}">
+    <meta property="og:url" content="https://wwwstationcat.org${escapeHtml(canonicalPath)}">
+    <meta property="og:site_name" content="Station Cat">
+    ${ogImageUrl ? `<meta property="og:image" content="${escapeHtml(ogImageUrl)}">` : ''}
+    <meta name="twitter:card" content="${ogImageUrl ? 'summary_large_image' : 'summary'}">
+    <meta name="twitter:title" content="${escapeHtml(title)} | Station Cat">
+    <meta name="twitter:description" content="${escapeHtml(description)}">
+    ${ogImageUrl ? `<meta name="twitter:image" content="${escapeHtml(ogImageUrl)}">` : ''}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <style>
       :root { color-scheme: light; --bg: #fffaf4; --surface: #ffffff; --soft: #f5efe7; --ink: #1f2d29; --muted: #64736d; --line: #e4dbd0; --teal: #08796d; --coral: #d95d45; }
@@ -12079,9 +12439,24 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
       .reader-comment-item p { color: var(--ink); line-height: 1.7; }
       .reader-bookmark-fab, .reader-bookmark-toast { display: none; }
       .reader-bookmark-toast { background: rgba(255,255,255,.96); border-color: rgba(8,121,109,.32); box-shadow: 0 18px 50px rgba(44,39,33,.12); color: var(--ink); font-weight: 900; left: max(16px, env(safe-area-inset-left)); position: fixed; right: max(16px, env(safe-area-inset-right)); text-align: center; z-index: 50; }
+      .signal-hero { align-items: end; border-left: 8px solid var(--teal); border-top: 1px dashed var(--line); display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); padding: clamp(22px, 4vw, 42px) 0 clamp(22px, 4vw, 42px) clamp(18px, 3vw, 34px); }
+      .signal-hero h1 { font-size: clamp(42px, 7vw, 84px); }
+      .signal-card-preview { background: #193a33; border: 1px solid #101f1c; border-radius: 12px; box-shadow: 8px 8px 0 rgba(34,27,22,.14); color: #fffaf1; display: grid; gap: 14px; min-height: 260px; padding: 22px; }
+      .signal-card-preview h2 { color: #fffaf1; font-size: 32px; }
+      .signal-card-preview p { color: rgba(255,250,241,.82); }
+      .signal-dash { border-bottom: 4px dashed #e9a95e; width: 148px; }
+      .signal-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+      .signal-entry { min-height: 220px; }
+      .signal-entry .meta { align-items: center; }
+      .signal-entry h3 { font-size: 24px; line-height: 1.18; }
+      .signal-brief-layout { display: grid; gap: 24px; margin-left: auto; margin-right: auto; max-width: 900px; }
+      .signal-share { align-items: center; background: var(--soft); border: 1px dashed var(--line); border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; padding: 14px; }
+      .signal-source-list { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
+      .signal-source-list a { color: var(--teal); font-weight: 900; }
+      .signal-source-list small { color: var(--muted); display: block; margin-top: 2px; }
       @media (max-width: 760px) {
         .shell { padding: 18px 14px 96px; }
-        .grid, .hero--novel { grid-template-columns: 1fr; }
+        .grid, .hero--novel, .signal-hero { grid-template-columns: 1fr; }
         .chapter-list { gap: 8px; }
         .chapter-card { padding: 12px; }
         .chapter-pagination { justify-content: flex-start; }
@@ -12102,6 +12477,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
         <a class="brand" href="/"><span>SC</span><span>Station Cat</span></a>
         <nav class="nav">
           <a href="${escapeHtml(novelV2BasePathForLocale(lang))}">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).serials)}</a>
+          <a href="${escapeHtml(getPathWithLocale(lang, 'signal'))}">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).signal)}</a>
           <a href="/devlog/">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).devlog)}</a>
           <a href="/apps/">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).apps)}</a>
           <a href="/library/">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).member)}</a>
@@ -12113,6 +12489,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, robots = '',
     </main>
   </body>
 </html>`;
+};
 
 const dynamicHtmlResponse = (request, payload, init = {}) =>
   new Response(request.method === 'HEAD' ? null : dynamicHtmlShell(payload), {
@@ -12151,6 +12528,249 @@ const renderDynamicDevlogPost = (route, post, body) => {
       </header>
       <div class="prose">${body.html || `<p>${escapeHtml(fallbackBody)}</p>`}</div>
     </article>`;
+};
+
+const signalCategoryLabels = {
+  ai: 'AI',
+  economy: 'Economy',
+  general: 'General',
+  market: 'Markets',
+  tech: 'Tech'
+};
+
+const signalCategoryLabelsByLocale = {
+  en: signalCategoryLabels,
+  ja: {
+    ai: 'AI',
+    economy: '経済',
+    general: '総合',
+    market: '市場',
+    tech: 'テック'
+  },
+  'zh-Hant': {
+    ai: 'AI',
+    economy: '經濟',
+    general: '綜合',
+    market: '市場',
+    tech: '科技'
+  },
+  'zh-Hans': {
+    ai: 'AI',
+    economy: '经济',
+    general: '综合',
+    market: '市场',
+    tech: '科技'
+  }
+};
+
+const normalizeSignalCategory = (value) => {
+  const category = cleanText(value || 'general', 40).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  return signalCategoryLabels[category] ? category : 'general';
+};
+
+const signalCategoryLabel = (category, locale) =>
+  signalCategoryLabelsByLocale[locale]?.[normalizeSignalCategory(category)] ||
+  signalCategoryLabels[normalizeSignalCategory(category)] ||
+  'Signal';
+
+const signalBriefMetadata = (row) => {
+  const metadata = parseStoredJson(row.metadata_json, {});
+  const summaryBullets = Array.isArray(metadata.summaryBullets)
+    ? metadata.summaryBullets.map((item) => cleanText(item, 180)).filter(Boolean).slice(0, 6)
+    : [];
+  const sources = Array.isArray(metadata.sources)
+    ? metadata.sources
+        .map((source) => ({
+          label: cleanText(source?.label || source?.title || source?.url, 160),
+          note: cleanText(source?.note || source?.description, 240),
+          url: cleanText(source?.url, 500)
+        }))
+        .filter((source) => source.label || source.url)
+        .slice(0, 12)
+    : [];
+
+  return {
+    briefDate: cleanText(metadata.briefDate || row.published_at || row.updated_at, 80),
+    category: normalizeSignalCategory(metadata.category || row.subtitle),
+    issue: cleanText(metadata.issue, 80),
+    sources,
+    summaryBullets
+  };
+};
+
+const renderSignalBriefPills = (route, row) => {
+  const meta = signalBriefMetadata(row);
+  const date = formatContentDate(meta.briefDate || row.published_at || row.updated_at, route.locale);
+  return `<div class="meta">
+      <span class="pill">${escapeHtml(signalCategoryLabel(meta.category, route.locale))}</span>
+      ${date ? `<span>${escapeHtml(date)}</span>` : ''}
+      ${meta.issue ? `<span>${escapeHtml(meta.issue)}</span>` : ''}
+    </div>`;
+};
+
+const renderDynamicSignalIndex = (route, rows) => {
+  const copy = dynamicContentCopy[route.locale] || dynamicContentCopy['zh-Hant'];
+  const cards = rows.length
+    ? rows
+        .map((row) => {
+          const meta = signalBriefMetadata(row);
+          const summary = firstPlainSummary([row.excerpt, row.description], 220);
+          const bullets = meta.summaryBullets.length
+            ? `<ul>${meta.summaryBullets.slice(0, 3).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+            : '';
+          return `<a class="card signal-entry" href="${escapeHtml(dynamicSignalPath(route, row.slug))}">
+              ${renderSignalBriefPills(route, row)}
+              <h3>${escapeHtml(row.title)}</h3>
+              ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
+              ${bullets}
+            </a>`;
+        })
+        .join('')
+    : `<p>${escapeHtml(copy.signalEmpty)}</p>`;
+
+  return `<section class="signal-hero">
+      <div class="hero-copy">
+        <p class="kicker">${escapeHtml(copy.signalEyebrow)}</p>
+        <h1>${escapeHtml(copy.signalTitle)}</h1>
+        <p>${escapeHtml(copy.signalDescription)}</p>
+      </div>
+      <aside class="signal-card-preview" aria-label="Signal card preview">
+        <p class="kicker">SC Signal strip</p>
+        <h2>Tech · Economy · AI</h2>
+        <p>把每天值得留意的公開信號整理成一張可以分享的卡片。</p>
+        <div class="signal-dash"></div>
+      </aside>
+    </section>
+    <section class="section">
+      <p class="kicker">${escapeHtml(copy.signalLatest)}</p>
+      <div class="signal-grid">${cards}</div>
+    </section>`;
+};
+
+const renderDynamicSignalBrief = (route, row, body) => {
+  const copy = dynamicContentCopy[route.locale] || dynamicContentCopy['zh-Hant'];
+  const meta = signalBriefMetadata(row);
+  const summary = firstPlainSummary([row.description, row.excerpt], 360);
+  const fallbackBody = firstPlainSummary([row.excerpt, row.description], 1200);
+  const canonicalPath = dynamicSignalPath(route, row.slug);
+  const absoluteUrl = absoluteStationUrl(canonicalPath);
+  const shareText = `${row.title} | Station Cat Signal strip`;
+  const shareHref = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(absoluteUrl)}`;
+  const cardPath = dynamicSignalCardPath(route, row.slug);
+  const sourceList = meta.sources.length
+    ? `<section class="panel">
+        <p class="kicker">${escapeHtml(copy.signalSources)}</p>
+        <ul class="signal-source-list">
+          ${meta.sources
+            .map((source) => {
+              const label = source.label || source.url;
+              const link = /^https?:\/\//i.test(source.url)
+                ? `<a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>`
+                : `<strong>${escapeHtml(label)}</strong>`;
+              return `<li>${link}${source.note ? `<small>${escapeHtml(source.note)}</small>` : ''}</li>`;
+            })
+            .join('')}
+        </ul>
+      </section>`
+    : '';
+
+  return `<article class="signal-brief-layout">
+      <a class="text-link" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.signalBack)}</a>
+      <header class="hero">
+        <p class="kicker">${escapeHtml(copy.signalEyebrow)}</p>
+        ${renderSignalBriefPills(route, row)}
+        <h1>${escapeHtml(row.title)}</h1>
+        ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
+      </header>
+      <section class="signal-share">
+        <div>
+          <strong>${escapeHtml(copy.signalShare)}</strong>
+          <p>${escapeHtml(copy.signalDescription)}</p>
+        </div>
+        <div class="button-row">
+          <a class="button button-primary" href="${escapeHtml(shareHref)}" target="_blank" rel="noreferrer">${escapeHtml(copy.signalShare)}</a>
+          <a class="button button-secondary" href="${escapeHtml(cardPath)}" target="_blank" rel="noreferrer">${escapeHtml(copy.signalCard)}</a>
+          <button class="button button-secondary" type="button" data-signal-copy-link>${escapeHtml(copy.signalCopyLink)}</button>
+        </div>
+      </section>
+      <div class="prose">${body.html || `<p>${escapeHtml(fallbackBody)}</p>`}</div>
+      ${sourceList}
+      <script>
+        (() => {
+          const button = document.querySelector('[data-signal-copy-link]');
+          button?.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText(${scriptJson(absoluteUrl)});
+              button.textContent = '已複製';
+            } catch {
+              button.textContent = 'Copy failed';
+            }
+            window.setTimeout(() => {
+              button.textContent = ${scriptJson(copy.signalCopyLink)};
+            }, 1800);
+          });
+        })();
+      </script>
+    </article>`;
+};
+
+const wrapSignalCardLines = (value, maxChars = 24, maxLines = 4) => {
+  const text = cleanText(value, 800);
+  if (!text) return [];
+  const words = text.includes(' ') ? text.split(/\s+/).filter(Boolean) : Array.from(text);
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const next = text.includes(' ') ? `${current}${current ? ' ' : ''}${word}` : `${current}${word}`;
+    if (next.length > maxChars && current) {
+      lines.push(current);
+      current = word;
+      if (lines.length >= maxLines) break;
+    } else {
+      current = next;
+    }
+  }
+  if (current && lines.length < maxLines) lines.push(current);
+  return lines.slice(0, maxLines);
+};
+
+const renderSignalShareCardSvg = (route, row) => {
+  const meta = signalBriefMetadata(row);
+  const category = signalCategoryLabel(meta.category, route.locale);
+  const date = formatContentDate(meta.briefDate || row.published_at || row.updated_at, route.locale);
+  const titleLines = wrapSignalCardLines(row.title, route.locale === 'en' ? 28 : 13, 3);
+  const summarySource = meta.summaryBullets[0] || row.excerpt || row.description;
+  const summaryLines = wrapSignalCardLines(summarySource, route.locale === 'en' ? 42 : 21, 3);
+  const sourceLabel = meta.sources[0]?.label || 'Station Cat';
+  const url = `wwwstationcat.org${dynamicSignalPath(route, row.slug)}`;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="${escapeHtml(row.title)}">
+    <defs>
+      <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+        <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#eadfce" stroke-width="1"/>
+      </pattern>
+      <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="10" dy="12" stdDeviation="0" flood-color="#211b16" flood-opacity="0.16"/>
+      </filter>
+    </defs>
+    <rect width="1200" height="630" fill="#fffaf4"/>
+    <rect width="1200" height="630" fill="url(#grid)" opacity="0.68"/>
+    <rect x="92" y="78" width="1016" height="474" rx="22" fill="#fffaf1" stroke="#241f1a" stroke-width="3" filter="url(#shadow)"/>
+    <rect x="92" y="78" width="18" height="474" fill="#286a5e"/>
+    <text x="142" y="134" fill="#286a5e" font-family="Arial, sans-serif" font-size="24" font-weight="800">SC SIGNAL STRIP</text>
+    <text x="930" y="134" fill="#524a42" font-family="Arial, sans-serif" font-size="22" font-weight="700" text-anchor="end">${escapeHtml(category)}</text>
+    <line x1="142" y1="164" x2="1058" y2="164" stroke="#d8c9b8" stroke-width="3" stroke-dasharray="7 8"/>
+    ${titleLines
+      .map((line, index) => `<text x="142" y="${232 + index * 74}" fill="#241f1a" font-family="Georgia, 'Times New Roman', serif" font-size="60" font-weight="800">${escapeHtml(line)}</text>`)
+      .join('')}
+    ${summaryLines
+      .map((line, index) => `<text x="146" y="${455 + index * 34}" fill="#52645e" font-family="Arial, sans-serif" font-size="26" font-weight="600">${escapeHtml(line)}</text>`)
+      .join('')}
+    <rect x="142" y="510" width="156" height="8" fill="#e9a95e"/>
+    <rect x="318" y="510" width="62" height="8" fill="#286a5e"/>
+    <text x="142" y="560" fill="#52645e" font-family="Arial, sans-serif" font-size="22" font-weight="700">${escapeHtml(date || sourceLabel)}</text>
+    <text x="1058" y="560" fill="#52645e" font-family="Arial, sans-serif" font-size="22" font-weight="700" text-anchor="end">${escapeHtml(url)}</text>
+  </svg>`;
 };
 
 const renderDynamicNovelIndex = (route, seriesRows) => {
@@ -13286,6 +13906,47 @@ const handleDynamicFrontendContent = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db || !(await ensureContentTablesReady(db))) return null;
 
+  if (route.kind === 'signal-index') {
+    const rows = await listPublishedContentEntries(db, { entryType: 'signal_brief', locale: route.locale, limit: 50 });
+    const copy = dynamicContentCopy[route.locale] || dynamicContentCopy['zh-Hant'];
+    return dynamicHtmlResponse(request, {
+      body: renderDynamicSignalIndex(route, rows),
+      canonicalPath: dynamicCanonicalPath(route),
+      description: copy.signalDescription,
+      lang: route.locale,
+      title: copy.signalTitle
+    });
+  }
+
+  if (route.kind === 'signal-brief' || route.kind === 'signal-card') {
+    const brief = await getPublishedContentEntry(db, {
+      entryType: 'signal_brief',
+      locale: route.locale,
+      slug: route.slug
+    });
+    if (!brief) return null;
+
+    if (route.kind === 'signal-card') {
+      return new Response(request.method === 'HEAD' ? null : renderSignalShareCardSvg(route, brief), {
+        headers: {
+          'cache-control': 'public, max-age=300',
+          'content-type': 'image/svg+xml; charset=utf-8',
+          'x-content-type-options': 'nosniff'
+        }
+      });
+    }
+
+    const body = await readPublicEntryBody(env, brief);
+    return dynamicHtmlResponse(request, {
+      body: renderDynamicSignalBrief(route, brief, body),
+      canonicalPath: dynamicCanonicalPath(route),
+      description: firstPlainSummary([brief.description, brief.excerpt], 260),
+      lang: route.locale,
+      ogImage: dynamicSignalCardPath(route, brief.slug),
+      title: brief.title
+    });
+  }
+
   if (route.kind === 'novel-index') {
     const seriesRows = await listPublishedContentEntries(db, { entryType: 'novel_series', locale: route.locale, limit: 100 });
     return dynamicHtmlResponse(request, {
@@ -14083,6 +14744,8 @@ export const __readerTotpTestHooks = {
   hotpCode,
   dynamicCanonicalPath,
   dynamicChapterPath,
+  dynamicSignalCardPath,
+  dynamicSignalPath,
   dynamicSeriesPath,
   normalizeTotpCode,
   normalizeReadingEventPayload,
@@ -14090,6 +14753,8 @@ export const __readerTotpTestHooks = {
   parseNovelForgeAnalyticsRoute,
   parseNovelForgeChapterContentRoute,
   parseDynamicContentRoute,
+  renderDynamicSignalBrief,
+  renderDynamicSignalIndex,
   splitNovelTranslationChunks,
   readerTotpResetFailureMessage,
   readerTotpResetFailureThreshold,
@@ -14097,6 +14762,7 @@ export const __readerTotpTestHooks = {
   reserveReaderTotpResetAttempt,
   renderDynamicNovelSeries,
   renderDynamicNovelChapter,
+  renderSignalShareCardSvg,
   sha256Hex,
   shouldSampleReaderTotpResetCleanup,
   timingSafeEqualString,
@@ -14406,6 +15072,11 @@ export default {
 
     if (url.pathname === '/admin/api/content/imports/review') {
       if (request.method === 'POST') return handleAdminReviewContentImport(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/signal/import') {
+      if (request.method === 'POST') return handleAdminImportSignalBrief(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

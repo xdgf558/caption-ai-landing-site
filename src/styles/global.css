@@ -3639,11 +3639,13 @@ button.button {
 .station-scrap {
   background: #fffaf1;
   border: 1px solid #d8c8b8;
+  color: inherit;
   box-shadow: var(--paper-shadow);
   display: grid;
   gap: 10px;
   padding: 18px;
   position: relative;
+  text-decoration: none;
   transform: rotate(-1.5deg);
   transition: transform 180ms ease, box-shadow 180ms ease;
 }

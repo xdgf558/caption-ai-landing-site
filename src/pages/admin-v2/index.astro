@@ -31,6 +31,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <div class="admin-v2-tabs" role="tablist" aria-label="Admin sections">
             <button class="admin-v2-tab is-active" type="button" data-admin-v2-tab="content">内容</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="imports">导入审核</button>
+            <button class="admin-v2-tab" type="button" data-admin-v2-tab="signal">简报</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="commerce">订单</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="accounts">账户</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="analytics">统计</button>
@@ -116,6 +117,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <select id="content-filter-type">
                 <option value="">全部</option>
                 <option value="blog_post">Blog / Devlog</option>
+                <option value="signal_brief">Signal 简报</option>
                 <option value="novel_series">小说作品</option>
                 <option value="novel_chapter">小说章节</option>
               </select>
@@ -136,6 +138,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
           <div class="button-row">
             <button class="button button-secondary" type="button" data-new-entry="blog_post">新 Blog</button>
+            <button class="button button-secondary" type="button" data-new-entry="signal_brief">新简报</button>
             <button class="button button-secondary" type="button" data-new-entry="novel_series">新作品</button>
             <button class="button button-secondary" type="button" data-new-entry="novel_chapter">新章节</button>
           </div>
@@ -154,6 +157,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
           </section>
           <div class="admin-v2-list" id="imports-list" aria-label="NovelForge imports"></div>
+        </section>
+
+        <section class="admin-v2-sidebar-section" data-admin-v2-panel="signal-sidebar" hidden>
+          <section class="admin-template-panel" aria-labelledby="signal-help-title">
+            <div>
+              <p class="station-kicker">Signal strip</p>
+              <h3 id="signal-help-title">每日简报导入</h3>
+              <p>把科技、经济、AI 或市场简报文案粘贴进来，保存后会发布到 /signal/，并自动生成分享卡片。</p>
+            </div>
+          </section>
+          <div class="button-row">
+            <button class="button button-primary" id="signal-refresh" type="button">刷新简报</button>
+          </div>
+          <div class="admin-v2-list" id="signal-list" aria-label="Signal strip briefs"></div>
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="commerce-sidebar" hidden>
@@ -312,6 +329,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 内容类型
                 <select id="content-entry-type" required>
                   <option value="blog_post">Blog / Devlog</option>
+                  <option value="signal_brief">Signal 简报</option>
                   <option value="novel_series">小说作品</option>
                   <option value="novel_chapter">小说章节</option>
                 </select>
@@ -397,7 +415,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <textarea id="content-excerpt" rows="3" placeholder="可选短摘要。"></textarea>
             </label>
 
-            <section class="admin-v2-subpanel">
+            <section class="admin-v2-subpanel" id="entry-pricing-panel">
               <div class="admin-v2-section-heading">
                 <div>
                   <p class="station-kicker">Entry Override</p>
@@ -570,6 +588,80 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </section>
         </section>
 
+        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="signal-main" hidden>
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">Signal strip</p>
+              <h2>每日信号简报</h2>
+            </div>
+            <div class="admin-v2-badges">
+              <span>Tech</span>
+              <span>Economy</span>
+              <span>AI</span>
+            </div>
+          </div>
+          <form class="admin-v2-form" id="signal-form">
+            <div class="admin-v2-form-grid">
+              <label>
+                标题
+                <input id="signal-title" required placeholder="每日优先简报：AI、市场与宏观信号" />
+              </label>
+              <label>
+                Slug
+                <input id="signal-slug" placeholder="daily-priority-brief-2026-07-04" />
+              </label>
+              <label>
+                日期
+                <input id="signal-date" type="date" />
+              </label>
+              <label>
+                分类
+                <select id="signal-category">
+                  <option value="tech">科技</option>
+                  <option value="economy">经济</option>
+                  <option value="ai">AI</option>
+                  <option value="market">市场</option>
+                  <option value="general">综合</option>
+                </select>
+              </label>
+              <label>
+                状态
+                <select id="signal-status-field">
+                  <option value="published">发布</option>
+                  <option value="draft">草稿</option>
+                  <option value="scheduled">定时</option>
+                </select>
+              </label>
+              <label>
+                Tags
+                <input id="signal-tags" placeholder="科技, 经济, AI" />
+              </label>
+            </div>
+            <label>
+              摘要
+              <textarea id="signal-description" rows="3" placeholder="一句话说明今天这条简报看什么。"></textarea>
+            </label>
+            <label>
+              分享卡片要点
+              <textarea id="signal-bullets" rows="4" placeholder="每行一个要点，也可以留空让系统从 Markdown 列表里自动抽取。"></textarea>
+            </label>
+            <label>
+              来源
+              <textarea id="signal-sources" rows="4" placeholder="每行一个来源。格式：来源标题 | https://example.com | 备注"></textarea>
+            </label>
+            <label>
+              简报正文 Markdown
+              <textarea id="signal-markdown" rows="16" required placeholder="把每日简报文案粘贴到这里。支持标题、段落和项目符号。"></textarea>
+            </label>
+            <div class="button-row">
+              <button class="button button-primary" type="submit">导入并保存简报</button>
+              <button class="button button-secondary" id="signal-reset" type="button">清空简报表单</button>
+              <a class="button button-secondary" id="signal-open-page" href="/signal/" target="_blank" rel="noreferrer">打开 Signal 页面</a>
+            </div>
+            <div class="admin-inline-status" id="signal-status" role="status" aria-live="polite" hidden></div>
+          </form>
+        </section>
+
         <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="commerce-main" hidden>
           <div class="admin-v2-section-heading">
             <div>
@@ -718,6 +810,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       revisionList: $('#revision-list'),
       importsList: $('#imports-list'),
       importDetail: $('#import-detail'),
+      signalList: $('#signal-list'),
+      signalForm: $('#signal-form'),
+      signalOpenPage: $('#signal-open-page'),
+      signalStatus: $('#signal-status'),
       ordersList: $('#orders-list'),
       orderDetail: $('#order-detail'),
       accountsList: $('#accounts-list'),
@@ -734,6 +830,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       accessForm: $('#access-form'),
       saveStatus: $('#content-save-status'),
       effectivePricingPreview: $('#pricing-effective-preview'),
+      entryPricingPanel: $('#entry-pricing-panel'),
       effectivePricingStatus: $('#pricing-effective-status'),
       effectivePricingRefresh: $('#pricing-effective-refresh'),
       pricingDefaultsApply: $('#pricing-defaults-apply'),
@@ -818,6 +915,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         auditTargetType: $('#audit-target-type'),
         auditTargetSlug: $('#audit-target-slug')
       },
+      signal: {
+        title: $('#signal-title'),
+        slug: $('#signal-slug'),
+        date: $('#signal-date'),
+        category: $('#signal-category'),
+        status: $('#signal-status-field'),
+        tags: $('#signal-tags'),
+        description: $('#signal-description'),
+        bullets: $('#signal-bullets'),
+        sources: $('#signal-sources'),
+        markdown: $('#signal-markdown')
+      },
       access: {
         email: $('#access-email'),
         seriesSlug: $('#access-series-slug'),
@@ -832,6 +941,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const state = {
       entries: [],
       imports: [],
+      signalBriefs: [],
       orders: [],
       accounts: [],
       analyticsStats: [],
@@ -839,6 +949,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       comments: [],
       selectedEntryId: 0,
       selectedImportId: 0,
+      selectedSignalId: 0,
       selectedOrderToken: '',
       selectedAccountId: 0,
       selectedAnalyticsKey: '',
@@ -920,6 +1031,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.coverStatus.textContent = message;
       elements.coverStatus.dataset.tone = tone;
       elements.coverStatus.hidden = !message;
+    };
+
+    const setSignalStatus = (message, tone = 'neutral') => {
+      elements.signalStatus.textContent = message;
+      elements.signalStatus.dataset.tone = tone;
+      elements.signalStatus.hidden = !message;
     };
 
     const apiJson = async (path, options = {}) => {
@@ -1023,6 +1140,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const detectEntryType = (frontmatter) => {
+      if (frontmatter.entryType === 'signal_brief' || frontmatter.type === 'signal_brief' || frontmatter.briefDate || frontmatter.signalCategory) return 'signal_brief';
       if (frontmatter.chapterSlug || frontmatter.chapterNumber || frontmatter.number) return 'novel_chapter';
       if (frontmatter.seriesSlug || frontmatter.updateSchedule || frontmatter.latestChapterSlug) return 'novel_series';
       return 'blog_post';
@@ -1547,15 +1665,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const updateConditionalFields = () => {
       const isChapter = elements.fields.entryType.value === 'novel_chapter';
+      const isNovel = elements.fields.entryType.value === 'novel_chapter' || elements.fields.entryType.value === 'novel_series';
       elements.fields.parentSlug.closest('label').hidden = !isChapter;
       elements.fields.chapterNumber.closest('label').hidden = !isChapter;
       elements.fields.volumeTitle.closest('label').hidden = !isChapter;
       elements.fields.parentSlug.required = isChapter;
       elements.fields.chapterNumber.required = isChapter;
+      elements.entryPricingPanel.hidden = !isNovel;
     };
 
     const entryTypeLabel = (type) => ({
       blog_post: 'Blog',
+      signal_brief: '简报',
       novel_series: '作品',
       novel_chapter: '章节'
     })[type] || type;
@@ -1583,6 +1704,113 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         button.addEventListener('click', () => loadEntryForEdit(entry.id));
         elements.contentList.append(button);
       });
+    };
+
+    const signalCategoryLabel = (value) => ({
+      ai: 'AI',
+      economy: '经济',
+      general: '综合',
+      market: '市场',
+      tech: '科技'
+    })[value] || value || '综合';
+
+    const todayDateInput = () => new Date().toISOString().slice(0, 10);
+
+    const resetSignalForm = () => {
+      elements.signal.title.value = '';
+      elements.signal.slug.value = '';
+      elements.signal.date.value = todayDateInput();
+      elements.signal.category.value = 'tech';
+      elements.signal.status.value = 'published';
+      elements.signal.tags.value = '科技, 经济, AI';
+      elements.signal.description.value = '';
+      elements.signal.bullets.value = '';
+      elements.signal.sources.value = '';
+      elements.signal.markdown.value = '';
+      elements.signalOpenPage.href = '/signal/';
+      setSignalStatus('');
+    };
+
+    const buildSignalImportPayload = () => {
+      const title = elements.signal.title.value.trim();
+      const briefDate = elements.signal.date.value || todayDateInput();
+      return {
+        briefDate,
+        bullets: elements.signal.bullets.value.split(/\n+/).map((line) => line.trim()).filter(Boolean),
+        category: elements.signal.category.value,
+        description: elements.signal.description.value.trim(),
+        locale: 'zh-Hant',
+        markdown: elements.signal.markdown.value.trim(),
+        requestId: `signal-${briefDate}-${Date.now()}`,
+        slug: elements.signal.slug.value.trim() || slugify(`${briefDate}-${title}`, 'daily-brief'),
+        sourcesText: elements.signal.sources.value.trim(),
+        status: elements.signal.status.value,
+        tags: splitTags(elements.signal.tags.value),
+        title
+      };
+    };
+
+    const renderSignalBriefList = () => {
+      if (!state.signalBriefs.length) {
+        renderEmpty(elements.signalList, '还没有 Signal 简报。');
+        return;
+      }
+
+      elements.signalList.innerHTML = '';
+      state.signalBriefs.forEach((entry) => {
+        const category = entry.metadata?.category || 'general';
+        const button = document.createElement('button');
+        button.className = `admin-v2-entry${entry.id === state.selectedSignalId ? ' is-active' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `
+          <span>${escapeHtml(entry.title)}</span>
+          <small>${escapeHtml(signalCategoryLabel(category))} · ${escapeHtml(entry.status)} · ${escapeHtml(formatDate(entry.publishedAt || entry.updatedAt))}</small>
+          <small>${escapeHtml(entry.slug)}</small>
+        `;
+        button.addEventListener('click', () => {
+          state.selectedSignalId = entry.id;
+          renderSignalBriefList();
+          elements.signalOpenPage.href = `/signal/${encodeURIComponent(entry.slug)}/`;
+        });
+        elements.signalList.append(button);
+      });
+    };
+
+    const loadSignalBriefs = async () => {
+      const payload = await apiJson('/admin/api/content/entries?type=signal_brief&locale=zh-Hant');
+      state.signalBriefs = payload.entries || [];
+      if (!state.signalBriefs.find((entry) => entry.id === state.selectedSignalId)) {
+        state.selectedSignalId = state.signalBriefs[0]?.id || 0;
+      }
+      renderSignalBriefList();
+      setStatus(`已载入 ${state.signalBriefs.length} 篇 Signal 简报。`, 'success');
+    };
+
+    const importSignalBrief = async (event) => {
+      event.preventDefault();
+      const payload = buildSignalImportPayload();
+      if (!payload.title || !payload.markdown) {
+        setSignalStatus('标题和简报正文必填。', 'error');
+        return;
+      }
+
+      const submitButton = elements.signalForm.querySelector('[type="submit"]');
+      submitButton.disabled = true;
+      setSignalStatus('正在导入 Signal 简报。');
+      try {
+        const result = await apiJson('/admin/api/signal/import', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const publicPath = result.publicPath || `/signal/${payload.slug}/`;
+        elements.signalOpenPage.href = publicPath;
+        setSignalStatus(`导入成功：${publicPath}，分享卡片 ${result.shareCardPath || `${publicPath}card.svg`}`, 'success');
+        await Promise.all([loadSignalBriefs(), loadEntries(), loadAuditLogs()]);
+      } catch (error) {
+        setSignalStatus(error.message, 'error');
+      } finally {
+        submitButton.disabled = false;
+      }
     };
 
     const importStatusTone = (status) => {
@@ -2722,6 +2950,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         panel.hidden = !expected;
       });
       if (name === 'imports') await loadImportReviews();
+      if (name === 'signal') await loadSignalBriefs();
       if (name === 'commerce') await loadOrders();
       if (name === 'accounts') await loadAccounts();
       if (name === 'analytics') await loadAnalyticsStats();
@@ -2732,9 +2961,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     elements.tabs.forEach((tab) => tab.addEventListener('click', () => switchTab(tab.dataset.adminV2Tab)));
     elements.contentForm.addEventListener('submit', saveContent);
+    elements.signalForm.addEventListener('submit', importSignalBrief);
     elements.accessForm.addEventListener('submit', grantEntitlement);
     $('#content-refresh').addEventListener('click', () => loadEntries({ autoSelect: true }));
     $('#imports-refresh').addEventListener('click', () => loadImportReviews());
+    $('#signal-refresh').addEventListener('click', loadSignalBriefs);
+    $('#signal-reset').addEventListener('click', resetSignalForm);
     $('#orders-refresh').addEventListener('click', loadOrders);
     $('#accounts-refresh').addEventListener('click', loadAccounts);
     $('#analytics-refresh').addEventListener('click', loadAnalyticsStats);
@@ -2776,6 +3008,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         await loadSchema();
         await loadPricingDefaults({ silent: true });
         resetForm('blog_post');
+        resetSignalForm();
         await loadEntries();
         const initialContentId = Number.parseInt(new URLSearchParams(window.location.search).get('contentId') || '', 10);
         if (Number.isFinite(initialContentId) && initialContentId > 0) {
