@@ -12851,17 +12851,48 @@ const wrapSignalCardLines = (value, maxChars = 24, maxLines = 4) => {
   return lines.slice(0, maxLines);
 };
 
+const truncateSignalCardText = (value, maxChars) => {
+  const chars = Array.from(cleanText(value, 400));
+  if (chars.length <= maxChars) return chars.join('');
+  return `${chars.slice(0, Math.max(1, maxChars - 1)).join('')}…`;
+};
+
+const normalizeSignalCardBullet = (value) =>
+  cleanText(value, 240)
+    .replace(/^(\d{1,3})[.)、．]\s+/, '')
+    .trim();
+
 const renderSignalShareCardSvg = (route, row) => {
   const meta = signalBriefMetadata(row);
   const category = signalCategoryLabel(meta.category, route.locale);
   const date = formatContentDate(meta.briefDate || row.published_at || row.updated_at, route.locale);
-  const titleLines = wrapSignalCardLines(row.title, route.locale === 'en' ? 28 : 13, 3);
-  const summarySource = meta.summaryBullets[0] || row.excerpt || row.description;
-  const summaryLines = wrapSignalCardLines(summarySource, route.locale === 'en' ? 42 : 21, 3);
+  const titleLines = wrapSignalCardLines(row.title, route.locale === 'en' ? 30 : 14, 2);
+  const bulletMaxChars = route.locale === 'en' ? 68 : 31;
+  const bulletLines = meta.summaryBullets
+    .map(normalizeSignalCardBullet)
+    .filter(Boolean)
+    .slice(0, 5)
+    .map((item) => truncateSignalCardText(item, bulletMaxChars));
+  const fallbackLines = !bulletLines.length
+    ? wrapSignalCardLines(row.excerpt || row.description, route.locale === 'en' ? 64 : 30, 5)
+    : [];
   const sourceLabel = meta.sources[0]?.label || 'Station Cat';
   const url = `wwwstationcat.org${dynamicSignalPath(route, row.slug)}`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="${escapeHtml(row.title)}">
+  const bulletSvg = bulletLines.length
+    ? bulletLines
+        .map((line, index) => {
+          const y = 326 + index * 50;
+          return `<circle cx="153" cy="${y - 8}" r="17" fill="#f4eadc" stroke="#d8c9b8" stroke-width="2"/>
+    <text x="153" y="${y}" fill="#286a5e" font-family="Arial, sans-serif" font-size="18" font-weight="900" text-anchor="middle">${index + 1}</text>
+    <text x="188" y="${y}" fill="#3f5751" font-family="Arial, sans-serif" font-size="26" font-weight="800">${escapeHtml(line)}</text>`;
+        })
+        .join('\n    ')
+    : fallbackLines
+        .map((line, index) => `<text x="142" y="${326 + index * 42}" fill="#3f5751" font-family="Arial, sans-serif" font-size="27" font-weight="700">${escapeHtml(line)}</text>`)
+        .join('\n    ');
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="${escapeHtml(row.title)}">
     <defs>
       <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
         <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#eadfce" stroke-width="1"/>
@@ -12870,23 +12901,22 @@ const renderSignalShareCardSvg = (route, row) => {
         <feDropShadow dx="10" dy="12" stdDeviation="0" flood-color="#211b16" flood-opacity="0.16"/>
       </filter>
     </defs>
-    <rect width="1200" height="630" fill="#fffaf4"/>
-    <rect width="1200" height="630" fill="url(#grid)" opacity="0.68"/>
-    <rect x="92" y="78" width="1016" height="474" rx="22" fill="#fffaf1" stroke="#241f1a" stroke-width="3" filter="url(#shadow)"/>
-    <rect x="92" y="78" width="18" height="474" fill="#286a5e"/>
-    <text x="142" y="134" fill="#286a5e" font-family="Arial, sans-serif" font-size="24" font-weight="800">SC SIGNAL STRIP</text>
-    <text x="930" y="134" fill="#524a42" font-family="Arial, sans-serif" font-size="22" font-weight="700" text-anchor="end">${escapeHtml(category)}</text>
-    <line x1="142" y1="164" x2="1058" y2="164" stroke="#d8c9b8" stroke-width="3" stroke-dasharray="7 8"/>
+    <rect width="1200" height="675" fill="#fffaf4"/>
+    <rect width="1200" height="675" fill="url(#grid)" opacity="0.68"/>
+    <rect x="74" y="58" width="1052" height="554" rx="24" fill="#fffaf1" stroke="#241f1a" stroke-width="3" filter="url(#shadow)"/>
+    <rect x="74" y="58" width="20" height="554" fill="#286a5e"/>
+    <text x="128" y="118" fill="#286a5e" font-family="Arial, sans-serif" font-size="25" font-weight="900">SC SIGNAL STRIP</text>
+    <text x="1064" y="118" fill="#524a42" font-family="Arial, sans-serif" font-size="22" font-weight="800" text-anchor="end">${escapeHtml(category)}</text>
+    <line x1="128" y1="150" x2="1072" y2="150" stroke="#d8c9b8" stroke-width="3" stroke-dasharray="7 8"/>
     ${titleLines
-      .map((line, index) => `<text x="142" y="${232 + index * 74}" fill="#241f1a" font-family="Georgia, 'Times New Roman', serif" font-size="60" font-weight="800">${escapeHtml(line)}</text>`)
+      .map((line, index) => `<text x="128" y="${226 + index * 66}" fill="#241f1a" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="800">${escapeHtml(line)}</text>`)
       .join('')}
-    ${summaryLines
-      .map((line, index) => `<text x="146" y="${455 + index * 34}" fill="#52645e" font-family="Arial, sans-serif" font-size="26" font-weight="600">${escapeHtml(line)}</text>`)
-      .join('')}
-    <rect x="142" y="510" width="156" height="8" fill="#e9a95e"/>
-    <rect x="318" y="510" width="62" height="8" fill="#286a5e"/>
-    <text x="142" y="560" fill="#52645e" font-family="Arial, sans-serif" font-size="22" font-weight="700">${escapeHtml(date || sourceLabel)}</text>
-    <text x="1058" y="560" fill="#52645e" font-family="Arial, sans-serif" font-size="22" font-weight="700" text-anchor="end">${escapeHtml(url)}</text>
+    <text x="128" y="286" fill="#7b6f63" font-family="Arial, sans-serif" font-size="22" font-weight="800">${escapeHtml(date || sourceLabel)}</text>
+    ${bulletSvg}
+    <rect x="128" y="548" width="170" height="8" fill="#e9a95e"/>
+    <rect x="318" y="548" width="72" height="8" fill="#286a5e"/>
+    <text x="128" y="588" fill="#52645e" font-family="Arial, sans-serif" font-size="22" font-weight="800">Station Cat Daily Signal</text>
+    <text x="1072" y="588" fill="#52645e" font-family="Arial, sans-serif" font-size="22" font-weight="800" text-anchor="end">${escapeHtml(url)}</text>
   </svg>`;
 };
 

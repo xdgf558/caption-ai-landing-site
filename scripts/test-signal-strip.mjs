@@ -86,7 +86,9 @@ assert.match(briefHtml, /class="signal-section-heading"/);
 const svg = renderSignalShareCardSvg(cardRoute, signalRow);
 assert.match(svg, /^<svg/);
 assert.match(svg, /width="1200"/);
+assert.match(svg, /height="675"/);
 assert.match(svg, /每日优先简报/);
+assert.match(svg, /全球资金重新流入科技基金/);
 
 const sanitizedSources = parseSignalSourcesInput([
   { label: 'Good', url: 'https://example.com/report' },
