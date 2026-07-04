@@ -90,6 +90,20 @@ assert.match(svg, /height="675"/);
 assert.match(svg, /每日优先简报/);
 assert.match(svg, /全球资金重新流入科技基金/);
 
+const tenItemSignalRow = {
+  ...signalRow,
+  metadata_json: JSON.stringify({
+    briefDate: '2026-07-04',
+    category: 'tech',
+    sources: [],
+    summaryBullets: Array.from({ length: 10 }, (_, index) => `${index + 1}. Signal item ${index + 1}`)
+  }),
+  signalMarkdown: ''
+};
+const tenItemSvg = renderSignalShareCardSvg(cardRoute, tenItemSignalRow);
+assert.match(tenItemSvg, /Signal item 10/);
+assert.match(tenItemSvg, />10<\/text>/);
+
 const sanitizedSources = parseSignalSourcesInput([
   { label: 'Good', url: 'https://example.com/report' },
   { label: 'Blocked', url: 'javascript:alert(1)' },

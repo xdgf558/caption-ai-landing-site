@@ -9253,6 +9253,7 @@ const parseSignalSourcesInput = (value) => {
     .slice(0, 12);
 };
 
+const signalSummaryMaxItems = 10;
 const signalNumberedHeadingPattern = /^(\d{1,3})[.)、]\s+(.{2,})$/;
 
 const extractSignalNumberedHeadings = (markdown) =>
@@ -9260,20 +9261,20 @@ const extractSignalNumberedHeadings = (markdown) =>
     .split('\n')
     .map((line) => cleanText(line.trim(), 220))
     .filter((line) => signalNumberedHeadingPattern.test(line))
-    .slice(0, 8);
+    .slice(0, signalSummaryMaxItems);
 
 const extractSignalSummaryBullets = (payload, markdown) => {
-  const explicit = normalizeStringArray(payload.summaryBullets || payload.bullets || payload.highlights, 6);
+  const explicit = normalizeStringArray(payload.summaryBullets || payload.bullets || payload.highlights, signalSummaryMaxItems);
   if (explicit.length) return explicit;
   const numbered = extractSignalNumberedHeadings(markdown);
-  if (numbered.length) return numbered.slice(0, 6);
+  if (numbered.length) return numbered.slice(0, signalSummaryMaxItems);
   const headings = String(markdown || '')
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => /^#{2,3}\s+/.test(line))
     .map((line) => cleanText(line.replace(/^#{2,3}\s+/, ''), 180))
     .filter(Boolean)
-    .slice(0, 6);
+    .slice(0, signalSummaryMaxItems);
   if (headings.length) return headings;
   return String(markdown || '')
     .split('\n')
@@ -9281,7 +9282,7 @@ const extractSignalSummaryBullets = (payload, markdown) => {
     .filter((line) => /^[-*]\s+/.test(line))
     .map((line) => cleanText(line.replace(/^[-*]\s+/, ''), 180))
     .filter(Boolean)
-    .slice(0, 6);
+    .slice(0, signalSummaryMaxItems);
 };
 
 const renderSignalMarkdownToHtml = (markdown) => {
@@ -12687,7 +12688,7 @@ const signalCategoryLabel = (category, locale) =>
 const signalBriefMetadata = (row) => {
   const metadata = parseStoredJson(row.metadata_json, {});
   let summaryBullets = Array.isArray(metadata.summaryBullets)
-    ? metadata.summaryBullets.map((item) => cleanText(item, 180)).filter(Boolean).slice(0, 6)
+    ? metadata.summaryBullets.map((item) => cleanText(item, 180)).filter(Boolean).slice(0, signalSummaryMaxItems)
     : [];
   if (row.signalMarkdown) {
     const markdownBullets = extractSignalSummaryBullets({}, row.signalMarkdown);
@@ -12697,7 +12698,7 @@ const signalBriefMetadata = (row) => {
       if (!normalized || seen.has(normalized)) continue;
       summaryBullets.push(item);
       seen.add(normalized);
-      if (summaryBullets.length >= 6) break;
+      if (summaryBullets.length >= signalSummaryMaxItems) break;
     }
   }
   const sources = Array.isArray(metadata.sources)
@@ -12738,7 +12739,7 @@ const renderDynamicSignalIndex = (route, rows) => {
           const meta = signalBriefMetadata(row);
           const summary = firstPlainSummary([row.description, row.excerpt], 180);
           const bullets = meta.summaryBullets.length
-            ? `<ul>${meta.summaryBullets.slice(0, 5).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+            ? `<ul>${meta.summaryBullets.slice(0, signalSummaryMaxItems).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
             : '';
           return `<a class="card signal-entry" href="${escapeHtml(dynamicSignalPath(route, row.slug))}">
               ${renderSignalBriefPills(route, row)}
@@ -12874,15 +12875,16 @@ const renderSignalShareCardSvg = (route, row) => {
   const meta = signalBriefMetadata(row);
   const category = signalCategoryLabel(meta.category, route.locale);
   const date = formatContentDate(meta.briefDate || row.published_at || row.updated_at, route.locale);
-  const titleLines = wrapSignalCardLines(row.title, route.locale === 'en' ? 30 : 14, 2);
-  const bulletMaxChars = route.locale === 'en' ? 68 : 31;
-  const bulletLines = meta.summaryBullets
+  const titleLines = [truncateSignalCardText(row.title, route.locale === 'en' ? 30 : 14)].filter(Boolean);
+  const rawBulletLines = meta.summaryBullets
     .map(normalizeSignalCardBullet)
     .filter(Boolean)
-    .slice(0, 5)
-    .map((item) => truncateSignalCardText(item, bulletMaxChars));
+    .slice(0, signalSummaryMaxItems);
+  const useTwoColumnBullets = rawBulletLines.length > 6;
+  const bulletMaxChars = useTwoColumnBullets ? (route.locale === 'en' ? 34 : 17) : route.locale === 'en' ? 68 : 31;
+  const bulletLines = rawBulletLines.map((item) => truncateSignalCardText(item, bulletMaxChars));
   const fallbackLines = !bulletLines.length
-    ? wrapSignalCardLines(row.excerpt || row.description, route.locale === 'en' ? 64 : 30, 5)
+    ? wrapSignalCardLines(row.excerpt || row.description, route.locale === 'en' ? 64 : 30, signalSummaryMaxItems)
     : [];
   const sourceLabel = meta.sources[0]?.label || 'Station Cat';
   const url = `wwwstationcat.org${dynamicSignalPath(route, row.slug)}`;
@@ -12890,13 +12892,19 @@ const renderSignalShareCardSvg = (route, row) => {
   const bulletSvg = bulletLines.length
     ? bulletLines
         .map((line, index) => {
-          const y = 326 + index * 50;
-          return `<circle cx="153" cy="${y - 8}" r="17" fill="#f4eadc" stroke="#d8c9b8" stroke-width="2"/>
-    <text x="153" y="${y}" fill="#286a5e" font-family="Arial, sans-serif" font-size="18" font-weight="900" text-anchor="middle">${index + 1}</text>
-    <text x="188" y="${y}" fill="#3f5751" font-family="Arial, sans-serif" font-size="26" font-weight="800">${escapeHtml(line)}</text>`;
+          const column = useTwoColumnBullets ? Math.floor(index / 5) : 0;
+          const rowIndex = useTwoColumnBullets ? index % 5 : index;
+          const x = column ? 612 : 153;
+          const textX = column ? 647 : 188;
+          const y = 326 + rowIndex * (useTwoColumnBullets ? 46 : bulletLines.length > 4 ? 46 : 54);
+          const fontSize = useTwoColumnBullets ? 21 : bulletLines.length > 4 ? 24 : 27;
+          return `<circle cx="${x}" cy="${y - 8}" r="${useTwoColumnBullets ? 15 : 17}" fill="#f4eadc" stroke="#d8c9b8" stroke-width="2"/>
+    <text x="${x}" y="${y}" fill="#286a5e" font-family="Arial, sans-serif" font-size="${useTwoColumnBullets ? 16 : 18}" font-weight="900" text-anchor="middle">${index + 1}</text>
+    <text x="${textX}" y="${y}" fill="#3f5751" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="800">${escapeHtml(line)}</text>`;
         })
         .join('\n    ')
     : fallbackLines
+        .slice(0, 6)
         .map((line, index) => `<text x="142" y="${326 + index * 42}" fill="#3f5751" font-family="Arial, sans-serif" font-size="27" font-weight="700">${escapeHtml(line)}</text>`)
         .join('\n    ');
 
