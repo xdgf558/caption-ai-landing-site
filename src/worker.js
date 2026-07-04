@@ -12689,8 +12689,16 @@ const signalBriefMetadata = (row) => {
   let summaryBullets = Array.isArray(metadata.summaryBullets)
     ? metadata.summaryBullets.map((item) => cleanText(item, 180)).filter(Boolean).slice(0, 6)
     : [];
-  if (!summaryBullets.length && row.signalMarkdown) {
-    summaryBullets = extractSignalSummaryBullets({}, row.signalMarkdown);
+  if (row.signalMarkdown) {
+    const markdownBullets = extractSignalSummaryBullets({}, row.signalMarkdown);
+    const seen = new Set(summaryBullets.map((item) => normalizeSignalCardBullet(item)));
+    for (const item of markdownBullets) {
+      const normalized = normalizeSignalCardBullet(item);
+      if (!normalized || seen.has(normalized)) continue;
+      summaryBullets.push(item);
+      seen.add(normalized);
+      if (summaryBullets.length >= 6) break;
+    }
   }
   const sources = Array.isArray(metadata.sources)
     ? metadata.sources

@@ -31,7 +31,7 @@ const signalRow = {
     briefDate: '2026-07-04',
     category: 'tech',
     sources: [{ label: 'Example source', url: 'https://example.com/report' }],
-    summaryBullets: []
+    summaryBullets: ['1. 美国就业降温，市场继续下调加息预期。']
   }),
   parent_slug: '',
   published_at: '2026-07-04 09:00:00',
