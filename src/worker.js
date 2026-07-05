@@ -12560,7 +12560,10 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
       .signal-entry ul { display: grid; gap: 8px; margin: 4px 0 0; padding-left: 20px; }
       .signal-entry li { color: var(--muted); font-size: 15px; line-height: 1.55; }
       .signal-read-more { color: var(--teal); font-size: 14px; font-weight: 950; margin-top: 4px; }
-      .signal-brief-layout { display: grid; gap: 24px; margin-left: auto; margin-right: auto; max-width: 900px; }
+      .signal-brief-layout { display: grid; gap: 18px; margin-left: auto; margin-right: auto; max-width: 900px; }
+      .signal-brief-header { display: grid; gap: 10px; margin-bottom: 4px; }
+      .signal-brief-header h1 { font-size: clamp(30px, 4vw, 44px); line-height: 1.12; }
+      .signal-brief-header > p:not(.kicker) { display: -webkit-box; font-size: 15px; line-height: 1.65; max-width: 780px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
       .signal-share { align-items: center; background: var(--soft); border: 1px dashed var(--line); border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; padding: 14px; }
       .signal-source-list { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
       .signal-source-list a { color: var(--teal); font-weight: 900; }
@@ -12802,12 +12805,13 @@ const renderDynamicSignalBrief = (route, row, body) => {
 
   return `<article class="signal-brief-layout">
       <a class="text-link" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.signalBack)}</a>
-      <header class="hero">
+      <header class="signal-brief-header">
         <p class="kicker">${escapeHtml(copy.signalEyebrow)}</p>
         ${renderSignalBriefPills(route, row)}
         <h1>${escapeHtml(row.title)}</h1>
         ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
       </header>
+      <div class="prose">${bodyHtml}</div>
       <section class="signal-share">
         <div>
           <strong>${escapeHtml(copy.signalShare)}</strong>
@@ -12819,7 +12823,6 @@ const renderDynamicSignalBrief = (route, row, body) => {
           <button class="button button-secondary" type="button" data-signal-copy-link>${escapeHtml(copy.signalCopyLink)}</button>
         </div>
       </section>
-      <div class="prose">${bodyHtml}</div>
       ${sourceList}
       <script>
         (() => {
