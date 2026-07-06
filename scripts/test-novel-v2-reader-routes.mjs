@@ -204,6 +204,11 @@ const paginatedSeriesHtml = hooks.renderDynamicNovelSeries(novelSeriesRoute, ser
 assert.match(paginatedSeriesHtml, /data-chapters-per-page="9"/);
 assert.match(paginatedSeriesHtml, /data-chapter-page="2" hidden/);
 assert.match(paginatedSeriesHtml, /data-chapter-page-button="2"/);
+assert.match(
+  read('src/worker.js'),
+  /\.chapter-card\[hidden\]\s*\{\s*display:\s*none\s*!important;\s*\}/,
+  'Dynamic chapter pagination should hide page 2+ cards even when .card sets display:grid.'
+);
 
 const chapterHtml = hooks.renderDynamicNovelChapter(
   { ...novelChapterRoute, chapterSlug: 'ch2' },

@@ -12501,6 +12501,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
       .chapter-list-shell { display: grid; gap: 14px; }
       .chapter-list { gap: 10px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
       .chapter-card { gap: 7px; min-height: 0; padding: 12px 14px; }
+      .chapter-card[hidden] { display: none !important; }
       .chapter-card .meta { align-items: center; gap: 6px; }
       .chapter-card .pill { padding: 5px 8px; }
       .chapter-card h3 { font-size: 18px; line-height: 1.25; }
