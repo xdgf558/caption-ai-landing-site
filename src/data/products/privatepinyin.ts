@@ -1,7 +1,7 @@
 export const privatePinyinProduct = {
   id: 'privatepinyin',
   slug: 'privatepinyin',
-  name: 'PrivatePinyin',
+  name: '猫栈拼音',
   latestVersion: '0.1.9',
   releaseDate: '2026-07-08',
   downloads: [

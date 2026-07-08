@@ -9,14 +9,15 @@ interface Props {
 const { lang = 'zh-Hant' } = Astro.props;
 const download = privatePinyinProduct.downloads[0];
 const inputSourceName = '猫栈拼音';
+const internalName = 'PrivatePinyin';
 
 const copy = {
   'zh-Hant': {
-    title: 'PrivatePinyin',
+    title: '猫栈拼音',
     eyebrow: 'macOS Input Method',
-    headline: 'PrivatePinyin：先從 macOS 開始的中文輸入法。',
+    headline: '猫栈拼音：先從 macOS 開始的中文輸入法。',
     intro:
-      'PrivatePinyin 是 Station Cat 正在測試的中文輸入法。第一個公開版本先提供 macOS pkg 安裝包，後續會繼續補上 Windows 和 iOS 版本。',
+      '猫栈拼音（PrivatePinyin）是 Station Cat 正在測試的中文輸入法。第一個公開版本先提供 macOS pkg 安裝包，後續會繼續補上 Windows 和 iOS 版本。',
     primary: '下載 macOS 版',
     secondary: '查看下載資訊',
     downloadHref: privatePinyinProduct.zhHantDownloadPagePath,
@@ -38,11 +39,11 @@ const copy = {
     ]
   },
   'zh-Hans': {
-    title: 'PrivatePinyin',
+    title: '猫栈拼音',
     eyebrow: 'macOS Input Method',
-    headline: 'PrivatePinyin：先从 macOS 开始的中文输入法。',
+    headline: '猫栈拼音：先从 macOS 开始的中文输入法。',
     intro:
-      'PrivatePinyin 是 Station Cat 正在测试的中文输入法。第一个公开版本先提供 macOS pkg 安装包，后续会继续补上 Windows 和 iOS 版本。',
+      '猫栈拼音（PrivatePinyin）是 Station Cat 正在测试的中文输入法。第一个公开版本先提供 macOS pkg 安装包，后续会继续补上 Windows 和 iOS 版本。',
     primary: '下载 macOS 版',
     secondary: '查看下载信息',
     downloadHref: privatePinyinProduct.zhHansDownloadPagePath,
@@ -64,11 +65,11 @@ const copy = {
     ]
   },
   en: {
-    title: 'PrivatePinyin',
+    title: 'Maozhan Pinyin',
     eyebrow: 'macOS Input Method',
-    headline: 'PrivatePinyin, a Chinese input method starting on macOS.',
+    headline: 'Maozhan Pinyin, a Chinese input method starting on macOS.',
     intro:
-      'PrivatePinyin is a Chinese input method being tested by Station Cat. The first public build is a macOS pkg installer, with Windows and iOS versions planned for later.',
+      'Maozhan Pinyin (PrivatePinyin) is a Chinese input method being tested by Station Cat. The first public build is a macOS pkg installer, with Windows and iOS versions planned for later.',
     primary: 'Download for macOS',
     secondary: 'View download info',
     downloadHref: privatePinyinProduct.downloadPagePath,
@@ -90,11 +91,11 @@ const copy = {
     ]
   },
   ja: {
-    title: 'PrivatePinyin',
+    title: '猫栈拼音',
     eyebrow: 'macOS Input Method',
-    headline: 'PrivatePinyin：macOS から始める中国語入力メソッド。',
+    headline: '猫栈拼音：macOS から始める中国語入力メソッド。',
     intro:
-      'PrivatePinyin は Station Cat がテストしている中国語入力メソッドです。最初の公開版は macOS pkg インストーラーで、Windows と iOS 版は今後追加予定です。',
+      '猫栈拼音（PrivatePinyin）は Station Cat がテストしている中国語入力メソッドです。最初の公開版は macOS pkg インストーラーで、Windows と iOS 版は今後追加予定です。',
     primary: 'macOS 版をダウンロード',
     secondary: 'ダウンロード情報を見る',
     downloadHref: privatePinyinProduct.jaDownloadPagePath,
@@ -152,11 +153,12 @@ const canonicalPath =
         <a class="button button-secondary" href={copy.downloadHref}>{copy.secondary}</a>
       </div>
     </div>
-    <div class="privatepinyin-preview-card" aria-label="PrivatePinyin app icon">
-      <img src={privatePinyinProduct.assets.icon} alt="PrivatePinyin app icon" width="512" height="512" />
+    <div class="privatepinyin-preview-card" aria-label={`${copy.title} app icon`}>
+      <img src={privatePinyinProduct.assets.icon} alt={`${copy.title} app icon`} width="512" height="512" />
       <div>
         <p class="section-kicker">Version {download.version}</p>
-        <h2>PrivatePinyin</h2>
+        <h2>{copy.title}</h2>
+        <p>{internalName}</p>
         <p>{download.label}</p>
       </div>
     </div>
@@ -180,7 +182,7 @@ const canonicalPath =
   <section class="page-section">
     <div class="radar-note-panel">
       <div>
-        <p class="section-kicker">PrivatePinyin</p>
+        <p class="section-kicker">{copy.title}</p>
         <h2>{copy.notesTitle}</h2>
       </div>
       <ul>
