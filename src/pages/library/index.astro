@@ -9,9 +9,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   canonicalPath="/library/"
 >
   <section class="works-hero reader-library-hero">
-    <p class="station-kicker">Member Center</p>
-    <h1>會員中心</h1>
-    <p>登入會員账号後，可以管理閱讀點數、會員狀態、已解鎖內容和保存過的書籤。</p>
+    <div class="reader-library-hero__copy">
+      <p class="station-kicker">Member Center</p>
+      <h1>會員中心</h1>
+    </div>
+    <aside class="reader-membership-summary" id="reader-membership-summary" data-state="neutral" aria-live="polite">
+      <p>會員狀態</p>
+      <strong id="reader-membership-summary-title">尚未登入</strong>
+      <span id="reader-membership-summary-detail">登入後顯示會員有效期</span>
+    </aside>
   </section>
 
   <section class="station-section reader-library-grid">
@@ -254,6 +260,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const membershipRule = document.getElementById('reader-membership-rule');
     const membershipRedeem = document.getElementById('reader-membership-redeem');
     const membershipStatus = document.getElementById('reader-membership-status');
+    const membershipSummary = document.getElementById('reader-membership-summary');
+    const membershipSummaryTitle = document.getElementById('reader-membership-summary-title');
+    const membershipSummaryDetail = document.getElementById('reader-membership-summary-detail');
     const libraryContent = document.getElementById('reader-library-content');
     const libraryList = document.getElementById('reader-library-list');
     const libraryEmpty = document.getElementById('reader-library-empty');
@@ -280,6 +289,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const setBookmarkStatus = (message, tone = 'neutral') => {
       bookmarkStatus.textContent = message;
       bookmarkStatus.dataset.tone = tone;
+    };
+
+    const setMembershipSummary = (title, detail, state = 'neutral') => {
+      membershipSummaryTitle.textContent = title;
+      membershipSummaryDetail.textContent = detail;
+      membershipSummary.dataset.state = state;
     };
 
     const setFieldState = (fields, enabled) => {
@@ -341,6 +356,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       accountEmail.textContent = signedIn
         ? `${session.account.displayName || session.account.username || session.account.email} · ${session.account.email}`
         : '';
+      setMembershipSummary(
+        signedIn ? '正在讀取' : '尚未登入',
+        signedIn ? '正在確認會員有效期' : '登入後顯示會員有效期',
+        signedIn ? 'loading' : 'neutral'
+      );
     };
 
     const entitlementTitle = (item) => {
@@ -545,9 +565,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       membershipRedeem.hidden = settings?.enabled === false;
       membershipRedeem.disabled = settings?.enabled === false || (creditAccount?.balanceCredits || 0) < cost;
       if (membership?.active) {
-        membershipState.textContent = `會員有效至 ${formatLocalDate(membership.expiresAt)}。`;
+        const expiresAt = formatLocalDate(membership.expiresAt);
+        setMembershipSummary('會員有效中', `有效至 ${expiresAt}`, 'active');
+        membershipState.textContent = coversPaid ? '會員閱讀權益已啟用。' : '會員已開通，目前不覆蓋收費章節。';
       } else {
+        setMembershipSummary('尚未開通會員', `可用閱讀點：${creditAccount?.balanceCredits || 0} ${unitLabel}`, 'inactive');
         membershipState.textContent = `尚未開通會員。当前余额 ${creditAccount?.balanceCredits || 0} ${unitLabel}。`;
+      }
+      if (settings?.enabled === false) {
+        setMembershipSummary('會員兌換未開啟', '目前不能兌換會員', 'inactive');
       }
       if (settings?.enabled === false) {
         setMembershipStatus('會員兌換目前未開啟。', 'neutral');

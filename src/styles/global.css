@@ -5458,6 +5458,70 @@ body.station-paper-page {
   padding-left: 16px;
 }
 
+.reader-library-hero {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+}
+
+.reader-library-hero__copy {
+  display: grid;
+  gap: 16px;
+}
+
+.reader-membership-summary {
+  align-self: start;
+  background: #f1e4d4;
+  border: 1px solid #d8c8b8;
+  border-radius: 12px;
+  box-shadow: 6px 8px 0 rgba(34, 27, 22, 0.12);
+  display: grid;
+  gap: 8px;
+  justify-self: end;
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.reader-membership-summary p,
+.reader-membership-summary strong,
+.reader-membership-summary span {
+  margin: 0;
+}
+
+.reader-membership-summary p {
+  color: #2e5b4e;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.reader-membership-summary strong {
+  color: #221b16;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.reader-membership-summary span {
+  color: #5d5148;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.reader-membership-summary[data-state='active'] {
+  background: #e8f3eb;
+  border-color: #95b8a5;
+}
+
+.reader-membership-summary[data-state='active'] strong {
+  color: #245044;
+}
+
+.reader-membership-summary[data-state='inactive'] {
+  background: #fff7e8;
+}
+
 .reader-library-grid {
   align-items: start;
   display: grid;
@@ -6430,8 +6494,13 @@ body.station-paper-page.caption-product-page {
   .serials-bookshelf__body,
   .serials-bookshelf__preview,
   .serial-detail-hero,
+  .reader-library-hero,
   .reader-library-grid {
     grid-template-columns: 1fr;
+  }
+
+  .reader-membership-summary {
+    justify-self: stretch;
   }
 
   .serial-card__header,
