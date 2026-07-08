@@ -14238,6 +14238,12 @@ const handleDynamicFrontendContent = async (request, env) => {
 };
 
 const downloadFiles = {
+  '/downloads/privatepinyin/PrivatePinyin-0.1.9.pkg': {
+    key: 'privatepinyin/0.1.9/PrivatePinyin-0.1.9.pkg',
+    filename: 'PrivatePinyin-0.1.9.pkg',
+    contentType: 'application/octet-stream',
+    limitKey: 'privatepinyin-0.1.9-pkg'
+  },
   '/downloads/stationcat-radar/StationCat-Radar-0.1.0-arm64.dmg': {
     key: 'stationcat-radar/0.1.0/StationCat-Radar-0.1.0-arm64.dmg',
     filename: 'StationCat-Radar-0.1.0-arm64.dmg',
