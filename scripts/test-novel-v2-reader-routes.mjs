@@ -191,6 +191,43 @@ const pricedSeriesHtml = hooks.renderDynamicNovelSeries(novelSeriesRoute, serial
 });
 assert.match(pricedSeriesHtml, /前 20 章免費，第 21 章起 1 閱讀點 \/ 章/);
 
+const elevenChapters = Array.from({ length: 11 }, (_, index) => ({
+  access_level: 'free',
+  chapter_number: index + 1,
+  description: '',
+  excerpt: '',
+  parent_slug: 'book',
+  slug: `ch${index + 1}`,
+  title: `Chapter ${index + 1}`,
+  word_count: 10
+}));
+const paidAfterTenSettings = {
+  chapterCredits: 1,
+  chapterPriceAmount: 0,
+  freeChapters: 10,
+  priceMode: 'chapter-paid'
+};
+const paidAfterTenHtml = hooks.renderDynamicNovelSeries(
+  novelSeriesRoute,
+  serial,
+  { html: '<p>Body</p>' },
+  elevenChapters,
+  paidAfterTenSettings
+);
+assert.match(paidAfterTenHtml, /第十章<\/span>\s*<span>免費<\/span>/);
+assert.match(paidAfterTenHtml, /第十一章<\/span>\s*<span>付費<\/span>/);
+const paidChapterHtml = hooks.renderDynamicNovelChapter(
+  { ...novelChapterRoute, chapterSlug: 'ch11' },
+  serial,
+  elevenChapters[10],
+  { html: '<p>Paid body should not render before unlock.</p>' },
+  elevenChapters,
+  paidAfterTenSettings
+);
+assert.match(paidChapterHtml, /data-serial-access-gate/);
+assert.match(paidChapterHtml, /data-access="paid"/);
+assert.doesNotMatch(paidChapterHtml, /Paid body should not render before unlock/);
+
 const manyChapters = Array.from({ length: 10 }, (_, index) => ({
   access_level: 'free',
   description: '',

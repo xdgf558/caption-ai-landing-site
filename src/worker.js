@@ -1017,6 +1017,38 @@ const resolveSeriesPaymentSettings = async (db, seriesSlug, env, options = {}) =
   return applyConfiguredPricingDefaultsToSettings(db, settings || getStaticSeriesPaymentSettings(seriesSlug, env));
 };
 
+const normalizeDynamicChapterAccessLevel = (value) => {
+  const accessLevel = cleanText(value, 40).toLowerCase();
+  if (accessLevel === 'supporter') return 'supporter';
+  if (accessLevel === 'member') return 'member';
+  if (accessLevel === 'paid') return 'paid';
+  return 'free';
+};
+
+const getDynamicChapterNumberForPricing = (chapter, index = 0) =>
+  normalizePositiveInteger(chapter?.chapter_number ?? chapter?.chapterNumber, 0) ||
+  normalizePositiveInteger(index + 1, 0);
+
+const getEffectiveDynamicChapterAccessLevel = (chapter, paymentSettings = null, index = 0) => {
+  const originalAccessLevel = normalizeDynamicChapterAccessLevel(chapter?.access_level ?? chapter?.access);
+  if (!paymentSettings || paymentSettings.priceMode !== 'chapter-paid') return originalAccessLevel;
+
+  const chapterNumber = getDynamicChapterNumberForPricing(chapter, index);
+  const hasChapterCharge =
+    normalizePositiveInteger(paymentSettings.chapterCredits, 0) > 0 ||
+    normalizePriceAmount(paymentSettings.chapterPriceAmount, 0) > 0;
+  if (!chapterNumber || !hasChapterCharge) return originalAccessLevel;
+
+  const freeChapters = normalizePositiveInteger(paymentSettings.freeChapters, 0);
+  if (chapterNumber <= freeChapters) return 'free';
+  if (originalAccessLevel === 'supporter') return 'supporter';
+  if (originalAccessLevel === 'member') return 'member';
+  return 'paid';
+};
+
+const dynamicProtectedAccessFromChapterAccess = (accessLevel) =>
+  accessLevel === 'supporter' ? 'supporter' : accessLevel === 'paid' || accessLevel === 'member' ? 'paid' : 'free';
+
 const getConfiguredTipAmount = (settings, amount) => {
   const requested = normalizePriceAmount(amount, null);
   if (!requested) return settings.tipAmounts[0] || 5;
@@ -4651,7 +4683,6 @@ const getBackendProtectedChapterContent = async (env, seriesSlug, chapterSlug, l
          AND slug = ?
          AND status = 'published'
          AND visibility IN ('public', 'unlisted')
-         AND access_level IN ('paid', 'supporter', 'member')
          ${localeClause}
        ORDER BY
          CASE WHEN access_level = 'supporter' THEN 0 ELSE 1 END,
@@ -4663,8 +4694,12 @@ const getBackendProtectedChapterContent = async (env, seriesSlug, chapterSlug, l
     .first();
 
   if (!row) return null;
+  const settings = await resolveSeriesPaymentSettings(db, row.parent_slug, env, { chapterSlug: row.slug, locale: row.locale });
+  const access = dynamicProtectedAccessFromChapterAccess(getEffectiveDynamicChapterAccessLevel(row, settings));
+  if (access === 'free') return null;
+
   return {
-    access: row.access_level === 'supporter' ? 'supporter' : 'paid',
+    access,
     chapterNumber: row.chapter_number,
     chapterSlug: row.slug,
     excerpt: firstPlainSummary([row.excerpt, row.description], 420),
@@ -12000,19 +12035,24 @@ const handlePublicContentBody = async (request, env) => {
 
   const entry = await getPublishedContentEntry(db, { entryType, locale, parentSlug, slug });
   if (!entry) return publicContentResponse({ ok: false, code: 'CONTENT_NOT_FOUND', message: 'Content was not found.' }, { status: 404 });
-  if (entry.access_level !== 'free') {
+  let effectiveAccessLevel = entry.access_level;
+  if (entryType === 'novel_chapter') {
+    const settings = await resolveSeriesPaymentSettings(db, entry.parent_slug, env, { chapterSlug: entry.slug, locale: entry.locale });
+    effectiveAccessLevel = getEffectiveDynamicChapterAccessLevel(entry, settings);
+  }
+  if (effectiveAccessLevel !== 'free') {
     return publicContentResponse(
       {
         ok: false,
         code: 'CONTENT_PROTECTED',
-        entry: contentEntryToJson(entry),
+        entry: contentEntryToJson({ ...entry, access_level: effectiveAccessLevel }),
         message: 'This content is protected.'
       },
       { status: 403 }
     );
   }
 
-  const body = await readPublicEntryBody(env, entry);
+  const body = await readPublicEntryBody(env, { ...entry, access_level: effectiveAccessLevel });
   return publicContentResponse({
     ok: true,
     entry: contentEntryToJson(entry),
@@ -12978,7 +13018,7 @@ const renderDynamicNovelIndex = (route, seriesRows) => {
 
 const DYNAMIC_CHAPTERS_PER_PAGE = 9;
 
-const renderChapterCards = (route, chapters) => {
+const renderChapterCards = (route, chapters, paymentSettings = null) => {
   const copy = dynamicContentCopy[route.locale];
   if (!chapters.length) return `<p>${escapeHtml(copy.chapters)}</p>`;
   return chapters
@@ -12987,10 +13027,11 @@ const renderChapterCards = (route, chapters) => {
         const summary = firstPlainSummary([chapter.excerpt, chapter.description], 120);
         const pageNumber = Math.floor(index / DYNAMIC_CHAPTERS_PER_PAGE) + 1;
         const hiddenAttribute = pageNumber > 1 ? ' hidden' : '';
+        const accessLevel = getEffectiveDynamicChapterAccessLevel(chapter, paymentSettings, index);
         return `<a class="card chapter-card" href="${escapeHtml(dynamicChapterPath(route, chapter.parent_slug, chapter.slug))}" data-chapter-page="${pageNumber}"${hiddenAttribute}>
         <div class="meta">
           <span class="pill">${escapeHtml(formatDynamicChapterNumber(chapter.chapter_number, route.locale))}</span>
-          <span>${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
+          <span>${escapeHtml(getDynamicAccessLabel(accessLevel, route.locale))}</span>
         </div>
         <h3>${escapeHtml(chapter.title)}</h3>
         ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
@@ -13882,7 +13923,7 @@ const renderDynamicNovelSeries = (route, serial, body, chapters, paymentSettings
     <section class="section">
       <p class="kicker">${escapeHtml(copy.chapters)}</p>
       <div class="chapter-list-shell" data-chapter-pagination-root data-chapters-per-page="${DYNAMIC_CHAPTERS_PER_PAGE}">
-        <div class="grid chapter-list" data-chapter-pagination-list>${renderChapterCards(route, chapters)}</div>
+        <div class="grid chapter-list" data-chapter-pagination-list>${renderChapterCards(route, chapters, paymentSettings)}</div>
         ${renderChapterPagination(chapters)}
       </div>
       ${renderChapterPaginationScript(chapters)}
@@ -13895,17 +13936,19 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
   const currentIndex = chapters.findIndex((entry) => entry.slug === chapter.slug);
   const previousChapter = currentIndex > 0 ? chapters[currentIndex - 1] : null;
   const nextChapter = currentIndex >= 0 ? chapters[currentIndex + 1] : null;
-  const isProtected = chapter.access_level !== 'free';
+  const effectiveAccessLevel = getEffectiveDynamicChapterAccessLevel(chapter, paymentSettings, currentIndex);
+  const effectiveChapter = { ...chapter, access_level: effectiveAccessLevel };
+  const isProtected = effectiveAccessLevel !== 'free';
   const bookmarkCopy = dynamicBookmarkCopy[route.locale] || dynamicBookmarkCopy['zh-Hant'];
   const fallbackBody = firstPlainSummary([chapter.excerpt, chapter.description], 1200);
   const content = isProtected
-    ? `<section class="gate" data-serial-access-gate data-series-slug="${escapeHtml(chapter.parent_slug)}" data-chapter-slug="${escapeHtml(chapter.slug)}" data-access="${escapeHtml(chapter.access_level)}" data-locale="${escapeHtml(route.locale)}" data-return-path="${escapeHtml(dynamicCanonicalPath(route))}">
-        <p class="kicker">${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</p>
+    ? `<section class="gate" data-serial-access-gate data-series-slug="${escapeHtml(chapter.parent_slug)}" data-chapter-slug="${escapeHtml(chapter.slug)}" data-access="${escapeHtml(effectiveAccessLevel)}" data-locale="${escapeHtml(route.locale)}" data-return-path="${escapeHtml(dynamicCanonicalPath(route))}">
+        <p class="kicker">${escapeHtml(getDynamicAccessLabel(effectiveAccessLevel, route.locale))}</p>
         <h2>${escapeHtml(copy.lockedTitle)}</h2>
         <p>${escapeHtml(copy.lockedBody)}</p>
         <div class="status" data-serial-access-status>${escapeHtml(paymentCopy.checking)}</div>
         <div class="status" data-serial-credit-status></div>
-        ${renderDynamicUnlockButtons(route, serial, chapter, paymentSettings)}
+        ${renderDynamicUnlockButtons(route, serial, effectiveChapter, paymentSettings)}
       </section>
       <article class="prose prose--reader prose--protected" data-protected-chapter-body data-reader-body hidden></article>
       <script>
@@ -14049,7 +14092,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
       <a class="text-link" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>
       <header class="hero hero--chapter">
         <div class="meta">
-          <span>${escapeHtml(copy.access)}: ${escapeHtml(getDynamicAccessLabel(chapter.access_level, route.locale))}</span>
+          <span>${escapeHtml(copy.access)}: ${escapeHtml(getDynamicAccessLabel(effectiveAccessLevel, route.locale))}</span>
           ${chapter.word_count ? `<span>${escapeHtml(String(chapter.word_count))} ${escapeHtml(copy.words)}</span>` : ''}
         </div>
         <h1>${escapeHtml(chapter.title)}</h1>
