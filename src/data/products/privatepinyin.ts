@@ -10,7 +10,7 @@ export const privatePinyinProduct = {
       label: 'macOS installer',
       version: '0.1.9',
       platform: 'macOS',
-      architecture: 'Apple Silicon / Intel',
+      architecture: 'Apple Silicon',
       minimumSystem: 'macOS 12 or later',
       fileSize: '2.1 MB',
       sha256: '2b24e016e57825b7490274eeb95941e43ebacab794cbcdcb25da4756f6c65d70',

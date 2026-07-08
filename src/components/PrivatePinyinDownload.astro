@@ -8,73 +8,74 @@ interface Props {
 
 const { lang = 'zh-Hant' } = Astro.props;
 const download = privatePinyinProduct.downloads[0];
+const inputSourceName = '猫栈拼音';
 
 const copy = {
   'zh-Hant': {
     title: '下載 PrivatePinyin',
-    description: '下載 PrivatePinyin 0.1.9 macOS 中文輸入法測試版。',
+    description: `下載 PrivatePinyin ${download.version} macOS 中文輸入法測試版。`,
     kicker: 'macOS Download',
-    headline: '下載 PrivatePinyin 0.1.9。',
+    headline: `下載 PrivatePinyin ${download.version}。`,
     intro:
-      '目前先提供 macOS pkg 安裝包。下載後打開安裝包，依照 macOS 安裝流程完成，再到系統輸入法設定裡加入 PrivatePinyin。',
+      `目前先提供 macOS pkg 安裝包。下載後打開安裝包，依照 macOS 安裝流程完成，再到系統輸入法設定裡加入「${inputSourceName}」（PrivatePinyin）。`,
     button: '下載 macOS PKG',
     back: '返回產品頁',
     backHref: privatePinyinProduct.zhHantProductPath,
     metaTitle: '安裝包資訊',
     checksum: 'SHA-256',
     warning:
-      '這是早期測試版。請只從 Station Cat 官方網站下載；首次安裝或啟用輸入法時，請以 macOS 安全和輸入法權限提示為準。',
+      '這是早期測試版，目前只支援 Apple Silicon Mac，Intel Mac 暫不支援。請只從 Station Cat 官方網站下載；首次安裝或啟用輸入法時，請以 macOS 安全和輸入法權限提示為準。',
     roadmapTitle: '後續版本',
     roadmap: 'Windows 和 iOS 版本會在開發完成後補上，這一頁會保留最新公開下載。'
   },
   'zh-Hans': {
     title: '下载 PrivatePinyin',
-    description: '下载 PrivatePinyin 0.1.9 macOS 中文输入法测试版。',
+    description: `下载 PrivatePinyin ${download.version} macOS 中文输入法测试版。`,
     kicker: 'macOS Download',
-    headline: '下载 PrivatePinyin 0.1.9。',
+    headline: `下载 PrivatePinyin ${download.version}。`,
     intro:
-      '目前先提供 macOS pkg 安装包。下载后打开安装包，按照 macOS 安装流程完成，再到系统输入法设置里加入 PrivatePinyin。',
+      `目前先提供 macOS pkg 安装包。下载后打开安装包，按照 macOS 安装流程完成，再到系统输入法设置里加入「${inputSourceName}」（PrivatePinyin）。`,
     button: '下载 macOS PKG',
     back: '返回产品页',
     backHref: privatePinyinProduct.zhHansProductPath,
     metaTitle: '安装包信息',
     checksum: 'SHA-256',
     warning:
-      '这是早期测试版。请只从 Station Cat 官方网站下载；首次安装或启用输入法时，请以 macOS 安全和输入法权限提示为准。',
+      '这是早期测试版，目前只支持 Apple Silicon Mac，Intel Mac 暂不支持。请只从 Station Cat 官方网站下载；首次安装或启用输入法时，请以 macOS 安全和输入法权限提示为准。',
     roadmapTitle: '后续版本',
     roadmap: 'Windows 和 iOS 版本会在开发完成后补上，这一页会保留最新公开下载。'
   },
   en: {
     title: 'Download PrivatePinyin',
-    description: 'Download PrivatePinyin 0.1.9, an early macOS Chinese input method build.',
+    description: `Download PrivatePinyin ${download.version}, an early macOS Chinese input method build.`,
     kicker: 'macOS Download',
-    headline: 'Download PrivatePinyin 0.1.9.',
+    headline: `Download PrivatePinyin ${download.version}.`,
     intro:
-      'The current public build is a macOS pkg installer. Open the package, complete the macOS install flow, then add PrivatePinyin in the system input method settings.',
+      `The current public build is a macOS pkg installer. Open the package, complete the macOS install flow, then add "${inputSourceName}" (PrivatePinyin) in System Settings > Keyboard > Input Sources.`,
     button: 'Download macOS PKG',
     back: 'Back to product page',
     backHref: privatePinyinProduct.productPath,
     metaTitle: 'Installer information',
     checksum: 'SHA-256',
     warning:
-      'This is an early test build. Download it only from the official Station Cat site. During first install or input method activation, follow macOS security and input-source prompts.',
+      'This is an early test build for Apple Silicon Macs only. Intel Macs are not supported yet. Download it only from the official Station Cat site. During first install or input method activation, follow macOS security and input-source prompts.',
     roadmapTitle: 'Next platforms',
     roadmap: 'Windows and iOS builds will be added when they are ready. This page keeps the latest public download.'
   },
   ja: {
     title: 'PrivatePinyin をダウンロード',
-    description: 'PrivatePinyin 0.1.9 macOS 中国語入力メソッドのテスト版をダウンロードできます。',
+    description: `PrivatePinyin ${download.version} macOS 中国語入力メソッドのテスト版をダウンロードできます。`,
     kicker: 'macOS Download',
-    headline: 'PrivatePinyin 0.1.9 をダウンロード。',
+    headline: `PrivatePinyin ${download.version} をダウンロード。`,
     intro:
-      '現在は macOS pkg インストーラーを提供しています。パッケージを開いて macOS のインストール手順を完了し、システムの入力メソッド設定で PrivatePinyin を追加してください。',
+      `現在は macOS pkg インストーラーを提供しています。パッケージを開いて macOS のインストール手順を完了し、システムの入力メソッド設定で「${inputSourceName}」（PrivatePinyin）を追加してください。`,
     button: 'macOS PKG をダウンロード',
     back: '製品ページへ戻る',
     backHref: privatePinyinProduct.jaProductPath,
     metaTitle: 'インストーラー情報',
     checksum: 'SHA-256',
     warning:
-      'これは早期テスト版です。Station Cat 公式サイトからのみダウンロードし、初回インストールや入力メソッド有効化時は macOS の安全確認に従ってください。',
+      'これは Apple Silicon Mac のみ対応する早期テスト版です。Intel Mac はまだ対応していません。Station Cat 公式サイトからのみダウンロードし、初回インストールや入力メソッド有効化時は macOS の安全確認に従ってください。',
     roadmapTitle: '今後のプラットフォーム',
     roadmap: 'Windows と iOS 版は準備ができ次第追加します。このページに最新の公開ダウンロードを置きます。'
   }
