@@ -5459,26 +5459,79 @@ body.station-paper-page {
 }
 
 .reader-library-hero {
-  align-items: start;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 12px;
+  margin-bottom: 22px;
+  min-height: 0;
+  padding-bottom: 28px;
+  padding-top: 28px;
 }
 
 .reader-library-hero__copy {
   display: grid;
-  gap: 16px;
+  gap: 12px;
+}
+
+.reader-library-hero__copy h1 {
+  font-size: clamp(40px, 7vw, 48px);
+}
+
+.reader-library-hero__copy p:last-child {
+  color: #5d5148;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.reader-membership-overview {
+  padding-bottom: 14px;
+  padding-top: 0;
 }
 
 .reader-membership-summary {
-  align-self: start;
-  background: #f1e4d4;
-  border: 1px solid #d8c8b8;
-  border-radius: 12px;
-  box-shadow: 6px 8px 0 rgba(34, 27, 22, 0.12);
-  display: grid;
-  gap: 8px;
-  justify-self: end;
+  align-items: center;
+  background: #e8f3eb;
+  border: 1px solid #b8d1c1;
+  border-radius: 16px;
+  box-shadow: 0 12px 26px rgba(80, 55, 35, 0.08);
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
   min-width: 0;
-  padding: 14px 16px;
+  padding: 18px 20px;
+}
+
+.reader-membership-summary__main {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  min-width: 0;
+}
+
+.reader-membership-summary__dot {
+  background: #2e5b4e;
+  border: 2px solid #fffaf1;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px #95b8a5;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 12px;
+  width: 12px;
+}
+
+.reader-membership-summary__actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.reader-membership-summary__actions span {
+  color: #245044;
+  font-size: 15px;
+  font-weight: 950;
+  white-space: nowrap;
 }
 
 .reader-membership-summary p,
@@ -5497,16 +5550,19 @@ body.station-paper-page {
 }
 
 .reader-membership-summary strong {
-  color: #221b16;
-  font-size: 24px;
+  color: #245044;
+  display: block;
+  font-size: clamp(22px, 3vw, 28px);
   line-height: 1.1;
 }
 
 .reader-membership-summary span {
-  color: #5d5148;
+  color: #4b665b;
+  display: block;
   font-size: 14px;
   font-weight: 800;
   line-height: 1.45;
+  margin-top: 4px;
 }
 
 .reader-membership-summary[data-state='active'] {
@@ -5522,11 +5578,28 @@ body.station-paper-page {
   background: #fff7e8;
 }
 
+.reader-membership-summary[data-state='inactive'] .reader-membership-summary__dot,
+.reader-membership-summary[data-state='neutral'] .reader-membership-summary__dot,
+.reader-membership-summary[data-state='loading'] .reader-membership-summary__dot {
+  background: #9a9488;
+  box-shadow: 0 0 0 1px #d8c8b8;
+}
+
+.reader-membership-overview > .reader-membership-state,
+.reader-membership-overview > .fine-print {
+  margin: 8px 0 0;
+}
+
+.reader-membership-overview > .reader-status {
+  margin-top: 12px;
+}
+
 .reader-library-grid {
   align-items: start;
   display: grid;
-  gap: 18px;
+  gap: 22px;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  padding-top: 14px;
 }
 
 .reader-panel,
@@ -5535,6 +5608,21 @@ body.station-paper-page {
 .serial-access-gate {
   display: grid;
   gap: 16px;
+}
+
+.reader-panel__header {
+  align-items: start;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.reader-panel__header .station-kicker {
+  grid-column: 1 / -1;
+}
+
+.reader-panel__header h2 {
+  margin: 0;
 }
 
 .reader-auth-switch {
@@ -5570,6 +5658,17 @@ body.station-paper-page {
   gap: 14px;
 }
 
+.reader-login-panel {
+  grid-column: 1 / -1;
+  justify-self: center;
+  max-width: 520px;
+  width: 100%;
+}
+
+.reader-credits-panel {
+  grid-column: 1 / -1;
+}
+
 .reader-panel label {
   color: #5d5148;
   display: grid;
@@ -5579,13 +5678,14 @@ body.station-paper-page {
 }
 
 .reader-panel input,
-.reader-panel textarea {
+.reader-panel textarea,
+.reader-panel select {
   background: #fffaf1;
-  border: 2px solid #d8c8b8;
+  border: 1px solid #d8c8b8;
   border-radius: 10px;
   color: #221b16;
   font: inherit;
-  min-height: 46px;
+  min-height: 42px;
   padding: 10px 12px;
 }
 
@@ -5595,7 +5695,8 @@ body.station-paper-page {
 }
 
 .reader-panel input:focus,
-.reader-panel textarea:focus {
+.reader-panel textarea:focus,
+.reader-panel select:focus {
   border-color: #2e5b4e;
   outline: 3px solid rgba(46, 91, 78, 0.16);
 }
@@ -5635,29 +5736,92 @@ body.station-paper-page {
 
 .reader-account-email {
   color: #221b16;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 900;
   margin: 0;
   overflow-wrap: anywhere;
 }
 
-.reader-password-form {
-  border-top: 1px dashed #d8c8b8;
-  display: grid;
-  gap: 14px;
-  padding-top: 16px;
+.reader-account-profile {
+  align-items: center;
+  border-bottom: 1px dashed #d8c8b8;
+  display: flex;
+  gap: 12px;
+  padding-bottom: 16px;
 }
 
-.reader-password-form h3 {
+.reader-account-avatar {
+  align-items: center;
+  background: #2e5b4e;
+  border: 2px solid #221b16;
+  border-radius: 999px;
+  color: #fffaf1;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 950;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.reader-password-disclosure {
+  border-bottom: 1px dashed #d8c8b8;
+  display: grid;
+  gap: 14px;
+  padding-bottom: 16px;
+}
+
+.reader-password-disclosure summary {
   color: #221b16;
-  font-size: 20px;
-  margin: 0;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 950;
+  list-style-position: outside;
+}
+
+.reader-password-disclosure[open] summary {
+  margin-bottom: 14px;
+}
+
+.reader-password-form {
+  display: grid;
+  gap: 14px;
+}
+
+.reader-danger-action {
+  border-color: #dc9b8c;
+  color: #8a3325;
+  justify-self: start;
+}
+
+.reader-danger-action:hover {
+  background: #fff0ed;
+  color: #6f281d;
 }
 
 .reader-totp-state {
   color: #5d5148;
   line-height: 1.7;
   margin: 0;
+}
+
+.reader-status-badge {
+  align-self: center;
+  background: #f1e4d4;
+  border: 1px solid #d8c8b8;
+  border-radius: 999px;
+  color: #5d5148;
+  font-size: 12px;
+  font-weight: 950;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.reader-status-badge[data-state='active'] {
+  background: #e8f3eb;
+  border-color: #95b8a5;
+  color: #245044;
 }
 
 .reader-totp-setup-box {
@@ -5719,28 +5883,62 @@ body.station-paper-page {
 
 .reader-credit-balance {
   color: #221b16;
-  font-size: clamp(28px, 5vw, 42px);
+  font-size: clamp(34px, 5vw, 48px);
   font-weight: 950;
   letter-spacing: 0;
   line-height: 1;
   margin: 0;
 }
 
-.reader-pay-currency-field {
+.reader-credit-summary {
+  align-items: end;
   display: grid;
   gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
-.reader-pay-currency-field select {
-  min-height: 48px;
+.reader-credit-summary .fine-print {
+  justify-self: end;
+  margin: 0;
+}
+
+.reader-pay-chip-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.reader-pay-chip {
+  appearance: none;
+  background: #fffaf1;
+  border: 1px solid #d8c8b8;
+  border-radius: 999px;
+  color: #2e5b4e;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 950;
+  min-height: 40px;
+  padding: 8px 12px;
+}
+
+.reader-pay-chip.is-active {
+  background: #e8f3eb;
+  border-color: #2e5b4e;
+  color: #245044;
+}
+
+.reader-pay-chip:focus-visible {
+  outline: 3px solid rgba(46, 91, 78, 0.16);
+  outline-offset: 2px;
 }
 
 .reader-membership-state {
-  color: #221b16;
-  font-size: clamp(22px, 4vw, 32px);
-  font-weight: 950;
+  color: #4b665b;
+  font-size: 14px;
+  font-weight: 850;
   letter-spacing: 0;
-  line-height: 1.18;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -5760,9 +5958,9 @@ body.station-paper-page {
 .station-paper-page .serial-access-gate {
   background: #fffaf1;
   border: 1px solid #d8c8b8;
-  border-radius: 12px;
-  box-shadow: 0 16px 34px rgba(80, 55, 35, 0.12);
-  padding: 22px;
+  border-radius: 16px;
+  box-shadow: 0 12px 26px rgba(80, 55, 35, 0.08);
+  padding: 24px;
 }
 
 .reader-library-list {
@@ -6500,7 +6698,32 @@ body.station-paper-page.caption-product-page {
   }
 
   .reader-membership-summary {
+    align-items: stretch;
+    flex-direction: column;
     justify-self: stretch;
+  }
+
+  .reader-membership-summary__actions {
+    align-items: stretch;
+    flex-direction: column;
+    justify-content: start;
+  }
+
+  .reader-membership-summary__actions span {
+    white-space: normal;
+  }
+
+  .reader-credit-summary,
+  .reader-panel__header {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-credit-summary .fine-print {
+    justify-self: start;
+  }
+
+  .reader-pay-chip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .serial-card__header,

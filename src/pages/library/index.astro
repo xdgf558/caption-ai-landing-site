@@ -12,12 +12,28 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <div class="reader-library-hero__copy">
       <p class="station-kicker">Member Center</p>
       <h1>會員中心</h1>
+      <p>管理你的會員、閱讀點與帳戶安全。</p>
     </div>
-    <aside class="reader-membership-summary" id="reader-membership-summary" data-state="neutral" aria-live="polite">
-      <p>會員狀態</p>
-      <strong id="reader-membership-summary-title">尚未登入</strong>
-      <span id="reader-membership-summary-detail">登入後顯示會員有效期</span>
-    </aside>
+  </section>
+
+  <section class="station-section reader-membership-overview" id="reader-membership-panel" hidden>
+    <div class="reader-membership-summary" id="reader-membership-summary" data-state="neutral" aria-live="polite">
+      <div class="reader-membership-summary__main">
+        <span class="reader-membership-summary__dot" aria-hidden="true"></span>
+        <div>
+          <p>會員狀態</p>
+          <strong id="reader-membership-summary-title">正在讀取</strong>
+          <span id="reader-membership-summary-detail">正在確認會員有效期</span>
+        </div>
+      </div>
+      <div class="reader-membership-summary__actions">
+        <span id="reader-membership-overview-credits">0 SC 閱讀點</span>
+        <button class="button button-primary" id="reader-membership-redeem" type="button">用閱讀點兌換會員</button>
+      </div>
+    </div>
+    <p class="reader-membership-state" id="reader-membership-state">尚未開通會員。</p>
+    <p class="fine-print" id="reader-membership-rule">10 點可兌換 1 個月會員，會員可閱讀收費章節。</p>
+    <div class="reader-status" id="reader-membership-status" role="status" aria-live="polite"></div>
   </section>
 
   <section class="station-section reader-library-grid">
@@ -33,17 +49,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </div>
       <div class="reader-auth-fields" id="reader-login-fields">
         <label>
-          用户名或 Email
+          使用者名稱或 Email
           <input id="reader-identifier" name="identifier" type="text" autocomplete="username" placeholder="username@example.com" />
         </label>
         <label>
-          密码
-          <input id="reader-password" name="password" type="password" autocomplete="current-password" placeholder="至少 8 个字符" />
+          密碼
+          <input id="reader-password" name="password" type="password" autocomplete="current-password" placeholder="至少 8 個字元" />
         </label>
       </div>
       <div class="reader-auth-fields" id="reader-register-fields" hidden>
         <label>
-          用户名
+          使用者名稱
           <input id="reader-username" name="username" type="text" autocomplete="username" placeholder="stationcat" />
         </label>
         <label>
@@ -51,83 +67,89 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <input id="reader-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" />
         </label>
         <label>
-          密码
-          <input id="reader-register-password" name="register-password" type="password" autocomplete="new-password" placeholder="至少 8 个字符" />
+          密碼
+          <input id="reader-register-password" name="register-password" type="password" autocomplete="new-password" placeholder="至少 8 個字元" />
         </label>
         <label>
-          确认密码
-          <input id="reader-register-password-confirm" name="register-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入密码" />
+          確認密碼
+          <input id="reader-register-password-confirm" name="register-password-confirm" type="password" autocomplete="new-password" placeholder="再次輸入密碼" />
         </label>
       </div>
       <div class="reader-auth-fields" id="reader-reset-fields" hidden>
         <label id="reader-reset-identifier-field">
-          用户名或 Email
+          使用者名稱或 Email
           <input id="reader-reset-identifier" name="reset-identifier" type="text" autocomplete="username" placeholder="username@example.com" />
         </label>
         <label id="reader-reset-totp-field">
-          二步验证码
-          <input id="reader-reset-totp-code" name="reset-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="6 位数字" />
+          兩步驗證碼
+          <input id="reader-reset-totp-code" name="reset-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="6 位數字" />
         </label>
         <label>
-          新密码
-          <input id="reader-reset-password" name="reset-password" type="password" autocomplete="new-password" placeholder="至少 8 个字符" />
+          新密碼
+          <input id="reader-reset-password" name="reset-password" type="password" autocomplete="new-password" placeholder="至少 8 個字元" />
         </label>
         <label>
-          确认新密码
-          <input id="reader-reset-password-confirm" name="reset-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入新密码" />
+          確認新密碼
+          <input id="reader-reset-password-confirm" name="reset-password-confirm" type="password" autocomplete="new-password" placeholder="再次輸入新密碼" />
         </label>
-        <p class="fine-print" id="reader-reset-help">只有已绑定 Google Authenticator / 二步验证器的账号，可以用验证码重置密码。</p>
+        <p class="fine-print" id="reader-reset-help">只有已綁定 Google Authenticator / 兩步驗證器的帳號，可以用驗證碼重置密碼。</p>
       </div>
       <button class="button button-primary" id="reader-login-submit" type="submit">登入會員中心</button>
       <div class="reader-status" id="reader-login-status" role="status" aria-live="polite"></div>
     </form>
 
     <div class="reader-panel reader-account-panel" id="reader-account-panel" hidden>
-      <div>
+      <div class="reader-panel__header">
         <p class="station-kicker">Account</p>
-        <h2>已登入</h2>
+        <h2>帳戶</h2>
       </div>
-      <p id="reader-account-email" class="reader-account-email"></p>
-      <form class="reader-password-form" id="reader-password-form">
-        <h3>修改密碼</h3>
-        <label>
-          当前密码
-          <input id="reader-current-password" name="current-password" type="password" autocomplete="current-password" placeholder="当前密码" />
-        </label>
-        <label>
-          新密码
-          <input id="reader-new-password" name="new-password" type="password" autocomplete="new-password" placeholder="至少 8 个字符" />
-        </label>
-        <label>
-          确认新密码
-          <input id="reader-new-password-confirm" name="new-password-confirm" type="password" autocomplete="new-password" placeholder="再次输入新密码" />
-        </label>
-        <label>
-          二步验证码
-          <input id="reader-password-totp-code" name="password-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="已绑定时必填" />
-        </label>
-        <button class="button button-secondary" id="reader-password-submit" type="submit">更新密碼</button>
-        <div class="reader-status" id="reader-password-status" role="status" aria-live="polite"></div>
-      </form>
-      <button class="button button-secondary" id="reader-logout" type="button">登出</button>
+      <div class="reader-account-profile">
+        <span class="reader-account-avatar" aria-hidden="true">SC</span>
+        <p id="reader-account-email" class="reader-account-email"></p>
+      </div>
+      <details class="reader-password-disclosure">
+        <summary>修改密碼</summary>
+        <form class="reader-password-form" id="reader-password-form">
+          <label>
+            目前密碼
+            <input id="reader-current-password" name="current-password" type="password" autocomplete="current-password" placeholder="目前密碼" />
+          </label>
+          <label>
+            新密碼
+            <input id="reader-new-password" name="new-password" type="password" autocomplete="new-password" placeholder="至少 8 個字元" />
+          </label>
+          <label>
+            確認新密碼
+            <input id="reader-new-password-confirm" name="new-password-confirm" type="password" autocomplete="new-password" placeholder="再次輸入新密碼" />
+          </label>
+          <label>
+            兩步驗證碼
+            <input id="reader-password-totp-code" name="password-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="已綁定時必填" />
+          </label>
+          <button class="button button-primary" id="reader-password-submit" type="submit">更新密碼</button>
+          <div class="reader-status" id="reader-password-status" role="status" aria-live="polite"></div>
+        </form>
+      </details>
+      <button class="button button-secondary reader-danger-action" id="reader-logout" type="button">登出</button>
     </div>
 
     <div class="reader-panel reader-totp-panel" id="reader-totp-panel" hidden>
-      <div>
+      <div class="reader-panel__header">
         <p class="station-kicker">Authenticator</p>
-        <h2>二步验证器</h2>
+        <h2>兩步驗證器</h2>
+        <span class="reader-status-badge" id="reader-totp-badge" data-state="neutral">讀取中</span>
       </div>
-      <p class="reader-totp-state" id="reader-totp-state">正在读取绑定状态。</p>
-      <button class="button button-primary" id="reader-totp-setup" type="button">绑定 Google Authenticator</button>
+      <p class="reader-totp-state" id="reader-totp-state">正在讀取綁定狀態。</p>
+      <button class="button button-secondary" id="reader-totp-setup" type="button">綁定 Google Authenticator</button>
       <div class="reader-totp-setup-box" id="reader-totp-setup-box" hidden>
         <div class="reader-totp-qr-card" id="reader-totp-qr-card" hidden>
-          <div class="reader-totp-qr" id="reader-totp-qr" aria-label="Google Authenticator 绑定二维码"></div>
-          <p class="fine-print">打开 Google Authenticator，点击加号，选择“扫描二维码”。</p>
+          <div class="reader-totp-qr" id="reader-totp-qr" aria-label="Google Authenticator 綁定 QR code"></div>
+          <p class="fine-print">打開 Google Authenticator，點擊加號，選擇「掃描 QR code」。</p>
         </div>
         <details class="reader-totp-manual">
-          <summary>无法扫码时，手动输入设置密钥</summary>
+          <summary>無法掃碼時，手動輸入設定金鑰</summary>
           <label>
-            设置密钥
+            設定金鑰
             <input id="reader-totp-secret" type="text" readonly />
           </label>
           <label>
@@ -136,23 +158,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </label>
         </details>
         <label>
-          6 位验证码
-          <input id="reader-totp-confirm-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Google Authenticator 当前数字" />
+          6 位驗證碼
+          <input id="reader-totp-confirm-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Google Authenticator 目前數字" />
         </label>
-        <button class="button button-secondary" id="reader-totp-confirm" type="button">确认绑定</button>
+        <button class="button button-primary" id="reader-totp-confirm" type="button">確認綁定</button>
       </div>
       <div class="reader-status" id="reader-totp-status" role="status" aria-live="polite"></div>
     </div>
 
     <div class="reader-panel reader-credits-panel" id="reader-credits-panel" hidden>
-      <div>
+      <div class="reader-panel__header">
         <p class="station-kicker">Reading Credits</p>
-        <h2>閱讀點數</h2>
+        <h2>閱讀點與充值</h2>
       </div>
-      <p class="reader-credit-balance" id="reader-credit-balance">0 SC Credits</p>
-      <p class="fine-print" id="reader-credit-cost">目前單章付費內容會扣除 1 點。</p>
-      <label class="reader-pay-currency-field">
-        支付網路
+      <div class="reader-credit-summary">
+        <p class="reader-credit-balance" id="reader-credit-balance">0 SC Credits</p>
+        <p class="fine-print" id="reader-credit-cost">目前單章付費內容會扣除 1 點。</p>
+      </div>
+      <label class="reader-pay-currency-field" hidden>
+        充值網絡
         <select id="reader-pay-currency">
           <option value="USDTBSC">USDT BSC</option>
           <option value="USDTERC20">USDT ETH</option>
@@ -162,19 +186,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <option value="FDUSDBSC">FDUSD BSC</option>
         </select>
       </label>
+      <div class="reader-pay-chip-grid" aria-label="充值網絡">
+        <button class="reader-pay-chip is-active" type="button" data-pay-currency="USDTBSC">USDT · BSC</button>
+        <button class="reader-pay-chip" type="button" data-pay-currency="USDTERC20">USDT · ETH</button>
+        <button class="reader-pay-chip" type="button" data-pay-currency="USDC">USDC · ETH</button>
+        <button class="reader-pay-chip" type="button" data-pay-currency="USDCMATIC">USDC · Polygon</button>
+        <button class="reader-pay-chip" type="button" data-pay-currency="USDTARB">USDT · Arbitrum</button>
+        <button class="reader-pay-chip" type="button" data-pay-currency="FDUSDBSC">FDUSD · BSC</button>
+      </div>
       <div class="reader-credit-packs" id="reader-credit-packs"></div>
       <div class="reader-status" id="reader-credit-status" role="status" aria-live="polite"></div>
-    </div>
-
-    <div class="reader-panel reader-membership-panel" id="reader-membership-panel" hidden>
-      <div>
-        <p class="station-kicker">Membership</p>
-        <h2>會員閱讀</h2>
-      </div>
-      <p class="reader-membership-state" id="reader-membership-state">尚未開通會員。</p>
-      <p class="fine-print" id="reader-membership-rule">10 點可兌換 1 個月會員，會員可閱讀收費章節。</p>
-      <button class="button button-primary" id="reader-membership-redeem" type="button">用閱讀點兌換會員</button>
-      <div class="reader-status" id="reader-membership-status" role="status" aria-live="polite"></div>
     </div>
   </section>
 
@@ -249,10 +270,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const totpConfirmCodeInput = document.getElementById('reader-totp-confirm-code');
     const totpConfirmButton = document.getElementById('reader-totp-confirm');
     const totpStatus = document.getElementById('reader-totp-status');
+    const totpBadge = document.getElementById('reader-totp-badge');
     const creditsPanel = document.getElementById('reader-credits-panel');
     const creditBalance = document.getElementById('reader-credit-balance');
     const creditCost = document.getElementById('reader-credit-cost');
     const payCurrencySelect = document.getElementById('reader-pay-currency');
+    const payCurrencyButtons = Array.from(document.querySelectorAll('[data-pay-currency]'));
     const creditPacks = document.getElementById('reader-credit-packs');
     const creditStatus = document.getElementById('reader-credit-status');
     const membershipPanel = document.getElementById('reader-membership-panel');
@@ -263,6 +286,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const membershipSummary = document.getElementById('reader-membership-summary');
     const membershipSummaryTitle = document.getElementById('reader-membership-summary-title');
     const membershipSummaryDetail = document.getElementById('reader-membership-summary-detail');
+    const membershipOverviewCredits = document.getElementById('reader-membership-overview-credits');
     const libraryContent = document.getElementById('reader-library-content');
     const libraryList = document.getElementById('reader-library-list');
     const libraryEmpty = document.getElementById('reader-library-empty');
@@ -322,7 +346,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         : showsReset
           ? isLegacyReset
             ? '更新密碼'
-            : '用验证码重置密码'
+            : '用驗證碼重置密碼'
           : '登入會員中心';
       loginFields.hidden = isRegister || showsReset;
       registerFields.hidden = !isRegister;
@@ -330,8 +354,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       resetIdentifierField.hidden = isLegacyReset;
       resetTotpField.hidden = isLegacyReset;
       resetHelp.textContent = isLegacyReset
-        ? '请为旧密码重置链接设置新的会员密码。'
-        : '只有已绑定 Google Authenticator / 二步验证器的账号，可以用验证码重置密码。';
+        ? '請為舊密碼重置連結設定新的會員密碼。'
+        : '只有已綁定 Google Authenticator / 兩步驗證器的帳號，可以用驗證碼重置密碼。';
       setFieldState([identifierInput, loginPasswordInput], authMode === 'login');
       setFieldState([usernameInput, emailInput, registerPasswordInput, registerPasswordConfirmInput], isRegister);
       setFieldState([resetIdentifierInput, resetTotpCodeInput], isReset);
@@ -555,29 +579,46 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
     };
 
+    const syncPayCurrencyButtons = () => {
+      payCurrencyButtons.forEach((button) => {
+        const selected = button.dataset.payCurrency === payCurrencySelect.value;
+        button.classList.toggle('is-active', selected);
+        button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      });
+    };
+
+    payCurrencyButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        payCurrencySelect.value = button.dataset.payCurrency || payCurrencySelect.value;
+        syncPayCurrencyButtons();
+      });
+    });
+
+    payCurrencySelect.addEventListener('change', syncPayCurrencyButtons);
+
     const renderMembership = (membership, settings, creditAccount) => {
       const cost = settings?.membershipCreditCost || 10;
       const months = settings?.membershipDurationMonths || 1;
       const unitLabel = settings?.unitLabel || creditAccount?.unitLabel || 'SC Credits';
+      const balanceCredits = creditAccount?.balanceCredits || 0;
       const coversPaid = settings?.membershipCoversPaidContent !== false;
+      membershipOverviewCredits.textContent = `${balanceCredits} SC 閱讀點`;
       membershipRule.textContent = `${cost} 點可兌換 ${months} 個月會員，${coversPaid ? '會員可閱讀收費章節。' : '目前會員不覆蓋收費章節。'}`;
-      membershipRedeem.textContent = `用 ${cost} 點兌換 ${months} 個月會員`;
+      membershipRedeem.textContent = membership?.active ? '用閱讀點續費' : `用 ${cost} 點兌換 ${months} 個月會員`;
       membershipRedeem.hidden = settings?.enabled === false;
-      membershipRedeem.disabled = settings?.enabled === false || (creditAccount?.balanceCredits || 0) < cost;
+      membershipRedeem.disabled = settings?.enabled === false || balanceCredits < cost;
       if (membership?.active) {
         const expiresAt = formatLocalDate(membership.expiresAt);
         setMembershipSummary('會員有效中', `有效至 ${expiresAt}`, 'active');
         membershipState.textContent = coversPaid ? '會員閱讀權益已啟用。' : '會員已開通，目前不覆蓋收費章節。';
       } else {
-        setMembershipSummary('尚未開通會員', `可用閱讀點：${creditAccount?.balanceCredits || 0} ${unitLabel}`, 'inactive');
-        membershipState.textContent = `尚未開通會員。当前余额 ${creditAccount?.balanceCredits || 0} ${unitLabel}。`;
+        setMembershipSummary('尚未開通會員', `可用閱讀點：${balanceCredits} ${unitLabel}`, 'inactive');
+        membershipState.textContent = `尚未開通會員。目前餘額 ${balanceCredits} ${unitLabel}。`;
       }
       if (settings?.enabled === false) {
         setMembershipSummary('會員兌換未開啟', '目前不能兌換會員', 'inactive');
-      }
-      if (settings?.enabled === false) {
         setMembershipStatus('會員兌換目前未開啟。', 'neutral');
-      } else if ((creditAccount?.balanceCredits || 0) < cost) {
+      } else if (!membership?.active && balanceCredits < cost) {
         setMembershipStatus('閱讀點不足，請先充值點數。', 'neutral');
       } else {
         setMembershipStatus('');
@@ -587,10 +628,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const renderTotpStatus = (totp) => {
       const enabled = Boolean(totp?.enabled);
       totpState.textContent = enabled
-        ? '二步验证器已绑定。后续修改或重置密码时，需要输入 6 位验证码。'
-        : '尚未绑定二步验证器。绑定后，可以不用邮件，直接用验证码重置密码。';
+        ? '兩步驗證器已綁定。後續修改或重置密碼時，需要輸入 6 位驗證碼。'
+        : '尚未綁定兩步驗證器。綁定後，可以不用郵件，直接用驗證碼重置密碼。';
+      totpBadge.textContent = enabled ? '✓ 已綁定' : '未綁定';
+      totpBadge.dataset.state = enabled ? 'active' : 'neutral';
       totpSetupButton.hidden = enabled;
-      passwordTotpCodeInput.placeholder = enabled ? '6 位数字' : '未绑定时可留空';
+      passwordTotpCodeInput.placeholder = enabled ? '6 位數字' : '未綁定時可留空';
       totpSetupBox.hidden = true;
       renderTotpQrCode('');
       if (!enabled) {
@@ -603,11 +646,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const loadTotpStatus = async () => {
       const response = await fetch('/api/readers/totp/status');
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.message || '读取二步验证状态失败。');
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取兩步驗證狀態失敗。');
       if (!data.authenticated) return;
       if (data.setupRequired) {
         renderTotpStatus({ enabled: false });
-        setTotpStatus(data.message || '二步验证数据表尚未初始化。', 'error');
+        setTotpStatus(data.message || '兩步驗證資料表尚未初始化。', 'error');
         return;
       }
       renderTotpStatus(data.totp || { enabled: false });
@@ -619,7 +662,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         await loadTotpStatus();
       } catch (error) {
         renderTotpStatus({ enabled: false });
-        setTotpStatus(error.message || '读取二步验证状态失败。', 'error');
+        setTotpStatus(error.message || '讀取兩步驗證狀態失敗。', 'error');
       }
     };
 
@@ -636,7 +679,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const svg = totpQr.querySelector('svg');
         if (svg) {
           svg.setAttribute('role', 'img');
-          svg.setAttribute('aria-label', 'Google Authenticator 绑定二维码');
+          svg.setAttribute('aria-label', 'Google Authenticator 綁定 QR code');
           svg.removeAttribute('width');
           svg.removeAttribute('height');
         }
@@ -657,6 +700,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       creditBalance.textContent = `${data.account?.balanceCredits || 0} ${unitLabel}`;
       creditCost.textContent = `目前單章付費內容會扣除 ${data.chapterCostCredits || 1} 點。`;
       renderCreditPacks(data.packs || []);
+      syncPayCurrencyButtons();
       renderMembership(data.membership, data.membershipSettings, data.account);
     };
 
@@ -737,7 +781,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     } else if (query.get('login') === 'invalid') {
       setStatus('登入連結已失效，請重新寄送。', 'error');
     } else if (resetToken) {
-      setStatus('请设置新的会员密码。', 'neutral');
+      setStatus('請設定新的會員密碼。', 'neutral');
     }
 
     if (query.get('payment') === 'success' && query.get('order')) {
@@ -761,11 +805,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       submitButton.disabled = true;
       setStatus(
         authMode === 'register'
-          ? '正在建立會員账号...'
+          ? '正在建立會員帳號...'
           : authMode === 'legacyReset'
-            ? '正在更新密码...'
+            ? '正在更新密碼...'
             : authMode === 'reset'
-            ? '正在验证二步验证码并重置密码...'
+            ? '正在驗證兩步驗證碼並重置密碼...'
               : '正在登入...',
         'neutral'
       );
@@ -879,12 +923,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     totpSetupButton.addEventListener('click', async () => {
       totpSetupButton.disabled = true;
-      setTotpStatus('正在生成二步验证密钥...', 'neutral');
+      setTotpStatus('正在生成兩步驗證金鑰...', 'neutral');
 
       try {
         const response = await fetch('/api/readers/totp/setup', { method: 'POST' });
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.message || '二步验证密钥生成失败。');
+        if (!response.ok || !data.ok) throw new Error(data.message || '兩步驗證金鑰生成失敗。');
 
         if (data.setup) {
           totpSecretInput.value = data.setup.secretBase32 || '';
@@ -893,16 +937,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           totpSetupBox.hidden = false;
           setTotpStatus(
             qrReady
-              ? '请用 Google Authenticator 扫描二维码，再输入当前 6 位验证码完成绑定。'
-              : '二维码生成失败，请展开手动密钥完成绑定。',
+              ? '請用 Google Authenticator 掃描 QR code，再輸入目前 6 位驗證碼完成綁定。'
+              : 'QR code 生成失敗，請展開手動金鑰完成綁定。',
             qrReady ? 'neutral' : 'error'
           );
         } else {
           renderTotpStatus(data.totp || { enabled: false });
-          setTotpStatus(data.message || '二步验证状态已更新。', data.totp?.enabled ? 'success' : 'neutral');
+          setTotpStatus(data.message || '兩步驗證狀態已更新。', data.totp?.enabled ? 'success' : 'neutral');
         }
       } catch (error) {
-        setTotpStatus(error.message || '二步验证密钥生成失败。', 'error');
+        setTotpStatus(error.message || '兩步驗證金鑰生成失敗。', 'error');
       } finally {
         totpSetupButton.disabled = false;
       }
@@ -910,7 +954,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     totpConfirmButton.addEventListener('click', async () => {
       totpConfirmButton.disabled = true;
-      setTotpStatus('正在确认验证码...', 'neutral');
+      setTotpStatus('正在確認驗證碼...', 'neutral');
 
       try {
         const response = await fetch('/api/readers/totp/confirm', {
@@ -921,11 +965,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           })
         });
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.message || '二步验证绑定失败。');
+        if (!response.ok || !data.ok) throw new Error(data.message || '兩步驗證綁定失敗。');
         renderTotpStatus(data.totp || { enabled: true });
-        setTotpStatus(data.message || '二步验证器已绑定。', 'success');
+        setTotpStatus(data.message || '兩步驗證器已綁定。', 'success');
       } catch (error) {
-        setTotpStatus(error.message || '二步验证绑定失败。', 'error');
+        setTotpStatus(error.message || '兩步驗證綁定失敗。', 'error');
       } finally {
         totpConfirmButton.disabled = false;
       }
@@ -987,7 +1031,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     setAuthMode(resetToken ? 'legacyReset' : 'login');
     if (resetToken) {
-      setStatus('请设置新的会员密码。', 'neutral');
+      setStatus('請設定新的會員密碼。', 'neutral');
     }
 
     loadSession()
