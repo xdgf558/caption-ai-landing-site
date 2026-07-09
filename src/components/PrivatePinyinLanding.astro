@@ -22,6 +22,7 @@ const copy = {
     intro:
       '猫栈拼音（PrivatePinyin）是 Station Cat 正在測試的中文輸入法。0.1.10 已提供 macOS 升級包，並新增 Windows TSF 內測版；iOS 版本會在後續開發完成後補上。',
     primary: '下載 macOS 版',
+    windowsCta: '下載 Windows 內測版',
     secondary: '查看下載資訊',
     downloadHref: privatePinyinProduct.zhHantDownloadPagePath,
     featuresTitle: '目前這個版本適合',
@@ -48,6 +49,7 @@ const copy = {
     intro:
       '猫栈拼音（PrivatePinyin）是 Station Cat 正在测试的中文输入法。0.1.10 已提供 macOS 升级包，并新增 Windows TSF 内测版；iOS 版本会在后续开发完成后补上。',
     primary: '下载 macOS 版',
+    windowsCta: '下载 Windows 内测版',
     secondary: '查看下载信息',
     downloadHref: privatePinyinProduct.zhHansDownloadPagePath,
     featuresTitle: '目前这个版本适合',
@@ -74,6 +76,7 @@ const copy = {
     intro:
       'Maozhan Pinyin (PrivatePinyin) is a Chinese input method being tested by Station Cat. Version 0.1.10 ships an upgraded macOS package and adds a Windows TSF internal test build. iOS is still planned for later.',
     primary: 'Download for macOS',
+    windowsCta: 'Download Windows beta',
     secondary: 'View download info',
     downloadHref: privatePinyinProduct.downloadPagePath,
     featuresTitle: 'What this build is for',
@@ -100,6 +103,7 @@ const copy = {
     intro:
       '猫栈拼音（PrivatePinyin）は Station Cat がテストしている中国語入力メソッドです。0.1.10 では macOS パッケージを更新し、Windows TSF の内部テスト版も追加しました。iOS 版は今後追加予定です。',
     primary: 'macOS 版をダウンロード',
+    windowsCta: 'Windows 内部テスト版',
     secondary: 'ダウンロード情報を見る',
     downloadHref: privatePinyinProduct.jaDownloadPagePath,
     featuresTitle: 'このバージョンでできること',
@@ -153,6 +157,7 @@ const canonicalPath =
       <p>{copy.intro}</p>
       <div class="button-row">
         <a class="button button-primary" href={macDownload.downloadPath}>{copy.primary}</a>
+        {windowsDownload && <a class="button button-secondary" href={windowsDownload.downloadPath}>{copy.windowsCta}</a>}
         <a class="button button-secondary" href={copy.downloadHref}>{copy.secondary}</a>
       </div>
     </div>
