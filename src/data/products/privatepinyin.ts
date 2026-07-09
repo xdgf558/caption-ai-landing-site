@@ -32,6 +32,12 @@ export const privatePinyinProduct = {
       channel: 'internal-test'
     }
   ],
+  iosTestflight: {
+    label: 'iOS TestFlight external test',
+    platform: 'iOS',
+    channel: 'external-test',
+    url: 'https://testflight.apple.com/join/QnWqrAaH'
+  },
   productPath: '/apps/privatepinyin/',
   downloadPagePath: '/apps/privatepinyin/download/',
   zhHantProductPath: '/zh-hant/apps/privatepinyin/',

@@ -10,6 +10,7 @@ const { lang = 'zh-Hant' } = Astro.props;
 const downloads = privatePinyinProduct.downloads;
 const macDownload = downloads.find((item) => item.id === 'macos-pkg') ?? downloads[0];
 const windowsDownload = downloads.find((item) => item.id === 'windows-exe');
+const iosTestflight = privatePinyinProduct.iosTestflight;
 const latestVersion = privatePinyinProduct.latestVersion;
 const macVersion = macDownload.version;
 const windowsVersion = windowsDownload?.version ?? latestVersion;
@@ -18,17 +19,18 @@ const inputSourceName = '猫栈拼音';
 const copy = {
   'zh-Hant': {
     title: '下載 猫栈拼音',
-    description: `下載 猫栈拼音（PrivatePinyin）測試版，包含 macOS ${macVersion} 升級包與 Windows ${windowsVersion} 內測版。`,
+    description: `下載 猫栈拼音（PrivatePinyin）測試版，包含 macOS ${macVersion}、Windows ${windowsVersion} 內測版與 iOS TestFlight 外部測試。`,
     kicker: 'Input Method Download',
     headline: '下載 猫栈拼音測試版。',
     intro:
-      `macOS 版目前是 ${macVersion}；Windows 版已更新到 ${windowsVersion} 內測包，提供 EXE 安裝包。macOS 安裝後請在系統輸入法設定裡加入「${inputSourceName}」（PrivatePinyin）。`,
+      `macOS 版目前是 ${macVersion}；Windows 版是 ${windowsVersion} 內測包；iOS 版已開放 TestFlight 外部測試。macOS 安裝後請在系統輸入法設定裡加入「${inputSourceName}」（PrivatePinyin）。`,
     primaryButton: '下載 macOS PKG',
     back: '返回產品頁',
     backHref: privatePinyinProduct.zhHantProductPath,
     metaTitle: '下載檔案',
     releaseNotesTitle: '版本說明',
     releaseNotes: [
+      'iOS 版已開放 TestFlight 外部測試，可在 iPhone 或 iPad 上安裝並接收後續測試更新。',
       `Windows TSF 內測包更新到 ${windowsVersion}，提供 EXE 安裝包下載。`,
       `${macVersion} 升級本機候選學習，常選詞會逐漸排得更靠前。`,
       'macOS 版新增一步聯想和短句補全學習，重複選擇的詞組會在本機形成後續建議。',
@@ -41,21 +43,22 @@ const copy = {
     checksum: 'SHA-256',
     metaLabels: ['Version', 'System', 'Size'],
     warning:
-      '請只從 Station Cat 官方網站下載。macOS 包目前只支援 Apple Silicon Mac，Intel Mac 暫不支援；Windows 版仍屬內測，請優先在願意測試的 Windows 10 / 11 裝置上使用。'
+      '請只從 Station Cat 官方網站下載桌面安裝包。macOS 包目前只支援 Apple Silicon Mac，Intel Mac 暫不支援；Windows 版仍屬內測；iOS 測試版請透過官方 Apple TestFlight 連結加入。'
   },
   'zh-Hans': {
     title: '下载 猫栈拼音',
-    description: `下载 猫栈拼音（PrivatePinyin）测试版，包含 macOS ${macVersion} 升级包与 Windows ${windowsVersion} 内测版。`,
+    description: `下载 猫栈拼音（PrivatePinyin）测试版，包含 macOS ${macVersion}、Windows ${windowsVersion} 内测版与 iOS TestFlight 外部测试。`,
     kicker: 'Input Method Download',
     headline: '下载 猫栈拼音测试版。',
     intro:
-      `macOS 版目前是 ${macVersion}；Windows 版已更新到 ${windowsVersion} 内测包，提供 EXE 安装包。macOS 安装后请在系统输入法设置里加入「${inputSourceName}」（PrivatePinyin）。`,
+      `macOS 版目前是 ${macVersion}；Windows 版是 ${windowsVersion} 内测包；iOS 版已开放 TestFlight 外部测试。macOS 安装后请在系统输入法设置里加入「${inputSourceName}」（PrivatePinyin）。`,
     primaryButton: '下载 macOS PKG',
     back: '返回产品页',
     backHref: privatePinyinProduct.zhHansProductPath,
     metaTitle: '下载文件',
     releaseNotesTitle: '版本说明',
     releaseNotes: [
+      'iOS 版已开放 TestFlight 外部测试，可在 iPhone 或 iPad 上安装并接收后续测试更新。',
       `Windows TSF 内测包更新到 ${windowsVersion}，提供 EXE 安装包下载。`,
       `${macVersion} 升级本机候选学习，常选词会逐渐排得更靠前。`,
       'macOS 版新增一步联想和短句补全学习，重复选择的词组会在本机形成后续建议。',
@@ -68,21 +71,22 @@ const copy = {
     checksum: 'SHA-256',
     metaLabels: ['Version', 'System', 'Size'],
     warning:
-      '请只从 Station Cat 官方网站下载。macOS 包目前只支持 Apple Silicon Mac，Intel Mac 暂不支持；Windows 版仍属内测，请优先在愿意测试的 Windows 10 / 11 设备上使用。'
+      '请只从 Station Cat 官方网站下载桌面安装包。macOS 包目前只支持 Apple Silicon Mac，Intel Mac 暂不支持；Windows 版仍属内测；iOS 测试版请通过官方 Apple TestFlight 链接加入。'
   },
   en: {
     title: 'Download Maozhan Pinyin',
-    description: `Download Maozhan Pinyin (PrivatePinyin) test builds, including macOS ${macVersion} and Windows ${windowsVersion}.`,
+    description: `Download Maozhan Pinyin (PrivatePinyin) test builds for macOS ${macVersion} and Windows ${windowsVersion}, or join the iOS external TestFlight group.`,
     kicker: 'Input Method Download',
     headline: 'Download Maozhan Pinyin test builds.',
     intro:
-      `The macOS build is currently ${macVersion}. The Windows internal test build has been updated to ${windowsVersion} and is provided as an EXE installer. After installing on macOS, add "${inputSourceName}" (PrivatePinyin) in System Settings > Keyboard > Input Sources.`,
+      `The macOS build is ${macVersion}, the Windows internal test build is ${windowsVersion}, and the iOS build is available through an external TestFlight group. After installing on macOS, add "${inputSourceName}" (PrivatePinyin) in System Settings > Keyboard > Input Sources.`,
     primaryButton: 'Download macOS PKG',
     back: 'Back to product page',
     backHref: privatePinyinProduct.productPath,
     metaTitle: 'Download files',
     releaseNotesTitle: 'Release notes',
     releaseNotes: [
+      'The iOS build is now available through an external TestFlight group for installation and future test updates on iPhone or iPad.',
       `Updates the Windows TSF internal test build to ${windowsVersion}, available as an EXE installer.`,
       `${macVersion} improves local candidate learning so frequently selected words can move higher over time.`,
       'The macOS build adds one-step association and short phrase completion learning for repeated phrase choices.',
@@ -95,21 +99,22 @@ const copy = {
     checksum: 'SHA-256',
     metaLabels: ['Version', 'System', 'Size'],
     warning:
-      'Download only from the official Station Cat site. The macOS package supports Apple Silicon Macs only; Intel Macs are not supported yet. The Windows build is still an internal test and is best used on Windows 10 / 11 devices you are comfortable testing on.'
+      'Download desktop installers only from the official Station Cat site. The macOS package supports Apple Silicon Macs only; Intel Macs are not supported yet. Windows remains an internal test, and iOS access is provided through the official Apple TestFlight link.'
   },
   ja: {
     title: '猫栈拼音 をダウンロード',
-    description: `猫栈拼音（PrivatePinyin）のテスト版をダウンロードできます。macOS ${macVersion} と Windows ${windowsVersion} 内部テスト版を含みます。`,
+    description: `猫栈拼音（PrivatePinyin）の macOS ${macVersion}、Windows ${windowsVersion} 内部テスト版をダウンロードし、iOS TestFlight 外部テストにも参加できます。`,
     kicker: 'Input Method Download',
     headline: '猫栈拼音 テスト版をダウンロード。',
     intro:
-      `macOS 版は現在 ${macVersion} です。Windows 内部テスト版は ${windowsVersion} に更新し、EXE を提供しています。macOS ではインストール後、システムの入力メソッド設定で「${inputSourceName}」（PrivatePinyin）を追加してください。`,
+      `macOS 版は ${macVersion}、Windows 内部テスト版は ${windowsVersion} です。iOS 版は TestFlight 外部テストで公開しています。macOS ではインストール後、システムの入力メソッド設定で「${inputSourceName}」（PrivatePinyin）を追加してください。`,
     primaryButton: 'macOS PKG をダウンロード',
     back: '製品ページへ戻る',
     backHref: privatePinyinProduct.jaProductPath,
     metaTitle: 'ダウンロードファイル',
     releaseNotesTitle: 'バージョン情報',
     releaseNotes: [
+      'iOS 版を TestFlight 外部テストで公開し、iPhone または iPad でインストールと今後のテスト更新を受け取れます。',
       `Windows TSF 内部テスト版を ${windowsVersion} に更新し、EXE で提供します。`,
       `${macVersion} ではローカル候補学習を改善し、よく選ぶ語が上位に出やすくなります。`,
       'macOS 版では一歩先の連想と短いフレーズ補完学習を追加しました。',
@@ -122,7 +127,42 @@ const copy = {
     checksum: 'SHA-256',
     metaLabels: ['Version', 'System', 'Size'],
     warning:
-      'Station Cat 公式サイトからのみダウンロードしてください。macOS パッケージは Apple Silicon Mac のみ対応し、Intel Mac はまだ対応していません。Windows 版は内部テストのため、テスト可能な Windows 10 / 11 デバイスで使用してください。'
+      'デスクトップ版は Station Cat 公式サイトからのみダウンロードしてください。macOS は Apple Silicon Mac のみ対応し、Windows は内部テスト版です。iOS 版は公式 Apple TestFlight リンクから参加してください。'
+  }
+}[lang];
+
+const iosCopy = {
+  'zh-Hant': {
+    badge: '外部測試',
+    title: 'iOS TestFlight',
+    description: '透過 Apple TestFlight 在 iPhone 或 iPad 安裝猫栈拼音測試版。',
+    labels: ['Channel', 'Device', 'Delivery'],
+    values: ['External Test', 'iPhone / iPad', 'Apple TestFlight'],
+    action: '加入 iOS 外部測試'
+  },
+  'zh-Hans': {
+    badge: '外部测试',
+    title: 'iOS TestFlight',
+    description: '通过 Apple TestFlight 在 iPhone 或 iPad 安装猫栈拼音测试版。',
+    labels: ['Channel', 'Device', 'Delivery'],
+    values: ['External Test', 'iPhone / iPad', 'Apple TestFlight'],
+    action: '加入 iOS 外部测试'
+  },
+  en: {
+    badge: 'External test',
+    title: 'iOS TestFlight',
+    description: 'Install the Maozhan Pinyin test build on iPhone or iPad through Apple TestFlight.',
+    labels: ['Channel', 'Device', 'Delivery'],
+    values: ['External Test', 'iPhone / iPad', 'Apple TestFlight'],
+    action: 'Join the iOS external test'
+  },
+  ja: {
+    badge: '外部テスト',
+    title: 'iOS TestFlight',
+    description: 'Apple TestFlight から iPhone または iPad に猫栈拼音テスト版をインストールできます。',
+    labels: ['Channel', 'Device', 'Delivery'],
+    values: ['External Test', 'iPhone / iPad', 'Apple TestFlight'],
+    action: 'iOS 外部テストに参加'
   }
 }[lang];
 
@@ -157,6 +197,7 @@ const canonicalPath =
     <p>{copy.intro}</p>
     <div class="button-row">
       <a class="button button-primary" href={macDownload.downloadPath}>{copy.primaryButton}</a>
+      <a class="button button-secondary" href={iosTestflight.url} target="_blank" rel="noreferrer">{iosCopy.action}</a>
       <a class="button button-secondary" href={copy.backHref}>{copy.back}</a>
     </div>
   </section>
@@ -199,6 +240,22 @@ const canonicalPath =
           <a class="button button-primary" href={download.downloadPath}>{copy.downloadAction} {download.platform}</a>
         </article>
       ))}
+      <article class="anytls-download-card privatepinyin-testflight-card">
+        <div>
+          <p class="section-kicker">{iosCopy.badge}</p>
+          <h3>{iosCopy.title}</h3>
+          <p>{iosCopy.description}</p>
+        </div>
+        <dl class="radar-meta-list">
+          {iosCopy.labels.map((label, index) => (
+            <div>
+              <dt>{label}</dt>
+              <dd>{iosCopy.values[index]}</dd>
+            </div>
+          ))}
+        </dl>
+        <a class="button button-primary" href={iosTestflight.url} target="_blank" rel="noreferrer">{iosCopy.action}</a>
+      </article>
     </div>
     <p>{copy.warning}</p>
   </section>
