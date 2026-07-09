@@ -9,7 +9,7 @@ interface Props {
 const { lang = 'zh-Hant' } = Astro.props;
 const downloads = privatePinyinProduct.downloads;
 const macDownload = downloads.find((item) => item.id === 'macos-pkg') ?? downloads[0];
-const windowsDownload = downloads.find((item) => item.id === 'windows-msi');
+const windowsDownload = downloads.find((item) => item.id === 'windows-exe');
 const latestVersion = privatePinyinProduct.latestVersion;
 const macVersion = macDownload.version;
 const windowsVersion = windowsDownload?.version ?? latestVersion;
@@ -31,7 +31,7 @@ const copy = {
     features: [
       ['本機中文輸入', '先把日常拼音輸入跑順，候選詞、標點和打字手感會持續調整。'],
       [`macOS ${macVersion}`, '加入本機候選學習、一步聯想和短句補全，常選詞會逐漸更貼近自己的輸入習慣。'],
-      [`Windows ${windowsVersion} 內測`, 'Windows MSI / ZIP 內測包已更新，適合願意協助測試 TSF 版本的使用者。'],
+      [`Windows ${windowsVersion} 內測`, 'Windows EXE 內測包已更新，適合願意協助測試 TSF 版本的使用者。'],
       ['小而清楚的下載入口', '安裝包、版本、大小和 SHA-256 都集中在下載頁，方便確認來源。']
     ],
     notesTitle: '上架狀態',
@@ -40,7 +40,7 @@ const copy = {
       `${macDownload.platform}，${macDownload.architecture}，${macDownload.minimumSystem}`,
       `安裝後請在系統輸入法設定裡加入「${inputSourceName}」（PrivatePinyin）。`,
       'macOS 安裝包只支援 Apple Silicon Mac，Intel Mac 暫不支援。',
-      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 內測版已提供 MSI 和 ZIP，未簽名，安裝時可能出現 SmartScreen 提示。` : '',
+      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 內測版已提供 EXE，未簽名，安裝時可能出現 SmartScreen 提示。` : '',
       '這是早期測試版，首次安裝或啟用輸入法時請以系統安全提示為準。'
     ]
   },
@@ -58,7 +58,7 @@ const copy = {
     features: [
       ['本机中文输入', '先把日常拼音输入跑顺，候选词、标点和打字手感会持续调整。'],
       [`macOS ${macVersion}`, '加入本机候选学习、一步联想和短句补全，常选词会逐渐更贴近自己的输入习惯。'],
-      [`Windows ${windowsVersion} 内测`, 'Windows MSI / ZIP 内测包已更新，适合愿意协助测试 TSF 版本的用户。'],
+      [`Windows ${windowsVersion} 内测`, 'Windows EXE 内测包已更新，适合愿意协助测试 TSF 版本的用户。'],
       ['小而清楚的下载入口', '安装包、版本、大小和 SHA-256 都集中在下载页，方便确认来源。']
     ],
     notesTitle: '上架状态',
@@ -67,7 +67,7 @@ const copy = {
       `${macDownload.platform}，${macDownload.architecture}，${macDownload.minimumSystem}`,
       `安装后请在系统输入法设置里加入「${inputSourceName}」（PrivatePinyin）。`,
       'macOS 安装包只支持 Apple Silicon Mac，Intel Mac 暂不支持。',
-      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 内测版已提供 MSI 和 ZIP，未签名，安装时可能出现 SmartScreen 提示。` : '',
+      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 内测版已提供 EXE，未签名，安装时可能出现 SmartScreen 提示。` : '',
       '这是早期测试版，首次安装或启用输入法时请以系统安全提示为准。'
     ]
   },
@@ -85,7 +85,7 @@ const copy = {
     features: [
       ['Local Chinese typing', 'The focus is making daily pinyin input feel steady, with candidates, punctuation, and typing flow improving over time.'],
       [`macOS ${macVersion}`, 'Adds local candidate learning, one-step association, and short phrase completion so repeated choices can move closer to your habits.'],
-      [`Windows ${windowsVersion} internal test`, 'The Windows MSI / ZIP internal test builds have been refreshed for users willing to help validate the TSF version.'],
+      [`Windows ${windowsVersion} internal test`, 'The Windows EXE internal test build has been refreshed for users willing to help validate the TSF version.'],
       ['Clear download trail', 'The installer, version, size, and SHA-256 checksum are kept together on the download page.']
     ],
     notesTitle: 'Release status',
@@ -94,7 +94,7 @@ const copy = {
       `${macDownload.platform}, ${macDownload.architecture}, ${macDownload.minimumSystem}`,
       `After installing, add "${inputSourceName}" (PrivatePinyin) in System Settings > Keyboard > Input Sources.`,
       'The macOS installer supports Apple Silicon Macs only. Intel Macs are not supported yet.',
-      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} internal test builds are available as MSI and ZIP files. They are unsigned and may trigger SmartScreen prompts.` : '',
+      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} internal test build is available as an EXE installer. It is unsigned and may trigger SmartScreen prompts.` : '',
       'This is an early test build. Follow system security prompts during install or input method activation.'
     ]
   },
@@ -112,7 +112,7 @@ const copy = {
     features: [
       ['ローカル中国語入力', '日常的なピンイン入力、候補、句読点、入力感を整えていきます。'],
       [`macOS ${macVersion}`, 'ローカル候補学習、一歩先の連想、短いフレーズ補完を追加し、よく選ぶ語を入力習慣に近づけていきます。'],
-      [`Windows ${windowsVersion} 内部テスト`, 'Windows MSI / ZIP の内部テスト版を更新しました。TSF 版の検証に協力できる方向けです。'],
+      [`Windows ${windowsVersion} 内部テスト`, 'Windows EXE の内部テスト版を更新しました。TSF 版の検証に協力できる方向けです。'],
       ['わかりやすい配布情報', 'インストーラー、バージョン、サイズ、SHA-256 をダウンロードページにまとめています。']
     ],
     notesTitle: '公開状況',
@@ -121,7 +121,7 @@ const copy = {
       `${macDownload.platform}、${macDownload.architecture}、${macDownload.minimumSystem}`,
       `インストール後、システムの入力メソッド設定で「${inputSourceName}」（PrivatePinyin）を追加してください。`,
       'macOS インストーラーは Apple Silicon Mac のみ対応です。Intel Mac はまだ対応していません。',
-      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 内部テスト版を MSI と ZIP で提供しています。未署名のため SmartScreen が表示される場合があります。` : '',
+      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 内部テスト版を EXE で提供しています。未署名のため SmartScreen が表示される場合があります。` : '',
       'これは早期テスト版です。インストールや入力メソッド有効化時はシステムの安全確認に従ってください。'
     ]
   }

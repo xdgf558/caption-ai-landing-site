@@ -9,7 +9,7 @@ interface Props {
 const { lang = 'zh-Hant' } = Astro.props;
 const downloads = privatePinyinProduct.downloads;
 const macDownload = downloads.find((item) => item.id === 'macos-pkg') ?? downloads[0];
-const windowsDownload = downloads.find((item) => item.id === 'windows-msi');
+const windowsDownload = downloads.find((item) => item.id === 'windows-exe');
 const latestVersion = privatePinyinProduct.latestVersion;
 const macVersion = macDownload.version;
 const windowsVersion = windowsDownload?.version ?? latestVersion;
@@ -22,14 +22,14 @@ const copy = {
     kicker: 'Input Method Download',
     headline: '下載 猫栈拼音測試版。',
     intro:
-      `macOS 版目前是 ${macVersion}；Windows 版已更新到 ${windowsVersion} 內測包，提供 MSI 安裝包和 ZIP 測試包。macOS 安裝後請在系統輸入法設定裡加入「${inputSourceName}」（PrivatePinyin）。`,
+      `macOS 版目前是 ${macVersion}；Windows 版已更新到 ${windowsVersion} 內測包，提供 EXE 安裝包。macOS 安裝後請在系統輸入法設定裡加入「${inputSourceName}」（PrivatePinyin）。`,
     primaryButton: '下載 macOS PKG',
     back: '返回產品頁',
     backHref: privatePinyinProduct.zhHantProductPath,
     metaTitle: '下載檔案',
     releaseNotesTitle: '版本說明',
     releaseNotes: [
-      `Windows TSF 內測包更新到 ${windowsVersion}，提供 MSI 和 ZIP 兩種下載。`,
+      `Windows TSF 內測包更新到 ${windowsVersion}，提供 EXE 安裝包下載。`,
       `${macVersion} 升級本機候選學習，常選詞會逐漸排得更靠前。`,
       'macOS 版新增一步聯想和短句補全學習，重複選擇的詞組會在本機形成後續建議。',
       `macOS 安裝包目前為 ${macVersion}，輸入源仍為「猫栈拼音」。`,
@@ -49,14 +49,14 @@ const copy = {
     kicker: 'Input Method Download',
     headline: '下载 猫栈拼音测试版。',
     intro:
-      `macOS 版目前是 ${macVersion}；Windows 版已更新到 ${windowsVersion} 内测包，提供 MSI 安装包和 ZIP 测试包。macOS 安装后请在系统输入法设置里加入「${inputSourceName}」（PrivatePinyin）。`,
+      `macOS 版目前是 ${macVersion}；Windows 版已更新到 ${windowsVersion} 内测包，提供 EXE 安装包。macOS 安装后请在系统输入法设置里加入「${inputSourceName}」（PrivatePinyin）。`,
     primaryButton: '下载 macOS PKG',
     back: '返回产品页',
     backHref: privatePinyinProduct.zhHansProductPath,
     metaTitle: '下载文件',
     releaseNotesTitle: '版本说明',
     releaseNotes: [
-      `Windows TSF 内测包更新到 ${windowsVersion}，提供 MSI 和 ZIP 两种下载。`,
+      `Windows TSF 内测包更新到 ${windowsVersion}，提供 EXE 安装包下载。`,
       `${macVersion} 升级本机候选学习，常选词会逐渐排得更靠前。`,
       'macOS 版新增一步联想和短句补全学习，重复选择的词组会在本机形成后续建议。',
       `macOS 安装包目前为 ${macVersion}，输入源仍为「猫栈拼音」。`,
@@ -76,14 +76,14 @@ const copy = {
     kicker: 'Input Method Download',
     headline: 'Download Maozhan Pinyin test builds.',
     intro:
-      `The macOS build is currently ${macVersion}. The Windows internal test build has been updated to ${windowsVersion} and is provided as MSI and ZIP packages. After installing on macOS, add "${inputSourceName}" (PrivatePinyin) in System Settings > Keyboard > Input Sources.`,
+      `The macOS build is currently ${macVersion}. The Windows internal test build has been updated to ${windowsVersion} and is provided as an EXE installer. After installing on macOS, add "${inputSourceName}" (PrivatePinyin) in System Settings > Keyboard > Input Sources.`,
     primaryButton: 'Download macOS PKG',
     back: 'Back to product page',
     backHref: privatePinyinProduct.productPath,
     metaTitle: 'Download files',
     releaseNotesTitle: 'Release notes',
     releaseNotes: [
-      `Updates the Windows TSF internal test build to ${windowsVersion}, available as MSI and ZIP downloads.`,
+      `Updates the Windows TSF internal test build to ${windowsVersion}, available as an EXE installer.`,
       `${macVersion} improves local candidate learning so frequently selected words can move higher over time.`,
       'The macOS build adds one-step association and short phrase completion learning for repeated phrase choices.',
       `The macOS installer is currently ${macVersion}. The input source remains "猫栈拼音".`,
@@ -103,14 +103,14 @@ const copy = {
     kicker: 'Input Method Download',
     headline: '猫栈拼音 テスト版をダウンロード。',
     intro:
-      `macOS 版は現在 ${macVersion} です。Windows 内部テスト版は ${windowsVersion} に更新し、MSI と ZIP を提供しています。macOS ではインストール後、システムの入力メソッド設定で「${inputSourceName}」（PrivatePinyin）を追加してください。`,
+      `macOS 版は現在 ${macVersion} です。Windows 内部テスト版は ${windowsVersion} に更新し、EXE を提供しています。macOS ではインストール後、システムの入力メソッド設定で「${inputSourceName}」（PrivatePinyin）を追加してください。`,
     primaryButton: 'macOS PKG をダウンロード',
     back: '製品ページへ戻る',
     backHref: privatePinyinProduct.jaProductPath,
     metaTitle: 'ダウンロードファイル',
     releaseNotesTitle: 'バージョン情報',
     releaseNotes: [
-      `Windows TSF 内部テスト版を ${windowsVersion} に更新し、MSI と ZIP で提供します。`,
+      `Windows TSF 内部テスト版を ${windowsVersion} に更新し、EXE で提供します。`,
       `${macVersion} ではローカル候補学習を改善し、よく選ぶ語が上位に出やすくなります。`,
       'macOS 版では一歩先の連想と短いフレーズ補完学習を追加しました。',
       `macOS インストーラーは現在 ${macVersion} です。入力ソース名は「猫栈拼音」のままです。`,

@@ -2,7 +2,7 @@ export const privatePinyinProduct = {
   id: 'privatepinyin',
   slug: 'privatepinyin',
   name: '猫栈拼音',
-  latestVersion: '0.1.11',
+  latestVersion: '0.1.10',
   releaseDate: '2026-07-09',
   downloads: [
     {
@@ -19,29 +19,16 @@ export const privatePinyinProduct = {
       channel: 'public-test'
     },
     {
-      id: 'windows-msi',
-      label: 'Windows MSI installer',
-      version: '0.1.11',
+      id: 'windows-exe',
+      label: 'Windows EXE installer',
+      version: '0.1.10',
       platform: 'Windows',
       architecture: 'x64',
       minimumSystem: 'Windows 10 / 11',
-      fileSize: '3.7 MB',
-      sha256: '65fc9fa783e947787099d2e72361f9b45e83f3cf00746df076712f4d54ca11a6',
-      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.11.msi',
-      r2ObjectKey: 'privatepinyin/0.1.11/PrivatePinyin-0.1.11.msi',
-      channel: 'internal-test'
-    },
-    {
-      id: 'windows-zip',
-      label: 'Windows ZIP test bundle',
-      version: '0.1.11',
-      platform: 'Windows',
-      architecture: 'x64',
-      minimumSystem: 'Windows 10 / 11',
-      fileSize: '3.8 MB',
-      sha256: '09da2f6f8ce47bf56c22209163590f45cbe70ae4039051eaa42ccc3368a7a61d',
-      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.11.zip',
-      r2ObjectKey: 'privatepinyin/0.1.11/PrivatePinyin-0.1.11.zip',
+      fileSize: '1.6 MB',
+      sha256: '4016b84921db43237b838caefb086d7704e8389fb352d0bef4d498e6b5993afc',
+      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.10-setup.exe',
+      r2ObjectKey: 'privatepinyin/0.1.10/PrivatePinyin-0.1.10-setup.exe',
       channel: 'internal-test'
     }
   ],
