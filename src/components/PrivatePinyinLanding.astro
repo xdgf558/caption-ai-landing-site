@@ -7,113 +7,116 @@ interface Props {
 }
 
 const { lang = 'zh-Hant' } = Astro.props;
-const download = privatePinyinProduct.downloads[0];
+const downloads = privatePinyinProduct.downloads;
+const macDownload = downloads.find((item) => item.id === 'macos-pkg') ?? downloads[0];
+const windowsDownload = downloads.find((item) => item.id === 'windows-msi');
+const latestVersion = privatePinyinProduct.latestVersion;
 const inputSourceName = '猫栈拼音';
 const internalName = 'PrivatePinyin';
 
 const copy = {
   'zh-Hant': {
     title: '猫栈拼音',
-    eyebrow: 'macOS Input Method',
-    headline: '猫栈拼音：先從 macOS 開始的中文輸入法。',
+    eyebrow: 'macOS / Windows Input Method',
+    headline: '猫栈拼音：本機中文輸入法測試版。',
     intro:
-      '猫栈拼音（PrivatePinyin）是 Station Cat 正在測試的中文輸入法。第一個公開版本先提供 macOS pkg 安裝包，後續會繼續補上 Windows 和 iOS 版本。',
+      '猫栈拼音（PrivatePinyin）是 Station Cat 正在測試的中文輸入法。0.1.10 已提供 macOS 升級包，並新增 Windows TSF 內測版；iOS 版本會在後續開發完成後補上。',
     primary: '下載 macOS 版',
     secondary: '查看下載資訊',
     downloadHref: privatePinyinProduct.zhHantDownloadPagePath,
     featuresTitle: '目前這個版本適合',
     features: [
-      ['本機中文輸入', '先把 macOS 上的日常拼音輸入跑順，候選詞、標點和打字手感會持續調整。'],
-      ['早期測試回饋', `${download.version} 是公開測試包，適合願意試用並回報問題的使用者。`],
-      ['後續多平台', 'macOS 版本先上架，Windows 和 iOS 版本會在後續開發完成後補上。'],
+      ['本機中文輸入', '先把日常拼音輸入跑順，候選詞、標點和打字手感會持續調整。'],
+      ['0.1.10 升級', '加入本機候選學習、一步聯想和短句補全，常選詞會逐漸更貼近自己的輸入習慣。'],
+      ['Windows 內測', '新增 Windows MSI / ZIP 內測包，適合願意協助測試 TSF 版本的使用者。'],
       ['小而清楚的下載入口', '安裝包、版本、大小和 SHA-256 都集中在下載頁，方便確認來源。']
     ],
     notesTitle: '上架狀態',
     notes: [
-      `目前版本：${download.version}`,
-      `${download.platform}，${download.architecture}，${download.minimumSystem}`,
-      '目前只提供 macOS pkg 安裝包。',
+      `目前版本：${latestVersion}`,
+      `${macDownload.platform}，${macDownload.architecture}，${macDownload.minimumSystem}`,
       `安裝後請在系統輸入法設定裡加入「${inputSourceName}」（PrivatePinyin）。`,
-      '目前安裝包只支援 Apple Silicon Mac，Intel Mac 暫不支援。',
-      '這是早期測試版，首次安裝時請以 macOS 安全提示為準。'
+      'macOS 安裝包只支援 Apple Silicon Mac，Intel Mac 暫不支援。',
+      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 內測版已提供 MSI 和 ZIP，未簽名，安裝時可能出現 SmartScreen 提示。` : '',
+      '這是早期測試版，首次安裝或啟用輸入法時請以系統安全提示為準。'
     ]
   },
   'zh-Hans': {
     title: '猫栈拼音',
-    eyebrow: 'macOS Input Method',
-    headline: '猫栈拼音：先从 macOS 开始的中文输入法。',
+    eyebrow: 'macOS / Windows Input Method',
+    headline: '猫栈拼音：本机中文输入法测试版。',
     intro:
-      '猫栈拼音（PrivatePinyin）是 Station Cat 正在测试的中文输入法。第一个公开版本先提供 macOS pkg 安装包，后续会继续补上 Windows 和 iOS 版本。',
+      '猫栈拼音（PrivatePinyin）是 Station Cat 正在测试的中文输入法。0.1.10 已提供 macOS 升级包，并新增 Windows TSF 内测版；iOS 版本会在后续开发完成后补上。',
     primary: '下载 macOS 版',
     secondary: '查看下载信息',
     downloadHref: privatePinyinProduct.zhHansDownloadPagePath,
     featuresTitle: '目前这个版本适合',
     features: [
-      ['本机中文输入', '先把 macOS 上的日常拼音输入跑顺，候选词、标点和打字手感会持续调整。'],
-      ['早期测试反馈', `${download.version} 是公开测试包，适合愿意试用并反馈问题的用户。`],
-      ['后续多平台', 'macOS 版本先上架，Windows 和 iOS 版本会在后续开发完成后补上。'],
+      ['本机中文输入', '先把日常拼音输入跑顺，候选词、标点和打字手感会持续调整。'],
+      ['0.1.10 升级', '加入本机候选学习、一步联想和短句补全，常选词会逐渐更贴近自己的输入习惯。'],
+      ['Windows 内测', '新增 Windows MSI / ZIP 内测包，适合愿意协助测试 TSF 版本的用户。'],
       ['小而清楚的下载入口', '安装包、版本、大小和 SHA-256 都集中在下载页，方便确认来源。']
     ],
     notesTitle: '上架状态',
     notes: [
-      `当前版本：${download.version}`,
-      `${download.platform}，${download.architecture}，${download.minimumSystem}`,
-      '目前只提供 macOS pkg 安装包。',
+      `当前版本：${latestVersion}`,
+      `${macDownload.platform}，${macDownload.architecture}，${macDownload.minimumSystem}`,
       `安装后请在系统输入法设置里加入「${inputSourceName}」（PrivatePinyin）。`,
-      '目前安装包只支持 Apple Silicon Mac，Intel Mac 暂不支持。',
-      '这是早期测试版，首次安装时请以 macOS 安全提示为准。'
+      'macOS 安装包只支持 Apple Silicon Mac，Intel Mac 暂不支持。',
+      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 内测版已提供 MSI 和 ZIP，未签名，安装时可能出现 SmartScreen 提示。` : '',
+      '这是早期测试版，首次安装或启用输入法时请以系统安全提示为准。'
     ]
   },
   en: {
     title: 'Maozhan Pinyin',
-    eyebrow: 'macOS Input Method',
-    headline: 'Maozhan Pinyin, a Chinese input method starting on macOS.',
+    eyebrow: 'macOS / Windows Input Method',
+    headline: 'Maozhan Pinyin, a local Chinese input method test build.',
     intro:
-      'Maozhan Pinyin (PrivatePinyin) is a Chinese input method being tested by Station Cat. The first public build is a macOS pkg installer, with Windows and iOS versions planned for later.',
+      'Maozhan Pinyin (PrivatePinyin) is a Chinese input method being tested by Station Cat. Version 0.1.10 ships an upgraded macOS package and adds a Windows TSF internal test build. iOS is still planned for later.',
     primary: 'Download for macOS',
     secondary: 'View download info',
     downloadHref: privatePinyinProduct.downloadPagePath,
     featuresTitle: 'What this build is for',
     features: [
-      ['Local Chinese typing', 'The first focus is making daily pinyin input on macOS feel steady, with candidates, punctuation, and typing flow improving over time.'],
-      ['Early testing feedback', `${download.version} is a public test package for people who are comfortable trying early builds and reporting issues.`],
-      ['Multi-platform roadmap', 'The macOS version comes first. Windows and iOS builds will follow when they are ready.'],
+      ['Local Chinese typing', 'The focus is making daily pinyin input feel steady, with candidates, punctuation, and typing flow improving over time.'],
+      ['0.1.10 update', 'Adds local candidate learning, one-step association, and short phrase completion so repeated choices can move closer to your habits.'],
+      ['Windows internal test', 'Adds Windows MSI / ZIP internal test builds for users willing to help validate the TSF version.'],
       ['Clear download trail', 'The installer, version, size, and SHA-256 checksum are kept together on the download page.']
     ],
     notesTitle: 'Release status',
     notes: [
-      `Current version: ${download.version}`,
-      `${download.platform}, ${download.architecture}, ${download.minimumSystem}`,
-      'The current public download is a macOS pkg installer.',
+      `Current version: ${latestVersion}`,
+      `${macDownload.platform}, ${macDownload.architecture}, ${macDownload.minimumSystem}`,
       `After installing, add "${inputSourceName}" (PrivatePinyin) in System Settings > Keyboard > Input Sources.`,
-      'The current installer supports Apple Silicon Macs only. Intel Macs are not supported yet.',
-      'This is an early test build. Follow macOS security prompts during first install.'
+      'The macOS installer supports Apple Silicon Macs only. Intel Macs are not supported yet.',
+      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} internal test builds are available as MSI and ZIP files. They are unsigned and may trigger SmartScreen prompts.` : '',
+      'This is an early test build. Follow system security prompts during install or input method activation.'
     ]
   },
   ja: {
     title: '猫栈拼音',
-    eyebrow: 'macOS Input Method',
-    headline: '猫栈拼音：macOS から始める中国語入力メソッド。',
+    eyebrow: 'macOS / Windows Input Method',
+    headline: '猫栈拼音：ローカル中国語入力メソッドのテスト版。',
     intro:
-      '猫栈拼音（PrivatePinyin）は Station Cat がテストしている中国語入力メソッドです。最初の公開版は macOS pkg インストーラーで、Windows と iOS 版は今後追加予定です。',
+      '猫栈拼音（PrivatePinyin）は Station Cat がテストしている中国語入力メソッドです。0.1.10 では macOS パッケージを更新し、Windows TSF の内部テスト版も追加しました。iOS 版は今後追加予定です。',
     primary: 'macOS 版をダウンロード',
     secondary: 'ダウンロード情報を見る',
     downloadHref: privatePinyinProduct.jaDownloadPagePath,
     featuresTitle: 'このバージョンでできること',
     features: [
-      ['ローカル中国語入力', 'まずは macOS での日常的なピンイン入力、候補、句読点、入力感を整えていきます。'],
-      ['早期テストのフィードバック', `${download.version} は公開テストパッケージです。早期版を試し、問題を共有できる方向けです。`],
-      ['複数プラットフォーム予定', 'macOS 版を先に公開し、Windows と iOS 版は準備ができ次第追加します。'],
+      ['ローカル中国語入力', '日常的なピンイン入力、候補、句読点、入力感を整えていきます。'],
+      ['0.1.10 アップデート', 'ローカル候補学習、一歩先の連想、短いフレーズ補完を追加し、よく選ぶ語を入力習慣に近づけていきます。'],
+      ['Windows 内部テスト', 'Windows MSI / ZIP の内部テスト版を追加しました。TSF 版の検証に協力できる方向けです。'],
       ['わかりやすい配布情報', 'インストーラー、バージョン、サイズ、SHA-256 をダウンロードページにまとめています。']
     ],
     notesTitle: '公開状況',
     notes: [
-      `現在のバージョン：${download.version}`,
-      `${download.platform}、${download.architecture}、${download.minimumSystem}`,
-      '現在は macOS pkg インストーラーのみ提供しています。',
+      `現在のバージョン：${latestVersion}`,
+      `${macDownload.platform}、${macDownload.architecture}、${macDownload.minimumSystem}`,
       `インストール後、システムの入力メソッド設定で「${inputSourceName}」（PrivatePinyin）を追加してください。`,
-      '現在のインストーラーは Apple Silicon Mac のみ対応です。Intel Mac はまだ対応していません。',
-      'これは早期テスト版です。初回インストール時は macOS の安全確認に従ってください。'
+      'macOS インストーラーは Apple Silicon Mac のみ対応です。Intel Mac はまだ対応していません。',
+      windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 内部テスト版を MSI と ZIP で提供しています。未署名のため SmartScreen が表示される場合があります。` : '',
+      'これは早期テスト版です。インストールや入力メソッド有効化時はシステムの安全確認に従ってください。'
     ]
   }
 }[lang];
@@ -149,17 +152,17 @@ const canonicalPath =
       <h1>{copy.headline}</h1>
       <p>{copy.intro}</p>
       <div class="button-row">
-        <a class="button button-primary" href={download.downloadPath}>{copy.primary}</a>
+        <a class="button button-primary" href={macDownload.downloadPath}>{copy.primary}</a>
         <a class="button button-secondary" href={copy.downloadHref}>{copy.secondary}</a>
       </div>
     </div>
     <div class="privatepinyin-preview-card" aria-label={`${copy.title} app icon`}>
       <img src={privatePinyinProduct.assets.icon} alt={`${copy.title} app icon`} width="512" height="512" />
       <div>
-        <p class="section-kicker">Version {download.version}</p>
+        <p class="section-kicker">Version {latestVersion}</p>
         <h2>{copy.title}</h2>
         <p>{internalName}</p>
-        <p>{download.label}</p>
+        <p>macOS / Windows</p>
       </div>
     </div>
   </section>
@@ -186,7 +189,7 @@ const canonicalPath =
         <h2>{copy.notesTitle}</h2>
       </div>
       <ul>
-        {copy.notes.map((note) => <li>{note}</li>)}
+        {copy.notes.filter(Boolean).map((note) => <li>{note}</li>)}
       </ul>
     </div>
   </section>

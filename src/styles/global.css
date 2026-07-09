@@ -6198,6 +6198,18 @@ body.station-paper-page {
   margin-bottom: 8px;
 }
 
+.privatepinyin-release-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.privatepinyin-release-list li {
+  color: #4a3f37;
+  line-height: 1.7;
+}
+
 body.station-paper-page.caption-product-page {
   --snap-cream: #fff8f1;
   --snap-paper: #fffdf8;
