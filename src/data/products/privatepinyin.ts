@@ -8,14 +8,14 @@ export const privatePinyinProduct = {
     {
       id: 'macos-pkg',
       label: 'macOS installer',
-      version: '0.1.10',
+      version: '0.1.12',
       platform: 'macOS',
       architecture: 'Apple Silicon',
       minimumSystem: 'macOS 12 or later',
       fileSize: '2.1 MB',
-      sha256: 'b96563c60ed8ac0c1190f611a93021d92edcc3ef7e4d75f5f6a7359acd1dbf46',
-      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.10.pkg',
-      r2ObjectKey: 'privatepinyin/0.1.10/PrivatePinyin-0.1.10.pkg',
+      sha256: '1777c4022b7fb68f55b9c7232d0382822e6d6de932a95866ba99cfe02c1adb49',
+      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.12.pkg',
+      r2ObjectKey: 'privatepinyin/0.1.12/PrivatePinyin-0.1.12.pkg',
       channel: 'public-test'
     },
     {
