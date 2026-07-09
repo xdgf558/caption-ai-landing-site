@@ -127,6 +127,109 @@ const copy = {
   }
 }[lang];
 
+const feedbackCopy = {
+  'zh-Hant': {
+    kicker: 'Bug Feedback',
+    title: '回報猫栈拼音問題',
+    intro: '遇到安裝、啟用、候選詞或輸入異常時，可以直接提交。內容會進入 Station Cat 後台的回饋處理區。',
+    platform: '系統平台',
+    version: '版本',
+    issueType: '問題類型',
+    impact: '影響程度',
+    summary: '問題摘要',
+    summaryPlaceholder: '例如：Windows 安裝後找不到輸入法',
+    details: '詳細描述',
+    detailsPlaceholder: '請描述發生了什麼、原本預期看到什麼。',
+    steps: '重現步驟（選填）',
+    stepsPlaceholder: '1. 打開設定\n2. 加入輸入法\n3. ...',
+    environment: '系統環境（選填）',
+    environmentPlaceholder: '例如：Windows 11 24H2 / macOS 15.5',
+    email: '聯絡 Email（選填）',
+    emailPlaceholder: '需要回覆時使用',
+    submit: '提交 Bug 回饋',
+    submitting: '正在提交…',
+    success: '已收到回饋，謝謝你幫忙測試。',
+    error: '提交失敗，請稍後再試。',
+    issueOptions: [['install', '安裝問題'], ['activation', '啟用問題'], ['typing', '輸入異常'], ['candidates', '候選詞問題'], ['performance', '閃退或效能'], ['other', '其他']],
+    impactOptions: [['minor', '輕微，不影響繼續使用'], ['normal', '一般，會影響部分使用'], ['blocking', '嚴重，無法繼續使用']]
+  },
+  'zh-Hans': {
+    kicker: 'Bug Feedback',
+    title: '反馈猫栈拼音问题',
+    intro: '遇到安装、启用、候选词或输入异常时，可以直接提交。内容会进入 Station Cat 后台的反馈处理区。',
+    platform: '系统平台',
+    version: '版本',
+    issueType: '问题类型',
+    impact: '影响程度',
+    summary: '问题摘要',
+    summaryPlaceholder: '例如：Windows 安装后找不到输入法',
+    details: '详细描述',
+    detailsPlaceholder: '请描述发生了什么、原本预期看到什么。',
+    steps: '复现步骤（选填）',
+    stepsPlaceholder: '1. 打开设置\n2. 添加输入法\n3. ...',
+    environment: '系统环境（选填）',
+    environmentPlaceholder: '例如：Windows 11 24H2 / macOS 15.5',
+    email: '联系 Email（选填）',
+    emailPlaceholder: '需要回复时使用',
+    submit: '提交 Bug 反馈',
+    submitting: '正在提交…',
+    success: '已收到反馈，谢谢你帮助测试。',
+    error: '提交失败，请稍后再试。',
+    issueOptions: [['install', '安装问题'], ['activation', '启用问题'], ['typing', '输入异常'], ['candidates', '候选词问题'], ['performance', '闪退或性能'], ['other', '其他']],
+    impactOptions: [['minor', '轻微，不影响继续使用'], ['normal', '一般，会影响部分使用'], ['blocking', '严重，无法继续使用']]
+  },
+  en: {
+    kicker: 'Bug Feedback',
+    title: 'Report a Maozhan Pinyin issue',
+    intro: 'Send installation, activation, candidate, typing, crash, or performance problems directly to the Station Cat admin feedback queue.',
+    platform: 'Platform',
+    version: 'Version',
+    issueType: 'Issue type',
+    impact: 'Impact',
+    summary: 'Issue summary',
+    summaryPlaceholder: 'Example: Input method is missing after installation',
+    details: 'Details',
+    detailsPlaceholder: 'Describe what happened and what you expected instead.',
+    steps: 'Steps to reproduce (optional)',
+    stepsPlaceholder: '1. Open Settings\n2. Add the input method\n3. ...',
+    environment: 'System environment (optional)',
+    environmentPlaceholder: 'Example: Windows 11 24H2 / macOS 15.5',
+    email: 'Contact email (optional)',
+    emailPlaceholder: 'Only used if a reply is needed',
+    submit: 'Submit bug feedback',
+    submitting: 'Submitting…',
+    success: 'Feedback received. Thank you for helping test the app.',
+    error: 'Feedback could not be submitted. Please try again later.',
+    issueOptions: [['install', 'Installation'], ['activation', 'Activation'], ['typing', 'Typing'], ['candidates', 'Candidates'], ['performance', 'Crash or performance'], ['other', 'Other']],
+    impactOptions: [['minor', 'Minor, I can keep using it'], ['normal', 'Moderate, some use is affected'], ['blocking', 'Blocking, I cannot continue']]
+  },
+  ja: {
+    kicker: 'Bug Feedback',
+    title: '猫栈拼音の問題を報告',
+    intro: 'インストール、有効化、候補、入力、クラッシュ、性能の問題を Station Cat 管理画面へ直接送信できます。',
+    platform: 'プラットフォーム',
+    version: 'バージョン',
+    issueType: '問題の種類',
+    impact: '影響度',
+    summary: '問題の概要',
+    summaryPlaceholder: '例：インストール後に入力メソッドが見つからない',
+    details: '詳細',
+    detailsPlaceholder: '起きたことと、期待していた動作を記入してください。',
+    steps: '再現手順（任意）',
+    stepsPlaceholder: '1. 設定を開く\n2. 入力メソッドを追加\n3. ...',
+    environment: 'システム環境（任意）',
+    environmentPlaceholder: '例：Windows 11 24H2 / macOS 15.5',
+    email: '連絡用 Email（任意）',
+    emailPlaceholder: '返信が必要な場合のみ使用します',
+    submit: 'Bug フィードバックを送信',
+    submitting: '送信中…',
+    success: 'フィードバックを受け付けました。テストへのご協力ありがとうございます。',
+    error: '送信できませんでした。しばらくしてから再度お試しください。',
+    issueOptions: [['install', 'インストール'], ['activation', '有効化'], ['typing', '入力'], ['candidates', '候補'], ['performance', 'クラッシュ・性能'], ['other', 'その他']],
+    impactOptions: [['minor', '軽微、使用を続けられる'], ['normal', '中程度、一部の使用に影響'], ['blocking', '重大、使用を続けられない']]
+  }
+}[lang];
+
 const canonicalPath =
   lang === 'zh-Hant'
     ? privatePinyinProduct.zhHantProductPath
@@ -200,4 +303,147 @@ const canonicalPath =
       </ul>
     </div>
   </section>
+
+  <section class="page-section privatepinyin-feedback" aria-labelledby={`privatepinyin-feedback-title-${lang}`}>
+    <div class="section-heading">
+      <p class="section-kicker">{feedbackCopy.kicker}</p>
+      <h2 id={`privatepinyin-feedback-title-${lang}`}>{feedbackCopy.title}</h2>
+      <p>{feedbackCopy.intro}</p>
+    </div>
+    <form
+      class="privatepinyin-feedback-form"
+      data-product-feedback-form
+      data-locale={lang}
+      data-mac-version={macVersion}
+      data-windows-version={windowsVersion}
+      data-submitting-label={feedbackCopy.submitting}
+      data-success-message={feedbackCopy.success}
+      data-error-message={feedbackCopy.error}
+    >
+      <div class="privatepinyin-feedback-grid">
+        <label>
+          {feedbackCopy.platform}
+          <select name="platform" required>
+            <option value="macos">macOS</option>
+            <option value="windows">Windows</option>
+            <option value="ios">iOS</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+        <label>
+          {feedbackCopy.version}
+          <input name="appVersion" value={macVersion} maxlength="40" required />
+        </label>
+        <label>
+          {feedbackCopy.issueType}
+          <select name="issueType" required>
+            {feedbackCopy.issueOptions.map(([value, label]) => <option value={value}>{label}</option>)}
+          </select>
+        </label>
+        <label>
+          {feedbackCopy.impact}
+          <select name="impact" required>
+            {feedbackCopy.impactOptions.map(([value, label]) => <option value={value} selected={value === 'normal'}>{label}</option>)}
+          </select>
+        </label>
+        <label class="privatepinyin-feedback-wide">
+          {feedbackCopy.summary}
+          <input name="summary" minlength="4" maxlength="120" placeholder={feedbackCopy.summaryPlaceholder} required />
+        </label>
+        <label class="privatepinyin-feedback-wide">
+          {feedbackCopy.details}
+          <textarea name="details" rows="6" minlength="20" maxlength="4000" placeholder={feedbackCopy.detailsPlaceholder} required></textarea>
+        </label>
+        <label class="privatepinyin-feedback-wide">
+          {feedbackCopy.steps}
+          <textarea name="reproductionSteps" rows="4" maxlength="2000" placeholder={feedbackCopy.stepsPlaceholder}></textarea>
+        </label>
+        <label>
+          {feedbackCopy.environment}
+          <input name="environment" maxlength="500" placeholder={feedbackCopy.environmentPlaceholder} />
+        </label>
+        <label>
+          {feedbackCopy.email}
+          <input name="contactEmail" type="email" maxlength="254" autocomplete="email" placeholder={feedbackCopy.emailPlaceholder} />
+        </label>
+      </div>
+      <label class="product-feedback-honeypot" aria-hidden="true">
+        Website
+        <input name="website" tabindex="-1" autocomplete="off" />
+      </label>
+      <div class="privatepinyin-feedback-actions">
+        <button class="button button-primary" type="submit" data-product-feedback-submit>{feedbackCopy.submit}</button>
+        <p class="privatepinyin-feedback-status" data-product-feedback-status role="status" aria-live="polite"></p>
+      </div>
+    </form>
+  </section>
+
+  <script is:inline>
+    document.querySelectorAll('[data-product-feedback-form]').forEach((form) => {
+      const platform = form.elements.platform;
+      const version = form.elements.appVersion;
+      const submit = form.querySelector('[data-product-feedback-submit]');
+      const status = form.querySelector('[data-product-feedback-status]');
+      const submitLabel = submit.textContent;
+
+      const syncVersion = () => {
+        if (platform.value === 'macos') version.value = form.dataset.macVersion || '';
+        else if (platform.value === 'windows') version.value = form.dataset.windowsVersion || '';
+        else version.value = '';
+      };
+
+      platform.addEventListener('change', syncVersion);
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+
+        submit.disabled = true;
+        submit.textContent = form.dataset.submittingLabel || submitLabel;
+        form.setAttribute('aria-busy', 'true');
+        status.textContent = '';
+        status.dataset.tone = 'neutral';
+
+        const values = new FormData(form);
+        const payload = {
+          appVersion: values.get('appVersion'),
+          contactEmail: values.get('contactEmail'),
+          details: values.get('details'),
+          environment: values.get('environment'),
+          impact: values.get('impact'),
+          issueType: values.get('issueType'),
+          locale: form.dataset.locale,
+          platform: values.get('platform'),
+          product: 'privatepinyin',
+          reproductionSteps: values.get('reproductionSteps'),
+          sourcePath: window.location.pathname,
+          summary: values.get('summary'),
+          viewportWidth: window.innerWidth,
+          website: values.get('website')
+        };
+
+        try {
+          const response = await fetch('/api/product-feedback', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.ok === false) throw new Error(result.message || 'Feedback request failed.');
+          const selectedPlatform = platform.value;
+          form.reset();
+          platform.value = selectedPlatform;
+          syncVersion();
+          status.textContent = form.dataset.successMessage || 'Feedback received.';
+          status.dataset.tone = 'success';
+        } catch (error) {
+          status.textContent = form.dataset.errorMessage || 'Feedback could not be submitted.';
+          status.dataset.tone = 'error';
+        } finally {
+          submit.disabled = false;
+          submit.textContent = submitLabel;
+          form.removeAttribute('aria-busy');
+        }
+      });
+    });
+  </script>
 </BaseLayout>

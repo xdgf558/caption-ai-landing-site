@@ -36,6 +36,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="accounts">账户</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="analytics">统计</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="comments">评论</button>
+            <button class="admin-v2-tab" type="button" data-admin-v2-tab="feedback">反馈</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="access">授权</button>
             <button class="admin-v2-tab" type="button" data-admin-v2-tab="audit">审计</button>
         </div>
@@ -285,6 +286,46 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <input id="comments-email" type="email" placeholder="reader@example.com" />
           </label>
           <button class="button button-primary" id="comments-refresh" type="button">刷新评论</button>
+        </section>
+
+        <section class="admin-v2-sidebar-section" data-admin-v2-panel="feedback-sidebar" hidden>
+          <label>
+            处理状态
+            <select id="feedback-status">
+              <option value="new" selected>新反馈</option>
+              <option value="in_progress">处理中</option>
+              <option value="resolved">已解决</option>
+              <option value="closed">已关闭</option>
+              <option value="">全部</option>
+            </select>
+          </label>
+          <label>
+            系统平台
+            <select id="feedback-platform">
+              <option value="">全部</option>
+              <option value="macos">macOS</option>
+              <option value="windows">Windows</option>
+              <option value="ios">iOS</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>
+            问题类型
+            <select id="feedback-issue-type">
+              <option value="">全部</option>
+              <option value="install">安装问题</option>
+              <option value="activation">启用问题</option>
+              <option value="typing">输入异常</option>
+              <option value="candidates">候选词问题</option>
+              <option value="performance">闪退或性能</option>
+              <option value="other">其他</option>
+            </select>
+          </label>
+          <label>
+            搜索
+            <input id="feedback-query" placeholder="摘要、正文或 Email" />
+          </label>
+          <button class="button button-primary" id="feedback-refresh" type="button">刷新反馈</button>
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="access-sidebar" hidden>
@@ -731,6 +772,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </section>
 
+        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="feedback-main" hidden>
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">Product Feedback</p>
+              <h2>产品 Bug 反馈</h2>
+            </div>
+          </div>
+          <div class="admin-commerce-grid">
+            <div class="admin-v2-table-list" id="feedback-list"></div>
+            <section class="admin-v2-subpanel admin-detail-panel" id="feedback-detail">
+              <p class="admin-empty-list">选择一条反馈查看复现信息并更新处理状态。</p>
+            </section>
+          </div>
+        </section>
+
         <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="access-main" hidden>
           <div class="admin-v2-section-heading">
             <div>
@@ -824,6 +880,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       analyticsUpdated: $('#analytics-updated'),
       commentsList: $('#comments-list'),
       commentDetail: $('#comment-detail'),
+      feedbackList: $('#feedback-list'),
+      feedbackDetail: $('#feedback-detail'),
       accessList: $('#access-list'),
       auditList: $('#audit-list'),
       contentForm: $('#content-form'),
@@ -911,6 +969,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         commentsSeries: $('#comments-series'),
         commentsChapter: $('#comments-chapter'),
         commentsEmail: $('#comments-email'),
+        feedbackStatus: $('#feedback-status'),
+        feedbackPlatform: $('#feedback-platform'),
+        feedbackIssueType: $('#feedback-issue-type'),
+        feedbackQuery: $('#feedback-query'),
         accessEmail: $('#access-email-filter'),
         auditTargetType: $('#audit-target-type'),
         auditTargetSlug: $('#audit-target-slug')
@@ -947,6 +1009,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       analyticsStats: [],
       analyticsInsights: [],
       comments: [],
+      feedback: [],
       selectedEntryId: 0,
       selectedImportId: 0,
       selectedSignalId: 0,
@@ -954,6 +1017,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       selectedAccountId: 0,
       selectedAnalyticsKey: '',
       selectedCommentId: '',
+      selectedFeedbackId: '',
       pricingDefaults: null,
       pricingDefaultsSetupRequired: false,
       schema: null
@@ -2856,6 +2920,143 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setStatus('评论审核状态已更新。', 'success');
     };
 
+    const feedbackStatusTone = (status) => {
+      if (status === 'resolved') return 'success';
+      if (status === 'new' || status === 'in_progress') return 'warning';
+      if (status === 'closed') return 'error';
+      return 'neutral';
+    };
+
+    const feedbackStatusLabel = (status) => ({
+      new: '新反馈',
+      in_progress: '处理中',
+      resolved: '已解决',
+      closed: '已关闭'
+    })[status] || status || '';
+
+    const feedbackIssueLabel = (issueType) => ({
+      install: '安装问题',
+      activation: '启用问题',
+      typing: '输入异常',
+      candidates: '候选词问题',
+      performance: '闪退或性能',
+      other: '其他'
+    })[issueType] || issueType || '';
+
+    const feedbackImpactLabel = (impact) => ({
+      minor: '轻微',
+      normal: '一般',
+      blocking: '严重阻断'
+    })[impact] || impact || '';
+
+    const buildFeedbackParams = () => {
+      const params = new URLSearchParams({ limit: '100', product: 'privatepinyin' });
+      if (elements.filters.feedbackStatus.value) params.set('status', elements.filters.feedbackStatus.value);
+      if (elements.filters.feedbackPlatform.value) params.set('platform', elements.filters.feedbackPlatform.value);
+      if (elements.filters.feedbackIssueType.value) params.set('issueType', elements.filters.feedbackIssueType.value);
+      if (elements.filters.feedbackQuery.value.trim()) params.set('query', elements.filters.feedbackQuery.value.trim());
+      return params;
+    };
+
+    const renderFeedbackDetail = (feedback) => {
+      if (!feedback) {
+        elements.feedbackDetail.innerHTML = '<p class="admin-empty-list">选择一条反馈查看复现信息并更新处理状态。</p>';
+        return;
+      }
+      elements.feedbackDetail.innerHTML = `
+        <div class="admin-v2-section-heading">
+          <div>
+            <p class="station-kicker">Feedback Detail</p>
+            <h3>${escapeHtml(feedback.summary || '')}</h3>
+          </div>
+          <span class="admin-status-pill" data-tone="${feedbackStatusTone(feedback.status)}">${escapeHtml(feedbackStatusLabel(feedback.status))}</span>
+        </div>
+        <div class="admin-detail-grid">
+          <article><span>产品版本</span><strong>猫栈拼音 ${escapeHtml(feedback.appVersion || '')}</strong><small>${escapeHtml(feedback.product || '')}</small></article>
+          <article><span>平台 / 类型</span><strong>${escapeHtml(feedback.platform || '')}</strong><small>${escapeHtml(feedbackIssueLabel(feedback.issueType))}</small></article>
+          <article><span>影响程度</span><strong>${escapeHtml(feedbackImpactLabel(feedback.impact))}</strong><small>${escapeHtml(feedback.locale || '')}</small></article>
+          <article><span>提交时间</span><strong>${escapeHtml(formatDate(feedback.createdAt) || '-')}</strong><small>更新：${escapeHtml(formatDate(feedback.updatedAt) || '-')}</small></article>
+        </div>
+        <section class="admin-detail-section">
+          <h4>问题描述</h4>
+          <p class="admin-empty-list">${escapeHtml(feedback.details || '').replace(/\n/g, '<br>')}</p>
+        </section>
+        <section class="admin-detail-section">
+          <h4>复现步骤</h4>
+          <p class="admin-empty-list">${feedback.reproductionSteps ? escapeHtml(feedback.reproductionSteps).replace(/\n/g, '<br>') : '未填写'}</p>
+        </section>
+        <section class="admin-detail-section">
+          <h4>环境与联系</h4>
+          <div class="admin-pricing-lines">
+            <p><strong>系统环境：</strong>${escapeHtml(feedback.environment || '未填写')}</p>
+            <p><strong>联系 Email：</strong>${escapeHtml(feedback.contactEmail || '未填写')}</p>
+            <p><strong>来源路径：</strong>${escapeHtml(feedback.sourcePath || '')}</p>
+            <p><strong>反馈 ID：</strong>${escapeHtml(feedback.id || '')}</p>
+          </div>
+        </section>
+        <label>
+          处理记录
+          <textarea id="feedback-admin-note" rows="4" maxlength="2000" placeholder="记录排查结果、修复版本或关闭原因。">${escapeHtml(feedback.adminNote || '')}</textarea>
+        </label>
+        <div class="button-row">
+          <button class="button button-secondary" type="button" data-feedback-next-status="new" ${feedback.status === 'new' ? 'disabled' : ''}>标记新反馈</button>
+          <button class="button button-primary" type="button" data-feedback-next-status="in_progress" ${feedback.status === 'in_progress' ? 'disabled' : ''}>开始处理</button>
+          <button class="button button-secondary" type="button" data-feedback-next-status="resolved" ${feedback.status === 'resolved' ? 'disabled' : ''}>标记已解决</button>
+          <button class="button button-secondary" type="button" data-feedback-next-status="closed" ${feedback.status === 'closed' ? 'disabled' : ''}>关闭</button>
+          ${feedback.sourcePath ? `<a class="button button-secondary" href="${escapeHtml(feedback.sourcePath)}" target="_blank" rel="noreferrer">打开产品页</a>` : ''}
+        </div>
+      `;
+      elements.feedbackDetail.querySelectorAll('[data-feedback-next-status]').forEach((button) => {
+        button.addEventListener('click', () => updateFeedback(feedback, button.dataset.feedbackNextStatus));
+      });
+    };
+
+    const renderFeedback = (items) => {
+      if (!items.length) {
+        renderEmpty(elements.feedbackList, '暂无产品反馈。');
+        renderFeedbackDetail(null);
+        return;
+      }
+      elements.feedbackList.innerHTML = '';
+      items.forEach((feedback) => {
+        const button = document.createElement('button');
+        button.className = `admin-v2-entry${feedback.id === state.selectedFeedbackId ? ' is-active' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `
+          <span>${escapeHtml(feedback.summary || '')}</span>
+          <small>${escapeHtml(feedbackStatusLabel(feedback.status))} · ${escapeHtml(feedback.platform || '')} · ${escapeHtml(feedback.appVersion || '')}</small>
+          <small>${escapeHtml(feedbackIssueLabel(feedback.issueType))} · ${escapeHtml(feedbackImpactLabel(feedback.impact))} · ${escapeHtml(formatDate(feedback.createdAt) || '')}</small>
+        `;
+        button.addEventListener('click', () => {
+          state.selectedFeedbackId = feedback.id;
+          renderFeedback(state.feedback);
+          renderFeedbackDetail(feedback);
+        });
+        elements.feedbackList.append(button);
+      });
+      const selected = items.find((feedback) => feedback.id === state.selectedFeedbackId) || items[0];
+      state.selectedFeedbackId = selected.id;
+      renderFeedbackDetail(selected);
+    };
+
+    const loadFeedback = async () => {
+      const payload = await apiJson(`/admin/api/product-feedback?${buildFeedbackParams().toString()}`);
+      state.feedback = payload.feedback || [];
+      renderFeedback(state.feedback);
+      setStatus(`已载入 ${state.feedback.length} 条产品反馈。`, 'success');
+    };
+
+    const updateFeedback = async (feedback, nextStatus) => {
+      const adminNote = $('#feedback-admin-note')?.value.trim() || '';
+      const result = await apiJson('/admin/api/product-feedback/update', {
+        method: 'POST',
+        body: JSON.stringify({ id: feedback.id, status: nextStatus, adminNote })
+      });
+      state.selectedFeedbackId = result.feedback?.id || feedback.id;
+      await Promise.all([loadFeedback(), loadAuditLogs()]);
+      setStatus('反馈处理状态已更新。', 'success');
+    };
+
     const loadEntitlements = async () => {
       const params = new URLSearchParams();
       const email = elements.filters.accessEmail.value.trim();
@@ -2955,6 +3156,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (name === 'accounts') await loadAccounts();
       if (name === 'analytics') await loadAnalyticsStats();
       if (name === 'comments') await loadComments();
+      if (name === 'feedback') await loadFeedback();
       if (name === 'access') await loadEntitlements();
       if (name === 'audit') await loadAuditLogs();
     };
@@ -2973,6 +3175,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#analytics-aggregate').addEventListener('click', aggregateAnalytics);
     $('#analytics-generate-insights').addEventListener('click', generateAnalyticsInsights);
     $('#comments-refresh').addEventListener('click', loadComments);
+    $('#feedback-refresh').addEventListener('click', loadFeedback);
     $('#access-refresh').addEventListener('click', loadEntitlements);
     $('#audit-refresh').addEventListener('click', loadAuditLogs);
     $('#content-reset').addEventListener('click', () => resetForm(elements.fields.entryType.value));

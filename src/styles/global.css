@@ -6210,6 +6210,110 @@ body.station-paper-page {
   line-height: 1.7;
 }
 
+.privatepinyin-feedback .section-heading {
+  max-width: 760px;
+}
+
+.privatepinyin-feedback-form {
+  background: rgba(255, 250, 241, 0.96);
+  border: 1px solid #bfae9d;
+  border-radius: 6px;
+  box-shadow: var(--paper-shadow);
+  margin-top: 24px;
+  padding: clamp(20px, 3vw, 34px);
+  position: relative;
+}
+
+.privatepinyin-feedback-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.privatepinyin-feedback-grid label {
+  color: #2e261f;
+  display: grid;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 8px;
+}
+
+.privatepinyin-feedback-grid input,
+.privatepinyin-feedback-grid select,
+.privatepinyin-feedback-grid textarea {
+  background: #fffdf8;
+  border: 1px solid #bfae9d;
+  border-radius: 4px;
+  color: #221b16;
+  font: inherit;
+  min-height: 46px;
+  padding: 11px 13px;
+  width: 100%;
+}
+
+.privatepinyin-feedback-grid textarea {
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.privatepinyin-feedback-grid input:focus,
+.privatepinyin-feedback-grid select:focus,
+.privatepinyin-feedback-grid textarea:focus {
+  border-color: #245247;
+  box-shadow: 0 0 0 3px rgba(36, 82, 71, 0.14);
+  outline: none;
+}
+
+.privatepinyin-feedback-wide {
+  grid-column: 1 / -1;
+}
+
+.privatepinyin-feedback-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.privatepinyin-feedback-status {
+  color: #5a4c41;
+  margin: 0;
+}
+
+.privatepinyin-feedback-status[data-tone="success"] {
+  color: #245247;
+  font-weight: 700;
+}
+
+.privatepinyin-feedback-status[data-tone="error"] {
+  color: #9a3028;
+  font-weight: 700;
+}
+
+.product-feedback-honeypot {
+  height: 1px;
+  left: -10000px;
+  overflow: hidden;
+  position: absolute;
+  top: auto;
+  width: 1px;
+}
+
+@media (max-width: 720px) {
+  .privatepinyin-feedback-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .privatepinyin-feedback-wide {
+    grid-column: auto;
+  }
+
+  .privatepinyin-feedback-actions .button {
+    width: 100%;
+  }
+}
+
 body.station-paper-page.caption-product-page {
   --snap-cream: #fff8f1;
   --snap-paper: #fffdf8;

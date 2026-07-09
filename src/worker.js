@@ -329,6 +329,13 @@ const readerCommentMinBodyLength = 2;
 const readerCommentMaxBodyLength = 1200;
 const readerCommentSubmitWindowSeconds = 60;
 const readerCommentSubmitLimitPerMinute = 5;
+const productFeedbackProducts = new Set(['privatepinyin']);
+const productFeedbackPlatforms = new Set(['macos', 'windows', 'ios', 'other']);
+const productFeedbackIssueTypes = new Set(['install', 'activation', 'typing', 'candidates', 'performance', 'other']);
+const productFeedbackImpacts = new Set(['minor', 'normal', 'blocking']);
+const productFeedbackStatuses = new Set(['new', 'in_progress', 'resolved', 'closed']);
+const productFeedbackSubmitWindowSeconds = 15 * 60;
+const productFeedbackSubmitLimitPerWindow = 5;
 const novelStatsDefaultSinceDays = 30;
 const novelStatsMaxAggregateTargets = 80;
 const defaultReaderCreditPacks = [
@@ -1418,6 +1425,35 @@ const readerCommentToJson = (row, options = {}) => {
   return comment;
 };
 
+const productFeedbackToJson = (row, options = {}) => {
+  const admin = Boolean(options.admin);
+  const feedback = {
+    id: row.id,
+    product: row.product,
+    platform: row.platform,
+    appVersion: row.app_version || '',
+    issueType: row.issue_type,
+    impact: row.impact,
+    summary: row.summary,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+  if (admin) {
+    feedback.details = row.details || '';
+    feedback.reproductionSteps = row.reproduction_steps || '';
+    feedback.environment = row.environment || '';
+    feedback.contactEmail = row.contact_email || '';
+    feedback.adminNote = row.admin_note || '';
+    feedback.sourcePath = row.source_path || '';
+    feedback.locale = row.locale || 'zh-Hant';
+    feedback.metadata = parseStoredJson(row.metadata_json, {});
+    feedback.updatedBy = row.updated_by || '';
+    feedback.resolvedAt = row.resolved_at || '';
+  }
+  return feedback;
+};
+
 const contentEntryTypes = new Set(['blog_post', 'novel_series', 'novel_chapter', 'signal_brief']);
 const contentLocales = new Set(['zh-Hant', 'zh-Hans', 'en', 'ja']);
 const contentStatuses = new Set(['draft', 'scheduled', 'published', 'archived']);
@@ -2350,6 +2386,7 @@ const isMissingReaderTotpResetAttemptsError = (error) =>
   /no such table: reader_totp_reset_attempts/i.test(error?.message || '');
 const isMissingReadingEventsError = (error) => /no such table: reading_events/i.test(error?.message || '');
 const isMissingReaderCommentsError = (error) => /no such table: reader_comments/i.test(error?.message || '');
+const isMissingProductFeedbackError = (error) => /no such table: product_feedback/i.test(error?.message || '');
 const isMissingChapterStatsError = (error) => /no such table: chapter_stats/i.test(error?.message || '');
 const isMissingAiInsightsError = (error) => /no such table: ai_insights/i.test(error?.message || '');
 
@@ -2409,6 +2446,16 @@ const ensureReaderCommentsReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingReaderCommentsError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureProductFeedbackReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM product_feedback LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingProductFeedbackError(error)) return false;
     throw error;
   }
 };
@@ -5383,6 +5430,187 @@ const checkNovelReadingEventRateLimit = async (db, events, clientHashes) => {
   }
 
   return { limited: false, scope: '', retryAfterSeconds: 0 };
+};
+
+const normalizeProductFeedbackText = (value, options = {}) => {
+  const field = options.field || 'Field';
+  const minLength = Math.max(0, Number(options.minLength || 0));
+  const maxLength = Math.max(minLength, Number(options.maxLength || 500));
+  const text = String(value || '')
+    .replace(/\r\n?/g, '\n')
+    .trim();
+  if (text.length < minLength) {
+    const error = new Error(`${field} is too short.`);
+    error.code = 'PRODUCT_FEEDBACK_TOO_SHORT';
+    throw error;
+  }
+  if (text.length > maxLength) {
+    const error = new Error(`${field} must be ${maxLength} characters or fewer.`);
+    error.code = 'PRODUCT_FEEDBACK_TOO_LONG';
+    throw error;
+  }
+  return text;
+};
+
+const selectProductFeedbackById = async (db, id) =>
+  db.prepare('SELECT * FROM product_feedback WHERE id = ? LIMIT 1').bind(id).first();
+
+const handleProductFeedbackSubmit = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Feedback database is not configured.' }, { status: 500 });
+  if (!(await ensureProductFeedbackReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'PRODUCT_FEEDBACK_NOT_READY',
+        message: 'Product feedback is not initialized. Apply migration 0018_product_feedback.sql.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const maxRequestBytes = 24 * 1024;
+  const contentLength = Number.parseInt(request.headers.get('content-length') || '0', 10);
+  if (contentLength > maxRequestBytes) {
+    return privateJson({ ok: false, code: 'PRODUCT_FEEDBACK_TOO_LARGE', message: 'Feedback request is too large.' }, { status: 413 });
+  }
+
+  let payload;
+  try {
+    const bodyText = await request.text();
+    if (bodyText.length > maxRequestBytes) {
+      return privateJson({ ok: false, code: 'PRODUCT_FEEDBACK_TOO_LARGE', message: 'Feedback request is too large.' }, { status: 413 });
+    }
+    payload = JSON.parse(bodyText);
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  // A filled honeypot is treated as accepted so automated submissions get no useful signal.
+  if (cleanText(payload.website, 200)) {
+    return privateJson({ ok: true, status: 'received', message: 'Feedback received.' });
+  }
+
+  const product = cleanText(payload.product || 'privatepinyin', 80).toLowerCase();
+  const platform = cleanText(payload.platform, 40).toLowerCase();
+  const issueType = cleanText(payload.issueType || payload.issue_type, 40).toLowerCase();
+  const impact = cleanText(payload.impact || 'normal', 40).toLowerCase();
+  const appVersion = cleanText(payload.appVersion || payload.version, 40);
+  const locale = normalizeContentLocale(payload.locale || 'zh-Hant');
+  const contactEmail = normalizeEmail(payload.contactEmail || payload.email);
+  if (!productFeedbackProducts.has(product)) {
+    return privateJson({ ok: false, code: 'INVALID_PRODUCT', message: 'Unsupported product.' }, { status: 400 });
+  }
+  if (!productFeedbackPlatforms.has(platform)) {
+    return privateJson({ ok: false, code: 'INVALID_PLATFORM', message: 'Select a valid platform.' }, { status: 400 });
+  }
+  if (!productFeedbackIssueTypes.has(issueType)) {
+    return privateJson({ ok: false, code: 'INVALID_ISSUE_TYPE', message: 'Select a valid issue type.' }, { status: 400 });
+  }
+  if (!productFeedbackImpacts.has(impact)) {
+    return privateJson({ ok: false, code: 'INVALID_IMPACT', message: 'Select a valid impact level.' }, { status: 400 });
+  }
+  if (!appVersion) {
+    return privateJson({ ok: false, code: 'VERSION_REQUIRED', message: 'Enter the app version.' }, { status: 400 });
+  }
+  if (contactEmail && !isEmail(contactEmail)) {
+    return privateJson({ ok: false, code: 'INVALID_EMAIL', message: 'Enter a valid contact email.' }, { status: 400 });
+  }
+
+  let summary;
+  let details;
+  let reproductionSteps;
+  let environment;
+  try {
+    summary = normalizeProductFeedbackText(payload.summary || payload.title, {
+      field: 'Summary',
+      minLength: 4,
+      maxLength: 120
+    });
+    details = normalizeProductFeedbackText(payload.details || payload.description, {
+      field: 'Details',
+      minLength: 20,
+      maxLength: 4000
+    });
+    reproductionSteps = normalizeProductFeedbackText(payload.reproductionSteps || payload.steps, {
+      field: 'Reproduction steps',
+      maxLength: 2000
+    });
+    environment = normalizeProductFeedbackText(payload.environment, {
+      field: 'Environment',
+      maxLength: 500
+    });
+  } catch (error) {
+    return privateJson(
+      { ok: false, code: error.code || 'INVALID_PRODUCT_FEEDBACK', message: error.message },
+      { status: 400 }
+    );
+  }
+
+  const clientHashes = await getRequestClientHashes(request);
+  const recentRow = await db
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM product_feedback
+       WHERE ip_hash = ?
+         AND created_at >= datetime('now', '-' || ? || ' seconds')`
+    )
+    .bind(clientHashes.ipHash, productFeedbackSubmitWindowSeconds)
+    .first();
+  if (normalizePositiveInteger(recentRow?.count, 0) >= productFeedbackSubmitLimitPerWindow) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'PRODUCT_FEEDBACK_RATE_LIMITED',
+        message: 'Too many feedback submissions. Please try again later.'
+      },
+      {
+        status: 429,
+        headers: { 'retry-after': String(productFeedbackSubmitWindowSeconds) }
+      }
+    );
+  }
+
+  const id = `pf_${randomHex(16)}`;
+  const sourcePath = cleanRedirectPath(payload.sourcePath || payload.path, '/zh-hant/apps/privatepinyin/');
+  const metadata = {
+    viewportWidth: normalizeNullableInteger(payload.viewportWidth, { min: 0, max: 10000 })
+  };
+  await db
+    .prepare(
+      `INSERT INTO product_feedback (
+        id, product, platform, app_version, issue_type, impact,
+        summary, details, reproduction_steps, environment, contact_email,
+        status, source_path, locale, metadata_json, ip_hash, user_agent_hash
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?)`
+    )
+    .bind(
+      id,
+      product,
+      platform,
+      appVersion,
+      issueType,
+      impact,
+      summary,
+      details,
+      reproductionSteps,
+      environment,
+      contactEmail,
+      sourcePath,
+      locale,
+      JSON.stringify(metadata),
+      clientHashes.ipHash,
+      clientHashes.ipUaHash
+    )
+    .run();
+
+  const feedback = await selectProductFeedbackById(db, id);
+  return privateJson({
+    ok: true,
+    feedback: productFeedbackToJson(feedback),
+    message: 'Feedback received.'
+  });
 };
 
 const normalizeReaderCommentBody = (value) => {
@@ -8422,6 +8650,168 @@ const handleAdminModerateReaderComment = async (request, env) => {
   return privateJson({
     ok: true,
     comment: readerCommentToJson(updated, { admin: true })
+  });
+};
+
+const handleAdminListProductFeedback = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Feedback database is not configured.' }, { status: 500 });
+  if (!(await ensureProductFeedbackReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'PRODUCT_FEEDBACK_NOT_READY',
+        message: 'Product feedback is not initialized. Apply migration 0018_product_feedback.sql.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const url = new URL(request.url);
+  const product = cleanText(url.searchParams.get('product') || 'privatepinyin', 80).toLowerCase();
+  const status = cleanText(url.searchParams.get('status'), 40).toLowerCase();
+  const platform = cleanText(url.searchParams.get('platform'), 40).toLowerCase();
+  const issueType = cleanText(url.searchParams.get('issueType'), 40).toLowerCase();
+  const query = cleanText(url.searchParams.get('query'), 120);
+  const limit = Math.min(Math.max(Number.parseInt(url.searchParams.get('limit') || '100', 10) || 100, 1), 150);
+  if (product && !productFeedbackProducts.has(product)) {
+    return privateJson({ ok: false, message: 'Invalid feedback product.' }, { status: 400 });
+  }
+  if (status && !productFeedbackStatuses.has(status)) {
+    return privateJson({ ok: false, message: 'Invalid feedback status.' }, { status: 400 });
+  }
+  if (platform && !productFeedbackPlatforms.has(platform)) {
+    return privateJson({ ok: false, message: 'Invalid feedback platform.' }, { status: 400 });
+  }
+  if (issueType && !productFeedbackIssueTypes.has(issueType)) {
+    return privateJson({ ok: false, message: 'Invalid feedback issue type.' }, { status: 400 });
+  }
+
+  const clauses = [];
+  const params = [];
+  if (product) {
+    clauses.push('product = ?');
+    params.push(product);
+  }
+  if (status) {
+    clauses.push('status = ?');
+    params.push(status);
+  }
+  if (platform) {
+    clauses.push('platform = ?');
+    params.push(platform);
+  }
+  if (issueType) {
+    clauses.push('issue_type = ?');
+    params.push(issueType);
+  }
+  if (query) {
+    clauses.push('(summary LIKE ? OR details LIKE ? OR contact_email LIKE ?)');
+    const queryPattern = `%${query}%`;
+    params.push(queryPattern, queryPattern, queryPattern);
+  }
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM product_feedback
+       ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
+       ORDER BY
+         CASE status
+           WHEN 'new' THEN 0
+           WHEN 'in_progress' THEN 1
+           WHEN 'resolved' THEN 2
+           ELSE 3
+         END,
+         updated_at DESC,
+         id DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+
+  return privateJson({
+    ok: true,
+    feedback: (response.results || []).map((row) => productFeedbackToJson(row, { admin: true }))
+  });
+};
+
+const handleAdminUpdateProductFeedback = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Feedback database is not configured.' }, { status: 500 });
+  if (!(await ensureProductFeedbackReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'PRODUCT_FEEDBACK_NOT_READY',
+        message: 'Product feedback is not initialized. Apply migration 0018_product_feedback.sql.'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, message: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const id = cleanText(payload.id, 80);
+  const status = cleanText(payload.status, 40).toLowerCase();
+  if (!id || !productFeedbackStatuses.has(status)) {
+    return privateJson({ ok: false, message: 'A valid feedback id and status are required.' }, { status: 400 });
+  }
+  const existing = await selectProductFeedbackById(db, id);
+  if (!existing) return privateJson({ ok: false, message: 'Feedback was not found.' }, { status: 404 });
+
+  let adminNote;
+  try {
+    adminNote = normalizeProductFeedbackText(payload.adminNote || payload.note, {
+      field: 'Admin note',
+      maxLength: 2000
+    });
+  } catch (error) {
+    return privateJson({ ok: false, code: error.code || 'INVALID_ADMIN_NOTE', message: error.message }, { status: 400 });
+  }
+
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  await db
+    .prepare(
+      `UPDATE product_feedback
+       SET status = ?,
+           admin_note = ?,
+           updated_by = ?,
+           resolved_at = CASE
+             WHEN ? = 'resolved' THEN COALESCE(resolved_at, CURRENT_TIMESTAMP)
+             WHEN ? IN ('new', 'in_progress') THEN NULL
+             ELSE resolved_at
+           END,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .bind(status, adminNote, actorEmail, status, status, id)
+    .run();
+
+  const updated = await selectProductFeedbackById(db, id);
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: 'product_feedback.update',
+    targetType: 'product_feedback',
+    targetId: id,
+    targetSlug: existing.product,
+    metadata: {
+      previousStatus: existing.status,
+      status,
+      platform: existing.platform,
+      issueType: existing.issue_type,
+      adminNote
+    }
+  });
+
+  return privateJson({
+    ok: true,
+    feedback: productFeedbackToJson(updated, { admin: true })
   });
 };
 
@@ -15011,12 +15401,15 @@ export const __readerTotpTestHooks = {
   handleAdminGenerateNovelAiInsights,
   handleAdminListNovelAiInsights,
   handleAdminListNovelAnalyticsStats,
+  handleAdminListProductFeedback,
   handleAdminListReaderComments,
   handleAdminModerateReaderComment,
+  handleAdminUpdateProductFeedback,
   handleNovelForgeAnalytics,
   handleNovelForgeChapterContent,
   handleNovelForgeTranslationSync,
   handlePublicNovelComments,
+  handleProductFeedbackSubmit,
   handleNovelReadingEvents,
   handleReaderCommentSubmit,
   handleReaderBookmarkDelete,
@@ -15031,6 +15424,7 @@ export const __readerTotpTestHooks = {
   normalizeTotpCode,
   normalizeReadingEventPayload,
   readerCommentToJson,
+  productFeedbackToJson,
   parseNovelForgeAnalyticsRoute,
   parseNovelForgeChapterContentRoute,
   parseDynamicContentRoute,
@@ -15093,6 +15487,10 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/waitlist') {
       return handleWaitlistSubmit(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/product-feedback') {
+      return handleProductFeedbackSubmit(request, env);
     }
 
     if (request.method === 'POST' && url.pathname === '/api/readers/magic-link') {
@@ -15279,6 +15677,16 @@ export default {
 
     if (url.pathname === '/admin/api/novels/comments/moderate') {
       if (request.method === 'POST') return handleAdminModerateReaderComment(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/product-feedback') {
+      if (request.method === 'GET') return handleAdminListProductFeedback(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/product-feedback/update') {
+      if (request.method === 'POST') return handleAdminUpdateProductFeedback(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
