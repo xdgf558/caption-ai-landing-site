@@ -8,6 +8,12 @@ const read = (path) => readFileSync(join(root, path), 'utf8');
 const testflightUrl = 'https://testflight.apple.com/join/QnWqrAaH';
 
 const productData = read('src/data/products/privatepinyin.ts');
+const worker = read('src/worker.js');
+assert.match(productData, /latestVersion: '0\.1\.13'/);
+assert.match(productData, /minimumSystem: 'macOS 14 or later'/);
+assert.match(productData, /PrivatePinyin-0\.1\.13\.pkg/);
+assert.match(productData, /9c17738382c030a87db4208ba456e1abcf73545af85bb63a451ea8147ca1451e/);
+assert.match(worker, /privatepinyin\/0\.1\.13\/PrivatePinyin-0\.1\.13\.pkg/);
 assert.match(productData, /iosTestflight/);
 assert.match(productData, new RegExp(testflightUrl.replaceAll('/', '\\/')));
 
