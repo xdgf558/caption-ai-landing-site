@@ -14628,6 +14628,12 @@ const handleDynamicFrontendContent = async (request, env) => {
 };
 
 const downloadFiles = {
+  '/downloads/privatepinyin/PrivatePinyin-0.1.15.pkg': {
+    key: 'privatepinyin/0.1.15/PrivatePinyin-0.1.15.pkg',
+    filename: 'PrivatePinyin-0.1.15.pkg',
+    contentType: 'application/octet-stream',
+    limitKey: 'privatepinyin-0.1.15-pkg'
+  },
   '/downloads/privatepinyin/PrivatePinyin-0.1.13.pkg': {
     key: 'privatepinyin/0.1.13/PrivatePinyin-0.1.13.pkg',
     filename: 'PrivatePinyin-0.1.13.pkg',

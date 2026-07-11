@@ -9,11 +9,11 @@ const testflightUrl = 'https://testflight.apple.com/join/QnWqrAaH';
 
 const productData = read('src/data/products/privatepinyin.ts');
 const worker = read('src/worker.js');
-assert.match(productData, /latestVersion: '0\.1\.13'/);
+assert.match(productData, /latestVersion: '0\.1\.15'/);
 assert.match(productData, /minimumSystem: 'macOS 14 or later'/);
-assert.match(productData, /PrivatePinyin-0\.1\.13\.pkg/);
-assert.match(productData, /9c17738382c030a87db4208ba456e1abcf73545af85bb63a451ea8147ca1451e/);
-assert.match(worker, /privatepinyin\/0\.1\.13\/PrivatePinyin-0\.1\.13\.pkg/);
+assert.match(productData, /PrivatePinyin-0\.1\.15\.pkg/);
+assert.match(productData, /cb48d25bfd31345ba91f9a9d073a9cf49cabb407d376edaa304b04cffdf59211/);
+assert.match(worker, /privatepinyin\/0\.1\.15\/PrivatePinyin-0\.1\.15\.pkg/);
 assert.match(productData, /iosTestflight/);
 assert.match(productData, new RegExp(testflightUrl.replaceAll('/', '\\/')));
 
