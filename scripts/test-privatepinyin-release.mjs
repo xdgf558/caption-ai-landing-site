@@ -9,11 +9,14 @@ const testflightUrl = 'https://testflight.apple.com/join/QnWqrAaH';
 
 const productData = read('src/data/products/privatepinyin.ts');
 const worker = read('src/worker.js');
-assert.match(productData, /latestVersion: '0\.1\.16'/);
+assert.match(productData, /latestVersion: '0\.1\.17'/);
 assert.match(productData, /minimumSystem: 'macOS 14 or later'/);
-assert.match(productData, /PrivatePinyin-0\.1\.16\.pkg/);
-assert.match(productData, /678026ab7a6e9c86b284e5048c78fa52fbb59f587954e2f16e33495a1d41a289/);
-assert.match(worker, /privatepinyin\/0\.1\.16\/PrivatePinyin-0\.1\.16\.pkg/);
+assert.match(productData, /PrivatePinyin-0\.1\.17\.pkg/);
+assert.match(productData, /43bcec63708a16098dec51a6a0d7533795a0cf7b7d459040eb1e9abf449bdb79/);
+assert.match(productData, /PrivatePinyin-0\.1\.13-setup\.exe/);
+assert.match(productData, /7bcc0125b1e57aa129a85f773aa5feca543c70a852704b80762440d4615c9b88/);
+assert.match(worker, /privatepinyin\/0\.1\.17\/PrivatePinyin-0\.1\.17\.pkg/);
+assert.match(worker, /privatepinyin\/0\.1\.13\/PrivatePinyin-0\.1\.13-setup\.exe/);
 assert.match(productData, /iosTestflight/);
 assert.match(productData, new RegExp(testflightUrl.replaceAll('/', '\\/')));
 
