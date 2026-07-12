@@ -32,8 +32,8 @@ const copy = {
     releaseNotes: [
       'iOS 版已開放 TestFlight 外部測試，可在 iPhone 或 iPad 上安裝並接收後續測試更新。',
       `Windows TSF 內測包更新到 ${windowsVersion}，提供 EXE 安裝包下載。`,
-      `${macVersion} 修復在 Chrome、TextEdit 等 App 之間切換時輸入法可能間歇性失效的問題。`,
-      '候選窗口改為跟隨輸入法服務進程，避免客戶端關閉後觸發崩潰；繼續提供第二版連續拼音分詞和本機聯想學習。',
+      `${macVersion} 將候選窗口改為橫向單行布局，每頁同時顯示 9 個候選。`,
+      '現有預設的 5 候選設定會自動遷移到 9，數字鍵 1–9 可直接選詞；繼續提供第二版連續拼音分詞和本機聯想學習。',
       `macOS 安裝包目前為 ${macVersion}，輸入源仍為「猫栈拼音」。`,
       'Windows 包目前未簽名，安裝時可能出現 SmartScreen 或信任提示。'
     ],
@@ -60,8 +60,8 @@ const copy = {
     releaseNotes: [
       'iOS 版已开放 TestFlight 外部测试，可在 iPhone 或 iPad 上安装并接收后续测试更新。',
       `Windows TSF 内测包更新到 ${windowsVersion}，提供 EXE 安装包下载。`,
-      `${macVersion} 修复在 Chrome、TextEdit 等 App 之间切换时输入法可能间歇性失效的问题。`,
-      '候选窗口改为跟随输入法服务进程，避免客户端关闭后触发崩溃；继续提供第二版连续拼音分词和本地联想学习。',
+      `${macVersion} 将候选窗口改为横向单行布局，每页同时显示 9 个候选。`,
+      '现有默认的 5 候选设置会自动迁移到 9，数字键 1–9 可直接选词；继续提供第二版连续拼音分词和本地联想学习。',
       `macOS 安装包目前为 ${macVersion}，输入源仍为「猫栈拼音」。`,
       'Windows 包目前未签名，安装时可能出现 SmartScreen 或信任提示。'
     ],
@@ -88,8 +88,8 @@ const copy = {
     releaseNotes: [
       'The iOS build is now available through an external TestFlight group for installation and future test updates on iPhone or iPad.',
       `Updates the Windows TSF internal test build to ${windowsVersion}, available as an EXE installer.`,
-      `${macVersion} fixes intermittent input failures when switching between apps such as Chrome and TextEdit.`,
-      'The candidate window now follows the input method service process to avoid crashes after a client closes, while second-generation continuous pinyin segmentation and local association learning remain available.',
+      `${macVersion} changes the candidate window to a horizontal single-row layout with nine choices per page.`,
+      'Existing five-candidate defaults migrate automatically to nine, number keys 1–9 select candidates directly, and second-generation continuous pinyin segmentation plus local association learning remain available.',
       `The macOS installer is currently ${macVersion}. The input source remains "猫栈拼音".`,
       'The Windows builds are unsigned and may trigger SmartScreen or trust prompts during install.'
     ],
@@ -116,8 +116,8 @@ const copy = {
     releaseNotes: [
       'iOS 版を TestFlight 外部テストで公開し、iPhone または iPad でインストールと今後のテスト更新を受け取れます。',
       `Windows TSF 内部テスト版を ${windowsVersion} に更新し、EXE で提供します。`,
-      `${macVersion} では Chrome や TextEdit などのアプリ切り替え時に入力が効かなくなる問題を修正しました。`,
-      '候補ウィンドウを入力メソッドサービスのプロセスに追従させ、クライアント終了後のクラッシュを防ぎます。第2世代の連続ピンイン分割とローカル連想学習も引き続き利用できます。',
+      `${macVersion} では候補ウィンドウを横一列に変更し、1ページに9候補を表示します。`,
+      '従来の5候補設定は自動的に9へ移行し、数字キー1〜9で直接選択できます。第2世代の連続ピンイン分割とローカル連想学習も引き続き利用できます。',
       `macOS インストーラーは現在 ${macVersion} です。入力ソース名は「猫栈拼音」のままです。`,
       'Windows 版は未署名のため、インストール時に SmartScreen や信頼確認が表示される場合があります。'
     ],
