@@ -24,6 +24,7 @@ const productPage = read('src/components/PrivatePinyinLanding.astro');
 assert.match(productPage, /加入 iOS TestFlight/);
 assert.match(productPage, /external TestFlight group/);
 assert.match(productPage, /iosTestflight\.url/);
+assert.match(productPage, /\?release=\$\{macVersion\}/);
 
 const downloadPage = read('src/components/PrivatePinyinDownload.astro');
 assert.match(downloadPage, /privatepinyin-testflight-card/);

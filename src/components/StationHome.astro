@@ -20,6 +20,7 @@ const xUrl = 'https://x.com/bketck';
 const stationLogoPath = '/images/home/station-cat-logo.png';
 const currentVersion = simpleCutProProduct.latestVersion.replace(/^v/, '');
 const privatePinyinVersion = privatePinyinProduct.latestVersion;
+const versionedPrivatePinyinDownload = (path: string) => `${path}?release=${privatePinyinVersion}`;
 
 const icons: Record<IconName, string> = {
   cat: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 13 8 5l6 5h4l6-5 1 8"/><path d="M7 14c0 8 5 12 9 12s9-4 9-12"/><path d="M12 16h.1M20 16h.1"/><path d="M14 20h4M16 18v3"/></svg>`,
@@ -319,7 +320,7 @@ const paths = {
     snapcopy: snapCopyProduct.zhHantProductPath,
     snapcopyTest: '/zh-hant/apps/caption-ai/download/',
     privatePinyin: privatePinyinProduct.zhHantProductPath,
-    privatePinyinDownload: privatePinyinProduct.zhHantDownloadPagePath,
+    privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.zhHantDownloadPagePath),
     simplecut: simpleCutProProduct.zhHantProductPath,
     simplecutDownload: simpleCutProProduct.zhHantDownloadPagePath,
     radar: stationCatRadarProduct.zhHantProductPath,
@@ -335,7 +336,7 @@ const paths = {
     snapcopy: snapCopyProduct.zhHansProductPath,
     snapcopyTest: '/zh-hans/apps/caption-ai/download/',
     privatePinyin: privatePinyinProduct.zhHansProductPath,
-    privatePinyinDownload: privatePinyinProduct.zhHansDownloadPagePath,
+    privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.zhHansDownloadPagePath),
     simplecut: simpleCutProProduct.zhHansProductPath,
     simplecutDownload: simpleCutProProduct.zhHansDownloadPagePath,
     radar: stationCatRadarProduct.zhHansProductPath,
@@ -351,7 +352,7 @@ const paths = {
     snapcopy: snapCopyProduct.productPath,
     snapcopyTest: '/apps/caption-ai/download/',
     privatePinyin: privatePinyinProduct.productPath,
-    privatePinyinDownload: privatePinyinProduct.downloadPagePath,
+    privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.downloadPagePath),
     simplecut: simpleCutProProduct.productPath,
     simplecutDownload: simpleCutProProduct.downloadPagePath,
     radar: stationCatRadarProduct.productPath,
@@ -367,7 +368,7 @@ const paths = {
     snapcopy: snapCopyProduct.jaProductPath,
     snapcopyTest: '/ja/apps/caption-ai/download/',
     privatePinyin: privatePinyinProduct.jaProductPath,
-    privatePinyinDownload: privatePinyinProduct.jaDownloadPagePath,
+    privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.jaDownloadPagePath),
     simplecut: simpleCutProProduct.jaProductPath,
     simplecutDownload: simpleCutProProduct.jaDownloadPagePath,
     radar: stationCatRadarProduct.jaProductPath,

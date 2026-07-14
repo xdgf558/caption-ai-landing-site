@@ -14,6 +14,7 @@ const iosTestflight = privatePinyinProduct.iosTestflight;
 const latestVersion = privatePinyinProduct.latestVersion;
 const macVersion = macDownload.version;
 const windowsVersion = windowsDownload?.version ?? latestVersion;
+const versionedDownloadPage = (path: string) => `${path}?release=${macVersion}`;
 const inputSourceName = '猫栈拼音';
 const internalName = 'PrivatePinyin';
 
@@ -28,7 +29,7 @@ const copy = {
     windowsCta: '下載 Windows 內測版',
     iosCta: '加入 iOS TestFlight',
     secondary: '查看下載資訊',
-    downloadHref: privatePinyinProduct.zhHantDownloadPagePath,
+    downloadHref: versionedDownloadPage(privatePinyinProduct.zhHantDownloadPagePath),
     featuresTitle: '目前這個版本適合',
     features: [
       ['本機中文輸入', '先把日常拼音輸入跑順，候選詞、標點和打字手感會持續調整。'],
@@ -58,7 +59,7 @@ const copy = {
     windowsCta: '下载 Windows 内测版',
     iosCta: '加入 iOS TestFlight',
     secondary: '查看下载信息',
-    downloadHref: privatePinyinProduct.zhHansDownloadPagePath,
+    downloadHref: versionedDownloadPage(privatePinyinProduct.zhHansDownloadPagePath),
     featuresTitle: '目前这个版本适合',
     features: [
       ['本机中文输入', '先把日常拼音输入跑顺，候选词、标点和打字手感会持续调整。'],
@@ -88,7 +89,7 @@ const copy = {
     windowsCta: 'Download Windows beta',
     iosCta: 'Join iOS TestFlight',
     secondary: 'View download info',
-    downloadHref: privatePinyinProduct.downloadPagePath,
+    downloadHref: versionedDownloadPage(privatePinyinProduct.downloadPagePath),
     featuresTitle: 'What this build is for',
     features: [
       ['Local Chinese typing', 'The focus is making daily pinyin input feel steady, with candidates, punctuation, and typing flow improving over time.'],
@@ -118,7 +119,7 @@ const copy = {
     windowsCta: 'Windows 内部テスト版',
     iosCta: 'iOS TestFlight に参加',
     secondary: 'ダウンロード情報を見る',
-    downloadHref: privatePinyinProduct.jaDownloadPagePath,
+    downloadHref: versionedDownloadPage(privatePinyinProduct.jaDownloadPagePath),
     featuresTitle: 'このバージョンでできること',
     features: [
       ['ローカル中国語入力', '日常的なピンイン入力、候補、句読点、入力感を整えていきます。'],

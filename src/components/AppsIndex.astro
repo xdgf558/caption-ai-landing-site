@@ -14,6 +14,8 @@ interface Props {
 
 const { lang = 'zh-Hant' } = Astro.props;
 const currentVersion = simpleCutProProduct.latestVersion.replace(/^v/, '');
+const privatePinyinVersion = privatePinyinProduct.latestVersion;
+const versionedPrivatePinyinDownload = (path: string) => `${path}?release=${privatePinyinVersion}`;
 
 const copy = {
   'zh-Hant': {
@@ -131,7 +133,7 @@ const paths = {
     canonical: '/zh-hant/apps/',
     snapcopy: captionAiProduct.zhHantProductPath,
     privatePinyin: privatePinyinProduct.zhHantProductPath,
-    privatePinyinDownload: privatePinyinProduct.zhHantDownloadPagePath,
+    privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.zhHantDownloadPagePath),
     simplecut: simpleCutProProduct.zhHantProductPath,
     simplecutDownload: simpleCutProProduct.zhHantDownloadPagePath,
     radar: stationCatRadarProduct.zhHantProductPath,
@@ -142,7 +144,7 @@ const paths = {
     canonical: '/zh-hans/apps/',
     snapcopy: captionAiProduct.zhHansProductPath,
     privatePinyin: privatePinyinProduct.zhHansProductPath,
-    privatePinyinDownload: privatePinyinProduct.zhHansDownloadPagePath,
+    privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.zhHansDownloadPagePath),
     simplecut: simpleCutProProduct.zhHansProductPath,
     simplecutDownload: simpleCutProProduct.zhHansDownloadPagePath,
     radar: stationCatRadarProduct.zhHansProductPath,
@@ -153,7 +155,7 @@ const paths = {
     canonical: '/apps/',
     snapcopy: captionAiProduct.productPath,
     privatePinyin: privatePinyinProduct.productPath,
-    privatePinyinDownload: privatePinyinProduct.downloadPagePath,
+    privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.downloadPagePath),
     simplecut: simpleCutProProduct.productPath,
     simplecutDownload: simpleCutProProduct.downloadPagePath,
     radar: stationCatRadarProduct.productPath,
@@ -164,7 +166,7 @@ const paths = {
     canonical: '/ja/apps/',
     snapcopy: captionAiProduct.jaProductPath,
     privatePinyin: privatePinyinProduct.jaProductPath,
-    privatePinyinDownload: privatePinyinProduct.jaDownloadPagePath,
+    privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.jaDownloadPagePath),
     simplecut: simpleCutProProduct.jaProductPath,
     simplecutDownload: simpleCutProProduct.jaDownloadPagePath,
     radar: stationCatRadarProduct.jaProductPath,
