@@ -12,8 +12,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   <section class="admin-v2-shell">
     <header class="admin-v2-heading">
       <div>
-        <p class="station-kicker">Admin 2.0</p>
-        <h1>Station Cat 后台内容平台</h1>
+        <p class="station-kicker">Station Cat Admin</p>
+        <h1>内容工作台</h1>
+        <div class="admin-v2-status" id="admin-v2-status" role="status" aria-live="polite">
+          正在连接后端内容平台。
+        </div>
       </div>
       <div class="admin-v2-heading__actions">
         <a class="button button-secondary" href="/admin/waitlist/">等待名单</a>
@@ -22,34 +25,44 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </div>
     </header>
 
-    <div class="admin-v2-status" id="admin-v2-status" role="status" aria-live="polite">
-      正在连接后端内容平台。
-    </div>
-
     <div class="admin-v2-grid">
       <aside class="admin-v2-panel admin-v2-sidebar" data-admin-v2-scroll-panel>
-        <div class="admin-v2-tabs" role="tablist" aria-label="Admin sections">
-            <button class="admin-v2-tab is-active" type="button" data-admin-v2-tab="content">内容</button>
-            <button class="admin-v2-tab" type="button" data-admin-v2-tab="imports">导入审核</button>
-            <button class="admin-v2-tab" type="button" data-admin-v2-tab="signal">简报</button>
-            <button class="admin-v2-tab" type="button" data-admin-v2-tab="commerce">订单</button>
-            <button class="admin-v2-tab" type="button" data-admin-v2-tab="accounts">账户</button>
-            <button class="admin-v2-tab" type="button" data-admin-v2-tab="analytics">统计</button>
-            <button class="admin-v2-tab" type="button" data-admin-v2-tab="comments">评论</button>
-            <button class="admin-v2-tab" type="button" data-admin-v2-tab="feedback">反馈</button>
-            <button class="admin-v2-tab" type="button" data-admin-v2-tab="access">授权</button>
-            <button class="admin-v2-tab" type="button" data-admin-v2-tab="audit">审计</button>
-        </div>
+        <nav class="admin-v2-tabs" aria-label="后台模块">
+          <div class="admin-v2-nav-group" role="group" aria-labelledby="admin-nav-publish">
+            <span class="admin-v2-nav-label" id="admin-nav-publish">发布</span>
+            <button class="admin-v2-tab is-active" type="button" aria-pressed="true" data-admin-v2-tab="content">内容</button>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="imports">导入审核</button>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="signal">每日简报</button>
+          </div>
+          <div class="admin-v2-nav-group" role="group" aria-labelledby="admin-nav-operations">
+            <span class="admin-v2-nav-label" id="admin-nav-operations">运营</span>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="commerce">订单</button>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="accounts">账户</button>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="access">读者授权</button>
+          </div>
+          <div class="admin-v2-nav-group" role="group" aria-labelledby="admin-nav-response">
+            <span class="admin-v2-nav-label" id="admin-nav-response">反馈</span>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="comments">评论审核</button>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="feedback">产品反馈</button>
+          </div>
+          <div class="admin-v2-nav-group" role="group" aria-labelledby="admin-nav-data">
+            <span class="admin-v2-nav-label" id="admin-nav-data">数据</span>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="analytics">阅读统计</button>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="audit">审计日志</button>
+          </div>
+        </nav>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="content-sidebar">
-          <section class="admin-template-panel admin-global-pricing-panel" aria-labelledby="pricing-defaults-title">
-            <div>
-              <p class="station-kicker">Global Pricing</p>
-              <h3 id="pricing-defaults-title">全局收费规则</h3>
-              <p id="pricing-defaults-summary">正在读取默认收费规则。</p>
-              <p class="admin-template-note">保存后对全部书籍和收费章节生效。章节不再直接用 USD 购买，只能先充值阅读点再解锁。</p>
-            </div>
-            <div class="admin-global-pricing-grid">
+          <details class="admin-template-panel admin-global-pricing-panel">
+            <summary class="admin-disclosure-summary">
+              <span>
+                <small>全站设置</small>
+                <strong id="pricing-defaults-title">全局收费规则</strong>
+              </span>
+              <span id="pricing-defaults-summary">正在读取默认收费规则。</span>
+            </summary>
+            <div class="admin-disclosure-body">
+              <div class="admin-global-pricing-grid">
               <label>
                 访问级别
                 <select id="global-access-level">
@@ -103,14 +116,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 打赏金额 USD
                 <input id="global-pricing-tip-amounts" placeholder="1, 3, 5" />
               </label>
+              </div>
+              <div class="button-row">
+                <button class="button button-primary" id="pricing-defaults-save" type="button">保存全局收费</button>
+                <button class="button button-secondary" id="pricing-defaults-apply" type="button">套用到当前编辑</button>
+                <button class="button button-secondary" id="pricing-defaults-refresh" type="button">刷新</button>
+              </div>
+              <div class="admin-inline-status" id="pricing-defaults-status" role="status" aria-live="polite" hidden></div>
             </div>
-            <div class="button-row">
-              <button class="button button-primary" id="pricing-defaults-save" type="button">保存全局收费</button>
-              <button class="button button-secondary" id="pricing-defaults-apply" type="button">套用到当前编辑</button>
-              <button class="button button-secondary" id="pricing-defaults-refresh" type="button">刷新</button>
-            </div>
-            <div class="admin-inline-status" id="pricing-defaults-status" role="status" aria-live="polite" hidden></div>
-          </section>
+          </details>
 
           <div class="admin-v2-filter-grid">
             <label>
@@ -363,165 +377,212 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
           </div>
 
+          <div class="admin-v2-editor-toolbar">
+            <div class="admin-inline-status" id="content-save-status" role="status" aria-live="polite" hidden></div>
+            <div class="button-row">
+              <button class="button button-secondary" id="content-reset" type="button">清空</button>
+              <button class="button button-primary" id="content-save" type="submit" form="content-form" data-content-save-button>保存内容</button>
+            </div>
+          </div>
+
           <form id="content-form" class="admin-v2-form">
             <input id="content-entry-id" type="hidden" />
-            <div class="admin-v2-form-grid">
-              <label>
-                内容类型
-                <select id="content-entry-type" required>
-                  <option value="blog_post">Blog / Devlog</option>
-                  <option value="signal_brief">Signal 简报</option>
-                  <option value="novel_series">小说作品</option>
-                  <option value="novel_chapter">小说章节</option>
-                </select>
-              </label>
-              <label>
-                语言
-                <select id="content-locale" required>
-                  <option value="zh-Hant">繁中</option>
-                  <option value="zh-Hans">简中</option>
-                  <option value="en">English</option>
-                  <option value="ja">日本語</option>
-                </select>
-              </label>
-              <label>
-                状态
-                <select id="content-status">
-                  <option value="draft">草稿</option>
-                  <option value="scheduled">定时</option>
-                  <option value="published">发布</option>
-                  <option value="archived">归档</option>
-                </select>
-              </label>
-              <label>
-                可见性
-                <select id="content-visibility">
-                  <option value="public">公开</option>
-                  <option value="unlisted">隐藏链接</option>
-                  <option value="private">私有</option>
-                </select>
-              </label>
-              <label>
-                Slug
-                <input id="content-slug" required placeholder="post-or-chapter-slug" />
-              </label>
-              <label>
-                父级 seriesSlug
-                <input id="content-parent-slug" placeholder="novel-series-slug" />
-              </label>
-              <label>
-                标题
-                <input id="content-title" required placeholder="内容标题" />
-              </label>
-              <label>
-                副标题
-                <input id="content-subtitle" placeholder="可选副标题" />
-              </label>
-              <label>
-                作者
-                <input id="content-author" placeholder="Station Cat" />
-              </label>
-              <label>
-                Tags
-                <input id="content-tags" placeholder="Novel, Devlog, Station Cat" />
-              </label>
-              <label>
-                章节序号
-                <input id="content-chapter-number" type="number" min="1" step="1" placeholder="1" />
-              </label>
-              <label>
-                分卷标题
-                <input id="content-volume-title" placeholder="第一卷" />
-              </label>
-              <label>
-                发布时间
-                <input id="content-published-at" type="datetime-local" />
-              </label>
-              <label>
-                排序
-                <input id="content-sort-order" type="number" min="0" step="1" value="0" />
-              </label>
-              <label class="admin-checkbox">
-                <input id="content-featured" type="checkbox" />
-                首页或书架精选
-              </label>
-            </div>
-
-            <label>
-              描述
-              <textarea id="content-description" rows="3" placeholder="用于列表、SEO 和分享卡片的说明。"></textarea>
-            </label>
-            <label>
-              摘要
-              <textarea id="content-excerpt" rows="3" placeholder="可选短摘要。"></textarea>
-            </label>
-
-            <section class="admin-v2-subpanel" id="entry-pricing-panel">
+            <section class="admin-v2-subpanel admin-v2-editor-primary">
               <div class="admin-v2-section-heading">
                 <div>
-                  <p class="station-kicker">Entry Override</p>
-                  <h3>单篇收费覆盖（可选）</h3>
-                  <p class="admin-template-note">全局收费规则请在左上角保存。章节 USD 直购已停用，收费章节统一用阅读点或会员阅读。</p>
+                  <p class="station-kicker">Basic</p>
+                  <h3>基础信息</h3>
                 </div>
               </div>
               <div class="admin-v2-form-grid">
                 <label>
-                  访问级别
-                  <select id="content-access-level">
-                    <option value="free">免费</option>
-                    <option value="paid">付费</option>
-                    <option value="supporter">支持者</option>
-                    <option value="member">会员</option>
+                  内容类型
+                  <select id="content-entry-type" required>
+                    <option value="blog_post">Blog / Devlog</option>
+                    <option value="signal_brief">Signal 简报</option>
+                    <option value="novel_series">小说作品</option>
+                    <option value="novel_chapter">小说章节</option>
                   </select>
                 </label>
                 <label>
-                  收费模式
-                  <select id="pricing-mode">
-                    <option value="free">免费阅读</option>
-                    <option value="tip-optional">免费 + 打赏</option>
-                    <option value="chapter-paid">单章购买</option>
-                    <option value="volume-paid">分卷购买</option>
-                    <option value="member">会员阅读</option>
+                  状态
+                  <select id="content-status">
+                    <option value="draft">草稿</option>
+                    <option value="scheduled">定时</option>
+                    <option value="published">发布</option>
+                    <option value="archived">归档</option>
                   </select>
                 </label>
                 <label>
-                  免费章节数
-                  <input id="pricing-free-chapters" type="number" min="0" step="1" value="0" />
+                  语言
+                  <select id="content-locale" required>
+                    <option value="zh-Hant">繁中</option>
+                    <option value="zh-Hans">简中</option>
+                    <option value="en">English</option>
+                    <option value="ja">日本語</option>
+                  </select>
                 </label>
                 <label>
-                  单章价格 USD（已停用）
-                  <input id="pricing-chapter-price" type="number" min="0" step="0.01" placeholder="已停用" disabled />
+                  Slug
+                  <input id="content-slug" required placeholder="post-or-chapter-slug" />
                 </label>
-                <label>
-                  支持者价格 USD（已停用）
-                  <input id="pricing-supporter-price" type="number" min="0" step="0.01" placeholder="已停用" disabled />
+                <label class="admin-v2-field--wide">
+                  标题
+                  <input id="content-title" required placeholder="内容标题" />
                 </label>
-                <label>
-                  单章阅读点
-                  <input id="pricing-chapter-credits" type="number" min="1" step="1" placeholder="1" />
+                <label class="admin-v2-field--wide">
+                  描述
+                  <textarea id="content-description" rows="3"></textarea>
                 </label>
-                <label>
-                  阅读点包
-                  <input id="pricing-credit-packs" placeholder="10:1, 50:5, 100:10" />
-                </label>
-                <label class="admin-checkbox">
-                  <input id="pricing-tips-enabled" type="checkbox" />
-                  开启打赏
-                </label>
-                <label>
-                  打赏金额 USD
-                  <input id="pricing-tip-amounts" placeholder="1, 3, 5" />
-                </label>
-                <label class="admin-checkbox">
-                  <input id="pricing-bundles-enabled" type="checkbox" />
-                  开启多章折扣
-                </label>
-                <label>
-                  多章折扣
-                  <input id="pricing-bundles" placeholder="5:10, 10:20" />
+                <label class="admin-v2-field--wide">
+                  摘要
+                  <textarea id="content-excerpt" rows="2"></textarea>
                 </label>
               </div>
-              <section class="admin-effective-pricing" aria-labelledby="effective-pricing-title">
+            </section>
+
+            <section class="admin-v2-subpanel admin-v2-editor-body">
+              <div class="admin-v2-section-heading">
+                <div>
+                  <p class="station-kicker">Markdown</p>
+                  <h3>正文</h3>
+                </div>
+                <div class="button-row">
+                  <label class="button button-secondary admin-file-button" for="content-file">导入 Markdown</label>
+                  <input class="admin-file-input" id="content-file" type="file" accept=".md,.markdown,text/markdown,text/plain" />
+                  <button class="button button-secondary" id="content-preview-button" type="button">预览</button>
+                  <button class="button button-secondary" id="content-worker-preview-button" type="button">Worker 预览</button>
+                  <button class="button button-primary" type="submit" data-content-save-button>保存</button>
+                </div>
+              </div>
+              <textarea id="content-markdown" rows="22" spellcheck="false" placeholder="这里写正文 Markdown。"></textarea>
+              <details class="admin-v2-inline-disclosure" id="content-preview-disclosure">
+                <summary>正文预览</summary>
+                <div class="admin-v2-preview" id="content-preview">等待输入正文。</div>
+              </details>
+            </section>
+
+            <details class="admin-v2-disclosure">
+              <summary class="admin-disclosure-summary">
+                <span>
+                  <small>Publish</small>
+                  <strong>发布设置</strong>
+                </span>
+              </summary>
+              <div class="admin-disclosure-body admin-v2-form-grid">
+                <label>
+                  可见性
+                  <select id="content-visibility">
+                    <option value="public">公开</option>
+                    <option value="unlisted">隐藏链接</option>
+                    <option value="private">私有</option>
+                  </select>
+                </label>
+                <label>
+                  父级 seriesSlug
+                  <input id="content-parent-slug" placeholder="novel-series-slug" />
+                </label>
+                <label>
+                  副标题
+                  <input id="content-subtitle" />
+                </label>
+                <label>
+                  作者
+                  <input id="content-author" placeholder="Station Cat" />
+                </label>
+                <label>
+                  Tags
+                  <input id="content-tags" />
+                </label>
+                <label>
+                  章节序号
+                  <input id="content-chapter-number" type="number" min="1" step="1" />
+                </label>
+                <label>
+                  分卷标题
+                  <input id="content-volume-title" />
+                </label>
+                <label>
+                  发布时间
+                  <input id="content-published-at" type="datetime-local" />
+                </label>
+                <label>
+                  排序
+                  <input id="content-sort-order" type="number" min="0" step="1" value="0" />
+                </label>
+                <label class="admin-checkbox">
+                  <input id="content-featured" type="checkbox" />
+                  首页或书架精选
+                </label>
+              </div>
+            </details>
+
+            <details class="admin-v2-disclosure" id="entry-pricing-panel">
+              <summary class="admin-disclosure-summary">
+                <span>
+                  <small>Pricing</small>
+                  <strong>单篇收费覆盖</strong>
+                </span>
+              </summary>
+              <div class="admin-disclosure-body">
+                <div class="admin-v2-form-grid">
+                  <label>
+                    访问级别
+                    <select id="content-access-level">
+                      <option value="free">免费</option>
+                      <option value="paid">付费</option>
+                      <option value="supporter">支持者</option>
+                      <option value="member">会员</option>
+                    </select>
+                  </label>
+                  <label>
+                    收费模式
+                    <select id="pricing-mode">
+                      <option value="free">免费阅读</option>
+                      <option value="tip-optional">免费 + 打赏</option>
+                      <option value="chapter-paid">单章购买</option>
+                      <option value="volume-paid">分卷购买</option>
+                      <option value="member">会员阅读</option>
+                    </select>
+                  </label>
+                  <label>
+                    免费章节数
+                    <input id="pricing-free-chapters" type="number" min="0" step="1" value="0" />
+                  </label>
+                  <label>
+                    单章价格 USD（已停用）
+                    <input id="pricing-chapter-price" type="number" min="0" step="0.01" placeholder="已停用" disabled />
+                  </label>
+                  <label>
+                    支持者价格 USD（已停用）
+                    <input id="pricing-supporter-price" type="number" min="0" step="0.01" placeholder="已停用" disabled />
+                  </label>
+                  <label>
+                    单章阅读点
+                    <input id="pricing-chapter-credits" type="number" min="1" step="1" placeholder="1" />
+                  </label>
+                  <label>
+                    阅读点包
+                    <input id="pricing-credit-packs" placeholder="10:1, 50:5, 100:10" />
+                  </label>
+                  <label class="admin-checkbox">
+                    <input id="pricing-tips-enabled" type="checkbox" />
+                    开启打赏
+                  </label>
+                  <label>
+                    打赏金额 USD
+                    <input id="pricing-tip-amounts" placeholder="1, 3, 5" />
+                  </label>
+                  <label class="admin-checkbox">
+                    <input id="pricing-bundles-enabled" type="checkbox" />
+                    开启多章折扣
+                  </label>
+                  <label>
+                    多章折扣
+                    <input id="pricing-bundles" placeholder="5:10, 10:20" />
+                  </label>
+                </div>
+                <section class="admin-effective-pricing" aria-labelledby="effective-pricing-title">
                 <div class="admin-v2-section-heading">
                   <div>
                     <p class="station-kicker">Effective Pricing</p>
@@ -533,84 +594,65 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   保存或载入小说作品 / 章节后，这里会读取公共 pricing API 的最终返回结果。
                 </div>
                 <div class="admin-inline-status" id="pricing-effective-status" role="status" aria-live="polite" hidden></div>
-              </section>
-            </section>
+                </section>
+              </div>
+            </details>
 
-            <section class="admin-v2-subpanel">
-              <div class="admin-v2-section-heading">
-                <div>
-                  <p class="station-kicker">Media</p>
-                  <h3>封面、导入备份与来源</h3>
+            <details class="admin-v2-disclosure">
+              <summary class="admin-disclosure-summary">
+                <span>
+                  <small>Media</small>
+                  <strong>封面与来源</strong>
+                </span>
+              </summary>
+              <div class="admin-disclosure-body">
+                <div class="admin-media-upload">
+                  <div>
+                    <strong>封面图片</strong>
+                    <span>JPG、PNG、WebP、GIF、AVIF，最大 5MB</span>
+                  </div>
+                  <div class="button-row">
+                    <label class="button button-secondary admin-file-button" for="content-cover-file">选择图片</label>
+                    <input class="admin-file-input" id="content-cover-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" />
+                    <button class="button button-primary" id="content-cover-upload" type="button">上传封面</button>
+                    <a class="button button-secondary" id="content-cover-open" href="#" target="_blank" rel="noreferrer" hidden>打开封面</a>
+                  </div>
+                  <figure class="admin-cover-preview" id="content-cover-preview" hidden></figure>
+                  <div class="admin-inline-status" id="content-cover-status" role="status" aria-live="polite" hidden></div>
+                </div>
+                <div class="admin-v2-form-grid">
+                  <label>
+                    Cover R2 Key
+                    <input id="content-cover-r2-key" />
+                  </label>
+                  <label>
+                    Cover Alt
+                    <input id="content-cover-alt" />
+                  </label>
+                  <label>
+                    Source Ref
+                    <input id="content-source-ref" />
+                  </label>
+                  <label>
+                    Revision Summary
+                    <input id="content-revision-summary" />
+                  </label>
                 </div>
               </div>
-              <div class="admin-media-upload">
-                <div>
-                  <strong>封面图片</strong>
-                  <span>支持 JPG、PNG、WebP、GIF、AVIF，单张不超过 5MB。</span>
-                </div>
-                <div class="button-row">
-                  <label class="button button-secondary admin-file-button" for="content-cover-file">选择封面图片</label>
-                  <input class="admin-file-input" id="content-cover-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" />
-                  <button class="button button-primary" id="content-cover-upload" type="button">上传封面</button>
-                  <a class="button button-secondary" id="content-cover-open" href="#" target="_blank" rel="noreferrer" hidden>打开封面</a>
-                </div>
-                <figure class="admin-cover-preview" id="content-cover-preview" hidden></figure>
-                <div class="admin-inline-status" id="content-cover-status" role="status" aria-live="polite" hidden></div>
-              </div>
-              <div class="admin-v2-form-grid">
-                <label>
-                  Cover R2 Key
-                  <input id="content-cover-r2-key" placeholder="content/media/covers/name.webp" />
-                </label>
-                <label>
-                  Cover Alt
-                  <input id="content-cover-alt" placeholder="封面描述" />
-                </label>
-                <label>
-                  Source Ref
-                  <input id="content-source-ref" placeholder="source path, import id, or external reference" />
-                </label>
-                <label>
-                  Revision Summary
-                  <input id="content-revision-summary" placeholder="本次修改说明" />
-                </label>
-              </div>
-            </section>
-
-            <section class="admin-v2-subpanel">
-              <div class="admin-v2-section-heading">
-                <div>
-                  <p class="station-kicker">Markdown</p>
-                  <h3>导入、预览与正文</h3>
-                </div>
-                <div class="button-row">
-                  <button class="button button-primary" type="submit" data-content-save-button>保存到后端内容平台</button>
-                  <label class="button button-secondary admin-file-button" for="content-file">导入 Markdown</label>
-                  <input class="admin-file-input" id="content-file" type="file" accept=".md,.markdown,text/markdown,text/plain" />
-                  <button class="button button-secondary" id="content-preview-button" type="button">刷新预览</button>
-                  <button class="button button-primary" id="content-worker-preview-button" type="button">打开 Worker 预览</button>
-                </div>
-              </div>
-              <textarea id="content-markdown" rows="18" spellcheck="false" placeholder="这里写正文 Markdown。导入带 frontmatter 的文件时，系统会自动填入上面的字段。"></textarea>
-              <div class="admin-v2-preview" id="content-preview">等待输入正文。</div>
-            </section>
-
-            <div class="button-row">
-              <button class="button button-primary" id="content-save" type="submit" data-content-save-button>保存到后端内容平台</button>
-              <button class="button button-secondary" id="content-reset" type="button">清空表单</button>
-            </div>
-            <div class="admin-inline-status" id="content-save-status" role="status" aria-live="polite" hidden></div>
+            </details>
           </form>
 
-          <section class="admin-v2-subpanel">
-            <div class="admin-v2-section-heading">
-              <div>
-                <p class="station-kicker">History</p>
-                <h3>修订记录</h3>
-              </div>
+          <details class="admin-v2-disclosure admin-v2-history">
+            <summary class="admin-disclosure-summary">
+              <span>
+                <small>History</small>
+                <strong>修订记录</strong>
+              </span>
+            </summary>
+            <div class="admin-disclosure-body">
+              <div class="admin-v2-list admin-v2-list--compact" id="revision-list"></div>
             </div>
-            <div class="admin-v2-list admin-v2-list--compact" id="revision-list"></div>
-          </section>
+          </details>
         </section>
 
         <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="imports-main" hidden>
@@ -3145,7 +3187,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const switchTab = async (name) => {
-      elements.tabs.forEach((tab) => tab.classList.toggle('is-active', tab.dataset.adminV2Tab === name));
+      elements.tabs.forEach((tab) => {
+        const isActive = tab.dataset.adminV2Tab === name;
+        tab.classList.toggle('is-active', isActive);
+        tab.setAttribute('aria-pressed', String(isActive));
+        tab.tabIndex = isActive ? 0 : -1;
+      });
       elements.panels.forEach((panel) => {
         const expected = panel.dataset.adminV2Panel.startsWith(`${name}-`);
         panel.hidden = !expected;
@@ -3161,7 +3208,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (name === 'audit') await loadAuditLogs();
     };
 
-    elements.tabs.forEach((tab) => tab.addEventListener('click', () => switchTab(tab.dataset.adminV2Tab)));
+    elements.tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => switchTab(tab.dataset.adminV2Tab));
+      tab.addEventListener('keydown', (event) => {
+        if (!['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'].includes(event.key)) return;
+        event.preventDefault();
+        const direction = ['ArrowDown', 'ArrowRight'].includes(event.key) ? 1 : -1;
+        const target = elements.tabs[(index + direction + elements.tabs.length) % elements.tabs.length];
+        target.focus();
+        switchTab(target.dataset.adminV2Tab);
+      });
+    });
     elements.contentForm.addEventListener('submit', saveContent);
     elements.signalForm.addEventListener('submit', importSignalBrief);
     elements.accessForm.addEventListener('submit', grantEntitlement);
@@ -3179,7 +3236,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#access-refresh').addEventListener('click', loadEntitlements);
     $('#audit-refresh').addEventListener('click', loadAuditLogs);
     $('#content-reset').addEventListener('click', () => resetForm(elements.fields.entryType.value));
-    $('#content-preview-button').addEventListener('click', renderPreview);
+    $('#content-preview-button').addEventListener('click', () => {
+      renderPreview();
+      $('#content-preview-disclosure').open = true;
+    });
     $('#content-worker-preview-button').addEventListener('click', openWorkerPreview);
     elements.coverUpload.addEventListener('click', uploadCoverImage);
     elements.effectivePricingRefresh.addEventListener('click', () => refreshEffectivePricingPreview());
