@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "channel": "stable",
+  "version": "0.1.21",
+  "build": 21,
+  "minimum_macos_version": "14.0",
+  "published_at": "2026-07-15T14:38:42Z",
+  "title": "猫栈拼音 0.1.21",
+  "release_notes": [
+    "偏好设置默认以 86% 紧凑比例显示，并可随窗口在 72% 至 100% 之间等比缩放。",
+    "修复触控板手势缩放可能造成的界面裁切或点击错位。",
+    "升级安装后可在确认后安全重新加载旧输入法进程，正常刷新无需注销或重启。",
+    "继续提供本地 trigram 联想、学习权重衰减、容量限制和多进程写入稳定性。"
+  ],
+  "release_page_url": "https://wwwstationcat.org/zh-hans/apps/privatepinyin/download/",
+  "package_url": "https://wwwstationcat.org/downloads/privatepinyin/PrivatePinyin-0.1.21.pkg",
+  "package_sha256": "660d1cc7d8674c8be0e3f30683deb0d6351fa0f76a4842c6cad46bb55f0a5026",
+  "package_size_bytes": 2620601
+}
