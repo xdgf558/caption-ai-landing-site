@@ -14724,12 +14724,6 @@ const downloadFiles = {
     contentType: 'application/octet-stream',
     limitKey: 'privatepinyin-0.1.9-pkg'
   },
-  '/downloads/stationcat-radar/StationCat-Radar-0.1.0-arm64.dmg': {
-    key: 'stationcat-radar/0.1.0/StationCat-Radar-0.1.0-arm64.dmg',
-    filename: 'StationCat-Radar-0.1.0-arm64.dmg',
-    contentType: 'application/x-apple-diskimage',
-    limitKey: 'stationcat-radar-0.1.0-arm64'
-  },
   '/downloads/simplecut-pro/SimpleCut-Pro-0.1.24-mac-arm64.dmg': {
     key: 'simplecut-pro/0.1.24/SimpleCut-Pro-0.1.24-mac-arm64.dmg',
     filename: 'SimpleCut-Pro-0.1.24-mac-arm64.dmg',

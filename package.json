@@ -9,7 +9,7 @@
     "dev": "astro dev --host 0.0.0.0",
     "build": "npm run build:novel-payment-config && astro build",
     "preview": "astro preview --host 0.0.0.0",
-    "test": "node scripts/test-reader-totp.mjs && node scripts/test-reader-bookmark-shortcut.mjs && node scripts/test-serials-hub-latest.mjs && node scripts/test-admin-import-delete.mjs && node scripts/test-novel-v2-reader-routes.mjs && node scripts/test-novel-reading-events.mjs && node scripts/test-reader-comments.mjs && node scripts/test-product-feedback.mjs && node scripts/test-privatepinyin-release.mjs && node scripts/test-novel-analytics-stats.mjs && node scripts/test-novel-ai-insights.mjs && node scripts/test-novelforge-writing-api.mjs && node scripts/test-novel-english-translation.mjs && node scripts/test-signal-strip.mjs"
+    "test": "node scripts/test-reader-totp.mjs && node scripts/test-reader-bookmark-shortcut.mjs && node scripts/test-serials-hub-latest.mjs && node scripts/test-admin-import-delete.mjs && node scripts/test-novel-v2-reader-routes.mjs && node scripts/test-novel-reading-events.mjs && node scripts/test-reader-comments.mjs && node scripts/test-product-feedback.mjs && node scripts/test-privatepinyin-release.mjs && node scripts/test-product-catalog.mjs && node scripts/test-novel-analytics-stats.mjs && node scripts/test-novel-ai-insights.mjs && node scripts/test-novelforge-writing-api.mjs && node scripts/test-novel-english-translation.mjs && node scripts/test-signal-strip.mjs"
   },
   "dependencies": {
     "astro": "^5.0.0",

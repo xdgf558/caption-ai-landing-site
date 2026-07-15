@@ -3944,9 +3944,15 @@ button.button {
   width: 42%;
 }
 
-.bench-card__icon--radar {
+.bench-card__icon--nodepilot {
   background: #e9f0ed;
-  color: #4b6d7b;
+}
+
+.bench-card__icon--nodepilot img {
+  border-radius: 24%;
+  box-shadow: 0 16px 28px rgba(80, 55, 35, 0.16);
+  max-width: 154px;
+  width: 44%;
 }
 
 .bench-card__icon--simplecut {
