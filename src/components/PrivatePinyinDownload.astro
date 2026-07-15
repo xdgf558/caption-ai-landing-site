@@ -32,8 +32,8 @@ const copy = {
     releaseNotes: [
       'iOS 版已開放 TestFlight 外部測試，可在 iPhone 或 iPad 上安裝並接收後續測試更新。',
       `Windows TSF 內測包更新到 ${windowsVersion}，提供 EXE 安裝包下載。`,
-      `${macVersion} 新增本機 trigram 聯想，最近兩個已選詞可共同影響下一候選。`,
-      '學習權重按 30 天半衰期自動衰減，並增加容量上限、自動淘汰和多進程並發寫入穩定性；所有學習記錄仍只保存在本機。',
+      `${macVersion} 的偏好設定預設以 86% 緊湊比例顯示，並可隨視窗在 72% 至 100% 之間等比縮放。`,
+      '修正觸控板手勢縮放可能造成的介面裁切或點擊錯位；升級後也會在確認後安全重新載入舊輸入法進程。',
       `macOS 安裝包目前為 ${macVersion}，輸入源仍為「猫栈拼音」。`,
       'Windows 包目前未簽名，安裝時可能出現 SmartScreen 或信任提示。'
     ],
@@ -60,8 +60,8 @@ const copy = {
     releaseNotes: [
       'iOS 版已开放 TestFlight 外部测试，可在 iPhone 或 iPad 上安装并接收后续测试更新。',
       `Windows TSF 内测包更新到 ${windowsVersion}，提供 EXE 安装包下载。`,
-      `${macVersion} 新增本地 trigram 联想，最近两个已选词可共同影响下一候选。`,
-      '学习权重按 30 天半衰期自动衰减，并增加容量上限、自动淘汰和多进程并发写入稳定性；所有学习记录仍只保存在本机。',
+      `${macVersion} 的偏好设置默认以 86% 紧凑比例显示，并可随窗口在 72% 至 100% 之间等比缩放。`,
+      '修复触控板手势缩放可能造成的界面裁切或点击错位；升级后也会在确认后安全重新加载旧输入法进程。',
       `macOS 安装包目前为 ${macVersion}，输入源仍为「猫栈拼音」。`,
       'Windows 包目前未签名，安装时可能出现 SmartScreen 或信任提示。'
     ],
@@ -88,8 +88,8 @@ const copy = {
     releaseNotes: [
       'The iOS build is now available through an external TestFlight group for installation and future test updates on iPhone or iPad.',
       `Updates the Windows TSF internal test build to ${windowsVersion}, available as an EXE installer.`,
-      `${macVersion} adds local trigram prediction so the two most recently selected words can jointly influence the next candidate.`,
-      'Learning weights decay with a 30-day half-life, with capacity limits, automatic eviction, and more stable multi-process writes. All learning records remain on the device.',
+      `${macVersion} opens Preferences at a compact 86% scale and resizes the complete interface proportionally from 72% to 100%.`,
+      'Fixes trackpad magnification paths that could clip controls or misalign pointer targets, and can safely refresh an older input-method process after an upgrade with confirmation.',
       `The macOS installer is currently ${macVersion}. The input source remains "猫栈拼音".`,
       'The Windows builds are unsigned and may trigger SmartScreen or trust prompts during install.'
     ],
@@ -116,8 +116,8 @@ const copy = {
     releaseNotes: [
       'iOS 版を TestFlight 外部テストで公開し、iPhone または iPad でインストールと今後のテスト更新を受け取れます。',
       `Windows TSF 内部テスト版を ${windowsVersion} に更新し、EXE で提供します。`,
-      `${macVersion} ではローカル trigram 予測を追加し、直近に選んだ2語が次の候補へ共同で反映されます。`,
-      '学習重みは30日の半減期で減衰し、容量上限、自動削除、複数プロセスからの安定した書き込みを追加しました。学習記録はすべて端末内にのみ保存されます。',
+      `${macVersion} では環境設定を既定で 86% のコンパクト表示にし、ウィンドウに合わせて 72% から 100% まで比例して拡大・縮小できます。`,
+      'トラックパッドの拡大操作による表示の欠けやクリック位置のずれを修正し、アップグレード後は確認のうえ古い入力メソッドプロセスを安全に再読み込みできます。',
       `macOS インストーラーは現在 ${macVersion} です。入力ソース名は「猫栈拼音」のままです。`,
       'Windows 版は未署名のため、インストール時に SmartScreen や信頼確認が表示される場合があります。'
     ],
