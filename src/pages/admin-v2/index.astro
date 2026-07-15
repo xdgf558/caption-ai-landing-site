@@ -385,7 +385,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
           </div>
 
-          <form id="content-form" class="admin-v2-form">
+          <form id="content-form" class="admin-v2-form" novalidate>
             <input id="content-entry-id" type="hidden" />
             <section class="admin-v2-subpanel admin-v2-editor-primary">
               <div class="admin-v2-section-heading">
@@ -425,6 +425,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <label>
                   Slug
                   <input id="content-slug" required placeholder="post-or-chapter-slug" />
+                </label>
+                <label hidden>
+                  父级 seriesSlug
+                  <input id="content-parent-slug" placeholder="novel-series-slug" />
+                </label>
+                <label hidden>
+                  章节序号
+                  <input id="content-chapter-number" type="number" min="1" step="1" />
                 </label>
                 <label class="admin-v2-field--wide">
                   标题
@@ -479,10 +487,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   </select>
                 </label>
                 <label>
-                  父级 seriesSlug
-                  <input id="content-parent-slug" placeholder="novel-series-slug" />
-                </label>
-                <label>
                   副标题
                   <input id="content-subtitle" />
                 </label>
@@ -493,10 +497,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <label>
                   Tags
                   <input id="content-tags" />
-                </label>
-                <label>
-                  章节序号
-                  <input id="content-chapter-number" type="number" min="1" step="1" />
                 </label>
                 <label>
                   分卷标题
@@ -2267,12 +2267,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const saveContent = async (event) => {
       event.preventDefault();
       const payload = buildPayload();
+      const hasValidChapterNumber = Number.isInteger(payload.chapterNumber) && payload.chapterNumber > 0;
       if (!payload.title || !payload.slug) {
         setSaveStatus('标题和 Slug 必填。', 'error');
         return;
       }
-      if (payload.entryType === 'novel_chapter' && (!payload.parentSlug || !payload.chapterNumber)) {
+      if (payload.entryType === 'novel_chapter' && (!payload.parentSlug || !hasValidChapterNumber)) {
         setSaveStatus('小说章节需要 seriesSlug 和章节序号。', 'error');
+        const missingField = payload.parentSlug ? elements.fields.chapterNumber : elements.fields.parentSlug;
+        missingField.focus();
         return;
       }
 
@@ -2297,11 +2300,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const openWorkerPreview = async () => {
       const payload = buildPayload();
+      const hasValidChapterNumber = Number.isInteger(payload.chapterNumber) && payload.chapterNumber > 0;
       if (!payload.title || !payload.slug) {
         setSaveStatus('标题和 Slug 必填，才能打开 Worker 预览。', 'error');
         return;
       }
-      if (payload.entryType === 'novel_chapter' && (!payload.parentSlug || !payload.chapterNumber)) {
+      if (payload.entryType === 'novel_chapter' && (!payload.parentSlug || !hasValidChapterNumber)) {
         setSaveStatus('小说章节预览需要 seriesSlug 和章节序号。', 'error');
         return;
       }

@@ -39,6 +39,17 @@ assert.ok(
 assert.match(adminSource, /class="admin-v2-disclosure" id="entry-pricing-panel"/);
 assert.match(adminSource, /class="admin-v2-disclosure admin-v2-history"/);
 assert.match(adminSource, /form="content-form" data-content-save-button/);
+assert.match(adminSource, /<form id="content-form" class="admin-v2-form" novalidate>/);
+assert.ok(
+  adminSource.indexOf('id="content-parent-slug"') < adminSource.indexOf('>发布设置</strong>'),
+  'Novel chapter seriesSlug should remain in the visible primary editor instead of a closed disclosure.'
+);
+assert.ok(
+  adminSource.indexOf('id="content-chapter-number"') < adminSource.indexOf('>发布设置</strong>'),
+  'Novel chapter number should remain in the visible primary editor instead of a closed disclosure.'
+);
+assert.match(adminSource, /Number\.isInteger\(payload\.chapterNumber\) && payload\.chapterNumber > 0/);
+assert.match(adminSource, /missingField\.focus\(\)/);
 assert.match(adminSource, /tab\.setAttribute\('aria-pressed', String\(isActive\)\)/);
 assert.match(adminSource, /content-preview-disclosure'\)\.open = true/);
 
