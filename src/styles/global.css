@@ -7779,7 +7779,7 @@ details[open] > .admin-disclosure-summary::after {
   border-top: 1px solid var(--admin-line);
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   padding-top: 14px;
 }
 
@@ -7855,6 +7855,178 @@ details[open] > .admin-disclosure-summary::after {
 .admin-signal-source-row__actions .button {
   min-height: 32px;
   padding: 6px 9px;
+}
+
+.admin-signal-candidate-filters {
+  align-items: end;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(90px, 1fr)) minmax(160px, 1.5fr) auto;
+}
+
+.admin-signal-candidate-filters label,
+.admin-signal-candidate-review label {
+  color: var(--admin-muted);
+  display: grid;
+  font-size: 10px;
+  font-weight: 850;
+  gap: 4px;
+}
+
+.admin-signal-candidate-filters select,
+.admin-signal-candidate-filters input,
+.admin-signal-candidate-review input {
+  min-height: 36px;
+}
+
+.admin-signal-candidate-filters__query {
+  grid-column: auto;
+}
+
+.admin-signal-candidate-filters .button {
+  min-height: 36px;
+}
+
+.admin-signal-candidate-summary {
+  background: #f4f7f5;
+  border: 1px solid #d7e0dc;
+  border-radius: 4px;
+  color: #40524c;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.45;
+  padding: 8px 10px;
+}
+
+.admin-signal-candidate-summary[data-state="setup"] {
+  background: #fff8e9;
+  border-color: #e6cf9d;
+  color: #725829;
+}
+
+.admin-signal-candidate-row {
+  gap: 9px;
+}
+
+.admin-signal-candidate-row__heading,
+.admin-signal-candidate-row__meta,
+.admin-signal-candidate-review,
+.admin-signal-candidate-review .button-row {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
+.admin-signal-candidate-row__heading {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.admin-signal-candidate-row__heading strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-signal-score {
+  align-items: baseline;
+  background: #eef1ef;
+  border: 1px solid #ccd4d0;
+  border-radius: 4px;
+  color: #52605b;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 9px;
+  font-weight: 900;
+  gap: 4px;
+  min-width: 68px;
+  padding: 4px 6px;
+}
+
+.admin-signal-score b {
+  color: inherit;
+  font-size: 14px;
+}
+
+.admin-signal-score[data-priority="high"] {
+  background: #e4f3eb;
+  border-color: #9fcab7;
+  color: #246049;
+}
+
+.admin-signal-score[data-priority="medium"] {
+  background: #fff4d9;
+  border-color: #dfc47f;
+  color: #75591d;
+}
+
+.admin-signal-candidate-row__meta {
+  color: var(--admin-muted);
+  flex-wrap: wrap;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-signal-candidate-row__meta span {
+  border-right: 1px solid var(--admin-line);
+  padding-right: 7px;
+}
+
+.admin-signal-candidate-row__meta span:last-child {
+  border-right: 0;
+  padding-right: 0;
+}
+
+.admin-signal-score-details {
+  color: var(--admin-muted);
+  font-size: 11px;
+}
+
+.admin-signal-score-details summary {
+  color: #315e51;
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.admin-signal-score-details ul {
+  margin: 7px 0 0;
+  padding-left: 18px;
+}
+
+.admin-signal-candidate-note {
+  -webkit-line-clamp: unset !important;
+}
+
+.admin-signal-candidate-review {
+  align-items: end;
+  border-top: 1px solid var(--admin-line);
+  flex-wrap: wrap;
+  padding-top: 9px;
+}
+
+.admin-signal-candidate-review label {
+  flex: 1 1 240px;
+}
+
+.admin-signal-candidate-review .button-row {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.admin-signal-candidate-review .button {
+  min-height: 36px;
+  padding: 7px 10px;
+}
+
+.admin-signal-candidate-review .button-danger {
+  background: #fff1ef;
+  border-color: #d9a29a;
+  color: #8d342d;
+}
+
+.admin-signal-candidate-review .button-danger:hover {
+  background: #f9ddd8;
+  border-color: #bd776d;
+  color: #6f241f;
 }
 
 @media (max-width: 1040px) {
@@ -7941,6 +8113,18 @@ details[open] > .admin-disclosure-summary::after {
 
   .admin-v2-shell {
     padding: 14px 10px 54px;
+  }
+
+  .admin-signal-candidate-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-signal-candidate-filters__query {
+    grid-column: 1 / -1;
+  }
+
+  .admin-signal-candidate-filters .button {
+    width: 100%;
   }
 
   .admin-v2-tabs {

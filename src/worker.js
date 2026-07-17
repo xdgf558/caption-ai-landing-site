@@ -7,6 +7,10 @@ import {
   signalContentHash,
   supportedSignalCollectionAdapters
 } from './signalCollection.js';
+import {
+  enrichSignalCandidateRows,
+  signalScorePriority
+} from './signalTriage.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -2400,8 +2404,13 @@ const isMissingSignalAutomationTablesError = (error) =>
   /no such table: signal_(sources|collection_runs|candidates)/i.test(error?.message || '');
 const isMissingSignalCollectionPhase2Error = (error) =>
   /no such table: signal_collection_tasks|no such column: (?:http_etag|processed_source_count)/i.test(error?.message || '');
+const isMissingSignalCandidateTriageError = (error) =>
+  /no such table: signal_candidate_reviews|no such column: (?:score_breakdown_json|cluster_key|decision_note|scored_at)/i.test(
+    error?.message || ''
+  );
 const readySignalAutomationDatabases = new WeakSet();
 const readySignalCollectionPhase2Databases = new WeakSet();
+const readySignalCandidateTriageDatabases = new WeakSet();
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -2437,6 +2446,27 @@ const ensureSignalCollectionPhase2Ready = async (db) => {
     return true;
   } catch (error) {
     if (isMissingSignalAutomationTablesError(error) || isMissingSignalCollectionPhase2Error(error)) return false;
+    throw error;
+  }
+};
+
+const ensureSignalCandidateTriageReady = async (db) => {
+  if (readySignalCandidateTriageDatabases.has(db)) return true;
+  try {
+    await db
+      .prepare('SELECT score_breakdown_json, cluster_key, decision_note, scored_at FROM signal_candidates LIMIT 1')
+      .first();
+    await db.prepare('SELECT id FROM signal_candidate_reviews LIMIT 1').first();
+    readySignalCandidateTriageDatabases.add(db);
+    return true;
+  } catch (error) {
+    if (
+      isMissingSignalAutomationTablesError(error) ||
+      isMissingSignalCollectionPhase2Error(error) ||
+      isMissingSignalCandidateTriageError(error)
+    ) {
+      return false;
+    }
     throw error;
   }
 };
@@ -9748,6 +9778,7 @@ const signalAutomationCategories = new Set(['ai', 'tech', 'economy', 'market', '
 const signalAutomationTrustTiers = new Set(['primary', 'established', 'community']);
 const signalAutomationRunStatuses = new Set(['queued', 'running', 'completed', 'partial', 'failed', 'cancelled']);
 const signalAutomationCandidateStatuses = new Set(['new', 'shortlisted', 'rejected', 'used']);
+const signalCandidateReviewActions = new Set(['shortlist', 'reject', 'restore', 'rescore']);
 const signalAutomationDefaultAdapters = Object.freeze({ api: 'json', page: 'html', rss: 'rss' });
 
 const signalAutomationSetupResponse = (kind) => {
@@ -9763,6 +9794,19 @@ const signalAutomationSetupResponse = (kind) => {
     ...(collections[kind] || {})
   });
 };
+
+const signalCandidateTriageSetupResponse = () =>
+  privateJson(
+    {
+      ok: false,
+      code: 'SIGNAL_CANDIDATE_TRIAGE_NOT_READY',
+      message: '先应用 migrations/0021_signal_candidate_triage.sql，再审核候选资讯。',
+      migration: '0021_signal_candidate_triage.sql',
+      setupRequired: true,
+      triageReady: false
+    },
+    { status: 503 }
+  );
 
 const signalSourceHealth = (row) => {
   if (!row.is_enabled) return 'paused';
@@ -9839,6 +9883,15 @@ const signalCandidateToJson = (row) => ({
   category: row.category,
   status: row.status,
   relevanceScore: row.relevance_score === null || row.relevance_score === undefined ? null : Number(row.relevance_score),
+  scorePriority:
+    row.relevance_score === null || row.relevance_score === undefined
+      ? 'unscored'
+      : signalScorePriority(Number(row.relevance_score)),
+  scoreBreakdown: parseStoredJson(row.score_breakdown_json, {}),
+  clusterKey: row.cluster_key || '',
+  clusterSize: normalizePositiveInteger(row.cluster_size, row.cluster_key ? 1 : 0),
+  decisionNote: row.decision_note || '',
+  scoredAt: row.scored_at || null,
   contentHash: row.content_hash,
   metadata: parseStoredJson(row.metadata_json, {}),
   reviewedBy: row.reviewed_by,
@@ -10195,41 +10248,317 @@ const handleAdminListSignalCandidates = async (request, env) => {
   const requestedStatus = cleanText(url.searchParams.get('status'), 30).toLowerCase();
   const status = signalAutomationCandidateStatuses.has(requestedStatus) ? requestedStatus : '';
   const sourceId = cleanText(url.searchParams.get('sourceId'), 120);
+  const requestedCategory = cleanText(url.searchParams.get('category'), 30).toLowerCase();
+  const category = signalAutomationCategories.has(requestedCategory) ? requestedCategory : '';
+  const query = cleanText(url.searchParams.get('query'), 160);
+  const requestedMinScore = Number.parseInt(url.searchParams.get('minScore') || '0', 10);
+  const minScore = Number.isFinite(requestedMinScore) ? Math.min(Math.max(requestedMinScore, 0), 100) : 0;
   const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 50), 1), 100);
-  const clauses = [];
-  const params = [];
-  if (status) {
-    clauses.push('candidate.status = ?');
-    params.push(status);
-  }
+  const baseClauses = [];
+  const baseParams = [];
   if (sourceId) {
-    clauses.push('candidate.source_id = ?');
-    params.push(sourceId);
+    baseClauses.push('candidate.source_id = ?');
+    baseParams.push(sourceId);
   }
-  const response = await db
-    .prepare(
-      `SELECT candidate.*, source.name AS source_name
-       FROM signal_candidates AS candidate
-       LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
-       ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
-       ORDER BY COALESCE(candidate.published_at, candidate.created_at) DESC
-       LIMIT ?`
-    )
-    .bind(...params, limit)
-    .all();
+  if (category) {
+    baseClauses.push('candidate.category = ?');
+    baseParams.push(category);
+  }
+  if (query) {
+    baseClauses.push('(candidate.title LIKE ? OR candidate.summary LIKE ?)');
+    baseParams.push(`%${query}%`, `%${query}%`);
+  }
+  if (minScore > 0) {
+    baseClauses.push('candidate.relevance_score >= ?');
+    baseParams.push(minScore);
+  }
+  const listClauses = [...baseClauses];
+  const listParams = [...baseParams];
+  if (status) {
+    listClauses.push('candidate.status = ?');
+    listParams.push(status);
+  }
+  const triageReady = await ensureSignalCandidateTriageReady(db);
+  const response = triageReady
+    ? await db
+        .prepare(
+          `WITH cluster_sizes AS (
+             SELECT cluster_key, COUNT(*) AS cluster_size
+             FROM signal_candidates
+             WHERE cluster_key <> ''
+             GROUP BY cluster_key
+           )
+           SELECT candidate.*, source.name AS source_name,
+                  COALESCE(cluster_sizes.cluster_size, 0) AS cluster_size
+           FROM signal_candidates AS candidate
+           LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
+           LEFT JOIN cluster_sizes ON cluster_sizes.cluster_key = candidate.cluster_key
+           ${listClauses.length ? `WHERE ${listClauses.join(' AND ')}` : ''}
+           ORDER BY CASE candidate.status
+                      WHEN 'new' THEN 0
+                      WHEN 'shortlisted' THEN 1
+                      WHEN 'rejected' THEN 2
+                      ELSE 3
+                    END,
+                    candidate.relevance_score DESC,
+                    COALESCE(candidate.published_at, candidate.created_at) DESC
+           LIMIT ?`
+        )
+        .bind(...listParams, limit)
+        .all()
+    : await db
+        .prepare(
+          `SELECT candidate.*, source.name AS source_name
+           FROM signal_candidates AS candidate
+           LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
+           ${listClauses.length ? `WHERE ${listClauses.join(' AND ')}` : ''}
+           ORDER BY COALESCE(candidate.published_at, candidate.created_at) DESC
+           LIMIT ?`
+        )
+        .bind(...listParams, limit)
+        .all();
   const candidates = (response.results || []).map(signalCandidateToJson);
+  const summaryStatement = db.prepare(
+      `SELECT COUNT(*) AS total,
+              SUM(CASE WHEN candidate.status = 'new' THEN 1 ELSE 0 END) AS new_count,
+              SUM(CASE WHEN candidate.status = 'shortlisted' THEN 1 ELSE 0 END) AS shortlisted_count,
+              SUM(CASE WHEN candidate.status = 'rejected' THEN 1 ELSE 0 END) AS rejected_count,
+              SUM(CASE WHEN candidate.status = 'used' THEN 1 ELSE 0 END) AS used_count,
+              AVG(candidate.relevance_score) AS average_score
+       FROM signal_candidates AS candidate
+       ${baseClauses.length ? `WHERE ${baseClauses.join(' AND ')}` : ''}`
+    );
+  const summaryRow = baseParams.length
+    ? await summaryStatement.bind(...baseParams).first()
+    : await summaryStatement.first();
   return privateJson({
     ok: true,
     setupRequired: false,
+    triageReady,
     candidates,
     summary: {
-      total: candidates.length,
-      new: candidates.filter((candidate) => candidate.status === 'new').length,
-      shortlisted: candidates.filter((candidate) => candidate.status === 'shortlisted').length,
-      rejected: candidates.filter((candidate) => candidate.status === 'rejected').length,
-      used: candidates.filter((candidate) => candidate.status === 'used').length
+      total: normalizePositiveInteger(summaryRow?.total, 0),
+      new: normalizePositiveInteger(summaryRow?.new_count, 0),
+      shortlisted: normalizePositiveInteger(summaryRow?.shortlisted_count, 0),
+      rejected: normalizePositiveInteger(summaryRow?.rejected_count, 0),
+      used: normalizePositiveInteger(summaryRow?.used_count, 0),
+      averageScore:
+        summaryRow?.average_score === null || summaryRow?.average_score === undefined
+          ? null
+          : Number(Number(summaryRow.average_score).toFixed(1))
     }
   });
+};
+
+const normalizeSignalCandidateReviewPayload = (payload) => {
+  const action = cleanText(payload?.action, 30).toLowerCase();
+  if (!signalCandidateReviewActions.has(action)) {
+    throw signalSourceValidationError('SIGNAL_CANDIDATE_ACTION_INVALID', '候选操作无效。');
+  }
+  const rawIds = Array.isArray(payload?.candidateIds)
+    ? payload.candidateIds
+    : [payload?.candidateId || payload?.id].filter(Boolean);
+  const candidateIds = [...new Set(rawIds.map((value) => cleanText(value, 120)).filter(Boolean))];
+  if (action !== 'rescore' && !candidateIds.length) {
+    throw signalSourceValidationError('SIGNAL_CANDIDATE_ID_REQUIRED', '至少选择一条候选资讯。');
+  }
+  if (candidateIds.length > 25) {
+    throw signalSourceValidationError('SIGNAL_CANDIDATE_LIMIT_EXCEEDED', '单次最多审核 25 条候选资讯。');
+  }
+  return {
+    action,
+    candidateIds,
+    note: cleanText(payload?.note, 500)
+  };
+};
+
+const rescoreSignalCandidates = async (db) => {
+  const response = await db
+    .prepare(
+      `SELECT candidate.*, source.trust_tier AS source_trust_tier,
+              source.category AS source_category
+       FROM signal_candidates AS candidate
+       LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
+       ORDER BY COALESCE(candidate.published_at, candidate.created_at) DESC
+       LIMIT 500`
+    )
+    .all();
+  const rows = (response.results || []).map((row) => ({
+    ...row,
+    source: {
+      category: row.source_category || row.category,
+      trust_tier: row.source_trust_tier || 'community'
+    }
+  }));
+  const enriched = await enrichSignalCandidateRows(rows, { now: new Date() });
+  for (let index = 0; index < enriched.length; index += 50) {
+    const chunk = enriched.slice(index, index + 50);
+    await db.batch(
+      chunk.map((row) =>
+        db
+          .prepare(
+            `UPDATE signal_candidates
+             SET relevance_score = ?, score_breakdown_json = ?, cluster_key = ?,
+                 metadata_json = ?, scored_at = ?, updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?`
+          )
+          .bind(
+            row.relevanceScore,
+            row.scoreBreakdownJson,
+            row.clusterKey,
+            row.metadataJson,
+            row.scoredAt,
+            row.id
+          )
+      )
+    );
+  }
+  return enriched.length;
+};
+
+const handleAdminReviewSignalCandidates = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureSignalAutomationTablesReady(db)) || !(await ensureSignalCandidateTriageReady(db))) {
+    return signalCandidateTriageSetupResponse();
+  }
+  if (!(await ensureContentTablesReady(db)) || !(await ensureAdminAuditLogsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'ADMIN_AUDIT_NOT_READY',
+        message: '内容库或审计日志表未初始化，候选审核已阻止。'
+      },
+      { status: 503 }
+    );
+  }
+
+  const actorEmail = await getAdminActorEmail(request, env);
+  if (!actorEmail) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_CANDIDATE_ADMIN_REQUIRED', message: '管理员身份无效或已过期。' },
+      { status: 401 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid candidate review JSON.' }, { status: 400 });
+  }
+
+  let normalized;
+  try {
+    normalized = normalizeSignalCandidateReviewPayload(payload);
+  } catch (error) {
+    return privateJson(
+      { ok: false, code: error.code || 'SIGNAL_CANDIDATE_REVIEW_INVALID', message: error.message },
+      { status: 400 }
+    );
+  }
+
+  if (normalized.action === 'rescore') {
+    const rescored = await rescoreSignalCandidates(db);
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: 'signal_candidates_rescore',
+      targetType: 'signal_candidate',
+      targetId: 'all',
+      targetSlug: 'candidate-review-queue',
+      metadata: { rescored }
+    });
+    return privateJson({ ok: true, rescored });
+  }
+
+  const placeholders = normalized.candidateIds.map(() => '?').join(', ');
+  const response = await db
+    .prepare(`SELECT * FROM signal_candidates WHERE id IN (${placeholders})`)
+    .bind(...normalized.candidateIds)
+    .all();
+  const candidates = response.results || [];
+  if (candidates.length !== normalized.candidateIds.length) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_CANDIDATE_NOT_FOUND', message: '部分候选资讯已经不存在，请刷新后重试。' },
+      { status: 404 }
+    );
+  }
+  if (candidates.some((candidate) => candidate.status === 'used')) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_CANDIDATE_ALREADY_USED', message: '已用于简报的候选不能修改审核状态。' },
+      { status: 409 }
+    );
+  }
+
+  const targetStatus = {
+    reject: 'rejected',
+    restore: 'new',
+    shortlist: 'shortlisted'
+  }[normalized.action];
+  const changes = candidates.filter((candidate) => candidate.status !== targetStatus);
+  if (!changes.length) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_CANDIDATE_STATUS_UNCHANGED', message: '候选资讯已经处于这个状态。' },
+      { status: 409 }
+    );
+  }
+
+  const statements = [];
+  for (const candidate of changes) {
+    statements.push(
+      db
+        .prepare(
+          `UPDATE signal_candidates
+           SET status = ?, decision_note = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ? AND status = ?`
+        )
+        .bind(targetStatus, normalized.note, actorEmail, candidate.id, candidate.status),
+      db
+        .prepare(
+          `INSERT INTO signal_candidate_reviews (
+             id, candidate_id, action, from_status, to_status, note, actor_email
+           ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+        )
+        .bind(
+          `signal-review-${randomToken(14)}`,
+          candidate.id,
+          normalized.action,
+          candidate.status,
+          targetStatus,
+          normalized.note,
+          actorEmail
+        )
+    );
+  }
+  await db.batch(statements);
+  await insertAdminAuditLog(db, {
+    actorEmail,
+    action: `signal_candidate_${normalized.action}`,
+    targetType: 'signal_candidate',
+    targetId: changes.length === 1 ? changes[0].id : 'batch',
+    targetSlug: changes.length === 1 ? changes[0].title : `${changes.length} candidates`,
+    metadata: {
+      candidateIds: changes.map((candidate) => candidate.id),
+      fromStatuses: [...new Set(changes.map((candidate) => candidate.status))],
+      note: normalized.note,
+      toStatus: targetStatus
+    }
+  });
+
+  const updatedResponse = await db
+    .prepare(
+      `SELECT candidate.*, source.name AS source_name,
+              (SELECT COUNT(*)
+               FROM signal_candidates AS related
+               WHERE related.cluster_key <> '' AND related.cluster_key = candidate.cluster_key) AS cluster_size
+       FROM signal_candidates AS candidate
+       LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
+       WHERE candidate.id IN (${placeholders})`
+    )
+    .bind(...normalized.candidateIds)
+    .all();
+  return privateJson({ ok: true, candidates: (updatedResponse.results || []).map(signalCandidateToJson) });
 };
 
 const signalCollectionMaxAttempts = 3;
@@ -10591,8 +10920,10 @@ const buildSignalCandidateRows = async (source, runId, collection) => {
     rows.push({
       author: cleanText(item.author, 160),
       canonicalUrl,
+      category: source.category || 'general',
       contentHash,
       externalId: cleanText(item.externalId, 300),
+      id: `signal-candidate-${randomToken(14)}`,
       metadataJson: JSON.stringify({
         adapter: getSignalSourceAdapter(source),
         fetchedFrom: collection.finalUrl,
@@ -10617,36 +10948,84 @@ const buildSignalCandidateRows = async (source, runId, collection) => {
 
 const insertSignalCandidates = async (db, source, rows) => {
   if (!rows.length) return { acceptedCount: 0, duplicateCount: 0 };
+  const triageReady = await ensureSignalCandidateTriageReady(db);
+  let insertRows = rows;
+  if (triageReady) {
+    const existingResponse = await db
+      .prepare(
+        `SELECT id, title, cluster_key
+         FROM signal_candidates
+         WHERE created_at >= datetime('now', '-7 days')
+         ORDER BY created_at DESC
+         LIMIT 300`
+      )
+      .all();
+    insertRows = await enrichSignalCandidateRows(rows, {
+      existingCandidates: existingResponse.results || [],
+      now: new Date(),
+      source
+    });
+  }
   const results = await db.batch(
-    rows.map((row) =>
-      db
-        .prepare(
-          `INSERT OR IGNORE INTO signal_candidates (
-             id, source_id, run_id, external_id, canonical_url, title, summary,
-             author, published_at, language, category, status, content_hash,
-             raw_payload_json, metadata_json
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?)`
-        )
-        .bind(
-          `signal-candidate-${randomToken(14)}`,
-          source.id,
-          row.runId,
-          row.externalId,
-          row.canonicalUrl,
-          row.title,
-          row.summary,
-          row.author,
-          row.publishedAt,
-          source.language || 'en',
-          source.category || 'general',
-          row.contentHash,
-          row.rawPayloadJson,
-          row.metadataJson
-        )
+    insertRows.map((row) =>
+      triageReady
+        ? db
+            .prepare(
+              `INSERT OR IGNORE INTO signal_candidates (
+                 id, source_id, run_id, external_id, canonical_url, title, summary,
+                 author, published_at, language, category, status, relevance_score,
+                 content_hash, raw_payload_json, metadata_json, score_breakdown_json,
+                 cluster_key, scored_at
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, ?, ?)`
+            )
+            .bind(
+              row.id,
+              source.id,
+              row.runId,
+              row.externalId,
+              row.canonicalUrl,
+              row.title,
+              row.summary,
+              row.author,
+              row.publishedAt,
+              source.language || 'en',
+              source.category || 'general',
+              row.relevanceScore,
+              row.contentHash,
+              row.rawPayloadJson,
+              row.metadataJson,
+              row.scoreBreakdownJson,
+              row.clusterKey,
+              row.scoredAt
+            )
+        : db
+            .prepare(
+              `INSERT OR IGNORE INTO signal_candidates (
+                 id, source_id, run_id, external_id, canonical_url, title, summary,
+                 author, published_at, language, category, status, content_hash,
+                 raw_payload_json, metadata_json
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?)`
+            )
+            .bind(
+              row.id,
+              source.id,
+              row.runId,
+              row.externalId,
+              row.canonicalUrl,
+              row.title,
+              row.summary,
+              row.author,
+              row.publishedAt,
+              source.language || 'en',
+              source.category || 'general',
+              row.contentHash,
+              row.rawPayloadJson,
+              row.metadataJson
+            )
     )
   );
   const acceptedCount = results.reduce((total, result) => total + getD1ChangeCount(result), 0);
-  return { acceptedCount, duplicateCount: Math.max(rows.length - acceptedCount, 0) };
+  return { acceptedCount, duplicateCount: Math.max(insertRows.length - acceptedCount, 0) };
 };
 
 const completeSignalCollectionTask = async (db, source, task, collection, counts) => {
@@ -16687,6 +17066,7 @@ export const __readerTotpTestHooks = {
   handleAdminAggregateNovelAnalytics,
   handleAdminGenerateNovelAiInsights,
   handleAdminListSignalCandidates,
+  handleAdminReviewSignalCandidates,
   handleAdminListSignalCollectionRuns,
   handleAdminListSignalSources,
   handleAdminCollectSignalSources,
@@ -16697,6 +17077,7 @@ export const __readerTotpTestHooks = {
   handleAdminModerateReaderComment,
   handleAdminUpdateProductFeedback,
   handleAdminSaveSignalSource,
+  normalizeSignalCandidateReviewPayload,
   handleSignalCollectionQueue,
   handleSignalCollectionSchedule,
   handleNovelForgeAnalytics,
@@ -17082,6 +17463,7 @@ export default {
 
     if (url.pathname === '/admin/api/signal/candidates') {
       if (request.method === 'GET') return handleAdminListSignalCandidates(request, env);
+      if (request.method === 'POST') return handleAdminReviewSignalCandidates(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
