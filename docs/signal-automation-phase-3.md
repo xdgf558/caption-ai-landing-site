@@ -26,4 +26,4 @@ Do not deploy this phase independently. When the full Signal automation project 
 2. `0020_signal_collection.sql`
 3. `0021_signal_candidate_triage.sql`
 
-Phase 4 can consume only shortlisted candidates when generating a draft brief. It must continue to require human review before public publishing.
+Phase 4 consumes only shortlisted candidates, saves an editable content-platform draft, and keeps public publishing behind an explicit editor action. See `docs/signal-automation-phase-4.md`.
