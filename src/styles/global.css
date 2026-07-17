@@ -7827,6 +7827,11 @@ details[open] > .admin-disclosure-summary::after {
   color: #626861;
 }
 
+#signal-automation-summary[data-state="error"] {
+  color: #a44848;
+  font-weight: 850;
+}
+
 .admin-signal-source-row__actions .button {
   min-height: 32px;
   padding: 6px 9px;

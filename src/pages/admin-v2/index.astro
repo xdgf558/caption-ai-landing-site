@@ -2145,30 +2145,43 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const loadSignalAutomation = async () => {
-      const [sourcesPayload, runsPayload, candidatesPayload] = await Promise.all([
-        apiJson('/admin/api/signal/sources'),
-        apiJson('/admin/api/signal/runs?limit=20'),
-        apiJson('/admin/api/signal/candidates?limit=30')
-      ]);
-      const setupRequired = sourcesPayload.setupRequired || runsPayload.setupRequired || candidatesPayload.setupRequired;
-      if (setupRequired) {
+      elements.signalAutomationSummary.textContent = '正在读取来源白名单。';
+      delete elements.signalAutomationSummary.dataset.state;
+      try {
+        const [sourcesPayload, runsPayload, candidatesPayload] = await Promise.all([
+          apiJson('/admin/api/signal/sources'),
+          apiJson('/admin/api/signal/runs?limit=20'),
+          apiJson('/admin/api/signal/candidates?limit=30')
+        ]);
+        const setupRequired = sourcesPayload.setupRequired || runsPayload.setupRequired || candidatesPayload.setupRequired;
+        if (setupRequired) {
+          state.signalSources = [];
+          state.signalRuns = [];
+          state.signalCandidates = [];
+          elements.signalAutomationSummary.textContent = '待应用 migrations/0019_signal_automation.sql';
+          renderEmpty(elements.signalSourcesList, '请先对生产 D1 应用 0019_signal_automation.sql。');
+          renderEmpty(elements.signalRunsList, '数据表尚未初始化。');
+          renderEmpty(elements.signalCandidatesList, '数据表尚未初始化。');
+          return;
+        }
+        state.signalSources = sourcesPayload.sources || [];
+        state.signalRuns = runsPayload.runs || [];
+        state.signalCandidates = candidatesPayload.candidates || [];
+        const sourceSummary = sourcesPayload.summary || {};
+        elements.signalAutomationSummary.textContent = `${sourceSummary.total || 0} 个来源 · ${sourceSummary.enabled || 0} 启用 · 未启动自动采集`;
+        renderSignalSources();
+        renderSignalRuns();
+        renderSignalCandidates();
+      } catch (error) {
         state.signalSources = [];
         state.signalRuns = [];
         state.signalCandidates = [];
-        elements.signalAutomationSummary.textContent = '待应用 migrations/0019_signal_automation.sql';
-        renderEmpty(elements.signalSourcesList, '请先对生产 D1 应用 0019_signal_automation.sql。');
-        renderEmpty(elements.signalRunsList, '数据表尚未初始化。');
-        renderEmpty(elements.signalCandidatesList, '数据表尚未初始化。');
-        return;
+        elements.signalAutomationSummary.dataset.state = 'error';
+        elements.signalAutomationSummary.textContent = `读取失败：${error.message}`;
+        renderEmpty(elements.signalSourcesList, '来源白名单读取失败，请稍后重试。');
+        renderEmpty(elements.signalRunsList, '采集运行记录暂时不可用。');
+        renderEmpty(elements.signalCandidatesList, '候选资讯暂时不可用。');
       }
-      state.signalSources = sourcesPayload.sources || [];
-      state.signalRuns = runsPayload.runs || [];
-      state.signalCandidates = candidatesPayload.candidates || [];
-      const sourceSummary = sourcesPayload.summary || {};
-      elements.signalAutomationSummary.textContent = `${sourceSummary.total || 0} 个来源 · ${sourceSummary.enabled || 0} 启用 · 未启动自动采集`;
-      renderSignalSources();
-      renderSignalRuns();
-      renderSignalCandidates();
     };
 
     const saveSignalSource = async (event) => {

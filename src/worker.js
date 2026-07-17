@@ -2391,6 +2391,7 @@ const isMissingChapterStatsError = (error) => /no such table: chapter_stats/i.te
 const isMissingAiInsightsError = (error) => /no such table: ai_insights/i.test(error?.message || '');
 const isMissingSignalAutomationTablesError = (error) =>
   /no such table: signal_(sources|collection_runs|candidates)/i.test(error?.message || '');
+const readySignalAutomationDatabases = new WeakSet();
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -2403,13 +2404,25 @@ const ensureContentTablesReady = async (db) => {
 };
 
 const ensureSignalAutomationTablesReady = async (db) => {
+  if (readySignalAutomationDatabases.has(db)) return true;
   try {
     await db.prepare('SELECT id FROM signal_sources LIMIT 1').first();
     await db.prepare('SELECT id FROM signal_collection_runs LIMIT 1').first();
     await db.prepare('SELECT id FROM signal_candidates LIMIT 1').first();
+    readySignalAutomationDatabases.add(db);
     return true;
   } catch (error) {
     if (isMissingSignalAutomationTablesError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureAdminAuditLogsReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM admin_audit_logs LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingContentTablesError(error)) return false;
     throw error;
   }
 };
@@ -9652,6 +9665,7 @@ const buildSignalImportBackupKey = (requestId) => {
   return `content/imports/signal/${year}/${month}/${safeRequestId}-${Date.now()}-${token}.json`;
 };
 
+// Manual brief sources also use this normalizer, so fragments never create duplicate source links.
 const normalizeSignalSourceUrl = (value) => {
   const valueText = cleanText(value, 1000);
   if (!valueText) return '';
@@ -9659,6 +9673,67 @@ const normalizeSignalSourceUrl = (value) => {
     const url = new URL(valueText);
     if (!['http:', 'https:'].includes(url.protocol)) return '';
     url.hash = '';
+    return url.toString();
+  } catch {
+    return '';
+  }
+};
+
+const blockedSignalAutomationHostSuffixes = new Set([
+  'arpa',
+  'example',
+  'home',
+  'internal',
+  'invalid',
+  'lan',
+  'local',
+  'localhost',
+  'onion',
+  'test'
+]);
+
+const isBlockedSignalAutomationIpv4 = (hostname) => {
+  const parts = hostname.split('.');
+  if (parts.length !== 4 || parts.some((part) => !/^\d{1,3}$/.test(part))) return false;
+  const octets = parts.map((part) => Number.parseInt(part, 10));
+  if (octets.some((octet) => octet < 0 || octet > 255)) return true;
+  const [first, second, third] = octets;
+  return (
+    first === 0 ||
+    first === 10 ||
+    (first === 100 && second >= 64 && second <= 127) ||
+    first === 127 ||
+    (first === 169 && second === 254) ||
+    (first === 172 && second >= 16 && second <= 31) ||
+    (first === 192 && second === 0 && [0, 2].includes(third)) ||
+    (first === 192 && second === 168) ||
+    (first === 198 && [18, 19].includes(second)) ||
+    (first === 198 && second === 51 && third === 100) ||
+    (first === 203 && second === 0 && third === 113) ||
+    first >= 224
+  );
+};
+
+const isBlockedSignalAutomationHostname = (value) => {
+  const hostname = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^\[|\]$/g, '')
+    .replace(/\.$/, '');
+  if (!hostname || hostname.includes(':')) return true;
+  if (isBlockedSignalAutomationIpv4(hostname)) return true;
+  if (!hostname.includes('.')) return true;
+  return [...blockedSignalAutomationHostSuffixes].some(
+    (suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`)
+  );
+};
+
+const normalizeSignalAutomationSourceUrl = (value) => {
+  const normalized = normalizeSignalSourceUrl(value);
+  if (!normalized) return '';
+  try {
+    const url = new URL(normalized);
+    if (url.username || url.password || isBlockedSignalAutomationHostname(url.hostname)) return '';
     return url.toString();
   } catch {
     return '';
@@ -9708,6 +9783,7 @@ const signalAutomationCategories = new Set(['ai', 'tech', 'economy', 'market', '
 const signalAutomationTrustTiers = new Set(['primary', 'established', 'community']);
 const signalAutomationRunStatuses = new Set(['queued', 'running', 'completed', 'partial', 'failed', 'cancelled']);
 const signalAutomationCandidateStatuses = new Set(['new', 'shortlisted', 'rejected', 'used']);
+const signalAutomationDefaultAdapters = Object.freeze({ api: 'json', page: 'html', rss: 'rss' });
 
 const signalAutomationSetupResponse = (kind) => {
   const collections = {
@@ -9825,15 +9901,21 @@ const normalizeSignalAutomationSourcePayload = (payload, existing = null) => {
   if (!name) throw signalSourceValidationError('SIGNAL_SOURCE_NAME_REQUIRED', '来源名称必填。');
 
   const endpointInput = cleanText(payload.endpointUrl ?? existing?.endpoint_url, 1000);
-  const endpointUrl = normalizeSignalSourceUrl(endpointInput);
+  const endpointUrl = normalizeSignalAutomationSourceUrl(endpointInput);
   if (!endpointUrl) {
-    throw signalSourceValidationError('SIGNAL_SOURCE_URL_INVALID', '采集地址必须是有效的 HTTP(S) URL。');
+    throw signalSourceValidationError(
+      'SIGNAL_SOURCE_URL_INVALID',
+      '采集地址必须是不含凭据、且指向公网主机的 HTTP(S) URL。'
+    );
   }
 
   const homepageInput = cleanText(payload.homepageUrl ?? existing?.homepage_url, 1000);
-  const homepageUrl = homepageInput ? normalizeSignalSourceUrl(homepageInput) : '';
+  const homepageUrl = homepageInput ? normalizeSignalAutomationSourceUrl(homepageInput) : '';
   if (homepageInput && !homepageUrl) {
-    throw signalSourceValidationError('SIGNAL_SOURCE_HOMEPAGE_INVALID', '主页地址必须是有效的 HTTP(S) URL。');
+    throw signalSourceValidationError(
+      'SIGNAL_SOURCE_HOMEPAGE_INVALID',
+      '主页地址必须是不含凭据、且指向公网主机的 HTTP(S) URL。'
+    );
   }
 
   const fetchIntervalMinutes = Number.parseInt(payload.fetchIntervalMinutes ?? existing?.fetch_interval_minutes ?? 360, 10);
@@ -9851,7 +9933,26 @@ const normalizeSignalAutomationSourcePayload = (payload, existing = null) => {
     throw signalSourceValidationError('SIGNAL_SOURCE_LANGUAGE_INVALID', '来源语言格式无效。');
   }
 
-  const configValue = payload.config === undefined ? parseStoredJson(existing?.config_json, {}) : normalizeJsonObject(payload.config);
+  if (payload.isEnabled !== undefined && typeof payload.isEnabled !== 'boolean') {
+    throw signalSourceValidationError('SIGNAL_SOURCE_ENABLED_INVALID', '启用状态必须是布尔值。');
+  }
+  if (payload.requiresApiKey !== undefined && typeof payload.requiresApiKey !== 'boolean') {
+    throw signalSourceValidationError('SIGNAL_SOURCE_API_KEY_FLAG_INVALID', 'API Key 标记必须是布尔值。');
+  }
+
+  const configValue =
+    payload.config === undefined
+      ? existing
+        ? parseStoredJson(existing.config_json, {})
+        : { adapter: signalAutomationDefaultAdapters[sourceType] }
+      : normalizeJsonObject(payload.config);
+  const previousDefaultAdapter = signalAutomationDefaultAdapters[existing?.source_type];
+  if (
+    !cleanText(configValue.adapter, 60) ||
+    (existing && sourceType !== existing.source_type && configValue.adapter === previousDefaultAdapter)
+  ) {
+    configValue.adapter = signalAutomationDefaultAdapters[sourceType];
+  }
   const configJson = JSON.stringify(configValue);
   if (configJson.length > 8000) {
     throw signalSourceValidationError('SIGNAL_SOURCE_CONFIG_TOO_LARGE', '来源配置过大。');
@@ -9866,11 +9967,10 @@ const normalizeSignalAutomationSourcePayload = (payload, existing = null) => {
     endpointUrl,
     homepageUrl,
     language,
-    isEnabled: payload.isEnabled === undefined ? Boolean(existing ? existing.is_enabled : true) : Boolean(payload.isEnabled),
+    isEnabled: payload.isEnabled === undefined ? Boolean(existing ? existing.is_enabled : true) : payload.isEnabled,
     fetchIntervalMinutes,
     maxItemsPerRun,
-    requiresApiKey:
-      payload.requiresApiKey === undefined ? Boolean(existing?.requires_api_key) : Boolean(payload.requiresApiKey),
+    requiresApiKey: payload.requiresApiKey === undefined ? Boolean(existing?.requires_api_key) : payload.requiresApiKey,
     configJson,
     notes: cleanText(payload.notes ?? existing?.notes, 1000)
   };
@@ -9918,6 +10018,16 @@ const handleAdminSaveSignalSource = async (request, env) => {
       { status: 503 }
     );
   }
+  if (!(await ensureContentTablesReady(db)) || !(await ensureAdminAuditLogsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'ADMIN_AUDIT_NOT_READY',
+        message: '内容库或审计日志表未初始化，来源变更已阻止。'
+      },
+      { status: 503 }
+    );
+  }
 
   let payload;
   try {
@@ -9928,11 +10038,23 @@ const handleAdminSaveSignalSource = async (request, env) => {
 
   const action = cleanText(payload.action || 'save', 30).toLowerCase();
   const sourceId = cleanText(payload.id, 120);
-  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+  const actorEmail = await getAdminActorEmail(request, env);
+  if (!actorEmail) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_SOURCE_ADMIN_REQUIRED', message: '管理员身份无效或已过期。' },
+      { status: 401 }
+    );
+  }
 
   if (action === 'toggle') {
     if (!sourceId) {
       return privateJson({ ok: false, code: 'SIGNAL_SOURCE_ID_REQUIRED', message: '来源 ID 必填。' }, { status: 400 });
+    }
+    if (typeof payload.isEnabled !== 'boolean') {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_SOURCE_ENABLED_INVALID', message: '启用状态必须是布尔值。' },
+        { status: 400 }
+      );
     }
     const source = await db
       .prepare(
@@ -9946,16 +10068,14 @@ const handleAdminSaveSignalSource = async (request, env) => {
     if (!source) {
       return privateJson({ ok: false, code: 'SIGNAL_SOURCE_NOT_FOUND', message: '没有找到这个来源。' }, { status: 404 });
     }
-    if (await ensureContentTablesReady(db)) {
-      await insertAdminAuditLog(db, {
-        actorEmail,
-        action: payload.isEnabled ? 'signal_source_enable' : 'signal_source_pause',
-        targetType: 'signal_source',
-        targetId: source.id,
-        targetSlug: source.name,
-        metadata: { endpointUrl: source.endpoint_url }
-      });
-    }
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: payload.isEnabled ? 'signal_source_enable' : 'signal_source_pause',
+      targetType: 'signal_source',
+      targetId: source.id,
+      targetSlug: source.name,
+      metadata: { endpointUrl: source.endpoint_url }
+    });
     return privateJson({ ok: true, source: signalSourceToJson(source) });
   }
 
@@ -10038,21 +10158,19 @@ const handleAdminSaveSignalSource = async (request, env) => {
           )
           .first();
 
-    if (await ensureContentTablesReady(db)) {
-      await insertAdminAuditLog(db, {
-        actorEmail,
-        action: existing ? 'signal_source_update' : 'signal_source_create',
-        targetType: 'signal_source',
-        targetId: saved.id,
-        targetSlug: saved.name,
-        metadata: {
-          category: saved.category,
-          endpointUrl: saved.endpoint_url,
-          isEnabled: Boolean(saved.is_enabled),
-          sourceType: saved.source_type
-        }
-      });
-    }
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: existing ? 'signal_source_update' : 'signal_source_create',
+      targetType: 'signal_source',
+      targetId: saved.id,
+      targetSlug: saved.name,
+      metadata: {
+        category: saved.category,
+        endpointUrl: saved.endpoint_url,
+        isEnabled: Boolean(saved.is_enabled),
+        sourceType: saved.source_type
+      }
+    });
 
     return privateJson({ ok: true, source: signalSourceToJson(saved) });
   } catch (error) {
@@ -16060,6 +16178,7 @@ export default {
     const redirectPath = pageRedirects[url.pathname];
     const legacyWorksRedirectPath = getLegacyWorksRedirectPath(url.pathname);
 
+    // This gate runs before every /admin/, /admin-v2/, and /admin/api/ route is dispatched.
     if (isAdminRequest) {
       const adminAccessResponse = await enforceAdminAccess(request, env);
       if (adminAccessResponse) return adminAccessResponse;
