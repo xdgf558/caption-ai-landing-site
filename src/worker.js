@@ -10233,6 +10233,7 @@ const handleAdminListSignalCandidates = async (request, env) => {
 };
 
 const signalCollectionMaxAttempts = 3;
+const signalCollectionStaleAfterMinutes = 120;
 const signalCollectionTaskStatuses = new Set(['queued', 'running', 'completed', 'failed']);
 
 const signalCollectionPhase2SetupResponse = () =>
@@ -10271,45 +10272,40 @@ const signalCollectionTaskToJson = (row) => ({
 });
 
 const selectSignalCollectionSources = async (db, options = {}) => {
-  const response = options.onlyDue
-    ? await db
-        .prepare(
-          `SELECT *
-           FROM signal_sources
-           WHERE is_enabled = 1
-             AND requires_api_key = 0
-             AND (
-               last_fetched_at IS NULL
-               OR datetime(last_fetched_at, '+' || fetch_interval_minutes || ' minutes') <= CURRENT_TIMESTAMP
-             )
-           ORDER BY
-             CASE trust_tier WHEN 'primary' THEN 0 WHEN 'established' THEN 1 ELSE 2 END,
-             name ASC
-           LIMIT 100`
-        )
-        .all()
-    : await db
-        .prepare(
-          `SELECT *
-           FROM signal_sources
-           WHERE is_enabled = 1 AND requires_api_key = 0
-           ORDER BY
-             CASE trust_tier WHEN 'primary' THEN 0 WHEN 'established' THEN 1 ELSE 2 END,
-             name ASC
-           LIMIT 100`
-        )
-        .all();
-  const requestedIds = new Set(options.sourceIds || []);
-  return (response.results || [])
-    .filter((source) => isCollectibleSignalSource(source) && (!requestedIds.size || requestedIds.has(source.id)))
-    .slice(0, 50);
+  const requestedIds = [...new Set((options.sourceIds || []).map((value) => cleanText(value, 120)).filter(Boolean))].slice(
+    0,
+    50
+  );
+  const filters = ['is_enabled = 1', 'requires_api_key = 0'];
+  const bindings = [];
+  if (options.onlyDue) {
+    filters.push(`(
+      last_fetched_at IS NULL
+      OR datetime(last_fetched_at, '+' || fetch_interval_minutes || ' minutes') <= CURRENT_TIMESTAMP
+    )`);
+  }
+  if (requestedIds.length) {
+    filters.push(`id IN (${requestedIds.map(() => '?').join(', ')})`);
+    bindings.push(...requestedIds);
+  }
+  const statement = db.prepare(
+    `SELECT *
+     FROM signal_sources
+     WHERE ${filters.join('\n       AND ')}
+     ORDER BY
+       CASE trust_tier WHEN 'primary' THEN 0 WHEN 'established' THEN 1 ELSE 2 END,
+       name ASC
+     LIMIT 50`
+  );
+  const response = bindings.length ? await statement.bind(...bindings).all() : await statement.all();
+  return (response.results || []).filter(isCollectibleSignalSource);
 };
 
-const findActiveScheduledSignalRun = async (db) =>
+const findActiveSignalCollectionRun = async (db) =>
   db
     .prepare(
       `SELECT * FROM signal_collection_runs
-       WHERE trigger_type = 'scheduled' AND status IN ('queued', 'running')
+       WHERE status IN ('queued', 'running')
        ORDER BY created_at DESC LIMIT 1`
     )
     .first();
@@ -10331,10 +10327,43 @@ const failQueuedSignalRun = async (db, runId, message) => {
              failed_count = source_count, error_json = ?,
              started_at = COALESCE(started_at, CURRENT_TIMESTAMP),
              finished_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-         WHERE id = ?`
+         WHERE id = ? AND status IN ('queued', 'running')`
       )
       .bind(JSON.stringify([{ message }]), runId)
   ]);
+};
+
+const expireStaleSignalCollectionRuns = async (db, maxAgeMinutes = signalCollectionStaleAfterMinutes) => {
+  const staleAfterMinutes = Math.max(15, normalizePositiveInteger(maxAgeMinutes, signalCollectionStaleAfterMinutes));
+  const cutoff = `-${staleAfterMinutes} minutes`;
+  const response = await db
+    .prepare(
+      `SELECT id
+       FROM signal_collection_runs
+       WHERE status IN ('queued', 'running')
+         AND datetime(updated_at) <= datetime('now', ?)
+       ORDER BY updated_at ASC`
+    )
+    .bind(cutoff)
+    .all();
+  const staleRuns = response.results || [];
+  for (const row of staleRuns) {
+    const message = `采集任务超过 ${staleAfterMinutes} 分钟没有进展，已自动终止。`;
+    await db
+      .prepare(
+        `UPDATE signal_collection_tasks
+         SET status = 'failed', attempts = MAX(attempts, 1), last_error = ?,
+             finished_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+         WHERE run_id = ? AND status IN ('queued', 'running')`
+      )
+      .bind(message, row.id)
+      .run();
+    const refreshed = await refreshSignalCollectionRun(db, row.id);
+    if (!refreshed || ['queued', 'running'].includes(refreshed.status)) {
+      await failQueuedSignalRun(db, row.id, message);
+    }
+  }
+  return staleRuns.map((row) => row.id);
 };
 
 const enqueueSignalCollectionRun = async (env, options = {}) => {
@@ -10346,10 +10375,9 @@ const enqueueSignalCollectionRun = async (env, options = {}) => {
     throw signalSourceValidationError('SIGNAL_COLLECTION_NOT_READY', '资讯采集数据表尚未初始化。');
   }
 
-  if (options.triggerType === 'scheduled') {
-    const activeRun = await findActiveScheduledSignalRun(db);
-    if (activeRun) return { alreadyRunning: true, run: signalCollectionRunToJson(activeRun), sources: [] };
-  }
+  await expireStaleSignalCollectionRuns(db);
+  const activeRun = await findActiveSignalCollectionRun(db);
+  if (activeRun) return { alreadyRunning: true, run: signalCollectionRunToJson(activeRun), sources: [] };
 
   const sources = await selectSignalCollectionSources(db, {
     onlyDue: options.triggerType === 'scheduled',
@@ -10361,24 +10389,32 @@ const enqueueSignalCollectionRun = async (env, options = {}) => {
   const actor = cleanText(options.actor || 'signal-cron', 320);
   const triggerType = options.triggerType === 'manual' ? 'manual' : 'scheduled';
   const sourceIds = sources.map((source) => source.id);
-  await db.batch([
-    db
-      .prepare(
-        `INSERT INTO signal_collection_runs (
-           id, trigger_type, status, requested_source_ids_json,
-           source_count, processed_source_count, created_by
-         ) VALUES (?, ?, 'queued', ?, ?, 0, ?)`
-      )
-      .bind(runId, triggerType, JSON.stringify(sourceIds), sources.length, actor),
-    ...sources.map((source) =>
+  try {
+    await db.batch([
       db
         .prepare(
-          `INSERT INTO signal_collection_tasks (id, run_id, source_id, status)
-           VALUES (?, ?, ?, 'queued')`
+          `INSERT INTO signal_collection_runs (
+             id, trigger_type, status, requested_source_ids_json,
+             source_count, processed_source_count, created_by
+           ) VALUES (?, ?, 'queued', ?, ?, 0, ?)`
         )
-        .bind(`signal-task-${randomToken(14)}`, runId, source.id)
-    )
-  ]);
+        .bind(runId, triggerType, JSON.stringify(sourceIds), sources.length, actor),
+      ...sources.map((source) =>
+        db
+          .prepare(
+            `INSERT INTO signal_collection_tasks (id, run_id, source_id, status)
+             VALUES (?, ?, ?, 'queued')`
+          )
+          .bind(`signal-task-${randomToken(14)}`, runId, source.id)
+      )
+    ]);
+  } catch (error) {
+    const concurrentRun = await findActiveSignalCollectionRun(db);
+    if (concurrentRun) {
+      return { alreadyRunning: true, run: signalCollectionRunToJson(concurrentRun), sources: [] };
+    }
+    throw error;
+  }
 
   try {
     await env.SIGNAL_COLLECTION_QUEUE.sendBatch(
@@ -10440,6 +10476,16 @@ const handleAdminCollectSignalSources = async (request, env) => {
       sourceIds,
       triggerType: 'manual'
     });
+    if (result.alreadyRunning) {
+      return privateJson({
+        ok: true,
+        alreadyRunning: true,
+        code: 'SIGNAL_COLLECTION_ALREADY_RUNNING',
+        message: '已有采集任务正在进行，本次没有重复创建。',
+        run: result.run,
+        sources: []
+      });
+    }
     if (!result.run) {
       return privateJson(
         {
@@ -10474,6 +10520,7 @@ const handleAdminCollectSignalSources = async (request, env) => {
 };
 
 const refreshSignalCollectionRun = async (db, runId) => {
+  // This read/aggregate/update sequence relies on the queue consumer remaining at max_concurrency = 1.
   const metrics = await db
     .prepare(
       `SELECT
@@ -10729,6 +10776,26 @@ const processSignalCollectionMessage = async (env, body, options = {}) => {
   }
 };
 
+const abandonSignalCollectionMessage = async (env, body, error) => {
+  const db = env.WAITLIST_DB;
+  const runId = cleanText(body?.runId, 120);
+  const sourceId = cleanText(body?.sourceId, 120);
+  if (!db || !runId || !sourceId) return false;
+  const message = cleanText(`队列消息超过重试上限：${error?.message || 'unknown error'}`, 500);
+  const result = await db
+    .prepare(
+      `UPDATE signal_collection_tasks
+       SET status = 'failed', attempts = MAX(attempts, ?), last_error = ?,
+           finished_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+       WHERE run_id = ? AND source_id = ? AND status IN ('queued', 'running')`
+    )
+    .bind(signalCollectionMaxAttempts, message, runId, sourceId)
+    .run();
+  if (!getD1ChangeCount(result)) return false;
+  await refreshSignalCollectionRun(db, runId);
+  return true;
+};
+
 const handleSignalCollectionQueue = async (batch, env) => {
   for (const message of batch.messages) {
     try {
@@ -10740,6 +10807,11 @@ const handleSignalCollectionQueue = async (batch, env) => {
       }
     } catch (error) {
       if (message.attempts >= signalCollectionMaxAttempts) {
+        try {
+          await abandonSignalCollectionMessage(env, message.body, error);
+        } catch (markError) {
+          console.error('Unable to mark abandoned Signal collection message', markError);
+        }
         message.ack();
         console.error('Signal collection message abandoned', error);
       } else {
@@ -16604,6 +16676,8 @@ export const __readerTotpTestHooks = {
   contentEntryLegacyWorksPath,
   contentEntryNovelV2Path,
   contentEntryPublicPath,
+  expireStaleSignalCollectionRuns,
+  findActiveSignalCollectionRun,
   getD1ChangeCount,
   getLegacyWorksRedirectPath,
   getReaderTotpResetLimitKeys,
@@ -16643,6 +16717,7 @@ export const __readerTotpTestHooks = {
   dynamicSeriesPath,
   normalizeTotpCode,
   normalizeReadingEventPayload,
+  selectSignalCollectionSources,
   normalizeSignalAutomationSourcePayload,
   processSignalCollectionMessage,
   readerCommentToJson,

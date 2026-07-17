@@ -1,3 +1,5 @@
+-- One-shot D1 migration. Apply through `wrangler d1 migrations apply` so Wrangler records it once;
+-- SQLite does not support `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` for these additions.
 ALTER TABLE signal_sources ADD COLUMN http_etag TEXT NOT NULL DEFAULT '';
 ALTER TABLE signal_sources ADD COLUMN http_last_modified TEXT NOT NULL DEFAULT '';
 ALTER TABLE signal_sources ADD COLUMN last_http_status INTEGER;
@@ -5,6 +7,10 @@ ALTER TABLE signal_sources ADD COLUMN last_item_count INTEGER NOT NULL DEFAULT 0
 ALTER TABLE signal_sources ADD COLUMN consecutive_failures INTEGER NOT NULL DEFAULT 0;
 
 ALTER TABLE signal_collection_runs ADD COLUMN processed_source_count INTEGER NOT NULL DEFAULT 0;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_signal_collection_runs_single_active
+  ON signal_collection_runs ((1))
+  WHERE status IN ('queued', 'running');
 
 CREATE TABLE IF NOT EXISTS signal_collection_tasks (
   id TEXT PRIMARY KEY,

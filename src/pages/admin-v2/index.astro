@@ -2187,7 +2187,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             ? `${sourceSummary.enabled || 0} 个来源启用 · 正在采集 ${activeRun.processedSourceCount || 0}/${activeRun.sourceCount || 0}`
             : `${sourceSummary.total || 0} 个来源 · ${sourceSummary.enabled || 0} 启用 · 每小时检查`
           : '待应用 migrations/0020_signal_collection.sql';
-        elements.signalCollectionStart.disabled = !state.signalCollectionReady;
+        elements.signalCollectionStart.disabled = !state.signalCollectionReady || Boolean(activeRun);
         renderSignalSources();
         renderSignalRuns();
         renderSignalCandidates();
@@ -2215,7 +2215,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           method: 'POST',
           body: JSON.stringify({})
         });
-        elements.signalCollectionStatus.dataset.tone = 'success';
+        elements.signalCollectionStatus.dataset.tone = payload.alreadyRunning ? 'pending' : 'success';
         elements.signalCollectionStatus.textContent = payload.message || '采集已启动。';
         await Promise.all([loadSignalAutomation(), loadAuditLogs()]);
         window.setTimeout(loadSignalAutomation, 1800);
@@ -2224,7 +2224,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         elements.signalCollectionStatus.dataset.tone = 'error';
         elements.signalCollectionStatus.textContent = error.message;
       } finally {
-        elements.signalCollectionStart.disabled = !state.signalCollectionReady;
+        elements.signalCollectionStart.disabled =
+          !state.signalCollectionReady || state.signalRuns.some((run) => ['queued', 'running'].includes(run.status));
       }
     };
 

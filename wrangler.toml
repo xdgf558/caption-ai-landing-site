@@ -32,6 +32,7 @@ queue = "station-cat-signal-collection"
 max_batch_size = 1
 max_batch_timeout = 5
 max_retries = 3
+# refreshSignalCollectionRun uses a read/aggregate/update sequence; keep this at 1 unless that code becomes concurrency-safe.
 max_concurrency = 1
 
 [[d1_databases]]

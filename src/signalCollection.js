@@ -337,8 +337,6 @@ export const assertSignalUrlResolvesPublicly = async (urlValue, options = {}) =>
     return normalized;
   }
 
-  const cache = options.dnsCache || new Map();
-  if (cache.has(url.hostname)) return normalized;
   const answers = await resolveDnsAnswers(
     url.hostname,
     options.fetchImpl || fetch,
@@ -347,7 +345,6 @@ export const assertSignalUrlResolvesPublicly = async (urlValue, options = {}) =>
   if (answers.some((answer) => isBlockedSignalIpv4(answer) || isBlockedSignalIpv6(answer))) {
     throw collectionError('SIGNAL_FETCH_PRIVATE_ADDRESS', '来源地址解析到内网或保留地址。', { retriable: false });
   }
-  cache.set(url.hostname, answers);
   return normalized;
 };
 
@@ -355,14 +352,13 @@ export const fetchPublicSignalResource = async (urlValue, options = {}) => {
   const fetchImpl = options.fetchImpl || fetch;
   const timeoutMs = options.timeoutMs || defaultFetchTimeoutMs;
   const maxBytes = options.maxBytes || defaultMaxBodyBytes;
-  const dnsCache = options.dnsCache || new Map();
   let currentUrl = normalizePublicSignalUrl(urlValue);
   if (!currentUrl) {
     throw collectionError('SIGNAL_FETCH_URL_BLOCKED', '来源地址不是允许的公网 HTTP(S) URL。', { retriable: false });
   }
 
   for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
-    await assertSignalUrlResolvesPublicly(currentUrl, { dnsCache, fetchImpl, timeoutMs });
+    await assertSignalUrlResolvesPublicly(currentUrl, { fetchImpl, timeoutMs });
     const headers = new Headers(options.headers || {});
     headers.set('accept', options.accept || 'application/rss+xml, application/atom+xml, application/xml, text/xml, application/json;q=0.9, */*;q=0.2');
     headers.set('user-agent', 'StationCat-SignalCollector/2.0 (+https://wwwstationcat.org/signal/)');
@@ -425,11 +421,9 @@ const parseHackerNewsItem = (item, sourceUrl) => {
 };
 
 const collectHackerNews = async (source, options) => {
-  const dnsCache = new Map();
   const listing = await fetchPublicSignalResource(source.endpoint_url, {
     ...options,
     accept: 'application/json',
-    dnsCache,
     headers: conditionalHeaders(source),
     maxBytes: 256 * 1024
   });
@@ -450,7 +444,6 @@ const collectHackerNews = async (source, options) => {
       const response = await fetchPublicSignalResource(itemUrl, {
         ...options,
         accept: 'application/json',
-        dnsCache,
         maxBytes: 128 * 1024
       });
       return parseHackerNewsItem(JSON.parse(response.body), listing.finalUrl);
@@ -497,6 +490,7 @@ export const getSignalSourceAdapter = (source) => {
 };
 
 export const collectSignalSource = async (source, options = {}) => {
+  // Secret-bearing adapters must use fixed provider hosts and a separate fetch path, never a database URL.
   const adapter = getSignalSourceAdapter(source);
   if (!supportedSignalCollectionAdapters.has(adapter)) {
     throw collectionError('SIGNAL_ADAPTER_UNSUPPORTED', `来源适配器 ${adapter || 'unknown'} 尚未开放。`, {

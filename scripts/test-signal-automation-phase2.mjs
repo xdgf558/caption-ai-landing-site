@@ -18,9 +18,12 @@ const read = (path) => readFileSync(join(root, path), 'utf8');
 
 const migration0019 = read('migrations/0019_signal_automation.sql');
 const migration0020 = read('migrations/0020_signal_collection.sql');
+const packageJson = JSON.parse(read('package.json'));
 assert.match(migration0020, /CREATE TABLE IF NOT EXISTS signal_collection_tasks/);
 assert.match(migration0020, /idx_signal_candidates_content_hash_unique/);
+assert.match(migration0020, /idx_signal_collection_runs_single_active/);
 assert.match(migration0020, /processed_source_count/);
+assert.equal(packageJson.dependencies['fast-xml-parser'], '5.10.1');
 
 const sqliteDirectory = mkdtempSync(join(tmpdir(), 'signal-automation-phase2-'));
 const sqlitePath = join(sqliteDirectory, 'signal.sqlite');
@@ -46,6 +49,16 @@ try {
   );
   assert.equal(hackerNewsLimitResult.status, 0, hackerNewsLimitResult.stderr);
   assert.equal(hackerNewsLimitResult.stdout.trim(), '12');
+
+  const singleActiveRunResult = runSqlite(`
+    INSERT INTO signal_collection_runs (id, trigger_type, status)
+    VALUES ('active-run-a', 'scheduled', 'queued');
+    INSERT INTO signal_collection_runs (id, trigger_type, status)
+    VALUES ('active-run-b', 'manual', 'running');
+  `);
+  assert.notEqual(singleActiveRunResult.status, 0);
+  assert.match(singleActiveRunResult.stderr, /idx_signal_collection_runs_single_active/i);
+  runSqlite("DELETE FROM signal_collection_runs WHERE id = 'active-run-a';");
 
   const uniqueHashResult = runSqlite(`
     INSERT INTO signal_candidates (id, source_id, canonical_url, title, content_hash)
@@ -187,10 +200,12 @@ await assert.rejects(
   (error) => error.code === 'SIGNAL_RESPONSE_TIMEOUT'
 );
 
+let hackerNewsDnsAQueries = 0;
 const hackerNewsFetch = async (url) => {
   const parsed = new URL(url);
   if (parsed.hostname === 'cloudflare-dns.com') {
     const type = parsed.searchParams.get('type');
+    if (type === 'A') hackerNewsDnsAQueries += 1;
     return new Response(dnsPayload(type, type === 'A' ? ['104.18.3.33'] : []));
   }
   if (parsed.pathname.endsWith('/topstories.json')) return new Response('[101,102]');
@@ -211,6 +226,7 @@ const collectedHackerNews = await collectSignalSource(
 );
 assert.equal(collectedHackerNews.items.length, 2);
 assert.equal(collectedHackerNews.items[1].canonicalUrl, 'https://news.ycombinator.com/item?id=102');
+assert.equal(hackerNewsDnsAQueries, 3, 'Each outbound HN request must repeat the public DNS check.');
 
 class ManualStatement {
   constructor(db, sql, params = []) {
@@ -226,12 +242,20 @@ class ManualStatement {
   async first() {
     if (/SELECT (?:id|http_etag|processed_source_count) FROM signal_/i.test(this.sql)) return null;
     if (/SELECT id FROM (?:content_entries|admin_audit_logs) LIMIT 1/i.test(this.sql)) return null;
+    if (/FROM signal_collection_runs\s+WHERE status IN \('queued', 'running'\)/i.test(this.sql)) {
+      return [...this.db.runs.values()].find((run) => ['queued', 'running'].includes(run.status)) || null;
+    }
     if (/SELECT \* FROM signal_collection_runs WHERE id = \?/i.test(this.sql)) return this.db.runs.get(this.params[0]) || null;
     return null;
   }
 
   async all() {
-    if (/FROM signal_sources\s+WHERE is_enabled = 1/i.test(this.sql)) return { results: [this.db.source] };
+    if (/FROM signal_sources\s+WHERE is_enabled = 1/i.test(this.sql)) {
+      this.db.lastSourceQuery = this.sql;
+      this.db.lastSourceParams = this.params;
+      const requested = this.params.length ? this.params.includes(this.db.source.id) : true;
+      return { results: requested ? [this.db.source] : [] };
+    }
     return { results: [] };
   }
 
@@ -272,6 +296,8 @@ class ManualStatement {
 class ManualDb {
   constructor() {
     this.auditActions = [];
+    this.lastSourceParams = [];
+    this.lastSourceQuery = '';
     this.runs = new Map();
     this.tasks = [];
     this.source = {
@@ -320,7 +346,7 @@ const manualDb = new ManualDb();
 const queuedMessages = [];
 const manualResponse = await workerHooks.handleAdminCollectSignalSources(
   new Request('http://localhost/admin/api/signal/collect', {
-    body: '{}',
+    body: JSON.stringify({ sourceIds: ['example-feed'] }),
     headers: { 'content-type': 'application/json' },
     method: 'POST'
   }),
@@ -335,6 +361,159 @@ assert.equal(manualPayload.run.sourceCount, 1);
 assert.equal(queuedMessages.length, 1);
 assert.equal(queuedMessages[0].body.sourceId, 'example-feed');
 assert.equal(manualDb.auditActions[0], 'signal_collection_start');
+assert.match(manualDb.lastSourceQuery, /id IN \(\?\)/);
+assert.doesNotMatch(manualDb.lastSourceQuery, /LIMIT 100/);
+assert.deepEqual(manualDb.lastSourceParams, ['example-feed']);
+
+const duplicateManualResponse = await workerHooks.handleAdminCollectSignalSources(
+  new Request('http://localhost/admin/api/signal/collect', {
+    body: JSON.stringify({ sourceIds: ['example-feed'] }),
+    headers: { 'content-type': 'application/json' },
+    method: 'POST'
+  }),
+  {
+    SIGNAL_COLLECTION_QUEUE: { sendBatch: async (messages) => queuedMessages.push(...messages) },
+    WAITLIST_DB: manualDb
+  }
+);
+assert.equal(duplicateManualResponse.status, 200);
+const duplicateManualPayload = await duplicateManualResponse.json();
+assert.equal(duplicateManualPayload.alreadyRunning, true);
+assert.equal(queuedMessages.length, 1);
+assert.equal(manualDb.runs.size, 1);
+assert.equal(manualDb.auditActions.length, 1);
+
+class StaleRunStatement {
+  constructor(db, sql, params = []) {
+    this.db = db;
+    this.sql = sql;
+    this.params = params;
+  }
+
+  bind(...params) {
+    return new StaleRunStatement(this.db, this.sql, params);
+  }
+
+  async all() {
+    if (/SELECT id\s+FROM signal_collection_runs/i.test(this.sql)) {
+      this.db.cutoff = this.params[0];
+      return { results: [{ id: this.db.run.id }] };
+    }
+    if (/SELECT source_id, last_error\s+FROM signal_collection_tasks/i.test(this.sql)) {
+      return {
+        results: this.db.tasks
+          .filter((task) => task.status === 'failed')
+          .map((task) => ({ last_error: task.last_error, source_id: task.source_id }))
+      };
+    }
+    return { results: [] };
+  }
+
+  async first() {
+    if (/COUNT\(\*\) AS source_count/i.test(this.sql)) {
+      const tasks = this.db.tasks;
+      return {
+        accepted_count: tasks.reduce((sum, task) => sum + task.accepted_count, 0),
+        duplicate_count: tasks.reduce((sum, task) => sum + task.duplicate_count, 0),
+        failed_count: tasks.filter((task) => task.status === 'failed').length,
+        fetched_count: tasks.reduce((sum, task) => sum + task.fetched_count, 0),
+        processed_source_count: tasks.filter((task) => ['completed', 'failed'].includes(task.status)).length,
+        source_count: tasks.length
+      };
+    }
+    if (/UPDATE signal_collection_runs[\s\S]+RETURNING \*/i.test(this.sql)) {
+      const [status, sourceCount, processedSourceCount, fetchedCount, acceptedCount, duplicateCount, failedCount, errors] =
+        this.params;
+      Object.assign(this.db.run, {
+        accepted_count: acceptedCount,
+        duplicate_count: duplicateCount,
+        error_json: errors,
+        failed_count: failedCount,
+        fetched_count: fetchedCount,
+        finished_at: '2026-07-17 14:00:00',
+        processed_source_count: processedSourceCount,
+        source_count: sourceCount,
+        status,
+        updated_at: '2026-07-17 14:00:00'
+      });
+      return this.db.run;
+    }
+    return null;
+  }
+
+  async run() {
+    if (/UPDATE signal_collection_tasks[\s\S]+status = 'failed'/i.test(this.sql)) {
+      const [message, runId] = this.params;
+      let changes = 0;
+      for (const task of this.db.tasks) {
+        if (task.run_id !== runId || !['queued', 'running'].includes(task.status)) continue;
+        task.status = 'failed';
+        task.last_error = message;
+        changes += 1;
+      }
+      return { meta: { changes } };
+    }
+    return { meta: { changes: 0 } };
+  }
+}
+
+class StaleRunDb {
+  constructor() {
+    this.cutoff = '';
+    this.run = {
+      accepted_count: 1,
+      created_at: '2026-07-17 10:00:00',
+      created_by: 'signal-cron',
+      duplicate_count: 0,
+      error_json: '[]',
+      failed_count: 0,
+      fetched_count: 1,
+      finished_at: null,
+      id: 'stale-run',
+      processed_source_count: 1,
+      requested_source_ids_json: '["source-a","source-b"]',
+      source_count: 2,
+      started_at: '2026-07-17 10:00:00',
+      status: 'running',
+      trigger_type: 'scheduled',
+      updated_at: '2026-07-17 10:00:00'
+    };
+    this.tasks = [
+      {
+        accepted_count: 1,
+        duplicate_count: 0,
+        fetched_count: 1,
+        last_error: '',
+        run_id: 'stale-run',
+        source_id: 'source-a',
+        status: 'completed'
+      },
+      {
+        accepted_count: 0,
+        duplicate_count: 0,
+        fetched_count: 0,
+        last_error: '',
+        run_id: 'stale-run',
+        source_id: 'source-b',
+        status: 'running'
+      }
+    ];
+  }
+
+  prepare(sql) {
+    return new StaleRunStatement(this, sql);
+  }
+}
+
+const staleRunDb = new StaleRunDb();
+const expiredRunIds = await workerHooks.expireStaleSignalCollectionRuns(staleRunDb);
+assert.deepEqual(expiredRunIds, ['stale-run']);
+assert.equal(staleRunDb.cutoff, '-120 minutes');
+assert.equal(staleRunDb.tasks[1].status, 'failed');
+assert.match(staleRunDb.tasks[1].last_error, /超过 120 分钟/);
+assert.equal(staleRunDb.run.status, 'partial');
+assert.equal(staleRunDb.run.processed_source_count, 2);
+assert.equal(staleRunDb.run.failed_count, 1);
 
 const protectedAdminEnv = {
   ADMIN_ALLOWED_EMAILS: 'admin@example.com',
