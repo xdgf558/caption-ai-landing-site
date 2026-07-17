@@ -28,6 +28,12 @@ const copy = {
       ['日常狀態檢查', '在使用前確認配置是否完整、版本是否對應、備註是否清楚。'],
       ['保留操作邊界', '頁面和軟體都不鼓勵、也不提供未授權訪問、規避限制或侵犯第三方服務的用途。']
     ],
+    releaseTitle: '0.2.26 版本更新',
+    releaseNotes: [
+      '重新設計 NodePilot 工作區，加入固定左側導航並簡化各頁面的資訊層級。',
+      '改善鍵盤焦點、減少動態效果支援與響應式版面。',
+      '切換語言時只儲存語言偏好，不再連帶提交其他尚未儲存的設定。'
+    ],
     notesTitle: '下載前請先確認',
     notes: [
       `目前版本：macOS ${macDownload.version}；Windows ${windowsDownload.version}`,
@@ -69,6 +75,12 @@ const copy = {
       ['测试环境管理', '适合管理你自己搭建或团队授权的测试节点与设置。'],
       ['日常状态检查', '在使用前确认配置是否完整、版本是否对应、备注是否清楚。'],
       ['保留操作边界', '页面和软件都不鼓励、也不提供未授权访问、规避限制或侵犯第三方服务的用途。']
+    ],
+    releaseTitle: '0.2.26 版本更新',
+    releaseNotes: [
+      '重新设计 NodePilot 工作区，加入固定左侧导航并简化各页面的信息层级。',
+      '改善键盘焦点、减少动态效果支持与响应式布局。',
+      '切换语言时只保存语言偏好，不再连带提交其他尚未保存的设置。'
     ],
     notesTitle: '下载前请先确认',
     notes: [
@@ -112,6 +124,12 @@ const copy = {
       ['Daily readiness checks', 'Review whether a profile is complete, versioned, and clearly documented before use.'],
       ['Clear boundaries', 'The page and software do not encourage or provide unauthorized access, restriction bypassing, or misuse of third-party services.']
     ],
+    releaseTitle: 'What is new in 0.2.26',
+    releaseNotes: [
+      'Redesigned the NodePilot workspace with a fixed sidebar and clearer, quieter page layouts.',
+      'Improved keyboard focus visibility, reduced-motion support, and responsive layouts.',
+      'Language switching now saves only the language preference and leaves other draft settings untouched.'
+    ],
     notesTitle: 'Before downloading',
     notes: [
       `Current versions: macOS ${macDownload.version}; Windows ${windowsDownload.version}`,
@@ -153,6 +171,12 @@ const copy = {
       ['承認済みテスト環境', '自分またはチームが管理を許可されたサーバーやネットワーク設定を扱います。'],
       ['日常の確認', '利用前に設定、バージョン、メモが分かりやすいか確認します。'],
       ['利用範囲を明確に', 'このページとソフトウェアは、未承認アクセス、制限回避、第三者サービスの不正利用を推奨しません。']
+    ],
+    releaseTitle: '0.2.26 アップデート',
+    releaseNotes: [
+      '固定サイドバーとより明確な情報階層で NodePilot ワークスペースを再設計しました。',
+      'キーボードフォーカスの視認性、動きを減らす設定、レスポンシブレイアウトを改善しました。',
+      '言語切り替え時は言語設定のみを保存し、未保存の他の設定には影響しません。'
     ],
     notesTitle: 'ダウンロード前の確認',
     notes: [
@@ -248,6 +272,18 @@ const localizedDownloads = [
           <p>{text}</p>
         </article>
       ))}
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="radar-note-panel">
+      <div>
+        <p class="section-kicker">Release notes</p>
+        <h2>{copy.releaseTitle}</h2>
+      </div>
+      <ul>
+        {copy.releaseNotes.map((note) => <li>{note}</li>)}
+      </ul>
     </div>
   </section>
 

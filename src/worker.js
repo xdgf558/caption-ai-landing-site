@@ -15048,16 +15048,38 @@ const downloadFiles = {
     cacheControl: 'public, max-age=60'
   },
   '/downloads/nodepilot/NodePilot-latest-arm64.dmg': {
-    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-arm64.dmg',
-    filename: 'NodePilot-0.2.18-arm64.dmg',
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-arm64.dmg',
+    filename: 'NodePilot-0.2.26-arm64.dmg',
     contentType: 'application/x-apple-diskimage',
-    limitKey: 'nodepilot-0.2.18-arm64'
+    limitKey: 'nodepilot-0.2.26-arm64'
   },
   '/downloads/anytls-desktop-manager/NodePilot-latest-arm64.dmg': {
-    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-arm64.dmg',
-    filename: 'NodePilot-0.2.18-arm64.dmg',
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-arm64.dmg',
+    filename: 'NodePilot-0.2.26-arm64.dmg',
     contentType: 'application/x-apple-diskimage',
-    limitKey: 'nodepilot-0.2.18-arm64'
+    limitKey: 'nodepilot-0.2.26-arm64'
+  },
+  '/downloads/nodepilot/NodePilot-0.2.26-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-arm64.dmg',
+    filename: 'NodePilot-0.2.26-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.26-arm64'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-0.2.26-arm64.dmg': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-arm64.dmg',
+    filename: 'NodePilot-0.2.26-arm64.dmg',
+    contentType: 'application/x-apple-diskimage',
+    limitKey: 'nodepilot-0.2.26-arm64'
+  },
+  '/downloads/nodepilot/NodePilot-0.2.26-arm64.dmg.blockmap': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-arm64.dmg.blockmap',
+    filename: 'NodePilot-0.2.26-arm64.dmg.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-0.2.26-arm64.dmg.blockmap': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-arm64.dmg.blockmap',
+    filename: 'NodePilot-0.2.26-arm64.dmg.blockmap',
+    contentType: 'application/octet-stream'
   },
   '/downloads/nodepilot/NodePilot-0.2.18-arm64.dmg': {
     key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-arm64.dmg',
@@ -15072,16 +15094,50 @@ const downloadFiles = {
     limitKey: 'nodepilot-0.2.18-arm64'
   },
   '/downloads/nodepilot/NodePilot-latest-mac-arm64.zip': {
-    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-mac-arm64.zip',
-    filename: 'NodePilot-0.2.18-mac-arm64.zip',
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-mac-arm64.zip',
+    filename: 'NodePilot-0.2.26-mac-arm64.zip',
     contentType: 'application/zip',
-    limitKey: 'nodepilot-0.2.18-mac-arm64-zip'
+    limitKey: 'nodepilot-0.2.26-mac-arm64-zip'
   },
   '/downloads/anytls-desktop-manager/NodePilot-latest-mac-arm64.zip': {
-    key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-mac-arm64.zip',
-    filename: 'NodePilot-0.2.18-mac-arm64.zip',
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-mac-arm64.zip',
+    filename: 'NodePilot-0.2.26-mac-arm64.zip',
     contentType: 'application/zip',
-    limitKey: 'nodepilot-0.2.18-mac-arm64-zip'
+    limitKey: 'nodepilot-0.2.26-mac-arm64-zip'
+  },
+  '/downloads/nodepilot/NodePilot-0.2.26-mac-arm64.zip': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-mac-arm64.zip',
+    filename: 'NodePilot-0.2.26-mac-arm64.zip',
+    contentType: 'application/zip',
+    limitKey: 'nodepilot-0.2.26-mac-arm64-zip'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-0.2.26-mac-arm64.zip': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-mac-arm64.zip',
+    filename: 'NodePilot-0.2.26-mac-arm64.zip',
+    contentType: 'application/zip',
+    limitKey: 'nodepilot-0.2.26-mac-arm64-zip'
+  },
+  '/downloads/nodepilot/NodePilot-0.2.26-mac-arm64.zip.blockmap': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-mac-arm64.zip.blockmap',
+    filename: 'NodePilot-0.2.26-mac-arm64.zip.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-0.2.26-mac-arm64.zip.blockmap': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-mac-arm64.zip.blockmap',
+    filename: 'NodePilot-0.2.26-mac-arm64.zip.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/nodepilot/latest-mac.yml': {
+    key: 'anytls-desktop-manager/0.2.26/latest-mac.yml',
+    filename: 'latest-mac.yml',
+    contentType: 'text/yaml; charset=utf-8',
+    cacheControl: 'public, max-age=60'
+  },
+  '/downloads/anytls-desktop-manager/latest-mac.yml': {
+    key: 'anytls-desktop-manager/0.2.26/latest-mac.yml',
+    filename: 'latest-mac.yml',
+    contentType: 'text/yaml; charset=utf-8',
+    cacheControl: 'public, max-age=60'
   },
   '/downloads/nodepilot/NodePilot-0.2.18-mac-arm64.zip': {
     key: 'anytls-desktop-manager/0.2.18/NodePilot-0.2.18-mac-arm64.zip',
@@ -15138,16 +15194,50 @@ const downloadFiles = {
     limitKey: 'nodepilot-0.2.12-arm64'
   },
   '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe': {
-    key: 'anytls-desktop-manager/0.2.18/NodePilot-Setup-0.2.18-x64.exe',
-    filename: 'NodePilot-Setup-0.2.18-x64.exe',
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-Setup-0.2.26-x64.exe',
+    filename: 'NodePilot-Setup-0.2.26-x64.exe',
     contentType: 'application/octet-stream',
-    limitKey: 'nodepilot-0.2.18-x64'
+    limitKey: 'nodepilot-0.2.26-x64'
   },
   '/downloads/anytls-desktop-manager/NodePilot-Setup-latest-x64.exe': {
-    key: 'anytls-desktop-manager/0.2.18/NodePilot-Setup-0.2.18-x64.exe',
-    filename: 'NodePilot-Setup-0.2.18-x64.exe',
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-Setup-0.2.26-x64.exe',
+    filename: 'NodePilot-Setup-0.2.26-x64.exe',
     contentType: 'application/octet-stream',
-    limitKey: 'nodepilot-0.2.18-x64'
+    limitKey: 'nodepilot-0.2.26-x64'
+  },
+  '/downloads/nodepilot/NodePilot-Setup-0.2.26-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-Setup-0.2.26-x64.exe',
+    filename: 'NodePilot-Setup-0.2.26-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.26-x64'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-Setup-0.2.26-x64.exe': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-Setup-0.2.26-x64.exe',
+    filename: 'NodePilot-Setup-0.2.26-x64.exe',
+    contentType: 'application/octet-stream',
+    limitKey: 'nodepilot-0.2.26-x64'
+  },
+  '/downloads/nodepilot/NodePilot-Setup-0.2.26-x64.exe.blockmap': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-Setup-0.2.26-x64.exe.blockmap',
+    filename: 'NodePilot-Setup-0.2.26-x64.exe.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/anytls-desktop-manager/NodePilot-Setup-0.2.26-x64.exe.blockmap': {
+    key: 'anytls-desktop-manager/0.2.26/NodePilot-Setup-0.2.26-x64.exe.blockmap',
+    filename: 'NodePilot-Setup-0.2.26-x64.exe.blockmap',
+    contentType: 'application/octet-stream'
+  },
+  '/downloads/nodepilot/latest.yml': {
+    key: 'anytls-desktop-manager/0.2.26/latest.yml',
+    filename: 'latest.yml',
+    contentType: 'text/yaml; charset=utf-8',
+    cacheControl: 'public, max-age=60'
+  },
+  '/downloads/anytls-desktop-manager/latest.yml': {
+    key: 'anytls-desktop-manager/0.2.26/latest.yml',
+    filename: 'latest.yml',
+    contentType: 'text/yaml; charset=utf-8',
+    cacheControl: 'public, max-age=60'
   },
   '/downloads/nodepilot/NodePilot-Setup-0.2.18-x64.exe': {
     key: 'anytls-desktop-manager/0.2.18/NodePilot-Setup-0.2.18-x64.exe',

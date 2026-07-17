@@ -30,6 +30,8 @@ const appsIndex = read('src/components/AppsIndex.astro');
 const footer = read('src/components/Footer.astro');
 const sitemap = read('public/sitemap.xml');
 const worker = read('src/worker.js');
+const nodePilotProduct = read('src/data/products/anytls-desktop-manager.ts');
+const nodePilotLanding = read('src/components/AnyTlsDesktopManagerLanding.astro');
 
 for (const [name, source] of Object.entries({ stationHome, appsIndex, footer, sitemap, worker })) {
   assert.doesNotMatch(source, /StationCat Radar|stationcat-radar|stationCatRadarProduct/, `${name} should not expose Radar`);
@@ -41,5 +43,13 @@ assert.match(stationHome, /nodePilotDownload/);
 assert.match(appsIndex, /title="NodePilot"/);
 assert.match(footer, /label: 'NodePilot'/);
 assert.match(sitemap, /apps\/nodepilot\//);
+assert.match(nodePilotProduct, /latestVersion: 'v0\.2\.26'/);
+assert.match(nodePilotProduct, /36d5f94320755ab02b594051acf5a4c94564c9f4bc9c327a0950f507c0181e40/);
+assert.match(nodePilotProduct, /53eec44cfa183eea11d6f8dc653dd10d0e0a0538623094ff1ca26ce7962db4b4/);
+assert.match(nodePilotLanding, /0\.2\.26 版本更新/);
+assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/NodePilot-0\.2\.26-arm64\.dmg/);
+assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/NodePilot-Setup-0\.2\.26-x64\.exe/);
+assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/latest-mac\.yml/);
+assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/latest\.yml/);
 
 console.log('Product catalog retirement and homepage tests passed.');

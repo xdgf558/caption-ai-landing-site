@@ -2,28 +2,28 @@ export const anyTlsDesktopManagerProduct = {
   id: 'anytls-desktop-manager',
   slug: 'anytls-desktop-manager',
   name: 'NodePilot',
-  latestVersion: 'v0.2.18',
+  latestVersion: 'v0.2.26',
   downloads: [
     {
       id: 'mac-arm64',
       label: 'macOS Apple Silicon',
-      version: '0.2.18',
+      version: '0.2.26',
       platform: 'macOS',
       architecture: 'arm64',
       minimumSystem: 'macOS 12 or later',
-      fileSize: '119.3 MB',
-      sha256: '7a10eddba4aea171a5b56ed9332d4d935a26e632eb7fde6a5b8819d29719af4b',
+      fileSize: '121.8 MB',
+      sha256: '36d5f94320755ab02b594051acf5a4c94564c9f4bc9c327a0950f507c0181e40',
       downloadPath: '/downloads/nodepilot/NodePilot-latest-arm64.dmg'
     },
     {
       id: 'windows-x64',
       label: 'Windows x64',
-      version: '0.2.18',
+      version: '0.2.26',
       platform: 'Windows',
       architecture: 'x64',
       minimumSystem: 'Windows 10 or later',
-      fileSize: '92.2 MB',
-      sha256: 'a6dbf31eb061282a105f732d4733c7c9f0a7e911903cd2441abaf4667279b72f',
+      fileSize: '93.8 MB',
+      sha256: '53eec44cfa183eea11d6f8dc653dd10d0e0a0538623094ff1ca26ce7962db4b4',
       downloadPath: '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe'
     }
   ],
