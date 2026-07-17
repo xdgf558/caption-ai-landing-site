@@ -15051,13 +15051,15 @@ const downloadFiles = {
     key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-arm64.dmg',
     filename: 'NodePilot-0.2.26-arm64.dmg',
     contentType: 'application/x-apple-diskimage',
-    limitKey: 'nodepilot-0.2.26-arm64'
+    limitKey: 'nodepilot-0.2.26-arm64',
+    cacheControl: 'public, max-age=60, must-revalidate'
   },
   '/downloads/anytls-desktop-manager/NodePilot-latest-arm64.dmg': {
     key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-arm64.dmg',
     filename: 'NodePilot-0.2.26-arm64.dmg',
     contentType: 'application/x-apple-diskimage',
-    limitKey: 'nodepilot-0.2.26-arm64'
+    limitKey: 'nodepilot-0.2.26-arm64',
+    cacheControl: 'public, max-age=60, must-revalidate'
   },
   '/downloads/nodepilot/NodePilot-0.2.26-arm64.dmg': {
     key: 'anytls-desktop-manager/0.2.26/NodePilot-0.2.26-arm64.dmg',
@@ -15197,13 +15199,15 @@ const downloadFiles = {
     key: 'anytls-desktop-manager/0.2.26/NodePilot-Setup-0.2.26-x64.exe',
     filename: 'NodePilot-Setup-0.2.26-x64.exe',
     contentType: 'application/octet-stream',
-    limitKey: 'nodepilot-0.2.26-x64'
+    limitKey: 'nodepilot-0.2.26-x64',
+    cacheControl: 'public, max-age=60, must-revalidate'
   },
   '/downloads/anytls-desktop-manager/NodePilot-Setup-latest-x64.exe': {
     key: 'anytls-desktop-manager/0.2.26/NodePilot-Setup-0.2.26-x64.exe',
     filename: 'NodePilot-Setup-0.2.26-x64.exe',
     contentType: 'application/octet-stream',
-    limitKey: 'nodepilot-0.2.26-x64'
+    limitKey: 'nodepilot-0.2.26-x64',
+    cacheControl: 'public, max-age=60, must-revalidate'
   },
   '/downloads/nodepilot/NodePilot-Setup-0.2.26-x64.exe': {
     key: 'anytls-desktop-manager/0.2.26/NodePilot-Setup-0.2.26-x64.exe',
