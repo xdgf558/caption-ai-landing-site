@@ -179,11 +179,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <div>
               <p class="station-kicker">Signal strip</p>
               <h3 id="signal-help-title">每日简报导入</h3>
-              <p>把科技、经济、AI 或市场简报文案粘贴进来，保存后会发布到 /signal/，并自动生成分享卡片。</p>
+              <p>继续人工发布简报，也可以维护后续自动采集会使用的来源白名单。第一阶段不会自动抓取或发布。</p>
             </div>
           </section>
           <div class="button-row">
             <button class="button button-primary" id="signal-refresh" type="button">刷新简报</button>
+            <button class="button button-secondary" id="signal-source-manage" type="button">管理来源</button>
           </div>
           <div class="admin-v2-list" id="signal-list" aria-label="Signal strip briefs"></div>
         </section>
@@ -683,6 +684,142 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <span>AI</span>
             </div>
           </div>
+
+          <details class="admin-v2-disclosure" id="signal-automation-panel" open>
+            <summary class="admin-disclosure-summary">
+              <span>
+                <small>Automation phase 1</small>
+                <strong>采集来源与候选资讯底座</strong>
+              </span>
+              <span id="signal-automation-summary">正在读取来源白名单。</span>
+            </summary>
+            <div class="admin-disclosure-body">
+              <div class="admin-signal-automation-grid">
+                <section class="admin-signal-source-pane" aria-labelledby="signal-sources-title">
+                  <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+                    <div>
+                      <p class="station-kicker">Approved sources</p>
+                      <h3 id="signal-sources-title">来源白名单</h3>
+                    </div>
+                    <button class="button button-secondary" id="signal-automation-refresh" type="button">刷新</button>
+                  </div>
+                  <div class="admin-v2-table-list" id="signal-sources-list"></div>
+                </section>
+
+                <form class="admin-v2-form admin-signal-source-form" id="signal-source-form" novalidate>
+                  <input id="signal-source-id" type="hidden" />
+                  <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+                    <div>
+                      <p class="station-kicker">Source settings</p>
+                      <h3 id="signal-source-form-title">新增来源</h3>
+                    </div>
+                  </div>
+                  <div class="admin-v2-form-grid">
+                    <label>
+                      来源名称
+                      <input id="signal-source-name" required placeholder="GitHub Changelog" />
+                    </label>
+                    <label>
+                      发布机构
+                      <input id="signal-source-publisher" placeholder="GitHub" />
+                    </label>
+                    <label class="admin-v2-field--wide">
+                      RSS / API / 页面地址
+                      <input id="signal-source-endpoint" type="url" required placeholder="https://example.com/feed.xml" />
+                    </label>
+                    <label class="admin-v2-field--wide">
+                      主页地址
+                      <input id="signal-source-homepage" type="url" placeholder="https://example.com/" />
+                    </label>
+                    <label>
+                      来源类型
+                      <select id="signal-source-type">
+                        <option value="rss">RSS / Atom</option>
+                        <option value="api">API</option>
+                        <option value="page">网页</option>
+                      </select>
+                    </label>
+                    <label>
+                      分类
+                      <select id="signal-source-category">
+                        <option value="ai">AI</option>
+                        <option value="tech">科技</option>
+                        <option value="economy">经济</option>
+                        <option value="market">市场</option>
+                        <option value="research">研究</option>
+                        <option value="general">综合</option>
+                      </select>
+                    </label>
+                    <label>
+                      可信等级
+                      <select id="signal-source-trust">
+                        <option value="primary">一手来源</option>
+                        <option value="established">成熟媒体</option>
+                        <option value="community">社区线索</option>
+                      </select>
+                    </label>
+                    <label>
+                      内容语言
+                      <input id="signal-source-language" value="en" placeholder="en" />
+                    </label>
+                    <label>
+                      采集间隔（分钟）
+                      <input id="signal-source-interval" type="number" min="15" max="10080" step="15" value="360" />
+                    </label>
+                    <label>
+                      单次最多条数
+                      <input id="signal-source-limit" type="number" min="1" max="100" step="1" value="30" />
+                    </label>
+                    <label class="admin-checkbox">
+                      <input id="signal-source-enabled" type="checkbox" checked />
+                      启用来源
+                    </label>
+                    <label class="admin-checkbox">
+                      <input id="signal-source-api-key" type="checkbox" />
+                      需要 API Key
+                    </label>
+                    <label class="admin-v2-field--wide">
+                      备注
+                      <textarea id="signal-source-notes" rows="3" placeholder="记录用途、限制或后续适配要求。"></textarea>
+                    </label>
+                  </div>
+                  <div class="button-row">
+                    <button class="button button-primary" type="submit">保存来源</button>
+                    <button class="button button-secondary" id="signal-source-reset" type="button">新增来源</button>
+                  </div>
+                  <div class="admin-inline-status" id="signal-source-status" role="status" aria-live="polite" hidden></div>
+                </form>
+              </div>
+
+              <div class="admin-signal-pipeline-grid">
+                <section aria-labelledby="signal-runs-title">
+                  <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+                    <div>
+                      <p class="station-kicker">Collection runs</p>
+                      <h3 id="signal-runs-title">采集运行</h3>
+                    </div>
+                  </div>
+                  <div class="admin-v2-table-list" id="signal-runs-list"></div>
+                </section>
+                <section aria-labelledby="signal-candidates-title">
+                  <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+                    <div>
+                      <p class="station-kicker">Candidate queue</p>
+                      <h3 id="signal-candidates-title">候选资讯</h3>
+                    </div>
+                  </div>
+                  <div class="admin-v2-table-list" id="signal-candidates-list"></div>
+                </section>
+              </div>
+            </div>
+          </details>
+
+          <div class="admin-v2-section-heading admin-v2-section-heading--compact admin-signal-manual-heading">
+            <div>
+              <p class="station-kicker">Manual publishing</p>
+              <h3>人工简报导入</h3>
+            </div>
+          </div>
           <form class="admin-v2-form" id="signal-form">
             <div class="admin-v2-form-grid">
               <label>
@@ -912,6 +1049,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalForm: $('#signal-form'),
       signalOpenPage: $('#signal-open-page'),
       signalStatus: $('#signal-status'),
+      signalAutomationPanel: $('#signal-automation-panel'),
+      signalAutomationSummary: $('#signal-automation-summary'),
+      signalSourcesList: $('#signal-sources-list'),
+      signalRunsList: $('#signal-runs-list'),
+      signalCandidatesList: $('#signal-candidates-list'),
+      signalSourceForm: $('#signal-source-form'),
+      signalSourceFormTitle: $('#signal-source-form-title'),
+      signalSourceStatus: $('#signal-source-status'),
       ordersList: $('#orders-list'),
       orderDetail: $('#order-detail'),
       accountsList: $('#accounts-list'),
@@ -1031,6 +1176,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         sources: $('#signal-sources'),
         markdown: $('#signal-markdown')
       },
+      signalSource: {
+        id: $('#signal-source-id'),
+        name: $('#signal-source-name'),
+        publisher: $('#signal-source-publisher'),
+        endpointUrl: $('#signal-source-endpoint'),
+        homepageUrl: $('#signal-source-homepage'),
+        sourceType: $('#signal-source-type'),
+        category: $('#signal-source-category'),
+        trustTier: $('#signal-source-trust'),
+        language: $('#signal-source-language'),
+        fetchIntervalMinutes: $('#signal-source-interval'),
+        maxItemsPerRun: $('#signal-source-limit'),
+        isEnabled: $('#signal-source-enabled'),
+        requiresApiKey: $('#signal-source-api-key'),
+        notes: $('#signal-source-notes')
+      },
       access: {
         email: $('#access-email'),
         seriesSlug: $('#access-series-slug'),
@@ -1046,6 +1207,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       entries: [],
       imports: [],
       signalBriefs: [],
+      signalSources: [],
+      signalRuns: [],
+      signalCandidates: [],
       orders: [],
       accounts: [],
       analyticsStats: [],
@@ -1055,6 +1219,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       selectedEntryId: 0,
       selectedImportId: 0,
       selectedSignalId: 0,
+      selectedSignalSourceId: '',
       selectedOrderToken: '',
       selectedAccountId: 0,
       selectedAnalyticsKey: '',
@@ -1143,6 +1308,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signalStatus.textContent = message;
       elements.signalStatus.dataset.tone = tone;
       elements.signalStatus.hidden = !message;
+    };
+
+    const setSignalSourceStatus = (message, tone = 'neutral') => {
+      elements.signalSourceStatus.textContent = message;
+      elements.signalSourceStatus.dataset.tone = tone;
+      elements.signalSourceStatus.hidden = !message;
     };
 
     const apiJson = async (path, options = {}) => {
@@ -1817,8 +1988,242 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       economy: '经济',
       general: '综合',
       market: '市场',
+      research: '研究',
       tech: '科技'
     })[value] || value || '综合';
+
+    const signalSourceTypeLabel = (value) => ({
+      api: 'API',
+      page: '网页',
+      rss: 'RSS / Atom'
+    })[value] || value;
+
+    const signalSourceTrustLabel = (value) => ({
+      community: '社区线索',
+      established: '成熟媒体',
+      primary: '一手来源'
+    })[value] || value;
+
+    const signalSourceHealthLabel = (value) => ({
+      error: '有错误',
+      healthy: '正常',
+      not_checked: '待首检',
+      paused: '已暂停'
+    })[value] || value;
+
+    const resetSignalSourceForm = () => {
+      state.selectedSignalSourceId = '';
+      elements.signalSource.id.value = '';
+      elements.signalSource.name.value = '';
+      elements.signalSource.publisher.value = '';
+      elements.signalSource.endpointUrl.value = '';
+      elements.signalSource.homepageUrl.value = '';
+      elements.signalSource.sourceType.value = 'rss';
+      elements.signalSource.category.value = 'tech';
+      elements.signalSource.trustTier.value = 'primary';
+      elements.signalSource.language.value = 'en';
+      elements.signalSource.fetchIntervalMinutes.value = '360';
+      elements.signalSource.maxItemsPerRun.value = '30';
+      elements.signalSource.isEnabled.checked = true;
+      elements.signalSource.requiresApiKey.checked = false;
+      elements.signalSource.notes.value = '';
+      elements.signalSourceFormTitle.textContent = '新增来源';
+      setSignalSourceStatus('');
+    };
+
+    const editSignalSource = (source) => {
+      state.selectedSignalSourceId = source.id;
+      elements.signalSource.id.value = source.id;
+      elements.signalSource.name.value = source.name || '';
+      elements.signalSource.publisher.value = source.publisher || '';
+      elements.signalSource.endpointUrl.value = source.endpointUrl || '';
+      elements.signalSource.homepageUrl.value = source.homepageUrl || '';
+      elements.signalSource.sourceType.value = source.sourceType || 'rss';
+      elements.signalSource.category.value = source.category || 'general';
+      elements.signalSource.trustTier.value = source.trustTier || 'primary';
+      elements.signalSource.language.value = source.language || 'en';
+      elements.signalSource.fetchIntervalMinutes.value = String(source.fetchIntervalMinutes || 360);
+      elements.signalSource.maxItemsPerRun.value = String(source.maxItemsPerRun || 30);
+      elements.signalSource.isEnabled.checked = Boolean(source.isEnabled);
+      elements.signalSource.requiresApiKey.checked = Boolean(source.requiresApiKey);
+      elements.signalSource.notes.value = source.notes || '';
+      elements.signalSourceFormTitle.textContent = `编辑：${source.name}`;
+      setSignalSourceStatus('');
+      elements.signalSourceForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    const buildSignalSourcePayload = () => {
+      const selectedSource = state.signalSources.find((source) => source.id === state.selectedSignalSourceId);
+      return {
+        action: 'save',
+        id: elements.signalSource.id.value.trim(),
+        name: elements.signalSource.name.value.trim(),
+        publisher: elements.signalSource.publisher.value.trim(),
+        endpointUrl: elements.signalSource.endpointUrl.value.trim(),
+        homepageUrl: elements.signalSource.homepageUrl.value.trim(),
+        sourceType: elements.signalSource.sourceType.value,
+        category: elements.signalSource.category.value,
+        trustTier: elements.signalSource.trustTier.value,
+        language: elements.signalSource.language.value.trim(),
+        fetchIntervalMinutes: Number.parseInt(elements.signalSource.fetchIntervalMinutes.value, 10),
+        maxItemsPerRun: Number.parseInt(elements.signalSource.maxItemsPerRun.value, 10),
+        isEnabled: elements.signalSource.isEnabled.checked,
+        requiresApiKey: elements.signalSource.requiresApiKey.checked,
+        config: selectedSource?.config || {},
+        notes: elements.signalSource.notes.value.trim()
+      };
+    };
+
+    const renderSignalSources = () => {
+      if (!state.signalSources.length) {
+        renderEmpty(elements.signalSourcesList, '还没有来源白名单。');
+        return;
+      }
+
+      elements.signalSourcesList.innerHTML = '';
+      state.signalSources.forEach((source) => {
+        const row = document.createElement('article');
+        row.className = 'admin-v2-row admin-signal-source-row';
+        row.innerHTML = `
+          <div class="admin-signal-source-row__heading">
+            <strong>${escapeHtml(source.name)}</strong>
+            <span class="admin-signal-source-state" data-state="${escapeHtml(source.health)}">${escapeHtml(signalSourceHealthLabel(source.health))}</span>
+          </div>
+          <div class="admin-signal-source-row__meta">
+            <span>${escapeHtml(signalSourceTypeLabel(source.sourceType))}</span>
+            <span>${escapeHtml(signalCategoryLabel(source.category))}</span>
+            <span>${escapeHtml(signalSourceTrustLabel(source.trustTier))}</span>
+            <span>${escapeHtml(String(source.fetchIntervalMinutes))} 分钟</span>
+            ${source.requiresApiKey ? '<span>需 API Key</span>' : ''}
+          </div>
+          <div class="admin-signal-source-row__url">${escapeHtml(source.endpointUrl)}</div>
+          ${source.notes ? `<small>${escapeHtml(source.notes)}</small>` : ''}
+          <div class="admin-signal-source-row__actions"></div>
+        `;
+        const actions = row.querySelector('.admin-signal-source-row__actions');
+        const editButton = document.createElement('button');
+        editButton.className = 'button button-secondary';
+        editButton.type = 'button';
+        editButton.textContent = '编辑';
+        editButton.addEventListener('click', () => editSignalSource(source));
+        const toggleButton = document.createElement('button');
+        toggleButton.className = 'button button-secondary';
+        toggleButton.type = 'button';
+        toggleButton.textContent = source.isEnabled ? '暂停' : '启用';
+        toggleButton.addEventListener('click', () => toggleSignalSource(source));
+        actions.append(editButton, toggleButton);
+        elements.signalSourcesList.append(row);
+      });
+    };
+
+    const renderSignalRuns = () => {
+      if (!state.signalRuns.length) {
+        renderEmpty(elements.signalRunsList, '第一阶段尚未启动采集，因此还没有运行记录。');
+        return;
+      }
+      elements.signalRunsList.innerHTML = state.signalRuns.map((run) => `
+        <article class="admin-v2-row">
+          <strong>${escapeHtml(run.status)} · ${escapeHtml(run.triggerType)}</strong>
+          <span>${escapeHtml(String(run.acceptedCount))} 候选 · ${escapeHtml(String(run.duplicateCount))} 重复 · ${escapeHtml(String(run.failedCount))} 失败</span>
+          <small>${escapeHtml(formatDate(run.startedAt || run.createdAt))}</small>
+        </article>
+      `).join('');
+    };
+
+    const renderSignalCandidates = () => {
+      if (!state.signalCandidates.length) {
+        renderEmpty(elements.signalCandidatesList, '候选队列为空。第二阶段接入采集后，资讯会先进入这里，不会直接发布。');
+        return;
+      }
+      elements.signalCandidatesList.innerHTML = state.signalCandidates.map((candidate) => `
+        <article class="admin-v2-row">
+          <strong>${escapeHtml(candidate.title)}</strong>
+          <span>${escapeHtml(candidate.sourceName || candidate.sourceId)} · ${escapeHtml(signalCategoryLabel(candidate.category))} · ${escapeHtml(candidate.status)}</span>
+          <small>${escapeHtml(formatDate(candidate.publishedAt || candidate.createdAt))}</small>
+        </article>
+      `).join('');
+    };
+
+    const loadSignalAutomation = async () => {
+      elements.signalAutomationSummary.textContent = '正在读取来源白名单。';
+      delete elements.signalAutomationSummary.dataset.state;
+      try {
+        const [sourcesPayload, runsPayload, candidatesPayload] = await Promise.all([
+          apiJson('/admin/api/signal/sources'),
+          apiJson('/admin/api/signal/runs?limit=20'),
+          apiJson('/admin/api/signal/candidates?limit=30')
+        ]);
+        const setupRequired = sourcesPayload.setupRequired || runsPayload.setupRequired || candidatesPayload.setupRequired;
+        if (setupRequired) {
+          state.signalSources = [];
+          state.signalRuns = [];
+          state.signalCandidates = [];
+          elements.signalAutomationSummary.textContent = '待应用 migrations/0019_signal_automation.sql';
+          renderEmpty(elements.signalSourcesList, '请先对生产 D1 应用 0019_signal_automation.sql。');
+          renderEmpty(elements.signalRunsList, '数据表尚未初始化。');
+          renderEmpty(elements.signalCandidatesList, '数据表尚未初始化。');
+          return;
+        }
+        state.signalSources = sourcesPayload.sources || [];
+        state.signalRuns = runsPayload.runs || [];
+        state.signalCandidates = candidatesPayload.candidates || [];
+        const sourceSummary = sourcesPayload.summary || {};
+        elements.signalAutomationSummary.textContent = `${sourceSummary.total || 0} 个来源 · ${sourceSummary.enabled || 0} 启用 · 未启动自动采集`;
+        renderSignalSources();
+        renderSignalRuns();
+        renderSignalCandidates();
+      } catch (error) {
+        state.signalSources = [];
+        state.signalRuns = [];
+        state.signalCandidates = [];
+        elements.signalAutomationSummary.dataset.state = 'error';
+        elements.signalAutomationSummary.textContent = `读取失败：${error.message}`;
+        renderEmpty(elements.signalSourcesList, '来源白名单读取失败，请稍后重试。');
+        renderEmpty(elements.signalRunsList, '采集运行记录暂时不可用。');
+        renderEmpty(elements.signalCandidatesList, '候选资讯暂时不可用。');
+      }
+    };
+
+    const saveSignalSource = async (event) => {
+      event.preventDefault();
+      const payload = buildSignalSourcePayload();
+      if (!payload.name || !payload.endpointUrl) {
+        setSignalSourceStatus('来源名称和采集地址必填。', 'error');
+        return;
+      }
+      const submitButton = elements.signalSourceForm.querySelector('[type="submit"]');
+      submitButton.disabled = true;
+      setSignalSourceStatus('正在保存来源。');
+      try {
+        await apiJson('/admin/api/signal/sources', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        resetSignalSourceForm();
+        await loadSignalAutomation();
+        await loadAuditLogs();
+        setSignalSourceStatus('来源已保存。', 'success');
+      } catch (error) {
+        setSignalSourceStatus(error.message, 'error');
+      } finally {
+        submitButton.disabled = false;
+      }
+    };
+
+    const toggleSignalSource = async (source) => {
+      setSignalSourceStatus(`正在${source.isEnabled ? '暂停' : '启用'} ${source.name}。`);
+      try {
+        await apiJson('/admin/api/signal/sources', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'toggle', id: source.id, isEnabled: !source.isEnabled })
+        });
+        await loadSignalAutomation();
+        await loadAuditLogs();
+        setSignalSourceStatus(`${source.name} 已${source.isEnabled ? '暂停' : '启用'}。`, 'success');
+      } catch (error) {
+        setSignalSourceStatus(error.message, 'error');
+      }
+    };
 
     const todayDateInput = () => new Date().toISOString().slice(0, 10);
 
@@ -3202,7 +3607,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         panel.hidden = !expected;
       });
       if (name === 'imports') await loadImportReviews();
-      if (name === 'signal') await loadSignalBriefs();
+      if (name === 'signal') {
+        await Promise.all([loadSignalBriefs(), loadSignalAutomation()]);
+        setStatus(`已载入 ${state.signalBriefs.length} 篇简报和 ${state.signalSources.length} 个采集来源。`, 'success');
+      }
       if (name === 'commerce') await loadOrders();
       if (name === 'accounts') await loadAccounts();
       if (name === 'analytics') await loadAnalyticsStats();
@@ -3225,11 +3633,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     });
     elements.contentForm.addEventListener('submit', saveContent);
     elements.signalForm.addEventListener('submit', importSignalBrief);
+    elements.signalSourceForm.addEventListener('submit', saveSignalSource);
     elements.accessForm.addEventListener('submit', grantEntitlement);
     $('#content-refresh').addEventListener('click', () => loadEntries({ autoSelect: true }));
     $('#imports-refresh').addEventListener('click', () => loadImportReviews());
     $('#signal-refresh').addEventListener('click', loadSignalBriefs);
     $('#signal-reset').addEventListener('click', resetSignalForm);
+    $('#signal-automation-refresh').addEventListener('click', loadSignalAutomation);
+    $('#signal-source-reset').addEventListener('click', resetSignalSourceForm);
+    $('#signal-source-manage').addEventListener('click', () => {
+      elements.signalAutomationPanel.open = true;
+      elements.signalAutomationPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
     $('#orders-refresh').addEventListener('click', loadOrders);
     $('#accounts-refresh').addEventListener('click', loadAccounts);
     $('#analytics-refresh').addEventListener('click', loadAnalyticsStats);
@@ -3276,6 +3691,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         await loadPricingDefaults({ silent: true });
         resetForm('blog_post');
         resetSignalForm();
+        resetSignalSourceForm();
         await loadEntries();
         const initialContentId = Number.parseInt(new URLSearchParams(window.location.search).get('contentId') || '', 10);
         if (Number.isFinite(initialContentId) && initialContentId > 0) {
