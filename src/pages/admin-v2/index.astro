@@ -688,8 +688,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <details class="admin-v2-disclosure" id="signal-automation-panel" open>
             <summary class="admin-disclosure-summary">
               <span>
-                <small>Automation phase 2</small>
-                <strong>免费来源采集与候选资讯</strong>
+                <small>Automation phase 3</small>
+                <strong>免费来源采集与候选审核</strong>
               </span>
               <span id="signal-automation-summary">正在读取来源白名单。</span>
             </summary>
@@ -811,7 +811,58 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                       <p class="station-kicker">Candidate queue</p>
                       <h3 id="signal-candidates-title">候选资讯</h3>
                     </div>
+                    <button
+                      class="button button-secondary"
+                      id="signal-candidates-rescore"
+                      type="button"
+                      title="重新评分最近 500 条候选；更早记录保留原评分，聚类仅作为审核辅助"
+                    >重新评分</button>
                   </div>
+                  <form class="admin-signal-candidate-filters" id="signal-candidate-filters">
+                    <label>
+                      状态
+                      <select id="signal-candidate-status">
+                        <option value="">全部</option>
+                        <option value="new">待审核</option>
+                        <option value="shortlisted">已入选</option>
+                        <option value="rejected">已淘汰</option>
+                        <option value="used">已采用</option>
+                      </select>
+                    </label>
+                    <label>
+                      来源
+                      <select id="signal-candidate-source">
+                        <option value="">全部来源</option>
+                      </select>
+                    </label>
+                    <label>
+                      分类
+                      <select id="signal-candidate-category">
+                        <option value="">全部分类</option>
+                        <option value="ai">AI</option>
+                        <option value="tech">科技</option>
+                        <option value="economy">经济</option>
+                        <option value="market">市场</option>
+                        <option value="research">研究</option>
+                        <option value="general">综合</option>
+                      </select>
+                    </label>
+                    <label>
+                      最低分
+                      <select id="signal-candidate-min-score">
+                        <option value="0">不限</option>
+                        <option value="55">55 · 可关注</option>
+                        <option value="75">75 · 高优先</option>
+                      </select>
+                    </label>
+                    <label class="admin-signal-candidate-filters__query">
+                      搜索
+                      <input id="signal-candidate-query" type="search" placeholder="标题或摘要" />
+                    </label>
+                    <button class="button button-primary" type="submit">筛选</button>
+                  </form>
+                  <div class="admin-signal-candidate-summary" id="signal-candidates-summary"></div>
+                  <div class="admin-inline-status" id="signal-candidates-status-message" role="status" aria-live="polite" hidden></div>
                   <div class="admin-v2-table-list" id="signal-candidates-list"></div>
                 </section>
               </div>
@@ -1060,6 +1111,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalSourcesList: $('#signal-sources-list'),
       signalRunsList: $('#signal-runs-list'),
       signalCandidatesList: $('#signal-candidates-list'),
+      signalCandidatesSummary: $('#signal-candidates-summary'),
+      signalCandidatesStatusMessage: $('#signal-candidates-status-message'),
+      signalCandidatesRescore: $('#signal-candidates-rescore'),
+      signalCandidateFilters: $('#signal-candidate-filters'),
       signalSourceForm: $('#signal-source-form'),
       signalSourceFormTitle: $('#signal-source-form-title'),
       signalSourceStatus: $('#signal-source-status'),
@@ -1198,6 +1253,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         requiresApiKey: $('#signal-source-api-key'),
         notes: $('#signal-source-notes')
       },
+      signalCandidate: {
+        status: $('#signal-candidate-status'),
+        sourceId: $('#signal-candidate-source'),
+        category: $('#signal-candidate-category'),
+        minScore: $('#signal-candidate-min-score'),
+        query: $('#signal-candidate-query')
+      },
       access: {
         email: $('#access-email'),
         seriesSlug: $('#access-series-slug'),
@@ -1217,6 +1279,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalRuns: [],
       signalCandidates: [],
       signalCollectionReady: false,
+      signalTriageReady: false,
+      signalCandidateSummary: null,
       orders: [],
       accounts: [],
       analyticsStats: [],
@@ -1321,6 +1385,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signalSourceStatus.textContent = message;
       elements.signalSourceStatus.dataset.tone = tone;
       elements.signalSourceStatus.hidden = !message;
+    };
+
+    const setSignalCandidateStatus = (message, tone = 'neutral') => {
+      elements.signalCandidatesStatusMessage.textContent = message;
+      elements.signalCandidatesStatusMessage.dataset.tone = tone;
+      elements.signalCandidatesStatusMessage.hidden = !message;
     };
 
     const apiJson = async (path, options = {}) => {
@@ -2018,6 +2088,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       paused: '已暂停'
     })[value] || value;
 
+    const signalCandidateStatusLabel = (value) => ({
+      new: '待审核',
+      shortlisted: '已入选',
+      rejected: '已淘汰',
+      used: '已采用'
+    })[value] || value;
+
+    const signalCandidatePriorityLabel = (value) => ({
+      high: '高优先',
+      low: '低优先',
+      medium: '可关注',
+      unscored: '未评分'
+    })[value] || value;
+
     const resetSignalSourceForm = () => {
       state.selectedSignalSourceId = '';
       elements.signalSource.id.value = '';
@@ -2139,47 +2223,207 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       `).join('');
     };
 
-    const renderSignalCandidates = () => {
-      if (!state.signalCandidates.length) {
-        renderEmpty(elements.signalCandidatesList, '候选队列为空。采集到的资讯会先进入这里，不会直接发布。');
+    const renderSignalCandidateSourceOptions = () => {
+      const selected = elements.signalCandidate.sourceId.value;
+      elements.signalCandidate.sourceId.innerHTML = '<option value="">全部来源</option>';
+      state.signalSources.forEach((source) => {
+        const option = document.createElement('option');
+        option.value = source.id;
+        option.textContent = source.name;
+        elements.signalCandidate.sourceId.append(option);
+      });
+      if (state.signalSources.some((source) => source.id === selected)) {
+        elements.signalCandidate.sourceId.value = selected;
+      }
+    };
+
+    const renderSignalCandidateSummary = () => {
+      if (!state.signalTriageReady) {
+        elements.signalCandidatesSummary.textContent = '待应用 migrations/0021_signal_candidate_triage.sql 后启用评分与审核。';
+        elements.signalCandidatesSummary.dataset.state = 'setup';
         return;
       }
-      elements.signalCandidatesList.innerHTML = state.signalCandidates.map((candidate) => `
-        <article class="admin-v2-row">
-          <strong>${candidate.canonicalUrl ? `<a href="${escapeHtml(candidate.canonicalUrl)}" target="_blank" rel="noreferrer">${escapeHtml(candidate.title)}</a>` : escapeHtml(candidate.title)}</strong>
-          <span>${escapeHtml(candidate.sourceName || candidate.sourceId)} · ${escapeHtml(signalCategoryLabel(candidate.category))} · ${escapeHtml(candidate.status)}</span>
+      delete elements.signalCandidatesSummary.dataset.state;
+      const summary = state.signalCandidateSummary || {};
+      const average = summary.averageScore === null || summary.averageScore === undefined
+        ? '暂无评分'
+        : `平均 ${summary.averageScore} 分`;
+      elements.signalCandidatesSummary.textContent = `${summary.total || 0} 条 · 待审 ${summary.new || 0} · 入选 ${summary.shortlisted || 0} · 淘汰 ${summary.rejected || 0} · ${average}`;
+    };
+
+    const candidateScoreDetails = (candidate) => {
+      const breakdown = candidate.scoreBreakdown || {};
+      const reasons = Array.isArray(breakdown.reasons) ? breakdown.reasons : [];
+      if (!reasons.length) return '';
+      return `
+        <details class="admin-signal-score-details">
+          <summary>查看评分依据</summary>
+          <ul>${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>
+        </details>
+      `;
+    };
+
+    const candidateActions = (candidate) => {
+      if (!state.signalTriageReady || candidate.status === 'used') return [];
+      if (candidate.status === 'new') return [['shortlist', '入选'], ['reject', '淘汰']];
+      if (candidate.status === 'shortlisted') return [['restore', '恢复待审'], ['reject', '淘汰']];
+      if (candidate.status === 'rejected') return [['shortlist', '重新入选'], ['restore', '恢复待审']];
+      return [];
+    };
+
+    const renderSignalCandidates = () => {
+      renderSignalCandidateSummary();
+      if (!state.signalCandidates.length) {
+        renderEmpty(elements.signalCandidatesList, '当前筛选下没有候选资讯。采集到的资讯会先进入这里，不会直接发布。');
+        return;
+      }
+      elements.signalCandidatesList.innerHTML = '';
+      state.signalCandidates.forEach((candidate) => {
+        const row = document.createElement('article');
+        row.className = 'admin-v2-row admin-signal-candidate-row';
+        row.dataset.candidateId = candidate.id;
+        const score = candidate.relevanceScore === null || candidate.relevanceScore === undefined
+          ? '—'
+          : String(candidate.relevanceScore);
+        const clusterLabel = candidate.clusterSize > 1 ? `<span>同题 ${escapeHtml(String(candidate.clusterSize))} 条</span>` : '';
+        row.innerHTML = `
+          <div class="admin-signal-candidate-row__heading">
+            <strong>${candidate.canonicalUrl ? `<a href="${escapeHtml(candidate.canonicalUrl)}" target="_blank" rel="noreferrer">${escapeHtml(candidate.title)}</a>` : escapeHtml(candidate.title)}</strong>
+            <span class="admin-signal-score" data-priority="${escapeHtml(candidate.scorePriority)}">
+              <b>${escapeHtml(score)}</b>
+              ${escapeHtml(signalCandidatePriorityLabel(candidate.scorePriority))}
+            </span>
+          </div>
+          <div class="admin-signal-candidate-row__meta">
+            <span>${escapeHtml(candidate.sourceName || candidate.sourceId)}</span>
+            <span>${escapeHtml(signalCategoryLabel(candidate.category))}</span>
+            <span data-status="${escapeHtml(candidate.status)}">${escapeHtml(signalCandidateStatusLabel(candidate.status))}</span>
+            ${clusterLabel}
+          </div>
           ${candidate.summary ? `<p>${escapeHtml(candidate.summary)}</p>` : ''}
-          <small>${escapeHtml(formatDate(candidate.publishedAt || candidate.createdAt))}</small>
-        </article>
-      `).join('');
+          <small>${escapeHtml(formatDate(candidate.publishedAt || candidate.createdAt))}${candidate.scoredAt ? ` · 评分 ${escapeHtml(formatDate(candidate.scoredAt))}` : ''}</small>
+          ${candidateScoreDetails(candidate)}
+          ${candidate.decisionNote ? `<p class="admin-signal-candidate-note"><strong>审核备注：</strong>${escapeHtml(candidate.decisionNote)}</p>` : ''}
+          <div class="admin-signal-candidate-review" ${candidate.status === 'used' || !state.signalTriageReady ? 'hidden' : ''}>
+            <label>
+              审核备注（可选）
+              <input type="text" maxlength="500" placeholder="记录入选或淘汰原因" />
+            </label>
+            <div class="button-row"></div>
+          </div>
+        `;
+        const actionList = candidateActions(candidate);
+        const actions = row.querySelector('.admin-signal-candidate-review .button-row');
+        const noteInput = row.querySelector('.admin-signal-candidate-review input');
+        actionList.forEach(([action, label]) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = action === 'reject' ? 'button button-danger' : action === 'shortlist' ? 'button button-primary' : 'button button-secondary';
+          button.textContent = label;
+          button.addEventListener('click', () => reviewSignalCandidate(candidate, action, noteInput.value));
+          actions.append(button);
+        });
+        elements.signalCandidatesList.append(row);
+      });
+    };
+
+    const signalCandidateQueryString = () => {
+      const params = new URLSearchParams({ limit: '50' });
+      if (elements.signalCandidate.status.value) params.set('status', elements.signalCandidate.status.value);
+      if (elements.signalCandidate.sourceId.value) params.set('sourceId', elements.signalCandidate.sourceId.value);
+      if (elements.signalCandidate.category.value) params.set('category', elements.signalCandidate.category.value);
+      if (elements.signalCandidate.minScore.value !== '0') params.set('minScore', elements.signalCandidate.minScore.value);
+      if (elements.signalCandidate.query.value.trim()) params.set('query', elements.signalCandidate.query.value.trim());
+      return params.toString();
+    };
+
+    const loadSignalCandidates = async () => {
+      const payload = await apiJson(`/admin/api/signal/candidates?${signalCandidateQueryString()}`);
+      state.signalCandidates = payload.candidates || [];
+      state.signalCandidateSummary = payload.summary || null;
+      state.signalTriageReady = Boolean(payload.triageReady);
+      elements.signalCandidatesRescore.disabled = !state.signalTriageReady;
+      renderSignalCandidates();
+      return payload;
+    };
+
+    const refreshSignalCandidates = async () => {
+      setSignalCandidateStatus('正在读取候选资讯。', 'pending');
+      try {
+        await loadSignalCandidates();
+        setSignalCandidateStatus('', 'neutral');
+      } catch (error) {
+        setSignalCandidateStatus(error.message, 'error');
+      }
+    };
+
+    const reviewSignalCandidate = async (candidate, action, note) => {
+      const row = elements.signalCandidatesList.querySelector(`[data-candidate-id="${CSS.escape(candidate.id)}"]`);
+      row?.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+      setSignalCandidateStatus('正在保存审核结果。', 'pending');
+      try {
+        await apiJson('/admin/api/signal/candidates', {
+          method: 'POST',
+          body: JSON.stringify({ action, candidateId: candidate.id, note })
+        });
+        setSignalCandidateStatus('审核结果已保存。', 'success');
+        await Promise.all([loadSignalCandidates(), loadAuditLogs()]);
+      } catch (error) {
+        setSignalCandidateStatus(error.message, 'error');
+        row?.querySelectorAll('button').forEach((button) => { button.disabled = false; });
+      }
+    };
+
+    const rescoreSignalCandidateQueue = async () => {
+      elements.signalCandidatesRescore.disabled = true;
+      setSignalCandidateStatus('正在按来源可信度、时效和内容完整度重新评分。', 'pending');
+      try {
+        const payload = await apiJson('/admin/api/signal/candidates', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'rescore' })
+        });
+        setSignalCandidateStatus(
+          `已重新评分最近 ${payload.rescored || 0} 条候选资讯；更早记录保留原评分，聚类仅作为审核辅助。`,
+          'success'
+        );
+        await Promise.all([loadSignalCandidates(), loadAuditLogs()]);
+      } catch (error) {
+        setSignalCandidateStatus(error.message, 'error');
+      } finally {
+        elements.signalCandidatesRescore.disabled = !state.signalTriageReady;
+      }
     };
 
     const loadSignalAutomation = async () => {
       elements.signalAutomationSummary.textContent = '正在读取来源白名单。';
       delete elements.signalAutomationSummary.dataset.state;
       try {
-        const [sourcesPayload, runsPayload, candidatesPayload] = await Promise.all([
+        const [sourcesPayload, runsPayload] = await Promise.all([
           apiJson('/admin/api/signal/sources'),
-          apiJson('/admin/api/signal/runs?limit=20'),
-          apiJson('/admin/api/signal/candidates?limit=30')
+          apiJson('/admin/api/signal/runs?limit=20')
         ]);
-        const setupRequired = sourcesPayload.setupRequired || runsPayload.setupRequired || candidatesPayload.setupRequired;
+        const setupRequired = sourcesPayload.setupRequired || runsPayload.setupRequired;
         if (setupRequired) {
           state.signalSources = [];
           state.signalRuns = [];
           state.signalCandidates = [];
           state.signalCollectionReady = false;
+          state.signalTriageReady = false;
+          state.signalCandidateSummary = null;
           elements.signalCollectionStart.disabled = true;
+          elements.signalCandidatesRescore.disabled = true;
           elements.signalAutomationSummary.textContent = '待应用 migrations/0019_signal_automation.sql';
           renderEmpty(elements.signalSourcesList, '请先对生产 D1 应用 0019_signal_automation.sql。');
           renderEmpty(elements.signalRunsList, '数据表尚未初始化。');
           renderEmpty(elements.signalCandidatesList, '数据表尚未初始化。');
+          renderSignalCandidateSummary();
           return;
         }
         state.signalSources = sourcesPayload.sources || [];
         state.signalRuns = runsPayload.runs || [];
-        state.signalCandidates = candidatesPayload.candidates || [];
         state.signalCollectionReady = Boolean(sourcesPayload.collectionReady);
+        renderSignalCandidateSourceOptions();
+        await loadSignalCandidates();
         const sourceSummary = sourcesPayload.summary || {};
         const activeRun = state.signalRuns.find((run) => ['queued', 'running'].includes(run.status));
         elements.signalAutomationSummary.textContent = sourcesPayload.collectionReady
@@ -2190,18 +2434,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         elements.signalCollectionStart.disabled = !state.signalCollectionReady || Boolean(activeRun);
         renderSignalSources();
         renderSignalRuns();
-        renderSignalCandidates();
       } catch (error) {
         state.signalSources = [];
         state.signalRuns = [];
         state.signalCandidates = [];
         state.signalCollectionReady = false;
+        state.signalTriageReady = false;
+        state.signalCandidateSummary = null;
         elements.signalCollectionStart.disabled = true;
+        elements.signalCandidatesRescore.disabled = true;
         elements.signalAutomationSummary.dataset.state = 'error';
         elements.signalAutomationSummary.textContent = `读取失败：${error.message}`;
         renderEmpty(elements.signalSourcesList, '来源白名单读取失败，请稍后重试。');
         renderEmpty(elements.signalRunsList, '采集运行记录暂时不可用。');
         renderEmpty(elements.signalCandidatesList, '候选资讯暂时不可用。');
+        renderSignalCandidateSummary();
       }
     };
 
@@ -3679,6 +3926,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     elements.contentForm.addEventListener('submit', saveContent);
     elements.signalForm.addEventListener('submit', importSignalBrief);
     elements.signalSourceForm.addEventListener('submit', saveSignalSource);
+    elements.signalCandidateFilters.addEventListener('submit', (event) => {
+      event.preventDefault();
+      refreshSignalCandidates();
+    });
     elements.accessForm.addEventListener('submit', grantEntitlement);
     $('#content-refresh').addEventListener('click', () => loadEntries({ autoSelect: true }));
     $('#imports-refresh').addEventListener('click', () => loadImportReviews());
@@ -3686,6 +3937,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#signal-reset').addEventListener('click', resetSignalForm);
     $('#signal-automation-refresh').addEventListener('click', loadSignalAutomation);
     $('#signal-collection-start').addEventListener('click', startSignalCollection);
+    elements.signalCandidatesRescore.addEventListener('click', rescoreSignalCandidateQueue);
     $('#signal-source-reset').addEventListener('click', resetSignalSourceForm);
     $('#signal-source-manage').addEventListener('click', () => {
       elements.signalAutomationPanel.open = true;
