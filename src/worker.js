@@ -2389,6 +2389,8 @@ const isMissingReaderCommentsError = (error) => /no such table: reader_comments/
 const isMissingProductFeedbackError = (error) => /no such table: product_feedback/i.test(error?.message || '');
 const isMissingChapterStatsError = (error) => /no such table: chapter_stats/i.test(error?.message || '');
 const isMissingAiInsightsError = (error) => /no such table: ai_insights/i.test(error?.message || '');
+const isMissingSignalAutomationTablesError = (error) =>
+  /no such table: signal_(sources|collection_runs|candidates)/i.test(error?.message || '');
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -2396,6 +2398,18 @@ const ensureContentTablesReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingContentTablesError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureSignalAutomationTablesReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM signal_sources LIMIT 1').first();
+    await db.prepare('SELECT id FROM signal_collection_runs LIMIT 1').first();
+    await db.prepare('SELECT id FROM signal_candidates LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingSignalAutomationTablesError(error)) return false;
     throw error;
   }
 };
@@ -9072,6 +9086,9 @@ const handleAdminContentSchema = async (env) =>
         'reading_events',
         'chapter_stats',
         'ai_insights',
+        'signal_sources',
+        'signal_collection_runs',
+        'signal_candidates',
         'admin_audit_logs'
       ],
       legacyMigration: 'Completed. The one-time legacy Markdown migration endpoint and manifest have been removed from the Worker bundle.',
@@ -9089,7 +9106,7 @@ const handleAdminContentSchema = async (env) =>
       readingEvents: 'Novel V2 reader pages can send chapter open, scroll depth, pause/resume, navigation, like, bookmark, and comment interaction events into reading_events.',
       readingAnalytics: 'Admin 2.0 can aggregate reading_events into chapter_stats for completion, drop-off, reading time, and engagement diagnostics.',
       aiInsights: 'Admin 2.0 can generate structured AI-style chapter insights from chapter_stats into ai_insights.',
-      signalStrip: 'Admin 2.0 can import daily technology/economy Signal strip briefs into signal_brief entries and render public /signal/ pages with share-card images.',
+      signalStrip: 'Admin 2.0 can import daily technology/economy Signal strip briefs, manage an approved source registry, and inspect future collection runs and candidate items before automated collection is enabled.',
       oldAuthoringPath: 'The old GitHub-token Markdown editor is deprecated. Use Admin 2.0 for routine content publishing.',
       nextStages: ['8D optional retry tools and richer NovelForge source diagnostics']
     }
@@ -9636,8 +9653,16 @@ const buildSignalImportBackupKey = (requestId) => {
 };
 
 const normalizeSignalSourceUrl = (value) => {
-  const url = cleanText(value, 500);
-  return /^https?:\/\//i.test(url) ? url : '';
+  const valueText = cleanText(value, 1000);
+  if (!valueText) return '';
+  try {
+    const url = new URL(valueText);
+    if (!['http:', 'https:'].includes(url.protocol)) return '';
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return '';
+  }
 };
 
 const parseSignalSourcesInput = (value) => {
@@ -9676,6 +9701,444 @@ const parseSignalSourcesInput = (value) => {
     })
     .filter((source) => source.label || source.url)
     .slice(0, 12);
+};
+
+const signalAutomationSourceTypes = new Set(['rss', 'api', 'page']);
+const signalAutomationCategories = new Set(['ai', 'tech', 'economy', 'market', 'research', 'general']);
+const signalAutomationTrustTiers = new Set(['primary', 'established', 'community']);
+const signalAutomationRunStatuses = new Set(['queued', 'running', 'completed', 'partial', 'failed', 'cancelled']);
+const signalAutomationCandidateStatuses = new Set(['new', 'shortlisted', 'rejected', 'used']);
+
+const signalAutomationSetupResponse = (kind) => {
+  const collections = {
+    candidates: { candidates: [], summary: { total: 0, new: 0, shortlisted: 0, rejected: 0, used: 0 } },
+    runs: { runs: [], summary: { total: 0, queued: 0, running: 0, failed: 0 } },
+    sources: { sources: [], summary: { total: 0, enabled: 0, paused: 0, errors: 0 } }
+  };
+  return privateJson({
+    ok: true,
+    setupRequired: true,
+    migration: '0019_signal_automation.sql',
+    ...(collections[kind] || {})
+  });
+};
+
+const signalSourceHealth = (row) => {
+  if (!row.is_enabled) return 'paused';
+  const latestErrorIsCurrent = row.last_error_at && (!row.last_success_at || row.last_error_at >= row.last_success_at);
+  if (latestErrorIsCurrent) return 'error';
+  if (row.last_success_at) return 'healthy';
+  return 'not_checked';
+};
+
+const signalSourceToJson = (row) => ({
+  id: row.id,
+  name: row.name,
+  publisher: row.publisher,
+  sourceType: row.source_type,
+  category: row.category,
+  trustTier: row.trust_tier,
+  endpointUrl: row.endpoint_url,
+  homepageUrl: row.homepage_url,
+  language: row.language,
+  isEnabled: Boolean(row.is_enabled),
+  fetchIntervalMinutes: normalizePositiveInteger(row.fetch_interval_minutes, 360),
+  maxItemsPerRun: normalizePositiveInteger(row.max_items_per_run, 30),
+  requiresApiKey: Boolean(row.requires_api_key),
+  config: parseStoredJson(row.config_json, {}),
+  notes: row.notes,
+  health: signalSourceHealth(row),
+  lastFetchedAt: row.last_fetched_at,
+  lastSuccessAt: row.last_success_at,
+  lastErrorAt: row.last_error_at,
+  lastError: row.last_error,
+  createdBy: row.created_by,
+  updatedBy: row.updated_by,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const signalCollectionRunToJson = (row) => ({
+  id: row.id,
+  triggerType: row.trigger_type,
+  status: row.status,
+  requestedSourceIds: parseStoredJson(row.requested_source_ids_json, []),
+  sourceCount: normalizePositiveInteger(row.source_count, 0),
+  fetchedCount: normalizePositiveInteger(row.fetched_count, 0),
+  acceptedCount: normalizePositiveInteger(row.accepted_count, 0),
+  duplicateCount: normalizePositiveInteger(row.duplicate_count, 0),
+  failedCount: normalizePositiveInteger(row.failed_count, 0),
+  errors: parseStoredJson(row.error_json, []),
+  startedAt: row.started_at,
+  finishedAt: row.finished_at,
+  createdBy: row.created_by,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const signalCandidateToJson = (row) => ({
+  id: row.id,
+  sourceId: row.source_id,
+  sourceName: row.source_name || '',
+  runId: row.run_id,
+  externalId: row.external_id,
+  canonicalUrl: row.canonical_url,
+  title: row.title,
+  summary: row.summary,
+  author: row.author,
+  publishedAt: row.published_at,
+  language: row.language,
+  category: row.category,
+  status: row.status,
+  relevanceScore: row.relevance_score === null || row.relevance_score === undefined ? null : Number(row.relevance_score),
+  contentHash: row.content_hash,
+  metadata: parseStoredJson(row.metadata_json, {}),
+  reviewedBy: row.reviewed_by,
+  reviewedAt: row.reviewed_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const signalSourceValidationError = (code, message) => {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+};
+
+const normalizeSignalAutomationSourcePayload = (payload, existing = null) => {
+  const sourceType = cleanText(payload.sourceType ?? existing?.source_type ?? '', 30).toLowerCase();
+  if (!signalAutomationSourceTypes.has(sourceType)) {
+    throw signalSourceValidationError('SIGNAL_SOURCE_TYPE_INVALID', '来源类型必须是 RSS、API 或网页。');
+  }
+
+  const category = cleanText(payload.category ?? existing?.category ?? 'general', 30).toLowerCase();
+  if (!signalAutomationCategories.has(category)) {
+    throw signalSourceValidationError('SIGNAL_SOURCE_CATEGORY_INVALID', '来源分类无效。');
+  }
+
+  const trustTier = cleanText(payload.trustTier ?? existing?.trust_tier ?? 'primary', 30).toLowerCase();
+  if (!signalAutomationTrustTiers.has(trustTier)) {
+    throw signalSourceValidationError('SIGNAL_SOURCE_TRUST_INVALID', '来源可信等级无效。');
+  }
+
+  const name = cleanText(payload.name ?? existing?.name, 160);
+  if (!name) throw signalSourceValidationError('SIGNAL_SOURCE_NAME_REQUIRED', '来源名称必填。');
+
+  const endpointInput = cleanText(payload.endpointUrl ?? existing?.endpoint_url, 1000);
+  const endpointUrl = normalizeSignalSourceUrl(endpointInput);
+  if (!endpointUrl) {
+    throw signalSourceValidationError('SIGNAL_SOURCE_URL_INVALID', '采集地址必须是有效的 HTTP(S) URL。');
+  }
+
+  const homepageInput = cleanText(payload.homepageUrl ?? existing?.homepage_url, 1000);
+  const homepageUrl = homepageInput ? normalizeSignalSourceUrl(homepageInput) : '';
+  if (homepageInput && !homepageUrl) {
+    throw signalSourceValidationError('SIGNAL_SOURCE_HOMEPAGE_INVALID', '主页地址必须是有效的 HTTP(S) URL。');
+  }
+
+  const fetchIntervalMinutes = Number.parseInt(payload.fetchIntervalMinutes ?? existing?.fetch_interval_minutes ?? 360, 10);
+  if (!Number.isFinite(fetchIntervalMinutes) || fetchIntervalMinutes < 15 || fetchIntervalMinutes > 10080) {
+    throw signalSourceValidationError('SIGNAL_SOURCE_INTERVAL_INVALID', '采集间隔必须在 15 到 10080 分钟之间。');
+  }
+
+  const maxItemsPerRun = Number.parseInt(payload.maxItemsPerRun ?? existing?.max_items_per_run ?? 30, 10);
+  if (!Number.isFinite(maxItemsPerRun) || maxItemsPerRun < 1 || maxItemsPerRun > 100) {
+    throw signalSourceValidationError('SIGNAL_SOURCE_LIMIT_INVALID', '单次条数必须在 1 到 100 之间。');
+  }
+
+  const language = cleanText(payload.language ?? existing?.language ?? 'en', 20) || 'en';
+  if (!/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/i.test(language)) {
+    throw signalSourceValidationError('SIGNAL_SOURCE_LANGUAGE_INVALID', '来源语言格式无效。');
+  }
+
+  const configValue = payload.config === undefined ? parseStoredJson(existing?.config_json, {}) : normalizeJsonObject(payload.config);
+  const configJson = JSON.stringify(configValue);
+  if (configJson.length > 8000) {
+    throw signalSourceValidationError('SIGNAL_SOURCE_CONFIG_TOO_LARGE', '来源配置过大。');
+  }
+
+  return {
+    name,
+    publisher: cleanText(payload.publisher ?? existing?.publisher, 160),
+    sourceType,
+    category,
+    trustTier,
+    endpointUrl,
+    homepageUrl,
+    language,
+    isEnabled: payload.isEnabled === undefined ? Boolean(existing ? existing.is_enabled : true) : Boolean(payload.isEnabled),
+    fetchIntervalMinutes,
+    maxItemsPerRun,
+    requiresApiKey:
+      payload.requiresApiKey === undefined ? Boolean(existing?.requires_api_key) : Boolean(payload.requiresApiKey),
+    configJson,
+    notes: cleanText(payload.notes ?? existing?.notes, 1000)
+  };
+};
+
+const handleAdminListSignalSources = async (env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureSignalAutomationTablesReady(db))) return signalAutomationSetupResponse('sources');
+
+  const response = await db
+    .prepare(
+      `SELECT *
+       FROM signal_sources
+       ORDER BY is_enabled DESC,
+                CASE trust_tier WHEN 'primary' THEN 0 WHEN 'established' THEN 1 ELSE 2 END,
+                name ASC
+       LIMIT 200`
+    )
+    .all();
+  const sources = (response.results || []).map(signalSourceToJson);
+  return privateJson({
+    ok: true,
+    setupRequired: false,
+    sources,
+    summary: {
+      total: sources.length,
+      enabled: sources.filter((source) => source.isEnabled).length,
+      paused: sources.filter((source) => !source.isEnabled).length,
+      errors: sources.filter((source) => source.health === 'error').length
+    }
+  });
+};
+
+const handleAdminSaveSignalSource = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureSignalAutomationTablesReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'SIGNAL_AUTOMATION_NOT_READY',
+        message: '先应用 migrations/0019_signal_automation.sql，再管理采集来源。'
+      },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid Signal source JSON.' }, { status: 400 });
+  }
+
+  const action = cleanText(payload.action || 'save', 30).toLowerCase();
+  const sourceId = cleanText(payload.id, 120);
+  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+
+  if (action === 'toggle') {
+    if (!sourceId) {
+      return privateJson({ ok: false, code: 'SIGNAL_SOURCE_ID_REQUIRED', message: '来源 ID 必填。' }, { status: 400 });
+    }
+    const source = await db
+      .prepare(
+        `UPDATE signal_sources
+         SET is_enabled = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?
+         RETURNING *`
+      )
+      .bind(payload.isEnabled ? 1 : 0, actorEmail, sourceId)
+      .first();
+    if (!source) {
+      return privateJson({ ok: false, code: 'SIGNAL_SOURCE_NOT_FOUND', message: '没有找到这个来源。' }, { status: 404 });
+    }
+    if (await ensureContentTablesReady(db)) {
+      await insertAdminAuditLog(db, {
+        actorEmail,
+        action: payload.isEnabled ? 'signal_source_enable' : 'signal_source_pause',
+        targetType: 'signal_source',
+        targetId: source.id,
+        targetSlug: source.name,
+        metadata: { endpointUrl: source.endpoint_url }
+      });
+    }
+    return privateJson({ ok: true, source: signalSourceToJson(source) });
+  }
+
+  if (action !== 'save') {
+    return privateJson({ ok: false, code: 'SIGNAL_SOURCE_ACTION_INVALID', message: '不支持这个来源操作。' }, { status: 400 });
+  }
+
+  const existing = sourceId ? await db.prepare('SELECT * FROM signal_sources WHERE id = ?').bind(sourceId).first() : null;
+  if (sourceId && !existing) {
+    return privateJson({ ok: false, code: 'SIGNAL_SOURCE_NOT_FOUND', message: '没有找到这个来源。' }, { status: 404 });
+  }
+
+  let normalized;
+  try {
+    normalized = normalizeSignalAutomationSourcePayload(payload, existing);
+  } catch (error) {
+    return privateJson({ ok: false, code: error.code || 'SIGNAL_SOURCE_INVALID', message: error.message }, { status: 400 });
+  }
+
+  try {
+    const saved = existing
+      ? await db
+          .prepare(
+            `UPDATE signal_sources
+             SET name = ?, publisher = ?, source_type = ?, category = ?, trust_tier = ?,
+                 endpoint_url = ?, homepage_url = ?, language = ?, is_enabled = ?,
+                 fetch_interval_minutes = ?, max_items_per_run = ?, requires_api_key = ?,
+                 config_json = ?, notes = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?
+             RETURNING *`
+          )
+          .bind(
+            normalized.name,
+            normalized.publisher,
+            normalized.sourceType,
+            normalized.category,
+            normalized.trustTier,
+            normalized.endpointUrl,
+            normalized.homepageUrl,
+            normalized.language,
+            normalized.isEnabled ? 1 : 0,
+            normalized.fetchIntervalMinutes,
+            normalized.maxItemsPerRun,
+            normalized.requiresApiKey ? 1 : 0,
+            normalized.configJson,
+            normalized.notes,
+            actorEmail,
+            existing.id
+          )
+          .first()
+      : await db
+          .prepare(
+            `INSERT INTO signal_sources (
+               id, name, publisher, source_type, category, trust_tier,
+               endpoint_url, homepage_url, language, is_enabled,
+               fetch_interval_minutes, max_items_per_run, requires_api_key,
+               config_json, notes, created_by, updated_by
+             )
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             RETURNING *`
+          )
+          .bind(
+            `signal-source-${randomToken(12)}`,
+            normalized.name,
+            normalized.publisher,
+            normalized.sourceType,
+            normalized.category,
+            normalized.trustTier,
+            normalized.endpointUrl,
+            normalized.homepageUrl,
+            normalized.language,
+            normalized.isEnabled ? 1 : 0,
+            normalized.fetchIntervalMinutes,
+            normalized.maxItemsPerRun,
+            normalized.requiresApiKey ? 1 : 0,
+            normalized.configJson,
+            normalized.notes,
+            actorEmail,
+            actorEmail
+          )
+          .first();
+
+    if (await ensureContentTablesReady(db)) {
+      await insertAdminAuditLog(db, {
+        actorEmail,
+        action: existing ? 'signal_source_update' : 'signal_source_create',
+        targetType: 'signal_source',
+        targetId: saved.id,
+        targetSlug: saved.name,
+        metadata: {
+          category: saved.category,
+          endpointUrl: saved.endpoint_url,
+          isEnabled: Boolean(saved.is_enabled),
+          sourceType: saved.source_type
+        }
+      });
+    }
+
+    return privateJson({ ok: true, source: signalSourceToJson(saved) });
+  } catch (error) {
+    if (/UNIQUE constraint failed: signal_sources\.endpoint_url/i.test(error?.message || '')) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_SOURCE_URL_DUPLICATE', message: '这个采集地址已经在白名单里。' },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
+};
+
+const handleAdminListSignalCollectionRuns = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureSignalAutomationTablesReady(db))) return signalAutomationSetupResponse('runs');
+
+  const url = new URL(request.url);
+  const requestedStatus = cleanText(url.searchParams.get('status'), 30).toLowerCase();
+  const status = signalAutomationRunStatuses.has(requestedStatus) ? requestedStatus : '';
+  const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 30), 1), 100);
+  const response = status
+    ? await db
+        .prepare('SELECT * FROM signal_collection_runs WHERE status = ? ORDER BY created_at DESC LIMIT ?')
+        .bind(status, limit)
+        .all()
+    : await db.prepare('SELECT * FROM signal_collection_runs ORDER BY created_at DESC LIMIT ?').bind(limit).all();
+  const runs = (response.results || []).map(signalCollectionRunToJson);
+  return privateJson({
+    ok: true,
+    setupRequired: false,
+    runs,
+    summary: {
+      total: runs.length,
+      queued: runs.filter((run) => run.status === 'queued').length,
+      running: runs.filter((run) => run.status === 'running').length,
+      failed: runs.filter((run) => run.status === 'failed').length
+    }
+  });
+};
+
+const handleAdminListSignalCandidates = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureSignalAutomationTablesReady(db))) return signalAutomationSetupResponse('candidates');
+
+  const url = new URL(request.url);
+  const requestedStatus = cleanText(url.searchParams.get('status'), 30).toLowerCase();
+  const status = signalAutomationCandidateStatuses.has(requestedStatus) ? requestedStatus : '';
+  const sourceId = cleanText(url.searchParams.get('sourceId'), 120);
+  const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 50), 1), 100);
+  const clauses = [];
+  const params = [];
+  if (status) {
+    clauses.push('candidate.status = ?');
+    params.push(status);
+  }
+  if (sourceId) {
+    clauses.push('candidate.source_id = ?');
+    params.push(sourceId);
+  }
+  const response = await db
+    .prepare(
+      `SELECT candidate.*, source.name AS source_name
+       FROM signal_candidates AS candidate
+       LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
+       ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
+       ORDER BY COALESCE(candidate.published_at, candidate.created_at) DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+  const candidates = (response.results || []).map(signalCandidateToJson);
+  return privateJson({
+    ok: true,
+    setupRequired: false,
+    candidates,
+    summary: {
+      total: candidates.length,
+      new: candidates.filter((candidate) => candidate.status === 'new').length,
+      shortlisted: candidates.filter((candidate) => candidate.status === 'shortlisted').length,
+      rejected: candidates.filter((candidate) => candidate.status === 'rejected').length,
+      used: candidates.filter((candidate) => candidate.status === 'used').length
+    }
+  });
 };
 
 const signalSummaryMaxItems = 10;
@@ -15529,12 +15992,16 @@ export const __readerTotpTestHooks = {
   getTotpStep,
   handleAdminAggregateNovelAnalytics,
   handleAdminGenerateNovelAiInsights,
+  handleAdminListSignalCandidates,
+  handleAdminListSignalCollectionRuns,
+  handleAdminListSignalSources,
   handleAdminListNovelAiInsights,
   handleAdminListNovelAnalyticsStats,
   handleAdminListProductFeedback,
   handleAdminListReaderComments,
   handleAdminModerateReaderComment,
   handleAdminUpdateProductFeedback,
+  handleAdminSaveSignalSource,
   handleNovelForgeAnalytics,
   handleNovelForgeChapterContent,
   handleNovelForgeTranslationSync,
@@ -15553,6 +16020,7 @@ export const __readerTotpTestHooks = {
   dynamicSeriesPath,
   normalizeTotpCode,
   normalizeReadingEventPayload,
+  normalizeSignalAutomationSourcePayload,
   readerCommentToJson,
   productFeedbackToJson,
   parseNovelForgeAnalyticsRoute,
@@ -15898,6 +16366,22 @@ export default {
 
     if (url.pathname === '/admin/api/signal/import') {
       if (request.method === 'POST') return handleAdminImportSignalBrief(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/signal/sources') {
+      if (request.method === 'GET') return handleAdminListSignalSources(env);
+      if (request.method === 'POST') return handleAdminSaveSignalSource(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/signal/runs') {
+      if (request.method === 'GET') return handleAdminListSignalCollectionRuns(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/signal/candidates') {
+      if (request.method === 'GET') return handleAdminListSignalCandidates(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

@@ -7724,6 +7724,114 @@ details[open] > .admin-disclosure-summary::after {
   color: #96a7a2;
 }
 
+.admin-v2-section-heading--compact {
+  align-items: flex-start;
+  min-height: 38px;
+}
+
+.admin-v2-section-heading--compact h3 {
+  font-size: 17px;
+}
+
+.admin-signal-automation-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+}
+
+.admin-signal-source-pane,
+.admin-signal-pipeline-grid > section {
+  align-content: start;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-signal-source-form {
+  align-content: start;
+  background: #ffffff;
+  border: 1px solid var(--admin-line);
+  border-radius: 5px;
+  padding: 12px;
+}
+
+.admin-signal-pipeline-grid {
+  border-top: 1px solid var(--admin-line);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-top: 14px;
+}
+
+.admin-signal-manual-heading {
+  border-bottom: 1px solid var(--admin-line);
+  margin-top: 2px;
+  padding: 4px 0 10px;
+}
+
+.admin-signal-source-row {
+  gap: 8px;
+}
+
+.admin-signal-source-row__heading,
+.admin-signal-source-row__meta,
+.admin-signal-source-row__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.admin-signal-source-row__heading {
+  justify-content: space-between;
+}
+
+.admin-signal-source-row__meta {
+  color: var(--admin-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.admin-signal-source-row__url {
+  color: var(--admin-muted);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.admin-signal-source-state {
+  background: #eef3f1;
+  border: 1px solid #cbd7d2;
+  border-radius: 4px;
+  color: #3f514b;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 3px 6px;
+}
+
+.admin-signal-source-state[data-state="healthy"] {
+  background: #e7f4ef;
+  border-color: #a9d1c3;
+  color: #285f51;
+}
+
+.admin-signal-source-state[data-state="error"] {
+  background: #faeeee;
+  border-color: #e2b6b6;
+  color: #943d3d;
+}
+
+.admin-signal-source-state[data-state="paused"] {
+  background: #f1f1ef;
+  border-color: #d4d5d0;
+  color: #626861;
+}
+
+.admin-signal-source-row__actions .button {
+  min-height: 32px;
+  padding: 6px 9px;
+}
+
 @media (max-width: 1040px) {
   .admin-v2-grid {
     grid-template-columns: 1fr;
@@ -7764,6 +7872,11 @@ details[open] > .admin-disclosure-summary::after {
 
   .admin-v2-sidebar .admin-v2-list {
     max-height: 360px;
+  }
+
+  .admin-signal-automation-grid,
+  .admin-signal-pipeline-grid {
+    grid-template-columns: 1fr;
   }
 }
 
