@@ -10251,6 +10251,7 @@ const handleAdminListSignalCandidates = async (request, env) => {
   const requestedCategory = cleanText(url.searchParams.get('category'), 30).toLowerCase();
   const category = signalAutomationCategories.has(requestedCategory) ? requestedCategory : '';
   const query = cleanText(url.searchParams.get('query'), 160);
+  const escapedQuery = query.replace(/[\\%_]/g, '\\$&');
   const requestedMinScore = Number.parseInt(url.searchParams.get('minScore') || '0', 10);
   const minScore = Number.isFinite(requestedMinScore) ? Math.min(Math.max(requestedMinScore, 0), 100) : 0;
   const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 50), 1), 100);
@@ -10265,8 +10266,8 @@ const handleAdminListSignalCandidates = async (request, env) => {
     baseParams.push(category);
   }
   if (query) {
-    baseClauses.push('(candidate.title LIKE ? OR candidate.summary LIKE ?)');
-    baseParams.push(`%${query}%`, `%${query}%`);
+    baseClauses.push(`(candidate.title LIKE ? ESCAPE '\\' OR candidate.summary LIKE ? ESCAPE '\\')`);
+    baseParams.push(`%${escapedQuery}%`, `%${escapedQuery}%`);
   }
   if (minScore > 0) {
     baseClauses.push('candidate.relevance_score >= ?');
@@ -10508,43 +10509,67 @@ const handleAdminReviewSignalCandidates = async (request, env) => {
     statements.push(
       db
         .prepare(
+          `INSERT INTO signal_candidate_reviews (
+             id, candidate_id, action, from_status, to_status, note, actor_email
+           )
+           SELECT ?, candidate.id, ?, candidate.status, ?, ?, ?
+           FROM signal_candidates AS candidate
+           WHERE candidate.id = ? AND candidate.status = ?`
+        )
+        .bind(
+          `signal-review-${randomToken(14)}`,
+          normalized.action,
+          targetStatus,
+          normalized.note,
+          actorEmail,
+          candidate.id,
+          candidate.status
+        ),
+      db
+        .prepare(
           `UPDATE signal_candidates
            SET status = ?, decision_note = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP,
                updated_at = CURRENT_TIMESTAMP
            WHERE id = ? AND status = ?`
         )
-        .bind(targetStatus, normalized.note, actorEmail, candidate.id, candidate.status),
-      db
-        .prepare(
-          `INSERT INTO signal_candidate_reviews (
-             id, candidate_id, action, from_status, to_status, note, actor_email
-           ) VALUES (?, ?, ?, ?, ?, ?, ?)`
-        )
-        .bind(
-          `signal-review-${randomToken(14)}`,
-          candidate.id,
-          normalized.action,
-          candidate.status,
-          targetStatus,
-          normalized.note,
-          actorEmail
-        )
+        .bind(targetStatus, normalized.note, actorEmail, candidate.id, candidate.status)
     );
   }
-  await db.batch(statements);
-  await insertAdminAuditLog(db, {
-    actorEmail,
-    action: `signal_candidate_${normalized.action}`,
-    targetType: 'signal_candidate',
-    targetId: changes.length === 1 ? changes[0].id : 'batch',
-    targetSlug: changes.length === 1 ? changes[0].title : `${changes.length} candidates`,
-    metadata: {
-      candidateIds: changes.map((candidate) => candidate.id),
-      fromStatuses: [...new Set(changes.map((candidate) => candidate.status))],
-      note: normalized.note,
-      toStatus: targetStatus
-    }
-  });
+  // D1 batches are transactional: the guarded history insert and matching update either describe the same transition or both no-op.
+  const batchResults = await db.batch(statements);
+  const appliedChanges = changes.filter(
+    (_candidate, index) => normalizePositiveInteger(batchResults[index * 2 + 1]?.meta?.changes, 0) > 0
+  );
+  const conflictedChanges = changes.filter((candidate) => !appliedChanges.includes(candidate));
+  if (appliedChanges.length) {
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: `signal_candidate_${normalized.action}`,
+      targetType: 'signal_candidate',
+      targetId: appliedChanges.length === 1 ? appliedChanges[0].id : 'batch',
+      targetSlug: appliedChanges.length === 1 ? appliedChanges[0].title : `${appliedChanges.length} candidates`,
+      metadata: {
+        candidateIds: appliedChanges.map((candidate) => candidate.id),
+        fromStatuses: [...new Set(appliedChanges.map((candidate) => candidate.status))],
+        note: normalized.note,
+        toStatus: targetStatus
+      }
+    });
+  }
+  if (conflictedChanges.length) {
+    return privateJson(
+      {
+        ok: false,
+        appliedCount: appliedChanges.length,
+        code: 'SIGNAL_CANDIDATE_STATUS_CONFLICT',
+        conflictedIds: conflictedChanges.map((candidate) => candidate.id),
+        message: appliedChanges.length
+          ? `已处理 ${appliedChanges.length} 条，另有 ${conflictedChanges.length} 条状态已变化，请刷新后确认。`
+          : '候选状态已被其他操作修改，请刷新后重试。'
+      },
+      { status: 409 }
+    );
+  }
 
   const updatedResponse = await db
     .prepare(

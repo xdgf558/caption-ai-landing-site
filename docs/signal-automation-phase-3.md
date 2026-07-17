@@ -15,7 +15,8 @@ Phase 3 turns collected Signal items into a reviewable queue. It remains determi
 - Shortlist, reject, or restore a candidate with an optional note.
 - Treat `used` as a terminal state in this phase so a published item cannot be changed accidentally.
 - Record each decision in `signal_candidate_reviews` and the existing Admin audit log.
-- Re-score legacy or newly adjusted candidates on demand without calling an external service.
+- Re-score up to the 500 most recent candidates on demand without calling an external service. Older candidates keep their previous score until they enter a future scoring batch.
+- Re-scoring rebuilds advisory clusters only within that 500-item batch, so cluster assignments can differ slightly from incremental collection results.
 
 ## Deployment
 

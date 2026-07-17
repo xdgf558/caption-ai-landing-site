@@ -1,4 +1,4 @@
-const signalTriageVersion = 1;
+const signalTriageVersion = 2;
 const signalClusterSimilarityThreshold = 0.72;
 
 const trustScores = Object.freeze({
@@ -58,10 +58,18 @@ const parseDate = (value) => {
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
+const escapeRegExp = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const topicKeywordMatches = (haystack, keyword) => {
+  if (keyword.includes(' ') || keyword.length > 3) return haystack.includes(keyword);
+  return new RegExp(`\\b${escapeRegExp(keyword)}\\b`, 'i').test(haystack);
+};
+
 const scoreRecency = (publishedAt, now) => {
   const published = parseDate(publishedAt);
   if (!published) return { points: 6, reason: '缺少可靠发布时间' };
-  const ageHours = Math.max(0, (now.getTime() - published.getTime()) / 3_600_000);
+  const ageHours = (now.getTime() - published.getTime()) / 3_600_000;
+  if (ageHours < 0) return { points: 6, reason: '发布时间晚于当前时间' };
   if (ageHours <= 6) return { points: 25, reason: '6 小时内发布' };
   if (ageHours <= 24) return { points: 22, reason: '24 小时内发布' };
   if (ageHours <= 72) return { points: 16, reason: '3 天内发布' };
@@ -86,7 +94,7 @@ const scoreTopic = (candidate, source) => {
   const category = normalizeText(candidate.category || source?.category || 'general').toLowerCase();
   if (category === 'general') return { matches: [], points: 10, reason: '综合来源基础分' };
   const haystack = `${normalizeText(candidate.title)} ${normalizeText(candidate.summary)}`.toLowerCase();
-  const matches = (categoryKeywords[category] || []).filter((keyword) => haystack.includes(keyword));
+  const matches = (categoryKeywords[category] || []).filter((keyword) => topicKeywordMatches(haystack, keyword));
   const points = matches.length ? Math.min(25, 8 + matches.length * 4) : 5;
   return {
     matches: matches.slice(0, 6),

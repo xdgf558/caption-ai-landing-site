@@ -80,6 +80,32 @@ assert.ok(highScore.score >= 75, `Expected high-priority score, received ${highS
 assert.ok(lowScore.score < 55, `Expected low-priority score, received ${lowScore.score}`);
 assert.ok(highScore.breakdown.trust > lowScore.breakdown.trust);
 
+const substringOnlyAiScore = scoreSignalCandidate(
+  {
+    category: 'ai',
+    publishedAt: '2026-07-17T10:00:00.000Z',
+    summary: 'A routine workplace note about a team calendar.',
+    title: 'Email maintainers said the archive remains available'
+  },
+  { category: 'ai', trust_tier: 'community' },
+  { now }
+);
+assert.deepEqual(substringOnlyAiScore.breakdown.topicMatches, []);
+assert.equal(substringOnlyAiScore.breakdown.topic, 5);
+
+const futureTimestampScore = scoreSignalCandidate(
+  {
+    category: 'tech',
+    publishedAt: '2026-07-17T13:00:00.000Z',
+    summary: 'A future-dated software release entry.',
+    title: 'Software release entry'
+  },
+  { category: 'tech', trust_tier: 'established' },
+  { now }
+);
+assert.equal(futureTimestampScore.breakdown.recency, 6);
+assert.ok(futureTimestampScore.reasons.includes('发布时间晚于当前时间'));
+
 assert.ok(
   signalTitleSimilarity(
     'OpenAI releases new reasoning model with safety report',
@@ -108,7 +134,7 @@ const clustered = await enrichSignalCandidateRows(
 );
 assert.equal(clustered[0].clusterKey, clustered[1].clusterKey);
 assert.equal(JSON.parse(clustered[1].metadataJson).triage.clusterMatchedId, 'candidate-a');
-assert.equal(JSON.parse(clustered[0].scoreBreakdownJson).version, 1);
+assert.equal(JSON.parse(clustered[0].scoreBreakdownJson).version, 2);
 
 assert.deepEqual(
   workerHooks.normalizeSignalCandidateReviewPayload({ action: 'shortlist', candidateIds: ['a', 'a', 'b'], note: ' useful ' }),
@@ -166,12 +192,17 @@ class ReviewStatement {
       return { meta: { changes: 1 } };
     }
     if (/INSERT INTO signal_candidate_reviews/i.test(this.sql)) {
+      const [reviewId, action, toStatus, note, actor, candidateId, expectedStatus] = this.params;
+      const candidate = this.db.candidates.get(candidateId);
+      if (!candidate || candidate.status !== expectedStatus) return { meta: { changes: 0 } };
       this.db.reviews.push({
-        action: this.params[2],
-        candidateId: this.params[1],
-        fromStatus: this.params[3],
-        note: this.params[5],
-        toStatus: this.params[4]
+        action,
+        actor,
+        candidateId,
+        fromStatus: candidate.status,
+        id: reviewId,
+        note,
+        toStatus
       });
       return { meta: { changes: 1 } };
     }
@@ -187,6 +218,7 @@ class ReviewDb {
   constructor() {
     this.auditActions = [];
     this.reviews = [];
+    this.raceStatus = '';
     this.candidates = new Map([
       ['candidate-review', {
         author: 'OpenAI',
@@ -205,7 +237,7 @@ class ReviewDb {
         reviewed_at: null,
         reviewed_by: '',
         run_id: 'run-a',
-        score_breakdown_json: '{"version":1}',
+        score_breakdown_json: '{"version":2}',
         scored_at: '2026-07-17 10:00:00',
         source_id: 'openai-news',
         status: 'new',
@@ -227,6 +259,10 @@ class ReviewDb {
   }
 
   async batch(statements) {
+    if (this.raceStatus) {
+      this.candidates.get('candidate-review').status = this.raceStatus;
+      this.raceStatus = '';
+    }
     const results = [];
     for (const statement of statements) results.push(await statement.run());
     return results;
@@ -259,6 +295,22 @@ const usedResponse = await workerHooks.handleAdminReviewSignalCandidates(
 assert.equal(usedResponse.status, 409);
 assert.equal((await usedResponse.json()).code, 'SIGNAL_CANDIDATE_ALREADY_USED');
 
+const conflictDb = new ReviewDb();
+conflictDb.raceStatus = 'rejected';
+const conflictResponse = await workerHooks.handleAdminReviewSignalCandidates(
+  new Request('http://localhost/admin/api/signal/candidates', {
+    body: JSON.stringify({ action: 'shortlist', candidateId: 'candidate-review' }),
+    headers: { 'content-type': 'application/json' },
+    method: 'POST'
+  }),
+  { WAITLIST_DB: conflictDb }
+);
+assert.equal(conflictResponse.status, 409);
+assert.equal((await conflictResponse.json()).code, 'SIGNAL_CANDIDATE_STATUS_CONFLICT');
+assert.equal(conflictDb.reviews.length, 0);
+assert.equal(conflictDb.auditActions.length, 0);
+assert.equal(conflictDb.candidates.get('candidate-review').status, 'rejected');
+
 const protectedAdminEnv = {
   ADMIN_ALLOWED_EMAILS: 'admin@example.com',
   CF_ACCESS_AUD: 'test-audience',
@@ -277,12 +329,15 @@ const adminSource = read('src/pages/admin-v2/index.astro');
 assert.match(adminSource, /id="signal-candidate-filters"/);
 assert.match(adminSource, /id="signal-candidates-rescore"/);
 assert.match(adminSource, /action: 'rescore'/);
+assert.match(adminSource, /更早记录保留原评分/);
 assert.match(adminSource, /reviewSignalCandidate/);
 assert.match(adminSource, /审核备注（可选）/);
 
 const workerSource = read('src/worker.js');
 assert.match(workerSource, /ensureSignalCandidateTriageReady/);
 assert.match(workerSource, /signal_candidate_reviews/);
+assert.match(workerSource, /SIGNAL_CANDIDATE_STATUS_CONFLICT/);
+assert.match(workerSource, /ESCAPE '\\\\'/);
 assert.match(workerSource, /if \(request\.method === 'POST'\) return handleAdminReviewSignalCandidates/);
 
 console.log('Signal automation phase 3 scoring, clustering, review, auth, migration, and Admin checks passed.');
