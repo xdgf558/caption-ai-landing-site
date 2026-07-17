@@ -191,7 +191,7 @@ const adminSource = read('src/pages/admin-v2/index.astro');
 assert.match(adminSource, /id="signal-source-form" novalidate/);
 assert.match(adminSource, /id="signal-sources-list"/);
 assert.match(adminSource, /\/admin\/api\/signal\/sources/);
-assert.match(adminSource, /第一阶段不会自动抓取或发布/);
+assert.match(adminSource, /候选内容需要人工审核，不会自动发布/);
 assert.match(adminSource, /读取失败：\$\{error\.message\}/);
 
 const workerSource = read('src/worker.js');
