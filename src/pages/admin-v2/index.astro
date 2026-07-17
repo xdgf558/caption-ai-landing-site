@@ -179,7 +179,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <div>
               <p class="station-kicker">Signal strip</p>
               <h3 id="signal-help-title">每日简报导入</h3>
-              <p>继续人工发布简报，也可以维护后续自动采集会使用的来源白名单。第一阶段不会自动抓取或发布。</p>
+              <p>保留人工发布，同时从免费白名单来源采集候选资讯。候选内容需要人工审核，不会自动发布。</p>
             </div>
           </section>
           <div class="button-row">
@@ -688,8 +688,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <details class="admin-v2-disclosure" id="signal-automation-panel" open>
             <summary class="admin-disclosure-summary">
               <span>
-                <small>Automation phase 1</small>
-                <strong>采集来源与候选资讯底座</strong>
+                <small>Automation phase 2</small>
+                <strong>免费来源采集与候选资讯</strong>
               </span>
               <span id="signal-automation-summary">正在读取来源白名单。</span>
             </summary>
@@ -701,8 +701,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                       <p class="station-kicker">Approved sources</p>
                       <h3 id="signal-sources-title">来源白名单</h3>
                     </div>
-                    <button class="button button-secondary" id="signal-automation-refresh" type="button">刷新</button>
+                    <div class="button-row admin-signal-collection-actions">
+                      <button class="button button-primary" id="signal-collection-start" type="button">立即采集</button>
+                      <button class="button button-secondary" id="signal-automation-refresh" type="button">刷新</button>
+                    </div>
                   </div>
+                  <div class="admin-inline-status" id="signal-collection-status" role="status" aria-live="polite" hidden></div>
                   <div class="admin-v2-table-list" id="signal-sources-list"></div>
                 </section>
 
@@ -1051,6 +1055,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalStatus: $('#signal-status'),
       signalAutomationPanel: $('#signal-automation-panel'),
       signalAutomationSummary: $('#signal-automation-summary'),
+      signalCollectionStart: $('#signal-collection-start'),
+      signalCollectionStatus: $('#signal-collection-status'),
       signalSourcesList: $('#signal-sources-list'),
       signalRunsList: $('#signal-runs-list'),
       signalCandidatesList: $('#signal-candidates-list'),
@@ -1210,6 +1216,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalSources: [],
       signalRuns: [],
       signalCandidates: [],
+      signalCollectionReady: false,
       orders: [],
       accounts: [],
       analyticsStats: [],
@@ -2094,10 +2101,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <span>${escapeHtml(signalCategoryLabel(source.category))}</span>
             <span>${escapeHtml(signalSourceTrustLabel(source.trustTier))}</span>
             <span>${escapeHtml(String(source.fetchIntervalMinutes))} 分钟</span>
+            <span>${source.collectionSupported ? '可采集' : '暂未适配'}</span>
             ${source.requiresApiKey ? '<span>需 API Key</span>' : ''}
           </div>
           <div class="admin-signal-source-row__url">${escapeHtml(source.endpointUrl)}</div>
           ${source.notes ? `<small>${escapeHtml(source.notes)}</small>` : ''}
+          ${source.lastFetchedAt ? `<small>最近采集：${escapeHtml(formatDate(source.lastFetchedAt))} · ${escapeHtml(String(source.lastItemCount || 0))} 条${source.lastHttpStatus ? ` · HTTP ${escapeHtml(String(source.lastHttpStatus))}` : ''}</small>` : ''}
           <div class="admin-signal-source-row__actions"></div>
         `;
         const actions = row.querySelector('.admin-signal-source-row__actions');
@@ -2118,13 +2127,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const renderSignalRuns = () => {
       if (!state.signalRuns.length) {
-        renderEmpty(elements.signalRunsList, '第一阶段尚未启动采集，因此还没有运行记录。');
+        renderEmpty(elements.signalRunsList, '尚未运行采集。点击“立即采集”后，免费来源会逐个进入队列。');
         return;
       }
       elements.signalRunsList.innerHTML = state.signalRuns.map((run) => `
         <article class="admin-v2-row">
           <strong>${escapeHtml(run.status)} · ${escapeHtml(run.triggerType)}</strong>
-          <span>${escapeHtml(String(run.acceptedCount))} 候选 · ${escapeHtml(String(run.duplicateCount))} 重复 · ${escapeHtml(String(run.failedCount))} 失败</span>
+          <span>${escapeHtml(String(run.processedSourceCount || 0))}/${escapeHtml(String(run.sourceCount || 0))} 来源 · ${escapeHtml(String(run.acceptedCount))} 候选 · ${escapeHtml(String(run.duplicateCount))} 重复 · ${escapeHtml(String(run.failedCount))} 失败</span>
           <small>${escapeHtml(formatDate(run.startedAt || run.createdAt))}</small>
         </article>
       `).join('');
@@ -2132,13 +2141,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const renderSignalCandidates = () => {
       if (!state.signalCandidates.length) {
-        renderEmpty(elements.signalCandidatesList, '候选队列为空。第二阶段接入采集后，资讯会先进入这里，不会直接发布。');
+        renderEmpty(elements.signalCandidatesList, '候选队列为空。采集到的资讯会先进入这里，不会直接发布。');
         return;
       }
       elements.signalCandidatesList.innerHTML = state.signalCandidates.map((candidate) => `
         <article class="admin-v2-row">
-          <strong>${escapeHtml(candidate.title)}</strong>
+          <strong>${candidate.canonicalUrl ? `<a href="${escapeHtml(candidate.canonicalUrl)}" target="_blank" rel="noreferrer">${escapeHtml(candidate.title)}</a>` : escapeHtml(candidate.title)}</strong>
           <span>${escapeHtml(candidate.sourceName || candidate.sourceId)} · ${escapeHtml(signalCategoryLabel(candidate.category))} · ${escapeHtml(candidate.status)}</span>
+          ${candidate.summary ? `<p>${escapeHtml(candidate.summary)}</p>` : ''}
           <small>${escapeHtml(formatDate(candidate.publishedAt || candidate.createdAt))}</small>
         </article>
       `).join('');
@@ -2158,6 +2168,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           state.signalSources = [];
           state.signalRuns = [];
           state.signalCandidates = [];
+          state.signalCollectionReady = false;
+          elements.signalCollectionStart.disabled = true;
           elements.signalAutomationSummary.textContent = '待应用 migrations/0019_signal_automation.sql';
           renderEmpty(elements.signalSourcesList, '请先对生产 D1 应用 0019_signal_automation.sql。');
           renderEmpty(elements.signalRunsList, '数据表尚未初始化。');
@@ -2167,8 +2179,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         state.signalSources = sourcesPayload.sources || [];
         state.signalRuns = runsPayload.runs || [];
         state.signalCandidates = candidatesPayload.candidates || [];
+        state.signalCollectionReady = Boolean(sourcesPayload.collectionReady);
         const sourceSummary = sourcesPayload.summary || {};
-        elements.signalAutomationSummary.textContent = `${sourceSummary.total || 0} 个来源 · ${sourceSummary.enabled || 0} 启用 · 未启动自动采集`;
+        const activeRun = state.signalRuns.find((run) => ['queued', 'running'].includes(run.status));
+        elements.signalAutomationSummary.textContent = sourcesPayload.collectionReady
+          ? activeRun
+            ? `${sourceSummary.enabled || 0} 个来源启用 · 正在采集 ${activeRun.processedSourceCount || 0}/${activeRun.sourceCount || 0}`
+            : `${sourceSummary.total || 0} 个来源 · ${sourceSummary.enabled || 0} 启用 · 每小时检查`
+          : '待应用 migrations/0020_signal_collection.sql';
+        elements.signalCollectionStart.disabled = !state.signalCollectionReady;
         renderSignalSources();
         renderSignalRuns();
         renderSignalCandidates();
@@ -2176,11 +2195,36 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         state.signalSources = [];
         state.signalRuns = [];
         state.signalCandidates = [];
+        state.signalCollectionReady = false;
+        elements.signalCollectionStart.disabled = true;
         elements.signalAutomationSummary.dataset.state = 'error';
         elements.signalAutomationSummary.textContent = `读取失败：${error.message}`;
         renderEmpty(elements.signalSourcesList, '来源白名单读取失败，请稍后重试。');
         renderEmpty(elements.signalRunsList, '采集运行记录暂时不可用。');
         renderEmpty(elements.signalCandidatesList, '候选资讯暂时不可用。');
+      }
+    };
+
+    const startSignalCollection = async () => {
+      elements.signalCollectionStart.disabled = true;
+      elements.signalCollectionStatus.hidden = false;
+      elements.signalCollectionStatus.dataset.tone = 'pending';
+      elements.signalCollectionStatus.textContent = '正在把免费来源加入采集队列。';
+      try {
+        const payload = await apiJson('/admin/api/signal/collect', {
+          method: 'POST',
+          body: JSON.stringify({})
+        });
+        elements.signalCollectionStatus.dataset.tone = 'success';
+        elements.signalCollectionStatus.textContent = payload.message || '采集已启动。';
+        await Promise.all([loadSignalAutomation(), loadAuditLogs()]);
+        window.setTimeout(loadSignalAutomation, 1800);
+        window.setTimeout(loadSignalAutomation, 5000);
+      } catch (error) {
+        elements.signalCollectionStatus.dataset.tone = 'error';
+        elements.signalCollectionStatus.textContent = error.message;
+      } finally {
+        elements.signalCollectionStart.disabled = !state.signalCollectionReady;
       }
     };
 
@@ -3640,6 +3684,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#signal-refresh').addEventListener('click', loadSignalBriefs);
     $('#signal-reset').addEventListener('click', resetSignalForm);
     $('#signal-automation-refresh').addEventListener('click', loadSignalAutomation);
+    $('#signal-collection-start').addEventListener('click', startSignalCollection);
     $('#signal-source-reset').addEventListener('click', resetSignalSourceForm);
     $('#signal-source-manage').addEventListener('click', () => {
       elements.signalAutomationPanel.open = true;

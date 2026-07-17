@@ -7747,6 +7747,26 @@ details[open] > .admin-disclosure-summary::after {
   min-width: 0;
 }
 
+.admin-signal-collection-actions {
+  justify-content: flex-end;
+  margin: 0;
+}
+
+.admin-signal-pipeline-grid .admin-v2-row p {
+  color: var(--admin-muted);
+  display: -webkit-box;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.admin-signal-pipeline-grid .admin-v2-row strong a {
+  color: inherit;
+}
+
 .admin-signal-source-form {
   align-content: start;
   background: #ffffff;
