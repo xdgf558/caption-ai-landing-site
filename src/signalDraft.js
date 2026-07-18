@@ -205,7 +205,7 @@ const validateDraftPayload = (payload, candidates, options) => {
   const markdown = items
     .map(
       (item, index) =>
-        `${index + 1}. ${item.headline}\n\n${item.summary}\n\n信号：${item.signal}\n\n噪音：${item.noise}`
+        `${index + 1}. ${item.headline}\n\n${item.summary}\n\n信號：${item.signal}\n\n噪音：${item.noise}`
     )
     .join('\n\n');
 

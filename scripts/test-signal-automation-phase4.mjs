@@ -134,7 +134,7 @@ assert.equal(generated.category, 'ai');
 assert.equal(generated.outputLocale, signalDraftOutputLocale);
 assert.equal(generated.translationMode, 'source-to-zh-Hant');
 assert.match(generated.markdown, /1\. 第 1 條資訊已完成繁體中文整理/);
-assert.match(generated.markdown, /信号：/);
+assert.match(generated.markdown, /信號：/);
 assert.match(generated.markdown, /噪音：/);
 assert.equal(aiCalls[0].request.response_format.type, 'json_schema');
 assert.equal(aiCalls[0].request.response_format.json_schema.properties.items.minItems, 3);
@@ -551,7 +551,7 @@ const publicationDb = new DraftDb(publicationCandidates, {
 const publicationPayload = {
   automation: storedAutomation,
   briefDate: '2026-07-18',
-  markdown: '1. Test item\n\nTest summary.\n\n信号：Test signal.\n\n噪音：Test noise.',
+  markdown: '1. Test item\n\nTest summary.\n\n信號：Test signal.\n\n噪音：Test noise.',
   status: 'published',
   title: 'Publication candidate exclusion'
 };
