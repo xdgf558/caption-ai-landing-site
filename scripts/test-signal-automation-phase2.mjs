@@ -9,7 +9,10 @@ import worker, { __readerTotpTestHooks as workerHooks } from '../src/worker.js';
 import {
   collectSignalSource,
   fetchPublicSignalResource,
+  getSignalSourceSecretBinding,
+  isSignalSourceSecretConfigured,
   normalizePublicSignalUrl,
+  parseAnthropicNewsPage,
   parseSignalFeed
 } from '../src/signalCollection.js';
 
@@ -18,6 +21,8 @@ const read = (path) => readFileSync(join(root, path), 'utf8');
 
 const migration0019 = read('migrations/0019_signal_automation.sql');
 const migration0020 = read('migrations/0020_signal_collection.sql');
+const migration0021 = read('migrations/0021_signal_candidate_triage.sql');
+const migration0022 = read('migrations/0022_signal_source_adapters.sql');
 const packageJson = JSON.parse(read('package.json'));
 assert.match(migration0020, /CREATE TABLE IF NOT EXISTS signal_collection_tasks/);
 assert.match(migration0020, /idx_signal_candidates_content_hash_unique/);
@@ -29,7 +34,7 @@ const sqliteDirectory = mkdtempSync(join(tmpdir(), 'signal-automation-phase2-'))
 const sqlitePath = join(sqliteDirectory, 'signal.sqlite');
 const runSqlite = (input) => spawnSync('sqlite3', [sqlitePath], { encoding: 'utf8', input });
 try {
-  const migrationResult = runSqlite(`${migration0019}\n${migration0020}`);
+  const migrationResult = runSqlite(`${migration0019}\n${migration0020}\n${migration0021}\n${migration0022}`);
   assert.equal(migrationResult.status, 0, migrationResult.stderr);
   const schemaResult = runSqlite(`
     SELECT
@@ -49,6 +54,32 @@ try {
   );
   assert.equal(hackerNewsLimitResult.status, 0, hackerNewsLimitResult.stderr);
   assert.equal(hackerNewsLimitResult.stdout.trim(), '12');
+  const officialAdapterResult = runSqlite(`
+    SELECT id || '|' || source_type || '|' || endpoint_url || '|' || is_enabled || '|' || config_json
+    FROM signal_sources
+    WHERE id IN ('openai-news', 'anthropic-news')
+    ORDER BY id;
+  `);
+  assert.equal(officialAdapterResult.status, 0, officialAdapterResult.stderr);
+  assert.equal(
+    officialAdapterResult.stdout.trim(),
+    [
+      'anthropic-news|page|https://www.anthropic.com/news|1|{"adapter":"anthropic_news"}',
+      'openai-news|rss|https://openai.com/news/rss.xml|1|{"adapter":"rss"}'
+    ].join('\n')
+  );
+  const fredAdapterResult = runSqlite(`
+    SELECT endpoint_url || '|' || is_enabled || '|' || requires_api_key
+           || '|' || json_extract(config_json, '$.adapter')
+           || '|' || json_extract(config_json, '$.secretBinding')
+           || '|' || json_array_length(json_extract(config_json, '$.series'))
+    FROM signal_sources WHERE id = 'fred-api';
+  `);
+  assert.equal(fredAdapterResult.status, 0, fredAdapterResult.stderr);
+  assert.equal(
+    fredAdapterResult.stdout.trim(),
+    'https://api.stlouisfed.org/fred/series/observations|0|1|fred|FRED_API_KEY|5'
+  );
 
   const singleActiveRunResult = runSqlite(`
     INSERT INTO signal_collection_runs (id, trigger_type, status)
@@ -112,6 +143,35 @@ assert.throws(
 assert.equal(normalizePublicSignalUrl('http://127.0.0.1/feed'), '');
 assert.equal(normalizePublicSignalUrl('https://reader:secret@example.org/feed'), '');
 
+const anthropicItems = parseAnthropicNewsPage(
+  `<main>
+    <a href="/features/research"><h2>Feature that must be ignored</h2><time>Jul 8, 2026</time></a>
+    <a href="/news/hard-questions">
+      <time datetime="2026-07-09">Jul 9, 2026</time>
+      <h2>Hard questions about AI systems</h2>
+      <p>An official Anthropic newsroom summary.</p>
+    </a>
+    <a href="/news/claude-for-teachers" class="PublicationList__listItem">
+      <div><time>Jul 14, 2026</time><span class="PublicationList__subject">Product</span></div>
+      <span class="PublicationList__title body-3">Introducing Claude for Teachers</span>
+    </a>
+  </main>`,
+  'https://www.anthropic.com/news',
+  10
+);
+assert.equal(anthropicItems.length, 2);
+const hardQuestionsItem = anthropicItems.find((item) => item.externalId === '/news/hard-questions');
+const teachersItem = anthropicItems.find((item) => item.externalId === '/news/claude-for-teachers');
+assert.equal(hardQuestionsItem.canonicalUrl, 'https://www.anthropic.com/news/hard-questions');
+assert.equal(hardQuestionsItem.publishedAt, '2026-07-09T00:00:00.000Z');
+assert.equal(hardQuestionsItem.summary, 'An official Anthropic newsroom summary.');
+assert.equal(teachersItem.title, 'Introducing Claude for Teachers');
+assert.equal(teachersItem.publishedAt, '2026-07-14T00:00:00.000Z');
+assert.throws(
+  () => parseAnthropicNewsPage('<a href="/news/item"><h2>Item</h2><time>Today</time></a>', 'https://example.org/news'),
+  (error) => error.code === 'SIGNAL_ANTHROPIC_SOURCE_INVALID'
+);
+
 const dnsPayload = (type, addresses) =>
   JSON.stringify({ Answer: addresses.map((data) => ({ data, type: type === 'A' ? 1 : 28 })) });
 
@@ -147,6 +207,102 @@ assert.equal(
   rssFetchCalls.find((call) => call.url === 'https://example.org/feed.xml').headers.get('if-none-match'),
   '"feed-v1"'
 );
+
+const anthropicFetch = async (url) => {
+  const parsed = new URL(url);
+  if (parsed.hostname === 'cloudflare-dns.com') {
+    const type = parsed.searchParams.get('type');
+    return new Response(dnsPayload(type, type === 'A' ? ['160.79.104.10'] : []));
+  }
+  assert.equal(parsed.toString(), 'https://www.anthropic.com/news');
+  return new Response(
+    '<a href="/news/reliable-systems"><time datetime="2026-07-10">Jul 10, 2026</time><h2>Reliable systems</h2><p>Official update.</p></a>',
+    { headers: { 'content-type': 'text/html' } }
+  );
+};
+const collectedAnthropic = await collectSignalSource(
+  {
+    config_json: '{"adapter":"anthropic_news"}',
+    endpoint_url: 'https://www.anthropic.com/news',
+    http_etag: '',
+    http_last_modified: '',
+    max_items_per_run: 10
+  },
+  { fetchImpl: anthropicFetch }
+);
+assert.equal(collectedAnthropic.items.length, 1);
+assert.equal(collectedAnthropic.items[0].title, 'Reliable systems');
+
+const fredApiKey = 'a'.repeat(32);
+const fredSource = {
+  config_json: JSON.stringify({
+    adapter: 'fred',
+    secretBinding: 'FRED_API_KEY',
+    series: [
+      { id: 'UNRATE', label: 'US unemployment rate', unit: 'percent' },
+      { id: 'DGS10', label: '10-year US Treasury yield', unit: 'percent' }
+    ]
+  }),
+  endpoint_url: 'https://api.stlouisfed.org/fred/series/observations',
+  max_items_per_run: 5,
+  requires_api_key: 1
+};
+assert.equal(getSignalSourceSecretBinding(fredSource), 'FRED_API_KEY');
+assert.equal(isSignalSourceSecretConfigured(fredSource), false);
+assert.equal(isSignalSourceSecretConfigured(fredSource, { FRED_API_KEY: fredApiKey }), true);
+const fredRequests = [];
+const fredFetch = async (url) => {
+  const parsed = new URL(url);
+  if (parsed.hostname === 'cloudflare-dns.com') {
+    const type = parsed.searchParams.get('type');
+    return new Response(dnsPayload(type, type === 'A' ? ['23.21.34.52'] : []));
+  }
+  assert.equal(parsed.hostname, 'api.stlouisfed.org');
+  assert.equal(parsed.searchParams.get('api_key'), fredApiKey);
+  fredRequests.push(parsed);
+  return new Response(
+    JSON.stringify({
+      observations: [
+        { date: '2026-06-01', value: parsed.searchParams.get('series_id') === 'UNRATE' ? '4.1' : '4.25' },
+        { date: '2026-05-01', value: parsed.searchParams.get('series_id') === 'UNRATE' ? '4.0' : '4.30' }
+      ]
+    }),
+    { headers: { 'content-type': 'application/json' } }
+  );
+};
+const collectedFred = await collectSignalSource(fredSource, {
+  fetchImpl: fredFetch,
+  secrets: { FRED_API_KEY: fredApiKey }
+});
+assert.equal(fredRequests.length, 2);
+assert.equal(collectedFred.items.length, 2);
+assert.equal(collectedFred.items[0].canonicalUrl, 'https://fred.stlouisfed.org/series/UNRATE');
+assert.match(collectedFred.items[0].summary, /Previous valid observation: 4\.0 percent/);
+assert.equal(collectedFred.finalUrl, 'https://fred.stlouisfed.org/');
+assert.doesNotMatch(JSON.stringify(collectedFred), new RegExp(fredApiKey));
+await assert.rejects(
+  collectSignalSource(fredSource, { fetchImpl: fredFetch, secrets: {} }),
+  (error) => error.code === 'SIGNAL_FRED_API_KEY_MISSING'
+);
+
+const fredRedirectTargets = [];
+const fredRedirectFetch = async (url) => {
+  const parsed = new URL(url);
+  if (parsed.hostname === 'cloudflare-dns.com') {
+    const type = parsed.searchParams.get('type');
+    return new Response(dnsPayload(type, type === 'A' ? ['23.21.34.52'] : []));
+  }
+  fredRedirectTargets.push(parsed.hostname);
+  return new Response(null, { status: 302, headers: { location: 'https://example.org/leak' } });
+};
+await assert.rejects(
+  collectSignalSource(
+    { ...fredSource, config_json: JSON.stringify({ ...JSON.parse(fredSource.config_json), series: [{ id: 'UNRATE', label: 'US unemployment rate', unit: 'percent' }] }) },
+    { fetchImpl: fredRedirectFetch, secrets: { FRED_API_KEY: fredApiKey } }
+  ),
+  (error) => error.code === 'SIGNAL_FETCH_REDIRECT_BLOCKED'
+);
+assert.deepEqual(fredRedirectTargets, ['api.stlouisfed.org']);
 
 const privateDnsFetch = async (url) => {
   const parsed = new URL(url);
@@ -227,6 +383,30 @@ const collectedHackerNews = await collectSignalSource(
 assert.equal(collectedHackerNews.items.length, 2);
 assert.equal(collectedHackerNews.items[1].canonicalUrl, 'https://news.ycombinator.com/item?id=102');
 assert.equal(hackerNewsDnsAQueries, 3, 'Each outbound HN request must repeat the public DNS check.');
+
+let selectionSql = '';
+const selectionDb = {
+  prepare(sql) {
+    selectionSql = sql;
+    return {
+      async all() {
+        return {
+          results: [
+            { config_json: '{"adapter":"rss"}', id: 'rss-source', is_enabled: 1, requires_api_key: 0 },
+            { ...fredSource, id: 'fred-source', is_enabled: 1 }
+          ]
+        };
+      }
+    };
+  }
+};
+const sourcesWithoutFredKey = await workerHooks.selectSignalCollectionSources(selectionDb);
+assert.deepEqual(sourcesWithoutFredKey.map((source) => source.id), ['rss-source']);
+const sourcesWithFredKey = await workerHooks.selectSignalCollectionSources(selectionDb, {
+  secrets: { FRED_API_KEY: fredApiKey }
+});
+assert.deepEqual(sourcesWithFredKey.map((source) => source.id), ['rss-source', 'fred-source']);
+assert.doesNotMatch(selectionSql, /requires_api_key\s*=\s*0/);
 
 class ManualStatement {
   constructor(db, sql, params = []) {
@@ -531,6 +711,8 @@ const adminSource = read('src/pages/admin-v2/index.astro');
 assert.match(adminSource, /id="signal-collection-start"/);
 assert.match(adminSource, /\/admin\/api\/signal\/collect/);
 assert.match(adminSource, /采集到的资讯会先进入这里，不会直接发布/);
+assert.match(adminSource, /source\.collectionConfigured/);
+assert.match(adminSource, /source\.missingSecretBinding/);
 
 const workerSource = read('src/worker.js');
 assert.match(workerSource, /async scheduled\(_controller, env\)/);
