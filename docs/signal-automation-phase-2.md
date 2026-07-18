@@ -38,3 +38,4 @@ Do not deploy this correction independently. When the full Signal automation pro
 3. `0021_signal_candidate_triage.sql`
 4. `0022_signal_source_adapters.sql`
 5. `0023_signal_candidate_deduplication.sql`
+6. `0024_signal_operations.sql`

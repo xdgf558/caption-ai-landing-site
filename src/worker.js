@@ -2420,10 +2420,13 @@ const isMissingSignalCandidateTriageError = (error) =>
   );
 const isMissingSignalCandidateDeduplicationError = (error) =>
   /no such table: signal_candidate_occurrences|no such column: title_fingerprint/i.test(error?.message || '');
+const isMissingSignalAutomationOperationsError = (error) =>
+  /no such table: signal_automation_(?:runtime|alerts)|no such column: last_cron_status/i.test(error?.message || '');
 const readySignalAutomationDatabases = new WeakSet();
 const readySignalCollectionPhase2Databases = new WeakSet();
 const readySignalCandidateTriageDatabases = new WeakSet();
 const readySignalCandidateDeduplicationDatabases = new WeakSet();
+const readySignalAutomationOperationsDatabases = new WeakSet();
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -2497,6 +2500,28 @@ const ensureSignalCandidateDeduplicationReady = async (db) => {
       isMissingSignalAutomationTablesError(error) ||
       isMissingSignalCandidateTriageError(error) ||
       isMissingSignalCandidateDeduplicationError(error)
+    ) {
+      return false;
+    }
+    throw error;
+  }
+};
+
+const ensureSignalAutomationOperationsReady = async (db) => {
+  if (readySignalAutomationOperationsDatabases.has(db)) return true;
+  if (!(await ensureSignalCollectionPhase2Ready(db))) return false;
+  try {
+    await db
+      .prepare('SELECT last_cron_status, consecutive_failures FROM signal_automation_runtime LIMIT 1')
+      .first();
+    await db.prepare('SELECT id FROM signal_automation_alerts LIMIT 1').first();
+    readySignalAutomationOperationsDatabases.add(db);
+    return true;
+  } catch (error) {
+    if (
+      isMissingSignalAutomationTablesError(error) ||
+      isMissingSignalCollectionPhase2Error(error) ||
+      isMissingSignalAutomationOperationsError(error)
     ) {
       return false;
     }
@@ -9814,6 +9839,18 @@ const signalAutomationCandidateStatuses = new Set(['new', 'shortlisted', 'reject
 const signalCandidateWindowHours = new Set([0, 24, 168]);
 const signalCandidateReviewActions = new Set(['shortlist', 'reject', 'restore', 'rescore']);
 const signalAutomationDefaultAdapters = Object.freeze({ api: 'json', page: 'html', rss: 'rss' });
+const signalAutomationAlertTypes = new Set([
+  'scheduler_gap',
+  'scheduler_failure',
+  'stale_run',
+  'run_failed',
+  'source_failures',
+  'queue_failure',
+  'dead_letter'
+]);
+const signalAutomationAlertSeverities = new Set(['info', 'warning', 'critical']);
+const signalAutomationRuntimeId = 'signal-collection';
+const signalCollectionDeadLetterQueueName = 'station-cat-signal-collection-dlq';
 
 const signalAutomationSetupResponse = (kind) => {
   const collections = {
@@ -9894,6 +9931,7 @@ const signalSourceToJson = (row, secrets = {}) => {
 const signalCollectionRunToJson = (row) => ({
   id: row.id,
   triggerType: row.trigger_type,
+  previousRunId: row.previous_run_id || '',
   status: row.status,
   requestedSourceIds: parseStoredJson(row.requested_source_ids_json, []),
   sourceCount: normalizePositiveInteger(row.source_count, 0),
@@ -9908,6 +9946,42 @@ const signalCollectionRunToJson = (row) => ({
   createdBy: row.created_by,
   createdAt: row.created_at,
   updatedAt: row.updated_at
+});
+
+const signalAutomationAlertToJson = (row) => ({
+  id: row.id,
+  dedupeKey: row.dedupe_key,
+  alertType: signalAutomationAlertTypes.has(row.alert_type) ? row.alert_type : 'queue_failure',
+  severity: signalAutomationAlertSeverities.has(row.severity) ? row.severity : 'warning',
+  status: row.status === 'resolved' ? 'resolved' : 'open',
+  title: row.title,
+  message: row.message,
+  runId: row.run_id || '',
+  sourceId: row.source_id || '',
+  occurrenceCount: Math.max(1, normalizePositiveInteger(row.occurrence_count, 1)),
+  metadata: parseStoredJson(row.metadata_json, {}),
+  firstSeenAt: row.first_seen_at,
+  lastSeenAt: row.last_seen_at,
+  lastNotifiedAt: row.last_notified_at,
+  notificationCount: normalizePositiveInteger(row.notification_count, 0),
+  resolvedAt: row.resolved_at,
+  resolvedBy: row.resolved_by || '',
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const signalAutomationRuntimeToJson = (row) => ({
+  id: row?.id || signalAutomationRuntimeId,
+  lastCronStartedAt: row?.last_cron_started_at || null,
+  lastCronFinishedAt: row?.last_cron_finished_at || null,
+  lastCronScheduledAt: row?.last_cron_scheduled_at || null,
+  lastCronStatus: row?.last_cron_status || 'never',
+  lastRunId: row?.last_run_id || '',
+  lastQueuedCount: normalizePositiveInteger(row?.last_queued_count, 0),
+  consecutiveFailures: normalizePositiveInteger(row?.consecutive_failures, 0),
+  lastError: row?.last_error || '',
+  createdAt: row?.created_at || null,
+  updatedAt: row?.updated_at || null
 });
 
 const signalCandidateToJson = (row) => {
@@ -10725,6 +10799,11 @@ const handleAdminReviewSignalCandidates = async (request, env) => {
 
 const signalCollectionMaxAttempts = 3;
 const signalCollectionStaleAfterMinutes = 120;
+const signalAutomationCronGapMinutes = 180;
+const signalAutomationCronCriticalMinutes = 360;
+const signalAutomationHistoryRetentionDays = 90;
+const signalAutomationResolvedAlertRetentionDays = 30;
+const signalAutomationSourceFailureAlertThreshold = 3;
 const signalCollectionTaskStatuses = new Set(['queued', 'running', 'completed', 'failed']);
 
 const signalCollectionPhase2SetupResponse = () =>
@@ -10738,6 +10817,273 @@ const signalCollectionPhase2SetupResponse = () =>
     },
     { status: 503 }
   );
+
+const signalAutomationOperationsSetupResponse = (options = {}) =>
+  privateJson(
+    {
+      ok: options.status === 200,
+      code: 'SIGNAL_OPERATIONS_NOT_READY',
+      message: '先应用 migrations/0024_signal_operations.sql，再查看自动化运行状态。',
+      migration: '0024_signal_operations.sql',
+      setupRequired: true
+    },
+    { status: options.status || 503 }
+  );
+
+const signalAutomationLog = (level, event, details = {}) => {
+  const entry = JSON.stringify({ component: 'signal_automation', event, ...details });
+  if (level === 'error') {
+    console.error(entry);
+  } else if (level === 'warn') {
+    console.warn(entry);
+  } else {
+    console.log(entry);
+  }
+};
+
+const signalAutomationAlertRecipients = (env) =>
+  splitEnvList(env.SIGNAL_ALERT_EMAILS || env.ADMIN_ALLOWED_EMAILS || defaultAdminEmail)
+    .map((email) => email.toLowerCase())
+    .filter(isEmail)
+    .slice(0, 5);
+
+const notifySignalAutomationAlert = async (env, alert) => {
+  if (alert?.severity !== 'critical' || alert?.last_notified_at) return { configured: false, sent: 0 };
+  if (!env.EMAIL || typeof env.EMAIL.send !== 'function') return { configured: false, sent: 0 };
+  const recipients = signalAutomationAlertRecipients(env);
+  if (!recipients.length) return { configured: false, sent: 0 };
+
+  const fromEmail = env.READER_EMAIL_FROM || 'noreply@wwwstationcat.org';
+  const fromName = env.READER_EMAIL_FROM_NAME || 'Station Cat';
+  const subject = `[Station Cat Signal] ${cleanText(alert.title, 160)}`;
+  const adminUrl = 'https://wwwstationcat.org/admin-v2/#signal';
+  const text = [alert.title, '', alert.message, '', `查看后台：${adminUrl}`].join('\n');
+  const html = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;color:#17211f">
+    <h1 style="font-size:20px">${escapeHtml(alert.title)}</h1>
+    <p>${escapeHtml(alert.message)}</p>
+    <p><a href="${adminUrl}">打开 Station Cat 后台</a></p>
+  </div>`;
+  let sent = 0;
+  for (const recipient of recipients) {
+    try {
+      await env.EMAIL.send({
+        to: recipient,
+        from: { email: fromEmail, name: fromName },
+        subject,
+        text,
+        html
+      });
+      sent += 1;
+    } catch (error) {
+      signalAutomationLog('error', 'alert_email_failed', {
+        alertId: alert.id,
+        code: cleanText(error?.code, 120),
+        message: cleanText(error?.message, 300)
+      });
+    }
+  }
+  if (sent > 0) {
+    await env.WAITLIST_DB
+      .prepare(
+        `UPDATE signal_automation_alerts
+         SET last_notified_at = CURRENT_TIMESTAMP,
+             notification_count = notification_count + ?,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = ? AND last_notified_at IS NULL`
+      )
+      .bind(sent, alert.id)
+      .run();
+  }
+  return { configured: true, sent };
+};
+
+const openSignalAutomationAlert = async (env, input) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureSignalAutomationOperationsReady(db))) return null;
+  const alertType = signalAutomationAlertTypes.has(input.alertType) ? input.alertType : 'queue_failure';
+  const severity = signalAutomationAlertSeverities.has(input.severity) ? input.severity : 'warning';
+  const dedupeKey = cleanText(input.dedupeKey, 240);
+  const title = cleanText(input.title, 200);
+  const message = cleanText(input.message, 1000);
+  if (!dedupeKey || !title || !message) return null;
+  const metadataJson = JSON.stringify(input.metadata && typeof input.metadata === 'object' ? input.metadata : {});
+  const alert = await db
+    .prepare(
+      `INSERT INTO signal_automation_alerts (
+         id, dedupe_key, alert_type, severity, status, title, message,
+         run_id, source_id, metadata_json
+       ) VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?, ?)
+       ON CONFLICT(dedupe_key) DO UPDATE SET
+         alert_type = excluded.alert_type,
+         severity = excluded.severity,
+         status = 'open',
+         title = excluded.title,
+         message = excluded.message,
+         run_id = excluded.run_id,
+         source_id = excluded.source_id,
+         occurrence_count = signal_automation_alerts.occurrence_count + 1,
+         metadata_json = excluded.metadata_json,
+         last_seen_at = CURRENT_TIMESTAMP,
+         last_notified_at = CASE
+           WHEN signal_automation_alerts.status = 'resolved' THEN NULL
+           ELSE signal_automation_alerts.last_notified_at
+         END,
+         resolved_at = NULL,
+         resolved_by = '',
+         updated_at = CURRENT_TIMESTAMP
+       RETURNING *`
+    )
+    .bind(
+      `signal-alert-${randomToken(14)}`,
+      dedupeKey,
+      alertType,
+      severity,
+      title,
+      message,
+      cleanText(input.runId, 120) || null,
+      cleanText(input.sourceId, 120) || null,
+      metadataJson
+    )
+    .first();
+  if (alert) await notifySignalAutomationAlert(env, alert);
+  return alert ? signalAutomationAlertToJson(alert) : null;
+};
+
+const resolveSignalAutomationAlert = async (db, options = {}) => {
+  const actor = cleanText(options.actor || 'signal-system', 320);
+  const alertId = cleanText(options.alertId, 120);
+  const dedupeKey = cleanText(options.dedupeKey, 240);
+  if (!alertId && !dedupeKey) return null;
+  const clause = alertId ? 'id = ?' : 'dedupe_key = ?';
+  return db
+    .prepare(
+      `UPDATE signal_automation_alerts
+       SET status = 'resolved', resolved_at = CURRENT_TIMESTAMP, resolved_by = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE ${clause} AND status = 'open'
+       RETURNING *`
+    )
+    .bind(actor, alertId || dedupeKey)
+    .first();
+};
+
+const pruneSignalAutomationHistory = async (db, options = {}) => {
+  const runRetentionDays = Math.max(30, normalizePositiveInteger(options.runRetentionDays, signalAutomationHistoryRetentionDays));
+  const alertRetentionDays = Math.max(
+    7,
+    normalizePositiveInteger(options.alertRetentionDays, signalAutomationResolvedAlertRetentionDays)
+  );
+  const [runResult, alertResult] = await db.batch([
+    db
+      .prepare(
+        `DELETE FROM signal_collection_runs
+         WHERE status IN ('completed', 'partial', 'failed', 'cancelled')
+           AND datetime(COALESCE(finished_at, updated_at, created_at)) < datetime('now', ?)`
+      )
+      .bind(`-${runRetentionDays} days`),
+    db
+      .prepare(
+        `DELETE FROM signal_automation_alerts
+         WHERE status = 'resolved'
+           AND datetime(COALESCE(resolved_at, updated_at, created_at)) < datetime('now', ?)`
+      )
+      .bind(`-${alertRetentionDays} days`)
+  ]);
+  return {
+    alertsDeleted: getD1ChangeCount(alertResult),
+    runsDeleted: getD1ChangeCount(runResult)
+  };
+};
+
+const beginSignalAutomationCron = async (env, options = {}) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureSignalAutomationOperationsReady(db))) return null;
+  const previous = await db
+    .prepare('SELECT * FROM signal_automation_runtime WHERE id = ?')
+    .bind(signalAutomationRuntimeId)
+    .first();
+  const previousMs = parseSqlTimestampMs(previous?.last_cron_started_at);
+  const gapMinutes = previousMs ? Math.floor((Date.now() - previousMs) / 60000) : 0;
+  if (gapMinutes > signalAutomationCronGapMinutes) {
+    await openSignalAutomationAlert(env, {
+      alertType: 'scheduler_gap',
+      dedupeKey: 'scheduler:gap',
+      severity: gapMinutes >= signalAutomationCronCriticalMinutes ? 'critical' : 'warning',
+      title: 'Signal 定时任务曾中断',
+      message: `距离上一次 Cron 启动已过去 ${gapMinutes} 分钟，请检查 Worker、Cron 和 Queue 状态。`,
+      metadata: { gapMinutes }
+    });
+  } else if (previousMs) {
+    await resolveSignalAutomationAlert(db, { actor: 'signal-cron', dedupeKey: 'scheduler:gap' });
+  }
+
+  const scheduledAt = Number.isFinite(options.scheduledTime)
+    ? new Date(options.scheduledTime).toISOString()
+    : new Date().toISOString();
+  await db
+    .prepare(
+      `INSERT INTO signal_automation_runtime (
+         id, last_cron_started_at, last_cron_scheduled_at, last_cron_status,
+         last_error, updated_at
+       ) VALUES (?, CURRENT_TIMESTAMP, ?, 'running', '', CURRENT_TIMESTAMP)
+       ON CONFLICT(id) DO UPDATE SET
+         last_cron_started_at = CURRENT_TIMESTAMP,
+         last_cron_scheduled_at = excluded.last_cron_scheduled_at,
+         last_cron_status = 'running',
+         last_error = '',
+         updated_at = CURRENT_TIMESTAMP`
+    )
+    .bind(signalAutomationRuntimeId, scheduledAt)
+    .run();
+  return { gapMinutes, scheduledAt };
+};
+
+const completeSignalAutomationCron = async (env, result = {}) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureSignalAutomationOperationsReady(db))) return null;
+  const queued = normalizePositiveInteger(result.queued, 0);
+  const status = queued > 0 ? 'queued' : 'skipped';
+  const runtime = await db
+    .prepare(
+      `UPDATE signal_automation_runtime
+       SET last_cron_finished_at = CURRENT_TIMESTAMP, last_cron_status = ?,
+           last_run_id = ?, last_queued_count = ?, consecutive_failures = 0,
+           last_error = '', updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?
+       RETURNING *`
+    )
+    .bind(status, cleanText(result.runId, 120) || null, queued, signalAutomationRuntimeId)
+    .first();
+  await resolveSignalAutomationAlert(db, { actor: 'signal-cron', dedupeKey: 'scheduler:failure' });
+  return runtime;
+};
+
+const failSignalAutomationCron = async (env, error) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureSignalAutomationOperationsReady(db))) return null;
+  const message = cleanText(error?.message || 'Signal Cron 执行失败。', 1000);
+  const runtime = await db
+    .prepare(
+      `UPDATE signal_automation_runtime
+       SET last_cron_finished_at = CURRENT_TIMESTAMP, last_cron_status = 'failed',
+           consecutive_failures = consecutive_failures + 1, last_error = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?
+       RETURNING *`
+    )
+    .bind(message, signalAutomationRuntimeId)
+    .first();
+  const failures = normalizePositiveInteger(runtime?.consecutive_failures, 1);
+  await openSignalAutomationAlert(env, {
+    alertType: 'scheduler_failure',
+    dedupeKey: 'scheduler:failure',
+    severity: failures >= 3 ? 'critical' : 'warning',
+    title: 'Signal 定时任务执行失败',
+    message: `${message}（连续失败 ${failures} 次）`,
+    metadata: { consecutiveFailures: failures }
+  });
+  return runtime;
+};
 
 const isCollectibleSignalSource = (source, secrets = {}) =>
   Boolean(source?.is_enabled) &&
@@ -10824,7 +11170,11 @@ const failQueuedSignalRun = async (db, runId, message) => {
   ]);
 };
 
-const expireStaleSignalCollectionRuns = async (db, maxAgeMinutes = signalCollectionStaleAfterMinutes) => {
+const expireStaleSignalCollectionRuns = async (
+  db,
+  maxAgeMinutes = signalCollectionStaleAfterMinutes,
+  options = {}
+) => {
   const staleAfterMinutes = Math.max(15, normalizePositiveInteger(maxAgeMinutes, signalCollectionStaleAfterMinutes));
   const cutoff = `-${staleAfterMinutes} minutes`;
   const response = await db
@@ -10853,6 +11203,17 @@ const expireStaleSignalCollectionRuns = async (db, maxAgeMinutes = signalCollect
     if (!refreshed || ['queued', 'running'].includes(refreshed.status)) {
       await failQueuedSignalRun(db, row.id, message);
     }
+    if (options.env) {
+      await openSignalAutomationAlert(options.env, {
+        alertType: 'stale_run',
+        dedupeKey: `run:${row.id}:stale`,
+        severity: 'critical',
+        title: 'Signal 采集任务卡死',
+        message,
+        runId: row.id,
+        metadata: { staleAfterMinutes }
+      });
+    }
   }
   return staleRuns.map((row) => row.id);
 };
@@ -10866,7 +11227,7 @@ const enqueueSignalCollectionRun = async (env, options = {}) => {
     throw signalSourceValidationError('SIGNAL_COLLECTION_NOT_READY', '资讯采集数据表尚未初始化。');
   }
 
-  await expireStaleSignalCollectionRuns(db);
+  await expireStaleSignalCollectionRuns(db, signalCollectionStaleAfterMinutes, { env });
   const activeRun = await findActiveSignalCollectionRun(db);
   if (activeRun) return { alreadyRunning: true, run: signalCollectionRunToJson(activeRun), sources: [] };
 
@@ -10879,7 +11240,8 @@ const enqueueSignalCollectionRun = async (env, options = {}) => {
 
   const runId = `signal-run-${randomToken(14)}`;
   const actor = cleanText(options.actor || 'signal-cron', 320);
-  const triggerType = options.triggerType === 'manual' ? 'manual' : 'scheduled';
+  const triggerType = options.triggerType === 'retry' ? 'retry' : options.triggerType === 'manual' ? 'manual' : 'scheduled';
+  const previousRunId = triggerType === 'retry' ? cleanText(options.previousRunId, 120) : '';
   const sourceIds = sources.map((source) => source.id);
   try {
     await db.batch([
@@ -10887,10 +11249,10 @@ const enqueueSignalCollectionRun = async (env, options = {}) => {
         .prepare(
           `INSERT INTO signal_collection_runs (
              id, trigger_type, status, requested_source_ids_json,
-             source_count, processed_source_count, created_by
-           ) VALUES (?, ?, 'queued', ?, ?, 0, ?)`
+             source_count, processed_source_count, created_by, previous_run_id
+           ) VALUES (?, ?, 'queued', ?, ?, 0, ?, ?)`
         )
-        .bind(runId, triggerType, JSON.stringify(sourceIds), sources.length, actor),
+        .bind(runId, triggerType, JSON.stringify(sourceIds), sources.length, actor, previousRunId || null),
       ...sources.map((source) =>
         db
           .prepare(
@@ -10915,6 +11277,15 @@ const enqueueSignalCollectionRun = async (env, options = {}) => {
   } catch (error) {
     const message = cleanText(`队列写入失败：${error?.message || 'unknown error'}`, 500);
     await failQueuedSignalRun(db, runId, message);
+    await openSignalAutomationAlert(env, {
+      alertType: 'queue_failure',
+      dedupeKey: `run:${runId}:queue`,
+      severity: 'critical',
+      title: 'Signal 采集队列写入失败',
+      message,
+      runId,
+      metadata: { sourceCount: sources.length }
+    });
     throw signalSourceValidationError('SIGNAL_COLLECTION_ENQUEUE_FAILED', message);
   }
 
@@ -11411,7 +11782,58 @@ const insertSignalCandidates = async (db, source, rows) => {
   return { acceptedCount, duplicateCount: Math.max(insertRows.length - acceptedCount, 0) };
 };
 
-const completeSignalCollectionTask = async (db, source, task, collection, counts) => {
+const syncSignalCollectionRunAlert = async (env, run) => {
+  if (!env || !run || !['partial', 'failed'].includes(run.status)) return null;
+  const failedCount = normalizePositiveInteger(run.failed_count, 0);
+  const sourceCount = normalizePositiveInteger(run.source_count, 0);
+  const failed = run.status === 'failed';
+  return openSignalAutomationAlert(env, {
+    alertType: 'run_failed',
+    dedupeKey: `run:${run.id}:failure`,
+    severity: failed ? 'critical' : 'warning',
+    title: failed ? 'Signal 采集运行失败' : 'Signal 采集运行部分失败',
+    message: `${failedCount}/${sourceCount} 个来源采集失败，请在后台查看运行记录并重试失败来源。`,
+    runId: run.id,
+    metadata: {
+      acceptedCount: normalizePositiveInteger(run.accepted_count, 0),
+      failedCount,
+      sourceCount,
+      status: run.status
+    }
+  });
+};
+
+const syncSignalRetrySuccessAlert = async (env, run) => {
+  if (!env?.WAITLIST_DB || run?.trigger_type !== 'retry' || run?.status !== 'completed' || !run?.previous_run_id) {
+    return null;
+  }
+  return resolveSignalAutomationAlert(env.WAITLIST_DB, {
+    actor: 'signal-queue',
+    dedupeKey: `run:${run.previous_run_id}:failure`
+  });
+};
+
+const syncSignalSourceFailureAlert = async (env, source, failureCount, message = '') => {
+  if (!env || !source?.id) return null;
+  const dedupeKey = `source:${source.id}:consecutive-failures`;
+  if (failureCount < signalAutomationSourceFailureAlertThreshold) {
+    if (await ensureSignalAutomationOperationsReady(env.WAITLIST_DB)) {
+      await resolveSignalAutomationAlert(env.WAITLIST_DB, { actor: 'signal-queue', dedupeKey });
+    }
+    return null;
+  }
+  return openSignalAutomationAlert(env, {
+    alertType: 'source_failures',
+    dedupeKey,
+    severity: failureCount >= signalAutomationSourceFailureAlertThreshold * 2 ? 'critical' : 'warning',
+    title: `资讯来源连续失败：${cleanText(source.name || source.id, 160)}`,
+    message: `${cleanText(message || source.last_error || '来源采集失败。', 700)}（连续失败 ${failureCount} 次）`,
+    sourceId: source.id,
+    metadata: { consecutiveFailures: failureCount }
+  });
+};
+
+const completeSignalCollectionTask = async (db, source, task, collection, counts, options = {}) => {
   await db.batch([
     db
       .prepare(
@@ -11446,12 +11868,21 @@ const completeSignalCollectionTask = async (db, source, task, collection, counts
         task.id
       )
   ]);
-  return refreshSignalCollectionRun(db, task.run_id);
+  const run = await refreshSignalCollectionRun(db, task.run_id);
+  if (options.env) {
+    if (normalizePositiveInteger(source.consecutive_failures, 0) > 0) {
+      await syncSignalSourceFailureAlert(options.env, source, 0);
+    }
+    await syncSignalCollectionRunAlert(options.env, run);
+    await syncSignalRetrySuccessAlert(options.env, run);
+  }
+  return run;
 };
 
-const failSignalCollectionTask = async (db, source, task, error) => {
+const failSignalCollectionTask = async (db, source, task, error, options = {}) => {
   const message = cleanText(error?.message || '资讯来源采集失败。', 500);
   const shouldRetry = error?.retriable !== false && normalizePositiveInteger(task.attempts, 1) < signalCollectionMaxAttempts;
+  const consecutiveFailures = normalizePositiveInteger(source.consecutive_failures, 0) + 1;
   await db.batch([
     db
       .prepare(
@@ -11473,7 +11904,11 @@ const failSignalCollectionTask = async (db, source, task, error) => {
       )
       .bind(shouldRetry ? 'queued' : 'failed', message, shouldRetry ? 1 : 0, task.id)
   ]);
-  await refreshSignalCollectionRun(db, task.run_id);
+  const run = await refreshSignalCollectionRun(db, task.run_id);
+  if (options.env && !shouldRetry) {
+    await syncSignalSourceFailureAlert(options.env, source, consecutiveFailures, message);
+    await syncSignalCollectionRunAlert(options.env, run);
+  }
   return { message, retry: shouldRetry };
 };
 
@@ -11534,10 +11969,10 @@ const processSignalCollectionMessage = async (env, body, options = {}) => {
       acceptedCount: inserted.acceptedCount,
       duplicateCount: inserted.duplicateCount + Math.max(collection.items.length - rows.length, 0)
     };
-    const run = await completeSignalCollectionTask(db, source, task, collection, counts);
+    const run = await completeSignalCollectionTask(db, source, task, collection, counts, { env });
     return { done: true, retry: false, run: signalCollectionRunToJson(run), task: { ...signalCollectionTaskToJson(task), ...counts } };
   } catch (error) {
-    const failure = await failSignalCollectionTask(db, source, task, error);
+    const failure = await failSignalCollectionTask(db, source, task, error, { env });
     return { done: !failure.retry, retry: failure.retry, error: failure.message, task: signalCollectionTaskToJson(task) };
   }
 };
@@ -11558,7 +11993,27 @@ const abandonSignalCollectionMessage = async (env, body, error) => {
     .bind(signalCollectionMaxAttempts, message, runId, sourceId)
     .run();
   if (!getD1ChangeCount(result)) return false;
-  await refreshSignalCollectionRun(db, runId);
+  await db
+    .prepare(
+      `UPDATE signal_sources
+       SET last_fetched_at = CURRENT_TIMESTAMP, last_error_at = CURRENT_TIMESTAMP,
+           last_error = ?, consecutive_failures = consecutive_failures + 1,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .bind(message, sourceId)
+    .run();
+  const run = await refreshSignalCollectionRun(db, runId);
+  const source = await db.prepare('SELECT * FROM signal_sources WHERE id = ?').bind(sourceId).first();
+  await syncSignalCollectionRunAlert(env, run);
+  if (source) {
+    await syncSignalSourceFailureAlert(
+      env,
+      source,
+      normalizePositiveInteger(source.consecutive_failures, 0),
+      message
+    );
+  }
   return true;
 };
 
@@ -11572,31 +12027,325 @@ const handleSignalCollectionQueue = async (batch, env) => {
         message.ack();
       }
     } catch (error) {
-      if (message.attempts >= signalCollectionMaxAttempts) {
-        try {
-          await abandonSignalCollectionMessage(env, message.body, error);
-        } catch (markError) {
-          console.error('Unable to mark abandoned Signal collection message', markError);
-        }
-        message.ack();
-        console.error('Signal collection message abandoned', error);
-      } else {
-        message.retry({ delaySeconds: Math.min(30 * 2 ** Math.max(message.attempts - 1, 0), 300) });
-      }
+      signalAutomationLog('error', 'queue_message_failed', {
+        attempts: normalizePositiveInteger(message.attempts, 1),
+        code: cleanText(error?.code, 120),
+        message: cleanText(error?.message, 500),
+        runId: cleanText(message.body?.runId, 120),
+        sourceId: cleanText(message.body?.sourceId, 120)
+      });
+      message.retry({ delaySeconds: Math.min(30 * 2 ** Math.max(message.attempts - 1, 0), 300) });
     }
   }
 };
 
-const handleSignalCollectionSchedule = async (env) => {
+const handleSignalCollectionDeadLetterQueue = async (batch, env) => {
+  for (const message of batch.messages) {
+    try {
+      const runId = cleanText(message.body?.runId, 120);
+      const sourceId = cleanText(message.body?.sourceId, 120);
+      const marked = await abandonSignalCollectionMessage(
+        env,
+        message.body,
+        signalSourceValidationError('SIGNAL_COLLECTION_DEAD_LETTER', '队列消息已进入死信队列。')
+      );
+      await openSignalAutomationAlert(env, {
+        alertType: 'dead_letter',
+        dedupeKey: `run:${runId || 'unknown'}:source:${sourceId || 'unknown'}:dead-letter`,
+        severity: 'critical',
+        title: 'Signal 队列消息进入死信队列',
+        message: marked
+          ? '采集任务已标记失败，请在后台重试该运行中的失败来源。'
+          : '死信消息对应的任务已经结束或无法定位，请检查队列日志。',
+        runId,
+        sourceId,
+        metadata: {
+          attempts: normalizePositiveInteger(message.attempts, signalCollectionMaxAttempts),
+          queue: cleanText(batch.queue, 160) || signalCollectionDeadLetterQueueName
+        }
+      });
+      signalAutomationLog('error', 'dead_letter_received', {
+        marked,
+        runId,
+        sourceId
+      });
+      message.ack();
+    } catch (error) {
+      signalAutomationLog('error', 'dead_letter_processing_failed', {
+        attempts: normalizePositiveInteger(message.attempts, 1),
+        message: cleanText(error?.message, 500),
+        runId: cleanText(message.body?.runId, 120),
+        sourceId: cleanText(message.body?.sourceId, 120)
+      });
+      message.retry({ delaySeconds: Math.min(60 * 2 ** Math.max(message.attempts - 1, 0), 900) });
+    }
+  }
+};
+
+const handleSignalCollectionSchedule = async (env, options = {}) => {
   if (!env.WAITLIST_DB || !env.SIGNAL_COLLECTION_QUEUE) return { queued: 0, skipped: true };
   if (!(await ensureSignalAutomationTablesReady(env.WAITLIST_DB))) return { queued: 0, setupRequired: true };
   if (!(await ensureSignalCollectionPhase2Ready(env.WAITLIST_DB))) return { queued: 0, setupRequired: true };
-  const result = await enqueueSignalCollectionRun(env, { actor: 'signal-cron', triggerType: 'scheduled' });
+  const operationsReady = await ensureSignalAutomationOperationsReady(env.WAITLIST_DB);
+  if (operationsReady) await beginSignalAutomationCron(env, options);
+  try {
+    const result = await enqueueSignalCollectionRun(env, { actor: 'signal-cron', triggerType: 'scheduled' });
+    const response = {
+      alreadyRunning: result.alreadyRunning,
+      queued: result.sources.length,
+      runId: result.run?.id || ''
+    };
+    if (operationsReady) {
+      const scheduledAt = Number.isFinite(options.scheduledTime) ? new Date(options.scheduledTime) : new Date();
+      if (scheduledAt.getUTCHours() === 3) await pruneSignalAutomationHistory(env.WAITLIST_DB);
+      await completeSignalAutomationCron(env, response);
+    }
+    signalAutomationLog('info', 'cron_completed', response);
+    return { ...response, operationsReady };
+  } catch (error) {
+    if (operationsReady) await failSignalAutomationCron(env, error);
+    signalAutomationLog('error', 'cron_failed', {
+      code: cleanText(error?.code, 120),
+      message: cleanText(error?.message, 500)
+    });
+    throw error;
+  }
+};
+
+const getSignalAutomationHealth = ({ runtime, alerts, activeRun }) => {
+  const openAlerts = alerts.filter((alert) => alert.status === 'open');
+  const criticalCount = openAlerts.filter((alert) => alert.severity === 'critical').length;
+  const warningCount = openAlerts.filter((alert) => alert.severity === 'warning').length;
+  const lastCronMs = parseSqlTimestampMs(runtime?.last_cron_started_at);
+  const heartbeatAgeMinutes = lastCronMs ? Math.max(0, Math.floor((Date.now() - lastCronMs) / 60000)) : null;
+  let state = 'healthy';
+  let message = '定时采集、队列和来源状态正常。';
+
+  if (!lastCronMs || runtime?.last_cron_status === 'never') {
+    state = 'waiting';
+    message = '等待阶段六上线后的第一次定时运行。';
+  }
+  if (
+    criticalCount > 0 ||
+    runtime?.last_cron_status === 'failed' ||
+    (heartbeatAgeMinutes !== null && heartbeatAgeMinutes >= signalAutomationCronCriticalMinutes)
+  ) {
+    state = 'critical';
+    message = criticalCount > 0 ? `有 ${criticalCount} 条严重告警需要处理。` : '定时采集状态异常，需要检查。';
+  } else if (
+    warningCount > 0 ||
+    (heartbeatAgeMinutes !== null && heartbeatAgeMinutes >= signalAutomationCronGapMinutes)
+  ) {
+    state = 'degraded';
+    message = warningCount > 0 ? `有 ${warningCount} 条警告需要检查。` : '定时采集心跳延迟。';
+  } else if (activeRun) {
+    state = 'running';
+    message = `正在处理 ${activeRun.processed_source_count || 0}/${activeRun.source_count || 0} 个来源。`;
+  }
+
   return {
-    alreadyRunning: result.alreadyRunning,
-    queued: result.sources.length,
-    runId: result.run?.id || ''
+    state,
+    message,
+    heartbeatAgeMinutes,
+    openAlertCount: openAlerts.length,
+    criticalAlertCount: criticalCount,
+    warningAlertCount: warningCount
   };
+};
+
+const handleAdminGetSignalOperations = async (request, env) => {
+  const actorEmail = await getAdminActorEmail(request, env);
+  if (!actorEmail) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_OPERATIONS_ADMIN_REQUIRED', message: '管理员身份无效或已过期。' },
+      { status: 401 }
+    );
+  }
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureSignalAutomationOperationsReady(db))) {
+    return signalAutomationOperationsSetupResponse({ status: 200 });
+  }
+
+  const [runtime, alertsResponse, sourceErrorsResponse, activeRun, latestRun] = await Promise.all([
+    db.prepare('SELECT * FROM signal_automation_runtime WHERE id = ?').bind(signalAutomationRuntimeId).first(),
+    db
+      .prepare(
+        `SELECT * FROM signal_automation_alerts
+         ORDER BY CASE status WHEN 'open' THEN 0 ELSE 1 END,
+                  CASE severity WHEN 'critical' THEN 0 WHEN 'warning' THEN 1 ELSE 2 END,
+                  datetime(last_seen_at) DESC
+         LIMIT 50`
+      )
+      .all(),
+    db
+      .prepare(
+        `SELECT id, name, category, consecutive_failures, last_error, last_error_at, last_success_at
+         FROM signal_sources
+         WHERE consecutive_failures > 0 OR last_error <> ''
+         ORDER BY consecutive_failures DESC, datetime(last_error_at) DESC
+         LIMIT 20`
+      )
+      .all(),
+    findActiveSignalCollectionRun(db),
+    db.prepare('SELECT * FROM signal_collection_runs ORDER BY datetime(created_at) DESC LIMIT 1').first()
+  ]);
+  const alertRows = alertsResponse.results || [];
+  const health = getSignalAutomationHealth({ runtime, alerts: alertRows, activeRun });
+  return privateJson({
+    ok: true,
+    setupRequired: false,
+    health,
+    runtime: signalAutomationRuntimeToJson(runtime),
+    activeRun: activeRun ? signalCollectionRunToJson(activeRun) : null,
+    latestRun: latestRun ? signalCollectionRunToJson(latestRun) : null,
+    alerts: alertRows.map(signalAutomationAlertToJson),
+    sourceErrors: (sourceErrorsResponse.results || []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      consecutiveFailures: normalizePositiveInteger(row.consecutive_failures, 0),
+      lastError: row.last_error,
+      lastErrorAt: row.last_error_at,
+      lastSuccessAt: row.last_success_at
+    })),
+    notification: {
+      configured: Boolean(env.EMAIL && typeof env.EMAIL.send === 'function' && signalAutomationAlertRecipients(env).length),
+      recipientCount: signalAutomationAlertRecipients(env).length,
+      criticalOnly: true
+    },
+    retention: {
+      resolvedAlertDays: signalAutomationResolvedAlertRetentionDays,
+      runDays: signalAutomationHistoryRetentionDays
+    }
+  });
+};
+
+const handleAdminManageSignalOperations = async (request, env) => {
+  const actorEmail = await getAdminActorEmail(request, env);
+  if (!actorEmail) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_OPERATIONS_ADMIN_REQUIRED', message: '管理员身份无效或已过期。' },
+      { status: 401 }
+    );
+  }
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureSignalAutomationOperationsReady(db))) return signalAutomationOperationsSetupResponse();
+  if (!(await ensureContentTablesReady(db)) || !(await ensureAdminAuditLogsReady(db))) {
+    return privateJson(
+      { ok: false, code: 'ADMIN_AUDIT_NOT_READY', message: '内容库或审计日志表未初始化，操作已阻止。' },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid Signal operations JSON.' }, { status: 400 });
+  }
+  const action = cleanText(payload?.action, 40).toLowerCase();
+
+  if (action === 'resolve_alert') {
+    const alertId = cleanText(payload.alertId, 120);
+    if (!alertId) {
+      return privateJson({ ok: false, code: 'SIGNAL_ALERT_ID_REQUIRED', message: '请选择要处理的告警。' }, { status: 400 });
+    }
+    const resolved = await resolveSignalAutomationAlert(db, { actor: actorEmail, alertId });
+    if (!resolved) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_ALERT_NOT_OPEN', message: '告警不存在或已经处理。' },
+        { status: 409 }
+      );
+    }
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: 'signal_automation_alert_resolve',
+      targetType: 'signal_automation_alert',
+      targetId: resolved.id,
+      targetSlug: resolved.dedupe_key,
+      metadata: { alertType: resolved.alert_type, severity: resolved.severity }
+    });
+    return privateJson({ ok: true, alert: signalAutomationAlertToJson(resolved), message: '告警已标记为已处理。' });
+  }
+
+  if (action === 'retry_run') {
+    const runId = cleanText(payload.runId, 120);
+    if (!runId) {
+      return privateJson({ ok: false, code: 'SIGNAL_RUN_ID_REQUIRED', message: '请选择要重试的采集运行。' }, { status: 400 });
+    }
+    const run = await db.prepare('SELECT * FROM signal_collection_runs WHERE id = ?').bind(runId).first();
+    if (!run) {
+      return privateJson({ ok: false, code: 'SIGNAL_RUN_NOT_FOUND', message: '没有找到这次采集运行。' }, { status: 404 });
+    }
+    if (!['partial', 'failed'].includes(run.status)) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_RUN_NOT_RETRYABLE', message: '只有部分失败或全部失败的运行可以重试。' },
+        { status: 409 }
+      );
+    }
+    const failedTasksResponse = await db
+      .prepare(
+        `SELECT source_id FROM signal_collection_tasks
+         WHERE run_id = ? AND status = 'failed'
+         ORDER BY source_id ASC LIMIT 50`
+      )
+      .bind(runId)
+      .all();
+    const sourceIds = (failedTasksResponse.results || []).map((row) => row.source_id).filter(Boolean);
+    if (!sourceIds.length) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_RUN_NO_FAILED_SOURCES', message: '这次运行没有可重试的失败来源。' },
+        { status: 409 }
+      );
+    }
+
+    try {
+      const result = await enqueueSignalCollectionRun(env, {
+        actor: actorEmail,
+        previousRunId: runId,
+        sourceIds,
+        triggerType: 'retry'
+      });
+      if (result.alreadyRunning) {
+        return privateJson({
+          ok: true,
+          alreadyRunning: true,
+          message: '已有采集任务正在进行，请等它结束后再重试。',
+          run: result.run
+        });
+      }
+      if (!result.run) {
+        return privateJson(
+          { ok: false, code: 'SIGNAL_RETRY_NO_SOURCES', message: '失败来源已暂停或当前不可采集。' },
+          { status: 409 }
+        );
+      }
+      await insertAdminAuditLog(db, {
+        actorEmail,
+        action: 'signal_collection_retry',
+        targetType: 'signal_collection_run',
+        targetId: result.run.id,
+        targetSlug: result.run.id,
+        metadata: { previousRunId: runId, sourceIds }
+      });
+      return privateJson({
+        ok: true,
+        message: `已把 ${result.sources.length} 个失败来源重新加入队列。`,
+        run: result.run,
+        previousRunId: runId,
+        sources: result.sources
+      });
+    } catch (error) {
+      return privateJson(
+        { ok: false, code: error?.code || 'SIGNAL_RETRY_FAILED', message: error?.message || '无法重试采集运行。' },
+        { status: error?.code === 'SIGNAL_COLLECTION_NOT_READY' ? 503 : 502 }
+      );
+    }
+  }
+
+  return privateJson({ ok: false, code: 'SIGNAL_OPERATION_INVALID', message: '不支持的运维操作。' }, { status: 400 });
 };
 
 const signalSummaryMaxItems = 10;
@@ -18118,14 +18867,17 @@ export const __readerTotpTestHooks = {
   buildSignalDraftApprovalPayload,
   buildNovelAiInsightFromStats,
   buildNovelChapterStatsMetrics,
+  beginSignalAutomationCron,
   bytesToBase32,
   contentEntryLegacyWorksPath,
   contentEntryNovelV2Path,
   contentEntryPublicPath,
   expireStaleSignalCollectionRuns,
+  failSignalAutomationCron,
   findActiveSignalCollectionRun,
   getD1ChangeCount,
   getLegacyWorksRedirectPath,
+  getSignalAutomationHealth,
   getReaderTotpResetLimitKeys,
   getReaderTotpResetIdentifierHash,
   getRequestClientHashes,
@@ -18138,6 +18890,8 @@ export const __readerTotpTestHooks = {
   handleAdminListSignalCandidates,
   handleAdminReviewSignalCandidates,
   handleAdminListSignalCollectionRuns,
+  handleAdminGetSignalOperations,
+  handleAdminManageSignalOperations,
   handleAdminListSignalSources,
   handleAdminCollectSignalSources,
   handleAdminListNovelAiInsights,
@@ -18150,7 +18904,9 @@ export const __readerTotpTestHooks = {
   handleAdminSaveSignalSource,
   normalizeSignalCandidateReviewPayload,
   handleSignalCollectionQueue,
+  handleSignalCollectionDeadLetterQueue,
   handleSignalCollectionSchedule,
+  openSignalAutomationAlert,
   handleNovelForgeAnalytics,
   handleNovelForgeChapterContent,
   handleNovelForgeTranslationSync,
@@ -18173,6 +18929,8 @@ export const __readerTotpTestHooks = {
   normalizeSignalAutomationSourcePayload,
   insertSignalCandidates,
   processSignalCollectionMessage,
+  completeSignalCollectionTask,
+  pruneSignalAutomationHistory,
   readerCommentToJson,
   productFeedbackToJson,
   parseNovelForgeAnalyticsRoute,
@@ -18187,6 +18945,8 @@ export const __readerTotpTestHooks = {
   readerTotpResetFailureThreshold,
   readerTotpResetLockedMessage,
   reserveReaderTotpResetAttempt,
+  resolveSignalAutomationAlert,
+  syncSignalRetrySuccessAlert,
   renderDynamicNovelSeries,
   renderDynamicNovelChapter,
   renderSignalShareCardSvg,
@@ -18544,6 +19304,12 @@ export default {
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
+    if (url.pathname === '/admin/api/signal/operations') {
+      if (request.method === 'GET') return handleAdminGetSignalOperations(request, env);
+      if (request.method === 'POST') return handleAdminManageSignalOperations(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
     if (url.pathname === '/admin/api/signal/candidates') {
       if (request.method === 'GET') return handleAdminListSignalCandidates(request, env);
       if (request.method === 'POST') return handleAdminReviewSignalCandidates(request, env);
@@ -18596,11 +19362,18 @@ export default {
     return new Response('Not found', { status: 404 });
   },
 
-  async scheduled(_controller, env) {
-    await handleSignalCollectionSchedule(env);
+  async scheduled(controller, env) {
+    await handleSignalCollectionSchedule(env, {
+      cron: cleanText(controller?.cron, 120),
+      scheduledTime: controller?.scheduledTime
+    });
   },
 
   async queue(batch, env) {
+    if (batch.queue === signalCollectionDeadLetterQueueName) {
+      await handleSignalCollectionDeadLetterQueue(batch, env);
+      return;
+    }
     await handleSignalCollectionQueue(batch, env);
   }
 };

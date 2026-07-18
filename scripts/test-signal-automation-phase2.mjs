@@ -459,6 +459,7 @@ class ManualStatement {
         trigger_type: this.params[1],
         updated_at: '2026-07-17 12:00:00'
       });
+      this.db.runs.get(this.params[0]).previous_run_id = this.params[5] || null;
       return { meta: { changes: 1 } };
     }
     if (/INSERT INTO signal_collection_tasks/i.test(this.sql)) {
@@ -715,7 +716,7 @@ assert.match(adminSource, /source\.collectionConfigured/);
 assert.match(adminSource, /source\.missingSecretBinding/);
 
 const workerSource = read('src/worker.js');
-assert.match(workerSource, /async scheduled\(_controller, env\)/);
+assert.match(workerSource, /async scheduled\(controller, env\)/);
 assert.match(workerSource, /async queue\(batch, env\)/);
 
 const collectionSource = read('src/signalCollection.js');

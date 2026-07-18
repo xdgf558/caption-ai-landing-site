@@ -45,5 +45,6 @@ Do not deploy this phase independently. After all six Signal automation phases a
 3. `0021_signal_candidate_triage.sql`
 4. `0022_signal_source_adapters.sql`
 5. `0023_signal_candidate_deduplication.sql`
+6. `0024_signal_operations.sql`
 
 No Phase 5 migration is required.
