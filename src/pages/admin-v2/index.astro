@@ -162,13 +162,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="imports-sidebar" hidden>
           <div class="button-row">
-            <button class="button button-primary" id="imports-refresh" type="button">刷新导入</button>
+            <button class="button button-primary" id="imports-refresh" type="button">刷新审核</button>
           </div>
           <section class="admin-template-panel" aria-labelledby="import-review-help-title">
             <div>
-              <p class="station-kicker">NovelForge</p>
-              <h3 id="import-review-help-title">导入 Review</h3>
-              <p>从 NovelForge 导入后，先在这里核对作品、章节、封面和收费摘要，再进入内容编辑器做最终调整。</p>
+              <p class="station-kicker">Review queue</p>
+              <h3 id="import-review-help-title">导入与发布审核</h3>
+              <p>统一审核 NovelForge 导入批次和 Signal 简报草稿。内容核对完成后，再从这里批准发布。</p>
             </div>
           </section>
           <div class="admin-v2-list" id="imports-list" aria-label="NovelForge imports"></div>
@@ -659,16 +659,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="imports-main" hidden>
           <div class="admin-v2-section-heading">
             <div>
-              <p class="station-kicker">NovelForge Review</p>
-              <h2>导入批次审核</h2>
+              <p class="station-kicker">Publishing Review</p>
+              <h2>导入与发布审核</h2>
             </div>
             <div class="admin-v2-badges">
-              <span>Stage 8C</span>
-              <span>Review before publish</span>
+              <span>NovelForge</span>
+              <span>Signal</span>
             </div>
           </div>
           <section class="admin-v2-subpanel admin-import-review" id="import-detail">
             <p class="admin-empty-list">选择一个 NovelForge 导入批次查看详情。</p>
+          </section>
+          <section class="admin-v2-subpanel admin-signal-approval-review" aria-labelledby="signal-approvals-title">
+            <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+              <div>
+                <p class="station-kicker">Signal publishing</p>
+                <h3 id="signal-approvals-title">简报批准发布</h3>
+              </div>
+              <button class="button button-secondary" id="signal-approvals-refresh" type="button">刷新简报审核</button>
+            </div>
+            <div class="admin-signal-candidate-summary" id="signal-approvals-summary">正在读取待发布简报。</div>
+            <p class="admin-signal-drafts-note">这里只发布最近一次已保存的版本。正文修改请先回到“每日简报”保存，再点击“批准发布”。</p>
+            <div class="admin-inline-status" id="signal-approvals-status" role="status" aria-live="polite" hidden></div>
+            <div class="admin-v2-table-list" id="signal-approvals-list"></div>
           </section>
         </section>
 
@@ -941,10 +954,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                     <p class="station-kicker">Editorial review</p>
                     <h3 id="signal-drafts-title">简报草稿</h3>
                   </div>
-                  <button class="button button-secondary" id="signal-drafts-refresh" type="button">刷新草稿</button>
+                  <div class="button-row">
+                    <button class="button button-secondary" id="signal-drafts-refresh" type="button">刷新草稿</button>
+                    <button class="button button-primary" id="signal-approvals-open" type="button">前往批准发布</button>
+                  </div>
                 </div>
                 <div class="admin-signal-candidate-summary" id="signal-drafts-summary">正在读取自动化草稿。</div>
-                <p class="admin-signal-drafts-note">“批准发布”会发布最近一次已保存的版本；编辑后请先点击“保存简报”。</p>
+                <p class="admin-signal-drafts-note">这里负责编辑、重新生成和删除草稿；最终批准发布已统一放到“导入审核”模块。</p>
                 <div class="admin-inline-status" id="signal-drafts-status" role="status" aria-live="polite" hidden></div>
                 <div class="admin-v2-table-list" id="signal-drafts-list"></div>
               </section>
@@ -1209,6 +1225,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalDraftsList: $('#signal-drafts-list'),
       signalDraftsSummary: $('#signal-drafts-summary'),
       signalDraftsStatus: $('#signal-drafts-status'),
+      signalApprovalsList: $('#signal-approvals-list'),
+      signalApprovalsSummary: $('#signal-approvals-summary'),
+      signalApprovalsStatus: $('#signal-approvals-status'),
       signalDraftCategory: $('#signal-draft-category'),
       signalDraftDate: $('#signal-draft-date'),
       signalDraftGenerate: $('#signal-draft-generate'),
@@ -1504,6 +1523,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signalDraftsStatus.textContent = message;
       elements.signalDraftsStatus.dataset.tone = tone;
       elements.signalDraftsStatus.hidden = !message;
+    };
+
+    const setSignalApprovalStatus = (message, tone = 'neutral') => {
+      elements.signalApprovalsStatus.textContent = message;
+      elements.signalApprovalsStatus.dataset.tone = tone;
+      elements.signalApprovalsStatus.hidden = !message;
     };
 
     const apiJson = async (path, options = {}) => {
@@ -2495,8 +2520,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const updateSignalDraftSelection = () => {
       const count = state.signalSelectedCandidateIds.size;
-      elements.signalDraftSelection.textContent = `已选 ${count} / 10`;
+      const remaining = Math.max(0, 3 - count);
+      elements.signalDraftSelection.textContent = remaining
+        ? `已选 ${count} / 10 · 还需 ${remaining} 条`
+        : `已选 ${count} / 10 · 可以生成`;
       elements.signalDraftGenerate.disabled = !state.signalTriageReady || count < 3 || count > 10;
+      elements.signalDraftGenerate.title = remaining
+        ? `请再入选 ${remaining} 条候选资讯`
+        : '使用当前选中的候选生成简报草稿';
     };
 
     const toggleSignalDraftCandidate = (candidate, checked) => {
@@ -2624,8 +2655,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           method: 'POST',
           body: JSON.stringify({ action, candidateId: candidate.id, note })
         });
-        if (action !== 'shortlist') state.signalSelectedCandidateIds.delete(candidate.id);
-        setSignalCandidateStatus('审核结果已保存。', 'success');
+        if (action === 'shortlist' && state.signalSelectedCandidateIds.size < 10) {
+          state.signalSelectedCandidateIds.add(candidate.id);
+          setSignalCandidateStatus(
+            `已入选并加入本次草稿，当前已选 ${state.signalSelectedCandidateIds.size} / 10。`,
+            'success'
+          );
+        } else {
+          if (action !== 'shortlist') state.signalSelectedCandidateIds.delete(candidate.id);
+          setSignalCandidateStatus('审核结果已保存。', 'success');
+        }
         await Promise.all([loadSignalCandidates(), loadAuditLogs()]);
       } catch (error) {
         setSignalCandidateStatus(error.message, 'error');
@@ -2951,55 +2990,51 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const renderSignalDraftSummary = () => {
       const summary = state.signalDraftSummary || {};
-      elements.signalDraftsSummary.textContent = `${summary.draft || 0} 份待审核 · ${summary.published || 0} 份已发布 · ${summary.archived || 0} 份已归档`;
+      const summaryText = `${summary.draft || 0} 份待审核 · ${summary.published || 0} 份已发布 · ${summary.archived || 0} 份已归档`;
+      elements.signalDraftsSummary.textContent = summaryText;
+      elements.signalApprovalsSummary.textContent = summaryText;
     };
 
-    const renderSignalDrafts = () => {
-      renderSignalDraftSummary();
-      if (!state.signalDrafts.length) {
-        renderEmpty(elements.signalDraftsList, '目前没有待审核草稿。入选 3–10 条候选后可生成一份新草稿。');
-        return;
-      }
-      elements.signalDraftsList.innerHTML = '';
-      state.signalDrafts.forEach((draft) => {
-        const candidateCount = draft.automation?.candidateIds?.length || 0;
-        const metadata = draft.metadata || {};
-        const row = document.createElement('article');
-        row.className = 'admin-v2-row admin-signal-draft-row';
-        row.dataset.draftId = String(draft.id);
-        row.innerHTML = `
-          <div class="admin-signal-draft-row__heading">
-            <strong>${escapeHtml(draft.title)}</strong>
-            <span class="admin-signal-source-state" data-state="${draft.automationInvalid ? 'error' : 'healthy'}">
-              ${draft.automationInvalid ? '关联异常' : '待审核'}
-            </span>
-          </div>
-          <div class="admin-signal-draft-row__meta">
-            <span>${escapeHtml(metadata.briefDate || String(draft.updatedAt || '').slice(0, 10))}</span>
-            <span>${escapeHtml(signalCategoryLabel(metadata.category || 'general'))}</span>
-            <span>${escapeHtml(String(candidateCount))} 条候选</span>
-            <span>${escapeHtml(draft.automation?.model || 'AI draft')}</span>
-          </div>
-          ${draft.description ? `<p>${escapeHtml(draft.description)}</p>` : ''}
-          <small>更新于 ${escapeHtml(formatDate(draft.updatedAt))}</small>
-          <div class="button-row admin-signal-draft-row__actions"></div>
-        `;
-        const actions = row.querySelector('.admin-signal-draft-row__actions');
-        const editButton = document.createElement('button');
-        editButton.className = 'button button-secondary';
-        editButton.type = 'button';
-        editButton.textContent = '编辑';
-        editButton.addEventListener('click', async () => {
-          await loadSignalBriefForEdit(draft.id);
-          elements.signalForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          window.setTimeout(() => elements.signal.title.focus(), 350);
-        });
-        const regenerateButton = document.createElement('button');
-        regenerateButton.className = 'button button-secondary';
-        regenerateButton.type = 'button';
-        regenerateButton.textContent = '重新生成';
-        regenerateButton.disabled = draft.automationInvalid;
-        regenerateButton.addEventListener('click', () => regenerateSignalBriefDraft(draft));
+    const openSignalDraftForEdit = async (draft) => {
+      const signalTab = elements.tabs.find((tab) => tab.dataset.adminV2Tab === 'signal');
+      if (!signalTab?.classList.contains('is-active')) await switchTab('signal');
+      await loadSignalBriefForEdit(draft.id);
+      elements.signalForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => elements.signal.title.focus(), 350);
+    };
+
+    const createSignalDraftRow = (draft, { approval = false } = {}) => {
+      const candidateCount = draft.automation?.candidateIds?.length || 0;
+      const metadata = draft.metadata || {};
+      const row = document.createElement('article');
+      row.className = 'admin-v2-row admin-signal-draft-row';
+      row.dataset.draftId = String(draft.id);
+      row.innerHTML = `
+        <div class="admin-signal-draft-row__heading">
+          <strong>${escapeHtml(draft.title)}</strong>
+          <span class="admin-signal-source-state" data-state="${draft.automationInvalid ? 'error' : 'healthy'}">
+            ${draft.automationInvalid ? '关联异常' : '待审核'}
+          </span>
+        </div>
+        <div class="admin-signal-draft-row__meta">
+          <span>${escapeHtml(metadata.briefDate || String(draft.updatedAt || '').slice(0, 10))}</span>
+          <span>${escapeHtml(signalCategoryLabel(metadata.category || 'general'))}</span>
+          <span>${escapeHtml(String(candidateCount))} 条候选</span>
+          <span>${escapeHtml(draft.automation?.model || 'AI draft')}</span>
+        </div>
+        ${draft.description ? `<p>${escapeHtml(draft.description)}</p>` : ''}
+        <small>更新于 ${escapeHtml(formatDate(draft.updatedAt))}</small>
+        <div class="button-row admin-signal-draft-row__actions"></div>
+      `;
+      const actions = row.querySelector('.admin-signal-draft-row__actions');
+      const editButton = document.createElement('button');
+      editButton.className = 'button button-secondary';
+      editButton.type = 'button';
+      editButton.textContent = approval ? '返回编辑' : '编辑';
+      editButton.addEventListener('click', () => openSignalDraftForEdit(draft));
+      actions.append(editButton);
+
+      if (approval) {
         const approveButton = document.createElement('button');
         approveButton.className = 'button button-primary';
         approveButton.type = 'button';
@@ -3007,14 +3042,43 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         approveButton.title = '发布最近一次已保存的版本';
         approveButton.disabled = draft.automationInvalid;
         approveButton.addEventListener('click', () => approveSignalBriefDraft(draft));
-        const archiveButton = document.createElement('button');
-        archiveButton.className = 'button button-danger';
-        archiveButton.type = 'button';
-        archiveButton.textContent = '删除';
-        archiveButton.addEventListener('click', () => archiveSignalBriefDraft(draft));
-        actions.append(editButton, regenerateButton, approveButton, archiveButton);
-        elements.signalDraftsList.append(row);
-      });
+        actions.append(approveButton);
+        return row;
+      }
+
+      const regenerateButton = document.createElement('button');
+      regenerateButton.className = 'button button-secondary';
+      regenerateButton.type = 'button';
+      regenerateButton.textContent = '重新生成';
+      regenerateButton.disabled = draft.automationInvalid;
+      regenerateButton.addEventListener('click', () => regenerateSignalBriefDraft(draft));
+      const archiveButton = document.createElement('button');
+      archiveButton.className = 'button button-danger';
+      archiveButton.type = 'button';
+      archiveButton.textContent = '删除';
+      archiveButton.addEventListener('click', () => archiveSignalBriefDraft(draft));
+      actions.append(regenerateButton, archiveButton);
+      return row;
+    };
+
+    const renderSignalApprovals = () => {
+      if (!state.signalDrafts.length) {
+        renderEmpty(elements.signalApprovalsList, '目前没有等待批准发布的简报。');
+        return;
+      }
+      elements.signalApprovalsList.replaceChildren(
+        ...state.signalDrafts.map((draft) => createSignalDraftRow(draft, { approval: true }))
+      );
+    };
+
+    const renderSignalDrafts = () => {
+      renderSignalDraftSummary();
+      renderSignalApprovals();
+      if (!state.signalDrafts.length) {
+        renderEmpty(elements.signalDraftsList, '目前没有待审核草稿。入选 3–10 条候选后可生成一份新草稿。');
+        return;
+      }
+      elements.signalDraftsList.replaceChildren(...state.signalDrafts.map((draft) => createSignalDraftRow(draft)));
     };
 
     const loadSignalDrafts = async () => {
@@ -3032,6 +3096,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         setSignalDraftStatus('', 'neutral');
       } catch (error) {
         setSignalDraftStatus(error.message, 'error');
+      }
+    };
+
+    const refreshSignalApprovals = async () => {
+      setSignalApprovalStatus('正在读取待发布简报。', 'pending');
+      try {
+        await loadSignalDrafts();
+        setSignalApprovalStatus('', 'neutral');
+      } catch (error) {
+        setSignalApprovalStatus(error.message, 'error');
       }
     };
 
@@ -3136,6 +3210,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const approveSignalBriefDraft = async (draft) => {
       setSignalDraftStatus('正在批准并发布简报。', 'pending');
+      setSignalApprovalStatus('正在批准并发布简报。', 'pending');
       const submit = async (allowCandidateExclusions = false) => apiJson('/admin/api/signal/drafts', {
         method: 'POST',
         body: JSON.stringify({ action: 'approve', entryId: draft.id, allowCandidateExclusions })
@@ -3152,6 +3227,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           );
           if (!confirmed) {
             setSignalDraftStatus('已取消发布，草稿和候选状态都没有变化。');
+            setSignalApprovalStatus('已取消发布，草稿和候选状态都没有变化。');
             return;
           }
           result = await submit(true);
@@ -3163,8 +3239,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             `简报已发布，但 ${result.candidateUsageConflictIds.length} 条候选状态发生并发变化，请刷新核对。`,
             'error'
           );
+          setSignalApprovalStatus(
+            `简报已发布，但 ${result.candidateUsageConflictIds.length} 条候选状态发生并发变化，请刷新核对。`,
+            'error'
+          );
         } else {
-          setSignalDraftStatus(`简报已批准发布：${result.publicPath || `/signal/${draft.slug}/`}`, 'success');
+          const successMessage = `简报已批准发布：${result.publicPath || `/signal/${draft.slug}/`}`;
+          setSignalDraftStatus(successMessage, 'success');
+          setSignalApprovalStatus(successMessage, 'success');
         }
         await Promise.all([
           loadSignalDrafts(),
@@ -3175,6 +3257,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         ]);
       } catch (error) {
         setSignalDraftStatus(error.message, 'error');
+        setSignalApprovalStatus(error.message, 'error');
       }
     };
 
@@ -4529,7 +4612,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const expected = panel.dataset.adminV2Panel.startsWith(`${name}-`);
         panel.hidden = !expected;
       });
-      if (name === 'imports') await loadImportReviews();
+      if (name === 'imports') {
+        await Promise.all([loadImportReviews(), loadSignalDrafts()]);
+        setStatus(`已载入 ${state.imports.length} 个 NovelForge 导入批次和 ${state.signalDrafts.length} 份待发布简报。`, 'success');
+      }
       if (name === 'signal') {
         await Promise.all([loadSignalBriefs(), loadSignalAutomation()]);
         setStatus(`已载入 ${state.signalBriefs.length} 篇简报和 ${state.signalSources.length} 个采集来源。`, 'success');
@@ -4563,7 +4649,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     });
     elements.accessForm.addEventListener('submit', grantEntitlement);
     $('#content-refresh').addEventListener('click', () => loadEntries({ autoSelect: true }));
-    $('#imports-refresh').addEventListener('click', () => loadImportReviews());
+    $('#imports-refresh').addEventListener('click', () => Promise.all([loadImportReviews(), refreshSignalApprovals()]));
     $('#signal-refresh').addEventListener('click', () => Promise.all([loadSignalBriefs(), refreshSignalDrafts()]));
     $('#signal-reset').addEventListener('click', resetSignalForm);
     $('#signal-automation-refresh').addEventListener('click', loadSignalAutomation);
@@ -4571,6 +4657,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     elements.signalCandidatesRescore.addEventListener('click', rescoreSignalCandidateQueue);
     elements.signalDraftGenerate.addEventListener('click', generateSignalBriefDraft);
     $('#signal-drafts-refresh').addEventListener('click', refreshSignalDrafts);
+    $('#signal-approvals-refresh').addEventListener('click', refreshSignalApprovals);
+    $('#signal-approvals-open').addEventListener('click', () => switchTab('imports'));
     $('#signal-source-reset').addEventListener('click', resetSignalSourceForm);
     $('#signal-source-manage').addEventListener('click', () => {
       elements.signalAutomationPanel.open = true;

@@ -52,6 +52,15 @@ assert.match(adminSource, /Number\.isInteger\(payload\.chapterNumber\) && payloa
 assert.match(adminSource, /missingField\.focus\(\)/);
 assert.match(adminSource, /tab\.setAttribute\('aria-pressed', String\(isActive\)\)/);
 assert.match(adminSource, /content-preview-disclosure'\)\.open = true/);
+assert.ok(
+  adminSource.indexOf('id="signal-approvals-list"') < adminSource.indexOf('data-admin-v2-panel="signal-main"'),
+  'Signal publication approval queue should live in the imports review workspace.'
+);
+assert.match(adminSource, /<h3 id="signal-approvals-title">简报批准发布<\/h3>/);
+assert.match(adminSource, /if \(name === 'imports'\) \{[\s\S]*?loadSignalDrafts\(\)/);
+assert.match(adminSource, /action: 'approve'/);
+assert.match(adminSource, /已入选并加入本次草稿/);
+assert.match(adminSource, /还需 \$\{remaining\} 条/);
 
 assert.match(stylesSource, /body\.admin-v2-page \{/);
 assert.match(stylesSource, /grid-template-columns: 260px minmax\(0, 1fr\)/);

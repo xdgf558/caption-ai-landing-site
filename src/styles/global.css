@@ -2854,6 +2854,16 @@ button.button {
   align-content: start;
 }
 
+.admin-signal-approval-review {
+  align-content: start;
+  display: grid;
+  gap: 10px;
+}
+
+.admin-signal-approval-review .admin-signal-draft-row__actions .button-primary {
+  margin-left: auto;
+}
+
 .admin-import-entry {
   gap: 10px;
 }
