@@ -11,7 +11,9 @@ import {
 } from './signalCollection.js';
 import {
   enrichSignalCandidateRows,
-  signalScorePriority
+  findSignalCandidateMergeMatch,
+  signalScorePriority,
+  signalTitleFingerprint
 } from './signalTriage.js';
 import {
   generateSignalBriefDraft,
@@ -2416,9 +2418,12 @@ const isMissingSignalCandidateTriageError = (error) =>
   /no such table: signal_candidate_reviews|no such column: (?:score_breakdown_json|cluster_key|decision_note|scored_at)/i.test(
     error?.message || ''
   );
+const isMissingSignalCandidateDeduplicationError = (error) =>
+  /no such table: signal_candidate_occurrences|no such column: title_fingerprint/i.test(error?.message || '');
 const readySignalAutomationDatabases = new WeakSet();
 const readySignalCollectionPhase2Databases = new WeakSet();
 const readySignalCandidateTriageDatabases = new WeakSet();
+const readySignalCandidateDeduplicationDatabases = new WeakSet();
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -2472,6 +2477,26 @@ const ensureSignalCandidateTriageReady = async (db) => {
       isMissingSignalAutomationTablesError(error) ||
       isMissingSignalCollectionPhase2Error(error) ||
       isMissingSignalCandidateTriageError(error)
+    ) {
+      return false;
+    }
+    throw error;
+  }
+};
+
+const ensureSignalCandidateDeduplicationReady = async (db) => {
+  if (readySignalCandidateDeduplicationDatabases.has(db)) return true;
+  if (!(await ensureSignalCandidateTriageReady(db))) return false;
+  try {
+    await db.prepare('SELECT title_fingerprint FROM signal_candidates LIMIT 1').first();
+    await db.prepare('SELECT id FROM signal_candidate_occurrences LIMIT 1').first();
+    readySignalCandidateDeduplicationDatabases.add(db);
+    return true;
+  } catch (error) {
+    if (
+      isMissingSignalAutomationTablesError(error) ||
+      isMissingSignalCandidateTriageError(error) ||
+      isMissingSignalCandidateDeduplicationError(error)
     ) {
       return false;
     }
@@ -9884,37 +9909,45 @@ const signalCollectionRunToJson = (row) => ({
   updatedAt: row.updated_at
 });
 
-const signalCandidateToJson = (row) => ({
-  id: row.id,
-  sourceId: row.source_id,
-  sourceName: row.source_name || '',
-  runId: row.run_id,
-  externalId: row.external_id,
-  canonicalUrl: row.canonical_url,
-  title: row.title,
-  summary: row.summary,
-  author: row.author,
-  publishedAt: row.published_at,
-  language: row.language,
-  category: row.category,
-  status: row.status,
-  relevanceScore: row.relevance_score === null || row.relevance_score === undefined ? null : Number(row.relevance_score),
-  scorePriority:
-    row.relevance_score === null || row.relevance_score === undefined
-      ? 'unscored'
-      : signalScorePriority(Number(row.relevance_score)),
-  scoreBreakdown: parseStoredJson(row.score_breakdown_json, {}),
-  clusterKey: row.cluster_key || '',
-  clusterSize: normalizePositiveInteger(row.cluster_size, row.cluster_key ? 1 : 0),
-  decisionNote: row.decision_note || '',
-  scoredAt: row.scored_at || null,
-  contentHash: row.content_hash,
-  metadata: parseStoredJson(row.metadata_json, {}),
-  reviewedBy: row.reviewed_by,
-  reviewedAt: row.reviewed_at,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at
-});
+const signalCandidateToJson = (row) => {
+  const occurrenceCount = normalizePositiveInteger(row.occurrence_count, 1);
+  const sourceCount = normalizePositiveInteger(row.occurrence_source_count, 1);
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    sourceName: row.source_name || '',
+    runId: row.run_id,
+    externalId: row.external_id,
+    canonicalUrl: row.canonical_url,
+    title: row.title,
+    summary: row.summary,
+    author: row.author,
+    publishedAt: row.published_at,
+    language: row.language,
+    category: row.category,
+    status: row.status,
+    relevanceScore: row.relevance_score === null || row.relevance_score === undefined ? null : Number(row.relevance_score),
+    scorePriority:
+      row.relevance_score === null || row.relevance_score === undefined
+        ? 'unscored'
+        : signalScorePriority(Number(row.relevance_score)),
+    scoreBreakdown: parseStoredJson(row.score_breakdown_json, {}),
+    clusterKey: row.cluster_key || '',
+    clusterSize: normalizePositiveInteger(row.cluster_size, row.cluster_key ? 1 : 0),
+    titleFingerprint: row.title_fingerprint || '',
+    occurrenceCount,
+    sourceCount,
+    mergedDuplicateCount: Math.max(occurrenceCount - 1, 0),
+    decisionNote: row.decision_note || '',
+    scoredAt: row.scored_at || null,
+    contentHash: row.content_hash,
+    metadata: parseStoredJson(row.metadata_json, {}),
+    reviewedBy: row.reviewed_by,
+    reviewedAt: row.reviewed_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+};
 
 const signalSourceValidationError = (code, message) => {
   const error = new Error(message);
@@ -10296,7 +10329,43 @@ const handleAdminListSignalCandidates = async (request, env) => {
     listParams.push(status);
   }
   const triageReady = await ensureSignalCandidateTriageReady(db);
-  const response = triageReady
+  const dedupReady = triageReady && (await ensureSignalCandidateDeduplicationReady(db));
+  const response = dedupReady
+    ? await db
+        .prepare(
+          `WITH cluster_sizes AS (
+             SELECT cluster_key, COUNT(*) AS cluster_size
+             FROM signal_candidates
+             WHERE cluster_key <> ''
+             GROUP BY cluster_key
+           ), occurrence_stats AS (
+             SELECT candidate_id, COUNT(*) AS occurrence_count,
+                    COUNT(DISTINCT source_id) AS occurrence_source_count
+             FROM signal_candidate_occurrences
+             GROUP BY candidate_id
+           )
+           SELECT candidate.*, source.name AS source_name,
+                  COALESCE(cluster_sizes.cluster_size, 0) AS cluster_size,
+                  COALESCE(occurrence_stats.occurrence_count, 1) AS occurrence_count,
+                  COALESCE(occurrence_stats.occurrence_source_count, 1) AS occurrence_source_count
+           FROM signal_candidates AS candidate
+           LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
+           LEFT JOIN cluster_sizes ON cluster_sizes.cluster_key = candidate.cluster_key
+           LEFT JOIN occurrence_stats ON occurrence_stats.candidate_id = candidate.id
+           ${listClauses.length ? `WHERE ${listClauses.join(' AND ')}` : ''}
+           ORDER BY CASE candidate.status
+                      WHEN 'new' THEN 0
+                      WHEN 'shortlisted' THEN 1
+                      WHEN 'rejected' THEN 2
+                      ELSE 3
+                    END,
+                    candidate.relevance_score DESC,
+                    COALESCE(candidate.published_at, candidate.created_at) DESC
+           LIMIT ?`
+        )
+        .bind(...listParams, limit)
+        .all()
+    : triageReady
     ? await db
         .prepare(
           `WITH cluster_sizes AS (
@@ -10335,7 +10404,30 @@ const handleAdminListSignalCandidates = async (request, env) => {
         .bind(...listParams, limit)
         .all();
   const candidates = (response.results || []).map(signalCandidateToJson);
-  const summaryStatement = db.prepare(
+  const summaryStatement = dedupReady
+    ? db.prepare(
+      `WITH occurrence_stats AS (
+         SELECT candidate_id, COUNT(*) AS occurrence_count
+         FROM signal_candidate_occurrences
+         GROUP BY candidate_id
+       )
+       SELECT COUNT(*) AS total,
+              SUM(CASE WHEN candidate.status = 'new' THEN 1 ELSE 0 END) AS new_count,
+              SUM(CASE WHEN candidate.status = 'shortlisted' THEN 1 ELSE 0 END) AS shortlisted_count,
+              SUM(CASE WHEN candidate.status = 'rejected' THEN 1 ELSE 0 END) AS rejected_count,
+              SUM(CASE WHEN candidate.status = 'used' THEN 1 ELSE 0 END) AS used_count,
+              AVG(candidate.relevance_score) AS average_score,
+              SUM(
+                CASE WHEN COALESCE(occurrence_stats.occurrence_count, 1) > 1
+                  THEN occurrence_stats.occurrence_count - 1
+                  ELSE 0
+                END
+              ) AS merged_duplicate_count
+       FROM signal_candidates AS candidate
+       LEFT JOIN occurrence_stats ON occurrence_stats.candidate_id = candidate.id
+       ${baseClauses.length ? `WHERE ${baseClauses.join(' AND ')}` : ''}`
+    )
+    : db.prepare(
       `SELECT COUNT(*) AS total,
               SUM(CASE WHEN candidate.status = 'new' THEN 1 ELSE 0 END) AS new_count,
               SUM(CASE WHEN candidate.status = 'shortlisted' THEN 1 ELSE 0 END) AS shortlisted_count,
@@ -10352,6 +10444,7 @@ const handleAdminListSignalCandidates = async (request, env) => {
     ok: true,
     setupRequired: false,
     triageReady,
+    dedupReady,
     candidates,
     summary: {
       total: normalizePositiveInteger(summaryRow?.total, 0),
@@ -10359,6 +10452,7 @@ const handleAdminListSignalCandidates = async (request, env) => {
       shortlisted: normalizePositiveInteger(summaryRow?.shortlisted_count, 0),
       rejected: normalizePositiveInteger(summaryRow?.rejected_count, 0),
       used: normalizePositiveInteger(summaryRow?.used_count, 0),
+      mergedDuplicates: normalizePositiveInteger(summaryRow?.merged_duplicate_count, 0),
       averageScore:
         summaryRow?.average_score === null || summaryRow?.average_score === undefined
           ? null
@@ -10390,6 +10484,7 @@ const normalizeSignalCandidateReviewPayload = (payload) => {
 };
 
 const rescoreSignalCandidates = async (db) => {
+  const dedupReady = await ensureSignalCandidateDeduplicationReady(db);
   const response = await db
     .prepare(
       `SELECT candidate.*, source.trust_tier AS source_trust_tier,
@@ -10412,21 +10507,39 @@ const rescoreSignalCandidates = async (db) => {
     const chunk = enriched.slice(index, index + 50);
     await db.batch(
       chunk.map((row) =>
-        db
-          .prepare(
-            `UPDATE signal_candidates
-             SET relevance_score = ?, score_breakdown_json = ?, cluster_key = ?,
-                 metadata_json = ?, scored_at = ?, updated_at = CURRENT_TIMESTAMP
-             WHERE id = ?`
-          )
-          .bind(
-            row.relevanceScore,
-            row.scoreBreakdownJson,
-            row.clusterKey,
-            row.metadataJson,
-            row.scoredAt,
-            row.id
-          )
+        dedupReady
+          ? db
+              .prepare(
+                `UPDATE signal_candidates
+                 SET relevance_score = ?, score_breakdown_json = ?, cluster_key = ?,
+                     title_fingerprint = ?, metadata_json = ?, scored_at = ?,
+                     updated_at = CURRENT_TIMESTAMP
+                 WHERE id = ?`
+              )
+              .bind(
+                row.relevanceScore,
+                row.scoreBreakdownJson,
+                row.clusterKey,
+                row.titleFingerprint,
+                row.metadataJson,
+                row.scoredAt,
+                row.id
+              )
+          : db
+              .prepare(
+                `UPDATE signal_candidates
+                 SET relevance_score = ?, score_breakdown_json = ?, cluster_key = ?,
+                     metadata_json = ?, scored_at = ?, updated_at = CURRENT_TIMESTAMP
+                 WHERE id = ?`
+              )
+              .bind(
+                row.relevanceScore,
+                row.scoreBreakdownJson,
+                row.clusterKey,
+                row.metadataJson,
+                row.scoredAt,
+                row.id
+              )
       )
     );
   }
@@ -10986,32 +11099,207 @@ const buildSignalCandidateRows = async (source, runId, collection) => {
       }),
       runId,
       summary: cleanText(item.summary, 1200),
-      title
+      title,
+      titleFingerprint: signalTitleFingerprint(title)
     });
   }
   return rows;
 };
 
+const loadSignalCandidateMergePool = async (db, rows) => {
+  const canonicalUrls = [...new Set(rows.map((row) => row.canonicalUrl).filter(Boolean))];
+  const contentHashes = [...new Set(rows.map((row) => row.contentHash).filter(Boolean))];
+  const titleFingerprints = [...new Set(rows.map((row) => row.titleFingerprint).filter(Boolean))];
+  const clauses = [`created_at >= datetime('now', '-7 days')`];
+  const params = [];
+  const addInClause = (column, values) => {
+    if (!values.length) return;
+    clauses.push(`${column} IN (${values.map(() => '?').join(', ')})`);
+    params.push(...values);
+  };
+  addInClause('canonical_url', canonicalUrls);
+  addInClause('content_hash', contentHashes);
+  addInClause('title_fingerprint', titleFingerprints);
+  return db
+    .prepare(
+      `SELECT id, canonical_url, content_hash, title, title_fingerprint,
+              published_at, created_at, cluster_key
+       FROM signal_candidates
+       WHERE ${clauses.map((clause) => `(${clause})`).join(' OR ')}
+       ORDER BY created_at DESC
+       LIMIT 1000`
+    )
+    .bind(...params)
+    .all();
+};
+
+const signalCandidateOccurrenceMetadata = (row, candidateId, matchReason) => {
+  const metadata = parseStoredJson(row.metadataJson, {});
+  metadata.deduplication = {
+    candidateId,
+    matchReason
+  };
+  return JSON.stringify(metadata);
+};
+
+const insertSignalCandidateOccurrence = async (db, source, row, candidateId, matchReason) =>
+  db
+    .prepare(
+      `INSERT OR IGNORE INTO signal_candidate_occurrences (
+         id, candidate_id, source_id, run_id, canonical_url, title, summary,
+         published_at, content_hash, title_fingerprint, match_reason, metadata_json
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(
+      `signal-occurrence-${randomToken(14)}`,
+      candidateId,
+      source.id,
+      row.runId,
+      row.canonicalUrl,
+      row.title,
+      row.summary,
+      row.publishedAt,
+      row.contentHash,
+      row.titleFingerprint,
+      matchReason,
+      signalCandidateOccurrenceMetadata(row, candidateId, matchReason)
+    )
+    .run();
+
+const findPersistedSignalCandidateMatch = async (db, row, now) => {
+  const response = await db
+    .prepare(
+      `SELECT id, canonical_url, content_hash, title, title_fingerprint,
+              published_at, created_at, cluster_key
+       FROM signal_candidates
+       WHERE canonical_url = ? OR content_hash = ?
+       ORDER BY created_at DESC
+       LIMIT 5`
+    )
+    .bind(row.canonicalUrl, row.contentHash)
+    .all();
+  return findSignalCandidateMergeMatch(row, response.results || [], { now });
+};
+
 const insertSignalCandidates = async (db, source, rows) => {
   if (!rows.length) return { acceptedCount: 0, duplicateCount: 0 };
   const triageReady = await ensureSignalCandidateTriageReady(db);
+  const dedupReady = triageReady && (await ensureSignalCandidateDeduplicationReady(db));
+  const triageNow = new Date();
   let insertRows = rows;
+  let existingCandidates = [];
   if (triageReady) {
-    const existingResponse = await db
-      .prepare(
-        `SELECT id, title, cluster_key
-         FROM signal_candidates
-         WHERE created_at >= datetime('now', '-7 days')
-         ORDER BY created_at DESC
-         LIMIT 300`
-      )
-      .all();
+    const existingResponse = dedupReady
+      ? await loadSignalCandidateMergePool(db, rows)
+      : await db
+          .prepare(
+            `SELECT id, title, cluster_key
+             FROM signal_candidates
+             WHERE created_at >= datetime('now', '-7 days')
+             ORDER BY created_at DESC
+             LIMIT 300`
+          )
+          .all();
+    existingCandidates = existingResponse.results || [];
     insertRows = await enrichSignalCandidateRows(rows, {
-      existingCandidates: existingResponse.results || [],
-      now: new Date(),
+      existingCandidates,
+      now: triageNow,
       source
     });
   }
+
+  if (dedupReady) {
+    let acceptedCount = 0;
+    let duplicateCount = 0;
+    const candidatePool = [...existingCandidates];
+    // Queue concurrency is intentionally one; database uniqueness remains the final guard for manual overlap.
+    for (const row of insertRows) {
+      const mergeMatch = findSignalCandidateMergeMatch(row, candidatePool, { now: triageNow });
+      if (mergeMatch) {
+        await insertSignalCandidateOccurrence(db, source, row, mergeMatch.candidateId, mergeMatch.reason);
+        duplicateCount += 1;
+        continue;
+      }
+
+      const results = await db.batch([
+        db
+          .prepare(
+            `INSERT OR IGNORE INTO signal_candidates (
+               id, source_id, run_id, external_id, canonical_url, title, summary,
+               author, published_at, language, category, status, relevance_score,
+               content_hash, raw_payload_json, metadata_json, score_breakdown_json,
+               cluster_key, title_fingerprint, scored_at
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, ?, ?, ?)`
+          )
+          .bind(
+            row.id,
+            source.id,
+            row.runId,
+            row.externalId,
+            row.canonicalUrl,
+            row.title,
+            row.summary,
+            row.author,
+            row.publishedAt,
+            source.language || 'en',
+            source.category || 'general',
+            row.relevanceScore,
+            row.contentHash,
+            row.rawPayloadJson,
+            row.metadataJson,
+            row.scoreBreakdownJson,
+            row.clusterKey,
+            row.titleFingerprint,
+            row.scoredAt
+          ),
+        db
+          .prepare(
+            `INSERT OR IGNORE INTO signal_candidate_occurrences (
+               id, candidate_id, source_id, run_id, canonical_url, title, summary,
+               published_at, content_hash, title_fingerprint, match_reason, metadata_json
+             )
+             SELECT ?, candidate.id, ?, ?, ?, ?, ?, ?, ?, ?, 'primary', ?
+             FROM signal_candidates AS candidate
+             WHERE candidate.id = ?`
+          )
+          .bind(
+            `signal-occurrence-${randomToken(14)}`,
+            source.id,
+            row.runId,
+            row.canonicalUrl,
+            row.title,
+            row.summary,
+            row.publishedAt,
+            row.contentHash,
+            row.titleFingerprint,
+            signalCandidateOccurrenceMetadata(row, row.id, 'primary'),
+            row.id
+          )
+      ]);
+      if (getD1ChangeCount(results[0]) > 0) {
+        acceptedCount += 1;
+        candidatePool.unshift({
+          id: row.id,
+          canonicalUrl: row.canonicalUrl,
+          contentHash: row.contentHash,
+          title: row.title,
+          titleFingerprint: row.titleFingerprint,
+          publishedAt: row.publishedAt,
+          createdAt: row.scoredAt,
+          clusterKey: row.clusterKey
+        });
+        continue;
+      }
+
+      const persistedMatch = await findPersistedSignalCandidateMatch(db, row, triageNow);
+      if (persistedMatch) {
+        await insertSignalCandidateOccurrence(db, source, row, persistedMatch.candidateId, persistedMatch.reason);
+      }
+      duplicateCount += 1;
+    }
+    return { acceptedCount, duplicateCount };
+  }
+
   const results = await db.batch(
     insertRows.map((row) =>
       triageReady
@@ -17553,6 +17841,7 @@ export const __readerTotpTestHooks = {
   normalizeReadingEventPayload,
   selectSignalCollectionSources,
   normalizeSignalAutomationSourcePayload,
+  insertSignalCandidates,
   processSignalCollectionMessage,
   readerCommentToJson,
   productFeedbackToJson,

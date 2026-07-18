@@ -4,10 +4,12 @@ Phase 3 turns collected Signal items into a reviewable queue. It remains determi
 
 ## Candidate Processing
 
-- Score every candidate from 0 to 100 using source trust, recency, content completeness, topic keywords, and clickbait penalties.
+- Score every candidate from 0 to 100 using source trust, recency, Station Cat site relevance, content completeness, and clickbait penalties.
 - Persist a score breakdown and plain-language reasons so an editor can understand the result.
-- Group similar titles into an event cluster using token similarity. Clustering is advisory; all source items remain visible.
-- Keep exact URL and content-hash deduplication from phase 2.
+- Merge exact canonical URLs, exact content hashes, and identical normalized title fingerprints published within 72 hours into one primary candidate.
+- Preserve every fetched report in `signal_candidate_occurrences`, including its source, URL, summary, timestamp, and merge reason.
+- Show one primary candidate in the review queue, with the merged report and distinct source counts beside it.
+- Group merely similar titles into an event cluster using token similarity. These clusters remain advisory and are labelled separately from true duplicate merges.
 
 ## Human Review
 
@@ -26,5 +28,6 @@ Do not deploy this phase independently. When the full Signal automation project 
 2. `0020_signal_collection.sql`
 3. `0021_signal_candidate_triage.sql`
 4. `0022_signal_source_adapters.sql`
+5. `0023_signal_candidate_deduplication.sql`
 
 Phase 4 consumes only shortlisted candidates, saves an editable content-platform draft, and keeps public publishing behind an explicit editor action. See `docs/signal-automation-phase-4.md`.

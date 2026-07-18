@@ -1,5 +1,6 @@
-const signalTriageVersion = 2;
+const signalTriageVersion = 3;
 const signalClusterSimilarityThreshold = 0.72;
+const signalTitleDuplicateWindowHours = 72;
 
 const trustScores = Object.freeze({
   community: 14,
@@ -7,28 +8,53 @@ const trustScores = Object.freeze({
   primary: 30
 });
 
-const categoryKeywords = Object.freeze({
-  ai: [
-    'ai', 'agent', 'anthropic', 'artificial intelligence', 'chatgpt', 'claude', 'copilot', 'deepseek',
-    'gemini', 'generative', 'gpt', 'inference', 'llm', 'machine learning', 'model', 'openai', 'training'
-  ],
-  economy: [
-    'central bank', 'cpi', 'economy', 'employment', 'fed', 'federal reserve', 'gdp', 'inflation',
-    'interest rate', 'jobs', 'monetary', 'nonfarm', 'payroll', 'recession', 'unemployment'
-  ],
-  market: [
-    'bitcoin', 'bond', 'crypto', 'earnings', 'equity', 'etf', 'fund', 'market', 'nasdaq', 'price',
-    'shares', 'stock', 'treasury', 'yield'
-  ],
-  research: [
-    'arxiv', 'benchmark', 'dataset', 'evaluation', 'experiment', 'paper', 'preprint', 'research',
-    'scientist', 'study'
-  ],
-  tech: [
-    'api', 'apple', 'cloud', 'cybersecurity', 'database', 'developer', 'github', 'google', 'hardware',
-    'microsoft', 'open source', 'privacy', 'release', 'security', 'software', 'startup', 'technology'
-  ]
+const siteRelevanceCategoryBase = Object.freeze({
+  ai: 9,
+  economy: 5,
+  general: 1,
+  market: 4,
+  research: 6,
+  tech: 8
 });
+
+const siteRelevanceKeywords = Object.freeze([
+  ['openai', 4],
+  ['anthropic', 4],
+  ['chatgpt', 4],
+  ['claude', 4],
+  ['codex', 4],
+  ['cloudflare', 4],
+  ['artificial intelligence', 3],
+  ['machine learning', 3],
+  ['open source', 3],
+  ['interest rate', 3],
+  ['federal reserve', 3],
+  ['ai', 3],
+  ['agent', 3],
+  ['api', 3],
+  ['creator', 3],
+  ['developer', 3],
+  ['github', 3],
+  ['gpt', 3],
+  ['llm', 3],
+  ['software', 3],
+  ['arxiv', 2],
+  ['cloud', 2],
+  ['cybersecurity', 2],
+  ['database', 2],
+  ['economy', 2],
+  ['employment', 2],
+  ['inflation', 2],
+  ['ios', 2],
+  ['macos', 2],
+  ['market', 2],
+  ['model', 2],
+  ['privacy', 2],
+  ['research', 2],
+  ['security', 2],
+  ['treasury', 2],
+  ['windows', 2]
+]);
 
 const titleStopWords = new Set([
   'a', 'about', 'after', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'has', 'have',
@@ -90,16 +116,20 @@ const scoreCompleteness = (candidate) => {
   };
 };
 
-const scoreTopic = (candidate, source) => {
+const scoreSiteRelevance = (candidate, source) => {
   const category = normalizeText(candidate.category || source?.category || 'general').toLowerCase();
-  if (category === 'general') return { matches: [], points: 10, reason: '综合来源基础分' };
   const haystack = `${normalizeText(candidate.title)} ${normalizeText(candidate.summary)}`.toLowerCase();
-  const matches = (categoryKeywords[category] || []).filter((keyword) => topicKeywordMatches(haystack, keyword));
-  const points = matches.length ? Math.min(25, 8 + matches.length * 4) : 5;
+  const matches = siteRelevanceKeywords
+    .filter(([keyword]) => topicKeywordMatches(haystack, keyword))
+    .slice(0, 8);
+  const base = siteRelevanceCategoryBase[category] ?? siteRelevanceCategoryBase.general;
+  const points = Math.min(25, base + matches.reduce((total, [, weight]) => total + weight, 0));
   return {
-    matches: matches.slice(0, 6),
+    matches: matches.map(([keyword]) => keyword),
     points,
-    reason: matches.length ? `命中 ${matches.length} 个${category}主题词` : `未命中明确的${category}主题词`
+    reason: matches.length
+      ? `站点相关性 ${points}/25：${matches.map(([keyword]) => keyword).join('、')}`
+      : `站点相关性 ${points}/25：仅命中${category}分类基础分`
   };
 };
 
@@ -133,9 +163,9 @@ export const scoreSignalCandidate = (candidate, source = {}, options = {}) => {
     ...candidate,
     publishedAt: candidate.publishedAt || candidate.published_at
   });
-  const topic = scoreTopic(candidate, source);
+  const siteRelevance = scoreSiteRelevance(candidate, source);
   const penalty = scorePenalty(candidate.title);
-  const score = clamp(trust + recency.points + completeness.points + topic.points + penalty.points, 0, 100);
+  const score = clamp(trust + recency.points + completeness.points + siteRelevance.points + penalty.points, 0, 100);
   const priority = signalScorePriority(score);
 
   return {
@@ -144,8 +174,8 @@ export const scoreSignalCandidate = (candidate, source = {}, options = {}) => {
       penalty: penalty.points,
       priority,
       recency: recency.points,
-      topic: topic.points,
-      topicMatches: topic.matches,
+      siteMatches: siteRelevance.matches,
+      siteRelevance: siteRelevance.points,
       trust,
       trustTier,
       version: signalTriageVersion
@@ -154,7 +184,7 @@ export const scoreSignalCandidate = (candidate, source = {}, options = {}) => {
       `${trustTier} 来源 ${trust} 分`,
       recency.reason,
       completeness.reason,
-      topic.reason,
+      siteRelevance.reason,
       ...penalty.reasons
     ],
     score
@@ -191,6 +221,69 @@ export const signalTitleSimilarity = (leftTitle, rightTitle) => {
   const jaccard = intersection / union;
   const containment = intersection / Math.min(left.size, right.size);
   return Number(Math.max(jaccard, containment * 0.92).toFixed(4));
+};
+
+export const signalTitleFingerprint = (value) =>
+  normalizeText(value)
+    .toLowerCase()
+    .replace(/[\p{P}\p{S}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 300);
+
+const candidateTimestamp = (candidate) =>
+  parseDate(
+    candidate?.publishedAt ||
+      candidate?.published_at ||
+      candidate?.createdAt ||
+      candidate?.created_at
+  );
+
+const isWithinTitleDuplicateWindow = (candidate, existing, now, windowHours) => {
+  const candidateTime = candidateTimestamp(candidate) || now;
+  const existingTime = candidateTimestamp(existing);
+  if (!existingTime) return false;
+  return Math.abs(candidateTime.getTime() - existingTime.getTime()) <= windowHours * 3_600_000;
+};
+
+export const findSignalCandidateMergeMatch = (candidate, existingCandidates = [], options = {}) => {
+  const now = parseDate(options.now) || new Date();
+  const windowHours = clamp(
+    Number(options.titleDuplicateWindowHours) || signalTitleDuplicateWindowHours,
+    1,
+    168
+  );
+  const canonicalUrl = normalizeText(candidate?.canonicalUrl || candidate?.canonical_url);
+  const contentHash = normalizeText(candidate?.contentHash || candidate?.content_hash);
+  const titleFingerprint =
+    normalizeText(candidate?.titleFingerprint || candidate?.title_fingerprint) ||
+    signalTitleFingerprint(candidate?.title);
+
+  const urlMatch = canonicalUrl
+    ? existingCandidates.find(
+        (existing) => normalizeText(existing?.canonicalUrl || existing?.canonical_url) === canonicalUrl
+      )
+    : null;
+  if (urlMatch) return { candidateId: urlMatch.id, reason: 'canonical_url' };
+
+  const contentMatch = contentHash
+    ? existingCandidates.find(
+        (existing) => normalizeText(existing?.contentHash || existing?.content_hash) === contentHash
+      )
+    : null;
+  if (contentMatch) return { candidateId: contentMatch.id, reason: 'content_hash' };
+
+  if (!titleFingerprint) return null;
+  const titleMatch = existingCandidates.find((existing) => {
+    const existingFingerprint =
+      normalizeText(existing?.titleFingerprint || existing?.title_fingerprint) ||
+      signalTitleFingerprint(existing?.title);
+    return (
+      existingFingerprint === titleFingerprint &&
+      isWithinTitleDuplicateWindow(candidate, existing, now, windowHours)
+    );
+  });
+  return titleMatch ? { candidateId: titleMatch.id, reason: 'title_fingerprint' } : null;
 };
 
 export const buildSignalClusterKey = async (title) => {
@@ -244,7 +337,9 @@ export const enrichSignalCandidateRows = async (rows, options = {}) => {
       metadataJson: JSON.stringify(metadata),
       relevanceScore: scoring.score,
       scoreBreakdownJson: JSON.stringify({ ...scoring.breakdown, reasons: scoring.reasons }),
-      scoredAt: now.toISOString()
+      scoredAt: now.toISOString(),
+      titleFingerprint:
+        normalizeText(row.titleFingerprint || row.title_fingerprint) || signalTitleFingerprint(row.title)
     };
     enriched.push(nextRow);
     pool.push({ clusterKey, id: row.id || '', title: row.title });
@@ -255,5 +350,6 @@ export const enrichSignalCandidateRows = async (rows, options = {}) => {
 
 export const signalTriageConstants = Object.freeze({
   clusterSimilarityThreshold: signalClusterSimilarityThreshold,
+  titleDuplicateWindowHours: signalTitleDuplicateWindowHours,
   version: signalTriageVersion
 });

@@ -815,7 +815,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                       class="button button-secondary"
                       id="signal-candidates-rescore"
                       type="button"
-                      title="重新评分最近 500 条候选；更早记录保留原评分，聚类仅作为审核辅助"
+                      title="按可信度、时效、站点相关性和内容完整度重新评分最近 500 条候选"
                     >重新评分</button>
                   </div>
                   <div class="admin-signal-draft-toolbar">
@@ -1309,6 +1309,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalCandidates: [],
       signalCollectionReady: false,
       signalTriageReady: false,
+      signalDedupReady: false,
       signalCandidateSummary: null,
       signalDraftAutomation: null,
       signalSelectedCandidateIds: new Set(),
@@ -2288,7 +2289,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const average = summary.averageScore === null || summary.averageScore === undefined
         ? '暂无评分'
         : `平均 ${summary.averageScore} 分`;
-      elements.signalCandidatesSummary.textContent = `${summary.total || 0} 条 · 待审 ${summary.new || 0} · 入选 ${summary.shortlisted || 0} · 淘汰 ${summary.rejected || 0} · ${average}`;
+      const merged = state.signalDedupReady
+        ? ` · 已合并重复 ${summary.mergedDuplicates || 0} 条`
+        : ' · 待应用 0023 后合并重复报道';
+      elements.signalCandidatesSummary.textContent = `${summary.total || 0} 条 · 待审 ${summary.new || 0} · 入选 ${summary.shortlisted || 0} · 淘汰 ${summary.rejected || 0} · ${average}${merged}`;
     };
 
     const candidateScoreDetails = (candidate) => {
@@ -2344,7 +2348,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const score = candidate.relevanceScore === null || candidate.relevanceScore === undefined
           ? '—'
           : String(candidate.relevanceScore);
-        const clusterLabel = candidate.clusterSize > 1 ? `<span>同题 ${escapeHtml(String(candidate.clusterSize))} 条</span>` : '';
+        const mergedLabel = candidate.occurrenceCount > 1
+          ? `<span>已合并 ${escapeHtml(String(candidate.occurrenceCount))} 条 · ${escapeHtml(String(candidate.sourceCount))} 来源</span>`
+          : '';
+        const clusterLabel = candidate.clusterSize > 1 ? `<span>近似同题 ${escapeHtml(String(candidate.clusterSize))} 条</span>` : '';
         const draftSelector = candidate.status === 'shortlisted'
           ? `<label class="admin-signal-candidate-select">
               <input type="checkbox" data-signal-candidate-select ${state.signalSelectedCandidateIds.has(candidate.id) ? 'checked' : ''} />
@@ -2364,6 +2371,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <span>${escapeHtml(candidate.sourceName || candidate.sourceId)}</span>
             <span>${escapeHtml(signalCategoryLabel(candidate.category))}</span>
             <span data-status="${escapeHtml(candidate.status)}">${escapeHtml(signalCandidateStatusLabel(candidate.status))}</span>
+            ${mergedLabel}
             ${clusterLabel}
           </div>
           ${candidate.summary ? `<p>${escapeHtml(candidate.summary)}</p>` : ''}
@@ -2412,6 +2420,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       state.signalCandidates = payload.candidates || [];
       state.signalCandidateSummary = payload.summary || null;
       state.signalTriageReady = Boolean(payload.triageReady);
+      state.signalDedupReady = Boolean(payload.dedupReady);
       elements.signalCandidatesRescore.disabled = !state.signalTriageReady;
       renderSignalCandidates();
       return payload;
@@ -2447,7 +2456,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const rescoreSignalCandidateQueue = async () => {
       elements.signalCandidatesRescore.disabled = true;
-      setSignalCandidateStatus('正在按来源可信度、时效和内容完整度重新评分。', 'pending');
+      setSignalCandidateStatus('正在按来源可信度、时效、站点相关性和内容完整度重新评分。', 'pending');
       try {
         const payload = await apiJson('/admin/api/signal/candidates', {
           method: 'POST',
@@ -2480,6 +2489,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           state.signalCandidates = [];
           state.signalCollectionReady = false;
           state.signalTriageReady = false;
+          state.signalDedupReady = false;
           state.signalCandidateSummary = null;
           elements.signalCollectionStart.disabled = true;
           elements.signalCandidatesRescore.disabled = true;
@@ -2511,6 +2521,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         state.signalCandidates = [];
         state.signalCollectionReady = false;
         state.signalTriageReady = false;
+        state.signalDedupReady = false;
         state.signalCandidateSummary = null;
         elements.signalCollectionStart.disabled = true;
         elements.signalCandidatesRescore.disabled = true;
