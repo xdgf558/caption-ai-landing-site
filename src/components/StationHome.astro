@@ -19,10 +19,13 @@ const { lang = 'zh-Hant', canonicalPath = '/' } = Astro.props;
 const xUrl = 'https://x.com/bketck';
 const stationLogoPath = '/images/home/station-cat-logo.png';
 const currentVersion = simpleCutProProduct.latestVersion.replace(/^v/, '');
-const privatePinyinVersion = privatePinyinProduct.latestVersion;
+const privatePinyinMacVersion =
+  privatePinyinProduct.downloads.find((download) => download.id === 'macos-pkg')?.version ?? privatePinyinProduct.latestVersion;
+const privatePinyinWindowsVersion =
+  privatePinyinProduct.downloads.find((download) => download.id === 'windows-exe')?.version ?? privatePinyinProduct.latestVersion;
 const nodePilotVersion = anyTlsDesktopManagerProduct.latestVersion.replace(/^v/, '');
 const nodePilotMacDownload = anyTlsDesktopManagerProduct.downloads.find((download) => download.id === 'mac-arm64');
-const versionedPrivatePinyinDownload = (path: string) => `${path}?release=${privatePinyinVersion}`;
+const versionedPrivatePinyinDownload = (path: string) => `${path}?release=${privatePinyinMacVersion}`;
 
 const icons: Record<IconName, string> = {
   cat: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 13 8 5l6 5h4l6-5 1 8"/><path d="M7 14c0 8 5 12 9 12s9-4 9-12"/><path d="M12 16h.1M20 16h.1"/><path d="M14 20h4M16 18v3"/></svg>`,
@@ -76,7 +79,7 @@ const copy = {
     nodePilotDesc: '在本機整理你擁有或獲授權管理的 AnyTLS 配置、連線資訊和備註。',
     followCleanerDesc: '低頻檢查 X 關注列表，本地保存結果，並匯出 CSV / JSON。',
     snapcopyStatus: 'App Store 上架',
-    privatePinyinStatus: `macOS / Windows ${privatePinyinVersion} · iOS TestFlight`,
+    privatePinyinStatus: `macOS ${privatePinyinMacVersion} · Windows ${privatePinyinWindowsVersion} · iOS TestFlight`,
     privatePinyinDownload: '下載與 TestFlight',
     simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: '查看工具',
@@ -145,7 +148,7 @@ const copy = {
     nodePilotDesc: '在本机整理你拥有或获授权管理的 AnyTLS 配置、连接信息和备注。',
     followCleanerDesc: '低频检查 X 关注列表，本地保存结果，并导出 CSV / JSON。',
     snapcopyStatus: 'App Store 上架',
-    privatePinyinStatus: `macOS / Windows ${privatePinyinVersion} · iOS TestFlight`,
+    privatePinyinStatus: `macOS ${privatePinyinMacVersion} · Windows ${privatePinyinWindowsVersion} · iOS TestFlight`,
     privatePinyinDownload: '下载与 TestFlight',
     simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: '查看工具',
@@ -214,7 +217,7 @@ const copy = {
     nodePilotDesc: 'Organize AnyTLS configurations, connection details, and local notes for environments you are authorized to manage.',
     followCleanerDesc: 'Review your X following list locally and export CSV / JSON results.',
     snapcopyStatus: 'App Store release',
-    privatePinyinStatus: `macOS / Windows ${privatePinyinVersion} · iOS TestFlight`,
+    privatePinyinStatus: `macOS ${privatePinyinMacVersion} · Windows ${privatePinyinWindowsVersion} · iOS TestFlight`,
     privatePinyinDownload: 'Downloads & TestFlight',
     simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: 'View App',
@@ -283,7 +286,7 @@ const copy = {
     nodePilotDesc: '管理権限のある AnyTLS 設定、接続情報、ローカルメモを整理します。',
     followCleanerDesc: 'X のフォロー一覧をローカルで見直し、CSV / JSON で書き出します。',
     snapcopyStatus: 'App Store 公開中',
-    privatePinyinStatus: `macOS / Windows ${privatePinyinVersion} · iOS TestFlight`,
+    privatePinyinStatus: `macOS ${privatePinyinMacVersion} · Windows ${privatePinyinWindowsVersion} · iOS TestFlight`,
     privatePinyinDownload: 'ダウンロード / TestFlight',
     simplecutStatus: `desktop release ${currentVersion}`,
     simplecutView: 'アプリを見る',

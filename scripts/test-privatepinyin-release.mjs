@@ -50,5 +50,7 @@ const appsIndex = read('src/components/AppsIndex.astro');
 const stationHome = read('src/components/StationHome.astro');
 assert.match(appsIndex, /macOS \/ Windows \/ iOS input method/);
 assert.match(stationHome, /iOS TestFlight/);
+assert.match(stationHome, /macOS \$\{privatePinyinMacVersion\} · Windows \$\{privatePinyinWindowsVersion\}/);
+assert.doesNotMatch(stationHome, /macOS \/ Windows \$\{privatePinyinVersion\}/);
 
 console.log('PrivatePinyin release entry tests passed.');
