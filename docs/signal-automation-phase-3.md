@@ -25,5 +25,6 @@ Do not deploy this phase independently. When the full Signal automation project 
 1. `0019_signal_automation.sql`
 2. `0020_signal_collection.sql`
 3. `0021_signal_candidate_triage.sql`
+4. `0022_signal_source_adapters.sql`
 
 Phase 4 consumes only shortlisted candidates, saves an editable content-platform draft, and keeps public publishing behind an explicit editor action. See `docs/signal-automation-phase-4.md`.

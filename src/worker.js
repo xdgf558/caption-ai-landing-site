@@ -3,6 +3,8 @@ import { protectedSerialContent } from './generated/protectedSerialContent.js';
 import {
   collectSignalSource,
   getSignalSourceAdapter,
+  getSignalSourceSecretBinding,
+  isSignalSourceSecretConfigured,
   normalizePublicSignalUrl,
   signalContentHash,
   supportedSignalCollectionAdapters
@@ -9822,38 +9824,46 @@ const signalSourceHealth = (row) => {
   return 'not_checked';
 };
 
-const signalSourceToJson = (row) => ({
-  id: row.id,
-  name: row.name,
-  publisher: row.publisher,
-  sourceType: row.source_type,
-  category: row.category,
-  trustTier: row.trust_tier,
-  endpointUrl: row.endpoint_url,
-  homepageUrl: row.homepage_url,
-  language: row.language,
-  isEnabled: Boolean(row.is_enabled),
-  fetchIntervalMinutes: normalizePositiveInteger(row.fetch_interval_minutes, 360),
-  maxItemsPerRun: normalizePositiveInteger(row.max_items_per_run, 30),
-  requiresApiKey: Boolean(row.requires_api_key),
-  config: parseStoredJson(row.config_json, {}),
-  adapter: getSignalSourceAdapter(row),
-  collectionSupported:
-    !Boolean(row.requires_api_key) && supportedSignalCollectionAdapters.has(getSignalSourceAdapter(row)),
-  notes: row.notes,
-  health: signalSourceHealth(row),
-  lastFetchedAt: row.last_fetched_at,
-  lastSuccessAt: row.last_success_at,
-  lastErrorAt: row.last_error_at,
-  lastError: row.last_error,
-  lastHttpStatus: row.last_http_status === null || row.last_http_status === undefined ? null : Number(row.last_http_status),
-  lastItemCount: normalizePositiveInteger(row.last_item_count, 0),
-  consecutiveFailures: normalizePositiveInteger(row.consecutive_failures, 0),
-  createdBy: row.created_by,
-  updatedBy: row.updated_by,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at
-});
+const signalCollectionSecrets = (env) => ({ FRED_API_KEY: cleanText(env?.FRED_API_KEY, 200) });
+
+const signalSourceToJson = (row, secrets = {}) => {
+  const adapter = getSignalSourceAdapter(row);
+  const collectionSupported = supportedSignalCollectionAdapters.has(adapter);
+  const collectionConfigured = collectionSupported && isSignalSourceSecretConfigured(row, secrets);
+  return {
+    id: row.id,
+    name: row.name,
+    publisher: row.publisher,
+    sourceType: row.source_type,
+    category: row.category,
+    trustTier: row.trust_tier,
+    endpointUrl: row.endpoint_url,
+    homepageUrl: row.homepage_url,
+    language: row.language,
+    isEnabled: Boolean(row.is_enabled),
+    fetchIntervalMinutes: normalizePositiveInteger(row.fetch_interval_minutes, 360),
+    maxItemsPerRun: normalizePositiveInteger(row.max_items_per_run, 30),
+    requiresApiKey: Boolean(row.requires_api_key),
+    config: parseStoredJson(row.config_json, {}),
+    adapter,
+    collectionSupported,
+    collectionConfigured,
+    missingSecretBinding: collectionConfigured ? '' : getSignalSourceSecretBinding(row),
+    notes: row.notes,
+    health: signalSourceHealth(row),
+    lastFetchedAt: row.last_fetched_at,
+    lastSuccessAt: row.last_success_at,
+    lastErrorAt: row.last_error_at,
+    lastError: row.last_error,
+    lastHttpStatus: row.last_http_status === null || row.last_http_status === undefined ? null : Number(row.last_http_status),
+    lastItemCount: normalizePositiveInteger(row.last_item_count, 0),
+    consecutiveFailures: normalizePositiveInteger(row.consecutive_failures, 0),
+    createdBy: row.created_by,
+    updatedBy: row.updated_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+};
 
 const signalCollectionRunToJson = (row) => ({
   id: row.id,
@@ -10022,7 +10032,7 @@ const handleAdminListSignalSources = async (env) => {
        LIMIT 200`
     )
     .all();
-  const sources = (response.results || []).map(signalSourceToJson);
+  const sources = (response.results || []).map((source) => signalSourceToJson(source, signalCollectionSecrets(env)));
   return privateJson({
     ok: true,
     setupRequired: false,
@@ -10108,7 +10118,7 @@ const handleAdminSaveSignalSource = async (request, env) => {
       targetSlug: source.name,
       metadata: { endpointUrl: source.endpoint_url }
     });
-    return privateJson({ ok: true, source: signalSourceToJson(source) });
+    return privateJson({ ok: true, source: signalSourceToJson(source, signalCollectionSecrets(env)) });
   }
 
   if (action !== 'save') {
@@ -10204,7 +10214,7 @@ const handleAdminSaveSignalSource = async (request, env) => {
       }
     });
 
-    return privateJson({ ok: true, source: signalSourceToJson(saved) });
+    return privateJson({ ok: true, source: signalSourceToJson(saved, signalCollectionSecrets(env)) });
   } catch (error) {
     if (/UNIQUE constraint failed: signal_sources\.endpoint_url/i.test(error?.message || '')) {
       return privateJson(
@@ -10608,10 +10618,10 @@ const signalCollectionPhase2SetupResponse = () =>
     { status: 503 }
   );
 
-const isCollectibleSignalSource = (source) =>
+const isCollectibleSignalSource = (source, secrets = {}) =>
   Boolean(source?.is_enabled) &&
-  !source?.requires_api_key &&
-  supportedSignalCollectionAdapters.has(getSignalSourceAdapter(source));
+  supportedSignalCollectionAdapters.has(getSignalSourceAdapter(source)) &&
+  isSignalSourceSecretConfigured(source, secrets);
 
 const signalCollectionTaskToJson = (row) => ({
   id: row.id,
@@ -10636,7 +10646,7 @@ const selectSignalCollectionSources = async (db, options = {}) => {
     0,
     50
   );
-  const filters = ['is_enabled = 1', 'requires_api_key = 0'];
+  const filters = ['is_enabled = 1'];
   const bindings = [];
   if (options.onlyDue) {
     filters.push(`(
@@ -10658,7 +10668,7 @@ const selectSignalCollectionSources = async (db, options = {}) => {
      LIMIT 50`
   );
   const response = bindings.length ? await statement.bind(...bindings).all() : await statement.all();
-  return (response.results || []).filter(isCollectibleSignalSource);
+  return (response.results || []).filter((source) => isCollectibleSignalSource(source, options.secrets));
 };
 
 const findActiveSignalCollectionRun = async (db) =>
@@ -10741,6 +10751,7 @@ const enqueueSignalCollectionRun = async (env, options = {}) => {
 
   const sources = await selectSignalCollectionSources(db, {
     onlyDue: options.triggerType === 'scheduled',
+    secrets: signalCollectionSecrets(env),
     sourceIds: options.sourceIds || []
   });
   if (!sources.length) return { alreadyRunning: false, run: null, sources: [] };
@@ -10787,7 +10798,11 @@ const enqueueSignalCollectionRun = async (env, options = {}) => {
   }
 
   const run = await db.prepare('SELECT * FROM signal_collection_runs WHERE id = ?').bind(runId).first();
-  return { alreadyRunning: false, run: signalCollectionRunToJson(run), sources: sources.map(signalSourceToJson) };
+  return {
+    alreadyRunning: false,
+    run: signalCollectionRunToJson(run),
+    sources: sources.map((source) => signalSourceToJson(source, signalCollectionSecrets(env)))
+  };
 };
 
 const handleAdminCollectSignalSources = async (request, env) => {
@@ -11166,12 +11181,16 @@ const processSignalCollectionMessage = async (env, body, options = {}) => {
     .run();
 
   try {
-    if (!isCollectibleSignalSource(source)) {
-      const error = signalSourceValidationError('SIGNAL_SOURCE_NOT_COLLECTIBLE', '来源已暂停、需要密钥或适配器未开放。');
+    const secrets = signalCollectionSecrets(env);
+    if (!isCollectibleSignalSource(source, secrets)) {
+      const error = signalSourceValidationError('SIGNAL_SOURCE_NOT_COLLECTIBLE', '来源已暂停、缺少所需密钥或适配器未开放。');
       error.retriable = false;
       throw error;
     }
-    const collection = await collectSignalSource(source, { fetchImpl: options.fetchImpl || fetch });
+    const collection = await collectSignalSource(source, {
+      fetchImpl: options.fetchImpl || fetch,
+      secrets
+    });
     const rows = await buildSignalCandidateRows(source, runId, collection);
     const inserted = await insertSignalCandidates(db, source, rows);
     const counts = {

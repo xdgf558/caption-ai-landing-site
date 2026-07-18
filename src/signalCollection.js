@@ -3,8 +3,13 @@ import { XMLParser } from 'fast-xml-parser';
 const defaultFetchTimeoutMs = 12_000;
 const defaultMaxBodyBytes = 1024 * 1024;
 const dnsResponseMaxBytes = 64 * 1024;
-const maxRedirects = 3;
+const defaultMaxRedirects = 3;
 const hackerNewsItemLimit = 12;
+const anthropicNewsHost = 'www.anthropic.com';
+const anthropicNewsPath = '/news';
+const fredApiEndpoint = 'https://api.stlouisfed.org/fred/series/observations';
+const fredApiKeyBinding = 'FRED_API_KEY';
+const fredSeriesLimit = 10;
 
 const blockedHostSuffixes = new Set([
   'arpa',
@@ -352,12 +357,15 @@ export const fetchPublicSignalResource = async (urlValue, options = {}) => {
   const fetchImpl = options.fetchImpl || fetch;
   const timeoutMs = options.timeoutMs || defaultFetchTimeoutMs;
   const maxBytes = options.maxBytes || defaultMaxBodyBytes;
+  const redirectLimit = Number.isInteger(options.maxRedirects)
+    ? Math.min(Math.max(options.maxRedirects, 0), defaultMaxRedirects)
+    : defaultMaxRedirects;
   let currentUrl = normalizePublicSignalUrl(urlValue);
   if (!currentUrl) {
     throw collectionError('SIGNAL_FETCH_URL_BLOCKED', '来源地址不是允许的公网 HTTP(S) URL。', { retriable: false });
   }
 
-  for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
+  for (let redirectCount = 0; redirectCount <= redirectLimit; redirectCount += 1) {
     await assertSignalUrlResolvesPublicly(currentUrl, { fetchImpl, timeoutMs });
     const headers = new Headers(options.headers || {});
     headers.set('accept', options.accept || 'application/rss+xml, application/atom+xml, application/xml, text/xml, application/json;q=0.9, */*;q=0.2');
@@ -366,7 +374,7 @@ export const fetchPublicSignalResource = async (urlValue, options = {}) => {
 
     if ([301, 302, 303, 307, 308].includes(response.status)) {
       const location = response.headers.get('location');
-      if (!location || redirectCount === maxRedirects) {
+      if (!location || redirectCount === redirectLimit) {
         throw collectionError('SIGNAL_FETCH_REDIRECT_BLOCKED', '来源重定向无效或次数过多。', { retriable: false });
       }
       const nextUrl = normalizePublicSignalUrl(location, currentUrl);
@@ -474,19 +482,264 @@ const collectXmlFeed = async (source, options) => {
   };
 };
 
-export const supportedSignalCollectionAdapters = new Set(['atom', 'hacker_news', 'rss']);
+const parseSignalSourceConfig = (source) => {
+  try {
+    const config = JSON.parse(source?.config_json || '{}');
+    return config && typeof config === 'object' && !Array.isArray(config) ? config : {};
+  } catch {
+    return {};
+  }
+};
+
+const htmlAttribute = (attributes, name) => {
+  const match = String(attributes || '').match(
+    new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'=<>]+))`, 'i')
+  );
+  return match?.[1] ?? match?.[2] ?? match?.[3] ?? '';
+};
+
+const englishMonthIndexes = new Map(
+  ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].map((month, index) => [
+    month,
+    index
+  ])
+);
+
+const normalizedHtmlDate = (attributes, content) => {
+  const value = htmlAttribute(attributes, 'datetime') || signalPlainText(content, 100);
+  const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnly) {
+    return new Date(Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))).toISOString();
+  }
+  const englishDate = value.match(/^([A-Za-z]{3,9})\s+(\d{1,2}),\s+(\d{4})$/);
+  const monthIndex = englishDate ? englishMonthIndexes.get(englishDate[1].slice(0, 3).toLowerCase()) : undefined;
+  if (englishDate && monthIndex !== undefined) {
+    return new Date(Date.UTC(Number(englishDate[3]), monthIndex, Number(englishDate[2]))).toISOString();
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+};
+
+const anthropicTitleSpan = (content) => {
+  for (const match of String(content || '').matchAll(/<span\b([^>]*)>([\s\S]*?)<\/span>/gi)) {
+    if (/__title(?:\s|$)/i.test(htmlAttribute(match[1], 'class'))) return match[2];
+  }
+  return '';
+};
+
+export const parseAnthropicNewsPage = (html, sourceUrl, maxItems = 30) => {
+  const normalizedSource = normalizePublicSignalUrl(sourceUrl);
+  const source = normalizedSource ? new URL(normalizedSource) : null;
+  if (!source || source.hostname !== anthropicNewsHost || source.pathname.replace(/\/$/, '') !== anthropicNewsPath) {
+    throw collectionError('SIGNAL_ANTHROPIC_SOURCE_INVALID', 'Anthropic 适配器只允许官方 News 页面。', {
+      retriable: false
+    });
+  }
+
+  const items = [];
+  const seenUrls = new Set();
+  const anchorPattern = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
+  for (const match of String(html || '').matchAll(anchorPattern)) {
+    const href = htmlAttribute(match[1], 'href');
+    if (!href) continue;
+    const canonicalUrl = normalizeSignalCandidateUrl(href, source.toString());
+    if (!canonicalUrl || seenUrls.has(canonicalUrl)) continue;
+    const canonical = new URL(canonicalUrl);
+    if (canonical.hostname !== anthropicNewsHost || !canonical.pathname.startsWith('/news/')) continue;
+
+    const content = match[2];
+    const heading = content.match(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/i);
+    const time = content.match(/<time\b([^>]*)>([\s\S]*?)<\/time>/i);
+    const paragraph = content.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i);
+    const title = signalPlainText(heading?.[1] || anthropicTitleSpan(content), 300);
+    if (!title || !time) continue;
+
+    seenUrls.add(canonicalUrl);
+    items.push({
+      author: 'Anthropic',
+      canonicalUrl,
+      externalId: canonical.pathname,
+      publishedAt: normalizedHtmlDate(time[1], time[2]),
+      summary: signalPlainText(paragraph?.[1], 1200),
+      title
+    });
+  }
+  if (!items.length) {
+    throw collectionError('SIGNAL_ANTHROPIC_PAGE_UNRECOGNIZED', 'Anthropic News 页面结构无法识别。', {
+      retriable: false
+    });
+  }
+  return items
+    .sort((left, right) => String(right.publishedAt || '').localeCompare(String(left.publishedAt || '')))
+    .slice(0, Math.max(1, maxItems));
+};
+
+const collectAnthropicNews = async (source, options) => {
+  const response = await fetchPublicSignalResource(source.endpoint_url, {
+    ...options,
+    accept: 'text/html,application/xhtml+xml;q=0.9',
+    headers: conditionalHeaders(source)
+  });
+  return {
+    ...response,
+    items: response.notModified
+      ? []
+      : parseAnthropicNewsPage(
+          response.body,
+          response.finalUrl,
+          Math.max(Number(source.max_items_per_run) || 1, 1)
+        )
+  };
+};
+
+const fredSeriesFromConfig = (source) => {
+  const config = parseSignalSourceConfig(source);
+  const seen = new Set();
+  return asArray(config.series)
+    .map((series) => ({
+      id: signalPlainText(series?.id, 64).toUpperCase(),
+      label: signalPlainText(series?.label, 180),
+      unit: signalPlainText(series?.unit, 80)
+    }))
+    .filter((series) => {
+      if (!/^[A-Z0-9_.-]{1,64}$/.test(series.id) || !series.label || seen.has(series.id)) return false;
+      seen.add(series.id);
+      return true;
+    });
+};
+
+const fredObservationDate = (value) => {
+  const normalized = String(value || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return null;
+  const date = new Date(`${normalized}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+};
+
+const fredObservationValue = (observation) => {
+  const value = signalPlainText(observation?.value, 80);
+  return value && value !== '.' ? value : '';
+};
+
+const parseFredSeriesItem = (payload, series) => {
+  const observations = asArray(payload?.observations).filter((observation) => fredObservationValue(observation));
+  const latest = observations[0];
+  if (!latest) return null;
+  const latestValue = fredObservationValue(latest);
+  const previous = observations[1];
+  const unitSuffix = series.unit ? ` ${series.unit}` : '';
+  const previousText = previous
+    ? ` Previous valid observation: ${fredObservationValue(previous)}${unitSuffix} on ${signalPlainText(previous.date, 20)}.`
+    : '';
+  return {
+    author: 'Federal Reserve Bank of St. Louis',
+    canonicalUrl: `https://fred.stlouisfed.org/series/${encodeURIComponent(series.id)}`,
+    externalId: `${series.id}:${signalPlainText(latest.date, 20)}:${latestValue}`,
+    publishedAt: fredObservationDate(latest.date),
+    summary: `FRED series ${series.id} recorded ${latestValue}${unitSuffix} on ${signalPlainText(latest.date, 20)}.${previousText}`,
+    title: `${series.label}: ${latestValue}${unitSuffix}`
+  };
+};
+
+const collectFred = async (source, options) => {
+  const apiKey = String(options.secrets?.[fredApiKeyBinding] || '').trim();
+  if (!/^[a-z0-9]{32}$/.test(apiKey)) {
+    throw collectionError('SIGNAL_FRED_API_KEY_MISSING', 'FRED_API_KEY 未配置或格式无效。', { retriable: false });
+  }
+  const seriesList = fredSeriesFromConfig(source).slice(
+    0,
+    Math.min(Math.max(Number(source.max_items_per_run) || 1, 1), fredSeriesLimit)
+  );
+  if (!seriesList.length) {
+    throw collectionError('SIGNAL_FRED_SERIES_REQUIRED', 'FRED 来源尚未配置要采集的 series。', { retriable: false });
+  }
+
+  const items = [];
+  const failures = [];
+  let responseHeaders = new Headers();
+  let responseStatus = 200;
+  for (const series of seriesList) {
+    const url = new URL(fredApiEndpoint);
+    url.searchParams.set('api_key', apiKey);
+    url.searchParams.set('file_type', 'json');
+    url.searchParams.set('limit', '2');
+    url.searchParams.set('series_id', series.id);
+    url.searchParams.set('sort_order', 'desc');
+    try {
+      const response = await fetchPublicSignalResource(url.toString(), {
+        ...options,
+        accept: 'application/json',
+        maxBytes: 256 * 1024,
+        maxRedirects: 0,
+        secrets: undefined
+      });
+      responseHeaders = response.headers;
+      responseStatus = response.status;
+      let payload;
+      try {
+        payload = JSON.parse(response.body);
+      } catch {
+        throw collectionError('SIGNAL_FRED_INVALID_JSON', `FRED series ${series.id} 返回了无效 JSON。`, {
+          retriable: false
+        });
+      }
+      const item = parseFredSeriesItem(payload, series);
+      if (!item) {
+        throw collectionError('SIGNAL_FRED_NO_OBSERVATIONS', `FRED series ${series.id} 没有可用观测值。`, {
+          retriable: false
+        });
+      }
+      items.push(item);
+    } catch (error) {
+      failures.push(error);
+    }
+  }
+  if (!items.length) {
+    const firstFailure = failures[0];
+    throw collectionError(
+      firstFailure?.code || 'SIGNAL_FRED_SERIES_FAILED',
+      firstFailure?.message || 'FRED series 采集失败。',
+      { retriable: firstFailure?.retriable !== false }
+    );
+  }
+  return {
+    body: '',
+    finalUrl: 'https://fred.stlouisfed.org/',
+    headers: responseHeaders,
+    itemErrors: failures.length,
+    items,
+    notModified: false,
+    status: responseStatus
+  };
+};
+
+export const supportedSignalCollectionAdapters = new Set([
+  'anthropic_news',
+  'atom',
+  'fred',
+  'hacker_news',
+  'rss'
+]);
 
 export const getSignalSourceAdapter = (source) => {
-  let config = {};
-  try {
-    config = JSON.parse(source?.config_json || '{}');
-  } catch {
-    config = {};
-  }
+  const config = parseSignalSourceConfig(source);
   const explicit = String(config.adapter || '').trim().toLowerCase();
   if (explicit) return explicit;
   if (source?.source_type === 'rss') return 'rss';
   return '';
+};
+
+export const getSignalSourceSecretBinding = (source) => {
+  if (getSignalSourceAdapter(source) !== 'fred') return '';
+  const binding = String(parseSignalSourceConfig(source).secretBinding || '').trim();
+  return binding === fredApiKeyBinding ? binding : '';
+};
+
+export const isSignalSourceSecretConfigured = (source, secrets = {}) => {
+  const adapter = getSignalSourceAdapter(source);
+  if (!source?.requires_api_key && adapter !== 'fred') return true;
+  const binding = getSignalSourceSecretBinding(source);
+  const value = binding ? String(secrets?.[binding] || '').trim() : '';
+  return binding === fredApiKeyBinding ? /^[a-z0-9]{32}$/.test(value) : Boolean(value);
 };
 
 export const collectSignalSource = async (source, options = {}) => {
@@ -497,7 +750,14 @@ export const collectSignalSource = async (source, options = {}) => {
       retriable: false
     });
   }
-  const result = adapter === 'hacker_news' ? await collectHackerNews(source, options) : await collectXmlFeed(source, options);
+  const result =
+    adapter === 'anthropic_news'
+      ? await collectAnthropicNews(source, options)
+      : adapter === 'fred'
+        ? await collectFred(source, options)
+        : adapter === 'hacker_news'
+          ? await collectHackerNews(source, options)
+          : await collectXmlFeed(source, options);
   return {
     etag: result.headers.get('etag') || source.http_etag || '',
     finalUrl: result.finalUrl,
