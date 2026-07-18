@@ -13,8 +13,12 @@ interface Props {
 
 const { lang = 'zh-Hant' } = Astro.props;
 const currentVersion = simpleCutProProduct.latestVersion.replace(/^v/, '');
-const privatePinyinVersion = privatePinyinProduct.latestVersion;
-const versionedPrivatePinyinDownload = (path: string) => `${path}?release=${privatePinyinVersion}`;
+const privatePinyinMacVersion =
+  privatePinyinProduct.downloads.find((download) => download.id === 'macos-pkg')?.version ?? privatePinyinProduct.latestVersion;
+const privatePinyinWindowsVersion =
+  privatePinyinProduct.downloads.find((download) => download.id === 'windows-exe')?.version ?? privatePinyinProduct.latestVersion;
+const privatePinyinReleaseToken = `${privatePinyinMacVersion}-${privatePinyinWindowsVersion}`;
+const versionedPrivatePinyinDownload = (path: string) => `${path}?release=${privatePinyinReleaseToken}`;
 
 const copy = {
   'zh-Hant': {

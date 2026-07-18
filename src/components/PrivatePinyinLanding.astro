@@ -14,7 +14,8 @@ const iosTestflight = privatePinyinProduct.iosTestflight;
 const latestVersion = privatePinyinProduct.latestVersion;
 const macVersion = macDownload.version;
 const windowsVersion = windowsDownload?.version ?? latestVersion;
-const versionedDownloadPage = (path: string) => `${path}?release=${macVersion}`;
+const releaseToken = `${macVersion}-${windowsVersion}`;
+const versionedDownloadPage = (path: string) => `${path}?release=${releaseToken}`;
 const inputSourceName = '猫栈拼音';
 const internalName = 'PrivatePinyin';
 

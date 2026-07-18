@@ -23,9 +23,10 @@ const privatePinyinMacVersion =
   privatePinyinProduct.downloads.find((download) => download.id === 'macos-pkg')?.version ?? privatePinyinProduct.latestVersion;
 const privatePinyinWindowsVersion =
   privatePinyinProduct.downloads.find((download) => download.id === 'windows-exe')?.version ?? privatePinyinProduct.latestVersion;
+const privatePinyinReleaseToken = `${privatePinyinMacVersion}-${privatePinyinWindowsVersion}`;
 const nodePilotVersion = anyTlsDesktopManagerProduct.latestVersion.replace(/^v/, '');
 const nodePilotMacDownload = anyTlsDesktopManagerProduct.downloads.find((download) => download.id === 'mac-arm64');
-const versionedPrivatePinyinDownload = (path: string) => `${path}?release=${privatePinyinMacVersion}`;
+const versionedPrivatePinyinDownload = (path: string) => `${path}?release=${privatePinyinReleaseToken}`;
 
 const icons: Record<IconName, string> = {
   cat: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 13 8 5l6 5h4l6-5 1 8"/><path d="M7 14c0 8 5 12 9 12s9-4 9-12"/><path d="M12 16h.1M20 16h.1"/><path d="M14 20h4M16 18v3"/></svg>`,
