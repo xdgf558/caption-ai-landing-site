@@ -56,15 +56,15 @@ const candidates = [
 
 const aiPayloadFor = (items = candidates) => ({
   category: 'ai',
-  description: '今天关注模型、经济政策和开发工具的三条信号。',
+  description: '今天關注模型、經濟政策和開發工具的三條重要信號。',
   items: items.map((candidate, index) => ({
     candidateId: candidate.id,
-    headline: `${index + 1}. 第 ${index + 1} 条资讯：${candidate.title}`,
-    noise: '仍需结合后续一手数据，不能过度外推。',
-    signal: '这项变化可能影响开发者、市场预期或产品路线。',
-    summary: `这条候选资讯需要翻译为中文。原文摘要：${candidate.summary}`
+    headline: `${index + 1}. 第 ${index + 1} 條資訊已完成繁體中文整理`,
+    noise: '仍需結合後續一手資料，不能過度推論。',
+    signal: '這項變化可能影響開發者、市場預期或產品路線。',
+    summary: `這條候選資訊已翻譯並保留原始事實，來源是 ${candidate.source_name || '官方來源'}。`
   })),
-  title: '每日信号简报'
+  title: '每日信號簡報'
 });
 
 const englishPayloadFor = (items = candidates) => ({
@@ -78,6 +78,30 @@ const englishPayloadFor = (items = candidates) => ({
     summary: candidate.summary
   })),
   title: 'Daily Signal Brief'
+});
+
+const mixedEnglishPayloadFor = (items = candidates) => ({
+  ...aiPayloadFor(items),
+  items: items.map((candidate, index) => ({
+    candidateId: candidate.id,
+    headline: `${index + 1}. OpenAI 推出 new reasoning model with expanded API safety report`,
+    noise: '仍需 wait for more first-party data before drawing broad conclusions',
+    signal: '這項 update may affect developers and future product roadmaps',
+    summary: '這則 report explains the new model architecture and API rollout schedule in detail'
+  }))
+});
+
+const simplifiedPayloadFor = (items = candidates) => ({
+  category: 'ai',
+  description: '今天关注模型、经济政策和开发工具的三条重要信号。',
+  items: items.map((candidate, index) => ({
+    candidateId: candidate.id,
+    headline: `${index + 1}. 发布新的模型与接口安全报告`,
+    noise: '仍需结合后续一手数据，不能过度推断。',
+    signal: '这项变化可能影响开发者、市场预期或产品路线。',
+    summary: '这条候选资讯已经整理，并保留原始事实和来源。'
+  })),
+  title: '每日信号简报'
 });
 
 assert.deepEqual(normalizeSignalDraftCandidateIds(candidates.map((candidate) => candidate.id)), candidates.map((candidate) => candidate.id));
@@ -109,7 +133,7 @@ assert.equal(generated.items.length, 3);
 assert.equal(generated.category, 'ai');
 assert.equal(generated.outputLocale, signalDraftOutputLocale);
 assert.equal(generated.translationMode, 'source-to-zh-Hant');
-assert.match(generated.markdown, /1\. 第 1 条资讯：OpenAI publishes a model and API update/);
+assert.match(generated.markdown, /1\. 第 1 條資訊已完成繁體中文整理/);
 assert.match(generated.markdown, /信号：/);
 assert.match(generated.markdown, /噪音：/);
 assert.equal(aiCalls[0].request.response_format.type, 'json_schema');
@@ -135,6 +159,23 @@ const translatedAfterRetry = await generateSignalBriefDraft(
 assert.equal(translationRetryCalls.length, 2);
 assert.match(translationRetryCalls[1].messages[0].content, /previous attempt did not complete the Chinese translation/i);
 assert.equal(translatedAfterRetry.outputLocale, 'zh-Hant');
+
+for (const invalidPayload of [mixedEnglishPayloadFor(), simplifiedPayloadFor()]) {
+  const languageRetryCalls = [];
+  const translatedResult = await generateSignalBriefDraft(
+    {
+      async run(_model, request) {
+        languageRetryCalls.push(request);
+        return { response: languageRetryCalls.length === 1 ? invalidPayload : aiPayloadFor() };
+      }
+    },
+    '@cf/test/draft-model',
+    candidates,
+    { briefDate: '2026-07-18', category: 'auto' }
+  );
+  assert.equal(languageRetryCalls.length, 2);
+  assert.equal(translatedResult.outputLocale, 'zh-Hant');
+}
 
 await assert.rejects(
   generateSignalBriefDraft(

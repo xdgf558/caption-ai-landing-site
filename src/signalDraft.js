@@ -2,7 +2,7 @@ const signalDraftCategories = new Set(['ai', 'tech', 'economy', 'market', 'resea
 
 export const signalDraftMinCandidates = 3;
 export const signalDraftMaxCandidates = 10;
-export const signalDraftPromptVersion = 3;
+export const signalDraftPromptVersion = 4;
 export const signalDraftOutputLocale = 'zh-Hant';
 
 export const getSignalDraftMaxTokens = (candidateCount) => {
@@ -79,7 +79,22 @@ const extractModelPayload = (result) => {
 
 const stripNumberPrefix = (value) => cleanText(value, 180).replace(/^\d{1,3}[.)、．]\s*/, '').trim();
 
-const containsChinese = (value) => /[\u3400-\u4dbf\u4e00-\u9fff]/u.test(String(value || ''));
+const chineseCharacterPattern = /[\u3400-\u4dbf\u4e00-\u9fff]/gu;
+const asciiWordPattern = /[A-Za-z][A-Za-z0-9.+#/-]*/g;
+const simplifiedChineseHintPattern = /[这为发说进个么与并还们时会开关对从来过于将让实应数条页读写东车国万广门见长场点线网体术现当无达种义头题记区设备产变报务据仅较归号简]/gu;
+const traditionalChineseHintPattern = /[這為發說進個麼與並還們時會開關對從來過於將讓實應數條頁讀寫東車國萬廣門見長場點線網體術現當無達種義頭題記區設備產變報務據僅較歸號簡]/gu;
+
+const countMatches = (value, pattern) => String(value || '').match(pattern)?.length || 0;
+
+const isMeaningfullyTraditionalChinese = (value) => {
+  const chineseCount = countMatches(value, chineseCharacterPattern);
+  const asciiWordCount = countMatches(value, asciiWordPattern);
+  if (chineseCount < 2 || chineseCount < asciiWordCount) return false;
+
+  const simplifiedHintCount = countMatches(value, simplifiedChineseHintPattern);
+  const traditionalHintCount = countMatches(value, traditionalChineseHintPattern);
+  return simplifiedHintCount < 3 || simplifiedHintCount <= traditionalHintCount;
+};
 
 const buildDraftSchema = (candidateCount) => ({
   type: 'object',
@@ -171,8 +186,8 @@ const validateDraftPayload = (payload, candidates, options) => {
     if (!headline || !summary || !signal || !noise) {
       throw draftError('SIGNAL_DRAFT_AI_OUTPUT_INVALID', 'AI 草稿包含空白栏目，请重试。', 502);
     }
-    if ([headline, summary, signal, noise].some((field) => !containsChinese(field))) {
-      throw draftError('SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID', 'AI 草稿未完成中文翻译，请重试。', 502);
+    if ([headline, summary, signal, noise].some((field) => !isMeaningfullyTraditionalChinese(field))) {
+      throw draftError('SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID', 'AI 草稿中文比例不足或未使用繁体中文，请重试。', 502);
     }
     return { candidateId, headline, summary, signal, noise };
   });
@@ -184,8 +199,8 @@ const validateDraftPayload = (payload, candidates, options) => {
   const category = options.category === 'auto' ? normalizeCategory(payload.category, fallbackCategory) : fallbackCategory;
   const title = cleanText(payload.title, 160) || `${options.briefDate} 每日信号简报`;
   const description = cleanText(payload.description, 500) || items.map((item) => item.headline).join('；');
-  if (!containsChinese(title) || !containsChinese(description)) {
-    throw draftError('SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID', 'AI 草稿标题或摘要未完成中文翻译，请重试。', 502);
+  if (!isMeaningfullyTraditionalChinese(title) || !isMeaningfullyTraditionalChinese(description)) {
+    throw draftError('SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID', 'AI 草稿标题或摘要中文比例不足或未使用繁体中文，请重试。', 502);
   }
   const markdown = items
     .map(
