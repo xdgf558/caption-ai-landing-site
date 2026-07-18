@@ -1,6 +1,7 @@
 const signalTriageVersion = 3;
 const signalClusterSimilarityThreshold = 0.72;
 const signalTitleDuplicateWindowHours = 72;
+const signalTitleDuplicateMinimumTokens = 4;
 
 const trustScores = Object.freeze({
   community: 14,
@@ -258,6 +259,7 @@ export const findSignalCandidateMergeMatch = (candidate, existingCandidates = []
   const titleFingerprint =
     normalizeText(candidate?.titleFingerprint || candidate?.title_fingerprint) ||
     signalTitleFingerprint(candidate?.title);
+  const category = normalizeText(candidate?.category).toLowerCase();
 
   const urlMatch = canonicalUrl
     ? existingCandidates.find(
@@ -273,12 +275,20 @@ export const findSignalCandidateMergeMatch = (candidate, existingCandidates = []
     : null;
   if (contentMatch) return { candidateId: contentMatch.id, reason: 'content_hash' };
 
-  if (!titleFingerprint) return null;
+  if (
+    !titleFingerprint ||
+    !category ||
+    signalTitleTokens(candidate?.title).length < signalTitleDuplicateMinimumTokens
+  ) {
+    return null;
+  }
   const titleMatch = existingCandidates.find((existing) => {
     const existingFingerprint =
       normalizeText(existing?.titleFingerprint || existing?.title_fingerprint) ||
       signalTitleFingerprint(existing?.title);
     return (
+      normalizeText(existing?.category).toLowerCase() === category &&
+      signalTitleTokens(existing?.title).length >= signalTitleDuplicateMinimumTokens &&
       existingFingerprint === titleFingerprint &&
       isWithinTitleDuplicateWindow(candidate, existing, now, windowHours)
     );
@@ -350,6 +360,7 @@ export const enrichSignalCandidateRows = async (rows, options = {}) => {
 
 export const signalTriageConstants = Object.freeze({
   clusterSimilarityThreshold: signalClusterSimilarityThreshold,
+  titleDuplicateMinimumTokens: signalTitleDuplicateMinimumTokens,
   titleDuplicateWindowHours: signalTitleDuplicateWindowHours,
   version: signalTriageVersion
 });

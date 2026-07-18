@@ -1,13 +1,16 @@
 # Signal Automation Phase 3
 
-Phase 3 turns collected Signal items into a reviewable queue. It remains deterministic, uses no paid API, and never publishes or changes candidate status automatically.
+Phase 3 turns collected Signal items into a reviewable queue. It remains deterministic, uses no paid API, and never publishes. The only automatic status transition is reopening a rejected candidate when a genuinely new occurrence is merged into it.
 
 ## Candidate Processing
 
 - Score every candidate from 0 to 100 using source trust, recency, Station Cat site relevance, content completeness, and clickbait penalties.
 - Persist a score breakdown and plain-language reasons so an editor can understand the result.
-- Merge exact canonical URLs, exact content hashes, and identical normalized title fingerprints published within 72 hours into one primary candidate.
+- Merge exact canonical URLs and exact content hashes into one primary candidate.
+- Merge identical normalized title fingerprints only when both reports share a category, the title contains at least four meaningful tokens, and their timestamps are within 72 hours. Generic titles stay separate and may only receive an advisory cluster.
 - Preserve every fetched report in `signal_candidate_occurrences`, including its source, URL, summary, timestamp, and merge reason.
+- If a new occurrence belongs to a rejected primary candidate, restore that candidate to `new` and record the automatic transition in `signal_candidate_reviews`. A replay of an already stored occurrence does not reopen it.
+- If the recent in-memory merge pool misses an older exact URL or content-hash match, rely on the global uniqueness guard, then look up the persisted candidate and attach the occurrence there. New primary candidates and their primary occurrences are inserted in one D1 batch.
 - Show one primary candidate in the review queue, with the merged report and distinct source counts beside it.
 - Group merely similar titles into an event cluster using token similarity. These clusters remain advisory and are labelled separately from true duplicate merges.
 

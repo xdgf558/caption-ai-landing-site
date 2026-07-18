@@ -11122,7 +11122,7 @@ const loadSignalCandidateMergePool = async (db, rows) => {
   addInClause('title_fingerprint', titleFingerprints);
   return db
     .prepare(
-      `SELECT id, canonical_url, content_hash, title, title_fingerprint,
+      `SELECT id, canonical_url, content_hash, title, title_fingerprint, category,
               published_at, created_at, cluster_key
        FROM signal_candidates
        WHERE ${clauses.map((clause) => `(${clause})`).join(' OR ')}
@@ -11142,34 +11142,72 @@ const signalCandidateOccurrenceMetadata = (row, candidateId, matchReason) => {
   return JSON.stringify(metadata);
 };
 
-const insertSignalCandidateOccurrence = async (db, source, row, candidateId, matchReason) =>
-  db
-    .prepare(
-      `INSERT OR IGNORE INTO signal_candidate_occurrences (
-         id, candidate_id, source_id, run_id, canonical_url, title, summary,
-         published_at, content_hash, title_fingerprint, match_reason, metadata_json
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .bind(
-      `signal-occurrence-${randomToken(14)}`,
-      candidateId,
-      source.id,
-      row.runId,
-      row.canonicalUrl,
-      row.title,
-      row.summary,
-      row.publishedAt,
-      row.contentHash,
-      row.titleFingerprint,
-      matchReason,
-      signalCandidateOccurrenceMetadata(row, candidateId, matchReason)
-    )
-    .run();
+const insertSignalCandidateOccurrence = async (db, source, row, candidateId, matchReason) => {
+  const occurrenceId = `signal-occurrence-${randomToken(14)}`;
+  const automaticRestoreNote = '同一事件出现新增报道，已自动回到待审核。';
+  const automaticActor = 'signal-automation';
+  // The random occurrence id lets the guarded restore no-op when this report is only a replay.
+  return db.batch([
+    db
+      .prepare(
+        `INSERT OR IGNORE INTO signal_candidate_occurrences (
+           id, candidate_id, source_id, run_id, canonical_url, title, summary,
+           published_at, content_hash, title_fingerprint, match_reason, metadata_json
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .bind(
+        occurrenceId,
+        candidateId,
+        source.id,
+        row.runId,
+        row.canonicalUrl,
+        row.title,
+        row.summary,
+        row.publishedAt,
+        row.contentHash,
+        row.titleFingerprint,
+        matchReason,
+        signalCandidateOccurrenceMetadata(row, candidateId, matchReason)
+      ),
+    db
+      .prepare(
+        `INSERT INTO signal_candidate_reviews (
+           id, candidate_id, action, from_status, to_status, note, actor_email
+         )
+         SELECT ?, candidate.id, 'restore', 'rejected', 'new', ?, ?
+         FROM signal_candidates AS candidate
+         WHERE candidate.id = ? AND candidate.status = 'rejected'
+           AND EXISTS (
+             SELECT 1 FROM signal_candidate_occurrences AS occurrence
+             WHERE occurrence.id = ? AND occurrence.candidate_id = candidate.id
+           )`
+      )
+      .bind(
+        `signal-review-${randomToken(14)}`,
+        automaticRestoreNote,
+        automaticActor,
+        candidateId,
+        occurrenceId
+      ),
+    db
+      .prepare(
+        `UPDATE signal_candidates
+         SET status = 'new', decision_note = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = ? AND status = 'rejected'
+           AND EXISTS (
+             SELECT 1 FROM signal_candidate_occurrences AS occurrence
+             WHERE occurrence.id = ? AND occurrence.candidate_id = signal_candidates.id
+           )`
+      )
+      .bind(automaticRestoreNote, automaticActor, candidateId, occurrenceId)
+  ]);
+};
 
 const findPersistedSignalCandidateMatch = async (db, row, now) => {
   const response = await db
     .prepare(
-      `SELECT id, canonical_url, content_hash, title, title_fingerprint,
+      `SELECT id, canonical_url, content_hash, title, title_fingerprint, category,
               published_at, created_at, cluster_key
        FROM signal_candidates
        WHERE canonical_url = ? OR content_hash = ?
@@ -11221,6 +11259,8 @@ const insertSignalCandidates = async (db, source, rows) => {
         continue;
       }
 
+      // Create the primary candidate and its guarded primary occurrence atomically.
+      // A uniqueness conflict is resolved below with an exact persisted lookup.
       const results = await db.batch([
         db
           .prepare(
@@ -11281,6 +11321,7 @@ const insertSignalCandidates = async (db, source, rows) => {
         candidatePool.unshift({
           id: row.id,
           canonicalUrl: row.canonicalUrl,
+          category: row.category || source.category || 'general',
           contentHash: row.contentHash,
           title: row.title,
           titleFingerprint: row.titleFingerprint,

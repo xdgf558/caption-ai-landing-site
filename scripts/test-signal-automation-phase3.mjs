@@ -157,6 +157,7 @@ assert.equal(
 );
 const existingCandidate = {
   canonicalUrl: 'https://openai.com/news/reasoning-model',
+  category: 'ai',
   contentHash: 'existing-content-hash',
   createdAt: '2026-07-17T09:00:00.000Z',
   id: 'candidate-primary',
@@ -194,6 +195,7 @@ assert.deepEqual(
   findSignalCandidateMergeMatch(
     {
       canonicalUrl: 'https://example.com/title-match',
+      category: 'ai',
       contentHash: 'title-match-hash',
       publishedAt: '2026-07-19T08:00:00.000Z',
       title: 'OpenAI releases a new reasoning model'
@@ -207,9 +209,43 @@ assert.equal(
   findSignalCandidateMergeMatch(
     {
       canonicalUrl: 'https://example.com/title-outside-window',
+      category: 'ai',
       contentHash: 'outside-window-hash',
       publishedAt: '2026-07-21T08:01:00.000Z',
       title: 'OpenAI releases a new reasoning model'
+    },
+    [existingCandidate],
+    { now }
+  ),
+  null
+);
+assert.equal(
+  findSignalCandidateMergeMatch(
+    {
+      canonicalUrl: 'https://example.com/weekly-update',
+      category: 'tech',
+      contentHash: 'weekly-update-new',
+      publishedAt: '2026-07-17T11:00:00.000Z',
+      title: 'Weekly Update'
+    },
+    [{
+      category: 'tech',
+      createdAt: '2026-07-17T09:00:00.000Z',
+      id: 'candidate-generic-title',
+      title: 'Weekly Update'
+    }],
+    { now }
+  ),
+  null
+);
+assert.equal(
+  findSignalCandidateMergeMatch(
+    {
+      canonicalUrl: 'https://example.com/cross-category',
+      category: 'market',
+      contentHash: 'cross-category-new',
+      publishedAt: '2026-07-17T11:00:00.000Z',
+      title: existingCandidate.title
     },
     [existingCandidate],
     { now }
@@ -233,8 +269,21 @@ class CandidateInsertStatement {
   }
 
   async all() {
+    if (/WHERE canonical_url = \? OR content_hash = \?/i.test(this.sql)) {
+      const [canonicalUrl, contentHash] = this.params;
+      return {
+        results: [...this.db.candidates.values()].filter(
+          (candidate) =>
+            candidate.canonical_url === canonicalUrl || candidate.content_hash === contentHash
+        )
+      };
+    }
     if (/SELECT id, canonical_url, content_hash, title, title_fingerprint/i.test(this.sql)) {
-      return { results: [...this.db.candidates.values()] };
+      return {
+        results: [...this.db.candidates.values()].filter(
+          (candidate) => !this.db.hiddenFromMergePool.has(candidate.id)
+        )
+      };
     }
     return { results: [] };
   }
@@ -320,14 +369,49 @@ class CandidateInsertStatement {
       this.db.occurrences.push(occurrence);
       return { meta: { changes: 1 } };
     }
+
+    if (/INSERT INTO signal_candidate_reviews/i.test(this.sql)) {
+      const [id, note, actor, candidateId, occurrenceId] = this.params;
+      const candidate = this.db.candidates.get(candidateId);
+      const occurrence = this.db.occurrences.find((item) => item.id === occurrenceId);
+      if (!candidate || candidate.status !== 'rejected' || !occurrence) return { meta: { changes: 0 } };
+      this.db.reviews.push({
+        action: 'restore',
+        actor,
+        candidateId,
+        fromStatus: 'rejected',
+        id,
+        note,
+        toStatus: 'new'
+      });
+      return { meta: { changes: 1 } };
+    }
+
+    if (/UPDATE signal_candidates[\s\S]+status = 'new'/i.test(this.sql)) {
+      const [note, actor, candidateId, occurrenceId] = this.params;
+      const candidate = this.db.candidates.get(candidateId);
+      const occurrence = this.db.occurrences.find((item) => item.id === occurrenceId);
+      if (!candidate || candidate.status !== 'rejected' || !occurrence) return { meta: { changes: 0 } };
+      Object.assign(candidate, {
+        decision_note: note,
+        reviewed_at: '2026-07-18 12:00:00',
+        reviewed_by: actor,
+        status: 'new',
+        updated_at: '2026-07-18 12:00:00'
+      });
+      return { meta: { changes: 1 } };
+    }
     return { meta: { changes: 0 } };
   }
 }
 
 class CandidateInsertDb {
   constructor() {
+    this.batchSizes = [];
     this.candidates = new Map();
+    this.hiddenFromMergePool = new Set();
     this.occurrences = [];
+    this.reviews = [];
   }
 
   prepare(sql) {
@@ -335,6 +419,7 @@ class CandidateInsertDb {
   }
 
   async batch(statements) {
+    this.batchSizes.push(statements.length);
     const results = [];
     for (const statement of statements) results.push(await statement.run());
     return results;
@@ -349,6 +434,7 @@ const candidateInsertResult = await workerHooks.insertSignalCandidates(
     {
       author: 'Station Source A',
       canonicalUrl: 'https://source-a.example/cloudflare-update',
+      category: 'tech',
       contentHash: 'cloudflare-update-a',
       externalId: 'source-a-update',
       id: 'candidate-cloudflare-a',
@@ -363,6 +449,7 @@ const candidateInsertResult = await workerHooks.insertSignalCandidates(
     {
       author: 'Station Source B',
       canonicalUrl: 'https://source-b.example/cloudflare-update',
+      category: 'tech',
       contentHash: 'cloudflare-update-b',
       externalId: 'source-b-update',
       id: 'candidate-cloudflare-b',
@@ -383,6 +470,111 @@ assert.deepEqual(
   candidateInsertDb.occurrences.map((occurrence) => occurrence.match_reason),
   ['primary', 'title_fingerprint']
 );
+
+const persistedFallbackDb = new CandidateInsertDb();
+persistedFallbackDb.candidates.set('candidate-persisted-old', {
+  canonical_url: 'https://source-old.example/platform-release',
+  category: 'tech',
+  cluster_key: 'signal-cluster-old',
+  content_hash: 'persisted-global-content-hash',
+  created_at: '2026-07-01T08:00:00.000Z',
+  id: 'candidate-persisted-old',
+  published_at: '2026-07-01T07:00:00.000Z',
+  source_id: 'source-old',
+  status: 'new',
+  title: 'A persisted report outside the recent merge pool',
+  title_fingerprint: 'a persisted report outside the recent merge pool'
+});
+persistedFallbackDb.hiddenFromMergePool.add('candidate-persisted-old');
+const persistedFallbackResult = await workerHooks.insertSignalCandidates(
+  persistedFallbackDb,
+  { category: 'tech', id: 'source-new', language: 'en', trust_tier: 'established' },
+  [{
+    author: 'Station Source New',
+    canonicalUrl: 'https://source-new.example/platform-release',
+    category: 'tech',
+    contentHash: 'persisted-global-content-hash',
+    externalId: 'persisted-fallback',
+    id: 'candidate-persisted-attempt',
+    metadataJson: '{}',
+    publishedAt: '2026-07-18T10:00:00.000Z',
+    rawPayloadJson: '{}',
+    runId: 'run-persisted-fallback',
+    summary: 'The same report arrived after the primary candidate left the recent pool.',
+    title: 'A fresh headline for the persisted platform report',
+    titleFingerprint: 'a fresh headline for the persisted platform report'
+  }]
+);
+assert.deepEqual(persistedFallbackResult, { acceptedCount: 0, duplicateCount: 1 });
+assert.equal(persistedFallbackDb.candidates.size, 1);
+assert.equal(persistedFallbackDb.occurrences.length, 1);
+assert.equal(persistedFallbackDb.occurrences[0].candidate_id, 'candidate-persisted-old');
+assert.equal(persistedFallbackDb.occurrences[0].match_reason, 'content_hash');
+assert.equal(persistedFallbackDb.batchSizes[0], 2);
+
+const rejectedReopenDb = new CandidateInsertDb();
+rejectedReopenDb.candidates.set('candidate-rejected', {
+  canonical_url: 'https://source-a.example/reported-update',
+  category: 'tech',
+  cluster_key: 'signal-cluster-reported-update',
+  content_hash: 'rejected-original-hash',
+  created_at: '2026-07-18T08:00:00.000Z',
+  decision_note: 'Not useful yesterday',
+  id: 'candidate-rejected',
+  published_at: '2026-07-18T07:00:00.000Z',
+  reviewed_at: '2026-07-18T08:30:00.000Z',
+  reviewed_by: 'editor@example.com',
+  source_id: 'source-a',
+  status: 'rejected',
+  title: 'Cloudflare launches a developer platform update',
+  title_fingerprint: 'cloudflare launches a developer platform update'
+});
+const rejectedReopenResult = await workerHooks.insertSignalCandidates(
+  rejectedReopenDb,
+  { category: 'tech', id: 'source-b', language: 'en', trust_tier: 'primary' },
+  [{
+    author: 'Station Source B',
+    canonicalUrl: 'https://source-b.example/reported-update',
+    category: 'tech',
+    contentHash: 'rejected-new-hash',
+    externalId: 'rejected-reopen',
+    id: 'candidate-rejected-reopen-attempt',
+    metadataJson: '{}',
+    publishedAt: '2026-07-18T11:00:00.000Z',
+    rawPayloadJson: '{}',
+    runId: 'run-rejected-reopen',
+    summary: 'A new source independently reports the previously rejected event.',
+    title: 'Cloudflare launches a developer platform update',
+    titleFingerprint: 'cloudflare launches a developer platform update'
+  }]
+);
+assert.deepEqual(rejectedReopenResult, { acceptedCount: 0, duplicateCount: 1 });
+assert.equal(rejectedReopenDb.candidates.get('candidate-rejected').status, 'new');
+assert.equal(rejectedReopenDb.candidates.get('candidate-rejected').reviewed_by, 'signal-automation');
+assert.equal(rejectedReopenDb.reviews.length, 1);
+assert.equal(rejectedReopenDb.reviews[0].action, 'restore');
+rejectedReopenDb.candidates.get('candidate-rejected').status = 'rejected';
+await workerHooks.insertSignalCandidates(
+  rejectedReopenDb,
+  { category: 'tech', id: 'source-b', language: 'en', trust_tier: 'primary' },
+  [{
+    author: 'Station Source B',
+    canonicalUrl: 'https://source-b.example/reported-update',
+    category: 'tech',
+    contentHash: 'rejected-new-hash',
+    externalId: 'rejected-reopen-replay',
+    id: 'candidate-rejected-replay-attempt',
+    metadataJson: '{}',
+    publishedAt: '2026-07-18T11:00:00.000Z',
+    rawPayloadJson: '{}',
+    runId: 'run-rejected-replay',
+    summary: 'The collection task replayed an occurrence that was already stored.',
+    title: 'Cloudflare launches a developer platform update',
+    titleFingerprint: 'cloudflare launches a developer platform update'
+  }]
+);
+assert.equal(rejectedReopenDb.candidates.get('candidate-rejected').status, 'rejected');
+assert.equal(rejectedReopenDb.reviews.length, 1);
 
 const clustered = await enrichSignalCandidateRows(
   [
