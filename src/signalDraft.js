@@ -2,7 +2,15 @@ const signalDraftCategories = new Set(['ai', 'tech', 'economy', 'market', 'resea
 
 export const signalDraftMinCandidates = 3;
 export const signalDraftMaxCandidates = 10;
-export const signalDraftPromptVersion = 1;
+export const signalDraftPromptVersion = 2;
+
+export const getSignalDraftMaxTokens = (candidateCount) => {
+  const normalizedCount = Math.min(
+    signalDraftMaxCandidates,
+    Math.max(signalDraftMinCandidates, Number.parseInt(candidateCount, 10) || signalDraftMinCandidates)
+  );
+  return Math.min(6400, Math.max(3200, 1600 + normalizedCount * 480));
+};
 
 const cleanText = (value, maxLength = 1000) =>
   String(value ?? '')
@@ -118,6 +126,7 @@ const buildDraftMessages = (candidates, options) => {
         'Do not invent facts, quotes, causes, forecasts, or source URLs.',
         'Return exactly one item for every candidateId and use each candidateId exactly once.',
         'summary states the sourced fact; signal explains why it may matter; noise states uncertainty or what not to over-interpret.',
+        'Keep each summary to 2-4 short sentences and each signal and noise field to 1-2 short sentences.',
         'Return only the requested JSON object.'
       ].join(' ')
     },
@@ -194,7 +203,7 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
   }
   const request = {
     messages: buildDraftMessages(normalizedCandidates, { briefDate, category }),
-    max_tokens: 3200,
+    max_tokens: getSignalDraftMaxTokens(normalizedCandidates.length),
     response_format: {
       type: 'json_schema',
       json_schema: buildDraftSchema(normalizedCandidates.length)

@@ -1434,7 +1434,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || payload.ok === false) {
-        throw new Error(payload.message || `Request failed: ${response.status}`);
+        const error = new Error(payload.message || `Request failed: ${response.status}`);
+        error.code = payload.code || '';
+        error.payload = payload;
+        error.status = response.status;
+        throw error;
       }
       return payload;
     };
@@ -2703,14 +2707,34 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signalDraftGenerate.textContent = '正在生成';
       setSignalCandidateStatus('正在生成可编辑草稿，完成后会载入下方人工发布表单。', 'pending');
       try {
-        const payload = await apiJson('/admin/api/signal/drafts/generate', {
-          method: 'POST',
-          body: JSON.stringify({
-            briefDate: elements.signalDraftDate.value || todayDateInput(),
-            candidateIds,
-            category: elements.signalDraftCategory.value
-          })
-        });
+        const draftRequest = {
+          briefDate: elements.signalDraftDate.value || todayDateInput(),
+          candidateIds,
+          category: elements.signalDraftCategory.value
+        };
+        let payload;
+        try {
+          payload = await apiJson('/admin/api/signal/drafts/generate', {
+            method: 'POST',
+            body: JSON.stringify(draftRequest)
+          });
+        } catch (error) {
+          if (error.code !== 'SIGNAL_DRAFT_OVERWRITE_CONFIRMATION_REQUIRED') throw error;
+          const confirmed = window.confirm(
+            '这个日期已有自动化草稿。重新生成会覆盖当前编辑版本，但修订记录仍可找回。继续吗？'
+          );
+          if (!confirmed) {
+            setSignalCandidateStatus('已取消重新生成，当前草稿保持不变。');
+            return;
+          }
+          payload = await apiJson('/admin/api/signal/drafts/generate', {
+            method: 'POST',
+            body: JSON.stringify({
+              ...draftRequest,
+              confirmOverwrite: true
+            })
+          });
+        }
         fillSignalFormFromEntry(payload.entry, payload.body, payload.automation);
         elements.signal.status.value = 'draft';
         setSignalCandidateStatus('草稿已生成并保存，候选仍保持“已入选”。请在下方编辑后手动发布。', 'success');
@@ -2738,13 +2762,36 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       submitButton.disabled = true;
       setSignalStatus('正在导入 Signal 简报。');
       try {
-        const result = await apiJson('/admin/api/signal/import', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
+        let result;
+        try {
+          result = await apiJson('/admin/api/signal/import', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+        } catch (error) {
+          if (error.code !== 'SIGNAL_DRAFT_CANDIDATE_EXCLUSION_CONFIRMATION_REQUIRED') throw error;
+          const excludedCount = Array.isArray(error.payload?.excludedCandidateIds)
+            ? error.payload.excludedCandidateIds.length
+            : 0;
+          const confirmed = window.confirm(
+            `有 ${excludedCount} 条关联候选已被淘汰或移出入选队列。继续发布会放弃这些候选的自动化关联，继续吗？`
+          );
+          if (!confirmed) {
+            setSignalStatus('已取消发布，草稿和候选状态都没有变化。');
+            return;
+          }
+          result = await apiJson('/admin/api/signal/import', {
+            method: 'POST',
+            body: JSON.stringify({
+              ...payload,
+              allowCandidateExclusions: true
+            })
+          });
+        }
         const publicPath = result.publicPath || `/signal/${payload.slug}/`;
         elements.signalOpenPage.href = payload.status === 'published' ? publicPath : '/signal/';
         const usedCandidateIds = Array.isArray(result.usedCandidateIds) ? result.usedCandidateIds : [];
+        const excludedCandidateIds = Array.isArray(result.excludedCandidateIds) ? result.excludedCandidateIds : [];
         const candidateUsageConflictIds = Array.isArray(result.candidateUsageConflictIds)
           ? result.candidateUsageConflictIds
           : [];
@@ -2753,6 +2800,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           setSignalStatus(
             `简报已发布，但 ${candidateUsageConflictIds.length} 条候选的状态同时被其他操作修改，请刷新候选队列确认。`,
             'error'
+          );
+        } else if (payload.status === 'published' && excludedCandidateIds.length) {
+          setSignalStatus(
+            `发布成功：${publicPath}。已从自动化关联中移除 ${excludedCandidateIds.length} 条不再入选的候选。`,
+            'success'
           );
         } else if (payload.status === 'published') {
           setSignalStatus(`发布成功：${publicPath}，分享卡片 ${result.shareCardPath || `${publicPath}card.svg`}`, 'success');

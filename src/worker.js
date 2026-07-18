@@ -11352,8 +11352,13 @@ const signalDraftAutomationMetadata = (value) => {
     max: signalDraftMaxCandidates
   });
   if (!candidateIds.length) return null;
+  const excludedCandidateIds = normalizeSignalDraftCandidateIds(metadata.excludedCandidateIds, {
+    min: 0,
+    max: signalDraftMaxCandidates
+  }).filter((candidateId) => !candidateIds.includes(candidateId));
   return {
     candidateIds,
+    excludedCandidateIds,
     generatedAt: cleanText(metadata.generatedAt, 80),
     model: cleanText(metadata.model, 160),
     promptVersion: normalizePositiveInteger(metadata.promptVersion, 0),
@@ -11459,6 +11464,16 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       { status: 409 }
     );
   }
+  if (existing && payload.confirmOverwrite !== true) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'SIGNAL_DRAFT_OVERWRITE_CONFIRMATION_REQUIRED',
+        message: '这个日期已有自动化草稿。重新生成会覆盖当前编辑版本，但修订记录仍会保留。'
+      },
+      { status: 409 }
+    );
+  }
 
   try {
     const model = getSignalBriefDraftModel(env);
@@ -11560,6 +11575,14 @@ const handleAdminImportSignalBrief = async (request, env) => {
     );
   }
 
+  const actorEmail = await getAdminActorEmail(request, env);
+  if (!actorEmail) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_IMPORT_ADMIN_REQUIRED', message: '管理员身份无效或已过期。' },
+      { status: 401 }
+    );
+  }
+
   let payload;
   try {
     payload = await request.json();
@@ -11584,10 +11607,10 @@ const handleAdminImportSignalBrief = async (request, env) => {
   const requestId =
     cleanText(payload.requestId, 240) ||
     `signal-${slug}-${(crypto.randomUUID?.() || randomToken(12)).replace(/-/g, '').slice(0, 8)}`;
-  const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
-  let automation = null;
+  const requestedStatus = normalizeContentStatus(payload.status || 'published');
+  let submittedAutomation = null;
   try {
-    automation = signalDraftAutomationMetadata(payload.automation);
+    submittedAutomation = signalDraftAutomationMetadata(payload.automation);
   } catch (error) {
     return privateJson({ ok: false, code: error.code, message: error.message }, { status: error.status || 400 });
   }
@@ -11599,7 +11622,7 @@ const handleAdminImportSignalBrief = async (request, env) => {
   const excerpt = cleanText(payload.excerpt || firstPlainSummary([markdown], 260), 1000);
   const existing = await db
     .prepare(
-      `SELECT id
+      `SELECT id, metadata_json, source_kind, status
        FROM content_entries
        WHERE entry_type = 'signal_brief'
          AND locale = ?
@@ -11610,6 +11633,119 @@ const handleAdminImportSignalBrief = async (request, env) => {
     .bind(locale, slug)
     .first();
 
+  // Automation provenance is server-owned. The browser may echo it back, but cannot replace candidate IDs.
+  const storedMetadata = parseStoredJson(existing?.metadata_json, {});
+  let storedAutomation = null;
+  try {
+    storedAutomation =
+      existing?.source_kind === 'signal_automation'
+        ? signalDraftAutomationMetadata(storedMetadata.automation)
+        : null;
+  } catch {
+    return privateJson(
+      {
+        ok: false,
+        code: 'SIGNAL_DRAFT_AUTOMATION_METADATA_INVALID',
+        message: '服务器保存的自动化关联无效，请重新生成草稿。'
+      },
+      { status: 409 }
+    );
+  }
+  if (existing?.source_kind === 'signal_automation' && !storedAutomation) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'SIGNAL_DRAFT_AUTOMATION_METADATA_INVALID',
+        message: '服务器保存的自动化关联为空，请重新生成草稿。'
+      },
+      { status: 409 }
+    );
+  }
+  if (submittedAutomation && !storedAutomation) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'SIGNAL_DRAFT_AUTOMATION_METADATA_UNTRUSTED',
+        message: '自动化候选关联只能来自服务器已保存的草稿。'
+      },
+      { status: 409 }
+    );
+  }
+  if (submittedAutomation && storedAutomation) {
+    const submittedIds = submittedAutomation.candidateIds.join('\n');
+    const storedIds = storedAutomation.candidateIds.join('\n');
+    if (submittedIds !== storedIds) {
+      return privateJson(
+        {
+          ok: false,
+          code: 'SIGNAL_DRAFT_AUTOMATION_METADATA_STALE',
+          message: '草稿的候选关联已变化，请重新载入后再保存。'
+        },
+        { status: 409 }
+      );
+    }
+  }
+  let automation = storedAutomation
+    ? { ...storedAutomation, sourceEntryId: normalizePositiveInteger(existing.id, 0) }
+    : null;
+
+  let usageCandidates = [];
+  let excludedCandidateIds = [];
+  if (requestedStatus === 'published' && automation?.candidateIds.length) {
+    if (!(await ensureSignalAutomationTablesReady(db)) || !(await ensureSignalCandidateTriageReady(db))) {
+      return signalCandidateTriageSetupResponse();
+    }
+    const placeholders = automation.candidateIds.map(() => '?').join(', ');
+    const response = await db
+      .prepare(`SELECT id, status FROM signal_candidates WHERE id IN (${placeholders})`)
+      .bind(...automation.candidateIds)
+      .all();
+    const candidateMap = new Map((response.results || []).map((candidate) => [candidate.id, candidate]));
+    if (candidateMap.size !== automation.candidateIds.length) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_DRAFT_CANDIDATE_NOT_FOUND', message: '草稿关联的候选资讯已经不存在。' },
+        { status: 409 }
+      );
+    }
+    usageCandidates = automation.candidateIds.map((candidateId) => candidateMap.get(candidateId));
+    excludedCandidateIds = usageCandidates
+      .filter((candidate) => candidate.status !== 'shortlisted' && candidate.status !== 'used')
+      .map((candidate) => candidate.id);
+    if (excludedCandidateIds.length && payload.allowCandidateExclusions !== true) {
+      return privateJson(
+        {
+          ok: false,
+          code: 'SIGNAL_DRAFT_CANDIDATE_EXCLUSION_CONFIRMATION_REQUIRED',
+          excludedCandidateIds,
+          message: `有 ${excludedCandidateIds.length} 条关联候选已不再是“已入选”状态。确认后可从本次发布关联中移除。`
+        },
+        { status: 409 }
+      );
+    }
+    if (excludedCandidateIds.length) {
+      const excludedSet = new Set(excludedCandidateIds);
+      usageCandidates = usageCandidates.filter((candidate) => !excludedSet.has(candidate.id));
+      if (!usageCandidates.length) {
+        return privateJson(
+          {
+            ok: false,
+            code: 'SIGNAL_DRAFT_NO_PUBLISHABLE_CANDIDATES',
+            excludedCandidateIds,
+            message: '所有关联候选都已被移出入选队列，请重新生成草稿。'
+          },
+          { status: 409 }
+        );
+      }
+      automation = {
+        ...automation,
+        candidateIds: usageCandidates.map((candidate) => candidate.id),
+        excludedCandidateIds: [
+          ...new Set([...(automation.excludedCandidateIds || []), ...excludedCandidateIds])
+        ]
+      };
+    }
+  }
+
   const backupPayload = {
     importedAt: new Date().toISOString(),
     importedBy: actorEmail,
@@ -11617,6 +11753,7 @@ const handleAdminImportSignalBrief = async (request, env) => {
     signalBrief: {
       briefDate,
       category,
+      excludedCandidateIds,
       locale,
       slug,
       title
@@ -11659,7 +11796,7 @@ const handleAdminImportSignalBrief = async (request, env) => {
     slug,
     sourceKind: automation ? 'signal_automation' : 'signal_brief',
     sourceRef: requestId,
-    status: payload.status || 'published',
+    status: requestedStatus,
     subtitle: signalCategoryLabel(category, locale),
     tags: payload.tags || ['Signal strip', signalCategoryLabel(category, locale)],
     title,
@@ -11667,39 +11804,6 @@ const handleAdminImportSignalBrief = async (request, env) => {
     wordCount,
     readingMinutes: Math.max(1, Math.ceil(wordCount / 450))
   });
-
-  let usageCandidates = [];
-  if (entry.status === 'published' && automation?.candidateIds.length) {
-    if (!(await ensureSignalAutomationTablesReady(db)) || !(await ensureSignalCandidateTriageReady(db))) {
-      return signalCandidateTriageSetupResponse();
-    }
-    const placeholders = automation.candidateIds.map(() => '?').join(', ');
-    const response = await db
-      .prepare(`SELECT id, status FROM signal_candidates WHERE id IN (${placeholders})`)
-      .bind(...automation.candidateIds)
-      .all();
-    usageCandidates = response.results || [];
-    if (usageCandidates.length !== automation.candidateIds.length) {
-      return privateJson(
-        { ok: false, code: 'SIGNAL_DRAFT_CANDIDATE_NOT_FOUND', message: '草稿关联的候选资讯已经不存在。' },
-        { status: 409 }
-      );
-    }
-    const invalidCandidates = usageCandidates.filter(
-      (candidate) => candidate.status !== 'shortlisted' && candidate.status !== 'used'
-    );
-    if (invalidCandidates.length) {
-      return privateJson(
-        {
-          ok: false,
-          code: 'SIGNAL_DRAFT_CANDIDATE_STATUS_CONFLICT',
-          invalidCandidateIds: invalidCandidates.map((candidate) => candidate.id),
-          message: '草稿关联候选的审核状态已经变化，请返回候选队列确认。'
-        },
-        { status: 409 }
-      );
-    }
-  }
 
   try {
     const { saved, revisionNumber } = await persistContentEntry(db, env, entry, {
@@ -11709,6 +11813,7 @@ const handleAdminImportSignalBrief = async (request, env) => {
         backupKey,
         briefDate,
         category,
+        excludedCandidateIds,
         requestId,
         sources: sources.length,
         summaryBullets: summaryBullets.length
@@ -11778,6 +11883,7 @@ const handleAdminImportSignalBrief = async (request, env) => {
       shareCardPath: `${publicPath}card.svg`,
       stage: automation ? 'signal-automation-4' : 'signal-strip-1',
       candidateUsageConflictIds,
+      excludedCandidateIds,
       usedCandidateIds
     });
   } catch (error) {
@@ -17392,6 +17498,7 @@ export const __readerTotpTestHooks = {
   handleAdminAggregateNovelAnalytics,
   handleAdminGenerateNovelAiInsights,
   handleAdminGenerateSignalBriefDraft,
+  handleAdminImportSignalBrief,
   handleAdminListSignalCandidates,
   handleAdminReviewSignalCandidates,
   handleAdminListSignalCollectionRuns,
