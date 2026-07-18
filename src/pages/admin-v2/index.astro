@@ -688,8 +688,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <details class="admin-v2-disclosure" id="signal-automation-panel" open>
             <summary class="admin-disclosure-summary">
               <span>
-                <small>Automation phase 4</small>
-                <strong>免费来源采集、候选审核与草稿</strong>
+                <small>Automation phase 5</small>
+                <strong>采集、今日候选与简报审核</strong>
               </span>
               <span id="signal-automation-summary">正在读取来源白名单。</span>
             </summary>
@@ -809,7 +809,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <div class="admin-v2-section-heading admin-v2-section-heading--compact">
                     <div>
                       <p class="station-kicker">Candidate queue</p>
-                      <h3 id="signal-candidates-title">候选资讯</h3>
+                      <h3 id="signal-candidates-title">今日候选</h3>
                     </div>
                     <button
                       class="button button-secondary"
@@ -854,6 +854,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                       </select>
                     </label>
                     <label>
+                      时间范围
+                      <select id="signal-candidate-window">
+                        <option value="24">近 24 小时</option>
+                        <option value="168">近 7 天</option>
+                        <option value="0">全部</option>
+                      </select>
+                    </label>
+                    <label>
                       来源
                       <select id="signal-candidate-source">
                         <option value="">全部来源</option>
@@ -890,13 +898,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <div class="admin-v2-table-list" id="signal-candidates-list"></div>
                 </section>
               </div>
+
+              <section class="admin-signal-drafts-pane" aria-labelledby="signal-drafts-title">
+                <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+                  <div>
+                    <p class="station-kicker">Editorial review</p>
+                    <h3 id="signal-drafts-title">简报草稿</h3>
+                  </div>
+                  <button class="button button-secondary" id="signal-drafts-refresh" type="button">刷新草稿</button>
+                </div>
+                <div class="admin-signal-candidate-summary" id="signal-drafts-summary">正在读取自动化草稿。</div>
+                <p class="admin-signal-drafts-note">“批准发布”会发布最近一次已保存的版本；编辑后请先点击“保存简报”。</p>
+                <div class="admin-inline-status" id="signal-drafts-status" role="status" aria-live="polite" hidden></div>
+                <div class="admin-v2-table-list" id="signal-drafts-list"></div>
+              </section>
             </div>
           </details>
 
           <div class="admin-v2-section-heading admin-v2-section-heading--compact admin-signal-manual-heading">
             <div>
-              <p class="station-kicker">Manual publishing</p>
-              <h3>人工简报导入</h3>
+              <p class="station-kicker">Brief editor</p>
+              <h3>简报编辑</h3>
             </div>
           </div>
           <form class="admin-v2-form" id="signal-form">
@@ -954,7 +976,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <textarea id="signal-markdown" rows="16" required placeholder="把每日简报文案粘贴到这里。支持标题、段落和项目符号。"></textarea>
             </label>
             <div class="button-row">
-              <button class="button button-primary" type="submit">导入并保存简报</button>
+              <button class="button button-primary" type="submit">保存简报</button>
               <button class="button button-secondary" id="signal-reset" type="button">清空简报表单</button>
               <a class="button button-secondary" id="signal-open-page" href="/signal/" target="_blank" rel="noreferrer">打开 Signal 页面</a>
             </div>
@@ -1140,6 +1162,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalCandidatesStatusMessage: $('#signal-candidates-status-message'),
       signalCandidatesRescore: $('#signal-candidates-rescore'),
       signalCandidateFilters: $('#signal-candidate-filters'),
+      signalDraftsList: $('#signal-drafts-list'),
+      signalDraftsSummary: $('#signal-drafts-summary'),
+      signalDraftsStatus: $('#signal-drafts-status'),
       signalDraftCategory: $('#signal-draft-category'),
       signalDraftDate: $('#signal-draft-date'),
       signalDraftGenerate: $('#signal-draft-generate'),
@@ -1284,6 +1309,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       },
       signalCandidate: {
         status: $('#signal-candidate-status'),
+        window: $('#signal-candidate-window'),
         sourceId: $('#signal-candidate-source'),
         category: $('#signal-candidate-category'),
         minScore: $('#signal-candidate-min-score'),
@@ -1307,6 +1333,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalSources: [],
       signalRuns: [],
       signalCandidates: [],
+      signalDrafts: [],
+      signalDraftSummary: null,
       signalCollectionReady: false,
       signalTriageReady: false,
       signalDedupReady: false,
@@ -1423,6 +1451,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signalCandidatesStatusMessage.textContent = message;
       elements.signalCandidatesStatusMessage.dataset.tone = tone;
       elements.signalCandidatesStatusMessage.hidden = !message;
+    };
+
+    const setSignalDraftStatus = (message, tone = 'neutral') => {
+      elements.signalDraftsStatus.textContent = message;
+      elements.signalDraftsStatus.dataset.tone = tone;
+      elements.signalDraftsStatus.hidden = !message;
     };
 
     const apiJson = async (path, options = {}) => {
@@ -2408,6 +2442,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const signalCandidateQueryString = () => {
       const params = new URLSearchParams({ limit: '50' });
       if (elements.signalCandidate.status.value) params.set('status', elements.signalCandidate.status.value);
+      if (elements.signalCandidate.window.value !== '0') params.set('sinceHours', elements.signalCandidate.window.value);
       if (elements.signalCandidate.sourceId.value) params.set('sourceId', elements.signalCandidate.sourceId.value);
       if (elements.signalCandidate.category.value) params.set('category', elements.signalCandidate.category.value);
       if (elements.signalCandidate.minScore.value !== '0') params.set('minScore', elements.signalCandidate.minScore.value);
@@ -2478,10 +2513,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signalAutomationSummary.textContent = '正在读取来源白名单。';
       delete elements.signalAutomationSummary.dataset.state;
       try {
-        const [sourcesPayload, runsPayload] = await Promise.all([
+        const [sourcesPayload, runsPayload, draftsPayload] = await Promise.all([
           apiJson('/admin/api/signal/sources'),
-          apiJson('/admin/api/signal/runs?limit=20')
+          apiJson('/admin/api/signal/runs?limit=20'),
+          apiJson('/admin/api/signal/drafts?status=draft&limit=30')
         ]);
+        state.signalDrafts = draftsPayload.drafts || [];
+        state.signalDraftSummary = draftsPayload.summary || null;
+        renderSignalDrafts();
         const setupRequired = sourcesPayload.setupRequired || runsPayload.setupRequired;
         if (setupRequired) {
           state.signalSources = [];
@@ -2519,6 +2558,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         state.signalSources = [];
         state.signalRuns = [];
         state.signalCandidates = [];
+        state.signalDrafts = [];
+        state.signalDraftSummary = null;
         state.signalCollectionReady = false;
         state.signalTriageReady = false;
         state.signalDedupReady = false;
@@ -2530,6 +2571,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         renderEmpty(elements.signalSourcesList, '来源白名单读取失败，请稍后重试。');
         renderEmpty(elements.signalRunsList, '采集运行记录暂时不可用。');
         renderEmpty(elements.signalCandidatesList, '候选资讯暂时不可用。');
+        renderEmpty(elements.signalDraftsList, '简报草稿暂时不可用。');
+        elements.signalDraftsSummary.textContent = '草稿读取失败。';
         renderSignalCandidateSummary();
       }
     };
@@ -2705,12 +2748,128 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const loadSignalBriefs = async () => {
       const payload = await apiJson('/admin/api/content/entries?type=signal_brief&locale=zh-Hant');
-      state.signalBriefs = payload.entries || [];
+      state.signalBriefs = (payload.entries || []).filter((entry) => entry.status !== 'archived');
       if (!state.signalBriefs.find((entry) => entry.id === state.selectedSignalId)) {
         state.selectedSignalId = state.signalBriefs[0]?.id || 0;
       }
       renderSignalBriefList();
       setStatus(`已载入 ${state.signalBriefs.length} 篇 Signal 简报。`, 'success');
+    };
+
+    const renderSignalDraftSummary = () => {
+      const summary = state.signalDraftSummary || {};
+      elements.signalDraftsSummary.textContent = `${summary.draft || 0} 份待审核 · ${summary.published || 0} 份已发布 · ${summary.archived || 0} 份已归档`;
+    };
+
+    const renderSignalDrafts = () => {
+      renderSignalDraftSummary();
+      if (!state.signalDrafts.length) {
+        renderEmpty(elements.signalDraftsList, '目前没有待审核草稿。入选 3–10 条候选后可生成一份新草稿。');
+        return;
+      }
+      elements.signalDraftsList.innerHTML = '';
+      state.signalDrafts.forEach((draft) => {
+        const candidateCount = draft.automation?.candidateIds?.length || 0;
+        const metadata = draft.metadata || {};
+        const row = document.createElement('article');
+        row.className = 'admin-v2-row admin-signal-draft-row';
+        row.dataset.draftId = String(draft.id);
+        row.innerHTML = `
+          <div class="admin-signal-draft-row__heading">
+            <strong>${escapeHtml(draft.title)}</strong>
+            <span class="admin-signal-source-state" data-state="${draft.automationInvalid ? 'error' : 'healthy'}">
+              ${draft.automationInvalid ? '关联异常' : '待审核'}
+            </span>
+          </div>
+          <div class="admin-signal-draft-row__meta">
+            <span>${escapeHtml(metadata.briefDate || String(draft.updatedAt || '').slice(0, 10))}</span>
+            <span>${escapeHtml(signalCategoryLabel(metadata.category || 'general'))}</span>
+            <span>${escapeHtml(String(candidateCount))} 条候选</span>
+            <span>${escapeHtml(draft.automation?.model || 'AI draft')}</span>
+          </div>
+          ${draft.description ? `<p>${escapeHtml(draft.description)}</p>` : ''}
+          <small>更新于 ${escapeHtml(formatDate(draft.updatedAt))}</small>
+          <div class="button-row admin-signal-draft-row__actions"></div>
+        `;
+        const actions = row.querySelector('.admin-signal-draft-row__actions');
+        const editButton = document.createElement('button');
+        editButton.className = 'button button-secondary';
+        editButton.type = 'button';
+        editButton.textContent = '编辑';
+        editButton.addEventListener('click', async () => {
+          await loadSignalBriefForEdit(draft.id);
+          elements.signalForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          window.setTimeout(() => elements.signal.title.focus(), 350);
+        });
+        const regenerateButton = document.createElement('button');
+        regenerateButton.className = 'button button-secondary';
+        regenerateButton.type = 'button';
+        regenerateButton.textContent = '重新生成';
+        regenerateButton.disabled = draft.automationInvalid;
+        regenerateButton.addEventListener('click', () => regenerateSignalBriefDraft(draft));
+        const approveButton = document.createElement('button');
+        approveButton.className = 'button button-primary';
+        approveButton.type = 'button';
+        approveButton.textContent = '批准发布';
+        approveButton.title = '发布最近一次已保存的版本';
+        approveButton.disabled = draft.automationInvalid;
+        approveButton.addEventListener('click', () => approveSignalBriefDraft(draft));
+        const archiveButton = document.createElement('button');
+        archiveButton.className = 'button button-danger';
+        archiveButton.type = 'button';
+        archiveButton.textContent = '删除';
+        archiveButton.addEventListener('click', () => archiveSignalBriefDraft(draft));
+        actions.append(editButton, regenerateButton, approveButton, archiveButton);
+        elements.signalDraftsList.append(row);
+      });
+    };
+
+    const loadSignalDrafts = async () => {
+      const payload = await apiJson('/admin/api/signal/drafts?status=draft&limit=30');
+      state.signalDrafts = payload.drafts || [];
+      state.signalDraftSummary = payload.summary || null;
+      renderSignalDrafts();
+      return payload;
+    };
+
+    const refreshSignalDrafts = async () => {
+      setSignalDraftStatus('正在读取简报草稿。', 'pending');
+      try {
+        await loadSignalDrafts();
+        setSignalDraftStatus('', 'neutral');
+      } catch (error) {
+        setSignalDraftStatus(error.message, 'error');
+      }
+    };
+
+    const applyGeneratedSignalDraft = async (payload) => {
+      fillSignalFormFromEntry(payload.entry, payload.body, payload.automation);
+      elements.signal.status.value = 'draft';
+      setSignalCandidateStatus('草稿已生成并保存，候选仍保持“已入选”。', 'success');
+      setSignalDraftStatus('草稿已进入审核队列。请编辑并保存后，再点击“批准发布”。', 'success');
+      setSignalStatus('AI 草稿已载入。请核对事实、来源和措辞，保存后回到草稿区批准发布。', 'success');
+      await Promise.all([loadSignalDrafts(), loadSignalBriefs(), loadEntries(), loadAuditLogs()]);
+      elements.signalForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => elements.signal.title.focus(), 350);
+    };
+
+    const requestSignalBriefDraft = async (draftRequest, options = {}) => {
+      try {
+        return await apiJson('/admin/api/signal/drafts/generate', {
+          method: 'POST',
+          body: JSON.stringify({ ...draftRequest, confirmOverwrite: options.confirmOverwrite === true })
+        });
+      } catch (error) {
+        if (error.code !== 'SIGNAL_DRAFT_OVERWRITE_CONFIRMATION_REQUIRED' || options.confirmOverwrite) throw error;
+        const confirmed = window.confirm(
+          '这个日期已有自动化草稿。重新生成会覆盖当前编辑版本，但修订记录仍可找回。继续吗？'
+        );
+        if (!confirmed) return null;
+        return apiJson('/admin/api/signal/drafts/generate', {
+          method: 'POST',
+          body: JSON.stringify({ ...draftRequest, confirmOverwrite: true })
+        });
+      }
     };
 
     const generateSignalBriefDraft = async () => {
@@ -2728,41 +2887,101 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           candidateIds,
           category: elements.signalDraftCategory.value
         };
-        let payload;
-        try {
-          payload = await apiJson('/admin/api/signal/drafts/generate', {
-            method: 'POST',
-            body: JSON.stringify(draftRequest)
-          });
-        } catch (error) {
-          if (error.code !== 'SIGNAL_DRAFT_OVERWRITE_CONFIRMATION_REQUIRED') throw error;
-          const confirmed = window.confirm(
-            '这个日期已有自动化草稿。重新生成会覆盖当前编辑版本，但修订记录仍可找回。继续吗？'
-          );
-          if (!confirmed) {
-            setSignalCandidateStatus('已取消重新生成，当前草稿保持不变。');
-            return;
-          }
-          payload = await apiJson('/admin/api/signal/drafts/generate', {
-            method: 'POST',
-            body: JSON.stringify({
-              ...draftRequest,
-              confirmOverwrite: true
-            })
-          });
+        const payload = await requestSignalBriefDraft(draftRequest);
+        if (!payload) {
+          setSignalCandidateStatus('已取消重新生成，当前草稿保持不变。');
+          return;
         }
-        fillSignalFormFromEntry(payload.entry, payload.body, payload.automation);
-        elements.signal.status.value = 'draft';
-        setSignalCandidateStatus('草稿已生成并保存，候选仍保持“已入选”。请在下方编辑后手动发布。', 'success');
-        setSignalStatus('AI 草稿已载入。请核对事实、来源和措辞，再选择“发布”并保存。', 'success');
-        await Promise.all([loadSignalBriefs(), loadEntries(), loadAuditLogs()]);
-        elements.signalForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        window.setTimeout(() => elements.signal.title.focus(), 350);
+        await applyGeneratedSignalDraft(payload);
       } catch (error) {
         setSignalCandidateStatus(error.message, 'error');
       } finally {
         elements.signalDraftGenerate.textContent = '生成草稿';
         updateSignalDraftSelection();
+      }
+    };
+
+    const regenerateSignalBriefDraft = async (draft) => {
+      const candidateIds = draft.automation?.candidateIds || [];
+      if (candidateIds.length < 3 || candidateIds.length > 10) {
+        setSignalDraftStatus('草稿关联的候选数量无效，请删除后重新选择候选。', 'error');
+        return;
+      }
+      const confirmed = window.confirm('重新生成会覆盖当前编辑内容，但修订记录仍可找回。继续吗？');
+      if (!confirmed) return;
+      setSignalDraftStatus('正在重新生成草稿。', 'pending');
+      try {
+        const payload = await requestSignalBriefDraft(
+          {
+            briefDate: draft.metadata?.briefDate || todayDateInput(),
+            candidateIds,
+            category: draft.metadata?.category || 'auto'
+          },
+          { confirmOverwrite: true }
+        );
+        await applyGeneratedSignalDraft(payload);
+      } catch (error) {
+        setSignalDraftStatus(error.message, 'error');
+      }
+    };
+
+    const archiveSignalBriefDraft = async (draft) => {
+      if (!window.confirm(`删除草稿“${draft.title}”？系统会归档并保留修订记录。`)) return;
+      setSignalDraftStatus('正在删除草稿。', 'pending');
+      try {
+        await apiJson('/admin/api/signal/drafts', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'archive', entryId: draft.id })
+        });
+        if (state.selectedSignalId === draft.id) resetSignalForm();
+        setSignalDraftStatus('草稿已归档，候选审核状态没有变化。', 'success');
+        await Promise.all([loadSignalDrafts(), loadSignalBriefs(), loadEntries(), loadAuditLogs()]);
+      } catch (error) {
+        setSignalDraftStatus(error.message, 'error');
+      }
+    };
+
+    const approveSignalBriefDraft = async (draft) => {
+      setSignalDraftStatus('正在批准并发布简报。', 'pending');
+      const submit = async (allowCandidateExclusions = false) => apiJson('/admin/api/signal/drafts', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'approve', entryId: draft.id, allowCandidateExclusions })
+      });
+      try {
+        let result;
+        try {
+          result = await submit();
+        } catch (error) {
+          if (error.code !== 'SIGNAL_DRAFT_CANDIDATE_EXCLUSION_CONFIRMATION_REQUIRED') throw error;
+          const excludedCount = error.payload?.excludedCandidateIds?.length || 0;
+          const confirmed = window.confirm(
+            `有 ${excludedCount} 条候选已不再入选。继续会把它们从本次发布关联中移除，是否发布？`
+          );
+          if (!confirmed) {
+            setSignalDraftStatus('已取消发布，草稿和候选状态都没有变化。');
+            return;
+          }
+          result = await submit(true);
+        }
+        (result.usedCandidateIds || []).forEach((candidateId) => state.signalSelectedCandidateIds.delete(candidateId));
+        elements.signalOpenPage.href = result.publicPath || `/signal/${encodeURIComponent(draft.slug)}/`;
+        if (result.candidateUsageConflictIds?.length) {
+          setSignalDraftStatus(
+            `简报已发布，但 ${result.candidateUsageConflictIds.length} 条候选状态发生并发变化，请刷新核对。`,
+            'error'
+          );
+        } else {
+          setSignalDraftStatus(`简报已批准发布：${result.publicPath || `/signal/${draft.slug}/`}`, 'success');
+        }
+        await Promise.all([
+          loadSignalDrafts(),
+          loadSignalBriefs(),
+          loadSignalCandidates(),
+          loadEntries(),
+          loadAuditLogs()
+        ]);
+      } catch (error) {
+        setSignalDraftStatus(error.message, 'error');
       }
     };
 
@@ -2827,7 +3046,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         } else {
           setSignalStatus('草稿已保存到内容平台，尚未公开。', 'success');
         }
-        await Promise.all([loadSignalBriefs(), loadEntries(), loadAuditLogs(), loadSignalCandidates()]);
+        await Promise.all([loadSignalDrafts(), loadSignalBriefs(), loadEntries(), loadAuditLogs(), loadSignalCandidates()]);
       } catch (error) {
         setSignalStatus(error.message, 'error');
       } finally {
@@ -4152,12 +4371,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     elements.accessForm.addEventListener('submit', grantEntitlement);
     $('#content-refresh').addEventListener('click', () => loadEntries({ autoSelect: true }));
     $('#imports-refresh').addEventListener('click', () => loadImportReviews());
-    $('#signal-refresh').addEventListener('click', loadSignalBriefs);
+    $('#signal-refresh').addEventListener('click', () => Promise.all([loadSignalBriefs(), refreshSignalDrafts()]));
     $('#signal-reset').addEventListener('click', resetSignalForm);
     $('#signal-automation-refresh').addEventListener('click', loadSignalAutomation);
     $('#signal-collection-start').addEventListener('click', startSignalCollection);
     elements.signalCandidatesRescore.addEventListener('click', rescoreSignalCandidateQueue);
     elements.signalDraftGenerate.addEventListener('click', generateSignalBriefDraft);
+    $('#signal-drafts-refresh').addEventListener('click', refreshSignalDrafts);
     $('#signal-source-reset').addEventListener('click', resetSignalSourceForm);
     $('#signal-source-manage').addEventListener('click', () => {
       elements.signalAutomationPanel.open = true;

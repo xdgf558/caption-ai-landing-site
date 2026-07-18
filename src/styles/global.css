@@ -7861,7 +7861,7 @@ details[open] > .admin-disclosure-summary::after {
   align-items: end;
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(4, minmax(90px, 1fr)) minmax(160px, 1.5fr) auto;
+  grid-template-columns: repeat(5, minmax(90px, 1fr)) minmax(160px, 1.5fr) auto;
 }
 
 .admin-signal-draft-toolbar {
@@ -8100,6 +8100,77 @@ details[open] > .admin-disclosure-summary::after {
   color: #6f241f;
 }
 
+.admin-signal-drafts-pane {
+  border-top: 1px solid var(--admin-line);
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+.admin-signal-drafts-note {
+  color: var(--admin-muted);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.5;
+  margin: -2px 0 0;
+}
+
+.admin-signal-draft-row {
+  gap: 8px;
+}
+
+.admin-signal-draft-row__heading,
+.admin-signal-draft-row__meta,
+.admin-signal-draft-row__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+}
+
+.admin-signal-draft-row__heading {
+  justify-content: space-between;
+}
+
+.admin-signal-draft-row__heading strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-signal-draft-row__meta {
+  color: var(--admin-muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-signal-draft-row__meta span {
+  border-right: 1px solid var(--admin-line);
+  padding-right: 10px;
+}
+
+.admin-signal-draft-row__meta span:last-child {
+  border-right: 0;
+  padding-right: 0;
+}
+
+.admin-signal-draft-row p {
+  color: var(--admin-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.admin-signal-draft-row__actions {
+  border-top: 1px solid var(--admin-line);
+  margin: 2px 0 0;
+  padding-top: 9px;
+}
+
+.admin-signal-draft-row__actions .button {
+  min-height: 34px;
+  padding: 6px 10px;
+}
+
 @media (max-width: 1040px) {
   .admin-v2-grid {
     grid-template-columns: 1fr;
@@ -8197,6 +8268,10 @@ details[open] > .admin-disclosure-summary::after {
 
   .admin-signal-draft-toolbar__intro {
     grid-column: 1 / -1;
+  }
+
+  .admin-signal-draft-row__actions .button {
+    flex: 1 1 calc(50% - 10px);
   }
 
   .admin-signal-draft-toolbar__count {
