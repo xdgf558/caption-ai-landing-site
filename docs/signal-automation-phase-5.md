@@ -9,8 +9,8 @@ Phase 5 adds the explicit editorial review and publication workflow for automate
 3. Generated entries appear in the dedicated **简报草稿** queue.
 4. **编辑** loads the stored Markdown into the existing Signal editor. Saving with draft status creates the normal content revision.
 5. **重新生成** requires confirmation and preserves previous revisions.
-6. **删除** is a soft delete: the entry becomes `archived`, while R2 bodies, revisions, audit history, and candidate review decisions remain intact.
-7. **批准发布** reads the title, Markdown, sources, and candidate provenance from server storage and reuses the existing Signal import publication path.
+6. **删除** is a soft delete: the entry becomes `archived`, while R2 bodies, revisions, audit history, and candidate review decisions remain intact. The same date can be regenerated later, reviving the archived automation entry as a draft.
+7. **批准发布** reads the title, Markdown, sources, and candidate provenance from server storage and reuses the existing Signal import publication path. The UI makes clear that approval publishes the most recently saved version.
 8. If linked candidates are no longer shortlisted, Admin requires an explicit exclusion confirmation before publication.
 
 ## API
@@ -28,7 +28,7 @@ Every route is behind the shared Cloudflare Access Admin gate and performs its o
 
 ## Data Integrity
 
-- Draft deletion uses a guarded `draft -> archived` update.
+- Draft deletion uses a guarded `draft -> archived` update. Regeneration explicitly permits only `archived + signal_automation` entries and clears their archive timestamp when restoring draft status.
 - The archive update, content revision, and audit row are written in one D1 batch and tied to a unique archive timestamp.
 - Candidate states are never changed by draft generation, editing, regeneration, or deletion.
 - Approval payloads are rebuilt from `content_entries`, R2 Markdown, and server-owned automation metadata. Browser-supplied titles, bodies, or candidate IDs are not used by the approval action.

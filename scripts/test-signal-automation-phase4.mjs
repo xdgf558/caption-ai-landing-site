@@ -327,6 +327,68 @@ assert.equal(overwriteResponse.status, 409);
 assert.equal((await overwriteResponse.json()).code, 'SIGNAL_DRAFT_OVERWRITE_CONFIRMATION_REQUIRED');
 assert.equal(overwriteAiCalled, false);
 
+let archivedReviveAiCalled = false;
+const archivedReviveDb = new DraftDb(candidates, {
+  archived_at: '2026-07-18T05:20:00.000Z',
+  id: 41,
+  source_kind: 'signal_automation',
+  status: 'archived'
+});
+const archivedReviveResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+  new Request('http://localhost/admin/api/signal/drafts/generate', {
+    body: JSON.stringify({
+      briefDate: '2026-07-18',
+      candidateIds: candidates.map((candidate) => candidate.id),
+      category: 'auto'
+    }),
+    headers: { 'content-type': 'application/json' },
+    method: 'POST'
+  }),
+  {
+    AI: {
+      async run() {
+        archivedReviveAiCalled = true;
+        return { response: aiPayloadFor() };
+      }
+    },
+    CONTENT_BUCKET: { async put() {} },
+    WAITLIST_DB: archivedReviveDb
+  }
+);
+assert.equal(archivedReviveResponse.status, 200);
+assert.equal(archivedReviveAiCalled, true);
+assert.equal((await archivedReviveResponse.json()).entry.status, 'draft');
+assert.equal(archivedReviveDb.savedEntry.archived_at, null);
+
+let publishedConflictAiCalled = false;
+const publishedConflictResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+  new Request('http://localhost/admin/api/signal/drafts/generate', {
+    body: JSON.stringify({
+      briefDate: '2026-07-18',
+      candidateIds: candidates.map((candidate) => candidate.id),
+      category: 'auto'
+    }),
+    headers: { 'content-type': 'application/json' },
+    method: 'POST'
+  }),
+  {
+    AI: {
+      async run() {
+        publishedConflictAiCalled = true;
+        return { response: aiPayloadFor() };
+      }
+    },
+    WAITLIST_DB: new DraftDb(candidates, {
+      id: 41,
+      source_kind: 'signal_automation',
+      status: 'published'
+    })
+  }
+);
+assert.equal(publishedConflictResponse.status, 409);
+assert.equal((await publishedConflictResponse.json()).code, 'SIGNAL_DRAFT_DATE_CONFLICT');
+assert.equal(publishedConflictAiCalled, false);
+
 const invalidStatusDb = new DraftDb([
   candidates[0],
   { ...candidates[1], status: 'new' },

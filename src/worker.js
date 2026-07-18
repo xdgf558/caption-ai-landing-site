@@ -9811,6 +9811,7 @@ const signalAutomationCategories = new Set(['ai', 'tech', 'economy', 'market', '
 const signalAutomationTrustTiers = new Set(['primary', 'established', 'community']);
 const signalAutomationRunStatuses = new Set(['queued', 'running', 'completed', 'partial', 'failed', 'cancelled']);
 const signalAutomationCandidateStatuses = new Set(['new', 'shortlisted', 'rejected', 'used']);
+const signalCandidateWindowHours = new Set([0, 24, 168]);
 const signalCandidateReviewActions = new Set(['shortlist', 'reject', 'restore', 'rescore']);
 const signalAutomationDefaultAdapters = Object.freeze({ api: 'json', page: 'html', rss: 'rss' });
 
@@ -10304,9 +10305,7 @@ const handleAdminListSignalCandidates = async (request, env) => {
   const requestedMinScore = Number.parseInt(url.searchParams.get('minScore') || '0', 10);
   const minScore = Number.isFinite(requestedMinScore) ? Math.min(Math.max(requestedMinScore, 0), 100) : 0;
   const requestedSinceHours = Number.parseInt(url.searchParams.get('sinceHours') || '0', 10);
-  const sinceHours = Number.isFinite(requestedSinceHours)
-    ? Math.min(Math.max(requestedSinceHours, 0), 24 * 30)
-    : 0;
+  const sinceHours = signalCandidateWindowHours.has(requestedSinceHours) ? requestedSinceHours : 24;
   const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 50), 1), 100);
   const baseClauses = [];
   const baseParams = [];
@@ -12070,7 +12069,9 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
     )
     .bind(slug)
     .first();
-  if (existing && (existing.status !== 'draft' || existing.source_kind !== 'signal_automation')) {
+  const existingAutomationDraft = existing?.source_kind === 'signal_automation' && existing?.status === 'draft';
+  const archivedAutomationDraft = existing?.source_kind === 'signal_automation' && existing?.status === 'archived';
+  if (existing && !existingAutomationDraft && !archivedAutomationDraft) {
     return privateJson(
       {
         ok: false,
@@ -12080,7 +12081,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       { status: 409 }
     );
   }
-  if (existing && payload.confirmOverwrite !== true) {
+  if (existingAutomationDraft && payload.confirmOverwrite !== true) {
     return privateJson(
       {
         ok: false,
@@ -12903,7 +12904,7 @@ const persistContentEntry = async (db, env, entry, options = {}) => {
         source_ref = excluded.source_ref,
         scheduled_at = excluded.scheduled_at,
         published_at = excluded.published_at,
-        archived_at = CASE WHEN excluded.status = 'archived' THEN CURRENT_TIMESTAMP ELSE content_entries.archived_at END,
+        archived_at = CASE WHEN excluded.status = 'archived' THEN CURRENT_TIMESTAMP ELSE NULL END,
         updated_by = excluded.updated_by,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *`

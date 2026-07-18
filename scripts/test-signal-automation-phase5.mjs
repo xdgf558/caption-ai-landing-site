@@ -254,11 +254,31 @@ assert.equal(candidateWindowResponse.status, 200);
 assert.equal((await candidateWindowResponse.json()).windowHours, 24);
 assert.ok(candidateWindowDb.boundParams.some((params) => params.includes('-24 hours')));
 
+const invalidCandidateWindowDb = new ReviewDb(null);
+const invalidCandidateWindowResponse = await hooks.handleAdminListSignalCandidates(
+  new Request('http://localhost/admin/api/signal/candidates?sinceHours=999999&limit=50'),
+  { WAITLIST_DB: invalidCandidateWindowDb }
+);
+assert.equal(invalidCandidateWindowResponse.status, 200);
+assert.equal((await invalidCandidateWindowResponse.json()).windowHours, 24);
+assert.ok(invalidCandidateWindowDb.boundParams.some((params) => params.includes('-24 hours')));
+assert.equal(invalidCandidateWindowDb.boundParams.some((params) => params.includes('-999999 hours')), false);
+
+const sevenDayCandidateWindowDb = new ReviewDb(null);
+const sevenDayCandidateWindowResponse = await hooks.handleAdminListSignalCandidates(
+  new Request('http://localhost/admin/api/signal/candidates?sinceHours=168&limit=50'),
+  { WAITLIST_DB: sevenDayCandidateWindowDb }
+);
+assert.equal(sevenDayCandidateWindowResponse.status, 200);
+assert.equal((await sevenDayCandidateWindowResponse.json()).windowHours, 168);
+assert.ok(sevenDayCandidateWindowDb.boundParams.some((params) => params.includes('-168 hours')));
+
 const adminSource = read('src/pages/admin-v2/index.astro');
 assert.match(adminSource, /<h3 id="signal-candidates-title">今日候选<\/h3>/);
 assert.match(adminSource, /id="signal-candidate-window"/);
 assert.match(adminSource, /<h3 id="signal-drafts-title">简报草稿<\/h3>/);
 assert.match(adminSource, /批准发布/);
+assert.match(adminSource, /发布最近一次已保存的版本/);
 assert.match(adminSource, /action: 'archive'/);
 assert.match(adminSource, /action: 'approve'/);
 assert.match(adminSource, /系统会归档并保留修订记录/);
@@ -269,5 +289,7 @@ assert.match(workerSource, /signal_brief_draft_archive/);
 assert.match(workerSource, /approvalEntryId/);
 assert.match(workerSource, /buildSignalDraftApprovalPayload/);
 assert.match(workerSource, /datetime\(COALESCE\(candidate\.published_at, candidate\.created_at\)\)/);
+assert.match(workerSource, /archivedAutomationDraft/);
+assert.match(workerSource, /archived_at = CASE WHEN excluded\.status = 'archived' THEN CURRENT_TIMESTAMP ELSE NULL END/);
 
 console.log('Signal automation phase 5 review, archive, approval payload, auth, and candidate-window checks passed.');

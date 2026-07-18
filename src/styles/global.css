@@ -8107,6 +8107,14 @@ details[open] > .admin-disclosure-summary::after {
   padding-top: 14px;
 }
 
+.admin-signal-drafts-note {
+  color: var(--admin-muted);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.5;
+  margin: -2px 0 0;
+}
+
 .admin-signal-draft-row {
   gap: 8px;
 }

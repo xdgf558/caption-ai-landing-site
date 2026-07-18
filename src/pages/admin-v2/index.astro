@@ -908,6 +908,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <button class="button button-secondary" id="signal-drafts-refresh" type="button">刷新草稿</button>
                 </div>
                 <div class="admin-signal-candidate-summary" id="signal-drafts-summary">正在读取自动化草稿。</div>
+                <p class="admin-signal-drafts-note">“批准发布”会发布最近一次已保存的版本；编辑后请先点击“保存简报”。</p>
                 <div class="admin-inline-status" id="signal-drafts-status" role="status" aria-live="polite" hidden></div>
                 <div class="admin-v2-table-list" id="signal-drafts-list"></div>
               </section>
@@ -2810,6 +2811,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         approveButton.className = 'button button-primary';
         approveButton.type = 'button';
         approveButton.textContent = '批准发布';
+        approveButton.title = '发布最近一次已保存的版本';
         approveButton.disabled = draft.automationInvalid;
         approveButton.addEventListener('click', () => approveSignalBriefDraft(draft));
         const archiveButton = document.createElement('button');
