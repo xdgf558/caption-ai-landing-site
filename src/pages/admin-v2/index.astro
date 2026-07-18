@@ -688,12 +688,48 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <details class="admin-v2-disclosure" id="signal-automation-panel" open>
             <summary class="admin-disclosure-summary">
               <span>
-                <small>Automation phase 5</small>
+                <small>Automation phase 6</small>
                 <strong>采集、今日候选与简报审核</strong>
               </span>
               <span id="signal-automation-summary">正在读取来源白名单。</span>
             </summary>
             <div class="admin-disclosure-body">
+              <section class="admin-signal-operations" aria-labelledby="signal-operations-title">
+                <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+                  <div>
+                    <p class="station-kicker">Operations</p>
+                    <h3 id="signal-operations-title">自动化运行状态</h3>
+                  </div>
+                  <span class="admin-signal-health" id="signal-operations-health" data-state="loading">正在检查</span>
+                </div>
+                <p class="admin-signal-operations__summary" id="signal-operations-summary" role="status" aria-live="polite">
+                  正在读取 Cron、队列与来源状态。
+                </p>
+                <dl class="admin-signal-operations__metrics">
+                  <div>
+                    <dt>上次 Cron</dt>
+                    <dd id="signal-operations-cron">—</dd>
+                  </div>
+                  <div>
+                    <dt>最近运行</dt>
+                    <dd id="signal-operations-run">—</dd>
+                  </div>
+                  <div>
+                    <dt>待处理告警</dt>
+                    <dd id="signal-operations-alert-count">—</dd>
+                  </div>
+                  <div>
+                    <dt>连续失败来源</dt>
+                    <dd id="signal-operations-source-errors">—</dd>
+                  </div>
+                </dl>
+                <div class="admin-signal-alerts-heading">
+                  <strong>运行告警</strong>
+                  <small id="signal-operations-notification">严重告警会发送邮件提醒。</small>
+                </div>
+                <div class="admin-v2-table-list admin-signal-alerts-list" id="signal-alerts-list"></div>
+              </section>
+
               <div class="admin-signal-automation-grid">
                 <section class="admin-signal-source-pane" aria-labelledby="signal-sources-title">
                   <div class="admin-v2-section-heading admin-v2-section-heading--compact">
@@ -1153,6 +1189,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalStatus: $('#signal-status'),
       signalAutomationPanel: $('#signal-automation-panel'),
       signalAutomationSummary: $('#signal-automation-summary'),
+      signalOperationsHealth: $('#signal-operations-health'),
+      signalOperationsSummary: $('#signal-operations-summary'),
+      signalOperationsCron: $('#signal-operations-cron'),
+      signalOperationsRun: $('#signal-operations-run'),
+      signalOperationsAlertCount: $('#signal-operations-alert-count'),
+      signalOperationsSourceErrors: $('#signal-operations-source-errors'),
+      signalOperationsNotification: $('#signal-operations-notification'),
+      signalAlertsList: $('#signal-alerts-list'),
       signalCollectionStart: $('#signal-collection-start'),
       signalCollectionStatus: $('#signal-collection-status'),
       signalSourcesList: $('#signal-sources-list'),
@@ -1332,6 +1376,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalBriefs: [],
       signalSources: [],
       signalRuns: [],
+      signalOperations: null,
+      signalAlerts: [],
+      signalSourceErrors: [],
       signalCandidates: [],
       signalDrafts: [],
       signalDraftSummary: null,
@@ -2284,18 +2331,115 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
     };
 
+    const signalHealthLabel = (stateName) => ({
+      critical: '严重异常',
+      degraded: '需要检查',
+      healthy: '运行正常',
+      running: '正在采集',
+      waiting: '等待首次运行'
+    }[stateName] || '待初始化');
+
+    const signalAlertSeverityLabel = (severity) => ({
+      critical: '严重',
+      warning: '警告',
+      info: '提示'
+    }[severity] || '警告');
+
+    const renderSignalAlerts = () => {
+      const openAlerts = state.signalAlerts.filter((alert) => alert.status === 'open');
+      if (!openAlerts.length) {
+        renderEmpty(elements.signalAlertsList, state.signalOperations?.setupRequired ? '应用 0024 后会在这里显示运行告警。' : '当前没有待处理告警。');
+        return;
+      }
+      elements.signalAlertsList.innerHTML = '';
+      openAlerts.slice(0, 12).forEach((alert) => {
+        const row = document.createElement('article');
+        row.className = 'admin-v2-row admin-signal-alert-row';
+        row.innerHTML = `
+          <div class="admin-signal-alert-row__heading">
+            <strong>${escapeHtml(alert.title)}</strong>
+            <span class="admin-signal-alert-severity" data-severity="${escapeHtml(alert.severity)}">${escapeHtml(signalAlertSeverityLabel(alert.severity))}</span>
+          </div>
+          <p>${escapeHtml(alert.message)}</p>
+          <div class="admin-signal-alert-row__meta">
+            <span>最近 ${escapeHtml(formatDate(alert.lastSeenAt))}</span>
+            <span>出现 ${escapeHtml(String(alert.occurrenceCount || 1))} 次</span>
+            ${alert.notificationCount ? `<span>已邮件通知 ${escapeHtml(String(alert.notificationCount))} 次</span>` : ''}
+          </div>
+          <div class="button-row admin-signal-alert-row__actions"></div>
+        `;
+        const button = document.createElement('button');
+        button.className = 'button button-secondary';
+        button.type = 'button';
+        button.textContent = '标记已处理';
+        button.addEventListener('click', () => resolveSignalAlert(alert, button));
+        row.querySelector('.admin-signal-alert-row__actions').append(button);
+        elements.signalAlertsList.append(row);
+      });
+    };
+
+    const renderSignalOperations = () => {
+      const payload = state.signalOperations;
+      if (!payload || payload.setupRequired) {
+        elements.signalOperationsHealth.dataset.state = 'setup';
+        elements.signalOperationsHealth.textContent = '待初始化';
+        elements.signalOperationsSummary.textContent = '应用 migrations/0024_signal_operations.sql 后启用心跳、告警与失败重试。';
+        elements.signalOperationsCron.textContent = '待应用 0024';
+        elements.signalOperationsRun.textContent = '—';
+        elements.signalOperationsAlertCount.textContent = '—';
+        elements.signalOperationsSourceErrors.textContent = '—';
+        elements.signalOperationsNotification.textContent = '阶段六尚未初始化。';
+        renderSignalAlerts();
+        return;
+      }
+      const health = payload.health || {};
+      const runtime = payload.runtime || {};
+      const latestRun = payload.latestRun;
+      elements.signalOperationsHealth.dataset.state = health.state || 'waiting';
+      elements.signalOperationsHealth.textContent = signalHealthLabel(health.state);
+      elements.signalOperationsSummary.textContent = health.message || '自动化运行状态已更新。';
+      elements.signalOperationsCron.textContent = runtime.lastCronStartedAt
+        ? `${formatDate(runtime.lastCronStartedAt)} · ${runtime.lastCronStatus || 'unknown'}`
+        : '等待首次运行';
+      elements.signalOperationsRun.textContent = latestRun
+        ? `${latestRun.status} · ${latestRun.processedSourceCount || 0}/${latestRun.sourceCount || 0} 来源`
+        : '尚无运行记录';
+      elements.signalOperationsAlertCount.textContent = `${health.openAlertCount || 0} 条`;
+      elements.signalOperationsSourceErrors.textContent = `${state.signalSourceErrors.length} 个`;
+      elements.signalOperationsNotification.textContent = payload.notification?.configured
+        ? `严重告警会发送给 ${payload.notification.recipientCount || 0} 个管理员邮箱。`
+        : '严重告警邮件尚未配置，后台仍会保留记录。';
+      renderSignalAlerts();
+    };
+
     const renderSignalRuns = () => {
       if (!state.signalRuns.length) {
         renderEmpty(elements.signalRunsList, '尚未运行采集。点击“立即采集”后，免费来源会逐个进入队列。');
         return;
       }
-      elements.signalRunsList.innerHTML = state.signalRuns.map((run) => `
-        <article class="admin-v2-row">
-          <strong>${escapeHtml(run.status)} · ${escapeHtml(run.triggerType)}</strong>
+      elements.signalRunsList.innerHTML = '';
+      state.signalRuns.forEach((run) => {
+        const row = document.createElement('article');
+        row.className = 'admin-v2-row admin-signal-run-row';
+        row.innerHTML = `
+          <div class="admin-signal-run-row__heading">
+            <strong>${escapeHtml(run.status)} · ${escapeHtml(run.triggerType)}</strong>
+            <small>${escapeHtml(formatDate(run.startedAt || run.createdAt))}</small>
+          </div>
           <span>${escapeHtml(String(run.processedSourceCount || 0))}/${escapeHtml(String(run.sourceCount || 0))} 来源 · ${escapeHtml(String(run.acceptedCount))} 候选 · ${escapeHtml(String(run.duplicateCount))} 重复 · ${escapeHtml(String(run.failedCount))} 失败</span>
-          <small>${escapeHtml(formatDate(run.startedAt || run.createdAt))}</small>
-        </article>
-      `).join('');
+          ${Array.isArray(run.errors) && run.errors.length ? `<p>${run.errors.slice(0, 3).map((item) => escapeHtml(item.message || item.sourceId)).join(' · ')}</p>` : ''}
+          <div class="button-row admin-signal-run-row__actions"></div>
+        `;
+        if (['partial', 'failed'].includes(run.status) && Number(run.failedCount) > 0) {
+          const button = document.createElement('button');
+          button.className = 'button button-secondary';
+          button.type = 'button';
+          button.textContent = '重试失败来源';
+          button.addEventListener('click', () => retrySignalRun(run, button));
+          row.querySelector('.admin-signal-run-row__actions').append(button);
+        }
+        elements.signalRunsList.append(row);
+      });
     };
 
     const renderSignalCandidateSourceOptions = () => {
@@ -2513,11 +2657,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signalAutomationSummary.textContent = '正在读取来源白名单。';
       delete elements.signalAutomationSummary.dataset.state;
       try {
-        const [sourcesPayload, runsPayload, draftsPayload] = await Promise.all([
+        const [sourcesPayload, runsPayload, draftsPayload, operationsPayload] = await Promise.all([
           apiJson('/admin/api/signal/sources'),
           apiJson('/admin/api/signal/runs?limit=20'),
-          apiJson('/admin/api/signal/drafts?status=draft&limit=30')
+          apiJson('/admin/api/signal/drafts?status=draft&limit=30'),
+          apiJson('/admin/api/signal/operations')
         ]);
+        state.signalOperations = operationsPayload;
+        state.signalAlerts = operationsPayload.alerts || [];
+        state.signalSourceErrors = operationsPayload.sourceErrors || [];
+        renderSignalOperations();
         state.signalDrafts = draftsPayload.drafts || [];
         state.signalDraftSummary = draftsPayload.summary || null;
         renderSignalDrafts();
@@ -2536,6 +2685,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           renderEmpty(elements.signalSourcesList, '请先对生产 D1 应用 0019_signal_automation.sql。');
           renderEmpty(elements.signalRunsList, '数据表尚未初始化。');
           renderEmpty(elements.signalCandidatesList, '数据表尚未初始化。');
+          renderSignalOperations();
           renderSignalCandidateSummary();
           return;
         }
@@ -2549,17 +2699,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         elements.signalAutomationSummary.textContent = sourcesPayload.collectionReady
           ? activeRun
             ? `${sourceSummary.enabled || 0} 个来源启用 · 正在采集 ${activeRun.processedSourceCount || 0}/${activeRun.sourceCount || 0}`
-            : `${sourceSummary.total || 0} 个来源 · ${sourceSummary.enabled || 0} 启用 · 每小时检查`
+            : `${sourceSummary.total || 0} 个来源 · ${sourceSummary.enabled || 0} 启用 · 每小时检查 · ${signalHealthLabel(operationsPayload.health?.state)}`
           : '待应用 migrations/0020_signal_collection.sql';
         elements.signalCollectionStart.disabled = !state.signalCollectionReady || Boolean(activeRun);
         renderSignalSources();
         renderSignalRuns();
+        renderSignalOperations();
       } catch (error) {
         state.signalSources = [];
         state.signalRuns = [];
         state.signalCandidates = [];
         state.signalDrafts = [];
         state.signalDraftSummary = null;
+        state.signalOperations = null;
+        state.signalAlerts = [];
+        state.signalSourceErrors = [];
         state.signalCollectionReady = false;
         state.signalTriageReady = false;
         state.signalDedupReady = false;
@@ -2572,8 +2726,47 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         renderEmpty(elements.signalRunsList, '采集运行记录暂时不可用。');
         renderEmpty(elements.signalCandidatesList, '候选资讯暂时不可用。');
         renderEmpty(elements.signalDraftsList, '简报草稿暂时不可用。');
+        renderSignalOperations();
         elements.signalDraftsSummary.textContent = '草稿读取失败。';
         renderSignalCandidateSummary();
+      }
+    };
+
+    const resolveSignalAlert = async (alert, button) => {
+      button.disabled = true;
+      elements.signalOperationsSummary.textContent = '正在更新告警状态。';
+      try {
+        const payload = await apiJson('/admin/api/signal/operations', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'resolve_alert', alertId: alert.id })
+        });
+        elements.signalOperationsSummary.textContent = payload.message || '告警已标记为已处理。';
+        await Promise.all([loadSignalAutomation(), loadAuditLogs()]);
+      } catch (error) {
+        elements.signalOperationsSummary.textContent = error.message;
+        button.disabled = false;
+      }
+    };
+
+    const retrySignalRun = async (run, button) => {
+      button.disabled = true;
+      elements.signalCollectionStatus.hidden = false;
+      elements.signalCollectionStatus.dataset.tone = 'pending';
+      elements.signalCollectionStatus.textContent = '正在重新加入失败来源。';
+      try {
+        const payload = await apiJson('/admin/api/signal/operations', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'retry_run', runId: run.id })
+        });
+        elements.signalCollectionStatus.dataset.tone = payload.alreadyRunning ? 'pending' : 'success';
+        elements.signalCollectionStatus.textContent = payload.message || '失败来源已重新加入队列。';
+        await Promise.all([loadSignalAutomation(), loadAuditLogs()]);
+        window.setTimeout(loadSignalAutomation, 1800);
+        window.setTimeout(loadSignalAutomation, 5000);
+      } catch (error) {
+        elements.signalCollectionStatus.dataset.tone = 'error';
+        elements.signalCollectionStatus.textContent = error.message;
+        button.disabled = false;
       }
     };
 

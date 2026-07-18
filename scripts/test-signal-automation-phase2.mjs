@@ -715,7 +715,7 @@ assert.match(adminSource, /source\.collectionConfigured/);
 assert.match(adminSource, /source\.missingSecretBinding/);
 
 const workerSource = read('src/worker.js');
-assert.match(workerSource, /async scheduled\(_controller, env\)/);
+assert.match(workerSource, /async scheduled\(controller, env\)/);
 assert.match(workerSource, /async queue\(batch, env\)/);
 
 const collectionSource = read('src/signalCollection.js');
