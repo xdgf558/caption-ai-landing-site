@@ -61,6 +61,7 @@ assert.match(adminSource, /if \(name === 'imports'\) \{[\s\S]*?loadSignalDrafts\
 assert.match(adminSource, /action: 'approve'/);
 assert.match(adminSource, /已入选并加入本次草稿/);
 assert.match(adminSource, /还需 \$\{remaining\} 条/);
+assert.match(adminSource, /英文来源会自动翻译为繁体中文/);
 
 assert.match(stylesSource, /body\.admin-v2-page \{/);
 assert.match(stylesSource, /grid-template-columns: 260px minmax\(0, 1fr\)/);

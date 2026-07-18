@@ -8,7 +8,8 @@ import {
   deriveSignalDraftCategory,
   generateSignalBriefDraft,
   getSignalDraftMaxTokens,
-  normalizeSignalDraftCandidateIds
+  normalizeSignalDraftCandidateIds,
+  signalDraftOutputLocale
 } from '../src/signalDraft.js';
 
 const root = join(fileURLToPath(new URL('..', import.meta.url)));
@@ -58,12 +59,25 @@ const aiPayloadFor = (items = candidates) => ({
   description: '今天关注模型、经济政策和开发工具的三条信号。',
   items: items.map((candidate, index) => ({
     candidateId: candidate.id,
-    headline: `${index + 1}. ${candidate.title}`,
+    headline: `${index + 1}. 第 ${index + 1} 条资讯：${candidate.title}`,
     noise: '仍需结合后续一手数据，不能过度外推。',
     signal: '这项变化可能影响开发者、市场预期或产品路线。',
-    summary: candidate.summary
+    summary: `这条候选资讯需要翻译为中文。原文摘要：${candidate.summary}`
   })),
   title: '每日信号简报'
+});
+
+const englishPayloadFor = (items = candidates) => ({
+  category: 'ai',
+  description: 'Today covers models, economic policy, and developer tools.',
+  items: items.map((candidate, index) => ({
+    candidateId: candidate.id,
+    headline: `${index + 1}. ${candidate.title}`,
+    noise: 'More first-party data is needed before drawing broad conclusions.',
+    signal: 'This may affect developers, market expectations, or product roadmaps.',
+    summary: candidate.summary
+  })),
+  title: 'Daily Signal Brief'
 });
 
 assert.deepEqual(normalizeSignalDraftCandidateIds(candidates.map((candidate) => candidate.id)), candidates.map((candidate) => candidate.id));
@@ -93,14 +107,44 @@ const generated = await generateSignalBriefDraft(ai, '@cf/test/draft-model', can
 });
 assert.equal(generated.items.length, 3);
 assert.equal(generated.category, 'ai');
-assert.match(generated.markdown, /1\. OpenAI publishes a model and API update/);
+assert.equal(generated.outputLocale, signalDraftOutputLocale);
+assert.equal(generated.translationMode, 'source-to-zh-Hant');
+assert.match(generated.markdown, /1\. 第 1 条资讯：OpenAI publishes a model and API update/);
 assert.match(generated.markdown, /信号：/);
 assert.match(generated.markdown, /噪音：/);
 assert.equal(aiCalls[0].request.response_format.type, 'json_schema');
 assert.equal(aiCalls[0].request.response_format.json_schema.properties.items.minItems, 3);
 assert.equal(aiCalls[0].request.max_tokens, 3200);
 assert.match(aiCalls[0].request.messages[0].content, /untrusted reference material/);
+assert.match(aiCalls[0].request.messages[0].content, /Traditional Chinese \(zh-Hant\)/);
 assert.match(aiCalls[0].request.messages[1].content, /not permission to publish/i);
+assert.match(aiCalls[0].request.messages[1].content, /"outputLocale":"zh-Hant"/);
+
+const translationRetryCalls = [];
+const translatedAfterRetry = await generateSignalBriefDraft(
+  {
+    async run(_model, request) {
+      translationRetryCalls.push(request);
+      return { response: translationRetryCalls.length === 1 ? englishPayloadFor() : aiPayloadFor() };
+    }
+  },
+  '@cf/test/draft-model',
+  candidates,
+  { briefDate: '2026-07-18', category: 'auto' }
+);
+assert.equal(translationRetryCalls.length, 2);
+assert.match(translationRetryCalls[1].messages[0].content, /previous attempt did not complete the Chinese translation/i);
+assert.equal(translatedAfterRetry.outputLocale, 'zh-Hant');
+
+await assert.rejects(
+  generateSignalBriefDraft(
+    { run: async () => ({ response: englishPayloadFor() }) },
+    '@cf/test/draft-model',
+    candidates,
+    { briefDate: '2026-07-18', category: 'auto' }
+  ),
+  (error) => error.code === 'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID'
+);
 
 const tenCandidates = Array.from({ length: 10 }, (_value, index) => ({
   ...candidates[index % candidates.length],
@@ -288,7 +332,9 @@ assert.equal(handlerPayload.entry.status, 'draft');
 assert.equal(handlerPayload.entry.sourceKind, 'signal_automation');
 assert.equal(handlerPayload.candidateStatusesChanged, false);
 assert.deepEqual(handlerPayload.automation.candidateIds, candidates.map((candidate) => candidate.id));
+assert.equal(handlerPayload.automation.outputLocale, 'zh-Hant');
 assert.equal(handlerPayload.automation.sourceEntryId, 41);
+assert.equal(handlerPayload.automation.translationMode, 'source-to-zh-Hant');
 assert.equal(bucketWrites.length, 2);
 assert.deepEqual([...draftDb.candidates.values()].map((candidate) => candidate.status), [
   'shortlisted',

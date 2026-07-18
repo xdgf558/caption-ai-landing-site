@@ -12489,8 +12489,10 @@ const signalDraftAutomationMetadata = (value) => {
     excludedCandidateIds,
     generatedAt: cleanText(metadata.generatedAt, 80),
     model: cleanText(metadata.model, 160),
+    outputLocale: cleanText(metadata.outputLocale, 20),
     promptVersion: normalizePositiveInteger(metadata.promptVersion, 0),
-    sourceEntryId: normalizePositiveInteger(metadata.sourceEntryId, 0)
+    sourceEntryId: normalizePositiveInteger(metadata.sourceEntryId, 0),
+    translationMode: cleanText(metadata.translationMode, 40)
   };
 };
 
@@ -12893,8 +12895,10 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
           candidateIds,
           generatedAt,
           model,
+          outputLocale: draft.outputLocale,
           promptVersion: draft.promptVersion,
-          sourceEntryId: existing?.id || 0
+          sourceEntryId: existing?.id || 0,
+          translationMode: draft.translationMode
         },
         briefDate,
         category: draft.category,
@@ -12922,6 +12926,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
         candidateIds,
         generationId,
         model,
+        outputLocale: draft.outputLocale,
         promptVersion: draft.promptVersion
       },
       revisionSummary: `AI 草稿生成 · ${candidateIds.length} 条候选`
@@ -12930,8 +12935,10 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       candidateIds,
       generatedAt,
       model,
+      outputLocale: draft.outputLocale,
       promptVersion: draft.promptVersion,
-      sourceEntryId: saved.id
+      sourceEntryId: saved.id,
+      translationMode: draft.translationMode
     };
     return privateJson({
       ok: true,

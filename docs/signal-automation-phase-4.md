@@ -15,6 +15,8 @@ Phase 4 converts reviewed Signal candidates into an editable brief draft. It use
 
 The generator never publishes a page, changes candidate review decisions, or trusts source URLs returned by the model.
 
+English and other non-Chinese candidate material remains unchanged in the candidate queue for provenance. During draft generation, every human-readable draft field is translated and rewritten into natural Traditional Chinese (`zh-Hant`). Company names, product names, technical terms, dates, numbers, uncertainty, and attribution are preserved. The server rejects an all-English draft and automatically retries generation once with a stricter translation instruction.
+
 ## Safety Boundaries
 
 - The route is protected by the existing Cloudflare Access Admin gate and also verifies the Admin actor before generation.
