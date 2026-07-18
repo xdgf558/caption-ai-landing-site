@@ -9931,6 +9931,7 @@ const signalSourceToJson = (row, secrets = {}) => {
 const signalCollectionRunToJson = (row) => ({
   id: row.id,
   triggerType: row.trigger_type,
+  previousRunId: row.previous_run_id || '',
   status: row.status,
   requestedSourceIds: parseStoredJson(row.requested_source_ids_json, []),
   sourceCount: normalizePositiveInteger(row.source_count, 0),
@@ -11240,6 +11241,7 @@ const enqueueSignalCollectionRun = async (env, options = {}) => {
   const runId = `signal-run-${randomToken(14)}`;
   const actor = cleanText(options.actor || 'signal-cron', 320);
   const triggerType = options.triggerType === 'retry' ? 'retry' : options.triggerType === 'manual' ? 'manual' : 'scheduled';
+  const previousRunId = triggerType === 'retry' ? cleanText(options.previousRunId, 120) : '';
   const sourceIds = sources.map((source) => source.id);
   try {
     await db.batch([
@@ -11247,10 +11249,10 @@ const enqueueSignalCollectionRun = async (env, options = {}) => {
         .prepare(
           `INSERT INTO signal_collection_runs (
              id, trigger_type, status, requested_source_ids_json,
-             source_count, processed_source_count, created_by
-           ) VALUES (?, ?, 'queued', ?, ?, 0, ?)`
+             source_count, processed_source_count, created_by, previous_run_id
+           ) VALUES (?, ?, 'queued', ?, ?, 0, ?, ?)`
         )
-        .bind(runId, triggerType, JSON.stringify(sourceIds), sources.length, actor),
+        .bind(runId, triggerType, JSON.stringify(sourceIds), sources.length, actor, previousRunId || null),
       ...sources.map((source) =>
         db
           .prepare(
@@ -11801,6 +11803,16 @@ const syncSignalCollectionRunAlert = async (env, run) => {
   });
 };
 
+const syncSignalRetrySuccessAlert = async (env, run) => {
+  if (!env?.WAITLIST_DB || run?.trigger_type !== 'retry' || run?.status !== 'completed' || !run?.previous_run_id) {
+    return null;
+  }
+  return resolveSignalAutomationAlert(env.WAITLIST_DB, {
+    actor: 'signal-queue',
+    dedupeKey: `run:${run.previous_run_id}:failure`
+  });
+};
+
 const syncSignalSourceFailureAlert = async (env, source, failureCount, message = '') => {
   if (!env || !source?.id) return null;
   const dedupeKey = `source:${source.id}:consecutive-failures`;
@@ -11858,8 +11870,11 @@ const completeSignalCollectionTask = async (db, source, task, collection, counts
   ]);
   const run = await refreshSignalCollectionRun(db, task.run_id);
   if (options.env) {
-    await syncSignalSourceFailureAlert(options.env, source, 0);
+    if (normalizePositiveInteger(source.consecutive_failures, 0) > 0) {
+      await syncSignalSourceFailureAlert(options.env, source, 0);
+    }
     await syncSignalCollectionRunAlert(options.env, run);
+    await syncSignalRetrySuccessAlert(options.env, run);
   }
   return run;
 };
@@ -12289,6 +12304,7 @@ const handleAdminManageSignalOperations = async (request, env) => {
     try {
       const result = await enqueueSignalCollectionRun(env, {
         actor: actorEmail,
+        previousRunId: runId,
         sourceIds,
         triggerType: 'retry'
       });
@@ -18913,6 +18929,7 @@ export const __readerTotpTestHooks = {
   normalizeSignalAutomationSourcePayload,
   insertSignalCandidates,
   processSignalCollectionMessage,
+  completeSignalCollectionTask,
   pruneSignalAutomationHistory,
   readerCommentToJson,
   productFeedbackToJson,
@@ -18929,6 +18946,7 @@ export const __readerTotpTestHooks = {
   readerTotpResetLockedMessage,
   reserveReaderTotpResetAttempt,
   resolveSignalAutomationAlert,
+  syncSignalRetrySuccessAlert,
   renderDynamicNovelSeries,
   renderDynamicNovelChapter,
   renderSignalShareCardSvg,

@@ -25,6 +25,8 @@ Critical alerts use the existing `EMAIL` binding. Recipients come from `SIGNAL_A
 
 Worker logs are emitted as structured JSON with `component: "signal_automation"`. Workers observability is enabled in `wrangler.toml` so Cron, Queue, and DLQ events can be filtered together.
 
+The scheduler-gap email is not a dead-man's switch: it can only be emitted after a later Cron invocation notices the gap. A complete Worker or Cron outage executes no code and therefore cannot send its own alert. Production must also use an independent monitor that alerts when `cron_completed` has not been observed for more than two hours, such as a Cloudflare log/observability alert or an external heartbeat service. Do not treat the in-Worker email path as the sole liveness monitor.
+
 ## Admin API
 
 - `GET /admin/api/signal/operations`
@@ -73,5 +75,6 @@ Do not run this checklist until Phase 6 is reviewed and approved.
 6. After final approval, deploy once. Cron configuration can take several minutes to propagate.
 7. In Admin, run **立即采集**, confirm candidates arrive, confirm the operations band updates, then test **重试失败来源** only with a deliberately failed source.
 8. Confirm Worker observability contains `cron_completed` and queue events, and confirm the public `/signal/` pages remain human-published content only.
+9. Configure an independent dead-man's-switch outside this Worker. Alert when no `cron_completed` event is observed for more than two hours; verify the alert reaches an operator before considering automation production-ready.
 
 Phase 6 is not deployed as part of this PR review cycle.

@@ -120,9 +120,16 @@ try {
       (SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'signal_automation_runtime') AS runtime_table,
       (SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'signal_automation_alerts') AS alerts_table,
       (SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'idx_signal_automation_alerts_status_severity') AS alerts_index,
+      (SELECT COUNT(*) FROM pragma_table_info('signal_collection_runs') WHERE name = 'previous_run_id') AS previous_run_column,
       (SELECT COUNT(*) FROM signal_automation_runtime WHERE id = 'signal-collection' AND last_cron_status = 'never') AS runtime_seed;
   `)[0];
-  assert.deepEqual(schema, { alerts_index: 1, alerts_table: 1, runtime_seed: 1, runtime_table: 1 });
+  assert.deepEqual(schema, {
+    alerts_index: 1,
+    alerts_table: 1,
+    previous_run_column: 1,
+    runtime_seed: 1,
+    runtime_table: 1
+  });
 
   assert.throws(
     () => db.query(`
@@ -186,16 +193,40 @@ try {
   assert.equal(retryResponse.status, 200);
   const retryPayload = await retryResponse.json();
   assert.equal(retryPayload.run.triggerType, 'retry');
+  assert.equal(retryPayload.run.previousRunId, 'failed-run');
   assert.deepEqual(retryPayload.run.requestedSourceIds, ['github-changelog']);
   assert.equal(queuedMessages.length, 1);
   assert.equal(queuedMessages[0].body.sourceId, 'github-changelog');
   assert.equal(db.query("SELECT COUNT(*) AS count FROM admin_audit_logs WHERE action = 'signal_collection_retry';")[0].count, 1);
 
+  await hooks.openSignalAutomationAlert(retryEnv, {
+    alertType: 'run_failed',
+    dedupeKey: 'run:failed-run:failure',
+    severity: 'warning',
+    title: 'Previous run failed',
+    message: 'Retry should resolve this alert.',
+    runId: 'failed-run'
+  });
+  const retryTask = db.query(
+    `SELECT * FROM signal_collection_tasks WHERE run_id = ${sqlLiteral(retryPayload.run.id)} LIMIT 1;`
+  )[0];
+  const retrySource = db.query("SELECT * FROM signal_sources WHERE id = 'github-changelog';")[0];
+  const completedRetryRun = await hooks.completeSignalCollectionTask(
+    db,
+    retrySource,
+    retryTask,
+    { etag: '', httpStatus: 304, items: [], lastModified: '', notModified: true },
+    { acceptedCount: 0, duplicateCount: 0 },
+    { env: retryEnv }
+  );
+  assert.equal(completedRetryRun.status, 'completed');
+  assert.equal(completedRetryRun.previous_run_id, 'failed-run');
+  const resolvedPreviousRunAlert = db.query(
+    "SELECT status, resolved_by FROM signal_automation_alerts WHERE dedupe_key = 'run:failed-run:failure';"
+  )[0];
+  assert.deepEqual(resolvedPreviousRunAlert, { resolved_by: 'signal-queue', status: 'resolved' });
+
   db.query(`
-    UPDATE signal_collection_tasks SET status = 'completed', finished_at = CURRENT_TIMESTAMP
-    WHERE run_id = ${sqlLiteral(retryPayload.run.id)};
-    UPDATE signal_collection_runs SET status = 'completed', processed_source_count = source_count,
-      finished_at = CURRENT_TIMESTAMP WHERE id = ${sqlLiteral(retryPayload.run.id)};
     UPDATE signal_sources SET is_enabled = 0;
     UPDATE signal_automation_runtime
     SET last_cron_started_at = datetime('now', '-7 hours'), last_cron_status = 'skipped';
@@ -314,6 +345,7 @@ try {
 const migration = read('migrations/0024_signal_operations.sql');
 assert.match(migration, /CREATE TABLE IF NOT EXISTS signal_automation_runtime/);
 assert.match(migration, /CREATE TABLE IF NOT EXISTS signal_automation_alerts/);
+assert.match(migration, /ADD COLUMN previous_run_id TEXT/);
 assert.match(migration, /UNIQUE/);
 
 const workerSource = read('src/worker.js');
@@ -321,6 +353,8 @@ assert.match(workerSource, /\/admin\/api\/signal\/operations/);
 assert.match(workerSource, /handleSignalCollectionDeadLetterQueue/);
 assert.match(workerSource, /signalAutomationLog\('info', 'cron_completed'/);
 assert.match(workerSource, /triggerType: 'retry'/);
+assert.match(workerSource, /source\.consecutive_failures, 0\) > 0/);
+assert.match(workerSource, /syncSignalRetrySuccessAlert\(options\.env, run\)/);
 
 const adminSource = read('src/pages/admin-v2/index.astro');
 assert.match(adminSource, /Automation phase 6/);

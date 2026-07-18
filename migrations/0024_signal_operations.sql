@@ -1,5 +1,12 @@
 -- One-shot D1 migration for Signal automation phase 6 operations and alerts.
 -- Apply only after migrations 0019 through 0023.
+ALTER TABLE signal_collection_runs ADD COLUMN previous_run_id TEXT
+  REFERENCES signal_collection_runs(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_signal_collection_runs_previous
+  ON signal_collection_runs (previous_run_id, created_at DESC)
+  WHERE previous_run_id IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS signal_automation_runtime (
   id TEXT PRIMARY KEY,
   last_cron_started_at TEXT,
