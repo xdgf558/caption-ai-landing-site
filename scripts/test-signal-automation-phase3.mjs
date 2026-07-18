@@ -253,6 +253,32 @@ assert.equal(
   null
 );
 
+const mergePoolBindCounts = [];
+const mergePoolRows = Array.from({ length: 50 }, (_, index) => ({
+  canonicalUrl: `https://arxiv.org/abs/2607.${String(index).padStart(5, '0')}`,
+  contentHash: `arxiv-content-hash-${index}`,
+  titleFingerprint: `arxiv research update number ${index}`
+}));
+const mergePoolResult = await workerHooks.loadSignalCandidateMergePool(
+  {
+    prepare() {
+      return {
+        bind(...params) {
+          mergePoolBindCounts.push(params.length);
+          assert.ok(params.length <= 100, `D1 query received ${params.length} bound parameters`);
+          return this;
+        },
+        async all() {
+          return { results: [] };
+        }
+      };
+    }
+  },
+  mergePoolRows
+);
+assert.deepEqual(mergePoolResult, { results: [] });
+assert.deepEqual(mergePoolBindCounts, [50, 50, 50]);
+
 class CandidateInsertStatement {
   constructor(db, sql, params = []) {
     this.db = db;

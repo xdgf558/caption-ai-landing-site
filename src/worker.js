@@ -11489,27 +11489,50 @@ const loadSignalCandidateMergePool = async (db, rows) => {
   const canonicalUrls = [...new Set(rows.map((row) => row.canonicalUrl).filter(Boolean))];
   const contentHashes = [...new Set(rows.map((row) => row.contentHash).filter(Boolean))];
   const titleFingerprints = [...new Set(rows.map((row) => row.titleFingerprint).filter(Boolean))];
-  const clauses = [`created_at >= datetime('now', '-7 days')`];
-  const params = [];
-  const addInClause = (column, values) => {
-    if (!values.length) return;
-    clauses.push(`${column} IN (${values.map(() => '?').join(', ')})`);
-    params.push(...values);
+  const selectColumns = `SELECT id, canonical_url, content_hash, title, title_fingerprint, category,
+                                published_at, created_at, cluster_key
+                         FROM signal_candidates`;
+  const candidates = new Map();
+  const addCandidates = (response) => {
+    for (const candidate of response?.results || []) candidates.set(candidate.id, candidate);
   };
-  addInClause('canonical_url', canonicalUrls);
-  addInClause('content_hash', contentHashes);
-  addInClause('title_fingerprint', titleFingerprints);
-  return db
-    .prepare(
-      `SELECT id, canonical_url, content_hash, title, title_fingerprint, category,
-              published_at, created_at, cluster_key
-       FROM signal_candidates
-       WHERE ${clauses.map((clause) => `(${clause})`).join(' OR ')}
-       ORDER BY created_at DESC
-       LIMIT 1000`
-    )
-    .bind(...params)
-    .all();
+
+  addCandidates(
+    await db
+      .prepare(
+        `${selectColumns}
+         WHERE created_at >= datetime('now', '-7 days')
+         ORDER BY created_at DESC
+         LIMIT 1000`
+      )
+      .all()
+  );
+
+  // D1 accepts at most 100 bound parameters per query. Keep exact persisted
+  // lookups separate so a 50-item feed cannot combine three fields into 150 binds.
+  const lookupBatchSize = 100;
+  for (const [column, values] of [
+    ['canonical_url', canonicalUrls],
+    ['content_hash', contentHashes],
+    ['title_fingerprint', titleFingerprints]
+  ]) {
+    for (let offset = 0; offset < values.length; offset += lookupBatchSize) {
+      const batch = values.slice(offset, offset + lookupBatchSize);
+      addCandidates(
+        await db
+          .prepare(
+            `${selectColumns}
+             WHERE ${column} IN (${batch.map(() => '?').join(', ')})
+             ORDER BY created_at DESC
+             LIMIT 1000`
+          )
+          .bind(...batch)
+          .all()
+      );
+    }
+  }
+
+  return { results: [...candidates.values()] };
 };
 
 const signalCandidateOccurrenceMetadata = (row, candidateId, matchReason) => {
@@ -18927,6 +18950,7 @@ export const __readerTotpTestHooks = {
   normalizeReadingEventPayload,
   selectSignalCollectionSources,
   normalizeSignalAutomationSourcePayload,
+  loadSignalCandidateMergePool,
   insertSignalCandidates,
   processSignalCollectionMessage,
   completeSignalCollectionTask,

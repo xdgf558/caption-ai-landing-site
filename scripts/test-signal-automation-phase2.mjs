@@ -119,6 +119,19 @@ assert.equal(rssItems.length, 1);
 assert.equal(rssItems[0].canonicalUrl, 'https://news.example.org/post');
 assert.equal(rssItems[0].summary, 'A concise summary .');
 
+const rssWithHtmlDoctypeItems = parseSignalFeed(
+  `<?xml version="1.0"?>
+   <rss xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><item>
+     <title>Changelog update</title>
+     <link>https://github.blog/changelog/2026-07-18-update/</link>
+     <content:encoded><![CDATA[<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"><p>Release details.</p>]]></content:encoded>
+   </item></channel></rss>`,
+  'https://github.blog/changelog/feed/',
+  10
+);
+assert.equal(rssWithHtmlDoctypeItems.length, 1);
+assert.equal(rssWithHtmlDoctypeItems[0].summary, 'Release details.');
+
 const atomItems = parseSignalFeed(
   `<?xml version="1.0"?>
    <feed xmlns="http://www.w3.org/2005/Atom"><entry>
@@ -365,10 +378,13 @@ const hackerNewsFetch = async (url) => {
     return new Response(dnsPayload(type, type === 'A' ? ['104.18.3.33'] : []));
   }
   if (parsed.pathname.endsWith('/topstories.json')) return new Response('[101,102]');
-  if (parsed.pathname.endsWith('/101.json')) {
+  if (parsed.pathname.endsWith('/item/101.json')) {
     return new Response(JSON.stringify({ by: 'alice', id: 101, time: 1784282400, title: 'Useful tool', type: 'story', url: 'https://example.org/tool' }));
   }
-  return new Response(JSON.stringify({ by: 'bob', id: 102, time: 1784282401, title: 'Community discussion', type: 'story' }));
+  if (parsed.pathname.endsWith('/item/102.json')) {
+    return new Response(JSON.stringify({ by: 'bob', id: 102, time: 1784282401, title: 'Community discussion', type: 'story' }));
+  }
+  return new Response('{"error":"Permission denied"}', { status: 401 });
 };
 const collectedHackerNews = await collectSignalSource(
   {

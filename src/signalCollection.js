@@ -197,8 +197,29 @@ const feedEntries = (parsed) => {
   return { entries: [], kind: '' };
 };
 
+const xmlOutsideCdata = (value) => {
+  const xml = String(value || '');
+  const segments = [];
+  let cursor = 0;
+  while (cursor < xml.length) {
+    const cdataStart = xml.indexOf('<![CDATA[', cursor);
+    if (cdataStart === -1) {
+      segments.push(xml.slice(cursor));
+      break;
+    }
+    segments.push(xml.slice(cursor, cdataStart));
+    const cdataEnd = xml.indexOf(']]>', cdataStart + 9);
+    if (cdataEnd === -1) {
+      segments.push(xml.slice(cdataStart));
+      break;
+    }
+    cursor = cdataEnd + 3;
+  }
+  return segments.join('');
+};
+
 export const parseSignalFeed = (xml, sourceUrl, maxItems = 30) => {
-  if (/<!DOCTYPE|<!ENTITY/i.test(xml)) {
+  if (/<!DOCTYPE|<!ENTITY/i.test(xmlOutsideCdata(xml))) {
     throw collectionError('SIGNAL_FEED_DTD_BLOCKED', '来源内容包含不允许的 XML 声明。', { retriable: false });
   }
   let parsed;
@@ -448,7 +469,7 @@ const collectHackerNews = async (source, options) => {
   const maxItems = Math.min(Math.max(Number(source.max_items_per_run) || 1, 1), hackerNewsItemLimit);
   const itemResults = await Promise.allSettled(
     ids.slice(0, maxItems).map(async (id) => {
-      const itemUrl = new URL(`${encodeURIComponent(String(id))}.json`, listing.finalUrl).toString();
+      const itemUrl = new URL(`item/${encodeURIComponent(String(id))}.json`, listing.finalUrl).toString();
       const response = await fetchPublicSignalResource(itemUrl, {
         ...options,
         accept: 'application/json',
