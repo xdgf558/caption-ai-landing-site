@@ -10303,6 +10303,10 @@ const handleAdminListSignalCandidates = async (request, env) => {
   const escapedQuery = query.replace(/[\\%_]/g, '\\$&');
   const requestedMinScore = Number.parseInt(url.searchParams.get('minScore') || '0', 10);
   const minScore = Number.isFinite(requestedMinScore) ? Math.min(Math.max(requestedMinScore, 0), 100) : 0;
+  const requestedSinceHours = Number.parseInt(url.searchParams.get('sinceHours') || '0', 10);
+  const sinceHours = Number.isFinite(requestedSinceHours)
+    ? Math.min(Math.max(requestedSinceHours, 0), 24 * 30)
+    : 0;
   const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 50), 1), 100);
   const baseClauses = [];
   const baseParams = [];
@@ -10321,6 +10325,10 @@ const handleAdminListSignalCandidates = async (request, env) => {
   if (minScore > 0) {
     baseClauses.push('candidate.relevance_score >= ?');
     baseParams.push(minScore);
+  }
+  if (sinceHours > 0) {
+    baseClauses.push("datetime(COALESCE(candidate.published_at, candidate.created_at)) >= datetime('now', ?)");
+    baseParams.push(`-${sinceHours} hours`);
   }
   const listClauses = [...baseClauses];
   const listParams = [...baseParams];
@@ -10445,6 +10453,7 @@ const handleAdminListSignalCandidates = async (request, env) => {
     setupRequired: false,
     triageReady,
     dedupReady,
+    windowHours: sinceHours,
     candidates,
     summary: {
       total: normalizePositiveInteger(summaryRow?.total, 0),
@@ -11714,6 +11723,265 @@ const signalDraftAutomationMetadata = (value) => {
   };
 };
 
+const signalBriefDraftForReview = (row) => {
+  const entry = contentEntryToJson(row);
+  let automation = null;
+  let automationInvalid = false;
+  try {
+    automation = signalDraftAutomationMetadata(entry.metadata?.automation);
+  } catch {
+    automationInvalid = true;
+  }
+  if (!automation) automationInvalid = true;
+  return {
+    ...entry,
+    automation: automation
+      ? { ...automation, sourceEntryId: normalizePositiveInteger(row.id, automation.sourceEntryId) }
+      : null,
+    automationInvalid
+  };
+};
+
+const buildSignalDraftApprovalPayload = (row, markdown, automation, options = {}) => {
+  const metadata = parseStoredJson(row.metadata_json, {});
+  const entryId = normalizePositiveInteger(row.id, 0);
+  return {
+    approvalEntryId: entryId,
+    allowCandidateExclusions: options.allowCandidateExclusions === true,
+    automation: { ...automation, sourceEntryId: entryId },
+    briefDate: metadata.briefDate || String(row.published_at || '').slice(0, 10) || new Date().toISOString().slice(0, 10),
+    bullets: metadata.summaryBullets || [],
+    category: metadata.category || 'general',
+    description: row.description,
+    locale: row.locale,
+    markdown,
+    requestId: `signal-approve-${entryId}-${Date.now()}`,
+    revisionSummary: '简报草稿审核通过并发布',
+    slug: row.slug,
+    sources: metadata.sources || [],
+    status: 'published',
+    tags: parseStoredJson(row.tags_json, []),
+    title: row.title
+  };
+};
+
+const handleAdminListSignalBriefDrafts = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'SIGNAL_DRAFT_CONTENT_NOT_READY',
+        message: '内容库尚未初始化，无法读取简报草稿。'
+      },
+      { status: 503 }
+    );
+  }
+  const actorEmail = await getAdminActorEmail(request, env);
+  if (!actorEmail) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_DRAFT_ADMIN_REQUIRED', message: '管理员身份无效或已过期。' },
+      { status: 401 }
+    );
+  }
+
+  const url = new URL(request.url);
+  const requestedStatus = cleanText(url.searchParams.get('status') || 'draft', 30).toLowerCase();
+  const status = requestedStatus === 'all' ? '' : contentStatuses.has(requestedStatus) ? requestedStatus : 'draft';
+  const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 30), 1), 100);
+  const listStatement = db.prepare(
+    `SELECT *
+     FROM content_entries
+     WHERE entry_type = 'signal_brief'
+       AND locale = 'zh-Hant'
+       AND source_kind = 'signal_automation'
+       ${status ? 'AND status = ?' : ''}
+     ORDER BY CASE status WHEN 'draft' THEN 0 WHEN 'scheduled' THEN 1 WHEN 'published' THEN 2 ELSE 3 END,
+              updated_at DESC
+     LIMIT ?`
+  );
+  const [response, summaryRow] = await Promise.all([
+    status ? listStatement.bind(status, limit).all() : listStatement.bind(limit).all(),
+    db
+      .prepare(
+        `SELECT COUNT(*) AS total,
+                SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) AS draft_count,
+                SUM(CASE WHEN status = 'scheduled' THEN 1 ELSE 0 END) AS scheduled_count,
+                SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) AS published_count,
+                SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END) AS archived_count
+         FROM content_entries
+         WHERE entry_type = 'signal_brief'
+           AND locale = 'zh-Hant'
+           AND source_kind = 'signal_automation'`
+      )
+      .first()
+  ]);
+  return privateJson({
+    ok: true,
+    drafts: (response.results || []).map(signalBriefDraftForReview),
+    summary: {
+      total: normalizePositiveInteger(summaryRow?.total, 0),
+      draft: normalizePositiveInteger(summaryRow?.draft_count, 0),
+      scheduled: normalizePositiveInteger(summaryRow?.scheduled_count, 0),
+      published: normalizePositiveInteger(summaryRow?.published_count, 0),
+      archived: normalizePositiveInteger(summaryRow?.archived_count, 0)
+    }
+  });
+};
+
+const handleAdminManageSignalBriefDraft = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  if (!(await ensureContentTablesReady(db)) || !(await ensureAdminAuditLogsReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'SIGNAL_DRAFT_CONTENT_NOT_READY',
+        message: '内容库或审计日志表尚未初始化，草稿审核已阻止。'
+      },
+      { status: 503 }
+    );
+  }
+  const actorEmail = await getAdminActorEmail(request, env);
+  if (!actorEmail) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_DRAFT_ADMIN_REQUIRED', message: '管理员身份无效或已过期。' },
+      { status: 401 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid Signal draft action JSON.' }, { status: 400 });
+  }
+  const action = cleanText(payload.action, 30).toLowerCase();
+  if (!['archive', 'approve'].includes(action)) {
+    return privateJson({ ok: false, code: 'SIGNAL_DRAFT_ACTION_INVALID', message: '草稿审核操作无效。' }, { status: 400 });
+  }
+  const entryId = normalizePositiveInteger(payload.entryId || payload.id, 0);
+  if (!entryId) {
+    return privateJson({ ok: false, code: 'SIGNAL_DRAFT_ID_REQUIRED', message: '请选择一份简报草稿。' }, { status: 400 });
+  }
+  const row = await db
+    .prepare(
+      `SELECT * FROM content_entries
+       WHERE id = ? AND entry_type = 'signal_brief' AND source_kind = 'signal_automation'
+       LIMIT 1`
+    )
+    .bind(entryId)
+    .first();
+  if (!row) {
+    return privateJson({ ok: false, code: 'SIGNAL_DRAFT_NOT_FOUND', message: '简报草稿不存在。' }, { status: 404 });
+  }
+  if (row.status !== 'draft') {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_DRAFT_STATUS_CONFLICT', message: '这份简报已不再是草稿，请刷新后重试。' },
+      { status: 409 }
+    );
+  }
+
+  if (action === 'archive') {
+    const archivedAt = new Date().toISOString();
+    const revisionSummary = '自动化简报草稿已删除（归档）';
+    const auditMetadata = JSON.stringify({
+      archivedAt,
+      candidateIds: signalBriefDraftForReview(row).automation?.candidateIds || [],
+      previousStatus: row.status
+    });
+    const results = await db.batch([
+      db
+        .prepare(
+          `UPDATE content_entries
+           SET status = 'archived', archived_at = ?, updated_by = ?, updated_at = ?
+           WHERE id = ? AND entry_type = 'signal_brief'
+             AND source_kind = 'signal_automation' AND status = 'draft'`
+        )
+        .bind(archivedAt, actorEmail, archivedAt, entryId),
+      db
+        .prepare(
+          `INSERT INTO content_revisions (
+             entry_id, revision_number, status, title, summary, metadata_json, pricing_json,
+             markdown_r2_key, html_r2_key, created_by
+           )
+           SELECT entry.id,
+                  COALESCE((SELECT MAX(revision_number) + 1 FROM content_revisions WHERE entry_id = entry.id), 1),
+                  entry.status, entry.title, ?, entry.metadata_json, entry.pricing_json,
+                  entry.markdown_r2_key, entry.html_r2_key, ?
+           FROM content_entries AS entry
+           WHERE entry.id = ? AND entry.status = 'archived' AND entry.archived_at = ?`
+        )
+        .bind(revisionSummary, actorEmail, entryId, archivedAt),
+      db
+        .prepare(
+          `INSERT INTO admin_audit_logs (
+             actor_email, action, target_type, target_id, target_slug, metadata_json
+           )
+           SELECT ?, 'signal_brief_draft_archive', 'signal_brief', CAST(entry.id AS TEXT), entry.slug, ?
+           FROM content_entries AS entry
+           WHERE entry.id = ? AND entry.status = 'archived' AND entry.archived_at = ?`
+        )
+        .bind(actorEmail, auditMetadata, entryId, archivedAt)
+    ]);
+    if (!getD1ChangeCount(results[0])) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_DRAFT_STATUS_CONFLICT', message: '草稿状态已变化，请刷新后重试。' },
+        { status: 409 }
+      );
+    }
+    return privateJson({
+      ok: true,
+      action,
+      archivedAt,
+      candidateStatusesChanged: false,
+      entryId,
+      stage: 'signal-automation-5'
+    });
+  }
+
+  const reviewDraft = signalBriefDraftForReview(row);
+  if (reviewDraft.automationInvalid || !reviewDraft.automation) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'SIGNAL_DRAFT_AUTOMATION_METADATA_INVALID',
+        message: '服务器保存的候选关联无效，请重新生成草稿。'
+      },
+      { status: 409 }
+    );
+  }
+  const bucket = getContentBucket(env);
+  if (!bucket) {
+    return privateJson(
+      { ok: false, code: 'CONTENT_BUCKET_NOT_CONFIGURED', message: '正文存储未配置，无法批准发布。' },
+      { status: 503 }
+    );
+  }
+  const markdown = await readContentObjectText(bucket, row.markdown_r2_key, 'Signal draft Markdown');
+  if (!markdown.trim()) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_DRAFT_BODY_NOT_FOUND', message: '草稿正文不存在，请重新生成或保存后再发布。' },
+      { status: 409 }
+    );
+  }
+  const importHeaders = new Headers(request.headers);
+  importHeaders.set('content-type', 'application/json');
+  const importRequest = new Request(new URL('/admin/api/signal/import', request.url), {
+    method: 'POST',
+    headers: importHeaders,
+    body: JSON.stringify(
+      buildSignalDraftApprovalPayload(row, markdown, reviewDraft.automation, {
+        allowCandidateExclusions: payload.allowCandidateExclusions === true
+      })
+    )
+  });
+  const response = await handleAdminImportSignalBrief(importRequest, env);
+  const result = await response.json().catch(() => ({}));
+  return privateJson({ ...result, action, stage: 'signal-automation-5' }, { status: response.status });
+};
+
 const handleAdminGenerateSignalBriefDraft = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
@@ -11980,6 +12248,17 @@ const handleAdminImportSignalBrief = async (request, env) => {
     )
     .bind(locale, slug)
     .first();
+  const approvalEntryId = normalizePositiveInteger(payload.approvalEntryId, 0);
+  if (approvalEntryId && (!existing || existing.id !== approvalEntryId || existing.status !== 'draft')) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'SIGNAL_DRAFT_STATUS_CONFLICT',
+        message: '草稿状态已变化，请刷新后重新审核。'
+      },
+      { status: 409 }
+    );
+  }
 
   // Automation provenance is server-owned. The browser may echo it back, but cannot replace candidate IDs.
   const storedMetadata = parseStoredJson(existing?.metadata_json, {});
@@ -17835,6 +18114,7 @@ const handleR2Download = async (request, env, file) => {
 export const __readerTotpTestHooks = {
   aggregateNovelChapterStats,
   base32ToBytes,
+  buildSignalDraftApprovalPayload,
   buildNovelAiInsightFromStats,
   buildNovelChapterStatsMetrics,
   bytesToBase32,
@@ -17853,6 +18133,7 @@ export const __readerTotpTestHooks = {
   handleAdminGenerateNovelAiInsights,
   handleAdminGenerateSignalBriefDraft,
   handleAdminImportSignalBrief,
+  handleAdminListSignalBriefDrafts,
   handleAdminListSignalCandidates,
   handleAdminReviewSignalCandidates,
   handleAdminListSignalCollectionRuns,
@@ -17863,6 +18144,7 @@ export const __readerTotpTestHooks = {
   handleAdminListProductFeedback,
   handleAdminListReaderComments,
   handleAdminModerateReaderComment,
+  handleAdminManageSignalBriefDraft,
   handleAdminUpdateProductFeedback,
   handleAdminSaveSignalSource,
   normalizeSignalCandidateReviewPayload,
@@ -18241,6 +18523,12 @@ export default {
 
     if (url.pathname === '/admin/api/signal/drafts/generate') {
       if (request.method === 'POST') return handleAdminGenerateSignalBriefDraft(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/signal/drafts') {
+      if (request.method === 'GET') return handleAdminListSignalBriefDrafts(request, env);
+      if (request.method === 'POST') return handleAdminManageSignalBriefDraft(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
