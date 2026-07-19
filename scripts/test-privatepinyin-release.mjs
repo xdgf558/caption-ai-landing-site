@@ -38,6 +38,8 @@ assert.ok(stableManifest.release_notes.every((note) => typeof note === 'string' 
 const productPage = read('src/components/PrivatePinyinLanding.astro');
 assert.match(productPage, /加入 iOS TestFlight/);
 assert.match(productPage, /external TestFlight group/);
+assert.match(productPage, /AI Lite 候選重排序/);
+assert.doesNotMatch(productPage, /偏好設定改為緊湊等比縮放/);
 assert.match(productPage, /iosTestflight\.url/);
 assert.match(productPage, /releaseToken = `\$\{macVersion\}-\$\{windowsVersion\}`/);
 assert.match(productPage, /\?release=\$\{releaseToken\}/);
