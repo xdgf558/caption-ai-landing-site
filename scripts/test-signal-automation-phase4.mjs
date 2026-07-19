@@ -144,6 +144,53 @@ assert.match(aiCalls[0].request.messages[0].content, /Traditional Chinese \(zh-H
 assert.match(aiCalls[0].request.messages[1].content, /not permission to publish/i);
 assert.match(aiCalls[0].request.messages[1].content, /"outputLocale":"zh-Hant"/);
 
+const wrappedJson = await generateSignalBriefDraft(
+  {
+    async run() {
+      return { response: `Draft follows:\n\`\`\`json\n${JSON.stringify(aiPayloadFor())}\n\`\`\`` };
+    }
+  },
+  '@cf/test/draft-model',
+  candidates,
+  { briefDate: '2026-07-18', category: 'auto' }
+);
+assert.equal(wrappedJson.items.length, candidates.length);
+
+const structureRetryCalls = [];
+const generatedAfterStructureRetry = await generateSignalBriefDraft(
+  {
+    async run(_model, request) {
+      structureRetryCalls.push(request);
+      return { response: structureRetryCalls.length === 1 ? '{"title":"truncated"' : aiPayloadFor() };
+    }
+  },
+  '@cf/test/draft-model',
+  candidates,
+  { briefDate: '2026-07-18', category: 'auto' }
+);
+assert.equal(structureRetryCalls.length, 2);
+assert.match(structureRetryCalls[1].messages[0].content, /previous attempt returned malformed or incomplete JSON/i);
+assert.equal(generatedAfterStructureRetry.items.length, candidates.length);
+
+const fallbackCalls = [];
+const generatedWithFallback = await generateSignalBriefDraft(
+  {
+    async run(model) {
+      fallbackCalls.push(model);
+      return { response: model === '@cf/test/fallback-model' ? aiPayloadFor() : '{"title":"truncated"' };
+    }
+  },
+  '@cf/test/draft-model',
+  candidates,
+  {
+    briefDate: '2026-07-18',
+    category: 'auto',
+    fallbackModel: '@cf/test/fallback-model'
+  }
+);
+assert.deepEqual(fallbackCalls, ['@cf/test/draft-model', '@cf/test/draft-model', '@cf/test/fallback-model']);
+assert.equal(generatedWithFallback.model, '@cf/test/fallback-model');
+
 const translationRetryCalls = [];
 const translatedAfterRetry = await generateSignalBriefDraft(
   {

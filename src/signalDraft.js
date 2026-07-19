@@ -2,7 +2,7 @@ const signalDraftCategories = new Set(['ai', 'tech', 'economy', 'market', 'resea
 
 export const signalDraftMinCandidates = 3;
 export const signalDraftMaxCandidates = 10;
-export const signalDraftPromptVersion = 4;
+export const signalDraftPromptVersion = 5;
 export const signalDraftOutputLocale = 'zh-Hant';
 
 export const getSignalDraftMaxTokens = (candidateCount) => {
@@ -54,6 +54,50 @@ export const deriveSignalDraftCategory = (candidates) => {
   return [...counts.entries()].sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))[0]?.[0] || 'general';
 };
 
+const parseJsonObject = (value) => {
+  const text = String(value || '')
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
+  if (!text) return null;
+  try {
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+  } catch {
+    // Some JSON-mode models still wrap a valid object in a short explanation.
+  }
+
+  for (let start = text.indexOf('{'); start >= 0; start = text.indexOf('{', start + 1)) {
+    let depth = 0;
+    let escaped = false;
+    let inString = false;
+    for (let index = start; index < text.length; index += 1) {
+      const character = text[index];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (character === '\\') escaped = true;
+        else if (character === '"') inString = false;
+        continue;
+      }
+      if (character === '"') {
+        inString = true;
+        continue;
+      }
+      if (character === '{') depth += 1;
+      else if (character === '}') depth -= 1;
+      if (depth !== 0) continue;
+      try {
+        const parsed = JSON.parse(text.slice(start, index + 1));
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+      } catch {
+        break;
+      }
+    }
+  }
+  return null;
+};
+
 const extractModelPayload = (result) => {
   const value =
     result?.response ??
@@ -64,17 +108,7 @@ const extractModelPayload = (result) => {
     result;
   if (value && typeof value === 'object' && !Array.isArray(value)) return value;
   if (typeof value !== 'string') return null;
-  const text = value
-    .trim()
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim();
-  if (!text) return null;
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
+  return parseJsonObject(value);
 };
 
 const stripNumberPrefix = (value) => cleanText(value, 180).replace(/^\d{1,3}[.)、．]\s*/, '').trim();
@@ -146,9 +180,12 @@ const buildDraftMessages = (candidates, options = {}) => {
         'Do not invent facts, quotes, causes, forecasts, or source URLs.',
         'Return exactly one item for every candidateId and use each candidateId exactly once.',
         'summary states the sourced fact; signal explains why it may matter; noise states uncertainty or what not to over-interpret.',
-        'Keep each summary to 2-4 short sentences and each signal and noise field to 1-2 short sentences.',
+        'Keep each summary to 1-2 short sentences and each signal and noise field to one short sentence.',
         options.strictTranslation
           ? 'A previous attempt did not complete the Chinese translation. Rewrite all human-readable fields in Traditional Chinese now.'
+          : '',
+        options.strictOutput
+          ? 'A previous attempt returned malformed or incomplete JSON. Return one complete JSON object matching the schema exactly, with every required field and no prose or Markdown outside it.'
           : '',
         'Return only the requested JSON object.'
       ].filter(Boolean).join(' ')
@@ -219,6 +256,11 @@ const validateDraftPayload = (payload, candidates, options) => {
   };
 };
 
+const retryableDraftOutputCodes = new Set([
+  'SIGNAL_DRAFT_AI_OUTPUT_INVALID',
+  'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID'
+]);
+
 export const generateSignalBriefDraft = async (ai, model, candidates, options = {}) => {
   if (!ai || typeof ai.run !== 'function') {
     throw draftError('SIGNAL_DRAFT_AI_NOT_CONFIGURED', 'Workers AI 尚未配置，当前仍可使用人工简报表单。', 503);
@@ -232,9 +274,14 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
   if (category !== 'auto' && !signalDraftCategories.has(category)) {
     throw draftError('SIGNAL_DRAFT_CATEGORY_INVALID', '简报分类无效。');
   }
-  const runGeneration = async (strictTranslation = false) => {
+  const runGeneration = async (selectedModel, generationOptions = {}) => {
     const request = {
-      messages: buildDraftMessages(normalizedCandidates, { briefDate, category, strictTranslation }),
+      messages: buildDraftMessages(normalizedCandidates, {
+        briefDate,
+        category,
+        strictOutput: generationOptions.strictOutput === true,
+        strictTranslation: generationOptions.strictTranslation === true
+      }),
       max_tokens: getSignalDraftMaxTokens(normalizedCandidates.length),
       response_format: {
         type: 'json_schema',
@@ -242,21 +289,47 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
       },
       temperature: 0.2
     };
-    const result = await ai.run(model, request);
+    const result = await ai.run(selectedModel, request);
     return validateDraftPayload(extractModelPayload(result), normalizedCandidates, { briefDate, category });
   };
-  let draft;
-  try {
-    draft = await runGeneration(false);
-  } catch (error) {
-    if (error?.code !== 'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID') throw error;
-    draft = await runGeneration(true);
+
+  const requestedModels = [model, cleanText(options.fallbackModel, 160)].filter(Boolean);
+  const models = [...new Set(requestedModels)];
+  let lastError = null;
+  let draft = null;
+  let usedModel = model;
+  for (const selectedModel of models) {
+    try {
+      draft = await runGeneration(selectedModel);
+      usedModel = selectedModel;
+      break;
+    } catch (error) {
+      if (!retryableDraftOutputCodes.has(error?.code)) throw error;
+      lastError = error;
+      try {
+        draft = await runGeneration(selectedModel, {
+          strictOutput: true,
+          strictTranslation: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID'
+        });
+        usedModel = selectedModel;
+        break;
+      } catch (retryError) {
+        if (!retryableDraftOutputCodes.has(retryError?.code)) throw retryError;
+        lastError = retryError;
+        console.warn('Signal draft model output failed validation after retry.', {
+          candidateCount: normalizedCandidates.length,
+          code: retryError.code,
+          model: selectedModel
+        });
+      }
+    }
   }
+  if (!draft) throw lastError || draftError('SIGNAL_DRAFT_AI_OUTPUT_INVALID', 'AI 返回的草稿结构无效，请重试。', 502);
   return {
     ...draft,
     briefDate,
     candidateIds,
-    model,
+    model: usedModel,
     outputLocale: signalDraftOutputLocale,
     promptVersion: signalDraftPromptVersion,
     translationMode: 'source-to-zh-Hant'

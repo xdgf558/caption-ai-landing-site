@@ -12466,6 +12466,10 @@ const renderSignalMarkdownToHtml = (markdown) => {
 const getSignalBriefDraftModel = (env) =>
   cleanText(env.SIGNAL_BRIEF_MODEL || defaultSignalBriefDraftModel, 160) || defaultSignalBriefDraftModel;
 
+const getSignalBriefDraftFallbackModel = (env) =>
+  cleanText(env.SIGNAL_BRIEF_FALLBACK_MODEL || env.NOVEL_TRANSLATION_MODEL || defaultNovelTranslationModel, 160) ||
+  defaultNovelTranslationModel;
+
 const normalizeSignalBriefDraftDate = (value) => {
   const briefDate = cleanText(value, 20);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(briefDate)) return '';
@@ -12868,10 +12872,13 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
 
   try {
     const model = getSignalBriefDraftModel(env);
+    const fallbackModel = getSignalBriefDraftFallbackModel(env);
     const draft = await generateSignalBriefDraft(env.AI, model, candidates, {
       briefDate,
-      category: requestedCategory
+      category: requestedCategory,
+      fallbackModel: fallbackModel === model ? '' : fallbackModel
     });
+    const generatedModel = draft.model || model;
     const generationId = `signal-draft-${(crypto.randomUUID?.() || randomToken(20)).replace(/-/g, '')}`;
     const generatedAt = new Date().toISOString();
     const sources = candidates.map((candidate) => ({
@@ -12894,7 +12901,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
         automation: {
           candidateIds,
           generatedAt,
-          model,
+          model: generatedModel,
           outputLocale: draft.outputLocale,
           promptVersion: draft.promptVersion,
           sourceEntryId: existing?.id || 0,
@@ -12925,7 +12932,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       auditMetadata: {
         candidateIds,
         generationId,
-        model,
+        model: generatedModel,
         outputLocale: draft.outputLocale,
         promptVersion: draft.promptVersion
       },
@@ -12934,7 +12941,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
     const automation = {
       candidateIds,
       generatedAt,
-      model,
+      model: generatedModel,
       outputLocale: draft.outputLocale,
       promptVersion: draft.promptVersion,
       sourceEntryId: saved.id,

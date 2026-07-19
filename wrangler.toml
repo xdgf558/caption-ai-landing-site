@@ -17,6 +17,7 @@ READER_EMAIL_FROM_NAME = "Station Cat"
 NOVEL_TRANSLATION_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 NOVEL_TRANSLATION_AUTO_SYNC = "1"
 SIGNAL_BRIEF_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
+SIGNAL_BRIEF_FALLBACK_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 
 [assets]
 directory = "./dist"
