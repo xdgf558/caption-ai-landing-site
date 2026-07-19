@@ -1,19 +1,20 @@
 {
   "schema_version": 1,
   "channel": "stable",
-  "version": "0.1.21",
-  "build": 21,
+  "version": "0.1.22",
+  "build": 22,
   "minimum_macos_version": "14.0",
-  "published_at": "2026-07-15T14:38:42Z",
-  "title": "猫栈拼音 0.1.21",
+  "published_at": "2026-07-19T02:05:29Z",
+  "title": "猫栈拼音 0.1.22",
   "release_notes": [
-    "偏好设置默认以 86% 紧凑比例显示，并可随窗口在 72% 至 100% 之间等比缩放。",
-    "修复触控板手势缩放可能造成的界面裁切或点击错位。",
-    "升级安装后可在确认后安全重新加载旧输入法进程，正常刷新无需注销或重启。",
-    "继续提供本地 trigram 联想、学习权重衰减、容量限制和多进程写入稳定性。"
+    "新增桌面端 AI Lite 候选重排序，所有推理均在本机异步完成，不联网、不记录输入内容。",
+    "AI 工作队列满、结果过期、候选身份变化或模型不可用时，会立即保留基础候选，不阻塞打字。",
+    "密码框会停用 AI 重排序并清除待处理结果，离开安全输入后从新的组合状态继续。",
+    "升级安装后会检测仍在运行的旧输入法进程，并在你确认后安全重新加载。",
+    "继续改进本地联想、学习权重衰减、容量限制和多进程写入稳定性。"
   ],
   "release_page_url": "https://wwwstationcat.org/zh-hans/apps/privatepinyin/download/",
-  "package_url": "https://wwwstationcat.org/downloads/privatepinyin/PrivatePinyin-0.1.21.pkg",
-  "package_sha256": "660d1cc7d8674c8be0e3f30683deb0d6351fa0f76a4842c6cad46bb55f0a5026",
-  "package_size_bytes": 2620601
+  "package_url": "https://wwwstationcat.org/downloads/privatepinyin/PrivatePinyin-0.1.22.pkg",
+  "package_sha256": "f4c5445f7ce8d3d34555c5047f37731f1a8f16e0a7f3bf097ff11fa11baebfc1",
+  "package_size_bytes": 3039890
 }

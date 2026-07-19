@@ -18007,6 +18007,12 @@ const downloadFiles = {
     contentType: 'application/octet-stream',
     limitKey: 'privatepinyin-0.1.20-setup-exe'
   },
+  '/downloads/privatepinyin/PrivatePinyin-0.1.22.pkg': {
+    key: 'privatepinyin/0.1.22/PrivatePinyin-0.1.22.pkg',
+    filename: 'PrivatePinyin-0.1.22.pkg',
+    contentType: 'application/octet-stream',
+    limitKey: 'privatepinyin-0.1.22-pkg'
+  },
   '/downloads/privatepinyin/PrivatePinyin-0.1.21.pkg': {
     key: 'privatepinyin/0.1.21/PrivatePinyin-0.1.21.pkg',
     filename: 'PrivatePinyin-0.1.21.pkg',
