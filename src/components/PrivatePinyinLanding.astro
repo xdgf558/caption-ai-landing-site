@@ -34,8 +34,8 @@ const copy = {
     featuresTitle: '目前這個版本適合',
     features: [
       ['本機中文輸入', '先把日常拼音輸入跑順，候選詞、標點和打字手感會持續調整。'],
-      [`macOS ${macVersion}`, '新增完全在本機非同步執行的 AI Lite 候選重排序；密碼輸入時會停用，失敗、逾時或結果過期時立即回退，不阻塞打字。'],
-      [`Windows ${windowsVersion} 內測`, 'Windows EXE 內測包已更新，適合願意協助測試 TSF 版本的使用者。'],
+      [`macOS ${macVersion}`, '內置詞庫擴充至 137,699 條，並可從選單或偏好設定匯入本機 Rime YAML 詞庫；匯入層獨立保存，升級不會覆蓋。'],
+      [`Windows ${windowsVersion} 內測`, 'Windows EXE 內測包同步加入擴充詞庫與本機 Rime YAML 匯入，並包含 x64 / x86 TSF 元件。'],
       ['iOS 外部測試', 'iPhone 與 iPad 使用者可透過 TestFlight 加入外部測試，協助驗證行動端鍵盤、候選詞和輸入流程。'],
       ['小而清楚的下載入口', '安裝包、版本、大小和 SHA-256 都集中在下載頁，方便確認來源。']
     ],
@@ -64,8 +64,8 @@ const copy = {
     featuresTitle: '目前这个版本适合',
     features: [
       ['本机中文输入', '先把日常拼音输入跑顺，候选词、标点和打字手感会持续调整。'],
-      [`macOS ${macVersion}`, '新增完全在本机异步执行的 AI Lite 候选重排序；密码输入时会停用，失败、超时或结果过期时立即回退，不阻塞打字。'],
-      [`Windows ${windowsVersion} 内测`, 'Windows EXE 内测包已更新，适合愿意协助测试 TSF 版本的用户。'],
+      [`macOS ${macVersion}`, '内置词库扩充至 137,699 条，并可从菜单或偏好设置导入本地 Rime YAML 词库；导入层独立保存，升级不会覆盖。'],
+      [`Windows ${windowsVersion} 内测`, 'Windows EXE 内测包同步加入扩充词库与本地 Rime YAML 导入，并包含 x64 / x86 TSF 组件。'],
       ['iOS 外部测试', 'iPhone 和 iPad 用户可通过 TestFlight 加入外部测试，帮助验证移动端键盘、候选词和输入流程。'],
       ['小而清楚的下载入口', '安装包、版本、大小和 SHA-256 都集中在下载页，方便确认来源。']
     ],
@@ -94,8 +94,8 @@ const copy = {
     featuresTitle: 'What this build is for',
     features: [
       ['Local Chinese typing', 'The focus is making daily pinyin input feel steady, with candidates, punctuation, and typing flow improving over time.'],
-      [`macOS ${macVersion}`, 'Adds fully on-device, asynchronous AI Lite candidate reranking. It is disabled for password input and falls back immediately on failure, timeout, or stale results without blocking typing.'],
-      [`Windows ${windowsVersion} internal test`, 'The Windows EXE internal test build has been refreshed for users willing to help validate the TSF version.'],
+      [`macOS ${macVersion}`, 'Expands the bundled permissive lexicon to 137,699 entries and adds local Rime YAML dictionary import. Imported entries are stored separately and survive upgrades.'],
+      [`Windows ${windowsVersion} internal test`, 'Adds the expanded lexicon and local Rime YAML import to the Windows EXE build, including both x64 and x86 TSF components.'],
       ['iOS external test', 'iPhone and iPad users can join through TestFlight to help validate the mobile keyboard, candidates, and typing flow.'],
       ['Clear download trail', 'The installer, version, size, and SHA-256 checksum are kept together on the download page.']
     ],
@@ -124,8 +124,8 @@ const copy = {
     featuresTitle: 'このバージョンでできること',
     features: [
       ['ローカル中国語入力', '日常的なピンイン入力、候補、句読点、入力感を整えていきます。'],
-      [`macOS ${macVersion}`, '端末内で非同期に動作する AI Lite 候補再ランキングを追加。パスワード入力時は無効になり、失敗・タイムアウト・古い結果は入力を止めず即座に基本候補へ戻します。'],
-      [`Windows ${windowsVersion} 内部テスト`, 'Windows EXE の内部テスト版を更新しました。TSF 版の検証に協力できる方向けです。'],
+      [`macOS ${macVersion}`, '許諾が明確な内蔵辞書を 137,699 件へ拡充し、ローカル Rime YAML 辞書の読み込みを追加しました。読み込んだ辞書は別領域に保存され、更新後も残ります。'],
+      [`Windows ${windowsVersion} 内部テスト`, '拡充辞書とローカル Rime YAML 読み込みを Windows EXE にも追加し、x64 / x86 の TSF コンポーネントを収録しました。'],
       ['iOS 外部テスト', 'iPhone と iPad から TestFlight に参加し、モバイルキーボード、候補、入力フローの検証に協力できます。'],
       ['わかりやすい配布情報', 'インストーラー、バージョン、サイズ、SHA-256 をダウンロードページにまとめています。']
     ],
