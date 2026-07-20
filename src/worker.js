@@ -18008,6 +18008,12 @@ const handleDynamicFrontendContent = async (request, env) => {
 };
 
 const downloadFiles = {
+  '/downloads/privatepinyin/PrivatePinyin-0.1.24.pkg': {
+    key: 'privatepinyin/0.1.24/PrivatePinyin-0.1.24.pkg',
+    filename: 'PrivatePinyin-0.1.24.pkg',
+    contentType: 'application/octet-stream',
+    limitKey: 'privatepinyin-0.1.24-pkg'
+  },
   '/downloads/privatepinyin/PrivatePinyin-0.1.23-setup.exe': {
     key: 'privatepinyin/0.1.23/PrivatePinyin-0.1.23-setup.exe',
     filename: 'PrivatePinyin-0.1.23-setup.exe',

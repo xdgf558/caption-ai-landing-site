@@ -30,12 +30,11 @@ const copy = {
     metaTitle: '下載檔案',
     releaseNotesTitle: '版本說明',
     releaseNotes: [
-      '將內置、授權明確的基礎詞庫從 100,669 條擴充至 137,699 條，補充更多常用短語讀音。',
-      '新增本機 Rime YAML 詞庫匯入；匯入資料與內置詞庫、學習資料分開保存，後續升級不會覆蓋。',
-      `macOS ${macVersion} 可從輸入法選單或偏好設定匯入；Windows ${windowsVersion} 可從設定工具匯入。`,
-      '匯入全程在本機完成，會限制檔案與條目規模並合併去重，不會連網或上傳使用者詞庫。',
-      '修正自訂 macOS 使用者詞庫路徑在設定修復時可能被覆蓋，並改善多檔案匯入結果提示。',
-      'Windows 包目前未簽名，安裝時可能出現 SmartScreen 或信任提示。'
+      `macOS ${macVersion} 讓所有輸入客戶端共享一份詞庫引擎快照，同時保持各自獨立的組詞狀態，大幅降低多應用長時間使用時的記憶體佔用。`,
+      '設定或匯入詞庫變更時只會重建一次共享引擎；若重建失敗，會繼續使用上一個可用快照，不影響基礎輸入。',
+      '加入 AI-09 桌面 Helper 安全邊界基礎設施；目前預設休眠，普通拼音和 AI Lite 候選排序不依賴它。',
+      `Windows 內測版仍為 ${windowsVersion}，下載與功能說明維持不變。`,
+      'macOS 安裝包已完成 Developer ID 簽名、Apple 公證與 stapling。'
     ],
     publicBadge: '公開測試',
     internalBadge: '內測版',
@@ -58,12 +57,11 @@ const copy = {
     metaTitle: '下载文件',
     releaseNotesTitle: '版本说明',
     releaseNotes: [
-      '将内置、许可明确的基础词库从 100,669 条扩充到 137,699 条，补充更多常用短语读音。',
-      '新增本地 Rime YAML 词库导入；导入数据与内置词库、学习数据分开保存，后续升级不会覆盖。',
-      `macOS ${macVersion} 可从输入法菜单或偏好设置导入；Windows ${windowsVersion} 可从设置工具导入。`,
-      '导入全程在本机完成，会限制文件与条目规模并合并去重，不会联网或上传用户词库。',
-      '修复自定义 macOS 用户词库路径在设置修复时可能被覆盖，并改进多文件导入结果提示。',
-      'Windows 包目前未签名，安装时可能出现 SmartScreen 或信任提示。'
+      `macOS ${macVersion} 让所有输入客户端共享一份词库引擎快照，同时保持各自独立的组词状态，大幅降低多应用长时间使用时的内存占用。`,
+      '设置或导入词库变更时只会重建一次共享引擎；若重建失败，会继续使用上一个可用快照，不影响基础输入。',
+      '加入 AI-09 桌面 Helper 安全边界基础设施；目前默认休眠，普通拼音和 AI Lite 候选排序不依赖它。',
+      `Windows 内测版仍为 ${windowsVersion}，下载与功能说明保持不变。`,
+      'macOS 安装包已完成 Developer ID 签名、Apple 公证与 stapling。'
     ],
     publicBadge: '公开测试',
     internalBadge: '内测版',
@@ -86,12 +84,11 @@ const copy = {
     metaTitle: 'Download files',
     releaseNotesTitle: 'Release notes',
     releaseNotes: [
-      'Expands the bundled, permissively licensed base lexicon from 100,669 to 137,699 entries with broader common-phrase coverage.',
-      'Adds local Rime YAML dictionary import. Imported entries are stored separately from bundled and learned data, so upgrades do not overwrite them.',
-      `Import from the input-method menu or Preferences on macOS ${macVersion}, or from the settings tool on Windows ${windowsVersion}.`,
-      'Import runs entirely on-device, with bounded file and entry counts plus merge and deduplication. User dictionaries are never uploaded.',
-      'Preserves explicit custom macOS user-lexicon paths during settings repair and reports partial multi-file imports accurately.',
-      'The Windows builds are unsigned and may trigger SmartScreen or trust prompts during install.'
+      `macOS ${macVersion} shares one lexicon engine snapshot across all input clients while preserving isolated composition state, substantially reducing memory during long-running multi-app use.`,
+      'Settings or imported-lexicon changes rebuild the shared engine only once. If rebuilding fails, the previous working snapshot remains active and base input continues.',
+      'Adds the dormant AI-09 desktop Helper security boundary. Ordinary pinyin input and AI Lite candidate ranking do not depend on it.',
+      `The Windows internal test build remains ${windowsVersion}; its download and feature information are unchanged.`,
+      'The macOS installer is Developer ID signed, Apple notarized, and stapled.'
     ],
     publicBadge: 'Public test',
     internalBadge: 'Internal test',
@@ -114,12 +111,11 @@ const copy = {
     metaTitle: 'ダウンロードファイル',
     releaseNotesTitle: 'バージョン情報',
     releaseNotes: [
-      '許諾が明確な内蔵基本辞書を 100,669 件から 137,699 件へ拡充し、一般的なフレーズの読みを追加しました。',
-      'ローカル Rime YAML 辞書の読み込みを追加しました。読み込んだデータは内蔵辞書や学習データと別に保存され、更新後も残ります。',
-      `macOS ${macVersion} は入力メニューまたは環境設定、Windows ${windowsVersion} は設定ツールから読み込めます。`,
-      '読み込みは端末内で完結し、ファイル数と項目数を制限して統合・重複排除します。ユーザー辞書を送信することはありません。',
-      'macOS のカスタムユーザー辞書パスを設定修復時にも保持し、複数ファイル読み込みの結果表示を改善しました。',
-      'Windows 版は未署名のため、インストール時に SmartScreen や信頼確認が表示される場合があります。'
+      `macOS ${macVersion} は全入力クライアントで一つの辞書エンジンスナップショットを共有しながら、変換状態を個別に保持し、複数アプリの長時間使用時のメモリを大幅に削減します。`,
+      '設定や読み込み辞書が変わった場合も共有エンジンは一度だけ再構築され、失敗時は直前の正常なスナップショットで基本入力を継続します。',
+      '通常は休止している AI-09 デスクトップ Helper の安全境界を追加しました。通常のピンイン入力と AI Lite 候補順位はこれに依存しません。',
+      `Windows 内部テスト版は ${windowsVersion} のままで、ダウンロードと機能説明に変更はありません。`,
+      'macOS インストーラーは Developer ID 署名、Apple 公証、stapling を完了しています。'
     ],
     publicBadge: '公開テスト',
     internalBadge: '内部テスト',
