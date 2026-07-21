@@ -7,9 +7,11 @@ import worker, { __readerTotpTestHooks as workerHooks } from '../src/worker.js';
 import {
   deriveSignalDraftCategory,
   generateSignalBriefDraft,
+  generateSignalBriefDraftWithProviders,
   getSignalDraftMaxTokens,
   normalizeSignalDraftCandidateIds,
-  signalDraftOutputLocale
+  signalDraftOutputLocale,
+  signalDraftQualityVersion
 } from '../src/signalDraft.js';
 
 const root = join(fileURLToPath(new URL('..', import.meta.url)));
@@ -54,17 +56,44 @@ const candidates = [
   }
 ];
 
+const editorialDetails = [
+  {
+    headline: 'OpenAI 公開模型與 API 更新',
+    noise: '目前資料只確認發布內容，尚未提供企業採用成效與實際安全表現。',
+    signal: '公開的 API 與安全資訊可協助開發團隊評估模型導入時程。',
+    summary: 'OpenAI 發布模型更新，內容涵蓋 API 與安全資訊。'
+  },
+  {
+    headline: '聯準會發布經濟政策更新',
+    noise: '單次政策公告不足以確認長期利率方向，仍要配合後續經濟數據判讀。',
+    signal: '官方政策更新可能改變市場對利率路徑與資金成本的判斷。',
+    summary: '聯準會發布一項官方經濟政策更新。'
+  },
+  {
+    headline: 'GitHub 更新開發工作流程',
+    noise: '公告尚未說明不同團隊導入後的維護成本與實際效率差異。',
+    signal: '工作流程更新可降低開發團隊整合與維護工具的操作成本。',
+    summary: 'GitHub 發布一項開發者工作流程更新。'
+  }
+];
+
 const aiPayloadFor = (items = candidates) => ({
   category: 'ai',
-  description: '今天關注模型、經濟政策和開發工具的三條重要信號。',
-  items: items.map((candidate, index) => ({
-    candidateId: candidate.id,
-    headline: `${index + 1}. 第 ${index + 1} 條資訊已完成繁體中文整理`,
-    noise: '仍需結合後續一手資料，不能過度推論。',
-    signal: '這項變化可能影響開發者、市場預期或產品路線。',
-    summary: `這條候選資訊已翻譯並保留原始事實，來源是 ${candidate.source_name || '官方來源'}。`
-  })),
-  title: '每日信號簡報'
+  description: '今天關注模型、經濟政策和開發工具帶來的不同影響。',
+  items: items.map((candidate, index) => {
+    const sourceNumber = candidate.title.match(/\d+(?:[,.]\d+)*/)?.[0];
+    if (sourceNumber !== undefined) {
+      return {
+        candidateId: candidate.id,
+        headline: `候選 ${sourceNumber} 的技術更新`,
+        noise: `候選 ${sourceNumber} 尚未提供足以驗證長期成效的使用資料。`,
+        signal: `候選 ${sourceNumber} 顯示開發工具仍在調整產品與工作流程。`,
+        summary: `來源整理了候選 ${sourceNumber} 的公開技術內容。`
+      };
+    }
+    return { candidateId: candidate.id, ...editorialDetails[index % editorialDetails.length] };
+  }),
+  title: '模型、政策與開發工具動向'
 });
 
 const englishPayloadFor = (items = candidates) => ({
@@ -112,6 +141,38 @@ const duplicatedEditorialPayloadFor = (items = candidates) => ({
   }))
 });
 
+const repeatedEditorialPayloadFor = (items = candidates) => ({
+  ...aiPayloadFor(items),
+  items: aiPayloadFor(items).items.map((item) => ({
+    ...item,
+    signal: '這項變化可能影響開發者、市場預期或產品路線。'
+  }))
+});
+
+const genericEditorialPayloadFor = (items = candidates) => {
+  const payload = aiPayloadFor(items);
+  payload.items[0] = {
+    ...payload.items[0],
+    signal: '這個故事可能會引起一些爭議，後續值得繼續關注。'
+  };
+  return payload;
+};
+
+const duplicatedHeaderPayloadFor = (items = candidates) => {
+  const payload = aiPayloadFor(items);
+  payload.description = payload.title;
+  return payload;
+};
+
+const unsupportedNumericPayloadFor = (items = candidates) => {
+  const payload = aiPayloadFor(items);
+  payload.items[0] = {
+    ...payload.items[0],
+    signal: '這項更新預計會在未來 99 天內改變模型導入節奏。'
+  };
+  return payload;
+};
+
 assert.deepEqual(normalizeSignalDraftCandidateIds(candidates.map((candidate) => candidate.id)), candidates.map((candidate) => candidate.id));
 assert.throws(
   () => normalizeSignalDraftCandidateIds(['one', 'two']),
@@ -140,8 +201,10 @@ const generated = await generateSignalBriefDraft(ai, '@cf/test/draft-model', can
 assert.equal(generated.items.length, 3);
 assert.equal(generated.category, 'ai');
 assert.equal(generated.outputLocale, signalDraftOutputLocale);
+assert.equal(generated.provider, 'workers-ai');
+assert.equal(generated.qualityVersion, signalDraftQualityVersion);
 assert.equal(generated.translationMode, 'source-to-zh-Hant');
-assert.match(generated.markdown, /1\. 第 1 條資訊已完成繁體中文整理/);
+assert.match(generated.markdown, /1\. OpenAI 公開模型與 API 更新/);
 assert.match(generated.markdown, /信號：/);
 assert.match(generated.markdown, /噪音：/);
 assert.equal(aiCalls[0].request.response_format.type, 'json_schema');
@@ -150,6 +213,8 @@ assert.equal(aiCalls[0].request.max_tokens, 3200);
 assert.match(aiCalls[0].request.messages[0].content, /untrusted reference material/);
 assert.match(aiCalls[0].request.messages[0].content, /Traditional Chinese \(zh-Hant\)/);
 assert.match(aiCalls[0].request.messages[0].content, /must never repeat or paraphrase each other/i);
+assert.match(aiCalls[0].request.messages[0].content, /Use a number only when the same number appears/i);
+assert.match(aiCalls[0].request.messages[0].content, /Do not reuse stock sentences/i);
 assert.match(aiCalls[0].request.messages[0].content, /Avoid generic controversy language/i);
 assert.match(aiCalls[0].request.messages[1].content, /not permission to publish/i);
 assert.match(aiCalls[0].request.messages[1].content, /"outputLocale":"zh-Hant"/);
@@ -182,6 +247,37 @@ assert.equal(structureRetryCalls.length, 2);
 assert.match(structureRetryCalls[1].messages[0].content, /previous attempt returned malformed or incomplete JSON/i);
 assert.equal(generatedAfterStructureRetry.items.length, candidates.length);
 
+const truncationRetryCalls = [];
+const generatedAfterTruncation = await generateSignalBriefDraft(
+  {
+    async run(_model, request) {
+      truncationRetryCalls.push(request);
+      return truncationRetryCalls.length === 1
+        ? { metadata: { finishReason: 'length' }, provider: 'deepseek', response: '{"title":"truncated"' }
+        : {
+            metadata: { finishReason: 'stop' },
+            model: 'deepseek-v4-pro',
+            provider: 'deepseek',
+            response: aiPayloadFor(),
+            usage: { completion_tokens: 800, prompt_tokens: 1200, total_tokens: 2000 }
+          };
+    }
+  },
+  'deepseek-v4-pro',
+  candidates,
+  { briefDate: '2026-07-18', category: 'auto', provider: 'deepseek' }
+);
+assert.equal(truncationRetryCalls.length, 2);
+assert.match(truncationRetryCalls[1].messages[0].content, /malformed or incomplete JSON/i);
+assert.equal(generatedAfterTruncation.finishReason, 'stop');
+assert.equal(generatedAfterTruncation.model, 'deepseek-v4-pro');
+assert.equal(generatedAfterTruncation.provider, 'deepseek');
+assert.deepEqual(generatedAfterTruncation.usage, {
+  completionTokens: 800,
+  promptTokens: 1200,
+  totalTokens: 2000
+});
+
 const fallbackCalls = [];
 const generatedWithFallback = await generateSignalBriefDraft(
   {
@@ -200,6 +296,47 @@ const generatedWithFallback = await generateSignalBriefDraft(
 );
 assert.deepEqual(fallbackCalls, ['@cf/test/draft-model', '@cf/test/draft-model', '@cf/test/fallback-model']);
 assert.equal(generatedWithFallback.model, '@cf/test/fallback-model');
+
+const providerFallbackCalls = [];
+const generatedWithProviderFallback = await generateSignalBriefDraftWithProviders(
+  [
+    {
+      ai: {
+        async run() {
+          providerFallbackCalls.push('deepseek');
+          const error = new Error('DeepSeek unavailable');
+          error.code = 'DEEPSEEK_AUTH_FAILED';
+          error.status = 503;
+          throw error;
+        }
+      },
+      model: 'deepseek-v4-pro',
+      provider: 'deepseek'
+    },
+    {
+      ai: {
+        async run() {
+          providerFallbackCalls.push('workers-ai');
+          return { response: aiPayloadFor() };
+        }
+      },
+      model: '@cf/test/draft-model',
+      provider: 'workers-ai'
+    }
+  ],
+  candidates,
+  { briefDate: '2026-07-18', category: 'auto' }
+);
+assert.deepEqual(providerFallbackCalls, ['deepseek', 'workers-ai']);
+assert.equal(generatedWithProviderFallback.provider, 'workers-ai');
+assert.equal(generatedWithProviderFallback.fallbackUsed, true);
+assert.deepEqual(
+  generatedWithProviderFallback.providerAttempts.map((attempt) => [attempt.provider, attempt.status, attempt.code || '']),
+  [
+    ['deepseek', 'failed', 'DEEPSEEK_AUTH_FAILED'],
+    ['workers-ai', 'completed', '']
+  ]
+);
 
 const translationRetryCalls = [];
 const translatedAfterRetry = await generateSignalBriefDraft(
@@ -247,8 +384,24 @@ const editorialResult = await generateSignalBriefDraft(
   { briefDate: '2026-07-18', category: 'auto' }
 );
 assert.equal(editorialRetryCalls.length, 2);
-assert.match(editorialRetryCalls[1].messages[0].content, /previous attempt repeated or paraphrased signal and noise/i);
+assert.match(editorialRetryCalls[1].messages[0].content, /previous attempt used repeated, generic, or overlapping editorial analysis/i);
 assert.equal(editorialResult.items.length, candidates.length);
+
+const factualRetryCalls = [];
+const factualResult = await generateSignalBriefDraft(
+  {
+    async run(_model, request) {
+      factualRetryCalls.push(request);
+      return { response: factualRetryCalls.length === 1 ? unsupportedNumericPayloadFor() : aiPayloadFor() };
+    }
+  },
+  '@cf/test/draft-model',
+  candidates,
+  { briefDate: '2026-07-18', category: 'auto' }
+);
+assert.equal(factualRetryCalls.length, 2);
+assert.match(factualRetryCalls[1].messages[0].content, /introduced a number that was not present/i);
+assert.equal(factualResult.items.length, candidates.length);
 
 await assert.rejects(
   generateSignalBriefDraft(
@@ -258,6 +411,38 @@ await assert.rejects(
     { briefDate: '2026-07-18', category: 'auto' }
   ),
   (error) => error.code === 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID'
+);
+
+await assert.rejects(
+  generateSignalBriefDraft(
+    { run: async () => ({ response: repeatedEditorialPayloadFor() }) },
+    '@cf/test/draft-model',
+    candidates,
+    { briefDate: '2026-07-18', category: 'auto' }
+  ),
+  (error) => error.code === 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID'
+);
+
+for (const editorialPayload of [genericEditorialPayloadFor(), duplicatedHeaderPayloadFor()]) {
+  await assert.rejects(
+    generateSignalBriefDraft(
+      { run: async () => ({ response: editorialPayload }) },
+      '@cf/test/draft-model',
+      candidates,
+      { briefDate: '2026-07-18', category: 'auto' }
+    ),
+    (error) => error.code === 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID'
+  );
+}
+
+await assert.rejects(
+  generateSignalBriefDraft(
+    { run: async () => ({ response: unsupportedNumericPayloadFor() }) },
+    '@cf/test/draft-model',
+    candidates,
+    { briefDate: '2026-07-18', category: 'auto' }
+  ),
+  (error) => error.code === 'SIGNAL_DRAFT_AI_OUTPUT_FACTUAL_INVALID'
 );
 
 await assert.rejects(
@@ -457,6 +642,9 @@ assert.equal(handlerPayload.entry.sourceKind, 'signal_automation');
 assert.equal(handlerPayload.candidateStatusesChanged, false);
 assert.deepEqual(handlerPayload.automation.candidateIds, candidates.map((candidate) => candidate.id));
 assert.equal(handlerPayload.automation.outputLocale, 'zh-Hant');
+assert.equal(handlerPayload.automation.provider, 'workers-ai');
+assert.equal(handlerPayload.automation.fallbackUsed, false);
+assert.equal(handlerPayload.automation.qualityVersion, signalDraftQualityVersion);
 assert.equal(handlerPayload.automation.sourceEntryId, 41);
 assert.equal(handlerPayload.automation.translationMode, 'source-to-zh-Hant');
 assert.equal(bucketWrites.length, 2);
@@ -467,6 +655,203 @@ assert.deepEqual([...draftDb.candidates.values()].map((candidate) => candidate.s
 ]);
 assert.equal(draftDb.sql.some((sql) => /UPDATE signal_candidates/i.test(sql)), false);
 assert.ok(draftDb.auditActions.includes('signal_brief_draft_generate'));
+
+const originalFetch = globalThis.fetch;
+try {
+  let workersAiCalledForDeepSeekSuccess = false;
+  let deepSeekRequestBody = null;
+  globalThis.fetch = async (_url, init) => {
+    deepSeekRequestBody = JSON.parse(init.body);
+    return new Response(
+      JSON.stringify({
+        choices: [
+          {
+            finish_reason: 'stop',
+            message: { content: JSON.stringify(aiPayloadFor()), role: 'assistant' }
+          }
+        ],
+        id: 'deepseek-signal-test',
+        model: 'deepseek-v4-pro',
+        usage: { completion_tokens: 700, prompt_tokens: 1100, total_tokens: 1800 }
+      }),
+      { status: 200 }
+    );
+  };
+  const deepSeekDb = new DraftDb();
+  const deepSeekHandlerResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+    new Request('http://localhost/admin/api/signal/drafts/generate', {
+      body: JSON.stringify({
+        briefDate: '2026-07-18',
+        candidateIds: candidates.map((candidate) => candidate.id),
+        category: 'auto'
+      }),
+      headers: { 'content-type': 'application/json' },
+      method: 'POST'
+    }),
+    {
+      AI: {
+        async run() {
+          workersAiCalledForDeepSeekSuccess = true;
+          return { response: aiPayloadFor() };
+        }
+      },
+      CONTENT_BUCKET: { async put() {} },
+      DEEPSEEK_API_KEY: 'test-deepseek-secret',
+      SIGNAL_BRIEF_DEEPSEEK_ENABLED: '1',
+      SIGNAL_BRIEF_DEEPSEEK_MODEL: 'deepseek-v4-pro',
+      WAITLIST_DB: deepSeekDb
+    }
+  );
+  assert.equal(deepSeekHandlerResponse.status, 200);
+  const deepSeekHandlerPayload = await deepSeekHandlerResponse.json();
+  assert.equal(deepSeekHandlerPayload.automation.provider, 'deepseek');
+  assert.equal(deepSeekHandlerPayload.automation.model, 'deepseek-v4-pro');
+  assert.equal(deepSeekHandlerPayload.automation.finishReason, 'stop');
+  assert.equal(deepSeekHandlerPayload.automation.fallbackUsed, false);
+  assert.equal(deepSeekHandlerPayload.automation.usage.totalTokens, 1800);
+  assert.equal(workersAiCalledForDeepSeekSuccess, false);
+  assert.deepEqual(deepSeekRequestBody.thinking, { type: 'disabled' });
+
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ error: { message: 'invalid test key' } }), { status: 401 });
+  let workersAiFallbackCalls = 0;
+  const deepSeekFallbackResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+    new Request('http://localhost/admin/api/signal/drafts/generate', {
+      body: JSON.stringify({
+        briefDate: '2026-07-18',
+        candidateIds: candidates.map((candidate) => candidate.id),
+        category: 'auto'
+      }),
+      headers: { 'content-type': 'application/json' },
+      method: 'POST'
+    }),
+    {
+      AI: {
+        async run() {
+          workersAiFallbackCalls += 1;
+          return { response: aiPayloadFor() };
+        }
+      },
+      CONTENT_BUCKET: { async put() {} },
+      DEEPSEEK_API_KEY: 'test-deepseek-secret',
+      SIGNAL_BRIEF_DEEPSEEK_ENABLED: '1',
+      WAITLIST_DB: new DraftDb()
+    }
+  );
+  assert.equal(deepSeekFallbackResponse.status, 200);
+  const deepSeekFallbackPayload = await deepSeekFallbackResponse.json();
+  assert.equal(workersAiFallbackCalls, 1);
+  assert.equal(deepSeekFallbackPayload.automation.provider, 'workers-ai');
+  assert.equal(deepSeekFallbackPayload.automation.fallbackUsed, true);
+  assert.equal(deepSeekFallbackPayload.automation.providerAttempts[0].code, 'DEEPSEEK_AUTH_FAILED');
+
+  let invalidModelFetchCalls = 0;
+  let invalidModelWorkersCalls = 0;
+  globalThis.fetch = async () => {
+    invalidModelFetchCalls += 1;
+    throw new Error('An unsupported DeepSeek model should fail before fetch');
+  };
+  const invalidDeepSeekModelResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+    new Request('http://localhost/admin/api/signal/drafts/generate', {
+      body: JSON.stringify({
+        briefDate: '2026-07-18',
+        candidateIds: candidates.map((candidate) => candidate.id),
+        category: 'auto'
+      }),
+      headers: { 'content-type': 'application/json' },
+      method: 'POST'
+    }),
+    {
+      AI: {
+        async run() {
+          invalidModelWorkersCalls += 1;
+          return { response: aiPayloadFor() };
+        }
+      },
+      CONTENT_BUCKET: { async put() {} },
+      DEEPSEEK_API_KEY: 'test-deepseek-secret',
+      SIGNAL_BRIEF_DEEPSEEK_ENABLED: '1',
+      SIGNAL_BRIEF_DEEPSEEK_MODEL: 'deepseek-unsupported-model',
+      WAITLIST_DB: new DraftDb()
+    }
+  );
+  assert.equal(invalidDeepSeekModelResponse.status, 200);
+  const invalidDeepSeekModelPayload = await invalidDeepSeekModelResponse.json();
+  assert.equal(invalidDeepSeekModelPayload.automation.provider, 'workers-ai');
+  assert.equal(invalidDeepSeekModelPayload.automation.fallbackUsed, true);
+  assert.equal(invalidDeepSeekModelPayload.automation.providerAttempts[0].code, 'DEEPSEEK_MODEL_UNSUPPORTED');
+  assert.equal(invalidModelFetchCalls, 0);
+  assert.equal(invalidModelWorkersCalls, 1);
+
+  let disabledDeepSeekFetchCalls = 0;
+  let disabledDeepSeekWorkersCalls = 0;
+  globalThis.fetch = async () => {
+    disabledDeepSeekFetchCalls += 1;
+    throw new Error('DeepSeek should be disabled');
+  };
+  const disabledDeepSeekResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+    new Request('http://localhost/admin/api/signal/drafts/generate', {
+      body: JSON.stringify({
+        briefDate: '2026-07-18',
+        candidateIds: candidates.map((candidate) => candidate.id),
+        category: 'auto'
+      }),
+      headers: { 'content-type': 'application/json' },
+      method: 'POST'
+    }),
+    {
+      AI: {
+        async run() {
+          disabledDeepSeekWorkersCalls += 1;
+          return { response: aiPayloadFor() };
+        }
+      },
+      CONTENT_BUCKET: { async put() {} },
+      DEEPSEEK_API_KEY: 'test-deepseek-secret',
+      SIGNAL_BRIEF_DEEPSEEK_ENABLED: '0',
+      WAITLIST_DB: new DraftDb()
+    }
+  );
+  assert.equal(disabledDeepSeekResponse.status, 200);
+  assert.equal((await disabledDeepSeekResponse.json()).automation.provider, 'workers-ai');
+  assert.equal(disabledDeepSeekFetchCalls, 0);
+  assert.equal(disabledDeepSeekWorkersCalls, 1);
+
+  let defaultOffFetchCalls = 0;
+  let defaultOffWorkersCalls = 0;
+  globalThis.fetch = async () => {
+    defaultOffFetchCalls += 1;
+    throw new Error('DeepSeek should remain disabled when the flag is absent');
+  };
+  const defaultOffResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+    new Request('http://localhost/admin/api/signal/drafts/generate', {
+      body: JSON.stringify({
+        briefDate: '2026-07-18',
+        candidateIds: candidates.map((candidate) => candidate.id),
+        category: 'auto'
+      }),
+      headers: { 'content-type': 'application/json' },
+      method: 'POST'
+    }),
+    {
+      AI: {
+        async run() {
+          defaultOffWorkersCalls += 1;
+          return { response: aiPayloadFor() };
+        }
+      },
+      CONTENT_BUCKET: { async put() {} },
+      DEEPSEEK_API_KEY: 'test-deepseek-secret',
+      WAITLIST_DB: new DraftDb()
+    }
+  );
+  assert.equal(defaultOffResponse.status, 200);
+  assert.equal((await defaultOffResponse.json()).automation.provider, 'workers-ai');
+  assert.equal(defaultOffFetchCalls, 0);
+  assert.equal(defaultOffWorkersCalls, 1);
+} finally {
+  globalThis.fetch = originalFetch;
+}
 
 let overwriteAiCalled = false;
 const overwriteResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(

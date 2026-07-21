@@ -3006,6 +3006,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const createSignalDraftRow = (draft, { approval = false } = {}) => {
       const candidateCount = draft.automation?.candidateIds?.length || 0;
       const metadata = draft.metadata || {};
+      const providerLabel = draft.automation?.provider === 'deepseek'
+        ? 'DeepSeek'
+        : draft.automation?.provider === 'workers-ai'
+          ? 'Workers AI'
+          : 'AI';
       const row = document.createElement('article');
       row.className = 'admin-v2-row admin-signal-draft-row';
       row.dataset.draftId = String(draft.id);
@@ -3020,6 +3025,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <span>${escapeHtml(metadata.briefDate || String(draft.updatedAt || '').slice(0, 10))}</span>
           <span>${escapeHtml(signalCategoryLabel(metadata.category || 'general'))}</span>
           <span>${escapeHtml(String(candidateCount))} 条候选</span>
+          <span>${escapeHtml(providerLabel)}${draft.automation?.fallbackUsed ? ' · 已回退' : ''}</span>
           <span>${escapeHtml(draft.automation?.model || 'AI draft')}</span>
         </div>
         ${draft.description ? `<p>${escapeHtml(draft.description)}</p>` : ''}
@@ -3112,7 +3118,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const applyGeneratedSignalDraft = async (payload) => {
       fillSignalFormFromEntry(payload.entry, payload.body, payload.automation);
       elements.signal.status.value = 'draft';
-      setSignalCandidateStatus('草稿已生成并保存，候选仍保持“已入选”。', 'success');
+      const providerLabel = payload.automation?.provider === 'deepseek' ? 'DeepSeek' : 'Workers AI';
+      const fallbackLabel = payload.automation?.fallbackUsed ? '（主模型失败后已自动回退）' : '';
+      setSignalCandidateStatus(`草稿已由 ${providerLabel} 生成并保存${fallbackLabel}，候选仍保持“已入选”。`, 'success');
       setSignalDraftStatus('草稿已进入审核队列。请编辑并保存后，再点击“批准发布”。', 'success');
       setSignalStatus('AI 草稿已载入。请核对事实、来源和措辞，保存后回到草稿区批准发布。', 'success');
       await Promise.all([loadSignalDrafts(), loadSignalBriefs(), loadEntries(), loadAuditLogs()]);

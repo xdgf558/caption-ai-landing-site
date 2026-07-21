@@ -16,10 +16,15 @@ import {
   signalTitleFingerprint
 } from './signalTriage.js';
 import {
-  generateSignalBriefDraft,
+  generateSignalBriefDraftWithProviders,
   normalizeSignalDraftCandidateIds,
   signalDraftMaxCandidates
 } from './signalDraft.js';
+import {
+  createDeepSeekSignalDraftAdapter,
+  defaultDeepSeekSignalDraftModel,
+  isDeepSeekApiKeyConfigured
+} from './deepseekSignalDraft.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -12470,6 +12475,33 @@ const getSignalBriefDraftFallbackModel = (env) =>
   cleanText(env.SIGNAL_BRIEF_FALLBACK_MODEL || env.NOVEL_TRANSLATION_MODEL || defaultNovelTranslationModel, 160) ||
   defaultNovelTranslationModel;
 
+const getSignalBriefDraftDeepSeekModel = (env) =>
+  cleanText(env.SIGNAL_BRIEF_DEEPSEEK_MODEL || defaultDeepSeekSignalDraftModel, 160) ||
+  defaultDeepSeekSignalDraftModel;
+
+const getSignalBriefDraftProviderPlan = (env) => {
+  const providers = [];
+  const deepSeekEnabled = cleanText(env.SIGNAL_BRIEF_DEEPSEEK_ENABLED || '0', 10) === '1';
+  if (deepSeekEnabled && isDeepSeekApiKeyConfigured(env.DEEPSEEK_API_KEY)) {
+    providers.push({
+      ai: createDeepSeekSignalDraftAdapter({ apiKey: env.DEEPSEEK_API_KEY }),
+      model: getSignalBriefDraftDeepSeekModel(env),
+      provider: 'deepseek'
+    });
+  }
+  if (env.AI && typeof env.AI.run === 'function') {
+    const model = getSignalBriefDraftModel(env);
+    const fallbackModel = getSignalBriefDraftFallbackModel(env);
+    providers.push({
+      ai: env.AI,
+      fallbackModel: fallbackModel === model ? '' : fallbackModel,
+      model,
+      provider: 'workers-ai'
+    });
+  }
+  return providers;
+};
+
 const normalizeSignalBriefDraftDate = (value) => {
   const briefDate = cleanText(value, 20);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(briefDate)) return '';
@@ -12488,15 +12520,37 @@ const signalDraftAutomationMetadata = (value) => {
     min: 0,
     max: signalDraftMaxCandidates
   }).filter((candidateId) => !candidateIds.includes(candidateId));
+  const usage = normalizeJsonObject(metadata.usage);
+  const normalizedUsage = {
+    completionTokens: normalizePositiveInteger(usage.completionTokens, 0),
+    promptTokens: normalizePositiveInteger(usage.promptTokens, 0),
+    totalTokens: normalizePositiveInteger(usage.totalTokens, 0)
+  };
+  const providerAttempts = (Array.isArray(metadata.providerAttempts) ? metadata.providerAttempts : [])
+    .slice(0, 6)
+    .map((attempt) => ({
+      code: cleanText(attempt?.code, 120),
+      finishReason: cleanText(attempt?.finishReason, 80),
+      model: cleanText(attempt?.model, 160),
+      provider: cleanText(attempt?.provider, 80),
+      status: cleanText(attempt?.status, 30)
+    }))
+    .filter((attempt) => attempt.provider && attempt.model && ['completed', 'failed'].includes(attempt.status));
   return {
     candidateIds,
     excludedCandidateIds,
+    fallbackUsed: metadata.fallbackUsed === true,
+    finishReason: cleanText(metadata.finishReason, 80),
     generatedAt: cleanText(metadata.generatedAt, 80),
     model: cleanText(metadata.model, 160),
     outputLocale: cleanText(metadata.outputLocale, 20),
+    provider: cleanText(metadata.provider, 80),
+    providerAttempts,
     promptVersion: normalizePositiveInteger(metadata.promptVersion, 0),
+    qualityVersion: normalizePositiveInteger(metadata.qualityVersion, 0),
     sourceEntryId: normalizePositiveInteger(metadata.sourceEntryId, 0),
-    translationMode: cleanText(metadata.translationMode, 40)
+    translationMode: cleanText(metadata.translationMode, 40),
+    usage: Object.values(normalizedUsage).some(Boolean) ? normalizedUsage : null
   };
 };
 
@@ -12871,14 +12925,12 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
   }
 
   try {
-    const model = getSignalBriefDraftModel(env);
-    const fallbackModel = getSignalBriefDraftFallbackModel(env);
-    const draft = await generateSignalBriefDraft(env.AI, model, candidates, {
+    const providerPlan = getSignalBriefDraftProviderPlan(env);
+    const draft = await generateSignalBriefDraftWithProviders(providerPlan, candidates, {
       briefDate,
-      category: requestedCategory,
-      fallbackModel: fallbackModel === model ? '' : fallbackModel
+      category: requestedCategory
     });
-    const generatedModel = draft.model || model;
+    const generatedModel = draft.model || providerPlan[0]?.model || '';
     const generationId = `signal-draft-${(crypto.randomUUID?.() || randomToken(20)).replace(/-/g, '')}`;
     const generatedAt = new Date().toISOString();
     const sources = candidates.map((candidate) => ({
@@ -12900,12 +12952,18 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
         adminVersion: 'signal-automation-4',
         automation: {
           candidateIds,
+          fallbackUsed: draft.fallbackUsed,
+          finishReason: draft.finishReason,
           generatedAt,
           model: generatedModel,
           outputLocale: draft.outputLocale,
+          provider: draft.provider,
+          providerAttempts: draft.providerAttempts,
           promptVersion: draft.promptVersion,
+          qualityVersion: draft.qualityVersion,
           sourceEntryId: existing?.id || 0,
-          translationMode: draft.translationMode
+          translationMode: draft.translationMode,
+          usage: draft.usage
         },
         briefDate,
         category: draft.category,
@@ -12934,18 +12992,28 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
         generationId,
         model: generatedModel,
         outputLocale: draft.outputLocale,
-        promptVersion: draft.promptVersion
+        promptVersion: draft.promptVersion,
+        provider: draft.provider,
+        providerAttempts: draft.providerAttempts,
+        qualityVersion: draft.qualityVersion,
+        usage: draft.usage
       },
       revisionSummary: `AI 草稿生成 · ${candidateIds.length} 条候选`
     });
     const automation = {
       candidateIds,
+      fallbackUsed: draft.fallbackUsed,
+      finishReason: draft.finishReason,
       generatedAt,
       model: generatedModel,
       outputLocale: draft.outputLocale,
+      provider: draft.provider,
+      providerAttempts: draft.providerAttempts,
       promptVersion: draft.promptVersion,
+      qualityVersion: draft.qualityVersion,
       sourceEntryId: saved.id,
-      translationMode: draft.translationMode
+      translationMode: draft.translationMode,
+      usage: draft.usage
     };
     return privateJson({
       ok: true,
@@ -12957,8 +13025,19 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       stage: 'signal-automation-4'
     });
   } catch (error) {
+    const providerAttempts = Array.isArray(error?.providerAttempts) ? error.providerAttempts : [];
+    console.warn('Signal brief generation failed.', {
+      candidateCount: candidateIds.length,
+      code: error?.code || 'SIGNAL_DRAFT_GENERATION_FAILED',
+      providerAttempts
+    });
     return privateJson(
-      { ok: false, code: error.code || 'SIGNAL_DRAFT_GENERATION_FAILED', message: error.message || '简报草稿生成失败。' },
+      {
+        ok: false,
+        code: error.code || 'SIGNAL_DRAFT_GENERATION_FAILED',
+        message: error.message || '简报草稿生成失败。',
+        providerAttempts
+      },
       { status: error.status || (error.code === 'CONTENT_BUCKET_NOT_CONFIGURED' ? 503 : 502) }
     );
   }
