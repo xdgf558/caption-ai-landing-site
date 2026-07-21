@@ -12481,7 +12481,7 @@ const getSignalBriefDraftDeepSeekModel = (env) =>
 
 const getSignalBriefDraftProviderPlan = (env) => {
   const providers = [];
-  const deepSeekEnabled = cleanText(env.SIGNAL_BRIEF_DEEPSEEK_ENABLED || '1', 10) !== '0';
+  const deepSeekEnabled = cleanText(env.SIGNAL_BRIEF_DEEPSEEK_ENABLED || '0', 10) === '1';
   if (deepSeekEnabled && isDeepSeekApiKeyConfigured(env.DEEPSEEK_API_KEY)) {
     providers.push({
       ai: createDeepSeekSignalDraftAdapter({ apiKey: env.DEEPSEEK_API_KEY }),

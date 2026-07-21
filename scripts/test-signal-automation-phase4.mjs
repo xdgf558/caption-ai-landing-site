@@ -697,6 +697,7 @@ try {
       },
       CONTENT_BUCKET: { async put() {} },
       DEEPSEEK_API_KEY: 'test-deepseek-secret',
+      SIGNAL_BRIEF_DEEPSEEK_ENABLED: '1',
       SIGNAL_BRIEF_DEEPSEEK_MODEL: 'deepseek-v4-pro',
       WAITLIST_DB: deepSeekDb
     }
@@ -733,6 +734,7 @@ try {
       },
       CONTENT_BUCKET: { async put() {} },
       DEEPSEEK_API_KEY: 'test-deepseek-secret',
+      SIGNAL_BRIEF_DEEPSEEK_ENABLED: '1',
       WAITLIST_DB: new DraftDb()
     }
   );
@@ -768,6 +770,7 @@ try {
       },
       CONTENT_BUCKET: { async put() {} },
       DEEPSEEK_API_KEY: 'test-deepseek-secret',
+      SIGNAL_BRIEF_DEEPSEEK_ENABLED: '1',
       SIGNAL_BRIEF_DEEPSEEK_MODEL: 'deepseek-unsupported-model',
       WAITLIST_DB: new DraftDb()
     }
@@ -813,6 +816,39 @@ try {
   assert.equal((await disabledDeepSeekResponse.json()).automation.provider, 'workers-ai');
   assert.equal(disabledDeepSeekFetchCalls, 0);
   assert.equal(disabledDeepSeekWorkersCalls, 1);
+
+  let defaultOffFetchCalls = 0;
+  let defaultOffWorkersCalls = 0;
+  globalThis.fetch = async () => {
+    defaultOffFetchCalls += 1;
+    throw new Error('DeepSeek should remain disabled when the flag is absent');
+  };
+  const defaultOffResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+    new Request('http://localhost/admin/api/signal/drafts/generate', {
+      body: JSON.stringify({
+        briefDate: '2026-07-18',
+        candidateIds: candidates.map((candidate) => candidate.id),
+        category: 'auto'
+      }),
+      headers: { 'content-type': 'application/json' },
+      method: 'POST'
+    }),
+    {
+      AI: {
+        async run() {
+          defaultOffWorkersCalls += 1;
+          return { response: aiPayloadFor() };
+        }
+      },
+      CONTENT_BUCKET: { async put() {} },
+      DEEPSEEK_API_KEY: 'test-deepseek-secret',
+      WAITLIST_DB: new DraftDb()
+    }
+  );
+  assert.equal(defaultOffResponse.status, 200);
+  assert.equal((await defaultOffResponse.json()).automation.provider, 'workers-ai');
+  assert.equal(defaultOffFetchCalls, 0);
+  assert.equal(defaultOffWorkersCalls, 1);
 } finally {
   globalThis.fetch = originalFetch;
 }

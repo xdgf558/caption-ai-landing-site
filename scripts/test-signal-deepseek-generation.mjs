@@ -27,7 +27,8 @@ assert.match(signalDraftSource, /finishReason: draft\.finishReason/);
 
 assert.match(adminSource, /draft\.automation\?\.provider === 'deepseek'/);
 assert.match(adminSource, /主模型失败后已自动回退/);
-assert.match(wranglerSource, /SIGNAL_BRIEF_DEEPSEEK_ENABLED = "1"/);
+assert.match(workerSource, /SIGNAL_BRIEF_DEEPSEEK_ENABLED \|\| '0'/);
+assert.match(wranglerSource, /SIGNAL_BRIEF_DEEPSEEK_ENABLED = "0"/);
 assert.match(wranglerSource, /SIGNAL_BRIEF_DEEPSEEK_MODEL = "deepseek-v4-pro"/);
 
 assert.match(phaseTwoDoc, /does not publish a brief automatically/i);

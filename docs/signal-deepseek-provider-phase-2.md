@@ -4,7 +4,7 @@ Phase 2 connects the Phase 1 DeepSeek adapter to authenticated Signal brief gene
 
 ## Generation Order
 
-1. When `SIGNAL_BRIEF_DEEPSEEK_ENABLED` is not `0` and `DEEPSEEK_API_KEY` is configured, `deepseek-v4-pro` is the primary generator.
+1. When `SIGNAL_BRIEF_DEEPSEEK_ENABLED=1` and `DEEPSEEK_API_KEY` is configured, `deepseek-v4-pro` is the primary generator. The committed production default remains disabled until the controlled rollout is complete.
 2. DeepSeek receives only the selected public candidate title, summary, publisher, category, and publication time.
 3. DeepSeek retries once for a malformed, truncated, untranslated, factually invalid, or editorially weak result.
 4. If DeepSeek remains unavailable or fails validation, generation falls back to the existing Workers AI primary and fallback models.
@@ -25,6 +25,8 @@ The Worker owns the final Markdown and rejects model output when any of these ch
 - Editorial analysis is too short or uses the known generic controversy template.
 - The brief title and description are effectively the same text.
 
+Numeric provenance currently validates Arabic numerals only. Invented Chinese-number words such as `三千` or `兩百`, and unit conversions expressed without a matching Arabic numeral, remain prompt-enforced limitations that require editorial review.
+
 The retry prompt identifies the failed quality class without sending private records or administrator data to the model.
 
 ## Configuration
@@ -32,7 +34,7 @@ The retry prompt identifies the failed quality class without sending private rec
 Non-secret Worker variables:
 
 ```text
-SIGNAL_BRIEF_DEEPSEEK_ENABLED=1
+SIGNAL_BRIEF_DEEPSEEK_ENABLED=0
 SIGNAL_BRIEF_DEEPSEEK_MODEL=deepseek-v4-pro
 SIGNAL_BRIEF_MODEL=@cf/meta/llama-3.1-8b-instruct-fast
 SIGNAL_BRIEF_FALLBACK_MODEL=@cf/meta/llama-3.3-70b-instruct-fp8-fast
@@ -44,11 +46,11 @@ The DeepSeek key remains a Worker Secret:
 npx --yes wrangler@latest secret put DEEPSEEK_API_KEY
 ```
 
-Set `SIGNAL_BRIEF_DEEPSEEK_ENABLED=0` to use only Workers AI without deleting the Secret.
+Keep `SIGNAL_BRIEF_DEEPSEEK_ENABLED=0` to use only Workers AI without deleting the Secret. Change it to `1` only during a controlled activation after the Secret and smoke-test path are ready.
 
 ## Rollout Boundary
 
-No database migration is required. Before production activation, configure the Secret and run one authenticated Admin smoke test with three public candidates. Verify that the saved draft reports `provider = deepseek`, `finishReason = stop`, complete Traditional Chinese fields, distinct signal/noise analysis, and correct source numbers. Then verify the kill switch and Workers AI fallback once.
+No database migration is required. Merging this phase keeps DeepSeek disabled. Before production activation, configure the Secret, enable DeepSeek in a controlled preview or activation change, and run one authenticated Admin smoke test with three public candidates. Verify that the saved draft reports `provider = deepseek`, `finishReason = stop`, complete Traditional Chinese fields, distinct signal/noise analysis, and correct source numbers. Then verify the kill switch and Workers AI fallback once before leaving the production flag enabled.
 
 Official references:
 
