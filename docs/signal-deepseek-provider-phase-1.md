@@ -10,10 +10,11 @@ Phase 1 adds an isolated DeepSeek model adapter for Signal brief generation. It 
 - Only `deepseek-v4-pro` and `deepseek-v4-flash` are accepted. Deprecated aliases are rejected.
 - Workers AI `json_schema` requests are converted to DeepSeek JSON Object mode, with the server-owned schema appended to the system instruction.
 - Thinking mode is disabled for predictable structured output, latency, and cost during editorial generation.
-- Responses are capped at 2 MiB and normalized to `{ provider, model, response, usage }`.
+- Requests and responses are both capped at 2 MiB before crossing the provider boundary.
+- Successful responses are normalized to `{ provider, model, response, usage, metadata }`; `metadata.finishReason` preserves the provider's `finish_reason` so Phase 2 can distinguish token truncation from malformed model output.
 - One retry is allowed for timeouts, HTTP 408/429, HTTP 5xx, network failures, or malformed success envelopes.
 - Authentication, balance, unsupported model, and other HTTP 4xx failures are not retried.
-- Provider error bodies and the API key are never included in returned error messages.
+- Provider error bodies are cancelled without being downloaded, and neither those bodies nor the API key are included in returned error messages.
 
 The adapter uses the Worker-native `fetch` API and adds no SDK dependency.
 

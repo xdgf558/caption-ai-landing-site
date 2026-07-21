@@ -15,10 +15,10 @@ const draftPayload = {
   category: 'tech',
   items: []
 };
-const responseEnvelope = (content = JSON.stringify(draftPayload)) => ({
+const responseEnvelope = (content = JSON.stringify(draftPayload), finishReason = 'stop') => ({
   id: 'chatcmpl-test',
   model: 'deepseek-v4-pro',
-  choices: [{ message: { role: 'assistant', content } }],
+  choices: [{ message: { role: 'assistant', content }, finish_reason: finishReason }],
   usage: { prompt_tokens: 120, completion_tokens: 80, total_tokens: 200 }
 });
 const request = {
@@ -83,9 +83,20 @@ assert.equal(result.provider, 'deepseek');
 assert.equal(result.model, 'deepseek-v4-pro');
 assert.equal(result.response, JSON.stringify(draftPayload));
 assert.equal(result.usage.total_tokens, 200);
+assert.equal(result.metadata.finishReason, 'stop');
+
+const truncatedAdapter = createDeepSeekSignalDraftAdapter({
+  apiKey,
+  fetchImpl: async () =>
+    new Response(JSON.stringify(responseEnvelope('{"title":"unfinished"', 'length')), { status: 200 })
+});
+const truncatedResult = await truncatedAdapter.run('deepseek-v4-pro', request);
+assert.equal(truncatedResult.response, '{"title":"unfinished"');
+assert.equal(truncatedResult.metadata.finishReason, 'length');
 
 const retryCalls = [];
 const retryDelays = [];
+let cancelledErrorBodies = 0;
 const retryAdapter = createDeepSeekSignalDraftAdapter({
   apiKey,
   retryDelayMs: 10,
@@ -93,10 +104,16 @@ const retryAdapter = createDeepSeekSignalDraftAdapter({
   fetchImpl: async () => {
     retryCalls.push(true);
     if (retryCalls.length === 1) {
-      return new Response(JSON.stringify({ error: { message: 'rate limited' } }), {
+      return {
+        ok: false,
         status: 429,
-        headers: { 'retry-after': '0' }
-      });
+        headers: new Headers({ 'retry-after': '0' }),
+        body: {
+          cancel: async () => {
+            cancelledErrorBodies += 1;
+          }
+        }
+      };
     }
     return new Response(JSON.stringify(responseEnvelope()), { status: 200 });
   }
@@ -104,7 +121,25 @@ const retryAdapter = createDeepSeekSignalDraftAdapter({
 const retried = await retryAdapter.run('deepseek-v4-pro', request);
 assert.equal(retryCalls.length, 2);
 assert.deepEqual(retryDelays, [0]);
+assert.equal(cancelledErrorBodies, 1);
 assert.equal(retried.provider, 'deepseek');
+
+let oversizedRequestCalls = 0;
+const oversizedRequestAdapter = createDeepSeekSignalDraftAdapter({
+  apiKey,
+  fetchImpl: async () => {
+    oversizedRequestCalls += 1;
+    return new Response(JSON.stringify(responseEnvelope()), { status: 200 });
+  }
+});
+await assert.rejects(
+  oversizedRequestAdapter.run('deepseek-v4-pro', {
+    ...request,
+    messages: [{ role: 'user', content: 'x'.repeat(2 * 1024 * 1024) }]
+  }),
+  (error) => error.code === 'DEEPSEEK_REQUEST_TOO_LARGE' && error.retriable === false && error.status === 413
+);
+assert.equal(oversizedRequestCalls, 0);
 
 let authCalls = 0;
 const authAdapter = createDeepSeekSignalDraftAdapter({
@@ -171,4 +206,4 @@ await assert.rejects(
 );
 assert.equal(timeoutCalls, 1);
 
-console.log('Signal DeepSeek model adapter configuration, request mapping, retry, and error checks passed.');
+console.log('Signal DeepSeek adapter request limits, metadata, retry, and error checks passed.');

@@ -5,6 +5,7 @@ const supportedDeepSeekModels = new Set(['deepseek-v4-flash', 'deepseek-v4-pro']
 const defaultTimeoutMs = 30_000;
 const defaultMaxAttempts = 2;
 const defaultRetryDelayMs = 250;
+const maxRequestBytes = 2 * 1024 * 1024;
 const maxResponseBytes = 2 * 1024 * 1024;
 
 const cleanText = (value, maxLength = 1000) => String(value ?? '').trim().slice(0, maxLength);
@@ -107,6 +108,15 @@ const readResponseTextLimited = async (response) => {
   return new TextDecoder().decode(bytes);
 };
 
+const cancelResponseBody = async (response) => {
+  if (!response?.body || typeof response.body.cancel !== 'function') return;
+  try {
+    await response.body.cancel();
+  } catch {
+    // The provider status is still authoritative if its body cannot be cancelled.
+  }
+};
+
 const parseResponseEnvelope = (text) => {
   try {
     const payload = JSON.parse(text);
@@ -164,6 +174,17 @@ const buildRequestBody = (model, request) => {
   return body;
 };
 
+const serializeRequestBody = (requestBody) => {
+  const serialized = JSON.stringify(requestBody);
+  if (new TextEncoder().encode(serialized).byteLength > maxRequestBytes) {
+    throw deepSeekError('DEEPSEEK_REQUEST_TOO_LARGE', 'DeepSeek 请求内容超过安全限制。', {
+      status: 413,
+      retriable: false
+    });
+  }
+  return serialized;
+};
+
 export const createDeepSeekSignalDraftAdapter = (options = {}) => {
   const apiKey = cleanText(options.apiKey, 512);
   const fetchImpl = options.fetchImpl || fetch;
@@ -189,6 +210,7 @@ export const createDeepSeekSignalDraftAdapter = (options = {}) => {
       }
       const selectedModel = normalizeDeepSeekSignalDraftModel(model);
       const requestBody = buildRequestBody(selectedModel, request);
+      const serializedRequestBody = serializeRequestBody(requestBody);
       let lastError = null;
 
       for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
@@ -202,12 +224,12 @@ export const createDeepSeekSignalDraftAdapter = (options = {}) => {
               authorization: `Bearer ${apiKey}`,
               'content-type': 'application/json'
             },
-            body: JSON.stringify(requestBody),
+            body: serializedRequestBody,
             redirect: 'error',
             signal: controller.signal
           });
-          const text = await readResponseTextLimited(response);
           if (!response.ok) {
+            await cancelResponseBody(response);
             const error = providerErrorFromResponse(response);
             if (error.retriable && attempt + 1 < maxAttempts) {
               lastError = error;
@@ -217,8 +239,10 @@ export const createDeepSeekSignalDraftAdapter = (options = {}) => {
             throw error;
           }
 
+          const text = await readResponseTextLimited(response);
           const envelope = parseResponseEnvelope(text);
-          const content = envelope?.choices?.[0]?.message?.content;
+          const choice = envelope?.choices?.[0];
+          const content = choice?.message?.content;
           if (typeof content !== 'string' || !content.trim()) {
             const error = deepSeekError('DEEPSEEK_RESPONSE_INVALID', 'DeepSeek 返回的响应结构无效。', {
               status: 502,
@@ -237,7 +261,10 @@ export const createDeepSeekSignalDraftAdapter = (options = {}) => {
             model: cleanText(envelope.model || selectedModel, 160),
             provider: 'deepseek',
             response: content,
-            usage: envelope.usage && typeof envelope.usage === 'object' ? envelope.usage : null
+            usage: envelope.usage && typeof envelope.usage === 'object' ? envelope.usage : null,
+            metadata: {
+              finishReason: cleanText(choice?.finish_reason, 80) || null
+            }
           };
         } catch (error) {
           if (error?.name === 'AbortError') {
