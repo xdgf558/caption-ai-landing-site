@@ -2,7 +2,7 @@ const signalDraftCategories = new Set(['ai', 'tech', 'economy', 'market', 'resea
 
 export const signalDraftMinCandidates = 3;
 export const signalDraftMaxCandidates = 10;
-export const signalDraftPromptVersion = 5;
+export const signalDraftPromptVersion = 6;
 export const signalDraftOutputLocale = 'zh-Hant';
 
 export const getSignalDraftMaxTokens = (candidateCount) => {
@@ -130,6 +130,35 @@ const isMeaningfullyTraditionalChinese = (value) => {
   return simplifiedHintCount < 3 || simplifiedHintCount <= traditionalHintCount;
 };
 
+const normalizeEditorialComparison = (value) =>
+  cleanText(value, 700)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '');
+
+const editorialBigrams = (value) => {
+  const normalized = normalizeEditorialComparison(value);
+  if (normalized.length < 2) return new Set(normalized ? [normalized] : []);
+  return new Set(Array.from({ length: normalized.length - 1 }, (_unused, index) => normalized.slice(index, index + 2)));
+};
+
+const editorialSimilarity = (left, right) => {
+  const leftNormalized = normalizeEditorialComparison(left);
+  const rightNormalized = normalizeEditorialComparison(right);
+  if (!leftNormalized || !rightNormalized) return 0;
+  if (leftNormalized === rightNormalized) return 1;
+  if (Math.min(leftNormalized.length, rightNormalized.length) < 12) return 0;
+
+  const leftBigrams = editorialBigrams(leftNormalized);
+  const rightBigrams = editorialBigrams(rightNormalized);
+  let shared = 0;
+  for (const bigram of leftBigrams) {
+    if (rightBigrams.has(bigram)) shared += 1;
+  }
+  return (2 * shared) / (leftBigrams.size + rightBigrams.size);
+};
+
+const signalAndNoiseAreDuplicated = (signal, noise) => editorialSimilarity(signal, noise) >= 0.86;
+
 const buildDraftSchema = (candidateCount) => ({
   type: 'object',
   additionalProperties: false,
@@ -180,12 +209,18 @@ const buildDraftMessages = (candidates, options = {}) => {
         'Do not invent facts, quotes, causes, forecasts, or source URLs.',
         'Return exactly one item for every candidateId and use each candidateId exactly once.',
         'summary states the sourced fact; signal explains why it may matter; noise states uncertainty or what not to over-interpret.',
+        'For every item, signal and noise must make meaningfully different points and must never repeat or paraphrase each other.',
+        'signal should identify a concrete implication, opportunity, or directional change; noise should identify an evidence gap, limitation, uncertainty, or reason for caution.',
+        'Avoid generic controversy language such as "this may cause controversy" unless the supplied source fact specifically supports that claim.',
         'Keep each summary to 1-2 short sentences and each signal and noise field to one short sentence.',
         options.strictTranslation
           ? 'A previous attempt did not complete the Chinese translation. Rewrite all human-readable fields in Traditional Chinese now.'
           : '',
         options.strictOutput
           ? 'A previous attempt returned malformed or incomplete JSON. Return one complete JSON object matching the schema exactly, with every required field and no prose or Markdown outside it.'
+          : '',
+        options.strictEditorial
+          ? 'A previous attempt repeated or paraphrased signal and noise. Rewrite every pair so signal gives the concrete significance and noise gives a distinct limitation or uncertainty.'
           : '',
         'Return only the requested JSON object.'
       ].filter(Boolean).join(' ')
@@ -226,6 +261,9 @@ const validateDraftPayload = (payload, candidates, options) => {
     if ([headline, summary, signal, noise].some((field) => !isMeaningfullyTraditionalChinese(field))) {
       throw draftError('SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID', 'AI 草稿中文比例不足或未使用繁体中文，请重试。', 502);
     }
+    if (signalAndNoiseAreDuplicated(signal, noise)) {
+      throw draftError('SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID', 'AI 草稿的信号与噪音内容重复，请重试。', 502);
+    }
     return { candidateId, headline, summary, signal, noise };
   });
   if (seen.size !== candidateMap.size) {
@@ -258,7 +296,8 @@ const validateDraftPayload = (payload, candidates, options) => {
 
 const retryableDraftOutputCodes = new Set([
   'SIGNAL_DRAFT_AI_OUTPUT_INVALID',
-  'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID'
+  'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID',
+  'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID'
 ]);
 
 export const generateSignalBriefDraft = async (ai, model, candidates, options = {}) => {
@@ -280,7 +319,8 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
         briefDate,
         category,
         strictOutput: generationOptions.strictOutput === true,
-        strictTranslation: generationOptions.strictTranslation === true
+        strictTranslation: generationOptions.strictTranslation === true,
+        strictEditorial: generationOptions.strictEditorial === true
       }),
       max_tokens: getSignalDraftMaxTokens(normalizedCandidates.length),
       response_format: {
@@ -309,7 +349,8 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
       try {
         draft = await runGeneration(selectedModel, {
           strictOutput: true,
-          strictTranslation: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID'
+          strictTranslation: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID',
+          strictEditorial: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID'
         });
         usedModel = selectedModel;
         break;

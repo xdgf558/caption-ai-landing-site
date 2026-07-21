@@ -104,6 +104,14 @@ const simplifiedPayloadFor = (items = candidates) => ({
   title: '每日信号简报'
 });
 
+const duplicatedEditorialPayloadFor = (items = candidates) => ({
+  ...aiPayloadFor(items),
+  items: aiPayloadFor(items).items.map((item) => ({
+    ...item,
+    noise: item.signal
+  }))
+});
+
 assert.deepEqual(normalizeSignalDraftCandidateIds(candidates.map((candidate) => candidate.id)), candidates.map((candidate) => candidate.id));
 assert.throws(
   () => normalizeSignalDraftCandidateIds(['one', 'two']),
@@ -141,6 +149,8 @@ assert.equal(aiCalls[0].request.response_format.json_schema.properties.items.min
 assert.equal(aiCalls[0].request.max_tokens, 3200);
 assert.match(aiCalls[0].request.messages[0].content, /untrusted reference material/);
 assert.match(aiCalls[0].request.messages[0].content, /Traditional Chinese \(zh-Hant\)/);
+assert.match(aiCalls[0].request.messages[0].content, /must never repeat or paraphrase each other/i);
+assert.match(aiCalls[0].request.messages[0].content, /Avoid generic controversy language/i);
 assert.match(aiCalls[0].request.messages[1].content, /not permission to publish/i);
 assert.match(aiCalls[0].request.messages[1].content, /"outputLocale":"zh-Hant"/);
 
@@ -223,6 +233,32 @@ for (const invalidPayload of [mixedEnglishPayloadFor(), simplifiedPayloadFor()])
   assert.equal(languageRetryCalls.length, 2);
   assert.equal(translatedResult.outputLocale, 'zh-Hant');
 }
+
+const editorialRetryCalls = [];
+const editorialResult = await generateSignalBriefDraft(
+  {
+    async run(_model, request) {
+      editorialRetryCalls.push(request);
+      return { response: editorialRetryCalls.length === 1 ? duplicatedEditorialPayloadFor() : aiPayloadFor() };
+    }
+  },
+  '@cf/test/draft-model',
+  candidates,
+  { briefDate: '2026-07-18', category: 'auto' }
+);
+assert.equal(editorialRetryCalls.length, 2);
+assert.match(editorialRetryCalls[1].messages[0].content, /previous attempt repeated or paraphrased signal and noise/i);
+assert.equal(editorialResult.items.length, candidates.length);
+
+await assert.rejects(
+  generateSignalBriefDraft(
+    { run: async () => ({ response: duplicatedEditorialPayloadFor() }) },
+    '@cf/test/draft-model',
+    candidates,
+    { briefDate: '2026-07-18', category: 'auto' }
+  ),
+  (error) => error.code === 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID'
+);
 
 await assert.rejects(
   generateSignalBriefDraft(
