@@ -41,7 +41,7 @@ SIGNAL_BRIEF_FALLBACK_MODEL=@cf/meta/llama-3.3-70b-instruct-fp8-fast
 
 ## Phase 2 Boundary
 
-Phase 2 will choose the provider in the authenticated Signal draft handler, use DeepSeek V4 Pro as the configured primary model, and retain Workers AI as a fallback. That wiring, provider metadata, quality validation, and any live API smoke test are intentionally outside this PR.
+Phase 2 chooses the provider in the authenticated Signal draft handler, uses DeepSeek V4 Pro as the configured primary model, and retains Workers AI as a fallback. Provider metadata and quality validation are documented in `docs/signal-deepseek-provider-phase-2.md`; a live API smoke test still requires the production Worker Secret and remains outside Phase 1.
 
 Only public candidate titles and summaries are intended to be sent to the provider. Reader accounts, Admin identity, secrets, private content, D1 records, and R2 objects must not be included in model requests.
 

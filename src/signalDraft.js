@@ -2,7 +2,8 @@ const signalDraftCategories = new Set(['ai', 'tech', 'economy', 'market', 'resea
 
 export const signalDraftMinCandidates = 3;
 export const signalDraftMaxCandidates = 10;
-export const signalDraftPromptVersion = 6;
+export const signalDraftPromptVersion = 7;
+export const signalDraftQualityVersion = 2;
 export const signalDraftOutputLocale = 'zh-Hant';
 
 export const getSignalDraftMaxTokens = (candidateCount) => {
@@ -159,6 +160,53 @@ const editorialSimilarity = (left, right) => {
 
 const signalAndNoiseAreDuplicated = (signal, noise) => editorialSimilarity(signal, noise) >= 0.86;
 
+const genericEditorialPattern = /(?:這|該)(?:個|項|則)?(?:問題|故事|研究|項目|消息|資訊).{0,12}可能會引起(?:一些)?爭議|可能引起(?:一些)?爭議/u;
+const numericFactPattern = /\d+(?:[,.]\d+)*/g;
+
+const normalizeNumericFact = (value) =>
+  String(value || '')
+    .replace(/,/g, '')
+    .split('.')
+    .map((part) => part.replace(/^0+(?=\d)/, '') || '0')
+    .join('.');
+
+const extractNumericFacts = (value) =>
+  new Set((String(value || '').match(numericFactPattern) || []).map(normalizeNumericFact).filter(Boolean));
+
+const findUnsupportedNumericFacts = (item, candidate, briefDate) => {
+  const sourceFacts = extractNumericFacts(
+    [candidate?.title, candidate?.summary, candidate?.publishedAt, candidate?.published_at, briefDate].join(' ')
+  );
+  const generatedFacts = extractNumericFacts([item.headline, item.summary, item.signal, item.noise].join(' '));
+  return [...generatedFacts].filter((fact) => !sourceFacts.has(fact));
+};
+
+const hasRepeatedEditorialText = (items, field) => {
+  for (let leftIndex = 0; leftIndex < items.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < items.length; rightIndex += 1) {
+      if (editorialSimilarity(items[leftIndex][field], items[rightIndex][field]) >= 0.92) return true;
+    }
+  }
+  return false;
+};
+
+const modelFinishReason = (result) =>
+  cleanText(result?.metadata?.finishReason ?? result?.finish_reason ?? result?.choices?.[0]?.finish_reason, 80)
+    .toLowerCase();
+
+const normalizeModelUsage = (value) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const normalizeTokenCount = (tokenValue) => {
+    const parsed = Number.parseInt(tokenValue, 10);
+    return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
+  };
+  const promptTokens = normalizeTokenCount(value.prompt_tokens ?? value.input_tokens);
+  const completionTokens = normalizeTokenCount(value.completion_tokens ?? value.output_tokens);
+  const totalTokens = normalizeTokenCount(value.total_tokens) || promptTokens + completionTokens;
+  if (!promptTokens && !completionTokens && !totalTokens) return null;
+  return { completionTokens, promptTokens, totalTokens };
+};
+
 const buildDraftSchema = (candidateCount) => ({
   type: 'object',
   additionalProperties: false,
@@ -207,11 +255,14 @@ const buildDraftMessages = (candidates, options = {}) => {
         'Translate English titles and summaries into Chinese while preserving company names, product names, technical terms, dates, numbers, uncertainty, and attribution.',
         'Do not leave complete English sentences in title, description, headline, summary, signal, or noise. English proper nouns and technical terms may remain when clearer.',
         'Do not invent facts, quotes, causes, forecasts, or source URLs.',
+        'Use a number only when the same number appears in that candidate source. Never calculate, convert, round, or transfer a number from another item.',
         'Return exactly one item for every candidateId and use each candidateId exactly once.',
         'summary states the sourced fact; signal explains why it may matter; noise states uncertainty or what not to over-interpret.',
         'For every item, signal and noise must make meaningfully different points and must never repeat or paraphrase each other.',
+        'Make every signal and noise specific to its own item. Do not reuse stock sentences across multiple items.',
         'signal should identify a concrete implication, opportunity, or directional change; noise should identify an evidence gap, limitation, uncertainty, or reason for caution.',
         'Avoid generic controversy language such as "this may cause controversy" unless the supplied source fact specifically supports that claim.',
+        'Write a concise editorial title and a distinct one-sentence description; do not repeat the title as the description.',
         'Keep each summary to 1-2 short sentences and each signal and noise field to one short sentence.',
         options.strictTranslation
           ? 'A previous attempt did not complete the Chinese translation. Rewrite all human-readable fields in Traditional Chinese now.'
@@ -220,7 +271,10 @@ const buildDraftMessages = (candidates, options = {}) => {
           ? 'A previous attempt returned malformed or incomplete JSON. Return one complete JSON object matching the schema exactly, with every required field and no prose or Markdown outside it.'
           : '',
         options.strictEditorial
-          ? 'A previous attempt repeated or paraphrased signal and noise. Rewrite every pair so signal gives the concrete significance and noise gives a distinct limitation or uncertainty.'
+          ? 'A previous attempt used repeated, generic, or overlapping editorial analysis. Rewrite every item with source-specific significance and a distinct limitation or uncertainty.'
+          : '',
+        options.strictFactual
+          ? 'A previous attempt introduced a number that was not present in its corresponding source. Remove every unsupported number and preserve supplied numbers exactly.'
           : '',
         'Return only the requested JSON object.'
       ].filter(Boolean).join(' ')
@@ -261,8 +315,22 @@ const validateDraftPayload = (payload, candidates, options) => {
     if ([headline, summary, signal, noise].some((field) => !isMeaningfullyTraditionalChinese(field))) {
       throw draftError('SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID', 'AI 草稿中文比例不足或未使用繁体中文，请重试。', 502);
     }
-    if (signalAndNoiseAreDuplicated(signal, noise)) {
-      throw draftError('SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID', 'AI 草稿的信号与噪音内容重复，请重试。', 502);
+    if (
+      signalAndNoiseAreDuplicated(signal, noise) ||
+      genericEditorialPattern.test(signal) ||
+      genericEditorialPattern.test(noise) ||
+      normalizeEditorialComparison(signal).length < 12 ||
+      normalizeEditorialComparison(noise).length < 12
+    ) {
+      throw draftError('SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID', 'AI 草稿的编辑分析重复或过于空泛，请重试。', 502);
+    }
+    const unsupportedNumericFacts = findUnsupportedNumericFacts(
+      { headline, summary, signal, noise },
+      candidateMap.get(candidateId),
+      options.briefDate
+    );
+    if (unsupportedNumericFacts.length) {
+      throw draftError('SIGNAL_DRAFT_AI_OUTPUT_FACTUAL_INVALID', 'AI 草稿包含来源没有提供的数字，请重试。', 502);
     }
     return { candidateId, headline, summary, signal, noise };
   });
@@ -272,10 +340,17 @@ const validateDraftPayload = (payload, candidates, options) => {
 
   const fallbackCategory = options.category === 'auto' ? deriveSignalDraftCategory(candidates) : normalizeCategory(options.category);
   const category = options.category === 'auto' ? normalizeCategory(payload.category, fallbackCategory) : fallbackCategory;
-  const title = cleanText(payload.title, 160) || `${options.briefDate} 每日信号简报`;
+  const title = cleanText(payload.title, 160) || `${options.briefDate} 每日信號簡報`;
   const description = cleanText(payload.description, 500) || items.map((item) => item.headline).join('；');
   if (!isMeaningfullyTraditionalChinese(title) || !isMeaningfullyTraditionalChinese(description)) {
     throw draftError('SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID', 'AI 草稿标题或摘要中文比例不足或未使用繁体中文，请重试。', 502);
+  }
+  if (
+    editorialSimilarity(title, description) >= 0.9 ||
+    hasRepeatedEditorialText(items, 'signal') ||
+    hasRepeatedEditorialText(items, 'noise')
+  ) {
+    throw draftError('SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID', 'AI 草稿重复使用相同的标题、摘要或分析句，请重试。', 502);
   }
   const markdown = items
     .map(
@@ -296,13 +371,15 @@ const validateDraftPayload = (payload, candidates, options) => {
 
 const retryableDraftOutputCodes = new Set([
   'SIGNAL_DRAFT_AI_OUTPUT_INVALID',
+  'SIGNAL_DRAFT_AI_OUTPUT_TRUNCATED',
   'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID',
-  'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID'
+  'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
+  'SIGNAL_DRAFT_AI_OUTPUT_FACTUAL_INVALID'
 ]);
 
 export const generateSignalBriefDraft = async (ai, model, candidates, options = {}) => {
   if (!ai || typeof ai.run !== 'function') {
-    throw draftError('SIGNAL_DRAFT_AI_NOT_CONFIGURED', 'Workers AI 尚未配置，当前仍可使用人工简报表单。', 503);
+    throw draftError('SIGNAL_DRAFT_AI_NOT_CONFIGURED', '简报生成模型尚未配置，当前仍可使用人工简报表单。', 503);
   }
   const candidateIds = normalizeSignalDraftCandidateIds(candidates?.map((candidate) => candidate?.id));
   const normalizedCandidates = candidateIds.map((id) => candidates.find((candidate) => candidate.id === id));
@@ -320,7 +397,8 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
         category,
         strictOutput: generationOptions.strictOutput === true,
         strictTranslation: generationOptions.strictTranslation === true,
-        strictEditorial: generationOptions.strictEditorial === true
+        strictEditorial: generationOptions.strictEditorial === true,
+        strictFactual: generationOptions.strictFactual === true
       }),
       max_tokens: getSignalDraftMaxTokens(normalizedCandidates.length),
       response_format: {
@@ -330,7 +408,19 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
       temperature: 0.2
     };
     const result = await ai.run(selectedModel, request);
-    return validateDraftPayload(extractModelPayload(result), normalizedCandidates, { briefDate, category });
+    const finishReason = modelFinishReason(result);
+    if (['length', 'max_tokens', 'max_output_tokens'].includes(finishReason)) {
+      const error = draftError('SIGNAL_DRAFT_AI_OUTPUT_TRUNCATED', 'AI 草稿因输出长度限制被截断，请重试。', 502);
+      error.finishReason = finishReason;
+      throw error;
+    }
+    return {
+      draft: validateDraftPayload(extractModelPayload(result), normalizedCandidates, { briefDate, category }),
+      finishReason: finishReason || null,
+      model: cleanText(result?.model || selectedModel, 160) || selectedModel,
+      provider: cleanText(result?.provider || options.provider || 'workers-ai', 80) || 'workers-ai',
+      usage: normalizeModelUsage(result?.usage)
+    };
   };
 
   const requestedModels = [model, cleanText(options.fallbackModel, 160)].filter(Boolean);
@@ -338,21 +428,36 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
   let lastError = null;
   let draft = null;
   let usedModel = model;
+  let modelFallbackUsed = false;
+  let usedProvider = cleanText(options.provider || 'workers-ai', 80) || 'workers-ai';
+  let finishReason = null;
+  let usage = null;
   for (const selectedModel of models) {
     try {
-      draft = await runGeneration(selectedModel);
-      usedModel = selectedModel;
+      const generation = await runGeneration(selectedModel);
+      draft = generation.draft;
+      usedModel = generation.model;
+      modelFallbackUsed = selectedModel !== models[0];
+      usedProvider = generation.provider;
+      finishReason = generation.finishReason;
+      usage = generation.usage;
       break;
     } catch (error) {
       if (!retryableDraftOutputCodes.has(error?.code)) throw error;
       lastError = error;
       try {
-        draft = await runGeneration(selectedModel, {
+        const generation = await runGeneration(selectedModel, {
           strictOutput: true,
           strictTranslation: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID',
-          strictEditorial: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID'
+          strictEditorial: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
+          strictFactual: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_FACTUAL_INVALID'
         });
-        usedModel = selectedModel;
+        draft = generation.draft;
+        usedModel = generation.model;
+        modelFallbackUsed = selectedModel !== models[0];
+        usedProvider = generation.provider;
+        finishReason = generation.finishReason;
+        usage = generation.usage;
         break;
       } catch (retryError) {
         if (!retryableDraftOutputCodes.has(retryError?.code)) throw retryError;
@@ -360,7 +465,9 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
         console.warn('Signal draft model output failed validation after retry.', {
           candidateCount: normalizedCandidates.length,
           code: retryError.code,
-          model: selectedModel
+          finishReason: retryError.finishReason || null,
+          model: selectedModel,
+          provider: cleanText(options.provider || 'workers-ai', 80) || 'workers-ai'
         });
       }
     }
@@ -370,9 +477,74 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
     ...draft,
     briefDate,
     candidateIds,
+    finishReason,
+    modelFallbackUsed,
     model: usedModel,
     outputLocale: signalDraftOutputLocale,
     promptVersion: signalDraftPromptVersion,
-    translationMode: 'source-to-zh-Hant'
+    provider: usedProvider,
+    qualityVersion: signalDraftQualityVersion,
+    translationMode: 'source-to-zh-Hant',
+    usage
   };
+};
+
+const canFallbackToNextSignalDraftProvider = (error) => {
+  if (retryableDraftOutputCodes.has(error?.code)) return true;
+  if (error?.code === 'SIGNAL_DRAFT_AI_NOT_CONFIGURED') return true;
+  if (!String(error?.code || '').startsWith('DEEPSEEK_')) return false;
+  return !['DEEPSEEK_REQUEST_INVALID', 'DEEPSEEK_REQUEST_TOO_LARGE'].includes(error.code);
+};
+
+export const generateSignalBriefDraftWithProviders = async (providers, candidates, options = {}) => {
+  const providerPlan = (Array.isArray(providers) ? providers : []).filter(
+    (provider) => provider?.ai && typeof provider.ai.run === 'function' && cleanText(provider.model, 160)
+  );
+  if (!providerPlan.length) {
+    throw draftError('SIGNAL_DRAFT_AI_NOT_CONFIGURED', '简报生成模型尚未配置，当前仍可使用人工简报表单。', 503);
+  }
+
+  const providerAttempts = [];
+  let lastError = null;
+  for (let index = 0; index < providerPlan.length; index += 1) {
+    const provider = providerPlan[index];
+    const providerName = cleanText(provider.provider || 'workers-ai', 80) || 'workers-ai';
+    try {
+      const draft = await generateSignalBriefDraft(provider.ai, provider.model, candidates, {
+        ...options,
+        fallbackModel: provider.fallbackModel,
+        provider: providerName
+      });
+      providerAttempts.push({
+        finishReason: draft.finishReason,
+        model: draft.model,
+        provider: draft.provider,
+        status: 'completed'
+      });
+      return {
+        ...draft,
+        fallbackUsed: draft.modelFallbackUsed || providerAttempts.some((attempt) => attempt.status === 'failed'),
+        providerAttempts
+      };
+    } catch (error) {
+      lastError = error;
+      providerAttempts.push({
+        code: cleanText(error?.code || 'SIGNAL_DRAFT_GENERATION_FAILED', 120),
+        finishReason: cleanText(error?.finishReason, 80) || null,
+        model: cleanText(provider.model, 160),
+        provider: providerName,
+        status: 'failed'
+      });
+      if (index + 1 >= providerPlan.length || !canFallbackToNextSignalDraftProvider(error)) {
+        error.providerAttempts = providerAttempts;
+        throw error;
+      }
+    }
+  }
+
+  if (lastError) {
+    lastError.providerAttempts = providerAttempts;
+    throw lastError;
+  }
+  throw draftError('SIGNAL_DRAFT_AI_NOT_CONFIGURED', '简报生成模型尚未配置，当前仍可使用人工简报表单。', 503);
 };

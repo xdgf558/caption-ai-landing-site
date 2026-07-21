@@ -18,6 +18,7 @@ NOVEL_TRANSLATION_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 NOVEL_TRANSLATION_AUTO_SYNC = "1"
 SIGNAL_BRIEF_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
 SIGNAL_BRIEF_FALLBACK_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+SIGNAL_BRIEF_DEEPSEEK_ENABLED = "1"
 SIGNAL_BRIEF_DEEPSEEK_MODEL = "deepseek-v4-pro"
 
 [assets]
