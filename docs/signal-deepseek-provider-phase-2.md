@@ -4,7 +4,7 @@ Phase 2 connects the Phase 1 DeepSeek adapter to authenticated Signal brief gene
 
 ## Generation Order
 
-1. When `SIGNAL_BRIEF_DEEPSEEK_ENABLED=1`, `DEEPSEEK_API_KEY` is configured, and the Phase 3 D1 rollout mode is `live`, the selected DeepSeek model is the primary generator. The committed production default remains disabled.
+1. When `SIGNAL_BRIEF_DEEPSEEK_ENABLED=1`, `DEEPSEEK_API_KEY` is configured, and the Phase 3 D1 rollout mode is `live`, the selected DeepSeek model is the primary generator. The deployment gate is enabled by the controlled activation change, while the D1 rollout remains the operator-controlled live switch.
 2. DeepSeek receives only the selected public candidate title, summary, publisher, category, and publication time.
 3. DeepSeek retries once for a malformed, truncated, untranslated, factually invalid, or editorially weak result.
 4. If DeepSeek remains unavailable or fails validation, generation falls back to the existing Workers AI primary and fallback models.

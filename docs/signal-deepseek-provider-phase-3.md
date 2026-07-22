@@ -1,6 +1,6 @@
 # Signal DeepSeek Provider Phase 3
 
-Phase 3 adds a server-owned rollout gate, an unpublished Admin smoke test, and an immediate kill switch. It does not enable DeepSeek in the committed production configuration and does not publish smoke-test output.
+Phase 3 adds a server-owned rollout gate, an unpublished Admin smoke test, and an immediate kill switch. The controlled activation change enables the deployment-level gate, but DeepSeek remains out of production traffic until an Admin enables the D1 rollout after a successful smoke test. It does not publish smoke-test output.
 
 ## Safety Model
 
@@ -45,7 +45,7 @@ The singleton `signal_model_rollout` row stores the selected model, rollout mode
 
 ## Controlled Activation
 
-1. Deploy Phase 3 with the committed `SIGNAL_BRIEF_DEEPSEEK_ENABLED=0` default.
+1. Deploy Phase 3 initially with `SIGNAL_BRIEF_DEEPSEEK_ENABLED=0`.
 2. Apply migration `0025_signal_model_rollout.sql`.
 3. Configure `DEEPSEEK_API_KEY` with `wrangler secret put`; never place it in `wrangler.toml`.
 4. In a separate activation change, set `SIGNAL_BRIEF_DEEPSEEK_ENABLED=1` and deploy. The D1 rollout mode remains `off`, so normal drafts still use Workers AI.
@@ -53,7 +53,7 @@ The singleton `signal_model_rollout` row stores the selected model, rollout mode
 6. Enable the primary model in Admin, generate one draft, and verify provider/model/fallback metadata.
 7. Exercise “关闭主模型” once and verify the next draft reports `provider = workers-ai`.
 
-The committed flag remains `0` in this phase, so merging the code cannot activate DeepSeek by itself.
+The controlled activation change commits the deployment flag as `1`. This still cannot activate DeepSeek by itself: the seeded D1 rollout mode is `off`, and switching it to `live` requires a fresh same-model smoke test plus an available Workers AI fallback.
 
 Official references:
 
