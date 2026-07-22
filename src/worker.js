@@ -16211,6 +16211,38 @@ const listPublishedContentEntries = async (db, options) => {
   return response.results || [];
 };
 
+const getAdjacentPublishedSignalBriefs = async (db, brief, locale) => {
+  const normalizedLocale = normalizeContentLocale(locale);
+  const publishedAt = cleanText(brief?.published_at || brief?.updated_at, 80);
+  const entryId = Number.parseInt(brief?.id, 10);
+  if (!publishedAt || !Number.isFinite(entryId)) return { next: null, previous: null };
+
+  const selectAdjacent = (direction) => {
+    const comparison = direction === 'previous' ? '<' : '>';
+    const order = direction === 'previous' ? 'DESC' : 'ASC';
+    return db
+      .prepare(
+        `SELECT *
+         FROM content_entries
+         WHERE entry_type = 'signal_brief'
+           AND locale = ?
+           AND status = 'published'
+           AND visibility IN ('public', 'unlisted')
+           AND (
+             COALESCE(published_at, updated_at) ${comparison} ?
+             OR (COALESCE(published_at, updated_at) = ? AND id ${comparison} ?)
+           )
+         ORDER BY COALESCE(published_at, updated_at) ${order}, id ${order}
+         LIMIT 1`
+      )
+      .bind(normalizedLocale, publishedAt, publishedAt, entryId)
+      .first();
+  };
+
+  const [previous, next] = await Promise.all([selectAdjacent('previous'), selectAdjacent('next')]);
+  return { next: next || null, previous: previous || null };
+};
+
 const renderSimpleMarkdownToHtml = (markdown) => {
   const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
   const output = [];
@@ -16762,12 +16794,26 @@ const dynamicNavCopy = {
     serials: 'Serials',
     signal: 'Signal strip'
   },
+  ja: {
+    apps: 'Apps',
+    devlog: '開発ログ',
+    member: '会員センター',
+    serials: '連載小説',
+    signal: 'シグナル簡報'
+  },
   'zh-Hant': {
     apps: 'Apps',
     devlog: '開發博客',
     member: '會員登入',
     serials: '連載小說',
     signal: '信號簡報'
+  },
+  'zh-Hans': {
+    apps: 'Apps',
+    devlog: '开发博客',
+    member: '会员登录',
+    serials: '连载小说',
+    signal: '信号简报'
   }
 };
 
@@ -16782,6 +16828,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
   const ogImageUrl = absoluteStationUrl(ogImage);
   const isSignalPage = pageKind === 'signal';
   const navCopy = dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant'];
+  const signalPageCopy = isSignalPage ? signalDesignCopy(lang) : null;
   const topbar = isSignalPage
     ? `<header class="signal-station-header">
         <div class="signal-station-header__inner">
@@ -16789,10 +16836,10 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
             <span class="signal-station-brand__mark">SC</span>
             <span class="signal-station-brand__copy">
               <strong>STATION CAT</strong>
-              <small>月台 · PLATFORM</small>
+              <small>${escapeHtml(signalPageCopy.platformLabel)}</small>
             </span>
           </a>
-          <nav class="signal-station-nav" aria-label="Primary navigation">
+          <nav class="signal-station-nav" aria-label="${escapeHtml(signalPageCopy.primaryNavigation)}">
             <a href="${escapeHtml(novelV2BasePathForLocale(lang))}">${escapeHtml(navCopy.serials)}</a>
             <a class="is-current" href="${escapeHtml(getPathWithLocale(lang, 'signal'))}" aria-current="page">${escapeHtml(navCopy.signal)}</a>
             <a href="/devlog/">${escapeHtml(navCopy.devlog)}</a>
@@ -16820,7 +16867,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
         <div class="signal-station-footer__inner">
           <div class="signal-station-footer__brand">
             <span>SC</span>
-            <p>© STATION CAT · 站台短訊</p>
+            <p>© STATION CAT · ${escapeHtml(signalPageCopy.footerLabel)}</p>
           </div>
           <p>SIGNAL &gt; NOISE</p>
         </div>
@@ -16845,7 +16892,6 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
     <meta name="twitter:description" content="${escapeHtml(description)}">
     ${ogImageUrl ? `<meta name="twitter:image" content="${escapeHtml(ogImageUrl)}">` : ''}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    ${isSignalPage ? '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">' : ''}
     <style>
       :root { color-scheme: light; --bg: #fffaf4; --surface: #ffffff; --soft: #f5efe7; --ink: #1f2d29; --muted: #64736d; --line: #e4dbd0; --teal: #08796d; --coral: #d95d45; }
       * { box-sizing: border-box; }
@@ -16926,46 +16972,46 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
       .reader-bookmark-toast { background: rgba(255,255,255,.96); border-color: rgba(8,121,109,.32); box-shadow: 0 18px 50px rgba(44,39,33,.12); color: var(--ink); font-weight: 900; left: max(16px, env(safe-area-inset-left)); position: fixed; right: max(16px, env(safe-area-inset-right)); text-align: center; z-index: 50; }
       @keyframes sc-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
       @keyframes sc-blink { 0%, 60% { opacity: 1; } 61%, 100% { opacity: .25; } }
-      .signal-page { --signal-paper: oklch(.955 .009 88); --signal-card: oklch(.985 .006 88); --signal-ink: oklch(.22 .012 60); --signal-muted: oklch(.5 .02 60); --signal-copy: oklch(.36 .012 60); --signal-amber: oklch(.66 .14 55); --signal-green: oklch(.62 .12 155); background: linear-gradient(oklch(.22 .012 60 / .035) 1px, transparent 1px) 0 0 / 100% 26px, var(--signal-paper); color: var(--signal-ink); font-family: "Noto Sans TC", system-ui, sans-serif; }
+      .signal-page { --signal-paper: oklch(.955 .009 88); --signal-card: oklch(.985 .006 88); --signal-ink: oklch(.22 .012 60); --signal-muted: oklch(.5 .02 60); --signal-copy: oklch(.36 .012 60); --signal-amber: oklch(.66 .14 55); --signal-green: oklch(.62 .12 155); --signal-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei", sans-serif; --signal-serif: ui-serif, "Iowan Old Style", "Songti TC", "Hiragino Mincho ProN", Georgia, serif; --signal-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; background: linear-gradient(oklch(.22 .012 60 / .035) 1px, transparent 1px) 0 0 / 100% 26px, var(--signal-paper); color: var(--signal-ink); font-family: var(--signal-sans); }
       .signal-page a { color: inherit; }
       .signal-page ::selection { background: oklch(.66 .14 55 / .28); }
       .signal-shell { margin: 0; max-width: none; padding: 0; }
       .signal-station-header { background: oklch(.955 .009 88 / .9); backdrop-filter: blur(10px); border-bottom: 1.5px solid var(--signal-ink); position: sticky; top: 0; z-index: 50; }
       .signal-station-header__inner { align-items: center; display: flex; gap: 24px; height: 64px; justify-content: space-between; margin: 0 auto; max-width: 1120px; padding: 0 24px; }
       .signal-station-brand { align-items: center; display: inline-flex; gap: 12px; text-decoration: none; }
-      .signal-station-brand__mark { background: var(--signal-ink); color: var(--signal-paper); display: grid; font-family: "JetBrains Mono", monospace; font-size: 14px; font-weight: 700; height: 34px; letter-spacing: 0; place-items: center; width: 34px; }
+      .signal-station-brand__mark { background: var(--signal-ink); color: var(--signal-paper); display: grid; font-family: var(--signal-mono); font-size: 14px; font-weight: 700; height: 34px; letter-spacing: 0; place-items: center; width: 34px; }
       .signal-station-brand__copy { display: flex; flex-direction: column; line-height: 1; }
-      .signal-station-brand__copy strong { font-family: "JetBrains Mono", monospace; font-size: 13px; letter-spacing: 0; }
-      .signal-station-brand__copy small { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 9.5px; letter-spacing: 0; margin-top: 3px; }
+      .signal-station-brand__copy strong { font-family: var(--signal-mono); font-size: 13px; letter-spacing: 0; }
+      .signal-station-brand__copy small { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 9.5px; letter-spacing: 0; margin-top: 3px; }
       .signal-station-nav { align-items: center; display: flex; flex-wrap: wrap; font-size: 13.5px; gap: 4px; }
       .signal-station-nav a { padding: 7px 11px; text-decoration: none; }
       .signal-station-nav a:hover, .signal-station-nav a:focus-visible { color: var(--signal-amber); }
       .signal-station-nav a.is-current { background: var(--signal-ink); color: var(--signal-paper); }
-      .signal-station-nav__x { border: 1.5px solid var(--signal-ink); font-family: "JetBrains Mono", monospace; font-size: 12px; margin-left: 6px; }
+      .signal-station-nav__x { border: 1.5px solid var(--signal-ink); font-family: var(--signal-mono); font-size: 12px; margin-left: 6px; }
       .signal-index-hero { margin: 0 auto; max-width: 1120px; padding: 72px 24px 40px; }
       .signal-index-hero__label { align-items: center; display: flex; gap: 12px; margin-bottom: 26px; }
       .signal-index-hero__lamp { animation: sc-blink 1.6s steps(1) infinite; background: var(--signal-amber); border-radius: 50%; height: 9px; width: 9px; }
-      .signal-index-hero__label strong { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 500; letter-spacing: 0; }
+      .signal-index-hero__label strong { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 12px; font-weight: 500; letter-spacing: 0; }
       .signal-index-hero__dash { background: repeating-linear-gradient(90deg, var(--signal-ink) 0 6px, transparent 6px 12px); flex: 1; height: 1.5px; }
-      .signal-index-hero h1 { font-family: "Noto Serif TC", serif; font-size: 104px; font-weight: 900; letter-spacing: 0; line-height: .98; margin: 0 0 26px; }
+      .signal-index-hero h1 { font-family: var(--signal-serif); font-size: 104px; font-weight: 900; letter-spacing: 0; line-height: .98; margin: 0 0 26px; }
       .signal-index-hero > p { color: oklch(.38 .012 60); font-size: 18px; line-height: 1.75; max-width: 640px; }
       .signal-ticker { background: var(--signal-ink); border-bottom: 1.5px solid var(--signal-ink); border-top: 1.5px solid var(--signal-ink); overflow: hidden; }
       .signal-ticker__track { animation: sc-ticker 42s linear infinite; display: flex; padding: 11px 0; width: max-content; will-change: transform; }
-      .signal-ticker__track span { color: oklch(.9 .01 88); font-family: "JetBrains Mono", monospace; font-size: 13px; letter-spacing: 0; white-space: nowrap; }
+      .signal-ticker__track span { color: oklch(.9 .01 88); font-family: var(--signal-mono); font-size: 13px; letter-spacing: 0; white-space: nowrap; }
       .signal-intro, .signal-feed { margin: 0 auto; max-width: 1120px; padding-left: 24px; padding-right: 24px; }
       .signal-intro { align-items: end; display: grid; gap: 40px; grid-template-columns: 1fr 1fr; padding-bottom: 30px; padding-top: 56px; }
-      .signal-intro h2 { font-family: "Noto Serif TC", serif; font-size: 38px; font-weight: 700; line-height: 1.15; margin: 0 0 14px; }
+      .signal-intro h2 { font-family: var(--signal-serif); font-size: 38px; font-weight: 700; line-height: 1.15; margin: 0 0 14px; }
       .signal-intro p { color: oklch(.42 .012 60); font-size: 15.5px; line-height: 1.7; max-width: 440px; }
       .signal-intro__stats { display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-end; }
       .signal-stat { min-width: 128px; text-align: right; }
       .signal-stat + .signal-stat { border-left: 1.5px solid var(--signal-ink); padding-left: 20px; }
-      .signal-stat strong { display: block; font-family: "JetBrains Mono", monospace; font-size: 34px; line-height: 1; }
+      .signal-stat strong { display: block; font-family: var(--signal-mono); font-size: 34px; line-height: 1; }
       .signal-stat:first-child strong { color: var(--signal-amber); }
-      .signal-stat span { color: var(--signal-muted); display: block; font-family: "JetBrains Mono", monospace; font-size: 10.5px; letter-spacing: 0; margin-top: 8px; }
+      .signal-stat span { color: var(--signal-muted); display: block; font-family: var(--signal-mono); font-size: 10.5px; letter-spacing: 0; margin-top: 8px; }
       .signal-feed { padding-bottom: 24px; }
       .signal-feed__heading { align-items: end; border-bottom: 2.5px solid var(--signal-ink); display: flex; gap: 12px; margin-bottom: 30px; padding-bottom: 12px; }
-      .signal-feed__heading h2 { font-family: "Noto Serif TC", serif; font-size: 22px; font-weight: 700; }
-      .signal-feed__heading span { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0; }
+      .signal-feed__heading h2 { font-family: var(--signal-serif); font-size: 22px; font-weight: 700; }
+      .signal-feed__heading span { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11px; letter-spacing: 0; }
       .signal-feed__heading span:last-child { margin-left: auto; }
       .signal-feed__list { display: flex; flex-direction: column; gap: 30px; }
       .signal-tape-card { --signal-accent: var(--signal-amber); background: var(--signal-card); border: 1.5px solid var(--signal-ink); box-shadow: 5px 6px 0 oklch(.22 .012 60 / .14); color: var(--signal-ink); display: grid; grid-template-columns: 44px minmax(0, 1fr); position: relative; text-decoration: none; transition: box-shadow .15s ease, transform .15s ease; }
@@ -16975,71 +17021,71 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
       .signal-tape-card__spine { background: radial-gradient(circle, oklch(.22 .012 60 / .22) 2.5px, transparent 3px) 50% 8px / 16px 22px repeat-y; border-right: 1.5px dashed oklch(.22 .012 60 / .35); }
       .signal-tape-card__body { padding: 24px 26px 24px; }
       .signal-dispatch-meta { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 13px; }
-      .signal-category-chip { align-items: center; border: 1.5px solid var(--signal-ink); border-left: 4px solid var(--signal-accent); display: inline-flex; font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 700; gap: 7px; letter-spacing: 0; padding: 4px 10px 4px 8px; }
+      .signal-category-chip { align-items: center; border: 1.5px solid var(--signal-ink); border-left: 4px solid var(--signal-accent); display: inline-flex; font-family: var(--signal-mono); font-size: 11px; font-weight: 700; gap: 7px; letter-spacing: 0; padding: 4px 10px 4px 8px; }
       .signal-category-chip strong { color: var(--signal-accent); }
-      .signal-code, .signal-date, .signal-weekday { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 11.5px; letter-spacing: 0; }
+      .signal-code, .signal-date, .signal-weekday { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11.5px; letter-spacing: 0; }
       .signal-date { color: oklch(.4 .012 60); font-size: 12px; margin-left: auto; }
-      .signal-tape-card h3 { font-family: "Noto Serif TC", serif; font-size: 29px; font-weight: 700; line-height: 1.25; margin: 0 0 10px; }
+      .signal-tape-card h3 { font-family: var(--signal-serif); font-size: 29px; font-weight: 700; line-height: 1.25; margin: 0 0 10px; }
       .signal-tape-card__summary { color: var(--signal-copy); font-size: 15px; line-height: 1.7; max-width: 66ch; }
       .signal-tape-list { background: oklch(.955 .009 88 / .58); border: 1px solid oklch(.22 .012 60 / .14); display: flex; flex-direction: column; gap: 9px; list-style: none; margin: 16px 0 0; padding: 14px 18px; }
       .signal-tape-list li { align-items: baseline; color: oklch(.3 .012 60); display: flex; font-size: 14.5px; gap: 10px; line-height: 1.55; }
-      .signal-tape-list li span { color: var(--signal-accent); font-family: "JetBrains Mono", monospace; font-size: 11.5px; font-weight: 700; min-width: 20px; }
-      .signal-tape-list li.signal-tape-list__more { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 11.5px; }
+      .signal-tape-list li span { color: var(--signal-accent); font-family: var(--signal-mono); font-size: 11.5px; font-weight: 700; min-width: 20px; }
+      .signal-tape-list li.signal-tape-list__more { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11.5px; }
       .signal-tape-card__footer { align-items: center; display: flex; gap: 14px; margin-top: 18px; }
-      .signal-read-more { font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 700; }
-      .signal-strength-label { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0; margin-left: auto; }
+      .signal-read-more { font-family: var(--signal-mono); font-size: 13px; font-weight: 700; }
+      .signal-strength-label { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 10px; letter-spacing: 0; margin-left: auto; }
       .signal-strength { align-items: flex-end; display: inline-flex; gap: 3px; height: 16px; }
       .signal-strength i { background: oklch(.22 .012 60 / .15); display: block; width: 5px; }
       .signal-strength i:nth-child(1) { height: 40%; } .signal-strength i:nth-child(2) { height: 62%; } .signal-strength i:nth-child(3) { height: 84%; } .signal-strength i:nth-child(4) { height: 100%; }
       .signal-strength[data-level="1"] i:nth-child(-n+1), .signal-strength[data-level="2"] i:nth-child(-n+2), .signal-strength[data-level="3"] i:nth-child(-n+3), .signal-strength[data-level="4"] i:nth-child(-n+4) { background: var(--signal-accent); }
-      .signal-empty { border: 1.5px dashed oklch(.22 .012 60 / .3); color: var(--signal-muted); font-family: "JetBrains Mono", monospace; padding: 28px; }
+      .signal-empty { border: 1.5px dashed oklch(.22 .012 60 / .3); color: var(--signal-muted); font-family: var(--signal-mono); padding: 28px; }
       .signal-detail-back { margin: 0 auto; max-width: 820px; padding: 26px 24px 0; }
-      .signal-detail-back a { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 12px; letter-spacing: 0; text-decoration: none; }
+      .signal-detail-back a { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 12px; letter-spacing: 0; text-decoration: none; }
       .signal-dispatch { --signal-accent: var(--signal-amber); margin: 0 auto; max-width: 820px; padding: 22px 24px 0; }
       .signal-dispatch--general, .signal-dispatch--economy, .signal-dispatch--market { --signal-accent: var(--signal-green); }
-      .signal-dispatch__masthead h1 { font-family: "Noto Serif TC", serif; font-size: 58px; font-weight: 900; letter-spacing: 0; line-height: 1.08; margin: 0 0 22px; }
+      .signal-dispatch__masthead h1 { font-family: var(--signal-serif); font-size: 58px; font-weight: 900; letter-spacing: 0; line-height: 1.08; margin: 0 0 22px; }
       .signal-dispatch__lede { color: oklch(.35 .012 60); font-size: 18px; line-height: 1.75; margin-bottom: 26px; max-width: 64ch; }
       .signal-dispatch__stats { align-items: center; border-bottom: 1.5px solid var(--signal-ink); border-top: 1.5px solid var(--signal-ink); display: flex; gap: 16px; padding: 16px 0; }
-      .signal-dispatch__stats > span:first-child { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0; }
+      .signal-dispatch__stats > span:first-child { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11px; letter-spacing: 0; }
       .signal-dispatch__items { margin-top: 8px; position: relative; }
       .signal-item { display: grid; grid-template-columns: 56px minmax(0, 1fr); position: relative; }
       .signal-item__rail { padding-top: 34px; position: relative; }
       .signal-item__rail::after { background: repeating-linear-gradient(var(--signal-ink) 0 5px, transparent 5px 11px); bottom: 0; content: ""; left: 19px; opacity: .35; position: absolute; top: 0; width: 1.5px; z-index: 1; }
-      .signal-item__number { background: var(--signal-paper); border: 1.5px solid var(--signal-ink); color: var(--signal-accent); display: grid; font-family: "JetBrains Mono", monospace; font-size: 14px; font-weight: 700; height: 38px; place-items: center; position: relative; width: 38px; z-index: 2; }
+      .signal-item__number { background: var(--signal-paper); border: 1.5px solid var(--signal-ink); color: var(--signal-accent); display: grid; font-family: var(--signal-mono); font-size: 14px; font-weight: 700; height: 38px; place-items: center; position: relative; width: 38px; z-index: 2; }
       .signal-item__body { padding: 34px 0 22px 6px; }
-      .signal-item__body h2 { font-family: "Noto Serif TC", serif; font-size: 26px; font-weight: 700; line-height: 1.3; margin: 0 0 12px; }
+      .signal-item__body h2 { font-family: var(--signal-serif); font-size: 26px; font-weight: 700; line-height: 1.3; margin: 0 0 12px; }
       .signal-item__copy { color: oklch(.34 .012 60); font-size: 15.5px; line-height: 1.78; margin-bottom: 16px; max-width: 60ch; }
       .signal-analysis { background: oklch(.22 .012 60 / .14); border: 1px solid oklch(.22 .012 60 / .14); display: grid; gap: 1.5px; grid-template-columns: 1fr 1fr; margin-bottom: 16px; }
       .signal-analysis__cell { background: var(--signal-card); padding: 13px 15px; }
-      .signal-analysis__label { color: var(--signal-accent); font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0; margin-bottom: 7px; }
+      .signal-analysis__label { color: var(--signal-accent); font-family: var(--signal-mono); font-size: 10px; letter-spacing: 0; margin-bottom: 7px; }
       .signal-analysis__cell:last-child .signal-analysis__label { color: var(--signal-muted); }
       .signal-analysis__text { color: oklch(.3 .012 60); font-size: 13.5px; line-height: 1.6; }
       .signal-analysis__cell:last-child .signal-analysis__text { color: oklch(.45 .012 60); }
-      .signal-item__source { color: var(--signal-muted); display: inline-flex; font-family: "JetBrains Mono", monospace; font-size: 11.5px; gap: 7px; letter-spacing: 0; text-decoration: none; }
+      .signal-item__source { color: var(--signal-muted); display: inline-flex; font-family: var(--signal-mono); font-size: 11.5px; gap: 7px; letter-spacing: 0; text-decoration: none; }
       .signal-item__source:hover { color: var(--signal-accent); }
       .signal-dispatch__fallback { background: var(--signal-card); border: 1.5px solid var(--signal-ink); padding: 24px; }
-      .signal-dispatch__fallback h1, .signal-dispatch__fallback h2, .signal-dispatch__fallback h3 { font-family: "Noto Serif TC", serif; }
+      .signal-dispatch__fallback h1, .signal-dispatch__fallback h2, .signal-dispatch__fallback h3 { font-family: var(--signal-serif); }
       .signal-dispatch__fallback p { color: var(--signal-copy); font-size: 15.5px; line-height: 1.78; }
       .signal-share-strip { align-items: center; border-top: 2px dotted oklch(.22 .012 60 / .4); display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; padding-top: 24px; }
-      .signal-share-strip > span { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 12px; letter-spacing: 0; margin-right: auto; }
-      .signal-share-button { background: transparent; border: 1.5px solid var(--signal-ink); color: var(--signal-ink); cursor: pointer; font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 700; padding: 9px 16px; text-decoration: none; }
+      .signal-share-strip > span { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 12px; letter-spacing: 0; margin-right: auto; }
+      .signal-share-button { background: transparent; border: 1.5px solid var(--signal-ink); color: var(--signal-ink); cursor: pointer; font-family: var(--signal-mono); font-size: 12px; font-weight: 700; padding: 9px 16px; text-decoration: none; }
       .signal-share-button:hover, .signal-share-button:focus-visible { background: var(--signal-ink); color: var(--signal-paper); }
       .signal-adjacent { margin: 40px auto 0; max-width: 820px; padding: 0 24px; }
       .signal-adjacent__grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
       .signal-adjacent__card { border: 1.5px solid var(--signal-ink); display: flex; flex-direction: column; gap: 8px; min-height: 104px; padding: 18px 20px; text-decoration: none; }
       .signal-adjacent__card:hover, .signal-adjacent__card:focus-visible { box-shadow: 5px 6px 0 oklch(.22 .012 60 / .14); color: inherit; }
-      .signal-adjacent__card small { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0; }
-      .signal-adjacent__card strong { font-family: "Noto Serif TC", serif; font-size: 17px; line-height: 1.35; }
+      .signal-adjacent__card small { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11px; letter-spacing: 0; }
+      .signal-adjacent__card strong { font-family: var(--signal-serif); font-size: 17px; line-height: 1.35; }
       .signal-adjacent__card--next { align-items: flex-end; text-align: right; }
       .signal-adjacent__empty { border: 1.5px dashed oklch(.22 .012 60 / .3); color: var(--signal-muted); display: flex; flex-direction: column; gap: 8px; justify-content: center; min-height: 104px; padding: 18px 20px; }
       .signal-adjacent__empty:last-child { align-items: flex-end; text-align: right; }
-      .signal-adjacent__empty small { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0; }
-      .signal-adjacent__empty strong { font-family: "Noto Serif TC", serif; font-size: 16px; font-weight: 500; }
+      .signal-adjacent__empty small { font-family: var(--signal-mono); font-size: 11px; letter-spacing: 0; }
+      .signal-adjacent__empty strong { font-family: var(--signal-serif); font-size: 16px; font-weight: 500; }
       .signal-station-footer { border-top: 1.5px solid var(--signal-ink); margin-top: 56px; }
       .signal-station-footer__inner { align-items: center; display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; margin: 0 auto; max-width: 1120px; padding: 34px 24px; }
       .signal-station-footer__brand { align-items: center; display: flex; gap: 12px; }
-      .signal-station-footer__brand span { background: var(--signal-ink); color: var(--signal-paper); display: grid; font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 700; height: 28px; place-items: center; width: 28px; }
-      .signal-station-footer p { color: var(--signal-muted); font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0; }
+      .signal-station-footer__brand span { background: var(--signal-ink); color: var(--signal-paper); display: grid; font-family: var(--signal-mono); font-size: 12px; font-weight: 700; height: 28px; place-items: center; width: 28px; }
+      .signal-station-footer p { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11px; letter-spacing: 0; }
       .signal-section-heading { border-top: 1px dashed var(--line); color: var(--ink); font-size: 30px; padding-top: 18px; }
       @media (max-width: 760px) {
         .shell { padding: 18px 14px 96px; }
@@ -17228,24 +17274,28 @@ const signalBriefMetadata = (row) => {
   };
 };
 
-const renderSignalBriefPills = (route, row) => {
-  const meta = signalBriefMetadata(row);
-  const date = formatContentDate(meta.briefDate || row.published_at || row.updated_at, route.locale);
-  return `<div class="meta">
-      <span class="pill">${escapeHtml(signalCategoryLabel(meta.category, route.locale))}</span>
-      ${date ? `<span>${escapeHtml(date)}</span>` : ''}
-      ${meta.issue ? `<span>${escapeHtml(meta.issue)}</span>` : ''}
-    </div>`;
-};
-
 const signalDesignCopyByLocale = {
   en: {
+    adjacentNavigation: 'Adjacent Signal briefs',
+    briefsLabel: 'briefs · BRIEFS',
+    copied: 'Copied',
+    copyFailed: 'Copy failed',
     dispatches: 'RECENT DISPATCHES',
+    footerLabel: 'PLATFORM DISPATCH',
+    heroAction: 'Tear off, read, and pass it on.',
+    introDescription: 'Each day, we turn the public signals worth noticing into a card you can tear off and share. Signal first, noise behind.',
+    introTitle: 'Technology · Economy · AI',
     latest: 'Latest update',
+    moreSignals: (count) => `${count} more signals`,
     newestFirst: '↓ Newest first',
     platform: 'Platform dispatch',
+    platformLabel: 'PLATFORM',
+    primaryNavigation: 'Primary navigation',
     signalCount: 'SIGNALS',
     signalLabel: '▲ SIGNAL',
+    signalStrength: 'Signal strength',
+    signalTotal: (count) => `${count} signals · ${count} SIGNALS`,
+    tickerLabel: 'Latest Signal headlines',
     noiseLabel: '▽ NOISE',
     source: 'SOURCE',
     tear: 'Tear off this strip —',
@@ -17255,12 +17305,26 @@ const signalDesignCopyByLocale = {
     newest: 'This is the latest brief'
   },
   ja: {
+    adjacentNavigation: '前後の Signal 簡報',
+    briefsLabel: '件の簡報 · BRIEFS',
+    copied: 'コピーしました',
+    copyFailed: 'コピーできませんでした',
     dispatches: 'RECENT DISPATCHES',
+    footerLabel: 'ホーム通信',
+    heroAction: '切り取り、読み、手渡す。',
+    introDescription: '毎日注目すべき公開シグナルを、切り取って共有できる一枚のカードにまとめます。シグナルを前に、ノイズを後ろに。',
+    introTitle: 'テクノロジー · 経済 · AI',
     latest: '最新更新',
+    moreSignals: (count) => `ほか ${count} 件のシグナル`,
     newestFirst: '↓ 新しい順',
     platform: 'ホーム通信',
+    platformLabel: 'プラットフォーム',
+    primaryNavigation: 'メインナビゲーション',
     signalCount: 'SIGNALS',
     signalLabel: '▲ シグナル',
+    signalStrength: 'シグナル強度',
+    signalTotal: (count) => `${count} 件のシグナル · ${count} SIGNALS`,
+    tickerLabel: '最新の Signal 見出し',
     noiseLabel: '▽ ノイズ',
     source: '出典',
     tear: 'この紙帯を切り取る ——',
@@ -17270,12 +17334,26 @@ const signalDesignCopyByLocale = {
     newest: '最新の簡報です'
   },
   'zh-Hant': {
+    adjacentNavigation: '相鄰 Signal 簡報',
+    briefsLabel: '份簡報 · BRIEFS',
+    copied: '已複製',
+    copyFailed: '複製失敗',
     dispatches: 'RECENT DISPATCHES',
+    footerLabel: '站台短訊',
+    heroAction: '撕下、閱讀、傳遞。',
+    introDescription: '把每天值得留意的公開信號整理成一張可以撕下、可以分享的卡片。信號在前，噪音退後。',
+    introTitle: '科技 · 經濟 · AI',
     latest: '最新更新',
+    moreSignals: (count) => `另有 ${count} 則信號`,
     newestFirst: '↓ 由新到舊',
     platform: '站台短訊',
+    platformLabel: '月台 · PLATFORM',
+    primaryNavigation: '主要導覽',
     signalCount: 'SIGNALS',
     signalLabel: '▲ 信號',
+    signalStrength: '信號強度',
+    signalTotal: (count) => `共 ${count} 則信號 · ${count} SIGNALS`,
+    tickerLabel: '最新 Signal 標題',
     noiseLabel: '▽ 噪音',
     source: '來源',
     tear: '撕下這張紙帶 ——',
@@ -17285,12 +17363,26 @@ const signalDesignCopyByLocale = {
     newest: '已是最新一則'
   },
   'zh-Hans': {
+    adjacentNavigation: '相邻 Signal 简报',
+    briefsLabel: '份简报 · BRIEFS',
+    copied: '已复制',
+    copyFailed: '复制失败',
     dispatches: 'RECENT DISPATCHES',
+    footerLabel: '站台短讯',
+    heroAction: '撕下、阅读、传递。',
+    introDescription: '把每天值得留意的公开信号整理成一张可以撕下、可以分享的卡片。信号在前，噪音退后。',
+    introTitle: '科技 · 经济 · AI',
     latest: '最新更新',
+    moreSignals: (count) => `另有 ${count} 则信号`,
     newestFirst: '↓ 由新到旧',
     platform: '站台短讯',
+    platformLabel: '站台 · PLATFORM',
+    primaryNavigation: '主要导航',
     signalCount: 'SIGNALS',
     signalLabel: '▲ 信号',
+    signalStrength: '信号强度',
+    signalTotal: (count) => `共 ${count} 则信号 · ${count} SIGNALS`,
+    tickerLabel: '最新 Signal 标题',
     noiseLabel: '▽ 噪音',
     source: '来源',
     tear: '撕下这张纸带 ——',
@@ -17343,9 +17435,9 @@ const renderSignalDispatchMeta = (route, row) => {
     </div>`;
 };
 
-const renderSignalStrength = (itemCount, forceFull = false) => {
+const renderSignalStrength = (itemCount, forceFull = false, label = 'Signal strength') => {
   const level = forceFull ? 4 : Math.max(1, Math.min(4, Math.round(Math.max(1, itemCount) / 2)));
-  return `<span class="signal-strength" data-level="${level}" aria-label="Signal strength ${level} of 4"><i></i><i></i><i></i><i></i></span>`;
+  return `<span class="signal-strength" data-level="${level}" aria-label="${escapeHtml(label)} ${level}/4"><i></i><i></i><i></i><i></i></span>`;
 };
 
 const splitSignalAnalysisLine = (value) => {
@@ -17419,7 +17511,7 @@ const renderDynamicSignalIndex = (route, rows) => {
             ? `<ul class="signal-tape-list">${visibleBullets
                 .map((item, index) => `<li><span>${String(index + 1).padStart(2, '0')}</span>${escapeHtml(item)}</li>`)
                 .join('')}${meta.summaryBullets.length > visibleBullets.length ? `<li class="signal-tape-list__more">＋ ${escapeHtml(
-                  route.locale === 'en' ? `${meta.summaryBullets.length - visibleBullets.length} more signals` : `另有 ${meta.summaryBullets.length - visibleBullets.length} 則信號`
+                  designCopy.moreSignals(meta.summaryBullets.length - visibleBullets.length)
                 )}</li>` : ''}</ul>`
             : '';
           return `<a class="signal-tape-card signal-tape-card--${escapeHtml(category)}" href="${escapeHtml(dynamicSignalPath(route, row.slug))}">
@@ -17431,8 +17523,8 @@ const renderDynamicSignalIndex = (route, rows) => {
                 ${bullets}
                 <footer class="signal-tape-card__footer">
                   <span class="signal-read-more">${escapeHtml(copy.signalReadMore)} →</span>
-                  <span class="signal-strength-label">信號強度</span>
-                  ${renderSignalStrength(meta.summaryBullets.length)}
+                  <span class="signal-strength-label">${escapeHtml(designCopy.signalStrength)}</span>
+                  ${renderSignalStrength(meta.summaryBullets.length, false, designCopy.signalStrength)}
                 </footer>
               </div>
             </a>`;
@@ -17447,18 +17539,18 @@ const renderDynamicSignalIndex = (route, rows) => {
         <span class="signal-index-hero__dash" aria-hidden="true"></span>
       </div>
       <h1>${escapeHtml(copy.signalTitle)}</h1>
-      <p>${escapeHtml(copy.signalDescription)} —— 撕下、閱讀、傳遞。</p>
+      <p>${escapeHtml(copy.signalDescription)} — ${escapeHtml(designCopy.heroAction)}</p>
     </section>
-    <div class="signal-ticker" aria-label="Latest Signal headlines">
+    <div class="signal-ticker" aria-label="${escapeHtml(designCopy.tickerLabel)}">
       <div class="signal-ticker__track"><span>${escapeHtml(ticker)}</span><span>${escapeHtml(ticker)}</span></div>
     </div>
     <section class="signal-intro">
       <div>
-        <h2>Tech · Economy · AI</h2>
-        <p>把每天值得留意的公開信號整理成一張可以撕下、可以分享的卡片。信號在前，噪音退後。</p>
+        <h2>${escapeHtml(designCopy.introTitle)}</h2>
+        <p>${escapeHtml(designCopy.introDescription)}</p>
       </div>
       <div class="signal-intro__stats">
-        <div class="signal-stat"><strong>${rows.length}</strong><span>份簡報 · BRIEFS</span></div>
+        <div class="signal-stat"><strong>${rows.length}</strong><span>${escapeHtml(designCopy.briefsLabel)}</span></div>
         <div class="signal-stat"><strong>${escapeHtml(latest ? signalBriefIsoDate(latest).replace(/-/g, '.') : '—')}</strong><span>${escapeHtml(designCopy.latest)} · LATEST</span></div>
       </div>
     </section>
@@ -17534,9 +17626,9 @@ const renderDynamicSignalBrief = (route, row, body, navigation = {}) => {
         <h1>${escapeHtml(row.title)}</h1>
         ${summary ? `<p class="signal-dispatch__lede">${escapeHtml(summary)}</p>` : ''}
         <div class="signal-dispatch__stats">
-          <span>共 ${items.length || meta.summaryBullets.length} 則信號 · ${items.length || meta.summaryBullets.length} ${escapeHtml(designCopy.signalCount)}</span>
-          <span class="signal-strength-label">信號強度</span>
-          ${renderSignalStrength(items.length || meta.summaryBullets.length, true)}
+          <span>${escapeHtml(designCopy.signalTotal(items.length || meta.summaryBullets.length))}</span>
+          <span class="signal-strength-label">${escapeHtml(designCopy.signalStrength)}</span>
+          ${renderSignalStrength(items.length || meta.summaryBullets.length, true, designCopy.signalStrength)}
         </div>
       </header>
       ${renderedItems ? `<div class="signal-dispatch__items">${renderedItems}</div>` : `<div class="signal-dispatch__fallback">${fallbackHtml}</div>`}
@@ -17552,9 +17644,9 @@ const renderDynamicSignalBrief = (route, row, body, navigation = {}) => {
           button?.addEventListener('click', async () => {
             try {
               await navigator.clipboard.writeText(${scriptJson(absoluteUrl)});
-              button.textContent = '已複製';
+              button.textContent = ${scriptJson(designCopy.copied)};
             } catch {
-              button.textContent = 'Copy failed';
+              button.textContent = ${scriptJson(designCopy.copyFailed)};
             }
             window.setTimeout(() => {
               button.textContent = ${scriptJson(copy.signalCopyLink)};
@@ -17563,7 +17655,7 @@ const renderDynamicSignalBrief = (route, row, body, navigation = {}) => {
         })();
       </script>
     </article>
-    <nav class="signal-adjacent" aria-label="Adjacent Signal briefs">
+    <nav class="signal-adjacent" aria-label="${escapeHtml(designCopy.adjacentNavigation)}">
       <div class="signal-adjacent__grid">${adjacentCard(navigation.previous, 'previous')}${adjacentCard(navigation.next, 'next')}</div>
     </nav>`;
 };
@@ -18843,18 +18935,7 @@ const handleDynamicFrontendContent = async (request, env) => {
     }
 
     const body = await readPublicEntryBody(env, brief, { preferMarkdown: true });
-    const adjacentRows = await listPublishedContentEntries(db, {
-      entryType: 'signal_brief',
-      locale: route.locale,
-      limit: 50
-    });
-    const currentIndex = adjacentRows.findIndex((entry) => entry.slug === brief.slug);
-    const navigation = currentIndex >= 0
-      ? {
-          previous: adjacentRows[currentIndex + 1] || null,
-          next: currentIndex > 0 ? adjacentRows[currentIndex - 1] : null
-        }
-      : {};
+    const navigation = await getAdjacentPublishedSignalBriefs(db, brief, route.locale);
     return dynamicHtmlResponse(request, {
       body: renderDynamicSignalBrief(route, brief, body, navigation),
       canonicalPath: dynamicCanonicalPath(route),
@@ -19865,6 +19946,7 @@ export const __readerTotpTestHooks = {
   failSignalAutomationCron,
   findActiveSignalCollectionRun,
   getD1ChangeCount,
+  getAdjacentPublishedSignalBriefs,
   getLegacyWorksRedirectPath,
   getSignalAutomationHealth,
   getReaderTotpResetLimitKeys,
