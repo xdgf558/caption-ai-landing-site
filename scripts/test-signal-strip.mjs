@@ -5,8 +5,10 @@ import { __readerTotpTestHooks as hooks } from '../src/worker.js';
 const {
   contentEntryPublicPath,
   dynamicCanonicalPath,
+  dynamicHtmlShell,
   dynamicSignalCardPath,
   dynamicSignalPath,
+  parseSignalMarkdownItems,
   parseSignalSourcesInput,
   parseDynamicContentRoute,
   renderDynamicSignalBrief,
@@ -68,10 +70,24 @@ assert.equal(enRoute.basePath, '/en/signal/');
 assert.equal(parseDynamicContentRoute('/signal/daily-brief-2026-07-04/extra/path'), null);
 
 const indexHtml = renderDynamicSignalIndex(indexRoute, [signalRow]);
-assert.match(indexHtml, /Signal strip/);
+assert.match(indexHtml, /SIGNAL STRIP/);
 assert.match(indexHtml, /\/signal\/daily-brief-2026-07-04\//);
 assert.match(indexHtml, /美国就业降温，市场继续下调加息预期/);
 assert.match(indexHtml, /閱讀全文/);
+assert.match(indexHtml, /class="signal-tape-card/);
+assert.match(indexHtml, /RECENT DISPATCHES/);
+
+const indexPage = dynamicHtmlShell({
+  body: indexHtml,
+  canonicalPath: '/signal/',
+  description: 'Signal strip',
+  lang: 'zh-Hant',
+  pageKind: 'signal',
+  title: '每日信號簡報'
+});
+assert.match(indexPage, /class="signal-page"/);
+assert.match(indexPage, /Noto\+Serif\+TC/);
+assert.match(indexPage, /signal-station-header/);
 
 const signalMarkdownHtml = renderSignalMarkdownToHtml(pastedSignalMarkdown);
 assert.match(signalMarkdownHtml, /class="signal-section-heading"/);
@@ -81,7 +97,26 @@ const briefHtml = renderDynamicSignalBrief(briefRoute, signalRow, { html: '<p>�
 assert.match(briefHtml, /分享到 X/);
 assert.match(briefHtml, /card\.svg/);
 assert.match(briefHtml, /Example source/);
-assert.match(briefHtml, /class="signal-section-heading"/);
+assert.match(briefHtml, /class="signal-dispatch/);
+assert.match(briefHtml, /class="signal-item/);
+assert.match(briefHtml, /▲ 信號/);
+assert.match(briefHtml, /▽ 噪音/);
+
+const structuredItems = parseSignalMarkdownItems(`1. 第一則信號
+這是一段正文。信號：企業採用正在增加。噪音：尚未公布實際定價。
+
+2. 第二則信號
+另一段正文。
+信號：需求上升。
+噪音：樣本仍然有限。`, [
+  { label: 'Source one', url: 'https://example.com/one' },
+  { label: 'Source two', url: 'https://example.com/two' }
+]);
+assert.equal(structuredItems.length, 2);
+assert.equal(structuredItems[0].body, '這是一段正文。');
+assert.equal(structuredItems[0].signal, '企業採用正在增加。');
+assert.equal(structuredItems[0].noise, '尚未公布實際定價。');
+assert.equal(structuredItems[1].source.label, 'Source two');
 
 const svg = renderSignalShareCardSvg(cardRoute, signalRow);
 assert.match(svg, /^<svg/);
