@@ -16211,6 +16211,38 @@ const listPublishedContentEntries = async (db, options) => {
   return response.results || [];
 };
 
+const getAdjacentPublishedSignalBriefs = async (db, brief, locale) => {
+  const normalizedLocale = normalizeContentLocale(locale);
+  const publishedAt = cleanText(brief?.published_at || brief?.updated_at, 80);
+  const entryId = Number.parseInt(brief?.id, 10);
+  if (!publishedAt || !Number.isFinite(entryId)) return { next: null, previous: null };
+
+  const selectAdjacent = (direction) => {
+    const comparison = direction === 'previous' ? '<' : '>';
+    const order = direction === 'previous' ? 'DESC' : 'ASC';
+    return db
+      .prepare(
+        `SELECT *
+         FROM content_entries
+         WHERE entry_type = 'signal_brief'
+           AND locale = ?
+           AND status = 'published'
+           AND visibility IN ('public', 'unlisted')
+           AND (
+             COALESCE(published_at, updated_at) ${comparison} ?
+             OR (COALESCE(published_at, updated_at) = ? AND id ${comparison} ?)
+           )
+         ORDER BY COALESCE(published_at, updated_at) ${order}, id ${order}
+         LIMIT 1`
+      )
+      .bind(normalizedLocale, publishedAt, publishedAt, entryId)
+      .first();
+  };
+
+  const [previous, next] = await Promise.all([selectAdjacent('previous'), selectAdjacent('next')]);
+  return { next: next || null, previous: previous || null };
+};
+
 const renderSimpleMarkdownToHtml = (markdown) => {
   const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
   const output = [];
@@ -16472,6 +16504,7 @@ const renderAdminContentPreview = async (entry, env) => {
       description: firstPlainSummary([entry.description, entry.excerpt], 260),
       lang: entry.locale,
       ogImage: dynamicSignalCardPath(route, entry.slug),
+      pageKind: 'signal',
       robots: 'noindex, nofollow',
       title: `[Preview] ${entry.title}`
     };
@@ -16761,12 +16794,26 @@ const dynamicNavCopy = {
     serials: 'Serials',
     signal: 'Signal strip'
   },
+  ja: {
+    apps: 'Apps',
+    devlog: '開発ログ',
+    member: '会員センター',
+    serials: '連載小説',
+    signal: 'シグナル簡報'
+  },
   'zh-Hant': {
     apps: 'Apps',
     devlog: '開發博客',
     member: '會員登入',
     serials: '連載小說',
     signal: '信號簡報'
+  },
+  'zh-Hans': {
+    apps: 'Apps',
+    devlog: '开发博客',
+    member: '会员登录',
+    serials: '连载小说',
+    signal: '信号简报'
   }
 };
 
@@ -16777,8 +16824,55 @@ const absoluteStationUrl = (path) => {
   return `https://wwwstationcat.org${value.startsWith('/') ? value : `/${value}`}`;
 };
 
-const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = '', robots = '', title }) => {
+const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = '', pageKind = '', robots = '', title }) => {
   const ogImageUrl = absoluteStationUrl(ogImage);
+  const isSignalPage = pageKind === 'signal';
+  const navCopy = dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant'];
+  const signalPageCopy = isSignalPage ? signalDesignCopy(lang) : null;
+  const topbar = isSignalPage
+    ? `<header class="signal-station-header">
+        <div class="signal-station-header__inner">
+          <a class="signal-station-brand" href="/">
+            <span class="signal-station-brand__mark">SC</span>
+            <span class="signal-station-brand__copy">
+              <strong>STATION CAT</strong>
+              <small>${escapeHtml(signalPageCopy.platformLabel)}</small>
+            </span>
+          </a>
+          <nav class="signal-station-nav" aria-label="${escapeHtml(signalPageCopy.primaryNavigation)}">
+            <a href="${escapeHtml(novelV2BasePathForLocale(lang))}">${escapeHtml(navCopy.serials)}</a>
+            <a class="is-current" href="${escapeHtml(getPathWithLocale(lang, 'signal'))}" aria-current="page">${escapeHtml(navCopy.signal)}</a>
+            <a href="/devlog/">${escapeHtml(navCopy.devlog)}</a>
+            <a href="/apps/">${escapeHtml(navCopy.apps)}</a>
+            <a href="/library/">${escapeHtml(navCopy.member)}</a>
+            <a href="/about/">About</a>
+            <a class="signal-station-nav__x" href="https://x.com/bketck">↗ X</a>
+          </nav>
+        </div>
+      </header>`
+    : `<header class="topbar">
+        <a class="brand" href="/"><span>SC</span><span>Station Cat</span></a>
+        <nav class="nav">
+          <a href="${escapeHtml(novelV2BasePathForLocale(lang))}">${escapeHtml(navCopy.serials)}</a>
+          <a href="${escapeHtml(getPathWithLocale(lang, 'signal'))}">${escapeHtml(navCopy.signal)}</a>
+          <a href="/devlog/">${escapeHtml(navCopy.devlog)}</a>
+          <a href="/apps/">${escapeHtml(navCopy.apps)}</a>
+          <a href="/library/">${escapeHtml(navCopy.member)}</a>
+          <a href="/about/">About</a>
+          <a href="https://x.com/bketck">Follow on X</a>
+        </nav>
+      </header>`;
+  const signalFooter = isSignalPage
+    ? `<footer class="signal-station-footer">
+        <div class="signal-station-footer__inner">
+          <div class="signal-station-footer__brand">
+            <span>SC</span>
+            <p>© STATION CAT · ${escapeHtml(signalPageCopy.footerLabel)}</p>
+          </div>
+          <p>SIGNAL &gt; NOISE</p>
+        </div>
+      </footer>`
+    : '';
   return `<!doctype html>
 <html lang="${escapeHtml(lang)}">
   <head>
@@ -16876,31 +16970,126 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
       .reader-comment-item p { color: var(--ink); line-height: 1.7; }
       .reader-bookmark-fab, .reader-bookmark-toast { display: none; }
       .reader-bookmark-toast { background: rgba(255,255,255,.96); border-color: rgba(8,121,109,.32); box-shadow: 0 18px 50px rgba(44,39,33,.12); color: var(--ink); font-weight: 900; left: max(16px, env(safe-area-inset-left)); position: fixed; right: max(16px, env(safe-area-inset-right)); text-align: center; z-index: 50; }
-      .signal-hero { align-items: end; border-left: 8px solid var(--teal); border-top: 1px dashed var(--line); display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); padding: clamp(22px, 4vw, 42px) 0 clamp(22px, 4vw, 42px) clamp(18px, 3vw, 34px); }
-      .signal-hero h1 { font-size: clamp(42px, 7vw, 84px); }
-      .signal-card-preview { background: #193a33; border: 1px solid #101f1c; border-radius: 12px; box-shadow: 8px 8px 0 rgba(34,27,22,.14); color: #fffaf1; display: grid; gap: 14px; min-height: 260px; padding: 22px; }
-      .signal-card-preview h2 { color: #fffaf1; font-size: 32px; }
-      .signal-card-preview p { color: rgba(255,250,241,.82); }
-      .signal-dash { border-bottom: 4px dashed #e9a95e; width: 148px; }
-      .signal-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-      .signal-entry { min-height: 220px; }
-      .signal-entry .meta { align-items: center; }
-      .signal-entry h3 { font-size: 24px; line-height: 1.18; }
-      .signal-entry ul { display: grid; gap: 8px; margin: 4px 0 0; padding-left: 20px; }
-      .signal-entry li { color: var(--muted); font-size: 15px; line-height: 1.55; }
-      .signal-read-more { color: var(--teal); font-size: 14px; font-weight: 950; margin-top: 4px; }
-      .signal-brief-layout { display: grid; gap: 18px; margin-left: auto; margin-right: auto; max-width: 900px; }
-      .signal-brief-header { display: grid; gap: 10px; margin-bottom: 4px; }
-      .signal-brief-header h1 { font-size: clamp(30px, 4vw, 44px); line-height: 1.12; }
-      .signal-brief-header > p:not(.kicker) { display: -webkit-box; font-size: 15px; line-height: 1.65; max-width: 780px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-      .signal-share { align-items: center; background: var(--soft); border: 1px dashed var(--line); border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; padding: 14px; }
-      .signal-source-list { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
-      .signal-source-list a { color: var(--teal); font-weight: 900; }
-      .signal-source-list small { color: var(--muted); display: block; margin-top: 2px; }
-      .signal-section-heading { border-top: 1px dashed var(--line); color: var(--ink); font-size: clamp(22px, 4vw, 30px); padding-top: 18px; }
+      @keyframes sc-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+      @keyframes sc-blink { 0%, 60% { opacity: 1; } 61%, 100% { opacity: .25; } }
+      .signal-page { --signal-paper: oklch(.955 .009 88); --signal-card: oklch(.985 .006 88); --signal-ink: oklch(.22 .012 60); --signal-muted: oklch(.5 .02 60); --signal-copy: oklch(.36 .012 60); --signal-amber: oklch(.66 .14 55); --signal-green: oklch(.62 .12 155); --signal-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei", sans-serif; --signal-serif: ui-serif, "Iowan Old Style", "Songti TC", "Hiragino Mincho ProN", Georgia, serif; --signal-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; background: linear-gradient(oklch(.22 .012 60 / .035) 1px, transparent 1px) 0 0 / 100% 26px, var(--signal-paper); color: var(--signal-ink); font-family: var(--signal-sans); }
+      .signal-page a { color: inherit; }
+      .signal-page ::selection { background: oklch(.66 .14 55 / .28); }
+      .signal-shell { margin: 0; max-width: none; padding: 0; }
+      .signal-station-header { background: oklch(.955 .009 88 / .9); backdrop-filter: blur(10px); border-bottom: 1.5px solid var(--signal-ink); position: sticky; top: 0; z-index: 50; }
+      .signal-station-header__inner { align-items: center; display: flex; gap: 24px; height: 64px; justify-content: space-between; margin: 0 auto; max-width: 1120px; padding: 0 24px; }
+      .signal-station-brand { align-items: center; display: inline-flex; gap: 12px; text-decoration: none; }
+      .signal-station-brand__mark { background: var(--signal-ink); color: var(--signal-paper); display: grid; font-family: var(--signal-mono); font-size: 14px; font-weight: 700; height: 34px; letter-spacing: 0; place-items: center; width: 34px; }
+      .signal-station-brand__copy { display: flex; flex-direction: column; line-height: 1; }
+      .signal-station-brand__copy strong { font-family: var(--signal-mono); font-size: 13px; letter-spacing: 0; }
+      .signal-station-brand__copy small { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 9.5px; letter-spacing: 0; margin-top: 3px; }
+      .signal-station-nav { align-items: center; display: flex; flex-wrap: wrap; font-size: 13.5px; gap: 4px; }
+      .signal-station-nav a { padding: 7px 11px; text-decoration: none; }
+      .signal-station-nav a:hover, .signal-station-nav a:focus-visible { color: var(--signal-amber); }
+      .signal-station-nav a.is-current { background: var(--signal-ink); color: var(--signal-paper); }
+      .signal-station-nav__x { border: 1.5px solid var(--signal-ink); font-family: var(--signal-mono); font-size: 12px; margin-left: 6px; }
+      .signal-index-hero { margin: 0 auto; max-width: 1120px; padding: 72px 24px 40px; }
+      .signal-index-hero__label { align-items: center; display: flex; gap: 12px; margin-bottom: 26px; }
+      .signal-index-hero__lamp { animation: sc-blink 1.6s steps(1) infinite; background: var(--signal-amber); border-radius: 50%; height: 9px; width: 9px; }
+      .signal-index-hero__label strong { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 12px; font-weight: 500; letter-spacing: 0; }
+      .signal-index-hero__dash { background: repeating-linear-gradient(90deg, var(--signal-ink) 0 6px, transparent 6px 12px); flex: 1; height: 1.5px; }
+      .signal-index-hero h1 { font-family: var(--signal-serif); font-size: 104px; font-weight: 900; letter-spacing: 0; line-height: .98; margin: 0 0 26px; }
+      .signal-index-hero > p { color: oklch(.38 .012 60); font-size: 18px; line-height: 1.75; max-width: 640px; }
+      .signal-ticker { background: var(--signal-ink); border-bottom: 1.5px solid var(--signal-ink); border-top: 1.5px solid var(--signal-ink); overflow: hidden; }
+      .signal-ticker__track { animation: sc-ticker 42s linear infinite; display: flex; padding: 11px 0; width: max-content; will-change: transform; }
+      .signal-ticker__track span { color: oklch(.9 .01 88); font-family: var(--signal-mono); font-size: 13px; letter-spacing: 0; white-space: nowrap; }
+      .signal-intro, .signal-feed { margin: 0 auto; max-width: 1120px; padding-left: 24px; padding-right: 24px; }
+      .signal-intro { align-items: end; display: grid; gap: 40px; grid-template-columns: 1fr 1fr; padding-bottom: 30px; padding-top: 56px; }
+      .signal-intro h2 { font-family: var(--signal-serif); font-size: 38px; font-weight: 700; line-height: 1.15; margin: 0 0 14px; }
+      .signal-intro p { color: oklch(.42 .012 60); font-size: 15.5px; line-height: 1.7; max-width: 440px; }
+      .signal-intro__stats { display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-end; }
+      .signal-stat { min-width: 128px; text-align: right; }
+      .signal-stat + .signal-stat { border-left: 1.5px solid var(--signal-ink); padding-left: 20px; }
+      .signal-stat strong { display: block; font-family: var(--signal-mono); font-size: 34px; line-height: 1; }
+      .signal-stat:first-child strong { color: var(--signal-amber); }
+      .signal-stat span { color: var(--signal-muted); display: block; font-family: var(--signal-mono); font-size: 10.5px; letter-spacing: 0; margin-top: 8px; }
+      .signal-feed { padding-bottom: 24px; }
+      .signal-feed__heading { align-items: end; border-bottom: 2.5px solid var(--signal-ink); display: flex; gap: 12px; margin-bottom: 30px; padding-bottom: 12px; }
+      .signal-feed__heading h2 { font-family: var(--signal-serif); font-size: 22px; font-weight: 700; }
+      .signal-feed__heading span { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11px; letter-spacing: 0; }
+      .signal-feed__heading span:last-child { margin-left: auto; }
+      .signal-feed__list { display: flex; flex-direction: column; gap: 30px; }
+      .signal-tape-card { --signal-accent: var(--signal-amber); background: var(--signal-card); border: 1.5px solid var(--signal-ink); box-shadow: 5px 6px 0 oklch(.22 .012 60 / .14); color: var(--signal-ink); display: grid; grid-template-columns: 44px minmax(0, 1fr); position: relative; text-decoration: none; transition: box-shadow .15s ease, transform .15s ease; }
+      .signal-tape-card::before { border-top: 2px dotted oklch(.22 .012 60 / .4); content: ""; left: 14px; position: absolute; right: 14px; top: 8px; }
+      .signal-tape-card:hover, .signal-tape-card:focus-visible { box-shadow: 8px 10px 0 oklch(.66 .14 55 / .55); color: inherit; transform: translate(-2px, -2px); }
+      .signal-tape-card--general, .signal-tape-card--economy, .signal-tape-card--market { --signal-accent: var(--signal-green); }
+      .signal-tape-card__spine { background: radial-gradient(circle, oklch(.22 .012 60 / .22) 2.5px, transparent 3px) 50% 8px / 16px 22px repeat-y; border-right: 1.5px dashed oklch(.22 .012 60 / .35); }
+      .signal-tape-card__body { padding: 24px 26px 24px; }
+      .signal-dispatch-meta { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 13px; }
+      .signal-category-chip { align-items: center; border: 1.5px solid var(--signal-ink); border-left: 4px solid var(--signal-accent); display: inline-flex; font-family: var(--signal-mono); font-size: 11px; font-weight: 700; gap: 7px; letter-spacing: 0; padding: 4px 10px 4px 8px; }
+      .signal-category-chip strong { color: var(--signal-accent); }
+      .signal-code, .signal-date, .signal-weekday { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11.5px; letter-spacing: 0; }
+      .signal-date { color: oklch(.4 .012 60); font-size: 12px; margin-left: auto; }
+      .signal-tape-card h3 { font-family: var(--signal-serif); font-size: 29px; font-weight: 700; line-height: 1.25; margin: 0 0 10px; }
+      .signal-tape-card__summary { color: var(--signal-copy); font-size: 15px; line-height: 1.7; max-width: 66ch; }
+      .signal-tape-list { background: oklch(.955 .009 88 / .58); border: 1px solid oklch(.22 .012 60 / .14); display: flex; flex-direction: column; gap: 9px; list-style: none; margin: 16px 0 0; padding: 14px 18px; }
+      .signal-tape-list li { align-items: baseline; color: oklch(.3 .012 60); display: flex; font-size: 14.5px; gap: 10px; line-height: 1.55; }
+      .signal-tape-list li span { color: var(--signal-accent); font-family: var(--signal-mono); font-size: 11.5px; font-weight: 700; min-width: 20px; }
+      .signal-tape-list li.signal-tape-list__more { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11.5px; }
+      .signal-tape-card__footer { align-items: center; display: flex; gap: 14px; margin-top: 18px; }
+      .signal-read-more { font-family: var(--signal-mono); font-size: 13px; font-weight: 700; }
+      .signal-strength-label { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 10px; letter-spacing: 0; margin-left: auto; }
+      .signal-strength { align-items: flex-end; display: inline-flex; gap: 3px; height: 16px; }
+      .signal-strength i { background: oklch(.22 .012 60 / .15); display: block; width: 5px; }
+      .signal-strength i:nth-child(1) { height: 40%; } .signal-strength i:nth-child(2) { height: 62%; } .signal-strength i:nth-child(3) { height: 84%; } .signal-strength i:nth-child(4) { height: 100%; }
+      .signal-strength[data-level="1"] i:nth-child(-n+1), .signal-strength[data-level="2"] i:nth-child(-n+2), .signal-strength[data-level="3"] i:nth-child(-n+3), .signal-strength[data-level="4"] i:nth-child(-n+4) { background: var(--signal-accent); }
+      .signal-empty { border: 1.5px dashed oklch(.22 .012 60 / .3); color: var(--signal-muted); font-family: var(--signal-mono); padding: 28px; }
+      .signal-detail-back { margin: 0 auto; max-width: 820px; padding: 26px 24px 0; }
+      .signal-detail-back a { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 12px; letter-spacing: 0; text-decoration: none; }
+      .signal-dispatch { --signal-accent: var(--signal-amber); margin: 0 auto; max-width: 820px; padding: 22px 24px 0; }
+      .signal-dispatch--general, .signal-dispatch--economy, .signal-dispatch--market { --signal-accent: var(--signal-green); }
+      .signal-dispatch__masthead h1 { font-family: var(--signal-serif); font-size: 58px; font-weight: 900; letter-spacing: 0; line-height: 1.08; margin: 0 0 22px; }
+      .signal-dispatch__lede { color: oklch(.35 .012 60); font-size: 18px; line-height: 1.75; margin-bottom: 26px; max-width: 64ch; }
+      .signal-dispatch__stats { align-items: center; border-bottom: 1.5px solid var(--signal-ink); border-top: 1.5px solid var(--signal-ink); display: flex; gap: 16px; padding: 16px 0; }
+      .signal-dispatch__stats > span:first-child { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11px; letter-spacing: 0; }
+      .signal-dispatch__items { margin-top: 8px; position: relative; }
+      .signal-item { display: grid; grid-template-columns: 56px minmax(0, 1fr); position: relative; }
+      .signal-item__rail { padding-top: 34px; position: relative; }
+      .signal-item__rail::after { background: repeating-linear-gradient(var(--signal-ink) 0 5px, transparent 5px 11px); bottom: 0; content: ""; left: 19px; opacity: .35; position: absolute; top: 0; width: 1.5px; z-index: 1; }
+      .signal-item__number { background: var(--signal-paper); border: 1.5px solid var(--signal-ink); color: var(--signal-accent); display: grid; font-family: var(--signal-mono); font-size: 14px; font-weight: 700; height: 38px; place-items: center; position: relative; width: 38px; z-index: 2; }
+      .signal-item__body { padding: 34px 0 22px 6px; }
+      .signal-item__body h2 { font-family: var(--signal-serif); font-size: 26px; font-weight: 700; line-height: 1.3; margin: 0 0 12px; }
+      .signal-item__copy { color: oklch(.34 .012 60); font-size: 15.5px; line-height: 1.78; margin-bottom: 16px; max-width: 60ch; }
+      .signal-analysis { background: oklch(.22 .012 60 / .14); border: 1px solid oklch(.22 .012 60 / .14); display: grid; gap: 1.5px; grid-template-columns: 1fr 1fr; margin-bottom: 16px; }
+      .signal-analysis__cell { background: var(--signal-card); padding: 13px 15px; }
+      .signal-analysis__label { color: var(--signal-accent); font-family: var(--signal-mono); font-size: 10px; letter-spacing: 0; margin-bottom: 7px; }
+      .signal-analysis__cell:last-child .signal-analysis__label { color: var(--signal-muted); }
+      .signal-analysis__text { color: oklch(.3 .012 60); font-size: 13.5px; line-height: 1.6; }
+      .signal-analysis__cell:last-child .signal-analysis__text { color: oklch(.45 .012 60); }
+      .signal-item__source { color: var(--signal-muted); display: inline-flex; font-family: var(--signal-mono); font-size: 11.5px; gap: 7px; letter-spacing: 0; text-decoration: none; }
+      .signal-item__source:hover { color: var(--signal-accent); }
+      .signal-dispatch__fallback { background: var(--signal-card); border: 1.5px solid var(--signal-ink); padding: 24px; }
+      .signal-dispatch__fallback h1, .signal-dispatch__fallback h2, .signal-dispatch__fallback h3 { font-family: var(--signal-serif); }
+      .signal-dispatch__fallback p { color: var(--signal-copy); font-size: 15.5px; line-height: 1.78; }
+      .signal-share-strip { align-items: center; border-top: 2px dotted oklch(.22 .012 60 / .4); display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; padding-top: 24px; }
+      .signal-share-strip > span { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 12px; letter-spacing: 0; margin-right: auto; }
+      .signal-share-button { background: transparent; border: 1.5px solid var(--signal-ink); color: var(--signal-ink); cursor: pointer; font-family: var(--signal-mono); font-size: 12px; font-weight: 700; padding: 9px 16px; text-decoration: none; }
+      .signal-share-button:hover, .signal-share-button:focus-visible { background: var(--signal-ink); color: var(--signal-paper); }
+      .signal-adjacent { margin: 40px auto 0; max-width: 820px; padding: 0 24px; }
+      .signal-adjacent__grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+      .signal-adjacent__card { border: 1.5px solid var(--signal-ink); display: flex; flex-direction: column; gap: 8px; min-height: 104px; padding: 18px 20px; text-decoration: none; }
+      .signal-adjacent__card:hover, .signal-adjacent__card:focus-visible { box-shadow: 5px 6px 0 oklch(.22 .012 60 / .14); color: inherit; }
+      .signal-adjacent__card small { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11px; letter-spacing: 0; }
+      .signal-adjacent__card strong { font-family: var(--signal-serif); font-size: 17px; line-height: 1.35; }
+      .signal-adjacent__card--next { align-items: flex-end; text-align: right; }
+      .signal-adjacent__empty { border: 1.5px dashed oklch(.22 .012 60 / .3); color: var(--signal-muted); display: flex; flex-direction: column; gap: 8px; justify-content: center; min-height: 104px; padding: 18px 20px; }
+      .signal-adjacent__empty:last-child { align-items: flex-end; text-align: right; }
+      .signal-adjacent__empty small { font-family: var(--signal-mono); font-size: 11px; letter-spacing: 0; }
+      .signal-adjacent__empty strong { font-family: var(--signal-serif); font-size: 16px; font-weight: 500; }
+      .signal-station-footer { border-top: 1.5px solid var(--signal-ink); margin-top: 56px; }
+      .signal-station-footer__inner { align-items: center; display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; margin: 0 auto; max-width: 1120px; padding: 34px 24px; }
+      .signal-station-footer__brand { align-items: center; display: flex; gap: 12px; }
+      .signal-station-footer__brand span { background: var(--signal-ink); color: var(--signal-paper); display: grid; font-family: var(--signal-mono); font-size: 12px; font-weight: 700; height: 28px; place-items: center; width: 28px; }
+      .signal-station-footer p { color: var(--signal-muted); font-family: var(--signal-mono); font-size: 11px; letter-spacing: 0; }
+      .signal-section-heading { border-top: 1px dashed var(--line); color: var(--ink); font-size: 30px; padding-top: 18px; }
       @media (max-width: 760px) {
         .shell { padding: 18px 14px 96px; }
-        .grid, .hero--novel, .signal-hero { grid-template-columns: 1fr; }
+        .grid, .hero--novel { grid-template-columns: 1fr; }
         .chapter-list { gap: 8px; }
         .chapter-card { padding: 12px; }
         .chapter-pagination { justify-content: flex-start; }
@@ -16912,25 +17101,53 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
         .reader-bookmark-fab { bottom: calc(16px + env(safe-area-inset-bottom)); display: inline-flex; left: auto; min-width: 132px; position: fixed; right: max(16px, env(safe-area-inset-right)); width: auto; z-index: 51; }
         .reader-bookmark-toast { bottom: calc(76px + env(safe-area-inset-bottom)); display: block; }
         .reader-bookmark-toast[hidden] { display: none; }
+        .signal-station-header__inner { align-items: flex-start; height: auto; padding-bottom: 10px; padding-top: 10px; }
+        .signal-station-brand__copy { display: none; }
+        .signal-station-nav { justify-content: flex-end; }
+        .signal-station-nav a { font-size: 12px; padding: 6px 7px; }
+        .signal-station-nav a:nth-child(3), .signal-station-nav a:nth-child(6) { display: none; }
+        .signal-index-hero { padding-top: 50px; }
+        .signal-index-hero h1 { font-size: 72px; }
+        .signal-intro h2 { font-size: 32px; }
+        .signal-tape-card h3 { font-size: 25px; }
+        .signal-dispatch__masthead h1 { font-size: 44px; }
+        .signal-item__body h2 { font-size: 23px; }
+        .signal-section-heading { font-size: 25px; }
+        .signal-intro { grid-template-columns: 1fr; }
+        .signal-intro__stats { justify-content: flex-start; }
+        .signal-stat { text-align: left; }
+        .signal-tape-card { grid-template-columns: 30px minmax(0, 1fr); }
+        .signal-tape-card__body { padding: 24px 18px 20px; }
+        .signal-date { margin-left: 0; }
+        .signal-analysis { grid-template-columns: 1fr; }
+        .signal-adjacent__grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 520px) {
+        .signal-station-header__inner { gap: 10px; padding-left: 14px; padding-right: 14px; }
+        .signal-station-nav a:nth-child(4), .signal-station-nav a:nth-child(5) { display: none; }
+        .signal-index-hero, .signal-intro, .signal-feed, .signal-detail-back, .signal-dispatch, .signal-adjacent { padding-left: 16px; padding-right: 16px; }
+        .signal-feed__heading span:nth-child(2) { display: none; }
+        .signal-tape-card__spine { background-size: 12px 20px; }
+        .signal-dispatch-meta { gap: 8px; }
+        .signal-weekday { display: none; }
+        .signal-item { grid-template-columns: 46px minmax(0, 1fr); }
+        .signal-item__body { padding-left: 2px; }
+        .signal-share-button { flex: 1 1 auto; text-align: center; }
+        .signal-index-hero h1 { font-size: 54px; }
+        .signal-dispatch__masthead h1 { font-size: 36px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .signal-index-hero__lamp, .signal-ticker__track { animation: none; }
+        .signal-tape-card { transition: none; }
       }
     </style>
   </head>
-  <body>
-    <main class="shell">
-      <header class="topbar">
-        <a class="brand" href="/"><span>SC</span><span>Station Cat</span></a>
-        <nav class="nav">
-          <a href="${escapeHtml(novelV2BasePathForLocale(lang))}">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).serials)}</a>
-          <a href="${escapeHtml(getPathWithLocale(lang, 'signal'))}">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).signal)}</a>
-          <a href="/devlog/">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).devlog)}</a>
-          <a href="/apps/">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).apps)}</a>
-          <a href="/library/">${escapeHtml((dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant']).member)}</a>
-          <a href="/about/">About</a>
-          <a href="https://x.com/bketck">Follow on X</a>
-        </nav>
-      </header>
+  <body class="${isSignalPage ? 'signal-page' : ''}">
+    ${topbar}
+    <main class="shell${isSignalPage ? ' signal-shell' : ''}">
       ${body}
     </main>
+    ${signalFooter}
   </body>
 </html>`;
 };
@@ -17057,58 +17274,299 @@ const signalBriefMetadata = (row) => {
   };
 };
 
-const renderSignalBriefPills = (route, row) => {
+const signalDesignCopyByLocale = {
+  en: {
+    adjacentNavigation: 'Adjacent Signal briefs',
+    briefsLabel: 'briefs · BRIEFS',
+    copied: 'Copied',
+    copyFailed: 'Copy failed',
+    dispatches: 'RECENT DISPATCHES',
+    footerLabel: 'PLATFORM DISPATCH',
+    heroAction: 'Tear off, read, and pass it on.',
+    introDescription: 'Each day, we turn the public signals worth noticing into a card you can tear off and share. Signal first, noise behind.',
+    introTitle: 'Technology · Economy · AI',
+    latest: 'Latest update',
+    moreSignals: (count) => `${count} more signals`,
+    newestFirst: '↓ Newest first',
+    platform: 'Platform dispatch',
+    platformLabel: 'PLATFORM',
+    primaryNavigation: 'Primary navigation',
+    signalCount: 'SIGNALS',
+    signalLabel: '▲ SIGNAL',
+    signalStrength: 'Signal strength',
+    signalTotal: (count) => `${count} signals · ${count} SIGNALS`,
+    tickerLabel: 'Latest Signal headlines',
+    noiseLabel: '▽ NOISE',
+    source: 'SOURCE',
+    tear: 'Tear off this strip —',
+    previous: '← Previous',
+    next: 'Next →',
+    oldest: 'This is the earliest brief',
+    newest: 'This is the latest brief'
+  },
+  ja: {
+    adjacentNavigation: '前後の Signal 簡報',
+    briefsLabel: '件の簡報 · BRIEFS',
+    copied: 'コピーしました',
+    copyFailed: 'コピーできませんでした',
+    dispatches: 'RECENT DISPATCHES',
+    footerLabel: 'ホーム通信',
+    heroAction: '切り取り、読み、手渡す。',
+    introDescription: '毎日注目すべき公開シグナルを、切り取って共有できる一枚のカードにまとめます。シグナルを前に、ノイズを後ろに。',
+    introTitle: 'テクノロジー · 経済 · AI',
+    latest: '最新更新',
+    moreSignals: (count) => `ほか ${count} 件のシグナル`,
+    newestFirst: '↓ 新しい順',
+    platform: 'ホーム通信',
+    platformLabel: 'プラットフォーム',
+    primaryNavigation: 'メインナビゲーション',
+    signalCount: 'SIGNALS',
+    signalLabel: '▲ シグナル',
+    signalStrength: 'シグナル強度',
+    signalTotal: (count) => `${count} 件のシグナル · ${count} SIGNALS`,
+    tickerLabel: '最新の Signal 見出し',
+    noiseLabel: '▽ ノイズ',
+    source: '出典',
+    tear: 'この紙帯を切り取る ——',
+    previous: '← 前の簡報',
+    next: '次の簡報 →',
+    oldest: '最初の簡報です',
+    newest: '最新の簡報です'
+  },
+  'zh-Hant': {
+    adjacentNavigation: '相鄰 Signal 簡報',
+    briefsLabel: '份簡報 · BRIEFS',
+    copied: '已複製',
+    copyFailed: '複製失敗',
+    dispatches: 'RECENT DISPATCHES',
+    footerLabel: '站台短訊',
+    heroAction: '撕下、閱讀、傳遞。',
+    introDescription: '把每天值得留意的公開信號整理成一張可以撕下、可以分享的卡片。信號在前，噪音退後。',
+    introTitle: '科技 · 經濟 · AI',
+    latest: '最新更新',
+    moreSignals: (count) => `另有 ${count} 則信號`,
+    newestFirst: '↓ 由新到舊',
+    platform: '站台短訊',
+    platformLabel: '月台 · PLATFORM',
+    primaryNavigation: '主要導覽',
+    signalCount: 'SIGNALS',
+    signalLabel: '▲ 信號',
+    signalStrength: '信號強度',
+    signalTotal: (count) => `共 ${count} 則信號 · ${count} SIGNALS`,
+    tickerLabel: '最新 Signal 標題',
+    noiseLabel: '▽ 噪音',
+    source: '來源',
+    tear: '撕下這張紙帶 ——',
+    previous: '← 上一則',
+    next: '下一則 →',
+    oldest: '已是最早一則',
+    newest: '已是最新一則'
+  },
+  'zh-Hans': {
+    adjacentNavigation: '相邻 Signal 简报',
+    briefsLabel: '份简报 · BRIEFS',
+    copied: '已复制',
+    copyFailed: '复制失败',
+    dispatches: 'RECENT DISPATCHES',
+    footerLabel: '站台短讯',
+    heroAction: '撕下、阅读、传递。',
+    introDescription: '把每天值得留意的公开信号整理成一张可以撕下、可以分享的卡片。信号在前，噪音退后。',
+    introTitle: '科技 · 经济 · AI',
+    latest: '最新更新',
+    moreSignals: (count) => `另有 ${count} 则信号`,
+    newestFirst: '↓ 由新到旧',
+    platform: '站台短讯',
+    platformLabel: '站台 · PLATFORM',
+    primaryNavigation: '主要导航',
+    signalCount: 'SIGNALS',
+    signalLabel: '▲ 信号',
+    signalStrength: '信号强度',
+    signalTotal: (count) => `共 ${count} 则信号 · ${count} SIGNALS`,
+    tickerLabel: '最新 Signal 标题',
+    noiseLabel: '▽ 噪音',
+    source: '来源',
+    tear: '撕下这张纸带 ——',
+    previous: '← 上一则',
+    next: '下一则 →',
+    oldest: '已是最早一则',
+    newest: '已是最新一则'
+  }
+};
+
+const signalDesignCopy = (locale) => signalDesignCopyByLocale[locale] || signalDesignCopyByLocale['zh-Hant'];
+
+const signalCategoryCode = (category) =>
+  ({ ai: 'AI', economy: 'ECON', general: 'MIXED', market: 'MARKET', research: 'RESEARCH', tech: 'TECH' })[
+    normalizeSignalCategory(category)
+  ] || 'MIXED';
+
+const signalBriefIsoDate = (row) => {
   const meta = signalBriefMetadata(row);
-  const date = formatContentDate(meta.briefDate || row.published_at || row.updated_at, route.locale);
-  return `<div class="meta">
-      <span class="pill">${escapeHtml(signalCategoryLabel(meta.category, route.locale))}</span>
-      ${date ? `<span>${escapeHtml(date)}</span>` : ''}
-      ${meta.issue ? `<span>${escapeHtml(meta.issue)}</span>` : ''}
+  const value = cleanText(meta.briefDate || row.published_at || row.updated_at, 80);
+  return value.match(/\d{4}-\d{2}-\d{2}/)?.[0] || '';
+};
+
+const signalWeekdayLabel = (iso, locale) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+  const day = new Date(`${iso}T00:00:00Z`).getUTCDay();
+  const labels = {
+    en: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
+    ja: ['日曜', '月曜', '火曜', '水曜', '木曜', '金曜', '土曜'],
+    'zh-Hant': ['週日', '週一', '週二', '週三', '週四', '週五', '週六'],
+    'zh-Hans': ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  };
+  return (labels[locale] || labels['zh-Hant'])[day];
+};
+
+const renderSignalCategoryChip = (route, row) => {
+  const meta = signalBriefMetadata(row);
+  return `<span class="signal-category-chip"><strong>${escapeHtml(signalCategoryCode(meta.category))}</strong><span>${escapeHtml(
+    signalCategoryLabel(meta.category, route.locale)
+  )}</span></span>`;
+};
+
+const renderSignalDispatchMeta = (route, row) => {
+  const iso = signalBriefIsoDate(row);
+  const issue = signalBriefMetadata(row).issue || (iso ? `SG-${iso.slice(2).replace(/-/g, '')}` : 'SG-DAILY');
+  return `<div class="signal-dispatch-meta">
+      ${renderSignalCategoryChip(route, row)}
+      <span class="signal-code">${escapeHtml(issue)}</span>
+      ${iso ? `<span class="signal-date">${escapeHtml(iso)}</span><span class="signal-weekday">${escapeHtml(signalWeekdayLabel(iso, route.locale))}</span>` : ''}
     </div>`;
+};
+
+const renderSignalStrength = (itemCount, forceFull = false, label = 'Signal strength') => {
+  const level = forceFull ? 4 : Math.max(1, Math.min(4, Math.round(Math.max(1, itemCount) / 2)));
+  return `<span class="signal-strength" data-level="${level}" aria-label="${escapeHtml(label)} ${level}/4"><i></i><i></i><i></i><i></i></span>`;
+};
+
+const splitSignalAnalysisLine = (value) => {
+  const text = cleanText(value, 4000);
+  const matches = [...text.matchAll(/(信號|信号|signal|噪音|noise)\s*[：:]/gi)];
+  if (!matches.length) return { body: text, signal: '', noise: '' };
+  const result = { body: text.slice(0, matches[0].index).trim(), signal: '', noise: '' };
+  matches.forEach((match, index) => {
+    const start = (match.index || 0) + match[0].length;
+    const end = index + 1 < matches.length ? matches[index + 1].index : text.length;
+    const content = text.slice(start, end).trim();
+    if (/^(信號|信号|signal)$/i.test(match[1])) result.signal = content;
+    if (/^(噪音|noise)$/i.test(match[1])) result.noise = content;
+  });
+  return result;
+};
+
+const parseSignalMarkdownItems = (markdown, sources = []) => {
+  const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
+  const items = [];
+  let current = null;
+  const flush = () => {
+    if (!current) return;
+    current.body = current.bodyParts.join(' ').trim();
+    delete current.bodyParts;
+    const source = sources[items.length] || null;
+    current.source = source;
+    items.push(current);
+    current = null;
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const heading = trimmed.replace(/^#{1,3}\s+/, '');
+    const headingMatch = heading.match(signalNumberedHeadingPattern);
+    if (headingMatch) {
+      flush();
+      current = { headline: cleanText(headingMatch[2], 300), bodyParts: [], signal: '', noise: '' };
+      continue;
+    }
+    if (!current) continue;
+    const parts = splitSignalAnalysisLine(trimmed.replace(/^[-*]\s+/, ''));
+    if (parts.body) current.bodyParts.push(parts.body);
+    if (parts.signal) current.signal = parts.signal;
+    if (parts.noise) current.noise = parts.noise;
+  }
+  flush();
+  return items.slice(0, signalSummaryMaxItems);
 };
 
 const renderDynamicSignalIndex = (route, rows) => {
   const copy = dynamicContentCopy[route.locale] || dynamicContentCopy['zh-Hant'];
+  const designCopy = signalDesignCopy(route.locale);
+  const latest = rows[0] || null;
+  const latestMeta = latest ? signalBriefMetadata(latest) : null;
+  const tickerItems = latestMeta?.summaryBullets?.length
+    ? latestMeta.summaryBullets.map(normalizeSignalCardBullet).filter(Boolean)
+    : latest
+      ? [latest.title]
+      : [copy.signalDescription];
+  const ticker = `${tickerItems.map((item) => `◆ ${item}`).join('   ')}   ◆ SIGNAL > NOISE   `;
   const cards = rows.length
     ? rows
         .map((row) => {
           const meta = signalBriefMetadata(row);
           const summary = firstPlainSummary([row.description, row.excerpt], 180);
-          const bullets = meta.summaryBullets.length
-            ? `<ul>${meta.summaryBullets.slice(0, signalSummaryMaxItems).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+          const category = normalizeSignalCategory(meta.category);
+          const visibleBullets = meta.summaryBullets.slice(0, 4).map(normalizeSignalCardBullet).filter(Boolean);
+          const bullets = visibleBullets.length
+            ? `<ul class="signal-tape-list">${visibleBullets
+                .map((item, index) => `<li><span>${String(index + 1).padStart(2, '0')}</span>${escapeHtml(item)}</li>`)
+                .join('')}${meta.summaryBullets.length > visibleBullets.length ? `<li class="signal-tape-list__more">＋ ${escapeHtml(
+                  designCopy.moreSignals(meta.summaryBullets.length - visibleBullets.length)
+                )}</li>` : ''}</ul>`
             : '';
-          return `<a class="card signal-entry" href="${escapeHtml(dynamicSignalPath(route, row.slug))}">
-              ${renderSignalBriefPills(route, row)}
-              <h3>${escapeHtml(row.title)}</h3>
-              ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
-              ${bullets}
-              <span class="signal-read-more">${escapeHtml(copy.signalReadMore)} →</span>
+          return `<a class="signal-tape-card signal-tape-card--${escapeHtml(category)}" href="${escapeHtml(dynamicSignalPath(route, row.slug))}">
+              <span class="signal-tape-card__spine" aria-hidden="true"></span>
+              <div class="signal-tape-card__body">
+                ${renderSignalDispatchMeta(route, row)}
+                <h3>${escapeHtml(row.title)}</h3>
+                ${summary ? `<p class="signal-tape-card__summary">${escapeHtml(summary)}</p>` : ''}
+                ${bullets}
+                <footer class="signal-tape-card__footer">
+                  <span class="signal-read-more">${escapeHtml(copy.signalReadMore)} →</span>
+                  <span class="signal-strength-label">${escapeHtml(designCopy.signalStrength)}</span>
+                  ${renderSignalStrength(meta.summaryBullets.length, false, designCopy.signalStrength)}
+                </footer>
+              </div>
             </a>`;
         })
         .join('')
-    : `<p>${escapeHtml(copy.signalEmpty)}</p>`;
+    : `<p class="signal-empty">${escapeHtml(copy.signalEmpty)}</p>`;
 
-  return `<section class="signal-hero">
-      <div class="hero-copy">
-        <p class="kicker">${escapeHtml(copy.signalEyebrow)}</p>
-        <h1>${escapeHtml(copy.signalTitle)}</h1>
-        <p>${escapeHtml(copy.signalDescription)}</p>
+  return `<section class="signal-index-hero">
+      <div class="signal-index-hero__label">
+        <span class="signal-index-hero__lamp" aria-hidden="true"></span>
+        <strong>SIGNAL STRIP · ${escapeHtml(designCopy.platform)}</strong>
+        <span class="signal-index-hero__dash" aria-hidden="true"></span>
       </div>
-      <aside class="signal-card-preview" aria-label="Signal card preview">
-        <p class="kicker">SC Signal strip</p>
-        <h2>Tech · Economy · AI</h2>
-        <p>把每天值得留意的公開信號整理成一張可以分享的卡片。</p>
-        <div class="signal-dash"></div>
-      </aside>
+      <h1>${escapeHtml(copy.signalTitle)}</h1>
+      <p>${escapeHtml(copy.signalDescription)} — ${escapeHtml(designCopy.heroAction)}</p>
     </section>
-    <section class="section">
-      <p class="kicker">${escapeHtml(copy.signalLatest)}</p>
-      <div class="signal-grid">${cards}</div>
+    <div class="signal-ticker" aria-label="${escapeHtml(designCopy.tickerLabel)}">
+      <div class="signal-ticker__track"><span>${escapeHtml(ticker)}</span><span>${escapeHtml(ticker)}</span></div>
+    </div>
+    <section class="signal-intro">
+      <div>
+        <h2>${escapeHtml(designCopy.introTitle)}</h2>
+        <p>${escapeHtml(designCopy.introDescription)}</p>
+      </div>
+      <div class="signal-intro__stats">
+        <div class="signal-stat"><strong>${rows.length}</strong><span>${escapeHtml(designCopy.briefsLabel)}</span></div>
+        <div class="signal-stat"><strong>${escapeHtml(latest ? signalBriefIsoDate(latest).replace(/-/g, '.') : '—')}</strong><span>${escapeHtml(designCopy.latest)} · LATEST</span></div>
+      </div>
+    </section>
+    <section class="signal-feed">
+      <header class="signal-feed__heading">
+        <h2>${escapeHtml(copy.signalLatest)}</h2>
+        <span>${escapeHtml(designCopy.dispatches)}</span>
+        <span>${escapeHtml(designCopy.newestFirst)}</span>
+      </header>
+      <div class="signal-feed__list">${cards}</div>
     </section>`;
 };
 
-const renderDynamicSignalBrief = (route, row, body) => {
+const renderDynamicSignalBrief = (route, row, body, navigation = {}) => {
   const copy = dynamicContentCopy[route.locale] || dynamicContentCopy['zh-Hant'];
+  const designCopy = signalDesignCopy(route.locale);
   const meta = signalBriefMetadata(row);
   const summary = firstPlainSummary([row.description, row.excerpt], 180);
   const fallbackBody = firstPlainSummary([row.excerpt, row.description], 1200);
@@ -17117,55 +17575,78 @@ const renderDynamicSignalBrief = (route, row, body) => {
   const shareText = `${row.title} | Station Cat Signal strip`;
   const shareHref = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(absoluteUrl)}`;
   const cardPath = dynamicSignalCardPath(route, row.slug);
-  const sourceList = meta.sources.length
-    ? `<section class="panel">
-        <p class="kicker">${escapeHtml(copy.signalSources)}</p>
-        <ul class="signal-source-list">
-          ${meta.sources
-            .map((source) => {
-              const label = source.label || source.url;
-              const link = /^https?:\/\//i.test(source.url)
-                ? `<a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>`
-                : `<strong>${escapeHtml(label)}</strong>`;
-              return `<li>${link}${source.note ? `<small>${escapeHtml(source.note)}</small>` : ''}</li>`;
-            })
-            .join('')}
-        </ul>
-      </section>`
-    : '';
+  const items = parseSignalMarkdownItems(body.markdown, meta.sources);
+  const category = normalizeSignalCategory(meta.category);
+  const renderedItems = items
+    .map((item, index) => {
+      const sourceLabel = item.source?.label || item.source?.url || '';
+      const source = sourceLabel
+        ? /^https?:\/\//i.test(item.source?.url || '')
+          ? `<a class="signal-item__source" href="${escapeHtml(item.source.url)}" target="_blank" rel="noreferrer">${escapeHtml(designCopy.source)} · ${escapeHtml(sourceLabel)} ↗</a>`
+          : `<span class="signal-item__source">${escapeHtml(designCopy.source)} · ${escapeHtml(sourceLabel)}</span>`
+        : '';
+      const analysis = item.signal || item.noise
+        ? `<div class="signal-analysis">
+            <div class="signal-analysis__cell"><div class="signal-analysis__label">${escapeHtml(designCopy.signalLabel)}</div><div class="signal-analysis__text">${escapeHtml(item.signal || '—')}</div></div>
+            <div class="signal-analysis__cell"><div class="signal-analysis__label">${escapeHtml(designCopy.noiseLabel)}</div><div class="signal-analysis__text">${escapeHtml(item.noise || '—')}</div></div>
+          </div>`
+        : '';
+      return `<section class="signal-item">
+          <div class="signal-item__rail"><span class="signal-item__number">${String(index + 1).padStart(2, '0')}</span></div>
+          <div class="signal-item__body">
+            <h2>${escapeHtml(item.headline)}</h2>
+            ${item.body ? `<p class="signal-item__copy">${escapeHtml(item.body)}</p>` : ''}
+            ${analysis}
+            ${source}
+          </div>
+        </section>`;
+    })
+    .join('');
+  const fallbackHtml = body.markdown
+    ? renderSignalMarkdownToHtml(body.markdown)
+    : body.html || `<p>${escapeHtml(fallbackBody)}</p>`;
+  const adjacentCard = (entry, direction) => {
+    if (!entry) {
+      return `<div class="signal-adjacent__empty"><small>${escapeHtml(direction === 'previous' ? designCopy.previous : designCopy.next)}</small><strong>${escapeHtml(
+        direction === 'previous' ? designCopy.oldest : designCopy.newest
+      )}</strong></div>`;
+    }
+    const label = direction === 'previous' ? designCopy.previous : designCopy.next;
+    const date = signalBriefIsoDate(entry).replace(/-/g, '.');
+    return `<a class="signal-adjacent__card${direction === 'next' ? ' signal-adjacent__card--next' : ''}" href="${escapeHtml(dynamicSignalPath(route, entry.slug))}">
+        <small>${escapeHtml(label)}${date ? ` · ${escapeHtml(date)}` : ''}</small>
+        <strong>${escapeHtml(entry.title)}</strong>
+      </a>`;
+  };
 
-  const bodyHtml = body.markdown ? renderSignalMarkdownToHtml(body.markdown) : body.html || `<p>${escapeHtml(fallbackBody)}</p>`;
-
-  return `<article class="signal-brief-layout">
-      <a class="text-link" href="${escapeHtml(route.basePath)}">${escapeHtml(copy.signalBack)}</a>
-      <header class="signal-brief-header">
-        <p class="kicker">${escapeHtml(copy.signalEyebrow)}</p>
-        ${renderSignalBriefPills(route, row)}
+  return `<div class="signal-detail-back"><a href="${escapeHtml(route.basePath)}">← ${escapeHtml(copy.signalBack)}</a></div>
+    <article class="signal-dispatch signal-dispatch--${escapeHtml(category)}">
+      <header class="signal-dispatch__masthead">
+        ${renderSignalDispatchMeta(route, row)}
         <h1>${escapeHtml(row.title)}</h1>
-        ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
+        ${summary ? `<p class="signal-dispatch__lede">${escapeHtml(summary)}</p>` : ''}
+        <div class="signal-dispatch__stats">
+          <span>${escapeHtml(designCopy.signalTotal(items.length || meta.summaryBullets.length))}</span>
+          <span class="signal-strength-label">${escapeHtml(designCopy.signalStrength)}</span>
+          ${renderSignalStrength(items.length || meta.summaryBullets.length, true, designCopy.signalStrength)}
+        </div>
       </header>
-      <div class="prose">${bodyHtml}</div>
-      <section class="signal-share">
-        <div>
-          <strong>${escapeHtml(copy.signalShare)}</strong>
-          <p>${escapeHtml(copy.signalDescription)}</p>
-        </div>
-        <div class="button-row">
-          <a class="button button-primary" href="${escapeHtml(shareHref)}" target="_blank" rel="noreferrer">${escapeHtml(copy.signalShare)}</a>
-          <a class="button button-secondary" href="${escapeHtml(cardPath)}" target="_blank" rel="noreferrer">${escapeHtml(copy.signalCard)}</a>
-          <button class="button button-secondary" type="button" data-signal-copy-link>${escapeHtml(copy.signalCopyLink)}</button>
-        </div>
+      ${renderedItems ? `<div class="signal-dispatch__items">${renderedItems}</div>` : `<div class="signal-dispatch__fallback">${fallbackHtml}</div>`}
+      <section class="signal-share-strip">
+        <span>${escapeHtml(designCopy.tear)}</span>
+        <a class="signal-share-button" href="${escapeHtml(shareHref)}" target="_blank" rel="noreferrer">${escapeHtml(copy.signalShare)}</a>
+        <a class="signal-share-button" href="${escapeHtml(cardPath)}" target="_blank" rel="noreferrer">${escapeHtml(copy.signalCard)}</a>
+        <button class="signal-share-button" type="button" data-signal-copy-link>${escapeHtml(copy.signalCopyLink)}</button>
       </section>
-      ${sourceList}
       <script>
         (() => {
           const button = document.querySelector('[data-signal-copy-link]');
           button?.addEventListener('click', async () => {
             try {
               await navigator.clipboard.writeText(${scriptJson(absoluteUrl)});
-              button.textContent = '已複製';
+              button.textContent = ${scriptJson(designCopy.copied)};
             } catch {
-              button.textContent = 'Copy failed';
+              button.textContent = ${scriptJson(designCopy.copyFailed)};
             }
             window.setTimeout(() => {
               button.textContent = ${scriptJson(copy.signalCopyLink)};
@@ -17173,7 +17654,10 @@ const renderDynamicSignalBrief = (route, row, body) => {
           });
         })();
       </script>
-    </article>`;
+    </article>
+    <nav class="signal-adjacent" aria-label="${escapeHtml(designCopy.adjacentNavigation)}">
+      <div class="signal-adjacent__grid">${adjacentCard(navigation.previous, 'previous')}${adjacentCard(navigation.next, 'next')}</div>
+    </nav>`;
 };
 
 const wrapSignalCardLines = (value, maxChars = 24, maxLines = 4) => {
@@ -18425,6 +18909,7 @@ const handleDynamicFrontendContent = async (request, env) => {
       canonicalPath: dynamicCanonicalPath(route),
       description: copy.signalDescription,
       lang: route.locale,
+      pageKind: 'signal',
       title: copy.signalTitle
     });
   }
@@ -18450,12 +18935,14 @@ const handleDynamicFrontendContent = async (request, env) => {
     }
 
     const body = await readPublicEntryBody(env, brief, { preferMarkdown: true });
+    const navigation = await getAdjacentPublishedSignalBriefs(db, brief, route.locale);
     return dynamicHtmlResponse(request, {
-      body: renderDynamicSignalBrief(route, brief, body),
+      body: renderDynamicSignalBrief(route, brief, body, navigation),
       canonicalPath: dynamicCanonicalPath(route),
       description: firstPlainSummary([brief.description, brief.excerpt], 260),
       lang: route.locale,
       ogImage: dynamicSignalCardPath(route, brief.slug),
+      pageKind: 'signal',
       title: brief.title
     });
   }
@@ -19459,6 +19946,7 @@ export const __readerTotpTestHooks = {
   failSignalAutomationCron,
   findActiveSignalCollectionRun,
   getD1ChangeCount,
+  getAdjacentPublishedSignalBriefs,
   getLegacyWorksRedirectPath,
   getSignalAutomationHealth,
   getReaderTotpResetLimitKeys,
@@ -19505,6 +19993,7 @@ export const __readerTotpTestHooks = {
   hotpCode,
   dynamicCanonicalPath,
   dynamicChapterPath,
+  dynamicHtmlShell,
   dynamicSignalCardPath,
   dynamicSignalPath,
   dynamicSeriesPath,
@@ -19522,6 +20011,7 @@ export const __readerTotpTestHooks = {
   parseNovelForgeAnalyticsRoute,
   parseNovelForgeChapterContentRoute,
   parseDynamicContentRoute,
+  parseSignalMarkdownItems,
   parseSignalSourcesInput,
   renderSignalMarkdownToHtml,
   renderDynamicSignalBrief,

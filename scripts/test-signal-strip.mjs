@@ -5,8 +5,11 @@ import { __readerTotpTestHooks as hooks } from '../src/worker.js';
 const {
   contentEntryPublicPath,
   dynamicCanonicalPath,
+  dynamicHtmlShell,
   dynamicSignalCardPath,
   dynamicSignalPath,
+  getAdjacentPublishedSignalBriefs,
+  parseSignalMarkdownItems,
   parseSignalSourcesInput,
   parseDynamicContentRoute,
   renderDynamicSignalBrief,
@@ -65,13 +68,91 @@ assert.equal(enRoute.kind, 'signal-brief');
 assert.equal(enRoute.locale, 'en');
 assert.equal(enRoute.basePath, '/en/signal/');
 
+const enIndexRoute = parseDynamicContentRoute('/en/signal/');
+assert.equal(enIndexRoute.kind, 'signal-index');
+
+const jaIndexRoute = parseDynamicContentRoute('/ja/signal/');
+assert.equal(jaIndexRoute.kind, 'signal-index');
+
 assert.equal(parseDynamicContentRoute('/signal/daily-brief-2026-07-04/extra/path'), null);
 
 const indexHtml = renderDynamicSignalIndex(indexRoute, [signalRow]);
-assert.match(indexHtml, /Signal strip/);
+assert.match(indexHtml, /SIGNAL STRIP/);
 assert.match(indexHtml, /\/signal\/daily-brief-2026-07-04\//);
 assert.match(indexHtml, /美国就业降温，市场继续下调加息预期/);
 assert.match(indexHtml, /閱讀全文/);
+assert.match(indexHtml, /class="signal-tape-card/);
+assert.match(indexHtml, /RECENT DISPATCHES/);
+
+const indexPage = dynamicHtmlShell({
+  body: indexHtml,
+  canonicalPath: '/signal/',
+  description: 'Signal strip',
+  lang: 'zh-Hant',
+  pageKind: 'signal',
+  title: '每日信號簡報'
+});
+assert.match(indexPage, /class="signal-page"/);
+assert.match(indexPage, /--signal-serif:/);
+assert.doesNotMatch(indexPage, /fonts\.googleapis\.com/);
+assert.match(indexPage, /signal-station-header/);
+
+const englishSignalRow = {
+  ...signalRow,
+  description: 'Five public signals worth checking today.',
+  excerpt: 'Five public signals worth checking today.',
+  locale: 'en',
+  metadata_json: JSON.stringify({
+    briefDate: '2026-07-04',
+    category: 'tech',
+    sources: [{ label: 'Example source', url: 'https://example.com/report' }],
+    summaryBullets: Array.from({ length: 5 }, (_, index) => `${index + 1}. English signal ${index + 1}`)
+  }),
+  signalMarkdown: `1. OpenAI publishes a product update
+The release adds a new workflow. Signal: Adoption may accelerate. Noise: Pricing remains unclear.`,
+  title: 'Daily technology brief'
+};
+const englishIndexHtml = renderDynamicSignalIndex(enIndexRoute, [englishSignalRow]);
+const englishPage = dynamicHtmlShell({
+  body: englishIndexHtml,
+  canonicalPath: '/en/signal/',
+  description: 'Signal strip',
+  lang: 'en',
+  pageKind: 'signal',
+  title: 'Daily Priority Brief'
+});
+assert.match(englishPage, /Tear off, read, and pass it on/);
+assert.match(englishPage, /Each day, we turn the public signals/);
+assert.match(englishPage, /briefs · BRIEFS/);
+assert.match(englishIndexHtml, /more signals/);
+assert.match(englishPage, /Signal strength/);
+assert.doesNotMatch(englishPage, /撕下|閱讀|傳遞|份簡報|信號強度|站台短訊|月台/);
+
+const japaneseSignalRow = {
+  ...englishSignalRow,
+  description: '今日確認したい公開シグナル。',
+  excerpt: '今日確認したい公開シグナル。',
+  locale: 'ja',
+  metadata_json: JSON.stringify({
+    briefDate: '2026-07-04',
+    category: 'tech',
+    sources: [],
+    summaryBullets: ['1. 新しい製品アップデート']
+  }),
+  title: '今日の技術簡報'
+};
+const japanesePage = dynamicHtmlShell({
+  body: renderDynamicSignalIndex(jaIndexRoute, [japaneseSignalRow]),
+  canonicalPath: '/ja/signal/',
+  description: 'Signal strip',
+  lang: 'ja',
+  pageKind: 'signal',
+  title: 'Daily Priority Brief'
+});
+assert.match(japanesePage, /切り取り、読み、手渡す/);
+assert.match(japanesePage, /シグナル強度/);
+assert.match(japanesePage, /ホーム通信/);
+assert.doesNotMatch(japanesePage, /撕下|閱讀|傳遞|份簡報|信號強度|站台短訊|月台/);
 
 const signalMarkdownHtml = renderSignalMarkdownToHtml(pastedSignalMarkdown);
 assert.match(signalMarkdownHtml, /class="signal-section-heading"/);
@@ -81,7 +162,65 @@ const briefHtml = renderDynamicSignalBrief(briefRoute, signalRow, { html: '<p>�
 assert.match(briefHtml, /分享到 X/);
 assert.match(briefHtml, /card\.svg/);
 assert.match(briefHtml, /Example source/);
-assert.match(briefHtml, /class="signal-section-heading"/);
+assert.match(briefHtml, /class="signal-dispatch/);
+assert.match(briefHtml, /class="signal-item/);
+assert.match(briefHtml, /▲ 信號/);
+assert.match(briefHtml, /▽ 噪音/);
+
+const englishBriefHtml = renderDynamicSignalBrief(
+  enRoute,
+  { ...englishSignalRow, id: 60 },
+  { html: '', markdown: englishSignalRow.signalMarkdown, source: 'test' }
+);
+assert.match(englishBriefHtml, /1 signals · 1 SIGNALS/);
+assert.match(englishBriefHtml, /Signal strength/);
+assert.match(englishBriefHtml, /Tear off this strip/);
+assert.match(englishBriefHtml, /Copied/);
+assert.doesNotMatch(englishBriefHtml, /共 1 則信號|信號強度|已複製/);
+
+const adjacentQueries = [];
+const adjacentDb = {
+  prepare(sql) {
+    return {
+      bind(...params) {
+        adjacentQueries.push({ params, sql });
+        return {
+          first: async () =>
+            /ORDER BY COALESCE\(published_at, updated_at\) DESC/.test(sql)
+              ? { id: 59, slug: 'older-brief', title: 'Older brief' }
+              : { id: 61, slug: 'newer-brief', title: 'Newer brief' }
+        };
+      }
+    };
+  }
+};
+const adjacentBriefs = await getAdjacentPublishedSignalBriefs(
+  adjacentDb,
+  { id: 60, published_at: '2026-07-04 09:00:00' },
+  'en'
+);
+assert.equal(adjacentBriefs.previous.slug, 'older-brief');
+assert.equal(adjacentBriefs.next.slug, 'newer-brief');
+assert.equal(adjacentQueries.length, 2);
+assert.ok(adjacentQueries.every(({ sql }) => /LIMIT 1/.test(sql)));
+assert.ok(adjacentQueries.every(({ sql }) => !/LIMIT 50/.test(sql)));
+assert.deepEqual(adjacentQueries[0].params, ['en', '2026-07-04 09:00:00', '2026-07-04 09:00:00', 60]);
+
+const structuredItems = parseSignalMarkdownItems(`1. 第一則信號
+這是一段正文。信號：企業採用正在增加。噪音：尚未公布實際定價。
+
+2. 第二則信號
+另一段正文。
+信號：需求上升。
+噪音：樣本仍然有限。`, [
+  { label: 'Source one', url: 'https://example.com/one' },
+  { label: 'Source two', url: 'https://example.com/two' }
+]);
+assert.equal(structuredItems.length, 2);
+assert.equal(structuredItems[0].body, '這是一段正文。');
+assert.equal(structuredItems[0].signal, '企業採用正在增加。');
+assert.equal(structuredItems[0].noise, '尚未公布實際定價。');
+assert.equal(structuredItems[1].source.label, 'Source two');
 
 const svg = renderSignalShareCardSvg(cardRoute, signalRow);
 assert.match(svg, /^<svg/);
