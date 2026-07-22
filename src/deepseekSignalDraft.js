@@ -225,7 +225,7 @@ export const createDeepSeekSignalDraftAdapter = (options = {}) => {
               'content-type': 'application/json'
             },
             body: serializedRequestBody,
-            redirect: 'error',
+            redirect: 'manual',
             signal: controller.signal
           });
           if (!response.ok) {

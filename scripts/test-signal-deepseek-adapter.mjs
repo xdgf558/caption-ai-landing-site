@@ -68,7 +68,7 @@ assert.equal(calls.length, 1);
 assert.equal(calls[0].url, deepSeekChatCompletionsUrl);
 assert.equal(calls[0].init.method, 'POST');
 assert.equal(calls[0].init.headers.authorization, `Bearer ${apiKey}`);
-assert.equal(calls[0].init.redirect, 'error');
+assert.equal(calls[0].init.redirect, 'manual');
 assert.equal(calls[0].init.body.includes(apiKey), false);
 const sentBody = JSON.parse(calls[0].init.body);
 assert.equal(sentBody.model, 'deepseek-v4-pro');
