@@ -133,6 +133,71 @@ const simplifiedPayloadFor = (items = candidates) => ({
   title: '每日信号简报'
 });
 
+const properNounCandidates = [
+  'ChatGPT for Small Business program',
+  'Gemini Flash in GitHub Copilot',
+  'OpenAI and Hugging Face security review',
+  'Google AI Tools for college students',
+  'Show HN Rust and Bevy space economy simulation',
+  'Gemini Flash Lite and Flash Cyber',
+  'Alliance for America Skilled Trades'
+].map((title, index) => ({
+  ...candidates[index % candidates.length],
+  id: `candidate-proper-noun-${index}`,
+  summary: `${title} is described in the public source.`,
+  title
+}));
+
+const properNounPayload = {
+  category: 'tech',
+  description: '今天整理人工智慧產品、開發工具、安全合作與人才計畫的最新動向。',
+  items: [
+    {
+      headline: 'ChatGPT for Small Business 計畫正式推出',
+      summary: 'OpenAI 公布面向小型企業的 ChatGPT 計畫，協助團隊導入人工智慧工具。',
+      signal: '小型企業取得人工智慧工具與實務支援的門檻可能進一步降低。',
+      noise: '公開來源尚未完整說明方案細節，實際採用成效仍需觀察。'
+    },
+    {
+      headline: 'Gemini Flash 現已登陸 GitHub Copilot',
+      summary: 'GitHub Copilot 開始提供 Gemini Flash，讓開發者可在既有工作流程中使用。',
+      signal: '更多模型進入 Copilot，可能增加開發團隊依任務選擇模型的彈性。',
+      noise: '不同程式任務的速度與品質表現，仍需透過實際專案驗證。'
+    },
+    {
+      headline: 'OpenAI 與 Hugging Face 合作調查模型安全事件',
+      summary: 'OpenAI 與 Hugging Face 公開模型評估期間安全事件的初步資訊。',
+      signal: '跨組織揭露事件細節，有助業界改善模型評估與安全測試流程。',
+      noise: '調查仍在進行，完整影響範圍與根本原因尚未確定。'
+    },
+    {
+      headline: 'Google AI Tools 提供大學生暑期實用建議',
+      summary: 'Google 整理學生可使用 AI Tools 規劃學習、實習與新學期準備的方法。',
+      signal: '人工智慧工具正更直接進入學生的日常規劃與學習流程。',
+      noise: '官方建議不等於學習成果，成效仍取決於使用方式與個人需求。'
+    },
+    {
+      headline: 'Show HN：Rust 與 Bevy 太空經濟模擬上線',
+      summary: '開發者使用 Rust 與 Bevy 製作可自行運行的太空經濟模擬專案。',
+      signal: '自主代理與動態市場結合，提供遊戲模擬系統新的實作參考。',
+      noise: '這是社群展示專案，效能、平衡性與長期維護仍待更多測試。'
+    },
+    {
+      headline: 'Gemini Flash Lite 與 Flash Cyber 新模型登場',
+      summary: 'Google 公布 Gemini Flash Lite 與 Flash Cyber 等模型更新。',
+      signal: '模型產品線持續細分，顯示供應商正針對成本與安全情境配置能力。',
+      noise: '公告資訊尚不足以比較各模型在真實工作負載中的整體差異。'
+    },
+    {
+      headline: 'Alliance for America Skilled Trades 宣布成立',
+      summary: 'Google 與多家企業成立技術人才合作聯盟，聚焦職業技能發展。',
+      signal: '企業共同投入技能培訓，可能擴大產業人才管道與就業連結。',
+      noise: '聯盟目標仍需後續執行資料，才能判斷對培訓與就業的實際影響。'
+    }
+  ].map((item, index) => ({ candidateId: properNounCandidates[index].id, ...item })),
+  title: '人工智慧產品、開發工具與人才動向'
+};
+
 const duplicatedEditorialPayloadFor = (items = candidates) => ({
   ...aiPayloadFor(items),
   items: aiPayloadFor(items).items.map((item) => ({
@@ -370,6 +435,16 @@ for (const invalidPayload of [mixedEnglishPayloadFor(), simplifiedPayloadFor()])
   assert.equal(languageRetryCalls.length, 2);
   assert.equal(translatedResult.outputLocale, 'zh-Hant');
 }
+
+const properNounResult = await generateSignalBriefDraft(
+  { run: async () => ({ response: properNounPayload }) },
+  '@cf/test/draft-model',
+  properNounCandidates,
+  { briefDate: '2026-07-22', category: 'auto' }
+);
+assert.equal(properNounResult.items.length, 7);
+assert.match(properNounResult.items[1].headline, /Gemini Flash.*GitHub Copilot/);
+assert.match(properNounResult.items[6].headline, /Alliance for America Skilled Trades/);
 
 const editorialRetryCalls = [];
 const editorialResult = await generateSignalBriefDraft(
