@@ -743,6 +743,56 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <div class="admin-v2-table-list admin-signal-alerts-list" id="signal-alerts-list"></div>
               </section>
 
+              <section class="admin-signal-model-rollout" aria-labelledby="signal-model-rollout-title">
+                <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+                  <div>
+                    <p class="station-kicker">Brief model</p>
+                    <h3 id="signal-model-rollout-title">简报生成模型</h3>
+                  </div>
+                  <span class="admin-signal-health" id="signal-model-rollout-health" data-state="loading">正在检查</span>
+                </div>
+                <p class="admin-signal-model-rollout__summary" id="signal-model-rollout-summary" role="status" aria-live="polite">
+                  正在读取 DeepSeek 发布闸门。
+                </p>
+                <dl class="admin-signal-model-rollout__metrics">
+                  <div>
+                    <dt>部署许可</dt>
+                    <dd id="signal-model-master-gate">—</dd>
+                  </div>
+                  <div>
+                    <dt>API Secret</dt>
+                    <dd id="signal-model-secret">—</dd>
+                  </div>
+                  <div>
+                    <dt>Workers AI 回退</dt>
+                    <dd id="signal-model-fallback">—</dd>
+                  </div>
+                  <div>
+                    <dt>最近冒烟</dt>
+                    <dd id="signal-model-last-smoke">—</dd>
+                  </div>
+                </dl>
+                <div class="admin-signal-model-rollout__controls">
+                  <label>
+                    DeepSeek 模型
+                    <select id="signal-model-deepseek-model">
+                      <option value="deepseek-v4-pro">DeepSeek V4 Pro</option>
+                      <option value="deepseek-v4-flash">DeepSeek V4 Flash</option>
+                    </select>
+                  </label>
+                  <button class="button button-secondary" id="signal-model-save" type="button">保存模型</button>
+                  <button class="button button-secondary" id="signal-model-smoke" type="button" disabled>测试所选候选</button>
+                  <button class="button button-primary" id="signal-model-enable" type="button" disabled>启用主模型</button>
+                  <button class="button button-danger" id="signal-model-disable" type="button" disabled>关闭主模型</button>
+                </div>
+                <p class="admin-signal-drafts-note">冒烟测试使用当前选中的 3–10 条候选，只返回预览，不创建简报、不发布内容。</p>
+                <div class="admin-inline-status" id="signal-model-status" role="status" aria-live="polite" hidden></div>
+                <details class="admin-signal-model-preview" id="signal-model-preview" hidden>
+                  <summary>查看最近冒烟预览</summary>
+                  <div id="signal-model-preview-body"></div>
+                </details>
+              </section>
+
               <div class="admin-signal-automation-grid">
                 <section class="admin-signal-source-pane" aria-labelledby="signal-sources-title">
                   <div class="admin-v2-section-heading admin-v2-section-heading--compact">
@@ -1213,6 +1263,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalOperationsSourceErrors: $('#signal-operations-source-errors'),
       signalOperationsNotification: $('#signal-operations-notification'),
       signalAlertsList: $('#signal-alerts-list'),
+      signalModelRolloutHealth: $('#signal-model-rollout-health'),
+      signalModelRolloutSummary: $('#signal-model-rollout-summary'),
+      signalModelMasterGate: $('#signal-model-master-gate'),
+      signalModelSecret: $('#signal-model-secret'),
+      signalModelFallback: $('#signal-model-fallback'),
+      signalModelLastSmoke: $('#signal-model-last-smoke'),
+      signalModelDeepSeekModel: $('#signal-model-deepseek-model'),
+      signalModelSave: $('#signal-model-save'),
+      signalModelSmoke: $('#signal-model-smoke'),
+      signalModelEnable: $('#signal-model-enable'),
+      signalModelDisable: $('#signal-model-disable'),
+      signalModelStatus: $('#signal-model-status'),
+      signalModelPreview: $('#signal-model-preview'),
+      signalModelPreviewBody: $('#signal-model-preview-body'),
       signalCollectionStart: $('#signal-collection-start'),
       signalCollectionStatus: $('#signal-collection-status'),
       signalSourcesList: $('#signal-sources-list'),
@@ -1396,6 +1460,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalSources: [],
       signalRuns: [],
       signalOperations: null,
+      signalModelRollout: null,
+      signalModelPreview: null,
       signalAlerts: [],
       signalSourceErrors: [],
       signalCandidates: [],
@@ -1529,6 +1595,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signalApprovalsStatus.textContent = message;
       elements.signalApprovalsStatus.dataset.tone = tone;
       elements.signalApprovalsStatus.hidden = !message;
+    };
+
+    const setSignalModelStatus = (message, tone = 'neutral') => {
+      elements.signalModelStatus.textContent = message;
+      elements.signalModelStatus.dataset.tone = tone;
+      elements.signalModelStatus.hidden = !message;
     };
 
     const apiJson = async (path, options = {}) => {
@@ -2437,6 +2509,175 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       renderSignalAlerts();
     };
 
+    const renderSignalModelPreview = () => {
+      const preview = state.signalModelPreview;
+      elements.signalModelPreview.hidden = !preview;
+      if (!preview) {
+        elements.signalModelPreview.open = false;
+        elements.signalModelPreviewBody.replaceChildren();
+        return;
+      }
+      elements.signalModelPreviewBody.innerHTML = `
+        <h4>${escapeHtml(preview.title || '未命名预览')}</h4>
+        ${preview.description ? `<p>${escapeHtml(preview.description)}</p>` : ''}
+        <ol>
+          ${(preview.items || []).map((item) => `
+            <li>
+              <strong>${escapeHtml(item.headline || '')}</strong>
+              <p>${escapeHtml(item.summary || '')}</p>
+              <small><b>信号：</b>${escapeHtml(item.signal || '')}</small>
+              <small><b>噪音：</b>${escapeHtml(item.noise || '')}</small>
+            </li>
+          `).join('')}
+        </ol>
+      `;
+    };
+
+    const updateSignalModelControls = () => {
+      const rollout = state.signalModelRollout;
+      const selectedCount = state.signalSelectedCandidateIds.size;
+      const selectionReady = selectedCount >= 3 && selectedCount <= 10;
+      const setupReady = Boolean(rollout && !rollout.setupRequired && !rollout.unavailable);
+      elements.signalModelDeepSeekModel.disabled = !setupReady || rollout?.rolloutMode === 'live';
+      elements.signalModelSave.disabled = !setupReady || rollout?.rolloutMode === 'live';
+      elements.signalModelSmoke.disabled = !setupReady || !rollout?.canSmoke || !selectionReady;
+      elements.signalModelEnable.disabled = !setupReady || !rollout?.canEnableLive || rollout?.rolloutMode === 'live';
+      elements.signalModelDisable.disabled = !setupReady || rollout?.rolloutMode !== 'live';
+      elements.signalModelSmoke.title = !selectionReady
+        ? '请先在今日候选中选择 3–10 条已入选资讯'
+        : rollout?.canSmoke
+          ? '只生成临时预览，不保存、不发布'
+          : '需要部署许可和 DeepSeek Secret';
+    };
+
+    const renderSignalModelRollout = () => {
+      const rollout = state.signalModelRollout;
+      if (!rollout || rollout.setupRequired || rollout.unavailable) {
+        elements.signalModelRolloutHealth.dataset.state = 'setup';
+        elements.signalModelRolloutHealth.textContent = rollout?.unavailable ? '读取失败' : '待初始化';
+        elements.signalModelRolloutSummary.textContent = rollout?.message || '应用 migrations/0025_signal_model_rollout.sql 后启用模型发布闸门。';
+        elements.signalModelMasterGate.textContent = '—';
+        elements.signalModelSecret.textContent = '—';
+        elements.signalModelFallback.textContent = '—';
+        elements.signalModelLastSmoke.textContent = '—';
+        updateSignalModelControls();
+        return;
+      }
+      const live = rollout.rolloutMode === 'live';
+      elements.signalModelRolloutHealth.dataset.state = rollout.liveEffective ? 'healthy' : live ? 'critical' : 'waiting';
+      elements.signalModelRolloutHealth.textContent = rollout.liveEffective ? 'DeepSeek 主用' : live ? '配置失效' : 'Workers AI 主用';
+      elements.signalModelRolloutSummary.textContent = rollout.liveEffective
+        ? `${rollout.deepSeekModel} 正在生成简报；Workers AI 保持自动回退。`
+        : live
+          ? '数据库要求启用 DeepSeek，但部署许可或 Secret 不完整，当前生成会安全回退。'
+          : rollout.canEnableLive
+            ? '冒烟已通过，可以手动启用 DeepSeek 主路径。'
+            : 'DeepSeek 尚未启用，正式草稿继续使用 Workers AI。';
+      elements.signalModelMasterGate.textContent = rollout.masterGateEnabled ? '已开启' : '未开启';
+      elements.signalModelSecret.textContent = rollout.secretConfigured ? '已配置' : '未配置';
+      elements.signalModelFallback.textContent = rollout.fallbackConfigured ? '已配置' : '不可用';
+      const smoke = rollout.lastSmoke || {};
+      elements.signalModelLastSmoke.textContent = smoke.status === 'never'
+        ? '尚未测试'
+        : `${smoke.status === 'passed' ? '通过' : smoke.status === 'running' ? '运行中' : '失败'} · ${formatDate(smoke.at)}${rollout.smokeFresh ? '' : ' · 已过期'}`;
+      elements.signalModelDeepSeekModel.value = rollout.deepSeekModel || 'deepseek-v4-pro';
+      updateSignalModelControls();
+    };
+
+    const loadSignalModelRollout = async () => {
+      try {
+        const payload = await apiJson('/admin/api/signal/model-rollout');
+        state.signalModelRollout = payload.rollout || null;
+      } catch (error) {
+        state.signalModelRollout = {
+          message: error.message,
+          setupRequired: error.code === 'SIGNAL_MODEL_ROLLOUT_NOT_READY',
+          unavailable: error.code !== 'SIGNAL_MODEL_ROLLOUT_NOT_READY'
+        };
+      }
+      renderSignalModelRollout();
+      return state.signalModelRollout;
+    };
+
+    const saveSignalModel = async () => {
+      elements.signalModelSave.disabled = true;
+      setSignalModelStatus('正在保存模型设置。', 'pending');
+      try {
+        const payload = await apiJson('/admin/api/signal/model-rollout', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'save_model', model: elements.signalModelDeepSeekModel.value })
+        });
+        state.signalModelRollout = payload.rollout;
+        state.signalModelPreview = null;
+        renderSignalModelPreview();
+        renderSignalModelRollout();
+        setSignalModelStatus(payload.message, 'success');
+        await loadAuditLogs();
+      } catch (error) {
+        setSignalModelStatus(error.message, 'error');
+        updateSignalModelControls();
+      }
+    };
+
+    const smokeTestSignalModel = async () => {
+      const candidateIds = [...state.signalSelectedCandidateIds];
+      if (candidateIds.length < 3 || candidateIds.length > 10) {
+        setSignalModelStatus('请先选择 3 至 10 条已入选候选。', 'error');
+        return;
+      }
+      elements.signalModelSmoke.disabled = true;
+      elements.signalModelSmoke.textContent = '正在测试';
+      setSignalModelStatus('正在调用 DeepSeek 生成临时预览，不会保存或发布。', 'pending');
+      try {
+        const payload = await apiJson('/admin/api/signal/model-rollout', {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'smoke_test',
+            briefDate: elements.signalDraftDate.value || todayDateInput(),
+            candidateIds,
+            category: elements.signalDraftCategory.value
+          })
+        });
+        state.signalModelRollout = payload.rollout;
+        state.signalModelPreview = payload.preview || null;
+        renderSignalModelPreview();
+        renderSignalModelRollout();
+        setSignalModelStatus(payload.message, 'success');
+        if (state.signalModelPreview) elements.signalModelPreview.open = true;
+        await loadAuditLogs();
+      } catch (error) {
+        setSignalModelStatus(error.message, 'error');
+        await loadSignalModelRollout();
+      } finally {
+        elements.signalModelSmoke.textContent = '测试所选候选';
+        updateSignalModelControls();
+      }
+    };
+
+    const setSignalModelMode = async (mode) => {
+      if (mode === 'live' && !window.confirm('确认让 DeepSeek 成为简报主模型？Workers AI 会继续作为自动回退。')) return;
+      elements.signalModelEnable.disabled = true;
+      elements.signalModelDisable.disabled = true;
+      setSignalModelStatus(mode === 'live' ? '正在启用 DeepSeek 主路径。' : '正在关闭 DeepSeek 主路径。', 'pending');
+      try {
+        const payload = await apiJson('/admin/api/signal/model-rollout', {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'set_mode',
+            confirmation: mode === 'live' ? 'ENABLE_DEEPSEEK_PRIMARY' : '',
+            mode
+          })
+        });
+        state.signalModelRollout = payload.rollout;
+        renderSignalModelRollout();
+        setSignalModelStatus(payload.message, 'success');
+        await loadAuditLogs();
+      } catch (error) {
+        setSignalModelStatus(error.message, 'error');
+        await loadSignalModelRollout();
+      }
+    };
+
     const renderSignalRuns = () => {
       if (!state.signalRuns.length) {
         renderEmpty(elements.signalRunsList, '尚未运行采集。点击“立即采集”后，免费来源会逐个进入队列。');
@@ -2528,6 +2769,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signalDraftGenerate.title = remaining
         ? `请再入选 ${remaining} 条候选资讯`
         : '使用当前选中的候选生成简报草稿';
+      updateSignalModelControls();
     };
 
     const toggleSignalDraftCandidate = (candidate, checked) => {
@@ -2700,7 +2942,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           apiJson('/admin/api/signal/sources'),
           apiJson('/admin/api/signal/runs?limit=20'),
           apiJson('/admin/api/signal/drafts?status=draft&limit=30'),
-          apiJson('/admin/api/signal/operations')
+          apiJson('/admin/api/signal/operations'),
+          loadSignalModelRollout()
         ]);
         state.signalOperations = operationsPayload;
         state.signalAlerts = operationsPayload.alerts || [];
@@ -4662,6 +4905,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     $('#signal-reset').addEventListener('click', resetSignalForm);
     $('#signal-automation-refresh').addEventListener('click', loadSignalAutomation);
     $('#signal-collection-start').addEventListener('click', startSignalCollection);
+    elements.signalModelSave.addEventListener('click', saveSignalModel);
+    elements.signalModelSmoke.addEventListener('click', smokeTestSignalModel);
+    elements.signalModelEnable.addEventListener('click', () => setSignalModelMode('live'));
+    elements.signalModelDisable.addEventListener('click', () => setSignalModelMode('off'));
     elements.signalCandidatesRescore.addEventListener('click', rescoreSignalCandidateQueue);
     elements.signalDraftGenerate.addEventListener('click', generateSignalBriefDraft);
     $('#signal-drafts-refresh').addEventListener('click', refreshSignalDrafts);

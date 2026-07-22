@@ -497,6 +497,10 @@ class DraftStatement {
 
   async first() {
     this.db.sql.push(this.sql);
+    if (/SELECT id FROM signal_model_rollout LIMIT 1/i.test(this.sql)) {
+      return this.db.modelRollout ? { id: 'signal-brief' } : null;
+    }
+    if (/SELECT \* FROM signal_model_rollout WHERE id = \?/i.test(this.sql)) return this.db.modelRollout;
     if (/SELECT \*\s+FROM content_entries[\s\S]+slug = \?/i.test(this.sql)) return this.db.existingEntry;
     if (/SELECT id, metadata_json, source_kind, status\s+FROM content_entries[\s\S]+slug = \?/i.test(this.sql)) {
       return this.db.existingEntry;
@@ -594,10 +598,11 @@ class DraftStatement {
 }
 
 class DraftDb {
-  constructor(rows = candidates, existingEntry = null) {
+  constructor(rows = candidates, existingEntry = null, modelRollout = null) {
     this.auditActions = [];
     this.candidates = new Map(rows.map((candidate) => [candidate.id, { ...candidate }]));
     this.existingEntry = existingEntry;
+    this.modelRollout = modelRollout;
     this.savedEntry = null;
     this.sql = [];
   }
@@ -677,7 +682,11 @@ try {
       { status: 200 }
     );
   };
-  const deepSeekDb = new DraftDb();
+  const deepSeekDb = new DraftDb(candidates, null, {
+    deepseek_model: 'deepseek-v4-pro',
+    rollout_mode: 'live',
+    updated_at: '2026-07-18 03:55:00'
+  });
   const deepSeekHandlerResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
     new Request('http://localhost/admin/api/signal/drafts/generate', {
       body: JSON.stringify({
@@ -735,7 +744,11 @@ try {
       CONTENT_BUCKET: { async put() {} },
       DEEPSEEK_API_KEY: 'test-deepseek-secret',
       SIGNAL_BRIEF_DEEPSEEK_ENABLED: '1',
-      WAITLIST_DB: new DraftDb()
+      WAITLIST_DB: new DraftDb(candidates, null, {
+        deepseek_model: 'deepseek-v4-pro',
+        rollout_mode: 'live',
+        updated_at: '2026-07-18 03:55:00'
+      })
     }
   );
   assert.equal(deepSeekFallbackResponse.status, 200);
@@ -772,7 +785,11 @@ try {
       DEEPSEEK_API_KEY: 'test-deepseek-secret',
       SIGNAL_BRIEF_DEEPSEEK_ENABLED: '1',
       SIGNAL_BRIEF_DEEPSEEK_MODEL: 'deepseek-unsupported-model',
-      WAITLIST_DB: new DraftDb()
+      WAITLIST_DB: new DraftDb(candidates, null, {
+        deepseek_model: 'deepseek-unsupported-model',
+        rollout_mode: 'live',
+        updated_at: '2026-07-18 03:55:00'
+      })
     }
   );
   assert.equal(invalidDeepSeekModelResponse.status, 200);
