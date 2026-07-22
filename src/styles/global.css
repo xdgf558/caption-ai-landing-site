@@ -7821,6 +7821,103 @@ details[open] > .admin-disclosure-summary::after {
   overflow-wrap: anywhere;
 }
 
+.admin-signal-model-rollout {
+  border-bottom: 1px solid var(--admin-line);
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+}
+
+.admin-signal-model-rollout__summary {
+  color: var(--admin-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.admin-signal-model-rollout__metrics {
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+
+.admin-signal-model-rollout__metrics > div {
+  background: #f4f7f5;
+  border: 1px solid #d7e0dc;
+  min-width: 0;
+  padding: 9px 10px;
+}
+
+.admin-signal-model-rollout__metrics dt {
+  color: var(--admin-muted);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-signal-model-rollout__metrics dd {
+  color: #263f38;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.4;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-signal-model-rollout__controls {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-signal-model-rollout__controls label {
+  color: var(--admin-muted);
+  display: grid;
+  font-size: 10px;
+  font-weight: 800;
+  gap: 4px;
+  min-width: 210px;
+}
+
+.admin-signal-model-rollout__controls select,
+.admin-signal-model-rollout__controls .button {
+  min-height: 36px;
+}
+
+.admin-signal-model-preview {
+  border-top: 1px dashed #cbd7d2;
+  padding-top: 9px;
+}
+
+.admin-signal-model-preview summary {
+  color: #245f50;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-signal-model-preview h4 {
+  font-size: 15px;
+  margin: 12px 0 6px;
+}
+
+.admin-signal-model-preview ol {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 0;
+  padding-left: 22px;
+}
+
+.admin-signal-model-preview li p,
+.admin-signal-model-preview li small {
+  display: block;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
 .admin-signal-alerts-heading {
   align-items: baseline;
   display: flex;
@@ -8434,7 +8531,8 @@ details[open] > .admin-disclosure-summary::after {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .admin-signal-operations__metrics {
+  .admin-signal-operations__metrics,
+  .admin-signal-model-rollout__metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -8551,5 +8649,20 @@ details[open] > .admin-disclosure-summary::after {
   .admin-v2-main .admin-v2-form-grid,
   .admin-v2-main .admin-v2-filter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-signal-model-rollout__controls {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-signal-model-rollout__controls label {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .admin-signal-model-rollout__controls .button {
+    width: 100%;
   }
 }

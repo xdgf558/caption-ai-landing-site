@@ -4,7 +4,7 @@ Phase 2 connects the Phase 1 DeepSeek adapter to authenticated Signal brief gene
 
 ## Generation Order
 
-1. When `SIGNAL_BRIEF_DEEPSEEK_ENABLED=1` and `DEEPSEEK_API_KEY` is configured, `deepseek-v4-pro` is the primary generator. The committed production default remains disabled until the controlled rollout is complete.
+1. When `SIGNAL_BRIEF_DEEPSEEK_ENABLED=1`, `DEEPSEEK_API_KEY` is configured, and the Phase 3 D1 rollout mode is `live`, the selected DeepSeek model is the primary generator. The committed production default remains disabled.
 2. DeepSeek receives only the selected public candidate title, summary, publisher, category, and publication time.
 3. DeepSeek retries once for a malformed, truncated, untranslated, factually invalid, or editorially weak result.
 4. If DeepSeek remains unavailable or fails validation, generation falls back to the existing Workers AI primary and fallback models.
@@ -50,7 +50,7 @@ Keep `SIGNAL_BRIEF_DEEPSEEK_ENABLED=0` to use only Workers AI without deleting t
 
 ## Rollout Boundary
 
-No database migration is required. Merging this phase keeps DeepSeek disabled. Before production activation, configure the Secret, enable DeepSeek in a controlled preview or activation change, and run one authenticated Admin smoke test with three public candidates. Verify that the saved draft reports `provider = deepseek`, `finishReason = stop`, complete Traditional Chinese fields, distinct signal/noise analysis, and correct source numbers. Then verify the kill switch and Workers AI fallback once before leaving the production flag enabled.
+Phase 2 itself requires no database migration. Merging it keeps DeepSeek disabled. Phase 3 adds the D1 rollout gate, unpublished Admin smoke test, 24-hour readiness window, and immediate kill switch documented in `docs/signal-deepseek-provider-phase-3.md`.
 
 Official references:
 

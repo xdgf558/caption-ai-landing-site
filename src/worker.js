@@ -23,7 +23,8 @@ import {
 import {
   createDeepSeekSignalDraftAdapter,
   defaultDeepSeekSignalDraftModel,
-  isDeepSeekApiKeyConfigured
+  isDeepSeekApiKeyConfigured,
+  normalizeDeepSeekSignalDraftModel
 } from './deepseekSignalDraft.js';
 
 const json = (body, init = {}) =>
@@ -2427,11 +2428,13 @@ const isMissingSignalCandidateDeduplicationError = (error) =>
   /no such table: signal_candidate_occurrences|no such column: title_fingerprint/i.test(error?.message || '');
 const isMissingSignalAutomationOperationsError = (error) =>
   /no such table: signal_automation_(?:runtime|alerts)|no such column: last_cron_status/i.test(error?.message || '');
+const isMissingSignalModelRolloutError = (error) => /no such table: signal_model_rollout/i.test(error?.message || '');
 const readySignalAutomationDatabases = new WeakSet();
 const readySignalCollectionPhase2Databases = new WeakSet();
 const readySignalCandidateTriageDatabases = new WeakSet();
 const readySignalCandidateDeduplicationDatabases = new WeakSet();
 const readySignalAutomationOperationsDatabases = new WeakSet();
+const readySignalModelRolloutDatabases = new WeakSet();
 
 const ensureContentTablesReady = async (db) => {
   try {
@@ -2530,6 +2533,18 @@ const ensureSignalAutomationOperationsReady = async (db) => {
     ) {
       return false;
     }
+    throw error;
+  }
+};
+
+const ensureSignalModelRolloutReady = async (db) => {
+  if (readySignalModelRolloutDatabases.has(db)) return true;
+  try {
+    await db.prepare('SELECT id FROM signal_model_rollout LIMIT 1').first();
+    readySignalModelRolloutDatabases.add(db);
+    return true;
+  } catch (error) {
+    if (isMissingSignalModelRolloutError(error)) return false;
     throw error;
   }
 };
@@ -12479,13 +12494,19 @@ const getSignalBriefDraftDeepSeekModel = (env) =>
   cleanText(env.SIGNAL_BRIEF_DEEPSEEK_MODEL || defaultDeepSeekSignalDraftModel, 160) ||
   defaultDeepSeekSignalDraftModel;
 
-const getSignalBriefDraftProviderPlan = (env) => {
+const signalBriefModelRolloutId = 'signal-brief';
+const signalBriefSmokeFreshnessMs = 24 * 60 * 60 * 1000;
+
+const isSignalBriefDeepSeekMasterEnabled = (env) =>
+  cleanText(env.SIGNAL_BRIEF_DEEPSEEK_ENABLED || '0', 10) === '1';
+
+const getSignalBriefDraftProviderPlan = (env, options = {}) => {
   const providers = [];
-  const deepSeekEnabled = cleanText(env.SIGNAL_BRIEF_DEEPSEEK_ENABLED || '0', 10) === '1';
+  const deepSeekEnabled = options.allowDeepSeek === true && isSignalBriefDeepSeekMasterEnabled(env);
   if (deepSeekEnabled && isDeepSeekApiKeyConfigured(env.DEEPSEEK_API_KEY)) {
     providers.push({
       ai: createDeepSeekSignalDraftAdapter({ apiKey: env.DEEPSEEK_API_KEY }),
-      model: getSignalBriefDraftDeepSeekModel(env),
+      model: cleanText(options.deepSeekModel, 160) || getSignalBriefDraftDeepSeekModel(env),
       provider: 'deepseek'
     });
   }
@@ -12500,6 +12521,416 @@ const getSignalBriefDraftProviderPlan = (env) => {
     });
   }
   return providers;
+};
+
+const signalBriefModelRolloutRow = async (db) =>
+  db.prepare('SELECT * FROM signal_model_rollout WHERE id = ? LIMIT 1').bind(signalBriefModelRolloutId).first();
+
+const signalBriefSmokeIsFresh = (row, now = Date.now()) => {
+  if (row?.last_smoke_status !== 'passed' || row?.last_smoke_model !== row?.deepseek_model) return false;
+  const smokeAt = Date.parse(row.last_smoke_at || '');
+  return Number.isFinite(smokeAt) && smokeAt <= now && now - smokeAt <= signalBriefSmokeFreshnessMs;
+};
+
+const signalBriefModelRolloutToJson = (row, env) => {
+  const masterGateEnabled = isSignalBriefDeepSeekMasterEnabled(env);
+  const secretConfigured = isDeepSeekApiKeyConfigured(env.DEEPSEEK_API_KEY);
+  const fallbackConfigured = Boolean(env.AI && typeof env.AI.run === 'function');
+  const smokeFresh = signalBriefSmokeIsFresh(row);
+  const rolloutMode = row?.rollout_mode === 'live' ? 'live' : 'off';
+  return {
+    canEnableLive: masterGateEnabled && secretConfigured && fallbackConfigured && smokeFresh,
+    canSmoke: masterGateEnabled && secretConfigured,
+    deepSeekModel: cleanText(row?.deepseek_model || getSignalBriefDraftDeepSeekModel(env), 160),
+    fallbackConfigured,
+    fallbackModel: getSignalBriefDraftModel(env),
+    lastSmoke: {
+      at: row?.last_smoke_at || null,
+      candidateCount: normalizePositiveInteger(row?.last_smoke_candidate_count, 0),
+      finishReason: cleanText(row?.last_smoke_finish_reason, 80),
+      message: cleanText(row?.last_smoke_message, 500),
+      model: cleanText(row?.last_smoke_model, 160),
+      status: cleanText(row?.last_smoke_status || 'never', 30),
+      usage: normalizeJsonObject(parseStoredJson(row?.last_smoke_usage_json, {}))
+    },
+    liveEffective: rolloutMode === 'live' && masterGateEnabled && secretConfigured,
+    masterGateEnabled,
+    rolloutMode,
+    secretConfigured,
+    smokeFresh,
+    updatedAt: row?.updated_at || null,
+    updatedBy: cleanText(row?.updated_by, 320)
+  };
+};
+
+const resolveSignalBriefModelRollout = async (db, env) => {
+  const fallback = {
+    allowDeepSeek: false,
+    deepSeekModel: getSignalBriefDraftDeepSeekModel(env),
+    rolloutMode: 'off',
+    setupReady: false
+  };
+  if (!isSignalBriefDeepSeekMasterEnabled(env) || !isDeepSeekApiKeyConfigured(env.DEEPSEEK_API_KEY)) return fallback;
+  try {
+    if (!(await ensureSignalModelRolloutReady(db))) return fallback;
+    const row = await signalBriefModelRolloutRow(db);
+    if (!row) return { ...fallback, setupReady: true };
+    return {
+      allowDeepSeek: row.rollout_mode === 'live',
+      deepSeekModel: cleanText(row.deepseek_model, 160) || fallback.deepSeekModel,
+      rolloutMode: row.rollout_mode === 'live' ? 'live' : 'off',
+      setupReady: true,
+      updatedAt: row.updated_at || null
+    };
+  } catch (error) {
+    console.warn('Signal brief model rollout check failed closed.', {
+      code: error?.code || 'SIGNAL_MODEL_ROLLOUT_CHECK_FAILED'
+    });
+    return fallback;
+  }
+};
+
+const signalBriefModelRolloutSetupResponse = () =>
+  privateJson(
+    {
+      ok: false,
+      code: 'SIGNAL_MODEL_ROLLOUT_NOT_READY',
+      message: '请先应用 migrations/0025_signal_model_rollout.sql。',
+      setupRequired: true
+    },
+    { status: 503 }
+  );
+
+const handleAdminGetSignalBriefModelRollout = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  const actorEmail = await getAdminActorEmail(request, env);
+  if (!actorEmail) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_MODEL_ADMIN_REQUIRED', message: '管理员身份无效或已过期。' },
+      { status: 401 }
+    );
+  }
+  if (!(await ensureSignalModelRolloutReady(db))) return signalBriefModelRolloutSetupResponse();
+  const row = await signalBriefModelRolloutRow(db);
+  return privateJson({ ok: true, rollout: signalBriefModelRolloutToJson(row, env), setupRequired: false });
+};
+
+const handleAdminManageSignalBriefModelRollout = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Content database is not configured.' }, { status: 500 });
+  const actorEmail = await getAdminActorEmail(request, env);
+  if (!actorEmail) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_MODEL_ADMIN_REQUIRED', message: '管理员身份无效或已过期。' },
+      { status: 401 }
+    );
+  }
+  if (!(await ensureSignalModelRolloutReady(db))) return signalBriefModelRolloutSetupResponse();
+  if (!(await ensureAdminAuditLogsReady(db))) {
+    return privateJson(
+      { ok: false, code: 'SIGNAL_MODEL_AUDIT_NOT_READY', message: '审计日志表尚未初始化，模型设置已阻止。' },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return privateJson({ ok: false, code: 'INVALID_JSON', message: 'Invalid Signal model JSON.' }, { status: 400 });
+  }
+  const action = cleanText(payload.action, 40).toLowerCase();
+  const current = await signalBriefModelRolloutRow(db);
+  if (!current) return signalBriefModelRolloutSetupResponse();
+
+  if (action === 'save_model') {
+    let model;
+    try {
+      model = normalizeDeepSeekSignalDraftModel(payload.model);
+    } catch (error) {
+      return privateJson({ ok: false, code: error.code, message: error.message }, { status: error.status || 400 });
+    }
+    if (current.rollout_mode === 'live' && model !== current.deepseek_model) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_MODEL_DISABLE_BEFORE_CHANGE', message: '请先关闭 DeepSeek 主路径，再更换模型。' },
+        { status: 409 }
+      );
+    }
+    const changed = model !== current.deepseek_model;
+    await db
+      .prepare(
+        `UPDATE signal_model_rollout
+         SET deepseek_model = ?,
+             last_smoke_status = CASE WHEN deepseek_model = ? THEN last_smoke_status ELSE 'never' END,
+             last_smoke_message = CASE WHEN deepseek_model = ? THEN last_smoke_message ELSE '' END,
+             updated_by = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`
+      )
+      .bind(model, model, model, actorEmail, signalBriefModelRolloutId)
+      .run();
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: 'signal_model_rollout_configure',
+      targetType: 'signal_model_rollout',
+      targetId: signalBriefModelRolloutId,
+      targetSlug: model,
+      metadata: { changed, model }
+    });
+    const row = await signalBriefModelRolloutRow(db);
+    return privateJson({
+      ok: true,
+      message: changed ? '模型已保存，请重新运行冒烟测试。' : '模型设置没有变化。',
+      rollout: signalBriefModelRolloutToJson(row, env)
+    });
+  }
+
+  if (action === 'set_mode') {
+    const mode = cleanText(payload.mode, 20).toLowerCase();
+    if (!['live', 'off'].includes(mode)) {
+      return privateJson({ ok: false, code: 'SIGNAL_MODEL_MODE_INVALID', message: '模型启用状态无效。' }, { status: 400 });
+    }
+    if (mode === 'live') {
+      if (payload.confirmation !== 'ENABLE_DEEPSEEK_PRIMARY') {
+        return privateJson(
+          { ok: false, code: 'SIGNAL_MODEL_CONFIRMATION_REQUIRED', message: '启用 DeepSeek 主路径需要明确确认。' },
+          { status: 400 }
+        );
+      }
+      const readiness = signalBriefModelRolloutToJson(current, env);
+      if (!readiness.canEnableLive) {
+        return privateJson(
+          {
+            ok: false,
+            code: 'SIGNAL_MODEL_NOT_READY_FOR_LIVE',
+            message: '需要部署许可、DeepSeek Secret、Workers AI 回退和 24 小时内同模型冒烟通过后才能启用。',
+            rollout: readiness
+          },
+          { status: 409 }
+        );
+      }
+    }
+    const result = await db
+      .prepare(
+        `UPDATE signal_model_rollout
+         SET rollout_mode = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?
+           AND (
+             ? = 'off'
+             OR (
+               last_smoke_status = 'passed'
+               AND last_smoke_model = deepseek_model
+               AND datetime(last_smoke_at) >= datetime('now', '-24 hours')
+             )
+           )`
+      )
+      .bind(mode, actorEmail, signalBriefModelRolloutId, mode)
+      .run();
+    if (!getD1ChangeCount(result)) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_MODEL_MODE_CONFLICT', message: '模型状态没有更新，请刷新后重试。' },
+        { status: 409 }
+      );
+    }
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: mode === 'live' ? 'signal_model_rollout_enable' : 'signal_model_rollout_disable',
+      targetType: 'signal_model_rollout',
+      targetId: signalBriefModelRolloutId,
+      targetSlug: current.deepseek_model,
+      metadata: { from: current.rollout_mode, mode, model: current.deepseek_model }
+    });
+    const row = await signalBriefModelRolloutRow(db);
+    return privateJson({
+      ok: true,
+      message: mode === 'live' ? 'DeepSeek 已启用为简报主模型，Workers AI 保持回退。' : 'DeepSeek 主路径已关闭。',
+      rollout: signalBriefModelRolloutToJson(row, env)
+    });
+  }
+
+  if (action === 'smoke_test') {
+    if (!(await ensureSignalAutomationTablesReady(db))) {
+      return privateJson(
+        {
+          ok: false,
+          code: 'SIGNAL_AUTOMATION_NOT_READY',
+          message: '候选资讯表尚未初始化，无法运行模型冒烟测试。'
+        },
+        { status: 503 }
+      );
+    }
+    if (!isSignalBriefDeepSeekMasterEnabled(env)) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_MODEL_MASTER_DISABLED', message: '部署许可尚未开启，不能调用 DeepSeek 冒烟测试。' },
+        { status: 409 }
+      );
+    }
+    if (!isDeepSeekApiKeyConfigured(env.DEEPSEEK_API_KEY)) {
+      return privateJson(
+        { ok: false, code: 'DEEPSEEK_NOT_CONFIGURED', message: 'DeepSeek Worker Secret 尚未配置。' },
+        { status: 409 }
+      );
+    }
+    let candidateIds;
+    try {
+      candidateIds = normalizeSignalDraftCandidateIds(payload.candidateIds);
+    } catch (error) {
+      return privateJson({ ok: false, code: error.code, message: error.message }, { status: error.status || 400 });
+    }
+    const briefDate = normalizeSignalBriefDraftDate(payload.briefDate || new Date().toISOString().slice(0, 10));
+    if (!briefDate) {
+      return privateJson({ ok: false, code: 'SIGNAL_DRAFT_DATE_INVALID', message: '简报日期无效。' }, { status: 400 });
+    }
+    const requestedCategory = cleanText(payload.category || 'auto', 30).toLowerCase();
+    if (requestedCategory !== 'auto' && !signalAutomationCategories.has(requestedCategory)) {
+      return privateJson({ ok: false, code: 'SIGNAL_DRAFT_CATEGORY_INVALID', message: '简报分类无效。' }, { status: 400 });
+    }
+    const placeholders = candidateIds.map(() => '?').join(', ');
+    const candidateResponse = await db
+      .prepare(
+        `SELECT candidate.*, source.name AS source_name, source.publisher AS source_publisher
+         FROM signal_candidates AS candidate
+         LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
+         WHERE candidate.id IN (${placeholders})`
+      )
+      .bind(...candidateIds)
+      .all();
+    const candidateMap = new Map((candidateResponse.results || []).map((candidate) => [candidate.id, candidate]));
+    if (candidateMap.size !== candidateIds.length) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_DRAFT_CANDIDATE_NOT_FOUND', message: '部分候选资讯已经不存在，请刷新后重试。' },
+        { status: 404 }
+      );
+    }
+    const candidates = candidateIds.map((id) => candidateMap.get(id));
+    if (candidates.some((candidate) => candidate.status !== 'shortlisted')) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_DRAFT_CANDIDATE_NOT_SHORTLISTED', message: '冒烟测试只能使用已入选候选。' },
+        { status: 409 }
+      );
+    }
+    const model = normalizeDeepSeekSignalDraftModel(current.deepseek_model);
+    const startedAt = new Date().toISOString();
+    await db
+      .prepare(
+        `UPDATE signal_model_rollout
+         SET last_smoke_status = 'running', last_smoke_at = ?, last_smoke_model = ?,
+             last_smoke_finish_reason = '', last_smoke_message = '正在运行',
+             last_smoke_usage_json = '{}', last_smoke_candidate_count = ?,
+             updated_by = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`
+      )
+      .bind(startedAt, model, candidateIds.length, actorEmail, signalBriefModelRolloutId)
+      .run();
+    try {
+      const draft = await generateSignalBriefDraftWithProviders(
+        [
+          {
+            ai: createDeepSeekSignalDraftAdapter({ apiKey: env.DEEPSEEK_API_KEY }),
+            model,
+            provider: 'deepseek'
+          }
+        ],
+        candidates,
+        { briefDate, category: requestedCategory }
+      );
+      const completedAt = new Date().toISOString();
+      const message = `冒烟通过：${candidateIds.length} 条候选，未保存、未发布。`;
+      const update = await db
+        .prepare(
+          `UPDATE signal_model_rollout
+           SET last_smoke_status = 'passed', last_smoke_at = ?, last_smoke_model = ?,
+               last_smoke_finish_reason = ?, last_smoke_message = ?, last_smoke_usage_json = ?,
+               last_smoke_candidate_count = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
+           WHERE id = ? AND deepseek_model = ?`
+        )
+        .bind(
+          completedAt,
+          model,
+          cleanText(draft.finishReason, 80),
+          message,
+          JSON.stringify(draft.usage || {}),
+          candidateIds.length,
+          actorEmail,
+          signalBriefModelRolloutId,
+          model
+        )
+        .run();
+      if (!getD1ChangeCount(update)) {
+        return privateJson(
+          { ok: false, code: 'SIGNAL_MODEL_CHANGED_DURING_SMOKE', message: '模型设置在测试期间发生变化，请重新测试。' },
+          { status: 409 }
+        );
+      }
+      await insertAdminAuditLog(db, {
+        actorEmail,
+        action: 'signal_model_rollout_smoke_passed',
+        targetType: 'signal_model_rollout',
+        targetId: signalBriefModelRolloutId,
+        targetSlug: model,
+        metadata: {
+          candidateCount: candidateIds.length,
+          candidateIds,
+          finishReason: draft.finishReason,
+          model,
+          usage: draft.usage
+        }
+      });
+      const row = await signalBriefModelRolloutRow(db);
+      return privateJson({
+        ok: true,
+        message,
+        preview: {
+          category: draft.category,
+          description: draft.description,
+          finishReason: draft.finishReason,
+          items: draft.items,
+          model: draft.model || model,
+          provider: draft.provider,
+          title: draft.title,
+          usage: draft.usage
+        },
+        rollout: signalBriefModelRolloutToJson(row, env)
+      });
+    } catch (error) {
+      const failedAt = new Date().toISOString();
+      const code = cleanText(error?.code || 'SIGNAL_MODEL_SMOKE_FAILED', 120);
+      const message = cleanText(error?.message || 'DeepSeek 冒烟测试失败。', 500);
+      await db
+        .prepare(
+          `UPDATE signal_model_rollout
+           SET last_smoke_status = 'failed', last_smoke_at = ?, last_smoke_model = ?,
+               last_smoke_finish_reason = ?, last_smoke_message = ?, last_smoke_usage_json = '{}',
+               last_smoke_candidate_count = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
+           WHERE id = ? AND deepseek_model = ?`
+        )
+        .bind(
+          failedAt,
+          model,
+          cleanText(error?.finishReason, 80),
+          `${code}: ${message}`,
+          candidateIds.length,
+          actorEmail,
+          signalBriefModelRolloutId,
+          model
+        )
+        .run();
+      await insertAdminAuditLog(db, {
+        actorEmail,
+        action: 'signal_model_rollout_smoke_failed',
+        targetType: 'signal_model_rollout',
+        targetId: signalBriefModelRolloutId,
+        targetSlug: model,
+        metadata: { candidateCount: candidateIds.length, candidateIds, code, model }
+      });
+      return privateJson(
+        { ok: false, code, message, rollout: signalBriefModelRolloutToJson(await signalBriefModelRolloutRow(db), env) },
+        { status: error?.status || 502 }
+      );
+    }
+  }
+
+  return privateJson({ ok: false, code: 'SIGNAL_MODEL_ACTION_INVALID', message: '模型操作无效。' }, { status: 400 });
 };
 
 const normalizeSignalBriefDraftDate = (value) => {
@@ -12548,6 +12979,8 @@ const signalDraftAutomationMetadata = (value) => {
     providerAttempts,
     promptVersion: normalizePositiveInteger(metadata.promptVersion, 0),
     qualityVersion: normalizePositiveInteger(metadata.qualityVersion, 0),
+    rolloutMode: cleanText(metadata.rolloutMode, 20),
+    rolloutUpdatedAt: cleanText(metadata.rolloutUpdatedAt, 80),
     sourceEntryId: normalizePositiveInteger(metadata.sourceEntryId, 0),
     translationMode: cleanText(metadata.translationMode, 40),
     usage: Object.values(normalizedUsage).some(Boolean) ? normalizedUsage : null
@@ -12925,7 +13358,11 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
   }
 
   try {
-    const providerPlan = getSignalBriefDraftProviderPlan(env);
+    const rollout = await resolveSignalBriefModelRollout(db, env);
+    const providerPlan = getSignalBriefDraftProviderPlan(env, {
+      allowDeepSeek: rollout.allowDeepSeek,
+      deepSeekModel: rollout.deepSeekModel
+    });
     const draft = await generateSignalBriefDraftWithProviders(providerPlan, candidates, {
       briefDate,
       category: requestedCategory
@@ -12961,6 +13398,8 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
           providerAttempts: draft.providerAttempts,
           promptVersion: draft.promptVersion,
           qualityVersion: draft.qualityVersion,
+          rolloutMode: rollout.rolloutMode,
+          rolloutUpdatedAt: rollout.updatedAt || '',
           sourceEntryId: existing?.id || 0,
           translationMode: draft.translationMode,
           usage: draft.usage
@@ -12996,6 +13435,8 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
         provider: draft.provider,
         providerAttempts: draft.providerAttempts,
         qualityVersion: draft.qualityVersion,
+        rolloutMode: rollout.rolloutMode,
+        rolloutUpdatedAt: rollout.updatedAt || '',
         usage: draft.usage
       },
       revisionSummary: `AI 草稿生成 · ${candidateIds.length} 条候选`
@@ -13011,6 +13452,8 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       providerAttempts: draft.providerAttempts,
       promptVersion: draft.promptVersion,
       qualityVersion: draft.qualityVersion,
+      rolloutMode: rollout.rolloutMode,
+      rolloutUpdatedAt: rollout.updatedAt || '',
       sourceEntryId: saved.id,
       translationMode: draft.translationMode,
       usage: draft.usage
@@ -19025,6 +19468,7 @@ export const __readerTotpTestHooks = {
   handleAdminAggregateNovelAnalytics,
   handleAdminGenerateNovelAiInsights,
   handleAdminGenerateSignalBriefDraft,
+  handleAdminGetSignalBriefModelRollout,
   handleAdminImportSignalBrief,
   handleAdminListSignalBriefDrafts,
   handleAdminListSignalCandidates,
@@ -19032,6 +19476,7 @@ export const __readerTotpTestHooks = {
   handleAdminListSignalCollectionRuns,
   handleAdminGetSignalOperations,
   handleAdminManageSignalOperations,
+  handleAdminManageSignalBriefModelRollout,
   handleAdminListSignalSources,
   handleAdminCollectSignalSources,
   handleAdminListNovelAiInsights,
@@ -19431,6 +19876,12 @@ export default {
     if (url.pathname === '/admin/api/signal/drafts') {
       if (request.method === 'GET') return handleAdminListSignalBriefDrafts(request, env);
       if (request.method === 'POST') return handleAdminManageSignalBriefDraft(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/signal/model-rollout') {
+      if (request.method === 'GET') return handleAdminGetSignalBriefModelRollout(request, env);
+      if (request.method === 'POST') return handleAdminManageSignalBriefModelRollout(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 

@@ -11,6 +11,7 @@ const workerSource = read('src/worker.js');
 const adminSource = read('src/pages/admin-v2/index.astro');
 const wranglerSource = read('wrangler.toml');
 const phaseTwoDoc = read('docs/signal-deepseek-provider-phase-2.md');
+const phaseThreeDoc = read('docs/signal-deepseek-provider-phase-3.md');
 
 assert.match(workerSource, /createDeepSeekSignalDraftAdapter/);
 assert.match(workerSource, /isDeepSeekApiKeyConfigured\(env\.DEEPSEEK_API_KEY\)/);
@@ -33,7 +34,9 @@ assert.match(wranglerSource, /SIGNAL_BRIEF_DEEPSEEK_MODEL = "deepseek-v4-pro"/);
 
 assert.match(phaseTwoDoc, /does not publish a brief automatically/i);
 assert.match(phaseTwoDoc, /DEEPSEEK_API_KEY/);
-assert.match(phaseTwoDoc, /No database migration is required/);
-assert.match(phaseTwoDoc, /authenticated Admin smoke test/);
+assert.match(phaseTwoDoc, /Phase 2 itself requires no database migration/);
+assert.match(phaseTwoDoc, /unpublished Admin smoke test/);
+assert.match(phaseThreeDoc, /does not publish smoke-test output/i);
+assert.match(phaseThreeDoc, /0025_signal_model_rollout\.sql/);
 
 console.log('Signal DeepSeek phase 2 provider routing, quality gate, metadata, and Admin checks passed.');
