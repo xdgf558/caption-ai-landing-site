@@ -30,9 +30,9 @@ const copy = {
     metaTitle: '下載檔案',
     releaseNotesTitle: '版本說明',
     releaseNotes: [
-      `macOS ${macVersion} 讓所有輸入客戶端共享一份詞庫引擎快照，同時保持各自獨立的組詞狀態，大幅降低多應用長時間使用時的記憶體佔用。`,
-      '設定或匯入詞庫變更時只會重建一次共享引擎；若重建失敗，會繼續使用上一個可用快照，不影響基礎輸入。',
-      '加入 AI-09 桌面 Helper 安全邊界基礎設施；目前預設休眠，普通拼音和 AI Lite 候選排序不依賴它。',
+      `macOS ${macVersion} 新增 Writer V1，可主動使用本機 AI 進行禮貌改寫與中英互譯預覽；結果只供複製，不會自動替換原文。`,
+      'Writer 模型約 1.1 GB，僅在使用者主動操作後從固定官方來源下載，下載與使用前都會校驗精確大小和 SHA-256。',
+      'Writer 透過獨立簽名的 AI-09 Helper 在本機運行；嚴格隱私模式會停用並取消 Writer，失敗時不影響普通拼音與 AI Lite。',
       `Windows 內測版仍為 ${windowsVersion}，下載與功能說明維持不變。`,
       'macOS 安裝包已完成 Developer ID 簽名、Apple 公證與 stapling。'
     ],
@@ -57,9 +57,9 @@ const copy = {
     metaTitle: '下载文件',
     releaseNotesTitle: '版本说明',
     releaseNotes: [
-      `macOS ${macVersion} 让所有输入客户端共享一份词库引擎快照，同时保持各自独立的组词状态，大幅降低多应用长时间使用时的内存占用。`,
-      '设置或导入词库变更时只会重建一次共享引擎；若重建失败，会继续使用上一个可用快照，不影响基础输入。',
-      '加入 AI-09 桌面 Helper 安全边界基础设施；目前默认休眠，普通拼音和 AI Lite 候选排序不依赖它。',
+      `macOS ${macVersion} 新增 Writer V1，可主动使用本地 AI 进行礼貌改写与中英互译预览；结果只供复制，不会自动替换原文。`,
+      'Writer 模型约 1.1 GB，仅在用户主动操作后从固定官方来源下载，下载与使用前都会校验精确大小和 SHA-256。',
+      'Writer 通过独立签名的 AI-09 Helper 在本地运行；严格隐私模式会停用并取消 Writer，失败时不影响普通拼音与 AI Lite。',
       `Windows 内测版仍为 ${windowsVersion}，下载与功能说明保持不变。`,
       'macOS 安装包已完成 Developer ID 签名、Apple 公证与 stapling。'
     ],
@@ -84,9 +84,9 @@ const copy = {
     metaTitle: 'Download files',
     releaseNotesTitle: 'Release notes',
     releaseNotes: [
-      `macOS ${macVersion} shares one lexicon engine snapshot across all input clients while preserving isolated composition state, substantially reducing memory during long-running multi-app use.`,
-      'Settings or imported-lexicon changes rebuild the shared engine only once. If rebuilding fails, the previous working snapshot remains active and base input continues.',
-      'Adds the dormant AI-09 desktop Helper security boundary. Ordinary pinyin input and AI Lite candidate ranking do not depend on it.',
+      `macOS ${macVersion} adds Writer V1 for user-initiated local AI rewrite and Chinese-English translation previews. Results are copied explicitly and never replace text automatically.`,
+      'The roughly 1.1 GB Writer model is downloaded only after an explicit action from a fixed official source, with exact size and SHA-256 verification before use.',
+      'Writer runs locally through a separately signed AI-09 Helper. Strict privacy mode disables and cancels Writer, while failures leave ordinary pinyin and AI Lite unaffected.',
       `The Windows internal test build remains ${windowsVersion}; its download and feature information are unchanged.`,
       'The macOS installer is Developer ID signed, Apple notarized, and stapled.'
     ],
@@ -111,9 +111,9 @@ const copy = {
     metaTitle: 'ダウンロードファイル',
     releaseNotesTitle: 'バージョン情報',
     releaseNotes: [
-      `macOS ${macVersion} は全入力クライアントで一つの辞書エンジンスナップショットを共有しながら、変換状態を個別に保持し、複数アプリの長時間使用時のメモリを大幅に削減します。`,
-      '設定や読み込み辞書が変わった場合も共有エンジンは一度だけ再構築され、失敗時は直前の正常なスナップショットで基本入力を継続します。',
-      '通常は休止している AI-09 デスクトップ Helper の安全境界を追加しました。通常のピンイン入力と AI Lite 候補順位はこれに依存しません。',
+      `macOS ${macVersion} は Writer V1 を追加し、ユーザー操作によるローカル AI の丁寧な書き換えと中英翻訳プレビューに対応しました。結果が自動で原文を置き換えることはありません。`,
+      '約 1.1 GB の Writer モデルは明示的な操作後に固定の公式配布元から取得し、使用前に正確なサイズと SHA-256 を検証します。',
+      'Writer は署名済みの独立 AI-09 Helper でローカル実行します。厳格プライバシーモードでは停止され、障害時も通常入力と AI Lite に影響しません。',
       `Windows 内部テスト版は ${windowsVersion} のままで、ダウンロードと機能説明に変更はありません。`,
       'macOS インストーラーは Developer ID 署名、Apple 公証、stapling を完了しています。'
     ],
