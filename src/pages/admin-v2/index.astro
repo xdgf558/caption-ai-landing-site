@@ -953,14 +953,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                       </select>
                     </label>
                     <label>
-                      时间范围
-                      <select id="signal-candidate-window">
-                        <option value="24">近 24 小时</option>
-                        <option value="168">近 7 天</option>
-                        <option value="0">全部</option>
-                      </select>
-                    </label>
-                    <label>
                       来源
                       <select id="signal-candidate-source">
                         <option value="">全部来源</option>
@@ -1436,7 +1428,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       },
       signalCandidate: {
         status: $('#signal-candidate-status'),
-        window: $('#signal-candidate-window'),
         sourceId: $('#signal-candidate-source'),
         category: $('#signal-candidate-category'),
         minScore: $('#signal-candidate-min-score'),
@@ -2859,7 +2850,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const signalCandidateQueryString = () => {
       const params = new URLSearchParams({ limit: '50' });
       if (elements.signalCandidate.status.value) params.set('status', elements.signalCandidate.status.value);
-      if (elements.signalCandidate.window.value !== '0') params.set('sinceHours', elements.signalCandidate.window.value);
+      params.set('date', todayDateInput());
       if (elements.signalCandidate.sourceId.value) params.set('sourceId', elements.signalCandidate.sourceId.value);
       if (elements.signalCandidate.category.value) params.set('category', elements.signalCandidate.category.value);
       if (elements.signalCandidate.minScore.value !== '0') params.set('minScore', elements.signalCandidate.minScore.value);
@@ -2940,7 +2931,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       try {
         const [sourcesPayload, runsPayload, draftsPayload, operationsPayload] = await Promise.all([
           apiJson('/admin/api/signal/sources'),
-          apiJson('/admin/api/signal/runs?limit=20'),
+          apiJson('/admin/api/signal/runs?limit=3'),
           apiJson('/admin/api/signal/drafts?status=draft&limit=30'),
           apiJson('/admin/api/signal/operations'),
           loadSignalModelRollout()

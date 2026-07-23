@@ -273,9 +273,22 @@ assert.equal(sevenDayCandidateWindowResponse.status, 200);
 assert.equal((await sevenDayCandidateWindowResponse.json()).windowHours, 168);
 assert.ok(sevenDayCandidateWindowDb.boundParams.some((params) => params.includes('-168 hours')));
 
+const todayCandidateDb = new ReviewDb(null);
+const todayCandidateResponse = await hooks.handleAdminListSignalCandidates(
+  new Request('http://localhost/admin/api/signal/candidates?date=2026-07-23&limit=50'),
+  { WAITLIST_DB: todayCandidateDb }
+);
+assert.equal(todayCandidateResponse.status, 200);
+const todayCandidatePayload = await todayCandidateResponse.json();
+assert.equal(todayCandidatePayload.date, '2026-07-23');
+assert.equal(todayCandidatePayload.windowHours, 0);
+assert.ok(todayCandidateDb.boundParams.some((params) => params.filter((value) => value === '2026-07-23').length === 2));
+
 const adminSource = read('src/pages/admin-v2/index.astro');
 assert.match(adminSource, /<h3 id="signal-candidates-title">今日候选<\/h3>/);
-assert.match(adminSource, /id="signal-candidate-window"/);
+assert.doesNotMatch(adminSource, /id="signal-candidate-window"/);
+assert.match(adminSource, /params\.set\('date', todayDateInput\(\)\)/);
+assert.match(adminSource, /\/admin\/api\/signal\/runs\?limit=3/);
 assert.match(adminSource, /<h3 id="signal-drafts-title">简报草稿<\/h3>/);
 assert.match(adminSource, /<h3 id="signal-approvals-title">简报批准发布<\/h3>/);
 assert.match(adminSource, /批准发布/);
