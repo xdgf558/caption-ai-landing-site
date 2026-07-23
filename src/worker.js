@@ -10400,6 +10400,8 @@ const handleAdminListSignalCandidates = async (request, env) => {
   const minScore = Number.isFinite(requestedMinScore) ? Math.min(Math.max(requestedMinScore, 0), 100) : 0;
   const requestedSinceHours = Number.parseInt(url.searchParams.get('sinceHours') || '0', 10);
   const sinceHours = signalCandidateWindowHours.has(requestedSinceHours) ? requestedSinceHours : 24;
+  const requestedDate = cleanText(url.searchParams.get('date'), 10);
+  const candidateDate = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : '';
   const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 50), 1), 100);
   const baseClauses = [];
   const baseParams = [];
@@ -10419,7 +10421,13 @@ const handleAdminListSignalCandidates = async (request, env) => {
     baseClauses.push('candidate.relevance_score >= ?');
     baseParams.push(minScore);
   }
-  if (sinceHours > 0) {
+  if (candidateDate) {
+    baseClauses.push(
+      'datetime(COALESCE(candidate.published_at, candidate.created_at)) >= datetime(?)',
+      "datetime(COALESCE(candidate.published_at, candidate.created_at)) < datetime(?, '+1 day')"
+    );
+    baseParams.push(candidateDate, candidateDate);
+  } else if (sinceHours > 0) {
     baseClauses.push("datetime(COALESCE(candidate.published_at, candidate.created_at)) >= datetime('now', ?)");
     baseParams.push(`-${sinceHours} hours`);
   }
@@ -10546,7 +10554,8 @@ const handleAdminListSignalCandidates = async (request, env) => {
     setupRequired: false,
     triageReady,
     dedupReady,
-    windowHours: sinceHours,
+    date: candidateDate || null,
+    windowHours: candidateDate ? 0 : sinceHours,
     candidates,
     summary: {
       total: normalizePositiveInteger(summaryRow?.total, 0),
