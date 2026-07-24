@@ -34,7 +34,7 @@ const copy = {
     featuresTitle: '目前這個版本適合',
     features: [
       ['本機中文輸入', '先把日常拼音輸入跑順，候選詞、標點和打字手感會持續調整。'],
-      [`macOS ${macVersion}`, '新增 Writer V1，可在偏好設定中主動使用本機 AI 進行禮貌改寫與中英互譯預覽；結果只供複製，不會自動替換原文。'],
+      [`macOS ${macVersion}`, '修復舊開發或 staging 副本與正式安裝版本同時啟動輸入法伺服器，導致偶發無法輸入的問題。'],
       [`Windows ${windowsVersion} 內測`, 'Windows EXE 內測包同步加入擴充詞庫與本機 Rime YAML 匯入，並包含 x64 / x86 TSF 元件。'],
       ['iOS 外部測試', 'iPhone 與 iPad 使用者可透過 TestFlight 加入外部測試，協助驗證行動端鍵盤、候選詞和輸入流程。'],
       ['本機與隱私優先', 'Writer 模型按需下載並校驗，透過獨立簽名的 Helper 在本機運行；嚴格隱私模式會停用並取消 Writer。'],
@@ -65,7 +65,7 @@ const copy = {
     featuresTitle: '目前这个版本适合',
     features: [
       ['本机中文输入', '先把日常拼音输入跑顺，候选词、标点和打字手感会持续调整。'],
-      [`macOS ${macVersion}`, '新增 Writer V1，可在偏好设置中主动使用本地 AI 进行礼貌改写与中英互译预览；结果只供复制，不会自动替换原文。'],
+      [`macOS ${macVersion}`, '修复旧开发或 staging 副本与正式安装版本同时启动输入法服务器，导致偶发无法输入的问题。'],
       [`Windows ${windowsVersion} 内测`, 'Windows EXE 内测包同步加入扩充词库与本地 Rime YAML 导入，并包含 x64 / x86 TSF 组件。'],
       ['iOS 外部测试', 'iPhone 和 iPad 用户可通过 TestFlight 加入外部测试，帮助验证移动端键盘、候选词和输入流程。'],
       ['本地与隐私优先', 'Writer 模型按需下载并校验，通过独立签名的 Helper 在本地运行；严格隐私模式会停用并取消 Writer。'],
@@ -96,7 +96,7 @@ const copy = {
     featuresTitle: 'What this build is for',
     features: [
       ['Local Chinese typing', 'The focus is making daily pinyin input feel steady, with candidates, punctuation, and typing flow improving over time.'],
-      [`macOS ${macVersion}`, 'Adds Writer V1 for user-initiated local AI rewrite and Chinese-English translation previews. Results are copied explicitly and never replace text automatically.'],
+      [`macOS ${macVersion}`, 'Fixes intermittent input loss caused by stale development or staging copies competing with the officially installed input method server.'],
       [`Windows ${windowsVersion} internal test`, 'Adds the expanded lexicon and local Rime YAML import to the Windows EXE build, including both x64 and x86 TSF components.'],
       ['iOS external test', 'iPhone and iPad users can join through TestFlight to help validate the mobile keyboard, candidates, and typing flow.'],
       ['Local and privacy-first', 'The Writer model is downloaded and verified on demand, then runs locally through a separately signed Helper. Strict privacy mode disables and cancels Writer.'],
@@ -127,7 +127,7 @@ const copy = {
     featuresTitle: 'このバージョンでできること',
     features: [
       ['ローカル中国語入力', '日常的なピンイン入力、候補、句読点、入力感を整えていきます。'],
-      [`macOS ${macVersion}`, 'Writer V1 を追加しました。ユーザー操作でローカル AI による丁寧な書き換えと中英翻訳をプレビューでき、結果が自動で原文を置き換えることはありません。'],
+      [`macOS ${macVersion}`, '古い開発版や staging 版が正式インストール版の入力メソッドサーバーと競合し、入力できなくなることがある問題を修正しました。'],
       [`Windows ${windowsVersion} 内部テスト`, '拡充辞書とローカル Rime YAML 読み込みを Windows EXE にも追加し、x64 / x86 の TSF コンポーネントを収録しました。'],
       ['iOS 外部テスト', 'iPhone と iPad から TestFlight に参加し、モバイルキーボード、候補、入力フローの検証に協力できます。'],
       ['ローカル処理とプライバシー', 'Writer モデルは必要時にダウンロードして検証し、署名済みの独立 Helper でローカル実行します。厳格プライバシーモードでは Writer を停止します。'],
