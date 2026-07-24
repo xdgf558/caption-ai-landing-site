@@ -10154,6 +10154,7 @@ const handleAdminListSignalSources = async (env) => {
     .prepare(
       `SELECT *
        FROM signal_sources
+       WHERE archived_at IS NULL
        ORDER BY is_enabled DESC,
                 CASE trust_tier WHEN 'primary' THEN 0 WHEN 'established' THEN 1 ELSE 2 END,
                 name ASC
@@ -10230,7 +10231,7 @@ const handleAdminSaveSignalSource = async (request, env) => {
       .prepare(
         `UPDATE signal_sources
          SET is_enabled = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
-         WHERE id = ?
+         WHERE id = ? AND archived_at IS NULL
          RETURNING *`
       )
       .bind(payload.isEnabled ? 1 : 0, actorEmail, sourceId)
@@ -10253,7 +10254,9 @@ const handleAdminSaveSignalSource = async (request, env) => {
     return privateJson({ ok: false, code: 'SIGNAL_SOURCE_ACTION_INVALID', message: '不支持这个来源操作。' }, { status: 400 });
   }
 
-  const existing = sourceId ? await db.prepare('SELECT * FROM signal_sources WHERE id = ?').bind(sourceId).first() : null;
+  const existing = sourceId
+    ? await db.prepare('SELECT * FROM signal_sources WHERE id = ? AND archived_at IS NULL').bind(sourceId).first()
+    : null;
   if (sourceId && !existing) {
     return privateJson({ ok: false, code: 'SIGNAL_SOURCE_NOT_FOUND', message: '没有找到这个来源。' }, { status: 404 });
   }
@@ -10274,7 +10277,7 @@ const handleAdminSaveSignalSource = async (request, env) => {
                  endpoint_url = ?, homepage_url = ?, language = ?, is_enabled = ?,
                  fetch_interval_minutes = ?, max_items_per_run = ?, requires_api_key = ?,
                  config_json = ?, notes = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP
-             WHERE id = ?
+             WHERE id = ? AND archived_at IS NULL
              RETURNING *`
           )
           .bind(
@@ -11142,7 +11145,7 @@ const selectSignalCollectionSources = async (db, options = {}) => {
     0,
     50
   );
-  const filters = ['is_enabled = 1'];
+  const filters = ['is_enabled = 1', 'archived_at IS NULL'];
   const bindings = [];
   if (options.onlyDue) {
     filters.push(`(
@@ -12234,7 +12237,8 @@ const handleAdminGetSignalOperations = async (request, env) => {
       .prepare(
         `SELECT id, name, category, consecutive_failures, last_error, last_error_at, last_success_at
          FROM signal_sources
-         WHERE consecutive_failures > 0 OR last_error <> ''
+         WHERE archived_at IS NULL
+           AND (consecutive_failures > 0 OR last_error <> '')
          ORDER BY consecutive_failures DESC, datetime(last_error_at) DESC
          LIMIT 20`
       )
