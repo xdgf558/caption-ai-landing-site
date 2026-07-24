@@ -1,21 +1,21 @@
 {
   "schema_version": 1,
   "channel": "stable",
-  "version": "0.1.26",
-  "build": 26,
+  "version": "0.1.27",
+  "build": 27,
   "minimum_macos_version": "14.0",
-  "published_at": "2026-07-24T06:17:22Z",
-  "title": "猫栈拼音 0.1.26",
+  "published_at": "2026-07-24T07:47:24Z",
+  "title": "猫栈拼音 0.1.27",
   "release_notes": [
+    "偏好设置改为紧凑的一级总览与二级功能页。词库管理、本地 Writer、版本与更新各自独立，后续增加功能不会继续拉长主页面。",
+    "隐私、预测、用户学习、词库导入、Writer、更新检查和重新加载仍沿用原有行为，窗口也继续支持等比例缩放。",
     "修复升级或残留开发副本可能启动多个输入法服务器、导致间歇性无法输入的问题；只有系统正式安装的猫栈拼音会继续运行。",
-    "启动时会核对已安装输入源的完整标识。发现旧副本或错误注册时会修复系统映射并退出当前副本，不会自动启用输入法。",
-    "已注册但尚未启用的猫栈拼音现在会被正确识别，避免重复注册或误报修复失败。",
-    "继续提供 macOS Writer V1：可在偏好设置中主动使用本地 AI 进行礼貌改写和中英互译预览，结果只供复制，不会自动替换原文。",
-    "Writer 模型约 1.1 GB，仅在用户主动操作后从固定官方来源下载；下载与使用前都会校验大小和 SHA-256，推理不使用云端。",
-    "严格隐私模式会强制停用并取消 Writer；模型缺失、超时、崩溃或队列繁忙均不影响普通拼音输入和 AI Lite 候选排序。"
+    "启动时会核对已安装输入源的完整标识，正确识别已注册但尚未启用的输入源，不会自动启用输入法。",
+    "macOS Writer V1 可在偏好设置中主动使用本地 AI 进行礼貌改写和中英互译预览，结果只供复制，不会自动替换原文。",
+    "Writer 模型约 1.1 GB，仅在用户主动操作后下载并校验；严格隐私模式会强制停用 Writer，普通拼音输入和 AI Lite 候选排序不受影响。"
   ],
   "release_page_url": "https://wwwstationcat.org/zh-hans/apps/privatepinyin/download/",
-  "package_url": "https://wwwstationcat.org/downloads/privatepinyin/PrivatePinyin-0.1.26.pkg",
-  "package_sha256": "5c83e1770f7eb8d18096c08bf4e4e2e2fa05fdcb82e402060b73f3e8160e4200",
-  "package_size_bytes": 14066233
+  "package_url": "https://wwwstationcat.org/downloads/privatepinyin/PrivatePinyin-0.1.27.pkg",
+  "package_sha256": "00eca727600f37476e1676207c0307bf685d4883b3b8f6be63cb6e56216d16bf",
+  "package_size_bytes": 14072621
 }
