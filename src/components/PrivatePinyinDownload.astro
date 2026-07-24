@@ -30,9 +30,9 @@ const copy = {
     metaTitle: '下載檔案',
     releaseNotesTitle: '版本說明',
     releaseNotes: [
-      `macOS ${macVersion} 修復舊開發或 staging 副本與正式版本同時啟動輸入法伺服器，導致偶發無法輸入的問題。`,
-      '啟動時會核對已安裝輸入源的完整識別；發現舊副本或錯誤註冊時會修復系統映射並退出目前副本，不會自動啟用輸入法。',
-      '已註冊但尚未啟用的猫栈拼音現在會被正確識別，避免重複註冊或誤報修復失敗；Writer V1 與嚴格隱私保護繼續保留。',
+      `macOS ${macVersion} 將偏好設定整理為緊湊的一級總覽，以及詞庫管理、本機 Writer、版本與更新三個二級功能頁。`,
+      '隱私、預測、使用者學習、詞庫匯入、Writer、更新檢查與重新載入仍沿用原有行為，視窗也繼續支援等比例縮放。',
+      '保留 0.1.26 的輸入伺服器競爭修復與已註冊輸入源識別，Writer V1 和嚴格隱私保護也繼續提供。',
       `Windows 內測版仍為 ${windowsVersion}，下載與功能說明維持不變。`,
       'macOS 安裝包已完成 Developer ID 簽名、Apple 公證與 stapling。'
     ],
@@ -57,9 +57,9 @@ const copy = {
     metaTitle: '下载文件',
     releaseNotesTitle: '版本说明',
     releaseNotes: [
-      `macOS ${macVersion} 修复旧开发或 staging 副本与正式版本同时启动输入法服务器，导致偶发无法输入的问题。`,
-      '启动时会核对已安装输入源的完整标识；发现旧副本或错误注册时会修复系统映射并退出当前副本，不会自动启用输入法。',
-      '已注册但尚未启用的猫栈拼音现在会被正确识别，避免重复注册或误报修复失败；Writer V1 与严格隐私保护继续保留。',
+      `macOS ${macVersion} 将偏好设置整理为紧凑的一级总览，以及词库管理、本地 Writer、版本与更新三个二级功能页。`,
+      '隐私、预测、用户学习、词库导入、Writer、更新检查与重新加载仍沿用原有行为，窗口也继续支持等比例缩放。',
+      '保留 0.1.26 的输入服务器竞争修复与已注册输入源识别，Writer V1 和严格隐私保护也继续提供。',
       `Windows 内测版仍为 ${windowsVersion}，下载与功能说明保持不变。`,
       'macOS 安装包已完成 Developer ID 签名、Apple 公证与 stapling。'
     ],
@@ -84,9 +84,9 @@ const copy = {
     metaTitle: 'Download files',
     releaseNotesTitle: 'Release notes',
     releaseNotes: [
-      `macOS ${macVersion} fixes intermittent input loss caused by stale development or staging copies competing with the officially installed input method server.`,
-      'At launch, the app verifies the complete installed input-source identity. It repairs stale mappings and exits the incorrect copy without enabling the input method automatically.',
-      'Registered but disabled installations are now recognized correctly, preventing duplicate registration and false repair failures. Writer V1 and strict privacy protections remain available.',
+      `macOS ${macVersion} reorganizes preferences into a compact overview with dedicated pages for lexicon management, local Writer, and version and update controls.`,
+      'Privacy, prediction, user learning, lexicon import, Writer, update checks, reload behavior, and proportional window resizing remain unchanged.',
+      'The 0.1.26 input-server ownership and registered-source fixes remain in place, together with Writer V1 and strict privacy protections.',
       `The Windows internal test build remains ${windowsVersion}; its download and feature information are unchanged.`,
       'The macOS installer is Developer ID signed, Apple notarized, and stapled.'
     ],
@@ -111,9 +111,9 @@ const copy = {
     metaTitle: 'ダウンロードファイル',
     releaseNotesTitle: 'バージョン情報',
     releaseNotes: [
-      `macOS ${macVersion} は、古い開発版や staging 版が正式インストール版の入力メソッドサーバーと競合し、入力できなくなることがある問題を修正しました。`,
-      '起動時にインストール済み入力ソースの完全な識別情報を確認し、古い対応付けを修復して誤ったコピーを終了します。入力メソッドを自動で有効にはしません。',
-      '登録済みで未有効のインストールも正しく認識し、重複登録や修復失敗の誤判定を防ぎます。Writer V1 と厳格プライバシー保護は引き続き利用できます。',
+      `macOS ${macVersion} は環境設定をコンパクトな概要と、辞書管理、ローカル Writer、バージョンと更新の専用ページに整理しました。`,
+      'プライバシー、予測、ユーザー学習、辞書読み込み、Writer、更新確認、再読み込み、ウィンドウの縦横比を保った拡大縮小は従来どおりです。',
+      '0.1.26 の入力サーバー競合と登録済み入力ソースの修正を維持し、Writer V1 と厳格プライバシー保護も引き続き利用できます。',
       `Windows 内部テスト版は ${windowsVersion} のままで、ダウンロードと機能説明に変更はありません。`,
       'macOS インストーラーは Developer ID 署名、Apple 公証、stapling を完了しています。'
     ],
