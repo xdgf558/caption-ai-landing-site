@@ -53,6 +53,7 @@ class MockBoundStatement {
         last_success_at: null,
         last_error_at: null,
         last_error: '',
+        archived_at: null,
         created_at: '2026-07-17 10:00:00',
         updated_at: '2026-07-17 10:00:00'
       };
@@ -94,8 +95,8 @@ class MockBoundStatement {
   }
 
   async all() {
-    if (/FROM signal_sources\s+ORDER BY/i.test(this.sql)) {
-      return { results: [...this.db.sources.values()] };
+    if (/FROM signal_sources\s+WHERE archived_at IS NULL\s+ORDER BY/i.test(this.sql)) {
+      return { results: [...this.db.sources.values()].filter((source) => !source.archived_at) };
     }
     if (/FROM signal_collection_runs/i.test(this.sql)) return { results: [] };
     if (/FROM signal_candidates AS candidate/i.test(this.sql)) return { results: [] };

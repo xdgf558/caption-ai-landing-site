@@ -16,7 +16,8 @@ const migrationFiles = [
   'migrations/0021_signal_candidate_triage.sql',
   'migrations/0022_signal_source_adapters.sql',
   'migrations/0023_signal_candidate_deduplication.sql',
-  'migrations/0024_signal_operations.sql'
+  'migrations/0024_signal_operations.sql',
+  'migrations/0026_archive_paused_signal_sources.sql'
 ];
 
 const sqlLiteral = (value) => {
@@ -109,7 +110,7 @@ assert.equal(migrate.status, 0, migrate.stderr);
 const prePhase6SqlitePath = join(sqliteDirectory, 'signal-pre-phase6.sqlite');
 const migratePrePhase6 = spawnSync('sqlite3', [prePhase6SqlitePath], {
   encoding: 'utf8',
-  input: migrationFiles.slice(0, -1).map(read).join('\n')
+  input: migrationFiles.slice(0, -2).map(read).join('\n')
 });
 assert.equal(migratePrePhase6.status, 0, migratePrePhase6.stderr);
 
