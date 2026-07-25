@@ -3596,8 +3596,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const renderImportList = () => {
       if (!state.imports.length) {
-        renderEmpty(elements.importsList, '暂无 NovelForge 导入记录。');
-        elements.importDetail.innerHTML = '<p class="admin-empty-list">NovelForge 软件导入后，这里会出现可审核批次。</p>';
+        renderEmpty(elements.importsList, '暂无待发布的 NovelForge 导入批次。');
+        elements.importDetail.innerHTML = '<p class="admin-empty-list">NovelForge 导入产生草稿后，这里会出现可审核批次；全部发布后会自动移出队列。</p>';
         return;
       }
 
@@ -3682,8 +3682,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
     };
 
+    const isPendingImportReview = (item) => (item?.summary?.draftCount || 0) > 0;
+
     const loadImportReviews = async ({ importId = 0 } = {}) => {
-      const params = new URLSearchParams({ type: 'novelforge', limit: '50' });
+      const params = new URLSearchParams({ type: 'novelforge', review: 'pending', limit: '50' });
       if (importId) params.set('id', String(importId));
       const payload = await apiJson(`/admin/api/content/imports?${params.toString()}`);
       if (importId) {
@@ -3691,6 +3693,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         if (updatedImport) {
           state.imports = state.imports.map((item) => (item.id === updatedImport.id ? updatedImport : item));
           if (!state.imports.find((item) => item.id === updatedImport.id)) state.imports.unshift(updatedImport);
+        } else {
+          state.imports = state.imports.filter((item) => item.id !== importId);
+          if (state.selectedImportId === importId) state.selectedImportId = state.imports[0]?.id || 0;
         }
       } else {
         state.imports = payload.imports || [];
@@ -3700,7 +3705,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
       renderImportList();
       renderImportDetail();
-      setStatus(`已载入 ${state.imports.length} 个 NovelForge 导入批次。`, 'success');
+      setStatus(`已载入 ${state.imports.length} 个待审核的 NovelForge 导入批次。`, 'success');
     };
 
     const publishSelectedImport = async () => {
@@ -3714,7 +3719,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           body: JSON.stringify({ action: 'publish', importId: state.selectedImportId })
         });
         if (payload.import) {
-          state.imports = state.imports.map((item) => (item.id === payload.import.id ? payload.import : item));
+          if (isPendingImportReview(payload.import)) {
+            state.imports = state.imports.map((item) => (item.id === payload.import.id ? payload.import : item));
+          } else {
+            state.imports = state.imports.filter((item) => item.id !== payload.import.id);
+            state.selectedImportId = state.imports[0]?.id || 0;
+          }
         }
         renderImportList();
         renderImportDetail();
@@ -4856,7 +4866,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
       if (name === 'imports') {
         await Promise.all([loadImportReviews(), loadSignalDrafts()]);
-        setStatus(`已载入 ${state.imports.length} 个 NovelForge 导入批次和 ${state.signalDrafts.length} 份待发布简报。`, 'success');
+        setStatus(`已载入 ${state.imports.length} 个待审核的 NovelForge 导入批次和 ${state.signalDrafts.length} 份待发布简报。`, 'success');
       }
       if (name === 'signal') {
         await Promise.all([loadSignalBriefs(), loadSignalAutomation()]);
