@@ -45,14 +45,10 @@ assert.ok(
   workerSource.includes('Linked content entries were kept'),
   'Import review API response should clarify linked content entries were kept.'
 );
-assert.ok(
-  workerSource.includes("url.searchParams.get('review') || 'all'"),
-  'Import list API should expose an explicit review queue filter.'
-);
 assert.match(
   workerSource,
-  /pending_entry\.source_ref = content_imports\.filename[\s\S]*?pending_entry\.status IN \('draft', 'scheduled'\)/,
-  'Pending import review queries should include only batches with unpublished entries.'
+  /buildContentImportListQuery\(\{ importId, importType, limit, review \}\)/,
+  'Import list API should use the tested review query builder.'
 );
 
 console.log('admin import delete tests passed');

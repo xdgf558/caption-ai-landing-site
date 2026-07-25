@@ -62,9 +62,11 @@ assert.match(adminSource, /action: 'approve'/);
 assert.match(adminSource, /已入选并加入本次草稿/);
 assert.match(adminSource, /还需 \$\{remaining\} 条/);
 assert.match(adminSource, /英文来源会自动翻译为繁体中文/);
-assert.match(adminSource, /new URLSearchParams\(\{ type: 'novelforge', review: 'pending', limit: '50' \}\)/);
-assert.match(adminSource, /isPendingImportReview\(payload\.import\)/);
-assert.match(adminSource, /state\.imports = state\.imports\.filter\(\(item\) => item\.id !== payload\.import\.id\)/);
+assert.match(adminSource, /id="import-review-filter"/);
+assert.match(adminSource, /<option value="pending">待处理<\/option>/);
+assert.match(adminSource, /<option value="all">全部记录<\/option>/);
+assert.match(adminSource, /hasPublishableImportEntries\(payload\.import\)/);
+assert.match(adminSource, /removeImportFromReviewState\(payload\.import\.id\)/);
 
 assert.match(stylesSource, /body\.admin-v2-page \{/);
 assert.match(stylesSource, /grid-template-columns: 260px minmax\(0, 1fr\)/);

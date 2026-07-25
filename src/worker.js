@@ -26,6 +26,7 @@ import {
   isDeepSeekApiKeyConfigured,
   normalizeDeepSeekSignalDraftModel
 } from './deepseekSignalDraft.js';
+import { buildContentImportListQuery } from './contentImportReview.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -9572,7 +9573,7 @@ const listEntriesForContentImports = async (db, importRows) => {
     .prepare(
       `SELECT *
        FROM content_entries
-       WHERE source_kind IN ('novelforge', 'signal_brief')
+       WHERE source_kind IN ('novelforge', 'signal_brief', 'signal_automation')
          AND source_ref IN (${placeholders})
        ORDER BY
          source_ref ASC,
@@ -9619,33 +9620,11 @@ const handleAdminListContentImports = async (request, env) => {
   if (!['all', 'pending'].includes(review)) {
     return privateJson({ ok: false, code: 'CONTENT_IMPORT_REVIEW_FILTER_INVALID', message: 'Unsupported import review filter.' }, { status: 400 });
   }
-  const clauses = ['import_type = ?'];
-  const params = [importType];
-  if (importId) {
-    clauses.push('id = ?');
-    params.push(importId);
-  }
-  if (review === 'pending') {
-    clauses.push(
-      `EXISTS (
-         SELECT 1
-         FROM content_entries pending_entry
-         WHERE pending_entry.source_kind = 'novelforge'
-           AND pending_entry.source_ref = content_imports.filename
-           AND pending_entry.status IN ('draft', 'scheduled')
-       )`
-    );
-  }
+  const query = buildContentImportListQuery({ importId, importType, limit, review });
 
   const response = await db
-    .prepare(
-      `SELECT *
-       FROM content_imports
-       WHERE ${clauses.join(' AND ')}
-       ORDER BY updated_at DESC, id DESC
-       LIMIT ?`
-    )
-    .bind(...params, limit)
+    .prepare(query.sql)
+    .bind(...query.params)
     .all();
 
   const importRows = response.results || [];

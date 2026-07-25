@@ -188,6 +188,8 @@ cover_{id}
 
 ## Production Verification
 
+Each import request must use a request ID that is unique within the NovelForge import stream. Migration `0027_content_import_review_indexes.sql` enforces this contract and adds the source lookup index used by the Admin review queue.
+
 1. Configure `NOVELFORGE_PUBLISH_TOKEN` in Cloudflare.
 2. Send a `draft` import request with one project and one chapter.
 3. Confirm the response returns `ok: true`, `remoteBookId`, `previewUrl`, `publishUrl`, and item `remoteId` values.
