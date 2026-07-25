@@ -1,21 +1,21 @@
 {
   "schema_version": 1,
   "channel": "stable",
-  "version": "0.1.27",
-  "build": 27,
+  "version": "0.1.28",
+  "build": 28,
   "minimum_macos_version": "14.0",
-  "published_at": "2026-07-24T07:47:24Z",
-  "title": "猫栈拼音 0.1.27",
+  "published_at": "2026-07-25T14:59:07Z",
+  "title": "猫栈拼音 0.1.28",
   "release_notes": [
-    "偏好设置改为紧凑的一级总览与二级功能页。词库管理、本地 Writer、版本与更新各自独立，后续增加功能不会继续拉长主页面。",
-    "隐私、预测、用户学习、词库导入、Writer、更新检查和重新加载仍沿用原有行为，窗口也继续支持等比例缩放。",
-    "修复升级或残留开发副本可能启动多个输入法服务器、导致间歇性无法输入的问题；只有系统正式安装的猫栈拼音会继续运行。",
-    "启动时会核对已安装输入源的完整标识，正确识别已注册但尚未启用的输入源，不会自动启用输入法。",
-    "macOS Writer V1 可在偏好设置中主动使用本地 AI 进行礼貌改写和中英互译预览，结果只供复制，不会自动替换原文。",
-    "Writer 模型约 1.1 GB，仅在用户主动操作后下载并校验；严格隐私模式会强制停用 Writer，普通拼音输入和 AI Lite 候选排序不受影响。"
+    "新增桌面版白霜拼音一键导入。用户确认 GPL-3.0 许可后，猫栈拼音只从白霜官方 GitHub Release 下载经审核的 1.0.4 词库。",
+    "下载与导入会校验固定版本、精确文件大小和 SHA-256，并拒绝路径穿越、符号链接、异常成员与解压炸弹；失败时保留上一份可用词库。",
+    "白霜词库独立保存在 rime_frost.tsv，可单独启用、停用、更新或清除，不会覆盖内置词库、手动导入词库、雾凇词库或本地学习数据。",
+    "桌面版手动词库容量提高到单个源文件 64 MiB、规范化词库 128 MiB、最多 75 万条；iOS 的原有上限保持不变。",
+    "导入、更新或清除白霜与雾凇词库后，共享输入引擎会按配置变化重建一次，新词库无需重启输入法进程即可生效。",
+    "白霜版本检查现在会明确显示成功或经过清理的错误提示；下载始终从固定官方地址开始，所有跳转必须使用 HTTPS。"
   ],
   "release_page_url": "https://wwwstationcat.org/zh-hans/apps/privatepinyin/download/",
-  "package_url": "https://wwwstationcat.org/downloads/privatepinyin/PrivatePinyin-0.1.27.pkg",
-  "package_sha256": "00eca727600f37476e1676207c0307bf685d4883b3b8f6be63cb6e56216d16bf",
-  "package_size_bytes": 14072621
+  "package_url": "https://wwwstationcat.org/downloads/privatepinyin/PrivatePinyin-0.1.28.pkg",
+  "package_sha256": "778cd5b53565131126c2734acc4771badd48f52d5b275a3ad671b166c4595ea8",
+  "package_size_bytes": 14384057
 }

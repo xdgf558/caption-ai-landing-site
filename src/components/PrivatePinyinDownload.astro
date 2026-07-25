@@ -30,9 +30,12 @@ const copy = {
     metaTitle: '下載檔案',
     releaseNotesTitle: '版本說明',
     releaseNotes: [
-      `macOS ${macVersion} 將偏好設定整理為緊湊的一級總覽，以及詞庫管理、本機 Writer、版本與更新三個二級功能頁。`,
-      '隱私、預測、使用者學習、詞庫匯入、Writer、更新檢查與重新載入仍沿用原有行為，視窗也繼續支援等比例縮放。',
-      '保留 0.1.26 的輸入伺服器競爭修復與已註冊輸入源識別，Writer V1 和嚴格隱私保護也繼續提供。',
+      `macOS ${macVersion} 新增桌面版白霜拼音一鍵匯入；確認 GPL-3.0 授權後，只會從白霜官方 GitHub Release 下載經審核的 1.0.4 詞庫。`,
+      '下載與匯入會校驗固定版本、精確檔案大小與 SHA-256，並拒絕路徑穿越、符號連結、異常成員與解壓縮炸彈；失敗時保留上一份可用詞庫。',
+      '白霜詞庫獨立儲存在 rime_frost.tsv，可單獨啟用、停用、更新或清除，不會覆蓋內建詞庫、手動匯入詞庫、霧凇詞庫或本機學習資料。',
+      '桌面版手動詞庫上限提高到單一來源檔案 64 MiB、正規化詞庫 128 MiB、最多 75 萬條；iOS 原有限制維持不變。',
+      '匯入、更新或清除白霜與霧凇詞庫後，共享輸入引擎會依設定變化重建一次，新詞庫不必重啟輸入法程序即可生效。',
+      '白霜版本檢查會明確顯示成功或經過清理的錯誤提示；下載固定從官方地址開始，所有重新導向都必須使用 HTTPS。',
       `Windows 內測版仍為 ${windowsVersion}，下載與功能說明維持不變。`,
       'macOS 安裝包已完成 Developer ID 簽名、Apple 公證與 stapling。'
     ],
@@ -57,9 +60,12 @@ const copy = {
     metaTitle: '下载文件',
     releaseNotesTitle: '版本说明',
     releaseNotes: [
-      `macOS ${macVersion} 将偏好设置整理为紧凑的一级总览，以及词库管理、本地 Writer、版本与更新三个二级功能页。`,
-      '隐私、预测、用户学习、词库导入、Writer、更新检查与重新加载仍沿用原有行为，窗口也继续支持等比例缩放。',
-      '保留 0.1.26 的输入服务器竞争修复与已注册输入源识别，Writer V1 和严格隐私保护也继续提供。',
+      `macOS ${macVersion} 新增桌面版白霜拼音一键导入；确认 GPL-3.0 许可后，只会从白霜官方 GitHub Release 下载经审核的 1.0.4 词库。`,
+      '下载与导入会校验固定版本、精确文件大小和 SHA-256，并拒绝路径穿越、符号链接、异常成员与解压炸弹；失败时保留上一份可用词库。',
+      '白霜词库独立保存在 rime_frost.tsv，可单独启用、停用、更新或清除，不会覆盖内置词库、手动导入词库、雾凇词库或本地学习数据。',
+      '桌面版手动词库上限提高到单个源文件 64 MiB、规范化词库 128 MiB、最多 75 万条；iOS 原有限制保持不变。',
+      '导入、更新或清除白霜与雾凇词库后，共享输入引擎会按配置变化重建一次，新词库无需重启输入法进程即可生效。',
+      '白霜版本检查会明确显示成功或经过清理的错误提示；下载固定从官方地址开始，所有跳转都必须使用 HTTPS。',
       `Windows 内测版仍为 ${windowsVersion}，下载与功能说明保持不变。`,
       'macOS 安装包已完成 Developer ID 签名、Apple 公证与 stapling。'
     ],
@@ -84,9 +90,12 @@ const copy = {
     metaTitle: 'Download files',
     releaseNotesTitle: 'Release notes',
     releaseNotes: [
-      `macOS ${macVersion} reorganizes preferences into a compact overview with dedicated pages for lexicon management, local Writer, and version and update controls.`,
-      'Privacy, prediction, user learning, lexicon import, Writer, update checks, reload behavior, and proportional window resizing remain unchanged.',
-      'The 0.1.26 input-server ownership and registered-source fixes remain in place, together with Writer V1 and strict privacy protections.',
+      `macOS ${macVersion} adds one-click Rime Frost import. After accepting the GPL-3.0 license, the app downloads only the reviewed 1.0.4 lexicon from the official Rime Frost GitHub Release.`,
+      'Downloads and imports verify the pinned version, exact file size, and SHA-256, while rejecting path traversal, symlinks, malformed members, and decompression bombs. A failed import keeps the last working lexicon.',
+      'Rime Frost is stored separately as rime_frost.tsv and can be enabled, disabled, updated, or cleared without replacing built-in, manual, Rime Ice, or local learning data.',
+      'Desktop manual-import limits are now 64 MiB per source file, 128 MiB for the normalized lexicon, and 750,000 entries. Existing iOS limits are unchanged.',
+      'Importing, updating, or clearing Rime Frost or Rime Ice rebuilds the shared input engine once when configuration changes, so the new lexicon works without restarting the input method process.',
+      'Rime Frost version checks now show a clear success state or sanitized error. Downloads always begin at the pinned official address and every redirect must use HTTPS.',
       `The Windows internal test build remains ${windowsVersion}; its download and feature information are unchanged.`,
       'The macOS installer is Developer ID signed, Apple notarized, and stapled.'
     ],
@@ -111,9 +120,12 @@ const copy = {
     metaTitle: 'ダウンロードファイル',
     releaseNotesTitle: 'バージョン情報',
     releaseNotes: [
-      `macOS ${macVersion} は環境設定をコンパクトな概要と、辞書管理、ローカル Writer、バージョンと更新の専用ページに整理しました。`,
-      'プライバシー、予測、ユーザー学習、辞書読み込み、Writer、更新確認、再読み込み、ウィンドウの縦横比を保った拡大縮小は従来どおりです。',
-      '0.1.26 の入力サーバー競合と登録済み入力ソースの修正を維持し、Writer V1 と厳格プライバシー保護も引き続き利用できます。',
+      `macOS ${macVersion} は白霜拼音のワンクリック取り込みに対応しました。GPL-3.0 ライセンスへの同意後、公式 GitHub Release から審査済みの 1.0.4 辞書だけをダウンロードします。`,
+      'ダウンロードと取り込みでは固定バージョン、正確なファイルサイズ、SHA-256 を検証し、パストラバーサル、シンボリックリンク、異常なメンバー、展開爆弾を拒否します。失敗しても直前の有効な辞書を維持します。',
+      '白霜辞書は rime_frost.tsv として独立保存され、内蔵辞書、手動取り込み辞書、霧凇辞書、ローカル学習データを上書きせずに、有効化、無効化、更新、削除できます。',
+      'デスクトップ版の手動辞書上限を、ソースファイル 64 MiB、正規化辞書 128 MiB、最大 75 万件に拡大しました。iOS の従来上限は変更していません。',
+      '白霜または霧凇辞書の取り込み、更新、削除後は、設定変更時に共有入力エンジンを一度だけ再構築し、入力メソッドを再起動せずに反映します。',
+      '白霜のバージョン確認は成功状態または整理済みのエラーを明示します。ダウンロードは固定された公式 URL から開始し、リダイレクト先も HTTPS に限定します。',
       `Windows 内部テスト版は ${windowsVersion} のままで、ダウンロードと機能説明に変更はありません。`,
       'macOS インストーラーは Developer ID 署名、Apple 公証、stapling を完了しています。'
     ],
