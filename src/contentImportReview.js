@@ -1,4 +1,4 @@
-const terminalContentImportStatuses = ['completed', 'completed_with_warnings', 'reviewed'];
+const terminalContentImportStatuses = ['completed', 'completed_with_warnings'];
 
 export const contentImportSourceKinds = (importType) =>
   importType === 'signal_brief' ? ['signal_brief', 'signal_automation'] : [importType];

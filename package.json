@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "build:novel-payment-config": "node scripts/build-novel-payment-config.mjs",
     "upload:protected-serial-content": "node scripts/upload-protected-serial-content.mjs",

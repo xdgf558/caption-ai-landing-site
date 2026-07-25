@@ -3728,10 +3728,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       renderImportList();
       renderImportDetail();
       if (importId) {
-        setStatus(
-          updatedImport ? `已刷新 NovelForge 导入批次 #${importId}。` : `批次 #${importId} 已不在当前筛选结果中。`,
-          'success'
-        );
+        if (updatedImport) {
+          setStatus(`已刷新 NovelForge 导入批次 #${importId}。`, 'success');
+        } else {
+          setStatus(`批次 #${importId} 已不在当前筛选结果中。`);
+        }
       } else {
         setStatus(
           review === 'all'
@@ -3786,8 +3787,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           body: JSON.stringify({ action: 'delete', importId: state.selectedImportId })
         });
         const deletedImportId = payload.deletedImportId || state.selectedImportId;
-        state.imports = state.imports.filter((entry) => entry.id !== deletedImportId);
-        state.selectedImportId = state.imports[0]?.id || 0;
+        removeImportFromReviewState(deletedImportId);
         renderImportList();
         renderImportDetail();
         await loadAuditLogs();

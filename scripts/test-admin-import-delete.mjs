@@ -22,7 +22,11 @@ assert.ok(
 );
 assert.ok(
   adminSource.includes('state.imports = state.imports.filter'),
-  'Admin delete handler should remove the deleted import record from the visible list.'
+  'Admin review state helper should remove an import record from the visible list.'
+);
+assert.ok(
+  adminSource.includes('removeImportFromReviewState(deletedImportId)'),
+  'Admin delete handler should preserve adjacent selection through the shared review state helper.'
 );
 
 assert.ok(
@@ -49,6 +53,11 @@ assert.match(
   workerSource,
   /buildContentImportListQuery\(\{ importId, importType, limit, review \}\)/,
   'Import list API should use the tested review query builder.'
+);
+assert.match(
+  workerSource,
+  /contentImportSourceKinds\(cleanText\(row\.import_type, 40\)\.toLowerCase\(\)\)/,
+  'Linked entry loading should share the import-to-source-kind mapping with the review query.'
 );
 
 console.log('admin import delete tests passed');

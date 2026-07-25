@@ -82,16 +82,26 @@ assert.deepEqual(
   'Signal review should match both manual and automated source kinds.'
 );
 
-assert.throws(
+assert.doesNotThrow(
   () => insertImport.run(8, 'novelforge', 'novel-published', 'processing', '2026-07-26 08:00:00'),
-  /UNIQUE constraint failed/,
-  'Import request IDs should be unique within each import type.'
+  'Import retries should remain valid history records when they reuse a request ID.'
 );
 
 const contentEntryIndexes = db.prepare(`PRAGMA index_list('content_entries')`).all();
 assert.ok(
   contentEntryIndexes.some((index) => index.name === 'idx_content_entries_source'),
   'The source lookup index should be installed.'
+);
+
+const contentImportIndexes = db.prepare(`PRAGMA index_list('content_imports')`).all();
+const contentImportLookupIndex = contentImportIndexes.find(
+  (index) => index.name === 'idx_content_imports_type_filename'
+);
+assert.ok(contentImportLookupIndex, 'The import lookup index should be installed.');
+assert.equal(
+  contentImportLookupIndex.unique,
+  0,
+  'The import lookup index must not reject retry records with a reused request ID.'
 );
 
 console.log('content import review query and migration tests passed');

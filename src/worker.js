@@ -26,7 +26,7 @@ import {
   isDeepSeekApiKeyConfigured,
   normalizeDeepSeekSignalDraftModel
 } from './deepseekSignalDraft.js';
-import { buildContentImportListQuery } from './contentImportReview.js';
+import { buildContentImportListQuery, contentImportSourceKinds } from './contentImportReview.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -9566,15 +9566,23 @@ const contentImportToJson = (row, entries = [], origin = '') => {
 
 const listEntriesForContentImports = async (db, importRows) => {
   const refs = [...new Set(importRows.map((row) => cleanText(row.filename, 240)).filter(Boolean))];
-  if (!refs.length) return new Map();
+  const sourceKinds = [
+    ...new Set(
+      importRows.flatMap((row) =>
+        contentImportSourceKinds(cleanText(row.import_type, 40).toLowerCase())
+      )
+    )
+  ].filter(Boolean);
+  if (!refs.length || !sourceKinds.length) return new Map();
 
-  const placeholders = refs.map(() => '?').join(', ');
+  const sourceKindPlaceholders = sourceKinds.map(() => '?').join(', ');
+  const refPlaceholders = refs.map(() => '?').join(', ');
   const response = await db
     .prepare(
       `SELECT *
        FROM content_entries
-       WHERE source_kind IN ('novelforge', 'signal_brief', 'signal_automation')
-         AND source_ref IN (${placeholders})
+       WHERE source_kind IN (${sourceKindPlaceholders})
+         AND source_ref IN (${refPlaceholders})
        ORDER BY
          source_ref ASC,
          CASE entry_type
@@ -9586,7 +9594,7 @@ const listEntriesForContentImports = async (db, importRows) => {
          updated_at DESC,
          id ASC`
     )
-    .bind(...refs)
+    .bind(...sourceKinds, ...refs)
     .all();
 
   const byRef = new Map(refs.map((ref) => [ref, []]));

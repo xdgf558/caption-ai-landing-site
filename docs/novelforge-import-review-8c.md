@@ -32,4 +32,4 @@ Stage 8C adds an Admin 2.0 review flow for content pushed from NovelForge.
 - Pricing is still controlled by Admin 2.0 content pricing fields and the global pricing template.
 - Review publishing intentionally does not apply NovelForge pricing suggestions.
 - The old GitHub-token Markdown admin path remains deprecated for routine authoring.
-- Apply `migrations/0027_content_import_review_indexes.sql` before deploying the pending-review filter. It indexes content source lookups and enforces unique import request IDs per import type.
+- Apply `migrations/0027_content_import_review_indexes.sql` before deploying the pending-review filter. It adds non-unique content source and import lookup indexes while preserving retry records that reuse a request ID.
