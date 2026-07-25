@@ -161,6 +161,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="imports-sidebar" hidden>
+          <div class="admin-v2-filter-grid admin-v2-filter-grid--single">
+            <label>
+              NovelForge 记录
+              <select id="import-review-filter">
+                <option value="pending">待处理</option>
+                <option value="all">全部记录</option>
+              </select>
+            </label>
+          </div>
           <div class="button-row">
             <button class="button button-primary" id="imports-refresh" type="button">刷新审核</button>
           </div>
@@ -1241,6 +1250,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       revisionList: $('#revision-list'),
       importsList: $('#imports-list'),
       importDetail: $('#import-detail'),
+      importReviewFilter: $('#import-review-filter'),
       signalList: $('#signal-list'),
       signalForm: $('#signal-form'),
       signalOpenPage: $('#signal-open-page'),
@@ -3596,8 +3606,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const renderImportList = () => {
       if (!state.imports.length) {
-        renderEmpty(elements.importsList, '暂无 NovelForge 导入记录。');
-        elements.importDetail.innerHTML = '<p class="admin-empty-list">NovelForge 软件导入后，这里会出现可审核批次。</p>';
+        const showingAll = elements.importReviewFilter.value === 'all';
+        renderEmpty(elements.importsList, showingAll ? '暂无 NovelForge 导入记录。' : '暂无待处理的 NovelForge 导入批次。');
+        elements.importDetail.innerHTML = showingAll
+          ? '<p class="admin-empty-list">NovelForge 软件导入后，这里会保留可查看的批次记录。</p>'
+          : '<p class="admin-empty-list">正在处理、导入失败或仍有草稿的批次会显示在这里；全部发布后会自动移出待处理队列。</p>';
         return;
       }
 
@@ -3630,7 +3643,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const entries = item.entries || [];
       const warnings = item.warnings || [];
       const errors = item.errors || [];
-      const canPublish = (item.summary?.draftCount || 0) > 0;
+      const canPublish = hasPublishableImportEntries(item);
       elements.importDetail.innerHTML = `
         <div class="admin-v2-section-heading">
           <div>
@@ -3682,15 +3695,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
     };
 
+    const hasPublishableImportEntries = (item) => (item?.summary?.draftCount || 0) > 0;
+
+    const removeImportFromReviewState = (importId) => {
+      const removedIndex = state.imports.findIndex((item) => item.id === importId);
+      state.imports = state.imports.filter((item) => item.id !== importId);
+      if (state.selectedImportId !== importId) return;
+      const nextIndex = Math.min(Math.max(removedIndex, 0), state.imports.length - 1);
+      state.selectedImportId = state.imports[nextIndex]?.id || 0;
+    };
+
     const loadImportReviews = async ({ importId = 0 } = {}) => {
-      const params = new URLSearchParams({ type: 'novelforge', limit: '50' });
+      const review = elements.importReviewFilter.value === 'all' ? 'all' : 'pending';
+      const params = new URLSearchParams({ type: 'novelforge', review, limit: '50' });
       if (importId) params.set('id', String(importId));
       const payload = await apiJson(`/admin/api/content/imports?${params.toString()}`);
+      let updatedImport = null;
       if (importId) {
-        const [updatedImport] = payload.imports || [];
+        [updatedImport] = payload.imports || [];
         if (updatedImport) {
           state.imports = state.imports.map((item) => (item.id === updatedImport.id ? updatedImport : item));
           if (!state.imports.find((item) => item.id === updatedImport.id)) state.imports.unshift(updatedImport);
+        } else {
+          removeImportFromReviewState(importId);
         }
       } else {
         state.imports = payload.imports || [];
@@ -3700,7 +3727,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
       renderImportList();
       renderImportDetail();
-      setStatus(`已载入 ${state.imports.length} 个 NovelForge 导入批次。`, 'success');
+      if (importId) {
+        if (updatedImport) {
+          setStatus(`已刷新 NovelForge 导入批次 #${importId}。`, 'success');
+        } else {
+          setStatus(`批次 #${importId} 已不在当前筛选结果中。`);
+        }
+      } else {
+        setStatus(
+          review === 'all'
+            ? `已载入 ${state.imports.length} 个 NovelForge 导入记录。`
+            : `已载入 ${state.imports.length} 个待处理的 NovelForge 导入批次。`,
+          'success'
+        );
+      }
     };
 
     const publishSelectedImport = async () => {
@@ -3714,7 +3754,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           body: JSON.stringify({ action: 'publish', importId: state.selectedImportId })
         });
         if (payload.import) {
-          state.imports = state.imports.map((item) => (item.id === payload.import.id ? payload.import : item));
+          if (elements.importReviewFilter.value === 'all' || hasPublishableImportEntries(payload.import)) {
+            state.imports = state.imports.map((item) => (item.id === payload.import.id ? payload.import : item));
+          } else {
+            removeImportFromReviewState(payload.import.id);
+          }
         }
         renderImportList();
         renderImportDetail();
@@ -3743,8 +3787,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           body: JSON.stringify({ action: 'delete', importId: state.selectedImportId })
         });
         const deletedImportId = payload.deletedImportId || state.selectedImportId;
-        state.imports = state.imports.filter((entry) => entry.id !== deletedImportId);
-        state.selectedImportId = state.imports[0]?.id || 0;
+        removeImportFromReviewState(deletedImportId);
         renderImportList();
         renderImportDetail();
         await loadAuditLogs();
@@ -4856,7 +4899,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
       if (name === 'imports') {
         await Promise.all([loadImportReviews(), loadSignalDrafts()]);
-        setStatus(`已载入 ${state.imports.length} 个 NovelForge 导入批次和 ${state.signalDrafts.length} 份待发布简报。`, 'success');
+        const importSummary = elements.importReviewFilter.value === 'all'
+          ? `${state.imports.length} 个 NovelForge 导入记录`
+          : `${state.imports.length} 个待处理的 NovelForge 导入批次`;
+        setStatus(`已载入 ${importSummary}和 ${state.signalDrafts.length} 份待发布简报。`, 'success');
       }
       if (name === 'signal') {
         await Promise.all([loadSignalBriefs(), loadSignalAutomation()]);
@@ -4892,6 +4938,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     elements.accessForm.addEventListener('submit', grantEntitlement);
     $('#content-refresh').addEventListener('click', () => loadEntries({ autoSelect: true }));
     $('#imports-refresh').addEventListener('click', () => Promise.all([loadImportReviews(), refreshSignalApprovals()]));
+    elements.importReviewFilter.addEventListener('change', () => loadImportReviews());
     $('#signal-refresh').addEventListener('click', () => Promise.all([loadSignalBriefs(), refreshSignalDrafts()]));
     $('#signal-reset').addEventListener('click', resetSignalForm);
     $('#signal-automation-refresh').addEventListener('click', loadSignalAutomation);

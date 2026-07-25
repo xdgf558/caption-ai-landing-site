@@ -188,6 +188,8 @@ cover_{id}
 
 ## Production Verification
 
+Repeated request IDs remain valid retry and history records. Migration `0027_content_import_review_indexes.sql` adds non-unique import and source lookup indexes for the Admin review queue without changing that retry behavior.
+
 1. Configure `NOVELFORGE_PUBLISH_TOKEN` in Cloudflare.
 2. Send a `draft` import request with one project and one chapter.
 3. Confirm the response returns `ok: true`, `remoteBookId`, `previewUrl`, `publishUrl`, and item `remoteId` values.

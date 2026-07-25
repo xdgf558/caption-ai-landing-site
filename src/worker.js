@@ -26,6 +26,7 @@ import {
   isDeepSeekApiKeyConfigured,
   normalizeDeepSeekSignalDraftModel
 } from './deepseekSignalDraft.js';
+import { buildContentImportListQuery, contentImportSourceKinds } from './contentImportReview.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -9565,15 +9566,23 @@ const contentImportToJson = (row, entries = [], origin = '') => {
 
 const listEntriesForContentImports = async (db, importRows) => {
   const refs = [...new Set(importRows.map((row) => cleanText(row.filename, 240)).filter(Boolean))];
-  if (!refs.length) return new Map();
+  const sourceKinds = [
+    ...new Set(
+      importRows.flatMap((row) =>
+        contentImportSourceKinds(cleanText(row.import_type, 40).toLowerCase())
+      )
+    )
+  ].filter(Boolean);
+  if (!refs.length || !sourceKinds.length) return new Map();
 
-  const placeholders = refs.map(() => '?').join(', ');
+  const sourceKindPlaceholders = sourceKinds.map(() => '?').join(', ');
+  const refPlaceholders = refs.map(() => '?').join(', ');
   const response = await db
     .prepare(
       `SELECT *
        FROM content_entries
-       WHERE source_kind IN ('novelforge', 'signal_brief')
-         AND source_ref IN (${placeholders})
+       WHERE source_kind IN (${sourceKindPlaceholders})
+         AND source_ref IN (${refPlaceholders})
        ORDER BY
          source_ref ASC,
          CASE entry_type
@@ -9585,7 +9594,7 @@ const listEntriesForContentImports = async (db, importRows) => {
          updated_at DESC,
          id ASC`
     )
-    .bind(...refs)
+    .bind(...sourceKinds, ...refs)
     .all();
 
   const byRef = new Map(refs.map((ref) => [ref, []]));
@@ -9615,22 +9624,15 @@ const handleAdminListContentImports = async (request, env) => {
   }
   const importId = normalizePositiveInteger(url.searchParams.get('id'), 0);
   const limit = Math.min(Math.max(normalizePositiveInteger(url.searchParams.get('limit'), 30), 1), 80);
-  const clauses = ['import_type = ?'];
-  const params = [importType];
-  if (importId) {
-    clauses.push('id = ?');
-    params.push(importId);
+  const review = cleanText(url.searchParams.get('review') || 'all', 20).toLowerCase();
+  if (!['all', 'pending'].includes(review)) {
+    return privateJson({ ok: false, code: 'CONTENT_IMPORT_REVIEW_FILTER_INVALID', message: 'Unsupported import review filter.' }, { status: 400 });
   }
+  const query = buildContentImportListQuery({ importId, importType, limit, review });
 
   const response = await db
-    .prepare(
-      `SELECT *
-       FROM content_imports
-       WHERE ${clauses.join(' AND ')}
-       ORDER BY updated_at DESC, id DESC
-       LIMIT ?`
-    )
-    .bind(...params, limit)
+    .prepare(query.sql)
+    .bind(...query.params)
     .all();
 
   const importRows = response.results || [];
