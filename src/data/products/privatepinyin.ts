@@ -3,7 +3,7 @@ export const privatePinyinProduct = {
   slug: 'privatepinyin',
   name: '猫栈拼音',
   latestVersion: '0.1.28',
-  releaseDate: '2026-07-25',
+  releaseDate: '2026-07-27',
   downloads: [
     {
       id: 'macos-pkg',
@@ -21,14 +21,14 @@ export const privatePinyinProduct = {
     {
       id: 'windows-exe',
       label: 'Windows EXE installer',
-      version: '0.1.23',
+      version: '0.1.24',
       platform: 'Windows',
       architecture: 'x64 / x86 TSF',
       minimumSystem: 'Windows 10 / 11',
-      fileSize: '4.1 MB',
-      sha256: '8ed9510556d14a7744547355881f3cfcfa8b58e5e36db0150ac298cf26f5fa7c',
-      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.23-setup.exe',
-      r2ObjectKey: 'privatepinyin/0.1.23/PrivatePinyin-0.1.23-setup.exe',
+      fileSize: '13.4 MB',
+      sha256: '1252f8d00888be0cb2b0f25aaa5d4bdc357a441b94ffa183a76112851668be62',
+      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.24-setup.exe',
+      r2ObjectKey: 'privatepinyin/0.1.24/PrivatePinyin-0.1.24-setup.exe',
       channel: 'internal-test'
     }
   ],
