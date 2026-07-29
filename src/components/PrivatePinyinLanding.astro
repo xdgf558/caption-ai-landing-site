@@ -35,7 +35,7 @@ const copy = {
     features: [
       ['本機中文輸入', '先把日常拼音輸入跑順，候選詞、標點和打字手感會持續調整。'],
       [`macOS ${macVersion}`, '新增全鍵盤拼音智能糾錯與可選的寬容拼音，穩定空格首選、溫和學習和盲打數字鍵行為。'],
-      [`Windows ${windowsVersion} 內測`, '新增全鍵盤拼音智能糾錯、白霜拼音 1.0.4 安全匯入與本機 AI Lite 候選重排序，並包含 x64 / x86 TSF 元件。'],
+      [`Windows ${windowsVersion} 內測`, '穩定空格首選，加入可選的寬容拼音與溫和學習；並修正預測狀態數字輸入、含空格使用者路徑及下載 TLS 相容性。'],
       ['iOS 外部測試', 'iPhone 與 iPad 使用者可透過 TestFlight 加入外部測試，協助驗證行動端鍵盤、候選詞和輸入流程。'],
       ['本機與隱私優先', 'Writer 模型按需下載並校驗，透過獨立簽名的 Helper 在本機運行；嚴格隱私模式會停用並取消 Writer。'],
       ['小而清楚的下載入口', '安裝包、版本、大小和 SHA-256 都集中在下載頁，方便確認來源。']
@@ -66,7 +66,7 @@ const copy = {
     features: [
       ['本机中文输入', '先把日常拼音输入跑顺，候选词、标点和打字手感会持续调整。'],
       [`macOS ${macVersion}`, '新增全键盘拼音智能纠错与可选的宽容拼音，稳定空格首选、温和学习和盲打数字键行为。'],
-      [`Windows ${windowsVersion} 内测`, '新增全键盘拼音智能纠错、白霜拼音 1.0.4 安全导入与本地 AI Lite 候选重排序，并包含 x64 / x86 TSF 组件。'],
+      [`Windows ${windowsVersion} 内测`, '稳定空格首选，加入可选的宽容拼音与温和学习；并修复预测状态数字输入、含空格用户路径及下载 TLS 兼容性。'],
       ['iOS 外部测试', 'iPhone 和 iPad 用户可通过 TestFlight 加入外部测试，帮助验证移动端键盘、候选词和输入流程。'],
       ['本地与隐私优先', 'Writer 模型按需下载并校验，通过独立签名的 Helper 在本地运行；严格隐私模式会停用并取消 Writer。'],
       ['小而清楚的下载入口', '安装包、版本、大小和 SHA-256 都集中在下载页，方便确认来源。']
@@ -97,7 +97,7 @@ const copy = {
     features: [
       ['Local Chinese typing', 'The focus is making daily pinyin input feel steady, with candidates, punctuation, and typing flow improving over time.'],
       [`macOS ${macVersion}`, 'Adds bounded full-key typo correction and opt-in tolerant pinyin, with a stable Space-key default, gentle learning, and prediction-safe blind-typing digits.'],
-      [`Windows ${windowsVersion} internal test`, 'Adds bounded full-keyboard typo correction, reviewed Rime Frost 1.0.4 import, and local AI Lite candidate reranking, including both x64 and x86 TSF components.'],
+      [`Windows ${windowsVersion} internal test`, 'Stabilizes the Space-key default, adds opt-in tolerant pinyin and gentle learning, and fixes prediction-only digits, user paths containing spaces, and download TLS compatibility.'],
       ['iOS external test', 'iPhone and iPad users can join through TestFlight to help validate the mobile keyboard, candidates, and typing flow.'],
       ['Local and privacy-first', 'The Writer model is downloaded and verified on demand, then runs locally through a separately signed Helper. Strict privacy mode disables and cancels Writer.'],
       ['Clear download trail', 'The installer, version, size, and SHA-256 checksum are kept together on the download page.']
@@ -128,7 +128,7 @@ const copy = {
     features: [
       ['ローカル中国語入力', '日常的なピンイン入力、候補、句読点、入力感を整えていきます。'],
       [`macOS ${macVersion}`, '全キーボードの入力訂正と任意の曖昧ピンインを追加し、Space キーの先頭候補、穏やかな学習、予測中の数字入力を安定させました。'],
-      [`Windows ${windowsVersion} 内部テスト`, '全キーボードの入力訂正、検証済み白霜拼音 1.0.4 の取り込み、ローカル AI Lite 候補並べ替えを追加し、x64 / x86 TSF コンポーネントを収録しました。'],
+      [`Windows ${windowsVersion} 内部テスト`, 'Space キーの先頭候補を安定させ、任意の曖昧ピンインと穏やかな学習を追加し、予測中の数字入力、空白を含むユーザーパス、ダウンロード TLS の互換性を修正しました。'],
       ['iOS 外部テスト', 'iPhone と iPad から TestFlight に参加し、モバイルキーボード、候補、入力フローの検証に協力できます。'],
       ['ローカル処理とプライバシー', 'Writer モデルは必要時にダウンロードして検証し、署名済みの独立 Helper でローカル実行します。厳格プライバシーモードでは Writer を停止します。'],
       ['わかりやすい配布情報', 'インストーラー、バージョン、サイズ、SHA-256 をダウンロードページにまとめています。']

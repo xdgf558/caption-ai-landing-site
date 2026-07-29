@@ -21,14 +21,14 @@ export const privatePinyinProduct = {
     {
       id: 'windows-exe',
       label: 'Windows EXE installer',
-      version: '0.1.24',
+      version: '0.1.25',
       platform: 'Windows',
       architecture: 'x64 / x86 TSF',
       minimumSystem: 'Windows 10 / 11',
-      fileSize: '13.4 MB',
-      sha256: '1252f8d00888be0cb2b0f25aaa5d4bdc357a441b94ffa183a76112851668be62',
-      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.24-setup.exe',
-      r2ObjectKey: 'privatepinyin/0.1.24/PrivatePinyin-0.1.24-setup.exe',
+      fileSize: '12.8 MB',
+      sha256: 'f819de9a17ad319ce3abf5f8551b674278e3e90709167cb457e73932fff41600',
+      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.25-setup.exe',
+      r2ObjectKey: 'privatepinyin/0.1.25/PrivatePinyin-0.1.25-setup.exe',
       channel: 'internal-test'
     }
   ],
