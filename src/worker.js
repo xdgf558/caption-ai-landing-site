@@ -19032,6 +19032,12 @@ const handleDynamicFrontendContent = async (request, env) => {
 };
 
 const downloadFiles = {
+  '/downloads/novelforge-ai/NovelForge-AI-0.1.110-mac-arm64.pkg': {
+    key: 'novelforge-ai/0.1.110/NovelForge-AI-0.1.110-mac-arm64.pkg',
+    filename: 'NovelForge-AI-0.1.110-mac-arm64.pkg',
+    contentType: 'application/octet-stream',
+    limitKey: 'novelforge-ai-0.1.110-mac-arm64-pkg'
+  },
   '/downloads/privatepinyin/PrivatePinyin-0.1.29.pkg': {
     key: 'privatepinyin/0.1.29/PrivatePinyin-0.1.29.pkg',
     filename: 'PrivatePinyin-0.1.29.pkg',

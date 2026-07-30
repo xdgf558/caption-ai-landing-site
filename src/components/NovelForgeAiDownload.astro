@@ -1,0 +1,256 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { novelForgeAiProduct } from '../data/products/novelforge-ai';
+
+interface Props {
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+}
+
+const { lang = 'zh-Hant' } = Astro.props;
+const download = novelForgeAiProduct.downloads[0];
+const version = novelForgeAiProduct.latestVersion;
+
+const copy = {
+  'zh-Hant': {
+    title: `下載 NovelForge AI ${version}`,
+    description: `下載 NovelForge AI ${version} macOS Apple Silicon 測試版，查看版本說明、安裝資訊與 SHA-256。`,
+    kicker: 'Download',
+    headline: `下載 NovelForge AI ${version}。`,
+    intro:
+      '目前提供 Apple Silicon Mac 的 PKG 公開測試版。安裝包已完成 Developer ID 簽名、Apple 公證與 stapling，並通過 macOS Gatekeeper 安裝檢查。',
+    downloadButton: '下載 macOS PKG',
+    back: '返回產品頁',
+    packageTitle: '安裝包資訊',
+    checksum: 'SHA-256',
+    releaseTitle: `${version} 版本說明`,
+    releaseNotes: [
+      '長篇、短故事與系列統一使用緊湊的深色工作台，並按準備、寫作、審校和發布階段組織工具。',
+      '新增專案切換、命令搜尋、專案級審核通知、唯讀 AI 執行台，以及適合窄視窗的抽屜與專注模式。',
+      '重新整理專案庫、系列庫、創作台與章節工作區，保留 AI 輸出先審核、再寫入正式故事記憶的邊界。'
+    ],
+    installTitle: '安裝、資料與更新',
+    installNotes: [
+      '下載後打開 PKG，應用會安裝到 /Applications/NovelForge AI.app。',
+      '升級前建議備份 ~/Library/Application Support/NovelForge AI/；資料庫、設定和本機備份都位於這個使用者資料目錄。',
+      '目前沒有自動更新 feed。新版本請回到此頁手動下載並安裝，既有本機資料不會因覆蓋應用程式而主動刪除。',
+      '本機優先不代表完全離線：執行 AI、語音或發布任務時，必要上下文會傳送到你主動配置的服務商。'
+    ],
+    trustTitle: '發布驗證',
+    trustNotes: [
+      'Developer ID Installer：HAO YE (Y35K7AQ974)',
+      'Apple 公證：已通過並 stapled',
+      'Gatekeeper：accepted / Notarized Developer ID',
+      '架構：Apple Silicon（arm64）'
+    ],
+    licenseNote: '程式碼倉庫可公開查看，但目前不是以開源授權發布；使用與再分發請以倉庫授權聲明為準。'
+  },
+  'zh-Hans': {
+    title: `下载 NovelForge AI ${version}`,
+    description: `下载 NovelForge AI ${version} macOS Apple Silicon 测试版，查看版本说明、安装信息与 SHA-256。`,
+    kicker: 'Download',
+    headline: `下载 NovelForge AI ${version}。`,
+    intro:
+      '目前提供 Apple Silicon Mac 的 PKG 公开测试版。安装包已完成 Developer ID 签名、Apple 公证与 stapling，并通过 macOS Gatekeeper 安装检查。',
+    downloadButton: '下载 macOS PKG',
+    back: '返回产品页',
+    packageTitle: '安装包信息',
+    checksum: 'SHA-256',
+    releaseTitle: `${version} 版本说明`,
+    releaseNotes: [
+      '长篇、短故事与系列统一使用紧凑的深色工作台，并按准备、写作、审校和发布阶段组织工具。',
+      '新增项目切换、命令搜索、项目级审核通知、只读 AI 运行台，以及适合窄窗口的抽屉与专注模式。',
+      '重新整理项目库、系列库、创作台与章节工作区，保留 AI 输出先审核、再写入正式故事记忆的边界。'
+    ],
+    installTitle: '安装、数据与更新',
+    installNotes: [
+      '下载后打开 PKG，应用会安装到 /Applications/NovelForge AI.app。',
+      '升级前建议备份 ~/Library/Application Support/NovelForge AI/；数据库、设置和本地备份都位于这个用户数据目录。',
+      '目前没有自动更新 feed。新版本请回到此页手动下载并安装，已有本地数据不会因覆盖应用程序而主动删除。',
+      '本地优先不代表完全离线：执行 AI、语音或发布任务时，必要上下文会发送到你主动配置的服务商。'
+    ],
+    trustTitle: '发布验证',
+    trustNotes: [
+      'Developer ID Installer：HAO YE (Y35K7AQ974)',
+      'Apple 公证：已通过并 stapled',
+      'Gatekeeper：accepted / Notarized Developer ID',
+      '架构：Apple Silicon（arm64）'
+    ],
+    licenseNote: '代码仓库可公开查看，但目前不是以开源许可发布；使用与再分发请以仓库许可声明为准。'
+  },
+  en: {
+    title: `Download NovelForge AI ${version}`,
+    description: `Download the NovelForge AI ${version} public test for Apple Silicon Macs and review its release notes, installation details, and SHA-256.`,
+    kicker: 'Download',
+    headline: `Download NovelForge AI ${version}.`,
+    intro:
+      'This public test is provided as a PKG for Apple Silicon Macs. The installer is Developer ID signed, Apple notarized, stapled, and accepted by the macOS Gatekeeper installation check.',
+    downloadButton: 'Download macOS PKG',
+    back: 'Back to product page',
+    packageTitle: 'Installer details',
+    checksum: 'SHA-256',
+    releaseTitle: `${version} release notes`,
+    releaseNotes: [
+      'Long-form projects, short stories, and series now share a compact dark workbench organized around Prepare, Write, Review, and Publish.',
+      'Adds project switching, command search, project-scoped review alerts, a read-only AI run console, and responsive drawers and focus modes.',
+      'Rebuilds the project library, series library, writing desk, and chapter workspace while preserving the review-first boundary for canonical story memory.'
+    ],
+    installTitle: 'Installation, data, and updates',
+    installNotes: [
+      'Open the downloaded PKG to install the app at /Applications/NovelForge AI.app.',
+      'Back up ~/Library/Application Support/NovelForge AI/ before upgrading. The database, settings, and local backups live under this user-data directory.',
+      'There is no auto-update feed yet. Download and install new versions from this page; replacing the app does not intentionally remove existing local data.',
+      'Local-first does not mean fully offline. AI, voice, or publishing tasks send necessary context to providers you explicitly configure.'
+    ],
+    trustTitle: 'Release verification',
+    trustNotes: [
+      'Developer ID Installer: HAO YE (Y35K7AQ974)',
+      'Apple notarization: accepted and stapled',
+      'Gatekeeper: accepted / Notarized Developer ID',
+      'Architecture: Apple Silicon (arm64)'
+    ],
+    licenseNote: 'The code repository is publicly visible, but this release is not offered under an open-source license. Refer to the repository license notice for use and redistribution terms.'
+  },
+  ja: {
+    title: `NovelForge AI ${version} をダウンロード`,
+    description: `NovelForge AI ${version} の Apple Silicon Mac 向けテスト版、更新内容、インストール情報、SHA-256 を確認できます。`,
+    kicker: 'Download',
+    headline: `NovelForge AI ${version} をダウンロード。`,
+    intro:
+      'Apple Silicon Mac 向けの PKG 公開テスト版です。インストーラーは Developer ID 署名、Apple 公証、stapling を完了し、macOS Gatekeeper のインストール確認を通過しています。',
+    downloadButton: 'macOS PKG をダウンロード',
+    back: '製品ページへ戻る',
+    packageTitle: 'インストーラー情報',
+    checksum: 'SHA-256',
+    releaseTitle: `${version} リリースノート`,
+    releaseNotes: [
+      '長編、短編、シリーズを、準備・執筆・校閲・公開の段階で整理するコンパクトなダークワークベンチへ統一しました。',
+      'プロジェクト切り替え、コマンド検索、プロジェクト別の確認通知、読み取り専用 AI 実行コンソール、狭い画面向けドロワーと集中モードを追加しました。',
+      'プロジェクト、シリーズ、執筆、章ワークスペースを再構成し、正式な物語記憶へ反映する前の作者確認を維持します。'
+    ],
+    installTitle: 'インストール、データ、更新',
+    installNotes: [
+      'ダウンロードした PKG を開くと、/Applications/NovelForge AI.app にインストールされます。',
+      '更新前に ~/Library/Application Support/NovelForge AI/ をバックアップしてください。データベース、設定、ローカルバックアップはこのユーザーデータ領域にあります。',
+      '自動更新フィードはまだありません。新しい版はこのページから手動でダウンロードしてインストールしてください。アプリの上書きで既存のローカルデータを意図的に削除することはありません。',
+      'ローカル優先は完全オフラインという意味ではありません。AI、音声、公開タスクでは、必要な文脈を明示的に設定したサービスへ送信します。'
+    ],
+    trustTitle: 'リリース検証',
+    trustNotes: [
+      'Developer ID Installer: HAO YE (Y35K7AQ974)',
+      'Apple 公証: accepted / stapled',
+      'Gatekeeper: accepted / Notarized Developer ID',
+      'アーキテクチャ: Apple Silicon (arm64)'
+    ],
+    licenseNote: 'コードリポジトリは公開されていますが、現在はオープンソースライセンスで提供していません。利用と再配布はリポジトリのライセンス表記に従ってください。'
+  }
+}[lang];
+
+const canonicalPath =
+  lang === 'zh-Hant'
+    ? novelForgeAiProduct.zhHantDownloadPagePath
+    : lang === 'zh-Hans'
+      ? novelForgeAiProduct.zhHansDownloadPagePath
+      : lang === 'ja'
+        ? novelForgeAiProduct.jaDownloadPagePath
+        : novelForgeAiProduct.downloadPagePath;
+const productPath =
+  lang === 'zh-Hant'
+    ? novelForgeAiProduct.zhHantProductPath
+    : lang === 'zh-Hans'
+      ? novelForgeAiProduct.zhHansProductPath
+      : lang === 'ja'
+        ? novelForgeAiProduct.jaProductPath
+        : novelForgeAiProduct.productPath;
+---
+
+<BaseLayout
+  title={copy.title}
+  description={copy.description}
+  lang={lang}
+  canonicalPath={canonicalPath}
+  ogImage={novelForgeAiProduct.assets.icon}
+  bodyClass="station-paper-page radar-page"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: novelForgeAiProduct.zhHantDownloadPagePath },
+    { hrefLang: 'zh-Hans', href: novelForgeAiProduct.zhHansDownloadPagePath },
+    { hrefLang: 'en', href: novelForgeAiProduct.downloadPagePath },
+    { hrefLang: 'ja', href: novelForgeAiProduct.jaDownloadPagePath },
+    { hrefLang: 'x-default', href: novelForgeAiProduct.zhHantDownloadPagePath }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">{copy.kicker}</p>
+    <h1>{copy.headline}</h1>
+    <p>{copy.intro}</p>
+    <div class="button-row">
+      <a class="button button-primary" href={download.downloadPath}>{copy.downloadButton}</a>
+      <a class="button button-secondary" href={productPath}>{copy.back}</a>
+    </div>
+  </section>
+
+  <section class="download-box radar-download-box">
+    <h2>{copy.packageTitle}</h2>
+    <article class="anytls-download-card">
+      <div>
+        <p class="section-kicker">{download.label}</p>
+        <h3>{download.platform} {download.architecture}</h3>
+      </div>
+      <dl class="radar-meta-list">
+        <div>
+          <dt>Version</dt>
+          <dd>{download.version}</dd>
+        </div>
+        <div>
+          <dt>Minimum system</dt>
+          <dd>{download.minimumSystem}</dd>
+        </div>
+        <div>
+          <dt>File size</dt>
+          <dd>{download.fileSize}</dd>
+        </div>
+      </dl>
+      <div class="checksum-block">
+        <strong>{copy.checksum}</strong>
+        <code>{download.sha256}</code>
+      </div>
+      <a class="button button-primary" href={download.downloadPath}>{copy.downloadButton}</a>
+    </article>
+  </section>
+
+  <section class="page-section">
+    <div class="radar-note-panel">
+      <div>
+        <p class="section-kicker">Release notes</p>
+        <h2>{copy.releaseTitle}</h2>
+      </div>
+      <ul>
+        {copy.releaseNotes.map((note) => <li>{note}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="radar-note-panel">
+      <div>
+        <p class="section-kicker">Local data</p>
+        <h2>{copy.installTitle}</h2>
+      </div>
+      <ul>
+        {copy.installNotes.map((note) => <li>{note}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="radar-note-panel">
+      <div>
+        <p class="section-kicker">Trust</p>
+        <h2>{copy.trustTitle}</h2>
+      </div>
+      <ul>
+        {copy.trustNotes.map((note) => <li>{note}</li>)}
+      </ul>
+      <p>{copy.licenseNote}</p>
+    </div>
+  </section>
+</BaseLayout>

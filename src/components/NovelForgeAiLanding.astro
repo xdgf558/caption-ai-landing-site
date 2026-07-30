@@ -1,0 +1,235 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { novelForgeAiProduct } from '../data/products/novelforge-ai';
+
+interface Props {
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+}
+
+const { lang = 'zh-Hant' } = Astro.props;
+const download = novelForgeAiProduct.downloads[0];
+const version = novelForgeAiProduct.latestVersion;
+
+const copy = {
+  'zh-Hant': {
+    title: 'NovelForge AI',
+    eyebrow: 'Local-first AI Writing Workbench',
+    headline: '把長篇與短篇創作，整理成可審閱的工作流。',
+    intro:
+      'NovelForge AI 是本機優先、作者主導的 AI 小說創作工作台，面向長篇連載、獨立短故事與系列短故事。它會整理大綱、角色狀態、時間線、伏筆、章節草稿和 AI 任務，但不會繞過作者審核改寫正式故事記憶。',
+    download: '下載 macOS 版',
+    details: '查看下載資訊',
+    repository: '查看原始碼倉庫',
+    iconAlt: 'NovelForge AI app icon',
+    featuresTitle: '從構思到發布的同一張工作台',
+    features: [
+      ['長篇連載', '管理故事線、章節節拍、草稿、精修、摘要、待審記憶更新與連續性檢查。'],
+      ['短故事與系列', '支援獨立短故事和共享世界觀的系列短篇，保留各自的敘事閉環與跨篇記憶。'],
+      ['結構化故事記憶', '把角色、規則、時間線、伏筆和章節摘要整理為可追蹤資料，而不是散落在聊天記錄裡。'],
+      ['作者審批邊界', 'AI 輸出先進入草稿或待審區；正式設定、故事記憶與發布內容仍由作者確認。'],
+      ['多模型接入', '可連接 OpenAI-compatible API，並為章節草稿、精修等工作配置不同模型路由。'],
+      ['本機資料與備份', 'SQLite 資料庫、作品和生成資產保存在本機，並提供本機備份流程。']
+    ],
+    releaseTitle: `${version} 創作工作台界面重構`,
+    releaseNotes: [
+      '長篇、短故事與系列統一使用緊湊的深色工作台，並按準備、寫作、審校和發布階段組織工具。',
+      '新增專案切換、命令搜尋、專案級審核通知與唯讀 AI 執行台，桌面和窄視窗都能完整操作。',
+      '專案庫、系列庫、創作台和章節工作區已重新排布，AI 輸出審批與正式故事記憶邊界保持不變。',
+      'macOS PKG 已完成 Developer ID 簽名、Apple 公證與 stapling。'
+    ],
+    boundaryTitle: '資料與 AI 邊界',
+    boundaryNotes: [
+      '本機優先不代表完全離線：執行 AI、語音或發布任務時，相關上下文會傳送到作者主動配置的服務商。',
+      'API Key 與本機設定由桌面應用儲存在使用者資料目錄；安裝包不包含共用 API Key 或預載雲端帳號。',
+      '目前是 Apple Silicon macOS 單使用者測試版；團隊協作、雲端同步、行動端和內建支付不在目前範圍。'
+    ]
+  },
+  'zh-Hans': {
+    title: 'NovelForge AI',
+    eyebrow: 'Local-first AI Writing Workbench',
+    headline: '把长篇与短篇创作，整理成可审核的工作流。',
+    intro:
+      'NovelForge AI 是本地优先、作者主导的 AI 小说创作工作台，面向长篇连载、独立短故事与系列短故事。它会整理大纲、角色状态、时间线、伏笔、章节草稿和 AI 任务，但不会绕过作者审核改写正式故事记忆。',
+    download: '下载 macOS 版',
+    details: '查看下载信息',
+    repository: '查看源码仓库',
+    iconAlt: 'NovelForge AI app icon',
+    featuresTitle: '从构思到发布的同一张工作台',
+    features: [
+      ['长篇连载', '管理故事线、章节节拍、草稿、精修、摘要、待审记忆更新与连续性检查。'],
+      ['短故事与系列', '支持独立短故事和共享世界观的系列短篇，保留各自的叙事闭环与跨篇记忆。'],
+      ['结构化故事记忆', '把角色、规则、时间线、伏笔和章节摘要整理为可追踪数据，而不是散落在聊天记录里。'],
+      ['作者审批边界', 'AI 输出先进入草稿或待审区；正式设定、故事记忆与发布内容仍由作者确认。'],
+      ['多模型接入', '可连接 OpenAI-compatible API，并为章节草稿、精修等工作配置不同模型路由。'],
+      ['本地数据与备份', 'SQLite 数据库、作品和生成资产保存在本机，并提供本地备份流程。']
+    ],
+    releaseTitle: `${version} 创作工作台界面重构`,
+    releaseNotes: [
+      '长篇、短故事与系列统一使用紧凑的深色工作台，并按准备、写作、审校和发布阶段组织工具。',
+      '新增项目切换、命令搜索、项目级审核通知与只读 AI 运行台，桌面和窄窗口都能完整操作。',
+      '项目库、系列库、创作台和章节工作区已重新排布，AI 输出审批与正式故事记忆边界保持不变。',
+      'macOS PKG 已完成 Developer ID 签名、Apple 公证与 stapling。'
+    ],
+    boundaryTitle: '数据与 AI 边界',
+    boundaryNotes: [
+      '本地优先不代表完全离线：执行 AI、语音或发布任务时，相关上下文会发送到作者主动配置的服务商。',
+      'API Key 与本地设置由桌面应用保存在用户数据目录；安装包不包含共享 API Key 或预置云端账号。',
+      '目前是 Apple Silicon macOS 单用户测试版；团队协作、云同步、移动端和内置支付不在当前范围。'
+    ]
+  },
+  en: {
+    title: 'NovelForge AI',
+    eyebrow: 'Local-first AI Writing Workbench',
+    headline: 'A reviewable workflow for long-form and short-form fiction.',
+    intro:
+      'NovelForge AI is a local-first, author-controlled writing workbench for serial novels, standalone short stories, and linked story series. It organizes outlines, character state, timelines, clues, chapter drafts, and AI tasks without silently changing canonical story memory.',
+    download: 'Download for macOS',
+    details: 'View download details',
+    repository: 'View source repository',
+    iconAlt: 'NovelForge AI app icon',
+    featuresTitle: 'One workbench from planning to release',
+    features: [
+      ['Serial novels', 'Manage storylines, chapter beats, drafts, polishing, summaries, pending memory updates, and continuity checks.'],
+      ['Short stories and series', 'Support standalone stories and linked series with independent narrative closure and shared cross-story memory.'],
+      ['Structured story memory', 'Track characters, rules, timelines, clues, and chapter summaries as reviewable data instead of scattered chat history.'],
+      ['Author approval boundary', 'AI output enters draft or review states first. Canon, story memory, and publishable content still require author confirmation.'],
+      ['Multiple model routes', 'Connect OpenAI-compatible APIs and assign different routes to chapter drafting, polishing, and other writing tasks.'],
+      ['Local data and backups', 'Keep the SQLite database, manuscripts, and generated assets on the Mac with a local backup workflow.']
+    ],
+    releaseTitle: `${version} writing workbench redesign`,
+    releaseNotes: [
+      'Long-form projects, short stories, and series now share a compact dark workbench organized around Prepare, Write, Review, and Publish.',
+      'Adds project switching, command search, project-scoped review alerts, and a read-only AI run console that works across desktop and narrow windows.',
+      'Rebuilds the project library, series library, writing desk, and chapter workspace while preserving the author-approval and story-memory boundary.',
+      'The macOS PKG is Developer ID signed, Apple notarized, and stapled.'
+    ],
+    boundaryTitle: 'Data and AI boundary',
+    boundaryNotes: [
+      'Local-first does not mean fully offline. AI, voice, or publishing tasks send relevant context to providers configured by the author.',
+      'API keys and local settings live in the desktop user-data directory. The installer includes no shared API key or preconfigured cloud account.',
+      'This is an Apple Silicon macOS single-user test build. Team collaboration, cloud sync, mobile apps, and built-in payments are outside the current scope.'
+    ]
+  },
+  ja: {
+    title: 'NovelForge AI',
+    eyebrow: 'Local-first AI Writing Workbench',
+    headline: '長編と短編を、確認できる執筆ワークフローへ。',
+    intro:
+      'NovelForge AI は、連載小説、独立した短編、連作短編のためのローカル優先・作者主導の AI 執筆ワークベンチです。アウトライン、人物状態、時間軸、伏線、章ドラフト、AI タスクを整理し、作者の確認なしに正式な物語記憶を書き換えません。',
+    download: 'macOS 版をダウンロード',
+    details: 'ダウンロード情報',
+    repository: 'ソースリポジトリを見る',
+    iconAlt: 'NovelForge AI アプリアイコン',
+    featuresTitle: '構想から公開まで一つのワークベンチで',
+    features: [
+      ['連載小説', 'ストーリーライン、章ビート、ドラフト、推敲、要約、保留中の記憶更新、整合性確認を管理します。'],
+      ['短編とシリーズ', '独立短編と共通世界を持つ連作短編に対応し、各話の完結性と物語横断の記憶を保ちます。'],
+      ['構造化された物語記憶', '人物、ルール、時間軸、伏線、章要約を、チャット履歴ではなく確認可能なデータとして管理します。'],
+      ['作者の承認境界', 'AI 出力は先にドラフトまたは確認待ちへ入り、正式設定、物語記憶、公開内容は作者が確定します。'],
+      ['複数モデル接続', 'OpenAI-compatible API に接続し、章ドラフトや推敲などに別々のモデル経路を設定できます。'],
+      ['ローカルデータとバックアップ', 'SQLite、原稿、生成資産を Mac 内に保存し、ローカルバックアップを利用できます。']
+    ],
+    releaseTitle: `${version} 執筆ワークベンチ再設計`,
+    releaseNotes: [
+      '長編、短編、シリーズを、準備・執筆・校閲・公開の段階で整理するコンパクトなダークワークベンチへ統一しました。',
+      'プロジェクト切り替え、コマンド検索、プロジェクト別の確認通知、読み取り専用 AI 実行コンソールを追加しました。',
+      'プロジェクト、シリーズ、執筆、章ワークスペースを再構成しつつ、作者承認と正式な物語記憶の境界を維持します。',
+      'macOS PKG は Developer ID 署名、Apple 公証、stapling を完了しています。'
+    ],
+    boundaryTitle: 'データと AI の境界',
+    boundaryNotes: [
+      'ローカル優先は完全オフラインという意味ではありません。AI、音声、公開タスクでは、関連する文脈を作者が設定したサービスへ送信します。',
+      'API キーとローカル設定はデスクトップのユーザーデータ領域に保存され、インストーラーに共有キーや設定済みクラウドアカウントは含まれません。',
+      '現在は Apple Silicon macOS 向けの単一ユーザーテスト版です。共同編集、クラウド同期、モバイル、内蔵決済は現在の対象外です。'
+    ]
+  }
+}[lang];
+
+const canonicalPath =
+  lang === 'zh-Hant'
+    ? novelForgeAiProduct.zhHantProductPath
+    : lang === 'zh-Hans'
+      ? novelForgeAiProduct.zhHansProductPath
+      : lang === 'ja'
+        ? novelForgeAiProduct.jaProductPath
+        : novelForgeAiProduct.productPath;
+const downloadPagePath =
+  lang === 'zh-Hant'
+    ? novelForgeAiProduct.zhHantDownloadPagePath
+    : lang === 'zh-Hans'
+      ? novelForgeAiProduct.zhHansDownloadPagePath
+      : lang === 'ja'
+        ? novelForgeAiProduct.jaDownloadPagePath
+        : novelForgeAiProduct.downloadPagePath;
+---
+
+<BaseLayout
+  title={copy.title}
+  description={copy.intro}
+  lang={lang}
+  canonicalPath={canonicalPath}
+  ogImage={novelForgeAiProduct.assets.icon}
+  bodyClass="station-paper-page radar-page"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: novelForgeAiProduct.zhHantProductPath },
+    { hrefLang: 'zh-Hans', href: novelForgeAiProduct.zhHansProductPath },
+    { hrefLang: 'en', href: novelForgeAiProduct.productPath },
+    { hrefLang: 'ja', href: novelForgeAiProduct.jaProductPath },
+    { hrefLang: 'x-default', href: novelForgeAiProduct.zhHantProductPath }
+  ]}
+>
+  <section class="radar-hero">
+    <div class="radar-hero__copy">
+      <p class="section-kicker">{copy.eyebrow}</p>
+      <h1>{copy.headline}</h1>
+      <p>{copy.intro}</p>
+      <div class="button-row">
+        <a class="button button-primary" href={download.downloadPath}>{copy.download}</a>
+        <a class="button button-secondary" href={downloadPagePath}>{copy.details}</a>
+        <a class="button button-secondary" href={novelForgeAiProduct.repositoryUrl} target="_blank" rel="noreferrer">{copy.repository}</a>
+      </div>
+    </div>
+    <div class="radar-preview-card anytls-icon-preview" aria-label="NovelForge AI app icon">
+      <img src={novelForgeAiProduct.assets.icon} alt={copy.iconAlt} width="1024" height="1024" />
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="section-heading">
+      <p class="section-kicker">Writing workflow</p>
+      <h2>{copy.featuresTitle}</h2>
+    </div>
+    <div class="radar-feature-grid">
+      {copy.features.map(([title, text]) => (
+        <article>
+          <h3>{title}</h3>
+          <p>{text}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="radar-note-panel">
+      <div>
+        <p class="section-kicker">Version {version}</p>
+        <h2>{copy.releaseTitle}</h2>
+      </div>
+      <ul>
+        {copy.releaseNotes.map((note) => <li>{note}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="radar-note-panel">
+      <div>
+        <p class="section-kicker">Local-first</p>
+        <h2>{copy.boundaryTitle}</h2>
+      </div>
+      <ul>
+        {copy.boundaryNotes.map((note) => <li>{note}</li>)}
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
