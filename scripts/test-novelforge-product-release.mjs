@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { __readerTotpTestHooks as hooks } from '../src/worker.js';
+
 const root = join(fileURLToPath(new URL('..', import.meta.url)));
 const read = (path) => readFileSync(join(root, path), 'utf8');
 
@@ -25,6 +27,79 @@ assert.match(productData, /novelforge-ai-icon\.png/);
 
 assert.match(worker, /\/downloads\/novelforge-ai\/NovelForge-AI-0\.1\.110-mac-arm64\.pkg/);
 assert.match(worker, /limitKey: 'novelforge-ai-0\.1\.110-mac-arm64-pkg'/);
+assert.match(worker, /headers\.set\('accept-ranges', 'bytes'\)/);
+assert.match(worker, /status: useRange \? 206 : 200/);
+assert.deepEqual(hooks.parseDownloadByteRange('bytes=0-1023', 451597937), {
+  kind: 'partial',
+  start: 0,
+  end: 1023,
+  offset: 0,
+  length: 1024
+});
+assert.deepEqual(hooks.parseDownloadByteRange('bytes=-1024', 451597937), {
+  kind: 'partial',
+  start: 451596913,
+  end: 451597936,
+  offset: 451596913,
+  length: 1024
+});
+assert.deepEqual(hooks.parseDownloadByteRange('bytes=451597937-', 451597937), {
+  kind: 'unsatisfiable'
+});
+assert.deepEqual(hooks.parseDownloadByteRange('bytes=0-1,4-5', 451597937), {
+  kind: 'unsatisfiable'
+});
+
+const requestedRanges = [];
+const objectMetadata = {
+  size: 451597937,
+  httpEtag: '"multipart-etag-14"',
+  writeHttpMetadata(headers) {
+    headers.set('content-type', 'application/octet-stream');
+  }
+};
+const downloadsBucket = {
+  async head() {
+    return objectMetadata;
+  },
+  async get(_key, options) {
+    requestedRanges.push(options?.range || null);
+    const length = options?.range?.length || objectMetadata.size;
+    return {
+      ...objectMetadata,
+      body: new Uint8Array(length)
+    };
+  }
+};
+const downloadFile = {
+  key: 'novelforge-ai/0.1.110/NovelForge-AI-0.1.110-mac-arm64.pkg',
+  filename: 'NovelForge-AI-0.1.110-mac-arm64.pkg',
+  contentType: 'application/octet-stream'
+};
+const rangeResponse = await hooks.handleR2Download(
+  new Request('https://wwwstationcat.org/downloads/novelforge-ai/NovelForge-AI-0.1.110-mac-arm64.pkg', {
+    headers: { range: 'bytes=0-1023' }
+  }),
+  { DOWNLOADS_BUCKET: downloadsBucket },
+  downloadFile
+);
+assert.equal(rangeResponse.status, 206);
+assert.equal(rangeResponse.headers.get('accept-ranges'), 'bytes');
+assert.equal(rangeResponse.headers.get('content-range'), 'bytes 0-1023/451597937');
+assert.equal(rangeResponse.headers.get('content-length'), '1024');
+assert.deepEqual(requestedRanges, [{ offset: 0, length: 1024 }]);
+assert.equal((await rangeResponse.arrayBuffer()).byteLength, 1024);
+
+const headResponse = await hooks.handleR2Download(
+  new Request('https://wwwstationcat.org/downloads/novelforge-ai/NovelForge-AI-0.1.110-mac-arm64.pkg', {
+    method: 'HEAD'
+  }),
+  { DOWNLOADS_BUCKET: downloadsBucket },
+  downloadFile
+);
+assert.equal(headResponse.status, 200);
+assert.equal(headResponse.headers.get('content-length'), '451597937');
+assert.equal(headResponse.headers.get('accept-ranges'), 'bytes');
 
 assert.match(landingPage, /作者審批邊界/);
 assert.match(landingPage, /Local-first does not mean fully offline/);

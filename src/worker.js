@@ -19968,6 +19968,46 @@ const checkDownloadLimit = async (request, env, file) => {
   return null;
 };
 
+const parseDownloadByteRange = (value, size) => {
+  if (!value) return { kind: 'full' };
+  if (!Number.isSafeInteger(size) || size < 0) return { kind: 'unsatisfiable' };
+
+  const match = /^bytes=(\d*)-(\d*)$/i.exec(value.trim());
+  if (!match || (!match[1] && !match[2])) return { kind: 'unsatisfiable' };
+
+  if (match[1]) {
+    const start = Number(match[1]);
+    const requestedEnd = match[2] ? Number(match[2]) : size - 1;
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(requestedEnd) || start >= size || requestedEnd < start) {
+      return { kind: 'unsatisfiable' };
+    }
+
+    const end = Math.min(requestedEnd, size - 1);
+    return {
+      kind: 'partial',
+      start,
+      end,
+      offset: start,
+      length: end - start + 1
+    };
+  }
+
+  const suffix = Number(match[2]);
+  if (!Number.isSafeInteger(suffix) || suffix <= 0 || size === 0) {
+    return { kind: 'unsatisfiable' };
+  }
+
+  const length = Math.min(suffix, size);
+  const start = size - length;
+  return {
+    kind: 'partial',
+    start,
+    end: size - 1,
+    offset: start,
+    length
+  };
+};
+
 const handleR2Download = async (request, env, file) => {
   if (!env.DOWNLOADS_BUCKET) {
     return new Response('Downloads bucket is not configured.', { status: 503 });
@@ -19978,20 +20018,68 @@ const handleR2Download = async (request, env, file) => {
     return limitResponse;
   }
 
-  const object = await env.DOWNLOADS_BUCKET.get(file.key);
+  const rangeHeader = request.headers.get('range');
+  let metadata = null;
+  let object = null;
 
-  if (!object) {
+  if (request.method === 'HEAD' || rangeHeader) {
+    metadata = await env.DOWNLOADS_BUCKET.head(file.key);
+  } else {
+    object = await env.DOWNLOADS_BUCKET.get(file.key);
+    metadata = object;
+  }
+
+  if (!metadata) {
     return new Response('Download file not found.', { status: 404 });
   }
 
+  const parsedRange = parseDownloadByteRange(rangeHeader, metadata.size);
+  if (parsedRange.kind === 'unsatisfiable') {
+    return new Response(null, {
+      status: 416,
+      headers: {
+        'accept-ranges': 'bytes',
+        'content-range': `bytes */${metadata.size}`,
+        'cache-control': 'no-store'
+      }
+    });
+  }
+
+  const ifRange = request.headers.get('if-range');
+  const useRange = parsedRange.kind === 'partial' && (!ifRange || ifRange === metadata.httpEtag);
+  if (request.method !== 'HEAD') {
+    object = await env.DOWNLOADS_BUCKET.get(
+      file.key,
+      useRange
+        ? {
+            range: {
+              offset: parsedRange.offset,
+              length: parsedRange.length
+            }
+          }
+        : undefined
+    );
+    if (!object) {
+      return new Response('Download file not found.', { status: 404 });
+    }
+  }
+
   const headers = new Headers();
-  object.writeHttpMetadata(headers);
+  metadata.writeHttpMetadata(headers);
   headers.set('content-type', file.contentType);
   headers.set('content-disposition', `attachment; filename="${file.filename}"`);
   headers.set('cache-control', file.cacheControl || 'public, max-age=3600');
-  headers.set('etag', object.httpEtag);
+  headers.set('etag', metadata.httpEtag);
+  headers.set('accept-ranges', 'bytes');
+  headers.set('content-length', String(useRange ? parsedRange.length : metadata.size));
+  if (useRange) {
+    headers.set('content-range', `bytes ${parsedRange.start}-${parsedRange.end}/${metadata.size}`);
+  }
 
-  return new Response(request.method === 'HEAD' ? null : object.body, { headers });
+  return new Response(request.method === 'HEAD' ? null : object.body, {
+    status: useRange ? 206 : 200,
+    headers
+  });
 };
 
 export const __readerTotpTestHooks = {
@@ -20012,6 +20100,8 @@ export const __readerTotpTestHooks = {
   getAdjacentPublishedSignalBriefs,
   getLegacyWorksRedirectPath,
   getSignalAutomationHealth,
+  handleR2Download,
+  parseDownloadByteRange,
   getReaderTotpResetLimitKeys,
   getReaderTotpResetIdentifierHash,
   getRequestClientHashes,
