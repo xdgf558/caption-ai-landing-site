@@ -124,6 +124,7 @@ for (const route of [
 
 assert.match(appsIndex, /title="NovelForge AI"/);
 assert.match(stationHome, /<h3>NovelForge AI<\/h3>/);
+assert.match(stationHome, /bench-card__icon--novelforge/);
 assert.match(footer, /label: 'NovelForge AI'/);
 assert.match(sitemap, /\/zh-hant\/apps\/novelforge-ai\/download\//);
 

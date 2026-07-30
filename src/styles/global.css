@@ -3958,6 +3958,16 @@ button.button {
   width: 42%;
 }
 
+.bench-card__icon--novelforge {
+  background: #e9f0ed;
+}
+
+.bench-card__icon--novelforge img {
+  filter: drop-shadow(0 16px 22px rgba(80, 55, 35, 0.14));
+  max-width: 154px;
+  width: 44%;
+}
+
 .bench-card__icon--nodepilot {
   background: #e9f0ed;
 }
