@@ -237,6 +237,8 @@ assert.match(svg, /width="1200"/);
 assert.match(svg, /height="675"/);
 assert.match(svg, /每日优先简报/);
 assert.match(svg, /全球资金重新流入科技基金/);
+assert.doesNotMatch(svg, /x="128" y="548" width="170" height="8" fill="#e9a95e"/);
+assert.doesNotMatch(svg, /x="318" y="548" width="72" height="8" fill="#286a5e"/);
 
 const png = await renderSignalShareCardPng(svg);
 assert.deepEqual(Array.from(png.slice(0, 8)), [137, 80, 78, 71, 13, 10, 26, 10]);

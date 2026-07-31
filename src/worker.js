@@ -17820,8 +17820,6 @@ const renderSignalShareCardSvg = (route, row) => {
       .join('')}
     <text x="128" y="286" fill="#7b6f63" font-family="'Noto Sans CJK TC', sans-serif" font-size="22" font-weight="800">${escapeHtml(date || sourceLabel)}</text>
     ${bulletSvg}
-    <rect x="128" y="548" width="170" height="8" fill="#e9a95e"/>
-    <rect x="318" y="548" width="72" height="8" fill="#286a5e"/>
     <text x="128" y="588" fill="#52645e" font-family="'Noto Sans CJK TC', sans-serif" font-size="22" font-weight="800">Station Cat Daily Signal</text>
     <text x="1072" y="588" fill="#52645e" font-family="'Noto Sans CJK TC', sans-serif" font-size="22" font-weight="800" text-anchor="end">${escapeHtml(url)}</text>
   </svg>`;
