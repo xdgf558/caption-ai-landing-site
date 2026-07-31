@@ -1,21 +1,19 @@
 {
   "schema_version": 1,
   "channel": "stable",
-  "version": "0.1.29",
-  "build": 29,
+  "version": "0.1.30",
+  "build": 30,
   "minimum_macos_version": "14.0",
-  "published_at": "2026-07-29T03:52:45Z",
-  "title": "猫栈拼音 0.1.29",
+  "published_at": "2026-07-31T15:59:23Z",
+  "title": "猫栈拼音 0.1.30",
   "release_notes": [
-    "新增全键盘拼音智能纠错，可在本机识别常见邻键误触、重复字母等输入错误；原始输入候选始终保留，纠错候选不会接管整个候选页。",
-    "新增默认关闭的「宽容拼音」，可按需兼容 zh/z、ch/c、sh/s、n/l、an/ang、en/eng 和 in/ing 等常见模糊音。",
-    "稳定空格键对应的第一候选：AI Lite 只能调整后续候选，不能移动当前首选，连续盲打时更可预测。",
-    "用户学习改为温和生效。同一习惯经过约三次确认后才影响排序，并使用生效/失效滞回，减少偶然误选和长期衰减造成的首选反复跳动。",
-    "统一盲打交互：空格提交当前第一候选，数字键只在真实拼音组合期间选择可见候选；仅显示下一词预测时，数字会正常输入到当前应用。",
-    "继续提供 0.1.28 的白霜拼音一键导入、桌面词库扩容、分层词库管理、本地 Writer、AI Lite 与一级/二级偏好设置页面。"
+    "修复 macOS 原生候选面板偶尔点击无反应的问题，鼠标选择现在会按候选页代次和精确位置验证后提交。",
+    "重复文字候选会保留用户实际点击的条目，不再因为文本相同而错误选择列表中的第一项。",
+    "迟到或无法验证的旧候选回调只记录诊断信息，不会提交旧文本、清除刚输入的新拼音或覆盖当前有效高亮。",
+    "继续提供全键盘智能纠错、宽容拼音、稳定空格首选、温和学习、白霜拼音一键导入、本地 Writer、AI Lite 与分层偏好设置。"
   ],
   "release_page_url": "https://wwwstationcat.org/zh-hans/apps/privatepinyin/download/",
-  "package_url": "https://wwwstationcat.org/downloads/privatepinyin/PrivatePinyin-0.1.29.pkg",
-  "package_sha256": "a2e036f668dec4e15058db51f3caeacd3722a2131462752a7cbc5d15bef60832",
-  "package_size_bytes": 14470598
+  "package_url": "https://wwwstationcat.org/downloads/privatepinyin/PrivatePinyin-0.1.30.pkg",
+  "package_sha256": "d4ef4c8e0122d7a22acd7a0e252a33e48eb18424c92c74a6df73d095cd381142",
+  "package_size_bytes": 14489209
 }

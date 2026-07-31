@@ -2,20 +2,20 @@ export const privatePinyinProduct = {
   id: 'privatepinyin',
   slug: 'privatepinyin',
   name: '猫栈拼音',
-  latestVersion: '0.1.29',
-  releaseDate: '2026-07-29',
+  latestVersion: '0.1.30',
+  releaseDate: '2026-07-31',
   downloads: [
     {
       id: 'macos-pkg',
       label: 'macOS installer',
-      version: '0.1.29',
+      version: '0.1.30',
       platform: 'macOS',
       architecture: 'Apple Silicon',
       minimumSystem: 'macOS 14 or later',
       fileSize: '13.8 MB',
-      sha256: 'a2e036f668dec4e15058db51f3caeacd3722a2131462752a7cbc5d15bef60832',
-      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.29.pkg',
-      r2ObjectKey: 'privatepinyin/0.1.29/PrivatePinyin-0.1.29.pkg',
+      sha256: 'd4ef4c8e0122d7a22acd7a0e252a33e48eb18424c92c74a6df73d095cd381142',
+      downloadPath: '/downloads/privatepinyin/PrivatePinyin-0.1.30.pkg',
+      r2ObjectKey: 'privatepinyin/0.1.30/PrivatePinyin-0.1.30.pkg',
       channel: 'public-test'
     },
     {
