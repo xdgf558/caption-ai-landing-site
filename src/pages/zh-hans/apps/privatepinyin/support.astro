@@ -1,0 +1,24 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import FAQ from '../../../../components/FAQ.astro';
+import { privatePinyinProduct } from '../../../../data/products/privatepinyin';
+
+const items = [
+  { question: '如何启用键盘？', answer: '打开“设置 > 通用 > 键盘 > 键盘 > 添加新键盘”，选择猫栈拼音，然后通过地球键切换。不需要完全访问。' },
+  { question: '键盘会上传输入内容吗？', answer: '不会。键盘扩展保持离线，组字、候选、纠错和学习都在设备上完成。' },
+  { question: '如何删除本机学习数据？', answer: '在容器 App 中打开“隐私与学习”并点击清除。导入词库可在“词库管理”中单独清除。' }
+];
+---
+
+<ProductLayout title="猫栈拼音支持" description="猫栈拼音的帮助、反馈与隐私资源。" lang="zh-Hans" canonicalPath="/zh-hans/apps/privatepinyin/support/" ogImage="/images/apps/privatepinyin-icon.png" alternates={[
+  { hrefLang: 'zh-Hant', href: '/zh-hant/apps/privatepinyin/support/' }, { hrefLang: 'zh-Hans', href: '/zh-hans/apps/privatepinyin/support/' },
+  { hrefLang: 'en', href: '/apps/privatepinyin/support/' }, { hrefLang: 'ja', href: '/ja/apps/privatepinyin/support/' },
+  { hrefLang: 'x-default', href: '/zh-hant/apps/privatepinyin/support/' }
+]}>
+  <section class="page-shell">
+    <p class="section-kicker">Support</p><h1>猫栈拼音支持。</h1>
+    <p>如需帮助或有隐私问题，请发邮件至 <a href={`mailto:${privatePinyinProduct.supportEmail}`}>{privatePinyinProduct.supportEmail}</a>，并注明猫栈拼音。</p>
+    <ul class="check-list"><li>反馈键盘激活、输入或候选点选问题。</li><li>请附上 iOS 版本、设备型号、目标 App 和可复现的拼音。</li><li>请不要发送密码、私人对话或其他敏感输入内容。</li></ul>
+    <div class="button-row"><a class="button button-primary" href={`mailto:${privatePinyinProduct.supportEmail}?subject=%E7%8C%AB%E6%A0%88%E6%8B%BC%E9%9F%B3%E6%94%AF%E6%8C%81`}>发送邮件</a><a class="button button-secondary" href="/zh-hans/apps/privatepinyin/privacy/">隐私政策</a><a class="button button-secondary" href="/zh-hans/apps/privatepinyin/">产品页</a></div>
+  </section><FAQ title="常见问题" items={items} />
+</ProductLayout>

@@ -1,0 +1,27 @@
+---
+import LegalLayout from '../../../../layouts/LegalLayout.astro';
+import { privatePinyinLegalNoticeZhHant, privatePinyinPrivacyZhHant } from '../../../../data/legal/privatepinyin';
+---
+
+<LegalLayout
+  title="貓棧拼音隱私政策"
+  description="貓棧拼音 iOS App、鍵盤擴充與支援頁面的隱私政策。"
+  lang="zh-Hant"
+  canonicalPath="/zh-hant/apps/privatepinyin/privacy/"
+  productLabel="貓棧拼音"
+  ogImage="/images/apps/privatepinyin-icon.png"
+  notice={privatePinyinLegalNoticeZhHant}
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/privatepinyin/privacy/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/privatepinyin/privacy/' },
+    { hrefLang: 'en', href: '/apps/privatepinyin/privacy/' },
+    { hrefLang: 'ja', href: '/ja/apps/privatepinyin/privacy/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/privatepinyin/privacy/' }
+  ]}
+>
+  <div class="legal-content">
+    {privatePinyinPrivacyZhHant.map((section) => (
+      <section><h2>{section.heading}</h2><p>{section.body}</p></section>
+    ))}
+  </div>
+</LegalLayout>

@@ -1,0 +1,23 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import FAQ from '../../../../components/FAQ.astro';
+import { privatePinyinProduct } from '../../../../data/products/privatepinyin';
+
+const items = [
+  { question: '如何啟用鍵盤？', answer: '打開「設定 > 一般 > 鍵盤 > 鍵盤 > 新增鍵盤」，選擇貓棧拼音，再以地球鍵切換。不需要完全存取。' },
+  { question: '鍵盤會上傳輸入內容嗎？', answer: '不會。鍵盤擴充保持離線，組字、候選、糾錯與學習都在裝置上完成。' },
+  { question: '如何刪除本機學習資料？', answer: '在容器 App 打開「隱私與學習」並點選清除。匯入詞典可在「詞庫管理」單獨清除。' }
+];
+---
+
+<ProductLayout title="貓棧拼音支援" description="貓棧拼音的說明、回饋與隱私資源。" lang="zh-Hant" canonicalPath="/zh-hant/apps/privatepinyin/support/" ogImage="/images/apps/privatepinyin-icon.png" alternates={[
+  { hrefLang: 'zh-Hant', href: '/zh-hant/apps/privatepinyin/support/' }, { hrefLang: 'zh-Hans', href: '/zh-hans/apps/privatepinyin/support/' },
+  { hrefLang: 'en', href: '/apps/privatepinyin/support/' }, { hrefLang: 'ja', href: '/ja/apps/privatepinyin/support/' },
+  { hrefLang: 'x-default', href: '/zh-hant/apps/privatepinyin/support/' }
+]}>
+  <section class="page-shell"><p class="section-kicker">Support</p><h1>貓棧拼音支援。</h1>
+    <p>如需協助或有隱私問題，請寄信至 <a href={`mailto:${privatePinyinProduct.supportEmail}`}>{privatePinyinProduct.supportEmail}</a>，並註明貓棧拼音。</p>
+    <ul class="check-list"><li>回饋鍵盤啟用、輸入或候選點選問題。</li><li>請附上 iOS 版本、裝置型號、目標 App 與可重現的拼音。</li><li>請勿傳送密碼、私人對話或其他敏感輸入內容。</li></ul>
+    <div class="button-row"><a class="button button-primary" href={`mailto:${privatePinyinProduct.supportEmail}?subject=PrivatePinyin%20support`}>寄送郵件</a><a class="button button-secondary" href="/zh-hant/apps/privatepinyin/privacy/">隱私政策</a><a class="button button-secondary" href="/zh-hant/apps/privatepinyin/">產品頁</a></div>
+  </section><FAQ title="常見問題" items={items} />
+</ProductLayout>

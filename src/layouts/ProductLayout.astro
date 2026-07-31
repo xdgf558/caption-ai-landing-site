@@ -13,9 +13,18 @@ interface Props {
   canonicalPath: string;
   alternates?: AlternateLink[];
   bodyClass?: string;
+  ogImage?: string;
 }
 
-const { title, description, lang = 'zh-Hant', canonicalPath, alternates = [], bodyClass } = Astro.props;
+const {
+  title,
+  description,
+  lang = 'zh-Hant',
+  canonicalPath,
+  alternates = [],
+  bodyClass,
+  ogImage = '/images/apps/snapcopy-app-icon.png'
+} = Astro.props;
 ---
 
 <BaseLayout
@@ -24,7 +33,7 @@ const { title, description, lang = 'zh-Hant', canonicalPath, alternates = [], bo
   lang={lang}
   canonicalPath={canonicalPath}
   alternates={alternates}
-  ogImage="/images/apps/snapcopy-app-icon.png"
+  ogImage={ogImage}
   bodyClass={bodyClass}
 >
   <slot />

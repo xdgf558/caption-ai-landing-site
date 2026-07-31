@@ -257,6 +257,35 @@ const canonicalPath =
       : lang === 'ja'
         ? privatePinyinProduct.jaProductPath
         : privatePinyinProduct.productPath;
+
+const legalLinks =
+  lang === 'zh-Hant'
+    ? {
+        privacy: privatePinyinProduct.privacyPaths.zhHant,
+        privacyLabel: '隱私政策',
+        support: privatePinyinProduct.supportPaths.zhHant,
+        supportLabel: '支援與聯絡'
+      }
+    : lang === 'zh-Hans'
+      ? {
+          privacy: privatePinyinProduct.privacyPaths.zhHans,
+          privacyLabel: '隐私政策',
+          support: privatePinyinProduct.supportPaths.zhHans,
+          supportLabel: '支持与联系'
+        }
+      : lang === 'ja'
+        ? {
+            privacy: privatePinyinProduct.privacyPaths.ja,
+            privacyLabel: 'プライバシーポリシー',
+            support: privatePinyinProduct.supportPaths.ja,
+            supportLabel: 'サポート'
+          }
+        : {
+            privacy: privatePinyinProduct.privacyPaths.en,
+            privacyLabel: 'Privacy policy',
+            support: privatePinyinProduct.supportPaths.en,
+            supportLabel: 'Support'
+          };
 ---
 
 <BaseLayout
@@ -284,6 +313,8 @@ const canonicalPath =
         {windowsDownload && <a class="button button-secondary" href={windowsDownload.downloadPath}>{copy.windowsCta}</a>}
         <a class="button button-secondary" href={iosTestflight.url} target="_blank" rel="noreferrer">{copy.iosCta}</a>
         <a class="button button-secondary" href={copy.downloadHref}>{copy.secondary}</a>
+        <a class="button button-secondary" href={legalLinks.privacy}>{legalLinks.privacyLabel}</a>
+        <a class="button button-secondary" href={legalLinks.support}>{legalLinks.supportLabel}</a>
       </div>
     </div>
     <div class="privatepinyin-preview-card" aria-label={`${copy.title} app icon`}>

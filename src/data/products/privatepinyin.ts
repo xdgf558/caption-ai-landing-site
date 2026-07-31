@@ -2,6 +2,7 @@ export const privatePinyinProduct = {
   id: 'privatepinyin',
   slug: 'privatepinyin',
   name: '猫栈拼音',
+  supportEmail: 'brodstem@protonmail.com',
   latestVersion: '0.1.30',
   releaseDate: '2026-07-31',
   downloads: [
@@ -46,6 +47,18 @@ export const privatePinyinProduct = {
   zhHansDownloadPagePath: '/zh-hans/apps/privatepinyin/download/',
   jaProductPath: '/ja/apps/privatepinyin/',
   jaDownloadPagePath: '/ja/apps/privatepinyin/download/',
+  privacyPaths: {
+    en: '/apps/privatepinyin/privacy/',
+    zhHans: '/zh-hans/apps/privatepinyin/privacy/',
+    zhHant: '/zh-hant/apps/privatepinyin/privacy/',
+    ja: '/ja/apps/privatepinyin/privacy/'
+  },
+  supportPaths: {
+    en: '/apps/privatepinyin/support/',
+    zhHans: '/zh-hans/apps/privatepinyin/support/',
+    zhHant: '/zh-hant/apps/privatepinyin/support/',
+    ja: '/ja/apps/privatepinyin/support/'
+  },
   assets: {
     icon: '/images/apps/privatepinyin-icon.png'
   }

@@ -14,9 +14,20 @@ interface Props {
   canonicalPath: string;
   notice: string;
   alternates?: AlternateLink[];
+  productLabel?: string;
+  ogImage?: string;
 }
 
-const { title, description, lang = 'zh-Hant', canonicalPath, notice, alternates = [] } = Astro.props;
+const {
+  title,
+  description,
+  lang = 'zh-Hant',
+  canonicalPath,
+  notice,
+  alternates = [],
+  productLabel = 'SnapCopy',
+  ogImage
+} = Astro.props;
 ---
 
 <ProductLayout
@@ -25,9 +36,10 @@ const { title, description, lang = 'zh-Hant', canonicalPath, notice, alternates 
   lang={lang}
   canonicalPath={canonicalPath}
   alternates={alternates}
+  ogImage={ogImage}
 >
   <section class="page-shell legal-shell">
-    <div class="section-kicker">{lang === 'ja' ? 'SnapCopy' : 'SnapCopy'}</div>
+    <div class="section-kicker">{productLabel}</div>
     <h1>{title}</h1>
     <LegalNotice text={notice} />
     <slot />

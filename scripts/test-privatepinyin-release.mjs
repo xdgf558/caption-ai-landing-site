@@ -20,6 +20,8 @@ assert.match(worker, /privatepinyin\/0\.1\.30\/PrivatePinyin-0\.1\.30\.pkg/);
 assert.match(worker, /privatepinyin\/0\.1\.25\/PrivatePinyin-0\.1\.25-setup\.exe/);
 assert.match(productData, /iosTestflight/);
 assert.match(productData, new RegExp(testflightUrl.replaceAll('/', '\\/')));
+assert.match(productData, /privacyPaths/);
+assert.match(productData, /supportPaths/);
 
 assert.equal(stableManifest.schema_version, 1);
 assert.equal(stableManifest.channel, 'stable');
@@ -46,6 +48,17 @@ assert.doesNotMatch(productPage, /偏好設定改為緊湊等比縮放/);
 assert.match(productPage, /iosTestflight\.url/);
 assert.match(productPage, /releaseToken = `\$\{macVersion\}-\$\{windowsVersion\}`/);
 assert.match(productPage, /\?release=\$\{releaseToken\}/);
+assert.match(productPage, /legalLinks\.privacy/);
+assert.match(productPage, /legalLinks\.support/);
+
+for (const localePath of ['', 'zh-hans/', 'zh-hant/', 'ja/']) {
+  const prefix = `src/pages/${localePath}apps/privatepinyin/`;
+  const privacyPage = read(`${prefix}privacy.astro`);
+  const supportPage = read(`${prefix}support.astro`);
+  assert.match(privacyPage, /privatepinyin-icon\.png/);
+  assert.match(supportPage, /privatepinyin-icon\.png/);
+  assert.match(supportPage, /supportEmail/);
+}
 
 const downloadPage = read('src/components/PrivatePinyinDownload.astro');
 assert.match(downloadPage, /privatepinyin-testflight-card/);
