@@ -7,6 +7,7 @@ const {
   dynamicCanonicalPath,
   dynamicHtmlShell,
   dynamicSignalCardPath,
+  dynamicSignalCardSvgPath,
   dynamicSignalPath,
   getAdjacentPublishedSignalBriefs,
   parseSignalMarkdownItems,
@@ -15,6 +16,7 @@ const {
   renderDynamicSignalBrief,
   renderDynamicSignalIndex,
   renderSignalMarkdownToHtml,
+  renderSignalShareCardPng,
   renderSignalShareCardSvg
 } = hooks;
 
@@ -58,10 +60,17 @@ assert.equal(briefRoute.kind, 'signal-brief');
 assert.equal(dynamicSignalPath(briefRoute, signalRow.slug), '/signal/daily-brief-2026-07-04/');
 assert.equal(dynamicCanonicalPath(briefRoute), '/signal/daily-brief-2026-07-04/');
 
-const cardRoute = parseDynamicContentRoute('/signal/daily-brief-2026-07-04/card.svg');
+const cardRoute = parseDynamicContentRoute('/signal/daily-brief-2026-07-04/card.png');
 assert.equal(cardRoute.kind, 'signal-card');
-assert.equal(dynamicSignalCardPath(cardRoute, signalRow.slug), '/signal/daily-brief-2026-07-04/card.svg');
-assert.equal(dynamicCanonicalPath(cardRoute), '/signal/daily-brief-2026-07-04/card.svg');
+assert.equal(cardRoute.assetFormat, 'png');
+assert.equal(dynamicSignalCardPath(cardRoute, signalRow.slug), '/signal/daily-brief-2026-07-04/card.png');
+assert.equal(dynamicCanonicalPath(cardRoute), '/signal/daily-brief-2026-07-04/card.png');
+
+const legacySvgCardRoute = parseDynamicContentRoute('/signal/daily-brief-2026-07-04/card.svg');
+assert.equal(legacySvgCardRoute.kind, 'signal-card');
+assert.equal(legacySvgCardRoute.assetFormat, 'svg');
+assert.equal(dynamicSignalCardSvgPath(legacySvgCardRoute, signalRow.slug), '/signal/daily-brief-2026-07-04/card.svg');
+assert.equal(dynamicCanonicalPath(legacySvgCardRoute), '/signal/daily-brief-2026-07-04/card.svg');
 
 const enRoute = parseDynamicContentRoute('/en/signal/daily-brief-2026-07-04/');
 assert.equal(enRoute.kind, 'signal-brief');
@@ -160,7 +169,7 @@ assert.match(signalMarkdownHtml, /全球资金重新流入科技基金/);
 
 const briefHtml = renderDynamicSignalBrief(briefRoute, signalRow, { html: '<p>正文内容</p>', markdown: pastedSignalMarkdown, source: 'test' });
 assert.match(briefHtml, /分享到 X/);
-assert.match(briefHtml, /card\.svg/);
+assert.match(briefHtml, /card\.png\?v=20260704090000/);
 assert.match(briefHtml, /Example source/);
 assert.match(briefHtml, /class="signal-dispatch/);
 assert.match(briefHtml, /class="signal-item/);
@@ -229,6 +238,27 @@ assert.match(svg, /height="675"/);
 assert.match(svg, /每日优先简报/);
 assert.match(svg, /全球资金重新流入科技基金/);
 
+const png = await renderSignalShareCardPng(svg);
+assert.deepEqual(Array.from(png.slice(0, 8)), [137, 80, 78, 71, 13, 10, 26, 10]);
+const pngView = new DataView(png.buffer, png.byteOffset, png.byteLength);
+assert.equal(pngView.getUint32(16), 1200);
+assert.equal(pngView.getUint32(20), 675);
+
+const briefPage = dynamicHtmlShell({
+  body: briefHtml,
+  canonicalPath: '/signal/daily-brief-2026-07-04/',
+  description: signalRow.description,
+  lang: 'zh-Hant',
+  ogImage: '/signal/daily-brief-2026-07-04/card.png?v=20260704090000',
+  pageKind: 'signal',
+  title: signalRow.title
+});
+assert.match(briefPage, /twitter:card" content="summary_large_image"/);
+assert.match(briefPage, /twitter:image" content="https:\/\/wwwstationcat\.org\/signal\/daily-brief-2026-07-04\/card\.png\?v=20260704090000"/);
+assert.match(briefPage, /og:image:type" content="image\/png"/);
+assert.match(briefPage, /og:image:width" content="1200"/);
+assert.match(briefPage, /og:image:height" content="675"/);
+
 const tenItemSignalRow = {
   ...signalRow,
   metadata_json: JSON.stringify({
@@ -264,5 +294,6 @@ const workerSource = await readFile(new URL('../src/worker.js', import.meta.url)
 assert.match(workerSource, /handleAdminImportSignalBrief/);
 assert.match(workerSource, /new Set\(\['blog_post', 'novel_series', 'novel_chapter', 'signal_brief'\]\)/);
 assert.match(workerSource, /twitter:card/);
+assert.match(workerSource, /'content-type': 'image\/png'/);
 
 console.log('Signal strip route, render, and admin import checks passed.');

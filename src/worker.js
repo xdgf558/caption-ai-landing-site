@@ -27,6 +27,7 @@ import {
   normalizeDeepSeekSignalDraftModel
 } from './deepseekSignalDraft.js';
 import { buildContentImportListQuery, contentImportSourceKinds } from './contentImportReview.js';
+import { Resvg } from '@cf-wasm/resvg';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -13831,7 +13832,7 @@ const handleAdminImportSignalBrief = async (request, env) => {
       publicPath,
       publicUrl: `${origin}${publicPath}`,
       revisionNumber,
-      shareCardPath: `${publicPath}card.svg`,
+      shareCardPath: `${publicPath}card.png`,
       stage: automation ? 'signal-automation-4' : 'signal-strip-1',
       candidateUsageConflictIds,
       excludedCandidateIds,
@@ -16518,7 +16519,7 @@ const renderAdminContentPreview = async (entry, env) => {
       canonicalPath: dynamicCanonicalPath(route),
       description: firstPlainSummary([entry.description, entry.excerpt], 260),
       lang: entry.locale,
-      ogImage: dynamicSignalCardPath(route, entry.slug),
+      ogImage: dynamicVersionedSignalCardPath(route, row),
       pageKind: 'signal',
       robots: 'noindex, nofollow',
       title: `[Preview] ${entry.title}`
@@ -16721,10 +16722,11 @@ const parseDynamicContentRoute = (pathname) => {
       };
     }
 
-    if (segmentCount === 3 && slug && ['card.svg', 'share-card.svg'].includes(asset)) {
+    if (segmentCount === 3 && slug && ['card.png', 'share-card.png', 'card.svg', 'share-card.svg'].includes(asset)) {
       return {
         ...baseRoute,
         asset,
+        assetFormat: asset.endsWith('.png') ? 'png' : 'svg',
         kind: 'signal-card',
         slug
       };
@@ -16785,7 +16787,11 @@ const dynamicCanonicalPath = (route) => {
   if (route.kind === 'novel-chapter') return dynamicChapterPath(route, route.seriesSlug, route.chapterSlug);
   if (route.kind === 'signal-index') return route.basePath;
   if (route.kind === 'signal-brief') return dynamicSignalPath(route, route.slug);
-  if (route.kind === 'signal-card') return dynamicSignalCardPath(route, route.slug);
+  if (route.kind === 'signal-card') {
+    return route.assetFormat === 'png'
+      ? dynamicSignalCardPath(route, route.slug)
+      : dynamicSignalCardSvgPath(route, route.slug);
+  }
   return '/';
 };
 
@@ -16799,7 +16805,12 @@ const dynamicChapterPath = (route, seriesSlug, chapterSlug) => {
 };
 
 const dynamicSignalPath = (route, slug) => `${route.basePath}${slug}/`;
-const dynamicSignalCardPath = (route, slug) => `${dynamicSignalPath(route, slug)}card.svg`;
+const dynamicSignalCardPath = (route, slug) => `${dynamicSignalPath(route, slug)}card.png`;
+const dynamicSignalCardSvgPath = (route, slug) => `${dynamicSignalPath(route, slug)}card.svg`;
+const dynamicVersionedSignalCardPath = (route, row) => {
+  const revision = cleanText(row.updated_at || row.published_at || '1', 80).replace(/[^0-9A-Za-z]/g, '') || '1';
+  return `${dynamicSignalCardPath(route, row.slug)}?v=${encodeURIComponent(revision)}`;
+};
 
 const dynamicNavCopy = {
   en: {
@@ -16902,10 +16913,15 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
     <meta property="og:url" content="https://wwwstationcat.org${escapeHtml(canonicalPath)}">
     <meta property="og:site_name" content="Station Cat">
     ${ogImageUrl ? `<meta property="og:image" content="${escapeHtml(ogImageUrl)}">` : ''}
+    ${ogImageUrl ? '<meta property="og:image:type" content="image/png">' : ''}
+    ${ogImageUrl ? '<meta property="og:image:width" content="1200">' : ''}
+    ${ogImageUrl ? '<meta property="og:image:height" content="675">' : ''}
+    ${ogImageUrl ? `<meta property="og:image:alt" content="${escapeHtml(title)}">` : ''}
     <meta name="twitter:card" content="${ogImageUrl ? 'summary_large_image' : 'summary'}">
     <meta name="twitter:title" content="${escapeHtml(title)} | Station Cat">
     <meta name="twitter:description" content="${escapeHtml(description)}">
     ${ogImageUrl ? `<meta name="twitter:image" content="${escapeHtml(ogImageUrl)}">` : ''}
+    ${ogImageUrl ? `<meta name="twitter:image:alt" content="${escapeHtml(title)}">` : ''}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <style>
       :root { color-scheme: light; --bg: #fffaf4; --surface: #ffffff; --soft: #f5efe7; --ink: #1f2d29; --muted: #64736d; --line: #e4dbd0; --teal: #08796d; --coral: #d95d45; }
@@ -17589,7 +17605,7 @@ const renderDynamicSignalBrief = (route, row, body, navigation = {}) => {
   const absoluteUrl = absoluteStationUrl(canonicalPath);
   const shareText = `${row.title} | Station Cat Signal strip`;
   const shareHref = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(absoluteUrl)}`;
-  const cardPath = dynamicSignalCardPath(route, row.slug);
+  const cardPath = dynamicVersionedSignalCardPath(route, row);
   const items = parseSignalMarkdownItems(body.markdown, meta.sources);
   const category = normalizeSignalCategory(meta.category);
   const renderedItems = items
@@ -17706,6 +17722,46 @@ const normalizeSignalCardBullet = (value) =>
     .replace(/^(\d{1,3})[.)、．]\s+/, '')
     .trim();
 
+const signalShareCardFontKey = 'fonts/NotoSansCJKtc-Regular.otf';
+
+const loadSignalShareCardFontBuffer = async (env) => {
+  if (!env.CONTENT_BUCKET?.get) {
+    const error = new Error('Signal share card font storage is not configured.');
+    error.code = 'SIGNAL_CARD_FONT_STORAGE_NOT_CONFIGURED';
+    throw error;
+  }
+  const object = await env.CONTENT_BUCKET.get(signalShareCardFontKey);
+  if (!object) {
+    const error = new Error('Signal share card font is not available.');
+    error.code = 'SIGNAL_CARD_FONT_NOT_FOUND';
+    throw error;
+  }
+  return new Uint8Array(await object.arrayBuffer());
+};
+
+const renderSignalShareCardPng = async (svg, fontBuffer = null) => {
+  const font = fontBuffer
+    ? {
+        defaultFontFamily: 'Noto Sans CJK TC',
+        fontBuffers: [fontBuffer],
+        sansSerifFamily: 'Noto Sans CJK TC',
+        serifFamily: 'Noto Sans CJK TC'
+      }
+    : undefined;
+  const renderer = await Resvg.async(svg, {
+    background: '#fffaf4',
+    fitTo: { mode: 'original' },
+    ...(font ? { font } : {})
+  });
+  const image = renderer.render();
+  try {
+    return image.asPng();
+  } finally {
+    image.free();
+    renderer.free();
+  }
+};
+
 const renderSignalShareCardSvg = (route, row) => {
   const meta = signalBriefMetadata(row);
   const category = signalCategoryLabel(meta.category, route.locale);
@@ -17734,13 +17790,13 @@ const renderSignalShareCardSvg = (route, row) => {
           const y = 326 + rowIndex * (useTwoColumnBullets ? 46 : bulletLines.length > 4 ? 46 : 54);
           const fontSize = useTwoColumnBullets ? 21 : bulletLines.length > 4 ? 24 : 27;
           return `<circle cx="${x}" cy="${y - 8}" r="${useTwoColumnBullets ? 15 : 17}" fill="#f4eadc" stroke="#d8c9b8" stroke-width="2"/>
-    <text x="${x}" y="${y}" fill="#286a5e" font-family="Arial, sans-serif" font-size="${useTwoColumnBullets ? 16 : 18}" font-weight="900" text-anchor="middle">${index + 1}</text>
-    <text x="${textX}" y="${y}" fill="#3f5751" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="800">${escapeHtml(line)}</text>`;
+    <text x="${x}" y="${y}" fill="#286a5e" font-family="'Noto Sans CJK TC', sans-serif" font-size="${useTwoColumnBullets ? 16 : 18}" font-weight="900" text-anchor="middle">${index + 1}</text>
+    <text x="${textX}" y="${y}" fill="#3f5751" font-family="'Noto Sans CJK TC', sans-serif" font-size="${fontSize}" font-weight="800">${escapeHtml(line)}</text>`;
         })
         .join('\n    ')
     : fallbackLines
         .slice(0, 6)
-        .map((line, index) => `<text x="142" y="${326 + index * 42}" fill="#3f5751" font-family="Arial, sans-serif" font-size="27" font-weight="700">${escapeHtml(line)}</text>`)
+        .map((line, index) => `<text x="142" y="${326 + index * 42}" fill="#3f5751" font-family="'Noto Sans CJK TC', sans-serif" font-size="27" font-weight="700">${escapeHtml(line)}</text>`)
         .join('\n    ');
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="${escapeHtml(row.title)}">
@@ -17756,18 +17812,18 @@ const renderSignalShareCardSvg = (route, row) => {
     <rect width="1200" height="675" fill="url(#grid)" opacity="0.68"/>
     <rect x="74" y="58" width="1052" height="554" rx="24" fill="#fffaf1" stroke="#241f1a" stroke-width="3" filter="url(#shadow)"/>
     <rect x="74" y="58" width="20" height="554" fill="#286a5e"/>
-    <text x="128" y="118" fill="#286a5e" font-family="Arial, sans-serif" font-size="25" font-weight="900">SC SIGNAL STRIP</text>
-    <text x="1064" y="118" fill="#524a42" font-family="Arial, sans-serif" font-size="22" font-weight="800" text-anchor="end">${escapeHtml(category)}</text>
+    <text x="128" y="118" fill="#286a5e" font-family="'Noto Sans CJK TC', sans-serif" font-size="25" font-weight="900">SC SIGNAL STRIP</text>
+    <text x="1064" y="118" fill="#524a42" font-family="'Noto Sans CJK TC', sans-serif" font-size="22" font-weight="800" text-anchor="end">${escapeHtml(category)}</text>
     <line x1="128" y1="150" x2="1072" y2="150" stroke="#d8c9b8" stroke-width="3" stroke-dasharray="7 8"/>
     ${titleLines
-      .map((line, index) => `<text x="128" y="${226 + index * 66}" fill="#241f1a" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="800">${escapeHtml(line)}</text>`)
+      .map((line, index) => `<text x="128" y="${226 + index * 66}" fill="#241f1a" font-family="'Noto Sans CJK TC', sans-serif" font-size="58" font-weight="800">${escapeHtml(line)}</text>`)
       .join('')}
-    <text x="128" y="286" fill="#7b6f63" font-family="Arial, sans-serif" font-size="22" font-weight="800">${escapeHtml(date || sourceLabel)}</text>
+    <text x="128" y="286" fill="#7b6f63" font-family="'Noto Sans CJK TC', sans-serif" font-size="22" font-weight="800">${escapeHtml(date || sourceLabel)}</text>
     ${bulletSvg}
     <rect x="128" y="548" width="170" height="8" fill="#e9a95e"/>
     <rect x="318" y="548" width="72" height="8" fill="#286a5e"/>
-    <text x="128" y="588" fill="#52645e" font-family="Arial, sans-serif" font-size="22" font-weight="800">Station Cat Daily Signal</text>
-    <text x="1072" y="588" fill="#52645e" font-family="Arial, sans-serif" font-size="22" font-weight="800" text-anchor="end">${escapeHtml(url)}</text>
+    <text x="128" y="588" fill="#52645e" font-family="'Noto Sans CJK TC', sans-serif" font-size="22" font-weight="800">Station Cat Daily Signal</text>
+    <text x="1072" y="588" fill="#52645e" font-family="'Noto Sans CJK TC', sans-serif" font-size="22" font-weight="800" text-anchor="end">${escapeHtml(url)}</text>
   </svg>`;
 };
 
@@ -18905,7 +18961,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
     </article>`;
 };
 
-const handleDynamicFrontendContent = async (request, env) => {
+const handleDynamicFrontendContent = async (request, env, ctx) => {
   if (request.method !== 'GET' && request.method !== 'HEAD') return null;
   const url = new URL(request.url);
   const route = parseDynamicContentRoute(url.pathname);
@@ -18938,6 +18994,50 @@ const handleDynamicFrontendContent = async (request, env) => {
     if (!brief) return null;
 
     if (route.kind === 'signal-card') {
+      if (route.assetFormat === 'png') {
+        const headers = new Headers({
+          'cache-control': 'public, max-age=86400',
+          'content-disposition': `inline; filename="${route.slug}-card.png"`,
+          'content-type': 'image/png',
+          'x-content-type-options': 'nosniff'
+        });
+        try {
+          const cache = globalThis.caches?.default;
+          const cacheKey = new Request(request.url, { method: 'GET' });
+          const cached = cache ? await cache.match(cacheKey) : null;
+          if (cached) {
+            return request.method === 'HEAD' ? new Response(null, { headers: cached.headers, status: cached.status }) : cached;
+          }
+          if (request.method === 'HEAD') return new Response(null, { headers });
+
+          const body = await readPublicEntryBody(env, brief, { preferMarkdown: true });
+          const cardBrief = body.markdown ? { ...brief, signalMarkdown: body.markdown } : brief;
+          const fontBuffer = await loadSignalShareCardFontBuffer(env);
+          const png = await renderSignalShareCardPng(renderSignalShareCardSvg(route, cardBrief), fontBuffer);
+          const response = new Response(png, { headers });
+          if (cache) {
+            const cacheWrite = cache.put(cacheKey, response.clone());
+            if (ctx?.waitUntil) ctx.waitUntil(cacheWrite);
+            else await cacheWrite;
+          }
+          return response;
+        } catch (error) {
+          console.error('Signal share card PNG generation failed.', {
+            code: error?.code || 'SIGNAL_CARD_PNG_FAILED',
+            message: error?.message || 'Unknown signal share card error.',
+            slug: route.slug
+          });
+          return new Response('Signal share card is temporarily unavailable.', {
+            headers: {
+              'cache-control': 'no-store',
+              'content-type': 'text/plain; charset=utf-8',
+              'x-content-type-options': 'nosniff'
+            },
+            status: 503
+          });
+        }
+      }
+
       const body = request.method === 'HEAD' ? { markdown: '' } : await readPublicEntryBody(env, brief, { preferMarkdown: true });
       const cardBrief = body.markdown ? { ...brief, signalMarkdown: body.markdown } : brief;
       return new Response(request.method === 'HEAD' ? null : renderSignalShareCardSvg(route, cardBrief), {
@@ -18956,7 +19056,7 @@ const handleDynamicFrontendContent = async (request, env) => {
       canonicalPath: dynamicCanonicalPath(route),
       description: firstPlainSummary([brief.description, brief.excerpt], 260),
       lang: route.locale,
-      ogImage: dynamicSignalCardPath(route, brief.slug),
+      ogImage: dynamicVersionedSignalCardPath(route, brief),
       pageKind: 'signal',
       title: brief.title
     });
@@ -20154,6 +20254,7 @@ export const __readerTotpTestHooks = {
   dynamicChapterPath,
   dynamicHtmlShell,
   dynamicSignalCardPath,
+  dynamicSignalCardSvgPath,
   dynamicSignalPath,
   dynamicSeriesPath,
   normalizeTotpCode,
@@ -20184,6 +20285,7 @@ export const __readerTotpTestHooks = {
   syncSignalRetrySuccessAlert,
   renderDynamicNovelSeries,
   renderDynamicNovelChapter,
+  renderSignalShareCardPng,
   renderSignalShareCardSvg,
   sha256Hex,
   shouldSampleReaderTotpResetCleanup,
@@ -20592,7 +20694,7 @@ export default {
       return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
-    const dynamicContentResponse = await handleDynamicFrontendContent(request, env);
+    const dynamicContentResponse = await handleDynamicFrontendContent(request, env, ctx);
     if (dynamicContentResponse) return dynamicContentResponse;
 
     if (env.ASSETS) {

@@ -3570,7 +3570,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             'success'
           );
         } else if (payload.status === 'published') {
-          setSignalStatus(`发布成功：${publicPath}，分享卡片 ${result.shareCardPath || `${publicPath}card.svg`}`, 'success');
+          setSignalStatus(`发布成功：${publicPath}，分享卡片 ${result.shareCardPath || `${publicPath}card.png`}`, 'success');
         } else {
           setSignalStatus('草稿已保存到内容平台，尚未公开。', 'success');
         }
