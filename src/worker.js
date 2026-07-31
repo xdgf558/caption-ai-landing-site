@@ -16807,9 +16807,10 @@ const dynamicChapterPath = (route, seriesSlug, chapterSlug) => {
 const dynamicSignalPath = (route, slug) => `${route.basePath}${slug}/`;
 const dynamicSignalCardPath = (route, slug) => `${dynamicSignalPath(route, slug)}card.png`;
 const dynamicSignalCardSvgPath = (route, slug) => `${dynamicSignalPath(route, slug)}card.svg`;
+const signalShareCardTemplateVersion = 'card2';
 const dynamicVersionedSignalCardPath = (route, row) => {
   const revision = cleanText(row.updated_at || row.published_at || '1', 80).replace(/[^0-9A-Za-z]/g, '') || '1';
-  return `${dynamicSignalCardPath(route, row.slug)}?v=${encodeURIComponent(revision)}`;
+  return `${dynamicSignalCardPath(route, row.slug)}?v=${encodeURIComponent(`${revision}-${signalShareCardTemplateVersion}`)}`;
 };
 
 const dynamicNavCopy = {

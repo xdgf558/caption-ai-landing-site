@@ -169,7 +169,7 @@ assert.match(signalMarkdownHtml, /全球资金重新流入科技基金/);
 
 const briefHtml = renderDynamicSignalBrief(briefRoute, signalRow, { html: '<p>正文内容</p>', markdown: pastedSignalMarkdown, source: 'test' });
 assert.match(briefHtml, /分享到 X/);
-assert.match(briefHtml, /card\.png\?v=20260704090000/);
+assert.match(briefHtml, /card\.png\?v=20260704090000-card2/);
 assert.match(briefHtml, /Example source/);
 assert.match(briefHtml, /class="signal-dispatch/);
 assert.match(briefHtml, /class="signal-item/);
