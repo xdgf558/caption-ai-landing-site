@@ -183,6 +183,23 @@ const seriesHtml = hooks.renderDynamicNovelSeries(novelSeriesRoute, serial, { ht
 assert.match(seriesHtml, /href="\/novel\/book\/chapter\/ch1\/"/);
 assert.match(seriesHtml, /href="\/novel\/book\/chapter\/ch3\/"/);
 assert.match(seriesHtml, /href="\/novel\/"/);
+assert.equal(hooks.getDynamicNovelSeriesStatusLabel(serial, 'zh-Hant'), '連載中');
+assert.equal(
+  hooks.getDynamicNovelSeriesStatusLabel({ metadata_json: '{"serialStatus":"completed"}' }, 'zh-Hant'),
+  '已完結'
+);
+assert.equal(
+  hooks.getDynamicNovelSeriesStatusLabel({ metadata_json: '{"serialStatus":"completed"}' }, 'en'),
+  'Completed'
+);
+
+const completedSeriesHtml = hooks.renderDynamicNovelSeries(
+  novelSeriesRoute,
+  { ...serial, metadata_json: '{"serialStatus":"completed"}' },
+  { html: '<p>Body</p>' },
+  chapters
+);
+assert.match(completedSeriesHtml, /已完結/);
 
 const pricedSeriesHtml = hooks.renderDynamicNovelSeries(novelSeriesRoute, serial, { html: '<p>Body</p>' }, chapters, {
   freeChapters: 20,

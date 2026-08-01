@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('../src/components/SerialsHubPage.astro', import.meta.url), 'utf8');
+const backendShelfSource = await readFile(new URL('../src/components/BackendContentShelf.astro', import.meta.url), 'utf8');
 const styles = await readFile(new URL('../src/styles/global.css', import.meta.url), 'utf8');
 
 assert.ok(
@@ -39,6 +40,14 @@ assert.ok(
 assert.ok(
   source.includes('runWhenDomReady(hydrateBackendLatestChapters);'),
   'Backend latest chapter hydration should run through the DOM-ready helper.'
+);
+assert.ok(
+  source.includes('formatSerialStatus') && source.includes('entry?.metadata?.serialStatus'),
+  'Bookshelf previews should read each backend series serialStatus instead of hard-coding the ongoing label.'
+);
+assert.ok(
+  backendShelfSource.includes('formatNovelStatus') && backendShelfSource.includes('entry?.metadata?.serialStatus'),
+  'Backend novel cards should render the same series serialStatus label.'
 );
 assert.ok(
   styles.includes('.station-paper-page .serials-bookshelf') &&

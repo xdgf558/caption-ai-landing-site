@@ -69,6 +69,19 @@ const configJson = JSON.stringify(config).replace(/</g, '\\u003c');
 
     const formatAccess = (value, locale) => accessLabels[locale]?.[value] || value;
 
+    const novelStatusLabels = {
+      en: { planned: 'Preparing', serializing: 'Serializing', completed: 'Completed', paused: 'Paused' },
+      ja: { planned: '準備中', serializing: '連載中', completed: '完結', paused: '一時停止' },
+      'zh-Hant': { planned: '籌備中', serializing: '連載中', completed: '已完結', paused: '暫停更新' },
+      'zh-Hans': { planned: '筹备中', serializing: '连载中', completed: '已完结', paused: '暂停更新' }
+    };
+
+    const formatNovelStatus = (entry, locale) => {
+      const status = String(entry?.metadata?.serialStatus || '').trim().toLowerCase();
+      const labels = novelStatusLabels[locale] || novelStatusLabels['zh-Hant'];
+      return labels[status] || labels.serializing;
+    };
+
     const cardHref = (config, entry) => `${config.basePath}${entry.slug}/`;
 
     const renderCard = (config, entry) => {
@@ -77,6 +90,7 @@ const configJson = JSON.stringify(config).replace(/</g, '\\u003c');
       const meta = [date, entry.authorName, formatAccess(entry.accessLevel, config.locale)].filter(Boolean);
       const href = cardHref(config, entry);
       const isNovel = config.entryType === 'novel_series';
+      const primaryLabel = isNovel ? formatNovelStatus(entry, config.locale) : copy.sourceLabel;
       const cover = entry.coverUrl
         ? `<a class="backend-content-card__cover${isNovel ? ' backend-content-card__cover--book' : ''}" href="${escapeHtml(href)}">
             <img src="${escapeHtml(entry.coverUrl)}" alt="${escapeHtml(entry.coverAlt || `${entry.title} cover`)}" loading="lazy" />
@@ -86,7 +100,7 @@ const configJson = JSON.stringify(config).replace(/</g, '\\u003c');
         ${cover}
         <div class="backend-content-card__body">
           <div class="backend-content-card__meta">
-            <span>${escapeHtml(copy.sourceLabel)}</span>
+            <span>${escapeHtml(primaryLabel)}</span>
             ${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}
           </div>
           <h3><a href="${escapeHtml(href)}">${escapeHtml(entry.title)}</a></h3>

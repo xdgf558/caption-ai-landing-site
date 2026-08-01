@@ -356,6 +356,17 @@ const backendShelfCopy = {
       'zh-Hans': { free: '免费', member: '会员', paid: '付费', supporter: '支持者' }
     };
     const formatAccess = (value, locale) => accessLabels[locale]?.[value] || value || '';
+    const serialStatusLabels = {
+      en: { planned: 'Preparing', serializing: 'Serializing', completed: 'Completed', paused: 'Paused' },
+      ja: { planned: '準備中', serializing: '連載中', completed: '完結', paused: '一時停止' },
+      'zh-Hant': { planned: '籌備中', serializing: '連載中', completed: '已完結', paused: '暫停更新' },
+      'zh-Hans': { planned: '筹备中', serializing: '连载中', completed: '已完结', paused: '暂停更新' }
+    };
+    const formatSerialStatus = (entry, locale) => {
+      const status = String(entry?.metadata?.serialStatus || '').trim().toLowerCase();
+      const labels = serialStatusLabels[locale] || serialStatusLabels['zh-Hant'];
+      return labels[status] || labels.serializing;
+    };
     const categoryLabels = {
       en: { ai: 'AI', fantasy: 'Fantasy', mystery: 'Mystery', scifi: 'Sci-fi', time: 'Time travel' },
       ja: { ai: 'AI', fantasy: 'ファンタジー', mystery: 'ミステリー', scifi: 'SF', time: 'タイムトラベル' },
@@ -385,7 +396,7 @@ const backendShelfCopy = {
       const cover = entry.coverUrl
         ? `<img src="${escapeHtml(entry.coverUrl)}" alt="${escapeHtml(entry.coverAlt || `${entry.title} cover`)}" loading="lazy" />`
         : `<strong>${escapeHtml(entry.title)}</strong>`;
-      const status = config.locale === 'en' ? 'Serializing' : config.locale === 'ja' ? '連載中' : '連載中';
+      const status = formatSerialStatus(entry, config.locale);
       const accessLabel = formatAccess(entry.accessLevel, config.locale);
       const subtitle = entry.subtitle ? `<p class="fine-print">${escapeHtml(entry.subtitle)}</p>` : '';
       return {

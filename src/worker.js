@@ -2011,6 +2011,35 @@ const dynamicAccessLabelsByLocale = {
   }
 };
 
+const novelSeriesSerialStatuses = new Set(['planned', 'serializing', 'completed', 'paused']);
+
+const dynamicNovelSeriesStatusLabelsByLocale = {
+  en: {
+    planned: 'Preparing',
+    serializing: 'Serializing',
+    completed: 'Completed',
+    paused: 'Paused'
+  },
+  ja: {
+    planned: '準備中',
+    serializing: '連載中',
+    completed: '完結',
+    paused: '一時停止'
+  },
+  'zh-Hant': {
+    planned: '籌備中',
+    serializing: '連載中',
+    completed: '已完結',
+    paused: '暫停更新'
+  },
+  'zh-Hans': {
+    planned: '筹备中',
+    serializing: '连载中',
+    completed: '已完结',
+    paused: '暂停更新'
+  }
+};
+
 const chineseNumerals = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
 
 const formatChineseChapterNumber = (value) => {
@@ -2041,6 +2070,17 @@ const formatDynamicChapterNumber = (chapterNumber, locale) => {
 
 const getDynamicAccessLabel = (accessLevel, locale) =>
   dynamicAccessLabelsByLocale[locale]?.[accessLevel] || dynamicAccessLabels[accessLevel] || accessLevel;
+
+const getDynamicNovelSeriesStatus = (series) => {
+  const metadata = parseStoredJson(series?.metadata_json, {});
+  const status = cleanText(metadata.serialStatus, 30).toLowerCase();
+  return novelSeriesSerialStatuses.has(status) ? status : 'serializing';
+};
+
+const getDynamicNovelSeriesStatusLabel = (series, locale) => {
+  const labels = dynamicNovelSeriesStatusLabelsByLocale[locale] || dynamicNovelSeriesStatusLabelsByLocale['zh-Hant'];
+  return labels[getDynamicNovelSeriesStatus(series)] || labels.serializing;
+};
 
 const getDynamicSeriesAccessSummary = (accessLevel, locale, paymentSettings = null) => {
   const accessLabel = getDynamicAccessLabel(accessLevel, locale);
@@ -17842,7 +17882,7 @@ const renderDynamicNovelIndex = (route, seriesRows) => {
           const summary = firstPlainSummary([series.description, series.excerpt, series.subtitle], 220);
           return `<a class="card" href="${escapeHtml(dynamicSeriesPath(route, series.slug))}">
           <div class="meta">
-            <span class="pill">${escapeHtml(dynamicContentStatusLabels[series.status] || series.status)}</span>
+            <span class="pill">${escapeHtml(getDynamicNovelSeriesStatusLabel(series, route.locale))}</span>
             <span>${escapeHtml(getDynamicAccessLabel(series.access_level, route.locale))}</span>
           </div>
           <h3>${escapeHtml(series.title)}</h3>
@@ -18752,6 +18792,7 @@ const renderDynamicNovelSeries = (route, serial, body, chapters, paymentSettings
         <h1>${escapeHtml(serial.title)}</h1>
         ${summary ? `<p>${escapeHtml(summary)}</p>` : ''}
         <div class="meta">
+          <span class="pill">${escapeHtml(getDynamicNovelSeriesStatusLabel(serial, route.locale))}</span>
           <span class="pill">${escapeHtml(copy.author)}: ${escapeHtml(serial.author_name || 'Station Cat')}</span>
           <span>${escapeHtml(copy.access)}: ${escapeHtml(accessSummary)}</span>
         </div>
@@ -20252,6 +20293,8 @@ export const __readerTotpTestHooks = {
   dynamicCanonicalPath,
   dynamicChapterPath,
   dynamicHtmlShell,
+  getDynamicNovelSeriesStatus,
+  getDynamicNovelSeriesStatusLabel,
   dynamicSignalCardPath,
   dynamicSignalCardSvgPath,
   dynamicSignalPath,
