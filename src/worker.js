@@ -19987,7 +19987,10 @@ const downloadFiles = {
   }
 };
 
-const externalDownloadRedirects = {};
+const externalDownloadRedirects = {
+  '/downloads/novelforge-ai/NovelForge-AI-0.1.115-mac-arm64.pkg':
+    'https://downloads.wwwstationcat.org:8443/novelforge-ai/0.1.115/NovelForge-AI-0.1.115-mac-arm64.pkg'
+};
 
 const downloadLimitConfig = {
   dailyLimit: 5,
