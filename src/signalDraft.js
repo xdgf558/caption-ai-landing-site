@@ -2,8 +2,8 @@ const signalDraftCategories = new Set(['ai', 'tech', 'economy', 'market', 'resea
 
 export const signalDraftMinCandidates = 3;
 export const signalDraftMaxCandidates = 10;
-export const signalDraftPromptVersion = 8;
-export const signalDraftQualityVersion = 3;
+export const signalDraftPromptVersion = 9;
+export const signalDraftQualityVersion = 4;
 export const signalDraftOutputLocale = 'zh-Hant';
 
 export const getSignalDraftMaxTokens = (candidateCount) => {
@@ -21,10 +21,11 @@ const cleanText = (value, maxLength = 1000) =>
     .trim()
     .slice(0, maxLength);
 
-const draftError = (code, message, status = 400) => {
+const draftError = (code, message, status = 400, details = null) => {
   const error = new Error(message);
   error.code = code;
   error.status = status;
+  if (details) error.details = details;
   return error;
 };
 
@@ -166,12 +167,12 @@ const signalAndNoiseAreDuplicated = (signal, noise) => editorialSimilarity(signa
 const genericEditorialPattern = /(?:這|該)(?:個|項|則)?(?:問題|故事|研究|項目|消息|資訊).{0,12}可能會引起(?:一些)?爭議|可能引起(?:一些)?爭議/u;
 const numericFactPattern = /\d+(?:[,.]\d+)*/g;
 
-const normalizeNumericFact = (value) =>
-  String(value || '')
-    .replace(/,/g, '')
-    .split('.')
-    .map((part) => part.replace(/^0+(?=\d)/, '') || '0')
-    .join('.');
+const normalizeNumericFact = (value) => {
+  const [integerPart = '0', decimalPart] = String(value || '').replace(/,/g, '').split('.');
+  const normalizedInteger = integerPart.replace(/^0+(?=\d)/, '') || '0';
+  const normalizedDecimal = decimalPart?.replace(/0+$/, '');
+  return normalizedDecimal ? `${normalizedInteger}.${normalizedDecimal}` : normalizedInteger;
+};
 
 const extractNumericFacts = (value) =>
   new Set((String(value || '').match(numericFactPattern) || []).map(normalizeNumericFact).filter(Boolean));
@@ -181,7 +182,32 @@ const findUnsupportedNumericFacts = (item, candidate, briefDate) => {
     [candidate?.title, candidate?.summary, candidate?.publishedAt, candidate?.published_at, briefDate].join(' ')
   );
   const generatedFacts = extractNumericFacts([item.headline, item.summary, item.signal, item.noise].join(' '));
-  return [...generatedFacts].filter((fact) => !sourceFacts.has(fact));
+  return {
+    allowedFacts: [...sourceFacts],
+    unsupportedFacts: [...generatedFacts].filter((fact) => !sourceFacts.has(fact))
+  };
+};
+
+const factualRetryInstruction = (violations) => {
+  const normalizedViolations = (Array.isArray(violations) ? violations : [])
+    .map((violation) => ({
+      allowedFacts: [...new Set((Array.isArray(violation?.allowedFacts) ? violation.allowedFacts : [])
+        .map((fact) => normalizeNumericFact(fact))
+        .filter(Boolean))].slice(0, 20),
+      candidateId: cleanText(violation?.candidateId, 120),
+      unsupportedFacts: [...new Set((Array.isArray(violation?.unsupportedFacts) ? violation.unsupportedFacts : [])
+        .map((fact) => normalizeNumericFact(fact))
+        .filter(Boolean))].slice(0, 20)
+    }))
+    .filter((violation) => violation.candidateId && violation.unsupportedFacts.length)
+    .slice(0, signalDraftMaxCandidates);
+  if (!normalizedViolations.length) return '';
+  return `Factual retry details: ${normalizedViolations
+    .map(
+      (violation) =>
+        `candidateId ${violation.candidateId} used unsupported numeric tokens ${violation.unsupportedFacts.join(', ')}; allowed numeric tokens are ${violation.allowedFacts.join(', ') || 'none'}.`
+    )
+    .join(' ')} Do not calculate, convert, round, or change units. Either use an allowed numeric token exactly or omit the number.`;
 };
 
 const hasRepeatedEditorialText = (items, field) => {
@@ -280,6 +306,7 @@ const buildDraftMessages = (candidates, options = {}) => {
         options.strictFactual
           ? 'A previous attempt introduced a number that was not present in its corresponding source. Remove every unsupported number and preserve supplied numbers exactly.'
           : '',
+        options.strictFactual ? factualRetryInstruction(options.factualViolations) : '',
         'Return only the requested JSON object.'
       ].filter(Boolean).join(' ')
     },
@@ -303,6 +330,7 @@ const validateDraftPayload = (payload, candidates, options) => {
   }
   const candidateMap = new Map(candidates.map((candidate) => [candidate.id, candidate]));
   const seen = new Set();
+  const factualViolations = [];
   const items = payload.items.map((item) => {
     const candidateId = cleanText(item?.candidateId, 120);
     if (!candidateMap.has(candidateId) || seen.has(candidateId)) {
@@ -328,18 +356,24 @@ const validateDraftPayload = (payload, candidates, options) => {
     ) {
       throw draftError('SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID', 'AI 草稿的编辑分析重复或过于空泛，请重试。', 502);
     }
-    const unsupportedNumericFacts = findUnsupportedNumericFacts(
+    const numericFacts = findUnsupportedNumericFacts(
       { headline, summary, signal, noise },
       candidateMap.get(candidateId),
       options.briefDate
     );
-    if (unsupportedNumericFacts.length) {
-      throw draftError('SIGNAL_DRAFT_AI_OUTPUT_FACTUAL_INVALID', 'AI 草稿包含来源没有提供的数字，请重试。', 502);
-    }
+    if (numericFacts.unsupportedFacts.length) factualViolations.push({ candidateId, ...numericFacts });
     return { candidateId, headline, summary, signal, noise };
   });
   if (seen.size !== candidateMap.size) {
     throw draftError('SIGNAL_DRAFT_AI_OUTPUT_INVALID', 'AI 草稿没有覆盖全部候选资讯，请重试。', 502);
+  }
+  if (factualViolations.length) {
+    throw draftError(
+      'SIGNAL_DRAFT_AI_OUTPUT_FACTUAL_INVALID',
+      'AI 草稿包含来源没有提供的数字，请重试。',
+      502,
+      { factualViolations }
+    );
   }
 
   const fallbackCategory = options.category === 'auto' ? deriveSignalDraftCategory(candidates) : normalizeCategory(options.category);
@@ -402,7 +436,8 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
         strictOutput: generationOptions.strictOutput === true,
         strictTranslation: generationOptions.strictTranslation === true,
         strictEditorial: generationOptions.strictEditorial === true,
-        strictFactual: generationOptions.strictFactual === true
+        strictFactual: generationOptions.strictFactual === true,
+        factualViolations: generationOptions.factualViolations
       }),
       max_tokens: getSignalDraftMaxTokens(normalizedCandidates.length),
       response_format: {
@@ -454,7 +489,8 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
           strictOutput: true,
           strictTranslation: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID',
           strictEditorial: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
-          strictFactual: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_FACTUAL_INVALID'
+          strictFactual: error.code === 'SIGNAL_DRAFT_AI_OUTPUT_FACTUAL_INVALID',
+          factualViolations: error?.details?.factualViolations
         });
         draft = generation.draft;
         usedModel = generation.model;
@@ -469,6 +505,7 @@ export const generateSignalBriefDraft = async (ai, model, candidates, options = 
         console.warn('Signal draft model output failed validation after retry.', {
           candidateCount: normalizedCandidates.length,
           code: retryError.code,
+          factualViolations: retryError?.details?.factualViolations || [],
           finishReason: retryError.finishReason || null,
           model: selectedModel,
           provider: cleanText(options.provider || 'workers-ai', 80) || 'workers-ai'

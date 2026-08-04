@@ -238,6 +238,28 @@ const unsupportedNumericPayloadFor = (items = candidates) => {
   return payload;
 };
 
+const decimalVersionCandidates = candidates.map((candidate, index) =>
+  index === 0
+    ? {
+        ...candidate,
+        summary: 'The FFmpeg project published release notes for FFmpeg 9.0.',
+        title: 'FFmpeg 9.0 release notes'
+      }
+    : candidate
+);
+
+const decimalVersionPayloadFor = () => {
+  const payload = aiPayloadFor(decimalVersionCandidates);
+  payload.items[0] = {
+    candidateId: decimalVersionCandidates[0].id,
+    headline: 'FFmpeg 9 正式發布',
+    summary: 'FFmpeg 9 的發行說明已公開。',
+    signal: 'FFmpeg 9 的釋出可讓維護者評估新版本的相容性與升級時機。',
+    noise: 'FFmpeg 9 的實際導入影響仍要視各專案的相依套件與測試結果而定。'
+  };
+  return payload;
+};
+
 assert.deepEqual(normalizeSignalDraftCandidateIds(candidates.map((candidate) => candidate.id)), candidates.map((candidate) => candidate.id));
 assert.throws(
   () => normalizeSignalDraftCandidateIds(['one', 'two']),
@@ -476,7 +498,16 @@ const factualResult = await generateSignalBriefDraft(
 );
 assert.equal(factualRetryCalls.length, 2);
 assert.match(factualRetryCalls[1].messages[0].content, /introduced a number that was not present/i);
+assert.match(factualRetryCalls[1].messages[0].content, /candidateId candidate-ai used unsupported numeric tokens 99/i);
 assert.equal(factualResult.items.length, candidates.length);
+
+const decimalVersionResult = await generateSignalBriefDraft(
+  { run: async () => ({ response: decimalVersionPayloadFor() }) },
+  '@cf/test/draft-model',
+  decimalVersionCandidates,
+  { briefDate: '2026-07-18', category: 'auto' }
+);
+assert.equal(decimalVersionResult.items[0].headline, 'FFmpeg 9 正式發布');
 
 await assert.rejects(
   generateSignalBriefDraft(

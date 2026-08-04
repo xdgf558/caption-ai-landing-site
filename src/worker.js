@@ -13528,6 +13528,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
     console.warn('Signal brief generation failed.', {
       candidateCount: candidateIds.length,
       code: error?.code || 'SIGNAL_DRAFT_GENERATION_FAILED',
+      factualViolations: error?.details?.factualViolations || [],
       providerAttempts
     });
     return privateJson(
