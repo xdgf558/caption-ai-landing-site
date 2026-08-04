@@ -98,7 +98,7 @@ const candidateRows = [
     category: 'ai',
     id: 'rollout-openai',
     sourceId: 'openai-news',
-    summary: 'OpenAI published a model and API safety update.',
+    summary: 'OpenAI published a model and API safety update with release notes covering deployment guidance, evaluation details, and documented behavior changes for developers.',
     title: 'OpenAI publishes a model and API safety update',
     url: 'https://openai.com/news/rollout-test'
   },
@@ -106,7 +106,7 @@ const candidateRows = [
     category: 'economy',
     id: 'rollout-fed',
     sourceId: 'federal-reserve-press',
-    summary: 'The Federal Reserve published an economic policy update.',
+    summary: 'The Federal Reserve published an economic policy update with the policy decision, current conditions, and details that frame how future economic data will be assessed.',
     title: 'Federal Reserve publishes an economic policy update',
     url: 'https://www.federalreserve.gov/newsevents/pressreleases/rollout-test.htm'
   },
@@ -114,7 +114,7 @@ const candidateRows = [
     category: 'tech',
     id: 'rollout-github',
     sourceId: 'github-changelog',
-    summary: 'GitHub released a developer workflow update.',
+    summary: 'GitHub released a developer workflow update with documented changes to project setup, review automation, integration steps, and maintenance tasks for engineering teams.',
     title: 'GitHub updates developer workflows',
     url: 'https://github.blog/changelog/rollout-test/'
   }

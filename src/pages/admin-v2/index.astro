@@ -2761,6 +2761,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const updateSignalDraftSelection = () => {
+      state.signalSelectedCandidateIds.forEach((id) => {
+        const candidate = state.signalCandidates.find((item) => item.id === id);
+        if (candidate && (candidate.status !== 'shortlisted' || candidate.draftEligible === false)) {
+          state.signalSelectedCandidateIds.delete(id);
+        }
+      });
       const count = state.signalSelectedCandidateIds.size;
       const remaining = Math.max(0, 3 - count);
       elements.signalDraftSelection.textContent = remaining
@@ -2774,7 +2780,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const toggleSignalDraftCandidate = (candidate, checked) => {
-      if (candidate.status !== 'shortlisted') return;
+      if (candidate.status !== 'shortlisted' || candidate.draftEligible === false) {
+        if (candidate.draftEligibilityReason) setSignalCandidateStatus(candidate.draftEligibilityReason, 'error');
+        return;
+      }
       if (checked && state.signalSelectedCandidateIds.size >= 10) {
         setSignalCandidateStatus('每份草稿最多选择 10 条候选资讯。', 'error');
         renderSignalCandidates();
@@ -2804,11 +2813,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           ? `<span>已合并 ${escapeHtml(String(candidate.occurrenceCount))} 条 · ${escapeHtml(String(candidate.sourceCount))} 来源</span>`
           : '';
         const clusterLabel = candidate.clusterSize > 1 ? `<span>近似同题 ${escapeHtml(String(candidate.clusterSize))} 条</span>` : '';
-        const draftSelector = candidate.status === 'shortlisted'
+        const draftSelector = candidate.status === 'shortlisted' && candidate.draftEligible !== false
           ? `<label class="admin-signal-candidate-select">
               <input type="checkbox" data-signal-candidate-select ${state.signalSelectedCandidateIds.has(candidate.id) ? 'checked' : ''} />
               <span class="sr-only">选择 ${escapeHtml(candidate.title)} 生成草稿</span>
             </label>`
+          : '';
+        const draftEligibilityLabel = candidate.status === 'shortlisted' && candidate.draftEligible === false
+          ? `<span title="${escapeHtml(candidate.draftEligibilityReason || '')}">素材不足，不能自动生成</span>`
           : '';
         row.innerHTML = `
           <div class="admin-signal-candidate-row__heading">
@@ -2823,6 +2835,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <span>${escapeHtml(candidate.sourceName || candidate.sourceId)}</span>
             <span>${escapeHtml(signalCategoryLabel(candidate.category))}</span>
             <span data-status="${escapeHtml(candidate.status)}">${escapeHtml(signalCandidateStatusLabel(candidate.status))}</span>
+            ${draftEligibilityLabel}
             ${mergedLabel}
             ${clusterLabel}
           </div>
@@ -2898,7 +2911,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           method: 'POST',
           body: JSON.stringify({ action, candidateId: candidate.id, note })
         });
-        if (action === 'shortlist' && state.signalSelectedCandidateIds.size < 10) {
+        if (action === 'shortlist' && candidate.draftEligible !== false && state.signalSelectedCandidateIds.size < 10) {
           state.signalSelectedCandidateIds.add(candidate.id);
           setSignalCandidateStatus(
             `已入选并加入本次草稿，当前已选 ${state.signalSelectedCandidateIds.size} / 10。`,
@@ -2906,7 +2919,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           );
         } else {
           if (action !== 'shortlist') state.signalSelectedCandidateIds.delete(candidate.id);
-          setSignalCandidateStatus('审核结果已保存。', 'success');
+          setSignalCandidateStatus(
+            action === 'shortlist' && candidate.draftEligible === false
+              ? `已入选，但${candidate.draftEligibilityReason || '来源材料不足'}，不会加入自动草稿。`
+              : '审核结果已保存。',
+            action === 'shortlist' && candidate.draftEligible === false ? 'neutral' : 'success'
+          );
         }
         await Promise.all([loadSignalCandidates(), loadAuditLogs()]);
       } catch (error) {

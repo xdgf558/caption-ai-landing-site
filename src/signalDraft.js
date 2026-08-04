@@ -2,8 +2,9 @@ const signalDraftCategories = new Set(['ai', 'tech', 'economy', 'market', 'resea
 
 export const signalDraftMinCandidates = 3;
 export const signalDraftMaxCandidates = 10;
-export const signalDraftPromptVersion = 9;
-export const signalDraftQualityVersion = 4;
+export const signalDraftMinimumSourceSummaryLength = 80;
+export const signalDraftPromptVersion = 10;
+export const signalDraftQualityVersion = 5;
 export const signalDraftOutputLocale = 'zh-Hant';
 
 export const getSignalDraftMaxTokens = (candidateCount) => {
@@ -20,6 +21,44 @@ const cleanText = (value, maxLength = 1000) =>
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, maxLength);
+
+const signalDraftEligibleSourceTrustTiers = new Set(['primary', 'established']);
+
+export const getSignalDraftCandidateEligibility = (candidate) => {
+  // Existing callers that predate source tiers remain compatible. Production
+  // candidate queries always supply this field from signal_sources.
+  const sourceTrustTier = cleanText(
+    candidate?.sourceTrustTier ?? candidate?.source_trust_tier ?? candidate?.trustTier ?? candidate?.trust_tier ?? 'primary',
+    30
+  ).toLowerCase() || 'primary';
+  const summaryLength = Array.from(cleanText(candidate?.summary, 1600)).length;
+
+  if (!signalDraftEligibleSourceTrustTiers.has(sourceTrustTier)) {
+    return {
+      eligible: false,
+      reason: '社区线索只用于发现选题，需补充正式来源后才能自动生成简报。',
+      reasonCode: 'SOURCE_TRUST_TIER_INSUFFICIENT',
+      sourceTrustTier,
+      summaryLength
+    };
+  }
+  if (summaryLength < signalDraftMinimumSourceSummaryLength) {
+    return {
+      eligible: false,
+      reason: `来源摘要不足 ${signalDraftMinimumSourceSummaryLength} 个字符，无法生成可核对的简报内容。`,
+      reasonCode: 'SOURCE_SUMMARY_INSUFFICIENT',
+      sourceTrustTier,
+      summaryLength
+    };
+  }
+  return {
+    eligible: true,
+    reason: '',
+    reasonCode: '',
+    sourceTrustTier,
+    summaryLength
+  };
+};
 
 const draftError = (code, message, status = 400, details = null) => {
   const error = new Error(message);
@@ -271,6 +310,7 @@ const buildDraftMessages = (candidates, options = {}) => {
     summary: cleanText(candidate.summary, 1600),
     source: cleanText(candidate.sourceName || candidate.source_name || candidate.sourceId || candidate.source_id, 180),
     publisher: cleanText(candidate.sourcePublisher || candidate.source_publisher, 180),
+    sourceTier: cleanText(candidate.sourceTrustTier || candidate.source_trust_tier, 30),
     category: normalizeCategory(candidate.category),
     publishedAt: cleanText(candidate.publishedAt || candidate.published_at, 80)
   }));
@@ -286,6 +326,8 @@ const buildDraftMessages = (candidates, options = {}) => {
         'Do not leave complete English sentences in title, description, headline, summary, signal, or noise. English proper nouns and technical terms may remain when clearer.',
         'Do not invent facts, quotes, causes, forecasts, or source URLs.',
         'Use a number only when the same number appears in that candidate source. Never calculate, convert, round, or transfer a number from another item.',
+        'Every summary must name the concrete actor, action, and object stated in that item\'s source summary. Never describe an item merely as an article, a discussion, or a topic.',
+        'Every signal must identify a concrete affected workflow, decision, market, or audience; every noise must identify a specific missing fact or scope limit from that item. Do not use generic wording such as "it may matter" or "details are limited" without naming what matters or what detail is missing.',
         'Return exactly one item for every candidateId and use each candidateId exactly once.',
         'summary states the sourced fact; signal explains why it may matter; noise states uncertainty or what not to over-interpret.',
         'For every item, signal and noise must make meaningfully different points and must never repeat or paraphrase each other.',

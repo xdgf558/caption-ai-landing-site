@@ -169,7 +169,8 @@ assert.match(signalMarkdownHtml, /全球资金重新流入科技基金/);
 
 const briefHtml = renderDynamicSignalBrief(briefRoute, signalRow, { html: '<p>正文内容</p>', markdown: pastedSignalMarkdown, source: 'test' });
 assert.match(briefHtml, /分享到 X/);
-assert.match(briefHtml, /card\.png\?v=20260704090000-card2/);
+assert.match(briefHtml, /card\.png\?v=20260704090000-card3/);
+assert.match(briefHtml, /url=https%3A%2F%2Fwwwstationcat\.org%2Fsignal%2Fdaily-brief-2026-07-04%2F%3Fshare%3D20260704090000-card3/);
 assert.match(briefHtml, /Example source/);
 assert.match(briefHtml, /class="signal-dispatch/);
 assert.match(briefHtml, /class="signal-item/);
@@ -252,11 +253,15 @@ const briefPage = dynamicHtmlShell({
   description: signalRow.description,
   lang: 'zh-Hant',
   ogImage: '/signal/daily-brief-2026-07-04/card.png?v=20260704090000',
+  ogUrl: '/signal/daily-brief-2026-07-04/?share=20260704090000-card3',
   pageKind: 'signal',
   title: signalRow.title
 });
 assert.match(briefPage, /twitter:card" content="summary_large_image"/);
 assert.match(briefPage, /twitter:image" content="https:\/\/wwwstationcat\.org\/signal\/daily-brief-2026-07-04\/card\.png\?v=20260704090000"/);
+assert.match(briefPage, /twitter:image:src" content="https:\/\/wwwstationcat\.org\/signal\/daily-brief-2026-07-04\/card\.png\?v=20260704090000"/);
+assert.match(briefPage, /og:image:secure_url" content="https:\/\/wwwstationcat\.org\/signal\/daily-brief-2026-07-04\/card\.png\?v=20260704090000"/);
+assert.match(briefPage, /og:url" content="https:\/\/wwwstationcat\.org\/signal\/daily-brief-2026-07-04\/\?share=20260704090000-card3"/);
 assert.match(briefPage, /og:image:type" content="image\/png"/);
 assert.match(briefPage, /og:image:width" content="1200"/);
 assert.match(briefPage, /og:image:height" content="675"/);

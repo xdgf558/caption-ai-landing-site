@@ -17,6 +17,7 @@ import {
 } from './signalTriage.js';
 import {
   generateSignalBriefDraftWithProviders,
+  getSignalDraftCandidateEligibility,
   normalizeSignalDraftCandidateIds,
   signalDraftMaxCandidates
 } from './signalDraft.js';
@@ -10050,10 +10051,12 @@ const signalAutomationRuntimeToJson = (row) => ({
 const signalCandidateToJson = (row) => {
   const occurrenceCount = normalizePositiveInteger(row.occurrence_count, 1);
   const sourceCount = normalizePositiveInteger(row.occurrence_source_count, 1);
+  const draftEligibility = getSignalDraftCandidateEligibility(row);
   return {
     id: row.id,
     sourceId: row.source_id,
     sourceName: row.source_name || '',
+    sourceTrustTier: draftEligibility.sourceTrustTier,
     runId: row.run_id,
     externalId: row.external_id,
     canonicalUrl: row.canonical_url,
@@ -10064,6 +10067,9 @@ const signalCandidateToJson = (row) => {
     language: row.language,
     category: row.category,
     status: row.status,
+    draftEligible: draftEligibility.eligible,
+    draftEligibilityReason: draftEligibility.reason,
+    draftEligibilityReasonCode: draftEligibility.reasonCode,
     relevanceScore: row.relevance_score === null || row.relevance_score === undefined ? null : Number(row.relevance_score),
     scorePriority:
       row.relevance_score === null || row.relevance_score === undefined
@@ -10084,6 +10090,30 @@ const signalCandidateToJson = (row) => {
     reviewedAt: row.reviewed_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at
+  };
+};
+
+const getIneligibleSignalDraftCandidates = (candidates) =>
+  (Array.isArray(candidates) ? candidates : [])
+    .map((candidate) => ({ candidate, eligibility: getSignalDraftCandidateEligibility(candidate) }))
+    .filter(({ eligibility }) => !eligibility.eligible)
+    .map(({ candidate, eligibility }) => ({
+      id: candidate.id,
+      reason: eligibility.reason,
+      reasonCode: eligibility.reasonCode,
+      sourceTrustTier: eligibility.sourceTrustTier,
+      summaryLength: eligibility.summaryLength,
+      title: cleanText(candidate.title, 240)
+    }));
+
+const signalDraftCandidateContextErrorPayload = (candidates) => {
+  const invalidCandidates = getIneligibleSignalDraftCandidates(candidates);
+  if (!invalidCandidates.length) return null;
+  return {
+    code: 'SIGNAL_DRAFT_CANDIDATE_CONTEXT_INSUFFICIENT',
+    ineligibleCandidates: invalidCandidates,
+    invalidCandidateIds: invalidCandidates.map((candidate) => candidate.id),
+    message: '所选候选缺少可核对的正式来源材料，不能自动生成简报。请改选有完整摘要的正式来源；社区线索可保留作人工选题参考。'
   };
 };
 
@@ -10499,7 +10529,7 @@ const handleAdminListSignalCandidates = async (request, env) => {
              FROM signal_candidate_occurrences
              GROUP BY candidate_id
            )
-           SELECT candidate.*, source.name AS source_name,
+           SELECT candidate.*, source.name AS source_name, source.trust_tier AS source_trust_tier,
                   COALESCE(cluster_sizes.cluster_size, 0) AS cluster_size,
                   COALESCE(occurrence_stats.occurrence_count, 1) AS occurrence_count,
                   COALESCE(occurrence_stats.occurrence_source_count, 1) AS occurrence_source_count
@@ -10529,7 +10559,7 @@ const handleAdminListSignalCandidates = async (request, env) => {
              WHERE cluster_key <> ''
              GROUP BY cluster_key
            )
-           SELECT candidate.*, source.name AS source_name,
+           SELECT candidate.*, source.name AS source_name, source.trust_tier AS source_trust_tier,
                   COALESCE(cluster_sizes.cluster_size, 0) AS cluster_size
            FROM signal_candidates AS candidate
            LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
@@ -10549,7 +10579,7 @@ const handleAdminListSignalCandidates = async (request, env) => {
         .all()
     : await db
         .prepare(
-          `SELECT candidate.*, source.name AS source_name
+          `SELECT candidate.*, source.name AS source_name, source.trust_tier AS source_trust_tier
            FROM signal_candidates AS candidate
            LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
            ${listClauses.length ? `WHERE ${listClauses.join(' AND ')}` : ''}
@@ -10859,7 +10889,7 @@ const handleAdminReviewSignalCandidates = async (request, env) => {
 
   const updatedResponse = await db
     .prepare(
-      `SELECT candidate.*, source.name AS source_name,
+      `SELECT candidate.*, source.name AS source_name, source.trust_tier AS source_trust_tier,
               (SELECT COUNT(*)
                FROM signal_candidates AS related
                WHERE related.cluster_key <> '' AND related.cluster_key = candidate.cluster_key) AS cluster_size
@@ -12844,7 +12874,8 @@ const handleAdminManageSignalBriefModelRollout = async (request, env) => {
     const placeholders = candidateIds.map(() => '?').join(', ');
     const candidateResponse = await db
       .prepare(
-        `SELECT candidate.*, source.name AS source_name, source.publisher AS source_publisher
+        `SELECT candidate.*, source.name AS source_name, source.publisher AS source_publisher,
+                source.trust_tier AS source_trust_tier
          FROM signal_candidates AS candidate
          LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
          WHERE candidate.id IN (${placeholders})`
@@ -12865,6 +12896,8 @@ const handleAdminManageSignalBriefModelRollout = async (request, env) => {
         { status: 409 }
       );
     }
+    const contextError = signalDraftCandidateContextErrorPayload(candidates);
+    if (contextError) return privateJson({ ok: false, ...contextError }, { status: 409 });
     const model = normalizeDeepSeekSignalDraftModel(current.deepseek_model);
     const startedAt = new Date().toISOString();
     await db
@@ -13352,7 +13385,8 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
   const placeholders = candidateIds.map(() => '?').join(', ');
   const candidateResponse = await db
     .prepare(
-      `SELECT candidate.*, source.name AS source_name, source.publisher AS source_publisher
+      `SELECT candidate.*, source.name AS source_name, source.publisher AS source_publisher,
+              source.trust_tier AS source_trust_tier
        FROM signal_candidates AS candidate
        LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
        WHERE candidate.id IN (${placeholders})`
@@ -13379,6 +13413,8 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       { status: 409 }
     );
   }
+  const contextError = signalDraftCandidateContextErrorPayload(candidates);
+  if (contextError) return privateJson({ ok: false, ...contextError }, { status: 409 });
 
   const slug = `daily-brief-${briefDate}`;
   const existing = await db
@@ -16848,11 +16884,15 @@ const dynamicChapterPath = (route, seriesSlug, chapterSlug) => {
 const dynamicSignalPath = (route, slug) => `${route.basePath}${slug}/`;
 const dynamicSignalCardPath = (route, slug) => `${dynamicSignalPath(route, slug)}card.png`;
 const dynamicSignalCardSvgPath = (route, slug) => `${dynamicSignalPath(route, slug)}card.svg`;
-const signalShareCardTemplateVersion = 'card2';
+const signalShareCardTemplateVersion = 'card3';
+const signalShareCardRevision = (row) =>
+  cleanText(row.updated_at || row.published_at || '1', 80).replace(/[^0-9A-Za-z]/g, '') || '1';
 const dynamicVersionedSignalCardPath = (route, row) => {
-  const revision = cleanText(row.updated_at || row.published_at || '1', 80).replace(/[^0-9A-Za-z]/g, '') || '1';
+  const revision = signalShareCardRevision(row);
   return `${dynamicSignalCardPath(route, row.slug)}?v=${encodeURIComponent(`${revision}-${signalShareCardTemplateVersion}`)}`;
 };
+const dynamicVersionedSignalSharePath = (route, row) =>
+  `${dynamicSignalPath(route, row.slug)}?share=${encodeURIComponent(`${signalShareCardRevision(row)}-${signalShareCardTemplateVersion}`)}`;
 
 const dynamicNavCopy = {
   en: {
@@ -16892,8 +16932,9 @@ const absoluteStationUrl = (path) => {
   return `https://wwwstationcat.org${value.startsWith('/') ? value : `/${value}`}`;
 };
 
-const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = '', pageKind = '', robots = '', title }) => {
+const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = '', ogUrl = '', pageKind = '', robots = '', title }) => {
   const ogImageUrl = absoluteStationUrl(ogImage);
+  const ogCanonicalUrl = absoluteStationUrl(ogUrl || canonicalPath);
   const isSignalPage = pageKind === 'signal';
   const navCopy = dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant'];
   const signalPageCopy = isSignalPage ? signalDesignCopy(lang) : null;
@@ -16952,9 +16993,10 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
     <link rel="canonical" href="https://wwwstationcat.org${escapeHtml(canonicalPath)}">
     <meta property="og:title" content="${escapeHtml(title)} | Station Cat">
     <meta property="og:description" content="${escapeHtml(description)}">
-    <meta property="og:url" content="https://wwwstationcat.org${escapeHtml(canonicalPath)}">
+    <meta property="og:url" content="${escapeHtml(ogCanonicalUrl)}">
     <meta property="og:site_name" content="Station Cat">
     ${ogImageUrl ? `<meta property="og:image" content="${escapeHtml(ogImageUrl)}">` : ''}
+    ${ogImageUrl ? `<meta property="og:image:secure_url" content="${escapeHtml(ogImageUrl)}">` : ''}
     ${ogImageUrl ? '<meta property="og:image:type" content="image/png">' : ''}
     ${ogImageUrl ? '<meta property="og:image:width" content="1200">' : ''}
     ${ogImageUrl ? '<meta property="og:image:height" content="675">' : ''}
@@ -16963,6 +17005,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
     <meta name="twitter:title" content="${escapeHtml(title)} | Station Cat">
     <meta name="twitter:description" content="${escapeHtml(description)}">
     ${ogImageUrl ? `<meta name="twitter:image" content="${escapeHtml(ogImageUrl)}">` : ''}
+    ${ogImageUrl ? `<meta name="twitter:image:src" content="${escapeHtml(ogImageUrl)}">` : ''}
     ${ogImageUrl ? `<meta name="twitter:image:alt" content="${escapeHtml(title)}">` : ''}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <style>
@@ -17645,8 +17688,9 @@ const renderDynamicSignalBrief = (route, row, body, navigation = {}) => {
   const fallbackBody = firstPlainSummary([row.excerpt, row.description], 1200);
   const canonicalPath = dynamicSignalPath(route, row.slug);
   const absoluteUrl = absoluteStationUrl(canonicalPath);
+  const shareUrl = absoluteStationUrl(dynamicVersionedSignalSharePath(route, row));
   const shareText = `${row.title} | Station Cat Signal strip`;
-  const shareHref = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(absoluteUrl)}`;
+  const shareHref = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
   const cardPath = dynamicVersionedSignalCardPath(route, row);
   const items = parseSignalMarkdownItems(body.markdown, meta.sources);
   const category = normalizeSignalCategory(meta.category);
@@ -19092,12 +19136,18 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
 
     const body = await readPublicEntryBody(env, brief, { preferMarkdown: true });
     const navigation = await getAdjacentPublishedSignalBriefs(db, brief, route.locale);
+    const shareVersion = cleanText(url.searchParams.get('share'), 120);
+    const expectedShareVersion = `${signalShareCardRevision(brief)}-${signalShareCardTemplateVersion}`;
     return dynamicHtmlResponse(request, {
       body: renderDynamicSignalBrief(route, brief, body, navigation),
       canonicalPath: dynamicCanonicalPath(route),
       description: firstPlainSummary([brief.description, brief.excerpt], 260),
       lang: route.locale,
       ogImage: dynamicVersionedSignalCardPath(route, brief),
+      ogUrl:
+        shareVersion === expectedShareVersion
+          ? `${dynamicSignalPath(route, brief.slug)}?share=${encodeURIComponent(shareVersion)}`
+          : '',
       pageKind: 'signal',
       title: brief.title
     });

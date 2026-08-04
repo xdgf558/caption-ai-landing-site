@@ -8,8 +8,10 @@ import {
   deriveSignalDraftCategory,
   generateSignalBriefDraft,
   generateSignalBriefDraftWithProviders,
+  getSignalDraftCandidateEligibility,
   getSignalDraftMaxTokens,
   normalizeSignalDraftCandidateIds,
+  signalDraftMinimumSourceSummaryLength,
   signalDraftOutputLocale,
   signalDraftQualityVersion
 } from '../src/signalDraft.js';
@@ -27,7 +29,7 @@ const candidates = [
     source_name: 'OpenAI News',
     source_publisher: 'OpenAI',
     status: 'shortlisted',
-    summary: 'OpenAI published a model update with API and safety details.',
+    summary: 'OpenAI published a model update with API release notes, safety evaluation details, deployment guidance, and documented behavior changes for developers.',
     title: 'OpenAI publishes a model and API update'
   },
   {
@@ -39,7 +41,7 @@ const candidates = [
     source_name: 'Federal Reserve',
     source_publisher: 'Federal Reserve',
     status: 'shortlisted',
-    summary: 'The Federal Reserve published an official economic policy update.',
+    summary: 'The Federal Reserve published an official economic policy update with guidance on the policy decision, current conditions, and the outlook for future data.',
     title: 'Federal Reserve publishes policy update'
   },
   {
@@ -51,7 +53,7 @@ const candidates = [
     source_name: 'GitHub Changelog',
     source_publisher: 'GitHub',
     status: 'shortlisted',
-    summary: 'GitHub released a developer workflow update.',
+    summary: 'GitHub released a developer workflow update with documented changes to project setup, review automation, and integration steps for engineering teams.',
     title: 'GitHub updates developer workflows'
   }
 ];
@@ -273,6 +275,26 @@ assert.equal(deriveSignalDraftCategory(candidates), 'ai');
 assert.equal(getSignalDraftMaxTokens(3), 3200);
 assert.equal(getSignalDraftMaxTokens(4), 3520);
 assert.equal(getSignalDraftMaxTokens(10), 6400);
+assert.equal(getSignalDraftCandidateEligibility({ ...candidates[0], source_trust_tier: 'primary' }).eligible, true);
+assert.deepEqual(
+  getSignalDraftCandidateEligibility({ ...candidates[0], source_trust_tier: 'community' }),
+  {
+    eligible: false,
+    reason: '社区线索只用于发现选题，需补充正式来源后才能自动生成简报。',
+    reasonCode: 'SOURCE_TRUST_TIER_INSUFFICIENT',
+    sourceTrustTier: 'community',
+    summaryLength: Array.from(candidates[0].summary).length
+  }
+);
+const shortSummaryEligibility = getSignalDraftCandidateEligibility({
+  ...candidates[0],
+  source_trust_tier: 'primary',
+  summary: 'Too short'
+});
+assert.equal(shortSummaryEligibility.eligible, false);
+assert.equal(shortSummaryEligibility.reasonCode, 'SOURCE_SUMMARY_INSUFFICIENT');
+assert.equal(shortSummaryEligibility.summaryLength, 9);
+assert.match(shortSummaryEligibility.reason, new RegExp(String(signalDraftMinimumSourceSummaryLength)));
 
 const aiCalls = [];
 const ai = {
@@ -1087,6 +1109,39 @@ const invalidStatusResponse = await workerHooks.handleAdminGenerateSignalBriefDr
 assert.equal(invalidStatusResponse.status, 409);
 assert.equal((await invalidStatusResponse.json()).code, 'SIGNAL_DRAFT_CANDIDATE_NOT_SHORTLISTED');
 
+let contextInvalidAiCalled = false;
+const contextInvalidDb = new DraftDb([
+  { ...candidates[0], source_trust_tier: 'primary' },
+  { ...candidates[1], source_trust_tier: 'primary' },
+  { ...candidates[2], source_trust_tier: 'community' }
+]);
+const contextInvalidResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+  new Request('http://localhost/admin/api/signal/drafts/generate', {
+    body: JSON.stringify({
+      briefDate: '2026-07-18',
+      candidateIds: candidates.map((candidate) => candidate.id),
+      category: 'auto'
+    }),
+    headers: { 'content-type': 'application/json' },
+    method: 'POST'
+  }),
+  {
+    AI: {
+      async run() {
+        contextInvalidAiCalled = true;
+        return { response: aiPayloadFor() };
+      }
+    },
+    WAITLIST_DB: contextInvalidDb
+  }
+);
+assert.equal(contextInvalidResponse.status, 409);
+const contextInvalidPayload = await contextInvalidResponse.json();
+assert.equal(contextInvalidPayload.code, 'SIGNAL_DRAFT_CANDIDATE_CONTEXT_INSUFFICIENT');
+assert.deepEqual(contextInvalidPayload.invalidCandidateIds, ['candidate-tech']);
+assert.equal(contextInvalidPayload.ineligibleCandidates[0].reasonCode, 'SOURCE_TRUST_TIER_INSUFFICIENT');
+assert.equal(contextInvalidAiCalled, false);
+
 const protectedResponse = await worker.fetch(
   new Request('https://wwwstationcat.org/admin/api/signal/drafts/generate', { method: 'POST' }),
   {
@@ -1192,6 +1247,7 @@ assert.match(adminSource, /automation: state\.signalDraftAutomation/);
 assert.match(adminSource, /confirmOverwrite: true/);
 assert.match(adminSource, /allowCandidateExclusions: true/);
 assert.match(adminSource, /草稿已保存到内容平台，尚未公开/);
+assert.match(adminSource, /draftEligible === false/);
 
 const workerSource = read('src/worker.js');
 assert.match(workerSource, /status: 'draft'/);
@@ -1201,5 +1257,6 @@ assert.match(workerSource, /WHERE id = \? AND status = 'shortlisted'/);
 assert.match(workerSource, /candidateUsageConflictIds/);
 assert.match(workerSource, /SIGNAL_DRAFT_CANDIDATE_EXCLUSION_CONFIRMATION_REQUIRED/);
 assert.match(workerSource, /Automation provenance is server-owned/);
+assert.match(workerSource, /SIGNAL_DRAFT_CANDIDATE_CONTEXT_INSUFFICIENT/);
 
 console.log('Signal automation phase 4 draft generation, storage, auth, and publication-gate checks passed.');
