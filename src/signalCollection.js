@@ -519,6 +519,66 @@ const htmlAttribute = (attributes, name) => {
   return match?.[1] ?? match?.[2] ?? match?.[3] ?? '';
 };
 
+const htmlMetaContent = (html, keys) => {
+  const expectedKeys = new Set((Array.isArray(keys) ? keys : [keys]).map((key) => String(key || '').toLowerCase()));
+  for (const match of String(html || '').matchAll(/<meta\b([^>]*)>/gi)) {
+    const attributes = match[1];
+    const key = [htmlAttribute(attributes, 'property'), htmlAttribute(attributes, 'name'), htmlAttribute(attributes, 'itemprop')]
+      .map((value) => String(value || '').trim().toLowerCase())
+      .find(Boolean);
+    if (!expectedKeys.has(key)) continue;
+    const content = signalPlainText(htmlAttribute(attributes, 'content'), 1200);
+    if (content) return content;
+  }
+  return '';
+};
+
+const htmlPageTitle = (html) => {
+  const title = String(html || '').match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
+  return signalPlainText(title?.[1], 300) || htmlMetaContent(html, ['og:title', 'twitter:title']);
+};
+
+const firstUsefulHtmlParagraph = (html) => {
+  const paragraphs = [];
+  for (const match of String(html || '').matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
+    const paragraph = signalPlainText(match[1], 1200);
+    if (paragraph) paragraphs.push(paragraph);
+  }
+  return paragraphs.find((paragraph) => Array.from(paragraph).length >= 80) || paragraphs[0] || '';
+};
+
+export const extractSignalLinkedPagePreview = (html) => {
+  const summaries = [
+    ['open_graph', htmlMetaContent(html, 'og:description')],
+    ['twitter', htmlMetaContent(html, 'twitter:description')],
+    ['description', htmlMetaContent(html, 'description')],
+    ['paragraph', firstUsefulHtmlParagraph(html)]
+  ];
+  const usable = summaries.find(([, value]) => Array.from(value).length >= 80) || summaries.find(([, value]) => value);
+  return {
+    summary: usable?.[1] || '',
+    summarySource: usable?.[0] || '',
+    title: htmlPageTitle(html)
+  };
+};
+
+export const fetchSignalLinkedPagePreview = async (url, options = {}) => {
+  const response = await fetchPublicSignalResource(url, {
+    ...options,
+    accept: 'text/html,application/xhtml+xml;q=0.9',
+    maxBytes: Math.min(Math.max(Number(options.maxBytes) || 256 * 1024, 32 * 1024), 512 * 1024)
+  });
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType && !/(?:text\/html|application\/xhtml\+xml)/i.test(contentType)) {
+    throw collectionError('SIGNAL_LINKED_PAGE_CONTENT_UNSUPPORTED', '外链不是可读取的公开网页。', { retriable: false });
+  }
+  const preview = extractSignalLinkedPagePreview(response.body);
+  if (!preview.summary) {
+    throw collectionError('SIGNAL_LINKED_PAGE_SUMMARY_UNAVAILABLE', '外链页面没有可用于简报的公开摘要。', { retriable: false });
+  }
+  return { ...preview, finalUrl: response.finalUrl };
+};
+
 const englishMonthIndexes = new Map(
   ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].map((month, index) => [
     month,
@@ -798,6 +858,7 @@ export const signalContentHash = async (item) => {
 
 export const __signalCollectionTestHooks = {
   collectionError,
+  extractSignalLinkedPagePreview,
   getSignalSourceAdapter,
   normalizePublishedAt,
   parseHackerNewsItem,

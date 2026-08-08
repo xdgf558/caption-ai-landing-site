@@ -2628,7 +2628,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
       elements.signalModelSmoke.disabled = true;
       elements.signalModelSmoke.textContent = '正在测试';
-      setSignalModelStatus('正在调用 DeepSeek 生成临时预览，不会保存或发布。', 'pending');
+      const needsEnrichment = candidateIds.filter((id) => {
+        const candidate = state.signalCandidates.find((item) => item.id === id);
+        return candidate?.draftEligible === false && candidate?.draftEnrichable === true;
+      }).length;
+      setSignalModelStatus(
+        needsEnrichment
+          ? `正在补取 ${needsEnrichment} 条外链公开摘要，再调用 DeepSeek 生成临时预览。`
+          : '正在调用 DeepSeek 生成临时预览，不会保存或发布。',
+        'pending'
+      );
       try {
         const payload = await apiJson('/admin/api/signal/model-rollout', {
           method: 'POST',
@@ -2645,10 +2654,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         renderSignalModelRollout();
         setSignalModelStatus(payload.message, 'success');
         if (state.signalModelPreview) elements.signalModelPreview.open = true;
-        await loadAuditLogs();
+        await Promise.allSettled([loadAuditLogs(), loadSignalCandidates()]);
       } catch (error) {
         setSignalModelStatus(error.message, 'error');
-        await loadSignalModelRollout();
+        await Promise.allSettled([loadSignalModelRollout(), loadSignalCandidates()]);
       } finally {
         elements.signalModelSmoke.textContent = '测试所选候选';
         updateSignalModelControls();
@@ -2760,10 +2769,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       return [];
     };
 
+    const canSelectSignalDraftCandidate = (candidate) =>
+      candidate.status === 'shortlisted' && (candidate.draftEligible !== false || candidate.draftEnrichable === true);
+
     const updateSignalDraftSelection = () => {
       state.signalSelectedCandidateIds.forEach((id) => {
         const candidate = state.signalCandidates.find((item) => item.id === id);
-        if (candidate && (candidate.status !== 'shortlisted' || candidate.draftEligible === false)) {
+        if (candidate && !canSelectSignalDraftCandidate(candidate)) {
           state.signalSelectedCandidateIds.delete(id);
         }
       });
@@ -2780,7 +2792,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const toggleSignalDraftCandidate = (candidate, checked) => {
-      if (candidate.status !== 'shortlisted' || candidate.draftEligible === false) {
+      if (!canSelectSignalDraftCandidate(candidate)) {
         if (candidate.draftEligibilityReason) setSignalCandidateStatus(candidate.draftEligibilityReason, 'error');
         return;
       }
@@ -2813,14 +2825,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           ? `<span>已合并 ${escapeHtml(String(candidate.occurrenceCount))} 条 · ${escapeHtml(String(candidate.sourceCount))} 来源</span>`
           : '';
         const clusterLabel = candidate.clusterSize > 1 ? `<span>近似同题 ${escapeHtml(String(candidate.clusterSize))} 条</span>` : '';
-        const draftSelector = candidate.status === 'shortlisted' && candidate.draftEligible !== false
+        const draftSelector = canSelectSignalDraftCandidate(candidate)
           ? `<label class="admin-signal-candidate-select">
               <input type="checkbox" data-signal-candidate-select ${state.signalSelectedCandidateIds.has(candidate.id) ? 'checked' : ''} />
               <span class="sr-only">选择 ${escapeHtml(candidate.title)} 生成草稿</span>
             </label>`
           : '';
         const draftEligibilityLabel = candidate.status === 'shortlisted' && candidate.draftEligible === false
-          ? `<span title="${escapeHtml(candidate.draftEligibilityReason || '')}">素材不足，不能自动生成</span>`
+          ? `<span title="${escapeHtml(candidate.draftEligibilityReason || '')}">${candidate.draftEnrichable ? '生成前会补取外链摘要' : '素材不足，不能自动生成'}</span>`
           : '';
         row.innerHTML = `
           <div class="admin-signal-candidate-row__heading">
@@ -2911,10 +2923,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           method: 'POST',
           body: JSON.stringify({ action, candidateId: candidate.id, note })
         });
-        if (action === 'shortlist' && candidate.draftEligible !== false && state.signalSelectedCandidateIds.size < 10) {
+        if (action === 'shortlist' && (candidate.draftEligible !== false || candidate.draftEnrichable) && state.signalSelectedCandidateIds.size < 10) {
           state.signalSelectedCandidateIds.add(candidate.id);
           setSignalCandidateStatus(
-            `已入选并加入本次草稿，当前已选 ${state.signalSelectedCandidateIds.size} / 10。`,
+            candidate.draftEnrichable
+              ? `已入选并加入本次草稿，生成前会补取外链公开摘要，当前已选 ${state.signalSelectedCandidateIds.size} / 10。`
+              : `已入选并加入本次草稿，当前已选 ${state.signalSelectedCandidateIds.size} / 10。`,
             'success'
           );
         } else {
@@ -3385,7 +3399,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setSignalCandidateStatus(`草稿已由 ${providerLabel} 生成并保存${fallbackLabel}，候选仍保持“已入选”。`, 'success');
       setSignalDraftStatus('草稿已进入审核队列。请编辑并保存后，再点击“批准发布”。', 'success');
       setSignalStatus('AI 草稿已载入。请核对事实、来源和措辞，保存后回到草稿区批准发布。', 'success');
-      await Promise.all([loadSignalDrafts(), loadSignalBriefs(), loadEntries(), loadAuditLogs()]);
+      await Promise.allSettled([loadSignalCandidates(), loadSignalDrafts(), loadSignalBriefs(), loadEntries(), loadAuditLogs()]);
       elements.signalForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
       window.setTimeout(() => elements.signal.title.focus(), 350);
     };
@@ -3417,7 +3431,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
       elements.signalDraftGenerate.disabled = true;
       elements.signalDraftGenerate.textContent = '正在生成';
-      setSignalCandidateStatus('正在生成可编辑草稿，完成后会载入下方人工发布表单。', 'pending');
+      const needsEnrichment = candidateIds.filter((id) => {
+        const candidate = state.signalCandidates.find((item) => item.id === id);
+        return candidate?.draftEligible === false && candidate?.draftEnrichable === true;
+      }).length;
+      setSignalCandidateStatus(
+        needsEnrichment
+          ? `正在补取 ${needsEnrichment} 条外链公开摘要，再生成可编辑草稿。`
+          : '正在生成可编辑草稿，完成后会载入下方人工发布表单。',
+        'pending'
+      );
       try {
         const draftRequest = {
           briefDate: elements.signalDraftDate.value || todayDateInput(),
@@ -3432,6 +3455,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         await applyGeneratedSignalDraft(payload);
       } catch (error) {
         setSignalCandidateStatus(error.message, 'error');
+        await loadSignalCandidates().catch(() => {});
       } finally {
         elements.signalDraftGenerate.textContent = '生成草稿';
         updateSignalDraftSelection();

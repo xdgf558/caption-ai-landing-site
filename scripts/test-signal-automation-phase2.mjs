@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 import worker, { __readerTotpTestHooks as workerHooks } from '../src/worker.js';
 import {
   collectSignalSource,
+  extractSignalLinkedPagePreview,
+  fetchSignalLinkedPagePreview,
   fetchPublicSignalResource,
   getSignalSourceSecretBinding,
   isSignalSourceSecretConfigured,
@@ -184,6 +186,38 @@ assert.throws(
   () => parseAnthropicNewsPage('<a href="/news/item"><h2>Item</h2><time>Today</time></a>', 'https://example.org/news'),
   (error) => error.code === 'SIGNAL_ANTHROPIC_SOURCE_INVALID'
 );
+
+const linkedPagePreview = extractSignalLinkedPagePreview(
+  `<html><head>
+    <title>Linked source title</title>
+    <meta property="og:description" content="A concrete public-page description that names the actor, the announced product change, the affected users, and the limits that still need review." />
+  </head><body><p>This paragraph should not replace a sufficiently detailed Open Graph description.</p></body></html>`
+);
+assert.equal(linkedPagePreview.title, 'Linked source title');
+assert.equal(linkedPagePreview.summarySource, 'open_graph');
+assert.match(linkedPagePreview.summary, /announced product change/);
+
+const linkedPageFetch = async (url) => {
+  const parsed = new URL(url);
+  if (parsed.hostname === 'cloudflare-dns.com') {
+    const type = parsed.searchParams.get('type');
+    return new Response(
+      JSON.stringify({ Answer: type === 'A' ? [{ data: '93.184.216.34', type: 1 }] : [] }),
+      { headers: { 'content-type': 'application/dns-json' } }
+    );
+  }
+  assert.equal(parsed.toString(), 'https://example.org/linked-source');
+  return new Response(
+    '<html><head><meta name="description" content="A public description with enough specific material to support a fact-checked editorial brief without inventing additional details." /></head></html>',
+    { headers: { 'content-type': 'text/html; charset=utf-8' } }
+  );
+};
+const fetchedLinkedPagePreview = await fetchSignalLinkedPagePreview('https://example.org/linked-source', {
+  fetchImpl: linkedPageFetch
+});
+assert.equal(fetchedLinkedPagePreview.finalUrl, 'https://example.org/linked-source');
+assert.equal(fetchedLinkedPagePreview.summarySource, 'description');
+assert.match(fetchedLinkedPagePreview.summary, /fact-checked editorial brief/);
 
 const dnsPayload = (type, addresses) =>
   JSON.stringify({ Answer: addresses.map((data) => ({ data, type: type === 'A' ? 1 : 28 })) });

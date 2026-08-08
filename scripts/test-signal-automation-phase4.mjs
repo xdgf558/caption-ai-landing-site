@@ -276,16 +276,26 @@ assert.equal(getSignalDraftMaxTokens(3), 3200);
 assert.equal(getSignalDraftMaxTokens(4), 3520);
 assert.equal(getSignalDraftMaxTokens(10), 6400);
 assert.equal(getSignalDraftCandidateEligibility({ ...candidates[0], source_trust_tier: 'primary' }).eligible, true);
-assert.deepEqual(
-  getSignalDraftCandidateEligibility({ ...candidates[0], source_trust_tier: 'community' }),
-  {
-    eligible: false,
-    reason: '社区线索只用于发现选题，需补充正式来源后才能自动生成简报。',
-    reasonCode: 'SOURCE_TRUST_TIER_INSUFFICIENT',
-    sourceTrustTier: 'community',
-    summaryLength: Array.from(candidates[0].summary).length
-  }
-);
+const communityEligibility = getSignalDraftCandidateEligibility({ ...candidates[0], source_trust_tier: 'community' });
+assert.equal(communityEligibility.eligible, false);
+assert.equal(communityEligibility.enrichable, true);
+assert.equal(communityEligibility.reasonCode, 'SOURCE_LINKED_PAGE_PREVIEW_REQUIRED');
+assert.equal(communityEligibility.sourceMaterial, 'source_summary');
+assert.equal(communityEligibility.summaryLength, Array.from(candidates[0].summary).length);
+const linkedPreviewEligibility = getSignalDraftCandidateEligibility({
+  ...candidates[0],
+  metadata_json: JSON.stringify({
+    linkedPagePreview: {
+      finalUrl: candidates[0].canonical_url,
+      summaryLength: Array.from(candidates[0].summary).length,
+      summarySource: 'open_graph'
+    }
+  }),
+  source_trust_tier: 'community'
+});
+assert.equal(linkedPreviewEligibility.eligible, true);
+assert.equal(linkedPreviewEligibility.enrichable, false);
+assert.equal(linkedPreviewEligibility.sourceMaterial, 'linked_page_preview');
 const shortSummaryEligibility = getSignalDraftCandidateEligibility({
   ...candidates[0],
   source_trust_tier: 'primary',
@@ -294,7 +304,8 @@ const shortSummaryEligibility = getSignalDraftCandidateEligibility({
 assert.equal(shortSummaryEligibility.eligible, false);
 assert.equal(shortSummaryEligibility.reasonCode, 'SOURCE_SUMMARY_INSUFFICIENT');
 assert.equal(shortSummaryEligibility.summaryLength, 9);
-assert.match(shortSummaryEligibility.reason, new RegExp(String(signalDraftMinimumSourceSummaryLength)));
+assert.equal(shortSummaryEligibility.enrichable, true);
+assert.match(shortSummaryEligibility.reason, /补取外链公开摘要/);
 
 const aiCalls = [];
 const ai = {
@@ -716,6 +727,23 @@ class DraftStatement {
   async run() {
     this.db.sql.push(this.sql);
     if (/INSERT INTO admin_audit_logs/i.test(this.sql)) this.db.auditActions.push(this.params[1]);
+    if (/UPDATE signal_candidates[\s\S]+SET summary = \?/i.test(this.sql)) {
+      const candidate = this.db.candidates.get(this.params.at(-1));
+      if (!candidate || candidate.status !== 'shortlisted') return { meta: { changes: 0 }, success: true };
+      candidate.summary = this.params[0];
+      candidate.relevance_score = this.params[1];
+      candidate.score_breakdown_json = this.params[2];
+      candidate.cluster_key = this.params[3];
+      if (this.params.length === 8) {
+        candidate.title_fingerprint = this.params[4];
+        candidate.metadata_json = this.params[5];
+        candidate.scored_at = this.params[6];
+      } else {
+        candidate.metadata_json = this.params[4];
+        candidate.scored_at = this.params[5];
+      }
+      return { meta: { changes: 1 }, success: true };
+    }
     if (/UPDATE signal_candidates[\s\S]+status = 'used'/i.test(this.sql)) {
       const candidate = this.db.candidates.get(this.params[1]);
       if (!candidate || candidate.status !== 'shortlisted') return { meta: { changes: 0 }, success: true };
@@ -788,6 +816,55 @@ assert.deepEqual([...draftDb.candidates.values()].map((candidate) => candidate.s
 ]);
 assert.equal(draftDb.sql.some((sql) => /UPDATE signal_candidates/i.test(sql)), false);
 assert.ok(draftDb.auditActions.includes('signal_brief_draft_generate'));
+
+const previewCandidates = candidates.map((candidate, index) => ({
+  ...candidate,
+  canonical_url: `https://example.org/linked-${index + 1}`,
+  source_trust_tier: 'community',
+  summary: ''
+}));
+const previousFetchForLinkedPagePreview = globalThis.fetch;
+try {
+  globalThis.fetch = async (url) => {
+    const parsed = new URL(url);
+    if (parsed.hostname === 'cloudflare-dns.com') {
+      const type = parsed.searchParams.get('type');
+      return new Response(
+        JSON.stringify({ Answer: type === 'A' ? [{ data: '93.184.216.34', type: 1 }] : [] }),
+        { headers: { 'content-type': 'application/dns-json' } }
+      );
+    }
+    return new Response(
+      `<html><head><meta property="og:description" content="${parsed.pathname.slice(1)} has a concrete public summary that identifies the actor, the product change, the affected users, and the remaining limits for review." /></head></html>`,
+      { headers: { 'content-type': 'text/html; charset=utf-8' } }
+    );
+  };
+  const previewDb = new DraftDb(previewCandidates);
+  const previewResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+    new Request('http://localhost/admin/api/signal/drafts/generate', {
+      body: JSON.stringify({
+        briefDate: '2026-07-18',
+        candidateIds: previewCandidates.map((candidate) => candidate.id),
+        category: 'auto'
+      }),
+      headers: { 'content-type': 'application/json' },
+      method: 'POST'
+    }),
+    {
+      AI: { run: async () => ({ response: aiPayloadFor(previewCandidates) }) },
+      CONTENT_BUCKET: { async put() {} },
+      WAITLIST_DB: previewDb
+    }
+  );
+  assert.equal(previewResponse.status, 200);
+  const previewPayload = await previewResponse.json();
+  assert.deepEqual(previewPayload.enrichment.enrichedCandidateIds, previewCandidates.map((candidate) => candidate.id));
+  assert.equal(previewPayload.enrichment.failedCandidates.length, 0);
+  assert.ok([...previewDb.candidates.values()].every((candidate) => candidate.summary.length >= signalDraftMinimumSourceSummaryLength));
+  assert.ok([...previewDb.candidates.values()].every((candidate) => candidate.metadata_json.includes('linkedPagePreview')));
+} finally {
+  globalThis.fetch = previousFetchForLinkedPagePreview;
+}
 
 const originalFetch = globalThis.fetch;
 try {
@@ -1113,7 +1190,11 @@ let contextInvalidAiCalled = false;
 const contextInvalidDb = new DraftDb([
   { ...candidates[0], source_trust_tier: 'primary' },
   { ...candidates[1], source_trust_tier: 'primary' },
-  { ...candidates[2], source_trust_tier: 'community' }
+  {
+    ...candidates[2],
+    canonical_url: 'https://news.ycombinator.com/item?id=123456',
+    source_trust_tier: 'community'
+  }
 ]);
 const contextInvalidResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
   new Request('http://localhost/admin/api/signal/drafts/generate', {
@@ -1139,7 +1220,7 @@ assert.equal(contextInvalidResponse.status, 409);
 const contextInvalidPayload = await contextInvalidResponse.json();
 assert.equal(contextInvalidPayload.code, 'SIGNAL_DRAFT_CANDIDATE_CONTEXT_INSUFFICIENT');
 assert.deepEqual(contextInvalidPayload.invalidCandidateIds, ['candidate-tech']);
-assert.equal(contextInvalidPayload.ineligibleCandidates[0].reasonCode, 'SOURCE_TRUST_TIER_INSUFFICIENT');
+assert.equal(contextInvalidPayload.ineligibleCandidates[0].reasonCode, 'SOURCE_LINKED_PAGE_PREVIEW_REQUIRED');
 assert.equal(contextInvalidAiCalled, false);
 
 const protectedResponse = await worker.fetch(

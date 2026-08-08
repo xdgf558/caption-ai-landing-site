@@ -3,8 +3,8 @@ const signalDraftCategories = new Set(['ai', 'tech', 'economy', 'market', 'resea
 export const signalDraftMinCandidates = 3;
 export const signalDraftMaxCandidates = 10;
 export const signalDraftMinimumSourceSummaryLength = 80;
-export const signalDraftPromptVersion = 10;
-export const signalDraftQualityVersion = 5;
+export const signalDraftPromptVersion = 11;
+export const signalDraftQualityVersion = 6;
 export const signalDraftOutputLocale = 'zh-Hant';
 
 export const getSignalDraftMaxTokens = (candidateCount) => {
@@ -24,6 +24,35 @@ const cleanText = (value, maxLength = 1000) =>
 
 const signalDraftEligibleSourceTrustTiers = new Set(['primary', 'established']);
 
+const parseCandidateMetadata = (candidate) => {
+  const value = candidate?.metadata ?? candidate?.metadata_json;
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(String(value || ''));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const getCandidateLinkedPageUrl = (candidate) => {
+  const value = cleanText(candidate?.canonicalUrl ?? candidate?.canonical_url, 2000);
+  try {
+    const url = new URL(value);
+    if (!['http:', 'https:'].includes(url.protocol) || url.hostname.toLowerCase() === 'news.ycombinator.com') return '';
+    return url.toString();
+  } catch {
+    return '';
+  }
+};
+
+const hasLinkedPagePreview = (metadata) => {
+  const preview = metadata?.linkedPagePreview;
+  if (!preview || typeof preview !== 'object' || Array.isArray(preview)) return false;
+  const summaryLength = Number.parseInt(preview.summaryLength, 10) || 0;
+  return Boolean(cleanText(preview.finalUrl, 2000) && cleanText(preview.summarySource, 40)) && summaryLength >= signalDraftMinimumSourceSummaryLength;
+};
+
 export const getSignalDraftCandidateEligibility = (candidate) => {
   // Existing callers that predate source tiers remain compatible. Production
   // candidate queries always supply this field from signal_sources.
@@ -32,23 +61,40 @@ export const getSignalDraftCandidateEligibility = (candidate) => {
     30
   ).toLowerCase() || 'primary';
   const summaryLength = Array.from(cleanText(candidate?.summary, 1600)).length;
+  const metadata = parseCandidateMetadata(candidate);
+  const linkedPagePreview = hasLinkedPagePreview(metadata);
+  const linkedPageUrl = getCandidateLinkedPageUrl(candidate);
+  const enrichable = Boolean(linkedPageUrl) && !linkedPagePreview;
+  const sourceMaterial = linkedPagePreview
+    ? 'linked_page_preview'
+    : summaryLength >= signalDraftMinimumSourceSummaryLength
+      ? 'source_summary'
+      : 'missing';
 
-  if (!signalDraftEligibleSourceTrustTiers.has(sourceTrustTier)) {
+  if (!signalDraftEligibleSourceTrustTiers.has(sourceTrustTier) && !linkedPagePreview) {
     return {
       eligible: false,
-      reason: '社区线索只用于发现选题，需补充正式来源后才能自动生成简报。',
-      reasonCode: 'SOURCE_TRUST_TIER_INSUFFICIENT',
+      reason: enrichable
+        ? '社区线索会在生成前补取外链公开摘要，补取成功后才能生成简报。'
+        : '社区线索缺少可核对的外链公开摘要，不能自动生成简报。',
+      reasonCode: 'SOURCE_LINKED_PAGE_PREVIEW_REQUIRED',
       sourceTrustTier,
-      summaryLength
+      summaryLength,
+      sourceMaterial,
+      enrichable
     };
   }
   if (summaryLength < signalDraftMinimumSourceSummaryLength) {
     return {
       eligible: false,
-      reason: `来源摘要不足 ${signalDraftMinimumSourceSummaryLength} 个字符，无法生成可核对的简报内容。`,
+      reason: enrichable
+        ? '来源摘要不足，生成前会补取外链公开摘要。'
+        : `来源摘要不足 ${signalDraftMinimumSourceSummaryLength} 个字符，无法生成可核对的简报内容。`,
       reasonCode: 'SOURCE_SUMMARY_INSUFFICIENT',
       sourceTrustTier,
-      summaryLength
+      summaryLength,
+      sourceMaterial,
+      enrichable
     };
   }
   return {
@@ -56,7 +102,9 @@ export const getSignalDraftCandidateEligibility = (candidate) => {
     reason: '',
     reasonCode: '',
     sourceTrustTier,
-    summaryLength
+    summaryLength,
+    sourceMaterial,
+    enrichable: false
   };
 };
 
@@ -304,16 +352,20 @@ const buildDraftSchema = (candidateCount) => ({
 });
 
 const buildDraftMessages = (candidates, options = {}) => {
-  const sourceData = candidates.map((candidate) => ({
-    candidateId: candidate.id,
-    title: cleanText(candidate.title, 300),
-    summary: cleanText(candidate.summary, 1600),
-    source: cleanText(candidate.sourceName || candidate.source_name || candidate.sourceId || candidate.source_id, 180),
-    publisher: cleanText(candidate.sourcePublisher || candidate.source_publisher, 180),
-    sourceTier: cleanText(candidate.sourceTrustTier || candidate.source_trust_tier, 30),
-    category: normalizeCategory(candidate.category),
-    publishedAt: cleanText(candidate.publishedAt || candidate.published_at, 80)
-  }));
+  const sourceData = candidates.map((candidate) => {
+    const eligibility = getSignalDraftCandidateEligibility(candidate);
+    return {
+      candidateId: candidate.id,
+      title: cleanText(candidate.title, 300),
+      summary: cleanText(candidate.summary, 1600),
+      source: cleanText(candidate.sourceName || candidate.source_name || candidate.sourceId || candidate.source_id, 180),
+      publisher: cleanText(candidate.sourcePublisher || candidate.source_publisher, 180),
+      sourceTier: cleanText(candidate.sourceTrustTier || candidate.source_trust_tier, 30),
+      sourceMaterial: eligibility.sourceMaterial,
+      category: normalizeCategory(candidate.category),
+      publishedAt: cleanText(candidate.publishedAt || candidate.published_at, 80)
+    };
+  });
   return [
     {
       role: 'system',
@@ -326,6 +378,7 @@ const buildDraftMessages = (candidates, options = {}) => {
         'Do not leave complete English sentences in title, description, headline, summary, signal, or noise. English proper nouns and technical terms may remain when clearer.',
         'Do not invent facts, quotes, causes, forecasts, or source URLs.',
         'Use a number only when the same number appears in that candidate source. Never calculate, convert, round, or transfer a number from another item.',
+        'When sourceMaterial is linked_page_preview, the summary was fetched from the public page linked by a community discovery source. Treat it as attributed webpage context, not evidence of a first-party announcement.',
         'Every summary must name the concrete actor, action, and object stated in that item\'s source summary. Never describe an item merely as an article, a discussion, or a topic.',
         'Every signal must identify a concrete affected workflow, decision, market, or audience; every noise must identify a specific missing fact or scope limit from that item. Do not use generic wording such as "it may matter" or "details are limited" without naming what matters or what detail is missing.',
         'Return exactly one item for every candidateId and use each candidateId exactly once.',

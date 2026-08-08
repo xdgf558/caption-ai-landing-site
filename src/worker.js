@@ -2,6 +2,7 @@ import { novelPaymentConfig } from './generated/novelPaymentConfig.js';
 import { protectedSerialContent } from './generated/protectedSerialContent.js';
 import {
   collectSignalSource,
+  fetchSignalLinkedPagePreview,
   getSignalSourceAdapter,
   getSignalSourceSecretBinding,
   isSignalSourceSecretConfigured,
@@ -10068,8 +10069,10 @@ const signalCandidateToJson = (row) => {
     category: row.category,
     status: row.status,
     draftEligible: draftEligibility.eligible,
+    draftEnrichable: draftEligibility.enrichable,
     draftEligibilityReason: draftEligibility.reason,
     draftEligibilityReasonCode: draftEligibility.reasonCode,
+    draftSourceMaterial: draftEligibility.sourceMaterial,
     relevanceScore: row.relevance_score === null || row.relevance_score === undefined ? null : Number(row.relevance_score),
     scorePriority:
       row.relevance_score === null || row.relevance_score === undefined
@@ -10103,17 +10106,153 @@ const getIneligibleSignalDraftCandidates = (candidates) =>
       reasonCode: eligibility.reasonCode,
       sourceTrustTier: eligibility.sourceTrustTier,
       summaryLength: eligibility.summaryLength,
+      enrichable: eligibility.enrichable,
       title: cleanText(candidate.title, 240)
     }));
 
 const signalDraftCandidateContextErrorPayload = (candidates) => {
   const invalidCandidates = getIneligibleSignalDraftCandidates(candidates);
   if (!invalidCandidates.length) return null;
+  const enrichableCandidateIds = invalidCandidates.filter((candidate) => candidate.enrichable).map((candidate) => candidate.id);
   return {
     code: 'SIGNAL_DRAFT_CANDIDATE_CONTEXT_INSUFFICIENT',
     ineligibleCandidates: invalidCandidates,
     invalidCandidateIds: invalidCandidates.map((candidate) => candidate.id),
-    message: '所选候选缺少可核对的正式来源材料，不能自动生成简报。请改选有完整摘要的正式来源；社区线索可保留作人工选题参考。'
+    enrichableCandidateIds,
+    message: enrichableCandidateIds.length
+      ? '所选候选需要补取外链公开摘要后才能生成简报。请重试，或改选材料完整的正式来源。'
+      : '所选候选缺少可核对的公开来源材料，不能自动生成简报。请改选有完整摘要的正式来源。'
+  };
+};
+
+const loadSelectedSignalDraftCandidates = async (db, candidateIds) => {
+  const placeholders = candidateIds.map(() => '?').join(', ');
+  const response = await db
+    .prepare(
+      `SELECT candidate.*, source.name AS source_name, source.publisher AS source_publisher,
+              source.trust_tier AS source_trust_tier, source.category AS source_category
+       FROM signal_candidates AS candidate
+       LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
+       WHERE candidate.id IN (${placeholders})`
+    )
+    .bind(...candidateIds)
+    .all();
+  const candidateMap = new Map((response.results || []).map((candidate) => [candidate.id, candidate]));
+  return candidateIds.map((id) => candidateMap.get(id));
+};
+
+const enrichSignalDraftCandidateMaterials = async (db, candidates) => {
+  const targets = candidates.filter((candidate) => {
+    const eligibility = getSignalDraftCandidateEligibility(candidate);
+    return !eligibility.eligible && eligibility.enrichable;
+  });
+  if (!targets.length) {
+    return { attemptedCandidateIds: [], enrichedCandidateIds: [], failedCandidates: [], skippedCandidateIds: [] };
+  }
+
+  const fetchedAt = new Date().toISOString();
+  const previewResults = await Promise.allSettled(
+    targets.map(async (candidate) => {
+      const preview = await fetchSignalLinkedPagePreview(candidate.canonical_url);
+      const metadata = normalizeJsonObject(parseStoredJson(candidate.metadata_json, {}));
+      const [enriched] = await enrichSignalCandidateRows(
+        [
+          {
+            ...candidate,
+            metadata_json: JSON.stringify({
+              ...metadata,
+              linkedPagePreview: {
+                finalUrl: preview.finalUrl,
+                fetchedAt,
+                summaryLength: Array.from(preview.summary).length,
+                summarySource: preview.summarySource,
+                title: cleanText(preview.title, 300)
+              }
+            }),
+            source: {
+              category: candidate.source_category || candidate.category,
+              trust_tier: candidate.source_trust_tier || 'community'
+            },
+            summary: preview.summary
+          }
+        ],
+        { now: new Date(fetchedAt) }
+      );
+      return enriched;
+    })
+  );
+  const successfulRows = previewResults
+    .flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []))
+    .filter(Boolean);
+  const failedCandidates = previewResults.flatMap((result, index) => {
+    if (result.status === 'fulfilled') return [];
+    return [
+      {
+        candidateId: targets[index].id,
+        code: cleanText(result.reason?.code || 'SIGNAL_LINKED_PAGE_FETCH_FAILED', 120),
+        message: cleanText(result.reason?.message || '无法读取外链公开摘要。', 300)
+      }
+    ];
+  });
+  if (!successfulRows.length) {
+    return {
+      attemptedCandidateIds: targets.map((candidate) => candidate.id),
+      enrichedCandidateIds: [],
+      failedCandidates,
+      skippedCandidateIds: []
+    };
+  }
+
+  const dedupReady = await ensureSignalCandidateDeduplicationReady(db);
+  const updates = await db.batch(
+    successfulRows.map((row) =>
+      dedupReady
+        ? db
+            .prepare(
+              `UPDATE signal_candidates
+               SET summary = ?, relevance_score = ?, score_breakdown_json = ?, cluster_key = ?,
+                   title_fingerprint = ?, metadata_json = ?, scored_at = ?, updated_at = CURRENT_TIMESTAMP
+               WHERE id = ? AND status = 'shortlisted'`
+            )
+            .bind(
+              row.summary,
+              row.relevanceScore,
+              row.scoreBreakdownJson,
+              row.clusterKey,
+              row.titleFingerprint,
+              row.metadataJson,
+              row.scoredAt,
+              row.id
+            )
+        : db
+            .prepare(
+              `UPDATE signal_candidates
+               SET summary = ?, relevance_score = ?, score_breakdown_json = ?, cluster_key = ?,
+                   metadata_json = ?, scored_at = ?, updated_at = CURRENT_TIMESTAMP
+               WHERE id = ? AND status = 'shortlisted'`
+            )
+            .bind(
+              row.summary,
+              row.relevanceScore,
+              row.scoreBreakdownJson,
+              row.clusterKey,
+              row.metadataJson,
+              row.scoredAt,
+              row.id
+            )
+    )
+  );
+  const enrichedCandidateIds = successfulRows
+    .filter((_row, index) => getD1ChangeCount(updates[index]) > 0)
+    .map((row) => row.id);
+  const skippedCandidateIds = successfulRows
+    .filter((_row, index) => getD1ChangeCount(updates[index]) === 0)
+    .map((row) => row.id);
+  return {
+    attemptedCandidateIds: targets.map((candidate) => candidate.id),
+    enrichedCandidateIds,
+    failedCandidates,
+    skippedCandidateIds
   };
 };
 
@@ -12835,7 +12974,7 @@ const handleAdminManageSignalBriefModelRollout = async (request, env) => {
   }
 
   if (action === 'smoke_test') {
-    if (!(await ensureSignalAutomationTablesReady(db))) {
+    if (!(await ensureSignalAutomationTablesReady(db)) || !(await ensureSignalCandidateTriageReady(db))) {
       return privateJson(
         {
           ok: false,
@@ -12871,33 +13010,31 @@ const handleAdminManageSignalBriefModelRollout = async (request, env) => {
     if (requestedCategory !== 'auto' && !signalAutomationCategories.has(requestedCategory)) {
       return privateJson({ ok: false, code: 'SIGNAL_DRAFT_CATEGORY_INVALID', message: '简报分类无效。' }, { status: 400 });
     }
-    const placeholders = candidateIds.map(() => '?').join(', ');
-    const candidateResponse = await db
-      .prepare(
-        `SELECT candidate.*, source.name AS source_name, source.publisher AS source_publisher,
-                source.trust_tier AS source_trust_tier
-         FROM signal_candidates AS candidate
-         LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
-         WHERE candidate.id IN (${placeholders})`
-      )
-      .bind(...candidateIds)
-      .all();
-    const candidateMap = new Map((candidateResponse.results || []).map((candidate) => [candidate.id, candidate]));
-    if (candidateMap.size !== candidateIds.length) {
+    let candidates = await loadSelectedSignalDraftCandidates(db, candidateIds);
+    if (candidates.some((candidate) => !candidate)) {
       return privateJson(
         { ok: false, code: 'SIGNAL_DRAFT_CANDIDATE_NOT_FOUND', message: '部分候选资讯已经不存在，请刷新后重试。' },
         { status: 404 }
       );
     }
-    const candidates = candidateIds.map((id) => candidateMap.get(id));
     if (candidates.some((candidate) => candidate.status !== 'shortlisted')) {
       return privateJson(
         { ok: false, code: 'SIGNAL_DRAFT_CANDIDATE_NOT_SHORTLISTED', message: '冒烟测试只能使用已入选候选。' },
         { status: 409 }
       );
     }
+    const enrichment = await enrichSignalDraftCandidateMaterials(db, candidates);
+    if (enrichment.attemptedCandidateIds.length) {
+      candidates = await loadSelectedSignalDraftCandidates(db, candidateIds);
+    }
+    if (candidates.some((candidate) => !candidate || candidate.status !== 'shortlisted')) {
+      return privateJson(
+        { ok: false, code: 'SIGNAL_DRAFT_CANDIDATE_NOT_SHORTLISTED', message: '候选状态已变化，请刷新后重新选择。' },
+        { status: 409 }
+      );
+    }
     const contextError = signalDraftCandidateContextErrorPayload(candidates);
-    if (contextError) return privateJson({ ok: false, ...contextError }, { status: 409 });
+    if (contextError) return privateJson({ ok: false, ...contextError, enrichment }, { status: 409 });
     const model = normalizeDeepSeekSignalDraftModel(current.deepseek_model);
     const startedAt = new Date().toISOString();
     await db
@@ -12924,7 +13061,9 @@ const handleAdminManageSignalBriefModelRollout = async (request, env) => {
         { briefDate, category: requestedCategory }
       );
       const completedAt = new Date().toISOString();
-      const message = `冒烟通过：${candidateIds.length} 条候选，未保存、未发布。`;
+      const message = `冒烟通过：${candidateIds.length} 条候选，未保存、未发布。${
+        enrichment.enrichedCandidateIds.length ? `已补取 ${enrichment.enrichedCandidateIds.length} 条外链公开摘要。` : ''
+      }`;
       const update = await db
         .prepare(
           `UPDATE signal_model_rollout
@@ -12962,6 +13101,7 @@ const handleAdminManageSignalBriefModelRollout = async (request, env) => {
           candidateIds,
           finishReason: draft.finishReason,
           model,
+          enrichment,
           usage: draft.usage
         }
       });
@@ -12979,6 +13119,7 @@ const handleAdminManageSignalBriefModelRollout = async (request, env) => {
           title: draft.title,
           usage: draft.usage
         },
+        enrichment,
         rollout: signalBriefModelRolloutToJson(row, env)
       });
     } catch (error) {
@@ -13382,25 +13523,13 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
     return privateJson({ ok: false, code: 'SIGNAL_DRAFT_CATEGORY_INVALID', message: '简报分类无效。' }, { status: 400 });
   }
 
-  const placeholders = candidateIds.map(() => '?').join(', ');
-  const candidateResponse = await db
-    .prepare(
-      `SELECT candidate.*, source.name AS source_name, source.publisher AS source_publisher,
-              source.trust_tier AS source_trust_tier
-       FROM signal_candidates AS candidate
-       LEFT JOIN signal_sources AS source ON source.id = candidate.source_id
-       WHERE candidate.id IN (${placeholders})`
-    )
-    .bind(...candidateIds)
-    .all();
-  const candidateMap = new Map((candidateResponse.results || []).map((candidate) => [candidate.id, candidate]));
-  if (candidateMap.size !== candidateIds.length) {
+  let candidates = await loadSelectedSignalDraftCandidates(db, candidateIds);
+  if (candidates.some((candidate) => !candidate)) {
     return privateJson(
       { ok: false, code: 'SIGNAL_DRAFT_CANDIDATE_NOT_FOUND', message: '部分候选资讯已经不存在，请刷新后重试。' },
       { status: 404 }
     );
   }
-  const candidates = candidateIds.map((id) => candidateMap.get(id));
   const invalidCandidates = candidates.filter((candidate) => candidate.status !== 'shortlisted');
   if (invalidCandidates.length) {
     return privateJson(
@@ -13413,8 +13542,24 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       { status: 409 }
     );
   }
+  const enrichment = await enrichSignalDraftCandidateMaterials(db, candidates);
+  if (enrichment.attemptedCandidateIds.length) {
+    candidates = await loadSelectedSignalDraftCandidates(db, candidateIds);
+  }
+  const candidatesAfterEnrichment = candidates.filter((candidate) => !candidate || candidate.status !== 'shortlisted');
+  if (candidatesAfterEnrichment.length) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'SIGNAL_DRAFT_CANDIDATE_NOT_SHORTLISTED',
+        invalidCandidateIds: candidatesAfterEnrichment.map((candidate) => candidate?.id).filter(Boolean),
+        message: '候选状态已变化，请刷新后重新选择。'
+      },
+      { status: 409 }
+    );
+  }
   const contextError = signalDraftCandidateContextErrorPayload(candidates);
-  if (contextError) return privateJson({ ok: false, ...contextError }, { status: 409 });
+  if (contextError) return privateJson({ ok: false, ...contextError, enrichment }, { status: 409 });
 
   const slug = `daily-brief-${briefDate}`;
   const existing = await db
@@ -13490,6 +13635,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
           providerAttempts: draft.providerAttempts,
           promptVersion: draft.promptVersion,
           qualityVersion: draft.qualityVersion,
+          sourceMaterialEnrichment: enrichment,
           rolloutMode: rollout.rolloutMode,
           rolloutUpdatedAt: rollout.updatedAt || '',
           sourceEntryId: existing?.id || 0,
@@ -13527,6 +13673,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
         provider: draft.provider,
         providerAttempts: draft.providerAttempts,
         qualityVersion: draft.qualityVersion,
+        sourceMaterialEnrichment: enrichment,
         rolloutMode: rollout.rolloutMode,
         rolloutUpdatedAt: rollout.updatedAt || '',
         usage: draft.usage
@@ -13544,6 +13691,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       providerAttempts: draft.providerAttempts,
       promptVersion: draft.promptVersion,
       qualityVersion: draft.qualityVersion,
+      sourceMaterialEnrichment: enrichment,
       rolloutMode: rollout.rolloutMode,
       rolloutUpdatedAt: rollout.updatedAt || '',
       sourceEntryId: saved.id,
@@ -13555,6 +13703,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       automation,
       body: { html: entry.html, markdown: draft.markdown },
       candidateStatusesChanged: false,
+      enrichment,
       entry: contentEntryToJson(saved),
       revisionNumber,
       stage: 'signal-automation-4'
