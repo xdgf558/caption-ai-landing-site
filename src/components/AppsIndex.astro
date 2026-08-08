@@ -2,7 +2,6 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProductCard from './ProductCard.astro';
 import { captionAiProduct } from '../data/products/caption-ai';
-import { xFollowCleanerProduct } from '../data/products/x-follow-cleaner';
 import { anyTlsDesktopManagerProduct } from '../data/products/anytls-desktop-manager';
 import { simpleCutProProduct } from '../data/products/simplecut-pro';
 import { privatePinyinProduct } from '../data/products/privatepinyin';
@@ -28,7 +27,7 @@ const copy = {
     description: 'Station Cat 正在開發和發布的小工具。',
     kicker: 'Station Cat Apps',
     heading: '小而實用的創作工具。',
-    intro: '這裡會放 Station Cat 正在開發、測試和發布的 App。現在有已上架的生活文案工具 SnapCopy、本機優先的 AI 小說創作工作台 NovelForge AI、macOS / Windows / iOS 中文輸入法「猫栈拼音」、桌面影片剪輯工具 SimpleCut Pro、Windows / Mac 配置管理工具 NodePilot，以及整理 X 關注列表的 Chrome 擴充功能。',
+    intro: '這裡會放 Station Cat 正在開發、測試和發布的 App。現在有已上架的生活文案工具 SnapCopy、本機優先的 AI 小說創作工作台 NovelForge AI、macOS / Windows / iOS 中文輸入法「猫栈拼音」、桌面影片剪輯工具 SimpleCut Pro，以及 Windows / Mac 配置管理工具 NodePilot。',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: '把早餐、咖啡、散步、寵物、旅行和日常照片，變成更適合分享的文案。',
     snapcopyCta: '查看 SnapCopy',
@@ -46,17 +45,14 @@ const copy = {
     simplecutDownloadCta: `下載 ${currentVersion}`,
     anytlsKicker: 'Windows / Mac test build',
     anytlsDescription: '整理你擁有或被授權管理的 AnyTLS 配置、連線資訊和本機備註。',
-    anytlsCta: '查看 NodePilot',
-    followCleanerKicker: 'Chrome extension',
-    followCleanerDescription: '低頻檢查 X 關注列表，本地保存結果，並支援 CSV / JSON 匯出。',
-    followCleanerCta: '查看 X Follow Cleaner'
+    anytlsCta: '查看 NodePilot'
   },
   'zh-Hans': {
     title: 'Apps from Station Cat',
     description: 'Station Cat 正在开发和发布的小工具。',
     kicker: 'Station Cat Apps',
     heading: '小而实用的创作工具。',
-    intro: '这里会放 Station Cat 正在开发、测试和发布的 App。现在有已上架的生活文案工具 SnapCopy、本地优先的 AI 小说创作工作台 NovelForge AI、macOS / Windows / iOS 中文输入法「猫栈拼音」、桌面视频剪辑工具 SimpleCut Pro、Windows / Mac 配置管理工具 NodePilot，以及整理 X 关注列表的 Chrome 扩展。',
+    intro: '这里会放 Station Cat 正在开发、测试和发布的 App。现在有已上架的生活文案工具 SnapCopy、本地优先的 AI 小说创作工作台 NovelForge AI、macOS / Windows / iOS 中文输入法「猫栈拼音」、桌面视频剪辑工具 SimpleCut Pro，以及 Windows / Mac 配置管理工具 NodePilot。',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: '把早餐、咖啡、散步、宠物、旅行和日常照片，变成更适合分享的文案。',
     snapcopyCta: '查看 SnapCopy',
@@ -74,17 +70,14 @@ const copy = {
     simplecutDownloadCta: `下载 ${currentVersion}`,
     anytlsKicker: 'Windows / Mac test build',
     anytlsDescription: '整理你拥有或被授权管理的 AnyTLS 配置、连接信息和本机备注。',
-    anytlsCta: '查看 NodePilot',
-    followCleanerKicker: 'Chrome extension',
-    followCleanerDescription: '低频检查 X 关注列表，本地保存结果，并支持 CSV / JSON 导出。',
-    followCleanerCta: '查看 X Follow Cleaner'
+    anytlsCta: '查看 NodePilot'
   },
   en: {
     title: 'Apps from Station Cat',
     description: 'Small tools built and published by Station Cat.',
     kicker: 'Station Cat Apps',
     heading: 'Small tools for everyday creativity.',
-    intro: 'This is where Station Cat collects apps in development, testing, and public release: SnapCopy for everyday captions, NovelForge AI for author-controlled fiction workflows, Maozhan Pinyin for macOS / Windows / iOS Chinese input, SimpleCut Pro for desktop video edits, NodePilot for authorized Windows / Mac configuration management, and a Chrome extension for calmer X follow-list reviews.',
+    intro: 'This is where Station Cat collects apps in development, testing, and public release: SnapCopy for everyday captions, NovelForge AI for author-controlled fiction workflows, Maozhan Pinyin for macOS / Windows / iOS Chinese input, SimpleCut Pro for desktop video edits, and NodePilot for authorized Windows / Mac configuration management.',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: 'Turn breakfast, coffee, walks, pets, travel, and daily photos into captions that are easier to share.',
     snapcopyCta: 'View SnapCopy',
@@ -102,17 +95,14 @@ const copy = {
     simplecutDownloadCta: `Download ${currentVersion}`,
     anytlsKicker: 'Windows / Mac test build',
     anytlsDescription: 'Organize AnyTLS configurations, connection details, and local notes for environments you are authorized to manage.',
-    anytlsCta: 'View NodePilot',
-    followCleanerKicker: 'Chrome extension',
-    followCleanerDescription: 'Review your X following list at a low frequency, keep results locally, and export CSV / JSON files.',
-    followCleanerCta: 'View X Follow Cleaner'
+    anytlsCta: 'View NodePilot'
   },
   ja: {
     title: 'Apps from Station Cat',
     description: 'Station Cat が作っている小さなツール。',
     kicker: 'Station Cat Apps',
     heading: '日常の創作を少し軽くするツール。',
-    intro: 'Station Cat が開発・テスト・公開しているアプリをまとめています。日常写真向け SnapCopy、作者主導の AI 小説ワークベンチ NovelForge AI、macOS / Windows / iOS 中国語入力の猫栈拼音、デスクトップ動画編集の SimpleCut Pro、Windows / Mac 向け設定管理ツール NodePilot、X のフォロー一覧を見直す Chrome 拡張があります。',
+    intro: 'Station Cat が開発・テスト・公開しているアプリをまとめています。日常写真向け SnapCopy、作者主導の AI 小説ワークベンチ NovelForge AI、macOS / Windows / iOS 中国語入力の猫栈拼音、デスクトップ動画編集の SimpleCut Pro、Windows / Mac 向け設定管理ツール NodePilot があります。',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: '朝食、コーヒー、散歩、ペット、旅行、日常写真を、共有しやすいキャプションにします。',
     snapcopyCta: 'SnapCopy を見る',
@@ -130,10 +120,7 @@ const copy = {
     simplecutDownloadCta: `${currentVersion} をダウンロード`,
     anytlsKicker: 'Windows / Mac test build',
     anytlsDescription: '管理権限のある AnyTLS 設定、接続情報、ローカルメモを整理します。',
-    anytlsCta: 'NodePilot を見る',
-    followCleanerKicker: 'Chrome extension',
-    followCleanerDescription: 'X のフォロー一覧を低頻度で確認し、結果をローカル保存して CSV / JSON で書き出します。',
-    followCleanerCta: 'X Follow Cleaner を見る'
+    anytlsCta: 'NodePilot を見る'
   }
 }[lang];
 
@@ -147,8 +134,7 @@ const paths = {
     privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.zhHantDownloadPagePath),
     simplecut: simpleCutProProduct.zhHantProductPath,
     simplecutDownload: simpleCutProProduct.zhHantDownloadPagePath,
-    anytls: anyTlsDesktopManagerProduct.zhHantProductPath,
-    followCleaner: xFollowCleanerProduct.zhHantProductPath
+    anytls: anyTlsDesktopManagerProduct.zhHantProductPath
   },
   'zh-Hans': {
     canonical: '/zh-hans/apps/',
@@ -159,8 +145,7 @@ const paths = {
     privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.zhHansDownloadPagePath),
     simplecut: simpleCutProProduct.zhHansProductPath,
     simplecutDownload: simpleCutProProduct.zhHansDownloadPagePath,
-    anytls: anyTlsDesktopManagerProduct.zhHansProductPath,
-    followCleaner: xFollowCleanerProduct.zhHansProductPath
+    anytls: anyTlsDesktopManagerProduct.zhHansProductPath
   },
   en: {
     canonical: '/apps/',
@@ -171,8 +156,7 @@ const paths = {
     privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.downloadPagePath),
     simplecut: simpleCutProProduct.productPath,
     simplecutDownload: simpleCutProProduct.downloadPagePath,
-    anytls: anyTlsDesktopManagerProduct.productPath,
-    followCleaner: xFollowCleanerProduct.productPath
+    anytls: anyTlsDesktopManagerProduct.productPath
   },
   ja: {
     canonical: '/ja/apps/',
@@ -183,8 +167,7 @@ const paths = {
     privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.jaDownloadPagePath),
     simplecut: simpleCutProProduct.jaProductPath,
     simplecutDownload: simpleCutProProduct.jaDownloadPagePath,
-    anytls: anyTlsDesktopManagerProduct.jaProductPath,
-    followCleaner: xFollowCleanerProduct.jaProductPath
+    anytls: anyTlsDesktopManagerProduct.jaProductPath
   }
 }[lang];
 ---
@@ -263,14 +246,6 @@ const paths = {
       imageVariant="icon"
       cta={copy.anytlsCta}
       kicker={copy.anytlsKicker}
-    />
-    <ProductCard
-      title="X Follow Cleaner"
-      description={copy.followCleanerDescription}
-      href={paths.followCleaner}
-      image={xFollowCleanerProduct.assets.screenshot}
-      cta={copy.followCleanerCta}
-      kicker={copy.followCleanerKicker}
     />
   </section>
 </BaseLayout>

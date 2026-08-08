@@ -21,7 +21,17 @@ const retiredRadarFiles = [
   'src/pages/zh-hant/apps/stationcat-radar/download.astro'
 ];
 
-for (const path of retiredRadarFiles) {
+const retiredXFollowCleanerFiles = [
+  'public/images/x-follow-cleaner-preview.svg',
+  'src/components/XFollowCleanerLanding.astro',
+  'src/data/products/x-follow-cleaner.ts',
+  'src/pages/apps/x-follow-cleaner/index.astro',
+  'src/pages/ja/apps/x-follow-cleaner/index.astro',
+  'src/pages/zh-hans/apps/x-follow-cleaner/index.astro',
+  'src/pages/zh-hant/apps/x-follow-cleaner/index.astro'
+];
+
+for (const path of [...retiredRadarFiles, ...retiredXFollowCleanerFiles]) {
   assert.equal(existsSync(join(root, path)), false, `${path} should be removed`);
 }
 
@@ -35,6 +45,7 @@ const nodePilotLanding = read('src/components/AnyTlsDesktopManagerLanding.astro'
 
 for (const [name, source] of Object.entries({ stationHome, appsIndex, footer, sitemap, worker })) {
   assert.doesNotMatch(source, /StationCat Radar|stationcat-radar|stationCatRadarProduct/, `${name} should not expose Radar`);
+  assert.doesNotMatch(source, /X Follow Cleaner|x-follow-cleaner|xFollowCleanerProduct/, `${name} should not expose X Follow Cleaner`);
 }
 
 assert.match(stationHome, /anyTlsDesktopManagerProduct/);

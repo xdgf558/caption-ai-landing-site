@@ -3,13 +3,12 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { snapCopyProduct } from '../data/products/caption-ai';
 import { anyTlsDesktopManagerProduct } from '../data/products/anytls-desktop-manager';
-import { xFollowCleanerProduct } from '../data/products/x-follow-cleaner';
 import { simpleCutProProduct } from '../data/products/simplecut-pro';
 import { privatePinyinProduct } from '../data/products/privatepinyin';
 import { novelForgeAiProduct } from '../data/products/novelforge-ai';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
-type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'app' | 'book';
+type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'book';
 
 interface Props {
   lang?: Locale;
@@ -38,7 +37,6 @@ const icons: Record<IconName, string> = {
   wrench: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="m20 6 3 3-6 6 6 6-3 3-6-6-6 6-3-3 6-6-6-6 3-3 6 6Z"/></svg>`,
   note: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 5h13l3 3v19H8Z"/><path d="M21 5v5h5M12 14h10M12 19h10M12 24h6"/></svg>`,
   camera: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 11h5l2-3h6l2 3h5v15H6Z"/><circle cx="16" cy="18" r="5"/><path d="M23 14h.1"/></svg>`,
-  app: `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="5" width="18" height="22" rx="5"/><path d="M13 9h6M13 23h6"/><path d="M12 15h8M12 18h5"/></svg>`,
   book: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 6h9a5 5 0 0 1 5 5v16H12a5 5 0 0 0-5 5Z"/><path d="M25 6h-4a5 5 0 0 0-5 5v16h9Z"/><path d="M11 12h5M11 17h4M21 12h2M21 17h2"/></svg>`
 };
 
@@ -76,13 +74,11 @@ const copy = {
     toolsIntro: '',
     viewApp: 'View App',
     joinTest: 'Join Test',
-    downloadExtension: 'Download ZIP',
     snapcopyDesc: '把日常照片變成更容易分享的一句話。',
     novelForgeDesc: '本機優先、作者主導的 AI 小說創作工作台，整理長篇、短篇、故事記憶與待審草稿。',
     privatePinyinDesc: '本機中文輸入法測試版，提供 macOS、Windows TSF 內測包，iOS 版也已開放 TestFlight 外部測試。',
     simplecutDesc: '在本機時間線剪切影片、對齊音訊、預覽轉場，並匯出輕量成片。',
     nodePilotDesc: '在本機整理你擁有或獲授權管理的 AnyTLS 配置、連線資訊和備註。',
-    followCleanerDesc: '低頻檢查 X 關注列表，本地保存結果，並匯出 CSV / JSON。',
     snapcopyStatus: 'App Store 上架',
     novelForgeStatus: `macOS public test ${novelForgeVersion}`,
     novelForgeDownload: '下載 Mac 版',
@@ -93,7 +89,6 @@ const copy = {
     simplecutDownload: '下載版本',
     nodePilotStatus: `Windows / Mac test build ${nodePilotVersion}`,
     nodePilotDownload: '下載 Mac 版',
-    followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Serial fiction',
     notesTitle: '正在連載：《离线未来》。',
     notesIntro: '',
@@ -148,13 +143,11 @@ const copy = {
     toolsIntro: '首页只放入口和状态，详细功能、下载、隐私和支持信息会留在各自产品页。',
     viewApp: 'View App',
     joinTest: 'Join Test',
-    downloadExtension: 'Download ZIP',
     snapcopyDesc: '把日常照片变成更容易分享的一句话。',
     novelForgeDesc: '本地优先、作者主导的 AI 小说创作工作台，整理长篇、短篇、故事记忆与待审草稿。',
     privatePinyinDesc: '本机中文输入法测试版，提供 macOS、Windows TSF 内测包，iOS 版也已开放 TestFlight 外部测试。',
     simplecutDesc: '在本机时间线剪切视频、对齐音频、预览转场，并导出轻量成片。',
     nodePilotDesc: '在本机整理你拥有或获授权管理的 AnyTLS 配置、连接信息和备注。',
-    followCleanerDesc: '低频检查 X 关注列表，本地保存结果，并导出 CSV / JSON。',
     snapcopyStatus: 'App Store 上架',
     novelForgeStatus: `macOS public test ${novelForgeVersion}`,
     novelForgeDownload: '下载 Mac 版',
@@ -165,7 +158,6 @@ const copy = {
     simplecutDownload: '下载版本',
     nodePilotStatus: `Windows / Mac test build ${nodePilotVersion}`,
     nodePilotDownload: '下载 Mac 版',
-    followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Serial fiction',
     notesTitle: '正在连载：《离线未来》。',
     notesIntro: '第一部长篇已经放上站台。这里保留作品入口、最新章节和阅读状态，后续更新会从 Admin 2.0 直接发布。',
@@ -220,13 +212,11 @@ const copy = {
     toolsIntro: 'The homepage keeps entries and status clear. Details, downloads, privacy, and support notes stay on each product page.',
     viewApp: 'View App',
     joinTest: 'Join Test',
-    downloadExtension: 'Download ZIP',
     snapcopyDesc: 'Turn everyday photos into a sentence that is easier to share.',
     novelForgeDesc: 'A local-first, author-controlled AI fiction workbench for long-form projects, short stories, story memory, and reviewable drafts.',
     privatePinyinDesc: 'An early local Chinese input method with macOS and Windows test builds plus an iOS external TestFlight group.',
     simplecutDesc: 'Cut clips on a local timeline, align audio, preview transitions, and export lightweight edits.',
     nodePilotDesc: 'Organize AnyTLS configurations, connection details, and local notes for environments you are authorized to manage.',
-    followCleanerDesc: 'Review your X following list locally and export CSV / JSON results.',
     snapcopyStatus: 'App Store release',
     novelForgeStatus: `macOS public test ${novelForgeVersion}`,
     novelForgeDownload: 'Download for Mac',
@@ -237,7 +227,6 @@ const copy = {
     simplecutDownload: 'Download',
     nodePilotStatus: `Windows / Mac test build ${nodePilotVersion}`,
     nodePilotDownload: 'Download for Mac',
-    followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Serial fiction',
     notesTitle: 'Now serializing: Offline Future.',
     notesIntro: 'The first long-form story is now live. This shelf keeps the series entry, latest chapter, and reading status in one place.',
@@ -292,13 +281,11 @@ const copy = {
     toolsIntro: 'ホームには入口と状態だけを置き、詳しい機能、ダウンロード、プライバシー、サポート情報は各製品ページにまとめます。',
     viewApp: 'View App',
     joinTest: 'Join Test',
-    downloadExtension: 'Download ZIP',
     snapcopyDesc: '日常写真を、共有しやすい一文に変えます。',
     novelForgeDesc: '長編、短編、物語記憶、確認待ちドラフトを扱う、ローカル優先・作者主導の AI 小説ワークベンチです。',
     privatePinyinDesc: 'ローカル中国語入力メソッドの早期テスト版です。macOS、Windows テスト版と iOS TestFlight 外部テストを提供しています。',
     simplecutDesc: 'ローカルのタイムラインでカット、音声調整、転換確認、軽い動画書き出しを行えます。',
     nodePilotDesc: '管理権限のある AnyTLS 設定、接続情報、ローカルメモを整理します。',
-    followCleanerDesc: 'X のフォロー一覧をローカルで見直し、CSV / JSON で書き出します。',
     snapcopyStatus: 'App Store 公開中',
     novelForgeStatus: `macOS public test ${novelForgeVersion}`,
     novelForgeDownload: 'Mac 版をダウンロード',
@@ -309,7 +296,6 @@ const copy = {
     simplecutDownload: 'ダウンロード',
     nodePilotStatus: `Windows / Mac test build ${nodePilotVersion}`,
     nodePilotDownload: 'Mac 版をダウンロード',
-    followCleanerStatus: 'Chrome extension v0.6.0',
     notesKicker: 'Serial fiction',
     notesTitle: '連載中：Offline Future。',
     notesIntro: '最初の長編小説を公開しました。作品ページ、最新章、読書ステータスをここにまとめます。',
@@ -347,8 +333,6 @@ const paths = {
     simplecutDownload: simpleCutProProduct.zhHantDownloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.zhHantProductPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.zhHantProductPath,
-    followCleaner: xFollowCleanerProduct.zhHantProductPath,
-    followCleanerDownload: xFollowCleanerProduct.downloadUrl,
     devlogPrefix: '/devlog/',
     signal: '/signal/'
   },
@@ -365,8 +349,6 @@ const paths = {
     simplecutDownload: simpleCutProProduct.zhHansDownloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.zhHansProductPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.zhHansProductPath,
-    followCleaner: xFollowCleanerProduct.zhHansProductPath,
-    followCleanerDownload: xFollowCleanerProduct.downloadUrl,
     devlogPrefix: '/zh-hans/devlog/',
     signal: '/zh-hans/signal/'
   },
@@ -383,8 +365,6 @@ const paths = {
     simplecutDownload: simpleCutProProduct.downloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.productPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.productPath,
-    followCleaner: xFollowCleanerProduct.productPath,
-    followCleanerDownload: xFollowCleanerProduct.downloadUrl,
     devlogPrefix: '/en/devlog/',
     signal: '/en/signal/'
   },
@@ -401,8 +381,6 @@ const paths = {
     simplecutDownload: simpleCutProProduct.jaDownloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.jaProductPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.jaProductPath,
-    followCleaner: xFollowCleanerProduct.jaProductPath,
-    followCleanerDownload: xFollowCleanerProduct.downloadUrl,
     devlogPrefix: '/ja/devlog/',
     signal: '/ja/signal/'
   }
@@ -611,20 +589,6 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
         </div>
       </article>
 
-      <article class="bench-card">
-        <div class="bench-card__icon">
-          <span class="line-icon line-icon--large" set:html={icons.app} />
-        </div>
-        <div class="bench-card__copy">
-          <span class="paper-stamp">{copy.followCleanerStatus}</span>
-          <h3>X Follow Cleaner</h3>
-          <p>{copy.followCleanerDesc}</p>
-          <div class="paper-actions">
-            <a class="ticket-button ticket-button--primary" href={paths.followCleaner}>{copy.viewApp}</a>
-            <a class="ticket-button ticket-button--secondary" href={paths.followCleanerDownload}>{copy.downloadExtension}</a>
-          </div>
-        </div>
-      </article>
     </div>
   </section>
 
