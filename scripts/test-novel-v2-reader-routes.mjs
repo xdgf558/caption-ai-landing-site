@@ -246,7 +246,7 @@ assert.match(paidChapterHtml, /data-access="paid"/);
 assert.doesNotMatch(paidChapterHtml, /Paid body should not render before unlock/);
 
 const memberFromTenChapters = Array.from({ length: 11 }, (_, index) => ({
-  access_level: index >= 9 ? 'member' : 'free',
+  access_level: 'free',
   chapter_number: index + 1,
   description: '',
   excerpt: '',
@@ -265,6 +265,7 @@ const memberFromTenSettings = {
     status: 'published'
   })),
   freeChapters: 0,
+  memberFromChapter: 10,
   priceMode: 'free'
 };
 const memberSeriesHtml = hooks.renderDynamicNovelSeries(
@@ -291,6 +292,10 @@ assert.match(memberChapterHtml, /登入後即可免費閱讀本章/);
 assert.doesNotMatch(memberChapterHtml, /<button[^>]+data-serial-credit-unlock/);
 assert.doesNotMatch(memberChapterHtml, /Member body should not render before sign in/);
 assert.equal(hooks.dynamicProtectedAccessFromChapterAccess('member'), 'member');
+assert.equal(
+  hooks.getEffectiveDynamicChapterAccessLevel(memberFromTenChapters[9], memberFromTenSettings, 9),
+  'member'
+);
 assert.equal(hooks.getNovelChapterAccessRequired({ access_level: 'member' }), 'member');
 assert.equal(
   hooks.applyContentPricingSnapshot(

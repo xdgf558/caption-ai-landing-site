@@ -677,6 +677,7 @@ const normalizeContentPricing = (value = {}) => {
   return {
     mode,
     freeChapters: normalizePositiveInteger(pricing.freeChapters, 0),
+    memberFromChapter: normalizePositiveInteger(pricing.memberFromChapter, 0),
     chapterPriceAmount: normalizePriceAmount(pricing.chapterPriceAmount, 0) || 0,
     chapterPriceCurrency: normalizeFiatCurrency(pricing.chapterPriceCurrency, 'USD'),
     chapterCredits: normalizePositiveInteger(pricing.chapterCredits, 0),
@@ -760,6 +761,7 @@ const getStaticSeriesPaymentSettings = (seriesSlug, env) => {
       source: 'env-default',
       priceMode: 'chapter-paid',
       freeChapters: 0,
+      memberFromChapter: 0,
       tipsEnabled: true,
       tipAmounts: [3, 5, 10],
       tipCurrency: 'USD',
@@ -789,6 +791,7 @@ const getStaticSeriesPaymentSettings = (seriesSlug, env) => {
     source: 'serial-config',
     priceMode: normalizeContentPricingMode(settings.priceMode),
     freeChapters: normalizePositiveInteger(settings.freeChapters, 0),
+    memberFromChapter: normalizePositiveInteger(settings.memberFromChapter, 0),
     tipsEnabled: settings.tipsEnabled !== false,
     tipAmounts: tipAmounts.length ? tipAmounts : [3, 5, 10],
     tipCurrency: normalizeFiatCurrency(settings.tipCurrency, 'USD'),
@@ -838,6 +841,7 @@ const applyContentPricingSnapshot = (settings, pricingSnapshot, source) => {
 
   if (has('mode') || has('priceMode')) next.priceMode = pricing.mode;
   if (has('freeChapters')) next.freeChapters = pricing.freeChapters;
+  if (has('memberFromChapter')) next.memberFromChapter = pricing.memberFromChapter;
   if (has('chapterPriceAmount')) next.chapterPriceAmount = pricing.chapterPriceAmount;
   if (has('chapterPriceCurrency')) next.chapterPriceCurrency = pricing.chapterPriceCurrency;
   if (has('chapterCredits')) next.chapterCredits = pricing.chapterCredits;
@@ -1077,9 +1081,17 @@ const getDynamicChapterNumberForPricing = (chapter, index = 0) =>
 
 const getEffectiveDynamicChapterAccessLevel = (chapter, paymentSettings = null, index = 0) => {
   const originalAccessLevel = normalizeDynamicChapterAccessLevel(chapter?.access_level ?? chapter?.access);
+  const chapterNumber = getDynamicChapterNumberForPricing(chapter, index);
+  const memberFromChapter = normalizePositiveInteger(paymentSettings?.memberFromChapter, 0);
+  if (
+    memberFromChapter &&
+    chapterNumber >= memberFromChapter &&
+    (originalAccessLevel === 'free' || originalAccessLevel === 'member')
+  ) {
+    return 'member';
+  }
   if (!paymentSettings || paymentSettings.priceMode !== 'chapter-paid') return originalAccessLevel;
 
-  const chapterNumber = getDynamicChapterNumberForPricing(chapter, index);
   const hasChapterCharge =
     normalizePositiveInteger(paymentSettings.chapterCredits, 0) > 0 ||
     normalizePriceAmount(paymentSettings.chapterPriceAmount, 0) > 0;
@@ -1168,6 +1180,7 @@ const paymentSettingsToPublicJson = (settings, options = {}) => {
     source: settings.source,
     priceMode: settings.priceMode,
     freeChapters: settings.freeChapters,
+    memberFromChapter: normalizePositiveInteger(settings.memberFromChapter, 0),
     tipsEnabled: Boolean(settings.tipsEnabled),
     tipAmounts: settings.tipAmounts.map((amount) => amountToStorage(amount)),
     tipCurrency: settings.tipCurrency,
@@ -2110,7 +2123,9 @@ const getDynamicNovelSeriesStatusLabel = (series, locale) => {
 
 const getDynamicSeriesAccessSummary = (accessLevel, locale, paymentSettings = null) => {
   const accessLabel = getDynamicAccessLabel(accessLevel, locale);
-  const memberStartChapter = (paymentSettings?.chapters || [])
+  const memberStartChapter =
+    normalizePositiveInteger(paymentSettings?.memberFromChapter, 0) ||
+    (paymentSettings?.chapters || [])
     .filter((chapter) => chapter.access === 'member')
     .map((chapter) => normalizePositiveInteger(chapter.chapterNumber, 0))
     .filter(Boolean)

@@ -560,6 +560,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                     <input id="pricing-free-chapters" type="number" min="0" step="1" value="0" />
                   </label>
                   <label>
+                    登录后免费起始章节
+                    <input id="pricing-member-from-chapter" type="number" min="0" step="1" value="0" />
+                  </label>
+                  <label>
                     单章价格 USD（已停用）
                     <input id="pricing-chapter-price" type="number" min="0" step="0.01" placeholder="已停用" disabled />
                   </label>
@@ -1368,6 +1372,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         accessLevel: $('#content-access-level'),
         pricingMode: $('#pricing-mode'),
         freeChapters: $('#pricing-free-chapters'),
+        memberFromChapter: $('#pricing-member-from-chapter'),
         chapterPrice: $('#pricing-chapter-price'),
         supporterPrice: $('#pricing-supporter-price'),
         chapterCredits: $('#pricing-chapter-credits'),
@@ -1764,6 +1769,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       pricing: {
         mode: 'chapter-paid',
         freeChapters: 20,
+        memberFromChapter: 0,
         chapterPriceAmount: 0,
         chapterPriceCurrency: 'USD',
         chapterCredits: 1,
@@ -1790,6 +1796,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const buildPricingPayload = () => ({
       mode: elements.fields.pricingMode.value,
       freeChapters: Number(elements.fields.freeChapters.value || 0),
+      memberFromChapter: Number(elements.fields.memberFromChapter.value || 0),
       chapterPriceAmount: 0,
       chapterPriceCurrency: 'USD',
       chapterCredits: elements.fields.chapterCredits.value ? Number(elements.fields.chapterCredits.value) : 1,
@@ -1833,6 +1840,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.fields.accessLevel.value = accessLevel || 'free';
       elements.fields.pricingMode.value = pricing.mode || 'free';
       elements.fields.freeChapters.value = pricing.freeChapters || 0;
+      elements.fields.memberFromChapter.value = pricing.memberFromChapter || 0;
       elements.fields.chapterPrice.value = '';
       elements.fields.supporterPrice.value = '';
       elements.fields.chapterCredits.value = pricing.chapterCredits || 1;
@@ -3643,7 +3651,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const membership = pricing.subscriptionEnabled !== false
         ? `会员 ${pricing.membershipCreditCost || 10} 点/${pricing.membershipDurationMonths || 1}个月`
         : '会员关闭';
-      return `${pricing.mode || 'free'} · 免费 ${pricing.freeChapters || 0} 章 · ${pricing.chapterCredits || 1} 点/章 · ${membership} · ${bundles} · ${creditPacks}`;
+      const memberGate = pricing.memberFromChapter ? `第 ${pricing.memberFromChapter} 章起登录后免费` : '未设置登录门槛';
+      return `${pricing.mode || 'free'} · 免费 ${pricing.freeChapters || 0} 章 · ${memberGate} · ${pricing.chapterCredits || 0} 点/章 · ${membership} · ${bundles} · ${creditPacks}`;
     };
 
     const renderImportList = () => {
@@ -4114,6 +4123,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.fields.accessLevel.value = frontmatter.access || frontmatter.accessLevel || 'free';
       elements.fields.pricingMode.value = frontmatter.priceMode || 'free';
       elements.fields.freeChapters.value = frontmatter.freeChapters || 0;
+      elements.fields.memberFromChapter.value = frontmatter.memberFromChapter || 0;
       elements.fields.chapterPrice.value = frontmatter.chapterPriceAmount || '';
       elements.fields.supporterPrice.value = frontmatter.supporterPriceAmount || '';
       elements.fields.chapterCredits.value = frontmatter.chapterCredits || '';
