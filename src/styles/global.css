@@ -200,21 +200,6 @@
   max-width: 760px;
 }
 
-.bench-card__icon--mindbudget {
-  align-items: center;
-  background: #ead8c8 url('/images/apps/mindbudget/warm-botanical.png') center / cover no-repeat;
-  display: flex;
-  justify-content: center;
-}
-
-.bench-card__icon--mindbudget img {
-  border-radius: 22%;
-  box-shadow: 0 16px 34px rgba(47, 37, 32, 0.18);
-  height: auto;
-  max-width: 168px;
-  width: 38%;
-}
-
 @media (max-width: 800px) {
   .mindbudget-hero,
   .mindbudget-download-hero,
@@ -4206,6 +4191,17 @@ button.button {
 }
 
 .bench-card__icon--snapcopy img {
+  border-radius: 26%;
+  box-shadow: 0 16px 28px rgba(80, 55, 35, 0.16);
+  max-width: 150px;
+  width: 42%;
+}
+
+.bench-card__icon--mindbudget {
+  background: #ead8c8 url('/images/apps/mindbudget/warm-botanical.png') center / cover no-repeat;
+}
+
+.bench-card__icon--mindbudget img {
   border-radius: 26%;
   box-shadow: 0 16px 28px rgba(80, 55, 35, 0.16);
   max-width: 150px;
