@@ -47,14 +47,14 @@ const staticSerialSlugs = serials.map((serial) => serial.data.seriesSlug);
 const mediaUrlForKey = (key: string) => `/api/content/media?key=${encodeURIComponent(key)}`;
 const backendSpotlightByLocale = {
   'zh-Hant': {
-    accessLabel: '付費連載',
+    accessLabel: '免費閱讀',
     author: 'Station Cat',
     coverAlt: '《离线未来》封面，1999 年舊房間、CRT 電腦和離線 AI 重啟。',
     coverUrl: mediaUrlForKey('content/media/covers/2026/06/cmqjfju1300008z3wyh66ynvw-offline-future-cover-v2.png'),
     description:
       '故事從 1999 年的一個夜晚開始：風扇、舊電腦、未連網的房間，和一個本不該在那個年代醒來的 AI。',
     firstChapterHref: getChapterHref(basePath, 'cmqjfju1300008z3wyh66ynvw', 'chap-offline-future-001'),
-    freeChapters: '前 20 章',
+    freeChapters: '第 1–9 章公開免費',
     href: `${basePath}cmqjfju1300008z3wyh66ynvw/`,
     latest: '第 1 章 1999年的风扇声',
     schedule: '不定期連載，完成後會同步更新章節順序',
@@ -640,7 +640,7 @@ const backendShelfCopy = {
           </div>
           <div>
             <span>{copy.accessLabel}</span>
-            <strong>第 21 章起 0.1 USD / 1 閱讀點</strong>
+            <strong>第 10 章起登入會員後免費閱讀</strong>
           </div>
         </div>
         <div class="button-row">

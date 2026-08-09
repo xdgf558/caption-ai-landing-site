@@ -245,6 +245,85 @@ assert.match(paidChapterHtml, /data-serial-access-gate/);
 assert.match(paidChapterHtml, /data-access="paid"/);
 assert.doesNotMatch(paidChapterHtml, /Paid body should not render before unlock/);
 
+const memberFromTenChapters = Array.from({ length: 11 }, (_, index) => ({
+  access_level: index >= 9 ? 'member' : 'free',
+  chapter_number: index + 1,
+  description: '',
+  excerpt: '',
+  parent_slug: 'book',
+  slug: `member-ch${index + 1}`,
+  title: `Member Chapter ${index + 1}`,
+  word_count: 10
+}));
+const memberFromTenSettings = {
+  chapterCredits: 0,
+  chapterPriceAmount: 0,
+  chapters: memberFromTenChapters.map((chapter) => ({
+    access: chapter.access_level,
+    chapterNumber: chapter.chapter_number,
+    chapterSlug: chapter.slug,
+    status: 'published'
+  })),
+  freeChapters: 0,
+  priceMode: 'free'
+};
+const memberSeriesHtml = hooks.renderDynamicNovelSeries(
+  novelSeriesRoute,
+  { ...serial, access_level: 'free' },
+  { html: '<p>Body</p>' },
+  memberFromTenChapters,
+  memberFromTenSettings
+);
+assert.match(memberSeriesHtml, /免費閱讀 · 第 10 章起需登入會員/);
+assert.match(memberSeriesHtml, /第九章<\/span>\s*<span>免費<\/span>/);
+assert.match(memberSeriesHtml, /第十章<\/span>\s*<span>會員<\/span>/);
+
+const memberChapterHtml = hooks.renderDynamicNovelChapter(
+  { ...novelChapterRoute, chapterSlug: 'member-ch10' },
+  serial,
+  memberFromTenChapters[9],
+  { html: '<p>Member body should not render before sign in.</p>' },
+  memberFromTenChapters,
+  memberFromTenSettings
+);
+assert.match(memberChapterHtml, /data-access="member"/);
+assert.match(memberChapterHtml, /登入後即可免費閱讀本章/);
+assert.doesNotMatch(memberChapterHtml, /<button[^>]+data-serial-credit-unlock/);
+assert.doesNotMatch(memberChapterHtml, /Member body should not render before sign in/);
+assert.equal(hooks.dynamicProtectedAccessFromChapterAccess('member'), 'member');
+assert.equal(hooks.getNovelChapterAccessRequired({ access_level: 'member' }), 'member');
+assert.equal(
+  hooks.applyContentPricingSnapshot(
+    { chapterCredits: 1, chapterPriceAmount: 1, priceMode: 'chapter-paid' },
+    { chapterCredits: 0, chapterPriceAmount: 0, mode: 'free' },
+    'test'
+  ).chapterCredits,
+  0
+);
+assert.deepEqual(
+  await hooks.resolveReaderChapterAccessForComments(
+    {},
+    {},
+    { account_id: 1, email: 'reader@example.com' },
+    { access_level: 'member', parent_slug: 'book', slug: 'member-ch10' }
+  ),
+  {
+    accessRequired: 'member',
+    allowed: true,
+    authenticated: true,
+    protected: true,
+    reason: 'member_signed_in'
+  }
+);
+await assert.rejects(
+  hooks.normalizeCreditUnlockPayload(
+    { access: 'member', chapterSlug: 'member-ch10', seriesSlug: 'book' },
+    {},
+    {}
+  ),
+  (error) => error?.code === 'CREDIT_UNLOCK_SCOPE_NOT_SUPPORTED'
+);
+
 const manyChapters = Array.from({ length: 10 }, (_, index) => ({
   access_level: 'free',
   description: '',

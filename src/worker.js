@@ -809,7 +809,14 @@ const getStaticSeriesPaymentSettings = (seriesSlug, env) => {
       .map((chapter) => ({
         chapterSlug: cleanSlug(chapter?.chapterSlug),
         chapterNumber: normalizePositiveInteger(chapter?.chapterNumber, 0),
-        access: chapter?.access === 'supporter' ? 'supporter' : chapter?.access === 'paid' ? 'paid' : 'free',
+        access:
+          chapter?.access === 'supporter'
+            ? 'supporter'
+            : chapter?.access === 'member'
+              ? 'member'
+              : chapter?.access === 'paid'
+                ? 'paid'
+                : 'free',
         status: chapter?.status === 'published' ? 'published' : chapter?.status === 'scheduled' ? 'scheduled' : 'draft'
       }))
       .filter((chapter) => chapter.chapterSlug)
@@ -831,10 +838,10 @@ const applyContentPricingSnapshot = (settings, pricingSnapshot, source) => {
 
   if (has('mode') || has('priceMode')) next.priceMode = pricing.mode;
   if (has('freeChapters')) next.freeChapters = pricing.freeChapters;
-  if (pricing.chapterPriceAmount > 0) next.chapterPriceAmount = pricing.chapterPriceAmount;
+  if (has('chapterPriceAmount')) next.chapterPriceAmount = pricing.chapterPriceAmount;
   if (has('chapterPriceCurrency')) next.chapterPriceCurrency = pricing.chapterPriceCurrency;
-  if (pricing.chapterCredits > 0) next.chapterCredits = pricing.chapterCredits;
-  if (pricing.supporterPriceAmount > 0) next.supporterPriceAmount = pricing.supporterPriceAmount;
+  if (has('chapterCredits')) next.chapterCredits = pricing.chapterCredits;
+  if (has('supporterPriceAmount')) next.supporterPriceAmount = pricing.supporterPriceAmount;
   if (has('supporterPriceCurrency')) next.supporterPriceCurrency = pricing.supporterPriceCurrency;
   if (has('tipsEnabled')) next.tipsEnabled = pricing.tipsEnabled;
   if (pricing.tipAmounts.length) next.tipAmounts = pricing.tipAmounts;
@@ -982,9 +989,11 @@ const backendChaptersToPaymentChapters = (chapters) =>
       access:
         chapter.access_level === 'supporter'
           ? 'supporter'
-          : chapter.access_level === 'paid' || chapter.access_level === 'member'
-            ? 'paid'
-            : 'free',
+          : chapter.access_level === 'member'
+            ? 'member'
+            : chapter.access_level === 'paid'
+              ? 'paid'
+              : 'free',
       status: 'published'
     }))
     .filter((chapter) => chapter.chapterSlug)
@@ -999,7 +1008,7 @@ const getBackendSeriesPaymentSettings = async (db, seriesSlug, env, options = {}
   const seriesEntry = await selectPublishedSeriesContentEntry(db, seriesSlug, options.locale);
   if (!seriesEntry) return null;
 
-  const fallback = getStaticSeriesPaymentSettings(seriesSlug, env);
+  const fallback = options.baseSettings || getStaticSeriesPaymentSettings(seriesSlug, env);
   const [chapters, rules] = await Promise.all([
     listPublishedContentEntries(db, {
       entryType: 'novel_chapter',
@@ -1044,14 +1053,14 @@ const applyConfiguredPricingDefaultsToSettings = async (db, settings) => {
 };
 
 const resolveSeriesPaymentSettings = async (db, seriesSlug, env, options = {}) => {
-  let settings = null;
+  const baseSettings = await applyConfiguredPricingDefaultsToSettings(db, getStaticSeriesPaymentSettings(seriesSlug, env));
   try {
-    const backendSettings = await getBackendSeriesPaymentSettings(db, seriesSlug, env, options);
-    if (backendSettings) settings = backendSettings;
+    const backendSettings = await getBackendSeriesPaymentSettings(db, seriesSlug, env, { ...options, baseSettings });
+    if (backendSettings) return backendSettings;
   } catch (error) {
     if (!isMissingContentTablesError(error)) throw error;
   }
-  return applyConfiguredPricingDefaultsToSettings(db, settings || getStaticSeriesPaymentSettings(seriesSlug, env));
+  return baseSettings;
 };
 
 const normalizeDynamicChapterAccessLevel = (value) => {
@@ -1084,7 +1093,13 @@ const getEffectiveDynamicChapterAccessLevel = (chapter, paymentSettings = null, 
 };
 
 const dynamicProtectedAccessFromChapterAccess = (accessLevel) =>
-  accessLevel === 'supporter' ? 'supporter' : accessLevel === 'paid' || accessLevel === 'member' ? 'paid' : 'free';
+  accessLevel === 'supporter'
+    ? 'supporter'
+    : accessLevel === 'member'
+      ? 'member'
+      : accessLevel === 'paid'
+        ? 'paid'
+        : 'free';
 
 const getConfiguredTipAmount = (settings, amount) => {
   const requested = normalizePriceAmount(amount, null);
@@ -1158,7 +1173,8 @@ const paymentSettingsToPublicJson = (settings, options = {}) => {
     tipCurrency: settings.tipCurrency,
     chapterPriceAmount: amountToStorage(settings.chapterPriceAmount),
     chapterPriceCurrency: settings.chapterPriceCurrency,
-    chapterCredits: Math.max(1, normalizePositiveInteger(settings.chapterCredits, 1)),
+    chapterCredits:
+      settings.priceMode === 'free' ? 0 : Math.max(1, normalizePositiveInteger(settings.chapterCredits, 1)),
     supporterPriceAmount: amountToStorage(settings.supporterPriceAmount),
     supporterPriceCurrency: settings.supporterPriceCurrency,
     bundlePurchasesEnabled: Boolean(settings.bundlePurchasesEnabled),
@@ -1848,6 +1864,8 @@ const dynamicContentCopy = {
     free: 'Free',
     lockedBody: 'Sign in from Member Center to check whether this account can read the chapter.',
     lockedTitle: 'This chapter is reserved for unlocked readers.',
+    memberLockedBody: 'Create a free account or sign in to continue reading. No purchase or reading credits are required.',
+    memberLockedTitle: 'Sign in to read this chapter for free.',
     nextChapter: 'Next chapter',
     previousChapter: 'Previous chapter',
     read: 'Read',
@@ -1883,6 +1901,8 @@ const dynamicContentCopy = {
     free: '無料',
     lockedBody: '本棚にログインして、このアカウントで読めるか確認してください。',
     lockedTitle: 'この章は解放済み読者向けです。',
+    memberLockedBody: '無料アカウントを作成するかログインすると、そのまま無料で読めます。購入や読書ポイントは不要です。',
+    memberLockedTitle: 'ログインすると、この章を無料で読めます。',
     nextChapter: '次の章',
     previousChapter: '前の章',
     read: '読む',
@@ -1918,6 +1938,8 @@ const dynamicContentCopy = {
     free: '免費',
     lockedBody: '請先從會員中心登入，確認這個帳戶是否可以閱讀本章。',
     lockedTitle: '這一章保留給已解鎖讀者。',
+    memberLockedBody: '註冊免費帳戶或登入後即可繼續閱讀，不需要購買會員，也不會扣除閱讀點。',
+    memberLockedTitle: '登入後即可免費閱讀本章。',
     nextChapter: '下一章',
     previousChapter: '上一章',
     read: '閱讀',
@@ -1953,6 +1975,8 @@ const dynamicContentCopy = {
     free: '免费',
     lockedBody: '请先从会员中心登录，确认这个账户是否可以阅读本章。',
     lockedTitle: '这一章保留给已解锁读者。',
+    memberLockedBody: '注册免费账户或登录后即可继续阅读，不需要购买会员，也不会扣除阅读点。',
+    memberLockedTitle: '登录后即可免费阅读本章。',
     nextChapter: '下一章',
     previousChapter: '上一章',
     read: '阅读',
@@ -2086,6 +2110,17 @@ const getDynamicNovelSeriesStatusLabel = (series, locale) => {
 
 const getDynamicSeriesAccessSummary = (accessLevel, locale, paymentSettings = null) => {
   const accessLabel = getDynamicAccessLabel(accessLevel, locale);
+  const memberStartChapter = (paymentSettings?.chapters || [])
+    .filter((chapter) => chapter.access === 'member')
+    .map((chapter) => normalizePositiveInteger(chapter.chapterNumber, 0))
+    .filter(Boolean)
+    .sort((left, right) => left - right)[0];
+  if (memberStartChapter) {
+    if (locale === 'en') return `Free to read · sign in from Chapter ${memberStartChapter}`;
+    if (locale === 'ja') return `無料 · 第${memberStartChapter}章からログインが必要`;
+    if (locale === 'zh-Hans') return `免费阅读 · 第 ${memberStartChapter} 章起需登录会员`;
+    return `免費閱讀 · 第 ${memberStartChapter} 章起需登入會員`;
+  }
   if (!paymentSettings || paymentSettings.priceMode === 'free') return accessLabel;
 
   const freeChapters = normalizePositiveInteger(paymentSettings.freeChapters, 0);
@@ -4844,7 +4879,15 @@ const handleNovelAccessCheck = async (request, env) => {
   const url = new URL(request.url);
   const seriesSlug = cleanSlug(url.searchParams.get('series'));
   const chapterSlug = cleanSlug(url.searchParams.get('chapter'));
-  const accessRequired = url.searchParams.get('access') === 'supporter' ? 'supporter' : url.searchParams.get('access') === 'free' ? 'free' : 'paid';
+  const requestedAccess = cleanText(url.searchParams.get('access'), 40).toLowerCase();
+  const accessRequired =
+    requestedAccess === 'supporter'
+      ? 'supporter'
+      : requestedAccess === 'member'
+        ? 'member'
+        : requestedAccess === 'free'
+          ? 'free'
+          : 'paid';
 
   if (!seriesSlug || !chapterSlug) {
     return json({ ok: false, message: 'series and chapter are required.' }, { status: 400 });
@@ -4862,6 +4905,21 @@ const handleNovelAccessCheck = async (request, env) => {
       allowed: false,
       accessRequired,
       reason: 'sign_in_required'
+    });
+  }
+
+  if (accessRequired === 'member') {
+    return json({
+      ok: true,
+      authenticated: true,
+      allowed: true,
+      accessRequired,
+      reason: 'member_signed_in',
+      account: {
+        id: session.account_id,
+        email: session.email
+      },
+      entitlement: null
     });
   }
 
@@ -5030,16 +5088,20 @@ const handleProtectedChapterContent = async (request, env) => {
     );
   }
 
-  const accessRequired = chapter.access === 'supporter' ? 'supporter' : 'paid';
-  const [membershipSettings, membership] = accessRequired === 'paid'
-    ? await Promise.all([
-        getReaderMembershipSettings(db, env),
-        getActiveReaderMembership(db, session.account_id)
-      ])
-    : [{ membershipCoversPaidContent: false }, null];
-  const entitlement = await findActiveNovelEntitlement(db, session.account_id, seriesSlug, chapterSlug, accessRequired);
+  const accessRequired = chapter.access === 'supporter' ? 'supporter' : chapter.access === 'member' ? 'member' : 'paid';
+  const [membershipSettings, membership] =
+    accessRequired === 'paid'
+      ? await Promise.all([
+          getReaderMembershipSettings(db, env),
+          getActiveReaderMembership(db, session.account_id)
+        ])
+      : [{ membershipCoversPaidContent: false }, null];
+  const entitlement =
+    accessRequired === 'member'
+      ? null
+      : await findActiveNovelEntitlement(db, session.account_id, seriesSlug, chapterSlug, accessRequired);
   const membershipAllowed = Boolean(membership && membershipSettings.enabled && membershipSettings.membershipCoversPaidContent);
-  if (!entitlement && !membershipAllowed) {
+  if (accessRequired !== 'member' && !entitlement && !membershipAllowed) {
     return privateJson(
       {
         ok: false,
@@ -5084,6 +5146,7 @@ const handleProtectedChapterContent = async (request, env) => {
     ok: true,
     authenticated: true,
     allowed: true,
+    accessRequired,
     account: {
       id: session.account_id,
       email: session.email
@@ -5877,6 +5940,7 @@ const getPublishedNovelChapterForComments = async (db, seriesSlug, chapterSlug, 
 const getNovelChapterAccessRequired = (chapter) => {
   const accessLevel = cleanText(chapter?.access_level || 'free', 40).toLowerCase();
   if (!accessLevel || accessLevel === 'free' || accessLevel === 'public') return 'free';
+  if (accessLevel === 'member') return 'member';
   if (accessLevel === 'supporter') return 'supporter';
   return 'paid';
 };
@@ -5900,6 +5964,16 @@ const resolveReaderChapterAccessForComments = async (db, env, session, chapter) 
       authenticated: false,
       protected: true,
       reason: 'sign_in_required'
+    };
+  }
+
+  if (accessRequired === 'member') {
+    return {
+      accessRequired,
+      allowed: true,
+      authenticated: true,
+      protected: true,
+      reason: 'member_signed_in'
     };
   }
 
@@ -7397,7 +7471,7 @@ const applyCreditTopupFromOrder = async (db, order, env) => {
 const normalizeCreditUnlockPayload = async (payload, env, db) => {
   const seriesSlug = cleanSlug(payload.seriesSlug);
   const chapterSlug = cleanSlug(payload.chapterSlug);
-  const accessRequired = payload.access === 'supporter' ? 'supporter' : 'paid';
+  const accessRequired = cleanText(payload.access, 40).toLowerCase();
 
   if (!seriesSlug || !chapterSlug) {
     const error = new Error('seriesSlug and chapterSlug are required.');
@@ -18377,16 +18451,18 @@ const dynamicReaderInteractionCopy = {
 
 const renderDynamicUnlockButtons = (route, serial, chapter, settings) => {
   const copy = dynamicPaymentCopy[route.locale];
+  const memberOnly = chapter.access_level === 'member';
   const orderType = chapter.access_level === 'supporter' ? 'supporter' : 'chapter';
+  const signInHref = `/library/?returnTo=${encodeURIComponent(dynamicCanonicalPath(route))}`;
 
   return `<div class="button-row">
-      <a class="button button-primary" href="/library/">${escapeHtml(copy.signIn)}</a>
+      <a class="button button-primary" href="${escapeHtml(signInHref)}">${escapeHtml(copy.signIn)}</a>
       ${
-        orderType === 'chapter'
+        orderType === 'chapter' && !memberOnly
           ? `<button class="button button-secondary" type="button" data-serial-credit-unlock>${escapeHtml(copy.creditUnlock)} · ${escapeHtml(String(settings.chapterCredits))}</button>`
           : ''
       }
-      ${orderType === 'chapter' ? `<a class="button button-secondary" href="/library/">${escapeHtml(copy.creditTopUp)}</a>` : ''}
+      ${orderType === 'chapter' && !memberOnly ? `<a class="button button-secondary" href="/library/">${escapeHtml(copy.creditTopUp)}</a>` : ''}
       <a class="button button-secondary" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>
     </div>`;
 };
@@ -19020,13 +19096,14 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
   const effectiveAccessLevel = getEffectiveDynamicChapterAccessLevel(chapter, paymentSettings, currentIndex);
   const effectiveChapter = { ...chapter, access_level: effectiveAccessLevel };
   const isProtected = effectiveAccessLevel !== 'free';
+  const memberOnly = effectiveAccessLevel === 'member';
   const bookmarkCopy = dynamicBookmarkCopy[route.locale] || dynamicBookmarkCopy['zh-Hant'];
   const fallbackBody = firstPlainSummary([chapter.excerpt, chapter.description], 1200);
   const content = isProtected
     ? `<section class="gate" data-serial-access-gate data-series-slug="${escapeHtml(chapter.parent_slug)}" data-chapter-slug="${escapeHtml(chapter.slug)}" data-access="${escapeHtml(effectiveAccessLevel)}" data-locale="${escapeHtml(route.locale)}" data-return-path="${escapeHtml(dynamicCanonicalPath(route))}">
         <p class="kicker">${escapeHtml(getDynamicAccessLabel(effectiveAccessLevel, route.locale))}</p>
-        <h2>${escapeHtml(copy.lockedTitle)}</h2>
-        <p>${escapeHtml(copy.lockedBody)}</p>
+        <h2>${escapeHtml(memberOnly ? copy.memberLockedTitle : copy.lockedTitle)}</h2>
+        <p>${escapeHtml(memberOnly ? copy.memberLockedBody : copy.lockedBody)}</p>
         <div class="status" data-serial-access-status>${escapeHtml(paymentCopy.checking)}</div>
         <div class="status" data-serial-credit-status></div>
         ${renderDynamicUnlockButtons(route, serial, effectiveChapter, paymentSettings)}
@@ -19089,7 +19166,12 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
               await loadProtectedContent();
               return;
             }
-            setStatus(access.authenticated ? ${JSON.stringify(paymentCopy.denied)} : ${JSON.stringify(copy.lockedBody)}, access.authenticated ? 'error' : 'neutral');
+            setStatus(
+              access.authenticated
+                ? ${JSON.stringify(paymentCopy.denied)}
+                : ${JSON.stringify(memberOnly ? copy.memberLockedBody : copy.lockedBody)},
+              access.authenticated ? 'error' : 'neutral'
+            );
           };
           if (creditUnlockButton) {
             creditUnlockButton.addEventListener('click', async () => {
@@ -20433,6 +20515,7 @@ const handleR2Download = async (request, env, file) => {
 
 export const __readerTotpTestHooks = {
   aggregateNovelChapterStats,
+  applyContentPricingSnapshot,
   base32ToBytes,
   buildSignalDraftApprovalPayload,
   buildNovelAiInsightFromStats,
@@ -20478,6 +20561,7 @@ export const __readerTotpTestHooks = {
   handleAdminUpdateProductFeedback,
   handleAdminSaveSignalSource,
   normalizeSignalCandidateReviewPayload,
+  normalizeCreditUnlockPayload,
   handleSignalCollectionQueue,
   handleSignalCollectionDeadLetterQueue,
   handleSignalCollectionSchedule,
@@ -20496,8 +20580,11 @@ export const __readerTotpTestHooks = {
   dynamicCanonicalPath,
   dynamicChapterPath,
   dynamicHtmlShell,
+  dynamicProtectedAccessFromChapterAccess,
+  getEffectiveDynamicChapterAccessLevel,
   getDynamicNovelSeriesStatus,
   getDynamicNovelSeriesStatusLabel,
+  getNovelChapterAccessRequired,
   dynamicSignalCardPath,
   dynamicSignalCardSvgPath,
   dynamicSignalPath,
@@ -20527,6 +20614,7 @@ export const __readerTotpTestHooks = {
   readerTotpResetLockedMessage,
   reserveReaderTotpResetAttempt,
   resolveSignalAutomationAlert,
+  resolveReaderChapterAccessForComments,
   syncSignalRetrySuccessAlert,
   renderDynamicNovelSeries,
   renderDynamicNovelChapter,
