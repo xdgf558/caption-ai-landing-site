@@ -6,6 +6,7 @@ import { anyTlsDesktopManagerProduct } from '../data/products/anytls-desktop-man
 import { simpleCutProProduct } from '../data/products/simplecut-pro';
 import { privatePinyinProduct } from '../data/products/privatepinyin';
 import { novelForgeAiProduct } from '../data/products/novelforge-ai';
+import { mindBudgetProduct } from '../data/products/mindbudget';
 
 interface Props {
   lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
@@ -27,10 +28,14 @@ const copy = {
     description: 'Station Cat 正在開發和發布的小工具。',
     kicker: 'Station Cat Apps',
     heading: '小而實用的創作工具。',
-    intro: '這裡會放 Station Cat 正在開發、測試和發布的 App。現在有已上架的生活文案工具 SnapCopy、本機優先的 AI 小說創作工作台 NovelForge AI、macOS / Windows / iOS 中文輸入法「猫栈拼音」、桌面影片剪輯工具 SimpleCut Pro，以及 Windows / Mac 配置管理工具 NodePilot。',
+    intro: '這裡會放 Station Cat 正在開發、測試和發布的 App。現在有已上架的生活文案工具 SnapCopy、公開測試中的本機預算工具花有數、本機優先的 AI 小說創作工作台 NovelForge AI、macOS / Windows / iOS 中文輸入法「猫栈拼音」、桌面影片剪輯工具 SimpleCut Pro，以及 Windows / Mac 配置管理工具 NodePilot。',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: '把早餐、咖啡、散步、寵物、旅行和日常照片，變成更適合分享的文案。',
     snapcopyCta: '查看 SnapCopy',
+    mindBudgetKicker: 'iPhone TestFlight public beta',
+    mindBudgetDescription: '不連銀行、不要求帳號，在 iPhone 本機記錄收支、控制週期預算，並用每日可花金額掌握節奏。',
+    mindBudgetCta: '查看花有數',
+    mindBudgetDownloadCta: '加入 TestFlight',
     novelForgeKicker: 'macOS public test',
     novelForgeDescription: '本機優先、作者主導的 AI 小說創作工作台，管理長篇、短篇、結構化故事記憶與待審 AI 草稿。',
     novelForgeCta: '查看 NovelForge AI',
@@ -52,10 +57,14 @@ const copy = {
     description: 'Station Cat 正在开发和发布的小工具。',
     kicker: 'Station Cat Apps',
     heading: '小而实用的创作工具。',
-    intro: '这里会放 Station Cat 正在开发、测试和发布的 App。现在有已上架的生活文案工具 SnapCopy、本地优先的 AI 小说创作工作台 NovelForge AI、macOS / Windows / iOS 中文输入法「猫栈拼音」、桌面视频剪辑工具 SimpleCut Pro，以及 Windows / Mac 配置管理工具 NodePilot。',
+    intro: '这里会放 Station Cat 正在开发、测试和发布的 App。现在有已上架的生活文案工具 SnapCopy、公开测试中的本地预算工具花有数、本地优先的 AI 小说创作工作台 NovelForge AI、macOS / Windows / iOS 中文输入法「猫栈拼音」、桌面视频剪辑工具 SimpleCut Pro，以及 Windows / Mac 配置管理工具 NodePilot。',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: '把早餐、咖啡、散步、宠物、旅行和日常照片，变成更适合分享的文案。',
     snapcopyCta: '查看 SnapCopy',
+    mindBudgetKicker: 'iPhone TestFlight 公开测试',
+    mindBudgetDescription: '不连接银行、不要求账号，在 iPhone 本地记录收支、控制周期预算，并用每日可花金额掌握节奏。',
+    mindBudgetCta: '查看花有数',
+    mindBudgetDownloadCta: '加入 TestFlight',
     novelForgeKicker: 'macOS public test',
     novelForgeDescription: '本地优先、作者主导的 AI 小说创作工作台，管理长篇、短篇、结构化故事记忆与待审 AI 草稿。',
     novelForgeCta: '查看 NovelForge AI',
@@ -77,10 +86,14 @@ const copy = {
     description: 'Small tools built and published by Station Cat.',
     kicker: 'Station Cat Apps',
     heading: 'Small tools for everyday creativity.',
-    intro: 'This is where Station Cat collects apps in development, testing, and public release: SnapCopy for everyday captions, NovelForge AI for author-controlled fiction workflows, Maozhan Pinyin for macOS / Windows / iOS Chinese input, SimpleCut Pro for desktop video edits, and NodePilot for authorized Windows / Mac configuration management.',
+    intro: 'This is where Station Cat collects apps in development, testing, and public release: SnapCopy for everyday captions, MindBudget for private on-device budgeting, NovelForge AI for author-controlled fiction workflows, Maozhan Pinyin for macOS / Windows / iOS Chinese input, SimpleCut Pro for desktop video edits, and NodePilot for authorized Windows / Mac configuration management.',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: 'Turn breakfast, coffee, walks, pets, travel, and daily photos into captions that are easier to share.',
     snapcopyCta: 'View SnapCopy',
+    mindBudgetKicker: 'iPhone TestFlight public beta',
+    mindBudgetDescription: 'Track income and expenses, set cycle budgets, and follow a daily spending pace on your iPhone without an account or bank connection.',
+    mindBudgetCta: 'View MindBudget',
+    mindBudgetDownloadCta: 'Join TestFlight',
     novelForgeKicker: 'macOS public test',
     novelForgeDescription: 'A local-first, author-controlled AI fiction workbench for long-form projects, short stories, structured memory, and reviewable drafts.',
     novelForgeCta: 'View NovelForge AI',
@@ -102,10 +115,14 @@ const copy = {
     description: 'Station Cat が作っている小さなツール。',
     kicker: 'Station Cat Apps',
     heading: '日常の創作を少し軽くするツール。',
-    intro: 'Station Cat が開発・テスト・公開しているアプリをまとめています。日常写真向け SnapCopy、作者主導の AI 小説ワークベンチ NovelForge AI、macOS / Windows / iOS 中国語入力の猫栈拼音、デスクトップ動画編集の SimpleCut Pro、Windows / Mac 向け設定管理ツール NodePilot があります。',
+    intro: 'Station Cat が開発・テスト・公開しているアプリをまとめています。日常写真向け SnapCopy、端末内で使う予算管理アプリ MindBudget、作者主導の AI 小説ワークベンチ NovelForge AI、macOS / Windows / iOS 中国語入力の猫栈拼音、デスクトップ動画編集の SimpleCut Pro、Windows / Mac 向け設定管理ツール NodePilot があります。',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: '朝食、コーヒー、散歩、ペット、旅行、日常写真を、共有しやすいキャプションにします。',
     snapcopyCta: 'SnapCopy を見る',
+    mindBudgetKicker: 'iPhone TestFlight public beta',
+    mindBudgetDescription: 'アカウントや銀行連携なしで、収支、予算サイクル、1日に使える金額を iPhone 内に記録します。',
+    mindBudgetCta: 'MindBudget を見る',
+    mindBudgetDownloadCta: 'TestFlight に参加',
     novelForgeKicker: 'macOS public test',
     novelForgeDescription: '長編、短編、構造化された物語記憶、確認待ち AI ドラフトを扱う、ローカル優先・作者主導の小説ワークベンチです。',
     novelForgeCta: 'NovelForge AI を見る',
@@ -128,6 +145,8 @@ const paths = {
   'zh-Hant': {
     canonical: '/zh-hant/apps/',
     snapcopy: captionAiProduct.zhHantProductPath,
+    mindBudget: mindBudgetProduct.zhHantProductPath,
+    mindBudgetDownload: mindBudgetProduct.zhHantDownloadPagePath,
     novelForge: novelForgeAiProduct.zhHantProductPath,
     novelForgeDownload: novelForgeAiProduct.zhHantDownloadPagePath,
     privatePinyin: privatePinyinProduct.zhHantProductPath,
@@ -139,6 +158,8 @@ const paths = {
   'zh-Hans': {
     canonical: '/zh-hans/apps/',
     snapcopy: captionAiProduct.zhHansProductPath,
+    mindBudget: mindBudgetProduct.zhHansProductPath,
+    mindBudgetDownload: mindBudgetProduct.zhHansDownloadPagePath,
     novelForge: novelForgeAiProduct.zhHansProductPath,
     novelForgeDownload: novelForgeAiProduct.zhHansDownloadPagePath,
     privatePinyin: privatePinyinProduct.zhHansProductPath,
@@ -150,6 +171,8 @@ const paths = {
   en: {
     canonical: '/apps/',
     snapcopy: captionAiProduct.productPath,
+    mindBudget: mindBudgetProduct.productPath,
+    mindBudgetDownload: mindBudgetProduct.downloadPagePath,
     novelForge: novelForgeAiProduct.productPath,
     novelForgeDownload: novelForgeAiProduct.downloadPagePath,
     privatePinyin: privatePinyinProduct.productPath,
@@ -161,6 +184,8 @@ const paths = {
   ja: {
     canonical: '/ja/apps/',
     snapcopy: captionAiProduct.jaProductPath,
+    mindBudget: mindBudgetProduct.jaProductPath,
+    mindBudgetDownload: mindBudgetProduct.jaDownloadPagePath,
     novelForge: novelForgeAiProduct.jaProductPath,
     novelForgeDownload: novelForgeAiProduct.jaDownloadPagePath,
     privatePinyin: privatePinyinProduct.jaProductPath,
@@ -200,6 +225,18 @@ const paths = {
       imageVariant="icon"
       cta={copy.snapcopyCta}
       kicker={copy.snapcopyKicker}
+    />
+    <ProductCard
+      title={lang === 'zh-Hans' || lang === 'zh-Hant' ? '花有數' : 'MindBudget'}
+      description={copy.mindBudgetDescription}
+      href={paths.mindBudget}
+      image={mindBudgetProduct.assets.icon}
+      imageAlt="MindBudget app icon"
+      imageVariant="icon"
+      cta={copy.mindBudgetCta}
+      secondaryHref={paths.mindBudgetDownload}
+      secondaryCta={copy.mindBudgetDownloadCta}
+      kicker={copy.mindBudgetKicker}
     />
     <ProductCard
       title="NovelForge AI"

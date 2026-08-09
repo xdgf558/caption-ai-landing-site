@@ -1,0 +1,160 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { mindBudgetProduct } from '../data/products/mindbudget';
+
+interface Props {
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+}
+
+const { lang = 'zh-Hant' } = Astro.props;
+const copy = {
+  'zh-Hant': {
+    title: 'MindBudget｜溫和的預算與消費回顧工具',
+    eyebrow: 'iPhone Public Test',
+    headline: '先看清今天能花多少，再決定下一筆要不要花。',
+    intro: 'MindBudget 是一款本機優先的 iPhone 預算與消費回顧工具。它把每日可用額度、收支記錄、願望清單、冷靜期和近期消費變化放在同一個安靜的工作流裡，不用註冊帳號，也不把財務記錄交給廣告或分析服務。',
+    join: '加入 TestFlight 公測',
+    testInfo: '查看安裝與版本說明',
+    privacy: '閱讀隱私政策',
+    showcaseTitle: '真正用來做決定的三個畫面',
+    screenshots: [
+      ['今天', '把週期預算換算成今天仍可使用的參考額度，並顯示目前節奏。', mindBudgetProduct.assets.dashboard],
+      ['問 MindBudget', '用本機模板回答預算問題；支援時可選擇 Apple Intelligence 在裝置端潤色。', mindBudgetProduct.assets.ask],
+      ['消費洞察', '整理近 30 天與目前週期的分類、趨勢和模式，不做羞辱或診斷。', mindBudgetProduct.assets.insights]
+    ],
+    featuresTitle: '不是另一個雲端帳本',
+    features: [
+      ['快速記錄收支', '手動記下支出與收入，保留精確金額、分類、日期和可選備註。'],
+      ['週期預算與每日節奏', '把固定支出、彈性預算與儲蓄目標分開，清楚看到目前週期壓力。'],
+      ['願望清單與冷靜期', '把暫時不買的東西放進願望清單，設定 24 小時、72 小時或自訂冷靜期。'],
+      ['溫和的本機洞察', '由確定性規則整理近期分類與消費變化，不把 AI 當作財務決策者。'],
+      ['完整資料控制', '支援 CSV 匯出、Face ID App 鎖與經過驗證的「刪除全部」流程。'],
+      ['可選系統整合', 'Siri、捷徑、Spotlight、通知與裝置端文字增強都可以分別開啟或保持關閉。']
+    ],
+    releaseTitle: `${mindBudgetProduct.latestVersion}（${mindBudgetProduct.buildNumber}）公開測試`,
+    releaseNotes: ['新增 App 內語言切換，可立即選擇跟隨系統、簡體中文或英文。', '加入收入分配、跨週期總儲蓄目標和每月固定支出規則。', '重新調整主畫面的每日消費節奏，並更新標準、深色與系統著色圖示。'],
+    boundaryTitle: '目前公測邊界',
+    boundaryNotes: ['僅支援 iPhone，最低系統為 iOS 17。', '目前支援英文與簡體中文 App 介面。', '沒有銀行連線、雲端同步、廣告、第三方分析或遠端 AI。', '這是 TestFlight 公測版，請不要把它當作會計、投資建議或醫療工具。']
+  },
+  'zh-Hans': {
+    title: '花有数｜温和的预算与消费复盘工具',
+    eyebrow: 'iPhone 公开测试',
+    headline: '先看清今天能花多少，再决定下一笔要不要花。',
+    intro: '花有数是一款本地优先的 iPhone 预算与消费复盘工具。它把每日可用额度、收支记录、心愿单、冷静期和近期消费变化放在同一个安静的工作流里，无需注册账号，也不会把财务记录交给广告或分析服务。',
+    join: '加入 TestFlight 公测',
+    testInfo: '查看安装与版本说明',
+    privacy: '阅读隐私政策',
+    showcaseTitle: '真正用来做决定的三个画面',
+    screenshots: [
+      ['今天', '把周期预算换算成今天仍可使用的参考额度，并显示当前节奏。', mindBudgetProduct.assets.dashboard],
+      ['问花有数', '用本地模板回答预算问题；支持时可选择 Apple Intelligence 在设备端润色。', mindBudgetProduct.assets.ask],
+      ['消费洞察', '整理近 30 天与当前周期的分类、趋势和模式，不做羞辱或诊断。', mindBudgetProduct.assets.insights]
+    ],
+    featuresTitle: '不是另一个云端账本',
+    features: [
+      ['快速记录收支', '手动记下支出与收入，保留精确金额、分类、日期和可选备注。'],
+      ['周期预算与每日节奏', '把固定支出、灵活预算与储蓄目标分开，清楚看到当前周期压力。'],
+      ['心愿单与冷静期', '把暂时不买的东西放进心愿单，设置 24 小时、72 小时或自定义冷静期。'],
+      ['温和的本地洞察', '由确定性规则整理近期分类与消费变化，不把 AI 当作财务决策者。'],
+      ['完整数据控制', '支持 CSV 导出、Face ID 应用锁与经过验证的“删除全部”流程。'],
+      ['可选系统集成', 'Siri、快捷指令、Spotlight、通知与设备端文字增强都可以分别开启或保持关闭。']
+    ],
+    releaseTitle: `${mindBudgetProduct.latestVersion}（${mindBudgetProduct.buildNumber}）公开测试`,
+    releaseNotes: ['新增应用内语言切换，可立即选择跟随系统、简体中文或英文。', '加入收入分配、跨周期总储蓄目标和每月固定支出规则。', '重新调整主界面的每日消费节奏，并更新标准、深色与系统着色图标。'],
+    boundaryTitle: '当前公测边界',
+    boundaryNotes: ['仅支持 iPhone，最低系统为 iOS 17。', '目前支持英文与简体中文应用界面。', '没有银行连接、云同步、广告、第三方分析或远程 AI。', '这是 TestFlight 公测版，请不要把它当作会计、投资建议或医疗工具。']
+  },
+  en: {
+    title: 'MindBudget | A calmer way to plan spending',
+    eyebrow: 'iPhone Public Test',
+    headline: 'See what today can hold before deciding on the next purchase.',
+    intro: 'MindBudget is a local-first iPhone budgeting and spending-reflection tool. It brings daily allowance, income and expense records, wishlists, cooling-off periods, and recent patterns into one calm workflow without an account or an advertising profile.',
+    join: 'Join the TestFlight beta',
+    testInfo: 'Installation and release notes',
+    privacy: 'Read the privacy policy',
+    showcaseTitle: 'Three screens built for real decisions',
+    screenshots: [
+      ['Today', 'Turn the current budget cycle into a clear daily reference and see the current pace.', mindBudgetProduct.assets.dashboard],
+      ['Ask MindBudget', 'Get complete local template answers, with optional on-device Apple Intelligence wording.', mindBudgetProduct.assets.ask],
+      ['Insights', 'Review 30-day and current-cycle categories, trends, and patterns without shame or diagnosis.', mindBudgetProduct.assets.insights]
+    ],
+    featuresTitle: 'Not another cloud ledger',
+    features: [
+      ['Fast manual records', 'Record exact income and expenses with categories, dates, and optional context.'],
+      ['Cycle budgets and daily pace', 'Keep fixed costs, flexible spending, and savings goals distinct while seeing current pressure.'],
+      ['Wishlist and cooling-off', 'Pause a purchase for 24 hours, 72 hours, or a custom period without treating either choice as failure.'],
+      ['Gentle local insights', 'Deterministic rules summarize recent spending changes. AI never decides your financial facts.'],
+      ['Data control', 'Export the ledger as CSV, enable an optional Face ID lock, or remove all local data through a verified flow.'],
+      ['Optional integrations', 'Siri, Shortcuts, Spotlight, notifications, and on-device wording enhancement can be controlled separately.']
+    ],
+    releaseTitle: `${mindBudgetProduct.latestVersion} (${mindBudgetProduct.buildNumber}) public beta`,
+    releaseNotes: ['Adds an in-app language choice for Follow System, Simplified Chinese, and English.', 'Adds explicit income allocation, a cross-cycle total savings goal, and monthly recurring fixed-expense rules.', 'Refines the Today spending pace and updates the standard, dark, and system-tinted app icons.'],
+    boundaryTitle: 'Public beta boundaries',
+    boundaryNotes: ['iPhone only, requiring iOS 17 or later.', 'The app interface currently supports English and Simplified Chinese.', 'No bank connection, cloud sync, advertising, third-party analytics, or remote AI.', 'This TestFlight beta is not an accounting system, investment adviser, or medical tool.']
+  },
+  ja: {
+    title: 'MindBudget｜落ち着いて支出を考える予算ツール',
+    eyebrow: 'iPhone Public Test',
+    headline: '次の支出を決める前に、今日使える範囲を確認する。',
+    intro: 'MindBudget は、iPhone のローカル環境で動く予算と支出の振り返りツールです。今日の目安、収支記録、ウィッシュリスト、クーリングオフ、最近の傾向を、アカウントや広告プロファイルなしで一つの穏やかな流れにまとめます。',
+    join: 'TestFlight 公開テストに参加',
+    testInfo: 'インストールと更新内容',
+    privacy: 'プライバシーポリシー',
+    showcaseTitle: '判断に使える三つの画面',
+    screenshots: [
+      ['今日', '現在の予算周期から、今日使える目安と進み方を分かりやすく表示します。', mindBudgetProduct.assets.dashboard],
+      ['MindBudget に質問', '完全なローカル回答と、任意のオンデバイス Apple Intelligence 文章補助を提供します。', mindBudgetProduct.assets.ask],
+      ['インサイト', '30日間と現在周期の分類・推移・傾向を、責めたり診断したりせず整理します。', mindBudgetProduct.assets.insights]
+    ],
+    featuresTitle: 'クラウド家計簿とは違う設計',
+    features: [
+      ['手動で素早く記録', '正確な収入・支出、分類、日付、任意の文脈を記録できます。'],
+      ['周期予算と今日のペース', '固定費、自由支出、貯蓄目標を分けて現在の負担を確認できます。'],
+      ['ウィッシュリストと保留', '24時間、72時間、または任意の期間を置いて購入を考え直せます。'],
+      ['穏やかなローカル分析', '決定的なルールで最近の変化を整理し、AI に金銭判断を任せません。'],
+      ['データ管理', 'CSV 書き出し、Face ID ロック、確認付きの全データ削除を利用できます。'],
+      ['任意のシステム連携', 'Siri、ショートカット、Spotlight、通知、文章補助を個別に管理できます。']
+    ],
+    releaseTitle: `${mindBudgetProduct.latestVersion}（${mindBudgetProduct.buildNumber}）公開テスト`,
+    releaseNotes: ['システム連動・簡体字中国語・英語を即時切り替えられるアプリ内言語設定を追加。', '収入配分、周期をまたぐ総貯蓄目標、月次固定支出ルールを追加。', '今日の支出ペースを調整し、標準・ダーク・システム着色アイコンを更新。'],
+    boundaryTitle: '公開テストの範囲',
+    boundaryNotes: ['iPhone 専用、iOS 17 以降が必要です。', 'アプリ画面は現在、英語と簡体字中国語に対応しています。', '銀行接続、クラウド同期、広告、第三者分析、リモート AI はありません。', '会計、投資助言、医療用途のアプリではありません。']
+  }
+}[lang];
+
+const canonicalPath = lang === 'zh-Hant' ? mindBudgetProduct.zhHantProductPath : lang === 'zh-Hans' ? mindBudgetProduct.zhHansProductPath : lang === 'ja' ? mindBudgetProduct.jaProductPath : mindBudgetProduct.productPath;
+const downloadPath = lang === 'zh-Hant' ? mindBudgetProduct.zhHantDownloadPagePath : lang === 'zh-Hans' ? mindBudgetProduct.zhHansDownloadPagePath : lang === 'ja' ? mindBudgetProduct.jaDownloadPagePath : mindBudgetProduct.downloadPagePath;
+const privacyPath = mindBudgetProduct.privacyPaths[lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang];
+---
+
+<BaseLayout title={copy.title} description={copy.intro} lang={lang} canonicalPath={canonicalPath} ogImage={mindBudgetProduct.assets.icon} bodyClass="station-paper-page mindbudget-page" alternates={[
+  { hrefLang: 'zh-Hant', href: mindBudgetProduct.zhHantProductPath }, { hrefLang: 'zh-Hans', href: mindBudgetProduct.zhHansProductPath },
+  { hrefLang: 'en', href: mindBudgetProduct.productPath }, { hrefLang: 'ja', href: mindBudgetProduct.jaProductPath },
+  { hrefLang: 'x-default', href: mindBudgetProduct.zhHantProductPath }
+]}>
+  <section class="mindbudget-hero">
+    <div class="mindbudget-hero__copy">
+      <p class="section-kicker">{copy.eyebrow} · {mindBudgetProduct.latestVersion}</p>
+      <div class="mindbudget-brand"><img src={mindBudgetProduct.assets.icon} alt="MindBudget app icon" width="1024" height="1024" /><span>{lang === 'zh-Hans' ? '花有数' : 'MindBudget'}</span></div>
+      <h1>{copy.headline}</h1>
+      <p>{copy.intro}</p>
+      <div class="button-row"><a class="button button-primary" href={mindBudgetProduct.testFlightUrl} target="_blank" rel="noreferrer">{copy.join}</a><a class="button button-secondary" href={downloadPath}>{copy.testInfo}</a><a class="button button-secondary" href={privacyPath}>{copy.privacy}</a></div>
+    </div>
+    <div class="mindbudget-hero__visual"><img class="mindbudget-phone" src={mindBudgetProduct.assets.dashboard} alt={copy.screenshots[0][0]} width="1206" height="2622" /></div>
+  </section>
+
+  <section class="page-section mindbudget-showcase">
+    <div class="section-heading"><p class="section-kicker">Product showcase</p><h2>{copy.showcaseTitle}</h2></div>
+    <div class="mindbudget-screen-grid">{copy.screenshots.map(([title, description, image]) => <figure><div><img src={image} alt={title} width="1206" height="2622" loading="lazy" /></div><figcaption><strong>{title}</strong><span>{description}</span></figcaption></figure>)}</div>
+  </section>
+
+  <section class="page-section">
+    <div class="section-heading"><p class="section-kicker">Local-first budgeting</p><h2>{copy.featuresTitle}</h2></div>
+    <div class="radar-feature-grid">{copy.features.map(([title, text]) => <article><h3>{title}</h3><p>{text}</p></article>)}</div>
+  </section>
+
+  <section class="page-section mindbudget-release-band">
+    <div><p class="section-kicker">TestFlight</p><h2>{copy.releaseTitle}</h2><ul>{copy.releaseNotes.map((note) => <li>{note}</li>)}</ul></div>
+    <div><p class="section-kicker">Scope</p><h2>{copy.boundaryTitle}</h2><ul>{copy.boundaryNotes.map((note) => <li>{note}</li>)}</ul></div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,15 @@
+---
+import LegalLayout from '../layouts/LegalLayout.astro';
+import { mindBudgetProduct } from '../data/products/mindbudget';
+import { mindBudgetPrivacyNotice, mindBudgetPrivacySections } from '../data/legal/mindbudget';
+interface Props { lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans'; }
+const { lang = 'zh-Hant' } = Astro.props;
+const title = lang === 'zh-Hans' ? '花有数隐私政策' : lang === 'zh-Hant' ? 'MindBudget 隱私政策' : lang === 'ja' ? 'MindBudget プライバシーポリシー' : 'MindBudget Privacy Policy';
+const description = lang === 'zh-Hans' ? '花有数公开 TestFlight 测试版的数据处理与隐私说明。' : lang === 'zh-Hant' ? 'MindBudget 公開 TestFlight 測試版的資料處理與隱私說明。' : lang === 'ja' ? 'MindBudget 公開 TestFlight 版のデータ処理とプライバシー説明。' : 'How the MindBudget public TestFlight beta handles data and privacy.';
+const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
+---
+<LegalLayout title={title} description={description} lang={lang} canonicalPath={mindBudgetProduct.privacyPaths[localeKey]} productLabel={lang === 'zh-Hans' ? '花有数' : 'MindBudget'} ogImage={mindBudgetProduct.assets.icon} notice={mindBudgetPrivacyNotice[lang]} alternates={[
+  { hrefLang: 'zh-Hant', href: mindBudgetProduct.privacyPaths.zhHant }, { hrefLang: 'zh-Hans', href: mindBudgetProduct.privacyPaths.zhHans },
+  { hrefLang: 'en', href: mindBudgetProduct.privacyPaths.en }, { hrefLang: 'ja', href: mindBudgetProduct.privacyPaths.ja },
+  { hrefLang: 'x-default', href: mindBudgetProduct.privacyPaths.zhHant }
+]}><div class="legal-content">{mindBudgetPrivacySections[lang].map((section) => <section><h2>{section.heading}</h2><p>{section.body}</p></section>)}</div></LegalLayout>

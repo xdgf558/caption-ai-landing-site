@@ -1,0 +1,64 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { mindBudgetProduct } from '../data/products/mindbudget';
+
+interface Props { lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans'; }
+const { lang = 'zh-Hant' } = Astro.props;
+const copy = {
+  'zh-Hant': {
+    title: '下載 MindBudget TestFlight 公測版', headline: '在 iPhone 上加入 MindBudget 公開測試。',
+    intro: '目前透過 Apple TestFlight 對外公測。打開邀請連結後，先安裝 TestFlight，再接受邀請並安裝 MindBudget。',
+    join: '打開 TestFlight 邀請', back: '返回產品頁', requirements: '測試需求',
+    requirementItems: ['iPhone，iOS 17.0 或以上版本。', 'Apple TestFlight App 與可用的 Apple Account。', 'App 介面目前提供英文與簡體中文，可在 App 內切換。'],
+    install: '安裝步驟', installItems: ['在 iPhone 上打開 TestFlight 公開邀請。', '若尚未安裝 TestFlight，依照 Apple 提示先完成安裝。', '點選「接受」與「安裝」；之後的新測試版可以直接在 TestFlight 更新。'],
+    release: `${mindBudgetProduct.latestVersion}（${mindBudgetProduct.buildNumber}）測試重點`,
+    notes: ['測試 App 內語言即時切換，以及貨幣、日期、通知和匯出檔名是否同步更新。', '測試收入分配、總儲蓄目標與每月固定支出規則。', '測試 CSV 匯出、Face ID App 鎖和完整刪除本機資料。'],
+    notice: 'TestFlight 版本可能包含錯誤或變更。重要財務資料請自行保留備份，並以銀行或正式帳目為準。', privacy: '隱私政策', support: '取得支援'
+  },
+  'zh-Hans': {
+    title: '下载花有数 TestFlight 公测版', headline: '在 iPhone 上加入花有数公开测试。',
+    intro: '目前通过 Apple TestFlight 对外公测。打开邀请链接后，先安装 TestFlight，再接受邀请并安装花有数。',
+    join: '打开 TestFlight 邀请', back: '返回产品页', requirements: '测试要求',
+    requirementItems: ['iPhone，iOS 17.0 或以上版本。', 'Apple TestFlight 应用与可用的 Apple 账户。', '应用界面目前提供英文与简体中文，可在应用内切换。'],
+    install: '安装步骤', installItems: ['在 iPhone 上打开 TestFlight 公开邀请。', '如果尚未安装 TestFlight，按照 Apple 提示先完成安装。', '点击“接受”和“安装”；后续测试版本可直接在 TestFlight 更新。'],
+    release: `${mindBudgetProduct.latestVersion}（${mindBudgetProduct.buildNumber}）测试重点`,
+    notes: ['测试应用内语言即时切换，以及货币、日期、通知和导出文件名是否同步更新。', '测试收入分配、总储蓄目标与每月固定支出规则。', '测试 CSV 导出、Face ID 应用锁和完整删除本地数据。'],
+    notice: 'TestFlight 版本可能包含错误或变更。重要财务数据请自行保留备份，并以银行或正式账目为准。', privacy: '隐私政策', support: '获取支持'
+  },
+  en: {
+    title: 'Download the MindBudget TestFlight beta', headline: 'Join the MindBudget public beta on iPhone.',
+    intro: 'MindBudget is currently available through Apple TestFlight. Open the invitation, install TestFlight if needed, then accept and install the beta.',
+    join: 'Open the TestFlight invitation', back: 'Back to product page', requirements: 'Test requirements',
+    requirementItems: ['An iPhone running iOS 17.0 or later.', 'The Apple TestFlight app and a working Apple Account.', 'The app interface currently supports English and Simplified Chinese with an in-app switch.'],
+    install: 'How to install', installItems: ['Open the public invitation on your iPhone.', 'Install TestFlight first if Apple prompts you to do so.', 'Tap Accept, then Install. Future beta builds can be updated from TestFlight.'],
+    release: `${mindBudgetProduct.latestVersion} (${mindBudgetProduct.buildNumber}) testing focus`,
+    notes: ['Verify immediate in-app language switching across money, dates, notifications, and export filenames.', 'Test income allocation, the total savings goal, and monthly recurring fixed expenses.', 'Test CSV export, the optional Face ID lock, and complete local deletion.'],
+    notice: 'TestFlight builds may contain defects or change without notice. Keep your own backup of important financial information and use official records as the source of truth.', privacy: 'Privacy policy', support: 'Get support'
+  },
+  ja: {
+    title: 'MindBudget TestFlight 公開テスト版', headline: 'iPhone で MindBudget の公開テストに参加。',
+    intro: '現在は Apple TestFlight で公開テストを行っています。招待を開き、必要なら TestFlight をインストールしてから、ベータ版を受け入れてください。',
+    join: 'TestFlight 招待を開く', back: '製品ページへ戻る', requirements: 'テスト要件',
+    requirementItems: ['iOS 17.0 以降を搭載した iPhone。', 'Apple TestFlight アプリと利用可能な Apple Account。', 'アプリ画面は現在、英語と簡体字中国語に対応し、アプリ内で切り替えられます。'],
+    install: 'インストール方法', installItems: ['iPhone で公開招待を開きます。', '案内が表示された場合は先に TestFlight をインストールします。', '「承認」、続いて「インストール」をタップします。以後は TestFlight から更新できます。'],
+    release: `${mindBudgetProduct.latestVersion}（${mindBudgetProduct.buildNumber}）テスト項目`,
+    notes: ['言語切り替えが金額、日付、通知、書き出しファイル名へ即時反映されること。', '収入配分、総貯蓄目標、月次固定支出ルール。', 'CSV、Face ID ロック、ローカルデータの完全削除。'],
+    notice: 'TestFlight 版には不具合や予告なしの変更が含まれる場合があります。重要な金融情報は別途保管し、正式な記録を基準にしてください。', privacy: 'プライバシー', support: 'サポート'
+  }
+}[lang];
+
+const canonicalPath = lang === 'zh-Hant' ? mindBudgetProduct.zhHantDownloadPagePath : lang === 'zh-Hans' ? mindBudgetProduct.zhHansDownloadPagePath : lang === 'ja' ? mindBudgetProduct.jaDownloadPagePath : mindBudgetProduct.downloadPagePath;
+const productPath = lang === 'zh-Hant' ? mindBudgetProduct.zhHantProductPath : lang === 'zh-Hans' ? mindBudgetProduct.zhHansProductPath : lang === 'ja' ? mindBudgetProduct.jaProductPath : mindBudgetProduct.productPath;
+const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
+---
+
+<BaseLayout title={copy.title} description={copy.intro} lang={lang} canonicalPath={canonicalPath} ogImage={mindBudgetProduct.assets.icon} bodyClass="station-paper-page mindbudget-page" alternates={[
+  { hrefLang: 'zh-Hant', href: mindBudgetProduct.zhHantDownloadPagePath }, { hrefLang: 'zh-Hans', href: mindBudgetProduct.zhHansDownloadPagePath },
+  { hrefLang: 'en', href: mindBudgetProduct.downloadPagePath }, { hrefLang: 'ja', href: mindBudgetProduct.jaDownloadPagePath },
+  { hrefLang: 'x-default', href: mindBudgetProduct.zhHantDownloadPagePath }
+]}>
+  <section class="page-shell mindbudget-download-hero"><div><p class="section-kicker">Apple TestFlight · Public beta</p><h1>{copy.headline}</h1><p>{copy.intro}</p><div class="button-row"><a class="button button-primary" href={mindBudgetProduct.testFlightUrl} target="_blank" rel="noreferrer">{copy.join}</a><a class="button button-secondary" href={productPath}>{copy.back}</a></div></div><img src={mindBudgetProduct.assets.icon} alt="MindBudget app icon" width="1024" height="1024" /></section>
+  <section class="page-section mindbudget-instruction-grid"><article><p class="section-kicker">Requirements</p><h2>{copy.requirements}</h2><ul>{copy.requirementItems.map((item) => <li>{item}</li>)}</ul></article><article><p class="section-kicker">Install</p><h2>{copy.install}</h2><ol>{copy.installItems.map((item) => <li>{item}</li>)}</ol></article></section>
+  <section class="page-section"><div class="radar-note-panel"><div><p class="section-kicker">Version {mindBudgetProduct.latestVersion}</p><h2>{copy.release}</h2></div><ul>{copy.notes.map((note) => <li>{note}</li>)}</ul></div></section>
+  <section class="page-section mindbudget-beta-notice"><p>{copy.notice}</p><div class="button-row"><a class="button button-secondary" href={mindBudgetProduct.privacyPaths[localeKey]}>{copy.privacy}</a><a class="button button-secondary" href={mindBudgetProduct.supportPaths[localeKey]}>{copy.support}</a></div></section>
+</BaseLayout>

@@ -6,6 +6,7 @@ import { anyTlsDesktopManagerProduct } from '../data/products/anytls-desktop-man
 import { simpleCutProProduct } from '../data/products/simplecut-pro';
 import { privatePinyinProduct } from '../data/products/privatepinyin';
 import { novelForgeAiProduct } from '../data/products/novelforge-ai';
+import { mindBudgetProduct } from '../data/products/mindbudget';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
 type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'book';
@@ -75,11 +76,14 @@ const copy = {
     viewApp: 'View App',
     joinTest: 'Join Test',
     snapcopyDesc: '把日常照片變成更容易分享的一句話。',
+    mindBudgetDesc: '不連銀行、不要求帳號，在 iPhone 本機記錄收支、安排週期預算，掌握今天還能花多少。',
     novelForgeDesc: '本機優先、作者主導的 AI 小說創作工作台，整理長篇、短篇、故事記憶與待審草稿。',
     privatePinyinDesc: '本機中文輸入法測試版，提供 macOS、Windows TSF 內測包，iOS 版也已開放 TestFlight 外部測試。',
     simplecutDesc: '在本機時間線剪切影片、對齊音訊、預覽轉場，並匯出輕量成片。',
     nodePilotDesc: '在本機整理你擁有或獲授權管理的 AnyTLS 配置、連線資訊和備註。',
     snapcopyStatus: 'App Store 上架',
+    mindBudgetStatus: `iPhone TestFlight ${mindBudgetProduct.latestVersion}`,
+    mindBudgetDownload: '加入公測',
     novelForgeStatus: `macOS public test ${novelForgeVersion}`,
     novelForgeDownload: '下載 Mac 版',
     privatePinyinStatus: `macOS ${privatePinyinMacVersion} · Windows ${privatePinyinWindowsVersion} · iOS TestFlight`,
@@ -144,11 +148,14 @@ const copy = {
     viewApp: 'View App',
     joinTest: 'Join Test',
     snapcopyDesc: '把日常照片变成更容易分享的一句话。',
+    mindBudgetDesc: '不连接银行、不要求账号，在 iPhone 本地记录收支、安排周期预算，掌握今天还能花多少。',
     novelForgeDesc: '本地优先、作者主导的 AI 小说创作工作台，整理长篇、短篇、故事记忆与待审草稿。',
     privatePinyinDesc: '本机中文输入法测试版，提供 macOS、Windows TSF 内测包，iOS 版也已开放 TestFlight 外部测试。',
     simplecutDesc: '在本机时间线剪切视频、对齐音频、预览转场，并导出轻量成片。',
     nodePilotDesc: '在本机整理你拥有或获授权管理的 AnyTLS 配置、连接信息和备注。',
     snapcopyStatus: 'App Store 上架',
+    mindBudgetStatus: `iPhone TestFlight ${mindBudgetProduct.latestVersion}`,
+    mindBudgetDownload: '加入公测',
     novelForgeStatus: `macOS public test ${novelForgeVersion}`,
     novelForgeDownload: '下载 Mac 版',
     privatePinyinStatus: `macOS ${privatePinyinMacVersion} · Windows ${privatePinyinWindowsVersion} · iOS TestFlight`,
@@ -213,11 +220,14 @@ const copy = {
     viewApp: 'View App',
     joinTest: 'Join Test',
     snapcopyDesc: 'Turn everyday photos into a sentence that is easier to share.',
+    mindBudgetDesc: 'Track spending, plan cycle budgets, and see what is safe to spend today, all on your iPhone without an account or bank connection.',
     novelForgeDesc: 'A local-first, author-controlled AI fiction workbench for long-form projects, short stories, story memory, and reviewable drafts.',
     privatePinyinDesc: 'An early local Chinese input method with macOS and Windows test builds plus an iOS external TestFlight group.',
     simplecutDesc: 'Cut clips on a local timeline, align audio, preview transitions, and export lightweight edits.',
     nodePilotDesc: 'Organize AnyTLS configurations, connection details, and local notes for environments you are authorized to manage.',
     snapcopyStatus: 'App Store release',
+    mindBudgetStatus: `iPhone TestFlight ${mindBudgetProduct.latestVersion}`,
+    mindBudgetDownload: 'Join public beta',
     novelForgeStatus: `macOS public test ${novelForgeVersion}`,
     novelForgeDownload: 'Download for Mac',
     privatePinyinStatus: `macOS ${privatePinyinMacVersion} · Windows ${privatePinyinWindowsVersion} · iOS TestFlight`,
@@ -282,11 +292,14 @@ const copy = {
     viewApp: 'View App',
     joinTest: 'Join Test',
     snapcopyDesc: '日常写真を、共有しやすい一文に変えます。',
+    mindBudgetDesc: 'アカウントや銀行連携なしで、収支、予算サイクル、今日使える金額を iPhone 内に記録します。',
     novelForgeDesc: '長編、短編、物語記憶、確認待ちドラフトを扱う、ローカル優先・作者主導の AI 小説ワークベンチです。',
     privatePinyinDesc: 'ローカル中国語入力メソッドの早期テスト版です。macOS、Windows テスト版と iOS TestFlight 外部テストを提供しています。',
     simplecutDesc: 'ローカルのタイムラインでカット、音声調整、転換確認、軽い動画書き出しを行えます。',
     nodePilotDesc: '管理権限のある AnyTLS 設定、接続情報、ローカルメモを整理します。',
     snapcopyStatus: 'App Store 公開中',
+    mindBudgetStatus: `iPhone TestFlight ${mindBudgetProduct.latestVersion}`,
+    mindBudgetDownload: '公開テストに参加',
     novelForgeStatus: `macOS public test ${novelForgeVersion}`,
     novelForgeDownload: 'Mac 版をダウンロード',
     privatePinyinStatus: `macOS ${privatePinyinMacVersion} · Windows ${privatePinyinWindowsVersion} · iOS TestFlight`,
@@ -325,6 +338,8 @@ const paths = {
     notes: '/novel/',
     snapcopy: snapCopyProduct.zhHantProductPath,
     snapcopyTest: '/zh-hant/apps/caption-ai/download/',
+    mindBudget: mindBudgetProduct.zhHantProductPath,
+    mindBudgetDownload: mindBudgetProduct.zhHantDownloadPagePath,
     novelForge: novelForgeAiProduct.zhHantProductPath,
     novelForgeDownload: novelForgeDownload.downloadPath,
     privatePinyin: privatePinyinProduct.zhHantProductPath,
@@ -341,6 +356,8 @@ const paths = {
     notes: '/novel/',
     snapcopy: snapCopyProduct.zhHansProductPath,
     snapcopyTest: '/zh-hans/apps/caption-ai/download/',
+    mindBudget: mindBudgetProduct.zhHansProductPath,
+    mindBudgetDownload: mindBudgetProduct.zhHansDownloadPagePath,
     novelForge: novelForgeAiProduct.zhHansProductPath,
     novelForgeDownload: novelForgeDownload.downloadPath,
     privatePinyin: privatePinyinProduct.zhHansProductPath,
@@ -357,6 +374,8 @@ const paths = {
     notes: '/novel/',
     snapcopy: snapCopyProduct.productPath,
     snapcopyTest: '/apps/caption-ai/download/',
+    mindBudget: mindBudgetProduct.productPath,
+    mindBudgetDownload: mindBudgetProduct.downloadPagePath,
     novelForge: novelForgeAiProduct.productPath,
     novelForgeDownload: novelForgeDownload.downloadPath,
     privatePinyin: privatePinyinProduct.productPath,
@@ -373,6 +392,8 @@ const paths = {
     notes: '/novel/',
     snapcopy: snapCopyProduct.jaProductPath,
     snapcopyTest: '/ja/apps/caption-ai/download/',
+    mindBudget: mindBudgetProduct.jaProductPath,
+    mindBudgetDownload: mindBudgetProduct.jaDownloadPagePath,
     novelForge: novelForgeAiProduct.jaProductPath,
     novelForgeDownload: novelForgeDownload.downloadPath,
     privatePinyin: privatePinyinProduct.jaProductPath,
@@ -525,6 +546,21 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
           <div class="paper-actions">
             <a class="ticket-button ticket-button--primary" href={paths.snapcopy}>{copy.viewApp}</a>
             <a class="ticket-button ticket-button--secondary" href={paths.snapcopyTest}>{copy.joinTest}</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="bench-card">
+        <div class="bench-card__icon bench-card__icon--mindbudget">
+          <img src={mindBudgetProduct.assets.icon} alt="MindBudget app icon" width="1024" height="1024" loading="lazy" />
+        </div>
+        <div class="bench-card__copy">
+          <span class="paper-stamp">{copy.mindBudgetStatus}</span>
+          <h3>{lang === 'zh-Hans' || lang === 'zh-Hant' ? '花有數' : 'MindBudget'}</h3>
+          <p>{copy.mindBudgetDesc}</p>
+          <div class="paper-actions">
+            <a class="ticket-button ticket-button--primary" href={paths.mindBudget}>{copy.viewApp}</a>
+            <a class="ticket-button ticket-button--secondary" href={paths.mindBudgetDownload}>{copy.mindBudgetDownload}</a>
           </div>
         </div>
       </article>

@@ -13,6 +13,260 @@
   --max: 1120px;
 }
 
+/* MindBudget product pages */
+.mindbudget-page {
+  --mindbudget-ink: #2f2520;
+  --mindbudget-green: #3f6b56;
+  --mindbudget-coral: #c86d54;
+  --mindbudget-paper: #fffaf3;
+  color: var(--mindbudget-ink);
+}
+
+.mindbudget-hero {
+  align-items: center;
+  display: grid;
+  gap: clamp(32px, 6vw, 88px);
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  margin: 0 auto;
+  max-width: 1160px;
+  min-height: min(760px, calc(100svh - 88px));
+  overflow: hidden;
+  padding: clamp(52px, 8vw, 96px) 20px;
+}
+
+.mindbudget-hero__copy {
+  display: grid;
+  gap: 20px;
+}
+
+.mindbudget-hero h1 {
+  font-size: 64px;
+  letter-spacing: 0;
+  line-height: 1.04;
+  margin: 0;
+  max-width: 760px;
+}
+
+.mindbudget-hero__copy > p:not(.section-kicker) {
+  font-size: 18px;
+  line-height: 1.8;
+  margin: 0;
+  max-width: 720px;
+}
+
+.mindbudget-brand {
+  align-items: center;
+  display: flex;
+  font-size: 20px;
+  font-weight: 800;
+  gap: 14px;
+}
+
+.mindbudget-brand img {
+  border: 1px solid rgba(47, 37, 32, 0.2);
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(47, 37, 32, 0.12);
+  height: 66px;
+  width: 66px;
+}
+
+.mindbudget-hero__visual {
+  align-items: flex-start;
+  background: #ead8c8 url('/images/apps/mindbudget/warm-botanical.png') center / cover no-repeat;
+  display: flex;
+  justify-content: center;
+  min-height: 570px;
+  overflow: hidden;
+  padding: 34px 28px 0;
+}
+
+.mindbudget-phone {
+  border: 7px solid #241f1c;
+  border-bottom: 0;
+  border-radius: 48px 48px 0 0;
+  box-shadow: 0 24px 52px rgba(47, 37, 32, 0.24);
+  display: block;
+  height: auto;
+  max-width: 340px;
+  width: 100%;
+}
+
+.mindbudget-showcase .section-heading,
+.mindbudget-page .page-section > .section-heading {
+  margin-bottom: 30px;
+}
+
+.mindbudget-screen-grid {
+  display: grid;
+  gap: clamp(18px, 3vw, 30px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mindbudget-screen-grid figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.mindbudget-screen-grid figure > div {
+  background: #ead8c8;
+  border: 1px solid rgba(47, 37, 32, 0.2);
+  overflow: hidden;
+  padding: 12px 12px 0;
+}
+
+.mindbudget-screen-grid img {
+  border-radius: 34px 34px 0 0;
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.mindbudget-screen-grid figcaption {
+  display: grid;
+  gap: 8px;
+  padding: 18px 2px 0;
+}
+
+.mindbudget-screen-grid figcaption strong {
+  font-size: 20px;
+}
+
+.mindbudget-screen-grid figcaption span {
+  color: rgba(47, 37, 32, 0.76);
+  line-height: 1.65;
+}
+
+.mindbudget-release-band {
+  border-bottom: 1px solid rgba(47, 37, 32, 0.22);
+  border-top: 1px solid rgba(47, 37, 32, 0.22);
+  display: grid;
+  gap: clamp(34px, 6vw, 80px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mindbudget-release-band > div:last-child {
+  border-left: 1px solid rgba(47, 37, 32, 0.18);
+  padding-left: clamp(24px, 4vw, 56px);
+}
+
+.mindbudget-release-band li,
+.mindbudget-instruction-grid li {
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+
+.mindbudget-download-hero {
+  align-items: center;
+  display: grid;
+  gap: 48px;
+  grid-template-columns: minmax(0, 1fr) 180px;
+}
+
+.mindbudget-download-hero > div {
+  display: grid;
+  gap: 18px;
+}
+
+.mindbudget-download-hero > img {
+  border: 1px solid rgba(47, 37, 32, 0.18);
+  border-radius: 38px;
+  box-shadow: 0 18px 36px rgba(47, 37, 32, 0.16);
+  height: auto;
+  width: 180px;
+}
+
+.mindbudget-instruction-grid {
+  display: grid;
+  gap: clamp(36px, 7vw, 96px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mindbudget-instruction-grid article {
+  border-top: 3px solid var(--mindbudget-green);
+  padding-top: 22px;
+}
+
+.mindbudget-beta-notice {
+  align-items: center;
+  background: #f3e4d5;
+  display: flex;
+  gap: 28px;
+  justify-content: space-between;
+}
+
+.mindbudget-beta-notice > p {
+  line-height: 1.7;
+  margin: 0;
+  max-width: 760px;
+}
+
+.bench-card__icon--mindbudget {
+  align-items: center;
+  background: #ead8c8 url('/images/apps/mindbudget/warm-botanical.png') center / cover no-repeat;
+  display: flex;
+  justify-content: center;
+}
+
+.bench-card__icon--mindbudget img {
+  border-radius: 22%;
+  box-shadow: 0 16px 34px rgba(47, 37, 32, 0.18);
+  height: auto;
+  max-width: 168px;
+  width: 38%;
+}
+
+@media (max-width: 800px) {
+  .mindbudget-hero,
+  .mindbudget-download-hero,
+  .mindbudget-instruction-grid,
+  .mindbudget-release-band {
+    grid-template-columns: 1fr;
+  }
+
+  .mindbudget-hero {
+    min-height: 0;
+    padding-top: 42px;
+  }
+
+  .mindbudget-hero h1 {
+    font-size: 44px;
+  }
+
+  .mindbudget-hero__visual {
+    min-height: 500px;
+  }
+
+  .mindbudget-screen-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mindbudget-screen-grid figure {
+    margin: 0 auto;
+    max-width: 430px;
+  }
+
+  .mindbudget-release-band > div:last-child {
+    border-left: 0;
+    border-top: 1px solid rgba(47, 37, 32, 0.18);
+    padding-left: 0;
+    padding-top: 32px;
+  }
+
+  .mindbudget-download-hero > img {
+    grid-row: 1;
+    width: 132px;
+  }
+
+  .mindbudget-beta-notice {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mindbudget-beta-notice .button-row {
+    display: grid;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

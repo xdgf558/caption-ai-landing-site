@@ -42,6 +42,8 @@ const sitemap = read('public/sitemap.xml');
 const worker = read('src/worker.js');
 const nodePilotProduct = read('src/data/products/anytls-desktop-manager.ts');
 const nodePilotLanding = read('src/components/AnyTlsDesktopManagerLanding.astro');
+const mindBudgetProduct = read('src/data/products/mindbudget.ts');
+const mindBudgetLanding = read('src/components/MindBudgetLanding.astro');
 
 for (const [name, source] of Object.entries({ stationHome, appsIndex, footer, sitemap, worker })) {
   assert.doesNotMatch(source, /StationCat Radar|stationcat-radar|stationCatRadarProduct/, `${name} should not expose Radar`);
@@ -62,5 +64,16 @@ assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/NodePilot-0\.2\.26-arm64
 assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/NodePilot-Setup-0\.2\.26-x64\.exe/);
 assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/latest-mac\.yml/);
 assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/latest\.yml/);
+assert.match(stationHome, /mindBudgetProduct/);
+assert.match(appsIndex, /title=\{lang === 'zh-Hans' \|\| lang === 'zh-Hant' \? '花有數' : 'MindBudget'\}/);
+assert.match(footer, /apps\/mindbudget\//);
+assert.match(sitemap, /apps\/mindbudget\/download\//);
+assert.match(sitemap, /apps\/mindbudget\/privacy\//);
+assert.match(sitemap, /apps\/mindbudget\/support\//);
+assert.match(mindBudgetProduct, /latestVersion: '0\.9\.4'/);
+assert.match(mindBudgetProduct, /https:\/\/testflight\.apple\.com\/join\/gnhUNEbz/);
+assert.doesNotMatch(mindBudgetProduct, /gnhUNEbz[，,]/);
+assert.match(mindBudgetProduct, /dashboard-zh-hans\.png/);
+assert.match(mindBudgetLanding, /Ask MindBudget/);
 
-console.log('Product catalog retirement and homepage tests passed.');
+console.log('Product catalog retirement, homepage, and MindBudget tests passed.');
