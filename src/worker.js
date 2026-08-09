@@ -2023,7 +2023,7 @@ const dynamicContentStatusLabels = {
 
 const dynamicAccessLabels = {
   free: 'Free',
-  member: 'Members',
+  member: 'Free with sign-in',
   paid: 'Paid',
   supporter: 'Supporters'
 };
@@ -2032,19 +2032,19 @@ const dynamicAccessLabelsByLocale = {
   en: dynamicAccessLabels,
   ja: {
     free: '無料',
-    member: 'メンバー',
+    member: 'ログイン後無料',
     paid: '有料',
     supporter: '支援者向け'
   },
   'zh-Hant': {
     free: '免費',
-    member: '會員',
+    member: '登入後免費',
     paid: '付費',
     supporter: '支持者'
   },
   'zh-Hans': {
     free: '免费',
-    member: '会员',
+    member: '登录后免费',
     paid: '付费',
     supporter: '支持者'
   }
@@ -18275,6 +18275,7 @@ const dynamicPaymentCopy = {
     disabled: 'Checkout is not configured yet.',
     failed: 'Could not create checkout.',
     library: 'Open Member Center',
+    memberDenied: 'Sign in to read this chapter for free.',
     opening: 'Opening NOWPayments...',
     signIn: 'Sign in to Member Center',
     signInRequired: 'Please sign in before unlocking paid reading.',
@@ -18295,6 +18296,7 @@ const dynamicPaymentCopy = {
     disabled: '支払い設定はまだ有効ではありません。',
     failed: 'チェックアウトを作成できませんでした。',
     library: '本棚を開く',
+    memberDenied: 'ログインすると、この章を無料で読めます。',
     opening: 'NOWPayments を開いています...',
     signIn: '本棚にログイン',
     signInRequired: '有料閲覧を解放する前にログインしてください。',
@@ -18315,6 +18317,7 @@ const dynamicPaymentCopy = {
     disabled: '支付通道尚未配置完成。',
     failed: '支付訂單建立失敗。',
     library: '打開會員中心',
+    memberDenied: '登入後即可免費閱讀本章。',
     opening: '正在打開 NOWPayments...',
     signIn: '登入會員中心',
     signInRequired: '請先登入，再解鎖付費閱讀。',
@@ -18335,6 +18338,7 @@ const dynamicPaymentCopy = {
     disabled: '支付通道尚未配置完成。',
     failed: '支付订单建立失败。',
     library: '打开会员中心',
+    memberDenied: '登录后即可免费阅读本章。',
     opening: '正在打开 NOWPayments...',
     signIn: '登录会员中心',
     signInRequired: '请先登录，再解锁付费阅读。',
@@ -18381,7 +18385,7 @@ const dynamicReaderInteractionCopy = {
   en: {
     body: 'Like this chapter, save your reading point, or submit a comment for review.',
     comment: 'Comment',
-    commentAccessRequired: 'Unlock this chapter before reading or submitting comments.',
+    commentAccessRequired: 'Sign in to read or submit comments for this chapter.',
     commentEmpty: 'No public comments yet.',
     commentFailed: 'Could not load comments.',
     commentLabel: 'Comment',
@@ -18402,7 +18406,7 @@ const dynamicReaderInteractionCopy = {
   ja: {
     body: 'この章にいいねを付けたり、読書位置を保存したり、レビュー用コメントを送れます。',
     comment: 'コメント',
-    commentAccessRequired: 'この章を解放するとコメントを読んだり送信したりできます。',
+    commentAccessRequired: 'ログインすると、この章のコメントを読んだり送信したりできます。',
     commentEmpty: '公開コメントはまだありません。',
     commentFailed: 'コメントを読み込めませんでした。',
     commentLabel: 'コメント',
@@ -18423,7 +18427,7 @@ const dynamicReaderInteractionCopy = {
   'zh-Hant': {
     body: '可以喜歡本章、保存目前閱讀位置，也可以提交評論，審核通過後公開展示。',
     comment: '評論',
-    commentAccessRequired: '解鎖本章後，可以查看或提交評論。',
+    commentAccessRequired: '登入後，可以查看或提交本章評論。',
     commentEmpty: '目前還沒有公開評論。',
     commentFailed: '評論載入失敗。',
     commentLabel: '評論內容',
@@ -18444,7 +18448,7 @@ const dynamicReaderInteractionCopy = {
   'zh-Hans': {
     body: '可以喜欢本章、保存目前阅读位置，也可以提交评论，审核通过后公开展示。',
     comment: '评论',
-    commentAccessRequired: '解锁本章后，可以查看或提交评论。',
+    commentAccessRequired: '登录后，可以查看或提交本章评论。',
     commentEmpty: '目前还没有公开评论。',
     commentFailed: '评论加载失败。',
     commentLabel: '评论内容',
@@ -19175,7 +19179,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
             });
             const response = await fetch('/api/novels/access?' + accessParams.toString());
             const access = await response.json();
-            if (!response.ok || !access.ok) throw new Error(access.message || ${JSON.stringify(paymentCopy.denied)});
+            if (!response.ok || !access.ok) throw new Error(access.message || ${JSON.stringify(memberOnly ? paymentCopy.memberDenied : paymentCopy.denied)});
             if (access.allowed) {
               setButtonsDisabled(true);
               await loadProtectedContent();
@@ -19183,7 +19187,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
             }
             setStatus(
               access.authenticated
-                ? ${JSON.stringify(paymentCopy.denied)}
+                ? ${JSON.stringify(memberOnly ? paymentCopy.memberDenied : paymentCopy.denied)}
                 : ${JSON.stringify(memberOnly ? copy.memberLockedBody : copy.lockedBody)},
               access.authenticated ? 'error' : 'neutral'
             );

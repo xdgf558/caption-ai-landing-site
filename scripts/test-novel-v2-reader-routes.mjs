@@ -277,7 +277,7 @@ const memberSeriesHtml = hooks.renderDynamicNovelSeries(
 );
 assert.match(memberSeriesHtml, /免費閱讀 · 第 10 章起需登入會員/);
 assert.match(memberSeriesHtml, /第九章<\/span>\s*<span>免費<\/span>/);
-assert.match(memberSeriesHtml, /第十章<\/span>\s*<span>會員<\/span>/);
+assert.match(memberSeriesHtml, /第十章<\/span>\s*<span>登入後免費<\/span>/);
 
 const memberChapterHtml = hooks.renderDynamicNovelChapter(
   { ...novelChapterRoute, chapterSlug: 'member-ch10' },
@@ -289,6 +289,8 @@ const memberChapterHtml = hooks.renderDynamicNovelChapter(
 );
 assert.match(memberChapterHtml, /data-access="member"/);
 assert.match(memberChapterHtml, /登入後即可免費閱讀本章/);
+assert.match(memberChapterHtml, /登入後，可以查看或提交本章評論/);
+assert.doesNotMatch(memberChapterHtml, /解鎖本章/);
 assert.doesNotMatch(memberChapterHtml, /<button[^>]+data-serial-credit-unlock/);
 assert.doesNotMatch(memberChapterHtml, /Member body should not render before sign in/);
 assert.equal(hooks.dynamicProtectedAccessFromChapterAccess('member'), 'member');
