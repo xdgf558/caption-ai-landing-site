@@ -1367,7 +1367,7 @@ const getConfiguredReaderCreditPacks = async (db, env) => {
       const row = await getContentPricingDefaultsRow(db);
       if (row) {
         const packs = contentPricingDefaultsToJson(row).pricing.creditPacks || [];
-        if (packs.length) return packs;
+        return packs;
       }
     }
   } catch (error) {
@@ -5280,11 +5280,14 @@ const handleReaderCredits = async (request, env) => {
     getConfiguredChapterCostCredits(db, env),
     getReaderMembershipSettings(db, env)
   ]);
+  const paymentConfig = getNowPaymentsConfig(env, request);
+  const checkoutEnabled = paymentConfig.hasApiKey && paymentConfig.hasIpnSecret && packs.length > 0;
   const session = await getReaderFromSession(request, env);
   if (!session) {
     return json({
       ok: true,
       authenticated: false,
+      checkoutEnabled,
       chapterCostCredits,
       packs: packs.map((pack) => ({
         credits: pack.credits,
@@ -5300,6 +5303,7 @@ const handleReaderCredits = async (request, env) => {
   return json({
     ok: true,
     authenticated: true,
+    checkoutEnabled,
     account: {
       id: session.account_id,
       email: session.email
@@ -7657,8 +7661,8 @@ const handleReaderCreditUnlock = async (request, env) => {
 const handleNovelPaymentsStatus = async (request, env) => {
   const config = getNowPaymentsConfig(env, request);
   const db = env.WAITLIST_DB;
-  const checkoutEnabled = config.hasApiKey && config.hasIpnSecret && Boolean(db);
   const creditPacks = db ? await getConfiguredReaderCreditPacks(db, env) : getReaderCreditConfig(env).packs;
+  const checkoutEnabled = config.hasApiKey && config.hasIpnSecret && Boolean(db) && creditPacks.length > 0;
   const membershipSettings = db ? await getReaderMembershipSettings(db, env) : {
     enabled: true,
     membershipCreditCost: defaultMembershipCreditCost,
@@ -7696,7 +7700,7 @@ const handleNovelPaymentsStatus = async (request, env) => {
     grantStatuses: novelPaymentGrantStatuses,
     note: checkoutEnabled
       ? 'Stage 5C grants reading entitlements after confirmed or finished NOWPayments reading orders.'
-      : 'Checkout stays disabled until NOWPAYMENTS_API_KEY and NOWPAYMENTS_IPN_SECRET are configured.'
+      : 'Checkout stays disabled until the database, payment credentials, and at least one Station Points pack are configured.'
   });
 };
 
@@ -20588,6 +20592,7 @@ export const __readerTotpTestHooks = {
   handleNovelForgeChapterContent,
   handleNovelForgeTranslationSync,
   handleNovelPaymentsStatus,
+  handleReaderCredits,
   handlePublicNovelComments,
   handleProductFeedbackSubmit,
   handleNovelReadingEvents,

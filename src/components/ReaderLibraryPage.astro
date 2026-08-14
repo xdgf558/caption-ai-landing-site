@@ -279,26 +279,28 @@ const clientConfig = {
         <p class="reader-credit-balance" id="reader-credit-balance">0 Station Points</p>
         <p class="fine-print" id="reader-credit-cost">{copy.chapterCost}</p>
       </div>
-      <label class="reader-pay-currency-field" hidden>
-        {copy.network}
-        <select id="reader-pay-currency">
-          <option value="USDTBSC">USDT BSC</option>
-          <option value="USDTERC20">USDT ETH</option>
-          <option value="USDC">USDC ETH</option>
-          <option value="USDCMATIC">USDC Polygon</option>
-          <option value="USDTARB">USDT Arbitrum</option>
-          <option value="FDUSDBSC">FDUSD BSC</option>
-        </select>
-      </label>
-      <div class="reader-pay-chip-grid" aria-label={copy.network}>
-        <button class="reader-pay-chip is-active" type="button" data-pay-currency="USDTBSC">USDT · BSC</button>
-        <button class="reader-pay-chip" type="button" data-pay-currency="USDTERC20">USDT · ETH</button>
-        <button class="reader-pay-chip" type="button" data-pay-currency="USDC">USDC · ETH</button>
-        <button class="reader-pay-chip" type="button" data-pay-currency="USDCMATIC">USDC · Polygon</button>
-        <button class="reader-pay-chip" type="button" data-pay-currency="USDTARB">USDT · Arbitrum</button>
-        <button class="reader-pay-chip" type="button" data-pay-currency="FDUSDBSC">FDUSD · BSC</button>
+      <div id="reader-credit-purchase-controls" hidden>
+        <label class="reader-pay-currency-field" hidden>
+          {copy.network}
+          <select id="reader-pay-currency">
+            <option value="USDTBSC">USDT BSC</option>
+            <option value="USDTERC20">USDT ETH</option>
+            <option value="USDC">USDC ETH</option>
+            <option value="USDCMATIC">USDC Polygon</option>
+            <option value="USDTARB">USDT Arbitrum</option>
+            <option value="FDUSDBSC">FDUSD BSC</option>
+          </select>
+        </label>
+        <div class="reader-pay-chip-grid" aria-label={copy.network}>
+          <button class="reader-pay-chip is-active" type="button" data-pay-currency="USDTBSC">USDT · BSC</button>
+          <button class="reader-pay-chip" type="button" data-pay-currency="USDTERC20">USDT · ETH</button>
+          <button class="reader-pay-chip" type="button" data-pay-currency="USDC">USDC · ETH</button>
+          <button class="reader-pay-chip" type="button" data-pay-currency="USDCMATIC">USDC · Polygon</button>
+          <button class="reader-pay-chip" type="button" data-pay-currency="USDTARB">USDT · Arbitrum</button>
+          <button class="reader-pay-chip" type="button" data-pay-currency="FDUSDBSC">FDUSD · BSC</button>
+        </div>
+        <div class="reader-credit-packs" id="reader-credit-packs"></div>
       </div>
-      <div class="reader-credit-packs" id="reader-credit-packs"></div>
       <div class="reader-status" id="reader-credit-status" role="status" aria-live="polite"></div>
     </div>
   </section>
@@ -402,6 +404,7 @@ const clientConfig = {
     const creditCost = document.getElementById('reader-credit-cost');
     const payCurrencySelect = document.getElementById('reader-pay-currency');
     const payCurrencyButtons = Array.from(document.querySelectorAll('[data-pay-currency]'));
+    const creditPurchaseControls = document.getElementById('reader-credit-purchase-controls');
     const creditPacks = document.getElementById('reader-credit-packs');
     const creditStatus = document.getElementById('reader-credit-status');
     const membershipPanel = document.getElementById('reader-membership-panel');
@@ -719,8 +722,10 @@ const clientConfig = {
       }
     };
 
-    const renderCreditPacks = (packs) => {
+    const renderCreditPacks = (packs, checkoutEnabled = false) => {
       creditPacks.innerHTML = '';
+      creditPurchaseControls.hidden = !checkoutEnabled || packs.length === 0;
+      if (creditPurchaseControls.hidden) return;
       packs.forEach((pack) => {
         const button = document.createElement('button');
         button.className = 'button button-secondary reader-credit-pack-button';
@@ -867,7 +872,7 @@ const clientConfig = {
       const unitLabel = data.account?.unitLabel || 'Station Points';
       creditBalance.textContent = `${data.account?.balanceCredits || 0} ${unitLabel}`;
       creditCost.textContent = formatReaderMessage('chapterCost', { cost: data.chapterCostCredits || 1 });
-      renderCreditPacks(data.packs || []);
+      renderCreditPacks(data.packs || [], data.checkoutEnabled === true);
       syncPayCurrencyButtons();
       renderMembership(data.membership, data.membershipSettings, data.account);
     };

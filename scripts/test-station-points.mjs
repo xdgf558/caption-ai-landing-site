@@ -156,6 +156,42 @@ const updatedCheckoutPack = await hooks.findConfiguredReaderCreditPack(d1, payme
 assert.equal(updatedStatus.readerCredits.packs[0].priceAmount, '21.00');
 assert.equal(updatedCheckoutPack.priceAmount, 21);
 
+pricingDb.prepare(`UPDATE admin_content_settings SET setting_json = ? WHERE setting_key = ?`).run(
+  '{"accessLevel":"paid","pricing":{"chapterCredits":3,"creditPacks":[]}}',
+  'content.pricing-defaults.v1'
+);
+const stoppedStatus = await (await hooks.handleNovelPaymentsStatus(
+  new Request('https://wwwstationcat.org/api/novels/payments/status'),
+  paymentEnv
+)).json();
+assert.equal(stoppedStatus.publicCheckoutEnabled, false);
+assert.equal(stoppedStatus.readerCredits.enabled, false);
+assert.deepEqual(stoppedStatus.readerCredits.packs, []);
+const stoppedCredits = await (await hooks.handleReaderCredits(
+  new Request('https://wwwstationcat.org/api/readers/credits'),
+  paymentEnv
+)).json();
+assert.equal(stoppedCredits.checkoutEnabled, false);
+assert.deepEqual(stoppedCredits.packs, []);
+await assert.rejects(
+  hooks.findConfiguredReaderCreditPack(d1, paymentEnv, 100),
+  (error) => error?.code === 'CREDIT_PACK_NOT_AVAILABLE'
+);
+
+pricingDb.prepare(`UPDATE admin_content_settings SET setting_json = ? WHERE setting_key = ?`).run(
+  '{"accessLevel":"paid","pricing":{"chapterCredits":3,"creditPacks":[{"credits":300,"label":"300 Station Points","priceAmount":21,"priceCurrency":"USD"}]}}',
+  'content.pricing-defaults.v1'
+);
+const creditsWithoutPayment = await (await hooks.handleReaderCredits(
+  new Request('https://wwwstationcat.org/api/readers/credits'),
+  { WAITLIST_DB: d1 }
+)).json();
+assert.equal(creditsWithoutPayment.ok, true);
+assert.equal(creditsWithoutPayment.authenticated, false);
+assert.equal(creditsWithoutPayment.checkoutEnabled, false);
+assert.equal(creditsWithoutPayment.packs.length, 1);
+assert.match(librarySource, /renderCreditPacks\(data\.packs \|\| \[\], data\.checkoutEnabled === true\)/);
+
 const unavailableStatus = await (await hooks.handleNovelPaymentsStatus(
   new Request('https://wwwstationcat.org/api/novels/payments/status'),
   { NOWPAYMENTS_API_KEY: 'test-api-key', NOWPAYMENTS_IPN_SECRET: 'test-ipn-secret' }
