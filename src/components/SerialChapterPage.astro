@@ -1,6 +1,7 @@
 ---
 import type { SerialChapterEntry, SerialEntry, SiteLocale } from '../data/serials';
 import { formatReadingMinutes, getChapterAccessLabel, getChapterHref, getSeriesHref } from '../data/serials';
+import { getReaderLibraryPath } from '../data/reader-library-client.js';
 
 interface CopyShape {
   accessLabel: string;
@@ -28,6 +29,8 @@ interface Props {
 const { basePath, chapter, chapterList, copy, locale, nextChapter, previousChapter, serial, Content } = Astro.props;
 const seriesHref = getSeriesHref(basePath, serial.data.seriesSlug);
 const chapterHref = getChapterHref(basePath, serial.data.seriesSlug, chapter.data.chapterSlug);
+const libraryPath = getReaderLibraryPath(locale);
+const libraryReturnHref = `${libraryPath}?returnTo=${encodeURIComponent(chapterHref)}`;
 const isProtectedChapter = chapter.data.access !== 'free';
 const isNovelV2Reader = basePath === '/novel/';
 const unlockOrderType = chapter.data.access === 'supporter' ? 'supporter' : 'chapter';
@@ -38,7 +41,9 @@ const bookmarkCopy = {
     saving: 'Saving bookmark...',
     saved: 'Bookmark saved. You can continue from Member Center next time.',
     signInRequired: 'Please sign in before saving a bookmark.',
-    failed: 'Could not save bookmark.'
+    failed: 'Could not save bookmark.',
+    position: 'Paragraph {block} · {progress}%',
+    positionFallback: '{progress}%'
   },
   ja: {
     save: 'しおりを保存',
@@ -46,7 +51,9 @@ const bookmarkCopy = {
     saving: 'しおりを保存しています...',
     saved: 'しおりを保存しました。次回は本棚から続きが読めます。',
     signInRequired: 'しおりを保存する前にログインしてください。',
-    failed: 'しおりを保存できませんでした。'
+    failed: 'しおりを保存できませんでした。',
+    position: '第{block}段落 · {progress}%',
+    positionFallback: '{progress}%'
   },
   'zh-Hant': {
     save: '保存書籤',
@@ -54,7 +61,9 @@ const bookmarkCopy = {
     saving: '正在保存書籤...',
     saved: '書籤已保存，下次可以從會員中心繼續閱讀。',
     signInRequired: '請先登入，再保存書籤。',
-    failed: '書籤保存失敗。'
+    failed: '書籤保存失敗。',
+    position: '第 {block} 段 · {progress}%',
+    positionFallback: '{progress}%'
   },
   'zh-Hans': {
     save: '保存书签',
@@ -62,7 +71,9 @@ const bookmarkCopy = {
     saving: '正在保存书签...',
     saved: '书签已保存，下次可以从会员中心继续阅读。',
     signInRequired: '请先登录，再保存书签。',
-    failed: '书签保存失败。'
+    failed: '书签保存失败。',
+    position: '第 {block} 段 · {progress}%',
+    positionFallback: '{progress}%'
   }
 }[locale];
 const interactionCopy = {
@@ -85,7 +96,8 @@ const interactionCopy = {
     commentTooShort: 'Write at least 2 characters before submitting.',
     commentsTitle: 'Reader comments',
     commentLoading: 'Loading comments...',
-    commentEmpty: 'No public comments yet.'
+    commentEmpty: 'No public comments yet.',
+    reader: 'Reader'
   },
   ja: {
     eyebrow: '読者アクション',
@@ -106,7 +118,8 @@ const interactionCopy = {
     commentTooShort: '2文字以上入力してから送信してください。',
     commentsTitle: '読者コメント',
     commentLoading: 'コメントを読み込んでいます...',
-    commentEmpty: '公開コメントはまだありません。'
+    commentEmpty: '公開コメントはまだありません。',
+    reader: '読者'
   },
   'zh-Hant': {
     eyebrow: '讀者互動',
@@ -127,7 +140,8 @@ const interactionCopy = {
     commentTooShort: '至少寫 2 個字再提交。',
     commentsTitle: '讀者評論',
     commentLoading: '正在載入評論...',
-    commentEmpty: '目前還沒有公開評論。'
+    commentEmpty: '目前還沒有公開評論。',
+    reader: '讀者'
   },
   'zh-Hans': {
     eyebrow: '读者互动',
@@ -148,7 +162,8 @@ const interactionCopy = {
     commentTooShort: '至少写 2 个字再提交。',
     commentsTitle: '读者评论',
     commentLoading: '正在加载评论...',
-    commentEmpty: '目前还没有公开评论。'
+    commentEmpty: '目前还没有公开评论。',
+    reader: '读者'
   }
 }[locale];
 const accessGateCopy = {
@@ -322,13 +337,13 @@ const accessGateCopy = {
         <div class="reader-status" data-serial-credit-status role="status" aria-live="polite"></div>
       )}
       <div class="button-row">
-        <a class="button button-primary" href="/library/">{accessGateCopy.signIn}</a>
+        <a class="button button-primary" href={libraryReturnHref}>{accessGateCopy.signIn}</a>
         {unlockOrderType === 'chapter' && (
           <button class="button button-secondary" type="button" data-serial-credit-unlock>
             {accessGateCopy.creditUnlock}
           </button>
         )}
-        {unlockOrderType === 'chapter' && <a class="button button-secondary" href="/library/">{accessGateCopy.creditTopUp}</a>}
+        {unlockOrderType === 'chapter' && <a class="button button-secondary" href={libraryReturnHref}>{accessGateCopy.creditTopUp}</a>}
         <a class="button button-secondary" href={seriesHref}>{copy.chapterBack}</a>
       </div>
     </section>
@@ -401,7 +416,7 @@ const accessGateCopy = {
   <div class="reader-status serial-bookmark-toast" data-reader-bookmark-toast role="status" aria-live="polite" hidden></div>
 </div>
 
-<script define:vars={{ bookmarkCopy, bookmarkData: {
+<script define:vars={{ bookmarkCopy, libraryPath, bookmarkData: {
   chapterSlug: chapter.data.chapterSlug,
   chapterTitle: chapter.data.title,
   locale,
@@ -507,7 +522,9 @@ const accessGateCopy = {
       blockIndex,
       progressPercent,
       sourcePath,
-      positionLabel: blockIndex >= 0 ? `第 ${blockIndex + 1} 段 · ${progressPercent}%` : `${progressPercent}%`
+      positionLabel: (blockIndex >= 0 ? bookmarkCopy.position : bookmarkCopy.positionFallback)
+        .replace('{block}', String(blockIndex + 1))
+        .replace('{progress}', String(progressPercent))
     };
   };
 
@@ -545,7 +562,7 @@ const accessGateCopy = {
       if (!response.ok || !data.ok) {
         if (data.code === 'SIGN_IN_REQUIRED') {
           setBookmarkStatus(bookmarkCopy.signInRequired, 'error');
-          window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname)}`;
+          window.location.href = `${libraryPath}?returnTo=${encodeURIComponent(window.location.pathname)}`;
           return;
         }
         throw new Error(data.message || bookmarkCopy.failed);
@@ -587,7 +604,7 @@ const accessGateCopy = {
 </script>
 
 {isNovelV2Reader && (
-  <script define:vars={{ interactionCopy, interactionKey: `${serial.data.seriesSlug}:${chapter.data.chapterSlug}`, commentData: {
+  <script define:vars={{ interactionCopy, interactionKey: `${serial.data.seriesSlug}:${chapter.data.chapterSlug}`, libraryPath, commentData: {
     chapterSlug: chapter.data.chapterSlug,
     locale,
     seriesSlug: serial.data.seriesSlug,
@@ -637,7 +654,7 @@ const accessGateCopy = {
       commentsList.innerHTML = comments.map((comment) => `
         <article class="reader-comment-item">
           <div>
-            <strong>${escapeClientHtml(comment.displayName || '读者')}</strong>
+            <strong>${escapeClientHtml(comment.displayName || interactionCopy.reader)}</strong>
             <time>${escapeClientHtml(formatClientDate(comment.createdAt))}</time>
           </div>
           <p>${escapeClientHtml(comment.body).replace(/\n/g, '<br>')}</p>
@@ -746,7 +763,7 @@ const accessGateCopy = {
         const payload = await response.json().catch(() => ({}));
         if (response.status === 401 || payload.code === 'SIGN_IN_REQUIRED') {
           setCommentStatus(interactionCopy.commentSignInRequired, 'error');
-          window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`;
+          window.location.href = `${libraryPath}?returnTo=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`;
           return;
         }
         if (response.status === 403 || payload.code === 'CHAPTER_COMMENT_ACCESS_REQUIRED') {
@@ -988,7 +1005,7 @@ const accessGateCopy = {
 )}
 
 {isProtectedChapter && (
-  <script define:vars={{ accessGateCopy }}>
+  <script define:vars={{ accessGateCopy, libraryPath }}>
     const gate = document.querySelector('[data-serial-access-gate]');
     const status = gate?.querySelector('[data-serial-access-status]');
     const creditStatus = gate?.querySelector('[data-serial-credit-status]');
@@ -1194,7 +1211,7 @@ const accessGateCopy = {
           if (!response.ok || !data.ok) {
             if (data.code === 'SIGN_IN_REQUIRED') {
               setGateStatus(accessGateCopy.signInRequired, 'error');
-              window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname)}`;
+              window.location.href = `${libraryPath}?returnTo=${encodeURIComponent(window.location.pathname)}`;
               return;
             }
             if (data.code === 'INSUFFICIENT_CREDITS') throw new Error(accessGateCopy.creditInsufficient);
@@ -1242,7 +1259,7 @@ const accessGateCopy = {
           if (!response.ok || !data.ok) {
             if (data.code === 'SIGN_IN_REQUIRED') {
               setGateStatus(accessGateCopy.signInRequired, 'error');
-              window.location.href = `/library/?returnTo=${encodeURIComponent(window.location.pathname)}`;
+              window.location.href = `${libraryPath}?returnTo=${encodeURIComponent(window.location.pathname)}`;
               return;
             }
             if (data.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(accessGateCopy.disabled);

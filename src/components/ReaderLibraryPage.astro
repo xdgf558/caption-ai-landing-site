@@ -1,5 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import {
+  getReaderLibraryMessages,
+  readerErrorMessageKeys,
+  readerLibraryPaths
+} from '../data/reader-library-client.js';
 
 interface Props {
   lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
@@ -7,9 +12,6 @@ interface Props {
 
 const { lang = 'zh-Hant' } = Astro.props;
 const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
-const libraryPaths = {
-  en: '/en/library/', ja: '/ja/library/', zhHant: '/zh-hant/library/', zhHans: '/zh-hans/library/'
-};
 const pointsPaths = {
   en: '/points/', ja: '/ja/points/', zhHant: '/zh-hant/points/', zhHans: '/zh-hans/points/'
 };
@@ -66,8 +68,10 @@ const copy = {
 
 const clientConfig = {
   locale: lang,
-  libraryPath: libraryPaths[localeKey],
+  libraryPath: readerLibraryPaths[lang],
   pointsPath: pointsPaths[localeKey],
+  messages: getReaderLibraryMessages(lang),
+  errorMessageKeys: readerErrorMessageKeys,
   publicPriceLoading: copy.publicTitle,
   publicPriceUnavailable: lang === 'ja' ? '現在購入できるポイントパックはありません' : lang === 'en' ? 'No points packs are currently available' : lang === 'zh-Hans' ? '目前没有可购买的积分包' : '目前沒有可購買的積分包',
   auth: {
@@ -89,13 +93,13 @@ const clientConfig = {
   title={copy.metaTitle}
   description={copy.metaDescription}
   lang={lang}
-  canonicalPath={libraryPaths[localeKey]}
+  canonicalPath={readerLibraryPaths[lang]}
   alternates={[
-    { hrefLang: 'zh-Hant', href: libraryPaths.zhHant },
-    { hrefLang: 'zh-Hans', href: libraryPaths.zhHans },
-    { hrefLang: 'en', href: libraryPaths.en },
-    { hrefLang: 'ja', href: libraryPaths.ja },
-    { hrefLang: 'x-default', href: libraryPaths.en }
+    { hrefLang: 'zh-Hant', href: readerLibraryPaths['zh-Hant'] },
+    { hrefLang: 'zh-Hans', href: readerLibraryPaths['zh-Hans'] },
+    { hrefLang: 'en', href: readerLibraryPaths.en },
+    { hrefLang: 'ja', href: readerLibraryPaths.ja },
+    { hrefLang: 'x-default', href: readerLibraryPaths.en }
   ]}
 >
   <script id="reader-client-config" type="application/json" set:html={JSON.stringify(clientConfig)} />
@@ -243,7 +247,7 @@ const clientConfig = {
       <button class="button button-secondary" id="reader-totp-setup" type="button">{copy.bind}</button>
       <div class="reader-totp-setup-box" id="reader-totp-setup-box" hidden>
         <div class="reader-totp-qr-card" id="reader-totp-qr-card" hidden>
-          <div class="reader-totp-qr" id="reader-totp-qr" aria-label="Google Authenticator 綁定 QR code"></div>
+          <div class="reader-totp-qr" id="reader-totp-qr" aria-label={getReaderLibraryMessages(lang).qrLabel}></div>
           <p class="fine-print">{copy.qrHelp}</p>
         </div>
         <details class="reader-totp-manual">
@@ -259,7 +263,7 @@ const clientConfig = {
         </details>
         <label>
           {copy.currentCode}
-          <input id="reader-totp-confirm-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Google Authenticator 目前數字" />
+          <input id="reader-totp-confirm-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder={getReaderLibraryMessages(lang).sixDigits} />
         </label>
         <button class="button button-primary" id="reader-totp-confirm" type="button">{copy.confirmBinding}</button>
       </div>
@@ -332,6 +336,23 @@ const clientConfig = {
     const readerClientConfig = JSON.parse(readerClientConfigNode?.textContent || '{}');
     const readerLocale = readerClientConfig.locale || 'zh-Hant';
     const readerLibraryPath = readerClientConfig.libraryPath || '/library/';
+    const readerMessages = readerClientConfig.messages || {};
+    const formatReaderMessage = (key, values = {}) => String(readerMessages[key] || key).replace(
+      /\{(\w+)\}/g,
+      (match, name) => Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : match
+    );
+    const localizedApiMessage = (data, fallbackKey) => {
+      const mappedKey = readerClientConfig.errorMessageKeys?.[String(data?.code || '')];
+      return formatReaderMessage(mappedKey || fallbackKey);
+    };
+    const createReaderError = (fallbackKey, data = null) => {
+      const error = new Error(data ? localizedApiMessage(data, fallbackKey) : formatReaderMessage(fallbackKey));
+      error.readerLocalized = true;
+      return error;
+    };
+    const caughtReaderMessage = (error, fallbackKey) => error?.readerLocalized
+      ? error.message
+      : formatReaderMessage(fallbackKey);
     const publicPointsTitle = document.getElementById('reader-public-points-title');
     const form = document.getElementById('reader-login-form');
     const authTitle = document.getElementById('reader-auth-title');
@@ -486,8 +507,8 @@ const clientConfig = {
         ? `${session.account.displayName || session.account.username || session.account.email} · ${session.account.email}`
         : '';
       setMembershipSummary(
-        signedIn ? '正在讀取' : '尚未登入',
-        signedIn ? '正在確認會員有效期' : '登入後顯示會員有效期',
+        formatReaderMessage(signedIn ? 'loading' : 'signedOut'),
+        formatReaderMessage(signedIn ? 'membershipChecking' : 'membershipAfterSignIn'),
         signedIn ? 'loading' : 'neutral'
       );
     };
@@ -496,7 +517,11 @@ const clientConfig = {
       const target = item.scope === 'series'
         ? item.seriesSlug
         : `${item.seriesSlug} / ${item.chapterSlug}`;
-      const access = item.accessLevel === 'all' ? '全部權限' : item.accessLevel === 'supporter' ? '支持者內容' : '付費內容';
+      const access = item.accessLevel === 'all'
+        ? formatReaderMessage('accessAll')
+        : item.accessLevel === 'supporter'
+          ? formatReaderMessage('accessSupporter')
+          : formatReaderMessage('accessPaid');
       return `${target} · ${access}`;
     };
 
@@ -517,17 +542,17 @@ const clientConfig = {
         title.textContent = entitlementTitle(item);
 
         const meta = document.createElement('p');
-        meta.textContent = `${item.source === 'manual' ? '手動授權' : item.source} · ${item.grantedAt || '已授權'}`;
+        meta.textContent = `${item.source === 'manual' ? formatReaderMessage('manualGrant') : item.source} · ${item.grantedAt || formatReaderMessage('granted')}`;
 
         const link = document.createElement('a');
         link.className = 'paper-link';
         link.href = entitlementHref(item);
-        link.textContent = item.scope === 'series' ? '打開作品' : '打開章節';
+        link.textContent = formatReaderMessage(item.scope === 'series' ? 'openSeries' : 'openChapter');
 
         if (item.expiresAt) {
           const expires = document.createElement('p');
           expires.className = 'fine-print';
-          expires.textContent = `有效至 ${item.expiresAt}`;
+          expires.textContent = formatReaderMessage('expires', { date: item.expiresAt });
           card.append(title, meta, expires, link);
         } else {
           card.append(title, meta, link);
@@ -567,13 +592,15 @@ const clientConfig = {
 
         const meta = document.createElement('p');
         const progress = Number.parseInt(item.progressPercent || 0, 10);
-        const position = item.positionLabel || (progress > 0 ? `已讀到 ${progress}%` : '已保存位置');
+        const position = item.positionLabel || (progress > 0
+          ? formatReaderMessage('readProgress', { progress })
+          : formatReaderMessage('savedPosition'));
         meta.textContent = `${item.seriesTitle || item.seriesSlug} · ${position} · ${formatLocalDate(item.updatedAt)}`;
 
         const link = document.createElement('a');
         link.className = 'paper-link';
         link.href = bookmarkHref(item);
-        link.textContent = '繼續閱讀';
+        link.textContent = formatReaderMessage('continueReading');
 
         const actions = document.createElement('div');
         actions.className = 'reader-bookmark-actions';
@@ -585,8 +612,10 @@ const clientConfig = {
           deleteButton.className = 'button button-secondary reader-bookmark-delete';
           deleteButton.type = 'button';
           deleteButton.dataset.readerBookmarkDelete = String(bookmarkId);
-          deleteButton.textContent = '刪除書籤';
-          deleteButton.setAttribute('aria-label', `刪除「${item.chapterTitle || item.chapterSlug}」書籤`);
+          deleteButton.textContent = formatReaderMessage('deleteBookmark');
+          deleteButton.setAttribute('aria-label', formatReaderMessage('deleteBookmarkLabel', {
+            title: item.chapterTitle || item.chapterSlug
+          }));
           actions.append(deleteButton);
         }
 
@@ -604,14 +633,14 @@ const clientConfig = {
     const loadLibrary = async () => {
       const response = await fetch('/api/novels/library');
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.message || '讀取會員資料失敗。');
+      if (!response.ok || !data.ok) throw createReaderError('libraryLoadFailed', data);
       renderLibrary(data.entitlements || []);
     };
 
     const loadBookmarks = async () => {
       const response = await fetch('/api/readers/bookmarks');
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.message || '讀取書籤失敗。');
+      if (!response.ok || !data.ok) throw createReaderError('bookmarkLoadFailed', data);
       if (!data.authenticated) return;
       renderBookmarks(data.bookmarks || []);
       setBookmarkStatus('');
@@ -619,7 +648,7 @@ const clientConfig = {
         const warning = document.createElement('p');
         warning.className = 'reader-status';
         warning.dataset.tone = 'error';
-        warning.textContent = data.message || '書籤資料表尚未初始化。';
+        warning.textContent = localizedApiMessage(data, 'bookmarksNotReady');
         bookmarkList.append(warning);
       }
     };
@@ -635,8 +664,8 @@ const clientConfig = {
 
       const previousText = deleteButton.textContent;
       deleteButton.disabled = true;
-      deleteButton.textContent = '刪除中...';
-      setBookmarkStatus('正在刪除書籤...');
+      deleteButton.textContent = formatReaderMessage('deletingBookmark');
+      setBookmarkStatus(formatReaderMessage('deletingBookmark'));
 
       try {
         const response = await fetch(`/api/readers/bookmarks?id=${encodeURIComponent(bookmarkId)}`, {
@@ -644,14 +673,14 @@ const clientConfig = {
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.ok) {
-          throw new Error(data.message || '刪除書籤失敗。');
+          throw createReaderError('deleteBookmarkFailed', data);
         }
         renderBookmarks(data.bookmarks || []);
-        setBookmarkStatus('書籤已刪除。', 'success');
+        setBookmarkStatus(formatReaderMessage('bookmarkDeleted'), 'success');
       } catch (error) {
         deleteButton.disabled = false;
-        deleteButton.textContent = previousText || '刪除書籤';
-        setBookmarkStatus(error.message || '刪除書籤失敗。', 'error');
+        deleteButton.textContent = previousText || formatReaderMessage('deleteBookmark');
+        setBookmarkStatus(caughtReaderMessage(error, 'deleteBookmarkFailed'), 'error');
       }
     });
 
@@ -725,24 +754,42 @@ const clientConfig = {
       const unitLabel = settings?.unitLabel || creditAccount?.unitLabel || 'Station Points';
       const balanceCredits = creditAccount?.balanceCredits || 0;
       const coversPaid = settings?.membershipCoversPaidContent !== false;
-      membershipOverviewCredits.textContent = `${balanceCredits} Station 積分`;
-      membershipRule.textContent = `${cost} 點可兌換 ${months} 個月會員，${coversPaid ? '會員可閱讀收費章節。' : '目前會員不覆蓋收費章節。'}`;
-      membershipRedeem.textContent = membership?.active ? '用積分續費' : `用 ${cost} 積分兌換 ${months} 個月會員`;
+      membershipOverviewCredits.textContent = formatReaderMessage('membershipPoints', { balance: balanceCredits });
+      membershipRule.textContent = formatReaderMessage('membershipRule', {
+        cost,
+        months,
+        coverage: formatReaderMessage(coversPaid ? 'membershipCoversPaid' : 'membershipNoPaidCoverage')
+      });
+      membershipRedeem.textContent = membership?.active
+        ? formatReaderMessage('renewMembership')
+        : formatReaderMessage('redeemMembership', { cost, months });
       membershipRedeem.hidden = settings?.enabled === false;
       membershipRedeem.disabled = settings?.enabled === false || balanceCredits < cost;
       if (membership?.active) {
         const expiresAt = formatLocalDate(membership.expiresAt);
-        setMembershipSummary('會員有效中', `有效至 ${expiresAt}`, 'active');
-        membershipState.textContent = coversPaid ? '會員閱讀權益已啟用。' : '會員已開通，目前不覆蓋收費章節。';
+        setMembershipSummary(
+          formatReaderMessage('membershipActive'),
+          formatReaderMessage('membershipExpires', { date: expiresAt }),
+          'active'
+        );
+        membershipState.textContent = formatReaderMessage(coversPaid ? 'membershipBenefitsActive' : 'membershipBenefitsLimited');
       } else {
-        setMembershipSummary('尚未開通會員', `可用積分：${balanceCredits} ${unitLabel}`, 'inactive');
-        membershipState.textContent = `尚未開通會員。目前餘額 ${balanceCredits} ${unitLabel}。`;
+        setMembershipSummary(
+          formatReaderMessage('membershipInactive'),
+          formatReaderMessage('availableBalance', { balance: balanceCredits, unit: unitLabel }),
+          'inactive'
+        );
+        membershipState.textContent = formatReaderMessage('currentBalance', { balance: balanceCredits, unit: unitLabel });
       }
       if (settings?.enabled === false) {
-        setMembershipSummary('會員兌換未開啟', '目前不能兌換會員', 'inactive');
-        setMembershipStatus('會員兌換目前未開啟。', 'neutral');
+        setMembershipSummary(
+          formatReaderMessage('membershipDisabled'),
+          formatReaderMessage('membershipDisabledDetail'),
+          'inactive'
+        );
+        setMembershipStatus(formatReaderMessage('membershipDisabledStatus'), 'neutral');
       } else if (!membership?.active && balanceCredits < cost) {
-        setMembershipStatus('Station 積分不足，請先購買積分。', 'neutral');
+        setMembershipStatus(formatReaderMessage('insufficientCredits'), 'neutral');
       } else {
         setMembershipStatus('');
       }
@@ -750,13 +797,11 @@ const clientConfig = {
 
     const renderTotpStatus = (totp) => {
       const enabled = Boolean(totp?.enabled);
-      totpState.textContent = enabled
-        ? '兩步驗證器已綁定。後續修改或重置密碼時，需要輸入 6 位驗證碼。'
-        : '尚未綁定兩步驗證器。綁定後，可以不用郵件，直接用驗證碼重置密碼。';
-      totpBadge.textContent = enabled ? '✓ 已綁定' : '未綁定';
+      totpState.textContent = formatReaderMessage(enabled ? 'totpEnabledState' : 'totpDisabledState');
+      totpBadge.textContent = `${enabled ? '✓ ' : ''}${formatReaderMessage(enabled ? 'enabledBadge' : 'disabledBadge')}`;
       totpBadge.dataset.state = enabled ? 'active' : 'neutral';
       totpSetupButton.hidden = enabled;
-      passwordTotpCodeInput.placeholder = enabled ? '6 位數字' : '未綁定時可留空';
+      passwordTotpCodeInput.placeholder = formatReaderMessage(enabled ? 'sixDigits' : 'totpOptional');
       totpSetupBox.hidden = true;
       renderTotpQrCode('');
       if (!enabled) {
@@ -769,11 +814,11 @@ const clientConfig = {
     const loadTotpStatus = async () => {
       const response = await fetch('/api/readers/totp/status');
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.message || '讀取兩步驗證狀態失敗。');
+      if (!response.ok || !data.ok) throw createReaderError('totpLoadFailed', data);
       if (!data.authenticated) return;
       if (data.setupRequired) {
         renderTotpStatus({ enabled: false });
-        setTotpStatus(data.message || '兩步驗證資料表尚未初始化。', 'error');
+        setTotpStatus(localizedApiMessage(data, 'totpNotReady'), 'error');
         return;
       }
       renderTotpStatus(data.totp || { enabled: false });
@@ -785,7 +830,7 @@ const clientConfig = {
         await loadTotpStatus();
       } catch (error) {
         renderTotpStatus({ enabled: false });
-        setTotpStatus(error.message || '讀取兩步驗證狀態失敗。', 'error');
+        setTotpStatus(caughtReaderMessage(error, 'totpLoadFailed'), 'error');
       }
     };
 
@@ -802,7 +847,7 @@ const clientConfig = {
         const svg = totpQr.querySelector('svg');
         if (svg) {
           svg.setAttribute('role', 'img');
-          svg.setAttribute('aria-label', 'Google Authenticator 綁定 QR code');
+          svg.setAttribute('aria-label', formatReaderMessage('qrLabel'));
           svg.removeAttribute('width');
           svg.removeAttribute('height');
         }
@@ -816,12 +861,12 @@ const clientConfig = {
     const loadCredits = async () => {
       const response = await fetch('/api/readers/credits');
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.message || '讀取 Station 積分失敗。');
+      if (!response.ok || !data.ok) throw createReaderError('creditsLoadFailed', data);
       if (!data.authenticated) return;
 
       const unitLabel = data.account?.unitLabel || 'Station Points';
       creditBalance.textContent = `${data.account?.balanceCredits || 0} ${unitLabel}`;
-      creditCost.textContent = `目前單章付費內容會扣除 ${data.chapterCostCredits || 1} 點。`;
+      creditCost.textContent = formatReaderMessage('chapterCost', { cost: data.chapterCostCredits || 1 });
       renderCreditPacks(data.packs || []);
       syncPayCurrencyButtons();
       renderMembership(data.membership, data.membershipSettings, data.account);
@@ -835,30 +880,30 @@ const clientConfig = {
       const order = data.order || {};
       const fulfillment = data.fulfillment || {};
       if (fulfillment.complete) {
-        if (fulfillment.kind === 'credit-pack') return '支付已確認，Station 積分已入帳。';
-        if (fulfillment.kind === 'tip') return 'NOWPayments 已確認，感謝支持。';
-        return 'NOWPayments 已確認，閱讀權限已更新。';
+        if (fulfillment.kind === 'credit-pack') return formatReaderMessage('paymentCreditConfirmed');
+        if (fulfillment.kind === 'tip') return formatReaderMessage('paymentTipConfirmed');
+        return formatReaderMessage('paymentAccessConfirmed');
       }
       if (fulfillment.needsReview) {
-        return '支付已確認，正在寫入 Station 積分。如果幾分鐘後仍未入帳，請保留訂單給後台排查。';
+        return formatReaderMessage('paymentNeedsReview');
       }
       if (['failed', 'expired', 'refunded'].includes(order.status)) {
-        return `訂單狀態：${order.status}，Station 積分沒有更新。`;
+        return formatReaderMessage('paymentFailedStatus', { status: order.status });
       }
-      if (order.status === 'confirming') return '已收到支付，正在等待區塊鏈確認。確認完成後會自動入帳。';
-      if (['confirmed', 'finished'].includes(order.status)) return '支付已確認，正在更新你的 Station 積分。';
-      return '已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。';
+      if (order.status === 'confirming') return formatReaderMessage('paymentConfirming');
+      if (['confirmed', 'finished'].includes(order.status)) return formatReaderMessage('paymentUpdating');
+      return formatReaderMessage('paymentReturnedPending');
     };
 
     const refreshReturnedPaymentOrder = async () => {
       const orderToken = query.get('order') || '';
       if (query.get('payment') !== 'success' || !orderToken) return;
 
-      setCreditStatus('已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。', 'neutral');
+      setCreditStatus(formatReaderMessage('paymentReturnedPending'), 'neutral');
       for (let attempt = 0; attempt < 12; attempt += 1) {
         const response = await fetch(`/api/novels/payments/order?order=${encodeURIComponent(orderToken)}`);
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.message || '訂單狀態讀取失敗。');
+        if (!response.ok || !data.ok) throw createReaderError('orderLoadFailed', data);
 
         const fulfillment = data.fulfillment || {};
         const tone = fulfillment.complete ? 'success' : fulfillment.needsReview ? 'error' : 'neutral';
@@ -873,13 +918,13 @@ const clientConfig = {
         await wait(fulfillment.nextCheckSeconds * 1000);
       }
 
-      setCreditStatus('仍在等待支付確認。你可以稍後刷新會員中心，確認後 Station 積分會自動入帳。', 'neutral');
+      setCreditStatus(formatReaderMessage('paymentStillPending'), 'neutral');
     };
 
     const loadSession = async () => {
       const response = await fetch('/api/readers/session');
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.message || '讀取登入狀態失敗。');
+      if (!response.ok || !data.ok) throw createReaderError('sessionLoadFailed', data);
       setSignedIn(data);
       if (data.authenticated) {
         await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), safeLoadTotpStatus()]);
@@ -900,19 +945,19 @@ const clientConfig = {
     }
 
     if (query.get('login') === 'success') {
-      setStatus('登入成功，正在載入會員中心。', 'success');
+      setStatus(formatReaderMessage('loginSuccessLoading'), 'success');
     } else if (query.get('login') === 'invalid') {
-      setStatus('登入連結已失效，請重新寄送。', 'error');
+      setStatus(formatReaderMessage('loginInvalid'), 'error');
     } else if (resetToken) {
-      setStatus('請設定新的會員密碼。', 'neutral');
+      setStatus(formatReaderMessage('setNewPassword'), 'neutral');
     }
 
     if (query.get('payment') === 'success' && query.get('order')) {
-      setCreditStatus('已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。', 'neutral');
+      setCreditStatus(formatReaderMessage('paymentReturnedPending'), 'neutral');
     } else if (query.get('payment') === 'success') {
-      setCreditStatus('支付已返回網站。確認完成後 Station 積分會自動入帳；如果還沒看到，稍後刷新即可。', 'success');
+      setCreditStatus(formatReaderMessage('paymentReturned'), 'success');
     } else if (query.get('payment') === 'cancelled') {
-      setCreditStatus('支付已取消，Station 積分沒有變動。', 'error');
+      setCreditStatus(formatReaderMessage('paymentCancelled'), 'error');
     }
 
     authModeButtons.forEach((button) => {
@@ -928,12 +973,12 @@ const clientConfig = {
       submitButton.disabled = true;
       setStatus(
         authMode === 'register'
-          ? '正在建立會員帳號...'
+          ? formatReaderMessage('creatingAccount')
           : authMode === 'legacyReset'
-            ? '正在更新密碼...'
+            ? formatReaderMessage('updatingPassword')
             : authMode === 'reset'
-            ? '正在驗證兩步驗證碼並重置密碼...'
-              : '正在登入...',
+              ? formatReaderMessage('resettingPassword')
+              : formatReaderMessage('signingIn'),
         'neutral'
       );
 
@@ -977,9 +1022,9 @@ const clientConfig = {
           body: JSON.stringify(body)
         });
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.message || '登入失敗。');
+        if (!response.ok || !data.ok) throw createReaderError('loginFailed', data);
 
-        setStatus(data.message || '已登入。', 'success');
+        setStatus(formatReaderMessage('signedIn'), 'success');
         setSignedIn(data);
         if (authMode === 'reset' || authMode === 'legacyReset') {
           window.history.replaceState({}, '', readerLibraryPath);
@@ -989,7 +1034,7 @@ const clientConfig = {
           window.location.href = redirectPath;
         }
       } catch (error) {
-        setStatus(error.message || '登入失敗。', 'error');
+        setStatus(caughtReaderMessage(error, 'loginFailed'), 'error');
       } finally {
         submitButton.disabled = false;
       }
@@ -1008,7 +1053,7 @@ const clientConfig = {
         creditBalance.textContent = '0 Station Points';
         renderMembership(null, { enabled: true, membershipCreditCost: 10, membershipDurationMonths: 1 }, { balanceCredits: 0, unitLabel: 'Station Points' });
         setAuthMode('login');
-        setStatus('已登出。', 'success');
+        setStatus(formatReaderMessage('signedOutSuccess'), 'success');
       } finally {
         logoutButton.disabled = false;
       }
@@ -1017,7 +1062,7 @@ const clientConfig = {
     passwordForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       passwordSubmitButton.disabled = true;
-      setPasswordStatus('正在更新密碼...', 'neutral');
+      setPasswordStatus(formatReaderMessage('updatingPassword'), 'neutral');
 
       try {
         const response = await fetch('/api/readers/password/change', {
@@ -1031,14 +1076,14 @@ const clientConfig = {
           })
         });
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.message || '密碼更新失敗。');
+        if (!response.ok || !data.ok) throw createReaderError('passwordUpdateFailed', data);
         currentPasswordInput.value = '';
         newPasswordInput.value = '';
         newPasswordConfirmInput.value = '';
         passwordTotpCodeInput.value = '';
-        setPasswordStatus(data.message || '密碼已更新。', 'success');
+        setPasswordStatus(formatReaderMessage('passwordUpdated'), 'success');
       } catch (error) {
-        setPasswordStatus(error.message || '密碼更新失敗。', 'error');
+        setPasswordStatus(caughtReaderMessage(error, 'passwordUpdateFailed'), 'error');
       } finally {
         passwordSubmitButton.disabled = false;
       }
@@ -1046,12 +1091,12 @@ const clientConfig = {
 
     totpSetupButton.addEventListener('click', async () => {
       totpSetupButton.disabled = true;
-      setTotpStatus('正在生成兩步驗證金鑰...', 'neutral');
+      setTotpStatus(formatReaderMessage('totpGenerating'), 'neutral');
 
       try {
         const response = await fetch('/api/readers/totp/setup', { method: 'POST' });
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.message || '兩步驗證金鑰生成失敗。');
+        if (!response.ok || !data.ok) throw createReaderError('totpGenerateFailed', data);
 
         if (data.setup) {
           totpSecretInput.value = data.setup.secretBase32 || '';
@@ -1060,16 +1105,16 @@ const clientConfig = {
           totpSetupBox.hidden = false;
           setTotpStatus(
             qrReady
-              ? '請用 Google Authenticator 掃描 QR code，再輸入目前 6 位驗證碼完成綁定。'
-              : 'QR code 生成失敗，請展開手動金鑰完成綁定。',
+              ? formatReaderMessage('totpScanQr')
+              : formatReaderMessage('totpQrFailed'),
             qrReady ? 'neutral' : 'error'
           );
         } else {
           renderTotpStatus(data.totp || { enabled: false });
-          setTotpStatus(data.message || '兩步驗證狀態已更新。', data.totp?.enabled ? 'success' : 'neutral');
+          setTotpStatus(formatReaderMessage('totpUpdated'), data.totp?.enabled ? 'success' : 'neutral');
         }
       } catch (error) {
-        setTotpStatus(error.message || '兩步驗證金鑰生成失敗。', 'error');
+        setTotpStatus(caughtReaderMessage(error, 'totpGenerateFailed'), 'error');
       } finally {
         totpSetupButton.disabled = false;
       }
@@ -1077,7 +1122,7 @@ const clientConfig = {
 
     totpConfirmButton.addEventListener('click', async () => {
       totpConfirmButton.disabled = true;
-      setTotpStatus('正在確認驗證碼...', 'neutral');
+      setTotpStatus(formatReaderMessage('totpConfirming'), 'neutral');
 
       try {
         const response = await fetch('/api/readers/totp/confirm', {
@@ -1088,11 +1133,11 @@ const clientConfig = {
           })
         });
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.message || '兩步驗證綁定失敗。');
+        if (!response.ok || !data.ok) throw createReaderError('totpBindFailed', data);
         renderTotpStatus(data.totp || { enabled: true });
-        setTotpStatus(data.message || '兩步驗證器已綁定。', 'success');
+        setTotpStatus(formatReaderMessage('totpBound'), 'success');
       } catch (error) {
-        setTotpStatus(error.message || '兩步驗證綁定失敗。', 'error');
+        setTotpStatus(caughtReaderMessage(error, 'totpBindFailed'), 'error');
       } finally {
         totpConfirmButton.disabled = false;
       }
@@ -1106,7 +1151,7 @@ const clientConfig = {
       buttons.forEach((item) => {
         item.disabled = true;
       });
-      setCreditStatus('正在建立 Station 積分購買訂單...', 'neutral');
+      setCreditStatus(formatReaderMessage('checkoutCreating'), 'neutral');
 
       try {
         const response = await fetch('/api/novels/payments/checkout', {
@@ -1121,12 +1166,12 @@ const clientConfig = {
           })
         });
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.message || '充值訂單建立失敗。');
-        if (!data.paymentUrl) throw new Error('NOWPayments 支付連結尚未生成。');
-        setCreditStatus('正在打開 NOWPayments。完成支付後回到會員中心，系統會等待區塊鏈確認並自動入帳。', 'success');
+        if (!response.ok || !data.ok) throw createReaderError('checkoutFailed', data);
+        if (!data.paymentUrl) throw createReaderError('paymentUrlMissing');
+        setCreditStatus(formatReaderMessage('checkoutOpening'), 'success');
         window.location.href = data.paymentUrl;
       } catch (error) {
-        setCreditStatus(error.message || '充值訂單建立失敗。', 'error');
+        setCreditStatus(caughtReaderMessage(error, 'checkoutFailed'), 'error');
         buttons.forEach((item) => {
           item.disabled = false;
         });
@@ -1135,31 +1180,30 @@ const clientConfig = {
 
     membershipRedeem.addEventListener('click', async () => {
       membershipRedeem.disabled = true;
-      setMembershipStatus('正在兌換會員...', 'neutral');
+      setMembershipStatus(formatReaderMessage('membershipRedeeming'), 'neutral');
 
       try {
         const response = await fetch('/api/readers/membership/redeem', { method: 'POST' });
         const data = await response.json();
         if (!response.ok || !data.ok) {
-          if (data.code === 'INSUFFICIENT_CREDITS') throw new Error('Station 積分不足，請先購買積分。');
-          throw new Error(data.message || '會員兌換失敗。');
+          throw createReaderError('membershipRedeemFailed', data);
         }
-        setMembershipStatus('會員已開通，收費章節可直接閱讀。', 'success');
+        setMembershipStatus(formatReaderMessage('membershipRedeemed'), 'success');
         await Promise.all([loadLibrary(), loadCredits()]);
       } catch (error) {
-        setMembershipStatus(error.message || '會員兌換失敗。', 'error');
+        setMembershipStatus(caughtReaderMessage(error, 'membershipRedeemFailed'), 'error');
         membershipRedeem.disabled = false;
       }
     });
 
     setAuthMode(resetToken ? 'legacyReset' : 'login');
     if (resetToken) {
-      setStatus('請設定新的會員密碼。', 'neutral');
+      setStatus(formatReaderMessage('setNewPassword'), 'neutral');
     }
 
     loadPublicPointsPrice();
     loadSession()
       .then(refreshReturnedPaymentOrder)
-      .catch((error) => setStatus(error.message, 'error'));
+      .catch((error) => setStatus(caughtReaderMessage(error, 'sessionLoadFailed'), 'error'));
   </script>
 </BaseLayout>
