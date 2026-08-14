@@ -328,7 +328,7 @@ const novelReadingEventsPath = '/api/novels/reading-events';
 const novelBundleOrderType = 'chapter-bundle';
 const novelCreditPackOrderType = 'credit-pack';
 const novelCreditSource = 'reader-credits';
-const novelCreditUnitLabel = 'SC Credits';
+const novelCreditUnitLabel = 'Station Points';
 const novelCreditLedgerTopupSource = 'nowpayments-credit-pack';
 const novelCreditLedgerUnlockSource = 'chapter-credit-unlock';
 const novelCreditLedgerMembershipSource = 'reader-membership-redeem';
@@ -369,9 +369,7 @@ const productFeedbackSubmitLimitPerWindow = 5;
 const novelStatsDefaultSinceDays = 30;
 const novelStatsMaxAggregateTargets = 80;
 const defaultReaderCreditPacks = [
-  { credits: 10, priceAmount: 1, priceCurrency: 'USD', label: '10 SC Credits' },
-  { credits: 50, priceAmount: 5, priceCurrency: 'USD', label: '50 SC Credits' },
-  { credits: 100, priceAmount: 10, priceCurrency: 'USD', label: '100 SC Credits' }
+  { credits: 100, priceAmount: 10, priceCurrency: 'USD', label: '100 Station Points' }
 ];
 const defaultMembershipCreditCost = 10;
 const defaultMembershipMonths = 1;
@@ -741,7 +739,7 @@ const findReaderCreditPack = (env, requestedCredits) => {
   const credits = normalizePositiveInteger(requestedCredits, 0);
   const pack = config.packs.find((candidate) => candidate.credits === credits) || null;
   if (!pack) {
-    const error = new Error('The selected reading credit pack is not available.');
+    const error = new Error('The selected Station Points pack is not available.');
     error.code = 'CREDIT_PACK_NOT_AVAILABLE';
     throw error;
   }
@@ -1400,7 +1398,7 @@ const findConfiguredReaderCreditPack = async (db, env, requestedCredits) => {
   const packs = await getConfiguredReaderCreditPacks(db, env);
   const pack = packs.find((candidate) => candidate.credits === credits) || null;
   if (!pack) {
-    const error = new Error('The selected reading credit pack is not available.');
+    const error = new Error('The selected Station Points pack is not available.');
     error.code = 'CREDIT_PACK_NOT_AVAILABLE';
     throw error;
   }
@@ -1877,7 +1875,7 @@ const dynamicContentCopy = {
     free: 'Free',
     lockedBody: 'Sign in from Member Center to check whether this account can read the chapter.',
     lockedTitle: 'This chapter is reserved for unlocked readers.',
-    memberLockedBody: 'Create a free account or sign in to continue reading. No purchase or reading credits are required.',
+    memberLockedBody: 'Create a free account or sign in to continue reading. No purchase or Station Points are required.',
     memberLockedTitle: 'Sign in to read this chapter for free.',
     nextChapter: 'Next chapter',
     previousChapter: 'Previous chapter',
@@ -1914,7 +1912,7 @@ const dynamicContentCopy = {
     free: '無料',
     lockedBody: '本棚にログインして、このアカウントで読めるか確認してください。',
     lockedTitle: 'この章は解放済み読者向けです。',
-    memberLockedBody: '無料アカウントを作成するかログインすると、そのまま無料で読めます。購入や読書ポイントは不要です。',
+    memberLockedBody: '無料アカウントを作成するかログインすると、そのまま無料で読めます。購入や Station Points は不要です。',
     memberLockedTitle: 'ログインすると、この章を無料で読めます。',
     nextChapter: '次の章',
     previousChapter: '前の章',
@@ -1951,7 +1949,7 @@ const dynamicContentCopy = {
     free: '免費',
     lockedBody: '請先從會員中心登入，確認這個帳戶是否可以閱讀本章。',
     lockedTitle: '這一章保留給已解鎖讀者。',
-    memberLockedBody: '註冊免費帳戶或登入後即可繼續閱讀，不需要購買會員，也不會扣除閱讀點。',
+    memberLockedBody: '註冊免費帳戶或登入後即可繼續閱讀，不需要購買會員，也不會扣除 Station 積分。',
     memberLockedTitle: '登入後即可免費閱讀本章。',
     nextChapter: '下一章',
     previousChapter: '上一章',
@@ -1988,7 +1986,7 @@ const dynamicContentCopy = {
     free: '免费',
     lockedBody: '请先从会员中心登录，确认这个账户是否可以阅读本章。',
     lockedTitle: '这一章保留给已解锁读者。',
-    memberLockedBody: '注册免费账户或登录后即可继续阅读，不需要购买会员，也不会扣除阅读点。',
+    memberLockedBody: '注册免费账户或登录后即可继续阅读，不需要购买会员，也不会扣除 Station 积分。',
     memberLockedTitle: '登录后即可免费阅读本章。',
     nextChapter: '下一章',
     previousChapter: '上一章',
@@ -2144,16 +2142,16 @@ const getDynamicSeriesAccessSummary = (accessLevel, locale, paymentSettings = nu
 
   if (paymentSettings.priceMode === 'chapter-paid' && freeChapters > 0 && chapterCredits > 0) {
     if (locale === 'en') return `First ${freeChapters} chapters free, ${chapterCredits} credit / chapter from Chapter ${paidStartChapter}`;
-    if (locale === 'ja') return `第${paidStartChapter}章から ${chapterCredits} 読書ポイント / 章（最初の${freeChapters}章は無料）`;
-    if (locale === 'zh-Hans') return `前 ${freeChapters} 章免费，第 ${paidStartChapter} 章起 ${chapterCredits} 阅读点 / 章`;
-    return `前 ${freeChapters} 章免費，第 ${paidStartChapter} 章起 ${chapterCredits} 閱讀點 / 章`;
+    if (locale === 'ja') return `第${paidStartChapter}章から ${chapterCredits} Station Points / 章（最初の${freeChapters}章は無料）`;
+    if (locale === 'zh-Hans') return `前 ${freeChapters} 章免费，第 ${paidStartChapter} 章起 ${chapterCredits} Station 积分 / 章`;
+    return `前 ${freeChapters} 章免費，第 ${paidStartChapter} 章起 ${chapterCredits} Station 積分 / 章`;
   }
 
   if (chapterCredits > 0 && accessLevel !== 'free') {
     if (locale === 'en') return `${accessLabel} · ${chapterCredits} credit / chapter`;
-    if (locale === 'ja') return `${accessLabel} · ${chapterCredits} 読書ポイント / 章`;
-    if (locale === 'zh-Hans') return `${accessLabel} · ${chapterCredits} 阅读点 / 章`;
-    return `${accessLabel} · ${chapterCredits} 閱讀點 / 章`;
+    if (locale === 'ja') return `${accessLabel} · ${chapterCredits} Station Points / 章`;
+    if (locale === 'zh-Hans') return `${accessLabel} · ${chapterCredits} Station 积分 / 章`;
+    return `${accessLabel} · ${chapterCredits} Station 積分 / 章`;
   }
 
   return accessLabel;
@@ -7267,7 +7265,7 @@ const redeemReaderMembershipWithCredits = async (db, accountId, env) => {
 
   if (!updatedAccount) {
     const summary = await getReaderCreditSummary(db, accountId, env);
-    const error = new Error('Insufficient reading credits for membership.');
+    const error = new Error('Insufficient Station Points for membership.');
     error.code = 'INSUFFICIENT_CREDITS';
     error.summary = summary;
     throw error;
@@ -7494,7 +7492,7 @@ const normalizeCreditUnlockPayload = async (payload, env, db) => {
     throw error;
   }
   if (accessRequired !== 'paid') {
-    const error = new Error('Reading credits can only unlock paid chapters in this stage.');
+    const error = new Error('Station Points can only unlock supported paid chapters in this flow.');
     error.code = 'CREDIT_UNLOCK_SCOPE_NOT_SUPPORTED';
     throw error;
   }
@@ -7532,7 +7530,7 @@ const spendReaderCreditsForChapter = async (db, accountId, unlock, env) => {
 
   if (!updatedAccount) {
     const summary = await getReaderCreditSummary(db, accountId, env);
-    const error = new Error('Insufficient reading credits.');
+    const error = new Error('Insufficient Station Points.');
     error.code = 'INSUFFICIENT_CREDITS';
     error.summary = summary;
     throw error;
@@ -7577,7 +7575,7 @@ const handleReaderCreditUnlock = async (request, env) => {
       {
         ok: false,
         code: 'SIGN_IN_REQUIRED',
-        message: 'Please sign in before using reading credits.'
+        message: 'Please sign in before using Station Points.'
       },
       { status: 401 }
     );
@@ -7756,7 +7754,7 @@ const normalizeCheckoutPayload = async (payload, session, env, db) => {
   }
 
   if (orderType !== novelCreditPackOrderType && orderType !== 'tip') {
-    const error = new Error('Direct USD unlocks are disabled. Please buy reading credits, then unlock chapters with credits.');
+    const error = new Error('Direct USD unlocks are disabled. Please buy Station Points, then redeem points for supported chapters.');
     error.code = 'DIRECT_USD_UNLOCK_DISABLED';
     throw error;
   }
@@ -7791,7 +7789,7 @@ const normalizeCheckoutPayload = async (payload, session, env, db) => {
       bundleDetails: null,
       chapterSlug: '',
       creditPack,
-      description: `Station Cat reading credits: ${creditPack.credits} ${creditPack.unitLabel}`,
+      description: `Station Cat digital points: ${creditPack.credits} ${creditPack.unitLabel}`,
       entitlementAccessLevel: '',
       entitlementScope: '',
       locale,
@@ -9327,7 +9325,7 @@ const handleAdminContentSchema = async (env) =>
   privateJson({
     ok: true,
     stage: '8D',
-    purpose: 'Backend content management, media upload, global reading-credit pricing, reader membership, order, reader account, credit, entitlement, audit, and NovelForge import review operations centered in Admin 2.0.',
+    purpose: 'Backend content management, media upload, global Station Points pricing, reader membership, order, reader account, points balance, entitlement, audit, and NovelForge import review operations centered in Admin 2.0.',
     entries: {
       entryTypes: [...contentEntryTypes],
       locales: [...contentLocales],
@@ -9372,14 +9370,14 @@ const handleAdminContentSchema = async (env) =>
       legacyMigration: 'Completed. The one-time legacy Markdown migration endpoint and manifest have been removed from the Worker bundle.',
       protectedContent: 'Paid/supporter chapter HTML is loaded from CONTENT_BUCKET after entitlement checks.',
       dynamicFrontend: 'Published backend content can render public Blog and serial pages without a site rebuild.',
-      checkoutPricing: 'Reader-facing checkout only sells reading-credit packs through NOWPayments. Paid chapters unlock with credits or active membership.',
+      checkoutPricing: 'Reader-facing checkout sells Station Points packs. Supported paid chapters unlock with Station Points or active membership.',
       commerceAdmin: 'Admin 2.0 can inspect orders, reader accounts, credit ledger, entitlements, and rerun paid-order fulfillment.',
       mediaUpload: 'Admin 2.0 uploads cover images into CONTENT_BUCKET under content/media/covers.',
       novelForgeImport: 'NovelForge can publish projects, chapters, and cover metadata through POST /api/novelforge/import with a dedicated Bearer token.',
       novelForgeImportReview: 'Admin 2.0 can review NovelForge import batches, inspect linked entries, and publish imported drafts after review.',
       novelForgeWritingApi: 'NovelForge can read chapter stats, AI insights, and book trends through GET /api/novelforge/analytics/* with the same Bearer token boundary.',
       pricingDefaults: 'Admin 2.0 stores global novel pricing defaults in admin_content_settings. Saved pricing applies to all books and chapters.',
-      readerMemberships: '10 reading credits can redeem a monthly membership by default. Active members can read paid chapters.',
+      readerMemberships: '10 Station Points can redeem a monthly membership by default. Active members can read supported paid chapters.',
       readerBookmarks: 'Reader accounts can save chapter bookmarks and continue reading from Member Center.',
       readingEvents: 'Novel V2 reader pages can send chapter open, scroll depth, pause/resume, navigation, like, bookmark, and comment interaction events into reading_events.',
       readingAnalytics: 'Admin 2.0 can aggregate reading_events into chapter_stats for completion, drop-off, reading time, and engagement diagnostics.',
@@ -18268,9 +18266,9 @@ const dynamicPaymentCopy = {
     bundleUnit: ' chapters',
     checking: 'Checking access...',
     contentFailed: 'Could not load the protected chapter.',
-    creditInsufficient: 'Not enough reading credits. Top up in Member Center first.',
-    creditTopUp: 'Top up credits',
-    creditUnlock: 'Use reading credits',
+    creditInsufficient: 'Not enough Station Points. Buy points in Member Center first.',
+    creditTopUp: 'Buy Station Points',
+    creditUnlock: 'Use Station Points',
     denied: 'This account has not unlocked this chapter yet.',
     disabled: 'Checkout is not configured yet.',
     failed: 'Could not create checkout.',
@@ -18289,9 +18287,9 @@ const dynamicPaymentCopy = {
     bundleUnit: '章',
     checking: '権限を確認しています...',
     contentFailed: '保護された本文を読み込めません。',
-    creditInsufficient: '読書ポイントが足りません。先に本棚で追加してください。',
-    creditTopUp: 'ポイントを追加',
-    creditUnlock: '読書ポイントで解放',
+    creditInsufficient: 'Station Points が足りません。先に会員センターで購入してください。',
+    creditTopUp: 'Station Points を購入',
+    creditUnlock: 'Station Points で解放',
     denied: 'このアカウントではまだこの章が解放されていません。',
     disabled: '支払い設定はまだ有効ではありません。',
     failed: 'チェックアウトを作成できませんでした。',
@@ -18310,9 +18308,9 @@ const dynamicPaymentCopy = {
     bundleUnit: ' 章',
     checking: '正在確認閱讀權限...',
     contentFailed: '受保護正文載入失敗。',
-    creditInsufficient: '閱讀點數不足，請先到會員中心充值。',
-    creditTopUp: '充值閱讀點',
-    creditUnlock: '用閱讀點解鎖',
+    creditInsufficient: 'Station 積分不足，請先到會員中心購買積分。',
+    creditTopUp: '購買 Station 積分',
+    creditUnlock: '用 Station 積分解鎖',
     denied: '這個帳戶尚未解鎖本章。',
     disabled: '支付通道尚未配置完成。',
     failed: '支付訂單建立失敗。',
@@ -18331,9 +18329,9 @@ const dynamicPaymentCopy = {
     bundleUnit: ' 章',
     checking: '正在确认阅读权限...',
     contentFailed: '受保护正文加载失败。',
-    creditInsufficient: '阅读点数不足，请先到会员中心充值。',
-    creditTopUp: '充值阅读点',
-    creditUnlock: '用阅读点解锁',
+    creditInsufficient: 'Station 积分不足，请先到会员中心购买积分。',
+    creditTopUp: '购买 Station 积分',
+    creditUnlock: '用 Station 积分解锁',
     denied: '这个账户尚未解锁本章。',
     disabled: '支付通道尚未配置完成。',
     failed: '支付订单建立失败。',

@@ -76,7 +76,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <select id="global-pricing-mode">
                   <option value="free">免费阅读</option>
                   <option value="tip-optional">免费 + 打赏</option>
-                  <option value="chapter-paid">阅读点解锁</option>
+                  <option value="chapter-paid">Station 积分解锁</option>
                   <option value="member">会员阅读</option>
                 </select>
               </label>
@@ -85,7 +85,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <input id="global-pricing-free-chapters" type="number" min="0" step="1" value="20" />
               </label>
               <label>
-                每章阅读点
+                每章 Station 积分
                 <input id="global-pricing-chapter-credits" type="number" min="1" step="1" value="1" />
               </label>
               <label class="admin-global-pricing-wide">
@@ -572,11 +572,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                     <input id="pricing-supporter-price" type="number" min="0" step="0.01" placeholder="已停用" disabled />
                   </label>
                   <label>
-                    单章阅读点
+                    单章 Station 积分
                     <input id="pricing-chapter-credits" type="number" min="1" step="1" placeholder="1" />
                   </label>
                   <label>
-                    阅读点包
+                    Station 积分商品
                     <input id="pricing-credit-packs" placeholder="10:1, 50:5, 100:10" />
                   </label>
                   <label class="admin-checkbox">
@@ -1754,7 +1754,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           const normalizedCredits = Number.parseInt(credits, 10);
           const normalizedPrice = Number.parseFloat(priceAmount);
           return Number.isFinite(normalizedCredits) && Number.isFinite(normalizedPrice)
-            ? { credits: normalizedCredits, priceAmount: normalizedPrice, priceCurrency: 'USD', label: label || `${normalizedCredits} SC Credits` }
+            ? { credits: normalizedCredits, priceAmount: normalizedPrice, priceCurrency: 'USD', label: label || `${normalizedCredits} Station Points` }
             : null;
         })
         .filter(Boolean);
@@ -1781,9 +1781,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         bundlePurchasesEnabled: false,
         chapterBundleDiscounts: [],
         creditPacks: [
-          { credits: 10, priceAmount: 1, priceCurrency: 'USD', label: '10 SC Credits' },
-          { credits: 50, priceAmount: 5, priceCurrency: 'USD', label: '50 SC Credits' },
-          { credits: 100, priceAmount: 10, priceCurrency: 'USD', label: '100 SC Credits' }
+          { credits: 100, priceAmount: 10, priceCurrency: 'USD', label: '100 Station Points' }
         ],
         directChapterCheckoutEnabled: false,
         subscriptionEnabled: true,
@@ -2015,7 +2013,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <div class="admin-pricing-lines">
           <p><strong>打赏：</strong>${escapeHtml(tips)}</p>
           <p><strong>多章折扣：</strong>${escapeHtml(bundles)}</p>
-          <p><strong>阅读点包：</strong>${escapeHtml(creditPacks)}</p>
+          <p><strong>Station 积分商品：</strong>${escapeHtml(creditPacks)}</p>
           <p><strong>会员兑换：</strong>${escapeHtml(membership)}</p>
           ${warnings.map((warning) => `<p class="admin-pricing-warning">${escapeHtml(warning)}</p>`).join('')}
         </div>
@@ -3647,7 +3645,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         : '多章折扣未开启';
       const creditPacks = Array.isArray(pricing.creditPacks) && pricing.creditPacks.length
         ? pricing.creditPacks.map((pack) => `${pack.credits}点/${formatMoney(pack.priceAmount, pack.priceCurrency || 'USD')}`).join('，')
-        : '阅读点包未配置';
+        : 'Station 积分商品未配置';
       const membership = pricing.subscriptionEnabled !== false
         ? `会员 ${pricing.membershipCreditCost || 10} 点/${pricing.membershipDurationMonths || 1}个月`
         : '会员关闭';
@@ -4262,7 +4260,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         button.type = 'button';
         button.innerHTML = `
           <span>${escapeHtml(account.email)}</span>
-          <small>${escapeHtml(account.status)} · 余额 ${escapeHtml(String(account.creditAccount?.balanceCredits || 0))} ${escapeHtml(account.creditAccount?.unitLabel || 'SC Credits')}</small>
+          <small>${escapeHtml(account.status)} · 余额 ${escapeHtml(String(account.creditAccount?.balanceCredits || 0))} ${escapeHtml(account.creditAccount?.unitLabel || 'Station Points')}</small>
           <small>订单 ${escapeHtml(String(account.stats?.orderCount || 0))} · 授权 ${escapeHtml(String(account.stats?.activeEntitlementCount || 0))} · 最近订单 ${escapeHtml(formatDate(account.stats?.latestOrderAt) || '-')}</small>
         `;
         button.addEventListener('click', () => loadAccountDetail(account.id));
@@ -4378,7 +4376,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
       renderAccountDetail(result);
       await Promise.all([loadAccounts(), loadAuditLogs()]);
-      setStatus('阅读点余额已调整。', 'success');
+      setStatus('Station 积分余额已调整。', 'success');
     };
 
     const currentAnalyticsWindowDays = () => Number(elements.filters.analyticsDays.value || 30);

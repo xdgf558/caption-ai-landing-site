@@ -1,5 +1,6 @@
 export const brandNavigation = [
   { label: 'Apps', href: '/apps/' },
+  { label: 'Points', href: '/points/' },
   { label: 'Serials', href: '/novel/' },
   { label: 'Signal', href: '/en/signal/' },
   { label: 'Dev Blog', href: '/en/devlog/' },
@@ -10,6 +11,7 @@ export const brandNavigation = [
 
 export const zhBrandNavigation = [
   { label: 'Apps', href: '/zh-hant/apps/' },
+  { label: '積分價格', href: '/zh-hant/points/' },
   { label: '連載小說', href: '/novel/' },
   { label: '信號簡報', href: '/signal/' },
   { label: '開發博客', href: '/devlog/' },
@@ -20,6 +22,7 @@ export const zhBrandNavigation = [
 
 export const zhHansBrandNavigation = [
   { label: 'Apps', href: '/zh-hans/apps/' },
+  { label: '积分价格', href: '/zh-hans/points/' },
   { label: '连载小说', href: '/novel/' },
   { label: '信号简报', href: '/zh-hans/signal/' },
   { label: '开发博客', href: '/zh-hans/devlog/' },
@@ -30,6 +33,7 @@ export const zhHansBrandNavigation = [
 
 export const jaBrandNavigation = [
   { label: 'Apps', href: '/ja/apps/' },
+  { label: 'ポイント価格', href: '/ja/points/' },
   { label: '連載小説', href: '/novel/' },
   { label: 'Signal', href: '/ja/signal/' },
   { label: '開発ログ', href: '/ja/devlog/' },

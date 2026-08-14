@@ -4,7 +4,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
 <BaseLayout
   title="會員中心"
-  description="Station Cat 會員中心，用於登入、管理閱讀點數、會員狀態、已解鎖內容和書籤。"
+  description="Station Cat 會員中心，用於登入、管理 Station 積分、會員狀態、已解鎖內容和書籤。"
   lang="zh-Hant"
   canonicalPath="/library/"
 >
@@ -12,8 +12,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <div class="reader-library-hero__copy">
       <p class="station-kicker">Member Center</p>
       <h1>會員中心</h1>
-      <p>管理你的會員、閱讀點與帳戶安全。</p>
+      <p>管理你的會員、Station 積分與帳戶安全。</p>
     </div>
+  </section>
+
+  <section class="station-section reader-public-points" aria-labelledby="reader-public-points-title">
+    <div>
+      <p class="station-kicker">STATION POINTS</p>
+      <h2 id="reader-public-points-title">100 Station 積分 · 10 美元</h2>
+      <p>一次性購買，無自動續費。積分可兌換明確標示支援 Station 積分的收費閱讀內容與數位產品權限。</p>
+    </div>
+    <a class="button button-secondary" href="/zh-hant/points/">查看公開價格與積分規則</a>
   </section>
 
   <section class="station-section reader-membership-overview" id="reader-membership-panel" hidden>
@@ -27,8 +36,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
       </div>
       <div class="reader-membership-summary__actions">
-        <span id="reader-membership-overview-credits">0 SC 閱讀點</span>
-        <button class="button button-primary" id="reader-membership-redeem" type="button">用閱讀點兌換會員</button>
+        <span id="reader-membership-overview-credits">0 Station 積分</span>
+        <button class="button button-primary" id="reader-membership-redeem" type="button">用積分兌換會員</button>
       </div>
     </div>
     <p class="reader-membership-state" id="reader-membership-state">尚未開通會員。</p>
@@ -168,11 +177,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     <div class="reader-panel reader-credits-panel" id="reader-credits-panel" hidden>
       <div class="reader-panel__header">
-        <p class="station-kicker">Reading Credits</p>
-        <h2>閱讀點與充值</h2>
+        <p class="station-kicker">Station Points</p>
+        <h2>Station 積分</h2>
       </div>
       <div class="reader-credit-summary">
-        <p class="reader-credit-balance" id="reader-credit-balance">0 SC Credits</p>
+        <p class="reader-credit-balance" id="reader-credit-balance">0 Station Points</p>
         <p class="fine-print" id="reader-credit-cost">目前單章付費內容會扣除 1 點。</p>
       </div>
       <label class="reader-pay-currency-field" hidden>
@@ -220,7 +229,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <div class="reader-library-list" id="reader-library-list"></div>
     <div class="reader-empty-shelf" id="reader-library-empty">
       <h3>目前還沒有已解鎖內容。</h3>
-      <p>登入後，這裡會顯示管理員手動授權或之後由 NOWPayments 支付成功發放的章節 / 作品權限。</p>
+      <p>登入後，這裡會顯示管理員手動授權或使用 Station 積分兌換的章節 / 作品權限。</p>
       <a class="button button-secondary" href="/novel/">回到連載小說</a>
     </div>
   </section>
@@ -574,7 +583,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         button.className = 'button button-secondary reader-credit-pack-button';
         button.type = 'button';
         button.dataset.credits = pack.credits;
-        button.textContent = `${pack.label || `${pack.credits} SC Credits`} · ${pack.priceAmount} ${pack.priceCurrency}`;
+        button.textContent = `${pack.label || `${pack.credits} Station Points`} · ${pack.priceAmount} ${pack.priceCurrency}`;
         creditPacks.append(button);
       });
     };
@@ -599,12 +608,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const renderMembership = (membership, settings, creditAccount) => {
       const cost = settings?.membershipCreditCost || 10;
       const months = settings?.membershipDurationMonths || 1;
-      const unitLabel = settings?.unitLabel || creditAccount?.unitLabel || 'SC Credits';
+      const unitLabel = settings?.unitLabel || creditAccount?.unitLabel || 'Station Points';
       const balanceCredits = creditAccount?.balanceCredits || 0;
       const coversPaid = settings?.membershipCoversPaidContent !== false;
-      membershipOverviewCredits.textContent = `${balanceCredits} SC 閱讀點`;
+      membershipOverviewCredits.textContent = `${balanceCredits} Station 積分`;
       membershipRule.textContent = `${cost} 點可兌換 ${months} 個月會員，${coversPaid ? '會員可閱讀收費章節。' : '目前會員不覆蓋收費章節。'}`;
-      membershipRedeem.textContent = membership?.active ? '用閱讀點續費' : `用 ${cost} 點兌換 ${months} 個月會員`;
+      membershipRedeem.textContent = membership?.active ? '用積分續費' : `用 ${cost} 積分兌換 ${months} 個月會員`;
       membershipRedeem.hidden = settings?.enabled === false;
       membershipRedeem.disabled = settings?.enabled === false || balanceCredits < cost;
       if (membership?.active) {
@@ -612,14 +621,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         setMembershipSummary('會員有效中', `有效至 ${expiresAt}`, 'active');
         membershipState.textContent = coversPaid ? '會員閱讀權益已啟用。' : '會員已開通，目前不覆蓋收費章節。';
       } else {
-        setMembershipSummary('尚未開通會員', `可用閱讀點：${balanceCredits} ${unitLabel}`, 'inactive');
+        setMembershipSummary('尚未開通會員', `可用積分：${balanceCredits} ${unitLabel}`, 'inactive');
         membershipState.textContent = `尚未開通會員。目前餘額 ${balanceCredits} ${unitLabel}。`;
       }
       if (settings?.enabled === false) {
         setMembershipSummary('會員兌換未開啟', '目前不能兌換會員', 'inactive');
         setMembershipStatus('會員兌換目前未開啟。', 'neutral');
       } else if (!membership?.active && balanceCredits < cost) {
-        setMembershipStatus('閱讀點不足，請先充值點數。', 'neutral');
+        setMembershipStatus('Station 積分不足，請先購買積分。', 'neutral');
       } else {
         setMembershipStatus('');
       }
@@ -693,10 +702,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const loadCredits = async () => {
       const response = await fetch('/api/readers/credits');
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.message || '讀取閱讀點數失敗。');
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取 Station 積分失敗。');
       if (!data.authenticated) return;
 
-      const unitLabel = data.account?.unitLabel || 'SC Credits';
+      const unitLabel = data.account?.unitLabel || 'Station Points';
       creditBalance.textContent = `${data.account?.balanceCredits || 0} ${unitLabel}`;
       creditCost.textContent = `目前單章付費內容會扣除 ${data.chapterCostCredits || 1} 點。`;
       renderCreditPacks(data.packs || []);
@@ -712,18 +721,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const order = data.order || {};
       const fulfillment = data.fulfillment || {};
       if (fulfillment.complete) {
-        if (fulfillment.kind === 'credit-pack') return 'NOWPayments 已確認，閱讀點數已入帳。';
+        if (fulfillment.kind === 'credit-pack') return '支付已確認，Station 積分已入帳。';
         if (fulfillment.kind === 'tip') return 'NOWPayments 已確認，感謝支持。';
         return 'NOWPayments 已確認，閱讀權限已更新。';
       }
       if (fulfillment.needsReview) {
-        return '支付已確認，正在寫入閱讀點數。如果幾分鐘後仍未入帳，請保留訂單給後台排查。';
+        return '支付已確認，正在寫入 Station 積分。如果幾分鐘後仍未入帳，請保留訂單給後台排查。';
       }
       if (['failed', 'expired', 'refunded'].includes(order.status)) {
-        return `訂單狀態：${order.status}，閱讀點數沒有更新。`;
+        return `訂單狀態：${order.status}，Station 積分沒有更新。`;
       }
       if (order.status === 'confirming') return '已收到支付，正在等待區塊鏈確認。確認完成後會自動入帳。';
-      if (['confirmed', 'finished'].includes(order.status)) return '支付已確認，正在更新你的閱讀點數。';
+      if (['confirmed', 'finished'].includes(order.status)) return '支付已確認，正在更新你的 Station 積分。';
       return '已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。';
     };
 
@@ -750,7 +759,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         await wait(fulfillment.nextCheckSeconds * 1000);
       }
 
-      setCreditStatus('仍在等待區塊鏈確認。你可以稍後刷新會員中心，確認後閱讀點數會自動入帳。', 'neutral');
+      setCreditStatus('仍在等待支付確認。你可以稍後刷新會員中心，確認後 Station 積分會自動入帳。', 'neutral');
     };
 
     const loadSession = async () => {
@@ -787,9 +796,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     if (query.get('payment') === 'success' && query.get('order')) {
       setCreditStatus('已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。', 'neutral');
     } else if (query.get('payment') === 'success') {
-      setCreditStatus('支付已返回網站。區塊鏈確認完成後，閱讀點數會自動入帳；如果還沒看到，稍後刷新即可。', 'success');
+      setCreditStatus('支付已返回網站。確認完成後 Station 積分會自動入帳；如果還沒看到，稍後刷新即可。', 'success');
     } else if (query.get('payment') === 'cancelled') {
-      setCreditStatus('支付已取消，閱讀點數沒有變動。', 'error');
+      setCreditStatus('支付已取消，Station 積分沒有變動。', 'error');
     }
 
     authModeButtons.forEach((button) => {
@@ -882,8 +891,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         renderCreditPacks([]);
         renderTotpStatus({ enabled: false });
         setTotpStatus('');
-        creditBalance.textContent = '0 SC Credits';
-        renderMembership(null, { enabled: true, membershipCreditCost: 10, membershipDurationMonths: 1 }, { balanceCredits: 0, unitLabel: 'SC Credits' });
+        creditBalance.textContent = '0 Station Points';
+        renderMembership(null, { enabled: true, membershipCreditCost: 10, membershipDurationMonths: 1 }, { balanceCredits: 0, unitLabel: 'Station Points' });
         setAuthMode('login');
         setStatus('已登出。', 'success');
       } finally {
@@ -983,7 +992,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       buttons.forEach((item) => {
         item.disabled = true;
       });
-      setCreditStatus('正在建立閱讀點數充值訂單...', 'neutral');
+      setCreditStatus('正在建立 Station 積分購買訂單...', 'neutral');
 
       try {
         const response = await fetch('/api/novels/payments/checkout', {
@@ -1018,7 +1027,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const response = await fetch('/api/readers/membership/redeem', { method: 'POST' });
         const data = await response.json();
         if (!response.ok || !data.ok) {
-          if (data.code === 'INSUFFICIENT_CREDITS') throw new Error('閱讀點不足，請先充值點數。');
+          if (data.code === 'INSUFFICIENT_CREDITS') throw new Error('Station 積分不足，請先購買積分。');
           throw new Error(data.message || '會員兌換失敗。');
         }
         setMembershipStatus('會員已開通，收費章節可直接閱讀。', 'success');

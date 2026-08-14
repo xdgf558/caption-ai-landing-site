@@ -206,7 +206,7 @@ const pricedSeriesHtml = hooks.renderDynamicNovelSeries(novelSeriesRoute, serial
   priceMode: 'chapter-paid',
   chapterCredits: 1
 });
-assert.match(pricedSeriesHtml, /前 20 章免費，第 21 章起 1 閱讀點 \/ 章/);
+assert.match(pricedSeriesHtml, /前 20 章免費，第 21 章起 1 Station 積分 \/ 章/);
 
 const elevenChapters = Array.from({ length: 11 }, (_, index) => ({
   access_level: 'free',
