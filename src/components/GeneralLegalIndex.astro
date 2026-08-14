@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { stationPointsProduct } from '../data/products/station-points';
+
+interface Props {
+  kind: 'privacy' | 'terms';
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+}
+
+const { kind, lang = 'en' } = Astro.props;
+const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
+const path = kind === 'terms' ? stationPointsProduct.termsPaths[localeKey] : stationPointsProduct.privacyPaths[localeKey];
+const paths = kind === 'terms' ? stationPointsProduct.termsPaths : stationPointsProduct.privacyPaths;
+const copy = {
+  en: kind === 'terms'
+    ? {
+        title: 'Terms', kicker: 'TERMS', heading: 'Product terms and purchase rules.',
+        intro: 'Each Station Cat product has terms suited to its platform, features, and paid offerings.',
+        links: [
+          ['Station Points Pricing and Use Rules', '/points/'],
+          ['SnapCopy Terms of Service', '/apps/caption-ai/terms/']
+        ]
+      }
+    : {
+        title: 'Privacy', kicker: 'PRIVACY', heading: 'Product privacy policies.',
+        intro: 'Each Station Cat app publishes a privacy policy that explains the data handled by that product.',
+        links: [
+          ['SnapCopy Privacy Policy', '/apps/caption-ai/privacy/'],
+          ['MindBudget Privacy Policy', '/apps/mindbudget/privacy/'],
+          ['Maozhan Pinyin Privacy Policy', '/apps/privatepinyin/privacy/']
+        ]
+      },
+  ja: kind === 'terms'
+    ? {
+        title: '利用規約', kicker: 'TERMS', heading: '製品規約と購入ルール。',
+        intro: 'Station Cat の各製品には、プラットフォーム、機能、有料提供内容に応じた規約があります。',
+        links: [
+          ['Station Points の価格と利用規則', '/ja/points/'],
+          ['SnapCopy 利用規約', '/ja/apps/caption-ai/terms/']
+        ]
+      }
+    : {
+        title: 'プライバシー', kicker: 'PRIVACY', heading: '製品ごとのプライバシーポリシー。',
+        intro: 'Station Cat の各アプリは、その製品が扱うデータを説明するプライバシーポリシーを公開しています。',
+        links: [
+          ['SnapCopy プライバシーポリシー', '/ja/apps/caption-ai/privacy/'],
+          ['MindBudget プライバシーポリシー', '/ja/apps/mindbudget/privacy/'],
+          ['猫栈拼音 プライバシーポリシー', '/ja/apps/privatepinyin/privacy/']
+        ]
+      },
+  'zh-Hant': kind === 'terms'
+    ? {
+        title: '服務條款', kicker: 'TERMS', heading: '產品條款與購買規則。',
+        intro: 'Station Cat 的每項產品，都有配合平台、功能和付費內容的適用條款。',
+        links: [
+          ['Station 積分價格與使用規則', '/zh-hant/points/'],
+          ['SnapCopy 服務條款', '/zh-hant/apps/caption-ai/terms/']
+        ]
+      }
+    : {
+        title: '隱私政策', kicker: 'PRIVACY', heading: '各產品的隱私政策。',
+        intro: 'Station Cat 的每個 App 都會公開說明該產品如何處理資料。',
+        links: [
+          ['SnapCopy 隱私政策', '/zh-hant/apps/caption-ai/privacy/'],
+          ['花有數隱私政策', '/zh-hant/apps/mindbudget/privacy/'],
+          ['猫栈拼音隱私政策', '/zh-hant/apps/privatepinyin/privacy/']
+        ]
+      },
+  'zh-Hans': kind === 'terms'
+    ? {
+        title: '服务条款', kicker: 'TERMS', heading: '产品条款与购买规则。',
+        intro: 'Station Cat 的每项产品，都有配合平台、功能和付费内容的适用条款。',
+        links: [
+          ['Station 积分价格与使用规则', '/zh-hans/points/'],
+          ['SnapCopy 服务条款', '/zh-hans/apps/caption-ai/terms/']
+        ]
+      }
+    : {
+        title: '隐私政策', kicker: 'PRIVACY', heading: '各产品的隐私政策。',
+        intro: 'Station Cat 的每个 App 都会公开说明该产品如何处理数据。',
+        links: [
+          ['SnapCopy 隐私政策', '/zh-hans/apps/caption-ai/privacy/'],
+          ['花有数隐私政策', '/zh-hans/apps/mindbudget/privacy/'],
+          ['猫栈拼音隐私政策', '/zh-hans/apps/privatepinyin/privacy/']
+        ]
+      }
+}[lang];
+---
+
+<BaseLayout
+  title={copy.title}
+  description={copy.intro}
+  lang={lang}
+  canonicalPath={path}
+  alternates={[
+    { hrefLang: 'zh-Hant', href: paths.zhHant },
+    { hrefLang: 'zh-Hans', href: paths.zhHans },
+    { hrefLang: 'en', href: paths.en },
+    { hrefLang: 'ja', href: paths.ja },
+    { hrefLang: 'x-default', href: paths.en }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">{copy.kicker}</p>
+    <h1>{copy.heading}</h1>
+    <p>{copy.intro}</p>
+    <div class="link-panel">
+      {copy.links.map(([label, href]) => <a href={href}>{label}</a>)}
+    </div>
+  </section>
+</BaseLayout>

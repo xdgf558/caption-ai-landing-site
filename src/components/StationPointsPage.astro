@@ -1,0 +1,305 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { stationPointsProduct } from '../data/products/station-points';
+
+interface Props {
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+}
+
+const { lang = 'zh-Hant' } = Astro.props;
+const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
+const copy = {
+  'zh-Hant': {
+    title: 'Station 積分價格與使用說明',
+    description: 'Station Cat 公開積分價格、可兌換內容、退款與帳戶規則。公開價格與實際結帳設定保持一致。',
+    kicker: 'STATION POINTS',
+    heading: '一個帳戶，一套清楚的積分。',
+    intro: 'Station 積分用於兌換 Station Cat 明確標示為可使用積分的數位內容與權限。價格公開、一次購買，不是訂閱。',
+    billing: '一次性購買 · 無自動續費',
+    cta: '登入會員中心購買',
+    support: '付款或積分協助',
+    useHeading: '積分目前可以怎麼用',
+    uses: [
+      '兌換收費小說章節或會員閱讀權益；實際所需積分以內容頁確認兌換前標示為準。',
+      '兌換明確標示「支援 Station 積分」的付費軟體下載或數位產品權限。未標示的軟體不包含在內。',
+      '兌換前會顯示所需積分與取得的權限，確認後才會扣除。'
+    ],
+    rulesHeading: '購買與帳戶規則',
+    rules: [
+      'Station 積分是站內數位權益單位，不是現金、加密貨幣或可轉讓的儲值金，不能提現、轉售或在帳戶之間轉移。',
+      '已購買的積分在帳戶有效期間不設到期日；退款、拒付、詐欺調查或依法處理時，對應積分與已兌換權限可能被撤回。',
+      '未使用積分的退款可聯絡支援申請，是否符合退款條件將依適用法律及結帳服務商政策處理；已兌換或部分使用的數位權益通常不能退款，法律另有規定除外。',
+      '稅費、可用付款方式與最終應付金額會在結帳前顯示。購買後，積分會存入登入時使用的 Station Cat 會員帳戶。'
+    ],
+    availability: '目前公開商品',
+    loading: '正在讀取目前可購買的積分包...',
+    unavailable: '積分結帳目前暫停，恢復後會在這裡顯示可購買的積分包。',
+    loadFailed: '暫時無法確認積分價格，請稍後重試或聯絡支援。',
+    availabilityBody: '下列價格直接來自目前的結帳設定。網站不會把尚未標示支援積分的軟體，自動列為可兌換產品。',
+    legal: '購買或使用 Station 積分，即表示你同意本頁規則與 Station Cat 的一般服務條款。',
+    terms: '一般服務條款',
+    privacy: '隱私政策'
+  },
+  'zh-Hans': {
+    title: 'Station 积分价格与使用说明',
+    description: 'Station Cat 公开积分价格、可兑换内容、退款与账户规则。公开价格与实际结账设置保持一致。',
+    kicker: 'STATION POINTS',
+    heading: '一个账户，一套清楚的积分。',
+    intro: 'Station 积分用于兑换 Station Cat 明确标示为可使用积分的数字内容与权限。价格公开、一次购买，不是订阅。',
+    billing: '一次性购买 · 无自动续费',
+    cta: '登录会员中心购买',
+    support: '付款或积分协助',
+    useHeading: '积分目前可以怎么用',
+    uses: [
+      '兑换收费小说章节或会员阅读权益；实际所需积分以内容页确认兑换前标示为准。',
+      '兑换明确标示“支持 Station 积分”的付费软件下载或数字产品权限。未标示的软件不包含在内。',
+      '兑换前会显示所需积分与取得的权限，确认后才会扣除。'
+    ],
+    rulesHeading: '购买与账户规则',
+    rules: [
+      'Station 积分是站内数字权益单位，不是现金、加密货币或可转让的储值金，不能提现、转售或在账户之间转移。',
+      '已购买的积分在账户有效期间不设到期日；退款、拒付、欺诈调查或依法处理时，对应积分与已兑换权限可能被撤回。',
+      '未使用积分的退款可联系支持申请，是否符合退款条件将依适用法律及结账服务商政策处理；已兑换或部分使用的数字权益通常不能退款，法律另有规定除外。',
+      '税费、可用付款方式与最终应付金额会在结账前显示。购买后，积分会存入登录时使用的 Station Cat 会员账户。'
+    ],
+    availability: '目前公开商品',
+    loading: '正在读取目前可购买的积分包...',
+    unavailable: '积分结账目前暂停，恢复后会在这里显示可购买的积分包。',
+    loadFailed: '暂时无法确认积分价格，请稍后重试或联系支持。',
+    availabilityBody: '下列价格直接来自目前的结账设置。网站不会把尚未标示支持积分的软件，自动列为可兑换产品。',
+    legal: '购买或使用 Station 积分，即表示你同意本页规则与 Station Cat 的一般服务条款。',
+    terms: '一般服务条款',
+    privacy: '隐私政策'
+  },
+  en: {
+    title: 'Station Points Pricing and Use',
+    description: 'Public pricing, eligible redemptions, refunds, and account rules for Station Points. Published prices stay aligned with the active checkout configuration.',
+    kicker: 'STATION POINTS',
+    heading: 'One account, one clear points balance.',
+    intro: 'Station Points redeem digital content and access rights that Station Cat explicitly marks as points-eligible. Pricing is public and every pack is a one-time purchase, not a subscription.',
+    billing: 'One-time purchase · No automatic renewal',
+    cta: 'Sign in to purchase',
+    support: 'Payment or points support',
+    useHeading: 'What points can currently unlock',
+    uses: [
+      'Paid fiction chapters or membership reading access. The exact points cost is shown on the relevant content page before you confirm redemption.',
+      'Paid software downloads or digital products only when their product page explicitly says “Station Points supported.” Unmarked software is not included.',
+      'Every redemption shows the points cost and access granted before the balance is deducted.'
+    ],
+    rulesHeading: 'Purchase and account rules',
+    rules: [
+      'Station Points are closed-loop digital access units. They are not cash, cryptocurrency, transferable stored value, or an investment, and cannot be withdrawn, resold, or moved between accounts.',
+      'Purchased points do not expire while the account remains available. Points and redeemed access may be reversed for refunds, chargebacks, fraud review, or legal compliance.',
+      'Contact support to request a refund for unused points. Eligibility follows applicable law and the checkout provider policy. Redeemed or partially used digital rights are generally non-refundable except where law requires otherwise.',
+      'Taxes, available payment methods, and the final amount are displayed before payment. Points are credited to the Station Cat member account used at checkout.'
+    ],
+    availability: 'Public products available now',
+    loading: 'Loading the Station Points packs currently available for purchase...',
+    unavailable: 'Station Points checkout is temporarily unavailable. Available packs will appear here when checkout resumes.',
+    loadFailed: 'We could not verify the current points price. Please try again later or contact support.',
+    availabilityBody: 'The prices below come directly from the active checkout configuration. Software is not points-eligible unless its product page explicitly says so.',
+    legal: 'By purchasing or using Station Points, you agree to these rules and Station Cat’s general terms.',
+    terms: 'General terms',
+    privacy: 'Privacy policy'
+  },
+  ja: {
+    title: 'Station Points の価格と利用方法',
+    description: 'Station Points の公開価格、交換対象、返金、アカウント規則。公開価格は有効な決済設定と常に一致します。',
+    kicker: 'STATION POINTS',
+    heading: 'ひとつのアカウントに、分かりやすいポイント残高。',
+    intro: 'Station Points は、Station Cat がポイント対応と明記したデジタルコンテンツや権利との交換に使えます。公開価格の一回払いで、サブスクリプションではありません。',
+    billing: '一回払い · 自動更新なし',
+    cta: 'ログインして購入',
+    support: '支払い・ポイントのサポート',
+    useHeading: '現在ポイントで利用できるもの',
+    uses: [
+      '有料小説の章、または会員向け読書権。必要ポイントは交換を確定する前に対象ページで表示されます。',
+      '商品ページに「Station Points 対応」と明記された有料ソフトウェアのダウンロード権またはデジタル商品。記載のないソフトウェアは対象外です。',
+      '交換前に必要ポイントと付与される権利を表示し、確認後にのみ残高を差し引きます。'
+    ],
+    rulesHeading: '購入とアカウントの規則',
+    rules: [
+      'Station Points はサイト内のデジタル利用単位です。現金、暗号資産、譲渡可能な前払式支払手段、投資商品ではなく、換金、転売、アカウント間移動はできません。',
+      '購入したポイントはアカウントが利用可能な間は失効しません。返金、チャージバック、不正調査、法令対応ではポイントや交換済み権利を取り消す場合があります。',
+      '未使用ポイントの返金はサポートへ申請できます。可否は適用法令と決済事業者の方針に従います。交換済みまたは一部使用済みのデジタル権利は、法令上必要な場合を除き原則返金できません。',
+      '税、利用可能な支払方法、最終金額は決済前に表示されます。ポイントは決済時に使用した Station Cat 会員アカウントへ付与されます。'
+    ],
+    availability: '現在の公開商品',
+    loading: '現在購入できる Station Points パックを読み込んでいます...',
+    unavailable: 'Station Points の決済は一時停止中です。再開後、購入可能なパックがここに表示されます。',
+    loadFailed: '現在の価格を確認できませんでした。後でもう一度お試しいただくか、サポートへご連絡ください。',
+    availabilityBody: '以下の価格は現在の決済設定から直接取得しています。商品ページに対応表示のないソフトウェアは交換対象ではありません。',
+    legal: 'Station Points の購入または利用により、本ページの規則と Station Cat の一般利用規約に同意したものとみなされます。',
+    terms: '一般利用規約',
+    privacy: 'プライバシーポリシー'
+  }
+}[lang];
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: stationPointsProduct.name,
+  description: copy.description,
+  brand: { '@type': 'Brand', name: 'Station Cat' }
+};
+const clientConfig = {
+  copy: {
+    billing: copy.billing,
+    unavailable: copy.unavailable,
+    loadFailed: copy.loadFailed
+  },
+  locale: lang,
+  productName: stationPointsProduct.name,
+  productUrl: new URL(stationPointsProduct.paths[localeKey], Astro.site || 'https://wwwstationcat.org').toString(),
+  statusEndpoint: stationPointsProduct.statusEndpoint
+};
+---
+
+<BaseLayout
+  title={copy.title}
+  description={copy.description}
+  lang={lang}
+  canonicalPath={stationPointsProduct.paths[localeKey]}
+  alternates={[
+    { hrefLang: 'zh-Hant', href: stationPointsProduct.paths.zhHant },
+    { hrefLang: 'zh-Hans', href: stationPointsProduct.paths.zhHans },
+    { hrefLang: 'en', href: stationPointsProduct.paths.en },
+    { hrefLang: 'ja', href: stationPointsProduct.paths.ja },
+    { hrefLang: 'x-default', href: stationPointsProduct.paths.zhHant }
+  ]}
+>
+  <script id="station-points-structured-data" type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  <script id="station-points-client-config" type="application/json" set:html={JSON.stringify(clientConfig)} />
+
+  <section class="works-hero station-points-hero">
+    <p class="station-kicker">{copy.kicker}</p>
+    <h1>{copy.heading}</h1>
+    <p>{copy.intro}</p>
+  </section>
+
+  <section class="station-section station-points-offer" aria-labelledby="station-points-product-title">
+    <div class="station-points-ticket" aria-hidden="true">
+      <span>SC</span>
+      <strong id="station-points-ticket-value">--</strong>
+      <small>STATION POINTS</small>
+    </div>
+    <div class="station-points-offer__copy">
+      <p class="station-kicker">{copy.availability}</p>
+      <h2 id="station-points-product-title">Station Points</h2>
+      <div id="station-points-packs" class="station-points-pack-list" aria-live="polite">
+        <p>{copy.loading}</p>
+      </div>
+      <p>{copy.availabilityBody}</p>
+      <div class="button-row">
+        <a class="button button-primary is-disabled" id="station-points-purchase" href={stationPointsProduct.libraryPaths[localeKey]} aria-disabled="true">{copy.cta}</a>
+        <a class="button button-secondary" href={`mailto:${stationPointsProduct.supportEmail}`}>{copy.support}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="station-section station-points-details">
+    <div>
+      <p class="station-kicker">REDEMPTION</p>
+      <h2>{copy.useHeading}</h2>
+      <ul>{copy.uses.map((item) => <li>{item}</li>)}</ul>
+    </div>
+    <div>
+      <p class="station-kicker">TERMS</p>
+      <h2>{copy.rulesHeading}</h2>
+      <ul>{copy.rules.map((item) => <li>{item}</li>)}</ul>
+    </div>
+  </section>
+
+  <section class="station-section station-points-legal-note">
+    <p>{copy.legal}</p>
+    <div class="button-row">
+      <a class="text-link" href={stationPointsProduct.termsPaths[localeKey]}>{copy.terms}</a>
+      <a class="text-link" href={stationPointsProduct.privacyPaths[localeKey]}>{copy.privacy}</a>
+      <a class="text-link" href={`mailto:${stationPointsProduct.supportEmail}`}>{stationPointsProduct.supportEmail}</a>
+    </div>
+  </section>
+
+  <script>
+    const configNode = document.getElementById('station-points-client-config');
+    const structuredDataNode = document.getElementById('station-points-structured-data');
+    const packsNode = document.getElementById('station-points-packs');
+    const ticketValue = document.getElementById('station-points-ticket-value');
+    const purchaseLink = document.getElementById('station-points-purchase');
+    const config = JSON.parse(configNode?.textContent || '{}');
+
+    const formatPrice = (amount, currency) => new Intl.NumberFormat(config.locale || 'en', {
+      style: 'currency',
+      currency: currency || 'USD',
+      maximumFractionDigits: Number(amount) % 1 === 0 ? 0 : 2
+    }).format(Number(amount));
+
+    const setPurchaseAvailability = (available) => {
+      purchaseLink?.setAttribute('aria-disabled', available ? 'false' : 'true');
+      purchaseLink?.classList.toggle('is-disabled', !available);
+      if (purchaseLink) purchaseLink.tabIndex = available ? 0 : -1;
+    };
+
+    purchaseLink?.addEventListener('click', (event) => {
+      if (purchaseLink.getAttribute('aria-disabled') === 'true') event.preventDefault();
+    });
+
+    const renderPacks = (packs, available) => {
+      if (!packsNode) return;
+      packsNode.innerHTML = '';
+      if (!available || packs.length === 0) {
+        const message = document.createElement('p');
+        message.className = 'reader-status';
+        message.dataset.tone = 'neutral';
+        message.textContent = config.copy.unavailable;
+        packsNode.append(message);
+        setPurchaseAvailability(false);
+        return;
+      }
+
+      if (ticketValue) ticketValue.textContent = String(packs[0].credits);
+      packs.forEach((pack) => {
+        const item = document.createElement('article');
+        item.className = 'station-points-pack';
+        const name = document.createElement('strong');
+        name.textContent = pack.label || `${pack.credits} Station Points`;
+        const price = document.createElement('span');
+        price.className = 'station-points-price';
+        price.textContent = formatPrice(pack.priceAmount, pack.priceCurrency);
+        const billing = document.createElement('small');
+        billing.className = 'station-points-billing';
+        billing.textContent = config.copy.billing;
+        item.append(name, price, billing);
+        packsNode.append(item);
+      });
+      setPurchaseAvailability(true);
+
+      if (structuredDataNode) {
+        structuredDataNode.textContent = JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: config.productName,
+          brand: { '@type': 'Brand', name: 'Station Cat' },
+          offers: packs.map((pack) => ({
+            '@type': 'Offer',
+            price: pack.priceAmount,
+            priceCurrency: pack.priceCurrency,
+            availability: 'https://schema.org/InStock',
+            url: config.productUrl
+          }))
+        });
+      }
+    };
+
+    fetch(config.statusEndpoint, { headers: { accept: 'application/json' }, cache: 'no-store' })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || 'Payment status unavailable.');
+        const packs = Array.isArray(data.readerCredits?.packs) ? data.readerCredits.packs : [];
+        renderPacks(packs, data.publicCheckoutEnabled === true && data.readerCredits?.enabled === true);
+      })
+      .catch(() => {
+        if (packsNode) packsNode.textContent = config.copy.loadFailed;
+        setPurchaseAvailability(false);
+      });
+  </script>
+</BaseLayout>

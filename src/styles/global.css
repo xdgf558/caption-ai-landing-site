@@ -5775,6 +5775,175 @@ body.station-paper-page {
   margin: 0;
 }
 
+.reader-public-points {
+  align-items: center;
+  background: #e8f3eb;
+  border: 1px solid #b8d1c1;
+  border-radius: 16px;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 22px;
+  margin-top: 0;
+  padding-bottom: 20px;
+  padding-top: 20px;
+}
+
+.reader-public-points h2,
+.reader-public-points p {
+  margin: 0;
+}
+
+.reader-public-points > div {
+  display: grid;
+  gap: 8px;
+}
+
+.reader-public-points > div > p:last-child {
+  line-height: 1.65;
+  max-width: 760px;
+}
+
+.station-points-hero > p:last-child {
+  font-size: 18px;
+  line-height: 1.75;
+  max-width: 780px;
+}
+
+.station-points-offer {
+  align-items: center;
+  display: grid;
+  gap: 40px;
+  grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr);
+}
+
+.station-points-ticket {
+  align-content: center;
+  aspect-ratio: 4 / 3;
+  background: #2e5b4e;
+  border: 3px solid #221b16;
+  border-radius: 8px;
+  box-shadow: 10px 10px 0 #e9b466;
+  color: #fffaf1;
+  display: grid;
+  justify-items: center;
+  min-height: 240px;
+  padding: 28px;
+  position: relative;
+}
+
+.station-points-ticket::before,
+.station-points-ticket::after {
+  background: #fffaf1;
+  border: 2px solid #221b16;
+  border-radius: 999px;
+  content: '';
+  height: 26px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+}
+
+.station-points-ticket::before { left: -15px; }
+.station-points-ticket::after { right: -15px; }
+
+.station-points-ticket span,
+.station-points-ticket small {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.station-points-ticket strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(72px, 10vw, 118px);
+  line-height: 0.9;
+}
+
+.station-points-offer__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.station-points-offer__copy h2,
+.station-points-offer__copy p {
+  margin: 0;
+}
+
+.station-points-pack-list {
+  display: grid;
+  gap: 10px;
+}
+
+.station-points-pack {
+  align-items: baseline;
+  border-bottom: 1px dashed #c8b6a5;
+  display: grid;
+  gap: 5px 18px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 10px 0 14px;
+}
+
+.station-points-pack strong {
+  font-size: 20px;
+}
+
+.station-points-pack .station-points-price {
+  font-size: 34px;
+  grid-row: span 2;
+}
+
+.station-points-pack .station-points-billing {
+  font-size: 13px;
+}
+
+.station-points-price {
+  color: #221b16 !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(46px, 7vw, 72px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.station-points-billing {
+  color: #2e5b4e !important;
+  font-weight: 900;
+}
+
+.station-points-details {
+  border-top: 2px solid #221b16;
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-top: 0;
+}
+
+.station-points-details > div {
+  padding: 30px;
+}
+
+.station-points-details > div + div {
+  border-left: 1px dashed #c8b6a5;
+}
+
+.station-points-details ul {
+  display: grid;
+  gap: 14px;
+  line-height: 1.7;
+  padding-left: 20px;
+}
+
+.station-points-legal-note {
+  border-top: 1px dashed #c8b6a5;
+  display: grid;
+  gap: 14px;
+}
+
+.station-points-legal-note p {
+  margin: 0;
+}
+
 .reader-membership-overview {
   padding-bottom: 14px;
   padding-top: 0;
@@ -7127,6 +7296,25 @@ body.station-paper-page.caption-product-page {
   .reader-library-hero,
   .reader-library-grid {
     grid-template-columns: 1fr;
+  }
+
+  .reader-public-points,
+  .station-points-offer,
+  .station-points-details {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-public-points .button {
+    justify-self: start;
+  }
+
+  .station-points-details > div {
+    padding: 24px 0;
+  }
+
+  .station-points-details > div + div {
+    border-left: 0;
+    border-top: 1px dashed #c8b6a5;
   }
 
   .reader-membership-summary {

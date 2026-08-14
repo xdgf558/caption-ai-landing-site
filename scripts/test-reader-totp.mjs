@@ -448,7 +448,7 @@ const consumeResults = await Promise.all([
 assert.equal(consumeResults.filter((result) => result.ok).length, 1);
 assert.equal(consumeResults.filter((result) => !result.ok).length, 1);
 
-const libraryPage = await readFile(new URL('../src/pages/library/index.astro', import.meta.url), 'utf8');
+const libraryPage = await readFile(new URL('../src/components/ReaderLibraryPage.astro', import.meta.url), 'utf8');
 assert.match(libraryPage, /resetToken/);
 assert.match(libraryPage, /legacyReset/);
 assert.match(libraryPage, /token:\s*resetToken/);
