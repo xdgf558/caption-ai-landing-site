@@ -4,7 +4,7 @@ export const brandNavigation = [
   { label: 'Serials', href: '/novel/' },
   { label: 'Signal', href: '/en/signal/' },
   { label: 'Dev Blog', href: '/en/devlog/' },
-  { label: 'Member Login', href: '/library/' },
+  { label: 'Member Login', href: '/en/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
   { label: 'Follow on X', href: 'https://x.com/bketck' }
 ];
@@ -15,7 +15,7 @@ export const zhBrandNavigation = [
   { label: '連載小說', href: '/novel/' },
   { label: '信號簡報', href: '/signal/' },
   { label: '開發博客', href: '/devlog/' },
-  { label: '會員登入', href: '/library/' },
+  { label: '會員登入', href: '/zh-hant/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
   { label: 'Follow on X', href: 'https://x.com/bketck' }
 ];
@@ -26,7 +26,7 @@ export const zhHansBrandNavigation = [
   { label: '连载小说', href: '/novel/' },
   { label: '信号简报', href: '/zh-hans/signal/' },
   { label: '开发博客', href: '/zh-hans/devlog/' },
-  { label: '会员登录', href: '/library/' },
+  { label: '会员登录', href: '/zh-hans/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
   { label: 'Follow on X', href: 'https://x.com/bketck' }
 ];
@@ -37,7 +37,7 @@ export const jaBrandNavigation = [
   { label: '連載小説', href: '/novel/' },
   { label: 'Signal', href: '/ja/signal/' },
   { label: '開発ログ', href: '/ja/devlog/' },
-  { label: '会員ログイン', href: '/library/' },
+  { label: '会員ログイン', href: '/ja/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
   { label: 'Follow on X', href: 'https://x.com/bketck' }
 ];

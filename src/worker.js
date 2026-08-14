@@ -7656,8 +7656,8 @@ const handleReaderCreditUnlock = async (request, env) => {
 
 const handleNovelPaymentsStatus = async (request, env) => {
   const config = getNowPaymentsConfig(env, request);
-  const checkoutEnabled = config.hasApiKey && config.hasIpnSecret;
   const db = env.WAITLIST_DB;
+  const checkoutEnabled = config.hasApiKey && config.hasIpnSecret && Boolean(db);
   const creditPacks = db ? await getConfiguredReaderCreditPacks(db, env) : getReaderCreditConfig(env).packs;
   const membershipSettings = db ? await getReaderMembershipSettings(db, env) : {
     enabled: true,
@@ -20544,6 +20544,7 @@ export const __readerTotpTestHooks = {
   contentEntryPublicPath,
   expireStaleSignalCollectionRuns,
   failSignalAutomationCron,
+  findConfiguredReaderCreditPack,
   findActiveSignalCollectionRun,
   getD1ChangeCount,
   getAdjacentPublishedSignalBriefs,
@@ -20586,6 +20587,7 @@ export const __readerTotpTestHooks = {
   handleNovelForgeAnalytics,
   handleNovelForgeChapterContent,
   handleNovelForgeTranslationSync,
+  handleNovelPaymentsStatus,
   handlePublicNovelComments,
   handleProductFeedbackSubmit,
   handleNovelReadingEvents,

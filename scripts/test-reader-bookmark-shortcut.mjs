@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const astroSource = await readFile(new URL('../src/components/SerialChapterPage.astro', import.meta.url), 'utf8');
-const librarySource = await readFile(new URL('../src/pages/library/index.astro', import.meta.url), 'utf8');
+const librarySource = await readFile(new URL('../src/components/ReaderLibraryPage.astro', import.meta.url), 'utf8');
 const globalCssSource = await readFile(new URL('../src/styles/global.css', import.meta.url), 'utf8');
 const workerSource = await readFile(new URL('../src/worker.js', import.meta.url), 'utf8');
 

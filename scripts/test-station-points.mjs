@@ -1,32 +1,40 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
+import { __readerTotpTestHooks as hooks } from '../src/worker.js';
 
 const read = (path) => readFile(new URL(path, import.meta.url), 'utf8');
 const [productSource, pageSource, librarySource, workerSource, migrationSource, sitemapSource] = await Promise.all([
   read('../src/data/products/station-points.ts'),
   read('../src/components/StationPointsPage.astro'),
-  read('../src/pages/library/index.astro'),
+  read('../src/components/ReaderLibraryPage.astro'),
   read('../src/worker.js'),
   read('../migrations/0028_station_points.sql'),
   read('../public/sitemap.xml')
 ]);
 
-assert.match(productSource, /points:\s*100/);
-assert.match(productSource, /priceAmount:\s*10/);
-assert.match(productSource, /priceCurrency:\s*'USD'/);
-assert.match(productSource, /billingType:\s*'one-time'/);
-
-assert.match(pageSource, /100 Station 積分/);
-assert.match(pageSource, /100 Station Points/);
+assert.match(productSource, /statusEndpoint:\s*'\/api\/novels\/payments\/status'/);
+assert.doesNotMatch(productSource, /priceAmount:/);
+assert.doesNotMatch(productSource, /priceCurrency:/);
+assert.doesNotMatch(pageSource, /100 Station (積分|Points)/);
 assert.match(pageSource, /一次性購買 · 無自動續費/);
 assert.match(pageSource, /One-time purchase · No automatic renewal/);
 assert.match(pageSource, /未標示的軟體不包含在內/);
 assert.match(pageSource, /Unmarked software is not included/);
+assert.match(pageSource, /fetch\(config\.statusEndpoint/);
+assert.match(pageSource, /data\.publicCheckoutEnabled === true/);
+assert.doesNotMatch(pageSource, /chapters, titles/);
+assert.doesNotMatch(pageSource, /章節、作品/);
 assert.match(productSource, /brodstem@protonmail\.com/);
 
-assert.match(librarySource, /100 Station 積分 · 10 美元/);
 assert.match(librarySource, /查看公開價格與積分規則/);
+assert.doesNotMatch(librarySource, /100 Station 積分 · 10 美元/);
+assert.match(librarySource, /locale:\s*readerLocale/);
+assert.match(librarySource, /returnPath:\s*readerLibraryPath/);
+assert.match(productSource, /en:\s*'\/en\/library\/'/);
+assert.match(productSource, /ja:\s*'\/ja\/library\/'/);
+assert.match(productSource, /zhHant:\s*'\/zh-hant\/library\/'/);
+assert.match(productSource, /zhHans:\s*'\/zh-hans\/library\/'/);
 assert.match(workerSource, /const novelCreditUnitLabel = 'Station Points'/);
 assert.match(workerSource, /\{ credits: 100, priceAmount: 10, priceCurrency: 'USD', label: '100 Station Points' \}/);
 assert.doesNotMatch(workerSource, /label: '10 SC Credits'/);
@@ -67,5 +75,93 @@ assert.deepEqual(migratedSettings.pricing.creditPacks, [
   { credits: 100, label: '100 Station Points', priceAmount: 10, priceCurrency: 'USD' }
 ]);
 db.close();
+
+class D1Statement {
+  constructor(database, sql, params = []) {
+    this.database = database;
+    this.sql = sql;
+    this.params = params;
+  }
+
+  bind(...params) {
+    return new D1Statement(this.database, this.sql, params);
+  }
+
+  async first() {
+    return this.database.prepare(this.sql).get(...this.params) || null;
+  }
+
+  async all() {
+    return { results: this.database.prepare(this.sql).all(...this.params) };
+  }
+
+  async run() {
+    const result = this.database.prepare(this.sql).run(...this.params);
+    return { meta: { changes: Number(result.changes || 0) }, success: true };
+  }
+}
+
+class D1Database {
+  constructor(database) {
+    this.database = database;
+  }
+
+  prepare(sql) {
+    return new D1Statement(this.database, sql);
+  }
+}
+
+const pricingDb = new DatabaseSync(':memory:');
+pricingDb.exec(`
+  CREATE TABLE admin_content_settings (
+    setting_key TEXT PRIMARY KEY,
+    setting_json TEXT NOT NULL,
+    updated_by TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  INSERT INTO admin_content_settings (setting_key, setting_json) VALUES (
+    'content.pricing-defaults.v1',
+    '{"accessLevel":"paid","pricing":{"chapterCredits":3,"creditPacks":[{"credits":240,"label":"240 Station Points","priceAmount":17,"priceCurrency":"USD"}]}}'
+  );
+`);
+const d1 = new D1Database(pricingDb);
+const paymentEnv = {
+  WAITLIST_DB: d1,
+  NOWPAYMENTS_API_KEY: 'test-api-key',
+  NOWPAYMENTS_IPN_SECRET: 'test-ipn-secret'
+};
+const statusResponse = await hooks.handleNovelPaymentsStatus(
+  new Request('https://wwwstationcat.org/api/novels/payments/status'),
+  paymentEnv
+);
+const publicStatus = await statusResponse.json();
+assert.equal(publicStatus.publicCheckoutEnabled, true);
+assert.deepEqual(publicStatus.readerCredits.packs, [
+  { credits: 240, label: '240 Station Points', priceAmount: '17.00', priceCurrency: 'USD' }
+]);
+const checkoutPack = await hooks.findConfiguredReaderCreditPack(d1, paymentEnv, 240);
+assert.equal(Number(checkoutPack.priceAmount).toFixed(2), publicStatus.readerCredits.packs[0].priceAmount);
+assert.equal(checkoutPack.priceCurrency, publicStatus.readerCredits.packs[0].priceCurrency);
+
+pricingDb.prepare(`UPDATE admin_content_settings SET setting_json = ? WHERE setting_key = ?`).run(
+  '{"accessLevel":"paid","pricing":{"chapterCredits":3,"creditPacks":[{"credits":300,"label":"300 Station Points","priceAmount":21,"priceCurrency":"USD"}]}}',
+  'content.pricing-defaults.v1'
+);
+const updatedStatus = await (await hooks.handleNovelPaymentsStatus(
+  new Request('https://wwwstationcat.org/api/novels/payments/status'),
+  paymentEnv
+)).json();
+const updatedCheckoutPack = await hooks.findConfiguredReaderCreditPack(d1, paymentEnv, 300);
+assert.equal(updatedStatus.readerCredits.packs[0].priceAmount, '21.00');
+assert.equal(updatedCheckoutPack.priceAmount, 21);
+
+const unavailableStatus = await (await hooks.handleNovelPaymentsStatus(
+  new Request('https://wwwstationcat.org/api/novels/payments/status'),
+  { NOWPAYMENTS_API_KEY: 'test-api-key', NOWPAYMENTS_IPN_SECRET: 'test-ipn-secret' }
+)).json();
+assert.equal(unavailableStatus.publicCheckoutEnabled, false);
+assert.equal(unavailableStatus.readerCredits.enabled, false);
+pricingDb.close();
 
 console.log('Station Points pricing and compatibility checks passed.');

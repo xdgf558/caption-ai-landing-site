@@ -1,0 +1,1165 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+interface Props {
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+}
+
+const { lang = 'zh-Hant' } = Astro.props;
+const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
+const libraryPaths = {
+  en: '/en/library/', ja: '/ja/library/', zhHant: '/zh-hant/library/', zhHans: '/zh-hans/library/'
+};
+const pointsPaths = {
+  en: '/points/', ja: '/ja/points/', zhHant: '/zh-hant/points/', zhHans: '/zh-hans/points/'
+};
+const copy = {
+  en: {
+    metaTitle: 'Member Center', metaDescription: 'Sign in to manage Station Points, membership access, unlocked content, bookmarks, and account security.',
+    heading: 'Member Center', heroDesc: 'Manage your membership, Station Points, and account security.',
+    publicTitle: 'Current Station Points packs', publicDesc: 'One-time purchases with no automatic renewal. Prices shown here come from the active checkout configuration.', publicLink: 'View public pricing and points rules',
+    membershipLabel: 'Membership status', loading: 'Loading', loadingMembership: 'Checking membership expiry', balance: '0 Station Points', redeemMembership: 'Redeem membership with points', noMembership: 'No active membership.', membershipRule: 'The current points cost and duration appear after sign-in.',
+    authTitle: 'Member sign in', authLabel: 'Member authentication method', login: 'Sign in', register: 'Register', reset: 'Reset password', identifier: 'Username or email', password: 'Password', min8: 'At least 8 characters', username: 'Username', confirmPassword: 'Confirm password', repeatPassword: 'Enter the password again', totpCode: 'Two-factor code', sixDigits: '6-digit code', newPassword: 'New password', confirmNewPassword: 'Confirm new password', repeatNewPassword: 'Enter the new password again', resetHelp: 'Accounts linked to an authenticator can reset their password with the current verification code.', loginSubmit: 'Open Member Center',
+    account: 'Account', changePassword: 'Change password', currentPassword: 'Current password', boundRequired: 'Required when an authenticator is linked', updatePassword: 'Update password', logout: 'Sign out',
+    authenticator: 'Two-factor authenticator', reading: 'Loading', readingBinding: 'Checking authenticator status.', bind: 'Link Google Authenticator', qrHelp: 'Open Google Authenticator, tap the plus button, and choose “Scan a QR code.”', manual: 'Enter the setup key manually', setupKey: 'Setup key', currentCode: 'Current 6-digit code', confirmBinding: 'Confirm link',
+    points: 'Station Points', chapterCost: 'The current chapter cost appears after sign-in.', network: 'Payment network',
+    continueReading: 'Continue reading', bookmarkHint: 'Press B on a chapter page to save your current position; on mobile, use the Save bookmark button at the lower right.', noBookmarks: 'No saved bookmarks yet.', noBookmarksDesc: 'Open a novel chapter and save a bookmark to continue from this page next time.', browse: 'Browse serial fiction',
+    unlocked: 'Unlocked content', noUnlocked: 'No unlocked content yet.', noUnlockedDesc: 'Chapter access granted by an administrator or redeemed with Station Points appears here after sign-in.', backNovel: 'Back to serial fiction'
+  },
+  ja: {
+    metaTitle: '会員センター', metaDescription: 'ログインして Station Points、会員権、解放済みコンテンツ、しおり、アカウントの安全性を管理します。',
+    heading: '会員センター', heroDesc: '会員権、Station Points、アカウントの安全性を管理します。',
+    publicTitle: '現在の Station Points パック', publicDesc: '自動更新のない一回払いです。表示価格は現在の決済設定から取得します。', publicLink: '公開価格とポイント規則を見る',
+    membershipLabel: '会員ステータス', loading: '読み込み中', loadingMembership: '会員有効期限を確認中', balance: '0 Station Points', redeemMembership: 'ポイントで会員権を交換', noMembership: '有効な会員権はありません。', membershipRule: '現在の必要ポイントと期間はログイン後に表示されます。',
+    authTitle: '会員ログイン', authLabel: '会員認証方法', login: 'ログイン', register: '登録', reset: 'パスワードをリセット', identifier: 'ユーザー名またはメール', password: 'パスワード', min8: '8文字以上', username: 'ユーザー名', confirmPassword: 'パスワード確認', repeatPassword: 'パスワードをもう一度入力', totpCode: '2段階認証コード', sixDigits: '6桁のコード', newPassword: '新しいパスワード', confirmNewPassword: '新しいパスワードの確認', repeatNewPassword: '新しいパスワードをもう一度入力', resetHelp: '認証アプリを連携済みのアカウントは、現在の確認コードでパスワードをリセットできます。', loginSubmit: '会員センターを開く',
+    account: 'アカウント', changePassword: 'パスワードを変更', currentPassword: '現在のパスワード', boundRequired: '認証アプリ連携時は必須', updatePassword: 'パスワードを更新', logout: 'ログアウト',
+    authenticator: '2段階認証アプリ', reading: '読み込み中', readingBinding: '認証アプリの状態を確認中。', bind: 'Google Authenticator を連携', qrHelp: 'Google Authenticator を開き、プラスボタンから「QR コードをスキャン」を選びます。', manual: '設定キーを手動入力', setupKey: '設定キー', currentCode: '現在の6桁コード', confirmBinding: '連携を確認',
+    points: 'Station Points', chapterCost: '現在の章ごとの必要ポイントはログイン後に表示されます。', network: '支払いネットワーク',
+    continueReading: '続きを読む', bookmarkHint: '章のページで B キーを押すと現在位置を保存できます。モバイルでは右下の「しおりを保存」ボタンを使います。', noBookmarks: '保存したしおりはまだありません。', noBookmarksDesc: '小説の章を開いてしおりを保存すると、次回このページから続けられます。', browse: '連載小説を見る',
+    unlocked: '解放済みコンテンツ', noUnlocked: '解放済みコンテンツはまだありません。', noUnlockedDesc: '管理者が付与した章、または Station Points で交換した章のアクセス権がここに表示されます。', backNovel: '連載小説へ戻る'
+  },
+  'zh-Hant': {
+    metaTitle: '會員中心', metaDescription: 'Station Cat 會員中心，用於登入、管理 Station 積分、會員狀態、已解鎖內容和書籤。',
+    heading: '會員中心', heroDesc: '管理你的會員、Station 積分與帳戶安全。',
+    publicTitle: '目前可購買的 Station 積分包', publicDesc: '一次性購買，無自動續費。這裡顯示的價格直接來自目前的結帳設定。', publicLink: '查看公開價格與積分規則',
+    membershipLabel: '會員狀態', loading: '正在讀取', loadingMembership: '正在確認會員有效期', balance: '0 Station 積分', redeemMembership: '用積分兌換會員', noMembership: '尚未開通會員。', membershipRule: '目前所需積分與有效期間會在登入後顯示。',
+    authTitle: '會員登入', authLabel: '會員登入方式', login: '登入', register: '註冊', reset: '重置密碼', identifier: '使用者名稱或 Email', password: '密碼', min8: '至少 8 個字元', username: '使用者名稱', confirmPassword: '確認密碼', repeatPassword: '再次輸入密碼', totpCode: '兩步驗證碼', sixDigits: '6 位數字', newPassword: '新密碼', confirmNewPassword: '確認新密碼', repeatNewPassword: '再次輸入新密碼', resetHelp: '只有已綁定 Google Authenticator / 兩步驗證器的帳號，可以用驗證碼重置密碼。', loginSubmit: '登入會員中心',
+    account: '帳戶', changePassword: '修改密碼', currentPassword: '目前密碼', boundRequired: '已綁定時必填', updatePassword: '更新密碼', logout: '登出',
+    authenticator: '兩步驗證器', reading: '讀取中', readingBinding: '正在讀取綁定狀態。', bind: '綁定 Google Authenticator', qrHelp: '打開 Google Authenticator，點擊加號，選擇「掃描 QR code」。', manual: '無法掃碼時，手動輸入設定金鑰', setupKey: '設定金鑰', currentCode: '6 位驗證碼', confirmBinding: '確認綁定',
+    points: 'Station 積分', chapterCost: '目前單章所需積分會在登入後顯示。', network: '充值網絡',
+    continueReading: '繼續閱讀', bookmarkHint: '在章節閱讀頁按 <kbd>B</kbd> 可保存目前閱讀位置；手機可點右下角「保存書籤」按鈕。', noBookmarks: '目前還沒有保存書籤。', noBookmarksDesc: '打開小說章節後保存書籤，下次就可以從這裡接著閱讀。', browse: '去看連載小說',
+    unlocked: '已解鎖內容', noUnlocked: '目前還沒有已解鎖內容。', noUnlockedDesc: '登入後，這裡會顯示管理員手動授權或使用 Station 積分兌換的章節權限。', backNovel: '回到連載小說'
+  },
+  'zh-Hans': {
+    metaTitle: '会员中心', metaDescription: 'Station Cat 会员中心，用于登录、管理 Station 积分、会员状态、已解锁内容和书签。',
+    heading: '会员中心', heroDesc: '管理你的会员、Station 积分与账户安全。',
+    publicTitle: '目前可购买的 Station 积分包', publicDesc: '一次性购买，无自动续费。这里显示的价格直接来自目前的结账设置。', publicLink: '查看公开价格与积分规则',
+    membershipLabel: '会员状态', loading: '正在读取', loadingMembership: '正在确认会员有效期', balance: '0 Station 积分', redeemMembership: '用积分兑换会员', noMembership: '尚未开通会员。', membershipRule: '目前所需积分与有效期间会在登录后显示。',
+    authTitle: '会员登录', authLabel: '会员登录方式', login: '登录', register: '注册', reset: '重置密码', identifier: '用户名或 Email', password: '密码', min8: '至少 8 个字符', username: '用户名', confirmPassword: '确认密码', repeatPassword: '再次输入密码', totpCode: '两步验证码', sixDigits: '6 位数字', newPassword: '新密码', confirmNewPassword: '确认新密码', repeatNewPassword: '再次输入新密码', resetHelp: '只有已绑定 Google Authenticator / 两步验证器的账户，可以用验证码重置密码。', loginSubmit: '登录会员中心',
+    account: '账户', changePassword: '修改密码', currentPassword: '当前密码', boundRequired: '已绑定时必填', updatePassword: '更新密码', logout: '退出登录',
+    authenticator: '两步验证器', reading: '读取中', readingBinding: '正在读取绑定状态。', bind: '绑定 Google Authenticator', qrHelp: '打开 Google Authenticator，点击加号，选择“扫描 QR code”。', manual: '无法扫码时，手动输入设置密钥', setupKey: '设置密钥', currentCode: '6 位验证码', confirmBinding: '确认绑定',
+    points: 'Station 积分', chapterCost: '目前单章所需积分会在登录后显示。', network: '充值网络',
+    continueReading: '继续阅读', bookmarkHint: '在章节阅读页按 B 可保存目前阅读位置；手机可点右下角“保存书签”按钮。', noBookmarks: '目前还没有保存书签。', noBookmarksDesc: '打开小说章节后保存书签，下次就可以从这里继续阅读。', browse: '去看连载小说',
+    unlocked: '已解锁内容', noUnlocked: '目前还没有已解锁内容。', noUnlockedDesc: '登录后，这里会显示管理员手动授权或使用 Station 积分兑换的章节权限。', backNovel: '回到连载小说'
+  }
+}[lang];
+
+const clientConfig = {
+  locale: lang,
+  libraryPath: libraryPaths[localeKey],
+  pointsPath: pointsPaths[localeKey],
+  publicPriceLoading: copy.publicTitle,
+  publicPriceUnavailable: lang === 'ja' ? '現在購入できるポイントパックはありません' : lang === 'en' ? 'No points packs are currently available' : lang === 'zh-Hans' ? '目前没有可购买的积分包' : '目前沒有可購買的積分包',
+  auth: {
+    loginTitle: copy.authTitle,
+    registerTitle: lang === 'ja' ? '会員登録' : lang === 'en' ? 'Create member account' : lang === 'zh-Hans' ? '会员注册' : '會員註冊',
+    resetTitle: copy.reset,
+    newPasswordTitle: lang === 'ja' ? '新しいパスワードを設定' : lang === 'en' ? 'Set a new password' : lang === 'zh-Hans' ? '设置新密码' : '設定新密碼',
+    loginSubmit: copy.loginSubmit,
+    registerSubmit: lang === 'ja' ? '登録してログイン' : lang === 'en' ? 'Register and sign in' : lang === 'zh-Hans' ? '注册并登录' : '註冊並登入',
+    resetSubmit: lang === 'ja' ? '確認コードでリセット' : lang === 'en' ? 'Reset with verification code' : lang === 'zh-Hans' ? '用验证码重置密码' : '用驗證碼重置密碼',
+    updateSubmit: copy.updatePassword,
+    resetHelp: copy.resetHelp,
+    legacyResetHelp: lang === 'ja' ? '以前のパスワードリセットリンク用に新しいパスワードを設定してください。' : lang === 'en' ? 'Set a new member password for this password reset link.' : lang === 'zh-Hans' ? '请为旧密码重置链接设置新的会员密码。' : '請為舊密碼重置連結設定新的會員密碼。'
+  }
+};
+---
+
+<BaseLayout
+  title={copy.metaTitle}
+  description={copy.metaDescription}
+  lang={lang}
+  canonicalPath={libraryPaths[localeKey]}
+  alternates={[
+    { hrefLang: 'zh-Hant', href: libraryPaths.zhHant },
+    { hrefLang: 'zh-Hans', href: libraryPaths.zhHans },
+    { hrefLang: 'en', href: libraryPaths.en },
+    { hrefLang: 'ja', href: libraryPaths.ja },
+    { hrefLang: 'x-default', href: libraryPaths.en }
+  ]}
+>
+  <script id="reader-client-config" type="application/json" set:html={JSON.stringify(clientConfig)} />
+  <section class="works-hero reader-library-hero">
+    <div class="reader-library-hero__copy">
+      <p class="station-kicker">Member Center</p>
+      <h1>{copy.heading}</h1>
+      <p>{copy.heroDesc}</p>
+    </div>
+  </section>
+
+  <section class="station-section reader-public-points" aria-labelledby="reader-public-points-title">
+    <div>
+      <p class="station-kicker">STATION POINTS</p>
+      <h2 id="reader-public-points-title">{copy.publicTitle}</h2>
+      <p>{copy.publicDesc}</p>
+    </div>
+    <a class="button button-secondary" href={pointsPaths[localeKey]}>{copy.publicLink}</a>
+  </section>
+
+  <section class="station-section reader-membership-overview" id="reader-membership-panel" hidden>
+    <div class="reader-membership-summary" id="reader-membership-summary" data-state="neutral" aria-live="polite">
+      <div class="reader-membership-summary__main">
+        <span class="reader-membership-summary__dot" aria-hidden="true"></span>
+        <div>
+          <p>{copy.membershipLabel}</p>
+          <strong id="reader-membership-summary-title">{copy.loading}</strong>
+          <span id="reader-membership-summary-detail">{copy.loadingMembership}</span>
+        </div>
+      </div>
+      <div class="reader-membership-summary__actions">
+        <span id="reader-membership-overview-credits">{copy.balance}</span>
+        <button class="button button-primary" id="reader-membership-redeem" type="button">{copy.redeemMembership}</button>
+      </div>
+    </div>
+    <p class="reader-membership-state" id="reader-membership-state">{copy.noMembership}</p>
+    <p class="fine-print" id="reader-membership-rule">{copy.membershipRule}</p>
+    <div class="reader-status" id="reader-membership-status" role="status" aria-live="polite"></div>
+  </section>
+
+  <section class="station-section reader-library-grid">
+    <form class="reader-panel reader-login-panel" id="reader-login-form">
+      <div>
+        <p class="station-kicker">Member Account</p>
+        <h2 id="reader-auth-title">{copy.authTitle}</h2>
+      </div>
+      <div class="reader-auth-switch" role="tablist" aria-label={copy.authLabel}>
+        <button class="reader-auth-switch__button is-active" type="button" data-auth-mode="login" aria-selected="true">{copy.login}</button>
+        <button class="reader-auth-switch__button" type="button" data-auth-mode="register" aria-selected="false">{copy.register}</button>
+        <button class="reader-auth-switch__button" type="button" data-auth-mode="reset" aria-selected="false">{copy.reset}</button>
+      </div>
+      <div class="reader-auth-fields" id="reader-login-fields">
+        <label>
+          {copy.identifier}
+          <input id="reader-identifier" name="identifier" type="text" autocomplete="username" placeholder="username@example.com" />
+        </label>
+        <label>
+          {copy.password}
+          <input id="reader-password" name="password" type="password" autocomplete="current-password" placeholder={copy.min8} />
+        </label>
+      </div>
+      <div class="reader-auth-fields" id="reader-register-fields" hidden>
+        <label>
+          {copy.username}
+          <input id="reader-username" name="username" type="text" autocomplete="username" placeholder="stationcat" />
+        </label>
+        <label>
+          Email
+          <input id="reader-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" />
+        </label>
+        <label>
+          {copy.password}
+          <input id="reader-register-password" name="register-password" type="password" autocomplete="new-password" placeholder={copy.min8} />
+        </label>
+        <label>
+          {copy.confirmPassword}
+          <input id="reader-register-password-confirm" name="register-password-confirm" type="password" autocomplete="new-password" placeholder={copy.repeatPassword} />
+        </label>
+      </div>
+      <div class="reader-auth-fields" id="reader-reset-fields" hidden>
+        <label id="reader-reset-identifier-field">
+          {copy.identifier}
+          <input id="reader-reset-identifier" name="reset-identifier" type="text" autocomplete="username" placeholder="username@example.com" />
+        </label>
+        <label id="reader-reset-totp-field">
+          {copy.totpCode}
+          <input id="reader-reset-totp-code" name="reset-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder={copy.sixDigits} />
+        </label>
+        <label>
+          {copy.newPassword}
+          <input id="reader-reset-password" name="reset-password" type="password" autocomplete="new-password" placeholder={copy.min8} />
+        </label>
+        <label>
+          {copy.confirmNewPassword}
+          <input id="reader-reset-password-confirm" name="reset-password-confirm" type="password" autocomplete="new-password" placeholder={copy.repeatNewPassword} />
+        </label>
+        <p class="fine-print" id="reader-reset-help">{copy.resetHelp}</p>
+      </div>
+      <button class="button button-primary" id="reader-login-submit" type="submit">{copy.loginSubmit}</button>
+      <div class="reader-status" id="reader-login-status" role="status" aria-live="polite"></div>
+    </form>
+
+    <div class="reader-panel reader-account-panel" id="reader-account-panel" hidden>
+      <div class="reader-panel__header">
+        <p class="station-kicker">Account</p>
+        <h2>{copy.account}</h2>
+      </div>
+      <div class="reader-account-profile">
+        <span class="reader-account-avatar" aria-hidden="true">SC</span>
+        <p id="reader-account-email" class="reader-account-email"></p>
+      </div>
+      <details class="reader-password-disclosure">
+        <summary>{copy.changePassword}</summary>
+        <form class="reader-password-form" id="reader-password-form">
+          <label>
+            {copy.currentPassword}
+            <input id="reader-current-password" name="current-password" type="password" autocomplete="current-password" placeholder={copy.currentPassword} />
+          </label>
+          <label>
+            {copy.newPassword}
+            <input id="reader-new-password" name="new-password" type="password" autocomplete="new-password" placeholder={copy.min8} />
+          </label>
+          <label>
+            {copy.confirmNewPassword}
+            <input id="reader-new-password-confirm" name="new-password-confirm" type="password" autocomplete="new-password" placeholder={copy.repeatNewPassword} />
+          </label>
+          <label>
+            {copy.totpCode}
+            <input id="reader-password-totp-code" name="password-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder={copy.boundRequired} />
+          </label>
+          <button class="button button-primary" id="reader-password-submit" type="submit">{copy.updatePassword}</button>
+          <div class="reader-status" id="reader-password-status" role="status" aria-live="polite"></div>
+        </form>
+      </details>
+      <button class="button button-secondary reader-danger-action" id="reader-logout" type="button">{copy.logout}</button>
+    </div>
+
+    <div class="reader-panel reader-totp-panel" id="reader-totp-panel" hidden>
+      <div class="reader-panel__header">
+        <p class="station-kicker">Authenticator</p>
+        <h2>{copy.authenticator}</h2>
+        <span class="reader-status-badge" id="reader-totp-badge" data-state="neutral">{copy.reading}</span>
+      </div>
+      <p class="reader-totp-state" id="reader-totp-state">{copy.readingBinding}</p>
+      <button class="button button-secondary" id="reader-totp-setup" type="button">{copy.bind}</button>
+      <div class="reader-totp-setup-box" id="reader-totp-setup-box" hidden>
+        <div class="reader-totp-qr-card" id="reader-totp-qr-card" hidden>
+          <div class="reader-totp-qr" id="reader-totp-qr" aria-label="Google Authenticator 綁定 QR code"></div>
+          <p class="fine-print">{copy.qrHelp}</p>
+        </div>
+        <details class="reader-totp-manual">
+          <summary>{copy.manual}</summary>
+          <label>
+            {copy.setupKey}
+            <input id="reader-totp-secret" type="text" readonly />
+          </label>
+          <label>
+            otpauth URI
+            <textarea id="reader-totp-uri" readonly rows="3"></textarea>
+          </label>
+        </details>
+        <label>
+          {copy.currentCode}
+          <input id="reader-totp-confirm-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Google Authenticator 目前數字" />
+        </label>
+        <button class="button button-primary" id="reader-totp-confirm" type="button">{copy.confirmBinding}</button>
+      </div>
+      <div class="reader-status" id="reader-totp-status" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="reader-panel reader-credits-panel" id="reader-credits-panel" hidden>
+      <div class="reader-panel__header">
+        <p class="station-kicker">Station Points</p>
+        <h2>{copy.points}</h2>
+      </div>
+      <div class="reader-credit-summary">
+        <p class="reader-credit-balance" id="reader-credit-balance">0 Station Points</p>
+        <p class="fine-print" id="reader-credit-cost">{copy.chapterCost}</p>
+      </div>
+      <label class="reader-pay-currency-field" hidden>
+        {copy.network}
+        <select id="reader-pay-currency">
+          <option value="USDTBSC">USDT BSC</option>
+          <option value="USDTERC20">USDT ETH</option>
+          <option value="USDC">USDC ETH</option>
+          <option value="USDCMATIC">USDC Polygon</option>
+          <option value="USDTARB">USDT Arbitrum</option>
+          <option value="FDUSDBSC">FDUSD BSC</option>
+        </select>
+      </label>
+      <div class="reader-pay-chip-grid" aria-label={copy.network}>
+        <button class="reader-pay-chip is-active" type="button" data-pay-currency="USDTBSC">USDT · BSC</button>
+        <button class="reader-pay-chip" type="button" data-pay-currency="USDTERC20">USDT · ETH</button>
+        <button class="reader-pay-chip" type="button" data-pay-currency="USDC">USDC · ETH</button>
+        <button class="reader-pay-chip" type="button" data-pay-currency="USDCMATIC">USDC · Polygon</button>
+        <button class="reader-pay-chip" type="button" data-pay-currency="USDTARB">USDT · Arbitrum</button>
+        <button class="reader-pay-chip" type="button" data-pay-currency="FDUSDBSC">FDUSD · BSC</button>
+      </div>
+      <div class="reader-credit-packs" id="reader-credit-packs"></div>
+      <div class="reader-status" id="reader-credit-status" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="station-section reader-library-content" id="reader-library-content" hidden>
+    <div class="station-section__heading">
+      <p class="station-kicker">Bookmarks</p>
+      <h2>{copy.continueReading}</h2>
+      <p class="reader-bookmark-hint" set:html={copy.bookmarkHint} />
+    </div>
+    <div class="reader-library-list" id="reader-bookmark-list"></div>
+    <div class="reader-status" id="reader-bookmark-status" role="status" aria-live="polite"></div>
+    <div class="reader-empty-shelf" id="reader-bookmark-empty">
+      <h3>{copy.noBookmarks}</h3>
+      <p>{copy.noBookmarksDesc}</p>
+      <a class="button button-secondary" href="/novel/">{copy.browse}</a>
+    </div>
+
+    <div class="station-section__heading">
+      <p class="station-kicker">Unlocked Content</p>
+      <h2>{copy.unlocked}</h2>
+    </div>
+    <div class="reader-library-list" id="reader-library-list"></div>
+    <div class="reader-empty-shelf" id="reader-library-empty">
+      <h3>{copy.noUnlocked}</h3>
+      <p>{copy.noUnlockedDesc}</p>
+      <a class="button button-secondary" href="/novel/">{copy.backNovel}</a>
+    </div>
+  </section>
+
+  <script>
+    import qrcode from 'qrcode-generator';
+
+    const readerClientConfigNode = document.getElementById('reader-client-config');
+    const readerClientConfig = JSON.parse(readerClientConfigNode?.textContent || '{}');
+    const readerLocale = readerClientConfig.locale || 'zh-Hant';
+    const readerLibraryPath = readerClientConfig.libraryPath || '/library/';
+    const publicPointsTitle = document.getElementById('reader-public-points-title');
+    const form = document.getElementById('reader-login-form');
+    const authTitle = document.getElementById('reader-auth-title');
+    const authModeButtons = Array.from(document.querySelectorAll('[data-auth-mode]'));
+    const loginFields = document.getElementById('reader-login-fields');
+    const registerFields = document.getElementById('reader-register-fields');
+    const resetFields = document.getElementById('reader-reset-fields');
+    const identifierInput = document.getElementById('reader-identifier');
+    const loginPasswordInput = document.getElementById('reader-password');
+    const usernameInput = document.getElementById('reader-username');
+    const emailInput = document.getElementById('reader-email');
+    const registerPasswordInput = document.getElementById('reader-register-password');
+    const registerPasswordConfirmInput = document.getElementById('reader-register-password-confirm');
+    const resetIdentifierInput = document.getElementById('reader-reset-identifier');
+    const resetIdentifierField = document.getElementById('reader-reset-identifier-field');
+    const resetTotpCodeInput = document.getElementById('reader-reset-totp-code');
+    const resetTotpField = document.getElementById('reader-reset-totp-field');
+    const resetPasswordInput = document.getElementById('reader-reset-password');
+    const resetPasswordConfirmInput = document.getElementById('reader-reset-password-confirm');
+    const resetHelp = document.getElementById('reader-reset-help');
+    const submitButton = document.getElementById('reader-login-submit');
+    const statusBox = document.getElementById('reader-login-status');
+    const accountPanel = document.getElementById('reader-account-panel');
+    const accountEmail = document.getElementById('reader-account-email');
+    const passwordForm = document.getElementById('reader-password-form');
+    const currentPasswordInput = document.getElementById('reader-current-password');
+    const newPasswordInput = document.getElementById('reader-new-password');
+    const newPasswordConfirmInput = document.getElementById('reader-new-password-confirm');
+    const passwordTotpCodeInput = document.getElementById('reader-password-totp-code');
+    const passwordSubmitButton = document.getElementById('reader-password-submit');
+    const passwordStatus = document.getElementById('reader-password-status');
+    const logoutButton = document.getElementById('reader-logout');
+    const totpPanel = document.getElementById('reader-totp-panel');
+    const totpState = document.getElementById('reader-totp-state');
+    const totpSetupButton = document.getElementById('reader-totp-setup');
+    const totpSetupBox = document.getElementById('reader-totp-setup-box');
+    const totpQrCard = document.getElementById('reader-totp-qr-card');
+    const totpQr = document.getElementById('reader-totp-qr');
+    const totpSecretInput = document.getElementById('reader-totp-secret');
+    const totpUriInput = document.getElementById('reader-totp-uri');
+    const totpConfirmCodeInput = document.getElementById('reader-totp-confirm-code');
+    const totpConfirmButton = document.getElementById('reader-totp-confirm');
+    const totpStatus = document.getElementById('reader-totp-status');
+    const totpBadge = document.getElementById('reader-totp-badge');
+    const creditsPanel = document.getElementById('reader-credits-panel');
+    const creditBalance = document.getElementById('reader-credit-balance');
+    const creditCost = document.getElementById('reader-credit-cost');
+    const payCurrencySelect = document.getElementById('reader-pay-currency');
+    const payCurrencyButtons = Array.from(document.querySelectorAll('[data-pay-currency]'));
+    const creditPacks = document.getElementById('reader-credit-packs');
+    const creditStatus = document.getElementById('reader-credit-status');
+    const membershipPanel = document.getElementById('reader-membership-panel');
+    const membershipState = document.getElementById('reader-membership-state');
+    const membershipRule = document.getElementById('reader-membership-rule');
+    const membershipRedeem = document.getElementById('reader-membership-redeem');
+    const membershipStatus = document.getElementById('reader-membership-status');
+    const membershipSummary = document.getElementById('reader-membership-summary');
+    const membershipSummaryTitle = document.getElementById('reader-membership-summary-title');
+    const membershipSummaryDetail = document.getElementById('reader-membership-summary-detail');
+    const membershipOverviewCredits = document.getElementById('reader-membership-overview-credits');
+    const libraryContent = document.getElementById('reader-library-content');
+    const libraryList = document.getElementById('reader-library-list');
+    const libraryEmpty = document.getElementById('reader-library-empty');
+    const bookmarkList = document.getElementById('reader-bookmark-list');
+    const bookmarkEmpty = document.getElementById('reader-bookmark-empty');
+    const bookmarkStatus = document.getElementById('reader-bookmark-status');
+    let authMode = 'login';
+
+    const setStatus = (message, tone = 'neutral') => {
+      statusBox.textContent = message;
+      statusBox.dataset.tone = tone;
+    };
+
+    const setPasswordStatus = (message, tone = 'neutral') => {
+      passwordStatus.textContent = message;
+      passwordStatus.dataset.tone = tone;
+    };
+
+    const setTotpStatus = (message, tone = 'neutral') => {
+      totpStatus.textContent = message;
+      totpStatus.dataset.tone = tone;
+    };
+
+    const setBookmarkStatus = (message, tone = 'neutral') => {
+      bookmarkStatus.textContent = message;
+      bookmarkStatus.dataset.tone = tone;
+    };
+
+    const setMembershipSummary = (title, detail, state = 'neutral') => {
+      membershipSummaryTitle.textContent = title;
+      membershipSummaryDetail.textContent = detail;
+      membershipSummary.dataset.state = state;
+    };
+
+    const setFieldState = (fields, enabled) => {
+      fields.forEach((field) => {
+        field.disabled = !enabled;
+      });
+    };
+
+    const setAuthMode = (mode) => {
+      authMode = ['register', 'reset', 'legacyReset'].includes(mode) ? mode : 'login';
+      const isRegister = authMode === 'register';
+      const isReset = authMode === 'reset';
+      const isLegacyReset = authMode === 'legacyReset';
+      const showsReset = isReset || isLegacyReset;
+
+      authTitle.textContent = isRegister
+        ? readerClientConfig.auth.registerTitle
+        : showsReset
+          ? isLegacyReset
+            ? readerClientConfig.auth.newPasswordTitle
+            : readerClientConfig.auth.resetTitle
+          : readerClientConfig.auth.loginTitle;
+      submitButton.textContent = isRegister
+        ? readerClientConfig.auth.registerSubmit
+        : showsReset
+          ? isLegacyReset
+            ? readerClientConfig.auth.updateSubmit
+            : readerClientConfig.auth.resetSubmit
+          : readerClientConfig.auth.loginSubmit;
+      loginFields.hidden = isRegister || showsReset;
+      registerFields.hidden = !isRegister;
+      resetFields.hidden = !showsReset;
+      resetIdentifierField.hidden = isLegacyReset;
+      resetTotpField.hidden = isLegacyReset;
+      resetHelp.textContent = isLegacyReset
+        ? readerClientConfig.auth.legacyResetHelp
+        : readerClientConfig.auth.resetHelp;
+      setFieldState([identifierInput, loginPasswordInput], authMode === 'login');
+      setFieldState([usernameInput, emailInput, registerPasswordInput, registerPasswordConfirmInput], isRegister);
+      setFieldState([resetIdentifierInput, resetTotpCodeInput], isReset);
+      setFieldState([resetPasswordInput, resetPasswordConfirmInput], showsReset);
+      authModeButtons.forEach((button) => {
+        const visibleMode = isLegacyReset ? 'reset' : authMode;
+        const selected = button.dataset.authMode === visibleMode;
+        button.classList.toggle('is-active', selected);
+        button.setAttribute('aria-selected', selected ? 'true' : 'false');
+      });
+      setStatus('');
+    };
+
+    const setSignedIn = (session) => {
+      const signedIn = Boolean(session?.authenticated);
+      form.hidden = signedIn;
+      accountPanel.hidden = !signedIn;
+      totpPanel.hidden = !signedIn;
+      creditsPanel.hidden = !signedIn;
+      membershipPanel.hidden = !signedIn;
+      libraryContent.hidden = !signedIn;
+      accountEmail.textContent = signedIn
+        ? `${session.account.displayName || session.account.username || session.account.email} · ${session.account.email}`
+        : '';
+      setMembershipSummary(
+        signedIn ? '正在讀取' : '尚未登入',
+        signedIn ? '正在確認會員有效期' : '登入後顯示會員有效期',
+        signedIn ? 'loading' : 'neutral'
+      );
+    };
+
+    const entitlementTitle = (item) => {
+      const target = item.scope === 'series'
+        ? item.seriesSlug
+        : `${item.seriesSlug} / ${item.chapterSlug}`;
+      const access = item.accessLevel === 'all' ? '全部權限' : item.accessLevel === 'supporter' ? '支持者內容' : '付費內容';
+      return `${target} · ${access}`;
+    };
+
+    const entitlementHref = (item) => {
+      if (item.scope === 'series') return `/novel/${item.seriesSlug}/`;
+      return `/novel/${item.seriesSlug}/chapter/${item.chapterSlug}/`;
+    };
+
+    const renderLibrary = (items) => {
+      libraryList.innerHTML = '';
+      libraryEmpty.hidden = items.length > 0;
+
+      items.forEach((item) => {
+        const card = document.createElement('article');
+        card.className = 'reader-library-card';
+
+        const title = document.createElement('h3');
+        title.textContent = entitlementTitle(item);
+
+        const meta = document.createElement('p');
+        meta.textContent = `${item.source === 'manual' ? '手動授權' : item.source} · ${item.grantedAt || '已授權'}`;
+
+        const link = document.createElement('a');
+        link.className = 'paper-link';
+        link.href = entitlementHref(item);
+        link.textContent = item.scope === 'series' ? '打開作品' : '打開章節';
+
+        if (item.expiresAt) {
+          const expires = document.createElement('p');
+          expires.className = 'fine-print';
+          expires.textContent = `有效至 ${item.expiresAt}`;
+          card.append(title, meta, expires, link);
+        } else {
+          card.append(title, meta, link);
+        }
+
+        if (item.note) {
+          const note = document.createElement('p');
+          note.className = 'fine-print';
+          note.textContent = item.note;
+          card.append(note);
+        }
+
+        libraryList.append(card);
+      });
+    };
+
+    const renderBookmarks = (items) => {
+      bookmarkList.innerHTML = '';
+      bookmarkEmpty.hidden = items.length > 0;
+
+      const bookmarkHref = (item) => {
+        const fallbackPath = `/novel/${item.seriesSlug}/chapter/${item.chapterSlug}/`;
+        const sourcePath = item.sourcePath || fallbackPath;
+        const anchorId = item.metadata?.anchorId;
+        if (anchorId && !sourcePath.includes('#')) {
+          return `${sourcePath}#${encodeURIComponent(anchorId)}`;
+        }
+        return sourcePath;
+      };
+
+      items.forEach((item) => {
+        const card = document.createElement('article');
+        card.className = 'reader-library-card reader-bookmark-card';
+
+        const title = document.createElement('h3');
+        title.textContent = item.chapterTitle || item.chapterSlug;
+
+        const meta = document.createElement('p');
+        const progress = Number.parseInt(item.progressPercent || 0, 10);
+        const position = item.positionLabel || (progress > 0 ? `已讀到 ${progress}%` : '已保存位置');
+        meta.textContent = `${item.seriesTitle || item.seriesSlug} · ${position} · ${formatLocalDate(item.updatedAt)}`;
+
+        const link = document.createElement('a');
+        link.className = 'paper-link';
+        link.href = bookmarkHref(item);
+        link.textContent = '繼續閱讀';
+
+        const actions = document.createElement('div');
+        actions.className = 'reader-bookmark-actions';
+        actions.append(link);
+
+        const bookmarkId = Number.parseInt(item.id || '', 10);
+        if (Number.isFinite(bookmarkId) && bookmarkId > 0) {
+          const deleteButton = document.createElement('button');
+          deleteButton.className = 'button button-secondary reader-bookmark-delete';
+          deleteButton.type = 'button';
+          deleteButton.dataset.readerBookmarkDelete = String(bookmarkId);
+          deleteButton.textContent = '刪除書籤';
+          deleteButton.setAttribute('aria-label', `刪除「${item.chapterTitle || item.chapterSlug}」書籤`);
+          actions.append(deleteButton);
+        }
+
+        card.append(title, meta, actions);
+        if (item.note) {
+          const note = document.createElement('p');
+          note.className = 'fine-print';
+          note.textContent = item.note;
+          card.append(note);
+        }
+        bookmarkList.append(card);
+      });
+    };
+
+    const loadLibrary = async () => {
+      const response = await fetch('/api/novels/library');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取會員資料失敗。');
+      renderLibrary(data.entitlements || []);
+    };
+
+    const loadBookmarks = async () => {
+      const response = await fetch('/api/readers/bookmarks');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取書籤失敗。');
+      if (!data.authenticated) return;
+      renderBookmarks(data.bookmarks || []);
+      setBookmarkStatus('');
+      if (data.setupRequired) {
+        const warning = document.createElement('p');
+        warning.className = 'reader-status';
+        warning.dataset.tone = 'error';
+        warning.textContent = data.message || '書籤資料表尚未初始化。';
+        bookmarkList.append(warning);
+      }
+    };
+
+    bookmarkList.addEventListener('click', async (event) => {
+      const deleteButton = event.target instanceof HTMLElement
+        ? event.target.closest('[data-reader-bookmark-delete]')
+        : null;
+      if (!deleteButton) return;
+
+      const bookmarkId = deleteButton.dataset.readerBookmarkDelete;
+      if (!bookmarkId) return;
+
+      const previousText = deleteButton.textContent;
+      deleteButton.disabled = true;
+      deleteButton.textContent = '刪除中...';
+      setBookmarkStatus('正在刪除書籤...');
+
+      try {
+        const response = await fetch(`/api/readers/bookmarks?id=${encodeURIComponent(bookmarkId)}`, {
+          method: 'DELETE'
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || '刪除書籤失敗。');
+        }
+        renderBookmarks(data.bookmarks || []);
+        setBookmarkStatus('書籤已刪除。', 'success');
+      } catch (error) {
+        deleteButton.disabled = false;
+        deleteButton.textContent = previousText || '刪除書籤';
+        setBookmarkStatus(error.message || '刪除書籤失敗。', 'error');
+      }
+    });
+
+    const setCreditStatus = (message, tone = 'neutral') => {
+      creditStatus.textContent = message;
+      creditStatus.dataset.tone = tone;
+    };
+
+    const setMembershipStatus = (message, tone = 'neutral') => {
+      membershipStatus.textContent = message;
+      membershipStatus.dataset.tone = tone;
+    };
+
+    const formatLocalDate = (value) => {
+      if (!value) return '';
+      const date = new Date(String(value).replace(' ', 'T'));
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleString(readerLocale, { dateStyle: 'medium', timeStyle: 'short' });
+    };
+
+    const loadPublicPointsPrice = async () => {
+      if (!publicPointsTitle) return;
+      try {
+        const response = await fetch('/api/novels/payments/status', { headers: { accept: 'application/json' }, cache: 'no-store' });
+        const data = await response.json();
+        const packs = Array.isArray(data.readerCredits?.packs) ? data.readerCredits.packs : [];
+        if (!response.ok || !data.ok || data.publicCheckoutEnabled !== true || packs.length === 0) {
+          publicPointsTitle.textContent = readerClientConfig.publicPriceUnavailable;
+          return;
+        }
+        publicPointsTitle.textContent = packs
+          .map((pack) => `${pack.label || `${pack.credits} Station Points`} · ${new Intl.NumberFormat(readerLocale, { style: 'currency', currency: pack.priceCurrency || 'USD' }).format(Number(pack.priceAmount))}`)
+          .join(' / ');
+      } catch {
+        publicPointsTitle.textContent = readerClientConfig.publicPriceUnavailable;
+      }
+    };
+
+    const renderCreditPacks = (packs) => {
+      creditPacks.innerHTML = '';
+      packs.forEach((pack) => {
+        const button = document.createElement('button');
+        button.className = 'button button-secondary reader-credit-pack-button';
+        button.type = 'button';
+        button.dataset.credits = pack.credits;
+        button.textContent = `${pack.label || `${pack.credits} Station Points`} · ${pack.priceAmount} ${pack.priceCurrency}`;
+        creditPacks.append(button);
+      });
+    };
+
+    const syncPayCurrencyButtons = () => {
+      payCurrencyButtons.forEach((button) => {
+        const selected = button.dataset.payCurrency === payCurrencySelect.value;
+        button.classList.toggle('is-active', selected);
+        button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      });
+    };
+
+    payCurrencyButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        payCurrencySelect.value = button.dataset.payCurrency || payCurrencySelect.value;
+        syncPayCurrencyButtons();
+      });
+    });
+
+    payCurrencySelect.addEventListener('change', syncPayCurrencyButtons);
+
+    const renderMembership = (membership, settings, creditAccount) => {
+      const cost = settings?.membershipCreditCost || 10;
+      const months = settings?.membershipDurationMonths || 1;
+      const unitLabel = settings?.unitLabel || creditAccount?.unitLabel || 'Station Points';
+      const balanceCredits = creditAccount?.balanceCredits || 0;
+      const coversPaid = settings?.membershipCoversPaidContent !== false;
+      membershipOverviewCredits.textContent = `${balanceCredits} Station 積分`;
+      membershipRule.textContent = `${cost} 點可兌換 ${months} 個月會員，${coversPaid ? '會員可閱讀收費章節。' : '目前會員不覆蓋收費章節。'}`;
+      membershipRedeem.textContent = membership?.active ? '用積分續費' : `用 ${cost} 積分兌換 ${months} 個月會員`;
+      membershipRedeem.hidden = settings?.enabled === false;
+      membershipRedeem.disabled = settings?.enabled === false || balanceCredits < cost;
+      if (membership?.active) {
+        const expiresAt = formatLocalDate(membership.expiresAt);
+        setMembershipSummary('會員有效中', `有效至 ${expiresAt}`, 'active');
+        membershipState.textContent = coversPaid ? '會員閱讀權益已啟用。' : '會員已開通，目前不覆蓋收費章節。';
+      } else {
+        setMembershipSummary('尚未開通會員', `可用積分：${balanceCredits} ${unitLabel}`, 'inactive');
+        membershipState.textContent = `尚未開通會員。目前餘額 ${balanceCredits} ${unitLabel}。`;
+      }
+      if (settings?.enabled === false) {
+        setMembershipSummary('會員兌換未開啟', '目前不能兌換會員', 'inactive');
+        setMembershipStatus('會員兌換目前未開啟。', 'neutral');
+      } else if (!membership?.active && balanceCredits < cost) {
+        setMembershipStatus('Station 積分不足，請先購買積分。', 'neutral');
+      } else {
+        setMembershipStatus('');
+      }
+    };
+
+    const renderTotpStatus = (totp) => {
+      const enabled = Boolean(totp?.enabled);
+      totpState.textContent = enabled
+        ? '兩步驗證器已綁定。後續修改或重置密碼時，需要輸入 6 位驗證碼。'
+        : '尚未綁定兩步驗證器。綁定後，可以不用郵件，直接用驗證碼重置密碼。';
+      totpBadge.textContent = enabled ? '✓ 已綁定' : '未綁定';
+      totpBadge.dataset.state = enabled ? 'active' : 'neutral';
+      totpSetupButton.hidden = enabled;
+      passwordTotpCodeInput.placeholder = enabled ? '6 位數字' : '未綁定時可留空';
+      totpSetupBox.hidden = true;
+      renderTotpQrCode('');
+      if (!enabled) {
+        totpSecretInput.value = '';
+        totpUriInput.value = '';
+        totpConfirmCodeInput.value = '';
+      }
+    };
+
+    const loadTotpStatus = async () => {
+      const response = await fetch('/api/readers/totp/status');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取兩步驗證狀態失敗。');
+      if (!data.authenticated) return;
+      if (data.setupRequired) {
+        renderTotpStatus({ enabled: false });
+        setTotpStatus(data.message || '兩步驗證資料表尚未初始化。', 'error');
+        return;
+      }
+      renderTotpStatus(data.totp || { enabled: false });
+      setTotpStatus('');
+    };
+
+    const safeLoadTotpStatus = async () => {
+      try {
+        await loadTotpStatus();
+      } catch (error) {
+        renderTotpStatus({ enabled: false });
+        setTotpStatus(error.message || '讀取兩步驗證狀態失敗。', 'error');
+      }
+    };
+
+    const renderTotpQrCode = (otpauthUrl) => {
+      totpQr.innerHTML = '';
+      totpQrCard.hidden = true;
+      if (!otpauthUrl) return true;
+
+      try {
+        const qr = qrcode(0, 'M');
+        qr.addData(otpauthUrl);
+        qr.make();
+        totpQr.innerHTML = qr.createSvgTag(5, 3);
+        const svg = totpQr.querySelector('svg');
+        if (svg) {
+          svg.setAttribute('role', 'img');
+          svg.setAttribute('aria-label', 'Google Authenticator 綁定 QR code');
+          svg.removeAttribute('width');
+          svg.removeAttribute('height');
+        }
+        totpQrCard.hidden = false;
+        return true;
+      } catch (error) {
+        return false;
+      }
+    };
+
+    const loadCredits = async () => {
+      const response = await fetch('/api/readers/credits');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取 Station 積分失敗。');
+      if (!data.authenticated) return;
+
+      const unitLabel = data.account?.unitLabel || 'Station Points';
+      creditBalance.textContent = `${data.account?.balanceCredits || 0} ${unitLabel}`;
+      creditCost.textContent = `目前單章付費內容會扣除 ${data.chapterCostCredits || 1} 點。`;
+      renderCreditPacks(data.packs || []);
+      syncPayCurrencyButtons();
+      renderMembership(data.membership, data.membershipSettings, data.account);
+    };
+
+    const wait = (milliseconds) => new Promise((resolve) => {
+      window.setTimeout(resolve, milliseconds);
+    });
+
+    const describePaymentOrder = (data) => {
+      const order = data.order || {};
+      const fulfillment = data.fulfillment || {};
+      if (fulfillment.complete) {
+        if (fulfillment.kind === 'credit-pack') return '支付已確認，Station 積分已入帳。';
+        if (fulfillment.kind === 'tip') return 'NOWPayments 已確認，感謝支持。';
+        return 'NOWPayments 已確認，閱讀權限已更新。';
+      }
+      if (fulfillment.needsReview) {
+        return '支付已確認，正在寫入 Station 積分。如果幾分鐘後仍未入帳，請保留訂單給後台排查。';
+      }
+      if (['failed', 'expired', 'refunded'].includes(order.status)) {
+        return `訂單狀態：${order.status}，Station 積分沒有更新。`;
+      }
+      if (order.status === 'confirming') return '已收到支付，正在等待區塊鏈確認。確認完成後會自動入帳。';
+      if (['confirmed', 'finished'].includes(order.status)) return '支付已確認，正在更新你的 Station 積分。';
+      return '已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。';
+    };
+
+    const refreshReturnedPaymentOrder = async () => {
+      const orderToken = query.get('order') || '';
+      if (query.get('payment') !== 'success' || !orderToken) return;
+
+      setCreditStatus('已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。', 'neutral');
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        const response = await fetch(`/api/novels/payments/order?order=${encodeURIComponent(orderToken)}`);
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '訂單狀態讀取失敗。');
+
+        const fulfillment = data.fulfillment || {};
+        const tone = fulfillment.complete ? 'success' : fulfillment.needsReview ? 'error' : 'neutral';
+        setCreditStatus(describePaymentOrder(data), tone);
+
+        if (fulfillment.complete) {
+          await Promise.all([loadLibrary(), loadCredits()]);
+          return;
+        }
+
+        if (!fulfillment.nextCheckSeconds) return;
+        await wait(fulfillment.nextCheckSeconds * 1000);
+      }
+
+      setCreditStatus('仍在等待支付確認。你可以稍後刷新會員中心，確認後 Station 積分會自動入帳。', 'neutral');
+    };
+
+    const loadSession = async () => {
+      const response = await fetch('/api/readers/session');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '讀取登入狀態失敗。');
+      setSignedIn(data);
+      if (data.authenticated) {
+        await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), safeLoadTotpStatus()]);
+      }
+    };
+
+    const query = new URLSearchParams(window.location.search);
+    const resetToken = query.get('resetToken') || '';
+    const resetEmail = query.get('resetEmail') || '';
+    const redirectPath = (() => {
+      const value = query.get('returnTo') || readerLibraryPath;
+      if (!value.startsWith('/') || value.startsWith('//')) return readerLibraryPath;
+      return value;
+    })();
+
+    if (resetEmail) {
+      resetIdentifierInput.value = resetEmail;
+    }
+
+    if (query.get('login') === 'success') {
+      setStatus('登入成功，正在載入會員中心。', 'success');
+    } else if (query.get('login') === 'invalid') {
+      setStatus('登入連結已失效，請重新寄送。', 'error');
+    } else if (resetToken) {
+      setStatus('請設定新的會員密碼。', 'neutral');
+    }
+
+    if (query.get('payment') === 'success' && query.get('order')) {
+      setCreditStatus('已返回網站，正在等待區塊鏈確認。確認完成後會自動入帳。', 'neutral');
+    } else if (query.get('payment') === 'success') {
+      setCreditStatus('支付已返回網站。確認完成後 Station 積分會自動入帳；如果還沒看到，稍後刷新即可。', 'success');
+    } else if (query.get('payment') === 'cancelled') {
+      setCreditStatus('支付已取消，Station 積分沒有變動。', 'error');
+    }
+
+    authModeButtons.forEach((button) => {
+      button.addEventListener('click', () => setAuthMode(button.dataset.authMode));
+    });
+
+    const loadReaderHome = async () => {
+      await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), safeLoadTotpStatus()]);
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      submitButton.disabled = true;
+      setStatus(
+        authMode === 'register'
+          ? '正在建立會員帳號...'
+          : authMode === 'legacyReset'
+            ? '正在更新密碼...'
+            : authMode === 'reset'
+            ? '正在驗證兩步驗證碼並重置密碼...'
+              : '正在登入...',
+        'neutral'
+      );
+
+      try {
+        let endpoint = '/api/readers/login';
+        let body = {
+          identifier: identifierInput.value,
+          password: loginPasswordInput.value,
+          redirectPath
+        };
+
+        if (authMode === 'register') {
+          endpoint = '/api/readers/register';
+          body = {
+            username: usernameInput.value,
+            email: emailInput.value,
+            password: registerPasswordInput.value,
+            confirmPassword: registerPasswordConfirmInput.value,
+            redirectPath
+          };
+        } else if (authMode === 'reset') {
+          endpoint = '/api/readers/password-reset/confirm';
+          body = {
+            identifier: resetIdentifierInput.value,
+            totpCode: resetTotpCodeInput.value,
+            password: resetPasswordInput.value,
+            confirmPassword: resetPasswordConfirmInput.value
+          };
+        } else if (authMode === 'legacyReset') {
+          endpoint = '/api/readers/password-reset/confirm';
+          body = {
+            token: resetToken,
+            password: resetPasswordInput.value,
+            confirmPassword: resetPasswordConfirmInput.value
+          };
+        }
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '登入失敗。');
+
+        setStatus(data.message || '已登入。', 'success');
+        setSignedIn(data);
+        if (authMode === 'reset' || authMode === 'legacyReset') {
+          window.history.replaceState({}, '', readerLibraryPath);
+        }
+        await loadReaderHome();
+        if (redirectPath && redirectPath !== readerLibraryPath && redirectPath !== window.location.pathname) {
+          window.location.href = redirectPath;
+        }
+      } catch (error) {
+        setStatus(error.message || '登入失敗。', 'error');
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    logoutButton.addEventListener('click', async () => {
+      logoutButton.disabled = true;
+      try {
+        await fetch('/api/readers/logout', { method: 'POST' });
+        setSignedIn({ authenticated: false });
+        renderLibrary([]);
+        renderBookmarks([]);
+        renderCreditPacks([]);
+        renderTotpStatus({ enabled: false });
+        setTotpStatus('');
+        creditBalance.textContent = '0 Station Points';
+        renderMembership(null, { enabled: true, membershipCreditCost: 10, membershipDurationMonths: 1 }, { balanceCredits: 0, unitLabel: 'Station Points' });
+        setAuthMode('login');
+        setStatus('已登出。', 'success');
+      } finally {
+        logoutButton.disabled = false;
+      }
+    });
+
+    passwordForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      passwordSubmitButton.disabled = true;
+      setPasswordStatus('正在更新密碼...', 'neutral');
+
+      try {
+        const response = await fetch('/api/readers/password/change', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            currentPassword: currentPasswordInput.value,
+            password: newPasswordInput.value,
+            confirmPassword: newPasswordConfirmInput.value,
+            totpCode: passwordTotpCodeInput.value
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '密碼更新失敗。');
+        currentPasswordInput.value = '';
+        newPasswordInput.value = '';
+        newPasswordConfirmInput.value = '';
+        passwordTotpCodeInput.value = '';
+        setPasswordStatus(data.message || '密碼已更新。', 'success');
+      } catch (error) {
+        setPasswordStatus(error.message || '密碼更新失敗。', 'error');
+      } finally {
+        passwordSubmitButton.disabled = false;
+      }
+    });
+
+    totpSetupButton.addEventListener('click', async () => {
+      totpSetupButton.disabled = true;
+      setTotpStatus('正在生成兩步驗證金鑰...', 'neutral');
+
+      try {
+        const response = await fetch('/api/readers/totp/setup', { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '兩步驗證金鑰生成失敗。');
+
+        if (data.setup) {
+          totpSecretInput.value = data.setup.secretBase32 || '';
+          totpUriInput.value = data.setup.otpauthUrl || '';
+          const qrReady = renderTotpQrCode(data.setup.otpauthUrl || '');
+          totpSetupBox.hidden = false;
+          setTotpStatus(
+            qrReady
+              ? '請用 Google Authenticator 掃描 QR code，再輸入目前 6 位驗證碼完成綁定。'
+              : 'QR code 生成失敗，請展開手動金鑰完成綁定。',
+            qrReady ? 'neutral' : 'error'
+          );
+        } else {
+          renderTotpStatus(data.totp || { enabled: false });
+          setTotpStatus(data.message || '兩步驗證狀態已更新。', data.totp?.enabled ? 'success' : 'neutral');
+        }
+      } catch (error) {
+        setTotpStatus(error.message || '兩步驗證金鑰生成失敗。', 'error');
+      } finally {
+        totpSetupButton.disabled = false;
+      }
+    });
+
+    totpConfirmButton.addEventListener('click', async () => {
+      totpConfirmButton.disabled = true;
+      setTotpStatus('正在確認驗證碼...', 'neutral');
+
+      try {
+        const response = await fetch('/api/readers/totp/confirm', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            code: totpConfirmCodeInput.value
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '兩步驗證綁定失敗。');
+        renderTotpStatus(data.totp || { enabled: true });
+        setTotpStatus(data.message || '兩步驗證器已綁定。', 'success');
+      } catch (error) {
+        setTotpStatus(error.message || '兩步驗證綁定失敗。', 'error');
+      } finally {
+        totpConfirmButton.disabled = false;
+      }
+    });
+
+    creditPacks.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-credits]');
+      if (!button) return;
+
+      const buttons = Array.from(creditPacks.querySelectorAll('button'));
+      buttons.forEach((item) => {
+        item.disabled = true;
+      });
+      setCreditStatus('正在建立 Station 積分購買訂單...', 'neutral');
+
+      try {
+        const response = await fetch('/api/novels/payments/checkout', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            orderType: 'credit-pack',
+            credits: Number.parseInt(button.dataset.credits || '0', 10),
+            locale: readerLocale,
+            payCurrency: payCurrencySelect.value,
+            returnPath: readerLibraryPath
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || '充值訂單建立失敗。');
+        if (!data.paymentUrl) throw new Error('NOWPayments 支付連結尚未生成。');
+        setCreditStatus('正在打開 NOWPayments。完成支付後回到會員中心，系統會等待區塊鏈確認並自動入帳。', 'success');
+        window.location.href = data.paymentUrl;
+      } catch (error) {
+        setCreditStatus(error.message || '充值訂單建立失敗。', 'error');
+        buttons.forEach((item) => {
+          item.disabled = false;
+        });
+      }
+    });
+
+    membershipRedeem.addEventListener('click', async () => {
+      membershipRedeem.disabled = true;
+      setMembershipStatus('正在兌換會員...', 'neutral');
+
+      try {
+        const response = await fetch('/api/readers/membership/redeem', { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          if (data.code === 'INSUFFICIENT_CREDITS') throw new Error('Station 積分不足，請先購買積分。');
+          throw new Error(data.message || '會員兌換失敗。');
+        }
+        setMembershipStatus('會員已開通，收費章節可直接閱讀。', 'success');
+        await Promise.all([loadLibrary(), loadCredits()]);
+      } catch (error) {
+        setMembershipStatus(error.message || '會員兌換失敗。', 'error');
+        membershipRedeem.disabled = false;
+      }
+    });
+
+    setAuthMode(resetToken ? 'legacyReset' : 'login');
+    if (resetToken) {
+      setStatus('請設定新的會員密碼。', 'neutral');
+    }
+
+    loadPublicPointsPrice();
+    loadSession()
+      .then(refreshReturnedPaymentOrder)
+      .catch((error) => setStatus(error.message, 'error'));
+  </script>
+</BaseLayout>
