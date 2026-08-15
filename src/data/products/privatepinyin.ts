@@ -33,11 +33,16 @@ export const privatePinyinProduct = {
       channel: 'internal-test'
     }
   ],
-  iosTestflight: {
-    label: 'iOS TestFlight external test',
+  iosAppStore: {
+    label: 'iOS App Store release',
     platform: 'iOS',
-    channel: 'external-test',
-    url: 'https://testflight.apple.com/join/QnWqrAaH'
+    channel: 'app-store',
+    version: '1.0',
+    releaseDate: '2026-08-14',
+    minimumSystem: 'iOS 18 or later',
+    devices: 'iPhone / iPad',
+    appId: '6789098978',
+    url: 'https://apps.apple.com/app/id6789098978'
   },
   productPath: '/apps/privatepinyin/',
   downloadPagePath: '/apps/privatepinyin/download/',

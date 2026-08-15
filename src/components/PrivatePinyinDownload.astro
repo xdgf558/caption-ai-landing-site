@@ -10,7 +10,7 @@ const { lang = 'zh-Hant' } = Astro.props;
 const downloads = privatePinyinProduct.downloads;
 const macDownload = downloads.find((item) => item.id === 'macos-pkg') ?? downloads[0];
 const windowsDownload = downloads.find((item) => item.id === 'windows-exe');
-const iosTestflight = privatePinyinProduct.iosTestflight;
+const iosAppStore = privatePinyinProduct.iosAppStore;
 const latestVersion = privatePinyinProduct.latestVersion;
 const macVersion = macDownload.version;
 const windowsVersion = windowsDownload?.version ?? latestVersion;
@@ -19,11 +19,11 @@ const inputSourceName = '猫栈拼音';
 const copy = {
   'zh-Hant': {
     title: '下載 猫栈拼音',
-    description: `下載 猫栈拼音（PrivatePinyin）測試版，包含 macOS ${macVersion}、Windows ${windowsVersion} 內測版與 iOS TestFlight 外部測試。`,
+    description: `下載 猫栈拼音（PrivatePinyin）：macOS ${macVersion}、Windows ${windowsVersion} 內測版，以及 App Store 上的 iOS ${iosAppStore.version} 正式版。`,
     kicker: 'Input Method Download',
     headline: '下載 猫栈拼音測試版。',
     intro:
-      `macOS 版目前是 ${macVersion}；Windows 版是 ${windowsVersion} 內測包；iOS 版已開放 TestFlight 外部測試。macOS 安裝後請在系統輸入法設定裡加入「${inputSourceName}」（PrivatePinyin）。`,
+      `macOS 版目前是 ${macVersion}；Windows 版是 ${windowsVersion} 內測包；iOS ${iosAppStore.version} 已正式上架 App Store。macOS 安裝後請在系統輸入法設定裡加入「${inputSourceName}」（PrivatePinyin）。`,
     primaryButton: '下載 macOS PKG',
     back: '返回產品頁',
     backHref: privatePinyinProduct.zhHantProductPath,
@@ -50,15 +50,15 @@ const copy = {
     checksum: 'SHA-256',
     metaLabels: ['Version', 'System', 'Size'],
     warning:
-      '請只從 Station Cat 官方網站下載桌面安裝包。macOS 包目前只支援 Apple Silicon Mac，Intel Mac 暫不支援；Windows 版仍屬內測；iOS 測試版請透過官方 Apple TestFlight 連結加入。'
+      '請只從 Station Cat 官方網站下載桌面安裝包。macOS 包目前只支援 Apple Silicon Mac，Intel Mac 暫不支援；Windows 版仍屬內測；iOS 正式版請透過 Apple App Store 安裝。'
   },
   'zh-Hans': {
     title: '下载 猫栈拼音',
-    description: `下载 猫栈拼音（PrivatePinyin）测试版，包含 macOS ${macVersion}、Windows ${windowsVersion} 内测版与 iOS TestFlight 外部测试。`,
+    description: `下载 猫栈拼音（PrivatePinyin）：macOS ${macVersion}、Windows ${windowsVersion} 内测版，以及 App Store 上的 iOS ${iosAppStore.version} 正式版。`,
     kicker: 'Input Method Download',
     headline: '下载 猫栈拼音测试版。',
     intro:
-      `macOS 版目前是 ${macVersion}；Windows 版是 ${windowsVersion} 内测包；iOS 版已开放 TestFlight 外部测试。macOS 安装后请在系统输入法设置里加入「${inputSourceName}」（PrivatePinyin）。`,
+      `macOS 版目前是 ${macVersion}；Windows 版是 ${windowsVersion} 内测包；iOS ${iosAppStore.version} 已正式上架 App Store。macOS 安装后请在系统输入法设置里加入「${inputSourceName}」（PrivatePinyin）。`,
     primaryButton: '下载 macOS PKG',
     back: '返回产品页',
     backHref: privatePinyinProduct.zhHansProductPath,
@@ -85,15 +85,15 @@ const copy = {
     checksum: 'SHA-256',
     metaLabels: ['Version', 'System', 'Size'],
     warning:
-      '请只从 Station Cat 官方网站下载桌面安装包。macOS 包目前只支持 Apple Silicon Mac，Intel Mac 暂不支持；Windows 版仍属内测；iOS 测试版请通过官方 Apple TestFlight 链接加入。'
+      '请只从 Station Cat 官方网站下载桌面安装包。macOS 包目前只支持 Apple Silicon Mac，Intel Mac 暂不支持；Windows 版仍属内测；iOS 正式版请通过 Apple App Store 安装。'
   },
   en: {
     title: 'Download Maozhan Pinyin',
-    description: `Download Maozhan Pinyin (PrivatePinyin) test builds for macOS ${macVersion} and Windows ${windowsVersion}, or join the iOS external TestFlight group.`,
+    description: `Download Maozhan Pinyin (PrivatePinyin) for macOS ${macVersion} and Windows ${windowsVersion}, or get the official iOS ${iosAppStore.version} release from the App Store.`,
     kicker: 'Input Method Download',
     headline: 'Download Maozhan Pinyin test builds.',
     intro:
-      `The macOS build is ${macVersion}, the Windows internal test build is ${windowsVersion}, and the iOS build is available through an external TestFlight group. After installing on macOS, add "${inputSourceName}" (PrivatePinyin) in System Settings > Keyboard > Input Sources.`,
+      `The macOS build is ${macVersion}, the Windows internal test build is ${windowsVersion}, and iOS ${iosAppStore.version} is officially available on the App Store. After installing on macOS, add "${inputSourceName}" (PrivatePinyin) in System Settings > Keyboard > Input Sources.`,
     primaryButton: 'Download macOS PKG',
     back: 'Back to product page',
     backHref: privatePinyinProduct.productPath,
@@ -120,15 +120,15 @@ const copy = {
     checksum: 'SHA-256',
     metaLabels: ['Version', 'System', 'Size'],
     warning:
-      'Download desktop installers only from the official Station Cat site. The macOS package supports Apple Silicon Macs only; Intel Macs are not supported yet. Windows remains an internal test, and iOS access is provided through the official Apple TestFlight link.'
+      'Download desktop installers only from the official Station Cat site. The macOS package supports Apple Silicon Macs only; Intel Macs are not supported yet. Windows remains an internal test, and the official iOS release is delivered through the Apple App Store.'
   },
   ja: {
     title: '猫栈拼音 をダウンロード',
-    description: `猫栈拼音（PrivatePinyin）の macOS ${macVersion}、Windows ${windowsVersion} 内部テスト版をダウンロードし、iOS TestFlight 外部テストにも参加できます。`,
+    description: `猫栈拼音（PrivatePinyin）の macOS ${macVersion}、Windows ${windowsVersion} 内部テスト版をダウンロードし、iOS ${iosAppStore.version} 正式版を App Store から入手できます。`,
     kicker: 'Input Method Download',
     headline: '猫栈拼音 テスト版をダウンロード。',
     intro:
-      `macOS 版は ${macVersion}、Windows 内部テスト版は ${windowsVersion} です。iOS 版は TestFlight 外部テストで公開しています。macOS ではインストール後、システムの入力メソッド設定で「${inputSourceName}」（PrivatePinyin）を追加してください。`,
+      `macOS 版は ${macVersion}、Windows 内部テスト版は ${windowsVersion} です。iOS ${iosAppStore.version} は App Store で正式公開しています。macOS ではインストール後、システムの入力メソッド設定で「${inputSourceName}」（PrivatePinyin）を追加してください。`,
     primaryButton: 'macOS PKG をダウンロード',
     back: '製品ページへ戻る',
     backHref: privatePinyinProduct.jaProductPath,
@@ -155,42 +155,42 @@ const copy = {
     checksum: 'SHA-256',
     metaLabels: ['Version', 'System', 'Size'],
     warning:
-      'デスクトップ版は Station Cat 公式サイトからのみダウンロードしてください。macOS は Apple Silicon Mac のみ対応し、Windows は内部テスト版です。iOS 版は公式 Apple TestFlight リンクから参加してください。'
+      'デスクトップ版は Station Cat 公式サイトからのみダウンロードしてください。macOS は Apple Silicon Mac のみ対応し、Windows は内部テスト版です。iOS 正式版は Apple App Store からインストールしてください。'
   }
 }[lang];
 
 const iosCopy = {
   'zh-Hant': {
-    badge: '外部測試',
-    title: 'iOS TestFlight',
-    description: '透過 Apple TestFlight 在 iPhone 或 iPad 安裝猫栈拼音測試版。',
-    labels: ['Channel', 'Device', 'Delivery'],
-    values: ['External Test', 'iPhone / iPad', 'Apple TestFlight'],
-    action: '加入 iOS 外部測試'
+    badge: '正式上架',
+    title: `iOS ${iosAppStore.version}`,
+    description: '從 Apple App Store 在 iPhone 或 iPad 安裝猫栈拼音正式版。',
+    labels: ['Version', 'Device', 'System'],
+    values: [iosAppStore.version, iosAppStore.devices, iosAppStore.minimumSystem],
+    action: '在 App Store 下載'
   },
   'zh-Hans': {
-    badge: '外部测试',
-    title: 'iOS TestFlight',
-    description: '通过 Apple TestFlight 在 iPhone 或 iPad 安装猫栈拼音测试版。',
-    labels: ['Channel', 'Device', 'Delivery'],
-    values: ['External Test', 'iPhone / iPad', 'Apple TestFlight'],
-    action: '加入 iOS 外部测试'
+    badge: '正式上架',
+    title: `iOS ${iosAppStore.version}`,
+    description: '从 Apple App Store 在 iPhone 或 iPad 安装猫栈拼音正式版。',
+    labels: ['Version', 'Device', 'System'],
+    values: [iosAppStore.version, iosAppStore.devices, iosAppStore.minimumSystem],
+    action: '从 App Store 下载'
   },
   en: {
-    badge: 'External test',
-    title: 'iOS TestFlight',
-    description: 'Install the Maozhan Pinyin test build on iPhone or iPad through Apple TestFlight.',
-    labels: ['Channel', 'Device', 'Delivery'],
-    values: ['External Test', 'iPhone / iPad', 'Apple TestFlight'],
-    action: 'Join the iOS external test'
+    badge: 'App Store release',
+    title: `iOS ${iosAppStore.version}`,
+    description: 'Install the official Maozhan Pinyin release on iPhone or iPad from the Apple App Store.',
+    labels: ['Version', 'Device', 'System'],
+    values: [iosAppStore.version, iosAppStore.devices, iosAppStore.minimumSystem],
+    action: 'Download on the App Store'
   },
   ja: {
-    badge: '外部テスト',
-    title: 'iOS TestFlight',
-    description: 'Apple TestFlight から iPhone または iPad に猫栈拼音テスト版をインストールできます。',
-    labels: ['Channel', 'Device', 'Delivery'],
-    values: ['External Test', 'iPhone / iPad', 'Apple TestFlight'],
-    action: 'iOS 外部テストに参加'
+    badge: 'App Store 正式公開',
+    title: `iOS ${iosAppStore.version}`,
+    description: 'Apple App Store から iPhone または iPad に猫栈拼音正式版をインストールできます。',
+    labels: ['Version', 'Device', 'System'],
+    values: [iosAppStore.version, iosAppStore.devices, iosAppStore.minimumSystem],
+    action: 'App Store からダウンロード'
   }
 }[lang];
 
@@ -225,7 +225,7 @@ const canonicalPath =
     <p>{copy.intro}</p>
     <div class="button-row">
       <a class="button button-primary" href={macDownload.downloadPath}>{copy.primaryButton}</a>
-      <a class="button button-secondary" href={iosTestflight.url} target="_blank" rel="noreferrer">{iosCopy.action}</a>
+      <a class="button button-secondary" href={iosAppStore.url} target="_blank" rel="noreferrer">{iosCopy.action}</a>
       <a class="button button-secondary" href={copy.backHref}>{copy.back}</a>
     </div>
   </section>
@@ -268,7 +268,7 @@ const canonicalPath =
           <a class="button button-primary" href={download.downloadPath}>{copy.downloadAction} {download.platform}</a>
         </article>
       ))}
-      <article class="anytls-download-card privatepinyin-testflight-card">
+      <article class="anytls-download-card privatepinyin-app-store-card">
         <div>
           <p class="section-kicker">{iosCopy.badge}</p>
           <h3>{iosCopy.title}</h3>
@@ -282,7 +282,7 @@ const canonicalPath =
             </div>
           ))}
         </dl>
-        <a class="button button-primary" href={iosTestflight.url} target="_blank" rel="noreferrer">{iosCopy.action}</a>
+        <a class="button button-primary" href={iosAppStore.url} target="_blank" rel="noreferrer">{iosCopy.action}</a>
       </article>
     </div>
     <p>{copy.warning}</p>
