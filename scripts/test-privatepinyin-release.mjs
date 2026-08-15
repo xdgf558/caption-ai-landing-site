@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(fileURLToPath(new URL('..', import.meta.url)));
 const read = (path) => readFileSync(join(root, path), 'utf8');
-const testflightUrl = 'https://testflight.apple.com/join/QnWqrAaH';
+const appStoreUrl = 'https://apps.apple.com/app/id6789098978';
 
 const productData = read('src/data/products/privatepinyin.ts');
 const worker = read('src/worker.js');
@@ -18,8 +18,12 @@ assert.match(productData, /PrivatePinyin-0\.1\.25-setup\.exe/);
 assert.match(productData, /f819de9a17ad319ce3abf5f8551b674278e3e90709167cb457e73932fff41600/);
 assert.match(worker, /privatepinyin\/0\.1\.30\/PrivatePinyin-0\.1\.30\.pkg/);
 assert.match(worker, /privatepinyin\/0\.1\.25\/PrivatePinyin-0\.1\.25-setup\.exe/);
-assert.match(productData, /iosTestflight/);
-assert.match(productData, new RegExp(testflightUrl.replaceAll('/', '\\/')));
+assert.match(productData, /iosAppStore/);
+assert.match(productData, /appId: '6789098978'/);
+assert.match(productData, /version: '1\.0'/);
+assert.match(productData, /minimumSystem: 'iOS 18 or later'/);
+assert.match(productData, new RegExp(appStoreUrl.replaceAll('/', '\\/')));
+assert.doesNotMatch(productData, /testflight\.apple\.com|iosTestflight/);
 assert.match(productData, /privacyPaths/);
 assert.match(productData, /supportPaths/);
 
@@ -38,14 +42,15 @@ assert.ok(stableManifest.release_notes.length >= 1 && stableManifest.release_not
 assert.ok(stableManifest.release_notes.every((note) => typeof note === 'string' && Buffer.byteLength(note) <= 500));
 
 const productPage = read('src/components/PrivatePinyinLanding.astro');
-assert.match(productPage, /加入 iOS TestFlight/);
-assert.match(productPage, /external TestFlight group/);
+assert.match(productPage, /在 App Store 下載/);
+assert.match(productPage, /officially available on the App Store/);
 assert.match(productPage, /原生候選面板偶爾點擊無反應/);
 assert.match(productPage, /intermittent no-op clicks/);
 assert.match(productPage, /嚴格隱私模式會停用並取消 Writer/);
 assert.match(productPage, /過期候選回調/);
 assert.doesNotMatch(productPage, /偏好設定改為緊湊等比縮放/);
-assert.match(productPage, /iosTestflight\.url/);
+assert.match(productPage, /iosAppStore\.url/);
+assert.doesNotMatch(productPage, /TestFlight/);
 assert.match(productPage, /releaseToken = `\$\{macVersion\}-\$\{windowsVersion\}`/);
 assert.match(productPage, /\?release=\$\{releaseToken\}/);
 assert.match(productPage, /legalLinks\.privacy/);
@@ -61,9 +66,10 @@ for (const localePath of ['', 'zh-hans/', 'zh-hant/', 'ja/']) {
 }
 
 const downloadPage = read('src/components/PrivatePinyinDownload.astro');
-assert.match(downloadPage, /privatepinyin-testflight-card/);
-assert.match(downloadPage, /加入 iOS 外部測試/);
-assert.match(downloadPage, /Apple TestFlight/);
+assert.match(downloadPage, /privatepinyin-app-store-card/);
+assert.match(downloadPage, /在 App Store 下載/);
+assert.match(downloadPage, /App Store release/);
+assert.doesNotMatch(downloadPage, /TestFlight/);
 assert.match(downloadPage, /Windows \$\{windowsVersion\} 穩定預設候選/);
 assert.match(downloadPage, /AI Lite 候選重排序/);
 assert.match(downloadPage, /使用者目錄或設定路徑含空格/);
@@ -77,7 +83,10 @@ assert.match(downloadPage, /Developer ID 簽名、Apple 公證與 stapling/);
 const appsIndex = read('src/components/AppsIndex.astro');
 const stationHome = read('src/components/StationHome.astro');
 assert.match(appsIndex, /macOS \/ Windows \/ iOS input method/);
-assert.match(stationHome, /iOS TestFlight/);
+assert.match(appsIndex, /iOS \$\{privatePinyinIosVersion\} 正式版已上架 App Store/);
+assert.doesNotMatch(appsIndex, /privatePinyinDescription: .*TestFlight/);
+assert.match(stationHome, /iOS App Store \$\{privatePinyinIosVersion\}/);
+assert.doesNotMatch(stationHome, /privatePinyin(?:Desc|Status|Download): .*TestFlight/);
 assert.match(stationHome, /macOS \$\{privatePinyinMacVersion\} · Windows \$\{privatePinyinWindowsVersion\}/);
 assert.doesNotMatch(stationHome, /macOS \/ Windows \$\{privatePinyinVersion\}/);
 assert.match(stationHome, /privatePinyinReleaseToken/);

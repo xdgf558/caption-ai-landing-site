@@ -10,7 +10,7 @@ const { lang = 'zh-Hant' } = Astro.props;
 const downloads = privatePinyinProduct.downloads;
 const macDownload = downloads.find((item) => item.id === 'macos-pkg') ?? downloads[0];
 const windowsDownload = downloads.find((item) => item.id === 'windows-exe');
-const iosTestflight = privatePinyinProduct.iosTestflight;
+const iosAppStore = privatePinyinProduct.iosAppStore;
 const latestVersion = privatePinyinProduct.latestVersion;
 const macVersion = macDownload.version;
 const windowsVersion = windowsDownload?.version ?? latestVersion;
@@ -25,10 +25,10 @@ const copy = {
     eyebrow: 'macOS / Windows / iOS Input Method',
     headline: '猫栈拼音：本機中文輸入法測試版。',
     intro:
-      `猫栈拼音（PrivatePinyin）是 Station Cat 正在測試的中文輸入法。macOS 版目前是 ${macVersion}，Windows TSF 內測版是 ${windowsVersion}，iOS 版也已開放 TestFlight 外部測試。`,
+      `猫栈拼音（PrivatePinyin）是 Station Cat 開發的本機中文輸入法。macOS 版目前是 ${macVersion}，Windows TSF 內測版是 ${windowsVersion}，iOS ${iosAppStore.version} 已正式上架 App Store。`,
     primary: '下載 macOS 版',
     windowsCta: '下載 Windows 內測版',
-    iosCta: '加入 iOS TestFlight',
+    iosCta: '在 App Store 下載',
     secondary: '查看下載資訊',
     downloadHref: versionedDownloadPage(privatePinyinProduct.zhHantDownloadPagePath),
     featuresTitle: '目前這個版本適合',
@@ -36,7 +36,7 @@ const copy = {
       ['本機中文輸入', '先把日常拼音輸入跑順，候選詞、標點和打字手感會持續調整。'],
       [`macOS ${macVersion}`, '修正原生候選面板偶爾點擊無反應的問題，並阻止過期候選回調提交舊文字或覆蓋目前高亮。'],
       [`Windows ${windowsVersion} 內測`, '穩定空格首選，加入可選的寬容拼音與溫和學習；並修正預測狀態數字輸入、含空格使用者路徑及下載 TLS 相容性。'],
-      ['iOS 外部測試', 'iPhone 與 iPad 使用者可透過 TestFlight 加入外部測試，協助驗證行動端鍵盤、候選詞和輸入流程。'],
+      [`iOS ${iosAppStore.version} 正式版`, 'iPhone 與 iPad 使用者可直接從 App Store 安裝，後續更新也由 Apple App Store 提供。'],
       ['本機與隱私優先', 'Writer 模型按需下載並校驗，透過獨立簽名的 Helper 在本機運行；嚴格隱私模式會停用並取消 Writer。'],
       ['小而清楚的下載入口', '安裝包、版本、大小和 SHA-256 都集中在下載頁，方便確認來源。']
     ],
@@ -47,7 +47,7 @@ const copy = {
       `安裝後請在系統輸入法設定裡加入「${inputSourceName}」（PrivatePinyin）。`,
       'macOS 安裝包只支援 Apple Silicon Mac，Intel Mac 暫不支援。',
       windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 內測版已提供 EXE，未簽名，安裝時可能出現 SmartScreen 提示。` : '',
-      'iOS 版已開放 TestFlight 外部測試，安裝與更新由 Apple TestFlight 提供。',
+      `iOS ${iosAppStore.version} 已正式上架 App Store，支援 ${iosAppStore.devices}，需要 ${iosAppStore.minimumSystem}。`,
       '這是早期測試版，首次安裝或啟用輸入法時請以系統安全提示為準。'
     ]
   },
@@ -56,10 +56,10 @@ const copy = {
     eyebrow: 'macOS / Windows / iOS Input Method',
     headline: '猫栈拼音：本机中文输入法测试版。',
     intro:
-      `猫栈拼音（PrivatePinyin）是 Station Cat 正在测试的中文输入法。macOS 版目前是 ${macVersion}，Windows TSF 内测版是 ${windowsVersion}，iOS 版也已开放 TestFlight 外部测试。`,
+      `猫栈拼音（PrivatePinyin）是 Station Cat 开发的本机中文输入法。macOS 版目前是 ${macVersion}，Windows TSF 内测版是 ${windowsVersion}，iOS ${iosAppStore.version} 已正式上架 App Store。`,
     primary: '下载 macOS 版',
     windowsCta: '下载 Windows 内测版',
-    iosCta: '加入 iOS TestFlight',
+    iosCta: '从 App Store 下载',
     secondary: '查看下载信息',
     downloadHref: versionedDownloadPage(privatePinyinProduct.zhHansDownloadPagePath),
     featuresTitle: '目前这个版本适合',
@@ -67,7 +67,7 @@ const copy = {
       ['本机中文输入', '先把日常拼音输入跑顺，候选词、标点和打字手感会持续调整。'],
       [`macOS ${macVersion}`, '修复原生候选面板偶尔点击无反应的问题，并阻止过期候选回调提交旧文本或覆盖当前高亮。'],
       [`Windows ${windowsVersion} 内测`, '稳定空格首选，加入可选的宽容拼音与温和学习；并修复预测状态数字输入、含空格用户路径及下载 TLS 兼容性。'],
-      ['iOS 外部测试', 'iPhone 和 iPad 用户可通过 TestFlight 加入外部测试，帮助验证移动端键盘、候选词和输入流程。'],
+      [`iOS ${iosAppStore.version} 正式版`, 'iPhone 和 iPad 用户可直接从 App Store 安装，后续更新也由 Apple App Store 提供。'],
       ['本地与隐私优先', 'Writer 模型按需下载并校验，通过独立签名的 Helper 在本地运行；严格隐私模式会停用并取消 Writer。'],
       ['小而清楚的下载入口', '安装包、版本、大小和 SHA-256 都集中在下载页，方便确认来源。']
     ],
@@ -78,7 +78,7 @@ const copy = {
       `安装后请在系统输入法设置里加入「${inputSourceName}」（PrivatePinyin）。`,
       'macOS 安装包只支持 Apple Silicon Mac，Intel Mac 暂不支持。',
       windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 内测版已提供 EXE，未签名，安装时可能出现 SmartScreen 提示。` : '',
-      'iOS 版已开放 TestFlight 外部测试，安装与更新由 Apple TestFlight 提供。',
+      `iOS ${iosAppStore.version} 已正式上架 App Store，支持 ${iosAppStore.devices}，需要 ${iosAppStore.minimumSystem}。`,
       '这是早期测试版，首次安装或启用输入法时请以系统安全提示为准。'
     ]
   },
@@ -87,10 +87,10 @@ const copy = {
     eyebrow: 'macOS / Windows / iOS Input Method',
     headline: 'Maozhan Pinyin, a local Chinese input method test build.',
     intro:
-      `Maozhan Pinyin (PrivatePinyin) is a Chinese input method being tested by Station Cat. The macOS build is ${macVersion}, the Windows TSF internal test build is ${windowsVersion}, and the iOS build is now available through an external TestFlight group.`,
+      `Maozhan Pinyin (PrivatePinyin) is a local Chinese input method by Station Cat. The macOS build is ${macVersion}, the Windows TSF internal test build is ${windowsVersion}, and iOS ${iosAppStore.version} is officially available on the App Store.`,
     primary: 'Download for macOS',
     windowsCta: 'Download Windows beta',
-    iosCta: 'Join iOS TestFlight',
+    iosCta: 'Download on the App Store',
     secondary: 'View download info',
     downloadHref: versionedDownloadPage(privatePinyinProduct.downloadPagePath),
     featuresTitle: 'What this build is for',
@@ -98,7 +98,7 @@ const copy = {
       ['Local Chinese typing', 'The focus is making daily pinyin input feel steady, with candidates, punctuation, and typing flow improving over time.'],
       [`macOS ${macVersion}`, 'Fixes intermittent no-op clicks in the native candidate panel and prevents stale callbacks from committing old text or replacing the current highlight.'],
       [`Windows ${windowsVersion} internal test`, 'Stabilizes the Space-key default, adds opt-in tolerant pinyin and gentle learning, and fixes prediction-only digits, user paths containing spaces, and download TLS compatibility.'],
-      ['iOS external test', 'iPhone and iPad users can join through TestFlight to help validate the mobile keyboard, candidates, and typing flow.'],
+      [`iOS ${iosAppStore.version} release`, 'iPhone and iPad users can install the public release directly from the App Store and receive updates through Apple.'],
       ['Local and privacy-first', 'The Writer model is downloaded and verified on demand, then runs locally through a separately signed Helper. Strict privacy mode disables and cancels Writer.'],
       ['Clear download trail', 'The installer, version, size, and SHA-256 checksum are kept together on the download page.']
     ],
@@ -109,7 +109,7 @@ const copy = {
       `After installing, add "${inputSourceName}" (PrivatePinyin) in System Settings > Keyboard > Input Sources.`,
       'The macOS installer supports Apple Silicon Macs only. Intel Macs are not supported yet.',
       windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} internal test build is available as an EXE installer. It is unsigned and may trigger SmartScreen prompts.` : '',
-      'The iOS build is available through an external TestFlight group, with installation and updates delivered by Apple TestFlight.',
+      `iOS ${iosAppStore.version} is available on the App Store for ${iosAppStore.devices} and requires ${iosAppStore.minimumSystem}.`,
       'This is an early test build. Follow system security prompts during install or input method activation.'
     ]
   },
@@ -118,10 +118,10 @@ const copy = {
     eyebrow: 'macOS / Windows / iOS Input Method',
     headline: '猫栈拼音：ローカル中国語入力メソッドのテスト版。',
     intro:
-      `猫栈拼音（PrivatePinyin）は Station Cat がテストしている中国語入力メソッドです。macOS 版は ${macVersion}、Windows TSF 内部テスト版は ${windowsVersion}、iOS 版は TestFlight 外部テストで公開しています。`,
+      `猫栈拼音（PrivatePinyin）は Station Cat が開発するローカル中国語入力メソッドです。macOS 版は ${macVersion}、Windows TSF 内部テスト版は ${windowsVersion}、iOS ${iosAppStore.version} は App Store で正式公開しています。`,
     primary: 'macOS 版をダウンロード',
     windowsCta: 'Windows 内部テスト版',
-    iosCta: 'iOS TestFlight に参加',
+    iosCta: 'App Store からダウンロード',
     secondary: 'ダウンロード情報を見る',
     downloadHref: versionedDownloadPage(privatePinyinProduct.jaDownloadPagePath),
     featuresTitle: 'このバージョンでできること',
@@ -129,7 +129,7 @@ const copy = {
       ['ローカル中国語入力', '日常的なピンイン入力、候補、句読点、入力感を整えていきます。'],
       [`macOS ${macVersion}`, 'ネイティブ候補パネルでクリックが反応しないことがある問題を修正し、古いコールバックによる旧テキストの確定や現在のハイライトの上書きを防ぎました。'],
       [`Windows ${windowsVersion} 内部テスト`, 'Space キーの先頭候補を安定させ、任意の曖昧ピンインと穏やかな学習を追加し、予測中の数字入力、空白を含むユーザーパス、ダウンロード TLS の互換性を修正しました。'],
-      ['iOS 外部テスト', 'iPhone と iPad から TestFlight に参加し、モバイルキーボード、候補、入力フローの検証に協力できます。'],
+      [`iOS ${iosAppStore.version} 正式版`, 'iPhone と iPad に App Store から直接インストールでき、今後の更新も Apple から提供されます。'],
       ['ローカル処理とプライバシー', 'Writer モデルは必要時にダウンロードして検証し、署名済みの独立 Helper でローカル実行します。厳格プライバシーモードでは Writer を停止します。'],
       ['わかりやすい配布情報', 'インストーラー、バージョン、サイズ、SHA-256 をダウンロードページにまとめています。']
     ],
@@ -140,7 +140,7 @@ const copy = {
       `インストール後、システムの入力メソッド設定で「${inputSourceName}」（PrivatePinyin）を追加してください。`,
       'macOS インストーラーは Apple Silicon Mac のみ対応です。Intel Mac はまだ対応していません。',
       windowsDownload ? `${windowsDownload.platform} ${windowsDownload.architecture} 内部テスト版を EXE で提供しています。未署名のため SmartScreen が表示される場合があります。` : '',
-      'iOS 版は TestFlight 外部テストで公開し、インストールと更新は Apple TestFlight から提供されます。',
+      `iOS ${iosAppStore.version} は App Store で正式公開中です。${iosAppStore.devices} に対応し、${iosAppStore.minimumSystem} が必要です。`,
       'これは早期テスト版です。インストールや入力メソッド有効化時はシステムの安全確認に従ってください。'
     ]
   }
@@ -311,7 +311,7 @@ const legalLinks =
       <div class="button-row">
         <a class="button button-primary" href={macDownload.downloadPath}>{copy.primary}</a>
         {windowsDownload && <a class="button button-secondary" href={windowsDownload.downloadPath}>{copy.windowsCta}</a>}
-        <a class="button button-secondary" href={iosTestflight.url} target="_blank" rel="noreferrer">{copy.iosCta}</a>
+        <a class="button button-secondary" href={iosAppStore.url} target="_blank" rel="noreferrer">{copy.iosCta}</a>
         <a class="button button-secondary" href={copy.downloadHref}>{copy.secondary}</a>
         <a class="button button-secondary" href={legalLinks.privacy}>{legalLinks.privacyLabel}</a>
         <a class="button button-secondary" href={legalLinks.support}>{legalLinks.supportLabel}</a>
@@ -320,7 +320,7 @@ const legalLinks =
     <div class="privatepinyin-preview-card" aria-label={`${copy.title} app icon`}>
       <img src={privatePinyinProduct.assets.icon} alt={`${copy.title} app icon`} width="512" height="512" />
       <div>
-        <p class="section-kicker">Windows {windowsVersion} · macOS {macVersion}</p>
+        <p class="section-kicker">Windows {windowsVersion} · macOS {macVersion} · iOS {iosAppStore.version}</p>
         <h2>{copy.title}</h2>
         <p>{internalName}</p>
         <p>macOS / Windows / iOS</p>

@@ -19,6 +19,7 @@ const privatePinyinMacVersion =
   privatePinyinProduct.downloads.find((download) => download.id === 'macos-pkg')?.version ?? privatePinyinProduct.latestVersion;
 const privatePinyinWindowsVersion =
   privatePinyinProduct.downloads.find((download) => download.id === 'windows-exe')?.version ?? privatePinyinProduct.latestVersion;
+const privatePinyinIosVersion = privatePinyinProduct.iosAppStore.version;
 const privatePinyinReleaseToken = `${privatePinyinMacVersion}-${privatePinyinWindowsVersion}`;
 const versionedPrivatePinyinDownload = (path: string) => `${path}?release=${privatePinyinReleaseToken}`;
 
@@ -41,9 +42,9 @@ const copy = {
     novelForgeCta: '查看 NovelForge AI',
     novelForgeDownloadCta: `下載 ${novelForgeVersion}`,
     privatePinyinKicker: 'macOS / Windows / iOS input method',
-    privatePinyinDescription: '本機中文輸入法測試版，提供 macOS、Windows TSF 內測包，iOS 版也已開放 TestFlight 外部測試。',
+    privatePinyinDescription: `本機中文輸入法，提供 macOS、Windows TSF 測試包；iOS ${privatePinyinIosVersion} 正式版已上架 App Store。`,
     privatePinyinCta: '查看猫栈拼音',
-    privatePinyinDownloadCta: '下載與 TestFlight',
+    privatePinyinDownloadCta: '下載與 App Store',
     simplecutKicker: 'desktop video editor',
     simplecutDescription: '在本機時間線剪切影片、對齊音訊、預覽轉場，並匯出輕量成片。',
     simplecutCta: '查看 SimpleCut Pro',
@@ -70,9 +71,9 @@ const copy = {
     novelForgeCta: '查看 NovelForge AI',
     novelForgeDownloadCta: `下载 ${novelForgeVersion}`,
     privatePinyinKicker: 'macOS / Windows / iOS input method',
-    privatePinyinDescription: '本机中文输入法测试版，提供 macOS、Windows TSF 内测包，iOS 版也已开放 TestFlight 外部测试。',
+    privatePinyinDescription: `本机中文输入法，提供 macOS、Windows TSF 测试包；iOS ${privatePinyinIosVersion} 正式版已上架 App Store。`,
     privatePinyinCta: '查看猫栈拼音',
-    privatePinyinDownloadCta: '下载与 TestFlight',
+    privatePinyinDownloadCta: '下载与 App Store',
     simplecutKicker: 'desktop video editor',
     simplecutDescription: '在本机时间线剪切视频、对齐音频、预览转场，并导出轻量成片。',
     simplecutCta: '查看 SimpleCut Pro',
@@ -99,9 +100,9 @@ const copy = {
     novelForgeCta: 'View NovelForge AI',
     novelForgeDownloadCta: `Download ${novelForgeVersion}`,
     privatePinyinKicker: 'macOS / Windows / iOS input method',
-    privatePinyinDescription: 'An early local Chinese input method with macOS and Windows test builds plus an iOS external TestFlight group.',
+    privatePinyinDescription: `A local Chinese input method with macOS and Windows test builds, plus the official iOS ${privatePinyinIosVersion} release on the App Store.`,
     privatePinyinCta: 'View Maozhan Pinyin',
-    privatePinyinDownloadCta: 'Downloads & TestFlight',
+    privatePinyinDownloadCta: 'Downloads & App Store',
     simplecutKicker: 'desktop video editor',
     simplecutDescription: 'Cut clips on a local timeline, align audio, preview transitions, and export lightweight edits.',
     simplecutCta: 'View SimpleCut Pro',
@@ -128,9 +129,9 @@ const copy = {
     novelForgeCta: 'NovelForge AI を見る',
     novelForgeDownloadCta: `${novelForgeVersion} をダウンロード`,
     privatePinyinKicker: 'macOS / Windows / iOS input method',
-    privatePinyinDescription: 'ローカル中国語入力メソッドの早期テスト版です。macOS、Windows テスト版と iOS TestFlight 外部テストを提供しています。',
+    privatePinyinDescription: `ローカル中国語入力メソッドです。macOS、Windows テスト版と App Store 公開中の iOS ${privatePinyinIosVersion} 正式版を提供しています。`,
     privatePinyinCta: '猫栈拼音 を見る',
-    privatePinyinDownloadCta: 'ダウンロード / TestFlight',
+    privatePinyinDownloadCta: 'ダウンロード / App Store',
     simplecutKicker: 'desktop video editor',
     simplecutDescription: 'ローカルのタイムラインでカット、音声調整、転換確認、軽い動画書き出しを行えます。',
     simplecutCta: 'SimpleCut Pro を見る',
