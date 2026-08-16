@@ -219,6 +219,62 @@ assert.equal(fetchedLinkedPagePreview.finalUrl, 'https://example.org/linked-sour
 assert.equal(fetchedLinkedPagePreview.summarySource, 'description');
 assert.match(fetchedLinkedPagePreview.summary, /fact-checked editorial brief/);
 
+const oversizedLinkedPageFetch = async (url) => {
+  const parsed = new URL(url);
+  if (parsed.hostname === 'cloudflare-dns.com') {
+    const type = parsed.searchParams.get('type');
+    return new Response(
+      JSON.stringify({ Answer: type === 'A' ? [{ data: '93.184.216.34', type: 1 }] : [] }),
+      { headers: { 'content-type': 'application/dns-json' } }
+    );
+  }
+  return new Response(
+    '<html><head><meta property="og:description" content="A detailed preview near the start of a very large page remains usable without downloading the entire response body into Worker memory." /></head></html>',
+    {
+      headers: {
+        'content-length': String(2 * 1024 * 1024),
+        'content-type': 'text/html; charset=utf-8'
+      }
+    }
+  );
+};
+const oversizedLinkedPagePreview = await fetchSignalLinkedPagePreview('https://example.org/large-linked-source', {
+  fetchImpl: oversizedLinkedPageFetch,
+  maxBytes: 32 * 1024
+});
+assert.equal(oversizedLinkedPagePreview.summarySource, 'open_graph');
+assert.match(oversizedLinkedPagePreview.summary, /without downloading the entire response body/);
+
+const crossrefFallbackFetch = async (url) => {
+  const parsed = new URL(url);
+  if (parsed.hostname === 'cloudflare-dns.com') {
+    const type = parsed.searchParams.get('type');
+    return new Response(
+      JSON.stringify({ Answer: type === 'A' ? [{ data: '93.184.216.34', type: 1 }] : [] }),
+      { headers: { 'content-type': 'application/dns-json' } }
+    );
+  }
+  if (parsed.hostname === 'www.science.org') return new Response('Forbidden', { status: 403 });
+  assert.equal(parsed.hostname, 'api.crossref.org');
+  return new Response(
+    JSON.stringify({
+      message: {
+        abstract:
+          '<jats:p>This peer-reviewed abstract explains the experiment, the measured climate response, the study limits, and the evidence needed for a verifiable editorial brief.</jats:p>',
+        title: ['Targeted marine cloud brightening weakens subsequent El Niño']
+      }
+    }),
+    { headers: { 'content-type': 'application/json' } }
+  );
+};
+const crossrefFallbackPreview = await fetchSignalLinkedPagePreview(
+  'https://www.science.org/doi/10.1126/sciadv.adx3012',
+  { fetchImpl: crossrefFallbackFetch }
+);
+assert.equal(crossrefFallbackPreview.finalUrl, 'https://www.science.org/doi/10.1126/sciadv.adx3012');
+assert.equal(crossrefFallbackPreview.summarySource, 'crossref_abstract');
+assert.match(crossrefFallbackPreview.summary, /peer-reviewed abstract explains the experiment/);
+
 const dnsPayload = (type, addresses) =>
   JSON.stringify({ Answer: addresses.map((data) => ({ data, type: type === 'A' ? 1 : 28 })) });
 

@@ -20,7 +20,8 @@ import {
   generateSignalBriefDraftWithProviders,
   getSignalDraftCandidateEligibility,
   normalizeSignalDraftCandidateIds,
-  signalDraftMaxCandidates
+  signalDraftMaxCandidates,
+  signalDraftMinCandidates
 } from './signalDraft.js';
 import {
   createDeepSeekSignalDraftAdapter,
@@ -10216,6 +10217,19 @@ const signalDraftCandidateContextErrorPayload = (candidates) => {
   };
 };
 
+const resolveSignalDraftCandidateContext = (candidates) => {
+  const contextError = signalDraftCandidateContextErrorPayload(candidates);
+  if (!contextError) {
+    return { contextError: null, eligibleCandidates: candidates, excludedCandidateIds: [] };
+  }
+  const invalidCandidateIds = new Set(contextError.invalidCandidateIds);
+  return {
+    contextError,
+    eligibleCandidates: candidates.filter((candidate) => !invalidCandidateIds.has(candidate.id)),
+    excludedCandidateIds: contextError.invalidCandidateIds
+  };
+};
+
 const loadSelectedSignalDraftCandidates = async (db, candidateIds) => {
   const placeholders = candidateIds.map(() => '?').join(', ');
   const response = await db
@@ -13114,7 +13128,7 @@ const handleAdminManageSignalBriefModelRollout = async (request, env) => {
         { status: 409 }
       );
     }
-    const enrichment = await enrichSignalDraftCandidateMaterials(db, candidates);
+    let enrichment = await enrichSignalDraftCandidateMaterials(db, candidates);
     if (enrichment.attemptedCandidateIds.length) {
       candidates = await loadSelectedSignalDraftCandidates(db, candidateIds);
     }
@@ -13124,8 +13138,28 @@ const handleAdminManageSignalBriefModelRollout = async (request, env) => {
         { status: 409 }
       );
     }
-    const contextError = signalDraftCandidateContextErrorPayload(candidates);
-    if (contextError) return privateJson({ ok: false, ...contextError, enrichment }, { status: 409 });
+    const candidateContext = resolveSignalDraftCandidateContext(candidates);
+    if (candidateContext.contextError && candidateContext.eligibleCandidates.length < signalDraftMinCandidates) {
+      return privateJson(
+        {
+          ok: false,
+          ...candidateContext.contextError,
+          enrichment,
+          message: `${candidateContext.contextError.message} 补取后只有 ${candidateContext.eligibleCandidates.length} 条材料合格，至少需要 ${signalDraftMinCandidates} 条。`
+        },
+        { status: 409 }
+      );
+    }
+    if (candidateContext.contextError) {
+      const requestedCandidateIds = [...candidateIds];
+      candidates = candidateContext.eligibleCandidates;
+      candidateIds = candidates.map((candidate) => candidate.id);
+      enrichment = {
+        ...enrichment,
+        excludedCandidateIds: candidateContext.excludedCandidateIds,
+        requestedCandidateIds
+      };
+    }
     const model = normalizeDeepSeekSignalDraftModel(current.deepseek_model);
     const startedAt = new Date().toISOString();
     await db
@@ -13633,7 +13667,7 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       { status: 409 }
     );
   }
-  const enrichment = await enrichSignalDraftCandidateMaterials(db, candidates);
+  let enrichment = await enrichSignalDraftCandidateMaterials(db, candidates);
   if (enrichment.attemptedCandidateIds.length) {
     candidates = await loadSelectedSignalDraftCandidates(db, candidateIds);
   }
@@ -13649,8 +13683,28 @@ const handleAdminGenerateSignalBriefDraft = async (request, env) => {
       { status: 409 }
     );
   }
-  const contextError = signalDraftCandidateContextErrorPayload(candidates);
-  if (contextError) return privateJson({ ok: false, ...contextError, enrichment }, { status: 409 });
+  const candidateContext = resolveSignalDraftCandidateContext(candidates);
+  if (candidateContext.contextError && candidateContext.eligibleCandidates.length < signalDraftMinCandidates) {
+    return privateJson(
+      {
+        ok: false,
+        ...candidateContext.contextError,
+        enrichment,
+        message: `${candidateContext.contextError.message} 补取后只有 ${candidateContext.eligibleCandidates.length} 条材料合格，至少需要 ${signalDraftMinCandidates} 条。`
+      },
+      { status: 409 }
+    );
+  }
+  if (candidateContext.contextError) {
+    const requestedCandidateIds = [...candidateIds];
+    candidates = candidateContext.eligibleCandidates;
+    candidateIds = candidates.map((candidate) => candidate.id);
+    enrichment = {
+      ...enrichment,
+      excludedCandidateIds: candidateContext.excludedCandidateIds,
+      requestedCandidateIds
+    };
+  }
 
   const slug = `daily-brief-${briefDate}`;
   const existing = await db

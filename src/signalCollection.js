@@ -255,17 +255,18 @@ export const parseSignalFeed = (xml, sourceUrl, maxItems = 30) => {
     .filter(Boolean);
 };
 
-export const readResponseTextLimited = async (response, maxBytes = defaultMaxBodyBytes, timeoutMs = 0) => {
+const readResponseTextWithLimit = async (response, maxBytes, timeoutMs, truncateAtLimit) => {
   const contentLength = Number.parseInt(response.headers.get('content-length') || '', 10);
-  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+  if (!truncateAtLimit && Number.isFinite(contentLength) && contentLength > maxBytes) {
     throw collectionError('SIGNAL_RESPONSE_TOO_LARGE', `来源响应超过 ${maxBytes} bytes。`, { retriable: false });
   }
   if (!response.body?.getReader) {
     const text = await response.text();
-    if (new TextEncoder().encode(text).byteLength > maxBytes) {
+    const bytes = new TextEncoder().encode(text);
+    if (bytes.byteLength > maxBytes && !truncateAtLimit) {
       throw collectionError('SIGNAL_RESPONSE_TOO_LARGE', `来源响应超过 ${maxBytes} bytes。`, { retriable: false });
     }
-    return text;
+    return bytes.byteLength > maxBytes ? new TextDecoder().decode(bytes.slice(0, maxBytes)) : text;
   }
 
   const reader = response.body.getReader();
@@ -301,15 +302,27 @@ export const readResponseTextLimited = async (response, maxBytes = defaultMaxBod
     }
     const { done, value } = chunk;
     if (done) break;
-    total += value.byteLength;
-    if (total > maxBytes) {
+    const remainingBytes = maxBytes - total;
+    if (value.byteLength > remainingBytes) {
+      if (!truncateAtLimit) {
+        await reader.cancel();
+        throw collectionError('SIGNAL_RESPONSE_TOO_LARGE', `来源响应超过 ${maxBytes} bytes。`, { retriable: false });
+      }
+      if (remainingBytes > 0) text += decoder.decode(value.slice(0, remainingBytes), { stream: true });
       await reader.cancel();
-      throw collectionError('SIGNAL_RESPONSE_TOO_LARGE', `来源响应超过 ${maxBytes} bytes。`, { retriable: false });
+      return text + decoder.decode();
     }
+    total += value.byteLength;
     text += decoder.decode(value, { stream: true });
   }
   return text + decoder.decode();
 };
+
+export const readResponseTextLimited = async (response, maxBytes = defaultMaxBodyBytes, timeoutMs = 0) =>
+  readResponseTextWithLimit(response, maxBytes, timeoutMs, false);
+
+export const readResponseTextPrefix = async (response, maxBytes = defaultMaxBodyBytes, timeoutMs = 0) =>
+  readResponseTextWithLimit(response, maxBytes, timeoutMs, true);
 
 const fetchWithTimeout = async (fetchImpl, url, init, timeoutMs) => {
   const controller = new AbortController();
@@ -415,7 +428,9 @@ export const fetchPublicSignalResource = async (urlValue, options = {}) => {
       });
     }
     return {
-      body: await readResponseTextLimited(response, maxBytes, timeoutMs),
+      body: options.truncateBody
+        ? await readResponseTextPrefix(response, maxBytes, timeoutMs)
+        : await readResponseTextLimited(response, maxBytes, timeoutMs),
       finalUrl: currentUrl,
       headers: response.headers,
       notModified: false,
@@ -547,6 +562,8 @@ const firstUsefulHtmlParagraph = (html) => {
   return paragraphs.find((paragraph) => Array.from(paragraph).length >= 80) || paragraphs[0] || '';
 };
 
+const linkedPagePreviewMinimumLength = 80;
+
 export const extractSignalLinkedPagePreview = (html) => {
   const summaries = [
     ['open_graph', htmlMetaContent(html, 'og:description')],
@@ -554,7 +571,9 @@ export const extractSignalLinkedPagePreview = (html) => {
     ['description', htmlMetaContent(html, 'description')],
     ['paragraph', firstUsefulHtmlParagraph(html)]
   ];
-  const usable = summaries.find(([, value]) => Array.from(value).length >= 80) || summaries.find(([, value]) => value);
+  const usable =
+    summaries.find(([, value]) => Array.from(value).length >= linkedPagePreviewMinimumLength) ||
+    summaries.find(([, value]) => value);
   return {
     summary: usable?.[1] || '',
     summarySource: usable?.[0] || '',
@@ -562,21 +581,78 @@ export const extractSignalLinkedPagePreview = (html) => {
   };
 };
 
+const signalDoiFromUrl = (value) => {
+  try {
+    const pathname = decodeURIComponent(new URL(value).pathname);
+    const match = pathname.match(/(?:^|\/)(10\.\d{4,9}\/[\w.()/:;-]+)/i);
+    return String(match?.[1] || '').replace(/[.;,)]+$/g, '');
+  } catch {
+    return '';
+  }
+};
+
+const crossrefSignalLinkedPagePreview = async (doi, originalUrl, options = {}) => {
+  const response = await fetchPublicSignalResource(
+    `https://api.crossref.org/works/${encodeURIComponent(doi)}`,
+    {
+      ...options,
+      accept: 'application/json',
+      maxBytes: 1024 * 1024,
+      truncateBody: false
+    }
+  );
+  let message;
+  try {
+    message = JSON.parse(response.body)?.message;
+  } catch {
+    throw collectionError('SIGNAL_CROSSREF_INVALID_JSON', 'Crossref 返回了无效的 DOI 元数据。', { retriable: false });
+  }
+  const summary = signalPlainText(message?.abstract, 1200);
+  if (Array.from(summary).length < linkedPagePreviewMinimumLength) {
+    throw collectionError('SIGNAL_CROSSREF_SUMMARY_UNAVAILABLE', 'Crossref 没有提供可用于简报的论文摘要。', {
+      retriable: false
+    });
+  }
+  return {
+    finalUrl: normalizePublicSignalUrl(originalUrl),
+    summary,
+    summarySource: 'crossref_abstract',
+    title: signalPlainText(asArray(message?.title)[0], 300)
+  };
+};
+
+const signalLinkedPageFallbackBlockedErrors = new Set([
+  'SIGNAL_FETCH_PRIVATE_ADDRESS',
+  'SIGNAL_FETCH_REDIRECT_BLOCKED',
+  'SIGNAL_FETCH_URL_BLOCKED'
+]);
+
 export const fetchSignalLinkedPagePreview = async (url, options = {}) => {
-  const response = await fetchPublicSignalResource(url, {
-    ...options,
-    accept: 'text/html,application/xhtml+xml;q=0.9',
-    maxBytes: Math.min(Math.max(Number(options.maxBytes) || 256 * 1024, 32 * 1024), 512 * 1024)
-  });
-  const contentType = response.headers.get('content-type') || '';
-  if (contentType && !/(?:text\/html|application\/xhtml\+xml)/i.test(contentType)) {
-    throw collectionError('SIGNAL_LINKED_PAGE_CONTENT_UNSUPPORTED', '外链不是可读取的公开网页。', { retriable: false });
+  const doi = signalDoiFromUrl(url);
+  try {
+    const response = await fetchPublicSignalResource(url, {
+      ...options,
+      accept: 'text/html,application/xhtml+xml;q=0.9',
+      maxBytes: Math.min(Math.max(Number(options.maxBytes) || 512 * 1024, 32 * 1024), 512 * 1024),
+      truncateBody: true
+    });
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType && !/(?:text\/html|application\/xhtml\+xml)/i.test(contentType)) {
+      throw collectionError('SIGNAL_LINKED_PAGE_CONTENT_UNSUPPORTED', '外链不是可读取的公开网页。', {
+        retriable: false
+      });
+    }
+    const preview = extractSignalLinkedPagePreview(response.body);
+    if (Array.from(preview.summary).length < linkedPagePreviewMinimumLength) {
+      throw collectionError('SIGNAL_LINKED_PAGE_SUMMARY_UNAVAILABLE', '外链页面没有足够的公开摘要用于简报。', {
+        retriable: false
+      });
+    }
+    return { ...preview, finalUrl: response.finalUrl };
+  } catch (error) {
+    if (!doi || signalLinkedPageFallbackBlockedErrors.has(error?.code)) throw error;
+    return crossrefSignalLinkedPagePreview(doi, url, options);
   }
-  const preview = extractSignalLinkedPagePreview(response.body);
-  if (!preview.summary) {
-    throw collectionError('SIGNAL_LINKED_PAGE_SUMMARY_UNAVAILABLE', '外链页面没有可用于简报的公开摘要。', { retriable: false });
-  }
-  return { ...preview, finalUrl: response.finalUrl };
 };
 
 const englishMonthIndexes = new Map(
