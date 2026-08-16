@@ -1223,6 +1223,51 @@ assert.deepEqual(contextInvalidPayload.invalidCandidateIds, ['candidate-tech']);
 assert.equal(contextInvalidPayload.ineligibleCandidates[0].reasonCode, 'SOURCE_LINKED_PAGE_PREVIEW_REQUIRED');
 assert.equal(contextInvalidAiCalled, false);
 
+const partiallyInvalidCandidates = [
+  ...candidates.map((candidate) => ({ ...candidate, source_trust_tier: 'primary' })),
+  {
+    ...candidates[2],
+    canonical_url: 'https://news.ycombinator.com/item?id=654321',
+    id: 'candidate-unverifiable-community-link',
+    source_trust_tier: 'community',
+    title: 'Community lead without a verifiable external summary'
+  }
+];
+let partialContextAiCandidates = [];
+const partiallyInvalidResponse = await workerHooks.handleAdminGenerateSignalBriefDraft(
+  new Request('http://localhost/admin/api/signal/drafts/generate', {
+    body: JSON.stringify({
+      briefDate: '2026-07-18',
+      candidateIds: partiallyInvalidCandidates.map((candidate) => candidate.id),
+      category: 'auto'
+    }),
+    headers: { 'content-type': 'application/json' },
+    method: 'POST'
+  }),
+  {
+    AI: {
+      async run(_model, request) {
+        partialContextAiCandidates = JSON.parse(request.messages[1].content).source_data;
+        return { response: aiPayloadFor(candidates) };
+      }
+    },
+    CONTENT_BUCKET: { async put() {} },
+    WAITLIST_DB: new DraftDb(partiallyInvalidCandidates)
+  }
+);
+assert.equal(partiallyInvalidResponse.status, 200);
+const partiallyInvalidPayload = await partiallyInvalidResponse.json();
+assert.deepEqual(partiallyInvalidPayload.automation.candidateIds, candidates.map((candidate) => candidate.id));
+assert.deepEqual(partiallyInvalidPayload.enrichment.excludedCandidateIds, ['candidate-unverifiable-community-link']);
+assert.deepEqual(
+  partiallyInvalidPayload.enrichment.requestedCandidateIds,
+  partiallyInvalidCandidates.map((candidate) => candidate.id)
+);
+assert.deepEqual(
+  partialContextAiCandidates.map((candidate) => candidate.candidateId),
+  candidates.map((candidate) => candidate.id)
+);
+
 const protectedResponse = await worker.fetch(
   new Request('https://wwwstationcat.org/admin/api/signal/drafts/generate', { method: 'POST' }),
   {

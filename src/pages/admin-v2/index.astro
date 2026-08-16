@@ -3402,7 +3402,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signal.status.value = 'draft';
       const providerLabel = payload.automation?.provider === 'deepseek' ? 'DeepSeek' : 'Workers AI';
       const fallbackLabel = payload.automation?.fallbackUsed ? '（主模型失败后已自动回退）' : '';
-      setSignalCandidateStatus(`草稿已由 ${providerLabel} 生成并保存${fallbackLabel}，候选仍保持“已入选”。`, 'success');
+      const excludedCount = payload.enrichment?.excludedCandidateIds?.length || 0;
+      const excludedLabel = excludedCount ? `，已跳过 ${excludedCount} 条无法核对公开摘要的候选` : '';
+      const retainedLabel = excludedCount ? '其余候选' : '候选';
+      setSignalCandidateStatus(
+        `草稿已由 ${providerLabel} 生成并保存${fallbackLabel}${excludedLabel}，${retainedLabel}仍保持“已入选”。`,
+        'success'
+      );
       setSignalDraftStatus('草稿已进入审核队列。请编辑并保存后，再点击“批准发布”。', 'success');
       setSignalStatus('AI 草稿已载入。请核对事实、来源和措辞，保存后回到草稿区批准发布。', 'success');
       await Promise.allSettled([loadSignalCandidates(), loadSignalDrafts(), loadSignalBriefs(), loadEntries(), loadAuditLogs()]);
