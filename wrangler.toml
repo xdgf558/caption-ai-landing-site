@@ -20,6 +20,10 @@ SIGNAL_BRIEF_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
 SIGNAL_BRIEF_FALLBACK_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 SIGNAL_BRIEF_DEEPSEEK_ENABLED = "1"
 SIGNAL_BRIEF_DEEPSEEK_MODEL = "deepseek-v4-pro"
+CREEM_MODE = "test"
+CREEM_CREDIT_PACK_PRODUCT_ID = "prod_4DJS5zfnpMENgs7IaXBSwG"
+CREEM_CREDIT_PACK_CREDITS = "100"
+CREEM_CREDIT_PACK_PRICE_USD = "10"
 
 [assets]
 directory = "./dist"

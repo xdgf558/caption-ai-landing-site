@@ -319,6 +319,10 @@ const acceptableAccessLevels = (access) => {
 const nowPaymentsProvider = 'nowpayments';
 const nowPaymentsDefaultApiBase = 'https://api.nowpayments.io/v1';
 const nowPaymentsWebhookPath = '/api/novels/webhooks/nowpayments';
+const creemProvider = 'creem';
+const creemTestApiBase = 'https://test-api.creem.io/v1';
+const creemProductionApiBase = 'https://api.creem.io/v1';
+const creemWebhookPath = '/api/novels/webhooks/creem';
 const nowPaymentsSupportedCurrencies = ['USDTBSC', 'USDTERC20', 'USDC', 'USDCMATIC', 'USDTARB', 'FDUSDBSC'];
 const novelOrderStatuses = ['draft', 'waiting', 'confirming', 'confirmed', 'finished', 'failed', 'expired', 'refunded', 'unknown'];
 const novelPaymentGrantStatuses = ['confirmed', 'finished'];
@@ -330,9 +334,9 @@ const novelBundleOrderType = 'chapter-bundle';
 const novelCreditPackOrderType = 'credit-pack';
 const novelCreditSource = 'reader-credits';
 const novelCreditUnitLabel = 'Station Points';
-const novelCreditLedgerTopupSource = 'nowpayments-credit-pack';
 const novelCreditLedgerUnlockSource = 'chapter-credit-unlock';
 const novelCreditLedgerMembershipSource = 'reader-membership-redeem';
+const creemCreditPackLedgerSource = 'creem-credit-pack';
 const novelAdminSource = 'admin-v2';
 const novelAdminManualCreditSource = 'admin-v2-manual-credit';
 const novelReadingEventTypes = new Set([
@@ -387,6 +391,16 @@ const timingSafeEqualString = (left, right) => {
   }
   return result === 0;
 };
+
+const normalizeEmailList = (value) =>
+  Array.from(
+    new Set(
+      String(value || '')
+        .split(/[\s,;]+/)
+        .map((email) => cleanText(email, 254).toLowerCase())
+        .filter(Boolean)
+    )
+  );
 
 const bytesToBase32 = (bytes) => {
   let bits = 0;
@@ -556,6 +570,50 @@ const getNowPaymentsConfig = (env, request) => {
   };
 };
 
+const getCreemConfig = (env, request) => {
+  const mode = cleanText(env.CREEM_MODE, 20).toLowerCase() === 'production' ? 'production' : 'test';
+  const defaultApiBase = mode === 'production' ? creemProductionApiBase : creemTestApiBase;
+  const apiBase = cleanText(env.CREEM_API_BASE || defaultApiBase, 200).replace(/\/+$/, '');
+  const origin = new URL(request.url).origin;
+  const webhookUrl = cleanText(env.CREEM_WEBHOOK_URL || `${origin}${creemWebhookPath}`, 300);
+
+  return {
+    apiBase: apiBase || defaultApiBase,
+    mode,
+    productId: cleanText(env.CREEM_CREDIT_PACK_PRODUCT_ID, 120),
+    productCredits: normalizePositiveInteger(env.CREEM_CREDIT_PACK_CREDITS, 100),
+    productPriceAmount: normalizePriceAmount(env.CREEM_CREDIT_PACK_PRICE_USD, 10),
+    testReaderEmails: normalizeEmailList(env.CREEM_TEST_READER_EMAILS),
+    webhookUrl,
+    hasApiKey: Boolean(String(env.CREEM_API_KEY || '').trim()),
+    hasWebhookSecret: Boolean(String(env.CREEM_WEBHOOK_SECRET || '').trim())
+  };
+};
+
+const isCreemPackMatch = (config, pack) =>
+  Boolean(
+    pack &&
+      pack.priceCurrency === 'USD' &&
+      pack.credits === config.productCredits &&
+      Math.abs(pack.priceAmount - config.productPriceAmount) < 0.001
+  );
+
+const isCreemCheckoutConfigured = (config) =>
+  config.hasApiKey && config.hasWebhookSecret && Boolean(config.productId);
+
+const isCreemCheckoutAllowed = (config, session, pack) => {
+  if (!isCreemCheckoutConfigured(config) || !isCreemPackMatch(config, pack)) return false;
+  if (config.mode === 'production') return true;
+  const email = cleanText(session?.email, 254).toLowerCase();
+  return Boolean(email && config.testReaderEmails.includes(email));
+};
+
+const verifyCreemSignature = async (rawBody, signature, secret) => {
+  if (!rawBody || !signature || !secret) return false;
+  const expected = await hmacSha256Hex(rawBody, secret);
+  return timingSafeEqualString(expected.toLowerCase(), String(signature).trim().toLowerCase());
+};
+
 const mapNowPaymentsStatus = (value) => {
   const status = cleanText(value, 80).toLowerCase();
   if (status === 'finished') return 'finished';
@@ -608,6 +666,11 @@ const getCheckoutPrices = (env) => ({
 const normalizePositiveInteger = (value, fallback = 0) => {
   const number = Number.parseInt(String(value ?? '').trim(), 10);
   return Number.isFinite(number) && number >= 0 ? number : fallback;
+};
+
+const normalizeSignedInteger = (value, fallback = 0) => {
+  const number = Number.parseInt(String(value ?? '').trim(), 10);
+  return Number.isFinite(number) ? number : fallback;
 };
 
 const normalizeBundleDiscounts = (discounts) =>
@@ -1226,6 +1289,8 @@ const parseOrderMetadata = (order) => {
 const extractNowPaymentsEvent = (payload) => {
   const providerStatus = normalizePaymentValue(payload.payment_status || payload.status, 80).toLowerCase();
   return {
+    provider: nowPaymentsProvider,
+    eventType: 'ipn',
     providerOrderId: normalizePaymentValue(payload.order_id || payload.orderId, 200),
     providerPaymentId: normalizePaymentValue(payload.payment_id || payload.paymentId, 120),
     providerInvoiceId: normalizePaymentValue(payload.invoice_id || payload.invoiceId, 120),
@@ -1236,6 +1301,76 @@ const extractNowPaymentsEvent = (payload) => {
     payAmount: normalizePaymentValue(payload.pay_amount || payload.payAmount || payload.actually_paid, 60),
     payCurrency: normalizePaymentValue(payload.pay_currency || payload.payCurrency, 24).toUpperCase()
   };
+};
+
+const normalizeCreemMode = (value) => {
+  const mode = normalizePaymentValue(value, 40).toLowerCase();
+  if (['test', 'sandbox', 'local'].includes(mode)) return 'test';
+  if (['production', 'prod', 'live'].includes(mode)) return 'production';
+  return mode;
+};
+
+const extractCreemEvent = (payload) => {
+  const eventType = normalizePaymentValue(payload?.eventType || payload?.event_type || payload?.type, 80).toLowerCase();
+  const object = payload?.object && typeof payload.object === 'object' ? payload.object : {};
+  const checkout = object.object === 'checkout' ? object : object.checkout || {};
+  const order = object.order && typeof object.order === 'object' ? object.order : {};
+  const product = object.product && typeof object.product === 'object' ? object.product : {};
+  const customer = object.customer && typeof object.customer === 'object' ? object.customer : {};
+  const providerStatus = normalizePaymentValue(order.status || object.status || eventType, 80).toLowerCase();
+  const amountCents = normalizePositiveInteger(order.amount, 0);
+  const status =
+    eventType === 'checkout.completed'
+      ? 'finished'
+      : eventType === 'refund.created' || eventType === 'dispute.created'
+        ? 'refunded'
+        : 'unknown';
+
+  return {
+    provider: creemProvider,
+    eventId: normalizePaymentValue(payload?.id, 120),
+    eventType,
+    providerOrderId: normalizePaymentValue(order.id, 200),
+    providerPaymentId: normalizePaymentValue(order.transaction?.id || order.transaction || object.transaction?.id, 120),
+    providerInvoiceId: normalizePaymentValue(checkout.id, 120),
+    providerStatus,
+    status,
+    requestId: normalizePaymentValue(checkout.request_id || object.request_id, 200),
+    productId: normalizePaymentValue(product.id || order.product || checkout.product, 120),
+    priceAmount: amountCents ? amountToStorage(amountCents / 100) : '',
+    priceCurrency: normalizePaymentValue(order.currency || product.currency, 24).toUpperCase(),
+    payAmount: amountCents ? amountToStorage(amountCents / 100) : '',
+    payCurrency: normalizePaymentValue(order.currency || product.currency, 24).toUpperCase(),
+    customerEmail: cleanText(customer.email, 254).toLowerCase(),
+    mode: normalizeCreemMode(order.mode || object.transaction?.mode || checkout.mode || object.mode || product.mode)
+  };
+};
+
+const validateCreemEvent = (order, event, config) => {
+  if (!order || order.provider !== creemProvider) return 'order_provider_mismatch';
+  if (order.order_type !== novelCreditPackOrderType) return 'order_type_mismatch';
+  if (!['checkout.completed', 'refund.created', 'dispute.created'].includes(event.eventType)) {
+    return 'event_not_supported';
+  }
+  if (event.eventType === 'checkout.completed' && (!event.requestId || event.requestId !== order.order_token)) {
+    return 'request_id_mismatch';
+  }
+
+  const metadata = parseOrderMetadata(order);
+  const expectedMode = normalizeCreemMode(metadata.creemMode || config.mode);
+  if (!event.mode || !expectedMode || event.mode !== expectedMode) return 'mode_mismatch';
+  const expectedProductId = cleanText(metadata.creemProductId || config.productId, 120);
+  if (!event.productId || !expectedProductId || event.productId !== expectedProductId) return 'product_mismatch';
+  if (!event.priceAmount || amountToStorage(event.priceAmount) !== amountToStorage(order.price_amount)) {
+    return 'amount_mismatch';
+  }
+  const expectedCurrency = normalizePaymentValue(order.price_currency, 24).toUpperCase();
+  if (!event.priceCurrency || !expectedCurrency || event.priceCurrency !== expectedCurrency) {
+    return 'currency_mismatch';
+  }
+  const orderEmail = cleanText(order.customer_email, 254).toLowerCase();
+  if (orderEmail && event.customerEmail && event.customerEmail !== orderEmail) return 'customer_mismatch';
+  return '';
 };
 
 const novelOrderToJson = (row) => ({
@@ -1270,7 +1405,7 @@ const novelOrderToJson = (row) => ({
 
 const readerCreditAccountToJson = (row, config) => ({
   accountId: row.account_id,
-  balanceCredits: normalizePositiveInteger(row.balance_credits, 0),
+  balanceCredits: normalizeSignedInteger(row.balance_credits, 0),
   lifetimePurchasedCredits: normalizePositiveInteger(row.lifetime_purchased_credits, 0),
   lifetimeSpentCredits: normalizePositiveInteger(row.lifetime_spent_credits, 0),
   unitLabel: row.currency_label || config.unitLabel,
@@ -1283,7 +1418,7 @@ const readerCreditLedgerToJson = (row) => ({
   accountId: row.account_id,
   entryType: row.entry_type,
   creditsDelta: normalizePositiveInteger(Math.abs(row.credits_delta), 0) * (Number(row.credits_delta) < 0 ? -1 : 1),
-  balanceAfter: normalizePositiveInteger(row.balance_after, 0),
+  balanceAfter: normalizeSignedInteger(row.balance_after, 0),
   source: row.source,
   sourceRef: row.source_ref,
   seriesSlug: row.series_slug,
@@ -1420,7 +1555,7 @@ const readerAccountToAdminJson = (row, config = getReaderCreditConfig({})) => ({
   updatedAt: row.updated_at,
   creditAccount: {
     accountId: row.id,
-    balanceCredits: normalizePositiveInteger(row.balance_credits, 0),
+    balanceCredits: normalizeSignedInteger(row.balance_credits, 0),
     lifetimePurchasedCredits: normalizePositiveInteger(row.lifetime_purchased_credits, 0),
     lifetimeSpentCredits: normalizePositiveInteger(row.lifetime_spent_credits, 0),
     unitLabel: row.currency_label || config.unitLabel,
@@ -1441,6 +1576,7 @@ const novelPaymentEventToJson = (row) => ({
   orderId: row.order_id,
   providerOrderId: row.provider_order_id,
   providerPaymentId: row.provider_payment_id,
+  providerEventId: row.provider_event_id || '',
   eventType: row.event_type,
   status: row.status,
   signatureValid: Boolean(row.signature_valid),
@@ -5282,8 +5418,11 @@ const handleReaderCredits = async (request, env) => {
     getReaderMembershipSettings(db, env)
   ]);
   const paymentConfig = getNowPaymentsConfig(env, request);
-  const checkoutEnabled = paymentConfig.hasApiKey && paymentConfig.hasIpnSecret && packs.length > 0;
   const session = await getReaderFromSession(request, env);
+  const creemConfig = getCreemConfig(env, request);
+  const nowPaymentsEnabled = paymentConfig.hasApiKey && paymentConfig.hasIpnSecret && packs.length > 0;
+  const creemEnabled = packs.some((pack) => isCreemCheckoutAllowed(creemConfig, session, pack));
+  const checkoutEnabled = nowPaymentsEnabled || creemEnabled;
   if (!session) {
     return json({
       ok: true,
@@ -7399,7 +7538,12 @@ const handleReaderMembershipRedeem = async (request, env) => {
   });
 };
 
-const hasCreditTopupLedger = async (db, accountId, sourceRef) =>
+const creditTopupSourceForProvider = (provider) =>
+  cleanText(provider, 60).toLowerCase() === creemProvider
+    ? creemCreditPackLedgerSource
+    : `${cleanText(provider, 60).toLowerCase() || nowPaymentsProvider}-credit-pack`;
+
+const hasCreditTopupLedger = async (db, accountId, source, sourceRef) =>
   db
     .prepare(
       `SELECT *
@@ -7410,42 +7554,109 @@ const hasCreditTopupLedger = async (db, accountId, sourceRef) =>
          AND source_ref = ?
        LIMIT 1`
     )
-    .bind(accountId, novelCreditLedgerTopupSource, sourceRef)
+    .bind(accountId, source, sourceRef)
     .first();
 
-const recordReaderCreditTopup = async (db, accountId, credits, sourceRef, note, metadata, config) => {
-  const account = await ensureReaderCreditAccount(db, accountId, config);
-  const updatedAccount = await db
+const hasCreditReversalLedger = async (db, accountId, source, sourceRef) =>
+  db
     .prepare(
+      `SELECT *
+       FROM reader_credit_ledger
+       WHERE account_id = ?
+         AND entry_type = 'reversal'
+         AND source = ?
+         AND source_ref = ?
+       LIMIT 1`
+    )
+    .bind(accountId, source, sourceRef)
+    .first();
+
+const recordReaderCreditTopup = async (db, accountId, credits, source, sourceRef, note, metadata, config) => {
+  const account = await ensureReaderCreditAccount(db, accountId, config);
+  const results = await db.batch([
+    db
+      .prepare(
+        `INSERT INTO reader_credit_ledger (
+          account_id, entry_type, credits_delta, balance_after, source, source_ref,
+          series_slug, chapter_slug, note, metadata_json
+        )
+        SELECT ?, 'topup', ?, 0, ?, ?, '', '', ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1
+          FROM reader_credit_ledger
+          WHERE account_id = ?
+            AND entry_type = 'reversal'
+            AND source = ?
+            AND source_ref = ?
+        )
+        RETURNING *`
+      )
+      .bind(
+        account.account_id,
+        credits,
+        source,
+        sourceRef,
+        note,
+        JSON.stringify(metadata || {}),
+        account.account_id,
+        source,
+        sourceRef
+      ),
+    db
+      .prepare(
       `UPDATE reader_credit_accounts
        SET balance_credits = balance_credits + ?,
            lifetime_purchased_credits = lifetime_purchased_credits + ?,
            updated_at = CURRENT_TIMESTAMP
        WHERE account_id = ?
+         AND EXISTS (
+           SELECT 1
+           FROM reader_credit_ledger
+           WHERE account_id = ?
+             AND entry_type = 'topup'
+             AND source = ?
+             AND source_ref = ?
+         )
+         AND NOT EXISTS (
+           SELECT 1
+           FROM reader_credit_ledger
+           WHERE account_id = ?
+             AND entry_type = 'reversal'
+             AND source = ?
+             AND source_ref = ?
+         )
        RETURNING *`
-    )
-    .bind(credits, credits, account.account_id)
-    .first();
-
-  const ledger = await db
-    .prepare(
-      `INSERT INTO reader_credit_ledger (
-        account_id, entry_type, credits_delta, balance_after, source, source_ref,
-        series_slug, chapter_slug, note, metadata_json
       )
-      VALUES (?, 'topup', ?, ?, ?, ?, '', '', ?, ?)
-      RETURNING *`
-    )
-    .bind(
-      account.account_id,
-      credits,
-      updatedAccount.balance_credits,
-      novelCreditLedgerTopupSource,
-      sourceRef,
-      note,
-      JSON.stringify(metadata || {})
-    )
-    .first();
+      .bind(
+        credits,
+        credits,
+        account.account_id,
+        account.account_id,
+        source,
+        sourceRef,
+        account.account_id,
+        source,
+        sourceRef
+      ),
+    db
+      .prepare(
+        `UPDATE reader_credit_ledger
+         SET balance_after = (
+           SELECT balance_credits
+           FROM reader_credit_accounts
+           WHERE account_id = ?
+         )
+         WHERE account_id = ?
+           AND entry_type = 'topup'
+           AND source = ?
+           AND source_ref = ?
+         RETURNING *`
+      )
+      .bind(account.account_id, account.account_id, source, sourceRef)
+  ]);
+  const updatedAccount = results[1]?.results?.[0] || null;
+  const ledger = results[2]?.results?.[0] || null;
+  if (!updatedAccount || !ledger) throw new Error('Reader credit top-up transaction did not complete.');
 
   return {
     account: updatedAccount,
@@ -7464,7 +7675,16 @@ const applyCreditTopupFromOrder = async (db, order, env) => {
   if (!credits) return { credited: false, reason: 'missing_credit_pack_metadata' };
 
   const sourceRef = order.order_token || order.provider_payment_id || order.provider_order_id || `order-${order.id}`;
-  const existing = await hasCreditTopupLedger(db, order.account_id, sourceRef);
+  const source = creditTopupSourceForProvider(order.provider);
+  const reversal = await hasCreditReversalLedger(db, order.account_id, source, sourceRef);
+  if (reversal) {
+    return {
+      credited: false,
+      reason: 'payment_reversed',
+      ledger: reversal
+    };
+  }
+  const existing = await hasCreditTopupLedger(db, order.account_id, source, sourceRef);
   if (existing) {
     return {
       credited: false,
@@ -7474,8 +7694,39 @@ const applyCreditTopupFromOrder = async (db, order, env) => {
   }
 
   const config = getReaderCreditConfig(env);
-  const note = `Automatically credited from NOWPayments ${order.status} order ${sourceRef}.`;
-  const result = await recordReaderCreditTopup(db, order.account_id, credits, sourceRef, note, metadata, config);
+  const providerLabel = cleanText(order.provider, 60) || nowPaymentsProvider;
+  const note = `Automatically credited from ${providerLabel} ${order.status} order ${sourceRef}.`;
+  let result;
+  try {
+    result = await recordReaderCreditTopup(
+      db,
+      order.account_id,
+      credits,
+      source,
+      sourceRef,
+      note,
+      metadata,
+      config
+    );
+  } catch (error) {
+    const existingAfterConflict = await hasCreditTopupLedger(db, order.account_id, source, sourceRef);
+    if (existingAfterConflict) {
+      return {
+        credited: false,
+        reason: 'already_credited',
+        ledger: existingAfterConflict
+      };
+    }
+    const reversalAfterConflict = await hasCreditReversalLedger(db, order.account_id, source, sourceRef);
+    if (reversalAfterConflict) {
+      return {
+        credited: false,
+        reason: 'payment_reversed',
+        ledger: reversalAfterConflict
+      };
+    }
+    throw error;
+  }
 
   return {
     credited: true,
@@ -7483,6 +7734,134 @@ const applyCreditTopupFromOrder = async (db, order, env) => {
     account: result.account,
     ledger: result.ledger,
     credits
+  };
+};
+
+const recordReaderCreditReversal = async (db, order, event, credits, source, sourceRef, config) => {
+  const account = await ensureReaderCreditAccount(db, order.account_id, config);
+  const note = `Processed ${event.eventType} for Creem order ${sourceRef}; credited points are reversed when present.`;
+  const metadata = {
+    ...parseOrderMetadata(order),
+    creemEventId: event.eventId,
+    creemEventType: event.eventType,
+    intendedReversalCredits: credits
+  };
+  const results = await db.batch([
+    db
+      .prepare(
+        `INSERT INTO reader_credit_ledger (
+          account_id, entry_type, credits_delta, balance_after, source, source_ref,
+          series_slug, chapter_slug, note, metadata_json
+        )
+        SELECT ?, 'reversal',
+          CASE WHEN EXISTS (
+            SELECT 1
+            FROM reader_credit_ledger
+            WHERE account_id = ?
+              AND entry_type = 'topup'
+              AND source = ?
+              AND source_ref = ?
+          ) THEN ? ELSE 0 END,
+          0, ?, ?, '', '', ?, ?
+        RETURNING *`
+      )
+      .bind(
+        account.account_id,
+        account.account_id,
+        source,
+        sourceRef,
+        -credits,
+        source,
+        sourceRef,
+        note,
+        JSON.stringify(metadata)
+      ),
+    db
+      .prepare(
+        `UPDATE reader_credit_accounts
+         SET balance_credits = balance_credits + COALESCE((
+               SELECT credits_delta
+               FROM reader_credit_ledger
+               WHERE account_id = ?
+                 AND entry_type = 'reversal'
+                 AND source = ?
+                 AND source_ref = ?
+               LIMIT 1
+             ), 0),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE account_id = ?
+         RETURNING *`
+      )
+      .bind(
+        account.account_id,
+        source,
+        sourceRef,
+        account.account_id
+      ),
+    db
+      .prepare(
+        `UPDATE reader_credit_ledger
+         SET balance_after = (
+           SELECT balance_credits
+           FROM reader_credit_accounts
+           WHERE account_id = ?
+         )
+         WHERE account_id = ?
+           AND entry_type = 'reversal'
+           AND source = ?
+           AND source_ref = ?
+         RETURNING *`
+      )
+      .bind(account.account_id, account.account_id, source, sourceRef)
+  ]);
+  const updatedAccount = results[1]?.results?.[0] || null;
+  const ledger = results[2]?.results?.[0] || null;
+  if (!updatedAccount || !ledger) throw new Error('Reader credit reversal transaction did not complete.');
+  return { account: updatedAccount, ledger, topupFound: Number(ledger.credits_delta) < 0 };
+};
+
+const applyCreditReversalFromOrder = async (db, order, event, env) => {
+  if (!order) return { reversed: false, reason: 'order_not_found' };
+  if (order.provider !== creemProvider) return { reversed: false, reason: 'order_provider_mismatch' };
+  if (order.order_type !== novelCreditPackOrderType) return { reversed: false, reason: 'not_credit_pack_order' };
+  if (!order.account_id) return { reversed: false, reason: 'missing_reader_account' };
+
+  const metadata = parseOrderMetadata(order);
+  const credits = normalizePositiveInteger(metadata.creditPackCredits, 0);
+  if (!credits) return { reversed: false, reason: 'missing_credit_pack_metadata' };
+
+  const sourceRef = order.order_token || order.provider_payment_id || order.provider_order_id || `order-${order.id}`;
+  const source = creemCreditPackLedgerSource;
+  const existing = await hasCreditReversalLedger(db, order.account_id, source, sourceRef);
+  if (existing) {
+    return { reversed: false, reason: 'already_reversed', ledger: existing };
+  }
+
+  let result;
+  try {
+    result = await recordReaderCreditReversal(
+      db,
+      order,
+      event,
+      credits,
+      source,
+      sourceRef,
+      getReaderCreditConfig(env)
+    );
+  } catch (error) {
+    const existingAfterConflict = await hasCreditReversalLedger(db, order.account_id, source, sourceRef);
+    if (existingAfterConflict) {
+      return { reversed: false, reason: 'already_reversed', ledger: existingAfterConflict };
+    }
+    throw error;
+  }
+
+  return {
+    reversed: result.topupFound,
+    reason: result.topupFound ? 'reversed' : 'reversal_recorded_before_credit',
+    account: result.account,
+    ledger: result.ledger,
+    credits: result.topupFound ? credits : 0
   };
 };
 
@@ -7661,9 +8040,16 @@ const handleReaderCreditUnlock = async (request, env) => {
 
 const handleNovelPaymentsStatus = async (request, env) => {
   const config = getNowPaymentsConfig(env, request);
+  const creemConfig = getCreemConfig(env, request);
   const db = env.WAITLIST_DB;
   const creditPacks = db ? await getConfiguredReaderCreditPacks(db, env) : getReaderCreditConfig(env).packs;
-  const checkoutEnabled = config.hasApiKey && config.hasIpnSecret && Boolean(db) && creditPacks.length > 0;
+  const nowPaymentsEnabled = config.hasApiKey && config.hasIpnSecret && Boolean(db) && creditPacks.length > 0;
+  // Public status stays closed for Creem Test Mode; only signed-in allowlisted readers see that checkout path.
+  const creemEnabled =
+    creemConfig.mode === 'production' &&
+    Boolean(db) &&
+    creditPacks.some((pack) => isCreemCheckoutAllowed(creemConfig, null, pack));
+  const checkoutEnabled = nowPaymentsEnabled || creemEnabled;
   const membershipSettings = db ? await getReaderMembershipSettings(db, env) : {
     enabled: true,
     membershipCreditCost: defaultMembershipCreditCost,
@@ -7673,14 +8059,20 @@ const handleNovelPaymentsStatus = async (request, env) => {
   };
   return json({
     ok: true,
-    provider: nowPaymentsProvider,
+    provider: creemEnabled && !nowPaymentsEnabled ? creemProvider : nowPaymentsProvider,
     configured: {
       apiKey: config.hasApiKey,
       ipnSecret: config.hasIpnSecret,
-      database: Boolean(env.WAITLIST_DB)
+      database: Boolean(env.WAITLIST_DB),
+      creem: {
+        apiKey: creemConfig.hasApiKey,
+        webhookSecret: creemConfig.hasWebhookSecret,
+        product: Boolean(creemConfig.productId),
+        mode: creemConfig.mode
+      }
     },
-    callbackPath: nowPaymentsWebhookPath,
-    callbackUrl: config.callbackUrl,
+    callbackPath: creemEnabled && !nowPaymentsEnabled ? creemWebhookPath : nowPaymentsWebhookPath,
+    callbackUrl: creemEnabled && !nowPaymentsEnabled ? creemConfig.webhookUrl : config.callbackUrl,
     checkoutPath: novelCheckoutPath,
     publicCheckoutEnabled: checkoutEnabled,
     readerCredits: {
@@ -7696,11 +8088,11 @@ const handleNovelPaymentsStatus = async (request, env) => {
       membership: membershipSettings
     },
     automaticEntitlementGrants: true,
-    supportedCurrencies: nowPaymentsSupportedCurrencies,
+    supportedCurrencies: creemEnabled && !nowPaymentsEnabled ? ['USD'] : nowPaymentsSupportedCurrencies,
     orderStatuses: novelOrderStatuses,
     grantStatuses: novelPaymentGrantStatuses,
     note: checkoutEnabled
-      ? 'Stage 5C grants reading entitlements after confirmed or finished NOWPayments reading orders.'
+      ? 'Confirmed payment orders automatically grant their configured Station Points or reading entitlements.'
       : 'Checkout stays disabled until the database, payment credentials, and at least one Station Points pack are configured.'
   });
 };
@@ -7727,6 +8119,41 @@ const createNowPaymentsInvoice = async (env, request, invoice) => {
   if (!response.ok) {
     const message = cleanText(data.message || data.error || 'NOWPayments invoice creation failed.', 300);
     throw new Error(message || 'NOWPayments invoice creation failed.');
+  }
+
+  return data;
+};
+
+const createCreemCheckout = async (env, request, checkout) => {
+  const config = getCreemConfig(env, request);
+  const response = await fetch(`${config.apiBase}/checkouts`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': String(env.CREEM_API_KEY || '').trim()
+    },
+    body: JSON.stringify(checkout)
+  });
+
+  const text = await response.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { message: text };
+  }
+
+  if (!response.ok) {
+    const message = cleanText(data.message || data.error || 'Creem checkout creation failed.', 300);
+    const error = new Error(message || 'Creem checkout creation failed.');
+    error.code = 'CREEM_CHECKOUT_FAILED';
+    throw error;
+  }
+
+  if (!normalizePaymentValue(data.checkout_url, 500)) {
+    const error = new Error('Creem did not return a checkout URL.');
+    error.code = 'CREEM_CHECKOUT_URL_MISSING';
+    throw error;
   }
 
   return data;
@@ -7873,7 +8300,14 @@ const normalizeCheckoutPayload = async (payload, session, env, db) => {
   };
 };
 
-const insertNovelCheckoutOrder = async (db, session, checkout, orderToken) =>
+const insertNovelCheckoutOrder = async (
+  db,
+  session,
+  checkout,
+  orderToken,
+  provider = nowPaymentsProvider,
+  providerMetadata = {}
+) =>
   db
     .prepare(
       `INSERT INTO novel_orders (
@@ -7887,7 +8321,7 @@ const insertNovelCheckoutOrder = async (db, session, checkout, orderToken) =>
     .bind(
       orderToken,
       session?.account_id || null,
-      nowPaymentsProvider,
+      provider,
       orderToken,
       checkout.orderType,
       checkout.seriesSlug,
@@ -7913,7 +8347,8 @@ const insertNovelCheckoutOrder = async (db, session, checkout, orderToken) =>
           : '',
         subtotalAmount: checkout.bundleDetails ? amountToStorage(checkout.bundleDetails.subtotalAmount) : '',
         unitPriceAmount: checkout.bundleDetails ? amountToStorage(checkout.bundleDetails.unitPriceAmount) : '',
-        returnPath: checkout.returnPath
+        returnPath: checkout.returnPath,
+        ...providerMetadata
       })
     )
     .first();
@@ -7932,7 +8367,7 @@ const insertNovelTipDraft = async (db, session, order, checkout) => {
     .bind(
       order.id,
       session?.account_id || null,
-      nowPaymentsProvider,
+      order.provider || nowPaymentsProvider,
       order.order_token,
       checkout.seriesSlug,
       amountToStorage(checkout.priceAmount),
@@ -7958,12 +8393,12 @@ const updateNovelCheckoutOrder = async (db, orderId, invoice, status = 'waiting'
        RETURNING *`
     )
     .bind(
-      normalizePaymentValue(invoice.id, 120),
-      normalizePaymentValue(invoice.id, 120),
-      normalizePaymentValue(invoice.order_id, 200),
-      normalizePaymentValue(invoice.order_id, 200),
-      normalizePaymentValue(invoice.invoice_url || invoice.payment_url, 500),
-      normalizePaymentValue(invoice.invoice_url || invoice.payment_url, 500),
+      normalizePaymentValue(invoice.id || invoice.checkout_id, 120),
+      normalizePaymentValue(invoice.id || invoice.checkout_id, 120),
+      normalizePaymentValue(invoice.order?.id || invoice.order_id, 200),
+      normalizePaymentValue(invoice.order?.id || invoice.order_id, 200),
+      normalizePaymentValue(invoice.checkout_url || invoice.invoice_url || invoice.payment_url, 500),
+      normalizePaymentValue(invoice.checkout_url || invoice.invoice_url || invoice.payment_url, 500),
       status,
       normalizePaymentValue(invoice.payment_status || invoice.status || status, 80),
       orderId
@@ -8000,18 +8435,6 @@ const handleNovelCheckout = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
 
-  const config = getNowPaymentsConfig(env, request);
-  if (!config.hasApiKey || !config.hasIpnSecret) {
-    return json(
-      {
-        ok: false,
-        code: 'PAYMENT_PROVIDER_NOT_CONFIGURED',
-        message: 'NOWPayments checkout is not configured yet.'
-      },
-      { status: 503 }
-    );
-  }
-
   let payload;
   try {
     payload = await request.json();
@@ -8028,28 +8451,67 @@ const handleNovelCheckout = async (request, env) => {
     return json({ ok: false, code: error.code || 'INVALID_CHECKOUT', message: error.message }, { status });
   }
 
+  const nowPaymentsConfig = getNowPaymentsConfig(env, request);
+  const creemConfig = getCreemConfig(env, request);
+  const useCreem =
+    checkout.orderType === novelCreditPackOrderType &&
+    isCreemCheckoutAllowed(creemConfig, session, checkout.creditPack);
+  const provider = useCreem ? creemProvider : nowPaymentsProvider;
+  if (!useCreem && (!nowPaymentsConfig.hasApiKey || !nowPaymentsConfig.hasIpnSecret)) {
+    return json(
+      {
+        ok: false,
+        code: 'PAYMENT_PROVIDER_NOT_CONFIGURED',
+        message: 'No payment provider is available for this purchase.'
+      },
+      { status: 503 }
+    );
+  }
+
   const orderToken = `sc-${randomToken(18).toLowerCase()}`;
-  const order = await insertNovelCheckoutOrder(db, session, checkout, orderToken);
+  const order = await insertNovelCheckoutOrder(db, session, checkout, orderToken, provider, {
+    ...(useCreem
+      ? {
+          creemMode: creemConfig.mode,
+          creemProductId: creemConfig.productId
+        }
+      : {})
+  });
   await insertNovelTipDraft(db, session, order, checkout);
 
   try {
-    const invoice = await createNowPaymentsInvoice(env, request, {
-      price_amount: checkout.priceAmount,
-      price_currency: checkout.priceCurrency,
-      order_id: orderToken,
-      order_description: checkout.description,
-      ipn_callback_url: config.callbackUrl,
-      success_url: paymentReturnUrl(request, checkout.returnPath, 'success', orderToken),
-      cancel_url: paymentReturnUrl(request, checkout.returnPath, 'cancelled', orderToken),
-      ...(checkout.payCurrency ? { pay_currency: checkout.payCurrency } : {})
-    });
+    const invoice = useCreem
+      ? await createCreemCheckout(env, request, {
+          product_id: creemConfig.productId,
+          request_id: orderToken,
+          units: 1,
+          customer: {
+            email: session.email
+          },
+          success_url: paymentReturnUrl(request, checkout.returnPath, 'success', orderToken),
+          metadata: {
+            accountId: String(session.account_id),
+            credits: String(checkout.creditPack.credits),
+            orderToken
+          }
+        })
+      : await createNowPaymentsInvoice(env, request, {
+          price_amount: checkout.priceAmount,
+          price_currency: checkout.priceCurrency,
+          order_id: orderToken,
+          order_description: checkout.description,
+          ipn_callback_url: nowPaymentsConfig.callbackUrl,
+          success_url: paymentReturnUrl(request, checkout.returnPath, 'success', orderToken),
+          cancel_url: paymentReturnUrl(request, checkout.returnPath, 'cancelled', orderToken),
+          ...(checkout.payCurrency ? { pay_currency: checkout.payCurrency } : {})
+        });
 
     const updatedOrder = await updateNovelCheckoutOrder(db, order.id, invoice, 'waiting');
     if (checkout.orderType === 'tip') await updateNovelTipFromOrder(db, updatedOrder, 'waiting');
 
     return json({
       ok: true,
-      provider: nowPaymentsProvider,
+      provider,
       checkoutEnabled: true,
       paymentUrl: updatedOrder.payment_url,
       order: novelOrderToJson(updatedOrder)
@@ -8060,8 +8522,8 @@ const handleNovelCheckout = async (request, env) => {
     return json(
       {
         ok: false,
-        code: 'NOWPAYMENTS_INVOICE_FAILED',
-        message: error.message || 'NOWPayments invoice creation failed.',
+        code: error.code || (useCreem ? 'CREEM_CHECKOUT_FAILED' : 'NOWPAYMENTS_INVOICE_FAILED'),
+        message: error.message || `${provider} checkout creation failed.`,
         order: novelOrderToJson(failedOrder)
       },
       { status: 502 }
@@ -8096,28 +8558,31 @@ const findNovelOrderByNowPaymentsEvent = async (db, event) => {
     .first();
 };
 
-const insertNovelPaymentEvent = async (db, event, payload, orderId = null) =>
-  db
+const insertNovelPaymentEvent = async (db, event, payload, orderId = null) => {
+  const idempotentCreemEvent = event.provider === creemProvider && Boolean(event.eventId);
+  return db
     .prepare(
-      `INSERT INTO novel_payment_events (
-        provider, order_id, provider_order_id, provider_payment_id, event_type,
+      `${idempotentCreemEvent ? 'INSERT OR IGNORE' : 'INSERT'} INTO novel_payment_events (
+        provider, order_id, provider_order_id, provider_payment_id, provider_event_id, event_type,
         status, signature_valid, payload_json
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
-      nowPaymentsProvider,
+      event.provider || nowPaymentsProvider,
       orderId,
       event.providerOrderId,
       event.providerPaymentId,
-      'ipn',
+      event.eventId || '',
+      event.eventType || 'ipn',
       event.providerStatus || event.status,
       1,
       JSON.stringify(payload)
     )
     .run();
+};
 
-const updateNovelOrderFromNowPaymentsEvent = async (db, orderId, event) =>
+const updateNovelOrderFromPaymentEvent = async (db, orderId, event) =>
   db
     .prepare(
       `UPDATE novel_orders
@@ -8303,7 +8768,7 @@ const handleNowPaymentsWebhook = async (request, env) => {
   let entitlementGrant = { granted: false, reason: order ? 'not_processed' : 'order_not_found' };
   let creditGrant = { credited: false, reason: order ? 'not_processed' : 'order_not_found' };
   if (order) {
-    updatedOrder = await updateNovelOrderFromNowPaymentsEvent(db, order.id, event);
+    updatedOrder = await updateNovelOrderFromPaymentEvent(db, order.id, event);
     if (updatedOrder.order_type === 'tip') {
       await updateNovelTipFromOrder(db, updatedOrder, event.status);
       entitlementGrant = { granted: false, reason: 'tip_order' };
@@ -8320,7 +8785,7 @@ const handleNowPaymentsWebhook = async (request, env) => {
   return json({
     ok: true,
     matched: Boolean(order),
-    provider: nowPaymentsProvider,
+    provider: order?.provider || nowPaymentsProvider,
     payment: {
       status: event.status,
       providerStatus: event.providerStatus,
@@ -8348,6 +8813,121 @@ const handleNowPaymentsWebhook = async (request, env) => {
   });
 };
 
+const findNovelOrderByCreemEvent = async (db, event) => {
+  if (!event.requestId && !event.providerOrderId && !event.providerInvoiceId) return null;
+
+  return db
+    .prepare(
+      `SELECT *
+       FROM novel_orders
+       WHERE provider = ?
+         AND (
+           (? <> '' AND order_token = ?)
+           OR (? <> '' AND provider_order_id = ?)
+           OR (? <> '' AND provider_invoice_id = ?)
+         )
+       ORDER BY updated_at DESC
+       LIMIT 1`
+    )
+    .bind(
+      creemProvider,
+      event.requestId,
+      event.requestId,
+      event.providerOrderId,
+      event.providerOrderId,
+      event.providerInvoiceId,
+      event.providerInvoiceId
+    )
+    .first();
+};
+
+const handleCreemWebhook = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const webhookSecret = String(env.CREEM_WEBHOOK_SECRET || '').trim();
+  if (!webhookSecret) {
+    return json({ ok: false, message: 'Creem webhook secret is not configured.' }, { status: 503 });
+  }
+
+  const rawBody = await request.text();
+  if (!rawBody || rawBody.length > 256000) {
+    return json({ ok: false, message: 'Invalid Creem payload.' }, { status: 400 });
+  }
+
+  const signature = request.headers.get('creem-signature') || '';
+  if (!(await verifyCreemSignature(rawBody, signature, webhookSecret))) {
+    return json({ ok: false, message: 'Invalid Creem signature.' }, { status: 401 });
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return json({ ok: false, message: 'Invalid Creem JSON payload.' }, { status: 400 });
+  }
+
+  const event = extractCreemEvent(payload);
+  const supportedEvent = ['checkout.completed', 'refund.created', 'dispute.created'].includes(event.eventType);
+  if (supportedEvent && !event.eventId) {
+    return json({
+      ok: true,
+      rejected: true,
+      reason: 'missing_event_id',
+      provider: creemProvider,
+      eventType: event.eventType
+    });
+  }
+  const order = supportedEvent ? await findNovelOrderByCreemEvent(db, event) : null;
+  const eventInsert = await insertNovelPaymentEvent(db, event, payload, order?.id || null);
+  const duplicateEvent = Boolean(event.eventId && getD1ChangeCount(eventInsert) === 0);
+
+  if (!supportedEvent) {
+    return json({ ok: true, ignored: true, duplicateEvent, provider: creemProvider, eventType: event.eventType });
+  }
+  if (!order) {
+    return json({ ok: true, matched: false, duplicateEvent, provider: creemProvider, eventType: event.eventType });
+  }
+
+  const validationError = validateCreemEvent(order, event, getCreemConfig(env, request));
+  if (validationError) {
+    return json({
+      ok: true,
+      rejected: true,
+      code: 'CREEM_EVENT_VALIDATION_FAILED',
+      reason: validationError,
+      duplicateEvent,
+      provider: creemProvider,
+      eventType: event.eventType,
+      eventId: event.eventId
+    });
+  }
+
+  const updatedOrder = await updateNovelOrderFromPaymentEvent(db, order.id, event);
+  const creditGrant = event.eventType === 'checkout.completed'
+    ? await applyCreditTopupFromOrder(db, updatedOrder, env)
+    : await applyCreditReversalFromOrder(db, updatedOrder, event, env);
+
+  return json({
+    ok: true,
+    matched: true,
+    duplicateEvent,
+    provider: creemProvider,
+    eventType: event.eventType,
+    creditGrant: {
+      credited: Boolean(creditGrant.credited),
+      reversed: Boolean(creditGrant.reversed),
+      reason: creditGrant.reason,
+      credits: creditGrant.credits || 0,
+      account: creditGrant.account
+        ? readerCreditAccountToJson(creditGrant.account, getReaderCreditConfig(env))
+        : null,
+      ledger: creditGrant.ledger ? readerCreditLedgerToJson(creditGrant.ledger) : null
+    },
+    order: novelOrderToJson(updatedOrder)
+  });
+};
+
 const findNovelOrderByToken = async (db, orderToken) =>
   db
     .prepare(
@@ -8364,7 +8944,7 @@ const listNovelPaymentEventsForOrder = async (db, orderId) => {
   const response = await db
     .prepare(
       `SELECT id, provider, order_id, provider_order_id, provider_payment_id, event_type,
-              status, signature_valid, received_at
+              provider_event_id, status, signature_valid, received_at
        FROM novel_payment_events
        WHERE order_id = ?
        ORDER BY received_at DESC, id DESC
@@ -8406,7 +8986,7 @@ const listReaderCreditLedgerForOrder = async (db, order) => {
        ORDER BY created_at DESC, id DESC
        LIMIT 10`
     )
-    .bind(order.account_id, novelCreditLedgerTopupSource, order.order_token)
+    .bind(order.account_id, creditTopupSourceForProvider(order.provider), order.order_token)
     .all();
 
   return (response.results || []).map(readerCreditLedgerToJson);
@@ -8431,13 +9011,21 @@ const summarizeNovelPaymentFulfillment = async (db, order) => {
 
   if (order.order_type === novelCreditPackOrderType) {
     const creditLedger = await listReaderCreditLedgerForOrder(db, order);
-    const complete = creditLedger.length > 0;
+    const topup = creditLedger.find((entry) => entry.entryType === 'topup') || null;
+    const reversal = creditLedger.find((entry) => entry.entryType === 'reversal') || null;
+    const complete = Boolean(topup);
     return {
       complete,
       kind: novelCreditPackOrderType,
       needsReview: paymentGrantable && !complete,
       pending: !paymentFinal,
-      reason: complete ? 'credits_credited' : paymentGrantable ? 'credit_topup_not_found' : waitingReason,
+      reason: reversal
+        ? 'credits_reversed'
+        : complete
+          ? 'credits_credited'
+          : paymentGrantable
+            ? 'credit_topup_not_found'
+            : waitingReason,
       entitlements: [],
       creditLedger
     };
@@ -20597,6 +21185,8 @@ export const __readerTotpTestHooks = {
   expireStaleSignalCollectionRuns,
   failSignalAutomationCron,
   findConfiguredReaderCreditPack,
+  extractCreemEvent,
+  getCreemConfig,
   findActiveSignalCollectionRun,
   getD1ChangeCount,
   getAdjacentPublishedSignalBriefs,
@@ -20640,6 +21230,7 @@ export const __readerTotpTestHooks = {
   handleNovelForgeChapterContent,
   handleNovelForgeTranslationSync,
   handleNovelPaymentsStatus,
+  handleCreemWebhook,
   handleReaderCredits,
   handlePublicNovelComments,
   handleProductFeedbackSubmit,
@@ -20695,6 +21286,9 @@ export const __readerTotpTestHooks = {
   sha256Hex,
   shouldSampleReaderTotpResetCleanup,
   timingSafeEqualString,
+  isCreemCheckoutAllowed,
+  validateCreemEvent,
+  verifyCreemSignature,
   translateNovelTextToEnglish,
   verifyAndConsumeReaderTotpCode,
   verifyTotpCode
@@ -20897,6 +21491,10 @@ export default {
 
     if (request.method === 'POST' && url.pathname === nowPaymentsWebhookPath) {
       return handleNowPaymentsWebhook(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === creemWebhookPath) {
+      return handleCreemWebhook(request, env);
     }
 
     if (request.method === 'POST' && url.pathname === novelReadingEventsPath) {
