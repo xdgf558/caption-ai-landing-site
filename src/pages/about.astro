@@ -12,12 +12,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <p class="section-kicker">About Station Cat</p>
     <h1>這是一座深夜還亮著的小站。</h1>
     <p class="about-page-lede">
-      Station Cat 是我的個人創作小站。這裡放正在打磨的小工具、長篇小說連載、開發筆記，也放一些從日常裡慢慢長出來的觀察。
+      Station Cat 是我的個人創作小站。這裡放正在打磨的小工具、長篇小說連載、公開信號，也放一些從日常裡慢慢長出來的觀察。
     </p>
     <div class="button-row">
       <a class="button button-primary" href="/novel/">看連載小說</a>
       <a class="button button-secondary" href="/zh-hant/apps/">看正在做的工具</a>
-      <a class="button button-secondary" href="/devlog/">看開發博客</a>
     </div>
   </section>
 
@@ -37,14 +36,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         SnapCopy、SimpleCut Pro、NodePilot 這些工具都從很小的需求開始。它們不追求一開始就很龐大，而是先把某個日常動作做順。
       </p>
     </article>
-
-    <article>
-      <p class="station-kicker">Build Log</p>
-      <h2>開發過程會被留下來。</h2>
-      <p>
-        我會把功能更新、踩坑、產品調整和一些想法寫進開發博客。它不是正式公告欄，更像一張工作桌上的便條紙，記錄事情怎麼一步步變清楚。
-      </p>
-    </article>
   </section>
 
   <section class="station-section about-page-note">
@@ -54,7 +45,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       我從零開始學開發，也從零開始把想法做成可以使用的東西。Station Cat 會保留這個過程裡比較真實的一面：有些功能會成熟，有些想法會被放下，有些故事會慢慢寫長。
     </p>
     <p>
-      如果你喜歡這裡的工具、小說或開發筆記，可以從會員中心登入，追連載、保存書籤，或在作品更新時回來看看。
+      如果你喜歡這裡的工具或小說，可以從會員中心登入，追連載、保存書籤，或在作品更新時回來看看。
     </p>
     <div class="button-row">
       <a class="button button-primary" href="/library/">會員登入</a>
@@ -80,7 +71,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     align-items: stretch;
     display: grid;
     gap: 18px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .about-page-grid article,
