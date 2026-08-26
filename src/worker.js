@@ -17191,28 +17191,24 @@ const dynamicVersionedSignalSharePath = (route, row) =>
 const dynamicNavCopy = {
   en: {
     apps: 'Apps',
-    devlog: 'Dev Blog',
     member: 'Member Center',
     serials: 'Serials',
     signal: 'Signal strip'
   },
   ja: {
     apps: 'Apps',
-    devlog: '開発ログ',
     member: '会員センター',
     serials: '連載小説',
     signal: 'シグナル簡報'
   },
   'zh-Hant': {
     apps: 'Apps',
-    devlog: '開發博客',
     member: '會員登入',
     serials: '連載小說',
     signal: '信號簡報'
   },
   'zh-Hans': {
     apps: 'Apps',
-    devlog: '开发博客',
     member: '会员登录',
     serials: '连载小说',
     signal: '信号简报'
@@ -17245,7 +17241,6 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
           <nav class="signal-station-nav" aria-label="${escapeHtml(signalPageCopy.primaryNavigation)}">
             <a href="${escapeHtml(novelV2BasePathForLocale(lang))}">${escapeHtml(navCopy.serials)}</a>
             <a class="is-current" href="${escapeHtml(getPathWithLocale(lang, 'signal'))}" aria-current="page">${escapeHtml(navCopy.signal)}</a>
-            <a href="/devlog/">${escapeHtml(navCopy.devlog)}</a>
             <a href="/apps/">${escapeHtml(navCopy.apps)}</a>
             <a href="/library/">${escapeHtml(navCopy.member)}</a>
             <a href="/about/">About</a>
@@ -17258,7 +17253,6 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
         <nav class="nav">
           <a href="${escapeHtml(novelV2BasePathForLocale(lang))}">${escapeHtml(navCopy.serials)}</a>
           <a href="${escapeHtml(getPathWithLocale(lang, 'signal'))}">${escapeHtml(navCopy.signal)}</a>
-          <a href="/devlog/">${escapeHtml(navCopy.devlog)}</a>
           <a href="/apps/">${escapeHtml(navCopy.apps)}</a>
           <a href="/library/">${escapeHtml(navCopy.member)}</a>
           <a href="/about/">About</a>

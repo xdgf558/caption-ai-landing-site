@@ -55,10 +55,11 @@ for (const [name, source] of Object.entries({ stationHome, appsIndex, footer, si
 for (const [name, source] of Object.entries({ stationHome, footer, navigation, about })) {
   assert.doesNotMatch(
     source,
-    /(?:\/devlog\/|Build log|開發博客|开发博客|開発ログ|Dev Blog)/i,
+    /(?:\/devlog\/|Build log|build notes|開發博客|开发博客|開発ログ|Dev Blog|開發筆記|开发笔记|開発ノート)/i,
     `${name} should not expose the development blog`
   );
 }
+assert.doesNotMatch(worker, /<a href="\/devlog\/">/, 'Worker-rendered navigation should not link the development blog');
 assert.equal(existsSync(join(root, 'src/pages/devlog/index.astro')), true, 'Devlog routes should remain restorable');
 assert.equal(existsSync(join(root, 'src/content/devlog')), true, 'Devlog content should remain intact');
 

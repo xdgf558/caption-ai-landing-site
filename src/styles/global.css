@@ -3824,8 +3824,7 @@ button.button {
 }
 
 .ticket-button:focus-visible,
-.paper-link:focus-visible,
-.build-log-row a:focus-visible {
+.paper-link:focus-visible {
   outline: 3px solid #f0a94a;
   outline-offset: 3px;
 }
@@ -4302,16 +4301,14 @@ button.button {
   justify-content: space-between;
 }
 
-.wall-note time,
-.build-log-row time {
+.wall-note time {
   color: #5f534a;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 13px;
   font-weight: 800;
 }
 
-.paper-link,
-.build-log-row a {
+.paper-link {
   color: #2e5b4e;
   font-weight: 900;
   text-decoration: underline;
@@ -4319,43 +4316,8 @@ button.button {
   text-underline-offset: 4px;
 }
 
-.paper-link:hover,
-.build-log-row a:hover {
+.paper-link:hover {
   color: #4b6d7b;
-}
-
-.build-log-list {
-  background:
-    linear-gradient(90deg, #f0a94a 0 4px, transparent 4px),
-    repeating-linear-gradient(0deg, transparent 0 72px, rgba(34, 27, 22, 0.08) 73px),
-    #fffaf1;
-  border: 1px solid #d8c8b8;
-  box-shadow: var(--paper-shadow);
-  display: grid;
-  padding: 14px 20px 14px 32px;
-}
-
-.build-log-row {
-  align-items: start;
-  border-bottom: 1px dashed #d8c8b8;
-  display: grid;
-  gap: 14px;
-  padding: 20px 0;
-}
-
-.build-log-row:last-child {
-  border-bottom: 0;
-}
-
-.build-log-row h3 {
-  font-size: 21px;
-  margin-bottom: 8px;
-}
-
-.paper-empty {
-  background: #fffaf1;
-  border: 1px dashed #d8c8b8;
-  padding: 18px;
 }
 
 .paper-closing {
@@ -4437,9 +4399,6 @@ button.button {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .build-log-row {
-    grid-template-columns: 116px 124px minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 760px) {
@@ -4513,8 +4472,7 @@ button.button {
   .station-day-grid,
   .bench-grid,
   .wall-note-grid,
-  .home-serial-card,
-  .build-log-row {
+  .home-serial-card {
     grid-template-columns: 1fr;
   }
 
