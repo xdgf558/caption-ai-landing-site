@@ -54,11 +54,12 @@ class D1Database {
 }
 
 const read = (path) => readFile(new URL(path, import.meta.url), 'utf8');
-const [readerMigration, paymentMigration, creditMigration, creemMigration, workerSource, wranglerSource] = await Promise.all([
+const [readerMigration, paymentMigration, creditMigration, creemMigration, creemReversalMigration, workerSource, wranglerSource] = await Promise.all([
   read('../migrations/0003_reader_accounts.sql'),
   read('../migrations/0005_novel_payments.sql'),
   read('../migrations/0006_reader_credits.sql'),
   read('../migrations/0029_creem_credit_topup_idempotency.sql'),
+  read('../migrations/0030_creem_reversals_and_event_ids.sql'),
   read('../src/worker.js'),
   read('../wrangler.toml')
 ]);
@@ -66,6 +67,8 @@ const [readerMigration, paymentMigration, creditMigration, creemMigration, worke
 assert.match(workerSource, /const creemTestApiBase = 'https:\/\/test-api\.creem\.io\/v1'/);
 assert.match(workerSource, /request\.headers\.get\('creem-signature'\)/);
 assert.match(workerSource, /url\.pathname === creemWebhookPath/);
+assert.match(creemReversalMigration, /provider_event_id/);
+assert.match(creemReversalMigration, /entry_type = 'reversal'/);
 assert.match(wranglerSource, /CREEM_MODE = "test"/);
 assert.match(wranglerSource, /CREEM_CREDIT_PACK_PRODUCT_ID = "prod_4DJS5zfnpMENgs7IaXBSwG"/);
 assert.doesNotMatch(wranglerSource, /CREEM_API_KEY/);
@@ -150,6 +153,7 @@ sqlite.exec(readerMigration);
 sqlite.exec(paymentMigration);
 sqlite.exec(creditMigration);
 sqlite.exec(creemMigration);
+sqlite.exec(creemReversalMigration);
 sqlite.prepare(
   `INSERT INTO reader_accounts (id, email, normalized_email, display_name)
    VALUES (1, 'reader@example.com', 'reader@example.com', 'Reader')`
@@ -200,8 +204,7 @@ assert.equal(firstResult.creditGrant.credits, 100);
 const repeatedResponse = await hooks.handleCreemWebhook(makeRequest(), env);
 assert.equal(repeatedResponse.status, 200);
 const repeatedResult = await repeatedResponse.json();
-assert.equal(repeatedResult.creditGrant.credited, false);
-assert.equal(repeatedResult.creditGrant.reason, 'already_credited');
+assert.equal(repeatedResult.duplicate, true);
 
 const account = sqlite.prepare('SELECT * FROM reader_credit_accounts WHERE account_id = 1').get();
 assert.equal(account.balance_credits, 100);
@@ -211,6 +214,7 @@ assert.equal(ledger.length, 1);
 assert.equal(ledger[0].source, 'creem-credit-pack');
 assert.equal(ledger[0].source_ref, orderToken);
 assert.equal(sqlite.prepare("SELECT status FROM novel_orders WHERE order_token = ?").get(orderToken).status, 'finished');
+assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM novel_payment_events WHERE provider_event_id = ?").get(payload.id).count, 1);
 
 const invalidResponse = await hooks.handleCreemWebhook(makeRequest(rawBody, 'invalid-signature'), env);
 assert.equal(invalidResponse.status, 401);
@@ -223,9 +227,200 @@ mismatchedPayload.object.order.product = 'prod_wrong';
 const mismatchedRawBody = JSON.stringify(mismatchedPayload);
 const mismatchedSignature = await hooks.hmacSha256Hex(mismatchedRawBody, secret);
 const mismatchResponse = await hooks.handleCreemWebhook(makeRequest(mismatchedRawBody, mismatchedSignature), env);
-assert.equal(mismatchResponse.status, 422);
-assert.equal((await mismatchResponse.json()).reason, 'product_mismatch');
+assert.equal(mismatchResponse.status, 200);
+const mismatchResult = await mismatchResponse.json();
+assert.equal(mismatchResult.rejected, true);
+assert.equal(mismatchResult.reason, 'product_mismatch');
 assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_credit_ledger').get().count, 1);
 
+const wrongAmountPayload = structuredClone(payload);
+wrongAmountPayload.id = 'evt_wrong_amount';
+wrongAmountPayload.object.order.amount = 900;
+const wrongAmountRawBody = JSON.stringify(wrongAmountPayload);
+const wrongAmountSignature = await hooks.hmacSha256Hex(wrongAmountRawBody, secret);
+const wrongAmountResponse = await hooks.handleCreemWebhook(makeRequest(wrongAmountRawBody, wrongAmountSignature), env);
+assert.equal(wrongAmountResponse.status, 200);
+assert.equal((await wrongAmountResponse.json()).reason, 'amount_mismatch');
+
+const wrongCurrencyPayload = structuredClone(payload);
+wrongCurrencyPayload.id = 'evt_wrong_currency';
+wrongCurrencyPayload.object.order.currency = 'EUR';
+wrongCurrencyPayload.object.product.currency = 'EUR';
+const wrongCurrencyRawBody = JSON.stringify(wrongCurrencyPayload);
+const wrongCurrencySignature = await hooks.hmacSha256Hex(wrongCurrencyRawBody, secret);
+const wrongCurrencyResponse = await hooks.handleCreemWebhook(makeRequest(wrongCurrencyRawBody, wrongCurrencySignature), env);
+assert.equal(wrongCurrencyResponse.status, 200);
+assert.equal((await wrongCurrencyResponse.json()).reason, 'currency_mismatch');
+
+const wrongCustomerPayload = structuredClone(payload);
+wrongCustomerPayload.id = 'evt_wrong_customer';
+wrongCustomerPayload.object.customer.email = 'attacker@example.com';
+const wrongCustomerRawBody = JSON.stringify(wrongCustomerPayload);
+const wrongCustomerSignature = await hooks.hmacSha256Hex(wrongCustomerRawBody, secret);
+const wrongCustomerResponse = await hooks.handleCreemWebhook(makeRequest(wrongCustomerRawBody, wrongCustomerSignature), env);
+assert.equal(wrongCustomerResponse.status, 200);
+assert.equal((await wrongCustomerResponse.json()).reason, 'customer_mismatch');
+
+const wrongModePayload = structuredClone(payload);
+wrongModePayload.id = 'evt_wrong_mode';
+wrongModePayload.object.mode = 'prod';
+wrongModePayload.object.order.mode = 'prod';
+wrongModePayload.object.product.mode = 'prod';
+wrongModePayload.object.customer.mode = 'prod';
+const wrongModeRawBody = JSON.stringify(wrongModePayload);
+const wrongModeSignature = await hooks.hmacSha256Hex(wrongModeRawBody, secret);
+const wrongModeResponse = await hooks.handleCreemWebhook(makeRequest(wrongModeRawBody, wrongModeSignature), env);
+assert.equal(wrongModeResponse.status, 200);
+const wrongModeResult = await wrongModeResponse.json();
+assert.equal(wrongModeResult.rejected, true);
+assert.equal(wrongModeResult.reason, 'mode_mismatch');
+assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_credit_ledger').get().count, 1);
+
+sqlite.prepare(
+  `UPDATE reader_credit_accounts
+   SET balance_credits = 20,
+       lifetime_spent_credits = 80
+   WHERE account_id = 1`
+).run();
+sqlite.prepare(
+  `INSERT INTO reader_credit_ledger (
+    account_id, entry_type, credits_delta, balance_after, source, source_ref, note
+  ) VALUES (1, 'spend', -80, 20, 'test-spend', 'test-spend-1', 'Simulate consumed points before refund.')`
+).run();
+
+const refundPayload = {
+  id: 'evt_station_cat_refund',
+  eventType: 'refund.created',
+  created_at: Date.now(),
+  object: {
+    id: 'ref_station_cat_test',
+    object: 'refund',
+    status: 'succeeded',
+    refund_amount: 1000,
+    refund_currency: 'USD',
+    transaction: {
+      id: 'tran_station_cat_test',
+      amount: 1000,
+      currency: 'USD',
+      order: 'ord_station_cat_test',
+      mode: 'sandbox'
+    },
+    checkout: {
+      id: 'ch_station_cat_test',
+      request_id: orderToken,
+      mode: 'sandbox'
+    },
+    order: {
+      id: 'ord_station_cat_test',
+      product: productId,
+      amount: 1000,
+      currency: 'USD',
+      status: 'paid',
+      transaction: 'tran_station_cat_test',
+      mode: 'sandbox'
+    },
+    product: { id: productId, price: 1000, currency: 'USD', mode: 'sandbox' },
+    customer: { id: 'cust_station_cat_test', email: 'reader@example.com', mode: 'sandbox' },
+    mode: 'sandbox'
+  }
+};
+const refundRawBody = JSON.stringify(refundPayload);
+const refundSignature = await hooks.hmacSha256Hex(refundRawBody, secret);
+const refundResponse = await hooks.handleCreemWebhook(makeRequest(refundRawBody, refundSignature), env);
+assert.equal(refundResponse.status, 200);
+const refundResult = await refundResponse.json();
+assert.equal(refundResult.creditGrant.reversed, true);
+assert.equal(refundResult.creditGrant.reason, 'reversed');
+assert.equal(refundResult.creditGrant.credits, 100);
+assert.equal(refundResult.creditGrant.account.balanceCredits, -80);
+assert.equal(sqlite.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id = 1').get().balance_credits, -80);
+assert.equal(sqlite.prepare('SELECT lifetime_purchased_credits FROM reader_credit_accounts WHERE account_id = 1').get().lifetime_purchased_credits, 0);
+const reversalLedger = sqlite.prepare("SELECT * FROM reader_credit_ledger WHERE entry_type = 'reversal'").get();
+assert.equal(reversalLedger.credits_delta, -100);
+assert.equal(reversalLedger.balance_after, -80);
+
+const repeatedRefundResponse = await hooks.handleCreemWebhook(makeRequest(refundRawBody, refundSignature), env);
+assert.equal(repeatedRefundResponse.status, 200);
+assert.equal((await repeatedRefundResponse.json()).duplicate, true);
+assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM reader_credit_ledger WHERE entry_type = 'reversal'").get().count, 1);
+
+const disputePayload = structuredClone(refundPayload);
+disputePayload.id = 'evt_station_cat_dispute';
+disputePayload.eventType = 'dispute.created';
+disputePayload.object.id = 'disp_station_cat_test';
+disputePayload.object.object = 'dispute';
+delete disputePayload.object.checkout.request_id;
+const disputeRawBody = JSON.stringify(disputePayload);
+const disputeSignature = await hooks.hmacSha256Hex(disputeRawBody, secret);
+const disputeResponse = await hooks.handleCreemWebhook(makeRequest(disputeRawBody, disputeSignature), env);
+assert.equal(disputeResponse.status, 200);
+const disputeResult = await disputeResponse.json();
+assert.equal(disputeResult.creditGrant.reversed, false);
+assert.equal(disputeResult.creditGrant.reason, 'already_reversed');
+assert.equal(sqlite.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id = 1').get().balance_credits, -80);
+
+const missingEventIdPayload = structuredClone(payload);
+delete missingEventIdPayload.id;
+const missingEventIdRawBody = JSON.stringify(missingEventIdPayload);
+const missingEventIdSignature = await hooks.hmacSha256Hex(missingEventIdRawBody, secret);
+const missingEventIdResponse = await hooks.handleCreemWebhook(makeRequest(missingEventIdRawBody, missingEventIdSignature), env);
+assert.equal(missingEventIdResponse.status, 200);
+const missingEventIdResult = await missingEventIdResponse.json();
+assert.equal(missingEventIdResult.rejected, true);
+assert.equal(missingEventIdResult.reason, 'missing_event_id');
+
+sqlite.prepare(
+  `INSERT INTO reader_accounts (id, email, normalized_email, display_name)
+   VALUES (2, 'early-refund@example.com', 'early-refund@example.com', 'Early Refund')`
+).run();
+const earlyRefundOrderToken = 'sc-creem-early-refund-test';
+sqlite.prepare(
+  `INSERT INTO novel_orders (
+    order_token, account_id, provider, provider_order_id, order_type,
+    price_amount, price_currency, pay_currency, status, customer_email, metadata_json
+  ) VALUES (?, 2, 'creem', ?, 'credit-pack', '10.00', 'USD', '', 'waiting', ?, ?)`
+).run(
+  earlyRefundOrderToken,
+  'ord_early_refund_test',
+  'early-refund@example.com',
+  JSON.stringify({
+    creditPackCredits: 100,
+    creditPackUnitLabel: 'Station Points',
+    creemMode: 'test',
+    creemProductId: productId
+  })
+);
+const earlyRefundPayload = structuredClone(refundPayload);
+earlyRefundPayload.id = 'evt_early_refund';
+earlyRefundPayload.object.order.id = 'ord_early_refund_test';
+earlyRefundPayload.object.customer.email = 'early-refund@example.com';
+earlyRefundPayload.object.checkout.id = 'ch_early_refund_test';
+earlyRefundPayload.object.checkout.request_id = earlyRefundOrderToken;
+const earlyRefundRawBody = JSON.stringify(earlyRefundPayload);
+const earlyRefundSignature = await hooks.hmacSha256Hex(earlyRefundRawBody, secret);
+const earlyRefundResponse = await hooks.handleCreemWebhook(makeRequest(earlyRefundRawBody, earlyRefundSignature), env);
+assert.equal(earlyRefundResponse.status, 200);
+const earlyRefundResult = await earlyRefundResponse.json();
+assert.equal(earlyRefundResult.creditGrant.reversed, false);
+assert.equal(earlyRefundResult.creditGrant.reason, 'reversal_recorded_before_credit');
+assert.equal(earlyRefundResult.creditGrant.ledger.creditsDelta, 0);
+
+const lateCompletionPayload = structuredClone(payload);
+lateCompletionPayload.id = 'evt_late_completion';
+lateCompletionPayload.object.id = 'ch_early_refund_test';
+lateCompletionPayload.object.request_id = earlyRefundOrderToken;
+lateCompletionPayload.object.order.id = 'ord_early_refund_test';
+lateCompletionPayload.object.customer.email = 'early-refund@example.com';
+lateCompletionPayload.object.metadata.orderToken = earlyRefundOrderToken;
+lateCompletionPayload.object.metadata.accountId = '2';
+const lateCompletionRawBody = JSON.stringify(lateCompletionPayload);
+const lateCompletionSignature = await hooks.hmacSha256Hex(lateCompletionRawBody, secret);
+const lateCompletionResponse = await hooks.handleCreemWebhook(makeRequest(lateCompletionRawBody, lateCompletionSignature), env);
+assert.equal(lateCompletionResponse.status, 200);
+const lateCompletionResult = await lateCompletionResponse.json();
+assert.equal(lateCompletionResult.creditGrant.credited, false);
+assert.equal(lateCompletionResult.creditGrant.reason, 'payment_reversed');
+assert.equal(sqlite.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id = 2').get().balance_credits, 0);
+
 sqlite.close();
-console.log('Creem test checkout webhook and idempotent Station Points crediting checks passed.');
+console.log('Creem checkout, event idempotency, mode isolation, and credit reversal checks passed.');

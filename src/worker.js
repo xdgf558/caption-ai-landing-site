@@ -336,6 +336,7 @@ const novelCreditSource = 'reader-credits';
 const novelCreditUnitLabel = 'Station Points';
 const novelCreditLedgerUnlockSource = 'chapter-credit-unlock';
 const novelCreditLedgerMembershipSource = 'reader-membership-redeem';
+const creemCreditPackLedgerSource = 'creem-credit-pack';
 const novelAdminSource = 'admin-v2';
 const novelAdminManualCreditSource = 'admin-v2-manual-credit';
 const novelReadingEventTypes = new Set([
@@ -665,6 +666,11 @@ const getCheckoutPrices = (env) => ({
 const normalizePositiveInteger = (value, fallback = 0) => {
   const number = Number.parseInt(String(value ?? '').trim(), 10);
   return Number.isFinite(number) && number >= 0 ? number : fallback;
+};
+
+const normalizeSignedInteger = (value, fallback = 0) => {
+  const number = Number.parseInt(String(value ?? '').trim(), 10);
+  return Number.isFinite(number) ? number : fallback;
 };
 
 const normalizeBundleDiscounts = (discounts) =>
@@ -1318,7 +1324,7 @@ const extractCreemEvent = (payload) => {
     eventId: normalizePaymentValue(payload?.id, 120),
     eventType,
     providerOrderId: normalizePaymentValue(order.id, 200),
-    providerPaymentId: normalizePaymentValue(order.transaction || object.transaction?.id, 120),
+    providerPaymentId: normalizePaymentValue(order.transaction?.id || order.transaction || object.transaction?.id, 120),
     providerInvoiceId: normalizePaymentValue(checkout.id, 120),
     providerStatus,
     status,
@@ -1329,23 +1335,37 @@ const extractCreemEvent = (payload) => {
     payAmount: amountCents ? amountToStorage(amountCents / 100) : '',
     payCurrency: normalizePaymentValue(order.currency || product.currency, 24).toUpperCase(),
     customerEmail: cleanText(customer.email, 254).toLowerCase(),
-    mode: normalizePaymentValue(object.mode || order.mode || checkout.mode || product.mode, 40).toLowerCase()
+    mode: normalizeCreemMode(order.mode || object.transaction?.mode || checkout.mode || object.mode || product.mode)
   };
 };
 
-const validateCreemCheckoutEvent = (order, event, config) => {
+const normalizeCreemMode = (value) => {
+  const mode = normalizePaymentValue(value, 40).toLowerCase();
+  if (['test', 'sandbox', 'local'].includes(mode)) return 'test';
+  if (['production', 'prod', 'live'].includes(mode)) return 'production';
+  return mode;
+};
+
+const validateCreemEvent = (order, event, config) => {
   if (!order || order.provider !== creemProvider) return 'order_provider_mismatch';
   if (order.order_type !== novelCreditPackOrderType) return 'order_type_mismatch';
-  if (event.eventType !== 'checkout.completed') return 'event_not_fulfillable';
-  if (!event.requestId || event.requestId !== order.order_token) return 'request_id_mismatch';
+  if (!['checkout.completed', 'refund.created', 'dispute.created'].includes(event.eventType)) {
+    return 'event_not_supported';
+  }
+  if (event.eventType === 'checkout.completed' && (!event.requestId || event.requestId !== order.order_token)) {
+    return 'request_id_mismatch';
+  }
 
   const metadata = parseOrderMetadata(order);
+  const expectedMode = normalizeCreemMode(metadata.creemMode || config.mode);
+  if (!event.mode || !expectedMode || event.mode !== expectedMode) return 'mode_mismatch';
   const expectedProductId = cleanText(metadata.creemProductId || config.productId, 120);
   if (!event.productId || !expectedProductId || event.productId !== expectedProductId) return 'product_mismatch';
   if (!event.priceAmount || amountToStorage(event.priceAmount) !== amountToStorage(order.price_amount)) {
     return 'amount_mismatch';
   }
-  if (!event.priceCurrency || event.priceCurrency !== normalizeFiatCurrency(order.price_currency)) {
+  const expectedCurrency = normalizePaymentValue(order.price_currency, 24).toUpperCase();
+  if (!event.priceCurrency || !expectedCurrency || event.priceCurrency !== expectedCurrency) {
     return 'currency_mismatch';
   }
   const orderEmail = cleanText(order.customer_email, 254).toLowerCase();
@@ -1385,7 +1405,7 @@ const novelOrderToJson = (row) => ({
 
 const readerCreditAccountToJson = (row, config) => ({
   accountId: row.account_id,
-  balanceCredits: normalizePositiveInteger(row.balance_credits, 0),
+  balanceCredits: normalizeSignedInteger(row.balance_credits, 0),
   lifetimePurchasedCredits: normalizePositiveInteger(row.lifetime_purchased_credits, 0),
   lifetimeSpentCredits: normalizePositiveInteger(row.lifetime_spent_credits, 0),
   unitLabel: row.currency_label || config.unitLabel,
@@ -1398,7 +1418,7 @@ const readerCreditLedgerToJson = (row) => ({
   accountId: row.account_id,
   entryType: row.entry_type,
   creditsDelta: normalizePositiveInteger(Math.abs(row.credits_delta), 0) * (Number(row.credits_delta) < 0 ? -1 : 1),
-  balanceAfter: normalizePositiveInteger(row.balance_after, 0),
+  balanceAfter: normalizeSignedInteger(row.balance_after, 0),
   source: row.source,
   sourceRef: row.source_ref,
   seriesSlug: row.series_slug,
@@ -1535,7 +1555,7 @@ const readerAccountToAdminJson = (row, config = getReaderCreditConfig({})) => ({
   updatedAt: row.updated_at,
   creditAccount: {
     accountId: row.id,
-    balanceCredits: normalizePositiveInteger(row.balance_credits, 0),
+    balanceCredits: normalizeSignedInteger(row.balance_credits, 0),
     lifetimePurchasedCredits: normalizePositiveInteger(row.lifetime_purchased_credits, 0),
     lifetimeSpentCredits: normalizePositiveInteger(row.lifetime_spent_credits, 0),
     unitLabel: row.currency_label || config.unitLabel,
@@ -1556,6 +1576,7 @@ const novelPaymentEventToJson = (row) => ({
   orderId: row.order_id,
   providerOrderId: row.provider_order_id,
   providerPaymentId: row.provider_payment_id,
+  providerEventId: row.provider_event_id || '',
   eventType: row.event_type,
   status: row.status,
   signatureValid: Boolean(row.signature_valid),
@@ -7518,7 +7539,9 @@ const handleReaderMembershipRedeem = async (request, env) => {
 };
 
 const creditTopupSourceForProvider = (provider) =>
-  `${cleanText(provider, 60).toLowerCase() || nowPaymentsProvider}-credit-pack`;
+  cleanText(provider, 60).toLowerCase() === creemProvider
+    ? creemCreditPackLedgerSource
+    : `${cleanText(provider, 60).toLowerCase() || nowPaymentsProvider}-credit-pack`;
 
 const hasCreditTopupLedger = async (db, accountId, source, sourceRef) =>
   db
@@ -7527,6 +7550,20 @@ const hasCreditTopupLedger = async (db, accountId, source, sourceRef) =>
        FROM reader_credit_ledger
        WHERE account_id = ?
          AND entry_type = 'topup'
+         AND source = ?
+         AND source_ref = ?
+       LIMIT 1`
+    )
+    .bind(accountId, source, sourceRef)
+    .first();
+
+const hasCreditReversalLedger = async (db, accountId, source, sourceRef) =>
+  db
+    .prepare(
+      `SELECT *
+       FROM reader_credit_ledger
+       WHERE account_id = ?
+         AND entry_type = 'reversal'
          AND source = ?
          AND source_ref = ?
        LIMIT 1`
@@ -7543,10 +7580,28 @@ const recordReaderCreditTopup = async (db, accountId, credits, source, sourceRef
           account_id, entry_type, credits_delta, balance_after, source, source_ref,
           series_slug, chapter_slug, note, metadata_json
         )
-        VALUES (?, 'topup', ?, 0, ?, ?, '', '', ?, ?)
+        SELECT ?, 'topup', ?, 0, ?, ?, '', '', ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1
+          FROM reader_credit_ledger
+          WHERE account_id = ?
+            AND entry_type = 'reversal'
+            AND source = ?
+            AND source_ref = ?
+        )
         RETURNING *`
       )
-      .bind(account.account_id, credits, source, sourceRef, note, JSON.stringify(metadata || {})),
+      .bind(
+        account.account_id,
+        credits,
+        source,
+        sourceRef,
+        note,
+        JSON.stringify(metadata || {}),
+        account.account_id,
+        source,
+        sourceRef
+      ),
     db
       .prepare(
       `UPDATE reader_credit_accounts
@@ -7554,9 +7609,35 @@ const recordReaderCreditTopup = async (db, accountId, credits, source, sourceRef
            lifetime_purchased_credits = lifetime_purchased_credits + ?,
            updated_at = CURRENT_TIMESTAMP
        WHERE account_id = ?
+         AND EXISTS (
+           SELECT 1
+           FROM reader_credit_ledger
+           WHERE account_id = ?
+             AND entry_type = 'topup'
+             AND source = ?
+             AND source_ref = ?
+         )
+         AND NOT EXISTS (
+           SELECT 1
+           FROM reader_credit_ledger
+           WHERE account_id = ?
+             AND entry_type = 'reversal'
+             AND source = ?
+             AND source_ref = ?
+         )
        RETURNING *`
       )
-      .bind(credits, credits, account.account_id),
+      .bind(
+        credits,
+        credits,
+        account.account_id,
+        account.account_id,
+        source,
+        sourceRef,
+        account.account_id,
+        source,
+        sourceRef
+      ),
     db
       .prepare(
         `UPDATE reader_credit_ledger
@@ -7595,6 +7676,14 @@ const applyCreditTopupFromOrder = async (db, order, env) => {
 
   const sourceRef = order.order_token || order.provider_payment_id || order.provider_order_id || `order-${order.id}`;
   const source = creditTopupSourceForProvider(order.provider);
+  const reversal = await hasCreditReversalLedger(db, order.account_id, source, sourceRef);
+  if (reversal) {
+    return {
+      credited: false,
+      reason: 'payment_reversed',
+      ledger: reversal
+    };
+  }
   const existing = await hasCreditTopupLedger(db, order.account_id, source, sourceRef);
   if (existing) {
     return {
@@ -7628,6 +7717,14 @@ const applyCreditTopupFromOrder = async (db, order, env) => {
         ledger: existingAfterConflict
       };
     }
+    const reversalAfterConflict = await hasCreditReversalLedger(db, order.account_id, source, sourceRef);
+    if (reversalAfterConflict) {
+      return {
+        credited: false,
+        reason: 'payment_reversed',
+        ledger: reversalAfterConflict
+      };
+    }
     throw error;
   }
 
@@ -7637,6 +7734,146 @@ const applyCreditTopupFromOrder = async (db, order, env) => {
     account: result.account,
     ledger: result.ledger,
     credits
+  };
+};
+
+const recordReaderCreditReversal = async (db, order, event, credits, source, sourceRef, config) => {
+  const account = await ensureReaderCreditAccount(db, order.account_id, config);
+  const note = `Processed ${event.eventType} for Creem order ${sourceRef}; credited points are reversed when present.`;
+  const metadata = {
+    ...parseOrderMetadata(order),
+    creemEventId: event.eventId,
+    creemEventType: event.eventType,
+    intendedReversalCredits: credits
+  };
+  const results = await db.batch([
+    db
+      .prepare(
+        `INSERT INTO reader_credit_ledger (
+          account_id, entry_type, credits_delta, balance_after, source, source_ref,
+          series_slug, chapter_slug, note, metadata_json
+        )
+        SELECT ?, 'reversal',
+          CASE WHEN EXISTS (
+            SELECT 1
+            FROM reader_credit_ledger
+            WHERE account_id = ?
+              AND entry_type = 'topup'
+              AND source = ?
+              AND source_ref = ?
+          ) THEN ? ELSE 0 END,
+          0, ?, ?, '', '', ?, ?
+        RETURNING *`
+      )
+      .bind(
+        account.account_id,
+        account.account_id,
+        source,
+        sourceRef,
+        -credits,
+        source,
+        sourceRef,
+        note,
+        JSON.stringify(metadata)
+      ),
+    db
+      .prepare(
+        `UPDATE reader_credit_accounts
+         SET balance_credits = balance_credits + COALESCE((
+               SELECT credits_delta
+               FROM reader_credit_ledger
+               WHERE account_id = ?
+                 AND entry_type = 'reversal'
+                 AND source = ?
+                 AND source_ref = ?
+               LIMIT 1
+             ), 0),
+             lifetime_purchased_credits = MAX(0, lifetime_purchased_credits + COALESCE((
+               SELECT credits_delta
+               FROM reader_credit_ledger
+               WHERE account_id = ?
+                 AND entry_type = 'reversal'
+                 AND source = ?
+                 AND source_ref = ?
+               LIMIT 1
+             ), 0)),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE account_id = ?
+         RETURNING *`
+      )
+      .bind(
+        account.account_id,
+        source,
+        sourceRef,
+        account.account_id,
+        source,
+        sourceRef,
+        account.account_id
+      ),
+    db
+      .prepare(
+        `UPDATE reader_credit_ledger
+         SET balance_after = (
+           SELECT balance_credits
+           FROM reader_credit_accounts
+           WHERE account_id = ?
+         )
+         WHERE account_id = ?
+           AND entry_type = 'reversal'
+           AND source = ?
+           AND source_ref = ?
+         RETURNING *`
+      )
+      .bind(account.account_id, account.account_id, source, sourceRef)
+  ]);
+  const updatedAccount = results[1]?.results?.[0] || null;
+  const ledger = results[2]?.results?.[0] || null;
+  if (!updatedAccount || !ledger) throw new Error('Reader credit reversal transaction did not complete.');
+  return { account: updatedAccount, ledger, topupFound: Number(ledger.credits_delta) < 0 };
+};
+
+const applyCreditReversalFromOrder = async (db, order, event, env) => {
+  if (!order) return { reversed: false, reason: 'order_not_found' };
+  if (order.provider !== creemProvider) return { reversed: false, reason: 'order_provider_mismatch' };
+  if (order.order_type !== novelCreditPackOrderType) return { reversed: false, reason: 'not_credit_pack_order' };
+  if (!order.account_id) return { reversed: false, reason: 'missing_reader_account' };
+
+  const metadata = parseOrderMetadata(order);
+  const credits = normalizePositiveInteger(metadata.creditPackCredits, 0);
+  if (!credits) return { reversed: false, reason: 'missing_credit_pack_metadata' };
+
+  const sourceRef = order.order_token || order.provider_payment_id || order.provider_order_id || `order-${order.id}`;
+  const source = creemCreditPackLedgerSource;
+  const existing = await hasCreditReversalLedger(db, order.account_id, source, sourceRef);
+  if (existing) {
+    return { reversed: false, reason: 'already_reversed', ledger: existing };
+  }
+
+  let result;
+  try {
+    result = await recordReaderCreditReversal(
+      db,
+      order,
+      event,
+      credits,
+      source,
+      sourceRef,
+      getReaderCreditConfig(env)
+    );
+  } catch (error) {
+    const existingAfterConflict = await hasCreditReversalLedger(db, order.account_id, source, sourceRef);
+    if (existingAfterConflict) {
+      return { reversed: false, reason: 'already_reversed', ledger: existingAfterConflict };
+    }
+    throw error;
+  }
+
+  return {
+    reversed: result.topupFound,
+    reason: result.topupFound ? 'reversed' : 'reversal_recorded_before_credit',
+    account: result.account,
+    ledger: result.ledger,
+    credits: result.topupFound ? credits : 0
   };
 };
 
@@ -7819,6 +8056,7 @@ const handleNovelPaymentsStatus = async (request, env) => {
   const db = env.WAITLIST_DB;
   const creditPacks = db ? await getConfiguredReaderCreditPacks(db, env) : getReaderCreditConfig(env).packs;
   const nowPaymentsEnabled = config.hasApiKey && config.hasIpnSecret && Boolean(db) && creditPacks.length > 0;
+  // Public status stays closed for Creem Test Mode; only signed-in allowlisted readers see that checkout path.
   const creemEnabled =
     creemConfig.mode === 'production' &&
     Boolean(db) &&
@@ -8332,26 +8570,29 @@ const findNovelOrderByNowPaymentsEvent = async (db, event) => {
     .first();
 };
 
-const insertNovelPaymentEvent = async (db, event, payload, orderId = null) =>
-  db
+const insertNovelPaymentEvent = async (db, event, payload, orderId = null) => {
+  const idempotentCreemEvent = event.provider === creemProvider && Boolean(event.eventId);
+  return db
     .prepare(
-      `INSERT INTO novel_payment_events (
-        provider, order_id, provider_order_id, provider_payment_id, event_type,
+      `${idempotentCreemEvent ? 'INSERT OR IGNORE' : 'INSERT'} INTO novel_payment_events (
+        provider, order_id, provider_order_id, provider_payment_id, provider_event_id, event_type,
         status, signature_valid, payload_json
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       event.provider || nowPaymentsProvider,
       orderId,
       event.providerOrderId,
       event.providerPaymentId,
+      event.eventId || '',
       event.eventType || 'ipn',
       event.providerStatus || event.status,
       1,
       JSON.stringify(payload)
     )
     .run();
+};
 
 const updateNovelOrderFromPaymentEvent = async (db, orderId, event) =>
   db
@@ -8640,8 +8881,26 @@ const handleCreemWebhook = async (request, env) => {
 
   const event = extractCreemEvent(payload);
   const supportedEvent = ['checkout.completed', 'refund.created', 'dispute.created'].includes(event.eventType);
+  if (supportedEvent && !event.eventId) {
+    return json({
+      ok: true,
+      rejected: true,
+      reason: 'missing_event_id',
+      provider: creemProvider,
+      eventType: event.eventType
+    });
+  }
   const order = supportedEvent ? await findNovelOrderByCreemEvent(db, event) : null;
-  await insertNovelPaymentEvent(db, event, payload, order?.id || null);
+  const eventInsert = await insertNovelPaymentEvent(db, event, payload, order?.id || null);
+  if (event.eventId && getD1ChangeCount(eventInsert) === 0) {
+    return json({
+      ok: true,
+      duplicate: true,
+      provider: creemProvider,
+      eventType: event.eventType,
+      eventId: event.eventId
+    });
+  }
 
   if (!supportedEvent) {
     return json({ ok: true, ignored: true, provider: creemProvider, eventType: event.eventType });
@@ -8650,26 +8909,23 @@ const handleCreemWebhook = async (request, env) => {
     return json({ ok: true, matched: false, provider: creemProvider, eventType: event.eventType });
   }
 
-  if (event.eventType === 'checkout.completed') {
-    const validationError = validateCreemCheckoutEvent(order, event, getCreemConfig(env, request));
-    if (validationError) {
-      return json(
-        {
-          ok: false,
-          code: 'CREEM_EVENT_VALIDATION_FAILED',
-          reason: validationError,
-          provider: creemProvider
-        },
-        { status: 422 }
-      );
-    }
+  const validationError = validateCreemEvent(order, event, getCreemConfig(env, request));
+  if (validationError) {
+    return json({
+      ok: true,
+      rejected: true,
+      code: 'CREEM_EVENT_VALIDATION_FAILED',
+      reason: validationError,
+      provider: creemProvider,
+      eventType: event.eventType,
+      eventId: event.eventId
+    });
   }
 
   const updatedOrder = await updateNovelOrderFromPaymentEvent(db, order.id, event);
-  const creditGrant =
-    event.eventType === 'checkout.completed'
-      ? await applyCreditTopupFromOrder(db, updatedOrder, env)
-      : { credited: false, reason: 'payment_reversed' };
+  const creditGrant = event.eventType === 'checkout.completed'
+    ? await applyCreditTopupFromOrder(db, updatedOrder, env)
+    : await applyCreditReversalFromOrder(db, updatedOrder, event, env);
 
   return json({
     ok: true,
@@ -8678,6 +8934,7 @@ const handleCreemWebhook = async (request, env) => {
     eventType: event.eventType,
     creditGrant: {
       credited: Boolean(creditGrant.credited),
+      reversed: Boolean(creditGrant.reversed),
       reason: creditGrant.reason,
       credits: creditGrant.credits || 0,
       account: creditGrant.account
@@ -8705,7 +8962,7 @@ const listNovelPaymentEventsForOrder = async (db, orderId) => {
   const response = await db
     .prepare(
       `SELECT id, provider, order_id, provider_order_id, provider_payment_id, event_type,
-              status, signature_valid, received_at
+              provider_event_id, status, signature_valid, received_at
        FROM novel_payment_events
        WHERE order_id = ?
        ORDER BY received_at DESC, id DESC
@@ -8772,13 +9029,21 @@ const summarizeNovelPaymentFulfillment = async (db, order) => {
 
   if (order.order_type === novelCreditPackOrderType) {
     const creditLedger = await listReaderCreditLedgerForOrder(db, order);
-    const complete = creditLedger.length > 0;
+    const topup = creditLedger.find((entry) => entry.entryType === 'topup') || null;
+    const reversal = creditLedger.find((entry) => entry.entryType === 'reversal') || null;
+    const complete = Boolean(topup);
     return {
       complete,
       kind: novelCreditPackOrderType,
       needsReview: paymentGrantable && !complete,
       pending: !paymentFinal,
-      reason: complete ? 'credits_credited' : paymentGrantable ? 'credit_topup_not_found' : waitingReason,
+      reason: reversal
+        ? 'credits_reversed'
+        : complete
+          ? 'credits_credited'
+          : paymentGrantable
+            ? 'credit_topup_not_found'
+            : waitingReason,
       entitlements: [],
       creditLedger
     };
@@ -21040,7 +21305,7 @@ export const __readerTotpTestHooks = {
   shouldSampleReaderTotpResetCleanup,
   timingSafeEqualString,
   isCreemCheckoutAllowed,
-  validateCreemCheckoutEvent,
+  validateCreemEvent,
   verifyCreemSignature,
   translateNovelTextToEnglish,
   verifyAndConsumeReaderTotpCode,
