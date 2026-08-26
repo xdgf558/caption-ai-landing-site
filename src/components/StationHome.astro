@@ -1,5 +1,4 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { snapCopyProduct } from '../data/products/caption-ai';
 import { anyTlsDesktopManagerProduct } from '../data/products/anytls-desktop-manager';
@@ -45,7 +44,7 @@ const icons: Record<IconName, string> = {
 const copy = {
   'zh-Hant': {
     title: 'Station Cat',
-    description: 'Station Cat 是一座深夜還亮著燈的個人小站，收集貓、早餐、公開信號、工具、開發日誌和奇怪想法。',
+    description: 'Station Cat 是一座深夜還亮著燈的個人小站，收集貓、早餐、公開信號、工具和奇怪想法。',
     logoCaption: '個人創作小站',
     logoAlt: 'Station Cat 品牌 Logo',
     heroTitle: '一座深夜還亮著的小站。',
@@ -103,21 +102,15 @@ const copy = {
     latestChapterLabel: '最新章',
     freeChaptersLabel: '第 10 章起登入會員後免費',
     emptyNotes: '第一部長篇小說很快會出現在這裡。',
-    buildKicker: 'Build log',
-    buildTitle: '最近的開發筆記。',
-    buildIntro: '',
-    readNote: 'Read note',
-    emptyBuild: '開發筆記很快會更新。',
     closingTitle: '這座小站還在慢慢長大。',
     closingText: '來看貓、看早餐、看工具，也看一點奇怪想法如何變成產品。',
     follow: 'Follow on X',
     viewSnapCopy: 'View SnapCopy',
     android: 'Join Android Waitlist',
-    dateLocale: 'zh-Hant'
   },
   'zh-Hans': {
     title: 'Station Cat',
-    description: 'Station Cat 是一座深夜还亮着灯的个人小站，收集猫、早餐、公开信号、工具、开发日志和奇怪想法。',
+    description: 'Station Cat 是一座深夜还亮着灯的个人小站，收集猫、早餐、公开信号、工具和奇怪想法。',
     logoCaption: '个人创作小站',
     logoAlt: 'Station Cat 品牌 Logo',
     heroTitle: '一座深夜还亮着的小站。',
@@ -175,21 +168,15 @@ const copy = {
     latestChapterLabel: '最新章',
     freeChaptersLabel: '第 10 章起登录会员后免费',
     emptyNotes: '第一部长篇小说很快会出现在这里。',
-    buildKicker: 'Build log',
-    buildTitle: '最近的开发笔记。',
-    buildIntro: '像翻一本 notebook，看看小工具是怎么慢慢变清楚的。',
-    readNote: 'Read note',
-    emptyBuild: '开发笔记很快会更新。',
     closingTitle: '这座小站还在慢慢长大。',
     closingText: '来看猫、看早餐、看工具，也看一点奇怪想法如何变成产品。',
     follow: 'Follow on X',
     viewSnapCopy: 'View SnapCopy',
     android: 'Join Android Waitlist',
-    dateLocale: 'zh-Hans'
   },
   en: {
     title: 'Station Cat',
-    description: 'Station Cat is a late-night personal station for cats, breakfast, public signals, small tools, build logs, and strange ideas.',
+    description: 'Station Cat is a late-night personal station for cats, breakfast, public signals, small tools, and strange ideas.',
     logoCaption: 'Independent creator station',
     logoAlt: 'Station Cat brand logo',
     heroTitle: 'A small station still lit late at night.',
@@ -247,21 +234,15 @@ const copy = {
     latestChapterLabel: 'Latest chapter',
     freeChaptersLabel: 'Free; sign in from Chapter 10',
     emptyNotes: 'The first serial will appear here soon.',
-    buildKicker: 'Build log',
-    buildTitle: 'Recent build notes.',
-    buildIntro: 'Like opening a notebook to see how small tools slowly become clearer.',
-    readNote: 'Read note',
-    emptyBuild: 'Build notes will appear here soon.',
     closingTitle: 'This small station is still growing.',
     closingText: 'Come by for cats, breakfast, tools, and a few strange ideas becoming products.',
     follow: 'Follow on X',
     viewSnapCopy: 'View SnapCopy',
     android: 'Join Android Waitlist',
-    dateLocale: 'en'
   },
   ja: {
     title: 'Station Cat',
-    description: 'Station Cat は、猫、朝食、公開シグナル、小さなツール、開発ログ、少し不思議なアイデアを集める深夜の小さな場所です。',
+    description: 'Station Cat は、猫、朝食、公開シグナル、小さなツール、少し不思議なアイデアを集める深夜の小さな場所です。',
     logoCaption: '個人クリエイターの小さな場所',
     logoAlt: 'Station Cat ブランドロゴ',
     heroTitle: '夜遅くまで灯りがついている小さな場所。',
@@ -319,17 +300,11 @@ const copy = {
     latestChapterLabel: '最新章',
     freeChaptersLabel: '無料・第10章からログインが必要',
     emptyNotes: '最初の連載はまもなくここに並びます。',
-    buildKicker: 'Build log',
-    buildTitle: '最近の開発ノート。',
-    buildIntro: '小さなツールが少しずつ形になる様子を notebook のように残します。',
-    readNote: 'Read note',
-    emptyBuild: '開発ノートはまもなく更新されます。',
     closingTitle: 'この小さな場所は、まだ少しずつ育っています。',
     closingText: '猫、朝食、ツール、そして少し不思議なアイデアがプロダクトになる途中を見に来てください。',
     follow: 'Follow on X',
     viewSnapCopy: 'View SnapCopy',
     android: 'Join Android Waitlist',
-    dateLocale: 'ja'
   }
 }[lang];
 
@@ -349,7 +324,6 @@ const paths = {
     simplecutDownload: simpleCutProProduct.zhHantDownloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.zhHantProductPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.zhHantProductPath,
-    devlogPrefix: '/devlog/',
     signal: '/signal/'
   },
   'zh-Hans': {
@@ -367,7 +341,6 @@ const paths = {
     simplecutDownload: simpleCutProProduct.zhHansDownloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.zhHansProductPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.zhHansProductPath,
-    devlogPrefix: '/zh-hans/devlog/',
     signal: '/zh-hans/signal/'
   },
   en: {
@@ -385,7 +358,6 @@ const paths = {
     simplecutDownload: simpleCutProProduct.downloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.productPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.productPath,
-    devlogPrefix: '/en/devlog/',
     signal: '/en/signal/'
   },
   ja: {
@@ -403,7 +375,6 @@ const paths = {
     simplecutDownload: simpleCutProProduct.jaDownloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.jaProductPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.jaProductPath,
-    devlogPrefix: '/ja/devlog/',
     signal: '/ja/signal/'
   }
 }[lang];
@@ -427,24 +398,6 @@ const homeSerial = {
 };
 const labelSeparator = lang === 'en' ? ': ' : '：';
 
-const devlogLanguage = lang;
-
-const allDevlog = await getCollection('devlog');
-const recentDevlog = allDevlog
-  .filter((post) => !post.data.draft && post.data.language === devlogLanguage)
-  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
-  .slice(0, 3);
-
-const formatDate = (value?: string | Date) => {
-  if (!value) return '';
-  const date = value instanceof Date ? value : new Date(value);
-  return new Intl.DateTimeFormat(copy.dateLocale, { year: 'numeric', month: 'short', day: 'numeric' }).format(date);
-};
-
-const devlogHref = (post: (typeof recentDevlog)[number]) => {
-  const slug = post.data.postSlug ?? post.slug;
-  return `${paths.devlogPrefix}${slug}/`;
-};
 ---
 
 <BaseLayout
@@ -656,30 +609,6 @@ const devlogHref = (post: (typeof recentDevlog)[number]) => {
         </div>
       </div>
     </article>
-  </section>
-
-  <section class="paper-section">
-    <div class="paper-section__heading">
-      <p class="paper-kicker">{copy.buildKicker}</p>
-      <h2>{copy.buildTitle}</h2>
-      {copy.buildIntro && <p>{copy.buildIntro}</p>}
-    </div>
-    {recentDevlog.length > 0 ? (
-      <div class="build-log-list">
-        {recentDevlog.map((post) => (
-          <article class="build-log-row">
-            <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
-            <span class="paper-stamp">{post.data.status}</span>
-            <div>
-              <h3><a href={devlogHref(post)}>{post.data.title}</a></h3>
-              <p>{post.data.description}</p>
-            </div>
-          </article>
-        ))}
-      </div>
-    ) : (
-      <p class="paper-empty">{copy.emptyBuild}</p>
-    )}
   </section>
 
   <section class="paper-closing">

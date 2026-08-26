@@ -38,6 +38,8 @@ for (const path of [...retiredRadarFiles, ...retiredXFollowCleanerFiles]) {
 const stationHome = read('src/components/StationHome.astro');
 const appsIndex = read('src/components/AppsIndex.astro');
 const footer = read('src/components/Footer.astro');
+const navigation = read('src/data/navigation.ts');
+const about = read('src/pages/about.astro');
 const sitemap = read('public/sitemap.xml');
 const worker = read('src/worker.js');
 const nodePilotProduct = read('src/data/products/anytls-desktop-manager.ts');
@@ -49,6 +51,16 @@ for (const [name, source] of Object.entries({ stationHome, appsIndex, footer, si
   assert.doesNotMatch(source, /StationCat Radar|stationcat-radar|stationCatRadarProduct/, `${name} should not expose Radar`);
   assert.doesNotMatch(source, /X Follow Cleaner|x-follow-cleaner|xFollowCleanerProduct/, `${name} should not expose X Follow Cleaner`);
 }
+
+for (const [name, source] of Object.entries({ stationHome, footer, navigation, about })) {
+  assert.doesNotMatch(
+    source,
+    /(?:\/devlog\/|Build log|開發博客|开发博客|開発ログ|Dev Blog)/i,
+    `${name} should not expose the development blog`
+  );
+}
+assert.equal(existsSync(join(root, 'src/pages/devlog/index.astro')), true, 'Devlog routes should remain restorable');
+assert.equal(existsSync(join(root, 'src/content/devlog')), true, 'Devlog content should remain intact');
 
 assert.match(stationHome, /anyTlsDesktopManagerProduct/);
 assert.match(stationHome, /<h3>NodePilot<\/h3>/);
