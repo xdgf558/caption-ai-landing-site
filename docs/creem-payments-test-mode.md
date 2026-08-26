@@ -28,7 +28,9 @@ The checkout gate also requires the live D1 pack to match the configured Creem p
 
 Creem signatures are verified against the unmodified request body using HMAC-SHA256. Supported events require a unique Creem event ID, matching mode, product, amount, currency, and customer. Permanent validation failures are acknowledged with HTTP 200 and a `rejected` reason so Creem does not repeatedly deliver an event that cannot become valid.
 
-Credit grants and reversals are transactional and idempotent. A refund or dispute creates one `reversal` ledger entry for the original order. If the points have already been spent, the full reversal is still applied and the account balance becomes negative; this visible negative balance is the outstanding Station Points debt and prevents further redemptions until repaid. A reversal arriving before the completion event creates a zero-delta marker so a later completion event cannot grant points for an already reversed payment.
+Credit grants and reversals are transactional and idempotent. Recording a provider event does not short-circuit fulfillment, so a Creem retry can resume safely if an earlier delivery stopped after recording the event but before updating the points ledger. A refund or dispute creates one `reversal` ledger entry for the original order. If the points have already been spent, the full reversal is still applied and the account balance becomes negative; this visible negative balance is the outstanding Station Points debt and prevents further redemptions until repaid. `lifetime_purchased_credits` remains the historical gross number of purchased points and is not reduced by reversals.
+
+The Test Mode product is an indivisible 100-point pack. Any successful refund event, including a partial monetary refund, revokes the full 100-point pack; proportional point reversals are not implemented. A reversal arriving before the completion event creates a zero-delta marker so a later completion event cannot grant points for an already reversed payment.
 
 Test and production event modes are canonicalized as follows:
 

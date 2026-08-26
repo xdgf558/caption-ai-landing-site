@@ -204,7 +204,9 @@ assert.equal(firstResult.creditGrant.credits, 100);
 const repeatedResponse = await hooks.handleCreemWebhook(makeRequest(), env);
 assert.equal(repeatedResponse.status, 200);
 const repeatedResult = await repeatedResponse.json();
-assert.equal(repeatedResult.duplicate, true);
+assert.equal(repeatedResult.duplicateEvent, true);
+assert.equal(repeatedResult.creditGrant.credited, false);
+assert.equal(repeatedResult.creditGrant.reason, 'already_credited');
 
 const account = sqlite.prepare('SELECT * FROM reader_credit_accounts WHERE account_id = 1').get();
 assert.equal(account.balance_credits, 100);
@@ -216,9 +218,54 @@ assert.equal(ledger[0].source_ref, orderToken);
 assert.equal(sqlite.prepare("SELECT status FROM novel_orders WHERE order_token = ?").get(orderToken).status, 'finished');
 assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM novel_payment_events WHERE provider_event_id = ?").get(payload.id).count, 1);
 
+sqlite.prepare(
+  `INSERT INTO reader_accounts (id, email, normalized_email, display_name)
+   VALUES (3, 'recovery@example.com', 'recovery@example.com', 'Recovery')`
+).run();
+const recoveryOrderToken = 'sc-creem-recovery-test';
+sqlite.prepare(
+  `INSERT INTO novel_orders (
+    order_token, account_id, provider, provider_order_id, order_type,
+    price_amount, price_currency, pay_currency, status, customer_email, metadata_json
+  ) VALUES (?, 3, 'creem', ?, 'credit-pack', '10.00', 'USD', '', 'waiting', ?, ?)`
+).run(
+  recoveryOrderToken,
+  'ord_recovery_test',
+  'recovery@example.com',
+  JSON.stringify({
+    creditPackCredits: 100,
+    creditPackUnitLabel: 'Station Points',
+    creemMode: 'test',
+    creemProductId: productId
+  })
+);
+const recoveryPayload = structuredClone(payload);
+recoveryPayload.id = 'evt_recovery_after_event_insert';
+recoveryPayload.object.id = 'ch_recovery_test';
+recoveryPayload.object.request_id = recoveryOrderToken;
+recoveryPayload.object.order.id = 'ord_recovery_test';
+recoveryPayload.object.customer.email = 'recovery@example.com';
+recoveryPayload.object.metadata.orderToken = recoveryOrderToken;
+recoveryPayload.object.metadata.accountId = '3';
+const recoveryRawBody = JSON.stringify(recoveryPayload);
+sqlite.prepare(
+  `INSERT INTO novel_payment_events (
+    provider, provider_event_id, event_type, status, signature_valid, payload_json
+  ) VALUES ('creem', ?, 'checkout.completed', 'finished', 1, ?)`
+).run(recoveryPayload.id, recoveryRawBody);
+const recoverySignature = await hooks.hmacSha256Hex(recoveryRawBody, secret);
+const recoveryResponse = await hooks.handleCreemWebhook(makeRequest(recoveryRawBody, recoverySignature), env);
+assert.equal(recoveryResponse.status, 200);
+const recoveryResult = await recoveryResponse.json();
+assert.equal(recoveryResult.duplicateEvent, true);
+assert.equal(recoveryResult.creditGrant.credited, true);
+assert.equal(recoveryResult.creditGrant.credits, 100);
+assert.equal(sqlite.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id = 3').get().balance_credits, 100);
+assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM novel_payment_events WHERE provider_event_id = ?").get(recoveryPayload.id).count, 1);
+
 const invalidResponse = await hooks.handleCreemWebhook(makeRequest(rawBody, 'invalid-signature'), env);
 assert.equal(invalidResponse.status, 401);
-assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_credit_ledger').get().count, 1);
+assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_credit_ledger WHERE account_id = 1').get().count, 1);
 
 const mismatchedPayload = structuredClone(payload);
 mismatchedPayload.id = 'evt_wrong_product';
@@ -231,7 +278,7 @@ assert.equal(mismatchResponse.status, 200);
 const mismatchResult = await mismatchResponse.json();
 assert.equal(mismatchResult.rejected, true);
 assert.equal(mismatchResult.reason, 'product_mismatch');
-assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_credit_ledger').get().count, 1);
+assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_credit_ledger WHERE account_id = 1').get().count, 1);
 
 const wrongAmountPayload = structuredClone(payload);
 wrongAmountPayload.id = 'evt_wrong_amount';
@@ -274,7 +321,7 @@ assert.equal(wrongModeResponse.status, 200);
 const wrongModeResult = await wrongModeResponse.json();
 assert.equal(wrongModeResult.rejected, true);
 assert.equal(wrongModeResult.reason, 'mode_mismatch');
-assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_credit_ledger').get().count, 1);
+assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_credit_ledger WHERE account_id = 1').get().count, 1);
 
 sqlite.prepare(
   `UPDATE reader_credit_accounts
@@ -334,14 +381,17 @@ assert.equal(refundResult.creditGrant.reason, 'reversed');
 assert.equal(refundResult.creditGrant.credits, 100);
 assert.equal(refundResult.creditGrant.account.balanceCredits, -80);
 assert.equal(sqlite.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id = 1').get().balance_credits, -80);
-assert.equal(sqlite.prepare('SELECT lifetime_purchased_credits FROM reader_credit_accounts WHERE account_id = 1').get().lifetime_purchased_credits, 0);
+assert.equal(sqlite.prepare('SELECT lifetime_purchased_credits FROM reader_credit_accounts WHERE account_id = 1').get().lifetime_purchased_credits, 100);
 const reversalLedger = sqlite.prepare("SELECT * FROM reader_credit_ledger WHERE entry_type = 'reversal'").get();
 assert.equal(reversalLedger.credits_delta, -100);
 assert.equal(reversalLedger.balance_after, -80);
 
 const repeatedRefundResponse = await hooks.handleCreemWebhook(makeRequest(refundRawBody, refundSignature), env);
 assert.equal(repeatedRefundResponse.status, 200);
-assert.equal((await repeatedRefundResponse.json()).duplicate, true);
+const repeatedRefundResult = await repeatedRefundResponse.json();
+assert.equal(repeatedRefundResult.duplicateEvent, true);
+assert.equal(repeatedRefundResult.creditGrant.reversed, false);
+assert.equal(repeatedRefundResult.creditGrant.reason, 'already_reversed');
 assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM reader_credit_ledger WHERE entry_type = 'reversal'").get().count, 1);
 
 const disputePayload = structuredClone(refundPayload);

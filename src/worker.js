@@ -1303,6 +1303,13 @@ const extractNowPaymentsEvent = (payload) => {
   };
 };
 
+const normalizeCreemMode = (value) => {
+  const mode = normalizePaymentValue(value, 40).toLowerCase();
+  if (['test', 'sandbox', 'local'].includes(mode)) return 'test';
+  if (['production', 'prod', 'live'].includes(mode)) return 'production';
+  return mode;
+};
+
 const extractCreemEvent = (payload) => {
   const eventType = normalizePaymentValue(payload?.eventType || payload?.event_type || payload?.type, 80).toLowerCase();
   const object = payload?.object && typeof payload.object === 'object' ? payload.object : {};
@@ -1337,13 +1344,6 @@ const extractCreemEvent = (payload) => {
     customerEmail: cleanText(customer.email, 254).toLowerCase(),
     mode: normalizeCreemMode(order.mode || object.transaction?.mode || checkout.mode || object.mode || product.mode)
   };
-};
-
-const normalizeCreemMode = (value) => {
-  const mode = normalizePaymentValue(value, 40).toLowerCase();
-  if (['test', 'sandbox', 'local'].includes(mode)) return 'test';
-  if (['production', 'prod', 'live'].includes(mode)) return 'production';
-  return mode;
 };
 
 const validateCreemEvent = (order, event, config) => {
@@ -7788,23 +7788,11 @@ const recordReaderCreditReversal = async (db, order, event, credits, source, sou
                  AND source_ref = ?
                LIMIT 1
              ), 0),
-             lifetime_purchased_credits = MAX(0, lifetime_purchased_credits + COALESCE((
-               SELECT credits_delta
-               FROM reader_credit_ledger
-               WHERE account_id = ?
-                 AND entry_type = 'reversal'
-                 AND source = ?
-                 AND source_ref = ?
-               LIMIT 1
-             ), 0)),
              updated_at = CURRENT_TIMESTAMP
          WHERE account_id = ?
          RETURNING *`
       )
       .bind(
-        account.account_id,
-        source,
-        sourceRef,
         account.account_id,
         source,
         sourceRef,
@@ -8892,21 +8880,13 @@ const handleCreemWebhook = async (request, env) => {
   }
   const order = supportedEvent ? await findNovelOrderByCreemEvent(db, event) : null;
   const eventInsert = await insertNovelPaymentEvent(db, event, payload, order?.id || null);
-  if (event.eventId && getD1ChangeCount(eventInsert) === 0) {
-    return json({
-      ok: true,
-      duplicate: true,
-      provider: creemProvider,
-      eventType: event.eventType,
-      eventId: event.eventId
-    });
-  }
+  const duplicateEvent = Boolean(event.eventId && getD1ChangeCount(eventInsert) === 0);
 
   if (!supportedEvent) {
-    return json({ ok: true, ignored: true, provider: creemProvider, eventType: event.eventType });
+    return json({ ok: true, ignored: true, duplicateEvent, provider: creemProvider, eventType: event.eventType });
   }
   if (!order) {
-    return json({ ok: true, matched: false, provider: creemProvider, eventType: event.eventType });
+    return json({ ok: true, matched: false, duplicateEvent, provider: creemProvider, eventType: event.eventType });
   }
 
   const validationError = validateCreemEvent(order, event, getCreemConfig(env, request));
@@ -8916,6 +8896,7 @@ const handleCreemWebhook = async (request, env) => {
       rejected: true,
       code: 'CREEM_EVENT_VALIDATION_FAILED',
       reason: validationError,
+      duplicateEvent,
       provider: creemProvider,
       eventType: event.eventType,
       eventId: event.eventId
@@ -8930,6 +8911,7 @@ const handleCreemWebhook = async (request, env) => {
   return json({
     ok: true,
     matched: true,
+    duplicateEvent,
     provider: creemProvider,
     eventType: event.eventType,
     creditGrant: {
