@@ -583,6 +583,7 @@ const getCreemConfig = (env, request) => {
     productId: cleanText(env.CREEM_CREDIT_PACK_PRODUCT_ID, 120),
     productCredits: normalizePositiveInteger(env.CREEM_CREDIT_PACK_CREDITS, 100),
     productPriceAmount: normalizePriceAmount(env.CREEM_CREDIT_PACK_PRICE_USD, 10),
+    productionReaderEmails: normalizeEmailList(env.CREEM_PRODUCTION_READER_EMAILS),
     testReaderEmails: normalizeEmailList(env.CREEM_TEST_READER_EMAILS),
     webhookUrl,
     hasApiKey: Boolean(String(env.CREEM_API_KEY || '').trim()),
@@ -603,8 +604,10 @@ const isCreemCheckoutConfigured = (config) =>
 
 const isCreemCheckoutAllowed = (config, session, pack) => {
   if (!isCreemCheckoutConfigured(config) || !isCreemPackMatch(config, pack)) return false;
-  if (config.mode === 'production') return true;
   const email = cleanText(session?.email, 254).toLowerCase();
+  if (config.mode === 'production') {
+    return config.productionReaderEmails.length === 0 || Boolean(email && config.productionReaderEmails.includes(email));
+  }
   return Boolean(email && config.testReaderEmails.includes(email));
 };
 
@@ -2903,6 +2906,47 @@ const splitEnvList = (value) =>
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
+
+const notifyCreemPaymentAlert = async (env, { title, message, eventId = '', orderToken = '' }) => {
+  if (!env.EMAIL || typeof env.EMAIL.send !== 'function') return { configured: false, sent: 0 };
+  const recipients = splitEnvList(env.PAYMENT_ALERT_EMAILS || env.ADMIN_ALLOWED_EMAILS || defaultAdminEmail)
+    .map((email) => email.toLowerCase())
+    .filter(isEmail)
+    .slice(0, 5);
+  if (!recipients.length) return { configured: false, sent: 0 };
+
+  const fromEmail = env.READER_EMAIL_FROM || 'noreply@wwwstationcat.org';
+  const fromName = env.READER_EMAIL_FROM_NAME || 'Station Cat';
+  const adminUrl = 'https://wwwstationcat.org/admin-v2/';
+  const details = [message, eventId ? `Event ID: ${eventId}` : '', orderToken ? `Order: ${orderToken}` : '']
+    .filter(Boolean)
+    .join('\n');
+  let sent = 0;
+  for (const recipient of recipients) {
+    try {
+      await env.EMAIL.send({
+        to: recipient,
+        from: { email: fromEmail, name: fromName },
+        subject: `[Station Cat Payments] ${cleanText(title, 160)}`,
+        text: `${details}\n\n查看后台：${adminUrl}`,
+        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;color:#17211f">
+          <h1 style="font-size:20px">${escapeHtml(title)}</h1>
+          <p>${escapeHtml(message)}</p>
+          ${eventId ? `<p>Event ID: <code>${escapeHtml(eventId)}</code></p>` : ''}
+          ${orderToken ? `<p>Order: <code>${escapeHtml(orderToken)}</code></p>` : ''}
+          <p><a href="${adminUrl}">打开 Station Cat 后台</a></p>
+        </div>`
+      });
+      sent += 1;
+    } catch (error) {
+      console.error('creem_payment_alert_email_failed', {
+        code: cleanText(error?.code, 120),
+        message: cleanText(error?.message, 300)
+      });
+    }
+  }
+  return { configured: true, sent };
+};
 
 const normalizeAccessTeamDomain = (value) => {
   const trimmed = String(value || '').trim().replace(/\/+$/, '');
@@ -8041,11 +8085,12 @@ const handleNovelPaymentsStatus = async (request, env) => {
   const creemConfig = getCreemConfig(env, request);
   const db = env.WAITLIST_DB;
   const creditPacks = db ? await getConfiguredReaderCreditPacks(db, env) : getReaderCreditConfig(env).packs;
-  // Public status stays closed for Creem Test Mode; only signed-in allowlisted readers see that checkout path.
+  // Public pricing follows the production product configuration. Account allowlists are applied by the signed-in reader endpoint.
   const creemEnabled =
     creemConfig.mode === 'production' &&
     Boolean(db) &&
-    creditPacks.some((pack) => isCreemCheckoutAllowed(creemConfig, null, pack));
+    isCreemCheckoutConfigured(creemConfig) &&
+    creditPacks.some((pack) => isCreemPackMatch(creemConfig, pack));
   const checkoutEnabled = creemEnabled;
   const membershipSettings = db ? await getReaderMembershipSettings(db, env) : {
     enabled: true,
@@ -8154,6 +8199,69 @@ const createCreemCheckout = async (env, request, checkout) => {
   }
 
   return data;
+};
+
+const validateCreemProductForCheckout = (config, product, pack) => {
+  if (!product || typeof product !== 'object') return 'product_missing';
+  if (normalizePaymentValue(product.id, 120) !== config.productId) return 'product_id_mismatch';
+  if (normalizeCreemMode(product.mode) !== config.mode) return 'mode_mismatch';
+  if (normalizePaymentValue(product.status, 40).toLowerCase() !== 'active') return 'product_inactive';
+
+  const billingType = normalizePaymentValue(product.billing_type || product.billingType, 40)
+    .toLowerCase()
+    .replace(/[-_\s]/g, '');
+  if (billingType !== 'onetime') return 'billing_type_mismatch';
+
+  const currency = normalizePaymentValue(product.currency, 24).toUpperCase();
+  if (currency !== pack.priceCurrency) return 'currency_mismatch';
+
+  const actualPriceCents = Number.parseInt(String(product.price ?? ''), 10);
+  const expectedPriceCents = Math.round(pack.priceAmount * 100);
+  if (!Number.isFinite(actualPriceCents) || actualPriceCents !== expectedPriceCents) return 'amount_mismatch';
+  return '';
+};
+
+const assertCreemProductReadyForCheckout = async (env, config, pack) => {
+  const url = new URL(`${config.apiBase}/products`);
+  url.searchParams.set('product_id', config.productId);
+
+  let response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        'x-api-key': String(env.CREEM_API_KEY || '').trim()
+      }
+    });
+  } catch {
+    const error = new Error('Creem product verification is temporarily unavailable.');
+    error.code = 'CREEM_PRODUCT_LOOKUP_FAILED';
+    throw error;
+  }
+
+  let data = {};
+  try {
+    const text = await response.text();
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    const error = new Error('Creem product verification is temporarily unavailable.');
+    error.code = 'CREEM_PRODUCT_LOOKUP_FAILED';
+    throw error;
+  }
+
+  const product = data.product && typeof data.product === 'object' ? data.product : data;
+  const reason = validateCreemProductForCheckout(config, product, pack);
+  if (reason) {
+    const error = new Error('Creem product configuration does not match Station Points checkout.');
+    error.code = 'CREEM_PRODUCT_CONFIGURATION_MISMATCH';
+    error.reason = reason;
+    throw error;
+  }
+
+  return product;
 };
 
 const normalizeCheckoutPayload = async (payload, session, env, db) => {
@@ -8475,6 +8583,25 @@ const handleNovelCheckout = async (request, env) => {
     );
   }
 
+  if (useCreem) {
+    try {
+      await assertCreemProductReadyForCheckout(env, creemConfig, checkout.creditPack);
+    } catch (error) {
+      console.error('Creem product preflight failed.', {
+        code: error.code || 'CREEM_PRODUCT_LOOKUP_FAILED',
+        reason: error.reason || ''
+      });
+      return json(
+        {
+          ok: false,
+          code: error.code || 'CREEM_PRODUCT_LOOKUP_FAILED',
+          message: 'Station Points checkout is temporarily unavailable.'
+        },
+        { status: 503 }
+      );
+    }
+  }
+
   const orderToken = `sc-${randomToken(18).toLowerCase()}`;
   const order = await insertNovelCheckoutOrder(db, session, checkout, orderToken, provider, {
     ...(useCreem
@@ -8586,6 +8713,19 @@ const insertNovelPaymentEvent = async (db, event, payload, orderId = null) => {
       1,
       JSON.stringify(payload)
     )
+    .run();
+};
+
+const updateCreemPaymentEventStatus = async (db, eventId, status) => {
+  if (!eventId) return null;
+  return db
+    .prepare(
+      `UPDATE novel_payment_events
+       SET status = ?
+       WHERE provider = ?
+         AND provider_event_id = ?`
+    )
+    .bind(cleanText(status, 120), creemProvider, eventId)
     .run();
 };
 
@@ -8898,6 +9038,15 @@ const handleCreemWebhook = async (request, env) => {
 
   const validationError = validateCreemEvent(order, event, getCreemConfig(env, request));
   if (validationError) {
+    await updateCreemPaymentEventStatus(db, event.eventId, `rejected:${validationError}`);
+    if (!duplicateEvent) {
+      await notifyCreemPaymentAlert(env, {
+        title: 'Creem webhook rejected',
+        message: `A signed Creem event failed validation: ${validationError}.`,
+        eventId: event.eventId,
+        orderToken: order.order_token
+      });
+    }
     return json({
       ok: true,
       rejected: true,
@@ -8911,9 +9060,24 @@ const handleCreemWebhook = async (request, env) => {
   }
 
   const updatedOrder = await updateNovelOrderFromPaymentEvent(db, order.id, event);
-  const creditGrant = event.eventType === 'checkout.completed'
-    ? await applyCreditTopupFromOrder(db, updatedOrder, env)
-    : await applyCreditReversalFromOrder(db, updatedOrder, event, env);
+  let creditGrant;
+  try {
+    creditGrant = event.eventType === 'checkout.completed'
+      ? await applyCreditTopupFromOrder(db, updatedOrder, env)
+      : await applyCreditReversalFromOrder(db, updatedOrder, event, env);
+    await updateCreemPaymentEventStatus(db, event.eventId, `processed:${event.providerStatus || event.status}`);
+  } catch (error) {
+    await updateCreemPaymentEventStatus(db, event.eventId, `fulfillment_failed:${cleanText(error?.code, 60) || 'error'}`);
+    if (!duplicateEvent) {
+      await notifyCreemPaymentAlert(env, {
+        title: 'Creem fulfillment failed',
+        message: 'A signed Creem event matched an order, but Station Points fulfillment did not finish.',
+        eventId: event.eventId,
+        orderToken: order.order_token
+      });
+    }
+    throw error;
+  }
 
   return json({
     ok: true,
@@ -21194,6 +21358,7 @@ export const __readerTotpTestHooks = {
   findConfiguredReaderCreditPack,
   extractCreemEvent,
   getCreemConfig,
+  assertCreemProductReadyForCheckout,
   findActiveSignalCollectionRun,
   getD1ChangeCount,
   getAdjacentPublishedSignalBriefs,
@@ -21294,6 +21459,7 @@ export const __readerTotpTestHooks = {
   shouldSampleReaderTotpResetCleanup,
   timingSafeEqualString,
   isCreemCheckoutAllowed,
+  validateCreemProductForCheckout,
   validateCreemEvent,
   verifyCreemSignature,
   translateNovelTextToEnglish,

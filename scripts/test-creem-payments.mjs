@@ -141,6 +141,103 @@ assert.equal(
   false
 );
 
+const productionConfig = hooks.getCreemConfig(
+  {
+    CREEM_MODE: 'production',
+    CREEM_API_KEY: 'creem_live_example',
+    CREEM_WEBHOOK_SECRET: secret,
+    CREEM_CREDIT_PACK_PRODUCT_ID: 'prod_station_points_live'
+  },
+  testRequest
+);
+assert.equal(hooks.isCreemCheckoutAllowed(productionConfig, { email: 'reader@example.com' }, configuredPack), true);
+
+const guardedProductionConfig = hooks.getCreemConfig(
+  {
+    CREEM_MODE: 'production',
+    CREEM_API_KEY: 'creem_live_example',
+    CREEM_WEBHOOK_SECRET: secret,
+    CREEM_CREDIT_PACK_PRODUCT_ID: 'prod_station_points_live',
+    CREEM_PRODUCTION_READER_EMAILS: 'pilot@example.com'
+  },
+  testRequest
+);
+assert.equal(hooks.isCreemCheckoutAllowed(guardedProductionConfig, { email: 'pilot@example.com' }, configuredPack), true);
+assert.equal(hooks.isCreemCheckoutAllowed(guardedProductionConfig, { email: 'reader@example.com' }, configuredPack), false);
+assert.equal(hooks.isCreemCheckoutAllowed(guardedProductionConfig, null, configuredPack), false);
+
+const liveProduct = {
+  id: 'prod_station_points_live',
+  mode: 'prod',
+  status: 'active',
+  billing_type: 'onetime',
+  price: 1000,
+  currency: 'USD'
+};
+assert.equal(hooks.validateCreemProductForCheckout(productionConfig, liveProduct, configuredPack), '');
+assert.equal(
+  hooks.validateCreemProductForCheckout(productionConfig, { ...liveProduct, price: 900 }, configuredPack),
+  'amount_mismatch'
+);
+assert.equal(
+  hooks.validateCreemProductForCheckout(productionConfig, { ...liveProduct, currency: 'EUR' }, configuredPack),
+  'currency_mismatch'
+);
+assert.equal(
+  hooks.validateCreemProductForCheckout(productionConfig, { ...liveProduct, status: 'archived' }, configuredPack),
+  'product_inactive'
+);
+assert.equal(
+  hooks.validateCreemProductForCheckout(productionConfig, { ...liveProduct, billing_type: 'recurring' }, configuredPack),
+  'billing_type_mismatch'
+);
+assert.equal(
+  hooks.validateCreemProductForCheckout(productionConfig, { ...liveProduct, mode: 'test' }, configuredPack),
+  'mode_mismatch'
+);
+
+const originalFetch = globalThis.fetch;
+try {
+  globalThis.fetch = async (url, options) => {
+    assert.equal(String(url), 'https://api.creem.io/v1/products?product_id=prod_station_points_live');
+    assert.equal(options.headers['x-api-key'], 'creem_live_example');
+    return new Response(JSON.stringify(liveProduct), {
+      status: 200,
+      headers: { 'content-type': 'application/json' }
+    });
+  };
+  assert.deepEqual(
+    await hooks.assertCreemProductReadyForCheckout(
+      { CREEM_API_KEY: 'creem_live_example' },
+      productionConfig,
+      configuredPack
+    ),
+    liveProduct
+  );
+
+  globalThis.fetch = async () => new Response(JSON.stringify({ ...liveProduct, price: 900 }), { status: 200 });
+  await assert.rejects(
+    hooks.assertCreemProductReadyForCheckout(
+      { CREEM_API_KEY: 'creem_live_example' },
+      productionConfig,
+      configuredPack
+    ),
+    (error) => error?.code === 'CREEM_PRODUCT_CONFIGURATION_MISMATCH' && error?.reason === 'amount_mismatch'
+  );
+
+  globalThis.fetch = async () => new Response('service unavailable', { status: 503 });
+  await assert.rejects(
+    hooks.assertCreemProductReadyForCheckout(
+      { CREEM_API_KEY: 'creem_live_example' },
+      productionConfig,
+      configuredPack
+    ),
+    (error) => error?.code === 'CREEM_PRODUCT_LOOKUP_FAILED'
+  );
+} finally {
+  globalThis.fetch = originalFetch;
+}
+
 const event = hooks.extractCreemEvent(payload);
 assert.equal(event.eventType, 'checkout.completed');
 assert.equal(event.requestId, orderToken);
@@ -217,6 +314,10 @@ assert.equal(ledger[0].source, 'creem-credit-pack');
 assert.equal(ledger[0].source_ref, orderToken);
 assert.equal(sqlite.prepare("SELECT status FROM novel_orders WHERE order_token = ?").get(orderToken).status, 'finished');
 assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM novel_payment_events WHERE provider_event_id = ?").get(payload.id).count, 1);
+assert.equal(
+  sqlite.prepare('SELECT status FROM novel_payment_events WHERE provider_event_id = ?').get(payload.id).status,
+  'processed:paid'
+);
 
 sqlite.prepare(
   `INSERT INTO reader_accounts (id, email, normalized_email, display_name)
@@ -273,11 +374,27 @@ mismatchedPayload.object.product.id = 'prod_wrong';
 mismatchedPayload.object.order.product = 'prod_wrong';
 const mismatchedRawBody = JSON.stringify(mismatchedPayload);
 const mismatchedSignature = await hooks.hmacSha256Hex(mismatchedRawBody, secret);
+const paymentAlerts = [];
+env.ADMIN_ALLOWED_EMAILS = 'payments@example.com';
+env.EMAIL = {
+  async send(message) {
+    paymentAlerts.push(message);
+  }
+};
 const mismatchResponse = await hooks.handleCreemWebhook(makeRequest(mismatchedRawBody, mismatchedSignature), env);
 assert.equal(mismatchResponse.status, 200);
 const mismatchResult = await mismatchResponse.json();
 assert.equal(mismatchResult.rejected, true);
 assert.equal(mismatchResult.reason, 'product_mismatch');
+assert.equal(
+  sqlite.prepare('SELECT status FROM novel_payment_events WHERE provider_event_id = ?').get(mismatchedPayload.id).status,
+  'rejected:product_mismatch'
+);
+assert.equal(paymentAlerts.length, 1);
+assert.equal(paymentAlerts[0].to, 'payments@example.com');
+assert.match(paymentAlerts[0].subject, /Creem webhook rejected/);
+delete env.EMAIL;
+delete env.ADMIN_ALLOWED_EMAILS;
 assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_credit_ledger WHERE account_id = 1').get().count, 1);
 
 const wrongAmountPayload = structuredClone(payload);

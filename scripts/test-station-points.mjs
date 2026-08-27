@@ -152,6 +152,21 @@ const checkoutPack = await hooks.findConfiguredReaderCreditPack(d1, paymentEnv, 
 assert.equal(Number(checkoutPack.priceAmount).toFixed(2), publicStatus.readerCredits.packs[0].priceAmount);
 assert.equal(checkoutPack.priceCurrency, publicStatus.readerCredits.packs[0].priceCurrency);
 
+const guardedProductionEnv = {
+  ...paymentEnv,
+  CREEM_PRODUCTION_READER_EMAILS: 'pilot@example.com'
+};
+const guardedPublicStatus = await (await hooks.handleNovelPaymentsStatus(
+  new Request('https://wwwstationcat.org/api/novels/payments/status'),
+  guardedProductionEnv
+)).json();
+assert.equal(guardedPublicStatus.publicCheckoutEnabled, true);
+const guardedSignedOutCredits = await (await hooks.handleReaderCredits(
+  new Request('https://wwwstationcat.org/api/readers/credits'),
+  guardedProductionEnv
+)).json();
+assert.equal(guardedSignedOutCredits.checkoutEnabled, false);
+
 pricingDb.prepare(`UPDATE admin_content_settings SET setting_json = ? WHERE setting_key = ?`).run(
   '{"accessLevel":"paid","pricing":{"chapterCredits":3,"creditPacks":[{"credits":300,"label":"300 Station Points","priceAmount":21,"priceCurrency":"USD"}]}}',
   'content.pricing-defaults.v1'

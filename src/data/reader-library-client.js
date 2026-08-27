@@ -20,6 +20,8 @@ export const readerErrorMessageKeys = Object.freeze({
   INSUFFICIENT_CREDITS: 'insufficientCredits',
   PAYMENT_PROVIDER_NOT_CONFIGURED: 'checkoutUnavailable',
   CREEM_CHECKOUT_NOT_AVAILABLE: 'checkoutUnavailable',
+  CREEM_PRODUCT_LOOKUP_FAILED: 'checkoutUnavailable',
+  CREEM_PRODUCT_CONFIGURATION_MISMATCH: 'checkoutUnavailable',
   CREEM_CHECKOUT_FAILED: 'checkoutFailed',
   CREEM_CHECKOUT_URL_MISSING: 'checkoutFailed',
   NOWPAYMENTS_INVOICE_FAILED: 'checkoutFailed',
