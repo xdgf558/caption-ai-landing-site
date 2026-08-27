@@ -5869,23 +5869,112 @@ body.station-paper-page {
   font-weight: 900;
 }
 
-.station-points-details {
+.station-points-capabilities {
   border-top: 2px solid #221b16;
   display: grid;
-  gap: 0;
+  gap: 26px;
+}
+
+.station-points-capabilities__heading {
+  display: grid;
+  gap: 9px;
+  max-width: 780px;
+}
+
+.station-points-capabilities__heading h2,
+.station-points-capabilities__heading p,
+.station-points-capability-group h3,
+.station-points-capability-group p,
+.station-points-redemption-note p {
+  margin: 0;
+}
+
+.station-points-capability-columns {
+  display: grid;
+  gap: 34px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding-top: 0;
 }
 
-.station-points-details > div {
-  padding: 30px;
+.station-points-capability-group {
+  border-top: 1px dashed #c8b6a5;
+  display: grid;
+  gap: 6px;
+  padding-top: 18px;
 }
 
-.station-points-details > div + div {
-  border-left: 1px dashed #c8b6a5;
+.station-points-capability-heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 34px;
 }
 
-.station-points-details ul {
+.station-points-capability-heading h3 {
+  font-size: 22px;
+}
+
+.station-points-capability-heading span,
+.reader-credit-use-status,
+.reader-credit-scope {
+  border: 1px solid #d8c8b8;
+  border-radius: 999px;
+  color: #5d5148;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 950;
+  padding: 5px 9px;
+}
+
+.station-points-capability-heading span[data-state='active'],
+.reader-credit-use-status[data-state='active'] {
+  background: #e8f3eb;
+  border-color: #95b8a5;
+  color: #245044;
+}
+
+.station-points-capability-heading span[data-state='planned'],
+.reader-credit-use-status[data-state='planned'] {
+  background: #f1e4d4;
+  color: #6b5543;
+}
+
+.station-points-capability-list {
+  display: grid;
+}
+
+.station-points-capability-list article {
+  border-bottom: 1px solid #eadfd1;
+  display: grid;
+  gap: 6px;
+  min-height: 92px;
+  padding: 18px 0;
+}
+
+.station-points-capability-list strong {
+  color: #221b16;
+  font-size: 17px;
+}
+
+.station-points-capability-list p,
+.station-points-capabilities__heading > p:last-child,
+.station-points-redemption-note p {
+  color: #5d5148;
+  line-height: 1.65;
+}
+
+.station-points-redemption-note {
+  border-left: 4px solid #e9b466;
+  display: grid;
+  gap: 5px;
+  padding: 3px 0 3px 16px;
+}
+
+.station-points-rules {
+  border-top: 1px dashed #c8b6a5;
+}
+
+.station-points-rules ul {
   display: grid;
   gap: 14px;
   line-height: 1.7;
@@ -6310,15 +6399,92 @@ body.station-paper-page {
 }
 
 .reader-credit-summary {
-  align-items: end;
   display: grid;
-  gap: 8px;
-  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
 }
 
-.reader-credit-summary .fine-print {
-  justify-self: end;
+.reader-credit-summary > p:last-child {
+  color: #5d5148;
+  line-height: 1.65;
   margin: 0;
+  max-width: 820px;
+}
+
+.reader-credit-scope {
+  align-self: center;
+  justify-self: end;
+}
+
+.reader-credit-use-columns {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.reader-credit-use-group {
+  border-top: 1px dashed #d8c8b8;
+  display: grid;
+  gap: 8px;
+  padding-top: 16px;
+}
+
+.reader-credit-use-heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 32px;
+}
+
+.reader-credit-use-heading h3,
+.reader-credit-purchase-heading h3 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.reader-credit-use-list {
+  display: grid;
+}
+
+.reader-credit-use-list article {
+  border-bottom: 1px solid #eadfd1;
+  display: grid;
+  gap: 5px;
+  min-height: 82px;
+  padding: 14px 0;
+}
+
+.reader-credit-use-list strong {
+  color: #221b16;
+}
+
+.reader-credit-use-list p,
+.reader-credit-planned-note,
+.reader-credit-purchase-heading p {
+  color: #5d5148;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.reader-credit-planned-note {
+  font-size: 13px;
+  padding-top: 4px;
+}
+
+#reader-credit-purchase-controls {
+  border-top: 2px solid #221b16;
+  display: grid;
+  gap: 14px;
+  padding-top: 18px;
+}
+
+#reader-credit-purchase-controls[hidden] {
+  display: none;
+}
+
+.reader-credit-purchase-heading {
+  display: grid;
+  gap: 5px;
 }
 
 .reader-membership-state {
@@ -7227,21 +7393,13 @@ body.station-paper-page.caption-product-page {
 
   .reader-public-points,
   .station-points-offer,
-  .station-points-details {
+  .station-points-capability-columns,
+  .reader-credit-use-columns {
     grid-template-columns: 1fr;
   }
 
   .reader-public-points .button {
     justify-self: start;
-  }
-
-  .station-points-details > div {
-    padding: 24px 0;
-  }
-
-  .station-points-details > div + div {
-    border-left: 0;
-    border-top: 1px dashed #c8b6a5;
   }
 
   .reader-membership-summary {
@@ -7260,12 +7418,11 @@ body.station-paper-page.caption-product-page {
     white-space: normal;
   }
 
-  .reader-credit-summary,
   .reader-panel__header {
     grid-template-columns: 1fr;
   }
 
-  .reader-credit-summary .fine-print {
+  .reader-credit-scope {
     justify-self: start;
   }
 
