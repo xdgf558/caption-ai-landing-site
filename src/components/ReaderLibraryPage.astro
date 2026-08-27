@@ -25,7 +25,7 @@ const copy = {
     account: 'Account', changePassword: 'Change password', currentPassword: 'Current password', boundRequired: 'Required when an authenticator is linked', updatePassword: 'Update password', logout: 'Sign out',
     authenticator: 'Two-factor authenticator', reading: 'Loading', readingBinding: 'Checking authenticator status.', bind: 'Link Google Authenticator', qrHelp: 'Open Google Authenticator, tap the plus button, and choose “Scan a QR code.”', manual: 'Enter the setup key manually', setupKey: 'Setup key', currentCode: 'Current 6-digit code', confirmBinding: 'Confirm link',
     points: 'Your Station Points', pointsScope: 'One balance across Station Cat', pointsIntro: 'Use this balance wherever Station Cat explicitly shows a Station Points redemption option. You always see the cost and access granted before points are deducted.',
-    availableNow: 'Available now', activeLabel: 'LIVE', readingMembership: 'Reading membership', readingMembershipDesc: 'Redeem points for time-limited member reading access.', paidChapters: 'Paid fiction chapters', chapterCost: 'Paid chapters currently cost {cost} point(s).',
+    availableNow: 'Available now', activeLabel: 'LIVE', readingMembership: 'Reading membership', readingMembershipDesc: 'Redeem points for time-limited member reading access.', paidChapters: 'Paid fiction chapters', chapterCost: 'Paid chapters currently cost {cost} point(s).', chapterCostFallback: 'Sign in to see the current points cost per paid chapter.',
     comingNext: 'Planned uses', plannedLabel: 'PLANNED', softwareDownloads: 'Paid software downloads', softwareDownloadsDesc: 'Redeem eligible desktop or mobile software download rights.', softwareAccess: 'Software features and access', softwareAccessDesc: 'Redeem eligible premium features or time-limited product access.', plannedNotice: 'Planned uses are not available yet. They will only become redeemable when a product page shows a points price and redemption button.',
     buyPoints: 'Buy Station Points', buyPointsDesc: 'Add to the same site-wide balance with a one-time purchase. No automatic renewal.',
     continueReading: 'Continue reading', bookmarkHint: 'Press B on a chapter page to save your current position; on mobile, use the Save bookmark button at the lower right.', noBookmarks: 'No saved bookmarks yet.', noBookmarksDesc: 'Open a novel chapter and save a bookmark to continue from this page next time.', browse: 'Browse serial fiction',
@@ -40,7 +40,7 @@ const copy = {
     account: 'アカウント', changePassword: 'パスワードを変更', currentPassword: '現在のパスワード', boundRequired: '認証アプリ連携時は必須', updatePassword: 'パスワードを更新', logout: 'ログアウト',
     authenticator: '2段階認証アプリ', reading: '読み込み中', readingBinding: '認証アプリの状態を確認中。', bind: 'Google Authenticator を連携', qrHelp: 'Google Authenticator を開き、プラスボタンから「QR コードをスキャン」を選びます。', manual: '設定キーを手動入力', setupKey: '設定キー', currentCode: '現在の6桁コード', confirmBinding: '連携を確認',
     points: 'Station Points 残高', pointsScope: 'Station Cat 共通ポイント', pointsIntro: 'Station Points 交換と明記された場所で共通して利用できます。交換を確定する前に、必要ポイントと付与される権利を必ず表示します。',
-    availableNow: '現在利用可能', activeLabel: '利用可能', readingMembership: '読書会員権', readingMembershipDesc: 'ポイントを期間限定の会員向け読書権と交換できます。', paidChapters: '有料小説の章', chapterCost: '有料章は現在{cost}ポイントです。',
+    availableNow: '現在利用可能', activeLabel: '利用可能', readingMembership: '読書会員権', readingMembershipDesc: 'ポイントを期間限定の会員向け読書権と交換できます。', paidChapters: '有料小説の章', chapterCost: '有料章は現在{cost}ポイントです。', chapterCostFallback: 'ログイン後に現在の章ごとの必要ポイントを表示します。',
     comingNext: '今後対応予定', plannedLabel: '予定', softwareDownloads: '有料ソフトウェアのダウンロード', softwareDownloadsDesc: '対象となるデスクトップ／モバイルソフトウェアのダウンロード権と交換。', softwareAccess: 'ソフトウェア機能・利用権', softwareAccessDesc: '対象となる上位機能や期間限定の製品利用権と交換。', plannedNotice: '予定中の用途はまだ交換できません。商品ページにポイント価格と交換ボタンが表示された時点で利用可能になります。',
     buyPoints: 'Station Points を購入', buyPointsDesc: '自動更新のない一回払いで、同じサイト共通残高に追加します。',
     continueReading: '続きを読む', bookmarkHint: '章のページで B キーを押すと現在位置を保存できます。モバイルでは右下の「しおりを保存」ボタンを使います。', noBookmarks: '保存したしおりはまだありません。', noBookmarksDesc: '小説の章を開いてしおりを保存すると、次回このページから続けられます。', browse: '連載小説を見る',
@@ -55,7 +55,7 @@ const copy = {
     account: '帳戶', changePassword: '修改密碼', currentPassword: '目前密碼', boundRequired: '已綁定時必填', updatePassword: '更新密碼', logout: '登出',
     authenticator: '兩步驗證器', reading: '讀取中', readingBinding: '正在讀取綁定狀態。', bind: '綁定 Google Authenticator', qrHelp: '打開 Google Authenticator，點擊加號，選擇「掃描 QR code」。', manual: '無法掃碼時，手動輸入設定金鑰', setupKey: '設定金鑰', currentCode: '6 位驗證碼', confirmBinding: '確認綁定',
     points: '我的 Station 積分', pointsScope: 'Station Cat 全站通用積分', pointsIntro: '凡是明確顯示 Station 積分兌換入口的內容與服務，都使用這一份餘額。確認兌換前，系統會先顯示所需積分與取得的權限。',
-    availableNow: '目前已開放', activeLabel: '可使用', readingMembership: '閱讀會員', readingMembershipDesc: '使用積分兌換有期限的會員閱讀權益。', paidChapters: '付費小說章節', chapterCost: '目前單章付費內容會扣除 {cost} 點。',
+    availableNow: '目前已開放', activeLabel: '可使用', readingMembership: '閱讀會員', readingMembershipDesc: '使用積分兌換有期限的會員閱讀權益。', paidChapters: '付費小說章節', chapterCost: '目前單章付費內容會扣除 {cost} 點。', chapterCostFallback: '登入後會顯示目前單章所需積分。',
     comingNext: '接下來會支援', plannedLabel: '規劃中', softwareDownloads: '付費軟體下載權限', softwareDownloadsDesc: '兌換符合資格的桌面或行動軟體下載權限。', softwareAccess: '軟體功能與使用權限', softwareAccessDesc: '兌換符合資格的進階功能或有期限的產品使用權。', plannedNotice: '規劃中的用途目前還不能兌換；只有產品頁顯示積分價格與兌換按鈕後，才代表正式開放。',
     buyPoints: '購買 Station 積分', buyPointsDesc: '一次性購買並加入同一份全站餘額，不會自動續費。',
     continueReading: '繼續閱讀', bookmarkHint: '在章節閱讀頁按 <kbd>B</kbd> 可保存目前閱讀位置；手機可點右下角「保存書籤」按鈕。', noBookmarks: '目前還沒有保存書籤。', noBookmarksDesc: '打開小說章節後保存書籤，下次就可以從這裡接著閱讀。', browse: '去看連載小說',
@@ -70,7 +70,7 @@ const copy = {
     account: '账户', changePassword: '修改密码', currentPassword: '当前密码', boundRequired: '已绑定时必填', updatePassword: '更新密码', logout: '退出登录',
     authenticator: '两步验证器', reading: '读取中', readingBinding: '正在读取绑定状态。', bind: '绑定 Google Authenticator', qrHelp: '打开 Google Authenticator，点击加号，选择“扫描 QR code”。', manual: '无法扫码时，手动输入设置密钥', setupKey: '设置密钥', currentCode: '6 位验证码', confirmBinding: '确认绑定',
     points: '我的 Station 积分', pointsScope: 'Station Cat 全站通用积分', pointsIntro: '凡是明确显示 Station 积分兑换入口的内容与服务，都使用这一份余额。确认兑换前，系统会先显示所需积分与取得的权限。',
-    availableNow: '目前已开放', activeLabel: '可使用', readingMembership: '阅读会员', readingMembershipDesc: '使用积分兑换有期限的会员阅读权益。', paidChapters: '付费小说章节', chapterCost: '目前单章付费内容会扣除 {cost} 点。',
+    availableNow: '目前已开放', activeLabel: '可使用', readingMembership: '阅读会员', readingMembershipDesc: '使用积分兑换有期限的会员阅读权益。', paidChapters: '付费小说章节', chapterCost: '目前单章付费内容会扣除 {cost} 点。', chapterCostFallback: '登录后会显示目前单章所需积分。',
     comingNext: '接下来会支持', plannedLabel: '规划中', softwareDownloads: '付费软件下载权限', softwareDownloadsDesc: '兑换符合资格的桌面或移动软件下载权限。', softwareAccess: '软件功能与使用权限', softwareAccessDesc: '兑换符合资格的高级功能或有期限的产品使用权。', plannedNotice: '规划中的用途目前还不能兑换；只有产品页显示积分价格与兑换按钮后，才代表正式开放。',
     buyPoints: '购买 Station 积分', buyPointsDesc: '一次性购买并加入同一份全站余额，不会自动续费。',
     continueReading: '继续阅读', bookmarkHint: '在章节阅读页按 B 可保存目前阅读位置；手机可点右下角“保存书签”按钮。', noBookmarks: '目前还没有保存书签。', noBookmarksDesc: '打开小说章节后保存书签，下次就可以从这里继续阅读。', browse: '去看连载小说',
@@ -308,7 +308,7 @@ const clientConfig = {
             </article>
             <article>
               <strong>{copy.paidChapters}</strong>
-              <p id="reader-credit-cost">{copy.chapterCost}</p>
+              <p id="reader-credit-cost">{copy.chapterCostFallback}</p>
             </article>
           </div>
         </section>

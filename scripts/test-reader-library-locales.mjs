@@ -53,6 +53,21 @@ assert.match(librarySource, /errorMessageKeys:\s*readerErrorMessageKeys/);
 assert.match(librarySource, /const localizedApiMessage =/);
 assert.match(librarySource, /formatReaderMessage\('paymentReturnedPending'\)/);
 assert.doesNotMatch(librarySource, /USDT|USDC|FDUSD|reader-pay-chip|reader-pay-currency/);
+assert.equal(
+  (librarySource.match(/chapterCostFallback:/g) || []).length,
+  locales.length,
+  'Every Member Center locale must provide a safe chapter-cost fallback'
+);
+const libraryServerMarkup = librarySource.slice(
+  librarySource.indexOf('<BaseLayout'),
+  librarySource.indexOf('  <script>')
+);
+assert.match(libraryServerMarkup, /id="reader-credit-cost">\{copy\.chapterCostFallback\}<\/p>/);
+assert.doesNotMatch(
+  libraryServerMarkup,
+  /id="reader-credit-cost">\{copy\.chapterCost\}<\/p>/,
+  'Server-rendered Member Center markup must not expose the {cost} template'
+);
 assert.doesNotMatch(
   librarySource.slice(librarySource.indexOf('<script>')),
   /[\u4e00-\u9fff]/,
