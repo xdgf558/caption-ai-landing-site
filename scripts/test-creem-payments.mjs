@@ -69,8 +69,8 @@ assert.match(workerSource, /request\.headers\.get\('creem-signature'\)/);
 assert.match(workerSource, /url\.pathname === creemWebhookPath/);
 assert.match(creemReversalMigration, /provider_event_id/);
 assert.match(creemReversalMigration, /entry_type = 'reversal'/);
-assert.match(wranglerSource, /CREEM_MODE = "test"/);
-assert.match(wranglerSource, /CREEM_CREDIT_PACK_PRODUCT_ID = "prod_4DJS5zfnpMENgs7IaXBSwG"/);
+assert.match(wranglerSource, /CREEM_MODE = "production"/);
+assert.match(wranglerSource, /CREEM_CREDIT_PACK_PRODUCT_ID = "prod_3NnsiVBFubZ3DslDdBxPf6"/);
 assert.doesNotMatch(wranglerSource, /CREEM_API_KEY/);
 assert.doesNotMatch(wranglerSource, /CREEM_WEBHOOK_SECRET/);
 

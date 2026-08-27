@@ -1,6 +1,15 @@
 # Creem Station Points payments
 
-This integration starts in Creem Test Mode and only handles the 100 Station Points / USD 10 one-time product. All other payment flows continue to use NOWPayments until the production rollout is explicitly enabled.
+This integration handles the 100 Station Points / USD 10 one-time product through Creem. The production rollout is enabled for Station Points purchases; all other payment flows continue to use NOWPayments.
+
+## Production resources
+
+- Product: `Station Points 100` (`prod_3NnsiVBFubZ3DslDdBxPf6`)
+- Webhook: `Station Cat Production Payments` (`wh_1BjIPvma3ajzWnUVdEGQpF`)
+- Webhook endpoint: `https://wwwstationcat.org/api/novels/webhooks/creem`
+- Events: `checkout.completed`, `refund.created`, and `dispute.created`
+
+Production API and webhook secrets live in Cloudflare Worker secrets. The Test Mode product and webhook remain available for isolated regression testing.
 
 ## Deployment order
 
@@ -22,7 +31,7 @@ This integration starts in Creem Test Mode and only handles the 100 Station Poin
 - `CREEM_API_BASE`: optional API endpoint override for local testing only.
 - `CREEM_SITE_URL`: optional public site origin override.
 
-The checkout gate also requires the live D1 pack to match the configured Creem product exactly. Missing credentials, a mismatched pack, or a reader outside the Test Mode allowlist causes the request to stay on the existing NOWPayments path.
+The checkout gate also requires the live D1 pack to match the configured Creem product exactly. Missing credentials or a mismatched pack causes the request to stay on the existing NOWPayments path. The reader allowlist is enforced only in Test Mode; production checkout is available to signed-in readers.
 
 ## Webhook and reversal behavior
 
