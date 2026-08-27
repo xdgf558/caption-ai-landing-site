@@ -6321,37 +6321,6 @@ body.station-paper-page {
   margin: 0;
 }
 
-.reader-pay-chip-grid {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.reader-pay-chip {
-  appearance: none;
-  background: #fffaf1;
-  border: 1px solid #d8c8b8;
-  border-radius: 999px;
-  color: #2e5b4e;
-  cursor: pointer;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 950;
-  min-height: 40px;
-  padding: 8px 12px;
-}
-
-.reader-pay-chip.is-active {
-  background: #e8f3eb;
-  border-color: #2e5b4e;
-  color: #245044;
-}
-
-.reader-pay-chip:focus-visible {
-  outline: 3px solid rgba(46, 91, 78, 0.16);
-  outline-offset: 2px;
-}
-
 .reader-membership-state {
   color: #4b665b;
   font-size: 14px;
@@ -7298,10 +7267,6 @@ body.station-paper-page.caption-product-page {
 
   .reader-credit-summary .fine-print {
     justify-self: start;
-  }
-
-  .reader-pay-chip-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .serial-card__header,
