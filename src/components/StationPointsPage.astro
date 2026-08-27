@@ -11,19 +11,29 @@ const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' 
 const copy = {
   'zh-Hant': {
     title: 'Station 積分價格與使用說明',
-    description: 'Station Cat 公開積分價格、可兌換內容、退款與帳戶規則。公開價格與實際結帳設定保持一致。',
+    description: 'Station Cat 全站通用積分的公開價格、目前用途、未來規劃、退款與帳戶規則。公開價格與實際結帳設定保持一致。',
     kicker: 'STATION POINTS',
-    heading: '一個帳戶，一套清楚的積分。',
-    intro: 'Station 積分用於兌換 Station Cat 明確標示為可使用積分的數位內容與權限。價格公開、一次購買，不是訂閱。',
+    heading: '一份餘額，通用於整個 Station Cat。',
+    intro: 'Station 積分是 Station Cat 的全站通用數位權益單位。你可以用同一份餘額兌換已開放的內容與服務；未來也會逐步接入軟體下載、進階功能和使用權限。',
     billing: '一次性購買 · 無自動續費',
     cta: '登入會員中心購買',
     support: '付款或積分協助',
-    useHeading: '積分目前可以怎麼用',
-    uses: [
-      '兌換收費小說章節或會員閱讀權益；實際所需積分以內容頁確認兌換前標示為準。',
-      '兌換明確標示「支援 Station 積分」的付費軟體下載或數位產品權限。未標示的軟體不包含在內。',
-      '兌換前會顯示所需積分與取得的權限，確認後才會扣除。'
+    useHeading: '一套積分，連接內容與工具',
+    useIntro: '功能會分階段開放。只有顯示積分價格與兌換按鈕的項目，才代表目前可以使用。',
+    availableHeading: '目前已開放',
+    availableStatus: '可使用',
+    availableUses: [
+      { title: '閱讀會員', body: '兌換有期限的會員閱讀權益。' },
+      { title: '付費小說章節', body: '兌換指定章節的閱讀權限。' }
     ],
+    plannedHeading: '接下來會支援',
+    plannedStatus: '規劃中',
+    plannedUses: [
+      { title: '付費軟體下載權限', body: '兌換符合資格的桌面或行動軟體下載。' },
+      { title: '軟體功能與使用權限', body: '兌換符合資格的進階功能或有期限的產品使用權。' }
+    ],
+    redemptionHeading: '每次兌換都由你確認',
+    redemptionBody: '兌換前會顯示所需積分、取得的權限與有效期間；確認後才會扣除。規劃中的用途目前不能兌換。',
     rulesHeading: '購買與帳戶規則',
     rules: [
       'Station 積分是站內數位權益單位，不是現金、加密貨幣或可轉讓的儲值金，不能提現、轉售或在帳戶之間轉移。',
@@ -35,26 +45,36 @@ const copy = {
     loading: '正在讀取目前可購買的積分包...',
     unavailable: '積分結帳目前暫停，恢復後會在這裡顯示可購買的積分包。',
     loadFailed: '暫時無法確認積分價格，請稍後重試或聯絡支援。',
-    availabilityBody: '下列價格直接來自目前的結帳設定。網站不會把尚未標示支援積分的軟體，自動列為可兌換產品。',
+    availabilityBody: '下列價格直接來自目前的結帳設定。購買後會加入同一份全站積分餘額，不會綁定某一本小說或某一款軟體。',
     legal: '購買或使用 Station 積分，即表示你同意本頁規則與 Station Cat 的一般服務條款。',
     terms: '一般服務條款',
     privacy: '隱私政策'
   },
   'zh-Hans': {
     title: 'Station 积分价格与使用说明',
-    description: 'Station Cat 公开积分价格、可兑换内容、退款与账户规则。公开价格与实际结账设置保持一致。',
+    description: 'Station Cat 全站通用积分的公开价格、目前用途、未来规划、退款与账户规则。公开价格与实际结账设置保持一致。',
     kicker: 'STATION POINTS',
-    heading: '一个账户，一套清楚的积分。',
-    intro: 'Station 积分用于兑换 Station Cat 明确标示为可使用积分的数字内容与权限。价格公开、一次购买，不是订阅。',
+    heading: '一份余额，通用于整个 Station Cat。',
+    intro: 'Station 积分是 Station Cat 的全站通用数字权益单位。你可以用同一份余额兑换已开放的内容与服务；未来也会逐步接入软件下载、高级功能和使用权限。',
     billing: '一次性购买 · 无自动续费',
     cta: '登录会员中心购买',
     support: '付款或积分协助',
-    useHeading: '积分目前可以怎么用',
-    uses: [
-      '兑换收费小说章节或会员阅读权益；实际所需积分以内容页确认兑换前标示为准。',
-      '兑换明确标示“支持 Station 积分”的付费软件下载或数字产品权限。未标示的软件不包含在内。',
-      '兑换前会显示所需积分与取得的权限，确认后才会扣除。'
+    useHeading: '一套积分，连接内容与工具',
+    useIntro: '功能会分阶段开放。只有显示积分价格与兑换按钮的项目，才代表目前可以使用。',
+    availableHeading: '目前已开放',
+    availableStatus: '可使用',
+    availableUses: [
+      { title: '阅读会员', body: '兑换有期限的会员阅读权益。' },
+      { title: '付费小说章节', body: '兑换指定章节的阅读权限。' }
     ],
+    plannedHeading: '接下来会支持',
+    plannedStatus: '规划中',
+    plannedUses: [
+      { title: '付费软件下载权限', body: '兑换符合资格的桌面或移动软件下载。' },
+      { title: '软件功能与使用权限', body: '兑换符合资格的高级功能或有期限的产品使用权。' }
+    ],
+    redemptionHeading: '每次兑换都由你确认',
+    redemptionBody: '兑换前会显示所需积分、取得的权限与有效期间；确认后才会扣除。规划中的用途目前不能兑换。',
     rulesHeading: '购买与账户规则',
     rules: [
       'Station 积分是站内数字权益单位，不是现金、加密货币或可转让的储值金，不能提现、转售或在账户之间转移。',
@@ -66,26 +86,36 @@ const copy = {
     loading: '正在读取目前可购买的积分包...',
     unavailable: '积分结账目前暂停，恢复后会在这里显示可购买的积分包。',
     loadFailed: '暂时无法确认积分价格，请稍后重试或联系支持。',
-    availabilityBody: '下列价格直接来自目前的结账设置。网站不会把尚未标示支持积分的软件，自动列为可兑换产品。',
+    availabilityBody: '下列价格直接来自目前的结账设置。购买后会加入同一份全站积分余额，不会绑定某一本小说或某一款软件。',
     legal: '购买或使用 Station 积分，即表示你同意本页规则与 Station Cat 的一般服务条款。',
     terms: '一般服务条款',
     privacy: '隐私政策'
   },
   en: {
     title: 'Station Points Pricing and Use',
-    description: 'Public pricing, eligible redemptions, refunds, and account rules for Station Points. Published prices stay aligned with the active checkout configuration.',
+    description: 'Public pricing, current uses, planned capabilities, refunds, and account rules for the site-wide Station Points balance.',
     kicker: 'STATION POINTS',
-    heading: 'One account, one clear points balance.',
-    intro: 'Station Points redeem digital content and access rights that Station Cat explicitly marks as points-eligible. Pricing is public and every pack is a one-time purchase, not a subscription.',
+    heading: 'One balance across Station Cat.',
+    intro: 'Station Points are Station Cat’s site-wide digital access units. Use one balance for eligible content and services today, with software downloads, premium features, and product access planned for future releases.',
     billing: 'One-time purchase · No automatic renewal',
     cta: 'Sign in to purchase',
     support: 'Payment or points support',
-    useHeading: 'What points can currently unlock',
-    uses: [
-      'Paid fiction chapters or membership reading access. The exact points cost is shown on the relevant content page before you confirm redemption.',
-      'Paid software downloads or digital products only when their product page explicitly says “Station Points supported.” Unmarked software is not included.',
-      'Every redemption shows the points cost and access granted before the balance is deducted.'
+    useHeading: 'One points system for content and tools',
+    useIntro: 'Capabilities launch in stages. An item is redeemable only when it displays a points price and redemption button.',
+    availableHeading: 'Available now',
+    availableStatus: 'LIVE',
+    availableUses: [
+      { title: 'Reading membership', body: 'Redeem time-limited member reading access.' },
+      { title: 'Paid fiction chapters', body: 'Redeem access to a specific chapter.' }
     ],
+    plannedHeading: 'Planned next',
+    plannedStatus: 'PLANNED',
+    plannedUses: [
+      { title: 'Paid software downloads', body: 'Redeem eligible desktop or mobile software downloads.' },
+      { title: 'Software features and access', body: 'Redeem eligible premium features or time-limited product access.' }
+    ],
+    redemptionHeading: 'You confirm every redemption',
+    redemptionBody: 'Before points are deducted, you see the cost, access granted, and any expiry. Planned uses cannot be redeemed yet.',
     rulesHeading: 'Purchase and account rules',
     rules: [
       'Station Points are closed-loop digital access units. They are not cash, cryptocurrency, transferable stored value, or an investment, and cannot be withdrawn, resold, or moved between accounts.',
@@ -97,26 +127,36 @@ const copy = {
     loading: 'Loading the Station Points packs currently available for purchase...',
     unavailable: 'Station Points checkout is temporarily unavailable. Available packs will appear here when checkout resumes.',
     loadFailed: 'We could not verify the current points price. Please try again later or contact support.',
-    availabilityBody: 'The prices below come directly from the active checkout configuration. Software is not points-eligible unless its product page explicitly says so.',
+    availabilityBody: 'The prices below come directly from the active checkout configuration. A purchase adds to one site-wide balance rather than being tied to a specific novel or app.',
     legal: 'By purchasing or using Station Points, you agree to these rules and Station Cat’s general terms.',
     terms: 'General terms',
     privacy: 'Privacy policy'
   },
   ja: {
     title: 'Station Points の価格と利用方法',
-    description: 'Station Points の公開価格、交換対象、返金、アカウント規則。公開価格は有効な決済設定と常に一致します。',
+    description: 'Station Cat 共通の Station Points に関する公開価格、現在の用途、今後の予定、返金、アカウント規則。',
     kicker: 'STATION POINTS',
-    heading: 'ひとつのアカウントに、分かりやすいポイント残高。',
-    intro: 'Station Points は、Station Cat がポイント対応と明記したデジタルコンテンツや権利との交換に使えます。公開価格の一回払いで、サブスクリプションではありません。',
+    heading: 'Station Cat 全体で使う、ひとつの残高。',
+    intro: 'Station Points は Station Cat 共通のデジタル利用単位です。現在の対象コンテンツやサービスに同じ残高を使え、今後はソフトウェアのダウンロード、上位機能、製品利用権にも順次対応します。',
     billing: '一回払い · 自動更新なし',
     cta: 'ログインして購入',
     support: '支払い・ポイントのサポート',
-    useHeading: '現在ポイントで利用できるもの',
-    uses: [
-      '有料小説の章、または会員向け読書権。必要ポイントは交換を確定する前に対象ページで表示されます。',
-      '商品ページに「Station Points 対応」と明記された有料ソフトウェアのダウンロード権またはデジタル商品。記載のないソフトウェアは対象外です。',
-      '交換前に必要ポイントと付与される権利を表示し、確認後にのみ残高を差し引きます。'
+    useHeading: 'コンテンツとツールをつなぐ共通ポイント',
+    useIntro: '機能は段階的に公開します。ポイント価格と交換ボタンが表示されている項目だけが現在の交換対象です。',
+    availableHeading: '現在利用可能',
+    availableStatus: '利用可能',
+    availableUses: [
+      { title: '読書会員権', body: '期間限定の会員向け読書権と交換できます。' },
+      { title: '有料小説の章', body: '指定した章の閲覧権と交換できます。' }
     ],
+    plannedHeading: '今後対応予定',
+    plannedStatus: '予定',
+    plannedUses: [
+      { title: '有料ソフトウェアのダウンロード', body: '対象となるデスクトップ／モバイルソフトウェアのダウンロード権。' },
+      { title: 'ソフトウェア機能・利用権', body: '対象となる上位機能や期間限定の製品利用権。' }
+    ],
+    redemptionHeading: '交換内容は毎回確認できます',
+    redemptionBody: 'ポイントを差し引く前に、必要ポイント、付与される権利、有効期間を表示します。予定中の用途はまだ交換できません。',
     rulesHeading: '購入とアカウントの規則',
     rules: [
       'Station Points はサイト内のデジタル利用単位です。現金、暗号資産、譲渡可能な前払式支払手段、投資商品ではなく、換金、転売、アカウント間移動はできません。',
@@ -128,7 +168,7 @@ const copy = {
     loading: '現在購入できる Station Points パックを読み込んでいます...',
     unavailable: 'Station Points の決済は一時停止中です。再開後、購入可能なパックがここに表示されます。',
     loadFailed: '現在の価格を確認できませんでした。後でもう一度お試しいただくか、サポートへご連絡ください。',
-    availabilityBody: '以下の価格は現在の決済設定から直接取得しています。商品ページに対応表示のないソフトウェアは交換対象ではありません。',
+    availabilityBody: '以下の価格は現在の決済設定から直接取得しています。購入分は特定の小説やアプリに固定されず、共通のポイント残高に追加されます。',
     legal: 'Station Points の購入または利用により、本ページの規則と Station Cat の一般利用規約に同意したものとみなされます。',
     terms: '一般利用規約',
     privacy: 'プライバシーポリシー'
@@ -197,17 +237,52 @@ const clientConfig = {
     </div>
   </section>
 
-  <section class="station-section station-points-details">
-    <div>
-      <p class="station-kicker">REDEMPTION</p>
-      <h2>{copy.useHeading}</h2>
-      <ul>{copy.uses.map((item) => <li>{item}</li>)}</ul>
+  <section class="station-section station-points-capabilities" aria-labelledby="station-points-capabilities-title">
+    <div class="station-points-capabilities__heading">
+      <p class="station-kicker">ONE BALANCE</p>
+      <h2 id="station-points-capabilities-title">{copy.useHeading}</h2>
+      <p>{copy.useIntro}</p>
     </div>
-    <div>
-      <p class="station-kicker">TERMS</p>
-      <h2>{copy.rulesHeading}</h2>
-      <ul>{copy.rules.map((item) => <li>{item}</li>)}</ul>
+    <div class="station-points-capability-columns">
+      <section class="station-points-capability-group" aria-labelledby="station-points-available-title">
+        <div class="station-points-capability-heading">
+          <h3 id="station-points-available-title">{copy.availableHeading}</h3>
+          <span data-state="active">{copy.availableStatus}</span>
+        </div>
+        <div class="station-points-capability-list">
+          {copy.availableUses.map((item) => (
+            <article>
+              <strong>{item.title}</strong>
+              <p>{item.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section class="station-points-capability-group" aria-labelledby="station-points-planned-title">
+        <div class="station-points-capability-heading">
+          <h3 id="station-points-planned-title">{copy.plannedHeading}</h3>
+          <span data-state="planned">{copy.plannedStatus}</span>
+        </div>
+        <div class="station-points-capability-list">
+          {copy.plannedUses.map((item) => (
+            <article>
+              <strong>{item.title}</strong>
+              <p>{item.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
+    <div class="station-points-redemption-note">
+      <strong>{copy.redemptionHeading}</strong>
+      <p>{copy.redemptionBody}</p>
+    </div>
+  </section>
+
+  <section class="station-section station-points-rules" aria-labelledby="station-points-rules-title">
+    <p class="station-kicker">TERMS</p>
+    <h2 id="station-points-rules-title">{copy.rulesHeading}</h2>
+    <ul>{copy.rules.map((item) => <li>{item}</li>)}</ul>
   </section>
 
   <section class="station-section station-points-legal-note">
