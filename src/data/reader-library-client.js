@@ -19,6 +19,9 @@ export const readerErrorMessageKeys = Object.freeze({
   BOOKMARK_NOT_FOUND: 'bookmarkNotFound',
   INSUFFICIENT_CREDITS: 'insufficientCredits',
   PAYMENT_PROVIDER_NOT_CONFIGURED: 'checkoutUnavailable',
+  CREEM_CHECKOUT_NOT_AVAILABLE: 'checkoutUnavailable',
+  CREEM_CHECKOUT_FAILED: 'checkoutFailed',
+  CREEM_CHECKOUT_URL_MISSING: 'checkoutFailed',
   NOWPAYMENTS_INVOICE_FAILED: 'checkoutFailed',
   ORDER_NOT_FOUND: 'orderNotFound',
   ORDER_ACCOUNT_MISMATCH: 'orderAccountMismatch'

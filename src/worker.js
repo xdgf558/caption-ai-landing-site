@@ -5417,12 +5417,10 @@ const handleReaderCredits = async (request, env) => {
     getConfiguredChapterCostCredits(db, env),
     getReaderMembershipSettings(db, env)
   ]);
-  const paymentConfig = getNowPaymentsConfig(env, request);
   const session = await getReaderFromSession(request, env);
   const creemConfig = getCreemConfig(env, request);
-  const nowPaymentsEnabled = paymentConfig.hasApiKey && paymentConfig.hasIpnSecret && packs.length > 0;
   const creemEnabled = packs.some((pack) => isCreemCheckoutAllowed(creemConfig, session, pack));
-  const checkoutEnabled = nowPaymentsEnabled || creemEnabled;
+  const checkoutEnabled = creemEnabled;
   if (!session) {
     return json({
       ok: true,
@@ -8043,13 +8041,12 @@ const handleNovelPaymentsStatus = async (request, env) => {
   const creemConfig = getCreemConfig(env, request);
   const db = env.WAITLIST_DB;
   const creditPacks = db ? await getConfiguredReaderCreditPacks(db, env) : getReaderCreditConfig(env).packs;
-  const nowPaymentsEnabled = config.hasApiKey && config.hasIpnSecret && Boolean(db) && creditPacks.length > 0;
   // Public status stays closed for Creem Test Mode; only signed-in allowlisted readers see that checkout path.
   const creemEnabled =
     creemConfig.mode === 'production' &&
     Boolean(db) &&
     creditPacks.some((pack) => isCreemCheckoutAllowed(creemConfig, null, pack));
-  const checkoutEnabled = nowPaymentsEnabled || creemEnabled;
+  const checkoutEnabled = creemEnabled;
   const membershipSettings = db ? await getReaderMembershipSettings(db, env) : {
     enabled: true,
     membershipCreditCost: defaultMembershipCreditCost,
@@ -8059,7 +8056,7 @@ const handleNovelPaymentsStatus = async (request, env) => {
   };
   return json({
     ok: true,
-    provider: creemEnabled && !nowPaymentsEnabled ? creemProvider : nowPaymentsProvider,
+    provider: creemProvider,
     configured: {
       apiKey: config.hasApiKey,
       ipnSecret: config.hasIpnSecret,
@@ -8071,8 +8068,8 @@ const handleNovelPaymentsStatus = async (request, env) => {
         mode: creemConfig.mode
       }
     },
-    callbackPath: creemEnabled && !nowPaymentsEnabled ? creemWebhookPath : nowPaymentsWebhookPath,
-    callbackUrl: creemEnabled && !nowPaymentsEnabled ? creemConfig.webhookUrl : config.callbackUrl,
+    callbackPath: creemWebhookPath,
+    callbackUrl: creemConfig.webhookUrl,
     checkoutPath: novelCheckoutPath,
     publicCheckoutEnabled: checkoutEnabled,
     readerCredits: {
@@ -8088,7 +8085,7 @@ const handleNovelPaymentsStatus = async (request, env) => {
       membership: membershipSettings
     },
     automaticEntitlementGrants: true,
-    supportedCurrencies: creemEnabled && !nowPaymentsEnabled ? ['USD'] : nowPaymentsSupportedCurrencies,
+    supportedCurrencies: ['USD'],
     orderStatuses: novelOrderStatuses,
     grantStatuses: novelPaymentGrantStatuses,
     note: checkoutEnabled
@@ -8227,7 +8224,7 @@ const normalizeCheckoutPayload = async (payload, session, env, db) => {
       locale,
       message: '',
       orderType,
-      payCurrency,
+      payCurrency: '',
       priceAmount: creditPack.priceAmount,
       priceCurrency: creditPack.priceCurrency,
       pricingSource,
@@ -8456,6 +8453,16 @@ const handleNovelCheckout = async (request, env) => {
   const useCreem =
     checkout.orderType === novelCreditPackOrderType &&
     isCreemCheckoutAllowed(creemConfig, session, checkout.creditPack);
+  if (checkout.orderType === novelCreditPackOrderType && !useCreem) {
+    return json(
+      {
+        ok: false,
+        code: 'CREEM_CHECKOUT_NOT_AVAILABLE',
+        message: 'Station Points checkout is temporarily unavailable.'
+      },
+      { status: 503 }
+    );
+  }
   const provider = useCreem ? creemProvider : nowPaymentsProvider;
   if (!useCreem && (!nowPaymentsConfig.hasApiKey || !nowPaymentsConfig.hasIpnSecret)) {
     return json(

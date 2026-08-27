@@ -1,6 +1,6 @@
 # Creem Station Points payments
 
-This integration handles the 100 Station Points / USD 10 one-time product through Creem. The production rollout is enabled for Station Points purchases; all other payment flows continue to use NOWPayments.
+This integration handles the 100 Station Points / USD 10 one-time product through Creem. Station Points purchases use Creem exclusively: the member center no longer exposes cryptocurrency network selection, and a missing or mismatched Creem configuration disables checkout instead of falling back to NOWPayments. Legacy NOWPayments code remains for historical orders and unrelated payment flows.
 
 ## Production resources
 
@@ -31,7 +31,7 @@ Production API and webhook secrets live in Cloudflare Worker secrets. The Test M
 - `CREEM_API_BASE`: optional API endpoint override for local testing only.
 - `CREEM_SITE_URL`: optional public site origin override.
 
-The checkout gate also requires the live D1 pack to match the configured Creem product exactly. Missing credentials or a mismatched pack causes the request to stay on the existing NOWPayments path. The reader allowlist is enforced only in Test Mode; production checkout is available to signed-in readers.
+The checkout gate also requires the live D1 pack to match the configured Creem product exactly. Missing credentials or a mismatched pack disables Station Points checkout. The reader allowlist is enforced only in Test Mode; production checkout is available to signed-in readers.
 
 ## Webhook and reversal behavior
 

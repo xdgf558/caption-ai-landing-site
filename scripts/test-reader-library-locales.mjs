@@ -52,6 +52,7 @@ assert.match(librarySource, /messages:\s*getReaderLibraryMessages\(lang\)/);
 assert.match(librarySource, /errorMessageKeys:\s*readerErrorMessageKeys/);
 assert.match(librarySource, /const localizedApiMessage =/);
 assert.match(librarySource, /formatReaderMessage\('paymentReturnedPending'\)/);
+assert.doesNotMatch(librarySource, /USDT|USDC|FDUSD|reader-pay-chip|reader-pay-currency/);
 assert.doesNotMatch(
   librarySource.slice(librarySource.indexOf('<script>')),
   /[\u4e00-\u9fff]/,

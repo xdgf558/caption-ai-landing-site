@@ -31,6 +31,7 @@ assert.match(librarySource, /查看公開價格與積分規則/);
 assert.doesNotMatch(librarySource, /100 Station 積分 · 10 美元/);
 assert.match(librarySource, /locale:\s*readerLocale/);
 assert.match(librarySource, /returnPath:\s*readerLibraryPath/);
+assert.doesNotMatch(librarySource, /payCurrency:/);
 assert.match(productSource, /en:\s*'\/en\/library\/'/);
 assert.match(productSource, /ja:\s*'\/ja\/library\/'/);
 assert.match(productSource, /zhHant:\s*'\/zh-hant\/library\/'/);
@@ -39,6 +40,7 @@ assert.match(workerSource, /const novelCreditUnitLabel = 'Station Points'/);
 assert.match(workerSource, /\{ credits: 100, priceAmount: 10, priceCurrency: 'USD', label: '100 Station Points' \}/);
 assert.doesNotMatch(workerSource, /label: '10 SC Credits'/);
 assert.doesNotMatch(workerSource, /label: '50 SC Credits'/);
+assert.match(workerSource, /checkout\.orderType === novelCreditPackOrderType && !useCreem/);
 
 assert.match(migrationSource, /UPDATE reader_credit_accounts/);
 assert.match(migrationSource, /100 Station Points/);
@@ -128,8 +130,12 @@ pricingDb.exec(`
 const d1 = new D1Database(pricingDb);
 const paymentEnv = {
   WAITLIST_DB: d1,
-  NOWPAYMENTS_API_KEY: 'test-api-key',
-  NOWPAYMENTS_IPN_SECRET: 'test-ipn-secret'
+  CREEM_MODE: 'production',
+  CREEM_API_KEY: 'live-api-key',
+  CREEM_WEBHOOK_SECRET: 'live-webhook-secret',
+  CREEM_CREDIT_PACK_PRODUCT_ID: 'prod_station_points_test',
+  CREEM_CREDIT_PACK_CREDITS: '240',
+  CREEM_CREDIT_PACK_PRICE_USD: '17'
 };
 const statusResponse = await hooks.handleNovelPaymentsStatus(
   new Request('https://wwwstationcat.org/api/novels/payments/status'),
@@ -137,6 +143,8 @@ const statusResponse = await hooks.handleNovelPaymentsStatus(
 );
 const publicStatus = await statusResponse.json();
 assert.equal(publicStatus.publicCheckoutEnabled, true);
+assert.equal(publicStatus.provider, 'creem');
+assert.deepEqual(publicStatus.supportedCurrencies, ['USD']);
 assert.deepEqual(publicStatus.readerCredits.packs, [
   { credits: 240, label: '240 Station Points', priceAmount: '17.00', priceCurrency: 'USD' }
 ]);
@@ -190,6 +198,15 @@ assert.equal(creditsWithoutPayment.ok, true);
 assert.equal(creditsWithoutPayment.authenticated, false);
 assert.equal(creditsWithoutPayment.checkoutEnabled, false);
 assert.equal(creditsWithoutPayment.packs.length, 1);
+const creditsWithOnlyNowPayments = await (await hooks.handleReaderCredits(
+  new Request('https://wwwstationcat.org/api/readers/credits'),
+  {
+    WAITLIST_DB: d1,
+    NOWPAYMENTS_API_KEY: 'test-api-key',
+    NOWPAYMENTS_IPN_SECRET: 'test-ipn-secret'
+  }
+)).json();
+assert.equal(creditsWithOnlyNowPayments.checkoutEnabled, false);
 assert.match(librarySource, /renderCreditPacks\(data\.packs \|\| \[\], data\.checkoutEnabled === true\)/);
 
 const unavailableStatus = await (await hooks.handleNovelPaymentsStatus(
@@ -198,6 +215,8 @@ const unavailableStatus = await (await hooks.handleNovelPaymentsStatus(
 )).json();
 assert.equal(unavailableStatus.publicCheckoutEnabled, false);
 assert.equal(unavailableStatus.readerCredits.enabled, false);
+assert.equal(unavailableStatus.provider, 'creem');
+assert.deepEqual(unavailableStatus.supportedCurrencies, ['USD']);
 pricingDb.close();
 
 console.log('Station Points pricing and compatibility checks passed.');
