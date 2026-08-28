@@ -43,9 +43,10 @@ for (const [code, key] of Object.entries(readerErrorMessageKeys)) {
   }
 }
 
-const [librarySource, chapterSource] = await Promise.all([
+const [librarySource, chapterSource, globalStyles] = await Promise.all([
   readFile(new URL('../src/components/ReaderLibraryPage.astro', import.meta.url), 'utf8'),
-  readFile(new URL('../src/components/SerialChapterPage.astro', import.meta.url), 'utf8')
+  readFile(new URL('../src/components/SerialChapterPage.astro', import.meta.url), 'utf8'),
+  readFile(new URL('../src/styles/global.css', import.meta.url), 'utf8')
 ]);
 
 assert.match(librarySource, /messages:\s*getReaderLibraryMessages\(lang\)/);
@@ -96,6 +97,8 @@ assert.doesNotMatch(
   />\s*(?:60|8)\s*Station Points\s*</,
   'Reference-only sample balances and pack values must not be exposed in the real Member Center'
 );
+assert.match(globalStyles, /\.reader-auth-intro\s*\{[^}]*order:\s*2;/s);
+assert.match(globalStyles, /\.reader-auth-card-wrap\s*\{[^}]*order:\s*1;/s);
 
 assert.match(chapterSource, /const libraryPath = getReaderLibraryPath\(locale\)/);
 assert.match(chapterSource, /href=\{libraryReturnHref\}/);
