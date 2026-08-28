@@ -15,6 +15,12 @@ const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' 
 const pointsPaths = {
   en: '/points/', ja: '/ja/points/', zhHant: '/zh-hant/points/', zhHans: '/zh-hans/points/'
 };
+const termsPaths = {
+  en: '/terms/', ja: '/ja/terms/', zhHant: '/zh-hant/terms/', zhHans: '/zh-hans/terms/'
+};
+const privacyPaths = {
+  en: '/privacy/', ja: '/ja/privacy/', zhHant: '/zh-hant/privacy/', zhHans: '/zh-hans/privacy/'
+};
 const copy = {
   en: {
     metaTitle: 'Member Center', metaDescription: 'Sign in to manage your site-wide Station Points balance, membership access, unlocked content, bookmarks, and account security.',
@@ -78,6 +84,93 @@ const copy = {
   }
 }[lang];
 
+const ui = {
+  en: {
+    authHeading: 'A door that stays open after midnight.', authDesc: 'One account and one shared balance. Sign in to manage Station Points, unlocked content, reading progress, and account security.',
+    authFeatureBalance: 'One site-wide balance', authFeatureBalanceDesc: 'Points are not tied to one novel or app. Every purchase is one-time, with no automatic renewal.',
+    authFeatureShelf: 'Your access stays on the shelf', authFeatureShelfDesc: 'Bookmarks, unlocked chapters, membership access, and redemption records stay together.',
+    authFeatureSecurity: 'Security you can see', authFeatureSecurityDesc: 'Link a compatible authenticator and manage password protection from one clear workspace.',
+    remember: 'Keep me signed in for 30 days', forgot: 'Forgot password?', registerNote: 'Creating an account is free and means you agree to the Terms and Privacy Policy.', loginNote: 'Accounts with two-factor authentication may be asked for a current 6-digit code.',
+    overview: 'Overview', pointsPack: 'Points packs', shelf: 'My shelf', security: 'Account security', addPoints: 'Add points', memberCenter: 'Member Center',
+    overviewKicker: 'Station Points', overviewHeading: 'One balance across all of Station Cat.', overviewDesc: 'Every eligible item marked with Station Points uses this balance. Before anything is deducted, you will see the cost and access you receive.', buyPack: 'Buy points pack', openShelf: 'Open my shelf', balanceLabel: 'Balance',
+    whatPointsDo: 'What this balance can do', whatPointsDoDesc: 'Only items with a points price and redemption button are available now. Planned uses cannot be redeemed yet.',
+    membershipPriceFallback: 'The current member price appears after sign-in.', chapterPriceFallback: 'The current chapter price appears after sign-in.', redeem: 'Redeem', readLatest: 'Read latest chapter',
+    recentActivity: 'Recent activity', allHistory: 'View all records', noActivity: 'No Station Points activity yet.',
+    pointsKicker: 'Current public offer', pointsHeading: 'Top up once, use the balance across the site.', pointsDesc: 'The current points pack comes directly from the live checkout configuration. Purchases are one-time and never renew automatically.',
+    oneTime: 'One-time purchase · no automatic renewal', packRules: 'Your points are credited to the signed-in account after payment confirmation.', checkout: 'Continue to checkout',
+    notCashKicker: 'NOT CASH', notCash: 'Not stored value', notCashDesc: 'Station Points are digital rights units for Station Cat. They cannot be withdrawn, resold, or transferred between accounts.',
+    refundKicker: 'REFUND', refund: 'Refund rules', refundDesc: 'Contact support about unused points. Redeemed digital access is normally non-refundable unless the law requires otherwise.',
+    creditedKicker: 'WHERE', credited: 'Where points arrive', creditedDesc: 'Points go to the account signed in during checkout and become usable after payment confirmation.',
+    shelfKicker: 'My shelf', shelfHeading: 'My shelf', shelfDesc: 'Bookmarks and unlocked reading access live here. Chapter unlocks remain available unless an expiry date is shown.', unlockedTab: 'Reading & access', historyTab: 'Points history',
+    securityKicker: 'Account security', securityHeading: 'Account security', securityDesc: 'Password and two-factor authentication are managed independently. When 2FA is linked, password changes also require a current code.', passwordHeading: 'Change password', passwordDesc: 'Choose a strong new password. Other signed-in devices may need to sign in again.',
+    checkoutDialogTitle: 'Confirm purchase', checkoutDialogDesc: 'Review the points pack and signed-in account before opening the secure payment page.', checkoutAccount: 'Account', checkoutPack: 'Points added', checkoutTotal: 'Amount', checkoutTax: 'Taxes and available payment methods are shown on the payment page.', cancel: 'Cancel', confirmPay: 'Confirm and pay',
+    activityPurchase: 'Points purchase', activitySpend: 'Points redemption', activityRefund: 'Payment reversal', activityAdjustment: 'Balance adjustment', activityStatus: 'Completed', permanent: 'Permanent access', continueAction: 'Continue reading', openAction: 'Open content'
+  },
+  ja: {
+    authHeading: '深夜でも入れる、小さな入口。', authDesc: 'ひとつのアカウントと共通残高で、Station Points、解放済みコンテンツ、読書位置、アカウントの安全性を管理します。',
+    authFeatureBalance: 'サイト共通の残高', authFeatureBalanceDesc: 'ポイントは特定の小説やアプリに固定されません。購入は一回払いで、自動更新はありません。',
+    authFeatureShelf: '利用権をひとつの本棚へ', authFeatureShelfDesc: 'しおり、解放済みの章、会員権、交換記録をまとめて確認できます。',
+    authFeatureSecurity: '見通しのよい安全管理', authFeatureSecurityDesc: '対応する認証アプリとパスワード保護を、ひとつの画面で管理できます。',
+    remember: '30日間ログイン状態を保持', forgot: 'パスワードを忘れた場合', registerNote: '登録は無料です。アカウント作成により利用規約とプライバシーポリシーに同意したものとします。', loginNote: '2段階認証を有効にしている場合、次に現在の6桁コードを求められることがあります。',
+    overview: '概要', pointsPack: 'ポイントパック', shelf: '本棚', security: 'アカウント保護', addPoints: 'ポイント追加', memberCenter: '会員センター',
+    overviewKicker: 'Station Points', overviewHeading: 'ひとつの残高を、Station Cat 全体で。', overviewDesc: 'Station Points と表示された対象コンテンツやサービスは、この残高を共通利用します。交換前に必要ポイントと取得する権利を必ず表示します。', buyPack: 'ポイントパックを購入', openShelf: '本棚を開く', balanceLabel: '残高',
+    whatPointsDo: 'この残高でできること', whatPointsDoDesc: 'ポイント価格と交換ボタンがある項目だけが現在利用できます。予定中の用途はまだ交換できません。',
+    membershipPriceFallback: '現在の会員価格はログイン後に表示します。', chapterPriceFallback: '現在の章価格はログイン後に表示します。', redeem: '交換', readLatest: '最新章を読む',
+    recentActivity: '最近の履歴', allHistory: 'すべての記録', noActivity: 'Station Points の履歴はまだありません。',
+    pointsKicker: '現在の公開商品', pointsHeading: '一度追加して、サイト全体で使う。', pointsDesc: '現在のポイントパックは実際の決済設定から読み込みます。一回払いで、自動更新はありません。',
+    oneTime: '一回払い · 自動更新なし', packRules: '支払い確認後、ログイン中のアカウントへポイントが付与されます。', checkout: '決済へ進む',
+    notCashKicker: 'NOT CASH', notCash: '前払式支払手段ではありません', notCashDesc: 'Station Points は Station Cat 内のデジタル利用権単位です。換金、転売、アカウント間移動はできません。',
+    refundKicker: 'REFUND', refund: '返金規則', refundDesc: '未使用ポイントはサポートへご相談ください。交換済みのデジタル権利は、法令上必要な場合を除き原則返金されません。',
+    creditedKicker: 'WHERE', credited: '付与先', creditedDesc: '決済時にログインしているアカウントへ付与され、支払い確認後に利用できます。',
+    shelfKicker: 'My shelf', shelfHeading: 'マイ本棚', shelfDesc: 'しおりと解放済みの読書権をまとめて確認できます。期限表示がない章は継続して利用できます。', unlockedTab: '読書・利用権', historyTab: 'ポイント履歴',
+    securityKicker: 'Account security', securityHeading: 'アカウント保護', securityDesc: 'パスワードと2段階認証は別々に管理します。2FA 連携時はパスワード変更にも現在のコードが必要です。', passwordHeading: 'パスワード変更', passwordDesc: '強い新しいパスワードを設定してください。他の端末では再ログインが必要になる場合があります。',
+    checkoutDialogTitle: '購入内容の確認', checkoutDialogDesc: '安全な決済ページを開く前に、ポイントパックとアカウントを確認してください。', checkoutAccount: 'アカウント', checkoutPack: '追加ポイント', checkoutTotal: '金額', checkoutTax: '税金と利用可能な支払い方法は決済ページに表示されます。', cancel: 'キャンセル', confirmPay: '確認して支払う',
+    activityPurchase: 'ポイント購入', activitySpend: 'ポイント交換', activityRefund: '支払い取消', activityAdjustment: '残高調整', activityStatus: '完了', permanent: '期限なし', continueAction: '続きを読む', openAction: 'コンテンツを開く'
+  },
+  'zh-Hant': {
+    authHeading: '深夜也能進站的門。', authDesc: '一組帳號、一份共用餘額。登入後管理 Station 積分、已解鎖內容、閱讀進度與帳戶安全。',
+    authFeatureBalance: '一份全站通用餘額', authFeatureBalanceDesc: '積分不綁定單一小說或軟體；每次購買都是一次性付款，沒有自動續費。',
+    authFeatureShelf: '解鎖過的都留在書櫃', authFeatureShelfDesc: '書籤、已解鎖章節、閱讀會員與兌換紀錄，集中收在同一個地方。',
+    authFeatureSecurity: '清楚可見的帳戶保護', authFeatureSecurityDesc: '綁定相容的驗證器，並在同一個工作區管理密碼與兩步驗證。',
+    remember: '保持登入 30 天', forgot: '忘記密碼？', registerNote: '建立帳戶不需付費，並表示你同意服務條款與隱私政策。', loginNote: '已啟用兩步驗證的帳戶，下一步可能會要求輸入目前的 6 位驗證碼。',
+    overview: '總覽', pointsPack: '積分包', shelf: '我的書櫃', security: '帳戶安全', addPoints: '加值', memberCenter: '會員中心',
+    overviewKicker: 'Station Points', overviewHeading: '一份餘額，通用於整個 Station Cat。', overviewDesc: '站內任何明確標示 Station 積分的內容與服務，都從這一份餘額扣點；確認前一定先顯示需要多少，以及會取得什麼權限。', buyPack: '購買積分包', openShelf: '打開我的書櫃', balanceLabel: '可用餘額',
+    whatPointsDo: '這份餘額可以做什麼', whatPointsDoDesc: '只有標示積分價格與兌換按鈕的項目才代表已開放；規劃中的用途現在還不能兌換。',
+    membershipPriceFallback: '登入後會顯示目前的會員兌換價格。', chapterPriceFallback: '登入後會顯示目前的單章兌換價格。', redeem: '兌換', readLatest: '去讀最新章',
+    recentActivity: '最近動態', allHistory: '查看全部紀錄', noActivity: '目前還沒有 Station 積分紀錄。',
+    pointsKicker: '目前公開商品', pointsHeading: '加值一次，餘額整站通用。', pointsDesc: '目前積分包直接讀取正式結帳設定。每次都是一次性購買，不會自動續費。',
+    oneTime: '一次性購買 · 無自動續費', packRules: '付款確認後，積分會存入目前登入的這個帳戶。', checkout: '前往結帳',
+    notCashKicker: 'NOT CASH', notCash: '不是儲值金', notCashDesc: 'Station 積分是站內數位權益單位，不能提現、轉售或在帳戶之間轉移。',
+    refundKicker: 'REFUND', refund: '退款規則', refundDesc: '未使用積分可聯絡支援申請；已兌換的數位權益通常不退，法律另有規定除外。',
+    creditedKicker: 'WHERE', credited: '積分入帳位置', creditedDesc: '積分存入結帳時登入的帳戶，付款確認完成後即可使用。',
+    shelfKicker: 'My shelf', shelfHeading: '我的書櫃', shelfDesc: '書籤與已解鎖的閱讀權限都收在這裡；沒有顯示到期日的章節會持續保留。', unlockedTab: '閱讀與權限', historyTab: '積分紀錄',
+    securityKicker: 'Account security', securityHeading: '帳戶安全', securityDesc: '密碼與兩步驗證各自獨立管理；已啟用兩步驗證時，修改密碼也會要求目前的驗證碼。', passwordHeading: '修改密碼', passwordDesc: '設定一組安全的新密碼；更新後，其他裝置可能需要重新登入。',
+    checkoutDialogTitle: '確認購買', checkoutDialogDesc: '打開安全付款頁前，請確認積分包與入帳帳戶。', checkoutAccount: '入帳帳戶', checkoutPack: '入帳積分', checkoutTotal: '應付金額', checkoutTax: '稅費與可用付款方式會在付款頁顯示。', cancel: '取消', confirmPay: '確認並付款',
+    activityPurchase: '積分購買', activitySpend: '積分兌換', activityRefund: '付款沖回', activityAdjustment: '餘額調整', activityStatus: '已完成', permanent: '永久權限', continueAction: '繼續閱讀', openAction: '打開內容'
+  },
+  'zh-Hans': {
+    authHeading: '深夜也能进站的门。', authDesc: '一组账号、一份共用余额。登录后管理 Station 积分、已解锁内容、阅读进度与账户安全。',
+    authFeatureBalance: '一份全站通用余额', authFeatureBalanceDesc: '积分不绑定单一小说或软件；每次购买都是一次性付款，没有自动续费。',
+    authFeatureShelf: '解锁过的都留在书架', authFeatureShelfDesc: '书签、已解锁章节、阅读会员与兑换记录，集中放在同一个地方。',
+    authFeatureSecurity: '清楚可见的账户保护', authFeatureSecurityDesc: '绑定兼容的验证器，并在同一个工作区管理密码与两步验证。',
+    remember: '保持登录 30 天', forgot: '忘记密码？', registerNote: '创建账户无需付费，并表示你同意服务条款与隐私政策。', loginNote: '已启用两步验证的账户，下一步可能会要求输入当前的 6 位验证码。',
+    overview: '总览', pointsPack: '积分包', shelf: '我的书架', security: '账户安全', addPoints: '充值', memberCenter: '会员中心',
+    overviewKicker: 'Station Points', overviewHeading: '一份余额，通用于整个 Station Cat。', overviewDesc: '站内任何明确标示 Station 积分的内容与服务，都从这一份余额扣点；确认前一定先显示需要多少，以及会获得什么权限。', buyPack: '购买积分包', openShelf: '打开我的书架', balanceLabel: '可用余额',
+    whatPointsDo: '这份余额可以做什么', whatPointsDoDesc: '只有标示积分价格与兑换按钮的项目才代表已开放；规划中的用途目前还不能兑换。',
+    membershipPriceFallback: '登录后会显示目前的会员兑换价格。', chapterPriceFallback: '登录后会显示目前的单章兑换价格。', redeem: '兑换', readLatest: '去读最新章',
+    recentActivity: '最近动态', allHistory: '查看全部记录', noActivity: '目前还没有 Station 积分记录。',
+    pointsKicker: '目前公开商品', pointsHeading: '充值一次，余额全站通用。', pointsDesc: '目前积分包直接读取正式结账设置。每次都是一次性购买，不会自动续费。',
+    oneTime: '一次性购买 · 无自动续费', packRules: '付款确认后，积分会存入当前登录的这个账户。', checkout: '前往结账',
+    notCashKicker: 'NOT CASH', notCash: '不是储值金', notCashDesc: 'Station 积分是站内数字权益单位，不能提现、转售或在账户之间转移。',
+    refundKicker: 'REFUND', refund: '退款规则', refundDesc: '未使用积分可联系支持申请；已兑换的数字权益通常不退，法律另有规定除外。',
+    creditedKicker: 'WHERE', credited: '积分到账位置', creditedDesc: '积分存入结账时登录的账户，付款确认完成后即可使用。',
+    shelfKicker: 'My shelf', shelfHeading: '我的书架', shelfDesc: '书签与已解锁的阅读权限都放在这里；没有显示到期日的章节会持续保留。', unlockedTab: '阅读与权限', historyTab: '积分记录',
+    securityKicker: 'Account security', securityHeading: '账户安全', securityDesc: '密码与两步验证各自独立管理；已启用两步验证时，修改密码也会要求当前验证码。', passwordHeading: '修改密码', passwordDesc: '设置一组安全的新密码；更新后，其他设备可能需要重新登录。',
+    checkoutDialogTitle: '确认购买', checkoutDialogDesc: '打开安全付款页前，请确认积分包与到账账户。', checkoutAccount: '到账账户', checkoutPack: '到账积分', checkoutTotal: '应付金额', checkoutTax: '税费与可用付款方式会在付款页显示。', cancel: '取消', confirmPay: '确认并付款',
+    activityPurchase: '积分购买', activitySpend: '积分兑换', activityRefund: '付款冲回', activityAdjustment: '余额调整', activityStatus: '已完成', permanent: '永久权限', continueAction: '继续阅读', openAction: '打开内容'
+  }
+}[lang];
+
 const clientConfig = {
   locale: lang,
   libraryPath: readerLibraryPaths[lang],
@@ -86,6 +179,7 @@ const clientConfig = {
   errorMessageKeys: readerErrorMessageKeys,
   publicPriceLoading: copy.publicTitle,
   publicPriceUnavailable: lang === 'ja' ? '現在購入できるポイントパックはありません' : lang === 'en' ? 'No points packs are currently available' : lang === 'zh-Hans' ? '目前没有可购买的积分包' : '目前沒有可購買的積分包',
+  ui,
   auth: {
     loginTitle: copy.authTitle,
     registerTitle: lang === 'ja' ? '会員登録' : lang === 'en' ? 'Create member account' : lang === 'zh-Hans' ? '会员注册' : '會員註冊',
@@ -105,6 +199,7 @@ const clientConfig = {
   title={copy.metaTitle}
   description={copy.metaDescription}
   lang={lang}
+  bodyClass="reader-center-page"
   canonicalPath={readerLibraryPaths[lang]}
   alternates={[
     { hrefLang: 'zh-Hant', href: readerLibraryPaths['zh-Hant'] },
@@ -115,260 +210,445 @@ const clientConfig = {
   ]}
 >
   <script id="reader-client-config" type="application/json" set:html={JSON.stringify(clientConfig)} />
-  <section class="works-hero reader-library-hero">
-    <div class="reader-library-hero__copy">
-      <p class="station-kicker">Member Center</p>
-      <h1>{copy.heading}</h1>
-      <p>{copy.heroDesc}</p>
-    </div>
-  </section>
-
-  <section class="station-section reader-public-points" aria-labelledby="reader-public-points-title">
-    <div>
-      <p class="station-kicker">STATION POINTS</p>
-      <h2 id="reader-public-points-title">{copy.publicTitle}</h2>
-      <p>{copy.publicDesc}</p>
-    </div>
-    <a class="button button-secondary" href={pointsPaths[localeKey]}>{copy.publicLink}</a>
-  </section>
-
-  <section class="station-section reader-membership-overview" id="reader-membership-panel" hidden>
-    <div class="reader-membership-summary" id="reader-membership-summary" data-state="neutral" aria-live="polite">
-      <div class="reader-membership-summary__main">
-        <span class="reader-membership-summary__dot" aria-hidden="true"></span>
-        <div>
-          <p>{copy.membershipLabel}</p>
-          <strong id="reader-membership-summary-title">{copy.loading}</strong>
-          <span id="reader-membership-summary-detail">{copy.loadingMembership}</span>
+  <div class="reader-center-v2">
+    <section class="reader-auth-shell" id="reader-auth-shell" aria-labelledby="reader-auth-heading">
+      <div class="reader-auth-intro">
+        <p class="reader-v2-kicker">Member Center</p>
+        <h1 id="reader-auth-heading">{ui.authHeading}</h1>
+        <p class="reader-auth-intro__lead">{ui.authDesc}</p>
+        <div class="reader-auth-benefits">
+          <article>
+            <span aria-hidden="true">◇</span>
+            <div>
+              <h2>{ui.authFeatureBalance}</h2>
+              <p>{ui.authFeatureBalanceDesc}</p>
+            </div>
+          </article>
+          <article>
+            <span aria-hidden="true">▤</span>
+            <div>
+              <h2>{ui.authFeatureShelf}</h2>
+              <p>{ui.authFeatureShelfDesc}</p>
+            </div>
+          </article>
+          <article>
+            <span aria-hidden="true">◈</span>
+            <div>
+              <h2>{ui.authFeatureSecurity}</h2>
+              <p>{ui.authFeatureSecurityDesc}</p>
+            </div>
+          </article>
         </div>
+        <a class="reader-auth-price-link" href={pointsPaths[localeKey]}>
+          <span>{copy.publicLink}</span>
+          <strong id="reader-public-points-title">{copy.publicTitle}</strong>
+        </a>
       </div>
-      <div class="reader-membership-summary__actions">
-        <span id="reader-membership-overview-credits">{copy.balance}</span>
-        <button class="button button-primary" id="reader-membership-redeem" type="button">{copy.redeemMembership}</button>
-      </div>
-    </div>
-    <p class="reader-membership-state" id="reader-membership-state">{copy.noMembership}</p>
-    <p class="fine-print" id="reader-membership-rule">{copy.membershipRule}</p>
-    <div class="reader-status" id="reader-membership-status" role="status" aria-live="polite"></div>
-  </section>
 
-  <section class="station-section reader-library-grid">
-    <form class="reader-panel reader-login-panel" id="reader-login-form">
-      <div>
-        <p class="station-kicker">Member Account</p>
-        <h2 id="reader-auth-title">{copy.authTitle}</h2>
-      </div>
-      <div class="reader-auth-switch" role="tablist" aria-label={copy.authLabel}>
-        <button class="reader-auth-switch__button is-active" type="button" data-auth-mode="login" aria-selected="true">{copy.login}</button>
-        <button class="reader-auth-switch__button" type="button" data-auth-mode="register" aria-selected="false">{copy.register}</button>
-        <button class="reader-auth-switch__button" type="button" data-auth-mode="reset" aria-selected="false">{copy.reset}</button>
-      </div>
-      <div class="reader-auth-fields" id="reader-login-fields">
-        <label>
-          {copy.identifier}
-          <input id="reader-identifier" name="identifier" type="text" autocomplete="username" placeholder="username@example.com" />
-        </label>
-        <label>
-          {copy.password}
-          <input id="reader-password" name="password" type="password" autocomplete="current-password" placeholder={copy.min8} />
-        </label>
-      </div>
-      <div class="reader-auth-fields" id="reader-register-fields" hidden>
-        <label>
-          {copy.username}
-          <input id="reader-username" name="username" type="text" autocomplete="username" placeholder="stationcat" />
-        </label>
-        <label>
-          Email
-          <input id="reader-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" />
-        </label>
-        <label>
-          {copy.password}
-          <input id="reader-register-password" name="register-password" type="password" autocomplete="new-password" placeholder={copy.min8} />
-        </label>
-        <label>
-          {copy.confirmPassword}
-          <input id="reader-register-password-confirm" name="register-password-confirm" type="password" autocomplete="new-password" placeholder={copy.repeatPassword} />
-        </label>
-      </div>
-      <div class="reader-auth-fields" id="reader-reset-fields" hidden>
-        <label id="reader-reset-identifier-field">
-          {copy.identifier}
-          <input id="reader-reset-identifier" name="reset-identifier" type="text" autocomplete="username" placeholder="username@example.com" />
-        </label>
-        <label id="reader-reset-totp-field">
-          {copy.totpCode}
-          <input id="reader-reset-totp-code" name="reset-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder={copy.sixDigits} />
-        </label>
-        <label>
-          {copy.newPassword}
-          <input id="reader-reset-password" name="reset-password" type="password" autocomplete="new-password" placeholder={copy.min8} />
-        </label>
-        <label>
-          {copy.confirmNewPassword}
-          <input id="reader-reset-password-confirm" name="reset-password-confirm" type="password" autocomplete="new-password" placeholder={copy.repeatNewPassword} />
-        </label>
-        <p class="fine-print" id="reader-reset-help">{copy.resetHelp}</p>
-      </div>
-      <button class="button button-primary" id="reader-login-submit" type="submit">{copy.loginSubmit}</button>
-      <div class="reader-status" id="reader-login-status" role="status" aria-live="polite"></div>
-    </form>
-
-    <div class="reader-panel reader-account-panel" id="reader-account-panel" hidden>
-      <div class="reader-panel__header">
-        <p class="station-kicker">Account</p>
-        <h2>{copy.account}</h2>
-      </div>
-      <div class="reader-account-profile">
-        <span class="reader-account-avatar" aria-hidden="true">SC</span>
-        <p id="reader-account-email" class="reader-account-email"></p>
-      </div>
-      <details class="reader-password-disclosure">
-        <summary>{copy.changePassword}</summary>
-        <form class="reader-password-form" id="reader-password-form">
-          <label>
-            {copy.currentPassword}
-            <input id="reader-current-password" name="current-password" type="password" autocomplete="current-password" placeholder={copy.currentPassword} />
-          </label>
-          <label>
-            {copy.newPassword}
-            <input id="reader-new-password" name="new-password" type="password" autocomplete="new-password" placeholder={copy.min8} />
-          </label>
-          <label>
-            {copy.confirmNewPassword}
-            <input id="reader-new-password-confirm" name="new-password-confirm" type="password" autocomplete="new-password" placeholder={copy.repeatNewPassword} />
-          </label>
-          <label>
-            {copy.totpCode}
-            <input id="reader-password-totp-code" name="password-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder={copy.boundRequired} />
-          </label>
-          <button class="button button-primary" id="reader-password-submit" type="submit">{copy.updatePassword}</button>
-          <div class="reader-status" id="reader-password-status" role="status" aria-live="polite"></div>
+      <div class="reader-auth-card-wrap">
+        <span class="reader-offset-layer" aria-hidden="true"></span>
+        <form class="reader-auth-card reader-panel" id="reader-login-form">
+          <div class="reader-auth-switch" role="tablist" aria-label={copy.authLabel}>
+            <button class="reader-auth-switch__button is-active" type="button" data-auth-mode="login" aria-selected="true">{copy.login}</button>
+            <button class="reader-auth-switch__button" type="button" data-auth-mode="register" aria-selected="false">{copy.register}</button>
+            <button class="reader-auth-switch__button" type="button" data-auth-mode="reset" aria-selected="false">{copy.reset}</button>
+          </div>
+          <div>
+            <p class="reader-v2-kicker">Station Cat</p>
+            <h2 id="reader-auth-title">{copy.authTitle}</h2>
+          </div>
+          <div class="reader-auth-fields" id="reader-login-fields">
+            <label>
+              {copy.identifier}
+              <input id="reader-identifier" name="identifier" type="text" autocomplete="username" placeholder="you@example.com" />
+            </label>
+            <label>
+              {copy.password}
+              <input id="reader-password" name="password" type="password" autocomplete="current-password" placeholder={copy.min8} />
+            </label>
+            <div class="reader-auth-options">
+              <label class="reader-auth-remember">
+                <input type="checkbox" checked />
+                <span>{ui.remember}</span>
+              </label>
+              <button id="reader-forgot-password" type="button">{ui.forgot}</button>
+            </div>
+            <p class="reader-form-note">{ui.loginNote}</p>
+          </div>
+          <div class="reader-auth-fields" id="reader-register-fields" hidden>
+            <label>
+              {copy.username}
+              <input id="reader-username" name="username" type="text" autocomplete="username" placeholder="stationcat" />
+            </label>
+            <label>
+              Email
+              <input id="reader-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" />
+            </label>
+            <label>
+              {copy.password}
+              <input id="reader-register-password" name="register-password" type="password" autocomplete="new-password" placeholder={copy.min8} />
+            </label>
+            <label>
+              {copy.confirmPassword}
+              <input id="reader-register-password-confirm" name="register-password-confirm" type="password" autocomplete="new-password" placeholder={copy.repeatPassword} />
+            </label>
+            <p class="reader-form-note">
+              {ui.registerNote}
+              <a href={termsPaths[localeKey]}>{copy.publicLink.includes('価格') ? '利用規約' : lang === 'en' ? 'Terms' : lang === 'zh-Hans' ? '服务条款' : '服務條款'}</a>
+              <a href={privacyPaths[localeKey]}>{lang === 'ja' ? 'プライバシー' : lang === 'en' ? 'Privacy' : lang === 'zh-Hans' ? '隐私政策' : '隱私政策'}</a>
+            </p>
+          </div>
+          <div class="reader-auth-fields" id="reader-reset-fields" hidden>
+            <label id="reader-reset-identifier-field">
+              {copy.identifier}
+              <input id="reader-reset-identifier" name="reset-identifier" type="text" autocomplete="username" placeholder="you@example.com" />
+            </label>
+            <label id="reader-reset-totp-field">
+              {copy.totpCode}
+              <input id="reader-reset-totp-code" name="reset-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder={copy.sixDigits} />
+            </label>
+            <label>
+              {copy.newPassword}
+              <input id="reader-reset-password" name="reset-password" type="password" autocomplete="new-password" placeholder={copy.min8} />
+            </label>
+            <label>
+              {copy.confirmNewPassword}
+              <input id="reader-reset-password-confirm" name="reset-password-confirm" type="password" autocomplete="new-password" placeholder={copy.repeatNewPassword} />
+            </label>
+            <p class="reader-form-note" id="reader-reset-help">{copy.resetHelp}</p>
+          </div>
+          <button class="reader-v2-button reader-v2-button--primary" id="reader-login-submit" type="submit">{copy.loginSubmit}</button>
+          <div class="reader-status" id="reader-login-status" role="status" aria-live="polite"></div>
         </form>
-      </details>
-      <button class="button button-secondary reader-danger-action" id="reader-logout" type="button">{copy.logout}</button>
-    </div>
-
-    <div class="reader-panel reader-totp-panel" id="reader-totp-panel" hidden>
-      <div class="reader-panel__header">
-        <p class="station-kicker">Authenticator</p>
-        <h2>{copy.authenticator}</h2>
-        <span class="reader-status-badge" id="reader-totp-badge" data-state="neutral">{copy.reading}</span>
       </div>
-      <p class="reader-totp-state" id="reader-totp-state">{copy.readingBinding}</p>
-      <button class="button button-secondary" id="reader-totp-setup" type="button">{copy.bind}</button>
-      <div class="reader-totp-setup-box" id="reader-totp-setup-box" hidden>
-        <div class="reader-totp-qr-card" id="reader-totp-qr-card" hidden>
-          <div class="reader-totp-qr" id="reader-totp-qr" aria-label={getReaderLibraryMessages(lang).qrLabel}></div>
-          <p class="fine-print">{copy.qrHelp}</p>
+    </section>
+
+    <section class="reader-dashboard-shell" id="reader-credits-panel" hidden>
+      <aside class="reader-dashboard-sidebar" aria-label={ui.memberCenter}>
+        <p class="reader-v2-kicker">Member Center</p>
+        <nav class="reader-dashboard-nav">
+          <button class="is-active" type="button" data-reader-view="overview" aria-current="true"><span aria-hidden="true">⌂</span>{ui.overview}</button>
+          <button type="button" data-reader-view="points"><span aria-hidden="true">◇</span>{ui.pointsPack}</button>
+          <button type="button" data-reader-view="shelf"><span aria-hidden="true">▤</span>{ui.shelf}</button>
+          <button type="button" data-reader-view="security"><span aria-hidden="true">◈</span>{ui.security}</button>
+        </nav>
+
+        <div class="reader-sidebar-balance">
+          <span>Station Points</span>
+          <p><strong id="reader-sidebar-credit-balance">0</strong> <small>Points</small></p>
+          <button class="reader-v2-button reader-v2-button--outline" type="button" data-reader-view-target="points">{ui.addPoints}</button>
         </div>
-        <details class="reader-totp-manual">
-          <summary>{copy.manual}</summary>
-          <label>
-            {copy.setupKey}
-            <input id="reader-totp-secret" type="text" readonly />
-          </label>
-          <label>
-            otpauth URI
-            <textarea id="reader-totp-uri" readonly rows="3"></textarea>
-          </label>
-        </details>
-        <label>
-          {copy.currentCode}
-          <input id="reader-totp-confirm-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder={getReaderLibraryMessages(lang).sixDigits} />
-        </label>
-        <button class="button button-primary" id="reader-totp-confirm" type="button">{copy.confirmBinding}</button>
-      </div>
-      <div class="reader-status" id="reader-totp-status" role="status" aria-live="polite"></div>
-    </div>
 
-    <div class="reader-panel reader-credits-panel" id="reader-credits-panel" hidden>
-      <div class="reader-panel__header">
-        <div>
-          <p class="station-kicker">Station Points</p>
-          <h2>{copy.points}</h2>
+        <div class="reader-sidebar-account">
+          <p id="reader-sidebar-account"></p>
+          <button id="reader-logout" type="button"><span aria-hidden="true">↪</span>{copy.logout}</button>
         </div>
-        <span class="reader-credit-scope">{copy.pointsScope}</span>
-      </div>
-      <div class="reader-credit-summary">
-        <p class="reader-credit-balance" id="reader-credit-balance">0 Station Points</p>
-        <p>{copy.pointsIntro}</p>
-      </div>
+      </aside>
 
-      <div class="reader-credit-use-columns">
-        <section class="reader-credit-use-group" aria-labelledby="reader-credit-available-title">
-          <div class="reader-credit-use-heading">
-            <h3 id="reader-credit-available-title">{copy.availableNow}</h3>
-            <span class="reader-credit-use-status" data-state="active">{copy.activeLabel}</span>
+      <main class="reader-dashboard-main">
+        <section class="reader-dashboard-view is-active" data-reader-view-panel="overview">
+          <div class="reader-overview-hero">
+            <div class="reader-overview-copy">
+              <p class="reader-v2-kicker">{ui.overviewKicker}</p>
+              <h1>{ui.overviewHeading}</h1>
+              <p>{ui.overviewDesc}</p>
+              <div class="reader-overview-actions">
+                <button class="reader-v2-button reader-v2-button--primary" type="button" data-reader-view-target="points"><span aria-hidden="true">◇</span>{ui.buyPack}</button>
+                <button class="reader-v2-button reader-v2-button--outline" type="button" data-reader-view-target="shelf">{ui.openShelf}<span aria-hidden="true">→</span></button>
+              </div>
+            </div>
+            <div class="reader-balance-visual">
+              <div class="reader-ticket-shadow" aria-hidden="true"></div>
+              <article class="reader-balance-ticket">
+                <span>{ui.balanceLabel}</span>
+                <strong id="reader-credit-balance">0</strong>
+                <small>Station Points</small>
+                <div></div>
+                <footer><span>Station Cat</span><span>SC · 2026</span></footer>
+              </article>
+              <div class="reader-overview-security">
+                <button id="reader-overview-totp-badge" type="button" data-reader-view-target="security">2FA · {copy.reading}</button>
+                <span id="reader-member-since"></span>
+              </div>
+            </div>
           </div>
-          <div class="reader-credit-use-list">
-            <article>
-              <strong>{copy.readingMembership}</strong>
-              <p>{copy.readingMembershipDesc}</p>
-            </article>
-            <article>
-              <strong>{copy.paidChapters}</strong>
-              <p id="reader-credit-cost">{copy.chapterCostFallback}</p>
-            </article>
+
+          <section class="reader-overview-section" aria-labelledby="reader-points-uses-heading">
+            <div class="reader-section-heading">
+              <div>
+                <p class="reader-v2-kicker">Station Points</p>
+                <h2 id="reader-points-uses-heading">{ui.whatPointsDo}</h2>
+              </div>
+              <p>{ui.whatPointsDoDesc}</p>
+            </div>
+
+            <div class="reader-capability-grid">
+              <article class="reader-capability-card reader-capability-card--active" id="reader-membership-panel" hidden>
+                <div class="reader-capability-card__heading">
+                  <span aria-hidden="true">♕</span>
+                  <h3>{copy.readingMembership}</h3>
+                  <small>{copy.activeLabel}</small>
+                </div>
+                <p>{copy.readingMembershipDesc}</p>
+                <div class="reader-membership-summary" id="reader-membership-summary" data-state="neutral" aria-live="polite">
+                  <div class="reader-membership-summary__main">
+                    <span class="reader-membership-summary__dot" aria-hidden="true"></span>
+                    <div>
+                      <p>{copy.membershipLabel}</p>
+                      <strong id="reader-membership-summary-title">{copy.loading}</strong>
+                      <span id="reader-membership-summary-detail">{copy.loadingMembership}</span>
+                    </div>
+                  </div>
+                  <div class="reader-membership-summary__actions">
+                    <span id="reader-membership-overview-credits">{copy.balance}</span>
+                    <button class="reader-v2-button reader-v2-button--outline" id="reader-membership-redeem" type="button">{copy.redeemMembership}</button>
+                  </div>
+                </div>
+                <p class="reader-membership-state" id="reader-membership-state">{copy.noMembership}</p>
+                <p class="reader-capability-price" id="reader-membership-rule">{ui.membershipPriceFallback}</p>
+                <div class="reader-status" id="reader-membership-status" role="status" aria-live="polite"></div>
+              </article>
+
+              <article class="reader-capability-card reader-capability-card--active">
+                <div class="reader-capability-card__heading">
+                  <span aria-hidden="true">▤</span>
+                  <h3>{copy.paidChapters}</h3>
+                  <small>{copy.activeLabel}</small>
+                </div>
+                <p>{copy.paidChapters}</p>
+                <p class="reader-capability-price" id="reader-credit-cost">{copy.chapterCostFallback}</p>
+                <a class="reader-v2-button reader-v2-button--outline" href="/novel/">{ui.readLatest}<span aria-hidden="true">→</span></a>
+              </article>
+
+              <article class="reader-capability-card reader-capability-card--planned">
+                <div class="reader-capability-card__heading">
+                  <span aria-hidden="true">⇩</span>
+                  <h3>{copy.softwareDownloads}</h3>
+                  <small>{copy.plannedLabel}</small>
+                </div>
+                <p>{copy.softwareDownloadsDesc}</p>
+                <p>{copy.plannedNotice}</p>
+              </article>
+
+              <article class="reader-capability-card reader-capability-card--planned">
+                <div class="reader-capability-card__heading">
+                  <span aria-hidden="true">⌘</span>
+                  <h3>{copy.softwareAccess}</h3>
+                  <small>{copy.plannedLabel}</small>
+                </div>
+                <p>{copy.softwareAccessDesc}</p>
+                <p>{copy.plannedNotice}</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="reader-overview-section" aria-labelledby="reader-recent-heading">
+            <div class="reader-section-heading reader-section-heading--row">
+              <div>
+                <p class="reader-v2-kicker">Activity</p>
+                <h2 id="reader-recent-heading">{ui.recentActivity}</h2>
+              </div>
+              <button type="button" data-reader-view-target="shelf" data-reader-shelf-target="history">{ui.allHistory} →</button>
+            </div>
+            <div class="reader-activity-list" id="reader-recent-activity">
+              <p class="reader-empty-line">{ui.noActivity}</p>
+            </div>
+          </section>
+        </section>
+
+        <section class="reader-dashboard-view" data-reader-view-panel="points" hidden>
+          <header class="reader-page-heading">
+            <p class="reader-v2-kicker">{ui.pointsKicker}</p>
+            <h1>{ui.pointsHeading}</h1>
+            <p>{ui.pointsDesc}</p>
+          </header>
+
+          <div id="reader-credit-purchase-controls" hidden>
+            <div class="reader-credit-packs" id="reader-credit-packs"></div>
+          </div>
+          <div class="reader-status" id="reader-credit-status" role="status" aria-live="polite"></div>
+
+          <section class="reader-points-rules" aria-label={copy.publicLink}>
+            <article><p class="reader-v2-kicker">{ui.notCashKicker}</p><h2>{ui.notCash}</h2><p>{ui.notCashDesc}</p></article>
+            <article><p class="reader-v2-kicker">{ui.refundKicker}</p><h2>{ui.refund}</h2><p>{ui.refundDesc}</p></article>
+            <article><p class="reader-v2-kicker">{ui.creditedKicker}</p><h2>{ui.credited}</h2><p>{ui.creditedDesc}</p></article>
+          </section>
+          <a class="reader-points-rules-link" href={pointsPaths[localeKey]}>{copy.publicLink} →</a>
+        </section>
+
+        <section class="reader-dashboard-view reader-library-content" id="reader-library-content" data-reader-view-panel="shelf" hidden>
+          <header class="reader-shelf-heading">
+            <div>
+              <p class="reader-v2-kicker">{ui.shelfKicker}</p>
+              <h1>{ui.shelfHeading}</h1>
+              <p>{ui.shelfDesc}</p>
+            </div>
+            <div class="reader-shelf-tabs" role="tablist">
+              <button class="is-active" id="reader-shelf-tab-unlocked" type="button" role="tab" data-reader-shelf-tab="unlocked" aria-controls="reader-shelf-panel-unlocked" aria-selected="true" tabindex="0">{ui.unlockedTab}</button>
+              <button id="reader-shelf-tab-history" type="button" role="tab" data-reader-shelf-tab="history" aria-controls="reader-shelf-panel-history" aria-selected="false" tabindex="-1">{ui.historyTab}</button>
+            </div>
+          </header>
+
+          <div id="reader-shelf-panel-unlocked" role="tabpanel" aria-labelledby="reader-shelf-tab-unlocked" data-reader-shelf-panel="unlocked">
+            <section class="reader-shelf-block" aria-labelledby="reader-bookmarks-title">
+              <div class="reader-section-heading">
+                <div>
+                  <p class="reader-v2-kicker">Bookmarks</p>
+                  <h2 id="reader-bookmarks-title">{copy.continueReading}</h2>
+                </div>
+                <p class="reader-bookmark-hint" set:html={copy.bookmarkHint} />
+              </div>
+              <div class="reader-library-list reader-shelf-grid" id="reader-bookmark-list"></div>
+              <div class="reader-status" id="reader-bookmark-status" role="status" aria-live="polite"></div>
+              <div class="reader-empty-shelf" id="reader-bookmark-empty">
+                <h3>{copy.noBookmarks}</h3>
+                <p>{copy.noBookmarksDesc}</p>
+                <a class="reader-v2-button reader-v2-button--outline" href="/novel/">{copy.browse}</a>
+              </div>
+            </section>
+
+            <section class="reader-shelf-block" aria-labelledby="reader-unlocked-title">
+              <div class="reader-section-heading">
+                <div>
+                  <p class="reader-v2-kicker">Unlocked Content</p>
+                  <h2 id="reader-unlocked-title">{copy.unlocked}</h2>
+                </div>
+              </div>
+              <div class="reader-library-list reader-shelf-grid" id="reader-library-list"></div>
+              <div class="reader-empty-shelf" id="reader-library-empty">
+                <h3>{copy.noUnlocked}</h3>
+                <p>{copy.noUnlockedDesc}</p>
+                <a class="reader-v2-button reader-v2-button--outline" href="/novel/">{copy.backNovel}</a>
+              </div>
+            </section>
+          </div>
+
+          <div id="reader-shelf-panel-history" role="tabpanel" aria-labelledby="reader-shelf-tab-history" data-reader-shelf-panel="history" hidden>
+            <div class="reader-ledger-history" id="reader-ledger-history">
+              <p class="reader-empty-line">{ui.noActivity}</p>
+            </div>
           </div>
         </section>
 
-        <section class="reader-credit-use-group" aria-labelledby="reader-credit-planned-title">
-          <div class="reader-credit-use-heading">
-            <h3 id="reader-credit-planned-title">{copy.comingNext}</h3>
-            <span class="reader-credit-use-status" data-state="planned">{copy.plannedLabel}</span>
+        <section class="reader-dashboard-view" data-reader-view-panel="security" hidden>
+          <header class="reader-page-heading">
+            <p class="reader-v2-kicker">{ui.securityKicker}</p>
+            <h1>{ui.securityHeading}</h1>
+            <p>{ui.securityDesc}</p>
+          </header>
+
+          <div class="reader-security-grid">
+            <div class="reader-panel reader-account-panel" id="reader-account-panel" hidden>
+              <div class="reader-panel__header">
+                <div>
+                  <p class="reader-v2-kicker">Password</p>
+                  <h2>{ui.passwordHeading}</h2>
+                </div>
+              </div>
+              <p>{ui.passwordDesc}</p>
+              <div class="reader-account-profile">
+                <span class="reader-account-avatar" aria-hidden="true">SC</span>
+                <p id="reader-account-email" class="reader-account-email"></p>
+              </div>
+              <form class="reader-password-form" id="reader-password-form">
+                <label>
+                  {copy.currentPassword}
+                  <input id="reader-current-password" name="current-password" type="password" autocomplete="current-password" placeholder={copy.currentPassword} />
+                </label>
+                <label>
+                  {copy.newPassword}
+                  <input id="reader-new-password" name="new-password" type="password" autocomplete="new-password" placeholder={copy.min8} />
+                </label>
+                <label>
+                  {copy.confirmNewPassword}
+                  <input id="reader-new-password-confirm" name="new-password-confirm" type="password" autocomplete="new-password" placeholder={copy.repeatNewPassword} />
+                </label>
+                <label>
+                  {copy.totpCode}
+                  <input id="reader-password-totp-code" name="password-totp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder={copy.boundRequired} />
+                </label>
+                <button class="reader-v2-button reader-v2-button--primary" id="reader-password-submit" type="submit">{copy.updatePassword}</button>
+                <div class="reader-status" id="reader-password-status" role="status" aria-live="polite"></div>
+              </form>
+            </div>
+
+            <div class="reader-panel reader-totp-panel" id="reader-totp-panel" hidden>
+              <div class="reader-panel__header">
+                <div>
+                  <p class="reader-v2-kicker">Authenticator</p>
+                  <h2>{copy.authenticator}</h2>
+                </div>
+                <span class="reader-status-badge" id="reader-totp-badge" data-state="neutral">{copy.reading}</span>
+              </div>
+              <p class="reader-totp-state" id="reader-totp-state">{copy.readingBinding}</p>
+              <button class="reader-v2-button reader-v2-button--outline" id="reader-totp-setup" type="button">{copy.bind}</button>
+              <div class="reader-totp-setup-box" id="reader-totp-setup-box" hidden>
+                <div class="reader-totp-step">
+                  <span>1</span>
+                  <div>
+                    <h3>{copy.qrHelp}</h3>
+                    <div class="reader-totp-qr-card" id="reader-totp-qr-card" hidden>
+                      <div class="reader-totp-qr" id="reader-totp-qr" aria-label={getReaderLibraryMessages(lang).qrLabel}></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="reader-totp-step">
+                  <span>2</span>
+                  <details class="reader-totp-manual">
+                    <summary>{copy.manual}</summary>
+                    <label>
+                      {copy.setupKey}
+                      <input id="reader-totp-secret" type="text" readonly />
+                    </label>
+                    <label>
+                      otpauth URI
+                      <textarea id="reader-totp-uri" readonly rows="3"></textarea>
+                    </label>
+                  </details>
+                </div>
+                <div class="reader-totp-step">
+                  <span>3</span>
+                  <div>
+                    <label>
+                      {copy.currentCode}
+                      <input id="reader-totp-confirm-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder={getReaderLibraryMessages(lang).sixDigits} />
+                    </label>
+                    <button class="reader-v2-button reader-v2-button--primary" id="reader-totp-confirm" type="button">{copy.confirmBinding}</button>
+                  </div>
+                </div>
+              </div>
+              <div class="reader-status" id="reader-totp-status" role="status" aria-live="polite"></div>
+            </div>
           </div>
-          <div class="reader-credit-use-list">
-            <article>
-              <strong>{copy.softwareDownloads}</strong>
-              <p>{copy.softwareDownloadsDesc}</p>
-            </article>
-            <article>
-              <strong>{copy.softwareAccess}</strong>
-              <p>{copy.softwareAccessDesc}</p>
-            </article>
-          </div>
-          <p class="reader-credit-planned-note">{copy.plannedNotice}</p>
         </section>
-      </div>
+      </main>
 
-      <div id="reader-credit-purchase-controls" hidden>
-        <div class="reader-credit-purchase-heading">
-          <h3>{copy.buyPoints}</h3>
-          <p>{copy.buyPointsDesc}</p>
+      <nav class="reader-mobile-nav" aria-label={ui.memberCenter}>
+        <button class="is-active" type="button" data-reader-view="overview"><span aria-hidden="true">⌂</span>{ui.overview}</button>
+        <button type="button" data-reader-view="points"><span aria-hidden="true">◇</span>{ui.pointsPack}</button>
+        <button type="button" data-reader-view="shelf"><span aria-hidden="true">▤</span>{ui.shelf}</button>
+        <button type="button" data-reader-view="security"><span aria-hidden="true">◈</span>{ui.security}</button>
+      </nav>
+    </section>
+
+    <dialog class="reader-checkout-dialog" id="reader-checkout-dialog" aria-labelledby="reader-checkout-title">
+      <form method="dialog" class="reader-checkout-dialog__card">
+        <p class="reader-v2-kicker">Station Points</p>
+        <h2 id="reader-checkout-title">{ui.checkoutDialogTitle}</h2>
+        <p>{ui.checkoutDialogDesc}</p>
+        <dl>
+          <div><dt>{ui.checkoutPack}</dt><dd id="reader-checkout-pack">—</dd></div>
+          <div><dt>{ui.checkoutAccount}</dt><dd id="reader-checkout-account">—</dd></div>
+          <div><dt>{ui.checkoutTotal}</dt><dd id="reader-checkout-total">—</dd></div>
+        </dl>
+        <p class="reader-form-note">{ui.checkoutTax}</p>
+        <div class="reader-checkout-dialog__actions">
+          <button class="reader-v2-button reader-v2-button--outline" value="cancel">{ui.cancel}</button>
+          <button class="reader-v2-button reader-v2-button--primary" id="reader-checkout-confirm" type="button">{ui.confirmPay}</button>
         </div>
-        <div class="reader-credit-packs" id="reader-credit-packs"></div>
-      </div>
-      <div class="reader-status" id="reader-credit-status" role="status" aria-live="polite"></div>
-    </div>
-  </section>
-
-  <section class="station-section reader-library-content" id="reader-library-content" hidden>
-    <div class="station-section__heading">
-      <p class="station-kicker">Bookmarks</p>
-      <h2>{copy.continueReading}</h2>
-      <p class="reader-bookmark-hint" set:html={copy.bookmarkHint} />
-    </div>
-    <div class="reader-library-list" id="reader-bookmark-list"></div>
-    <div class="reader-status" id="reader-bookmark-status" role="status" aria-live="polite"></div>
-    <div class="reader-empty-shelf" id="reader-bookmark-empty">
-      <h3>{copy.noBookmarks}</h3>
-      <p>{copy.noBookmarksDesc}</p>
-      <a class="button button-secondary" href="/novel/">{copy.browse}</a>
-    </div>
-
-    <div class="station-section__heading">
-      <p class="station-kicker">Unlocked Content</p>
-      <h2>{copy.unlocked}</h2>
-    </div>
-    <div class="reader-library-list" id="reader-library-list"></div>
-    <div class="reader-empty-shelf" id="reader-library-empty">
-      <h3>{copy.noUnlocked}</h3>
-      <p>{copy.noUnlockedDesc}</p>
-      <a class="button button-secondary" href="/novel/">{copy.backNovel}</a>
-    </div>
-  </section>
-
+      </form>
+    </dialog>
+  </div>
   <script>
     import qrcode from 'qrcode-generator';
 
@@ -377,6 +657,7 @@ const clientConfig = {
     const readerLocale = readerClientConfig.locale || 'zh-Hant';
     const readerLibraryPath = readerClientConfig.libraryPath || '/library/';
     const readerMessages = readerClientConfig.messages || {};
+    const readerUi = readerClientConfig.ui || {};
     const formatReaderMessage = (key, values = {}) => String(readerMessages[key] || key).replace(
       /\{(\w+)\}/g,
       (match, name) => Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : match
@@ -394,9 +675,16 @@ const clientConfig = {
       ? error.message
       : formatReaderMessage(fallbackKey);
     const publicPointsTitle = document.getElementById('reader-public-points-title');
+    const authShell = document.getElementById('reader-auth-shell');
     const form = document.getElementById('reader-login-form');
     const authTitle = document.getElementById('reader-auth-title');
     const authModeButtons = Array.from(document.querySelectorAll('[data-auth-mode]'));
+    const forgotPasswordButton = document.getElementById('reader-forgot-password');
+    const viewButtons = Array.from(document.querySelectorAll('[data-reader-view]'));
+    const viewTargetButtons = Array.from(document.querySelectorAll('[data-reader-view-target]'));
+    const viewPanels = Array.from(document.querySelectorAll('[data-reader-view-panel]'));
+    const shelfTabButtons = Array.from(document.querySelectorAll('[data-reader-shelf-tab]'));
+    const shelfPanels = Array.from(document.querySelectorAll('[data-reader-shelf-panel]'));
     const loginFields = document.getElementById('reader-login-fields');
     const registerFields = document.getElementById('reader-register-fields');
     const resetFields = document.getElementById('reader-reset-fields');
@@ -437,8 +725,12 @@ const clientConfig = {
     const totpConfirmButton = document.getElementById('reader-totp-confirm');
     const totpStatus = document.getElementById('reader-totp-status');
     const totpBadge = document.getElementById('reader-totp-badge');
+    const overviewTotpBadge = document.getElementById('reader-overview-totp-badge');
     const creditsPanel = document.getElementById('reader-credits-panel');
     const creditBalance = document.getElementById('reader-credit-balance');
+    const sidebarCreditBalance = document.getElementById('reader-sidebar-credit-balance');
+    const sidebarAccount = document.getElementById('reader-sidebar-account');
+    const memberSince = document.getElementById('reader-member-since');
     const creditCost = document.getElementById('reader-credit-cost');
     const creditPurchaseControls = document.getElementById('reader-credit-purchase-controls');
     const creditPacks = document.getElementById('reader-credit-packs');
@@ -458,11 +750,28 @@ const clientConfig = {
     const bookmarkList = document.getElementById('reader-bookmark-list');
     const bookmarkEmpty = document.getElementById('reader-bookmark-empty');
     const bookmarkStatus = document.getElementById('reader-bookmark-status');
+    const recentActivity = document.getElementById('reader-recent-activity');
+    const ledgerHistory = document.getElementById('reader-ledger-history');
+    const checkoutDialog = document.getElementById('reader-checkout-dialog');
+    const checkoutPack = document.getElementById('reader-checkout-pack');
+    const checkoutAccount = document.getElementById('reader-checkout-account');
+    const checkoutTotal = document.getElementById('reader-checkout-total');
+    const checkoutConfirm = document.getElementById('reader-checkout-confirm');
     let authMode = 'login';
+    let activeReaderView = 'overview';
+    let activeShelfTab = 'unlocked';
+    let pendingCreditPack = null;
+    let currentReaderEmail = '';
 
     const setStatus = (message, tone = 'neutral') => {
       statusBox.textContent = message;
       statusBox.dataset.tone = tone;
+    };
+
+    const closeCheckoutDialog = () => {
+      if (typeof checkoutDialog?.close === 'function' && checkoutDialog.open) {
+        checkoutDialog.close();
+      }
     };
 
     const setPasswordStatus = (message, tone = 'neutral') => {
@@ -489,6 +798,39 @@ const clientConfig = {
     const setFieldState = (fields, enabled) => {
       fields.forEach((field) => {
         field.disabled = !enabled;
+      });
+    };
+
+    const setShelfTab = (tab) => {
+      activeShelfTab = tab === 'history' ? 'history' : 'unlocked';
+      shelfTabButtons.forEach((button) => {
+        const selected = button.dataset.readerShelfTab === activeShelfTab;
+        button.classList.toggle('is-active', selected);
+        button.setAttribute('aria-selected', selected ? 'true' : 'false');
+        button.tabIndex = selected ? 0 : -1;
+      });
+      shelfPanels.forEach((panel) => {
+        panel.hidden = panel.dataset.readerShelfPanel !== activeShelfTab;
+      });
+    };
+
+    const setReaderView = (view, shelfTab = '') => {
+      activeReaderView = ['points', 'shelf', 'security'].includes(view) ? view : 'overview';
+      viewButtons.forEach((button) => {
+        const selected = button.dataset.readerView === activeReaderView;
+        button.classList.toggle('is-active', selected);
+        if (selected) button.setAttribute('aria-current', 'true');
+        else button.removeAttribute('aria-current');
+      });
+      viewPanels.forEach((panel) => {
+        const selected = panel.dataset.readerViewPanel === activeReaderView;
+        panel.hidden = !selected;
+        panel.classList.toggle('is-active', selected);
+      });
+      if (activeReaderView === 'shelf' && shelfTab) setShelfTab(shelfTab);
+      closeCheckoutDialog();
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     };
 
@@ -536,15 +878,20 @@ const clientConfig = {
 
     const setSignedIn = (session) => {
       const signedIn = Boolean(session?.authenticated);
-      form.hidden = signedIn;
+      authShell.hidden = signedIn;
       accountPanel.hidden = !signedIn;
       totpPanel.hidden = !signedIn;
       creditsPanel.hidden = !signedIn;
       membershipPanel.hidden = !signedIn;
-      libraryContent.hidden = !signedIn;
-      accountEmail.textContent = signedIn
+      currentReaderEmail = signedIn ? String(session.account?.email || '') : '';
+      const accountLabel = signedIn
         ? `${session.account.displayName || session.account.username || session.account.email} · ${session.account.email}`
         : '';
+      accountEmail.textContent = signedIn
+        ? accountLabel
+        : '';
+      sidebarAccount.textContent = accountLabel;
+      if (signedIn) setReaderView(activeReaderView);
       setMembershipSummary(
         formatReaderMessage(signedIn ? 'loading' : 'signedOut'),
         formatReaderMessage(signedIn ? 'membershipChecking' : 'membershipAfterSignIn'),
@@ -569,13 +916,35 @@ const clientConfig = {
       return `/novel/${item.seriesSlug}/chapter/${item.chapterSlug}/`;
     };
 
+    const shelfMonogram = (value) => String(value || 'SC')
+      .split(/[-_\s]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('') || 'SC';
+
+    const createShelfCover = (label, variant = 0) => {
+      const cover = document.createElement('div');
+      cover.className = `reader-shelf-cover reader-shelf-cover--${variant % 4}`;
+      cover.setAttribute('aria-hidden', 'true');
+      const mark = document.createElement('span');
+      mark.textContent = shelfMonogram(label);
+      cover.append(mark);
+      return cover;
+    };
+
     const renderLibrary = (items) => {
       libraryList.innerHTML = '';
       libraryEmpty.hidden = items.length > 0;
 
-      items.forEach((item) => {
+      items.forEach((item, index) => {
         const card = document.createElement('article');
-        card.className = 'reader-library-card';
+        card.className = 'reader-library-card reader-shelf-card';
+
+        const cover = createShelfCover(item.seriesSlug || item.chapterSlug, index);
+
+        const body = document.createElement('div');
+        body.className = 'reader-shelf-card__body';
 
         const title = document.createElement('h3');
         title.textContent = entitlementTitle(item);
@@ -592,18 +961,19 @@ const clientConfig = {
           const expires = document.createElement('p');
           expires.className = 'fine-print';
           expires.textContent = formatReaderMessage('expires', { date: item.expiresAt });
-          card.append(title, meta, expires, link);
+          body.append(title, meta, expires, link);
         } else {
-          card.append(title, meta, link);
+          body.append(title, meta, link);
         }
 
         if (item.note) {
           const note = document.createElement('p');
           note.className = 'fine-print';
           note.textContent = item.note;
-          card.append(note);
+          body.append(note);
         }
 
+        card.append(cover, body);
         libraryList.append(card);
       });
     };
@@ -622,9 +992,14 @@ const clientConfig = {
         return sourcePath;
       };
 
-      items.forEach((item) => {
+      items.forEach((item, index) => {
         const card = document.createElement('article');
-        card.className = 'reader-library-card reader-bookmark-card';
+        card.className = 'reader-library-card reader-bookmark-card reader-shelf-card';
+
+        const cover = createShelfCover(item.seriesSlug || item.chapterSlug, index + 1);
+
+        const body = document.createElement('div');
+        body.className = 'reader-shelf-card__body';
 
         const title = document.createElement('h3');
         title.textContent = item.chapterTitle || item.chapterSlug;
@@ -645,6 +1020,16 @@ const clientConfig = {
         actions.className = 'reader-bookmark-actions';
         actions.append(link);
 
+        if (progress > 0) {
+          const progressTrack = document.createElement('div');
+          progressTrack.className = 'reader-bookmark-progress';
+          progressTrack.setAttribute('aria-label', formatReaderMessage('readProgress', { progress }));
+          const progressValue = document.createElement('span');
+          progressValue.style.width = `${Math.min(progress, 100)}%`;
+          progressTrack.append(progressValue);
+          body.append(progressTrack);
+        }
+
         const bookmarkId = Number.parseInt(item.id || '', 10);
         if (Number.isFinite(bookmarkId) && bookmarkId > 0) {
           const deleteButton = document.createElement('button');
@@ -658,13 +1043,15 @@ const clientConfig = {
           actions.append(deleteButton);
         }
 
-        card.append(title, meta, actions);
+        body.prepend(title, meta);
+        body.append(actions);
         if (item.note) {
           const note = document.createElement('p');
           note.className = 'fine-print';
           note.textContent = item.note;
-          card.append(note);
+          body.append(note);
         }
+        card.append(cover, body);
         bookmarkList.append(card);
       });
     };
@@ -758,18 +1145,117 @@ const clientConfig = {
       }
     };
 
+    const formatPackPrice = (pack) => new Intl.NumberFormat(readerLocale, {
+      style: 'currency',
+      currency: pack.priceCurrency || 'USD'
+    }).format(Number(pack.priceAmount || 0));
+
     const renderCreditPacks = (packs, checkoutEnabled = false) => {
       creditPacks.innerHTML = '';
       creditPurchaseControls.hidden = !checkoutEnabled || packs.length === 0;
       if (creditPurchaseControls.hidden) return;
       packs.forEach((pack) => {
+        const product = document.createElement('article');
+        product.className = 'reader-points-product';
+
+        const ticket = document.createElement('div');
+        ticket.className = 'reader-points-ticket';
+        const ticketKicker = document.createElement('span');
+        ticketKicker.textContent = 'Station Points';
+        const ticketValue = document.createElement('strong');
+        ticketValue.textContent = String(pack.credits || 0);
+        const ticketUnit = document.createElement('small');
+        ticketUnit.textContent = 'Points';
+        const ticketRule = document.createElement('p');
+        ticketRule.textContent = readerUi.oneTime;
+        ticket.append(ticketKicker, ticketValue, ticketUnit, ticketRule);
+
+        const details = document.createElement('div');
+        details.className = 'reader-points-product__details';
+        const kicker = document.createElement('p');
+        kicker.className = 'reader-v2-kicker';
+        kicker.textContent = readerUi.pointsKicker;
+        const title = document.createElement('h2');
+        title.textContent = pack.label || `${pack.credits} Station Points`;
+        const price = document.createElement('p');
+        price.className = 'reader-points-product__price';
+        price.textContent = formatPackPrice(pack);
+        const rule = document.createElement('p');
+        rule.textContent = readerUi.packRules;
         const button = document.createElement('button');
-        button.className = 'button button-secondary reader-credit-pack-button';
+        button.className = 'reader-v2-button reader-v2-button--primary reader-credit-pack-button';
         button.type = 'button';
         button.dataset.credits = pack.credits;
-        button.textContent = `${pack.label || `${pack.credits} Station Points`} · ${pack.priceAmount} ${pack.priceCurrency}`;
-        creditPacks.append(button);
+        button.dataset.packLabel = pack.label || `${pack.credits} Station Points`;
+        button.dataset.priceAmount = pack.priceAmount;
+        button.dataset.priceCurrency = pack.priceCurrency;
+        button.textContent = readerUi.checkout;
+        details.append(kicker, title, price, rule, button);
+        product.append(ticket, details);
+        creditPacks.append(product);
       });
+    };
+
+    const activityPresentation = (item) => {
+      const delta = Number(item.creditsDelta || 0);
+      const source = String(item.source || '').toLowerCase();
+      const entryType = String(item.entryType || '').toLowerCase();
+      if (source.includes('refund') || source.includes('dispute') || source.includes('reversal') || entryType.includes('reversal')) {
+        return { label: readerUi.activityRefund, tone: 'refund' };
+      }
+      if (delta > 0 && (source.includes('payment') || source.includes('topup') || source.includes('credit-pack'))) {
+        return { label: readerUi.activityPurchase, tone: 'purchase' };
+      }
+      if (delta < 0) return { label: readerUi.activitySpend, tone: 'spend' };
+      return { label: readerUi.activityAdjustment, tone: 'adjustment' };
+    };
+
+    const renderLedgerList = (container, items) => {
+      container.innerHTML = '';
+      if (items.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'reader-empty-line';
+        empty.textContent = readerUi.noActivity;
+        container.append(empty);
+        return;
+      }
+
+      items.forEach((item) => {
+        const presentation = activityPresentation(item);
+        const row = document.createElement('article');
+        row.className = 'reader-activity-row';
+        row.dataset.tone = presentation.tone;
+
+        const mark = document.createElement('span');
+        mark.className = 'reader-activity-row__mark';
+        mark.setAttribute('aria-hidden', 'true');
+        mark.textContent = Number(item.creditsDelta || 0) >= 0 ? '+' : '−';
+
+        const copyBox = document.createElement('div');
+        const title = document.createElement('h3');
+        title.textContent = presentation.label;
+        const detail = document.createElement('p');
+        detail.textContent = item.note || [item.seriesSlug, item.chapterSlug].filter(Boolean).join(' / ') || readerUi.activityStatus;
+        copyBox.append(title, detail);
+
+        const value = document.createElement('div');
+        value.className = 'reader-activity-row__value';
+        const delta = Number(item.creditsDelta || 0);
+        const amount = document.createElement('strong');
+        amount.textContent = `${delta > 0 ? '+' : ''}${delta}`;
+        const date = document.createElement('time');
+        date.dateTime = item.createdAt || '';
+        date.textContent = formatLocalDate(item.createdAt);
+        value.append(amount, date);
+
+        row.append(mark, copyBox, value);
+        container.append(row);
+      });
+    };
+
+    const renderCreditLedger = (items) => {
+      renderLedgerList(recentActivity, items.slice(0, 4));
+      renderLedgerList(ledgerHistory, items);
     };
 
     const renderMembership = (membership, settings, creditAccount) => {
@@ -824,6 +1310,8 @@ const clientConfig = {
       totpState.textContent = formatReaderMessage(enabled ? 'totpEnabledState' : 'totpDisabledState');
       totpBadge.textContent = `${enabled ? '✓ ' : ''}${formatReaderMessage(enabled ? 'enabledBadge' : 'disabledBadge')}`;
       totpBadge.dataset.state = enabled ? 'active' : 'neutral';
+      overviewTotpBadge.textContent = `2FA · ${formatReaderMessage(enabled ? 'enabledBadge' : 'disabledBadge')}`;
+      overviewTotpBadge.dataset.state = enabled ? 'active' : 'neutral';
       totpSetupButton.hidden = enabled;
       passwordTotpCodeInput.placeholder = formatReaderMessage(enabled ? 'sixDigits' : 'totpOptional');
       totpSetupBox.hidden = true;
@@ -888,11 +1376,16 @@ const clientConfig = {
       if (!response.ok || !data.ok) throw createReaderError('creditsLoadFailed', data);
       if (!data.authenticated) return;
 
-      const unitLabel = data.account?.unitLabel || 'Station Points';
-      creditBalance.textContent = `${data.account?.balanceCredits || 0} ${unitLabel}`;
+      const balance = Number(data.account?.balanceCredits || 0);
+      creditBalance.textContent = String(balance);
+      sidebarCreditBalance.textContent = String(balance);
+      memberSince.textContent = data.account?.createdAt
+        ? formatLocalDate(data.account.createdAt)
+        : '';
       creditCost.textContent = formatReaderMessage('chapterCost', { cost: data.chapterCostCredits || 1 });
       renderCreditPacks(data.packs || [], data.checkoutEnabled === true);
       renderMembership(data.membership, data.membershipSettings, data.account);
+      renderCreditLedger(Array.isArray(data.ledger) ? data.ledger : []);
     };
 
     const wait = (milliseconds) => new Promise((resolve) => {
@@ -987,6 +1480,37 @@ const clientConfig = {
       button.addEventListener('click', () => setAuthMode(button.dataset.authMode));
     });
 
+    forgotPasswordButton.addEventListener('click', () => setAuthMode('reset'));
+
+    viewButtons.forEach((button) => {
+      button.addEventListener('click', () => setReaderView(button.dataset.readerView));
+    });
+
+    viewTargetButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        setReaderView(button.dataset.readerViewTarget, button.dataset.readerShelfTarget || '');
+      });
+    });
+
+    shelfTabButtons.forEach((button) => {
+      button.addEventListener('click', () => setShelfTab(button.dataset.readerShelfTab));
+      button.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const currentIndex = shelfTabButtons.indexOf(button);
+        const targetIndex = event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? shelfTabButtons.length - 1
+            : event.key === 'ArrowRight'
+              ? (currentIndex + 1) % shelfTabButtons.length
+              : (currentIndex - 1 + shelfTabButtons.length) % shelfTabButtons.length;
+        const target = shelfTabButtons[targetIndex];
+        setShelfTab(target.dataset.readerShelfTab);
+        target.focus();
+      });
+    });
+
     const loadReaderHome = async () => {
       await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), safeLoadTotpStatus()]);
     };
@@ -1071,10 +1595,14 @@ const clientConfig = {
         renderLibrary([]);
         renderBookmarks([]);
         renderCreditPacks([]);
+        renderCreditLedger([]);
         renderTotpStatus({ enabled: false });
         setTotpStatus('');
-        creditBalance.textContent = '0 Station Points';
+        creditBalance.textContent = '0';
+        sidebarCreditBalance.textContent = '0';
+        memberSince.textContent = '';
         renderMembership(null, { enabled: true, membershipCreditCost: 10, membershipDurationMonths: 1 }, { balanceCredits: 0, unitLabel: 'Station Points' });
+        setReaderView('overview');
         setAuthMode('login');
         setStatus(formatReaderMessage('signedOutSuccess'), 'success');
       } finally {
@@ -1166,14 +1694,41 @@ const clientConfig = {
       }
     });
 
-    creditPacks.addEventListener('click', async (event) => {
+    creditPacks.addEventListener('click', (event) => {
       const button = event.target.closest('[data-credits]');
       if (!button) return;
+
+      pendingCreditPack = {
+        credits: Number.parseInt(button.dataset.credits || '0', 10),
+        label: button.dataset.packLabel || `${button.dataset.credits || '0'} Station Points`,
+        priceAmount: button.dataset.priceAmount || '0',
+        priceCurrency: button.dataset.priceCurrency || 'USD'
+      };
+      checkoutPack.textContent = `${pendingCreditPack.credits} Station Points`;
+      checkoutAccount.textContent = currentReaderEmail || '—';
+      checkoutTotal.textContent = new Intl.NumberFormat(readerLocale, {
+        style: 'currency',
+        currency: pendingCreditPack.priceCurrency
+      }).format(Number(pendingCreditPack.priceAmount));
+      if (typeof checkoutDialog.showModal === 'function') {
+        checkoutDialog.showModal();
+      } else {
+        checkoutConfirm.click();
+      }
+    });
+
+    checkoutDialog.addEventListener('click', (event) => {
+      if (event.target === checkoutDialog) closeCheckoutDialog();
+    });
+
+    checkoutConfirm.addEventListener('click', async () => {
+      if (!pendingCreditPack) return;
 
       const buttons = Array.from(creditPacks.querySelectorAll('button'));
       buttons.forEach((item) => {
         item.disabled = true;
       });
+      checkoutConfirm.disabled = true;
       setCreditStatus(formatReaderMessage('checkoutCreating'), 'neutral');
 
       try {
@@ -1182,7 +1737,7 @@ const clientConfig = {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
             orderType: 'credit-pack',
-            credits: Number.parseInt(button.dataset.credits || '0', 10),
+            credits: pendingCreditPack.credits,
             locale: readerLocale,
             returnPath: readerLibraryPath
           })
@@ -1191,12 +1746,15 @@ const clientConfig = {
         if (!response.ok || !data.ok) throw createReaderError('checkoutFailed', data);
         if (!data.paymentUrl) throw createReaderError('paymentUrlMissing');
         setCreditStatus(formatReaderMessage('checkoutOpening'), 'success');
+        closeCheckoutDialog();
         window.location.href = data.paymentUrl;
       } catch (error) {
         setCreditStatus(caughtReaderMessage(error, 'checkoutFailed'), 'error');
         buttons.forEach((item) => {
           item.disabled = false;
         });
+        checkoutConfirm.disabled = false;
+        closeCheckoutDialog();
       }
     });
 

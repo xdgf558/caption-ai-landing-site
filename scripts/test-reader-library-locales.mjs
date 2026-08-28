@@ -73,6 +73,29 @@ assert.doesNotMatch(
   /[\u4e00-\u9fff]/,
   'Member Center runtime script must not contain fixed Chinese UI copy'
 );
+assert.match(libraryServerMarkup, /class="reader-auth-shell" id="reader-auth-shell"/);
+assert.match(libraryServerMarkup, /data-reader-view-panel="overview"/);
+assert.match(libraryServerMarkup, /data-reader-view-panel="points"/);
+assert.match(libraryServerMarkup, /data-reader-view-panel="shelf"/);
+assert.match(libraryServerMarkup, /data-reader-view-panel="security"/);
+assert.match(libraryServerMarkup, /class="reader-mobile-nav"/);
+assert.match(libraryServerMarkup, /id="reader-checkout-dialog"/);
+assert.match(libraryServerMarkup, /role="tab"[^>]+aria-controls="reader-shelf-panel-unlocked"/);
+assert.match(libraryServerMarkup, /role="tab"[^>]+aria-controls="reader-shelf-panel-history"/);
+assert.match(libraryServerMarkup, /role="tabpanel"[^>]+aria-labelledby="reader-shelf-tab-unlocked"/);
+assert.match(libraryServerMarkup, /role="tabpanel"[^>]+aria-labelledby="reader-shelf-tab-history"/);
+assert.match(libraryServerMarkup, /data-reader-view="overview" aria-current="true"/);
+assert.match(librarySource, /renderCreditLedger\(Array\.isArray\(data\.ledger\)/);
+assert.match(librarySource, /typeof checkoutDialog\.showModal === 'function'/);
+assert.match(librarySource, /checkoutConfirm\.click\(\)/);
+assert.match(librarySource, /credits: pendingCreditPack\.credits/);
+assert.doesNotMatch(librarySource, /form\.hidden = false/);
+assert.doesNotMatch(librarySource, /aria-current=['"]page['"]/);
+assert.doesNotMatch(
+  libraryServerMarkup,
+  />\s*(?:60|8)\s*Station Points\s*</,
+  'Reference-only sample balances and pack values must not be exposed in the real Member Center'
+);
 
 assert.match(chapterSource, /const libraryPath = getReaderLibraryPath\(locale\)/);
 assert.match(chapterSource, /href=\{libraryReturnHref\}/);
