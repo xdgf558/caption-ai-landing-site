@@ -327,7 +327,7 @@ const clientConfig = {
       <aside class="reader-dashboard-sidebar" aria-label={ui.memberCenter}>
         <p class="reader-v2-kicker">Member Center</p>
         <nav class="reader-dashboard-nav">
-          <button class="is-active" type="button" data-reader-view="overview" aria-current="page"><span aria-hidden="true">⌂</span>{ui.overview}</button>
+          <button class="is-active" type="button" data-reader-view="overview" aria-current="true"><span aria-hidden="true">⌂</span>{ui.overview}</button>
           <button type="button" data-reader-view="points"><span aria-hidden="true">◇</span>{ui.pointsPack}</button>
           <button type="button" data-reader-view="shelf"><span aria-hidden="true">▤</span>{ui.shelf}</button>
           <button type="button" data-reader-view="security"><span aria-hidden="true">◈</span>{ui.security}</button>
@@ -484,12 +484,12 @@ const clientConfig = {
               <p>{ui.shelfDesc}</p>
             </div>
             <div class="reader-shelf-tabs" role="tablist">
-              <button class="is-active" type="button" data-reader-shelf-tab="unlocked" aria-selected="true">{ui.unlockedTab}</button>
-              <button type="button" data-reader-shelf-tab="history" aria-selected="false">{ui.historyTab}</button>
+              <button class="is-active" id="reader-shelf-tab-unlocked" type="button" role="tab" data-reader-shelf-tab="unlocked" aria-controls="reader-shelf-panel-unlocked" aria-selected="true" tabindex="0">{ui.unlockedTab}</button>
+              <button id="reader-shelf-tab-history" type="button" role="tab" data-reader-shelf-tab="history" aria-controls="reader-shelf-panel-history" aria-selected="false" tabindex="-1">{ui.historyTab}</button>
             </div>
           </header>
 
-          <div data-reader-shelf-panel="unlocked">
+          <div id="reader-shelf-panel-unlocked" role="tabpanel" aria-labelledby="reader-shelf-tab-unlocked" data-reader-shelf-panel="unlocked">
             <section class="reader-shelf-block" aria-labelledby="reader-bookmarks-title">
               <div class="reader-section-heading">
                 <div>
@@ -523,7 +523,7 @@ const clientConfig = {
             </section>
           </div>
 
-          <div data-reader-shelf-panel="history" hidden>
+          <div id="reader-shelf-panel-history" role="tabpanel" aria-labelledby="reader-shelf-tab-history" data-reader-shelf-panel="history" hidden>
             <div class="reader-ledger-history" id="reader-ledger-history">
               <p class="reader-empty-line">{ui.noActivity}</p>
             </div>
@@ -768,6 +768,12 @@ const clientConfig = {
       statusBox.dataset.tone = tone;
     };
 
+    const closeCheckoutDialog = () => {
+      if (typeof checkoutDialog?.close === 'function' && checkoutDialog.open) {
+        checkoutDialog.close();
+      }
+    };
+
     const setPasswordStatus = (message, tone = 'neutral') => {
       passwordStatus.textContent = message;
       passwordStatus.dataset.tone = tone;
@@ -801,6 +807,7 @@ const clientConfig = {
         const selected = button.dataset.readerShelfTab === activeShelfTab;
         button.classList.toggle('is-active', selected);
         button.setAttribute('aria-selected', selected ? 'true' : 'false');
+        button.tabIndex = selected ? 0 : -1;
       });
       shelfPanels.forEach((panel) => {
         panel.hidden = panel.dataset.readerShelfPanel !== activeShelfTab;
@@ -812,7 +819,7 @@ const clientConfig = {
       viewButtons.forEach((button) => {
         const selected = button.dataset.readerView === activeReaderView;
         button.classList.toggle('is-active', selected);
-        if (selected) button.setAttribute('aria-current', 'page');
+        if (selected) button.setAttribute('aria-current', 'true');
         else button.removeAttribute('aria-current');
       });
       viewPanels.forEach((panel) => {
@@ -821,7 +828,7 @@ const clientConfig = {
         panel.classList.toggle('is-active', selected);
       });
       if (activeReaderView === 'shelf' && shelfTab) setShelfTab(shelfTab);
-      checkoutDialog?.close();
+      closeCheckoutDialog();
       window.requestAnimationFrame(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
@@ -872,7 +879,6 @@ const clientConfig = {
     const setSignedIn = (session) => {
       const signedIn = Boolean(session?.authenticated);
       authShell.hidden = signedIn;
-      form.hidden = false;
       accountPanel.hidden = !signedIn;
       totpPanel.hidden = !signedIn;
       creditsPanel.hidden = !signedIn;
@@ -1488,6 +1494,21 @@ const clientConfig = {
 
     shelfTabButtons.forEach((button) => {
       button.addEventListener('click', () => setShelfTab(button.dataset.readerShelfTab));
+      button.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const currentIndex = shelfTabButtons.indexOf(button);
+        const targetIndex = event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? shelfTabButtons.length - 1
+            : event.key === 'ArrowRight'
+              ? (currentIndex + 1) % shelfTabButtons.length
+              : (currentIndex - 1 + shelfTabButtons.length) % shelfTabButtons.length;
+        const target = shelfTabButtons[targetIndex];
+        setShelfTab(target.dataset.readerShelfTab);
+        target.focus();
+      });
     });
 
     const loadReaderHome = async () => {
@@ -1689,11 +1710,15 @@ const clientConfig = {
         style: 'currency',
         currency: pendingCreditPack.priceCurrency
       }).format(Number(pendingCreditPack.priceAmount));
-      checkoutDialog.showModal();
+      if (typeof checkoutDialog.showModal === 'function') {
+        checkoutDialog.showModal();
+      } else {
+        checkoutConfirm.click();
+      }
     });
 
     checkoutDialog.addEventListener('click', (event) => {
-      if (event.target === checkoutDialog) checkoutDialog.close();
+      if (event.target === checkoutDialog) closeCheckoutDialog();
     });
 
     checkoutConfirm.addEventListener('click', async () => {
@@ -1721,7 +1746,7 @@ const clientConfig = {
         if (!response.ok || !data.ok) throw createReaderError('checkoutFailed', data);
         if (!data.paymentUrl) throw createReaderError('paymentUrlMissing');
         setCreditStatus(formatReaderMessage('checkoutOpening'), 'success');
-        checkoutDialog.close();
+        closeCheckoutDialog();
         window.location.href = data.paymentUrl;
       } catch (error) {
         setCreditStatus(caughtReaderMessage(error, 'checkoutFailed'), 'error');
@@ -1729,7 +1754,7 @@ const clientConfig = {
           item.disabled = false;
         });
         checkoutConfirm.disabled = false;
-        checkoutDialog.close();
+        closeCheckoutDialog();
       }
     });
 
