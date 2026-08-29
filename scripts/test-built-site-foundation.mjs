@@ -23,6 +23,11 @@ for (const [locale, langMarker, heading] of localizedNotFoundPages) {
 
 const redirects = await readDist('_redirects');
 assert.doesNotMatch(redirects, /^\/signal \/signal\/ 301$/m, 'Worker owns the slashless Signal redirect');
+const redirectRules = redirects
+  .split(/\r?\n/)
+  .map((line) => line.trim())
+  .filter((line) => line && !line.startsWith('#'));
+assert.ok(redirectRules.length <= 100, 'Cloudflare accepts at most 100 dynamic _redirects rules');
 for (const [source, target] of [
   ['/apps', '/en/apps/'],
   ['/points', '/en/points/'],

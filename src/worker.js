@@ -21319,6 +21319,12 @@ const getPermanentTrailingSlashRedirect = (pathname) => {
   return permanentTrailingSlashPatterns.some((pattern) => pattern.test(pathname)) ? `${pathname}/` : '';
 };
 
+const isStaticTrailingSlashCandidate = (pathname) => {
+  if (!pathname || pathname === '/' || pathname.endsWith('/')) return false;
+  const lastSegment = pathname.split('/').filter(Boolean).at(-1) || '';
+  return Boolean(lastSegment) && !lastSegment.includes('.');
+};
+
 const getLegacyWorksRedirectPath = (pathname) => {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/';
   const segments = normalizedPath.split('/').filter(Boolean);
@@ -21565,6 +21571,7 @@ export const __readerTotpTestHooks = {
   getAdjacentPublishedSignalBriefs,
   getLegacyWorksRedirectPath,
   getPermanentTrailingSlashRedirect,
+  isStaticTrailingSlashCandidate,
   getSignalAutomationHealth,
   handleR2Download,
   parseDownloadByteRange,
@@ -22092,6 +22099,17 @@ export default {
     if (dynamicContentResponse) return dynamicContentResponse;
 
     if (env.ASSETS) {
+      if (
+        (request.method === 'GET' || request.method === 'HEAD')
+        && isStaticTrailingSlashCandidate(url.pathname)
+      ) {
+        const trailingUrl = new URL(url);
+        trailingUrl.pathname = `${url.pathname}/`;
+        const trailingResponse = await env.ASSETS.fetch(new Request(trailingUrl.toString(), request));
+        if (trailingResponse.status !== 404) {
+          return Response.redirect(trailingUrl.toString(), 301);
+        }
+      }
       const assetResponse = await env.ASSETS.fetch(request);
       return isAdminRequest ? withPrivateHeaders(assetResponse) : assetResponse;
     }

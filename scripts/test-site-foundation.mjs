@@ -125,6 +125,12 @@ for (const path of ['/devlog', '/en/devlog', '/zh-hant/devlog/post', '/works/boo
 for (const path of ['/endevlog', '/zh-hantdevlog', '/jaworks', '/zh-hansworks']) {
   assert.equal(workerHooks.getPermanentTrailingSlashRedirect(path), '', `garbage route must not redirect: ${path}`);
 }
+for (const path of ['/about', '/en/apps/nodepilot', '/zh-hant/library']) {
+  assert.equal(workerHooks.isStaticTrailingSlashCandidate(path), true, `static route must be checked: ${path}`);
+}
+for (const path of ['/', '/about/', '/images/logo.webp', '/unknown.json']) {
+  assert.equal(workerHooks.isStaticTrailingSlashCandidate(path), false, `non-page route must not be checked: ${path}`);
+}
 assert.equal(workerHooks.getLegacyWorksRedirectPath('/works/book/chapter'), '/novel/book/chapter/chapter/');
 assert.equal(workerHooks.getLegacyWorksRedirectPath('/en/works/book/chapter'), '/en/novel/book/chapter/chapter/');
 assert.equal(workerHooks.getLegacyWorksRedirectPath('/ja/works/book'), '/novel/book/');
