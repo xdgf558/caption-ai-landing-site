@@ -115,6 +115,8 @@ assert.match(home, /'@type': 'WebSite'/);
 assert.match(structuredDataHelper, /'@type': 'Book'/);
 assert.match(worker, /const dynamicBookStructuredData/);
 assert.match(worker, /structuredData: dynamicBookStructuredData\(route, serial\)/);
+assert.match(worker, /globalThis\.caches\?\.default/);
+assert.match(worker, /LIMIT 50000/);
 assert.match(worker, /robots: 'noindex, follow'/);
 assert.match(home, /station-cat-logo-67dc39a9-160\.webp/);
 assert.match(home, /simplecut-icon-0268e767/);
@@ -169,6 +171,59 @@ assert.match(mergedSitemap, /\/ja\/signal\/daily-brief\//);
 assert.match(mergedSitemap, /\/novel\/book-one\//);
 assert.match(mergedSitemap, /\/en\/novel\/book-one\/chapter\/chapter-one\//);
 assert.doesNotMatch(mergedSitemap, /unsupported-book|retired-post/);
+assert.equal(workerHooks.normalizeIsoTimestamp('2026-08-26 04:34:28'), '2026-08-26T04:34:28.000Z');
+assert.equal(workerHooks.normalizeIsoTimestamp('2026-08-26'), '2026-08-26T00:00:00.000Z');
+assert.equal(workerHooks.normalizeIsoTimestamp('2026-08-26T04:34:28+08:00'), '2026-08-25T20:34:28.000Z');
+assert.equal(workerHooks.normalizeIsoTimestamp('not-a-date'), '');
+const dynamicBookSchema = workerHooks.dynamicBookStructuredData(
+  { basePath: '/novel/', locale: 'zh-Hant' },
+  {
+    slug: 'book-one',
+    title: 'Book One',
+    description: 'A test book.',
+    published_at: '2026-08-26 04:34:28',
+    updated_at: '2026-08-27 05:45:39'
+  }
+);
+assert.equal(dynamicBookSchema.datePublished, '2026-08-26T04:34:28.000Z');
+assert.equal(dynamicBookSchema.dateModified, '2026-08-27T05:45:39.000Z');
+
+const originalCaches = globalThis.caches;
+let cachedSitemapResponse = null;
+let sitemapAssetFetches = 0;
+globalThis.caches = {
+  default: {
+    match: async () => cachedSitemapResponse?.clone() || null,
+    put: async (_key, response) => {
+      cachedSitemapResponse = response.clone();
+    }
+  }
+};
+try {
+  const pendingCacheWrites = [];
+  const sitemapEnv = {
+    ASSETS: {
+      fetch: async () => {
+        sitemapAssetFetches += 1;
+        return new Response('<?xml version="1.0"?><urlset></urlset>', { status: 200 });
+      }
+    }
+  };
+  const request = new Request('https://wwwstationcat.org/sitemap.xml');
+  const first = await workerHooks.handleSitemap(request, sitemapEnv, {
+    waitUntil: (promise) => pendingCacheWrites.push(promise)
+  });
+  await Promise.all(pendingCacheWrites);
+  assert.equal(first.status, 200);
+  assert.match(first.headers.get('cache-control') || '', /s-maxage=3600/);
+  assert.ok(cachedSitemapResponse, 'sitemap response should be written to the Cache API');
+  const second = await workerHooks.handleSitemap(request, sitemapEnv, { waitUntil: () => {} });
+  assert.equal(second.status, 200);
+  assert.equal(sitemapAssetFetches, 1, 'cached sitemap should avoid another asset or D1 load');
+} finally {
+  if (originalCaches === undefined) delete globalThis.caches;
+  else globalThis.caches = originalCaches;
+}
 
 const readPngDimensions = async (path) => {
   const buffer = await readFile(resolve(projectRoot, path));

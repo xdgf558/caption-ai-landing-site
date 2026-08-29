@@ -17950,6 +17950,16 @@ const escapeXml = (value) =>
 
 const sitemapLastmod = (value) => cleanText(value, 80).match(/^\d{4}-\d{2}-\d{2}/)?.[0] || '';
 
+const normalizeIsoTimestamp = (value) => {
+  const text = cleanText(value, 40);
+  if (!text) return '';
+  let normalized = text.replace(' ', 'T');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) normalized = `${normalized}T00:00:00Z`;
+  else if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized)) normalized = `${normalized}Z`;
+  const date = new Date(normalized);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : '';
+};
+
 const dynamicSitemapPath = (row) => {
   const locale = normalizeContentLocale(row?.locale);
   const slug = cleanSlug(row?.slug, 160);
@@ -17971,6 +17981,7 @@ const mergeSitemapXmlWithRows = (baseXml, rows = []) => {
   const fallback = String(baseXml || '').includes('</urlset>')
     ? String(baseXml)
     : '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>\n';
+  // Static and dynamic entries must use the same canonical absolute URL format for exact deduplication.
   const existing = new Set([...fallback.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
   const additions = [];
   for (const row of rows) {
@@ -17989,7 +18000,15 @@ const mergeSitemapXmlWithRows = (baseXml, rows = []) => {
   return fallback.replace('</urlset>', `${additions.join('\n')}\n</urlset>`);
 };
 
-const handleSitemap = async (request, env) => {
+const handleSitemap = async (request, env, ctx) => {
+  const cache = globalThis.caches?.default;
+  const cacheKey = new Request(new URL('/sitemap.xml', request.url), { method: 'GET' });
+  const cached = cache ? await cache.match(cacheKey) : null;
+  if (cached) {
+    return request.method === 'HEAD'
+      ? new Response(null, { status: cached.status, headers: cached.headers })
+      : cached;
+  }
   const assetRequest = new Request(new URL('/sitemap.xml', request.url), { method: 'GET' });
   const baseResponse = env.ASSETS ? await env.ASSETS.fetch(assetRequest) : null;
   const baseXml = baseResponse?.ok ? await baseResponse.text() : '';
@@ -18004,22 +18023,31 @@ const handleSitemap = async (request, env) => {
              AND visibility = 'public'
              AND entry_type IN ('signal_brief', 'novel_series', 'novel_chapter')
            ORDER BY COALESCE(updated_at, published_at) DESC, id DESC
-           LIMIT 5000`
+           LIMIT 50000`
         )
         .all();
       rows = result.results || [];
+      if (rows.length >= 50000) {
+        console.warn('Dynamic sitemap reached the 50,000-entry query limit; sitemap splitting is required.');
+      }
     }
   } catch (error) {
     console.error('Dynamic sitemap entries could not be loaded.', error);
   }
   const xml = mergeSitemapXmlWithRows(baseXml, rows);
-  return new Response(request.method === 'HEAD' ? null : xml, {
+  const response = new Response(request.method === 'HEAD' ? null : xml, {
     headers: {
       'cache-control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
       'content-type': 'application/xml; charset=utf-8',
       'x-content-type-options': 'nosniff'
     }
   });
+  if (cache && request.method === 'GET') {
+    const write = cache.put(cacheKey, response.clone());
+    if (ctx?.waitUntil) ctx.waitUntil(write);
+    else await write;
+  }
+  return response;
 };
 const signalShareCardTemplateVersion = 'card3';
 const signalShareCardRevision = (row) =>
@@ -18407,6 +18435,8 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
 const dynamicBookStructuredData = (route, serial) => {
   const canonicalPath = dynamicSeriesPath(route, serial.slug);
   const coverUrl = contentMediaUrl(serial.cover_r2_key);
+  const datePublished = normalizeIsoTimestamp(serial.published_at);
+  const dateModified = normalizeIsoTimestamp(serial.updated_at);
   return {
     '@context': 'https://schema.org',
     '@type': 'Book',
@@ -18423,8 +18453,8 @@ const dynamicBookStructuredData = (route, serial) => {
       name: 'Station Cat',
       url: 'https://wwwstationcat.org'
     },
-    ...(serial.published_at ? { datePublished: serial.published_at } : {}),
-    ...(serial.updated_at ? { dateModified: serial.updated_at } : {}),
+    ...(datePublished ? { datePublished } : {}),
+    ...(dateModified ? { dateModified } : {}),
     ...(coverUrl ? { image: absoluteStationUrl(coverUrl) } : {})
   };
 };
@@ -21532,6 +21562,7 @@ export const __readerTotpTestHooks = {
   handleSignalCollectionQueue,
   handleSignalCollectionDeadLetterQueue,
   handleSignalCollectionSchedule,
+  handleSitemap,
   openSignalAutomationAlert,
   handleNovelForgeAnalytics,
   handleNovelForgeChapterContent,
@@ -21548,6 +21579,7 @@ export const __readerTotpTestHooks = {
   hmacSha256Hex,
   hotpCode,
   dynamicCanonicalPath,
+  dynamicBookStructuredData,
   dynamicChapterPath,
   dynamicHtmlShell,
   dynamicProtectedAccessFromChapterAccess,
@@ -21561,6 +21593,7 @@ export const __readerTotpTestHooks = {
   dynamicSeriesPath,
   dynamicSitemapPath,
   mergeSitemapXmlWithRows,
+  normalizeIsoTimestamp,
   normalizeTotpCode,
   normalizeReadingEventPayload,
   selectSignalCollectionSources,
@@ -21650,7 +21683,7 @@ export default {
     }
 
     if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/sitemap.xml') {
-      return handleSitemap(request, env);
+      return handleSitemap(request, env, ctx);
     }
 
     if (request.method === 'POST' && url.pathname === '/api/waitlist') {

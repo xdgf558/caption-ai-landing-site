@@ -8,6 +8,7 @@ This batch reduces homepage image transfer, adds immutable caching for fingerpri
 - `/_astro/*` and `/images/optimized/*` receive one-year immutable cache headers. Social and icon assets use shorter, non-immutable cache lifetimes.
 - `scripts/generate-sitemap.mjs` scans the built public pages, excludes admin, member, 404, and retired devlog routes, and adds a stable source-commit `lastmod` date.
 - `/sitemap.xml` runs through the Worker so published D1 Signal briefs, novel series, and novel chapters are added with their own update dates without waiting for another deployment.
+- The merged sitemap uses the Cache API for one-hour shared edge caching and warns when the 50,000-entry query limit is reached.
 - The four homepage locales emit Organization and WebSite JSON-LD. Static and D1-backed novel series pages emit Book JSON-LD.
 - Retired devlog pages remain reachable for recovery but now use `noindex, follow` and are absent from the sitemap.
 
