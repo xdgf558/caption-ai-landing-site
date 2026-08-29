@@ -43,7 +43,6 @@ References:
 
 ## Deferred batches
 
-- Image conversion, responsive sources, and long-lived immutable asset caching.
-- Sitemap generation with `lastmod`, complete public routes, and retired devlog handling.
-- Organization, WebSite, and Book structured data.
 - Remaining language-prefix normalization and homepage layout cleanup.
+
+The image, sitemap, caching, and structured-data items moved into the second foundation batch. See `docs/site-performance-search-release-checklist.md`.

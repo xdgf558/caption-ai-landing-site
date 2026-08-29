@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content';
 import SerialDetailPage from '../../../../components/SerialDetailPage.astro';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import { getFirstChapter, getLatestChapter, getPublishedChapters, getVisibleSerials, serialsCopy } from '../../../../data/serials';
+import { createBookStructuredData } from '../../../../data/structured-data';
 
 export async function getStaticPaths() {
   const serials = getVisibleSerials(await getCollection('serials'));
@@ -20,14 +21,17 @@ const chapterContent = getPublishedChapters(await getCollection('serialChapters'
 const firstChapter = getFirstChapter(chapterContent);
 const latestChapter = getLatestChapter(chapterContent);
 const { Content } = await render(serial);
+const canonicalPath = `${basePath}${serial.data.seriesSlug}/`;
+const bookStructuredData = createBookStructuredData({ canonicalPath, locale, serial });
 ---
 
 <BaseLayout
   title={`${serial.data.title} | ${copy.title}`}
   description={serial.data.description}
   lang="zh-Hans"
-  canonicalPath={`${basePath}${serial.data.seriesSlug}/`}
+  canonicalPath={canonicalPath}
   bodyClass="station-home"
+  structuredData={bookStructuredData}
   alternates={[
     { hrefLang: 'zh-Hant', href: `/zh-hant/works/${serial.data.seriesSlug}/` },
     { hrefLang: 'zh-Hans', href: `/zh-hans/works/${serial.data.seriesSlug}/` },

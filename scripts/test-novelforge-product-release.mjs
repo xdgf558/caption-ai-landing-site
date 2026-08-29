@@ -15,7 +15,6 @@ const worker = read('src/worker.js');
 const appsIndex = read('src/components/AppsIndex.astro');
 const stationHome = read('src/components/StationHome.astro');
 const footer = read('src/components/Footer.astro');
-const sitemap = read('public/sitemap.xml');
 const novelForgeDownloadPath = '/downloads/novelforge-ai/NovelForge-AI-0.1.115-mac-arm64.pkg';
 const novelForgeExternalDownloadUrl = 'https://downloads.wwwstationcat.org:8443/novelforge-ai/0.1.115/NovelForge-AI-0.1.115-mac-arm64.pkg';
 
@@ -139,6 +138,6 @@ assert.match(appsIndex, /title="NovelForge AI"/);
 assert.match(stationHome, /<h3>NovelForge AI<\/h3>/);
 assert.match(stationHome, /bench-card__icon--novelforge/);
 assert.match(footer, /label: 'NovelForge AI'/);
-assert.match(sitemap, /\/zh-hant\/apps\/novelforge-ai\/download\//);
+assert.equal(existsSync(join(root, 'src/pages/zh-hant/apps/novelforge-ai/download.astro')), true);
 
 console.log('NovelForge AI product release tests passed.');

@@ -4,13 +4,12 @@ import { DatabaseSync } from 'node:sqlite';
 import { __readerTotpTestHooks as hooks } from '../src/worker.js';
 
 const read = (path) => readFile(new URL(path, import.meta.url), 'utf8');
-const [productSource, pageSource, librarySource, workerSource, migrationSource, sitemapSource] = await Promise.all([
+const [productSource, pageSource, librarySource, workerSource, migrationSource] = await Promise.all([
   read('../src/data/products/station-points.ts'),
   read('../src/components/StationPointsPage.astro'),
   read('../src/components/ReaderLibraryPage.astro'),
   read('../src/worker.js'),
-  read('../migrations/0028_station_points.sql'),
-  read('../public/sitemap.xml')
+  read('../migrations/0028_station_points.sql')
 ]);
 
 assert.match(productSource, /statusEndpoint:\s*'\/api\/novels\/payments\/status'/);
@@ -55,8 +54,6 @@ assert.match(workerSource, /checkout\.orderType === novelCreditPackOrderType && 
 
 assert.match(migrationSource, /UPDATE reader_credit_accounts/);
 assert.match(migrationSource, /100 Station Points/);
-assert.match(sitemapSource, /https:\/\/wwwstationcat\.org\/zh-hant\/points\//);
-assert.match(sitemapSource, /https:\/\/wwwstationcat\.org\/points\//);
 
 const db = new DatabaseSync(':memory:');
 db.exec(`
