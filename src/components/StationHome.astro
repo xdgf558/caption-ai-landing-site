@@ -6,6 +6,7 @@ import { simpleCutProProduct } from '../data/products/simplecut-pro';
 import { privatePinyinProduct } from '../data/products/privatepinyin';
 import { novelForgeAiProduct } from '../data/products/novelforge-ai';
 import { mindBudgetProduct } from '../data/products/mindbudget';
+import { siteConfig } from '../data/site';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
 type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'book';
@@ -17,7 +18,33 @@ interface Props {
 
 const { lang = 'zh-Hant', canonicalPath = '/' } = Astro.props;
 const xUrl = 'https://x.com/bketck';
-const stationLogoPath = '/images/home/station-cat-logo.png';
+const optimizedHomeImages = {
+  logo: {
+    src: '/images/optimized/station-cat-logo-67dc39a9-160.webp',
+    srcset:
+      '/images/optimized/station-cat-logo-67dc39a9-160.webp 160w, /images/optimized/station-cat-logo-67dc39a9-320.webp 320w'
+  },
+  cover: {
+    src: '/images/optimized/offline-future-cover-96c3c463-360.webp',
+    srcset:
+      '/images/optimized/offline-future-cover-96c3c463-360.webp 360w, /images/optimized/offline-future-cover-96c3c463-720.webp 720w'
+  },
+  apps: {
+    snapcopy: 'snapcopy-icon-91491f7c',
+    mindbudget: 'mindbudget-icon-3bd31000',
+    novelforge: 'novelforge-icon-05ef05b9',
+    privatepinyin: 'privatepinyin-icon-6c79dbfe',
+    simplecut: 'simplecut-icon-0268e767',
+    nodepilot: 'nodepilot-icon-fd4176df'
+  }
+} as const;
+const optimizedAppImage = (key: keyof typeof optimizedHomeImages.apps) => {
+  const filename = optimizedHomeImages.apps[key];
+  return {
+    src: `/images/optimized/${filename}-256.webp`,
+    srcset: `/images/optimized/${filename}-256.webp 256w, /images/optimized/${filename}-512.webp 512w`
+  };
+};
 const currentVersion = simpleCutProProduct.latestVersion.replace(/^v/, '');
 const novelForgeVersion = novelForgeAiProduct.latestVersion;
 const novelForgeDownload = novelForgeAiProduct.downloads[0];
@@ -379,10 +406,9 @@ const paths = {
   }
 }[lang];
 
-const mediaUrlForKey = (key: string) => `/api/content/media?key=${encodeURIComponent(key)}`;
 const homeSerial = {
   coverAlt: '《离线未来》封面，1999 年旧房间、CRT 电脑和离线 AI 重启。',
-  coverUrl: mediaUrlForKey('content/media/covers/2026/06/cmqjfju1300008z3wyh66ynvw-offline-future-cover-v2.png'),
+  coverUrl: optimizedHomeImages.cover.src,
   description:
     lang === 'en'
       ? 'A 1999 room, a CRT computer, a local AI that should not wake up yet, and a second chance that starts with the sound of an old fan.'
@@ -397,6 +423,27 @@ const homeSerial = {
   title: '离线未来'
 };
 const labelSeparator = lang === 'en' ? ': ' : '：';
+const organizationStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': `${siteConfig.baseUrl}/#organization`,
+  name: siteConfig.name,
+  legalName: siteConfig.legalName,
+  url: siteConfig.baseUrl,
+  logo: `${siteConfig.baseUrl}/apple-touch-icon.png`,
+  email: siteConfig.supportEmail,
+  sameAs: [xUrl]
+};
+const websiteStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${siteConfig.baseUrl}/#website`,
+  url: siteConfig.baseUrl,
+  name: siteConfig.name,
+  description: copy.description,
+  inLanguage: ['zh-Hant', 'zh-Hans', 'en', 'ja'],
+  publisher: { '@id': `${siteConfig.baseUrl}/#organization` }
+};
 
 ---
 
@@ -406,6 +453,7 @@ const labelSeparator = lang === 'en' ? ': ' : '：';
   lang={lang}
   canonicalPath={canonicalPath}
   bodyClass="station-home station-home-v2"
+  structuredData={[organizationStructuredData, websiteStructuredData]}
   alternates={[
     { hrefLang: 'zh-Hant', href: '/' },
     { hrefLang: 'zh-Hans', href: '/zh-hans/' },
@@ -417,7 +465,16 @@ const labelSeparator = lang === 'en' ? ': ' : '：';
   <section class="paper-hero">
     <div class="paper-hero__copy">
       <div class="station-logo-lockup">
-        <img src={stationLogoPath} alt={copy.logoAlt} width="998" height="970" />
+        <img
+          src={optimizedHomeImages.logo.src}
+          srcset={optimizedHomeImages.logo.srcset}
+          sizes="88px"
+          alt={copy.logoAlt}
+          width="320"
+          height="311"
+          decoding="async"
+          fetchpriority="high"
+        />
         <div class="station-logo-lockup__text">
           <p class="paper-kicker">Station Cat</p>
           <p class="station-logo-lockup__caption">{copy.logoCaption}</p>
@@ -447,7 +504,17 @@ const labelSeparator = lang === 'en' ? ': ' : '：';
           ) : (
             <article class={`station-scrap station-scrap--${item.type}`}>
               {item.type === 'polaroid' && (
-                <img class="station-scrap__photo" src={stationLogoPath} alt={copy.logoAlt} width="998" height="970" loading="lazy" />
+                <img
+                  class="station-scrap__photo"
+                  src={optimizedHomeImages.logo.src}
+                  srcset={optimizedHomeImages.logo.srcset}
+                  sizes="(max-width: 760px) calc(100vw - 72px), 220px"
+                  alt={copy.logoAlt}
+                  width="320"
+                  height="311"
+                  loading="lazy"
+                  decoding="async"
+                />
               )}
               <span class="paper-stamp">{item.stamp}</span>
               <h2>{item.title}</h2>
@@ -491,7 +558,7 @@ const labelSeparator = lang === 'en' ? ': ' : '：';
     <div class="bench-grid">
       <article class="bench-card">
         <div class="bench-card__icon bench-card__icon--snapcopy">
-          <img src={snapCopyProduct.assets.icon} alt="SnapCopy app icon" width="512" height="512" loading="lazy" />
+          <img src={optimizedAppImage('snapcopy').src} srcset={optimizedAppImage('snapcopy').srcset} sizes="(max-width: 760px) 260px, 300px" alt="SnapCopy app icon" width="512" height="512" loading="lazy" decoding="async" />
         </div>
         <div class="bench-card__copy">
           <span class="paper-stamp">{copy.snapcopyStatus}</span>
@@ -506,7 +573,7 @@ const labelSeparator = lang === 'en' ? ': ' : '：';
 
       <article class="bench-card">
         <div class="bench-card__icon bench-card__icon--mindbudget">
-          <img src={mindBudgetProduct.assets.icon} alt="MindBudget app icon" width="1024" height="1024" loading="lazy" />
+          <img src={optimizedAppImage('mindbudget').src} srcset={optimizedAppImage('mindbudget').srcset} sizes="(max-width: 760px) 260px, 300px" alt="MindBudget app icon" width="512" height="512" loading="lazy" decoding="async" />
         </div>
         <div class="bench-card__copy">
           <span class="paper-stamp">{copy.mindBudgetStatus}</span>
@@ -521,7 +588,7 @@ const labelSeparator = lang === 'en' ? ': ' : '：';
 
       <article class="bench-card">
         <div class="bench-card__icon bench-card__icon--novelforge">
-          <img src={novelForgeAiProduct.assets.icon} alt="NovelForge AI app icon" width="1024" height="1024" loading="lazy" />
+          <img src={optimizedAppImage('novelforge').src} srcset={optimizedAppImage('novelforge').srcset} sizes="(max-width: 760px) 260px, 300px" alt="NovelForge AI app icon" width="512" height="512" loading="lazy" decoding="async" />
         </div>
         <div class="bench-card__copy">
           <span class="paper-stamp">{copy.novelForgeStatus}</span>
@@ -536,7 +603,7 @@ const labelSeparator = lang === 'en' ? ': ' : '：';
 
       <article class="bench-card">
         <div class="bench-card__icon bench-card__icon--privatepinyin">
-          <img src={privatePinyinProduct.assets.icon} alt="猫栈拼音 app icon" width="512" height="512" loading="lazy" />
+          <img src={optimizedAppImage('privatepinyin').src} srcset={optimizedAppImage('privatepinyin').srcset} sizes="(max-width: 760px) 260px, 300px" alt="猫栈拼音 app icon" width="512" height="512" loading="lazy" decoding="async" />
         </div>
         <div class="bench-card__copy">
           <span class="paper-stamp">{copy.privatePinyinStatus}</span>
@@ -551,7 +618,7 @@ const labelSeparator = lang === 'en' ? ': ' : '：';
 
       <article class="bench-card">
         <div class="bench-card__icon bench-card__icon--simplecut">
-          <img src={simpleCutProProduct.assets.icon} alt="SimpleCut Pro app icon" width="1024" height="1024" loading="lazy" />
+          <img src={optimizedAppImage('simplecut').src} srcset={optimizedAppImage('simplecut').srcset} sizes="(max-width: 760px) 260px, 300px" alt="SimpleCut Pro app icon" width="512" height="512" loading="lazy" decoding="async" />
         </div>
         <div class="bench-card__copy">
           <span class="paper-stamp">{copy.simplecutStatus}</span>
@@ -566,7 +633,7 @@ const labelSeparator = lang === 'en' ? ': ' : '：';
 
       <article class="bench-card">
         <div class="bench-card__icon bench-card__icon--nodepilot">
-          <img src={anyTlsDesktopManagerProduct.assets.icon} alt="NodePilot app icon" width="512" height="512" loading="lazy" />
+          <img src={optimizedAppImage('nodepilot').src} srcset={optimizedAppImage('nodepilot').srcset} sizes="(max-width: 760px) 260px, 300px" alt="NodePilot app icon" width="512" height="512" loading="lazy" decoding="async" />
         </div>
         <div class="bench-card__copy">
           <span class="paper-stamp">{copy.nodePilotStatus}</span>
@@ -590,7 +657,16 @@ const labelSeparator = lang === 'en' ? ': ' : '：';
     </div>
     <article class="home-serial-card">
       <a class="home-serial-card__cover" href={homeSerial.href} aria-label={homeSerial.title}>
-        <img src={homeSerial.coverUrl} alt={homeSerial.coverAlt} loading="lazy" />
+        <img
+          src={homeSerial.coverUrl}
+          srcset={optimizedHomeImages.cover.srcset}
+          sizes="(max-width: 760px) 260px, 280px"
+          alt={homeSerial.coverAlt}
+          width="720"
+          height="1080"
+          loading="lazy"
+          decoding="async"
+        />
       </a>
       <div class="home-serial-card__copy">
         <div class="wall-note__meta">

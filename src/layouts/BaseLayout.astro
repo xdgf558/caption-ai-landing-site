@@ -18,6 +18,7 @@ interface Props {
   robots?: string;
   alternates?: AlternateLink[];
   bodyClass?: string;
+  structuredData?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 const {
@@ -28,7 +29,8 @@ const {
   ogImage = siteConfig.ogImage,
   robots = '',
   alternates = [],
-  bodyClass
+  bodyClass,
+  structuredData = []
 } = Astro.props;
 
 const fullTitle = title.includes(siteConfig.name)
@@ -44,6 +46,9 @@ const resolvedBodyClass = [
   shouldUsePaperTheme ? 'station-paper-page' : '',
   bodyClass
 ].filter(Boolean).join(' ');
+const structuredDataScripts = (Array.isArray(structuredData) ? structuredData : [structuredData])
+  .filter((entry) => entry && typeof entry === 'object')
+  .map((entry) => JSON.stringify(entry).replace(/</g, '\\u003c'));
 ---
 
 <!doctype html>
@@ -74,6 +79,7 @@ const resolvedBodyClass = [
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    {structuredDataScripts.map((script) => <script type="application/ld+json" set:html={script} />)}
   </head>
   <body class={resolvedBodyClass}>
     <a class="skip-link" href="#main">{lang === 'ja' ? '本文へ移動' : lang === 'zh-Hant' ? '跳到主要內容' : lang === 'zh-Hans' ? '跳到主要内容' : 'Skip to content'}</a>

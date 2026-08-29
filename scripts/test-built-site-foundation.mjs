@@ -22,4 +22,18 @@ for (const [locale, langMarker, heading] of localizedNotFoundPages) {
 const redirects = await readDist('_redirects');
 assert.doesNotMatch(redirects, /^\/signal \/signal\/ 301$/m, 'Worker owns the slashless Signal redirect');
 
+const sitemap = await readDist('sitemap.xml');
+assert.match(sitemap, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
+for (const route of ['/novel/', '/en/novel/', '/signal/', '/ja/signal/', '/zh-hant/apps/mindbudget/']) {
+  assert.ok(sitemap.includes(`<loc>https://wwwstationcat.org${route}</loc>`), `sitemap must include ${route}`);
+}
+assert.doesNotMatch(sitemap, /\/devlog\/|\/admin-v2\/|\/library\//);
+
+const homepage = await readDist('index.html');
+assert.match(homepage, /station-cat-logo-67dc39a9-160\.webp/);
+assert.match(homepage, /offline-future-cover-96c3c463-360\.webp/);
+assert.match(homepage, /"@type":"Organization"/);
+assert.match(homepage, /"@type":"WebSite"/);
+assert.doesNotMatch(homepage, /station-cat-logo\.png/);
+
 console.log('Built site foundation tests passed.');

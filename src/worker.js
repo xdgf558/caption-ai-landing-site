@@ -17939,6 +17939,88 @@ const dynamicChapterPath = (route, seriesSlug, chapterSlug) => {
 const dynamicSignalPath = (route, slug) => `${route.basePath}${slug}/`;
 const dynamicSignalCardPath = (route, slug) => `${dynamicSignalPath(route, slug)}card.png`;
 const dynamicSignalCardSvgPath = (route, slug) => `${dynamicSignalPath(route, slug)}card.svg`;
+
+const escapeXml = (value) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+const sitemapLastmod = (value) => cleanText(value, 80).match(/^\d{4}-\d{2}-\d{2}/)?.[0] || '';
+
+const dynamicSitemapPath = (row) => {
+  const locale = normalizeContentLocale(row?.locale);
+  const slug = cleanSlug(row?.slug, 160);
+  const parentSlug = cleanSlug(row?.parent_slug, 160);
+  if (!slug) return '';
+  if (row.entry_type === 'signal_brief') return `${getPathWithLocale(locale, 'signal')}${slug}/`;
+  if (row.entry_type === 'novel_series') {
+    if (locale !== 'zh-Hant' && locale !== defaultNovelTranslationTargetLocale) return '';
+    return `${novelV2BasePathForLocale(locale)}${slug}/`;
+  }
+  if (row.entry_type === 'novel_chapter' && parentSlug) {
+    if (locale !== 'zh-Hant' && locale !== defaultNovelTranslationTargetLocale) return '';
+    return `${novelV2BasePathForLocale(locale)}${parentSlug}/chapter/${slug}/`;
+  }
+  return '';
+};
+
+const mergeSitemapXmlWithRows = (baseXml, rows = []) => {
+  const fallback = String(baseXml || '').includes('</urlset>')
+    ? String(baseXml)
+    : '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>\n';
+  const existing = new Set([...fallback.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
+  const additions = [];
+  for (const row of rows) {
+    const path = dynamicSitemapPath(row);
+    if (!path) continue;
+    const location = absoluteStationUrl(path);
+    if (!location || existing.has(location)) continue;
+    existing.add(location);
+    const lastmod = sitemapLastmod(row.updated_at || row.published_at);
+    additions.push(
+      `  <url><loc>${escapeXml(location)}</loc>${lastmod ? `<lastmod>${escapeXml(lastmod)}</lastmod>` : ''}</url>`
+    );
+  }
+  if (!additions.length) return fallback;
+  additions.sort((left, right) => left.localeCompare(right, 'en'));
+  return fallback.replace('</urlset>', `${additions.join('\n')}\n</urlset>`);
+};
+
+const handleSitemap = async (request, env) => {
+  const assetRequest = new Request(new URL('/sitemap.xml', request.url), { method: 'GET' });
+  const baseResponse = env.ASSETS ? await env.ASSETS.fetch(assetRequest) : null;
+  const baseXml = baseResponse?.ok ? await baseResponse.text() : '';
+  let rows = [];
+  try {
+    if (env.WAITLIST_DB && (await ensureContentTablesReady(env.WAITLIST_DB))) {
+      const result = await env.WAITLIST_DB
+        .prepare(
+          `SELECT entry_type, locale, slug, parent_slug, published_at, updated_at
+           FROM content_entries
+           WHERE status = 'published'
+             AND visibility = 'public'
+             AND entry_type IN ('signal_brief', 'novel_series', 'novel_chapter')
+           ORDER BY COALESCE(updated_at, published_at) DESC, id DESC
+           LIMIT 5000`
+        )
+        .all();
+      rows = result.results || [];
+    }
+  } catch (error) {
+    console.error('Dynamic sitemap entries could not be loaded.', error);
+  }
+  const xml = mergeSitemapXmlWithRows(baseXml, rows);
+  return new Response(request.method === 'HEAD' ? null : xml, {
+    headers: {
+      'cache-control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
+      'content-type': 'application/xml; charset=utf-8',
+      'x-content-type-options': 'nosniff'
+    }
+  });
+};
 const signalShareCardTemplateVersion = 'card3';
 const signalShareCardRevision = (row) =>
   cleanText(row.updated_at || row.published_at || '1', 80).replace(/[^0-9A-Za-z]/g, '') || '1';
@@ -17983,7 +18065,7 @@ const absoluteStationUrl = (path) => {
   return `https://wwwstationcat.org${value.startsWith('/') ? value : `/${value}`}`;
 };
 
-const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = '', ogUrl = '', pageKind = '', robots = '', title }) => {
+const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = '', ogUrl = '', pageKind = '', robots = '', structuredData = [], title }) => {
   const ogImageUrl = absoluteStationUrl(ogImage);
   const ogCanonicalUrl = absoluteStationUrl(ogUrl || canonicalPath);
   const isSignalPage = pageKind === 'signal';
@@ -18031,6 +18113,10 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
         </div>
       </footer>`
     : '';
+  const structuredDataScripts = (Array.isArray(structuredData) ? structuredData : [structuredData])
+    .filter((entry) => entry && typeof entry === 'object')
+    .map((entry) => `<script type="application/ld+json">${JSON.stringify(entry).replace(/</g, '\\u003c')}</script>`)
+    .join('');
   return `<!doctype html>
 <html lang="${escapeHtml(lang)}">
   <head>
@@ -18057,6 +18143,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
     ${ogImageUrl ? `<meta name="twitter:image:src" content="${escapeHtml(ogImageUrl)}">` : ''}
     ${ogImageUrl ? `<meta name="twitter:image:alt" content="${escapeHtml(title)}">` : ''}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    ${structuredDataScripts}
     <style>
       :root { color-scheme: light; --bg: #fffaf4; --surface: #ffffff; --soft: #f5efe7; --ink: #1f2d29; --muted: #64736d; --line: #e4dbd0; --teal: #08796d; --coral: #d95d45; }
       * { box-sizing: border-box; }
@@ -18315,6 +18402,31 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
     ${signalFooter}
   </body>
 </html>`;
+};
+
+const dynamicBookStructuredData = (route, serial) => {
+  const canonicalPath = dynamicSeriesPath(route, serial.slug);
+  const coverUrl = contentMediaUrl(serial.cover_r2_key);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    '@id': `${absoluteStationUrl(canonicalPath)}#book`,
+    name: serial.title,
+    description: firstPlainSummary([serial.description, serial.excerpt], 500),
+    url: absoluteStationUrl(canonicalPath),
+    inLanguage: route.locale,
+    bookFormat: 'https://schema.org/EBook',
+    author: { '@type': 'Person', name: serial.author_name || 'Station Cat' },
+    publisher: {
+      '@type': 'Organization',
+      '@id': 'https://wwwstationcat.org/#organization',
+      name: 'Station Cat',
+      url: 'https://wwwstationcat.org'
+    },
+    ...(serial.published_at ? { datePublished: serial.published_at } : {}),
+    ...(serial.updated_at ? { dateModified: serial.updated_at } : {}),
+    ...(coverUrl ? { image: absoluteStationUrl(coverUrl) } : {})
+  };
 };
 
 const dynamicHtmlResponse = (request, payload, init = {}) =>
@@ -20238,6 +20350,7 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
       canonicalPath: dynamicCanonicalPath(route),
       description: firstPlainSummary([post.description, post.excerpt], 260),
       lang: route.locale,
+      robots: 'noindex, follow',
       title: post.title
     });
   }
@@ -20255,6 +20368,7 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
       canonicalPath: dynamicCanonicalPath(route),
       description: firstPlainSummary([serial.description, serial.excerpt], 260),
       lang: route.locale,
+      structuredData: dynamicBookStructuredData(route, serial),
       title: serial.title
     });
   }
@@ -21445,6 +21559,8 @@ export const __readerTotpTestHooks = {
   dynamicSignalCardSvgPath,
   dynamicSignalPath,
   dynamicSeriesPath,
+  dynamicSitemapPath,
+  mergeSitemapXmlWithRows,
   normalizeTotpCode,
   normalizeReadingEventPayload,
   selectSignalCollectionSources,
@@ -21531,6 +21647,10 @@ export default {
 
     if (downloadFile && (request.method === 'GET' || request.method === 'HEAD')) {
       return handleR2Download(request, env, downloadFile);
+    }
+
+    if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/sitemap.xml') {
+      return handleSitemap(request, env);
     }
 
     if (request.method === 'POST' && url.pathname === '/api/waitlist') {
