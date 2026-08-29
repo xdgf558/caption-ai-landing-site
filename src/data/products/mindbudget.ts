@@ -10,8 +10,8 @@ export const mindBudgetProduct = {
   minimumSystem: 'iOS 17.0 or later',
   deviceFamily: 'iPhone',
   testFlightUrl: 'https://testflight.apple.com/join/gnhUNEbz',
-  productPath: '/apps/mindbudget/',
-  downloadPagePath: '/apps/mindbudget/download/',
+  productPath: '/en/apps/mindbudget/',
+  downloadPagePath: '/en/apps/mindbudget/download/',
   zhHantProductPath: '/zh-hant/apps/mindbudget/',
   zhHantDownloadPagePath: '/zh-hant/apps/mindbudget/download/',
   zhHansProductPath: '/zh-hans/apps/mindbudget/',
@@ -19,13 +19,13 @@ export const mindBudgetProduct = {
   jaProductPath: '/ja/apps/mindbudget/',
   jaDownloadPagePath: '/ja/apps/mindbudget/download/',
   privacyPaths: {
-    en: '/apps/mindbudget/privacy/',
+    en: '/en/apps/mindbudget/privacy/',
     zhHans: '/zh-hans/apps/mindbudget/privacy/',
     zhHant: '/zh-hant/apps/mindbudget/privacy/',
     ja: '/ja/apps/mindbudget/privacy/'
   },
   supportPaths: {
-    en: '/apps/mindbudget/support/',
+    en: '/en/apps/mindbudget/support/',
     zhHans: '/zh-hans/apps/mindbudget/support/',
     zhHant: '/zh-hant/apps/mindbudget/support/',
     ja: '/ja/apps/mindbudget/support/'

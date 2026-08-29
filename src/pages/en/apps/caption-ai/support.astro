@@ -1,7 +1,7 @@
 ---
-import ProductLayout from '../../../layouts/ProductLayout.astro';
-import FAQ from '../../../components/FAQ.astro';
-import { captionAiProduct } from '../../../data/products/caption-ai';
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import FAQ from '../../../../components/FAQ.astro';
+import { captionAiProduct } from '../../../../data/products/caption-ai';
 
 const supportFaqEn = [
   {
@@ -31,11 +31,11 @@ const supportFaqEn = [
   title="SnapCopy Support"
   description="Get help with SnapCopy, send feedback, and review privacy and terms links."
   lang="en"
-  canonicalPath="/apps/caption-ai/support/"
+  canonicalPath="/en/apps/caption-ai/support/"
   alternates={[
     { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/support/' },
     { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/support/' },
-    { hrefLang: 'en', href: '/apps/caption-ai/support/' },
+    { hrefLang: 'en', href: '/en/apps/caption-ai/support/' },
     { hrefLang: 'ja', href: '/ja/apps/caption-ai/support/' },
     { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/support/' }
   ]}
@@ -55,8 +55,8 @@ const supportFaqEn = [
     </ul>
     <div class="button-row">
       <a class="button button-primary" href={`mailto:${captionAiProduct.supportEmail}?subject=SnapCopy%20support`}>Email support</a>
-      <a class="button button-secondary" href="/apps/caption-ai/privacy/">Privacy policy</a>
-      <a class="button button-secondary" href="/apps/caption-ai/terms/">Terms</a>
+      <a class="button button-secondary" href="/en/apps/caption-ai/privacy/">Privacy policy</a>
+      <a class="button button-secondary" href="/en/apps/caption-ai/terms/">Terms</a>
     </div>
   </section>
   <FAQ title="Support FAQ" items={supportFaqEn} />

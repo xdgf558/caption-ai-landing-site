@@ -78,8 +78,8 @@ export const simpleCutProProduct = {
       r2ObjectKey: 'simplecut-pro/0.1.24/latest.yml'
     }
   ],
-  productPath: '/apps/simplecut-pro/',
-  downloadPagePath: '/apps/simplecut-pro/download/',
+  productPath: '/en/apps/simplecut-pro/',
+  downloadPagePath: '/en/apps/simplecut-pro/download/',
   zhHantProductPath: '/zh-hant/apps/simplecut-pro/',
   zhHantDownloadPagePath: '/zh-hant/apps/simplecut-pro/download/',
   zhHansProductPath: '/zh-hans/apps/simplecut-pro/',

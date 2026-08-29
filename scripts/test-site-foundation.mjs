@@ -23,7 +23,10 @@ const [
   privacy,
   support,
   terms,
-  structuredDataHelper
+  structuredDataHelper,
+  navigation,
+  appsIndex,
+  languageSwitcher
 ] = await Promise.all([
   read('src/layouts/BaseLayout.astro'),
   read('src/components/StationHome.astro'),
@@ -34,10 +37,13 @@ const [
   read('src/worker.js'),
   read('src/components/NotFoundPage.astro'),
   read('public/favicon.svg'),
-  read('src/pages/privacy.astro'),
-  read('src/pages/support.astro'),
-  read('src/pages/terms.astro'),
-  read('src/data/structured-data.ts')
+  read('src/pages/en/privacy.astro'),
+  read('src/pages/en/support.astro'),
+  read('src/pages/en/terms.astro'),
+  read('src/data/structured-data.ts'),
+  read('src/data/navigation.ts'),
+  read('src/components/AppsIndex.astro'),
+  read('src/components/LanguageSwitcher.astro')
 ]);
 
 assert.match(site, /ogImage:\s*'\/images\/social\/station-cat-og\.png'/);
@@ -59,8 +65,28 @@ for (const title of [
 await assert.rejects(access(resolve(projectRoot, 'src/pages/zh-hant/index.astro')));
 assert.match(redirects, /^\/zh-hant \/ 301$/m);
 assert.match(redirects, /^\/zh-hant\/ \/ 301$/m);
+for (const [source, target] of [
+  ['/apps', '/en/apps/'],
+  ['/points', '/en/points/'],
+  ['/privacy', '/en/privacy/'],
+  ['/terms', '/en/terms/'],
+  ['/support', '/en/support/'],
+  ['/library', '/zh-hant/library/']
+]) {
+  assert.ok(redirects.includes(`${source} ${target} 301`), `${source} must redirect permanently to ${target}`);
+}
 assert.doesNotMatch(redirects, /^\/signal \/signal\/ 301$/m);
 await assert.rejects(access(resolve(projectRoot, 'public/sitemap.xml')));
+for (const legacyPage of [
+  'src/pages/apps/index.astro',
+  'src/pages/points.astro',
+  'src/pages/privacy.astro',
+  'src/pages/support.astro',
+  'src/pages/terms.astro',
+  'src/pages/library/index.astro'
+]) {
+  await assert.rejects(access(resolve(projectRoot, legacyPage)), `${legacyPage} must not remain a duplicate page`);
+}
 
 for (const header of [
   'Content-Security-Policy: frame-ancestors \'none\'',
@@ -79,6 +105,9 @@ assert.ok(wrangler.includes('"/sitemap.xml"'), 'sitemap must run the Worker firs
 for (const route of ['/admin', '/admin/*', '/admin-v2', '/admin-v2/*']) {
   assert.ok(wrangler.includes(`"${route}"`), `admin route must run the Worker first: ${route}`);
 }
+for (const route of ['/works', '/en/works', '/ja/works', '/zh-hans/works', '/zh-hant/works']) {
+  assert.ok(wrangler.includes(`"${route}"`), `legacy works route must run the Worker first: ${route}`);
+}
 for (const route of ['/signal/*', '/en/signal/*', '/ja/signal/*', '/zh-hans/signal/*', '/zh-hant/signal/*']) {
   assert.ok(wrangler.includes(`"${route}"`), `dynamic route must run the Worker first: ${route}`);
 }
@@ -91,6 +120,19 @@ for (const path of ['/devlog', '/en/devlog', '/zh-hant/devlog/post', '/works/boo
 for (const path of ['/endevlog', '/zh-hantdevlog', '/jaworks', '/zh-hansworks']) {
   assert.equal(workerHooks.getPermanentTrailingSlashRedirect(path), '', `garbage route must not redirect: ${path}`);
 }
+assert.equal(workerHooks.getLegacyWorksRedirectPath('/works/book/chapter'), '/novel/book/chapter/chapter/');
+assert.equal(workerHooks.getLegacyWorksRedirectPath('/en/works/book/chapter'), '/en/novel/book/chapter/chapter/');
+assert.equal(workerHooks.getLegacyWorksRedirectPath('/ja/works/book'), '/novel/book/');
+assert.doesNotMatch(worker, /<a href="\/apps\/">|<a href="\/library\/">/);
+
+for (const source of [navigation, appsIndex]) {
+  assert.match(source, /\/en\/apps\//, 'English app navigation must use the explicit locale prefix');
+}
+assert.match(languageSwitcher, /isApps \? `\/en\$\{appsPath\}`/);
+assert.match(languageSwitcher, /isNovel \? `\/en\$\{novelPath\}`/);
+assert.match(languageSwitcher, /isNovel \? novelPath/);
+assert.match(navigation, /href: '\/en\/novel\/'/);
+assert.match(appsIndex, /canonical: '\/en\/apps\/'/);
 
 assert.match(notFound, /robots="noindex, follow"/);
 assert.match(notFound, /aria-labelledby="not-found-heading"/);
@@ -133,25 +175,29 @@ for (const asset of [
   assert.ok(info.size < 100_000, `${asset} should stay below 100 KB`);
 }
 
-for (const route of ['/devlog', '/devlog/', '/admin-v2', '/admin-v2/', '/library/', '/en/library/']) {
+for (const route of [
+  '/devlog', '/devlog/', '/admin-v2', '/admin-v2/', '/library/', '/en/library/', '/apps/', '/points/',
+  '/privacy/', '/support/', '/terms/', '/works/', '/en/works/'
+]) {
   assert.equal(shouldIncludeSitemapRoute(route), false, `sitemap must exclude ${route}`);
 }
-for (const route of ['/', '/signal/', '/novel/', '/zh-hant/apps/mindbudget/']) {
+for (const route of ['/', '/signal/', '/novel/', '/en/apps/', '/en/points/', '/zh-hant/apps/mindbudget/']) {
   assert.equal(shouldIncludeSitemapRoute(route), true, `sitemap must include ${route}`);
 }
 const sitemapFixture = await mkdtemp(join(tmpdir(), 'station-cat-sitemap-'));
 try {
-  for (const route of ['index.html', 'apps/tool/index.html', 'devlog/post/index.html', 'library/index.html']) {
+  for (const route of ['index.html', 'en/apps/tool/index.html', 'apps/legacy/index.html', 'devlog/post/index.html', 'library/index.html']) {
     const path = resolve(sitemapFixture, route);
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, '<!doctype html>', 'utf8');
   }
   const generated = await generateSitemap({ distRoot: sitemapFixture, lastmod: '2026-08-29' });
-  assert.ok(generated.routes.includes('/apps/tool/'));
+  assert.ok(generated.routes.includes('/en/apps/tool/'));
   assert.ok(generated.routes.includes('/signal/'));
   assert.ok(generated.routes.includes('/novel/'));
   assert.ok(!generated.routes.includes('/devlog/post/'));
   assert.ok(!generated.routes.includes('/library/'));
+  assert.ok(!generated.routes.includes('/apps/legacy/'));
   assert.match(generated.xml, /<lastmod>2026-08-29<\/lastmod>/);
 } finally {
   await rm(sitemapFixture, { recursive: true, force: true });

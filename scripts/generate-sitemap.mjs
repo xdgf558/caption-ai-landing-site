@@ -19,6 +19,11 @@ export const requiredDynamicIndexRoutes = [
 ];
 
 const excludedPrefixes = [
+  '/apps/',
+  '/points/',
+  '/privacy/',
+  '/support/',
+  '/terms/',
   '/admin/',
   '/admin-v2/',
   '/devlog/',
@@ -26,6 +31,11 @@ const excludedPrefixes = [
   '/ja/devlog/',
   '/zh-hans/devlog/',
   '/zh-hant/devlog/',
+  '/works/',
+  '/en/works/',
+  '/ja/works/',
+  '/zh-hans/works/',
+  '/zh-hant/works/',
   '/library/',
   '/en/library/',
   '/ja/library/',

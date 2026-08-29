@@ -56,7 +56,7 @@ assert.match(productPage, /\?release=\$\{releaseToken\}/);
 assert.match(productPage, /legalLinks\.privacy/);
 assert.match(productPage, /legalLinks\.support/);
 
-for (const localePath of ['', 'zh-hans/', 'zh-hant/', 'ja/']) {
+for (const localePath of ['en/', 'zh-hans/', 'zh-hant/', 'ja/']) {
   const prefix = `src/pages/${localePath}apps/privatepinyin/`;
   const privacyPage = read(`${prefix}privacy.astro`);
   const supportPage = read(`${prefix}support.astro`);

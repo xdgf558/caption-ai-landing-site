@@ -129,7 +129,7 @@ assert.equal(hooks.parseDynamicContentRoute('/zh-hant/novel/book/chapter/ch1/'),
 assert.equal(hooks.parseDynamicContentRoute('/works/book/ch1/extra/'), null);
 
 assert.equal(hooks.getLegacyWorksRedirectPath('/works/'), '/novel/');
-assert.equal(hooks.getLegacyWorksRedirectPath('/en/works/'), '/novel/');
+assert.equal(hooks.getLegacyWorksRedirectPath('/en/works/'), '/en/novel/');
 assert.equal(hooks.getLegacyWorksRedirectPath('/zh-hant/works/'), '/novel/');
 assert.equal(hooks.getLegacyWorksRedirectPath('/zh-hans/works/book/'), '/novel/book/');
 assert.equal(hooks.getLegacyWorksRedirectPath('/ja/works/book/ch1/'), '/novel/book/chapter/ch1/');

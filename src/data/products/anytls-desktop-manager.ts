@@ -27,7 +27,7 @@ export const anyTlsDesktopManagerProduct = {
       downloadPath: '/downloads/nodepilot/NodePilot-Setup-latest-x64.exe?release=0.2.26'
     }
   ],
-  productPath: '/apps/nodepilot/',
+  productPath: '/en/apps/nodepilot/',
   zhHantProductPath: '/zh-hant/apps/nodepilot/',
   zhHansProductPath: '/zh-hans/apps/nodepilot/',
   jaProductPath: '/ja/apps/nodepilot/',

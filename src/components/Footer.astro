@@ -60,18 +60,18 @@ const links =
           { label: 'X', href: 'https://x.com/bketck' }
         ]
     : [
-        { label: 'SnapCopy', href: '/apps/caption-ai/' },
-        { label: 'MindBudget', href: '/apps/mindbudget/' },
-        { label: 'NovelForge AI', href: '/apps/novelforge-ai/' },
-        { label: 'Maozhan Pinyin', href: '/apps/privatepinyin/' },
-        { label: 'NodePilot', href: '/apps/nodepilot/' },
-        { label: 'Serials', href: '/novel/' },
+        { label: 'SnapCopy', href: '/en/apps/caption-ai/' },
+        { label: 'MindBudget', href: '/en/apps/mindbudget/' },
+        { label: 'NovelForge AI', href: '/en/apps/novelforge-ai/' },
+        { label: 'Maozhan Pinyin', href: '/en/apps/privatepinyin/' },
+        { label: 'NodePilot', href: '/en/apps/nodepilot/' },
+        { label: 'Serials', href: '/en/novel/' },
         { label: 'Signal', href: '/en/signal/' },
         { label: 'Member Center', href: '/en/library/' },
-        { label: 'Points Pricing', href: '/points/' },
-        { label: 'Privacy', href: '/apps/caption-ai/privacy/' },
-        { label: 'Support', href: '/apps/caption-ai/support/' },
-        { label: 'Terms', href: '/apps/caption-ai/terms/' },
+        { label: 'Points Pricing', href: '/en/points/' },
+        { label: 'Privacy', href: '/en/apps/caption-ai/privacy/' },
+        { label: 'Support', href: '/en/apps/caption-ai/support/' },
+        { label: 'Terms', href: '/en/apps/caption-ai/terms/' },
         { label: 'Android Waitlist', href: '/android/' },
         { label: 'X', href: 'https://x.com/bketck' }
       ];
@@ -80,7 +80,7 @@ const links =
 <footer class="site-footer">
   <div class="footer-grid">
     <div>
-      <a class="brand-mark footer-brand" href="/">
+      <a class="brand-mark footer-brand" href={lang === 'en' ? '/en/' : lang === 'ja' ? '/ja/' : lang === 'zh-Hans' ? '/zh-hans/' : '/'}>
         <span class="brand-icon" aria-hidden="true">SC</span>
         <span>{siteConfig.name}</span>
       </a>

@@ -3,7 +3,7 @@ export const stationPointsProduct = {
   supportEmail: 'brodstem@protonmail.com',
   statusEndpoint: '/api/novels/payments/status',
   paths: {
-    en: '/points/',
+    en: '/en/points/',
     ja: '/ja/points/',
     zhHant: '/zh-hant/points/',
     zhHans: '/zh-hans/points/'
@@ -15,13 +15,13 @@ export const stationPointsProduct = {
     zhHans: '/zh-hans/library/'
   },
   termsPaths: {
-    en: '/terms/',
+    en: '/en/terms/',
     ja: '/ja/terms/',
     zhHant: '/zh-hant/terms/',
     zhHans: '/zh-hans/terms/'
   },
   privacyPaths: {
-    en: '/privacy/',
+    en: '/en/privacy/',
     ja: '/ja/privacy/',
     zhHant: '/zh-hant/privacy/',
     zhHans: '/zh-hans/privacy/'

@@ -1,18 +1,18 @@
 ---
-import LegalLayout from '../../../layouts/LegalLayout.astro';
-import { legalNoticeEn, privacyEn } from '../../../data/legal/caption-ai';
+import LegalLayout from '../../../../layouts/LegalLayout.astro';
+import { legalNoticeEn, privacyEn } from '../../../../data/legal/caption-ai';
 ---
 
 <LegalLayout
   title="SnapCopy Privacy Policy"
   description="Privacy policy for SnapCopy app, website, update lists, and support pages."
   lang="en"
-  canonicalPath="/apps/caption-ai/privacy/"
+  canonicalPath="/en/apps/caption-ai/privacy/"
   notice={legalNoticeEn}
   alternates={[
     { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/privacy/' },
     { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/privacy/' },
-    { hrefLang: 'en', href: '/apps/caption-ai/privacy/' },
+    { hrefLang: 'en', href: '/en/apps/caption-ai/privacy/' },
     { hrefLang: 'ja', href: '/ja/apps/caption-ai/privacy/' },
     { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/privacy/' }
   ]}

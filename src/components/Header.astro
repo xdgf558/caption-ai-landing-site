@@ -33,7 +33,7 @@ const nav = isProduct
     : lang === 'ja'
       ? jaBrandNavigation
     : brandNavigation;
-const homeHref = '/';
+const homeHref = lang === 'en' ? '/en/' : lang === 'ja' ? '/ja/' : lang === 'zh-Hans' ? '/zh-hans/' : '/';
 const ariaLabel =
   lang === 'ja'
     ? 'メインナビゲーション'

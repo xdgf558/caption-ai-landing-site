@@ -1,3 +1,22 @@
 # The root URL is the canonical Traditional Chinese homepage.
 /zh-hant / 301
 /zh-hant/ / 301
+
+# English pages now use an explicit locale prefix. Keep established links and search signals intact.
+/apps/anytls-desktop-manager /en/apps/nodepilot/ 301
+/apps/anytls-desktop-manager/ /en/apps/nodepilot/ 301
+/apps /en/apps/ 301
+/apps/ /en/apps/ 301
+/apps/* /en/apps/:splat 301
+/points /en/points/ 301
+/points/ /en/points/ 301
+/privacy /en/privacy/ 301
+/privacy/ /en/privacy/ 301
+/terms /en/terms/ 301
+/terms/ /en/terms/ 301
+/support /en/support/ 301
+/support/ /en/support/ 301
+
+# The unprefixed member route historically rendered Traditional Chinese.
+/library /zh-hant/library/ 301
+/library/ /zh-hant/library/ 301

@@ -253,7 +253,7 @@ const makeCookie = (name, value, request, options = {}) => {
 
 const clearCookie = (name, request) => makeCookie(name, '', request, { maxAge: 0 });
 
-const cleanRedirectPath = (value, fallback = '/library/') => {
+const cleanRedirectPath = (value, fallback = '/zh-hant/library/') => {
   const path = cleanText(value, 300);
   if (!path || !path.startsWith('/') || path.startsWith('//')) return fallback;
   return path;
@@ -655,7 +655,7 @@ const amountToStorage = (amount) => {
 };
 
 const paymentReturnUrl = (request, path, state, orderToken) => {
-  const url = new URL(cleanRedirectPath(path, '/library/'), new URL(request.url).origin);
+  const url = new URL(cleanRedirectPath(path, '/zh-hant/library/'), new URL(request.url).origin);
   url.searchParams.set('payment', state);
   url.searchParams.set('order', orderToken);
   return url.toString();
@@ -4728,7 +4728,7 @@ const handleReaderVerify = async (request, env) => {
   const url = new URL(request.url);
   const rawToken = cleanText(url.searchParams.get('token'), 300);
   const redirectPath = cleanRedirectPath(url.searchParams.get('redirect'));
-  const failureUrl = new URL('/library/', url.origin);
+  const failureUrl = new URL('/zh-hant/library/', url.origin);
   failureUrl.searchParams.set('login', 'invalid');
 
   if (!rawToken) {
@@ -8283,9 +8283,14 @@ const normalizeCheckoutPayload = async (payload, session, env, db) => {
   const prices = getCheckoutPrices(env);
   const payCurrency = normalizePayCurrency(payload.payCurrency);
   const locale = cleanText(payload.locale, 20);
+  const localizedLibraryPath = dynamicLibraryPathForLocale(normalizeContentLocale(locale));
   const returnPath = cleanRedirectPath(
     payload.returnPath,
-    orderType === novelCreditPackOrderType ? '/library/' : seriesSlug ? `/novel/${seriesSlug}/` : '/library/'
+    orderType === novelCreditPackOrderType
+      ? localizedLibraryPath
+      : seriesSlug
+        ? `${novelV2BasePathForLocale(normalizeContentLocale(locale))}${seriesSlug}/`
+        : localizedLibraryPath
   );
 
   if (orderType !== novelCreditPackOrderType && !seriesSlug) {
@@ -18086,6 +18091,25 @@ const dynamicNavCopy = {
   }
 };
 
+const dynamicHomePathForLocale = (locale) =>
+  locale === 'en' ? '/en/' : locale === 'ja' ? '/ja/' : locale === 'zh-Hans' ? '/zh-hans/' : '/';
+const dynamicAppsPathForLocale = (locale) =>
+  locale === 'en'
+    ? '/en/apps/'
+    : locale === 'ja'
+      ? '/ja/apps/'
+      : locale === 'zh-Hans'
+        ? '/zh-hans/apps/'
+        : '/zh-hant/apps/';
+const dynamicLibraryPathForLocale = (locale) =>
+  locale === 'en'
+    ? '/en/library/'
+    : locale === 'ja'
+      ? '/ja/library/'
+      : locale === 'zh-Hans'
+        ? '/zh-hans/library/'
+        : '/zh-hant/library/';
+
 const absoluteStationUrl = (path) => {
   const value = cleanText(path, 1000);
   if (!value) return '';
@@ -18098,11 +18122,14 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
   const ogCanonicalUrl = absoluteStationUrl(ogUrl || canonicalPath);
   const isSignalPage = pageKind === 'signal';
   const navCopy = dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant'];
+  const homePath = dynamicHomePathForLocale(lang);
+  const appsPath = dynamicAppsPathForLocale(lang);
+  const libraryPath = dynamicLibraryPathForLocale(lang);
   const signalPageCopy = isSignalPage ? signalDesignCopy(lang) : null;
   const topbar = isSignalPage
     ? `<header class="signal-station-header">
         <div class="signal-station-header__inner">
-          <a class="signal-station-brand" href="/">
+          <a class="signal-station-brand" href="${escapeHtml(homePath)}">
             <span class="signal-station-brand__mark">SC</span>
             <span class="signal-station-brand__copy">
               <strong>STATION CAT</strong>
@@ -18112,20 +18139,20 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
           <nav class="signal-station-nav" aria-label="${escapeHtml(signalPageCopy.primaryNavigation)}">
             <a href="${escapeHtml(novelV2BasePathForLocale(lang))}">${escapeHtml(navCopy.serials)}</a>
             <a class="is-current" href="${escapeHtml(getPathWithLocale(lang, 'signal'))}" aria-current="page">${escapeHtml(navCopy.signal)}</a>
-            <a href="/apps/">${escapeHtml(navCopy.apps)}</a>
-            <a href="/library/">${escapeHtml(navCopy.member)}</a>
+            <a href="${escapeHtml(appsPath)}">${escapeHtml(navCopy.apps)}</a>
+            <a href="${escapeHtml(libraryPath)}">${escapeHtml(navCopy.member)}</a>
             <a href="/about/">About</a>
             <a class="signal-station-nav__x" href="https://x.com/bketck">↗ X</a>
           </nav>
         </div>
       </header>`
     : `<header class="topbar">
-        <a class="brand" href="/"><span>SC</span><span>Station Cat</span></a>
+        <a class="brand" href="${escapeHtml(homePath)}"><span>SC</span><span>Station Cat</span></a>
         <nav class="nav">
           <a href="${escapeHtml(novelV2BasePathForLocale(lang))}">${escapeHtml(navCopy.serials)}</a>
           <a href="${escapeHtml(getPathWithLocale(lang, 'signal'))}">${escapeHtml(navCopy.signal)}</a>
-          <a href="/apps/">${escapeHtml(navCopy.apps)}</a>
-          <a href="/library/">${escapeHtml(navCopy.member)}</a>
+          <a href="${escapeHtml(appsPath)}">${escapeHtml(navCopy.apps)}</a>
+          <a href="${escapeHtml(libraryPath)}">${escapeHtml(navCopy.member)}</a>
           <a href="/about/">About</a>
           <a href="https://x.com/bketck">Follow on X</a>
         </nav>
@@ -19429,7 +19456,8 @@ const renderDynamicUnlockButtons = (route, serial, chapter, settings) => {
   const copy = dynamicPaymentCopy[route.locale];
   const memberOnly = chapter.access_level === 'member';
   const orderType = chapter.access_level === 'supporter' ? 'supporter' : 'chapter';
-  const signInHref = `/library/?returnTo=${encodeURIComponent(dynamicCanonicalPath(route))}`;
+  const libraryPath = dynamicLibraryPathForLocale(route.locale);
+  const signInHref = `${libraryPath}?returnTo=${encodeURIComponent(dynamicCanonicalPath(route))}`;
 
   return `<div class="button-row">
       <a class="button button-primary" href="${escapeHtml(signInHref)}">${escapeHtml(copy.signIn)}</a>
@@ -19438,7 +19466,7 @@ const renderDynamicUnlockButtons = (route, serial, chapter, settings) => {
           ? `<button class="button button-secondary" type="button" data-serial-credit-unlock>${escapeHtml(copy.creditUnlock)} · ${escapeHtml(String(settings.chapterCredits))}</button>`
           : ''
       }
-      ${orderType === 'chapter' && !memberOnly ? `<a class="button button-secondary" href="/library/">${escapeHtml(copy.creditTopUp)}</a>` : ''}
+      ${orderType === 'chapter' && !memberOnly ? `<a class="button button-secondary" href="${escapeHtml(libraryPath)}">${escapeHtml(copy.creditTopUp)}</a>` : ''}
       <a class="button button-secondary" href="${escapeHtml(dynamicSeriesPath(route, serial.slug))}">${escapeHtml(copy.backSeries)}</a>
     </div>`;
 };
@@ -19655,6 +19683,7 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
     seriesSlug: serial.slug,
     sourcePath: dynamicCanonicalPath(route)
   };
+  const libraryPath = dynamicLibraryPathForLocale(route.locale);
   return `<section class="reader-interactions" data-reader-v2-interactions>
       <div>
         <p class="kicker">${escapeHtml(copy.eyebrow)}</p>
@@ -19685,6 +19714,7 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
         const interactionPanel = document.querySelector('[data-reader-v2-interactions]');
         const interactionCopy = ${scriptJson(copy)};
         const commentData = ${scriptJson(commentData)};
+        const readerLibraryPath = ${scriptJson(libraryPath)};
         const commentsEndpoint = '/api/novels/comments';
         const commentSubmitEndpoint = '/api/readers/comments';
         const interactionKey = ${scriptJson(interactionKey)};
@@ -19823,7 +19853,7 @@ const renderDynamicReaderInteractions = (route, serial, chapter) => {
             const payload = await response.json().catch(() => ({}));
             if (response.status === 401 || payload.code === 'SIGN_IN_REQUIRED') {
               setCommentStatus(interactionCopy.commentSignInRequired, 'error');
-              window.location.href = '/library/?returnTo=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
+              window.location.href = readerLibraryPath + '?returnTo=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
               return;
             }
             if (response.status === 403 || payload.code === 'CHAPTER_COMMENT_ACCESS_REQUIRED') {
@@ -19859,6 +19889,7 @@ const renderDynamicBookmarkScript = (route, serial, chapter) => {
     seriesTitle: serial.title,
     sourcePath: dynamicCanonicalPath(route)
   };
+  const libraryPath = dynamicLibraryPathForLocale(route.locale);
 
   return `<script>
     (() => {
@@ -19866,6 +19897,7 @@ const renderDynamicBookmarkScript = (route, serial, chapter) => {
       const bookmarkToast = document.querySelector('[data-reader-bookmark-toast]');
       const bookmarkCopy = ${scriptJson(copy)};
       const bookmarkData = ${scriptJson(bookmarkData)};
+      const readerLibraryPath = ${scriptJson(libraryPath)};
       const anchorPrefix = 'sc-bookmark-block-';
       let bookmarkToastTimer;
       const getBookmarkButtons = () => Array.from(document.querySelectorAll('[data-reader-bookmark-save]'));
@@ -19984,7 +20016,7 @@ const renderDynamicBookmarkScript = (route, serial, chapter) => {
           if (!response.ok || !data.ok) {
             if (data.code === 'SIGN_IN_REQUIRED') {
               setBookmarkStatus(bookmarkCopy.signInRequired, 'error');
-              window.location.href = '/library/?returnTo=' + encodeURIComponent(window.location.pathname);
+              window.location.href = readerLibraryPath + '?returnTo=' + encodeURIComponent(window.location.pathname);
               return;
             }
             throw new Error(data.message || bookmarkCopy.failed);
@@ -20074,6 +20106,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
   const isProtected = effectiveAccessLevel !== 'free';
   const memberOnly = effectiveAccessLevel === 'member';
   const bookmarkCopy = dynamicBookmarkCopy[route.locale] || dynamicBookmarkCopy['zh-Hant'];
+  const libraryPath = dynamicLibraryPathForLocale(route.locale);
   const fallbackBody = firstPlainSummary([chapter.excerpt, chapter.description], 1200);
   const content = isProtected
     ? `<section class="gate" data-serial-access-gate data-series-slug="${escapeHtml(chapter.parent_slug)}" data-chapter-slug="${escapeHtml(chapter.slug)}" data-access="${escapeHtml(effectiveAccessLevel)}" data-locale="${escapeHtml(route.locale)}" data-return-path="${escapeHtml(dynamicCanonicalPath(route))}">
@@ -20093,6 +20126,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
           const body = document.querySelector('[data-protected-chapter-body]');
           const unlockButtons = gate ? Array.from(gate.querySelectorAll('[data-serial-unlock]')) : [];
           const creditUnlockButton = gate?.querySelector('[data-serial-credit-unlock]');
+          const readerLibraryPath = ${scriptJson(libraryPath)};
           const setStatus = (message, tone = 'neutral') => {
             if (!status) return;
             status.textContent = message;
@@ -20168,7 +20202,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
                 const payload = await response.json();
                 if (!response.ok || !payload.ok) {
                   if (payload.code === 'SIGN_IN_REQUIRED') {
-                    window.location.href = '/library/?returnTo=' + encodeURIComponent(window.location.pathname);
+                    window.location.href = readerLibraryPath + '?returnTo=' + encodeURIComponent(window.location.pathname);
                     return;
                   }
                   if (payload.code === 'INSUFFICIENT_CREDITS') throw new Error(${JSON.stringify(paymentCopy.creditInsufficient)});
@@ -20207,7 +20241,7 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
                 const payload = await response.json();
                 if (!response.ok || !payload.ok) {
                   if (payload.code === 'SIGN_IN_REQUIRED') {
-                    window.location.href = '/library/?returnTo=' + encodeURIComponent(window.location.pathname);
+                    window.location.href = readerLibraryPath + '?returnTo=' + encodeURIComponent(window.location.pathname);
                     return;
                   }
                   if (payload.code === 'PAYMENT_PROVIDER_NOT_CONFIGURED') throw new Error(${JSON.stringify(paymentCopy.disabled)});
@@ -21261,8 +21295,8 @@ const downloadLimitConfig = {
 const pageRedirects = {
   '/downloads/simplecut-pro': '/zh-hans/apps/simplecut-pro/download/',
   '/downloads/simplecut-pro/': '/zh-hans/apps/simplecut-pro/download/',
-  '/apps/anytls-desktop-manager': '/apps/nodepilot/',
-  '/apps/anytls-desktop-manager/': '/apps/nodepilot/',
+  '/apps/anytls-desktop-manager': '/en/apps/nodepilot/',
+  '/apps/anytls-desktop-manager/': '/en/apps/nodepilot/',
   '/zh-hant/apps/anytls-desktop-manager': '/zh-hant/apps/nodepilot/',
   '/zh-hant/apps/anytls-desktop-manager/': '/zh-hant/apps/nodepilot/',
   '/zh-hans/apps/anytls-desktop-manager': '/zh-hans/apps/nodepilot/',
@@ -21291,7 +21325,9 @@ const getLegacyWorksRedirectPath = (pathname) => {
   if (!segments.length) return '';
 
   let offset = 0;
+  let locale = 'zh-Hant';
   if (pathSegmentLocales[segments[0]]) {
+    locale = pathSegmentLocales[segments[0]];
     offset = 1;
   }
 
@@ -21301,9 +21337,10 @@ const getLegacyWorksRedirectPath = (pathname) => {
   const seriesSlug = cleanSlug(segments[offset + 1] || '', 160);
   const chapterSlug = cleanSlug(segments[offset + 2] || '', 160);
 
-  if (segmentCount === 1) return '/novel/';
-  if (segmentCount === 2 && seriesSlug) return `/novel/${seriesSlug}/`;
-  if (segmentCount === 3 && seriesSlug && chapterSlug) return `/novel/${seriesSlug}/chapter/${chapterSlug}/`;
+  const basePath = locale === 'en' ? '/en/novel/' : '/novel/';
+  if (segmentCount === 1) return basePath;
+  if (segmentCount === 2 && seriesSlug) return `${basePath}${seriesSlug}/`;
+  if (segmentCount === 3 && seriesSlug && chapterSlug) return `${basePath}${seriesSlug}/chapter/${chapterSlug}/`;
   return '';
 };
 
