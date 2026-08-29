@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Everyday AI Apps">
-  <rect width="64" height="64" rx="14" fill="#1f2d29"/>
-  <path d="M18 20h28v7H26v6h17v7H26v4h21v7H18V20Z" fill="#fffaf4"/>
-  <circle cx="47" cy="18" r="5" fill="#d95d45"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Station Cat">
+  <rect width="64" height="64" rx="14" fill="#1f5b4d"/>
+  <path d="M30 17H13v17h10v7H13v6h17V29H20v-6h10Z" fill="#fffaf4"/>
+  <path d="M52 17H34v30h18v-6H41V23h11Z" fill="#fffaf4"/>
+  <circle cx="52" cy="52" r="4" fill="#f1a54b"/>
 </svg>

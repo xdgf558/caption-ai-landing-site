@@ -1,0 +1,78 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+type Locale = 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+
+interface Props {
+  lang?: Locale;
+  canonicalPath?: string;
+}
+
+const { lang = 'zh-Hant', canonicalPath = '/404/' } = Astro.props;
+
+const copy = {
+  en: {
+    title: 'Page not found | Station Cat',
+    description: 'The requested Station Cat page could not be found.',
+    kicker: 'Lost signal',
+    heading: 'This stop is not on the map.',
+    text: 'The address may have changed, or the page may no longer be available. Return to the station or browse the current apps.',
+    home: 'Return home',
+    apps: 'Browse apps',
+    appsPath: '/en/apps/'
+  },
+  ja: {
+    title: 'ページが見つかりません | Station Cat',
+    description: 'お探しの Station Cat ページは見つかりませんでした。',
+    kicker: 'Lost signal',
+    heading: 'この停車駅は地図にありません。',
+    text: 'アドレスが変更されたか、ページが公開されていない可能性があります。ホームに戻るか、公開中のアプリをご覧ください。',
+    home: 'ホームに戻る',
+    apps: 'アプリを見る',
+    appsPath: '/ja/apps/'
+  },
+  'zh-Hant': {
+    title: '找不到頁面 | Station Cat',
+    description: '找不到你要開啟的 Station Cat 頁面。',
+    kicker: 'Lost signal',
+    heading: '這一站不在地圖上。',
+    text: '網址可能已經變更，或這個頁面目前不再開放。你可以回到首頁，或看看正在發布的工具。',
+    home: '回到首頁',
+    apps: '查看工具',
+    appsPath: '/zh-hant/apps/'
+  },
+  'zh-Hans': {
+    title: '找不到页面 | Station Cat',
+    description: '找不到你要打开的 Station Cat 页面。',
+    kicker: 'Lost signal',
+    heading: '这一站不在地图上。',
+    text: '网址可能已经变更，或这个页面目前不再开放。你可以回到首页，或看看正在发布的工具。',
+    home: '回到首页',
+    apps: '查看工具',
+    appsPath: '/zh-hans/apps/'
+  }
+} as const;
+
+const localeCopy = copy[lang];
+---
+
+<BaseLayout
+  title={localeCopy.title}
+  description={localeCopy.description}
+  lang={lang}
+  canonicalPath={canonicalPath}
+  robots="noindex, follow"
+>
+  <section class="not-found-page" aria-labelledby="not-found-heading">
+    <div class="not-found-page__code" aria-hidden="true">404</div>
+    <div class="not-found-page__copy">
+      <p class="paper-kicker">{localeCopy.kicker}</p>
+      <h1 id="not-found-heading">{localeCopy.heading}</h1>
+      <p>{localeCopy.text}</p>
+      <div class="paper-actions">
+        <a class="ticket-button ticket-button--primary" href="/">{localeCopy.home}</a>
+        <a class="ticket-button ticket-button--secondary" href={localeCopy.appsPath}>{localeCopy.apps}</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

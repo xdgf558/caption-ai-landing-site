@@ -13,6 +13,81 @@
   --max: 1120px;
 }
 
+.not-found-page {
+  align-items: center;
+  box-sizing: border-box;
+  display: grid;
+  gap: clamp(32px, 7vw, 96px);
+  grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
+  margin: 0 auto;
+  min-height: calc(100svh - 240px);
+  padding: clamp(56px, 9vw, 120px) 24px;
+  width: min(1120px, 100%);
+}
+
+.not-found-page * {
+  box-sizing: border-box;
+}
+
+.not-found-page__code {
+  color: var(--paper-ink, #241f1a);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(112px, 18vw, 240px);
+  font-weight: 700;
+  line-height: 0.78;
+  opacity: 0.12;
+}
+
+.not-found-page__copy {
+  border-left: 8px solid var(--paper-green, #1f5b4d);
+  max-width: 660px;
+  min-width: 0;
+  padding: 20px 0 20px clamp(24px, 4vw, 52px);
+}
+
+.not-found-page__copy h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(38px, 6vw, 68px);
+  line-height: 1.05;
+  margin: 12px 0 20px;
+}
+
+.not-found-page__copy > p:not(.paper-kicker) {
+  font-size: 18px;
+  line-height: 1.8;
+  margin: 0 0 28px;
+}
+
+@media (max-width: 720px) {
+  .not-found-page {
+    align-content: center;
+    grid-template-columns: 1fr;
+    min-height: calc(100svh - 190px);
+  }
+
+  .not-found-page__code {
+    font-size: 104px;
+  }
+
+  .not-found-page__copy {
+    max-width: 100%;
+    padding-left: 22px;
+    width: 100%;
+  }
+
+  .not-found-page__copy h1,
+  .not-found-page__copy > p {
+    overflow-wrap: anywhere;
+  }
+
+  .not-found-page__copy .paper-actions,
+  .not-found-page__copy .ticket-button {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+}
+
 /* Member center V2 */
 .reader-center-page {
   --reader-paper: #f4ece0;

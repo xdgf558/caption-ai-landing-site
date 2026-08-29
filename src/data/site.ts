@@ -4,7 +4,7 @@ export const siteConfig = {
   baseUrl: 'https://wwwstationcat.org',
   defaultLocale: 'zh-Hant',
   supportEmail: 'brodstem@protonmail.com',
-  ogImage: '/images/brand-hero-placeholder.svg',
+  ogImage: '/images/social/station-cat-og.png',
   description:
     'A small creative station for cats, meals, AI tools, and curious ideas.'
 };
