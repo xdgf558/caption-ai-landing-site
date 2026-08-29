@@ -55,10 +55,15 @@ run_worker_first = [
   "/en/devlog/*",
   "/ja/devlog/*",
   "/zh-hans/devlog/*",
+  "/works",
   "/works/*",
+  "/en/works",
   "/en/works/*",
+  "/ja/works",
   "/ja/works/*",
+  "/zh-hans/works",
   "/zh-hans/works/*",
+  "/zh-hant/works",
   "/zh-hant/works/*"
 ]
 

@@ -42,6 +42,14 @@ interface Props {
 }
 
 const { basePath, copy, featuredLatestChapter, featuredSerial, locale, serials } = Astro.props;
+const libraryHref =
+  locale === 'en'
+    ? '/en/library/'
+    : locale === 'ja'
+      ? '/ja/library/'
+      : locale === 'zh-Hans'
+        ? '/zh-hans/library/'
+        : '/zh-hant/library/';
 const featuredCoverText = featuredSerial?.data.coverLabel ?? featuredSerial?.data.title;
 const staticSerialSlugs = serials.map((serial) => serial.data.seriesSlug);
 const mediaUrlForKey = (key: string) => `/api/content/media?key=${encodeURIComponent(key)}`;
@@ -159,6 +167,7 @@ const bookshelfJson = JSON.stringify({
   empty: bookshelfCopy.empty,
   existingSlugs: bookshelfItems.map((book) => book.seriesSlug).filter(Boolean),
   libraryLabel: copy.libraryLabel,
+  libraryHref,
   locale,
   openSeries: bookshelfCopy.openSeries,
   readFirst: bookshelfCopy.readFirst
@@ -253,7 +262,7 @@ const backendShelfCopy = {
               <div class="button-row">
                 <a class="button button-primary" href={book.firstChapterHref}>{bookshelfCopy.readFirst}</a>
                 <a class="button button-secondary" href={book.href}>{bookshelfCopy.openSeries}</a>
-                <a class="button button-secondary" href="/library/">{copy.libraryLabel}</a>
+                <a class="button button-secondary" href={libraryHref}>{copy.libraryLabel}</a>
               </div>
             </div>
           </article>
@@ -271,7 +280,7 @@ const backendShelfCopy = {
       <p class="fine-print">{copy.heroNote}</p>
       <div class="button-row">
         <a class="button button-primary" href="#serial-shelf">{copy.heroSecondary}</a>
-        <a class="button button-secondary" href="/library/">{copy.libraryLabel}</a>
+        <a class="button button-secondary" href={libraryHref}>{copy.libraryLabel}</a>
       </div>
     </div>
   </section>
@@ -414,7 +423,7 @@ const backendShelfCopy = {
               <div class="button-row">
                 <a class="button button-primary" href="${escapeHtml(href)}" data-backend-first-chapter-link="${escapeHtml(entry.slug)}">${escapeHtml(config.readFirst)}</a>
                 <a class="button button-secondary" href="${escapeHtml(href)}">${escapeHtml(config.openSeries)}</a>
-                <a class="button button-secondary" href="/library/">${escapeHtml(config.libraryLabel)}</a>
+                <a class="button button-secondary" href="${escapeHtml(config.libraryHref)}">${escapeHtml(config.libraryLabel)}</a>
               </div>
             </div>
           </article>`,

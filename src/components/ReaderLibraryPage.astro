@@ -13,13 +13,13 @@ interface Props {
 const { lang = 'zh-Hant' } = Astro.props;
 const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
 const pointsPaths = {
-  en: '/points/', ja: '/ja/points/', zhHant: '/zh-hant/points/', zhHans: '/zh-hans/points/'
+  en: '/en/points/', ja: '/ja/points/', zhHant: '/zh-hant/points/', zhHans: '/zh-hans/points/'
 };
 const termsPaths = {
-  en: '/terms/', ja: '/ja/terms/', zhHant: '/zh-hant/terms/', zhHans: '/zh-hans/terms/'
+  en: '/en/terms/', ja: '/ja/terms/', zhHant: '/zh-hant/terms/', zhHans: '/zh-hans/terms/'
 };
 const privacyPaths = {
-  en: '/privacy/', ja: '/ja/privacy/', zhHant: '/zh-hant/privacy/', zhHans: '/zh-hans/privacy/'
+  en: '/en/privacy/', ja: '/ja/privacy/', zhHant: '/zh-hant/privacy/', zhHans: '/zh-hans/privacy/'
 };
 const copy = {
   en: {
@@ -655,7 +655,7 @@ const clientConfig = {
     const readerClientConfigNode = document.getElementById('reader-client-config');
     const readerClientConfig = JSON.parse(readerClientConfigNode?.textContent || '{}');
     const readerLocale = readerClientConfig.locale || 'zh-Hant';
-    const readerLibraryPath = readerClientConfig.libraryPath || '/library/';
+    const readerLibraryPath = readerClientConfig.libraryPath || '/zh-hant/library/';
     const readerMessages = readerClientConfig.messages || {};
     const readerUi = readerClientConfig.ui || {};
     const formatReaderMessage = (key, values = {}) => String(readerMessages[key] || key).replace(

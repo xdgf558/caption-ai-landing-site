@@ -67,7 +67,7 @@ assert.match(stationHome, /<h3>NodePilot<\/h3>/);
 assert.match(stationHome, /nodePilotDownload/);
 assert.match(appsIndex, /title="NodePilot"/);
 assert.match(footer, /label: 'NodePilot'/);
-assert.equal(existsSync(join(root, 'src/pages/apps/nodepilot/index.astro')), true);
+assert.equal(existsSync(join(root, 'src/pages/en/apps/nodepilot/index.astro')), true);
 assert.match(nodePilotProduct, /latestVersion: 'v0\.2\.26'/);
 assert.match(nodePilotProduct, /36d5f94320755ab02b594051acf5a4c94564c9f4bc9c327a0950f507c0181e40/);
 assert.match(nodePilotProduct, /53eec44cfa183eea11d6f8dc653dd10d0e0a0538623094ff1ca26ce7962db4b4/);
@@ -80,7 +80,7 @@ assert.match(stationHome, /mindBudgetProduct/);
 assert.match(appsIndex, /title=\{lang === 'zh-Hans' \|\| lang === 'zh-Hant' \? '花有數' : 'MindBudget'\}/);
 assert.match(footer, /apps\/mindbudget\//);
 for (const path of ['download.astro', 'privacy.astro', 'support.astro']) {
-  assert.equal(existsSync(join(root, 'src/pages/apps/mindbudget', path)), true, `MindBudget route is missing: ${path}`);
+  assert.equal(existsSync(join(root, 'src/pages/en/apps/mindbudget', path)), true, `MindBudget route is missing: ${path}`);
 }
 assert.match(mindBudgetProduct, /latestVersion: '0\.9\.4'/);
 assert.match(mindBudgetProduct, /https:\/\/testflight\.apple\.com\/join\/gnhUNEbz/);

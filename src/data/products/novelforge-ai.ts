@@ -18,8 +18,8 @@ export const novelForgeAiProduct = {
       channel: 'public-test'
     }
   ],
-  productPath: '/apps/novelforge-ai/',
-  downloadPagePath: '/apps/novelforge-ai/download/',
+  productPath: '/en/apps/novelforge-ai/',
+  downloadPagePath: '/en/apps/novelforge-ai/download/',
   zhHantProductPath: '/zh-hant/apps/novelforge-ai/',
   zhHantDownloadPagePath: '/zh-hant/apps/novelforge-ai/download/',
   zhHansProductPath: '/zh-hans/apps/novelforge-ai/',

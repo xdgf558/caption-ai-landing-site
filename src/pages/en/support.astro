@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { siteConfig } from '../../data/site';
+---
+
+<BaseLayout
+  title="Support"
+  description="Support and contact information for Station Cat products."
+  lang="en"
+  canonicalPath="/en/support/"
+>
+  <section class="page-shell">
+    <p class="section-kicker">Support</p>
+    <h1>Support for current products.</h1>
+    <p>
+      For help, feedback, or waitlist deletion requests, use the product support page and mention the product name.
+    </p>
+    <div class="link-panel">
+      <a href="/en/apps/caption-ai/support/">SnapCopy Support</a>
+      <a href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>
+    </div>
+  </section>
+</BaseLayout>

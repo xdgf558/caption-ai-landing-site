@@ -16,6 +16,8 @@ const devlogPath = normalizedPath
   .replace(/^\/en(?=\/devlog)/, '')
   .replace(/^\/zh-hant(?=\/devlog)/, '')
   .replace(/^\/zh-hans(?=\/devlog)/, '');
+const novelPath = normalizedPath
+  .replace(/^\/en(?=\/novel)/, '');
 const worksPath = normalizedPath
   .replace(/^\/ja(?=\/works)/, '')
   .replace(/^\/en(?=\/works)/, '')
@@ -28,12 +30,13 @@ const standalonePath = normalizedPath
   .replace(/^\/zh-hans(?=\/(?:points|library|terms|privacy))/, '');
 const isApps = appsPath.startsWith('/apps');
 const isDevlog = devlogPath.startsWith('/devlog');
+const isNovel = novelPath.startsWith('/novel');
 const isWorks = worksPath.startsWith('/works');
 const isStandalone = /^\/(?:points|library|terms|privacy)\/$/.test(standalonePath);
-const standaloneEnglishPath = standalonePath === '/library/' ? '/en/library/' : standalonePath;
-const enPath = isStandalone ? standaloneEnglishPath : isApps ? appsPath : isDevlog ? `/en${devlogPath}` : isWorks ? worksPath : '/en/';
+const standaloneEnglishPath = `/en${standalonePath}`;
+const enPath = isStandalone ? standaloneEnglishPath : isApps ? `/en${appsPath}` : isDevlog ? `/en${devlogPath}` : isNovel ? `/en${novelPath}` : isWorks ? `/en${worksPath}` : '/en/';
 const jaPath = isStandalone ? `/ja${standalonePath}` : isApps ? `/ja${appsPath}` : isDevlog ? `/ja${devlogPath}` : isWorks ? `/ja${worksPath}` : '/ja/';
-const zhHantPath = isStandalone ? `/zh-hant${standalonePath}` : isApps ? `/zh-hant${appsPath}` : isDevlog ? devlogPath : isWorks ? `/zh-hant${worksPath}` : '/';
+const zhHantPath = isStandalone ? `/zh-hant${standalonePath}` : isApps ? `/zh-hant${appsPath}` : isDevlog ? devlogPath : isNovel ? novelPath : isWorks ? `/zh-hant${worksPath}` : '/';
 const zhHansPath = isStandalone ? `/zh-hans${standalonePath}` : isApps ? `/zh-hans${appsPath}` : isDevlog ? `/zh-hans${devlogPath}` : isWorks ? `/zh-hans${worksPath}` : '/zh-hans/';
 const currentLabel = lang === 'zh-Hans' ? '简中' : lang === 'en' ? 'EN' : lang === 'ja' ? '日本語' : '繁中';
 ---

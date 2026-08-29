@@ -1,0 +1,41 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import DownloadButtons from '../../../../components/DownloadButtons.astro';
+import UseCaseSection from '../../../../components/UseCaseSection.astro';
+import { captionAiProduct } from '../../../../data/products/caption-ai';
+import { captionAiEn } from '../../../../data/copy/caption-ai.en';
+---
+
+<ProductLayout
+  title="Download SnapCopy on the App Store"
+  description="SnapCopy is available on the App Store for iPhone and iPad."
+  lang="en"
+  canonicalPath="/en/apps/caption-ai/download/"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/download/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/download/' },
+    { hrefLang: 'en', href: '/en/apps/caption-ai/download/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/download/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/download/' }
+  ]}
+>
+  <section class="page-shell">
+    <p class="section-kicker">Download</p>
+    <h1>SnapCopy is now on the App Store.</h1>
+    <p>
+      iPhone and iPad users can get SnapCopy from the App Store. Android is still planned, and you can join the update list.
+    </p>
+    <div class="button-row">
+      <a class="button button-primary" href={captionAiProduct.platforms.ios.appStoreUrl}>Download on App Store</a>
+      <a class="button button-secondary" href="/android/?product=snapcopy&source=download-page&campaign=android-waitlist">Get Android Updates</a>
+    </div>
+  </section>
+  <DownloadButtons
+    ios={captionAiProduct.platforms.ios}
+    android={captionAiProduct.platforms.android}
+    locale="en"
+    iosWaitlistHref="#waitlist-ios"
+    androidWaitlistHref="/android/?product=snapcopy&source=download-page&campaign=android-waitlist"
+  />
+  <UseCaseSection title="Built around daily sharing" scenes={captionAiEn.scenes} />
+</ProductLayout>

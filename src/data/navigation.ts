@@ -1,7 +1,7 @@
 export const brandNavigation = [
-  { label: 'Apps', href: '/apps/' },
-  { label: 'Points', href: '/points/' },
-  { label: 'Serials', href: '/novel/' },
+  { label: 'Apps', href: '/en/apps/' },
+  { label: 'Points', href: '/en/points/' },
+  { label: 'Serials', href: '/en/novel/' },
   { label: 'Signal', href: '/en/signal/' },
   { label: 'Member Login', href: '/en/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
@@ -39,11 +39,11 @@ export const jaBrandNavigation = [
 ];
 
 export const productNavigation = [
-  { label: 'Overview', href: '/apps/caption-ai/' },
-  { label: 'Serials', href: '/novel/' },
-  { label: 'Download', href: '/apps/caption-ai/download/' },
-  { label: 'Android', href: '/apps/caption-ai/android/' },
-  { label: 'Support', href: '/apps/caption-ai/support/' }
+  { label: 'Overview', href: '/en/apps/caption-ai/' },
+  { label: 'Serials', href: '/en/novel/' },
+  { label: 'Download', href: '/en/apps/caption-ai/download/' },
+  { label: 'Android', href: '/en/apps/caption-ai/android/' },
+  { label: 'Support', href: '/en/apps/caption-ai/support/' }
 ];
 
 export const zhProductNavigation = [

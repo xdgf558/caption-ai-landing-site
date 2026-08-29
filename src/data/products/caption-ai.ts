@@ -19,7 +19,7 @@ export const snapCopyProduct = {
   },
   locales: ['zh-Hant', 'zh-Hans', 'en', 'ja'],
   defaultLocale: 'zh-Hant',
-  productPath: '/apps/caption-ai/',
+  productPath: '/en/apps/caption-ai/',
   zhHantProductPath: '/zh-hant/apps/caption-ai/',
   zhHansProductPath: '/zh-hans/apps/caption-ai/',
   jaProductPath: '/ja/apps/caption-ai/',

@@ -44,8 +44,8 @@ export const privatePinyinProduct = {
     appId: '6789098978',
     url: 'https://apps.apple.com/app/id6789098978'
   },
-  productPath: '/apps/privatepinyin/',
-  downloadPagePath: '/apps/privatepinyin/download/',
+  productPath: '/en/apps/privatepinyin/',
+  downloadPagePath: '/en/apps/privatepinyin/download/',
   zhHantProductPath: '/zh-hant/apps/privatepinyin/',
   zhHantDownloadPagePath: '/zh-hant/apps/privatepinyin/download/',
   zhHansProductPath: '/zh-hans/apps/privatepinyin/',
@@ -53,13 +53,13 @@ export const privatePinyinProduct = {
   jaProductPath: '/ja/apps/privatepinyin/',
   jaDownloadPagePath: '/ja/apps/privatepinyin/download/',
   privacyPaths: {
-    en: '/apps/privatepinyin/privacy/',
+    en: '/en/apps/privatepinyin/privacy/',
     zhHans: '/zh-hans/apps/privatepinyin/privacy/',
     zhHant: '/zh-hant/apps/privatepinyin/privacy/',
     ja: '/ja/apps/privatepinyin/privacy/'
   },
   supportPaths: {
-    en: '/apps/privatepinyin/support/',
+    en: '/en/apps/privatepinyin/support/',
     zhHans: '/zh-hans/apps/privatepinyin/support/',
     zhHant: '/zh-hant/apps/privatepinyin/support/',
     ja: '/ja/apps/privatepinyin/support/'

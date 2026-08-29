@@ -1,0 +1,33 @@
+---
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import CaptionAiLanding from '../../../../components/CaptionAiLanding.astro';
+import { captionAiEn } from '../../../../data/copy/caption-ai.en';
+import { captionAiFaqEn } from '../../../../data/faqs/caption-ai.en';
+
+const links = {
+  download: '/en/apps/caption-ai/download/?product=snapcopy&source=product-page&campaign=hero',
+  platformDownload: '/en/apps/caption-ai/download/?product=snapcopy&source=product-page&campaign=platform',
+  downloadBox: '/en/apps/caption-ai/download/?product=snapcopy&source=product-page&campaign=download-box',
+  finalDownload: '/en/apps/caption-ai/download/?product=snapcopy&source=product-page&campaign=final-cta',
+  privacy: '/en/apps/caption-ai/privacy/?product=snapcopy&source=product-page&campaign=hero-privacy',
+  android: '/android/?product=snapcopy&source=product-page&campaign=android-waitlist',
+  follow: 'https://x.com/bketck'
+};
+---
+
+<ProductLayout
+  title={captionAiEn.seo.title}
+  description={captionAiEn.seo.description}
+  lang="en"
+  canonicalPath="/en/apps/caption-ai/"
+  bodyClass="caption-product-page"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/caption-ai/' },
+    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/caption-ai/' },
+    { hrefLang: 'en', href: '/en/apps/caption-ai/' },
+    { hrefLang: 'ja', href: '/ja/apps/caption-ai/' },
+    { hrefLang: 'x-default', href: '/zh-hant/apps/caption-ai/' }
+  ]}
+>
+  <CaptionAiLanding copy={captionAiEn} faqItems={captionAiFaqEn} locale="en" links={links} />
+</ProductLayout>

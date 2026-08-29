@@ -122,8 +122,8 @@ assert.match(downloadPage, /Application Support\/NovelForge AI/);
 assert.match(downloadPage, /not offered under an open-source license/);
 
 for (const route of [
-  'src/pages/apps/novelforge-ai/index.astro',
-  'src/pages/apps/novelforge-ai/download.astro',
+  'src/pages/en/apps/novelforge-ai/index.astro',
+  'src/pages/en/apps/novelforge-ai/download.astro',
   'src/pages/zh-hant/apps/novelforge-ai/index.astro',
   'src/pages/zh-hant/apps/novelforge-ai/download.astro',
   'src/pages/zh-hans/apps/novelforge-ai/index.astro',
