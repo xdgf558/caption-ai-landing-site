@@ -21130,8 +21130,8 @@ const pageRedirects = {
 const permanentTrailingSlashPatterns = [
   /^\/(?:(?:en|ja|zh-hans|zh-hant)\/)?signal(?:\/.*)?$/,
   /^\/(?:en\/)?novel(?:\/.*)?$/,
-  /^\/(?:en|ja|zh-hans|zh-hant)?\/?devlog(?:\/.*)?$/,
-  /^\/(?:en|ja|zh-hans|zh-hant)?\/?works(?:\/.*)?$/
+  /^\/(?:(?:en|ja|zh-hans|zh-hant)\/)?devlog(?:\/.*)?$/,
+  /^\/(?:(?:en|ja|zh-hans|zh-hant)\/)?works(?:\/.*)?$/
 ];
 
 const getPermanentTrailingSlashRedirect = (pathname) => {
@@ -21383,6 +21383,7 @@ export const __readerTotpTestHooks = {
   getD1ChangeCount,
   getAdjacentPublishedSignalBriefs,
   getLegacyWorksRedirectPath,
+  getPermanentTrailingSlashRedirect,
   getSignalAutomationHealth,
   handleR2Download,
   parseDownloadByteRange,

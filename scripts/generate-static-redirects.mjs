@@ -1,10 +1,11 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const distRoot = resolve(projectRoot, 'dist');
 const redirectsPath = resolve(distRoot, '_redirects');
+const localizedNotFoundLocales = ['en', 'ja', 'zh-hans', 'zh-hant'];
 
 const walk = async (directory) => {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -41,4 +42,12 @@ const output = [existing.trimEnd(), '', '# Permanent canonical redirects for gen
   .replace(/^\n+/, '');
 await writeFile(redirectsPath, output);
 
+for (const locale of localizedNotFoundLocales) {
+  await copyFile(
+    resolve(distRoot, locale, '404', 'index.html'),
+    resolve(distRoot, locale, '404.html')
+  );
+}
+
 console.log(`Generated ${redirects.length} permanent trailing-slash redirects.`);
+console.log(`Generated ${localizedNotFoundLocales.length} localized 404.html fallbacks.`);

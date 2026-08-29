@@ -3,6 +3,8 @@ import { access, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { __readerTotpTestHooks as workerHooks } from '../src/worker.js';
+
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path) => readFile(resolve(projectRoot, path), 'utf8');
 
@@ -55,7 +57,7 @@ for (const title of [
 await assert.rejects(access(resolve(projectRoot, 'src/pages/zh-hant/index.astro')));
 assert.match(redirects, /^\/zh-hant \/ 301$/m);
 assert.match(redirects, /^\/zh-hant\/ \/ 301$/m);
-assert.match(redirects, /^\/signal \/signal\/ 301$/m);
+assert.doesNotMatch(redirects, /^\/signal \/signal\/ 301$/m);
 assert.doesNotMatch(sitemap, /<loc>https:\/\/wwwstationcat\.org\/zh-hant\/<\/loc>/);
 
 for (const header of [
@@ -69,12 +71,21 @@ for (const header of [
 
 assert.match(wrangler, /not_found_handling\s*=\s*"404-page"/);
 assert.match(wrangler, /run_worker_first\s*=\s*\[/);
+for (const route of ['/admin', '/admin/*', '/admin-v2', '/admin-v2/*']) {
+  assert.ok(wrangler.includes(`"${route}"`), `admin route must run the Worker first: ${route}`);
+}
 for (const route of ['/signal/*', '/en/signal/*', '/ja/signal/*', '/zh-hans/signal/*', '/zh-hant/signal/*']) {
   assert.ok(wrangler.includes(`"${route}"`), `dynamic route must run the Worker first: ${route}`);
 }
 assert.match(worker, /'content-security-policy': "frame-ancestors 'none'"/);
 assert.match(worker, /const getPermanentTrailingSlashRedirect/);
 assert.match(worker, /Response\.redirect\(redirectUrl\.toString\(\), 301\)/);
+for (const path of ['/devlog', '/en/devlog', '/zh-hant/devlog/post', '/works/book', '/ja/works/book']) {
+  assert.equal(workerHooks.getPermanentTrailingSlashRedirect(path), `${path}/`);
+}
+for (const path of ['/endevlog', '/zh-hantdevlog', '/jaworks', '/zh-hansworks']) {
+  assert.equal(workerHooks.getPermanentTrailingSlashRedirect(path), '', `garbage route must not redirect: ${path}`);
+}
 
 assert.match(notFound, /robots="noindex, follow"/);
 assert.match(notFound, /aria-labelledby="not-found-heading"/);

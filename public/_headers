@@ -3,19 +3,3 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
-
-/admin
-  X-Robots-Tag: noindex, nofollow, noarchive
-  Cache-Control: no-store
-
-/admin/*
-  X-Robots-Tag: noindex, nofollow, noarchive
-  Cache-Control: no-store
-
-/admin-v2
-  X-Robots-Tag: noindex, nofollow, noarchive
-  Cache-Control: no-store
-
-/admin-v2/*
-  X-Robots-Tag: noindex, nofollow, noarchive
-  Cache-Control: no-store

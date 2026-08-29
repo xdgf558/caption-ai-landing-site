@@ -31,7 +31,10 @@ binding = "ASSETS"
 not_found_handling = "404-page"
 run_worker_first = [
   "/api/*",
+  # Keep both bare and nested admin routes behind the Worker JWT gate. Cloudflare Access remains the outer gate.
+  "/admin",
   "/admin/*",
+  "/admin-v2",
   "/admin-v2/*",
   "/downloads/*",
   "/novel/*",
