@@ -83,7 +83,12 @@ for (const legacyPage of [
   'src/pages/privacy.astro',
   'src/pages/support.astro',
   'src/pages/terms.astro',
-  'src/pages/library/index.astro'
+  'src/pages/library/index.astro',
+  'src/pages/works/index.astro',
+  'src/pages/en/works/index.astro',
+  'src/pages/ja/works/index.astro',
+  'src/pages/zh-hans/works/index.astro',
+  'src/pages/zh-hant/works/index.astro'
 ]) {
   await assert.rejects(access(resolve(projectRoot, legacyPage)), `${legacyPage} must not remain a duplicate page`);
 }

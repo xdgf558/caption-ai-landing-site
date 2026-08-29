@@ -40,7 +40,12 @@ for (const legacyPage of [
   'privacy/index.html',
   'support/index.html',
   'terms/index.html',
-  'library/index.html'
+  'library/index.html',
+  'works/index.html',
+  'en/works/index.html',
+  'ja/works/index.html',
+  'zh-hans/works/index.html',
+  'zh-hant/works/index.html'
 ]) {
   await assert.rejects(access(distPath(legacyPage)), `${legacyPage} must not be emitted as a duplicate page`);
 }
