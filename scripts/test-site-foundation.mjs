@@ -110,10 +110,10 @@ assert.ok(wrangler.includes('"/sitemap.xml"'), 'sitemap must run the Worker firs
 for (const route of ['/admin', '/admin/*', '/admin-v2', '/admin-v2/*']) {
   assert.ok(wrangler.includes(`"${route}"`), `admin route must run the Worker first: ${route}`);
 }
-for (const route of ['/works', '/en/works', '/ja/works', '/zh-hans/works', '/zh-hant/works']) {
-  assert.ok(wrangler.includes(`"${route}"`), `legacy works route must run the Worker first: ${route}`);
+for (const route of ['/works', '/works/*']) {
+  assert.ok(wrangler.includes(`"${route}"`), `unprefixed legacy works route must run the Worker first: ${route}`);
 }
-for (const route of ['/signal/*', '/en/signal/*', '/ja/signal/*', '/zh-hans/signal/*', '/zh-hant/signal/*']) {
+for (const route of ['/signal/*', '/en/*', '/ja/*', '/zh-hans/*', '/zh-hant/*']) {
   assert.ok(wrangler.includes(`"${route}"`), `dynamic route must run the Worker first: ${route}`);
 }
 assert.match(worker, /'content-security-policy': "frame-ancestors 'none'"/);
