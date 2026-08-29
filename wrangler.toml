@@ -28,6 +28,35 @@ CREEM_CREDIT_PACK_PRICE_USD = "10"
 [assets]
 directory = "./dist"
 binding = "ASSETS"
+not_found_handling = "404-page"
+run_worker_first = [
+  "/api/*",
+  "/admin/*",
+  "/admin-v2/*",
+  "/downloads/*",
+  "/novel/*",
+  "/en/novel",
+  "/en/novel/*",
+  "/signal",
+  "/signal/*",
+  "/en/signal",
+  "/en/signal/*",
+  "/ja/signal",
+  "/ja/signal/*",
+  "/zh-hans/signal",
+  "/zh-hans/signal/*",
+  "/zh-hant/signal",
+  "/zh-hant/signal/*",
+  "/devlog/*",
+  "/en/devlog/*",
+  "/ja/devlog/*",
+  "/zh-hans/devlog/*",
+  "/works/*",
+  "/en/works/*",
+  "/ja/works/*",
+  "/zh-hans/works/*",
+  "/zh-hant/works/*"
+]
 
 [ai]
 binding = "AI"

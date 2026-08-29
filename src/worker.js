@@ -37,6 +37,8 @@ const json = (body, init = {}) =>
     ...init,
     headers: {
       'content-type': 'application/json; charset=utf-8',
+      'referrer-policy': 'strict-origin-when-cross-origin',
+      'x-content-type-options': 'nosniff',
       ...(init.headers || {})
     }
   });
@@ -18320,7 +18322,11 @@ const dynamicHtmlResponse = (request, payload, init = {}) =>
     ...init,
     headers: {
       'cache-control': 'no-store',
+      'content-security-policy': "frame-ancestors 'none'",
       'content-type': 'text/html; charset=utf-8',
+      'referrer-policy': 'strict-origin-when-cross-origin',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'DENY',
       ...(init.headers || {})
     }
   });
@@ -21121,6 +21127,20 @@ const pageRedirects = {
   '/ja/apps/anytls-desktop-manager/': '/ja/apps/nodepilot/'
 };
 
+const permanentTrailingSlashPatterns = [
+  /^\/(?:(?:en|ja|zh-hans|zh-hant)\/)?signal(?:\/.*)?$/,
+  /^\/(?:en\/)?novel(?:\/.*)?$/,
+  /^\/(?:en|ja|zh-hans|zh-hant)?\/?devlog(?:\/.*)?$/,
+  /^\/(?:en|ja|zh-hans|zh-hant)?\/?works(?:\/.*)?$/
+];
+
+const getPermanentTrailingSlashRedirect = (pathname) => {
+  if (!pathname || pathname === '/' || pathname.endsWith('/')) return '';
+  const lastSegment = pathname.split('/').filter(Boolean).at(-1) || '';
+  if (!lastSegment || lastSegment.includes('.')) return '';
+  return permanentTrailingSlashPatterns.some((pattern) => pattern.test(pathname)) ? `${pathname}/` : '';
+};
+
 const getLegacyWorksRedirectPath = (pathname) => {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/';
   const segments = normalizedPath.split('/').filter(Boolean);
@@ -21480,6 +21500,7 @@ export default {
     const externalDownloadRedirect = externalDownloadRedirects[url.pathname];
     const redirectPath = pageRedirects[url.pathname];
     const legacyWorksRedirectPath = getLegacyWorksRedirectPath(url.pathname);
+    const permanentTrailingSlashRedirect = getPermanentTrailingSlashRedirect(url.pathname);
 
     // This gate runs before every /admin/, /admin-v2/, and /admin/api/ route is dispatched.
     if (isAdminRequest) {
@@ -21489,6 +21510,12 @@ export default {
 
     if (legacyWorksRedirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
       const redirectUrl = new URL(legacyWorksRedirectPath, url.origin);
+      redirectUrl.search = url.search;
+      return Response.redirect(redirectUrl.toString(), 301);
+    }
+
+    if (permanentTrailingSlashRedirect && (request.method === 'GET' || request.method === 'HEAD')) {
+      const redirectUrl = new URL(permanentTrailingSlashRedirect, url.origin);
       redirectUrl.search = url.search;
       return Response.redirect(redirectUrl.toString(), 301);
     }
