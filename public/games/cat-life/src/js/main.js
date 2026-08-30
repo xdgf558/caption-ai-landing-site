@@ -480,6 +480,7 @@
   window.CatGameApp = {
     activateMemberStorage: activateMemberStorage,
     applyCloudSave: applyCloudSave,
+    render: render,
   };
 
   function handleClick(event) {
@@ -814,6 +815,11 @@
     }
 
     if (target.matches("[data-room-setting]")) {
+      if (!game.systems.homeSystem.isRoomSettingAllowed(target.dataset.roomSetting, target.value)) {
+        pushNotice(t("premium_room_locked"));
+        render();
+        return;
+      }
       game.state.game.home.roomScene[target.dataset.roomSetting] = target.value;
       if (target.dataset.roomSetting === "layout") {
         game.systems.homeSystem.resetFurnitureLayout();
@@ -1015,6 +1021,9 @@
     render();
     if (window.CatGameCloud && typeof window.CatGameCloud.init === "function") {
       window.CatGameCloud.init(game.state.game);
+    }
+    if (window.CatGameCommerce && typeof window.CatGameCommerce.init === "function") {
+      window.CatGameCommerce.init();
     }
     scheduleLotteryResolve("init");
     game.state.saveSystem.saveGame(game.state.game);

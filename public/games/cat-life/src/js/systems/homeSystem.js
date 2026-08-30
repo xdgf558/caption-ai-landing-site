@@ -1,5 +1,7 @@
 (function (game) {
   var t = game.utils.i18n.t;
+  var escapeHtml = game.utils.format.escapeHtml;
+  var stationRoomEntitlement = "cat-life.content.furniture.station-room.v1";
   var wallOptions = [
     { value: "sunny", labelKey: "room_wall_sunny" },
     { value: "mint", labelKey: "room_wall_mint" },
@@ -20,6 +22,51 @@
     { value: "window", labelKey: "room_layout_window" },
     { value: "playful", labelKey: "room_layout_playful" },
   ];
+  var premiumOptions = {
+    wall: { value: "station-green", labelKey: "room_wall_station", entitlementKey: stationRoomEntitlement },
+    floor: { value: "station-stripe", labelKey: "room_floor_station", entitlementKey: stationRoomEntitlement },
+    decor: { value: "station-signal", labelKey: "room_decor_station", entitlementKey: stationRoomEntitlement },
+    layout: { value: "station-waiting", labelKey: "room_layout_station", entitlementKey: stationRoomEntitlement },
+  };
+
+  function hasEntitlement(entitlementKey) {
+    return Boolean(
+      window.CatGameCommerce &&
+      typeof window.CatGameCommerce.hasEntitlement === "function" &&
+      window.CatGameCommerce.hasEntitlement(entitlementKey)
+    );
+  }
+
+  function getBaseOptions(key) {
+    return {
+      wall: wallOptions,
+      floor: floorOptions,
+      decor: decorOptions,
+      layout: layoutOptions,
+    }[key] || [];
+  }
+
+  function getAvailableOptions(key) {
+    var options = getBaseOptions(key).slice();
+    var premium = premiumOptions[key];
+    if (premium && hasEntitlement(premium.entitlementKey)) options.push(premium);
+    return options;
+  }
+
+  function isRoomSettingAllowed(key, value) {
+    return getAvailableOptions(key).some(function (option) {
+      return option.value === value;
+    });
+  }
+
+  function getRenderableRoomScene(scene) {
+    var source = scene || {};
+    var defaults = { wall: "sunny", floor: "oak", decor: "plants", layout: "cozy" };
+    return Object.keys(defaults).reduce(function (result, key) {
+      result[key] = isRoomSettingAllowed(key, source[key]) ? source[key] : defaults[key];
+      return result;
+    }, {});
+  }
 
   function recalculateComfort() {
     syncPlacedFurnitureCapacity(true);
@@ -67,7 +114,7 @@
   }
 
   function ensureFurnitureLayout() {
-    var scene = game.state.game.home.roomScene;
+    var scene = getRenderableRoomScene(game.state.game.home.roomScene);
     var layout = game.state.game.home.furnitureLayout || {};
 
     game.state.game.home.placedFurniture.forEach(function (furnitureId, index) {
@@ -139,6 +186,12 @@
         { left: "62%", top: "30%" },
         { left: "24%", top: "28%" },
       ],
+      "station-waiting": [
+        { left: "8%", top: "56%" },
+        { left: "34%", top: "48%" },
+        { left: "62%", top: "56%" },
+        { left: "72%", top: "30%" },
+      ],
     };
     var points = layoutMap[layout] || layoutMap.cozy;
     return points[index % points.length];
@@ -159,7 +212,7 @@
   }
 
   function resetFurnitureLayout() {
-    var scene = game.state.game.home.roomScene;
+    var scene = getRenderableRoomScene(game.state.game.home.roomScene);
     var layout = {};
 
     syncPlacedFurnitureCapacity(true).placed.forEach(function (furnitureId, index) {
@@ -221,6 +274,7 @@
   }
 
   function renderRoomScene(scene, cats, furniture) {
+    scene = getRenderableRoomScene(scene);
     var roomStep = getCurrentRoomStep();
     syncPlacedFurnitureCapacity(true);
     ensureFurnitureLayout();
@@ -233,7 +287,7 @@
           '" src="' +
           game.utils.catArt.buildCatSvg(cat, 88) +
           '" alt="' +
-          cat.name +
+          escapeHtml(cat.name) +
           '" style="animation-delay:' +
           index * 0.6 +
           's;" />'
@@ -300,6 +354,12 @@
     setFurniturePosition: setFurniturePosition,
     resetFurnitureLayout: resetFurnitureLayout,
     renderRoomScene: renderRoomScene,
+    getRenderableRoomScene: getRenderableRoomScene,
+    getRoomWallOptions: function () { return getAvailableOptions("wall"); },
+    getRoomFloorOptions: function () { return getAvailableOptions("floor"); },
+    getRoomDecorOptions: function () { return getAvailableOptions("decor"); },
+    getRoomLayoutOptions: function () { return getAvailableOptions("layout"); },
+    isRoomSettingAllowed: isRoomSettingAllowed,
     roomWallOptions: wallOptions,
     roomFloorOptions: floorOptions,
     roomDecorOptions: decorOptions,

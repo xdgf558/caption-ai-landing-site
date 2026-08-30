@@ -232,6 +232,13 @@
   min-height: 1.4em;
 }
 
+.cat-commerce-dialog__balance {
+  background: #eee5d6;
+  border-left: 4px solid #1e5f50;
+  font-weight: 800;
+  padding: 12px 14px;
+}
+
 .cat-recovery-list,
 .cat-recovery-log > div {
   display: grid;

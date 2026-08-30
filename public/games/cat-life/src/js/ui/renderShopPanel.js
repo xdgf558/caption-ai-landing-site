@@ -83,6 +83,9 @@
   }
 
   function renderShopPanel(state) {
+    var stationCommerce = window.CatGameCommerce && typeof window.CatGameCommerce.renderShopSection === "function"
+      ? window.CatGameCommerce.renderShopSection()
+      : "";
     var currentHunger = game.systems.playerSystem.getCurrentHunger();
     var now = game.systems.timeSystem.getNow();
     var discountActive = game.systems.shopSystem.isDiscountWindow(now);
@@ -130,6 +133,7 @@
       "</div>" +
       "</div>" +
       "</section>" +
+      stationCommerce +
       '<section class="page-card">' +
       '<div class="inline-row"><div><p class="section-eyebrow">' + t("shop_discount_title") + '</p><h3 class="panel-title">' + t("shop_discount_panel_title") + "</h3></div></div>" +
       '<p class="page-copy" style="margin-top: 8px;">' +
