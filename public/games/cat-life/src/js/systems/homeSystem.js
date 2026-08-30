@@ -1,7 +1,9 @@
 (function (game) {
   var t = game.utils.i18n.t;
   var escapeHtml = game.utils.format.escapeHtml;
-  var stationRoomEntitlement = "cat-life.content.furniture.station-room.v1";
+  var contentManifest = window.CatGameContentManifest;
+  var stationRoomProduct = contentManifest && contentManifest.getProduct("cat-life.bundle.station-room");
+  var stationRoomTheme = stationRoomProduct && stationRoomProduct.roomTheme;
   var wallOptions = [
     { value: "sunny", labelKey: "room_wall_sunny" },
     { value: "mint", labelKey: "room_wall_mint" },
@@ -22,13 +24,6 @@
     { value: "window", labelKey: "room_layout_window" },
     { value: "playful", labelKey: "room_layout_playful" },
   ];
-  var premiumOptions = {
-    wall: { value: "station-green", labelKey: "room_wall_station", entitlementKey: stationRoomEntitlement },
-    floor: { value: "station-stripe", labelKey: "room_floor_station", entitlementKey: stationRoomEntitlement },
-    decor: { value: "station-signal", labelKey: "room_decor_station", entitlementKey: stationRoomEntitlement },
-    layout: { value: "station-waiting", labelKey: "room_layout_station", entitlementKey: stationRoomEntitlement },
-  };
-
   function hasEntitlement(entitlementKey) {
     return Boolean(
       window.CatGameCommerce &&
@@ -48,8 +43,10 @@
 
   function getAvailableOptions(key) {
     var options = getBaseOptions(key).slice();
-    var premium = premiumOptions[key];
-    if (premium && hasEntitlement(premium.entitlementKey)) options.push(premium);
+    var premium = stationRoomTheme && stationRoomTheme.options[key];
+    if (premium && stationRoomProduct && hasEntitlement(stationRoomProduct.entitlementKey)) {
+      options.push(premium);
+    }
     return options;
   }
 
@@ -186,15 +183,38 @@
         { left: "62%", top: "30%" },
         { left: "24%", top: "28%" },
       ],
-      "station-waiting": [
-        { left: "8%", top: "56%" },
-        { left: "34%", top: "48%" },
-        { left: "62%", top: "56%" },
-        { left: "72%", top: "30%" },
-      ],
     };
+    if (stationRoomTheme && stationRoomTheme.layoutPositions) {
+      Object.keys(stationRoomTheme.layoutPositions).forEach(function (key) {
+        layoutMap[key] = stationRoomTheme.layoutPositions[key];
+      });
+    }
     var points = layoutMap[layout] || layoutMap.cozy;
     return points[index % points.length];
+  }
+
+  function renderThemeFixtures(scene) {
+    if (!stationRoomTheme || !stationRoomProduct || !hasEntitlement(stationRoomProduct.entitlementKey)) return "";
+    return stationRoomTheme.fixtures
+      .filter(function (fixture) {
+        return Object.keys(fixture.when).every(function (key) {
+          return scene[key] === fixture.when[key];
+        });
+      })
+      .map(function (fixture) {
+        return (
+          '<img class="room-theme-fixture room-theme-fixture--' +
+          escapeHtml(fixture.id) +
+          '" src="' +
+          escapeHtml(fixture.asset) +
+          '" alt="" aria-hidden="true" width="' +
+          fixture.width +
+          '" height="' +
+          fixture.height +
+          '" loading="lazy" />'
+        );
+      })
+      .join("");
   }
 
   function getFurniturePosition(furnitureId, index, layoutName) {
@@ -333,6 +353,7 @@
       "</div>" +
       '<div class="room-wall-art"></div>' +
       '<div class="room-floor"></div>' +
+      renderThemeFixtures(scene) +
       furnitureMarkup +
       catMarkup +
       "</div>"

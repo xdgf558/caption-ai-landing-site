@@ -41,7 +41,7 @@ const copy = {
     accountText: '不登入也能以遊客身分在本機遊玩。登入 Station Cat 會員後，遊戲會顯示會員資料，並使用帳號專屬的本機副本與雲端存檔。舊遊客進度可安全承接；本機與雲端有差異時會先請你選擇，並可從最近 5 份雲端記錄恢復。',
     commerceKicker: 'Optional member unlocks',
     commerceTitle: '喜歡的外觀，可以跟著帳號一起走。',
-    commerceText: '遊戲商城已支援 Station 積分商品。首批支援月夜虎斑造型與車站房間主題；只有正式上架的商品才會在遊戲中顯示，兌換前會展示伺服器目前價格與帳戶餘額。',
+    commerceText: '首批實際內容已完成：月夜虎斑為小橘提供銀藍外觀；車站房間套裝包含綠牆、條紋地板、長椅、信號燈、車站時鐘與站牌。只有後台正式上架的商品才會顯示價格並允許兌換。',
     commerceNotes: ['永久解鎖、帳號綁定、不可轉讓', '一次性積分兌換，沒有自動續費', '不影響遊戲數值；本機金幣與存檔不能換取官方權益'],
     languages: '遊戲介面支援簡體中文、English 與日本語；本站介紹頁提供繁中、簡中、英文與日文。',
     finalTitle: '今天先領一隻貓回家。',
@@ -76,7 +76,7 @@ const copy = {
     accountText: '不登录也能以游客身份在本地游玩。登录 Station Cat 会员后，游戏会显示会员资料，并使用账号专属的本地副本与云存档。旧游客进度可安全承接；本地与云端有差异时会先请你选择，并可从最近 5 份云端记录恢复。',
     commerceKicker: 'Optional member unlocks',
     commerceTitle: '喜欢的外观，可以跟着账号一起走。',
-    commerceText: '游戏商城已支持 Station 积分商品。首批支持月夜虎斑造型与车站房间主题；只有正式上架的商品才会在游戏中显示，兑换前会展示服务器当前价格与账户余额。',
+    commerceText: '首批实际内容已完成：月夜虎斑为小橘提供银蓝外观；车站房间套装包含绿墙、条纹地板、长椅、信号灯、车站时钟与站牌。只有后台正式上架的商品才会显示价格并允许兑换。',
     commerceNotes: ['永久解锁、账号绑定、不可转让', '一次性积分兑换，没有自动续费', '不影响游戏数值；本地金币与存档不能换取官方权益'],
     languages: '游戏界面支持简体中文、English 与日本語；本站介绍页提供繁中、简中、英文与日文。',
     finalTitle: '今天先领一只猫回家。',
@@ -111,7 +111,7 @@ const copy = {
     accountText: 'You can play locally without signing in. After signing in to Station Cat, the game shows your member profile and uses an account-specific local copy with cloud save. Existing guest progress can be carried forward safely; if local and cloud versions differ, you choose which one to keep, and the five latest cloud versions remain available for recovery.',
     commerceKicker: 'Optional member unlocks',
     commerceTitle: 'Keep favorite looks with your account.',
-    commerceText: 'The game shop now supports Station Points products. Moonlit Tabby and the Station Room Set are the first supported unlocks. Only released products appear in the game, with the current server price and account balance shown before redemption.',
+    commerceText: 'The first complete content packs are ready. Moonlit Tabby gives Sunny a silver-blue look; the Station Room Set includes green walls, striped flooring, a bench, signal lamp, station clock, and departure board. Prices and redemption appear only after a product is formally activated in Admin.',
     commerceNotes: ['Permanent, account-bound, and non-transferable', 'One-time points redemption with no automatic renewal', 'Cosmetic only; local gold and save data cannot create official ownership'],
     languages: 'The game interface supports Simplified Chinese, English, and Japanese. This product page is available in Traditional Chinese, Simplified Chinese, English, and Japanese.',
     finalTitle: 'Bring a cat home today.',
@@ -146,7 +146,7 @@ const copy = {
     accountText: 'ログインせずに、ゲストとしてこの端末で遊べます。Station Cat にログインすると会員情報が表示され、アカウント専用のローカル副本とクラウドセーブが使われます。既存のゲスト進行は安全に引き継げます。ローカルとクラウドが異なる場合は使う版を選べ、最近 5 件のクラウド版から復元できます。',
     commerceKicker: 'Optional member unlocks',
     commerceTitle: 'お気に入りの見た目をアカウントと一緒に。',
-    commerceText: 'ゲーム内ショップは Station Points 商品に対応しました。最初の対応商品は月夜のキジトラと駅の部屋セットです。正式公開された商品だけが表示され、交換前にサーバー上の現在価格と残高を確認できます。',
+    commerceText: '最初の実コンテンツが完成しました。月夜のキジトラはサニーを銀青の外観に変え、駅の部屋セットには緑の壁、縞床、ベンチ、信号ランプ、駅時計、発車案内板が含まれます。Admin で正式に有効化された商品だけが価格を表示し、交換できます。',
     commerceNotes: ['永久解放・アカウント専用・譲渡不可', '1回限りのポイント交換で自動更新なし', '見た目のみ。ローカルコインやセーブデータでは公式所有権を作れません'],
     languages: 'ゲーム画面は簡体字中国語、English、日本語に対応しています。紹介ページは繁体字、簡体字、英語、日本語で読めます。',
     finalTitle: '今日、最初の猫を迎えよう。',
@@ -258,7 +258,9 @@ const structuredData = {
   <section class="page-section cat-life-commerce" aria-labelledby="cat-life-commerce-title">
     <div class="cat-life-commerce__media" aria-hidden="true">
       <img src={catLifeGameProduct.assets.moonlitTabby} alt="" width="480" height="480" loading="lazy" />
-      <img src={catLifeGameProduct.assets.stationRoom} alt="" width="800" height="800" loading="lazy" />
+      <img src={catLifeGameProduct.assets.stationBench} alt="" width="640" height="640" loading="lazy" />
+      <img src={catLifeGameProduct.assets.stationSignalLamp} alt="" width="600" height="640" loading="lazy" />
+      <img src={catLifeGameProduct.assets.stationClockBoard} alt="" width="640" height="640" loading="lazy" />
     </div>
     <div class="cat-life-commerce__copy">
       <p class="section-kicker">{copy.commerceKicker}</p>

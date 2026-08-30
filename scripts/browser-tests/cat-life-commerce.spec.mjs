@@ -160,14 +160,25 @@ test('unlocks the complete station room option set from an account entitlement',
   expect(await page.evaluate(() => window.CatGame.systems.homeSystem.getRenderableRoomScene({
     wall: 'station-green', floor: 'station-stripe', decor: 'station-signal', layout: 'station-waiting'
   }))).toEqual({ wall: 'station-green', floor: 'station-stripe', decor: 'station-signal', layout: 'station-waiting' });
-
+  await page.evaluate(() => {
+    const preview = document.createElement('div');
+    preview.id = 'station-room-test-preview';
+    preview.innerHTML = window.CatGame.systems.homeSystem.renderRoomScene({
+      wall: 'station-green', floor: 'station-stripe', decor: 'station-signal', layout: 'station-waiting'
+    }, [], []);
+    document.body.appendChild(preview);
+  });
+  await expect(page.locator('#station-room-test-preview .room-theme-fixture')).toHaveCount(3);
+  await expect(page.locator('.room-theme-fixture--station-bench')).toHaveAttribute('src', /station-bench\.png$/);
+  await expect(page.locator('.room-theme-fixture--station-signal-lamp')).toHaveAttribute('src', /station-signal-lamp\.png$/);
+  await expect(page.locator('.room-theme-fixture--station-clock-board')).toHaveAttribute('src', /station-clock-board\.png$/);
 });
 
 test('keeps forged premium room values visually locked for a guest and fits mobile width', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     localStorage.setItem('catGameSaveV1', JSON.stringify({
-      version: '1.18.0',
+      version: '1.19.0',
       schemaVersion: 2,
       meta: { createdAt: new Date().toISOString() },
       player: { name: 'Guest', gold: 500 },
@@ -188,5 +199,14 @@ test('keeps forged premium room values visually locked for a guest and fits mobi
     window.CatGame.state.game.home.roomScene
   ));
   expect(scene).toEqual({ wall: 'sunny', floor: 'oak', decor: 'plants', layout: 'cozy' });
+  expect(await page.evaluate(() => {
+    const preview = document.createElement('div');
+    preview.innerHTML = window.CatGame.systems.homeSystem.renderRoomScene(
+      window.CatGame.state.game.home.roomScene,
+      [],
+      []
+    );
+    return preview.querySelectorAll('.room-theme-fixture').length;
+  })).toBe(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
 });
