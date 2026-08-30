@@ -72,6 +72,8 @@ const readerTotpResetMaxLockSeconds = 15 * 60;
 const catLifeGameKey = 'cat-life';
 const catLifeGameSaveMaxBytes = 750000;
 const catLifeGameSaveBackupLimit = 5;
+const catLifeGameSaveRateLimitWindowSeconds = 60;
+const catLifeGameSaveRateLimitWrites = 20;
 const adminPathPattern = /^\/admin(?:-v2)?(?:\/|$)/;
 const defaultAdminEmail = 'brodstem@protonmail.com';
 
@@ -2651,7 +2653,7 @@ const isMissingReaderTotpResetAttemptsError = (error) =>
 const isMissingReadingEventsError = (error) => /no such table: reading_events/i.test(error?.message || '');
 const isMissingReaderCommentsError = (error) => /no such table: reader_comments/i.test(error?.message || '');
 const isMissingReaderGameSavesError = (error) =>
-  /no such table: reader_game_save(?:s|_backups)/i.test(error?.message || '');
+  /no such table: reader_game_save(?:s|_backups|_rate_limits)/i.test(error?.message || '');
 const isMissingProductFeedbackError = (error) => /no such table: product_feedback/i.test(error?.message || '');
 const isMissingChapterStatsError = (error) => /no such table: chapter_stats/i.test(error?.message || '');
 const isMissingAiInsightsError = (error) => /no such table: ai_insights/i.test(error?.message || '');
@@ -2852,6 +2854,7 @@ const ensureReaderGameSavesReady = async (db) => {
   try {
     await db.prepare('SELECT id FROM reader_game_saves LIMIT 1').first();
     await db.prepare('SELECT id FROM reader_game_save_backups LIMIT 1').first();
+    await db.prepare('SELECT account_id FROM reader_game_save_rate_limits LIMIT 1').first();
     return true;
   } catch (error) {
     if (isMissingReaderGameSavesError(error)) return false;
@@ -4848,6 +4851,42 @@ const readerGameSaveConflictResponse = (session, row) =>
     { status: 409 }
   );
 
+const checkReaderGameSaveRateLimit = async (db, accountId) => {
+  const row = await db
+    .prepare(
+      `INSERT INTO reader_game_save_rate_limits (
+        account_id, game_key, window_started_at, write_count, updated_at
+      )
+      VALUES (?, ?, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP)
+      ON CONFLICT(account_id, game_key) DO UPDATE SET
+        write_count = CASE
+          WHEN unixepoch(window_started_at) <= unixepoch('now') - ? THEN 1
+          ELSE write_count + 1
+        END,
+        window_started_at = CASE
+          WHEN unixepoch(window_started_at) <= unixepoch('now') - ? THEN CURRENT_TIMESTAMP
+          ELSE window_started_at
+        END,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING
+        write_count,
+        MAX(1, ? - MAX(0, unixepoch('now') - unixepoch(window_started_at))) AS retry_after_seconds`
+    )
+    .bind(
+      accountId,
+      catLifeGameKey,
+      catLifeGameSaveRateLimitWindowSeconds,
+      catLifeGameSaveRateLimitWindowSeconds,
+      catLifeGameSaveRateLimitWindowSeconds
+    )
+    .first();
+
+  return {
+    limited: Number(row?.write_count || 0) > catLifeGameSaveRateLimitWrites,
+    retryAfterSeconds: Number(row?.retry_after_seconds || catLifeGameSaveRateLimitWindowSeconds)
+  };
+};
+
 const handleReaderGameSavePut = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
@@ -4872,11 +4911,26 @@ const handleReaderGameSavePut = async (request, env) => {
   }
 
   const requestOrigin = cleanText(request.headers.get('origin'), 300);
-  if (requestOrigin && requestOrigin !== new URL(request.url).origin) {
+  if (!requestOrigin || requestOrigin !== new URL(request.url).origin) {
     return privateJson({ ok: false, code: 'INVALID_ORIGIN', message: 'Invalid request origin.' }, { status: 403 });
   }
   if (!String(request.headers.get('content-type') || '').toLowerCase().includes('application/json')) {
     return privateJson({ ok: false, code: 'INVALID_CONTENT_TYPE', message: 'JSON is required.' }, { status: 415 });
+  }
+
+  const rateLimit = await checkReaderGameSaveRateLimit(db, session.account_id);
+  if (rateLimit.limited) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'GAME_SAVE_RATE_LIMITED',
+        message: 'Too many cloud save writes. Please wait before trying again.'
+      },
+      {
+        status: 429,
+        headers: { 'retry-after': String(rateLimit.retryAfterSeconds) }
+      }
+    );
   }
 
   const contentLength = Number(request.headers.get('content-length') || 0);

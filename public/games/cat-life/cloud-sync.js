@@ -2,7 +2,8 @@
   var apiPath = "/api/readers/game-saves/cat-life";
   var markerKey = "catGameCloudSyncV1";
   var backupKeyPrefix = "catGameLocalBackupV1:";
-  var syncDelayMs = 1400;
+  var guestClaimKey = "catGameGuestSaveClaimV1";
+  var syncDelayMs = 5000;
   var account = null;
   var cloudSave = null;
   var conflict = null;
@@ -211,12 +212,13 @@
     return readMarkers()[String(account.id)] || null;
   }
 
-  function writeMarker(save, digest) {
+  function writeMarker(save, localDigest) {
     if (!account || !save) return false;
     try {
       var markers = readMarkers();
       markers[String(account.id)] = {
-        digest: digest || save.digest || "",
+        localDigest: localDigest || "",
+        cloudDigest: save.digest || "",
         revision: Number(save.revision || 0),
         syncedAt: new Date().toISOString()
       };
@@ -224,6 +226,22 @@
       return true;
     } catch (error) {
       return false;
+    }
+  }
+
+  function readGuestClaim() {
+    try {
+      return String(localStorage.getItem(guestClaimKey) || "");
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function claimGuestSave() {
+    if (!account) return;
+    try {
+      localStorage.setItem(guestClaimKey, String(account.id));
+    } catch (error) {
     }
   }
 
@@ -410,26 +428,39 @@
       renderMember();
       var result = await requestJson(apiPath);
       cloudSave = result.save || null;
-      initialized = true;
-      if (!cloudSave) {
-        await uploadSave(latestLocalSave, 0);
-        return;
+      var claimedAccountId = readGuestClaim();
+      var activation = null;
+      if (window.CatGameApp && typeof window.CatGameApp.activateMemberStorage === "function") {
+        activation = window.CatGameApp.activateMemberStorage(account.id, {
+          allowGuestImport: !claimedAccountId || claimedAccountId === String(account.id),
+          remoteSave: cloudSave
+        });
+        latestLocalSave = activation && activation.game || latestLocalSave;
+        if (activation && activation.source === "guest") claimGuestSave();
+        if (activation && activation.source === "remote") {
+          initialized = true;
+          writeMarker(cloudSave, await digestSave(latestLocalSave));
+          setStatus(getCopy().synced);
+          return;
+        }
       }
-
+      initialized = true;
       var localDigest = await digestSave(latestLocalSave);
-      if (localDigest && localDigest === cloudSave.digest) {
+      var marker = readMarker();
+      var action = window.CatGameCloudPolicy
+        ? window.CatGameCloudPolicy.resolveInitialAction(localDigest, cloudSave, marker)
+        : cloudSave ? "conflict" : "upload";
+      if (action === "synced") {
         writeMarker(cloudSave, localDigest);
         setStatus(getCopy().synced);
         return;
       }
-
-      var marker = readMarker();
-      if (marker && marker.digest === localDigest) {
+      if (action === "remote") {
         await applyRemoteSave(cloudSave);
         return;
       }
-      if (marker && marker.digest === cloudSave.digest) {
-        await uploadSave(latestLocalSave, cloudSave.revision);
+      if (action === "upload") {
+        await uploadSave(latestLocalSave, cloudSave ? cloudSave.revision : 0);
         return;
       }
 

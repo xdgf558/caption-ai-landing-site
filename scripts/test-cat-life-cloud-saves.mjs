@@ -96,7 +96,10 @@ sqlite.prepare(
 const request = (method, token = '', body = null, headers = {}) => {
   const requestHeaders = new Headers(headers);
   if (token) requestHeaders.set('cookie', `station_cat_reader_session=${token}`);
-  if (body !== null) requestHeaders.set('content-type', 'application/json');
+  if (body !== null) {
+    requestHeaders.set('content-type', 'application/json');
+    if (!requestHeaders.has('origin')) requestHeaders.set('origin', 'https://wwwstationcat.org');
+  }
   return new Request('https://wwwstationcat.org/api/readers/game-saves/cat-life', {
     method,
     headers: requestHeaders,
@@ -141,6 +144,15 @@ assert.equal(result.body.authenticated, true);
 assert.equal(result.body.account.displayName, 'Player One');
 assert.equal(result.body.account.username, 'playerone');
 assert.equal(result.body.save, null);
+
+result = await json(
+  await hooks.handleReaderGameSavePut(
+    request('PUT', firstSessionToken, { baseRevision: 0, saveData: makeSave(5) }, { origin: '' }),
+    env
+  )
+);
+assert.equal(result.response.status, 403);
+assert.equal(result.body.code, 'INVALID_ORIGIN');
 
 const firstSave = makeSave(10);
 result = await json(
@@ -220,6 +232,25 @@ assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_game_save_back
 assert.deepEqual(
   sqlite.prepare('SELECT revision FROM reader_game_save_backups ORDER BY revision').all().map((row) => row.revision),
   [4, 5, 6, 7, 8]
+);
+
+sqlite.prepare(
+  `UPDATE reader_game_save_rate_limits
+   SET write_count = 20, window_started_at = CURRENT_TIMESTAMP
+   WHERE account_id = 1 AND game_key = 'cat-life'`
+).run();
+result = await json(
+  await hooks.handleReaderGameSavePut(
+    request('PUT', firstSessionToken, { baseRevision: revision, saveData: makeSave(100) }),
+    env
+  )
+);
+assert.equal(result.response.status, 429);
+assert.equal(result.body.code, 'GAME_SAVE_RATE_LIMITED');
+assert.ok(Number(result.response.headers.get('retry-after')) >= 1);
+assert.equal(
+  sqlite.prepare("SELECT write_count FROM reader_game_save_rate_limits WHERE account_id = 1 AND game_key = 'cat-life'").get().write_count,
+  21
 );
 
 result = await json(await hooks.handleReaderGameSaveGet(request('GET', secondSessionToken), env));

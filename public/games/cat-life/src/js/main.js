@@ -430,23 +430,55 @@
     render();
   }
 
-  function applyCloudSave(saveData) {
+  function replaceGameState(saveData, options) {
+    var settings = options || {};
     var localSettings = game.state.game && game.state.game.settings || {};
     var imported = game.state.normalizeGameData(saveData);
-    imported.settings.customMusicData = localSettings.customMusicData || "";
-    imported.settings.customMusicName = localSettings.customMusicName || "";
-    imported.settings.customMusicEnabled = Boolean(localSettings.customMusicEnabled && localSettings.customMusicData);
+    if (settings.preserveCustomMusic) {
+      imported.settings.customMusicData = localSettings.customMusicData || "";
+      imported.settings.customMusicName = localSettings.customMusicName || "";
+      imported.settings.customMusicEnabled = Boolean(localSettings.customMusicEnabled && localSettings.customMusicData);
+    }
     game.state.game = imported;
     game.systems.homeSystem.recalculateComfort();
     game.systems.workSystem.refreshJobUnlocks();
     game.systems.taskSystem.refreshAllTasks();
-    syncRealtime("cloud");
+    syncRealtime(settings.reason || "cloud");
     getSelectedCat();
-    game.state.saveSystem.saveGame(game.state.game);
+    if (settings.save !== false) game.state.saveSystem.saveGame(game.state.game);
     render();
+    return game.state.game;
+  }
+
+  function applyCloudSave(saveData) {
+    return replaceGameState(saveData, { preserveCustomMusic: true, reason: "cloud" });
+  }
+
+  function activateMemberStorage(accountId, options) {
+    var settings = options || {};
+    var storageKey = game.config.storageKey + ":member:" + String(accountId);
+    game.state.saveSystem.setStorageKey(storageKey);
+
+    var memberSave = game.state.saveSystem.loadGame();
+    if (memberSave) {
+      return { source: "member", game: replaceGameState(memberSave, { save: false, reason: "member" }) };
+    }
+    if (settings.allowGuestImport) {
+      game.state.saveSystem.saveGame(game.state.game);
+      return { source: "guest", game: game.state.game };
+    }
+    if (settings.remoteSave && settings.remoteSave.data) {
+      return {
+        source: "remote",
+        game: replaceGameState(settings.remoteSave.data, { preserveCustomMusic: false, reason: "cloud" })
+      };
+    }
+
+    return { source: "fresh", game: replaceGameState(game.state.createNewGame(), { reason: "member" }) };
   }
 
   window.CatGameApp = {
+    activateMemberStorage: activateMemberStorage,
     applyCloudSave: applyCloudSave,
   };
 

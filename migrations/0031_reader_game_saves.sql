@@ -40,3 +40,14 @@ CREATE TABLE IF NOT EXISTS reader_game_save_backups (
 
 CREATE INDEX IF NOT EXISTS idx_reader_game_save_backups_account_game_revision
   ON reader_game_save_backups (account_id, game_key, revision DESC);
+
+CREATE TABLE IF NOT EXISTS reader_game_save_rate_limits (
+  account_id INTEGER NOT NULL,
+  game_key TEXT NOT NULL,
+  window_started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  write_count INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (account_id, game_key),
+  FOREIGN KEY (account_id) REFERENCES reader_accounts(id) ON DELETE CASCADE,
+  CHECK (write_count >= 0)
+);

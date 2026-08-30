@@ -11,6 +11,7 @@ const gameRoot = 'public/games/cat-life';
 
 for (const path of [
   `${gameRoot}/index.html`,
+  `${gameRoot}/cloud-sync-policy.js`,
   `${gameRoot}/cloud-sync.js`,
   `${gameRoot}/site-integration.js`,
   `${gameRoot}/site-integration.css`,
@@ -31,11 +32,13 @@ for (const path of [
 
 const gameIndex = read(`${gameRoot}/index.html`);
 const integration = read(`${gameRoot}/site-integration.js`);
+const cloudSyncPolicy = read(`${gameRoot}/cloud-sync-policy.js`);
 const cloudSync = read(`${gameRoot}/cloud-sync.js`);
 const gameMain = read(`${gameRoot}/src/js/main.js`);
 const saveSystem = read(`${gameRoot}/src/js/state/saveSystem.js`);
 const namespace = read(`${gameRoot}/src/js/core/namespace.js`);
 const i18n = read(`${gameRoot}/src/js/core/i18n.js`);
+const savePanel = read(`${gameRoot}/src/js/ui/renderSavePanel.js`);
 const settingsPanel = read(`${gameRoot}/src/js/ui/renderSettingsPanel.js`);
 const landing = read('src/components/CatLifeGameLanding.astro');
 const product = read('src/data/products/cat-life-game.ts');
@@ -47,6 +50,7 @@ const headers = read('public/_headers');
 
 assert.match(gameIndex, /<meta name="robots" content="noindex, nofollow"/);
 assert.ok(gameIndex.indexOf('site-integration.js') < gameIndex.indexOf('core/namespace.js'));
+assert.ok(gameIndex.indexOf('cloud-sync-policy.js') < gameIndex.indexOf('cloud-sync.js'));
 assert.ok(gameIndex.indexOf('cloud-sync.js') < gameIndex.indexOf('src/js/main.js'));
 assert.match(gameIndex, /data-station-link="gameInfo"/);
 assert.match(gameIndex, /data-station-language/);
@@ -64,8 +68,17 @@ assert.match(cloudSync, /baseRevision/);
 assert.match(cloudSync, /error\.status === 409/);
 assert.match(cloudSync, /customMusicData = ""/);
 assert.match(cloudSync, /catGameLocalBackupV1:/);
+assert.match(cloudSync, /catGameGuestSaveClaimV1/);
+assert.match(cloudSync, /localDigest/);
+assert.match(cloudSync, /cloudDigest/);
 assert.match(saveSystem, /CatGameCloud\.onLocalSave\(nextData\)/);
+assert.match(saveSystem, /setStorageKey/);
+assert.match(savePanel, /saveSystem\.getStorageKey\(\)/);
+assert.match(settingsPanel, /saveSystem\.getStorageKey\(\)/);
+assert.doesNotMatch(i18n, /does not upload progress to a server|\u6e38\u620f\u4e0d\u4f1a\u4e0a\u4f20\u5230\u670d\u52a1\u5668|\u30b5\u30fc\u30d0\u30fc\u3078\u9001\u4fe1\u3055\u308cません/);
 assert.match(gameMain, /applyCloudSave/);
+assert.match(gameMain, /activateMemberStorage/);
+assert.match(gameMain, /:member:/);
 assert.match(gameMain, /CatGameCloud\.init\(game\.state\.game\)/);
 assert.doesNotMatch(
   gameMain,
@@ -159,5 +172,75 @@ assert.equal(
 languageContext.window.CatGameIntegration.useSavedLanguage(savedLanguage);
 assert.equal(languageContext.window.CatGameIntegration.sessionLanguage, '');
 assert.equal(new URL(replacedUrl).searchParams.has('lang'), false);
+
+const policyContext = { window: {} };
+vm.runInNewContext(cloudSyncPolicy, policyContext);
+const resolveInitialAction = policyContext.window.CatGameCloudPolicy.resolveInitialAction;
+assert.equal(resolveInitialAction('local-a', null, null), 'upload');
+assert.equal(resolveInitialAction('same', { digest: 'same' }, null), 'synced');
+assert.equal(
+  resolveInitialAction('normalized-local', { digest: 'compact-cloud' }, {
+    localDigest: 'normalized-local',
+    cloudDigest: 'compact-cloud'
+  }),
+  'synced',
+  'different local and cloud representations must still be recognized as the same synced revision'
+);
+assert.equal(
+  resolveInitialAction('local-after-play', { digest: 'compact-cloud' }, {
+    localDigest: 'normalized-local',
+    cloudDigest: 'compact-cloud'
+  }),
+  'upload',
+  'playing after applying a cloud save must upload instead of reporting a false conflict'
+);
+assert.equal(
+  resolveInitialAction('normalized-local', { digest: 'cloud-after-other-device' }, {
+    localDigest: 'normalized-local',
+    cloudDigest: 'compact-cloud'
+  }),
+  'remote'
+);
+assert.equal(
+  resolveInitialAction('local-after-play', { digest: 'cloud-after-other-device' }, {
+    localDigest: 'normalized-local',
+    cloudDigest: 'compact-cloud'
+  }),
+  'conflict'
+);
+assert.equal(
+  resolveInitialAction('legacy', { digest: 'legacy' }, { digest: 'legacy' }),
+  'synced',
+  'existing one-digest markers must remain readable during migration'
+);
+
+const storage = new Map();
+const saveContext = {
+  window: {
+    CatGame: {
+      config: { storageKey: 'catGameSaveV1' },
+      state: {
+        game: null,
+        normalizeGameData(value) { return value; }
+      },
+      utils: {
+        format: { formatDateKey() { return '2026-08-30'; } },
+        storage: {
+          loadJSON(key) { return storage.get(key) || null; },
+          saveJSON(key, value) { storage.set(key, value); }
+        }
+      }
+    }
+  }
+};
+vm.runInNewContext(saveSystem, saveContext);
+const memberSaveSystem = saveContext.window.CatGame.state.saveSystem;
+memberSaveSystem.setStorageKey('catGameSaveV1:member:1');
+memberSaveSystem.saveGame({ meta: {}, player: { coins: 10 } });
+memberSaveSystem.setStorageKey('catGameSaveV1:member:2');
+memberSaveSystem.saveGame({ meta: {}, player: { coins: 20 } });
+assert.equal(storage.get('catGameSaveV1:member:1').player.coins, 10);
+assert.equal(storage.get('catGameSaveV1:member:2').player.coins, 20);
+assert.equal(storage.has('catGameSaveV1'), false, 'member saves must not overwrite the shared guest slot');
 
 console.log('Cat Life Game website integration tests passed.');
