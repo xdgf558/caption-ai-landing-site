@@ -19,20 +19,11 @@
     messageTone: ""
   };
 
-  var manifests = {
-    "cat-life.skin.moonlit-tabby": {
-      entitlementKey: "cat-life.cosmetic.skin.moonlit-tabby.v1",
-      kind: "skin",
-      image: "src/assets/premium/moonlit-tabby.png",
-      imageSize: 480
-    },
-    "cat-life.bundle.station-room": {
-      entitlementKey: "cat-life.content.furniture.station-room.v1",
-      kind: "room",
-      image: "src/assets/premium/station-room-set.jpg",
-      imageSize: 800
-    }
+  var contentManifest = window.CatGameContentManifest || {
+    productsById: {},
+    getSkin: function () { return null; }
   };
+  var manifests = contentManifest.productsById;
 
   var copyByLocale = {
     "zh-Hant": {
@@ -333,13 +324,15 @@
   }
 
   function isMoonlitEquipped() {
-    return hasEntitlement(manifests["cat-life.skin.moonlit-tabby"].entitlementKey)
+    var manifest = manifests["cat-life.skin.moonlit-tabby"];
+    return Boolean(manifest && hasEntitlement(manifest.entitlementKey))
       && getPreferences().equippedSkin === "cat-life.skin.moonlit-tabby";
   }
 
   function getCatSprite(cat) {
-    if (!cat || cat.id !== "cat_001" || !isMoonlitEquipped()) return "";
-    return new URL(manifests["cat-life.skin.moonlit-tabby"].image, document.baseURI).href;
+    if (!cat || !isMoonlitEquipped()) return "";
+    var skin = contentManifest.getSkin("cat-life.skin.moonlit-tabby", cat.id);
+    return skin ? new URL(skin.sprite, document.baseURI).href : "";
   }
 
   function getProductDescription(productId) {
@@ -398,7 +391,7 @@
     return (
       '<article class="shop-card station-commerce-card' + (owned ? " is-owned" : "") + '">' +
       '<div class="shop-art station-commerce-art"><img src="' + escapeHtml(manifest.image) + '" alt="' +
-      escapeHtml(product.name) + '" width="' + manifest.imageSize + '" height="' + manifest.imageSize + '" loading="lazy" /></div>' +
+      escapeHtml(product.name) + '" width="' + manifest.imageSize.width + '" height="' + manifest.imageSize.height + '" loading="lazy" /></div>' +
       '<div class="shop-row"><div><p class="section-eyebrow">' + escapeHtml(copy.kicker) + '</p><h3 class="panel-title">' +
       escapeHtml(product.name) + '</h3></div>' +
       (product.pointsPrice === null ? "" : '<span class="pill">' + escapeHtml(String(product.pointsPrice)) + " Station Points</span>") +
@@ -545,7 +538,8 @@
   function toggleSkin() {
     var copy = getCopy();
     var next = isMoonlitEquipped() ? "" : "cat-life.skin.moonlit-tabby";
-    if (!hasEntitlement(manifests["cat-life.skin.moonlit-tabby"].entitlementKey)) return;
+    var manifest = manifests["cat-life.skin.moonlit-tabby"];
+    if (!manifest || !hasEntitlement(manifest.entitlementKey)) return;
     updatePreferences({ equippedSkin: next });
     state.message = next ? copy.skinApplied : copy.skinRemoved;
     state.messageTone = "success";

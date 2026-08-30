@@ -2,25 +2,25 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.18.0",
+      version: "1.19.0",
       saveSchemaVersion: 2,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
-          "游戏商店新增 Station Points 会员区，价格、余额和官方权益全部由服务器确认。",
-          "首批支持月夜虎斑造型与车站房间主题；商品上架后才会显示和允许兑换。",
-          "已购权益与 Station Cat 账号绑定，可跨设备同步；本地存档不能伪造官方解锁。",
+          "首批实际内容完成：月夜虎斑猫咪皮肤可替换小橘的官方外观。",
+          "车站房间套装新增长椅、信号灯、车站时钟与站牌，并按房间选项统一渲染。",
+          "皮肤、家具资源与授权规则现在共用一份内容清单；本地修改仍不能伪造官方权益。",
         ],
         en: [
-          "The game shop now has a Station Points member section with server-confirmed prices, balances, and ownership.",
-          "The first supported unlocks are Moonlit Tabby and the Station Room Set; products appear only after release.",
-          "Purchased entitlements stay with your Station Cat account across devices, and local saves cannot mint official ownership.",
+          "The first complete content pack is here: Moonlit Tabby can replace Sunny's official appearance.",
+          "The Station Room Set now includes a bench, signal lamp, station clock, and departure board rendered with its room options.",
+          "Skins, furniture assets, and entitlement rules now share one content manifest; local edits still cannot mint official ownership.",
         ],
         ja: [
-          "ショップに Station Points 会員エリアを追加し、価格・残高・公式所有権をサーバーで確認します。",
-          "最初の対応商品は月夜のキジトラと駅の部屋セットです。公開後のみ表示・交換できます。",
-          "購入権利は Station Cat アカウントに紐づき端末間で使え、ローカルセーブでは公式解放を偽造できません。",
+          "最初の実コンテンツが完成し、月夜のキジトラでサニーの公式外観を変更できます。",
+          "駅の部屋セットにベンチ、信号ランプ、駅時計、発車案内板が加わり、ルーム設定と一緒に描画されます。",
+          "スキン、家具素材、権利ルールを1つのコンテンツマニフェストで管理し、ローカル改変で公式所有権は作れません。",
         ],
       },
       readoptCost: 80,

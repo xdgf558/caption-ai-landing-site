@@ -1207,22 +1207,6 @@ button:disabled {
   right: 24px;
 }
 
-.decor-station-signal::after {
-  content: "";
-  position: absolute;
-  right: 28px;
-  top: 30px;
-  width: 58px;
-  height: 118px;
-  border: 5px solid #6a4728;
-  border-radius: 8px;
-  background:
-    radial-gradient(circle at 50% 27%, #e7b94b 0 12px, #473927 13px 17px, transparent 18px),
-    radial-gradient(circle at 50% 73%, #8fc58f 0 12px, #473927 13px 17px, transparent 18px),
-    linear-gradient(180deg, #d9a84e, #a86f2c);
-  box-shadow: 7px 7px 0 rgba(28, 48, 39, 0.18);
-}
-
 .decor-plants::after {
   width: 70px;
   height: 104px;
@@ -1256,8 +1240,57 @@ button:disabled {
     radial-gradient(circle at 96% 50%, rgba(255, 242, 176, 0.98) 0 10px, transparent 10px);
 }
 
+.room-theme-fixture {
+  position: absolute;
+  z-index: 0;
+  display: block;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.room-theme-fixture--station-clock-board {
+  top: -7%;
+  left: 36%;
+  width: min(31%, 238px);
+}
+
+.room-theme-fixture--station-signal-lamp {
+  right: -2%;
+  bottom: -3%;
+  width: min(24%, 184px);
+}
+
+.room-theme-fixture--station-bench {
+  bottom: -14%;
+  left: 11%;
+  width: min(43%, 330px);
+}
+
+@media (max-width: 700px) {
+  .room-theme-fixture--station-clock-board {
+    top: -2%;
+    left: 43%;
+    width: 38%;
+  }
+
+  .room-theme-fixture--station-signal-lamp {
+    right: -4%;
+    bottom: -2%;
+    width: 30%;
+  }
+
+  .room-theme-fixture--station-bench {
+    bottom: -11%;
+    left: 5%;
+    width: 62%;
+  }
+}
+
 .room-furniture {
   position: absolute;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1289,6 +1322,7 @@ button:disabled {
 
 .room-cat-sprite {
   position: absolute;
+  z-index: 1;
   bottom: 22px;
   width: 72px;
   height: 72px;
