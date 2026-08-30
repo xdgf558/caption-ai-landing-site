@@ -64,6 +64,12 @@
   }
 
   function getCatSpriteUrl(cat) {
+    var memberSprite = window.CatGameCommerce && typeof window.CatGameCommerce.getCatSprite === "function"
+      ? window.CatGameCommerce.getCatSprite(cat)
+      : "";
+    if (memberSprite) {
+      return memberSprite;
+    }
     var artKey = inferArtKeyFromTraits((cat && cat.traits) || {});
     var fileName = spriteFiles[artKey];
 

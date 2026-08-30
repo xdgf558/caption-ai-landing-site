@@ -13,6 +13,7 @@ for (const path of [
   `${gameRoot}/index.html`,
   `${gameRoot}/cloud-sync-policy.js`,
   `${gameRoot}/cloud-sync.js`,
+  `${gameRoot}/commerce.js`,
   `${gameRoot}/site-integration.js`,
   `${gameRoot}/site-integration.css`,
   `${gameRoot}/src/js/main.js`,
@@ -21,6 +22,8 @@ for (const path of [
   `${gameRoot}/src/js/core/i18n.js`,
   `${gameRoot}/src/assets/cats/orange-tabby.png`,
   `${gameRoot}/src/assets/community/npc-cat-sprites.png`,
+  `${gameRoot}/src/assets/premium/moonlit-tabby.png`,
+  `${gameRoot}/src/assets/premium/station-room-set.jpg`,
   'src/components/CatLifeGameLanding.astro',
   'src/data/products/cat-life-game.ts',
   'src/pages/en/apps/cat-life-game/index.astro',
@@ -35,6 +38,7 @@ const gameIndex = read(`${gameRoot}/index.html`);
 const integration = read(`${gameRoot}/site-integration.js`);
 const cloudSyncPolicy = read(`${gameRoot}/cloud-sync-policy.js`);
 const cloudSync = read(`${gameRoot}/cloud-sync.js`);
+const commerce = read(`${gameRoot}/commerce.js`);
 const gameMain = read(`${gameRoot}/src/js/main.js`);
 const saveMigrations = read(`${gameRoot}/src/js/state/saveMigrations.js`);
 const saveSystem = read(`${gameRoot}/src/js/state/saveSystem.js`);
@@ -55,6 +59,8 @@ assert.ok(gameIndex.indexOf('site-integration.js') < gameIndex.indexOf('core/nam
 assert.ok(gameIndex.indexOf('saveMigrations.js') < gameIndex.indexOf('gameState.js'));
 assert.ok(gameIndex.indexOf('cloud-sync-policy.js') < gameIndex.indexOf('cloud-sync.js'));
 assert.ok(gameIndex.indexOf('cloud-sync.js') < gameIndex.indexOf('src/js/main.js'));
+assert.ok(gameIndex.indexOf('cloud-sync.js') < gameIndex.indexOf('commerce.js'));
+assert.ok(gameIndex.indexOf('commerce.js') < gameIndex.indexOf('src/js/main.js'));
 assert.match(gameIndex, /data-station-link="gameInfo"/);
 assert.match(gameIndex, /data-station-language/);
 assert.match(integration, /sessionLanguage/);
@@ -85,6 +91,15 @@ assert.match(gameMain, /applyCloudSave/);
 assert.match(gameMain, /activateMemberStorage/);
 assert.match(gameMain, /:member:/);
 assert.match(gameMain, /CatGameCloud\.init\(game\.state\.game\)/);
+assert.match(gameMain, /CatGameCommerce\.init\(\)/);
+assert.match(commerce, /\/api\/games\/cat-life\/catalog/);
+assert.match(commerce, /\/api\/games\/cat-life\/entitlements/);
+assert.match(commerce, /\/api\/games\/cat-life\/redemptions/);
+assert.match(commerce, /JSON\.stringify\(\{ productId: productId, idempotencyKey: idempotencyKey \}\)/);
+assert.doesNotMatch(commerce, /src\/data\/products|server\/catalog/);
+assert.match(commerce, /cat-life\.cosmetic\.skin\.moonlit-tabby\.v1/);
+assert.match(commerce, /cat-life\.content\.furniture\.station-room\.v1/);
+assert.doesNotMatch(commerce, /planned 商品|Planned products|planned products/);
 assert.doesNotMatch(
   gameMain,
   /settings\.language\s*=\s*window\.CatGameIntegration/,
@@ -93,11 +108,16 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(product, /sourceCommit: '0cc839f'/);
+assert.match(namespace, /version: "1\.18\.0"/);
+assert.match(namespace, /Station Points member section/);
+assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
 assert.match(landing, /five latest cloud versions remain available for recovery/);
 assert.match(landing, /最近 5 份雲端記錄恢復/);
+assert.match(landing, /只有正式上架的商品才會在遊戲中顯示/);
+assert.match(landing, /current server price and account balance/);
+assert.match(product, /latestVersion: '1\.18\.0'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);

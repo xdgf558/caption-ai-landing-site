@@ -84,6 +84,19 @@
         </div>
       </div>
     </dialog>
+    <dialog class="cat-cloud-dialog cat-commerce-dialog" data-cat-commerce-dialog aria-labelledby="cat-commerce-dialog-title">
+      <div class="cat-cloud-dialog__body">
+        <p class="cat-cloud-dialog__kicker">STATION POINTS STORE</p>
+        <h2 id="cat-commerce-dialog-title" data-cat-commerce-title>確認兌換</h2>
+        <p data-cat-commerce-copy></p>
+        <p class="cat-commerce-dialog__balance" data-cat-commerce-balance></p>
+        <div class="cat-cloud-dialog__actions">
+          <button class="primary-button" type="button" data-cat-commerce-confirm>確認兌換</button>
+          <button class="ghost-button" type="button" data-cat-commerce-cancel>取消</button>
+        </div>
+        <p class="cat-cloud-dialog__status" data-cat-commerce-status aria-live="polite"></p>
+      </div>
+    </dialog>
     <div class="app-frame broadsheet-shell">
       <header id="app-header" class="newspaper-header"></header>
       <div class="layout-body">
@@ -149,6 +162,7 @@
 
     <script src="./cloud-sync-policy.js"></script>
     <script src="./cloud-sync.js"></script>
+    <script src="./commerce.js"></script>
     <script src="./src/js/main.js"></script>
   </body>
 </html>

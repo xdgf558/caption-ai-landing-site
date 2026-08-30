@@ -1161,6 +1161,12 @@ button:disabled {
     linear-gradient(180deg, #82a3df 0%, #4f6db3 100%);
 }
 
+.wall-station-green .room-wall-art {
+  background:
+    linear-gradient(90deg, transparent 0 11%, rgba(244, 223, 166, 0.72) 11% 12%, transparent 12% 88%, rgba(244, 223, 166, 0.72) 88% 89%, transparent 89%),
+    linear-gradient(180deg, #527867 0%, #2f5d4c 100%);
+}
+
 .floor-oak .room-floor {
   background:
     repeating-linear-gradient(
@@ -1186,6 +1192,12 @@ button:disabled {
     linear-gradient(180deg, #f5a9b6 0%, #e07f94 100%);
 }
 
+.floor-station-stripe .room-floor {
+  background:
+    repeating-linear-gradient(90deg, #d9bd86 0 36px, #f5e7c7 36px 72px, #8a5c3c 72px 76px),
+    #d9bd86;
+}
+
 .decor-plants::after,
 .decor-posters::after,
 .decor-lanterns::after {
@@ -1193,6 +1205,22 @@ button:disabled {
   position: absolute;
   top: 26px;
   right: 24px;
+}
+
+.decor-station-signal::after {
+  content: "";
+  position: absolute;
+  right: 28px;
+  top: 30px;
+  width: 58px;
+  height: 118px;
+  border: 5px solid #6a4728;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 27%, #e7b94b 0 12px, #473927 13px 17px, transparent 18px),
+    radial-gradient(circle at 50% 73%, #8fc58f 0 12px, #473927 13px 17px, transparent 18px),
+    linear-gradient(180deg, #d9a84e, #a86f2c);
+  box-shadow: 7px 7px 0 rgba(28, 48, 39, 0.18);
 }
 
 .decor-plants::after {

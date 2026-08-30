@@ -28,7 +28,7 @@
   }
 
   function renderRoomPanel(state) {
-    var scene = state.home.roomScene;
+    var scene = game.systems.homeSystem.getRenderableRoomScene(state.home.roomScene);
     var cats = game.systems.collectionSystem.getUnlockedCats().filter(function (cat) {
       return cat.isAlive !== false;
     });
@@ -58,10 +58,10 @@
       '</p><p style="margin-top:8px;"><button class="primary-button" data-upgrade-room ' +
       (upgradeCost === null ? "disabled" : "") +
       ">" + t("room_upgrade_action") + "</button></p></div>" +
-      renderSelect(t("room_wall"), "wall", scene.wall, game.systems.homeSystem.roomWallOptions) +
-      renderSelect(t("room_floor"), "floor", scene.floor, game.systems.homeSystem.roomFloorOptions) +
-      renderSelect(t("room_decor"), "decor", scene.decor, game.systems.homeSystem.roomDecorOptions) +
-      renderSelect(t("room_layout"), "layout", scene.layout, game.systems.homeSystem.roomLayoutOptions) +
+      renderSelect(t("room_wall"), "wall", scene.wall, game.systems.homeSystem.getRoomWallOptions()) +
+      renderSelect(t("room_floor"), "floor", scene.floor, game.systems.homeSystem.getRoomFloorOptions()) +
+      renderSelect(t("room_decor"), "decor", scene.decor, game.systems.homeSystem.getRoomDecorOptions()) +
+      renderSelect(t("room_layout"), "layout", scene.layout, game.systems.homeSystem.getRoomLayoutOptions()) +
       "</div></div></section>" +
       '<section class="home-grid">' +
       '<div class="page-card">' +

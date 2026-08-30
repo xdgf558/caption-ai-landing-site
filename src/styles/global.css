@@ -139,8 +139,55 @@
 .cat-life-section,
 .cat-life-world,
 .cat-life-account-note,
+.cat-life-commerce,
 .cat-life-final {
   max-width: 1160px;
+}
+
+.cat-life-commerce {
+  align-items: center;
+  background: #163f36;
+  color: #fffaf0;
+  display: grid;
+  gap: clamp(28px, 5vw, 68px);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  padding: clamp(28px, 5vw, 68px);
+}
+
+.cat-life-commerce__media {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cat-life-commerce__media img {
+  aspect-ratio: 1;
+  background: #f5ead7;
+  border: 2px solid #241f19;
+  height: auto;
+  object-fit: contain;
+  width: 100%;
+}
+
+.cat-life-commerce__copy h2 {
+  color: inherit;
+  font-size: clamp(34px, 5vw, 64px);
+  margin: 8px 0 18px;
+}
+
+.cat-life-commerce__copy .section-kicker,
+.cat-life-commerce__copy p,
+.cat-life-commerce__copy li {
+  color: inherit;
+}
+
+.cat-life-commerce__copy ul {
+  border-top: 1px solid rgba(255, 250, 240, 0.35);
+  display: grid;
+  gap: 10px;
+  list-style: square;
+  margin: 22px 0 0;
+  padding: 18px 0 0 20px;
 }
 
 .cat-life-feature-grid {
@@ -314,6 +361,7 @@ body.cat-life-game-page .cat-life-account-note .section-kicker {
   .cat-life-feature-grid,
   .cat-life-world,
   .cat-life-account-note,
+  .cat-life-commerce,
   .cat-life-final {
     grid-template-columns: 1fr;
   }
@@ -334,6 +382,10 @@ body.cat-life-game-page .cat-life-account-note .section-kicker {
     margin-left: 20px;
     margin-right: 20px;
     width: auto;
+  }
+
+  .cat-life-commerce {
+    grid-template-columns: 1fr;
   }
 
   .cat-life-final {

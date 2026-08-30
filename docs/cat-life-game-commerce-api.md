@@ -1,6 +1,6 @@
 # Cat Life Game commerce API
 
-Task 3 exposes the authenticated server boundary on top of the Task 2 storage transactions. It does not activate a product or add a purchase button to the game.
+Task 3 exposes the authenticated server boundary on top of the Task 2 storage transactions. Game version 1.18.0 consumes this API for the Task 5 storefront, but client code never activates a product or supplies a price.
 
 ## Routes
 
@@ -19,4 +19,4 @@ Responses use stable error codes for client localization. Business conflicts ret
 3. Apply `migrations/0035_cat_life_game_commerce_admin.sql` when deploying the Admin workspace.
 4. Deploy the Worker.
 
-Both launch products remain `planned`. The catalog therefore stays empty in production until a later reviewed release ships the game assets, Admin activation controls, client purchase confirmation, and version-history entry.
+Both launch products remain `planned` after the 1.18.0 client ships. The catalog therefore stays empty in production until an operator completes the activation checklist and explicitly activates a product through the protected Admin workspace. The client assets, purchase confirmation, entitlement-gated renderers, and localized version history may be deployed safely before that decision.

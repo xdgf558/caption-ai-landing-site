@@ -2,25 +2,25 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.17.0",
+      version: "1.18.0",
       saveSchemaVersion: 2,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
-          "社区主页从卡片列表升级为完整猫咪镇地图，可直接点击玩家小家和邻居小屋。",
-          "NPC 猫咪改用新的猫咪贴图合集，并通过不同姿势和毛色滤镜区分每只猫。",
-          "玩家小家仍保留原房间、家具摆放、改造和猫咪走动功能。",
+          "游戏商店新增 Station Points 会员区，价格、余额和官方权益全部由服务器确认。",
+          "首批支持月夜虎斑造型与车站房间主题；商品上架后才会显示和允许兑换。",
+          "已购权益与 Station Cat 账号绑定，可跨设备同步；本地存档不能伪造官方解锁。",
         ],
         en: [
-          "Community now uses a full Cat Town map instead of a card list, with clickable player and neighbor homes.",
-          "NPC cats now use the new cat sticker sheet with varied poses and color filters.",
-          "Player Home still preserves the old room, furniture placement, renovation, and roaming cats.",
+          "The game shop now has a Station Points member section with server-confirmed prices, balances, and ownership.",
+          "The first supported unlocks are Moonlit Tabby and the Station Room Set; products appear only after release.",
+          "Purchased entitlements stay with your Station Cat account across devices, and local saves cannot mint official ownership.",
         ],
         ja: [
-          "コミュニティをカード一覧からクリック可能な猫の町マップに更新しました。",
-          "NPC猫は新しい猫ステッカー画像を使い、ポーズと色違いで表示します。",
-          "自宅の部屋、家具配置、改装、猫の移動機能は引き続き残っています。",
+          "ショップに Station Points 会員エリアを追加し、価格・残高・公式所有権をサーバーで確認します。",
+          "最初の対応商品は月夜のキジトラと駅の部屋セットです。公開後のみ表示・交換できます。",
+          "購入権利は Station Cat アカウントに紐づき端末間で使え、ローカルセーブでは公式解放を偽造できません。",
         ],
       },
       readoptCost: 80,
