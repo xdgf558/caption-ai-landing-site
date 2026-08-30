@@ -30,6 +30,12 @@ import {
   normalizeDeepSeekSignalDraftModel
 } from './deepseekSignalDraft.js';
 import { buildContentImportListQuery, contentImportSourceKinds } from './contentImportReview.js';
+import {
+  createCatLifeCorrectionId,
+  createCatLifePurchaseId,
+  redeemCatLifeProduct,
+  reverseCatLifePurchase
+} from './catLifeCommerce.js';
 import { Resvg } from '@cf-wasm/resvg';
 
 const json = (body, init = {}) =>
@@ -22179,6 +22185,10 @@ const handleR2Download = async (request, env, file) => {
 };
 
 export const __readerTotpTestHooks = {
+  createCatLifeCorrectionId,
+  createCatLifePurchaseId,
+  redeemCatLifeProduct,
+  reverseCatLifePurchase,
   aggregateNovelChapterStats,
   applyContentPricingSnapshot,
   base32ToBytes,
