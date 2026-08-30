@@ -4,7 +4,7 @@
 
 This document fixes the product and authorization rules for the first Station Points integration in Cat Life Game. It is a design contract for the database, APIs, Admin workspace, game client, and release tests that follow. It does not enable a public product, create a database table, deduct points, or expose a redemption button by itself.
 
-The machine-readable companion is `server/catalog/cat-life-game-commerce.v1.json`. It is Worker seed input, not product-page or game-client data, and must never be bundled into a public response. Its launch products stay `planned` until the database migration, server redemption path, Admin controls, final assets, browser tests, and production rollout have all shipped. A planned product must never appear in a purchasable API response.
+The machine-readable companion is `server/catalog/cat-life-game-commerce.v1.json`. It is Worker seed input, not product-page or game-client data, and must never be bundled into a public response. Task 2 persists that catalog through `migrations/0033_cat_life_game_commerce.sql` and implements the private transaction primitives described in `docs/cat-life-game-commerce-storage.md`. Its launch products stay `planned` until the server routes, Admin controls, final assets, browser tests, and production rollout have all shipped. A planned product must never appear in a purchasable API response.
 
 ## Trust boundary
 
