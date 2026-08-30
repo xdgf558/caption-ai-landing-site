@@ -70,6 +70,23 @@ const parseJson = (value, fallback = {}) => {
   }
 };
 
+const supportedLocales = new Set(['en', 'ja', 'zh-Hans', 'zh-Hant']);
+
+const normalizeLocale = (value) => {
+  const locale = String(value || '').trim();
+  return supportedLocales.has(locale) ? locale : 'zh-Hant';
+};
+
+const localizedProductName = (names, locale, fallback) => {
+  const normalizedNames = names && typeof names === 'object' ? names : {};
+  return String(
+    normalizedNames[locale]
+    || normalizedNames.en
+    || normalizedNames['zh-Hant']
+    || fallback
+  );
+};
+
 const first = (db, sql, ...params) => db.prepare(sql).bind(...params).first();
 
 const getPurchaseRowByIdempotency = (db, accountId, idempotencyKey) =>
@@ -91,6 +108,128 @@ const getPurchaseRowById = (db, accountId, purchaseId) =>
     accountId,
     purchaseId
   );
+
+export const listCatLifeProducts = async (db, { accountId: accountIdValue = 0, locale: localeValue } = {}) => {
+  if (!db?.prepare) throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
+  const accountId = Number(accountIdValue);
+  const signedIn = Number.isSafeInteger(accountId) && accountId > 0;
+  const locale = normalizeLocale(localeValue);
+  const result = await db
+    .prepare(
+      `SELECT
+        product.product_id,
+        product.game_key,
+        product.product_type,
+        product.points_price,
+        product.lifecycle_status,
+        product.entitlement_key,
+        product.catalog_revision,
+        product.names_json,
+        entitlement.id AS entitlement_id,
+        entitlement.purchase_id,
+        entitlement.granted_at,
+        entitlement.expires_at
+       FROM game_products product
+       LEFT JOIN game_entitlements entitlement
+         ON entitlement.account_id = ?
+        AND entitlement.game_key = product.game_key
+        AND entitlement.entitlement_key = product.entitlement_key
+        AND entitlement.revoked_at IS NULL
+        AND (entitlement.expires_at IS NULL OR entitlement.expires_at > CURRENT_TIMESTAMP)
+       WHERE product.game_key = ?
+         AND (
+           product.lifecycle_status = 'active'
+           OR (
+             entitlement.id IS NOT NULL
+             AND product.lifecycle_status IN ('paused', 'retired')
+           )
+         )
+       ORDER BY product.points_price ASC, product.product_id ASC`
+    )
+    .bind(signedIn ? accountId : 0, gameKey)
+    .all();
+
+  return (result.results || []).map((row) => {
+    const names = parseJson(row.names_json);
+    const owned = Boolean(row.entitlement_id);
+    return {
+      productId: row.product_id,
+      gameKey: row.game_key,
+      productType: row.product_type,
+      name: localizedProductName(names, locale, row.product_id),
+      pointsPrice: Number(row.points_price),
+      lifecycleStatus: row.lifecycle_status,
+      entitlementKey: row.entitlement_key,
+      catalogRevision: Number(row.catalog_revision),
+      owned,
+      redeemable: row.lifecycle_status === 'active' && !owned,
+      entitlement: owned
+        ? {
+            id: row.entitlement_id,
+            purchaseId: row.purchase_id,
+            grantedAt: row.granted_at,
+            expiresAt: row.expires_at
+          }
+        : null
+    };
+  });
+};
+
+export const listCatLifeEntitlements = async (db, accountIdValue, { locale: localeValue } = {}) => {
+  if (!db?.prepare) throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
+  const accountId = normalizeAccountId(accountIdValue);
+  const locale = normalizeLocale(localeValue);
+  const result = await db
+    .prepare(
+      `SELECT
+        entitlement.id,
+        entitlement.entitlement_key,
+        entitlement.product_id,
+        entitlement.purchase_id,
+        entitlement.grant_source,
+        entitlement.granted_at,
+        entitlement.expires_at,
+        product.product_type,
+        product.lifecycle_status,
+        product.catalog_revision,
+        product.names_json
+       FROM game_entitlements entitlement
+       INNER JOIN game_products product ON product.product_id = entitlement.product_id
+       WHERE entitlement.account_id = ?
+         AND entitlement.game_key = ?
+         AND entitlement.revoked_at IS NULL
+         AND (entitlement.expires_at IS NULL OR entitlement.expires_at > CURRENT_TIMESTAMP)
+       ORDER BY entitlement.granted_at DESC, entitlement.id DESC`
+    )
+    .bind(accountId, gameKey)
+    .all();
+
+  return (result.results || []).map((row) => ({
+    id: row.id,
+    entitlementKey: row.entitlement_key,
+    productId: row.product_id,
+    productType: row.product_type,
+    productName: localizedProductName(parseJson(row.names_json), locale, row.product_id),
+    purchaseId: row.purchase_id,
+    grantSource: row.grant_source,
+    lifecycleStatus: row.lifecycle_status,
+    catalogRevision: Number(row.catalog_revision),
+    grantedAt: row.granted_at,
+    expiresAt: row.expires_at,
+    active: true
+  }));
+};
+
+export const getCatLifePointsBalance = async (db, accountIdValue) => {
+  if (!db?.prepare) throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
+  const accountId = normalizeAccountId(accountIdValue);
+  const row = await first(
+    db,
+    `SELECT balance_credits FROM reader_credit_accounts WHERE account_id = ?`,
+    accountId
+  );
+  return Number(row?.balance_credits || 0);
+};
 
 const purchaseResult = async (db, purchase, { replayed = false } = {}) => {
   if (!purchase) return null;
@@ -227,7 +366,8 @@ const diagnoseRedemptionFailure = async (db, { accountId, productId, idempotency
 
 export const redeemCatLifeProduct = async (
   db,
-  { accountId: accountIdValue, productId: productIdValue, idempotencyKey: keyValue, purchaseId: trustedId }
+  { accountId: accountIdValue, productId: productIdValue, idempotencyKey: keyValue },
+  { purchaseIdFactory = createCatLifePurchaseId } = {}
 ) => {
   if (!db?.prepare || !db?.batch) {
     throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
@@ -235,9 +375,7 @@ export const redeemCatLifeProduct = async (
   const accountId = normalizeAccountId(accountIdValue);
   const productId = normalizeProductId(productIdValue);
   const idempotencyKey = normalizeOpaqueKey(keyValue, 'idempotencyKey');
-  const purchaseId = trustedId
-    ? normalizeOpaqueKey(trustedId, 'purchaseId', 8, 100)
-    : createCatLifePurchaseId();
+  const purchaseId = normalizeOpaqueKey(purchaseIdFactory(), 'purchaseId', 8, 100);
 
   const existing = await getPurchaseRowByIdempotency(db, accountId, idempotencyKey);
   if (existing) {
