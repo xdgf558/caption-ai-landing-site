@@ -4,13 +4,15 @@ Task 3 exposes the authenticated server boundary on top of the Task 2 storage tr
 
 ## Routes
 
-- `GET /api/games/cat-life/catalog?locale=zh-Hant` returns only active products for guests and non-owning members. A signed-in owner also receives owned paused or retired products, marked non-redeemable.
+- `GET /api/games/cat-life/catalog?locale=zh-Hant` returns active products only when the server rollout permits that visitor. A signed-in owner continues to receive owned active, paused, or retired products when rollout is closed, always marked non-redeemable when no new purchase is allowed.
 - `GET /api/games/cat-life/entitlements?locale=zh-Hant` returns the current account's active, unexpired server entitlements. Guests receive an empty list with `authenticated: false` so local play can continue without treating sign-out as an API failure.
 - `POST /api/games/cat-life/redemptions` accepts only `productId` and `idempotencyKey` as transaction inputs. It requires an active Station Cat session, an exact same-origin `Origin`, JSON content type, and a bounded request body.
 
 The redemption handler never forwards a client `purchaseId`, price, entitlement key, game currency, lottery result, or save data to the transaction module. The transaction creates its purchase ID with Web Crypto and selects price and entitlement data from D1.
 
 Responses use stable error codes for client localization. Business conflicts return HTTP 409, authentication failures return 401, origin failures return 403, and missing migrations return `REDEMPTION_NOT_READY` with HTTP 503. Valid redemption attempts are limited to 10 per account in a 60-second fixed window; malformed and oversized requests are rejected before consuming the quota.
+
+New purchases also require `CAT_LIFE_COMMERCE_ROLLOUT_MODE` to be `allowlist` for a listed member or `public`. Missing and invalid modes act as `off`. See `docs/cat-life-game-commerce-release.md` for the phased launch, monitoring, and kill-switch procedure.
 
 ## Deployment order
 

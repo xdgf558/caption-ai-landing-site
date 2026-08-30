@@ -149,7 +149,14 @@ const getPurchaseRowById = (db, accountId, purchaseId) =>
     purchaseId
   );
 
-export const listCatLifeProducts = async (db, { accountId: accountIdValue = 0, locale: localeValue } = {}) => {
+export const listCatLifeProducts = async (
+  db,
+  {
+    accountId: accountIdValue = 0,
+    locale: localeValue,
+    includeActiveCatalog = true
+  } = {}
+) => {
   if (!db?.prepare) throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
   const accountId = Number(accountIdValue);
   const signedIn = Number.isSafeInteger(accountId) && accountId > 0;
@@ -178,15 +185,15 @@ export const listCatLifeProducts = async (db, { accountId: accountIdValue = 0, l
         AND (entitlement.expires_at IS NULL OR entitlement.expires_at > CURRENT_TIMESTAMP)
        WHERE product.game_key = ?
          AND (
-           product.lifecycle_status = 'active'
+           (? = 1 AND product.lifecycle_status = 'active')
            OR (
              entitlement.id IS NOT NULL
-             AND product.lifecycle_status IN ('paused', 'retired')
+             AND product.lifecycle_status IN ('active', 'paused', 'retired')
            )
          )
        ORDER BY product.points_price ASC, product.product_id ASC`
     )
-    .bind(signedIn ? accountId : 0, gameKey)
+    .bind(signedIn ? accountId : 0, gameKey, includeActiveCatalog ? 1 : 0)
     .all();
 
   return (result.results || []).map((row) => {
@@ -407,7 +414,7 @@ const diagnoseRedemptionFailure = async (db, { accountId, productId, idempotency
 export const redeemCatLifeProduct = async (
   db,
   { accountId: accountIdValue, productId: productIdValue, idempotencyKey: keyValue },
-  { purchaseIdFactory = createCatLifePurchaseId } = {}
+  { purchaseIdFactory = createCatLifePurchaseId, allowNewPurchase = true } = {}
 ) => {
   if (!db?.prepare || !db?.batch) {
     throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
@@ -415,7 +422,6 @@ export const redeemCatLifeProduct = async (
   const accountId = normalizeAccountId(accountIdValue);
   const productId = normalizeProductId(productIdValue);
   const idempotencyKey = normalizeOpaqueKey(keyValue, 'idempotencyKey');
-  const purchaseId = normalizeOpaqueKey(purchaseIdFactory(), 'purchaseId', 8, 100);
 
   const existing = await getPurchaseRowByIdempotency(db, accountId, idempotencyKey);
   if (existing) {
@@ -427,6 +433,12 @@ export const redeemCatLifeProduct = async (
     }
     throw commerceError('REDEMPTION_CONFLICT', 'The original redemption is incomplete.');
   }
+
+  if (!allowNewPurchase) {
+    throw commerceError('COMMERCE_ROLLOUT_CLOSED', 'Game commerce is not open for this account.');
+  }
+
+  const purchaseId = normalizeOpaqueKey(purchaseIdFactory(), 'purchaseId', 8, 100);
 
   const statements = [
     db.prepare(

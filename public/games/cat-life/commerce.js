@@ -5,6 +5,7 @@
   var cachePrefix = "catGameCommerceEntitlementsV1:";
   var preferencePrefix = "catGameCommercePreferencesV1:";
   var lastAccountKey = "catGameCommerceLastAccountV1";
+  var memberAccountKey = "catGameMemberAccountV1";
   var initialized = false;
   var pendingKeys = {};
   var state = {
@@ -63,6 +64,7 @@
       error_ALREADY_OWNED: "這個帳號已經擁有這件商品。",
       error_INSUFFICIENT_POINTS: "Station 積分不足，請先購買積分。",
       error_REDEMPTION_RATE_LIMITED: "操作太頻繁，請稍後再試。",
+      error_COMMERCE_ROLLOUT_CLOSED: "會員商城正在分階段開放，這個帳號目前尚未開放兌換。",
       error_default: "兌換暫時失敗，沒有扣除積分。請稍後重試。"
     },
     "zh-CN": {
@@ -102,6 +104,7 @@
       error_ALREADY_OWNED: "这个账号已经拥有这件商品。",
       error_INSUFFICIENT_POINTS: "Station 积分不足，请先购买积分。",
       error_REDEMPTION_RATE_LIMITED: "操作太频繁，请稍后再试。",
+      error_COMMERCE_ROLLOUT_CLOSED: "会员商城正在分阶段开放，这个账号目前尚未开放兑换。",
       error_default: "兑换暂时失败，没有扣除积分。请稍后重试。"
     },
     en: {
@@ -141,6 +144,7 @@
       error_ALREADY_OWNED: "This account already owns this product.",
       error_INSUFFICIENT_POINTS: "You need more Station Points before redeeming this product.",
       error_REDEMPTION_RATE_LIMITED: "Too many attempts. Please wait and try again.",
+      error_COMMERCE_ROLLOUT_CLOSED: "The member store is opening in stages and redemption is not enabled for this account yet.",
       error_default: "Redemption failed without deducting points. Please try again later."
     },
     ja: {
@@ -180,6 +184,7 @@
       error_ALREADY_OWNED: "このアカウントはすでに所有しています。",
       error_INSUFFICIENT_POINTS: "Station Points が不足しています。",
       error_REDEMPTION_RATE_LIMITED: "操作が多すぎます。少し待ってから再試行してください。",
+      error_COMMERCE_ROLLOUT_CLOSED: "会員ストアは段階的に公開中で、このアカウントではまだ交換できません。",
       error_default: "ポイントを消費せず交換に失敗しました。後でもう一度お試しください。"
     }
   };
@@ -292,7 +297,9 @@
   function useOfflineCache() {
     var accountId = "";
     try {
-      accountId = String(localStorage.getItem(lastAccountKey) || "");
+      var memberAccountId = String(localStorage.getItem(memberAccountKey) || "");
+      if (memberAccountId === "guest") return false;
+      accountId = memberAccountId || String(localStorage.getItem(lastAccountKey) || "");
     } catch (error) {
     }
     if (!accountId) return false;
@@ -576,6 +583,18 @@
     bindDialog();
     document.addEventListener("click", handleClick);
     window.addEventListener("catgame:site-locale", function () { refresh(); });
+    window.addEventListener("catgame:member-session", function () {
+      if (state.status !== "offline") return;
+      if (!useOfflineCache()) {
+        state.authenticated = false;
+        state.offlineCache = false;
+        state.account = null;
+        state.balance = null;
+        state.products = [];
+        state.entitlements = [];
+      }
+      refreshView();
+    });
     refresh();
   }
 

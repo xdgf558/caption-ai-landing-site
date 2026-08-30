@@ -3,7 +3,7 @@ export const catLifeGameProduct = {
   zhHantName: '打工養貓日記',
   zhHansName: '打工养猫日记',
   jaName: '働いて猫を育てる日記',
-  latestVersion: '1.19.0',
+  latestVersion: '1.19.1',
   productPath: '/en/apps/cat-life-game/',
   zhHantProductPath: '/zh-hant/apps/cat-life-game/',
   zhHansProductPath: '/zh-hans/apps/cat-life-game/',
