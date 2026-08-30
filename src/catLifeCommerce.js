@@ -2,6 +2,13 @@ const gameKey = 'cat-life';
 const ledgerSource = 'cat-life-game';
 const productIdPattern = /^cat-life\.(?:skin|furniture|bundle|map|story|feature)\.[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const opaqueKeyPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/;
+const productLifecycleStatuses = new Set(['planned', 'active', 'paused', 'retired']);
+const productLifecycleTransitions = Object.freeze({
+  planned: new Set(['planned', 'active']),
+  active: new Set(['active', 'paused', 'retired']),
+  paused: new Set(['paused', 'active', 'retired']),
+  retired: new Set(['retired'])
+});
 
 export class CatLifeCommerceError extends Error {
   constructor(code, message, details = {}) {
@@ -60,6 +67,8 @@ const randomId = (prefix) => {
 
 export const createCatLifePurchaseId = () => randomId('clp');
 export const createCatLifeCorrectionId = () => randomId('clc');
+export const createCatLifeGrantId = () => randomId('clg');
+export const createCatLifeRevokeId = () => randomId('clr');
 
 const parseJson = (value, fallback = {}) => {
   try {
@@ -76,6 +85,37 @@ const normalizeLocale = (value) => {
   const locale = String(value || '').trim();
   return supportedLocales.has(locale) ? locale : 'zh-Hant';
 };
+
+const normalizeLifecycleStatus = (value) => {
+  const status = String(value || '').trim().toLowerCase();
+  if (!productLifecycleStatuses.has(status)) {
+    throw commerceError('INVALID_PRODUCT_UPDATE', 'A valid product lifecycle status is required.');
+  }
+  return status;
+};
+
+const normalizePointsPrice = (value) => {
+  const pointsPrice = Number(value);
+  if (!Number.isSafeInteger(pointsPrice) || pointsPrice < 1 || pointsPrice > 10000) {
+    throw commerceError('INVALID_PRODUCT_UPDATE', 'The Station Points price must be an integer from 1 to 10000.');
+  }
+  return pointsPrice;
+};
+
+const normalizeProductNames = (value, fallback = {}) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw commerceError('INVALID_PRODUCT_UPDATE', 'Localized product names are required.');
+  }
+  const names = {};
+  for (const locale of supportedLocales) {
+    const name = String(value[locale] || fallback[locale] || '').trim().slice(0, 120);
+    if (!name) throw commerceError('INVALID_PRODUCT_UPDATE', `A ${locale} product name is required.`);
+    names[locale] = name;
+  }
+  return names;
+};
+
+const normalizeActorEmail = (value) => String(value || '').trim().toLowerCase().slice(0, 254);
 
 const localizedProductName = (names, locale, fallback) => {
   const normalizedNames = names && typeof names === 'object' ? names : {};
@@ -703,4 +743,482 @@ export const reverseCatLifePurchase = async (
   return purchaseResult(db, reversed);
 };
 
-export const catLifeCommerceConstants = Object.freeze({ gameKey, ledgerSource });
+const adminProductToJson = (row) => ({
+  productId: row.product_id,
+  gameKey: row.game_key,
+  productType: row.product_type,
+  pointsPrice: Number(row.points_price),
+  lifecycleStatus: row.lifecycle_status,
+  entitlementKey: row.entitlement_key,
+  catalogRevision: Number(row.catalog_revision),
+  names: parseJson(row.names_json),
+  metadata: parseJson(row.metadata_json),
+  purchaseCount: Number(row.purchase_count || 0),
+  activeEntitlementCount: Number(row.active_entitlement_count || 0),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+export const listCatLifeAdminProducts = async (db) => {
+  if (!db?.prepare) throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
+  const result = await db
+    .prepare(
+      `SELECT
+        product.*,
+        (SELECT COUNT(*) FROM game_purchases purchase
+         WHERE purchase.product_id = product.product_id) AS purchase_count,
+        (SELECT COUNT(*) FROM game_entitlements entitlement
+         WHERE entitlement.product_id = product.product_id
+           AND entitlement.revoked_at IS NULL
+           AND (entitlement.expires_at IS NULL OR entitlement.expires_at > CURRENT_TIMESTAMP)
+        ) AS active_entitlement_count
+       FROM game_products product
+       WHERE product.game_key = ?
+       ORDER BY product.product_type ASC, product.product_id ASC`
+    )
+    .bind(gameKey)
+    .all();
+  return (result.results || []).map(adminProductToJson);
+};
+
+export const updateCatLifeAdminProduct = async (
+  db,
+  {
+    productId: productIdValue,
+    pointsPrice: pointsPriceValue,
+    lifecycleStatus: lifecycleStatusValue,
+    names: namesValue,
+    activationConfirmation: activationConfirmationValue
+  }
+) => {
+  if (!db?.prepare) throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
+  const productId = normalizeProductId(productIdValue);
+  const existing = await first(
+    db,
+    `SELECT * FROM game_products WHERE product_id = ? AND game_key = ? LIMIT 1`,
+    productId,
+    gameKey
+  );
+  if (!existing) throw commerceError('PRODUCT_NOT_FOUND', 'The game product was not found.');
+
+  const lifecycleStatus = normalizeLifecycleStatus(lifecycleStatusValue);
+  const allowedTransitions = productLifecycleTransitions[existing.lifecycle_status] || new Set();
+  if (!allowedTransitions.has(lifecycleStatus)) {
+    throw commerceError('INVALID_PRODUCT_TRANSITION', 'This product lifecycle transition is not allowed.');
+  }
+  if (
+    lifecycleStatus === 'active'
+    && existing.lifecycle_status !== 'active'
+    && String(activationConfirmationValue || '').trim() !== productId
+  ) {
+    throw commerceError('ACTIVATION_CONFIRMATION_REQUIRED', 'Type the product ID to confirm activation.');
+  }
+
+  const pointsPrice = normalizePointsPrice(pointsPriceValue);
+  const existingNames = parseJson(existing.names_json);
+  const names = normalizeProductNames(namesValue, existingNames);
+  const namesJson = JSON.stringify(names);
+  const changed =
+    pointsPrice !== Number(existing.points_price)
+    || lifecycleStatus !== existing.lifecycle_status
+    || namesJson !== JSON.stringify(existingNames);
+
+  if (!changed) return adminProductToJson(existing);
+
+  const updated = await db
+    .prepare(
+      `UPDATE game_products
+       SET points_price = ?,
+           lifecycle_status = ?,
+           names_json = ?,
+           catalog_revision = catalog_revision + 1,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE product_id = ? AND game_key = ?
+       RETURNING *`
+    )
+    .bind(pointsPrice, lifecycleStatus, namesJson, productId, gameKey)
+    .first();
+  return adminProductToJson(updated);
+};
+
+const adminPurchaseToJson = (row) => ({
+  id: row.id,
+  accountId: Number(row.account_id),
+  accountEmail: row.account_email || '',
+  gameKey: row.game_key,
+  productId: row.product_id,
+  productType: row.product_type,
+  entitlementKey: row.entitlement_key,
+  pointsSpent: Number(row.points_spent),
+  balanceBefore: Number(row.balance_before),
+  balanceAfter: row.balance_after === null ? null : Number(row.balance_after),
+  catalogRevision: Number(row.catalog_revision),
+  productSnapshot: parseJson(row.product_snapshot_json),
+  idempotencyKey: row.idempotency_key,
+  status: row.status,
+  ledgerId: row.ledger_id,
+  ledgerSource: row.ledger_source,
+  ledgerSourceRef: row.ledger_source_ref,
+  reversalId: row.reversal_id,
+  reversalReason: row.reversal_reason,
+  reversalLedgerId: row.reversal_ledger_id,
+  entitlementId: row.entitlement_id || null,
+  entitlementRevokedAt: row.entitlement_revoked_at || '',
+  completedAt: row.completed_at,
+  reversedAt: row.reversed_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const adminPurchaseSelect = `SELECT
+  purchase.*,
+  account.email AS account_email,
+  entitlement.id AS entitlement_id,
+  entitlement.revoked_at AS entitlement_revoked_at
+ FROM game_purchases purchase
+ INNER JOIN reader_accounts account ON account.id = purchase.account_id
+ LEFT JOIN game_entitlements entitlement ON entitlement.purchase_id = purchase.id`;
+
+export const listCatLifeAdminPurchases = async (
+  db,
+  { status: statusValue = '', productId: productIdValue = '', email: emailValue = '', limit: limitValue = 80 } = {}
+) => {
+  if (!db?.prepare) throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
+  const status = String(statusValue || '').trim().toLowerCase();
+  const productId = String(productIdValue || '').trim();
+  const email = String(emailValue || '').trim().toLowerCase();
+  const limit = Math.min(Math.max(Number.parseInt(limitValue, 10) || 80, 1), 100);
+  const clauses = [];
+  const params = [];
+  if (status) {
+    if (!new Set(['pending', 'completed', 'reversing', 'reversed']).has(status)) {
+      throw commerceError('INVALID_ADMIN_FILTER', 'The purchase status filter is invalid.');
+    }
+    clauses.push('purchase.status = ?');
+    params.push(status);
+  }
+  if (productId) {
+    clauses.push('purchase.product_id = ?');
+    params.push(normalizeProductId(productId));
+  }
+  if (email) {
+    clauses.push('account.normalized_email = ?');
+    params.push(email);
+  }
+  const result = await db
+    .prepare(
+      `${adminPurchaseSelect}
+       ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
+       ORDER BY purchase.updated_at DESC, purchase.id DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+  return (result.results || []).map(adminPurchaseToJson);
+};
+
+export const getCatLifeAdminPurchase = async (db, purchaseIdValue) => {
+  if (!db?.prepare) throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
+  const purchaseId = normalizeOpaqueKey(purchaseIdValue, 'purchaseId', 8, 100);
+  const row = await first(db, `${adminPurchaseSelect} WHERE purchase.id = ? LIMIT 1`, purchaseId);
+  if (!row) throw commerceError('PURCHASE_NOT_FOUND', 'The purchase was not found.');
+  const [ledgerResult, commerceEventsResult] = await Promise.all([
+    db
+      .prepare(
+        `SELECT id, entry_type, credits_delta, balance_after, source, source_ref, note, metadata_json, created_at
+         FROM reader_credit_ledger
+         WHERE account_id = ? AND source = ? AND source_ref = ?
+         ORDER BY id ASC`
+      )
+      .bind(row.account_id, ledgerSource, purchaseId)
+      .all(),
+    db
+      .prepare(
+        `SELECT id, event_type, event_key, points_delta, metadata_json, created_at
+         FROM game_commerce_events
+         WHERE purchase_id = ?
+         ORDER BY id ASC`
+      )
+      .bind(purchaseId)
+      .all()
+  ]);
+  return {
+    ...adminPurchaseToJson(row),
+    ledger: (ledgerResult.results || []).map((entry) => ({
+      id: entry.id,
+      entryType: entry.entry_type,
+      creditsDelta: Number(entry.credits_delta),
+      balanceAfter: Number(entry.balance_after),
+      source: entry.source,
+      sourceRef: entry.source_ref,
+      note: entry.note,
+      metadata: parseJson(entry.metadata_json),
+      createdAt: entry.created_at
+    })),
+    events: (commerceEventsResult.results || []).map((event) => ({
+      id: event.id,
+      eventType: event.event_type,
+      eventKey: event.event_key,
+      pointsDelta: Number(event.points_delta),
+      metadata: parseJson(event.metadata_json),
+      createdAt: event.created_at
+    }))
+  };
+};
+
+const adminEntitlementToJson = (row) => ({
+  id: Number(row.id),
+  accountId: Number(row.account_id),
+  accountEmail: row.account_email || '',
+  gameKey: row.game_key,
+  entitlementKey: row.entitlement_key,
+  productId: row.product_id,
+  productName: localizedProductName(parseJson(row.names_json), 'zh-Hant', row.product_id),
+  purchaseId: row.purchase_id || '',
+  grantSource: row.grant_source,
+  sourceRef: row.source_ref,
+  grantReason: row.grant_reason || '',
+  grantedBy: row.granted_by || '',
+  metadata: parseJson(row.metadata_json),
+  grantedAt: row.granted_at,
+  expiresAt: row.expires_at,
+  revokedAt: row.revoked_at,
+  revokeReason: row.revoke_reason,
+  active: !row.revoked_at
+});
+
+export const listCatLifeAdminEntitlements = async (
+  db,
+  { email: emailValue = '', productId: productIdValue = '', status: statusValue = '', limit: limitValue = 100 } = {}
+) => {
+  if (!db?.prepare) throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
+  const email = String(emailValue || '').trim().toLowerCase();
+  const productId = String(productIdValue || '').trim();
+  const status = String(statusValue || '').trim().toLowerCase();
+  const limit = Math.min(Math.max(Number.parseInt(limitValue, 10) || 100, 1), 100);
+  const clauses = ['entitlement.game_key = ?'];
+  const params = [gameKey];
+  if (email) {
+    clauses.push('account.normalized_email = ?');
+    params.push(email);
+  }
+  if (productId) {
+    clauses.push('entitlement.product_id = ?');
+    params.push(normalizeProductId(productId));
+  }
+  if (status === 'active') clauses.push('entitlement.revoked_at IS NULL');
+  else if (status === 'revoked') clauses.push('entitlement.revoked_at IS NOT NULL');
+  else if (status) throw commerceError('INVALID_ADMIN_FILTER', 'The entitlement status filter is invalid.');
+
+  const result = await db
+    .prepare(
+      `SELECT entitlement.*, account.email AS account_email, product.names_json
+       FROM game_entitlements entitlement
+       INNER JOIN reader_accounts account ON account.id = entitlement.account_id
+       INNER JOIN game_products product ON product.product_id = entitlement.product_id
+       WHERE ${clauses.join(' AND ')}
+       ORDER BY entitlement.updated_at DESC, entitlement.id DESC
+       LIMIT ?`
+    )
+    .bind(...params, limit)
+    .all();
+  return (result.results || []).map(adminEntitlementToJson);
+};
+
+export const grantCatLifeAdminEntitlement = async (
+  db,
+  {
+    accountId: accountIdValue,
+    productId: productIdValue,
+    reason: reasonValue,
+    actorEmail: actorEmailValue
+  },
+  { grantIdFactory = createCatLifeGrantId } = {}
+) => {
+  if (!db?.prepare || !db?.batch) {
+    throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
+  }
+  const accountId = normalizeAccountId(accountIdValue);
+  const productId = normalizeProductId(productIdValue);
+  const reason = normalizeReason(reasonValue);
+  const actorEmail = normalizeActorEmail(actorEmailValue) || 'admin';
+  const grantId = normalizeOpaqueKey(grantIdFactory(), 'grantId', 8, 100);
+  const product = await first(
+    db,
+    `SELECT * FROM game_products WHERE product_id = ? AND game_key = ? LIMIT 1`,
+    productId,
+    gameKey
+  );
+  if (!product) throw commerceError('PRODUCT_NOT_FOUND', 'The game product was not found.');
+  if (!new Set(['active', 'paused']).has(product.lifecycle_status)) {
+    throw commerceError('PRODUCT_NOT_GRANTABLE', 'Only active or paused products can be granted manually.');
+  }
+
+  const statements = [
+    db
+      .prepare(
+        `INSERT INTO game_entitlements (
+          account_id, game_key, entitlement_key, product_id, purchase_id,
+          grant_source, source_ref, grant_reason, granted_by, metadata_json
+        ) VALUES (?, ?, ?, ?, NULL, 'admin', ?, ?, ?, json_object('catalogRevision', ?))`
+      )
+      .bind(
+        accountId,
+        gameKey,
+        product.entitlement_key,
+        product.product_id,
+        grantId,
+        reason,
+        actorEmail,
+        product.catalog_revision
+      ),
+    db
+      .prepare(
+        `INSERT INTO game_entitlement_events (
+          account_id, entitlement_id, event_type, event_key, product_id,
+          entitlement_key, actor_email, reason, metadata_json
+        ) VALUES (
+          ?,
+          (SELECT id FROM game_entitlements
+           WHERE account_id = ? AND game_key = ? AND grant_source = 'admin' AND source_ref = ?),
+          'entitlement.granted', ?, ?, ?, ?, ?,
+          json_object('grantSource', 'admin', 'catalogRevision', ?)
+        )`
+      )
+      .bind(
+        accountId,
+        accountId,
+        gameKey,
+        grantId,
+        `grant:${grantId}`,
+        product.product_id,
+        product.entitlement_key,
+        actorEmail,
+        reason,
+        product.catalog_revision
+      )
+  ];
+
+  try {
+    await db.batch(statements);
+  } catch (error) {
+    const existing = await first(
+      db,
+      `SELECT entitlement.*, account.email AS account_email, product.names_json
+       FROM game_entitlements entitlement
+       INNER JOIN reader_accounts account ON account.id = entitlement.account_id
+       INNER JOIN game_products product ON product.product_id = entitlement.product_id
+       WHERE entitlement.account_id = ? AND entitlement.game_key = ?
+         AND entitlement.entitlement_key = ? AND entitlement.revoked_at IS NULL
+       LIMIT 1`,
+      accountId,
+      gameKey,
+      product.entitlement_key
+    );
+    if (existing) throw commerceError('ALREADY_OWNED', 'This account already owns the product.');
+    throw commerceError('ADMIN_GRANT_CONFLICT', 'The manual entitlement grant was rolled back.', {
+      cause: String(error?.message || error)
+    });
+  }
+
+  const granted = await first(
+    db,
+    `SELECT entitlement.*, account.email AS account_email, product.names_json
+     FROM game_entitlements entitlement
+     INNER JOIN reader_accounts account ON account.id = entitlement.account_id
+     INNER JOIN game_products product ON product.product_id = entitlement.product_id
+     WHERE entitlement.account_id = ? AND entitlement.game_key = ?
+       AND entitlement.grant_source = 'admin' AND entitlement.source_ref = ?
+     LIMIT 1`,
+    accountId,
+    gameKey,
+    grantId
+  );
+  if (!granted) throw commerceError('ADMIN_GRANT_CONFLICT', 'The manual entitlement grant did not complete.');
+  return adminEntitlementToJson(granted);
+};
+
+export const revokeCatLifeAdminEntitlement = async (
+  db,
+  {
+    entitlementId: entitlementIdValue,
+    reason: reasonValue,
+    actorEmail: actorEmailValue
+  },
+  { revokeIdFactory = createCatLifeRevokeId } = {}
+) => {
+  if (!db?.prepare || !db?.batch) {
+    throw commerceError('REDEMPTION_NOT_READY', 'Game commerce storage is unavailable.');
+  }
+  const entitlementId = Number(entitlementIdValue);
+  if (!Number.isSafeInteger(entitlementId) || entitlementId < 1) {
+    throw commerceError('INVALID_ENTITLEMENT', 'A valid entitlement is required.');
+  }
+  const reason = normalizeReason(reasonValue);
+  const actorEmail = normalizeActorEmail(actorEmailValue) || 'admin';
+  const revokeId = normalizeOpaqueKey(revokeIdFactory(), 'revokeId', 8, 100);
+  const existing = await first(
+    db,
+    `SELECT entitlement.*, account.email AS account_email, product.names_json
+     FROM game_entitlements entitlement
+     INNER JOIN reader_accounts account ON account.id = entitlement.account_id
+     INNER JOIN game_products product ON product.product_id = entitlement.product_id
+     WHERE entitlement.id = ? AND entitlement.game_key = ? LIMIT 1`,
+    entitlementId,
+    gameKey
+  );
+  if (!existing) throw commerceError('ENTITLEMENT_NOT_FOUND', 'The entitlement was not found.');
+  if (existing.grant_source === 'station-points') {
+    throw commerceError(
+      'PURCHASE_REVERSAL_REQUIRED',
+      'Station Point purchases must be corrected through the purchase reversal workflow.'
+    );
+  }
+  if (existing.revoked_at) return { replayed: true, entitlement: adminEntitlementToJson(existing) };
+
+  const statements = [
+    db
+      .prepare(
+        `UPDATE game_entitlements
+         SET revoked_at = CURRENT_TIMESTAMP, revoke_reason = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ? AND game_key = ? AND revoked_at IS NULL`
+      )
+      .bind(reason, entitlementId, gameKey),
+    db
+      .prepare(
+        `INSERT INTO game_entitlement_events (
+          account_id, entitlement_id, event_type, event_key, product_id,
+          entitlement_key, actor_email, reason, metadata_json
+        )
+        SELECT account_id, id, 'entitlement.revoked', ?, product_id,
+          entitlement_key, ?, ?, json_object('grantSource', grant_source, 'purchaseId', purchase_id)
+        FROM game_entitlements
+        WHERE id = ? AND game_key = ? AND revoked_at IS NOT NULL`
+      )
+      .bind(`revoke:${revokeId}`, actorEmail, reason, entitlementId, gameKey)
+  ];
+  try {
+    await db.batch(statements);
+  } catch (error) {
+    throw commerceError('ADMIN_REVOKE_CONFLICT', 'The entitlement revocation was rolled back.', {
+      cause: String(error?.message || error)
+    });
+  }
+  const revoked = await first(
+    db,
+    `SELECT entitlement.*, account.email AS account_email, product.names_json
+     FROM game_entitlements entitlement
+     INNER JOIN reader_accounts account ON account.id = entitlement.account_id
+     INNER JOIN game_products product ON product.product_id = entitlement.product_id
+     WHERE entitlement.id = ? LIMIT 1`,
+    entitlementId
+  );
+  if (!revoked?.revoked_at) throw commerceError('ADMIN_REVOKE_CONFLICT', 'The entitlement revocation did not complete.');
+  return { replayed: false, entitlement: adminEntitlementToJson(revoked) };
+};
+
+export const catLifeCommerceConstants = Object.freeze({
+  gameKey,
+  ledgerSource,
+  productLifecycleStatuses: Object.freeze([...productLifecycleStatuses])
+});
