@@ -18,4 +18,4 @@ The D1 batch inserts the pending purchase snapshot, performs a compare-and-swap 
 
 ## Release boundary
 
-Task 3 exposes these functions through the routes documented in `docs/cat-life-game-commerce-api.md`. No public route imports client prices or local game state, and both products remain `planned`. Production deployment order is migration `0033`, migration `0034`, then the Worker; the Worker must not be deployed until both migrations have completed successfully.
+Task 3 exposes these functions through the routes documented in `docs/cat-life-game-commerce-api.md`, and Task 4 adds the protected controls documented in `docs/cat-life-game-commerce-admin.md`. No public route imports client prices or local game state, and both products remain `planned`. Production deployment order is migration `0033`, migration `0034`, migration `0035`, then the Worker; the Worker must not be deployed until the migrations required by the selected release have completed successfully.

@@ -37,6 +37,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div class="admin-v2-nav-group" role="group" aria-labelledby="admin-nav-operations">
             <span class="admin-v2-nav-label" id="admin-nav-operations">运营</span>
             <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="commerce">订单</button>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="game-commerce">游戏商品</button>
             <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="accounts">账户</button>
             <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="access">读者授权</button>
           </div>
@@ -236,6 +237,38 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <input id="orders-series" placeholder="deng-hai-liang-zhe" />
           </label>
           <button class="button button-primary" id="orders-refresh" type="button">刷新订单</button>
+        </section>
+
+        <section class="admin-v2-sidebar-section" data-admin-v2-panel="game-commerce-sidebar" hidden>
+          <label>
+            游戏购买状态
+            <select id="game-purchases-status">
+              <option value="">全部</option>
+              <option value="pending">pending</option>
+              <option value="completed">completed</option>
+              <option value="reversing">reversing</option>
+              <option value="reversed">reversed</option>
+            </select>
+          </label>
+          <label>
+            商品
+            <select id="game-commerce-product-filter">
+              <option value="">全部商品</option>
+            </select>
+          </label>
+          <label>
+            会员 Email
+            <input id="game-commerce-email-filter" type="email" placeholder="reader@example.com" />
+          </label>
+          <label>
+            权益状态
+            <select id="game-entitlements-status">
+              <option value="">全部</option>
+              <option value="active">有效</option>
+              <option value="revoked">已撤销</option>
+            </select>
+          </label>
+          <button class="button button-primary" id="game-commerce-refresh" type="button">刷新游戏商品</button>
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="accounts-sidebar" hidden>
@@ -1106,6 +1139,80 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </section>
 
+        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="game-commerce-main" hidden>
+          <div class="admin-v2-section-heading">
+            <div>
+              <p class="station-kicker">Cat Life Commerce</p>
+              <h2>游戏商品与官方权益</h2>
+            </div>
+            <div class="admin-v2-badges">
+              <span id="game-commerce-readiness">正在读取</span>
+            </div>
+          </div>
+
+          <div class="admin-inline-status" id="game-commerce-status" role="status" aria-live="polite">
+            商品保持 planned 时不会出现在玩家目录；激活前必须确认游戏资源和客户端已识别对应权益键。
+          </div>
+
+          <section class="admin-v2-subpanel" aria-labelledby="game-products-heading">
+            <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+              <div>
+                <p class="station-kicker">Server Catalog</p>
+                <h3 id="game-products-heading">服务端商品目录</h3>
+              </div>
+            </div>
+            <div class="admin-commerce-grid">
+              <div class="admin-v2-table-list" id="game-products-list"></div>
+              <section class="admin-detail-panel" id="game-product-detail">
+                <p class="admin-empty-list">选择一个商品编辑价格、名称或生命周期。</p>
+              </section>
+            </div>
+          </section>
+
+          <section class="admin-v2-subpanel" aria-labelledby="game-purchases-heading">
+            <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+              <div>
+                <p class="station-kicker">Purchases</p>
+                <h3 id="game-purchases-heading">购买与积分流水</h3>
+              </div>
+            </div>
+            <div class="admin-commerce-grid">
+              <div class="admin-v2-table-list" id="game-purchases-list"></div>
+              <section class="admin-detail-panel" id="game-purchase-detail">
+                <p class="admin-empty-list">选择一笔购买查看账本和纠正记录。</p>
+              </section>
+            </div>
+          </section>
+
+          <section class="admin-v2-subpanel" aria-labelledby="game-entitlements-heading">
+            <div class="admin-v2-section-heading admin-v2-section-heading--compact">
+              <div>
+                <p class="station-kicker">Official Entitlements</p>
+                <h3 id="game-entitlements-heading">人工授权与撤销</h3>
+              </div>
+            </div>
+            <form class="admin-v2-form" id="game-entitlement-grant-form">
+              <div class="admin-v2-form-grid">
+                <label>
+                  会员 Email
+                  <input id="game-entitlement-email" type="email" required placeholder="reader@example.com" />
+                </label>
+                <label>
+                  商品
+                  <select id="game-entitlement-product" required></select>
+                </label>
+              </div>
+              <label>
+                授权原因
+                <textarea id="game-entitlement-reason" rows="3" minlength="3" maxlength="500" required placeholder="说明客服补发、测试授权或其他处理依据。"></textarea>
+              </label>
+              <button class="button button-primary" type="submit">发放官方权益</button>
+              <p class="admin-empty-list">人工授权不会扣除 Station 积分，也不会伪造购买记录。</p>
+            </form>
+            <div class="admin-v2-table-list" id="game-entitlements-list"></div>
+          </section>
+        </section>
+
         <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="accounts-main" hidden>
           <div class="admin-v2-section-heading">
             <div>
@@ -1307,6 +1414,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalSourceStatus: $('#signal-source-status'),
       ordersList: $('#orders-list'),
       orderDetail: $('#order-detail'),
+      gameCommerceReadiness: $('#game-commerce-readiness'),
+      gameCommerceStatus: $('#game-commerce-status'),
+      gameProductsList: $('#game-products-list'),
+      gameProductDetail: $('#game-product-detail'),
+      gamePurchasesList: $('#game-purchases-list'),
+      gamePurchaseDetail: $('#game-purchase-detail'),
+      gameEntitlementsList: $('#game-entitlements-list'),
+      gameEntitlementGrantForm: $('#game-entitlement-grant-form'),
+      gameEntitlementEmail: $('#game-entitlement-email'),
+      gameEntitlementProduct: $('#game-entitlement-product'),
+      gameEntitlementReason: $('#game-entitlement-reason'),
       accountsList: $('#accounts-list'),
       accountDetail: $('#account-detail'),
       analyticsList: $('#analytics-list'),
@@ -1396,6 +1514,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         orderType: $('#orders-type'),
         orderEmail: $('#orders-email'),
         orderSeries: $('#orders-series'),
+        gamePurchaseStatus: $('#game-purchases-status'),
+        gameProduct: $('#game-commerce-product-filter'),
+        gameEmail: $('#game-commerce-email-filter'),
+        gameEntitlementStatus: $('#game-entitlements-status'),
         accountEmail: $('#accounts-email-filter'),
         accountStatus: $('#accounts-status'),
         analyticsSeries: $('#analytics-series'),
@@ -1480,6 +1602,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       signalDraftAutomation: null,
       signalSelectedCandidateIds: new Set(),
       orders: [],
+      gameProducts: [],
+      gamePurchases: [],
+      gameEntitlements: [],
       accounts: [],
       analyticsStats: [],
       analyticsInsights: [],
@@ -1490,6 +1615,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       selectedSignalId: 0,
       selectedSignalSourceId: '',
       selectedOrderToken: '',
+      selectedGameProductId: '',
+      selectedGamePurchaseId: '',
       selectedAccountId: 0,
       selectedAnalyticsKey: '',
       selectedCommentId: '',
@@ -1931,8 +2058,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const statusTone = (status) => {
-      if (['finished', 'confirmed', 'active'].includes(status)) return 'success';
-      if (['failed', 'expired', 'refunded', 'disabled'].includes(status)) return 'error';
+      if (['finished', 'confirmed', 'completed', 'active'].includes(status)) return 'success';
+      if (['planned', 'paused', 'pending', 'reversing'].includes(status)) return 'warning';
+      if (['failed', 'expired', 'refunded', 'disabled', 'retired', 'reversed'].includes(status)) return 'error';
       return 'neutral';
     };
 
@@ -4247,6 +4375,364 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setStatus('订单履约已重跑。', 'success');
     };
 
+    const gameLifecycleLabel = (status) => ({
+      planned: '规划中',
+      active: '销售中',
+      paused: '暂停销售',
+      retired: '已退役'
+    })[status] || status || '';
+
+    const syncGameProductOptions = () => {
+      const filterValue = elements.filters.gameProduct.value;
+      const grantValue = elements.gameEntitlementProduct.value;
+      elements.filters.gameProduct.innerHTML = '<option value="">全部商品</option>';
+      elements.gameEntitlementProduct.innerHTML = '';
+      state.gameProducts.forEach((product) => {
+        const label = `${product.names?.['zh-Hant'] || product.productId} · ${product.pointsPrice} 点 · ${gameLifecycleLabel(product.lifecycleStatus)}`;
+        const filterOption = document.createElement('option');
+        filterOption.value = product.productId;
+        filterOption.textContent = label;
+        elements.filters.gameProduct.append(filterOption);
+        if (['active', 'paused'].includes(product.lifecycleStatus)) {
+          const grantOption = document.createElement('option');
+          grantOption.value = product.productId;
+          grantOption.textContent = label;
+          elements.gameEntitlementProduct.append(grantOption);
+        }
+      });
+      if ([...elements.filters.gameProduct.options].some((option) => option.value === filterValue)) {
+        elements.filters.gameProduct.value = filterValue;
+      }
+      if ([...elements.gameEntitlementProduct.options].some((option) => option.value === grantValue)) {
+        elements.gameEntitlementProduct.value = grantValue;
+      }
+      elements.gameEntitlementProduct.disabled = elements.gameEntitlementProduct.options.length === 0;
+    };
+
+    const renderGameProductDetail = (product) => {
+      if (!product) {
+        elements.gameProductDetail.innerHTML = '<p class="admin-empty-list">选择一个商品编辑价格、名称或生命周期。</p>';
+        return;
+      }
+      elements.gameProductDetail.innerHTML = `
+        <div class="admin-v2-section-heading">
+          <div>
+            <p class="station-kicker">Catalog Revision ${escapeHtml(String(product.catalogRevision))}</p>
+            <h3>${escapeHtml(product.names?.['zh-Hant'] || product.productId)}</h3>
+          </div>
+          <span class="admin-status-pill" data-tone="${statusTone(product.lifecycleStatus)}">${escapeHtml(gameLifecycleLabel(product.lifecycleStatus))}</span>
+        </div>
+        <div class="admin-pricing-lines">
+          <p><strong>商品 ID：</strong>${escapeHtml(product.productId)}</p>
+          <p><strong>权益键：</strong>${escapeHtml(product.entitlementKey)}</p>
+          <p><strong>类型：</strong>${escapeHtml(product.productType)}</p>
+          <p><strong>购买 / 有效权益：</strong>${escapeHtml(String(product.purchaseCount))} / ${escapeHtml(String(product.activeEntitlementCount))}</p>
+        </div>
+        <form class="admin-v2-form" id="game-product-form">
+          <div class="admin-v2-form-grid">
+            <label>
+              Station 积分价格
+              <input id="game-product-price" type="number" min="1" max="10000" step="1" required value="${escapeHtml(String(product.pointsPrice))}" />
+            </label>
+            <label>
+              生命周期
+              <select id="game-product-lifecycle">
+                <option value="planned" ${product.lifecycleStatus === 'planned' ? 'selected' : ''}>planned · 规划中</option>
+                <option value="active" ${product.lifecycleStatus === 'active' ? 'selected' : ''}>active · 销售中</option>
+                <option value="paused" ${product.lifecycleStatus === 'paused' ? 'selected' : ''}>paused · 暂停销售</option>
+                <option value="retired" ${product.lifecycleStatus === 'retired' ? 'selected' : ''}>retired · 永久退役</option>
+              </select>
+            </label>
+            <label>
+              繁中名称
+              <input id="game-product-name-zh-hant" required maxlength="120" value="${escapeHtml(product.names?.['zh-Hant'] || '')}" />
+            </label>
+            <label>
+              简中名称
+              <input id="game-product-name-zh-hans" required maxlength="120" value="${escapeHtml(product.names?.['zh-Hans'] || '')}" />
+            </label>
+            <label>
+              English
+              <input id="game-product-name-en" required maxlength="120" value="${escapeHtml(product.names?.en || '')}" />
+            </label>
+            <label>
+              日本語
+              <input id="game-product-name-ja" required maxlength="120" value="${escapeHtml(product.names?.ja || '')}" />
+            </label>
+          </div>
+          <button class="button button-primary" type="submit">保存商品</button>
+          <p class="admin-empty-list">商品 ID 与权益键不可编辑。首次激活需要再次输入完整商品 ID；retired 为终态。</p>
+        </form>
+      `;
+      $('#game-product-form').addEventListener('submit', (event) => saveGameProduct(event, product));
+    };
+
+    const renderGameProducts = () => {
+      if (!state.gameProducts.length) {
+        renderEmpty(elements.gameProductsList, '暂无游戏商品。');
+        renderGameProductDetail(null);
+        return;
+      }
+      elements.gameProductsList.innerHTML = '';
+      state.gameProducts.forEach((product) => {
+        const button = document.createElement('button');
+        button.className = `admin-v2-entry${product.productId === state.selectedGameProductId ? ' is-active' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `
+          <span>${escapeHtml(product.names?.['zh-Hant'] || product.productId)}</span>
+          <small>${escapeHtml(gameLifecycleLabel(product.lifecycleStatus))} · ${escapeHtml(String(product.pointsPrice))} Station Points</small>
+          <small>Revision ${escapeHtml(String(product.catalogRevision))} · ${escapeHtml(product.productType)}</small>
+        `;
+        button.addEventListener('click', () => {
+          state.selectedGameProductId = product.productId;
+          renderGameProducts();
+        });
+        elements.gameProductsList.append(button);
+      });
+      const selected = state.gameProducts.find((product) => product.productId === state.selectedGameProductId) || state.gameProducts[0];
+      state.selectedGameProductId = selected.productId;
+      renderGameProductDetail(selected);
+    };
+
+    const loadGameProducts = async () => {
+      const payload = await apiJson('/admin/api/games/cat-life/products');
+      state.gameProducts = payload.products || [];
+      syncGameProductOptions();
+      renderGameProducts();
+      elements.gameCommerceReadiness.textContent = '后台已就绪';
+    };
+
+    const saveGameProduct = async (event, product) => {
+      event.preventDefault();
+      const lifecycleStatus = $('#game-product-lifecycle').value;
+      let activationConfirmation = '';
+      if (lifecycleStatus === 'active' && product.lifecycleStatus !== 'active') {
+        activationConfirmation = window.prompt(`输入完整商品 ID 以确认激活：\n${product.productId}`) || '';
+        if (!activationConfirmation) return;
+      }
+      const payload = await apiJson('/admin/api/games/cat-life/products', {
+        method: 'POST',
+        body: JSON.stringify({
+          productId: product.productId,
+          pointsPrice: Number($('#game-product-price').value),
+          lifecycleStatus,
+          activationConfirmation,
+          names: {
+            en: $('#game-product-name-en').value.trim(),
+            ja: $('#game-product-name-ja').value.trim(),
+            'zh-Hans': $('#game-product-name-zh-hans').value.trim(),
+            'zh-Hant': $('#game-product-name-zh-hant').value.trim()
+          }
+        })
+      });
+      state.gameProducts = payload.products || [];
+      state.selectedGameProductId = payload.product?.productId || product.productId;
+      syncGameProductOptions();
+      renderGameProducts();
+      await loadAuditLogs();
+      setStatus('游戏商品已保存。', 'success');
+    };
+
+    const gameCommerceQuery = () => {
+      const params = new URLSearchParams({ limit: '100' });
+      if (elements.filters.gamePurchaseStatus.value) params.set('status', elements.filters.gamePurchaseStatus.value);
+      if (elements.filters.gameProduct.value) params.set('productId', elements.filters.gameProduct.value);
+      if (elements.filters.gameEmail.value.trim()) params.set('email', elements.filters.gameEmail.value.trim());
+      return params;
+    };
+
+    const renderGamePurchaseDetail = (purchase) => {
+      if (!purchase) {
+        elements.gamePurchaseDetail.innerHTML = '<p class="admin-empty-list">选择一笔购买查看账本和纠正记录。</p>';
+        return;
+      }
+      const ledger = purchase.ledger || [];
+      const events = purchase.events || [];
+      elements.gamePurchaseDetail.innerHTML = `
+        <div class="admin-v2-section-heading">
+          <div>
+            <p class="station-kicker">Purchase Detail</p>
+            <h3>${escapeHtml(purchase.productSnapshot?.names?.['zh-Hant'] || purchase.productId)}</h3>
+          </div>
+          <span class="admin-status-pill" data-tone="${statusTone(purchase.status)}">${escapeHtml(purchase.status)}</span>
+        </div>
+        <div class="admin-detail-grid">
+          <article><span>扣除积分</span><strong>${escapeHtml(String(purchase.pointsSpent))}</strong></article>
+          <article><span>余额变化</span><strong>${escapeHtml(String(purchase.balanceBefore))} → ${escapeHtml(String(purchase.balanceAfter ?? '-'))}</strong></article>
+          <article><span>目录版本</span><strong>${escapeHtml(String(purchase.catalogRevision))}</strong></article>
+          <article><span>账本 ID</span><strong>${escapeHtml(String(purchase.ledgerId || '-'))}</strong></article>
+        </div>
+        <div class="admin-pricing-lines">
+          <p><strong>购买 ID：</strong>${escapeHtml(purchase.id)}</p>
+          <p><strong>会员：</strong>${escapeHtml(purchase.accountEmail)} · #${escapeHtml(String(purchase.accountId))}</p>
+          <p><strong>商品：</strong>${escapeHtml(purchase.productId)}</p>
+          <p><strong>权益：</strong>${escapeHtml(purchase.entitlementKey)}</p>
+          <p><strong>完成：</strong>${escapeHtml(formatDate(purchase.completedAt) || '-')}</p>
+          ${purchase.reversalReason ? `<p><strong>纠正原因：</strong>${escapeHtml(purchase.reversalReason)}</p>` : ''}
+        </div>
+        ${purchase.status === 'completed' ? `
+          <form class="admin-v2-form" id="game-purchase-reverse-form">
+            <label>
+              纠正原因
+              <textarea id="game-purchase-reverse-reason" rows="3" minlength="3" maxlength="500" required placeholder="说明为何撤销权益并返还原购买积分。"></textarea>
+            </label>
+            <button class="button button-danger" type="submit">撤销权益并返还 ${escapeHtml(String(purchase.pointsSpent))} 点</button>
+          </form>
+        ` : ''}
+        <section class="admin-detail-section">
+          <h4>积分账本</h4>
+          ${ledger.length ? ledger.map((entry) => `
+            <article class="admin-v2-row">
+              <strong>${escapeHtml(formatCredits(entry.creditsDelta))} · ${escapeHtml(entry.entryType)}</strong>
+              <span>余额 ${escapeHtml(String(entry.balanceAfter))} · ledger #${escapeHtml(String(entry.id))}</span>
+              <small>${escapeHtml(entry.note || '')} · ${escapeHtml(formatDate(entry.createdAt))}</small>
+            </article>
+          `).join('') : '<p class="admin-empty-list">暂无账本记录。</p>'}
+        </section>
+        <section class="admin-detail-section">
+          <h4>交易事件</h4>
+          ${events.length ? events.map((event) => `
+            <article class="admin-v2-row">
+              <strong>${escapeHtml(event.eventType)}</strong>
+              <span>${escapeHtml(formatCredits(event.pointsDelta))} · ${escapeHtml(event.eventKey)}</span>
+              <small>${escapeHtml(formatDate(event.createdAt))}</small>
+            </article>
+          `).join('') : '<p class="admin-empty-list">暂无交易事件。</p>'}
+        </section>
+      `;
+      const form = $('#game-purchase-reverse-form');
+      if (form) form.addEventListener('submit', (event) => reverseGamePurchase(event, purchase));
+    };
+
+    const loadGamePurchaseDetail = async (purchaseId) => {
+      state.selectedGamePurchaseId = purchaseId;
+      elements.gamePurchaseDetail.innerHTML = '<p class="admin-empty-list">正在读取购买详情。</p>';
+      const payload = await apiJson(`/admin/api/games/cat-life/purchases?purchaseId=${encodeURIComponent(purchaseId)}`);
+      renderGamePurchaseDetail(payload.purchase);
+      renderGamePurchases();
+    };
+
+    const renderGamePurchases = () => {
+      if (!state.gamePurchases.length) {
+        renderEmpty(elements.gamePurchasesList, '暂无游戏购买记录。');
+        renderGamePurchaseDetail(null);
+        return;
+      }
+      elements.gamePurchasesList.innerHTML = '';
+      state.gamePurchases.forEach((purchase) => {
+        const button = document.createElement('button');
+        button.className = `admin-v2-entry${purchase.id === state.selectedGamePurchaseId ? ' is-active' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `
+          <span>${escapeHtml(purchase.productSnapshot?.names?.['zh-Hant'] || purchase.productId)}</span>
+          <small>${escapeHtml(purchase.status)} · ${escapeHtml(String(purchase.pointsSpent))} Station Points</small>
+          <small>${escapeHtml(purchase.accountEmail)} · ${escapeHtml(formatDate(purchase.createdAt))}</small>
+        `;
+        button.addEventListener('click', () => loadGamePurchaseDetail(purchase.id));
+        elements.gamePurchasesList.append(button);
+      });
+    };
+
+    const loadGamePurchases = async () => {
+      const payload = await apiJson(`/admin/api/games/cat-life/purchases?${gameCommerceQuery().toString()}`);
+      state.gamePurchases = payload.purchases || [];
+      renderGamePurchases();
+    };
+
+    const reverseGamePurchase = async (event, purchase) => {
+      event.preventDefault();
+      const reason = $('#game-purchase-reverse-reason').value.trim();
+      const result = await apiJson('/admin/api/games/cat-life/purchases/reverse', {
+        method: 'POST',
+        body: JSON.stringify({ purchaseId: purchase.id, reason })
+      });
+      renderGamePurchaseDetail(result.purchase);
+      await Promise.all([loadGamePurchases(), loadGameEntitlements(), loadAuditLogs()]);
+      setStatus(`购买已纠正，返还 ${result.result?.purchase?.pointsSpent || purchase.pointsSpent} Station Points。`, 'success');
+    };
+
+    const renderGameEntitlements = () => {
+      if (!state.gameEntitlements.length) {
+        renderEmpty(elements.gameEntitlementsList, '暂无匹配的游戏权益。');
+        return;
+      }
+      elements.gameEntitlementsList.innerHTML = '';
+      state.gameEntitlements.forEach((entitlement) => {
+        const row = document.createElement('article');
+        row.className = 'admin-v2-row';
+        row.innerHTML = `
+          <strong>${escapeHtml(entitlement.productName || entitlement.productId)}</strong>
+          <span>${escapeHtml(entitlement.accountEmail)} · ${escapeHtml(entitlement.grantSource)} · ${entitlement.active ? '有效' : '已撤销'}</span>
+          <small>${escapeHtml(entitlement.entitlementKey)} · ${escapeHtml(formatDate(entitlement.grantedAt))}</small>
+          ${entitlement.grantReason ? `<small>授权：${escapeHtml(entitlement.grantReason)}</small>` : ''}
+          ${entitlement.revokeReason ? `<small>撤销：${escapeHtml(entitlement.revokeReason)}</small>` : ''}
+        `;
+        if (entitlement.active) {
+          const revoke = document.createElement('button');
+          revoke.className = 'button button-danger';
+          revoke.type = 'button';
+          revoke.textContent = '仅撤销权益';
+          revoke.title = '不会返还 Station 积分；购买纠正请在购买详情操作。';
+          revoke.addEventListener('click', () => revokeGameEntitlement(entitlement));
+          row.append(revoke);
+        }
+        elements.gameEntitlementsList.append(row);
+      });
+    };
+
+    const loadGameEntitlements = async () => {
+      const params = gameCommerceQuery();
+      params.delete('status');
+      if (elements.filters.gameEntitlementStatus.value) params.set('status', elements.filters.gameEntitlementStatus.value);
+      const payload = await apiJson(`/admin/api/games/cat-life/entitlements?${params.toString()}`);
+      state.gameEntitlements = payload.entitlements || [];
+      renderGameEntitlements();
+    };
+
+    const grantGameEntitlement = async (event) => {
+      event.preventDefault();
+      const result = await apiJson('/admin/api/games/cat-life/entitlements/grant', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: elements.gameEntitlementEmail.value.trim(),
+          productId: elements.gameEntitlementProduct.value,
+          reason: elements.gameEntitlementReason.value.trim()
+        })
+      });
+      elements.filters.gameEmail.value = result.entitlement?.accountEmail || elements.gameEntitlementEmail.value.trim();
+      elements.gameEntitlementReason.value = '';
+      await Promise.all([loadGameProducts(), loadGameEntitlements(), loadAuditLogs()]);
+      setStatus('官方游戏权益已发放；未扣除 Station 积分。', 'success');
+    };
+
+    const revokeGameEntitlement = async (entitlement) => {
+      const reason = window.prompt('请输入撤销原因。此操作只撤销权益，不返还 Station 积分：') || '';
+      if (reason.trim().length < 3) return;
+      await apiJson('/admin/api/games/cat-life/entitlements/revoke', {
+        method: 'POST',
+        body: JSON.stringify({ entitlementId: entitlement.id, reason: reason.trim() })
+      });
+      await Promise.all([loadGameProducts(), loadGameEntitlements(), loadAuditLogs()]);
+      setStatus('游戏权益已撤销；未返还 Station 积分。', 'success');
+    };
+
+    const loadGameCommerce = async () => {
+      elements.gameCommerceReadiness.textContent = '正在读取';
+      elements.gameCommerceStatus.textContent = '正在读取服务端商品、购买记录与官方权益。';
+      try {
+        await loadGameProducts();
+        await Promise.all([loadGamePurchases(), loadGameEntitlements()]);
+        elements.gameCommerceReadiness.textContent = '可管理';
+        elements.gameCommerceStatus.textContent = `已载入 ${state.gameProducts.length} 个商品、${state.gamePurchases.length} 笔购买和 ${state.gameEntitlements.length} 条权益。`;
+        setStatus('游戏商品后台已载入。', 'success');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '未知错误';
+        elements.gameCommerceReadiness.textContent = '读取失败';
+        elements.gameCommerceStatus.textContent = `游戏商品后台暂时不可用：${message}`;
+        setStatus(`游戏商品后台读取失败：${message}`, 'error');
+      }
+    };
+
     const loadAccounts = async () => {
       const params = new URLSearchParams({ limit: '80' });
       if (elements.filters.accountEmail.value.trim()) params.set('email', elements.filters.accountEmail.value.trim());
@@ -4965,6 +5451,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         setStatus(`已载入 ${state.signalBriefs.length} 篇简报和 ${state.signalSources.length} 个采集来源。`, 'success');
       }
       if (name === 'commerce') await loadOrders();
+      if (name === 'game-commerce') await loadGameCommerce();
       if (name === 'accounts') await loadAccounts();
       if (name === 'analytics') await loadAnalyticsStats();
       if (name === 'comments') await loadComments();
@@ -4992,6 +5479,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       refreshSignalCandidates();
     });
     elements.accessForm.addEventListener('submit', grantEntitlement);
+    elements.gameEntitlementGrantForm.addEventListener('submit', grantGameEntitlement);
     $('#content-refresh').addEventListener('click', () => loadEntries({ autoSelect: true }));
     $('#imports-refresh').addEventListener('click', () => Promise.all([loadImportReviews(), refreshSignalApprovals()]));
     elements.importReviewFilter.addEventListener('change', () => loadImportReviews());
@@ -5014,6 +5502,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       elements.signalAutomationPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     $('#orders-refresh').addEventListener('click', loadOrders);
+    $('#game-commerce-refresh').addEventListener('click', loadGameCommerce);
     $('#accounts-refresh').addEventListener('click', loadAccounts);
     $('#analytics-refresh').addEventListener('click', loadAnalyticsStats);
     $('#analytics-aggregate').addEventListener('click', aggregateAnalytics);

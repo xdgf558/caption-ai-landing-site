@@ -33,10 +33,17 @@ import { buildContentImportListQuery, contentImportSourceKinds } from './content
 import {
   createCatLifeCorrectionId,
   createCatLifePurchaseId,
+  getCatLifeAdminPurchase,
   getCatLifePointsBalance,
+  grantCatLifeAdminEntitlement,
+  listCatLifeAdminEntitlements,
+  listCatLifeAdminProducts,
+  listCatLifeAdminPurchases,
   listCatLifeEntitlements,
   listCatLifeProducts,
   redeemCatLifeProduct,
+  revokeCatLifeAdminEntitlement,
+  updateCatLifeAdminProduct,
   reverseCatLifePurchase
 } from './catLifeCommerce.js';
 import { Resvg } from '@cf-wasm/resvg';
@@ -2670,7 +2677,7 @@ const isMissingReaderCommentsError = (error) => /no such table: reader_comments/
 const isMissingReaderGameSavesError = (error) =>
   /no such table: reader_game_save(?:s|_backups|_rate_limits|_recovery_events)/i.test(error?.message || '');
 const isMissingCatLifeCommerceError = (error) =>
-  /no such table: (?:game_products|game_purchases|game_entitlements|game_commerce_events|game_commerce_rate_limits)/i.test(
+  /no such table: (?:game_products|game_purchases|game_entitlements|game_commerce_events|game_commerce_rate_limits|game_entitlement_events)|no such column: (?:grant_reason|granted_by)/i.test(
     error?.message || ''
   );
 const isMissingProductFeedbackError = (error) => /no such table: product_feedback/i.test(error?.message || '');
@@ -2891,6 +2898,18 @@ const ensureCatLifeCommerceReady = async (db, { requireRateLimit = false } = {})
     if (requireRateLimit) {
       await db.prepare('SELECT account_id FROM game_commerce_rate_limits LIMIT 1').first();
     }
+    return true;
+  } catch (error) {
+    if (isMissingCatLifeCommerceError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureCatLifeCommerceAdminReady = async (db) => {
+  if (!(await ensureCatLifeCommerceReady(db, { requireRateLimit: true }))) return false;
+  try {
+    await db.prepare('SELECT grant_reason, granted_by FROM game_entitlements LIMIT 1').first();
+    await db.prepare('SELECT id FROM game_entitlement_events LIMIT 1').first();
     return true;
   } catch (error) {
     if (isMissingCatLifeCommerceError(error)) return false;
@@ -5593,6 +5612,285 @@ const handleCatLifeRedemption = async (request, env) => {
       message: cleanText(error?.message, 300)
     }));
     return privateJson({ ok: false, code: 'REDEMPTION_FAILED', message: 'Redemption failed.' }, { status: 500 });
+  }
+};
+
+const catLifeCommerceAdminNotReadyResponse = () =>
+  privateJson(
+    {
+      ok: false,
+      code: 'GAME_COMMERCE_ADMIN_NOT_READY',
+      message: 'Cat Life Game commerce administration is not initialized.'
+    },
+    { status: 503 }
+  );
+
+const catLifeCommerceAdminErrorResponse = (error) => {
+  const code = cleanText(error?.code, 80) || 'GAME_COMMERCE_ADMIN_FAILED';
+  const statuses = {
+    INVALID_ACCOUNT: 400,
+    INVALID_PRODUCT: 400,
+    INVALID_REQUEST: 400,
+    INVALID_PRODUCT_UPDATE: 400,
+    INVALID_ADMIN_FILTER: 400,
+    INVALID_ENTITLEMENT: 400,
+    INVALID_CORRECTION: 400,
+    PRODUCT_NOT_FOUND: 404,
+    PURCHASE_NOT_FOUND: 404,
+    ENTITLEMENT_NOT_FOUND: 404,
+    ACTIVATION_CONFIRMATION_REQUIRED: 409,
+    INVALID_PRODUCT_TRANSITION: 409,
+    PRODUCT_NOT_GRANTABLE: 409,
+    ALREADY_OWNED: 409,
+    ADMIN_GRANT_CONFLICT: 409,
+    ADMIN_REVOKE_CONFLICT: 409,
+    CORRECTION_CONFLICT: 409,
+    REDEMPTION_NOT_READY: 503
+  };
+  const status = statuses[code];
+  if (!status) return null;
+  return privateJson({ ok: false, code, message: cleanText(error?.message, 300) }, { status });
+};
+
+const readCatLifeCommerceAdminPayload = async (request) => {
+  const requestOrigin = cleanText(request.headers.get('origin'), 300);
+  if (!requestOrigin || requestOrigin !== new URL(request.url).origin) {
+    return {
+      response: privateJson({ ok: false, code: 'INVALID_ORIGIN', message: 'Invalid request origin.' }, { status: 403 })
+    };
+  }
+  if (!String(request.headers.get('content-type') || '').toLowerCase().includes('application/json')) {
+    return {
+      response: privateJson({ ok: false, code: 'INVALID_CONTENT_TYPE', message: 'JSON is required.' }, { status: 415 })
+    };
+  }
+  const body = await readRequestTextWithLimit(request, 16000);
+  if (!body) {
+    return {
+      response: privateJson({ ok: false, code: 'ADMIN_REQUEST_TOO_LARGE', message: 'Request is too large.' }, { status: 413 })
+    };
+  }
+  const payload = parseStoredJson(body.text, null);
+  if (!isPlainRecord(payload)) {
+    return {
+      response: privateJson({ ok: false, code: 'INVALID_ADMIN_REQUEST', message: 'Invalid request body.' }, { status: 400 })
+    };
+  }
+  return { payload };
+};
+
+const findCatLifeAdminReaderAccount = async (db, payload) => {
+  const accountId = Number(payload.accountId);
+  const normalizedEmail = normalizeEmail(payload.email);
+  if (Number.isSafeInteger(accountId) && accountId > 0) {
+    return db
+      .prepare('SELECT id, email, normalized_email, status FROM reader_accounts WHERE id = ? LIMIT 1')
+      .bind(accountId)
+      .first();
+  }
+  if (normalizedEmail && isEmail(normalizedEmail)) {
+    return db
+      .prepare('SELECT id, email, normalized_email, status FROM reader_accounts WHERE normalized_email = ? LIMIT 1')
+      .bind(normalizedEmail)
+      .first();
+  }
+  return null;
+};
+
+const handleAdminCatLifeProducts = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureCatLifeCommerceAdminReady(db))) return catLifeCommerceAdminNotReadyResponse();
+  if (request.method === 'GET') {
+    return privateJson({ ok: true, products: await listCatLifeAdminProducts(db) });
+  }
+
+  const input = await readCatLifeCommerceAdminPayload(request);
+  if (input.response) return input.response;
+  try {
+    const before = (await listCatLifeAdminProducts(db)).find(
+      (product) => product.productId === cleanText(input.payload.productId, 160)
+    );
+    const product = await updateCatLifeAdminProduct(db, input.payload);
+    const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: 'cat_life_product.update',
+      targetType: 'cat_life_product',
+      targetId: product.productId,
+      targetSlug: product.productId,
+      metadata: {
+        before: before
+          ? {
+              pointsPrice: before.pointsPrice,
+              lifecycleStatus: before.lifecycleStatus,
+              catalogRevision: before.catalogRevision,
+              names: before.names
+            }
+          : null,
+        after: {
+          pointsPrice: product.pointsPrice,
+          lifecycleStatus: product.lifecycleStatus,
+          catalogRevision: product.catalogRevision,
+          names: product.names
+        }
+      }
+    });
+    return privateJson({ ok: true, product, products: await listCatLifeAdminProducts(db) });
+  } catch (error) {
+    return catLifeCommerceAdminErrorResponse(error)
+      || privateJson({ ok: false, code: 'GAME_COMMERCE_ADMIN_FAILED', message: 'Product update failed.' }, { status: 500 });
+  }
+};
+
+const handleAdminCatLifePurchases = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureCatLifeCommerceAdminReady(db))) return catLifeCommerceAdminNotReadyResponse();
+  const url = new URL(request.url);
+  const purchaseId = cleanText(url.searchParams.get('purchaseId') || url.searchParams.get('id'), 120);
+  try {
+    if (purchaseId) {
+      return privateJson({ ok: true, purchase: await getCatLifeAdminPurchase(db, purchaseId) });
+    }
+    const purchases = await listCatLifeAdminPurchases(db, {
+      status: url.searchParams.get('status'),
+      productId: url.searchParams.get('productId'),
+      email: url.searchParams.get('email'),
+      limit: url.searchParams.get('limit')
+    });
+    return privateJson({ ok: true, purchases });
+  } catch (error) {
+    return catLifeCommerceAdminErrorResponse(error)
+      || privateJson({ ok: false, code: 'GAME_COMMERCE_ADMIN_FAILED', message: 'Purchase lookup failed.' }, { status: 500 });
+  }
+};
+
+const handleAdminCatLifePurchaseReverse = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureCatLifeCommerceAdminReady(db))) return catLifeCommerceAdminNotReadyResponse();
+  const input = await readCatLifeCommerceAdminPayload(request);
+  if (input.response) return input.response;
+  try {
+    const purchase = await getCatLifeAdminPurchase(db, input.payload.purchaseId);
+    const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+    const result = await reverseCatLifePurchase(db, {
+      accountId: purchase.accountId,
+      purchaseId: purchase.id,
+      reason: input.payload.reason
+    });
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: 'cat_life_purchase.reverse',
+      targetType: 'cat_life_purchase',
+      targetId: purchase.id,
+      targetSlug: purchase.productId,
+      metadata: {
+        accountId: purchase.accountId,
+        accountEmail: purchase.accountEmail,
+        productId: purchase.productId,
+        pointsRestored: result.purchase.pointsSpent,
+        reason: cleanText(input.payload.reason, 500),
+        replayed: Boolean(result.replayed)
+      }
+    });
+    return privateJson({ ok: true, result, purchase: await getCatLifeAdminPurchase(db, purchase.id) });
+  } catch (error) {
+    return catLifeCommerceAdminErrorResponse(error)
+      || privateJson({ ok: false, code: 'GAME_COMMERCE_ADMIN_FAILED', message: 'Purchase correction failed.' }, { status: 500 });
+  }
+};
+
+const handleAdminCatLifeEntitlements = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureCatLifeCommerceAdminReady(db))) return catLifeCommerceAdminNotReadyResponse();
+  const url = new URL(request.url);
+  try {
+    const entitlements = await listCatLifeAdminEntitlements(db, {
+      email: url.searchParams.get('email'),
+      productId: url.searchParams.get('productId'),
+      status: url.searchParams.get('status'),
+      limit: url.searchParams.get('limit')
+    });
+    return privateJson({ ok: true, entitlements });
+  } catch (error) {
+    return catLifeCommerceAdminErrorResponse(error)
+      || privateJson({ ok: false, code: 'GAME_COMMERCE_ADMIN_FAILED', message: 'Entitlement lookup failed.' }, { status: 500 });
+  }
+};
+
+const handleAdminCatLifeEntitlementGrant = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureCatLifeCommerceAdminReady(db))) return catLifeCommerceAdminNotReadyResponse();
+  const input = await readCatLifeCommerceAdminPayload(request);
+  if (input.response) return input.response;
+  const account = await findCatLifeAdminReaderAccount(db, input.payload);
+  if (!account) {
+    return privateJson({ ok: false, code: 'ACCOUNT_NOT_FOUND', message: 'The reader account was not found.' }, { status: 404 });
+  }
+  if (account.status !== 'active') {
+    return privateJson({ ok: false, code: 'ACCOUNT_DISABLED', message: 'The reader account is disabled.' }, { status: 409 });
+  }
+  try {
+    const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+    const entitlement = await grantCatLifeAdminEntitlement(db, {
+      accountId: account.id,
+      productId: input.payload.productId,
+      reason: input.payload.reason,
+      actorEmail
+    });
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: 'cat_life_entitlement.grant',
+      targetType: 'cat_life_entitlement',
+      targetId: String(entitlement.id),
+      targetSlug: entitlement.productId,
+      metadata: {
+        accountId: account.id,
+        accountEmail: account.email,
+        productId: entitlement.productId,
+        entitlementKey: entitlement.entitlementKey,
+        reason: entitlement.grantReason,
+        grantSource: entitlement.grantSource
+      }
+    });
+    return privateJson({ ok: true, entitlement });
+  } catch (error) {
+    return catLifeCommerceAdminErrorResponse(error)
+      || privateJson({ ok: false, code: 'GAME_COMMERCE_ADMIN_FAILED', message: 'Entitlement grant failed.' }, { status: 500 });
+  }
+};
+
+const handleAdminCatLifeEntitlementRevoke = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db || !(await ensureCatLifeCommerceAdminReady(db))) return catLifeCommerceAdminNotReadyResponse();
+  const input = await readCatLifeCommerceAdminPayload(request);
+  if (input.response) return input.response;
+  try {
+    const actorEmail = (await getAdminActorEmail(request, env)) || 'admin';
+    const result = await revokeCatLifeAdminEntitlement(db, {
+      entitlementId: input.payload.entitlementId,
+      reason: input.payload.reason,
+      actorEmail
+    });
+    await insertAdminAuditLog(db, {
+      actorEmail,
+      action: 'cat_life_entitlement.revoke',
+      targetType: 'cat_life_entitlement',
+      targetId: String(result.entitlement.id),
+      targetSlug: result.entitlement.productId,
+      metadata: {
+        accountId: result.entitlement.accountId,
+        accountEmail: result.entitlement.accountEmail,
+        productId: result.entitlement.productId,
+        entitlementKey: result.entitlement.entitlementKey,
+        reason: cleanText(input.payload.reason, 500),
+        pointsRestored: 0,
+        replayed: Boolean(result.replayed)
+      }
+    });
+    return privateJson({ ok: true, ...result });
+  } catch (error) {
+    return catLifeCommerceAdminErrorResponse(error)
+      || privateJson({ ok: false, code: 'GAME_COMMERCE_ADMIN_FAILED', message: 'Entitlement revocation failed.' }, { status: 500 });
   }
 };
 
@@ -22810,6 +23108,36 @@ export default {
 
     if (request.method === 'POST' && url.pathname === novelReadingEventsPath) {
       return handleNovelReadingEvents(request, env);
+    }
+
+    if (url.pathname === '/admin/api/games/cat-life/products') {
+      if (request.method === 'GET' || request.method === 'POST') return handleAdminCatLifeProducts(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/games/cat-life/purchases') {
+      if (request.method === 'GET') return handleAdminCatLifePurchases(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/games/cat-life/purchases/reverse') {
+      if (request.method === 'POST') return handleAdminCatLifePurchaseReverse(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/games/cat-life/entitlements') {
+      if (request.method === 'GET') return handleAdminCatLifeEntitlements(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/games/cat-life/entitlements/grant') {
+      if (request.method === 'POST') return handleAdminCatLifeEntitlementGrant(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/admin/api/games/cat-life/entitlements/revoke') {
+      if (request.method === 'POST') return handleAdminCatLifeEntitlementRevoke(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
     if (url.pathname === '/admin/api/novels/analytics/stats') {

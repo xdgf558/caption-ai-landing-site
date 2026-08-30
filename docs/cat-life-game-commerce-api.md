@@ -16,6 +16,7 @@ Responses use stable error codes for client localization. Business conflicts ret
 
 1. Apply `migrations/0033_cat_life_game_commerce.sql`.
 2. Apply `migrations/0034_cat_life_game_commerce_api.sql`.
-3. Deploy the Worker.
+3. Apply `migrations/0035_cat_life_game_commerce_admin.sql` when deploying the Admin workspace.
+4. Deploy the Worker.
 
 Both launch products remain `planned`. The catalog therefore stays empty in production until a later reviewed release ships the game assets, Admin activation controls, client purchase confirmation, and version-history entry.
