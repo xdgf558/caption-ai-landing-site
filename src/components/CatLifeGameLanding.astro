@@ -1,0 +1,247 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { catLifeGameProduct } from '../data/products/cat-life-game';
+import { siteConfig } from '../data/site';
+
+type Locale = 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+
+interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'zh-Hant' } = Astro.props;
+
+const copy = {
+  'zh-Hant': {
+    title: '打工養貓日記｜免費網頁養成遊戲',
+    description: '在瀏覽器裡工作、照顧貓咪、佈置房間並探索貓咪鎮。免費遊玩，進度保存在目前裝置。',
+    kicker: 'Browser Cat Life Game',
+    heading: '打工、生活，然後把貓照顧好。',
+    intro: '《打工養貓日記》是一款可以直接在瀏覽器遊玩的生活養成遊戲。安排工作與休息、管理金幣和體力、照顧每隻貓，再慢慢把自己的小家和貓咪鎮填滿。',
+    play: '立即開始遊戲',
+    apps: '返回 Apps',
+    status: '免費遊玩 · 無需安裝',
+    previewLabel: '遊戲中的橘貓角色',
+    statDay: '第 1 天',
+    statCoins: '金幣 500',
+    statCats: '1 隻貓',
+    nowTitle: '現在可以做的事',
+    nowIntro: '這個版本保留完整遊戲循環，桌面與手機都可以直接進入。',
+    features: [
+      ['安排一天', '在工作、休息、飲食與心情之間找平衡，時間會持續前進。'],
+      ['照顧貓咪', '餵食、清潔、陪玩、看病，觀察每隻貓不同的狀態與成長。'],
+      ['打造自己的家', '購買家具和用品，調整房間配置，再到貓咪鎮拜訪鄰居。'],
+      ['持續保存進度', '遊戲會自動保存在目前瀏覽器，也可以匯出或匯入 JSON 存檔。']
+    ],
+    shopKicker: 'Life around the station',
+    shopTitle: '小店、房間和貓咪鎮，都在同一段日常裡。',
+    shopText: '商店商品有獨立插圖，社區使用可互動的貓咪鎮地圖；遊戲也包含銀行、收藏、任務、醫院、街機和版本記錄。',
+    localTitle: '這一階段的帳號說明',
+    localText: '目前遊戲進度保存在這台裝置的瀏覽器中，尚未與 Station Cat 會員帳號同步。後續接入會員系統時，會先設計舊存檔遷移流程，不會直接覆蓋現有進度。',
+    languages: '遊戲介面支援簡體中文、English 與日本語；本站介紹頁提供繁中、簡中、英文與日文。',
+    finalTitle: '今天先領一隻貓回家。',
+    finalText: '不需要下載，也沒有強制註冊。打開頁面，就可以從第一天開始。'
+  },
+  'zh-Hans': {
+    title: '打工养猫日记｜免费网页养成游戏',
+    description: '在浏览器里工作、照顾猫咪、布置房间并探索猫咪镇。免费游玩，进度保存在当前设备。',
+    kicker: 'Browser Cat Life Game',
+    heading: '打工、生活，然后把猫照顾好。',
+    intro: '《打工养猫日记》是一款可以直接在浏览器游玩的生活养成游戏。安排工作与休息、管理金币和体力、照顾每只猫，再慢慢把自己的小家和猫咪镇填满。',
+    play: '立即开始游戏',
+    apps: '返回 Apps',
+    status: '免费游玩 · 无需安装',
+    previewLabel: '游戏中的橘猫角色',
+    statDay: '第 1 天',
+    statCoins: '金币 500',
+    statCats: '1 只猫',
+    nowTitle: '现在可以做的事',
+    nowIntro: '这个版本保留完整游戏循环，桌面与手机都可以直接进入。',
+    features: [
+      ['安排一天', '在工作、休息、饮食与心情之间找平衡，时间会持续前进。'],
+      ['照顾猫咪', '喂食、清洁、陪玩、看病，观察每只猫不同的状态与成长。'],
+      ['打造自己的家', '购买家具和用品，调整房间配置，再到猫咪镇拜访邻居。'],
+      ['持续保存进度', '游戏会自动保存在当前浏览器，也可以导出或导入 JSON 存档。']
+    ],
+    shopKicker: 'Life around the station',
+    shopTitle: '小店、房间和猫咪镇，都在同一段日常里。',
+    shopText: '商店商品有独立插图，社区使用可交互的猫咪镇地图；游戏也包含银行、收藏、任务、医院、街机和版本记录。',
+    localTitle: '这一阶段的账号说明',
+    localText: '目前游戏进度保存在这台设备的浏览器中，尚未与 Station Cat 会员账号同步。后续接入会员系统时，会先设计旧存档迁移流程，不会直接覆盖现有进度。',
+    languages: '游戏界面支持简体中文、English 与日本語；本站介绍页提供繁中、简中、英文与日文。',
+    finalTitle: '今天先领一只猫回家。',
+    finalText: '不需要下载，也没有强制注册。打开页面，就可以从第一天开始。'
+  },
+  en: {
+    title: 'Cat Life Game | Free Browser Life Simulation',
+    description: 'Work, care for cats, furnish your room, and explore Cat Town in a free browser game. Progress stays on your current device.',
+    kicker: 'Browser Cat Life Game',
+    heading: 'Work, live, and take good care of the cats.',
+    intro: 'Cat Life Game is a life simulation you can play directly in the browser. Balance work and rest, manage coins and energy, care for each cat, and gradually fill your home and Cat Town with a life of your own.',
+    play: 'Play now',
+    apps: 'Back to Apps',
+    status: 'Free to play · No install',
+    previewLabel: 'Orange cat character from Cat Life Game',
+    statDay: 'Day 1',
+    statCoins: '500 coins',
+    statCats: '1 cat',
+    nowTitle: 'What you can do now',
+    nowIntro: 'This release keeps the complete game loop available on desktop and mobile browsers.',
+    features: [
+      ['Plan a day', 'Balance work, rest, meals, energy, and mood while in-game time keeps moving.'],
+      ['Care for cats', 'Feed, clean, play with, and treat cats while watching their individual needs change.'],
+      ['Build a home', 'Buy furniture and supplies, arrange your room, and visit neighbors across Cat Town.'],
+      ['Keep your progress', 'The game autosaves in this browser and can export or import a JSON save file.']
+    ],
+    shopKicker: 'Life around the station',
+    shopTitle: 'The shop, your room, and Cat Town share one daily rhythm.',
+    shopText: 'Shop items have their own illustrations and the community lives on an interactive Cat Town map. Banking, collections, tasks, a hospital, an arcade, and release notes are included too.',
+    localTitle: 'Account status for this phase',
+    localText: 'Game progress currently stays in this browser and is not yet synced to a Station Cat member account. A later account phase will include a migration path for existing saves instead of overwriting them.',
+    languages: 'The game interface supports Simplified Chinese, English, and Japanese. This product page is available in Traditional Chinese, Simplified Chinese, English, and Japanese.',
+    finalTitle: 'Bring a cat home today.',
+    finalText: 'There is nothing to install and no required registration. Open the game and start on day one.'
+  },
+  ja: {
+    title: '働いて猫を育てる日記｜無料ブラウザ生活ゲーム',
+    description: 'ブラウザで働き、猫を世話し、部屋を整え、猫の町を探索する無料生活ゲーム。進行状況は現在の端末に保存されます。',
+    kicker: 'Browser Cat Life Game',
+    heading: '働いて、暮らして、猫たちを大切に育てる。',
+    intro: '「働いて猫を育てる日記」は、ブラウザですぐ遊べる生活シミュレーションです。仕事と休息、所持金と体力を管理し、猫の世話をしながら、自分の家と猫の町での暮らしを少しずつ広げていきます。',
+    play: '今すぐ遊ぶ',
+    apps: 'Apps に戻る',
+    status: '無料 · インストール不要',
+    previewLabel: 'ゲームに登場する茶トラ猫',
+    statDay: '1日目',
+    statCoins: '500 コイン',
+    statCats: '猫 1匹',
+    nowTitle: '今できること',
+    nowIntro: 'このバージョンでは、デスクトップとモバイルの両方でゲーム全体を遊べます。',
+    features: [
+      ['一日を組み立てる', '仕事、休息、食事、体力、気分のバランスを取りながら時間を進めます。'],
+      ['猫を世話する', '食事、掃除、遊び、治療を行い、それぞれの猫の状態と成長を見守ります。'],
+      ['自分の家を作る', '家具や用品を購入して部屋を整え、猫の町の隣人を訪ねます。'],
+      ['進行状況を保存する', 'ブラウザに自動保存し、JSON セーブデータの書き出しと読み込みもできます。']
+    ],
+    shopKicker: 'Life around the station',
+    shopTitle: 'お店、部屋、猫の町が、ひとつの日常につながります。',
+    shopText: 'ショップの商品には個別イラストがあり、コミュニティは操作できる猫の町マップになっています。銀行、コレクション、タスク、病院、アーケード、更新履歴もあります。',
+    localTitle: 'この段階でのアカウントについて',
+    localText: '現在のゲーム進行はこのブラウザに保存され、Station Cat 会員アカウントとはまだ同期されません。今後のアカウント連携では、既存データを上書きせず移行できる仕組みを先に用意します。',
+    languages: 'ゲーム画面は簡体字中国語、English、日本語に対応しています。紹介ページは繁体字、簡体字、英語、日本語で読めます。',
+    finalTitle: '今日、最初の猫を迎えよう。',
+    finalText: 'インストールも必須登録もありません。ページを開けば、1日目から始められます。'
+  }
+}[lang];
+
+const paths = {
+  'zh-Hant': { canonical: catLifeGameProduct.zhHantProductPath, apps: '/zh-hant/apps/', gameLanguage: 'zh-Hant' },
+  'zh-Hans': { canonical: catLifeGameProduct.zhHansProductPath, apps: '/zh-hans/apps/', gameLanguage: 'zh-CN' },
+  en: { canonical: catLifeGameProduct.productPath, apps: '/en/apps/', gameLanguage: 'en' },
+  ja: { canonical: catLifeGameProduct.jaProductPath, apps: '/ja/apps/', gameLanguage: 'ja' }
+}[lang];
+const playUrl = `${catLifeGameProduct.gamePath}?lang=${encodeURIComponent(paths.gameLanguage)}`;
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: catLifeGameProduct.name,
+  alternateName: [catLifeGameProduct.zhHantName, catLifeGameProduct.jaName],
+  applicationCategory: 'GameApplication',
+  operatingSystem: 'Any modern web browser',
+  softwareVersion: catLifeGameProduct.latestVersion,
+  url: new URL(paths.canonical, siteConfig.baseUrl).toString(),
+  image: new URL(catLifeGameProduct.assets.icon, siteConfig.baseUrl).toString(),
+  inLanguage: ['zh-Hant', 'zh-Hans', 'en', 'ja'],
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  publisher: { '@type': 'Organization', name: siteConfig.name, url: siteConfig.baseUrl }
+};
+---
+
+<BaseLayout
+  title={copy.title}
+  description={copy.description}
+  lang={lang}
+  canonicalPath={paths.canonical}
+  ogImage={catLifeGameProduct.assets.icon}
+  bodyClass="cat-life-game-page"
+  structuredData={structuredData}
+  alternates={[
+    { hrefLang: 'zh-Hant', href: catLifeGameProduct.zhHantProductPath },
+    { hrefLang: 'zh-Hans', href: catLifeGameProduct.zhHansProductPath },
+    { hrefLang: 'en', href: catLifeGameProduct.productPath },
+    { hrefLang: 'ja', href: catLifeGameProduct.jaProductPath },
+    { hrefLang: 'x-default', href: catLifeGameProduct.zhHantProductPath }
+  ]}
+>
+  <section class="cat-life-hero">
+    <img class="cat-life-hero__art" src={catLifeGameProduct.assets.community} alt="" width="1122" height="1402" fetchpriority="high" />
+    <div class="cat-life-hero__copy">
+      <p class="section-kicker">{copy.kicker}</p>
+      <h1>{copy.heading}</h1>
+      <p class="cat-life-hero__intro">{copy.intro}</p>
+      <p class="cat-life-status">{copy.status}</p>
+      <div class="button-row">
+        <a class="button button-primary" href={playUrl}>{copy.play}</a>
+        <a class="button button-secondary" href={paths.apps}>{copy.apps}</a>
+      </div>
+    </div>
+    <div class="cat-life-hero__snapshot" aria-label={copy.previewLabel}>
+      <img src={catLifeGameProduct.assets.icon} alt={copy.previewLabel} width="330" height="330" />
+      <div class="cat-life-hero__stats" aria-hidden="true">
+        <span>{copy.statDay}</span>
+        <span>{copy.statCoins}</span>
+        <span>{copy.statCats}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page-section cat-life-section">
+    <div class="section-heading">
+      <p class="section-kicker">Version {catLifeGameProduct.latestVersion}</p>
+      <h2>{copy.nowTitle}</h2>
+      <p>{copy.nowIntro}</p>
+    </div>
+    <div class="cat-life-feature-grid">
+      {copy.features.map(([title, text], index) => (
+        <article>
+          <span aria-hidden="true">0{index + 1}</span>
+          <h3>{title}</h3>
+          <p>{text}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="page-section cat-life-world">
+    <div class="cat-life-world__media">
+      <img src={catLifeGameProduct.assets.shopFood} alt="" width="800" height="600" loading="lazy" />
+      <img src={catLifeGameProduct.assets.shopBed} alt="" width="800" height="600" loading="lazy" />
+    </div>
+    <div class="cat-life-world__copy">
+      <p class="section-kicker">{copy.shopKicker}</p>
+      <h2>{copy.shopTitle}</h2>
+      <p>{copy.shopText}</p>
+    </div>
+  </section>
+
+  <section class="page-section cat-life-account-note" aria-labelledby="cat-life-account-title">
+    <div>
+      <p class="section-kicker">Local save</p>
+      <h2 id="cat-life-account-title">{copy.localTitle}</h2>
+    </div>
+    <div>
+      <p>{copy.localText}</p>
+      <p class="cat-life-language-note">{copy.languages}</p>
+    </div>
+  </section>
+
+  <section class="page-section cat-life-final">
+    <img src={catLifeGameProduct.assets.icon} alt="" width="330" height="330" loading="lazy" />
+    <div>
+      <p class="section-kicker">Cat Life Game</p>
+      <h2>{copy.finalTitle}</h2>
+      <p>{copy.finalText}</p>
+    </div>
+    <a class="button button-primary" href={playUrl}>{copy.play}</a>
+  </section>
+</BaseLayout>

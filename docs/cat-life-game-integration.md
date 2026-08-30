@@ -1,0 +1,11 @@
+# Cat Life Game website integration
+
+The browser game is published as a static sub-application at `/games/cat-life/`. Its runtime was copied from `xdgf558/cat-life-game` at merge commit `0cc839f` (game version `1.17.0`). The Station Cat integration files are `site-integration.js` and `site-integration.css`; the copied `index.html` and `src/js/main.js` contain the small hooks that load them and apply a requested language.
+
+The four indexable product pages live at `/en/apps/cat-life-game/`, `/ja/apps/cat-life-game/`, `/zh-hans/apps/cat-life-game/`, and `/zh-hant/apps/cat-life-game/`. The playable runtime is marked `noindex` and excluded from the sitemap so search results point to a localized product page instead of the application shell.
+
+The save key remains `catGameSaveV1`. Task 1 deliberately keeps saves in the current browser. The product-page `lang` parameter is a session-only display override and must never replace an existing saved language. Only a language change made inside the game's settings is persisted. A later member-account phase must migrate or link this local save explicitly and must not replace it during login.
+
+The runtime uses unversioned file names, so all `/games/cat-life/*` responses require revalidation instead of mixing a fresh HTML shell with cached JavaScript from another snapshot. The same route has a game-specific CSP that permits only same-origin scripts and images, the two Bitcoin data APIs used by the lottery feature, and local/data audio. Keep this policy in place while the game shares the main `wwwstationcat.org` origin. Before connecting member sessions, evaluate moving the runtime to a dedicated game subdomain with an explicit cross-origin API contract.
+
+When updating the embedded game, copy the upstream `index.html` and `src/` tree, then reapply the Station Cat shell hooks and update both `sourceCommit` in `src/data/products/cat-life-game.ts` and the regression expectations in `scripts/test-cat-life-game-integration.mjs`. This manual snapshot is acceptable for the first integration, but repeated releases should replace it with a pinned submodule, subtree, or build-time sync step so upstream updates cannot silently discard the website hooks.

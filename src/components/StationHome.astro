@@ -6,6 +6,7 @@ import { simpleCutProProduct } from '../data/products/simplecut-pro';
 import { privatePinyinProduct } from '../data/products/privatepinyin';
 import { novelForgeAiProduct } from '../data/products/novelforge-ai';
 import { mindBudgetProduct } from '../data/products/mindbudget';
+import { catLifeGameProduct } from '../data/products/cat-life-game';
 import { siteConfig } from '../data/site';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
@@ -335,6 +336,37 @@ const copy = {
   }
 }[lang];
 
+const catLifeCopy = {
+  'zh-Hant': {
+    title: '打工養貓日記',
+    description: '在瀏覽器裡安排工作與休息、照顧貓咪、佈置房間，再到貓咪鎮走一圈。',
+    status: '免費網頁遊戲',
+    view: '查看遊戲',
+    play: '立即遊玩'
+  },
+  'zh-Hans': {
+    title: '打工养猫日记',
+    description: '在浏览器里安排工作与休息、照顾猫咪、布置房间，再到猫咪镇走一圈。',
+    status: '免费网页游戏',
+    view: '查看游戏',
+    play: '立即游玩'
+  },
+  en: {
+    title: 'Cat Life Game',
+    description: 'Balance work and rest, care for cats, furnish your room, and explore Cat Town in the browser.',
+    status: 'Free browser game',
+    view: 'View game',
+    play: 'Play now'
+  },
+  ja: {
+    title: '働いて猫を育てる日記',
+    description: 'ブラウザで仕事と休息を調整し、猫を世話し、部屋を整えながら猫の町を探索します。',
+    status: '無料ブラウザゲーム',
+    view: 'ゲームを見る',
+    play: '今すぐ遊ぶ'
+  }
+}[lang];
+
 const paths = {
   'zh-Hant': {
     apps: '/zh-hant/apps/',
@@ -351,6 +383,8 @@ const paths = {
     simplecutDownload: simpleCutProProduct.zhHantDownloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.zhHantProductPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.zhHantProductPath,
+    catLife: catLifeGameProduct.zhHantProductPath,
+    catLifePlay: `${catLifeGameProduct.gamePath}?lang=zh-Hant`,
     signal: '/signal/'
   },
   'zh-Hans': {
@@ -368,6 +402,8 @@ const paths = {
     simplecutDownload: simpleCutProProduct.zhHansDownloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.zhHansProductPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.zhHansProductPath,
+    catLife: catLifeGameProduct.zhHansProductPath,
+    catLifePlay: `${catLifeGameProduct.gamePath}?lang=zh-CN`,
     signal: '/zh-hans/signal/'
   },
   en: {
@@ -385,6 +421,8 @@ const paths = {
     simplecutDownload: simpleCutProProduct.downloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.productPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.productPath,
+    catLife: catLifeGameProduct.productPath,
+    catLifePlay: `${catLifeGameProduct.gamePath}?lang=en`,
     signal: '/en/signal/'
   },
   ja: {
@@ -402,6 +440,8 @@ const paths = {
     simplecutDownload: simpleCutProProduct.jaDownloadPagePath,
     nodePilot: anyTlsDesktopManagerProduct.jaProductPath,
     nodePilotDownload: nodePilotMacDownload?.downloadPath ?? anyTlsDesktopManagerProduct.jaProductPath,
+    catLife: catLifeGameProduct.jaProductPath,
+    catLifePlay: `${catLifeGameProduct.gamePath}?lang=ja`,
     signal: '/ja/signal/'
   }
 }[lang];
@@ -556,6 +596,21 @@ const websiteStructuredData = {
       {copy.toolsIntro && <p>{copy.toolsIntro}</p>}
     </div>
     <div class="bench-grid">
+      <article class="bench-card">
+        <div class="bench-card__icon bench-card__icon--cat-life">
+          <img src={catLifeGameProduct.assets.icon} alt="Cat Life Game orange cat" width="330" height="330" loading="lazy" decoding="async" />
+        </div>
+        <div class="bench-card__copy">
+          <span class="paper-stamp">{catLifeCopy.status}</span>
+          <h3>{catLifeCopy.title}</h3>
+          <p>{catLifeCopy.description}</p>
+          <div class="paper-actions">
+            <a class="ticket-button ticket-button--primary" href={paths.catLife}>{catLifeCopy.view}</a>
+            <a class="ticket-button ticket-button--secondary" href={paths.catLifePlay}>{catLifeCopy.play}</a>
+          </div>
+        </div>
+      </article>
+
       <article class="bench-card">
         <div class="bench-card__icon bench-card__icon--snapcopy">
           <img src={optimizedAppImage('snapcopy').src} srcset={optimizedAppImage('snapcopy').srcset} sizes="(max-width: 760px) 260px, 300px" alt="SnapCopy app icon" width="512" height="512" loading="lazy" decoding="async" />

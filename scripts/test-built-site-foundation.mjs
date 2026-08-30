@@ -64,14 +64,22 @@ for (const route of [
   '/ja/signal/',
   '/en/apps/',
   '/en/points/',
-  '/zh-hant/apps/mindbudget/'
+  '/zh-hant/apps/mindbudget/',
+  '/en/apps/cat-life-game/',
+  '/ja/apps/cat-life-game/',
+  '/zh-hans/apps/cat-life-game/',
+  '/zh-hant/apps/cat-life-game/'
 ]) {
   assert.ok(sitemap.includes(`<loc>https://wwwstationcat.org${route}</loc>`), `sitemap must include ${route}`);
 }
 assert.doesNotMatch(
   sitemap,
-  /\/devlog\/|\/admin-v2\/|\/library\/|https:\/\/wwwstationcat\.org\/(?:apps|points|privacy|support|terms|works)\//
+  /\/devlog\/|\/admin-v2\/|\/library\/|\/games\/|https:\/\/wwwstationcat\.org\/(?:apps|points|privacy|support|terms|works)\//
 );
+
+const catLifeGame = await readDist('games/cat-life/index.html');
+assert.match(catLifeGame, /<meta name="robots" content="noindex, nofollow"\s*\/?>/);
+assert.match(catLifeGame, /site-integration\.js/);
 
 const localizedAppsPages = [
   ['en/apps/index.html', 'Station Cat Apps | Independent Creative Tools', 'https://wwwstationcat.org/en/apps/'],
