@@ -126,7 +126,8 @@ sqlite.prepare(
      ('one@example.com', 'one@example.com', 'One'),
      ('two@example.com', 'two@example.com', 'Two'),
      ('three@example.com', 'three@example.com', 'Three'),
-     ('four@example.com', 'four@example.com', 'Four')`
+     ('four@example.com', 'four@example.com', 'Four'),
+     ('five@example.com', 'five@example.com', 'Five')`
 ).run();
 sqlite.prepare(
   `INSERT INTO reader_credit_accounts (
@@ -135,7 +136,8 @@ sqlite.prepare(
     (1, 30, 30, 'Station Points'),
     (2, 5, 5, 'Station Points'),
     (3, 30, 30, 'Station Points'),
-    (4, 25, 25, 'Station Points')`
+    (4, 25, 25, 'Station Points'),
+    (5, 20, 20, 'Station Points')`
 ).run();
 
 const expectCode = async (promise, code) => {
@@ -147,14 +149,15 @@ const expectCode = async (promise, code) => {
 
 const moonlit = 'cat-life.skin.moonlit-tabby';
 const stationRoom = 'cat-life.bundle.station-room';
+const redeem = (payload, purchaseId) =>
+  hooks.redeemCatLifeProduct(db, payload, { purchaseIdFactory: () => purchaseId });
 
 await expectCode(
-  hooks.redeemCatLifeProduct(db, {
+  redeem({
     accountId: 1,
     productId: moonlit,
-    idempotencyKey: 'planned-product-one',
-    purchaseId: 'purchase-planned-one'
-  }),
+    idempotencyKey: 'planned-product-one'
+  }, 'purchase-planned-one'),
   'PRODUCT_NOT_AVAILABLE'
 );
 assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM game_purchases').get().count, 0);
@@ -162,15 +165,14 @@ assert.equal(sqlite.prepare('SELECT balance_credits FROM reader_credit_accounts 
 
 sqlite.prepare("UPDATE game_products SET lifecycle_status = 'active', updated_at = CURRENT_TIMESTAMP").run();
 
-let result = await hooks.redeemCatLifeProduct(db, {
+let result = await redeem({
   accountId: 1,
   productId: moonlit,
   idempotencyKey: 'redeem-moonlit-one',
-  purchaseId: 'purchase-moonlit-one',
   pointsPrice: 0,
   entitlementKey: 'client-forged-entitlement',
   gameGold: 999999
-});
+}, 'purchase-moonlit-one');
 assert.equal(result.replayed, false);
 assert.equal(result.purchase.status, 'completed');
 assert.equal(result.purchase.pointsSpent, 10, 'the server catalog must set the charged price');
@@ -190,12 +192,11 @@ assert.equal(
   1
 );
 
-result = await hooks.redeemCatLifeProduct(db, {
+result = await redeem({
   accountId: 1,
   productId: moonlit,
-  idempotencyKey: 'redeem-moonlit-one',
-  purchaseId: 'ignored-on-replay'
-});
+  idempotencyKey: 'redeem-moonlit-one'
+}, 'ignored-on-replay');
 assert.equal(result.replayed, true);
 assert.equal(result.purchase.id, 'purchase-moonlit-one');
 assert.equal(result.balance, 20);
@@ -203,44 +204,40 @@ assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM game_purchases').get(
 assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_credit_ledger').get().count, 1);
 
 await expectCode(
-  hooks.redeemCatLifeProduct(db, {
+  redeem({
     accountId: 1,
     productId: stationRoom,
-    idempotencyKey: 'redeem-moonlit-one',
-    purchaseId: 'purchase-conflicting-key'
-  }),
+    idempotencyKey: 'redeem-moonlit-one'
+  }, 'purchase-conflicting-key'),
   'IDEMPOTENCY_CONFLICT'
 );
 await expectCode(
-  hooks.redeemCatLifeProduct(db, {
+  redeem({
     accountId: 1,
     productId: moonlit,
-    idempotencyKey: 'redeem-moonlit-again',
-    purchaseId: 'purchase-moonlit-again'
-  }),
+    idempotencyKey: 'redeem-moonlit-again'
+  }, 'purchase-moonlit-again'),
   'ALREADY_OWNED'
 );
 assert.equal(sqlite.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id = 1').get().balance_credits, 20);
 
 await expectCode(
-  hooks.redeemCatLifeProduct(db, {
+  redeem({
     accountId: 2,
     productId: moonlit,
-    idempotencyKey: 'insufficient-points-two',
-    purchaseId: 'purchase-insufficient-two'
-  }),
+    idempotencyKey: 'insufficient-points-two'
+  }, 'purchase-insufficient-two'),
   'INSUFFICIENT_POINTS'
 );
 assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM game_purchases WHERE account_id = 2').get().count, 0);
 assert.equal(sqlite.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id = 2').get().balance_credits, 5);
 
-result = await hooks.redeemCatLifeProduct(db, {
+result = await redeem({
   accountId: 3,
   productId: stationRoom,
   idempotencyKey: 'redeem-station-room-three',
-  purchaseId: 'purchase-station-room-three',
   pointsPrice: 1
-});
+}, 'purchase-station-room-three');
 assert.equal(result.purchase.pointsSpent, 25);
 assert.equal(result.balance, 5);
 assert.equal(
@@ -250,18 +247,16 @@ assert.equal(
 );
 
 const concurrent = await Promise.allSettled([
-  hooks.redeemCatLifeProduct(db, {
+  redeem({
     accountId: 4,
     productId: moonlit,
-    idempotencyKey: 'concurrent-moonlit-four',
-    purchaseId: 'purchase-concurrent-moonlit-four'
-  }),
-  hooks.redeemCatLifeProduct(db, {
+    idempotencyKey: 'concurrent-moonlit-four'
+  }, 'purchase-concurrent-moonlit-four'),
+  redeem({
     accountId: 4,
     productId: stationRoom,
-    idempotencyKey: 'concurrent-room-four',
-    purchaseId: 'purchase-concurrent-room-four'
-  })
+    idempotencyKey: 'concurrent-room-four'
+  }, 'purchase-concurrent-room-four')
 ]);
 assert.equal(concurrent.filter((entry) => entry.status === 'fulfilled').length, 1);
 assert.equal(concurrent.filter((entry) => entry.status === 'rejected').length, 1);
@@ -273,6 +268,25 @@ assert.equal(accountFour.balance_credits >= 0, true);
 assert.equal(accountFour.balance_credits + accountFour.lifetime_spent_credits, 25);
 assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM game_purchases WHERE account_id = 4').get().count, 1);
 assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM game_entitlements WHERE account_id = 4').get().count, 1);
+
+const sameProductConcurrent = await Promise.allSettled([
+  redeem({
+    accountId: 5,
+    productId: moonlit,
+    idempotencyKey: 'same-product-first-five'
+  }, 'purchase-same-product-first-five'),
+  redeem({
+    accountId: 5,
+    productId: moonlit,
+    idempotencyKey: 'same-product-second-five'
+  }, 'purchase-same-product-second-five')
+]);
+assert.equal(sameProductConcurrent.filter((entry) => entry.status === 'fulfilled').length, 1);
+assert.equal(sameProductConcurrent.filter((entry) => entry.status === 'rejected').length, 1);
+assert.equal(sameProductConcurrent.find((entry) => entry.status === 'rejected').reason.code, 'ALREADY_OWNED');
+assert.equal(sqlite.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id = 5').get().balance_credits, 10);
+assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM game_purchases WHERE account_id = 5').get().count, 1);
+assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM game_entitlements WHERE account_id = 5').get().count, 1);
 
 result = await hooks.reverseCatLifePurchase(db, {
   accountId: 3,
@@ -308,12 +322,11 @@ assert.equal(
   1
 );
 
-result = await hooks.redeemCatLifeProduct(db, {
+result = await redeem({
   accountId: 3,
   productId: stationRoom,
-  idempotencyKey: 'redeem-station-room-three',
-  purchaseId: 'ignored-after-reversal'
-});
+  idempotencyKey: 'redeem-station-room-three'
+}, 'ignored-after-reversal');
 assert.equal(result.replayed, true);
 assert.equal(result.purchase.status, 'reversed');
 assert.equal(result.balance, 30);

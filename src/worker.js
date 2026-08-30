@@ -33,6 +33,9 @@ import { buildContentImportListQuery, contentImportSourceKinds } from './content
 import {
   createCatLifeCorrectionId,
   createCatLifePurchaseId,
+  getCatLifePointsBalance,
+  listCatLifeEntitlements,
+  listCatLifeProducts,
   redeemCatLifeProduct,
   reverseCatLifePurchase
 } from './catLifeCommerce.js';
@@ -82,6 +85,10 @@ const catLifeGameSaveSchemaVersion = 2;
 const catLifeGameSaveBackupLimit = 5;
 const catLifeGameSaveRateLimitWindowSeconds = 60;
 const catLifeGameSaveRateLimitWrites = 20;
+const catLifeCommerceRequestMaxBytes = 4096;
+const catLifeCommerceRateLimitWindowSeconds = 60;
+const catLifeCommerceRedemptionsPerWindow = 10;
+const catLifeCommerceRedemptionAction = 'redeem';
 const adminPathPattern = /^\/admin(?:-v2)?(?:\/|$)/;
 const defaultAdminEmail = 'brodstem@protonmail.com';
 
@@ -2662,6 +2669,10 @@ const isMissingReadingEventsError = (error) => /no such table: reading_events/i.
 const isMissingReaderCommentsError = (error) => /no such table: reader_comments/i.test(error?.message || '');
 const isMissingReaderGameSavesError = (error) =>
   /no such table: reader_game_save(?:s|_backups|_rate_limits|_recovery_events)/i.test(error?.message || '');
+const isMissingCatLifeCommerceError = (error) =>
+  /no such table: (?:game_products|game_purchases|game_entitlements|game_commerce_events|game_commerce_rate_limits)/i.test(
+    error?.message || ''
+  );
 const isMissingProductFeedbackError = (error) => /no such table: product_feedback/i.test(error?.message || '');
 const isMissingChapterStatsError = (error) => /no such table: chapter_stats/i.test(error?.message || '');
 const isMissingAiInsightsError = (error) => /no such table: ai_insights/i.test(error?.message || '');
@@ -2867,6 +2878,22 @@ const ensureReaderGameSavesReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingReaderGameSavesError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureCatLifeCommerceReady = async (db, { requireRateLimit = false } = {}) => {
+  try {
+    await db.prepare('SELECT product_id FROM game_products LIMIT 1').first();
+    await db.prepare('SELECT id FROM game_purchases LIMIT 1').first();
+    await db.prepare('SELECT id FROM game_entitlements LIMIT 1').first();
+    await db.prepare('SELECT id FROM game_commerce_events LIMIT 1').first();
+    if (requireRateLimit) {
+      await db.prepare('SELECT account_id FROM game_commerce_rate_limits LIMIT 1').first();
+    }
+    return true;
+  } catch (error) {
+    if (isMissingCatLifeCommerceError(error)) return false;
     throw error;
   }
 };
@@ -5355,6 +5382,218 @@ const handleReaderGameSaveRecoveryPost = async (request, env) => {
     recoveredFromRevision: sourceRevision,
     save: readerGameSaveToJson(await getReaderGameSave(db, session.account_id))
   });
+};
+
+const catLifeCommerceNotReadyResponse = () =>
+  privateJson(
+    {
+      ok: false,
+      code: 'REDEMPTION_NOT_READY',
+      message: 'Cat Life Game commerce is not initialized.'
+    },
+    { status: 503 }
+  );
+
+const catLifeCommerceAccountJson = (session) => ({
+  id: session.account_id,
+  email: session.email,
+  username: session.username || '',
+  displayName: session.display_name || session.username || session.email
+});
+
+const catLifeCommercePublicPurchase = (result) => ({
+  replayed: Boolean(result.replayed),
+  balance: Number(result.balance || 0),
+  purchase: {
+    id: result.purchase.id,
+    productId: result.purchase.productId,
+    productType: result.purchase.productType,
+    entitlementKey: result.purchase.entitlementKey,
+    pointsSpent: Number(result.purchase.pointsSpent),
+    balanceBefore: Number(result.purchase.balanceBefore),
+    balanceAfter: Number(result.purchase.balanceAfter),
+    catalogRevision: Number(result.purchase.catalogRevision),
+    status: result.purchase.status,
+    completedAt: result.purchase.completedAt
+  },
+  entitlement: result.entitlement
+    ? {
+        id: result.entitlement.id,
+        entitlementKey: result.entitlement.entitlementKey,
+        productId: result.entitlement.productId,
+        purchaseId: result.entitlement.purchaseId,
+        grantedAt: result.entitlement.grantedAt,
+        expiresAt: result.entitlement.expiresAt,
+        active: Boolean(result.entitlement.active)
+      }
+    : null
+});
+
+const handleCatLifeCatalog = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return catLifeCommerceNotReadyResponse();
+  if (!(await ensureCatLifeCommerceReady(db))) return catLifeCommerceNotReadyResponse();
+
+  const session = await getReaderFromSession(request, env);
+  const locale = normalizeContentLocale(new URL(request.url).searchParams.get('locale') || 'zh-Hant');
+  const [products, balance] = await Promise.all([
+    listCatLifeProducts(db, { accountId: session?.account_id || 0, locale }),
+    session ? getCatLifePointsBalance(db, session.account_id) : Promise.resolve(0)
+  ]);
+
+  return privateJson({
+    ok: true,
+    authenticated: Boolean(session),
+    locale,
+    ...(session ? { account: catLifeCommerceAccountJson(session), balance } : {}),
+    products
+  });
+};
+
+const handleCatLifeEntitlements = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return catLifeCommerceNotReadyResponse();
+  if (!(await ensureCatLifeCommerceReady(db))) return catLifeCommerceNotReadyResponse();
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return privateJson({ ok: true, authenticated: false, entitlements: [] });
+  }
+  const locale = normalizeContentLocale(new URL(request.url).searchParams.get('locale') || 'zh-Hant');
+  const [entitlements, balance] = await Promise.all([
+    listCatLifeEntitlements(db, session.account_id, { locale }),
+    getCatLifePointsBalance(db, session.account_id)
+  ]);
+  return privateJson({
+    ok: true,
+    authenticated: true,
+    locale,
+    account: catLifeCommerceAccountJson(session),
+    balance,
+    entitlements
+  });
+};
+
+const checkCatLifeCommerceRateLimit = async (db, accountId) => {
+  const row = await db
+    .prepare(
+      `INSERT INTO game_commerce_rate_limits (
+        account_id, action, window_started_at, request_count, updated_at
+      ) VALUES (?, ?, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP)
+      ON CONFLICT(account_id, action) DO UPDATE SET
+        request_count = CASE
+          WHEN unixepoch(window_started_at) <= unixepoch('now') - ? THEN 1
+          ELSE request_count + 1
+        END,
+        window_started_at = CASE
+          WHEN unixepoch(window_started_at) <= unixepoch('now') - ? THEN CURRENT_TIMESTAMP
+          ELSE window_started_at
+        END,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING
+        request_count,
+        MAX(1, ? - MAX(0, unixepoch('now') - unixepoch(window_started_at))) AS retry_after_seconds`
+    )
+    .bind(
+      accountId,
+      catLifeCommerceRedemptionAction,
+      catLifeCommerceRateLimitWindowSeconds,
+      catLifeCommerceRateLimitWindowSeconds,
+      catLifeCommerceRateLimitWindowSeconds
+    )
+    .first();
+  return {
+    limited: Number(row?.request_count || 0) > catLifeCommerceRedemptionsPerWindow,
+    retryAfterSeconds: Number(row?.retry_after_seconds || catLifeCommerceRateLimitWindowSeconds)
+  };
+};
+
+const catLifeCommerceErrorResponse = (error) => {
+  const code = cleanText(error?.code, 80) || 'REDEMPTION_FAILED';
+  const statuses = {
+    INVALID_ACCOUNT: 400,
+    INVALID_PRODUCT: 400,
+    INVALID_REQUEST: 400,
+    PRODUCT_NOT_AVAILABLE: 409,
+    ALREADY_OWNED: 409,
+    INSUFFICIENT_POINTS: 409,
+    IDEMPOTENCY_CONFLICT: 409,
+    REDEMPTION_CONFLICT: 409,
+    REDEMPTION_NOT_READY: 503
+  };
+  const status = statuses[code];
+  if (!status) return null;
+  return privateJson({ ok: false, code, message: cleanText(error?.message, 300) }, { status });
+};
+
+const handleCatLifeRedemption = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return catLifeCommerceNotReadyResponse();
+  if (!(await ensureCatLifeCommerceReady(db, { requireRateLimit: true }))) {
+    return catLifeCommerceNotReadyResponse();
+  }
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return privateJson(
+      { ok: false, authenticated: false, code: 'SIGN_IN_REQUIRED', message: 'Please sign in first.' },
+      { status: 401 }
+    );
+  }
+
+  const requestOrigin = cleanText(request.headers.get('origin'), 300);
+  if (!requestOrigin || requestOrigin !== new URL(request.url).origin) {
+    return privateJson({ ok: false, code: 'INVALID_ORIGIN', message: 'Invalid request origin.' }, { status: 403 });
+  }
+  if (!String(request.headers.get('content-type') || '').toLowerCase().includes('application/json')) {
+    return privateJson({ ok: false, code: 'INVALID_CONTENT_TYPE', message: 'JSON is required.' }, { status: 415 });
+  }
+
+  const body = await readRequestTextWithLimit(request, catLifeCommerceRequestMaxBytes);
+  if (!body) {
+    return privateJson({ ok: false, code: 'REDEMPTION_REQUEST_TOO_LARGE', message: 'Request is too large.' }, { status: 413 });
+  }
+  const payload = parseStoredJson(body.text, null);
+  if (
+    !isPlainRecord(payload)
+    || typeof payload.productId !== 'string'
+    || typeof payload.idempotencyKey !== 'string'
+  ) {
+    return privateJson({ ok: false, code: 'INVALID_REDEMPTION', message: 'Invalid redemption request.' }, { status: 400 });
+  }
+
+  const rateLimit = await checkCatLifeCommerceRateLimit(db, session.account_id);
+  if (rateLimit.limited) {
+    return privateJson(
+      { ok: false, code: 'REDEMPTION_RATE_LIMITED', message: 'Too many redemption requests.' },
+      { status: 429, headers: { 'retry-after': String(rateLimit.retryAfterSeconds) } }
+    );
+  }
+
+  try {
+    const result = await redeemCatLifeProduct(db, {
+      accountId: session.account_id,
+      productId: payload.productId,
+      idempotencyKey: payload.idempotencyKey
+    });
+    return privateJson({
+      ok: true,
+      authenticated: true,
+      account: catLifeCommerceAccountJson(session),
+      ...catLifeCommercePublicPurchase(result)
+    });
+  } catch (error) {
+    const response = catLifeCommerceErrorResponse(error);
+    if (response) return response;
+    console.error(JSON.stringify({
+      component: 'cat_life_commerce',
+      event: 'redemption_failed',
+      accountId: session.account_id,
+      code: cleanText(error?.code, 80),
+      message: cleanText(error?.message, 300)
+    }));
+    return privateJson({ ok: false, code: 'REDEMPTION_FAILED', message: 'Redemption failed.' }, { status: 500 });
+  }
 };
 
 const handleReaderVerify = async (request, env) => {
@@ -22254,6 +22493,9 @@ export const __readerTotpTestHooks = {
   handleNovelPaymentsStatus,
   handleCreemWebhook,
   handleReaderCredits,
+  handleCatLifeCatalog,
+  handleCatLifeEntitlements,
+  handleCatLifeRedemption,
   handleReaderGameSaveGet,
   handleReaderGameSavePut,
   handleReaderGameSaveRecoveryGet,
@@ -22439,6 +22681,21 @@ export default {
     if (url.pathname === '/api/readers/game-saves/cat-life/recovery') {
       if (request.method === 'GET') return handleReaderGameSaveRecoveryGet(request, env);
       if (request.method === 'POST') return handleReaderGameSaveRecoveryPost(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/api/games/cat-life/catalog') {
+      if (request.method === 'GET') return handleCatLifeCatalog(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/api/games/cat-life/entitlements') {
+      if (request.method === 'GET') return handleCatLifeEntitlements(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (url.pathname === '/api/games/cat-life/redemptions') {
+      if (request.method === 'POST') return handleCatLifeRedemption(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
