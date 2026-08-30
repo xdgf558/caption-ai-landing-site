@@ -3,6 +3,8 @@
     config: {
       storageKey: "catGameSaveV1",
       version: "1.17.0",
+      saveSchemaVersion: 2,
+      cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [

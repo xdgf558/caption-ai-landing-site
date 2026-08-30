@@ -4,6 +4,7 @@
   var backupKeyPrefix = "catGameLocalBackupV1:";
   var guestClaimKey = "catGameGuestSaveClaimV1";
   var syncDelayMs = 5000;
+  var maxSaveBytes = Number(window.CatGame && window.CatGame.config.cloudSaveMaxBytes || 750000);
   var account = null;
   var cloudSave = null;
   var conflict = null;
@@ -33,6 +34,20 @@
       useLocal: "使用這台裝置",
       useRemote: "使用雲端存檔",
       later: "稍後處理",
+      recovery: "恢復記錄",
+      recoveryTitle: "雲端存檔恢復",
+      recoveryCopy: "可從最近五個雲端版本恢復進度。恢復前會先保留目前版本。",
+      recoveryLoading: "正在讀取恢復記錄",
+      recoveryEmpty: "目前沒有可恢復的雲端版本。",
+      recoveryLog: "最近恢復",
+      recoveryEvent: "已從版本 {source} 恢復為版本 {restored}",
+      revision: "雲端版本 {revision}",
+      restore: "恢復這個版本",
+      restoreConfirm: "確定恢復這個雲端版本？目前版本會先被保留。",
+      recovering: "正在恢復",
+      recovered: "已恢復雲端存檔",
+      close: "關閉",
+      tooLarge: "存檔超過 750KB，已保留在本機，不會上傳。",
       failed: "同步失敗，本地進度仍已保存。"
     },
     "zh-CN": {
@@ -52,6 +67,20 @@
       useLocal: "使用这台设备",
       useRemote: "使用云端存档",
       later: "稍后处理",
+      recovery: "恢复记录",
+      recoveryTitle: "云存档恢复",
+      recoveryCopy: "可从最近五个云端版本恢复进度。恢复前会先保留当前版本。",
+      recoveryLoading: "正在读取恢复记录",
+      recoveryEmpty: "目前没有可恢复的云端版本。",
+      recoveryLog: "最近恢复",
+      recoveryEvent: "已从版本 {source} 恢复为版本 {restored}",
+      revision: "云端版本 {revision}",
+      restore: "恢复这个版本",
+      restoreConfirm: "确定恢复这个云端版本？当前版本会先被保留。",
+      recovering: "正在恢复",
+      recovered: "已恢复云存档",
+      close: "关闭",
+      tooLarge: "存档超过 750KB，已保留在本机，不会上传。",
       failed: "同步失败，本地进度仍已保存。"
     },
     en: {
@@ -71,6 +100,20 @@
       useLocal: "Use this device",
       useRemote: "Use cloud save",
       later: "Decide later",
+      recovery: "Recovery history",
+      recoveryTitle: "Cloud save recovery",
+      recoveryCopy: "Restore one of the five most recent cloud versions. The current version is backed up first.",
+      recoveryLoading: "Loading recovery history",
+      recoveryEmpty: "No cloud versions are available for recovery yet.",
+      recoveryLog: "Recent recoveries",
+      recoveryEvent: "Restored version {source} as version {restored}",
+      revision: "Cloud revision {revision}",
+      restore: "Restore this version",
+      restoreConfirm: "Restore this cloud version? The current version will be backed up first.",
+      recovering: "Restoring",
+      recovered: "Cloud save restored",
+      close: "Close",
+      tooLarge: "This save exceeds 750KB. It remains local and was not uploaded.",
       failed: "Sync failed. Your local progress is still saved."
     },
     ja: {
@@ -90,6 +133,20 @@
       useLocal: "このデバイスを使う",
       useRemote: "クラウドを使う",
       later: "後で決める",
+      recovery: "復元履歴",
+      recoveryTitle: "クラウドセーブの復元",
+      recoveryCopy: "最近の5件のクラウド版から復元できます。現在の版は先にバックアップされます。",
+      recoveryLoading: "復元履歴を読み込み中",
+      recoveryEmpty: "復元できるクラウド版はまだありません。",
+      recoveryLog: "最近の復元",
+      recoveryEvent: "版 {source} を版 {restored} として復元しました",
+      revision: "クラウド版 {revision}",
+      restore: "この版を復元",
+      restoreConfirm: "このクラウド版を復元しますか？現在の版は先に保存されます。",
+      recovering: "復元中",
+      recovered: "クラウドセーブを復元しました",
+      close: "閉じる",
+      tooLarge: "セーブが 750KB を超えたため、ローカルに保持し、アップロードしません。",
       failed: "同期に失敗しました。ローカルの進行データは保存されています。"
     }
   };
@@ -100,6 +157,7 @@
     status: document.querySelector("[data-cat-cloud-status]"),
     login: document.querySelector("[data-cat-member-login]"),
     action: document.querySelector("[data-cat-cloud-action]"),
+    recoveryAction: document.querySelector("[data-cat-recovery-action]"),
     dialog: document.querySelector("[data-cat-cloud-dialog]"),
     dialogTitle: document.querySelector("[data-cat-cloud-dialog-title]"),
     dialogCopy: document.querySelector("[data-cat-cloud-dialog-copy]"),
@@ -110,7 +168,16 @@
     useLocal: document.querySelector("[data-cat-cloud-use-local]"),
     useRemote: document.querySelector("[data-cat-cloud-use-remote]"),
     later: document.querySelector("[data-cat-cloud-later]"),
-    dialogStatus: document.querySelector("[data-cat-cloud-dialog-status]")
+    dialogStatus: document.querySelector("[data-cat-cloud-dialog-status]"),
+    recoveryDialog: document.querySelector("[data-cat-recovery-dialog]"),
+    recoveryTitle: document.querySelector("[data-cat-recovery-title]"),
+    recoveryCopy: document.querySelector("[data-cat-recovery-copy]"),
+    recoveryStatus: document.querySelector("[data-cat-recovery-status]"),
+    recoveryList: document.querySelector("[data-cat-recovery-list]"),
+    recoveryLogSection: document.querySelector("[data-cat-recovery-log-section]"),
+    recoveryLogTitle: document.querySelector("[data-cat-recovery-log-title]"),
+    recoveryLog: document.querySelector("[data-cat-recovery-log]"),
+    recoveryClose: document.querySelector("[data-cat-recovery-close]")
   };
 
   function getLocale() {
@@ -156,6 +223,7 @@
         elements.login.textContent = copy.login;
       }
       if (elements.action) elements.action.hidden = true;
+      if (elements.recoveryAction) elements.recoveryAction.hidden = true;
       setStatus(copy.localOnly);
       return;
     }
@@ -168,6 +236,16 @@
       elements.action.textContent = copy.resolve;
       elements.action.hidden = !conflict;
     }
+    if (elements.recoveryAction) {
+      elements.recoveryAction.textContent = copy.recovery;
+      elements.recoveryAction.hidden = false;
+    }
+  }
+
+  function formatCopy(template, values) {
+    return Object.keys(values || {}).reduce(function (text, key) {
+      return text.replace(new RegExp("\\{" + key + "\\}", "g"), String(values[key]));
+    }, String(template || ""));
   }
 
   function normalizeSave(saveData) {
@@ -258,6 +336,112 @@
     }
   }
 
+  function closeRecoveryDialog() {
+    if (!elements.recoveryDialog) return;
+    if (typeof elements.recoveryDialog.close === "function") {
+      elements.recoveryDialog.close();
+    } else {
+      elements.recoveryDialog.removeAttribute("open");
+    }
+  }
+
+  function renderRecoveryHistory(result) {
+    var copy = getCopy();
+    var backups = Array.isArray(result.backups) ? result.backups : [];
+    var events = Array.isArray(result.recoveryEvents) ? result.recoveryEvents : [];
+    elements.recoveryList.replaceChildren();
+    if (!backups.length) {
+      var empty = document.createElement("p");
+      empty.textContent = copy.recoveryEmpty;
+      elements.recoveryList.appendChild(empty);
+    }
+
+    backups.forEach(function (backup) {
+      var item = document.createElement("article");
+      var title = document.createElement("strong");
+      var time = document.createElement("span");
+      var button = document.createElement("button");
+      item.className = "cat-recovery-item";
+      title.textContent = formatCopy(copy.revision, { revision: backup.revision });
+      time.textContent = formatTime(backup.clientUpdatedAt || backup.createdAt);
+      button.className = "secondary-button";
+      button.type = "button";
+      button.textContent = copy.restore;
+      button.addEventListener("click", function () {
+        restoreBackup(backup).catch(handleAsyncError);
+      });
+      item.append(title, time, button);
+      elements.recoveryList.appendChild(item);
+    });
+
+    elements.recoveryLog.replaceChildren();
+    events.forEach(function (event) {
+      var entry = document.createElement("p");
+      entry.className = "cat-recovery-event";
+      entry.textContent = formatCopy(copy.recoveryEvent, {
+        source: event.sourceRevision,
+        restored: event.restoredRevision
+      }) + " · " + formatTime(event.createdAt);
+      elements.recoveryLog.appendChild(entry);
+    });
+    elements.recoveryLogTitle.textContent = copy.recoveryLog;
+    elements.recoveryLogSection.hidden = events.length === 0;
+  }
+
+  async function loadRecoveryHistory() {
+    var copy = getCopy();
+    elements.recoveryStatus.textContent = copy.recoveryLoading;
+    var result = await requestJson(apiPath + "/recovery");
+    renderRecoveryHistory(result);
+    elements.recoveryStatus.textContent = "";
+  }
+
+  async function showRecoveryDialog() {
+    if (!authenticated || !elements.recoveryDialog) return;
+    var copy = getCopy();
+    elements.recoveryTitle.textContent = copy.recoveryTitle;
+    elements.recoveryCopy.textContent = copy.recoveryCopy;
+    elements.recoveryClose.textContent = copy.close;
+    if (typeof elements.recoveryDialog.showModal === "function") {
+      if (!elements.recoveryDialog.open) elements.recoveryDialog.showModal();
+    } else {
+      elements.recoveryDialog.setAttribute("open", "");
+    }
+    try {
+      await loadRecoveryHistory();
+    } catch (error) {
+      elements.recoveryStatus.textContent = copy.failed;
+    }
+  }
+
+  async function restoreBackup(backup) {
+    var copy = getCopy();
+    if (!cloudSave || !window.confirm(copy.restoreConfirm)) return;
+    elements.recoveryStatus.textContent = copy.recovering;
+    try {
+      var result = await requestJson(apiPath + "/recovery", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          baseRevision: Number(cloudSave.revision || 0),
+          sourceRevision: Number(backup.revision || 0)
+        })
+      });
+      await applyRemoteSave(result.save);
+      setStatus(copy.recovered);
+      elements.recoveryStatus.textContent = copy.recovered;
+      await loadRecoveryHistory();
+    } catch (error) {
+      if (error.status === 409 && error.data && error.data.save) {
+        cloudSave = error.data.save;
+        closeRecoveryDialog();
+        enterConflict(latestLocalSave, cloudSave);
+        return;
+      }
+      elements.recoveryStatus.textContent = copy.failed;
+    }
+  }
+
   function closeConflictDialog() {
     if (!elements.dialog) return;
     if (typeof elements.dialog.close === "function") {
@@ -317,6 +501,11 @@
     syncInFlight = true;
     setStatus(getCopy().syncing);
     try {
+      var saveBytes = new TextEncoder().encode(JSON.stringify(normalized)).byteLength;
+      if (!saveBytes || saveBytes > maxSaveBytes) {
+        setStatus(getCopy().tooLarge);
+        return false;
+      }
       var localDigest = await digestSave(normalized);
       var result = await requestJson(apiPath, {
         method: "PUT",
@@ -483,6 +672,10 @@
   }
 
   if (elements.action) elements.action.addEventListener("click", showConflictDialog);
+  if (elements.recoveryAction) elements.recoveryAction.addEventListener("click", function () {
+    showRecoveryDialog().catch(handleAsyncError);
+  });
+  if (elements.recoveryClose) elements.recoveryClose.addEventListener("click", closeRecoveryDialog);
   if (elements.useLocal) elements.useLocal.addEventListener("click", function () {
     useLocalSave().catch(handleAsyncError);
   });
@@ -493,6 +686,9 @@
   window.addEventListener("catgame:site-locale", function () {
     renderMember();
     if (conflict && elements.dialog && elements.dialog.open) showConflictDialog();
+    if (elements.recoveryDialog && elements.recoveryDialog.open) {
+      showRecoveryDialog().catch(handleAsyncError);
+    }
   });
 
   window.CatGameCloud = {

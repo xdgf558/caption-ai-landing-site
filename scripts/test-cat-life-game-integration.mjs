@@ -16,6 +16,7 @@ for (const path of [
   `${gameRoot}/site-integration.js`,
   `${gameRoot}/site-integration.css`,
   `${gameRoot}/src/js/main.js`,
+  `${gameRoot}/src/js/state/saveMigrations.js`,
   `${gameRoot}/src/js/core/namespace.js`,
   `${gameRoot}/src/js/core/i18n.js`,
   `${gameRoot}/src/assets/cats/orange-tabby.png`,
@@ -35,6 +36,7 @@ const integration = read(`${gameRoot}/site-integration.js`);
 const cloudSyncPolicy = read(`${gameRoot}/cloud-sync-policy.js`);
 const cloudSync = read(`${gameRoot}/cloud-sync.js`);
 const gameMain = read(`${gameRoot}/src/js/main.js`);
+const saveMigrations = read(`${gameRoot}/src/js/state/saveMigrations.js`);
 const saveSystem = read(`${gameRoot}/src/js/state/saveSystem.js`);
 const namespace = read(`${gameRoot}/src/js/core/namespace.js`);
 const i18n = read(`${gameRoot}/src/js/core/i18n.js`);
@@ -50,6 +52,7 @@ const headers = read('public/_headers');
 
 assert.match(gameIndex, /<meta name="robots" content="noindex, nofollow"/);
 assert.ok(gameIndex.indexOf('site-integration.js') < gameIndex.indexOf('core/namespace.js'));
+assert.ok(gameIndex.indexOf('saveMigrations.js') < gameIndex.indexOf('gameState.js'));
 assert.ok(gameIndex.indexOf('cloud-sync-policy.js') < gameIndex.indexOf('cloud-sync.js'));
 assert.ok(gameIndex.indexOf('cloud-sync.js') < gameIndex.indexOf('src/js/main.js'));
 assert.match(gameIndex, /data-station-link="gameInfo"/);
@@ -69,6 +72,8 @@ assert.match(cloudSync, /error\.status === 409/);
 assert.match(cloudSync, /customMusicData = ""/);
 assert.match(cloudSync, /catGameLocalBackupV1:/);
 assert.match(cloudSync, /catGameGuestSaveClaimV1/);
+assert.match(cloudSync, /\/recovery/);
+assert.match(cloudSync, /GAME_SAVE_TOO_LARGE|tooLarge/);
 assert.match(cloudSync, /localDigest/);
 assert.match(cloudSync, /cloudDigest/);
 assert.match(saveSystem, /CatGameCloud\.onLocalSave\(nextData\)/);
@@ -103,6 +108,8 @@ assert.match(headers, /\/games\/cat-life\/\*/);
 assert.match(headers, /Cache-Control: no-cache/);
 assert.match(headers, /script-src 'self'/);
 assert.match(headers, /X-Robots-Tag: noindex, nofollow/);
+assert.match(gameIndex, /data-cat-recovery-action/);
+assert.match(gameIndex, /data-cat-recovery-dialog/);
 assert.equal(shouldIncludeSitemapRoute('/games/cat-life/'), false);
 for (const route of [
   '/en/apps/cat-life-game/',
@@ -218,7 +225,7 @@ const storage = new Map();
 const saveContext = {
   window: {
     CatGame: {
-      config: { storageKey: 'catGameSaveV1' },
+      config: { storageKey: 'catGameSaveV1', saveSchemaVersion: 2 },
       state: {
         game: null,
         normalizeGameData(value) { return value; }
@@ -242,5 +249,46 @@ memberSaveSystem.saveGame({ meta: {}, player: { coins: 20 } });
 assert.equal(storage.get('catGameSaveV1:member:1').player.coins, 10);
 assert.equal(storage.get('catGameSaveV1:member:2').player.coins, 20);
 assert.equal(storage.has('catGameSaveV1'), false, 'member saves must not overwrite the shared guest slot');
+
+const futureSave = { schemaVersion: 3, meta: {}, player: { gold: 99 } };
+storage.set('catGameSaveV1:member:3', futureSave);
+saveContext.window.CatGame.state.normalizeGameData = (value) => {
+  if (value.schemaVersion > 2) {
+    const error = new Error('unsupported');
+    error.code = 'SAVE_SCHEMA_UNSUPPORTED';
+    throw error;
+  }
+  return value;
+};
+saveContext.window.CatGame.state.createNewGame = () => ({ schemaVersion: 2, meta: {}, player: { gold: 200 } });
+memberSaveSystem.setStorageKey('catGameSaveV1:member:3');
+const compatibilitySave = memberSaveSystem.loadOrCreateGame();
+assert.equal(compatibilitySave.schemaVersion, 2);
+assert.equal(memberSaveSystem.getStorageKey(), 'catGameSaveV1:member:3:compat-v2');
+assert.deepEqual(storage.get('catGameSaveV1:member:3'), futureSave, 'future saves must remain untouched');
+assert.equal(storage.get('catGameSaveV1:member:3:compat-v2').schemaVersion, 2);
+
+const migrationContext = { window: {} };
+vm.runInNewContext(saveMigrations, migrationContext);
+const legacySave = {
+  version: '1.0.0',
+  player: { coins: 42 },
+  settings: { musicVolume: 55 }
+};
+const migratedSave = migrationContext.window.CatGameSaveMigrations.migrate(legacySave);
+assert.equal(migratedSave.fromVersion, 0);
+assert.equal(migratedSave.toVersion, 2);
+assert.deepEqual([...migratedSave.applied], [1, 2]);
+assert.equal(migratedSave.data.schemaVersion, 2);
+assert.equal(migratedSave.data.player.gold, 42);
+assert.equal(migratedSave.data.player.coins, undefined);
+assert.equal(migratedSave.data.settings.bgmVolume, 55);
+assert.equal(migratedSave.data.settings.sfxVolume, 55);
+assert.equal(migratedSave.data.settings.musicVolume, undefined);
+assert.equal(legacySave.player.coins, 42, 'migrations must not mutate the stored source object');
+assert.throws(
+  () => migrationContext.window.CatGameSaveMigrations.migrate({ schemaVersion: 3 }),
+  (error) => error.code === 'SAVE_SCHEMA_UNSUPPORTED'
+);
 
 console.log('Cat Life Game website integration tests passed.');
