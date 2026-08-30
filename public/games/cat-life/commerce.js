@@ -23,12 +23,14 @@
     "cat-life.skin.moonlit-tabby": {
       entitlementKey: "cat-life.cosmetic.skin.moonlit-tabby.v1",
       kind: "skin",
-      image: "src/assets/premium/moonlit-tabby.png"
+      image: "src/assets/premium/moonlit-tabby.png",
+      imageSize: 480
     },
     "cat-life.bundle.station-room": {
       entitlementKey: "cat-life.content.furniture.station-room.v1",
       kind: "room",
-      image: "src/assets/premium/station-room-set.jpg"
+      image: "src/assets/premium/station-room-set.jpg",
+      imageSize: 800
     }
   };
 
@@ -40,7 +42,7 @@
       loading: "正在讀取會員商品…",
       unavailable: "會員商城暫時無法連線；本機遊戲仍可繼續。",
       cached: "目前使用這個帳號最近一次同步的離線權益。離線時不能購買。",
-      empty: "目前沒有已上架的會員商品。planned 商品不會在這裡顯示。",
+      empty: "目前沒有已上架的會員商品，請稍後再看看。",
       guest: "遊客可以預覽商品；登入 Station Cat 後才能兌換與跨裝置使用。",
       signIn: "登入後兌換",
       balance: "可用餘額：{balance} Station Points",
@@ -79,7 +81,7 @@
       loading: "正在读取会员商品…",
       unavailable: "会员商城暂时无法连接；本地游戏仍可继续。",
       cached: "当前使用此账号最近同步的离线权益。离线时不能购买。",
-      empty: "目前没有已上架的会员商品。planned 商品不会在这里显示。",
+      empty: "目前没有已上架的会员商品，请稍后再看看。",
       guest: "游客可以预览商品；登录 Station Cat 后才能兑换与跨设备使用。",
       signIn: "登录后兑换",
       balance: "可用余额：{balance} Station Points",
@@ -118,7 +120,7 @@
       loading: "Loading member products…",
       unavailable: "The member store is temporarily unavailable. Local play still works.",
       cached: "Showing the latest offline entitlement cache for this account. Purchases require a connection.",
-      empty: "No member products are on sale right now. Planned products never appear here.",
+      empty: "No member products are on sale right now. Please check back later.",
       guest: "Guests can preview products. Sign in to redeem and use ownership across devices.",
       signIn: "Sign in to redeem",
       balance: "Available: {balance} Station Points",
@@ -157,7 +159,7 @@
       loading: "会員商品を読み込み中…",
       unavailable: "会員ストアに接続できません。ローカルゲームは引き続き遊べます。",
       cached: "このアカウントで最後に同期したオフライン権利を表示しています。購入には接続が必要です。",
-      empty: "現在販売中の会員商品はありません。planned 商品は表示されません。",
+      empty: "現在販売中の会員商品はありません。しばらくしてからご確認ください。",
       guest: "ゲストは商品を確認できます。交換と端末間利用にはログインが必要です。",
       signIn: "ログインして交換",
       balance: "利用可能：{balance} Station Points",
@@ -396,7 +398,7 @@
     return (
       '<article class="shop-card station-commerce-card' + (owned ? " is-owned" : "") + '">' +
       '<div class="shop-art station-commerce-art"><img src="' + escapeHtml(manifest.image) + '" alt="' +
-      escapeHtml(product.name) + '" width="800" height="800" loading="lazy" /></div>' +
+      escapeHtml(product.name) + '" width="' + manifest.imageSize + '" height="' + manifest.imageSize + '" loading="lazy" /></div>' +
       '<div class="shop-row"><div><p class="section-eyebrow">' + escapeHtml(copy.kicker) + '</p><h3 class="panel-title">' +
       escapeHtml(product.name) + '</h3></div>' +
       (product.pointsPrice === null ? "" : '<span class="pill">' + escapeHtml(String(product.pointsPrice)) + " Station Points</span>") +

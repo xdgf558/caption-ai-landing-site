@@ -99,6 +99,7 @@ assert.match(commerce, /JSON\.stringify\(\{ productId: productId, idempotencyKey
 assert.doesNotMatch(commerce, /src\/data\/products|server\/catalog/);
 assert.match(commerce, /cat-life\.cosmetic\.skin\.moonlit-tabby\.v1/);
 assert.match(commerce, /cat-life\.content\.furniture\.station-room\.v1/);
+assert.doesNotMatch(commerce, /planned 商品|Planned products|planned products/);
 assert.doesNotMatch(
   gameMain,
   /settings\.language\s*=\s*window\.CatGameIntegration/,
@@ -109,7 +110,7 @@ assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
 assert.match(namespace, /version: "1\.18\.0"/);
 assert.match(namespace, /Station Points member section/);
-assert.match(product, /sourceCommit: '0cc839f'/);
+assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
 assert.match(landing, /five latest cloud versions remain available for recovery/);

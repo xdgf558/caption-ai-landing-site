@@ -9,7 +9,7 @@ export const catLifeGameProduct = {
   zhHansProductPath: '/zh-hans/apps/cat-life-game/',
   jaProductPath: '/ja/apps/cat-life-game/',
   gamePath: '/games/cat-life/',
-  sourceCommit: '0cc839f',
+  upstreamSourceCommit: '0cc839f',
   assets: {
     icon: '/games/cat-life/src/assets/cats/orange-tabby.png',
     community: '/games/cat-life/src/assets/community/npc-cat-sprites.png',
