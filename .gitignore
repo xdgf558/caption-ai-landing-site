@@ -6,3 +6,5 @@ dist/
 .dev.vars*
 .DS_Store
 npm-debug.log*
+playwright-report/
+test-results/

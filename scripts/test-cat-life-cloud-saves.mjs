@@ -54,16 +54,18 @@ class D1Database {
 }
 
 const read = (path) => readFile(new URL(path, import.meta.url), 'utf8');
-const [readerMigration, passwordMigration, gameSaveMigration] = await Promise.all([
+const [readerMigration, passwordMigration, gameSaveMigration, gameSaveRecoveryMigration] = await Promise.all([
   read('../migrations/0003_reader_accounts.sql'),
   read('../migrations/0011_reader_password_credentials.sql'),
-  read('../migrations/0031_reader_game_saves.sql')
+  read('../migrations/0031_reader_game_saves.sql'),
+  read('../migrations/0032_reader_game_save_recovery.sql')
 ]);
 
 const sqlite = new DatabaseSync(':memory:');
 sqlite.exec(readerMigration);
 sqlite.exec(passwordMigration);
 sqlite.exec(gameSaveMigration);
+sqlite.exec(gameSaveRecoveryMigration);
 const db = new D1Database(sqlite);
 const env = { WAITLIST_DB: db };
 
@@ -110,6 +112,7 @@ const request = (method, token = '', body = null, headers = {}) => {
 const json = async (response) => ({ response, body: await response.json() });
 const makeSave = (coins, savedAt = '2026-08-30T01:00:00.000Z') => ({
   version: '1.17.0',
+  schemaVersion: 2,
   meta: {
     createdAt: '2026-08-29T01:00:00.000Z',
     lastSavedAt: savedAt,
@@ -145,6 +148,57 @@ assert.equal(result.body.account.displayName, 'Player One');
 assert.equal(result.body.account.username, 'playerone');
 assert.equal(result.body.save, null);
 
+const invalidRequest = new Request('https://wwwstationcat.org/api/readers/game-saves/cat-life', {
+  method: 'PUT',
+  headers: {
+    cookie: `station_cat_reader_session=${firstSessionToken}`,
+    origin: 'https://wwwstationcat.org',
+    'content-type': 'application/json'
+  },
+  body: '{'
+});
+result = await json(await hooks.handleReaderGameSavePut(invalidRequest, env));
+assert.equal(result.response.status, 400);
+assert.equal(
+  sqlite.prepare('SELECT COUNT(*) AS count FROM reader_game_save_rate_limits WHERE account_id = 1').get().count,
+  0,
+  'invalid JSON must not consume the valid-write rate limit'
+);
+
+result = await json(
+  await hooks.handleReaderGameSavePut(
+    request('PUT', firstSessionToken, {
+      baseRevision: 0,
+      saveData: { ...makeSave(5), schemaVersion: 999 }
+    }),
+    env
+  )
+);
+assert.equal(result.response.status, 400);
+assert.equal(result.body.code, 'INVALID_GAME_SAVE');
+assert.equal(
+  sqlite.prepare('SELECT COUNT(*) AS count FROM reader_game_save_rate_limits WHERE account_id = 1').get().count,
+  0,
+  'unsupported schema versions must fail before rate limiting'
+);
+
+result = await json(
+  await hooks.handleReaderGameSavePut(
+    request('PUT', firstSessionToken, {
+      baseRevision: 0,
+      saveData: { ...makeSave(5), oversizedFixture: 'x'.repeat(751000) }
+    }),
+    env
+  )
+);
+assert.equal(result.response.status, 413);
+assert.equal(result.body.code, 'GAME_SAVE_TOO_LARGE');
+assert.equal(
+  sqlite.prepare('SELECT COUNT(*) AS count FROM reader_game_save_rate_limits WHERE account_id = 1').get().count,
+  0,
+  'oversized saves must fail before rate limiting'
+);
+
 result = await json(
   await hooks.handleReaderGameSavePut(
     request('PUT', firstSessionToken, { baseRevision: 0, saveData: makeSave(5) }, { origin: '' }),
@@ -167,6 +221,7 @@ result = await json(
 );
 assert.equal(result.response.status, 200);
 assert.equal(result.body.save.revision, 1);
+assert.equal(result.body.save.schemaVersion, 2);
 assert.equal(result.body.save.data.player.coins, 10);
 assert.equal(result.body.save.data.meta.lastSavedAt, undefined);
 assert.equal(result.body.save.data.meta.lastSyncAt, undefined);
@@ -234,6 +289,55 @@ assert.deepEqual(
   [4, 5, 6, 7, 8]
 );
 
+result = await json(await hooks.handleReaderGameSaveRecoveryGet(request('GET', firstSessionToken), env));
+assert.equal(result.response.status, 200);
+assert.equal(result.body.currentRevision, 9);
+assert.deepEqual(result.body.backups.map((backup) => backup.revision), [8, 7, 6, 5, 4]);
+assert.deepEqual(result.body.recoveryEvents, []);
+
+result = await json(
+  await hooks.handleReaderGameSaveRecoveryPost(
+    request('POST', firstSessionToken, { baseRevision: 9, sourceRevision: 4 }),
+    env
+  )
+);
+assert.equal(result.response.status, 200);
+assert.equal(result.body.recoveredFromRevision, 4);
+assert.equal(result.body.save.revision, 10);
+assert.equal(result.body.save.data.player.coins, 40);
+assert.deepEqual(
+  sqlite.prepare('SELECT revision FROM reader_game_save_backups ORDER BY revision').all().map((row) => row.revision),
+  [5, 6, 7, 8, 9]
+);
+
+result = await json(await hooks.handleReaderGameSaveRecoveryGet(request('GET', firstSessionToken), env));
+assert.equal(result.body.recoveryEvents.length, 1);
+assert.deepEqual(result.body.recoveryEvents[0], {
+  sourceRevision: 4,
+  previousRevision: 9,
+  restoredRevision: 10,
+  createdAt: result.body.recoveryEvents[0].createdAt
+});
+
+result = await json(
+  await hooks.handleReaderGameSaveRecoveryPost(
+    request('POST', firstSessionToken, { baseRevision: 9, sourceRevision: 5 }),
+    env
+  )
+);
+assert.equal(result.response.status, 409);
+assert.equal(result.body.code, 'GAME_SAVE_CONFLICT');
+assert.equal(result.body.save.revision, 10);
+
+result = await json(
+  await hooks.handleReaderGameSaveRecoveryPost(
+    request('POST', firstSessionToken, { baseRevision: 10, sourceRevision: 4 }),
+    env
+  )
+);
+assert.equal(result.response.status, 404);
+assert.equal(result.body.code, 'GAME_SAVE_BACKUP_NOT_FOUND');
+
 sqlite.prepare(
   `UPDATE reader_game_save_rate_limits
    SET write_count = 20, window_started_at = CURRENT_TIMESTAMP
@@ -241,7 +345,7 @@ sqlite.prepare(
 ).run();
 result = await json(
   await hooks.handleReaderGameSavePut(
-    request('PUT', firstSessionToken, { baseRevision: revision, saveData: makeSave(100) }),
+    request('PUT', firstSessionToken, { baseRevision: 10, saveData: makeSave(100) }),
     env
   )
 );
@@ -258,6 +362,34 @@ assert.equal(result.response.status, 200);
 assert.equal(result.body.authenticated, true);
 assert.equal(result.body.account.id, 2);
 assert.equal(result.body.save, null, 'one member must never see another member\'s cloud save');
+
+const secondFirstSave = await json(
+  await hooks.handleReaderGameSavePut(
+    request('PUT', secondSessionToken, { baseRevision: 0, saveData: makeSave(200) }),
+    env
+  )
+);
+assert.equal(secondFirstSave.response.status, 200);
+const concurrentResults = await Promise.all([
+  hooks.handleReaderGameSavePut(
+    request('PUT', secondSessionToken, { baseRevision: 1, saveData: makeSave(210) }),
+    env
+  ),
+  hooks.handleReaderGameSavePut(
+    request('PUT', secondSessionToken, { baseRevision: 1, saveData: makeSave(220) }),
+    env
+  )
+]);
+const concurrentBodies = await Promise.all(concurrentResults.map(json));
+assert.deepEqual(
+  concurrentBodies.map((entry) => entry.response.status).sort(),
+  [200, 409],
+  'two writes from the same base revision must produce exactly one winner'
+);
+assert.equal(
+  sqlite.prepare("SELECT revision FROM reader_game_saves WHERE account_id = 2 AND game_key = 'cat-life'").get().revision,
+  2
+);
 
 sqlite.close();
 console.log('Cat Life Game cloud save tests passed.');

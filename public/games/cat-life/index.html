@@ -32,6 +32,7 @@
         </span>
         <a class="station-site-member__action" href="/zh-hant/library/?returnTo=%2Fgames%2Fcat-life%2F" data-cat-member-login>登入</a>
         <button class="station-site-member__action" type="button" data-cat-cloud-action hidden>處理衝突</button>
+        <button class="station-site-member__action station-site-member__action--secondary" type="button" data-cat-recovery-action hidden>恢復記錄</button>
       </div>
       <label class="station-site-language">
         <span class="sr-only">Language</span>
@@ -67,6 +68,22 @@
         <p class="cat-cloud-dialog__status" data-cat-cloud-dialog-status aria-live="polite"></p>
       </form>
     </dialog>
+    <dialog class="cat-cloud-dialog" data-cat-recovery-dialog aria-labelledby="cat-recovery-dialog-title">
+      <div class="cat-cloud-dialog__body">
+        <p class="cat-cloud-dialog__kicker">STATION CAT CLOUD SAVE</p>
+        <h2 id="cat-recovery-dialog-title" data-cat-recovery-title>恢復記錄</h2>
+        <p data-cat-recovery-copy>可從最近五個雲端版本恢復進度。恢復前會先保留目前版本。</p>
+        <p class="cat-cloud-dialog__status" data-cat-recovery-status aria-live="polite"></p>
+        <div class="cat-recovery-list" data-cat-recovery-list></div>
+        <section class="cat-recovery-log" data-cat-recovery-log-section hidden>
+          <h3 data-cat-recovery-log-title>最近恢復</h3>
+          <div data-cat-recovery-log></div>
+        </section>
+        <div class="cat-cloud-dialog__actions">
+          <button class="ghost-button" type="button" data-cat-recovery-close>關閉</button>
+        </div>
+      </div>
+    </dialog>
     <div class="app-frame broadsheet-shell">
       <header id="app-header" class="newspaper-header"></header>
       <div class="layout-body">
@@ -93,6 +110,7 @@
     <script src="./src/js/data/tasksData.js"></script>
     <script src="./src/js/data/communityData.js"></script>
 
+    <script src="./src/js/state/saveMigrations.js"></script>
     <script src="./src/js/state/gameState.js"></script>
     <script src="./src/js/state/saveSystem.js"></script>
 

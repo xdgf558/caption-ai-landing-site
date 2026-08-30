@@ -110,6 +110,7 @@
     var currentUtcDate = formatUtcDateKey(now);
     return {
       version: game.config.version,
+      schemaVersion: game.config.saveSchemaVersion,
       meta: {
         createdAt: now.toISOString(),
         lastSavedAt: null,
@@ -265,9 +266,12 @@
   }
 
   function normalizeGameData(saveData) {
+    var migration = window.CatGameSaveMigrations.migrate(saveData);
+    saveData = migration.data;
     var fresh = createNewGame();
     var normalized = {
-      version: saveData.version || fresh.version,
+      version: game.config.version,
+      schemaVersion: game.config.saveSchemaVersion,
       meta: Object.assign({}, fresh.meta, saveData.meta || {}),
       player: Object.assign({}, fresh.player, saveData.player || {}),
       cats:
