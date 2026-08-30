@@ -24,6 +24,10 @@
 
 /games/cat-life/
   Cache-Control: no-cache
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://blockstream.info https://mempool.space; media-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  X-Robots-Tag: noindex, nofollow
 
-/games/cat-life/src/*
-  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+/games/cat-life/*
+  Cache-Control: no-cache
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://blockstream.info https://mempool.space; media-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  X-Robots-Tag: noindex, nofollow

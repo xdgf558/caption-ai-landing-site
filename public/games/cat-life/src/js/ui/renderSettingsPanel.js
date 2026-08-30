@@ -3,6 +3,7 @@
   var t = game.utils.i18n.t;
 
   function renderSettingsPanel(state) {
+    var activeLanguage = game.utils.i18n.getLanguage();
     return (
       '<section class="page-header">' +
       '<div class="page-card">' +
@@ -29,11 +30,11 @@
       '<div class="inline-row" style="margin-top: 14px;"><button class="primary-button" data-rename-player>' + t("save_name") + '</button>' +
       '<span class="task-meta">' + t("rename_hint") + "</span></div>" +
       '<div class="setting-row" style="margin-top: 18px;"><label for="setting-language">' + t("language") + '</label><select id="setting-language" class="field" data-setting-key="language"><option value="zh-CN" ' +
-      (state.settings.language === "zh-CN" ? "selected" : "") +
+      (activeLanguage === "zh-CN" ? "selected" : "") +
       '>中文</option><option value="en" ' +
-      (state.settings.language === "en" ? "selected" : "") +
+      (activeLanguage === "en" ? "selected" : "") +
       '>English</option><option value="ja" ' +
-      (state.settings.language === "ja" ? "selected" : "") +
+      (activeLanguage === "ja" ? "selected" : "") +
       '>日本語</option></select></div>' +
       '<div class="setting-row" style="margin-top: 18px;"><label for="setting-auto-save">' + t("auto_save") + '</label>' +
       '<input id="setting-auto-save" class="toggle-field" type="checkbox" data-setting-key="autoSave" ' +

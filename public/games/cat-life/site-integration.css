@@ -83,6 +83,21 @@
   padding: 7px 28px 7px 10px;
 }
 
+.station-site-language {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.station-site-language__note {
+  color: #6d6255;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .station-site-bar a:focus-visible,
 .station-site-bar select:focus-visible {
   outline: 3px solid #e7a449;

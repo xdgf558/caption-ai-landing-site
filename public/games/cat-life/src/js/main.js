@@ -401,6 +401,14 @@
       game.state.game.settings[key] = target.value;
     }
 
+    if (
+      key === "language" &&
+      window.CatGameIntegration &&
+      typeof window.CatGameIntegration.useSavedLanguage === "function"
+    ) {
+      window.CatGameIntegration.useSavedLanguage(game.state.game.settings.language);
+    }
+
     game.state.saveSystem.saveGame(game.state.game);
     if (game.systems.musicSystem) {
       game.systems.musicSystem.applyVolume();
@@ -907,14 +915,8 @@
     dom.toast = document.getElementById("app-toast");
 
     game.state.game = game.state.saveSystem.loadOrCreateGame();
-    if (
-      window.CatGameIntegration &&
-      ["zh-CN", "en", "ja"].indexOf(window.CatGameIntegration.initialLanguage) >= 0
-    ) {
-      game.state.game.settings.language = window.CatGameIntegration.initialLanguage;
-    }
     if (window.CatGameIntegration && typeof window.CatGameIntegration.applySavedLanguage === "function") {
-      window.CatGameIntegration.applySavedLanguage(game.state.game.settings.language);
+      window.CatGameIntegration.applySavedLanguage(game.utils.i18n.getLanguage());
     }
 
     if (typeof game.state.game.tasks._dailySpendOffset !== "number") {

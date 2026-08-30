@@ -1499,6 +1499,12 @@
   };
 
   function getLanguage() {
+    if (
+      window.CatGameIntegration &&
+      ["zh-CN", "en", "ja"].indexOf(window.CatGameIntegration.sessionLanguage) >= 0
+    ) {
+      return window.CatGameIntegration.sessionLanguage;
+    }
     if (game.state && game.state.game && game.state.game.settings && game.state.game.settings.language) {
       return game.state.game.settings.language;
     }

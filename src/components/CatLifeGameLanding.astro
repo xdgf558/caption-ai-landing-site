@@ -14,10 +14,10 @@ const { lang = 'zh-Hant' } = Astro.props;
 const copy = {
   'zh-Hant': {
     title: '打工養貓日記｜免費網頁養成遊戲',
-    description: '在瀏覽器裡工作、照顧貓咪、佈置房間並探索猫咪鎮。免費遊玩，進度保存在目前裝置。',
+    description: '在瀏覽器裡工作、照顧貓咪、佈置房間並探索貓咪鎮。免費遊玩，進度保存在目前裝置。',
     kicker: 'Browser Cat Life Game',
     heading: '打工、生活，然後把貓照顧好。',
-    intro: '《打工養貓日記》是一款可以直接在瀏覽器遊玩的生活養成遊戲。安排工作與休息、管理金幣和體力、照顧每隻貓，再慢慢把自己的小家和猫咪鎮填滿。',
+    intro: '《打工養貓日記》是一款可以直接在瀏覽器遊玩的生活養成遊戲。安排工作與休息、管理金幣和體力、照顧每隻貓，再慢慢把自己的小家和貓咪鎮填滿。',
     play: '立即開始遊戲',
     apps: '返回 Apps',
     status: '免費遊玩 · 無需安裝',
@@ -30,12 +30,12 @@ const copy = {
     features: [
       ['安排一天', '在工作、休息、飲食與心情之間找平衡，時間會持續前進。'],
       ['照顧貓咪', '餵食、清潔、陪玩、看病，觀察每隻貓不同的狀態與成長。'],
-      ['打造自己的家', '購買家具和用品，調整房間配置，再到猫咪鎮拜訪鄰居。'],
+      ['打造自己的家', '購買家具和用品，調整房間配置，再到貓咪鎮拜訪鄰居。'],
       ['持續保存進度', '遊戲會自動保存在目前瀏覽器，也可以匯出或匯入 JSON 存檔。']
     ],
     shopKicker: 'Life around the station',
-    shopTitle: '小店、房間和猫咪鎮，都在同一段日常裡。',
-    shopText: '商店商品有獨立插圖，社區使用可互動的猫咪鎮地圖；遊戲也包含銀行、收藏、任務、醫院、街機和版本記錄。',
+    shopTitle: '小店、房間和貓咪鎮，都在同一段日常裡。',
+    shopText: '商店商品有獨立插圖，社區使用可互動的貓咪鎮地圖；遊戲也包含銀行、收藏、任務、醫院、街機和版本記錄。',
     localTitle: '這一階段的帳號說明',
     localText: '目前遊戲進度保存在這台裝置的瀏覽器中，尚未與 Station Cat 會員帳號同步。後續接入會員系統時，會先設計舊存檔遷移流程，不會直接覆蓋現有進度。',
     languages: '遊戲介面支援簡體中文、English 與日本語；本站介紹頁提供繁中、簡中、英文與日文。',
@@ -151,7 +151,7 @@ const structuredData = {
   softwareVersion: catLifeGameProduct.latestVersion,
   url: new URL(paths.canonical, siteConfig.baseUrl).toString(),
   image: new URL(catLifeGameProduct.assets.icon, siteConfig.baseUrl).toString(),
-  inLanguage: ['zh-Hans', 'en', 'ja'],
+  inLanguage: ['zh-Hant', 'zh-Hans', 'en', 'ja'],
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   publisher: { '@type': 'Organization', name: siteConfig.name, url: siteConfig.baseUrl }
 };
