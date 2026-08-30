@@ -11,6 +11,7 @@ const gameRoot = 'public/games/cat-life';
 
 for (const path of [
   `${gameRoot}/index.html`,
+  `${gameRoot}/cloud-sync.js`,
   `${gameRoot}/site-integration.js`,
   `${gameRoot}/site-integration.css`,
   `${gameRoot}/src/js/main.js`,
@@ -30,7 +31,9 @@ for (const path of [
 
 const gameIndex = read(`${gameRoot}/index.html`);
 const integration = read(`${gameRoot}/site-integration.js`);
+const cloudSync = read(`${gameRoot}/cloud-sync.js`);
 const gameMain = read(`${gameRoot}/src/js/main.js`);
+const saveSystem = read(`${gameRoot}/src/js/state/saveSystem.js`);
 const namespace = read(`${gameRoot}/src/js/core/namespace.js`);
 const i18n = read(`${gameRoot}/src/js/core/i18n.js`);
 const settingsPanel = read(`${gameRoot}/src/js/ui/renderSettingsPanel.js`);
@@ -44,6 +47,7 @@ const headers = read('public/_headers');
 
 assert.match(gameIndex, /<meta name="robots" content="noindex, nofollow"/);
 assert.ok(gameIndex.indexOf('site-integration.js') < gameIndex.indexOf('core/namespace.js'));
+assert.ok(gameIndex.indexOf('cloud-sync.js') < gameIndex.indexOf('src/js/main.js'));
 assert.match(gameIndex, /data-station-link="gameInfo"/);
 assert.match(gameIndex, /data-station-language/);
 assert.match(integration, /sessionLanguage/);
@@ -53,6 +57,16 @@ assert.match(integration, /searchParams\.delete\("lang"\)/);
 assert.match(integration, /"zh-Hant"/);
 assert.match(integration, /"zh-CN"/);
 assert.match(integration, /member: "Member center"/);
+assert.match(cloudSync, /\/api\/readers\/game-saves\/cat-life/);
+assert.match(cloudSync, /\/api\/readers\/session/);
+assert.match(cloudSync, /\?returnTo=/);
+assert.match(cloudSync, /baseRevision/);
+assert.match(cloudSync, /error\.status === 409/);
+assert.match(cloudSync, /customMusicData = ""/);
+assert.match(cloudSync, /catGameLocalBackupV1:/);
+assert.match(saveSystem, /CatGameCloud\.onLocalSave\(nextData\)/);
+assert.match(gameMain, /applyCloudSave/);
+assert.match(gameMain, /CatGameCloud\.init\(game\.state\.game\)/);
 assert.doesNotMatch(
   gameMain,
   /settings\.language\s*=\s*window\.CatGameIntegration/,

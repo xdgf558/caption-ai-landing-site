@@ -430,6 +430,26 @@
     render();
   }
 
+  function applyCloudSave(saveData) {
+    var localSettings = game.state.game && game.state.game.settings || {};
+    var imported = game.state.normalizeGameData(saveData);
+    imported.settings.customMusicData = localSettings.customMusicData || "";
+    imported.settings.customMusicName = localSettings.customMusicName || "";
+    imported.settings.customMusicEnabled = Boolean(localSettings.customMusicEnabled && localSettings.customMusicData);
+    game.state.game = imported;
+    game.systems.homeSystem.recalculateComfort();
+    game.systems.workSystem.refreshJobUnlocks();
+    game.systems.taskSystem.refreshAllTasks();
+    syncRealtime("cloud");
+    getSelectedCat();
+    game.state.saveSystem.saveGame(game.state.game);
+    render();
+  }
+
+  window.CatGameApp = {
+    applyCloudSave: applyCloudSave,
+  };
+
   function handleClick(event) {
     var pageButton = event.target.closest("[data-page-target]");
     var catSelectButton = event.target.closest("[data-select-cat]");
@@ -961,6 +981,9 @@
     syncRealtime("init");
     pushNotice(t("storage_loaded"));
     render();
+    if (window.CatGameCloud && typeof window.CatGameCloud.init === "function") {
+      window.CatGameCloud.init(game.state.game);
+    }
     scheduleLotteryResolve("init");
     game.state.saveSystem.saveGame(game.state.game);
 

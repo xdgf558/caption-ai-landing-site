@@ -69,6 +69,9 @@ const readerTotpResetLockedMessage = '尝试次数过多，请稍后再试。';
 const readerTotpResetFailureThreshold = 5;
 const readerTotpResetBaseLockSeconds = 60;
 const readerTotpResetMaxLockSeconds = 15 * 60;
+const catLifeGameKey = 'cat-life';
+const catLifeGameSaveMaxBytes = 750000;
+const catLifeGameSaveBackupLimit = 5;
 const adminPathPattern = /^\/admin(?:-v2)?(?:\/|$)/;
 const defaultAdminEmail = 'brodstem@protonmail.com';
 
@@ -2647,6 +2650,8 @@ const isMissingReaderTotpResetAttemptsError = (error) =>
   /no such table: reader_totp_reset_attempts/i.test(error?.message || '');
 const isMissingReadingEventsError = (error) => /no such table: reading_events/i.test(error?.message || '');
 const isMissingReaderCommentsError = (error) => /no such table: reader_comments/i.test(error?.message || '');
+const isMissingReaderGameSavesError = (error) =>
+  /no such table: reader_game_save(?:s|_backups)/i.test(error?.message || '');
 const isMissingProductFeedbackError = (error) => /no such table: product_feedback/i.test(error?.message || '');
 const isMissingChapterStatsError = (error) => /no such table: chapter_stats/i.test(error?.message || '');
 const isMissingAiInsightsError = (error) => /no such table: ai_insights/i.test(error?.message || '');
@@ -2839,6 +2844,17 @@ const ensureReaderCommentsReady = async (db) => {
     return true;
   } catch (error) {
     if (isMissingReaderCommentsError(error)) return false;
+    throw error;
+  }
+};
+
+const ensureReaderGameSavesReady = async (db) => {
+  try {
+    await db.prepare('SELECT id FROM reader_game_saves LIMIT 1').first();
+    await db.prepare('SELECT id FROM reader_game_save_backups LIMIT 1').first();
+    return true;
+  } catch (error) {
+    if (isMissingReaderGameSavesError(error)) return false;
     throw error;
   }
 };
@@ -4718,6 +4734,271 @@ const handleReaderSession = async (request, env) => {
     session: {
       expiresAt: session.session_expires_at
     }
+  });
+};
+
+const normalizeReaderGameSaveTimestamp = (value) => {
+  const date = new Date(cleanText(value, 60));
+  return Number.isFinite(date.getTime()) ? date.toISOString() : new Date().toISOString();
+};
+
+const normalizeReaderGameSave = (value) => {
+  if (!isPlainRecord(value)) return null;
+
+  const cloned = parseStoredJson(JSON.stringify(value), null);
+  if (
+    !isPlainRecord(cloned) ||
+    !isPlainRecord(cloned.meta) ||
+    !isPlainRecord(cloned.player) ||
+    !Array.isArray(cloned.cats) ||
+    !isPlainRecord(cloned.inventory) ||
+    !isPlainRecord(cloned.settings)
+  ) {
+    return null;
+  }
+
+  delete cloned.meta.lastSavedAt;
+  delete cloned.meta.lastSyncAt;
+  cloned.settings.customMusicData = '';
+  cloned.settings.customMusicName = '';
+  cloned.settings.customMusicEnabled = false;
+
+  const saveJson = JSON.stringify(cloned);
+  const saveBytes = new TextEncoder().encode(saveJson).byteLength;
+  if (!saveBytes || saveBytes > catLifeGameSaveMaxBytes) return null;
+
+  return {
+    data: cloned,
+    saveBytes,
+    saveJson,
+    saveVersion: cleanText(cloned.version, 40)
+  };
+};
+
+const readerGameSaveToJson = (row) => {
+  if (!row) return null;
+  const data = parseStoredJson(row.save_json, null);
+  if (!isPlainRecord(data)) return null;
+  return {
+    gameKey: row.game_key,
+    saveVersion: row.save_version || '',
+    revision: Number(row.revision || 0),
+    digest: row.save_hash || '',
+    clientUpdatedAt: row.client_updated_at || '',
+    updatedAt: row.updated_at || '',
+    data
+  };
+};
+
+const getReaderGameSave = async (db, accountId, gameKey = catLifeGameKey) =>
+  db
+    .prepare(
+      `SELECT *
+       FROM reader_game_saves
+       WHERE account_id = ? AND game_key = ?
+       LIMIT 1`
+    )
+    .bind(accountId, gameKey)
+    .first();
+
+const readerGameSaveAccountJson = (session) => ({
+  id: session.account_id,
+  email: session.email,
+  username: session.username || '',
+  displayName: session.display_name || session.username || session.email
+});
+
+const handleReaderGameSaveGet = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) return privateJson({ ok: true, authenticated: false, save: null });
+
+  if (!(await ensureReaderGameSavesReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'READER_GAME_SAVES_NOT_READY',
+        message: 'Game cloud saves are not initialized.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const row = await getReaderGameSave(db, session.account_id);
+  return privateJson({
+    ok: true,
+    authenticated: true,
+    account: readerGameSaveAccountJson(session),
+    save: readerGameSaveToJson(row)
+  });
+};
+
+const readerGameSaveConflictResponse = (session, row) =>
+  privateJson(
+    {
+      ok: false,
+      authenticated: true,
+      code: 'GAME_SAVE_CONFLICT',
+      message: 'The cloud save changed on another session.',
+      account: readerGameSaveAccountJson(session),
+      save: readerGameSaveToJson(row)
+    },
+    { status: 409 }
+  );
+
+const handleReaderGameSavePut = async (request, env) => {
+  const db = env.WAITLIST_DB;
+  if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+
+  const session = await getReaderFromSession(request, env);
+  if (!session) {
+    return privateJson(
+      { ok: false, authenticated: false, code: 'SIGN_IN_REQUIRED', message: 'Please sign in first.' },
+      { status: 401 }
+    );
+  }
+
+  if (!(await ensureReaderGameSavesReady(db))) {
+    return privateJson(
+      {
+        ok: false,
+        code: 'READER_GAME_SAVES_NOT_READY',
+        message: 'Game cloud saves are not initialized.'
+      },
+      { status: 503 }
+    );
+  }
+
+  const requestOrigin = cleanText(request.headers.get('origin'), 300);
+  if (requestOrigin && requestOrigin !== new URL(request.url).origin) {
+    return privateJson({ ok: false, code: 'INVALID_ORIGIN', message: 'Invalid request origin.' }, { status: 403 });
+  }
+  if (!String(request.headers.get('content-type') || '').toLowerCase().includes('application/json')) {
+    return privateJson({ ok: false, code: 'INVALID_CONTENT_TYPE', message: 'JSON is required.' }, { status: 415 });
+  }
+
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > catLifeGameSaveMaxBytes + 50000) {
+    return privateJson({ ok: false, code: 'GAME_SAVE_TOO_LARGE', message: 'Game save is too large.' }, { status: 413 });
+  }
+
+  const rawBody = await request.text();
+  if (new TextEncoder().encode(rawBody).byteLength > catLifeGameSaveMaxBytes + 50000) {
+    return privateJson({ ok: false, code: 'GAME_SAVE_TOO_LARGE', message: 'Game save is too large.' }, { status: 413 });
+  }
+
+  const payload = parseStoredJson(rawBody, null);
+  const baseRevision = Number(payload?.baseRevision);
+  if (!isPlainRecord(payload) || !Number.isInteger(baseRevision) || baseRevision < 0) {
+    return privateJson({ ok: false, code: 'INVALID_GAME_SAVE', message: 'Invalid game save request.' }, { status: 400 });
+  }
+
+  const normalized = normalizeReaderGameSave(payload.saveData);
+  if (!normalized) {
+    return privateJson(
+      { ok: false, code: 'INVALID_GAME_SAVE', message: 'Game save is invalid or exceeds the size limit.' },
+      { status: 400 }
+    );
+  }
+
+  const clientUpdatedAt = normalizeReaderGameSaveTimestamp(payload.clientUpdatedAt);
+  const saveHash = await sha256Hex(normalized.saveJson);
+  const existing = await getReaderGameSave(db, session.account_id);
+
+  if (!existing) {
+    if (baseRevision !== 0) return readerGameSaveConflictResponse(session, null);
+    try {
+      await db
+        .prepare(
+          `INSERT INTO reader_game_saves (
+            account_id, game_key, save_version, save_json, save_hash, save_bytes,
+            revision, client_updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, 1, ?)`
+        )
+        .bind(
+          session.account_id,
+          catLifeGameKey,
+          normalized.saveVersion,
+          normalized.saveJson,
+          saveHash,
+          normalized.saveBytes,
+          clientUpdatedAt
+        )
+        .run();
+    } catch (error) {
+      if (/UNIQUE constraint failed/i.test(error?.message || '')) {
+        return readerGameSaveConflictResponse(session, await getReaderGameSave(db, session.account_id));
+      }
+      throw error;
+    }
+  } else {
+    if (Number(existing.revision) !== baseRevision) {
+      return readerGameSaveConflictResponse(session, existing);
+    }
+
+    const results = await db.batch([
+      db
+        .prepare(
+          `INSERT OR IGNORE INTO reader_game_save_backups (
+            account_id, game_key, save_version, save_json, save_hash, save_bytes,
+            revision, client_updated_at
+          )
+          SELECT account_id, game_key, save_version, save_json, save_hash, save_bytes,
+                 revision, client_updated_at
+          FROM reader_game_saves
+          WHERE account_id = ? AND game_key = ? AND revision = ?`
+        )
+        .bind(session.account_id, catLifeGameKey, baseRevision),
+      db
+        .prepare(
+          `UPDATE reader_game_saves
+           SET save_version = ?,
+               save_json = ?,
+               save_hash = ?,
+               save_bytes = ?,
+               revision = revision + 1,
+               client_updated_at = ?,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE account_id = ? AND game_key = ? AND revision = ?`
+        )
+        .bind(
+          normalized.saveVersion,
+          normalized.saveJson,
+          saveHash,
+          normalized.saveBytes,
+          clientUpdatedAt,
+          session.account_id,
+          catLifeGameKey,
+          baseRevision
+        ),
+      db
+        .prepare(
+          `DELETE FROM reader_game_save_backups
+           WHERE id IN (
+             SELECT id
+             FROM reader_game_save_backups
+             WHERE account_id = ? AND game_key = ?
+             ORDER BY revision DESC
+             LIMIT -1 OFFSET ?
+           )`
+        )
+        .bind(session.account_id, catLifeGameKey, catLifeGameSaveBackupLimit)
+    ]);
+
+    if (getD1ChangeCount(results[1]) === 0) {
+      return readerGameSaveConflictResponse(session, await getReaderGameSave(db, session.account_id));
+    }
+  }
+
+  const saved = await getReaderGameSave(db, session.account_id);
+  return privateJson({
+    ok: true,
+    authenticated: true,
+    account: readerGameSaveAccountJson(session),
+    save: readerGameSaveToJson(saved)
   });
 };
 
@@ -21614,6 +21895,8 @@ export const __readerTotpTestHooks = {
   handleNovelPaymentsStatus,
   handleCreemWebhook,
   handleReaderCredits,
+  handleReaderGameSaveGet,
+  handleReaderGameSavePut,
   handlePublicNovelComments,
   handleProductFeedbackSubmit,
   handleNovelReadingEvents,
@@ -21784,6 +22067,12 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/readers/logout') {
       return handleReaderLogout(request, env);
+    }
+
+    if (url.pathname === '/api/readers/game-saves/cat-life') {
+      if (request.method === 'GET') return handleReaderGameSaveGet(request, env);
+      if (request.method === 'PUT') return handleReaderGameSavePut(request, env);
+      return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
     }
 
     if (request.method === 'GET' && url.pathname === '/api/readers/credits') {

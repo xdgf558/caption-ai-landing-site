@@ -4,6 +4,9 @@
     nextData.meta.lastSavedAt = new Date().toISOString();
     nextData.meta.lastPlayedDate = game.utils.format.formatDateKey(new Date());
     game.utils.storage.saveJSON(game.config.storageKey, nextData);
+    if (window.CatGameCloud && typeof window.CatGameCloud.onLocalSave === "function") {
+      window.CatGameCloud.onLocalSave(nextData);
+    }
     return nextData;
   }
 
