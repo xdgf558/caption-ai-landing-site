@@ -110,7 +110,7 @@ const request = (method, token = '', body = null, headers = {}) => {
 };
 
 const json = async (response) => ({ response, body: await response.json() });
-const makeSave = (coins, savedAt = '2026-08-30T01:00:00.000Z') => ({
+const makeSave = (gold, savedAt = '2026-08-30T01:00:00.000Z') => ({
   version: '1.17.0',
   schemaVersion: 2,
   meta: {
@@ -118,11 +118,13 @@ const makeSave = (coins, savedAt = '2026-08-30T01:00:00.000Z') => ({
     lastSavedAt: savedAt,
     lastSyncAt: '2026-08-30T01:00:01.000Z'
   },
-  player: { coins, energy: 80 },
+  player: { gold, energy: 80 },
   cats: [{ id: 'cat-one', name: 'Momo' }],
   inventory: { food: 2 },
   settings: {
     language: 'en',
+    bgmVolume: 60,
+    sfxVolume: 70,
     customMusicData: 'data:audio/mpeg;base64,private-device-audio',
     customMusicName: 'local-song.mp3',
     customMusicEnabled: true
@@ -182,6 +184,23 @@ assert.equal(
   'unsupported schema versions must fail before rate limiting'
 );
 
+const mislabeledCurrentSave = makeSave(5);
+delete mislabeledCurrentSave.player.gold;
+mislabeledCurrentSave.player.coins = 5;
+result = await json(
+  await hooks.handleReaderGameSavePut(
+    request('PUT', firstSessionToken, { baseRevision: 0, saveData: mislabeledCurrentSave }),
+    env
+  )
+);
+assert.equal(result.response.status, 400);
+assert.equal(result.body.code, 'INVALID_GAME_SAVE');
+assert.equal(
+  sqlite.prepare('SELECT COUNT(*) AS count FROM reader_game_save_rate_limits WHERE account_id = 1').get().count,
+  0,
+  'schema 2 saves with legacy fields must fail before rate limiting'
+);
+
 result = await json(
   await hooks.handleReaderGameSavePut(
     request('PUT', firstSessionToken, {
@@ -198,6 +217,28 @@ assert.equal(
   0,
   'oversized saves must fail before rate limiting'
 );
+
+const legacyServerSave = makeSave(5);
+legacyServerSave.schemaVersion = 0;
+legacyServerSave.player.coins = legacyServerSave.player.gold;
+delete legacyServerSave.player.gold;
+legacyServerSave.settings.musicVolume = 45;
+delete legacyServerSave.settings.bgmVolume;
+delete legacyServerSave.settings.sfxVolume;
+result = await json(
+  await hooks.handleReaderGameSavePut(
+    request('PUT', firstSessionToken, { baseRevision: 0, saveData: legacyServerSave }),
+    env
+  )
+);
+assert.equal(result.response.status, 200);
+assert.equal(result.body.save.schemaVersion, 2);
+assert.equal(result.body.save.data.player.gold, 5);
+assert.equal(result.body.save.data.player.coins, undefined);
+assert.equal(result.body.save.data.settings.bgmVolume, 45);
+assert.equal(result.body.save.data.settings.sfxVolume, 45);
+sqlite.prepare('DELETE FROM reader_game_saves WHERE account_id = 1').run();
+sqlite.prepare('DELETE FROM reader_game_save_rate_limits WHERE account_id = 1').run();
 
 result = await json(
   await hooks.handleReaderGameSavePut(
@@ -222,7 +263,7 @@ result = await json(
 assert.equal(result.response.status, 200);
 assert.equal(result.body.save.revision, 1);
 assert.equal(result.body.save.schemaVersion, 2);
-assert.equal(result.body.save.data.player.coins, 10);
+assert.equal(result.body.save.data.player.gold, 10);
 assert.equal(result.body.save.data.meta.lastSavedAt, undefined);
 assert.equal(result.body.save.data.meta.lastSyncAt, undefined);
 assert.equal(result.body.save.data.settings.customMusicData, '');
@@ -243,7 +284,7 @@ result = await json(
 );
 assert.equal(result.response.status, 200);
 assert.equal(result.body.save.revision, 2);
-assert.equal(result.body.save.data.player.coins, 20);
+assert.equal(result.body.save.data.player.gold, 20);
 assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM reader_game_save_backups').get().count, 1);
 
 result = await json(
@@ -255,7 +296,7 @@ result = await json(
 assert.equal(result.response.status, 409);
 assert.equal(result.body.code, 'GAME_SAVE_CONFLICT');
 assert.equal(result.body.save.revision, 2);
-assert.equal(result.body.save.data.player.coins, 20);
+assert.equal(result.body.save.data.player.gold, 20);
 
 result = await json(
   await hooks.handleReaderGameSavePut(
@@ -272,10 +313,10 @@ assert.equal(result.response.status, 403);
 assert.equal(result.body.code, 'INVALID_ORIGIN');
 
 let revision = 2;
-for (let coins = 30; coins <= 90; coins += 10) {
+for (let gold = 30; gold <= 90; gold += 10) {
   result = await json(
     await hooks.handleReaderGameSavePut(
-      request('PUT', firstSessionToken, { baseRevision: revision, saveData: makeSave(coins) }),
+      request('PUT', firstSessionToken, { baseRevision: revision, saveData: makeSave(gold) }),
       env
     )
   );
@@ -304,7 +345,7 @@ result = await json(
 assert.equal(result.response.status, 200);
 assert.equal(result.body.recoveredFromRevision, 4);
 assert.equal(result.body.save.revision, 10);
-assert.equal(result.body.save.data.player.coins, 40);
+assert.equal(result.body.save.data.player.gold, 40);
 assert.deepEqual(
   sqlite.prepare('SELECT revision FROM reader_game_save_backups ORDER BY revision').all().map((row) => row.revision),
   [5, 6, 7, 8, 9]

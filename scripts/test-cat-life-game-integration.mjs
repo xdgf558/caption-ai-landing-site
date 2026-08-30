@@ -225,7 +225,7 @@ const storage = new Map();
 const saveContext = {
   window: {
     CatGame: {
-      config: { storageKey: 'catGameSaveV1' },
+      config: { storageKey: 'catGameSaveV1', saveSchemaVersion: 2 },
       state: {
         game: null,
         normalizeGameData(value) { return value; }
@@ -249,6 +249,24 @@ memberSaveSystem.saveGame({ meta: {}, player: { coins: 20 } });
 assert.equal(storage.get('catGameSaveV1:member:1').player.coins, 10);
 assert.equal(storage.get('catGameSaveV1:member:2').player.coins, 20);
 assert.equal(storage.has('catGameSaveV1'), false, 'member saves must not overwrite the shared guest slot');
+
+const futureSave = { schemaVersion: 3, meta: {}, player: { gold: 99 } };
+storage.set('catGameSaveV1:member:3', futureSave);
+saveContext.window.CatGame.state.normalizeGameData = (value) => {
+  if (value.schemaVersion > 2) {
+    const error = new Error('unsupported');
+    error.code = 'SAVE_SCHEMA_UNSUPPORTED';
+    throw error;
+  }
+  return value;
+};
+saveContext.window.CatGame.state.createNewGame = () => ({ schemaVersion: 2, meta: {}, player: { gold: 200 } });
+memberSaveSystem.setStorageKey('catGameSaveV1:member:3');
+const compatibilitySave = memberSaveSystem.loadOrCreateGame();
+assert.equal(compatibilitySave.schemaVersion, 2);
+assert.equal(memberSaveSystem.getStorageKey(), 'catGameSaveV1:member:3:compat-v2');
+assert.deepEqual(storage.get('catGameSaveV1:member:3'), futureSave, 'future saves must remain untouched');
+assert.equal(storage.get('catGameSaveV1:member:3:compat-v2').schemaVersion, 2);
 
 const migrationContext = { window: {} };
 vm.runInNewContext(saveMigrations, migrationContext);

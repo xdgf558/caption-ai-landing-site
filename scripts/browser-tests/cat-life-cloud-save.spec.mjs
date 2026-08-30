@@ -195,3 +195,19 @@ test('shows the conflict chooser when another session wins the revision race', a
   await expect(page.locator('[data-cat-cloud-use-local]')).toHaveText('Use this device');
   await expect(page.locator('[data-cat-cloud-use-remote]')).toHaveText('Use cloud save');
 });
+
+test('keeps member recovery controls reachable at mobile width', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('catGameGuestSaveClaimV1', 'another-account');
+  });
+  await mockSession(page);
+  await page.route('**/api/readers/game-saves/cat-life', (route) => route.fulfill({
+    json: { ok: true, authenticated: true, account: sessionResponse.account, save: cloudEnvelope(1, 100) }
+  }));
+
+  await page.goto('/games/cat-life/?lang=en');
+  await expect(page.locator('[data-cat-recovery-action]')).toBeVisible();
+  await expect(page.locator('[data-station-language]')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+});

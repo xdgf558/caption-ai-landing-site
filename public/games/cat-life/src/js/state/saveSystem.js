@@ -27,7 +27,22 @@
     if (!saved) {
       return null;
     }
-    return game.state.normalizeGameData(saved);
+    try {
+      return game.state.normalizeGameData(saved);
+    } catch (error) {
+      if (!error || error.code !== "SAVE_SCHEMA_UNSUPPORTED") throw error;
+
+      var sourceStorageKey = activeStorageKey;
+      var compatibilityStorageKey = sourceStorageKey + ":compat-v" + String(game.config.saveSchemaVersion);
+      var existingCompatibilitySave = game.utils.storage.loadJSON(compatibilityStorageKey);
+      activeStorageKey = compatibilityStorageKey;
+      console.warn("存档来自较新的游戏版本，已切换到独立兼容存档槽。", {
+        compatibilityStorageKey: compatibilityStorageKey,
+        sourceStorageKey: sourceStorageKey,
+      });
+      if (!existingCompatibilitySave) return null;
+      return game.state.normalizeGameData(existingCompatibilitySave);
+    }
   }
 
   function createAndSaveGame() {

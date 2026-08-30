@@ -4748,6 +4748,35 @@ const normalizeReaderGameSaveTimestamp = (value) => {
   return Number.isFinite(date.getTime()) ? date.toISOString() : new Date().toISOString();
 };
 
+const migrateReaderGameSaveSchema = (save) => {
+  const schemaVersion = Number(save.schemaVersion || 0);
+  if (!Number.isInteger(schemaVersion) || schemaVersion < 0 || schemaVersion > catLifeGameSaveSchemaVersion) {
+    return null;
+  }
+
+  if (schemaVersion === catLifeGameSaveSchemaVersion) {
+    if (Object.hasOwn(save.player, 'coins') || Object.hasOwn(save.settings, 'musicVolume')) return null;
+  } else {
+    if (schemaVersion < 1) {
+      if (!Number.isFinite(save.player.gold) && Number.isFinite(save.player.coins)) {
+        save.player.gold = save.player.coins;
+      }
+      delete save.player.coins;
+    }
+    if (schemaVersion < 2) {
+      if (Number.isFinite(save.settings.musicVolume)) {
+        if (!Number.isFinite(save.settings.bgmVolume)) save.settings.bgmVolume = save.settings.musicVolume;
+        if (!Number.isFinite(save.settings.sfxVolume)) save.settings.sfxVolume = save.settings.musicVolume;
+      }
+      delete save.settings.musicVolume;
+    }
+  }
+
+  if (!Number.isFinite(save.player.gold)) return null;
+  save.schemaVersion = catLifeGameSaveSchemaVersion;
+  return save;
+};
+
 const normalizeReaderGameSave = (value) => {
   if (!isPlainRecord(value)) return null;
 
@@ -4769,22 +4798,19 @@ const normalizeReaderGameSave = (value) => {
   cloned.settings.customMusicName = '';
   cloned.settings.customMusicEnabled = false;
 
-  const schemaVersion = Number(cloned.schemaVersion || 0);
-  if (!Number.isInteger(schemaVersion) || schemaVersion < 0 || schemaVersion > catLifeGameSaveSchemaVersion) {
-    return null;
-  }
-  cloned.schemaVersion = schemaVersion;
+  const migrated = migrateReaderGameSaveSchema(cloned);
+  if (!migrated) return null;
 
-  const saveJson = JSON.stringify(cloned);
+  const saveJson = JSON.stringify(migrated);
   const saveBytes = new TextEncoder().encode(saveJson).byteLength;
   if (!saveBytes || saveBytes > catLifeGameSaveMaxBytes) return null;
 
   return {
-    data: cloned,
+    data: migrated,
     saveBytes,
     saveJson,
-    saveVersion: cleanText(cloned.version, 40),
-    schemaVersion
+    saveVersion: cleanText(migrated.version, 40),
+    schemaVersion: migrated.schemaVersion
   };
 };
 

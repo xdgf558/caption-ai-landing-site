@@ -343,3 +343,14 @@
     width: 100%;
   }
 }
+
+@media (max-width: 420px) {
+  .station-site-member__avatar {
+    display: none;
+  }
+
+  .station-site-member__action {
+    font-size: 10px;
+    padding-inline: 8px;
+  }
+}
