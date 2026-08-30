@@ -124,8 +124,8 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.19\.0"/);
-assert.match(namespace, /first complete content pack/);
+assert.match(namespace, /version: "1\.19\.1"/);
+assert.match(namespace, /off, allowlist, and public rollout stages/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
@@ -133,7 +133,7 @@ assert.match(landing, /five latest cloud versions remain available for recovery/
 assert.match(landing, /最近 5 份雲端記錄恢復/);
 assert.match(landing, /只有後台正式上架的商品才會顯示價格並允許兌換/);
 assert.match(landing, /Prices and redemption appear only after a product is formally activated in Admin/);
-assert.match(product, /latestVersion: '1\.19\.0'/);
+assert.match(product, /latestVersion: '1\.19\.1'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);

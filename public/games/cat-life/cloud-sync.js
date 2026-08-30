@@ -3,6 +3,7 @@
   var markerKey = "catGameCloudSyncV1";
   var backupKeyPrefix = "catGameLocalBackupV1:";
   var guestClaimKey = "catGameGuestSaveClaimV1";
+  var memberAccountKey = "catGameMemberAccountV1";
   var syncDelayMs = 5000;
   var maxSaveBytes = Number(window.CatGame && window.CatGame.config.cloudSaveMaxBytes || 750000);
   var account = null;
@@ -15,6 +16,17 @@
   var pendingAfterSync = false;
   var latestLocalSave = null;
   var syncTimer = null;
+
+  function publishMemberSession(accountId) {
+    var value = accountId ? String(accountId) : "guest";
+    try {
+      localStorage.setItem(memberAccountKey, value);
+    } catch (error) {
+    }
+    window.dispatchEvent(new CustomEvent("catgame:member-session", {
+      detail: { accountId: accountId ? String(accountId) : "" }
+    }));
+  }
 
   var copyByLocale = {
     "zh-Hant": {
@@ -527,6 +539,7 @@
       } else if (error.status === 401) {
         authenticated = false;
         account = null;
+        publishMemberSession(null);
         renderMember();
       } else {
         setStatus(getCopy().failed);
@@ -609,11 +622,13 @@
       authenticated = Boolean(session.authenticated);
       account = session.account || null;
       if (!authenticated) {
+        publishMemberSession(null);
         initialized = true;
         renderMember();
         return;
       }
 
+      publishMemberSession(account.id);
       renderMember();
       var result = await requestJson(apiPath);
       cloudSave = result.save || null;
@@ -659,6 +674,7 @@
       if (error.status === 401) {
         authenticated = false;
         account = null;
+        publishMemberSession(null);
         renderMember();
       } else {
         setStatus(getCopy().offline);

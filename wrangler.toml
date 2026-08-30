@@ -24,6 +24,8 @@ CREEM_MODE = "production"
 CREEM_CREDIT_PACK_PRODUCT_ID = "prod_3NnsiVBFubZ3DslDdBxPf6"
 CREEM_CREDIT_PACK_CREDITS = "100"
 CREEM_CREDIT_PACK_PRICE_USD = "10"
+# Fail closed until the Cat Life commerce release checklist advances this to allowlist or public.
+CAT_LIFE_COMMERCE_ROLLOUT_MODE = "off"
 
 [assets]
 directory = "./dist"

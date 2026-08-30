@@ -96,6 +96,7 @@ const catLifeCommerceRequestMaxBytes = 4096;
 const catLifeCommerceRateLimitWindowSeconds = 60;
 const catLifeCommerceRedemptionsPerWindow = 10;
 const catLifeCommerceRedemptionAction = 'redeem';
+const catLifeCommerceRolloutModes = new Set(['off', 'allowlist', 'public']);
 const adminPathPattern = /^\/admin(?:-v2)?(?:\/|$)/;
 const defaultAdminEmail = 'brodstem@protonmail.com';
 
@@ -5448,15 +5449,37 @@ const catLifeCommercePublicPurchase = (result) => ({
     : null
 });
 
+const getCatLifeCommerceRollout = (env, session = null) => {
+  const configuredMode = cleanText(env.CAT_LIFE_COMMERCE_ROLLOUT_MODE, 30).toLowerCase();
+  const mode = catLifeCommerceRolloutModes.has(configuredMode) ? configuredMode : 'off';
+  const accountEmail = cleanText(session?.normalized_email || session?.email, 254).toLowerCase();
+  const allowlist = new Set(
+    splitEnvList(env.CAT_LIFE_COMMERCE_ALLOWLIST)
+      .map((email) => email.toLowerCase())
+      .filter(isEmail)
+  );
+  const eligible = mode === 'public' || (mode === 'allowlist' && Boolean(accountEmail) && allowlist.has(accountEmail));
+  return {
+    mode,
+    catalogVisible: eligible,
+    redemptionEnabled: Boolean(session) && eligible
+  };
+};
+
 const handleCatLifeCatalog = async (request, env) => {
   const db = env.WAITLIST_DB;
   if (!db) return catLifeCommerceNotReadyResponse();
   if (!(await ensureCatLifeCommerceReady(db))) return catLifeCommerceNotReadyResponse();
 
   const session = await getReaderFromSession(request, env);
+  const rollout = getCatLifeCommerceRollout(env, session);
   const locale = normalizeContentLocale(new URL(request.url).searchParams.get('locale') || 'zh-Hant');
   const [products, balance] = await Promise.all([
-    listCatLifeProducts(db, { accountId: session?.account_id || 0, locale }),
+    listCatLifeProducts(db, {
+      accountId: session?.account_id || 0,
+      locale,
+      includeActiveCatalog: rollout.catalogVisible
+    }),
     session ? getCatLifePointsBalance(db, session.account_id) : Promise.resolve(0)
   ]);
 
@@ -5464,6 +5487,7 @@ const handleCatLifeCatalog = async (request, env) => {
     ok: true,
     authenticated: Boolean(session),
     locale,
+    rollout,
     ...(session ? { account: catLifeCommerceAccountJson(session), balance } : {}),
     products
   });
@@ -5538,6 +5562,7 @@ const catLifeCommerceErrorResponse = (error) => {
     INSUFFICIENT_POINTS: 409,
     IDEMPOTENCY_CONFLICT: 409,
     REDEMPTION_CONFLICT: 409,
+    COMMERCE_ROLLOUT_CLOSED: 409,
     REDEMPTION_NOT_READY: 503
   };
   const status = statuses[code];
@@ -5590,10 +5615,13 @@ const handleCatLifeRedemption = async (request, env) => {
   }
 
   try {
+    const rollout = getCatLifeCommerceRollout(env, session);
     const result = await redeemCatLifeProduct(db, {
       accountId: session.account_id,
       productId: payload.productId,
       idempotencyKey: payload.idempotencyKey
+    }, {
+      allowNewPurchase: rollout.redemptionEnabled
     });
     return privateJson({
       ok: true,

@@ -76,7 +76,7 @@ const createDatabase = ({ commerce = true } = {}) => {
 };
 
 const { sqlite, db } = createDatabase();
-const env = { WAITLIST_DB: db };
+const env = { WAITLIST_DB: db, CAT_LIFE_COMMERCE_ROLLOUT_MODE: 'public' };
 const origin = 'https://wwwstationcat.org';
 const sessionTokens = ['commerce-session-one', 'commerce-session-two', 'commerce-session-three'];
 const sessionHashes = await Promise.all(sessionTokens.map((token) => hooks.sha256Hex(token)));
@@ -203,6 +203,35 @@ sqlite
   .prepare("UPDATE game_products SET lifecycle_status = 'active' WHERE product_id = 'cat-life.skin.moonlit-tabby'")
   .run();
 
+const closedEnv = { WAITLIST_DB: db };
+result = await call(makeRequest('/api/games/cat-life/catalog?locale=en'), closedEnv);
+assert.equal(result.body.rollout.mode, 'off');
+assert.equal(result.body.rollout.catalogVisible, false);
+assert.deepEqual(result.body.products, [], 'missing rollout configuration must fail closed');
+result = await call(
+  makeRequest('/api/games/cat-life/redemptions', {
+    method: 'POST',
+    token: sessionTokens[1],
+    body: { productId: 'cat-life.skin.moonlit-tabby', idempotencyKey: 'closed-rollout-two' }
+  }),
+  closedEnv
+);
+assert.equal(result.response.status, 409);
+assert.equal(result.body.code, 'COMMERCE_ROLLOUT_CLOSED');
+
+const allowlistEnv = {
+  WAITLIST_DB: db,
+  CAT_LIFE_COMMERCE_ROLLOUT_MODE: 'allowlist',
+  CAT_LIFE_COMMERCE_ALLOWLIST: 'ONE@example.com'
+};
+result = await call(makeRequest('/api/games/cat-life/catalog?locale=en'), allowlistEnv);
+assert.deepEqual(result.body.products, [], 'allowlist mode must not expose products to guests');
+result = await call(makeRequest('/api/games/cat-life/catalog?locale=en', { token: sessionTokens[1] }), allowlistEnv);
+assert.deepEqual(result.body.products, [], 'allowlist mode must not expose products to another account');
+result = await call(makeRequest('/api/games/cat-life/catalog?locale=en', { token: sessionTokens[0] }), allowlistEnv);
+assert.equal(result.body.rollout.redemptionEnabled, true);
+assert.equal(result.body.products.length, 1, 'allowlisted accounts must see active products');
+
 result = await call(makeRequest('/api/games/cat-life/catalog?locale=zh-Hans'));
 assert.equal(result.body.products.length, 1);
 assert.equal(result.body.products[0].productId, 'cat-life.skin.moonlit-tabby');
@@ -249,6 +278,25 @@ assert.equal(result.body.purchase.entitlementKey, 'cat-life.cosmetic.skin.moonli
 assert.equal(result.body.balance, 20);
 assert.equal(result.body.entitlement.active, true);
 const serverPurchaseId = result.body.purchase.id;
+
+result = await call(
+  makeRequest('/api/games/cat-life/redemptions', {
+    method: 'POST',
+    token: sessionTokens[0],
+    body: {
+      productId: 'cat-life.skin.moonlit-tabby',
+      idempotencyKey: 'api-moonlit-one'
+    }
+  }),
+  closedEnv
+);
+assert.equal(result.response.status, 200, 'a closed rollout must still replay a completed purchase safely');
+assert.equal(result.body.replayed, true);
+assert.equal(result.body.purchase.id, serverPurchaseId);
+result = await call(makeRequest('/api/games/cat-life/catalog?locale=en', { token: sessionTokens[0] }), closedEnv);
+assert.equal(result.body.products.length, 1, 'a closed rollout must retain owned active products');
+assert.equal(result.body.products[0].owned, true);
+assert.equal(result.body.products[0].redeemable, false);
 
 result = await call(
   makeRequest('/api/games/cat-life/redemptions', {
