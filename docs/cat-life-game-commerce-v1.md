@@ -4,7 +4,7 @@
 
 This document fixes the product and authorization rules for the first Station Points integration in Cat Life Game. It is a design contract for the database, APIs, Admin workspace, game client, and release tests that follow. It does not enable a public product, create a database table, deduct points, or expose a redemption button by itself.
 
-The machine-readable companion is `src/data/products/cat-life-game-commerce.v1.json`. Its launch products stay `planned` until the database migration, server redemption path, Admin controls, final assets, browser tests, and production rollout have all shipped. A planned product must never appear in a purchasable API response.
+The machine-readable companion is `server/catalog/cat-life-game-commerce.v1.json`. It is Worker seed input, not product-page or game-client data, and must never be bundled into a public response. Its launch products stay `planned` until the database migration, server redemption path, Admin controls, final assets, browser tests, and production rollout have all shipped. A planned product must never appear in a purchasable API response.
 
 ## Trust boundary
 
@@ -34,12 +34,14 @@ Version 1 grants only permanent, account-scoped, non-transferable entitlements. 
 
 ### Product lifecycle
 
-| Status | Public catalog | Redeemable | Meaning |
-| --- | --- | --- | --- |
-| `planned` | No | No | Design or assets are incomplete. |
-| `active` | Yes | Yes | Backend and game release both support the entitlement. |
-| `paused` | Visible only when needed for an existing owner | No | Temporarily unavailable for new purchases. |
-| `retired` | No | No | No new purchases; existing owners keep access. |
+| Status | Guest or new-buyer catalog | Existing owner's account catalog | Redeemable | Meaning |
+| --- | --- | --- | --- | --- |
+| `planned` | No | No | No | Design or assets are incomplete. |
+| `active` | Yes | Yes | Yes | Backend and game release both support the entitlement. |
+| `paused` | No | Yes, marked owned and unavailable | No | Temporarily unavailable for new purchases. |
+| `retired` | No | Yes, marked owned and retired | No | No new purchases; existing owners keep access. |
+
+The unauthenticated catalog and a signed-in catalog for an account that does not own the product return only `active` products. A signed-in owner's response additionally joins that account's `paused` and `retired` entitlements to archival product presentation, with `owned: true`, the lifecycle status, and `redeemable: false`. Pausing or retiring a product never removes its entitlement key from the ownership response or content manifest.
 
 Products are never deleted after a purchase. A retired product remains resolvable for history, recovery, and customer support. Changing a product from `planned` to `active` is a production release decision and requires the security checklist below.
 
@@ -60,19 +62,20 @@ The Station Room Set is one commercial entitlement. Its content manifest may exp
 
 The future redemption endpoint accepts only `productId` and a caller-generated `idempotencyKey`. It must ignore prices, entitlement keys, item quantities, balance values, game gold, lottery state, and other client claims.
 
-For an authenticated account, one D1 transaction must:
+For an authenticated account, the server first looks up `(account_id, idempotency_key)`. A completed request for the same product returns its original purchase, entitlement, ledger, and balance result before checking current ownership. Reusing the key for a different product returns `IDEMPOTENCY_CONFLICT`. This ordering ensures a successful retry never degrades into `ALREADY_OWNED`.
 
-1. load an `active` product from the server catalog;
+For a new key, the server generates the opaque purchase ID before starting the D1 transaction. One transaction must then:
+
+1. claim the account-scoped idempotency key by inserting the purchase ID and an immutable snapshot selected from an `active` server product;
 2. reject an existing permanent entitlement without charging;
-3. claim the account-scoped idempotency key;
-4. verify the current Station Points balance;
-5. append one negative `reader_credit_ledger` entry using the purchase ID as `source_ref`;
-6. update the points balance;
-7. insert the purchase snapshot;
-8. grant the `game_entitlements` row;
-9. append an audit event.
+3. verify the current Station Points balance;
+4. append one negative `reader_credit_ledger` entry using the already-generated purchase ID as `source_ref`;
+5. update the points balance;
+6. mark the purchase completed;
+7. grant the `game_entitlements` row;
+8. append an audit event.
 
-All steps succeed or none do. Repeating the same idempotency key returns the original completed result. Concurrent requests for the same product may create only one purchase, one points deduction, and one active entitlement.
+All steps succeed or none do. The idempotency insert has a database uniqueness constraint. If a concurrent request loses that race, it reads and returns the winning request's original result after the transaction completes. Concurrent requests with different keys for the same product may create only one completed purchase, one points deduction, and one active entitlement; the losing request resolves to `ALREADY_OWNED` without charging.
 
 Recommended public errors are `SIGN_IN_REQUIRED`, `PRODUCT_NOT_AVAILABLE`, `ALREADY_OWNED`, `INSUFFICIENT_POINTS`, `IDEMPOTENCY_CONFLICT`, `REDEMPTION_CONFLICT`, and `REDEMPTION_NOT_READY`. The client must show the server balance and server price returned after the transaction rather than calculate either locally.
 

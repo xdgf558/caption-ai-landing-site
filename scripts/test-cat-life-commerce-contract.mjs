@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path) => readFileSync(join(root, path), 'utf8');
-const catalog = JSON.parse(read('src/data/products/cat-life-game-commerce.v1.json'));
+const catalogPath = 'server/catalog/cat-life-game-commerce.v1.json';
+const catalog = JSON.parse(read(catalogPath));
 const contract = read('docs/cat-life-game-commerce-v1.md');
 const locales = ['en', 'ja', 'zh-Hans', 'zh-Hant'];
 const productIdPattern = /^cat-life\.(?:skin|furniture|bundle|map|story|feature)\.[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -20,6 +21,12 @@ assert.equal(catalog.ownershipScope, 'account');
 assert.equal(catalog.entitlementMode, 'perpetual');
 assert.equal(catalog.transferable, false);
 assert.equal(catalog.launchProducts.length, 2);
+assert.equal(existsSync(join(root, catalogPath)), true);
+assert.equal(
+  existsSync(join(root, 'src/data/products/cat-life-game-commerce.v1.json')),
+  false,
+  'the Worker catalog seed must not live beside client-facing product data'
+);
 
 const productIds = new Set();
 const entitlementKeys = new Set();
@@ -64,11 +71,23 @@ for (const forbidden of [
 
 assert.match(contract, /All steps succeed or none do\./);
 assert.match(contract, /game_entitlements/);
-assert.match(contract, /Repeating the same idempotency key returns the original completed result\./);
+assert.match(contract, /returns its original purchase, entitlement, ledger, and balance result before checking current ownership/);
+assert.match(contract, /generates the opaque purchase ID before starting the D1 transaction/);
+assert.match(contract, /using the already-generated purchase ID as `source_ref`/);
+assert.match(contract, /paused` and `retired` entitlements to archival product presentation/);
 assert.match(contract, /negative or insufficient balance blocks new redemptions/);
 assert.match(contract, /update the in-game version history/);
 assert.match(contract, /both launch products remain `planned`/);
 assert.match(contract, /None of those values can create Station Points, a server entitlement/);
 assert.match(contract, /ignore prices, entitlement keys, item quantities, balance values, game gold, lottery state/);
+
+for (const clientPath of [
+  'src/components/CatLifeGameLanding.astro',
+  'src/data/products/cat-life-game.ts',
+  'public/games/cat-life/cloud-sync.js',
+  'public/games/cat-life/site-integration.js'
+]) {
+  assert.doesNotMatch(read(clientPath), /cat-life-game-commerce\.v1\.json/, `${clientPath} must use APIs, not the seed catalog`);
+}
 
 console.log('Cat Life Game commerce contract tests passed.');
