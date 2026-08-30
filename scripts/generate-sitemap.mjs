@@ -26,6 +26,7 @@ const excludedPrefixes = [
   '/terms/',
   '/admin/',
   '/admin-v2/',
+  '/games/',
   '/devlog/',
   '/en/devlog/',
   '/ja/devlog/',

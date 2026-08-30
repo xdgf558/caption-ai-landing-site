@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#f5eee3" />
+    <title>打工养猫日记</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./src/styles/reset.css" />
+    <link rel="stylesheet" href="./src/styles/layout.css" />
+    <link rel="stylesheet" href="./src/styles/main.css" />
+    <link rel="stylesheet" href="./src/styles/broadsheet.css" />
+    <link rel="stylesheet" href="./site-integration.css" />
+  </head>
+  <body>
+    <header class="station-site-bar">
+      <a class="station-site-brand" href="/" data-station-link="home" aria-label="Station Cat home">
+        <span aria-hidden="true">SC</span>
+        <strong>Station Cat</strong>
+      </a>
+      <nav class="station-site-links" aria-label="Station Cat">
+        <a href="/zh-hant/apps/cat-life-game/" data-station-link="gameInfo">遊戲介紹</a>
+        <a href="/zh-hant/apps/" data-station-link="apps">Apps</a>
+        <a href="/zh-hant/library/" data-station-link="member">會員中心</a>
+      </nav>
+      <label class="station-site-language">
+        <span class="sr-only">Language</span>
+        <select data-station-language aria-label="Language">
+          <option value="zh-Hant">繁中</option>
+          <option value="zh-CN">简中</option>
+          <option value="en">EN</option>
+          <option value="ja">日本語</option>
+        </select>
+      </label>
+    </header>
+    <div class="app-frame broadsheet-shell">
+      <header id="app-header" class="newspaper-header"></header>
+      <div class="layout-body">
+        <nav id="app-navigation" class="desktop-navigation" aria-label="主导航"></nav>
+        <main id="app-main" class="main-content"></main>
+      </div>
+      <nav id="app-mobile-navigation" class="mobile-navigation" aria-label="移动导航"></nav>
+      <div id="app-toast" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+    </div>
+
+    <script src="./site-integration.js"></script>
+    <script src="./src/js/core/namespace.js"></script>
+    <script src="./src/js/core/i18n.js"></script>
+    <script src="./src/js/utils/storage.js"></script>
+    <script src="./src/js/utils/format.js"></script>
+    <script src="./src/js/utils/random.js"></script>
+    <script src="./src/js/utils/bitcoinApi.js"></script>
+    <script src="./src/js/utils/catArt.js"></script>
+
+    <script src="./src/js/data/itemsData.js"></script>
+    <script src="./src/js/data/jobsData.js"></script>
+    <script src="./src/js/data/catsData.js"></script>
+    <script src="./src/js/data/diseasesData.js"></script>
+    <script src="./src/js/data/tasksData.js"></script>
+    <script src="./src/js/data/communityData.js"></script>
+
+    <script src="./src/js/state/gameState.js"></script>
+    <script src="./src/js/state/saveSystem.js"></script>
+
+    <script src="./src/js/systems/timeSystem.js"></script>
+    <script src="./src/js/systems/playerSystem.js"></script>
+    <script src="./src/js/systems/bankSystem.js"></script>
+    <script src="./src/js/systems/workSystem.js"></script>
+    <script src="./src/js/systems/catSystem.js"></script>
+    <script src="./src/js/systems/collectionSystem.js"></script>
+    <script src="./src/js/systems/shopSystem.js"></script>
+    <script src="./src/js/systems/homeSystem.js"></script>
+    <script src="./src/js/systems/communitySystem.js"></script>
+    <script src="./src/js/systems/taskSystem.js"></script>
+    <script src="./src/js/systems/musicSystem.js"></script>
+    <script src="./src/js/systems/arcadeSystem.js"></script>
+    <script src="./src/js/systems/lotterySystem.js"></script>
+    <script src="./src/js/systems/hospitalSystem.js"></script>
+
+    <script src="./src/js/ui/renderHeader.js"></script>
+    <script src="./src/js/ui/renderNavigation.js"></script>
+    <script src="./src/js/ui/renderMorePanel.js"></script>
+    <script src="./src/js/ui/renderHome.js"></script>
+    <script src="./src/js/ui/renderRoomPanel.js"></script>
+    <script src="./src/js/ui/renderCommunityPanel.js"></script>
+    <script src="./src/js/ui/renderWorkPanel.js"></script>
+    <script src="./src/js/ui/renderBankPanel.js"></script>
+    <script src="./src/js/ui/renderCatPanel.js"></script>
+    <script src="./src/js/ui/renderCollectionPanel.js"></script>
+    <script src="./src/js/ui/renderArcadePanel.js"></script>
+    <script src="./src/js/ui/renderHospitalPanel.js"></script>
+    <script src="./src/js/ui/renderShopPanel.js"></script>
+    <script src="./src/js/ui/renderTaskPanel.js"></script>
+    <script src="./src/js/ui/renderVersionPanel.js"></script>
+    <script src="./src/js/ui/renderSavePanel.js"></script>
+    <script src="./src/js/ui/renderSettingsPanel.js"></script>
+
+    <script src="./src/js/main.js"></script>
+  </body>
+</html>

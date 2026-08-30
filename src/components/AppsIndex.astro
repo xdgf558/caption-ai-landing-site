@@ -7,6 +7,7 @@ import { simpleCutProProduct } from '../data/products/simplecut-pro';
 import { privatePinyinProduct } from '../data/products/privatepinyin';
 import { novelForgeAiProduct } from '../data/products/novelforge-ai';
 import { mindBudgetProduct } from '../data/products/mindbudget';
+import { catLifeGameProduct } from '../data/products/cat-life-game';
 
 interface Props {
   lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
@@ -29,7 +30,11 @@ const copy = {
     description: 'Station Cat 正在開發和發布的小工具。',
     kicker: 'Station Cat Apps',
     heading: '小而實用的創作工具。',
-    intro: '這裡會放 Station Cat 正在開發、測試和發布的 App。現在有已上架的生活文案工具 SnapCopy、公開測試中的本機預算工具花有數、本機優先的 AI 小說創作工作台 NovelForge AI、macOS / Windows / iOS 中文輸入法「猫栈拼音」、桌面影片剪輯工具 SimpleCut Pro，以及 Windows / Mac 配置管理工具 NodePilot。',
+    intro: '這裡會放 Station Cat 正在開發、測試和發布的 App 與網頁作品。除了桌面和行動工具，現在也可以直接遊玩《打工養貓日記》。',
+    catLifeKicker: 'Free browser game',
+    catLifeDescription: '在瀏覽器裡安排工作與休息、照顧貓咪、佈置房間，再慢慢探索猫咪鎮。',
+    catLifeCta: '查看遊戲',
+    catLifePlayCta: '立即遊玩',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: '把早餐、咖啡、散步、寵物、旅行和日常照片，變成更適合分享的文案。',
     snapcopyCta: '查看 SnapCopy',
@@ -58,7 +63,11 @@ const copy = {
     description: 'Station Cat 正在开发和发布的小工具。',
     kicker: 'Station Cat Apps',
     heading: '小而实用的创作工具。',
-    intro: '这里会放 Station Cat 正在开发、测试和发布的 App。现在有已上架的生活文案工具 SnapCopy、公开测试中的本地预算工具花有数、本地优先的 AI 小说创作工作台 NovelForge AI、macOS / Windows / iOS 中文输入法「猫栈拼音」、桌面视频剪辑工具 SimpleCut Pro，以及 Windows / Mac 配置管理工具 NodePilot。',
+    intro: '这里会放 Station Cat 正在开发、测试和发布的 App 与网页作品。除了桌面和移动工具，现在也可以直接游玩《打工养猫日记》。',
+    catLifeKicker: 'Free browser game',
+    catLifeDescription: '在浏览器里安排工作与休息、照顾猫咪、布置房间，再慢慢探索猫咪镇。',
+    catLifeCta: '查看游戏',
+    catLifePlayCta: '立即游玩',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: '把早餐、咖啡、散步、宠物、旅行和日常照片，变成更适合分享的文案。',
     snapcopyCta: '查看 SnapCopy',
@@ -87,7 +96,11 @@ const copy = {
     description: 'Small tools built and published by Station Cat.',
     kicker: 'Station Cat Apps',
     heading: 'Small tools for everyday creativity.',
-    intro: 'This is where Station Cat collects apps in development, testing, and public release: SnapCopy for everyday captions, MindBudget for private on-device budgeting, NovelForge AI for author-controlled fiction workflows, Maozhan Pinyin for macOS / Windows / iOS Chinese input, SimpleCut Pro for desktop video edits, and NodePilot for authorized Windows / Mac configuration management.',
+    intro: 'Station Cat collects apps and small web projects in development, testing, and public release. Alongside the desktop and mobile tools, Cat Life Game is now ready to play in the browser.',
+    catLifeKicker: 'Free browser game',
+    catLifeDescription: 'Balance work and rest, care for cats, furnish your room, and gradually explore Cat Town.',
+    catLifeCta: 'View the game',
+    catLifePlayCta: 'Play now',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: 'Turn breakfast, coffee, walks, pets, travel, and daily photos into captions that are easier to share.',
     snapcopyCta: 'View SnapCopy',
@@ -116,7 +129,11 @@ const copy = {
     description: 'Station Cat が作っている小さなツール。',
     kicker: 'Station Cat Apps',
     heading: '日常の創作を少し軽くするツール。',
-    intro: 'Station Cat が開発・テスト・公開しているアプリをまとめています。日常写真向け SnapCopy、端末内で使う予算管理アプリ MindBudget、作者主導の AI 小説ワークベンチ NovelForge AI、macOS / Windows / iOS 中国語入力の猫栈拼音、デスクトップ動画編集の SimpleCut Pro、Windows / Mac 向け設定管理ツール NodePilot があります。',
+    intro: 'Station Cat が開発・テスト・公開しているアプリとウェブ作品をまとめています。デスクトップ・モバイルツールに加えて、Cat Life Game をブラウザですぐ遊べるようになりました。',
+    catLifeKicker: 'Free browser game',
+    catLifeDescription: '仕事と休息を調整し、猫を世話し、部屋を整えながら猫の町を探索します。',
+    catLifeCta: 'ゲームを見る',
+    catLifePlayCta: '今すぐ遊ぶ',
     snapcopyKicker: 'Available on the App Store',
     snapcopyDescription: '朝食、コーヒー、散歩、ペット、旅行、日常写真を、共有しやすいキャプションにします。',
     snapcopyCta: 'SnapCopy を見る',
@@ -154,7 +171,8 @@ const paths = {
     privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.zhHantDownloadPagePath),
     simplecut: simpleCutProProduct.zhHantProductPath,
     simplecutDownload: simpleCutProProduct.zhHantDownloadPagePath,
-    anytls: anyTlsDesktopManagerProduct.zhHantProductPath
+    anytls: anyTlsDesktopManagerProduct.zhHantProductPath,
+    catLife: catLifeGameProduct.zhHantProductPath
   },
   'zh-Hans': {
     canonical: '/zh-hans/apps/',
@@ -167,7 +185,8 @@ const paths = {
     privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.zhHansDownloadPagePath),
     simplecut: simpleCutProProduct.zhHansProductPath,
     simplecutDownload: simpleCutProProduct.zhHansDownloadPagePath,
-    anytls: anyTlsDesktopManagerProduct.zhHansProductPath
+    anytls: anyTlsDesktopManagerProduct.zhHansProductPath,
+    catLife: catLifeGameProduct.zhHansProductPath
   },
   en: {
     canonical: '/en/apps/',
@@ -180,7 +199,8 @@ const paths = {
     privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.downloadPagePath),
     simplecut: simpleCutProProduct.productPath,
     simplecutDownload: simpleCutProProduct.downloadPagePath,
-    anytls: anyTlsDesktopManagerProduct.productPath
+    anytls: anyTlsDesktopManagerProduct.productPath,
+    catLife: catLifeGameProduct.productPath
   },
   ja: {
     canonical: '/ja/apps/',
@@ -193,7 +213,8 @@ const paths = {
     privatePinyinDownload: versionedPrivatePinyinDownload(privatePinyinProduct.jaDownloadPagePath),
     simplecut: simpleCutProProduct.jaProductPath,
     simplecutDownload: simpleCutProProduct.jaDownloadPagePath,
-    anytls: anyTlsDesktopManagerProduct.jaProductPath
+    anytls: anyTlsDesktopManagerProduct.jaProductPath,
+    catLife: catLifeGameProduct.jaProductPath
   }
 }[lang];
 ---
@@ -217,6 +238,18 @@ const paths = {
     <p>{copy.intro}</p>
   </section>
   <section class="page-section product-list">
+    <ProductCard
+      title={lang === 'zh-Hant' ? '打工養貓日記' : lang === 'zh-Hans' ? '打工养猫日记' : lang === 'ja' ? '働いて猫を育てる日記' : 'Cat Life Game'}
+      description={copy.catLifeDescription}
+      href={paths.catLife}
+      image={catLifeGameProduct.assets.icon}
+      imageAlt="Cat Life Game orange cat"
+      imageVariant="icon"
+      cta={copy.catLifeCta}
+      secondaryHref={`${catLifeGameProduct.gamePath}?lang=${encodeURIComponent(lang === 'zh-Hant' ? 'zh-Hant' : lang === 'zh-Hans' ? 'zh-CN' : lang)}`}
+      secondaryCta={copy.catLifePlayCta}
+      kicker={copy.catLifeKicker}
+    />
     <ProductCard
       title="SnapCopy"
       description={copy.snapcopyDescription}

@@ -21,3 +21,9 @@
 
 /apple-touch-icon.png
   Cache-Control: public, max-age=604800
+
+/games/cat-life/
+  Cache-Control: no-cache
+
+/games/cat-life/src/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400

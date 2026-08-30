@@ -1,0 +1,117 @@
+.station-site-bar,
+.station-site-bar * {
+  box-sizing: border-box;
+  letter-spacing: 0;
+}
+
+.station-site-bar .sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.station-site-bar {
+  align-items: center;
+  background: rgba(249, 244, 235, 0.96);
+  border-bottom: 1px solid #d8ccbb;
+  color: #24211d;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  min-height: 62px;
+  padding: 10px clamp(16px, 4vw, 52px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.station-site-brand {
+  align-items: center;
+  color: inherit;
+  display: inline-flex;
+  gap: 10px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.station-site-brand > span {
+  align-items: center;
+  background: #244f43;
+  border-radius: 7px;
+  color: #fffaf1;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.station-site-links {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.station-site-links a {
+  color: #564f45;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 8px 10px;
+  text-decoration: none;
+}
+
+.station-site-links a:hover,
+.station-site-links a:focus-visible {
+  background: #eee4d5;
+  color: #1e473c;
+}
+
+.station-site-language select {
+  background: #fffaf1;
+  border: 1px solid #b9aa95;
+  border-radius: 7px;
+  color: #24211d;
+  min-height: 38px;
+  padding: 7px 28px 7px 10px;
+}
+
+.station-site-bar a:focus-visible,
+.station-site-bar select:focus-visible {
+  outline: 3px solid #e7a449;
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  .station-site-bar {
+    gap: 10px;
+    padding: 9px 12px;
+  }
+
+  .station-site-brand strong,
+  .station-site-links a:nth-child(2),
+  .station-site-links a:nth-child(3) {
+    display: none;
+  }
+
+  .station-site-links {
+    flex: 1;
+  }
+
+  .station-site-links a {
+    border: 1px solid #cfc0ad;
+    font-size: 13px;
+    padding: 7px 9px;
+  }
+
+  .station-site-language select {
+    max-width: 78px;
+  }
+}
