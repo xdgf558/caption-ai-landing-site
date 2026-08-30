@@ -1,14 +1,29 @@
 (function (game) {
+  var activeStorageKey = game.config.storageKey;
+
+  function getStorageKey() {
+    return activeStorageKey;
+  }
+
+  function setStorageKey(storageKey) {
+    var nextKey = String(storageKey || "").trim();
+    activeStorageKey = nextKey || game.config.storageKey;
+    return activeStorageKey;
+  }
+
   function saveGame(saveData) {
     var nextData = saveData || game.state.game;
     nextData.meta.lastSavedAt = new Date().toISOString();
     nextData.meta.lastPlayedDate = game.utils.format.formatDateKey(new Date());
-    game.utils.storage.saveJSON(game.config.storageKey, nextData);
+    game.utils.storage.saveJSON(activeStorageKey, nextData);
+    if (window.CatGameCloud && typeof window.CatGameCloud.onLocalSave === "function") {
+      window.CatGameCloud.onLocalSave(nextData);
+    }
     return nextData;
   }
 
   function loadGame() {
-    var saved = game.utils.storage.loadJSON(game.config.storageKey);
+    var saved = game.utils.storage.loadJSON(activeStorageKey);
     if (!saved) {
       return null;
     }
@@ -65,6 +80,8 @@
   }
 
   game.state.saveSystem = {
+    getStorageKey: getStorageKey,
+    setStorageKey: setStorageKey,
     saveGame: saveGame,
     loadGame: loadGame,
     createAndSaveGame: createAndSaveGame,

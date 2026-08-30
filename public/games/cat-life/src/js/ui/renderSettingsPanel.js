@@ -13,7 +13,7 @@
       "</div>" +
       '<div class="page-card">' +
       '<p class="section-eyebrow">' + t("version_info") + "</p>" +
-      '<p class="page-copy">' + t("storage_key_info") + "</p>" +
+      '<p class="page-copy">' + t("storage_key_info", { key: game.state.saveSystem.getStorageKey() }) + "</p>" +
       '<p class="helper-text" style="margin-top: 8px;">' +
       t("current_version", { version: game.config.version }) +
       "</p>" +

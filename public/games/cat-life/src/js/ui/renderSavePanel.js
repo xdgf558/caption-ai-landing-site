@@ -33,7 +33,7 @@
       format.escapeHtml(lastSavedText) +
       "</p></div>" +
       '<div class="notice-item"><p><strong>' + t("save_storage_key") + "</strong></p><p>" +
-      format.escapeHtml(game.config.storageKey) +
+      format.escapeHtml(game.state.saveSystem.getStorageKey()) +
       "</p></div>" +
       '<div class="notice-item"><p><strong>' + t("auto_save") + "</strong></p><p>" +
       (state.settings.autoSave ? t("enabled_text") : t("disabled_text")) +

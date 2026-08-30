@@ -45,6 +45,9 @@
   function renderLocale(nextLocale) {
     var copy = copyByLocale[nextLocale] || copyByLocale["zh-Hant"];
     siteLocale = nextLocale;
+    if (window.CatGameIntegration) {
+      window.CatGameIntegration.siteLocale = siteLocale;
+    }
     document.documentElement.lang = siteLocale === "zh-CN" ? "zh-Hans" : siteLocale;
     document.querySelectorAll("[data-station-link]").forEach(function (link) {
       var key = link.getAttribute("data-station-link");
@@ -62,6 +65,9 @@
     if (languageNote) {
       languageNote.textContent = copy.languageNote;
       languageNote.hidden = !copy.languageNote;
+    }
+    if (typeof window.dispatchEvent === "function" && typeof window.CustomEvent === "function") {
+      window.dispatchEvent(new window.CustomEvent("catgame:site-locale", { detail: { locale: siteLocale } }));
     }
   }
 
