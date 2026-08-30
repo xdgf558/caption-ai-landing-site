@@ -1168,6 +1168,12 @@ export const revokeCatLifeAdminEntitlement = async (
     gameKey
   );
   if (!existing) throw commerceError('ENTITLEMENT_NOT_FOUND', 'The entitlement was not found.');
+  if (existing.grant_source === 'station-points') {
+    throw commerceError(
+      'PURCHASE_REVERSAL_REQUIRED',
+      'Station Point purchases must be corrected through the purchase reversal workflow.'
+    );
+  }
   if (existing.revoked_at) return { replayed: true, entitlement: adminEntitlementToJson(existing) };
 
   const statements = [

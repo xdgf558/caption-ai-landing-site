@@ -11,7 +11,7 @@ All routes are below `/admin/api/games/cat-life/` and therefore pass through the
 - `POST purchases/reverse` performs the existing atomic corrective reversal. It revokes the purchased entitlement and restores exactly the points stored in the purchase snapshot.
 - `GET entitlements` lists official game entitlements, including revoked records.
 - `POST entitlements/grant` creates an audited manual entitlement for an existing active reader account. It creates no purchase and deducts no points.
-- `POST entitlements/revoke` revokes an entitlement with a reason. It restores no points; a purchased entitlement that requires a refund must use the purchase correction route instead.
+- `POST entitlements/revoke` revokes only manual/admin entitlements with a reason and restores no points. Station Point purchase entitlements are rejected with `PURCHASE_REVERSAL_REQUIRED` and must use the atomic purchase correction route instead.
 
 Product changes, grants, revocations, and purchase corrections also append the existing `admin_audit_logs` records. Manual entitlement grants and revocations have their own `game_entitlement_events` history so their support history does not depend only on the Admin UI.
 

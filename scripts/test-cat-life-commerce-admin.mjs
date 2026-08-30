@@ -230,6 +230,32 @@ result = await call(
 assert.equal(result.body.purchase.ledger.length, 1);
 assert.equal(result.body.purchase.events[0].eventType, 'purchase.completed');
 
+const purchasedEntitlementId = sqlite
+  .prepare('SELECT id FROM game_entitlements WHERE purchase_id = ?')
+  .get(purchase.purchase.id).id;
+result = await call(
+  makeRequest('/admin/api/games/cat-life/entitlements/revoke', {
+    method: 'POST',
+    body: {
+      entitlementId: purchasedEntitlementId,
+      reason: 'This must use the purchase correction workflow.'
+    }
+  }),
+  db
+);
+assert.equal(result.response.status, 409);
+assert.equal(result.body.code, 'PURCHASE_REVERSAL_REQUIRED');
+assert.equal(
+  sqlite.prepare('SELECT revoked_at FROM game_entitlements WHERE id = ?').get(purchasedEntitlementId).revoked_at,
+  null,
+  'a Station Point entitlement must remain active when plain revocation is rejected'
+);
+assert.equal(
+  sqlite.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id = 1').get().balance_credits,
+  38,
+  'a rejected plain revocation must not change the point balance'
+);
+
 const supportBalanceBefore = sqlite
   .prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id = 2')
   .get().balance_credits;
@@ -333,5 +359,6 @@ assert.match(adminPage, /id="game-product-form"/);
 assert.match(adminPage, /id="game-purchase-reverse-form"/);
 assert.match(adminPage, /id="game-entitlement-grant-form"/);
 assert.match(adminPage, /只撤销权益，不返还 Station 积分/);
+assert.match(adminPage, /请从购买记录冲正/);
 
 console.log('Cat Life Game commerce Admin tests passed.');

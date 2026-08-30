@@ -4669,11 +4669,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         `;
         if (entitlement.active) {
           const revoke = document.createElement('button');
-          revoke.className = 'button button-danger';
           revoke.type = 'button';
-          revoke.textContent = '仅撤销权益';
-          revoke.title = '不会返还 Station 积分；购买纠正请在购买详情操作。';
-          revoke.addEventListener('click', () => revokeGameEntitlement(entitlement));
+          if (entitlement.grantSource === 'station-points') {
+            revoke.className = 'button';
+            revoke.textContent = '请从购买记录冲正';
+            revoke.title = '积分购买权益必须通过购买冲正撤销并返还原购买积分。';
+            revoke.disabled = true;
+          } else {
+            revoke.className = 'button button-danger';
+            revoke.textContent = '仅撤销权益';
+            revoke.title = '不会返还 Station 积分。';
+            revoke.addEventListener('click', () => revokeGameEntitlement(entitlement));
+          }
           row.append(revoke);
         }
         elements.gameEntitlementsList.append(row);
