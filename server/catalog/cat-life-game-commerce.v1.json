@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "catalogRevision": 1,
+  "gameKey": "cat-life",
+  "catalogStatus": "planned",
+  "pointsUnit": "Station Points",
+  "ownershipScope": "account",
+  "entitlementMode": "perpetual",
+  "transferable": false,
+  "pricingBands": {
+    "cat_skin": { "minimumPoints": 5, "maximumPoints": 10 },
+    "furniture_item": { "minimumPoints": 5, "maximumPoints": 10 },
+    "furniture_bundle": { "minimumPoints": 20, "maximumPoints": 30 },
+    "map_expansion": { "minimumPoints": 40, "maximumPoints": 80 },
+    "story_expansion": { "minimumPoints": 40, "maximumPoints": 80 }
+  },
+  "launchProducts": [
+    {
+      "productId": "cat-life.skin.moonlit-tabby",
+      "productType": "cat_skin",
+      "pointsPrice": 10,
+      "saleStatus": "planned",
+      "entitlementKey": "cat-life.cosmetic.skin.moonlit-tabby.v1",
+      "names": {
+        "en": "Moonlit Tabby",
+        "ja": "月夜のキジトラ",
+        "zh-Hans": "月夜虎斑皮肤",
+        "zh-Hant": "月夜虎斑皮膚"
+      }
+    },
+    {
+      "productId": "cat-life.bundle.station-room",
+      "productType": "furniture_bundle",
+      "pointsPrice": 25,
+      "saleStatus": "planned",
+      "entitlementKey": "cat-life.content.furniture.station-room.v1",
+      "names": {
+        "en": "Station Room Set",
+        "ja": "ステーション・ルームセット",
+        "zh-Hans": "车站小屋家具套装",
+        "zh-Hant": "車站小屋家具組"
+      }
+    }
+  ],
+  "forbiddenRedemptions": [
+    "game_gold",
+    "energy",
+    "mood",
+    "cat_stats",
+    "lottery_tickets",
+    "lottery_results",
+    "chance_outcomes",
+    "station_points_exchange"
+  ]
+}
