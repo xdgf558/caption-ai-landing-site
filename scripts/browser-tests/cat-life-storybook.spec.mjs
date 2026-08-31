@@ -41,6 +41,11 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   await expect(page.locator('.mobile-navigation')).toBeHidden();
   expect(await page.locator('.cat-stage-art > img').getAttribute('src')).toContain('/assets/poses/');
 
+  for (const selector of ['.statusbar-stats .stat-row', '.cat-stage-mini-stats .stat-row']) {
+    const tops = await page.locator(selector).evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().top));
+    expect(Math.max(...tops) - Math.min(...tops), `${selector} should share one top edge`).toBeLessThan(1);
+  }
+
   const audioBefore = await page.evaluate(() => ({
     bgmEnabled: window.CatGame.state.game.settings.bgmEnabled,
     bgmVolume: window.CatGame.state.game.settings.bgmVolume,
@@ -62,6 +67,26 @@ test('keeps the storybook shell coherent across every desktop game page', async 
     const width = await pageWidthReport(page);
     expect(width.scroll, `${pageName}: ${JSON.stringify(width.offenders)}`).toBe(1280);
   }
+
+  await page.locator('.desktop-navigation [data-page-target="work"]').click();
+  const workIcons = page.locator('.work-card-icon img');
+  await expect(workIcons).toHaveCount(5);
+  const workIconReport = await workIcons.evaluateAll((images) => ({
+    loaded: images.every((image) => image.complete && image.naturalWidth > 0),
+    sources: new Set(images.map((image) => image.getAttribute('src'))).size
+  }));
+  expect(workIconReport).toEqual({ loaded: true, sources: 5 });
+
+  await page.locator('.desktop-navigation [data-page-target="community"]').click();
+  const neighborMarker = page.locator('[data-community-neighbor]').first();
+  const markerBeforeHover = await neighborMarker.boundingBox();
+  await neighborMarker.hover();
+  await page.waitForTimeout(240);
+  const markerAfterHover = await neighborMarker.boundingBox();
+  expect(markerBeforeHover).not.toBeNull();
+  expect(markerAfterHover).not.toBeNull();
+  expect(Math.abs(markerAfterHover.x - markerBeforeHover.x)).toBeLessThan(6);
+  expect(Math.abs(markerAfterHover.y - markerBeforeHover.y)).toBeLessThan(14);
 
   await page.locator('.desktop-navigation [data-page-target="shop"]').click();
   const shopTabs = page.locator('.shop-tabs [role="tab"]');
@@ -91,4 +116,27 @@ test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', a
   await expect(page.locator('.shop-tabs')).toBeVisible();
   const shopWidth = await pageWidthReport(page);
   expect(shopWidth.scroll, JSON.stringify(shopWidth.offenders)).toBe(390);
+
+  await page.locator('[data-page-target="work"]:visible').click();
+  await expect(page.locator('.work-card-icon')).toHaveCount(5);
+  const workWidth = await pageWidthReport(page);
+  expect(workWidth.scroll, JSON.stringify(workWidth.offenders)).toBe(390);
+});
+
+test('aligns the website account action with the language control', async ({ page }) => {
+  await page.goto('/games/cat-life/?lang=zh-Hant');
+
+  const accountAction = page.locator('.station-site-member__action:visible').first();
+  const languageSelect = page.locator('[data-station-language]');
+  const languageNote = page.locator('[data-station-language-note]');
+  await expect(accountAction).toBeVisible();
+  await expect(languageSelect).toBeVisible();
+  await expect(languageNote).toBeVisible();
+
+  const accountBox = await accountAction.boundingBox();
+  const languageBox = await languageSelect.boundingBox();
+  expect(accountBox).not.toBeNull();
+  expect(languageBox).not.toBeNull();
+  expect(Math.abs(accountBox.height - languageBox.height)).toBeLessThan(1);
+  expect(Math.abs(accountBox.y - languageBox.y)).toBeLessThan(1);
 });

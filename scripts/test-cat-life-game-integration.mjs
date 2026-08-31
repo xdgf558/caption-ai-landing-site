@@ -30,6 +30,12 @@ for (const path of [
   `${gameRoot}/src/styles/broadsheet.css`,
   `${gameRoot}/src/assets/cats/orange-tabby.png`,
   `${gameRoot}/src/assets/community/npc-cat-sprites.png`,
+  `${gameRoot}/src/assets/jobs/job-flyer.svg`,
+  `${gameRoot}/src/assets/jobs/job-store.svg`,
+  `${gameRoot}/src/assets/jobs/job-petshop.svg`,
+  `${gameRoot}/src/assets/jobs/job-it-engineer.svg`,
+  `${gameRoot}/src/assets/jobs/job-cat-cafe.svg`,
+  `${gameRoot}/src/assets/jobs/LICENSE-phosphor.txt`,
   `${gameRoot}/src/assets/premium/moonlit-tabby.png`,
   `${gameRoot}/src/assets/premium/station-room-set.jpg`,
   `${gameRoot}/src/assets/premium/station-bench.png`,
@@ -138,8 +144,8 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.20\.0"/);
-assert.match(namespace, /warm hand-drawn storybook interface/);
+assert.match(namespace, /version: "1\.20\.1"/);
+assert.match(namespace, /neighbor homes in Cat Town jumping out of position/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
@@ -147,7 +153,7 @@ assert.match(landing, /five latest cloud versions remain available for recovery/
 assert.match(landing, /最近 5 份雲端記錄恢復/);
 assert.match(landing, /只有後台正式上架的商品才會顯示價格並允許兌換/);
 assert.match(landing, /Prices and redemption appear only after a product is formally activated in Admin/);
-assert.match(product, /latestVersion: '1\.20\.0'/);
+assert.match(product, /latestVersion: '1\.20\.1'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);
@@ -169,6 +175,7 @@ assert.match(gameIndex, /renderMemberStorePanel\.js/);
 assert.doesNotMatch(shopPanel, /CatGameCommerce|notice-list/);
 assert.match(shopPanel, /inline-row shop-actions/);
 assert.doesNotMatch(workPanel, /t\("stamina"\)|t\("player_hunger"\)|t\("mood"\)/);
+assert.match(workPanel, /trustedJob\.iconPath/);
 assert.match(memberStorePanel, /CatGameCommerce\.renderShopSection\(\)/);
 assert.match(gameNavigation, /"member_store"/);
 assert.match(gameMain, /member_store: game\.ui\.renderMemberStorePanel/);

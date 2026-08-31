@@ -358,6 +358,8 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
 .cat-stage-name { justify-content: center; margin-top: -4px; }
 .cat-stage-mini-stats { display: grid; gap: 6px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 10px; }
 .cat-stage-mini-stats .stat-row { border-width: 1.5px; box-shadow: none; padding: 7px 8px; }
+.statusbar-stats .stat-row + .stat-row,
+.cat-stage-mini-stats .stat-row + .stat-row { margin-top: 0; }
 .cat-stage-mini-stats .stat-row-heading { margin-bottom: 5px; }
 .cat-stage-mini-stats .stat-label, .cat-stage-mini-stats .stat-row-heading strong { font-size: 9px; }
 .cat-stage-mini-stats .bar-track { height: 7px; }
@@ -394,6 +396,29 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
 .work-card:nth-child(3n + 1) { background: #fff8e7; }
 .work-card:nth-child(3n + 2) { background: #edf5e6; }
 .work-card:nth-child(3n + 3) { background: #eaf3f8; }
+.work-card-heading {
+  align-items: start;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+}
+.work-card-title { min-width: 0; }
+.work-card-icon {
+  align-items: center;
+  background: var(--job-icon-color, var(--story-blue));
+  border: 2px solid var(--story-ink);
+  border-radius: 13px 16px 12px 14px;
+  box-shadow: var(--story-shadow-small);
+  display: inline-flex;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+.work-card-icon img { filter: brightness(0) invert(1); height: 27px; width: 27px; }
+.work-card[data-job-card="job_flyer"] { --job-icon-color: var(--story-blue); }
+.work-card[data-job-card="job_store"] { --job-icon-color: #b5824e; }
+.work-card[data-job-card="job_petshop"] { --job-icon-color: var(--story-orange); }
+.work-card[data-job-card="job_it_engineer"] { --job-icon-color: #8a7fbf; }
+.work-card[data-job-card="job_cat_cafe_manager"] { --job-icon-color: var(--story-green); }
 .task-card:nth-child(3n + 1) { background: #fff8e7; }
 .task-card:nth-child(3n + 2) { background: #edf5e6; }
 .task-card:nth-child(3n + 3) { background: #eaf3f8; }
@@ -441,7 +466,7 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
 .community-town-map { background: #dcebd1; border: 2.5px solid var(--story-ink); border-radius: 24px 17px 22px 16px; box-shadow: var(--story-shadow-small); }
 .community-card, .community-town-card { background: var(--story-paper); }
 .community-map-marker { background: var(--story-paper); border: 2px solid var(--story-ink); border-radius: 999px; box-shadow: var(--story-shadow-small); min-height: 40px; min-width: 44px; }
-.community-map-marker:hover { background: var(--story-orange); color: var(--story-paper); transform: translateY(-2px); }
+.community-map-marker:hover { background: var(--story-orange); color: var(--story-paper); }
 .community-cat-sprite { mix-blend-mode: multiply; }
 .arcade-hero-card { background: #fff9df; overflow: hidden; position: relative; }
 .arcade-hero-card::after { background: var(--story-yellow); border: 2px solid var(--story-ink); border-radius: 50%; content: "★"; font-size: 24px; height: 52px; line-height: 48px; position: absolute; right: 18px; text-align: center; top: 18px; transform: rotate(8deg); width: 52px; }

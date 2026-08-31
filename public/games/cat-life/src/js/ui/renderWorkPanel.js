@@ -4,6 +4,7 @@
   var getText = game.utils.i18n.getDataText;
 
   function renderJobCard(job, player) {
+    var trustedJob = game.data.jobMap[job.id] || {};
     var hasActiveWork = Boolean(player.activeWork);
     var activeSleep = game.systems.playerSystem.hasActiveSleep();
     var projected = game.systems.workSystem.getProjectedWorkState(job, player.mood);
@@ -22,9 +23,12 @@
           : t("start_work");
 
     return (
-      '<article class="work-card">' +
-      '<div class="work-row">' +
-      '<div><p class="section-eyebrow">' + t("work_opportunity") + '</p><h3 class="panel-title">' +
+      '<article class="work-card" data-job-card="' + format.escapeHtml(job.id) + '">' +
+      '<div class="work-row work-card-heading">' +
+      '<span class="work-card-icon" aria-hidden="true"><img src="' +
+      format.escapeHtml(trustedJob.iconPath || "./src/assets/jobs/job-flyer.svg") +
+      '" alt="" width="28" height="28" loading="lazy" decoding="async"></span>' +
+      '<div class="work-card-title"><p class="section-eyebrow">' + t("work_opportunity") + '</p><h3 class="panel-title">' +
       format.escapeHtml(getText(job, "name")) +
       "</h3></div>" +
       '<span class="status-pill ' +

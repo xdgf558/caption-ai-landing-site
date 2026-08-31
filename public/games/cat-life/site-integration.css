@@ -365,6 +365,7 @@
 /* Storybook shell integration. Keep the account and cloud-save controls visually
    consistent with the game while preserving the website-owned behavior. */
 .station-site-bar {
+  --station-site-control-height: 40px;
   background: rgba(255, 252, 246, 0.96);
   border-bottom: 2px solid #4a3b2a;
   color: #4a3b2a;
@@ -407,11 +408,45 @@
   color: #4a3b2a;
 }
 
+.station-site-member__action,
+.station-site-language select {
+  box-sizing: border-box;
+  font-size: 12px;
+  height: var(--station-site-control-height);
+  line-height: 1;
+  min-height: var(--station-site-control-height);
+}
+
+.station-site-language {
+  position: relative;
+}
+
+.station-site-language__note {
+  max-width: 170px;
+  position: absolute;
+  right: 0;
+  top: calc(var(--station-site-control-height) + 3px);
+  width: max-content;
+}
+
+.station-site-bar:has(.station-site-language__note:not([hidden])) {
+  padding-bottom: 20px;
+}
+
 .station-site-language select {
   background: #fffcf6;
   border: 2px solid #4a3b2a;
   border-radius: 13px 16px 12px 15px;
   color: #4a3b2a;
+}
+
+@media (pointer: coarse) {
+  .station-site-bar { --station-site-control-height: 44px; }
+}
+
+@media (max-width: 760px) {
+  .station-site-language__note { max-width: 86px; }
+  .station-site-bar:has(.station-site-language__note:not([hidden])) { padding-bottom: 30px; }
 }
 
 .cat-cloud-dialog {
