@@ -59,7 +59,7 @@
       (item.type === "playerConsumable"
         ? '<p class="helper-text" style="margin-top: 8px;">' + t("owned_count", { count: count }) + "</p>"
         : "") +
-      '<div class="inline-row" style="margin-top: 16px;">' +
+      '<div class="inline-row shop-actions" style="margin-top: 16px;">' +
       '<span class="status-pill ' +
       (gold >= priceState.price ? "is-success" : "is-warning") +
       '">' +

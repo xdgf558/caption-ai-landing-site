@@ -126,9 +126,7 @@
     var activeWork = state.player.activeWork;
     var activeJob = activeWork ? game.data.jobMap[activeWork.jobId] || activeWork : null;
     var staminaCountdown = game.systems.timeSystem.getStaminaRecoveryCountdown();
-    var moodStatus = game.systems.playerSystem.getMoodStatus(state.player.mood);
     var activeSleep = game.systems.playerSystem.getActiveSleep();
-    var hungerCountdown = game.systems.playerSystem.getHungerCountdown();
     var currentHunger = game.systems.playerSystem.getCurrentHunger();
 
     return (
@@ -163,21 +161,6 @@
           "</span></p>"
         : '<p class="page-copy">' + t("work_panel_copy") + "</p>") +
       '<div class="notice-list" style="margin-top: 16px;">' +
-      '<div class="notice-item"><p><strong>' + t("stamina") + "</strong></p><p>" +
-      state.player.stamina +
-      " / 100</p></div>" +
-      '<div class="notice-item"><p><strong>' + t("player_hunger") + "</strong></p><p>" +
-      currentHunger +
-      " / 100" +
-      (hungerCountdown === null
-        ? ""
-        : " · " + t("player_hunger_next_rise") + ' <span data-player-hunger-countdown>' +
-          format.formatDuration(hungerCountdown) +
-          "</span>") +
-      "</p></div>" +
-      '<div class="notice-item"><p><strong>' + t("mood") + "</strong></p><p>" +
-      state.player.mood +
-      " / 100 · " + t(moodStatus.key) + "</p></div>" +
       '<div class="notice-item"><p><strong>' + t("stamina_recovery_rule") + "</strong></p><p>" +
       (staminaCountdown === null
         ? t("stamina_full")
