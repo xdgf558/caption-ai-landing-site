@@ -22,6 +22,9 @@ for (const path of [
   `${gameRoot}/src/js/state/saveMigrations.js`,
   `${gameRoot}/src/js/core/namespace.js`,
   `${gameRoot}/src/js/core/i18n.js`,
+  `${gameRoot}/src/js/ui/renderHeader.js`,
+  `${gameRoot}/src/js/ui/renderMemberStorePanel.js`,
+  `${gameRoot}/src/styles/broadsheet.css`,
   `${gameRoot}/src/assets/cats/orange-tabby.png`,
   `${gameRoot}/src/assets/community/npc-cat-sprites.png`,
   `${gameRoot}/src/assets/premium/moonlit-tabby.png`,
@@ -51,8 +54,13 @@ const saveMigrations = read(`${gameRoot}/src/js/state/saveMigrations.js`);
 const saveSystem = read(`${gameRoot}/src/js/state/saveSystem.js`);
 const namespace = read(`${gameRoot}/src/js/core/namespace.js`);
 const i18n = read(`${gameRoot}/src/js/core/i18n.js`);
+const headerPanel = read(`${gameRoot}/src/js/ui/renderHeader.js`);
 const savePanel = read(`${gameRoot}/src/js/ui/renderSavePanel.js`);
 const settingsPanel = read(`${gameRoot}/src/js/ui/renderSettingsPanel.js`);
+const shopPanel = read(`${gameRoot}/src/js/ui/renderShopPanel.js`);
+const memberStorePanel = read(`${gameRoot}/src/js/ui/renderMemberStorePanel.js`);
+const gameNavigation = read(`${gameRoot}/src/js/ui/renderNavigation.js`);
+const broadsheetStyles = read(`${gameRoot}/src/styles/broadsheet.css`);
 const landing = read('src/components/CatLifeGameLanding.astro');
 const product = read('src/data/products/cat-life-game.ts');
 const apps = read('src/components/AppsIndex.astro');
@@ -124,8 +132,8 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.19\.1"/);
-assert.match(namespace, /off, allowlist, and public rollout stages/);
+assert.match(namespace, /version: "1\.19\.2"/);
+assert.match(namespace, /Member Store is now a separate page/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
@@ -133,7 +141,7 @@ assert.match(landing, /five latest cloud versions remain available for recovery/
 assert.match(landing, /最近 5 份雲端記錄恢復/);
 assert.match(landing, /只有後台正式上架的商品才會顯示價格並允許兌換/);
 assert.match(landing, /Prices and redemption appear only after a product is formally activated in Admin/);
-assert.match(product, /latestVersion: '1\.19\.1'/);
+assert.match(product, /latestVersion: '1\.19\.2'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);
@@ -151,6 +159,17 @@ assert.match(headers, /script-src 'self'/);
 assert.match(headers, /X-Robots-Tag: noindex, nofollow/);
 assert.match(gameIndex, /data-cat-recovery-action/);
 assert.match(gameIndex, /data-cat-recovery-dialog/);
+assert.match(gameIndex, /renderMemberStorePanel\.js/);
+assert.doesNotMatch(shopPanel, /CatGameCommerce|notice-list/);
+assert.match(memberStorePanel, /CatGameCommerce\.renderShopSection\(\)/);
+assert.match(gameNavigation, /"member_store"/);
+assert.match(gameMain, /member_store: game\.ui\.renderMemberStorePanel/);
+assert.match(i18n, /nav_member_store: "Member Store"/);
+assert.match(headerPanel, /role="progressbar"/);
+assert.match(headerPanel, /aria-valuenow/);
+assert.match(broadsheetStyles, /\.bar-track\.is-battery/);
+assert.match(broadsheetStyles, /grid-template-columns: repeat\(auto-fit, minmax\(205px, 1fr\)\)/);
+assert.match(broadsheetStyles, /grid-template-columns: 92px minmax\(0, 1fr\)/);
 assert.equal(shouldIncludeSitemapRoute('/games/cat-life/'), false);
 for (const route of [
   '/en/apps/cat-life-game/',

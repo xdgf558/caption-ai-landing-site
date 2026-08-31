@@ -3,7 +3,7 @@
   var t = game.utils.i18n.t;
 
   var groups = [
-    { label: "nav_group_life", pages: ["home", "work", "bank", "shop"] },
+    { label: "nav_group_life", pages: ["home", "work", "bank", "shop", "member_store"] },
     { label: "nav_group_cats", pages: ["cats", "hospital", "collection"] },
     { label: "nav_group_town", pages: ["community", "arcade", "tasks"] },
     { label: "nav_group_system", pages: ["version", "save", "settings"] },

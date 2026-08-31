@@ -83,10 +83,6 @@
   }
 
   function renderShopPanel(state) {
-    var stationCommerce = window.CatGameCommerce && typeof window.CatGameCommerce.renderShopSection === "function"
-      ? window.CatGameCommerce.renderShopSection()
-      : "";
-    var currentHunger = game.systems.playerSystem.getCurrentHunger();
     var now = game.systems.timeSystem.getNow();
     var discountActive = game.systems.shopSystem.isDiscountWindow(now);
     var activeOffers = game.systems.shopSystem.getActiveOffers(now);
@@ -114,26 +110,8 @@
       '<p class="section-eyebrow">' + t("shopping_info") + "</p>" +
       '<p class="page-copy">' + t("shopping_copy") + "</p>" +
       '<p class="helper-text" style="margin-top: 8px;">' + t("shop_discount_window_copy", { start: "20:00", end: "22:00" }) + "</p>" +
-      '<div class="notice-list" style="margin-top: 16px;">' +
-      '<div class="notice-item"><p><strong>' + t("current_gold") + "</strong></p><p>" +
-      state.player.gold +
-      " " + t("gold_unit") + "</p></div>" +
-      '<div class="notice-item"><p><strong>' + t("stamina") + "</strong></p><p>" +
-      state.player.stamina +
-      ' / 100</p></div>' +
-      '<div class="notice-item"><p><strong>' + t("player_hunger") + "</strong></p><p>" +
-      currentHunger +
-      ' / 100</p></div>' +
-      '<div class="notice-item"><p><strong>' + t("mood") + "</strong></p><p>" +
-      state.player.mood +
-      ' / 100</p></div>' +
-      '<div class="notice-item"><p><strong>' + t("shop_discount_title") + "</strong></p><p>" +
-      (discountActive ? t("shop_discount_live") : t("shop_discount_waiting")) +
-      "</p></div>" +
-      "</div>" +
       "</div>" +
       "</section>" +
-      stationCommerce +
       '<section class="page-card">' +
       '<div class="inline-row"><div><p class="section-eyebrow">' + t("shop_discount_title") + '</p><h3 class="panel-title">' + t("shop_discount_panel_title") + "</h3></div></div>" +
       '<p class="page-copy" style="margin-top: 8px;">' +

@@ -2,25 +2,28 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.19.1",
+      version: "1.19.2",
       saveSchemaVersion: 2,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
-          "会员商城新增关闭、白名单与公开三阶段上线门禁，未开放时不会接受新的积分兑换。",
-          "离线权益按会员账号隔离；切换账号后不会沿用上一个账号的皮肤或家具权限。",
-          "退款或后台冲正撤销权益后，已装备的付费皮肤和房间主题会在下次同步时立即收回。",
+          "会员商店已从普通金币商店拆分成独立页面，Station 积分商品不再混在日常补给里。",
+          "普通商店删除了重复的金币、体力、饥饿和心情摘要，顶部状态栏继续作为唯一状态入口。",
+          "桌面导航和移动端“更多”都新增会员商店入口，支付与官方权益规则保持不变。",
+          "全游戏改用更紧凑的卡片、字号与间距；顶部体力、心情和饥饿改为醒目的电量进度条。",
         ],
         en: [
-          "The member store now has off, allowlist, and public rollout stages; new Point redemptions stay closed until enabled.",
-          "Offline entitlements are isolated by member account, so switching accounts never carries over another account's skins or furniture.",
-          "When a refund or Admin correction revokes ownership, equipped premium skins and room themes are removed on the next sync.",
+          "The Member Store is now a separate page, keeping Station Points products out of the regular gold shop.",
+          "The regular shop no longer repeats gold, stamina, hunger, or mood summaries; the masthead remains the single status source.",
+          "Desktop navigation and mobile More now include the Member Store, with payment and entitlement rules unchanged.",
+          "The game now uses denser cards, type, and spacing, while stamina, mood, and hunger use prominent battery-style meters.",
         ],
         ja: [
-          "会員ストアに停止・許可リスト・一般公開の段階リリースを追加し、公開前の新規交換を受け付けないようにしました。",
-          "オフライン権利を会員アカウントごとに分離し、アカウント切替時に別ユーザーのスキンや家具を引き継ぎません。",
-          "返金または管理者の訂正で権利が取り消された場合、次回同期時に装備中の有料スキンと部屋テーマを解除します。",
+          "会員ストアを通常のゴールドショップから分離し、Station Points 商品を独立ページに移しました。",
+          "通常ショップから重複していたゴールド・体力・空腹・気分の概要を削除し、上部ステータスを唯一の表示元にしました。",
+          "デスクトップナビとモバイルの「その他」に会員ストアを追加し、決済と公式権利のルールは維持しています。",
+          "全体のカード・文字・余白をコンパクトにし、上部の体力・気分・空腹を見やすいバッテリー型メーターに変更しました。",
         ],
       },
       readoptCost: 80,
