@@ -11,7 +11,7 @@ const [wrangler, catalogSource, releaseDoc, apiTest, browserTest] = await Promis
 ]);
 
 const catalog = JSON.parse(catalogSource);
-assert.match(wrangler, /CAT_LIFE_COMMERCE_ROLLOUT_MODE\s*=\s*"off"/);
+assert.match(wrangler, /CAT_LIFE_COMMERCE_ROLLOUT_MODE\s*=\s*"allowlist"/);
 assert.doesNotMatch(wrangler, /CAT_LIFE_COMMERCE_ALLOWLIST\s*=/, 'member email allowlist must not be committed');
 assert.equal(catalog.catalogStatus, 'planned');
 assert.equal(catalog.launchProducts.every((product) => product.saleStatus === 'planned'), true);
