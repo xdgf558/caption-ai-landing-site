@@ -638,6 +638,21 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
 }
 
 .shop-card .panel-title { font-size: 18px; }
+.shop-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.shop-card > .shop-actions {
+  align-items: stretch;
+  margin-top: auto !important;
+  padding-top: 12px;
+}
+.shop-actions > .status-pill {
+  align-items: center;
+  min-height: 38px;
+}
+.shop-actions > .store-button { margin-left: auto; }
 .main-content .page-card + .page-card { margin-top: 12px; }
 .page-card .page-card + .page-card { margin-top: 10px; }
 
@@ -945,6 +960,7 @@ select {
   .shop-card > .page-copy,
   .shop-card > .shop-meta { font-size: 13px; }
   .shop-card > .inline-row { margin-top: 10px !important; }
+  .shop-card > .shop-actions { padding-top: 0; }
   .lottery-digit-row { grid-template-columns: repeat(6, 1fr); }
   .lottery-digit-select { min-width: 0; padding: 4px; }
   .station-commerce-actions { align-items: stretch; flex-direction: column; }

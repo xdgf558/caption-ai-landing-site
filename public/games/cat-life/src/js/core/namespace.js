@@ -2,28 +2,25 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.19.2",
+      version: "1.19.3",
       saveSchemaVersion: 2,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
-          "会员商店已从普通金币商店拆分成独立页面，Station 积分商品不再混在日常补给里。",
-          "普通商店删除了重复的金币、体力、饥饿和心情摘要，顶部状态栏继续作为唯一状态入口。",
-          "桌面导航和移动端“更多”都新增会员商店入口，支付与官方权益规则保持不变。",
-          "全游戏改用更紧凑的卡片、字号与间距；顶部体力、心情和饥饿改为醒目的电量进度条。",
+          "普通商店的卡片操作区现在统一贴齐底部，购买、使用与状态按钮排列更整齐。",
+          "打工页面删除了重复的体力、饥饿和心情摘要，顶部电量条继续作为唯一实时状态入口。",
+          "体力恢复规则和当前等级仍保留在打工提醒中，不影响工作条件、收益或进行中的任务。",
         ],
         en: [
-          "The Member Store is now a separate page, keeping Station Points products out of the regular gold shop.",
-          "The regular shop no longer repeats gold, stamina, hunger, or mood summaries; the masthead remains the single status source.",
-          "Desktop navigation and mobile More now include the Member Store, with payment and entitlement rules unchanged.",
-          "The game now uses denser cards, type, and spacing, while stamina, mood, and hunger use prominent battery-style meters.",
+          "Regular shop card actions now align along the bottom, keeping purchase, use, and status controls level.",
+          "The work page no longer repeats stamina, hunger, or mood summaries; the masthead meters remain the single live status source.",
+          "Stamina recovery guidance and the current level remain in the work hint without changing work conditions, rewards, or active jobs.",
         ],
         ja: [
-          "会員ストアを通常のゴールドショップから分離し、Station Points 商品を独立ページに移しました。",
-          "通常ショップから重複していたゴールド・体力・空腹・気分の概要を削除し、上部ステータスを唯一の表示元にしました。",
-          "デスクトップナビとモバイルの「その他」に会員ストアを追加し、決済と公式権利のルールは維持しています。",
-          "全体のカード・文字・余白をコンパクトにし、上部の体力・気分・空腹を見やすいバッテリー型メーターに変更しました。",
+          "通常ショップのカード操作欄を下端にそろえ、購入・使用・状態ボタンを整列しました。",
+          "仕事ページから重複していた体力・空腹・気分の概要を削除し、上部メーターを唯一のリアルタイム表示にしました。",
+          "体力回復ルールと現在レベルは仕事の案内に残し、条件・報酬・進行中の仕事には変更ありません。",
         ],
       },
       readoptCost: 80,

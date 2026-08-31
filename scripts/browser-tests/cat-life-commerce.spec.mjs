@@ -186,10 +186,31 @@ test('keeps the normal shop and member store as separate pages', async ({ page }
     return getComputedStyle(node).gridTemplateColumns.split(' ').length;
   })).toBeGreaterThanOrEqual(4);
   expect(await page.locator('#app-main .shop-art').first().evaluate((node) => node.getBoundingClientRect().height)).toBeLessThanOrEqual(170);
+  const shopAlignment = await page.locator('#app-main .page-card', { hasText: 'Daily Care Supplies' }).locator('.shop-grid').evaluate((node) => {
+    const cards = Array.from(node.children);
+    const firstTop = cards[0].getBoundingClientRect().top;
+    const firstRow = cards.filter((card) => Math.abs(card.getBoundingClientRect().top - firstTop) < 1);
+    return {
+      actionBottoms: firstRow.map((card) => card.querySelector('.shop-actions').getBoundingClientRect().bottom),
+      buttonHeights: firstRow.flatMap((card) => Array.from(card.querySelectorAll('.shop-actions button')).map((button) => button.getBoundingClientRect().height))
+    };
+  });
+  expect(Math.max(...shopAlignment.actionBottoms) - Math.min(...shopAlignment.actionBottoms)).toBeLessThanOrEqual(1);
+  expect(Math.max(...shopAlignment.buttonHeights) - Math.min(...shopAlignment.buttonHeights)).toBeLessThanOrEqual(1);
 
   await page.locator('[data-page-target="member_store"]').first().click();
   await expect(page.locator('#app-main [data-cat-commerce-section]')).toContainText('Moonlit Tabby');
   await expect(page.locator('#app-main')).not.toContainText('Daily Care Supplies');
+});
+
+test('keeps live player condition only in the masthead on the work page', async ({ page }) => {
+  await mockCloudGuest(page);
+  await page.goto('/games/cat-life/?lang=en');
+  await page.locator('[data-page-target="work"]').first().click();
+  const workSummary = page.locator('#app-main > .page-header .page-card').nth(1).locator('.notice-item');
+  await expect(workSummary).toHaveCount(2);
+  await expect(workSummary.locator('strong')).toHaveText(['Stamina Recovery', 'Current Level']);
+  await expect(page.locator('.statusbar-stats [role="progressbar"]')).toHaveCount(3);
 });
 
 test('keeps compact mouse controls while restoring 44px touch targets', async ({ browser }) => {
