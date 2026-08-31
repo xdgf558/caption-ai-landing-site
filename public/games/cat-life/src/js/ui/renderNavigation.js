@@ -17,6 +17,11 @@
     community: "▦",
     more: "•••",
   };
+  var desktopMarks = {
+    home: "⌂", work: "▣", bank: "◇", shop: "▤", member_store: "★",
+    cats: "猫", hospital: "+", collection: "▥", community: "⌖", arcade: "◎",
+    tasks: "✓", version: "i", save: "▧", settings: "⚙",
+  };
 
   function getCounts(state) {
     var needy = state.cats.filter(function (cat) {
@@ -55,7 +60,8 @@
         '<section class="nav-group"><p class="nav-group-title">' + t(group.label) + "</p>" +
         group.pages.map(function (page) {
           return (
-            '<button class="nav-button" data-page-target="' + page + '"><span>' + t("nav_" + page) + "</span>" +
+            '<button class="nav-button" data-page-target="' + page + '"><span class="nav-mark" aria-hidden="true">' +
+            desktopMarks[page] + '</span><span class="nav-label">' + t("nav_" + page) + "</span>" +
             renderBadge(page, state, counts) + "</button>"
           );
         }).join("") +

@@ -90,7 +90,7 @@
       : '<div class="notice-item"><p><strong>' + t("pregnancy_status") + "</strong></p><p>" + t("pregnancy_none") + "</p></div>";
 
     return (
-      '<section class="page-header">' +
+      '<section class="page-header hospital-page-header">' +
       '<div class="page-card">' +
       '<p class="section-eyebrow">' + t("page_hospital") + "</p>" +
       '<h2 class="page-title">' + t("hospital_panel_title") + "</h2>" +
@@ -101,7 +101,7 @@
       '<p class="page-copy">' +
       (sickCats.length ? t("hospital_alert_copy", { count: sickCats.length }) : t("hospital_empty_copy")) +
       "</p></div></section>" +
-      '<section class="home-grid">' +
+      '<section class="home-grid hospital-grid">' +
       '<div class="page-card">' +
       '<div class="inline-row"><div><p class="section-eyebrow">' + t("hospital_alert") + '</p><h3 class="panel-title">' +
       t("treat_now") +
@@ -126,7 +126,7 @@
       '<p class="helper-text" style="margin-top: 10px;">' + t("breed_hint") + "</p>" +
       '<div class="notice-list" style="margin-top: 14px;">' + pregnantMarkup + "</div>" +
       "</div></div></section>" +
-      '<section class="home-grid" style="margin-top: 18px;">' +
+      '<section class="home-grid hospital-grid hospital-grid-secondary" style="margin-top: 18px;">' +
       '<div class="page-card">' +
       '<p class="section-eyebrow">' + t("healthy_cats") + '</p><h3 class="panel-title">' + t("healthy_cats") + "</h3>" +
       '<div class="notice-list" style="margin-top: 16px;">' +

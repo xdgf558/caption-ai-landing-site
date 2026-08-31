@@ -98,98 +98,72 @@
     var furniture = game.data.items.filter(function (item) {
       return item.type === "furniture";
     });
+    var category = ["cat", "player", "furniture", "sale"].indexOf(game.state.shopCategory) !== -1
+      ? game.state.shopCategory
+      : "cat";
+    var categoryItems = category === "cat"
+      ? catItems
+      : category === "player"
+        ? playerFoods.concat(playerDrinks)
+        : category === "furniture"
+          ? furniture
+          : [];
+    var categoryTitle = category === "cat"
+      ? t("daily_supplies")
+      : category === "player"
+        ? t("player_supplies_title")
+        : category === "furniture"
+          ? t("warm_home")
+          : t("shop_discount_panel_title");
+    var categoryEyebrow = category === "cat"
+      ? t("consumables")
+      : category === "player"
+        ? t("player_foods_title") + " / " + t("player_drinks_title")
+        : category === "furniture"
+          ? t("furniture")
+          : t("shop_discount_title");
+    var cards = category === "sale"
+      ? activeOffers.map(function (entry) {
+          return renderShopCard(
+            entry.item,
+            state.player.gold,
+            entry.item.type === "furniture" && state.inventory.furnitureOwned.indexOf(entry.item.id) !== -1,
+            entry.priceState
+          );
+        }).join("")
+      : categoryItems.map(function (item) {
+          return renderShopCard(
+            item,
+            state.player.gold,
+            item.type === "furniture" && state.inventory.furnitureOwned.indexOf(item.id) !== -1,
+            game.systems.shopSystem.getPriceState(item.id, now)
+          );
+        }).join("");
 
     return (
       '<section class="page-header">' +
-      '<div class="page-card">' +
+      '<div class="page-card page-intro-card">' +
       '<p class="section-eyebrow">' + t("page_shop") + "</p>" +
       '<h2 class="page-title">' + t("shop_panel_title") + "</h2>" +
       '<p class="page-copy">' + t("shop_panel_copy") + "</p>" +
       "</div>" +
-      '<div class="page-card">' +
+      '<div class="page-card shop-hours-card">' +
       '<p class="section-eyebrow">' + t("shopping_info") + "</p>" +
-      '<p class="page-copy">' + t("shopping_copy") + "</p>" +
-      '<p class="helper-text" style="margin-top: 8px;">' + t("shop_discount_window_copy", { start: "20:00", end: "22:00" }) + "</p>" +
+      '<p class="page-copy">' + t("shop_discount_window_copy", { start: "20:00", end: "22:00" }) + "</p>" +
+      '<span class="status-pill ' + (discountActive ? "is-success" : "is-warning") + '">' +
+      (discountActive ? t("shop_discount_panel_live") : t("shop_discount_panel_waiting", { start: "20:00", end: "22:00" })) + '</span>' +
       "</div>" +
       "</section>" +
-      '<section class="page-card">' +
-      '<div class="inline-row"><div><p class="section-eyebrow">' + t("shop_discount_title") + '</p><h3 class="panel-title">' + t("shop_discount_panel_title") + "</h3></div></div>" +
-      '<p class="page-copy" style="margin-top: 8px;">' +
-      (discountActive
-        ? t("shop_discount_panel_live")
-        : t("shop_discount_panel_waiting", { start: "20:00", end: "22:00" })) +
-      "</p>" +
-      (activeOffers.length
-        ? '<div class="shop-grid" style="margin-top: 16px;">' +
-          activeOffers
-            .map(function (entry) {
-              return renderShopCard(
-                entry.item,
-                state.player.gold,
-                entry.item.type === "furniture" && state.inventory.furnitureOwned.indexOf(entry.item.id) !== -1,
-                entry.priceState
-              );
-            })
-            .join("") +
-          "</div>"
-        : '<div class="empty-state" style="margin-top: 16px;">' + t(discountActive ? "shop_discount_empty" : "shop_discount_resting") + "</div>") +
-      "</section>" +
-      '<section class="page-card">' +
-      '<div class="inline-row"><div><p class="section-eyebrow">' + t("consumables") + '</p><h3 class="panel-title">' + t("daily_supplies") + "</h3></div></div>" +
-      '<div class="shop-grid" style="margin-top: 16px;">' +
-      catItems
-        .map(function (item) {
-          return renderShopCard(
-            item,
-            state.player.gold,
-            false,
-            game.systems.shopSystem.getPriceState(item.id, now)
-          );
-        })
-        .join("") +
-      "</div></section>" +
-      '<section class="page-card">' +
-      '<div class="inline-row"><div><p class="section-eyebrow">' + t("player_supplies_title") + '</p><h3 class="panel-title">' + t("player_foods_title") + "</h3></div></div>" +
-      '<div class="shop-grid" style="margin-top: 16px;">' +
-      playerFoods
-        .map(function (item) {
-          return renderShopCard(
-            item,
-            state.player.gold,
-            false,
-            game.systems.shopSystem.getPriceState(item.id, now)
-          );
-        })
-        .join("") +
-      "</div></section>" +
-      '<section class="page-card">' +
-      '<div class="inline-row"><div><p class="section-eyebrow">' + t("player_supplies_title") + '</p><h3 class="panel-title">' + t("player_drinks_title") + "</h3></div></div>" +
-      '<div class="shop-grid" style="margin-top: 16px;">' +
-      playerDrinks
-        .map(function (item) {
-          return renderShopCard(
-            item,
-            state.player.gold,
-            false,
-            game.systems.shopSystem.getPriceState(item.id, now)
-          );
-        })
-        .join("") +
-      "</div></section>" +
-      '<section class="page-card">' +
-      '<div class="inline-row"><div><p class="section-eyebrow">' + t("furniture") + '</p><h3 class="panel-title">' + t("warm_home") + "</h3></div></div>" +
-      '<div class="shop-grid" style="margin-top: 16px;">' +
-      furniture
-        .map(function (item) {
-          return renderShopCard(
-            item,
-            state.player.gold,
-            state.inventory.furnitureOwned.indexOf(item.id) !== -1,
-            game.systems.shopSystem.getPriceState(item.id, now)
-          );
-        })
-        .join("") +
-      "</div></section>"
+      '<div class="shop-tabs" role="tablist" aria-label="' + format.escapeHtml(t("page_shop")) + '">' +
+      '<button id="shop-tab-cat" role="tab" aria-controls="shop-panel" aria-selected="' + (category === "cat") + '" tabindex="' + (category === "cat" ? "0" : "-1") + '" class="chip-button ' + (category === "cat" ? "is-active" : "") + '" data-shop-category="cat">' + t("daily_supplies") + '</button>' +
+      '<button id="shop-tab-player" role="tab" aria-controls="shop-panel" aria-selected="' + (category === "player") + '" tabindex="' + (category === "player" ? "0" : "-1") + '" class="chip-button ' + (category === "player" ? "is-active" : "") + '" data-shop-category="player">' + t("player_supplies_title") + '</button>' +
+      '<button id="shop-tab-furniture" role="tab" aria-controls="shop-panel" aria-selected="' + (category === "furniture") + '" tabindex="' + (category === "furniture" ? "0" : "-1") + '" class="chip-button ' + (category === "furniture" ? "is-active" : "") + '" data-shop-category="furniture">' + t("furniture") + '</button>' +
+      '<button id="shop-tab-sale" role="tab" aria-controls="shop-panel" aria-selected="' + (category === "sale") + '" tabindex="' + (category === "sale" ? "0" : "-1") + '" class="chip-button ' + (category === "sale" ? "is-active" : "") + '" data-shop-category="sale">' + t("shop_discount_title") + '</button></div>' +
+      '<section id="shop-panel" class="page-card shop-catalog" role="tabpanel" aria-labelledby="shop-tab-' + category + '"><div class="section-heading"><div><p class="section-eyebrow">' +
+      categoryEyebrow + '</p><h3 class="panel-title">' + categoryTitle + '</h3></div><span class="pill">' +
+      (category === "sale" ? activeOffers.length : categoryItems.length) + '</span></div>' +
+      (cards ? '<div class="shop-grid">' + cards + '</div>' : '<div class="empty-state">' +
+        t(category === "sale" ? (discountActive ? "shop_discount_empty" : "shop_discount_resting") : "shop_category_empty") + '</div>') + '</section>'
     );
   }
 

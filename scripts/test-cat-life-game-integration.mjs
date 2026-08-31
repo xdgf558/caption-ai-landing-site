@@ -23,6 +23,8 @@ for (const path of [
   `${gameRoot}/src/js/core/namespace.js`,
   `${gameRoot}/src/js/core/i18n.js`,
   `${gameRoot}/src/js/ui/renderHeader.js`,
+  `${gameRoot}/src/js/ui/renderHome.js`,
+  `${gameRoot}/src/js/ui/renderCatPanel.js`,
   `${gameRoot}/src/js/ui/renderMemberStorePanel.js`,
   `${gameRoot}/src/js/ui/renderWorkPanel.js`,
   `${gameRoot}/src/styles/broadsheet.css`,
@@ -56,6 +58,8 @@ const saveSystem = read(`${gameRoot}/src/js/state/saveSystem.js`);
 const namespace = read(`${gameRoot}/src/js/core/namespace.js`);
 const i18n = read(`${gameRoot}/src/js/core/i18n.js`);
 const headerPanel = read(`${gameRoot}/src/js/ui/renderHeader.js`);
+const homePanel = read(`${gameRoot}/src/js/ui/renderHome.js`);
+const catPanel = read(`${gameRoot}/src/js/ui/renderCatPanel.js`);
 const savePanel = read(`${gameRoot}/src/js/ui/renderSavePanel.js`);
 const settingsPanel = read(`${gameRoot}/src/js/ui/renderSettingsPanel.js`);
 const shopPanel = read(`${gameRoot}/src/js/ui/renderShopPanel.js`);
@@ -134,8 +138,8 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.19\.3"/);
-assert.match(namespace, /Regular shop card actions now align along the bottom/);
+assert.match(namespace, /version: "1\.20\.0"/);
+assert.match(namespace, /warm hand-drawn storybook interface/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
@@ -143,7 +147,7 @@ assert.match(landing, /five latest cloud versions remain available for recovery/
 assert.match(landing, /最近 5 份雲端記錄恢復/);
 assert.match(landing, /只有後台正式上架的商品才會顯示價格並允許兌換/);
 assert.match(landing, /Prices and redemption appear only after a product is formally activated in Admin/);
-assert.match(product, /latestVersion: '1\.19\.3'/);
+assert.match(product, /latestVersion: '1\.20\.0'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);
@@ -171,11 +175,20 @@ assert.match(gameMain, /member_store: game\.ui\.renderMemberStorePanel/);
 assert.match(i18n, /nav_member_store: "Member Store"/);
 assert.match(headerPanel, /role="progressbar"/);
 assert.match(headerPanel, /aria-valuenow/);
-assert.match(broadsheetStyles, /\.statusbar-stats \.bar-track/);
+assert.match(broadsheetStyles, /--story-orange: #e8834a/);
+assert.match(broadsheetStyles, /\.bar-track\.is-segmented/);
 assert.doesNotMatch(headerPanel, /is-battery/);
 assert.match(broadsheetStyles, /@media \(pointer: coarse\)/);
-assert.match(broadsheetStyles, /grid-template-columns: repeat\(auto-fit, minmax\(205px, 1fr\)\)/);
+assert.match(broadsheetStyles, /\.shop-grid \{ display: grid; gap: 13px; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
 assert.match(broadsheetStyles, /grid-template-columns: 92px minmax\(0, 1fr\)/);
+assert.match(homePanel, /home-cat-stage/);
+assert.match(catPanel, /getCatStageUrl/);
+assert.match(shopPanel, /data-shop-category="cat"/);
+assert.match(gameMain, /data-top-sound-toggle/);
+assert.match(gameMain, /data-shop-category/);
+for (const pose of ['happy', 'cry', 'fish', 'pounce', 'nap']) {
+  assert.equal(existsSync(join(root, gameRoot, `src/assets/poses/${pose}.png`)), true, `${pose} pose must exist`);
+}
 assert.equal(shouldIncludeSitemapRoute('/games/cat-life/'), false);
 for (const route of [
   '/en/apps/cat-life-game/',
