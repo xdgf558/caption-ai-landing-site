@@ -41,6 +41,21 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   await expect(page.locator('.mobile-navigation')).toBeHidden();
   expect(await page.locator('.cat-stage-art > img').getAttribute('src')).toContain('/assets/poses/');
 
+  const audioBefore = await page.evaluate(() => ({
+    bgmEnabled: window.CatGame.state.game.settings.bgmEnabled,
+    bgmVolume: window.CatGame.state.game.settings.bgmVolume,
+    sfxVolume: window.CatGame.state.game.settings.sfxVolume
+  }));
+  await page.locator('[data-top-sound-toggle]').click();
+  const audioMuted = await page.evaluate(() => ({
+    bgmEnabled: window.CatGame.state.game.settings.bgmEnabled,
+    bgmVolume: window.CatGame.state.game.settings.bgmVolume,
+    sfxVolume: window.CatGame.state.game.settings.sfxVolume
+  }));
+  expect(audioMuted).toEqual({ bgmEnabled: false, bgmVolume: audioBefore.bgmVolume, sfxVolume: audioBefore.sfxVolume });
+  await page.locator('[data-top-sound-toggle]').click();
+  await expect(page.locator('[data-top-sound-toggle]')).toHaveAttribute('aria-pressed', 'true');
+
   for (const pageName of desktopPages) {
     await page.locator(`.desktop-navigation [data-page-target="${pageName}"]`).click();
     await expect(page.locator('#app-main')).not.toBeEmpty();
@@ -49,9 +64,14 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   }
 
   await page.locator('.desktop-navigation [data-page-target="shop"]').click();
-  await expect(page.locator('.shop-tabs [role="tab"]')).toHaveCount(4);
-  await page.locator('[data-shop-category="player"]').click();
+  const shopTabs = page.locator('.shop-tabs [role="tab"]');
+  await expect(shopTabs).toHaveCount(4);
+  await expect(shopTabs.first()).toHaveAttribute('aria-controls', 'shop-panel');
+  await shopTabs.first().focus();
+  await shopTabs.first().press('ArrowRight');
   await expect(page.locator('[data-shop-category="player"]')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('[data-shop-category="player"]')).toBeFocused();
+  await expect(page.locator('#shop-panel')).toHaveAttribute('aria-labelledby', 'shop-tab-player');
   await expect(page.locator('.shop-grid .shop-card').first()).toBeVisible();
 });
 

@@ -155,15 +155,15 @@
       "</div>" +
       "</section>" +
       '<div class="shop-tabs" role="tablist" aria-label="' + format.escapeHtml(t("page_shop")) + '">' +
-      '<button role="tab" aria-selected="' + (category === "cat") + '" class="chip-button ' + (category === "cat" ? "is-active" : "") + '" data-shop-category="cat">' + t("daily_supplies") + '</button>' +
-      '<button role="tab" aria-selected="' + (category === "player") + '" class="chip-button ' + (category === "player" ? "is-active" : "") + '" data-shop-category="player">' + t("player_supplies_title") + '</button>' +
-      '<button role="tab" aria-selected="' + (category === "furniture") + '" class="chip-button ' + (category === "furniture" ? "is-active" : "") + '" data-shop-category="furniture">' + t("furniture") + '</button>' +
-      '<button role="tab" aria-selected="' + (category === "sale") + '" class="chip-button ' + (category === "sale" ? "is-active" : "") + '" data-shop-category="sale">' + t("shop_discount_title") + '</button></div>' +
-      '<section class="page-card shop-catalog" role="tabpanel"><div class="section-heading"><div><p class="section-eyebrow">' +
+      '<button id="shop-tab-cat" role="tab" aria-controls="shop-panel" aria-selected="' + (category === "cat") + '" tabindex="' + (category === "cat" ? "0" : "-1") + '" class="chip-button ' + (category === "cat" ? "is-active" : "") + '" data-shop-category="cat">' + t("daily_supplies") + '</button>' +
+      '<button id="shop-tab-player" role="tab" aria-controls="shop-panel" aria-selected="' + (category === "player") + '" tabindex="' + (category === "player" ? "0" : "-1") + '" class="chip-button ' + (category === "player" ? "is-active" : "") + '" data-shop-category="player">' + t("player_supplies_title") + '</button>' +
+      '<button id="shop-tab-furniture" role="tab" aria-controls="shop-panel" aria-selected="' + (category === "furniture") + '" tabindex="' + (category === "furniture" ? "0" : "-1") + '" class="chip-button ' + (category === "furniture" ? "is-active" : "") + '" data-shop-category="furniture">' + t("furniture") + '</button>' +
+      '<button id="shop-tab-sale" role="tab" aria-controls="shop-panel" aria-selected="' + (category === "sale") + '" tabindex="' + (category === "sale" ? "0" : "-1") + '" class="chip-button ' + (category === "sale" ? "is-active" : "") + '" data-shop-category="sale">' + t("shop_discount_title") + '</button></div>' +
+      '<section id="shop-panel" class="page-card shop-catalog" role="tabpanel" aria-labelledby="shop-tab-' + category + '"><div class="section-heading"><div><p class="section-eyebrow">' +
       categoryEyebrow + '</p><h3 class="panel-title">' + categoryTitle + '</h3></div><span class="pill">' +
       (category === "sale" ? activeOffers.length : categoryItems.length) + '</span></div>' +
       (cards ? '<div class="shop-grid">' + cards + '</div>' : '<div class="empty-state">' +
-        t(discountActive ? "shop_discount_empty" : "shop_discount_resting") + '</div>') + '</section>'
+        t(category === "sale" ? (discountActive ? "shop_discount_empty" : "shop_discount_resting") : "shop_category_empty") + '</div>') + '</section>'
     );
   }
 

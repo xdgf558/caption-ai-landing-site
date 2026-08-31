@@ -136,6 +136,11 @@ test('redeems an active skin with server data only and applies the official enti
     const cat = window.CatGame.state.game.cats.find((entry) => entry.id === 'cat_001');
     return window.CatGameCommerce.getCatSprite(cat);
   })).toContain('/src/assets/premium/moonlit-tabby.png');
+
+  await page.locator('[data-page-target="cats"]').first().click();
+  await page.locator('[data-cat-action="rest"]').click();
+  await expect(page.locator('.cat-portrait .cat-detail-photo img')).toHaveAttribute('src', /moonlit-tabby\.png/);
+  await expect(page.locator('.cat-portrait .cat-reaction-cue')).toHaveText('Zz');
 });
 
 test('shows active products to guests but routes redemption through member sign-in', async ({ page }) => {

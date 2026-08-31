@@ -45,7 +45,7 @@
     var activeJob = activeWork ? game.data.jobMap[activeWork.jobId] || activeWork : null;
     var activeSleep = game.systems.playerSystem.getActiveSleep();
     var sleepRecovery = game.systems.playerSystem.getSleepRecovery();
-    var soundOn = Number(state.settings.sfxVolume || 0) > 0;
+    var soundOn = state.settings.bgmEnabled !== false && Number(state.settings.bgmVolume || 0) > 0;
 
     return (
       '<div class="masthead"><div class="masthead-identity"><span class="game-logo" aria-hidden="true">猫</span>' +
@@ -55,7 +55,7 @@
       '<div class="masthead-actions"><div class="coin-badge"><span aria-hidden="true">●</span><strong>' +
       format.formatNumber(player.gold) + '</strong><small>' + t("gold_unit") + '</small></div>' +
       '<button class="sound-toggle ' + (soundOn ? "is-on" : "") + '" type="button" data-top-sound-toggle aria-pressed="' +
-      (soundOn ? "true" : "false") + '" aria-label="' + format.escapeHtml(t("sfx_volume")) + '">' +
+      (soundOn ? "true" : "false") + '" aria-label="' + format.escapeHtml(t("bgm_enabled")) + '">' +
       (soundOn ? "♪" : "×") + '</button></div></div>' +
       '<div class="statusbar"><div class="statusbar-stats">' +
       renderBar(t("stamina"), displayStats.stamina, {

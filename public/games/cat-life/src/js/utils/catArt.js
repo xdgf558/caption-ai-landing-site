@@ -97,11 +97,11 @@
   }
 
   function getCatPose(cat) {
-    var reaction = game.state.catReaction;
+    var activeReaction = getCatReaction(cat);
     var disease = game.systems.catSystem && game.systems.catSystem.getCatDisease(cat);
 
-    if (reaction && reaction.catId === cat.id && reaction.expiresAt > Date.now() && poseFiles[reaction.pose]) {
-      return reaction.pose;
+    if (activeReaction) {
+      return activeReaction;
     }
     if (disease) {
       return "cry";
@@ -122,6 +122,27 @@
       return "angry";
     }
     return "happy";
+  }
+
+  function getCatReaction(cat) {
+    var reaction = game.state.catReaction;
+
+    if (reaction && cat && reaction.catId === cat.id && reaction.expiresAt > Date.now() && poseFiles[reaction.pose]) {
+      return reaction.pose;
+    }
+    return "";
+  }
+
+  function getCatReactionCue(cat) {
+    var cues = {
+      fish: "🐟",
+      surprised: "✦",
+      pounce: "✦",
+      nap: "Zz",
+      joy: "♪",
+      heart: "♥",
+    };
+    return cues[getCatReaction(cat)] || "";
   }
 
   function getCatStageUrl(cat) {
@@ -173,5 +194,7 @@
     getCatSpriteUrl: getCatSpriteUrl,
     getCatStageUrl: getCatStageUrl,
     getCatPose: getCatPose,
+    getCatReaction: getCatReaction,
+    getCatReactionCue: getCatReactionCue,
   };
 })(window.CatGame);

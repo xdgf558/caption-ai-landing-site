@@ -126,14 +126,19 @@
     var furniture = game.systems.homeSystem.getPlacedFurniture();
     var stageCat = careCats[0] || getUnlockedCats(state)[0];
     var stageCondition = stageCat ? getCatState(stageCat) : null;
+    var stageReaction = stageCat ? game.utils.catArt.getCatReaction(stageCat) : "";
+    var stageReactionCue = stageCat ? game.utils.catArt.getCatReactionCue(stageCat) : "";
 
     return (
       '<section class="cat-stage home-cat-stage"><div class="cat-stage-copy"><p class="section-eyebrow">' + t("today_headline") +
       '</p><div class="speech-bubble"><h2>' + format.escapeHtml(headline.title) + '</h2><p>' +
       format.escapeHtml(headline.copy) + '</p></div><div class="headline-actions">' + renderHeadlineAction(headline) +
       '<button class="ghost-button" data-page-target="cats">' + t("headline_all_cats") + '</button></div></div>' +
-      (stageCat ? '<div class="cat-stage-art"><img src="' + game.utils.catArt.getCatStageUrl(stageCat) + '" alt="' +
-        format.escapeHtml(getText(stageCat, "name")) + '" width="420" height="420" /><div class="cat-stage-name"><strong>' +
+      (stageCat ? '<div class="cat-stage-art ' + (stageReaction ? "has-reaction" : "") + '" data-cat-reaction="' +
+        format.escapeHtml(stageReaction) + '"><img src="' + game.utils.catArt.getCatStageUrl(stageCat) + '" alt="' +
+        format.escapeHtml(getText(stageCat, "name")) + '" width="420" height="420" />' +
+        (stageReactionCue ? '<span class="cat-reaction-cue" aria-hidden="true">' + stageReactionCue + '</span>' : '') +
+        '<div class="cat-stage-name"><strong>' +
         format.escapeHtml(getText(stageCat, "name")) + '</strong><span class="status-pill ' +
         format.escapeHtml(stageCondition.className) + '">' + format.escapeHtml(stageCondition.label) + '</span></div><div class="cat-stage-mini-stats">' +
         game.ui.helpers.renderBar(t("hunger_label"), stageCat.hunger) +
