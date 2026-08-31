@@ -12,6 +12,7 @@
     var items = [
       { page: "bank", meta: t("more_bank_meta", { amount: format.formatNumber(bank.balance) }) },
       { page: "shop", meta: t("more_shop_meta") },
+      { page: "member_store", meta: t("more_member_store_meta") },
       { page: "hospital", meta: t("more_hospital_meta", { count: counts.sick }) },
       { page: "collection", meta: t("more_collection_meta", { current: unlockedCats, total: totalCats }) },
       { page: "arcade", meta: t("more_arcade_meta") },

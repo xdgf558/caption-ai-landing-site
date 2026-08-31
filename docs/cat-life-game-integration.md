@@ -1,6 +1,6 @@
 # Cat Life Game website integration
 
-The browser game is published as a static sub-application at `/games/cat-life/`. Its runtime was copied from `xdgf558/cat-life-game` at merge commit `0cc839f` and is currently released as website game version `1.19.1`. The Station Cat integration files are `site-integration.js`, `site-integration.css`, `content-manifest.js`, and `commerce.js`; the copied `index.html` and `src/js/main.js` contain the hooks that load them and apply a requested language.
+The browser game is published as a static sub-application at `/games/cat-life/`. Its runtime was copied from `xdgf558/cat-life-game` at merge commit `0cc839f` and is currently released as website game version `1.19.2`. The Station Cat integration files are `site-integration.js`, `site-integration.css`, `content-manifest.js`, and `commerce.js`; the copied `index.html` and `src/js/main.js` contain the hooks that load them and apply a requested language.
 
 The four indexable product pages live at `/en/apps/cat-life-game/`, `/ja/apps/cat-life-game/`, `/zh-hans/apps/cat-life-game/`, and `/zh-hant/apps/cat-life-game/`. The playable runtime is marked `noindex` and excluded from the sitemap so search results point to a localized product page instead of the application shell.
 
@@ -27,6 +27,8 @@ The planned Station Points catalog and server-authoritative ownership boundary a
 Version 1.19.0 ships the first complete content assets and moves client rendering rules into the frozen public `content-manifest.js`. The manifest contains product IDs, entitlement keys, asset paths, supported cats, room options, fixture conditions, and layout coordinates, but it deliberately contains no price, balance, ownership, redeemability, or lifecycle state. Those values continue to come only from the server APIs.
 
 Version 1.19.1 adds a fail-closed commerce rollout gate, account-scoped offline entitlement selection, and immediate visual removal after a server entitlement is revoked. These controls do not change the 1.19.0 content manifest or make either product purchasable by themselves.
+
+Version 1.19.2 moves the Station Points member catalog into its own navigation page and removes the duplicate player-resource summary from the regular gold shop. It also tightens the game-wide card, type, image, control, and spacing scale; mobile shop cards use a compact horizontal layout, while stamina, mood, and hunger use live battery-style meters in the masthead. The commerce API, rollout gate, prices, and entitlement boundary are unchanged.
 
 Moonlit Tabby changes only the `cat_001` sprite after the official skin entitlement is present. The Station Room Set exposes four coordinated room options and renders its bench, signal lamp, station clock, and departure board only while the official room entitlement is present. Imported or edited save values fall back to the free room defaults and never render paid fixtures without ownership. An offline entitlement cache may keep an already synchronized cosmetic visible, but it cannot redeem, restore, or create server ownership. See `docs/cat-life-game-content-packs.md` for the asset and renderer contract.
 

@@ -188,6 +188,7 @@
       });
       Array.prototype.forEach.call(document.querySelectorAll(barSelector), function (node) {
         node.style.width = safeValue + "%";
+        node.setAttribute("aria-valuenow", safeValue);
         node.classList.toggle("is-danger", isDanger);
         node.classList.toggle("is-normal", !isDanger);
       });
@@ -341,6 +342,7 @@
       arcade: game.ui.renderArcadePanel,
       hospital: game.ui.renderHospitalPanel,
       shop: game.ui.renderShopPanel,
+      member_store: game.ui.renderMemberStorePanel,
       tasks: game.ui.renderTaskPanel,
       version: game.ui.renderVersionPanel,
       save: game.ui.renderSavePanel,

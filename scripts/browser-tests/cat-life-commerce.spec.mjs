@@ -115,7 +115,7 @@ test('redeems an active skin with server data only and applies the official enti
   });
 
   await page.goto('/games/cat-life/?lang=en');
-  await page.locator('[data-page-target="shop"]').first().click();
+  await page.locator('[data-page-target="member_store"]').first().click();
   await expect(page.locator('[data-cat-commerce-section]')).toContainText('Moonlit Tabby');
   await page.locator('[data-cat-commerce-action="confirm"]').click();
   await expect(page.locator('[data-cat-commerce-dialog]')).toBeVisible();
@@ -153,10 +153,77 @@ test('shows active products to guests but routes redemption through member sign-
   });
 
   await page.goto('/games/cat-life/?lang=en');
-  await page.locator('[data-page-target="shop"]').first().click();
+  await page.locator('[data-page-target="member_store"]').first().click();
   const signIn = page.locator('[data-cat-commerce-section] a', { hasText: 'Sign in to redeem' });
   await expect(signIn).toHaveAttribute('href', /\/en\/library\/\?returnTo=/);
   expect(posted).toBe(false);
+});
+
+test('keeps the normal shop and member store as separate pages', async ({ page }) => {
+  await mockCloudGuest(page);
+  await page.route('**/api/games/cat-life/catalog?*', (route) => route.fulfill({
+    json: { ok: true, authenticated: false, products: [skinProduct] }
+  }));
+  await page.route('**/api/games/cat-life/entitlements?*', (route) => route.fulfill({
+    json: { ok: true, authenticated: false, entitlements: [] }
+  }));
+
+  await page.goto('/games/cat-life/?lang=en');
+  await expect(page.locator('.statusbar-stats [role="progressbar"]')).toHaveCount(3);
+  await expect(page.locator('[data-player-stamina-bar]')).toHaveAttribute('aria-valuenow', '100');
+  const batteryBox = await page.locator('.statusbar-stats .bar-track').first().evaluate((node) => node.getBoundingClientRect().toJSON());
+  expect(batteryBox.height).toBe(13);
+  expect(batteryBox.width).toBeGreaterThan(100);
+  await page.locator('[data-page-target="cats"]').first().click();
+  expect(await page.locator('#app-main [role="progressbar"]').first().evaluate((node) => {
+    return node.parentElement.getBoundingClientRect().height;
+  })).toBe(5);
+  await page.locator('[data-page-target="shop"]').first().click();
+  await expect(page.locator('#app-main')).toContainText('Daily Care Supplies');
+  await expect(page.locator('#app-main [data-cat-commerce-section]')).toHaveCount(0);
+  await expect(page.locator('#app-main .notice-list')).toHaveCount(0);
+  expect(await page.locator('#app-main .shop-grid').first().evaluate((node) => {
+    return getComputedStyle(node).gridTemplateColumns.split(' ').length;
+  })).toBeGreaterThanOrEqual(4);
+  expect(await page.locator('#app-main .shop-art').first().evaluate((node) => node.getBoundingClientRect().height)).toBeLessThanOrEqual(170);
+
+  await page.locator('[data-page-target="member_store"]').first().click();
+  await expect(page.locator('#app-main [data-cat-commerce-section]')).toContainText('Moonlit Tabby');
+  await expect(page.locator('#app-main')).not.toContainText('Daily Care Supplies');
+});
+
+test('keeps compact mouse controls while restoring 44px touch targets', async ({ browser }) => {
+  const context = await browser.newContext({
+    baseURL: 'http://127.0.0.1:4178',
+    hasTouch: true,
+    viewport: { width: 1024, height: 768 }
+  });
+  const page = await context.newPage();
+  await mockCloudGuest(page);
+  await page.goto('/games/cat-life/?lang=en');
+  expect(await page.locator('.nav-button').first().evaluate((node) => node.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  expect(await page.locator('.sleep-control').evaluate((node) => node.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  await context.close();
+});
+
+test('opens the separate member store from mobile More without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockCloudGuest(page);
+  await page.route('**/api/games/cat-life/catalog?*', (route) => route.fulfill({
+    json: { ok: true, authenticated: false, products: [skinProduct] }
+  }));
+  await page.route('**/api/games/cat-life/entitlements?*', (route) => route.fulfill({
+    json: { ok: true, authenticated: false, entitlements: [] }
+  }));
+
+  await page.goto('/games/cat-life/?lang=en');
+  await page.locator('[data-page-target="more"]:visible').click();
+  await page.locator('[data-page-target="shop"]:visible').click();
+  expect(await page.locator('#app-main .shop-art').first().evaluate((node) => node.getBoundingClientRect().width)).toBeLessThanOrEqual(92);
+  await page.locator('[data-page-target="more"]:visible').click();
+  await page.locator('[data-page-target="member_store"]:visible').click();
+  await expect(page.locator('#app-main [data-cat-commerce-section]')).toContainText('Moonlit Tabby');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
 });
 
 test('unlocks the complete station room option set from an account entitlement', async ({ page }) => {
@@ -271,7 +338,7 @@ test('keeps the current account cosmetic offline without enabling redemption', a
     return window.CatGameCommerce.getCatSprite(cat);
   })).toContain('/src/assets/premium/moonlit-tabby.png');
   expect(await page.evaluate(() => window.CatGameCommerce.getSnapshot().authenticated)).toBe(false);
-  await page.locator('[data-page-target="shop"]').first().click();
+  await page.locator('[data-page-target="member_store"]').first().click();
   await expect(page.locator('[data-cat-commerce-section]')).not.toContainText('Redeem for');
 });
 
@@ -301,7 +368,7 @@ test('removes equipped premium visuals after the server revokes their entitlemen
   }));
 
   await page.goto('/games/cat-life/?lang=en');
-  await page.locator('[data-page-target="shop"]').first().click();
+  await page.locator('[data-page-target="member_store"]').first().click();
   await page.locator('[data-cat-commerce-action="toggle-skin"]').click();
   expect(await page.evaluate(() => {
     const cat = window.CatGame.state.game.cats.find((entry) => entry.id === 'cat_001');
