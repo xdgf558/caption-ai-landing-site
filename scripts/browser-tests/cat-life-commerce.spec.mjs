@@ -171,9 +171,13 @@ test('keeps the normal shop and member store as separate pages', async ({ page }
   await page.goto('/games/cat-life/?lang=en');
   await expect(page.locator('.statusbar-stats [role="progressbar"]')).toHaveCount(3);
   await expect(page.locator('[data-player-stamina-bar]')).toHaveAttribute('aria-valuenow', '100');
-  const batteryBox = await page.locator('.bar-track.is-battery').first().evaluate((node) => node.getBoundingClientRect().toJSON());
+  const batteryBox = await page.locator('.statusbar-stats .bar-track').first().evaluate((node) => node.getBoundingClientRect().toJSON());
   expect(batteryBox.height).toBe(13);
   expect(batteryBox.width).toBeGreaterThan(100);
+  await page.locator('[data-page-target="cats"]').first().click();
+  expect(await page.locator('#app-main [role="progressbar"]').first().evaluate((node) => {
+    return node.parentElement.getBoundingClientRect().height;
+  })).toBe(5);
   await page.locator('[data-page-target="shop"]').first().click();
   await expect(page.locator('#app-main')).toContainText('Daily Care Supplies');
   await expect(page.locator('#app-main [data-cat-commerce-section]')).toHaveCount(0);
@@ -186,6 +190,20 @@ test('keeps the normal shop and member store as separate pages', async ({ page }
   await page.locator('[data-page-target="member_store"]').first().click();
   await expect(page.locator('#app-main [data-cat-commerce-section]')).toContainText('Moonlit Tabby');
   await expect(page.locator('#app-main')).not.toContainText('Daily Care Supplies');
+});
+
+test('keeps compact mouse controls while restoring 44px touch targets', async ({ browser }) => {
+  const context = await browser.newContext({
+    baseURL: 'http://127.0.0.1:4178',
+    hasTouch: true,
+    viewport: { width: 1024, height: 768 }
+  });
+  const page = await context.newPage();
+  await mockCloudGuest(page);
+  await page.goto('/games/cat-life/?lang=en');
+  expect(await page.locator('.nav-button').first().evaluate((node) => node.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  expect(await page.locator('.sleep-control').evaluate((node) => node.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  await context.close();
 });
 
 test('opens the separate member store from mobile More without horizontal overflow', async ({ page }) => {

@@ -240,7 +240,7 @@ textarea:focus-visible {
   overflow: hidden;
 }
 
-.bar-track.is-battery {
+.statusbar-stats .bar-track {
   background: var(--color-neutral-100);
   border: 1px solid var(--color-neutral-700);
   border-radius: 3px;
@@ -253,7 +253,7 @@ textarea:focus-visible {
   width: calc(100% - 5px);
 }
 
-.bar-track.is-battery::after {
+.statusbar-stats .bar-track::after {
   background: var(--color-neutral-700);
   border-radius: 0 2px 2px 0;
   content: "";
@@ -264,7 +264,7 @@ textarea:focus-visible {
   width: 3px;
 }
 
-.bar-track.is-battery .bar-fill {
+.statusbar-stats .bar-track .bar-fill {
   border-radius: 1px;
   min-width: 2px;
 }
@@ -828,6 +828,20 @@ select {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+@media (pointer: coarse) {
+  .nav-button,
+  .primary-button,
+  .secondary-button,
+  .ghost-button,
+  .action-button,
+  .store-button,
+  .task-button,
+  .chip-button,
+  .text-link,
+  .cat-chip,
+  .more-link { min-height: 44px; }
 }
 
 @media (max-width: 860px) {

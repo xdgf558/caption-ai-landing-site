@@ -10,7 +10,7 @@
     var barAttribute = options && options.barAttribute ? " " + options.barAttribute : "";
     return (
       '<div class="stat-row"><div class="stat-row-heading"><span class="stat-label">' + label +
-      '</span><strong' + valueAttribute + '>' + safeValue + '</strong></div><div class="bar-track is-battery"><div class="bar-fill ' +
+      '</span><strong' + valueAttribute + '>' + safeValue + '</strong></div><div class="bar-track"><div class="bar-fill ' +
       (isDanger ? "is-danger" : "is-normal") + '" role="progressbar" aria-label="' + format.escapeHtml(label) +
       '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + safeValue + '"' + barAttribute +
       ' style="width:' + safeValue + '%"></div></div></div>'
