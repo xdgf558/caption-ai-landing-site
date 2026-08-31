@@ -8,6 +8,7 @@
   var lotteryCelebrationTimerId = null;
   var toastTimerId = null;
   var activeToastId = null;
+  var catReactionTimerId = null;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -118,6 +119,34 @@
     game.systems.taskSystem.refreshAllTasks();
     persistGame(Boolean(result.forceSave));
     render();
+  }
+
+  function showCatReaction(catId, action) {
+    var poses = {
+      feedBasic: "fish",
+      feedPremium: "fish",
+      clean: "surprised",
+      play: "pounce",
+      rest: "nap",
+      catGrass: "joy",
+      medicine: "heart",
+    };
+    var pose = poses[action];
+
+    if (!catId || !pose) {
+      return;
+    }
+    game.state.catReaction = { catId: catId, pose: pose, expiresAt: Date.now() + 2200 };
+    if (catReactionTimerId) {
+      window.clearTimeout(catReactionTimerId);
+    }
+    catReactionTimerId = window.setTimeout(function () {
+      game.state.catReaction = null;
+      catReactionTimerId = null;
+      if (game.state.currentPage === "home" || game.state.currentPage === "cats") {
+        render();
+      }
+    }, 2250);
   }
 
   function scheduleLotteryResolve(source) {
@@ -517,6 +546,25 @@
     var resetRoomLayoutButton = event.target.closest("[data-reset-room-layout]");
     var upgradeRoomButton = event.target.closest("[data-upgrade-room]");
     var clearCustomMusicButton = event.target.closest("[data-clear-custom-music]");
+    var soundToggleButton = event.target.closest("[data-top-sound-toggle]");
+    var shopCategoryButton = event.target.closest("[data-shop-category]");
+    var catActionResult;
+
+    if (soundToggleButton) {
+      game.state.game.settings.sfxVolume = Number(game.state.game.settings.sfxVolume || 0) > 0 ? 0 : 60;
+      game.state.saveSystem.saveGame(game.state.game);
+      if (game.systems.musicSystem) {
+        game.systems.musicSystem.applyVolume();
+      }
+      render();
+      return;
+    }
+
+    if (shopCategoryButton) {
+      game.state.shopCategory = shopCategoryButton.dataset.shopCategory;
+      render();
+      return;
+    }
 
     if (game.systems.musicSystem) {
       game.systems.musicSystem.unlock();
@@ -607,7 +655,11 @@
       if (catActionButton.dataset.catId) {
         game.state.selectedCatId = catActionButton.dataset.catId;
       }
-      handleActionResult(game.systems.catSystem.performAction(game.state.selectedCatId, catActionButton.dataset.catAction));
+      catActionResult = game.systems.catSystem.performAction(game.state.selectedCatId, catActionButton.dataset.catAction);
+      if (catActionResult && catActionResult.ok) {
+        showCatReaction(game.state.selectedCatId, catActionButton.dataset.catAction);
+      }
+      handleActionResult(catActionResult);
       return;
     }
 

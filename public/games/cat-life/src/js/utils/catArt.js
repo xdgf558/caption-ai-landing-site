@@ -4,6 +4,22 @@
     cow_cat: "cow-cat.png",
     blue_cat: "blue-cat.png",
   };
+  var poseFiles = {
+    angry: "angry.png",
+    celebrate: "celebrate.png",
+    cry: "cry.png",
+    fish: "fish.png",
+    happy: "happy.png",
+    heart: "heart.png",
+    joy: "joy.png",
+    nap: "nap.png",
+    pounce: "pounce.png",
+    question: "question.png",
+    shy: "shy.png",
+    sleep: "sleep.png",
+    surprised: "surprised.png",
+    wave: "wave.png",
+  };
 
   function escapeSvg(text) {
     return encodeURIComponent(String(text || ""))
@@ -80,6 +96,50 @@
     return new URL("src/assets/cats/" + fileName, document.baseURI).href;
   }
 
+  function getCatPose(cat) {
+    var reaction = game.state.catReaction;
+    var disease = game.systems.catSystem && game.systems.catSystem.getCatDisease(cat);
+
+    if (reaction && reaction.catId === cat.id && reaction.expiresAt > Date.now() && poseFiles[reaction.pose]) {
+      return reaction.pose;
+    }
+    if (disease) {
+      return "cry";
+    }
+    if (cat.hunger <= 30) {
+      return "question";
+    }
+    if (cat.clean <= 30) {
+      return "shy";
+    }
+    if (cat.energy <= 35) {
+      return "nap";
+    }
+    if (cat.mood >= 85) {
+      return "celebrate";
+    }
+    if (cat.mood <= 35) {
+      return "angry";
+    }
+    return "happy";
+  }
+
+  function getCatStageUrl(cat) {
+    var memberSprite = window.CatGameCommerce && typeof window.CatGameCommerce.getCatSprite === "function"
+      ? window.CatGameCommerce.getCatSprite(cat)
+      : "";
+    var artKey = inferArtKeyFromTraits((cat && cat.traits) || {});
+    var pose = getCatPose(cat);
+
+    if (memberSprite) {
+      return memberSprite;
+    }
+    if (artKey !== "orange_tabby" || !poseFiles[pose]) {
+      return getCatSpriteUrl(cat);
+    }
+    return new URL("src/assets/poses/" + poseFiles[pose], document.baseURI).href;
+  }
+
   function buildCatSvg(cat, size) {
     var traits = (cat && cat.traits) || {};
     var fur = traits.furColor || "#f3a64a";
@@ -111,5 +171,7 @@
     buildCatSvg: buildCatSvg,
     inferArtKeyFromTraits: inferArtKeyFromTraits,
     getCatSpriteUrl: getCatSpriteUrl,
+    getCatStageUrl: getCatStageUrl,
+    getCatPose: getCatPose,
   };
 })(window.CatGame);

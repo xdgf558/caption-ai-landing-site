@@ -361,3 +361,106 @@
     padding-inline: 8px;
   }
 }
+
+/* Storybook shell integration. Keep the account and cloud-save controls visually
+   consistent with the game while preserving the website-owned behavior. */
+.station-site-bar {
+  background: rgba(255, 252, 246, 0.96);
+  border-bottom: 2px solid #4a3b2a;
+  color: #4a3b2a;
+  font-family: ui-rounded, "Arial Rounded MT Bold", "PingFang SC", "Hiragino Sans GB", sans-serif;
+}
+
+.station-site-brand > span,
+.station-site-member__action {
+  background: #e8834a;
+  border: 2px solid #4a3b2a;
+  border-radius: 13px 10px 14px 9px;
+  box-shadow: 2px 2px 0 #4a3b2a;
+  color: #fffcf6;
+}
+
+.station-site-brand > span {
+  height: 36px;
+  width: 36px;
+}
+
+.station-site-links a {
+  border-radius: 999px;
+  color: #675744;
+}
+
+.station-site-links a:hover,
+.station-site-links a:focus-visible {
+  background: #f3e7d0;
+  color: #4a3b2a;
+}
+
+.station-site-member__avatar {
+  background: #f0c05a;
+  border: 2px solid #4a3b2a;
+  color: #4a3b2a;
+}
+
+.station-site-member__action--secondary {
+  background: #fffcf6;
+  color: #4a3b2a;
+}
+
+.station-site-language select {
+  background: #fffcf6;
+  border: 2px solid #4a3b2a;
+  border-radius: 13px 16px 12px 15px;
+  color: #4a3b2a;
+}
+
+.cat-cloud-dialog {
+  background: #fffcf6;
+  border: 2.5px solid #4a3b2a;
+  border-radius: 22px 17px 24px 16px;
+  box-shadow: 5px 5px 0 #e8834a;
+  color: #4a3b2a;
+  font-family: ui-rounded, "Arial Rounded MT Bold", "PingFang SC", "Hiragino Sans GB", sans-serif;
+}
+
+.cat-cloud-dialog__kicker { color: #e8834a; }
+.cat-cloud-dialog__compare > div,
+.cat-recovery-item,
+.cat-recovery-event {
+  background: #f3e7d0;
+  border: 1.5px solid #4a3b2a;
+  border-radius: 13px 16px 12px 15px;
+}
+
+.cat-commerce-dialog__balance {
+  background: #e9f3df;
+  border-left-color: #7fa86b;
+  border-radius: 0 12px 12px 0;
+}
+
+.station-commerce,
+.station-commerce-heading,
+.station-commerce-grid,
+.station-commerce-card,
+.station-commerce-card > :not(.shop-art),
+.station-commerce-actions,
+.station-commerce-actions > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.station-commerce-heading,
+.station-commerce-actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 520px) {
+  .station-commerce-heading > .secondary-button {
+    width: 100%;
+  }
+
+  .station-commerce-actions {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+}

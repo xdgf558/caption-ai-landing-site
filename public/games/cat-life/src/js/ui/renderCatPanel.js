@@ -21,9 +21,8 @@
       '" data-select-cat="' +
       cat.id +
       '">' +
-      '<div class="inline-row"><span class="item-icon cat-chip-icon">' +
-      game.systems.catSystem.getCatVisualState(cat).icon +
-      '</span><strong>' +
+      '<div class="inline-row"><img class="cat-chip-art" src="' + game.utils.catArt.buildCatSvg(cat, 64) + '" alt="" />' +
+      '<strong>' +
       format.escapeHtml(getText(cat, "name")) +
       "</strong><span class=\"pill\">" +
       format.escapeHtml(getText(cat, "breed")) +
@@ -108,7 +107,7 @@
 
     return (
       '<section class="page-header">' +
-      '<div class="page-card">' +
+      '<div class="page-card cat-detail-card">' +
       '<p class="section-eyebrow">' + t("page_cats") + "</p>" +
       '<h2 class="page-title">' + t("cats_panel_title") + "</h2>" +
       '<p class="page-copy">' + t("cats_panel_copy") + "</p>" +
@@ -140,8 +139,8 @@
           ? t("later_unlock")
           : t("friendship_health", { intimacy: selectedCat.intimacy, health: selectedCat.health })) +
       "</span></div>" +
-      '<div class="cat-portrait" style="margin-top: 14px;"><div class="cat-detail-photo halftone"><img src="' +
-      game.utils.catArt.buildCatSvg(selectedCat, 260) +
+      '<div class="cat-portrait cat-stage" style="margin-top: 14px;"><div class="cat-detail-photo"><img src="' +
+      game.utils.catArt.getCatStageUrl(selectedCat) +
       '" alt="' + format.escapeHtml(getText(selectedCat, "name")) + '" /></div><div><p class="mini-label">' +
       t("cat_portrait") + '</p><p class="page-copy">' + t(catVisual.labelKey) + "</p></div></div>" +
       (!isLocked

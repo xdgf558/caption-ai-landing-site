@@ -9,8 +9,8 @@
     var valueAttribute = options && options.valueAttribute ? " " + options.valueAttribute : "";
     var barAttribute = options && options.barAttribute ? " " + options.barAttribute : "";
     return (
-      '<div class="stat-row"><div class="stat-row-heading"><span class="stat-label">' + label +
-      '</span><strong' + valueAttribute + '>' + safeValue + '</strong></div><div class="bar-track"><div class="bar-fill ' +
+      '<div class="stat-row ' + (options && options.inverseTone ? "is-inverse" : "") + '"><div class="stat-row-heading"><span class="stat-label">' + label +
+      '</span><strong' + valueAttribute + '>' + safeValue + '</strong></div><div class="bar-track is-segmented"><div class="bar-fill ' +
       (isDanger ? "is-danger" : "is-normal") + '" role="progressbar" aria-label="' + format.escapeHtml(label) +
       '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + safeValue + '"' + barAttribute +
       ' style="width:' + safeValue + '%"></div></div></div>'
@@ -45,16 +45,19 @@
     var activeJob = activeWork ? game.data.jobMap[activeWork.jobId] || activeWork : null;
     var activeSleep = game.systems.playerSystem.getActiveSleep();
     var sleepRecovery = game.systems.playerSystem.getSleepRecovery();
+    var soundOn = Number(state.settings.sfxVolume || 0) > 0;
 
     return (
-      '<div class="masthead-rule is-heavy"></div>' +
-      '<div class="masthead"><div class="masthead-title"><h1>' + t("brandTitle") +
-      '</h1><span>' + t("masthead_edition") + '</span></div><div class="masthead-meta"><span>' +
-      t("day_label", { day: player.currentDay || 1 }) + '</span><span data-live-clock>' + format.formatGameTime() +
-      '</span><span>v' + format.escapeHtml(game.config.version) + '</span></div></div>' +
-      '<div class="masthead-rule is-fine"></div>' +
-      '<div class="statusbar"><div class="cash-block"><span>' + t("cash_outside_bank") +
-      '</span><strong>' + format.formatNumber(player.gold) + ' ' + t("gold_unit") + '</strong></div><div class="statusbar-stats">' +
+      '<div class="masthead"><div class="masthead-identity"><span class="game-logo" aria-hidden="true">猫</span>' +
+      '<div class="masthead-title"><h1>' + t("brandTitle") + '</h1><div class="masthead-meta"><span>' +
+      t("day_label", { day: player.currentDay || 1 }) + '</span><span>·</span><span data-live-clock>' + format.formatGameTime() +
+      '</span><span>·</span><span>v' + format.escapeHtml(game.config.version) + '</span></div></div></div>' +
+      '<div class="masthead-actions"><div class="coin-badge"><span aria-hidden="true">●</span><strong>' +
+      format.formatNumber(player.gold) + '</strong><small>' + t("gold_unit") + '</small></div>' +
+      '<button class="sound-toggle ' + (soundOn ? "is-on" : "") + '" type="button" data-top-sound-toggle aria-pressed="' +
+      (soundOn ? "true" : "false") + '" aria-label="' + format.escapeHtml(t("sfx_volume")) + '">' +
+      (soundOn ? "♪" : "×") + '</button></div></div>' +
+      '<div class="statusbar"><div class="statusbar-stats">' +
       renderBar(t("stamina"), displayStats.stamina, {
         valueAttribute: "data-player-stamina-live",
         barAttribute: "data-player-stamina-bar",
@@ -77,7 +80,7 @@
       (activeSleep
         ? t("sleeping_now") + ' · <span data-player-sleep-duration>' + format.formatDuration(sleepRecovery.elapsedMs) + '</span>'
         : t("sleep_ready_copy")) +
-      '</span></div></div><div class="masthead-rule is-medium"></div>'
+      '</span></div></div></div>'
     );
   }
 
