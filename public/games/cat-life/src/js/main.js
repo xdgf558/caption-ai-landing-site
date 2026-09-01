@@ -541,7 +541,10 @@
     var communityVisitButton = event.target.closest("[data-community-visit]");
     var communityGiftButton = event.target.closest("[data-community-gift]");
     var communityExchangeButton = event.target.closest("[data-community-exchange]");
+    var arcadeViewButton = event.target.closest("[data-arcade-view]");
+    var arcadeDetailsButton = event.target.closest("[data-arcade-details]");
     var slotButton = event.target.closest("[data-slot-bet]");
+    var slotSpinButton = event.target.closest("[data-slot-spin]");
     var breedButton = event.target.closest("[data-breed-cats]");
     var inspectCollectionButton = event.target.closest("[data-inspect-collection-cat]");
     var resetRoomLayoutButton = event.target.closest("[data-reset-room-layout]");
@@ -624,6 +627,25 @@
       window.scrollTo(0, 0);
       if (pageButton.dataset.pageTarget === "arcade") {
         scheduleLotteryResolve("arcade-page");
+      }
+      return;
+    }
+
+    if (arcadeViewButton) {
+      game.state.arcadeView = arcadeViewButton.dataset.arcadeView === "lottery" ? "lottery" : "slot";
+      render();
+      return;
+    }
+
+    if (arcadeDetailsButton) {
+      var arcadeDetails = document.querySelector(".arcade-details");
+      var arcadeDetailsSummary = arcadeDetails ? arcadeDetails.querySelector("summary") : null;
+      if (arcadeDetails) {
+        arcadeDetails.open = true;
+        if (arcadeDetailsSummary) {
+          arcadeDetailsSummary.focus();
+        }
+        arcadeDetails.scrollIntoView({ behavior: "smooth", block: "start" });
       }
       return;
     }
@@ -781,7 +803,13 @@
     }
 
     if (slotButton) {
-      startArcadeSpin(slotButton.dataset.slotBet);
+      game.state.arcadeBet = Number(slotButton.dataset.slotBet || game.config.slotBets[0]);
+      render();
+      return;
+    }
+
+    if (slotSpinButton) {
+      startArcadeSpin(game.state.arcadeBet || game.config.slotBets[0]);
       return;
     }
 

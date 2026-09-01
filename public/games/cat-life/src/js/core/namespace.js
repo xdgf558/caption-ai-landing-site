@@ -141,6 +141,8 @@
       selectedCatId: "cat_001",
       notifications: [],
       arcadeSpin: null,
+      arcadeView: "slot",
+      arcadeBet: 20,
       roomDrag: null,
       roomMode: "life",
       collectionInspectCatId: null,
