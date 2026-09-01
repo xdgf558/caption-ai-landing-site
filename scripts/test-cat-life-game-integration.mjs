@@ -162,6 +162,8 @@ assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
 assert.match(namespace, /version: "1\.21\.1"/);
 assert.match(namespace, /Cats switch to a side-on walking pose/);
+assert.match(namespace, /動きを減らす設定/);
+assert.doesNotMatch(namespace, /視差効果を減らす設定/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
