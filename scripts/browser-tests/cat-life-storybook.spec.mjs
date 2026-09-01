@@ -5,6 +5,7 @@ const desktopPages = [
   'work',
   'bank',
   'shop',
+  'inventory',
   'member_store',
   'cats',
   'hospital',
@@ -113,6 +114,13 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   await expect(page.locator('[data-shop-category="player"]')).toBeFocused();
   await expect(page.locator('#shop-panel')).toHaveAttribute('aria-labelledby', 'shop-tab-player');
   await expect(page.locator('.shop-grid .shop-card').first()).toBeVisible();
+
+  await page.locator('[data-store-item="bread"]').click();
+  await page.locator('.desktop-navigation [data-page-target="inventory"]').click();
+  const breadCard = page.locator('.inventory-card', { hasText: 'Bread' });
+  await expect(breadCard).toContainText('x1');
+  await breadCard.locator('[data-use-player-item="bread"]').click();
+  await expect(breadCard).toHaveCount(0);
 });
 
 test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', async ({ page }) => {
@@ -127,6 +135,12 @@ test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', a
 
   await page.locator('[data-page-target="more"]:visible').click();
   await expect(page.locator('[data-page-target="settings"]:visible')).toBeVisible();
+  await page.locator('[data-page-target="inventory"]:visible').click();
+  await expect(page.locator('.inventory-grid').first()).toBeVisible();
+  const inventoryWidth = await pageWidthReport(page);
+  expect(inventoryWidth.scroll, JSON.stringify(inventoryWidth.offenders)).toBe(390);
+
+  await page.locator('[data-page-target="more"]:visible').click();
   await page.locator('[data-page-target="shop"]:visible').click();
   await expect(page.locator('.shop-tabs')).toBeVisible();
   const shopWidth = await pageWidthReport(page);
