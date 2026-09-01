@@ -443,8 +443,17 @@
     window_perch: "src/assets/shop/shop-window.jpg",
   };
 
+  var roomImages = {
+    bed_basic: "src/assets/rooms/furniture-bed.png",
+    bowl_basic: "src/assets/rooms/furniture-bowl.png",
+    carpet_warm: "src/assets/rooms/furniture-rug.png",
+    climbing_tree: "src/assets/rooms/furniture-tree.png",
+    window_perch: "src/assets/rooms/furniture-window.png",
+  };
+
   items.forEach(function (item) {
     item.image = shopImages[item.id] || "src/assets/shop/shop-food.jpg";
+    item.roomImage = roomImages[item.id] || "";
   });
 
   game.data.items = items;

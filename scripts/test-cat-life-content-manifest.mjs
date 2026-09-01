@@ -13,7 +13,7 @@ vm.runInNewContext(source, context);
 const api = context.window.CatGameContentManifest;
 const manifest = api.manifest;
 assert.equal(manifest.schemaVersion, 1);
-assert.equal(manifest.releaseVersion, '1.19.0');
+assert.equal(manifest.releaseVersion, '1.21.1');
 assert.equal(manifest.products.length, 2);
 assert.equal(Object.isFrozen(manifest), true);
 assert.equal(Object.isFrozen(manifest.products), true);
@@ -44,6 +44,7 @@ inspectKeys(manifest);
 const skinProduct = api.getProduct('cat-life.skin.moonlit-tabby');
 assert.equal(skinProduct.kind, 'skin');
 assert.equal(api.getSkin(skinProduct.productId, 'cat_001').sprite, 'src/assets/premium/moonlit-tabby.png');
+assert.equal(api.getSkin(skinProduct.productId, 'cat_001').walkSprite, 'src/assets/cats/moonlit-tabby-walk.png');
 assert.equal(api.getSkin(skinProduct.productId, 'cat_002'), null);
 
 const roomProduct = api.getProduct('cat-life.bundle.station-room');
@@ -70,7 +71,10 @@ assert.equal(roomProduct.roomTheme.layoutPositions['station-waiting'].length, 4)
 const assetPaths = new Set();
 manifest.products.forEach((product) => {
   assetPaths.add(product.image);
-  (product.skins || []).forEach((skin) => assetPaths.add(skin.sprite));
+  (product.skins || []).forEach((skin) => {
+    assetPaths.add(skin.sprite);
+    if (skin.walkSprite) assetPaths.add(skin.walkSprite);
+  });
   (product.roomTheme?.fixtures || []).forEach((fixture) => assetPaths.add(fixture.asset));
 });
 for (const asset of assetPaths) {

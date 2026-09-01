@@ -942,7 +942,6 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
 .room-furniture-art {
   border-radius: 13px;
   height: 100%;
-  mix-blend-mode: multiply;
   object-fit: contain;
   pointer-events: none;
   width: 100%;
@@ -958,16 +957,41 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
   z-index: 4;
 }
 
+.room-cat-actor::after {
+  background: rgba(74, 52, 30, .2);
+  border-radius: 50%;
+  bottom: 16px;
+  content: "";
+  filter: blur(2px);
+  height: 10px;
+  left: 17px;
+  position: absolute;
+  width: 72px;
+  z-index: 0;
+}
+
+.room-cat-visual {
+  display: block;
+  height: 96px;
+  position: relative;
+  transform-origin: center bottom;
+  width: 104px;
+  z-index: 1;
+}
+
 .room-cat-actor .room-cat-sprite {
   border-radius: 0;
-  bottom: auto;
   display: block;
   height: 96px;
   object-fit: contain;
-  position: static;
+  inset: 0;
+  position: absolute;
   transform-origin: center bottom;
-  width: 96px;
+  width: 104px;
 }
+
+.room-cat-idle-sprite { opacity: 1; }
+.room-cat-walk-sprite { opacity: 0; }
 
 .room-cat-actor figcaption {
   background: rgba(255, 252, 246, .88);
@@ -985,17 +1009,36 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
   white-space: nowrap;
 }
 
-.room-cat-path-1 { animation: room-route-1 15s linear infinite; }
-.room-cat-path-2 { animation: room-route-2 17s linear infinite; }
-.room-cat-path-3 { animation: room-route-3 13.5s linear infinite; }
-.room-cat-facing-1 { animation: room-facing-1 15s step-end infinite; }
-.room-cat-facing-2 { animation: room-facing-2 17s step-end infinite; }
-.room-cat-facing-3 { animation: room-facing-3 13.5s step-end infinite; }
+.room-cat-path-1 { animation: room-route-1 15s linear infinite; animation-delay: var(--room-route-delay, 0s); }
+.room-cat-path-2 { animation: room-route-2 17s linear infinite; animation-delay: var(--room-route-delay, 0s); }
+.room-cat-path-3 { animation: room-route-3 13.5s linear infinite; animation-delay: var(--room-route-delay, 0s); }
+.room-cat-facing-1 { animation: room-facing-1 15s step-end infinite; animation-delay: var(--room-route-delay, 0s); }
+.room-cat-facing-2 { animation: room-facing-2 17s step-end infinite; animation-delay: var(--room-route-delay, 0s); }
+.room-cat-facing-3 { animation: room-facing-3 13.5s step-end infinite; animation-delay: var(--room-route-delay, 0s); }
+
+.room-cat-path-1 .room-cat-walk-sprite {
+  animation: room-walk-visible-1 15s step-end infinite, room-walk-step .38s ease-in-out infinite alternate;
+  animation-delay: var(--room-route-delay, 0s), 0s;
+}
+.room-cat-path-2 .room-cat-walk-sprite {
+  animation: room-walk-visible-2 17s step-end infinite, room-walk-step .38s ease-in-out infinite alternate;
+  animation-delay: var(--room-route-delay, 0s), 0s;
+}
+.room-cat-path-3 .room-cat-walk-sprite {
+  animation: room-walk-visible-3 13.5s step-end infinite, room-walk-step .38s ease-in-out infinite alternate;
+  animation-delay: var(--room-route-delay, 0s), 0s;
+}
+.room-cat-path-1 .room-cat-idle-sprite { animation: room-idle-visible-1 15s step-end infinite; animation-delay: var(--room-route-delay, 0s); }
+.room-cat-path-2 .room-cat-idle-sprite { animation: room-idle-visible-2 17s step-end infinite; animation-delay: var(--room-route-delay, 0s); }
+.room-cat-path-3 .room-cat-idle-sprite { animation: room-idle-visible-3 13.5s step-end infinite; animation-delay: var(--room-route-delay, 0s); }
 
 .room-scene.is-editing .room-cat-actor,
+.room-scene.is-editing .room-cat-visual,
 .room-scene.is-editing .room-cat-sprite {
   animation-play-state: paused;
 }
+.room-scene.is-editing .room-cat-idle-sprite { opacity: 1 !important; }
+.room-scene.is-editing .room-cat-walk-sprite { opacity: 0 !important; }
 
 .room-walk-zones {
   display: none;
@@ -1061,6 +1104,36 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
   69%, 100% { transform: scaleX(-1); }
 }
 
+@keyframes room-walk-step {
+  0% { transform: translateY(1px) rotate(-.7deg) scaleY(.985); }
+  100% { transform: translateY(-2px) rotate(.7deg) scaleY(1); }
+}
+
+@keyframes room-walk-visible-1 {
+  0%, 12%, 28%, 38%, 52%, 63%, 78%, 88%, 100% { opacity: 0; }
+  12.01%, 27.99%, 38.01%, 51.99%, 63.01%, 77.99%, 88.01%, 99.99% { opacity: 1; }
+}
+@keyframes room-idle-visible-1 {
+  0%, 12%, 28%, 38%, 52%, 63%, 78%, 88%, 100% { opacity: 1; }
+  12.01%, 27.99%, 38.01%, 51.99%, 63.01%, 77.99%, 88.01%, 99.99% { opacity: 0; }
+}
+@keyframes room-walk-visible-2 {
+  0%, 10%, 26%, 37%, 54%, 65%, 82%, 91%, 100% { opacity: 0; }
+  10.01%, 25.99%, 37.01%, 53.99%, 65.01%, 81.99%, 91.01%, 99.99% { opacity: 1; }
+}
+@keyframes room-idle-visible-2 {
+  0%, 10%, 26%, 37%, 54%, 65%, 82%, 91%, 100% { opacity: 1; }
+  10.01%, 25.99%, 37.01%, 53.99%, 65.01%, 81.99%, 91.01%, 99.99% { opacity: 0; }
+}
+@keyframes room-walk-visible-3 {
+  0%, 14%, 30%, 41%, 57%, 69%, 84%, 92%, 100% { opacity: 0; }
+  14.01%, 29.99%, 41.01%, 56.99%, 69.01%, 83.99%, 92.01%, 99.99% { opacity: 1; }
+}
+@keyframes room-idle-visible-3 {
+  0%, 14%, 30%, 41%, 57%, 69%, 84%, 92%, 100% { opacity: 1; }
+  14.01%, 29.99%, 41.01%, 56.99%, 69.01%, 83.99%, 92.01%, 99.99% { opacity: 0; }
+}
+
 @media (max-width: 1040px) {
   .room-home-header { grid-template-columns: minmax(220px, 1fr) auto; }
   .room-community-back { grid-column: 2; grid-row: 1; }
@@ -1084,7 +1157,8 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
   .room-option-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .room-stage-panel .room-furniture { height: 68px; width: 76px; }
   .room-cat-actor { width: 82px; }
-  .room-cat-actor .room-cat-sprite { height: 76px; width: 76px; }
+  .room-cat-visual,
+  .room-cat-actor .room-cat-sprite { height: 76px; width: 82px; }
   .room-cat-actor figcaption { max-width: 76px; }
 }
 
@@ -1111,5 +1185,8 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
 
 @media (prefers-reduced-motion: reduce) {
   .room-cat-actor,
+  .room-cat-visual,
   .room-cat-sprite { animation: none !important; }
+  .room-cat-idle-sprite { opacity: 1 !important; }
+  .room-cat-walk-sprite { opacity: 0 !important; }
 }
