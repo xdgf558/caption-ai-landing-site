@@ -88,6 +88,21 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   expect(Math.abs(markerAfterHover.x - markerBeforeHover.x)).toBeLessThan(6);
   expect(Math.abs(markerAfterHover.y - markerBeforeHover.y)).toBeLessThan(14);
 
+  await page.locator('[data-community-home]').click();
+  await expect(page.locator('.room-home-workspace')).toBeVisible();
+  await expect(page.locator('.room-cat-actor')).toHaveCount(1);
+  await expect(page.locator('.room-furniture-art')).toHaveCount(2);
+  await expect(page.locator('.room-home-page')).toHaveAttribute('data-room-mode', 'life');
+  const lifeAnimation = await page.locator('.room-cat-actor').evaluate((node) => getComputedStyle(node).animationName);
+  expect(lifeAnimation).toContain('room-route-');
+  await page.locator('[data-room-mode-target="edit"]').first().click();
+  await expect(page.locator('.room-home-page')).toHaveAttribute('data-room-mode', 'edit');
+  await expect(page.locator('.room-walk-zone')).toHaveCount(3);
+  const editAnimationState = await page.locator('.room-cat-actor').evaluate((node) => getComputedStyle(node).animationPlayState);
+  expect(editAnimationState).toBe('paused');
+  await page.locator('[data-room-mode-target="life"]').last().click();
+  await expect(page.locator('.room-home-page')).toHaveAttribute('data-room-mode', 'life');
+
   await page.locator('.desktop-navigation [data-page-target="shop"]').click();
   const shopTabs = page.locator('.shop-tabs [role="tab"]');
   await expect(shopTabs).toHaveCount(4);
@@ -121,6 +136,12 @@ test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', a
   await expect(page.locator('.work-card-icon')).toHaveCount(5);
   const workWidth = await pageWidthReport(page);
   expect(workWidth.scroll, JSON.stringify(workWidth.offenders)).toBe(390);
+
+  await page.locator('[data-page-target="community"]:visible').click();
+  await page.locator('[data-community-home]').click();
+  await expect(page.locator('.room-home-workspace')).toBeVisible();
+  const roomWidth = await pageWidthReport(page);
+  expect(roomWidth.scroll, JSON.stringify(roomWidth.offenders)).toBe(390);
 });
 
 test('aligns the website account action with the language control', async ({ page }) => {

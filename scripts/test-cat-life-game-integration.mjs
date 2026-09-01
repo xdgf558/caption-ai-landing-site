@@ -36,6 +36,10 @@ for (const path of [
   `${gameRoot}/src/assets/jobs/job-it-engineer.svg`,
   `${gameRoot}/src/assets/jobs/job-cat-cafe.svg`,
   `${gameRoot}/src/assets/jobs/LICENSE-phosphor.txt`,
+  `${gameRoot}/src/assets/rooms/room-storybook-empty.webp`,
+  `${gameRoot}/src/assets/rooms/decor-plants.webp`,
+  `${gameRoot}/src/assets/rooms/decor-poster.webp`,
+  `${gameRoot}/src/assets/rooms/decor-lanterns.webp`,
   `${gameRoot}/src/assets/premium/moonlit-tabby.png`,
   `${gameRoot}/src/assets/premium/station-room-set.jpg`,
   `${gameRoot}/src/assets/premium/station-bench.png`,
@@ -71,6 +75,7 @@ const settingsPanel = read(`${gameRoot}/src/js/ui/renderSettingsPanel.js`);
 const shopPanel = read(`${gameRoot}/src/js/ui/renderShopPanel.js`);
 const memberStorePanel = read(`${gameRoot}/src/js/ui/renderMemberStorePanel.js`);
 const workPanel = read(`${gameRoot}/src/js/ui/renderWorkPanel.js`);
+const roomPanel = read(`${gameRoot}/src/js/ui/renderRoomPanel.js`);
 const gameNavigation = read(`${gameRoot}/src/js/ui/renderNavigation.js`);
 const broadsheetStyles = read(`${gameRoot}/src/styles/broadsheet.css`);
 const landing = read('src/components/CatLifeGameLanding.astro');
@@ -144,8 +149,8 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.20\.1"/);
-assert.match(namespace, /neighbor homes in Cat Town jumping out of position/);
+assert.match(namespace, /version: "1\.21\.0"/);
+assert.match(namespace, /Cats now follow room routes/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
@@ -153,7 +158,7 @@ assert.match(landing, /five latest cloud versions remain available for recovery/
 assert.match(landing, /最近 5 份雲端記錄恢復/);
 assert.match(landing, /只有後台正式上架的商品才會顯示價格並允許兌換/);
 assert.match(landing, /Prices and redemption appear only after a product is formally activated in Admin/);
-assert.match(product, /latestVersion: '1\.20\.1'/);
+assert.match(product, /latestVersion: '1\.21\.0'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);
@@ -176,6 +181,15 @@ assert.doesNotMatch(shopPanel, /CatGameCommerce|notice-list/);
 assert.match(shopPanel, /inline-row shop-actions/);
 assert.doesNotMatch(workPanel, /t\("stamina"\)|t\("player_hunger"\)|t\("mood"\)/);
 assert.match(workPanel, /trustedJob\.iconPath/);
+assert.match(roomPanel, /data-room-mode-target/);
+assert.match(roomPanel, /room-home-workspace/);
+assert.match(roomPanel, /room-furniture-shelf/);
+assert.match(homeSystem, /room-cat-actor room-cat-path-/);
+assert.match(homeSystem, /room-furniture-art/);
+assert.doesNotMatch(homeSystem, /room-furniture-icon/);
+assert.match(broadsheetStyles, /@keyframes room-route-1/);
+assert.match(broadsheetStyles, /room-scene\.is-editing \.room-cat-actor/);
+assert.match(broadsheetStyles, /room-storybook-empty\.webp/);
 assert.match(memberStorePanel, /CatGameCommerce\.renderShopSection\(\)/);
 assert.match(gameNavigation, /"member_store"/);
 assert.match(gameMain, /member_store: game\.ui\.renderMemberStorePanel/);

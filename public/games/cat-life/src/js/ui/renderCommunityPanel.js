@@ -277,13 +277,7 @@
     var npc;
 
     if (game.state.communityView === "player_home") {
-      return (
-        '<section class="page-card">' +
-        '<div class="inline-row"><div><p class="section-eyebrow">' + t("page_community") + '</p><h3 class="panel-title">' + t("community_player_home") + "</h3></div>" +
-        '<button class="secondary-button" data-community-back>' + t("community_back") + "</button></div>" +
-        "</section>" +
-        game.ui.renderRoomPanel(state)
-      );
+      return game.ui.renderRoomPanel(state);
     }
 
     if (game.state.selectedCommunityNpcId) {
