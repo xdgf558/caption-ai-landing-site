@@ -25,6 +25,7 @@ for (const path of [
   `${gameRoot}/src/js/ui/renderHeader.js`,
   `${gameRoot}/src/js/ui/renderHome.js`,
   `${gameRoot}/src/js/ui/renderCatPanel.js`,
+  `${gameRoot}/src/js/ui/renderInventoryPanel.js`,
   `${gameRoot}/src/js/ui/renderMemberStorePanel.js`,
   `${gameRoot}/src/js/ui/renderWorkPanel.js`,
   `${gameRoot}/src/styles/broadsheet.css`,
@@ -84,6 +85,7 @@ const catPanel = read(`${gameRoot}/src/js/ui/renderCatPanel.js`);
 const savePanel = read(`${gameRoot}/src/js/ui/renderSavePanel.js`);
 const settingsPanel = read(`${gameRoot}/src/js/ui/renderSettingsPanel.js`);
 const shopPanel = read(`${gameRoot}/src/js/ui/renderShopPanel.js`);
+const inventoryPanel = read(`${gameRoot}/src/js/ui/renderInventoryPanel.js`);
 const memberStorePanel = read(`${gameRoot}/src/js/ui/renderMemberStorePanel.js`);
 const workPanel = read(`${gameRoot}/src/js/ui/renderWorkPanel.js`);
 const roomPanel = read(`${gameRoot}/src/js/ui/renderRoomPanel.js`);
@@ -160,10 +162,8 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.21\.1"/);
-assert.match(namespace, /Cats switch to a side-on walking pose/);
-assert.match(namespace, /動きを減らす設定/);
-assert.doesNotMatch(namespace, /視差効果を減らす設定/);
+assert.match(namespace, /version: "1\.22\.0"/);
+assert.match(namespace, /Added a dedicated player backpack/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
@@ -171,7 +171,7 @@ assert.match(landing, /five latest cloud versions remain available for recovery/
 assert.match(landing, /最近 5 份雲端記錄恢復/);
 assert.match(landing, /只有後台正式上架的商品才會顯示價格並允許兌換/);
 assert.match(landing, /Prices and redemption appear only after a product is formally activated in Admin/);
-assert.match(product, /latestVersion: '1\.21\.1'/);
+assert.match(product, /latestVersion: '1\.22\.0'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);
@@ -190,6 +190,7 @@ assert.match(headers, /X-Robots-Tag: noindex, nofollow/);
 assert.match(gameIndex, /data-cat-recovery-action/);
 assert.match(gameIndex, /data-cat-recovery-dialog/);
 assert.match(gameIndex, /renderMemberStorePanel\.js/);
+assert.match(gameIndex, /renderInventoryPanel\.js/);
 assert.doesNotMatch(shopPanel, /CatGameCommerce|notice-list/);
 assert.match(shopPanel, /inline-row shop-actions/);
 assert.doesNotMatch(workPanel, /t\("stamina"\)|t\("player_hunger"\)|t\("mood"\)/);
@@ -217,8 +218,16 @@ assert.match(broadsheetStyles, /room-scene\.is-editing \.room-cat-actor/);
 assert.match(broadsheetStyles, /room-storybook-empty\.webp/);
 assert.match(memberStorePanel, /CatGameCommerce\.renderShopSection\(\)/);
 assert.match(gameNavigation, /"member_store"/);
+assert.match(gameNavigation, /"inventory"/);
 assert.match(gameMain, /member_store: game\.ui\.renderMemberStorePanel/);
+assert.match(gameMain, /inventory: game\.ui\.renderInventoryPanel/);
 assert.match(i18n, /nav_member_store: "Member Store"/);
+assert.match(i18n, /nav_inventory: "Backpack"/);
+assert.match(inventoryPanel, /data-use-player-item/);
+assert.match(inventoryPanel, /data-cat-action/);
+assert.match(inventoryPanel, /data-community-home/);
+assert.match(inventoryPanel, /format\.escapeHtml\(t\("inventory_use_for"/);
+assert.match(broadsheetStyles, /\.inventory-grid/);
 assert.match(headerPanel, /role="progressbar"/);
 assert.match(headerPanel, /aria-valuenow/);
 assert.match(broadsheetStyles, /--story-orange: #e8834a/);
@@ -342,6 +351,122 @@ const localizedRoomMarkup = roomGame.systems.homeSystem.renderRoomScene(
 assert.match(localizedRoomMarkup, /Marmalade/);
 assert.match(localizedRoomMarkup, /cat-walk\.png/);
 assert.doesNotMatch(localizedRoomMarkup, /小橘/);
+
+const inventoryCounts = {
+  bread: 2,
+  food_basic: 3,
+  cat_snack: 1
+};
+const inventoryGame = {
+  state: { selectedCatId: 'cat_001' },
+  data: {
+    items: [
+      {
+        id: 'bread',
+        name: '面包',
+        nameEn: 'Bread',
+        type: 'playerConsumable',
+        image: 'bread.jpg',
+        descriptionEn: 'A filling snack.',
+        effectTextEn: 'Hunger -12'
+      },
+      {
+        id: 'food_basic',
+        name: '普通猫粮',
+        nameEn: 'Basic Cat Food',
+        type: 'consumable',
+        category: 'food',
+        image: 'food.jpg',
+        descriptionEn: 'Daily cat food.',
+        effectTextEn: 'Hunger +25'
+      },
+      {
+        id: 'cat_snack',
+        name: '猫咪小零食',
+        nameEn: 'Cat Snack',
+        type: 'consumable',
+        category: 'community',
+        image: 'snack.jpg',
+        descriptionEn: 'A community gift.',
+        effectTextEn: 'Trade material'
+      },
+      {
+        id: 'bed_basic',
+        name: '猫窝',
+        nameEn: 'Cat Bed',
+        type: 'furniture',
+        image: 'bed-shop.jpg',
+        roomImage: 'bed-room.png',
+        descriptionEn: 'A comfortable bed.',
+        effectTextEn: 'Comfort +10'
+      },
+      {
+        id: 'coffee',
+        name: '咖啡',
+        nameEn: 'Coffee',
+        type: 'playerConsumable',
+        image: 'coffee.jpg',
+        descriptionEn: 'A drink.',
+        effectTextEn: 'Stamina +12'
+      }
+    ]
+  },
+  utils: {
+    format: {
+      escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;');
+      },
+      formatNumber(value) {
+        return String(value);
+      }
+    },
+    i18n: {
+      t(key, vars) {
+        if (key === 'inventory_use_for') return `Use for ${vars.name}`;
+        if (key === 'inventory_group_count') return `${vars.count} types`;
+        return key;
+      },
+      getDataText(record, field) {
+        return record[`${field}En`] || record[field] || '';
+      }
+    },
+    catArt: {
+      getCatSpriteUrl() {
+        return 'cat.png';
+      }
+    }
+  },
+  systems: {
+    playerSystem: {
+      getInventoryCount(itemId) {
+        return inventoryCounts[itemId] || 0;
+      },
+      hasActiveSleep() {
+        return false;
+      }
+    }
+  },
+  ui: {}
+};
+const inventoryContext = { window: { CatGame: inventoryGame } };
+vm.runInNewContext(inventoryPanel, inventoryContext);
+const inventoryMarkup = inventoryGame.ui.renderInventoryPanel({
+  inventory: { furnitureOwned: ['bed_basic'] },
+  cats: [{ id: 'cat_001', unlocked: true, isAlive: true, name: '<小橘>', nameEn: '<Marmalade>' }]
+});
+assert.match(inventoryMarkup, /data-use-player-item="bread"/);
+assert.match(inventoryMarkup, /data-cat-action="feedBasic" data-cat-id="cat_001"/);
+assert.match(inventoryMarkup, /data-page-target="community"/);
+assert.match(inventoryMarkup, /data-community-home/);
+assert.match(inventoryMarkup, /bed-room\.png/);
+assert.match(inventoryMarkup, /x2/);
+assert.match(inventoryMarkup, /&lt;Marmalade&gt;/);
+assert.doesNotMatch(inventoryMarkup, /<Marmalade>/);
+assert.doesNotMatch(inventoryMarkup, /Coffee/);
 
 const policyContext = { window: {} };
 vm.runInNewContext(cloudSyncPolicy, policyContext);

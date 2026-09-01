@@ -212,7 +212,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .main-content { background: transparent; border: 0; box-shadow: none; min-height: 620px; min-width: 0; padding: 0 0 36px; }
 .main-content > * + * { margin-top: 18px; }
 .page-header { align-items: stretch; display: grid; gap: 14px; grid-template-columns: minmax(0, 1.7fr) minmax(230px, .8fr); }
-.page-card, .settings-card, .stat-card, .work-card, .shop-card, .task-card, .care-card,
+.page-card, .settings-card, .stat-card, .work-card, .shop-card, .inventory-card, .task-card, .care-card,
 .arcade-hero-card, .community-card, .headline {
   background: var(--story-paper);
   border: 2px solid var(--story-ink);
@@ -220,7 +220,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   box-shadow: var(--story-shadow-small);
   color: var(--story-ink);
 }
-.page-header, .page-header > *, .page-card, .main-content, .shop-grid, .shop-card,
+.page-header, .page-header > *, .page-card, .main-content, .shop-grid, .shop-card, .inventory-grid, .inventory-card,
 .shop-card > :not(.shop-art), .shop-row > *, .inline-row > * { min-width: 0; }
 .page-header .inline-row, .shop-row { flex-wrap: wrap; }
 .page-copy, .helper-text, .panel-title, .shop-meta, .pill, .status-pill { overflow-wrap: anywhere; }
@@ -442,6 +442,30 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
 .shop-actions { align-items: flex-end; align-self: end; flex-wrap: wrap; grid-row: 7; justify-content: flex-end; margin-top: auto !important; }
 .shop-actions .status-pill { margin-right: auto; }
 
+.inventory-header { grid-template-columns: minmax(0, 1.45fr) minmax(300px, .9fr); }
+.inventory-summary { display: grid; gap: 9px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; }
+.inventory-summary > div { background: rgba(243, 231, 208, .62); border: 1px solid rgba(74, 59, 42, .2); border-radius: 12px; display: grid; gap: 2px; padding: 10px; }
+.inventory-summary strong { color: var(--story-orange); font-size: 23px; line-height: 1; }
+.inventory-summary span { color: #756652; font-size: 10px; font-weight: 800; }
+.inventory-target-card { background: var(--story-mint); }
+.inventory-cat-selector { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.inventory-cat-chip { align-items: center; background: var(--story-paper); border: 1.5px solid var(--story-ink); border-radius: 999px; color: var(--story-ink); display: inline-flex; font-size: 10px; font-weight: 900; gap: 6px; min-height: 38px; padding: 4px 10px 4px 5px; }
+.inventory-cat-chip img { background: var(--story-muted); border-radius: 50%; height: 28px; object-fit: contain; width: 28px; }
+.inventory-cat-chip.is-selected { background: var(--story-orange); color: var(--story-paper); }
+.inventory-section { border-top: 2px solid rgba(74, 59, 42, .18); padding-top: 18px; }
+.inventory-grid { display: grid; gap: 13px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.inventory-card { display: grid; gap: 13px; grid-template-columns: 112px minmax(0, 1fr); min-height: 190px; padding: 12px; }
+.inventory-art { align-self: stretch; background: #fffaf0; border: 1.5px solid var(--story-ink); border-radius: 15px 11px 17px 12px; min-height: 150px; overflow: hidden; }
+.inventory-art img { height: 100%; object-fit: contain; width: 100%; }
+.inventory-card-copy { display: flex; flex-direction: column; min-width: 0; }
+.inventory-card-heading { align-items: flex-start; display: flex; gap: 8px; justify-content: space-between; }
+.inventory-count { align-items: center; background: var(--story-yellow); border: 1.5px solid var(--story-ink); border-radius: 999px; display: inline-flex; flex: 0 0 auto; font-size: 10px; font-weight: 900; min-height: 25px; padding: 4px 8px; }
+.inventory-card .page-copy { font-size: 11px; margin-top: 7px; }
+.inventory-card .shop-meta { margin-top: 7px; }
+.inventory-actions { align-items: flex-end; display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: auto; padding-top: 12px; }
+.inventory-empty { text-align: center; }
+.inventory-empty .primary-button { margin-top: 14px; }
+
 .cat-layout, .collection-layout { display: grid; gap: 16px; grid-template-columns: 210px minmax(0, 1fr); }
 .cat-chip { align-items: center; background: var(--story-paper); border: 2px solid var(--story-ink); border-radius: 16px 12px 18px 13px; box-shadow: var(--story-shadow-small); color: var(--story-ink); display: block; padding: 8px; text-align: left; width: 100%; }
 .cat-chip.is-selected { background: var(--story-orange); color: var(--story-paper); }
@@ -507,6 +531,7 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
   .sleep-live-copy { align-self: center; grid-column: auto; }
   .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .shop-card { grid-template-columns: 112px minmax(0, 1fr); }
+  .inventory-header { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 900px) {
@@ -538,6 +563,7 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
   .home-cat-stage { min-height: 350px; }
   .shop-grid { grid-template-columns: 1fr; }
   .shop-card { grid-template-columns: 150px minmax(0, 1fr); }
+  .inventory-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 700px) {
@@ -590,6 +616,12 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
   .price-stack { align-items: flex-start; }
   .shop-actions { justify-content: flex-start; }
   .shop-actions .status-pill { flex-basis: 100%; margin-right: 0; width: fit-content; }
+  .inventory-summary { gap: 6px; }
+  .inventory-summary > div { padding: 8px; }
+  .inventory-summary strong { font-size: 19px; }
+  .inventory-card { gap: 10px; grid-template-columns: 88px minmax(0, 1fr); min-height: 172px; padding: 10px; }
+  .inventory-art { min-height: 126px; }
+  .inventory-actions { justify-content: flex-start; }
   .summary-grid, .collection-grid { grid-template-columns: 1fr; }
   .primary-button, .secondary-button, .ghost-button, .action-button, .chip-button,
   .store-button, .task-button, .text-link { min-height: 44px; }

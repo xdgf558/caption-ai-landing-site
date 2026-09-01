@@ -371,6 +371,7 @@
       arcade: game.ui.renderArcadePanel,
       hospital: game.ui.renderHospitalPanel,
       shop: game.ui.renderShopPanel,
+      inventory: game.ui.renderInventoryPanel,
       member_store: game.ui.renderMemberStorePanel,
       tasks: game.ui.renderTaskPanel,
       version: game.ui.renderVersionPanel,

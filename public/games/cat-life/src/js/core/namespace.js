@@ -2,25 +2,25 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.21.1",
+      version: "1.22.0",
       saveSchemaVersion: 2,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
-          "房间家具改用透明背景资源，猫窝、食盆、地毯、猫爬架和窗边台不再出现白色方框。",
-          "猫咪移动时会切换到侧身迈步姿势并产生轻微步态起伏，停留时恢复坐姿。",
-          "会员月夜虎斑皮肤新增对应行走姿势，装修模式与减少动态效果仍会暂停走动。",
+          "新增独立玩家背包，商店购买和社区收集的物品会按玩家补给、猫咪用品、社区材料与家具分类显示。",
+          "食物和饮料可以直接在背包使用；猫粮、猫砂、玩具、猫草和护理用品可以直接用于当前选中的猫咪。",
+          "家具与社区材料提供前往小家或猫町的快捷入口，库存、自动存档和云同步继续使用原有数据。",
         ],
         en: [
-          "Room furniture now uses transparent assets, removing the white boxes around beds, bowls, rugs, cat trees, and window perches.",
-          "Cats switch to a side-on walking pose with a subtle gait while moving, then return to their seated pose when they stop.",
-          "The Moonlit Tabby member skin has its own walking pose, while Edit mode and reduced motion still pause movement.",
+          "Added a dedicated player backpack that groups shop purchases and community finds into player supplies, cat supplies, materials, and furniture.",
+          "Food and drinks can be used directly, while cat food, litter, toys, grass, and care items apply to the currently selected cat.",
+          "Furniture and community materials link to My Home or Cat Town, while inventory, auto-save, and cloud sync continue using the existing data.",
         ],
         ja: [
-          "ベッド、フードボウル、ラグ、キャットタワー、窓辺ベッドを透過素材に変更し、白い四角をなくしました。",
-          "移動中は横向きの歩行姿勢と小さな歩行モーションに切り替わり、停止すると座り姿勢に戻ります。",
-          "会員向け月夜トラ猫にも歩行姿勢を追加し、編集モードと動きを減らす設定では従来どおり停止します。",
+          "プレイヤー用バッグを追加し、ショップ購入品とコミュニティ入手品を補給品、猫用品、素材、家具に分けて表示します。",
+          "食べ物と飲み物はバッグから直接使え、猫のごはん、猫砂、おもちゃ、猫草、ケア用品は選択中の猫に使えます。",
+          "家具とコミュニティ素材から自分の家や猫町へ移動でき、所持数、自動セーブ、クラウド同期は既存データをそのまま使います。",
         ],
       },
       readoptCost: 80,
