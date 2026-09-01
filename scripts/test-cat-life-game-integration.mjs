@@ -185,6 +185,8 @@ assert.match(roomPanel, /data-room-mode-target/);
 assert.match(roomPanel, /room-home-workspace/);
 assert.match(roomPanel, /room-furniture-shelf/);
 assert.match(homeSystem, /room-cat-actor room-cat-path-/);
+assert.match(homeSystem, /var catName = getText\(cat, "name"\)/);
+assert.doesNotMatch(homeSystem, /escapeHtml\(cat\.name\)|name: cat\.name/);
 assert.match(homeSystem, /room-furniture-art/);
 assert.doesNotMatch(homeSystem, /room-furniture-icon/);
 assert.match(broadsheetStyles, /@keyframes room-route-1/);

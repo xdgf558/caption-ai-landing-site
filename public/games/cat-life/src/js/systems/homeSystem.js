@@ -1,5 +1,6 @@
 (function (game) {
   var t = game.utils.i18n.t;
+  var getText = game.utils.i18n.getText;
   var escapeHtml = game.utils.format.escapeHtml;
   var contentManifest = window.CatGameContentManifest;
   var stationRoomProduct = contentManifest && contentManifest.getProduct("cat-life.bundle.station-room");
@@ -320,21 +321,22 @@
     var catMarkup = cats
       .map(function (cat, index) {
         var route = (index % 3) + 1;
+        var catName = getText(cat, "name");
         return (
           '<figure class="room-cat-actor room-cat-path-' +
           route +
           '" style="animation-delay:' +
           index * -1.8 +
           's;" aria-label="' +
-          escapeHtml(t("room_cat_route_label", { name: cat.name })) +
+          escapeHtml(t("room_cat_route_label", { name: catName })) +
           '"><img class="room-cat-sprite room-cat-facing-' +
           route +
           '" src="' +
           game.utils.catArt.buildCatSvg(cat, 104) +
           '" alt="' +
-          escapeHtml(cat.name) +
+          escapeHtml(catName) +
           '" /><figcaption>' +
-          escapeHtml(cat.name) +
+          escapeHtml(catName) +
           "</figcaption></figure>"
         );
       })
