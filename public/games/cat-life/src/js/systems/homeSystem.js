@@ -1,6 +1,6 @@
 (function (game) {
   var t = game.utils.i18n.t;
-  var getText = game.utils.i18n.getText;
+  var getDataText = game.utils.i18n.getDataText;
   var escapeHtml = game.utils.format.escapeHtml;
   var contentManifest = window.CatGameContentManifest;
   var stationRoomProduct = contentManifest && contentManifest.getProduct("cat-life.bundle.station-room");
@@ -321,7 +321,7 @@
     var catMarkup = cats
       .map(function (cat, index) {
         var route = (index % 3) + 1;
-        var catName = getText(cat, "name");
+        var catName = getDataText(cat, "name");
         return (
           '<figure class="room-cat-actor room-cat-path-' +
           route +

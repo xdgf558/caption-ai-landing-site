@@ -185,7 +185,8 @@ assert.match(roomPanel, /data-room-mode-target/);
 assert.match(roomPanel, /room-home-workspace/);
 assert.match(roomPanel, /room-furniture-shelf/);
 assert.match(homeSystem, /room-cat-actor room-cat-path-/);
-assert.match(homeSystem, /var catName = getText\(cat, "name"\)/);
+assert.match(homeSystem, /var getDataText = game\.utils\.i18n\.getDataText/);
+assert.match(homeSystem, /var catName = getDataText\(cat, "name"\)/);
 assert.doesNotMatch(homeSystem, /escapeHtml\(cat\.name\)|name: cat\.name/);
 assert.match(homeSystem, /room-furniture-art/);
 assert.doesNotMatch(homeSystem, /room-furniture-icon/);
@@ -281,6 +282,40 @@ assert.equal(
 languageContext.window.CatGameIntegration.useSavedLanguage(savedLanguage);
 assert.equal(languageContext.window.CatGameIntegration.sessionLanguage, '');
 assert.equal(new URL(replacedUrl).searchParams.has('lang'), false);
+
+const roomGame = languageContext.window.CatGame;
+roomGame.systems = {};
+roomGame.config = {
+  roomUpgradeSteps: [{ level: 1, capacity: 3, width: 620, height: 360, upgradeCost: null }]
+};
+roomGame.data = { itemMap: {} };
+roomGame.state.game.home = {
+  roomLevel: 1,
+  placedFurniture: [],
+  furnitureLayout: {},
+  roomScene: { wall: 'sunny', floor: 'oak', decor: 'plants', layout: 'cozy' }
+};
+roomGame.state.game.inventory = { furnitureOwned: [] };
+roomGame.state.game.player = { gold: 0 };
+roomGame.utils.format = {
+  escapeHtml(value) {
+    return String(value);
+  }
+};
+roomGame.utils.catArt = {
+  buildCatSvg() {
+    return 'cat.svg';
+  }
+};
+vm.runInNewContext(homeSystem, languageContext);
+const localizedRoomMarkup = roomGame.systems.homeSystem.renderRoomScene(
+  roomGame.state.game.home.roomScene,
+  [{ name: '小橘', nameEn: 'Marmalade', nameJa: 'マーマレード' }],
+  [],
+  { mode: 'life' }
+);
+assert.match(localizedRoomMarkup, /Marmalade/);
+assert.doesNotMatch(localizedRoomMarkup, /小橘/);
 
 const policyContext = { window: {} };
 vm.runInNewContext(cloudSyncPolicy, policyContext);
