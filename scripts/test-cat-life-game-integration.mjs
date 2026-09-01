@@ -358,7 +358,7 @@ const inventoryCounts = {
   cat_snack: 1
 };
 const inventoryGame = {
-  state: { selectedCatId: 'cat_001' },
+  state: { selectedCatId: 'cat_dead' },
   data: {
     items: [
       {
@@ -456,8 +456,16 @@ const inventoryContext = { window: { CatGame: inventoryGame } };
 vm.runInNewContext(inventoryPanel, inventoryContext);
 const inventoryMarkup = inventoryGame.ui.renderInventoryPanel({
   inventory: { furnitureOwned: ['bed_basic'] },
-  cats: [{ id: 'cat_001', unlocked: true, isAlive: true, name: '<小橘>', nameEn: '<Marmalade>' }]
+  cats: [
+    { id: 'cat_dead', unlocked: true, isAlive: false, name: '旧猫', nameEn: 'Late Cat' },
+    { id: 'cat_001', unlocked: true, isAlive: true, name: '<小橘>', nameEn: '<Marmalade>' }
+  ]
 });
+assert.equal(
+  inventoryGame.state.selectedCatId,
+  'cat_dead',
+  'rendering the backpack must not replace the global cat selection'
+);
 assert.match(inventoryMarkup, /data-use-player-item="bread"/);
 assert.match(inventoryMarkup, /data-cat-action="feedBasic" data-cat-id="cat_001"/);
 assert.match(inventoryMarkup, /data-page-target="community"/);
@@ -467,6 +475,29 @@ assert.match(inventoryMarkup, /x2/);
 assert.match(inventoryMarkup, /&lt;Marmalade&gt;/);
 assert.doesNotMatch(inventoryMarkup, /<Marmalade>/);
 assert.doesNotMatch(inventoryMarkup, /Coffee/);
+
+const itemDataGame = { config: { toyWandUsesPerPurchase: 6 }, data: {} };
+vm.runInNewContext(itemsData, { window: { CatGame: itemDataGame } });
+inventoryGame.data.items = itemDataGame.data.items;
+inventoryGame.systems.playerSystem.getInventoryCount = () => 1;
+const allItemsMarkup = inventoryGame.ui.renderInventoryPanel({
+  inventory: {
+    furnitureOwned: itemDataGame.data.items
+      .filter((item) => item.type === 'furniture')
+      .map((item) => item.id)
+  },
+  cats: [{ id: 'cat_001', unlocked: true, isAlive: true, name: '小橘', nameEn: 'Marmalade' }]
+});
+for (const item of itemDataGame.data.items.filter((entry) => {
+  return entry.type === 'consumable' && entry.category !== 'community';
+})) {
+  const card = allItemsMarkup.match(
+    new RegExp(`<article class="inventory-card" data-inventory-item="${item.id}">[\\s\\S]*?</article>`)
+  );
+  assert.ok(card, `${item.id} must render in the backpack`);
+  assert.match(card[0], /data-cat-action=/, `${item.id} must map to a cat action`);
+  assert.doesNotMatch(card[0], /data-page-target="community"/, `${item.id} must not fall back to Cat Town`);
+}
 
 const policyContext = { window: {} };
 vm.runInNewContext(cloudSyncPolicy, policyContext);

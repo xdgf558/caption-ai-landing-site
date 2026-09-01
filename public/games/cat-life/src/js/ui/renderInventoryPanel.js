@@ -30,14 +30,9 @@
     var availableCats = state.cats.filter(function (cat) {
       return cat.unlocked && cat.isAlive !== false;
     });
-    var selected = availableCats.find(function (cat) {
+    return availableCats.find(function (cat) {
       return cat.id === game.state.selectedCatId;
     }) || availableCats[0] || null;
-
-    if (selected) {
-      game.state.selectedCatId = selected.id;
-    }
-    return selected;
   }
 
   function renderCatSelector(state, selectedCat) {
@@ -49,7 +44,8 @@
       return '<p class="helper-text">' + t("inventory_no_cat_target") + "</p>";
     }
 
-    return '<div class="inventory-cat-selector" aria-label="' + format.escapeHtml(t("inventory_cat_target")) + '">' +
+    return '<div class="inventory-cat-selector" role="group" aria-label="' +
+      format.escapeHtml(t("inventory_cat_target")) + '">' +
       cats.map(function (cat) {
         var name = getText(cat, "name");
         var selected = selectedCat && selectedCat.id === cat.id;
@@ -60,19 +56,18 @@
       }).join("") + "</div>";
   }
 
-  function renderAction(item, count, selectedCat, sleeping) {
+  function renderAction(item, selectedCat, sleeping) {
     var action = catActions[item.id];
 
     if (item.type === "playerConsumable") {
       return '<button class="secondary-button" data-use-player-item="' + format.escapeHtml(item.id) + '" ' +
-        (count <= 0 || sleeping ? "disabled" : "") + ">" + t("use_item") + "</button>";
+        (sleeping ? "disabled" : "") + ">" + t("use_item") + "</button>";
     }
 
-    if (action) {
+    if (action && selectedCat) {
       return '<button class="action-button" data-cat-action="' + action + '" data-cat-id="' +
-        format.escapeHtml(selectedCat ? selectedCat.id : "") + '" ' +
-        (count <= 0 || !selectedCat ? "disabled" : "") + ">" +
-        format.escapeHtml(t("inventory_use_for", { name: selectedCat ? getText(selectedCat, "name") : t("nav_cats") })) +
+        format.escapeHtml(selectedCat.id) + '">' +
+        format.escapeHtml(t("inventory_use_for", { name: getText(selectedCat, "name") })) +
         "</button>";
     }
 
@@ -80,14 +75,18 @@
       return '<button class="ghost-button" data-community-home>' + t("inventory_go_home") + "</button>";
     }
 
-    return '<button class="ghost-button" data-page-target="community">' + t("inventory_go_town") + "</button>";
+    if (item.type === "material" || item.category === "community") {
+      return '<button class="ghost-button" data-page-target="community">' + t("inventory_go_town") + "</button>";
+    }
+
+    return "";
   }
 
   function renderItemCard(entry, selectedCat, sleeping) {
     var item = entry.item;
     var image = item.type === "furniture" ? (item.roomImage || item.image) : item.image;
 
-    return '<article class="inventory-card">' +
+    return '<article class="inventory-card" data-inventory-item="' + format.escapeHtml(item.id) + '">' +
       '<div class="inventory-art"><img src="' + format.escapeHtml(image) + '" alt="' +
       format.escapeHtml(getText(item, "name")) + '" width="512" height="384" loading="lazy" /></div>' +
       '<div class="inventory-card-copy"><div class="inventory-card-heading"><div><p class="section-eyebrow">' +
@@ -96,7 +95,7 @@
       (item.type === "furniture" ? t("owned") : "x" + format.formatNumber(entry.count)) + "</span></div>" +
       '<p class="page-copy">' + format.escapeHtml(getText(item, "description")) + "</p>" +
       '<p class="shop-meta">' + t("effect") + "：" + format.escapeHtml(getText(item, "effectText")) + "</p>" +
-      '<div class="inventory-actions">' + renderAction(item, entry.count, selectedCat, sleeping) + "</div></div></article>";
+      '<div class="inventory-actions">' + renderAction(item, selectedCat, sleeping) + "</div></div></article>";
   }
 
   function renderGroup(group, entries, selectedCat, sleeping) {
@@ -130,7 +129,8 @@
     return '<section class="page-header inventory-header"><div class="page-card page-intro-card">' +
       '<p class="section-eyebrow">' + t("page_inventory") + '</p><h2 class="page-title">' +
       t("inventory_panel_title") + '</h2><p class="page-copy">' + t("inventory_panel_copy") +
-      '</p><div class="inventory-summary" aria-label="' + format.escapeHtml(t("inventory_summary")) + '">' +
+      '</p><div class="inventory-summary" role="group" aria-label="' +
+      format.escapeHtml(t("inventory_summary")) + '">' +
       '<div><strong>' + entries.length + '</strong><span>' + t("inventory_unique_items") + '</span></div>' +
       '<div><strong>' + format.formatNumber(totalUnits) + '</strong><span>' + t("inventory_total_units") + '</span></div>' +
       '<div><strong>' + furnitureCount + '</strong><span>' + t("inventory_furniture_count") +
