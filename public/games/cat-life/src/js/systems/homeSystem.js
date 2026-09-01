@@ -325,17 +325,17 @@
         return (
           '<figure class="room-cat-actor room-cat-path-' +
           route +
-          '" style="animation-delay:' +
+          '" style="--room-route-delay:' +
           index * -1.8 +
           's;" aria-label="' +
           escapeHtml(t("room_cat_route_label", { name: catName })) +
-          '"><img class="room-cat-sprite room-cat-facing-' +
+          '"><span class="room-cat-visual room-cat-facing-' +
           route +
-          '" src="' +
+          '" aria-hidden="true"><img class="room-cat-sprite room-cat-idle-sprite" src="' +
           game.utils.catArt.buildCatSvg(cat, 104) +
-          '" alt="' +
-          escapeHtml(catName) +
-          '" /><figcaption>' +
+          '" alt="" /><img class="room-cat-sprite room-cat-walk-sprite" src="' +
+          game.utils.catArt.getCatWalkUrl(cat) +
+          '" alt="" /></span><figcaption>' +
           escapeHtml(catName) +
           "</figcaption></figure>"
         );
@@ -354,7 +354,7 @@
           spot.top +
           ';">' +
           '<img class="room-furniture-art" src="' +
-          escapeHtml(item.image) +
+          escapeHtml(item.roomImage || item.image) +
           '" alt="' +
           escapeHtml(game.utils.i18n.getDataText(item, "name")) +
           '" draggable="false" />' +

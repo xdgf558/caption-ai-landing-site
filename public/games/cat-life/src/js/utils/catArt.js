@@ -4,6 +4,11 @@
     cow_cat: "cow-cat.png",
     blue_cat: "blue-cat.png",
   };
+  var walkFiles = {
+    orange_tabby: "orange-tabby-walk.png",
+    cow_cat: "cow-cat-walk.png",
+    blue_cat: "blue-cat-walk.png",
+  };
   var poseFiles = {
     angry: "angry.png",
     celebrate: "celebrate.png",
@@ -93,6 +98,18 @@
       return null;
     }
 
+    return new URL("src/assets/cats/" + fileName, document.baseURI).href;
+  }
+
+  function getCatWalkUrl(cat) {
+    var memberSprite = window.CatGameCommerce && typeof window.CatGameCommerce.getCatWalkSprite === "function"
+      ? window.CatGameCommerce.getCatWalkSprite(cat)
+      : "";
+    if (memberSprite) {
+      return memberSprite;
+    }
+    var artKey = inferArtKeyFromTraits((cat && cat.traits) || {});
+    var fileName = walkFiles[artKey] || walkFiles.orange_tabby;
     return new URL("src/assets/cats/" + fileName, document.baseURI).href;
   }
 
@@ -192,6 +209,7 @@
     buildCatSvg: buildCatSvg,
     inferArtKeyFromTraits: inferArtKeyFromTraits,
     getCatSpriteUrl: getCatSpriteUrl,
+    getCatWalkUrl: getCatWalkUrl,
     getCatStageUrl: getCatStageUrl,
     getCatPose: getCatPose,
     getCatReaction: getCatReaction,

@@ -29,6 +29,10 @@ for (const path of [
   `${gameRoot}/src/js/ui/renderWorkPanel.js`,
   `${gameRoot}/src/styles/broadsheet.css`,
   `${gameRoot}/src/assets/cats/orange-tabby.png`,
+  `${gameRoot}/src/assets/cats/orange-tabby-walk.png`,
+  `${gameRoot}/src/assets/cats/cow-cat-walk.png`,
+  `${gameRoot}/src/assets/cats/blue-cat-walk.png`,
+  `${gameRoot}/src/assets/cats/moonlit-tabby-walk.png`,
   `${gameRoot}/src/assets/community/npc-cat-sprites.png`,
   `${gameRoot}/src/assets/jobs/job-flyer.svg`,
   `${gameRoot}/src/assets/jobs/job-store.svg`,
@@ -40,6 +44,11 @@ for (const path of [
   `${gameRoot}/src/assets/rooms/decor-plants.webp`,
   `${gameRoot}/src/assets/rooms/decor-poster.webp`,
   `${gameRoot}/src/assets/rooms/decor-lanterns.webp`,
+  `${gameRoot}/src/assets/rooms/furniture-bed.png`,
+  `${gameRoot}/src/assets/rooms/furniture-bowl.png`,
+  `${gameRoot}/src/assets/rooms/furniture-rug.png`,
+  `${gameRoot}/src/assets/rooms/furniture-tree.png`,
+  `${gameRoot}/src/assets/rooms/furniture-window.png`,
   `${gameRoot}/src/assets/premium/moonlit-tabby.png`,
   `${gameRoot}/src/assets/premium/station-room-set.jpg`,
   `${gameRoot}/src/assets/premium/station-bench.png`,
@@ -62,11 +71,13 @@ const cloudSync = read(`${gameRoot}/cloud-sync.js`);
 const commerce = read(`${gameRoot}/commerce.js`);
 const contentManifest = read(`${gameRoot}/content-manifest.js`);
 const homeSystem = read(`${gameRoot}/src/js/systems/homeSystem.js`);
+const itemsData = read(`${gameRoot}/src/js/data/itemsData.js`);
 const gameMain = read(`${gameRoot}/src/js/main.js`);
 const saveMigrations = read(`${gameRoot}/src/js/state/saveMigrations.js`);
 const saveSystem = read(`${gameRoot}/src/js/state/saveSystem.js`);
 const namespace = read(`${gameRoot}/src/js/core/namespace.js`);
 const i18n = read(`${gameRoot}/src/js/core/i18n.js`);
+const catArt = read(`${gameRoot}/src/js/utils/catArt.js`);
 const headerPanel = read(`${gameRoot}/src/js/ui/renderHeader.js`);
 const homePanel = read(`${gameRoot}/src/js/ui/renderHome.js`);
 const catPanel = read(`${gameRoot}/src/js/ui/renderCatPanel.js`);
@@ -149,8 +160,10 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.21\.0"/);
-assert.match(namespace, /Cats now follow room routes/);
+assert.match(namespace, /version: "1\.21\.1"/);
+assert.match(namespace, /Cats switch to a side-on walking pose/);
+assert.match(namespace, /動きを減らす設定/);
+assert.doesNotMatch(namespace, /視差効果を減らす設定/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
@@ -158,7 +171,7 @@ assert.match(landing, /five latest cloud versions remain available for recovery/
 assert.match(landing, /最近 5 份雲端記錄恢復/);
 assert.match(landing, /只有後台正式上架的商品才會顯示價格並允許兌換/);
 assert.match(landing, /Prices and redemption appear only after a product is formally activated in Admin/);
-assert.match(product, /latestVersion: '1\.21\.0'/);
+assert.match(product, /latestVersion: '1\.21\.1'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);
@@ -185,12 +198,21 @@ assert.match(roomPanel, /data-room-mode-target/);
 assert.match(roomPanel, /room-home-workspace/);
 assert.match(roomPanel, /room-furniture-shelf/);
 assert.match(homeSystem, /room-cat-actor room-cat-path-/);
+assert.match(homeSystem, /room-cat-walk-sprite/);
+assert.match(catArt, /getCatWalkUrl/);
+assert.match(commerce, /getCatWalkSprite/);
 assert.match(homeSystem, /var getDataText = game\.utils\.i18n\.getDataText/);
 assert.match(homeSystem, /var catName = getDataText\(cat, "name"\)/);
 assert.doesNotMatch(homeSystem, /escapeHtml\(cat\.name\)|name: cat\.name/);
 assert.match(homeSystem, /room-furniture-art/);
+assert.match(homeSystem, /item\.roomImage \|\| item\.image/);
 assert.doesNotMatch(homeSystem, /room-furniture-icon/);
+assert.match(itemsData, /bed_basic: "src\/assets\/rooms\/furniture-bed\.png"/);
+assert.match(itemsData, /window_perch: "src\/assets\/rooms\/furniture-window\.png"/);
+assert.doesNotMatch(broadsheetStyles, /\.room-furniture-art[\s\S]*?mix-blend-mode/);
 assert.match(broadsheetStyles, /@keyframes room-route-1/);
+assert.match(broadsheetStyles, /@keyframes room-walk-step/);
+assert.match(broadsheetStyles, /@keyframes room-walk-visible-1/);
 assert.match(broadsheetStyles, /room-scene\.is-editing \.room-cat-actor/);
 assert.match(broadsheetStyles, /room-storybook-empty\.webp/);
 assert.match(memberStorePanel, /CatGameCommerce\.renderShopSection\(\)/);
@@ -305,6 +327,9 @@ roomGame.utils.format = {
 roomGame.utils.catArt = {
   buildCatSvg() {
     return 'cat.svg';
+  },
+  getCatWalkUrl() {
+    return 'cat-walk.png';
   }
 };
 vm.runInNewContext(homeSystem, languageContext);
@@ -315,6 +340,7 @@ const localizedRoomMarkup = roomGame.systems.homeSystem.renderRoomScene(
   { mode: 'life' }
 );
 assert.match(localizedRoomMarkup, /Marmalade/);
+assert.match(localizedRoomMarkup, /cat-walk\.png/);
 assert.doesNotMatch(localizedRoomMarkup, /小橘/);
 
 const policyContext = { window: {} };

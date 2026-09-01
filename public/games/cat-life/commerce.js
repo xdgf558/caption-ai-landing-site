@@ -342,6 +342,12 @@
     return skin ? new URL(skin.sprite, document.baseURI).href : "";
   }
 
+  function getCatWalkSprite(cat) {
+    if (!cat || !isMoonlitEquipped()) return "";
+    var skin = contentManifest.getSkin("cat-life.skin.moonlit-tabby", cat.id);
+    return skin && skin.walkSprite ? new URL(skin.walkSprite, document.baseURI).href : getCatSprite(cat);
+  }
+
   function getProductDescription(productId) {
     var copy = getCopy();
     if (productId === "cat-life.skin.moonlit-tabby") return copy.descriptionSkin;
@@ -604,6 +610,7 @@
     renderShopSection: renderShopSection,
     hasEntitlement: hasEntitlement,
     getCatSprite: getCatSprite,
+    getCatWalkSprite: getCatWalkSprite,
     isMoonlitEquipped: isMoonlitEquipped,
     manifests: manifests,
     getSnapshot: function () {

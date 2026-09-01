@@ -11,7 +11,7 @@
 
   var manifest = deepFreeze({
     schemaVersion: 1,
-    releaseVersion: "1.19.0",
+    releaseVersion: "1.21.1",
     products: [
       {
         productId: "cat-life.skin.moonlit-tabby",
@@ -24,6 +24,7 @@
             id: "moonlit-tabby",
             targetCatIds: ["cat_001"],
             sprite: "src/assets/premium/moonlit-tabby.png",
+            walkSprite: "src/assets/cats/moonlit-tabby-walk.png",
           },
         ],
       },
