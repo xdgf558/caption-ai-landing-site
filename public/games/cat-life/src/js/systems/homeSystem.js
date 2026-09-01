@@ -1,5 +1,6 @@
 (function (game) {
   var t = game.utils.i18n.t;
+  var getDataText = game.utils.i18n.getDataText;
   var escapeHtml = game.utils.format.escapeHtml;
   var contentManifest = window.CatGameContentManifest;
   var stationRoomProduct = contentManifest && contentManifest.getProduct("cat-life.bundle.station-room");
@@ -217,6 +218,23 @@
       .join("");
   }
 
+  function renderBaseDecor(scene) {
+    var decorAssets = {
+      plants: "src/assets/rooms/decor-plants.webp",
+      posters: "src/assets/rooms/decor-poster.webp",
+      lanterns: "src/assets/rooms/decor-lanterns.webp",
+    };
+    var asset = decorAssets[scene.decor];
+
+    return asset
+      ? '<img class="room-base-decor room-base-decor--' +
+          escapeHtml(scene.decor) +
+          '" src="' +
+          escapeHtml(asset) +
+          '" alt="" aria-hidden="true" loading="lazy" />'
+      : "";
+  }
+
   function getFurniturePosition(furnitureId, index, layoutName) {
     var layout = ensureFurnitureLayout();
     return layout[furnitureId] || getFurniturePlacement(layoutName, index);
@@ -293,24 +311,33 @@
       .filter(Boolean);
   }
 
-  function renderRoomScene(scene, cats, furniture) {
+  function renderRoomScene(scene, cats, furniture, options) {
     scene = getRenderableRoomScene(scene);
+    options = options || {};
     var roomStep = getCurrentRoomStep();
     syncPlacedFurnitureCapacity(true);
     ensureFurnitureLayout();
 
     var catMarkup = cats
       .map(function (cat, index) {
+        var route = (index % 3) + 1;
+        var catName = getDataText(cat, "name");
         return (
-          '<img class="room-cat-sprite room-cat-path-' +
-          ((index % 3) + 1) +
-          '" src="' +
-          game.utils.catArt.buildCatSvg(cat, 88) +
-          '" alt="' +
-          escapeHtml(cat.name) +
+          '<figure class="room-cat-actor room-cat-path-' +
+          route +
           '" style="animation-delay:' +
-          index * 0.6 +
-          's;" />'
+          index * -1.8 +
+          's;" aria-label="' +
+          escapeHtml(t("room_cat_route_label", { name: catName })) +
+          '"><img class="room-cat-sprite room-cat-facing-' +
+          route +
+          '" src="' +
+          game.utils.catArt.buildCatSvg(cat, 104) +
+          '" alt="' +
+          escapeHtml(catName) +
+          '" /><figcaption>' +
+          escapeHtml(catName) +
+          "</figcaption></figure>"
         );
       })
       .join("");
@@ -326,9 +353,11 @@
           ";top:" +
           spot.top +
           ';">' +
-          '<span class="room-furniture-icon">' +
-          item.icon +
-          "</span>" +
+          '<img class="room-furniture-art" src="' +
+          escapeHtml(item.image) +
+          '" alt="' +
+          escapeHtml(game.utils.i18n.getDataText(item, "name")) +
+          '" draggable="false" />' +
           "</div>"
         );
       })
@@ -343,16 +372,21 @@
       scene.decor +
       " room-level-" +
       roomStep.level +
-      '" style="max-width:' +
-      roomStep.width +
-      "px;min-height:" +
-      roomStep.height +
-      'px;">' +
+      (options.mode === "edit" ? " is-editing" : " is-living") +
+      '">' +
       '<div class="room-scene-badge">' +
       t("room_capacity_text", { count: roomStep.capacity }) +
       "</div>" +
+      '<div class="room-walk-zones" aria-hidden="true"><span class="room-walk-zone room-walk-zone--rest">' +
+      t("room_route_rest") +
+      '</span><span class="room-walk-zone room-walk-zone--food">' +
+      t("room_route_food") +
+      '</span><span class="room-walk-zone room-walk-zone--play">' +
+      t("room_route_play") +
+      "</span></div>" +
       '<div class="room-wall-art"></div>' +
       '<div class="room-floor"></div>' +
+      renderBaseDecor(scene) +
       renderThemeFixtures(scene) +
       furnitureMarkup +
       catMarkup +

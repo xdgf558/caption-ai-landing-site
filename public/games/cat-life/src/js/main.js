@@ -548,7 +548,32 @@
     var clearCustomMusicButton = event.target.closest("[data-clear-custom-music]");
     var soundToggleButton = event.target.closest("[data-top-sound-toggle]");
     var shopCategoryButton = event.target.closest("[data-shop-category]");
+    var roomModeButton = event.target.closest("[data-room-mode-target]");
+    var roomOptionButton = event.target.closest("[data-room-option-key]");
     var catActionResult;
+
+    if (roomModeButton) {
+      game.state.roomMode = roomModeButton.dataset.roomModeTarget === "edit" ? "edit" : "life";
+      render();
+      return;
+    }
+
+    if (roomOptionButton) {
+      var roomOptionKey = roomOptionButton.dataset.roomOptionKey;
+      var roomOptionValue = roomOptionButton.dataset.roomOptionValue;
+      if (!game.systems.homeSystem.isRoomSettingAllowed(roomOptionKey, roomOptionValue)) {
+        pushNotice(t("premium_room_locked"));
+        render();
+        return;
+      }
+      game.state.game.home.roomScene[roomOptionKey] = roomOptionValue;
+      if (roomOptionKey === "layout") {
+        game.systems.homeSystem.resetFurnitureLayout();
+      }
+      persistGame(true);
+      render();
+      return;
+    }
 
     if (soundToggleButton) {
       if (game.state.game.settings.bgmEnabled !== false && Number(game.state.game.settings.bgmVolume || 0) > 0) {
@@ -605,6 +630,7 @@
     if (communityHomeButton) {
       game.state.currentPage = "community";
       game.state.communityView = "player_home";
+      game.state.roomMode = "life";
       game.state.selectedCommunityNpcId = null;
       render();
       return;
@@ -1012,7 +1038,12 @@
     var furniture = event.target.closest(".room-furniture[data-furniture-id]");
     var scene;
 
-    if (!furniture || (game.state.currentPage !== "room" && !(game.state.currentPage === "community" && game.state.communityView === "player_home"))) {
+    if (
+      !furniture ||
+      game.state.roomMode !== "edit" ||
+      (game.state.currentPage !== "room" &&
+        !(game.state.currentPage === "community" && game.state.communityView === "player_home"))
+    ) {
       return;
     }
 
