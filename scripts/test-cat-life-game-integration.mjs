@@ -41,6 +41,7 @@ for (const path of [
   `${gameRoot}/src/assets/jobs/job-it-engineer.svg`,
   `${gameRoot}/src/assets/jobs/job-cat-cafe.svg`,
   `${gameRoot}/src/assets/jobs/LICENSE-phosphor.txt`,
+  `${gameRoot}/src/assets/work/work-shift-flyer.jpg`,
   `${gameRoot}/src/assets/rooms/room-storybook-empty.webp`,
   `${gameRoot}/src/assets/rooms/decor-plants.webp`,
   `${gameRoot}/src/assets/rooms/decor-poster.webp`,

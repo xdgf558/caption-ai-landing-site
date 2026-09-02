@@ -143,6 +143,8 @@
       arcadeSpin: null,
       arcadeView: "slot",
       arcadeBet: 20,
+      workJobId: "job_flyer",
+      workFilter: "all",
       roomDrag: null,
       roomMode: "life",
       collectionInspectCatId: null,
