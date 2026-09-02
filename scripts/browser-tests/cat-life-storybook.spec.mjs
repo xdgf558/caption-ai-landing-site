@@ -109,6 +109,16 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   }));
   expect(workIconReport).toEqual({ loaded: true, sources: 5 });
 
+  await page.locator('.desktop-navigation [data-page-target="cats"]').click();
+  await expect(page.locator('.cat-roster-card')).toHaveCount(3);
+  await expect(page.locator('.cat-journal-profile')).toBeVisible();
+  await expect(page.locator('.cat-journal-care')).toBeVisible();
+  await expect(page.locator('.cat-action-card')).toHaveCount(7);
+  await expect(page.locator('.cat-profile-scene .cat-profile-cat')).toHaveAttribute('src', /assets\//);
+  await expect(page.locator('.cat-profile-section [role="progressbar"]')).toHaveCount(5);
+  await page.locator('.cat-recommendation [data-cat-action="feedBasic"]').click();
+  await expect(page.locator('.cat-action-card[data-cat-action="feedBasic"]')).toContainText('Stock 2');
+
   await page.locator('.desktop-navigation [data-page-target="community"]').click();
   const neighborMarker = page.locator('[data-community-neighbor]').first();
   const markerBeforeHover = await neighborMarker.boundingBox();
@@ -181,6 +191,13 @@ test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', a
   await expect(page.locator('.work-roster-icon')).toHaveCount(5);
   const workWidth = await pageWidthReport(page);
   expect(workWidth.scroll, JSON.stringify(workWidth.offenders)).toBe(390);
+
+  await page.locator('[data-page-target="cats"]:visible').click();
+  await expect(page.locator('.cat-roster')).toBeVisible();
+  await expect(page.locator('.cat-journal-profile')).toBeVisible();
+  await expect(page.locator('.cat-action-card')).toHaveCount(7);
+  const catsWidth = await pageWidthReport(page);
+  expect(catsWidth.scroll, JSON.stringify(catsWidth.offenders)).toBe(390);
 
   await page.locator('[data-page-target="more"]:visible').click();
   await page.locator('[data-page-target="bank"]:visible').click();
