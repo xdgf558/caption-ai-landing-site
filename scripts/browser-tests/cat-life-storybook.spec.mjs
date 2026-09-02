@@ -173,6 +173,45 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   await expect(breadCard).toHaveCount(0);
 });
 
+test('keeps hospital treatment copy and patient profile selection aligned', async ({ page }) => {
+  await page.goto('/games/cat-life/?lang=en');
+  await page.evaluate(() => {
+    const cat = window.CatGame.state.game.cats.find((entry) => entry.id === 'cat_001');
+    const now = new Date().toISOString();
+    cat.diseaseId = 'cold';
+    cat.health = 28;
+    cat.diseaseStartedAt = now;
+    cat.diseaseProgressAt = now;
+    cat.diseaseCheckAt = now;
+    window.CatGame.state.game.player.gold = 0;
+    window.CatGame.state.selectedCatId = cat.id;
+    window.CatGameApp.render();
+  });
+
+  await page.locator('[data-page-target="hospital"]').first().click();
+  await expect(page.locator('.hospital-patient-card.is-sick')).toBeVisible();
+  await expect(page.locator('.hospital-treat-button')).toBeDisabled();
+  await expect(page.locator('.hospital-work-button')).toHaveText('Find work');
+  await expect(page.locator('.hospital-work-button')).not.toContainText('go_work');
+
+  await page.evaluate(() => {
+    const cat = window.CatGame.state.game.cats.find((entry) => entry.id === 'cat_001');
+    cat.diseaseId = null;
+    cat.health = 90;
+    cat.diseaseStartedAt = null;
+    window.CatGame.state.game.player.gold = 200;
+    window.CatGame.state.selectedCatId = cat.id;
+    window.CatGameApp.render();
+  });
+
+  await expect(page.locator('.hospital-patient-card.is-stable')).toBeVisible();
+  const currentCatId = await page.locator('.hospital-patient-card [data-page-target="cats"][data-select-cat]').getAttribute('data-select-cat');
+  expect(currentCatId).toBeTruthy();
+  await page.locator('.hospital-patient-card [data-page-target="cats"][data-select-cat]').click();
+  await expect(page.locator('.cat-journal-profile')).toBeVisible();
+  expect(await page.evaluate(() => window.CatGame.state.selectedCatId)).toBe(currentCatId);
+});
+
 test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/games/cat-life/?lang=en');
