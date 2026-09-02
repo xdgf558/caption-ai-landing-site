@@ -207,6 +207,14 @@
     var remainingText = activeWork
       ? format.formatDuration(game.systems.workSystem.getRemainingMs(activeWork))
       : t("task_completed");
+    var workProgress = 0;
+
+    if (activeWork) {
+      workProgress = format.toPercent(
+        Date.now() - new Date(activeWork.startedAt).getTime(),
+        new Date(activeWork.endsAt).getTime() - new Date(activeWork.startedAt).getTime()
+      );
+    }
 
     function refreshStat(valueSelector, barSelector, value, inverseTone) {
       var safeValue = Math.max(0, Math.min(100, Math.round(value || 0)));
@@ -231,9 +239,13 @@
       node.textContent = remainingText;
     });
 
-    Array.prototype.forEach.call(document.querySelectorAll("[data-stamina-recovery]"), function (node) {
-      var countdown = game.systems.timeSystem.getStaminaRecoveryCountdown();
-      node.textContent = countdown === null ? t("stamina_full") : format.formatDuration(countdown);
+    Array.prototype.forEach.call(document.querySelectorAll("[data-active-work-progress]"), function (node) {
+      node.style.width = workProgress + "%";
+      node.setAttribute("aria-valuenow", workProgress);
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-work-live-status]"), function (node) {
+      node.textContent = activeWork ? t("work_scene_active") : t("work_scene_ready");
     });
 
     refreshStat("[data-player-stamina-live]", "[data-player-stamina-bar]", displayStats.stamina, false);
@@ -519,6 +531,8 @@
     var pageButton = event.target.closest("[data-page-target]");
     var catSelectButton = event.target.closest("[data-select-cat]");
     var jobButton = event.target.closest("[data-job-id]");
+    var workSelectButton = event.target.closest("[data-select-work-job]");
+    var workFilterButton = event.target.closest("[data-work-filter]");
     var catActionButton = event.target.closest("[data-cat-action]");
     var shopButton = event.target.closest("[data-store-item]");
     var taskButton = event.target.closest("[data-task-claim]");
@@ -697,6 +711,20 @@
 
     if (catSelectButton) {
       game.state.selectedCatId = catSelectButton.dataset.selectCat;
+      render();
+      return;
+    }
+
+    if (workFilterButton && game.state.currentPage === "work") {
+      game.state.workFilter = ["all", "unlocked", "locked"].indexOf(workFilterButton.dataset.workFilter) >= 0
+        ? workFilterButton.dataset.workFilter
+        : "all";
+      render();
+      return;
+    }
+
+    if (workSelectButton && game.state.currentPage === "work") {
+      game.state.workJobId = workSelectButton.dataset.selectWorkJob;
       render();
       return;
     }
