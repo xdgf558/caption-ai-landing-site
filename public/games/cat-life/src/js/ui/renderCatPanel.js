@@ -244,6 +244,7 @@
   function renderRecommendation(actionKey, state, cat) {
     var action = getActionMeta(actionKey);
     var item = getActionItem(action);
+    var available = canPerformAction(action, state, cat);
     var actionLabel = t(action.labelKey);
     var actionCount = getActionCount(action, state);
     var effectText = item ? getText(item, "effectText") : t(action.effectKey);
@@ -258,8 +259,9 @@
       '<div class="cat-recommendation-body"><div class="cat-recommendation-art"><img src="' + safe(getActionImage(action)) + '" alt="' +
       safe(item ? getText(item, "name") : actionLabel) + '" width="160" height="120" decoding="async" /><span class="cat-recommendation-stock">' +
       safe(stockText) + '</span></div><div class="cat-recommendation-copy"><h4>' + safe(actionLabel) + '</h4><p>' + safe(detailText) +
-      '</p><div class="cat-recommendation-meta"><span>' + safe(effectText) + '</span><span>' + safe(stockText) + '</span></div><button type="button" class="primary-button" data-cat-action="' +
-      safe(action.key) + '" aria-label="' + safe(actionLabel) + '">' + t("cat_execute") + '</button></div></div><p class="cat-recommendation-note">' +
+      '</p><div class="cat-recommendation-meta"><span>' + safe(effectText) + '</span><span>' + safe(stockText) + '</span></div><button type="button" class="primary-button' +
+      (!available ? ' is-unavailable' : '') + '" data-cat-action="' + safe(action.key) + '"' + (!available ? ' disabled' : '') + ' aria-label="' + safe(actionLabel) + '">' +
+      t("cat_execute") + '</button></div></div><p class="cat-recommendation-note">' +
       t("cat_recommendation_copy", { name: safe(getText(cat, "name")) }) + '</p></section>';
   }
 

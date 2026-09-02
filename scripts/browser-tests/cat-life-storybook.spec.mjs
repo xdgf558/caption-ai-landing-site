@@ -116,6 +116,15 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   await expect(page.locator('.cat-action-card')).toHaveCount(7);
   await expect(page.locator('.cat-profile-scene .cat-profile-cat')).toHaveAttribute('src', /assets\//);
   await expect(page.locator('.cat-profile-section [role="progressbar"]')).toHaveCount(5);
+  const catNameLabel = page.locator('label.sr-only[for="cat-name-input"]');
+  await expect(catNameLabel).toBeAttached();
+  await expect(catNameLabel).toHaveCSS('position', 'absolute');
+  await expect(catNameLabel).toHaveCSS('width', '1px');
+  const recommendedAction = await page.locator('.cat-recommendation [data-cat-action]').getAttribute('data-cat-action');
+  const recommendedButton = page.locator('.cat-recommendation [data-cat-action]');
+  const recommendedCard = page.locator(`.cat-action-card[data-cat-action="${recommendedAction}"]`);
+  expect(await recommendedButton.isDisabled()).toBe(await recommendedCard.isDisabled());
+  await expect(recommendedButton).toBeEnabled();
   await page.locator('.cat-recommendation [data-cat-action="feedBasic"]').click();
   await expect(page.locator('.cat-action-card[data-cat-action="feedBasic"]')).toContainText('Stock 2');
 

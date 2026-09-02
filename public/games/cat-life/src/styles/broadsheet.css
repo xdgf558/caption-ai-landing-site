@@ -32,6 +32,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   outline: 3px solid var(--story-blue);
   outline-offset: 3px;
 }
+.sr-only {
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
 
 .broadsheet-shell.app-frame {
   background: transparent;
@@ -1641,16 +1652,6 @@ body:has(.arcade-page) .newspaper-header { margin-bottom: 18px; }
 .arcade-summary-copy strong { color: var(--arcade-ink); font-size: 14px; }
 .arcade-summary-copy p { margin: 6px 0 0; }
 
-.arcade-page .sr-only {
-  clip: rect(0, 0, 0, 0);
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
-}
-
 @keyframes arcade-pulse {
   from { opacity: 0.42; transform: scale(0.82); }
   to { opacity: 1; transform: scale(1.15); }
@@ -1994,8 +1995,6 @@ body:has(.arcade-page) .newspaper-header { margin-bottom: 18px; }
 .bank-settlement-value { color: var(--story-ink); display: block; font-size: 17px; line-height: 1.25; margin-top: 10px; overflow-wrap: anywhere; }
 .bank-settlement-card .helper-text, .bank-history-card .helper-text { margin-top: 7px; }
 .bank-history-card .bank-history-note { border-top: 1px dashed rgba(74, 59, 42, .2); margin-top: 10px; padding-top: 9px; }
-.bank-page .sr-only { height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-
 @keyframes bank-clerk-breathe {
   from { transform: translate3d(0, 2px, 0) rotate(-.5deg); }
   to { transform: translate3d(0, -3px, 0) rotate(.5deg); }
