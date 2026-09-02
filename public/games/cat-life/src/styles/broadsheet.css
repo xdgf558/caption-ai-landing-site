@@ -1951,6 +1951,11 @@ body:has(.arcade-page) .newspaper-header { margin-bottom: 18px; }
 .bank-amount-label { color: var(--story-ink); font-size: 11px; font-weight: 900; }
 .bank-amount-hint { color: #8b7a62; font-size: 10px; line-height: 1.35; overflow-wrap: anywhere; text-align: right; }
 .bank-amount-input { font-size: 18px; font-weight: 900; grid-column: 1 / -1; min-height: 50px; margin-top: 3px; }
+.bank-quick-groups { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 10px; }
+.bank-lane-loan .bank-quick-groups { grid-template-columns: 1fr; }
+.bank-quick-group { min-width: 0; }
+.bank-quick-label { color: #8b7a62; display: block; font-size: 9px; font-weight: 900; letter-spacing: .04em; margin-bottom: 5px; text-transform: uppercase; }
+.bank-quick-group .bank-quick-actions { margin-top: 0; }
 .bank-quick-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
 .bank-quick-chip { min-height: 34px; min-width: 44px; padding: 5px 10px; }
 .bank-quick-chip-max { background: var(--story-yellow); }
@@ -1988,7 +1993,7 @@ body:has(.arcade-page) .newspaper-header { margin-bottom: 18px; }
 .bank-history-card .bank-settlement-dot { background: var(--story-blue); }
 .bank-settlement-value { color: var(--story-ink); display: block; font-size: 17px; line-height: 1.25; margin-top: 10px; overflow-wrap: anywhere; }
 .bank-settlement-card .helper-text, .bank-history-card .helper-text { margin-top: 7px; }
-.bank-history-note { border-top: 1px dashed rgba(74, 59, 42, .2); margin-top: 10px !important; padding-top: 9px; }
+.bank-history-card .bank-history-note { border-top: 1px dashed rgba(74, 59, 42, .2); margin-top: 10px; padding-top: 9px; }
 .bank-page .sr-only { height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
 @keyframes bank-clerk-breathe {
@@ -2039,6 +2044,7 @@ body:has(.arcade-page) .newspaper-header { margin-bottom: 18px; }
   .bank-financial-stat + .bank-financial-stat, .bank-financial-stat:nth-child(n + 3) { border-left: 0; border-top: 1px dashed rgba(74, 59, 42, .25); }
   .bank-financial-stat:first-child { border-top: 0; }
   .bank-lane-actions { grid-template-columns: 1fr; }
+  .bank-quick-groups { grid-template-columns: 1fr; }
   .bank-loan-facts { grid-template-columns: 1fr; }
   .bank-amount-field { grid-template-columns: 1fr; }
   .bank-amount-hint { text-align: left; }

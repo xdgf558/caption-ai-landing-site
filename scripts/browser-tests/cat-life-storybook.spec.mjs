@@ -75,9 +75,21 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   await expect(page.locator('.bank-financial-stat')).toHaveCount(5);
   await expect(page.locator('.bank-lane')).toHaveCount(2);
   await expect(page.locator('.bank-lane-action')).toHaveCount(4);
+  await expect(page.locator('#bank-deposit-input')).not.toHaveAttribute('max');
+  await expect(page.locator('#bank-loan-input')).not.toHaveAttribute('max');
   await page.locator('#bank-deposit-input').fill('50');
   await page.getByRole('button', { name: 'Deposit', exact: true }).click();
   await expect(page.locator('.bank-financial-stat.is-savings')).toContainText('50');
+  await expect(page.locator('[data-bank-action="withdraw"][data-bank-amount="10"]')).toBeEnabled();
+  await expect(page.locator('[data-bank-action="withdraw"][data-bank-amount="100"]')).toBeDisabled();
+  await page.locator('[data-bank-action="withdraw"][data-bank-amount="10"]').click();
+  await expect(page.locator('.bank-financial-stat.is-savings')).toContainText('40');
+  await page.locator('#bank-loan-input').fill('100');
+  await page.getByRole('button', { name: 'Take a loan', exact: true }).click();
+  await expect(page.locator('.bank-financial-stat.is-debt')).toContainText('100');
+  await expect(page.locator('[data-bank-action="repay"][data-bank-amount="10"]')).toBeEnabled();
+  await page.locator('[data-bank-action="repay"][data-bank-amount="10"]').click();
+  await expect(page.locator('.bank-financial-stat.is-debt')).toContainText('90');
 
   await page.locator('.desktop-navigation [data-page-target="work"]').click();
   const workIcons = page.locator('.work-roster-icon img');

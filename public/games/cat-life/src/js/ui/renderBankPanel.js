@@ -47,6 +47,18 @@
     return buttons;
   }
 
+  function renderQuickGroup(label, action, inputId, maxAmount) {
+    return (
+      '<div class="bank-quick-group"><span class="bank-quick-label">' +
+      label +
+      '</span><div class="bank-quick-actions" aria-label="' +
+      copy("bank_quick_amounts") +
+      '">' +
+      renderQuickButtons(action, inputId, maxAmount) +
+      "</div></div>"
+    );
+  }
+
   function renderStat(label, value, meta, tone) {
     return (
       '<div class="bank-financial-stat ' +
@@ -85,7 +97,7 @@
     );
   }
 
-  function renderAmountField(inputId, maxAmount, hint) {
+  function renderAmountField(inputId, hint) {
     return (
       '<div class="bank-amount-field"><label class="bank-amount-label" for="' +
       inputId +
@@ -95,9 +107,7 @@
       hint +
       '</span><input id="' +
       inputId +
-      '" class="text-field bank-amount-input" type="number" min="1" step="1" inputmode="numeric" max="' +
-      maxAmount +
-      '" placeholder="' +
+      '" class="text-field bank-amount-input" type="number" min="1" step="1" inputmode="numeric" placeholder="' +
       copy("bank_amount_placeholder") +
       '" aria-describedby="' +
       inputId +
@@ -251,16 +261,24 @@
       '</div><div class="bank-lane-divider"></div>' +
       renderAmountField(
         "bank-deposit-input",
-        Math.max(maxDeposit, maxWithdraw),
         copy("bank_savings_input_hint", {
           cash: format.formatNumber(maxDeposit),
           savings: format.formatNumber(maxWithdraw),
         })
       ) +
-      '<div class="bank-quick-actions" aria-label="' +
-      copy("bank_quick_amounts") +
-      '">' +
-      renderQuickButtons("deposit", "bank-deposit-input", maxDeposit) +
+      '<div class="bank-quick-groups">' +
+      renderQuickGroup(
+        copy("bank_deposit_title"),
+        "deposit",
+        "bank-deposit-input",
+        maxDeposit
+      ) +
+      renderQuickGroup(
+        copy("bank_withdraw_title"),
+        "withdraw",
+        "bank-deposit-input",
+        maxWithdraw
+      ) +
       '</div><p class="bank-lane-hint">' +
       copy("bank_savings_hint") +
       '</p><div class="bank-lane-footer"><span>' +
@@ -300,15 +318,24 @@
       '</div><div class="bank-lane-divider"></div>' +
       renderAmountField(
         "bank-loan-input",
-        Math.max(loanLimit, maxRepay),
         hasLoan
           ? copy("bank_current_debt_amount", { amount: format.formatNumber(bank.totalDebt) })
           : copy("bank_loan_room", { amount: format.formatNumber(loanLimit) })
       ) +
-      '<div class="bank-quick-actions" aria-label="' +
-      copy("bank_quick_amounts") +
-      '">' +
-      renderQuickButtons("loan", "bank-loan-input", loanCanBeStarted ? loanLimit : 0) +
+      '<div class="bank-quick-groups">' +
+      (hasLoan
+        ? renderQuickGroup(
+            copy("bank_repay_title"),
+            "repay",
+            "bank-loan-input",
+            maxRepay
+          )
+        : renderQuickGroup(
+            copy("bank_loan_take_title"),
+            "loan",
+            "bank-loan-input",
+            loanCanBeStarted ? loanLimit : 0
+          )) +
       '</div><p class="bank-lane-hint bank-loan-note">' +
       copy(hasLoan ? "bank_active_loan_copy" : "bank_no_loan_copy") +
       '</p><div class="bank-loan-facts"><div><span>' +
@@ -328,7 +355,9 @@
         rate: Math.round(game.config.bank.dailyInterestRate * 100),
       }) +
       '</span><strong>' +
-      copy("bank_loan_limit_now", { amount: format.formatNumber(loanLimit) }) +
+      amount(loanLimit) +
+      " " +
+      goldUnit +
       '</strong></div></div><div class="bank-payoff-row"><div><p class="section-eyebrow">' +
       copy("bank_repay_full_title") +
       '</p><p class="helper-text">' +
