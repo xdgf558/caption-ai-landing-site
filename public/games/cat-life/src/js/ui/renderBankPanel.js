@@ -3,18 +3,29 @@
   var t = game.utils.i18n.t;
   var quickAmounts = game.config.bank.quickAmounts;
 
+  function copy(key, vars) {
+    return format.escapeHtml(t(key, vars));
+  }
+
+  function amount(value) {
+    return format.escapeHtml(format.formatNumber(value));
+  }
+
   function renderQuickButtons(action, inputId, maxAmount) {
     var buttons = quickAmounts
-      .map(function (amount) {
+      .map(function (value) {
+        var disabled = value > maxAmount;
         return (
-          '<button class="chip-button" data-bank-action="' +
+          '<button class="chip-button bank-quick-chip" type="button" data-bank-action="' +
           action +
           '" data-bank-input="' +
           inputId +
           '" data-bank-amount="' +
-          amount +
-          '">' +
-          amount +
+          value +
+          '"' +
+          (disabled ? " disabled" : "") +
+          ">" +
+          amount(value) +
           "</button>"
         );
       })
@@ -22,56 +33,105 @@
 
     if (maxAmount > 0) {
       buttons +=
-        '<button class="chip-button" data-bank-action="' +
+        '<button class="chip-button bank-quick-chip bank-quick-chip-max" type="button" data-bank-action="' +
         action +
         '" data-bank-input="' +
         inputId +
         '" data-bank-amount="' +
         maxAmount +
         '">' +
-        t("bank_max_button") +
+        copy("bank_max_button") +
         "</button>";
     }
 
     return buttons;
   }
 
-  function renderActionCard(title, copy, inputId, action, confirmText, maxAmount) {
+  function renderQuickGroup(label, action, inputId, maxAmount) {
     return (
-      '<div class="settings-card">' +
-      '<p class="section-eyebrow">' + title + "</p>" +
-      '<p class="page-copy">' + copy + "</p>" +
-      '<input id="' + inputId + '" class="text-field" type="number" min="1" step="1" placeholder="' + t("bank_amount_placeholder") + '" />' +
-      '<div class="button-cloud" style="margin-top: 12px;">' +
-      renderQuickButtons(action, inputId, maxAmount) +
-      "</div>" +
-      '<button class="primary-button" style="margin-top: 14px;" data-bank-action="' +
-      action +
-      '" data-bank-input="' +
-      inputId +
+      '<div class="bank-quick-group"><span class="bank-quick-label">' +
+      label +
+      '</span><div class="bank-quick-actions" aria-label="' +
+      copy("bank_quick_amounts") +
       '">' +
-      confirmText +
-      "</button>" +
-      "</div>"
+      renderQuickButtons(action, inputId, maxAmount) +
+      "</div></div>"
     );
   }
 
-  function renderPreviewCard(title, preview, activeKey, emptyKey) {
+  function renderStat(label, value, meta, tone) {
     return (
-      '<div class="stat-card">' +
-      '<p class="section-eyebrow">' + title + "</p>" +
-      '<h3 class="panel-title">' +
-      (preview.active
-        ? t(activeKey, { amount: format.formatNumber(preview.amount) })
-        : t(emptyKey)) +
-      "</h3>" +
-      '<p class="page-copy">' +
-      t("bank_next_settlement_time", {
+      '<div class="bank-financial-stat ' +
+      tone +
+      '"><span class="bank-financial-label">' +
+      label +
+      '</span><strong class="bank-financial-value">' +
+      value +
+      '</strong><span class="bank-financial-meta">' +
+      meta +
+      "</span></div>"
+    );
+  }
+
+  function renderPreviewValue(preview, activeKey, emptyKey) {
+    return preview.active
+      ? copy(activeKey, { amount: format.formatNumber(preview.amount) })
+      : copy(emptyKey);
+  }
+
+  function renderPreviewCard(title, preview, activeKey, emptyKey, tone) {
+    return (
+      '<article class="bank-settlement-card ' +
+      tone +
+      '"><div class="bank-settlement-card-head"><span class="bank-settlement-dot" aria-hidden="true"></span><p class="section-eyebrow">' +
+      title +
+      '</p></div><strong class="bank-settlement-value">' +
+      renderPreviewValue(preview, activeKey, emptyKey) +
+      '</strong><p class="helper-text">' +
+      copy("bank_next_settlement_time", {
         day: preview.day,
         clock: preview.clock,
         hours: preview.hoursUntil,
       }) +
-      "</p></div>"
+      "</p></article>"
+    );
+  }
+
+  function renderAmountField(inputId, hint) {
+    return (
+      '<div class="bank-amount-field"><label class="bank-amount-label" for="' +
+      inputId +
+      '">' +
+      copy("bank_action_amount") +
+      '</label><span class="bank-amount-hint">' +
+      hint +
+      '</span><input id="' +
+      inputId +
+      '" class="text-field bank-amount-input" type="number" min="1" step="1" inputmode="numeric" placeholder="' +
+      copy("bank_amount_placeholder") +
+      '" aria-describedby="' +
+      inputId +
+      '-hint" /><span id="' +
+      inputId +
+      '-hint" class="sr-only">' +
+      hint +
+      "</span></div>"
+    );
+  }
+
+  function renderLaneAction(action, inputId, label, className, disabled) {
+    return (
+      '<button class="' +
+      className +
+      ' bank-lane-action" type="button" data-bank-action="' +
+      action +
+      '" data-bank-input="' +
+      inputId +
+      '"' +
+      (disabled ? " disabled" : "") +
+      ">" +
+      label +
+      "</button>"
     );
   }
 
@@ -88,117 +148,270 @@
     var maxDeposit = Math.max(0, Math.floor(state.player.gold));
     var maxWithdraw = Math.max(0, Math.floor(bank.balance));
     var maxRepay = Math.max(0, Math.min(Math.floor(state.player.gold), Math.floor(bank.totalDebt)));
+    var hasLoan = bank.totalDebt > 0;
+    var loanCanBeStarted = !hasLoan && loanLimit >= game.config.bank.minLoanAmount;
+    var clerkUrl = new URL("src/assets/bank/bank-counter-clerk.webp", document.baseURI).href;
+    var day = Math.floor(state.player.currentDay || 1);
+    var goldUnit = copy("gold_unit");
 
     return (
-      '<section class="page-header">' +
-      '<div class="page-card">' +
-      '<p class="section-eyebrow">' + t("page_bank") + "</p>" +
-      '<h2 class="page-title">' + t("bank_panel_title") + "</h2>" +
-      '<p class="page-copy">' + t("bank_panel_copy") + "</p>" +
-      "</div>" +
-      '<div class="page-card">' +
-      '<p class="section-eyebrow">' + t("bank_loan_status") + "</p>" +
-      '<h3 class="panel-title">' + t(loanStatusKey) + "</h3>" +
-      '<p class="page-copy">' + t("bank_day_summary", { day: Math.floor(state.player.currentDay || 1) }) + "</p>" +
-      '<div class="inline-row" style="margin-top: 16px;">' +
-      '<span class="status-pill ' + loanStatusTone + '">' + t(loanStatusKey) + "</span>" +
-      '<span class="status-pill ' + creditStatusTone + '">' + t(creditStatusKey) + "</span>" +
-      '<span class="pill">' + t("bank_interest_daily_rate", { rate: Math.round(game.config.bank.dailyInterestRate * 100) }) + "</span>" +
-      '<span class="pill">' + t("bank_savings_daily_rate", { rate: Math.round(game.config.bank.savingsDailyRate * 100) }) + "</span>" +
-      "</div>" +
-      '<p class="helper-text" style="margin-top: 12px;">' + t("bank_auto_repay_notice", { rate: Math.round(game.config.bank.autoRepayRatio * 100) }) + "</p>" +
-      '<p class="helper-text" style="margin-top: 8px;">' + t("bank_loan_limit_now", { amount: format.formatNumber(loanLimit) }) + "</p>" +
-      "</div>" +
-      "</section>" +
-      '<section class="summary-grid">' +
-      '<div class="stat-card"><p class="section-eyebrow">' + t("gold") + '</p><h3 class="panel-title">' +
-      format.formatNumber(state.player.gold) +
-      " " + t("gold_unit") + "</h3></div>" +
-      '<div class="stat-card"><p class="section-eyebrow">' + t("bank_balance") + '</p><h3 class="panel-title">' +
-      format.formatNumber(bank.balance) +
-      " " + t("gold_unit") + "</h3></div>" +
-      '<div class="stat-card"><p class="section-eyebrow">' + t("bank_loan_principal") + '</p><h3 class="panel-title">' +
-      format.formatNumber(bank.principal) +
-      " " + t("gold_unit") + "</h3></div>" +
-      '<div class="stat-card"><p class="section-eyebrow">' + t("bank_loan_interest") + '</p><h3 class="panel-title">' +
-      format.formatNumber(bank.accruedInterest) +
-      " " + t("gold_unit") + "</h3></div>" +
-      '<div class="stat-card"><p class="section-eyebrow">' + t("bank_total_debt") + '</p><h3 class="panel-title">' +
-      format.formatNumber(bank.totalDebt) +
-      " " + t("gold_unit") + "</h3></div>" +
-      '<div class="stat-card"><p class="section-eyebrow">' + t("bank_loan_status") + '</p><h3 class="panel-title">' +
-      t(loanStatusKey) +
-      "</h3></div>" +
-      renderPreviewCard(t("bank_next_savings_interest"), savingsPreview, "bank_preview_gain", "bank_preview_none") +
-      renderPreviewCard(t("bank_next_loan_interest"), loanPreview, "bank_preview_cost", "bank_preview_no_loan") +
-      '<div class="stat-card"><p class="section-eyebrow">' + t("bank_credit_rating") + '</p><h3 class="panel-title">' +
-      t(creditStatusKey) +
-      '</h3><p class="page-copy">' + t("bank_credit_history", {
-        good: bank.goodRepaymentCount || 0,
-        late: bank.lateRepaymentCount || 0,
-      }) + "</p></div>" +
-      '<div class="stat-card"><p class="section-eyebrow">' + t("bank_loan_limit") + '</p><h3 class="panel-title">' +
-      format.formatNumber(loanLimit) +
-      " " + t("gold_unit") + '</h3><p class="page-copy">' + t("bank_loan_limit_copy") + "</p></div>" +
-      "</section>" +
-      '<section class="settings-grid" style="margin-top: 18px;">' +
-      renderActionCard(
-        t("bank_deposit_title"),
-        t("bank_deposit_copy"),
-        "bank-deposit-input",
+      '<div class="bank-page">' +
+      '<section class="bank-overview" aria-labelledby="bank-page-title">' +
+      '<div class="bank-overview-copy"><p class="section-eyebrow">' +
+      copy("page_bank") +
+      '</p><h2 id="bank-page-title" class="page-title">' +
+      copy("bank_panel_title") +
+      '</h2><p class="page-copy">' +
+      copy("bank_panel_copy") +
+      '</p><div class="bank-overview-status"><span class="status-pill ' +
+      format.escapeHtml(loanStatusTone) +
+      '">' +
+      copy(loanStatusKey) +
+      '</span><span class="status-pill ' +
+      format.escapeHtml(creditStatusTone) +
+      '">' +
+      copy(creditStatusKey) +
+      '</span><span class="pill">' +
+      copy("bank_interest_daily_rate", {
+        rate: Math.round(game.config.bank.dailyInterestRate * 100),
+      }) +
+      '</span><span class="pill">' +
+      copy("bank_savings_daily_rate", {
+        rate: Math.round(game.config.bank.savingsDailyRate * 100),
+      }) +
+      '</span></div><p class="helper-text bank-overview-note">' +
+      copy("bank_auto_repay_notice", {
+        rate: Math.round(game.config.bank.autoRepayRatio * 100),
+      }) +
+      '</p></div><div class="bank-clerk-figure"><img src="' +
+      format.escapeHtml(clerkUrl) +
+      '" alt="' +
+      copy("bank_clerk_alt") +
+      '" width="520" height="360" decoding="async" /></div></section>' +
+      '<section class="bank-financial-strip" aria-label="' +
+      copy("bank_overview_label") +
+      '">' +
+      renderStat(
+        copy("bank_available_cash"),
+        amount(state.player.gold) + " " + goldUnit,
+        copy("bank_cash_meta"),
+        "is-cash"
+      ) +
+      renderStat(
+        copy("bank_balance"),
+        amount(bank.balance) + " " + goldUnit,
+        copy("bank_savings_meta", {
+          rate: Math.round(game.config.bank.savingsDailyRate * 100),
+        }),
+        "is-savings"
+      ) +
+      renderStat(
+        copy("bank_total_debt"),
+        amount(bank.totalDebt) + " " + goldUnit,
+        copy(bank.totalDebt > 0 ? "bank_debt_meta_active" : "bank_debt_meta_clear"),
+        "is-debt"
+      ) +
+      renderStat(
+        copy("bank_credit_rating"),
+        copy(creditStatusKey),
+        copy("bank_credit_meta", {
+          good: bank.goodRepaymentCount || 0,
+          late: bank.lateRepaymentCount || 0,
+        }),
+        "is-credit"
+      ) +
+      renderStat(
+        copy("bank_loan_limit"),
+        amount(loanLimit) + " " + goldUnit,
+        copy("bank_loan_limit_now", { amount: format.formatNumber(loanLimit) }),
+        "is-limit"
+      ) +
+      '</section><section class="bank-counter-shell" aria-labelledby="bank-counter-title"><div class="bank-counter-heading"><div><span class="bank-counter-tab">' +
+      copy("bank_counter_label") +
+      '</span><h3 id="bank-counter-title" class="panel-title">' +
+      copy("bank_counter_title") +
+      '</h3></div><p class="bank-day-stamp">' +
+      copy("bank_day_summary", { day: day }) +
+      '</p></div><div class="bank-lanes">' +
+      '<section class="bank-lane bank-lane-savings" data-bank-lane="savings" aria-labelledby="bank-savings-lane-title"><div class="bank-lane-heading"><div class="bank-lane-heading-main"><span class="bank-lane-number" aria-hidden="true">1</span><div><p class="section-eyebrow">' +
+      copy("bank_counter_savings_label") +
+      '</p><h4 id="bank-savings-lane-title" class="panel-title">' +
+      copy("bank_counter_savings_title") +
+      '</h4><p class="page-copy">' +
+      copy("bank_counter_savings_copy") +
+      '</p></div></div><span class="status-pill is-success">' +
+      copy("bank_savings_safe") +
+      '</span></div><div class="bank-lane-actions" role="group" aria-label="' +
+      copy("bank_counter_savings_title") +
+      '">' +
+      renderLaneAction(
         "deposit",
-        t("bank_deposit_action"),
+        "bank-deposit-input",
+        copy("bank_deposit_action_short"),
+        "secondary-button",
+        maxDeposit <= 0
+      ) +
+      renderLaneAction(
+        "withdraw",
+        "bank-deposit-input",
+        copy("bank_withdraw_action_short"),
+        "ghost-button",
+        maxWithdraw <= 0
+      ) +
+      '</div><div class="bank-lane-divider"></div>' +
+      renderAmountField(
+        "bank-deposit-input",
+        copy("bank_savings_input_hint", {
+          cash: format.formatNumber(maxDeposit),
+          savings: format.formatNumber(maxWithdraw),
+        })
+      ) +
+      '<div class="bank-quick-groups">' +
+      renderQuickGroup(
+        copy("bank_deposit_title"),
+        "deposit",
+        "bank-deposit-input",
         maxDeposit
       ) +
-      renderActionCard(
-        t("bank_withdraw_title"),
-        t("bank_withdraw_copy"),
-        "bank-withdraw-input",
+      renderQuickGroup(
+        copy("bank_withdraw_title"),
         "withdraw",
-        t("bank_withdraw_action"),
+        "bank-deposit-input",
         maxWithdraw
       ) +
-      "</section>" +
-      '<section class="settings-grid" style="margin-top: 18px;">' +
-      renderActionCard(
-        t("bank_loan_take_title"),
-        t("bank_loan_take_copy", {
-          min: game.config.bank.minLoanAmount,
-          max: loanLimit,
-        }),
-        "bank-loan-input",
+      '</div><p class="bank-lane-hint">' +
+      copy("bank_savings_hint") +
+      '</p><div class="bank-lane-footer"><span>' +
+      copy("bank_available_savings_amount", { amount: format.formatNumber(maxWithdraw) }) +
+      '</span><span>' +
+      copy("bank_savings_daily_rate", {
+        rate: Math.round(game.config.bank.savingsDailyRate * 100),
+      }) +
+      "</span></div></section>" +
+      '<section class="bank-lane bank-lane-loan" data-bank-lane="loan" aria-labelledby="bank-loan-lane-title"><div class="bank-lane-heading"><div class="bank-lane-heading-main"><span class="bank-lane-number" aria-hidden="true">2</span><div><p class="section-eyebrow">' +
+      copy("bank_counter_loan_label") +
+      '</p><h4 id="bank-loan-lane-title" class="panel-title">' +
+      copy("bank_counter_loan_title") +
+      '</h4><p class="page-copy">' +
+      copy("bank_counter_loan_copy") +
+      '</p></div></div><span class="status-pill ' +
+      format.escapeHtml(loanStatusTone) +
+      '">' +
+      copy(loanStatusKey) +
+      '</span></div><div class="bank-lane-actions" role="group" aria-label="' +
+      copy("bank_counter_loan_title") +
+      '">' +
+      renderLaneAction(
         "loan",
-        t("bank_loan_take_action"),
-        loanLimit
+        "bank-loan-input",
+        copy("bank_loan_take_action_short"),
+        "primary-button",
+        !loanCanBeStarted
       ) +
-      renderActionCard(
-        t("bank_repay_title"),
-        t("bank_repay_copy"),
-        "bank-repay-input",
+      renderLaneAction(
         "repay",
-        t("bank_repay_action"),
-        maxRepay
+        "bank-loan-input",
+        copy("bank_repay_action_short"),
+        "ghost-button",
+        maxRepay <= 0
       ) +
-      "</section>"
-      + '<section class="page-card" style="margin-top: 18px;">' +
-      '<p class="section-eyebrow">' + t("bank_repay_full_title") + "</p>" +
-      '<p class="page-copy">' + t("bank_repay_full_copy", {
+      '</div><div class="bank-lane-divider"></div>' +
+      renderAmountField(
+        "bank-loan-input",
+        hasLoan
+          ? copy("bank_current_debt_amount", { amount: format.formatNumber(bank.totalDebt) })
+          : copy("bank_loan_room", { amount: format.formatNumber(loanLimit) })
+      ) +
+      '<div class="bank-quick-groups">' +
+      (hasLoan
+        ? renderQuickGroup(
+            copy("bank_repay_title"),
+            "repay",
+            "bank-loan-input",
+            maxRepay
+          )
+        : renderQuickGroup(
+            copy("bank_loan_take_title"),
+            "loan",
+            "bank-loan-input",
+            loanCanBeStarted ? loanLimit : 0
+          )) +
+      '</div><p class="bank-lane-hint bank-loan-note">' +
+      copy(hasLoan ? "bank_active_loan_copy" : "bank_no_loan_copy") +
+      '</p><div class="bank-loan-facts"><div><span>' +
+      copy("bank_loan_principal") +
+      '</span><strong>' +
+      amount(bank.principal) +
+      " " +
+      goldUnit +
+      '</strong></div><div><span>' +
+      copy("bank_loan_interest") +
+      '</span><strong>' +
+      amount(bank.accruedInterest) +
+      " " +
+      goldUnit +
+      '</strong></div><div><span>' +
+      copy("bank_interest_daily_rate", {
+        rate: Math.round(game.config.bank.dailyInterestRate * 100),
+      }) +
+      '</span><strong>' +
+      amount(loanLimit) +
+      " " +
+      goldUnit +
+      '</strong></div></div><div class="bank-payoff-row"><div><p class="section-eyebrow">' +
+      copy("bank_repay_full_title") +
+      '</p><p class="helper-text">' +
+      copy("bank_repay_full_copy", {
         fee: format.formatNumber(payoffQuote.feeAmount),
         rate: payoffQuote.feePercent,
         total: format.formatNumber(payoffQuote.totalAmount),
-      }) + "</p>" +
-      '<p class="helper-text" style="margin-top: 8px;">' + t("bank_repay_full_fee_status", {
+      }) +
+      '</p></div><button class="secondary-button bank-payoff-button" type="button" data-bank-action="repay-full"' +
+      (!hasLoan ? " disabled" : "") +
+      ">" +
+      copy("bank_repay_full_action", {
+        amount: format.formatNumber(payoffQuote.totalAmount),
+      }) +
+      "</button></div></section>" +
+      '</div></section><section class="bank-settlement" aria-labelledby="bank-settlement-title"><div class="bank-settlement-heading"><div><p class="section-eyebrow">' +
+      copy("bank_settlement_label") +
+      '</p><h3 id="bank-settlement-title" class="panel-title">' +
+      copy("bank_settlement_title") +
+      '</h3></div><p class="helper-text">' +
+      copy("bank_settlement_copy") +
+      '</p></div><div class="bank-settlement-grid">' +
+      renderPreviewCard(
+        copy("bank_next_savings_interest"),
+        savingsPreview,
+        "bank_preview_gain",
+        "bank_preview_none",
+        "is-savings"
+      ) +
+      renderPreviewCard(
+        copy("bank_next_loan_interest"),
+        loanPreview,
+        "bank_preview_cost",
+        "bank_preview_no_loan",
+        "is-loan"
+      ) +
+      '<article class="bank-history-card"><div class="bank-settlement-card-head"><span class="bank-settlement-dot" aria-hidden="true"></span><p class="section-eyebrow">' +
+      copy("bank_history_label") +
+      '</p></div><strong class="bank-settlement-value">' +
+      copy(creditStatusKey) +
+      '</strong><p class="helper-text">' +
+      copy("bank_credit_history", {
+        good: bank.goodRepaymentCount || 0,
+        late: bank.lateRepaymentCount || 0,
+      }) +
+      '</p><p class="helper-text bank-history-note">' +
+      copy("bank_repay_full_fee_status", {
         days: payoffQuote.ageDays,
         freeDay: game.config.bank.fullPayoffFeeFreeDay,
         fee: format.formatNumber(payoffQuote.feeAmount),
         rate: payoffQuote.feePercent,
-      }) + "</p>" +
-      '<div class="button-cloud" style="margin-top: 14px;">' +
-      '<button class="secondary-button" data-bank-action="repay-full">' +
-      t("bank_repay_full_action", {
-        amount: format.formatNumber(payoffQuote.totalAmount),
       }) +
-      "</button></div></section>"
+      "</p></article></div></section>" +
+      '</div>'
     );
   }
 
