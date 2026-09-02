@@ -308,6 +308,12 @@
       var countdown = cat ? game.systems.catSystem.getDiseaseProgressCountdown(cat) : null;
       node.textContent = countdown === null ? t("stopped") : format.formatDuration(countdown);
     });
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-pregnancy-countdown]"), function (node) {
+      var cat = game.systems.catSystem.getCat(node.dataset.catId);
+      var countdown = cat ? game.systems.collectionSystem.getPregnancyCountdown(cat) : null;
+      node.textContent = countdown === null ? t("stopped") : format.formatDuration(countdown);
+    });
   }
 
   function syncRealtime(source) {
