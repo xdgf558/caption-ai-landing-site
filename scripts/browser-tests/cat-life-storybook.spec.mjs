@@ -128,6 +128,20 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   await page.locator('.cat-recommendation [data-cat-action="feedBasic"]').click();
   await expect(page.locator('.cat-action-card[data-cat-action="feedBasic"]')).toContainText('Stock 2');
 
+  await page.locator('.desktop-navigation [data-page-target="collection"]').click();
+  await expect(page.locator('.collection-journal-page')).toBeVisible();
+  await expect(page.locator('.collection-route-entry')).toHaveCount(3);
+  await expect(page.locator('.collection-route-entry.is-recorded')).toHaveCount(1);
+  await expect(page.locator('.collection-route-entry.is-now')).toHaveCount(1);
+  await expect(page.locator('.collection-journal-progress-track')).toHaveAttribute('role', 'progressbar');
+  await expect(page.locator('.collection-record')).toBeVisible();
+  await expect(page.locator('.collection-route-entry.is-recorded')).toHaveAttribute('aria-pressed', 'true');
+  const collectionCatId = await page.locator('.collection-record [data-page-target="cats"][data-select-cat]').getAttribute('data-select-cat');
+  expect(collectionCatId).toBeTruthy();
+  await page.locator('.collection-record [data-page-target="cats"][data-select-cat]').click();
+  await expect(page.locator('.cat-journal-profile')).toBeVisible();
+  expect(await page.evaluate(() => window.CatGame.state.selectedCatId)).toBe(collectionCatId);
+
   await page.locator('.desktop-navigation [data-page-target="community"]').click();
   const neighborMarker = page.locator('[data-community-neighbor]').first();
   const markerBeforeHover = await neighborMarker.boundingBox();
@@ -246,6 +260,13 @@ test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', a
   await expect(page.locator('.cat-action-card')).toHaveCount(7);
   const catsWidth = await pageWidthReport(page);
   expect(catsWidth.scroll, JSON.stringify(catsWidth.offenders)).toBe(390);
+
+  await page.locator('[data-page-target="more"]:visible').click();
+  await page.locator('[data-page-target="collection"]:visible').click();
+  await expect(page.locator('.collection-journal-page')).toBeVisible();
+  await expect(page.locator('.collection-route-entry')).toHaveCount(3);
+  const collectionWidth = await pageWidthReport(page);
+  expect(collectionWidth.scroll, JSON.stringify(collectionWidth.offenders)).toBe(390);
 
   await page.locator('[data-page-target="more"]:visible').click();
   await page.locator('[data-page-target="bank"]:visible').click();
