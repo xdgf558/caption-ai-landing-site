@@ -70,7 +70,7 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   }
 
   await page.locator('.desktop-navigation [data-page-target="work"]').click();
-  const workIcons = page.locator('.work-card-icon img');
+  const workIcons = page.locator('.work-roster-icon img');
   await expect(workIcons).toHaveCount(5);
   const workIconReport = await workIcons.evaluateAll((images) => ({
     loaded: images.every((image) => image.complete && image.naturalWidth > 0),
@@ -147,7 +147,7 @@ test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', a
   expect(shopWidth.scroll, JSON.stringify(shopWidth.offenders)).toBe(390);
 
   await page.locator('[data-page-target="work"]:visible').click();
-  await expect(page.locator('.work-card-icon')).toHaveCount(5);
+  await expect(page.locator('.work-roster-icon')).toHaveCount(5);
   const workWidth = await pageWidthReport(page);
   expect(workWidth.scroll, JSON.stringify(workWidth.offenders)).toBe(390);
 

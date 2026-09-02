@@ -164,7 +164,7 @@
     return (
       '<div class="work-scene ' + (activeWork ? "is-active" : "is-ready") + '" data-work-scene>' +
       (isFlyer
-        ? '<img class="work-scene-backdrop" src="./src/assets/work/work-shift-flyer.jpg" alt="" width="960" height="720" decoding="async">'
+        ? '<img class="work-scene-backdrop" src="./src/assets/work/work-shift-flyer.webp" alt="" width="960" height="720" decoding="async">'
         : '<div class="work-scene-icon-frame"><img src="' + format.escapeHtml(jobIcon) + '" alt="" width="92" height="92" decoding="async"></div>') +
       (!isFlyer
         ? '<img class="work-scene-cat" src="./src/assets/cats/orange-tabby-walk.png" alt="" width="512" height="341" decoding="async">'

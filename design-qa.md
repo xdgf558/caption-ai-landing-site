@@ -2,8 +2,8 @@
 
 ## Comparison setup
 
-- Source visual truth: `/Users/shaola/.codex/generated_images/01a05cf5-b1d8-79a1-8e17-ebd5117a4c6d/exec-e1c0c52a-e2f2-4f46-8681-5a9c0f10ab77.png`
-- Implementation screenshots: `/private/tmp/cat-life-work-ready-top-viewport.png`, `/private/tmp/cat-life-work-ready-roster-viewport.png`, `/private/tmp/cat-life-work-active.png`
+- Source visual truth: PR #87 design context — the selected third Product Design ideation concept, “今日排班计划”.
+- Implementation screenshots: PR #87 browser QA captures — `cat-life-work-ready-top-viewport.png`, `cat-life-work-ready-roster-viewport.png`, and `cat-life-work-active.png`. These captures are intentionally kept out of the deployable repository to avoid adding private-machine paths and unnecessary clone/deployment weight.
 - Viewport: in-app browser CSS viewport `1280 × 720`; browser screenshot surface `1265 × 712` pixels; `devicePixelRatio` reported by the page as `2`.
 - Source pixels: `1487 × 1058`; implementation pixels: `1265 × 712` per capture. No pixel-level diff was used because the source is a generated full-page mock and the implementation includes the live site's fixed shell; comparison was normalized to the shared content regions and layout intent.
 - Ready state: Day 1, 200 gold, stamina 100, mood 80, hunger 20, Lv.1 with `0 / 100` EXP, flyer job selected, convenience-store job shown as the next unlock.
@@ -15,9 +15,9 @@ The source and ready implementation were opened together and compared at the pag
 
 ## Focused-region comparison evidence
 
-- Planner top: `/private/tmp/cat-life-work-ready-top-viewport.png` verifies the date/shift board, selected job scene, metric strip, CTA, growth card, and next-unlock card at readable scale.
-- Roster: `/private/tmp/cat-life-work-ready-roster-viewport.png` verifies the five job rows, aligned metric columns, selected state, lock labels, and filter controls.
-- Dynamic state: `/private/tmp/cat-life-work-active.png` verifies the same selected-job region after starting work, including the real image asset, active treatment, status pill, progress treatment, and live copy.
+- Planner top: the PR #87 browser QA capture `cat-life-work-ready-top-viewport.png` verifies the date/shift board, selected job scene, metric strip, CTA, growth card, and next-unlock card at readable scale.
+- Roster: the PR #87 browser QA capture `cat-life-work-ready-roster-viewport.png` verifies the five job rows, aligned metric columns, selected state, lock labels, and filter controls.
+- Dynamic state: the PR #87 browser QA capture `cat-life-work-active.png` verifies the same selected-job region after starting work, including the real image asset, active treatment, status pill, progress treatment, and live copy.
 - No focused-region issue remains actionable after the roster grid was aligned to eight columns and the empty decorative tape element was removed.
 
 ## Required fidelity surfaces

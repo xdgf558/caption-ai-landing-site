@@ -248,11 +248,6 @@
       node.textContent = activeWork ? t("work_scene_active") : t("work_scene_ready");
     });
 
-    Array.prototype.forEach.call(document.querySelectorAll("[data-stamina-recovery]"), function (node) {
-      var countdown = game.systems.timeSystem.getStaminaRecoveryCountdown();
-      node.textContent = countdown === null ? t("stamina_full") : format.formatDuration(countdown);
-    });
-
     refreshStat("[data-player-stamina-live]", "[data-player-stamina-bar]", displayStats.stamina, false);
     refreshStat("[data-player-mood-live]", "[data-player-mood-bar]", displayStats.mood, false);
     refreshStat("[data-player-hunger-live]", "[data-player-hunger-bar]", game.systems.playerSystem.getCurrentHunger(), true);

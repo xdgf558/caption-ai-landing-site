@@ -209,13 +209,15 @@ test('keeps the normal shop and member store as separate pages', async ({ page }
   await expect(page.locator('#app-main')).not.toContainText('Daily Care Supplies');
 });
 
-test('keeps live player condition only in the masthead on the work page', async ({ page }) => {
+test('keeps live player condition only in the masthead and exposes work progression', async ({ page }) => {
   await mockCloudGuest(page);
   await page.goto('/games/cat-life/?lang=en');
   await page.locator('[data-page-target="work"]').first().click();
-  const workSummary = page.locator('#app-main > .page-header .page-card').nth(1).locator('.notice-item');
-  await expect(workSummary).toHaveCount(2);
-  await expect(workSummary.locator('strong')).toHaveText(['Stamina Recovery', 'Current Level']);
+  await expect(page.locator('#app-main .work-shift-board')).toBeVisible();
+  await expect(page.locator('#app-main .work-growth-card')).toHaveCount(1);
+  await expect(page.locator('#app-main .work-growth-card')).toContainText('Player Level');
+  await expect(page.locator('#app-main .work-growth-card [data-work-exp-current]')).toContainText('0 / 100 EXP');
+  await expect(page.locator('#app-main [data-player-stamina-live], #app-main [data-player-mood-live], #app-main [data-player-hunger-live]')).toHaveCount(0);
   await expect(page.locator('.statusbar-stats [role="progressbar"]')).toHaveCount(3);
 });
 
