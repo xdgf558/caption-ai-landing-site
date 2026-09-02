@@ -94,6 +94,15 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   await page.locator('.desktop-navigation [data-page-target="work"]').click();
   const workIcons = page.locator('.work-roster-icon img');
   await expect(workIcons).toHaveCount(5);
+  await expect
+    .poll(
+      () =>
+        workIcons.evaluateAll((images) =>
+          images.every((image) => image.complete && image.naturalWidth > 0)
+        ),
+      { message: 'work roster illustrations should finish loading' }
+    )
+    .toBe(true);
   const workIconReport = await workIcons.evaluateAll((images) => ({
     loaded: images.every((image) => image.complete && image.naturalWidth > 0),
     sources: new Set(images.map((image) => image.getAttribute('src'))).size
