@@ -235,7 +235,7 @@
       '<button type="button" class="primary-button hospital-treat-button" data-treat-cat="' + safe(cat.id) + '"' +
       (canTreat ? "" : " disabled") + '><span>' + safe(t("treat_now")) + '</span><strong>' + safe(format.formatNumber(treatmentCost)) +
       ' ' + safe(t("gold_unit")) + '</strong></button>' +
-      (!canTreat ? '<button type="button" class="secondary-button hospital-work-button" data-page-target="work">' + safe(t("go_work")) + '</button>' : "") +
+      (!canTreat ? '<button type="button" class="secondary-button hospital-work-button" data-page-target="work">' + safe(t("headline_go_work")) + '</button>' : "") +
       '</div></div></article>'
     );
   }
