@@ -43,6 +43,7 @@ for (const path of [
   `${gameRoot}/src/assets/jobs/LICENSE-phosphor.txt`,
   `${gameRoot}/src/assets/work/work-shift-flyer.webp`,
   `${gameRoot}/src/assets/bank/bank-counter-clerk.webp`,
+  `${gameRoot}/src/assets/home/home-house-scene.webp`,
   `${gameRoot}/src/assets/rooms/room-storybook-empty.webp`,
   `${gameRoot}/src/assets/rooms/decor-plants.webp`,
   `${gameRoot}/src/assets/rooms/decor-poster.webp`,
@@ -209,6 +210,7 @@ assert.match(homeSystem, /var catName = getDataText\(cat, "name"\)/);
 assert.doesNotMatch(homeSystem, /escapeHtml\(cat\.name\)|name: cat\.name/);
 assert.match(homeSystem, /room-furniture-art/);
 assert.match(homeSystem, /item\.roomImage \|\| item\.image/);
+assert.match(homePanel, /home-house-scene\.webp/);
 assert.doesNotMatch(homeSystem, /room-furniture-icon/);
 assert.match(itemsData, /bed_basic: "src\/assets\/rooms\/furniture-bed\.png"/);
 assert.match(itemsData, /window_perch: "src\/assets\/rooms\/furniture-window\.png"/);

@@ -36,13 +36,22 @@ async function pageWidthReport(page) {
 test('keeps the storybook shell coherent across every desktop game page', async ({ page }) => {
   await page.goto('/games/cat-life/?lang=en');
 
-  await expect(page.locator('.home-cat-stage')).toBeVisible();
+  await expect(page.locator('.home-journal-page')).toBeVisible();
+  await expect(page.locator('.home-route-entry')).toHaveCount(5);
+  await expect(page.locator('.home-journal-scene')).toBeVisible();
+  await expect(page.locator('.home-journal-room')).toHaveAttribute('src', /home-house-scene\.webp/);
+  await expect
+    .poll(
+      () => page.locator('.home-journal-room').evaluate((image) => image.complete && image.naturalWidth > 0),
+      { message: 'home house illustration should finish loading' }
+    )
+    .toBe(true);
   await expect(page.locator('.statusbar-stats [role="progressbar"]')).toHaveCount(3);
   await expect(page.locator('.desktop-navigation')).toBeVisible();
   await expect(page.locator('.mobile-navigation')).toBeHidden();
-  expect(await page.locator('.cat-stage-art > img').getAttribute('src')).toContain('/assets/poses/');
+  expect(await page.locator('.home-journal-cat').getAttribute('src')).toContain('/assets/poses/');
 
-  for (const selector of ['.statusbar-stats .stat-row', '.cat-stage-mini-stats .stat-row']) {
+  for (const selector of ['.statusbar-stats .stat-row']) {
     const tops = await page.locator(selector).evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().top));
     expect(Math.max(...tops) - Math.min(...tops), `${selector} should share one top edge`).toBeLessThan(1);
   }
@@ -232,7 +241,8 @@ test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', a
 
   await expect(page.locator('.desktop-navigation')).toBeHidden();
   await expect(page.locator('.mobile-navigation')).toBeVisible();
-  await expect(page.locator('.home-cat-stage')).toBeVisible();
+  await expect(page.locator('.home-journal-page')).toBeVisible();
+  await expect(page.locator('.home-route-entry')).toHaveCount(5);
   const width = await pageWidthReport(page);
   expect(width.scroll, JSON.stringify(width.offenders)).toBe(390);
 
