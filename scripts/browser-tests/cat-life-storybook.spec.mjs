@@ -69,6 +69,16 @@ test('keeps the storybook shell coherent across every desktop game page', async 
     expect(width.scroll, `${pageName}: ${JSON.stringify(width.offenders)}`).toBe(1280);
   }
 
+  await page.locator('.desktop-navigation [data-page-target="bank"]').click();
+  await expect(page.locator('.bank-overview')).toBeVisible();
+  await expect(page.locator('.bank-clerk-figure img')).toHaveAttribute('src', /bank-counter-clerk/);
+  await expect(page.locator('.bank-financial-stat')).toHaveCount(5);
+  await expect(page.locator('.bank-lane')).toHaveCount(2);
+  await expect(page.locator('.bank-lane-action')).toHaveCount(4);
+  await page.locator('#bank-deposit-input').fill('50');
+  await page.getByRole('button', { name: 'Deposit', exact: true }).click();
+  await expect(page.locator('.bank-financial-stat.is-savings')).toContainText('50');
+
   await page.locator('.desktop-navigation [data-page-target="work"]').click();
   const workIcons = page.locator('.work-roster-icon img');
   await expect(workIcons).toHaveCount(5);
@@ -150,6 +160,14 @@ test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', a
   await expect(page.locator('.work-roster-icon')).toHaveCount(5);
   const workWidth = await pageWidthReport(page);
   expect(workWidth.scroll, JSON.stringify(workWidth.offenders)).toBe(390);
+
+  await page.locator('[data-page-target="more"]:visible').click();
+  await page.locator('[data-page-target="bank"]:visible').click();
+  await expect(page.locator('.bank-counter-shell')).toBeVisible();
+  const bankWidth = await pageWidthReport(page);
+  expect(bankWidth.scroll, JSON.stringify(bankWidth.offenders)).toBe(390);
+  await expect(page.locator('.bank-lanes')).toHaveCount(1);
+  await expect(page.locator('.bank-lane')).toHaveCount(2);
 
   await page.locator('[data-page-target="community"]:visible').click();
   await page.locator('[data-community-home]').click();
