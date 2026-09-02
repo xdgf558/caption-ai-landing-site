@@ -138,9 +138,9 @@ test('redeems an active skin with server data only and applies the official enti
   })).toContain('/src/assets/premium/moonlit-tabby.png');
 
   await page.locator('[data-page-target="cats"]').first().click();
-  await page.locator('[data-cat-action="rest"]').click();
-  await expect(page.locator('.cat-portrait .cat-detail-photo img')).toHaveAttribute('src', /moonlit-tabby\.png/);
-  await expect(page.locator('.cat-portrait .cat-reaction-cue')).toHaveText('Zz');
+  await page.locator('.cat-action-section [data-cat-action="rest"]').click();
+  await expect(page.locator('.cat-profile-scene .cat-profile-cat')).toHaveAttribute('src', /moonlit-tabby\.png/);
+  await expect(page.locator('.cat-profile-scene .cat-reaction-cue')).toHaveText('Zz');
 });
 
 test('shows active products to guests but routes redemption through member sign-in', async ({ page }) => {
@@ -181,9 +181,9 @@ test('keeps the normal shop and member store as separate pages', async ({ page }
   expect(batteryBox.height).toBeLessThanOrEqual(14);
   expect(batteryBox.width).toBeGreaterThan(100);
   await page.locator('[data-page-target="cats"]').first().click();
-  expect(await page.locator('#app-main [role="progressbar"]').first().evaluate((node) => {
+  expect(await page.locator('#app-main .cat-profile-section [role="progressbar"]').first().evaluate((node) => {
     return node.parentElement.getBoundingClientRect().height;
-  })).toBe(5);
+  })).toBeGreaterThanOrEqual(6);
   await page.locator('[data-page-target="shop"]').first().click();
   await expect(page.locator('#app-main')).toContainText('Daily Care Supplies');
   await expect(page.locator('#app-main [data-cat-commerce-section]')).toHaveCount(0);

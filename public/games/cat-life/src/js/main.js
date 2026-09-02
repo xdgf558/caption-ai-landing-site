@@ -302,6 +302,12 @@
       var deathEta = cat ? game.systems.catSystem.getHungerDeathEta(cat) : null;
       node.textContent = deathEta === null ? t("dead_label") : format.formatDuration(deathEta);
     });
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-cat-disease-countdown]"), function (node) {
+      var cat = game.systems.catSystem.getCat(node.dataset.catId);
+      var countdown = cat ? game.systems.catSystem.getDiseaseProgressCountdown(cat) : null;
+      node.textContent = countdown === null ? t("stopped") : format.formatDuration(countdown);
+    });
   }
 
   function syncRealtime(source) {
