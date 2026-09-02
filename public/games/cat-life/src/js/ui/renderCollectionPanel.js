@@ -117,7 +117,9 @@
           return renderRouteEntry(cat, selectedCat ? selectedCat.id : "", index, nextLockedIndex);
         }).join("")
       : '<li class="collection-route-empty"><p class="panel-title">' + safe(t("no_cat_data")) + '</p></li>';
-    var objectiveCopy = nextLockedIndex === -1 ? t("collection_all_complete") : t("collection_next_copy");
+    var collectionComplete = nextLockedIndex === -1;
+    var objectiveTitle = collectionComplete ? t("collection_all_complete") : t("collection_next_hint");
+    var objectiveCopy = collectionComplete ? t("collection_all_complete") : t("collection_next_copy");
 
     return '<section class="collection-journal-page" aria-labelledby="collection-journal-title">' +
       '<header class="collection-journal-cover"><div class="collection-journal-heading"><p class="section-eyebrow">' + safe(t("page_collection")) +
@@ -128,7 +130,7 @@
       '</dt><dd>' + safe(number(stats.totalCats)) + '</dd></div><div><dt>' + safe(t("collection_unique_looks")) + '</dt><dd>' + safe(number(stats.uniqueLooks)) +
       '</dd></div><div><dt>' + safe(t("collection_kittens")) + '</dt><dd>' + safe(number(stats.kittens)) + '</dd></div></dl></div></header>' +
       '<section class="collection-journal-objective" aria-labelledby="collection-objective-title"><div><p class="section-eyebrow">' +
-      safe(t("collection_next_label")) + '</p><h3 id="collection-objective-title" class="panel-title">' + safe(t("collection_next_hint")) +
+      safe(t("collection_next_label")) + '</p><h3 id="collection-objective-title" class="panel-title">' + safe(objectiveTitle) +
       '</h3><p class="page-copy">' + safe(objectiveCopy) + '</p></div><button type="button" class="primary-button" data-page-target="cats">' +
       safe(t("collection_open_cats")) + '</button></section>' +
       '<section class="collection-route-book" aria-labelledby="collection-route-title"><div class="collection-route-heading"><div><p class="section-eyebrow">' +
