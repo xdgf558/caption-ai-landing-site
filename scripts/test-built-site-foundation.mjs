@@ -116,7 +116,9 @@ for (const [path, expectedTitle, canonical] of [
 }
 
 const homepage = await readDist('index.html');
-assert.match(homepage, /station-cat-logo-67dc39a9-160\.webp/);
+assert.match(homepage, /station-cat-logo-1668c2e5-160\.webp/);
+assert.match(homepage, /href="https:\/\/x\.com\/statiocat"/);
+assert.doesNotMatch(homepage, /bketck/);
 assert.match(homepage, /offline-future-cover-96c3c463-360\.webp/);
 assert.match(homepage, /"@type":"Organization"/);
 assert.match(homepage, /"@type":"WebSite"/);

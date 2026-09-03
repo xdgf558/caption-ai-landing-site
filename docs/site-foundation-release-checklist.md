@@ -37,7 +37,7 @@ References:
 - Unauthenticated `/admin`, `/admin/`, `/admin-v2`, and `/admin-v2/` requests are intercepted by Cloudflare Access before any admin HTML is returned.
 - An unknown navigation URL returns a branded `404` page with a non-empty body.
 - Unknown `/en/`, `/ja/`, `/zh-hans/`, and `/zh-hant/` URLs return the matching localized 404 copy.
-- `/favicon.ico`, `/favicon.svg`, and `/apple-touch-icon.png` return `200`.
+- `/favicon.ico`, `/favicon-64.png`, and `/apple-touch-icon.png` return `200`.
 - Static and dynamic HTML responses include `X-Content-Type-Options`, `Referrer-Policy`, and framing protection.
 - The homepage Open Graph image is a `1200x630` PNG and renders in a social-card debugger.
 

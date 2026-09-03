@@ -2136,7 +2136,15 @@ ol {
   font-size: 13px;
   height: 34px;
   justify-content: center;
+  overflow: hidden;
   width: 34px;
+}
+
+.brand-icon img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
 }
 
 .nav-links,
@@ -5460,7 +5468,7 @@ button.button {
 }
 
 .station-logo-lockup img {
-  background: #221b16;
+  background: transparent;
   border: 2px solid #221b16;
   border-radius: 50%;
   height: 88px;
@@ -8654,6 +8662,10 @@ body.station-paper-page.caption-product-page {
   box-shadow: 0 8px 20px rgba(121, 51, 79, 0.16);
   color: transparent;
   font-size: 0;
+}
+
+.station-paper-page.caption-product-page .brand-icon img {
+  opacity: 0;
 }
 
 .station-paper-page.caption-product-page .nav-links {

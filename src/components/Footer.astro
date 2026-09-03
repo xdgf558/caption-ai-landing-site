@@ -24,7 +24,7 @@ const links =
         { label: 'サポート', href: '/ja/apps/caption-ai/support/' },
         { label: '利用規約', href: '/ja/apps/caption-ai/terms/' },
         { label: 'Android Waitlist', href: '/android/' },
-        { label: 'X', href: 'https://x.com/bketck' }
+        { label: 'X', href: siteConfig.xUrl }
       ]
     : lang === 'zh-Hant'
       ? [
@@ -42,7 +42,7 @@ const links =
           { label: '支援', href: '/zh-hant/apps/caption-ai/support/' },
           { label: '服務條款', href: '/zh-hant/apps/caption-ai/terms/' },
           { label: 'Android Waitlist', href: '/android/' },
-          { label: 'X', href: 'https://x.com/bketck' }
+          { label: 'X', href: siteConfig.xUrl }
         ]
     : lang === 'zh-Hans'
       ? [
@@ -60,7 +60,7 @@ const links =
           { label: '支持', href: '/zh-hans/apps/caption-ai/support/' },
           { label: '服务条款', href: '/zh-hans/apps/caption-ai/terms/' },
           { label: 'Android Waitlist', href: '/android/' },
-          { label: 'X', href: 'https://x.com/bketck' }
+          { label: 'X', href: siteConfig.xUrl }
         ]
     : [
         { label: 'SnapCopy', href: '/en/apps/caption-ai/' },
@@ -77,7 +77,7 @@ const links =
         { label: 'Support', href: '/en/apps/caption-ai/support/' },
         { label: 'Terms', href: '/en/apps/caption-ai/terms/' },
         { label: 'Android Waitlist', href: '/android/' },
-        { label: 'X', href: 'https://x.com/bketck' }
+        { label: 'X', href: siteConfig.xUrl }
       ];
 ---
 
@@ -85,7 +85,9 @@ const links =
   <div class="footer-grid">
     <div>
       <a class="brand-mark footer-brand" href={lang === 'en' ? '/en/' : lang === 'ja' ? '/ja/' : lang === 'zh-Hans' ? '/zh-hans/' : '/'}>
-        <span class="brand-icon" aria-hidden="true">SC</span>
+        <span class="brand-icon" aria-hidden="true">
+          <img src="/images/optimized/station-cat-logo-1668c2e5-160.webp" alt="" width="34" height="34" loading="lazy" />
+        </span>
         <span>{siteConfig.name}</span>
       </a>
       <p>

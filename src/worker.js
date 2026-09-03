@@ -19311,6 +19311,7 @@ const dynamicLibraryPathForLocale = (locale) =>
       : locale === 'zh-Hans'
         ? '/zh-hans/library/'
         : '/zh-hant/library/';
+const STATION_X_URL = 'https://x.com/statiocat';
 
 const absoluteStationUrl = (path) => {
   const value = cleanText(path, 1000);
@@ -19344,7 +19345,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
             <a href="${escapeHtml(appsPath)}">${escapeHtml(navCopy.apps)}</a>
             <a href="${escapeHtml(libraryPath)}">${escapeHtml(navCopy.member)}</a>
             <a href="/about/">About</a>
-            <a class="signal-station-nav__x" href="https://x.com/bketck">↗ X</a>
+            <a class="signal-station-nav__x" href="${STATION_X_URL}">↗ X</a>
           </nav>
         </div>
       </header>`
@@ -19356,7 +19357,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
           <a href="${escapeHtml(appsPath)}">${escapeHtml(navCopy.apps)}</a>
           <a href="${escapeHtml(libraryPath)}">${escapeHtml(navCopy.member)}</a>
           <a href="/about/">About</a>
-          <a href="https://x.com/bketck">Follow on X</a>
+          <a href="${STATION_X_URL}">Follow on X</a>
         </nav>
       </header>`;
   const signalFooter = isSignalPage
@@ -19399,7 +19400,8 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
     ${ogImageUrl ? `<meta name="twitter:image" content="${escapeHtml(ogImageUrl)}">` : ''}
     ${ogImageUrl ? `<meta name="twitter:image:src" content="${escapeHtml(ogImageUrl)}">` : ''}
     ${ogImageUrl ? `<meta name="twitter:image:alt" content="${escapeHtml(title)}">` : ''}
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64">
     ${structuredDataScripts}
     <style>
       :root { color-scheme: light; --bg: #fffaf4; --surface: #ffffff; --soft: #f5efe7; --ink: #1f2d29; --muted: #64736d; --line: #e4dbd0; --teal: #08796d; --coral: #d95d45; }

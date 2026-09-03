@@ -3,6 +3,7 @@ import ProductLayout from '../../../../layouts/ProductLayout.astro';
 import CaptionAiLanding from '../../../../components/CaptionAiLanding.astro';
 import { captionAiEn } from '../../../../data/copy/caption-ai.en';
 import { captionAiFaqEn } from '../../../../data/faqs/caption-ai.en';
+import { siteConfig } from '../../../../data/site';
 
 const links = {
   download: '/en/apps/caption-ai/download/?product=snapcopy&source=product-page&campaign=hero',
@@ -11,7 +12,7 @@ const links = {
   finalDownload: '/en/apps/caption-ai/download/?product=snapcopy&source=product-page&campaign=final-cta',
   privacy: '/en/apps/caption-ai/privacy/?product=snapcopy&source=product-page&campaign=hero-privacy',
   android: '/android/?product=snapcopy&source=product-page&campaign=android-waitlist',
-  follow: 'https://x.com/bketck'
+  follow: siteConfig.xUrl
 };
 ---
 

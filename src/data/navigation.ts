@@ -1,3 +1,5 @@
+import { siteConfig } from './site';
+
 export const brandNavigation = [
   { label: 'Apps', href: '/en/apps/' },
   { label: 'Game', href: '/en/apps/cat-life-game/' },
@@ -6,7 +8,7 @@ export const brandNavigation = [
   { label: 'Signal', href: '/en/signal/' },
   { label: 'Member Login', href: '/en/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
-  { label: 'Follow on X', href: 'https://x.com/bketck', mobileHidden: true }
+  { label: 'Follow on X', href: siteConfig.xUrl, mobileHidden: true }
 ];
 
 export const zhBrandNavigation = [
@@ -17,7 +19,7 @@ export const zhBrandNavigation = [
   { label: '信號簡報', href: '/signal/' },
   { label: '會員登入', href: '/zh-hant/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
-  { label: 'Follow on X', href: 'https://x.com/bketck', mobileHidden: true }
+  { label: 'Follow on X', href: siteConfig.xUrl, mobileHidden: true }
 ];
 
 export const zhHansBrandNavigation = [
@@ -28,7 +30,7 @@ export const zhHansBrandNavigation = [
   { label: '信号简报', href: '/zh-hans/signal/' },
   { label: '会员登录', href: '/zh-hans/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
-  { label: 'Follow on X', href: 'https://x.com/bketck', mobileHidden: true }
+  { label: 'Follow on X', href: siteConfig.xUrl, mobileHidden: true }
 ];
 
 export const jaBrandNavigation = [
@@ -39,7 +41,7 @@ export const jaBrandNavigation = [
   { label: 'Signal', href: '/ja/signal/' },
   { label: '会員ログイン', href: '/ja/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
-  { label: 'Follow on X', href: 'https://x.com/bketck', mobileHidden: true }
+  { label: 'Follow on X', href: siteConfig.xUrl, mobileHidden: true }
 ];
 
 export const productNavigation = [

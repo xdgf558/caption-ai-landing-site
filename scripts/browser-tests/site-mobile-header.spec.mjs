@@ -16,7 +16,10 @@ test('keeps the localized mobile homepage navigation in an equal two-by-two grid
       <body class="station-home station-home-v2">
         <header class="site-header">
           <nav class="nav-wrap">
-            <a class="brand-mark" href="#"><span class="brand-icon">SC</span><span>Station Cat</span></a>
+            <a class="brand-mark" href="#">
+              <span class="brand-icon"><img src="http://127.0.0.1:4178/images/optimized/station-cat-logo-1668c2e5-160.webp" alt="" width="34" height="34"></span>
+              <span>Station Cat</span>
+            </a>
             <div class="nav-links">
               ${labels.map((label, index) => `<a class="${index > 5 ? 'mobile-hide' : ''}" href="#">${label}</a>`).join('')}
             </div>
@@ -26,6 +29,10 @@ test('keeps the localized mobile homepage navigation in an equal two-by-two grid
       </body>
     `);
     await page.addStyleTag({ path: resolve('src/styles/global.css') });
+
+    const logo = page.locator('.brand-icon img');
+    await expect(logo).toBeVisible();
+    await expect.poll(() => logo.evaluate((image) => image.complete && image.naturalWidth)).toBe(160);
 
     const links = page.locator('.station-home-v2 .nav-links a:visible');
     await expect(links).toHaveCount(4);
