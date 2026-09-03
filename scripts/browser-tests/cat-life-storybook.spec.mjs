@@ -248,6 +248,17 @@ test('fits the storybook shell, cat stage, shop tabs, and More menu at 390px', a
 
   await page.locator('[data-page-target="more"]:visible').click();
   await expect(page.locator('[data-page-target="settings"]:visible')).toBeVisible();
+  await expect(page.locator('.more-link')).toHaveCount(11);
+  const moreImages = page.locator('.more-link img');
+  await expect(moreImages).toHaveCount(11);
+  await expect
+    .poll(
+      () => moreImages.evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0)),
+      { message: 'More menu illustrations should finish loading' }
+    )
+    .toBe(true);
+  const moreWidth = await pageWidthReport(page);
+  expect(moreWidth.scroll, JSON.stringify(moreWidth.offenders)).toBe(390);
   await page.locator('[data-page-target="inventory"]:visible').click();
   await expect(page.locator('.inventory-grid').first()).toBeVisible();
   const inventoryWidth = await pageWidthReport(page);

@@ -27,6 +27,7 @@ for (const path of [
   `${gameRoot}/src/js/ui/renderCatPanel.js`,
   `${gameRoot}/src/js/ui/renderInventoryPanel.js`,
   `${gameRoot}/src/js/ui/renderMemberStorePanel.js`,
+  `${gameRoot}/src/js/ui/renderMorePanel.js`,
   `${gameRoot}/src/js/ui/renderWorkPanel.js`,
   `${gameRoot}/src/styles/broadsheet.css`,
   `${gameRoot}/src/assets/cats/orange-tabby.png`,
@@ -90,6 +91,7 @@ const settingsPanel = read(`${gameRoot}/src/js/ui/renderSettingsPanel.js`);
 const shopPanel = read(`${gameRoot}/src/js/ui/renderShopPanel.js`);
 const inventoryPanel = read(`${gameRoot}/src/js/ui/renderInventoryPanel.js`);
 const memberStorePanel = read(`${gameRoot}/src/js/ui/renderMemberStorePanel.js`);
+const morePanel = read(`${gameRoot}/src/js/ui/renderMorePanel.js`);
 const workPanel = read(`${gameRoot}/src/js/ui/renderWorkPanel.js`);
 const roomPanel = read(`${gameRoot}/src/js/ui/renderRoomPanel.js`);
 const gameNavigation = read(`${gameRoot}/src/js/ui/renderNavigation.js`);
@@ -211,6 +213,10 @@ assert.doesNotMatch(homeSystem, /escapeHtml\(cat\.name\)|name: cat\.name/);
 assert.match(homeSystem, /room-furniture-art/);
 assert.match(homeSystem, /item\.roomImage \|\| item\.image/);
 assert.match(homePanel, /home-house-scene\.webp/);
+assert.match(morePanel, /more-link-art/);
+assert.match(morePanel, /bank-counter-clerk\.webp/);
+assert.match(morePanel, /slot-machine-cabinet\.webp/);
+assert.match(broadsheetStyles, /\.more-grid/);
 assert.doesNotMatch(homeSystem, /room-furniture-icon/);
 assert.match(itemsData, /bed_basic: "src\/assets\/rooms\/furniture-bed\.png"/);
 assert.match(itemsData, /window_perch: "src\/assets\/rooms\/furniture-window\.png"/);
