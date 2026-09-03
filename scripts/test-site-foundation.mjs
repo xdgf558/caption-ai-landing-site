@@ -186,6 +186,12 @@ assert.doesNotMatch(home, /simpleCutProProduct\.assets\.icon/);
 assert.doesNotMatch(home, /content\/media\/covers\/2026\/06/);
 await access(resolve(projectRoot, 'scripts/assets/station-cat-logo.png'));
 await assert.rejects(access(resolve(projectRoot, 'public/images/home/station-cat-logo.png')));
+for (const legacyLogo of [
+  'public/images/optimized/station-cat-logo-67dc39a9-160.webp',
+  'public/images/optimized/station-cat-logo-67dc39a9-320.webp'
+]) {
+  await assert.rejects(access(resolve(projectRoot, legacyLogo)));
+}
 for (const asset of [
   'public/images/optimized/station-cat-logo-1668c2e5-160.webp',
   'public/images/optimized/station-cat-logo-1668c2e5-320.webp',
