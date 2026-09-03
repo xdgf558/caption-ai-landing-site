@@ -76,8 +76,8 @@ const structuredDataScripts = (Array.isArray(structuredData) ? structuredData : 
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     {structuredDataScripts.map((script) => <script type="application/ld+json" set:html={script} />)}
   </head>

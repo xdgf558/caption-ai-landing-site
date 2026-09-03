@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../data/site';
 ---
 
 <BaseLayout
@@ -49,7 +50,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </p>
     <div class="button-row">
       <a class="button button-primary" href="/zh-hant/library/">會員登入</a>
-      <a class="button button-secondary" href="https://x.com/bketck">Follow on X</a>
+      <a class="button button-secondary" href={siteConfig.xUrl}>Follow on X</a>
     </div>
   </section>
 </BaseLayout>

@@ -1,17 +1,14 @@
+import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Resvg } from '@cf-wasm/resvg/node';
+import sharp from 'sharp';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const publicRoot = resolve(projectRoot, 'public');
 
-const renderPng = async (svg, width) => {
-  const renderer = await Resvg.async(svg, {
-    fitTo: { mode: 'width', value: width }
-  });
-  return Buffer.from(renderer.render().asPng());
-};
+const logoSourcePath = resolve(projectRoot, 'scripts/assets/station-cat-logo.png');
+const expectedLogoHash = '1668c2e5';
 
 const createIco = (png, size) => {
   const header = Buffer.alloc(22);
@@ -29,11 +26,34 @@ const createIco = (png, size) => {
   return Buffer.concat([header, png]);
 };
 
-const faviconSvg = await readFile(resolve(publicRoot, 'favicon.svg'), 'utf8');
-const faviconPng = await renderPng(faviconSvg, 64);
-const appleTouchIcon = await renderPng(faviconSvg, 180);
+const logoSource = await readFile(logoSourcePath);
+const logoHash = createHash('sha256').update(logoSource).digest('hex').slice(0, 8);
+if (logoHash !== expectedLogoHash) {
+  throw new Error(`Update the branded asset filenames for logo hash ${logoHash}.`);
+}
+
+const faviconPng = await sharp(logoSource)
+  .resize(64, 64, { fit: 'contain' })
+  .png({ compressionLevel: 9 })
+  .toBuffer();
+const appleTouchIcon = await sharp(logoSource)
+  .resize(180, 180, { fit: 'contain' })
+  .flatten({ background: '#fffaf4' })
+  .png({ compressionLevel: 9 })
+  .toBuffer();
 
 await writeFile(resolve(publicRoot, 'favicon.ico'), createIco(faviconPng, 64));
+await writeFile(resolve(publicRoot, 'favicon-64.png'), faviconPng);
 await writeFile(resolve(publicRoot, 'apple-touch-icon.png'), appleTouchIcon);
+for (const size of [160, 320]) {
+  const optimizedLogo = await sharp(logoSource)
+    .resize(size, size, { fit: 'contain' })
+    .webp({ quality: 86, alphaQuality: 90, effort: 6 })
+    .toBuffer();
+  await writeFile(
+    resolve(publicRoot, `images/optimized/station-cat-logo-${logoHash}-${size}.webp`),
+    optimizedLogo
+  );
+}
 
-console.log('Generated favicon.ico and apple-touch-icon.png.');
+console.log(`Generated Station Cat brand assets for logo ${logoHash}.`);

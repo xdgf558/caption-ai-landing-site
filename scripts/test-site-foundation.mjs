@@ -13,13 +13,14 @@ const read = (path) => readFile(resolve(projectRoot, path), 'utf8');
 const [
   baseLayout,
   home,
+  header,
+  footer,
   site,
   headers,
   redirects,
   wrangler,
   worker,
   notFound,
-  favicon,
   privacy,
   support,
   terms,
@@ -30,13 +31,14 @@ const [
 ] = await Promise.all([
   read('src/layouts/BaseLayout.astro'),
   read('src/components/StationHome.astro'),
+  read('src/components/Header.astro'),
+  read('src/components/Footer.astro'),
   read('src/data/site.ts'),
   read('public/_headers'),
   read('public/_redirects'),
   read('wrangler.toml'),
   read('src/worker.js'),
   read('src/components/NotFoundPage.astro'),
-  read('public/favicon.svg'),
   read('src/pages/en/privacy.astro'),
   read('src/pages/en/support.astro'),
   read('src/pages/en/terms.astro'),
@@ -47,10 +49,12 @@ const [
 ]);
 
 assert.match(site, /ogImage:\s*'\/images\/social\/station-cat-og\.png'/);
+assert.match(site, /xUrl:\s*'https:\/\/x\.com\/statiocat'/);
 assert.match(baseLayout, /property="og:image:type" content="image\/png"/);
 assert.match(baseLayout, /property="og:image:width" content="1200"/);
 assert.match(baseLayout, /property="og:image:height" content="630"/);
 assert.match(baseLayout, /rel="icon" href="\/favicon\.ico"/);
+assert.match(baseLayout, /rel="icon" href="\/favicon-64\.png"/);
 assert.match(baseLayout, /rel="apple-touch-icon" href="\/apple-touch-icon\.png"/);
 
 for (const title of [
@@ -157,10 +161,9 @@ for (const page of [
   await access(resolve(projectRoot, page));
 }
 
-for (const source of [favicon, privacy, support, terms]) {
+for (const source of [privacy, support, terms]) {
   assert.doesNotMatch(source, /Everyday AI Apps/i);
 }
-assert.match(favicon, /aria-label="Station Cat"/);
 
 assert.match(baseLayout, /type="application\/ld\+json"/);
 assert.match(home, /'@type': 'Organization'/);
@@ -171,14 +174,21 @@ assert.match(worker, /structuredData: dynamicBookStructuredData\(route, serial\)
 assert.match(worker, /globalThis\.caches\?\.default/);
 assert.match(worker, /LIMIT 50000/);
 assert.match(worker, /robots: 'noindex, follow'/);
-assert.match(home, /station-cat-logo-67dc39a9-160\.webp/);
+assert.match(worker, /const STATION_X_URL = 'https:\/\/x\.com\/statiocat'/);
+assert.doesNotMatch([site, home, footer, navigation, worker].join('\n'), /bketck/);
+assert.match(home, /station-cat-logo-1668c2e5-160\.webp/);
+assert.match(header, /station-cat-logo-1668c2e5-160\.webp/);
+assert.match(footer, /station-cat-logo-1668c2e5-160\.webp/);
 assert.match(home, /simplecut-icon-0268e767/);
 assert.match(home, /offline-future-cover-96c3c463-360\.webp/);
 assert.doesNotMatch(home, /station-cat-logo\.png/);
 assert.doesNotMatch(home, /simpleCutProProduct\.assets\.icon/);
 assert.doesNotMatch(home, /content\/media\/covers\/2026\/06/);
+await access(resolve(projectRoot, 'scripts/assets/station-cat-logo.png'));
+await assert.rejects(access(resolve(projectRoot, 'public/images/home/station-cat-logo.png')));
 for (const asset of [
-  'public/images/optimized/station-cat-logo-67dc39a9-160.webp',
+  'public/images/optimized/station-cat-logo-1668c2e5-160.webp',
+  'public/images/optimized/station-cat-logo-1668c2e5-320.webp',
   'public/images/optimized/simplecut-icon-0268e767-256.webp',
   'public/images/optimized/offline-future-cover-96c3c463-360.webp'
 ]) {
@@ -290,6 +300,7 @@ const readPngDimensions = async (path) => {
 
 const ico = await readFile(resolve(projectRoot, 'public/favicon.ico'));
 assert.deepEqual([...ico.subarray(0, 4)], [0, 0, 1, 0], 'favicon.ico has an invalid header');
+assert.deepEqual(await readPngDimensions('public/favicon-64.png'), [64, 64]);
 assert.deepEqual(await readPngDimensions('public/apple-touch-icon.png'), [180, 180]);
 assert.deepEqual(await readPngDimensions('public/images/social/station-cat-og.png'), [1200, 630]);
 
