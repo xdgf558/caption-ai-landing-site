@@ -4,7 +4,8 @@ This runbook is the launch gate for the Moonlit Tabby skin and Station Room Set.
 
 ## Rollout controls
 
-- `CAT_LIFE_COMMERCE_ROLLOUT_MODE=off` is the committed default. Missing, misspelled, or unknown values also fail closed.
+- The reviewed configuration currently commits `CAT_LIFE_COMMERCE_ROLLOUT_MODE=allowlist`. This is not approval for public sales; D1 product activation is a separate gate. See the [dated launch-readiness assessment](cat-life-paid-launch-readiness.md) for evidence and outstanding checks.
+- `CAT_LIFE_COMMERCE_ROLLOUT_MODE=off` is the emergency closure mode. Missing, misspelled, or unknown values also fail closed as `off`.
 - `CAT_LIFE_COMMERCE_ROLLOUT_MODE=allowlist` exposes active products only to signed-in readers whose normalized email is in `CAT_LIFE_COMMERCE_ALLOWLIST`.
 - `CAT_LIFE_COMMERCE_ROLLOUT_MODE=public` exposes active products to guests for preview and lets any signed-in reader redeem them.
 - Store `CAT_LIFE_COMMERCE_ALLOWLIST` as a Worker secret because it contains member email addresses. Never commit it to `wrangler.toml` or logs.
@@ -26,6 +27,8 @@ The release gate must remain green for these cases:
 | Rollout mistake | Missing or invalid configuration acts as `off`; allowlist mode does not expose products to guests or other members | API and release-configuration suites |
 
 ## Phase 0: deploy closed
+
+This is the initial-deployment procedure, not a claim about current production state. Do not reset an already deployed environment or rerun completed financial tests without checking the restricted audit records first.
 
 1. Confirm both launch products are still `planned` in the Admin workspace.
 2. Apply D1 migrations in order: `0033`, `0034`, then `0035`.
@@ -77,4 +80,3 @@ After the limited phase is clean, change the reviewed configuration to `public`,
 ## Kill switch and rollback
 
 Set the rollout mode back to `off` first, then pause active products in Admin. Keep `CAT_LIFE_COMMERCE_ALLOWLIST`, the migrations, assets, purchase history, ledgers, and entitlements intact until reconciliation is complete. Never revoke a Station Points purchase with the manual entitlement button; use the purchase reversal flow so point restoration and entitlement revocation remain atomic and idempotent.
-
