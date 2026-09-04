@@ -176,6 +176,8 @@ assert.match(landing, /five latest cloud versions remain available for recovery/
 assert.match(landing, /最近 5 份雲端記錄恢復/);
 assert.match(landing, /兌換是否開放，以會員商店的即時狀態為準/);
 assert.match(landing, /Check the member store for current availability/);
+assert.match(landing, /<img src=\{catLifeGameProduct\.assets\.stationRoom\} alt=""/);
+assert.match(landing, /<figcaption>\{copy\.commercePreview\}<\/figcaption>/);
 assert.match(product, /latestVersion: '1\.22\.1'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);

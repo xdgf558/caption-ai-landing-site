@@ -183,6 +183,7 @@ for (const [locale, prefix, skinScope, roomScope, policy] of [
     await expect.poll(() => page.locator('.station-commerce-art img').evaluateAll(images =>
       images.length === 2 && images.every(image => image.complete && image.naturalWidth > 0))).toBe(true);
     const links = page.locator('.station-commerce-guidance a');
+    await expect(page.locator('.station-commerce-guidance .station-commerce-links')).toHaveJSProperty('tagName', 'DIV');
     await expect(links.first()).toHaveAttribute('href', `/${prefix}/points/`);
     await expect(links.last()).toHaveAttribute('href', 'mailto:brodstem@protonmail.com');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
@@ -191,6 +192,7 @@ for (const [locale, prefix, skinScope, roomScope, policy] of [
       await page.locator(`[data-cat-commerce-action="confirm"][data-product-id="${product.productId}"]`).click();
       await expect(page.locator('[data-cat-commerce-scope]')).toContainText(product === skinProduct ? skinScope : roomScope);
       await expect(page.locator('[data-cat-commerce-policy]')).toContainText(policy);
+      await expect(page.locator('[data-cat-commerce-links]')).toHaveJSProperty('tagName', 'DIV');
       await expect(page.locator('[data-cat-commerce-links] a').first()).toHaveAttribute('href', `/${prefix}/points/`);
       expect(await page.locator('[data-cat-commerce-dialog]').evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
       await page.locator('[data-cat-commerce-dialog]').screenshot({ path: testInfo.outputPath(`${product === skinProduct ? 'skin' : 'room'}-confirm.png`) });

@@ -471,7 +471,7 @@
           ? '<div class="shop-grid station-commerce-grid">' + products.map(renderProduct).join("") + "</div>"
           : '<div class="empty-state">' + escapeHtml(copy.empty) + "</div>") +
       '<footer class="station-commerce-guidance"><p>' + escapeHtml(copy.paymentNote) + '</p><p>' +
-      escapeHtml(copy.correctionNote) + '</p><nav class="station-commerce-links">' + renderSupportLinks() + '</nav></footer></section>'
+      escapeHtml(copy.correctionNote) + '</p><div class="station-commerce-links">' + renderSupportLinks() + '</div></footer></section>'
     );
   }
 
