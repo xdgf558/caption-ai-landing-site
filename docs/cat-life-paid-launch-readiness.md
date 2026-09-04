@@ -13,9 +13,26 @@
 - 读取服务端种子、内容 manifest、商城渲染、房间渲染、商品介绍页、发布手册和测试代码。
 - 已检查套装宣传图；它是内容插画，不是当前房间运行截图。
 - 本地测试使用 VM、测试数据库和模拟 API；不能证明生产 D1 的当前价格、商品状态或真实支付成功。
-- 生产只做了一次不带凭证的只读请求：`GET /api/games/cat-life/catalog?locale=zh-Hans`。结果为 `ok: true`、`authenticated: false`、`rollout.mode: allowlist`、`catalogVisible: false`、`redemptionEnabled: false`、`products: []`。
+- 初次生产观察与 PR 复核均只使用不带凭证的游客目录 GET；复核的可追溯记录见下表。两次结果一致：`ok: true`、`authenticated: false`、`rollout.mode: allowlist`、`catalogVisible: false`、`redemptionEnabled: false`、`products: []`。
 - 该结果只能证明游客被挡住，不能证明白名单密钥正确、非白名单会员被挡住，或两个商品都已暂停。
 - 历史对话提及月夜商品测试和手动测试积分；本次未取得可对应的生产订单、账本和冲正审计证据，不追认成已完成验收，也不重复赠送或扣点。证据应保存在受限后台，不将邮箱、账户和订单明细提交到仓库。
+
+### 生产游客目录复核记录
+
+这是 PR 审查后的重新请求，不为初次观察补造时间或版本。
+
+| 字段 | 实测值 |
+| --- | --- |
+| 请求 | `GET https://wwwstationcat.org/api/games/cat-life/catalog?locale=zh-Hans`，未发送 Cookie 或 Authorization |
+| 客户端开始时间（UTC） | `2026-09-04T21:49:33.996Z` |
+| 客户端完成时间（UTC） | `2026-09-04T21:49:35.406Z`（新加坡时间 2026-09-05 05:49:35.406） |
+| 目标站点 HTTP 状态 | `HTTP/2 200`；不把代理的 `200 Connection established` 当作站点状态 |
+| 响应 Date | `Fri, 04 Sep 2026 21:49:35 GMT` |
+| 响应缓存策略 | `Cache-Control: no-store` |
+| Cloudflare 请求标识 | `cf-ray: a36034731d64d183-LAX` |
+| 生产部署版本 / commit | 未核实：响应未包含部署 ID 或 commit，本次未访问 Cloudflare 部署记录。本文代码基线 `6a2f9cb` 不等于已核验的线上 SHA |
+
+后续生产验收应在受限发布记录中补上此时间窗口对应的 Worker deployment/version ID、关联 commit 和查询时间；若有灰度多版本，应保留版本分流信息，不能仅凭最新部署推断本次请求使用的版本。完成关联前，这条证据只支持当时游客目录的行为，不支持某次部署已通过验收。
 
 ## 首批商品交付边界
 
