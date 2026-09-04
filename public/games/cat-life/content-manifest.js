@@ -11,7 +11,7 @@
 
   var manifest = deepFreeze({
     schemaVersion: 1,
-    releaseVersion: "1.22.0",
+    releaseVersion: "1.22.1",
     products: [
       {
         productId: "cat-life.skin.moonlit-tabby",
@@ -32,8 +32,8 @@
         productId: "cat-life.bundle.station-room",
         entitlementKey: "cat-life.content.furniture.station-room.v1",
         kind: "room",
-        image: "src/assets/premium/station-room-set.jpg",
-        imageSize: { width: 800, height: 800 },
+        image: "src/assets/premium/station-room-preview.webp",
+        imageSize: { width: 759, height: 428 },
         roomTheme: {
           options: {
             wall: { value: "station-green", labelKey: "room_wall_station" },

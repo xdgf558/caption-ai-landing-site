@@ -169,6 +169,21 @@
   width: 100%;
 }
 
+.cat-life-commerce__preview {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.cat-life-commerce__preview img {
+  aspect-ratio: auto;
+}
+
+.cat-life-commerce__preview figcaption {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
 body.cat-life-game-page .cat-life-commerce__copy h2 {
   color: #fffaf0;
   font-size: clamp(34px, 5vw, 64px);

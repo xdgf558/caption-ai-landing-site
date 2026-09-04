@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
+import sharp from 'sharp';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const gameRoot = join(root, 'public/games/cat-life');
@@ -13,7 +14,7 @@ vm.runInNewContext(source, context);
 const api = context.window.CatGameContentManifest;
 const manifest = api.manifest;
 assert.equal(manifest.schemaVersion, 1);
-assert.equal(manifest.releaseVersion, '1.22.0');
+assert.equal(manifest.releaseVersion, '1.22.1');
 assert.equal(manifest.products.length, 2);
 assert.equal(Object.isFrozen(manifest), true);
 assert.equal(Object.isFrozen(manifest.products), true);
@@ -49,6 +50,12 @@ assert.equal(api.getSkin(skinProduct.productId, 'cat_002'), null);
 
 const roomProduct = api.getProduct('cat-life.bundle.station-room');
 assert.equal(roomProduct.kind, 'room');
+assert.equal(roomProduct.image, 'src/assets/premium/station-room-preview.webp');
+const preview = await sharp(join(gameRoot, roomProduct.image)).metadata();
+assert.equal(preview.format, 'webp');
+assert.equal(preview.width, roomProduct.imageSize.width);
+assert.equal(preview.height, roomProduct.imageSize.height);
+assert.ok(readFileSync(join(gameRoot, roomProduct.image)).length < 100000, 'Room preview must stay below 100 KB');
 assert.deepEqual(
   Object.fromEntries(Object.entries(roomProduct.roomTheme.options).map(([key, option]) => [key, option.value])),
   {
