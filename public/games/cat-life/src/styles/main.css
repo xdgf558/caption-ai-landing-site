@@ -1196,40 +1196,40 @@ button:disabled {
 }
 
 .room-theme-fixture--station-clock-board {
-  top: -7%;
+  top: 2%;
   left: 36%;
-  width: min(31%, 238px);
+  width: min(27%, 210px);
 }
 
 .room-theme-fixture--station-signal-lamp {
-  right: -2%;
-  bottom: -3%;
+  right: 1%;
+  bottom: 1%;
   width: min(24%, 184px);
 }
 
 .room-theme-fixture--station-bench {
-  bottom: -14%;
+  bottom: 0;
   left: 11%;
-  width: min(43%, 330px);
+  width: min(37%, 285px);
 }
 
 @media (max-width: 700px) {
   .room-theme-fixture--station-clock-board {
-    top: -2%;
+    top: 2%;
     left: 43%;
     width: 38%;
   }
 
   .room-theme-fixture--station-signal-lamp {
-    right: -4%;
-    bottom: -2%;
+    right: 0;
+    bottom: 1%;
     width: 30%;
   }
 
   .room-theme-fixture--station-bench {
-    bottom: -11%;
+    bottom: 0;
     left: 5%;
-    width: 62%;
+    width: 54%;
   }
 }
 

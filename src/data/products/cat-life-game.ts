@@ -3,7 +3,7 @@ export const catLifeGameProduct = {
   zhHantName: '打工養貓日記',
   zhHansName: '打工养猫日记',
   jaName: '働いて猫を育てる日記',
-  latestVersion: '1.22.0',
+  latestVersion: '1.22.1',
   productPath: '/en/apps/cat-life-game/',
   zhHantProductPath: '/zh-hant/apps/cat-life-game/',
   zhHansProductPath: '/zh-hans/apps/cat-life-game/',
@@ -16,7 +16,7 @@ export const catLifeGameProduct = {
     shopFood: '/games/cat-life/src/assets/shop/shop-food.jpg',
     shopBed: '/games/cat-life/src/assets/shop/shop-bed.jpg',
     moonlitTabby: '/games/cat-life/src/assets/premium/moonlit-tabby.png',
-    stationRoom: '/games/cat-life/src/assets/premium/station-room-set.jpg',
+    stationRoom: '/games/cat-life/src/assets/premium/station-room-preview.webp',
     stationBench: '/games/cat-life/src/assets/premium/station-bench.png',
     stationSignalLamp: '/games/cat-life/src/assets/premium/station-signal-lamp.png',
     stationClockBoard: '/games/cat-life/src/assets/premium/station-clock-board.png'

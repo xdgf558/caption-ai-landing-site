@@ -73,6 +73,155 @@ async function mockCloudMember(page, member = account) {
   }));
 }
 
+async function openGamePage(page, name) {
+  const target = page.locator(`[data-page-target="${name}"]:visible`).first();
+  if (!await target.count()) await page.locator('[data-page-target="more"]:visible').click();
+  await target.click();
+}
+
+for (const width of [1440, 390]) {
+  test(`room purchase, decoration, reload and revocation through UI at ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await mockCloudMember(page);
+    let owned = false;
+    let balance = 100;
+    let posts = 0;
+    await page.route('**/api/games/cat-life/catalog?*', route => route.fulfill({ json: {
+      ok: true, authenticated: true, account, balance,
+      products: [{ ...roomProduct, owned, redeemable: !owned, entitlement: null }]
+    } }));
+    await page.route('**/api/games/cat-life/entitlements?*', route => route.fulfill({ json: {
+      ok: true, authenticated: true, account, balance,
+      entitlements: owned ? [entitlementFor(roomProduct)] : []
+    } }));
+    await page.route('**/api/games/cat-life/redemptions', route => {
+      const body = route.request().postDataJSON();
+      expect(Object.keys(body).sort()).toEqual(['idempotencyKey', 'productId']);
+      expect(body.productId).toBe(roomProduct.productId);
+      posts += 1;
+      owned = true;
+      balance = 75;
+      return route.fulfill({ json: { ok: true, authenticated: true, account, balance,
+        purchase: { id: 'clp_room_ui', status: 'completed' }, entitlement: entitlementFor(roomProduct) } });
+    });
+    await page.goto('/games/cat-life/?lang=en');
+    await openGamePage(page, 'member_store');
+    await expect(page.locator('.station-commerce-card')).toContainText('cannot be dragged independently');
+    await page.locator('[data-cat-commerce-action="confirm"]').click();
+    await expect(page.locator('[data-cat-commerce-copy]')).toContainText('25 Station Points');
+    await expect(page.locator('[data-cat-commerce-scope]')).toContainText('No table');
+    await expect(page.locator('[data-cat-commerce-policy]')).toContainText('not cash');
+    await expect(page.locator('[data-cat-commerce-links] a').first()).toHaveAttribute('href', '/en/points/');
+    await page.locator('[data-cat-commerce-confirm]').click();
+    await expect(page.locator('.station-commerce-summary')).toContainText('75 Station Points');
+    expect(posts).toBe(1);
+    await openGamePage(page, 'community');
+    await page.locator('[data-community-home]').click();
+    await page.locator('[data-room-mode-target="edit"]').first().click();
+    const options = { wall: 'station-green', floor: 'station-stripe', decor: 'station-signal', layout: 'station-waiting' };
+    for (const [key, value] of Object.entries(options)) {
+      await page.locator(`[data-room-option-key="${key}"][data-room-option-value="${value}"]`).click();
+    }
+    await expect(page.locator('.room-theme-fixture')).toHaveCount(3);
+    await page.locator('[data-room-mode-target="life"]').last().click();
+    await expect.poll(() => page.locator('.room-scene img').evaluateAll(images =>
+      images.every(image => image.complete && image.naturalWidth > 0))).toBe(true);
+    expect(await page.locator('.room-theme-fixture').evaluateAll(images => images.every(image => {
+      const box = image.getBoundingClientRect();
+      const room = image.closest('.room-scene').getBoundingClientRect();
+      return box.top >= room.top && box.left >= room.left && box.right <= room.right && box.bottom <= room.bottom;
+    }))).toBe(true);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.locator('.room-home-workspace').screenshot({ path: testInfo.outputPath('room-owned.png') });
+    if (width === 1440 && process.env.CAT_LIFE_CAPTURE_ROOM_PREVIEW) {
+      // Capture the actual entitled UI, never add an entitlement bypass to the renderer.
+      await page.locator('.room-scene').screenshot({ path: process.env.CAT_LIFE_CAPTURE_ROOM_PREVIEW });
+    }
+    await page.reload();
+    await expect.poll(() => page.evaluate(() => window.CatGameCommerce.hasEntitlement('cat-life.content.furniture.station-room.v1'))).toBe(true);
+    await openGamePage(page, 'community');
+    await page.locator('[data-community-home]').click();
+    await expect(page.locator('.room-theme-fixture')).toHaveCount(3);
+    expect(await page.evaluate(() => window.CatGame.state.game.home.roomScene)).toMatchObject(options);
+    owned = false;
+    balance = 100;
+    await openGamePage(page, 'member_store');
+    await page.locator('[data-cat-commerce-action="refresh"]').click();
+    await expect(page.locator('.station-commerce-summary')).toContainText('100 Station Points');
+    await openGamePage(page, 'community');
+    await page.locator('[data-community-home]').click();
+    await expect(page.locator('.room-theme-fixture')).toHaveCount(0);
+    await expect(page.locator('.room-scene')).not.toHaveClass(/wall-station-green|floor-station-stripe/);
+    await page.locator('[data-room-mode-target="edit"]').first().click();
+    await expect(page.locator('[data-room-option-value="station-green"]')).toHaveCount(0);
+    await page.locator('.room-home-workspace').screenshot({ path: testInfo.outputPath('room-revoked.png') });
+    expect(posts).toBe(1);
+  });
+}
+
+for (const [locale, prefix, skinScope, roomScope, policy] of [
+  ['en', 'en', 'Only for the starter orange cat', 'cannot be dragged independently', 'not cash'],
+  ['zh-CN', 'zh-hans', '仅适用初始橘猫', '不能独立拖动', '不等于现金退款'],
+  ['zh-Hant', 'zh-hant', '僅適用初始橘貓', '不能獨立拖動', '不等於現金退款'],
+  ['ja', 'ja', '最初の茶トラ猫', '個別にドラッグできません', '現金の返金ではありません']
+]) {
+  test(`localized offer scope and support links fit mobile: ${locale}`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockCloudMember(page);
+    await page.route('**/api/games/cat-life/catalog?*', route => route.fulfill({ json: {
+      ok: true, authenticated: true, account, balance: 100,
+      products: [skinProduct, { ...roomProduct, owned: false, redeemable: true, entitlement: null }]
+    } }));
+    await page.route('**/api/games/cat-life/entitlements?*', route => route.fulfill({ json: {
+      ok: true, authenticated: true, account, balance: 100, entitlements: []
+    } }));
+    await page.goto(`/games/cat-life/?lang=${locale}`);
+    await openGamePage(page, 'member_store');
+    await expect(page.locator('.station-commerce-card').first()).toContainText(skinScope);
+    await expect(page.locator('.station-commerce-card').last()).toContainText(roomScope);
+    await expect.poll(() => page.locator('.station-commerce-art img').evaluateAll(images =>
+      images.length === 2 && images.every(image => image.complete && image.naturalWidth > 0))).toBe(true);
+    const links = page.locator('.station-commerce-guidance a');
+    await expect(links.first()).toHaveAttribute('href', `/${prefix}/points/`);
+    await expect(links.last()).toHaveAttribute('href', 'mailto:brodstem@protonmail.com');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+    await page.locator('[data-cat-commerce-section]').screenshot({ path: testInfo.outputPath('store.png') });
+    for (const product of [skinProduct, roomProduct]) {
+      await page.locator(`[data-cat-commerce-action="confirm"][data-product-id="${product.productId}"]`).click();
+      await expect(page.locator('[data-cat-commerce-scope]')).toContainText(product === skinProduct ? skinScope : roomScope);
+      await expect(page.locator('[data-cat-commerce-policy]')).toContainText(policy);
+      await expect(page.locator('[data-cat-commerce-links] a').first()).toHaveAttribute('href', `/${prefix}/points/`);
+      expect(await page.locator('[data-cat-commerce-dialog]').evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+      await page.locator('[data-cat-commerce-dialog]').screenshot({ path: testInfo.outputPath(`${product === skinProduct ? 'skin' : 'room'}-confirm.png`) });
+      await page.locator('[data-cat-commerce-cancel]').click();
+    }
+  });
+}
+
+test('uncertain redemption preserves the retry key and never promises no debit', async ({ page }) => {
+  await mockCloudMember(page);
+  await page.route('**/api/games/cat-life/catalog?*', route => route.fulfill({ json: {
+    ok: true, authenticated: true, account, balance: 100, products: [skinProduct]
+  } }));
+  await page.route('**/api/games/cat-life/entitlements?*', route => route.fulfill({ json: {
+    ok: true, authenticated: true, account, balance: 100, entitlements: []
+  } }));
+  const bodies = [];
+  await page.route('**/api/games/cat-life/redemptions', route => {
+    bodies.push(route.request().postDataJSON());
+    return route.fulfill({ status: 503, json: { ok: false } });
+  });
+  await page.goto('/games/cat-life/?lang=en');
+  await openGamePage(page, 'member_store');
+  await page.locator('[data-cat-commerce-action="confirm"]').click();
+  await page.locator('[data-cat-commerce-confirm]').click();
+  await expect(page.locator('[data-cat-commerce-status]')).toContainText('could not confirm');
+  await page.locator('[data-cat-commerce-confirm]').click();
+  await expect.poll(() => bodies.length).toBe(2);
+  expect(bodies[0]).toEqual(bodies[1]);
+});
+
 test('redeems an active skin with server data only and applies the official entitlement', async ({ page }) => {
   let owned = false;
   let redemptionBody = null;

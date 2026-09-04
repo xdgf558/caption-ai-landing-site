@@ -57,15 +57,21 @@
       redeemed: "兌換完成，官方權益已加入帳號。",
       skinApplied: "月夜虎斑造型已套用。",
       skinRemoved: "已恢復原本造型。",
-      descriptionSkin: "為小橘套用銀藍虎斑與月亮項圈；只改變外觀，不影響數值。",
-      descriptionRoom: "解鎖車站綠牆、條紋地板、信號燈裝飾與候車室配置。",
+      descriptionSkin: "僅適用初始橘貓（預設名：小橘），改名後仍適用。不包含新貓或其他貓的造型；只改變外觀，不影響數值。",
+      descriptionRoom: "包含綠牆、條紋地面、信號裝飾、候車布局四項主題：選綠牆顯示時鐘站牌，選信號裝飾顯示信號燈，選候車布局顯示長椅。",
+      roomScope: "在「貓町 → 玩家小家 → 裝修」選用。三件裝飾不是背包家具，不能獨立拖動；不含桌子、花瓶、獨立地毯、擴容或數值加成。",
+      roomPreview: "遊戲實景：四項主題全部選用。貓咪、貓窩與食盆是免費基礎內容，不屬於本套裝。",
+      paymentNote: "商品點數不是首次付款金額。積分依當前套餐購買，最低付款額請查看積分價格；剩餘積分保留在帳號中。",
+      correctionNote: "兌換問題請聯絡支援。經核准的兌換沖正會撤銷權益並退回原積分，不等於現金退款；付款退款依積分規則處理。",
+      rules: "積分價格與退款規則",
+      support: "兌換與付款協助",
       error_SIGN_IN_REQUIRED: "請先登入 Station Cat。",
       error_PRODUCT_NOT_AVAILABLE: "這件商品目前沒有開放兌換。",
       error_ALREADY_OWNED: "這個帳號已經擁有這件商品。",
       error_INSUFFICIENT_POINTS: "Station 積分不足，請先購買積分。",
       error_REDEMPTION_RATE_LIMITED: "操作太頻繁，請稍後再試。",
       error_COMMERCE_ROLLOUT_CLOSED: "會員商城正在分階段開放，這個帳號目前尚未開放兌換。",
-      error_default: "兌換暫時失敗，沒有扣除積分。請稍後重試。"
+      error_default: "暫時無法確認兌換結果。請刷新核對餘額與權益，或重試；仍有疑問請聯絡支援。"
     },
     "zh-CN": {
       kicker: "Station Points Store",
@@ -97,15 +103,21 @@
       redeemed: "兑换完成，官方权益已加入账号。",
       skinApplied: "月夜虎斑造型已应用。",
       skinRemoved: "已恢复原本造型。",
-      descriptionSkin: "为小橘应用银蓝虎斑与月亮项圈；只改变外观，不影响数值。",
-      descriptionRoom: "解锁车站绿墙、条纹地板、信号灯装饰与候车室布局。",
+      descriptionSkin: "仅适用初始橘猫（默认名：小橘），改名后仍适用。不包含新猫或其他猫的造型；只改变外观，不影响数值。",
+      descriptionRoom: "包含绿墙、条纹地面、信号装饰、候车布局四项主题：选绿墙显示时钟站牌，选信号装饰显示信号灯，选候车布局显示长椅。",
+      roomScope: "在“猫町 → 玩家小家 → 装修”选用。三件装饰不是背包家具，不能独立拖动；不含桌子、花瓶、独立地毯、扩容或数值加成。",
+      roomPreview: "游戏实景：四项主题全部选用。猫咪、猫窝与食盆是免费基础内容，不属于本套装。",
+      paymentNote: "商品点数不是首次付款金额。积分按当前套餐购买，最低付款额请查看积分价格；剩余积分保留在账号中。",
+      correctionNote: "兑换问题请联系支持。经批准的兑换冲正会撤销权益并退回原积分，不等于现金退款；付款退款按积分规则处理。",
+      rules: "积分价格与退款规则",
+      support: "兑换与付款协助",
       error_SIGN_IN_REQUIRED: "请先登录 Station Cat。",
       error_PRODUCT_NOT_AVAILABLE: "这件商品目前没有开放兑换。",
       error_ALREADY_OWNED: "这个账号已经拥有这件商品。",
       error_INSUFFICIENT_POINTS: "Station 积分不足，请先购买积分。",
       error_REDEMPTION_RATE_LIMITED: "操作太频繁，请稍后再试。",
       error_COMMERCE_ROLLOUT_CLOSED: "会员商城正在分阶段开放，这个账号目前尚未开放兑换。",
-      error_default: "兑换暂时失败，没有扣除积分。请稍后重试。"
+      error_default: "暂时无法确认兑换结果。请刷新核对余额与权益，或重试；仍有疑问请联系支持。"
     },
     en: {
       kicker: "Station Points Store",
@@ -137,15 +149,21 @@
       redeemed: "Redemption complete. The official entitlement is now on your account.",
       skinApplied: "Moonlit Tabby is now equipped.",
       skinRemoved: "The original skin is restored.",
-      descriptionSkin: "Give Sunny a silver-blue tabby coat and moon collar. Cosmetic only; stats never change.",
-      descriptionRoom: "Unlock station-green walls, striped flooring, signal decor, and a waiting-room layout.",
+      descriptionSkin: "Only for the starter orange cat (default name: Sunny), even after renaming. No new cat or skins for other cats. Cosmetic only; stats never change.",
+      descriptionRoom: "Four theme options: green walls show the clock board, signal decor shows the lamp, and the waiting-room layout shows the bench, plus striped flooring.",
+      roomScope: "Select them in Cat Town → Player Home → Edit. The three fixtures are not backpack furniture and cannot be dragged independently. No table, vase, separate rug, extra capacity, or stat bonuses.",
+      roomPreview: "In-game view with all four options selected. The cat, bed, and food bowl are free base content, not part of this pack.",
+      paymentNote: "The points price is not your first payment amount. Points are sold in current packs; see points pricing for the minimum payment. Unspent points stay on your account.",
+      correctionNote: "Contact support about redemption issues. An approved redemption reversal revokes access and restores the original points, not cash. Payment refunds follow the points rules.",
+      rules: "Points pricing and refund rules",
+      support: "Redemption and payment support",
       error_SIGN_IN_REQUIRED: "Sign in to Station Cat first.",
       error_PRODUCT_NOT_AVAILABLE: "This product is not available for redemption.",
       error_ALREADY_OWNED: "This account already owns this product.",
       error_INSUFFICIENT_POINTS: "You need more Station Points before redeeming this product.",
       error_REDEMPTION_RATE_LIMITED: "Too many attempts. Please wait and try again.",
       error_COMMERCE_ROLLOUT_CLOSED: "The member store is opening in stages and redemption is not enabled for this account yet.",
-      error_default: "Redemption failed without deducting points. Please try again later."
+      error_default: "We could not confirm the redemption result. Refresh to check your balance and ownership, or retry. Contact support if it remains unclear."
     },
     ja: {
       kicker: "Station Points Store",
@@ -177,15 +195,21 @@
       redeemed: "交換が完了し、公式権利がアカウントに追加されました。",
       skinApplied: "月夜のキジトラを適用しました。",
       skinRemoved: "元のスキンに戻しました。",
-      descriptionSkin: "チャトラを銀青の縞と月の首輪に変更します。見た目だけで能力値は変わりません。",
-      descriptionRoom: "駅の緑壁、ストライプ床、信号装飾、待合室レイアウトを解放します。",
+      descriptionSkin: "最初の茶トラ猫（初期名：チャトラ）専用です。名前を変えても使えます。新しい猫や他の猫のスキンは含まず、能力値も変わりません。",
+      descriptionRoom: "緑の壁、ストライプ床、信号装飾、待合室配置の4項目です。緑の壁で時計付き案内板、信号装飾でランプ、待合室配置でベンチが表示されます。",
+      roomScope: "「猫町 → 自分の家 → 編集」で選択します。3点の装飾はバッグの家具ではなく、個別にドラッグできません。テーブル、花瓶、単独のラグ、部屋の拡張、能力値アップは含みません。",
+      roomPreview: "4項目を選択したゲーム画面です。猫、ベッド、食器は無料の基本コンテンツで、このセットには含まれません。",
+      paymentNote: "商品のポイント数は初回の支払額ではありません。ポイントは現在のパック単位で購入します。最低支払額はポイント料金をご確認ください。残りはアカウントに保持されます。",
+      correctionNote: "交換の問題はサポートへご連絡ください。承認された交換取消は権利を取り消して元のポイントを戻すもので、現金の返金ではありません。支払いの返金はポイント規則に従います。",
+      rules: "ポイント料金と返金規則",
+      support: "交換・支払いのサポート",
       error_SIGN_IN_REQUIRED: "先に Station Cat へログインしてください。",
       error_PRODUCT_NOT_AVAILABLE: "この商品は現在交換できません。",
       error_ALREADY_OWNED: "このアカウントはすでに所有しています。",
       error_INSUFFICIENT_POINTS: "Station Points が不足しています。",
       error_REDEMPTION_RATE_LIMITED: "操作が多すぎます。少し待ってから再試行してください。",
       error_COMMERCE_ROLLOUT_CLOSED: "会員ストアは段階的に公開中で、このアカウントではまだ交換できません。",
-      error_default: "ポイントを消費せず交換に失敗しました。後でもう一度お試しください。"
+      error_default: "交換結果を確認できませんでした。更新して残高と所有権を確認するか、再試行してください。不明な場合はサポートへご連絡ください。"
     }
   };
 
@@ -355,6 +379,12 @@
     return "";
   }
 
+  function renderSupportLinks() {
+    var copy = getCopy();
+    return '<a href="' + escapeHtml(getPointsPath()) + '">' + escapeHtml(copy.rules) +
+      '</a><a href="mailto:brodstem@protonmail.com">' + escapeHtml(copy.support) + '</a>';
+  }
+
   function productList() {
     var items = state.products.slice();
     state.entitlements.forEach(function (entitlement) {
@@ -405,10 +435,12 @@
       '<article class="shop-card station-commerce-card' + (owned ? " is-owned" : "") + '">' +
       '<div class="shop-art station-commerce-art"><img src="' + escapeHtml(manifest.image) + '" alt="' +
       escapeHtml(product.name) + '" width="' + manifest.imageSize.width + '" height="' + manifest.imageSize.height + '" loading="lazy" /></div>' +
+      (manifest.kind === "room" ? '<p class="station-commerce-caption">' + escapeHtml(copy.roomPreview) + '</p>' : '') +
       '<div class="shop-row"><div><p class="section-eyebrow">' + escapeHtml(copy.kicker) + '</p><h3 class="panel-title">' +
       escapeHtml(product.name) + '</h3></div>' +
       (product.pointsPrice === null ? "" : '<span class="pill">' + escapeHtml(String(product.pointsPrice)) + " Station Points</span>") +
       '</div><p class="page-copy">' + escapeHtml(getProductDescription(product.productId)) + "</p>" +
+      (manifest.kind === "room" ? '<p class="shop-meta">' + escapeHtml(copy.roomScope) + '</p>' : '') +
       '<p class="shop-meta">' + escapeHtml(copy.permanent) + "</p>" +
       '<div class="inline-row station-commerce-actions"><span class="status-pill ' + (owned ? "is-success" : "") + '">' +
       escapeHtml(statusCopy(product)) + "</span>" + action + "</div></article>"
@@ -438,7 +470,8 @@
         : products.length
           ? '<div class="shop-grid station-commerce-grid">' + products.map(renderProduct).join("") + "</div>"
           : '<div class="empty-state">' + escapeHtml(copy.empty) + "</div>") +
-      "</section>"
+      '<footer class="station-commerce-guidance"><p>' + escapeHtml(copy.paymentNote) + '</p><p>' +
+      escapeHtml(copy.correctionNote) + '</p><nav class="station-commerce-links">' + renderSupportLinks() + '</nav></footer></section>'
     );
   }
 
@@ -502,6 +535,10 @@
     dialog.root.dataset.productId = product.productId;
     dialog.title.textContent = copy.confirmTitle;
     dialog.copy.textContent = formatCopy(copy.confirmCopy, { price: product.pointsPrice, name: product.name });
+    dialog.scope.textContent = getProductDescription(product.productId) +
+      (manifests[product.productId].kind === "room" ? " " + copy.roomScope : "");
+    dialog.policy.textContent = copy.correctionNote;
+    dialog.links.innerHTML = renderSupportLinks();
     dialog.balance.textContent = formatCopy(copy.confirmBalance, { balance: state.balance });
     dialog.status.textContent = "";
     dialog.confirm.textContent = copy.confirmAction;
@@ -564,6 +601,9 @@
     if (!dialog.root) return;
     dialog.title = dialog.root.querySelector("[data-cat-commerce-title]");
     dialog.copy = dialog.root.querySelector("[data-cat-commerce-copy]");
+    dialog.scope = dialog.root.querySelector("[data-cat-commerce-scope]");
+    dialog.policy = dialog.root.querySelector("[data-cat-commerce-policy]");
+    dialog.links = dialog.root.querySelector("[data-cat-commerce-links]");
     dialog.balance = dialog.root.querySelector("[data-cat-commerce-balance]");
     dialog.status = dialog.root.querySelector("[data-cat-commerce-status]");
     dialog.confirm = dialog.root.querySelector("[data-cat-commerce-confirm]");
