@@ -151,7 +151,7 @@
       game.state.catReaction = null;
       catReactionTimerId = null;
       if (game.state.currentPage === "home" || game.state.currentPage === "cats") {
-        render();
+        render(true);
       }
     }, 2250);
   }
@@ -189,16 +189,16 @@
             if (game.state.lotteryCelebration && game.state.lotteryCelebration.key === celebrationKey) {
               game.state.lotteryCelebration = null;
               if (game.state.currentPage === "arcade") {
-                render();
+                render(true);
               }
             }
           }, 5300);
         }
 
         persistGame(true);
-        render();
+        render(true);
       } else if (game.state.currentPage === "arcade") {
-        render();
+        render(true);
       }
     });
   }
@@ -338,9 +338,9 @@
       game.systems.workSystem.refreshJobUnlocks();
       game.systems.taskSystem.refreshAllTasks();
       persistGame(true);
-      render();
-    } else if (journeyDayChanged || source === "focus" || source === "visibility") {
-      render();
+      render(true);
+    } else if (journeyDayChanged && (game.state.currentPage === "home" || game.state.currentPage === "cats")) {
+      render(true);
     } else {
       refreshLiveBindings();
     }
@@ -395,7 +395,17 @@
     }, 1300);
   }
 
-  function render() {
+  function render(preserveDrafts) {
+    // Background updates must not discard text, amounts or selections being
+    // edited. These drafts stay in memory only; explicit actions render afresh.
+    var drafts = preserveDrafts === true ? Array.prototype.filter.call(
+      dom.main.querySelectorAll('input[id]:not([type="file"]):not([type="hidden"]), textarea[id], select[id]'),
+      function (node) { return !node.readOnly && !node.disabled; }
+    ).map(function (node) {
+      return { id: node.id, tag: node.tagName, type: node.type, value: node.value, checked: node.checked,
+        focused: document.activeElement === node, start: node.selectionStart, end: node.selectionEnd,
+        direction: node.selectionDirection };
+    }) : [];
     var pageRenderers = {
       home: game.ui.renderHome,
       room: game.ui.renderCommunityPanel,
@@ -419,6 +429,15 @@
 
     dom.header.innerHTML = game.ui.renderHeader(game.state.game);
     dom.main.innerHTML = renderer(game.state.game);
+    drafts.forEach(function (draft) {
+      var node = document.getElementById(draft.id);
+      if (!node || node.tagName !== draft.tag || node.type !== draft.type || node.disabled || node.readOnly) return;
+      if (node.tagName === "SELECT" && !Array.prototype.some.call(node.options, function (option) { return option.value === draft.value; })) return;
+      node.value = draft.value;
+      if (node.type === "checkbox" || node.type === "radio") node.checked = draft.checked;
+      if (draft.focused) node.focus({ preventScroll: true });
+      if (typeof draft.start === "number") node.setSelectionRange(draft.start, draft.end, draft.direction);
+    });
     dom.navigation.innerHTML = game.ui.renderDesktopNavigation(game.state.game);
     dom.mobileNavigation.innerHTML = game.ui.renderMobileNavigation(game.state.game);
     if (roomResizeObserver) roomResizeObserver.disconnect();

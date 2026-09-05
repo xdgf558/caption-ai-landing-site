@@ -176,6 +176,49 @@ test('first clinic aid is charged once, survives reload, and no treatment is gra
   assert.equal(game.state.game.player.hospitalVisits, 1);
 });
 
+test('unclaimed packages remain available after graduation, with the oldest package first and no duplicates after reload', () => {
+  const f = setup();
+  const { game, state, cat, learn, at } = f;
+  Object.assign(state.player.careLearning, { metCat: true, fed: true, played: true, worked: true });
+  // Care using existing inventory must not forfeit the packages for earlier stages.
+  for (const date of ['2026-09-05T12:00:00Z', '2026-09-07T12:00:00Z', '2026-09-09T23:59:59Z']) {
+    at(date);
+    cat.energy = 10;
+    assert.equal(game.systems.catSystem.performAction(cat.id, 'rest').ok, true);
+  }
+  at('2026-09-10T00:00:00Z');
+  assert.equal(learn.active(state), false);
+  const initialInventory = copy(state.inventory);
+  for (const lesson of [1, 2, 3]) {
+    const current = game.state.game;
+    assert.equal(learn.canClaim(current), true);
+    assert.equal(learn.recommendation(current).kind, 'supplies');
+    assert.equal(learn.recommendation(current).params.lesson, lesson);
+    assert.equal(learn.claimSupplies().ok, true);
+    f.reload();
+    assert.deepEqual(copy(game.state.game.player.careLearning.supplyClaims), [1, 2, 3].slice(0, lesson));
+  }
+  assert.equal(learn.claimSupplies().ok, false);
+  assert.equal(game.state.game.inventory.food, initialInventory.food + 6);
+  assert.equal(game.state.game.inventory.litter, initialInventory.litter + 3);
+  assert.equal(game.state.game.inventory.toys, initialInventory.toys + 6);
+  assert.equal(learn.active(game.state.game), false, 'late claims do not extend disease protection');
+  assert.equal(game.state.game.player.careLearning.careDates.length, 3);
+});
+
+test('a later learning day allows missed packages but never unlocks a fourth or an unearned stage', () => {
+  const { game, state, cat, learn, at } = setup();
+  cat.energy = 10;
+  game.systems.catSystem.performAction(cat.id, 'rest');
+  at(start + DAY);
+  assert.equal(learn.claimSupplies().ok, true);
+  assert.deepEqual(copy(state.player.careLearning.supplyClaims), [1]);
+  assert.equal(learn.claimSupplies().ok, true);
+  assert.deepEqual(copy(state.player.careLearning.supplyClaims), [1, 2]);
+  assert.equal(learn.claimSupplies().ok, false);
+  assert.equal(state.player.careLearning.careDates.length, 1);
+});
+
 test('zero resources, both hungry: rescue → player meal → meet/supplies → useful care; no fabricated rewards', () => {
   const { game, state, cat, learn } = setup();
   cat.hunger = 10;
@@ -253,6 +296,7 @@ test('realtime hunger and stamina guide the player to food or sleep; pregnancy a
   state.player.hunger = 100;
   state.inventory.bread = 1;
   assert.equal(learn.recommendation(state).itemId, 'bread');
+  assert.equal(learn.recommendation(state).routeKey, 'care');
   state.inventory.bread = 0;
   assert.equal(learn.recommendation(state).page, 'shop');
   state.player.hunger = 0;
@@ -263,6 +307,45 @@ test('realtime hunger and stamina guide the player to food or sleep; pregnancy a
   state.inventory.premiumFood = 4;
   cat.hunger = 60;
   assert.equal(learn.recommendation(state).action, 'feedPremium');
+});
+
+test('global recommendations scan every rescue reason, including missing litter and deceased companions among living cats', () => {
+  const { game, state, cat, learn } = setup();
+  const dirty = { ...copy(cat), id: 'dirty_cat', clean: 10 };
+  const deceased = { ...copy(cat), id: 'old_friend', isAlive: false };
+  state.cats.push(dirty, deceased);
+  state.inventory.litter = 0;
+  assert.equal(game.systems.careSystem.rescueReason(dirty, state), 'supplies');
+  assert.equal(learn.recommendation(state).catId, dirty.id);
+  assert.equal(learn.recommendation(state).kind, 'rescue');
+  assert.equal(learn.recommendation(state, cat).catId, cat.id, 'cat detail recommendations remain local');
+  assert.equal(game.systems.careSystem.rescueCat(dirty.id).ok, true);
+  assert.equal(learn.recommendation(state).catId, deceased.id);
+  assert.equal(learn.recommendation(state).buttonKey, 'care_legacy_action');
+  assert.equal(game.systems.careSystem.rescueCat(deceased.id).ok, true);
+  assert.notEqual(learn.recommendation(state).kind, 'rescue');
+});
+
+test('journey landmarks describe learning, returning and rescue states in every locale', () => {
+  const { game, state, cat, learn } = setup();
+  for (const language of ['zh-CN', 'en', 'ja']) {
+    state.settings.language = language;
+    for (const eligible of [true, false]) {
+      state.player.careLearning.eligible = eligible;
+      cat.health = 100;
+      let html = game.ui.renderCareJourney(state);
+      const label = game.utils.i18n.t(eligible ? 'learning_journey' : 'learning_return');
+      assert.ok(html.includes('aria-label="' + label + '"'));
+      cat.health = 10;
+      html = game.ui.renderCareJourney(state);
+      assert.ok(html.includes('aria-label="' + game.utils.i18n.t('care_support_title') + '"'));
+    }
+  }
+  cat.health = 100;
+  state.player.gold = 0;
+  state.player.hunger = 100;
+  assert.equal(learn.recommendation(state).kind, 'meal');
+  assert.equal(learn.recommendation(state).routeKey, 'care');
 });
 
 test('learning prevents new infections, not existing illness or the permanent gentle-care safety system', () => {

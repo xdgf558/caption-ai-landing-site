@@ -182,6 +182,14 @@ for (const width of [1440, 390]) {
 
 test('bench avoidance repairs old full-room layouts visually, survives resize and constrains dragging', async ({ page }, testInfo) => {
   await mockCloudMember(page);
+  // Exercise the slower cloud-save path: entitlements alone do not mean that
+  // member storage has activated and finished replacing the guest game.
+  let releaseCloudSave;
+  const cloudSaveReady = new Promise(resolve => { releaseCloudSave = resolve; });
+  await page.route('**/api/readers/game-saves/cat-life', async route => {
+    await cloudSaveReady;
+    await route.fulfill({ json: { ok: true, authenticated: true, account, save: null } });
+  });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.route('**/api/games/cat-life/catalog?*', route => route.fulfill({ json: {
     ok: true, authenticated: true, account, balance: 0, products: [roomProduct]
@@ -191,6 +199,9 @@ test('bench avoidance repairs old full-room layouts visually, survives resize an
   } }));
   await page.goto('/games/cat-life/?lang=en');
   await expect.poll(() => page.evaluate(() => window.CatGameCommerce.hasEntitlement('cat-life.content.furniture.station-room.v1'))).toBe(true);
+  releaseCloudSave();
+  await expect.poll(() => page.evaluate(() => window.CatGame.state.saveSystem.getStorageKey()))
+    .toMatch(/:member:17$/);
   const original = await page.evaluate(() => {
     const game = window.CatGame;
     const ids = game.data.items.filter(item => item.type === 'furniture').map(item => item.id);
@@ -226,6 +237,8 @@ test('bench avoidance repairs old full-room layouts visually, survives resize an
   expect(await page.evaluate(() => JSON.stringify(window.CatGame.state.game.home.furnitureLayout))).not.toBe(original);
   await page.reload();
   await expect.poll(() => page.evaluate(() => window.CatGameCommerce.hasEntitlement('cat-life.content.furniture.station-room.v1'))).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.CatGame.state.saveSystem.getStorageKey()))
+    .toMatch(/:member:17$/);
   await openGamePage(page, 'community');
   await page.locator('[data-community-home]').click();
   await expectFurnitureClearOfBench(page);

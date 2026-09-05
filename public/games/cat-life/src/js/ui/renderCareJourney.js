@@ -44,9 +44,10 @@
     var rec = learning.recommendation(state, cat);
     var novice = learning.data(state).eligible && learning.active(state);
     var needsSupport = rec.kind === "rescue" || rec.kind === "meal";
+    var label = t(needsSupport ? "care_support_title" : novice ? "learning_journey" : "learning_return");
     return '<section class="care-journey' + (cat ? ' is-compact cat-recommendation' : '') +
-      (needsSupport ? ' care-support-card' : '') + '" data-care-journey aria-label="' + safe(t("learning_journey")) + '">' +
-      '<div class="care-journey-heading"><div><p class="section-eyebrow">' + safe(t(novice ? "learning_journey" : "learning_return")) +
+      (needsSupport ? ' care-support-card' : '') + '" data-care-journey aria-label="' + safe(label) + '">' +
+      '<div class="care-journey-heading"><div><p class="section-eyebrow">' + safe(label) +
       (rec.params.name ? ' · ' + safe(rec.params.name) : '') + '</p><h3 class="panel-title" tabindex="-1">' + safe(t(rec.titleKey, rec.params)) +
       '</h3><p class="page-copy">' + safe(t(rec.copyKey, rec.params)) + '</p></div>' + renderAction(rec) + '</div>' +
       renderProgress(state) + '</section>';

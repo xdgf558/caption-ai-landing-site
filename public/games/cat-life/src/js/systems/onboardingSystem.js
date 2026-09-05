@@ -22,14 +22,24 @@
     return lesson <= 3 ? lesson : 0;
   }
   function canClaim(state, date) {
-    var lesson = lessonFor(state, date);
-    return lesson > 0 && data(state).supplyClaims.indexOf(lesson) === -1 &&
+    return claimLessonFor(state, date) > 0 &&
       state.cats.some(function (cat) { return cat.unlocked && cat.isAlive !== false && cat.careStatus !== "sheltered"; });
+  }
+  function claimLessonFor(state, date) {
+    var learning = data(state);
+    var today = dayKey(date || now());
+    var last = learning.careDates[learning.careDates.length - 1];
+    if (!learning.eligible || (last && today < last)) return 0;
+    // Earned packages do not expire when the lesson advances or protection ends.
+    var available = Math.min(3, learning.careDates.length + (last === today ? 0 : 1));
+    return [1, 2, 3].find(function (lesson) {
+      return lesson <= available && learning.supplyClaims.indexOf(lesson) === -1;
+    }) || 0;
   }
   function claimSupplies() {
     var state = game.state.game;
     if (!canClaim(state)) return { ok: false, message: t("learning_supply_unavailable") };
-    var lesson = lessonFor(state);
+    var lesson = claimLessonFor(state);
     Object.keys(bundle).forEach(function (key) { state.inventory[key] += bundle[key]; });
     data(state).supplyClaims.push(lesson);
     return { ok: true, forceSave: true, message: t("learning_supply_received", { lesson: lesson }) };
@@ -79,21 +89,25 @@
     var learning = data(state);
     var live = state.cats.filter(function (cat) { return cat.unlocked && cat.isAlive !== false; });
     function needy(cat) { return cat.careStatus === "sheltered" || cat.diseaseId || cat.hunger <= 30 || cat.health <= 30; }
-    var cat = preferredCat || live.find(needy) || live[0] || state.cats.find(function (entry) { return entry.unlocked; });
+    var rescueCat = state.cats.find(function (entry) { return game.systems.careSystem.rescueReason(entry, state); });
+    var cat = preferredCat || rescueCat || live.find(needy) || live[0] || state.cats.find(function (entry) { return entry.unlocked; });
     var params = { name: cat ? game.utils.i18n.getDataText(cat, "name") : "", lesson: lessonFor(state), count: learning.careDates.length };
     function result(kind, title, copy, button, extra) {
       return Object.assign({ kind: kind, titleKey: title, copyKey: copy, buttonKey: button, params: params, catId: cat && cat.id, routeKey: "care" }, extra || {});
     }
     function page(target, title, copy, button) { return result("page", title, copy, button, { page: target, routeKey: target === "work" ? "work" : target === "shop" ? "shop" : "care" }); }
     function action(key, title, copy, button) { return result("cat", title, copy, button, { action: key }); }
-    function supply() { return result("supplies", "learning_supply_title", "learning_supply_copy", "learning_supply_claim"); }
+    function supply() {
+      params.lesson = claimLessonFor(state);
+      return result("supplies", "learning_supply_title", "learning_supply_copy", "learning_supply_claim");
+    }
     function work() {
       if (state.player.activeSleep) return result("sleep", "headline_sleep_title", "headline_sleep_copy", "wake_action", { routeKey: "sleep" });
       if (state.player.activeWork) return page("work", "learning_work_running", "learning_work_running_copy", "headline_view_work");
       if (game.systems.playerSystem.getCurrentHunger(undefined, state.player) >= game.config.playerCondition.hungerBlockThreshold) {
         var food = game.data.items.find(function (item) { return item.hungerReduce > 0 && state.inventory[item.inventoryField] > 0; });
-        if (food) return result("player-item", "learning_player_food", "learning_player_food_copy", "learning_eat", { itemId: food.id, routeKey: "shop" });
-        if (game.systems.careSystem.canGetMeal(state)) return result("meal", "care_meal_title", "care_meal_copy", "care_meal_action", { routeKey: "shop" });
+        if (food) return result("player-item", "learning_player_food", "learning_player_food_copy", "learning_eat", { itemId: food.id });
+        if (game.systems.careSystem.canGetMeal(state)) return result("meal", "care_meal_title", "care_meal_copy", "care_meal_action");
         return page("shop", "headline_player_hungry_title", "headline_player_hungry_copy", "headline_buy_food");
       }
       var jobs = state.jobs.filter(function (job) { return job.unlocked; });
@@ -112,7 +126,7 @@
       return result("treat", "learning_treat_title", canTreatFree(cat, state) ? "learning_treatment_help" : "learning_treat_copy", canTreatFree(cat, state) ? "learning_treat_free" : "treat_now");
     }
     if (reason) return result("rescue", "care_rescue_title", "care_rescue_copy", "care_rescue_action");
-    if (game.systems.careSystem.canGetMeal(state)) return result("meal", "care_meal_title", "care_meal_copy", "care_meal_action", { routeKey: "shop" });
+    if (game.systems.careSystem.canGetMeal(state)) return result("meal", "care_meal_title", "care_meal_copy", "care_meal_action");
     var needed = game.systems.catSystem.getFoodUnitsNeeded(cat);
     function feed() {
       if (state.inventory.food >= needed) return action("feedBasic", "learning_feed_title", "learning_feed_copy", "feed_basic");

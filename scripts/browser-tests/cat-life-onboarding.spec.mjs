@@ -162,3 +162,108 @@ test('return recommendations stay useful for veterans, and three locales fit 390
   await expect(page.locator('.care-journey-progress')).toHaveCount(0);
   await expect(journey(page).locator('[data-page-target="cats"]')).toBeVisible();
 });
+
+test('focus, visibility and real background updates preserve unsubmitted names and import text', async ({ page }) => {
+  await open(page, 1280);
+  for (const [target, selector, draft] of [
+    ['cats', '#cat-name-input', 'Momo draft'],
+    ['save', '#save-import-text', 'draft-save-payload'],
+  ]) {
+    await page.evaluate((target) => {
+      window.CatGame.state.currentPage = target;
+      window.CatGameApp.render();
+    }, target);
+    const field = page.locator(selector);
+    await field.fill(draft);
+    await field.evaluate((node) => node.setSelectionRange(2, 5));
+    for (const source of ['focus', 'visibility']) {
+      const sameNode = await field.evaluate((node, source) => {
+        if (source === 'focus') window.dispatchEvent(new Event('focus'));
+        else document.dispatchEvent(new Event('visibilitychange'));
+        return node.isConnected;
+      }, source);
+      expect(sameNode, 'unchanged resume must not replace the form').toBe(true);
+      await expect(field).toHaveValue(draft);
+    }
+    // An actual recovery requires re-rendering; preserve both draft and caret.
+    await page.evaluate(() => {
+      const game = window.CatGame;
+      game.state.game.player.stamina = 20;
+      game.state.game.player.staminaUpdatedAt = new Date(Date.now() - game.config.staminaRecoveryIntervalMs).toISOString();
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(await page.evaluate(() => window.CatGame.state.game.player.stamina)).toBeGreaterThan(20);
+    await expect(field).toHaveValue(draft);
+    await expect(field).toBeFocused();
+    expect(await field.evaluate((node) => [node.selectionStart, node.selectionEnd])).toEqual([2, 5]);
+    await page.clock.fastForward(86400000);
+    await expect(field).toHaveValue(draft);
+    await expect(field).toBeFocused();
+    expect(await page.evaluate(() => window.CatGame.state.game.cats[0].name)).not.toBe(draft);
+  }
+});
+
+test('an unclaimed third package survives midnight and reload without extending protection or allowing duplicates', async ({ page }) => {
+  await open(page);
+  await page.clock.setSystemTime(new Date('2026-09-05T23:59:59Z'));
+  await page.evaluate(() => {
+    const game = window.CatGame;
+    Object.assign(game.state.game.player.careLearning, {
+      metCat: true, fed: true, played: true, worked: true,
+      careDates: ['2026-09-01', '2026-09-03', '2026-09-05'], supplyClaims: [1, 2],
+      protectedUntil: '2026-09-06T00:00:00.000Z',
+    });
+    // This scenario crosses midnight online, without also simulating a 12-hour absence.
+    game.systems.careSystem.rebase(game.state.game.cats[0], new Date());
+    game.state.game.player.hungerUpdatedAt = new Date().toISOString();
+    window.CatGameApp.render();
+  });
+  await expect(journey(page).locator('[data-learning-supplies]')).toBeVisible();
+  await page.clock.fastForward(2000);
+  await expect(journey(page)).toHaveAttribute('aria-label', 'One thing for today');
+  await expect(journey(page).locator('[data-learning-supplies]')).toBeVisible();
+  await page.reload();
+  await expect(journey(page).locator('[data-learning-supplies]')).toBeVisible();
+  await journey(page).locator('[data-learning-supplies]').click();
+  expect((await progress(page)).supplyClaims).toEqual([1, 2, 3]);
+  await page.reload();
+  await expect(page.locator('[data-learning-supplies]')).toHaveCount(0);
+  expect(await page.evaluate(() => window.CatGame.systems.onboardingSystem.active(window.CatGame.state.game))).toBe(false);
+});
+
+test('home rescues overlooked companions first and keeps in-place meals on the care route', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => {
+    const state = window.CatGame.state.game;
+    state.player.careLearning.eligible = false;
+    state.inventory.litter = 0;
+    Object.assign(state.cats[0], { hunger: 100, clean: 100, mood: 100, energy: 100 });
+    state.cats[1].unlocked = true;
+    state.cats[1].clean = 10;
+    state.cats[2].unlocked = true;
+    state.cats[2].isAlive = false;
+    window.CatGameApp.render();
+  });
+  await expect(journey(page)).toHaveAttribute('aria-label', 'Gentle care · Free');
+  await journey(page).locator('[data-rescue-cat="cat_002"]').click();
+  await journey(page).locator('[data-rescue-cat="cat_003"]').click();
+  expect(await page.evaluate(() => window.CatGame.state.game.cats.every(cat => cat.isAlive !== false))).toBe(true);
+  await page.evaluate(() => {
+    const state = window.CatGame.state.game;
+    state.player.gold = 0;
+    state.player.hunger = 100;
+    window.CatGameApp.render();
+  });
+  await expect(journey(page).locator('[data-care-meal]')).toBeVisible();
+  await expect(page.locator('.home-route-entry.is-now')).toHaveAttribute('data-home-route', 'care');
+  await journey(page).locator('[data-care-meal]').click();
+  await page.evaluate(() => {
+    const state = window.CatGame.state.game;
+    state.player.gold = 50;
+    state.player.hunger = 100;
+    state.inventory.bread = 1;
+    window.CatGameApp.render();
+  });
+  await expect(journey(page).locator('[data-use-player-item="bread"]')).toBeVisible();
+  await expect(page.locator('.home-route-entry.is-now')).toHaveAttribute('data-home-route', 'care');
+});
