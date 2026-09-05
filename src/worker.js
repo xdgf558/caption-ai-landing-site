@@ -88,7 +88,7 @@ const readerTotpResetMaxLockSeconds = 15 * 60;
 const catLifeGameKey = 'cat-life';
 const catLifeGameSaveMaxBytes = 750000;
 const catLifeGameSaveRequestMaxBytes = catLifeGameSaveMaxBytes + 50000;
-const catLifeGameSaveSchemaVersion = 2;
+const catLifeGameSaveSchemaVersion = 3;
 const catLifeGameSaveBackupLimit = 5;
 const catLifeGameSaveRateLimitWindowSeconds = 60;
 const catLifeGameSaveRateLimitWrites = 20;
@@ -4807,9 +4807,10 @@ const migrateReaderGameSaveSchema = (save) => {
     return null;
   }
 
-  if (schemaVersion === catLifeGameSaveSchemaVersion) {
+  if (schemaVersion >= 2) {
     if (Object.hasOwn(save.player, 'coins') || Object.hasOwn(save.settings, 'musicVolume')) return null;
-  } else {
+  }
+  if (schemaVersion < 2) {
     if (schemaVersion < 1) {
       if (!Number.isFinite(save.player.gold) && Number.isFinite(save.player.coins)) {
         save.player.gold = save.player.coins;
@@ -4822,6 +4823,21 @@ const migrateReaderGameSaveSchema = (save) => {
         if (!Number.isFinite(save.settings.sfxVolume)) save.settings.sfxVolume = save.settings.musicVolume;
       }
       delete save.settings.musicVolume;
+    }
+  }
+
+  if (schemaVersion < 3) {
+    for (const cat of save.cats) {
+      if (!isPlainRecord(cat)) return null;
+      // Match the browser migration: prefer evidence of actual cat decay sync.
+      const trackers = cat.decayTracker || {};
+      let times = ['hunger', 'clean', 'mood', 'health', 'energy']
+        .map((key) => Date.parse(trackers[key])).filter(Number.isFinite);
+      if (cat.diseaseId && Number.isFinite(Date.parse(cat.diseaseProgressAt))) times.push(Date.parse(cat.diseaseProgressAt));
+      if (!times.length) times = [cat.ageUpdatedAt, cat.bornAt].map(Date.parse).filter(Number.isFinite);
+      if (!times.length) times = [save.meta.lastSyncAt, save.meta.lastSavedAt, save.meta.createdAt].map(Date.parse).filter(Number.isFinite);
+      cat.careStatus = 'home';
+      cat.careLastSyncAt = times.length ? new Date(Math.max(...times)).toISOString() : new Date().toISOString();
     }
   }
 
@@ -4845,14 +4861,14 @@ const normalizeReaderGameSave = (value) => {
     return null;
   }
 
-  delete cloned.meta.lastSavedAt;
-  delete cloned.meta.lastSyncAt;
   cloned.settings.customMusicData = '';
   cloned.settings.customMusicName = '';
   cloned.settings.customMusicEnabled = false;
 
   const migrated = migrateReaderGameSaveSchema(cloned);
   if (!migrated) return null;
+  delete migrated.meta.lastSavedAt;
+  delete migrated.meta.lastSyncAt;
 
   const saveJson = JSON.stringify(migrated);
   const saveBytes = new TextEncoder().encode(saveJson).byteLength;
@@ -5099,6 +5115,11 @@ const handleReaderGameSavePut = async (request, env) => {
   const clientUpdatedAt = normalizeReaderGameSaveTimestamp(payload.clientUpdatedAt);
   const saveHash = await sha256Hex(normalized.saveJson);
   const existing = await getReaderGameSave(db, session.account_id);
+
+  // A stale tab must not replace v3 care/identity fields with its pre-upgrade save.
+  if (existing && Number(existing.schema_version) >= 3 && Number(payload.saveData.schemaVersion || 0) < 3) {
+    return readerGameSaveConflictResponse(session, existing);
+  }
 
   if (!existing) {
     if (baseRevision !== 0) return readerGameSaveConflictResponse(session, null);

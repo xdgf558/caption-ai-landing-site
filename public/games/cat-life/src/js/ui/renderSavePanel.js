@@ -16,6 +16,9 @@
       '<div class="inline-row" style="margin-top:18px; flex-wrap: wrap;">' +
       '<button class="primary-button" data-manual-save>' + t("manual_save_action") + "</button>" +
       '<button class="secondary-button" data-export-save>' + t("export_json") + "</button>" +
+      (game.state.saveSystem.getCareRecoveryBackup()
+        ? '<button type="button" class="secondary-button" data-export-care-backup>' + format.escapeHtml(t("care_backup_export")) + '</button>'
+        : '') +
       "</div>" +
       "</div>" +
       '<div class="page-card">' +

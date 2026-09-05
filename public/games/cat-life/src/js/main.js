@@ -301,7 +301,7 @@
     Array.prototype.forEach.call(document.querySelectorAll("[data-cat-hunger-zero]"), function (node) {
       var cat = game.systems.catSystem.getCat(node.dataset.catId);
       var deathEta = cat ? game.systems.catSystem.getHungerDeathEta(cat) : null;
-      node.textContent = deathEta === null ? t("dead_label") : format.formatDuration(deathEta);
+      node.textContent = deathEta === null ? t("stopped") : format.formatDuration(deathEta);
     });
 
     Array.prototype.forEach.call(document.querySelectorAll("[data-cat-disease-countdown]"), function (node) {
@@ -561,6 +561,9 @@
     var renameCatButton = event.target.closest("[data-rename-cat]");
     var releaseNoteButton = event.target.closest("[data-dismiss-release-note]");
     var readoptButton = event.target.closest("[data-readopt-cat]");
+    var rescueButton = event.target.closest("[data-rescue-cat]");
+    var reliefMealButton = event.target.closest("[data-care-meal]");
+    var careBackupButton = event.target.closest("[data-export-care-backup]");
     var treatButton = event.target.closest("[data-treat-cat]");
     var sleepButton = event.target.closest("[data-player-sleep]");
     var usePlayerItemButton = event.target.closest("[data-use-player-item]");
@@ -771,6 +774,22 @@
 
     if (readoptButton) {
       handleActionResult(game.systems.catSystem.readoptCat(readoptButton.dataset.readoptCat));
+      return;
+    }
+
+    if (rescueButton) {
+      game.state.selectedCatId = rescueButton.dataset.rescueCat;
+      handleActionResult(game.systems.careSystem.rescueCat(rescueButton.dataset.rescueCat));
+      return;
+    }
+
+    if (reliefMealButton) {
+      handleActionResult(game.systems.careSystem.getMeal());
+      return;
+    }
+
+    if (careBackupButton) {
+      game.state.saveSystem.downloadCareRecoveryBackup();
       return;
     }
 

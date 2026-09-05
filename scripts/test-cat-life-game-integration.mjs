@@ -167,8 +167,8 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.22\.2"/);
-assert.match(namespace, /Added a dedicated player backpack/);
+assert.match(namespace, /version: "1\.23\.0"/);
+assert.match(namespace, /Gentle care is on/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
@@ -178,7 +178,7 @@ assert.match(landing, /兌換是否開放，以會員商店的即時狀態為準
 assert.match(landing, /Check the member store for current availability/);
 assert.match(landing, /<img src=\{catLifeGameProduct\.assets\.stationRoom\} alt=""/);
 assert.match(landing, /<figcaption>\{copy\.commercePreview\}<\/figcaption>/);
-assert.match(product, /latestVersion: '1\.22\.2'/);
+assert.match(product, /latestVersion: '1\.23\.0'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);
@@ -622,9 +622,9 @@ const legacySave = {
 };
 const migratedSave = migrationContext.window.CatGameSaveMigrations.migrate(legacySave);
 assert.equal(migratedSave.fromVersion, 0);
-assert.equal(migratedSave.toVersion, 2);
-assert.deepEqual([...migratedSave.applied], [1, 2]);
-assert.equal(migratedSave.data.schemaVersion, 2);
+assert.equal(migratedSave.toVersion, 3);
+assert.deepEqual([...migratedSave.applied], [1, 2, 3]);
+assert.equal(migratedSave.data.schemaVersion, 3);
 assert.equal(migratedSave.data.player.gold, 42);
 assert.equal(migratedSave.data.player.coins, undefined);
 assert.equal(migratedSave.data.settings.bgmVolume, 55);
@@ -632,7 +632,7 @@ assert.equal(migratedSave.data.settings.sfxVolume, 55);
 assert.equal(migratedSave.data.settings.musicVolume, undefined);
 assert.equal(legacySave.player.coins, 42, 'migrations must not mutate the stored source object');
 assert.throws(
-  () => migrationContext.window.CatGameSaveMigrations.migrate({ schemaVersion: 3 }),
+  () => migrationContext.window.CatGameSaveMigrations.migrate({ schemaVersion: 4 }),
   (error) => error.code === 'SAVE_SCHEMA_UNSUPPORTED'
 );
 

@@ -203,7 +203,9 @@ test('bench avoidance repairs old full-room layouts visually, survives resize an
   });
   await openGamePage(page, 'community');
   await page.locator('[data-community-home]').click();
-  await expect(page.locator('.news-toast')).toHaveCount(0);
+  // Cloud-load and release notices are queued for 3.2s each; let the queue drain
+  // before viewport/drag checks so a toast cannot cover the furniture target.
+  await expect(page.locator('.news-toast')).toHaveCount(0, { timeout: 15000 });
   for (const width of [1440, 768, 390, 320, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     await expectFurnitureClearOfBench(page);

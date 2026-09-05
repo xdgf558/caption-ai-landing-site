@@ -14,7 +14,7 @@ vm.runInNewContext(source, context);
 const api = context.window.CatGameContentManifest;
 const manifest = api.manifest;
 assert.equal(manifest.schemaVersion, 1);
-assert.equal(manifest.releaseVersion, '1.22.2');
+assert.equal(manifest.releaseVersion, '1.23.0');
 assert.equal(manifest.products.length, 2);
 assert.equal(Object.isFrozen(manifest), true);
 assert.equal(Object.isFrozen(manifest.products), true);

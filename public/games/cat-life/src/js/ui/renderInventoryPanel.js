@@ -65,6 +65,9 @@
     }
 
     if (action && selectedCat) {
+      if (selectedCat.careStatus === "sheltered") {
+        return '<button type="button" class="secondary-button" data-page-target="cats" data-select-cat="' + format.escapeHtml(selectedCat.id) + '">' + t("care_pick_up_first") + '</button>';
+      }
       return '<button class="action-button" data-cat-action="' + action + '" data-cat-id="' +
         format.escapeHtml(selectedCat.id) + '">' +
         format.escapeHtml(t("inventory_use_for", { name: getText(selectedCat, "name") })) +

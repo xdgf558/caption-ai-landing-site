@@ -70,11 +70,15 @@
   }
 
   function canPerformAction(action, state, cat) {
+    if (cat.careStatus === "sheltered") return false;
     var count = getActionCount(action, state);
     return count === null || count >= getActionRequiredCount(action, cat);
   }
 
   function getStatusMeta(cat, isLocked, isDead, disease, visual) {
+    if (cat.careStatus === "sheltered" && !isDead && !isLocked) {
+      return { className: "is-success", label: t("care_sheltered"), icon: "" };
+    }
     if (isDead) {
       return { className: "is-danger", label: t("dead_label"), icon: visual.icon };
     }
@@ -174,7 +178,7 @@
       (reactionCue ? '<span class="cat-reaction-cue" aria-hidden="true">' + safe(reactionCue) + '</span>' : "") +
       '</div><div class="cat-profile-scene-caption"><span class="cat-scene-state-icon" aria-hidden="true">' + safe(catVisual.icon) +
       '</span><span><span class="mini-label">' + t("cat_portrait") + '</span><strong>' + t(catVisual.labelKey) +
-      '</strong></span></div><span class="cat-profile-scene-stamp">' + (isDead ? t("dead_label") : isLocked ? t("later_unlock") : t("cat_home_stamp")) + '</span></div>'
+      '</strong></span></div><span class="cat-profile-scene-stamp">' + (isDead ? t("dead_label") : isLocked ? t("later_unlock") : cat.careStatus === "sheltered" ? t("care_sheltered") : t("cat_home_stamp")) + '</span></div>'
     );
   }
 
@@ -284,11 +288,9 @@
   }
 
   function renderCareActions(state, cat, disease, isDead, isLocked) {
+    if (cat.careStatus === "sheltered" && !isLocked) return "";
     if (isDead) {
-      return '<section class="cat-care-state is-dead"><div class="cat-care-state-heading"><span class="cat-care-state-icon" aria-hidden="true">🪦</span><div><p class="section-eyebrow">' +
-        t("death_state") + '</p><h3 class="panel-title">' + t("cat_unavailable") + '</h3></div></div><p class="page-copy">' +
-        t("death_desc", { name: safe(getText(cat, "name")) }) + '</p><div class="cat-readopt-action"><button type="button" class="secondary-button" data-readopt-cat="' +
-        safe(cat.id) + '">' + t("readopt_action") + '</button><span class="helper-text">' + t("readopt_cost", { cost: game.config.readoptCost }) + '</span></div></section>';
+      return "";
     }
 
     if (isLocked) {
@@ -316,6 +318,9 @@
   }
 
   function renderStateChanges(cat, disease, isDead, isLocked) {
+    if (cat.careStatus === "sheltered" && !isDead && !isLocked) {
+      return '<p class="helper-text">' + safe(t("care_decay_paused")) + '</p>';
+    }
     if (isLocked) {
       return '<section class="cat-change-board" aria-labelledby="cat-change-title"><div class="section-heading"><div><p class="section-eyebrow">' +
         t("cat_state_changes_label") + '</p><h3 id="cat-change-title" class="panel-title">' + t("cat_state_changes_title") + '</h3></div><span class="pill">◇</span></div>' +
@@ -399,6 +404,7 @@
     var activeReaction = game.utils.catArt.getCatReaction(selectedCat);
     var reactionCue = game.utils.catArt.getCatReactionCue(selectedCat);
     var recommendedAction = getRecommendedAction(selectedCat, state, catDisease, isDead, isLocked);
+    if (game.systems.careSystem.rescueReason(selectedCat, state)) recommendedAction = null;
 
     return '<section class="page-header cat-page-intro"><div class="page-card cat-intro-card"><p class="section-eyebrow">' + t("page_cats") + '</p><h2 class="page-title">' +
       t("cat_journal_label") + '</h2><p class="page-copy">' + t("cat_journal_copy") + '</p><div class="cat-intro-rule" aria-hidden="true"></div><span class="cat-intro-note">' +
@@ -416,7 +422,7 @@
       (isLocked ? renderUnlockInfo(selectedCat) : renderNameEditor(selectedCat) + renderBondMeter(selectedCat)) + renderCatSignals(selectedCat, isLocked) + '</section><section class="page-card cat-journal-care" aria-labelledby="cat-care-title">' +
       '<div class="cat-care-heading"><div><p class="section-eyebrow">' + t("cat_today_label") + '</p><h2 id="cat-care-title" class="page-title">' + t("cat_today_title") + '</h2></div><span class="cat-care-date">' +
       t("cat_today_badge") + '</span></div><p class="page-copy cat-care-copy">' + t("cat_today_copy", { name: safe(getText(selectedCat, "name")) }) + '</p>' +
-      (recommendedAction ? renderRecommendation(recommendedAction, state, selectedCat) : "") + renderCareActions(state, selectedCat, catDisease, isDead, isLocked) +
+      game.ui.renderCareSupport(selectedCat, state) + (recommendedAction ? renderRecommendation(recommendedAction, state, selectedCat) : "") + renderCareActions(state, selectedCat, catDisease, isDead, isLocked) +
       (!isDead && !isLocked ? renderSupplies(state, selectedCat) : "") + renderPregnancy(selectedCat) + renderStateChanges(selectedCat, catDisease, isDead, isLocked) +
       (!isLocked ? '<section class="cat-care-tips"><p class="section-eyebrow">' + t("care_tips") + '</p><p class="page-copy">' + t("care_tips_copy") + '</p></section>' : "") +
       '</section></div></section>';

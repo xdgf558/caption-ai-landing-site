@@ -142,7 +142,7 @@
       }
     }
 
-    if (game.systems.catSystem) {
+    if (game.systems.catSystem && !document.hidden) {
       var catSyncResult = game.systems.catSystem.syncCatState(now, source);
       if (catSyncResult.changed) {
         changed = true;

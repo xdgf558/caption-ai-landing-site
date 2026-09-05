@@ -22,6 +22,21 @@
     return nextData;
   }
 
+  function backupBeforeCareRecovery() {
+    var key = activeStorageKey + ":before-care-recovery";
+    // Keep the first snapshot; later recoveries must not overwrite this safety net.
+    if (!game.utils.storage.loadJSON(key)) game.utils.storage.saveJSON(key, game.state.game);
+  }
+
+  function getCareRecoveryBackup() {
+    return game.utils.storage.loadJSON(activeStorageKey + ":before-care-recovery");
+  }
+
+  function downloadCareRecoveryBackup() {
+    var backup = getCareRecoveryBackup();
+    if (backup) downloadExport(backup, "cat-care-before-recovery-");
+  }
+
   function loadGame() {
     var saved = game.utils.storage.loadJSON(activeStorageKey);
     if (!saved) {
@@ -65,12 +80,12 @@
     return JSON.stringify(game.state.game, null, 2);
   }
 
-  function downloadExport() {
-    var blob = new Blob([exportText()], { type: "application/json" });
+  function downloadExport(saveData, filePrefix) {
+    var blob = new Blob([saveData ? JSON.stringify(saveData, null, 2) : exportText()], { type: "application/json" });
     var url = URL.createObjectURL(blob);
     var anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "cat-game-save-" + game.utils.format.formatDateKey(new Date()) + ".json";
+    anchor.download = (filePrefix || "cat-game-save-") + game.utils.format.formatDateKey(new Date()) + ".json";
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
@@ -96,6 +111,9 @@
 
   game.state.saveSystem = {
     getStorageKey: getStorageKey,
+    backupBeforeCareRecovery: backupBeforeCareRecovery,
+    getCareRecoveryBackup: getCareRecoveryBackup,
+    downloadCareRecoveryBackup: downloadCareRecoveryBackup,
     setStorageKey: setStorageKey,
     saveGame: saveGame,
     loadGame: loadGame,

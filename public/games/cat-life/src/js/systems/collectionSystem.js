@@ -22,6 +22,7 @@
     return getUnlockedCats().filter(function (cat) {
       return (
         cat.isAlive !== false &&
+        cat.careStatus !== "sheltered" &&
         game.systems.catSystem.getCatAgeYears(cat) >= 1 &&
         !(cat.gender === "female" && cat.isPregnant)
       );
@@ -43,11 +44,16 @@
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  function createKitten(parentA, parentB) {
+  function createKitten(parentA, parentB, siblings) {
     var nowIso = game.systems.timeSystem.getNow().toISOString();
-    var kittenIndex = game.state.game.cats.filter(function (cat) {
+    var existingCats = game.state.game.cats.concat(siblings || []);
+    var kittenIndex = existingCats.filter(function (cat) {
       return String(cat.id || "").indexOf("kitten_") === 0;
     }).length + 1;
+    var idPrefix = "kitten_" + Date.now() + "_";
+    while (existingCats.some(function (cat) { return cat.id === idPrefix + kittenIndex; })) {
+      kittenIndex += 1;
+    }
     var traits = {
       furColor: mixTrait("furColor", parentA, parentB),
       patchColor: mixTrait("patchColor", parentA, parentB),
@@ -58,7 +64,7 @@
     };
 
     return {
-      id: "kitten_" + Date.now() + "_" + kittenIndex,
+      id: idPrefix + kittenIndex,
       name: "小猫" + kittenIndex,
       nameEn: "Kitten " + kittenIndex,
       nameJa: "こねこ " + kittenIndex,
@@ -138,7 +144,7 @@
     var index;
 
     for (index = 0; index < count; index += 1) {
-      kittens.push(createKitten(mother, father));
+      kittens.push(createKitten(mother, father, kittens));
     }
 
     kittens.forEach(function (kitten) {
@@ -221,7 +227,7 @@
       return { ok: false, message: t("breed_pick_two") };
     }
 
-    if (parentA.isAlive === false || parentB.isAlive === false) {
+    if (parentA.isAlive === false || parentB.isAlive === false || parentA.careStatus === "sheltered" || parentB.careStatus === "sheltered") {
       return { ok: false, message: t("breed_alive_only") };
     }
 

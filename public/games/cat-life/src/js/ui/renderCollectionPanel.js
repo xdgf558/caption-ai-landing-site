@@ -89,7 +89,7 @@
       renderMetric(t("cat_bond_label"), cat.intimacy, "bond") +
       renderMetric(t("health_label"), cat.health, "health") +
       renderMetric(t("energy_label"), cat.energy, "energy") +
-      '</div><div class="collection-record-actions"><p class="helper-text">' + safe(t("collection_record_copy")) +
+      '</div>' + game.ui.renderCareSupport(cat, game.state.game) + '<div class="collection-record-actions"><p class="helper-text">' + safe(t("collection_record_copy")) +
       '</p><button type="button" class="primary-button" data-page-target="cats" data-select-cat="' + safe(cat.id) + '">' +
       safe(t("collection_open_cats")) + '</button></div></section>';
   }

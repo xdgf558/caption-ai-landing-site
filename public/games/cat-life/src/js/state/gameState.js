@@ -3,7 +3,7 @@
     return JSON.parse(JSON.stringify(value));
   }
 
-  function mergeById(baseList, savedList) {
+  function mergeById(baseList, savedList, keepExtraIds) {
     var savedMap = {};
     var extraItems = [];
 
@@ -14,12 +14,36 @@
         extraItems.push(item);
       }
     });
+    if (keepExtraIds) {
+      Object.keys(savedMap).forEach(function (id) {
+        if (!baseList.some(function (item) { return item.id === id; })) extraItems.push(savedMap[id]);
+      });
+    }
 
     return baseList
       .map(function (baseItem) {
         return Object.assign({}, deepClone(baseItem), savedMap[baseItem.id] || {});
       })
       .concat(extraItems);
+  }
+
+  function preserveCatIds(savedCats) {
+    var reservedIds = new Set(savedCats.map(function (cat) { return cat && cat.id; }));
+    var seenIds = new Set();
+    return savedCats.map(function (cat) {
+      if (!cat || !cat.id) return cat;
+      if (seenIds.has(cat.id)) {
+        // Old twin saves may already contain collisions. Preserve both records;
+        // existing references keep pointing to the first holder of the old ID.
+        var suffix = 1;
+        var id;
+        do { id = cat.id + "_recovered_" + suffix++; } while (reservedIds.has(id));
+        reservedIds.add(id);
+        cat = Object.assign({}, cat, { id: id });
+      }
+      seenIds.add(cat.id);
+      return cat;
+    });
   }
 
   function clampStat(value, fallback) {
@@ -52,6 +76,8 @@
     return deepClone(game.data.cats).map(function (cat) {
       return Object.assign({}, cat, {
         isAlive: true,
+        careStatus: "home",
+        careLastSyncAt: nowIso,
         diedAt: null,
         deathReason: null,
         ageYears: typeof cat.initialAgeYears === "number" ? cat.initialAgeYears : 0.2,
@@ -276,7 +302,7 @@
       player: Object.assign({}, fresh.player, saveData.player || {}),
       cats:
         Array.isArray(saveData.cats) && saveData.cats.length
-          ? mergeById(fresh.cats, saveData.cats)
+          ? mergeById(fresh.cats, preserveCatIds(saveData.cats), true)
           : fresh.cats,
       inventory: Object.assign({}, fresh.inventory, saveData.inventory || {}),
       jobs:
@@ -703,6 +729,8 @@
       var baseCat = game.data.cats.find(function (entry) {
         return entry.id === cat.id;
       }) || {};
+      cat.careStatus = cat.careStatus === "sheltered" ? "sheltered" : "home";
+      if (!Number.isFinite(Date.parse(cat.careLastSyncAt))) cat.careLastSyncAt = fallbackTime;
       var defaultTraits = {
         artKey: "orange_tabby",
         furColor: "#f3a64a",

@@ -4,6 +4,7 @@
   var t = game.utils.i18n.t;
   var getText = game.utils.i18n.getDataText;
   var YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+  var care = game.systems.careSystem;
 
   function useEnglishFallback() {
     return game.utils.i18n.getLanguage() !== "zh-CN";
@@ -22,6 +23,7 @@
   function ensureCatRuntimeFields(cat, fallbackIso) {
     var seedTime = fallbackIso || getNowIso();
     var baseCat = getBaseCat(cat.id) || {};
+    care.ensure(cat, seedTime);
 
     if (cat.gender !== "male" && cat.gender !== "female") {
       cat.gender = baseCat.gender || (Math.random() < 0.5 ? "male" : "female");
@@ -144,54 +146,7 @@
     });
   }
 
-  function buildDeathMessage(cat, source, reason, disease) {
-    var name = getText(cat, "name");
-    var lang = game.utils.i18n.getLanguage();
-
-    if (reason === "disease_zero" && disease) {
-      return source === "init"
-        ? lang !== "zh-CN"
-          ? name + " passed away from untreated " + getText(disease, "name") + " while you were away."
-          : "离线期间，" + name + "因" + getText(disease, "name") + "未及时治疗而去世。"
-        : lang !== "zh-CN"
-          ? name + " passed away from untreated " + getText(disease, "name") + "."
-          : name + "因" + getText(disease, "name") + "未及时治疗而去世。";
-    }
-
-    return source === "init"
-      ? lang !== "zh-CN"
-        ? name + "'s hunger reached zero while you were away, and the cat died."
-        : "离线期间，" + name + "的饱腹感归零，已经死亡。"
-      : lang !== "zh-CN"
-        ? name + "'s hunger reached zero and the cat died."
-        : name + "的饱腹感归零，已经死亡。";
-  }
-
-  function markCatDead(cat, nowIso, source, messages, reason, disease) {
-    if (!cat.isAlive) {
-      return;
-    }
-
-    cat.isAlive = false;
-    if (reason === "hunger_zero") {
-      cat.hunger = 0;
-    }
-    if (reason === "disease_zero") {
-      cat.health = 0;
-    }
-    cat.diedAt = nowIso;
-    cat.deathReason = reason || "hunger_zero";
-    cat.mood = 0;
-    cat.energy = 0;
-    cat.isPregnant = false;
-    cat.pregnancyStartedAt = null;
-    cat.pregnancyDueAt = null;
-    cat.pregnancyMateId = null;
-    cat.pregnancyLitterSize = 0;
-    messages.push(buildDeathMessage(cat, source, reason || "hunger_zero", disease));
-  }
-
-  function applyDecaySteps(cat, statKey, nowDate, source, messages) {
+  function applyDecaySteps(cat, statKey, nowDate, source, messages, floors) {
     var rule = decayRules[statKey];
     var trackerTime = new Date(cat.decayTracker[statKey]).getTime();
     var nowTime = nowDate.getTime();
@@ -199,16 +154,16 @@
     var steps = Math.floor(elapsed / rule.intervalMs);
     var nextTrackerTime = trackerTime;
 
-    if (steps <= 0 || !cat.isAlive) {
+    if (steps <= 0 || !cat.isAlive || cat.careStatus === "sheltered") {
       return false;
     }
 
-    cat[statKey] = clamp((cat[statKey] || 0) - steps, 0, 100);
+    cat[statKey] = clamp((cat[statKey] || 0) - steps, floors[statKey] || 0, 100);
     nextTrackerTime += steps * rule.intervalMs;
     cat.decayTracker[statKey] = new Date(nextTrackerTime).toISOString();
 
     if (statKey === "hunger" && cat.hunger <= 0) {
-      markCatDead(cat, nowDate.toISOString(), source, messages, "hunger_zero");
+      care.shelter(cat, nowDate, "hunger", messages);
     }
 
     return true;
@@ -238,6 +193,7 @@
       if (status.goldReady && status.ageReady) {
         cat.unlocked = true;
         ensureCatRuntimeFields(cat, nowDate.toISOString());
+        care.rebase(cat, nowDate);
         changed = true;
         messages.push(t("unlock_new_cat", { name: getText(cat, "name") }));
       }
@@ -254,6 +210,7 @@
         otherCat.id !== cat.id &&
         otherCat.unlocked &&
         otherCat.isAlive !== false &&
+        otherCat.careStatus !== "sheltered" &&
         otherDisease &&
         otherDisease.contagious &&
         otherDisease.id === disease.id
@@ -299,7 +256,8 @@
     var checkTime;
     var disease;
 
-    if (!cat.isAlive || cat.diseaseId) {
+    if (!cat.isAlive || cat.careStatus === "sheltered" || cat.diseaseId || care.isProtected(cat, nowDate)) {
+      cat.diseaseCheckAt = nowDate.toISOString();
       return false;
     }
 
@@ -331,7 +289,7 @@
     return false;
   }
 
-  function syncDiseaseProgress(cat, nowDate, source, messages) {
+  function syncDiseaseProgress(cat, nowDate, source, messages, floors) {
     var disease = getDisease(cat);
     var trackerTime;
     var elapsed;
@@ -340,7 +298,7 @@
     var previousMood;
     var extraDecay = 0;
 
-    if (!cat.isAlive || !disease) {
+    if (!cat.isAlive || cat.careStatus === "sheltered" || !disease) {
       return false;
     }
 
@@ -361,12 +319,12 @@
       extraDecay += steps;
     }
 
-    cat.health = clamp(cat.health - steps * disease.healthDecay - extraDecay, 0, 100);
+    cat.health = clamp(cat.health - steps * disease.healthDecay - extraDecay, floors.health || 0, 100);
     cat.mood = clamp(cat.mood - steps * disease.moodDecay, 0, 100);
     cat.diseaseProgressAt = new Date(trackerTime + steps * disease.progressIntervalMs).toISOString();
 
     if (cat.health <= 0) {
-      markCatDead(cat, nowDate.toISOString(), source, messages, "disease_zero", disease);
+      care.shelter(cat, nowDate, "health", messages);
       return true;
     }
 
@@ -402,15 +360,44 @@
         return;
       }
 
+      if (cat.careStatus === "sheltered") return;
+      var careWindow = care.windowFor(cat, nowDate, source);
+      var end = careWindow.end;
+      // Invalid/future trackers must not freeze care or produce a catch-up burst.
+      Object.keys(decayRules).forEach(function (key) {
+        var time = Date.parse(cat.decayTracker[key]);
+        if (!Number.isFinite(time) || time > nowDate.getTime()) cat.decayTracker[key] = fallbackIso;
+        else if (careWindow.away && time < end.getTime() - game.config.gentleCare.offlineCapMs) {
+          cat.decayTracker[key] = new Date(end.getTime() - game.config.gentleCare.offlineCapMs).toISOString();
+        }
+      });
+      ["diseaseProgressAt", "diseaseCheckAt"].forEach(function (key) {
+        var time = Date.parse(cat[key]);
+        if (!Number.isFinite(time) || time > nowDate.getTime()) cat[key] = fallbackIso;
+        else if (careWindow.away && time < end.getTime() - game.config.gentleCare.offlineCapMs) {
+          cat[key] = new Date(end.getTime() - game.config.gentleCare.offlineCapMs).toISOString();
+        }
+      });
+
       Object.keys(decayRules).forEach(function (statKey) {
-        var didChange = applyDecaySteps(cat, statKey, nowDate, source, messages);
+        var didChange = applyDecaySteps(cat, statKey, end, source, messages, careWindow.floors);
         changed = changed || didChange;
       });
 
-      changed = syncDiseaseProgress(cat, nowDate, source, messages) || changed;
-      if (cat.isAlive) {
+      changed = syncDiseaseProgress(cat, end, source, messages, careWindow.floors) || changed;
+      if (careWindow.away) {
+        // Skip completed away-time infection rolls, not fractional care progress.
+        // Full rebasing belongs to shelter/recovery/clock correction only.
+        var checkTime = Date.parse(cat.diseaseCheckAt);
+        var checkSteps = Math.floor(Math.max(0, end.getTime() - checkTime) / game.config.diseaseCheckIntervalMs);
+        cat.diseaseCheckAt = new Date(checkTime + checkSteps * game.config.diseaseCheckIntervalMs).toISOString();
+      } else if (cat.careStatus !== "sheltered") {
         changed = syncDiseaseChecks(cat, nowDate, messages) || changed;
       }
+      if (careWindow.longAbsence || cat.hunger <= 0 || cat.health <= 0) {
+        changed = care.shelter(cat, nowDate, careWindow.longAbsence ? "away" : "urgent", messages) || changed;
+      }
+      cat.careLastSyncAt = fallbackIso;
     });
 
     changed = refreshCatUnlocks(nowDate, messages) || changed;
@@ -428,12 +415,12 @@
     var elapsed;
 
     if (!rule) {
-      return 0;
+      return null;
     }
 
     ensureCatRuntimeFields(cat, now.toISOString());
 
-    if (!cat.isAlive) {
+    if (!cat.isAlive || cat.careStatus === "sheltered") {
       return null;
     }
 
@@ -459,7 +446,7 @@
     var trackerTime;
     var elapsed;
 
-    if (!cat || !cat.isAlive || !disease) {
+    if (!cat || !cat.isAlive || cat.careStatus === "sheltered" || !disease) {
       return null;
     }
 
@@ -478,6 +465,9 @@
 
     if (!cat.isAlive) {
       return { icon: iconSet.dead || "☠️", labelKey: "dead_state" };
+    }
+    if (cat.careStatus === "sheltered") {
+      return { icon: iconSet.calm || "", labelKey: "care_sheltered" };
     }
     if (cat.diseaseId || cat.health <= 25) {
       return { icon: iconSet.sick || "😵", labelKey: "sick_state" };
@@ -553,6 +543,9 @@
       };
     }
     ensureCatRuntimeFields(cat, nowIso);
+    if (cat.careStatus === "sheltered") {
+      return { ok: false, message: t("care_pick_up_first") };
+    }
     if (!cat.isAlive) {
       return {
         ok: false,
@@ -714,6 +707,8 @@
       diseaseProgressAt: nowIso,
       diseaseCheckAt: nowIso,
       adoptionCount: adoptionCount,
+      careStatus: "home",
+      careLastSyncAt: nowIso,
       decayTracker: {
         hunger: nowIso,
         clean: nowIso,
