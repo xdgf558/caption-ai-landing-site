@@ -112,14 +112,14 @@ const request = (method, token = '', body = null, headers = {}) => {
 const json = async (response) => ({ response, body: await response.json() });
 const makeSave = (gold, savedAt = '2026-08-30T01:00:00.000Z') => ({
   version: '1.17.0',
-  schemaVersion: 2,
+  schemaVersion: 3,
   meta: {
     createdAt: '2026-08-29T01:00:00.000Z',
     lastSavedAt: savedAt,
     lastSyncAt: '2026-08-30T01:00:01.000Z'
   },
   player: { gold, energy: 80 },
-  cats: [{ id: 'cat-one', name: 'Momo' }],
+  cats: [{ id: 'cat-one', name: 'Momo', careStatus: 'sheltered', careLastSyncAt: '2026-08-30T00:00:00.000Z', intimacy: 61 }],
   inventory: { food: 2 },
   settings: {
     language: 'en',
@@ -232,11 +232,26 @@ result = await json(
   )
 );
 assert.equal(result.response.status, 200);
-assert.equal(result.body.save.schemaVersion, 2);
+assert.equal(result.body.save.schemaVersion, 3);
 assert.equal(result.body.save.data.player.gold, 5);
 assert.equal(result.body.save.data.player.coins, undefined);
 assert.equal(result.body.save.data.settings.bgmVolume, 45);
 assert.equal(result.body.save.data.settings.sfxVolume, 45);
+sqlite.prepare('DELETE FROM reader_game_saves WHERE account_id = 1').run();
+sqlite.prepare('DELETE FROM reader_game_save_rate_limits WHERE account_id = 1').run();
+
+const versionTwoSave = { ...makeSave(7), schemaVersion: 2 };
+versionTwoSave.cats[0].isAlive = false;
+versionTwoSave.cats[0].name = 'Original companion';
+result = await json(await hooks.handleReaderGameSavePut(
+  request('PUT', firstSessionToken, { baseRevision: 0, saveData: versionTwoSave }), env
+));
+assert.equal(result.response.status, 200);
+assert.equal(result.body.save.schemaVersion, 3);
+assert.equal(result.body.save.data.cats[0].careLastSyncAt, versionTwoSave.meta.lastSyncAt);
+assert.equal(result.body.save.data.cats[0].careStatus, 'home');
+assert.equal(result.body.save.data.cats[0].isAlive, false, 'cloud migration does not choose legacy recovery for the player');
+assert.equal(result.body.save.data.cats[0].intimacy, 61);
 sqlite.prepare('DELETE FROM reader_game_saves WHERE account_id = 1').run();
 sqlite.prepare('DELETE FROM reader_game_save_rate_limits WHERE account_id = 1').run();
 
@@ -262,8 +277,11 @@ result = await json(
 );
 assert.equal(result.response.status, 200);
 assert.equal(result.body.save.revision, 1);
-assert.equal(result.body.save.schemaVersion, 2);
+assert.equal(result.body.save.schemaVersion, 3);
 assert.equal(result.body.save.data.player.gold, 10);
+assert.equal(result.body.save.data.cats[0].careStatus, 'sheltered');
+assert.equal(result.body.save.data.cats[0].careLastSyncAt, firstSave.cats[0].careLastSyncAt);
+assert.equal(result.body.save.data.cats[0].intimacy, 61);
 assert.equal(result.body.save.data.meta.lastSavedAt, undefined);
 assert.equal(result.body.save.data.meta.lastSyncAt, undefined);
 assert.equal(result.body.save.data.settings.customMusicData, '');
@@ -272,6 +290,13 @@ assert.equal(result.body.save.data.settings.customMusicEnabled, false);
 assert.equal(result.body.save.digest, await hooks.sha256Hex(JSON.stringify(result.body.save.data)));
 
 const secondSave = makeSave(20, '2026-08-30T02:00:00.000Z');
+const staleTabSave = { ...makeSave(999), schemaVersion: 2 };
+result = await json(await hooks.handleReaderGameSavePut(
+  request('PUT', firstSessionToken, { baseRevision: 1, saveData: staleTabSave }), env
+));
+assert.equal(result.response.status, 409, 'old clients cannot overwrite upgraded care state even with the current revision');
+assert.equal(result.body.save.data.player.gold, 10);
+sqlite.prepare('DELETE FROM reader_game_save_rate_limits WHERE account_id = 1').run();
 result = await json(
   await hooks.handleReaderGameSavePut(
     request('PUT', firstSessionToken, {

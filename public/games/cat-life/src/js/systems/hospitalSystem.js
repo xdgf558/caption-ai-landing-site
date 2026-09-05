@@ -19,7 +19,7 @@
     var disease = cat ? getDisease(cat.diseaseId) : null;
     var nowIso = game.systems.timeSystem.getNow().toISOString();
 
-    if (!cat || !cat.unlocked || cat.isAlive === false) {
+    if (!cat || !cat.unlocked || cat.isAlive === false || cat.careStatus === "sheltered") {
       return {
         ok: false,
         message: t("treatment_unneeded"),
@@ -47,6 +47,7 @@
     cat.diseaseStartedAt = null;
     cat.diseaseProgressAt = nowIso;
     cat.diseaseCheckAt = nowIso;
+    game.systems.careSystem.protectAfterTreatment(cat, new Date(nowIso));
     cat.health = clamp(cat.health + 12, 0, 100);
     cat.mood = clamp(cat.mood + 6, 0, 100);
 

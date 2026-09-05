@@ -114,8 +114,8 @@
     var severity = getSeverity(cat);
     var countdown = disease ? game.systems.catSystem.getDiseaseProgressCountdown(cat) : null;
     var name = getText(cat, "name");
-    var stateLabel = disease ? t(severity.key) : t("hospital_stable");
-    var detail = disease ? getText(disease, "name") : t("hospital_stable_state");
+    var stateLabel = cat.careStatus === "sheltered" ? t("care_sheltered") : disease ? t(severity.key) : t("hospital_stable");
+    var detail = cat.careStatus === "sheltered" ? t("care_pick_up_first") : disease ? getText(disease, "name") : t("hospital_stable_state");
     var imageUrl = getCatImage(cat, false);
     var ariaLabel = name + " · " + detail + " · " + stateLabel;
 
@@ -272,12 +272,17 @@
     var disease = selectedPatient ? game.systems.catSystem.getCatDisease(selectedPatient) : null;
 
     if (!selectedPatient) {
-      return renderNoPatient();
+      var legacyCat = state.cats.find(function (cat) { return cat.unlocked && cat.isAlive === false; });
+      return game.ui.renderCareSupport(legacyCat, state) + renderNoPatient();
+    }
+    if (selectedPatient.careStatus === "sheltered") {
+      return '<article class="hospital-patient-card">' + renderPatientIdentity(selectedPatient, null, "care_sheltered") +
+        game.ui.renderCareSupport(selectedPatient, state) + '</article>';
     }
     if (disease) {
-      return renderSickPatient(state, selectedPatient, disease);
+      return game.ui.renderCareSupport(selectedPatient, state) + renderSickPatient(state, selectedPatient, disease);
     }
-    return renderStablePatient(selectedPatient);
+    return game.ui.renderCareSupport(selectedPatient, state) + renderStablePatient(selectedPatient);
   }
 
   function renderBreedOptions(breedableCats, selectedIndex) {

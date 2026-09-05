@@ -19,7 +19,7 @@
 
   function getNeedyCats(state) {
     return getUnlockedCats(state).filter(function (cat) {
-      return cat.hunger <= 30 || cat.clean <= 30 || game.systems.catSystem.getCatDisease(cat);
+      return cat.careStatus === "sheltered" || cat.hunger <= 30 || cat.clean <= 30 || game.systems.catSystem.getCatDisease(cat);
     });
   }
 
@@ -33,6 +33,14 @@
     var work = state.player.activeWork;
     var job = work ? game.data.jobMap[work.jobId] || work : null;
     var activeSleep = game.systems.playerSystem.getActiveSleep();
+
+    var rescueCat = (state.cats || []).find(function (cat) { return game.systems.careSystem.rescueReason(cat, state); });
+    if (rescueCat) {
+      return {
+        title: t("care_support_title"), copy: t("care_rescue_copy"), button: t("care_open_companion"),
+        page: "cats", catId: rescueCat.id, routeKey: "care",
+      };
+    }
 
     if (sick) {
       return {
@@ -98,11 +106,15 @@
       return '<button class="' + buttonClass + '" type="button" data-cat-action="' + safe(headline.action) + '" data-cat-id="' +
         safe(headline.catId) + '">' + safe(headline.button) + "</button>";
     }
-    return '<button class="' + buttonClass + '" type="button" data-page-target="' + safe(headline.page) + '">' +
+    return '<button class="' + buttonClass + '" type="button" data-page-target="' + safe(headline.page) + '"' +
+      (headline.catId ? ' data-select-cat="' + safe(headline.catId) + '"' : '') + '>' +
       safe(headline.button) + "</button>";
   }
 
   function getCatState(cat) {
+    if (cat.careStatus === "sheltered") {
+      return { label: t("care_sheltered"), className: "", copy: t("care_sheltered_copy"), page: "cats" };
+    }
     if (game.systems.catSystem.getCatDisease(cat)) {
       return { label: t("cat_state_sick"), className: "is-alert", copy: t("cat_state_sick_copy"), page: "hospital" };
     }
@@ -161,6 +173,7 @@
   }
 
   function getRouteTitle(step, headline) {
+    if (step.key === "care" && headline.catId && headline.page === "cats") return t("care_open_companion");
     if (step.key === "care" && headline.action === "clean") {
       return t("headline_clean_now");
     }
@@ -186,7 +199,7 @@
     var isCurrent = step.key === context.currentKey;
     var isComplete = !isCurrent && isRouteComplete(step, context);
     var status = isCurrent ? t("home_route_now") : isComplete ? t("home_route_done") : t("home_route_not_started");
-    var copy = isCurrent && step.key === "care" && (headline.action === "clean" || headline.page === "hospital")
+    var copy = isCurrent && step.key === "care" && (headline.action === "clean" || headline.page === "hospital" || headline.page === "cats")
       ? headline.copy
       : t(step.copyKey);
     var stateClass = isCurrent ? " is-now" : isComplete ? " is-done" : "";
@@ -303,7 +316,7 @@
     return '<div class="cat-stage-art home-journal-scene ' + (reaction ? "has-reaction" : "") + '" data-cat-reaction="' + safe(reaction) + '">' +
       '<img class="home-journal-cat" src="' + safe(game.utils.catArt.getCatStageUrl(stageCat)) + '" alt="' + safe(name) + '" width="420" height="420" decoding="async" />' +
       '<img class="home-journal-room" src="' + safe(asset("src/assets/home/home-house-scene.webp")) + '" alt="" width="1200" height="800" decoding="async" />' +
-      '<div class="home-scene-caption"><span>' + safe(t("cat_home_stamp")) + '</span><strong>' + safe(name) + '</strong><span class="status-pill ' +
+      '<div class="home-scene-caption"><span>' + safe(t(stageCat.careStatus === "sheltered" ? "care_sheltered" : "cat_home_stamp")) + '</span><strong>' + safe(name) + '</strong><span class="status-pill ' +
       safe(stageCondition.className) + '">' + safe(stageCondition.label) + '</span></div></div>';
   }
 
@@ -311,14 +324,15 @@
     var headline = getHeadline(state);
     var needy = getNeedyCats(state);
     var unlockedCats = getUnlockedCats(state);
-    var stageCat = needy[0] || unlockedCats[0];
+    var supportCat = (state.cats || []).find(function (cat) { return game.systems.careSystem.rescueReason(cat, state); });
+    var stageCat = (supportCat && supportCat.isAlive !== false ? supportCat : null) || needy[0] || unlockedCats[0];
     var stageCondition = stageCat ? getCatState(stageCat) : null;
     var scene = renderScene(stageCat, stageCondition);
 
     return '<section class="home-journal-page home-cat-stage" aria-labelledby="home-journal-title"><div class="home-journal-cover"><div class="home-journal-intro">' +
       '<p class="home-journal-date">' + safe(getJournalDate()) + '</p><h2 id="home-journal-title">' + safe(t("home_journal_title")) +
       '</h2><p class="home-journal-copy">' + safe(t("home_journal_copy")) + '</p></div>' + scene +
-      '</div>' + renderRoute(state, headline, needy) + renderCareSummary(needy) + '<div class="home-journal-divider"></div><div class="home-journal-lower"><section class="home-journal-tasks" aria-labelledby="home-tasks-title"><div class="section-heading"><div><h3 id="home-tasks-title" class="panel-title">' +
+      '</div>' + game.ui.renderCareSupport(supportCat, state) + game.ui.renderReliefMeal(state) + renderRoute(state, headline, needy) + renderCareSummary(needy) + '<div class="home-journal-divider"></div><div class="home-journal-lower"><section class="home-journal-tasks" aria-labelledby="home-tasks-title"><div class="section-heading"><div><h3 id="home-tasks-title" class="panel-title">' +
       safe(t("home_tasks_panel_title")) + '</h3></div><button class="text-link" type="button" data-page-target="tasks">' +
       safe(t("go_tasks_claim")) + ' →</button></div><div class="home-task-list">' + renderTaskList(state) + '</div></section>' + renderWorkSummary(state) + '</div></section>';
   }

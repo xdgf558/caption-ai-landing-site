@@ -82,7 +82,7 @@
   function renderRoomPanel(state) {
     var scene = game.systems.homeSystem.getRenderableRoomScene(state.home.roomScene);
     var cats = game.systems.collectionSystem.getUnlockedCats().filter(function (cat) {
-      return cat.isAlive !== false;
+      return cat.isAlive !== false && cat.careStatus !== "sheltered";
     });
     var furniture = game.systems.homeSystem.getPlacedFurniture();
     var storedFurniture = game.systems.homeSystem.getStoredFurniture();

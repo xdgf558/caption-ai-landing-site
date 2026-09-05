@@ -1,5 +1,5 @@
 (function (window) {
-  var currentSchemaVersion = 2;
+  var currentSchemaVersion = 3;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -26,9 +26,22 @@
     return save;
   }
 
+  function migrationToVersion3(save) {
+    (save.cats || []).forEach(function (cat) {
+      var meta = save.meta || {};
+      var times = [meta.lastSyncAt, meta.lastSavedAt, cat.ageUpdatedAt, cat.diseaseProgressAt]
+        .concat(Object.values(cat.decayTracker || {})).map(Date.parse).filter(Number.isFinite);
+      cat.careStatus = "home";
+      cat.careLastSyncAt = times.length ? new Date(Math.max.apply(Math, times)).toISOString() : (meta.createdAt || new Date().toISOString());
+    });
+    save.schemaVersion = 3;
+    return save;
+  }
+
   var migrations = {
     1: migrationToVersion1,
     2: migrationToVersion2,
+    3: migrationToVersion3,
   };
 
   function migrate(saveData) {

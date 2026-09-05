@@ -22,6 +22,7 @@
     return getUnlockedCats().filter(function (cat) {
       return (
         cat.isAlive !== false &&
+        cat.careStatus !== "sheltered" &&
         game.systems.catSystem.getCatAgeYears(cat) >= 1 &&
         !(cat.gender === "female" && cat.isPregnant)
       );
@@ -221,7 +222,7 @@
       return { ok: false, message: t("breed_pick_two") };
     }
 
-    if (parentA.isAlive === false || parentB.isAlive === false) {
+    if (parentA.isAlive === false || parentB.isAlive === false || parentA.careStatus === "sheltered" || parentB.careStatus === "sheltered") {
       return { ok: false, message: t("breed_alive_only") };
     }
 

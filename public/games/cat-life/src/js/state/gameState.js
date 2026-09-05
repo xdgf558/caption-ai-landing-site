@@ -3,7 +3,7 @@
     return JSON.parse(JSON.stringify(value));
   }
 
-  function mergeById(baseList, savedList) {
+  function mergeById(baseList, savedList, keepExtraIds) {
     var savedMap = {};
     var extraItems = [];
 
@@ -14,6 +14,11 @@
         extraItems.push(item);
       }
     });
+    if (keepExtraIds) {
+      Object.keys(savedMap).forEach(function (id) {
+        if (!baseList.some(function (item) { return item.id === id; })) extraItems.push(savedMap[id]);
+      });
+    }
 
     return baseList
       .map(function (baseItem) {
@@ -52,6 +57,8 @@
     return deepClone(game.data.cats).map(function (cat) {
       return Object.assign({}, cat, {
         isAlive: true,
+        careStatus: "home",
+        careLastSyncAt: nowIso,
         diedAt: null,
         deathReason: null,
         ageYears: typeof cat.initialAgeYears === "number" ? cat.initialAgeYears : 0.2,
@@ -276,7 +283,7 @@
       player: Object.assign({}, fresh.player, saveData.player || {}),
       cats:
         Array.isArray(saveData.cats) && saveData.cats.length
-          ? mergeById(fresh.cats, saveData.cats)
+          ? mergeById(fresh.cats, saveData.cats, true)
           : fresh.cats,
       inventory: Object.assign({}, fresh.inventory, saveData.inventory || {}),
       jobs:
@@ -703,6 +710,8 @@
       var baseCat = game.data.cats.find(function (entry) {
         return entry.id === cat.id;
       }) || {};
+      cat.careStatus = cat.careStatus === "sheltered" ? "sheltered" : "home";
+      if (!Number.isFinite(Date.parse(cat.careLastSyncAt))) cat.careLastSyncAt = fallbackTime;
       var defaultTraits = {
         artKey: "orange_tabby",
         furColor: "#f3a64a",

@@ -3461,3 +3461,23 @@ body:has(.arcade-page) .newspaper-header { margin-bottom: 18px; }
 @media (prefers-reduced-motion: reduce) {
   .more-link { transition: none; }
 }
+.care-support-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-block: 16px;
+  padding: 20px;
+  border: 2px solid var(--story-ink);
+  border-radius: 20px;
+  background: #edf3e3;
+  color: #3d4731;
+}
+
+.care-support-card > div { flex: 1; min-width: 0; }
+.care-support-card .primary-button { flex-shrink: 0; white-space: normal; }
+.care-support-card .page-copy { margin-block: 8px 0; }
+
+@media (max-width: 620px) {
+  .care-support-card { flex-direction: column; align-items: stretch; padding: 16px; gap: 14px; }
+  .care-support-card .primary-button { width: 100%; }
+}

@@ -114,6 +114,7 @@
   }
 
   function getCatPose(cat) {
+    if (cat.careStatus === "sheltered") return "nap";
     var activeReaction = getCatReaction(cat);
     var disease = game.systems.catSystem && game.systems.catSystem.getCatDisease(cat);
 

@@ -608,9 +608,9 @@ const legacySave = {
 };
 const migratedSave = migrationContext.window.CatGameSaveMigrations.migrate(legacySave);
 assert.equal(migratedSave.fromVersion, 0);
-assert.equal(migratedSave.toVersion, 2);
-assert.deepEqual([...migratedSave.applied], [1, 2]);
-assert.equal(migratedSave.data.schemaVersion, 2);
+assert.equal(migratedSave.toVersion, 3);
+assert.deepEqual([...migratedSave.applied], [1, 2, 3]);
+assert.equal(migratedSave.data.schemaVersion, 3);
 assert.equal(migratedSave.data.player.gold, 42);
 assert.equal(migratedSave.data.player.coins, undefined);
 assert.equal(migratedSave.data.settings.bgmVolume, 55);
@@ -618,7 +618,7 @@ assert.equal(migratedSave.data.settings.sfxVolume, 55);
 assert.equal(migratedSave.data.settings.musicVolume, undefined);
 assert.equal(legacySave.player.coins, 42, 'migrations must not mutate the stored source object');
 assert.throws(
-  () => migrationContext.window.CatGameSaveMigrations.migrate({ schemaVersion: 3 }),
+  () => migrationContext.window.CatGameSaveMigrations.migrate({ schemaVersion: 4 }),
   (error) => error.code === 'SAVE_SCHEMA_UNSUPPORTED'
 );
 

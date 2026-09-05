@@ -3,7 +3,7 @@
     config: {
       storageKey: "catGameSaveV1",
       version: "1.22.1",
-      saveSchemaVersion: 2,
+      saveSchemaVersion: 3,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
@@ -131,11 +131,16 @@
         maxGiftsPerNpcPerDay: 3,
         maxExchangesPerNpcPerDay: 2,
       },
+      gentleCare: {
+        offlineCapMs: 8 * 60 * 60 * 1000,
+        suspendThresholdMs: 60 * 1000,
+        rescueBaseline: 50,
+        recoveryProtectionMs: 24 * 60 * 60 * 1000,
+      },
       catDecayRules: {
-        hunger: { intervalMs: 12 * 60 * 1000, label: "饱腹" },
+        hunger: { intervalMs: 30 * 60 * 1000, label: "饱腹" },
         clean: { intervalMs: 8 * 60 * 1000, label: "清洁" },
         mood: { intervalMs: 6 * 60 * 1000, label: "心情" },
-        health: { intervalMs: 10 * 60 * 1000, label: "健康" },
         energy: { intervalMs: 5 * 60 * 1000, label: "活力" },
       },
     },

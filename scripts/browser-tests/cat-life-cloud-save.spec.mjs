@@ -75,14 +75,14 @@ test('migrates a legacy guest save before first cloud upload and blocks oversize
   await page.goto('/games/cat-life/?lang=en');
   await expect(page.locator('[data-cat-cloud-status]')).toHaveText('Cloud save synced');
   expect(putCount).toBe(1);
-  expect(uploadedSave.schemaVersion).toBe(2);
+  expect(uploadedSave.schemaVersion).toBe(3);
   expect(uploadedSave.player.gold).toBe(42);
   expect(uploadedSave.player.coins).toBeUndefined();
   expect(uploadedSave.settings.bgmVolume).toBe(55);
   expect(uploadedSave.settings.sfxVolume).toBe(55);
 
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('catGameSaveV1:member:7')));
-  expect(stored.schemaVersion).toBe(2);
+  expect(stored.schemaVersion).toBe(3);
   expect(stored.player.gold).toBe(42);
 
   await page.evaluate(() => {
