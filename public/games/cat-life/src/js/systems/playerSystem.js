@@ -170,8 +170,8 @@
     };
   }
 
-  function getCurrentHunger(nowDate) {
-    var player = getPlayer();
+  function getCurrentHunger(nowDate, playerState) {
+    var player = playerState || getPlayer();
     var now = nowDate || game.systems.timeSystem.getNow();
     var updatedAt = player.hungerUpdatedAt ? new Date(player.hungerUpdatedAt).getTime() : now.getTime();
     var elapsed = Math.max(0, now.getTime() - updatedAt);

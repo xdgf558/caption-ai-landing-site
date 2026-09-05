@@ -29,10 +29,19 @@
   function migrationToVersion3(save) {
     (save.cats || []).forEach(function (cat) {
       var meta = save.meta || {};
-      var times = [meta.lastSyncAt, meta.lastSavedAt, cat.ageUpdatedAt, cat.diseaseProgressAt]
-        .concat(Object.values(cat.decayTracker || {})).map(Date.parse).filter(Number.isFinite);
+      // Global saves/age refreshes do not prove that this cat's decay was synced.
+      var trackers = cat.decayTracker || {};
+      var times = ["hunger", "clean", "mood", "health", "energy"]
+        .map(function (key) { return Date.parse(trackers[key]); }).filter(Number.isFinite);
+      if (cat.diseaseId && Number.isFinite(Date.parse(cat.diseaseProgressAt))) times.push(Date.parse(cat.diseaseProgressAt));
+      if (!times.length) {
+        times = [cat.ageUpdatedAt, cat.bornAt].map(Date.parse).filter(Number.isFinite);
+      }
+      if (!times.length) {
+        times = [meta.lastSyncAt, meta.lastSavedAt, meta.createdAt].map(Date.parse).filter(Number.isFinite);
+      }
       cat.careStatus = "home";
-      cat.careLastSyncAt = times.length ? new Date(Math.max.apply(Math, times)).toISOString() : (meta.createdAt || new Date().toISOString());
+      cat.careLastSyncAt = times.length ? new Date(Math.max.apply(Math, times)).toISOString() : new Date().toISOString();
     });
     save.schemaVersion = 3;
     return save;

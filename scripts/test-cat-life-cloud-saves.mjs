@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
+import vm from 'node:vm';
 import { __readerTotpTestHooks as hooks } from '../src/worker.js';
 
 class D1Statement {
@@ -254,6 +255,33 @@ assert.equal(result.body.save.data.cats[0].isAlive, false, 'cloud migration does
 assert.equal(result.body.save.data.cats[0].intimacy, 61);
 sqlite.prepare('DELETE FROM reader_game_saves WHERE account_id = 1').run();
 sqlite.prepare('DELETE FROM reader_game_save_rate_limits WHERE account_id = 1').run();
+
+// Golden parity fixtures: changing only global metadata must not mask old cat care.
+const browserMigration = { window: {} };
+vm.runInNewContext(await read('../public/games/cat-life/src/js/state/saveMigrations.js'), browserMigration);
+const oldCare = '2026-08-29T01:00:00.000Z';
+const recentCare = '2026-08-29T02:00:00.000Z';
+for (const fixture of [
+  { label: 'old trackers, fresh global/age/healthy disease timestamp', cat: { decayTracker: { hunger: oldCare, clean: oldCare, mood: oldCare, energy: oldCare }, ageUpdatedAt: '2026-08-30T01:00:00.000Z', diseaseProgressAt: '2026-08-30T01:00:00.000Z' }, expected: oldCare },
+  { label: 'partial tracker record ignores malformed timestamps', cat: { decayTracker: { hunger: 'invalid', energy: oldCare, extensionField: '2026-08-30T01:00:00.000Z' } }, expected: oldCare },
+  { label: 'active disease progress is cat-specific evidence', cat: { decayTracker: { hunger: oldCare }, diseaseId: 'cold', diseaseProgressAt: recentCare }, expected: recentCare },
+  { label: 'missing trackers falls back to cat age sync before global save', cat: { ageUpdatedAt: oldCare }, expected: oldCare },
+  { label: 'missing cat evidence falls back to global timestamp', cat: {}, expected: makeSave(7).meta.lastSyncAt },
+]) {
+  const saved = { ...makeSave(7), schemaVersion: 2 };
+  saved.cats = [{ id: 'cat-one', name: 'Momo', ...fixture.cat }];
+  const original = JSON.stringify(saved);
+  const migrated = browserMigration.window.CatGameSaveMigrations.migrate(saved).data;
+  const response = await json(await hooks.handleReaderGameSavePut(
+    request('PUT', firstSessionToken, { baseRevision: 0, saveData: saved }), env
+  ));
+  assert.equal(response.response.status, 200, fixture.label);
+  assert.equal(response.body.save.data.cats[0].careLastSyncAt, fixture.expected, fixture.label);
+  assert.deepEqual(response.body.save.data.cats, JSON.parse(JSON.stringify(migrated.cats)), fixture.label);
+  assert.equal(JSON.stringify(saved), original, 'both migrations leave the source intact');
+  sqlite.prepare('DELETE FROM reader_game_saves WHERE account_id = 1').run();
+  sqlite.prepare('DELETE FROM reader_game_save_rate_limits WHERE account_id = 1').run();
+}
 
 result = await json(
   await hooks.handleReaderGameSavePut(

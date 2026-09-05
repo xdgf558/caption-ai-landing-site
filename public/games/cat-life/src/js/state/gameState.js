@@ -27,6 +27,25 @@
       .concat(extraItems);
   }
 
+  function preserveCatIds(savedCats) {
+    var reservedIds = new Set(savedCats.map(function (cat) { return cat && cat.id; }));
+    var seenIds = new Set();
+    return savedCats.map(function (cat) {
+      if (!cat || !cat.id) return cat;
+      if (seenIds.has(cat.id)) {
+        // Old twin saves may already contain collisions. Preserve both records;
+        // existing references keep pointing to the first holder of the old ID.
+        var suffix = 1;
+        var id;
+        do { id = cat.id + "_recovered_" + suffix++; } while (reservedIds.has(id));
+        reservedIds.add(id);
+        cat = Object.assign({}, cat, { id: id });
+      }
+      seenIds.add(cat.id);
+      return cat;
+    });
+  }
+
   function clampStat(value, fallback) {
     var min = game.config.playerCondition.min;
     var max = game.config.playerCondition.max;
@@ -283,7 +302,7 @@
       player: Object.assign({}, fresh.player, saveData.player || {}),
       cats:
         Array.isArray(saveData.cats) && saveData.cats.length
-          ? mergeById(fresh.cats, saveData.cats, true)
+          ? mergeById(fresh.cats, preserveCatIds(saveData.cats), true)
           : fresh.cats,
       inventory: Object.assign({}, fresh.inventory, saveData.inventory || {}),
       jobs:

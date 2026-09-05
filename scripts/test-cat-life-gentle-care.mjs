@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { test } from 'node:test';
 
 const root = new URL('../public/games/cat-life/', import.meta.url);
 const scripts = [...readFileSync(new URL('index.html', root), 'utf8').matchAll(/<script src="\.\/(src\/js\/[^" ]+)"/g)]
@@ -220,3 +221,174 @@ for (const language of ['zh-CN', 'en', 'ja']) {
 }
 
 console.log('Gentle care checks passed: away windows, hidden timers, rescue, legacy backups, identity, schema and 3-language UI.');
+
+test('P2: short focus/visibility/reload syncs preserve partial decay and disease periods', () => {
+  for (const source of ['focus', 'visibility', 'init', 'import', 'cloud']) {
+    for (const minutes of [[20, 40], [4, 8, 12, 16, 20, 24, 28, 32, 36, 40]]) {
+      let cat = fresh();
+      disease(cat);
+      sync(40 / 60, source);
+      const continuous = snapshot(cat);
+      cat = fresh();
+      disease(cat);
+      for (const minute of minutes) {
+        sync(minute / 60, source);
+        // Actual normalization, as on reload/import, must preserve the remainder too.
+        game.state.game = game.state.normalizeGameData(snapshot(game.state.game));
+      }
+      cat = game.state.game.cats[0];
+      assert.equal(cat.hunger, 79, `${source}: 40 minutes means one fullness tick`);
+      for (const key of ['hunger', 'clean', 'mood', 'energy', 'health']) {
+        assert.equal(cat[key], continuous[key], `${source}/${key} cannot be reset by short visits`);
+      }
+      assert.deepEqual(snapshot(cat.decayTracker), snapshot(continuous.decayTracker));
+      assert.equal(cat.diseaseProgressAt, continuous.diseaseProgressAt);
+      const before = snapshot(cat);
+      for (let repeat = 0; repeat < 5; repeat++) cats.syncCatState(new Clock(), source);
+      assert.deepEqual(snapshot(cat), before, 'same-time focus is idempotent');
+    }
+  }
+});
+
+test('P2: real twin births in the same millisecond survive normalize, export and import', () => {
+  fresh();
+  const [father, mother] = game.state.game.cats;
+  father.gender = 'male';
+  mother.gender = 'female';
+  mother.unlocked = true;
+  mother.isPregnant = true;
+  mother.pregnancyMateId = father.id;
+  mother.pregnancyDueAt = new Clock().toISOString();
+  mother.pregnancyLitterSize = 2;
+  const result = game.systems.collectionSystem.syncPregnancies(new Clock(), 'timer');
+  assert.equal(result.changed, true);
+  const twins = game.state.game.cats.filter((cat) => cat.id.startsWith('kitten_'));
+  assert.equal(twins.length, 2);
+  assert.equal(new Set(twins.map((cat) => cat.id)).size, 2, 'same batch and clock must still produce distinct IDs');
+  twins[0].name = 'First twin';
+  twins[0].intimacy = 17;
+  twins[1].name = 'Second twin';
+  twins[1].intimacy = 39;
+  const before = snapshot(twins);
+  const imported = game.state.saveSystem.importText(game.state.saveSystem.exportText());
+  for (const twin of before) {
+    const saved = imported.cats.find((cat) => cat.id === twin.id);
+    assert.equal(saved.name, twin.name);
+    assert.equal(saved.intimacy, twin.intimacy);
+    assert.deepEqual(snapshot(saved.parents), twin.parents);
+  }
+  assert.equal(imported.cats.filter((cat) => cat.id.startsWith('kitten_')).length, 2);
+});
+
+test('P2: existing colliding twin records retain both cats with stable repaired IDs', () => {
+  const cat = fresh();
+  const saved = snapshot(game.state.game);
+  saved.schemaVersion = 2;
+  const id = 'kitten_1234_1';
+  saved.cats.push(
+    { ...snapshot(cat), id, name: 'First twin', intimacy: 17 },
+    { ...snapshot(cat), id, name: 'Second twin', intimacy: 39 },
+    { ...snapshot(cat), id: id + '_recovered_1', name: 'Existing suffix' },
+  );
+  const original = snapshot(saved);
+  const normalized = game.state.normalizeGameData(saved);
+  assert.equal(normalized.cats.length, saved.cats.length);
+  assert.equal(new Set(normalized.cats.map((cat) => cat.id)).size, saved.cats.length);
+  assert.equal(normalized.cats.find((cat) => cat.id === id).name, 'First twin');
+  assert.equal(normalized.cats.find((cat) => cat.name === 'Second twin').id, id + '_recovered_2');
+  assert.equal(normalized.cats.find((cat) => cat.name === 'Second twin').intimacy, 39);
+  assert.deepEqual(snapshot(game.state.normalizeGameData(snapshot(normalized)).cats), snapshot(normalized.cats));
+  assert.deepEqual(saved, original);
+});
+
+test('P2: same-clock litters avoid a pre-existing sparse ID collision', () => {
+  const first = fresh();
+  game.state.game.cats.push({ ...snapshot(first), id: 'kitten_' + now + '_2' });
+  const [father, ...mothers] = game.state.game.cats.slice(0, 3);
+  for (const mother of mothers) {
+    Object.assign(mother, {
+      gender: 'female', unlocked: true, isPregnant: true, pregnancyMateId: father.id,
+      pregnancyDueAt: new Clock().toISOString(), pregnancyLitterSize: 2,
+    });
+  }
+  game.systems.collectionSystem.syncPregnancies(new Clock(), 'timer');
+  const kittens = game.state.game.cats.filter((cat) => cat.id.startsWith('kitten_'));
+  assert.equal(kittens.length, 5);
+  assert.equal(new Set(kittens.map((cat) => cat.id)).size, 5);
+});
+
+test('P2: a fresh global meta timestamp cannot hide 24-hour-old v2 cat trackers', () => {
+  fresh();
+  const saved = snapshot(game.state.game);
+  saved.schemaVersion = 2;
+  now += 24 * HOUR;
+  const current = new Clock().toISOString();
+  saved.meta.lastSyncAt = current;
+  saved.meta.lastSavedAt = current;
+  for (const cat of saved.cats) {
+    delete cat.careLastSyncAt;
+    cat.ageUpdatedAt = current;
+    cat.diseaseProgressAt = current; // no active disease: this is not negative care evidence
+  }
+  const original = snapshot(saved);
+  game.state.game = game.state.normalizeGameData(saved);
+  assert.equal(game.state.game.cats[0].careLastSyncAt, new Clock(start).toISOString());
+  cats.syncCatState(new Clock(), 'init');
+  assert.equal(game.state.game.cats[0].careStatus, 'sheltered');
+  assert.equal(game.state.game.cats[0].hunger, 64);
+  assert.deepEqual(saved, original, 'migration cannot mutate the original save');
+});
+
+test('P3: emergency meal uses real-time hunger before the next timer sync', () => {
+  fresh();
+  game.state.game.player.gold = 0;
+  game.state.game.player.hunger = 76;
+  now += 15 * 60000;
+  assert.equal(game.systems.playerSystem.getCurrentHunger(), 80);
+  assert.equal(care.canGetMeal(game.state.game), true);
+  assert.match(game.ui.renderReliefMeal(game.state.game), /data-care-meal/);
+  assert.equal(care.getMeal().ok, true);
+  assert.equal(game.systems.playerSystem.getCurrentHunger(), 40);
+  assert.equal(care.getMeal().ok, false);
+});
+
+test('P3: current v3 build preserves a future v4 save through repeated loads, saves and rejected imports', () => {
+  fresh();
+  const saveSystem = game.state.saveSystem;
+  const originalKey = saveSystem.getStorageKey();
+  const key = 'catGameSaveV1:member:future-test';
+  const future = { ...snapshot(game.state.game), schemaVersion: 4, futureOnlyField: 'do not lose' };
+  const raw = JSON.stringify(future);
+  storage.set(key, raw);
+  saveSystem.setStorageKey(key);
+  game.state.game = saveSystem.loadOrCreateGame();
+  assert.equal(game.state.game.schemaVersion, 3);
+  assert.equal(saveSystem.getStorageKey(), key + ':compat-v3');
+  game.state.game.player.gold = 51;
+  saveSystem.saveGame();
+  saveSystem.setStorageKey(key);
+  assert.equal(saveSystem.loadOrCreateGame().player.gold, 51);
+  assert.equal(storage.get(key), raw);
+  const before = snapshot(game.state.game);
+  assert.throws(() => saveSystem.importText(raw), (error) => error.code === 'SAVE_SCHEMA_UNSUPPORTED');
+  assert.deepEqual(snapshot(game.state.game), before);
+  assert.equal(storage.get(key), raw);
+  saveSystem.setStorageKey(originalKey);
+});
+
+test('P3: 1.23.0 release version and three-language notes appear for a 1.22.1 save', () => {
+  fresh();
+  const manifestContext = { window: {} };
+  vm.runInNewContext(readFileSync(new URL('content-manifest.js', root), 'utf8'), manifestContext);
+  assert.equal(game.config.version, '1.23.0');
+  assert.equal(manifestContext.window.CatGameContentManifest.manifest.releaseVersion, game.config.version);
+  assert.match(readFileSync(new URL('../src/data/products/cat-life-game.ts', import.meta.url), 'utf8'), /latestVersion: '1\.23\.0'/);
+  game.state.game.meta.lastSeenVersion = '1.22.1';
+  for (const lang of ['zh-CN', 'en', 'ja']) {
+    game.state.game.settings.language = lang;
+    const html = game.ui.renderVersionPanel(game.state.game);
+    assert.match(html, /1\.23\.0/);
+    assert.match(html, /data-dismiss-release-note/);
+    assert.ok(game.config.releaseNotes[lang].length > 0);
+  }
+});

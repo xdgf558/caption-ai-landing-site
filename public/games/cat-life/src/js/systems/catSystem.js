@@ -386,8 +386,11 @@
 
       changed = syncDiseaseProgress(cat, end, source, messages, careWindow.floors) || changed;
       if (careWindow.away) {
-        // No accumulated infection rolls on return; discarded time stays discarded.
-        care.rebase(cat, nowDate);
+        // Skip completed away-time infection rolls, not fractional care progress.
+        // Full rebasing belongs to shelter/recovery/clock correction only.
+        var checkTime = Date.parse(cat.diseaseCheckAt);
+        var checkSteps = Math.floor(Math.max(0, end.getTime() - checkTime) / game.config.diseaseCheckIntervalMs);
+        cat.diseaseCheckAt = new Date(checkTime + checkSteps * game.config.diseaseCheckIntervalMs).toISOString();
       } else if (cat.careStatus !== "sheltered") {
         changed = syncDiseaseChecks(cat, nowDate, messages) || changed;
       }

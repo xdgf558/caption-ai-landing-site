@@ -4829,10 +4829,15 @@ const migrateReaderGameSaveSchema = (save) => {
   if (schemaVersion < 3) {
     for (const cat of save.cats) {
       if (!isPlainRecord(cat)) return null;
-      const times = [save.meta.lastSyncAt, save.meta.lastSavedAt, cat.ageUpdatedAt, cat.diseaseProgressAt]
-        .concat(Object.values(cat.decayTracker || {})).map(Date.parse).filter(Number.isFinite);
+      // Match the browser migration: prefer evidence of actual cat decay sync.
+      const trackers = cat.decayTracker || {};
+      let times = ['hunger', 'clean', 'mood', 'health', 'energy']
+        .map((key) => Date.parse(trackers[key])).filter(Number.isFinite);
+      if (cat.diseaseId && Number.isFinite(Date.parse(cat.diseaseProgressAt))) times.push(Date.parse(cat.diseaseProgressAt));
+      if (!times.length) times = [cat.ageUpdatedAt, cat.bornAt].map(Date.parse).filter(Number.isFinite);
+      if (!times.length) times = [save.meta.lastSyncAt, save.meta.lastSavedAt, save.meta.createdAt].map(Date.parse).filter(Number.isFinite);
       cat.careStatus = 'home';
-      cat.careLastSyncAt = times.length ? new Date(Math.max(...times)).toISOString() : (save.meta.createdAt || new Date().toISOString());
+      cat.careLastSyncAt = times.length ? new Date(Math.max(...times)).toISOString() : new Date().toISOString();
     }
   }
 

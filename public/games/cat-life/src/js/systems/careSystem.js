@@ -107,7 +107,7 @@
   }
 
   function canGetMeal(state) {
-    return state.player.hunger >= game.config.playerCondition.hungerBlockThreshold && state.player.gold === 0;
+    return game.systems.playerSystem.getCurrentHunger(undefined, state.player) >= game.config.playerCondition.hungerBlockThreshold && state.player.gold === 0;
   }
 
   function getMeal() {

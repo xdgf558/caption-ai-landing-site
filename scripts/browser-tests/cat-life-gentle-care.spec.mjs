@@ -94,3 +94,54 @@ test('old loss stays opt-in and recovery keeps a local backup and the same bond'
   await page.getByRole('button', { name: 'Export backup from before first recovery', exact: true }).click();
   expect((await downloaded).suggestedFilename()).toMatch(/^cat-care-before-recovery-.*\.json$/);
 });
+
+test('focus plus reload preserves two partial 20-minute care intervals', async ({ page }) => {
+  const start = Date.parse('2026-09-05T00:00:00Z');
+  await page.clock.setFixedTime(new Date(start));
+  await page.goto('/games/cat-life/?lang=en');
+  await expect(page.locator('.home-journal-page')).toBeVisible();
+  await page.evaluate(() => {
+    window.CatGame.utils.random.chance = () => false;
+  });
+  await page.clock.setFixedTime(new Date(start + 20 * 60000));
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await page.reload();
+  expect(await page.evaluate(() => window.CatGame.state.game.cats[0].hunger)).toBe(80);
+  await page.clock.setFixedTime(new Date(start + 40 * 60000));
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await page.reload();
+  expect(await page.evaluate(() => window.CatGame.state.game.cats[0].hunger)).toBe(79);
+});
+
+test('v2 import honors old cat trackers despite fresh meta and shows the new release notice', async ({ page }) => {
+  await page.goto('/games/cat-life/?lang=en');
+  await expect(page.locator('.home-journal-page')).toBeVisible();
+  const saved = await page.evaluate(() => {
+    const save = window.CatGame.state.createNewGame();
+    save.schemaVersion = 2;
+    save.version = '1.22.1';
+    save.settings.language = 'en';
+    save.meta.lastSeenVersion = '1.22.1';
+    const old = new Date(Date.now() - 24 * 3600000).toISOString();
+    save.cats.forEach((cat) => {
+      delete cat.careLastSyncAt;
+      delete cat.careStatus;
+      Object.keys(cat.decayTracker).forEach((key) => { cat.decayTracker[key] = old; });
+    });
+    return JSON.stringify(save);
+  });
+  await page.locator('.desktop-navigation [data-page-target="save"]').click();
+  await page.locator('#save-import-text').fill(saved);
+  await page.locator('[data-import-save]').click();
+  await page.locator('.desktop-navigation [data-page-target="home"]').click();
+  await expect(page.locator('.care-support-card').first()).toContainText('Safe in temporary care');
+  expect(await page.evaluate(() => window.CatGame.state.game.cats[0].hunger)).toBe(64);
+  await page.locator('.desktop-navigation [data-page-target="version"]').click();
+  await expect(page.locator('#app-main')).toContainText('1.23.0');
+  await expect(page.locator('#app-main')).toContainText('Gentle care is on');
+  await expect(page.locator('[data-dismiss-release-note]')).toBeVisible();
+  await page.locator('[data-dismiss-release-note]').click();
+  await page.reload();
+  await page.locator('.desktop-navigation [data-page-target="version"]').click();
+  await expect(page.locator('[data-dismiss-release-note]')).toHaveCount(0);
+});
