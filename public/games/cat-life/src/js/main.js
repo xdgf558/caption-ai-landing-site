@@ -9,6 +9,7 @@
   var toastTimerId = null;
   var activeToastId = null;
   var catReactionTimerId = null;
+  var roomResizeObserver = null;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -409,6 +410,10 @@
     dom.main.innerHTML = renderer(game.state.game);
     dom.navigation.innerHTML = game.ui.renderDesktopNavigation(game.state.game);
     dom.mobileNavigation.innerHTML = game.ui.renderMobileNavigation(game.state.game);
+    if (roomResizeObserver) roomResizeObserver.disconnect();
+    arrangeRoomFurniture();
+    var roomScene = dom.main.querySelector(".room-scene");
+    if (roomResizeObserver && roomScene) roomResizeObserver.observe(roomScene);
     updateShellText();
     renderToast();
     if (game.systems.musicSystem) {
@@ -1083,6 +1088,39 @@
     }
   }
 
+  function roomRect(element, scene) {
+    var rect = element.getBoundingClientRect();
+    var origin = scene.getBoundingClientRect();
+    var left = rect.left - origin.left - scene.clientLeft;
+    var top = rect.top - origin.top - scene.clientTop;
+    return { left: left, top: top, right: left + rect.width, bottom: top + rect.height,
+      width: rect.width, height: rect.height };
+  }
+
+  function arrangeRoomFurniture() {
+    if (game.state.roomDrag) return;
+    var scene = dom.main.querySelector(".room-scene");
+    var bench = scene && scene.querySelector(".room-theme-fixture--station-bench");
+    if (!bench || !scene.clientWidth) return;
+    var obstacles = [roomRect(bench, scene)];
+    Array.prototype.forEach.call(scene.querySelectorAll(".room-furniture"), function (element, index) {
+      var saved = game.systems.homeSystem.getFurniturePosition(element.dataset.furnitureId, index);
+      var desired = { x: parseFloat(saved.left) * scene.clientWidth / 100,
+        y: parseFloat(saved.top) * scene.clientHeight / 100 };
+      var size = roomRect(element, scene);
+      var spot = game.systems.homeSystem.resolveFurnitureSpot(desired, size,
+        { width: scene.clientWidth, height: scene.clientHeight }, obstacles);
+      if (spot) {
+        element.style.left = spot.x / scene.clientWidth * 100 + "%";
+        element.style.top = spot.y / scene.clientHeight * 100 + "%";
+        obstacles.push({ left: spot.x - size.width / 2, right: spot.x + size.width / 2,
+          top: spot.y - size.height / 2, bottom: spot.y + size.height / 2 });
+      } else {
+        obstacles.push(size);
+      }
+    });
+  }
+
   function updateDraggedFurniture(clientX, clientY) {
     var drag = game.state.roomDrag;
     var xPercent;
@@ -1094,6 +1132,21 @@
 
     xPercent = clamp(((clientX - drag.sceneRect.left) / drag.sceneRect.width) * 100, 8, 92);
     yPercent = clamp(((clientY - drag.sceneRect.top) / drag.sceneRect.height) * 100, 34, 82);
+
+    var scene = drag.element.closest(".room-scene");
+    var bench = scene.querySelector(".room-theme-fixture--station-bench");
+    if (bench) {
+      var obstacles = [roomRect(bench, scene)];
+      Array.prototype.forEach.call(scene.querySelectorAll(".room-furniture"), function (element) {
+        if (element !== drag.element) obstacles.push(roomRect(element, scene));
+      });
+      var spot = game.systems.homeSystem.resolveFurnitureSpot(
+        { x: xPercent * scene.clientWidth / 100, y: yPercent * scene.clientHeight / 100 },
+        roomRect(drag.element, scene), { width: scene.clientWidth, height: scene.clientHeight }, obstacles);
+      if (!spot) return;
+      xPercent = spot.x / scene.clientWidth * 100;
+      yPercent = spot.y / scene.clientHeight * 100;
+    }
 
     game.systems.homeSystem.setFurniturePosition(drag.furnitureId, xPercent.toFixed(2) + "%", yPercent.toFixed(2) + "%");
 
@@ -1172,6 +1225,7 @@
     dom.navigation = document.getElementById("app-navigation");
     dom.mobileNavigation = document.getElementById("app-mobile-navigation");
     dom.toast = document.getElementById("app-toast");
+    if (window.ResizeObserver) roomResizeObserver = new ResizeObserver(arrangeRoomFurniture);
 
     game.state.game = game.state.saveSystem.loadOrCreateGame();
     if (window.CatGameIntegration && typeof window.CatGameIntegration.applySavedLanguage === "function") {

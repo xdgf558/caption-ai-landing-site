@@ -79,6 +79,24 @@ async function openGamePage(page, name) {
   await target.click();
 }
 
+async function expectFurnitureClearOfBench(page) {
+  await expect.poll(() => page.locator('.room-scene').evaluate(scene => {
+    const bench = scene.querySelector('.room-theme-fixture--station-bench').getBoundingClientRect();
+    const room = scene.getBoundingClientRect();
+    const boxes = [...scene.querySelectorAll('.room-furniture')].map(node => node.getBoundingClientRect());
+    const separate = (a, b) => a.right <= b.left + 0.1 || a.left >= b.right - 0.1 ||
+      a.bottom <= b.top + 0.1 || a.top >= b.bottom - 0.1;
+    return boxes.length > 0 && boxes.every((box, index) => box.width > 0 && box.height > 0 &&
+      box.left >= room.left && box.right <= room.right && box.top >= room.top && box.bottom <= room.bottom &&
+      separate(box, bench) && boxes.slice(0, index).every(other => separate(box, other)));
+  })).toBe(true).catch(async error => {
+    console.log(await page.locator('.room-scene').evaluate(scene => [scene, ...scene.querySelectorAll('.room-furniture, .room-theme-fixture--station-bench')].map(node => ({
+      className: node.className, style: node.getAttribute('style'), rect: node.getBoundingClientRect().toJSON(), transform: getComputedStyle(node).transform
+    }))));
+    throw error;
+  });
+}
+
 for (const width of [1440, 390]) {
   test(`room purchase, decoration, reload and revocation through UI at ${width}px`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 1000 });
@@ -124,6 +142,7 @@ for (const width of [1440, 390]) {
       await page.locator(`[data-room-option-key="${key}"][data-room-option-value="${value}"]`).click();
     }
     await expect(page.locator('.room-theme-fixture')).toHaveCount(3);
+    await expectFurnitureClearOfBench(page);
     await page.locator('[data-room-mode-target="life"]').last().click();
     await expect.poll(() => page.locator('.room-scene img').evaluateAll(images =>
       images.every(image => image.complete && image.naturalWidth > 0))).toBe(true);
@@ -144,6 +163,7 @@ for (const width of [1440, 390]) {
     await page.locator('[data-community-home]').click();
     await expect(page.locator('.room-theme-fixture')).toHaveCount(3);
     expect(await page.evaluate(() => window.CatGame.state.game.home.roomScene)).toMatchObject(options);
+    await expectFurnitureClearOfBench(page);
     owned = false;
     balance = 100;
     await openGamePage(page, 'member_store');
@@ -159,6 +179,60 @@ for (const width of [1440, 390]) {
     expect(posts).toBe(1);
   });
 }
+
+test('bench avoidance repairs old full-room layouts visually, survives resize and constrains dragging', async ({ page }, testInfo) => {
+  await mockCloudMember(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.route('**/api/games/cat-life/catalog?*', route => route.fulfill({ json: {
+    ok: true, authenticated: true, account, balance: 0, products: [roomProduct]
+  } }));
+  await page.route('**/api/games/cat-life/entitlements?*', route => route.fulfill({ json: {
+    ok: true, authenticated: true, account, balance: 0, entitlements: [entitlementFor(roomProduct)]
+  } }));
+  await page.goto('/games/cat-life/?lang=en');
+  await expect.poll(() => page.evaluate(() => window.CatGameCommerce.hasEntitlement('cat-life.content.furniture.station-room.v1'))).toBe(true);
+  const original = await page.evaluate(() => {
+    const game = window.CatGame;
+    const ids = game.data.items.filter(item => item.type === 'furniture').map(item => item.id);
+    game.state.game.inventory.furnitureOwned = ids;
+    game.state.game.home.placedFurniture = ids;
+    game.state.game.home.roomLevel = 4;
+    game.state.game.home.roomScene.layout = 'station-waiting';
+    game.state.game.home.furnitureLayout = Object.fromEntries(ids.map(id => [id, { left: '30%', top: '72%' }]));
+    return JSON.stringify(game.state.game.home.furnitureLayout);
+  });
+  await openGamePage(page, 'community');
+  await page.locator('[data-community-home]').click();
+  await expect(page.locator('.news-toast')).toHaveCount(0);
+  for (const width of [1440, 768, 390, 320, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await expectFurnitureClearOfBench(page);
+    expect(await page.evaluate(() => JSON.stringify(window.CatGame.state.game.home.furnitureLayout))).toBe(original);
+    await page.locator('.room-scene').evaluate(scene => scene.scrollIntoView({ block: 'center' }));
+    await page.locator('.room-scene').screenshot({ path: testInfo.outputPath(`bench-clear-${width}.png`) });
+  }
+  await page.locator('[data-room-mode-target="edit"]').first().click();
+  const item = page.locator('.room-furniture').first();
+  await item.scrollIntoViewIfNeeded();
+  const from = await item.boundingBox();
+  const bench = await page.locator('.room-theme-fixture--station-bench').boundingBox();
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bench.x + bench.width / 2, bench.y + bench.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await expectFurnitureClearOfBench(page);
+  expect(await page.evaluate(() => JSON.stringify(window.CatGame.state.game.home.furnitureLayout))).not.toBe(original);
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => window.CatGameCommerce.hasEntitlement('cat-life.content.furniture.station-room.v1'))).toBe(true);
+  await openGamePage(page, 'community');
+  await page.locator('[data-community-home]').click();
+  await expectFurnitureClearOfBench(page);
+  await page.locator('[data-room-mode-target="edit"]').first().click();
+  await page.locator('[data-reset-room-layout]').click();
+  await expectFurnitureClearOfBench(page);
+  await page.locator('[data-room-option-value="cozy"]').click();
+  await expect(page.locator('.room-theme-fixture--station-bench')).toHaveCount(0);
+});
 
 for (const [locale, prefix, skinScope, roomScope, policy] of [
   ['en', 'en', 'Only for the starter orange cat', 'cannot be dragged independently', 'not cash'],
