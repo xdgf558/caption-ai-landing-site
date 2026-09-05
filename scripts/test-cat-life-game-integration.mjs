@@ -354,6 +354,20 @@ roomGame.utils.catArt = {
   }
 };
 vm.runInNewContext(homeSystem, languageContext);
+const resolveSpot = roomGame.systems.homeSystem.resolveFurnitureSpot;
+const bounds = { width: 760, height: 426 };
+const size = { width: 112, height: 92 };
+const bench = { left: 84, right: 365, top: 143, bottom: 426 };
+const desired = { x: 200, y: 300 };
+const firstSpot = resolveSpot(desired, size, bounds, [bench]);
+assert.ok(firstSpot);
+assert.ok(firstSpot.x - size.width / 2 >= bench.right + 6);
+const occupied = { left: firstSpot.x - 56, right: firstSpot.x + 56, top: firstSpot.y - 46, bottom: firstSpot.y + 46 };
+const secondSpot = resolveSpot(desired, size, bounds, [bench, occupied]);
+assert.ok(secondSpot);
+assert.ok(Math.abs(firstSpot.x - secondSpot.x) >= 118 || Math.abs(firstSpot.y - secondSpot.y) >= 98);
+assert.deepEqual(desired, { x: 200, y: 300 }, 'collision resolution must not mutate saved positions');
+assert.equal(resolveSpot({ x: 600, y: 250 }, size, bounds, [bench]).x, 600);
 const localizedRoomMarkup = roomGame.systems.homeSystem.renderRoomScene(
   roomGame.state.game.home.roomScene,
   [{ name: '小橘', nameEn: 'Marmalade', nameJa: 'マーマレード' }],

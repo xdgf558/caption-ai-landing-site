@@ -1270,15 +1270,18 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
   border: 0;
   border-radius: 14px;
   box-shadow: none;
-  height: 92px;
+  height: auto;
+  aspect-ratio: 28 / 23;
   overflow: hidden;
-  width: 112px;
+  width: min(22%, 112px);
   z-index: 3;
 }
 
 .room-scene.is-living .room-furniture { cursor: default; }
 .room-scene.is-editing .room-furniture { outline: 2px dashed rgba(229, 126, 72, .82); outline-offset: 3px; }
 .room-furniture-art {
+  position: absolute;
+  inset: 0;
   border-radius: 13px;
   height: 100%;
   object-fit: contain;
@@ -1494,7 +1497,7 @@ button:disabled, .primary-button:disabled, .secondary-button:disabled, .ghost-bu
   .room-stage-footer p { max-width: 68%; }
   .room-furniture-shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .room-option-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .room-stage-panel .room-furniture { height: 68px; width: 76px; }
+  .room-stage-panel .room-furniture { width: min(22%, 76px); }
   .room-cat-actor { width: 82px; }
   .room-cat-visual,
   .room-cat-actor .room-cat-sprite { height: 76px; width: 82px; }
