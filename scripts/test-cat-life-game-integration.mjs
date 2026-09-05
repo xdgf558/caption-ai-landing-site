@@ -20,6 +20,9 @@ for (const path of [
   `${gameRoot}/site-integration.css`,
   `${gameRoot}/src/js/main.js`,
   `${gameRoot}/src/js/state/saveMigrations.js`,
+  `${gameRoot}/src/js/state/careLearningState.js`,
+  `${gameRoot}/src/js/systems/onboardingSystem.js`,
+  `${gameRoot}/src/js/ui/renderCareJourney.js`,
   `${gameRoot}/src/js/core/namespace.js`,
   `${gameRoot}/src/js/core/i18n.js`,
   `${gameRoot}/src/js/ui/renderHeader.js`,
@@ -110,6 +113,10 @@ assert.ok(gameIndex.indexOf('core/namespace.js') < gameIndex.indexOf('content-ma
 assert.ok(gameIndex.indexOf('content-manifest.js') < gameIndex.indexOf('systems/homeSystem.js'));
 assert.ok(gameIndex.indexOf('content-manifest.js') < gameIndex.indexOf('commerce.js'));
 assert.ok(gameIndex.indexOf('saveMigrations.js') < gameIndex.indexOf('gameState.js'));
+assert.ok(gameIndex.indexOf('careLearningState.js') < gameIndex.indexOf('gameState.js'));
+assert.ok(gameIndex.indexOf('careSystem.js') < gameIndex.indexOf('onboardingSystem.js'));
+assert.ok(gameIndex.indexOf('onboardingSystem.js') < gameIndex.indexOf('catSystem.js'));
+assert.ok(gameIndex.indexOf('renderCareJourney.js') < gameIndex.indexOf('renderHome.js'));
 assert.ok(gameIndex.indexOf('cloud-sync-policy.js') < gameIndex.indexOf('cloud-sync.js'));
 assert.ok(gameIndex.indexOf('cloud-sync.js') < gameIndex.indexOf('src/js/main.js'));
 assert.ok(gameIndex.indexOf('cloud-sync.js') < gameIndex.indexOf('commerce.js'));
@@ -167,7 +174,7 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.23\.0"/);
+assert.match(namespace, /version: "1\.24\.0"/);
 assert.match(namespace, /Gentle care is on/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
@@ -178,7 +185,7 @@ assert.match(landing, /兌換是否開放，以會員商店的即時狀態為準
 assert.match(landing, /Check the member store for current availability/);
 assert.match(landing, /<img src=\{catLifeGameProduct\.assets\.stationRoom\} alt=""/);
 assert.match(landing, /<figcaption>\{copy\.commercePreview\}<\/figcaption>/);
-assert.match(product, /latestVersion: '1\.23\.0'/);
+assert.match(product, /latestVersion: '1\.24\.0'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);

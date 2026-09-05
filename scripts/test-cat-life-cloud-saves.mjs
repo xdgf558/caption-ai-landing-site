@@ -293,6 +293,10 @@ assert.equal(result.response.status, 403);
 assert.equal(result.body.code, 'INVALID_ORIGIN');
 
 const firstSave = makeSave(10);
+firstSave.player.careLearning = {
+  version: 1, eligible: true, metCat: true, fed: true, played: false, worked: false,
+  careDates: ['2026-08-29'], supplyClaims: [1, 2], treatmentUsed: true, protectedUntil: null
+};
 result = await json(
   await hooks.handleReaderGameSavePut(
     request('PUT', firstSessionToken, {
@@ -307,6 +311,8 @@ assert.equal(result.response.status, 200);
 assert.equal(result.body.save.revision, 1);
 assert.equal(result.body.save.schemaVersion, 3);
 assert.equal(result.body.save.data.player.gold, 10);
+assert.deepEqual(result.body.save.data.player.careLearning, firstSave.player.careLearning,
+  'the deployed schema-3 Worker must preserve additive learning data, including reward deduplication');
 assert.equal(result.body.save.data.cats[0].careStatus, 'sheltered');
 assert.equal(result.body.save.data.cats[0].careLastSyncAt, firstSave.cats[0].careLastSyncAt);
 assert.equal(result.body.save.data.cats[0].intimacy, 61);

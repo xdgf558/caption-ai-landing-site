@@ -93,7 +93,7 @@
     return {
       changed: true,
       messages:
-        source !== "timer"
+        source !== "timer" && !game.systems.onboardingSystem.active(game.state.game)
           ? [
               t("shop_discount_started", {
                 start: getConfig().discountStartHour + ":00",

@@ -10,6 +10,7 @@
   var activeToastId = null;
   var catReactionTimerId = null;
   var roomResizeObserver = null;
+  var careJourneyDate = null;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -105,6 +106,7 @@
   }
 
   function handleActionResult(result) {
+    var journeyFocused = document.activeElement && document.activeElement.closest("[data-care-journey]");
     if (!result) {
       return;
     }
@@ -120,6 +122,10 @@
     game.systems.taskSystem.refreshAllTasks();
     persistGame(Boolean(result.forceSave));
     render();
+    if (journeyFocused) {
+      var nextHeading = document.querySelector("[data-care-journey] h3");
+      if (nextHeading) nextHeading.focus({ preventScroll: true });
+    }
   }
 
   function showCatReaction(catId, action) {
@@ -319,6 +325,9 @@
 
   function syncRealtime(source) {
     var result = game.systems.timeSystem.syncRealtimeState(source);
+    var today = game.systems.timeSystem.getNow().toISOString().slice(0, 10);
+    var journeyDayChanged = careJourneyDate !== today;
+    careJourneyDate = today;
 
     if (result.messages && result.messages.length) {
       result.messages.forEach(pushNotice);
@@ -329,6 +338,8 @@
       game.systems.workSystem.refreshJobUnlocks();
       game.systems.taskSystem.refreshAllTasks();
       persistGame(true);
+      render();
+    } else if (journeyDayChanged || source === "focus" || source === "visibility") {
       render();
     } else {
       refreshLiveBindings();
@@ -563,6 +574,8 @@
     var readoptButton = event.target.closest("[data-readopt-cat]");
     var rescueButton = event.target.closest("[data-rescue-cat]");
     var reliefMealButton = event.target.closest("[data-care-meal]");
+    var learningMeetButton = event.target.closest("[data-learning-meet]");
+    var learningSuppliesButton = event.target.closest("[data-learning-supplies]");
     var careBackupButton = event.target.closest("[data-export-care-backup]");
     var treatButton = event.target.closest("[data-treat-cat]");
     var sleepButton = event.target.closest("[data-player-sleep]");
@@ -769,6 +782,18 @@
         showCatReaction(game.state.selectedCatId, catActionButton.dataset.catAction);
       }
       handleActionResult(catActionResult);
+      return;
+    }
+
+    if (learningMeetButton) {
+      var meetResult = game.systems.onboardingSystem.meetCat(learningMeetButton.dataset.learningMeet);
+      if (meetResult.ok) game.state.selectedCatId = learningMeetButton.dataset.learningMeet;
+      handleActionResult(meetResult);
+      return;
+    }
+
+    if (learningSuppliesButton) {
+      handleActionResult(game.systems.onboardingSystem.claimSupplies());
       return;
     }
 
@@ -1292,7 +1317,11 @@
     });
 
     syncRealtime("init");
-    pushNotice(t("storage_loaded"));
+    // The learning card already confirms a successful load. Keep its first
+    // action unobscured; action and safety notices still appear normally.
+    if (!game.systems.onboardingSystem.active(game.state.game)) {
+      pushNotice(t("storage_loaded"));
+    }
     render();
     if (window.CatGameCloud && typeof window.CatGameCloud.init === "function") {
       window.CatGameCloud.init(game.state.game);

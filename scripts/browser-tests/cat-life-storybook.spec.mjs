@@ -118,6 +118,9 @@ test('keeps the storybook shell coherent across every desktop game page', async 
   }));
   expect(workIconReport).toEqual({ loaded: true, sources: 5 });
 
+  // This existing coverage exercises the established care tray for a veteran;
+  // the beginner meet/supply sequence is covered by cat-life-onboarding.spec.
+  await page.evaluate(() => { window.CatGame.state.game.player.careLearning.eligible = false; });
   await page.locator('.desktop-navigation [data-page-target="cats"]').click();
   await expect(page.locator('.cat-roster-card')).toHaveCount(3);
   await expect(page.locator('.cat-journal-profile')).toBeVisible();
@@ -207,6 +210,7 @@ test('keeps hospital treatment copy and patient profile selection aligned', asyn
     cat.diseaseProgressAt = now;
     cat.diseaseCheckAt = now;
     window.CatGame.state.game.player.gold = 0;
+    window.CatGame.state.game.player.careLearning.eligible = false;
     window.CatGame.state.selectedCatId = cat.id;
     window.CatGameApp.render();
   });

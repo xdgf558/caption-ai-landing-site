@@ -2,12 +2,15 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.23.0",
+      version: "1.24.0",
       saveSchemaVersion: 3,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
+          "第一次一起生活：认识伙伴、喂食、陪玩，再完成第一份工作；引导按实际操作保存进度。",
+          "3 个有效照护日提供分阶段补给与新染病保护，首次门诊免费。无须连续上线，离开不消耗学习机会。",
+          "首页会优先推荐接回、救助或治疗，再安排日常照护；学习结束后免费托管和基础救助仍然保留。",
           "安心照护开启：饥饿或疾病不再造成新的永久死亡，危险状态会进入免费托管。",
           "饱腹每 30 分钟下降 1 点，无病时不再自然扣健康；离线负向结算最多 8 小时，短时离开的计时进度会保留。",
           "免费接回和基础救助保留身份与羁绊，康复后有 24 小时疾病保护；零现金且无法打工时可领取应急餐。",
@@ -15,6 +18,9 @@
           "车站小屋长椅会为普通家具留出空间；旧布局、拖动和屏幕尺寸变化时自动避让，原有摆放记录保持兼容。",
         ],
         en: [
+          "Your first days together: meet, feed, play and finish a first job. Progress follows real actions and is saved.",
+          "Three meaningful care days include staged supplies, protection from new illness and a free first clinic treatment. No streak is required; time away uses no learning days.",
+          "Home prioritizes welcome-back, rescue or treatment before daily care. Free temporary care and basic rescue remain after learning.",
           "Gentle care is on: hunger and illness no longer cause new permanent losses. Cats in danger enter free temporary care.",
           "Fullness drops by 1 every 30 minutes; healthy cats no longer lose health over time. Away-time decay is capped at 8 hours, and short visits preserve partial progress.",
           "Free recovery preserves identity and bonds with 24 hours of illness protection. A free emergency meal helps when you have no cash and are too hungry to work.",
@@ -22,6 +28,9 @@
           "Room furniture now avoids the Station bench when loading layouts, dragging, or resizing the screen, while preserving existing saved placements.",
         ],
         ja: [
+          "猫と出会い、ごはん、遊び、初仕事へ。実際の操作に沿ってガイドが進み、記録が保存されます。",
+          "お世話した3日分の補給、新たな病気からの保護、初回無料診療を用意。連続ログインは不要で、留守中に練習日数は減りません。",
+          "ホームではお迎え・救護・治療を優先して案内します。練習終了後も無料のお預かりと基本ケアは利用できます。",
           "安心ケアを開始。空腹や病気で猫を永久に失うことはなくなり、危険な状態では無料でお預かりします。",
           "満腹度は30分ごとに1減少し、健康な猫の体力は自然には減りません。留守中の減少は最大8時間で、短い外出でも途中の進捗を保ちます。",
           "無料のお迎えと救護で名前と絆を保ち、回復後24時間は病気から守られます。現金がなく空腹で働けないときは無料の応急食をどうぞ。",

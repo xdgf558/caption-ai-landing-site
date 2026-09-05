@@ -145,6 +145,7 @@
         lastSeenVersion: null,
       },
       player: {
+        careLearning: game.state.createCareLearning(),
         name: "玩家",
         level: 1,
         exp: 0,
@@ -317,6 +318,10 @@
       settings: Object.assign({}, fresh.settings, saveData.settings || {}),
       flags: Object.assign({}, fresh.flags, saveData.flags || {}),
     };
+
+    normalized.player.careLearning = game.state.normalizeCareLearning(
+      saveData.player && saveData.player.careLearning, normalized.player, normalized.flags
+    );
 
     if (!Array.isArray(normalized.inventory.furnitureOwned)) {
       normalized.inventory.furnitureOwned = fresh.inventory.furnitureOwned.slice();

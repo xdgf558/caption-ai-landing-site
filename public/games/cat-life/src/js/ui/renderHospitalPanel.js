@@ -210,9 +210,10 @@
   function renderSickPatient(state, cat, disease) {
     var severity = getSeverity(cat);
     var countdown = game.systems.catSystem.getDiseaseProgressCountdown(cat);
-    var treatmentCost = Number(disease.treatmentCost) || 0;
+    var free = game.systems.onboardingSystem.canTreatFree(cat, state);
+    var treatmentCost = free ? 0 : Number(disease.treatmentCost) || 0;
     var canTreat = Number(state.player.gold) >= treatmentCost;
-    var treatmentNote = canTreat ? t("hospital_treatment_note") : t("hospital_treatment_unavailable");
+    var treatmentNote = free ? t("learning_treatment_help") : canTreat ? t("hospital_treatment_note") : t("hospital_treatment_unavailable");
 
     return (
       '<article class="hospital-patient-card is-sick" aria-labelledby="hospital-patient-title">' +
@@ -280,7 +281,8 @@
         game.ui.renderCareSupport(selectedPatient, state) + '</article>';
     }
     if (disease) {
-      return game.ui.renderCareSupport(selectedPatient, state) + renderSickPatient(state, selectedPatient, disease);
+      return (game.systems.onboardingSystem.canTreatFree(selectedPatient, state) ? "" : game.ui.renderCareSupport(selectedPatient, state)) +
+        renderSickPatient(state, selectedPatient, disease);
     }
     return game.ui.renderCareSupport(selectedPatient, state) + renderStablePatient(selectedPatient);
   }
