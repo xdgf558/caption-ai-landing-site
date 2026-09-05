@@ -2,12 +2,13 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.22.1",
+      version: "1.22.2",
       saveSchemaVersion: 2,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
+          "车站小屋长椅会为普通家具留出空间；旧布局、拖动和屏幕尺寸变化时自动避让，原有摆放记录保持兼容。",
           "会员商店新增车站小屋实景预览，明确皮肤适用对象、主题包含项与不包含项。",
           "兑换确认补充商品范围、积分规则与客服入口；修正房间主题装饰的边缘裁切。",
           "新增独立玩家背包，商店购买和社区收集的物品会按玩家补给、猫咪用品、社区材料与家具分类显示。",
@@ -15,6 +16,7 @@
           "家具与社区材料提供前往小家或猫町的快捷入口，库存、自动存档和云同步继续使用原有数据。",
         ],
         en: [
+          "Room furniture now avoids the Station bench when loading layouts, dragging, or resizing the screen, while preserving existing saved placements.",
           "The member store now shows an in-game Station Room preview and clarifies skin eligibility, included themes, and exclusions.",
           "Redemption confirmation includes product scope, points rules, and support links; room theme fixtures no longer clip at the edges.",
           "Added a dedicated player backpack that groups shop purchases and community finds into player supplies, cat supplies, materials, and furniture.",
@@ -22,6 +24,7 @@
           "Furniture and community materials link to My Home or Cat Town, while inventory, auto-save, and cloud sync continue using the existing data.",
         ],
         ja: [
+          "駅のベンチと家具が重ならないよう、配置の読み込み・ドラッグ・画面サイズ変更時に位置を調整します。既存の配置データは保持されます。",
           "会員ストアに駅の部屋のゲーム画面を追加し、スキンの対象とテーマの内容・対象外項目を明記しました。",
           "交換確認に商品内容、ポイント規則、サポートへのリンクを追加し、部屋の装飾が端で切れる表示を修正しました。",
           "プレイヤー用バッグを追加し、ショップ購入品とコミュニティ入手品を補給品、猫用品、素材、家具に分けて表示します。",

@@ -167,7 +167,7 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.22\.1"/);
+assert.match(namespace, /version: "1\.22\.2"/);
 assert.match(namespace, /Added a dedicated player backpack/);
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
@@ -178,7 +178,7 @@ assert.match(landing, /兌換是否開放，以會員商店的即時狀態為準
 assert.match(landing, /Check the member store for current availability/);
 assert.match(landing, /<img src=\{catLifeGameProduct\.assets\.stationRoom\} alt=""/);
 assert.match(landing, /<figcaption>\{copy\.commercePreview\}<\/figcaption>/);
-assert.match(product, /latestVersion: '1\.22\.1'/);
+assert.match(product, /latestVersion: '1\.22\.2'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);
@@ -354,6 +354,20 @@ roomGame.utils.catArt = {
   }
 };
 vm.runInNewContext(homeSystem, languageContext);
+const resolveSpot = roomGame.systems.homeSystem.resolveFurnitureSpot;
+const bounds = { width: 760, height: 426 };
+const size = { width: 112, height: 92 };
+const bench = { left: 84, right: 365, top: 143, bottom: 426 };
+const desired = { x: 200, y: 300 };
+const firstSpot = resolveSpot(desired, size, bounds, [bench]);
+assert.ok(firstSpot);
+assert.ok(firstSpot.x - size.width / 2 >= bench.right + 6);
+const occupied = { left: firstSpot.x - 56, right: firstSpot.x + 56, top: firstSpot.y - 46, bottom: firstSpot.y + 46 };
+const secondSpot = resolveSpot(desired, size, bounds, [bench, occupied]);
+assert.ok(secondSpot);
+assert.ok(Math.abs(firstSpot.x - secondSpot.x) >= 118 || Math.abs(firstSpot.y - secondSpot.y) >= 98);
+assert.deepEqual(desired, { x: 200, y: 300 }, 'collision resolution must not mutate saved positions');
+assert.equal(resolveSpot({ x: 600, y: 250 }, size, bounds, [bench]).x, 600);
 const localizedRoomMarkup = roomGame.systems.homeSystem.renderRoomScene(
   roomGame.state.game.home.roomScene,
   [{ name: '小橘', nameEn: 'Marmalade', nameJa: 'マーマレード' }],

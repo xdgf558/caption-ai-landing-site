@@ -249,6 +249,41 @@
     };
   }
 
+  // Find the nearest free center using obstacle edges, without changing the save.
+  function resolveFurnitureSpot(desired, size, bounds, obstacles) {
+    var gap = 6;
+    var halfWidth = size.width / 2;
+    var halfHeight = size.height / 2;
+    var minX = halfWidth + gap;
+    var maxX = bounds.width - halfWidth - gap;
+    var minY = Math.max(halfHeight + gap, bounds.height * 0.34);
+    var maxY = Math.min(bounds.height - halfHeight - gap, bounds.height * 0.86);
+    var xs = [desired.x, minX, maxX];
+    var ys = [desired.y, minY, maxY];
+    var best = null;
+    var distance = Infinity;
+    obstacles.forEach(function (rect) {
+      xs.push(rect.left - halfWidth - gap, rect.right + halfWidth + gap);
+      ys.push(rect.top - halfHeight - gap, rect.bottom + halfHeight + gap);
+    });
+    xs.forEach(function (x) {
+      x = Math.max(minX, Math.min(maxX, x));
+      ys.forEach(function (y) {
+        y = Math.max(minY, Math.min(maxY, y));
+        var blocked = obstacles.some(function (rect) {
+          return x + halfWidth > rect.left - gap && x - halfWidth < rect.right + gap &&
+            y + halfHeight > rect.top - gap && y - halfHeight < rect.bottom + gap;
+        });
+        var nextDistance = Math.pow(x - desired.x, 2) + Math.pow(y - desired.y, 2);
+        if (!blocked && nextDistance < distance) {
+          best = { x: x, y: y };
+          distance = nextDistance;
+        }
+      });
+    });
+    return best;
+  }
+
   function resetFurnitureLayout() {
     var scene = getRenderableRoomScene(game.state.game.home.roomScene);
     var layout = {};
@@ -407,6 +442,7 @@
     ensureFurnitureLayout: ensureFurnitureLayout,
     getFurniturePosition: getFurniturePosition,
     setFurniturePosition: setFurniturePosition,
+    resolveFurnitureSpot: resolveFurnitureSpot,
     resetFurnitureLayout: resetFurnitureLayout,
     renderRoomScene: renderRoomScene,
     getRenderableRoomScene: getRenderableRoomScene,
