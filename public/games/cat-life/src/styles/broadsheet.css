@@ -3525,3 +3525,34 @@ body:has(.arcade-page) .newspaper-header { margin-bottom: 18px; }
   .care-journey-heading .primary-button { max-width: none; width: 100%; }
   .care-journey-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+/* Shared memories reuse the cat journal's paper, ink and existing type scale. */
+.cat-memories {
+  padding-top: 20px;
+  border-top: 1px solid var(--story-orange);
+  scroll-margin-top: 24px;
+}
+.cat-memories header { display: grid; gap: 6px; }
+.cat-memories .helper-text { margin: 0; }
+.cat-memory-list { list-style: none; padding: 0; margin: 18px 0 0; }
+.cat-memory-entry { padding: 0 0 16px 16px; border-left: 2px solid var(--story-muted); }
+.cat-memory-entry + .cat-memory-entry { padding-top: 8px; }
+.cat-memory-entry:last-child { padding-bottom: 0; }
+.cat-memory-entry h4 { margin: 5px 0; color: var(--story-ink); font-size: 16px; line-height: 1.4; }
+.cat-memory-entry p, .memory-empty { color: var(--story-ink); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.cat-memory-entry p { margin: 0; font-weight: 500; }
+.memory-date { color: var(--story-ink); font-size: 12px; opacity: .8; line-height: 1.5; }
+.memory-bond-stage { margin: 10px 0 4px; font-weight: 800; color: var(--story-ink); }
+.memory-toggle { margin-top: 16px; min-height: 44px; width: 100%; }
+.home-latest-memory {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  margin: 0 0 20px; padding: 18px 22px;
+  border: 1px solid var(--story-orange); border-radius: 16px; background: var(--story-paper);
+}
+.home-latest-memory > div { min-width: 0; }
+.home-latest-memory h3 { margin: 5px 0; font-size: 18px; line-height: 1.4; overflow-wrap: anywhere; }
+.home-latest-memory button { flex-shrink: 0; min-height: 44px; }
+#cat-memories-title { scroll-margin-top: 96px; }
+@media (max-width: 520px) {
+  .home-latest-memory { align-items: stretch; flex-direction: column; gap: 12px; padding: 16px; }
+  .cat-memory-entry { padding-left: 12px; }
+}

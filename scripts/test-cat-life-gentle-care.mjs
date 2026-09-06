@@ -377,18 +377,18 @@ test('P3: current v3 build preserves a future v4 save through repeated loads, sa
   saveSystem.setStorageKey(originalKey);
 });
 
-test('P3: 1.24.0 release version and three-language notes appear for a 1.23.0 save', () => {
+test('P3: 1.25.0 release version and three-language notes appear for a 1.24.0 save', () => {
   fresh();
   const manifestContext = { window: {} };
   vm.runInNewContext(readFileSync(new URL('content-manifest.js', root), 'utf8'), manifestContext);
-  assert.equal(game.config.version, '1.24.0');
+  assert.equal(game.config.version, '1.25.0');
   assert.equal(manifestContext.window.CatGameContentManifest.manifest.releaseVersion, game.config.version);
-  assert.match(readFileSync(new URL('../src/data/products/cat-life-game.ts', import.meta.url), 'utf8'), /latestVersion: '1\.24\.0'/);
-  game.state.game.meta.lastSeenVersion = '1.23.0';
+  assert.match(readFileSync(new URL('../src/data/products/cat-life-game.ts', import.meta.url), 'utf8'), /latestVersion: '1\.25\.0'/);
+  game.state.game.meta.lastSeenVersion = '1.24.0';
   for (const lang of ['zh-CN', 'en', 'ja']) {
     game.state.game.settings.language = lang;
     const html = game.ui.renderVersionPanel(game.state.game);
-    assert.match(html, /1\.24\.0/);
+    assert.match(html, /1\.25\.0/);
     assert.match(html, /data-dismiss-release-note/);
     assert.ok(game.config.releaseNotes[lang].length > 0);
   }

@@ -293,6 +293,10 @@ assert.equal(result.response.status, 403);
 assert.equal(result.body.code, 'INVALID_ORIGIN');
 
 const firstSave = makeSave(10);
+firstSave.cats[0].memoryJournal = { version: 1, entries: [
+  { key: 'feed', at: '2026-09-06T12:00:00.000Z', order: 1 },
+  { key: 'bond_50', at: null, order: 0 }
+] };
 firstSave.player.careLearning = {
   version: 1, eligible: true, metCat: true, fed: true, played: false, worked: false,
   careDates: ['2026-08-29'], supplyClaims: [1, 2], treatmentUsed: true, protectedUntil: null
@@ -316,6 +320,8 @@ assert.deepEqual(result.body.save.data.player.careLearning, firstSave.player.car
 assert.equal(result.body.save.data.cats[0].careStatus, 'sheltered');
 assert.equal(result.body.save.data.cats[0].careLastSyncAt, firstSave.cats[0].careLastSyncAt);
 assert.equal(result.body.save.data.cats[0].intimacy, 61);
+assert.deepEqual(result.body.save.data.cats[0].memoryJournal, firstSave.cats[0].memoryJournal,
+  'schema-3 Worker preserves per-cat memories and undated legacy milestones');
 assert.equal(result.body.save.data.meta.lastSavedAt, undefined);
 assert.equal(result.body.save.data.meta.lastSyncAt, undefined);
 assert.equal(result.body.save.data.settings.customMusicData, '');

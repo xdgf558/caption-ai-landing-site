@@ -242,7 +242,7 @@
     return '<section class="home-journal-page home-cat-stage" aria-labelledby="home-journal-title"><div class="home-journal-cover"><div class="home-journal-intro">' +
       '<p class="home-journal-date">' + safe(getJournalDate()) + '</p><h2 id="home-journal-title">' + safe(t("home_journal_title")) +
       '</h2><p class="home-journal-copy">' + safe(t("home_journal_copy")) + '</p></div>' + scene +
-      '</div>' + game.ui.renderCareJourney(state) + renderRoute(state, headline, needy) + renderCareSummary(needy) + '<div class="home-journal-divider"></div><div class="home-journal-lower"><section class="home-journal-tasks" aria-labelledby="home-tasks-title"><div class="section-heading"><div><h3 id="home-tasks-title" class="panel-title">' +
+      '</div>' + game.ui.renderCareJourney(state) + game.ui.renderLatestMemory(state) + renderRoute(state, headline, needy) + renderCareSummary(needy) + '<div class="home-journal-divider"></div><div class="home-journal-lower"><section class="home-journal-tasks" aria-labelledby="home-tasks-title"><div class="section-heading"><div><h3 id="home-tasks-title" class="panel-title">' +
       safe(t("home_tasks_panel_title")) + '</h3></div><button class="text-link" type="button" data-page-target="tasks">' +
       safe(t("go_tasks_claim")) + ' →</button></div><div class="home-task-list">' + renderTaskList(state) + '</div></section>' + renderWorkSummary(state) + '</div></section>';
   }

@@ -823,6 +823,7 @@
           cat.decayTracker[key] = fallbackTime;
         }
       });
+      cat.memoryJournal = game.state.catMemory.normalize(cat.memoryJournal, cat);
       return cat;
     });
 

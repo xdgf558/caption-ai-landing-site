@@ -2,12 +2,15 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.24.0",
+      version: "1.25.0",
       saveSchemaVersion: 3,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
+          "共同回忆：真实的喂食、陪玩、门诊与接回会记入每只猫的日记，首页可直接翻开最近的一页。",
+          "亲密达到 25 / 50 / 75 / 100 时留下羁绊里程碑。旧存档只补记能确认的已有羁绊，并注明日期未记录。",
+          "回忆随猫咪身份保存，改名、刷新和云端同步不会重复领取或新增奖励；无需连续打卡。",
           "第一次一起生活：认识伙伴、喂食、陪玩，再完成第一份工作；引导按实际操作保存进度。",
           "3 个有效照护日提供分阶段补给与新染病保护，首次门诊免费。无须连续上线，离开不消耗学习机会。",
           "首页会优先推荐接回、救助或治疗，再安排日常照护；学习结束后免费托管和基础救助仍然保留。",
@@ -18,6 +21,9 @@
           "车站小屋长椅会为普通家具留出空间；旧布局、拖动和屏幕尺寸变化时自动避让，原有摆放记录保持兼容。",
         ],
         en: [
+          "Shared memories: real meals, playtime, treatment and welcome-home moments enter each cat's journal. Open the latest page from Home.",
+          "Bond milestones at 25 / 50 / 75 / 100 mark your relationship. Existing bonds are preserved with dates explicitly marked as unrecorded.",
+          "Memories follow each cat's identity through renaming, reloads and cloud sync. No extra rewards or daily streaks.",
           "Your first days together: meet, feed, play and finish a first job. Progress follows real actions and is saved.",
           "Three meaningful care days include staged supplies, protection from new illness and a free first clinic treatment. No streak is required; time away uses no learning days.",
           "Home prioritizes welcome-back, rescue or treatment before daily care. Free temporary care and basic rescue remain after learning.",
@@ -28,6 +34,9 @@
           "Room furniture now avoids the Station bench when loading layouts, dragging, or resizing the screen, while preserving existing saved placements.",
         ],
         ja: [
+          "ふたりの思い出：ごはん、遊び、診療、お迎えを猫ごとの日記に記録。ホームから最新のページを開けます。",
+          "絆が25・50・75・100に達すると記念の記録に。以前からの絆は「日付未記録」と明記します。",
+          "思い出は猫のIDと一緒に保存。改名・再読み込み・クラウド同期でも保たれ、追加報酬や連続ログインはありません。",
           "猫と出会い、ごはん、遊び、初仕事へ。実際の操作に沿ってガイドが進み、記録が保存されます。",
           "お世話した3日分の補給、新たな病気からの保護、初回無料診療を用意。連続ログインは不要で、留守中に練習日数は減りません。",
           "ホームではお迎え・救護・治療を優先して案内します。練習終了後も無料のお預かりと基本ケアは利用できます。",
@@ -175,6 +184,7 @@
       communityView: "main",
       catReaction: null,
       shopCategory: "cat",
+      memoryExpandedCatId: null,
     },
     systems: {},
     ui: {},

@@ -51,6 +51,7 @@
       return { ok: false, message: t("learning_unavailable") };
     }
     data(state).metCat = true;
+    game.systems.memorySystem.recordMeet(cat);
     return { ok: true, forceSave: true, message: t("learning_met", { name: game.utils.i18n.getDataText(cat, "name") }) };
   }
   function recordCare(cat, action, before) {
