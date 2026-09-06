@@ -395,7 +395,9 @@
         changed = syncDiseaseChecks(cat, nowDate, messages) || changed;
       }
       if (careWindow.longAbsence || cat.hunger <= 0 || cat.health <= 0) {
-        changed = care.shelter(cat, nowDate, careWindow.longAbsence ? "away" : "urgent", messages) || changed;
+        var shelterMessages = source === "init" && game.state.currentPage === "home" &&
+          game.systems.onboardingSystem.active(game.state.game) ? [] : messages;
+        changed = care.shelter(cat, nowDate, careWindow.longAbsence ? "away" : "urgent", shelterMessages) || changed;
       }
       cat.careLastSyncAt = fallbackIso;
     });
@@ -535,6 +537,7 @@
     var comfortBonus = Math.floor(state.home.comfortScore / 20);
     var nowIso = getNowIso();
     var foodUnitsNeeded;
+    var careBefore = cat ? Object.assign({}, cat) : {};
 
     if (!cat || !cat.unlocked) {
       return {
@@ -668,6 +671,7 @@
 
     return {
       ok: true,
+      forceSave: game.systems.onboardingSystem.recordCare(cat, actionKey, careBefore),
       messages: messages,
     };
   }

@@ -103,7 +103,8 @@
   }
 
   function isProtected(cat, now) {
-    return timestamp(cat.careProtectedUntil, 0) > now.getTime();
+    return timestamp(cat.careProtectedUntil, 0) > now.getTime() ||
+      game.systems.onboardingSystem.active(game.state.game, now);
   }
 
   function canGetMeal(state) {

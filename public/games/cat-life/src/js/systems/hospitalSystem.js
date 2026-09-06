@@ -18,6 +18,9 @@
     var cat = game.systems.catSystem.getCat(catId);
     var disease = cat ? getDisease(cat.diseaseId) : null;
     var nowIso = game.systems.timeSystem.getNow().toISOString();
+    var free = game.systems.onboardingSystem.canTreatFree(cat, state);
+    var cost = disease && !free ? disease.treatmentCost : 0;
+    var careBefore = cat ? Object.assign({}, cat) : {};
 
     if (!cat || !cat.unlocked || cat.isAlive === false || cat.careStatus === "sheltered") {
       return {
@@ -33,15 +36,16 @@
       };
     }
 
-    if (state.player.gold < disease.treatmentCost) {
+    if (state.player.gold < cost) {
       return {
         ok: false,
-        message: t("treatment_failed_gold", { cost: disease.treatmentCost }),
+        message: t("treatment_failed_gold", { cost: cost }),
       };
     }
 
-    state.player.gold -= disease.treatmentCost;
-    state.player.totalSpend += disease.treatmentCost;
+    state.player.gold -= cost;
+    state.player.totalSpend += cost;
+    if (free) game.systems.onboardingSystem.data(state).treatmentUsed = true;
     state.player.hospitalVisits += 1;
     cat.diseaseId = null;
     cat.diseaseStartedAt = null;
@@ -50,6 +54,7 @@
     game.systems.careSystem.protectAfterTreatment(cat, new Date(nowIso));
     cat.health = clamp(cat.health + 12, 0, 100);
     cat.mood = clamp(cat.mood + 6, 0, 100);
+    game.systems.onboardingSystem.recordCare(cat, "treat", careBefore);
 
     if (game.systems.taskSystem) {
       game.systems.taskSystem.refreshAllTasks();
@@ -62,7 +67,7 @@
         t("treatment_success", {
           name: getText(cat, "name"),
           disease: getText(disease, "name"),
-          cost: disease.treatmentCost,
+          cost: cost,
         }),
       ],
     };

@@ -422,7 +422,10 @@
       (isLocked ? renderUnlockInfo(selectedCat) : renderNameEditor(selectedCat) + renderBondMeter(selectedCat)) + renderCatSignals(selectedCat, isLocked) + '</section><section class="page-card cat-journal-care" aria-labelledby="cat-care-title">' +
       '<div class="cat-care-heading"><div><p class="section-eyebrow">' + t("cat_today_label") + '</p><h2 id="cat-care-title" class="page-title">' + t("cat_today_title") + '</h2></div><span class="cat-care-date">' +
       t("cat_today_badge") + '</span></div><p class="page-copy cat-care-copy">' + t("cat_today_copy", { name: safe(getText(selectedCat, "name")) }) + '</p>' +
-      game.ui.renderCareSupport(selectedCat, state) + (recommendedAction ? renderRecommendation(recommendedAction, state, selectedCat) : "") + renderCareActions(state, selectedCat, catDisease, isDead, isLocked) +
+      (isLocked ? "" : game.systems.onboardingSystem.data(state).eligible
+        ? game.ui.renderCareJourney(state, selectedCat)
+        : game.ui.renderCareSupport(selectedCat, state) + (recommendedAction ? renderRecommendation(recommendedAction, state, selectedCat) : "")) +
+      renderCareActions(state, selectedCat, catDisease, isDead, isLocked) +
       (!isDead && !isLocked ? renderSupplies(state, selectedCat) : "") + renderPregnancy(selectedCat) + renderStateChanges(selectedCat, catDisease, isDead, isLocked) +
       (!isLocked ? '<section class="cat-care-tips"><p class="section-eyebrow">' + t("care_tips") + '</p><p class="page-copy">' + t("care_tips_copy") + '</p></section>' : "") +
       '</section></div></section>';

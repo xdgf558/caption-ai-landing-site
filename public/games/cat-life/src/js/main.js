@@ -10,6 +10,7 @@
   var activeToastId = null;
   var catReactionTimerId = null;
   var roomResizeObserver = null;
+  var careJourneyDate = null;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -105,6 +106,7 @@
   }
 
   function handleActionResult(result) {
+    var journeyFocused = document.activeElement && document.activeElement.closest("[data-care-journey]");
     if (!result) {
       return;
     }
@@ -120,6 +122,10 @@
     game.systems.taskSystem.refreshAllTasks();
     persistGame(Boolean(result.forceSave));
     render();
+    if (journeyFocused) {
+      var nextHeading = document.querySelector("[data-care-journey] h3");
+      if (nextHeading) nextHeading.focus({ preventScroll: true });
+    }
   }
 
   function showCatReaction(catId, action) {
@@ -145,7 +151,7 @@
       game.state.catReaction = null;
       catReactionTimerId = null;
       if (game.state.currentPage === "home" || game.state.currentPage === "cats") {
-        render();
+        render(true);
       }
     }, 2250);
   }
@@ -183,16 +189,16 @@
             if (game.state.lotteryCelebration && game.state.lotteryCelebration.key === celebrationKey) {
               game.state.lotteryCelebration = null;
               if (game.state.currentPage === "arcade") {
-                render();
+                render(true);
               }
             }
           }, 5300);
         }
 
         persistGame(true);
-        render();
+        render(true);
       } else if (game.state.currentPage === "arcade") {
-        render();
+        render(true);
       }
     });
   }
@@ -319,6 +325,9 @@
 
   function syncRealtime(source) {
     var result = game.systems.timeSystem.syncRealtimeState(source);
+    var today = game.systems.timeSystem.getNow().toISOString().slice(0, 10);
+    var journeyDayChanged = careJourneyDate !== today;
+    careJourneyDate = today;
 
     if (result.messages && result.messages.length) {
       result.messages.forEach(pushNotice);
@@ -329,7 +338,9 @@
       game.systems.workSystem.refreshJobUnlocks();
       game.systems.taskSystem.refreshAllTasks();
       persistGame(true);
-      render();
+      render(true);
+    } else if (journeyDayChanged && (game.state.currentPage === "home" || game.state.currentPage === "cats")) {
+      render(true);
     } else {
       refreshLiveBindings();
     }
@@ -384,7 +395,17 @@
     }, 1300);
   }
 
-  function render() {
+  function render(preserveDrafts) {
+    // Background updates must not discard text, amounts or selections being
+    // edited. These drafts stay in memory only; explicit actions render afresh.
+    var drafts = preserveDrafts === true ? Array.prototype.filter.call(
+      dom.main.querySelectorAll('input[id]:not([type="file"]):not([type="hidden"]), textarea[id], select[id]'),
+      function (node) { return !node.readOnly && !node.disabled; }
+    ).map(function (node) {
+      return { id: node.id, tag: node.tagName, type: node.type, value: node.value, checked: node.checked,
+        focused: document.activeElement === node, start: node.selectionStart, end: node.selectionEnd,
+        direction: node.selectionDirection };
+    }) : [];
     var pageRenderers = {
       home: game.ui.renderHome,
       room: game.ui.renderCommunityPanel,
@@ -408,6 +429,15 @@
 
     dom.header.innerHTML = game.ui.renderHeader(game.state.game);
     dom.main.innerHTML = renderer(game.state.game);
+    drafts.forEach(function (draft) {
+      var node = document.getElementById(draft.id);
+      if (!node || node.tagName !== draft.tag || node.type !== draft.type || node.disabled || node.readOnly) return;
+      if (node.tagName === "SELECT" && !Array.prototype.some.call(node.options, function (option) { return option.value === draft.value; })) return;
+      node.value = draft.value;
+      if (node.type === "checkbox" || node.type === "radio") node.checked = draft.checked;
+      if (draft.focused) node.focus({ preventScroll: true });
+      if (typeof draft.start === "number") node.setSelectionRange(draft.start, draft.end, draft.direction);
+    });
     dom.navigation.innerHTML = game.ui.renderDesktopNavigation(game.state.game);
     dom.mobileNavigation.innerHTML = game.ui.renderMobileNavigation(game.state.game);
     if (roomResizeObserver) roomResizeObserver.disconnect();
@@ -563,6 +593,8 @@
     var readoptButton = event.target.closest("[data-readopt-cat]");
     var rescueButton = event.target.closest("[data-rescue-cat]");
     var reliefMealButton = event.target.closest("[data-care-meal]");
+    var learningMeetButton = event.target.closest("[data-learning-meet]");
+    var learningSuppliesButton = event.target.closest("[data-learning-supplies]");
     var careBackupButton = event.target.closest("[data-export-care-backup]");
     var treatButton = event.target.closest("[data-treat-cat]");
     var sleepButton = event.target.closest("[data-player-sleep]");
@@ -769,6 +801,18 @@
         showCatReaction(game.state.selectedCatId, catActionButton.dataset.catAction);
       }
       handleActionResult(catActionResult);
+      return;
+    }
+
+    if (learningMeetButton) {
+      var meetResult = game.systems.onboardingSystem.meetCat(learningMeetButton.dataset.learningMeet);
+      if (meetResult.ok) game.state.selectedCatId = learningMeetButton.dataset.learningMeet;
+      handleActionResult(meetResult);
+      return;
+    }
+
+    if (learningSuppliesButton) {
+      handleActionResult(game.systems.onboardingSystem.claimSupplies());
       return;
     }
 
@@ -1292,7 +1336,11 @@
     });
 
     syncRealtime("init");
-    pushNotice(t("storage_loaded"));
+    // The learning card already confirms a successful load. Keep its first
+    // action unobscured; action and safety notices still appear normally.
+    if (!game.systems.onboardingSystem.active(game.state.game)) {
+      pushNotice(t("storage_loaded"));
+    }
     render();
     if (window.CatGameCloud && typeof window.CatGameCloud.init === "function") {
       window.CatGameCloud.init(game.state.game);

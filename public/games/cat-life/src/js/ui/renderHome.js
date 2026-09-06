@@ -23,93 +23,6 @@
     });
   }
 
-  function getHeadline(state) {
-    var cats = getUnlockedCats(state);
-    var sick = cats.find(function (cat) { return game.systems.catSystem.getCatDisease(cat); });
-    var hungry = cats.filter(function (cat) { return cat.hunger <= 30; }).sort(function (a, b) { return a.hunger - b.hunger; })[0];
-    var dirty = cats.filter(function (cat) { return cat.clean <= 30; }).sort(function (a, b) { return a.clean - b.clean; })[0];
-    var playerHunger = game.systems.playerSystem.getCurrentHunger();
-    var hungerBlockThreshold = game.config.playerCondition.hungerBlockThreshold;
-    var work = state.player.activeWork;
-    var job = work ? game.data.jobMap[work.jobId] || work : null;
-    var activeSleep = game.systems.playerSystem.getActiveSleep();
-
-    var rescueCat = (state.cats || []).find(function (cat) { return game.systems.careSystem.rescueReason(cat, state); });
-    if (rescueCat) {
-      return {
-        title: t("care_support_title"), copy: t("care_rescue_copy"), button: t("care_open_companion"),
-        page: "cats", catId: rescueCat.id, routeKey: "care",
-      };
-    }
-
-    if (sick) {
-      return {
-        title: t("headline_sick_title", { name: getText(sick, "name") }),
-        copy: t("headline_sick_copy", { health: sick.health }),
-        button: t("go_hospital"), page: "hospital", routeKey: "care",
-      };
-    }
-    if (hungry) {
-      if (state.inventory.food <= 0) {
-        return {
-          title: t("headline_hungry_title", { name: getText(hungry, "name") }),
-          copy: t("headline_hungry_empty_copy", { value: hungry.hunger }),
-          button: t("headline_buy_cat_food"), page: "shop", routeKey: "shop",
-        };
-      }
-      return {
-        title: t("headline_hungry_title", { name: getText(hungry, "name") }),
-        copy: t("headline_hungry_copy", { value: hungry.hunger }),
-        button: t("headline_feed_now"), action: "feedBasic", catId: hungry.id, routeKey: "care",
-      };
-    }
-    if (dirty) {
-      if (state.inventory.litter <= 0) {
-        return {
-          title: t("headline_dirty_title", { name: getText(dirty, "name") }),
-          copy: t("headline_dirty_empty_copy", { value: dirty.clean }),
-          button: t("headline_buy_litter"), page: "shop", routeKey: "shop",
-        };
-      }
-      return {
-        title: t("headline_dirty_title", { name: getText(dirty, "name") }),
-        copy: t("headline_dirty_copy", { value: dirty.clean }),
-        button: t("headline_clean_now"), action: "clean", catId: dirty.id, routeKey: "care",
-      };
-    }
-    if (activeSleep) {
-      return {
-        title: t("headline_sleep_title"),
-        copy: t("headline_sleep_copy"),
-        button: t("wake_action"), playerSleep: true, routeKey: "sleep",
-      };
-    }
-    if (playerHunger >= hungerBlockThreshold) {
-      return { title: t("headline_player_hungry_title"), copy: t("headline_player_hungry_copy"), button: t("headline_buy_food"), page: "shop", routeKey: "shop" };
-    }
-    if (work) {
-      return {
-        title: t("headline_work_title", { job: getText(job, "name") }),
-        copy: t("headline_work_copy"), button: t("headline_view_work"), page: "work", routeKey: "work",
-      };
-    }
-    return { title: t("headline_calm_title"), copy: t("headline_calm_copy"), button: t("headline_go_work"), page: "work", routeKey: "work" };
-  }
-
-  function renderHeadlineAction(headline, className) {
-    var buttonClass = className || "primary-button";
-
-    if (headline.playerSleep) {
-      return '<button class="' + buttonClass + '" type="button" data-player-sleep>' + safe(headline.button) + "</button>";
-    }
-    if (headline.action) {
-      return '<button class="' + buttonClass + '" type="button" data-cat-action="' + safe(headline.action) + '" data-cat-id="' +
-        safe(headline.catId) + '">' + safe(headline.button) + "</button>";
-    }
-    return '<button class="' + buttonClass + '" type="button" data-page-target="' + safe(headline.page) + '"' +
-      (headline.catId ? ' data-select-cat="' + safe(headline.catId) + '"' : '') + '>' +
-      safe(headline.button) + "</button>";
-  }
 
   function getCatState(cat) {
     if (cat.careStatus === "sheltered") {
@@ -159,20 +72,19 @@
   }
 
   function getRouteContext(state, headline, needy) {
-    var activeSleep = game.systems.playerSystem.getActiveSleep();
-    var routeKey = activeSleep ? "sleep" : headline.routeKey || "work";
+    var routeKey = headline.routeKey || "work";
     var steps = getRouteSteps();
 
     return {
       currentKey: routeKey,
       currentIndex: Math.max(0, steps.findIndex(function (step) { return step.key === routeKey; })),
       needy: needy,
-      activeSleep: activeSleep,
       state: state,
     };
   }
 
   function getRouteTitle(step, headline) {
+    if (step.key === headline.routeKey && headline.titleKey) return t(headline.titleKey, headline.params);
     if (step.key === "care" && headline.catId && headline.page === "cats") return t("care_open_companion");
     if (step.key === "care" && headline.action === "clean") {
       return t("headline_clean_now");
@@ -199,13 +111,10 @@
     var isCurrent = step.key === context.currentKey;
     var isComplete = !isCurrent && isRouteComplete(step, context);
     var status = isCurrent ? t("home_route_now") : isComplete ? t("home_route_done") : t("home_route_not_started");
-    var copy = isCurrent && step.key === "care" && (headline.action === "clean" || headline.page === "hospital" || headline.page === "cats")
-      ? headline.copy
-      : t(step.copyKey);
+    var copy = isCurrent && headline.copy ? headline.copy : t(step.copyKey);
     var stateClass = isCurrent ? " is-now" : isComplete ? " is-done" : "";
-    var currentAction = isCurrent
-      ? '<div class="home-route-action">' + renderHeadlineAction(headline, "primary-button") + "</div>"
-      : "";
+    // The shared journey above owns the primary action; this is an overview.
+    var currentAction = "";
 
     return (
       '<article class="home-route-entry' + stateClass + '" data-home-route="' + safe(step.key) + '" data-home-route-index="' + index + '">' +
@@ -321,7 +230,8 @@
   }
 
   function renderHome(state) {
-    var headline = getHeadline(state);
+    var rec = game.systems.onboardingSystem.recommendation(state);
+    var headline = Object.assign({}, rec, { copy: t(rec.copyKey, rec.params) });
     var needy = getNeedyCats(state);
     var unlockedCats = getUnlockedCats(state);
     var supportCat = (state.cats || []).find(function (cat) { return game.systems.careSystem.rescueReason(cat, state); });
@@ -332,7 +242,7 @@
     return '<section class="home-journal-page home-cat-stage" aria-labelledby="home-journal-title"><div class="home-journal-cover"><div class="home-journal-intro">' +
       '<p class="home-journal-date">' + safe(getJournalDate()) + '</p><h2 id="home-journal-title">' + safe(t("home_journal_title")) +
       '</h2><p class="home-journal-copy">' + safe(t("home_journal_copy")) + '</p></div>' + scene +
-      '</div>' + game.ui.renderCareSupport(supportCat, state) + game.ui.renderReliefMeal(state) + renderRoute(state, headline, needy) + renderCareSummary(needy) + '<div class="home-journal-divider"></div><div class="home-journal-lower"><section class="home-journal-tasks" aria-labelledby="home-tasks-title"><div class="section-heading"><div><h3 id="home-tasks-title" class="panel-title">' +
+      '</div>' + game.ui.renderCareJourney(state) + renderRoute(state, headline, needy) + renderCareSummary(needy) + '<div class="home-journal-divider"></div><div class="home-journal-lower"><section class="home-journal-tasks" aria-labelledby="home-tasks-title"><div class="section-heading"><div><h3 id="home-tasks-title" class="panel-title">' +
       safe(t("home_tasks_panel_title")) + '</h3></div><button class="text-link" type="button" data-page-target="tasks">' +
       safe(t("go_tasks_claim")) + ' →</button></div><div class="home-task-list">' + renderTaskList(state) + '</div></section>' + renderWorkSummary(state) + '</div></section>';
   }

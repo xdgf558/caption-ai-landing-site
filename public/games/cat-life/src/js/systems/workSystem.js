@@ -282,6 +282,7 @@
       game.systems.taskSystem.refreshAllTasks();
     }
 
+    game.systems.onboardingSystem.recordWork();
     messages.unshift(
       t(source === "init" ? "work_finished_offline" : "work_finished_now", {
         name: getText(job || activeWork, "name"),

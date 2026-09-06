@@ -3484,3 +3484,44 @@ body:has(.arcade-page) .newspaper-header { margin-bottom: 18px; }
   .care-support-card { flex-direction: column; align-items: stretch; padding: 16px; gap: 14px; }
   .care-support-card .primary-button { width: 100%; }
 }
+
+/* A single next action, shared by the home diary and beginner care desk. */
+.care-journey {
+  background: var(--story-paper);
+  border: 2px solid var(--story-ink);
+  border-radius: 18px 14px 17px 15px;
+  display: block;
+  margin: 18px 0;
+  padding: 22px;
+  box-shadow: 3px 3px 0 var(--story-muted);
+}
+.care-journey-heading { align-items: center; display: flex; gap: 24px; justify-content: space-between; }
+.care-journey-heading > div { min-width: 0; }
+.care-journey-heading .panel-title { font-size: clamp(18px, 2vw, 24px); line-height: 1.4; }
+.care-journey-heading .page-copy { line-height: 1.65; margin-top: 8px; max-width: 58ch; }
+.care-journey-heading .primary-button { flex-shrink: 0; max-width: 240px; min-height: 44px; white-space: normal; }
+.care-journey-progress { border-top: 1px dashed var(--story-ink); margin-top: 18px; padding-top: 16px; }
+.care-journey-days { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
+.care-journey-stamps { display: flex; gap: 7px; }
+.care-journey-stamps span { align-items: center; border: 1px solid var(--story-green); border-radius: 50%; display: flex; height: 28px; justify-content: center; width: 28px; font-size: 13px; }
+.care-journey-stamps .is-done { background: var(--story-mint); border-width: 2px; font-weight: 800; }
+.care-journey .helper-text { color: var(--story-ink); font-size: 13px; line-height: 1.6; margin: 10px 0; }
+.care-journey-steps { display: grid; gap: 8px; grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; margin: 12px 0; padding: 0; }
+.care-journey-steps li { align-items: flex-start; background: var(--story-muted); border: 1px solid transparent; border-radius: 9px; display: flex; font-size: 13px; gap: 8px; line-height: 1.5; padding: 10px; }
+.care-journey-steps li > span { font-weight: 800; }
+.care-journey-steps small { display: block; font-size: 11px; margin-top: 3px; }
+.care-journey-steps .is-done { background: var(--story-mint); }
+.care-journey-steps .is-current { background: var(--story-paper); border-color: var(--story-orange); }
+.care-journey-rules { border-top: 1px dashed rgba(74, 59, 42, .28); margin-top: 12px; padding-top: 10px; }
+.care-journey-rules summary { align-items: center; cursor: pointer; display: flex; font-size: 12px; font-weight: 800; min-height: 44px; padding: 5px 0; }
+.care-journey-fineprint { font-size: 12px; line-height: 1.7; margin: 7px 0 0; }
+.care-journey.is-compact { padding: 16px; }
+.care-journey.is-compact .care-journey-heading { align-items: stretch; flex-direction: column; gap: 14px; }
+.care-journey.is-compact .primary-button { max-width: none; width: 100%; }
+.care-journey.is-compact .care-journey-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 720px) {
+  .care-journey { padding: 16px; }
+  .care-journey-heading { align-items: stretch; flex-direction: column; gap: 14px; }
+  .care-journey-heading .primary-button { max-width: none; width: 100%; }
+  .care-journey-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
