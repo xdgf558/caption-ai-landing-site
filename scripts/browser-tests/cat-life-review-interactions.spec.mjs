@@ -1,5 +1,37 @@
 import { expect, test } from '@playwright/test';
 
+async function sampleLiveButton(page, selector) {
+  return page.evaluate(async (selector) => {
+    const positions = [];
+    const started = performance.now();
+    let previous = document.querySelector(selector);
+    let replacements = 0;
+    // Cover a full one-second background tick, regardless of display frame rate.
+    do {
+      await new Promise(requestAnimationFrame);
+      const nodes = document.querySelectorAll(selector);
+      if (nodes.length !== 1) throw new Error('Expected exactly one live button: ' + selector);
+      const node = nodes[0];
+      const rect = node.getBoundingClientRect();
+      if (!node.isConnected || rect.width <= 0 || rect.height <= 0 || getComputedStyle(node).visibility === 'hidden') {
+        throw new Error('Live button is not visible: ' + selector);
+      }
+      if (node !== previous) replacements++;
+      previous = node;
+      positions.push({ top: rect.top, left: rect.left, transform: getComputedStyle(node).transform });
+    } while (performance.now() - started < 1200);
+    return { positions, replacements, elapsed: performance.now() - started };
+  }, selector);
+}
+
+function expectStationary(sample, before) {
+  expect(sample.positions.length).toBeGreaterThan(0);
+  expect(sample.elapsed).toBeGreaterThanOrEqual(1200);
+  expect(Math.max(...sample.positions.map((value) => Math.abs(value.top - before.y))), 'live vertical movement').toBeLessThan(0.1);
+  expect(Math.max(...sample.positions.map((value) => Math.abs(value.left - before.x))), 'live horizontal movement').toBeLessThan(0.1);
+  expect(sample.positions.every((value) => value.transform === 'none'), 'live button transform').toBe(true);
+}
+
 for (const width of [390, 1280]) {
   test(width + 'px: rescue successors stay stationary under an edge hover and accept ordinary clicks', async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
@@ -19,21 +51,14 @@ for (const width of [390, 1280]) {
         window.CatGameApp.render();
       }, kind);
       await page.locator('[data-care-journey] [data-rescue-cat]').click();
-      const button = page.locator(kind === 'meal' ? '[data-care-journey] [data-care-meal]' : '[data-care-journey] [data-learning-supplies]');
+      const selector = kind === 'meal' ? '[data-care-journey] [data-care-meal]' : '[data-care-journey] [data-learning-supplies]';
+      const button = page.locator(selector);
       await button.scrollIntoViewIfNeeded();
       const before = await button.boundingBox();
       await page.mouse.move(before.x + before.width / 2, before.y + before.height - 0.5);
-      const samples = await button.evaluate(async (node) => {
-        const positions = [];
-        for (let index = 0; index < 24; index++) {
-          await new Promise(requestAnimationFrame);
-          const rect = node.getBoundingClientRect();
-          positions.push({ top: rect.top, left: rect.left });
-        }
-        return positions;
-      });
-      expect(Math.max(...samples.map((value) => Math.abs(value.top - before.y)))).toBeLessThan(0.1);
-      expect(Math.max(...samples.map((value) => Math.abs(value.left - before.x)))).toBeLessThan(0.1);
+      const sample = await sampleLiveButton(page, selector);
+      expect(sample.replacements, 'background tick replaced the sampled button').toBeGreaterThan(0);
+      expectStationary(sample, before);
       await expect(button).toHaveCSS('transform', 'none');
       await button.click({ timeout: 2000 });
       if (kind === 'meal') {
@@ -42,6 +67,26 @@ for (const width of [390, 1280]) {
         expect(await page.evaluate(() => window.CatGame.state.game.player.careLearning.supplyClaims)).toEqual([1]);
       }
     }
+  });
+
+  test(width + 'px: live hover sampler still detects real movement and missing controls', async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/games/cat-life/?lang=en');
+    await expect(page.locator('[data-care-journey]')).toBeVisible();
+    await page.locator('[data-learning-meet]').click();
+    const selector = '[data-care-journey] [data-learning-supplies]';
+    const button = page.locator(selector);
+    await button.scrollIntoViewIfNeeded();
+    const before = await button.boundingBox();
+    await page.mouse.move(before.x + before.width / 2, before.y + before.height / 2);
+    // Mutation control: the same assertion must reject a real hover displacement.
+    const movement = await page.addStyleTag({ content: selector + ':hover { transform: translateY(-4px) !important; transition: none !important; }' });
+    const moved = await sampleLiveButton(page, selector);
+    expect(() => expectStationary(moved, before)).toThrow(/live vertical movement/);
+    await movement.evaluate((node) => node.remove());
+    // Do not make a vanishing control pass by silently skipping empty frames.
+    await page.addStyleTag({ content: selector + ' { display: none !important; }' });
+    await expect(sampleLiveButton(page, selector)).rejects.toThrow('Live button is not visible');
   });
 
   test(width + 'px: expanding ten memories retains visible keyboard focus without moving the control', async ({ page }, info) => {
