@@ -1617,7 +1617,7 @@
       version_history_title: "Earlier updates",
       version_history_copy: "Revisit earlier changes by version.",
       version_history_version: "v{{version}} release notes",
-      version_history_count: "{{count}} changes",
+      version_history_count: "Changes: {{count}}",
       todays_focus: "Today's Focus",
       work_panel_title: "Time to earn today's cat food money",
       work_panel_copy: "Jobs now run in real time. You can leave the page and rewards will sync when you return.",

@@ -17,6 +17,8 @@ Verified:
 Limits:
 
 - Chrome's mobile screenshot capture timed out; mobile checks were DOM/interaction checks, not screenshot QA.
-- Two Playwright browser regression cases were added for 390/1280px, but the CLI suite was not run in this task. They remain for CI or a separately authorized browser-test run.
+- Initial implementation added two Playwright regression cases without running the CLI suite. In the PR #102 review follow-up, both cases were strengthened and run five times each: 10/10 passed. They explicitly call `CatGameApp.render()` while expanded and perform `page.reload()` from an expanded state, verifying the collapsed default after re-entering the version page.
 - No production account, cloud save, Worker, database or deployment was changed.
 - Root design-qa.md remains the prior memories review; this record does not overwrite it.
+
+PR #102 P3 follow-up: English uses `Changes: {{count}}` to avoid incorrect singular grammar; the content-pack publishing checklist now requires archiving all three locales into `releaseHistory` before replacing the current notes. Full npm test, project build, syntax and diff checks passed again. The separately reported baseline one-second rerender interaction-test issue was not modified as part of these fixes.
