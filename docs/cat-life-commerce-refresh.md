@@ -31,7 +31,10 @@ switch, and does not claim to preserve an in-progress IME composition.
 catalog and entitlement requests until the player has typed or focused a control.
 It then releases the responses and asserts that the original DOM node was
 disconnected, proving the test crossed a real completion-triggered redraw.
-It does not stub the renderer, sleep for a presumed tick, or pause game timers.
+Positive interaction tests do not stub the renderer, sleep for a presumed tick,
+or pause game timers. The rejection cases wrap the next renderer output to
+produce a disabled control, duplicate identities, or an identical control in a
+different region; the actual commerce response still triggers the render.
 All account/network responses are local test fixtures, never production writes.
 
 At both 390px and 1280px the tests independently cover:
@@ -45,6 +48,11 @@ At both 390px and 1280px the tests independently cover:
 - An authenticated account receiving a real entitlement fixture while editing,
   then displaying ownership in the store; manual refresh preserves button focus
   through both loading and ready renders.
+- Disabled, duplicate-identity and other-region successors must not receive
+  focus. Each case verifies the intended DOM condition and real node replacement
+  before asserting that focus was not transferred.
+
+## Verification history
 
 Before the fix, the two mobile success cases failed with `Sunny` instead of
 `Momo draft` and an empty import textarea instead of `draft-save-payload`.
@@ -52,7 +60,28 @@ After the fix, the 16 cases repeated three times in UTC passed 48/48.
 Full `npm test`, 143-page project build and modified-JS syntax checks passed.
 The complete browser suite in UTC passed 77/77, including existing membership
 purchase/revocation, cloud-save, onboarding, version-history and redraw tests.
-These are local results; no PR CI or production deployment has run for this fix.
+These were initial local results, not a claim that the initial PR CI passed.
+[PR #104 initial CI](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/34040069672)
+failed 1/77 in the existing room-drag test: the saved furniture layout remained
+unchanged. All other 76 browser cases passed. No production deployment has run.
+
+The review update makes the room test use locator actionability to hover the
+live furniture, then explicitly requires the intended `roomDrag` identity,
+connected element and pointer capture after `mouse.down()`. Only afterward does
+it sample the live bench coordinates and move the pointer. It also requires the
+drag to finish on release. The original layout-change, bench/collision, resize
+and reload assertions remain; there are no forced clicks, synthetic pointer
+events, retries or direct writes to drag state.
+
+Review-update local verification:
+
+- UTC room drag plus all six focus rejection cases, repeated three times: 21/21.
+- UTC repaired room-drag test repeated ten times: 10/10.
+- UTC complete browser suite: 83/83.
+- Full `npm test`, 143-page build, modified-test syntax and diff checks: passed.
+
+The review-update CI result is tracked separately on PR #104; the initial failed
+CI run remains part of this verification history.
 
 Run the focused check:
 

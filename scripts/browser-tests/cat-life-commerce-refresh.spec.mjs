@@ -45,6 +45,47 @@ async function rememberNode(locator) {
 }
 
 for (const width of [390, 1280]) {
+  for (const rejection of ['disabled', 'duplicate', 'other-region']) {
+    test(`background focus rejects ${rejection} replacement at ${width}px`, async ({ page }) => {
+      const release = await holdInitialization(page, width);
+      await openPage(page, 'cats');
+      const button = page.locator('[data-rename-cat]');
+      await button.focus();
+      const original = await rememberNode(button);
+      // Change only the next renderer output to exercise rejection branches;
+      // the actual delayed commerce response still drives the background render.
+      await page.evaluate(rejection => {
+        const ui = window.CatGame.ui;
+        const renderCats = ui.renderCatPanel;
+        const renderHeader = ui.renderHeader;
+        const identity = document.querySelector('[data-rename-cat]').outerHTML;
+        ui.renderCatPanel = function (state) {
+          const template = document.createElement('template');
+          template.innerHTML = renderCats(state);
+          const replacement = template.content.querySelector('[data-rename-cat]');
+          if (rejection === 'disabled') replacement.disabled = true;
+          if (rejection === 'duplicate') replacement.after(replacement.cloneNode(true));
+          if (rejection === 'other-region') replacement.remove();
+          return template.innerHTML;
+        };
+        if (rejection === 'other-region') {
+          ui.renderHeader = state => renderHeader(state) + identity;
+        }
+      }, rejection);
+      await release();
+      expect(await original.evaluate(node => node.isConnected)).toBe(false);
+      const mainCandidates = page.locator('#app-main [data-rename-cat]');
+      await expect(mainCandidates).toHaveCount(rejection === 'duplicate' ? 2 : rejection === 'disabled' ? 1 : 0);
+      if (rejection === 'disabled') await expect(mainCandidates).toBeDisabled();
+      if (rejection === 'other-region') {
+        await expect(page.locator('#app-header [data-rename-cat]')).toBeVisible();
+      }
+      expect(await page.locator('[data-rename-cat]').evaluateAll(nodes =>
+        nodes.some(node => node === document.activeElement))).toBe(false);
+      expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
+    });
+  }
+
   test(`member entitlement initialization updates ownership without interrupting editing at ${width}px`, async ({ page }) => {
     const release = await holdInitialization(page, width, true);
     await openPage(page, 'cats');
