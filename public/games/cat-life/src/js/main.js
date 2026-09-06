@@ -395,7 +395,39 @@
     }, 1300);
   }
 
+  function captureBackgroundFocus() {
+    var active = document.activeElement;
+    if (!active || !active.matches('button, a[href], summary, [tabindex]')) return null;
+    var root = [dom.header, dom.main, dom.navigation, dom.mobileNavigation].find(function (node) {
+      return node && node.contains(active);
+    });
+    if (!root) return null; // Dialogs and the site shell are not replaced here.
+    var identity = Array.prototype.filter.call(active.attributes, function (attribute) {
+      return active.id ? attribute.name === "id" : attribute.name.indexOf("data-") === 0;
+    }).map(function (attribute) { return { name: attribute.name, value: attribute.value }; });
+    if (!identity.length) return null;
+    return function () {
+      if (active.isConnected) return;
+      // Match semantic identity within the same region, never a sibling index:
+      // an entitlement change can remove/reorder controls or disable an action.
+      var matches = Array.prototype.filter.call(root.querySelectorAll(active.tagName), function (node) {
+        return identity.every(function (attribute) { return node.getAttribute(attribute.name) === attribute.value; });
+      });
+      if (matches.length !== 1) return;
+      var next = matches[0];
+      if (!next.matches(':disabled, [aria-disabled="true"]') && next.getClientRects().length) {
+        next.focus({ preventScroll: true });
+      }
+    };
+  }
+
   function render(preserveDrafts) {
+    var restoreFocus = preserveDrafts === true ? captureBackgroundFocus() : null;
+    // Disclosure state is transient UI, not save data. Preserve both open and
+    // closed states on background updates, before restoring a summary's focus.
+    var disclosures = preserveDrafts === true ? Array.prototype.map.call(
+      dom.main.querySelectorAll('details[id]'), function (node) { return { id: node.id, open: node.open }; }
+    ) : [];
     var releaseFocus = document.activeElement && document.activeElement.matches('.release-history-item > summary')
       ? document.activeElement.parentElement.dataset.releaseVersion : null;
     // Background updates must not discard text, amounts or selections being
@@ -431,6 +463,12 @@
 
     dom.header.innerHTML = game.ui.renderHeader(game.state.game);
     dom.main.innerHTML = renderer(game.state.game);
+    disclosures.forEach(function (draft) {
+      var matches = Array.prototype.filter.call(dom.main.querySelectorAll('details[id]'), function (node) {
+        return node.id === draft.id;
+      });
+      if (matches.length === 1) matches[0].open = draft.open;
+    });
     if (releaseFocus) {
       Array.prototype.forEach.call(dom.main.querySelectorAll('[data-release-version]'), function (details) {
         if (details.dataset.releaseVersion === releaseFocus) details.querySelector('summary').focus({ preventScroll: true });
@@ -476,6 +514,7 @@
         button.removeAttribute("aria-current");
       }
     });
+    if (restoreFocus) restoreFocus();
   }
 
   function updateSetting(target) {

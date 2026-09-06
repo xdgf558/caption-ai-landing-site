@@ -7,6 +7,7 @@
   var lastAccountKey = "catGameCommerceLastAccountV1";
   var memberAccountKey = "catGameMemberAccountV1";
   var initialized = false;
+  var refreshRevision = 0;
   var pendingKeys = {};
   var state = {
     status: "idle",
@@ -477,11 +478,16 @@
 
   function refreshView() {
     if (window.CatGameApp && typeof window.CatGameApp.render === "function") {
-      window.CatGameApp.render();
+      // Membership responses can arrive while another page is being edited.
+      // Update entitlements immediately without treating it as a player action.
+      window.CatGameApp.render(true);
     }
   }
 
   function refresh(options) {
+    // Latest-started refresh owns all state/cache/render side effects. Requests
+    // may finish out of order when locale or account data is refreshed again.
+    var revision = ++refreshRevision;
     var settings = options || {};
     if (!settings.silent) {
       state.status = "loading";
@@ -493,8 +499,16 @@
       requestJson(catalogPath + "?locale=" + locale),
       requestJson(entitlementsPath + "?locale=" + locale)
     ]).then(function (responses) {
+      if (revision !== refreshRevision) return state;
       var catalog = responses[0];
       var entitlementResult = responses[1];
+      // A session can change between the two HTTP requests. Never assemble an
+      // account, balance and ownership list from different identities.
+      if (Boolean(catalog.authenticated) !== Boolean(entitlementResult.authenticated) ||
+        (catalog.authenticated && (!catalog.account || !entitlementResult.account ||
+          !catalog.account.id || String(catalog.account.id) !== String(entitlementResult.account.id)))) {
+        throw new Error("Membership responses do not belong to the same account");
+      }
       state.status = "ready";
       state.offlineCache = false;
       state.authenticated = Boolean(catalog.authenticated && entitlementResult.authenticated);
@@ -506,6 +520,7 @@
       refreshView();
       return state;
     }).catch(function () {
+      if (revision !== refreshRevision) return state;
       state.status = "offline";
       if (!useOfflineCache()) {
         state.authenticated = false;

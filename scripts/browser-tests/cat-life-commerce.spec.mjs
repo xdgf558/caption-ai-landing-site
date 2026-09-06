@@ -226,13 +226,24 @@ test('bench avoidance repairs old full-room layouts visually, survives resize an
   }
   await page.locator('[data-room-mode-target="edit"]').first().click();
   const item = page.locator('.room-furniture').first();
-  await item.scrollIntoViewIfNeeded();
-  const from = await item.boundingBox();
-  const bench = await page.locator('.room-theme-fixture--station-bench').boundingBox();
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  const furnitureId = await item.getAttribute('data-furniture-id');
+  // Let locator actionability wait for the live item to settle after edit-mode
+  // layout/scrolling. A previously sampled bounding box can miss the item.
+  await item.hover();
   await page.mouse.down();
+  await expect.poll(() => page.evaluate(() => {
+    const drag = window.CatGame.state.roomDrag;
+    return drag && { id: drag.furnitureId, connected: drag.element.isConnected,
+      captured: drag.element.hasPointerCapture(drag.pointerId) };
+  }), { message: 'pointerdown must establish a live furniture drag before moving' })
+    .toEqual({ id: furnitureId, connected: true, captured: true });
+  // Drag start can reposition the furniture. Resolve the live destination only
+  // now, rather than reusing coordinates from before pointerdown.
+  const bench = await page.locator('.room-theme-fixture--station-bench').boundingBox();
+  expect(bench).not.toBeNull();
   await page.mouse.move(bench.x + bench.width / 2, bench.y + bench.height / 2, { steps: 10 });
   await page.mouse.up();
+  await expect.poll(() => page.evaluate(() => window.CatGame.state.roomDrag)).toBeNull();
   await expectFurnitureClearOfBench(page);
   expect(await page.evaluate(() => JSON.stringify(window.CatGame.state.game.home.furnitureLayout))).not.toBe(original);
   await page.reload();
