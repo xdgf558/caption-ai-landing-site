@@ -127,6 +127,34 @@ for (const mismatch of ['different-accounts', 'different-authentication']) {
 }
 
 for (const width of [390, 1280]) {
+  for (const view of ['slot', 'lottery']) {
+    for (const failure of [false, true]) {
+      test(`arcade ${view} rules survive ${failure ? 'failed' : 'successful'} commerce and background render at ${width}px`, async ({ page }) => {
+        const release = await holdInitialization(page, width);
+        await openPage(page, 'arcade');
+        await page.locator(`[role="tab"][data-arcade-view="${view}"]`).click();
+        const details = page.locator('.arcade-details');
+        const summary = details.locator('summary');
+        await summary.focus();
+        await page.keyboard.press('Enter');
+        await expect(details).toHaveAttribute('open', '');
+        for (const refresh of [() => page.evaluate(() => window.CatGameApp.render(true)), () => release(failure)]) {
+          const original = await rememberNode(summary);
+          await refresh();
+          expect(await original.evaluate(node => node.isConnected)).toBe(false);
+          await expect(details).toHaveAttribute('open', '');
+          await expect(summary).toBeFocused();
+        }
+        await page.keyboard.press('Enter');
+        await page.evaluate(() => window.CatGameApp.render(true));
+        await expect(details).not.toHaveAttribute('open');
+        await expect(summary).toBeFocused();
+        await page.keyboard.press('Enter');
+        await expect(details).toHaveAttribute('open', '');
+      });
+    }
+  }
+
   test(`lottery digit retains value and focus across background and commerce render at ${width}px`, async ({ page }) => {
     const release = await holdInitialization(page, width);
     await openPage(page, 'arcade');

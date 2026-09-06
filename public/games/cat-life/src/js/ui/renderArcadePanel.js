@@ -324,7 +324,7 @@
 
   function renderArcadeDetails(data) {
     var lastSummary = data.lastSummary;
-    return '<details class="arcade-details"><summary><span>' + t("arcade_rule_history") + '</span><span class="arcade-summary-mark" aria-hidden="true">＋</span></summary><div class="arcade-details-body">' +
+    return '<details id="arcade-rule-history" class="arcade-details"><summary id="arcade-rule-history-summary"><span>' + t("arcade_rule_history") + '</span><span class="arcade-summary-mark" aria-hidden="true">＋</span></summary><div class="arcade-details-body">' +
       '<div class="arcade-details-grid"><section class="arcade-detail-section"><div class="arcade-section-heading"><div><span class="arcade-card-label">' +
       t("slot_paytable") + '</span><h4>' + t("slot_rules_title") + '</h4></div></div><div class="arcade-rule-list">' + renderPaytable() +
       '</div><div class="arcade-special-rule"><strong>' + t("slot_special_bonus") + '</strong><p>' + t("slot_special_bonus_copy") +

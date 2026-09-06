@@ -133,6 +133,29 @@ Second-review local verification:
 These results validate the new runtime changes locally; CI is tracked against
 the new PR head, not the previously green `19da76c`.
 
+### Third review: arcade disclosure identity
+
+Commit `1ada8dd` retained lottery input and care-rule state, but the arcade
+rules/history disclosure still lacked IDs. On that baseline the new 390px slot
+test confirmed that `render(true)` removed its `open` attribute.
+
+`renderArcadePanel.js` now gives the shared rules/history details and summary
+stable IDs (`arcade-rule-history` and `arcade-rule-history-summary`), using the
+existing background disclosure/focus restoration without changing save data.
+Eight new cases cover slot/lottery views at 390px/1280px, with successful/failed
+commerce responses. Each crosses both an explicit background render and a real
+delayed response, verifies node replacement, expanded state and summary focus,
+then uses Enter to close/reopen and checks that a closed-state redraw also
+retains focus.
+
+Duplicate data-only button identities still deliberately decline focus
+restoration; adding unique focus keys remains separate non-blocking follow-up.
+
+Third-review local verification: UTC arcade cases repeated three times passed
+24/24; the complete UTC browser suite passed 101/101. Full `npm test`, 143-page
+build, modified-JS syntax and diff checks passed. CI is checked on this new
+commit separately, not inferred from `1ada8dd`.
+
 Run the focused check:
 
 ```sh
