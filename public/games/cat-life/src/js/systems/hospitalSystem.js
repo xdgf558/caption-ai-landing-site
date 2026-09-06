@@ -55,6 +55,7 @@
     cat.health = clamp(cat.health + 12, 0, 100);
     cat.mood = clamp(cat.mood + 6, 0, 100);
     game.systems.onboardingSystem.recordCare(cat, "treat", careBefore);
+    game.systems.memorySystem.recordCare(cat, "treat", careBefore);
 
     if (game.systems.taskSystem) {
       game.systems.taskSystem.refreshAllTasks();

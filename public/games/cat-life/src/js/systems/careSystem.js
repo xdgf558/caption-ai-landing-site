@@ -95,6 +95,7 @@
     protectAfterTreatment(cat, now);
     rebase(cat, now);
     // No inventory, currency, intimacy, XP, task counters or adoption reset.
+    game.systems.memorySystem.recordRecovery(cat, reason);
     return { ok: true, forceSave: true, message: t("care_rescued", { name: game.utils.i18n.getDataText(cat, "name") }) };
   }
 

@@ -669,9 +669,14 @@
       game.systems.taskSystem.refreshAllTasks();
     }
 
+    var learningChanged = game.systems.onboardingSystem.recordCare(cat, actionKey, careBefore);
+    var memoryChanged = game.systems.memorySystem.recordCare(cat, actionKey, careBefore);
+    if (memoryChanged) {
+      messages[0] += " " + t("memory_added", { title: t("memory_" + game.systems.memorySystem.list(cat)[0].key) });
+    }
     return {
       ok: true,
-      forceSave: game.systems.onboardingSystem.recordCare(cat, actionKey, careBefore),
+      forceSave: learningChanged || memoryChanged,
       messages: messages,
     };
   }
@@ -746,6 +751,9 @@
 
     previousName = getText(cat, "name");
     cat.name = trimmedName;
+    // A player's chosen name is not a translated species/default name.
+    cat.nameEn = trimmedName;
+    cat.nameJa = trimmedName;
 
     return {
       ok: true,

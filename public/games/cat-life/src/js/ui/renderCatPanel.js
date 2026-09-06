@@ -207,7 +207,7 @@
       t("cat_bond_label") + '</p><h3 id="cat-bond-title" class="panel-title">' + t("cat_bond_title") + '</h3></div><strong>' +
       value + '<small>/100</small></strong></div><div class="cat-bond-track"><span style="width:' + value +
       '%" role="progressbar" aria-label="' + safe(t("cat_bond_label")) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + value +
-      '"></span></div><p class="helper-text">' + t("friendship_health", { intimacy: value, health: percent(cat.health) }) + '</p></section>';
+      '"></span></div>' + game.ui.renderMemoryBond(cat) + '<p class="helper-text">' + t("friendship_health", { intimacy: value, health: percent(cat.health) }) + '</p></section>';
   }
 
   function getRecommendedAction(cat, state, disease, isDead, isLocked) {
@@ -366,7 +366,7 @@
       t("cat_shop_link") + '</button></div><div class="cat-supply-list">' + supplyItems.map(function (entry) {
         var item = game.data.itemMap[entry.itemId];
         return '<span class="cat-supply-chip"><img src="' + safe(item.image) + '" alt="" width="34" height="26" loading="lazy" decoding="async" /><strong>' +
-          number(getInventoryCount(state, entry.field)) + '</strong><span>' + safe(getText(item, "name")) + '</span>';
+          number(getInventoryCount(state, entry.field)) + '</strong><span>' + safe(getText(item, "name")) + '</span></span>';
       }).join("") + '</div><p class="helper-text">' + t("cat_supply_copy", { name: safe(getText(cat, "name")) }) + '</p></section>';
   }
 
@@ -419,7 +419,7 @@
       '<div class="cat-profile-heading"><div><p class="section-eyebrow">' + t("cat_profile_label") + '</p><h2 id="cat-profile-title" class="page-title">' + safe(getText(selectedCat, "name")) +
       '</h2><p class="cat-profile-breed">' + safe(getText(selectedCat, "breed")) + '</p></div><span class="status-pill ' + status.className + '"><span aria-hidden="true">' +
       safe(status.icon) + '</span>' + status.label + '</span></div>' + renderCatScene(selectedCat, catVisual, isDead, isLocked, activeReaction, reactionCue) + renderCatFacts(selectedCat, catDisease) +
-      (isLocked ? renderUnlockInfo(selectedCat) : renderNameEditor(selectedCat) + renderBondMeter(selectedCat)) + renderCatSignals(selectedCat, isLocked) + '</section><section class="page-card cat-journal-care" aria-labelledby="cat-care-title">' +
+      (isLocked ? renderUnlockInfo(selectedCat) : renderNameEditor(selectedCat) + renderBondMeter(selectedCat)) + renderCatSignals(selectedCat, isLocked) + game.ui.renderCatMemories(selectedCat) + '</section><section class="page-card cat-journal-care" aria-labelledby="cat-care-title">' +
       '<div class="cat-care-heading"><div><p class="section-eyebrow">' + t("cat_today_label") + '</p><h2 id="cat-care-title" class="page-title">' + t("cat_today_title") + '</h2></div><span class="cat-care-date">' +
       t("cat_today_badge") + '</span></div><p class="page-copy cat-care-copy">' + t("cat_today_copy", { name: safe(getText(selectedCat, "name")) }) + '</p>' +
       (isLocked ? "" : game.systems.onboardingSystem.data(state).eligible

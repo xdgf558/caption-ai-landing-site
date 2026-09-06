@@ -677,10 +677,20 @@
       game.systems.musicSystem.unlock();
     }
 
+    var memoryToggle = event.target.closest("[data-memory-toggle]");
+    if (memoryToggle) {
+      game.state.memoryExpandedCatId = game.state.memoryExpandedCatId === memoryToggle.dataset.memoryToggle ? null : memoryToggle.dataset.memoryToggle;
+      render(true);
+      var newMemoryToggle = document.querySelector("[data-memory-toggle]");
+      if (newMemoryToggle) newMemoryToggle.focus({ preventScroll: true });
+      return;
+    }
+
     if (pageButton) {
       if (pageButton.dataset.selectCat) {
         game.state.selectedCatId = pageButton.dataset.selectCat;
       }
+      if (pageButton.hasAttribute("data-open-memories")) game.state.memoryExpandedCatId = game.state.selectedCatId;
       game.state.currentPage = pageButton.dataset.pageTarget;
       if (game.state.currentPage === "room") {
         game.state.currentPage = "community";
@@ -691,6 +701,13 @@
       }
       render();
       window.scrollTo(0, 0);
+      if (pageButton.hasAttribute("data-open-memories")) {
+        var memoryHeading = document.getElementById("cat-memories-title");
+        if (memoryHeading) {
+          memoryHeading.focus({ preventScroll: true });
+          memoryHeading.scrollIntoView({ block: "start" });
+        }
+      }
       if (pageButton.dataset.pageTarget === "arcade") {
         scheduleLotteryResolve("arcade-page");
       }
