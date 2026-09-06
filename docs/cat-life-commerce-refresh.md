@@ -21,6 +21,20 @@ by position. Focus is restored with `preventScroll`; external site controls and
 dialogs are not replaced or refocused by this helper. Editable input focus and
 selection continue to use the existing draft restoration.
 
+Every commerce refresh now has a monotonically increasing request revision.
+Only the latest-started revision can apply success/failure state, write the
+entitlement cache or trigger a render. Superseded responses return without those
+side effects, including when the newer refresh has become a guest or failed.
+The catalog and entitlement responses must also agree on authentication and
+account ID before they are combined; an inconsistent pair follows the existing
+offline path instead of publishing mixed-account data.
+
+Lottery digit selects now have stable, unique IDs so the existing draft path
+also restores their value and focus. The care-rules details and summary have
+stable IDs; background renders restore open/closed details state within the
+same main region before restoring focus. This state is not stored in the save:
+a full reload still starts with the care rules collapsed.
+
 No layout, assets, backend, save schema or account synchronization policy changes.
 This fix does not suppress an intentional cloud-save replacement or account
 switch, and does not claim to preserve an in-progress IME composition.
@@ -36,6 +50,10 @@ or pause game timers. The rejection cases wrap the next renderer output to
 produce a disabled control, duplicate identities, or an identical control in a
 different region; the actual commerce response still triggers the render.
 All account/network responses are local test fixtures, never production writes.
+Catalog and entitlement fixtures are now separate contracts and separate indexed
+request queues. Catalog returns `products`, entitlements returns `entitlements`;
+tests can release each endpoint of each refresh independently, without pairing
+by arrival order or returning a combined response object.
 
 At both 390px and 1280px the tests independently cover:
 
@@ -51,6 +69,14 @@ At both 390px and 1280px the tests independently cover:
 - Disabled, duplicate-identity and other-region successors must not receive
   focus. Each case verifies the intended DOM condition and real node replacement
   before asserting that focus was not transferred.
+- Lottery digit value/focus and care-rule open/closed state/summary focus survive
+  both an explicit `render(true)` and an actual delayed commerce response.
+
+Ordering tests additionally interleave two refreshes and complete the newer
+pair first. Older successes and failures cannot roll account 2 / balance 222
+back to account 1 / balance 111, overwrite a newer guest/offline result, mutate
+commerce caches or redraw the current input. Separate tests reject mixed-account
+and mixed-authentication pairs.
 
 ## Verification history
 
@@ -82,6 +108,30 @@ Review-update local verification:
 
 The review-update CI result is tracked separately on PR #104; the initial failed
 CI run remains part of this verification history.
+
+### Second review: runtime gaps
+
+Commit `19da76c` passed CI but only changed tests/documentation. It did not yet
+cover request ordering, ID-less lottery selects or care-rule disclosure state.
+On that baseline, new deterministic checks reproduced the 2/222 → 1/111 account
+rollback, an unfocused lottery digit after `render(true)`, and a care disclosure
+that closed on redraw. The lottery reproduction initially used an ambiguous tab
+selector; after narrowing to the actual tab it failed on the intended focus
+assertion. These findings supersede any implication that CI alone completed
+the initialization fix.
+
+The second review changes `commerce.js`, `main.js` and the two affected renderers
+as described above, alongside the separated response fixtures. The onboarding
+markup unit test is updated to require the new stable disclosure/summary IDs.
+
+Second-review local verification:
+
+- UTC 32 focused cases repeated three times: 96/96.
+- UTC complete browser suite: 93/93.
+- Full `npm test`, 143-page build, modified-JS syntax and diff checks: passed.
+
+These results validate the new runtime changes locally; CI is tracked against
+the new PR head, not the previously green `19da76c`.
 
 Run the focused check:
 

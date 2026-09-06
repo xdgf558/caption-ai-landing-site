@@ -372,7 +372,8 @@ test('all three languages resolve new literal and dynamic keys; one primary acti
     assert.equal((html.match(/<button /g) || []).length, 1);
     assert.equal((html.match(/data-learning-step=/g) || []).length, 4);
     assert.equal((html.match(/aria-current="step"/g) || []).length, 1);
-    assert.match(html, /<details class="care-journey-rules">/);
+    assert.match(html, /<details id="care-journey-rules" class="care-journey-rules">/);
+    assert.match(html, /<summary id="care-journey-rules-summary">/);
     assert.doesNotMatch(html, /undefined|NaN|>learning_\w+</);
   }
 });

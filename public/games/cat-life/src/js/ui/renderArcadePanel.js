@@ -108,7 +108,7 @@
 
         return '<label class="lottery-digit-control"><span class="sr-only">' +
           escape(t("lottery_digit_label", { position: index + 1 })) +
-          '</span><select class="field lottery-digit-select" data-lottery-digit-index="' + index +
+          '</span><select id="lottery-digit-' + index + '" class="field lottery-digit-select" data-lottery-digit-index="' + index +
           '" aria-label="' + escape(t("lottery_digit_label", { position: index + 1 })) + '">' + options + "</select></label>";
       })
       .join("");

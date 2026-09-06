@@ -423,6 +423,11 @@
 
   function render(preserveDrafts) {
     var restoreFocus = preserveDrafts === true ? captureBackgroundFocus() : null;
+    // Disclosure state is transient UI, not save data. Preserve both open and
+    // closed states on background updates, before restoring a summary's focus.
+    var disclosures = preserveDrafts === true ? Array.prototype.map.call(
+      dom.main.querySelectorAll('details[id]'), function (node) { return { id: node.id, open: node.open }; }
+    ) : [];
     var releaseFocus = document.activeElement && document.activeElement.matches('.release-history-item > summary')
       ? document.activeElement.parentElement.dataset.releaseVersion : null;
     // Background updates must not discard text, amounts or selections being
@@ -458,6 +463,12 @@
 
     dom.header.innerHTML = game.ui.renderHeader(game.state.game);
     dom.main.innerHTML = renderer(game.state.game);
+    disclosures.forEach(function (draft) {
+      var matches = Array.prototype.filter.call(dom.main.querySelectorAll('details[id]'), function (node) {
+        return node.id === draft.id;
+      });
+      if (matches.length === 1) matches[0].open = draft.open;
+    });
     if (releaseFocus) {
       Array.prototype.forEach.call(dom.main.querySelectorAll('[data-release-version]'), function (details) {
         if (details.dataset.releaseVersion === releaseFocus) details.querySelector('summary').focus({ preventScroll: true });

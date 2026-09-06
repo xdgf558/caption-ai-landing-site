@@ -1,12 +1,50 @@
 import { expect, test } from '@playwright/test';
 
+function memberFixture(id, balance) {
+  const productId = 'cat-life.skin.moonlit-tabby';
+  const entitlementKey = 'cat-life.cosmetic.skin.moonlit-tabby.v1';
+  return { account: { id, username: `member${id}`, displayName: `Member ${id}` }, balance,
+    products: [{ productId, entitlementKey, name: `Member ${id} skin`, pointsPrice: 10,
+      productType: 'cosmetic-skin', lifecycleStatus: 'active', owned: true, redeemable: false }],
+    entitlements: [{ id: `entitlement-${id}`, productId, entitlementKey, active: true }] };
+}
+
+async function commerceRequests(page) {
+  const requests = { catalog: [], entitlements: [] };
+  for (const endpoint of Object.keys(requests)) {
+    await page.route(`**/api/games/cat-life/${endpoint}?*`, route => { requests[endpoint].push(route); });
+  }
+  async function wait(index) {
+    for (const endpoint of Object.keys(requests)) {
+      await expect.poll(() => Boolean(requests[endpoint][index])).toBe(true);
+    }
+  }
+  async function reply(index, endpoint, fixture = {}, failure = false) {
+    const route = requests[endpoint][index];
+    expect(route, `${endpoint} request ${index} is pending`).toBeTruthy();
+    requests[endpoint][index] = null;
+    // Each endpoint has its own contract; never return products and entitlements
+    // in the same fixture or pair responses by whichever request arrived first.
+    const json = { ok: true, authenticated: Boolean(fixture.account), account: fixture.account || null,
+      balance: fixture.balance ?? null };
+    if (endpoint === 'catalog') json.products = fixture.products || [];
+    else json.entitlements = fixture.entitlements || [];
+    await route.fulfill(failure ? { status: 503, json: { ok: false } } : { json });
+  }
+  async function complete(index, fixture, failure = false) {
+    await wait(index);
+    await Promise.all(Object.keys(requests).map(endpoint => reply(index, endpoint, fixture, failure)));
+  }
+  return { wait, reply, complete };
+}
+
 // Hold both real initialization requests until the player is already editing.
 // No sleeps, mocked renderer, or assumptions about the one-second timer.
 async function holdInitialization(page, width, member = false) {
   await page.setViewportSize({ width, height: 900 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  const pending = [];
-  const account = member ? { id: 17, username: 'testmember', displayName: 'Test Member' } : null;
+  const fixture = member ? memberFixture(17, 100) : {};
+  const account = fixture.account || null;
   await page.route('**/api/readers/session', route => route.fulfill({
     json: { ok: true, authenticated: member, account }
   }));
@@ -14,24 +52,19 @@ async function holdInitialization(page, width, member = false) {
     json: { ok: true, authenticated: member, account,
       save: route.request().method() === 'PUT' ? { revision: 1 } : null }
   }));
-  await page.route('**/api/games/cat-life/catalog?*', route => { pending.push(route); });
-  await page.route('**/api/games/cat-life/entitlements?*', route => { pending.push(route); });
+  const gate = await commerceRequests(page);
   await page.goto('/games/cat-life/?lang=en');
-  await expect.poll(() => pending.length).toBe(2);
+  await gate.wait(0);
   await expect.poll(() => page.evaluate(() => window.CatGameCommerce.getSnapshot().status)).toBe('loading');
   if (member) await expect(page.locator('[data-cat-cloud-status]')).toHaveText('Cloud save synced');
-  return async (failure = false) => {
-    await expect.poll(() => pending.length).toBe(2);
-    await Promise.all(pending.splice(0).map(route => route.fulfill(failure ? {
-      status: 503, json: { ok: false }
-    } : {
-      json: { ok: true, authenticated: member, account, balance: member ? 100 : null, products: [],
-        entitlements: member ? [{ productId: 'cat-life.skin.moonlit-tabby',
-          entitlementKey: 'cat-life.cosmetic.skin.moonlit-tabby.v1', active: true }] : [] }
-    })));
+  let next = 0;
+  const release = async (failure = false) => {
+    await gate.complete(next++, fixture, failure);
     await expect.poll(() => page.evaluate(() => window.CatGameCommerce.getSnapshot().status))
       .toBe(failure ? 'offline' : 'ready');
   };
+  release.gate = gate;
+  return release;
 }
 
 async function openPage(page, target) {
@@ -44,7 +77,95 @@ async function rememberNode(locator) {
   return locator.evaluateHandle(node => node);
 }
 
+for (const scenario of ['older-success', 'older-failure', 'newer-guest', 'newer-failure']) {
+  test(`out-of-order commerce responses cannot overwrite latest state: ${scenario}`, async ({ page }) => {
+    const release = await holdInitialization(page, 1280);
+    await release();
+    await openPage(page, 'cats');
+    const gate = release.gate;
+    await page.evaluate(() => { window.oldRefresh = window.CatGameCommerce.refresh({ silent: true }); });
+    await gate.wait(1);
+    await page.evaluate(() => { window.newRefresh = window.CatGameCommerce.refresh({ silent: true }); });
+    await gate.wait(2);
+    const newest = scenario === 'newer-guest' ? {} : memberFixture(2, 222);
+    // Interleave endpoints, then complete the newer pair before the older pair.
+    await gate.reply(1, 'catalog', memberFixture(1, 111));
+    await gate.reply(2, 'entitlements', newest, scenario === 'newer-failure');
+    await gate.reply(2, 'catalog', newest, scenario === 'newer-failure');
+    await page.evaluate(() => window.newRefresh);
+    const snapshot = await page.evaluate(() => window.CatGameCommerce.getSnapshot());
+    expect(snapshot.status).toBe(scenario === 'newer-failure' ? 'offline' : 'ready');
+    expect(snapshot.account?.id ?? null).toBe(scenario.startsWith('newer-') ? null : 2);
+    if (!scenario.startsWith('newer-')) expect(snapshot.balance).toBe(222);
+    const cache = await page.evaluate(() => Object.fromEntries(Object.entries(localStorage)
+      .filter(([key]) => key.startsWith('catGameCommerce'))));
+    const field = page.locator('#cat-name-input');
+    await field.fill('Latest draft');
+    const original = await rememberNode(field);
+    await gate.reply(1, 'entitlements', memberFixture(1, 111), scenario === 'older-failure');
+    await page.evaluate(() => window.oldRefresh);
+    expect(await page.evaluate(() => window.CatGameCommerce.getSnapshot())).toEqual(snapshot);
+    expect(await page.evaluate(() => Object.fromEntries(Object.entries(localStorage)
+      .filter(([key]) => key.startsWith('catGameCommerce'))))).toEqual(cache);
+    expect(await original.evaluate(node => node.isConnected), 'stale response must not trigger a render').toBe(true);
+    await expect(field).toHaveValue('Latest draft');
+    await expect(field).toBeFocused();
+  });
+}
+
+for (const mismatch of ['different-accounts', 'different-authentication']) {
+  test(`a refresh rejects inconsistent endpoint identities: ${mismatch}`, async ({ page }) => {
+    const release = await holdInitialization(page, 1280);
+    await release.gate.reply(0, 'catalog', memberFixture(1, 111));
+    await release.gate.reply(0, 'entitlements', mismatch === 'different-accounts' ? memberFixture(2, 222) : {});
+    await expect.poll(() => page.evaluate(() => window.CatGameCommerce.getSnapshot().status)).toBe('offline');
+    expect(await page.evaluate(() => window.CatGameCommerce.getSnapshot())).toMatchObject({
+      authenticated: false, account: null, balance: null, products: [], entitlements: []
+    });
+    expect(await page.evaluate(() => localStorage.getItem('catGameCommerceLastAccountV1'))).toBeNull();
+  });
+}
+
 for (const width of [390, 1280]) {
+  test(`lottery digit retains value and focus across background and commerce render at ${width}px`, async ({ page }) => {
+    const release = await holdInitialization(page, width);
+    await openPage(page, 'arcade');
+    await page.locator('[role="tab"][data-arcade-view="lottery"]').click();
+    const digit = page.locator('[data-lottery-digit-index="2"]');
+    await digit.selectOption('7');
+    await digit.focus();
+    for (const refresh of [() => page.evaluate(() => window.CatGameApp.render(true)), () => release()]) {
+      const original = await rememberNode(digit);
+      await refresh();
+      expect(await original.evaluate(node => node.isConnected)).toBe(false);
+      await expect(digit).toHaveValue('7');
+      await expect(digit).toBeFocused();
+    }
+  });
+
+  test(`care rules remain open and focused across background and commerce render at ${width}px`, async ({ page }) => {
+    const release = await holdInitialization(page, width);
+    const details = page.locator('.care-journey-rules');
+    const summary = details.locator('summary');
+    await summary.focus();
+    await page.keyboard.press('Enter');
+    await expect(details).toHaveAttribute('open', '');
+    for (const refresh of [() => page.evaluate(() => window.CatGameApp.render(true)), () => release()]) {
+      const original = await rememberNode(summary);
+      await refresh();
+      expect(await original.evaluate(node => node.isConnected)).toBe(false);
+      await expect(details).toHaveAttribute('open', '');
+      await expect(summary).toBeFocused();
+    }
+    await page.keyboard.press('Enter');
+    await page.evaluate(() => window.CatGameApp.render(true));
+    await expect(details).not.toHaveAttribute('open');
+    await expect(summary).toBeFocused();
+    await page.keyboard.press('Enter');
+    await page.reload();
+    await expect(details).not.toHaveAttribute('open');
+  });
+
   for (const rejection of ['disabled', 'duplicate', 'other-region']) {
     test(`background focus rejects ${rejection} replacement at ${width}px`, async ({ page }) => {
       const release = await holdInitialization(page, width);

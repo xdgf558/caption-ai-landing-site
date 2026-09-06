@@ -36,7 +36,7 @@
           (step === current ? ' aria-current="step"' : "") + '><span aria-hidden="true">' + (index + 1) +
           '</span><div>' + safe(t("learning_step_" + step)) + '<small>' +
           safe(t(done ? "learning_done" : step === current ? "learning_next" : "learning_later")) + '</small></div></li>';
-      }).join("") + '</ol><details class="care-journey-rules"><summary>' + safe(t("learning_rule_label")) +
+      }).join("") + '</ol><details id="care-journey-rules" class="care-journey-rules"><summary id="care-journey-rules-summary">' + safe(t("learning_rule_label")) +
       '</summary><p class="care-journey-fineprint">' + safe(t("learning_day_rule")) + '</p></details></div>';
   }
 
