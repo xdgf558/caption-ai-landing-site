@@ -2,17 +2,29 @@
   var format = game.utils.format;
   var t = game.utils.i18n.t;
 
-  function getReleaseNotes() {
-    return game.config.releaseNotes[game.utils.i18n.getLanguage()] || game.config.releaseNotes["zh-CN"] || [];
+  function getReleaseNotes(notes) {
+    return notes[game.utils.i18n.getLanguage()] || notes["zh-CN"] || [];
+  }
+
+  function renderNotes(notes) {
+    return getReleaseNotes(notes)
+      .map(function (note) {
+        return '<li class="notice-item"><p>' + format.escapeHtml(note) + "</p></li>";
+      })
+      .join("");
   }
 
   function renderVersionPanel(state) {
     var isNewVersion = state.meta.lastSeenVersion !== game.config.version;
-    var releaseNotes = getReleaseNotes()
-      .map(function (note) {
-        return '<div class="notice-item"><p>• ' + format.escapeHtml(note) + "</p></div>";
-      })
-      .join("");
+    var history = (game.config.releaseHistory || []).filter(function (release) {
+      return release.version !== game.config.version;
+    }).map(function (release) {
+      var open = (game.state.releaseHistoryOpen || []).indexOf(release.version) !== -1;
+      return '<details class="release-history-item" data-release-version="' + format.escapeHtml(release.version) + '"' + (open ? ' open' : '') + '>' +
+        '<summary><span>' + format.escapeHtml(t("version_history_version", { version: release.version })) + '</span><span class="helper-text">' +
+        format.escapeHtml(t("version_history_count", { count: getReleaseNotes(release.notes).length })) + '</span></summary>' +
+        '<ul class="notice-list release-note-list">' + renderNotes(release.notes) + '</ul></details>';
+    }).join("");
 
     return (
       '<section class="page-header">' +
@@ -31,14 +43,16 @@
         : '<div class="inline-row" style="margin-top: 16px;"><span class="status-pill is-success">' + t("release_current") + "</span></div>") +
       "</div>" +
       "</section>" +
-      '<section class="page-card">' +
-      '<div class="inline-row"><div><p class="section-eyebrow">' + t("release_content") + '</p><h3 class="panel-title">' +
+      '<section class="page-card release-latest" aria-labelledby="release-latest-title">' +
+      '<div class="inline-row"><div><p class="section-eyebrow">' + t("release_content") + '</p><h3 class="panel-title" id="release-latest-title">' +
       t("version_current_title", { version: game.config.version }) +
       "</h3></div></div>" +
-      '<div class="notice-list" style="margin-top: 16px;">' +
-      releaseNotes +
-      "</div>" +
-      "</section>"
+      '<ul class="notice-list release-note-list">' +
+      renderNotes(game.config.releaseNotes) +
+      "</ul>" +
+      "</section>" +
+      (history ? '<section class="page-card release-history" aria-labelledby="release-history-title"><h3 class="panel-title" id="release-history-title">' +
+        t("version_history_title") + '</h3><p class="page-copy">' + t("version_history_copy") + '</p><div class="release-history-list">' + history + '</div></section>' : '')
     );
   }
 

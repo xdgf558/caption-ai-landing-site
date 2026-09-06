@@ -396,6 +396,8 @@
   }
 
   function render(preserveDrafts) {
+    var releaseFocus = document.activeElement && document.activeElement.matches('.release-history-item > summary')
+      ? document.activeElement.parentElement.dataset.releaseVersion : null;
     // Background updates must not discard text, amounts or selections being
     // edited. These drafts stay in memory only; explicit actions render afresh.
     var drafts = preserveDrafts === true ? Array.prototype.filter.call(
@@ -429,6 +431,11 @@
 
     dom.header.innerHTML = game.ui.renderHeader(game.state.game);
     dom.main.innerHTML = renderer(game.state.game);
+    if (releaseFocus) {
+      Array.prototype.forEach.call(dom.main.querySelectorAll('[data-release-version]'), function (details) {
+        if (details.dataset.releaseVersion === releaseFocus) details.querySelector('summary').focus({ preventScroll: true });
+      });
+    }
     drafts.forEach(function (draft) {
       var node = document.getElementById(draft.id);
       if (!node || node.tagName !== draft.tag || node.type !== draft.type || node.disabled || node.readOnly) return;
@@ -1325,6 +1332,14 @@
     getSelectedCat();
 
     document.addEventListener("click", handleClick);
+    document.addEventListener("toggle", function (event) {
+      var details = event.target;
+      if (!details.matches || !details.matches('[data-release-version]') || !details.isConnected) return;
+      var version = details.dataset.releaseVersion;
+      var opened = (game.state.releaseHistoryOpen || []).filter(function (item) { return item !== version; });
+      if (details.open) opened.push(version);
+      game.state.releaseHistoryOpen = opened;
+    }, true);
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("change", handleChange);
     document.addEventListener("pointerdown", handlePointerDown);
