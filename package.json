@@ -7,7 +7,7 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "pretest": "node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs",
+    "pretest": "node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs && node scripts/test-cat-life-release-history.mjs",
     "build:novel-payment-config": "node scripts/build-novel-payment-config.mjs",
     "generate:brand-assets": "node scripts/generate-brand-assets.mjs && node scripts/capture-social-preview.mjs",
     "upload:protected-serial-content": "node scripts/upload-protected-serial-content.mjs",

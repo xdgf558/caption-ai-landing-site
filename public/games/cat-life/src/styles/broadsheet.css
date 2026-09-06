@@ -3560,6 +3560,15 @@ body:has(.arcade-page) .newspaper-header { margin-bottom: 18px; }
 .home-latest-memory h3 { margin: 5px 0; font-size: 18px; line-height: 1.4; overflow-wrap: anywhere; }
 .home-latest-memory button { flex-shrink: 0; min-height: 44px; }
 #cat-memories-title { scroll-margin-top: 96px; }
+.release-note-list { margin: 16px 0 0; padding: 0; list-style: none; }
+.release-history-list { display: grid; gap: 12px; margin-top: 16px; }
+.release-history-item { border: 1px solid var(--story-ink); border-radius: 14px; background: var(--story-paper); overflow: hidden; }
+.release-history-item > summary { min-height: 48px; padding: 14px 16px; cursor: pointer; color: var(--story-ink); overflow-wrap: anywhere; }
+.release-history-item > summary > span:first-child { margin-right: 12px; font-weight: 700; }
+.release-history-item > summary:hover { background: var(--story-muted); }
+.release-history-item > summary:focus-visible { outline: 3px solid var(--story-orange); outline-offset: -4px; border-radius: 12px; }
+.release-history-item[open] > summary { border-bottom: 1px solid var(--story-ink); }
+.release-history-item > .release-note-list { margin: 0; padding: 16px; }
 @media (max-width: 520px) {
   .home-latest-memory { align-items: stretch; flex-direction: column; gap: 12px; padding: 16px; }
   .cat-memory-entry { padding-left: 12px; }
