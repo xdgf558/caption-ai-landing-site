@@ -3543,6 +3543,14 @@ body:has(.arcade-page) .newspaper-header { margin-bottom: 18px; }
 .memory-date { color: var(--story-ink); font-size: 12px; opacity: .8; line-height: 1.5; }
 .memory-bond-stage { margin: 10px 0 4px; font-weight: 800; color: var(--story-ink); }
 .memory-toggle { margin-top: 16px; min-height: 44px; width: 100%; }
+/* Dynamic successor CTAs must not move their hit area out from under a pointer.
+   Keep shadow feedback, but exclude transform from hover/press transitions. */
+.care-journey .primary-button,
+.care-support-card .primary-button,
+.cat-memories .memory-toggle { transition: box-shadow 120ms ease, filter 120ms ease; }
+.care-journey .primary-button:is(:hover, :active),
+.care-support-card .primary-button:is(:hover, :active),
+.cat-memories .memory-toggle:is(:hover, :active) { transform: none; }
 .home-latest-memory {
   display: flex; align-items: center; justify-content: space-between; gap: 20px;
   margin: 0 0 20px; padding: 18px 22px;

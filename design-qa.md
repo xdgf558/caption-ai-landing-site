@@ -12,7 +12,16 @@
 
 ## Findings and fixes
 
-No remaining P0/P1/P2 issue in the new memory flow.
+PR #101 review of `87da855` found two P2 interaction defects. The initial local passing run below was not sufficient evidence of stability: CI run `34028892813` and the review reported 45/47. The review supersedes that earlier acceptance; the follow-up results below apply to the corrected implementation.
+
+### Review follow-up
+
+- P2 — Unstable hover hit areas after rescue: global hover/active transforms moved the next care button under a stationary pointer. Care-journey, care-support and memory-toggle buttons now retain shadow feedback without geometric transforms. No forced clicks, extra retries or suppressed animations were added to the tests.
+- P2 — Focus leaving the viewport: with ten entries, the old bottom toggle moved down 844px after expansion. The toggle now precedes the list, so the existing focus restoration returns to the same screen position. Enter expansion and Space collapse keep focus below the fixed header and above the mobile navigation.
+- P3 — Documentation: the integration introduction now explicitly targets source version 1.25.0 rather than claiming 1.20.1 is current; source version is distinguished from deployed version.
+- Reproduction: all four newly added regression cases failed against the old implementation. The originally failing welcome-back/meal paths also reproduced an intermittent failure (2 failures in 6 focused runs).
+- Corrected behavior: the four new cases plus the two previously failing paths passed three repetitions (18/18). The complete 51-case browser suite passed two repetitions (102/102).
+- Visual evidence: `test-results/cat-life-review-interactio-4bf40--without-moving-the-control/expanded-focus-390.png` and `test-results/cat-life-review-interactio-1e864--without-moving-the-control/expanded-focus-1280.png` were inspected. Ten entries are expanded; the focused control remains around y=400 with its focus ring visible. Viewports and screenshot pixels are 390×844 and 1280×844 at density 1. Existing fonts, colors, assets and journal column layout are unchanged; control placement is the intentional correction.
 
 - Initial P2: jumping from Home put the journal heading behind the fixed site bar. The heading now has a 96px scroll margin; browser tests assert it is focused and below the bar. Final `journal-390.png`, `journal-1040.png`, and `journal-1280.png` verify the corrected landing position.
 - Initial P2, pre-existing but exposed here: care supplies nested progressively because a chip's outer span was not closed. The final combined desktop evidence shows six sibling chips, and browser assertions guard against nesting.
@@ -29,7 +38,7 @@ Focused combined captures at 390, 1040 and 1280 verify the shared paper surface,
 ## Required fidelity surfaces
 
 - Typography: retains the storybook font stack and established headings. Event headings are 16px, body 13px/1.7 and dates 12px/1.5. Dates, long localized copy and player names wrap without raw keys or overflow.
-- Spacing/layout: preserves existing columns and profile controls. Journal uses a restrained divider and list, three initial entries, then an explicit expand button. Expanded state survives action/focus rerenders. Home stacks its button below the summary at 520px; controls remain at least 44px high.
+- Spacing/layout: preserves existing columns and profile controls. Journal uses a restrained divider, an explicit expand button above the list and three initial entries. Expanded state survives action/focus rerenders. Home stacks its button below the summary at 520px; controls remain at least 44px high.
 - Colors/tokens: uses existing `--story-ink`, paper, orange and muted tokens. No new gradients, color palette, decorative glyphs or animation.
 - Image quality: all existing room, cat, action and supply assets are retained; QA explicitly waits for their decoding. No new images or placeholder artwork. Fixed supply nesting restores intended image/card layout.
 - Copy/content: records real successful interactions once per cat. Old milestones are labelled “date not recorded”; no historical feeding dates are invented. Full bond has a family-state message instead of another target. Missing and future-format journals have honest empty/upgrade states in Chinese, English and Japanese.
@@ -37,7 +46,8 @@ Focused combined captures at 390, 1040 and 1280 verify the shared paper surface,
 ## Verification
 
 - 8 focused memory unit tests plus existing care/onboarding suites; full `npm test` passed.
-- 47/47 browser tests passed, including six new memory cases: real care, reload/rename, correct-cat navigation, persistent expansion/drafts and three locales.
+- Historical initial run only: 47/47 browser tests passed once locally, including six new memory cases. Review and CI subsequently reported 45/47; a repeated focused reproduction failed twice in six runs. Do not use the initial count as the acceptance result for `87da855`.
+- Review-fix acceptance: `npx playwright test --repeat-each=2` passed 102/102 (51 distinct cases), without retries. Four new cases cover both 390px and 1280px; edge-hover geometry, ordinary clicks and keyboard focus bounds are asserted. Full `npm test`, 143-page build, JS syntax and whitespace checks also passed again. Remote CI status is tracked separately on PR #101, not inferred from a local run.
 - Cloud contract round-trips `cat.memoryJournal` through the existing schema-3 Worker.
 - Local 143-page build passed. No Worker code, database schema or deployment change.
 - UI browser checks include named sections, semantic time/list markup, focus transfer, 44px buttons and no horizontal overflow at 390/1040/1280.

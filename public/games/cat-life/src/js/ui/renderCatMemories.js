@@ -23,12 +23,14 @@
     var entries = game.systems.memorySystem.list(cat);
     var future = game.systems.memorySystem.journal(cat).version !== 1;
     var expanded = game.state.memoryExpandedCatId === cat.id;
+    // Keep the focused control above content whose height changes on expansion.
+    var toggle = entries.length > 3 ? '<button type="button" class="ghost-button memory-toggle" data-memory-toggle="' + safe(cat.id) +
+      '" aria-controls="cat-memory-entries" aria-expanded="' + expanded + '">' + copy(expanded ? "memory_collapse" : "memory_expand", { count: entries.length }) + '</button>' : "";
     return '<section class="cat-memories" aria-labelledby="cat-memories-title"><header><p class="section-eyebrow">' + copy("memory_label") +
       '</p><h3 id="cat-memories-title" class="panel-title" tabindex="-1">' + copy("memory_title") + '</h3><p class="helper-text">' + copy("memory_intro") +
-      '</p></header>' + (!entries.length ? '<p class="memory-empty">' + copy(future ? "memory_future" : "memory_empty") + '</p>' :
+      '</p></header>' + toggle + (!entries.length ? '<p class="memory-empty">' + copy(future ? "memory_future" : "memory_empty") + '</p>' :
       '<ol id="cat-memory-entries" class="cat-memory-list">' + (expanded ? entries : entries.slice(0, 3)).map(row).join("") + '</ol>') +
-      (entries.length > 3 ? '<button type="button" class="ghost-button memory-toggle" data-memory-toggle="' + safe(cat.id) +
-        '" aria-controls="cat-memory-entries" aria-expanded="' + expanded + '">' + copy(expanded ? "memory_collapse" : "memory_expand", { count: entries.length }) + '</button>' : "") + '</section>';
+      '</section>';
   };
   game.ui.renderLatestMemory = function (state) {
     var latest = game.systems.memorySystem.latest(state);

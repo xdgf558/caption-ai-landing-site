@@ -1,6 +1,6 @@
 # Cat Life Game website integration
 
-The browser game is published as a static sub-application at `/games/cat-life/`. Its runtime was copied from `xdgf558/cat-life-game` at merge commit `0cc839f` and is currently released as website game version `1.20.1`. The Station Cat integration files are `site-integration.js`, `site-integration.css`, `content-manifest.js`, and `commerce.js`; the copied `index.html` and `src/js/main.js` contain the hooks that load them and apply a requested language.
+The browser game is published as a static sub-application at `/games/cat-life/`. Its runtime originated from `xdgf558/cat-life-game` at merge commit `0cc839f`; this branch targets website game version `1.25.0`. This source version is not a claim that the branch has been deployed. The Station Cat integration files are `site-integration.js`, `site-integration.css`, `content-manifest.js`, and `commerce.js`; the copied `index.html` and `src/js/main.js` contain the hooks that load them and apply a requested language.
 
 The four indexable product pages live at `/en/apps/cat-life-game/`, `/ja/apps/cat-life-game/`, `/zh-hans/apps/cat-life-game/`, and `/zh-hant/apps/cat-life-game/`. The playable runtime is marked `noindex` and excluded from the sitemap so search results point to a localized product page instead of the application shell.
 
