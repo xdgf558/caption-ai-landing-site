@@ -395,7 +395,34 @@
     }, 1300);
   }
 
+  function captureBackgroundFocus() {
+    var active = document.activeElement;
+    if (!active || !active.matches('button, a[href], summary, [tabindex]')) return null;
+    var root = [dom.header, dom.main, dom.navigation, dom.mobileNavigation].find(function (node) {
+      return node && node.contains(active);
+    });
+    if (!root) return null; // Dialogs and the site shell are not replaced here.
+    var identity = Array.prototype.filter.call(active.attributes, function (attribute) {
+      return active.id ? attribute.name === "id" : attribute.name.indexOf("data-") === 0;
+    }).map(function (attribute) { return { name: attribute.name, value: attribute.value }; });
+    if (!identity.length) return null;
+    return function () {
+      if (active.isConnected) return;
+      // Match semantic identity within the same region, never a sibling index:
+      // an entitlement change can remove/reorder controls or disable an action.
+      var matches = Array.prototype.filter.call(root.querySelectorAll(active.tagName), function (node) {
+        return identity.every(function (attribute) { return node.getAttribute(attribute.name) === attribute.value; });
+      });
+      if (matches.length !== 1) return;
+      var next = matches[0];
+      if (!next.matches(':disabled, [aria-disabled="true"]') && next.getClientRects().length) {
+        next.focus({ preventScroll: true });
+      }
+    };
+  }
+
   function render(preserveDrafts) {
+    var restoreFocus = preserveDrafts === true ? captureBackgroundFocus() : null;
     var releaseFocus = document.activeElement && document.activeElement.matches('.release-history-item > summary')
       ? document.activeElement.parentElement.dataset.releaseVersion : null;
     // Background updates must not discard text, amounts or selections being
@@ -476,6 +503,7 @@
         button.removeAttribute("aria-current");
       }
     });
+    if (restoreFocus) restoreFocus();
   }
 
   function updateSetting(target) {

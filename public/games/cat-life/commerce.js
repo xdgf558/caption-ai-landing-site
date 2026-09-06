@@ -477,7 +477,9 @@
 
   function refreshView() {
     if (window.CatGameApp && typeof window.CatGameApp.render === "function") {
-      window.CatGameApp.render();
+      // Membership responses can arrive while another page is being edited.
+      // Update entitlements immediately without treating it as a player action.
+      window.CatGameApp.render(true);
     }
   }
 
