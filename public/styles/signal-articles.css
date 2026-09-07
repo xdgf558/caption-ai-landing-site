@@ -1,0 +1,46 @@
+.articles-page { background: #fcfcfa; }
+.articles-page .signal-shell { max-width: 1080px; margin: 0 auto; padding: 36px 24px 72px; }
+.articles-brand-logo { display: block; width: 40px; height: 40px; object-fit: contain; flex-shrink: 0; }
+.articles-page .signal-station-header { background: #fcfcfa; border-bottom: 1px solid #d9dfdc; }
+.articles-page .signal-station-header__inner { min-height: 68px; }
+.articles-page .signal-station-footer { border-top: 1px solid #d9dfdc; }
+.articles-intro { padding: 28px 0 36px; max-width: 780px; }
+.articles-eyebrow { color: #55716b; font: 600 12px/1.5 ui-monospace, monospace; }
+.articles-intro h1 { font: 600 42px/1.2 ui-serif, Georgia, 'Songti TC', serif; margin: 12px 0 20px; letter-spacing: 0; }
+.articles-intro > p:not(.articles-eyebrow) { color: #57625f; font-size: 17px; line-height: 1.8; }
+.articles-intro > a { color: #286153; font-size: 14px; text-underline-offset: 4px; }
+.articles-nav { display: flex; gap: 28px; border-bottom: 1px solid #ced8d3; font-size: 14px; }
+.articles-nav > * { padding: 16px 0; min-height: 44px; text-decoration: none; }
+.articles-nav [aria-current] { border-bottom: 2px solid #286153; font-weight: 700; }
+.article-row { padding: 30px 0; border-bottom: 1px solid #e1e5e2; display: grid; gap: 28px; align-items: start; }
+.article-row.has-cover { grid-template-columns: 230px minmax(0, 1fr); }
+.article-thumbnail { display: block; aspect-ratio: 3/2; overflow: hidden; border-radius: 4px; background: #eef1ed; }
+.article-thumbnail img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.article-meta { display: flex; flex-wrap: wrap; gap: 12px; color: #65716b; font-size: 12px; line-height: 1.6; }
+.article-row h2 { font: 600 24px/1.5 ui-serif, Georgia, 'Songti TC', serif; margin: 10px 0; overflow-wrap: anywhere; }
+.article-row h2 a { text-decoration: none; }
+.article-row h2 a:hover { color: #286153; }
+.article-row p { color: #56605c; font-size: 15px; line-height: 1.8; margin: 8px 0; overflow-wrap: anywhere; }
+.article-read, .article-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #286153; font-size: 14px; text-underline-offset: 4px; }
+.articles-empty { padding: 44px 0; color: #64706a; }
+.articles-pagination { display: flex; gap: 24px; padding-top: 24px; }
+.articles-pagination a { min-height: 44px; display: inline-flex; align-items: center; }
+.article-reader { max-width: 760px; margin: 0 auto; overflow-wrap: anywhere; }
+.article-reader header { padding: 30px 0; border-bottom: 1px solid #d9dfdc; margin-bottom: 28px; }
+.article-reader h1 { font: 600 38px/1.4 ui-serif, Georgia, 'Songti TC', serif; margin: 16px 0; letter-spacing: 0; }
+.article-lead { color: #5b6761; font-size: 18px; line-height: 1.8; }
+.article-cover { display: block; width: 100%; height: auto; border-radius: 4px; margin: 24px 0 32px; }
+.article-prose { font-size: 17px; line-height: 1.95; }
+.article-prose p { white-space: pre-wrap; margin: 0 0 1.3em; }
+.article-prose h1, .article-prose h2 { font-size: 26px; margin: 1.8em 0 .8em; }
+.article-prose h3 { font-size: 21px; }
+.article-prose li { margin-bottom: .5em; }
+@media (max-width: 600px) {
+  .articles-page .signal-shell { padding: 22px 18px 48px; }
+  .articles-intro { padding: 16px 0 26px; }
+  .articles-intro h1 { font-size: 32px; }
+  .article-row.has-cover { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .article-row h2 { font-size: 23px; }
+  .article-reader h1 { font-size: 29px; }
+  .article-prose { font-size: 16px; }
+}

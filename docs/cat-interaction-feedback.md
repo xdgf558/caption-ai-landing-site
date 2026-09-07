@@ -20,4 +20,4 @@ The first transparent request returned an opaque checkerboard. A second built-in
 
 ## Verification
 
-See root `design-qa.md` for results and verification boundaries. Full unit tests, the 143-page build and the complete UTC browser suite (106/106) passed. Reproduce with `npm test`, `npm run build` and `TZ=UTC npm run test:browser`. No deployment is implied by the version bump.
+See root `design-qa.md` for results and verification boundaries. Full unit tests, the 144-page build and the complete UTC browser suite (106/106) passed. Reproduce with `npm test`, `npm run build` and `TZ=UTC npm run test:browser`. No deployment is implied by the version bump.

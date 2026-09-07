@@ -33,9 +33,10 @@ Evidence stays in ignored `test-results/`, not git or deployed `public/`. These 
 
 ## Verification and boundaries
 
-Full `npm test`, 8 new interaction tests, 143-page build, JS syntax and whitespace checks passed.
+Full `npm test` (including the latest main's article tests), 8 new interaction tests, 144-page build, JS syntax and whitespace checks passed. The initial build had 143 pages; syncing main added its article admin page.
 In-app checks: feed/play/rest/clean; double-click play consumed exactly one use; disclosure and clean-button focus survived reaction-end redraw; unsubmitted nickname and focus survived background redraw; reload clears transient receipt; no console errors returned.
-Browser validation on 2026-09-07, with `TZ=UTC`: five new interaction cases passed; the final complete suite passed 106/106 (57.3s).
+Browser validation on 2026-09-07, with `TZ=UTC`: five new interaction cases passed; the complete suite passed 106/106 (57.3s), then passed 106/106 again (52.9s) after syncing latest main.
+The latest main's separate article browser suite also passed 5/5 (2.5s). Its test entry and the new interaction entry are both retained in package.json.
 The initial full run passed 105/106: the member skin test still targeted the removed care section and old `Zz` cue. Its selector and reaction assertion now follow the new UI while retaining the official skin identity check and adding the rest animation check. That case passed 5/5 repeated runs before the complete rerun. No failures were skipped or retried automatically.
 Browser emulated reduced-motion coverage passed; no OS-level reduced-motion or screen-reader test was run. GitHub CI status is reported by the PR checks, not this local QA record.
 The fixture has no member API; its cloud-unavailable label is expected. No production account/save, Worker, database or deployment changed.

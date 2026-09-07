@@ -32,7 +32,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <span class="admin-v2-nav-label" id="admin-nav-publish">发布</span>
             <button class="admin-v2-tab is-active" type="button" aria-pressed="true" data-admin-v2-tab="content">内容</button>
             <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="imports">导入审核</button>
-            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="signal">每日简报</button>
+            <a class="admin-v2-tab" href="/admin/articles/">文章</a>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="signal">简报归档与采集</button>
           </div>
           <div class="admin-v2-nav-group" role="group" aria-labelledby="admin-nav-operations">
             <span class="admin-v2-nav-label" id="admin-nav-operations">运营</span>
@@ -3390,7 +3391,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const loadSignalBriefs = async () => {
       const payload = await apiJson('/admin/api/content/entries?type=signal_brief&locale=zh-Hant');
-      state.signalBriefs = (payload.entries || []).filter((entry) => entry.status !== 'archived');
+      state.signalBriefs = (payload.entries || []).filter((entry) => entry.status !== 'archived' && entry.sourceKind !== 'x_article');
       if (!state.signalBriefs.find((entry) => entry.id === state.selectedSignalId)) {
         state.selectedSignalId = state.signalBriefs[0]?.id || 0;
       }
@@ -4051,7 +4052,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (elements.filters.type.value) params.set('type', elements.filters.type.value);
       if (elements.filters.status.value) params.set('status', elements.filters.status.value);
       const payload = await apiJson(`/admin/api/content/entries?${params.toString()}`);
-      state.entries = payload.entries || [];
+      state.entries = (payload.entries || []).filter((entry) => entry.sourceKind !== 'x_article');
       const selectedEntryStillVisible = state.entries.some((entry) => entry.id === state.selectedEntryId);
       renderContentList();
       if (autoSelect && state.entries.length) {
