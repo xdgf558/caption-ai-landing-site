@@ -31,10 +31,25 @@
 .article-lead { color: #5b6761; font-size: 18px; line-height: 1.8; }
 .article-cover { display: block; width: 100%; height: auto; border-radius: 4px; margin: 24px 0 32px; }
 .article-prose { font-size: 17px; line-height: 1.95; }
-.article-prose p { white-space: pre-wrap; margin: 0 0 1.3em; }
+.article-prose p { margin: 0 0 1.3em; }
 .article-prose h1, .article-prose h2 { font-size: 26px; margin: 1.8em 0 .8em; }
 .article-prose h3 { font-size: 21px; }
 .article-prose li { margin-bottom: .5em; }
+.article-prose ul, .article-prose ol { padding-inline-start: 1.6em; }
+.article-prose li > p { margin-bottom: .6em; }
+.article-prose h4, .article-prose h5, .article-prose h6 { font-size: 18px; margin: 1.5em 0 .6em; }
+.article-prose blockquote { margin: 1.5em 0; padding: 6px 0 6px 22px; border-left: 3px solid #739c88; color: #536b5d; }
+.article-prose blockquote > :last-child { margin-bottom: 0; }
+.article-prose a { color: #286153; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.article-prose img { display: block; max-width: 100%; height: auto; border-radius: 4px; margin: 20px auto; }
+.article-prose code { font: .88em/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; background: #edf1ee; padding: 2px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+.article-prose pre { max-width: 100%; overflow-x: auto; background: #edf1ee; border: 1px solid #d6e0d9; border-radius: 4px; padding: 18px; white-space: pre; }
+.article-prose pre code { padding: 0; background: transparent; overflow-wrap: normal; }
+.article-prose hr { margin: 2em 0; border: 0; border-top: 1px solid #cdd8d0; }
+.article-table-scroll { max-width: 100%; overflow-x: auto; margin: 1.5em 0; }
+.article-prose table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 15px; }
+.article-prose th, .article-prose td { border-bottom: 1px solid #d4dfd8; padding: 10px 14px; text-align: left; vertical-align: top; min-width: 150px; max-width: 360px; overflow-wrap: anywhere; }
+.article-prose th { background: #eaf0ec; font-weight: 600; }
 .article-row-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
 .article-share-trigger { font: inherit; font-size: 14px; color: #286153; background: transparent; border: 1px solid #c4d2c9; border-radius: 4px; min-height: 44px; padding: 8px 14px; cursor: pointer; }
 .article-share-dialog { box-sizing: border-box; width: min(480px, calc(100% - 24px)); max-height: calc(100dvh - 24px); padding: 20px; border: 1px solid #c4d2c9; border-radius: 8px; background: #fcfcfa; color: #243c34; overflow-y: auto; }

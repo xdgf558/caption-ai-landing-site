@@ -48,6 +48,7 @@ import {
 } from './catLifeCommerce.js';
 import { Resvg } from '@cf-wasm/resvg';
 import { articleSourceKind, articleCopy, articleBasePath, articleMetadata, normalizeArticleInput, suggestArticleMetadata, renderArticleIndex, renderArticleDetail } from './signalArticles.js';
+import { renderArticleMarkdown } from './articleMarkdown.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -16761,7 +16762,7 @@ const handleAdminArticles = async (request, env) => {
     try { payload = JSON.parse(body.text); } catch { return privateJson({ ok: false, message: '无效的 JSON。' }, { status: 400 }); }
     if (url.pathname.endsWith('/metadata')) return privateJson({ ok: true, ...await suggestArticleMetadata(payload?.sourceUrl) });
     const article = normalizeArticleInput(payload);
-    const html = renderSignalMarkdownToHtml(article.markdown);
+    const html = renderArticleMarkdown(article.markdown, article.locale);
     if (url.pathname.endsWith('/preview')) {
       const row = { ...article, locale: article.locale, published_at: new Date().toISOString(), cover_r2_key: article.coverR2Key, cover_alt: article.coverAlt, metadata_json: JSON.stringify({ article: { sourceUrl: article.url, hasBody: article.hasBody } }) };
       return privateJson({ ok: true, html: renderArticleDetail(article.locale, row, html) });
@@ -21682,7 +21683,7 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
       const meta = articleMetadata(brief);
       const body = meta.hasBody ? await readPublicEntryBody(env, brief, { preferMarkdown: true }) : { markdown: '' };
       return dynamicHtmlResponse(request, {
-        body: renderArticleDetail(route.locale, brief, renderSignalMarkdownToHtml(body.markdown)),
+        body: renderArticleDetail(route.locale, brief, renderArticleMarkdown(body.markdown, route.locale)),
         canonicalPath: dynamicCanonicalPath(route), description: brief.description,
         lang: route.locale, pageKind: 'articles', title: brief.title,
         ogImage: contentMediaUrl(brief.cover_r2_key), robots: meta.hasBody ? '' : 'noindex, follow',

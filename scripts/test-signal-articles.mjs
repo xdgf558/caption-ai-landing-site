@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import './test-article-markdown.mjs';
 import worker, { __readerTotpTestHooks as hooks } from '../src/worker.js';
 import { normalizeArticleUrl, normalizeArticleInput, suggestArticleMetadata, renderArticleIndex } from '../src/signalArticles.js';
 import { createArticleFixture } from './helpers/article-fixture.mjs';

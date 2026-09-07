@@ -1,4 +1,11 @@
 ---
+import { Bold, Italic, Heading2, List, Link, Quote, Code, ImagePlus, Undo2 } from '@lucide/astro';
+const bodyTools = [
+  { action: 'heading', label: '小标题', Icon: Heading2 }, { action: 'bold', label: '加粗', Icon: Bold },
+  { action: 'italic', label: '斜体', Icon: Italic }, { action: 'quote', label: '引用', Icon: Quote },
+  { action: 'list', label: '列表', Icon: List }, { action: 'link', label: '链接', Icon: Link },
+  { action: 'code', label: '代码块', Icon: Code }
+];
 ---
 <!doctype html>
 <html lang="zh-Hans">
@@ -33,7 +40,18 @@
               <div><label for="article-cover">封面 <span>可选</span></label><input id="article-cover" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" /></div>
             </div>
             <div id="cover-selected" hidden><img id="cover-image" alt="封面预览" width="180" height="120" /><div><label for="article-cover-alt">图片说明</label><input id="article-cover-alt" maxlength="300" /><button id="cover-remove" type="button">移除封面</button></div></div>
-            <details id="article-body-section"><summary>站内正文 <span>可选 · Markdown</span></summary><label class="sr-only" for="article-body">正文</label><textarea id="article-body" rows="16" maxlength="120000"></textarea></details>
+            <details id="article-body-section">
+              <summary>站内正文 <span>可选 · 增强 Markdown</span></summary>
+              <div class="body-tools" role="group" aria-label="正文排版">
+                {bodyTools.map(({ action, label, Icon }) => <button type="button" data-body-action={action} aria-label={label} title={label}><Icon size={18} aria-hidden="true" /></button>)}
+                <button id="article-body-image-button" type="button" aria-label="插入图片" title="插入图片"><ImagePlus size={18} aria-hidden="true" /></button>
+                <button id="article-format-undo" type="button" aria-label="撤销排版" title="撤销排版" disabled><Undo2 size={18} aria-hidden="true" /></button>
+                <button id="article-format" type="button">整理排版</button>
+              </div>
+              <label class="body-paste-option"><input id="article-rich-paste" type="checkbox" checked />保留粘贴格式</label>
+              <input id="article-body-image" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" hidden aria-label="正文图片" />
+              <label class="sr-only" for="article-body">正文</label><textarea id="article-body" rows="16" maxlength="120000"></textarea>
+            </details>
             <footer class="editor-actions"><button type="button" id="article-preview">预览</button><span class="action-spacer"></span><button type="button" id="article-withdraw" hidden>下架</button><button type="submit" id="article-save">保存草稿</button><button type="button" class="primary" id="article-publish">发布文章</button></footer>
           </form>
         </section>

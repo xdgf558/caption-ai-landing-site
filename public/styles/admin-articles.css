@@ -40,6 +40,11 @@
 #cover-remove { margin-top: 8px; }
 #article-body-section { border-top: 1px solid #e0e6e2; margin-top: 24px; }
 #article-body-section summary { padding: 16px 0; cursor: pointer; font-weight: 600; }
+.body-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.body-tools button { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 8px; }
+.body-tools #article-format { width: auto; padding: 8px 12px; }
+.article-admin .body-paste-option { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: 13px; margin: 12px 0; }
+.article-admin .body-paste-option input { width: 16px; height: 16px; min-height: 16px; margin: 0; accent-color: #326451; }
 .editor-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px solid #e0e6e2; padding-top: 18px; margin-top: 20px; }
 .action-spacer { flex: 1; }
 #article-list button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid #dce3de; background: transparent; border-radius: 0; padding: 16px 10px; }
@@ -56,3 +61,4 @@
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 @media(max-width: 760px) { .editor-layout { grid-template-columns: 1fr; gap: 24px; } .editor-shell { padding: 22px 16px 48px; } .editor-topbar { padding: 0 16px; } .editor-workspace { border: 0; padding: 4px 16px 20px; } #article-list { max-height: 210px; overflow: auto; } .editor-options { grid-template-columns: 1fr; gap: 0; } .action-spacer { display: none; } .editor-actions button { flex: 1 1 auto; } #cover-selected { align-items: start; } #cover-selected img { width: 90px; height: 75px; } }
 @media(pointer: coarse) { .article-admin button, .article-admin select, .article-admin input { min-height: 44px; } }
+@media(pointer: coarse) { .body-tools button { min-width: 44px; } .article-admin .body-paste-option { min-height: 44px; } .article-admin .body-paste-option input { min-height: 16px; } }
