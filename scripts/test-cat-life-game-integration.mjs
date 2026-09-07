@@ -26,6 +26,7 @@ for (const path of [
   `${gameRoot}/src/js/systems/catInteractionSystem.js`,
   `${gameRoot}/src/styles/cat-interactions.css`,
   `${gameRoot}/src/assets/poses/eating-bowl.webp`,
+  `${gameRoot}/src/assets/audio/moonlight-tiptoes-soft.m4a`,
   `${gameRoot}/src/js/ui/renderCatMemories.js`,
   `${gameRoot}/src/js/systems/onboardingSystem.js`,
   `${gameRoot}/src/js/ui/renderCareJourney.js`,
@@ -183,11 +184,11 @@ assert.match(namespace, /storageKey: "catGameSaveV1"/);
 const releaseContext = { window: {} };
 vm.runInNewContext(namespace, releaseContext);
 const releaseConfig = releaseContext.window.CatGame.config;
-assert.equal(releaseConfig.version, '1.26.1');
+assert.equal(releaseConfig.version, '1.26.2');
 for (const [language, currentCopy] of Object.entries({
-  'zh-CN': '照护建议现在只定位到对应按钮',
-  en: 'Care guidance now points to the matching care button',
-  ja: 'お世話の案内は対応するボタンへ移動するだけ'
+  'zh-CN': '背景音乐换为《月亮下的小猫·柔和版》',
+  en: 'Background music is now Moonlight Tiptoes',
+  ja: 'BGMを「月明かりの子猫'
 })) {
   assert.ok(releaseConfig.releaseNotes[language].some(note => note.startsWith(currentCopy)), 'Current notes, not archived notes: ' + language);
 }
@@ -201,7 +202,7 @@ assert.match(landing, /兌換是否開放，以會員商店的即時狀態為準
 assert.match(landing, /Check the member store for current availability/);
 assert.match(landing, /<img src=\{catLifeGameProduct\.assets\.stationRoom\} alt=""/);
 assert.match(landing, /<figcaption>\{copy\.commercePreview\}<\/figcaption>/);
-assert.match(product, /latestVersion: '1\.26\.1'/);
+assert.match(product, /latestVersion: '1\.26\.2'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);

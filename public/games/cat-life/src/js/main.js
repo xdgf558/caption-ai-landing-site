@@ -702,6 +702,7 @@
       }
       game.state.saveSystem.saveGame(game.state.game);
       if (game.systems.musicSystem) {
+        if (game.state.game.settings.bgmEnabled && Number(game.state.game.settings.bgmVolume) > 0) game.systems.musicSystem.unlock();
         game.systems.musicSystem.applyVolume();
         game.systems.musicSystem.syncForState(game.state.currentPage);
       }
@@ -1395,9 +1396,9 @@
     document.addEventListener("visibilitychange", function () {
       if (!document.hidden) {
         syncRealtime("visibility");
-        if (game.systems.musicSystem) {
-          game.systems.musicSystem.syncForState(game.state.currentPage);
-        }
+      }
+      if (game.systems.musicSystem) {
+        game.systems.musicSystem.syncForState(game.state.currentPage);
       }
     });
     window.addEventListener("beforeunload", function () {
