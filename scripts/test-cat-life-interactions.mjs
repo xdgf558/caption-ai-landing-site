@@ -5,6 +5,16 @@ import { test } from 'node:test';
 const root = new URL('../public/games/cat-life/', import.meta.url);
 const files = [...readFileSync(new URL('index.html', root), 'utf8').matchAll(/<script src="\.\/(src\/js\/[^" ]+)"/g)].map(m => m[1]).filter(p => !/main\.js|musicSystem\.js/.test(p));
 const clone = value => JSON.parse(JSON.stringify(value));
+function unchanged(state, before) {
+  const changed = [];
+  function visit(a, b, path) {
+    if (JSON.stringify(a) === JSON.stringify(b)) return;
+    if (!a || !b || typeof a !== 'object' || typeof b !== 'object') { changed.push(path); return; }
+    for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) visit(a[key], b[key], path + '.' + key);
+  }
+  visit(state, JSON.parse(before), 'state');
+  assert.deepEqual(changed, [], 'read-only calls changed state');
+}
 function setup() {
   let now = Date.parse('2026-09-07T12:00:00Z');
   class Clock extends Date { constructor(...args) { super(...(args.length ? args : [now])); } static now() { return now; } }
@@ -13,7 +23,7 @@ function setup() {
     localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v), removeItem: k => storage.delete(k) } });
   for (const file of files) vm.runInContext(readFileSync(new URL(file, root), 'utf8'), context);
   const game = context.window.CatGame;
-  const state = game.state.game = game.state.createNewGame();
+  const state = game.state.game = game.state.normalizeGameData(game.state.createNewGame());
   game.state.selectedCatId = state.cats[0].id;
   game.utils.random.chance = () => false;
   Object.assign(state.inventory, { food: 10, toys: 10, premiumFood: 10, medicine: 10, litter: 10, catGrass: 10 });
@@ -90,4 +100,65 @@ test('localized feedback and hostile names are safe in all supported languages',
     const html = game.ui.renderCatPanel(state);
     assert.doesNotMatch(html, /interaction_(ready|done|says|more|memory)|undefined|NaN|<img onerror/);
   }
+});
+
+test('memory reads and latest selection do not reorder saved entries', () => {
+  const { game, cat, state } = setup();
+  cat.memoryJournal = { version: 1, entries: [
+    { key: 'met', at: '2026-09-01T00:00:00Z', order: 1 },
+    { key: 'feed', at: '2026-09-02T00:00:00Z', order: 2 },
+    { key: 'bond_25', at: null, order: 0 }
+  ] };
+  const before = JSON.stringify(state);
+  Object.freeze(cat.memoryJournal.entries);
+  assert.deepEqual(clone(game.systems.memorySystem.list(cat)).map(e => e.key), ['feed', 'met', 'bond_25']);
+  assert.equal(game.systems.memorySystem.latest(state).entry.key, 'feed');
+  game.ui.renderCatPanel(state);
+  unchanged(state, before);
+  // Even a normalizer returning a shared immutable array must be safe to read.
+  const normalize = game.state.catMemory.normalize;
+  game.state.catMemory.normalize = () => cat.memoryJournal;
+  assert.deepEqual(clone(game.systems.memorySystem.list(cat)).map(e => e.key), ['feed', 'met', 'bond_25']);
+  game.state.catMemory.normalize = normalize;
+  cat.memoryJournal = { version: 2, entries: [{ key: 'future', order: 99 }] };
+  const future = JSON.stringify(cat.memoryJournal);
+  assert.deepEqual(clone(game.systems.memorySystem.list(cat)), []);
+  assert.equal(JSON.stringify(cat.memoryJournal), future);
+});
+
+test('veteran and novice guidance point to one real control without duplicate care actions', () => {
+  const { game, state, cat } = setup();
+  cat.hunger = 50;
+  Object.assign(state.player.careLearning, { metCat: true, supplyClaims: [1, 2, 3] });
+  for (const eligible of [false, true]) {
+    state.player.careLearning.eligible = eligible;
+    const before = JSON.stringify(state);
+    const html = game.ui.renderCatPanel(state);
+    assert.equal((html.match(/data-cat-action="/g) || []).length, 7);
+    assert.equal((html.match(/data-focus-cat-action="feedBasic"/g) || []).length, 1);
+    assert.match(html, /aria-controls="cat-care-feedBasic"/);
+    assert.match(html, /只定位到照护按钮，不会消耗物品/);
+    unchanged(state, before);
+    assert.match(game.ui.renderCareJourney(state), /data-cat-action="feedBasic"/, 'home retains direct care');
+  }
+});
+
+test('additional care guidance and all localized completion labels resolve safely', () => {
+  const { game, state, cat, system } = setup();
+  state.player.careLearning.eligible = false;
+  cat.hunger = 100; cat.clean = 40; cat.health = 80; cat.mood = 90;
+  for (const language of ['zh-CN', 'en', 'ja']) {
+    state.settings.language = language;
+    const html = game.ui.renderCatPanel(state);
+    assert.match(html, /data-focus-cat-action="clean"/);
+    assert.match(html, /aria-controls="cat-care-clean"/);
+    assert.doesNotMatch(html, /interaction_find_|undefined|NaN/);
+  }
+  state.settings.language = 'en';
+  system.perform(cat.id, 'feedBasic');
+  const html = game.ui.renderCatPanel(state);
+  assert.match(html, /Done: Feed/);
+  assert.doesNotMatch(html, /Feed complete/);
+  assert.doesNotMatch(game.ui.renderCareActionLink('clean', '<script>bad</script>', false), /<script>/);
+  assert.match(game.ui.renderCareActionLink('clean', 'Clean', false), / disabled/);
 });

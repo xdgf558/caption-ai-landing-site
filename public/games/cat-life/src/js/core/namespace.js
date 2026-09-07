@@ -2,28 +2,48 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.26.0",
+      version: "1.26.1",
       saveSchemaVersion: 3,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
-          "猫咪互动以场景为中心，喂食、陪玩和休息就在猫咪下方，其他照护可展开查看。",
-          "互动后显示实际状态变化与物品消耗，新回忆只在真正产生时提示。",
-          "不同动作有独立反馈动效，快速连点不重复结算，后台刷新保留操作焦点与展开状态，并支持减少动态效果。"
+          "照护建议现在只定位到对应按钮，不会消耗物品；实际操作和结果统一留在猫咪身边。",
+          "主操作与更多照护使用一致的焦点提示，定位后展开状态和未提交的名字仍会保留。",
+          "润色互动完成文案，并强化回忆读取不改变保存顺序的检查；照护数值与存档格式不变。"
         ],
         "en": [
-          "Scene-first cat care puts feeding, play and rest beneath your companion, with more care available on demand.",
-          "Results show actual stat changes and supplies used. Memory notices appear only when a new memory is recorded.",
-          "Distinct reactions, rapid-click protection and preserved focus across background refreshes support calmer care, including reduced motion."
+          "Care guidance now points to the matching care button without spending supplies. Actions and results stay together beside your cat.",
+          "Primary and additional care share one focus style. Finding an action keeps disclosures and unfinished names intact.",
+          "Clearer completion messages and checks that reading memories preserves their saved order. Care values and save format are unchanged."
         ],
         "ja": [
-          "猫のすぐ下にごはん・遊び・休憩を配置。ほかのお世話は開いて確認できます。",
-          "実際の状態変化と消費アイテムを表示。新しい思い出が生まれたときだけお知らせします。",
-          "動作ごとの反応、連打の重複防止、更新後のフォーカス保持に対応。動きを減らす設定も使えます。"
+          "お世話の案内は対応するボタンへ移動するだけで、アイテムを消費しません。操作と結果は猫のそばにまとまります。",
+          "基本のお世話と追加のお世話でフォーカス表示を統一。移動後も開いた項目と入力中の名前を保ちます。",
+          "完了メッセージを改善し、思い出の閲覧が保存順序を変えないことを確認。お世話の数値とセーブ形式は変わりません。"
         ]
       },
       releaseHistory: [
+        {
+          version: "1.26.0",
+          notes: {
+            "zh-CN": [
+              "猫咪互动以场景为中心，喂食、陪玩和休息就在猫咪下方，其他照护可展开查看。",
+              "互动后显示实际状态变化与物品消耗，新回忆只在真正产生时提示。",
+              "不同动作有独立反馈动效，快速连点不重复结算，后台刷新保留操作焦点与展开状态，并支持减少动态效果。"
+            ],
+            "en": [
+              "Scene-first cat care puts feeding, play and rest beneath your companion, with more care available on demand.",
+              "Results show actual stat changes and supplies used. Memory notices appear only when a new memory is recorded.",
+              "Distinct reactions, rapid-click protection and preserved focus across background refreshes support calmer care, including reduced motion."
+            ],
+            "ja": [
+              "猫のすぐ下にごはん・遊び・休憩を配置。ほかのお世話は開いて確認できます。",
+              "実際の状態変化と消費アイテムを表示。新しい思い出が生まれたときだけお知らせします。",
+              "動作ごとの反応、連打の重複防止、更新後のフォーカス保持に対応。動きを減らす設定も使えます。"
+            ]
+          }
+        },
         {
           version: "1.25.1",
           notes: {

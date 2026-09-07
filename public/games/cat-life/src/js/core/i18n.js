@@ -2902,6 +2902,7 @@
 
   Object.assign(messages["zh-CN"], {
     interaction_feed: "喂食", interaction_ready: "陪它做一件小事", interaction_ready_copy: "喂食、陪玩，或让它歇一会儿。",
+    interaction_find_action: "找到{{action}}按钮", interaction_find_hint: "只定位到照护按钮，不会消耗物品。",
     interaction_done: "{{action}}完成", interaction_unchanged: "状态已满，本次没有数值变化",
     interaction_more: "更多照护", interaction_memory_added: "新回忆已记入日记",
     interaction_says_feedBasic: "喵，吃饱啦。", interaction_says_feedPremium: "今天的饭好香。",
@@ -2910,7 +2911,8 @@
   });
   Object.assign(messages.en, {
     interaction_feed: "Feed", interaction_ready: "A little time together", interaction_ready_copy: "Share a meal, play, or take a rest.",
-    interaction_done: "{{action}} complete", interaction_unchanged: "Already full — no stat changes this time",
+    interaction_find_action: "Show {{action}} button", interaction_find_hint: "Find the care button without using any supplies.",
+    interaction_done: "Done: {{action}}", interaction_unchanged: "Already full — no stat changes this time",
     interaction_more: "More care", interaction_memory_added: "A new memory is in your journal",
     interaction_says_feedBasic: "Meow, that was lovely.", interaction_says_feedPremium: "What a lovely meal!",
     interaction_says_play: "That was fun!", interaction_says_rest: "It feels safe to rest here.",
@@ -2918,6 +2920,7 @@
   });
   Object.assign(messages.ja, {
     interaction_feed: "ごはん", interaction_ready: "一緒に小さなひとときを", interaction_ready_copy: "ごはん、遊び、それともひと休み。",
+    interaction_find_action: "「{{action}}」ボタンへ", interaction_find_hint: "お世話ボタンへ移動します。アイテムは消費しません。",
     interaction_done: "{{action}}が完了", interaction_unchanged: "状態は満タンです。今回は数値の変化なし",
     interaction_more: "ほかのお世話", interaction_memory_added: "新しい思い出を日記に記録しました",
     interaction_says_feedBasic: "にゃあ、おいしかった。", interaction_says_feedPremium: "ごちそうさま。",

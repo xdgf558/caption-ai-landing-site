@@ -137,8 +137,8 @@ test('v2 import honors old cat trackers despite fresh meta and shows the new rel
   await expect(page.locator('.care-support-card').first()).toContainText('Safe in temporary care');
   expect(await page.evaluate(() => window.CatGame.state.game.cats[0].hunger)).toBe(64);
   await page.locator('.desktop-navigation [data-page-target="version"]').click();
-  await expect(page.locator('#app-main')).toContainText('1.26.0');
-  await expect(page.locator('#app-main')).toContainText('Gentle care is on');
+  await expect(page.locator('.release-latest')).toContainText('1.26.1');
+  await expect(page.locator('.release-latest')).toContainText('Care guidance now points to the matching care button');
   await expect(page.locator('[data-dismiss-release-note]')).toBeVisible();
   await page.locator('[data-dismiss-release-note]').click();
   await page.reload();

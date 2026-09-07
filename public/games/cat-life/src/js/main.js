@@ -616,6 +616,7 @@
     var workSelectButton = event.target.closest("[data-select-work-job]");
     var workFilterButton = event.target.closest("[data-work-filter]");
     var catActionButton = event.target.closest("[data-cat-action]");
+    var careJumpButton = event.target.closest("[data-focus-cat-action]");
     var shopButton = event.target.closest("[data-store-item]");
     var taskButton = event.target.closest("[data-task-claim]");
     var exportButton = event.target.closest("[data-export-save]");
@@ -656,6 +657,16 @@
     var roomModeButton = event.target.closest("[data-room-mode-target]");
     var roomOptionButton = event.target.closest("[data-room-option-key]");
     var catActionResult;
+
+    if (careJumpButton) {
+      var careControl = document.getElementById("cat-care-" + careJumpButton.dataset.focusCatAction);
+      if (game.state.currentPage !== "cats" || !careControl || careControl.disabled || !careControl.closest(".cat-journal-profile")) return;
+      var careDisclosure = careControl.closest("details");
+      if (careDisclosure) careDisclosure.open = true;
+      careControl.scrollIntoView({ block: "center", behavior: "instant" });
+      careControl.focus({ preventScroll: true });
+      return;
+    }
 
     if (roomModeButton) {
       game.state.roomMode = roomModeButton.dataset.roomModeTarget === "edit" ? "edit" : "life";
@@ -853,7 +864,7 @@
       if (catActionResult && catActionResult.ok) {
         scheduleCatReactionEnd();
       }
-      handleActionResult(catActionResult, true, Boolean(catActionButton.closest('.cat-journal-profile')));
+      handleActionResult(catActionResult, true, game.state.currentPage === "cats" && Boolean(document.querySelector('[data-interaction-feedback]')));
       return;
     }
 

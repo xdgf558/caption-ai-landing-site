@@ -180,8 +180,18 @@ assert.doesNotMatch(
 assert.match(gameMain, /CatGameIntegration\.useSavedLanguage/);
 assert.match(settingsPanel, /activeLanguage = game\.utils\.i18n\.getLanguage\(\)/);
 assert.match(namespace, /storageKey: "catGameSaveV1"/);
-assert.match(namespace, /version: "1\.26\.0"/);
-assert.match(namespace, /Gentle care is on/);
+const releaseContext = { window: {} };
+vm.runInNewContext(namespace, releaseContext);
+const releaseConfig = releaseContext.window.CatGame.config;
+assert.equal(releaseConfig.version, '1.26.1');
+for (const [language, currentCopy] of Object.entries({
+  'zh-CN': '照护建议现在只定位到对应按钮',
+  en: 'Care guidance now points to the matching care button',
+  ja: 'お世話の案内は対応するボタンへ移動するだけ'
+})) {
+  assert.ok(releaseConfig.releaseNotes[language].some(note => note.startsWith(currentCopy)), 'Current notes, not archived notes: ' + language);
+}
+assert.ok(releaseConfig.releaseHistory.some(release => release.version === '1.26.0'));
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
 assert.match(landing, /登入會員後可同步雲端存檔/);
@@ -191,7 +201,7 @@ assert.match(landing, /兌換是否開放，以會員商店的即時狀態為準
 assert.match(landing, /Check the member store for current availability/);
 assert.match(landing, /<img src=\{catLifeGameProduct\.assets\.stationRoom\} alt=""/);
 assert.match(landing, /<figcaption>\{copy\.commercePreview\}<\/figcaption>/);
-assert.match(product, /latestVersion: '1\.26\.0'/);
+assert.match(product, /latestVersion: '1\.26\.1'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);

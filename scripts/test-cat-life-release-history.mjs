@@ -18,13 +18,13 @@ for (const language of ['zh-CN', 'en', 'ja']) test(language + ': latest only; al
   const before = JSON.stringify(game.state);
   const html = game.ui.renderVersionPanel(game.state.game);
   assert.equal(JSON.stringify(game.state), before, 'render has no state mutations');
-  assert.equal((html.match(/<details /g) || []).length, 5);
+  assert.equal((html.match(/<details /g) || []).length, 6);
   assert.doesNotMatch(html, /<details[^>]+ open/);
   assert.match(html, /data-dismiss-release-note/);
   const latest = html.split('class="page-card release-latest"')[1].split('</section>')[0];
   assert.equal((latest.match(/<li /g) || []).length, 3);
-  assert.deepEqual(Array.from(game.config.releaseHistory, item => item.version), ['1.25.1', '1.25.0', '1.24.0', '1.23.0', '1.22.2']);
-  assert.deepEqual(Array.from(game.config.releaseHistory, item => item.notes[language].length), [2, 3, 3, 4, 1]);
+  assert.deepEqual(Array.from(game.config.releaseHistory, item => item.version), ['1.26.0', '1.25.1', '1.25.0', '1.24.0', '1.23.0', '1.22.2']);
+  assert.deepEqual(Array.from(game.config.releaseHistory, item => item.notes[language].length), [3, 2, 3, 3, 4, 1]);
   for (const release of game.config.releaseHistory) for (const note of release.notes[language]) {
     assert.ok(html.includes(game.utils.format.escapeHtml(note)));
     assert.ok(!latest.includes(game.utils.format.escapeHtml(note)));
