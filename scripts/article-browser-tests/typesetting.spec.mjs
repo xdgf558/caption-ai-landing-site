@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { encodedArticleLinks } from '../helpers/article-link-fixtures.mjs';
 
 async function editor(page, id) {
   await page.goto('/admin/articles/');
@@ -90,6 +91,43 @@ test('formatting is undoable, toolbar never submits and paste rejects unsafe con
   await expect(page.getByRole('status')).toContainText('120000');
   expect((await body.inputValue()).length).toBe(119999);
   expect(saves).toBe(0);
+});
+
+test('encoded scheme links are removed on paste and never appear in preview or published hrefs', async ({ page, context }) => {
+  const body = await editor(page, 8104);
+  const allowed = [
+    ['External', 'HTTPS://EXAMPLE.COM:443/a', 'https://example.com/a'],
+    ['Site', '/signal/?title=%E7%8C%AB', 'https://wwwstationcat.org/signal/?title=%E7%8C%AB'],
+    ['Anchor', '#part', '#part'],
+    ['Email', 'mailto:author@example.com', 'mailto:author@example.com']
+  ];
+  const pasted = encodedArticleLinks.map((url, index) => `<p><a href="${url}">Encoded ${index}</a></p>`).join('')
+    + '<p><a href="java&#10;script:alert(1)">Entity control</a></p>'
+    + allowed.map(([label, input]) => `<p><a href="${input}">${label}</a></p>`).join('');
+  await paste(body, pasted);
+  const pastedMarkdown = await body.inputValue();
+  for (const url of encodedArticleLinks) expect(pastedMarkdown).not.toContain(url);
+  await expect(body).toHaveValue(/Encoded 0/);
+  await expect(body).toHaveValue(/https:\/\/example.com\/a/);
+  await page.getByRole('button', { name: '预览', exact: true }).click();
+  const preview = page.frameLocator('#article-preview-frame');
+  await expect(preview.locator('.article-prose a')).toHaveCount(allowed.length);
+  for (const [label, , output] of allowed) await expect(preview.getByRole('link', { name: label, exact: true })).toHaveAttribute('href', output);
+  await page.getByRole('button', { name: '关闭', exact: true }).click();
+
+  // Direct Markdown bypasses clipboard cleaning; the server must independently reject it.
+  await body.fill(encodedArticleLinks.map((url, index) => `[Encoded ${index}](${url})`).join('\n\n')
+    + '\n\n' + allowed.map(([label, input]) => `[${label}](${input})`).join('\n\n'));
+  await page.getByRole('button', { name: '预览', exact: true }).click();
+  await expect(preview.locator('.article-prose a')).toHaveCount(allowed.length);
+  for (const [label, , output] of allowed) await expect(preview.getByRole('link', { name: label, exact: true })).toHaveAttribute('href', output);
+  await page.getByRole('button', { name: '关闭', exact: true }).click();
+  await page.getByRole('button', { name: '发布文章', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('文章已发布。');
+  const reader = await context.newPage();
+  await reader.goto('/zh-hans/signal/x-article-8104/');
+  await expect(reader.locator('.article-prose a')).toHaveCount(allowed.length);
+  for (const [label, , output] of allowed) await expect(reader.getByRole('link', { name: label, exact: true })).toHaveAttribute('href', output);
 });
 
 test('headerless pasted tables retain first-row data and body image upload is undoable', async ({ page }) => {

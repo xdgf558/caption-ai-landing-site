@@ -21681,9 +21681,20 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
     if (brief.source_kind === articleSourceKind) {
       if (route.kind === 'signal-card') return new Response('Not found', { status: 404 });
       const meta = articleMetadata(brief);
-      const body = meta.hasBody ? await readPublicEntryBody(env, brief, { preferMarkdown: true }) : { markdown: '' };
+      let articleHtml = '';
+      if (request.method !== 'HEAD' && meta.hasBody) {
+        const body = await readPublicEntryBody(env, brief, { preferMarkdown: true });
+        try {
+          articleHtml = renderArticleMarkdown(body.markdown, route.locale);
+        } catch {
+          console.warn('Article Markdown rendering fell back to plain text.', {
+            code: 'ARTICLE_BODY_RENDER_FALLBACK', entryId: brief.id, bodyLength: body.markdown?.length || 0
+          });
+          articleHtml = `<div class="article-plain-text">${escapeHtml(body.markdown || '')}</div>`;
+        }
+      }
       return dynamicHtmlResponse(request, {
-        body: renderArticleDetail(route.locale, brief, renderArticleMarkdown(body.markdown, route.locale)),
+        body: request.method === 'HEAD' ? '' : renderArticleDetail(route.locale, brief, articleHtml),
         canonicalPath: dynamicCanonicalPath(route), description: brief.description,
         lang: route.locale, pageKind: 'articles', title: brief.title,
         ogImage: contentMediaUrl(brief.cover_r2_key), robots: meta.hasBody ? '' : 'noindex, follow',

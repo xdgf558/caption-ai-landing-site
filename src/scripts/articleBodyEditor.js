@@ -1,6 +1,6 @@
 import TurndownService from 'turndown';
 import { tables } from 'turndown-plugin-gfm';
-import { articleBodyLimit, formatArticleMarkdown, localArticleImage, safeArticleLink } from '../articleMarkdown.js';
+import { articleBodyLimit, formatArticleMarkdown, localArticleImage, normalizeArticleLink } from '../articleMarkdown.js';
 
 export function markdownFromClipboard(html) {
   if (html.length > 1000000) throw Error('粘贴内容过大，请分段粘贴。');
@@ -12,7 +12,8 @@ export function markdownFromClipboard(html) {
   root.querySelectorAll('script,style,iframe,object,embed,svg,math,link,meta,base,form,input,button,textarea,select,noscript').forEach(node => node.remove());
   root.querySelectorAll('[hidden],[aria-hidden="true"]').forEach(node => node.remove());
   root.querySelectorAll('a').forEach(node => {
-    if (!safeArticleLink(node.getAttribute('href'))) node.replaceWith(...node.childNodes);
+    const href = normalizeArticleLink(node.getAttribute('href'));
+    if (href) node.setAttribute('href', href); else node.replaceWith(...node.childNodes);
   });
   root.querySelectorAll('img').forEach(node => {
     const src = localArticleImage(node.getAttribute('src'));

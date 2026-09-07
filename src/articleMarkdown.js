@@ -2,14 +2,18 @@ import MarkdownIt from 'markdown-it';
 
 export const articleBodyLimit = 120000;
 const siteOrigin = 'https://wwwstationcat.org';
-export function safeArticleLink(value) {
+export function normalizeArticleLink(value) {
   const text = String(value || '').trim();
-  if (!text || /[\u0000-\u0020\u007f\\]/.test(text) || text.startsWith('//')) return false;
+  // Check the literal prefix before URL resolution can turn an ambiguous scheme into HTTPS.
+  if (!/^(?:https?:\/\/|mailto:|\/(?!\/)|#)/i.test(text) || /[\u0000-\u0020\u007f\\]/.test(text)) return '';
   try {
     const url = new URL(text, siteOrigin);
-    return !url.username && !url.password && (['https:', 'http:'].includes(url.protocol) || url.protocol === 'mailto:');
-  } catch { return false; }
+    if (url.username || url.password || !['https:', 'http:', 'mailto:'].includes(url.protocol)) return '';
+    if (text.startsWith('#')) return '#' + url.hash.slice(1);
+    return url.href;
+  } catch { return ''; }
 }
+export const safeArticleLink = value => Boolean(normalizeArticleLink(value));
 
 export function localArticleImage(value) {
   try {
@@ -25,7 +29,10 @@ export function localArticleImage(value) {
 const md = new MarkdownIt({ html: false, breaks: true, linkify: true, typographer: false, maxNesting: 40 });
 md.validateLink = safeArticleLink;
 md.renderer.rules.link_open = (tokens, index, options, env, renderer) => {
-  tokens[index].attrSet('rel', 'noopener noreferrer');
+  const token = tokens[index], href = normalizeArticleLink(token.attrGet('href'));
+  if (href) token.attrSet('href', href);
+  else if (token.attrIndex('href') >= 0) token.attrs.splice(token.attrIndex('href'), 1);
+  token.attrSet('rel', 'noopener noreferrer');
   return renderer.renderToken(tokens, index, options);
 };
 const imageRule = md.renderer.rules.image;

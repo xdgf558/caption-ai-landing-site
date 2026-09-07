@@ -32,6 +32,7 @@
 .article-cover { display: block; width: 100%; height: auto; border-radius: 4px; margin: 24px 0 32px; }
 .article-prose { font-size: 17px; line-height: 1.95; }
 .article-prose p { margin: 0 0 1.3em; }
+.article-plain-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .article-prose h1, .article-prose h2 { font-size: 26px; margin: 1.8em 0 .8em; }
 .article-prose h3 { font-size: 21px; }
 .article-prose li { margin-bottom: .5em; }

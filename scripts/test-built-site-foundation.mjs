@@ -123,6 +123,8 @@ for (const [path, label, href] of [
   ['ja/index.html', '記事と思考', '/ja/signal/']
 ]) {
   const html = await readDist(path);
+  assert.ok(html.match(/<title>([^<]*)<\/title>/)?.[1].includes(label), `${path}: homepage title uses the same article name as navigation`);
+  assert.doesNotMatch(html, /公開信號|公开信号|public signals|公開シグナル/);
   const articleLinks = [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)]
     .filter((match) => match[1].includes(`href="${href}"`));
   assert.ok(articleLinks.length >= 3, `${path} must preserve header, card and footer article links`);

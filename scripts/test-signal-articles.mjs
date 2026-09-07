@@ -4,6 +4,7 @@ import worker, { __readerTotpTestHooks as hooks } from '../src/worker.js';
 import { normalizeArticleUrl, normalizeArticleInput, suggestArticleMetadata, renderArticleIndex } from '../src/signalArticles.js';
 import { createArticleFixture } from './helpers/article-fixture.mjs';
 import { articleShareData, articleShareCopy } from '../src/articleShare.js';
+import { encodedArticleLinks } from './helpers/article-link-fixtures.mjs';
 
 const { env, sqlite, objects } = createArticleFixture();
 const base = 'http://localhost:4179';
@@ -161,4 +162,45 @@ env.WAITLIST_DB.prepare = sql => {
 assert.equal((await hooks.handleDynamicFrontendContent(new Request(base + '/signal/', { method: 'HEAD' }), env, {})).status, 200);
 env.WAITLIST_DB.prepare = prepare;
 assert.match(await (await publicPage('/signal/?page=2&tracking=test')).text(), /rel="canonical" href="https:\/\/wwwstationcat.org\/signal\/\?page=2"/);
+
+// Stored/R2 bodies may predate the current writer limit. Public reads must remain available.
+const longEntry = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/9901', status: 'published' })).json()).entry;
+const longMarkdown = '<script>window.articleInjected=true</script>\n\n' + 'x'.repeat(120001) + '\nFull-text tail <img src=x onerror=alert(1)>';
+await env.CONTENT_BUCKET.put(longEntry.markdownR2Key, longMarkdown);
+const warnings = [], originalWarn = console.warn;
+let longResponse;
+try {
+  console.warn = (...args) => warnings.push(args);
+  longResponse = await publicPage('/en/signal/x-article-9901/');
+} finally { console.warn = originalWarn; }
+assert.equal(longResponse.status, 200);
+const longHtml = await longResponse.text();
+assert.match(longHtml, /class="article-plain-text"/);
+assert.match(longHtml, /&lt;script&gt;window.articleInjected=true&lt;\/script&gt;/);
+assert.match(longHtml, /Full-text tail &lt;img src=x onerror=alert\(1\)&gt;/);
+assert.doesNotMatch(longHtml, /<script>window.articleInjected|<img src=x/);
+assert.equal(warnings.length, 1);
+assert.deepEqual(warnings[0][1], { code: 'ARTICLE_BODY_RENDER_FALLBACK', entryId: longEntry.id, bodyLength: longMarkdown.length });
+assert.doesNotMatch(JSON.stringify(warnings), /articleInjected|Full-text tail/);
+const bucketGet = env.CONTENT_BUCKET.get;
+let headBodyReads = 0;
+try {
+  env.CONTENT_BUCKET.get = async () => { headBodyReads++; throw Error('HEAD must not read R2'); };
+  const head = await hooks.handleDynamicFrontendContent(new Request(base + '/en/signal/x-article-9901/', { method: 'HEAD' }), env, {});
+  assert.equal(head.status, 200);
+  assert.equal(await head.text(), '');
+  assert.equal(headBodyReads, 0, 'HEAD does not access stored article bodies');
+} finally { env.CONTENT_BUCKET.get = bucketGet; }
+assert.equal((await call({ ...data, markdown: longMarkdown }, '/preview')).status, 400, 'admin preview still rejects oversize input');
+assert.equal((await call({ ...data, sourceUrl: 'https://x.com/i/article/9902', markdown: longMarkdown })).status, 400, 'writer limits stay strict');
+
+const encodedBody = encodedArticleLinks.map((url, index) => `[Encoded ${index}](${url})`).join('\n\n');
+const encodedInput = { ...data, sourceUrl: 'https://x.com/i/article/9903', markdown: encodedBody, status: 'published' };
+const previewLinks = (await (await call(encodedInput, '/preview')).json()).html;
+const encodedEntry = (await (await call(encodedInput)).json()).entry;
+const encodedHtml = await (await publicPage(`/en/signal/${encodedEntry.slug}/`)).text();
+for (const output of [previewLinks, encodedHtml]) {
+  assert.doesNotMatch(output, /href="(?:java|data%|%|https%)/i, 'encoded schemes must not become article links');
+  assert.match(output, /Encoded 0/);
+}
 console.log('Signal articles: URL bounds, auth, preview, SQLite CAS, revision bodies, public routes, archive, sitemap and uploads passed.');
