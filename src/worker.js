@@ -11593,6 +11593,7 @@ const buildContentEntriesQuery = (url, options = {}) => {
   if (options.publicOnly) {
     clauses.push("visibility IN ('public', 'unlisted')");
   }
+  if (options.excludeArticles) clauses.push("source_kind <> 'x_article'");
 
   if (parentSlug) {
     clauses.push('parent_slug = ?');
@@ -11622,7 +11623,7 @@ const handleAdminListContentEntries = async (request, env) => {
   const url = new URL(request.url);
   let query;
   try {
-    query = buildContentEntriesQuery(url);
+    query = buildContentEntriesQuery(url, { excludeArticles: true });
   } catch (error) {
     return privateJson({ ok: false, code: error.code || 'CONTENT_QUERY_INVALID', message: error.message }, { status: 400 });
   }
@@ -15935,6 +15936,10 @@ const handleAdminImportSignalBrief = async (request, env) => {
     .bind(locale, slug)
     .first();
   const approvalEntryId = normalizePositiveInteger(payload.approvalEntryId, 0);
+  if (existing?.source_kind === articleSourceKind) {
+    const error = articleEditorRequiredError();
+    return privateJson({ ok: false, code: error.code, message: error.message, editUrl: error.editUrl }, { status: error.status });
+  }
   if (approvalEntryId && (!existing || existing.id !== approvalEntryId || existing.status !== 'draft')) {
     return privateJson(
       {
@@ -16204,9 +16209,10 @@ const handleAdminImportSignalBrief = async (request, env) => {
       {
         ok: false,
         code: error.code || 'SIGNAL_IMPORT_FAILED',
-        message: error.message || 'Signal brief import failed.'
+        message: error.message || 'Signal brief import failed.',
+        editUrl: error.editUrl
       },
-      { status: error.code === 'CONTENT_BUCKET_NOT_CONFIGURED' ? 503 : 500 }
+      { status: error.status || (error.code === 'CONTENT_BUCKET_NOT_CONFIGURED' ? 503 : 500) }
     );
   }
 };
@@ -16541,11 +16547,24 @@ const uploadContentBodies = async (env, entry) => {
   }
 };
 
+const articleEditorRequiredError = () => Object.assign(new Error('此内容为 X 文章，请前往 /admin/articles/ 编辑。'), {
+  code: 'ARTICLE_EDITOR_REQUIRED', status: 409, editUrl: '/admin/articles/'
+});
+
 const persistContentEntry = async (db, env, entry, options = {}) => {
   const actorEmail = cleanText(options.actorEmail, 254) || entry.updatedBy || entry.createdBy || 'admin';
   entry.createdBy = entry.createdBy || actorEmail;
   entry.updatedBy = actorEmail;
 
+  // Reject legacy writes before R2 I/O; the UPSERT repeats the boundary for races.
+  if (!options.articleVersion) {
+    if (entry.sourceKind === articleSourceKind) throw articleEditorRequiredError();
+    if (entry.entryType === 'signal_brief') {
+      const current = await db.prepare("SELECT source_kind FROM content_entries WHERE entry_type = ? AND locale = ? AND parent_slug = ? AND slug = ?")
+        .bind(entry.entryType, entry.locale, entry.parentSlug, entry.slug).first();
+      if (current?.source_kind === articleSourceKind) throw articleEditorRequiredError();
+    }
+  }
   await uploadContentBodies(env, entry);
 
   const saved = await db
@@ -16592,7 +16611,9 @@ const persistContentEntry = async (db, env, entry, options = {}) => {
         archived_at = CASE WHEN excluded.status = 'archived' THEN CURRENT_TIMESTAMP ELSE NULL END,
         updated_by = excluded.updated_by,
         updated_at = CURRENT_TIMESTAMP
-      WHERE (? = '' OR (content_entries.source_kind = 'x_article' AND json_extract(content_entries.metadata_json, '$.article.version') = ?))
+      WHERE ((? = '' AND content_entries.source_kind <> 'x_article')
+        OR (content_entries.source_kind = 'x_article' AND excluded.source_kind = 'x_article'
+          AND json_extract(content_entries.metadata_json, '$.article.version') = ?))
       RETURNING *`
     )
     .bind(
@@ -16635,7 +16656,10 @@ const persistContentEntry = async (db, env, entry, options = {}) => {
     )
     .first();
 
-  if (!saved) throw Object.assign(new Error('文章已在其他窗口更新，请重新载入。'), { code: 'ARTICLE_CONFLICT', status: 409 });
+  if (!saved) {
+    if (!options.articleVersion) throw articleEditorRequiredError();
+    throw Object.assign(new Error('文章已在其他窗口更新，请重新载入。'), { code: 'ARTICLE_CONFLICT', status: 409 });
+  }
 
   const pricingRules = await syncContentPricingRules(db, saved);
 
@@ -16817,7 +16841,7 @@ const handleAdminUpsertContentEntry = async (request, env) => {
       storage: getContentStorageDescriptor(env)
     });
   } catch (error) {
-    return privateJson({ ok: false, code: error.code || 'CONTENT_UPLOAD_FAILED', message: error.message }, { status: 503 });
+    return privateJson({ ok: false, code: error.code || 'CONTENT_UPLOAD_FAILED', message: error.message, editUrl: error.editUrl }, { status: error.status || 503 });
   }
 };
 
@@ -18671,6 +18695,7 @@ const listPublishedContentEntries = async (db, options) => {
        WHERE entry_type = ?
          AND locale = ?
          ${parentClause}
+         ${options.excludeArticles ? "AND source_kind <> 'x_article'" : ''}
          AND status = 'published'
          AND visibility IN ('public', 'unlisted')
        ORDER BY ${orderClause}
@@ -18697,6 +18722,7 @@ const getAdjacentPublishedSignalBriefs = async (db, brief, locale) => {
          FROM content_entries
          WHERE entry_type = 'signal_brief'
            AND locale = ?
+           AND source_kind <> 'x_article'
            AND status = 'published'
            AND visibility IN ('public', 'unlisted')
            AND (
@@ -21625,13 +21651,12 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
       const result = await db.prepare("SELECT * FROM content_entries WHERE entry_type = 'signal_brief' AND source_kind = 'x_article' AND status = 'published' AND visibility = 'public' ORDER BY COALESCE(published_at, updated_at) DESC, id DESC LIMIT 21 OFFSET ?").bind((page - 1) * 20).all();
       const rows = result.results || [], copy = articleCopy(route.locale);
       return dynamicHtmlResponse(request, {
-        body: renderArticleIndex(route.locale, rows.slice(0, 20), { page, hasMore: rows.length > 20 }),
+        body: request.method === 'HEAD' ? '' : renderArticleIndex(route.locale, rows.slice(0, 20), { page, hasMore: rows.length > 20 }),
         canonicalPath: `${dynamicCanonicalPath(route)}${page > 1 ? `?page=${page}` : ''}`,
         description: copy.description, lang: route.locale, pageKind: 'articles', title: copy.title
       });
     }
-    const archiveResult = await db.prepare("SELECT * FROM content_entries WHERE entry_type = 'signal_brief' AND locale = ? AND source_kind <> 'x_article' AND status = 'published' AND visibility = 'public' ORDER BY COALESCE(published_at, updated_at) DESC, id DESC LIMIT 50").bind(route.locale).all();
-    const archiveRows = archiveResult.results || [];
+    const archiveRows = await listPublishedContentEntries(db, { entryType: 'signal_brief', locale: route.locale, limit: 50, excludeArticles: true });
     const signalRows = request.method === 'HEAD' ? archiveRows : await hydrateSignalIndexRows(env, archiveRows);
     const copy = dynamicContentCopy[route.locale] || dynamicContentCopy['zh-Hant'];
     return dynamicHtmlResponse(request, {

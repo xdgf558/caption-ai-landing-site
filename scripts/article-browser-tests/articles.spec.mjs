@@ -1,5 +1,45 @@
 import { test, expect } from '@playwright/test';
 
+test('Enter saves a draft and legacy editors cannot rewrite an article', async ({ page, request, baseURL }) => {
+  await page.goto('/admin/articles/');
+  await expect(page.getByRole('button', { name: '保存草稿', exact: true })).toBeEnabled();
+  await page.getByLabel('X 文章链接', { exact: true }).fill('https://x.com/i/article/3001');
+  await page.getByLabel('标题', { exact: true }).fill('Enter remains a draft');
+  await page.getByLabel('摘要', { exact: true }).fill('Never publish by implicit form submission.');
+  for (const field of ['标题', 'X 文章链接']) {
+    const saved = page.waitForResponse(response => response.url().endsWith('/admin/api/articles') && response.request().method() === 'POST');
+    await page.getByLabel(field, { exact: true }).press('Enter');
+    expect((await (await saved).json()).entry.status).toBe('draft');
+    await expect(page.getByRole('status')).toHaveText('草稿已保存。');
+  }
+  await page.getByRole('button', { name: '发布文章', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('文章已发布。');
+  const entries = (await (await request.get('/admin/api/articles')).json()).entries;
+  const article = entries.find(entry => entry.slug === 'x-article-3001');
+  expect(article.status).toBe('published');
+  for (const path of ['/admin/api/content/entries', '/admin/api/signal/import']) {
+    const response = await request.post(path, { headers: { origin: baseURL }, data: { entryType: 'signal_brief', locale: article.locale, slug: article.slug, title: 'Legacy overwrite', markdown: 'Wrong body', status: 'published' } });
+    expect(response.status()).toBe(409);
+    expect((await response.json()).editUrl).toBe('/admin/articles/');
+  }
+  for (const query of ['', '?type=signal_brief&locale=zh-Hans']) {
+    const legacy = (await (await request.get('/admin/api/content/entries' + query)).json()).entries;
+    expect(legacy.some(entry => entry.sourceKind === 'x_article')).toBe(false);
+  }
+  const preserved = (await (await request.get(`/admin/api/articles?id=${article.id}`)).json()).entry;
+  expect(preserved.metadata.article).toEqual(article.metadata.article);
+  expect(preserved.sourceKind).toBe('x_article');
+  await page.reload();
+  await expect(page.getByRole('button', { name: /Enter remains a draft 已发布/ })).toBeVisible();
+  await page.getByRole('button', { name: /Enter remains a draft 已发布/ }).click();
+  await page.getByLabel('标题', { exact: true }).fill('Unsaved change');
+  await page.getByLabel('筛选文章', { exact: true }).selectOption('draft');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button', { name: '取消', exact: true }).click();
+  await expect(page.getByLabel('筛选文章', { exact: true })).toHaveValue('all');
+  await expect(page.getByLabel('标题', { exact: true })).toHaveValue('Unsaved change');
+});
+
 test('manual fallback, cover, draft, preview, publish, conflict and withdrawal', async ({ page, context }) => {
   await page.goto('/admin/articles/');
   await expect(page.getByRole('button', { name: '保存草稿', exact: true })).toBeEnabled();
@@ -56,3 +96,27 @@ for (const width of [390, 1280]) {
     }
   });
 }
+
+test('paging asks before changing the list and preserves unsaved text', async ({ page, request, baseURL }) => {
+  for (let index = 0; index < 21; index++) {
+    const result = await request.post('/admin/api/articles', { headers: { origin: baseURL }, data: {
+      sourceUrl: `https://x.com/i/article/${5000 + index}`, title: `Paging draft ${index}`, description: 'Local pagination fixture', status: 'draft'
+    } });
+    expect(result.ok()).toBe(true);
+  }
+  await page.goto('/admin/articles/');
+  await expect(page.getByRole('button', { name: '下一页', exact: true })).toBeEnabled();
+  await page.getByLabel('标题', { exact: true }).fill('Keep this unsaved text');
+  const listRequests = [];
+  page.on('request', request => { if (request.url().includes('/admin/api/articles?page=')) listRequests.push(request.url()); });
+  await page.getByRole('button', { name: '下一页', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button', { name: '取消', exact: true }).click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  expect(listRequests).toHaveLength(0);
+  await page.getByRole('button', { name: '下一页', exact: true }).click();
+  await page.getByRole('button', { name: '确认', exact: true }).click();
+  await expect(page.getByRole('button', { name: '上一页', exact: true })).toBeEnabled();
+  expect(listRequests.some(url => url.includes('page=2'))).toBe(true);
+  await expect(page.getByLabel('标题', { exact: true })).toHaveValue('Keep this unsaved text');
+});

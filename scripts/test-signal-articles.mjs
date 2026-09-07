@@ -77,8 +77,70 @@ assert.equal(uploaded.status, 200, await uploaded.clone().text());
 const media = (await uploaded.json()).media;
 assert.ok(normalizeArticleInput({ ...data, coverR2Key: media.key }).coverR2Key);
 assert.equal((await call('x'.repeat(6 * 1024 * 1024 + 1), '/cover')).status, 413);
-const rows = [{ locale: 'ja', slug: 'x-article-1', title: '<unsafe>', description: '"text"', metadata_json: JSON.stringify({ article: { hasBody: true } }) }];
+const rows = [{ locale: 'ja', slug: 'x-article-1', title: '<unsafe>', description: '"text"', metadata_json: JSON.stringify({ article: { hasBody: true, sourceUrl: 'https://x.com/i/article/1' } }) }];
 assert.match(renderArticleIndex('en', rows), /&lt;unsafe&gt;/);
 assert.match(renderArticleIndex('en', rows), /\/ja\/signal\/x-article-1\//);
 assert.equal(linkOnly.metadata.article.hasBody, false);
+
+// Exercise the actual legacy routes, not only the new editor's handler.
+const protectedEntry = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/777', locale: 'zh-Hant', status: 'published' })).json()).entry;
+const legacyPayload = { entryType: 'signal_brief', slug: protectedEntry.slug, locale: 'zh-Hant', title: 'Overwritten', markdown: 'Wrong body', status: 'published' };
+const before = sqlite.prepare('SELECT * FROM content_entries WHERE id = ?').get(protectedEntry.id);
+const beforeObjects = [...objects.keys()];
+const beforeRevisions = sqlite.prepare('SELECT count(*) n FROM content_revisions').get().n;
+const beforeAudit = sqlite.prepare('SELECT count(*) n FROM admin_audit_logs').get().n;
+for (const path of ['/admin/api/content/entries', '/admin/api/signal/import']) {
+  const result = await worker.fetch(request(path, legacyPayload), env, {});
+  assert.equal(result.status, 409, await result.clone().text());
+  const error = await result.json();
+  assert.equal(error.code, 'ARTICLE_EDITOR_REQUIRED');
+  assert.equal(error.editUrl, '/admin/articles/');
+}
+assert.deepEqual(sqlite.prepare('SELECT * FROM content_entries WHERE id = ?').get(protectedEntry.id), before);
+assert.deepEqual([...objects.keys()], beforeObjects, 'legacy saves are rejected before writing R2');
+assert.equal(sqlite.prepare('SELECT count(*) n FROM content_revisions').get().n, beforeRevisions);
+assert.equal(sqlite.prepare('SELECT count(*) n FROM admin_audit_logs').get().n, beforeAudit);
+const spoofed = await worker.fetch(request('/admin/api/content/entries', { ...legacyPayload, sourceKind: 'x_article', articleVersion: protectedEntry.metadata.article.version }), env, {});
+assert.equal(spoofed.status, 409, 'public payload cannot impersonate internal article options');
+for (const query of ['', '?type=signal_brief&locale=zh-Hant']) {
+  const listed = await (await worker.fetch(request('/admin/api/content/entries' + query), env, {})).json();
+  assert.ok(listed.entries.every(row => row.sourceKind !== 'x_article'));
+}
+const prepare = env.WAITLIST_DB.prepare;
+env.WAITLIST_DB.prepare = sql => {
+  const statement = prepare(sql);
+  // Simulate a concurrent article creation after the preflight's snapshot.
+  if (sql.startsWith('SELECT source_kind FROM content_entries')) statement.first = async () => null;
+  return statement;
+};
+assert.equal((await worker.fetch(request('/admin/api/content/entries', legacyPayload), env, {})).status, 409, 'UPSERT itself guards a stale preflight');
+env.WAITLIST_DB.prepare = prepare;
+assert.deepEqual(sqlite.prepare('SELECT * FROM content_entries WHERE id = ?').get(protectedEntry.id), before);
+assert.match(await (await publicPage('/signal/')).text(), /Making a small game/);
+
+const insertBrief = sqlite.prepare("INSERT INTO content_entries(entry_type,locale,slug,title,status,source_kind,visibility,featured,sort_order,published_at) VALUES('signal_brief','ja',?,?,'published','signal_brief',?,?,?,?)");
+insertBrief.run('older', 'Archive older', 'public', 0, 0, '2026-01-01 00:00:00');
+insertBrief.run('unlisted', 'Archive pinned unlisted', 'unlisted', 1, 10, '2026-01-02 00:00:00');
+insertBrief.run('pinned', 'Archive first pinned', 'public', 1, 0, '2026-01-03 00:00:00');
+const articleBetween = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/888', locale: 'ja', status: 'published' })).json()).entry;
+sqlite.prepare('UPDATE content_entries SET published_at = ? WHERE id = ?').run('2026-01-02 12:00:00', articleBetween.id);
+const archiveHtml = await (await publicPage('/ja/signal/?view=archive')).text();
+assert.ok(archiveHtml.indexOf('Archive first pinned') < archiveHtml.indexOf('Archive pinned unlisted'));
+assert.ok(archiveHtml.indexOf('Archive pinned unlisted') < archiveHtml.indexOf('Archive older'));
+assert.doesNotMatch(archiveHtml, /x-article-888/);
+const middleBrief = sqlite.prepare("SELECT * FROM content_entries WHERE slug='unlisted'").get();
+const adjacent = await hooks.getAdjacentPublishedSignalBriefs(env.WAITLIST_DB, middleBrief, 'ja');
+assert.equal(adjacent.previous.slug, 'older'); assert.equal(adjacent.next.slug, 'pinned');
+sqlite.prepare('UPDATE content_entries SET metadata_json = ? WHERE id = ?').run(JSON.stringify({ article: { hasBody: false, sourceUrl: 'javascript:alert(1)' } }), articleBetween.id);
+assert.equal((await publicPage('/ja/signal/')).status, 200);
+assert.doesNotMatch(await (await publicPage('/ja/signal/')).text(), /javascript:|x-article-888/);
+assert.match(renderArticleIndex('en', [{ metadata_json: '{invalid' }]), /New articles are on their way/);
+env.WAITLIST_DB.prepare = sql => {
+  const statement = prepare(sql);
+  if (sql.includes("source_kind = 'x_article'") && sql.includes('LIMIT 21 OFFSET')) statement.all = async () => ({ results: [new Proxy({}, { get() { throw Error('HEAD must not render entries'); } })] });
+  return statement;
+};
+assert.equal((await hooks.handleDynamicFrontendContent(new Request(base + '/signal/', { method: 'HEAD' }), env, {})).status, 200);
+env.WAITLIST_DB.prepare = prepare;
+assert.match(await (await publicPage('/signal/?page=2&tracking=test')).text(), /rel="canonical" href="https:\/\/wwwstationcat.org\/signal\/\?page=2"/);
 console.log('Signal articles: URL bounds, auth, preview, SQLite CAS, revision bodies, public routes, archive, sitemap and uploads passed.');

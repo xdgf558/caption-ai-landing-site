@@ -67,10 +67,17 @@ const dateLabel = (row) => String(row.published_at || row.updated_at || '').slic
 const coverUrl = (row) => row.cover_r2_key ? `/api/content/media?key=${encodeURIComponent(row.cover_r2_key)}` : '';
 export function renderArticleIndex(locale, rows, { page = 1, hasMore = false } = {}) {
   const e = escapeArticleHtml, copy = articleCopy(locale), base = articleBasePath(locale);
+  // Legacy/admin data can be malformed: one broken reference must not take down the collection.
+  const visibleRows = rows.flatMap(row => {
+    const meta = articleMetadata(row);
+    try {
+      const source = normalizeArticleUrl(meta.sourceUrl);
+      return [{ row, meta, href: meta.hasBody ? `${articleBasePath(row.locale)}${row.slug}/` : source.url }];
+    } catch { return []; }
+  });
   return `<section class="articles-intro"><p class="articles-eyebrow">STATION CAT / JOURNAL</p><h1>${e(copy.title)}</h1><p>${e(copy.description)}</p><a href="https://x.com/statiocat">@statiocat</a></section>
     <nav class="articles-nav" aria-label="${e(copy.title)}"><span aria-current="page">${e(copy.latest)}</span><a href="${base}?view=archive">${e(copy.archive)}</a></nav>
-    <section class="articles-list" aria-label="${e(copy.latest)}">${rows.length ? rows.map(row => {
-      const meta = articleMetadata(row), href = meta.hasBody ? `${articleBasePath(row.locale)}${row.slug}/` : normalizeArticleUrl(meta.sourceUrl).url;
+    <section class="articles-list" aria-label="${e(copy.latest)}">${visibleRows.length ? visibleRows.map(({row, meta, href}) => {
       return `<article class="article-row${coverUrl(row) ? ' has-cover' : ''}" lang="${e(row.locale)}">
         ${coverUrl(row) ? `<a class="article-thumbnail" href="${e(href)}" tabindex="-1" aria-hidden="true"><img src="${e(coverUrl(row))}" alt="" width="480" height="320" loading="lazy"></a>` : ''}
         <div><div class="article-meta"><time datetime="${e(dateLabel(row))}">${e(dateLabel(row))}</time><span>${e(languageName(row.locale))}</span>${meta.hasBody ? `<span>${row.reading_minutes || 1} ${e(copy.minutes)}</span>` : '<span>X Articles</span>'}</div>

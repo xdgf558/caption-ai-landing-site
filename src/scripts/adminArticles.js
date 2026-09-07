@@ -40,7 +40,7 @@ const run = async (action) => {
     $('list-next').disabled = !hasMore;
   }
 };
-let hasMore = false;
+let hasMore = false, loadedFilter = 'all';
 const renderList = () => {
   const container = $('article-list');
   container.replaceChildren();
@@ -66,6 +66,7 @@ const renderList = () => {
 const load = async () => {
   const data = await api(`/admin/api/articles?page=${page}&status=${encodeURIComponent($('article-filter').value)}`);
   entries = data.entries; hasMore = data.hasMore;
+  loadedFilter = $('article-filter').value;
   renderList();
 };
 const showCover = (url = '') => {
@@ -101,16 +102,23 @@ const save = (state) => {
   });
 };
 form.addEventListener('input', () => { dirty = true; $('editor-state').textContent = '未保存修改'; });
-form.addEventListener('submit', (event) => { event.preventDefault(); save('published'); });
-$('article-save').onclick = () => save(entry?.status === 'published' ? 'published' : 'draft');
+form.addEventListener('submit', (event) => { event.preventDefault(); save(entry?.status === 'published' ? 'published' : 'draft'); });
+$('article-publish').onclick = () => save('published');
 $('article-withdraw').onclick = async () => { if (!busy && await ask('下架这篇文章？网站将不再展示。')) save('archived'); };
 $('article-new').onclick = async () => { if (!busy && (!dirty || await ask('放弃未保存的修改？'))) { fill(); status(''); $('article-url').focus(); } };
 $('article-refresh').onclick = () => run(load);
-const changePage = (nextPage) => run(async () => {
-  const previous = page;
-  page = nextPage;
-  try { await load(); } catch (error) { page = previous; throw error; }
-});
+const changePage = async (nextPage) => {
+  if (busy) return;
+  if (dirty && !await ask('当前文章尚未保存，仍要切换列表？编辑内容会保留。')) {
+    $('article-filter').value = loadedFilter;
+    return;
+  }
+  return run(async () => {
+    const previous = page;
+    page = nextPage;
+    try { await load(); } catch (error) { page = previous; $('article-filter').value = loadedFilter; throw error; }
+  });
+};
 $('article-filter').onchange = () => changePage(1);
 $('list-next').onclick = () => changePage(page + 1);
 $('list-previous').onclick = () => changePage(page - 1);
