@@ -35,6 +35,23 @@
 .article-prose h1, .article-prose h2 { font-size: 26px; margin: 1.8em 0 .8em; }
 .article-prose h3 { font-size: 21px; }
 .article-prose li { margin-bottom: .5em; }
+.article-row-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
+.article-share-trigger { font: inherit; font-size: 14px; color: #286153; background: transparent; border: 1px solid #c4d2c9; border-radius: 4px; min-height: 44px; padding: 8px 14px; cursor: pointer; }
+.article-share-dialog { box-sizing: border-box; width: min(480px, calc(100% - 24px)); max-height: calc(100dvh - 24px); padding: 20px; border: 1px solid #c4d2c9; border-radius: 8px; background: #fcfcfa; color: #243c34; overflow-y: auto; }
+.article-share-dialog::backdrop { background: #15231db3; }
+.article-share-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.article-share-heading h2 { margin: 0; font: 600 19px/1.4 system-ui, sans-serif; }
+.article-share-dialog button, .article-share-actions a { box-sizing: border-box; display: inline-flex; justify-content: center; align-items: center; min-height: 44px; padding: 8px 12px; border: 1px solid #c4d2c9; border-radius: 4px; color: #243c34; background: #fff; font: 14px/1.4 system-ui, sans-serif; text-decoration: none; cursor: pointer; }
+.article-share-preview { width: min(100%, 300px); aspect-ratio: 3 / 4; margin: auto; background: #e9efea; }
+.article-share-preview img { display: block; width: 100%; height: auto; }
+.article-share-status, .article-share-hint { font: 13px/1.6 system-ui, sans-serif; margin: 12px 0; overflow-wrap: anywhere; }
+.article-share-status { color: #286153; }
+.article-share-hint { color: #59655f; }
+.article-share-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.article-share-actions [data-share-save] { color: #fff; background: #286153; border-color: #286153; }
+.article-share-dialog input { box-sizing: border-box; width: 100%; min-width: 0; padding: 10px; min-height: 44px; margin-top: 12px; border: 1px solid #c4d2c9; border-radius: 4px; background: #fff; font: 12px/1.5 system-ui, sans-serif; }
+.article-share-dialog [hidden], .article-share-trigger[hidden] { display: none; }
+.article-share-trigger:focus-visible, .article-share-dialog :focus-visible { outline: 2px solid #286153; outline-offset: 3px; }
 @media (max-width: 600px) {
   .articles-page .signal-shell { padding: 22px 18px 48px; }
   .articles-intro { padding: 16px 0 26px; }

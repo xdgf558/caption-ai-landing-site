@@ -19414,25 +19414,25 @@ const dynamicNavCopy = {
     apps: 'Apps',
     member: 'Member Center',
     serials: 'Serials',
-    signal: 'Signal strip'
+    signal: 'Notes & Essays'
   },
   ja: {
     apps: 'Apps',
     member: '会員センター',
     serials: '連載小説',
-    signal: 'シグナル簡報'
+    signal: '記事と思考'
   },
   'zh-Hant': {
     apps: 'Apps',
     member: '會員登入',
     serials: '連載小說',
-    signal: '信號簡報'
+    signal: '文章與觀察'
   },
   'zh-Hans': {
     apps: 'Apps',
     member: '会员登录',
     serials: '连载小说',
-    signal: '信号简报'
+    signal: '文章与观察'
   }
 };
 
@@ -19795,7 +19795,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
         .signal-tape-card { transition: none; }
       }
     </style>
-    ${pageKind === 'articles' ? '<link rel="stylesheet" href="/styles/signal-articles.css">' : ''}
+    ${pageKind === 'articles' ? '<link rel="stylesheet" href="/styles/signal-articles.css"><script type="module" src="/scripts/article-share.js?v=1"></script>' : ''}
   </head>
   <body class="${isSignalPage ? 'signal-page' : ''}${pageKind === 'articles' ? ' articles-page' : ''}">
     ${topbar}

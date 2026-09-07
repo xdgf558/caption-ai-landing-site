@@ -1,4 +1,5 @@
 import { extractSignalLinkedPagePreview, readResponseTextLimited } from './signalCollection.js';
+import { articleShareCopy, articleShareData } from './articleShare.js';
 
 export const articleSourceKind = 'x_article';
 export const escapeArticleHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -64,6 +65,22 @@ export const articleMetadata = (row) => {
 };
 const languageName = (locale) => ({ 'zh-Hant': '繁體中文', 'zh-Hans': '简体中文', en: 'English', ja: '日本語' }[locale] || locale);
 const dateLabel = (row) => String(row.published_at || row.updated_at || '').slice(0, 10);
+const renderArticleShare = (locale, row) => {
+  const data = articleShareData(row, articleBasePath(row.locale));
+  if (!data) return '';
+  return `<button type="button" class="article-share-trigger" hidden data-article-share="${escapeArticleHtml(JSON.stringify(data))}">${escapeArticleHtml(articleShareCopy(locale).open)}</button>`;
+};
+const renderArticleShareDialog = (locale) => {
+  const e = escapeArticleHtml, copy = articleShareCopy(locale);
+  return `<dialog class="article-share-dialog" aria-labelledby="article-share-title" data-article-share-dialog data-copy="${e(JSON.stringify(copy))}">
+    <div class="article-share-heading"><h2 id="article-share-title">${e(copy.title)}</h2><button type="button" data-share-close autofocus>${e(copy.close)}</button></div>
+    <div class="article-share-preview" aria-busy="false"><img data-share-image hidden alt="${e(copy.ready)}" width="1080" height="1440"></div>
+    <p class="article-share-status" role="status" aria-live="polite"></p>
+    <p class="article-share-hint">${e(copy.hint)}</p>
+    <div class="article-share-actions"><a data-share-save hidden download="station-cat-article.png">${e(copy.save)}</a><button type="button" data-share-native hidden>${e(copy.share)}</button><button type="button" data-share-copy>${e(copy.copy)}</button><button type="button" data-share-retry hidden>${e(copy.retry)}</button></div>
+    <input data-share-url aria-label="${e(copy.copy)}" readonly>
+  </dialog>`;
+};
 const coverUrl = (row) => row.cover_r2_key ? `/api/content/media?key=${encodeURIComponent(row.cover_r2_key)}` : '';
 export function renderArticleIndex(locale, rows, { page = 1, hasMore = false } = {}) {
   const e = escapeArticleHtml, copy = articleCopy(locale), base = articleBasePath(locale);
@@ -81,15 +98,15 @@ export function renderArticleIndex(locale, rows, { page = 1, hasMore = false } =
       return `<article class="article-row${coverUrl(row) ? ' has-cover' : ''}" lang="${e(row.locale)}">
         ${coverUrl(row) ? `<a class="article-thumbnail" href="${e(href)}" tabindex="-1" aria-hidden="true"><img src="${e(coverUrl(row))}" alt="" width="480" height="320" loading="lazy"></a>` : ''}
         <div><div class="article-meta"><time datetime="${e(dateLabel(row))}">${e(dateLabel(row))}</time><span>${e(languageName(row.locale))}</span>${meta.hasBody ? `<span>${row.reading_minutes || 1} ${e(copy.minutes)}</span>` : '<span>X Articles</span>'}</div>
-        <h2><a href="${e(href)}">${e(row.title)}</a></h2><p>${e(row.description)}</p><a class="article-read" href="${e(href)}">${e(meta.hasBody ? copy.read : copy.original)} <span aria-hidden="true">↗</span></a></div></article>`;
+        <h2><a href="${e(href)}">${e(row.title)}</a></h2><p>${e(row.description)}</p><div class="article-row-actions"><a class="article-read" href="${e(href)}">${e(meta.hasBody ? copy.read : copy.original)} <span aria-hidden="true">↗</span></a>${renderArticleShare(locale, row)}</div></div></article>`;
     }).join('') : `<p class="articles-empty">${e(copy.empty)}</p>`}</section>
-    <nav class="articles-pagination" aria-label="${e(copy.latest)}">${page > 1 ? `<a href="${base}?page=${page - 1}">${e(copy.previous)}</a>` : ''}${hasMore ? `<a href="${base}?page=${page + 1}">${e(copy.more)}</a>` : ''}</nav>`;
+    <nav class="articles-pagination" aria-label="${e(copy.latest)}">${page > 1 ? `<a href="${base}?page=${page - 1}">${e(copy.previous)}</a>` : ''}${hasMore ? `<a href="${base}?page=${page + 1}">${e(copy.more)}</a>` : ''}</nav>${renderArticleShareDialog(locale)}`;
 }
 
 export function renderArticleDetail(locale, row, safeHtml) {
   const e = escapeArticleHtml, copy = articleCopy(locale), meta = articleMetadata(row);
   return `<article class="article-reader"><a class="article-back" href="${articleBasePath(locale)}">${e(copy.back)}</a>
-    <header><div class="article-meta"><span>STATION CAT</span><time datetime="${e(dateLabel(row))}">${e(dateLabel(row))}</time></div><h1>${e(row.title)}</h1><p class="article-lead">${e(row.description)}</p><a href="${e(normalizeArticleUrl(meta.sourceUrl).url)}" rel="noopener noreferrer">${e(copy.original)} ↗</a></header>
+    <header><div class="article-meta"><span>STATION CAT</span><time datetime="${e(dateLabel(row))}">${e(dateLabel(row))}</time></div><h1>${e(row.title)}</h1><p class="article-lead">${e(row.description)}</p><div class="article-row-actions"><a href="${e(normalizeArticleUrl(meta.sourceUrl).url)}" rel="noopener noreferrer">${e(copy.original)} ↗</a>${renderArticleShare(locale, row)}</div></header>
     ${coverUrl(row) ? `<img class="article-cover" src="${e(coverUrl(row))}" alt="${e(row.cover_alt)}" width="1200" height="800">` : ''}
-    <div class="article-prose">${safeHtml}</div></article>`;
+    <div class="article-prose">${safeHtml}</div></article>${renderArticleShareDialog(locale)}`;
 }
