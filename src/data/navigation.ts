@@ -5,7 +5,7 @@ export const brandNavigation = [
   { label: 'Game', href: '/en/apps/cat-life-game/' },
   { label: 'Points', href: '/en/points/' },
   { label: 'Serials', href: '/en/novel/' },
-  { label: 'Signal', href: '/en/signal/' },
+  { label: 'Notes & Essays', href: '/en/signal/' },
   { label: 'Member Login', href: '/en/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
   { label: 'Follow on X', href: siteConfig.xUrl, mobileHidden: true }
@@ -16,7 +16,7 @@ export const zhBrandNavigation = [
   { label: '遊戲', href: '/zh-hant/apps/cat-life-game/' },
   { label: '積分價格', href: '/zh-hant/points/' },
   { label: '連載小說', href: '/novel/' },
-  { label: '信號簡報', href: '/signal/' },
+  { label: '文章與觀察', href: '/signal/' },
   { label: '會員登入', href: '/zh-hant/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
   { label: 'Follow on X', href: siteConfig.xUrl, mobileHidden: true }
@@ -27,7 +27,7 @@ export const zhHansBrandNavigation = [
   { label: '游戏', href: '/zh-hans/apps/cat-life-game/' },
   { label: '积分价格', href: '/zh-hans/points/' },
   { label: '连载小说', href: '/novel/' },
-  { label: '信号简报', href: '/zh-hans/signal/' },
+  { label: '文章与观察', href: '/zh-hans/signal/' },
   { label: '会员登录', href: '/zh-hans/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
   { label: 'Follow on X', href: siteConfig.xUrl, mobileHidden: true }
@@ -38,7 +38,7 @@ export const jaBrandNavigation = [
   { label: 'ゲーム', href: '/ja/apps/cat-life-game/' },
   { label: 'ポイント価格', href: '/ja/points/' },
   { label: '連載小説', href: '/novel/' },
-  { label: 'Signal', href: '/ja/signal/' },
+  { label: '記事と思考', href: '/ja/signal/' },
   { label: '会員ログイン', href: '/ja/library/' },
   { label: 'About', href: '/about/', mobileHidden: true },
   { label: 'Follow on X', href: siteConfig.xUrl, mobileHidden: true }
