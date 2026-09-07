@@ -58,10 +58,10 @@ assert.match(baseLayout, /rel="icon" href="\/favicon-64\.png"/);
 assert.match(baseLayout, /rel="apple-touch-icon" href="\/apple-touch-icon\.png"/);
 
 for (const title of [
-  'Station Cat｜獨立 App、連載小說與信號簡報',
-  'Station Cat｜独立 App、连载小说与信号简报',
-  'Station Cat | Independent Apps, Serial Fiction, and Signals',
-  'Station Cat｜個人開発アプリ・連載小説・シグナル速報'
+  'Station Cat｜獨立 App、連載小說與文章觀察',
+  'Station Cat｜独立 App、连载小说与文章观察',
+  'Station Cat | Independent Apps, Serial Fiction, and Essays',
+  'Station Cat｜個人開発アプリ・連載小説・記事と思考'
 ]) {
   assert.ok(home.includes(title), `homepage title is missing: ${title}`);
 }
