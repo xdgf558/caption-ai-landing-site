@@ -28,6 +28,14 @@ Enter in a title or URL field saves a draft (or saves an already-published entry
 
 Canonical URLs retain only content-defining query parameters: article page 1 uses `/signal/`, subsequent pages use `?page=N`, and the legacy collection uses `?view=archive`. Localized equivalents follow the same rule. Tracking and other unused query parameters are omitted. Archive currently retains its existing single-page, 50-entry listing; its canonical therefore does not include pagination. HEAD skips article-card rendering. Malformed article source links are skipped rather than breaking the collection.
 
+## Article Share Cards
+
+Published article rows and reading pages provide a localized **分享卡片 / Share card** action. The browser generates a 1080 x 1440 PNG containing the Station Cat logo, title, summary, website publication date and QR code. It supports image download, long-press image saving, copying the canonical URL, and native file sharing when the browser supports it. WeChat destination selection is controlled by the operating system; this is not a WeChat SDK integration and does not automatically post to Moments or groups.
+
+QR codes use the existing `qrcode-generator` dependency and point to the fixed `https://wwwstationcat.org` canonical article URL without tracking parameters. Link-only articles point to their existing website wrapper with the X original link; they remain `noindex` and excluded from the sitemap. Published text only is embedded into escaped button metadata. No article is published, no content write/API credential is added, and no server-side PNG generation is required. The legacy brief card endpoints remain unchanged. Downloaded images are snapshots and cannot be recalled when an article changes or is withdrawn.
+
+PNG generation handles long mixed-language text, preserves a four-module QR quiet zone, and falls back to text branding if the logo cannot load. Closing a dialog invalidates pending generation and revokes its object URL. Copy permission failures retain a selectable URL; native-share failures retain image saving. `scripts/article-browser-tests/share.spec.mjs` checks the actual PNG dimensions and QR pixels, copy/download, native file-share payload, link-only wrappers, focus restoration, failure/retry, long text, and 390/1280px layout. Native WeChat and iOS long-press saving still require a real-device acceptance check.
+
 ## Local Verification
 
 Run `npm test` and `npm run build`. `scripts/test-signal-articles.mjs` exercises the real Worker handlers with temporary SQLite and in-memory R2: URL validation, Origin, preview escaping, drafts, duplicate links, concurrent edits, immutable revision bodies, publication/unpublication, archive preservation, sitemap visibility and uploads.

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import worker, { __readerTotpTestHooks as hooks } from '../src/worker.js';
 import { normalizeArticleUrl, normalizeArticleInput, suggestArticleMetadata, renderArticleIndex } from '../src/signalArticles.js';
 import { createArticleFixture } from './helpers/article-fixture.mjs';
+import { articleShareData, articleShareCopy } from '../src/articleShare.js';
 
 const { env, sqlite, objects } = createArticleFixture();
 const base = 'http://localhost:4179';
@@ -55,6 +56,8 @@ const index = await (await publicPage('/signal/')).text();
 assert.match(index, /Published essay/); assert.match(index, /\/en\/signal\/x-article-123\//);
 const detail = await (await publicPage('/en/signal/x-article-123/')).text();
 assert.match(detail, /&lt;script&gt;/); assert.match(detail, /"@type":"Article"/);
+assert.match(detail, /data-article-share=/);
+assert.match(detail, /scripts\/article-share\.js\?v=1/);
 assert.equal((await hooks.handleDynamicFrontendContent(new Request(base + '/en/signal/', { method: 'HEAD' }), env, {})).body, null);
 const linkOnly = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/456', title: 'Link only', markdown: '', status: 'published' })).json()).entry;
 const linkDetail = await (await publicPage('/en/signal/x-article-456/')).text();
@@ -81,6 +84,20 @@ const rows = [{ locale: 'ja', slug: 'x-article-1', title: '<unsafe>', descriptio
 assert.match(renderArticleIndex('en', rows), /&lt;unsafe&gt;/);
 assert.match(renderArticleIndex('en', rows), /\/ja\/signal\/x-article-1\//);
 assert.equal(linkOnly.metadata.article.hasBody, false);
+const shared = articleShareData({ ...rows[0], title: '<unsafe> "quoted"', slug: 'x-article-1' }, '/ja/signal/');
+assert.equal(shared.url, 'https://wwwstationcat.org/ja/signal/x-article-1/');
+assert.ok(shared.modules.length >= 21);
+assert.ok(shared.modules.every(row => /^[01]+$/.test(row) && row.length === shared.modules.length));
+assert.equal(articleShareData({ slug: '../admin' }, '/signal/'), null);
+assert.equal(articleShareData({ slug: 'x-article-1' }, '//evil.org/'), null);
+for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
+  assert.ok(articleShareCopy(locale).save);
+  const rendered = renderArticleIndex(locale, rows);
+  assert.match(rendered, /data-article-share-dialog/);
+  assert.match(rendered, /&lt;unsafe&gt;/);
+}
+assert.match(linkDetail, /data-article-share=/, 'link-only articles can share their website wrapper');
+assert.doesNotMatch(await (await publicPage('/en/signal/?view=archive')).text(), /data-article-share=/, 'legacy archive remains independent');
 
 // Exercise the actual legacy routes, not only the new editor's handler.
 const protectedEntry = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/777', locale: 'zh-Hant', status: 'published' })).json()).entry;
