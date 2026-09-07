@@ -47,6 +47,7 @@ import {
   reverseCatLifePurchase
 } from './catLifeCommerce.js';
 import { Resvg } from '@cf-wasm/resvg';
+import { articleSourceKind, articleCopy, articleBasePath, articleMetadata, normalizeArticleInput, suggestArticleMetadata, renderArticleIndex, renderArticleDetail } from './signalArticles.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -16591,6 +16592,7 @@ const persistContentEntry = async (db, env, entry, options = {}) => {
         archived_at = CASE WHEN excluded.status = 'archived' THEN CURRENT_TIMESTAMP ELSE NULL END,
         updated_by = excluded.updated_by,
         updated_at = CURRENT_TIMESTAMP
+      WHERE (? = '' OR (content_entries.source_kind = 'x_article' AND json_extract(content_entries.metadata_json, '$.article.version') = ?))
       RETURNING *`
     )
     .bind(
@@ -16627,9 +16629,13 @@ const persistContentEntry = async (db, env, entry, options = {}) => {
       entry.scheduledAt,
       entry.publishedAt,
       entry.createdBy,
-      entry.updatedBy
+      entry.updatedBy,
+      options.articleVersion || '',
+      options.articleVersion || ''
     )
     .first();
+
+  if (!saved) throw Object.assign(new Error('文章已在其他窗口更新，请重新载入。'), { code: 'ARTICLE_CONFLICT', status: 409 });
 
   const pricingRules = await syncContentPricingRules(db, saved);
 
@@ -16677,6 +16683,95 @@ const persistContentEntry = async (db, env, entry, options = {}) => {
   });
 
   return { pricingRules, revisionNumber, saved };
+};
+
+const handleAdminArticles = async (request, env) => {
+  const url = new URL(request.url);
+  if (request.method !== 'GET' && request.headers.get('origin') !== url.origin) {
+    return privateJson({ ok: false, message: '请从本站后台提交。' }, { status: 403 });
+  }
+  const actorEmail = await getAdminActorEmail(request, env);
+  if (!actorEmail) return privateJson({ ok: false, message: '请重新登录后台。' }, { status: 401 });
+  try {
+    const db = env.WAITLIST_DB;
+    if (!db || !(await ensureContentTablesReady(db))) return privateJson({ ok: false, message: '内容数据库尚未就绪。' }, { status: 503 });
+    if (url.pathname.endsWith('/cover') && request.method === 'POST') {
+      // Bound multipart bytes before parsing; Content-Length is not trusted.
+      const reader = request.body?.getReader();
+      const chunks = [];
+      let size = 0;
+      if (!reader) return privateJson({ ok: false, message: '请选择封面。' }, { status: 400 });
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.byteLength;
+        if (size > maxContentImageRequestBytes) {
+          await reader.cancel();
+          return privateJson({ ok: false, message: '封面不能超过 5MB。' }, { status: 413 });
+        }
+        chunks.push(value);
+      }
+      const bytes = new Uint8Array(size);
+      let offset = 0;
+      for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+      return handleAdminUploadContentMedia(new Request(request.url, { method: 'POST', headers: request.headers, body: bytes }), env);
+    }
+    if (request.method === 'GET' && url.pathname !== '/admin/api/articles') return privateJson({ ok: false }, { status: 405 });
+    if (request.method === 'GET') {
+      const id = normalizePositiveInteger(url.searchParams.get('id'), 0);
+      if (id) {
+        const row = await db.prepare("SELECT * FROM content_entries WHERE id = ? AND entry_type = 'signal_brief' AND source_kind = 'x_article'").bind(id).first();
+        if (!row) return privateJson({ ok: false, message: '文章不存在。' }, { status: 404 });
+        const markdown = articleMetadata(row).hasBody ? await readContentObjectText(getContentBucket(env), row.markdown_r2_key, 'Article Markdown') : '';
+        return privateJson({ ok: true, entry: contentEntryToJson(row), markdown });
+      }
+      const page = Math.min(10000, Math.max(1, Number.parseInt(url.searchParams.get('page'), 10) || 1));
+      const filter = ['draft', 'published', 'archived'].includes(url.searchParams.get('status')) ? url.searchParams.get('status') : '';
+      const result = await db.prepare("SELECT * FROM content_entries WHERE entry_type = 'signal_brief' AND source_kind = 'x_article' AND (? = '' OR status = ?) ORDER BY updated_at DESC, id DESC LIMIT 21 OFFSET ?").bind(filter, filter, (page - 1) * 20).all();
+      return privateJson({ ok: true, entries: (result.results || []).slice(0, 20).map(contentEntryToJson), hasMore: (result.results || []).length > 20, page });
+    }
+    if (request.method !== 'POST') return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    const body = await readRequestTextWithLimit(request, 520000);
+    if (!body) return privateJson({ ok: false, message: '文章过大，请缩短正文。' }, { status: 413 });
+    let payload;
+    try { payload = JSON.parse(body.text); } catch { return privateJson({ ok: false, message: '无效的 JSON。' }, { status: 400 }); }
+    if (url.pathname.endsWith('/metadata')) return privateJson({ ok: true, ...await suggestArticleMetadata(payload?.sourceUrl) });
+    const article = normalizeArticleInput(payload);
+    const html = renderSignalMarkdownToHtml(article.markdown);
+    if (url.pathname.endsWith('/preview')) {
+      const row = { ...article, locale: article.locale, published_at: new Date().toISOString(), cover_r2_key: article.coverR2Key, cover_alt: article.coverAlt, metadata_json: JSON.stringify({ article: { sourceUrl: article.url, hasBody: article.hasBody } }) };
+      return privateJson({ ok: true, html: renderArticleDetail(article.locale, row, html) });
+    }
+    const existing = await db.prepare("SELECT * FROM content_entries WHERE entry_type = 'signal_brief' AND locale = ? AND slug = ? AND parent_slug = ''").bind(article.locale, article.slug).first();
+    const id = normalizePositiveInteger(payload.id, 0);
+    if (existing && (!id || existing.id !== id || existing.source_kind !== articleSourceKind)) {
+      return privateJson({ ok: false, code: 'ARTICLE_DUPLICATE', message: '此链接已有文章，请从列表打开后编辑。' }, { status: 409 });
+    }
+    if (id && !existing) return privateJson({ ok: false, message: '已保存文章的链接和语言不可更改，请新建文章。' }, { status: 409 });
+    const previous = articleMetadata(existing || {});
+    if (existing && (!payload.version || payload.version !== previous.version)) return privateJson({ ok: false, code: 'ARTICLE_CONFLICT', message: '文章已更新，请重新载入。' }, { status: 409 });
+    const version = crypto.randomUUID();
+    const entry = normalizeContentPayload({
+      entryType: 'signal_brief', sourceKind: articleSourceKind, sourceRef: article.url,
+      slug: article.slug, locale: article.locale, title: article.title,
+      description: article.description, excerpt: article.description.slice(0, 1000),
+      markdown: article.markdown, html, bodyFormat: 'markdown',
+      status: article.status, visibility: 'public', accessLevel: 'free',
+      coverR2Key: article.coverR2Key, coverAlt: article.coverAlt,
+      authorName: 'Station Cat', publishedAt: existing?.published_at || (article.status === 'published' ? new Date().toISOString() : null),
+      readingMinutes: article.hasBody ? Math.max(1, Math.ceil(countContentWords(article.markdown) / 450)) : 0,
+      wordCount: countContentWords(article.markdown),
+      metadata: { article: { sourceUrl: article.url, hasBody: article.hasBody, version } }
+    });
+    // Immutable body keys preserve previous revisions and the live body during a failed edit.
+    entry.markdownR2Key = article.hasBody ? `content/articles/${article.locale}/${article.slug}/${version}.md` : '';
+    entry.htmlR2Key = article.hasBody ? `content/articles/${article.locale}/${article.slug}/${version}.html` : '';
+    const { saved } = await persistContentEntry(db, env, entry, { actorEmail, articleVersion: existing ? previous.version : '__new__', auditAction: 'article_save', revisionSummary: article.status });
+    return privateJson({ ok: true, entry: contentEntryToJson(saved) });
+  } catch (error) {
+    console.warn('Article publishing request failed.', { code: error.code || 'ARTICLE_FAILED' });
+    return privateJson({ ok: false, code: error.code || 'ARTICLE_FAILED', message: error.status ? error.message : '保存失败，请稍后重试；当前内容仍保留在编辑器中。' }, { status: error.status || 503 });
+  }
 };
 
 const handleAdminUpsertContentEntry = async (request, env) => {
@@ -19250,6 +19345,7 @@ const handleSitemap = async (request, env, ctx) => {
            WHERE status = 'published'
              AND visibility = 'public'
              AND entry_type IN ('signal_brief', 'novel_series', 'novel_chapter')
+             AND (source_kind <> 'x_article' OR json_extract(metadata_json, '$.article.hasBody') = 1)
            ORDER BY COALESCE(updated_at, published_at) DESC, id DESC
            LIMIT 50000`
         )
@@ -19344,7 +19440,7 @@ const absoluteStationUrl = (path) => {
 const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = '', ogUrl = '', pageKind = '', robots = '', structuredData = [], title }) => {
   const ogImageUrl = absoluteStationUrl(ogImage);
   const ogCanonicalUrl = absoluteStationUrl(ogUrl || canonicalPath);
-  const isSignalPage = pageKind === 'signal';
+  const isSignalPage = pageKind === 'signal' || pageKind === 'articles';
   const navCopy = dynamicNavCopy[lang] || dynamicNavCopy['zh-Hant'];
   const homePath = dynamicHomePathForLocale(lang);
   const appsPath = dynamicAppsPathForLocale(lang);
@@ -19354,7 +19450,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
     ? `<header class="signal-station-header">
         <div class="signal-station-header__inner">
           <a class="signal-station-brand" href="${escapeHtml(homePath)}">
-            <span class="signal-station-brand__mark">SC</span>
+            ${pageKind === 'articles' ? '<img class="articles-brand-logo" src="/images/optimized/station-cat-logo-1668c2e5-160.webp" width="40" height="40" alt="" />' : '<span class="signal-station-brand__mark">SC</span>'}
             <span class="signal-station-brand__copy">
               <strong>STATION CAT</strong>
               <small>${escapeHtml(signalPageCopy.platformLabel)}</small>
@@ -19411,9 +19507,9 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
     <meta property="og:site_name" content="Station Cat">
     ${ogImageUrl ? `<meta property="og:image" content="${escapeHtml(ogImageUrl)}">` : ''}
     ${ogImageUrl ? `<meta property="og:image:secure_url" content="${escapeHtml(ogImageUrl)}">` : ''}
-    ${ogImageUrl ? '<meta property="og:image:type" content="image/png">' : ''}
-    ${ogImageUrl ? '<meta property="og:image:width" content="1200">' : ''}
-    ${ogImageUrl ? '<meta property="og:image:height" content="675">' : ''}
+    ${ogImageUrl && pageKind !== 'articles' ? '<meta property="og:image:type" content="image/png">' : ''}
+    ${ogImageUrl && pageKind !== 'articles' ? '<meta property="og:image:width" content="1200">' : ''}
+    ${ogImageUrl && pageKind !== 'articles' ? '<meta property="og:image:height" content="675">' : ''}
     ${ogImageUrl ? `<meta property="og:image:alt" content="${escapeHtml(title)}">` : ''}
     <meta name="twitter:card" content="${ogImageUrl ? 'summary_large_image' : 'summary'}">
     <meta name="twitter:title" content="${escapeHtml(title)} | Station Cat">
@@ -19673,8 +19769,9 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
         .signal-tape-card { transition: none; }
       }
     </style>
+    ${pageKind === 'articles' ? '<link rel="stylesheet" href="/styles/signal-articles.css">' : ''}
   </head>
-  <body class="${isSignalPage ? 'signal-page' : ''}">
+  <body class="${isSignalPage ? 'signal-page' : ''}${pageKind === 'articles' ? ' articles-page' : ''}">
     ${topbar}
     <main class="shell${isSignalPage ? ' signal-shell' : ''}">
       ${body}
@@ -21523,12 +21620,23 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
   if (!db || !(await ensureContentTablesReady(db))) return null;
 
   if (route.kind === 'signal-index') {
-    const rows = await listPublishedContentEntries(db, { entryType: 'signal_brief', locale: route.locale, limit: 50 });
-    const signalRows = request.method === 'HEAD' ? rows : await hydrateSignalIndexRows(env, rows);
+    if (url.searchParams.get('view') !== 'archive') {
+      const page = Math.min(10000, Math.max(1, Number.parseInt(url.searchParams.get('page'), 10) || 1));
+      const result = await db.prepare("SELECT * FROM content_entries WHERE entry_type = 'signal_brief' AND source_kind = 'x_article' AND status = 'published' AND visibility = 'public' ORDER BY COALESCE(published_at, updated_at) DESC, id DESC LIMIT 21 OFFSET ?").bind((page - 1) * 20).all();
+      const rows = result.results || [], copy = articleCopy(route.locale);
+      return dynamicHtmlResponse(request, {
+        body: renderArticleIndex(route.locale, rows.slice(0, 20), { page, hasMore: rows.length > 20 }),
+        canonicalPath: `${dynamicCanonicalPath(route)}${page > 1 ? `?page=${page}` : ''}`,
+        description: copy.description, lang: route.locale, pageKind: 'articles', title: copy.title
+      });
+    }
+    const archiveResult = await db.prepare("SELECT * FROM content_entries WHERE entry_type = 'signal_brief' AND locale = ? AND source_kind <> 'x_article' AND status = 'published' AND visibility = 'public' ORDER BY COALESCE(published_at, updated_at) DESC, id DESC LIMIT 50").bind(route.locale).all();
+    const archiveRows = archiveResult.results || [];
+    const signalRows = request.method === 'HEAD' ? archiveRows : await hydrateSignalIndexRows(env, archiveRows);
     const copy = dynamicContentCopy[route.locale] || dynamicContentCopy['zh-Hant'];
     return dynamicHtmlResponse(request, {
-      body: renderDynamicSignalIndex(route, signalRows),
-      canonicalPath: dynamicCanonicalPath(route),
+      body: `<a href="${articleBasePath(route.locale)}">${escapeHtml(articleCopy(route.locale).back)}</a>` + renderDynamicSignalIndex(route, signalRows),
+      canonicalPath: `${dynamicCanonicalPath(route)}?view=archive`,
       description: copy.signalDescription,
       lang: route.locale,
       pageKind: 'signal',
@@ -21543,6 +21651,22 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
       slug: route.slug
     });
     if (!brief) return null;
+
+    if (brief.source_kind === articleSourceKind) {
+      if (route.kind === 'signal-card') return new Response('Not found', { status: 404 });
+      const meta = articleMetadata(brief);
+      const body = meta.hasBody ? await readPublicEntryBody(env, brief, { preferMarkdown: true }) : { markdown: '' };
+      return dynamicHtmlResponse(request, {
+        body: renderArticleDetail(route.locale, brief, renderSignalMarkdownToHtml(body.markdown)),
+        canonicalPath: dynamicCanonicalPath(route), description: brief.description,
+        lang: route.locale, pageKind: 'articles', title: brief.title,
+        ogImage: contentMediaUrl(brief.cover_r2_key), robots: meta.hasBody ? '' : 'noindex, follow',
+        structuredData: meta.hasBody ? { '@context': 'https://schema.org', '@type': 'Article', headline: brief.title,
+          author: { '@type': 'Person', name: 'Station Cat', url: STATION_X_URL },
+          datePublished: normalizeIsoTimestamp(brief.published_at), dateModified: normalizeIsoTimestamp(brief.updated_at),
+          inLanguage: brief.locale, url: absoluteStationUrl(dynamicCanonicalPath(route)), sameAs: meta.sourceUrl } : []
+      });
+    }
 
     if (route.kind === 'signal-card') {
       if (route.assetFormat === 'png') {
@@ -22774,6 +22898,8 @@ const handleR2Download = async (request, env, file) => {
 };
 
 export const __readerTotpTestHooks = {
+  handleAdminArticles,
+  handleDynamicFrontendContent,
   createCatLifeCorrectionId,
   createCatLifePurchaseId,
   redeemCatLifeProduct,
@@ -23306,6 +23432,10 @@ export default {
     if (url.pathname === '/admin/api/content/imports/review') {
       if (request.method === 'POST') return handleAdminReviewContentImport(request, env);
       return privateJson({ ok: false, message: 'Method not allowed.' }, { status: 405 });
+    }
+
+    if (['/admin/api/articles', '/admin/api/articles/preview', '/admin/api/articles/metadata', '/admin/api/articles/cover'].includes(url.pathname)) {
+      return handleAdminArticles(request, env);
     }
 
     if (url.pathname === '/admin/api/signal/import') {

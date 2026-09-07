@@ -1,0 +1,46 @@
+---
+---
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>文章管理 | Station Cat</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/styles/signal-articles.css" />
+    <link rel="stylesheet" href="/styles/admin-articles.css" />
+  </head>
+  <body class="article-admin">
+    <header class="editor-topbar"><a href="/admin-v2/">Station Cat <span>/ 后台</span></a><a href="/signal/" target="_blank" rel="noopener">查看网站 ↗</a></header>
+    <main class="editor-shell">
+      <header class="editor-heading"><h1>文章</h1><button type="button" id="article-new">新建文章</button></header>
+      <p id="article-status" role="status" aria-live="polite"></p>
+      <div class="editor-layout">
+        <aside class="editor-library" aria-label="文章列表">
+          <div class="library-tools"><label class="sr-only" for="article-filter">筛选文章</label><select id="article-filter"><option value="all">全部状态</option><option value="draft">草稿</option><option value="published">已发布</option><option value="archived">已下架</option></select><button id="article-refresh" type="button">刷新</button></div>
+          <div id="article-list"></div><div class="list-pagination"><button id="list-previous" type="button" disabled>上一页</button><button id="list-next" type="button" disabled>下一页</button></div>
+        </aside>
+        <section class="editor-workspace" aria-label="文章编辑">
+          <form id="article-form">
+            <div class="editor-form-heading"><h2 id="editor-title">新文章</h2><span id="editor-state">未保存</span></div>
+            <label for="article-url">X 文章链接</label>
+            <div class="link-input"><input id="article-url" type="url" required maxlength="500" placeholder="https://x.com/i/article/…" /><button id="article-metadata" type="button">识别链接</button></div>
+            <label for="article-title">标题</label><input id="article-title" required maxlength="240" />
+            <label for="article-description">摘要</label><textarea id="article-description" required maxlength="1200" rows="3"></textarea>
+            <div class="editor-options">
+              <div><label for="article-locale">原文语言</label><select id="article-locale"><option value="zh-Hans">简体中文</option><option value="zh-Hant">繁體中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+              <div><label for="article-cover">封面 <span>可选</span></label><input id="article-cover" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" /></div>
+            </div>
+            <div id="cover-selected" hidden><img id="cover-image" alt="封面预览" width="180" height="120" /><div><label for="article-cover-alt">图片说明</label><input id="article-cover-alt" maxlength="300" /><button id="cover-remove" type="button">移除封面</button></div></div>
+            <details id="article-body-section"><summary>站内正文 <span>可选 · Markdown</span></summary><label class="sr-only" for="article-body">正文</label><textarea id="article-body" rows="16" maxlength="120000"></textarea></details>
+            <footer class="editor-actions"><button type="button" id="article-preview">预览</button><span class="action-spacer"></span><button type="button" id="article-withdraw" hidden>下架</button><button type="button" id="article-save">保存草稿</button><button type="submit" class="primary" id="article-publish">发布文章</button></footer>
+          </form>
+        </section>
+      </div>
+    </main>
+    <dialog id="preview-dialog"><header><h2>文章预览</h2><button type="button" id="preview-close">关闭</button></header><iframe id="article-preview-frame" title="文章预览" sandbox=""></iframe></dialog>
+    <dialog id="confirm-dialog"><h2 id="confirm-title">放弃未保存的修改？</h2><div class="editor-actions"><button id="confirm-cancel" type="button">取消</button><button id="confirm-accept" type="button" class="primary">确认</button></div></dialog>
+    <script src="../../scripts/adminArticles.js"></script>
+  </body>
+</html>
