@@ -2,28 +2,48 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.26.1",
+      version: "1.26.2",
       saveSchemaVersion: 3,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
-          "照护建议现在只定位到对应按钮，不会消耗物品；实际操作和结果统一留在猫咪身边。",
-          "主操作与更多照护使用一致的焦点提示，定位后展开状态和未提交的名字仍会保留。",
-          "润色互动完成文案，并强化回忆读取不改变保存顺序的检查；照护数值与存档格式不变。"
+          "背景音乐换为《月亮下的小猫·柔和版》：轻盈的卡通小夜曲，柔化高音，陪伴日常照护。",
+          "同一首音乐跨页面连续循环；静音或切到后台时暂停，返回后从原位置继续。",
+          "保留原有音量、静音与自定义音乐设置。点击后才加载音乐，不改变照护数值或存档格式。"
         ],
         "en": [
-          "Care guidance now points to the matching care button without spending supplies. Actions and results stay together beside your cat.",
-          "Primary and additional care share one focus style. Finding an action keeps disclosures and unfinished names intact.",
-          "Clearer completion messages and checks that reading memories preserves their saved order. Care values and save format are unchanged."
+          "Background music is now Moonlight Tiptoes — Soft Mix: a light cartoon serenade with gentler high notes for everyday care.",
+          "One continuous loop follows you across pages. Muting or hiding the game pauses playback; returning resumes from the same position.",
+          "Your volume, mute and custom music settings are preserved. Music loads after interaction; care values and save format are unchanged."
         ],
         "ja": [
-          "お世話の案内は対応するボタンへ移動するだけで、アイテムを消費しません。操作と結果は猫のそばにまとまります。",
-          "基本のお世話と追加のお世話でフォーカス表示を統一。移動後も開いた項目と入力中の名前を保ちます。",
-          "完了メッセージを改善し、思い出の閲覧が保存順序を変えないことを確認。お世話の数値とセーブ形式は変わりません。"
+          "BGMを「月明かりの子猫（やわらかい音色）」に変更。高音をやさしく整えた、軽やかなアニメ風の小夜曲です。",
+          "ページを移動しても同じ曲が続きます。ミュートや画面を離れたときは一時停止し、戻ると続きから再生します。",
+          "音量・ミュート・カスタム音楽の設定はそのまま。操作後に音楽を読み込み、お世話の数値とセーブ形式は変えません。"
         ]
       },
       releaseHistory: [
+        {
+          version: "1.26.1",
+          notes: {
+            "zh-CN": [
+              "照护建议现在只定位到对应按钮，不会消耗物品；实际操作和结果统一留在猫咪身边。",
+              "主操作与更多照护使用一致的焦点提示，定位后展开状态和未提交的名字仍会保留。",
+              "润色互动完成文案，并强化回忆读取不改变保存顺序的检查；照护数值与存档格式不变。"
+            ],
+            "en": [
+              "Care guidance now points to the matching care button without spending supplies. Actions and results stay together beside your cat.",
+              "Primary and additional care share one focus style. Finding an action keeps disclosures and unfinished names intact.",
+              "Clearer completion messages and checks that reading memories preserves their saved order. Care values and save format are unchanged."
+            ],
+            "ja": [
+              "お世話の案内は対応するボタンへ移動するだけで、アイテムを消費しません。操作と結果は猫のそばにまとまります。",
+              "基本のお世話と追加のお世話でフォーカス表示を統一。移動後も開いた項目と入力中の名前を保ちます。",
+              "完了メッセージを改善し、思い出の閲覧が保存順序を変えないことを確認。お世話の数値とセーブ形式は変わりません。"
+            ]
+          }
+        },
         {
           version: "1.26.0",
           notes: {
