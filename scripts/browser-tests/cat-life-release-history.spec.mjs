@@ -10,8 +10,8 @@ for (const width of [390, 1280]) test(width + 'px: release history stays folded 
   await page.setViewportSize({ width, height: 844 });
   await page.goto('/games/cat-life/?lang=en');
   await openVersion(page, width);
-  await expect(page.locator('.release-latest .notice-item')).toHaveCount(2);
-  await expect(page.locator('.release-history-item')).toHaveCount(4);
+  await expect(page.locator('.release-latest .notice-item')).toHaveCount(3);
+  await expect(page.locator('.release-history-item')).toHaveCount(5);
   await expect(page.locator('.release-history-item[open]')).toHaveCount(0);
   await expect(page.locator('[data-release-version="1.22.2"] summary')).toContainText('Changes: 1');
   const details = page.locator('[data-release-version="1.25.0"]');
@@ -41,7 +41,7 @@ for (const width of [390, 1280]) test(width + 'px: release history stays folded 
   await expect.poll(() => page.evaluate(() => window.CatGame.state.releaseHistoryOpen)).toContain('1.25.0');
   await page.reload();
   await openVersion(page, width);
-  await expect(page.locator('.release-history-item')).toHaveCount(4);
+  await expect(page.locator('.release-history-item')).toHaveCount(5);
   await expect(page.locator('.release-history-item[open]')).toHaveCount(0);
   await expect(details.locator('.notice-item').first()).toBeHidden();
   expect(await page.evaluate(() => window.CatGame.state.releaseHistoryOpen)).toEqual([]);

@@ -2,25 +2,45 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.25.1",
+      version: "1.26.0",
       saveSchemaVersion: 3,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
-          "版本说明现在只展开本次更新，历史内容按版本号归档，点击即可查看。",
-          "手动展开的历史记录会在本次游玩中保持展开，不再被后台刷新收起。"
+          "猫咪互动以场景为中心，喂食、陪玩和休息就在猫咪下方，其他照护可展开查看。",
+          "互动后显示实际状态变化与物品消耗，新回忆只在真正产生时提示。",
+          "不同动作有独立反馈动效，快速连点不重复结算，后台刷新保留操作焦点与展开状态，并支持减少动态效果。"
         ],
         "en": [
-          "Patch notes now show only the latest update by default. Earlier updates are grouped by version and can be expanded.",
-          "Expanded history stays open during this visit, including background refreshes."
+          "Scene-first cat care puts feeding, play and rest beneath your companion, with more care available on demand.",
+          "Results show actual stat changes and supplies used. Memory notices appear only when a new memory is recorded.",
+          "Distinct reactions, rapid-click protection and preserved focus across background refreshes support calmer care, including reduced motion."
         ],
         "ja": [
-          "更新内容は最新分だけを表示。過去の内容はバージョンごとに折りたたみ、クリックで確認できます。",
-          "開いた過去の更新内容は、バックグラウンド更新後も今回のプレイ中は開いたままになります。"
+          "猫のすぐ下にごはん・遊び・休憩を配置。ほかのお世話は開いて確認できます。",
+          "実際の状態変化と消費アイテムを表示。新しい思い出が生まれたときだけお知らせします。",
+          "動作ごとの反応、連打の重複防止、更新後のフォーカス保持に対応。動きを減らす設定も使えます。"
         ]
       },
       releaseHistory: [
+        {
+          version: "1.25.1",
+          notes: {
+            "zh-CN": [
+              "版本说明现在只展开本次更新，历史内容按版本号归档，点击即可查看。",
+              "手动展开的历史记录会在本次游玩中保持展开，不再被后台刷新收起。"
+            ],
+            "en": [
+              "Patch notes now show only the latest update by default. Earlier updates are grouped by version and can be expanded.",
+              "Expanded history stays open during this visit, including background refreshes."
+            ],
+            "ja": [
+              "更新内容は最新分だけを表示。過去の内容はバージョンごとに折りたたみ、クリックで確認できます。",
+              "開いた過去の更新内容は、バックグラウンド更新後も今回のプレイ中は開いたままになります。"
+            ]
+          }
+        },
         {
           "version": "1.25.0",
           "notes": {
