@@ -389,9 +389,10 @@ test('redeems an active skin with server data only and applies the official enti
   })).toContain('/src/assets/premium/moonlit-tabby.png');
 
   await page.locator('[data-page-target="cats"]').first().click();
-  await page.locator('.cat-action-section [data-cat-action="rest"]').click();
+  await page.locator('#cat-care-rest').click();
   await expect(page.locator('.cat-profile-scene .cat-profile-cat')).toHaveAttribute('src', /moonlit-tabby\.png/);
-  await expect(page.locator('.cat-profile-scene .cat-reaction-cue')).toHaveText('Zz');
+  await expect(page.locator('.cat-profile-scene .cat-reaction-speech')).toHaveText('It feels safe to rest here.');
+  await expect(page.locator('.cat-profile-scene .cat-profile-cat')).toHaveCSS('animation-name', 'cat-resting');
 });
 
 test('shows active products to guests but routes redemption through member sign-in', async ({ page }) => {

@@ -76,7 +76,7 @@ test('temporary care connects cats, hospital, collection and backpack without co
   await expect(page.locator('#app-main [data-cat-action]:enabled')).toHaveCount(0);
   await page.locator('#app-main [data-page-target="cats"]').first().click();
   await page.locator('[data-rescue-cat="cat_001"]').click();
-  await expect(page.locator('.cat-action-grid')).toBeVisible();
+  await expect(page.locator('.cat-interaction-tray')).toBeVisible();
 });
 
 test('old loss stays opt-in and recovery keeps a local backup and the same bond', async ({ page }) => {
@@ -137,7 +137,7 @@ test('v2 import honors old cat trackers despite fresh meta and shows the new rel
   await expect(page.locator('.care-support-card').first()).toContainText('Safe in temporary care');
   expect(await page.evaluate(() => window.CatGame.state.game.cats[0].hunger)).toBe(64);
   await page.locator('.desktop-navigation [data-page-target="version"]').click();
-  await expect(page.locator('#app-main')).toContainText('1.25.1');
+  await expect(page.locator('#app-main')).toContainText('1.26.0');
   await expect(page.locator('#app-main')).toContainText('Gentle care is on');
   await expect(page.locator('[data-dismiss-release-note]')).toBeVisible();
   await page.locator('[data-dismiss-release-note]').click();

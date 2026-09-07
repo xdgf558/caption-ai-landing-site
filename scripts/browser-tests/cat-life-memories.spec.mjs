@@ -35,7 +35,7 @@ test('390px: actual care creates memories; home opens the correct journal, reloa
   await expect(page.locator('.cat-memory-entry')).toHaveCount(3);
   await page.clock.runFor(20000);
   await page.locator('.cat-action-grid [data-cat-action="play"]').click();
-  await expect(page.locator('#app-toast')).toContainText('Memory saved: A little closer to you');
+  await expect(page.locator('[data-interaction-feedback]')).toContainText('A new memory is in your journal');
   await expect(page.locator('.cat-memory-entry')).toHaveCount(4);
   const memories = await journal(page);
   await page.locator('#cat-name-input').fill('Momo');

@@ -13,7 +13,7 @@
     angry: "angry.png",
     celebrate: "celebrate.png",
     cry: "cry.png",
-    fish: "fish.png",
+    fish: "eating-bowl.webp",
     happy: "happy.png",
     heart: "heart.png",
     joy: "joy.png",
@@ -145,7 +145,7 @@
   function getCatReaction(cat) {
     var reaction = game.state.catReaction;
 
-    if (reaction && cat && reaction.catId === cat.id && reaction.expiresAt > Date.now() && poseFiles[reaction.pose]) {
+    if (reaction && cat && reaction.owner === game.state.game && reaction.cat === cat && reaction.catId === cat.id && reaction.expiresAt > Date.now() && poseFiles[reaction.pose]) {
       return reaction.pose;
     }
     return "";

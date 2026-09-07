@@ -105,13 +105,15 @@
     }
   }
 
-  function handleActionResult(result) {
+  function handleActionResult(result, preserveDrafts, inlineFeedback) {
     var journeyFocused = document.activeElement && document.activeElement.closest("[data-care-journey]");
     if (!result) {
       return;
     }
 
-    if (result.messages && result.messages.length) {
+    if (inlineFeedback && result.ok) {
+      // The scene receipt is the success announcement; do not cover it with a toast.
+    } else if (result.messages && result.messages.length) {
       result.messages.forEach(pushNotice);
     } else if (result.message) {
       pushNotice(result.message);
@@ -121,34 +123,21 @@
     game.systems.workSystem.refreshJobUnlocks();
     game.systems.taskSystem.refreshAllTasks();
     persistGame(Boolean(result.forceSave));
-    render();
+    render(preserveDrafts === true);
     if (journeyFocused) {
       var nextHeading = document.querySelector("[data-care-journey] h3");
       if (nextHeading) nextHeading.focus({ preventScroll: true });
     }
   }
 
-  function showCatReaction(catId, action) {
-    var poses = {
-      feedBasic: "fish",
-      feedPremium: "fish",
-      clean: "surprised",
-      play: "pounce",
-      rest: "nap",
-      catGrass: "joy",
-      medicine: "heart",
-    };
-    var pose = poses[action];
-
-    if (!catId || !pose) {
-      return;
-    }
-    game.state.catReaction = { catId: catId, pose: pose, expiresAt: Date.now() + 2200 };
+  function scheduleCatReactionEnd() {
+    var reaction = game.state.catReaction;
+    if (!reaction) return;
     if (catReactionTimerId) {
       window.clearTimeout(catReactionTimerId);
     }
     catReactionTimerId = window.setTimeout(function () {
-      game.state.catReaction = null;
+      if (game.state.catReaction === reaction) game.state.catReaction = null;
       catReactionTimerId = null;
       if (game.state.currentPage === "home" || game.state.currentPage === "cats") {
         render(true);
@@ -859,11 +848,12 @@
       if (catActionButton.dataset.catId) {
         game.state.selectedCatId = catActionButton.dataset.catId;
       }
-      catActionResult = game.systems.catSystem.performAction(game.state.selectedCatId, catActionButton.dataset.catAction);
+      catActionResult = game.systems.catInteractionSystem.perform(game.state.selectedCatId, catActionButton.dataset.catAction);
+      if (!catActionResult) return;
       if (catActionResult && catActionResult.ok) {
-        showCatReaction(game.state.selectedCatId, catActionButton.dataset.catAction);
+        scheduleCatReactionEnd();
       }
-      handleActionResult(catActionResult);
+      handleActionResult(catActionResult, true, Boolean(catActionButton.closest('.cat-journal-profile')));
       return;
     }
 

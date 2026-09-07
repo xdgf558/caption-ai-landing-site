@@ -52,6 +52,7 @@
   }
 
   function getActionImage(action) {
+    if (action.key === "feedBasic") return asset("src/assets/rooms/furniture-bowl.png");
     var item = getActionItem(action);
     return item && item.image ? item.image : action.imagePath ? asset(action.imagePath) : asset("src/assets/rooms/furniture-bowl.png");
   }
@@ -167,19 +168,46 @@
       }).join("") + '</div></section>';
   }
 
-  function renderCatScene(cat, catVisual, isDead, isLocked, activeReaction, reactionCue) {
+  function renderCatScene(cat, catVisual, isDead, isLocked, activeReaction) {
     var name = getText(cat, "name");
+    var feedback = game.systems.catInteractionSystem.current(cat);
+    var elapsed = activeReaction && game.state.catReaction.startedAt ? Math.max(0, Date.now() - game.state.catReaction.startedAt) : 0;
 
     return (
       '<div class="cat-profile-scene ' + (activeReaction ? "has-reaction" : "") + (isDead ? " is-dead" : "") + (isLocked ? " is-locked" : "") + '" data-cat-reaction="' +
-      safe(activeReaction) + '"><img class="cat-profile-room" src="' + safe(asset("src/assets/rooms/room-storybook-empty.webp")) +
+      safe(activeReaction) + '" style="--reaction-delay:-' + elapsed + 'ms"><img class="cat-profile-room" src="' + safe(asset("src/assets/rooms/room-storybook-empty.webp")) +
       '" alt="" width="1672" height="941" /><div class="cat-profile-room-tint" aria-hidden="true"></div><div class="cat-profile-cat-wrap">' +
       '<img class="cat-profile-cat" src="' + safe(game.utils.catArt.getCatStageUrl(cat)) + '" alt="' + safe(name) + '" width="280" height="280" />' +
-      (reactionCue ? '<span class="cat-reaction-cue" aria-hidden="true">' + safe(reactionCue) + '</span>' : "") +
+      (feedback && activeReaction ? '<span class="cat-reaction-speech">' + safe(t("interaction_says_" + feedback.action)) + '</span>' : "") +
       '</div><div class="cat-profile-scene-caption"><span class="cat-scene-state-icon" aria-hidden="true">' + safe(catVisual.icon) +
       '</span><span><span class="mini-label">' + t("cat_portrait") + '</span><strong>' + t(catVisual.labelKey) +
       '</strong></span></div><span class="cat-profile-scene-stamp">' + (isDead ? t("dead_label") : isLocked ? t("later_unlock") : cat.careStatus === "sheltered" ? t("care_sheltered") : t("cat_home_stamp")) + '</span></div>'
     );
+  }
+
+  function renderInteractionFeedback(cat) {
+    var feedback = game.systems.catInteractionSystem.current(cat);
+    var content = '<strong>' + safe(t("interaction_ready")) + '</strong><span>' + safe(t("interaction_ready_copy")) + '</span>';
+    if (feedback) {
+      var action = getActionMeta(feedback.action);
+      var item = getActionItem(action);
+      var labels = { hunger: "hunger_label", clean: "clean_label", mood: "mood_label", health: "health_label", energy: "energy_label", intimacy: "cat_bond_label" };
+      content = '<strong>' + safe(t("interaction_done", { action: t(action.key === "feedBasic" ? "interaction_feed" : action.labelKey) })) + '</strong><div class="cat-feedback-values">' +
+        (feedback.deltas.length ? feedback.deltas.map(function (entry) {
+          return '<span>' + safe(t(labels[entry.key])) + ' <b class="' + (entry.value < 0 ? 'is-spent' : '') + '">' + (entry.value > 0 ? '+' : '') + safe(number(entry.value)) + '</b></span>';
+        }).join('') : '<span>' + safe(t("interaction_unchanged")) + '</span>') + '</div><small>' +
+        (feedback.used > 0 ? safe(getText(item, "name")) + ' −' + safe(number(feedback.used)) : safe(t("cat_no_consumable"))) + '</small>' +
+        (feedback.memoryAdded ? '<a href="#cat-memories-title">' + safe(t("interaction_memory_added")) + '</a>' : '');
+    }
+    return '<section class="cat-interaction-feedback" role="status" aria-live="polite" aria-atomic="true" data-interaction-feedback>' + content + '</section>';
+  }
+
+  function renderInteractionDesk(state, cat, isDead, isLocked) {
+    if (isDead || isLocked || cat.careStatus === "sheltered") return '';
+    return renderInteractionFeedback(cat) + '<div class="cat-interaction-tray cat-action-grid" role="group" aria-label="' + safe(t("cat_actions_title")) + '">' +
+      ["feedBasic", "play", "rest"].map(function (key) { return renderActionCard(getActionMeta(key), state, cat); }).join('') + '</div>' +
+      '<details id="cat-extra-care" class="cat-extra-care"><summary id="cat-extra-care-summary">' + safe(t("interaction_more")) + '</summary>' +
+      '<div class="cat-action-grid">' + catActions.filter(function (action) { return ["feedBasic", "play", "rest"].indexOf(action.key) === -1; }).map(function (action) { return renderActionCard(action, state, cat); }).join('') + '</div></details>';
   }
 
   function renderNameEditor(cat) {
@@ -281,9 +309,9 @@
       : t("cat_stock_label", { count: number(count) });
 
     return '<button type="button" class="cat-action-card cat-action-' + action.tone + (!available ? " is-unavailable" : "") + '" data-cat-action="' +
-      safe(action.key) + '" ' + (!available ? "disabled" : "") + ' aria-label="' + safe(actionLabel + " · " + stockText) + '"><span class="cat-action-art"><img src="' +
+      safe(action.key) + '" id="cat-care-' + safe(action.key) + '" ' + (!available ? "disabled" : "") + ' aria-label="' + safe(actionLabel + " · " + stockText) + '"><span class="cat-action-art"><img src="' +
       safe(getActionImage(action)) + '" alt="" width="96" height="72" loading="lazy" decoding="async" /></span><span class="cat-action-copy"><strong>' +
-      safe(actionLabel) + '</strong><span>' + safe(detailText) + '</span><small>' + safe(stockText) + (required > 1 ? " · " + t("cat_food_required", { count: required }) : "") +
+      safe(action.key === "feedBasic" ? t("interaction_feed") : actionLabel) + '</strong><span>' + safe(detailText) + '</span><small>' + safe(stockText) + (required > 1 ? " · " + t("cat_food_required", { count: required }) : "") +
       '</small></span></button>';
   }
 
@@ -402,7 +430,6 @@
     var catDisease = game.systems.catSystem.getCatDisease(selectedCat);
     var status = getStatusMeta(selectedCat, isLocked, isDead, catDisease, catVisual);
     var activeReaction = game.utils.catArt.getCatReaction(selectedCat);
-    var reactionCue = game.utils.catArt.getCatReactionCue(selectedCat);
     var recommendedAction = getRecommendedAction(selectedCat, state, catDisease, isDead, isLocked);
     if (game.systems.careSystem.rescueReason(selectedCat, state)) recommendedAction = null;
 
@@ -418,14 +445,14 @@
       }).join("") + '</div><p class="cat-roster-help">' + t("cat_roster_copy") + '</p></aside><div class="cat-journal-spread"><section class="page-card cat-journal-profile" aria-labelledby="cat-profile-title">' +
       '<div class="cat-profile-heading"><div><p class="section-eyebrow">' + t("cat_profile_label") + '</p><h2 id="cat-profile-title" class="page-title">' + safe(getText(selectedCat, "name")) +
       '</h2><p class="cat-profile-breed">' + safe(getText(selectedCat, "breed")) + '</p></div><span class="status-pill ' + status.className + '"><span aria-hidden="true">' +
-      safe(status.icon) + '</span>' + status.label + '</span></div>' + renderCatScene(selectedCat, catVisual, isDead, isLocked, activeReaction, reactionCue) + renderCatFacts(selectedCat, catDisease) +
+      safe(status.icon) + '</span>' + status.label + '</span><a class="cat-interaction-memory-link" href="#cat-memories-title">' + safe(t("memory_open")) + '</a></div>' + renderCatScene(selectedCat, catVisual, isDead, isLocked, activeReaction) + renderInteractionDesk(state, selectedCat, isDead, isLocked) + renderCatFacts(selectedCat, catDisease) +
       (isLocked ? renderUnlockInfo(selectedCat) : renderNameEditor(selectedCat) + renderBondMeter(selectedCat)) + renderCatSignals(selectedCat, isLocked) + game.ui.renderCatMemories(selectedCat) + '</section><section class="page-card cat-journal-care" aria-labelledby="cat-care-title">' +
       '<div class="cat-care-heading"><div><p class="section-eyebrow">' + t("cat_today_label") + '</p><h2 id="cat-care-title" class="page-title">' + t("cat_today_title") + '</h2></div><span class="cat-care-date">' +
       t("cat_today_badge") + '</span></div><p class="page-copy cat-care-copy">' + t("cat_today_copy", { name: safe(getText(selectedCat, "name")) }) + '</p>' +
       (isLocked ? "" : game.systems.onboardingSystem.data(state).eligible
         ? game.ui.renderCareJourney(state, selectedCat)
         : game.ui.renderCareSupport(selectedCat, state) + (recommendedAction ? renderRecommendation(recommendedAction, state, selectedCat) : "")) +
-      renderCareActions(state, selectedCat, catDisease, isDead, isLocked) +
+      (isLocked ? renderCareActions(state, selectedCat, catDisease, isDead, isLocked) : '') +
       (!isDead && !isLocked ? renderSupplies(state, selectedCat) : "") + renderPregnancy(selectedCat) + renderStateChanges(selectedCat, catDisease, isDead, isLocked) +
       (!isLocked ? '<section class="cat-care-tips"><p class="section-eyebrow">' + t("care_tips") + '</p><p class="page-copy">' + t("care_tips_copy") + '</p></section>' : "") +
       '</section></div></section>';

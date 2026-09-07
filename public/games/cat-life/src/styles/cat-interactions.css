@@ -1,0 +1,55 @@
+/* Scene-first interaction desk. Native controls stay still while the cat reacts. */
+.cat-journal-spread { grid-template-columns: minmax(0, 1.35fr) minmax(260px, .8fr); }
+.cat-profile-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; }
+.cat-profile-heading > div { grid-column: 1; grid-row: 1; }
+.cat-profile-heading > div > .section-eyebrow { display: none; }
+.cat-profile-heading > .status-pill { grid-column: 1; grid-row: 2; max-width: 100%; justify-self: start; }
+.cat-profile-heading > .cat-interaction-memory-link { grid-column: 2; grid-row: 1; align-self: center; padding: 8px; border: 1px solid #c7b497; border-radius: 10px; }
+.cat-interaction-memory-link { color: var(--story-green); font-size: 13px; font-weight: 800; margin-left: auto; }
+.cat-journal-profile .cat-profile-scene { aspect-ratio: 1 / 1; }
+.cat-profile-scene .cat-profile-cat-wrap { width: 78%; height: 72%; bottom: 1%; }
+.cat-profile-scene.has-reaction .cat-profile-cat { animation-delay: var(--reaction-delay, 0ms); animation-duration: 1100ms; animation-iteration-count: 2; animation-fill-mode: both; transform-origin: 50% 90%; }
+.cat-profile-scene[data-cat-reaction="fish"] .cat-profile-cat { animation-name: cat-eating; }
+.cat-profile-scene[data-cat-reaction="pounce"] .cat-profile-cat { animation-name: cat-playing; }
+.cat-profile-scene[data-cat-reaction="nap"] .cat-profile-cat { animation-name: cat-resting; }
+.cat-reaction-speech { position: absolute; right: 0; top: -22%; max-width: 82%; padding: 10px 14px; background: var(--story-paper); border: 1px solid var(--story-ink); border-radius: 14px; color: var(--story-ink); font-size: 14px; line-height: 1.5; box-shadow: var(--story-shadow-small); }
+.cat-interaction-feedback { display: grid; gap: 7px; min-height: 112px; padding: 15px; margin-top: 10px; border: 1px solid #d8c6aa; border-radius: 14px; background: var(--story-paper); font-size: 14px; line-height: 1.5; align-content: center; }
+.cat-interaction-feedback > strong { font-size: 17px; }
+.cat-interaction-feedback:has(.cat-feedback-values) { grid-template-columns: minmax(70px, .7fr) minmax(0, 1.3fr); min-height: 96px; padding: 12px; }
+.cat-interaction-feedback:has(.cat-feedback-values) > strong { grid-row: 1 / 3; align-self: center; font-size: 16px; }
+.cat-interaction-feedback:has(.cat-feedback-values) > small,
+.cat-interaction-feedback:has(.cat-feedback-values) > a { grid-column: 2; }
+.cat-interaction-feedback small { color: #6c5c46; font-size: 12px; }
+.cat-interaction-feedback a { color: #526d3d; font-size: 12px; }
+.cat-feedback-values { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.cat-feedback-values b { color: #526d3d; margin-left: 4px; }
+.cat-feedback-values .is-spent { color: #9b4927; }
+.cat-interaction-tray { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 18px 0 14px; }
+.cat-interaction-tray .cat-action-card { display: flex; flex-direction: column; align-items: stretch; text-align: center; gap: 10px; padding: 12px 7px; background: var(--story-paper); border: 1px solid #d8c6aa; border-radius: 16px; box-shadow: none; min-width: 0; }
+.cat-interaction-tray .cat-action-art { width: 100%; height: 82px; background: transparent; border: 0; }
+.cat-interaction-tray .cat-action-art img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+.cat-interaction-tray .cat-action-copy strong { color: #a75024; font-size: 17px; }
+.cat-interaction-tray .cat-action-copy span { display: none; }
+.cat-interaction-tray .cat-action-copy small { font-size: 11px; line-height: 1.4; }
+.cat-extra-care { border: 1px solid #d8c6aa; border-radius: 14px; background: var(--story-paper); margin-bottom: 18px; }
+.cat-extra-care summary { min-height: 48px; padding: 13px 16px; font-weight: 800; cursor: pointer; font-size: 15px; }
+.cat-extra-care .cat-action-grid { padding: 8px; }
+.cat-interaction-tray .cat-action-card:hover,
+.cat-extra-care .cat-action-card:hover { transform: none; }
+.cat-interaction-tray .cat-action-card:focus-visible,
+.cat-extra-care summary:focus-visible { outline: 3px solid var(--story-orange); outline-offset: 3px; }
+.cat-interaction-tray .is-unavailable { opacity: .55; }
+#cat-memories-title { scroll-margin-top: 100px; }
+@keyframes cat-eating { 0%, 100% { transform: rotate(0); } 35% { transform: rotate(2deg) translateY(3px); } 70% { transform: rotate(-1deg); } }
+@keyframes cat-playing { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px) rotate(-3deg); } 70% { transform: rotate(2deg); } }
+@keyframes cat-resting { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025, 1.015); } }
+@media (max-width: 1150px) { .cat-journal-spread { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 620px) {
+  .cat-journal-profile { padding: 10px; }
+  .cat-interaction-tray { gap: 7px; }
+  .cat-interaction-tray .cat-action-art { height: 64px; }
+  .cat-interaction-tray .cat-action-copy strong { font-size: 15px; }
+  .cat-profile-scene-caption, .cat-profile-scene-stamp { display: none; }
+  .cat-reaction-speech { font-size: 13px; padding: 7px 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .cat-profile-scene.has-reaction .cat-profile-cat { animation: none; } }
