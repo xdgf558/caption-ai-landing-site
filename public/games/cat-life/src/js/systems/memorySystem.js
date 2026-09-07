@@ -2,7 +2,7 @@
   function journal(cat) { return game.state.catMemory.normalize(cat.memoryJournal, cat); }
   function list(cat) {
     var value = journal(cat);
-    return value.version === 1 ? value.entries.sort(function (a, b) {
+    return value.version === 1 ? value.entries.slice().sort(function (a, b) {
       return Number(Boolean(b.at)) - Number(Boolean(a.at)) || b.order - a.order ||
         (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0) ||
         (Number(b.key.replace("bond_", "")) || 0) - (Number(a.key.replace("bond_", "")) || 0);

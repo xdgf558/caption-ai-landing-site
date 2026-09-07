@@ -3,8 +3,17 @@
   var safe = game.utils.format.escapeHtml;
   var learning = game.systems.onboardingSystem;
 
-  function renderAction(rec) {
+  // Guidance locates the one real care control; it never settles an action itself.
+  function renderCareActionLink(action, label, available) {
+    return '<div class="cat-care-navigation"><button type="button" class="secondary-button cat-care-jump" id="cat-care-jump-' + safe(action) +
+      '" data-focus-cat-action="' + safe(action) + '" aria-controls="cat-care-' + safe(action) + '" aria-describedby="cat-care-jump-help"' +
+      (available === false ? ' disabled' : '') + '>' + safe(t("interaction_find_action", { action: label })) +
+      '</button><p id="cat-care-jump-help" class="helper-text">' + safe(t("interaction_find_hint")) + '</p></div>';
+  }
+
+  function renderAction(rec, cat) {
     if (!rec.buttonKey) return "";
+    if (cat && rec.kind === "cat") return renderCareActionLink(rec.action, t(rec.action === "feedBasic" ? "interaction_feed" : rec.buttonKey));
     var attributes = "";
     if (rec.kind === "page") attributes = 'data-page-target="' + safe(rec.page) + '"' + (rec.catId ? ' data-select-cat="' + safe(rec.catId) + '"' : "");
     if (rec.kind === "cat") attributes = 'data-cat-action="' + safe(rec.action) + '" data-cat-id="' + safe(rec.catId) + '"';
@@ -49,8 +58,9 @@
       (needsSupport ? ' care-support-card' : '') + '" data-care-journey aria-label="' + safe(label) + '">' +
       '<div class="care-journey-heading"><div><p class="section-eyebrow">' + safe(label) +
       (rec.params.name ? ' · ' + safe(rec.params.name) : '') + '</p><h3 class="panel-title" tabindex="-1">' + safe(t(rec.titleKey, rec.params)) +
-      '</h3><p class="page-copy">' + safe(t(rec.copyKey, rec.params)) + '</p></div>' + renderAction(rec) + '</div>' +
+      '</h3><p class="page-copy">' + safe(t(rec.copyKey, rec.params)) + '</p></div>' + renderAction(rec, cat) + '</div>' +
       renderProgress(state) + '</section>';
   }
   game.ui.renderCareJourney = renderCareJourney;
+  game.ui.renderCareActionLink = renderCareActionLink;
 })(window.CatGame);

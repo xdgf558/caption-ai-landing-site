@@ -37,7 +37,14 @@
 .cat-interaction-tray .cat-action-card:hover,
 .cat-extra-care .cat-action-card:hover { transform: none; }
 .cat-interaction-tray .cat-action-card:focus-visible,
+.cat-extra-care .cat-action-card:focus-visible,
+.cat-care-jump:focus-visible,
 .cat-extra-care summary:focus-visible { outline: 3px solid var(--story-orange); outline-offset: 3px; }
+.cat-care-navigation { min-width: 0; }
+.cat-care-jump { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.cat-care-jump:hover { transform: none; }
+.cat-care-navigation .helper-text { margin: 8px 0 0; font-size: 11px; line-height: 1.5; }
+.cat-journal-care .care-journey-heading { flex-wrap: wrap; }
 .cat-interaction-tray .is-unavailable { opacity: .55; }
 #cat-memories-title { scroll-margin-top: 100px; }
 @keyframes cat-eating { 0%, 100% { transform: rotate(0); } 35% { transform: rotate(2deg) translateY(3px); } 70% { transform: rotate(-1deg); } }

@@ -1,46 +1,39 @@
-# Cat interaction feedback — Design QA (1.26.0)
+# Cat interaction polish — Design QA (1.26.1)
 
-## Target and comparison
+## Scope and visual target
 
-Selected target: first displayed Product Design image (scene-first feeding).
-Source: `test-results/cat-interactions-design/selected-design.png`, 853 × 1844, designed for 390 × 844.
-Implementation: `test-results/cat-interactions-design/mobile-feeding.jpg` (375 × 895) and `desktop-playing.jpg`.
-Combined, inspected evidence: `test-results/cat-interactions-design/comparison.png` (770 × 860).
-The source is normalized to 375px width; the implementation crop (21,75), 318 × 725, is normalized to the same width. Both images were opened together after the fixes.
+Keep the approved 1.26.0 scene-first Cat Journal. This is an interaction polish, not a new layout or art direction. Product Design guided the separation between secondary guidance (locate an action) and actual care beside the cat. Room, cat sprites, three primary actions, roster, status and supplies remain unchanged.
 
-Codex in-app browser, isolated local guest origin on port 4184. CSS widths checked: 390, 1040, 1280; heights 844/1100 for mobile region inspection, 900 for larger layouts. The in-app capture scales the 390px viewport to 375 pixels and clips to the visible panel. This is a region comparison, not an unscaled device screenshot. Full-page capture showed stitching artifacts and was rejected as evidence.
+The previous release's QA is preserved in `docs/design-qa/cat-interaction-feedback.md`. The before/after desktop comparison was captured in the Codex in-app browser at 1280 × 900, using the same local orange cat, room, food stock and ready receipt. Both were inspected together. Evidence is in ignored `test-results/cat-interaction-polish/`: `before-desktop.jpg`, `after-desktop.jpg`, `desktop-comparison.png`, `mobile-focus.jpg` and `mobile-novice.jpg`. These are local review artifacts, not PR attachments, and are not in public assets or git.
 
-Matching state: healthy orange tabby, hunger 50 and mood 60 before real feeding; result +25/+4, basic food −1. Test state was imported through the game's normal UI. Earlier capped and no-change states were checked separately. Existing outer navigation is outside this component target.
+The in-app browser captures a 1265 × 889 visible desktop region and a 375px-wide region for a 390px CSS viewport. This is not an unscaled device screenshot. Mobile evidence verifies interaction and responsive fit, not a matched before/after mobile design comparison.
 
-Evidence stays in ignored `test-results/`, not git or deployed `public/`. These are local review artifacts, not hosted PR attachments. Previous QA is archived in `docs/design-qa/cat-life-memories.md`.
+## Comparison and intentional differences
 
-## Findings, fixes and final comparison
+- Typography, cream/brown/sage/orange tokens, borders, scene, primary controls and column positions match the existing design. No new image resources.
+- The right-hand Execute control becomes a secondary Find-button control with an explicit no-consumption hint. This adds about 45px to the desktop recommendation card; the existing bowl image fills its taller cover slot. No overlap or clipped text was observed.
+- Additional care, the disclosure summary and the new navigation button share the orange keyboard focus treatment with the primary tray. Pointer focus is not forced to show a keyboard ring.
+- At CSS widths 390, 1040 and 1280, document scroll width did not exceed client width. Mobile action targets were within the unobscured viewport, above the fixed bottom navigation.
 
-- P2 fixed: success toast obscured the receipt. Profile care now announces success inline; failure and other-page messages remain.
-- P2 fixed: the mobile heading stacked too tall. Two-column heading keeps the name and memory link together, retaining the real status.
-- P2 fixed: tall vertical receipt differed from the target hierarchy. The final receipt uses a result/value split with wrapping for additional actual deltas.
-- Final combined inspection: room, eating pose, speech, unobstructed receipt, three illustrated actions and more-care disclosure appear in the intended order. No actionable P0/P1/P2 visual finding remains.
-- Expected integration differences: retain existing roster, facts, guidance and navigation; use existing bowl/toy/bed props; show useful inventory counts instead of decorative taglines; native disclosure marker replaces a decorative arrow.
-- P3: in-app JPEG screenshots are softer than the source PNG. The actual eating sprite is 560 × 560 WebP, approximately 47 KB.
+## Manual interaction checks — passed
 
-## Required fidelity surfaces
+Local guest origins only; no production save/account was used.
 
-- Typography: existing rounded Chinese/system stack, 16–17px result heading, 14px receipt/speech, 15–17px action labels. Long translations wrap.
-- Spacing/layout: square scene, reserved receipt, three equal action columns, stable disclosure. DOM checks found identical row tops at 390/1040/1280 and no horizontal overflow; intermediate widths stack the guidance sidebar.
-- Colors/tokens: existing cream paper, brown ink, orange and sage. Positive deltas use dark green; spent vitality uses brown-orange.
-- Imagery: generated eating-cat cutout over the existing room; no full mock embedded as UI. Existing play/nap and member/non-orange identities remain. Motion transforms the cat, not the room or hit targets.
-- Copy/content: actual capped stat changes and consumed items, including pregnancy; memory prompt only for a real new entry. Three-language unit coverage; no new rules/rewards/save schema.
+- Veteran guidance focuses Feed, Play or Rest without consuming inventory. Actual care produces one inline receipt and hides the success toast. Feeding changed stock 9 → 8 and displayed actual +25 hunger / +4 mood.
+- Finding additional care opens `cat-extra-care` before focusing its control. At 390px the target was at y=385–459, above the bottom navigation at y=776. The unsubmitted nickname remained intact.
+- Keyboard focus on additional care uses `rgb(232, 131, 74)`. Reaction-end redraw retained an enabled care button's focus and the nickname draft.
+- The novice journey retains package claiming, then points to the real Feed button: seven care controls total, none duplicated in the right guidance panel. Locating retained stock 5; Enter fed once, stock became 4, and the receipt read `Done: Feed` without a toast. Finding Clean Up on mobile opened additional care and focused the visible button.
+- Consuming the final premium-food item disables its button. Existing safe focus restoration intentionally does not refocus a newly disabled control; the disclosure stays open. This is not a guarantee of focus retention for disabled targets.
 
-## Verification and boundaries
+## Automated checks and limits
 
-Full `npm test` (including the latest main's article tests), 8 new interaction tests, 144-page build, JS syntax and whitespace checks passed. The initial build had 143 pages; syncing main added its article admin page.
-In-app checks: feed/play/rest/clean; double-click play consumed exactly one use; disclosure and clean-button focus survived reaction-end redraw; unsubmitted nickname and focus survived background redraw; reload clears transient receipt; no console errors returned.
-Browser validation on 2026-09-07, with `TZ=UTC`: five new interaction cases passed; the complete suite passed 106/106 (57.3s), then passed 106/106 again (52.9s) after syncing latest main.
-The latest main's separate article browser suite also passed 5/5 (2.5s). Its test entry and the new interaction entry are both retained in package.json.
-The initial full run passed 105/106: the member skin test still targeted the removed care section and old `Zz` cue. Its selector and reaction assertion now follow the new UI while retaining the official skin identity check and adding the rest animation check. That case passed 5/5 repeated runs before the complete rerun. No failures were skipped or retried automatically.
-Browser emulated reduced-motion coverage passed; no OS-level reduced-motion or screen-reader test was run. GitHub CI status is reported by the PR checks, not this local QA record.
-The fixture has no member API; its cloud-unavailable label is expected. No production account/save, Worker, database or deployment changed.
+Full `npm test`, 11 interaction unit tests, the release-history tests, integration/manifest checks and the 144-page build passed locally. Current release notes are checked directly in zh-CN/en/ja; 1.26.0 is archived, not mixed into current notes.
 
-Next: review the PR and its GitHub CI checks before merging. No merge or deployment has been performed.
+With user permission on 2026-09-07, Playwright ran under `TZ=UTC`. The seven new scenarios passed 7/7 (2.8s), then five repeated runs passed 35/35 (9.8s). They cover novice/veteran guidance at 390/1280, additional-care focus across explicit redraw, and home-success/cat-error notifications. The complete game browser suite passed 113/113 (54.9s), including the updated storybook and release tests. The independent article browser suite passed 5/5 (3.0s), and its fresh 144-page build passed. No failed assertions, skips or automatic retries were needed. The first sandboxed launch could not bind the local server port; after granting the required execution permission, all test runs completed successfully. No GitHub CI result is claimed for this local branch. No native screen reader or physical iPhone test was run.
 
-final result: passed
+Memory normalization already returned a copy before this change. The additional `slice()` makes read-only sorting explicit; frozen-array and shared-normalizer tests protect that contract. This is not evidence of a previously reproduced save-order corruption.
+
+Save schema stays 3. No Worker, database, economy, production deployment or PR has changed.
+
+Visual QA final result: passed.
+Local verification final result: passed. Ready for PR review; GitHub CI and review are still required before merge or deployment.
