@@ -2935,6 +2935,64 @@
     interaction_says_clean: "お部屋がすっきり。", interaction_says_catGrass: "気分が軽くなったよ。", interaction_says_medicine: "お世話してくれてありがとう。"
   });
 
+  Object.assign(messages["zh-CN"], {
+    share_open: "分享本次更新", share_dialog_title: "小站来信", share_close: "关闭",
+    share_game_title: "打工养猫日记", share_tagline: "忙完今天，回家养猫。", share_latest: "最新更新",
+    share_headline: "小站又有新消息。", share_brand: "从零做产品，写故事，记录日常。",
+    share_scan: "扫码进入游戏", share_free: "免费游玩 · 无需安装",
+    share_preview_alt: "小站来信分享卡：水彩小屋与橘猫、本次更新摘要、Station Cat 介绍和游戏二维码。完整更新与链接见旁边的分享文案。",
+    share_dimensions: "1080 × 1440 PNG · 可长按图片保存",
+    share_dialog_copy: "寄一张小站的明信片。",
+    share_how: "朋友圈：保存图片后手动发布。X：保存图片，再打开草稿并自行附图；不会自动发布。",
+    share_copy_label: "分享文案与游戏链接", share_save: "保存分享卡", share_copy_text: "复制文案", share_copy_link: "复制链接",
+    share_x: "打开 X 草稿", share_native: "系统分享图片", share_retry: "重新生成",
+    share_loading: "正在准备你的明信片…", share_ready: "图片已准备好，二维码可直接进入游戏。",
+    share_failed: "图片未能生成，请重试。也可以先复制文案或游戏链接。",
+    share_copy_manual: "无法自动复制，已选中文字；请长按或使用快捷键复制。", share_copied: "已复制。",
+    share_saved: "已开始下载。在微信等浏览器中，也可长按预览图保存到相册。",
+    share_sent: "图片已交给系统分享。", share_cancelled: "已取消分享，图片仍可保存。",
+    share_native_failed: "系统未能分享图片，请改用保存图片。",
+    share_privacy: "只分享公开更新与 Station Cat 品牌介绍，不包含你的昵称、账号或存档。卡片最多展示三条更新摘要；完整内容保留在上方文案中。"
+  });
+  Object.assign(messages.en, {
+    share_open: "Share this update", share_dialog_title: "A letter from the station", share_close: "Close",
+    share_game_title: "Cat Life Diary", share_tagline: "A long day. A cat to come home to.", share_latest: "LATEST UPDATE",
+    share_headline: "A little news from the station.", share_brand: "Making products, writing stories, recording everyday life.",
+    share_scan: "Scan to play", share_free: "Free to play · No install",
+    share_preview_alt: "A station postcard with a watercolor cottage and tabby, this update's highlights, the Station Cat introduction and a game QR code. Full notes and link are in the share text.",
+    share_dimensions: "1080 × 1440 PNG · Hold the image to save",
+    share_dialog_copy: "Send a little piece of the station.",
+    share_how: "Moments: save the image and post it yourself. X: save the image, then open the draft and attach it. Nothing is posted automatically.",
+    share_copy_label: "Share text and game link", share_save: "Save postcard", share_copy_text: "Copy text", share_copy_link: "Copy link",
+    share_x: "Open X draft", share_native: "Share image", share_retry: "Try again",
+    share_loading: "Preparing your postcard…", share_ready: "Your postcard is ready. The QR code opens the game.",
+    share_failed: "The image could not be prepared. Retry, or copy the text or game link.",
+    share_copy_manual: "Automatic copying is unavailable. The text is selected; hold or use your copy shortcut.", share_copied: "Copied.",
+    share_saved: "Download started. In browsers such as WeChat, you can also hold the preview to save it.",
+    share_sent: "Image handed to system sharing.", share_cancelled: "Sharing cancelled. You can still save the image.",
+    share_native_failed: "System sharing failed. Please save the image instead.",
+    share_privacy: "Only public updates and the Station Cat introduction are shared. No nickname, account or save data. The card shows up to three shortened highlights; the text above keeps the full notes."
+  });
+  Object.assign(messages.ja, {
+    share_open: "この更新をシェア", share_dialog_title: "小さな駅からの手紙", share_close: "閉じる",
+    share_game_title: "ねこと暮らす日記", share_tagline: "今日を終えたら、猫のいる家へ。", share_latest: "最新アップデート",
+    share_headline: "小さな駅から、新しいお知らせ。", share_brand: "プロダクトを作り、物語を書き、日常を記録。",
+    share_scan: "スキャンして遊ぶ", share_free: "無料で遊べる · インストール不要",
+    share_preview_alt: "水彩の家と茶トラ、今回の更新、Station Catの紹介、ゲームのQRコードを載せた絵はがき。更新全文とリンクは共有テキストにあります。",
+    share_dimensions: "1080 × 1440 PNG · 長押しでも保存できます",
+    share_dialog_copy: "小さな駅の絵はがきを届けよう。",
+    share_how: "WeChatのモーメンツ：画像を保存して手動で投稿。X：画像を保存し、下書きを開いて添付してください。自動投稿はしません。",
+    share_copy_label: "共有テキストとゲームのリンク", share_save: "絵はがきを保存", share_copy_text: "文章をコピー", share_copy_link: "リンクをコピー",
+    share_x: "Xの下書きを開く", share_native: "画像を共有", share_retry: "もう一度作る",
+    share_loading: "絵はがきを準備しています…", share_ready: "準備できました。QRコードからゲームを開けます。",
+    share_failed: "画像を作れませんでした。再試行するか、文章・リンクをコピーしてください。",
+    share_copy_manual: "自動コピーが使えません。選択した文章を長押しやショートカットでコピーしてください。", share_copied: "コピーしました。",
+    share_saved: "ダウンロードを開始しました。WeChatなどではプレビューを長押しして保存することもできます。",
+    share_sent: "画像をシステムの共有機能に渡しました。", share_cancelled: "共有をキャンセルしました。画像は保存できます。",
+    share_native_failed: "システムで共有できませんでした。画像を保存してください。",
+    share_privacy: "公開の更新とStation Catの紹介だけを共有します。名前・アカウント・セーブは含めません。カードは最大3件の要約を表示し、全文は上の文章に残ります。"
+  });
+
   game.utils.i18n = {
     t: t,
     getDataText: getDataText,

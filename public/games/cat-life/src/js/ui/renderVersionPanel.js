@@ -46,7 +46,8 @@
       '<section class="page-card release-latest" aria-labelledby="release-latest-title">' +
       '<div class="inline-row"><div><p class="section-eyebrow">' + t("release_content") + '</p><h3 class="panel-title" id="release-latest-title">' +
       t("version_current_title", { version: game.config.version }) +
-      "</h3></div></div>" +
+      '</h3></div><button type="button" class="primary-button" id="game-share-open" data-game-share-open>' +
+      format.escapeHtml(t("share_open")) + '</button></div>' +
       '<ul class="notice-list release-note-list">' +
       renderNotes(game.config.releaseNotes) +
       "</ul>" +

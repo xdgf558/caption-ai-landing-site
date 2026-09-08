@@ -610,6 +610,8 @@
   };
 
   function handleClick(event) {
+    var shareButton = event.target.closest("[data-game-share-open]");
+    if (shareButton) { game.ui.shareDialog.open(shareButton); return; }
     var pageButton = event.target.closest("[data-page-target]");
     var catSelectButton = event.target.closest("[data-select-cat]");
     var jobButton = event.target.closest("[data-job-id]");
@@ -1405,6 +1407,7 @@
       game.state.saveSystem.saveGame(game.state.game);
     });
     window.addEventListener("pagehide", function () {
+      game.ui.shareDialog.dismiss();
       game.state.saveSystem.saveGame(game.state.game);
     });
 

@@ -25,6 +25,13 @@ for (const path of [
   `${gameRoot}/src/js/systems/memorySystem.js`,
   `${gameRoot}/src/js/systems/catInteractionSystem.js`,
   `${gameRoot}/src/styles/cat-interactions.css`,
+  `${gameRoot}/src/styles/share-card.css`,
+  `${gameRoot}/src/js/utils/shareCard.js`,
+  `${gameRoot}/src/js/ui/shareDialog.js`,
+  `${gameRoot}/src/js/vendor/qrcode.js`,
+  `${gameRoot}/src/assets/share/station-letter.webp`,
+  `${gameRoot}/src/assets/share/letter-title.ttf`,
+  `${gameRoot}/src/assets/share/OFL.txt`,
   `${gameRoot}/src/assets/poses/eating-bowl.webp`,
   `${gameRoot}/src/assets/audio/moonlight-tiptoes-soft.m4a`,
   `${gameRoot}/src/js/ui/renderCatMemories.js`,
@@ -184,11 +191,11 @@ assert.match(namespace, /storageKey: "catGameSaveV1"/);
 const releaseContext = { window: {} };
 vm.runInNewContext(namespace, releaseContext);
 const releaseConfig = releaseContext.window.CatGame.config;
-assert.equal(releaseConfig.version, '1.26.2');
+assert.equal(releaseConfig.version, '1.27.0');
 for (const [language, currentCopy] of Object.entries({
-  'zh-CN': '背景音乐换为《月亮下的小猫·柔和版》',
-  en: 'Background music is now Moonlight Tiptoes',
-  ja: 'BGMを「月明かりの子猫'
+  'zh-CN': '新增「小站来信」分享卡',
+  en: 'Station Letters postcards',
+  ja: '「小さな駅からの手紙」カード'
 })) {
   assert.ok(releaseConfig.releaseNotes[language].some(note => note.startsWith(currentCopy)), 'Current notes, not archived notes: ' + language);
 }
@@ -202,7 +209,7 @@ assert.match(landing, /兌換是否開放，以會員商店的即時狀態為準
 assert.match(landing, /Check the member store for current availability/);
 assert.match(landing, /<img src=\{catLifeGameProduct\.assets\.stationRoom\} alt=""/);
 assert.match(landing, /<figcaption>\{copy\.commercePreview\}<\/figcaption>/);
-assert.match(product, /latestVersion: '1\.26\.2'/);
+assert.match(product, /latestVersion: '1\.27\.0'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);
