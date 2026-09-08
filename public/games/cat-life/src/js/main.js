@@ -141,6 +141,8 @@
       catReactionTimerId = null;
       if (game.state.currentPage === "home" || game.state.currentPage === "cats") {
         render(true);
+      } else {
+        game.utils.catMotion.sync();
       }
     }, 2250);
   }
@@ -193,6 +195,7 @@
   }
 
   function refreshLiveBindings() {
+    game.utils.catMotion.syncPreferences();
     var activeWork = game.systems.workSystem.getActiveWork();
     var displayStats = game.systems.playerSystem.getDisplayStats();
     var activeSleep = game.systems.playerSystem.getActiveSleep();
@@ -451,7 +454,9 @@
     var renderer = pageRenderers[game.state.currentPage] || game.ui.renderHome;
 
     dom.header.innerHTML = game.ui.renderHeader(game.state.game);
+    game.utils.catMotion.beforeRender();
     dom.main.innerHTML = renderer(game.state.game);
+    game.utils.catMotion.sync();
     disclosures.forEach(function (draft) {
       var matches = Array.prototype.filter.call(dom.main.querySelectorAll('details[id]'), function (node) {
         return node.id === draft.id;

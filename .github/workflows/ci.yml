@@ -25,6 +25,13 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Verify reproducible Cat Life motion bundle
+        run: |
+          npm ci --prefix experiments/orange-cat-preview
+          npm test --prefix experiments/orange-cat-preview
+          npm run build:game --prefix experiments/orange-cat-preview
+          git diff --exit-code -- public/games/cat-life/src/vendor/cat-motion
+
       - name: Install browser
         run: npx playwright install --with-deps chromium
 

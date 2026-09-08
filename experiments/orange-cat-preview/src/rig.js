@@ -39,7 +39,7 @@ export class OrangeCatRig {
     this.headRoot.addChild(this.head.mesh,this.mouth);
     this.food=new Container();
     this.pellets=Array.from({length:3},()=>{const sprite=new Sprite(textures.kibble);sprite.anchor.set(.5);this.food.addChild(sprite);return sprite;});
-    this.legs=new Map();this.contacts=new Graphics();this.debug=new Graphics();
+    this.legs=new Map();this.debug=new Graphics();
     this.root.addChild(this.tail.mesh,this.far,this.body.mesh,this.near,this.headRoot,this.food,this.debug);
     for(const name of ['far-back','far-front','near-back','near-front']) {
       const back=name.includes('back'),far=name.includes('far'),grid=meshGrid(textures[back?'back-leg':'front-leg'],10,32);

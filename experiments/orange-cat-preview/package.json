@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 4190 --strictPort",
     "build": "vite build",
+    "build:game": "node scripts/build-game.mjs",
     "test": "node --test tests/*.test.mjs",
     "prepare:assets": "node scripts/prepare-assets.mjs"
   },

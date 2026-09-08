@@ -25,6 +25,16 @@ for (const path of [
   `${gameRoot}/src/js/systems/memorySystem.js`,
   `${gameRoot}/src/js/systems/catInteractionSystem.js`,
   `${gameRoot}/src/styles/cat-interactions.css`,
+  `${gameRoot}/src/js/utils/catMotion.js`,
+  `${gameRoot}/src/styles/cat-motion.css`,
+  `${gameRoot}/src/vendor/cat-motion/runtime.js`,
+  `${gameRoot}/src/vendor/cat-motion/torso.webp`,
+  `${gameRoot}/src/vendor/cat-motion/head.webp`,
+  `${gameRoot}/src/vendor/cat-motion/front-leg.webp`,
+  `${gameRoot}/src/vendor/cat-motion/back-leg.webp`,
+  `${gameRoot}/src/vendor/cat-motion/tail.webp`,
+  `${gameRoot}/src/vendor/cat-motion/mouth-open.webp`,
+  `${gameRoot}/src/vendor/cat-motion/kibble.webp`,
   `${gameRoot}/src/styles/share-card.css`,
   `${gameRoot}/src/js/utils/shareCard.js`,
   `${gameRoot}/src/js/ui/shareDialog.js`,
@@ -191,14 +201,59 @@ assert.match(namespace, /storageKey: "catGameSaveV1"/);
 const releaseContext = { window: {} };
 vm.runInNewContext(namespace, releaseContext);
 const releaseConfig = releaseContext.window.CatGame.config;
-assert.equal(releaseConfig.version, '1.27.0');
-for (const [language, currentCopy] of Object.entries({
-  'zh-CN': '新增「小站来信」分享卡',
-  en: 'Station Letters postcards',
-  ja: '「小さな駅からの手紙」カード'
+assert.equal(releaseConfig.version, '1.28.0');
+assert.equal(releaseConfig.saveSchemaVersion, 3, 'Animation must preserve save schema 3');
+vm.runInNewContext(contentManifest, releaseContext);
+assert.equal(releaseContext.window.CatGameContentManifest.manifest.releaseVersion, releaseConfig.version);
+for (const [language, currentCopyPatterns] of Object.entries({
+  'zh-CN': [
+    /普通橘猫.*免费 PixiJS 轻量骨骼动画/,
+    /首页与猫咪档案支持待机、喂食.*房间支持待机、行走/,
+    /会员皮肤与其他猫继续使用原图/,
+    /降低动态.*不支持.*离线.*回退原图/,
+    /不改变照护结算.*schema 3.*无需迁移/
+  ],
+  en: [
+    /Ordinary orange tabbies.*free, lightweight PixiJS skeletal animation/,
+    /idle and feeding on Home and cat profiles.*idle and walking in rooms/,
+    /Member skins and other cats keep their original artwork/,
+    /reduced motion.*unsupported.*offline.*fall back to the original images/,
+    /do not change care settlement.*schema 3.*no migration required/
+  ],
+  ja: [
+    /通常の茶トラ猫.*無料の軽量 PixiJS ボーンアニメーション/,
+    /ホームと猫のプロフィール.*待機・食事.*部屋.*待機・歩行/,
+    /会員用スキンとほかの猫は元の画像を維持/,
+    /動きを減らす設定.*非対応.*オフライン.*元の画像に戻ります/,
+    /お世話の結果計算は変わりません.*schema 3.*移行は不要/
+  ]
 })) {
-  assert.ok(releaseConfig.releaseNotes[language].some(note => note.startsWith(currentCopy)), 'Current notes, not archived notes: ' + language);
+  const currentNotes = releaseConfig.releaseNotes[language];
+  assert.equal(currentNotes.length, 3, 'Only current release notes: ' + language);
+  for (const pattern of currentCopyPatterns) {
+    assert.match(currentNotes.join(' '), pattern, 'Current notes, not archived notes: ' + language);
+  }
 }
+assert.equal(releaseConfig.releaseHistory[0].version, '1.27.0', 'Archive the previous release newest-first');
+assert.equal(releaseConfig.releaseHistory.filter(release => release.version === '1.27.0').length, 1);
+assert.ok(releaseConfig.releaseHistory.every(release => release.version !== releaseConfig.version));
+assert.deepEqual(JSON.parse(JSON.stringify(releaseConfig.releaseHistory[0].notes)), {
+  'zh-CN': [
+    '新增「小站来信」分享卡，附更新与品牌介绍。',
+    '保存高清图片，扫码进入游戏；附文案与 X 草稿。',
+    '支持手机与系统分享，不包含账号或存档。'
+  ],
+  en: [
+    'Station Letters postcards: this update and the Station Cat story.',
+    'Save a game QR postcard, copy the text or open an X draft.',
+    'Mobile-friendly sharing. No account or save data.'
+  ],
+  ja: [
+    '「小さな駅からの手紙」カードに、更新とブランド紹介を。',
+    'ゲームのQRコード付き画像を保存。文章のコピーやXにも対応。',
+    'スマホでも共有。アカウントやセーブは含めません。'
+  ]
+}, 'Preserve all 1.27.0 release notes verbatim');
 assert.ok(releaseConfig.releaseHistory.some(release => release.version === '1.26.0'));
 assert.match(product, /upstreamSourceCommit: '0cc839f'/);
 assert.match(landing, /Signed-in members can sync a cloud save/);
@@ -209,7 +264,7 @@ assert.match(landing, /兌換是否開放，以會員商店的即時狀態為準
 assert.match(landing, /Check the member store for current availability/);
 assert.match(landing, /<img src=\{catLifeGameProduct\.assets\.stationRoom\} alt=""/);
 assert.match(landing, /<figcaption>\{copy\.commercePreview\}<\/figcaption>/);
-assert.match(product, /latestVersion: '1\.27\.0'/);
+assert.match(product, /latestVersion: '1\.28\.0'/);
 assert.doesNotMatch(landing, /not yet synced to a Station Cat member account/);
 assert.doesNotMatch(landing, /尚未與 Station Cat 會員帳號同步/);
 assert.doesNotMatch(landing, /尚未与 Station Cat 会员账号同步/);
