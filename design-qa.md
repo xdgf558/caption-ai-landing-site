@@ -1,39 +1,53 @@
-# Cat interaction polish — Design QA (1.26.1)
+# Station Letters sharing card — Design QA (1.27.0)
 
-## Scope and visual target
+## Target, evidence and normalization
 
-Keep the approved 1.26.0 scene-first Cat Journal. This is an interaction polish, not a new layout or art direction. Product Design guided the separation between secondary guidance (locate an action) and actual care beside the cat. Room, cat sprites, three primary actions, roster, status and supplies remain unchanged.
+Source visual truth: selected Product Design option 1, “小站来信”. Local review copy: `test-results/share-card/source.png` (1086 × 1448). The approved mock is a flat 3:4 export, not a screen with browser chrome.
 
-The previous release's QA is preserved in `docs/design-qa/cat-interaction-feedback.md`. The before/after desktop comparison was captured in the Codex in-app browser at 1280 × 900, using the same local orange cat, room, food stock and ready receipt. Both were inspected together. Evidence is in ignored `test-results/cat-interaction-polish/`: `before-desktop.jpg`, `after-desktop.jpg`, `desktop-comparison.png`, `mobile-focus.jpg` and `mobile-novice.jpg`. These are local review artifacts, not PR attachments, and are not in public assets or git.
+Rendered implementation: `test-results/share-card/postcard.png` (1080 × 1440), a real PNG downloaded through the Version → Share this update flow. The same image was verified under the exact production game CSP. `desktop.png`, `tablet.png` and `mobile.png` show the surrounding modal at 1280 × 900, 1040 × 900 and 390 × 900 CSS pixels, deviceScaleFactor 1. The export remains 1080 × 1440 at every viewport; it is not a screenshot of the preview.
 
-The in-app browser captures a 1265 × 889 visible desktop region and a 375px-wide region for a 390px CSS viewport. This is not an unscaled device screenshot. Mobile evidence verifies interaction and responsive fit, not a matched before/after mobile design comparison.
+Full comparison: `test-results/share-card/comparison.png` places both images in one 1620 × 1080 input, each normalized to 810 × 1080. Focused comparison: `footer-comparison.png` puts the bottom 440px of each normalized 1080px-wide poster into one 1080 × 880 input. Both comparison inputs were opened and inspected. The in-app browser was also used to inspect the working modal and controls.
 
-## Comparison and intentional differences
+State: local guest, zh-Hant site / existing zh-CN game-copy fallback, generated and ready. The mock's v1.26.2 music copy intentionally becomes current v1.27.0 sharing notes. The illustrative QR is intentionally replaced with a verified real game QR. English and Japanese exports were separately opened to verify line wrapping and layout.
 
-- Typography, cream/brown/sage/orange tokens, borders, scene, primary controls and column positions match the existing design. No new image resources.
-- The right-hand Execute control becomes a secondary Find-button control with an explicit no-consumption hint. This adds about 45px to the desktop recommendation card; the existing bowl image fills its taller cover slot. No overlap or clipped text was observed.
-- Additional care, the disclosure summary and the new navigation button share the orange keyboard focus treatment with the primary tray. Pointer focus is not forced to show a keyboard ring.
-- At CSS widths 390, 1040 and 1280, document scroll width did not exceed client width. Mobile action targets were within the unobscured viewport, above the fixed bottom navigation.
+These screenshots are ignored local review artifacts, not committed files or PR attachments, and are not deployed. No private machine paths are embedded in the committed documentation. Previous interaction-polish QA is preserved in `docs/design-qa/cat-interaction-polish.md`.
 
-## Manual interaction checks — passed
+## Findings and iteration history
 
-Local guest origins only; no production save/account was used.
+- Initial comparison (`comparison-before.png`, `postcard-before.png`): **P2 — the update area was too dense.** Six lines of small 22px copy weakened the postcard hierarchy. The update notes were edited into concise, accurate release copy and Chinese body text increased to 27px; English/JA remain 23px for their longer summaries. Live wrapping is bounded to two lines per note, with full current notes available as selectable text.
+- Post-fix comparison (`comparison.png`, `footer-comparison.png`): copy is readable, separated from the brand footer, and does not collide with the QR. The primary scene, title, postal accents and left-copy/right-QR composition are preserved. No remaining actionable P0/P1/P2 visual differences.
+- Mobile UI check: the modal header stays available while scrolling to actions. Image preview, instructions and actions stack in one column; desktop uses two columns. Figure default margins were removed. No horizontal overflow at any tested width.
+- Functional integration finding: production CSP does not allow blob image previews. The implementation now uses a data-URL preview without weakening CSP; blob URLs remain download-only. All 19 sharing scenarios passed with production CSP applied.
+- Test correction: the first close/cleanup assertion ran before the queued native dialog close event. It now waits for actual dialog teardown before asserting zero object URLs. This is a condition-based assertion, not a sleep or retry.
 
-- Veteran guidance focuses Feed, Play or Rest without consuming inventory. Actual care produces one inline receipt and hides the success toast. Feeding changed stock 9 → 8 and displayed actual +25 hunger / +4 mood.
-- Finding additional care opens `cat-extra-care` before focusing its control. At 390px the target was at y=385–459, above the bottom navigation at y=776. The unsubmitted nickname remained intact.
-- Keyboard focus on additional care uses `rgb(232, 131, 74)`. Reaction-end redraw retained an enabled care button's focus and the nickname draft.
-- The novice journey retains package claiming, then points to the real Feed button: seven care controls total, none duplicated in the right guidance panel. Locating retained stock 5; Enter fed once, stock became 4, and the receipt read `Done: Feed` without a toast. Finding Clean Up on mobile opened additional care and focused the visible button.
-- Consuming the final premium-food item disables its button. Existing safe focus restoration intentionally does not refocus a newly disabled control; the disclosure stays open. This is not a guarantee of focus retention for disabled targets.
+## Required fidelity surfaces
 
-## Automated checks and limits
+**Fonts and typography:** Noto Serif SC Black provides the large fixed game title in all three languages; a local 10.6 KB subset loads before export. Georgia/system serif provides brand and display labels, matching the reference's editorial contrast; system CJK sans handles the smaller release text. Bounded wrapping, grapheme-safe ellipsis and word-boundary wrapping prevent spillover. Different OS body fallbacks may have minor glyph/metric differences (P3), not fixed-font title drift.
 
-Full `npm test`, 11 interaction unit tests, the release-history tests, integration/manifest checks and the 144-page build passed locally. Current release notes are checked directly in zh-CN/en/ja; 1.26.0 is archived, not mixed into current notes.
+**Spacing and layout rhythm:** fixed 1080 × 1440 export; matching upper brand/title/subtitle zones, cottage scene around 25–69%, update block below and QR on the lower right. Safe QR whitespace is deliberately wider than the fake code in the mock. The brand footer is slightly lower to reserve room for up to three two-line notes; no overlap in Chinese, English, Japanese or long-text unit cases.
 
-With user permission on 2026-09-07, Playwright ran under `TZ=UTC`. The seven new scenarios passed 7/7 (2.8s), then five repeated runs passed 35/35 (9.8s). They cover novice/veteran guidance at 390/1280, additional-care focus across explicit redraw, and home-success/cat-error notifications. The complete game browser suite passed 113/113 (54.9s), including the updated storybook and release tests. The independent article browser suite passed 5/5 (3.0s), and its fresh 144-page build passed. No failed assertions, skips or automatic retries were needed. The first sandboxed launch could not bind the local server port; after granting the required execution permission, all test runs completed successfully. No GitHub CI result is claimed for this local branch. No native screen reader or physical iPhone test was run.
+**Colors and tokens:** cream paper, cocoa ink, orange postal/update accents and sage details follow the selected reference. The modal uses the existing story paper/ink/orange/green system, with orange focus outlines and no hover translation or new motion.
 
-Memory normalization already returned a copy before this change. The additional `slice()` makes read-only sorting explicit; frozen-array and shared-normalizer tests protect that contract. This is not evidence of a previously reproduced save-order corruption.
+**Image quality and asset fidelity:** the actual selected scene was edited through built-in ImageGen to remove overlaid type and fake QR while preserving the cat, orange bow, cottage, flowers, signs and postal marks. The 158 KB WebP is sharp at export size. Actual existing Station Cat logo is reused; no CSS art, emoji or handmade SVG substitutes. Real QR uses square integer modules, black on white, four-module quiet zone and no overlapping logo.
 
-Save schema stays 3. No Worker, database, economy, production deployment or PR has changed.
+**Copy/content:** live latest notes and version only; Station Cat is introduced as a personal creative brand (“从零做产品，写故事，记录日常。”), not as the player's identity. Interface distinguishes saving/manual Moments posting, an X draft requiring manual image attachment, and supported native sharing. Loading, failure, retry, manual-copy, cancellation and native-share failure have explicit copy in zh-CN/en/ja. No simulated-QR label remains.
 
-Visual QA final result: passed.
-Local verification final result: passed. Ready for PR review; GitHub CI and review are still required before merge or deployment.
+## Interaction and accessibility checks
+
+- Entry is a real button with a stable ID. Native modal supplies focus containment and Escape close; sticky Close stays reachable. Close returns focus to the latest entry even after redraw.
+- Image alt text describes the card and points to selectable equivalent text. The readonly text field has a real label. Status uses a polite live region. Controls are at least 44px high.
+- PNG generation completes before save/native sharing is enabled. No incomplete download is offered.
+- Explicit `render(true)` and actual commerce response completion preserve image, selected text and focused control.
+- Failed illustration/font/QR loading can retry. Closing during generation prevents stale modal/image resurrection. Closing/retry revokes object URLs.
+- Clipboard rejection selects copyable text; native capability/success/cancel/failure are covered without contacting real social accounts.
+- QR independently decoded from actual PNG and from 540px JPEG quality 80, for every tested locale/viewport.
+
+## Verification and limits
+
+Local verification on 2026-09-08: 7/7 sharing unit tests, 19/19 sharing browser tests under production CSP, full game browser suite **139/139** under TZ=UTC, full `npm test`, 144-page Astro build and whitespace/syntax checks passed. No GitHub CI result is claimed before a PR exists.
+
+OS share sheets and real X/WeChat publishing were not invoked. Native handoff behavior is mocked in automated tests; a physical iPhone/WeChat save/scan check remains useful before release. No new Worker, database, account or save schema changes; no deployment or posting performed.
+
+Asset paths, licenses and the final built-in ImageGen edit prompt are recorded in `docs/cat-life-game-sharing.md`.
+
+final result: passed

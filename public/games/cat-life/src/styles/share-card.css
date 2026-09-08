@@ -1,0 +1,67 @@
+/* Share controls live outside the game render root so background sync cannot
+   replace a prepared image, selected copy, or the focused action. */
+.game-share-dialog {
+  box-sizing: border-box;
+  width: min(1040px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 2px solid var(--story-ink, #4a3b2a);
+  border-radius: 24px;
+  background: var(--story-paper, #fffcf6);
+  color: var(--story-ink, #4a3b2a);
+  box-shadow: 0 18px 70px #33291d44;
+  overscroll-behavior: contain;
+}
+.game-share-dialog::backdrop { background: #31271cb8; }
+.game-share-dialog * { box-sizing: border-box; }
+.game-share-dialog [hidden] { display: none; }
+.game-share-heading {
+  position: sticky; top: 0; z-index: 1; background: var(--story-paper, #fffcf6);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 20px 24px; border-bottom: 1px solid #4a3b2a25;
+}
+.game-share-heading h2 { font-size: 22px; margin: 4px 0 0; }
+.game-share-heading p { color: #916f4a; font-size: 11px; letter-spacing: .16em; margin: 0; }
+.game-share-close { flex-shrink: 0; min-height: 44px; }
+.game-share-body { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr); }
+.game-share-preview { margin: 0; padding: 24px; background: #efe8d9; min-width: 0; }
+.game-share-preview img {
+  display: block; width: 100%; height: auto; aspect-ratio: 3 / 4;
+  background: #fffcf6; box-shadow: 0 4px 18px #4a3b2a25;
+}
+.game-share-placeholder {
+  display: grid; place-items: center; aspect-ratio: 3 / 4;
+  border: 1px dashed #a99477; color: #6f614d; padding: 24px; text-align: center;
+}
+.game-share-preview figcaption { margin-top: 12px; font-size: 12px; color: #71624d; text-align: center; }
+.game-share-controls { padding: 28px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.game-share-controls h3 { margin: 0; font-size: 25px; line-height: 1.35; }
+.game-share-controls p { margin: 0; font-size: 14px; line-height: 1.65; }
+.game-share-controls label { font-size: 13px; font-weight: 700; }
+.game-share-controls textarea {
+  resize: vertical; width: 100%; min-height: 112px; padding: 12px;
+  color: inherit; background: #f6f0e4; border: 1px solid #cfc1ab; border-radius: 12px;
+  font: inherit; font-size: 13px; line-height: 1.6;
+}
+.game-share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.game-share-actions button, .game-share-actions a {
+  min-height: 46px; display: flex; align-items: center; justify-content: center;
+  text-align: center; line-height: 1.35; padding: 12px; text-decoration: none;
+}
+.game-share-actions .primary-button { grid-column: 1 / -1; }
+.game-share-status { min-height: 46px; color: #596c40; }
+.game-share-status.is-error { color: #9d3727; }
+.game-share-privacy { margin-top: auto; padding-top: 16px; border-top: 1px solid #4a3b2a20; color: #746450; }
+.game-share-dialog :is(button, a, textarea):focus-visible { outline: 3px solid #e8834a; outline-offset: 3px; }
+.game-share-dialog :is(button, a):hover { transform: none; }
+.game-share-dialog button:disabled { cursor: wait; opacity: .55; }
+@media (max-width: 720px) {
+  .game-share-dialog { width: calc(100% - 20px); max-height: calc(100dvh - 20px); border-radius: 18px; }
+  .game-share-heading { padding: 16px; }
+  .game-share-heading h2 { font-size: 19px; }
+  .game-share-body { grid-template-columns: 1fr; }
+  .game-share-preview { padding: 16px 24px; }
+  .game-share-preview img, .game-share-placeholder { max-width: 420px; margin: 0 auto; }
+  .game-share-controls { padding: 20px; gap: 14px; }
+  .game-share-controls h3 { font-size: 22px; }
+}

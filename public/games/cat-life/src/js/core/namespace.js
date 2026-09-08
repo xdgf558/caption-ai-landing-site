@@ -2,28 +2,48 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.26.2",
+      version: "1.27.0",
       saveSchemaVersion: 3,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
-          "背景音乐换为《月亮下的小猫·柔和版》：轻盈的卡通小夜曲，柔化高音，陪伴日常照护。",
-          "同一首音乐跨页面连续循环；静音或切到后台时暂停，返回后从原位置继续。",
-          "保留原有音量、静音与自定义音乐设置。点击后才加载音乐，不改变照护数值或存档格式。"
+          "新增「小站来信」分享卡，附更新与品牌介绍。",
+          "保存高清图片，扫码进入游戏；附文案与 X 草稿。",
+          "支持手机与系统分享，不包含账号或存档。"
         ],
         "en": [
-          "Background music is now Moonlight Tiptoes — Soft Mix: a light cartoon serenade with gentler high notes for everyday care.",
-          "One continuous loop follows you across pages. Muting or hiding the game pauses playback; returning resumes from the same position.",
-          "Your volume, mute and custom music settings are preserved. Music loads after interaction; care values and save format are unchanged."
+          "Station Letters postcards: this update and the Station Cat story.",
+          "Save a game QR postcard, copy the text or open an X draft.",
+          "Mobile-friendly sharing. No account or save data."
         ],
         "ja": [
-          "BGMを「月明かりの子猫（やわらかい音色）」に変更。高音をやさしく整えた、軽やかなアニメ風の小夜曲です。",
-          "ページを移動しても同じ曲が続きます。ミュートや画面を離れたときは一時停止し、戻ると続きから再生します。",
-          "音量・ミュート・カスタム音楽の設定はそのまま。操作後に音楽を読み込み、お世話の数値とセーブ形式は変えません。"
+          "「小さな駅からの手紙」カードに、更新とブランド紹介を。",
+          "ゲームのQRコード付き画像を保存。文章のコピーやXにも対応。",
+          "スマホでも共有。アカウントやセーブは含めません。"
         ]
       },
       releaseHistory: [
+        {
+          version: "1.26.2",
+          notes: {
+            "zh-CN": [
+              "背景音乐换为《月亮下的小猫·柔和版》：轻盈的卡通小夜曲，柔化高音，陪伴日常照护。",
+              "同一首音乐跨页面连续循环；静音或切到后台时暂停，返回后从原位置继续。",
+              "保留原有音量、静音与自定义音乐设置。点击后才加载音乐，不改变照护数值或存档格式。"
+            ],
+            "en": [
+              "Background music is now Moonlight Tiptoes — Soft Mix: a light cartoon serenade with gentler high notes for everyday care.",
+              "One continuous loop follows you across pages. Muting or hiding the game pauses playback; returning resumes from the same position.",
+              "Your volume, mute and custom music settings are preserved. Music loads after interaction; care values and save format are unchanged."
+            ],
+            "ja": [
+              "BGMを「月明かりの子猫（やわらかい音色）」に変更。高音をやさしく整えた、軽やかなアニメ風の小夜曲です。",
+              "ページを移動しても同じ曲が続きます。ミュートや画面を離れたときは一時停止し、戻ると続きから再生します。",
+              "音量・ミュート・カスタム音楽の設定はそのまま。操作後に音楽を読み込み、お世話の数値とセーブ形式は変えません。"
+            ]
+          }
+        },
         {
           version: "1.26.1",
           notes: {
