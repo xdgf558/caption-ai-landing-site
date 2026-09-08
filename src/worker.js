@@ -19315,7 +19315,10 @@ const dynamicSitemapPath = (row) => {
   const slug = cleanSlug(row?.slug, 160);
   const parentSlug = cleanSlug(row?.parent_slug, 160);
   if (!slug) return '';
-  if (row.entry_type === 'signal_brief') return `${getPathWithLocale(locale, 'signal')}${slug}/`;
+  if (row.entry_type === 'signal_brief') {
+    if (row.source_kind !== articleSourceKind || row.article_has_body !== 1) return '';
+    return `${getPathWithLocale(locale, 'signal')}${slug}/`;
+  }
   if (row.entry_type === 'novel_series') {
     if (locale !== 'zh-Hant' && locale !== defaultNovelTranslationTargetLocale) return '';
     return `${novelV2BasePathForLocale(locale)}${slug}/`;
@@ -19352,7 +19355,8 @@ const mergeSitemapXmlWithRows = (baseXml, rows = []) => {
 
 const handleSitemap = async (request, env, ctx) => {
   const cache = globalThis.caches?.default;
-  const cacheKey = new Request(new URL('/sitemap.xml', request.url), { method: 'GET' });
+  // Do not reuse sitemap caches that still contain retired public briefs.
+  const cacheKey = new Request(new URL('/sitemap.xml?scope=articles-only-v1', request.url), { method: 'GET' });
   const cached = cache ? await cache.match(cacheKey) : null;
   if (cached) {
     return request.method === 'HEAD'
@@ -19367,12 +19371,13 @@ const handleSitemap = async (request, env, ctx) => {
     if (env.WAITLIST_DB && (await ensureContentTablesReady(env.WAITLIST_DB))) {
       const result = await env.WAITLIST_DB
         .prepare(
-          `SELECT entry_type, locale, slug, parent_slug, published_at, updated_at
+          `SELECT entry_type, source_kind, locale, slug, parent_slug, published_at, updated_at,
+             CASE WHEN source_kind = 'x_article' THEN json_extract(metadata_json, '$.article.hasBody') ELSE 0 END AS article_has_body
            FROM content_entries
            WHERE status = 'published'
              AND visibility = 'public'
              AND entry_type IN ('signal_brief', 'novel_series', 'novel_chapter')
-             AND (source_kind <> 'x_article' OR json_extract(metadata_json, '$.article.hasBody') = 1)
+             AND (entry_type <> 'signal_brief' OR (source_kind = 'x_article' AND json_extract(metadata_json, '$.article.hasBody') = 1))
            ORDER BY COALESCE(updated_at, published_at) DESC, id DESC
            LIMIT 50000`
         )
@@ -21636,37 +21641,32 @@ const renderDynamicNovelChapter = (route, serial, chapter, body, chapters, payme
     </article>`;
 };
 
+const redirectRetiredSignalArchive = (locale) => new Response(null, {
+  status: 301,
+  headers: { location: articleBasePath(locale), 'cache-control': 'no-store', 'x-robots-tag': 'noindex' }
+});
+
 const handleDynamicFrontendContent = async (request, env, ctx) => {
   if (request.method !== 'GET' && request.method !== 'HEAD') return null;
   const url = new URL(request.url);
   const route = parseDynamicContentRoute(url.pathname);
   if (!route) return null;
   if (route.kind === 'devlog-index' || (route.kind === 'novel-index' && route.locale === 'zh-Hant')) return null;
+  if (route.kind === 'signal-index' && url.searchParams.get('view') === 'archive') {
+    return redirectRetiredSignalArchive(route.locale);
+  }
 
   const db = env.WAITLIST_DB;
   if (!db || !(await ensureContentTablesReady(db))) return null;
 
   if (route.kind === 'signal-index') {
-    if (url.searchParams.get('view') !== 'archive') {
-      const page = Math.min(10000, Math.max(1, Number.parseInt(url.searchParams.get('page'), 10) || 1));
-      const result = await db.prepare("SELECT * FROM content_entries WHERE entry_type = 'signal_brief' AND source_kind = 'x_article' AND status = 'published' AND visibility = 'public' ORDER BY COALESCE(published_at, updated_at) DESC, id DESC LIMIT 21 OFFSET ?").bind((page - 1) * 20).all();
-      const rows = result.results || [], copy = articleCopy(route.locale);
-      return dynamicHtmlResponse(request, {
-        body: request.method === 'HEAD' ? '' : renderArticleIndex(route.locale, rows.slice(0, 20), { page, hasMore: rows.length > 20 }),
-        canonicalPath: `${dynamicCanonicalPath(route)}${page > 1 ? `?page=${page}` : ''}`,
-        description: copy.description, lang: route.locale, pageKind: 'articles', title: copy.title
-      });
-    }
-    const archiveRows = await listPublishedContentEntries(db, { entryType: 'signal_brief', locale: route.locale, limit: 50, excludeArticles: true });
-    const signalRows = request.method === 'HEAD' ? archiveRows : await hydrateSignalIndexRows(env, archiveRows);
-    const copy = dynamicContentCopy[route.locale] || dynamicContentCopy['zh-Hant'];
+    const page = Math.min(10000, Math.max(1, Number.parseInt(url.searchParams.get('page'), 10) || 1));
+    const result = await db.prepare("SELECT * FROM content_entries WHERE entry_type = 'signal_brief' AND source_kind = 'x_article' AND status = 'published' AND visibility = 'public' ORDER BY COALESCE(published_at, updated_at) DESC, id DESC LIMIT 21 OFFSET ?").bind((page - 1) * 20).all();
+    const rows = result.results || [], copy = articleCopy(route.locale);
     return dynamicHtmlResponse(request, {
-      body: `<a href="${articleBasePath(route.locale)}">${escapeHtml(articleCopy(route.locale).back)}</a>` + renderDynamicSignalIndex(route, signalRows),
-      canonicalPath: `${dynamicCanonicalPath(route)}?view=archive`,
-      description: copy.signalDescription,
-      lang: route.locale,
-      pageKind: 'signal',
-      title: copy.signalTitle
+      body: request.method === 'HEAD' ? '' : renderArticleIndex(route.locale, rows.slice(0, 20), { page, hasMore: rows.length > 20 }),
+      canonicalPath: `${dynamicCanonicalPath(route)}${page > 1 ? `?page=${page}` : ''}`,
+      description: copy.description, lang: route.locale, pageKind: 'articles', title: copy.title
     });
   }
 
@@ -21705,79 +21705,7 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
       });
     }
 
-    if (route.kind === 'signal-card') {
-      if (route.assetFormat === 'png') {
-        const headers = new Headers({
-          'cache-control': 'public, max-age=86400',
-          'content-disposition': `inline; filename="${route.slug}-card.png"`,
-          'content-type': 'image/png',
-          'x-content-type-options': 'nosniff'
-        });
-        try {
-          const cache = globalThis.caches?.default;
-          const cacheKey = new Request(request.url, { method: 'GET' });
-          const cached = cache ? await cache.match(cacheKey) : null;
-          if (cached) {
-            return request.method === 'HEAD' ? new Response(null, { headers: cached.headers, status: cached.status }) : cached;
-          }
-          if (request.method === 'HEAD') return new Response(null, { headers });
-
-          const body = await readPublicEntryBody(env, brief, { preferMarkdown: true });
-          const cardBrief = body.markdown ? { ...brief, signalMarkdown: body.markdown } : brief;
-          const fontBuffer = await loadSignalShareCardFontBuffer(env);
-          const png = await renderSignalShareCardPng(renderSignalShareCardSvg(route, cardBrief), fontBuffer);
-          const response = new Response(png, { headers });
-          if (cache) {
-            const cacheWrite = cache.put(cacheKey, response.clone());
-            if (ctx?.waitUntil) ctx.waitUntil(cacheWrite);
-            else await cacheWrite;
-          }
-          return response;
-        } catch (error) {
-          console.error('Signal share card PNG generation failed.', {
-            code: error?.code || 'SIGNAL_CARD_PNG_FAILED',
-            message: error?.message || 'Unknown signal share card error.',
-            slug: route.slug
-          });
-          return new Response('Signal share card is temporarily unavailable.', {
-            headers: {
-              'cache-control': 'no-store',
-              'content-type': 'text/plain; charset=utf-8',
-              'x-content-type-options': 'nosniff'
-            },
-            status: 503
-          });
-        }
-      }
-
-      const body = request.method === 'HEAD' ? { markdown: '' } : await readPublicEntryBody(env, brief, { preferMarkdown: true });
-      const cardBrief = body.markdown ? { ...brief, signalMarkdown: body.markdown } : brief;
-      return new Response(request.method === 'HEAD' ? null : renderSignalShareCardSvg(route, cardBrief), {
-        headers: {
-          'cache-control': 'public, max-age=300',
-          'content-type': 'image/svg+xml; charset=utf-8',
-          'x-content-type-options': 'nosniff'
-        }
-      });
-    }
-
-    const body = await readPublicEntryBody(env, brief, { preferMarkdown: true });
-    const navigation = await getAdjacentPublishedSignalBriefs(db, brief, route.locale);
-    const shareVersion = cleanText(url.searchParams.get('share'), 120);
-    const expectedShareVersion = `${signalShareCardRevision(brief)}-${signalShareCardTemplateVersion}`;
-    return dynamicHtmlResponse(request, {
-      body: renderDynamicSignalBrief(route, brief, body, navigation),
-      canonicalPath: dynamicCanonicalPath(route),
-      description: firstPlainSummary([brief.description, brief.excerpt], 260),
-      lang: route.locale,
-      ogImage: dynamicVersionedSignalCardPath(route, brief),
-      ogUrl:
-        shareVersion === expectedShareVersion
-          ? `${dynamicSignalPath(route, brief.slug)}?share=${encodeURIComponent(shareVersion)}`
-          : '',
-      pageKind: 'signal',
-      title: brief.title
-    });
+    return redirectRetiredSignalArchive(route.locale);
   }
 
   if (route.kind === 'novel-index') {

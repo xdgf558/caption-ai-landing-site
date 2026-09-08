@@ -234,13 +234,16 @@ const mergedSitemap = workerHooks.mergeSitemapXmlWithRows(
   '<?xml version="1.0"?><urlset><url><loc>https://wwwstationcat.org/</loc><lastmod>2026-08-29</lastmod></url></urlset>',
   [
     { entry_type: 'signal_brief', locale: 'ja', slug: 'daily-brief', updated_at: '2026-08-28 10:00:00' },
+    { entry_type: 'signal_brief', source_kind: 'x_article', article_has_body: 1, locale: 'ja', slug: 'full-article', updated_at: '2026-08-28 10:00:00' },
+    { entry_type: 'signal_brief', source_kind: 'x_article', article_has_body: 0, locale: 'ja', slug: 'link-only', updated_at: '2026-08-28 10:00:00' },
     { entry_type: 'novel_series', locale: 'zh-Hant', slug: 'book-one', updated_at: '2026-08-27 10:00:00' },
     { entry_type: 'novel_chapter', locale: 'en', parent_slug: 'book-one', slug: 'chapter-one', updated_at: '2026-08-26 10:00:00' },
     { entry_type: 'novel_series', locale: 'ja', slug: 'unsupported-book', updated_at: '2026-08-25 10:00:00' },
     { entry_type: 'blog_post', locale: 'zh-Hant', slug: 'retired-post', updated_at: '2026-08-24 10:00:00' }
   ]
 );
-assert.match(mergedSitemap, /\/ja\/signal\/daily-brief\//);
+assert.match(mergedSitemap, /\/ja\/signal\/full-article\//);
+assert.doesNotMatch(mergedSitemap, /daily-brief|link-only/);
 assert.match(mergedSitemap, /\/novel\/book-one\//);
 assert.match(mergedSitemap, /\/en\/novel\/book-one\/chapter\/chapter-one\//);
 assert.doesNotMatch(mergedSitemap, /unsupported-book|retired-post/);

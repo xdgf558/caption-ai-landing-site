@@ -301,6 +301,5 @@ const workerSource = await readFile(new URL('../src/worker.js', import.meta.url)
 assert.match(workerSource, /handleAdminImportSignalBrief/);
 assert.match(workerSource, /new Set\(\['blog_post', 'novel_series', 'novel_chapter', 'signal_brief'\]\)/);
 assert.match(workerSource, /twitter:card/);
-assert.match(workerSource, /'content-type': 'image\/png'/);
 
-console.log('Signal strip route, render, and admin import checks passed.');
+console.log('Legacy Signal route parsing, render helpers, and admin import checks passed.');

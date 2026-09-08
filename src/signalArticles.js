@@ -54,10 +54,10 @@ export async function suggestArticleMetadata(sourceUrl, fetchImpl = fetch) {
 }
 
 export const articleCopy = (locale) => ({
-  'zh-Hant': { title: '文章與觀察', description: '關於創作、工具與日常的長篇記錄。', latest: '最新文章', archive: '簡報歸檔', empty: '新文章正在整理中。', read: '閱讀文章', original: '在 X 閱讀原文', back: '返回文章', more: '下一頁', previous: '上一頁', language: '原文語言', minutes: '分鐘閱讀' },
-  'zh-Hans': { title: '文章与观察', description: '关于创作、工具与日常的长篇记录。', latest: '最新文章', archive: '简报归档', empty: '新文章正在整理中。', read: '阅读文章', original: '在 X 阅读原文', back: '返回文章', more: '下一页', previous: '上一页', language: '原文语言', minutes: '分钟阅读' },
-  en: { title: 'Notes & Essays', description: 'Longer thoughts on making things, useful tools, and everyday life.', latest: 'Latest articles', archive: 'Brief archive', empty: 'New articles are on their way.', read: 'Read article', original: 'Read on X', back: 'Back to articles', more: 'Next page', previous: 'Previous page', language: 'Original language', minutes: 'min read' },
-  ja: { title: '記事と思考', description: 'ものづくり、ツール、日々の暮らしについての記録。', latest: '新着記事', archive: '過去のブリーフ', empty: '新しい記事を準備しています。', read: '記事を読む', original: 'X で原文を読む', back: '記事一覧へ', more: '次のページ', previous: '前のページ', language: '原文の言語', minutes: '分で読めます' }
+  'zh-Hant': { title: '文章與觀察', description: '關於創作、工具與日常的長篇記錄。', latest: '最新文章', empty: '新文章正在整理中。', read: '閱讀文章', original: '在 X 閱讀原文', back: '返回文章', more: '下一頁', previous: '上一頁', language: '原文語言', minutes: '分鐘閱讀' },
+  'zh-Hans': { title: '文章与观察', description: '关于创作、工具与日常的长篇记录。', latest: '最新文章', empty: '新文章正在整理中。', read: '阅读文章', original: '在 X 阅读原文', back: '返回文章', more: '下一页', previous: '上一页', language: '原文语言', minutes: '分钟阅读' },
+  en: { title: 'Notes & Essays', description: 'Longer thoughts on making things, useful tools, and everyday life.', latest: 'Latest articles', empty: 'New articles are on their way.', read: 'Read article', original: 'Read on X', back: 'Back to articles', more: 'Next page', previous: 'Previous page', language: 'Original language', minutes: 'min read' },
+  ja: { title: '記事と思考', description: 'ものづくり、ツール、日々の暮らしについての記録。', latest: '新着記事', empty: '新しい記事を準備しています。', read: '記事を読む', original: 'X で原文を読む', back: '記事一覧へ', more: '次のページ', previous: '前のページ', language: '原文の言語', minutes: '分で読めます' }
 }[locale] || articleCopy('zh-Hant'));
 export const articleBasePath = (locale) => ({ 'zh-Hant': '/signal/', 'zh-Hans': '/zh-hans/signal/', en: '/en/signal/', ja: '/ja/signal/' }[locale] || '/signal/');
 export const articleMetadata = (row) => {
@@ -93,7 +93,7 @@ export function renderArticleIndex(locale, rows, { page = 1, hasMore = false } =
     } catch { return []; }
   });
   return `<section class="articles-intro"><p class="articles-eyebrow">STATION CAT / JOURNAL</p><h1>${e(copy.title)}</h1><p>${e(copy.description)}</p><a href="https://x.com/statiocat">@statiocat</a></section>
-    <nav class="articles-nav" aria-label="${e(copy.title)}"><span aria-current="page">${e(copy.latest)}</span><a href="${base}?view=archive">${e(copy.archive)}</a></nav>
+    <h2 class="articles-list-heading">${e(copy.latest)}</h2>
     <section class="articles-list" aria-label="${e(copy.latest)}">${visibleRows.length ? visibleRows.map(({row, meta, href}) => {
       return `<article class="article-row${coverUrl(row) ? ' has-cover' : ''}" lang="${e(row.locale)}">
         ${coverUrl(row) ? `<a class="article-thumbnail" href="${e(href)}" tabindex="-1" aria-hidden="true"><img src="${e(coverUrl(row))}" alt="" width="480" height="320" loading="lazy"></a>` : ''}
