@@ -73,8 +73,10 @@ assert.equal(unpublished.status, 200);
 assert.doesNotMatch(await (await publicPage('/en/signal/')).text(), /Published essay/);
 assert.equal(await publicPage('/en/signal/x-article-123/'), null);
 sqlite.prepare("INSERT INTO content_entries(entry_type,locale,slug,title,status,source_kind) VALUES('signal_brief','en','legacy','Legacy brief','published','signal_brief')").run();
-assert.match(await (await publicPage('/en/signal/?view=archive')).text(), /Legacy brief/);
-assert.doesNotMatch(await (await publicPage('/en/signal/?view=archive')).text(), /Link only/);
+const retiredArchive = await publicPage('/en/signal/?view=archive');
+assert.equal(retiredArchive.status, 301);
+assert.equal(retiredArchive.headers.get('location'), '/en/signal/');
+assert.equal(await retiredArchive.text(), '');
 assert.equal(sqlite.prepare("SELECT count(*) n FROM admin_audit_logs WHERE action='article_save'").get().n, 4);
 const image = new FormData(); image.set('file', new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6fHAAAAAASUVORK5CYII=', 'base64')], { type: 'image/png' }), 'cover.png'); image.set('mediaKind', 'covers');
 const uploaded = await hooks.handleAdminArticles(new Request(base + '/admin/api/articles/cover', { method: 'POST', headers: { origin: base }, body: image }), env);
@@ -97,9 +99,10 @@ for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
   const rendered = renderArticleIndex(locale, rows);
   assert.match(rendered, /data-article-share-dialog/);
   assert.match(rendered, /&lt;unsafe&gt;/);
+  assert.doesNotMatch(rendered, /view=archive|articles-nav|簡報歸檔|简报归档|Brief archive|過去のブリーフ/);
+  assert.match(rendered, /<h2 class="articles-list-heading">/);
 }
 assert.match(linkDetail, /data-article-share=/, 'link-only articles can share their website wrapper');
-assert.doesNotMatch(await (await publicPage('/en/signal/?view=archive')).text(), /data-article-share=/, 'legacy archive remains independent');
 
 // Exercise the actual legacy routes, not only the new editor's handler.
 const protectedEntry = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/777', locale: 'zh-Hant', status: 'published' })).json()).entry;
@@ -143,10 +146,10 @@ insertBrief.run('unlisted', 'Archive pinned unlisted', 'unlisted', 1, 10, '2026-
 insertBrief.run('pinned', 'Archive first pinned', 'public', 1, 0, '2026-01-03 00:00:00');
 const articleBetween = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/888', locale: 'ja', status: 'published' })).json()).entry;
 sqlite.prepare('UPDATE content_entries SET published_at = ? WHERE id = ?').run('2026-01-02 12:00:00', articleBetween.id);
-const archiveHtml = await (await publicPage('/ja/signal/?view=archive')).text();
-assert.ok(archiveHtml.indexOf('Archive first pinned') < archiveHtml.indexOf('Archive pinned unlisted'));
-assert.ok(archiveHtml.indexOf('Archive pinned unlisted') < archiveHtml.indexOf('Archive older'));
-assert.doesNotMatch(archiveHtml, /x-article-888/);
+assert.equal((await publicPage('/ja/signal/?view=archive')).status, 301);
+const adminBriefs = (await (await worker.fetch(request('/admin/api/content/entries?type=signal_brief&locale=ja'), env, {})).json()).entries;
+assert.ok(['older', 'unlisted', 'pinned'].every(slug => adminBriefs.some(entry => entry.slug === slug)), 'retired public briefs stay available to Admin');
+assert.ok(adminBriefs.every(entry => entry.sourceKind !== 'x_article'));
 const middleBrief = sqlite.prepare("SELECT * FROM content_entries WHERE slug='unlisted'").get();
 const adjacent = await hooks.getAdjacentPublishedSignalBriefs(env.WAITLIST_DB, middleBrief, 'ja');
 assert.equal(adjacent.previous.slug, 'older'); assert.equal(adjacent.next.slug, 'pinned');
@@ -162,6 +165,55 @@ env.WAITLIST_DB.prepare = sql => {
 assert.equal((await hooks.handleDynamicFrontendContent(new Request(base + '/signal/', { method: 'HEAD' }), env, {})).status, 200);
 env.WAITLIST_DB.prepare = prepare;
 assert.match(await (await publicPage('/signal/?page=2&tracking=test')).text(), /rel="canonical" href="https:\/\/wwwstationcat.org\/signal\/\?page=2"/);
+
+// Retire all public archive surfaces without touching records, bodies or Admin access.
+for (const [locale, path] of [['zh-Hant', '/signal/'], ['zh-Hans', '/zh-hans/signal/'], ['en', '/en/signal/'], ['ja', '/ja/signal/']]) {
+  for (const [source, visibility] of [['signal_brief', 'public'], ['backend', 'unlisted']]) {
+    sqlite.prepare("INSERT INTO content_entries(entry_type,locale,slug,title,status,source_kind,visibility) VALUES('signal_brief',?,?,'Retired history','published',?,?)")
+      .run(locale, source === 'signal_brief' ? 'retired-brief' : 'retired-backend', source, visibility);
+  }
+  const rowsBeforeReads = sqlite.prepare("SELECT * FROM content_entries WHERE source_kind <> 'x_article' ORDER BY id").all();
+  for (const method of ['GET', 'HEAD']) {
+    for (const suffix of ['?view=archive', '?view=archive&page=2&next=https://evil.org/', 'retired-brief/', 'retired-backend/', ...['card.png', 'share-card.png', 'card.svg', 'share-card.svg'].map(card => `retired-brief/${card}?v=old`)]) {
+      const result = await worker.fetch(new Request(base + path + suffix, { method }), env, {});
+      assert.equal(result.status, 301, `${method} ${path}${suffix}`);
+      assert.equal(result.headers.get('location'), path);
+      assert.equal(result.headers.get('cache-control'), 'no-store');
+      assert.equal(result.headers.get('x-robots-tag'), 'noindex');
+      assert.equal(await result.text(), '');
+    }
+  }
+  const publicList = await (await publicPage(path)).text();
+  assert.doesNotMatch(publicList, /Retired history|view=archive/);
+  const withoutDb = await hooks.handleDynamicFrontendContent(request(path + '?view=archive'), {}, {});
+  assert.equal(withoutDb.status, 301, 'archive redirect does not need D1');
+  assert.deepEqual(sqlite.prepare("SELECT * FROM content_entries WHERE source_kind <> 'x_article' ORDER BY id").all(), rowsBeforeReads);
+}
+const retiredRows = sqlite.prepare("SELECT * FROM content_entries WHERE source_kind <> 'x_article' ORDER BY id").all();
+const retiredObjects = [...objects.entries()];
+const originalCaches = globalThis.caches;
+const sitemapCache = new Map([[base + '/sitemap.xml', new Response('<urlset><url><loc>https://wwwstationcat.org/en/signal/legacy/</loc></url></urlset>')]]);
+const cacheReads = [];
+try {
+  globalThis.caches = { default: {
+    async match(key) { cacheReads.push(key.url); return sitemapCache.get(key.url)?.clone(); },
+    async put(key, response) { sitemapCache.set(key.url, new Response(await response.text(), response)); }
+  } };
+  const card = await publicPage('/en/signal/legacy/card.png?v=old');
+  assert.equal(card.status, 301);
+  assert.equal(cacheReads.length, 0, 'retired card requests never return previously cached images');
+  const visibleSitemap = await (await hooks.handleSitemap(request('/sitemap.xml'), env, {})).text();
+  assert.match(visibleSitemap, /x-article-777/);
+  assert.doesNotMatch(visibleSitemap, /legacy|retired-|\/older\/|\/pinned\/|\/unlisted\/|x-article-456/);
+  assert.notEqual(cacheReads[0], base + '/sitemap.xml', 'previous sitemap namespace cannot reintroduce legacy URLs');
+  assert.equal(await (await hooks.handleSitemap(request('/sitemap.xml'), env, {})).text(), visibleSitemap);
+  assert.equal(cacheReads[1], cacheReads[0]);
+} finally {
+  if (originalCaches === undefined) delete globalThis.caches;
+  else globalThis.caches = originalCaches;
+}
+assert.deepEqual(sqlite.prepare("SELECT * FROM content_entries WHERE source_kind <> 'x_article' ORDER BY id").all(), retiredRows);
+assert.deepEqual([...objects.entries()], retiredObjects);
 
 // Stored/R2 bodies may predate the current writer limit. Public reads must remain available.
 const longEntry = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/9901', status: 'published' })).json()).entry;
@@ -203,4 +255,4 @@ for (const output of [previewLinks, encodedHtml]) {
   assert.doesNotMatch(output, /href="(?:java|data%|%|https%)/i, 'encoded schemes must not become article links');
   assert.match(output, /Encoded 0/);
 }
-console.log('Signal articles: URL bounds, auth, preview, SQLite CAS, revision bodies, public routes, archive, sitemap and uploads passed.');
+console.log('Signal articles: URL bounds, auth, preview, SQLite CAS, revision bodies, public routes, archive retirement, sitemap and uploads passed.');

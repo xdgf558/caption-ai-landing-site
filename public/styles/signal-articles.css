@@ -9,9 +9,7 @@
 .articles-intro h1 { font: 600 42px/1.2 ui-serif, Georgia, 'Songti TC', serif; margin: 12px 0 20px; letter-spacing: 0; }
 .articles-intro > p:not(.articles-eyebrow) { color: #57625f; font-size: 17px; line-height: 1.8; }
 .articles-intro > a { color: #286153; font-size: 14px; text-underline-offset: 4px; }
-.articles-nav { display: flex; gap: 28px; border-bottom: 1px solid #ced8d3; font-size: 14px; }
-.articles-nav > * { padding: 16px 0; min-height: 44px; text-decoration: none; }
-.articles-nav [aria-current] { border-bottom: 2px solid #286153; font-weight: 700; }
+.articles-list-heading { margin: 0; padding: 16px 0; border-bottom: 1px solid #ced8d3; font: 600 14px/1.5 system-ui, sans-serif; }
 .article-row { padding: 30px 0; border-bottom: 1px solid #e1e5e2; display: grid; gap: 28px; align-items: start; }
 .article-row.has-cover { grid-template-columns: 230px minmax(0, 1fr); }
 .article-thumbnail { display: block; aspect-ratio: 3/2; overflow: hidden; border-radius: 4px; background: #eef1ed; }
