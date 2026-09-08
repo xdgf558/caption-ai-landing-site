@@ -41,6 +41,11 @@ for (const width of [390, 1040, 1280]) test(`${width}px: CSP-safe rig actually d
   expect(await page.evaluate(() => CatGame.systems.catInteractionSystem.current(CatGame.state.game.cats[0]).startedAt === window.__receiptStart)).toBe(true);
   await page.waitForTimeout(1800);
   expect(await canvas(page).evaluate(pixels)).toBeGreaterThan(1000);
+  // The reaction-end render replaces the scene; capture only after it settles.
+  await expect.poll(() => page.evaluate(() => CatGame.state.catReaction === null)).toBe(true);
+  expect(await canvas(page).evaluate(pixels)).toBeGreaterThan(1000);
+  await expect(page.locator('#cat-name-input')).toHaveValue('还没提交');
+  await expect(page.locator('#cat-name-input')).toBeFocused();
   await page.locator('.cat-profile-scene').screenshot({ path: 'test-results/cat-motion-' + width + '.png' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
   expect(await page.evaluate(() => !!window.catPreview)).toBe(false);
