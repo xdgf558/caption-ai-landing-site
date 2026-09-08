@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import './test-article-markdown.mjs';
 import worker, { __readerTotpTestHooks as hooks } from '../src/worker.js';
 import { normalizeArticleUrl, normalizeArticleInput, suggestArticleMetadata, renderArticleIndex } from '../src/signalArticles.js';
 import { createArticleFixture } from './helpers/article-fixture.mjs';
+import { articleShareData, articleShareCopy } from '../src/articleShare.js';
+import { encodedArticleLinks } from './helpers/article-link-fixtures.mjs';
 
 const { env, sqlite, objects } = createArticleFixture();
 const base = 'http://localhost:4179';
@@ -55,6 +58,8 @@ const index = await (await publicPage('/signal/')).text();
 assert.match(index, /Published essay/); assert.match(index, /\/en\/signal\/x-article-123\//);
 const detail = await (await publicPage('/en/signal/x-article-123/')).text();
 assert.match(detail, /&lt;script&gt;/); assert.match(detail, /"@type":"Article"/);
+assert.match(detail, /data-article-share=/);
+assert.match(detail, /scripts\/article-share\.js\?v=1/);
 assert.equal((await hooks.handleDynamicFrontendContent(new Request(base + '/en/signal/', { method: 'HEAD' }), env, {})).body, null);
 const linkOnly = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/456', title: 'Link only', markdown: '', status: 'published' })).json()).entry;
 const linkDetail = await (await publicPage('/en/signal/x-article-456/')).text();
@@ -81,6 +86,20 @@ const rows = [{ locale: 'ja', slug: 'x-article-1', title: '<unsafe>', descriptio
 assert.match(renderArticleIndex('en', rows), /&lt;unsafe&gt;/);
 assert.match(renderArticleIndex('en', rows), /\/ja\/signal\/x-article-1\//);
 assert.equal(linkOnly.metadata.article.hasBody, false);
+const shared = articleShareData({ ...rows[0], title: '<unsafe> "quoted"', slug: 'x-article-1' }, '/ja/signal/');
+assert.equal(shared.url, 'https://wwwstationcat.org/ja/signal/x-article-1/');
+assert.ok(shared.modules.length >= 21);
+assert.ok(shared.modules.every(row => /^[01]+$/.test(row) && row.length === shared.modules.length));
+assert.equal(articleShareData({ slug: '../admin' }, '/signal/'), null);
+assert.equal(articleShareData({ slug: 'x-article-1' }, '//evil.org/'), null);
+for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
+  assert.ok(articleShareCopy(locale).save);
+  const rendered = renderArticleIndex(locale, rows);
+  assert.match(rendered, /data-article-share-dialog/);
+  assert.match(rendered, /&lt;unsafe&gt;/);
+}
+assert.match(linkDetail, /data-article-share=/, 'link-only articles can share their website wrapper');
+assert.doesNotMatch(await (await publicPage('/en/signal/?view=archive')).text(), /data-article-share=/, 'legacy archive remains independent');
 
 // Exercise the actual legacy routes, not only the new editor's handler.
 const protectedEntry = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/777', locale: 'zh-Hant', status: 'published' })).json()).entry;
@@ -143,4 +162,45 @@ env.WAITLIST_DB.prepare = sql => {
 assert.equal((await hooks.handleDynamicFrontendContent(new Request(base + '/signal/', { method: 'HEAD' }), env, {})).status, 200);
 env.WAITLIST_DB.prepare = prepare;
 assert.match(await (await publicPage('/signal/?page=2&tracking=test')).text(), /rel="canonical" href="https:\/\/wwwstationcat.org\/signal\/\?page=2"/);
+
+// Stored/R2 bodies may predate the current writer limit. Public reads must remain available.
+const longEntry = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/9901', status: 'published' })).json()).entry;
+const longMarkdown = '<script>window.articleInjected=true</script>\n\n' + 'x'.repeat(120001) + '\nFull-text tail <img src=x onerror=alert(1)>';
+await env.CONTENT_BUCKET.put(longEntry.markdownR2Key, longMarkdown);
+const warnings = [], originalWarn = console.warn;
+let longResponse;
+try {
+  console.warn = (...args) => warnings.push(args);
+  longResponse = await publicPage('/en/signal/x-article-9901/');
+} finally { console.warn = originalWarn; }
+assert.equal(longResponse.status, 200);
+const longHtml = await longResponse.text();
+assert.match(longHtml, /class="article-plain-text"/);
+assert.match(longHtml, /&lt;script&gt;window.articleInjected=true&lt;\/script&gt;/);
+assert.match(longHtml, /Full-text tail &lt;img src=x onerror=alert\(1\)&gt;/);
+assert.doesNotMatch(longHtml, /<script>window.articleInjected|<img src=x/);
+assert.equal(warnings.length, 1);
+assert.deepEqual(warnings[0][1], { code: 'ARTICLE_BODY_RENDER_FALLBACK', entryId: longEntry.id, bodyLength: longMarkdown.length });
+assert.doesNotMatch(JSON.stringify(warnings), /articleInjected|Full-text tail/);
+const bucketGet = env.CONTENT_BUCKET.get;
+let headBodyReads = 0;
+try {
+  env.CONTENT_BUCKET.get = async () => { headBodyReads++; throw Error('HEAD must not read R2'); };
+  const head = await hooks.handleDynamicFrontendContent(new Request(base + '/en/signal/x-article-9901/', { method: 'HEAD' }), env, {});
+  assert.equal(head.status, 200);
+  assert.equal(await head.text(), '');
+  assert.equal(headBodyReads, 0, 'HEAD does not access stored article bodies');
+} finally { env.CONTENT_BUCKET.get = bucketGet; }
+assert.equal((await call({ ...data, markdown: longMarkdown }, '/preview')).status, 400, 'admin preview still rejects oversize input');
+assert.equal((await call({ ...data, sourceUrl: 'https://x.com/i/article/9902', markdown: longMarkdown })).status, 400, 'writer limits stay strict');
+
+const encodedBody = encodedArticleLinks.map((url, index) => `[Encoded ${index}](${url})`).join('\n\n');
+const encodedInput = { ...data, sourceUrl: 'https://x.com/i/article/9903', markdown: encodedBody, status: 'published' };
+const previewLinks = (await (await call(encodedInput, '/preview')).json()).html;
+const encodedEntry = (await (await call(encodedInput)).json()).entry;
+const encodedHtml = await (await publicPage(`/en/signal/${encodedEntry.slug}/`)).text();
+for (const output of [previewLinks, encodedHtml]) {
+  assert.doesNotMatch(output, /href="(?:java|data%|%|https%)/i, 'encoded schemes must not become article links');
+  assert.match(output, /Encoded 0/);
+}
 console.log('Signal articles: URL bounds, auth, preview, SQLite CAS, revision bodies, public routes, archive, sitemap and uploads passed.');

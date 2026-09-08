@@ -1,8 +1,11 @@
+import { attachArticleBodyEditor } from './articleBodyEditor.js';
+
 const $ = (id) => document.getElementById(id);
 const form = $('article-form');
 let entry = null, entries = [], coverKey = '', page = 1, dirty = false, busy = false;
 const statusNames = { draft: '草稿', published: '已发布', archived: '已下架' };
 const status = (message, error = false) => { $('article-status').textContent = message; $('article-status').dataset.error = String(error); };
+const bodyEditor = attachArticleBodyEditor({ body: $('article-body'), status });
 const api = async (path, options = {}) => {
   const response = await fetch(path, { credentials: 'same-origin', signal: AbortSignal.timeout(30000), ...options });
   const data = await response.json().catch(() => ({}));
@@ -38,6 +41,7 @@ const run = async (action) => {
     $('article-locale').disabled = Boolean(entry);
     $('list-previous').disabled = page <= 1;
     $('list-next').disabled = !hasMore;
+    bodyEditor.syncControls();
   }
 };
 let hasMore = false, loadedFilter = 'all';
@@ -80,6 +84,7 @@ const fill = (row = null, markdown = '') => {
   $('article-description').value = row?.description || '';
   $('article-locale').value = row?.locale || 'zh-Hans';
   $('article-body').value = markdown;
+  bodyEditor.reset();
   $('article-body-section').open = Boolean(markdown);
   $('article-cover-alt').value = row?.coverAlt || '';
   $('article-url').readOnly = Boolean(row);
@@ -138,6 +143,17 @@ $('article-cover').onchange = () => run(async () => {
   coverKey = result.media.key; showCover(result.media.url); dirty = true; status('封面已上传，保存文章后生效。');
 });
 $('cover-remove').onclick = () => { coverKey = ''; showCover(); $('article-cover').value = ''; dirty = true; };
+$('article-body-image-button').onclick = () => $('article-body-image').click();
+$('article-body-image').onchange = () => run(async () => {
+  const file = $('article-body-image').files?.[0];
+  $('article-body-image').value = '';
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) throw new Error('图片不能超过 5MB。');
+  const data = new FormData(); data.set('file', file); data.set('mediaKind', 'covers'); data.set('slug', 'article-body');
+  const result = await api('/admin/api/articles/cover', { method: 'POST', body: data });
+  bodyEditor.insertImage(result.media.url, file.name);
+  status('图片已插入正文，保存文章后生效。');
+});
 $('article-preview').onclick = () => {
   if (!form.reportValidity()) return;
   run(async () => {

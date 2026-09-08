@@ -48,6 +48,7 @@ import {
 } from './catLifeCommerce.js';
 import { Resvg } from '@cf-wasm/resvg';
 import { articleSourceKind, articleCopy, articleBasePath, articleMetadata, normalizeArticleInput, suggestArticleMetadata, renderArticleIndex, renderArticleDetail } from './signalArticles.js';
+import { renderArticleMarkdown } from './articleMarkdown.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -16761,7 +16762,7 @@ const handleAdminArticles = async (request, env) => {
     try { payload = JSON.parse(body.text); } catch { return privateJson({ ok: false, message: '无效的 JSON。' }, { status: 400 }); }
     if (url.pathname.endsWith('/metadata')) return privateJson({ ok: true, ...await suggestArticleMetadata(payload?.sourceUrl) });
     const article = normalizeArticleInput(payload);
-    const html = renderSignalMarkdownToHtml(article.markdown);
+    const html = renderArticleMarkdown(article.markdown, article.locale);
     if (url.pathname.endsWith('/preview')) {
       const row = { ...article, locale: article.locale, published_at: new Date().toISOString(), cover_r2_key: article.coverR2Key, cover_alt: article.coverAlt, metadata_json: JSON.stringify({ article: { sourceUrl: article.url, hasBody: article.hasBody } }) };
       return privateJson({ ok: true, html: renderArticleDetail(article.locale, row, html) });
@@ -19414,25 +19415,25 @@ const dynamicNavCopy = {
     apps: 'Apps',
     member: 'Member Center',
     serials: 'Serials',
-    signal: 'Signal strip'
+    signal: 'Notes & Essays'
   },
   ja: {
     apps: 'Apps',
     member: '会員センター',
     serials: '連載小説',
-    signal: 'シグナル簡報'
+    signal: '記事と思考'
   },
   'zh-Hant': {
     apps: 'Apps',
     member: '會員登入',
     serials: '連載小說',
-    signal: '信號簡報'
+    signal: '文章與觀察'
   },
   'zh-Hans': {
     apps: 'Apps',
     member: '会员登录',
     serials: '连载小说',
-    signal: '信号简报'
+    signal: '文章与观察'
   }
 };
 
@@ -19795,7 +19796,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
         .signal-tape-card { transition: none; }
       }
     </style>
-    ${pageKind === 'articles' ? '<link rel="stylesheet" href="/styles/signal-articles.css">' : ''}
+    ${pageKind === 'articles' ? '<link rel="stylesheet" href="/styles/signal-articles.css"><script type="module" src="/scripts/article-share.js?v=1"></script>' : ''}
   </head>
   <body class="${isSignalPage ? 'signal-page' : ''}${pageKind === 'articles' ? ' articles-page' : ''}">
     ${topbar}
@@ -21680,9 +21681,20 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
     if (brief.source_kind === articleSourceKind) {
       if (route.kind === 'signal-card') return new Response('Not found', { status: 404 });
       const meta = articleMetadata(brief);
-      const body = meta.hasBody ? await readPublicEntryBody(env, brief, { preferMarkdown: true }) : { markdown: '' };
+      let articleHtml = '';
+      if (request.method !== 'HEAD' && meta.hasBody) {
+        const body = await readPublicEntryBody(env, brief, { preferMarkdown: true });
+        try {
+          articleHtml = renderArticleMarkdown(body.markdown, route.locale);
+        } catch {
+          console.warn('Article Markdown rendering fell back to plain text.', {
+            code: 'ARTICLE_BODY_RENDER_FALLBACK', entryId: brief.id, bodyLength: body.markdown?.length || 0
+          });
+          articleHtml = `<div class="article-plain-text">${escapeHtml(body.markdown || '')}</div>`;
+        }
+      }
       return dynamicHtmlResponse(request, {
-        body: renderArticleDetail(route.locale, brief, renderSignalMarkdownToHtml(body.markdown)),
+        body: request.method === 'HEAD' ? '' : renderArticleDetail(route.locale, brief, articleHtml),
         canonicalPath: dynamicCanonicalPath(route), description: brief.description,
         lang: route.locale, pageKind: 'articles', title: brief.title,
         ogImage: contentMediaUrl(brief.cover_r2_key), robots: meta.hasBody ? '' : 'noindex, follow',
