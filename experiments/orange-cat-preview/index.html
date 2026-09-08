@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#fbf3e4">
+  <title>橘猫动作小屋 · Station Cat</title>
+</head>
+<body>
+  <main class="preview-shell">
+    <header class="masthead"><a class="brand" href="#main-stage">Station Cat <span>动作小屋</span></a><span class="preview-badge">独立预览 · 不连接存档</span></header>
+    <section class="intro"><div><p class="eyebrow">ORANGE TABBY / MOTION STUDY 01</p><h1>让小橘，真正迈出一步。</h1><p>先看看它怎么站稳、迈步，再低头吃一口。</p></div><p class="tech-note">PixiJS + 轻量 2D 骨骼<br><span>不使用 Spine · 无软件授权费</span></p></section>
+    <section class="motion-workspace" aria-label="橘猫动作预览">
+      <div class="stage-shell">
+        <div class="stage-topline"><span id="action-caption">01 / 待机</span><span id="engine-status" role="status">正在准备小橘…</span></div>
+        <div id="main-stage" tabindex="0" role="img" aria-label="橘猫动画舞台；可用下方按钮控制播放"><div class="loading" id="loading">正在准备分层素材与动画…</div></div>
+        <div class="stage-bottomline"><span id="motion-description" aria-live="polite">四只脚踩稳，胸腹轻轻呼吸，尾巴独立摆动。</span><span id="frame-readout" aria-hidden="true">00.00 s</span></div>
+      </div>
+      <aside class="control-desk" aria-labelledby="controls-title">
+        <p class="eyebrow">观察它的一举一动</p><h2 id="controls-title">今天先试这三件事</h2>
+        <div class="action-list" role="group" aria-label="动作片段">
+          <button class="action-card is-active" data-action="idle" aria-pressed="true"><span class="action-index">01</span><span><strong>待一会儿</strong><small>呼吸、耳朵与尾巴</small></span><span class="action-duration">6 秒</span></button>
+          <button class="action-card" data-action="walk" aria-pressed="false"><span class="action-index">02</span><span><strong>走一小段</strong><small>交替迈步，脚掌踩住地面</small></span><span class="action-duration">6 秒</span></button>
+          <button class="action-card" data-action="eat" aria-pressed="false"><span class="action-index">03</span><span><strong>去吃饭</strong><small>走近、低头、吃饭、抬头</small></span><span class="action-duration">10 秒</span></button>
+        </div>
+        <div class="playback"><button id="pause" class="primary-button" disabled>暂停</button><button id="replay" class="secondary-button" disabled>从头重播</button></div>
+        <label class="slider-label" for="timeline">逐帧看一看 <output id="time-output">0.0 / 6.0 s</output></label><input id="timeline" type="range" min="0" max="1000" value="0" step="1" disabled aria-label="动作时间轴">
+        <label class="slider-label" for="speed">播放速度 <output id="speed-output">1×</output></label><select id="speed"><option value="0.5">0.5× · 慢动作</option><option value="1" selected>1× · 正常速度</option><option value="1.5">1.5× · 快放</option></select>
+        <label class="check-control"><input id="bones" type="checkbox"><span>显示骨骼与脚掌落点</span></label>
+        <p class="desk-note">切换动作会从片段起点重播。拖动时间轴可暂停检查关节；目前只验证左向动作，不包含转身。</p>
+      </aside>
+    </section>
+    <section class="observation-notes" aria-label="本次观察重点"><div><span>01 / 落地</span><p>脚掌落地时锁住位置，身体从上方经过。</p></div><div><span>02 / 分层</span><p>头、胸腹、四肢和尾巴分别运动。</p></div><div><span>03 / 不打扰</span><p>只是动作样片，不扣猫粮，不读写游戏存档。</p></div></section>
+    <footer><span>Station Cat · 小橘动作研究</span><a href="./PIXI-LICENSE.txt" target="_blank" rel="noopener">引擎开源许可</a></footer>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

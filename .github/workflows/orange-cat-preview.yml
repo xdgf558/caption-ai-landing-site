@@ -1,0 +1,37 @@
+name: Orange cat preview
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/orange-cat-preview/**'
+      - '.github/workflows/orange-cat-preview.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/orange-cat-preview/**'
+      - '.github/workflows/orange-cat-preview.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: experiments/orange-cat-preview
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: experiments/orange-cat-preview/package-lock.json
+      - name: Install preview dependencies
+        run: npm ci
+      - name: Check animation and artwork geometry
+        run: npm test
+      - name: Build standalone preview
+        run: npm run build
