@@ -1,0 +1,20 @@
+{
+  "mouth": {
+    "source": "exec-da9fe279-c80b-4bbd-822c-45dea99d2c32.png",
+    "sourceSHA256": "2494d69cd9525750ea884808b0bbc915d51343efc10d09596d099e112532c64b",
+    "crop": {
+      "left": 94,
+      "top": 316,
+      "width": 96,
+      "height": 88
+    },
+    "upperLip": {
+      "x": 118,
+      "y": 323
+    }
+  },
+  "kibble": {
+    "source": "exec-3b6731a2-eba8-4de5-8043-a9ffd19b0de6.png",
+    "sourceSHA256": "6db4cea3eb580ec9bacac4ab1183ea7e1a68d7989f753150169daa1f924be59f"
+  }
+}
