@@ -222,7 +222,7 @@
 
     var name = getText(stageCat, "name");
     var reaction = game.utils.catArt.getCatReaction(stageCat);
-    return '<div class="cat-stage-art home-journal-scene ' + (reaction ? "has-reaction" : "") + '" data-cat-reaction="' + safe(reaction) + '">' +
+    return '<div class="cat-stage-art home-journal-scene ' + (reaction ? "has-reaction" : "") + '" data-cat-reaction="' + safe(reaction) + '" data-cat-motion-area="home" data-cat-motion-id="' + safe(stageCat.id) + '">' +
       '<img class="home-journal-cat" src="' + safe(game.utils.catArt.getCatStageUrl(stageCat)) + '" alt="' + safe(name) + '" width="420" height="420" decoding="async" />' +
       '<img class="home-journal-room" src="' + safe(asset("src/assets/home/home-house-scene.webp")) + '" alt="" width="1200" height="800" decoding="async" />' +
       '<div class="home-scene-caption"><span>' + safe(t(stageCat.careStatus === "sheltered" ? "care_sheltered" : "cat_home_stamp")) + '</span><strong>' + safe(name) + '</strong><span class="status-pill ' +

@@ -366,7 +366,7 @@
           escapeHtml(t("room_cat_route_label", { name: catName })) +
           '"><span class="room-cat-visual room-cat-facing-' +
           route +
-          '" aria-hidden="true"><img class="room-cat-sprite room-cat-idle-sprite" src="' +
+          '" aria-hidden="true" data-cat-motion-area="room" data-cat-motion-id="' + escapeHtml(cat.id) + '"><img class="room-cat-sprite room-cat-idle-sprite" src="' +
           game.utils.catArt.buildCatSvg(cat, 104) +
           '" alt="" /><img class="room-cat-sprite room-cat-walk-sprite" src="' +
           game.utils.catArt.getCatWalkUrl(cat) +

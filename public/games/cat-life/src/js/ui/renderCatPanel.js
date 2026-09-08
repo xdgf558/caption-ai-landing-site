@@ -176,7 +176,7 @@
     return (
       '<div class="cat-profile-scene ' + (activeReaction ? "has-reaction" : "") + (isDead ? " is-dead" : "") + (isLocked ? " is-locked" : "") + '" data-cat-reaction="' +
       safe(activeReaction) + '" style="--reaction-delay:-' + elapsed + 'ms"><img class="cat-profile-room" src="' + safe(asset("src/assets/rooms/room-storybook-empty.webp")) +
-      '" alt="" width="1672" height="941" /><div class="cat-profile-room-tint" aria-hidden="true"></div><div class="cat-profile-cat-wrap">' +
+      '" alt="" width="1672" height="941" /><div class="cat-profile-room-tint" aria-hidden="true"></div><div class="cat-profile-cat-wrap" data-cat-motion-area="profile" data-cat-motion-id="' + safe(cat.id) + '">' +
       '<img class="cat-profile-cat" src="' + safe(game.utils.catArt.getCatStageUrl(cat)) + '" alt="' + safe(name) + '" width="280" height="280" />' +
       (feedback && activeReaction ? '<span class="cat-reaction-speech">' + safe(t("interaction_says_" + feedback.action)) + '</span>' : "") +
       '</div><div class="cat-profile-scene-caption"><span class="cat-scene-state-icon" aria-hidden="true">' + safe(catVisual.icon) +

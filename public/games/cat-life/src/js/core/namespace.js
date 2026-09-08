@@ -2,28 +2,48 @@
   window.CatGame = window.CatGame || {
     config: {
       storageKey: "catGameSaveV1",
-      version: "1.27.0",
+      version: "1.28.0",
       saveSchemaVersion: 3,
       cloudSaveMaxBytes: 750000,
       startingFurniture: ["bed_basic", "bowl_basic"],
       releaseNotes: {
         "zh-CN": [
-          "新增「小站来信」分享卡，附更新与品牌介绍。",
-          "保存高清图片，扫码进入游戏；附文案与 X 草稿。",
-          "支持手机与系统分享，不包含账号或存档。"
+          "普通橘猫加入免费 PixiJS 轻量骨骼动画：首页与猫咪档案支持待机、喂食，房间支持待机、行走。",
+          "会员皮肤与其他猫继续使用原图；开启降低动态、环境不支持或离线加载失败时回退原图。",
+          "动画不改变照护结算，存档仍使用 schema 3，无需迁移。"
         ],
         "en": [
-          "Station Letters postcards: this update and the Station Cat story.",
-          "Save a game QR postcard, copy the text or open an X draft.",
-          "Mobile-friendly sharing. No account or save data."
+          "Ordinary orange tabbies get free, lightweight PixiJS skeletal animation: idle and feeding on Home and cat profiles, idle and walking in rooms.",
+          "Member skins and other cats keep their original artwork; reduced motion, unsupported rendering or offline loading failures fall back to the original images.",
+          "Animations do not change care settlement. Saves remain on schema 3, with no migration required."
         ],
         "ja": [
-          "「小さな駅からの手紙」カードに、更新とブランド紹介を。",
-          "ゲームのQRコード付き画像を保存。文章のコピーやXにも対応。",
-          "スマホでも共有。アカウントやセーブは含めません。"
+          "通常の茶トラ猫に無料の軽量 PixiJS ボーンアニメーションを追加。ホームと猫のプロフィールでは待機・食事、部屋では待機・歩行に対応します。",
+          "会員用スキンとほかの猫は元の画像を維持。動きを減らす設定、描画非対応、オフラインで読み込めない場合も元の画像に戻ります。",
+          "アニメーションによってお世話の結果計算は変わりません。セーブは schema 3 のままで、移行は不要です。"
         ]
       },
       releaseHistory: [
+        {
+          version: "1.27.0",
+          notes: {
+            "zh-CN": [
+              "新增「小站来信」分享卡，附更新与品牌介绍。",
+              "保存高清图片，扫码进入游戏；附文案与 X 草稿。",
+              "支持手机与系统分享，不包含账号或存档。"
+            ],
+            "en": [
+              "Station Letters postcards: this update and the Station Cat story.",
+              "Save a game QR postcard, copy the text or open an X draft.",
+              "Mobile-friendly sharing. No account or save data."
+            ],
+            "ja": [
+              "「小さな駅からの手紙」カードに、更新とブランド紹介を。",
+              "ゲームのQRコード付き画像を保存。文章のコピーやXにも対応。",
+              "スマホでも共有。アカウントやセーブは含めません。"
+            ]
+          }
+        },
         {
           version: "1.26.2",
           notes: {

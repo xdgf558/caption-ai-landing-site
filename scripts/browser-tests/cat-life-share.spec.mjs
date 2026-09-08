@@ -43,7 +43,7 @@ for (const width of [390, 1040, 1280]) for (const language of ['zh-Hant', 'en', 
     expect(assets).toEqual([]);
     await open(page, width, language); await ready(page);
     const copy = await page.locator('#game-share-copy').inputValue();
-    expect(copy).toContain('v1.27.0'); expect(copy).toContain('Station Cat');
+    expect(copy).toContain('v1.28.0'); expect(copy).toContain('Station Cat');
     expect(copy).not.toMatch(/PRIVATE_|accountId|1\.26\.2|Moonlight|share_[a-z]|undefined|NaN/);
     const destination = 'https://wwwstationcat.org/games/cat-life/?lang=' + language;
     expect(copy).toContain(destination);
@@ -142,7 +142,7 @@ for (const outcome of ['success', 'cancel', 'failure', 'unsupported']) test(`nat
   if (outcome === 'unsupported') { await expect(page.locator('[data-share-native]')).toBeHidden(); return; }
   await page.locator('[data-share-native]').click();
   const file = await page.evaluate(() => window.sharedFile);
-  expect(file.name).toBe('station-cat-v1.27.0-en.png'); expect(file.size).toBeGreaterThan(10000); expect(file.active).toBe(true);
+  expect(file.name).toBe('station-cat-v1.28.0-en.png'); expect(file.size).toBeGreaterThan(10000); expect(file.active).toBe(true);
   expect(file.fields).toEqual(['files', 'title']);
   await expect(page.locator('[data-share-status]')).toHaveText({ success: 'Image handed to system sharing.', cancel: 'Sharing cancelled. You can still save the image.', failure: 'System sharing failed. Please save the image instead.' }[outcome]);
   await expect(page.locator('[data-share-save]')).toBeEnabled();
