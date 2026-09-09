@@ -38,6 +38,18 @@ for (const locale of locales) {
 }
 
 assert.equal(getReaderLibraryMessages('en').membershipActive, 'VIP membership active');
+for (const [locale, reading, noSeparatePricing] of [
+  ['zh-Hant', /目前提供小說閱讀/, /不另設積分價格或兌換入口/],
+  ['zh-Hans', /目前提供小说阅读/, /不另设积分价格或兑换入口/],
+  ['en', /Currently includes fiction reading/, /without separate points prices or redemption buttons/],
+  ['ja', /現在は小説の閲覧に対応/, /個別のポイント価格や交換ボタンは設けません/]
+]) {
+  assert.match(vipMembershipCopy[locale].readingDescription, reading);
+  assert.match(vipMembershipCopy[locale].useIntro, noSeparatePricing);
+}
+for (const message of Object.values(getReaderLibraryMessages('ja'))) {
+  assert.doesNotMatch(message, /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]VIP/u);
+}
 assert.equal(getReaderLibraryMessages('ja').paymentCancelled, '支払いはキャンセルされました。Station Points は変更されていません。');
 assert.equal(getReaderLibraryMessages('zh-Hans').bookmarkDeleted, '书签已删除。');
 assert.equal(getReaderLibraryMessages('zh-Hant').totpBound, '兩步驗證器已綁定。');

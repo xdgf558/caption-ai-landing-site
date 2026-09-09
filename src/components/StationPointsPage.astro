@@ -23,11 +23,11 @@ const copy = {
     cta: '登入會員中心購買',
     support: '付款或積分協助',
     useHeading: '一套積分，連接內容與工具',
-    useIntro: '功能會分階段開放。只有顯示積分價格與兌換按鈕的項目，才代表目前可以使用。',
+    useIntro: vip.useIntro,
     availableHeading: '目前已開放',
     availableStatus: '可使用',
     availableUses: [
-      { title: vip.name, body: vip.intro },
+      { title: vip.name, body: vip.readingDescription },
       { title: '付費小說章節', body: '兌換指定章節的閱讀權限。' }
     ],
     plannedHeading: vip.plannedHeading,
@@ -37,7 +37,7 @@ const copy = {
       { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: '每次兌換都由你確認',
-    redemptionBody: '兌換前會顯示所需積分、取得的權限與有效期間；確認後才會扣除。規劃中的用途目前不能兌換。',
+    redemptionBody: vip.redemptionBody,
     rulesHeading: '購買與帳戶規則',
     rules: [
       'Station 積分是站內數位權益單位，不是現金、加密貨幣或可轉讓的儲值金，不能提現、轉售或在帳戶之間轉移。',
@@ -64,11 +64,11 @@ const copy = {
     cta: '登录会员中心购买',
     support: '付款或积分协助',
     useHeading: '一套积分，连接内容与工具',
-    useIntro: '功能会分阶段开放。只有显示积分价格与兑换按钮的项目，才代表目前可以使用。',
+    useIntro: vip.useIntro,
     availableHeading: '目前已开放',
     availableStatus: '可使用',
     availableUses: [
-      { title: vip.name, body: vip.intro },
+      { title: vip.name, body: vip.readingDescription },
       { title: '付费小说章节', body: '兑换指定章节的阅读权限。' }
     ],
     plannedHeading: vip.plannedHeading,
@@ -78,7 +78,7 @@ const copy = {
       { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: '每次兑换都由你确认',
-    redemptionBody: '兑换前会显示所需积分、取得的权限与有效期间；确认后才会扣除。规划中的用途目前不能兑换。',
+    redemptionBody: vip.redemptionBody,
     rulesHeading: '购买与账户规则',
     rules: [
       'Station 积分是站内数字权益单位，不是现金、加密货币或可转让的储值金，不能提现、转售或在账户之间转移。',
@@ -105,11 +105,11 @@ const copy = {
     cta: 'Sign in to purchase',
     support: 'Payment or points support',
     useHeading: 'One points system for content and tools',
-    useIntro: 'Capabilities launch in stages. An item is redeemable only when it displays a points price and redemption button.',
+    useIntro: vip.useIntro,
     availableHeading: 'Available now',
     availableStatus: 'LIVE',
     availableUses: [
-      { title: vip.name, body: vip.intro },
+      { title: vip.name, body: vip.readingDescription },
       { title: 'Paid fiction chapters', body: 'Redeem access to a specific chapter.' }
     ],
     plannedHeading: vip.plannedHeading,
@@ -119,7 +119,7 @@ const copy = {
       { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: 'You confirm every redemption',
-    redemptionBody: 'Before points are deducted, you see the cost, access granted, and any expiry. Planned uses cannot be redeemed yet.',
+    redemptionBody: vip.redemptionBody,
     rulesHeading: 'Purchase and account rules',
     rules: [
       'Station Points are closed-loop digital access units. They are not cash, cryptocurrency, transferable stored value, or an investment, and cannot be withdrawn, resold, or moved between accounts.',
@@ -146,11 +146,11 @@ const copy = {
     cta: 'ログインして購入',
     support: '支払い・ポイントのサポート',
     useHeading: 'コンテンツとツールをつなぐ共通ポイント',
-    useIntro: '機能は段階的に公開します。ポイント価格と交換ボタンが表示されている項目だけが現在の交換対象です。',
+    useIntro: vip.useIntro,
     availableHeading: '現在利用可能',
     availableStatus: '利用可能',
     availableUses: [
-      { title: vip.name, body: vip.intro },
+      { title: vip.name, body: vip.readingDescription },
       { title: '有料小説の章', body: '指定した章の閲覧権と交換できます。' }
     ],
     plannedHeading: vip.plannedHeading,
@@ -160,7 +160,7 @@ const copy = {
       { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: '交換内容は毎回確認できます',
-    redemptionBody: 'ポイントを差し引く前に、必要ポイント、付与される権利、有効期間を表示します。予定中の用途はまだ交換できません。',
+    redemptionBody: vip.redemptionBody,
     rulesHeading: '購入とアカウントの規則',
     rules: [
       'Station Points はサイト内のデジタル利用単位です。現金、暗号資産、譲渡可能な前払式支払手段、投資商品ではなく、換金、転売、アカウント間移動はできません。',

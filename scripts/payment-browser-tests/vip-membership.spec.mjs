@@ -74,8 +74,15 @@ for (const width of [390, 768, 1280]) for (const [path, locale] of Object.entrie
     }
     expect(errors).toEqual([]);
     await page.goto(`/${path}/points/`);
-    await expect(page.locator('.station-points-capabilities')).toContainText(vipMembershipCopy[locale].name);
-    await expect(page.locator('#station-points-planned-title')).toHaveText(vipMembershipCopy[locale].plannedHeading);
+    const vip = vipMembershipCopy[locale];
+    const capabilities = page.locator('.station-points-capabilities');
+    await expect(capabilities).toContainText(vip.name);
+    await expect(capabilities.locator('.station-points-capabilities__heading > p').last()).toHaveText(vip.useIntro);
+    await expect(capabilities.locator('.station-points-capability-group').first().locator('article').first().locator('p')).toHaveText(vip.readingDescription);
+    await expect(capabilities.locator('.station-points-redemption-note > p')).toHaveText(vip.redemptionBody);
+    await expect(capabilities.locator('.station-points-capability-group').last()).toContainText(vip.notice);
+    await expect(capabilities.locator('.station-points-capability-group').last().locator('a, button')).toHaveCount(0);
+    await expect(page.locator('#station-points-planned-title')).toHaveText(vip.plannedHeading);
   });
 }
 
