@@ -21,7 +21,8 @@ async function mockMembership(page, options = {}) {
     }
     await route.fulfill({ json: {
       ok: true, authenticated: state.authenticated,
-      account: { email: 'vip-preview@example.test', username: 'VIP Preview', balanceCredits: state.balance },
+      redemption: request.method() === 'POST' ? { requestKey: request.headers()['idempotency-key'] } : undefined,
+      account: { id: 1, email: 'vip-preview@example.test', username: 'VIP Preview', balanceCredits: state.balance },
       membership: { active: state.active, expiresAt: '2027-01-10T00:00:00Z', level: 'member' },
       membershipSettings: { enabled: state.enabled, membershipCreditCost: state.cost, membershipDurationMonths: state.months, membershipCoversPaidContent: state.coversPaid },
       entitlements: [], bookmarks: [], ledger: [], packs: [], totp: { enabled: false },
@@ -130,7 +131,7 @@ test('VIP states follow server settings, balance, coverage and session', async (
     }
     if (options.failRedeem) {
       await button.click();
-      await expect(panel.locator('#reader-membership-status')).toHaveText(messages.membershipRedeemFailed);
+      await expect(panel.locator('#reader-membership-status')).toHaveText(messages.membershipRetrySafe);
       await expect(panel.locator('#reader-membership-summary-title')).toHaveText(messages.membershipInactive);
       await expect(button).toBeEnabled();
       expect(writes).toHaveLength(1);
