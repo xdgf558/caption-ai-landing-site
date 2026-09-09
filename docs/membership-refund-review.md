@@ -34,6 +34,22 @@
 
 新增 `0037_membership_refund_reviews.sql`，依赖已有 0036 与审计表。缺迁移时仅新审核功能返回 503，既有兑换与退款回调不依赖新表。上线须另获批准，先备份与迁移，再部署；审核记录和选择项不可当缓存删除。
 
+### 上线清单
+
+- 不确定就不要提交，继续留待审核。默认选中的「确认无需撤销 VIP」是不可覆盖的最终决定，不是暂存或稍后处理；提交 keep 后不能再把同一冲正改为撤销。
+- 获准上线后，先用下面的只读查询核对生产冲正来源，记录查询时间和汇总结果。本轮尚未执行此生产核对；队列仅包含 `creem-credit-pack`，不能把空队列解释为全部支付来源都已审完。若发现 `nowpayments-credit-pack` 或其他历史来源，应单独登记、明确处理方案，不能改写来源以塞入现有队列。
+- 确认 D1 备份可用后执行 `0037_membership_refund_reviews.sql`，再同时发布 Worker 和 `/admin/membership-refunds/`，验证 Access、队列和缺少可靠回执时的禁止撤销行为。
+- 当前页面对超过历史上限、链无法验证、没有未使用期限等情况显示统一提示；没有候选不等于已确认无需撤销。原因不明时继续待审核，不以 keep 关闭问题。
+- 真实退款撤销验收须另获批准。审核行、选择项和原兑换回执永久保留，不得回退到无审计写入；本 PR 合入或部署都不等于音乐开闸。
+
+```sql
+SELECT source, COUNT(*) AS reversal_count
+FROM reader_credit_ledger
+WHERE entry_type = 'reversal'
+GROUP BY source
+ORDER BY source;
+```
+
 `npm test` 已纳入 `scripts/test-membership-refund-review.mjs`；覆盖历史队列、保留不变、只撤未用期限、保留后续续费、重复/并发、旧快照和提交前续费、跨账户、额度上限、异常历史、写入/零命中故障、丢响应、Access/Origin/体积限制与缺迁移。
 
 支付 Playwright 套件包含五个审核 UI 用例，随现有 `test:browser:payments` 进入 CI：1280px/390px、转义、显式提交而非回车、旧页面锁定、未知响应重载、历史无回执禁用、未保存筛选确认。浏览器接口使用 fixtures；数据库使用内存 SQLite，不替代真实 Safari、Cloudflare 多实例或生产退款验收。
