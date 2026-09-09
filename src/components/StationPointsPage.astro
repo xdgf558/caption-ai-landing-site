@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import CreemTrustBadge from './CreemTrustBadge.astro';
 import { stationPointsProduct } from '../data/products/station-points';
 
 interface Props {
@@ -234,6 +235,7 @@ const clientConfig = {
         <a class="button button-primary is-disabled" id="station-points-purchase" href={stationPointsProduct.libraryPaths[localeKey]} aria-disabled="true">{copy.cta}</a>
         <a class="button button-secondary" href={`mailto:${stationPointsProduct.supportEmail}`}>{copy.support}</a>
       </div>
+      <CreemTrustBadge lang={lang} id="station-points-trust" hidden />
     </div>
   </section>
 
@@ -309,6 +311,8 @@ const clientConfig = {
     }).format(Number(amount));
 
     const setPurchaseAvailability = (available) => {
+      const trustBadge = document.getElementById('station-points-trust');
+      if (trustBadge) trustBadge.hidden = !available;
       purchaseLink?.setAttribute('aria-disabled', available ? 'false' : 'true');
       purchaseLink?.classList.toggle('is-disabled', !available);
       if (purchaseLink) purchaseLink.tabIndex = available ? 0 : -1;

@@ -1,0 +1,54 @@
+---
+interface Props {
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+  id?: string;
+  hidden?: boolean;
+}
+const { lang = 'zh-Hant', id, hidden = false } = Astro.props;
+const labels = {
+  en: 'Payments secured by Creem (opens in a new tab)',
+  ja: 'Creem による安全な決済（新しいタブで開く）',
+  'zh-Hant': '付款由 Creem 安全處理（另開新分頁）',
+  'zh-Hans': '付款由 Creem 安全处理（在新标签页打开）'
+};
+---
+
+<!-- Official light badge copied from the Creem dashboard on 2026-09-09. No scripts or remote assets. -->
+<div class="creem-trust" id={id} hidden={hidden}>
+  <a class="creem-trust__link" href="https://www.creem.io/" target="_blank" rel="noopener noreferrer" aria-label={labels[lang]}>
+    <span class="creem-trust__copy" lang="en">Payments secured by</span>
+    <svg width="14" height="14" viewBox="0 0 121 121" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <path d="M22.1102 11C24.1187 11 25.9669 12.0982 26.9281 13.8619L51.2059 58.4106C52.5699 60.9134 55.7048 61.8368 58.2077 60.473C60.7108 59.109 61.6342 55.9742 60.2701 53.4712L41.5466 19.113C39.554 15.4566 42.2004 11 46.3645 11H103.806C107.885 11 110.539 15.2933 108.715 18.9416L65.0579 106.254C63.0356 110.298 57.2654 110.298 55.2431 106.254L11.5863 18.9416C9.76212 15.2933 12.4156 11 16.4946 11H22.1102Z" fill="#B09CFB" />
+    </svg>
+    <span class="creem-trust__brand" lang="en">Creem</span>
+  </a>
+</div>
+
+<style>
+  .creem-trust { margin-block: 16px 4px; }
+  .creem-trust[hidden] { display: none; }
+  .creem-trust__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-sizing: border-box;
+    max-width: 100%;
+    min-height: 36px;
+    padding: 8px 13px;
+    border-radius: 10px;
+    border: 2px solid #151617;
+    background: #f5f2f0;
+    box-shadow: 0 2px 0 #151617;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.3;
+    letter-spacing: 0;
+    text-decoration: none;
+  }
+  .creem-trust__copy { color: #5b5c5e; font-weight: 600; }
+  .creem-trust__brand { color: #151617; font-weight: 700; }
+  .creem-trust__link svg { display: block; flex: 0 0 14px; }
+  .creem-trust__link:focus-visible { outline: 2px solid #151617; outline-offset: 4px; }
+  @media (pointer: coarse) { .creem-trust__link { min-height: 44px; } }
+</style>
