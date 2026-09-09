@@ -32,6 +32,20 @@ async function mockMembership(page, options = {}) {
 }
 
 const locales = { 'zh-hant': 'zh-Hant', 'zh-hans': 'zh-Hans', en: 'en', ja: 'ja' };
+async function expectVipBadge(root) {
+  const mark = root.locator('.vip-mark');
+  const image = mark.locator('img');
+  await expect(image).toBeVisible();
+  await expect(mark).toHaveAttribute('aria-hidden', 'true');
+  await expect(image).toHaveAttribute('alt', '');
+  await expect(image).toHaveAttribute('src', /\/_astro\/vip-badge\..*\.webp$/);
+  await expect(image).toHaveAttribute('srcset', /192w/);
+  await expect.poll(() => image.evaluate(node => node.complete && node.naturalWidth > 0)).toBe(true);
+  const box = await mark.boundingBox();
+  expect(box.width).toBe(64);
+  expect(box.height).toBe(64);
+}
+
 for (const width of [390, 768, 1280]) for (const [path, locale] of Object.entries(locales)) {
   test(`VIP ${locale} ${width}px: readable layout, planned services and existing redemption only`, async ({ page }) => {
     await page.setViewportSize({ width, height: 960 });
@@ -50,8 +64,7 @@ for (const width of [390, 768, 1280]) for (const [path, locale] of Object.entrie
     await expect(panel.locator('button')).toHaveCount(1);
     await expect(panel.locator('[data-vip-planned]')).toHaveCount(2);
     await expect(panel.locator('[data-vip-planned] button, [data-vip-planned] a')).toHaveCount(0);
-    await expect(panel.locator('.vip-mark svg')).toBeVisible();
-    await expect(panel.locator('.vip-mark')).toHaveAttribute('aria-hidden', 'true');
+    await expectVipBadge(panel);
     expect(writes).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
     const status = await panel.locator('#reader-membership-summary-title').boundingBox();
@@ -76,6 +89,7 @@ for (const width of [390, 768, 1280]) for (const [path, locale] of Object.entrie
     await page.goto(`/${path}/points/`);
     const vip = vipMembershipCopy[locale];
     const capabilities = page.locator('.station-points-capabilities');
+    await expectVipBadge(capabilities);
     await expect(capabilities).toContainText(vip.name);
     await expect(capabilities.locator('.station-points-capabilities__heading > p').last()).toHaveText(vip.useIntro);
     await expect(capabilities.locator('.station-points-capability-group').first().locator('article').first().locator('p')).toHaveText(vip.readingDescription);
