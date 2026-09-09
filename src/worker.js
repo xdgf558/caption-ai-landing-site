@@ -49,6 +49,8 @@ import {
 import { Resvg } from '@cf-wasm/resvg';
 import { articleSourceKind, articleCopy, articleBasePath, articleMetadata, normalizeArticleInput, suggestArticleMetadata, renderArticleIndex, renderArticleDetail } from './signalArticles.js';
 import { renderArticleMarkdown } from './articleMarkdown.js';
+import { safeReturnPath } from './safeReturnPath.js';
+import { applyMembershipRedemption, readMembershipReceipt, validMembershipRequestKey, isReaderMembershipActive } from './readerMembership.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -284,9 +286,7 @@ const makeCookie = (name, value, request, options = {}) => {
 const clearCookie = (name, request) => makeCookie(name, '', request, { maxAge: 0 });
 
 const cleanRedirectPath = (value, fallback = '/zh-hant/library/') => {
-  const path = cleanText(value, 300);
-  if (!path || !path.startsWith('/') || path.startsWith('//')) return fallback;
-  return path;
+  return safeReturnPath(value, fallback);
 };
 
 const isLocalHostnameRequest = (request) => {
@@ -367,7 +367,6 @@ const novelCreditPackOrderType = 'credit-pack';
 const novelCreditSource = 'reader-credits';
 const novelCreditUnitLabel = 'Station Points';
 const novelCreditLedgerUnlockSource = 'chapter-credit-unlock';
-const novelCreditLedgerMembershipSource = 'reader-membership-redeem';
 const creemCreditPackLedgerSource = 'creem-credit-pack';
 const novelAdminSource = 'admin-v2';
 const novelAdminManualCreditSource = 'admin-v2-manual-credit';
@@ -1489,7 +1488,7 @@ const readerMembershipToJson = (row) => row
       startedAt: row.started_at,
       expiresAt: row.expires_at,
       lastRedeemedAt: row.last_redeemed_at,
-      active: !row.expires_at || new Date(String(row.expires_at).replace(' ', 'T')).getTime() > Date.now(),
+      active: isReaderMembershipActive(row),
       metadata: parseStoredJson(row.metadata_json, {}),
       createdAt: row.created_at,
       updatedAt: row.updated_at
@@ -1498,16 +1497,16 @@ const readerMembershipToJson = (row) => row
 
 const getActiveReaderMembership = async (db, accountId) => {
   if (!db || !(await ensureReaderMembershipsReady(db))) return null;
-  return db
+  const membership = await db
     .prepare(
       `SELECT *
        FROM reader_memberships
        WHERE account_id = ?
-         AND expires_at > CURRENT_TIMESTAMP
        LIMIT 1`
     )
     .bind(accountId)
     .first();
+  return isReaderMembershipActive(membership) ? membership : null;
 };
 
 const getReaderMembershipSettings = async (db, env) => {
@@ -4734,7 +4733,7 @@ const handleReaderMagicLinkRequest = async (request, env) => {
   });
 };
 
-const getReaderFromSession = async (request, env) => {
+const getReaderFromSession = async (request, env, { touch = true } = {}) => {
   const db = env.WAITLIST_DB;
   if (!db) return null;
 
@@ -4767,10 +4766,12 @@ const getReaderFromSession = async (request, env) => {
 
   if (!session) return null;
 
-  await db
-    .prepare(`UPDATE reader_sessions SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?`)
-    .bind(session.session_id)
-    .run();
+  if (touch) {
+    await db
+      .prepare(`UPDATE reader_sessions SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?`)
+      .bind(session.session_id)
+      .run();
+  }
 
   return session;
 };
@@ -8643,13 +8644,15 @@ const handleAdminListNovelAiInsights = async (request, env) => {
   });
 };
 
-const redeemReaderMembershipWithCredits = async (db, accountId, env) => {
+const redeemReaderMembershipWithCredits = async (db, accountId, env, requestKey) => {
   if (!(await ensureReaderMembershipsReady(db))) {
     const error = new Error('Reader memberships are not initialized. Apply migration 0009_reader_memberships.sql.');
     error.code = 'READER_MEMBERSHIPS_NOT_READY';
     throw error;
   }
 
+  const existing = await readMembershipReceipt(db, accountId, requestKey);
+  if (existing) return { ...existing, replayed: true };
   const settings = await getReaderMembershipSettings(db, env);
   if (!settings.enabled) {
     const error = new Error('Membership redemption is disabled.');
@@ -8659,109 +8662,25 @@ const redeemReaderMembershipWithCredits = async (db, accountId, env) => {
 
   const config = getReaderCreditConfig(env);
   await ensureReaderCreditAccount(db, accountId, config);
-  const costCredits = Math.max(1, settings.membershipCreditCost);
-  const months = Math.max(1, settings.membershipDurationMonths);
-  const sourceRef = `membership-${randomToken(12).toLowerCase()}`;
-
-  const updatedAccount = await db
-    .prepare(
-      `UPDATE reader_credit_accounts
-       SET balance_credits = balance_credits - ?,
-           lifetime_spent_credits = lifetime_spent_credits + ?,
-           updated_at = CURRENT_TIMESTAMP
-       WHERE account_id = ?
-         AND balance_credits >= ?
-       RETURNING *`
-    )
-    .bind(costCredits, costCredits, accountId, costCredits)
-    .first();
-
-  if (!updatedAccount) {
-    const summary = await getReaderCreditSummary(db, accountId, env);
-    const error = new Error('Insufficient Station Points for membership.');
-    error.code = 'INSUFFICIENT_CREDITS';
-    error.summary = summary;
-    throw error;
-  }
-
-  const monthModifier = `+${months} month`;
-  const membership = await db
-    .prepare(
-      `INSERT INTO reader_memberships (
-        account_id, membership_level, source, source_ref, started_at, expires_at,
-        last_redeemed_at, metadata_json
-      )
-      VALUES (?, 'member', ?, ?, CURRENT_TIMESTAMP, datetime(CURRENT_TIMESTAMP, ?), CURRENT_TIMESTAMP, ?)
-      ON CONFLICT(account_id)
-      DO UPDATE SET
-        membership_level = 'member',
-        source = excluded.source,
-        source_ref = excluded.source_ref,
-        expires_at = datetime(
-          CASE
-            WHEN reader_memberships.expires_at > CURRENT_TIMESTAMP THEN reader_memberships.expires_at
-            ELSE CURRENT_TIMESTAMP
-          END,
-          ?
-        ),
-        last_redeemed_at = CURRENT_TIMESTAMP,
-        metadata_json = excluded.metadata_json,
-        updated_at = CURRENT_TIMESTAMP
-      RETURNING *`
-    )
-    .bind(
-      accountId,
-      novelCreditLedgerMembershipSource,
-      sourceRef,
-      monthModifier,
-      JSON.stringify({
-        costCredits,
-        months,
-        membershipCoversPaidContent: settings.membershipCoversPaidContent
-      }),
-      monthModifier
-    )
-    .first();
-
-  const ledger = await db
-    .prepare(
-      `INSERT INTO reader_credit_ledger (
-        account_id, entry_type, credits_delta, balance_after, source, source_ref,
-        series_slug, chapter_slug, note, metadata_json
-      )
-      VALUES (?, 'membership_redeem', ?, ?, ?, ?, '', '', ?, ?)
-      RETURNING *`
-    )
-    .bind(
-      accountId,
-      -costCredits,
-      updatedAccount.balance_credits,
-      novelCreditLedgerMembershipSource,
-      sourceRef,
-      `Redeemed ${months} month membership with ${costCredits} ${config.unitLabel}.`,
-      JSON.stringify({
-        costCredits,
-        months,
-        expiresAt: membership.expires_at
-      })
-    )
-    .first();
-
-  return {
-    account: updatedAccount,
-    ledger,
-    membership,
-    settings
-  };
+  return applyMembershipRedemption(db, accountId, requestKey, settings);
 };
 
 const handleReaderMembershipRedeem = async (request, env) => {
   const db = env.WAITLIST_DB;
-  if (!db) return json({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
+  if (!db) return privateJson({ ok: false, code: 'MEMBERSHIP_REDEEM_UNAVAILABLE' }, { status: 503 });
+  if (request.headers.get('origin') !== new URL(request.url).origin) {
+    return privateJson({ ok: false, code: 'ORIGIN_MISMATCH' }, { status: 403 });
+  }
+  const requestKey = request.headers.get('idempotency-key');
+  if (!validMembershipRequestKey(requestKey)) {
+    return privateJson({ ok: false, code: 'MEMBERSHIP_REQUEST_KEY_REQUIRED' }, { status: 400 });
+  }
 
-  const session = await getReaderFromSession(request, env);
+  let session;
+  try { session = await getReaderFromSession(request, env, { touch: false }); }
+  catch { return privateJson({ ok: false, code: 'MEMBERSHIP_REDEEM_UNAVAILABLE' }, { status: 503 }); }
   if (!session) {
-    return json(
+    return privateJson(
       {
         ok: false,
         code: 'SIGN_IN_REQUIRED',
@@ -8772,31 +8691,29 @@ const handleReaderMembershipRedeem = async (request, env) => {
   }
 
   let redeem;
+  if (request.headers.get('x-reader-account') !== String(session.account_id)) {
+    return privateJson({ ok: false, code: 'SIGN_IN_REQUIRED' }, { status: 401 });
+  }
   try {
-    redeem = await redeemReaderMembershipWithCredits(db, session.account_id, env);
+    redeem = await redeemReaderMembershipWithCredits(db, session.account_id, env, requestKey);
   } catch (error) {
-    const status =
-      error.code === 'INSUFFICIENT_CREDITS'
-        ? 402
-        : error.code === 'READER_MEMBERSHIPS_NOT_READY'
-          ? 503
-          : 400;
-    return json(
-      {
-        ok: false,
-        code: error.code || 'MEMBERSHIP_REDEEM_FAILED',
-        message: error.message,
-        ...(error.summary || {})
-      },
-      { status }
-    );
+    // A lost batch response may already have committed. Re-read the same receipt, never retry with a new key.
+    try { redeem = await readMembershipReceipt(db, session.account_id, requestKey); } catch { /* Fail closed below. */ }
+    if (!redeem) {
+      const code = ['INSUFFICIENT_CREDITS', 'MEMBERSHIP_DISABLED'].includes(error.code)
+        ? error.code : 'MEMBERSHIP_REDEEM_UNAVAILABLE';
+      return privateJson({ ok: false, code }, { status: code === 'INSUFFICIENT_CREDITS' ? 402 : 503 });
+    }
   }
 
-  const summary = await getReaderCreditSummary(db, session.account_id, env);
-  return json({
+  let summary;
+  try { summary = await getReaderCreditSummary(db, session.account_id, env); }
+  catch { return privateJson({ ok: false, code: 'MEMBERSHIP_REDEEM_UNAVAILABLE' }, { status: 503 }); }
+  return privateJson({
     ok: true,
     redeemed: true,
     costCredits: redeem.settings.membershipCreditCost,
+    redemption: { requestKey, expiresAt: redeem.membership.expires_at, costCredits: redeem.settings.membershipCreditCost },
     membership: readerMembershipToJson(redeem.membership),
     ledger: readerCreditLedgerToJson(redeem.ledger),
     account: {

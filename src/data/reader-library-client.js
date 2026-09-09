@@ -18,6 +18,9 @@ export const readerErrorMessageKeys = Object.freeze({
   INVALID_BOOKMARK_ID: 'bookmarkInvalid',
   BOOKMARK_NOT_FOUND: 'bookmarkNotFound',
   INSUFFICIENT_CREDITS: 'insufficientCredits',
+  MEMBERSHIP_REDEEM_UNAVAILABLE: 'membershipRetrySafe',
+  MEMBERSHIP_REQUEST_KEY_REQUIRED: 'membershipReloadRequired',
+  MEMBERSHIP_DISABLED: 'membershipDisabledStatus',
   PAYMENT_PROVIDER_NOT_CONFIGURED: 'checkoutUnavailable',
   CREEM_CHECKOUT_NOT_AVAILABLE: 'checkoutUnavailable',
   CREEM_PRODUCT_LOOKUP_FAILED: 'checkoutUnavailable',
@@ -31,6 +34,9 @@ export const readerErrorMessageKeys = Object.freeze({
 
 export const readerLibraryClientMessages = Object.freeze({
   en: {
+    membershipCheckRequest: 'Check pending redemption',
+    membershipRetrySafe: 'The redemption result is not confirmed. Retry here to check the same request without charging twice. Persistent browser storage and a current browser are required.',
+    membershipReloadRequired: 'Reload Member Center before redeeming VIP membership.',
     loading: 'Loading', signedOut: 'Not signed in', membershipChecking: 'Checking VIP membership expiry', membershipAfterSignIn: 'Sign in to view VIP membership expiry',
     accessAll: 'All access', accessSupporter: 'Supporter content', accessPaid: 'Paid content', manualGrant: 'Manual grant', granted: 'Granted', openSeries: 'Open series', openChapter: 'Open chapter', expires: 'Expires {date}',
     readProgress: 'Read to {progress}%', savedPosition: 'Saved position', continueReading: 'Continue reading', deleteBookmark: 'Delete bookmark', deleteBookmarkLabel: 'Delete bookmark for “{title}”',
@@ -45,6 +51,9 @@ export const readerLibraryClientMessages = Object.freeze({
     authUnavailable: 'Member sign-in is temporarily unavailable.', totpUnavailable: 'Two-factor authentication is temporarily unavailable.', emailResetDisabled: 'Use your username or email, current two-factor code, and new password to reset access.', usernameTaken: 'This username is already in use.', emailTaken: 'This email is already registered. Sign in instead.', invalidEmail: 'Enter a valid email address.', signInRequired: 'Sign in to continue.', bookmarksUnavailable: 'Bookmarks are temporarily unavailable.', bookmarkInvalid: 'This bookmark is invalid.', bookmarkNotFound: 'Bookmark not found.', checkoutUnavailable: 'Checkout is temporarily unavailable.', orderNotFound: 'Payment order not found.', orderAccountMismatch: 'This payment order belongs to another account.'
   },
   ja: {
+    membershipCheckRequest: '交換結果を再確認',
+    membershipRetrySafe: '交換結果を確認できません。同じ画面で再試行すると同一の処理を確認し、二重に差し引きません。保存領域が使える最新のブラウザーが必要です。',
+    membershipReloadRequired: 'VIP 会員権の交換前に会員センターを再読み込みしてください。',
     loading: '読み込み中', signedOut: '未ログイン', membershipChecking: 'VIP 会員有効期限を確認中', membershipAfterSignIn: 'ログイン後に VIP 会員有効期限を表示します',
     accessAll: 'すべての権限', accessSupporter: 'サポーター向け', accessPaid: '有料コンテンツ', manualGrant: '手動付与', granted: '付与済み', openSeries: '作品を開く', openChapter: '章を開く', expires: '有効期限 {date}',
     readProgress: '{progress}% まで読了', savedPosition: '保存した位置', continueReading: '続きを読む', deleteBookmark: 'しおりを削除', deleteBookmarkLabel: '「{title}」のしおりを削除',
@@ -59,6 +68,9 @@ export const readerLibraryClientMessages = Object.freeze({
     authUnavailable: '会員ログインは一時的に利用できません。', totpUnavailable: '2段階認証は一時的に利用できません。', emailResetDisabled: 'ユーザー名またはメール、現在の2段階認証コード、新しいパスワードでリセットしてください。', usernameTaken: 'このユーザー名はすでに使用されています。', emailTaken: 'このメールは登録済みです。ログインしてください。', invalidEmail: '有効なメールアドレスを入力してください。', signInRequired: '続行するにはログインしてください。', bookmarksUnavailable: 'しおり機能は一時的に利用できません。', bookmarkInvalid: 'このしおりは無効です。', bookmarkNotFound: 'しおりが見つかりません。', checkoutUnavailable: '決済は一時的に利用できません。', orderNotFound: '注文が見つかりません。', orderAccountMismatch: 'この注文は別のアカウントに属しています。'
   },
   'zh-Hant': {
+    membershipCheckRequest: '確認上次兌換結果',
+    membershipRetrySafe: '兌換結果尚未確認。請在此重試同一筆請求，不會重複扣點；需使用可保存資料的新版瀏覽器。',
+    membershipReloadRequired: '請重新載入會員中心後再兌換 VIP 會員。',
     loading: '正在讀取', signedOut: '尚未登入', membershipChecking: '正在確認 VIP 會員有效期', membershipAfterSignIn: '登入後顯示 VIP 會員有效期',
     accessAll: '全部權限', accessSupporter: '支持者內容', accessPaid: '付費內容', manualGrant: '手動授權', granted: '已授權', openSeries: '打開作品', openChapter: '打開章節', expires: '有效至 {date}',
     readProgress: '已讀到 {progress}%', savedPosition: '已保存位置', continueReading: '繼續閱讀', deleteBookmark: '刪除書籤', deleteBookmarkLabel: '刪除「{title}」書籤',
@@ -73,6 +85,9 @@ export const readerLibraryClientMessages = Object.freeze({
     authUnavailable: '會員登入功能暫時無法使用。', totpUnavailable: '兩步驗證功能暫時無法使用。', emailResetDisabled: '請使用使用者名稱或 Email、目前驗證碼和新密碼完成重置。', usernameTaken: '這個使用者名稱已被使用。', emailTaken: '這個 Email 已經註冊，請直接登入。', invalidEmail: '請輸入有效的 Email。', signInRequired: '請先登入再繼續。', bookmarksUnavailable: '書籤功能暫時無法使用。', bookmarkInvalid: '這個書籤無效。', bookmarkNotFound: '找不到書籤。', checkoutUnavailable: '支付目前暫時無法使用。', orderNotFound: '找不到支付訂單。', orderAccountMismatch: '這筆訂單屬於另一個帳戶。'
   },
   'zh-Hans': {
+    membershipCheckRequest: '确认上次兑换结果',
+    membershipRetrySafe: '兑换结果尚未确认。请在此重试同一笔请求，不会重复扣点；需使用可保存数据的新版浏览器。',
+    membershipReloadRequired: '请重新加载会员中心后再兑换 VIP 会员。',
     loading: '正在读取', signedOut: '尚未登录', membershipChecking: '正在确认 VIP 会员有效期', membershipAfterSignIn: '登录后显示 VIP 会员有效期',
     accessAll: '全部权限', accessSupporter: '支持者内容', accessPaid: '付费内容', manualGrant: '手动授权', granted: '已授权', openSeries: '打开作品', openChapter: '打开章节', expires: '有效至 {date}',
     readProgress: '已读到 {progress}%', savedPosition: '已保存位置', continueReading: '继续阅读', deleteBookmark: '删除书签', deleteBookmarkLabel: '删除“{title}”书签',

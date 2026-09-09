@@ -637,6 +637,8 @@ const clientConfig = {
   </div>
   <script>
     import qrcode from 'qrcode-generator';
+    import { safeReturnPath } from '../safeReturnPath.js';
+    import { pendingMembershipKey } from '../data/membership-redemption-client.js';
 
     const readerClientConfigNode = document.getElementById('reader-client-config');
     const readerClientConfig = JSON.parse(readerClientConfigNode?.textContent || '{}');
@@ -861,8 +863,16 @@ const clientConfig = {
       setStatus('');
     };
 
+    let membershipAccountId = 0;
+    let membershipBusy = false;
+    let membershipUnavailable = false;
+    const hasPendingMembership = () => {
+      try { return Boolean(window.localStorage.getItem(`stationcat.membership.pending.v1:${membershipAccountId}`)); }
+      catch { return false; }
+    };
     const setSignedIn = (session) => {
       const signedIn = Boolean(session?.authenticated);
+      membershipAccountId = signedIn ? Number(session.account?.id) : 0;
       authShell.hidden = signedIn;
       accountPanel.hidden = !signedIn;
       totpPanel.hidden = !signedIn;
@@ -1259,11 +1269,13 @@ const clientConfig = {
         months,
         coverage: formatReaderMessage(coverageKey)
       });
-      membershipRedeem.textContent = membership?.active
+      const pending = hasPendingMembership();
+      membershipRedeem.textContent = pending ? formatReaderMessage('membershipCheckRequest') : membership?.active
         ? formatReaderMessage('renewMembership')
         : formatReaderMessage('redeemMembership', { cost, months });
-      membershipRedeem.hidden = settings?.enabled === false;
-      membershipRedeem.disabled = settings?.enabled === false || balanceCredits < cost;
+      membershipRedeem.hidden = settings?.enabled === false && !pending;
+      membershipUnavailable = !pending && (settings?.enabled === false || balanceCredits < cost);
+      membershipRedeem.disabled = membershipBusy || membershipUnavailable;
       if (membership?.active) {
         const expiresAt = formatLocalDate(membership.expiresAt);
         setMembershipSummary(
@@ -1373,6 +1385,7 @@ const clientConfig = {
       renderCreditPacks(data.packs || [], data.checkoutEnabled === true);
       renderMembership(data.membership, data.membershipSettings, data.account);
       renderCreditLedger(Array.isArray(data.ledger) ? data.ledger : []);
+      return data;
     };
 
     const wait = (milliseconds) => new Promise((resolve) => {
@@ -1437,11 +1450,7 @@ const clientConfig = {
     const query = new URLSearchParams(window.location.search);
     const resetToken = query.get('resetToken') || '';
     const resetEmail = query.get('resetEmail') || '';
-    const redirectPath = (() => {
-      const value = query.get('returnTo') || readerLibraryPath;
-      if (!value.startsWith('/') || value.startsWith('//')) return readerLibraryPath;
-      return value;
-    })();
+    const redirectPath = safeReturnPath(query.get('returnTo'), readerLibraryPath);
 
     if (resetEmail) {
       resetIdentifierInput.value = resetEmail;
@@ -1746,20 +1755,43 @@ const clientConfig = {
     });
 
     membershipRedeem.addEventListener('click', async () => {
+      if (membershipBusy || !membershipAccountId) return;
+      const accountId = membershipAccountId;
+      membershipBusy = true;
       membershipRedeem.disabled = true;
       setMembershipStatus(formatReaderMessage('membershipRedeeming'), 'neutral');
 
       try {
-        const response = await fetch('/api/readers/membership/redeem', { method: 'POST' });
-        const data = await response.json();
-        if (!response.ok || !data.ok) {
-          throw createReaderError('membershipRedeemFailed', data);
-        }
-        setMembershipStatus(formatReaderMessage('membershipRedeemed'), 'success');
-        await Promise.all([loadLibrary(), loadCredits()]);
+        // Serialize shared pending-key use across tabs. Unsupported browsers fail before POST.
+        if (!navigator.locks) throw createReaderError('membershipRetrySafe');
+        await navigator.locks.request(`stationcat.membership:${accountId}`, { ifAvailable: true }, async (lock) => {
+          if (!lock || membershipAccountId !== accountId) throw createReaderError('membershipRetrySafe');
+          const pending = pendingMembershipKey(window.localStorage, accountId);
+          const sessionResponse = await fetch('/api/readers/session', { cache: 'no-store' });
+          const session = await sessionResponse.json();
+          if (!sessionResponse.ok || !session.authenticated || Number(session.account?.id) !== accountId) {
+            throw createReaderError('signInRequired');
+          }
+          const response = await fetch('/api/readers/membership/redeem', {
+            method: 'POST', headers: { 'Idempotency-Key': pending.key, 'X-Reader-Account': String(accountId) }
+          });
+          const data = await response.json();
+          if (!response.ok || !data.ok) {
+            throw createReaderError('membershipRetrySafe', data);
+          }
+          if (data.redemption?.requestKey !== pending.key) throw createReaderError('membershipRetrySafe');
+          if (membershipAccountId !== accountId) throw createReaderError('signInRequired');
+          const [, credits] = await Promise.all([loadLibrary(), loadCredits()]);
+          if (!credits || membershipAccountId !== accountId) throw createReaderError('signInRequired');
+          pending.clear();
+          renderMembership(credits.membership, credits.membershipSettings, credits.account);
+          setMembershipStatus(formatReaderMessage('membershipRedeemed'), 'success');
+        });
       } catch (error) {
-        setMembershipStatus(caughtReaderMessage(error, 'membershipRedeemFailed'), 'error');
-        membershipRedeem.disabled = false;
+        setMembershipStatus(caughtReaderMessage(error, 'membershipRetrySafe'), 'error');
+      } finally {
+        membershipBusy = false;
+        membershipRedeem.disabled = membershipUnavailable;
       }
     });
 
