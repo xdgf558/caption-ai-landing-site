@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { executeMusicPublication } from '../src/music/publication.js';
 import { publicationFingerprint } from '../src/music/publicationValidation.js';
 import { projectPublicTrack } from '../src/music/catalog.js';
+import { verifyMusicAudioAsset, validateMeasuredPreview } from '../src/music/audioValidation.js';
 
 const dbs = [];
 afterEach(() => { for (const db of dbs.splice(0)) db.close(); });
@@ -52,14 +53,14 @@ function reviewData(now) {
     authorizationBasis: 'Isolated permission fixture, not an actual license.',
     lyricsRightsNotes: 'Instrumental fixture.', coverRightsNotes: 'No custom cover.', audioInputRightsNotes: 'No third-party inputs.' };
 }
-async function seed(f, mode = 'vip') {
+async function seed(f, mode = 'vip', media = {}) {
   const now = Date.now(), { sql } = f;
   const ids = { id: randomUUID(), revisionId: randomUUID(), audio: randomUUID(), preview: randomUUID(), evidence: randomUUID(), rightsId: randomUUID() };
   insert(sql, 'music_tracks', { id: ids.id, slug: `song-${ids.id}`, created_at: now - 3000, updated_at: now - 1000 });
   const asset = { owner_track_id: ids.id, state: 'validated', byte_size: 1000, sha256: 'a'.repeat(64), etag: 'fixture-etag', created_at: now - 2000 };
-  insert(sql, 'music_assets', { ...asset, id: ids.audio, kind: 'audio', format: 'mp3', content_type: 'audio/mpeg', duration_ms: 120000, object_key: `private/${ids.audio}` });
+  insert(sql, 'music_assets', { ...asset, id: ids.audio, kind: 'audio', format: 'mp3', content_type: 'audio/mpeg', duration_ms: 120000, object_key: `private/${ids.audio}`, ...media.audio });
   insert(sql, 'music_assets', { ...asset, id: ids.preview, kind: 'preview', format: 'mp3', content_type: 'audio/mpeg', duration_ms: 30000,
-    object_key: `private/${ids.preview}`, derived_from_asset_id: ids.audio, source_start_ms: 10000, source_end_ms: 40000 });
+    object_key: `private/${ids.preview}`, derived_from_asset_id: ids.audio, source_start_ms: 10000, source_end_ms: 40000, ...media.preview });
   insert(sql, 'music_assets', { ...asset, id: ids.evidence, kind: 'evidence', format: 'pdf', content_type: 'application/pdf', object_key: `private/${ids.evidence}` });
   insert(sql, 'music_track_revisions', { id: ids.revisionId, track_id: ids.id, revision_no: 1, audio_asset_id: ids.audio,
     preview_asset_id: ids.preview, access_mode: mode, early_access_until: mode === 'early_access' ? now + 86400000 : null,
@@ -132,6 +133,35 @@ test('publish atomically seals revision, switches pointers, bumps versions and w
   assert.equal(JSON.parse(audit[0].summary_json).newPolicy.accessMode, 'vip');
   assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM music_mutations').get().n, 1);
   assert.ok(f.state.binds <= 100);
+});
+
+test('real MP3 resource verifier blocks corrupted bytes before any publication write', async () => {
+  const root = new URL('../tests/fixtures/music-mp3/', import.meta.url);
+  const files = JSON.parse(readFileSync(new URL('manifest.json', root))).files;
+  const audio = files.find(f => f.file === 'cbr-stereo.mp3'), preview = files.find(f => f.file === 'preview.mp3');
+  const fields = file => ({ byte_size: file.bytes, duration_ms: file.packetDurationMs, sha256: file.sha256 });
+  const f = database(), ids = await seed(f, 'vip', { audio: fields(audio), preview: {
+    ...fields(preview), source_start_ms: 0, source_end_ms: 1000 } });
+  const input = command(f, ids), before = dump(f);
+  let corrupt = true;
+  const verifyResources = async assets => {
+    const results = [];
+    for (const a of assets) {
+      if (!['audio', 'preview'].includes(a.kind)) { results.push((await verifier([a])).assets[0]); continue; }
+      const data = readFileSync(new URL(a.kind === 'audio' ? audio.file : preview.file, root));
+      if (corrupt && a.kind === 'preview') data[0] = 0;
+      results.push(await verifyMusicAudioAsset(a, { etag: a.etag, size: data.length, contentType: 'audio/mpeg',
+        body: new ReadableStream({ start(c) { c.enqueue(data); c.close(); } }) }));
+    }
+    validateMeasuredPreview(assets.find(a => a.id === ids.audio), assets.find(a => a.id === ids.preview),
+      results.find(r => r.id === ids.audio), results.find(r => r.id === ids.preview));
+    return { checkedAt: Date.now(), assets: results };
+  };
+  await rejects(run(f, input, { verifyResources }), 'MUSIC_MP3_FRAME_INVALID');
+  assert.deepEqual(dump(f), before);
+  corrupt = false;
+  const result = await run(f, input, { verifyResources });
+  assert.equal(result.action, 'publish'); assert.equal(result.catalogVersion, 1);
 });
 
 test('same key replays exact result, changed payload conflicts, lost commit response recovers', async () => {

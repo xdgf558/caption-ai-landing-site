@@ -1,0 +1,33 @@
+Music parser dependencies (exact versions are locked in package-lock.json)
+
+mp3-parser 0.3.0
+https://github.com/biril/mp3-parser
+Copyright (c) 2013-2016 Alex Lambiris
+
+@noble/hashes 2.4.0
+https://github.com/paulmillr/noble-hashes
+Copyright (c) 2022 Paul Miller (https://paulmillr.com)
+
+Both dependencies are distributed under the MIT License:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+The original notices remain in each installed package. No FFmpeg source or
+binary is included in the application. Local fixture generation is separate
+test tooling, not a Worker transcoding service.
