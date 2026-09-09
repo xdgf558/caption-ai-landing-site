@@ -1,6 +1,14 @@
-# 测试矩阵与 M0 实测
+# 测试矩阵
 
-## 最新：M1-01 / M1-02
+## 最新：M1-03
+
+2026-09-09，main@8994fa4。`npm run test:music:membership` 18 项通过，已接 npm pretest/CI；复用真实会员/退款迁移和业务函数，以内存 SQLite 验证只读资格。覆盖真实会话、单次 first-primary 查询形状、最小字段、全库不变、日期/失效/故障/超时、未知多 grant/终身拒绝、四语路径、VIP 关闭、免费/试听隔离及 HEAD/条件请求合同。联测确认撤销后下一次读按原会员期限失效、保留未撤销续购。见 M1_VIP_ADAPTER。
+
+没有 Worker 路由、音频字节、生产数据库或 UI 变更；不声称完成 D1 生产副本/多实例、Safari、真实支付或音乐 Playwright 验收。M1-04、M1-05 和 M2 媒体入口仍待做。
+
+本轮 `npm test`、`npm run build` 均通过，145 页 / 111 条公开 sitemap；无新增依赖或部署动作。
+
+## 历史：M1-01 / M1-02
 
 2026-09-09，main@dee3cdf 基线。`npm run test:music:foundation` 17 项通过，已接入 npm pretest/CI；覆盖独立迁移、归属、不可变与 OR REPLACE、UTC/策略/显式 variant、四语私有字段过滤、自然到期 ETag、500 曲、隐藏曲歌单过滤、审核证据和统计结构。Wrangler 4.130.0 本地 D1 迁移通过，14 表/28 触发器，foreign_key_check 为空、quick_check=ok。`npm test` / `npm run build` 通过，145 页/111 sitemap。详见 M1_FOUNDATION。
 

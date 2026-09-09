@@ -1,6 +1,6 @@
 # M0 接入决策
 
-日期：2026-09-09。下方保留 M0 接入方案；M1-01/02 当前数据与纯策略实现见 [M1 基础](M1_FOUNDATION.md)，路由/存储服务/UI 等仍未接入。完整要求以 [原规格](DEVELOPMENT_SPEC.md) 为准。
+日期：2026-09-09。下方保留 M0 接入方案；M1-01/02 数据与纯策略实现见 [M1 基础](M1_FOUNDATION.md)，M1-03 单次主库只读资格及 capabilities/access 合同见 [只读 VIP 适配](M1_VIP_ADAPTER.md)。路由/媒体服务/UI 等仍未接入。完整要求以 [原规格](DEVELOPMENT_SPEC.md) 为准。
 
 ## 当前系统与最小边界
 
