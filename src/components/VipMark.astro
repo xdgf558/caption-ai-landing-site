@@ -1,0 +1,30 @@
+---
+import { Crown } from '@lucide/astro';
+---
+
+<span class="vip-mark" aria-hidden="true">
+  <Crown size={26} strokeWidth={1.6} />
+  <span>VIP</span>
+</span>
+
+<style>
+  .vip-mark {
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border-radius: 50%;
+    border: 1px solid #b48b3d;
+    background: #234e43;
+    color: #f5d687;
+    box-shadow: inset 0 0 0 4px #234e43, inset 0 0 0 5px #9d844b;
+  }
+  .vip-mark span {
+    font: 800 11px/1.2 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0;
+  }
+</style>

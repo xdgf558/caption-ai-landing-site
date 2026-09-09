@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { vipMembershipCopy } from '../src/data/vip-membership.js';
 import {
   getReaderErrorMessageKey,
   getReaderLibraryMessages,
@@ -25,13 +26,18 @@ for (const locale of locales) {
 const referenceKeys = Object.keys(readerLibraryClientMessages.en).sort();
 for (const locale of locales) {
   const messages = getReaderLibraryMessages(locale);
+  assert.match(vipMembershipCopy[locale].name, /VIP/);
+  assert.deepEqual(Object.keys(vipMembershipCopy[locale]).sort(), Object.keys(vipMembershipCopy.en).sort());
+  for (const key of ['membershipActive', 'membershipInactive', 'membershipRule', 'redeemMembership', 'renewMembership', 'membershipRedeeming', 'membershipRedeemed', 'membershipRedeemFailed']) {
+    assert.match(messages[key], /VIP/, `${locale}.${key} must use the VIP name`);
+  }
   assert.deepEqual(Object.keys(messages).sort(), referenceKeys, `${locale} must expose the full client message set`);
   for (const key of referenceKeys) {
     assert.ok(String(messages[key]).trim(), `${locale}.${key} must not be empty`);
   }
 }
 
-assert.equal(getReaderLibraryMessages('en').membershipActive, 'Membership active');
+assert.equal(getReaderLibraryMessages('en').membershipActive, 'VIP membership active');
 assert.equal(getReaderLibraryMessages('ja').paymentCancelled, '支払いはキャンセルされました。Station Points は変更されていません。');
 assert.equal(getReaderLibraryMessages('zh-Hans').bookmarkDeleted, '书签已删除。');
 assert.equal(getReaderLibraryMessages('zh-Hant').totpBound, '兩步驗證器已綁定。');

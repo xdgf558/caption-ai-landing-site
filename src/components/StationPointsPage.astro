@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CreemTrustBadge from './CreemTrustBadge.astro';
+import VipMark from './VipMark.astro';
+import { vipMembershipCopy } from '../data/vip-membership.js';
 import { stationPointsProduct } from '../data/products/station-points';
 
 interface Props {
@@ -8,6 +10,7 @@ interface Props {
 }
 
 const { lang = 'zh-Hant' } = Astro.props;
+const vip = vipMembershipCopy[lang];
 const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
 const copy = {
   'zh-Hant': {
@@ -15,7 +18,7 @@ const copy = {
     description: 'Station Cat 全站通用積分的公開價格、目前用途、未來規劃、退款與帳戶規則。公開價格與實際結帳設定保持一致。',
     kicker: 'STATION POINTS',
     heading: '一份餘額，通用於整個 Station Cat。',
-    intro: 'Station 積分是 Station Cat 的全站通用數位權益單位。你可以用同一份餘額兌換已開放的內容與服務；未來也會逐步接入軟體下載、進階功能和使用權限。',
+    intro: 'Station 積分是 Station Cat 的全站通用數位權益單位，可兌換 VIP 會員及已開放的內容。音樂與指定軟體下載規劃作為 VIP 服務提供，目前尚未開放。',
     billing: '一次性購買 · 無自動續費',
     cta: '登入會員中心購買',
     support: '付款或積分協助',
@@ -24,14 +27,14 @@ const copy = {
     availableHeading: '目前已開放',
     availableStatus: '可使用',
     availableUses: [
-      { title: '閱讀會員', body: '兌換有期限的會員閱讀權益。' },
+      { title: vip.name, body: vip.intro },
       { title: '付費小說章節', body: '兌換指定章節的閱讀權限。' }
     ],
-    plannedHeading: '接下來會支援',
+    plannedHeading: vip.plannedHeading,
     plannedStatus: '規劃中',
     plannedUses: [
-      { title: '付費軟體下載權限', body: '兌換符合資格的桌面或行動軟體下載。' },
-      { title: '軟體功能與使用權限', body: '兌換符合資格的進階功能或有期限的產品使用權。' }
+      { title: vip.music, body: vip.musicDescription },
+      { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: '每次兌換都由你確認',
     redemptionBody: '兌換前會顯示所需積分、取得的權限與有效期間；確認後才會扣除。規劃中的用途目前不能兌換。',
@@ -56,7 +59,7 @@ const copy = {
     description: 'Station Cat 全站通用积分的公开价格、目前用途、未来规划、退款与账户规则。公开价格与实际结账设置保持一致。',
     kicker: 'STATION POINTS',
     heading: '一份余额，通用于整个 Station Cat。',
-    intro: 'Station 积分是 Station Cat 的全站通用数字权益单位。你可以用同一份余额兑换已开放的内容与服务；未来也会逐步接入软件下载、高级功能和使用权限。',
+    intro: 'Station 积分是 Station Cat 的全站通用数字权益单位，可兑换 VIP 会员及已开放的内容。音乐与指定软件下载规划作为 VIP 服务提供，目前尚未开放。',
     billing: '一次性购买 · 无自动续费',
     cta: '登录会员中心购买',
     support: '付款或积分协助',
@@ -65,14 +68,14 @@ const copy = {
     availableHeading: '目前已开放',
     availableStatus: '可使用',
     availableUses: [
-      { title: '阅读会员', body: '兑换有期限的会员阅读权益。' },
+      { title: vip.name, body: vip.intro },
       { title: '付费小说章节', body: '兑换指定章节的阅读权限。' }
     ],
-    plannedHeading: '接下来会支持',
+    plannedHeading: vip.plannedHeading,
     plannedStatus: '规划中',
     plannedUses: [
-      { title: '付费软件下载权限', body: '兑换符合资格的桌面或移动软件下载。' },
-      { title: '软件功能与使用权限', body: '兑换符合资格的高级功能或有期限的产品使用权。' }
+      { title: vip.music, body: vip.musicDescription },
+      { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: '每次兑换都由你确认',
     redemptionBody: '兑换前会显示所需积分、取得的权限与有效期间；确认后才会扣除。规划中的用途目前不能兑换。',
@@ -97,7 +100,7 @@ const copy = {
     description: 'Public pricing, current uses, planned capabilities, refunds, and account rules for the site-wide Station Points balance.',
     kicker: 'STATION POINTS',
     heading: 'One balance across Station Cat.',
-    intro: 'Station Points are Station Cat’s site-wide digital access units. Use one balance for eligible content and services today, with software downloads, premium features, and product access planned for future releases.',
+    intro: 'Station Points are Station Cat’s site-wide digital access units for VIP membership and available content. Music and selected software downloads are planned as VIP services and are not available yet.',
     billing: 'One-time purchase · No automatic renewal',
     cta: 'Sign in to purchase',
     support: 'Payment or points support',
@@ -106,14 +109,14 @@ const copy = {
     availableHeading: 'Available now',
     availableStatus: 'LIVE',
     availableUses: [
-      { title: 'Reading membership', body: 'Redeem time-limited member reading access.' },
+      { title: vip.name, body: vip.intro },
       { title: 'Paid fiction chapters', body: 'Redeem access to a specific chapter.' }
     ],
-    plannedHeading: 'Planned next',
+    plannedHeading: vip.plannedHeading,
     plannedStatus: 'PLANNED',
     plannedUses: [
-      { title: 'Paid software downloads', body: 'Redeem eligible desktop or mobile software downloads.' },
-      { title: 'Software features and access', body: 'Redeem eligible premium features or time-limited product access.' }
+      { title: vip.music, body: vip.musicDescription },
+      { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: 'You confirm every redemption',
     redemptionBody: 'Before points are deducted, you see the cost, access granted, and any expiry. Planned uses cannot be redeemed yet.',
@@ -138,7 +141,7 @@ const copy = {
     description: 'Station Cat 共通の Station Points に関する公開価格、現在の用途、今後の予定、返金、アカウント規則。',
     kicker: 'STATION POINTS',
     heading: 'Station Cat 全体で使う、ひとつの残高。',
-    intro: 'Station Points は Station Cat 共通のデジタル利用単位です。現在の対象コンテンツやサービスに同じ残高を使え、今後はソフトウェアのダウンロード、上位機能、製品利用権にも順次対応します。',
+    intro: 'Station Points は Station Cat 共通のデジタル利用単位で、VIP 会員権や公開済みのコンテンツと交換できます。音楽と対象ソフトウェアのダウンロードは VIP サービスとして予定しており、現在は未公開です。',
     billing: '一回払い · 自動更新なし',
     cta: 'ログインして購入',
     support: '支払い・ポイントのサポート',
@@ -147,14 +150,14 @@ const copy = {
     availableHeading: '現在利用可能',
     availableStatus: '利用可能',
     availableUses: [
-      { title: '読書会員権', body: '期間限定の会員向け読書権と交換できます。' },
+      { title: vip.name, body: vip.intro },
       { title: '有料小説の章', body: '指定した章の閲覧権と交換できます。' }
     ],
-    plannedHeading: '今後対応予定',
+    plannedHeading: vip.plannedHeading,
     plannedStatus: '予定',
     plannedUses: [
-      { title: '有料ソフトウェアのダウンロード', body: '対象となるデスクトップ／モバイルソフトウェアのダウンロード権。' },
-      { title: 'ソフトウェア機能・利用権', body: '対象となる上位機能や期間限定の製品利用権。' }
+      { title: vip.music, body: vip.musicDescription },
+      { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: '交換内容は毎回確認できます',
     redemptionBody: 'ポイントを差し引く前に、必要ポイント、付与される権利、有効期間を表示します。予定中の用途はまだ交換できません。',
@@ -254,6 +257,7 @@ const clientConfig = {
         <div class="station-points-capability-list">
           {copy.availableUses.map((item) => (
             <article>
+              {item.title === vip.name && <VipMark />}
               <strong>{item.title}</strong>
               <p>{item.body}</p>
             </article>
@@ -273,6 +277,7 @@ const clientConfig = {
             </article>
           ))}
         </div>
+        <p>{vip.notice}</p>
       </section>
     </div>
     <div class="station-points-redemption-note">
