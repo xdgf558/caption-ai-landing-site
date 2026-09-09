@@ -1,6 +1,12 @@
 # 测试矩阵
 
-## 最新：M1-03
+## 最新：M1-04
+
+2026-09-10，main@233d716 基线。`npm run test:music:publication` 23 项通过，已接 npm pretest/CI；覆盖新旧发布指针、逐步 SQL 失败及零命中整批回滚、同键重放/异键冲突/丢响应、并发多曲目录版本、下架留存、审核指纹与证据变动、资源证明缺失/错误、slug/文本/试听边界、500 首及自然到期竞态。见 [条件发布](M1_PUBLICATION.md)。
+
+`npm test` / `npm run build` 通过，145 页 / 111 sitemap。Wrangler 4.130.0 在隔离本地 D1 从 0001 增量应用 0002 成功；Miniflare 的 first-primary、INTEGER 值、changes() 和早/晚步骤零命中整批回滚实测通过。没有运行完整生产服务、远程数据库、R2、真 MP3、Safari 或音乐 Playwright；没有修改 UI。
+
+## 历史：M1-03
 
 2026-09-09，main@8994fa4。`npm run test:music:membership` 18 项通过，已接 npm pretest/CI；复用真实会员/退款迁移和业务函数，以内存 SQLite 验证只读资格。覆盖真实会话、单次 first-primary 查询形状、最小字段、全库不变、日期/失效/故障/超时、未知多 grant/终身拒绝、四语路径、VIP 关闭、免费/试听隔离及 HEAD/条件请求合同。联测确认撤销后下一次读按原会员期限失效、保留未撤销续购。见 M1_VIP_ADAPTER。
 
