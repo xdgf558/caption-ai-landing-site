@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import CreemTrustBadge from './CreemTrustBadge.astro';
 import {
   getReaderLibraryMessages,
   readerErrorMessageKeys,
@@ -465,6 +466,7 @@ const clientConfig = {
 
           <div id="reader-credit-purchase-controls" hidden>
             <div class="reader-credit-packs" id="reader-credit-packs"></div>
+            <CreemTrustBadge lang={lang} />
           </div>
           <div class="reader-status" id="reader-credit-status" role="status" aria-live="polite"></div>
 
@@ -646,6 +648,7 @@ const clientConfig = {
           <button class="reader-v2-button reader-v2-button--outline" value="cancel">{ui.cancel}</button>
           <button class="reader-v2-button reader-v2-button--primary" id="reader-checkout-confirm" type="button">{ui.confirmPay}</button>
         </div>
+        <CreemTrustBadge lang={lang} />
       </form>
     </dialog>
   </div>
