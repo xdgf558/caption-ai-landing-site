@@ -11,7 +11,7 @@
 | `src/worker.js:1499` getActiveReaderMembership | 只检查 account_id 与 expires_at > CURRENT_TIMESTAMP；缺绑定/缺表返回 null | 缺基础设施与无资格混在一起；不能直接满足音乐 503/fail-closed 合同 |
 | `src/worker.js:1483` readerMembershipToJson | 无 expires_at 也标 active；日期去空格换 T 再用 JS Date | 与 SQL/NOT NULL 约束不一致；不能据此推断“空日期=终身”。音乐应明确 UTC 校验 |
 | `src/worker.js:1513` getReaderMembershipSettings | 从 admin_content_settings 读兑换开关、点数、周期、小说付费内容覆盖规则，有默认值 | 价格展示读取现有配置；小说覆盖开关不是已确认的音乐权限字段 |
-| `src/worker.js:6297` handleNovelAccessCheck | 小说 member 级别可仅凭登录阅读；paid 分支才查会员/小说单项权益 | 小说 member、单章/整本权限均不能直接映射全站 VIP |
+| `src/worker.js:6296` handleNovelAccessCheck | 小说 member 级别可仅凭登录阅读；paid 分支才查会员/小说单项权益 | 小说 member、单章/整本权限均不能直接映射全站 VIP |
 | `src/worker.js:6656` getReaderCreditSummary | 会 ensureReaderCreditAccount，包含余额/账单/会员资料 | 不把这份可写且含额外私人信息的接口用作音频请求鉴权 |
 
 免费注册账号、积分余额、后台 Access 身份、游戏商品权益、VIP 图标和支付返回参数都不是 VIP 资格来源。未来音乐代码只从可信会话取得 accountId，禁止信任请求体里的 accountId/isVip/expiry。
@@ -34,7 +34,7 @@
 
 ### G2 退款/拒付与撤销
 
-`src/worker.js:10215` handleCreemWebhook 将 refund.created/dispute.created 交给 `applyCreditReversalFromOrder`（9092）与 `recordReaderCreditReversal`（9009）。现有批处理撤销积分包入账，不更新 reader_memberships。
+`src/worker.js:10223` handleCreemWebhook 将 refund.created/dispute.created 交给 `applyCreditReversalFromOrder`（9092）与 `recordReaderCreditReversal`（9009）。现有批处理撤销积分包入账，不更新 reader_memberships。
 
 隔离测试完成签名充值入账、兑换、签名退款：退款扣回 100 点后，会员行完全不变，查询仍 active。重复退款的积分幂等由原有测试覆盖，但那不等于 VIP 撤销。
 

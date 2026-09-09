@@ -19,7 +19,11 @@
 
 计划四语主路径 `/music/`（繁中）、`/zh-hans/music/`、`/en/music/`、`/ja/music/`；`/zh-hant/music/` 作为繁中别名重定向至 `/music/`，保留经过校验的歌曲/歌单查询。四个主路径各自 canonical 与互相 hreflang，别名不进 sitemap。该方案待 M2/M4 实装回归，不声称当前路径存在。
 
-`LanguageSwitcher.astro` 的 standalone 正则目前只有 points/library/terms/privacy，需显式扩展音乐映射，否则切语言会回首页。`wrangler.toml` 的 run_worker_first 已有 /api/*、/admin/* 和本地化路径，但缺 /music 与 /music/*；新增时一并检查无尾斜线路由与关闭闸门行为，不能让静态 assets 绕过音乐开关。
+`LanguageSwitcher.astro` 的 standalone 正则目前只有 points/library/terms/privacy。音乐必须有独立的显式语言映射：繁中直接指向 `/music/`，另三语分别指向上述主路径，不能仅将 music 加进 standalone 正则，否则繁中会生成 `/zh-hant/music/`。别名重定向只用于兼容外部链接，不能作为语言切换的正常中转。会员中心仍保持 `/zh-hant/library/` 等现有路径，不随音乐规划改动。
+
+M4 回归必须断言四语音乐页的繁中选项直接为 `/music/`、切换不经过别名、合法歌曲/歌单查询被保留；另测直接访问 `/zh-hant/music/` 时重定向及 canonical/hreflang 一致。上述为未来验收要求，当前没有实现或运行这些测试。
+
+`wrangler.toml` 的 run_worker_first 已有 /api/*、/admin/* 和本地化路径，但缺 /music 与 /music/*；新增时一并检查无尾斜线路由与关闭闸门行为，不能让静态 assets 绕过音乐开关。
 
 实际会员中心是 `/zh-hant/library/`、`/zh-hans/library/`、`/en/library/`、`/ja/library/`，复用 `src/data/reader-library-client.js`。导航、页脚、积分页 VIP 说明和 sitemap 等到音乐验收/上线批准后更新，不提前承诺可用。
 
