@@ -1,0 +1,82 @@
+---
+import { ArrowLeft, RefreshCw } from '@lucide/astro';
+---
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>VIP 退款审核 | Station Cat</title>
+    <link rel="icon" href="/favicon.ico" />
+  </head>
+  <body class="refund-admin">
+  <main class="refund-workspace">
+    <header class="refund-heading">
+      <div><a href="/admin-v2/"><ArrowLeft size={16} /> Station Cat 工作台</a><h1>VIP 退款审核</h1></div>
+      <button type="button" id="refund-refresh" aria-label="刷新审核队列" title="刷新审核队列"><RefreshCw size={18} /></button>
+    </header>
+    <p id="refund-status" role="status" aria-live="polite">正在读取待审核记录。</p>
+    <div class="refund-columns">
+      <aside aria-label="退款审核队列">
+        <label class="refund-filter">审核状态<select id="refund-filter"><option value="pending">待审核</option><option value="reviewed">已审核</option></select></label>
+        <div id="refund-list"></div>
+        <button type="button" id="refund-next" hidden>下一页</button>
+      </aside>
+      <section id="refund-detail" aria-label="审核详情"><p>尚未选择记录。</p></section>
+    </div>
+  </main>
+  </body>
+</html>
+<script>
+  import '../../scripts/adminMembershipRefunds.js';
+</script>
+<style is:global>
+  .refund-admin { margin: 0; background: #f7f8f8; color: #253b37; font: 15px/1.6 system-ui, sans-serif; }
+  .refund-admin * { box-sizing: border-box; }
+  .refund-admin a { color: #315d51; text-decoration: none; }
+  .refund-admin button { cursor: pointer; }
+  .refund-admin :is(select, textarea, input:not([type="radio"]):not([type="checkbox"])) { border: 1px solid #adbcb5; border-radius: 4px; background: white; padding: 8px 10px; color: #253b37; }
+  .refund-admin input { accent-color: #315d51; }
+  .refund-workspace { max-width: 1160px; margin: 24px auto 64px; padding: 0 20px; color: #253b37; letter-spacing: 0; }
+  .refund-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .refund-heading a { display: inline-flex; align-items: center; gap: 6px; }
+  .refund-heading h1 { font-size: 26px; margin: 14px 0; }
+  #refund-refresh { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid #adbcb5; border-radius: 4px; background: white; color: #315d51; }
+  #refund-status { min-height: 24px; font-size: 14px; }
+  #refund-status[data-error="true"] { color: #a2353c; }
+  .refund-columns { display: grid; grid-template-columns: minmax(230px, 300px) minmax(0, 1fr); gap: 28px; border-top: 1px solid #cbd3d0; padding-top: 20px; }
+  .refund-columns > aside { border-right: 1px solid #cbd3d0; padding-right: 20px; min-width: 0; }
+  .refund-filter { display: grid; gap: 8px; font-size: 14px; margin-bottom: 16px; }
+  .refund-entry { display: grid; gap: 5px; width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid #cbd3d0; border-radius: 0; padding: 14px 8px; overflow-wrap: anywhere; }
+  .refund-entry[aria-current="true"] { background: #e7efeb; border-left: 3px solid #315d51; }
+  .refund-entry small { color: #5d6b66; }
+  .refund-workspace button, .refund-workspace select, .refund-workspace input:not([type="checkbox"]):not([type="radio"]) { min-height: 44px; font: inherit; }
+  .refund-workspace :is(button, select, input, textarea):focus-visible { outline: 2px solid #35675b; outline-offset: 3px; }
+  #refund-detail { min-width: 0; overflow-wrap: anywhere; }
+  #refund-detail h2 { font-size: 22px; margin-top: 0; }
+  #refund-detail h3 { font-size: 17px; margin: 24px 0 10px; }
+  .refund-facts { display: grid; grid-template-columns: minmax(110px, 1fr) minmax(0, 3fr); gap: 8px 16px; font-size: 14px; }
+  .refund-facts dt { color: #5d6b66; }
+  .refund-facts dd { margin: 0; }
+  .refund-note { padding: 12px 0; border-block: 1px solid #cbd3d0; font-size: 14px; }
+  #refund-form { display: grid; gap: 18px; }
+  #refund-form fieldset { margin: 0; padding: 12px 0; border: 0; border-bottom: 1px solid #cbd3d0; min-width: 0; }
+  #refund-form legend { font-weight: 700; }
+  .refund-choice { display: flex; align-items: center; min-height: 44px; gap: 10px; padding: 5px 0; }
+  .refund-choice input { flex: 0 0 auto; width: 18px; height: 18px; }
+  .refund-choice span { min-width: 0; }
+  .refund-choice small { display: block; color: #5d6b66; margin-top: 4px; }
+  .refund-field { display: grid; gap: 8px; }
+  .refund-field textarea { resize: vertical; min-height: 96px; width: 100%; box-sizing: border-box; font: inherit; }
+  #refund-preview { padding: 12px; background: #edf2f0; border-left: 3px solid #315d51; margin: 0; }
+  #refund-submit { justify-self: start; background: #315d51; color: white; border: 1px solid #315d51; padding: 10px 18px; border-radius: 4px; }
+  .refund-workspace button:disabled { opacity: .5; cursor: not-allowed; }
+  @media (max-width: 680px) {
+    .refund-workspace { padding: 0 14px; margin-top: 16px; }
+    .refund-columns { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    .refund-columns > aside { border-right: 0; border-bottom: 1px solid #cbd3d0; padding: 0 0 16px; }
+    #refund-list { max-height: 250px; overflow-y: auto; }
+    .refund-facts { grid-template-columns: 100px minmax(0, 1fr); }
+  }
+</style>

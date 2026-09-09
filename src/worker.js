@@ -51,6 +51,7 @@ import { articleSourceKind, articleCopy, articleBasePath, articleMetadata, norma
 import { renderArticleMarkdown } from './articleMarkdown.js';
 import { safeReturnPath } from './safeReturnPath.js';
 import { applyMembershipRedemption, readMembershipReceipt, validMembershipRequestKey, isReaderMembershipActive } from './readerMembership.js';
+import { listMembershipRefundReviews, getMembershipRefundReview, decideMembershipRefundReview } from './membershipRefundReview.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -10646,6 +10647,41 @@ const handleAdminFulfillNovelOrder = async (request, env) => {
     ...result,
     ...(await buildAdminOrderDetail(db, refreshedOrder || order))
   });
+};
+
+const handleAdminMembershipRefundReviews = async (request, env) => {
+  if (!env.WAITLIST_DB) return privateJson({ ok: false, code: 'REVIEW_UNAVAILABLE' }, { status: 503 });
+  const url = new URL(request.url);
+  try {
+    if (request.method === 'GET') {
+      if (url.searchParams.has('id')) {
+        const id = Number(url.searchParams.get('id'));
+        if (!Number.isSafeInteger(id) || id <= 0) return privateJson({ ok: false, code: 'INVALID_REVIEW' }, { status: 400 });
+        return privateJson({ ok: true, ...await getMembershipRefundReview(env.WAITLIST_DB, id) });
+      }
+      const before = Number(url.searchParams.get('before') || Number.MAX_SAFE_INTEGER);
+      if (!Number.isSafeInteger(before) || before <= 0) return privateJson({ ok: false, code: 'INVALID_REVIEW' }, { status: 400 });
+      return privateJson({ ok: true, ...await listMembershipRefundReviews(env.WAITLIST_DB, {
+        reviewed: url.searchParams.get('status') === 'reviewed', before
+      }) });
+    }
+    if (request.method !== 'POST') return privateJson({ ok: false, code: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+    if (request.headers.get('origin') !== url.origin) return privateJson({ ok: false, code: 'ORIGIN_MISMATCH' }, { status: 403 });
+    const body = await readRequestTextWithLimit(request, 12000);
+    if (!body) return privateJson({ ok: false, code: 'REVIEW_TOO_LARGE' }, { status: 413 });
+    let payload;
+    try { payload = JSON.parse(body.text); } catch { return privateJson({ ok: false, code: 'INVALID_REVIEW' }, { status: 400 }); }
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return privateJson({ ok: false, code: 'INVALID_REVIEW' }, { status: 400 });
+    // Attribute financial decisions to the verified JWT, never a caller-provided email header.
+    const actor = isLocalHostnameRequest(request) || hasLocalAdminBypass(env) ? 'local-admin'
+      : normalizeEmail((await verifyAccessJwt(getAccessToken(request), getAdminAccessConfig(env))).email);
+    return privateJson({ ok: true, ...await decideMembershipRefundReview(env.WAITLIST_DB, payload, actor) });
+  } catch (error) {
+    const known = ['INVALID_REVIEW', 'REVIEW_NOT_FOUND', 'REVIEW_ALREADY_DECIDED', 'REVIEW_STALE',
+      'REDEMPTION_NOT_REVOKABLE', 'REFUND_CREDIT_BUDGET_EXCEEDED'];
+    const code = known.includes(error.code) ? error.code : 'REVIEW_UNAVAILABLE';
+    return privateJson({ ok: false, code }, { status: code === 'REVIEW_UNAVAILABLE' ? 503 : error.status });
+  }
 };
 
 const handleAdminListReaderAccounts = async (request, env) => {
@@ -23168,6 +23204,10 @@ export default {
 
     if (request.method === 'POST' && url.pathname === novelReadingEventsPath) {
       return handleNovelReadingEvents(request, env);
+    }
+
+    if (url.pathname === '/admin/api/readers/membership-refund-reviews') {
+      return handleAdminMembershipRefundReviews(request, env);
     }
 
     if (url.pathname === '/admin/api/games/cat-life/products') {
