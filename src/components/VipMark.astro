@@ -1,10 +1,10 @@
 ---
-import { Crown } from '@lucide/astro';
+import { Image } from 'astro:assets';
+import vipBadge from '../assets/vip-badge.png';
 ---
 
 <span class="vip-mark" aria-hidden="true">
-  <Crown size={26} strokeWidth={1.6} />
-  <span>VIP</span>
+  <Image src={vipBadge} alt="" width={64} height={64} widths={[64, 128, 192]} sizes="64px" format="webp" quality={86} />
 </span>
 
 <style>
@@ -12,19 +12,12 @@ import { Crown } from '@lucide/astro';
     width: 64px;
     height: 64px;
     flex: 0 0 64px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    border-radius: 50%;
-    border: 1px solid #b48b3d;
-    background: #234e43;
-    color: #f5d687;
-    box-shadow: inset 0 0 0 4px #234e43, inset 0 0 0 5px #9d844b;
+    display: block;
   }
-  .vip-mark span {
-    font: 800 11px/1.2 ui-sans-serif, system-ui, sans-serif;
-    letter-spacing: 0;
+  .vip-mark img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
 </style>
