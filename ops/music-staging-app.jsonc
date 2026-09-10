@@ -1,6 +1,5 @@
 {
-  // Isolated staging application. This config deliberately has no public route yet.
-  // Add the Access audience and custom domain only after the Access application exists.
+  // Isolated staging application protected by its own Cloudflare Access app.
   "name": "station-cat-music-staging",
   "account_id": "3f5394e0ef5a531c63c0ceaa74262e0d",
   "main": "../src/music/stagingEntrypoint.js",
@@ -8,6 +7,12 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "music-staging.wwwstationcat.org",
+      "custom_domain": true
+    }
+  ],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -15,6 +20,8 @@
   },
   "vars": {
     "ADMIN_ALLOWED_EMAILS": "brodstem@protonmail.com",
+    "CF_ACCESS_TEAM_DOMAIN": "misty-limit-82d5.cloudflareaccess.com",
+    "CF_ACCESS_AUD": "5ceda63da88e8ffb34a88338231028e473379ae51755ae3f6d69be218bb63e4a",
     "MUSIC_STAGING_EXPECTED_HOST": "music-staging.wwwstationcat.org",
     "MUSIC_PUBLIC_ENABLED": "false",
     "MUSIC_UPLOADS_ENABLED": "false",

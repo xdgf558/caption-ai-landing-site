@@ -70,14 +70,17 @@ test('the deployed entrypoint blocks other hosts and keeps admin closed without 
   assert.deepEqual(await missingAccess.json(), { ok: false, code: 'ADMIN_AUTH_UNAVAILABLE' });
 });
 
-test('staging config contains only isolated music bindings and no traffic route', async () => {
+test('staging config exposes only the Access-protected music host and isolated bindings', async () => {
   const source = await readFile(new URL('../ops/music-staging-app.jsonc', import.meta.url), 'utf8');
   const config = JSON.parse(source.replace(/^\s*\/\/.*$/gm, ''));
 
   assert.equal(config.workers_dev, false);
   assert.equal(config.preview_urls, false);
   assert.equal(config.route, undefined);
-  assert.equal(config.routes, undefined);
+  assert.deepEqual(config.routes, [{
+    pattern: 'music-staging.wwwstationcat.org',
+    custom_domain: true
+  }]);
   assert.equal(config.triggers, undefined);
   assert.equal(config.queues, undefined);
   assert.equal(config.assets.directory, '../.generated/music-staging-assets');
@@ -91,7 +94,8 @@ test('staging config contains only isolated music bindings and no traffic route'
     name: 'station-cat-music-staging-private'
   }]);
   assert.equal(source.includes('WAITLIST_DB'), false);
-  assert.equal(source.includes('CF_ACCESS_AUD'), false);
+  assert.equal(config.vars.CF_ACCESS_TEAM_DOMAIN, 'misty-limit-82d5.cloudflareaccess.com');
+  assert.equal(config.vars.CF_ACCESS_AUD, '5ceda63da88e8ffb34a88338231028e473379ae51755ae3f6d69be218bb63e4a');
   for (const key of ['MUSIC_PUBLIC_ENABLED', 'MUSIC_UPLOADS_ENABLED', 'MUSIC_VIP_DELIVERY_ENABLED', 'MUSIC_ANALYTICS_ENABLED']) {
     assert.equal(config.vars[key], 'false');
   }
