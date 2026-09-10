@@ -6,6 +6,8 @@
 
 ## 当前用户授权
 
+最新：PR #127 已合并 main@726a586；用户批准独立预发存储创建。MUSIC_DB/R2 已创建，0001–0003 已迁移，配额 0，桶为私有且为空。见 [STAGING_STORAGE](STAGING_STORAGE.md)。未部署或开闸；下方待复审/无资源记录为历史。
+
 PR #127 复审修复：已复现首轮 AbortError，修复上传完成等待和播放断言；含构建的 CLI 浏览器三轮 18/18、client 6/6、admin 20/20 通过，待远端 CI 与复审。以下“CLI 待授权”是初次交付历史；测试预览器禁止部署，生产与开闸范围未扩大。
 
 最新：PR #126 已合并 (main@c3cba1c)。用户授权并实现简洁音乐后台基础 UI，使用 Product Design 并沿用文章后台参照；范围与验证见 [M5_ADMIN_WORKSPACE](M5_ADMIN_WORKSPACE.md)。全仓/6 项客户端/11 项 uploads/17 项 runtime 测试和 146 页构建通过；CLI 浏览器套件待授权运行。M5 不是全部完成；不部署、不改支付或开闸。下段保留上一批背景。

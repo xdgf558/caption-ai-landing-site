@@ -1,8 +1,11 @@
 # Music Database Migrations
 
-These migrations target a future independent `MUSIC_DB`, never `WAITLIST_DB`.
+These migrations target an independent `MUSIC_DB`, never `WAITLIST_DB`.
 They are intentionally outside the existing production `migrations/` directory.
-No production binding, remote database or media bucket has been created.
+On 2026-09-10, the owner authorized isolated staging storage: migrations 0001-0003
+were applied to the new staging MUSIC_DB only. See the
+[resource record](../docs/music/STAGING_STORAGE.md). No production music binding,
+Worker deployment, positive upload quota or public launch has been configured.
 
 `0001_music_foundation.sql` initializes an empty database once. A pre-existing
 schema must be inspected and migrated explicitly, not overwritten or silently

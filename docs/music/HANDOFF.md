@@ -1,5 +1,9 @@
 # 音乐系统交接记录
 
+## 最新：独立预发存储
+
+PR #127 已合并 main@726a586。用户批准建独立存储，已创建 station-cat-music-staging（8fe1a3e1-7325-4d87-a7e6-2c51338b9158）与 station-cat-music-staging-private，迁移 0001–0003 完成，配额 0，桶公开入口均关闭。资源/核验/备份详见 [STAGING_STORAGE](STAGING_STORAGE.md)。ops/music-staging-storage.jsonc 只用于存储运维，不是部署配置。生产库/桶未改，未部署、上传或开闸；测试 Worker 禁止接入这些云资源。以下“最新”为历史阶段。
+
 ## 最新：简洁音乐后台基础 UI
 
 PR #126 已合并 main@c3cba1c；本轮分支 codex/music-admin-workspace，用户授权 UI，不含部署。新增 /admin/music/，Product Design 参照现有文章后台；范围、恢复协议和验证记录见 [M5_ADMIN_WORKSPACE](M5_ADMIN_WORKSPACE.md)。全仓、6 项客户端、11 项上传、17 项 runtime 与构建通过；CLI 浏览器 6 用例已接 CI 但待运行。内置浏览器已验证隔离上传/审核/发布链路和 390px。后续不得声称真实音乐/云端/听审或公开播放器已验收。
