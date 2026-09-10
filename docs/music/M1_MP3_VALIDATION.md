@@ -49,7 +49,7 @@ D1 与 R2 仍不共享事务。核验后删除/替换竞态需要 M2 不可覆�
 
 - `npm run test:music:mp3`：21 项，五份真实编码合成文件、不同 chunk 边界、结构损坏、Xing 伪造、ID3、预算/超时/中断、绑定与容差、32/4 MiB 边界，全部通过。
 - `npm run test:music:publication`：24 项通过，新增真实 MP3 核验阻断/成功联测。两套均进入 npm pretest/CI。
-- 本地 workerd（Miniflare）browser bundle：五份实际编码文件的时长/hash/样本数及截断拒绝通过，无绑定/远程资源。
+- 本地 workerd（Miniflare）browser bundle：五份实际编码文件的时长/hash/样本数及截断拒绝通过，无绑定/远程资源。这是一次本地验证，复现脚本未纳入仓库，CI 未执行；M2 须补充可复现的运行时测试及真实 R2 适配验收，私有对象按不超过 64 KiB 分块读取，禁止先用 `arrayBuffer()` 缓冲整曲。
 - `npm test` / `npm run build`：通过，145 页 / 111 sitemap。没有 UI，本轮不跑音乐 Playwright 或 Safari，不把模型/本地 runtime 测试当成预发验收。
 - `npm audit` 非绿：9 项告警（1 low、7 high、1 critical），位于原有 astro/esbuild/js-yaml/nanoid/postcss/sharp/smol-toml/svgo/vite；两项新依赖未被列入。本轮没有升级这些既有版本，不将“无新增告警”写成供应链无风险；原站依赖风险应另开升级/可达性审查。
 
