@@ -1,8 +1,18 @@
 # 音乐系统交接记录
 
-日期：2026-09-10。最新交接：PR #122 已合并，M1-05 真 MP3 帧解析完成，待独立 PR 审查。下方 M1-04 及更早内容均为历史，最新状态以本节与 CURRENT_PHASE 为准。
+日期：2026-09-10。最新交接：PR #123 已合并，M2-RUNTIME 本地适配与验收完成，待独立 PR 审查。下方 M1 内容均为历史，最新状态以本节与 CURRENT_PHASE 为准。
 
-## 最新：音乐 M1-05
+## 最新：M2-RUNTIME
+
+用户授权先做运行环境与存储适配。基线 main@3c48aa4，分支 codex/music-runtime-storage；12 项存储、10 项本地 workerd/D1/R2 测试、全仓测试通过。正常 npm ci 可重建；运行时套件进入独立 CI 步骤，源代码与合成夹具均可从仓库复现。见 [M2_RUNTIME_STORAGE](M2_RUNTIME_STORAGE.md)。
+
+完成规范音频 key 与条件 GET、原生 BYOB 每块不超过 64 KiB、共享 GET/解析期限和取消清理，完整本地 D1 发布/回执重放/末尾零命中回滚，32 MiB/4 MiB 单读与四并发。测试用独立 reader D1 核对 INTEGER 账号和 UTC TEXT 期限的只读资格查询，不使用真实会员资料。
+
+尚未创建云端 MUSIC_DB/R2、迁移/部署、发布音乐或开闸；没有 UI。真实预发、实际套餐 CPU/整体 heap/多实例、对象删除竞态、完整证据验证与人工试听仍待做。测试权利/证据 stub 不代表完整生产发布。#121 Cookie/异常 clock、空歌单、#122 metadata 422 留管理/媒体接口批次。以后 UI 按要求调用 Product Design。
+
+新增固定测试依赖的告警已通过限定子依赖版本处理；原站 9 项依赖告警仍存在，不宣称 npm audit 全绿。原站依赖大版本升级单独处理。
+
+## 历史：音乐 M1-05
 
 用户授权合并 #122（main@ac8ac76）后，再批准本批解析器开发。分支 codex/music-mp3-validation 增加流式测时/hash、严格帧/ID3/预算检查、对象与试听源绑定；没有迁移或路由。21 项解析测试及 24 项发布测试通过，五份本地合成 MP3 与独立 FFmpeg packet 计数一致，本地 workerd 测量与截断拒绝通过；npm test/build 通过，145 页/111 sitemap。
 

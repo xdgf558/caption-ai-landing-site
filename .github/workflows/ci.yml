@@ -25,6 +25,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Verify isolated music Workers D1 and R2 runtime
+        run: npm run test:music:runtime
+
       - name: Verify reproducible Cat Life motion bundle
         run: |
           npm ci --prefix experiments/orange-cat-preview
