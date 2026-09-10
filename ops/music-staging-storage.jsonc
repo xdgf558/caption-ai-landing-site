@@ -1,0 +1,29 @@
+{
+  // Storage administration only: no Worker entrypoint, assets, routes or production bindings.
+  // Never deploy the local music preview/fixture Worker with these resources.
+  "name": "station-cat-music-staging-storage",
+  "account_id": "3f5394e0ef5a531c63c0ceaa74262e0d",
+  "compatibility_date": "2026-09-10",
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": {
+    "MUSIC_PUBLIC_ENABLED": "false",
+    "MUSIC_UPLOADS_ENABLED": "false",
+    "MUSIC_VIP_DELIVERY_ENABLED": "false",
+    "MUSIC_ANALYTICS_ENABLED": "false"
+  },
+  "d1_databases": [
+    {
+      "binding": "MUSIC_DB",
+      "database_name": "station-cat-music-staging",
+      "database_id": "8fe1a3e1-7325-4d87-a7e6-2c51338b9158",
+      "migrations_dir": "../migrations-music"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MUSIC_BUCKET",
+      "bucket_name": "station-cat-music-staging-private"
+    }
+  ]
+}
