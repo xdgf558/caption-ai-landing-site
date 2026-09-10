@@ -2,6 +2,8 @@
 
 更新：2026-09-10。
 
+最新授权：PR #126 已合并为 main@c3cba1c，用户批准简洁音乐后台基础 UI。PR #127，分支 codex/music-admin-workspace，见 [基础工作区](M5_ADMIN_WORKSPACE.md)。初审浏览器 1/6 失败已复现修复，含构建的 CLI 浏览器连续三轮 18/18 通过，完整发布/下架/归档已执行；client 6/6、admin 20/20 通过。待远端 CI 与复审。M5-01/02 部分完成，歌单/统计/四角色公开预览未实现；没有部署或开闸。以下私有上传段为历史。
+
 本轮授权：PR #125 已合并为 main@1ca7e02，开始 M2-02 私有上传与完整验证接线，分支 `codex/music-private-uploads`。上传预留/流式 PUT/complete、实际资源校验、技术审核及成功发布 HTTP 闭环本地 DONE：11 项上传测试、17 项本地 runtime 及全仓 npm test/build 通过（145 页/111 sitemap），见 [私有上传与审核发布](M2_PRIVATE_UPLOADS.md)。M2 整体保持 IN_PROGRESS，自动清理/配额回收仍属 M2-05。没有创建云端资源、执行远程迁移、上传正式音乐、部署或开闸。本批无 UI。
 
 已合并的 M2-RUNTIME 本地适配 DONE：12 项存储测试、10 项 workerd/D1/R2 测试，包括完整发布、真实 SQL 零命中回滚、四并发及大文件边界。见 [运行环境与存储](M2_RUNTIME_STORAGE.md)。真实预发验收仍 TODO。

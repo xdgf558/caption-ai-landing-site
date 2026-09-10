@@ -28,6 +28,9 @@ jobs:
       - name: Verify music upload validation and quota guards
         run: npm run test:music:uploads
 
+      - name: Verify music admin client contracts
+        run: npm run test:music:admin-ui
+
       - name: Verify isolated music Workers D1 and R2 runtime
         run: npm run test:music:runtime
 
@@ -58,3 +61,6 @@ jobs:
         run: npm run test:browser:payments
         env:
           ALLOW_EMPTY_SERIAL_CONTENT: "1"
+
+      - name: Run music admin browser tests
+        run: npx playwright test --config playwright.music-admin.config.mjs
