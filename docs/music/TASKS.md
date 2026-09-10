@@ -1,6 +1,6 @@
 # Station Cat Music 任务清单
 
-来源：[完整规格 v1.1](DEVELOPMENT_SPEC.md)，尤其第 18–21 节。更新：2026-09-10。
+来源：[完整规格 v1.1](DEVELOPMENT_SPEC.md)，尤其第 18–21 节。更新：2026-09-11。
 
 状态：TODO / IN_PROGRESS / DONE / BLOCKED。只有实际验收完成才标 DONE。PREP、M0、M1-01 至 M1-05 已完成本地实现与测试；M2 已启动，本地基础未上线。原会员 #118/#119 已上线，用户报告人工验收完成。任务拆分不改变完整规格的首发范围。
 
@@ -46,7 +46,7 @@
 
 | 编号 | 状态 | 工作与验收 |
 | --- | --- | --- |
-| M2-01 | IN_PROGRESS | M2-ADMIN 接入管理路由、Access JWT 和同源/custom-header 防护；公共目录、详情、歌词、封面与歌单仍 TODO，四开关未写入部署配置 |
+| M2-01 | DONE（本地） | 管理路由与 Access 保护、公开目录/曲目/歌单、封面/歌词和 capabilities/access 已接 Worker；字段白名单、ETag/自然到期、版本/下架与条件 R2 读取已验收，见 M2_PUBLIC_READ。统计事件属 M4-05；未部署/开闸 |
 | M2-02 | DONE（本地） | 私有流式上传、实际字节/MIME/结构检查、原子配额预留、一次写入和未知结果恢复、不可覆盖/用途隔离已验收；11 项上传与 17 项 runtime 通过。真实预发 TODO；失败/过期资源保留 charge，自动清理/配额回收留 M2-05；见 M2_PRIVATE_UPLOADS |
 | M2-03 | DONE（本地） | 草稿、权利记录、技术审核、成功发布/下架/归档、审计及歌单列表/详情/创建/状态/原子排序已接通；歌单不改变单曲权限，空公开投影隐藏；见 M2_ADMIN_API、M2_PRIVATE_UPLOADS、M2_COLLECTIONS |
 | M2-04 | DONE（本地） | full/preview 的 GET/HEAD/Range/If-Range 共用发布与实时 VIP 守卫；10 项协议测试及 Miniflare 真实 D1/R2 字节回归通过，未授权不读 R2 或泄漏大小/ETag，见 M2_MEDIA_PROTOCOL；未部署/开闸 |

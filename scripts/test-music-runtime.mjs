@@ -59,6 +59,9 @@ async function mediaCall(trackId, variant, { method = 'GET', headers = {}, versi
   return mf.dispatchFetch(`http://music.local.test/fixture-media/api/music/tracks/${trackId}/audio?v=${version}&variant=${variant}`,
     { method, headers });
 }
+async function publicCall(path, { method = 'GET', headers = {} } = {}) {
+  return mf.dispatchFetch(`http://music.local.test/fixture-public/api/music${path}`, { method, headers });
+}
 const adminDraft = () => ({ slug: `admin-fixture-${randomUUID()}`, metadata: { originalLocale: 'en',
   title: { en: 'Local admin fixture' }, summary: { en: '' }, creatorName: 'Fixture', language: 'instrumental',
   instrumental: true, genres: [], moods: [] } });
@@ -165,6 +168,42 @@ test('collection lifecycle and exact order execute through native D1 JSON guards
   assert.equal(result.body.catalogVersion, catalogAfterPublish + 1);
   collection = (await adminCall(`/collections/${collection.id}`)).body;
   assert.deepEqual(collection.tracks.map(track => track.id), [published.command.trackId, draft.body.trackId]);
+});
+
+test('native D1 public catalog, track and collection reads share the filtered projection', async () => {
+  const published = await seed();
+  assert.equal((await call('/publish', published.command)).status, 200);
+  const body = { slug: `public-list-${randomUUID()}`, originalLocale: 'en', title: { en: 'Public runtime list' },
+    description: { en: 'Native public catalog read.' } };
+  const created = await adminCall('/collections', 'POST', body);
+  assert.equal(created.status, 200, JSON.stringify(created.body));
+  let result = await adminCall(`/collections/${created.body.collectionId}/tracks`, 'PUT',
+    { trackIds: [published.command.trackId], reason: 'Public runtime order.' }, { 'If-Match': '"edit-1"' });
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  result = await adminCall(`/collections/${created.body.collectionId}`, 'PATCH', { ...body, status: 'published',
+    reason: 'Publish public runtime list.' }, { 'If-Match': '"edit-2"' });
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+
+  let response = await publicCall('/catalog?locale=en');
+  assert.equal(response.status, 200); assert.equal(response.headers.get('cache-control'), 'public, max-age=0, must-revalidate');
+  const etag = response.headers.get('etag'), catalog = await response.json();
+  assert.ok(catalog.tracks.some(track => track.id === published.command.trackId));
+  const collection = catalog.collections.find(item => item.id === created.body.collectionId);
+  assert.deepEqual(collection.trackIds, [published.command.trackId]);
+  response = await publicCall('/catalog?locale=en', { headers: { 'If-None-Match': etag } });
+  assert.equal(response.status, 304); assert.equal(await response.text(), '');
+
+  response = await publicCall(`/tracks/${published.command.trackId}?locale=en`);
+  assert.equal(response.status, 200); const detail = await response.json();
+  assert.equal(detail.track.id, published.command.trackId); assert.equal(detail.track.effectiveAccess, 'vip');
+  assert.equal(detail.track.story, '');
+  response = await publicCall(`/collections/${body.slug}?locale=en`);
+  assert.equal(response.status, 200); const list = await response.json();
+  assert.deepEqual(list.tracks.map(track => track.id), [published.command.trackId]);
+  response = await publicCall(`/tracks/${published.command.trackId}/access?v=1`);
+  assert.equal(response.status, 401); assert.equal((await response.json()).error.code, 'AUTH_REQUIRED');
+  response = await publicCall('/me/capabilities?locale=en');
+  assert.equal(response.status, 200); assert.equal((await response.json()).canPlayVipFull, false);
 });
 
 test('admin unpublish and archive retain fixture media and sealed history with all flags off', async () => {
@@ -392,6 +431,12 @@ test('real protected upload, review and publish HTTP chain uses actual MP3/cover
     const replayPut = await uploadJson(`/uploads/${asset.uploadId}/body`, 'PUT', Buffer.from('must not replace'), { 'Content-Type': asset.type }, true);
     assert.equal(replayPut.status, 200); assert.equal(replayPut.body.status, 'completed');
   }
+  let publicAsset = await publicCall(`/tracks/${trackId}/cover?v=2`);
+  assert.equal(publicAsset.status, 200); assert.equal(publicAsset.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(Buffer.from(await publicAsset.arrayBuffer()), cover.bytes);
+  publicAsset = await publicCall(`/tracks/${trackId}/lyrics?v=2`);
+  assert.equal(publicAsset.status, 200); assert.equal(publicAsset.headers.get('content-type'), 'text/plain; charset=utf-8');
+  assert.deepEqual(Buffer.from(await publicAsset.arrayBuffer()), lyrics.bytes);
   const mediaOff = (await adminCall('/status')).body;
   assert.equal(mediaOff.flags.public, false); assert.equal(mediaOff.flags.vipDelivery, false); assert.equal(mediaOff.capabilities.media, false);
   const replacement = await adminCall(`/tracks/${trackId}`, 'PATCH', { ...draft, assets, policy,

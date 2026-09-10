@@ -54,6 +54,7 @@ import { applyMembershipRedemption, readMembershipReceipt, validMembershipReques
 import { listMembershipRefundReviews, getMembershipRefundReview, decideMembershipRefundReview } from './membershipRefundReview.js';
 import { handleMusicAdmin, isMusicAdminPath, musicAdminDenied } from './music/adminHttp.js';
 import { handleMusicMedia, isMusicMediaPath } from './music/mediaResponse.js';
+import { handleMusicPublic, isMusicPublicPath } from './music/publicHttp.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -22870,6 +22871,7 @@ export default {
 
     if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
     if (isMusicMediaPath(url.pathname)) return handleMusicMedia(request, env);
+    if (isMusicPublicPath(url.pathname)) return handleMusicPublic(request, env);
 
     if (legacyWorksRedirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
       const redirectUrl = new URL(legacyWorksRedirectPath, url.origin);

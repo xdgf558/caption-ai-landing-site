@@ -1,5 +1,13 @@
 # 测试矩阵
 
+## 最新：M2-01 公开读取
+
+2026-09-11，`main@e2bf795` 基线。`test:music:public` 9/9，Miniflare runtime 20/20，全仓 `npm test` 与 `npm run build` 通过；构建 146 页、111 条 sitemap。详见 [M2_PUBLIC_READ](M2_PUBLIC_READ.md)。
+
+覆盖总闸关闭零 D1/R2 读取、精确路由/方法/参数、四语目录与详情、字段白名单、ETag/304/HEAD、抢先权益自然到期、歌单顺序和 500 条窗口外直达、空/损坏歌单隐藏、封面/歌词版本与条件 R2 GET、下架、存储异常不泄漏，以及 capabilities/access 不读媒体。Miniflare 额外使用真实发布后的本地 D1/R2 字节验证目录、曲目、歌单、封面和歌词。
+
+没有真实云端 D1/R2、预发/生产、浏览器播放器、Safari、正式内容、清理、外部一致限流、部署或开闸验收；未改绑定、配额与功能开关。
+
 ## 最新：M2-03 歌单管理
 
 2026-09-10，main@837f09a 基线。`test:music:collections` 9/9、admin 23/23、foundation 17/17、本地 Miniflare runtime 19/19、全仓 `npm test` 与 `npm run build` 通过；构建 146 页、111 条 sitemap。详见 [M2_COLLECTIONS](M2_COLLECTIONS.md)。

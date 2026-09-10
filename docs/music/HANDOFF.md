@@ -1,5 +1,11 @@
 # 音乐系统交接记录
 
+## 最新：M2-01 公开读取
+
+2026-09-11，基线 `main@e2bf795`，分支 `codex/music-public-catalog`。公开目录、曲目详情、歌单详情、封面/歌词以及 capabilities/access 已接 Worker。公开 JSON 只用字段白名单，共享缓存不含账号资格；VIP 和资格响应保持 `private, no-store`。歌单不改变单曲策略，下架、版本冲突和存储异常在字节读取前关闭。详见 [M2_PUBLIC_READ](M2_PUBLIC_READ.md)。
+
+专项单元回归 9/9，Miniflare 原生 D1/R2 runtime 20/20，全仓 `npm test` 与 `npm run build` 通过，构建 146 页、111 条 sitemap。没有 UI、新迁移、配额、云端操作、正式内容、部署或开闸。M2-05 的回收、外部一致限流和诊断仍未完成；下一个功能阶段才是 M3 播放器。
+
 ## 最新：M2-03 歌单管理
 
 PR #131 已合并为 main@837f09a；用户随后授权在分支 `codex/music-playlist-admin` 闭合 M2-03。新增受保护的歌单列表/详情/创建/保存/排序接口，复用既有 Access、同源、自定义请求头、If-Match、幂等回执、审计和 D1 条件事务。发布、已发布编辑/排序及下架会递增 `catalogVersion`；私有草稿操作不会。歌单关系不改变单曲免费/VIP 策略。

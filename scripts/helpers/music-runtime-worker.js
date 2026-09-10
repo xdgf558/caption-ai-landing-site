@@ -5,6 +5,7 @@ import { executeMusicPublication } from '../../src/music/publication.js';
 import { readMusicMembership } from '../../src/music/membership.js';
 import { handleMusicAdmin, isMusicAdminPath } from '../../src/music/adminHttp.js';
 import { handleMusicMedia } from '../../src/music/mediaResponse.js';
+import { handleMusicPublic } from '../../src/music/publicHttp.js';
 import { seedMusicRuntimeFixture, fixtureEvidenceProof, seedLargeRuntimeAudio } from './music-runtime-fixture.js';
 
 // Only bundled by the local test runner. Never deploy this fixture router or its synthetic approvals.
@@ -14,6 +15,12 @@ export default {
       if (new URL(request.url).pathname.startsWith('/fixture-media/api/music/tracks/')) {
         const url = new URL(request.url); url.pathname = url.pathname.replace('/fixture-media', '');
         return handleMusicMedia(new Request(url, request), {
+          ...env, MUSIC_PUBLIC_ENABLED: 'true', MUSIC_VIP_DELIVERY_ENABLED: 'true'
+        });
+      }
+      if (new URL(request.url).pathname.startsWith('/fixture-public/api/music/')) {
+        const url = new URL(request.url); url.pathname = url.pathname.replace('/fixture-public', '');
+        return handleMusicPublic(new Request(url, request), {
           ...env, MUSIC_PUBLIC_ENABLED: 'true', MUSIC_VIP_DELIVERY_ENABLED: 'true'
         });
       }
