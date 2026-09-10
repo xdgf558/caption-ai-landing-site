@@ -38,7 +38,7 @@
 
 ## 验证与后续
 
-- `npm run test:music:publication`：23 项通过，已加入 npm pretest/CI。真实 SQLite 事务覆盖逐步 SQL 失败和零命中回滚、并发同键/不同曲、丢响应、旧版保留、下架、审批过期、政策时间竞态、无效 slug/试听、500 首竞态等。
+- `npm run test:music:publication`：当前 24 项通过（M1-04 原有 23 项，M1-05 新增真实 MP3 核验阻断/成功联测），已加入 npm pretest/CI。真实 SQLite 事务覆盖逐步 SQL 失败和零命中回滚、并发同键/不同曲、丢响应、旧版保留、下架、审批过期、政策时间竞态、无效 slug/试听、500 首竞态等。
 - `npm test`、`npm run build`：通过；145 页、111 条公开 sitemap。未新增运行时依赖、UI、音乐页面、导航或构建资源。
 - Wrangler 4.130.0 隔离本地 D1：从 0001 增量应用 0002 成功（9 条迁移命令）。另用 Miniflare 本地 D1 验证 first-primary、INTEGER 数值、`changes()` 跨语句语义和前段/后段零行导致全批回滚；这是基础事务合约实测，不是完整服务的生产多实例测试。
 - 未运行真实 R2、真实 MP3、生产 D1/副本、多实例、Safari 或音乐 Playwright。没有 UI 的模型测试不替代后续页面验收。

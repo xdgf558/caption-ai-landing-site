@@ -1,5 +1,7 @@
 # M0 接入决策
 
+2026-09-10 M1-05 补充：#122 已合并，真 MP3 流式解析及本地编码样本/workerd 验证完成，见 [M1_MP3_VALIDATION](M1_MP3_VALIDATION.md)。采用严格支持集和保守编码样本时长，不用 LAME trim 缩短试听限额；不把结构检查当作完整解码、语义同源或 R2 原子性证明。M2 尚未接线，下文较早的未选型表述属历史。
+
 2026-09-10 最新补充：PR #121 已合并。M1-04 条件发布及审核指纹、append-only 回执、零命中回滚 guard 已实现并本地验证，见 [M1_PUBLICATION](M1_PUBLICATION.md)。没有生产路由或真实资源验证器，后续依次 M1-05 与 M2；下方推进段是 M0/M1 初始决策历史，以 CURRENT_PHASE 为准。
 
 日期：2026-09-09。下方保留 M0 接入方案；M1-01/02 数据与纯策略实现见 [M1 基础](M1_FOUNDATION.md)，M1-03 单次主库只读资格及 capabilities/access 合同见 [只读 VIP 适配](M1_VIP_ADAPTER.md)。路由/媒体服务/UI 等仍未接入。完整要求以 [原规格](DEVELOPMENT_SPEC.md) 为准。

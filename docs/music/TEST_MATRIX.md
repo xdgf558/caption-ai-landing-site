@@ -1,6 +1,12 @@
 # 测试矩阵
 
-## 最新：M1-04
+## 最新：M1-05
+
+2026-09-10，main@ac8ac76 基线。`npm run test:music:mp3` 21 项、`npm run test:music:publication` 24 项通过；真实编码 CBR/VBR/MPEG-2/原始流/试听样本与独立 packet 样本数一致，比较去填充 PCM 差异；覆盖 ID3/边界分块/伪造信息头/损坏/预算/中断/源绑定及容差。32 MiB/4 MiB 分块边界测试固定 carry 67,584 字节。新增真实字节核验阻断和成功发布的隔离数据库联测。见 [M1_MP3_VALIDATION](M1_MP3_VALIDATION.md)。
+
+本地 workerd 五份 MP3 与截断失败检查通过；npm test/build 通过，145 页/111 sitemap。合成资源不进 public/Worker，CI 不下载/执行 FFmpeg。无真实 R2/预发 D1/多实例/生产 CPU 配额/Safari/音乐 UI 验收。npm audit 仍有原依赖的 9 项告警，新增两库未列入，详见核验文档。
+
+## 历史：M1-04
 
 2026-09-10，main@233d716 基线。`npm run test:music:publication` 23 项通过，已接 npm pretest/CI；覆盖新旧发布指针、逐步 SQL 失败及零命中整批回滚、同键重放/异键冲突/丢响应、并发多曲目录版本、下架留存、审核指纹与证据变动、资源证明缺失/错误、slug/文本/试听边界、500 首及自然到期竞态。见 [条件发布](M1_PUBLICATION.md)。
 

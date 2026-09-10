@@ -7,10 +7,12 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "pretest": "npm run test:music:foundation && npm run test:music:membership && npm run test:music:publication && node scripts/test-membership-safety.mjs && node scripts/test-membership-refund-review.mjs && node scripts/test-signal-articles.mjs && node scripts/test-cat-life-interactions.mjs && node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs && node scripts/test-cat-life-release-history.mjs && node scripts/test-cat-life-music.mjs && node scripts/test-cat-life-share.mjs && node scripts/test-cat-life-motion.mjs",
+    "pretest": "npm run test:music:foundation && npm run test:music:membership && npm run test:music:publication && npm run test:music:mp3 && node scripts/test-membership-safety.mjs && node scripts/test-membership-refund-review.mjs && node scripts/test-signal-articles.mjs && node scripts/test-cat-life-interactions.mjs && node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs && node scripts/test-cat-life-release-history.mjs && node scripts/test-cat-life-music.mjs && node scripts/test-cat-life-share.mjs && node scripts/test-cat-life-motion.mjs",
     "test:music:foundation": "node --test scripts/test-music-foundation.mjs",
     "test:music:membership": "node --test scripts/test-music-membership.mjs",
     "test:music:publication": "node --test scripts/test-music-publication.mjs",
+    "test:music:mp3": "node --test scripts/test-music-mp3.mjs",
+    "generate:music:mp3-fixtures": "node scripts/generate-music-mp3-fixtures.mjs",
     "build:novel-payment-config": "node scripts/build-novel-payment-config.mjs",
     "generate:brand-assets": "node scripts/generate-brand-assets.mjs && node scripts/capture-social-preview.mjs",
     "upload:protected-serial-content": "node scripts/upload-protected-serial-content.mjs",
@@ -27,10 +29,12 @@
   "dependencies": {
     "@cf-wasm/resvg": "^0.3.4",
     "@lucide/astro": "1.42.0",
+    "@noble/hashes": "2.4.0",
     "astro": "^5.0.0",
     "fast-xml-parser": "5.10.1",
     "js-yaml": "^4.2.0",
     "markdown-it": "15.0.1",
+    "mp3-parser": "0.3.0",
     "qrcode-generator": "^1.4.4",
     "turndown": "7.2.4",
     "turndown-plugin-gfm": "1.0.2"
