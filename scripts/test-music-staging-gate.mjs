@@ -100,3 +100,9 @@ test('staging config exposes only the Access-protected music host and isolated b
     assert.equal(config.vars[key], 'false');
   }
 });
+
+test('staging entrypoint imports the isolated Access actor instead of the production Worker', async () => {
+  const source = await readFile(new URL('../src/music/stagingEntrypoint.js', import.meta.url), 'utf8');
+  assert.match(source, /from '\.\.\/adminAccess\.js'/);
+  assert.doesNotMatch(source, /from '\.\.\/worker\.js'/);
+});

@@ -1,4 +1,4 @@
-import { musicAdminActor } from '../worker.js';
+import { musicAdminActor } from '../adminAccess.js';
 import { handleMusicAdmin, isMusicAdminPath, musicAdminDenied } from './adminHttp.js';
 import {
   isMusicStagingRequest,
