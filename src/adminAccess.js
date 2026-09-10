@@ -11,9 +11,30 @@ const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 export const normalizeAccessTeamDomain = (value) => {
   const trimmed = String(value || '').trim().replace(/\/+$/, '');
   if (!trimmed) return '';
-  if (/^https?:\/\//i.test(trimmed)) return trimmed.toLowerCase();
-  if (trimmed.includes('.')) return `https://${trimmed}`.toLowerCase();
-  return `https://${trimmed}.cloudflareaccess.com`.toLowerCase();
+  if (/^http:\/\//i.test(trimmed)) return '';
+
+  const candidate = /^https:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed.includes('.') ? trimmed : `${trimmed}.cloudflareaccess.com`}`;
+
+  try {
+    const url = new URL(candidate);
+    const hostname = url.hostname.toLowerCase();
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      url.port ||
+      url.pathname !== '/' ||
+      url.search ||
+      url.hash ||
+      hostname === 'cloudflareaccess.com' ||
+      !hostname.endsWith('.cloudflareaccess.com')
+    ) return '';
+    return `https://${hostname}`;
+  } catch {
+    return '';
+  }
 };
 
 export const getAdminAccessConfig = (env) => {
@@ -43,7 +64,12 @@ export const getAccessToken = (request) => {
     .map((cookie) => cookie.trim())
     .find((cookie) => cookie.startsWith('CF_Authorization='));
 
-  return cookieToken ? decodeURIComponent(cookieToken.split('=').slice(1).join('=')) : '';
+  if (!cookieToken) return '';
+  try {
+    return decodeURIComponent(cookieToken.split('=').slice(1).join('='));
+  } catch {
+    return '';
+  }
 };
 
 const decodeBase64Url = (value) => {
@@ -76,6 +102,15 @@ const getAccessJwk = async (teamDomain, kid) => {
   const jwks = await response.json();
   const jwk = jwks.keys?.find((key) => key.kid === kid);
   if (!jwk) throw new Error('Cloudflare Access signing key not found');
+  if (
+    jwk.kty !== 'RSA' ||
+    (jwk.use && jwk.use !== 'sig') ||
+    (jwk.alg && jwk.alg !== 'RS256') ||
+    typeof jwk.n !== 'string' ||
+    !jwk.n ||
+    typeof jwk.e !== 'string' ||
+    !jwk.e
+  ) throw new Error('Cloudflare Access signing key is invalid');
   return jwk;
 };
 

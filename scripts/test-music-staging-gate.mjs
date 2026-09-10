@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { dirname, extname, relative, resolve } from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import {
   isMusicStagingRequest,
   musicStagingHost,
@@ -101,8 +103,37 @@ test('staging config exposes only the Access-protected music host and isolated b
   }
 });
 
-test('staging entrypoint imports the isolated Access actor instead of the production Worker', async () => {
-  const source = await readFile(new URL('../src/music/stagingEntrypoint.js', import.meta.url), 'utf8');
-  assert.match(source, /from '\.\.\/adminAccess\.js'/);
-  assert.doesNotMatch(source, /from '\.\.\/worker\.js'/);
+test('staging module graph stays inside music and the shared Access actor', async () => {
+  const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url));
+  const entry = fileURLToPath(new URL('../src/music/stagingEntrypoint.js', import.meta.url));
+  const pending = [entry];
+  const visited = new Set();
+  const externalImports = new Set();
+
+  while (pending.length) {
+    const file = pending.pop();
+    if (visited.has(file)) continue;
+    visited.add(file);
+
+    const source = await readFile(file, 'utf8');
+    assert.doesNotMatch(source, /\bimport\s*\(/, `dynamic import is not allowed in ${relative(sourceRoot, file)}`);
+    const imports = source.matchAll(/\b(?:import|export)\s+(?:[^'\"]*?\s+from\s+)?['\"]([^'\"]+)['\"]/g);
+
+    for (const [, specifier] of imports) {
+      if (!specifier.startsWith('.')) {
+        externalImports.add(specifier);
+        continue;
+      }
+      const resolved = resolve(dirname(file), extname(specifier) ? specifier : `${specifier}.js`);
+      const repoPath = relative(sourceRoot, resolved).replaceAll('\\', '/');
+      assert.ok(repoPath === 'adminAccess.js' || repoPath.startsWith('music/'), `unexpected staging import: ${repoPath}`);
+      pending.push(resolved);
+    }
+  }
+
+  const paths = [...visited].map((file) => relative(sourceRoot, file).replaceAll('\\', '/')).sort();
+  assert.ok(paths.includes('adminAccess.js'));
+  assert.ok(paths.includes('music/stagingEntrypoint.js'));
+  assert.ok(!paths.includes('worker.js'));
+  assert.deepEqual([...externalImports].sort(), ['@noble/hashes/sha2.js', 'mp3-parser/lib/lib.js']);
 });

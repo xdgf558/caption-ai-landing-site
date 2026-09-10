@@ -3,6 +3,7 @@ import { afterEach, before, test } from 'node:test';
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import worker from '../src/worker.js';
+import { getAccessToken, musicAdminActor, normalizeAccessTeamDomain } from '../src/adminAccess.js';
 import { handleMusicAdmin } from '../src/music/adminHttp.js';
 import { executeMusicPublication } from '../src/music/publication.js';
 import { publicationFingerprint } from '../src/music/publicationValidation.js';
@@ -301,6 +302,44 @@ async function jwt(patch = {}) {
     aud: ['music-test-aud'], email: actor, exp: Math.floor(Date.now() / 1000) + 3600, ...patch });
   return raw + '.' + Buffer.from(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, new TextEncoder().encode(raw))).toString('base64url');
 }
+test('shared Access input parsing rejects insecure domains and malformed cookies', () => {
+  assert.equal(normalizeAccessTeamDomain('fixture'), 'https://fixture.cloudflareaccess.com');
+  assert.equal(normalizeAccessTeamDomain('FIXTURE.CLOUDFLAREACCESS.COM/'), 'https://fixture.cloudflareaccess.com');
+  assert.equal(normalizeAccessTeamDomain('https://fixture.cloudflareaccess.com/'), 'https://fixture.cloudflareaccess.com');
+  for (const domain of [
+    'http://fixture.cloudflareaccess.com',
+    'https://evil.example',
+    'https://fixture.cloudflareaccess.com/path',
+    'https://user@fixture.cloudflareaccess.com',
+    'cloudflareaccess.com'
+  ]) assert.equal(normalizeAccessTeamDomain(domain), '', domain);
+
+  assert.equal(getAccessToken(new Request(origin, { headers: { Cookie: 'CF_Authorization=%broken' } })), '');
+});
+
+test('music actor contract requires a signed JWT and preserves fail-closed status codes', async () => {
+  const expectCode = (promise, code, status) => assert.rejects(promise, (error) => error.code === code && error.status === status);
+  await expectCode(musicAdminActor(req('/status'), {}), 'ADMIN_AUTH_UNAVAILABLE', 503);
+  await expectCode(musicAdminActor(req('/status'), config), 'ADMIN_AUTH_REQUIRED', 401);
+
+  globalThis.fetch = async () => Response.json({ keys: [publicJwk] });
+  assert.equal(await musicAdminActor(req('/status', 'GET', undefined, { 'Cf-Access-Jwt-Assertion': await jwt() }), config), actor);
+  await expectCode(
+    musicAdminActor(req('/status', 'GET', undefined, { 'Cf-Access-Jwt-Assertion': await jwt({ email: 'other@example.test' }) }), config),
+    'ADMIN_FORBIDDEN',
+    403
+  );
+});
+
+test('music actor rejects non-signing or malformed RSA keys before importKey', async () => {
+  const token = await jwt();
+  const request = req('/status', 'GET', undefined, { 'Cf-Access-Jwt-Assertion': token });
+  for (const patch of [{ kty: 'EC' }, { use: 'enc' }, { alg: 'PS256' }, { n: '' }, { e: '' }]) {
+    globalThis.fetch = async () => Response.json({ keys: [{ ...publicJwk, ...patch }] });
+    await assert.rejects(musicAdminActor(request, config), (error) => error.code === 'ADMIN_AUTH_REQUIRED' && error.status === 401);
+  }
+});
+
 test('actual Worker route checks Access signature, audience, issuer, expiry and allowlist before music DB', async () => {
   const f = fixture(); let certs = 0;
   globalThis.fetch = async url => {
@@ -350,7 +389,13 @@ test('actual Worker write attributes audit to the verified JWT, not the forwarde
 test('production imports never include fixture verifier; music bindings, switches, payment and schema config remain untouched', () => {
   const source = readFileSync(new URL('../src/worker.js', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /music-runtime-fixture|music-runtime-worker|fixtureEvidenceProof/);
-  assert.ok(source.indexOf('await enforceAdminAccess(request, env)', source.indexOf('export default')) < source.indexOf('return handleMusicAdmin(request, env, musicAdminActor)'));
+  const musicRoute = 'return handleMusicAdmin(request, env, musicAdminActor)';
+  assert.ok(source.indexOf('await enforceAdminAccess(request, env)', source.indexOf('export default')) < source.indexOf(musicRoute));
+  assert.match(source, /if \(isMusicAdminPath\(url\.pathname\)\) return handleMusicAdmin\(request, env, musicAdminActor\)/);
+  assert.doesNotMatch(source, /handleMusicAdmin\([^\n]*getAdminActorEmail/);
+  const staging = readFileSync(new URL('../src/music/stagingEntrypoint.js', import.meta.url), 'utf8');
+  assert.match(staging, /import \{ musicAdminActor \} from '\.\.\/adminAccess\.js'/);
+  assert.doesNotMatch(staging, /getAdminActorEmail|ADMIN_ACCESS_LOCAL_BYPASS|from '\.\.\/worker\.js'/);
   const configText = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
   assert.doesNotMatch(configText, /MUSIC_DB|MUSIC_BUCKET|MUSIC_PUBLIC_ENABLED|MUSIC_UPLOADS_ENABLED/);
 });
