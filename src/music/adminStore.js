@@ -40,7 +40,7 @@ export async function loadAssets(db, ids) {
 }
 
 // Internal writes only: actor identity and normalized command must come from the guarded HTTP adapter.
-export async function mutate(db, { actorId, route, key, command, clock = Date.now }, build) {
+export async function mutate(db, { actorId, route, key, command, clock = Date.now, conflictCode = 'MUSIC_EDIT_CONFLICT' }, build) {
   text(actorId, 200); mutationKey(key);
   const hash = await publicationHash(command);
   const receipt = async () => {
@@ -86,7 +86,7 @@ export async function mutate(db, { actorId, route, key, command, clock = Date.no
     if (['MUSIC_INVALID_POLICY', 'MUSIC_INVALID_UTC', 'MUSIC_EARLY_ACCESS_NOT_FUTURE', 'MUSIC_POLICY_VERSION_CONFLICT'].includes(error.code)) {
       fail(error.code, error.code.endsWith('CONFLICT') ? 409 : 422);
     }
-    if (/music_publication_guards\.passed|MUSIC_IMMUTABLE_MUTATION|UNIQUE constraint failed/.test(error.message)) fail('MUSIC_EDIT_CONFLICT', 409);
+    if (/music_publication_guards\.passed|MUSIC_IMMUTABLE_MUTATION|UNIQUE constraint failed/.test(error.message)) fail(conflictCode, 409);
     fail('MUSIC_DATABASE_UNAVAILABLE', 503);
   }
 }

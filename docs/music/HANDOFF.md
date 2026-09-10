@@ -1,5 +1,11 @@
 # 音乐系统交接记录
 
+## 最新：M2-03 歌单管理
+
+PR #131 已合并为 main@837f09a；用户随后授权在分支 `codex/music-playlist-admin` 闭合 M2-03。新增受保护的歌单列表/详情/创建/保存/排序接口，复用既有 Access、同源、自定义请求头、If-Match、幂等回执、审计和 D1 条件事务。发布、已发布编辑/排序及下架会递增 `catalogVersion`；私有草稿操作不会。歌单关系不改变单曲免费/VIP 策略。
+
+空歌单不能发布，事务内会重查至少一首曲目仍公开；曲目后续全部下架时，公共投影隐藏整张空歌单。专门回归 9/9，admin 23/23、foundation 17/17、Miniflare runtime 19/19、全仓 `npm test` 与构建通过（146 页、111 条 sitemap），详见 [M2_COLLECTIONS](M2_COLLECTIONS.md)。没有迁移、UI、云端读写、部署或开闸；M2-01 公开歌单读取与 M5-03 可视化排序仍未实现。
+
 ## 最新：M2-04 单曲媒体协议
 
 用户授权从 main@9fc9e95 开始 M2-04，分支 `codex/music-media-protocol`。full/preview 版本化入口已接生产 Worker 路由，但公开开关仍默认关闭且没有新增绑定；关闭时不碰 D1/R2。每次请求读取当前发布修订，VIP full 在 R2 前复用原会员实时资格，preview 只读独立短文件。GET/HEAD、单 Range、If-Range、200/206/416、no-store 和无 304 合同已完成，详见 [M2_MEDIA_PROTOCOL](M2_MEDIA_PROTOCOL.md)。

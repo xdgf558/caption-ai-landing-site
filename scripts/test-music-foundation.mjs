@@ -228,7 +228,7 @@ test('collections filter hidden tracks, preserve order and cannot unlock VIP', a
   const result = await catalog([record(db, vip), record(db, free), record(db, hidden)], { collections: [{ collection, items }] });
   assert.deepEqual(result.body.collections[0].trackIds, [vip.id, free.id]);
   assert.equal(result.body.tracks.find(t => t.id === vip.id).effectiveAccess, 'vip');
-  assert.equal((await catalog([], { collections: [{ collection, items }] })).body.collections[0].trackIds.length, 0);
+  assert.deepEqual((await catalog([], { collections: [{ collection, items }] })).body.collections, []);
 });
 
 test('500-track limit, deterministic order and ETag, duplicate rejection', async () => {

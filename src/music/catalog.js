@@ -149,7 +149,7 @@ export async function buildPublicCatalog({ records, collections = [], catalogVer
   for (const row of collections) {
     try {
       const collection = projectCollection(row, locale, ids);
-      if (collection) publicCollections.push(collection);
+      if (collection?.trackIds.length) publicCollections.push(collection);
     } catch (error) {
       if (!(error instanceof SyntaxError) && !error.code?.startsWith('MUSIC_')) throw error;
     }
