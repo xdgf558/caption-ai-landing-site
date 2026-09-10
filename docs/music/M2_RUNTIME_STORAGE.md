@@ -34,7 +34,7 @@ npm test
 npm run build
 ```
 
-storage 在 npm pretest；runtime 是 CI 独立步骤。runtime 使用 Miniflare 4.20260730.0 / workerd 1.20260730.1，兼容日期 2026-07-30、browser ESM 打包、不启用 nodejs_compat。测试只监听回环地址、使用临时 D1/R2、阻断出站 fetch，不加载 wrangler.toml 或 Cloudflare 凭证，结束 dispose。临时真实编码/大文件夹具不进入 public/dist/git。
+storage 在 npm pretest；runtime 是 CI 独立步骤。runtime 使用 Miniflare 4.20260730.0 / workerd 1.20260730.1，兼容日期 2026-07-30、browser ESM 打包、不启用 nodejs_compat。测试只监听回环地址、使用临时 D1/R2、阻断出站 fetch，不加载 wrangler.toml 或 Cloudflare 凭证，结束 dispose。五份小型合成编码样本复用已提交的 tests/fixtures/music-mp3，不进入 public/dist；大文件仅运行时生成，不进入 git 或部署产物。
 
 本轮以上测试与构建均通过，145 个静态页面、111 条 sitemap；正常 `npm ci` 已验证。未跑 UI Playwright 或真实 Safari，本轮没有界面改动；GitHub CI 状态以 PR 检查为准。
 
