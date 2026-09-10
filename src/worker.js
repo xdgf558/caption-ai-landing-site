@@ -53,6 +53,7 @@ import { safeReturnPath } from './safeReturnPath.js';
 import { applyMembershipRedemption, readMembershipReceipt, validMembershipRequestKey, isReaderMembershipActive } from './readerMembership.js';
 import { listMembershipRefundReviews, getMembershipRefundReview, decideMembershipRefundReview } from './membershipRefundReview.js';
 import { handleMusicAdmin, isMusicAdminPath, musicAdminDenied } from './music/adminHttp.js';
+import { handleMusicMedia, isMusicMediaPath } from './music/mediaResponse.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -22868,6 +22869,7 @@ export default {
     }
 
     if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
+    if (isMusicMediaPath(url.pathname)) return handleMusicMedia(request, env);
 
     if (legacyWorksRedirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
       const redirectUrl = new URL(legacyWorksRedirectPath, url.origin);

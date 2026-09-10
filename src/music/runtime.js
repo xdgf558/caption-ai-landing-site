@@ -2,15 +2,19 @@ import { publicationError } from './publicationValidation.js';
 
 const enabled = value => value === true || value === 'true';
 
+export function musicRuntimeFlags(env = {}) {
+  return Object.freeze({
+    public: enabled(env.MUSIC_PUBLIC_ENABLED), uploads: enabled(env.MUSIC_UPLOADS_ENABLED),
+    vipDelivery: enabled(env.MUSIC_VIP_DELIVERY_ENABLED), analytics: enabled(env.MUSIC_ANALYTICS_ENABLED)
+  });
+}
+
 // Internal binding checks, not authorization or proof that an R2 bucket is private.
 export function musicRuntime(env = {}) {
   const db = env?.MUSIC_DB, bucket = env?.MUSIC_BUCKET;
   if (!db || db === env?.WAITLIST_DB || typeof db.withSession !== 'function' ||
     !bucket || typeof bucket.get !== 'function') throw publicationError('MUSIC_NOT_CONFIGURED', 503);
-  return { db, bucket, flags: Object.freeze({
-    public: enabled(env.MUSIC_PUBLIC_ENABLED), uploads: enabled(env.MUSIC_UPLOADS_ENABLED),
-    vipDelivery: enabled(env.MUSIC_VIP_DELIVERY_ENABLED), analytics: enabled(env.MUSIC_ANALYTICS_ENABLED)
-  }) };
+  return { db, bucket, flags: musicRuntimeFlags(env) };
 }
 
 // Read-only readiness probe. Never creates tables, applies migrations or touches WAITLIST_DB.

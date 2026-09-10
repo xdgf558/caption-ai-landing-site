@@ -1,5 +1,13 @@
 # 测试矩阵
 
+## 最新：M2-04 音频媒体协议
+
+2026-09-10，main@9fc9e95 基线。`test:music:media` 10/10、会员 21/21、存储 12/12、本地 Miniflare runtime 18/18、全仓 `npm test` 与 `npm run build` 通过；构建 146 页、111 条 sitemap。详见 [M2_MEDIA_PROTOCOL](M2_MEDIA_PROTOCOL.md)。
+
+覆盖总闸关闭零读取、发布版本/下架状态、独立试听、免费 full、匿名/普通/过期/受限/故障/VIP full、200/206/416、逐字节/开放/后缀/裁剪范围、无效及多范围、HEAD、If-Range 强 ETag/日期、无媒体 304、R2 缺失/变更/MIME/大小/范围异常和无媒体元数据泄漏。真实本地 R2 验证 preview/full 分段字节及 HEAD；响应直接流式返回 R2 body。
+
+没有真实云端 D1/R2、预发/生产、浏览器播放器、Safari、正式音频、公开目录、歌单、清理或限流验收；未改开关与绑定。M2-03 歌单仍为 IN_PROGRESS，不影响本轮单曲媒体合同，但公开上线前仍需闭合相应产品范围。
+
 ## 最新：M2 私有上传与审核发布
 
 2026-09-10，main@1ca7e02 基线。上传 11 项、runtime 17 项、npm test/build 通过，145 页/111 sitemap，详见 [M2_PRIVATE_UPLOADS](M2_PRIVATE_UPLOADS.md)。新增隔离真实字节上传到权利/技术审核/发布、会话四并发、无长度头 32 MiB 上传、实际字节超限/截断、技术事务零行回滚、新版失败保留旧版、附件 GET/HEAD；uploads/runtime 均在 CI 中。没有云端/真实授权/完整解码/实际试听/UI/真机验收，不是 M2 整体验收。

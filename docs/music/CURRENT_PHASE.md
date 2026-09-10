@@ -2,6 +2,8 @@
 
 更新：2026-09-10。
 
+当前：用户授权开始 M2-04，基线 main@9fc9e95，分支 `codex/music-media-protocol`。版本化 full/preview 的 GET/HEAD、单 Range、If-Range、实时 VIP 守卫及私有 R2 流式响应已本地完成；媒体 10/10、会员 21/21、存储 12/12、Miniflare runtime 18/18、全仓 npm test/build 通过，见 [M2-04 音频媒体协议](M2_MEDIA_PROTOCOL.md)。M2-03 歌单仍为 IN_PROGRESS，但不参与单曲媒体授权链；未改部署配置、绑定或开关，未部署或开闸。下方内容为此前阶段历史。
+
 当前：PR #127 已合并 main@726a586。用户批准独立预发存储，已建 MUSIC_DB 和私有 R2，0001–0003 已应用且配额为 0，见 [STAGING_STORAGE](STAGING_STORAGE.md)。没有部署、正配额、上传正式音频或开闸；下一步是另行批准隔离预发应用配置/鉴权。下方 PR #127 待复审等内容为此前历史。
 
 最新授权：PR #126 已合并为 main@c3cba1c，用户批准简洁音乐后台基础 UI。PR #127，分支 codex/music-admin-workspace，见 [基础工作区](M5_ADMIN_WORKSPACE.md)。初审浏览器 1/6 失败已复现修复，含构建的 CLI 浏览器连续三轮 18/18 通过，完整发布/下架/归档已执行；client 6/6、admin 20/20 通过。待远端 CI 与复审。M5-01/02 部分完成，歌单/统计/四角色公开预览未实现；没有部署或开闸。以下私有上传段为历史。
@@ -14,10 +16,10 @@
 
 - 当前：PREP、M0-01 至 M0-05、M1-01 至 M1-05 已完成本地实现和测试；M1 本地基础完成，不代表生产系统完成。
 - M0 DONE 仅表示核对完成；原会员修复状态以下表及 PR #118 为准，不表示音乐具备上线资格。
-- M2：IN_PROGRESS，运行环境、管理控制接口、私有上传和审核发布完成本地验收；M3–M6：TODO。HTTP 发布已接真实字节验证器，不再固定 503；公开媒体、歌单、清理/外部限流与真实预发仍 TODO。
+- M2：IN_PROGRESS，运行环境、管理控制接口、私有上传、审核发布和 M2-04 单曲媒体协议完成本地验收；M3–M6：TODO。歌单、公开目录/封面/歌词、清理/外部限流与真实预发仍 TODO。
 - 历史 M0 规划分支：codex/music-planning；创建基线：main@3b8bbc8c324e65e721d9b1b989d6d87b988f447d。
 - 原会员独立修复分支：codex/fix-membership-redemption-safety；基线：main@19a4436。
-- 当前开发分支：codex/music-private-uploads。下一步：审查本轮；之后可按用户授权推进简洁后台基础工作区（M5-01/02，必须 Product Design），未实现的歌单/统计不能伪装可用。公开媒体守卫 M2-04、M2-05 清理/配额回收仍是上线前置；不自动创建资源或开放音乐。
+- 当前开发分支：codex/music-media-protocol。下一步：审查 M2-04；M2-03 歌单与 M2-05 清理/配额回收仍须独立闭合，不自动创建资源、部署或开放音乐。
 
 ## 待核对和上线门槛
 
