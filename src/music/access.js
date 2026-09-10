@@ -33,30 +33,41 @@ export async function musicCapabilities(request, env, {
 export async function musicAccess(request, env, {
   record, revisionNo, variant, vipDeliveryEnabled = false, clock = Date.now, timeoutMs = 1500
 } = {}) {
-  if (!validMethod(request)) return response(request, 405, errorBody('METHOD_NOT_ALLOWED'));
-  if (!['full', 'preview'].includes(variant)) return response(request, 400, errorBody('INVALID_VARIANT'));
-  if (!positiveInteger(revisionNo)) return response(request, 400, errorBody('INVALID_INPUT'));
+  const result = await resolveMusicAccess(request, env, {
+    record, revisionNo, variant, vipDeliveryEnabled, clock, timeoutMs
+  });
+  return response(request, result.status, result.body);
+}
+
+// Shared by the lightweight access endpoint and media delivery. It never reads media storage.
+export async function resolveMusicAccess(request, env, {
+  record, revisionNo, variant, vipDeliveryEnabled = false, clock = Date.now, timeoutMs = 1500
+} = {}) {
+  const result = (status, body) => ({ status, body });
+  if (!validMethod(request)) return result(405, errorBody('METHOD_NOT_ALLOWED'));
+  if (!['full', 'preview'].includes(variant)) return result(400, errorBody('INVALID_VARIANT'));
+  if (!positiveInteger(revisionNo)) return result(400, errorBody('INVALID_INPUT'));
   let now;
   try { now = clock(); isoTime(now); }
-  catch { return response(request, 503, errorBody('MEMBERSHIP_UNAVAILABLE')); }
+  catch { return result(503, errorBody('MEMBERSHIP_UNAVAILABLE')); }
   if (['unpublished', 'archived'].includes(record?.track?.lifecycle)) {
-    return response(request, 410, errorBody('TRACK_UNAVAILABLE'));
+    return result(410, errorBody('TRACK_UNAVAILABLE'));
   }
   const track = projectPublicTrack(record, { locale: 'zh-Hant', now });
-  if (!track) return response(request, 404, errorBody('NOT_FOUND'));
-  if (track.audioVersion !== revisionNo) return response(request, 409, errorBody('VERSION_CONFLICT'));
+  if (!track) return result(404, errorBody('NOT_FOUND'));
+  if (track.audioVersion !== revisionNo) return result(409, errorBody('VERSION_CONFLICT'));
   const access = { effectiveAccess: track.effectiveAccess,
     canPlayFull: track.effectiveAccess === 'free', canPreview: track.previewAvailable, reason: null };
-  const denied = (status, code) => response(request, status, { ...access, reason: code, ...errorBody(code) });
+  const denied = (status, code) => result(status, { ...access, reason: code, ...errorBody(code) });
   if (variant === 'preview') {
-    return access.canPreview ? response(request, 200, access) : denied(404, 'PREVIEW_UNAVAILABLE');
+    return access.canPreview ? result(200, access) : denied(404, 'PREVIEW_UNAVAILABLE');
   }
-  if (access.canPlayFull) return response(request, 200, access);
+  if (access.canPlayFull) return result(200, access);
   if (vipDeliveryEnabled !== true) return denied(503, 'VIP_DELIVERY_DISABLED');
   const membership = await readMusicMembership(request, env, { clock, timeoutMs });
   if (membership.code) return denied(membership.status, membership.code);
   if (!membership.authenticated) return denied(401, 'AUTH_REQUIRED');
   if (membership.membershipStatus === 'expired') return denied(403, 'MEMBERSHIP_EXPIRED');
   if (membership.membershipStatus !== 'active') return denied(403, 'VIP_REQUIRED');
-  return response(request, 200, { ...access, canPlayFull: true });
+  return result(200, { ...access, canPlayFull: true });
 }

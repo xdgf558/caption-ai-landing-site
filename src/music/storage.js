@@ -17,6 +17,14 @@ function audioIdentity(asset) {
   }
 }
 
+export function validateMusicMediaAsset(asset, kind, trackId) {
+  audioIdentity(asset);
+  if (asset.state !== 'validated' || asset.kind !== kind || asset.owner_track_id !== trackId) {
+    throw mp3Error('MUSIC_STORAGE_ASSET_INVALID');
+  }
+  return asset;
+}
+
 export function cancelBody(object) {
   try { Promise.resolve(object?.body?.cancel()).catch(() => {}); } catch { /* May already be locked or closed. */ }
 }

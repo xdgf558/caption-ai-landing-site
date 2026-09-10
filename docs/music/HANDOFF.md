@@ -1,5 +1,11 @@
 # 音乐系统交接记录
 
+## 最新：M2-04 单曲媒体协议
+
+用户授权从 main@9fc9e95 开始 M2-04，分支 `codex/music-media-protocol`。full/preview 版本化入口已接生产 Worker 路由，但公开开关仍默认关闭且没有新增绑定；关闭时不碰 D1/R2。每次请求读取当前发布修订，VIP full 在 R2 前复用原会员实时资格，preview 只读独立短文件。GET/HEAD、单 Range、If-Range、200/206/416、no-store 和无 304 合同已完成，详见 [M2_MEDIA_PROTOCOL](M2_MEDIA_PROTOCOL.md)。
+
+本地媒体 10/10、会员 21/21、存储 12/12、Miniflare runtime 18/18、全仓 npm test/build 通过。没有部署、开闸、迁移、云端读写、正式音频、播放器或 UI。M2-03 歌单继续保持 IN_PROGRESS；它不阻断单曲媒体协议开发，但公开上线前应按最终曲库产品范围闭合。下一步先审查本轮，再由用户决定补歌单、M2-05 或继续播放器基础。
+
 ## 最新：独立预发存储
 
 PR #127 已合并 main@726a586。用户批准建独立存储，已创建 station-cat-music-staging（8fe1a3e1-7325-4d87-a7e6-2c51338b9158）与 station-cat-music-staging-private，迁移 0001–0003 完成，配额 0，桶公开入口均关闭。资源/核验/备份详见 [STAGING_STORAGE](STAGING_STORAGE.md)。ops/music-staging-storage.jsonc 只用于存储运维，不是部署配置。生产库/桶未改，未部署、上传或开闸；测试 Worker 禁止接入这些云资源。以下“最新”为历史阶段。

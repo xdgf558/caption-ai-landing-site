@@ -55,6 +55,10 @@ async function adminCall(path, method = 'GET', body, headers = {}) {
   assert.equal(response.headers.get('cache-control'), 'private, no-store');
   return { status: response.status, body: await response.json() };
 }
+async function mediaCall(trackId, variant, { method = 'GET', headers = {}, version = 1 } = {}) {
+  return mf.dispatchFetch(`http://music.local.test/fixture-media/api/music/tracks/${trackId}/audio?v=${version}&variant=${variant}`,
+    { method, headers });
+}
 const adminDraft = () => ({ slug: `admin-fixture-${randomUUID()}`, metadata: { originalLocale: 'en',
   title: { en: 'Local admin fixture' }, summary: { en: '' }, creatorName: 'Fixture', language: 'instrumental',
   instrumental: true, genres: [], moods: [] } });
@@ -232,6 +236,37 @@ test('separate local reader D1 returns INTEGER identity and stays read-only duri
   assert.equal(result.body.validUntil, new Date(now + 60000).toISOString());
   assert.deepEqual((await reader.prepare('SELECT * FROM reader_memberships').all()).results, before.results);
   assert.equal((await reader.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE name LIKE 'music_%'").first()).n, 0);
+});
+
+test('native D1 publication and R2 object serve exact preview/full Range bytes behind the shared guard', async () => {
+  const { command, audio, preview } = await seed();
+  assert.equal((await call('/publish', command)).status, 200);
+  const previewFile = file('tests/fixtures/music-mp3/preview.mp3');
+  let response = await mediaCall(command.trackId, 'preview', { headers: { Range: 'bytes=0-1' } });
+  assert.equal(response.status, 206); assert.deepEqual(Buffer.from(await response.arrayBuffer()), previewFile.subarray(0, 2));
+  assert.equal(response.headers.get('content-range'), `bytes 0-1/${preview.byte_size}`);
+  assert.equal(response.headers.get('cache-control'), 'private, no-store');
+  response = await mediaCall(command.trackId, 'full');
+  assert.equal(response.status, 401); assert.equal(response.headers.get('etag'), null);
+
+  const reader = await mf.getD1Database('WAITLIST_DB'), token = `media-${randomUUID()}`, time = Date.now();
+  await reader.batch([
+    reader.prepare('INSERT OR REPLACE INTO reader_accounts(id,status) VALUES(77,\'active\')'),
+    reader.prepare(`INSERT INTO reader_sessions(account_id,session_hash,created_at,expires_at,revoked_at)
+      VALUES(77,?,?,?,NULL)`).bind(createHash('sha256').update(token).digest('hex'),
+      new Date(time - 10000).toISOString(), new Date(time + 60000).toISOString()),
+    reader.prepare(`INSERT OR REPLACE INTO reader_memberships(account_id,membership_level,started_at,expires_at)
+      VALUES(77,'member',?,?)`).bind(new Date(time - 10000).toISOString(), new Date(time + 120000).toISOString())
+  ]);
+  const audioFile = file('tests/fixtures/music-mp3/cbr-stereo.mp3'), auth = { Cookie: `station_cat_reader_session=${token}` };
+  response = await mediaCall(command.trackId, 'full', { headers: { ...auth, Range: 'bytes=-3' } });
+  assert.equal(response.status, 206); assert.deepEqual(Buffer.from(await response.arrayBuffer()), audioFile.subarray(-3));
+  assert.equal(response.headers.get('content-range'), `bytes ${audio.byte_size - 3}-${audio.byte_size - 1}/${audio.byte_size}`);
+  response = await mediaCall(command.trackId, 'preview', { method: 'HEAD', headers: { Range: 'bytes=0-1' } });
+  assert.equal(response.status, 200); assert.equal(response.headers.get('content-length'), String(preview.byte_size));
+  assert.equal(response.headers.get('content-range'), null); assert.equal(await response.text(), '');
+  response = await mediaCall(command.trackId, 'preview', { headers: { Range: `bytes=${preview.byte_size}-` } });
+  assert.equal(response.status, 416); assert.equal(response.headers.get('content-range'), `bytes */${preview.byte_size}`);
 });
 
 test('fixture worker is not wired into site or deployment', () => {

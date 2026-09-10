@@ -7,12 +7,13 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "pretest": "npm run test:music:foundation && npm run test:music:membership && npm run test:music:publication && npm run test:music:mp3 && npm run test:music:storage && npm run test:music:admin && npm run test:music:staging && node scripts/test-membership-safety.mjs && node scripts/test-membership-refund-review.mjs && node scripts/test-signal-articles.mjs && node scripts/test-cat-life-interactions.mjs && node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs && node scripts/test-cat-life-release-history.mjs && node scripts/test-cat-life-music.mjs && node scripts/test-cat-life-share.mjs && node scripts/test-cat-life-motion.mjs",
+    "pretest": "npm run test:music:foundation && npm run test:music:membership && npm run test:music:publication && npm run test:music:mp3 && npm run test:music:storage && npm run test:music:media && npm run test:music:admin && npm run test:music:staging && node scripts/test-membership-safety.mjs && node scripts/test-membership-refund-review.mjs && node scripts/test-signal-articles.mjs && node scripts/test-cat-life-interactions.mjs && node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs && node scripts/test-cat-life-release-history.mjs && node scripts/test-cat-life-music.mjs && node scripts/test-cat-life-share.mjs && node scripts/test-cat-life-motion.mjs",
     "test:music:foundation": "node --test scripts/test-music-foundation.mjs",
     "test:music:membership": "node --test scripts/test-music-membership.mjs",
     "test:music:publication": "node --test scripts/test-music-publication.mjs",
     "test:music:mp3": "node --test scripts/test-music-mp3.mjs",
     "test:music:storage": "node --test scripts/test-music-storage.mjs",
+    "test:music:media": "node --test scripts/test-music-media.mjs",
     "test:music:runtime": "node --test scripts/test-music-runtime.mjs",
     "test:music:staging": "node --test scripts/test-music-staging-gate.mjs",
     "test:music:admin": "node --test scripts/test-music-admin.mjs",
