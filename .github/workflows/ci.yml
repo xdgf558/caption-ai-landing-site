@@ -63,4 +63,4 @@ jobs:
           ALLOW_EMPTY_SERIAL_CONTENT: "1"
 
       - name: Run music admin browser tests
-        run: npm run test:browser:music-admin
+        run: npx playwright test --config playwright.music-admin.config.mjs

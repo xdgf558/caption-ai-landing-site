@@ -17,7 +17,7 @@
     "test:music:admin": "node --test scripts/test-music-admin.mjs",
     "test:music:uploads": "node --test scripts/test-music-uploads.mjs",
     "test:music:admin-ui": "node --test scripts/test-music-admin-client.mjs",
-    "test:browser:music-admin": "playwright test --config playwright.music-admin.config.mjs",
+    "test:browser:music-admin": "npm run build && playwright test --config playwright.music-admin.config.mjs",
     "generate:music:mp3-fixtures": "node scripts/generate-music-mp3-fixtures.mjs",
     "build:novel-payment-config": "node scripts/build-novel-payment-config.mjs",
     "generate:brand-assets": "node scripts/generate-brand-assets.mjs && node scripts/capture-social-preview.mjs",

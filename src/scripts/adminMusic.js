@@ -11,7 +11,7 @@ const el = (tag, text, className) => { const e = document.createElement(tag); if
 const localTime = iso => { if (!iso) return ''; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,19); };
 const errorMessages = {
   ADMIN_AUTH_REQUIRED:'后台登录已过期，请重新登录后回到此页核对。', ADMIN_FORBIDDEN:'此账号没有音乐管理权限。',
-  MUSIC_BINDINGS_UNAVAILABLE:'音乐环境尚未配置。', MUSIC_DATABASE_UNAVAILABLE:'音乐数据库尚不可用。',
+  MUSIC_BINDINGS_UNAVAILABLE:'音乐环境尚未配置。', MUSIC_NOT_CONFIGURED:'音乐环境尚未配置。', MUSIC_DATABASE_UNAVAILABLE:'音乐数据库尚不可用。',
   MUSIC_EDIT_CONFLICT:'曲目已被其他操作更新。请重新载入后核对，当前内容已保留。',
   MUSIC_PUBLICATION_CONFLICT:'发布版本已变化，请重新载入核对。', MUSIC_REVIEW_STALE:'草稿已变化，请重新进行权利和技术核对。',
   RIGHTS_REVIEW_REQUIRED:'权利资料不完整，请核对来源、日期、授权说明和凭证。',
@@ -83,6 +83,7 @@ function ask(title, description, reason = false) {
     dialog.showModal();
   });
 }
+$('confirm-reason').onkeydown = e => { if (e.key === 'Enter') e.preventDefault(); };
 async function canLeave() { return !(dirty || assetsDirty || reviewDirty) || !!await ask('放弃未保存的修改？', '已上传的文件仍保留在上传会话中，不会被删除。'); }
 function tab(index, focus = false) {
   activeStep = index;

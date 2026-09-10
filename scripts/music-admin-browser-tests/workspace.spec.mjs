@@ -18,6 +18,15 @@ async function upload(page,kind,file) {
   await page.locator('#file-' + kind).setInputFiles(file);
   await page.locator('[data-upload-kind="' + kind + '"]').click();
   await expect(page.locator('#music-status')).toContainText('文件已验证');
+  await expect(page.locator('#file-' + kind)).toHaveValue('');
+  await expect(page.locator('[data-upload-kind="' + kind + '"]')).toBeEnabled();
+}
+async function playMuted(audio) {
+  await audio.evaluate(async a => {
+    a.muted = true;
+    try { await a.play(); } catch (error) { if (error.name !== 'AbortError') throw error; }
+  });
+  await expect.poll(() => audio.evaluate(a => !a.paused && a.currentTime > 0)).toBe(true);
 }
 async function rights(page) {
   await page.getByRole('tab',{name:'审核发布',exact:true}).click();
@@ -46,8 +55,8 @@ test('Enter saves a draft; full upload, review, publish, revision, unpublish and
   await upload(page,'lyrics',{name:'lyrics.txt',mimeType:'text/plain',buffer:Buffer.from('本地歌词夹具')});
   await upload(page,'evidence',{name:'evidence.png',mimeType:'image/png',buffer:png});
   await expect(page.locator('audio')).toHaveCount(2);
-  await page.locator('audio').first().evaluate(a => a.play());
-  await page.locator('audio').last().evaluate(a => a.play());
+  await playMuted(page.locator('audio').first());
+  await playMuted(page.locator('audio').last());
   await expect.poll(() => page.locator('audio').first().evaluate(a => a.paused)).toBe(true);
   await page.getByRole('button',{name:'保存素材到草稿',exact:true}).click();
   await expect(page.locator('#track-version')).toHaveText('编辑版本 3');
@@ -61,7 +70,11 @@ test('Enter saves a draft; full upload, review, publish, revision, unpublish and
   await expect(page.locator('#technical-state')).toHaveText('已核对');
   await page.locator('#track-publish').click();
   await expect(page.locator('#confirm-description')).toContainText('VIP 专享');
-  await page.locator('#confirm-reason').fill('合成夹具发布测试'); await page.locator('#confirm-accept').click();
+  await page.locator('#confirm-reason').fill('合成夹具发布测试');
+  await page.locator('#confirm-reason').press('Enter');
+  await expect(page.locator('#confirm-dialog')).toBeVisible();
+  await expect(page.locator('#track-state')).toHaveText('草稿');
+  await page.locator('#confirm-accept').click();
   await expect(page.locator('#track-state')).toHaveText('已发布');
   await page.reload(); await expect(page.locator('#track-state')).toHaveText('已发布');
   await page.getByRole('tab',{name:'基本资料',exact:true}).click();
@@ -135,7 +148,10 @@ test('keyboard tabs and desktop/mobile have no horizontal overflow; music servic
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
   }
-  await page.route('**/admin/api/music/status',route => route.fulfill({status:503,json:{ok:false,code:'MUSIC_BINDINGS_UNAVAILABLE'}}));
-  await page.reload(); await expect(page.locator('#track-new')).toBeDisabled();
-  await expect(page.locator('#music-status')).toContainText('尚未配置');
+  for (const code of ['MUSIC_BINDINGS_UNAVAILABLE','MUSIC_NOT_CONFIGURED']) {
+    await page.route('**/admin/api/music/status',route => route.fulfill({status:503,json:{ok:false,code}}));
+    await page.reload(); await expect(page.locator('#track-new')).toBeDisabled();
+    await expect(page.locator('#music-status')).toContainText('尚未配置');
+    await page.unroute('**/admin/api/music/status');
+  }
 });
