@@ -3244,7 +3244,7 @@ const enforceAdminAccess = async (request, env) => {
   return null;
 };
 
-const musicAdminActor = async (request, env) => {
+export const musicAdminActor = async (request, env) => {
   const denied = (code, status) => Object.assign(new Error(code), { code, status });
   const config = getAdminAccessConfig(env);
   if (!config.isConfigured) throw denied('ADMIN_AUTH_UNAVAILABLE', 503);

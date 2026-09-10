@@ -1,0 +1,51 @@
+{
+  // Isolated staging application protected by its own Cloudflare Access app.
+  "name": "station-cat-music-staging",
+  "account_id": "3f5394e0ef5a531c63c0ceaa74262e0d",
+  "main": "../src/music/stagingEntrypoint.js",
+  "compatibility_date": "2026-09-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "music-staging.wwwstationcat.org",
+      "custom_domain": true
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "redact_query_string": true
+  },
+  "vars": {
+    "ADMIN_ALLOWED_EMAILS": "brodstem@protonmail.com",
+    "CF_ACCESS_TEAM_DOMAIN": "misty-limit-82d5.cloudflareaccess.com",
+    "CF_ACCESS_AUD": "5ceda63da88e8ffb34a88338231028e473379ae51755ae3f6d69be218bb63e4a",
+    "MUSIC_STAGING_EXPECTED_HOST": "music-staging.wwwstationcat.org",
+    "MUSIC_PUBLIC_ENABLED": "false",
+    "MUSIC_UPLOADS_ENABLED": "false",
+    "MUSIC_VIP_DELIVERY_ENABLED": "false",
+    "MUSIC_ANALYTICS_ENABLED": "false"
+  },
+  "assets": {
+    "directory": "../.generated/music-staging-assets",
+    "binding": "ASSETS",
+    "not_found_handling": "none",
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "MUSIC_DB",
+      "database_name": "station-cat-music-staging",
+      "database_id": "8fe1a3e1-7325-4d87-a7e6-2c51338b9158",
+      "migrations_dir": "../migrations-music"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MUSIC_BUCKET",
+      "bucket_name": "station-cat-music-staging-private"
+    }
+  ]
+}
