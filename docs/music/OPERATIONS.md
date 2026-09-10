@@ -1,6 +1,6 @@
 # 音乐运维准备
 
-2026-09-10 补充：本地 M2-RUNTIME 适配和可复现测试见 [运行环境与存储](M2_RUNTIME_STORAGE.md)。没有创建云端资源；该文档的真实预发清单仍全部待验收，scripts/helpers 中的无鉴权测试 Worker 禁止部署。
+2026-09-10 补充：本地上传/审核发布已完成，见 [M2_PRIVATE_UPLOADS](M2_PRIVATE_UPLOADS.md)。0003 仅 MUSIC_DB；quota 默认 0，失败/过期预留保留 charge，自动回收/对账留 M2-05，禁止通过手删会话恢复额度。没有创建云端资源；真实预发清单仍全部待验收，scripts/helpers 中含假身份和上传测试前缀的 Worker 禁止部署。M2-RUNTIME 历史适配见 [运行环境与存储](M2_RUNTIME_STORAGE.md)。
 
 日期：2026-09-09。状态：方案，未创建资源、改配置、执行迁移、上传或部署。
 

@@ -201,13 +201,13 @@ test('rights review uses verified actor and server fingerprint, clears technical
     evidence: f.sql.prepare('SELECT * FROM music_rights_evidence WHERE review_id=?').all(r.id) }));
 });
 
-test('publishing cannot use client proof or synthetic data; even all flags on do not enable incomplete routes', async () => {
+test('publishing requires real private objects; flags or client proof cannot bless synthetic assets', async () => {
   const f = fixture(), cmd = await seeded(f), before = f.dump();
   Object.assign(f.env, { MUSIC_PUBLIC_ENABLED: 'true', MUSIC_UPLOADS_ENABLED: 'true', MUSIC_VIP_DELIVERY_ENABLED: 'true' });
   const status = (await call(f, '/status')).body;
-  assert.equal(status.flags.public, true); assert.equal(status.capabilities.publish, false); assert.equal(status.capabilities.uploads, false);
+  assert.equal(status.flags.public, true); assert.equal(status.capabilities.publish, true); assert.equal(status.capabilities.uploads, false);
   const body = { revisionId: cmd.revisionId, reason: cmd.reason, confirmedPolicyVersion: 1 };
-  assert.equal((await call(f, `/tracks/${cmd.trackId}/publish`, 'POST', body, ifMatch(1))).body.code, 'MUSIC_TECHNICAL_VERIFIER_UNAVAILABLE');
+  assert.equal((await call(f, `/tracks/${cmd.trackId}/publish`, 'POST', body, ifMatch(1))).status, 503);
   assert.equal((await call(f, `/tracks/${cmd.trackId}/publish`, 'POST', { ...body, verifyResources: true }, ifMatch(1))).status, 400);
   for (const path of ['/uploads', '/assets/' + randomUUID(), '/collections', '/analytics', '/tracks/x/technical-review']) {
     assert.equal((await call(f, path, 'GET')).status, 404);
@@ -306,7 +306,7 @@ test('actual Worker route checks Access signature, audience, issuer, expiry and 
   };
   const env = { ...f.env, ...config }, token = await jwt(), before = f.dump();
   const good = await worker.fetch(req('/status', 'GET', undefined, { 'Cf-Access-Jwt-Assertion': token }), env, {});
-  assert.equal(good.status, 200); assert.equal((await good.json()).capabilities.publish, false); assert.ok(certs);
+  assert.equal(good.status, 200); assert.equal((await good.json()).capabilities.publish, true); assert.ok(certs);
   for (const patch of [{ aud: 'other' }, { iss: 'https://wrong.cloudflareaccess.com' }, { exp: 0 }, { email: 'other@example.test' }]) {
     assert.ok([401, 403].includes((await worker.fetch(req('/status', 'GET', undefined, { 'Cf-Access-Jwt-Assertion': await jwt(patch) }), env, {})).status));
   }

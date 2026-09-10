@@ -1,6 +1,10 @@
 # 测试矩阵
 
-## 最新：M2-ADMIN
+## 最新：M2 私有上传与审核发布
+
+2026-09-10，main@1ca7e02 基线。上传 11 项、runtime 17 项、npm test/build 通过，145 页/111 sitemap，详见 [M2_PRIVATE_UPLOADS](M2_PRIVATE_UPLOADS.md)。新增隔离真实字节上传到权利/技术审核/发布、会话四并发、无长度头 32 MiB 上传、实际字节超限/截断、技术事务零行回滚、新版失败保留旧版、附件 GET/HEAD；uploads/runtime 均在 CI 中。没有云端/真实授权/完整解码/实际试听/UI/真机验收，不是 M2 整体验收。
+
+## 历史：M2-ADMIN
 
 2026-09-10，main@9dc86e3 基线。管理接口 20 项、只读会员 21 项、发布 25 项、本地 runtime 14 项及全仓 npm test/build 通过，145 页/111 sitemap。详见 [管理接口](M2_ADMIN_API.md)。管理套件加入 npm pretest，runtime 沿用独立 CI 步骤。
 

@@ -10,6 +10,10 @@ import { seedMusicRuntimeFixture, fixtureEvidenceProof, seedLargeRuntimeAudio } 
 export default {
   async fetch(request, env) {
     try {
+      if (new URL(request.url).pathname.startsWith('/fixture-uploads/admin/api/music/')) {
+        const url = new URL(request.url); url.pathname = url.pathname.replace('/fixture-uploads', '');
+        return handleMusicAdmin(new Request(url, request), { ...env, MUSIC_UPLOADS_ENABLED: 'true' }, async () => 'fixture@example.test');
+      }
       if (isMusicAdminPath(new URL(request.url).pathname)) {
         // Local fixture identity only; the real Worker verifies Access JWT and its email allowlist.
         return handleMusicAdmin(request, env, async () => 'fixture@example.test');
