@@ -1,6 +1,12 @@
 # 测试矩阵
 
-## 最新：M1-05
+## 最新：M2-RUNTIME
+
+2026-09-10，main@3c48aa4 基线。`npm run test:music:storage` 12 项、`npm run test:music:runtime` 10 项与全仓 `npm test` 通过，正常 `npm ci` 重建成功。详见 [运行环境与存储](M2_RUNTIME_STORAGE.md)。runtime 是本地 workerd + D1 + R2 原生接口，不是生产/预发 Cloudflare；脚本进入仓库和 CI。
+
+覆盖真实迁移与缺 0002、五份音频的条件 GET/BYOB、损坏 MP3 的写前拒绝、完整发布的 json_object guard、末尾零命中整批回滚、同键四并发、独立 reader D1 只读查询、32 MiB/4 MiB 单读与四并发及测试路由隔离。固定缓冲与本地耗时不能当作生产 CPU/整体内存指标；证据审核仍是合成 stub，不证明完整发布资源验证或音频语义同源。没有真实资源、迁移、部署、人工试听或 UI 验收。
+
+## 历史：M1-05
 
 2026-09-10，main@ac8ac76 基线。`npm run test:music:mp3` 21 项、`npm run test:music:publication` 24 项通过；真实编码 CBR/VBR/MPEG-2/原始流/试听样本与独立 packet 样本数一致，比较去填充 PCM 差异；覆盖 ID3/边界分块/伪造信息头/损坏/预算/中断/源绑定及容差。32 MiB/4 MiB 分块边界测试固定 carry 67,584 字节。新增真实字节核验阻断和成功发布的隔离数据库联测。见 [M1_MP3_VALIDATION](M1_MP3_VALIDATION.md)。
 
