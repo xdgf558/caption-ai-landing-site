@@ -1,6 +1,7 @@
 import { resolveMusicAccess } from './access.js';
 import { positiveInteger } from './policy.js';
 import { validMusicId } from './publicationValidation.js';
+import { loadPublishedMusicRecord } from './publicStore.js';
 import { musicRuntime, musicRuntimeFlags } from './runtime.js';
 import { cancelBody, validateMusicMediaAsset } from './storage.js';
 
@@ -40,29 +41,6 @@ function requestInput(request) {
   if (!/^[1-9][0-9]*$/.test(rawVersion || '') || !positiveInteger(Number(rawVersion))) return { error: 'INVALID_INPUT' };
   if (!['full', 'preview'].includes(variant)) return { error: 'INVALID_VARIANT' };
   return { trackId: match[1].toLowerCase(), revisionNo: Number(rawVersion), variant };
-}
-
-function rows(result) {
-  if (result?.success !== true || !Array.isArray(result.results)) throw new Error('MUSIC_DATABASE_UNAVAILABLE');
-  return result.results;
-}
-
-async function loadPublishedRecord(db, trackId) {
-  try {
-    const session = db.withSession('first-primary');
-    if (typeof session?.batch !== 'function' || typeof session?.prepare !== 'function') throw new Error('session');
-    const result = (await session.batch([
-      session.prepare('SELECT * FROM music_tracks WHERE id=? LIMIT 2').bind(trackId),
-      session.prepare(`SELECT * FROM music_track_revisions
-        WHERE id=(SELECT published_revision_id FROM music_tracks WHERE id=?) LIMIT 2`).bind(trackId),
-      session.prepare(`SELECT a.* FROM music_assets a
-        JOIN music_track_revisions r ON r.id=(SELECT published_revision_id FROM music_tracks WHERE id=?)
-        WHERE a.id IN (r.audio_asset_id,r.preview_asset_id,r.cover_asset_id,r.lyrics_asset_id)
-        ORDER BY a.id LIMIT 5`).bind(trackId)
-    ])).map(rows);
-    if (result[0].length > 1 || result[1].length > 1 || result[2].length > 4) throw new Error('cardinality');
-    return { track: result[0][0] || null, revision: result[1][0] || null, assets: result[2] };
-  } catch { throw Object.assign(new Error('MUSIC_DATABASE_UNAVAILABLE'), { code: 'MUSIC_DATABASE_UNAVAILABLE', status: 503 }); }
 }
 
 // Invalid or unsupported ranges are deliberately ignored and become a full 200 response.
@@ -134,7 +112,7 @@ export async function handleMusicMedia(request, env, { clock = Date.now, timeout
   let runtime, record;
   try {
     runtime = musicRuntime(env);
-    record = await loadPublishedRecord(runtime.db, input.trackId);
+    record = await loadPublishedMusicRecord(runtime.db, input.trackId);
   } catch (error) {
     return jsonResponse(request, Number.isInteger(error?.status) ? error.status : 503,
       error?.code === 'MUSIC_NOT_CONFIGURED' ? error.code : 'MUSIC_DATABASE_UNAVAILABLE');

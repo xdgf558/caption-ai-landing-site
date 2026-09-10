@@ -110,6 +110,21 @@ export function projectPublicTrack(record, { locale, now }) {
   }
 }
 
+export function projectPublicTrackDetail(record, options) {
+  const track = projectPublicTrack(record, options);
+  if (!track) return null;
+  try {
+    const metadata = parseObject(record.revision.metadata_json);
+    const story = metadata.story === undefined ? '' : metadata.story;
+    if (typeof story !== 'string' || story.length > 8000 ||
+      /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(story)) return null;
+    return { ...track, story };
+  } catch (error) {
+    if (error instanceof SyntaxError || error.code?.startsWith('MUSIC_')) return null;
+    throw error;
+  }
+}
+
 function projectCollection(record, locale, publicIds) {
   if (!object(record)) return null;
   const { collection, items } = record;
