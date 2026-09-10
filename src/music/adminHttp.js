@@ -7,6 +7,8 @@ import { createMusicUpload, readMusicUpload, writeMusicUpload, completeMusicUplo
 import { musicResourceVerifier } from './resources.js';
 import { reviewMusicTechnical } from './technicalReview.js';
 import { readAdminMusicAsset } from './adminAssets.js';
+import { createAdminMusicCollection, listAdminMusicCollections, readAdminMusicCollection,
+  saveAdminMusicCollection, saveAdminMusicCollectionTracks } from './collections.js';
 
 export const isMusicAdminPath = path => path === '/admin/api/music' || path.startsWith('/admin/api/music/');
 function response(request, status, body, headers = {}) {
@@ -83,7 +85,7 @@ export async function handleMusicAdmin(request, env, authorize) {
       result = { ...settings, actorId, flags: runtime.flags, storage: upload,
         capabilities: { drafts: true, rightsReview: true, unpublish: true, archive: true,
           uploads: runtime.flags.uploads && !!upload?.quotaBytes && typeof runtime.bucket.put === 'function',
-          technicalReview: true, publish: true, collections: false, media: false, adminAssets: true } };
+          technicalReview: true, publish: true, collections: true, media: false, adminAssets: true } };
     } else if (path === '/admin/api/music/tracks') {
       if (read) {
         fields(query, ['before', 'status', 'q']);
@@ -99,6 +101,15 @@ export async function handleMusicAdmin(request, env, authorize) {
     } else if (path === '/admin/api/music/audit' && read) {
       fields(query, ['before']);
       result = await listAdminMusicAudit(runtime.db, query.before === undefined ? undefined : Number(query.before));
+    } else if (path === '/admin/api/music/collections') {
+      if (read) {
+        fields(query, ['before', 'status', 'q']);
+        result = await listAdminMusicCollections(runtime.db, { before: query.before === undefined ? undefined : Number(query.before),
+          status: query.status, q: query.q });
+      } else if (request.method === 'POST') {
+        fields(query, []); mutationKey(context.key);
+        result = await createAdminMusicCollection(runtime.db, await readBody(request), context);
+      } else fail('METHOD_NOT_ALLOWED', 405);
     } else {
       fields(query, []);
       const track = /^\/admin\/api\/music\/tracks\/([^/]+)(?:\/(publish|unpublish|archive))?$/.exec(path);
@@ -106,8 +117,20 @@ export async function handleMusicAdmin(request, env, authorize) {
       const technical = /^\/admin\/api\/music\/revisions\/([^/]+)\/technical-review$/.exec(path);
       const upload = /^\/admin\/api\/music\/uploads\/([^/]+)(?:\/(body|complete))?$/.exec(path);
       const asset = /^\/admin\/api\/music\/assets\/([^/]+)$/.exec(path);
+      const collection = /^\/admin\/api\/music\/collections\/([^/]+)(?:\/(tracks))?$/.exec(path);
       if (asset && read) return await readAdminMusicAsset(runtime.db, runtime.bucket, asset[1], request);
-      if (upload) {
+      if (collection) {
+        const id = musicId(collection[1]);
+        if (!collection[2] && read) result = await readAdminMusicCollection(runtime.db, id);
+        else {
+          const method = collection[2] ? 'PUT' : 'PATCH';
+          if (request.method !== method) fail('METHOD_NOT_ALLOWED', 405);
+          mutationKey(context.key); editVersion(context.ifMatch);
+          result = collection[2]
+            ? await saveAdminMusicCollectionTracks(runtime.db, id, await readBody(request), context)
+            : await saveAdminMusicCollection(runtime.db, id, await readBody(request), context);
+        }
+      } else if (upload) {
         musicId(upload[1]);
         await uploadReadiness(runtime.db);
         if (!upload[2] && read) result = await readMusicUpload(runtime.db, upload[1], actorId);

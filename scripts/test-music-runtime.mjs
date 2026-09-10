@@ -140,6 +140,33 @@ test('four identical admin requests share one receipt and competing saves never 
   assert.equal((await adminCall(`/tracks/${created.trackId}`)).body.editVersion, 2);
 });
 
+test('collection lifecycle and exact order execute through native D1 JSON guards', async () => {
+  const published = await seed();
+  assert.equal((await call('/publish', published.command)).status, 200);
+  const draft = await adminCall('/tracks', 'POST', adminDraft());
+  assert.equal(draft.status, 200, JSON.stringify(draft.body));
+  const body = { slug: `runtime-list-${randomUUID()}`, originalLocale: 'en', title: { en: 'Runtime playlist' },
+    description: { en: 'Native D1 collection transaction.' } };
+  const created = await adminCall('/collections', 'POST', body);
+  assert.equal(created.status, 200, JSON.stringify(created.body));
+  let result = await adminCall(`/collections/${created.body.collectionId}/tracks`, 'PUT',
+    { trackIds: [draft.body.trackId, published.command.trackId], reason: 'Native order.' }, { 'If-Match': '"edit-1"' });
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  let collection = (await adminCall(`/collections/${created.body.collectionId}`)).body;
+  assert.deepEqual(collection.tracks.map(track => track.id), [draft.body.trackId, published.command.trackId]);
+  result = await adminCall(`/collections/${collection.id}`, 'PATCH', { slug: collection.slug,
+    originalLocale: collection.originalLocale, title: collection.title, description: collection.description,
+    status: 'published', reason: 'Publish native playlist.' }, { 'If-Match': '"edit-2"' });
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  const catalogAfterPublish = result.body.catalogVersion;
+  result = await adminCall(`/collections/${collection.id}/tracks`, 'PUT',
+    { trackIds: [published.command.trackId, draft.body.trackId], reason: 'Native reorder.' }, { 'If-Match': '"edit-3"' });
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  assert.equal(result.body.catalogVersion, catalogAfterPublish + 1);
+  collection = (await adminCall(`/collections/${collection.id}`)).body;
+  assert.deepEqual(collection.tracks.map(track => track.id), [published.command.trackId, draft.body.trackId]);
+});
+
 test('admin unpublish and archive retain fixture media and sealed history with all flags off', async () => {
   const { command } = await seed(); assert.equal((await call('/publish', command)).status, 200);
   const path = `/tracks/${command.trackId}`;

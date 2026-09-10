@@ -1,5 +1,13 @@
 # 测试矩阵
 
+## 最新：M2-03 歌单管理
+
+2026-09-10，main@837f09a 基线。`test:music:collections` 9/9、admin 23/23、foundation 17/17、本地 Miniflare runtime 19/19、全仓 `npm test` 与 `npm run build` 通过；构建 146 页、111 条 sitemap。详见 [M2_COLLECTIONS](M2_COLLECTIONS.md)。
+
+覆盖列表/详情/分页、四语输入、slug 与归档终态、If-Match、同源、幂等重放、发布/下架/归档、最多 500 首的精确唯一顺序、非法/已归档曲目、单曲权限不变、`catalogVersion`、每步零写入回滚、并发编辑和发布时曲目并发下架。公共投影会按单曲发布状态过滤，并隐藏过滤后为空的歌单。
+
+没有新增迁移、后台歌单 UI、公开歌单 HTTP、云端 D1、多实例、播放器、Safari、正式内容、部署或开闸验收。M2-03 本地完成不代表 M2-01、M5-03 或音乐上线完成。
+
 ## 最新：M2-04 音频媒体协议
 
 2026-09-10，main@9fc9e95 基线。`test:music:media` 10/10、会员 21/21、存储 12/12、本地 Miniflare runtime 18/18、全仓 `npm test` 与 `npm run build` 通过；构建 146 页、111 条 sitemap。详见 [M2_MEDIA_PROTOCOL](M2_MEDIA_PROTOCOL.md)。

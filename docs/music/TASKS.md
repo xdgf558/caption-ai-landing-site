@@ -48,7 +48,7 @@
 | --- | --- | --- |
 | M2-01 | IN_PROGRESS | M2-ADMIN 接入管理路由、Access JWT 和同源/custom-header 防护；公共目录、详情、歌词、封面与歌单仍 TODO，四开关未写入部署配置 |
 | M2-02 | DONE（本地） | 私有流式上传、实际字节/MIME/结构检查、原子配额预留、一次写入和未知结果恢复、不可覆盖/用途隔离已验收；11 项上传与 17 项 runtime 通过。真实预发 TODO；失败/过期资源保留 charge，自动清理/配额回收留 M2-05；见 M2_PRIVATE_UPLOADS |
-| M2-03 | IN_PROGRESS | 草稿、权利记录、技术审核、成功发布/下架/归档和审计已本地接通，发布使用实际私有资源验证器；歌单仍 TODO；见 M2_ADMIN_API、M2_PRIVATE_UPLOADS |
+| M2-03 | DONE（本地） | 草稿、权利记录、技术审核、成功发布/下架/归档、审计及歌单列表/详情/创建/状态/原子排序已接通；歌单不改变单曲权限，空公开投影隐藏；见 M2_ADMIN_API、M2_PRIVATE_UPLOADS、M2_COLLECTIONS |
 | M2-04 | DONE（本地） | full/preview 的 GET/HEAD/Range/If-Range 共用发布与实时 VIP 守卫；10 项协议测试及 Miniflare 真实 D1/R2 字节回归通过，未授权不读 R2 或泄漏大小/ETag，见 M2_MEDIA_PROTOCOL；未部署/开闸 |
 | M2-05 | TODO | 过期会话清理、引用与发布竞态、外部一致限流、诊断和审计；先 dry-run，未引用证据充分才清理，不覆盖既有 cron/队列 |
 
