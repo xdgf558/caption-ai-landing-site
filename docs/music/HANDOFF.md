@@ -1,5 +1,11 @@
 # 音乐系统交接记录
 
+## 最新：简洁音乐后台基础 UI
+
+PR #126 已合并 main@c3cba1c；本轮分支 codex/music-admin-workspace，用户授权 UI，不含部署。新增 /admin/music/，Product Design 参照现有文章后台；范围、恢复协议和验证记录见 [M5_ADMIN_WORKSPACE](M5_ADMIN_WORKSPACE.md)。全仓、6 项客户端、11 项上传、17 项 runtime 与构建通过；CLI 浏览器 6 用例已接 CI 但待运行。内置浏览器已验证隔离上传/审核/发布链路和 390px。后续不得声称真实音乐/云端/听审或公开播放器已验收。
+
+恢复本轮时先查用户是否回复允许本地 Playwright，运行 npm run build 与 npm run test:browser:music-admin 后修复失败，再进入 PR 审查。纯本地预览器使用假身份和临时数据库，禁止部署。下面“最新”标题均属较早阶段历史。
+
 日期：2026-09-10。最新交接：PR #125 已合并，私有上传与审核发布 API 本地完成，待独立 PR 审查。下方其他阶段内容均为历史，最新状态以本节与 CURRENT_PHASE 为准。
 
 ## 最新：M2 私有上传与审核发布

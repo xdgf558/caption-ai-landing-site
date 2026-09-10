@@ -80,7 +80,7 @@ export async function handleMusicAdmin(request, env, authorize) {
     if (path === '/admin/api/music/status' && read) {
       fields(query, []);
       const upload = await uploadReadiness(runtime.db).catch(() => null);
-      result = { ...settings, flags: runtime.flags, storage: upload,
+      result = { ...settings, actorId, flags: runtime.flags, storage: upload,
         capabilities: { drafts: true, rightsReview: true, unpublish: true, archive: true,
           uploads: runtime.flags.uploads && !!upload?.quotaBytes && typeof runtime.bucket.put === 'function',
           technicalReview: true, publish: true, collections: false, media: false, adminAssets: true } };

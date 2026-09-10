@@ -207,7 +207,10 @@ test('publishing requires real private objects; flags or client proof cannot ble
   const status = (await call(f, '/status')).body;
   assert.equal(status.flags.public, true); assert.equal(status.capabilities.publish, true); assert.equal(status.capabilities.uploads, false);
   const body = { revisionId: cmd.revisionId, reason: cmd.reason, confirmedPolicyVersion: 1 };
-  assert.equal((await call(f, `/tracks/${cmd.trackId}/publish`, 'POST', body, ifMatch(1))).status, 503);
+  const denied = await call(f, `/tracks/${cmd.trackId}/publish`, 'POST', body, ifMatch(1));
+  // Random UUID order may inspect the synthetic evidence key before the unavailable audio object.
+  assert.ok((denied.status === 422 && denied.body.code === 'MUSIC_STORAGE_ASSET_INVALID') ||
+    (denied.status === 503 && denied.body.code === 'MUSIC_STORAGE_UNAVAILABLE'), JSON.stringify(denied));
   assert.equal((await call(f, `/tracks/${cmd.trackId}/publish`, 'POST', { ...body, verifyResources: true }, ifMatch(1))).status, 400);
   for (const path of ['/uploads', '/assets/' + randomUUID(), '/collections', '/analytics', '/tracks/x/technical-review']) {
     assert.equal((await call(f, path, 'GET')).status, 404);

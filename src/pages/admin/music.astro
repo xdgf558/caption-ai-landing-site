@@ -1,0 +1,104 @@
+---
+import { Plus, RefreshCw, ArrowLeft, ArrowRight, Save, Search, History, X, Upload, Music2 } from '@lucide/astro';
+const locales = [['zh-Hans', '简体中文'], ['zh-Hant', '繁體中文'], ['en', 'English'], ['ja', '日本語']];
+const kinds = [['audio', '完整音频', '.mp3', 'MP3 · 最大 32 MiB'], ['preview', '独立试听', '.mp3', 'MP3 · 最大 4 MiB'],
+  ['cover', '封面', '.jpg,.jpeg,.png,.webp', 'JPEG / PNG / WebP · 最大 5 MiB'], ['lyrics', '歌词', '.txt,.lrc', 'UTF-8 TXT / LRC · 最大 128 KiB'], ['evidence', '权利凭证', '.pdf,.jpg,.jpeg,.png', 'PDF / JPEG / PNG · 最大 10 MiB']];
+const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', '商业使用授权依据'], ['lyricsRightsNotes', '歌词权利说明'],
+  ['coverRightsNotes', '封面权利说明'], ['audioInputRightsNotes', '音频输入权利说明']];
+---
+<!doctype html>
+<html lang="zh-Hans">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><meta name="robots" content="noindex,nofollow" />
+  <title>音乐管理 | Station Cat</title><link rel="icon" href="/favicon.ico" /><link rel="stylesheet" href="/styles/admin-music.css" /></head>
+<body class="music-admin">
+<header class="music-topbar"><a href="/admin-v2/"><img src="/images/optimized/station-cat-logo-1668c2e5-160.webp" width="32" height="32" alt="" />Station Cat <span>/ 后台</span></a><button id="audit-open" type="button"><History size={16} />操作记录</button></header>
+<main class="music-shell">
+  <header class="music-heading"><div><p class="eyebrow">内容工作区</p><h1>音乐</h1></div><button id="track-new" class="primary" type="button" disabled><Plus size={18} />新建曲目</button></header>
+  <div class="music-health"><span id="environment">正在连接音乐服务</span><span id="storage">配额待查询</span></div>
+  <div class="music-feedback"><p id="music-status" role="status" aria-live="polite">正在读取曲库。</p><button id="music-reload" type="button" title="重新读取服务状态" aria-label="重新读取服务状态"><RefreshCw size={17} /></button><button id="mutation-retry" type="button" hidden>核对并重试原操作</button></div>
+  <div class="music-layout">
+    <aside aria-label="曲目列表" class="music-library">
+      <form id="search-form" role="search"><label class="sr-only" for="track-search">搜索曲目</label><input id="track-search" type="search" maxlength="120" placeholder="搜索曲名或标识" /><button type="submit" title="搜索曲目" aria-label="搜索曲目"><Search size={17} /></button></form>
+      <label class="sr-only" for="track-filter">曲目状态</label><select id="track-filter"><option value="">全部状态</option><option value="draft">草稿</option><option value="published">已发布</option><option value="unpublished">已下架</option><option value="archived">已归档</option></select>
+      <div id="track-list"><p class="muted">正在加载…</p></div>
+      <div class="pagination"><button id="list-prev" type="button" aria-label="上一页" title="上一页" disabled><ArrowLeft size={17} /></button><span id="list-page">第 1 页</span><button id="list-next" type="button" aria-label="下一页" title="下一页" disabled><ArrowRight size={17} /></button></div>
+    </aside>
+    <section class="music-workspace" aria-label="曲目编辑">
+      <div id="workspace-empty"><Music2 size={32} /><h2>选择一首曲目</h2><p>暂无选中的曲目。</p></div>
+      <div id="workspace" hidden>
+        <header class="workspace-heading"><div><h2 id="track-heading">新曲目</h2><p id="track-version" class="muted">未保存</p></div><span id="track-state" class="badge">草稿</span></header>
+        <div role="tablist" aria-label="曲目工作区" class="music-tabs">
+          {['基本资料', '素材', '审核发布'].map((name, i) => <button type="button" id={`step-${i}`} role="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`panel-${i}`} tabindex={i === 0 ? 0 : -1}>{name}</button>)}
+        </div>
+        <section id="panel-0" role="tabpanel" aria-labelledby="step-0">
+          <form id="track-form">
+            <fieldset id="metadata-fields"><div class="field-grid">
+              <label>原文语言<select id="original-locale">{locales.map(([value, name]) => <option value={value}>{name}</option>)}</select></label>
+              <label>署名<input id="creator-name" required maxlength="80" /></label>
+              <label class="full">曲目链接标识<input id="track-slug" required maxlength="100" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="例如 evening-at-the-station" /></label>
+              <label class="full">曲名<input id="track-title" required maxlength="120" /></label>
+              <label class="full">简介<input id="track-summary" maxlength="500" /></label>
+              <label>演唱语言<input id="track-language" required maxlength="40" placeholder="例如 中文 / 无人声" /></label>
+              <label class="check"><input id="track-instrumental" type="checkbox" />纯音乐</label>
+              <label>风格<input id="track-genres" placeholder="以逗号分隔" maxlength="395" /></label><label>情绪<input id="track-moods" placeholder="以逗号分隔" maxlength="395" /></label>
+              <label class="full">创作故事<textarea id="track-story" maxlength="8000" rows="4"></textarea></label>
+            </div>
+            <details><summary>多语言曲名与简介</summary><div class="field-grid">{locales.map(([value, name]) => <div><label>{name} 曲名<input data-title-locale={value} maxlength="120" /></label><label>{name} 简介<input data-summary-locale={value} maxlength="500" /></label></div>)}</div></details>
+            <h3>收听范围</h3><div class="field-grid">
+              <label>访问策略<select id="access-mode"><option value="vip">VIP 专享</option><option value="free">免费精选</option><option value="early_access">VIP 抢先听</option></select></label>
+              <div id="early-options" class="field-grid full" hidden><label>抢先结束时间（本地时区）<input id="early-until" type="datetime-local" step="1" /></label><label>结束后<select id="post-early"><option value="vip">VIP 专享</option><option value="free">免费精选</option></select></label></div>
+            </div>
+            <label id="save-reason-label">修改说明<input id="save-reason" maxlength="1000" /></label>
+            <footer class="music-actions"><button id="track-save" class="primary" type="submit"><Save size={17} />保存草稿</button><span id="draft-notice" class="muted">尚未发布</span></footer></fieldset>
+          </form>
+        </section>
+        <section id="panel-1" role="tabpanel" aria-labelledby="step-1" hidden>
+          <p id="upload-availability" class="notice">保存曲目后可上传素材。</p>
+          <div class="upload-rows">{kinds.map(([kind, name, accept, limit]) => <section class="upload-row" aria-label={name}>
+            <header><h3>{name}</h3><span class="muted">{limit}</span></header>
+            <div data-asset-kind={kind} class="asset-view"></div>
+            {kind === 'preview' && <div class="field-grid"><label>原曲起点（秒）<input id="preview-start" type="number" min="0" step="0.001" value="0" /></label><label>原曲终点（秒）<input id="preview-end" type="number" min="0.001" step="0.001" /></label></div>}
+            <div class="upload-control"><label class="sr-only" for={`file-${kind}`}>选择{name}文件</label><input id={`file-${kind}`} type="file" accept={accept} /><button type="button" data-upload-kind={kind}><Upload size={16} />上传</button></div>
+          </section>)}</div>
+          <section id="upload-recovery" hidden><h3>上传会话</h3><div id="upload-sessions"></div></section>
+          <p class="muted">失败或过期的上传仍占用预留额度；目前不能自动回收。</p>
+          <footer class="music-actions"><button id="assets-save" class="primary" type="button"><Save size={17} />保存素材到草稿</button><span id="assets-state" class="muted"></span></footer>
+        </section>
+        <section id="panel-2" role="tabpanel" aria-labelledby="step-2" hidden>
+          <p id="review-state" class="notice"></p>
+          <details id="rights-details" open><summary>权利核对 <span id="rights-state" class="badge">待审核</span></summary>
+            <form id="rights-form"><fieldset id="rights-fields"><div class="field-grid">
+              <label>来源平台<select data-right="sourcePlatform"><option value="">请选择</option><option value="suno">Suno</option></select></label>
+              <label>来源歌曲链接<input data-right="sourceSongUrl" type="url" maxlength="500" placeholder="https://suno.com/…" /></label>
+              {rightsText.map(([key, label]) => <label class={key === 'sourceSongId' ? '' : 'full'}>{label}<input data-right={key} maxlength="4000" /></label>)}
+              { [['generatedAt','生成时间'],['downloadedAt','下载时间'],['termsCheckedAt','条款核对时间']].map(([key,label]) => <label>{label}（本地时区）<input data-right={key} type="datetime-local" step="1" /></label>) }
+              {[['planAtGeneration','生成时套餐'],['planAtDownload','下载时套餐']].map(([key,label]) => <label>{label}<select data-right={key}><option value="">请选择</option><option value="free">Free</option><option value="pro">Pro</option><option value="premier">Premier</option><option value="other">其他</option></select></label>)}
+              <label>作品类型<select data-right="outputKind"><option value="">请选择</option><option value="standard">标准作品</option><option value="remix">Remix</option><option value="other">其他</option></select></label>
+              <label>下载方式<select data-right="downloadMethod"><option value="">请选择</option><option value="official">官方下载</option></select></label>
+              <label>授权用途<select data-right="permittedUse"><option value="">请选择</option><option value="commercial">商业使用</option></select></label>
+            </div><details><summary>例外授权材料</summary><label>例外授权依据<input data-right="exceptionAuthorizationBasis" maxlength="4000" /></label><label>对应凭证<select data-right="exceptionEvidenceAssetId"><option value="">未选择</option></select></label></details>
+            <p id="evidence-count" class="muted"></p>
+            <label>审核结论<select id="rights-decision"><option value="pending">待审核</option><option value="blocked">不通过</option><option value="approved">通过</option></select></label>
+            <label>审核说明<input id="rights-reason" required maxlength="1000" /></label>
+            <footer class="music-actions"><button type="submit">提交权利核对</button></footer></fieldset></form>
+          </details>
+          <details id="technical-details"><summary>试听与技术核对 <span id="technical-state" class="badge">待核对</span></summary>
+            <form id="technical-form"><fieldset id="technical-fields">
+              <label class="check"><input data-tech="audioListened" type="checkbox" />已听完整音频，确认可播放且无明显损坏</label>
+              <label class="check" id="check-preview"><input data-tech="previewListened" type="checkbox" />已听独立试听文件，确认可播放</label>
+              <label class="check" id="check-source"><input data-tech="previewSourceConfirmed" type="checkbox" />已对照原曲，确认试听片段来源和区间正确</label>
+              <label class="check" id="check-artwork"><input data-tech="artworkChecked" type="checkbox" />已查看封面，确认显示正常</label>
+              <label>核对说明<input id="technical-reason" required maxlength="1000" /></label>
+              <footer class="music-actions"><button type="submit">提交技术核对</button></footer>
+            </fieldset></form>
+          </details>
+          <section class="publication"><h3>发布状态</h3><p id="publication-summary"></p><div class="music-actions"><button id="track-publish" type="button" class="primary">发布曲目</button><button id="track-unpublish" type="button">下架</button><button id="track-archive" type="button" class="danger">归档</button></div></section>
+        </section>
+      </div>
+    </section>
+  </div>
+</main>
+<dialog id="confirm-dialog" aria-labelledby="confirm-title"><form method="dialog" id="confirm-form"><header><h2 id="confirm-title"></h2></header><p id="confirm-description"></p><label id="confirm-reason-label">操作说明<input id="confirm-reason" maxlength="1000" /></label><footer class="music-actions"><button value="cancel" formnovalidate>取消</button><button id="confirm-accept" value="yes" class="primary">确认</button></footer></form></dialog>
+<dialog id="audit-dialog" aria-labelledby="audit-title"><header><h2 id="audit-title">操作记录</h2><button id="audit-close" type="button" aria-label="关闭操作记录" title="关闭操作记录"><X size={18} /></button></header><div id="audit-list"></div><button id="audit-next" type="button" hidden>加载更多</button></dialog>
+<script src="../../scripts/adminMusic.js"></script>
+</body></html>
