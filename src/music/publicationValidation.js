@@ -29,7 +29,7 @@ export function publicationFingerprint({ track, revision, assets, rights, eviden
     })) });
 }
 
-function checkRights(snapshot, now) {
+export function checkRights(snapshot, now) {
   const { revision, rights, evidence, assets } = snapshot;
   if (!rights || rights.revision_id !== revision.id || rights.review_status !== 'approved' ||
     !nonempty(rights.reviewer_id, 200) || !Number.isSafeInteger(rights.reviewed_at) ||
@@ -86,6 +86,9 @@ export async function validatePublication(snapshot, command, now) {
     first_published_at: track.first_published_at ?? now, published_at: now }, revision: { ...revision, state: 'sealed' }, assets };
   if (!projectPublicTrack(candidate, { locale: 'zh-Hant', now })) throw publicationError('MUSIC_INVALID_PUBLICATION');
   const meta = parse(revision.metadata_json);
+  if (!object(meta.title) || !object(meta.summary) || !Array.isArray(meta.genres) || !Array.isArray(meta.moods)) {
+    throw publicationError('MUSIC_INVALID_METADATA');
+  }
   for (const [field, max] of [['title', 120], ['summary', 500]]) {
     for (const [locale, value] of Object.entries(meta[field])) {
       if (!MUSIC_LOCALES.includes(locale) || typeof value !== 'string' || [...value].length > max || /[\u0000-\u001f\u007f]/.test(value)) {

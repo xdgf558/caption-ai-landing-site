@@ -6,10 +6,11 @@ const SESSION_COOKIE = 'station_cat_reader_session';
 const unavailable = () => Object.assign(new Error('MEMBERSHIP_UNAVAILABLE'), { code: 'MEMBERSHIP_UNAVAILABLE' });
 
 function sessionToken(request) {
-  const matches = (request.headers.get('cookie') || '').split(';').map(value => value.trim())
-    .filter(value => value.slice(0, value.indexOf('=')) === SESSION_COOKIE);
-  if (matches.length !== 1) return null;
-  const token = matches[0].slice(matches[0].indexOf('=') + 1);
+  // Match the reader login's getCookie: the first named cookie wins, including an empty one.
+  const match = (request.headers.get('cookie') || '').split(';').map(value => value.trim())
+    .find(value => value.includes('=') && value.slice(0, value.indexOf('=')) === SESSION_COOKIE);
+  if (!match) return null;
+  const token = match.slice(match.indexOf('=') + 1);
   return /^[A-Za-z0-9_-]{1,512}$/.test(token) ? token : null;
 }
 
@@ -62,19 +63,26 @@ function interpret(row, now) {
 }
 
 export async function readMusicMembership(request, env, { clock = Date.now, timeoutMs = 1500 } = {}) {
-  isoTime(clock());
-  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 5000) throw unavailable();
-  const token = sessionToken(request);
-  if (!token) return snapshot(clock());
-  let timer;
+  let timer, lastNow = null;
   try {
+    lastNow = clock(); isoTime(lastNow);
+    if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 5000) throw unavailable();
+    const token = sessionToken(request);
+    if (!token) return snapshot(lastNow);
     const row = await Promise.race([
       queryMembership(env?.WAITLIST_DB, token),
       new Promise((_, reject) => { timer = setTimeout(() => reject(unavailable()), timeoutMs); })
     ]);
     // A slow query must not authorize using the time from before the request started.
-    return interpret(row, clock());
+    const now = clock(); isoTime(now);
+    if (now < lastNow) throw unavailable();
+    lastNow = now;
+    return interpret(row, now);
   } catch {
-    return snapshot(clock(), { status: 503, code: 'MEMBERSHIP_UNAVAILABLE', membershipStatus: 'unavailable' });
+    // Do not invoke a failed clock again on the error path, or fabricate a valid timestamp.
+    let serverNow = null;
+    try { serverNow = isoTime(lastNow); } catch {}
+    return { status: 503, code: 'MEMBERSHIP_UNAVAILABLE', authenticated: false,
+      membershipStatus: 'unavailable', validUntil: null, serverNow };
   } finally { clearTimeout(timer); }
 }

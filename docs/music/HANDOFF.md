@@ -1,8 +1,16 @@
 # 音乐系统交接记录
 
-日期：2026-09-10。最新交接：PR #123 已合并，M2-RUNTIME 本地适配与验收完成，待独立 PR 审查。下方 M1 内容均为历史，最新状态以本节与 CURRENT_PHASE 为准。
+日期：2026-09-10。最新交接：PR #124 已合并，M2-ADMIN 首批管理控制接口本地完成，待独立 PR 审查。下方其他阶段内容均为历史，最新状态以本节与 CURRENT_PHASE 为准。
 
-## 最新：M2-RUNTIME
+## 最新：M2-ADMIN
+
+用户授权管理接口接入，基线 main@9dc86e3，分支 codex/music-admin-api。20 项管理接口、21 项会员、25 项发布、14 项本地 workerd/D1/R2 测试和全仓 npm test/build 通过，145 页/111 sitemap。见 [M2_ADMIN_API](M2_ADMIN_API.md)。
+
+完成音乐专用 Access JWT actor（不采信 email/Host/local bypass）、同源/custom-header 防护、64 KiB JSON 上限与读超时、草稿新版本、人工权利记录、下架/归档/审计。写操作同批事务/零命中回滚/幂等回执；旧公开版与历史不被草稿保存覆盖。未接完整验证器，所以 HTTP publish 固定 503。#121 重复 Cookie 对齐、异常 clock/budget 和迟到 rejection 回归已完成；#122 畸形 metadata 422 有回归。
+
+下一批是 M2-02 私有上传、配额/租约、完整验证器与技术审核，再接成功发布闭环。歌单、公共媒体、清理/限流和真实预发仍待做。没有创建资源、迁移、部署、上传正式内容、UI 或音乐开闸；测试 stub 不代表正式审核，禁止部署 fixture Worker。以后涉及 UI 仍必须 Product Design。
+
+## 历史：M2-RUNTIME
 
 用户授权先做运行环境与存储适配。基线 main@3c48aa4，分支 codex/music-runtime-storage；12 项存储、10 项本地 workerd/D1/R2 测试、全仓测试通过。正常 npm ci 可重建；运行时套件进入独立 CI 步骤，源代码与合成夹具均可从仓库复现。见 [M2_RUNTIME_STORAGE](M2_RUNTIME_STORAGE.md)。
 

@@ -3,12 +3,17 @@ import { verifyStoredMusicAudio } from '../../src/music/storage.js';
 import { validateMeasuredPreview } from '../../src/music/audioValidation.js';
 import { executeMusicPublication } from '../../src/music/publication.js';
 import { readMusicMembership } from '../../src/music/membership.js';
+import { handleMusicAdmin, isMusicAdminPath } from '../../src/music/adminHttp.js';
 import { seedMusicRuntimeFixture, fixtureEvidenceProof, seedLargeRuntimeAudio } from './music-runtime-fixture.js';
 
 // Only bundled by the local test runner. Never deploy this fixture router or its synthetic approvals.
 export default {
   async fetch(request, env) {
     try {
+      if (isMusicAdminPath(new URL(request.url).pathname)) {
+        // Local fixture identity only; the real Worker verifies Access JWT and its email allowlist.
+        return handleMusicAdmin(request, env, async () => 'fixture@example.test');
+      }
       if (request.method !== 'POST') return new Response(null, { status: 405 });
       const { db, bucket, flags } = musicRuntime(env), path = new URL(request.url).pathname;
       let result;
