@@ -206,9 +206,13 @@ test('direct collection lookup is not limited by the 500-item catalog window', a
   assert.equal(detail.collection.id, last.id); assert.deepEqual(detail.collection.trackIds, [track.id]);
 });
 
-test('cover and lyrics stream only the current versioned canonical object and HEAD cancels its body', async () => {
+test('VIP cover and lyrics stay anonymous while full audio access remains protected', async () => {
   const f = fixture(), track = f.seedTrack({ slug: 'asset-song', title: 'Assets' });
-  let response = await handleMusicPublic(request(`/api/music/tracks/${track.id}/cover?v=1`), f.env, { clock: () => now });
+  let response = await handleMusicPublic(request(`/api/music/tracks/${track.id}/access?v=1`), f.env, { clock: () => now });
+  await json(response, 401, 'AUTH_REQUIRED');
+  assert.equal(f.state.r2.length, 0);
+
+  response = await handleMusicPublic(request(`/api/music/tracks/${track.id}/cover?v=1`), f.env, { clock: () => now });
   assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'image/png');
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.deepEqual([...new Uint8Array(await response.arrayBuffer())], [137, 80, 78, 71]);
