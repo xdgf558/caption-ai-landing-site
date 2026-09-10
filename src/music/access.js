@@ -36,8 +36,9 @@ export async function musicAccess(request, env, {
   if (!validMethod(request)) return response(request, 405, errorBody('METHOD_NOT_ALLOWED'));
   if (!['full', 'preview'].includes(variant)) return response(request, 400, errorBody('INVALID_VARIANT'));
   if (!positiveInteger(revisionNo)) return response(request, 400, errorBody('INVALID_INPUT'));
-  const now = clock();
-  isoTime(now);
+  let now;
+  try { now = clock(); isoTime(now); }
+  catch { return response(request, 503, errorBody('MEMBERSHIP_UNAVAILABLE')); }
   if (['unpublished', 'archived'].includes(record?.track?.lifecycle)) {
     return response(request, 410, errorBody('TRACK_UNAVAILABLE'));
   }

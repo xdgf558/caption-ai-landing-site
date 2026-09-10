@@ -394,3 +394,14 @@ test('invalid command, absent migration and missing bindings fail closed', async
   await rejects(run(f, input), 'MUSIC_PUBLICATION_UNAVAILABLE');
   assert.equal(snapshot(f, ids).track.lifecycle, 'draft');
 });
+
+test('missing title/summary/tags are publication validation errors, never an uncaught TypeError', async () => {
+  for (const key of ['title', 'summary', 'genres', 'moods']) {
+    const f = database(), ids = await seed(f);
+    const meta = JSON.parse(snapshot(f, ids).revision.metadata_json); delete meta[key];
+    f.sql.prepare('UPDATE music_track_revisions SET metadata_json=? WHERE id=?').run(JSON.stringify(meta), ids.revisionId);
+    const before = dump(f);
+    await assert.rejects(run(f, command(f, ids)), e => e.status === 422 && ['MUSIC_INVALID_METADATA', 'MUSIC_INVALID_PUBLICATION'].includes(e.code));
+    assert.deepEqual(dump(f), before);
+  }
+});

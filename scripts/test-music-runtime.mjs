@@ -46,6 +46,17 @@ async function call(path, input = {}, headers = {}) {
     headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(input) });
   return { status: response.status, body: await response.json() };
 }
+async function adminCall(path, method = 'GET', body, headers = {}) {
+  const response = await mf.dispatchFetch(`http://music.local.test/admin/api/music${path}`, { method,
+    headers: { Origin: 'http://music.local.test', 'X-Requested-With': 'StationCatMusicAdmin',
+      'Content-Type': 'application/json', 'Idempotency-Key': randomUUID(), ...headers },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  assert.equal(response.headers.get('cache-control'), 'private, no-store');
+  return { status: response.status, body: await response.json() };
+}
+const adminDraft = () => ({ slug: `admin-fixture-${randomUUID()}`, metadata: { originalLocale: 'en',
+  title: { en: 'Local admin fixture' }, summary: { en: '' }, creatorName: 'Fixture', language: 'instrumental',
+  instrumental: true, genres: [], moods: [] } });
 async function putFixture(name, kind = 'audio', owner = randomUUID()) {
   const f = manifest.find(f => f.file === name), data = file(`tests/fixtures/music-mp3/${name}`), id = randomUUID();
   const key = `music/${kind === 'audio' ? 'audio' : 'previews'}/${owner}/${id}.mp3`;
@@ -75,6 +86,62 @@ test('missing schema is 503; actual migrations on local D1 enable primary readin
   assert.equal(probe.body.catalogVersion, 0); assert.equal(probe.body.previewLimitMs, 45000);
   assert.deepEqual(probe.body.flags, { public: false, uploads: false, vipDelivery: false, analytics: false });
   assert.deepEqual((await db.prepare('PRAGMA foreign_key_check').all()).results, []);
+});
+
+test('admin create/save/rights HTTP lifecycle executes real D1 without changing public catalog', async () => {
+  const body = adminDraft(), first = await adminCall('/tracks', 'POST', body);
+  assert.equal(first.status, 200, JSON.stringify(first.body));
+  const id = first.body.trackId, path = `/tracks/${id}`, read = await adminCall(path);
+  assert.equal(read.body.draft.policy.accessMode, 'vip');
+  const saved = await adminCall(path, 'PATCH', { ...body, policy: read.body.draft.policy, revisionId: first.body.revisionId,
+    reason: 'Workerd save.' }, { 'If-Match': '"edit-1"' });
+  assert.equal(saved.status, 200, JSON.stringify(saved.body));
+  const review = await adminCall(`/revisions/${saved.body.revisionId}/rights-review`, 'PUT',
+    { status: 'pending', review: {}, evidenceIds: [], reason: 'Workerd review.' }, { 'If-Match': '"edit-2"' });
+  assert.equal(review.status, 200, JSON.stringify(review.body));
+  assert.equal(review.body.editVersion, 3);
+  const current = await adminCall(path); assert.equal(current.body.rights.reviewer, 'fixture@example.test');
+  assert.equal(current.body.draft.technicalReviewedAt, null);
+  const publish = await adminCall(`${path}/publish`, 'POST', { revisionId: saved.body.revisionId, confirmedPolicyVersion: 1,
+    reason: 'Must stay private.' }, { 'If-Match': '"edit-3"' });
+  assert.equal(publish.status, 503);
+  assert.equal((await db.prepare("SELECT value_json FROM music_settings WHERE key='catalogVersion'").first()).value_json, '0');
+});
+
+test('admin last receipt RAISE(IGNORE) rolls back all earlier real D1 writes', async () => {
+  const before = await dump(), body = adminDraft(), headers = { 'Idempotency-Key': randomUUID() };
+  await db.prepare(`CREATE TRIGGER music_admin_test_ignore BEFORE INSERT ON music_mutations
+    BEGIN SELECT RAISE(IGNORE); END`).run();
+  try {
+    const result = await adminCall('/tracks', 'POST', body, headers);
+    assert.equal(result.status, 409, JSON.stringify(result.body)); assert.deepEqual(await dump(), before);
+  } finally { await db.prepare('DROP TRIGGER music_admin_test_ignore').run(); }
+  assert.equal((await adminCall('/tracks', 'POST', body, headers)).status, 200);
+});
+
+test('four identical admin requests share one receipt and competing saves never overwrite', async () => {
+  const body = adminDraft(), headers = { 'Idempotency-Key': randomUUID() };
+  const results = await Promise.all(Array.from({ length: 4 }, () => adminCall('/tracks', 'POST', body, headers)));
+  assert.ok(results.every(r => r.status === 200), JSON.stringify(results));
+  assert.equal(new Set(results.map(r => r.body.trackId)).size, 1);
+  const created = results[0].body, read = (await adminCall(`/tracks/${created.trackId}`)).body;
+  const saves = await Promise.all(Array.from({ length: 4 }, (_, i) => adminCall(`/tracks/${created.trackId}`, 'PATCH', {
+    ...body, policy: read.draft.policy, revisionId: created.revisionId, reason: `Writer ${i}` }, { 'If-Match': '"edit-1"' })));
+  assert.equal(saves.filter(r => r.status === 200).length, 1, JSON.stringify(saves));
+  assert.ok(saves.every(r => [200, 409].includes(r.status)), JSON.stringify(saves));
+  assert.equal((await adminCall(`/tracks/${created.trackId}`)).body.editVersion, 2);
+});
+
+test('admin unpublish and archive retain fixture media and sealed history with all flags off', async () => {
+  const { command } = await seed(); assert.equal((await call('/publish', command)).status, 200);
+  const path = `/tracks/${command.trackId}`;
+  const off = await adminCall(`${path}/unpublish`, 'POST', { revisionId: command.revisionId, reason: 'Local downlist.' }, { 'If-Match': '"edit-2"' });
+  assert.equal(off.status, 200, JSON.stringify(off.body));
+  const archived = await adminCall(`${path}/archive`, 'POST', { reason: 'Retain fixture history.' }, { 'If-Match': '"edit-3"' });
+  assert.equal(archived.status, 200, JSON.stringify(archived.body));
+  assert.equal((await adminCall(path)).body.lifecycle, 'archived');
+  assert.equal((await db.prepare('SELECT state FROM music_track_revisions WHERE id=?').bind(command.revisionId).first()).state, 'sealed');
+  assert.equal((await db.prepare('SELECT COUNT(*) n FROM music_assets WHERE owner_track_id=?').bind(command.trackId).first()).n, 3);
 });
 
 test('native R2 BYOB + conditional GET measures all five encoded fixtures', async () => {

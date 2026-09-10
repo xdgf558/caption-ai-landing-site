@@ -1,6 +1,12 @@
 # 测试矩阵
 
-## 最新：M2-RUNTIME
+## 最新：M2-ADMIN
+
+2026-09-10，main@9dc86e3 基线。管理接口 20 项、只读会员 21 项、发布 25 项、本地 runtime 14 项及全仓 npm test/build 通过，145 页/111 sitemap。详见 [管理接口](M2_ADMIN_API.md)。管理套件加入 npm pretest，runtime 沿用独立 CI 步骤。
+
+真实 Worker 入口核对 RSA JWT/allowlist 与伪造身份拒绝；请求体实际计数/超时/UTF-8；跨曲资源、权利指纹、旧版保留；每步零写入与丢响应重放；原生 D1 管理 CRUD、末尾 RAISE(IGNORE) 回滚、四并发与下架归档。没有完整资源验证器时，HTTP 发布入口固定 503；只有测试模块注入合成发布材料。没有实际云端资源/迁移/部署/解码试听或 UI/Safari 验收。
+
+## 历史：M2-RUNTIME
 
 2026-09-10，main@3c48aa4 基线。`npm run test:music:storage` 12 项、`npm run test:music:runtime` 10 项与全仓 `npm test` 通过，正常 `npm ci` 重建成功。详见 [运行环境与存储](M2_RUNTIME_STORAGE.md)。runtime 是本地 workerd + D1 + R2 原生接口，不是生产/预发 Cloudflare；脚本进入仓库和 CI。
 

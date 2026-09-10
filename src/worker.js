@@ -52,6 +52,7 @@ import { renderArticleMarkdown } from './articleMarkdown.js';
 import { safeReturnPath } from './safeReturnPath.js';
 import { applyMembershipRedemption, readMembershipReceipt, validMembershipRequestKey, isReaderMembershipActive } from './readerMembership.js';
 import { listMembershipRefundReviews, getMembershipRefundReview, decideMembershipRefundReview } from './membershipRefundReview.js';
+import { handleMusicAdmin, isMusicAdminPath, musicAdminDenied } from './music/adminHttp.js';
 
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
@@ -3241,6 +3242,22 @@ const enforceAdminAccess = async (request, env) => {
   }
 
   return null;
+};
+
+const musicAdminActor = async (request, env) => {
+  const denied = (code, status) => Object.assign(new Error(code), { code, status });
+  const config = getAdminAccessConfig(env);
+  if (!config.isConfigured) throw denied('ADMIN_AUTH_UNAVAILABLE', 503);
+  try {
+    // Music APIs deliberately do not inherit Host-header/local-bypass actor shortcuts.
+    const payload = await verifyAccessJwt(getAccessToken(request), config);
+    const email = normalizeEmail(payload.email);
+    if (!email || email.length > 200 || !config.allowedEmails.has(email)) throw denied('ADMIN_FORBIDDEN', 403);
+    return email;
+  } catch (error) {
+    if (error.code === 'ADMIN_FORBIDDEN') throw error;
+    throw denied('ADMIN_AUTH_REQUIRED', 401);
+  }
 };
 
 const getSetting = (db, product, platform) =>
@@ -22978,9 +22995,17 @@ export default {
 
     // This gate runs before every /admin/, /admin-v2/, and /admin/api/ route is dispatched.
     if (isAdminRequest) {
-      const adminAccessResponse = await enforceAdminAccess(request, env);
-      if (adminAccessResponse) return adminAccessResponse;
+      let adminAccessResponse;
+      try { adminAccessResponse = await enforceAdminAccess(request, env); }
+      catch (error) {
+        if (!isMusicAdminPath(url.pathname)) throw error;
+        return musicAdminDenied(request, 401);
+      }
+      if (adminAccessResponse) return isMusicAdminPath(url.pathname)
+        ? musicAdminDenied(request, adminAccessResponse.status) : adminAccessResponse;
     }
+
+    if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
 
     if (legacyWorksRedirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
       const redirectUrl = new URL(legacyWorksRedirectPath, url.origin);

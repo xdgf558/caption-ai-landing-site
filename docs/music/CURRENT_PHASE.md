@@ -2,16 +2,18 @@
 
 更新：2026-09-10。
 
-本轮授权：PR #123 已合并为 main@3c48aa4，开始 M2 的运行环境与存储适配（M2-RUNTIME），分支 `codex/music-runtime-storage`。本地适配与可复现验收 DONE：12 项存储测试、10 项 workerd/D1/R2 测试及全仓测试通过；包括完整发布、真实 SQL 零命中回滚、四并发及大文件边界。见 [运行环境与存储](M2_RUNTIME_STORAGE.md)。真实预发验收仍 TODO；没有创建云端资源、执行远程迁移、上传正式音乐、部署或开闸。
+本轮授权：PR #124 已合并为 main@9dc86e3，开始 M2 管理接口接入，分支 `codex/music-admin-api`。M2-ADMIN 首批管理控制接口本地 DONE：Access 鉴权、草稿读写、权利记录、下架、归档、审计与发布拒绝边界。20 项管理测试、21 项只读会员测试、25 项发布测试、14 项本地 runtime 及全仓 npm test/build 通过（145 页/111 sitemap），见 [管理接口](M2_ADMIN_API.md)。私有上传 M2-02、完整资源验证器、技术审核和真实发布仍是下一批；M2 整体保持 IN_PROGRESS。没有创建云端资源、执行远程迁移、上传正式音乐、部署或开闸。
+
+已合并的 M2-RUNTIME 本地适配 DONE：12 项存储测试、10 项 workerd/D1/R2 测试，包括完整发布、真实 SQL 零命中回滚、四并发及大文件边界。见 [运行环境与存储](M2_RUNTIME_STORAGE.md)。真实预发验收仍 TODO。
 
 当前状态：M0 PR #117、原会员 PR #118、人工退款审核 PR #119、音乐基础 PR #120、只读 VIP PR #121、条件发布 PR #122、MP3 解析 PR #123 均已合并；#118/#119 已完成授权的迁移与部署。用户报告真实兑换、退款后台登录后验收及真实撤销已人工完成，不扩大为 Safari 或多实例并发验证。M1-05 的 21 项解析测试及 24 项发布测试通过，见 [MP3 核验](M1_MP3_VALIDATION.md)。
 
 - 当前：PREP、M0-01 至 M0-05、M1-01 至 M1-05 已完成本地实现和测试；M1 本地基础完成，不代表生产系统完成。
 - M0 DONE 仅表示核对完成；原会员修复状态以下表及 PR #118 为准，不表示音乐具备上线资格。
-- M2：IN_PROGRESS，仅运行环境/存储先行项完成本地验收；M3–M6：TODO。尚未接真实云端私有资源；没有完整资源验证器时发布仍返回 503。
+- M2：IN_PROGRESS，运行环境/存储先行项与管理控制接口首批完成本地验收；M3–M6：TODO。尚未接真实云端私有资源；管理 HTTP 发布仍固定返回 503。
 - 历史 M0 规划分支：codex/music-planning；创建基线：main@3b8bbc8c324e65e721d9b1b989d6d87b988f447d。
 - 原会员独立修复分支：codex/fix-membership-redemption-safety；基线：main@19a4436。
-- 当前开发分支：codex/music-runtime-storage。下一步：审查本轮，再按授权推进预发验证或管理接口；不自动创建资源或开放音乐。涉及 UI 时必须调用 Product Design 技能。
+- 当前开发分支：codex/music-admin-api。下一步：审查本轮，再推进 M2-02 私有上传及完整验证器；不自动创建资源或开放音乐。涉及 UI 时必须调用 Product Design 技能。
 
 ## 待核对和上线门槛
 

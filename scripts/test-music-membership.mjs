@@ -97,10 +97,10 @@ async function code(response, status, expected) {
   assert.equal(body.error?.code, expected); return body;
 }
 
-test('anonymous and ambiguous cookies never query private data; claims cannot grant VIP', async () => {
+test('anonymous and invalid cookies never query private data; claims cannot grant VIP', async () => {
   const f = fixture(); f.member();
   for (const cookie of ['', 'other=1', 'station_cat_reader_session=',
-    'station_cat_reader_session=x; station_cat_reader_session=y', 'station_cat_reader_session=%broken']) {
+    'station_cat_reader_session=%broken']) {
     const result = await readMusicMembership(request(null, 'GET', { cookie, 'X-Reader-Account': '1',
       'Cf-Access-Authenticated-User-Email': 'admin@example.test' }, '?isVip=true&accountId=1&payment=success'),
     f.env, { clock: () => now });
@@ -108,6 +108,43 @@ test('anonymous and ambiguous cookies never query private data; claims cannot gr
   }
   assert.equal(f.state.reads.length, 0);
   assert.equal((await readMusicMembership(request(null), {}, { clock: () => now })).status, 200);
+});
+
+test('duplicate reader cookies match the existing first-cookie rule, never fall through to a later valid token', async () => {
+  const f = fixture(); f.member();
+  for (const [cookie, expected] of [
+    ['station_cat_reader_session=fixture-session-1; station_cat_reader_session=fixture-session-2', 'active'],
+    ['station_cat_reader_session=fixture-session-2; station_cat_reader_session=fixture-session-1', 'none'],
+    ['station_cat_reader_session=; station_cat_reader_session=fixture-session-1', 'none'],
+    ['station_cat_reader_session=%bad; station_cat_reader_session=fixture-session-1', 'none']
+  ]) {
+    assert.equal((await readMusicMembership(request(null, 'GET', { cookie }), f.env, { clock: () => now })).membershipStatus, expected);
+  }
+});
+
+test('invalid clocks and budgets return private 503 instead of throwing or granting access', async () => {
+  const f = fixture(); f.member();
+  for (const options of [{ clock: () => NaN }, { clock: () => { throw new Error('private clock details'); } },
+    { timeoutMs: 0 }, { timeoutMs: 5001 }, { timeoutMs: NaN }]) {
+    const result = await read(f, 1, options); assert.equal(result.status, 503); assert.equal(result.authenticated, false);
+    await code(await musicCapabilities(request(), f.env, { clock: () => now, ...options }), 503, 'MEMBERSHIP_UNAVAILABLE');
+    await code(await access(f, record(), options), 503, 'MEMBERSHIP_UNAVAILABLE');
+  }
+  let calls = 0;
+  const result = await read(f, 1, { clock: () => ++calls === 1 ? now : now - 1 });
+  assert.equal(result.status, 503); assert.equal(calls, 2);
+});
+
+test('query rejection after timeout is consumed, and a clock throwing after lookup never leaks', async () => {
+  const f = fixture(); f.member(); let rejected = false;
+  const env = { WAITLIST_DB: { withSession() { return { prepare() { return { bind() { return { async all() {
+    await new Promise(resolve => setTimeout(resolve, 25)); rejected = true; throw new Error('late private failure');
+  } }; } }; } }; } } };
+  assert.equal((await readMusicMembership(request(), env, { timeoutMs: 1, clock: () => now })).status, 503);
+  await new Promise(resolve => setTimeout(resolve, 60)); assert.equal(rejected, true);
+  let calls = 0;
+  const result = await read(f, 1, { clock: () => { if (++calls > 1) throw new Error('private'); return now; } });
+  assert.equal(result.status, 503); assert.equal(calls, 2);
 });
 
 test('trusted session hash + joined account + real membership only; absolutely no writes', async () => {
