@@ -1,8 +1,16 @@
 # 音乐系统交接记录
 
-日期：2026-09-10。最新交接：PR #124 已合并，M2-ADMIN 首批管理控制接口本地完成，待独立 PR 审查。下方其他阶段内容均为历史，最新状态以本节与 CURRENT_PHASE 为准。
+日期：2026-09-10。最新交接：PR #125 已合并，私有上传与审核发布 API 本地完成，待独立 PR 审查。下方其他阶段内容均为历史，最新状态以本节与 CURRENT_PHASE 为准。
 
-## 最新：M2-ADMIN
+## 最新：M2 私有上传与审核发布
+
+基线 main@1ca7e02，分支 codex/music-private-uploads。11 项上传测试、17 项本地 workerd/D1/R2、npm test/build 通过，145 页/111 sitemap。见 [M2_PRIVATE_UPLOADS](M2_PRIVATE_UPLOADS.md)。上传流/配额预留、complete 真实文件校验、私有审阅下载、技术确认和成功发布 API 已连通；旧公开版/权利/事务边界保留。
+
+0003 只能用于 MUSIC_DB，本地默认 quota=0，需另批配置。一次写入会话不可接管，丢响应先查状态/complete；失败或过期预留仍计费，安全清理和配额回收留 M2-05，不可直接删除会话/回执。无新依赖；image-size 候选撤回，原 9 项 audit 告警未处理。无云端资源/迁移/部署/正式音乐或 UI。fixture Worker 含假身份和上传测试前缀，绝不可部署。
+
+下一步先审查；之后可授权简洁后台基础 UI，使用 Product Design。公开音频 Range/VIP 守卫、歌单、清理/外部限流和真机/预发仍未完成，不能因为本地发布成功就开闸。PDF/图像仅有限结构检查，MP3 不是完整解码，试听语义同源和真实权利必须人工核对。
+
+## 历史：M2-ADMIN
 
 用户授权管理接口接入，基线 main@9dc86e3，分支 codex/music-admin-api。20 项管理接口、21 项会员、25 项发布、14 项本地 workerd/D1/R2 测试和全仓 npm test/build 通过，145 页/111 sitemap。见 [M2_ADMIN_API](M2_ADMIN_API.md)。
 

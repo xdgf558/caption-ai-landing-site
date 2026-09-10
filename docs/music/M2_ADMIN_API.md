@@ -1,5 +1,7 @@
 # M2-ADMIN: management control API
 
+Historical PR #125 slice. Uploads, private asset review, technical approval and real-byte publication are now implemented locally in [M2_PRIVATE_UPLOADS](M2_PRIVATE_UPLOADS.md). The fixed-503 publication statements below describe the earlier slice, not current behavior. Public media delivery and cloud rollout remain pending.
+
 Baseline: PR #124 merged at `9dc86e3`. Branch: `codex/music-admin-api`.
 Status: first management-control slice locally implemented and validated; M2 remains IN_PROGRESS.
 

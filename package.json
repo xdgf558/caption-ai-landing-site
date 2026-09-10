@@ -15,6 +15,7 @@
     "test:music:storage": "node --test scripts/test-music-storage.mjs",
     "test:music:runtime": "node --test scripts/test-music-runtime.mjs",
     "test:music:admin": "node --test scripts/test-music-admin.mjs",
+    "test:music:uploads": "node --test scripts/test-music-uploads.mjs",
     "generate:music:mp3-fixtures": "node scripts/generate-music-mp3-fixtures.mjs",
     "build:novel-payment-config": "node scripts/build-novel-payment-config.mjs",
     "generate:brand-assets": "node scripts/generate-brand-assets.mjs && node scripts/capture-social-preview.mjs",

@@ -1,28 +1,29 @@
 import { verifyMusicAudioAsset } from './audioValidation.js';
+import { inspectMp3 } from './mp3.js';
 import { MP3_LIMITS, mp3Error } from './mp3Stream.js';
 import { validMusicId } from './publicationValidation.js';
 
 function audioIdentity(asset) {
   const folder = asset?.kind === 'audio' ? 'audio' : asset?.kind === 'preview' ? 'previews' : null;
   const max = asset?.kind === 'audio' ? MP3_LIMITS.audioBytes : MP3_LIMITS.previewBytes;
-  if (!folder || !validMusicId(asset.id) || !validMusicId(asset.owner_track_id) || asset.state !== 'validated' ||
+  if (!folder || !validMusicId(asset.id) || !validMusicId(asset.owner_track_id) || !['uploaded', 'validated'].includes(asset.state) ||
     asset.object_key !== `music/${folder}/${asset.owner_track_id}/${asset.id}.mp3` ||
     asset.format !== 'mp3' || asset.content_type !== 'audio/mpeg' ||
     typeof asset.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(asset.sha256) ||
-    !Number.isSafeInteger(asset.duration_ms) || asset.duration_ms < 1 ||
+    (asset.state === 'validated' && (!Number.isSafeInteger(asset.duration_ms) || asset.duration_ms < 1)) ||
     !Number.isSafeInteger(asset.byte_size) || asset.byte_size < 1 || asset.byte_size > max ||
     typeof asset.etag !== 'string' || !/^[\x21-\x7e]{1,200}$/.test(asset.etag) || /["\\]/.test(asset.etag)) {
     throw mp3Error('MUSIC_STORAGE_ASSET_INVALID');
   }
 }
 
-function cancelBody(object) {
+export function cancelBody(object) {
   try { Promise.resolve(object?.body?.cancel()).catch(() => {}); } catch { /* May already be locked or closed. */ }
 }
 
 // A BYOB reader limits the allocation at the native R2 boundary, not just the parser input.
 // No default-reader fallback: splitting an arbitrarily large buffered chunk is not bounded I/O.
-function boundedBody(body) {
+export function boundedBody(body) {
   let reader;
   try { reader = body.getReader({ mode: 'byob' }); }
   catch { cancelBody({ body }); throw mp3Error('MUSIC_STORAGE_STREAM_UNSUPPORTED', 503); }
@@ -55,7 +56,15 @@ function boundedBody(body) {
 
 // Trusted internal caller only. This neither authenticates a user nor issues a playback response.
 // Covers the conditional GET and parsing with one wall/I/O deadline; not a CPU interruption.
-export async function verifyStoredMusicAudio(bucket, asset, { signal, timeoutMs = 10000, limits = {} } = {}) {
+export function verifyStoredMusicAudio(bucket, asset, options) {
+  if (asset?.state !== 'validated') return Promise.reject(mp3Error('MUSIC_STORAGE_ASSET_INVALID'));
+  return readStoredAudio(bucket, asset, options);
+}
+export function measureUploadedMusicAudio(bucket, asset, options) {
+  if (asset?.state !== 'uploaded') return Promise.reject(mp3Error('MUSIC_STORAGE_ASSET_INVALID'));
+  return readStoredAudio(bucket, asset, options);
+}
+async function readStoredAudio(bucket, asset, { signal, timeoutMs = 10000, limits = {} } = {}) {
   audioIdentity(asset);
   if (typeof bucket?.get !== 'function') throw mp3Error('MUSIC_NOT_CONFIGURED', 503);
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10000 ||
@@ -83,9 +92,12 @@ export async function verifyStoredMusicAudio(bucket, asset, { signal, timeoutMs 
       cancelBody(object); throw mp3Error('MUSIC_STORAGE_OBJECT_CHANGED', 409);
     }
     input = boundedBody(object.body);
-    const measured = await Promise.race([verifyMusicAudioAsset(asset, { size: object.size, etag: object.etag,
-      contentType: object.httpMetadata.contentType, body: input.stream }, { signal, limits }), stop]);
-    return { ...measured, storageRead: input.metrics() };
+    const measured = await Promise.race([asset.state === 'validated'
+      ? verifyMusicAudioAsset(asset, { size: object.size, etag: object.etag,
+        contentType: object.httpMetadata.contentType, body: input.stream }, { signal, limits })
+      : inspectMp3(input.stream, { signal, limits, expectedBytes: asset.byte_size, kind: asset.kind, contentType: asset.content_type }), stop]);
+    if (measured.sha256 !== asset.sha256) throw mp3Error('MUSIC_MP3_MEASUREMENT_MISMATCH');
+    return { ...measured, id: asset.id, exists: true, etag: object.etag, storageRead: input.metrics() };
   } catch (error) {
     if (/^MUSIC_(STORAGE|MP3|NOT_CONFIGURED)/.test(error?.code || '')) throw error;
     throw mp3Error('MUSIC_STORAGE_UNAVAILABLE', 503);
