@@ -117,7 +117,9 @@ test('music login stays in the member center and offers an explicit sanitized re
   await back.click();
   expect(new URL(page.url()).pathname).toBe('/en/music/');
   expect(new URL(page.url()).search).toBe(`?track=${track}`);
-  expect(new URL(page.url()).hash).toBe('#membership-return');
+  // Music consumes the fragment into memory; it is not retained in history.
+  await expect(page.locator('[data-music-return-notice]')).toContainText('Membership is syncing');
+  await expect(page.locator('audio')).not.toHaveAttribute('src', /.+/);
   expect(state.keys).toEqual([]);
 });
 
