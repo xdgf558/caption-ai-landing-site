@@ -1,0 +1,67 @@
+---
+import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw } from '@lucide/astro';
+import '../styles/music-player.css';
+interface Props { previewLabel?: string; }
+const { previewLabel } = Astro.props;
+---
+<section class="station-music-player" data-music-player aria-label="音乐播放器" data-locale="zh-Hans">
+  <audio data-music-audio preload="none"></audio>
+  <div class="station-music-layout">
+    <div class="station-music-library">
+      {previewLabel && <span class="station-music-preview-label">{previewLabel}</span>}
+      <h1>音乐小站</h1>
+      <p class="station-music-intro">选一首，让日常慢下来。</p>
+      <div class="station-music-catalog-message" data-catalog-message role="status">正在整理曲目…</div>
+      <button class="station-music-retry" data-catalog-retry hidden type="button"><RefreshCw size={18} />重新加载</button>
+      <ul class="station-music-tracks" data-track-list aria-label="选择歌曲"></ul>
+    </div>
+    <aside class="station-music-detail" aria-label="当前歌曲" data-track-detail hidden>
+      <div class="station-music-art">
+        <img data-cover alt="" width="480" height="480" hidden />
+        <div data-cover-fallback class="station-music-art-fallback"><Music2 size={64} /><span>暂无封面</span></div>
+      </div>
+      <h2 data-track-title></h2>
+      <p class="station-music-byline"><span data-track-creator></span><span aria-hidden="true"> · </span><span data-track-access></span></p>
+      <span class="station-music-status" data-play-status role="status" aria-live="polite">尚未播放</span>
+      <p class="station-music-error" data-play-error hidden></p>
+    </aside>
+  </div>
+  <div class="station-music-dock" data-player-dock hidden aria-label="播放控制">
+    <div class="station-music-dock-inner">
+      <div class="station-music-now">
+        <img data-mini-cover alt="" width="80" height="80" hidden />
+        <div><strong data-mini-title></strong><span data-mini-description></span></div>
+      </div>
+      <button class="station-music-main-play" data-main-play type="button" aria-label="播放" disabled>
+        <span class="station-music-main-play-circle"><Play data-play-icon size={32} fill="currentColor" /><Pause data-pause-icon size={32} fill="currentColor" hidden /><LoaderCircle data-loading-icon size={32} hidden /></span>
+        <span data-play-label>播放</span>
+      </button>
+      <div class="station-music-progress">
+        <span data-current-time aria-live="off">00:00</span>
+        <input data-progress type="range" min="0" max="1" step="0.1" value="0" aria-label="播放进度" disabled />
+        <span data-duration aria-live="off">--:--</span>
+      </div>
+      <div class="station-music-volume">
+        <button data-mute type="button" aria-label="静音" aria-pressed="false"><Volume2 data-sound-icon size={25} /><VolumeX data-mute-icon size={25} hidden /></button>
+        <input data-volume type="range" min="0" max="1" step="0.01" value="1" aria-label="音量" />
+      </div>
+    </div>
+    <p class="station-music-dock-error" data-dock-error hidden></p>
+  </div>
+  <template data-track-template>
+    <li class="station-music-track">
+      <button class="station-music-select" type="button">
+        <img data-row-cover alt="" width="88" height="88" />
+        <Music2 data-row-fallback size={40} hidden />
+        <span class="station-music-track-copy"><strong data-row-title></strong><span data-row-description></span></span>
+      </button>
+      <span class="station-music-track-duration" data-row-duration></span>
+      <button class="station-music-row-play" data-row-play type="button"><Play data-play-icon size={23} fill="currentColor" /><Pause data-pause-icon size={23} fill="currentColor" hidden /><LoaderCircle data-loading-icon size={23} hidden /></button>
+    </li>
+  </template>
+</section>
+<script>
+  import { mountMusicPlayer } from '../scripts/musicPlayerClient.js';
+  const root = document.querySelector('[data-music-player]');
+  if (root instanceof HTMLElement) mountMusicPlayer(root);
+</script>

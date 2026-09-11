@@ -31,6 +31,9 @@ jobs:
       - name: Verify music admin client contracts
         run: npm run test:music:admin-ui
 
+      - name: Build isolated music player preview
+        run: npm run build:music:player-preview
+
       - name: Verify isolated music Workers D1 and R2 runtime
         run: npm run test:music:runtime
 

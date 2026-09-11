@@ -12,3 +12,6 @@ test-results/
 # Music staging execution records stay local, including sanitized reports.
 music-staging-http-records*/
 ops/evidence/music-staging-http-*.json
+
+# Design comparisons and execution evidence are local-only.
+/design-qa.md
