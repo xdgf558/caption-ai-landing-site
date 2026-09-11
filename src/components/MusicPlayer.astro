@@ -1,5 +1,5 @@
 ---
-import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ListMusic, X, Search, SlidersHorizontal, ChevronUp, Heart } from '@lucide/astro';
+import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ListMusic, X, Search, SlidersHorizontal, ChevronUp, Heart, Share2, Link } from '@lucide/astro';
 import '../styles/music-player.css';
 import '../styles/music-mobile.css';
 import '../styles/music-personal.css';
@@ -36,6 +36,12 @@ const t = musicText(lang);
               <label>{t('收听方式')}<select data-access-filter><option value="">{t('全部')}</option><option value="free">{t('免费')}</option><option value="vip">VIP</option></select></label>
               <label>{t('歌单')}<select data-collection-filter><option value="">{t('全部歌曲')}</option></select></label>
             </div>
+            <div class="station-music-link-actions" data-collection-share hidden>
+              <button data-share-music="collection" type="button"><Share2 size={18} />{t('分享歌单')}</button>
+              <button data-copy-music="collection" type="button"><Link size={18} />{t('复制链接')}</button>
+              <p data-share-message="collection" role="status"></p>
+              <input data-share-url="collection" readonly hidden aria-label={t('歌单链接')} />
+            </div>
             <details data-tag-filters hidden><summary>{t('风格')} · {t('心情')}</summary><fieldset data-genre-filter><legend>{t('风格')}</legend></fieldset><fieldset data-mood-filter><legend>{t('心情')}</legend></fieldset></details>
             <button type="button" data-clear-filters hidden>{t('清除筛选')}</button>
       <details class="station-music-list-help"><summary>{t('播放列表说明')}</summary><p class="station-music-queue-help" id="music-list-play-help">{t('点击列表的播放按钮，会按当前列表重建队列；底栏继续播放保留原队列。')}</p></details>
@@ -51,6 +57,8 @@ const t = musicText(lang);
         <p data-library-count role="status"></p>
         <p class="station-music-local-notice" data-local-notice role="status" hidden></p>
         <p class="station-music-local-notice" data-resume-notice role="status" hidden></p>
+        <p class="station-music-local-notice" data-music-return-notice role="status" hidden></p>
+        <a data-return-membership hidden>{t('前往会员中心')}</a>
       </div>}
       <div class="station-music-list-heading"><h2 data-list-title>{t('全部歌曲')}</h2><div class="station-music-queue-tools" aria-label={t('队列设置')}>
         <button data-play-all type="button" disabled><Play size={16} />{t('播放全部')}</button>
@@ -82,6 +90,12 @@ const t = musicText(lang);
         <button data-access-refresh type="button">{t('重新核验资格')}</button>
         <a data-membership-link hidden>{t('前往会员中心')}</a>
       </div>
+      {library && <div class="station-music-link-actions">
+        <button data-share-music="track" type="button"><Share2 size={18} />{t('分享歌曲')}</button>
+        <button data-copy-music="track" type="button"><Link size={18} />{t('复制链接')}</button>
+        <p data-share-message="track" role="status"></p>
+        <input data-share-url="track" readonly hidden aria-label={t('歌曲链接')} />
+      </div>}
       {library && <details class="station-music-lyrics" data-lyrics-panel>
         <summary>{t('歌词')}</summary>
         <p data-lyrics-message></p>

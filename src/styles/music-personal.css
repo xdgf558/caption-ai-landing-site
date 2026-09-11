@@ -20,6 +20,10 @@
 .station-music-lyrics-content p { font: inherit; padding: .375rem .625rem; margin: 0; border-left: 3px solid transparent; }
 .station-music-lyrics-content [aria-current='true'] { color: var(--music-accent); border-left-color: var(--music-accent); background: var(--music-accent-soft); font-weight: 700; }
 .station-music-lyrics button { margin-top: .75rem; }
+.station-music-link-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
+.station-music-link-actions button { display: inline-flex; align-items: center; gap: .375rem; padding: .625rem .75rem; border: 1px solid var(--music-line); border-radius: .5rem; color: var(--music-ink); background: #fffdf9; }
+.station-music-link-actions p { width: 100%; margin: 0; font-size: .875rem; }
+.station-music-link-actions input { width: 100%; min-width: 0; padding: .625rem; }
 @media (max-width: 48rem) {
   .station-music-player[data-library] .station-music-track { grid-template-columns: minmax(0, 1fr) 44px 44px; gap: .25rem; }
   .station-music-player[data-library] [data-row-creator] { display: none; }

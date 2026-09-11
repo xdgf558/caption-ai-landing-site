@@ -208,6 +208,9 @@ const clientConfig = {
 >
   <script id="reader-client-config" type="application/json" set:html={JSON.stringify(clientConfig)} />
   <div class="reader-center-v2">
+    <section class="reader-panel music-member-return" data-music-member-return hidden>
+      <a class="reader-v2-button reader-v2-button--secondary"></a><p></p>
+    </section>
     <section class="reader-auth-shell" id="reader-auth-shell" aria-labelledby="reader-auth-heading">
       <div class="reader-auth-intro">
         <p class="reader-v2-kicker">Member Center</p>
@@ -640,11 +643,13 @@ const clientConfig = {
     import qrcode from 'qrcode-generator';
     import { safeReturnPath } from '../safeReturnPath.js';
     import { pendingMembershipKey } from '../data/membership-redemption-client.js';
+    import { mountMusicMemberReturn } from '../scripts/musicMemberReturn.js';
 
     const readerClientConfigNode = document.getElementById('reader-client-config');
     const readerClientConfig = JSON.parse(readerClientConfigNode?.textContent || '{}');
     const readerLocale = readerClientConfig.locale || 'zh-Hant';
     const readerLibraryPath = readerClientConfig.libraryPath || '/zh-hant/library/';
+    const musicEntry = mountMusicMemberReturn(document.querySelector('[data-music-member-return]'), { locale: readerLocale });
     const readerMessages = readerClientConfig.messages || {};
     const readerUi = readerClientConfig.ui || {};
     const formatReaderMessage = (key, values = {}) => String(readerMessages[key] || key).replace(
@@ -1451,7 +1456,8 @@ const clientConfig = {
     const query = new URLSearchParams(window.location.search);
     const resetToken = query.get('resetToken') || '';
     const resetEmail = query.get('resetEmail') || '';
-    const redirectPath = safeReturnPath(query.get('returnTo'), readerLibraryPath);
+    // Music visitors explicitly return after managing membership, not after login.
+    const redirectPath = query.get('source') === 'music' ? readerLibraryPath : safeReturnPath(query.get('returnTo'), readerLibraryPath);
 
     if (resetEmail) {
       resetIdentifierInput.value = resetEmail;
@@ -1737,7 +1743,7 @@ const clientConfig = {
             orderType: 'credit-pack',
             credits: pendingCreditPack.credits,
             locale: readerLocale,
-            returnPath: readerLibraryPath
+            returnPath: musicEntry?.checkoutReturnPath || readerLibraryPath
           })
         });
         const data = await response.json();
@@ -1808,6 +1814,10 @@ const clientConfig = {
       .catch((error) => setStatus(caughtReaderMessage(error, 'sessionLoadFailed'), 'error'));
   </script>
 </BaseLayout>
+<style>
+  .music-member-return { margin-bottom: 1.5rem; padding: 1.25rem; }
+  .music-member-return p { margin: .75rem 0 0; overflow-wrap: anywhere; }
+</style>
 
 <style>
   .reader-vip-heading h2 { font-size: 24px; max-width: none; }

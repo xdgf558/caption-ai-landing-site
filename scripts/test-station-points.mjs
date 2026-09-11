@@ -45,7 +45,7 @@ assert.match(librarySource, /\{vip\.notice\}/);
 assert.doesNotMatch(librarySource, /付費軟體下載權限|Paid software downloads|softwareAccessDesc:|plannedNotice:|whatPointsDoDesc:/);
 assert.match(librarySource, /id="reader-credit-cost"/);
 assert.match(librarySource, /locale:\s*readerLocale/);
-assert.match(librarySource, /returnPath:\s*readerLibraryPath/);
+assert.match(librarySource, /returnPath:\s*musicEntry\?\.checkoutReturnPath \|\| readerLibraryPath/);
 assert.doesNotMatch(librarySource, /payCurrency:/);
 assert.match(productSource, /en:\s*'\/en\/library\/'/);
 assert.match(productSource, /ja:\s*'\/ja\/library\/'/);

@@ -101,3 +101,60 @@ for (const returnTo of ['/\\outside.example', '/%255coutside.example', '/a/..//o
     expect(new URL(page.url()).pathname).toBe('/en/library/');
   });
 }
+
+test('music login stays in the member center; explicit safe return respects the public gate and never redeems', async ({ page }) => {
+  const state = await fixture(page, { authenticated: false });
+  const track = '11111111-1111-4111-8111-111111111111';
+  await page.goto(`/en/library/?source=music&returnTo=${encodeURIComponent(`/en/music/?track=${track}&payment=success&vip=true`)}`);
+  const back = page.locator('[data-music-member-return] a');
+  await expect(back).toHaveAttribute('href', `/en/music/?track=${track}#membership-return`);
+  await page.locator('#reader-identifier').fill('fixture@example.test');
+  await page.locator('#reader-password').fill('fixture-password');
+  await page.locator('#reader-login-submit').click();
+  await expect(page.locator('#reader-membership-panel')).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/en/library/');
+  expect(state.keys).toEqual([]);
+  const landing = page.waitForResponse(response => new URL(response.url()).pathname === '/en/music/' && response.request().isNavigationRequest());
+  await back.click();
+  const response = await landing;
+  expect(new URL(page.url()).pathname).toBe('/en/music/');
+  expect(new URL(page.url()).search).toBe(`?track=${track}`);
+  // This suite's Worker fixture keeps the music gate closed. Navigation is not
+  // permission to render the player; open-gate playback uses the music fixture.
+  expect(response.status()).toBe(503);
+  expect((await response.json()).error.code).toBe('MUSIC_PUBLIC_DISABLED');
+  await expect(page.locator('audio')).toHaveCount(0);
+  expect(state.keys).toEqual([]);
+});
+
+test('invalid music context cannot create a return link or bypass existing redemption controls', async ({ page }) => {
+  const state = await fixture(page);
+  await page.goto('/en/library/?source=music&returnTo=https%3A%2F%2Fevil.test%2Fmusic%2F');
+  await expect(page.locator('#reader-membership-panel')).toBeVisible();
+  await expect(page.locator('[data-music-member-return]')).toBeHidden();
+  expect(state.keys).toEqual([]);
+});
+
+test('checkout sends only the selected points pack and sanitized music navigation; it does not redeem VIP', async ({ page }) => {
+  const bodies=[],pack={ credits:100, label:'100 Station Points', priceAmount:10, priceCurrency:'USD' };
+  await page.route('**/api/**', async route => {
+    const request=route.request();
+    if (request.method() !== 'GET') {
+      bodies.push({path:new URL(request.url()).pathname,body:request.postDataJSON()});
+      // Deliberately fail the mock checkout: no external payment navigation.
+      return route.fulfill({status:503,json:{ok:false}});
+    }
+    await route.fulfill({json:{ok:true,authenticated:true,account:{id:1,email:'fixture@example.test',balanceCredits:0},
+      publicCheckoutEnabled:true,readerCredits:{enabled:true,packs:[pack]},checkoutEnabled:true,packs:[pack],
+      entitlements:[],bookmarks:[],ledger:[],totp:{enabled:false}}});
+  });
+  await page.goto(`/en/library/?source=music&returnTo=${encodeURIComponent('/en/music/?collection=quiet&vip=true&token=private')}`);
+  await page.locator('[data-reader-view="points"]:visible').click();
+  await page.locator('.reader-credit-pack-button').click();
+  await expect(page.locator('#reader-checkout-dialog')).toBeVisible();
+  expect(bodies).toEqual([]);
+  await page.locator('#reader-checkout-confirm').click();
+  await expect.poll(()=>bodies.length).toBe(1);
+  expect(bodies).toEqual([{path:'/api/novels/payments/checkout',body:{orderType:'credit-pack',credits:100,locale:'en',
+    returnPath:'/en/library/?source=music&returnTo=%2Fen%2Fmusic%2F%3Fcollection%3Dquiet'}}]);
+});

@@ -1,6 +1,24 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+分享歌曲|分享歌曲|Share song|曲を共有
+分享歌单|分享歌單|Share playlist|プレイリストを共有
+复制链接|複製連結|Copy link|リンクをコピー
+歌曲链接|歌曲連結|Song link|曲のリンク
+歌单链接|歌單連結|Playlist link|プレイリストのリンク
+链接已复制。|連結已複製。|Link copied.|リンクをコピーしました。
+分享窗口已完成。|分享視窗已完成。|Share dialog completed.|共有画面を閉じました。
+请选中并复制下面的链接。|請選取並複製下面的連結。|Select and copy the link below.|下のリンクを選択してコピーしてください。
+分享的歌曲或歌单已不可用。|分享的歌曲或歌單已無法使用。|The shared song or playlist is unavailable.|共有された曲またはプレイリストは利用できません。
+暂时无法读取这首歌曲或歌单，请重新加载。|暫時無法讀取這首歌曲或歌單，請重新載入。|This song or playlist could not be loaded. Please reload.|この曲またはプレイリストを読み込めません。再読み込みしてください。
+正在读取指定歌曲或歌单…|正在讀取指定歌曲或歌單…|Loading the selected song or playlist…|指定の曲またはプレイリストを読み込み中…
+返回音乐|返回音樂|Return to music|音楽に戻る
+返回音乐后会重新核验收听资格，并保持暂停。|返回音樂後會重新核驗收聽資格，並保持暫停。|Listening access will be checked again when you return. Playback stays paused.|音楽に戻ると再生資格を再確認します。再生は一時停止のままです。
+会员权益正在同步，最多等待 60 秒。|會員權益正在同步，最多等待 60 秒。|Membership is syncing. This check lasts up to 60 seconds.|会員資格を同期中です。確認は最大60秒で終了します。
+权益已重新核验，点击播放继续。|權益已重新核驗，點擊播放繼續。|Access has been checked. Press play to continue.|資格を確認しました。再生ボタンで続けられます。
+VIP 资格有效，完整音频暂未开放。|VIP 資格有效，完整音訊暫未開放。|Your VIP membership is active. Full audio is not available yet.|VIP会員資格は有効です。フル音源は現在提供されていません。
+请登录会员中心后返回音乐。|請登入會員中心後返回音樂。|Sign in at the member center, then return to music.|会員センターでログインしてから音楽に戻ってください。
+会员权益尚未确认，请稍后重新核验或返回会员中心。|會員權益尚未確認，請稍後重新核驗或返回會員中心。|Membership is not confirmed yet. Check again later or return to the member center.|会員資格はまだ確認できません。後ほど再確認するか、会員センターに戻ってください。
 收藏夹|收藏夾|Saved|保存済み
 最近|最近|Recent|履歴
 歌词|歌詞|Lyrics|歌詞
