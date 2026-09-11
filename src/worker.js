@@ -57,6 +57,7 @@ import { handleMusicMedia, isMusicMediaPath } from './music/mediaResponse.js';
 import { handleMusicPublic, isMusicPublicPath } from './music/publicHttp.js';
 import { isMusicPagePath } from './music/pagePaths.js';
 import { handleMusicPage } from './music/pageHttp.js';
+import { isMusicShareCardPath, handleMusicShareCard } from './music/shareCardHttp.js';
 import { handleMusicAnalytics, isMusicAnalyticsPath, runMusicAnalyticsRetention } from './music/analytics.js';
 import {
   defaultAdminEmail,
@@ -22874,6 +22875,7 @@ export default {
 
     if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
     if (isMusicPagePath(url.pathname)) return handleMusicPage(request, env);
+    if (isMusicShareCardPath(url.pathname)) return handleMusicShareCard(request, env);
     if (isMusicAnalyticsPath(url.pathname)) return handleMusicAnalytics(request, env);
     if (isMusicMediaPath(url.pathname)) return handleMusicMedia(request, env);
     if (isMusicPublicPath(url.pathname)) return handleMusicPublic(request, env);

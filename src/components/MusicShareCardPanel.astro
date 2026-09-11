@@ -1,0 +1,35 @@
+---
+import { X, Download, Share2, Link, ExternalLink, LoaderCircle } from '@lucide/astro';
+import { musicText } from '../scripts/musicMessages.js';
+import '../styles/music-share-card.css';
+const t = musicText(Astro.props.lang);
+---
+<dialog class="station-music-share-dialog" data-share-card-dialog id="music-share-card" aria-labelledby="music-share-card-heading" data-card-format="poster">
+  <header class="station-music-share-heading">
+    <div><h2 id="music-share-card-heading">{t('分享歌曲')}</h2><p data-card-track></p></div>
+    <button data-panel-close="share" type="button" aria-label={t('关闭分享卡片')} autofocus><X size={24} /></button>
+  </header>
+  <div class="station-music-share-layout">
+    <div class="station-music-share-artwork">
+      <div data-card-busy class="station-music-share-busy" hidden><LoaderCircle size={26} /><span>{t('正在制作歌曲卡片…')}</span></div>
+      <img data-card-image alt="" hidden />
+    </div>
+    <div class="station-music-share-options">
+      <div class="station-music-share-formats" role="group" aria-label={t('卡片格式')}>
+        <button data-card-format="poster" type="button" aria-pressed="true">{t('微信海报')}</button>
+        <button data-card-format="card" type="button" aria-pressed="false">{t('横版链接卡')}</button>
+      </div>
+      <p class="station-music-share-hint">{t('将这首歌分享给朋友。扫码后打开歌曲页面，收听资格以页面为准。')}</p>
+      <div class="station-music-share-actions">
+        <a data-card-save download="station-cat-music.png" class="station-music-share-primary" hidden><Download size={19} />{t('保存图片')}</a>
+        <button data-card-native type="button" disabled><Share2 size={19} />{t('分享图片')}</button>
+        <button data-card-copy type="button"><Link size={19} />{t('复制链接')}</button>
+        <a data-card-x target="_blank" rel="noopener noreferrer"><ExternalLink size={19} />{t('前往 X 分享')}</a>
+      </div>
+      <p class="station-music-share-hint">{t('微信中可长按图片保存，再发送给朋友或朋友圈。')}</p>
+      <p data-card-message role="status" aria-live="polite"></p>
+      <button data-card-retry type="button" hidden>{t('重新制作卡片')}</button>
+      <input data-card-url readonly hidden aria-label={t('歌曲链接')} />
+    </div>
+  </div>
+</dialog>

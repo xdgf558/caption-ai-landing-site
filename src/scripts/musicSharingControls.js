@@ -1,14 +1,17 @@
 import { musicShareUrl, shareMusicLink } from '../music/navigation.js';
+import { mountMusicShareCardPanel } from './musicShareCardControls.js';
 
-export function mountMusicSharing(root, { t, locale, origin = globalThis.location.origin, navigator = globalThis.navigator } = {}) {
+export function mountMusicSharing(root, { t, locale, origin = globalThis.location.origin, navigator = globalThis.navigator, fetcher = globalThis.fetch, panels } = {}) {
   const abort = new AbortController();
   let selected = {}, epochs = { track: 0, collection: 0 };
+  const cards = panels ? mountMusicShareCardPanel(root, { t, locale, origin, navigator, fetcher, panels }) : null;
   const id = (kind, value = selected[kind]) => kind === 'track' ? value?.id : value?.slug;
   for (const kind of ['track', 'collection']) {
     const message = root.querySelector(`[data-share-message="${kind}"]`), input = root.querySelector(`[data-share-url="${kind}"]`);
     for (const action of ['share', 'copy']) root.querySelector(`[data-${action}-music="${kind}"]`).addEventListener('click', async () => {
       const value = selected[kind], key = id(kind);
       if (!key) return;
+      if (kind === 'track' && action === 'share' && cards) { cards.open(); return; }
       const epoch = ++epochs[kind]; input.hidden = true; message.textContent = '';
       const result = await shareMusicLink({ title: value.title, url: musicShareUrl(origin, locale, { [kind]: key }) }, { navigator, copyOnly: action === 'copy' });
       if (abort.signal.aborted || epochs[kind] !== epoch || id(kind) !== key) return;
@@ -27,7 +30,8 @@ export function mountMusicSharing(root, { t, locale, origin = globalThis.locatio
         for (const action of ['share', 'copy']) root.querySelector(`[data-${action}-music="${kind}"]`).disabled = !id(kind, value[kind]);
       }
       selected = value;
+      cards?.update(value.track);
       root.querySelector('[data-collection-share]').hidden = !selected.collection;
-    }, destroy() { abort.abort(); }
+    }, destroy() { cards?.destroy(); abort.abort(); }
   };
 }

@@ -1,6 +1,23 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+关闭分享卡片|關閉分享卡片|Close share card|シェアカードを閉じる
+卡片格式|卡片格式|Card format|カード形式
+微信海报|微信海報|WeChat poster|WeChat用ポスター
+横版链接卡|橫版連結卡|Landscape link card|横型リンクカード
+保存图片|儲存圖片|Save image|画像を保存
+分享图片|分享圖片|Share image|画像をシェア
+前往 X 分享|前往 X 分享|Share on X|X でシェア
+重新制作卡片|重新製作卡片|Retry card|カードを再作成
+正在制作歌曲卡片…|正在製作歌曲卡片…|Preparing song card…|曲のカードを作成中…
+分享卡片已准备好。|分享卡片已準備好。|Your share card is ready.|シェアカードを作成しました。
+歌曲分享卡片：{title}|歌曲分享卡片：{title}|Song share card: {title}|曲のシェアカード：{title}
+制作太频繁，请稍后重试。|製作太頻繁，請稍後重試。|Too many requests. Please try again later.|リクエストが多すぎます。しばらくしてから再試行してください。
+这首歌曲已不可用，无法制作卡片。|這首歌曲已不可用，無法製作卡片。|This song is unavailable. A card cannot be created.|この曲は利用できないため、カードを作成できません。
+卡片暂时无法制作，仍可复制歌曲链接。|卡片暫時無法製作，仍可複製歌曲連結。|The card is unavailable. You can still copy the song link.|カードを作成できません。曲のリンクはコピーできます。
+无法分享图片，请保存或长按图片。|無法分享圖片，請儲存或長按圖片。|Image sharing is unavailable. Save or long-press the image.|画像をシェアできません。保存するか、画像を長押ししてください。
+将这首歌分享给朋友。扫码后打开歌曲页面，收听资格以页面为准。|將這首歌分享給朋友。掃碼後開啟歌曲頁面，收聽資格以頁面為準。|Share this song with a friend. The QR code opens its page, where listening access is checked.|この曲を友だちに。QRコードで曲のページを開き、再生資格を確認します。
+微信中可长按图片保存，再发送给朋友或朋友圈。|微信中可長按圖片儲存，再傳送給朋友或朋友圈。|In WeChat, long-press to save the image, then send it to friends or Moments.|WeChatでは画像を長押しして保存し、友だちやモーメンツに送れます。
 收听统计与隐私|收聽統計與隱私|Listening statistics & privacy|再生統計とプライバシー
 帮助了解作品的收听情况。仅在你同意后，发送曲目、试听或完整版、播放里程碑和累计收听时长；不发送收藏、账号或支付信息。|協助了解作品的收聽情況。僅在你同意後，傳送曲目、試聽或完整版、播放里程碑及累計收聽時長；不傳送收藏、帳號或付款資訊。|Help us understand how songs are heard. With your consent, we send the song, preview or full version, playback milestones and accumulated listening time. Saved songs, account and payment details are excluded.|作品の聴かれ方を把握するための任意の統計です。同意後に曲、試聴・フル版、再生の到達点、累計再生時間を送信します。お気に入り、アカウント、決済情報は送りません。
 原始事件最多保留 30 天，匿名每日汇总最多 365 天。撤回会停止采集并清除本机统计会话，已接收的数据按保留期到期。|原始事件最多保留 30 天，匿名每日彙總最多 365 天。撤回會停止蒐集並清除本機統計工作階段，已接收的資料依保留期限到期。|Raw events are kept for up to 30 days; anonymous daily totals for up to 365 days. Withdrawal stops collection and clears this browser’s statistics session. Data already received expires under these limits.|生のイベントは最大30日、匿名の日別集計は最大365日保存します。撤回すると収集を停止し、このブラウザの統計セッションを削除します。受信済みデータは保存期間に従って期限切れになります。

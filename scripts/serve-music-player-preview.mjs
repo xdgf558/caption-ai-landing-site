@@ -5,6 +5,9 @@ import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tracks, demoWav } from './fixtures/music-player/data.mjs';
 import { MUSIC_ANALYTICS_VERSION, validateMusicEvents } from '../src/music/analytics.js';
+import { musicShareCardData, musicShareMetadata, MUSIC_SHARE_FONT } from '../src/music/shareCard.js';
+import { normalizeMusicCardCover, renderMusicShareCard } from '../src/music/shareCardRender.js';
+import { musicPageLocale } from '../src/music/pagePaths.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const libraryPreview = process.env.MUSIC_LIBRARY_PREVIEW === 'true';
@@ -13,7 +16,8 @@ const port = Number(process.env.MUSIC_PLAYER_PREVIEW_PORT || 4198);
 const origin = `http://127.0.0.1:${port}`;
 const wavs = new Map();
 const analyticsPreview = process.env.MUSIC_ANALYTICS_PREVIEW === 'true';
-const counters = { catalog: 0, track: 0, collection: 0, capabilities: 0, access: 0, audio: 0, lyrics: 0, analytics: 0 };
+const counters = { catalog: 0, track: 0, collection: 0, capabilities: 0, access: 0, audio: 0, lyrics: 0, analytics: 0, cards: 0 };
+const sharePreview = process.env.MUSIC_SHARE_CARDS_PREVIEW === 'true';
 async function analyticsAvailable() {
   if (!analyticsPreview) return false;
   try { return JSON.parse(await readFile(resolve(root,'.generated/music-analytics-preview-state.json'),'utf8')).available === true; }
@@ -51,7 +55,7 @@ const server = createServer(async (req, res) => {
     // Local-only switches live outside tracked files. They are not sessions or credentials.
     const fixture = sharingDemo ? { membership: 'member' } : scenario === 'access-lifecycle'
       ? JSON.parse(await readFile(resolve(root, '.generated/music-player-access-state.json'), 'utf8')) : {};
-    const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(url.searchParams.get('locale')) ? url.searchParams.get('locale') : 'zh-Hans';
+    const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(url.searchParams.get('locale')) ? url.searchParams.get('locale') : url.pathname.includes('/music') ? musicPageLocale(url.pathname) : 'zh-Hans';
     const names = { 'zh-Hans': ['窗边的午后', '夜行小站', '慢慢醒来'], 'zh-Hant': ['窗邊的午後', '夜行小站', '慢慢醒來'], en: ['Afternoon by the Window', 'Night Station', 'Waking Slowly'], ja: ['窓辺の午後', '夜の小駅', 'ゆっくり目覚めて'] };
     const lyricsDemo = sharingDemo || ['lyrics-local', 'lyrics-error', 'lyrics-large-text'].includes(scenario);
     const mobileDesign = lyricsDemo || ['mobile-design', 'mobile-large-text'].includes(scenario);
@@ -75,6 +79,18 @@ const server = createServer(async (req, res) => {
     const vip = fixture.membership === 'vip' && !expired;
     const fullAccess = track => track.effectiveAccess === 'free' ? 200 : fixture.membership === 'unavailable' ? 503 : vip ? 200 : expired ? 403 : 401;
     if (url.pathname === '/__local/requests') { send(200, counters); return; }
+    const shareMatch = /^\/api\/music\/tracks\/([a-f0-9-]+)\/share\.png$/.exec(url.pathname);
+    if (shareMatch) {
+      if (!sharePreview) { send(503, { error: { code: 'MUSIC_SHARE_CARDS_DISABLED' } }); return; }
+      const track = demoTracks.find(item => item.id === shareMatch[1]), format = url.searchParams.get('format');
+      if (!track || url.searchParams.get('v') !== '1' || !['card', 'poster'].includes(format) || [...url.searchParams.keys()].sort().join(',') !== 'format,locale,v') { send(400, { error: { code: 'INVALID_INPUT' } }); return; }
+      let state = {}; try { state = JSON.parse(await readFile(resolve(root, '.generated/music-share-preview-state.json'), 'utf8')); } catch {}
+      if (state.unavailable) { send(503, { error: { code: 'LOCAL_CARD_UNAVAILABLE' } }); return; }
+      counters.cards++;
+      const cover = normalizeMusicCardCover(await readFile(resolve(root, 'scripts/fixtures/music-player/artwork', `${track.art}.webp`)), 'image/webp');
+      const card = await renderMusicShareCard(musicShareCardData(track, origin, locale), format, cover, await readFile(resolve(root, 'public' + MUSIC_SHARE_FONT)));
+      send(200, Buffer.from(card), 'image/png'); return;
+    }
     if (url.pathname === '/api/music/catalog') {
       counters.catalog++;
       if (scenario === 'catalog-error') { send(503, { error: { code: 'MUSIC_PUBLIC_DISABLED' } }); return; }
@@ -150,6 +166,10 @@ const server = createServer(async (req, res) => {
     const file = resolve(staticRoot, '.' + decodeURIComponent(url.pathname) + (url.pathname.endsWith('/') ? 'index.html' : ''));
     if (!file.startsWith(staticRoot + sep)) { send(404, 'Not found', 'text/plain'); return; }
     let bytes = await readFile(file);
+    if (sharePreview && extname(file) === '.html' && url.pathname.endsWith('/music/') && url.searchParams.has('track')) {
+      const track = demoTracks.find(item => item.id === url.searchParams.get('track'));
+      if (track) bytes = Buffer.from(bytes.toString().replace(/<title>[\s\S]*?<\/title>|<link\b[^>]*rel="canonical"[^>]*>|<meta\b[^>]*(?:property="og:[^"]*"|name="(?:twitter:[^"]*|description)")[^>]*>/gi, '').replace('</head>', musicShareMetadata(track, origin, locale) + '</head>'));
+    }
     if (['mobile-large-text', 'lyrics-large-text', 'sharing-large-text'].includes(scenario) && extname(file) === '.html') bytes = Buffer.from(bytes.toString().replace('</head>', '<style>html{font-size:200% !important}</style></head>'));
     send(200, bytes, mime[extname(file)] || 'application/octet-stream');
   } catch { send(404, 'Local preview unavailable', 'text/plain'); }

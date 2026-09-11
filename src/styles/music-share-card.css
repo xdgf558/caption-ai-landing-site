@@ -1,0 +1,26 @@
+.station-music-share-dialog { box-sizing: border-box; width: min(940px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 26px; border: 1px solid var(--music-line); border-radius: 16px; color: var(--music-ink); background: var(--music-bg); }
+.station-music-share-dialog::backdrop { background: #1f2d2966; }
+.station-music-share-heading { display: flex; align-items: start; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+.station-music-share-heading h2 { font-family: var(--music-display); font-size: 1.875rem; line-height: 1.3; margin: 0; }
+.station-music-share-heading p { font-size: .9375rem; margin: 8px 0 0; color: var(--music-muted); overflow-wrap: anywhere; }
+.station-music-share-dialog :is(button,a[data-card-save],a[data-card-x]) { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 44px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--music-line); border-radius: 8px; background: #fffdf9; color: var(--music-ink); text-decoration: none; font-size: .9375rem; line-height: 1.4; cursor: pointer; }
+.station-music-share-heading > button { padding: 8px; flex-shrink: 0; }
+.station-music-share-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(230px, 1fr); gap: 28px; align-items: start; }
+.station-music-share-artwork { min-width: 0; min-height: 180px; display: grid; place-items: center; }
+.station-music-share-artwork img { display: block; width: 100%; height: auto; max-width: 370px; border: 1px solid var(--music-line); border-radius: 9px; }
+[data-card-format="card"] .station-music-share-artwork img { max-width: none; }
+.station-music-share-busy { display: grid; justify-items: center; gap: 18px; color: var(--music-muted); font-size: .9375rem; }
+.station-music-share-formats { display: flex; flex-wrap: wrap; gap: 8px; }
+.station-music-share-formats [aria-pressed="true"] { border-color: var(--music-accent); background: #e8efeb; color: var(--music-accent); }
+.station-music-share-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: 10px; margin-block: 24px; }
+.station-music-share-actions svg { flex-shrink: 0; }
+.station-music-share-dialog a.station-music-share-primary { background: var(--music-accent); border-color: var(--music-accent); color: #fff; }
+.station-music-share-hint, .station-music-share-options [role="status"] { font-size: .9375rem; line-height: 1.7; color: var(--music-muted); overflow-wrap: anywhere; }
+.station-music-share-options input { box-sizing: border-box; width: 100%; padding: 12px; border: 1px solid var(--music-line); border-radius: 8px; }
+@media (max-width: 48rem) {
+  .station-music-share-dialog { width: calc(100% - 16px); max-height: calc(100dvh - 16px); padding: 18px; scroll-padding-block-start: var(--music-share-heading-space, 7rem); }
+  .station-music-share-layout { grid-template-columns: minmax(0,1fr); gap: 20px; }
+  .station-music-share-artwork img { max-width: 320px; }
+  .station-music-share-heading h2 { font-size: 1.625rem; }
+  .station-music-share-heading { position: sticky; top: -18px; z-index: 1; padding-block: 18px 12px; margin-top: -18px; margin-bottom: 18px; background: var(--music-bg); }
+}

@@ -3,7 +3,7 @@ export function createMusicPanelHistory(host, onChange) {
   const owner = `music-${Math.random().toString(36).slice(2)}`;
   const read = () => {
     const marker = host.history.state?.musicPanel;
-    return marker?.owner === owner && ['detail', 'filter', 'queue', 'menu'].includes(marker.kind) ? marker.kind : null;
+    return marker?.owner === owner && ['detail', 'filter', 'queue', 'menu', 'share'].includes(marker.kind) ? marker.kind : null;
   };
   const write = kind => {
     const state = { ...host.history.state };
@@ -20,10 +20,10 @@ export function createMusicPanelHistory(host, onChange) {
   host.addEventListener('popstate', pop);
   const api = {
     open(kind) {
-      if (disposed || !['detail', 'filter', 'queue', 'menu'].includes(kind)) return;
+      if (disposed || !['detail', 'filter', 'queue', 'menu', 'share'].includes(kind)) return;
       if (pendingBack) { pendingOpen = kind; return; }
       if (!read()) base = JSON.stringify(host.history.state?.musicLibrary);
-      host.history[read() ? 'replaceState' : 'pushState'](write(kind), '', host.location.href);
+      host.history[read() && kind !== 'share' ? 'replaceState' : 'pushState'](write(kind), '', host.location.href);
       onChange(kind);
     },
     close() {
@@ -43,13 +43,13 @@ export function mountMusicPanels(root, { host = window } = {}) {
   const doc = root.ownerDocument, abort = new AbortController();
   const $ = selector => root.querySelector(selector), on = (node, name, fn) => node?.addEventListener(name, fn, { signal: abort.signal });
   const mobile = host.matchMedia('(max-width: 48rem)');
-  const dialogs = { detail: $('[data-detail-dialog]'), filter: $('[data-filter-dialog]'), queue: $('[data-queue-dialog]'), menu: doc.querySelector('[data-menu-dialog]') };
+  const dialogs = { detail: $('[data-detail-dialog]'), filter: $('[data-filter-dialog]'), queue: $('[data-queue-dialog]'), menu: doc.querySelector('[data-menu-dialog]'), share: $('[data-share-card-dialog]') };
   const dock = $('[data-player-dock]'), detail = $('[data-track-detail]'), filter = $('[data-filter-panel]');
   const nav = doc.querySelector('[data-music-nav-content]'), navHome = nav?.parentElement;
   const previous = $('[data-previous]'), next = $('[data-next]'), transport = previous.parentElement;
   const openers = new Map();
   let active = null, oldOverflow = null, disposed = false;
-  const toggles = { detail: '[data-detail-toggle]', filter: '[data-filter-toggle]', queue: '[data-queue-toggle]', menu: '[data-music-menu-toggle]' };
+  const toggles = { detail: '[data-detail-toggle]', filter: '[data-filter-toggle]', queue: '[data-queue-toggle]', menu: '[data-music-menu-toggle]', share: '[data-share-music="track"]' };
   const focusable = node => node?.isConnected && !node.disabled && node.getClientRects().length && !node.closest('[inert]');
   const restore = kind => {
     const candidates = [openers.get(kind), ...doc.querySelectorAll(toggles[kind]), $('[data-music-search]')];
@@ -61,7 +61,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
   };
   const switchPanel = kind => {
     if (disposed) return;
-    if (!dialogs[kind] || (kind !== 'queue' && !mobile.matches) || (kind === 'detail' && detail.hidden)) kind = null;
+    if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches) || (kind === 'detail' && detail.hidden)) kind = null;
     if (active === kind) return;
     const last = active;
     if (active) {
@@ -86,7 +86,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
   const history = createMusicPanelHistory(host, switchPanel);
   const open = (kind, opener = doc.activeElement) => {
     if (kind === 'detail' && !mobile.matches) { $('[data-track-title]')?.focus({ preventScroll: true }); return; }
-    if (!dialogs[kind] || (kind !== 'queue' && !mobile.matches) || (kind === 'detail' && detail.hidden)) return;
+    if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches) || (kind === 'detail' && detail.hidden)) return;
     openers.set(kind, opener);
     history.open(kind);
   };

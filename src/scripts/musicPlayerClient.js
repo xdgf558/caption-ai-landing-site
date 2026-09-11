@@ -38,7 +38,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const local = isLibrary ? createMusicLocalData() : null;
   let favoriteIds = new Set(local?.snapshot().favorites || []);
   const lyrics = isLibrary ? mountMusicLyrics(root, { t, fetcher }) : null;
-  const sharing = isLibrary ? mountMusicSharing(root, { t, locale }) : null;
+  const sharing = isLibrary ? mountMusicSharing(root, { t, locale, fetcher, panels }) : null;
   // Subscribe before queue advancement so a natural ended event is measured
   // before the queue can synchronously select the next source.
   const analytics = isLibrary ? mountMusicAnalytics(root,player,{fetcher,t,
