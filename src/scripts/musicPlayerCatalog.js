@@ -13,9 +13,22 @@ export function readPlayerCatalog(body) {
         track.previewDurationSec > Math.min(45, track.durationSec / 2) + 0.25 || !Number.isFinite(track.previewSourceStartSec) || track.previewSourceStartSec < 0))) {
       throw new Error('INVALID_CATALOG');
     }
+    const optionalText = (key, max) => {
+      if (track[key] === undefined) return '';
+      if (typeof track[key] !== 'string' || track[key].length > max || /[\u0000-\u001f\u007f]/.test(track[key])) throw new Error('INVALID_CATALOG');
+      return track[key];
+    };
+    const tags = key => {
+      if (track[key] === undefined) return [];
+      if (!Array.isArray(track[key]) || track[key].length > 12 || track[key].some(value => !text(value, 40))) throw new Error('INVALID_CATALOG');
+      return [...new Set(track[key])];
+    };
+    const publishedAt = optionalText('publishedAt', 30);
+    if (publishedAt && !Number.isFinite(Date.parse(publishedAt))) throw new Error('INVALID_CATALOG');
     seen.add(track.id);
     // Reconstruct canonical same-origin URLs, never trust a URL from JSON.
-    return { id: track.id, title: track.title, creatorName: track.creatorName, durationSec: track.durationSec,
+    return { summary: optionalText('summary', 500), genres: tags('genres'), moods: tags('moods'), publishedAt,
+      id: track.id, title: track.title, creatorName: track.creatorName, durationSec: track.durationSec,
       audioVersion: track.audioVersion, policyVersion: track.policyVersion, effectiveAccess: track.effectiveAccess,
       previewAvailable: track.previewAvailable, previewDurationSec: track.previewDurationSec,
       previewSourceStartSec: track.previewSourceStartSec,
@@ -31,4 +44,19 @@ export function formatMusicTime(value) {
   if (!Number.isFinite(value) || value < 0) return '--:--';
   const seconds = Math.floor(value);
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+export function readPlayerCollections(body, tracks) {
+  if (body.collections === undefined) return [];
+  if (!Array.isArray(body.collections) || body.collections.length > 500) throw new Error('INVALID_COLLECTIONS');
+  const ids = new Set(tracks.map(track => track.id)), seen = new Set(), slugs = new Set();
+  return body.collections.map(item => {
+    if (!item || !idPattern.test(item.id) || seen.has(item.id) || slugs.has(item.slug) ||
+      typeof item.slug !== 'string' || item.slug.length > 100 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.slug) ||
+      !text(item.title, 200) || typeof item.description !== 'string' || item.description.length > 500 ||
+      !Array.isArray(item.trackIds) || item.trackIds.length > 500 || new Set(item.trackIds).size !== item.trackIds.length ||
+      item.trackIds.some(id => !idPattern.test(id))) throw new Error('INVALID_COLLECTIONS');
+    seen.add(item.id); slugs.add(item.slug);
+    return { id: item.id, slug: item.slug, title: item.title, description: item.description, trackIds: item.trackIds.filter(id => ids.has(id)) };
+  }).filter(item => item.trackIds.length);
 }

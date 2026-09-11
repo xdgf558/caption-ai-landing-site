@@ -33,6 +33,11 @@ binding = "ASSETS"
 not_found_handling = "404-page"
 run_worker_first = [
   "/api/*",
+  # Music HTML must pass its public gate before static asset lookup.
+  "/music",
+  "/music/*",
+  # Encoded HTML paths must reach the same gate before the asset router decodes them.
+  "/*%*",
   # Keep both bare and nested admin routes behind the Worker JWT gate. Cloudflare Access remains the outer gate.
   "/admin",
   "/admin/*",

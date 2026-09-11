@@ -19,6 +19,8 @@ export const requiredDynamicIndexRoutes = [
 ];
 
 const excludedPrefixes = [
+  // Music remains unlisted until release approval, including its language alias.
+  '/music/', '/en/music/', '/ja/music/', '/zh-hans/music/', '/zh-hant/music/',
   '/apps/',
   '/points/',
   '/privacy/',
