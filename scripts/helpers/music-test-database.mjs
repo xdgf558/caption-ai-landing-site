@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 export function musicTestDatabase() {
   const sql = new DatabaseSync(':memory:');
   sql.exec('PRAGMA foreign_keys=ON');
-  for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql']) {
+  for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql']) {
     sql.exec(readFileSync(new URL(`../../migrations-music/${name}`, import.meta.url), 'utf8'));
   }
   const state = { fail: null, skip: null, lose: false, beforeWrite: null };

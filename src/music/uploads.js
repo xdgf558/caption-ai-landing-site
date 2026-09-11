@@ -5,9 +5,7 @@ import { verifyStoredMusicAsset } from './resources.js';
 import { validateMeasuredPreview } from './audioValidation.js';
 import { boundedBody } from './storage.js';
 
-const chargedSql = `(SELECT COALESCE(SUM(declared_bytes),0) FROM music_upload_sessions)
-  + (SELECT COALESCE(SUM(byte_size),0) FROM music_assets a WHERE NOT EXISTS
-    (SELECT 1 FROM music_upload_sessions u WHERE u.asset_id=a.id))`;
+const chargedSql = '(SELECT COALESCE(SUM(charged_bytes),0) FROM music_storage_charges)';
 export async function uploadReadiness(db) {
   try {
     const s = primary(db);
@@ -19,7 +17,9 @@ export async function uploadReadiness(db) {
   } catch { fail('MUSIC_UPLOADS_NOT_CONFIGURED', 503); }
 }
 async function session(db, id, actorId) {
-  const u = rows(await primary(db).prepare('SELECT * FROM music_upload_sessions WHERE id=? AND actor_id=?').bind(musicId(id), actorId).all())[0];
+  const u = rows(await primary(db).prepare(`SELECT u.*,c.claimed_at AS cleanup_claimed_at,c.released_at AS cleanup_released_at
+    FROM music_upload_sessions u LEFT JOIN music_upload_cleanup c ON c.upload_id=u.id
+    WHERE u.id=? AND u.actor_id=?`).bind(musicId(id), actorId).all())[0];
   if (!u) fail('NOT_FOUND', 404);
   const a = (await loadAssets(db, [u.asset_id]))[0];
   if (!a) fail('MUSIC_DATABASE_UNAVAILABLE', 503);
@@ -29,10 +29,12 @@ function sessionView({ u, a }) {
   return { uploadId: u.id, assetId: a.id, trackId: a.owner_track_id, status: u.status,
     expired: u.status !== 'completed' && u.expires_at <= Date.now(), state: a.state,
     declaredBytes: u.declared_bytes, actualBytes: u.actual_bytes, durationMs: a.duration_ms,
-    contentType: a.content_type, expiresAt: u.expires_at };
+    contentType: a.content_type, expiresAt: u.expires_at,
+    cleanupState: u.cleanup_released_at !== null ? 'released' : u.cleanup_claimed_at !== null ? 'retired' : null };
 }
 export async function readMusicUpload(db, id, actorId) { return sessionView(await session(db, id, actorId)); }
 function live(u, now) {
+  if (u.cleanup_claimed_at !== null) fail('UPLOAD_RETIRED', 410);
   if (u.expires_at <= now || u.status === 'expired') fail('UPLOAD_EXPIRED', 410);
   if (u.status === 'rejected') fail('UPLOAD_REJECTED', 409);
 }
@@ -89,6 +91,7 @@ export async function writeMusicUpload(db, bucket, id, request, context) {
   mutationKey(context.key);
   if (typeof bucket.put !== 'function' || typeof FixedLengthStream !== 'function') fail('MUSIC_UPLOADS_NOT_CONFIGURED', 503);
   const initial = await session(db, id, context.actorId), { u, a } = initial;
+  if (u.cleanup_claimed_at !== null) fail('UPLOAD_RETIRED', 410);
   if (u.status === 'completed') { void request.body?.cancel().catch(() => {}); return sessionView(initial); }
   live(u, Date.now());
   if (!u.expected_sha256) fail('MUSIC_UPLOADS_NOT_CONFIGURED', 503);
@@ -148,6 +151,7 @@ export async function writeMusicUpload(db, bucket, id, request, context) {
 
 export async function completeMusicUpload(db, bucket, id, input, context) {
   fields(input, []);
+  if ((await session(db, id, context.actorId)).u.cleanup_claimed_at !== null) fail('UPLOAD_RETIRED', 410);
   try { return await completeUpload(db, bucket, id, context); }
   catch (error) {
     if (error.code === 'UPLOAD_ALREADY_COMPLETED') return { ...await readMusicUpload(db, id, context.actorId), replayed: true };
@@ -163,6 +167,7 @@ export async function completeMusicUpload(db, bucket, id, input, context) {
 async function completeUpload(db, bucket, id, context) {
   return mutate(db, { ...context, route: `/admin/api/music/uploads/${id}/complete`, command: {} }, async (s, now) => {
     const { u, a } = await session(db, id, context.actorId);
+    if (u.cleanup_claimed_at !== null) fail('UPLOAD_RETIRED', 410);
     if (u.status === 'completed') fail('UPLOAD_ALREADY_COMPLETED', 409);
     live(u, now);
     if (u.status !== 'uploading' || !u.write_token || !u.expected_sha256) fail('UPLOAD_NOT_READY', 409);
