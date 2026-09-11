@@ -17,10 +17,11 @@ const { previewLabel } = Astro.props;
         <button data-repeat type="button" aria-label="顺序播放，点击切换循环方式"><Repeat data-repeat-icon size={17} /><Repeat1 data-repeat-one-icon size={17} hidden /><span data-repeat-label>顺序播放</span></button>
         <button data-queue-toggle type="button" aria-expanded="false" aria-controls="music-queue"><ListMusic size={18} />队列 <span data-queue-count>0</span></button>
       </div>
+      <p class="station-music-queue-help" id="music-list-play-help">点击列表的播放按钮，会按当前列表重建队列；底栏继续播放保留原队列。</p>
       <p class="station-music-queue-notice" data-queue-notice role="status" hidden></p>
       <div class="station-music-catalog-message" data-catalog-message role="status">正在整理曲目…</div>
       <button class="station-music-retry" data-catalog-retry hidden type="button"><RefreshCw size={18} />重新加载</button>
-      <ul class="station-music-tracks" data-track-list aria-label="选择歌曲"></ul>
+      <ul class="station-music-tracks" data-track-list aria-label="选择歌曲" aria-describedby="music-list-play-help"></ul>
     </div>
     <aside class="station-music-detail" aria-label="当前歌曲" data-track-detail hidden>
       <div class="station-music-art">
@@ -62,7 +63,7 @@ const { previewLabel } = Astro.props;
   </div>
   <dialog class="station-music-queue-dialog" data-queue-dialog id="music-queue" aria-labelledby="music-queue-heading">
     <div class="station-music-queue-heading"><h2 id="music-queue-heading">待播队列</h2><button data-queue-close type="button" aria-label="关闭队列" autofocus><X size={22} /></button></div>
-    <p class="station-music-queue-help">这里保留开始播放时的曲目顺序。随机播放时，上一首返回实际收听历史。</p>
+    <p class="station-music-queue-help">从歌曲列表开始播放或点击“播放全部”会重建队列；只浏览歌曲不改变待播顺序。随机播放时，上一首返回实际收听历史。</p>
     <p data-queue-empty>队列为空，选择歌曲或点击播放全部。</p>
     <ul class="station-music-queue-list" data-queue-list></ul>
     <div class="station-music-queue-confirm" data-queue-confirm hidden>
