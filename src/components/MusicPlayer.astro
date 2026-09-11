@@ -1,87 +1,109 @@
 ---
 import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ListMusic, X } from '@lucide/astro';
 import '../styles/music-player.css';
-interface Props { previewLabel?: string; }
-const { previewLabel } = Astro.props;
+import { musicText } from '../scripts/musicMessages.js';
+interface Props { previewLabel?: string; lang?: 'zh-Hans' | 'zh-Hant' | 'en' | 'ja'; library?: boolean; }
+const { previewLabel, lang = 'zh-Hans', library = false } = Astro.props;
+const t = musicText(lang);
 ---
-<section class="station-music-player" data-music-player aria-label="音乐播放器" data-locale="zh-Hans">
+<section class="station-music-player" data-music-player aria-label={t('音乐播放器')} data-locale={lang} data-library={library ? "true" : undefined}>
   <audio data-music-audio preload="none"></audio>
   <div class="station-music-layout">
     <div class="station-music-library">
       {previewLabel && <span class="station-music-preview-label">{previewLabel}</span>}
-      <h1>音乐小站</h1>
-      <p class="station-music-intro">选一首，让日常慢下来。</p>
-      <div class="station-music-queue-tools" aria-label="队列设置">
-        <button data-play-all type="button" disabled><Play size={16} />播放全部</button>
-        <button data-shuffle type="button" aria-pressed="false"><Shuffle size={17} />随机</button>
-        <button data-repeat type="button" aria-label="顺序播放，点击切换循环方式"><Repeat data-repeat-icon size={17} /><Repeat1 data-repeat-one-icon size={17} hidden /><span data-repeat-label>顺序播放</span></button>
-        <button data-queue-toggle type="button" aria-expanded="false" aria-controls="music-queue"><ListMusic size={18} />队列 <span data-queue-count>0</span></button>
+      <h1>{t('音乐小站')}</h1>
+      <p class="station-music-intro">{t('选一首，让日常慢下来。')}</p>
+      {library && <div class="station-music-browser" data-library-controls>
+        <div class="station-music-browse-modes" aria-label={t('浏览曲库')}>
+          <button type="button" data-browse-mode="latest" aria-pressed="true">{t('最新发布')}</button>
+          <button type="button" data-browse-mode="picks" aria-pressed="false">{t('免费精选')}</button>
+        </div>
+        <p data-picks-help hidden>{t('按最新发布选取免费作品。')}</p>
+        <label class="station-music-search">{t('搜索')}<input data-music-search type="search" maxlength="200" placeholder={t('搜索歌曲、创作者或标签')} /></label>
+        <div class="station-music-filters">
+          <label>{t('收听方式')}<select data-access-filter><option value="">{t('全部')}</option><option value="free">{t('免费')}</option><option value="vip">VIP</option></select></label>
+          <label>{t('歌单')}<select data-collection-filter><option value="">{t('全部歌曲')}</option></select></label>
+        </div>
+        <details data-tag-filters hidden><summary>{t('风格')} · {t('心情')}</summary><fieldset data-genre-filter><legend>{t('风格')}</legend></fieldset><fieldset data-mood-filter><legend>{t('心情')}</legend></fieldset></details>
+        <button type="button" data-clear-filters hidden>{t('清除筛选')}</button>
+        <p data-collection-description hidden></p>
+        <p data-library-notice role="status" hidden></p>
+        <p data-library-count role="status"></p>
+      </div>}
+      <div class="station-music-queue-tools" aria-label={t('队列设置')}>
+        <button data-play-all type="button" disabled><Play size={16} />{t('播放全部')}</button>
+        <button data-shuffle type="button" aria-pressed="false"><Shuffle size={17} />{t('随机')}</button>
+        <button data-repeat type="button" aria-label={t('{mode}，点击切换循环方式', { mode: t('顺序播放') })}><Repeat data-repeat-icon size={17} /><Repeat1 data-repeat-one-icon size={17} hidden /><span data-repeat-label>{t('顺序播放')}</span></button>
+        <button data-queue-toggle type="button" aria-expanded="false" aria-controls="music-queue"><ListMusic size={18} />{t('队列')} <span data-queue-count>0</span></button>
       </div>
-      <p class="station-music-queue-help" id="music-list-play-help">点击列表的播放按钮，会按当前列表重建队列；底栏继续播放保留原队列。</p>
+      <p class="station-music-queue-help" id="music-list-play-help">{t('点击列表的播放按钮，会按当前列表重建队列；底栏继续播放保留原队列。')}</p>
       <p class="station-music-queue-notice" data-queue-notice role="status" hidden></p>
-      <div class="station-music-catalog-message" data-catalog-message role="status">正在整理曲目…</div>
-      <button class="station-music-retry" data-catalog-retry hidden type="button"><RefreshCw size={18} />重新加载</button>
-      <ul class="station-music-tracks" data-track-list aria-label="选择歌曲" aria-describedby="music-list-play-help"></ul>
+      <div class="station-music-catalog-message" data-catalog-message role="status">{t('正在整理曲目…')}</div>
+      <button class="station-music-retry" data-catalog-retry hidden type="button"><RefreshCw size={18} />{t('重新加载')}</button>
+      <ul class="station-music-tracks" data-track-list aria-label={t('选择歌曲')} aria-describedby="music-list-play-help"></ul>
+      {library && <button class="station-music-more" data-show-more type="button" hidden>{t('再显示 50 首')}</button>}
     </div>
-    <aside class="station-music-detail" aria-label="当前歌曲" data-track-detail hidden>
+    <aside class="station-music-detail" aria-label={t('当前歌曲')} data-track-detail hidden>
       <div class="station-music-art">
         <img data-cover alt="" width="480" height="480" hidden />
-        <div data-cover-fallback class="station-music-art-fallback"><Music2 size={64} /><span>暂无封面</span></div>
+        <div data-cover-fallback class="station-music-art-fallback"><Music2 size={64} /><span>{t('暂无封面')}</span></div>
       </div>
       <h2 data-track-title></h2>
+      {library && <p class="station-music-summary" data-track-summary></p>}
       <p class="station-music-byline"><span data-track-creator></span><span aria-hidden="true"> · </span><span data-track-access></span></p>
-      <span class="station-music-status" data-play-status role="status" aria-live="polite">尚未播放</span>
+      <span class="station-music-status" data-play-status role="status" aria-live="polite">{t('尚未播放')}</span>
       <p class="station-music-error" data-play-error hidden></p>
-      <div class="station-music-queue-tools station-music-access-actions" aria-label="播放资格与版本">
-        <button data-play-full type="button" hidden>从头播放完整版</button>
-        <button data-play-preview type="button" hidden>播放试听</button>
-        <button data-access-refresh type="button">重新核验资格</button>
-        <a data-membership-link hidden>前往会员中心</a>
+      <div class="station-music-queue-tools station-music-access-actions" aria-label={t('播放资格与版本')}>
+        {library && <button data-detail-play type="button">{t('播放')}</button>}
+        <button data-play-full type="button" hidden>{t('从头播放完整版')}</button>
+        <button data-play-preview type="button" hidden>{t('播放试听')}</button>
+        <button data-access-refresh type="button">{t('重新核验资格')}</button>
+        <a data-membership-link hidden>{t('前往会员中心')}</a>
       </div>
     </aside>
   </div>
-  <div class="station-music-dock" data-player-dock hidden aria-label="播放控制">
+  <div class="station-music-dock" data-player-dock hidden aria-label={t('播放控制')}>
     <div class="station-music-dock-inner">
       <div class="station-music-now">
         <img data-mini-cover alt="" width="80" height="80" hidden />
         <div><strong data-mini-title></strong><span data-mini-description></span></div>
       </div>
       <div class="station-music-transport">
-        <button class="station-music-step" data-previous type="button" aria-label="上一首；超过三秒时回到开头" disabled><SkipBack size={22} fill="currentColor" /></button>
-        <button class="station-music-main-play" data-main-play type="button" aria-label="播放" disabled>
+        <button class="station-music-step" data-previous type="button" aria-label={t('上一首；超过三秒时回到开头')} disabled><SkipBack size={22} fill="currentColor" /></button>
+        <button class="station-music-main-play" data-main-play type="button" aria-label={t('播放')} disabled>
         <span class="station-music-main-play-circle"><Play data-play-icon size={32} fill="currentColor" /><Pause data-pause-icon size={32} fill="currentColor" hidden /><LoaderCircle data-loading-icon size={32} hidden /></span>
-        <span data-play-label>播放</span>
+        <span data-play-label>{t('播放')}</span>
         </button>
-        <button class="station-music-step" data-next type="button" aria-label="下一首" disabled><SkipForward size={22} fill="currentColor" /></button>
+        <button class="station-music-step" data-next type="button" aria-label={t('下一首')} disabled><SkipForward size={22} fill="currentColor" /></button>
       </div>
       <div class="station-music-progress">
         <span data-current-time aria-live="off">00:00</span>
-        <input data-progress type="range" min="0" max="1" step="0.1" value="0" aria-label="播放进度" disabled />
+        <input data-progress type="range" min="0" max="1" step="0.1" value="0" aria-label={t('播放进度')} disabled />
         <span data-duration aria-live="off">--:--</span>
       </div>
       <div class="station-music-volume">
-        <button data-mute type="button" aria-label="静音" aria-pressed="false"><Volume2 data-sound-icon size={25} /><VolumeX data-mute-icon size={25} hidden /></button>
-        <input data-volume type="range" min="0" max="1" step="0.01" value="1" aria-label="音量" />
+        <button data-mute type="button" aria-label={t('静音')} aria-pressed="false"><Volume2 data-sound-icon size={25} /><VolumeX data-mute-icon size={25} hidden /></button>
+        <input data-volume type="range" min="0" max="1" step="0.01" value="1" aria-label={t('音量')} />
       </div>
     </div>
-    <p class="station-music-system-note station-music-device-volume">请用设备音量按键调节音量。</p>
+    <p class="station-music-system-note station-music-device-volume">{t('请用设备音量按键调节音量。')}</p>
     <p class="station-music-system-note" data-system-notice role="status" hidden></p>
     <p class="station-music-dock-error" data-dock-error hidden></p>
     <p class="station-music-dock-error" data-dock-queue-notice hidden></p>
   </div>
   <dialog class="station-music-queue-dialog" data-queue-dialog id="music-queue" aria-labelledby="music-queue-heading">
-    <div class="station-music-queue-heading"><h2 id="music-queue-heading">待播队列</h2><button data-queue-close type="button" aria-label="关闭队列" autofocus><X size={22} /></button></div>
-    <p class="station-music-queue-help">从歌曲列表开始播放或点击“播放全部”会重建队列；只浏览歌曲不改变待播顺序。随机播放时，上一首返回实际收听历史。</p>
-    <p data-queue-empty>队列为空，选择歌曲或点击播放全部。</p>
+    <div class="station-music-queue-heading"><h2 id="music-queue-heading">{t('待播队列')}</h2><button data-queue-close type="button" aria-label={t('关闭队列')} autofocus><X size={22} /></button></div>
+    <p class="station-music-queue-help">{t('从歌曲列表开始播放或点击“播放全部”会重建队列；只浏览歌曲不改变待播顺序。随机播放时，上一首返回实际收听历史。')}</p>
+    <p data-queue-empty>{t('队列为空，选择歌曲或点击播放全部。')}</p>
     <ul class="station-music-queue-list" data-queue-list></ul>
     <div class="station-music-queue-confirm" data-queue-confirm hidden>
       <p data-queue-confirm-title></p>
-      <p class="station-music-queue-help">没有下一首可完整收听的曲目时，将停止播放。</p>
-      <button data-remove-next type="button">移除并播放下一首</button>
-      <button data-remove-stop type="button">移除并停止</button>
-      <button data-remove-cancel type="button">取消</button>
+      <p class="station-music-queue-help">{t('没有下一首可完整收听的曲目时，将停止播放。')}</p>
+      <button data-remove-next type="button">{t('移除并播放下一首')}</button>
+      <button data-remove-stop type="button">{t('移除并停止')}</button>
+      <button data-remove-cancel type="button">{t('取消')}</button>
     </div>
-    <div class="station-music-queue-footer"><button data-queue-add type="button" disabled>加入当前曲目</button><button data-queue-clear type="button" disabled>清空并停止</button></div>
+    <div class="station-music-queue-footer"><button data-queue-add type="button" disabled>{t('加入当前曲目')}</button><button data-queue-clear type="button" disabled>{t('清空并停止')}</button></div>
   </dialog>
   <template data-queue-template>
     <li class="station-music-queue-row"><button class="station-music-queue-pick" data-queue-play type="button"><strong data-queue-title></strong><span data-queue-meta></span></button><button data-queue-remove type="button"><X size={18} /></button></li>
@@ -89,7 +111,7 @@ const { previewLabel } = Astro.props;
   <template data-track-template>
     <li class="station-music-track">
       <button class="station-music-select" type="button">
-        <img data-row-cover alt="" width="88" height="88" />
+        <img data-row-cover alt="" width="88" height="88" loading="lazy" decoding="async" />
         <Music2 data-row-fallback size={40} hidden />
         <span class="station-music-track-copy"><strong data-row-title></strong><span data-row-description></span></span>
       </button>

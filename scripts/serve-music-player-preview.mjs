@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { tracks, demoWav } from './fixtures/music-player/data.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const libraryPreview = process.env.MUSIC_LIBRARY_PREVIEW === 'true';
 const output = resolve(root, '.generated/music-player-preview');
 const port = Number(process.env.MUSIC_PLAYER_PREVIEW_PORT || 4198);
 const origin = `http://127.0.0.1:${port}`;
@@ -26,8 +27,21 @@ const server = createServer(async (req, res) => {
     // Local-only switches live outside tracked files. They are not sessions or credentials.
     const fixture = scenario === 'access-lifecycle'
       ? JSON.parse(await readFile(resolve(root, '.generated/music-player-access-state.json'), 'utf8')) : {};
-    const demoTracks = tracks.map(track => scenario === 'access-lifecycle' && fixture.catalog !== 'free' && track.art !== 'night'
-      ? { ...track, effectiveAccess: 'vip', previewAvailable: true, previewDurationSec: 30, previewSourceStartSec: 12 } : track);
+    const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(url.searchParams.get('locale')) ? url.searchParams.get('locale') : 'zh-Hans';
+    const names = { 'zh-Hans': ['窗边的午后', '夜行小站', '慢慢醒来'], 'zh-Hant': ['窗邊的午後', '夜行小站', '慢慢醒來'], en: ['Afternoon by the Window', 'Night Station', 'Waking Slowly'], ja: ['窓辺の午後', '夜の小駅', 'ゆっくり目覚めて'] };
+    const baseTracks = scenario === 'library-500' ? Array.from({ length: 500 }, (_, i) => ({ ...tracks[i % 3], id: `00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}` })) : tracks;
+    const demoTracks = baseTracks.map(track => scenario === 'access-lifecycle' && fixture.catalog !== 'free' && track.art !== 'night'
+      ? { ...track, effectiveAccess: 'vip', previewAvailable: true, previewDurationSec: 30, previewSourceStartSec: 12 } : track).map((track, i) => ({ ...track,
+      title: names[locale][i % 3] + (scenario === 'library-500' ? ` ${i + 1}` : ''),
+      effectiveAccess: libraryPreview && i % 3 === 1 ? 'vip' : track.effectiveAccess,
+      previewAvailable: libraryPreview && i % 3 === 1 ? true : track.previewAvailable,
+      previewDurationSec: libraryPreview && i % 3 === 1 ? 30 : track.previewDurationSec,
+      previewSourceStartSec: libraryPreview && i % 3 === 1 ? 12 : track.previewSourceStartSec,
+      genres: i % 2 ? ['Ambient'] : ['Piano', 'Acoustic'], moods: i % 3 ? ['Calm'] : ['Warm'],
+      summary: locale === 'en' ? 'Original synthesized audio for local interaction testing.' : locale === 'ja' ? '操作確認用に合成したローカル音源です。' : '本地合成演示音频，仅用于交互预览。',
+      publishedAt: new Date(Date.UTC(2026, 8, 11) - i * 86400000).toISOString(), coverUrl: `/api/music/tracks/${track.id}/cover?v=1`
+    }));
+    const collections = libraryPreview ? [{ id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', slug: 'quiet-days', title: locale === 'en' ? 'Quiet Days' : locale === 'ja' ? '静かな日々' : '安静的日常', description: '', trackIds: demoTracks.slice(0, 3).map(t => t.id).reverse() }] : [];
     const expired = fixture.validUntil && Date.parse(fixture.validUntil) <= Date.now();
     const vip = fixture.membership === 'vip' && !expired;
     const fullAccess = track => track.effectiveAccess === 'free' ? 200 : fixture.membership === 'unavailable' ? 503 : vip ? 200 : expired ? 403 : 401;
@@ -35,7 +49,7 @@ const server = createServer(async (req, res) => {
     if (url.pathname === '/api/music/catalog') {
       counters.catalog++;
       if (scenario === 'catalog-error') { send(503, { error: { code: 'MUSIC_PUBLIC_DISABLED' } }); return; }
-      send(200, { schemaVersion: 2, catalogVersion: 1, locale: 'zh-Hans', collections: [],
+      send(200, { schemaVersion: 2, catalogVersion: 1, locale, collections,
         tracks: scenario === 'empty' ? [] : demoTracks.map(({ art, ...track }) => track) }); return;
     }
     if (url.pathname === '/api/music/me/capabilities') {
@@ -77,8 +91,9 @@ const server = createServer(async (req, res) => {
     if (url.pathname === '/brand.webp') {
       send(200, await readFile(resolve(root, 'public/images/optimized/station-cat-logo-1668c2e5-160.webp')), 'image/webp'); return;
     }
-    const file = resolve(output, '.' + decodeURIComponent(url.pathname) + (url.pathname.endsWith('/') ? 'index.html' : ''));
-    if (!file.startsWith(output + sep)) { send(404, 'Not found', 'text/plain'); return; }
+    const staticRoot = libraryPreview ? resolve(root, 'dist') : output;
+    const file = resolve(staticRoot, '.' + decodeURIComponent(url.pathname) + (url.pathname.endsWith('/') ? 'index.html' : ''));
+    if (!file.startsWith(staticRoot + sep)) { send(404, 'Not found', 'text/plain'); return; }
     send(200, await readFile(file), mime[extname(file)] || 'application/octet-stream');
   } catch { send(404, 'Local preview unavailable', 'text/plain'); }
 });

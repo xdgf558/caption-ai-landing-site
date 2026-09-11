@@ -1,5 +1,7 @@
 import { musicSource } from './musicPlayerCore.js';
 
+import { musicText } from './musicMessages.js';
+
 const mounts = new WeakMap(), sessions = new WeakMap();
 export const MUSIC_PLAYBACK_CHANNEL = 'station-cat:music-playback:v1';
 const running = status => ['loading', 'playing', 'buffering'].includes(status);
@@ -10,7 +12,7 @@ const newer = (a, b) => !b || a.stamp > b.stamp || (a.stamp === b.stamp && a.ins
 
 // Progressive enhancement for this music player only. No global keyboard/audio hooks.
 export function createMusicSystemControls(player, queue, {
-  audio, getTracks, host = globalThis, clock = Date.now, onChange = () => {}
+  audio, getTracks, locale = 'zh-Hans', host = globalThis, clock = Date.now, onChange = () => {}
 } = {}) {
   if (mounts.has(player)) return mounts.get(player);
   let instanceId;
@@ -83,7 +85,7 @@ export function createMusicSystemControls(player, queue, {
     const key = JSON.stringify([track.id, state.activeAudioVersion, state.activeVariant, track.title, track.creatorName, Boolean(track.coverUrl)]);
     if (key !== metadataKey) {
       try {
-        metadata = new host.MediaMetadata({ title: `${track.title}${state.activeVariant === 'preview' ? ' · 试听' : ''}`,
+        metadata = new host.MediaMetadata({ title: `${track.title}${state.activeVariant === 'preview' ? ` · ${musicText(locale)('试听')}` : ''}`,
           artist: track.creatorName, album: 'Station Cat', artwork: track.coverUrl ? [{
             src: new URL(`/api/music/tracks/${track.id}/cover?v=${state.activeAudioVersion}`, host.location.origin).href
           }] : [] });

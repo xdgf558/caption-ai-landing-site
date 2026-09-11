@@ -152,3 +152,30 @@
   .station-music-select img { width: 56px; height: 56px; }
   .station-music-track-copy strong { font-size: 20px; }
 }
+
+/* M4 browse controls extend the approved paper/teal player without another audio. */
+.station-music-page { min-width: 0; padding-bottom: 180px; }
+.station-music-page .station-music-player h1 { font-size: clamp(40px, 5vw, 68px); }
+.station-music-browser { margin-bottom: 24px; }
+.station-music-browser p { color: var(--music-muted); font-size: 14px; overflow-wrap: anywhere; }
+.station-music-browse-modes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.station-music-browser button, .station-music-more { min-height: 44px; border: 1px solid var(--music-line); border-radius: 8px; background: #fffdf9; color: var(--music-ink); padding: 10px 16px; }
+.station-music-browse-modes [aria-pressed='true'] { background: var(--music-accent); color: white; border-color: var(--music-accent); }
+.station-music-search { display: grid; gap: 6px; font-size: 14px; font-weight: 600; }
+.station-music-search input, .station-music-filters select { min-width: 0; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--music-line); border-radius: 8px; background: #fffdf9; color: var(--music-ink); font: inherit; }
+.station-music-filters { display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; margin: 14px 0; }
+.station-music-filters label { display: grid; min-width: 0; gap: 6px; font-size: 14px; }
+.station-music-browser summary { cursor: pointer; padding: 12px 0; min-height: 44px; }
+.station-music-browser fieldset { border: 0; padding: 8px 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.station-music-browser legend { font-weight: 600; font-size: 14px; }
+.station-music-browser fieldset label { display: inline-flex; align-items: center; min-height: 44px; gap: 8px; max-width: 100%; overflow-wrap: anywhere; }
+.station-music-browser input[type='checkbox'] { width: 18px; height: 18px; accent-color: var(--music-accent); flex-shrink: 0; }
+.station-music-player :is(select,summary,a):focus-visible { outline: 3px solid var(--music-accent); outline-offset: 3px; }
+.station-music-more { margin: 24px 0; }
+.station-music-summary { color: var(--music-muted); white-space: pre-line; overflow-wrap: anywhere; }
+.station-music-player[data-library] .station-music-detail { position: sticky; top: 24px; }
+@media(max-width: 600px) {
+  .station-music-player[data-library] .station-music-detail { position: static; }
+  .station-music-page .station-music-player { padding-bottom: 32px; }
+  .station-music-filters { grid-template-columns: 1fr; }
+}

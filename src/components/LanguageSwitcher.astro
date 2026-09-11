@@ -1,4 +1,5 @@
 ---
+import { isMusicPagePath, musicPageHref } from '../music/pagePaths.js';
 interface Props {
   lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
 }
@@ -34,10 +35,11 @@ const isNovel = novelPath.startsWith('/novel');
 const isWorks = worksPath.startsWith('/works');
 const isStandalone = /^\/(?:points|library|terms|privacy)\/$/.test(standalonePath);
 const standaloneEnglishPath = `/en${standalonePath}`;
-const enPath = isStandalone ? standaloneEnglishPath : isApps ? `/en${appsPath}` : isDevlog ? `/en${devlogPath}` : isNovel ? `/en${novelPath}` : isWorks ? `/en${worksPath}` : '/en/';
-const jaPath = isStandalone ? `/ja${standalonePath}` : isApps ? `/ja${appsPath}` : isDevlog ? `/ja${devlogPath}` : isWorks ? `/ja${worksPath}` : '/ja/';
-const zhHantPath = isStandalone ? `/zh-hant${standalonePath}` : isApps ? `/zh-hant${appsPath}` : isDevlog ? devlogPath : isNovel ? novelPath : isWorks ? `/zh-hant${worksPath}` : '/';
-const zhHansPath = isStandalone ? `/zh-hans${standalonePath}` : isApps ? `/zh-hans${appsPath}` : isDevlog ? `/zh-hans${devlogPath}` : isWorks ? `/zh-hans${worksPath}` : '/zh-hans/';
+const isMusic = isMusicPagePath(path);
+const enPath = isMusic ? musicPageHref('en') : isStandalone ? standaloneEnglishPath : isApps ? `/en${appsPath}` : isDevlog ? `/en${devlogPath}` : isNovel ? `/en${novelPath}` : isWorks ? `/en${worksPath}` : '/en/';
+const jaPath = isMusic ? musicPageHref('ja') : isStandalone ? `/ja${standalonePath}` : isApps ? `/ja${appsPath}` : isDevlog ? `/ja${devlogPath}` : isWorks ? `/ja${worksPath}` : '/ja/';
+const zhHantPath = isMusic ? musicPageHref('zh-Hant') : isStandalone ? `/zh-hant${standalonePath}` : isApps ? `/zh-hant${appsPath}` : isDevlog ? devlogPath : isNovel ? novelPath : isWorks ? `/zh-hant${worksPath}` : '/';
+const zhHansPath = isMusic ? musicPageHref('zh-Hans') : isStandalone ? `/zh-hans${standalonePath}` : isApps ? `/zh-hans${appsPath}` : isDevlog ? `/zh-hans${devlogPath}` : isWorks ? `/zh-hans${worksPath}` : '/zh-hans/';
 const currentLabel = lang === 'zh-Hans' ? '简中' : lang === 'en' ? 'EN' : lang === 'ja' ? '日本語' : '繁中';
 ---
 
@@ -52,10 +54,12 @@ const currentLabel = lang === 'zh-Hans' ? '简中' : lang === 'en' ? 'EN' : lang
 </div>
 
 <script>
+  import { isMusicPagePath, musicPageHref, musicPageLocale } from '../music/pagePaths.js';
   document.querySelectorAll('.language-select').forEach((select) => {
     select.addEventListener('change', () => {
       if (select instanceof HTMLSelectElement && select.value) {
-        window.location.href = select.value;
+        window.location.href = isMusicPagePath(location.pathname)
+          ? musicPageHref(musicPageLocale(select.value), location.search) : select.value;
       }
     });
   });

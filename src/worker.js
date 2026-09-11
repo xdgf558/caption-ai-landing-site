@@ -55,6 +55,8 @@ import { listMembershipRefundReviews, getMembershipRefundReview, decideMembershi
 import { handleMusicAdmin, isMusicAdminPath, musicAdminDenied } from './music/adminHttp.js';
 import { handleMusicMedia, isMusicMediaPath } from './music/mediaResponse.js';
 import { handleMusicPublic, isMusicPublicPath } from './music/publicHttp.js';
+import { isMusicPagePath } from './music/pagePaths.js';
+import { handleMusicPage } from './music/pageHttp.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -22870,6 +22872,7 @@ export default {
     }
 
     if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
+    if (isMusicPagePath(url.pathname)) return handleMusicPage(request, env);
     if (isMusicMediaPath(url.pathname)) return handleMusicMedia(request, env);
     if (isMusicPublicPath(url.pathname)) return handleMusicPublic(request, env);
 

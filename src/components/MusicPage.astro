@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MusicPlayer from './MusicPlayer.astro';
+import { musicPagePaths } from '../music/pagePaths.js';
+import { musicText } from '../scripts/musicMessages.js';
+interface Props { lang?: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja'; }
+const { lang = 'zh-Hant' } = Astro.props;
+const t = musicText(lang);
+---
+<BaseLayout lang={lang} title={t('音乐小站')} description={t('音乐作品、歌单与免费试听。')} canonicalPath={musicPagePaths[lang]} robots="noindex,nofollow" bodyClass="station-music-page"
+  alternates={Object.entries(musicPagePaths).map(([hrefLang, href]) => ({ hrefLang, href }))}>
+  <MusicPlayer lang={lang} library />
+  <noscript><p>{t('开启 JavaScript 后可浏览和播放音乐。')}</p></noscript>
+</BaseLayout>

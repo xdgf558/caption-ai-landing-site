@@ -1,4 +1,4 @@
-import { readPlayerCatalog, playerVariant } from './musicPlayerCatalog.js';
+import { readPlayerCatalog, readPlayerCollections, playerVariant } from './musicPlayerCatalog.js';
 import { watchReaderSession } from './readerSessionEvents.js';
 
 const mounts = new WeakMap(), MAX_TIMER = 2147483647;
@@ -69,10 +69,10 @@ export function createMusicAccessLifecycle(player, queue, {
       void refresh('expiry');
     }, Math.max(1, Math.min(MAX_TIMER, remaining)));
   };
-  const applyCatalog = values => {
+  const applyCatalog = (values, collections) => {
     const state = player.snapshot(), old = activeTrack();
     tracks = values;
-    onCatalog(tracks);
+    onCatalog(tracks, collections);
     queue.updateCatalog(tracks);
     const current = activeTrack();
     if (old?.effectiveAccess === 'free' && current?.effectiveAccess === 'vip' && state.activeVariant === 'full' && playerVariant(current, capabilities) !== 'full') {
@@ -113,7 +113,8 @@ export function createMusicAccessLifecycle(player, queue, {
     const catalog = read(`/api/music/catalog?locale=${locale}`).then(result => {
       if (disposed || epoch !== currentEpoch) return;
       if (result.status !== 200) throw new Error('CATALOG_UNAVAILABLE');
-      applyCatalog(readPlayerCatalog(result.body));
+      const values = readPlayerCatalog(result.body);
+      applyCatalog(values, readPlayerCollections(result.body, values));
       invalidVersions.clear();
     }).catch(() => { if (!disposed && epoch === currentEpoch) onCatalogError(); });
     const work = Promise.all([caps, catalog]).then(() => {
