@@ -1,7 +1,8 @@
 ---
-import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ListMusic, X, Search, SlidersHorizontal, ChevronUp } from '@lucide/astro';
+import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ListMusic, X, Search, SlidersHorizontal, ChevronUp, Heart } from '@lucide/astro';
 import '../styles/music-player.css';
 import '../styles/music-mobile.css';
+import '../styles/music-personal.css';
 import { musicText } from '../scripts/musicMessages.js';
 interface Props { previewLabel?: string; lang?: 'zh-Hans' | 'zh-Hant' | 'en' | 'ja'; library?: boolean; }
 const { previewLabel, lang = 'zh-Hans', library = false } = Astro.props;
@@ -25,6 +26,8 @@ const t = musicText(lang);
           <button type="button" data-browse-mode="latest" aria-pressed="true">{t('最新发布')}</button>
           <button type="button" data-browse-mode="picks" aria-pressed="false">{t('免费精选')}</button>
           <button type="button" data-browse-mode="albums" aria-pressed="false">{t('专辑')}</button>
+          <button type="button" data-browse-mode="favorites" aria-label={t('我的收藏')} aria-pressed="false">{t('收藏夹')}</button>
+          <button type="button" data-browse-mode="recent" aria-label={t('最近播放')} aria-pressed="false">{t('最近')}</button>
         </div>
         <p data-picks-help hidden>{t('按最新发布选取免费作品。')}</p>
         <div data-filter-home>
@@ -36,11 +39,18 @@ const t = musicText(lang);
             <details data-tag-filters hidden><summary>{t('风格')} · {t('心情')}</summary><fieldset data-genre-filter><legend>{t('风格')}</legend></fieldset><fieldset data-mood-filter><legend>{t('心情')}</legend></fieldset></details>
             <button type="button" data-clear-filters hidden>{t('清除筛选')}</button>
       <details class="station-music-list-help"><summary>{t('播放列表说明')}</summary><p class="station-music-queue-help" id="music-list-play-help">{t('点击列表的播放按钮，会按当前列表重建队列；底栏继续播放保留原队列。')}</p></details>
+            <details class="station-music-local-data"><summary>{t('管理本机记录')}</summary>
+              <p>{t('收藏与播放记录仅保存在此浏览器，不随账号同步。')}</p>
+              <button data-local-export type="button" hidden>{t('导出原始记录')}</button>
+              <button data-local-clear type="button">{t('清除本机音乐记录')}</button>
+            </details>
           </div>
         </div>
         <p data-collection-description hidden></p>
         <p data-library-notice role="status" hidden></p>
         <p data-library-count role="status"></p>
+        <p class="station-music-local-notice" data-local-notice role="status" hidden></p>
+        <p class="station-music-local-notice" data-resume-notice role="status" hidden></p>
       </div>}
       <div class="station-music-list-heading"><h2 data-list-title>{t('全部歌曲')}</h2><div class="station-music-queue-tools" aria-label={t('队列设置')}>
         <button data-play-all type="button" disabled><Play size={16} />{t('播放全部')}</button>
@@ -66,11 +76,19 @@ const t = musicText(lang);
       <p class="station-music-error" data-play-error hidden></p>
       <div class="station-music-queue-tools station-music-access-actions" aria-label={t('播放资格与版本')}>
         {library && <button data-detail-play type="button">{t('播放')}</button>}
+        {library && <button data-detail-favorite type="button" aria-pressed="false"><Heart size={18} /><span data-detail-favorite-label>{t('收藏')}</span></button>}
         <button data-play-full type="button" hidden>{t('从头播放完整版')}</button>
         <button data-play-preview type="button" hidden>{t('播放试听')}</button>
         <button data-access-refresh type="button">{t('重新核验资格')}</button>
         <a data-membership-link hidden>{t('前往会员中心')}</a>
       </div>
+      {library && <details class="station-music-lyrics" data-lyrics-panel>
+        <summary>{t('歌词')}</summary>
+        <p data-lyrics-message></p>
+        <div class="station-music-lyrics-content" data-lyrics-content tabindex="0" role="region" aria-label={t('歌词')} aria-live="off"></div>
+        <button data-lyrics-follow type="button" hidden>{t('回到当前歌词')}</button>
+        <button data-lyrics-retry type="button" hidden>{t('重新加载歌词')}</button>
+      </details>}
     </aside></div>
   </div>
   <div data-dock-home></div>
@@ -145,9 +163,10 @@ const t = musicText(lang);
       <button class="station-music-select" type="button">
         <img data-row-cover alt="" width="88" height="88" loading="lazy" decoding="async" />
         <Music2 data-row-fallback size={40} hidden />
-        <span class="station-music-track-copy"><strong data-row-title></strong><span data-row-description></span></span>
+        <span class="station-music-track-copy"><strong data-row-title></strong><span data-row-description><span data-row-creator></span><span data-row-access></span></span></span>
       </button>
       <span class="station-music-track-duration" data-row-duration></span>
+      {library && <button class="station-music-row-favorite" data-row-favorite type="button" aria-pressed="false"><Heart size={21} /></button>}
       <button class="station-music-row-play" data-row-play type="button"><Play data-play-icon size={23} fill="currentColor" /><Pause data-pause-icon size={23} fill="currentColor" hidden /><LoaderCircle data-loading-icon size={23} hidden /></button>
     </li>
   </template>

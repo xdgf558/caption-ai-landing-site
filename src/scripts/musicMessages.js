@@ -1,6 +1,38 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+收藏夹|收藏夾|Saved|保存済み
+最近|最近|Recent|履歴
+歌词|歌詞|Lyrics|歌詞
+收藏|收藏|Save|保存
+已收藏|已收藏|Saved|保存済み
+收藏：{title}|收藏：{title}|Save: {title}|保存：{title}
+取消收藏：{title}|取消收藏：{title}|Unsave: {title}|保存を解除：{title}
+我的收藏|我的收藏|Saved songs|お気に入り
+最近播放|最近播放|Recently played|最近の再生
+有 {count} 首记录不在当前目录中，仍已保留。|有 {count} 首記錄不在目前目錄中，仍已保留。|{count} recorded songs are outside the current catalog. Their records are retained.|記録した{count}曲は現在の曲一覧にありません。記録は保持されています。
+管理本机记录|管理本機記錄|Manage local records|ローカル記録を管理
+收藏与播放记录仅保存在此浏览器，不随账号同步。|收藏與播放記錄僅儲存在此瀏覽器，不隨帳號同步。|Saved songs and playback records stay in this browser and do not sync with your account.|お気に入りと再生記録はこのブラウザにのみ保存され、アカウントとは同期されません。
+导出原始记录|匯出原始記錄|Export original records|元の記録をエクスポート
+清除本机音乐记录|清除本機音樂記錄|Clear local music records|ローカル音楽記録を削除
+清除这个浏览器的收藏、播放记录和保存进度？当前播放不会停止。|清除此瀏覽器的收藏、播放記錄與儲存進度？目前播放不會停止。|Clear saved songs, playback history and positions in this browser? Current playback will continue.|このブラウザのお気に入り、再生履歴、保存位置を削除しますか？現在の再生は続きます。
+这首作品为纯音乐|這首作品為純音樂|This is an instrumental track.|この曲はインストゥルメンタルです。
+暂未提供歌词|暫未提供歌詞|Lyrics have not been provided.|歌詞はまだ提供されていません。
+正在加载歌词…|正在載入歌詞…|Loading lyrics…|歌詞を読み込み中…
+回到当前歌词|回到目前歌詞|Follow current lyrics|現在の歌詞を追従
+重新加载歌词|重新載入歌詞|Retry lyrics|歌詞を再読み込み
+手动滚动可暂停跟随。|手動捲動可暫停跟隨。|Scroll to pause automatic following.|スクロールすると自動追従が止まります。
+时间标记不可用，显示普通歌词。|時間標記無法使用，顯示一般歌詞。|Timing is unavailable. Showing plain lyrics.|時刻情報がないため、通常の歌詞を表示します。
+歌词暂时无法加载，请重试。|歌詞暫時無法載入，請重試。|Lyrics could not be loaded. Please retry.|歌詞を読み込めません。もう一度お試しください。
+暂无可显示的收藏。未发布曲目的收藏仍会保留。|暫無可顯示的收藏。未發布曲目的收藏仍會保留。|No saved songs to show. Unavailable songs remain saved.|表示できるお気に入りはありません。非公開の曲の保存情報は保持されます。
+暂无可显示的播放记录。播放歌曲后会记录在这里。|暫無可顯示的播放記錄。播放歌曲後會記錄在這裡。|No playback history to show. Played songs will appear here.|表示できる再生履歴はありません。再生した曲がここに表示されます。
+已恢复上次位置，点击播放继续。|已恢復上次位置，點擊播放繼續。|Your previous position is restored. Press play to continue.|前回の位置を復元しました。再生ボタンで続けられます。
+音频版本或收听方式已变化，请重新选择播放。|音訊版本或收聽方式已變更，請重新選擇播放。|The audio version or listening mode changed. Please choose playback again.|音源の版または再生モードが変わりました。再生を選び直してください。
+上次曲目暂不可用，本机记录仍保留。|上次曲目暫不可用，本機記錄仍保留。|The previous song is unavailable. Your local records are retained.|前回の曲は現在利用できません。ローカル記録は保持されます。
+本机记录暂时无法保存，本次播放仍可继续。|本機記錄暫時無法儲存，本次播放仍可繼續。|Local records cannot be saved right now. Playback can continue.|ローカル記録を保存できません。再生は続けられます。
+本机记录无法读取。原始记录已保留，可先导出；本次使用临时记录。|本機記錄無法讀取。原始記錄已保留，可先匯出；本次使用暫存記錄。|Local records could not be read. The original is retained for export; this session uses temporary records.|ローカル記録を読み込めません。元の記録はエクスポート用に保持し、今回は一時記録を使います。
+已迁移旧收藏与设置。旧进度未恢复，请重新选择歌曲。|已移轉舊收藏與設定。舊進度未恢復，請重新選擇歌曲。|Old saved songs and settings were migrated. Old positions were not restored; please select a song.|以前のお気に入りと設定を移行しました。再生位置は復元していません。曲を選び直してください。
+最多收藏 500 首，请先移除部分收藏。|最多收藏 500 首，請先移除部分收藏。|You can save up to 500 songs. Remove a saved song first.|お気に入りは500曲までです。先に一部を解除してください。
 专辑|專輯|Albums|アルバム
 暂无已发布专辑。专辑发布后会显示在这里。|暫無已發布專輯。專輯發布後會顯示在這裡。|No albums published yet. New albums will appear here.|公開済みのアルバムはまだありません。公開されるとここに表示されます。
 歌曲详情|歌曲詳情|Song details|曲の詳細

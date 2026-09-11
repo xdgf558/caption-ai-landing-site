@@ -11,7 +11,7 @@ const output = resolve(root, '.generated/music-player-preview');
 const port = Number(process.env.MUSIC_PLAYER_PREVIEW_PORT || 4198);
 const origin = `http://127.0.0.1:${port}`;
 const wavs = new Map();
-const counters = { catalog: 0, capabilities: 0, access: 0, audio: 0 };
+const counters = { catalog: 0, capabilities: 0, access: 0, audio: 0, lyrics: 0 };
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp' };
 const server = createServer(async (req, res) => {
   if (req.headers.host !== `127.0.0.1:${port}` || !['GET', 'HEAD'].includes(req.method)) { res.writeHead(403); res.end(); return; }
@@ -29,13 +29,15 @@ const server = createServer(async (req, res) => {
       ? JSON.parse(await readFile(resolve(root, '.generated/music-player-access-state.json'), 'utf8')) : {};
     const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(url.searchParams.get('locale')) ? url.searchParams.get('locale') : 'zh-Hans';
     const names = { 'zh-Hans': ['窗边的午后', '夜行小站', '慢慢醒来'], 'zh-Hant': ['窗邊的午後', '夜行小站', '慢慢醒來'], en: ['Afternoon by the Window', 'Night Station', 'Waking Slowly'], ja: ['窓辺の午後', '夜の小駅', 'ゆっくり目覚めて'] };
-    const mobileDesign = ['mobile-design', 'mobile-large-text'].includes(scenario);
+    const lyricsDemo = ['lyrics-local', 'lyrics-error', 'lyrics-large-text'].includes(scenario);
+    const mobileDesign = lyricsDemo || ['mobile-design', 'mobile-large-text'].includes(scenario);
     const mobileTracks = [tracks[0], tracks[2], tracks[1], { ...tracks[0], id: '44444444-4444-4444-8444-444444444444', art: 'rain', durationSec: 204 }];
     const mobileNames = { 'zh-Hans': ['窗边的午后', '清晨第一缕光', '晚安，小城市', '雨落在屋檐'], 'zh-Hant': ['窗邊的午後', '清晨第一縷光', '晚安，小城市', '雨落在屋簷'], en: ['Afternoon by the Window', 'The First Light of Morning', 'Goodnight, Little City', 'Rain on the Roof'], ja: ['窓辺の午後', '朝の最初の光', 'おやすみ、小さな街', '軒先に降る雨'] };
     const baseTracks = mobileDesign ? mobileTracks : scenario === 'library-500' ? Array.from({ length: 500 }, (_, i) => ({ ...tracks[i % 3], id: `00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}` })) : tracks;
     const demoTracks = baseTracks.map(track => scenario === 'access-lifecycle' && fixture.catalog !== 'free' && track.art !== 'night'
       ? { ...track, effectiveAccess: 'vip', previewAvailable: true, previewDurationSec: 30, previewSourceStartSec: 12 } : track).map((track, i) => ({ ...track,
       title: (mobileDesign ? mobileNames[locale][i] : names[locale][i % 3]) + (scenario === 'library-500' ? ` ${i + 1}` : ''),
+      instrumental: lyricsDemo && track.art === 'morning', lyricsKind: lyricsDemo ? track.art === 'morning' ? 'none' : track.art === 'rain' ? 'txt' : 'lrc' : 'none',
       effectiveAccess: libraryPreview && (mobileDesign ? track.art === 'night' : i % 3 === 1) ? 'vip' : track.effectiveAccess,
       previewAvailable: libraryPreview && (mobileDesign ? track.art === 'night' : i % 3 === 1) ? true : track.previewAvailable,
       previewDurationSec: libraryPreview && (mobileDesign ? track.art === 'night' : i % 3 === 1) ? 30 : track.previewDurationSec,
@@ -63,11 +65,18 @@ const server = createServer(async (req, res) => {
         validUntil: fixture.membership === 'vip' ? fixture.validUntil || new Date(Date.now() + 60000).toISOString() : null
       }); return;
     }
-    const match = /^\/api\/music\/tracks\/([a-f0-9-]+)\/(cover|audio|access)$/.exec(url.pathname);
+    const match = /^\/api\/music\/tracks\/([a-f0-9-]+)\/(cover|audio|access|lyrics)$/.exec(url.pathname);
     if (match) {
       const track = demoTracks.find(item => item.id === match[1]);
       if (!track || url.searchParams.get('v') !== '1') { send(404, { error: { code: 'NOT_FOUND' } }); return; }
       if (match[2] === 'cover') { send(200, await readFile(resolve(root, 'scripts/fixtures/music-player/artwork', `${track.art}.webp`)), 'image/webp'); return; }
+      if (match[2] === 'lyrics') {
+        counters.lyrics++;
+        if (!lyricsDemo || track.lyricsKind === 'none' || scenario === 'lyrics-error') { send(scenario === 'lyrics-error' ? 503 : 404, { error: { code: 'LOCAL_LYRICS_UNAVAILABLE' } }); return; }
+        const lines = ['窗边有一束慢慢的光', '落在书页和你的身旁', '城市轻轻放慢了脚步', '听风经过安静的小巷', '把今天的忙碌放下', '留一点时间给晚霞', '杯里的温暖还在', '远处的灯一盏盏亮', '雨声落在屋檐上', '小猫蜷在窗台旁', '愿你有柔软的梦', '明天再向阳光出发'];
+        const words = track.lyricsKind === 'txt' ? lines.join('\n') : '[ti:本地原创交互测试]\n[offset:+250]\n' + lines.map((line, i) => `[00:${String(i * 5).padStart(2, '0')}.250]${line}`).join('\n');
+        send(200, words, 'text/plain; charset=utf-8'); return;
+      }
       if (match[2] === 'access') {
         counters.access++;
         const status = fullAccess(track), code = status === 401 ? 'AUTH_REQUIRED' : status === 403 ? 'MEMBERSHIP_EXPIRED' : 'MEMBERSHIP_UNAVAILABLE';
@@ -98,7 +107,7 @@ const server = createServer(async (req, res) => {
     const file = resolve(staticRoot, '.' + decodeURIComponent(url.pathname) + (url.pathname.endsWith('/') ? 'index.html' : ''));
     if (!file.startsWith(staticRoot + sep)) { send(404, 'Not found', 'text/plain'); return; }
     let bytes = await readFile(file);
-    if (scenario === 'mobile-large-text' && extname(file) === '.html') bytes = Buffer.from(bytes.toString().replace('</head>', '<style>html{font-size:200% !important}</style></head>'));
+    if (['mobile-large-text', 'lyrics-large-text'].includes(scenario) && extname(file) === '.html') bytes = Buffer.from(bytes.toString().replace('</head>', '<style>html{font-size:200% !important}</style></head>'));
     send(200, bytes, mime[extname(file)] || 'application/octet-stream');
   } catch { send(404, 'Local preview unavailable', 'text/plain'); }
 });

@@ -25,9 +25,12 @@ export function readPlayerCatalog(body) {
     };
     const publishedAt = optionalText('publishedAt', 30);
     if (publishedAt && !Number.isFinite(Date.parse(publishedAt))) throw new Error('INVALID_CATALOG');
+    if (track.instrumental !== undefined && typeof track.instrumental !== 'boolean') throw new Error('INVALID_CATALOG');
+    if (track.lyricsKind !== undefined && !['none', 'txt', 'lrc'].includes(track.lyricsKind)) throw new Error('INVALID_CATALOG');
     seen.add(track.id);
     // Reconstruct canonical same-origin URLs, never trust a URL from JSON.
     return { summary: optionalText('summary', 500), genres: tags('genres'), moods: tags('moods'), publishedAt,
+      instrumental: track.instrumental === true, lyricsKind: track.lyricsKind || 'none',
       id: track.id, title: track.title, creatorName: track.creatorName, durationSec: track.durationSec,
       audioVersion: track.audioVersion, policyVersion: track.policyVersion, effectiveAccess: track.effectiveAccess,
       previewAvailable: track.previewAvailable, previewDurationSec: track.previewDurationSec,

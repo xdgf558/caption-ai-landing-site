@@ -8,6 +8,9 @@ import { playerVariant, formatMusicTime } from './musicPlayerCatalog.js';
 import { musicText } from './musicMessages.js';
 import { mountMusicPanels } from './musicPanels.js';
 import { mountMusicLibraryControls } from './musicLibraryControls.js';
+import { createMusicLocalData } from './musicLocalData.js';
+import { bindMusicLocalPlayback } from './musicLocalPlayback.js';
+import { mountMusicLyrics } from './musicLyricsControls.js';
 
 const mounts = new WeakMap();
 const statusText = { idle: '尚未播放', loading: '正在载入', playing: '正在播放', paused: '已暂停',
@@ -21,10 +24,13 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const audio = $('[data-music-audio]'), player = createMusicPlayer(audio);
   const abort = new AbortController(), list = $('[data-track-list]'), rows = new Map();
   let rowSignature = '';
-  let visibleTracks = [], shownTracks = [], viewTrackId = null, libraryControls = null;
+  let visibleTracks = [], shownTracks = [], viewTrackId = null, libraryControls = null, localPlayback = null, localUnsubscribe = null;
   let tracks = [], capabilities = null, disposed = false, scrub = null, selectedOnce = false, accessState = { checking: false };
   let rowAbort = new AbortController(), systemState = { notice: null, coordinationSupported: true };
   const panels = isLibrary ? mountMusicPanels(root) : null;
+  const local = isLibrary ? createMusicLocalData() : null;
+  let favoriteIds = new Set(local?.snapshot().favorites || []);
+  const lyrics = isLibrary ? mountMusicLyrics(root, { t, fetcher }) : null;
   const queue = createMusicQueue(player);
   const queueControls = mountMusicQueueControls(root, { queue, player, getVisibleTracks: () => visibleTracks, getAllTracks: () => tracks, panels });
   const listen = (target, event, callback) => target.addEventListener(event, callback, { signal: abort.signal });
@@ -64,14 +70,21 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       if (!row) continue;
       row.dataset.selected = String(viewed?.id === track.id);
       row.dataset.playing = String(active && state.status === 'playing');
+      if (isLibrary) {
+        const favorite = favoriteIds.has(track.id), button = row.querySelector('[data-row-favorite]');
+        button.setAttribute('aria-pressed', String(favorite));
+        button.setAttribute('aria-label', t(favorite ? '取消收藏：{title}' : '收藏：{title}', { title: track.title }));
+      }
       row.querySelector('.station-music-select').setAttribute('aria-pressed', String(viewed?.id === track.id));
-      row.querySelector('[data-row-description]').textContent = `${track.creatorName} · ${permission(track)}`;
+      row.querySelector('[data-row-creator]').textContent = `${track.creatorName} · `;
+      row.querySelector('[data-row-access]').textContent = permission(track);
       const button = row.querySelector('[data-row-play]');
       button.disabled = playerVariant(track, capabilities) === null && !(active && running(state.status));
       button.setAttribute('aria-label', t('{action}：{title}', { action: active && running(state.status) ? t('暂停') : playerVariant(track, capabilities) === 'preview' ? t('试听') : t('播放'), title: track.title }));
       icons(button, active && ['loading', 'buffering'].includes(state.status), active && state.status === 'playing');
     }
     panels?.refresh();
+    lyrics?.update(viewed, state);
     if (viewed) {
       setImage($('[data-cover]'), viewed.coverUrl);
       if (isLibrary) setImage($('[data-hero-cover]'), viewed.coverUrl);
@@ -80,6 +93,9 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       setText('[data-track-creator]', viewed.creatorName);
       setText('[data-track-access]', permission(viewed));
       if (isLibrary) {
+        const favorite = favoriteIds.has(viewed.id);
+        $('[data-detail-favorite]').setAttribute('aria-pressed', String(favorite));
+        setText('[data-detail-favorite-label]', t(favorite ? '已收藏' : '收藏'));
         setText('[data-track-summary]', viewed.summary);
         $('[data-detail-play]').disabled = playerVariant(viewed, capabilities) === null;
         setText('[data-detail-play]', viewed.id === selected?.id && running(state.status) ? t('暂停') : playerVariant(viewed, capabilities) === 'preview' ? t('播放试听') : t('播放'));
@@ -136,6 +152,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
 
   };
   const choose = (track, start) => {
+    localPlayback?.touch();
     viewTrackId = track.id;
     if (libraryControls) libraryControls.select(track.id);
     if (start) { queue.playFromList(track.id, visibleTracks.some(item => item.id === track.id) ? visibleTracks : [track]); return; }
@@ -148,7 +165,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     if (next === rowSignature) return;
     rowSignature = next;
     const focused = document.activeElement?.closest('[data-track-id]');
-    const focusId = focused?.dataset.trackId, focusPlay = document.activeElement?.hasAttribute('data-row-play');
+    const focusId = focused?.dataset.trackId, focusSelector = document.activeElement?.hasAttribute('data-row-play') ? '[data-row-play]' : document.activeElement?.hasAttribute('data-row-favorite') ? '[data-row-favorite]' : '.station-music-select';
     rowAbort.abort(); rowAbort = new AbortController();
     list.replaceChildren(); rows.clear();
     const fragment = document.createDocumentFragment();
@@ -156,7 +173,8 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       const row = $('[data-track-template]').content.firstElementChild.cloneNode(true);
       row.dataset.trackId = track.id;
       row.querySelector('[data-row-title]').textContent = track.title;
-      row.querySelector('[data-row-description]').textContent = `${track.creatorName} · ${permission(track)}`;
+      row.querySelector('[data-row-creator]').textContent = `${track.creatorName} · `;
+      row.querySelector('[data-row-access]').textContent = permission(track);
       row.querySelector('[data-row-play]').setAttribute('aria-label', t('{action}：{title}', { action: t('播放'), title: track.title }));
       row.querySelector('[data-row-play]').disabled = playerVariant(track, capabilities) === null;
       row.querySelector('[data-row-duration]').textContent = formatMusicTime(track.durationSec);
@@ -169,7 +187,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       fragment.append(row); rows.set(track.id, row);
     }
     list.append(fragment);
-    if (focusId) rows.get(focusId)?.querySelector(focusPlay ? '[data-row-play]' : '.station-music-select')?.focus({ preventScroll: true });
+    if (focusId) rows.get(focusId)?.querySelector(focusSelector)?.focus({ preventScroll: true });
   };
   // Delegate row actions, so replacing the catalog does not accumulate listeners.
   listen(list, 'click', event => {
@@ -177,6 +195,11 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     if (!row || !list.contains(row) || button.disabled) return;
     const track = tracks.find(item => item.id === row.dataset.trackId);
     if (track) {
+      if (button.hasAttribute('data-row-favorite')) {
+        local?.toggleFavorite(track.id);
+        if (!button.isConnected) $('[data-browse-mode][aria-pressed="true"]')?.focus();
+        return;
+      }
       const start = button.hasAttribute('data-row-play');
       choose(track, start);
       if (!start) panels?.open('detail', button);
@@ -202,7 +225,13 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(root.dataset.locale) ? root.dataset.locale : 'zh-Hans';
   $('[data-membership-link]').href = { 'zh-Hans': '/zh-hans/library/', 'zh-Hant': '/zh-hant/library/', en: '/en/library/', ja: '/ja/library/' }[locale];
   const access = createMusicAccessLifecycle(player, queue, { fetcher, locale,
-    onChange(value) { accessState = value; capabilities = value.capabilities; render(player.snapshot()); },
+    onChange(value) {
+      accessState = value; capabilities = value.capabilities;
+      // Completion also covers a foreground retry after the first catalog read failed.
+      // The lifecycle enforces current access before publishing checking=false.
+      if (!value.checking && tracks.length) localPlayback?.restore({ selection: libraryControls?.selection(), capabilities });
+      render(player.snapshot());
+    },
     onCatalog(values, collections) {
       tracks = values;
       if (libraryControls) libraryControls.update(values, collections);
@@ -219,19 +248,42 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     }
   });
   if (isLibrary) {
-    libraryControls = mountMusicLibraryControls(root, { t, onChange({ results, shown, trackId, loaded, mode }) {
+    libraryControls = mountMusicLibraryControls(root, { t, getLocal: () => local.snapshot(), onChange({ results, shown, trackId, loaded, mode }) {
       visibleTracks = results; shownTracks = shown; viewTrackId = trackId || null;
       renderRows();
       $('[data-play-all]').disabled = !results.length;
       if (loaded) {
         $('[data-catalog-message]').hidden = results.length > 0;
-        setText('[data-catalog-message]', t(mode === 'albums' ? '暂无已发布专辑。专辑发布后会显示在这里。' : tracks.length ? '没有匹配的歌曲，试试其他条件。' : '小站还在准备音乐，稍后再来听听。'));
+        setText('[data-catalog-message]', t(mode === 'albums' ? '暂无已发布专辑。专辑发布后会显示在这里。' : mode === 'favorites' ? '暂无可显示的收藏。未发布曲目的收藏仍会保留。' : mode === 'recent' ? '暂无可显示的播放记录。播放歌曲后会记录在这里。' : tracks.length ? '没有匹配的歌曲，试试其他条件。' : '小站还在准备音乐，稍后再来听听。'));
       }
       render(player.snapshot());
     } });
     listen($('[data-detail-play]'), 'click', () => {
       const track = tracks.find(item => item.id === (viewTrackId || player.snapshot().activeTrackId));
       if (track) choose(track, true);
+    });
+    localPlayback = bindMusicLocalPlayback(player, queue, local, { getTracks: () => tracks, host: window, onNotice(kind) {
+      const messages = { restored: '已恢复上次位置，点击播放继续。', changed: '音频版本或收听方式已变化，请重新选择播放。', missing: '上次曲目暂不可用，本机记录仍保留。' };
+      setText('[data-resume-notice]', t(messages[kind])); $('[data-resume-notice]').hidden = false;
+    } });
+    localUnsubscribe = local.subscribe(value => {
+      favoriteIds = new Set(value.favorites);
+      const messages = { storage: '本机记录暂时无法保存，本次播放仍可继续。', corrupt: '本机记录无法读取。原始记录已保留，可先导出；本次使用临时记录。', migration: '已迁移旧收藏与设置。旧进度未恢复，请重新选择歌曲。', limit: '最多收藏 500 首，请先移除部分收藏。' };
+      setText('[data-local-notice]', t(messages[value.warning] || '')); $('[data-local-notice]').hidden = !value.warning;
+      $('[data-local-export]').hidden = !value.canExportOriginal;
+      libraryControls.refreshLocal(); render(player.snapshot());
+    });
+    listen($('[data-detail-favorite]'), 'click', () => {
+      const id = viewTrackId || player.snapshot().activeTrackId; if (id) local.toggleFavorite(id);
+    });
+    listen($('[data-local-export]'), 'click', () => {
+      const raw = local.original(); if (raw === null) return;
+      const url = URL.createObjectURL(new Blob([raw], { type: 'application/json' }));
+      const link = document.createElement('a'); link.href = url; link.download = 'stationcat-music-original.json'; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+    listen($('[data-local-clear]'), 'click', () => {
+      if (window.confirm(t('清除这个浏览器的收藏、播放记录和保存进度？当前播放不会停止。'))) { localPlayback.clear(); $('[data-resume-notice]').hidden = true; }
     });
   }
   const load = (reason = 'manual') => {
@@ -252,7 +304,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const api = { player, queue, access, system, destroy() {
     if (disposed) return;
     disposed = true;
-    panels?.destroy(); libraryControls?.destroy(); rowAbort.abort(); abort.abort(); unsubscribe(); system.destroy(); access.destroy(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
+    localPlayback?.destroy(); localUnsubscribe?.(); local?.destroy(); lyrics?.destroy(); panels?.destroy(); libraryControls?.destroy(); rowAbort.abort(); abort.abort(); unsubscribe(); system.destroy(); access.destroy(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
   } };
   mounts.set(root, api);
   // Keep bfcache state: restoring a page does not mount a second player.
