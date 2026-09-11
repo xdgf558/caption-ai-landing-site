@@ -1,6 +1,8 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+专辑|專輯|Albums|アルバム
+暂无已发布专辑。专辑发布后会显示在这里。|暫無已發布專輯。專輯發布後會顯示在這裡。|No albums published yet. New albums will appear here.|公開済みのアルバムはまだありません。公開されるとここに表示されます。
 歌曲详情|歌曲詳情|Song details|曲の詳細
 关闭详情|關閉詳情|Close details|詳細を閉じる
 筛选歌曲|篩選歌曲|Filter songs|曲を絞り込む

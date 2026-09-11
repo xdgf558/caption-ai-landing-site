@@ -101,6 +101,17 @@ test('50-row presentation does not truncate play-all and browsing never rewrites
   assert.equal(queue.snapshot().items.length, 500); assert.equal(audio.src, source); assert.equal(player.snapshot().sourceGeneration, generation);
   queue.destroy(); player.destroy();
 });
+test('album category stays empty until its own contract exists, without reclassifying playlists or changing playback', () => {
+  const audio = new Audio(), player = createMusicPlayer(audio, { origin: 'https://music.example.test' }), queue = createMusicQueue(player);
+  queue.updateCatalog(tracks); queue.playAll(tracks);
+  const source = audio.src, generation = player.snapshot().sourceGeneration, items = queue.snapshot().items;
+  const groups = readPlayerCollections({ collections: [group] }, tracks);
+  assert.deepEqual(browseMusic(tracks, groups, { mode: 'albums', collection: group.slug }), []);
+  assert.deepEqual(browseMusic(tracks, groups, { collection: group.slug }).map(track => track.id), group.trackIds);
+  assert.equal(audio.src, source); assert.equal(player.snapshot().sourceGeneration, generation);
+  assert.deepEqual(queue.snapshot().items, items);
+  queue.destroy(); player.destroy();
+});
 test('all UI dictionary entries have four translations and preserve placeholders', () => {
   for (const [key, values] of Object.entries(musicMessages)) {
     assert.equal(values.length, 4, key); assert.ok(values.every(Boolean), key);

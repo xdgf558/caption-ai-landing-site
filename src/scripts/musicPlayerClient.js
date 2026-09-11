@@ -208,7 +208,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       if (libraryControls) libraryControls.update(values, collections);
       else { visibleTracks = shownTracks = values; renderRows(); }
       $('[data-catalog-message]').hidden = visibleTracks.length > 0;
-      if (!tracks.length) setText('[data-catalog-message]', t('小站还在准备音乐，稍后再来听听。'));
+      if (!isLibrary && !tracks.length) setText('[data-catalog-message]', t('小站还在准备音乐，稍后再来听听。'));
       if (!selectedOnce && tracks.length && (!viewTrackId || tracks.some(track => track.id === viewTrackId))) { selectedOnce = true; const first = tracks.find(track => track.id === viewTrackId) || visibleTracks[0] || tracks[0];
         player.select(first, playerVariant(first, capabilities) || 'preview'); }
       render(player.snapshot());
@@ -219,13 +219,13 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     }
   });
   if (isLibrary) {
-    libraryControls = mountMusicLibraryControls(root, { t, onChange({ results, shown, trackId, loaded }) {
+    libraryControls = mountMusicLibraryControls(root, { t, onChange({ results, shown, trackId, loaded, mode }) {
       visibleTracks = results; shownTracks = shown; viewTrackId = trackId || null;
       renderRows();
       $('[data-play-all]').disabled = !results.length;
       if (loaded) {
         $('[data-catalog-message]').hidden = results.length > 0;
-        setText('[data-catalog-message]', t(tracks.length ? '没有匹配的歌曲，试试其他条件。' : '小站还在准备音乐，稍后再来听听。'));
+        setText('[data-catalog-message]', t(mode === 'albums' ? '暂无已发布专辑。专辑发布后会显示在这里。' : tracks.length ? '没有匹配的歌曲，试试其他条件。' : '小站还在准备音乐，稍后再来听听。'));
       }
       render(player.snapshot());
     } });

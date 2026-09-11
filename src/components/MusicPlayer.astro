@@ -17,13 +17,14 @@ const t = musicText(lang);
         {library && <img data-hero-cover class="station-music-hero-cover" alt="" width="160" height="160" hidden />}
       </div>
       {library && <div class="station-music-browser" data-library-controls>
-        <div class="station-music-search-row">
+        <div class="station-music-search-row" data-song-search>
           <label class="station-music-search"><span class="sr-only">{t('搜索')}</span><Search size={22} aria-hidden="true" /><input data-music-search type="search" maxlength="200" placeholder={t('搜索歌曲、创作者或标签')} /></label>
           <button class="station-music-filter-toggle" data-filter-toggle type="button" aria-label={t('筛选歌曲')} aria-controls="music-filters" aria-expanded="false"><SlidersHorizontal size={24} /></button>
         </div>
         <div class="station-music-browse-modes" aria-label={t('浏览曲库')}>
           <button type="button" data-browse-mode="latest" aria-pressed="true">{t('最新发布')}</button>
           <button type="button" data-browse-mode="picks" aria-pressed="false">{t('免费精选')}</button>
+          <button type="button" data-browse-mode="albums" aria-pressed="false">{t('专辑')}</button>
         </div>
         <p data-picks-help hidden>{t('按最新发布选取免费作品。')}</p>
         <div data-filter-home>
@@ -41,7 +42,7 @@ const t = musicText(lang);
         <p data-library-notice role="status" hidden></p>
         <p data-library-count role="status"></p>
       </div>}
-      <div class="station-music-list-heading"><h2>{t('全部歌曲')}</h2><div class="station-music-queue-tools" aria-label={t('队列设置')}>
+      <div class="station-music-list-heading"><h2 data-list-title>{t('全部歌曲')}</h2><div class="station-music-queue-tools" aria-label={t('队列设置')}>
         <button data-play-all type="button" disabled><Play size={16} />{t('播放全部')}</button>
         <button data-queue-toggle type="button" aria-expanded="false" aria-controls="music-queue"><ListMusic size={18} />{t('队列')} <span data-queue-count>0</span></button>
       </div>
