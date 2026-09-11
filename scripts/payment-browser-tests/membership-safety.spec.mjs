@@ -102,7 +102,7 @@ for (const returnTo of ['/\\outside.example', '/%255coutside.example', '/a/..//o
   });
 }
 
-test('music login stays in the member center and offers an explicit sanitized return without redeeming', async ({ page }) => {
+test('music login stays in the member center; explicit safe return respects the public gate and never redeems', async ({ page }) => {
   const state = await fixture(page, { authenticated: false });
   const track = '11111111-1111-4111-8111-111111111111';
   await page.goto(`/en/library/?source=music&returnTo=${encodeURIComponent(`/en/music/?track=${track}&payment=success&vip=true`)}`);
@@ -114,12 +114,16 @@ test('music login stays in the member center and offers an explicit sanitized re
   await expect(page.locator('#reader-membership-panel')).toBeVisible();
   expect(new URL(page.url()).pathname).toBe('/en/library/');
   expect(state.keys).toEqual([]);
+  const landing = page.waitForResponse(response => new URL(response.url()).pathname === '/en/music/' && response.request().isNavigationRequest());
   await back.click();
+  const response = await landing;
   expect(new URL(page.url()).pathname).toBe('/en/music/');
   expect(new URL(page.url()).search).toBe(`?track=${track}`);
-  // Music consumes the fragment into memory; it is not retained in history.
-  await expect(page.locator('[data-music-return-notice]')).toContainText('Membership is syncing');
-  await expect(page.locator('audio')).not.toHaveAttribute('src', /.+/);
+  // This suite's Worker fixture keeps the music gate closed. Navigation is not
+  // permission to render the player; open-gate playback uses the music fixture.
+  expect(response.status()).toBe(503);
+  expect((await response.json()).error.code).toBe('MUSIC_PUBLIC_DISABLED');
+  await expect(page.locator('audio')).toHaveCount(0);
   expect(state.keys).toEqual([]);
 });
 
