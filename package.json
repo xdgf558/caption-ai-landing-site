@@ -7,7 +7,7 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "pretest": "npm run test:music:foundation && npm run test:music:membership && npm run test:music:publication && npm run test:music:mp3 && npm run test:music:storage && npm run test:music:media && npm run test:music:public && npm run test:music:admin && npm run test:music:collections && npm run test:music:cleanup && npm run test:music:rate-limits && npm run test:music:staging && npm run test:music:player && node scripts/test-membership-safety.mjs && node scripts/test-membership-refund-review.mjs && node scripts/test-signal-articles.mjs && node scripts/test-cat-life-interactions.mjs && node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs && node scripts/test-cat-life-release-history.mjs && node scripts/test-cat-life-music.mjs && node scripts/test-cat-life-share.mjs && node scripts/test-cat-life-motion.mjs",
+    "pretest": "npm run test:music:foundation && npm run test:music:membership && npm run test:music:publication && npm run test:music:mp3 && npm run test:music:storage && npm run test:music:media && npm run test:music:public && npm run test:music:admin && npm run test:music:collections && npm run test:music:cleanup && npm run test:music:rate-limits && npm run test:music:staging && npm run test:music:player && npm run test:music:queue && node scripts/test-membership-safety.mjs && node scripts/test-membership-refund-review.mjs && node scripts/test-signal-articles.mjs && node scripts/test-cat-life-interactions.mjs && node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs && node scripts/test-cat-life-release-history.mjs && node scripts/test-cat-life-music.mjs && node scripts/test-cat-life-share.mjs && node scripts/test-cat-life-motion.mjs",
     "test:music:foundation": "node --test scripts/test-music-foundation.mjs",
     "test:music:membership": "node --test scripts/test-music-membership.mjs",
     "test:music:publication": "node --test scripts/test-music-publication.mjs",
@@ -39,6 +39,7 @@
     "test:music:cleanup": "node --test scripts/test-music-cleanup.mjs",
     "test:music:rate-limits": "node --test scripts/test-music-rate-limits.mjs",
     "test:music:player": "node --test scripts/test-music-player.mjs",
+    "test:music:queue": "node --test scripts/test-music-queue.mjs",
     "build:music:player-preview": "astro build --config scripts/fixtures/music-player/astro.config.mjs",
     "preview:music:player": "npm run build:music:player-preview && node scripts/serve-music-player-preview.mjs"
   },

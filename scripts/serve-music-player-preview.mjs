@@ -40,6 +40,9 @@ const server = createServer(async (req, res) => {
       if (!track || url.searchParams.get('v') !== '1') { send(404, { error: { code: 'NOT_FOUND' } }); return; }
       if (match[2] === 'cover') { send(200, await readFile(resolve(root, 'scripts/fixtures/music-player/artwork', `${track.art}.webp`)), 'image/webp'); return; }
       counters.audio++;
+      if (process.env.MUSIC_PLAYER_PREVIEW_SCENARIO === 'queue-errors') {
+        send(503, { error: { code: 'LOCAL_AUDIO_FAILURE' } }); return;
+      }
       if (url.searchParams.get('variant') !== 'full') { send(404, { error: { code: 'PREVIEW_UNAVAILABLE' } }); return; }
       if (!wavs.has(track.id)) wavs.set(track.id, demoWav(track));
       const bytes = wavs.get(track.id), range = /^bytes=(\d+)-(\d*)$/.exec(req.headers.range || '');
