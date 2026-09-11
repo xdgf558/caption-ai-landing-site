@@ -71,6 +71,8 @@
 .station-music-queue-tools button[aria-pressed='true'], .station-music-queue-tools button[data-active='true'] { background: #e3eee8; border-color: var(--music-accent); color: var(--music-accent); }
 .station-music-queue-tools button:hover:not(:disabled), .station-music-queue-dialog button:hover:not(:disabled) { border-color: var(--music-accent); }
 .station-music-queue-notice { color: var(--music-muted); font-size: 14px; margin: -4px 0 20px; }
+.station-music-access-actions { margin-top: 18px; }
+.station-music-access-actions a { display: inline-flex; align-items: center; min-height: 44px; color: var(--music-accent); font-size: 14px; }
 .station-music-queue-dialog { width: min(560px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 24px; border: 1px solid var(--music-line); border-radius: 14px; color: var(--music-ink); background: var(--music-bg); box-shadow: 0 18px 60px #182c2533; overflow: auto; }
 .station-music-queue-dialog::backdrop { background: #1f2d2966; }
 .station-music-queue-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: -24px; background: var(--music-bg); padding-block: 4px; z-index: 1; }

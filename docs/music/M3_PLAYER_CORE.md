@@ -39,6 +39,6 @@ MUSIC_PLAYER_PREVIEW_SCENARIO=catalog-error npm run preview:music:player
 
 本地浏览器截图、设计对照、运行输出及 session 材料保留在被忽略的 `.generated/`、`design-qa.md` 或仓库外，不作为源码、文档或 PR 附件发布。
 
-M3-03 仍需处理资格到期、登出/换账号、回前台重查、主动切换 full/preview 以及错误后的 access 复核。M4 仍需完整目录/歌单、正式路由、四语文案和会员回跳；M6 仍需真实设备、实际 MP3、隔离预发和多实例验收。本组件不能作为生产开放依据。
+M3-03 的资格到期、登出/换账号、回前台重查、主动切换 full/preview 和错误后的 access 复核由 [生命周期层](M3_ACCESS_LIFECYCLE.md) 接入。内核新增同步播放守卫与保留选择的卸源，位置恢复仍须用户主动播放且落在实际 seekable 范围。M4 仍需完整目录/歌单、正式路由、四语文案和会员回跳；M6 仍需真实设备、实际 MP3、隔离预发和多实例验收。本组件不能作为生产开放依据。
 
 无数据库迁移、Worker 配置、支付/VIP 账本或功能开关变更。回退本包仅移除组件和本地预览，不涉及云端数据恢复。

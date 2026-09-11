@@ -636,6 +636,7 @@ const clientConfig = {
     </dialog>
   </div>
   <script>
+    import { notifyReaderSession, withReaderSessionChange } from '../scripts/readerSessionEvents.js';
     import qrcode from 'qrcode-generator';
     import { safeReturnPath } from '../safeReturnPath.js';
     import { pendingMembershipKey } from '../data/membership-redemption-client.js';
@@ -1457,6 +1458,7 @@ const clientConfig = {
     }
 
     if (query.get('login') === 'success') {
+      notifyReaderSession('changed');
       setStatus(formatReaderMessage('loginSuccessLoading'), 'success');
     } else if (query.get('login') === 'invalid') {
       setStatus(formatReaderMessage('loginInvalid'), 'error');
@@ -1559,11 +1561,11 @@ const clientConfig = {
           };
         }
 
-        const response = await fetch(endpoint, {
+        const response = await withReaderSessionChange(() => fetch(endpoint, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(body)
-        });
+        }));
         const data = await response.json();
         if (!response.ok || !data.ok) throw createReaderError('loginFailed', data);
 
@@ -1586,7 +1588,7 @@ const clientConfig = {
     logoutButton.addEventListener('click', async () => {
       logoutButton.disabled = true;
       try {
-        await fetch('/api/readers/logout', { method: 'POST' });
+        await withReaderSessionChange(() => fetch('/api/readers/logout', { method: 'POST' }));
         setSignedIn({ authenticated: false });
         renderLibrary([]);
         renderBookmarks([]);
@@ -1612,7 +1614,7 @@ const clientConfig = {
       setPasswordStatus(formatReaderMessage('updatingPassword'), 'neutral');
 
       try {
-        const response = await fetch('/api/readers/password/change', {
+        const response = await withReaderSessionChange(() => fetch('/api/readers/password/change', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
@@ -1621,7 +1623,7 @@ const clientConfig = {
             confirmPassword: newPasswordConfirmInput.value,
             totpCode: passwordTotpCodeInput.value
           })
-        });
+        }));
         const data = await response.json();
         if (!response.ok || !data.ok) throw createReaderError('passwordUpdateFailed', data);
         currentPasswordInput.value = '';

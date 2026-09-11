@@ -1,0 +1,13 @@
+---
+// LOCAL fixture only. No login, cookies, credentials or remote API calls.
+---
+<!doctype html>
+<html lang="zh-Hans"><head><meta charset="utf-8" /><title>本地账号通知夹具</title></head>
+<body><main><h1>本地账号通知夹具</h1><p>仅发送失效通知，不授予资格，也不修改真实账号。</p>
+<button id="changing">模拟开始退出或切换账号</button><button id="changed">模拟账号请求结束</button><p id="result" role="status"></p></main>
+<script>
+  import { notifyReaderSession } from '../../../../../src/scripts/readerSessionEvents.js';
+  for (const phase of ['changing', 'changed']) document.getElementById(phase)?.addEventListener('click', () => {
+    notifyReaderSession(phase); document.getElementById('result').textContent = phase;
+  });
+</script></body></html>
