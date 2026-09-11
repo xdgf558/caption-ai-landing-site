@@ -61,6 +61,12 @@
 .upload-row header { display:flex; gap:8px; justify-content:space-between; align-items:baseline; flex-wrap:wrap; }
 .upload-control { display:flex; align-items:center; gap:12px; margin-top:10px; }
 .upload-control button { flex-shrink:0; }
+.wav-help { margin:8px 0 0; font-size:.875rem; }
+.wav-progress { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:12px; padding:12px; background:#eff4ef; border-radius:8px; }
+.wav-progress label { margin:0; }
+.wav-progress progress { flex:1 1 120px; min-width:0; accent-color:#36624d; }
+.wav-progress button { flex-shrink:0; }
+.wav-formats { margin-top:16px; }
 .asset-view audio { width:100%; display:block; margin:8px 0; }
 .asset-view img { display:block; width:112px; height:112px; object-fit:contain; margin:12px 0; }
 .asset-view a { display:inline-block; margin:8px 12px 8px 0; overflow-wrap:anywhere; }

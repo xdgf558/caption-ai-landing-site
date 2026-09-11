@@ -4,7 +4,7 @@
 
 追加需求：PR #143 的 M4-02 新增四语“专辑”分类，目前为明确空状态。整张专辑上传归 M5-01B，专辑类型、曲序及会员专享配置归 M5-03，均未实施；现有歌单与逐曲权限不变，见 DECISIONS/TASKS。
 
-当前开发：用户确认第 3 套“留白明信片”，分支 `codex/music-share-cards` 增加 M4-06 歌曲卡片（横版元数据 + 竖版二维码 PNG），见 [M4_SHARE_CARDS](M4_SHARE_CARDS.md)。基于待审 PR #146 / `codex/music-analytics-privacy@3d40b45`；先合 #146，再改打 main 审本包。新增 MUSIC_SHARE_CARDS_ENABLED 缺省关闭，已有 ops/业务旗未改；不部署、不迁移、不发布本地设计/执行/session 材料。下一阶段 M5，WAV 转 MP3 与专辑计划保持。
+当前开发：用户授权进入 M5。`codex/music-admin-wav-transcode` 基于待审 #147 / `codex/music-share-cards@566cde6`，先完成 M5-01A 后台 WAV → MP3 → 原上传流程，合同见 [M5_WAV_TRANSCODE](M5_WAV_TRANSCODE.md)。#146/#147 保留待审；本包独立 PR。M5-01B 专辑批量上传、M5-02 四角色预览、M5-03 专辑与歌单管理仍待后续切片。没有部署、迁移、开闸或发布本地执行/session 材料。
 
 前一切片：M4-05/#146 实现可选第一方统计、明确同意/撤回、原子事件限流、保留期任务与只读管理汇总，合同见 [M4_ANALYTICS_PRIVACY](M4_ANALYTICS_PRIVACY.md)，仍待独立 review。0006 未远程应用。M4-04/#145 已合入 `main@c4fbd28`。
 
@@ -12,7 +12,7 @@ M4-01 已复审，PR CI 全绿后合并 #142；门禁、浏览与播放分离的
 
 历史：M3-03/#140 已复审并合入 `main@751cbd5`。分支 `codex/music-system-media-controls` 基于该提交实现 M3-04 系统媒体键、音量降级与音乐标签页协调，见 [M3-04](M3_SYSTEM_CONTROLS.md)。本地代码、专项、构建与实际30分钟观察已完成，PR #141 待独立 review。保持隔离预览，后续 M4 正式页面独立推进；本包不部署、不开正式音乐入口。下方为历史交付记录。
 
-后续范围已确认：M5-01A 纳入 M5 后台完善，提供 WAV 在管理员浏览器内转为 MP3 后上传，单独 PR 实现；当前 TODO，不插入 M3 队列代码。进度/取消/重试/文件限制及现有服务端核验边界见 [任务清单](TASKS.md) 与 [决策记录](DECISIONS.md)。
+后续范围已确认：M5-01A 纳入 M5 后台完善，提供 WAV 在管理员浏览器内转为 MP3 后上传，单独 PR 实现；当前 IN_PROGRESS，沿用后台上传合同。进度/取消/重试/文件限制及现有服务端核验边界见 [任务清单](TASKS.md) 与 [决策记录](DECISIONS.md)。
 
 当前交付：#139 已合入 `main@5b76920`，M3-02 队列完成；复审补丁 `88c90b1` 仅补充列表播放重建队列的界面说明与合同，完整 CI 通过后合并。合同见 [M3 队列](M3_QUEUE.md)。保持独立本机预览，下一步 M3-03 资格变化，之后 M3-04 系统控制，均尚未启动；未部署或开放正式音乐入口。以下开发段落为历史。
 

@@ -1,5 +1,7 @@
 import { request, createJournal, hashFile, fileFormat, assetUrl, bytes, policyForSave } from './musicAdminClient.js';
 import { mountMusicAdminAnalytics } from './musicAdminAnalytics.js';
+import { createWavConverter } from './musicWavClient.js';
+import { isWav, WAV_PROFILE } from './musicWav.js';
 
 const $ = id => document.getElementById(id), all = selector => [...document.querySelectorAll(selector)];
 const names = { draft:'草稿', published:'已发布', unpublished:'已下架', archived:'已归档', audio:'完整音频', preview:'独立试听', cover:'封面', lyrics:'歌词', evidence:'权利凭证' };
@@ -9,6 +11,27 @@ const value = id => $(id).value.trim();
 const revision = () => track?.draft || track?.published;
 const status = (text, error = false) => { $('music-status').textContent = text; $('music-status').dataset.error = String(error); };
 const el = (tag, text, className) => { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (className) e.className = className; return e; };
+const wavConverter = createWavConverter();
+function uploadLabels() {
+  for (const kind of ['audio', 'preview']) {
+    document.querySelector('[data-upload-kind="' + kind + '"] span').textContent = isWav($('file-' + kind).files[0]) ? '转换并上传' : '上传';
+  }
+}
+for (const kind of ['audio', 'preview']) {
+  $('file-' + kind).addEventListener('change', uploadLabels);
+  $('wav-cancel-' + kind).onclick = () => wavConverter.cancel();
+}
+async function prepareUploadFile(file, kind, recoveryJob) {
+  if (!isWav(file) || !['audio', 'preview'].includes(kind)) return { file };
+  if (recoveryJob && recoveryJob.conversion !== WAV_PROFILE) throw new Error('此会话需要原始 MP3 文件，不能用新的转换替代。');
+  const panel = $('wav-progress-' + kind), meter = panel.querySelector('progress'), label = panel.querySelector('label');
+  panel.hidden = false; meter.value = 0; label.textContent = '正在本机转换 0%';
+  status('正在本机转换 WAV。原文件留在本机，转换成功后才开始上传。');
+  try {
+    const result = await wavConverter.convert(file, kind, p => { meter.value = p; label.textContent = '正在本机转换 ' + p + '%'; });
+    return { file: result.file, conversion: result.profile, seconds: result.info.seconds };
+  } finally { panel.hidden = true; }
+}
 const localTime = iso => { if (!iso) return ''; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,19); };
 const errorMessages = {
   ADMIN_AUTH_REQUIRED:'后台登录已过期，请重新登录后回到此页核对。', ADMIN_FORBIDDEN:'此账号没有音乐管理权限。',
@@ -58,6 +81,7 @@ function sync() {
   $('track-version').textContent = unsaved ? '有未保存修改' : track ? '编辑版本 ' + track.editVersion : '未保存';
   $('assets-state').textContent = assetsDirty ? '有未保存的素材引用' : '素材与草稿一致';
   $('draft-notice').textContent = track?.published ? '保存修改不会替换已发布版本' : '保存草稿不会发布';
+  uploadLabels();
 }
 async function run(action) {
   if (busy) return;
@@ -262,7 +286,10 @@ async function resumeUpload(job, file) {
   }
   if (current.status === 'reserved') {
     file ||= $('file-' + job.kind).files[0];
+    if (file && isWav(file)) ({ file } = await prepareUploadFile(file,job.kind,job));
     if (!file || file.size !== job.size || await hashFile(file) !== job.sha256) throw new Error('请重新选择原文件，再点击此会话的“查询并恢复”。');
+    // Conversion may take minutes. Recheck the actor immediately before any PUT.
+    await checkActor();
     rememberJob({ ...job,stage:'writing' });
     status('正在上传 ' + job.name + '，请保持页面打开。');
     // Once PUT begins, never replay bytes. Query/complete is the recovery path.
@@ -274,16 +301,19 @@ async function resumeUpload(job, file) {
   status('文件已验证，请保存素材到草稿。');
 }
 all('[data-upload-kind]').forEach(button => { button.onclick = () => run(async () => {
-  const kind = button.dataset.uploadKind, file = $('file-' + kind).files[0]; if (!file) throw new Error('请先选择文件。');
+  const kind = button.dataset.uploadKind, source = $('file-' + kind).files[0]; if (!source) throw new Error('请先选择文件。');
   if (kind === 'evidence' && evidence.length >= 10) throw new Error('每曲最多关联 10 份凭证。');
-  const { format,type } = fileFormat(kind,file); const input = { trackId:track.id,kind,format,byteSize:file.size };
+  const input = { trackId:track.id,kind };
   if (kind === 'preview') {
     const start = Number(value('preview-start')), end = Number(value('preview-end'));
     if (!assets.audio || !value('preview-end') || !Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start) throw new Error('请先上传原曲，并填写有效的试听来源区间。');
     Object.assign(input,{ sourceAssetId:assets.audio,sourceStartMs:Math.round(start*1000),sourceEndMs:Math.round(end*1000) });
   }
+  const { file,conversion,seconds } = await prepareUploadFile(source,kind);
+  if (kind === 'preview' && conversion && Math.abs(seconds * 1000 - (input.sourceEndMs - input.sourceStartMs)) > 250) throw new Error('试听 WAV 时长与填写的来源区间不一致，请核对后重试。');
+  const { format,type } = fileFormat(kind,file); Object.assign(input,{ format,byteSize:file.size });
   input.sha256 = await hashFile(file,p => status('正在校验文件 ' + p + '%'));
-  const job = { localId:crypto.randomUUID(),trackId:track.id,kind,name:file.name,size:file.size,sha256:input.sha256,type,writeKey:crypto.randomUUID() };
+  const job = { localId:crypto.randomUUID(),trackId:track.id,kind,name:file.name,size:file.size,sha256:input.sha256,type,writeKey:crypto.randomUUID(), ...(conversion ? { conversion } : {}) };
   const result = await mutate('/uploads','POST',input,'reserve',{ job });
   await resumeUpload({ ...job,uploadId:result.uploadId,assetId:result.assetId },file);
   $('file-' + kind).value = ''; sync();
@@ -378,6 +408,6 @@ $('music-reload').onclick = () => run(async () => {
   if (track) await loadTrack(track.id); await loadList(); status('已重新读取当前版本。');
 });
 window.addEventListener('beforeunload',e => { if (dirty || assetsDirty || reviewDirty || busy || journal?.get().pending) { e.preventDefault(); e.returnValue = ''; } });
-window.addEventListener('pagehide',stopAudio);
+window.addEventListener('pagehide',() => { stopAudio(); wavConverter.cancel(); });
 run(boot);
 mountMusicAdminAnalytics();
