@@ -6,7 +6,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { handleMusicPublic, isMusicPublicPath } from '../src/music/publicHttp.js';
 
 const now = Date.parse('2026-09-11T00:00:00Z');
-const migrations = ['0001_music_foundation.sql', '0002_music_publication.sql']
+const migrations = ['0001_music_foundation.sql', '0002_music_publication.sql', '0005_music_rate_limits.sql']
   .map(name => readFileSync(new URL(`../migrations-music/${name}`, import.meta.url), 'utf8'));
 const dbs = [];
 afterEach(() => { for (const db of dbs.splice(0)) db.close(); });
@@ -28,10 +28,18 @@ function fixture() {
   const db = { withSession(mode) {
     assert.equal(mode, 'first-primary');
     return { prepare: query => {
+      if (/^(DELETE FROM music_rate_|INSERT INTO music_rate_sources)/.test(query.trim())) return new Statement(query);
       assert.match(query.trim(), /^SELECT\s/i);
       assert.doesNotMatch(query, /rights|audit|mutation|upload|email|membership|account/i);
       return new Statement(query);
     }, async batch(statements) {
+      if (statements.every(s => /^(DELETE FROM music_rate_|INSERT INTO music_rate_sources)/.test(s.query.trim()))) {
+        sql.exec('BEGIN');
+        try {
+          const results = statements.map(s => ({ success: true, results: sql.prepare(s.query).all(...s.params) }));
+          sql.exec('COMMIT'); return results;
+        } catch (e) { sql.exec('ROLLBACK'); throw e; }
+      }
       state.reads++;
       if (state.failDatabase) throw new Error('private database failure');
       return statements.map(statement => ({ success: true,
@@ -50,7 +58,7 @@ function fixture() {
     return state.objectPatch ? state.objectPatch(object) : object;
   } };
   const env = { MUSIC_DB: db, MUSIC_BUCKET: bucket, WAITLIST_DB: {}, MUSIC_PUBLIC_ENABLED: 'true',
-    MUSIC_VIP_DELIVERY_ENABLED: 'true' };
+    MUSIC_VIP_DELIVERY_ENABLED: 'true', MUSIC_RATE_LIMIT_SECRET: 'public-unit-fixture-secret-not-for-deployment' };
 
   function seedTrack({ slug, title, accessMode = 'vip', publishedAt = now - 10000, bad = false,
     badStorage = false, lifecycle = 'published', earlyAccessUntil = null, postEarlyAccessMode = null } = {}) {
@@ -101,7 +109,8 @@ function fixture() {
 }
 
 function request(path, options = {}) {
-  return new Request(`https://wwwstationcat.org${path}`, options);
+  return new Request(`https://wwwstationcat.org${path}`, { ...options,
+    headers: { 'CF-Connecting-IP': '192.0.2.1', ...options.headers } });
 }
 
 async function json(response, status, code = null) {

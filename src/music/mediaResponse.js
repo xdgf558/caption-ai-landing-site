@@ -4,6 +4,7 @@ import { validMusicId } from './publicationValidation.js';
 import { loadPublishedMusicRecord } from './publicStore.js';
 import { musicRuntime, musicRuntimeFlags } from './runtime.js';
 import { cancelBody, validateMusicMediaAsset } from './storage.js';
+import { checkMusicRateLimit } from './rateLimits.js';
 
 const MEDIA_PATH = /^\/api\/music\/tracks\/([^/]+)\/audio$/;
 const PRIVATE_HEADERS = Object.freeze({
@@ -112,6 +113,8 @@ export async function handleMusicMedia(request, env, { clock = Date.now, timeout
   let runtime, record;
   try {
     runtime = musicRuntime(env);
+    const limited = await checkMusicRateLimit(request, env, 'audio', { clock, timeoutMs });
+    if (limited) return jsonResponse(request, limited.status, limited.code, { 'Retry-After': String(limited.retryAfter) });
     record = await loadPublishedMusicRecord(runtime.db, input.trackId);
   } catch (error) {
     return jsonResponse(request, Number.isInteger(error?.status) ? error.status : 503,

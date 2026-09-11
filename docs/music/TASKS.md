@@ -50,7 +50,7 @@
 | M2-02 | DONE（本地） | 私有流式上传、实际字节/MIME/结构检查、原子配额预留、一次写入和未知结果恢复、不可覆盖/用途隔离已验收；11 项上传与 17 项 runtime 通过。真实预发 TODO；失败/过期资源保留 charge，自动清理/配额回收留 M2-05；见 M2_PRIVATE_UPLOADS |
 | M2-03 | DONE（本地） | 草稿、权利记录、技术审核、成功发布/下架/归档、审计及歌单列表/详情/创建/状态/原子排序已接通；歌单不改变单曲权限，空公开投影隐藏；见 M2_ADMIN_API、M2_PRIVATE_UPLOADS、M2_COLLECTIONS |
 | M2-04 | DONE（本地） | full/preview 的 GET/HEAD/Range/If-Range 共用发布与实时 VIP 守卫；10 项协议测试及 Miniflare 真实 D1/R2 字节回归通过，未授权不读 R2 或泄漏大小/ETag，见 M2_MEDIA_PROTOCOL；未部署/开闸 |
-| M2-05 | IN_PROGRESS | PR #133 后开始清理与配额回收：先 dry-run，未引用与无迟到写入风险的证据充分才执行受限清理；外部一致限流、诊断为第二批，不覆盖既有 cron/队列 |
+| M2-05 | DONE（本地，待复审） | M2-05A/#134：只读 dry-run、引用/迟到写入保护、受限清理与幂等回收；M2-05B：D1 原子来源/全局限流、窗口 HMAC、只读诊断。见 M2_CLEANUP/M2_RATE_LIMITS；不覆盖 cron/队列，真实预发、多实例、压测与维护演练仍 TODO |
 
 退出条件：隔离上传到发布/下架闭环可测，跨账号/缓存/资格故障/开关关闭均不泄露受保护资源。
 

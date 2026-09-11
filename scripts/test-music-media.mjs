@@ -46,6 +46,10 @@ function fixture({ record = publishedRecord(), membership = 'active', bucketPatc
     return {
       prepare(query) { return { bind() { return { query }; } }; },
       async batch(statements) {
+        // Protocol fixtures isolate catalog/member/R2 behavior; atomic rate admission has its own SQL and native tests.
+        if (statements.every(s => /^(DELETE FROM music_rate_|INSERT INTO music_rate_sources)/.test(s.query.trim()))) {
+          return [{ success: true, results: [] }, { success: true, results: [] }, { success: true, results: [{ hits: 1 }] }];
+        }
         state.musicReads++;
         if (databaseFailure) throw new Error('private database detail');
         assert.equal(statements.length, 3);
@@ -82,14 +86,15 @@ function fixture({ record = publishedRecord(), membership = 'active', bucketPatc
     return bucketPatch ? bucketPatch(object, { key, options, asset }) : object;
   } };
   return { state, env: { MUSIC_DB: music, MUSIC_BUCKET: bucket, WAITLIST_DB: membershipDb,
-    MUSIC_PUBLIC_ENABLED: String(publicEnabled), MUSIC_VIP_DELIVERY_ENABLED: String(vipDelivery) } };
+    MUSIC_PUBLIC_ENABLED: String(publicEnabled), MUSIC_VIP_DELIVERY_ENABLED: String(vipDelivery),
+    MUSIC_RATE_LIMIT_SECRET: 'media-unit-fixture-secret-not-for-deployment' } };
 }
 
 function request({ variant = 'preview', version = '1', method = 'GET', headers = {}, track = ids.track,
   search = null, cookie = false } = {}) {
   const query = search ?? `v=${version}&variant=${variant}`;
   return new Request(`https://wwwstationcat.org/api/music/tracks/${track}/audio?${query}`, { method,
-    headers: { ...(cookie ? { Cookie: 'station_cat_reader_session=fixture-token' } : {}), ...headers } });
+    headers: { 'CF-Connecting-IP': '192.0.2.1', ...(cookie ? { Cookie: 'station_cat_reader_session=fixture-token' } : {}), ...headers } });
 }
 
 async function json(response, status, code) {

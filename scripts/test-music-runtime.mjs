@@ -17,7 +17,7 @@ let mf, db, bucket;
 function migrationStatements() {
   const parser = new DatabaseSync(':memory:'), migrations = [];
   try {
-    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql']) {
+    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql']) {
       const statements = [];
       let remaining = file(`migrations-music/${name}`).toString();
       while (remaining.trim()) {
@@ -36,7 +36,7 @@ before(async () => {
     bundle: true, format: 'esm', platform: 'browser', write: false });
   mf = new Miniflare({ modules: true, script: bundle.outputFiles[0].text, compatibilityDate: '2026-07-30',
     host: '127.0.0.1', port: 0, d1Databases: { MUSIC_DB: 'music-test-only', WAITLIST_DB: 'reader-test-only' },
-    r2Buckets: { MUSIC_BUCKET: 'music-test-only' },
+    r2Buckets: { MUSIC_BUCKET: 'music-test-only' }, bindings: { MUSIC_RATE_LIMIT_SECRET: 'runtime-fixture-secret-not-for-deployment' },
     outboundService: () => new Response('Network disabled in local music tests', { status: 403 }) });
   db = await mf.getD1Database('MUSIC_DB'); bucket = await mf.getR2Bucket('MUSIC_BUCKET');
 }, { timeout: 30000 });
@@ -57,10 +57,11 @@ async function adminCall(path, method = 'GET', body, headers = {}) {
 }
 async function mediaCall(trackId, variant, { method = 'GET', headers = {}, version = 1 } = {}) {
   return mf.dispatchFetch(`http://music.local.test/fixture-media/api/music/tracks/${trackId}/audio?v=${version}&variant=${variant}`,
-    { method, headers });
+    { method, headers: { 'CF-Connecting-IP': '192.0.2.1', ...headers } });
 }
 async function publicCall(path, { method = 'GET', headers = {} } = {}) {
-  return mf.dispatchFetch(`http://music.local.test/fixture-public/api/music${path}`, { method, headers });
+  return mf.dispatchFetch(`http://music.local.test/fixture-public/api/music${path}`, {
+    method, headers: { 'CF-Connecting-IP': '192.0.2.1', ...headers } });
 }
 const adminDraft = () => ({ slug: `admin-fixture-${randomUUID()}`, metadata: { originalLocale: 'en',
   title: { en: 'Local admin fixture' }, summary: { en: '' }, creatorName: 'Fixture', language: 'instrumental',
@@ -97,6 +98,7 @@ test('missing schema is 503; actual migrations on local D1 enable primary readin
   assert.ok((await db.batch(migrations[2].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.equal((await adminCall('/status')).body.storage, null);
   assert.ok((await db.batch(migrations[3].map(sql => db.prepare(sql)))).every(r => r.success));
+  assert.ok((await db.batch(migrations[4].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.equal((await adminCall('/status')).body.storage.quotaBytes, 0);
   assert.deepEqual((await db.prepare('PRAGMA foreign_key_check').all()).results, []);
 });
@@ -551,6 +553,31 @@ test('native ignored quota release rolls back audit and accounting after R2 dele
     assert.equal((await db.prepare('SELECT charged_bytes FROM music_storage_charges WHERE asset_id=?').bind(f.asset.id).first()).charged_bytes,f.bytes.length);
   } finally { await db.prepare('DROP TRIGGER cleanup_test_ignore').run(); }
   assert.equal((await cleanupExecute(f)).body.cleanupState,'released');
+});
+
+test('native D1 source/global rate limits admit exactly the configured budget under concurrent requests', async () => {
+  const stamp = Date.parse('2026-09-11T02:00:30Z'), window = stamp-30000;
+  const check = ip => call('/rate-check',{ category: 'audio',source: 2,global: 3,now: stamp },{ 'CF-Connecting-IP': ip });
+  const same = await Promise.all(Array.from({ length: 12 },() => check('198.51.100.1')));
+  assert.ok(same.every(r => r.status === 200),JSON.stringify(same));
+  assert.equal(same.filter(r => r.body.allowed).length,2,JSON.stringify(same));
+  const others = await Promise.all(Array.from({ length: 12 },(_,i) => check(`203.0.113.${i+1}`)));
+  assert.equal(others.filter(r => r.body.allowed).length,1,JSON.stringify(others));
+  assert.ok(others.filter(r => !r.body.allowed).every(r => r.body.status === 429 && r.body.retryAfter === 30));
+  assert.equal((await db.prepare("SELECT hits FROM music_rate_windows WHERE category='audio' AND window_start=?").bind(window).first()).hits,3);
+  assert.equal((await db.prepare("SELECT SUM(hits) n FROM music_rate_sources WHERE category='audio' AND window_start=?").bind(window).first()).n,3);
+});
+
+test('native ignored global counter fails closed and rolls back the admitted source increment', async () => {
+  const stamp = Date.parse('2026-09-11T03:00:30Z'), window = stamp-30000;
+  const check = () => call('/rate-check',{ category: 'catalog',source: 3,global: 10,now: stamp },{ 'CF-Connecting-IP': '198.51.100.1' });
+  assert.equal((await check()).body.allowed,true);
+  await db.prepare('CREATE TRIGGER rate_test_ignore BEFORE UPDATE ON music_rate_windows BEGIN SELECT RAISE(IGNORE); END').run();
+  try {
+    const denied = await check(); assert.equal(denied.body.status,503); assert.equal(denied.body.allowed,false);
+    assert.equal((await db.prepare("SELECT hits FROM music_rate_sources WHERE category='catalog' AND window_start=?").bind(window).first()).hits,1);
+  } finally { await db.prepare('DROP TRIGGER rate_test_ignore').run(); }
+  assert.equal((await check()).body.allowed,true);
 });
 
 test('native unknown-length 32 MiB input streams to R2; actual overrun and truncated bodies cannot complete', { timeout: 30000 }, async () => {

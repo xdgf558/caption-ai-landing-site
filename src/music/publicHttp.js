@@ -7,6 +7,7 @@ import { checkAssetIdentity, checkStoredObject } from './resources.js';
 import { musicRuntime, musicRuntimeFlags } from './runtime.js';
 import { cancelBody } from './storage.js';
 import { loadPublishedMusicRecord, loadPublicMusicCollectionSnapshot, loadPublicMusicSnapshot } from './publicStore.js';
+import { checkMusicRateLimit } from './rateLimits.js';
 
 const TRACK_PATH = /^\/api\/music\/tracks\/([^/]+)$/;
 const TRACK_ASSET_PATH = /^\/api\/music\/tracks\/([^/]+)\/(cover|lyrics)$/;
@@ -185,6 +186,10 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
   } catch (error) {
     return errorResponse(request, 503, error?.code === 'MUSIC_NOT_CONFIGURED' ? error.code : 'MUSIC_DATABASE_UNAVAILABLE', currentRoute);
   }
+
+  const limited = await checkMusicRateLimit(request, env,
+    ['cover', 'lyrics'].includes(currentRoute.kind) ? 'artwork' : 'catalog', { clock: () => now, timeoutMs });
+  if (limited) return errorResponse(request, limited.status, limited.code, currentRoute, { 'Retry-After': String(limited.retryAfter) });
 
   if (currentRoute.kind === 'capabilities') {
     return musicCapabilities(request, env, { locale, vipDeliveryEnabled: runtime.flags.vipDelivery,
