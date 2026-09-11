@@ -13,16 +13,22 @@ export function musicSource(track, variant) {
 
 export function createMusicPlayer(audio, { origin = globalThis.location?.origin } = {}) {
   if (players.has(audio)) return players.get(audio);
-  const listeners = new Set(), events = new Map();
+  const listeners = new Set(), playListeners = new Set(), events = new Map();
   let destroyed = false, intent = false, attempt = 0, expectedSource = '', metadataReady = false;
   let state = {
     status: 'idle', activeTrackId: null, activeAudioVersion: null, activeVariant: null,
     activePolicyVersion: null, fullDurationSec: null, previewSourceStartSec: null,
     currentTimeSec: 0, durationSec: null, sourceGeneration: 0, seeking: false,
-    volume: audio.volume, muted: audio.muted, lastError: null
+    volume: audio.volume, muted: audio.muted, volumeSupported: true, muteSupported: true, lastError: null
   };
   audio.preload = 'none';
   audio.autoplay = false;
+  // Probe before a source exists. Some browsers silently ignore software volume.
+  const initialVolume = audio.volume, probeVolume = initialVolume === 1 ? .5 : 1;
+  try { audio.volume = probeVolume; state.volumeSupported = Math.abs(audio.volume - probeVolume) < .001; }
+  catch { state.volumeSupported = false; }
+  finally { try { audio.volume = initialVolume; } catch {} }
+  state.volume = audio.volume;
   const snapshot = () => ({ ...state, lastError: state.lastError ? { ...state.lastError } : null });
   const publish = patch => {
     if (destroyed) return;
@@ -52,6 +58,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
   on('timeupdate', progress);
   on('seeking', progress);
   on('seeked', progress);
+  on('ratechange', progress);
   on('playing', () => {
     if (!current() || audio.readyState < 2 || audio.paused || audio.ended) return;
     if (!intent) { audio.pause(); return; }
@@ -126,10 +133,11 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
       currentTimeSec: preservePosition ? state.currentTimeSec : 0,
       lastError: code ? { code, message } : null });
   };
-  const play = () => {
+  const play = ({ userInitiated = false } = {}) => {
     if (destroyed || !state.activeTrackId) return;
     const denied = playGuard?.(snapshot());
     if (denied) { unload(denied); return; }
+    if (userInitiated) for (const listener of playListeners) listener(snapshot());
     const generation = state.sourceGeneration, invocation = ++attempt;
     intent = true;
     if (!expectedSource || audio.error) {
@@ -160,6 +168,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
   const api = {
     snapshot,
     subscribe(listener) { listeners.add(listener); listener(snapshot()); return () => listeners.delete(listener); },
+    onUserPlay(listener) { playListeners.add(listener); return () => playListeners.delete(listener); },
     select,
     play,
     pause,
@@ -175,7 +184,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
     },
     playTrack(track, variant = 'full') {
       const changed = select(track, variant);
-      if (!changed && intent) pause(); else play();
+      if (!changed && intent) pause(); else play({ userInitiated: true });
     },
     seek(value) {
       if (!current() || !metadataReady || !finite(value) || !audio.seekable.length) return false;
@@ -191,17 +200,24 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
       try { audio.currentTime = nearest; progress(); return true; } catch { return false; }
     },
     setVolume(value) {
-      if (destroyed || !Number.isFinite(value)) return;
-      audio.volume = Math.max(0, Math.min(1, value));
-      publish({ volume: audio.volume });
+      if (destroyed || !state.volumeSupported || !Number.isFinite(value)) return false;
+      const target = Math.max(0, Math.min(1, value));
+      try { audio.volume = target; } catch { publish({ volumeSupported: false }); return false; }
+      const supported = Math.abs(audio.volume - target) < .001;
+      publish({ volume: audio.volume, volumeSupported: supported }); return supported;
     },
-    setMuted(value) { if (!destroyed) { audio.muted = Boolean(value); publish({ muted: audio.muted }); } },
+    setMuted(value) {
+      if (destroyed || !state.muteSupported) return false;
+      try { audio.muted = Boolean(value); } catch { publish({ muteSupported: false }); return false; }
+      const supported = audio.muted === Boolean(value);
+      publish({ muted: audio.muted, muteSupported: supported }); return supported;
+    },
     destroy() {
       if (destroyed) return;
       stopSource();
       destroyed = true;
       for (const [event, handler] of events) audio.removeEventListener(event, handler);
-      listeners.clear();
+      listeners.clear(); playListeners.clear();
       players.delete(audio);
     }
   };

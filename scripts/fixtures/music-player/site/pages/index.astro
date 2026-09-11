@@ -27,6 +27,10 @@ import MusicPlayer from '../../../../../src/components/MusicPlayer.astro';
     <footer>本地合成演示音频与示例封面，仅用于播放器交互预览。</footer>
   </body>
 </html>
+<script>
+  import { mountLocalSystemFixture } from '../../system-controls.js';
+  mountLocalSystemFixture();
+</script>
 <style is:global>
   :root { --bg: #fffaf4; --ink: #1f2d29; --muted: #64736d; --line: #e4dbd0; --teal: #08796d; --max: 1120px; }
   * { box-sizing: border-box; }
