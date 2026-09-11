@@ -5,7 +5,7 @@ export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocume
   const message = root.querySelector('[data-lyrics-message]'), content = root.querySelector('[data-lyrics-content]');
   const back = root.querySelector('[data-lyrics-follow]'), retry = root.querySelector('[data-lyrics-retry]');
   const abort = new AbortController();
-  let track = null, state = null, key = '', epoch = 0, request = null, timer = null, parsed = null, active = -1, following = true, loading = false;
+  let track = null, state = null, key = '', epoch = 0, request = null, timer = null, parsed = null, active = -1, following = true, loading = false, failed = false;
   const on = (node, event, handler) => node.addEventListener(event, handler, { signal: abort.signal });
   const stop = () => { epoch++; request?.abort(); request = null; clearTimeout(timer); loading = false; };
   const highlight = () => {
@@ -22,7 +22,8 @@ export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocume
     }
   };
   const load = async () => {
-    if (!panel.open || !track || parsed || loading) return;
+    // Progress renders must not turn a failed read into an automatic retry loop.
+    if (!panel.open || !track || parsed || loading || failed) return;
     if (track.instrumental) { message.textContent = t('这首作品为纯音乐'); return; }
     if (track.lyricsKind === 'none') { message.textContent = t('暂未提供歌词'); return; }
     stop(); const generation = epoch, selected = track;
@@ -38,11 +39,11 @@ export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocume
       message.textContent = result.kind === 'txt' && result.warnings ? t('时间标记不可用，显示普通歌词。') : result.kind === 'lrc' ? t('手动滚动可暂停跟随。') : '';
       highlight();
     } catch {
-      if (generation === epoch) { message.textContent = t('歌词暂时无法加载，请重试。'); retry.hidden = false; }
+      if (generation === epoch) { failed = true; message.textContent = t('歌词暂时无法加载，请重试。'); retry.hidden = false; }
     } finally { if (generation === epoch) { clearTimeout(timer); request = null; loading = false; } }
   };
   on(panel, 'toggle', () => { if (panel.open) { active = -1; void load(); highlight(); } else stop(); });
-  on(retry, 'click', () => { parsed = null; void load(); });
+  on(retry, 'click', () => { failed = false; parsed = null; void load(); });
   const manual = () => { following = false; back.hidden = active < 0; };
   on(content, 'wheel', manual); on(content, 'touchmove', manual); on(content, 'pointerdown', manual);
   on(content, 'keydown', event => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) manual(); });
@@ -51,7 +52,7 @@ export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocume
     update(value, snapshot) {
       track = value; state = snapshot;
       const next = track ? `${track.id}:${track.audioVersion}:${track.lyricsKind}:${track.instrumental}` : '';
-      if (next !== key) { stop(); key = next; parsed = null; active = -1; following = true; content.replaceChildren(); content.scrollTop = 0; message.textContent = ''; retry.hidden = true; back.hidden = true; }
+      if (next !== key) { stop(); key = next; parsed = null; failed = false; active = -1; following = true; content.replaceChildren(); content.scrollTop = 0; message.textContent = ''; retry.hidden = true; back.hidden = true; }
       if (!document.hidden) { void load(); highlight(); }
     },
     destroy() { stop(); abort.abort(); }

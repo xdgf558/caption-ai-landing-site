@@ -181,7 +181,7 @@ class Element extends EventTarget {
   setAttribute(k,v) { this.attrs.set(k,v); } removeAttribute(k) { this.attrs.delete(k); }
   getClientRects() { return [1]; } scrollTo(value) { this.scrolled=value.top; }
 }
-test('instrumental and missing lyrics do not fetch; errors retry and destruction rejects a late response', async () => {
+test('instrumental/missing lyrics do not fetch; progress never retries errors, explicit retry works and destruction rejects late responses', async () => {
   const nodes = new Map(['panel','message','content','follow','retry'].map(key=>[`[data-lyrics-${key}]`,new Element()]));
   let calls = 0, finish;
   const view = mountMusicLyrics({ ownerDocument: { hidden:false, createElement:()=>new Element() }, querySelector:s=>nodes.get(s) }, {
@@ -193,6 +193,10 @@ test('instrumental and missing lyrics do not fetch; errors retry and destruction
   assert.equal(nodes.get('[data-lyrics-message]').textContent,'暂未提供歌词'); assert.equal(calls,0);
   view.update({...tracks[0], instrumental:false, lyricsKind:'lrc'},{}); await new Promise(r=>setImmediate(r));
   assert.equal(nodes.get('[data-lyrics-retry]').hidden,false);
+  for (let second=0; second<20; second++) view.update({...tracks[0], instrumental:false, lyricsKind:'lrc'}, {activeTrackId:tracks[0].id,activeAudioVersion:1,activeVariant:'full',currentTimeSec:second});
+  nodes.get('[data-lyrics-panel]').open=false; nodes.get('[data-lyrics-panel]').dispatchEvent(new Event('toggle'));
+  nodes.get('[data-lyrics-panel]').open=true; nodes.get('[data-lyrics-panel]').dispatchEvent(new Event('toggle'));
+  assert.equal(calls,1); assert.equal(nodes.get('[data-lyrics-retry]').hidden,false);
   nodes.get('[data-lyrics-retry]').dispatchEvent(new Event('click')); assert.equal(calls,2);
   view.destroy(); finish(new Response('[00:01]late',{headers:{'content-type':'text/plain'}})); await new Promise(r=>setImmediate(r));
   assert.equal(nodes.get('[data-lyrics-content]').children.length,0);
