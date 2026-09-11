@@ -8,3 +8,7 @@ dist/
 npm-debug.log*
 playwright-report/
 test-results/
+
+# Music staging execution records stay local, including sanitized reports.
+music-staging-http-records*/
+ops/evidence/music-staging-http-*.json
