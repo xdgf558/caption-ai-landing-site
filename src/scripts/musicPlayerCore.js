@@ -173,6 +173,14 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
     play,
     pause,
     unload,
+    restorePosition(value) {
+      // Restore only a source-less selection. Metadata/seekable will clamp it
+      // after the next explicit play; this method never assigns src or plays.
+      if (destroyed || expectedSource || !state.activeTrackId || !finite(value) || !['idle', 'paused'].includes(state.status)) return false;
+      resumePosition = Math.min(value, state.durationSec ?? value);
+      publish({ status: 'paused', currentTimeSec: resumePosition });
+      return true;
+    },
     setPlayGuard(guard) { playGuard = guard; },
     clear() {
       if (destroyed) return;

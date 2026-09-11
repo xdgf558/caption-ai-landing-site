@@ -1,0 +1,27 @@
+/* M4-03 extends the selected paper-library design with local controls and lyrics. */
+.station-music-player { --music-accent-soft: #e8efea; }
+.station-music-local-data button, .station-music-lyrics button {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .625rem .875rem;
+  color: var(--music-ink); background: #fffdf9; border: 1px solid var(--music-line); border-radius: .5rem;
+}
+.station-music-local-data { margin-block: .5rem; color: var(--music-muted); font-size: .875rem; }
+.station-music-local-data summary { width: fit-content; padding-block: .625rem; cursor: pointer; }
+.station-music-local-data p, .station-music-local-notice { font-size: .875rem; line-height: 1.6; }
+.station-music-local-data button { margin: 0 .5rem .5rem 0; }
+.station-music-local-notice { color: var(--music-muted); }
+.station-music-player[data-library] .station-music-track { grid-template-columns: minmax(0, 1fr) auto 44px 44px; }
+.station-music-row-favorite { display: grid; place-items: center; width: 44px; padding: 0; color: var(--music-muted); background: transparent; border: 0; }
+[data-row-favorite][aria-pressed='true'], [data-detail-favorite][aria-pressed='true'] { color: var(--music-accent); }
+[data-row-favorite][aria-pressed='true'] svg, [data-detail-favorite][aria-pressed='true'] svg { fill: currentColor; }
+.station-music-lyrics { margin-top: 1.5rem; border-top: 1px solid var(--music-line); }
+.station-music-lyrics summary { cursor: pointer; padding: 1rem 0; font-size: 1.25rem; font-family: var(--music-display); }
+.station-music-lyrics > p { font-size: .875rem; line-height: 1.6; color: var(--music-muted); }
+.station-music-lyrics-content { position: relative; max-height: 20rem; max-height: min(20rem, 40dvh); overflow: auto; overscroll-behavior: contain; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.9; font-size: 1.0625rem; scroll-behavior: auto; }
+.station-music-lyrics-content p { font: inherit; padding: .375rem .625rem; margin: 0; border-left: 3px solid transparent; }
+.station-music-lyrics-content [aria-current='true'] { color: var(--music-accent); border-left-color: var(--music-accent); background: var(--music-accent-soft); font-weight: 700; }
+.station-music-lyrics button { margin-top: .75rem; }
+@media (max-width: 48rem) {
+  .station-music-player[data-library] .station-music-track { grid-template-columns: minmax(0, 1fr) 44px 44px; gap: .25rem; }
+  .station-music-player[data-library] [data-row-creator] { display: none; }
+  .station-music-player[data-library] .station-music-browse-modes { column-gap: .375rem; }
+}
