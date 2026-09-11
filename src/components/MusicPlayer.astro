@@ -1,5 +1,5 @@
 ---
-import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw } from '@lucide/astro';
+import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ListMusic, X } from '@lucide/astro';
 import '../styles/music-player.css';
 interface Props { previewLabel?: string; }
 const { previewLabel } = Astro.props;
@@ -11,9 +11,17 @@ const { previewLabel } = Astro.props;
       {previewLabel && <span class="station-music-preview-label">{previewLabel}</span>}
       <h1>音乐小站</h1>
       <p class="station-music-intro">选一首，让日常慢下来。</p>
+      <div class="station-music-queue-tools" aria-label="队列设置">
+        <button data-play-all type="button" disabled><Play size={16} />播放全部</button>
+        <button data-shuffle type="button" aria-pressed="false"><Shuffle size={17} />随机</button>
+        <button data-repeat type="button" aria-label="顺序播放，点击切换循环方式"><Repeat data-repeat-icon size={17} /><Repeat1 data-repeat-one-icon size={17} hidden /><span data-repeat-label>顺序播放</span></button>
+        <button data-queue-toggle type="button" aria-expanded="false" aria-controls="music-queue"><ListMusic size={18} />队列 <span data-queue-count>0</span></button>
+      </div>
+      <p class="station-music-queue-help" id="music-list-play-help">点击列表的播放按钮，会按当前列表重建队列；底栏继续播放保留原队列。</p>
+      <p class="station-music-queue-notice" data-queue-notice role="status" hidden></p>
       <div class="station-music-catalog-message" data-catalog-message role="status">正在整理曲目…</div>
       <button class="station-music-retry" data-catalog-retry hidden type="button"><RefreshCw size={18} />重新加载</button>
-      <ul class="station-music-tracks" data-track-list aria-label="选择歌曲"></ul>
+      <ul class="station-music-tracks" data-track-list aria-label="选择歌曲" aria-describedby="music-list-play-help"></ul>
     </div>
     <aside class="station-music-detail" aria-label="当前歌曲" data-track-detail hidden>
       <div class="station-music-art">
@@ -32,10 +40,14 @@ const { previewLabel } = Astro.props;
         <img data-mini-cover alt="" width="80" height="80" hidden />
         <div><strong data-mini-title></strong><span data-mini-description></span></div>
       </div>
-      <button class="station-music-main-play" data-main-play type="button" aria-label="播放" disabled>
+      <div class="station-music-transport">
+        <button class="station-music-step" data-previous type="button" aria-label="上一首；超过三秒时回到开头" disabled><SkipBack size={22} fill="currentColor" /></button>
+        <button class="station-music-main-play" data-main-play type="button" aria-label="播放" disabled>
         <span class="station-music-main-play-circle"><Play data-play-icon size={32} fill="currentColor" /><Pause data-pause-icon size={32} fill="currentColor" hidden /><LoaderCircle data-loading-icon size={32} hidden /></span>
         <span data-play-label>播放</span>
-      </button>
+        </button>
+        <button class="station-music-step" data-next type="button" aria-label="下一首" disabled><SkipForward size={22} fill="currentColor" /></button>
+      </div>
       <div class="station-music-progress">
         <span data-current-time aria-live="off">00:00</span>
         <input data-progress type="range" min="0" max="1" step="0.1" value="0" aria-label="播放进度" disabled />
@@ -47,7 +59,25 @@ const { previewLabel } = Astro.props;
       </div>
     </div>
     <p class="station-music-dock-error" data-dock-error hidden></p>
+    <p class="station-music-dock-error" data-dock-queue-notice hidden></p>
   </div>
+  <dialog class="station-music-queue-dialog" data-queue-dialog id="music-queue" aria-labelledby="music-queue-heading">
+    <div class="station-music-queue-heading"><h2 id="music-queue-heading">待播队列</h2><button data-queue-close type="button" aria-label="关闭队列" autofocus><X size={22} /></button></div>
+    <p class="station-music-queue-help">从歌曲列表开始播放或点击“播放全部”会重建队列；只浏览歌曲不改变待播顺序。随机播放时，上一首返回实际收听历史。</p>
+    <p data-queue-empty>队列为空，选择歌曲或点击播放全部。</p>
+    <ul class="station-music-queue-list" data-queue-list></ul>
+    <div class="station-music-queue-confirm" data-queue-confirm hidden>
+      <p data-queue-confirm-title></p>
+      <p class="station-music-queue-help">没有下一首可完整收听的曲目时，将停止播放。</p>
+      <button data-remove-next type="button">移除并播放下一首</button>
+      <button data-remove-stop type="button">移除并停止</button>
+      <button data-remove-cancel type="button">取消</button>
+    </div>
+    <div class="station-music-queue-footer"><button data-queue-add type="button" disabled>加入当前曲目</button><button data-queue-clear type="button" disabled>清空并停止</button></div>
+  </dialog>
+  <template data-queue-template>
+    <li class="station-music-queue-row"><button class="station-music-queue-pick" data-queue-play type="button"><strong data-queue-title></strong><span data-queue-meta></span></button><button data-queue-remove type="button"><X size={18} /></button></li>
+  </template>
   <template data-track-template>
     <li class="station-music-track">
       <button class="station-music-select" type="button">

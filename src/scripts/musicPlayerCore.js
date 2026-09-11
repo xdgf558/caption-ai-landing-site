@@ -18,7 +18,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
   let state = {
     status: 'idle', activeTrackId: null, activeAudioVersion: null, activeVariant: null,
     activePolicyVersion: null, fullDurationSec: null, previewSourceStartSec: null,
-    currentTimeSec: 0, durationSec: null, sourceGeneration: 0,
+    currentTimeSec: 0, durationSec: null, sourceGeneration: 0, seeking: false,
     volume: audio.volume, muted: audio.muted, lastError: null
   };
   audio.preload = 'none';
@@ -36,7 +36,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
   const progress = () => {
     if (!current() || !metadataReady || audio.readyState < 1) return;
     const durationSec = finite(audio.duration) && audio.duration > 0 ? audio.duration : state.durationSec;
-    publish({ durationSec, currentTimeSec: finite(audio.currentTime)
+    publish({ durationSec, seeking: Boolean(audio.seeking), currentTimeSec: finite(audio.currentTime)
       ? Math.min(audio.currentTime, durationSec ?? audio.currentTime) : 0 });
   };
   on('loadedmetadata', () => {
@@ -46,6 +46,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
   });
   on('durationchange', progress);
   on('timeupdate', progress);
+  on('seeking', progress);
   on('seeked', progress);
   on('playing', () => {
     if (!current() || audio.readyState < 2 || audio.paused || audio.ended) return;
@@ -100,7 +101,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
     publish({ status: 'idle', activeTrackId: track.id, activeAudioVersion: track.audioVersion,
       activeVariant: variant, activePolicyVersion: track.policyVersion,
       fullDurationSec: track.durationSec, previewSourceStartSec: variant === 'preview' ? track.previewSourceStartSec : null,
-      currentTimeSec: 0, durationSec: variant === 'preview' ? track.previewDurationSec : track.durationSec,
+      currentTimeSec: 0, seeking: false, durationSec: variant === 'preview' ? track.previewDurationSec : track.durationSec,
       sourceGeneration: state.sourceGeneration + 1, lastError: null });
     return true;
   };
@@ -146,6 +147,13 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
     select,
     play,
     pause,
+    clear() {
+      if (destroyed) return;
+      stopSource();
+      publish({ status: 'idle', activeTrackId: null, activeAudioVersion: null, activeVariant: null,
+        activePolicyVersion: null, fullDurationSec: null, previewSourceStartSec: null,
+        currentTimeSec: 0, durationSec: null, seeking: false, sourceGeneration: state.sourceGeneration + 1, lastError: null });
+    },
     playTrack(track, variant = 'full') {
       const changed = select(track, variant);
       if (!changed && intent) pause(); else play();

@@ -1,4 +1,6 @@
 import { createMusicPlayer } from './musicPlayerCore.js';
+import { createMusicQueue } from './musicPlayerQueue.js';
+import { mountMusicQueueControls } from './musicQueueControls.js';
 import { readPlayerCatalog, playerVariant, formatMusicTime } from './musicPlayerCatalog.js';
 
 const mounts = new WeakMap();
@@ -12,6 +14,8 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const audio = $('[data-music-audio]'), player = createMusicPlayer(audio);
   const abort = new AbortController(), list = $('[data-track-list]'), rows = new Map();
   let tracks = [], capabilities = null, disposed = false, requestGeneration = 0, scrub = null;
+  const queue = createMusicQueue(player);
+  const queueControls = mountMusicQueueControls(root, { queue, player, getVisibleTracks: () => tracks });
   const requests = new Set();
   const listen = (target, event, callback) => target.addEventListener(event, callback, { signal: abort.signal });
   const setText = (selector, text) => { const node = $(selector); if (node.textContent !== text) node.textContent = text; };
@@ -49,7 +53,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     setText('[data-play-status]', status);
     $('[data-play-status]').dataset.state = state.status;
     const unavailable = playerVariant(selected, capabilities) === null;
-    $('[data-main-play]').disabled = unavailable;
+    $('[data-main-play]').disabled = unavailable && !running(state.status);
     const label = running(state.status) ? '暂停' : state.status === 'ended' ? '重新播放'
       : state.status === 'error' ? '重试播放' : state.currentTimeSec > 0 ? '继续播放'
       : state.activeVariant === 'preview' ? '播放试听' : '播放';
@@ -79,16 +83,17 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       row.querySelector('.station-music-select').setAttribute('aria-pressed', String(active));
       row.querySelector('[data-row-description]').textContent = `${track.creatorName} · ${permission(track)}`;
       const button = row.querySelector('[data-row-play]');
-      button.disabled = playerVariant(track, capabilities) === null;
+      button.disabled = playerVariant(track, capabilities) === null && !(active && running(state.status));
       button.setAttribute('aria-label', `${active && running(state.status) ? '暂停' : playerVariant(track, capabilities) === 'preview' ? '试听' : '播放'}：${track.title}`);
       icons(button, active && ['loading', 'buffering'].includes(state.status), active && state.status === 'playing');
     }
   };
   const choose = (track, start) => {
+    if (start) { queue.playFromList(track.id, tracks); return; }
     const variant = playerVariant(track, capabilities);
     // The UI choice is a hint; /audio still performs the actual authorization.
     if (variant === null) { player.select(track, 'preview'); return; }
-    if (start) player.playTrack(track, variant); else player.select(track, variant);
+    player.select(track, variant);
   };
   const renderRows = () => {
     list.replaceChildren(); rows.clear();
@@ -117,7 +122,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   });
   listen($('[data-main-play]'), 'click', () => {
     const state = player.snapshot();
-    if (running(state.status)) player.pause(); else player.play();
+    if (running(state.status)) player.pause(); else queue.playCurrent(tracks);
   });
   listen($('[data-progress]'), 'input', event => {
     scrub = { generation: player.snapshot().sourceGeneration, value: Number(event.target.value) };
@@ -142,7 +147,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const load = () => {
     const generation = ++requestGeneration;
     for (const request of requests) request.abort();
-    requests.clear(); capabilities = null;
+    requests.clear(); capabilities = null; queue.updateCapabilities(null);
     $('[data-catalog-retry]').hidden = true;
     $('[data-catalog-message]').hidden = false;
     setText('[data-catalog-message]', '正在整理曲目…');
@@ -152,11 +157,12 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     // Capabilities failure must not withhold free tracks. Each request settles independently.
     void json(`/api/music/me/capabilities?locale=${locale}`, capabilityRequest).then(body => {
       if (disposed || generation !== requestGeneration) return;
-      capabilities = body; render(player.snapshot());
+      capabilities = body; queue.updateCapabilities(body); render(player.snapshot());
     }).catch(() => {});
     void json(`/api/music/catalog?locale=${locale}`, catalogRequest).then(body => {
       if (disposed || generation !== requestGeneration) return;
       tracks = readPlayerCatalog(body);
+      queue.updateCatalog(tracks);
       renderRows();
       $('[data-catalog-message]').hidden = tracks.length > 0;
       if (!tracks.length) setText('[data-catalog-message]', '小站还在准备音乐，稍后再来听听。');
@@ -169,11 +175,11 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     });
   };
   listen($('[data-catalog-retry]'), 'click', load);
-  const api = { player, destroy() {
+  const api = { player, queue, destroy() {
     if (disposed) return;
     disposed = true; requestGeneration++;
     for (const request of requests) request.abort();
-    requests.clear(); abort.abort(); unsubscribe(); player.destroy(); mounts.delete(root);
+    requests.clear(); abort.abort(); unsubscribe(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
   } };
   mounts.set(root, api);
   // Keep bfcache state: restoring a page does not mount a second player.
