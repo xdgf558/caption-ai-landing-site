@@ -29,14 +29,17 @@ const server = createServer(async (req, res) => {
       ? JSON.parse(await readFile(resolve(root, '.generated/music-player-access-state.json'), 'utf8')) : {};
     const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(url.searchParams.get('locale')) ? url.searchParams.get('locale') : 'zh-Hans';
     const names = { 'zh-Hans': ['窗边的午后', '夜行小站', '慢慢醒来'], 'zh-Hant': ['窗邊的午後', '夜行小站', '慢慢醒來'], en: ['Afternoon by the Window', 'Night Station', 'Waking Slowly'], ja: ['窓辺の午後', '夜の小駅', 'ゆっくり目覚めて'] };
-    const baseTracks = scenario === 'library-500' ? Array.from({ length: 500 }, (_, i) => ({ ...tracks[i % 3], id: `00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}` })) : tracks;
+    const mobileDesign = ['mobile-design', 'mobile-large-text'].includes(scenario);
+    const mobileTracks = [tracks[0], tracks[2], tracks[1], { ...tracks[0], id: '44444444-4444-4444-8444-444444444444', art: 'rain', durationSec: 204 }];
+    const mobileNames = { 'zh-Hans': ['窗边的午后', '清晨第一缕光', '晚安，小城市', '雨落在屋檐'], 'zh-Hant': ['窗邊的午後', '清晨第一縷光', '晚安，小城市', '雨落在屋簷'], en: ['Afternoon by the Window', 'The First Light of Morning', 'Goodnight, Little City', 'Rain on the Roof'], ja: ['窓辺の午後', '朝の最初の光', 'おやすみ、小さな街', '軒先に降る雨'] };
+    const baseTracks = mobileDesign ? mobileTracks : scenario === 'library-500' ? Array.from({ length: 500 }, (_, i) => ({ ...tracks[i % 3], id: `00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}` })) : tracks;
     const demoTracks = baseTracks.map(track => scenario === 'access-lifecycle' && fixture.catalog !== 'free' && track.art !== 'night'
       ? { ...track, effectiveAccess: 'vip', previewAvailable: true, previewDurationSec: 30, previewSourceStartSec: 12 } : track).map((track, i) => ({ ...track,
-      title: names[locale][i % 3] + (scenario === 'library-500' ? ` ${i + 1}` : ''),
-      effectiveAccess: libraryPreview && i % 3 === 1 ? 'vip' : track.effectiveAccess,
-      previewAvailable: libraryPreview && i % 3 === 1 ? true : track.previewAvailable,
-      previewDurationSec: libraryPreview && i % 3 === 1 ? 30 : track.previewDurationSec,
-      previewSourceStartSec: libraryPreview && i % 3 === 1 ? 12 : track.previewSourceStartSec,
+      title: (mobileDesign ? mobileNames[locale][i] : names[locale][i % 3]) + (scenario === 'library-500' ? ` ${i + 1}` : ''),
+      effectiveAccess: libraryPreview && (mobileDesign ? track.art === 'night' : i % 3 === 1) ? 'vip' : track.effectiveAccess,
+      previewAvailable: libraryPreview && (mobileDesign ? track.art === 'night' : i % 3 === 1) ? true : track.previewAvailable,
+      previewDurationSec: libraryPreview && (mobileDesign ? track.art === 'night' : i % 3 === 1) ? 30 : track.previewDurationSec,
+      previewSourceStartSec: libraryPreview && (mobileDesign ? track.art === 'night' : i % 3 === 1) ? 12 : track.previewSourceStartSec,
       genres: i % 2 ? ['Ambient'] : ['Piano', 'Acoustic'], moods: i % 3 ? ['Calm'] : ['Warm'],
       summary: locale === 'en' ? 'Original synthesized audio for local interaction testing.' : locale === 'ja' ? '操作確認用に合成したローカル音源です。' : '本地合成演示音频，仅用于交互预览。',
       publishedAt: new Date(Date.UTC(2026, 8, 11) - i * 86400000).toISOString(), coverUrl: `/api/music/tracks/${track.id}/cover?v=1`
@@ -94,7 +97,9 @@ const server = createServer(async (req, res) => {
     const staticRoot = libraryPreview ? resolve(root, 'dist') : output;
     const file = resolve(staticRoot, '.' + decodeURIComponent(url.pathname) + (url.pathname.endsWith('/') ? 'index.html' : ''));
     if (!file.startsWith(staticRoot + sep)) { send(404, 'Not found', 'text/plain'); return; }
-    send(200, await readFile(file), mime[extname(file)] || 'application/octet-stream');
+    let bytes = await readFile(file);
+    if (scenario === 'mobile-large-text' && extname(file) === '.html') bytes = Buffer.from(bytes.toString().replace('</head>', '<style>html{font-size:200% !important}</style></head>'));
+    send(200, bytes, mime[extname(file)] || 'application/octet-stream');
   } catch { send(404, 'Local preview unavailable', 'text/plain'); }
 });
 server.listen(port, '127.0.0.1', () => console.log(`Local music player: ${origin}/`));

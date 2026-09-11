@@ -1,6 +1,15 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+歌曲详情|歌曲詳情|Song details|曲の詳細
+关闭详情|關閉詳情|Close details|詳細を閉じる
+筛选歌曲|篩選歌曲|Filter songs|曲を絞り込む
+关闭筛选|關閉篩選|Close filters|絞り込みを閉じる
+查看歌曲|查看歌曲|Show songs|曲を表示
+打开菜单|打開選單|Open menu|メニューを開く
+关闭菜单|關閉選單|Close menu|メニューを閉じる
+菜单|選單|Menu|メニュー
+播放列表说明|播放清單說明|How the queue works|再生リストについて
 音乐小站|音樂小站|Music at Station Cat|音楽の小駅
 选一首，让日常慢下来。|選一首，讓日常慢下來。|A song for a slower day.|一曲選んで、ひと息。
 音乐播放器|音樂播放器|Music player|音楽プレーヤー

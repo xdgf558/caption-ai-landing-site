@@ -20,6 +20,8 @@ export function mountMusicLibraryControls(root, { t, onChange, host = window }) 
     $('[data-collection-description]').textContent = description; $('[data-collection-description]').hidden = !description;
     $('[data-picks-help]').hidden = state.mode !== 'picks';
     $('[data-clear-filters]').hidden = !state.query && !state.genres.length && !state.moods.length && !state.access && !state.collection && state.mode === 'latest';
+    const filterToggle = $('[data-filter-toggle]');
+    if (filterToggle) filterToggle.dataset.active = String(Boolean(state.genres.length || state.moods.length || state.access || state.collection));
     const missing = (state.track && !tracks.some(item => item.id === state.track)) || (state.collection && !collections.some(item => item.slug === state.collection));
     const notice = loaded && missing ? t('当前目录中未找到此歌曲或歌单。') : '';
     $('[data-library-notice]').textContent = notice; $('[data-library-notice]').hidden = !notice;
@@ -30,7 +32,7 @@ export function mountMusicLibraryControls(root, { t, onChange, host = window }) 
     if (state.track) params.set('track', state.track);
     if (state.collection) params.set('collection', state.collection);
     const query = musicSelection(params).toString();
-    host.history[replace ? 'replaceState' : 'pushState']({ musicLibrary: { ...state } }, '', host.location.pathname + (query ? `?${query}` : ''));
+    host.history[replace || host.history.state?.musicPanel ? 'replaceState' : 'pushState']({ ...host.history.state, musicLibrary: { ...state } }, '', host.location.pathname + (query ? `?${query}` : ''));
   };
   const change = (patch, replace = false) => { state = { ...state, ...patch }; count = 50; save(replace); render(); };
   on($('[data-music-search]'), 'input', event => change({ query: event.target.value.slice(0, 200) }, true));
