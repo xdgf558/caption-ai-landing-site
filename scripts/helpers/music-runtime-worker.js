@@ -6,12 +6,17 @@ import { readMusicMembership } from '../../src/music/membership.js';
 import { handleMusicAdmin, isMusicAdminPath } from '../../src/music/adminHttp.js';
 import { handleMusicMedia } from '../../src/music/mediaResponse.js';
 import { handleMusicPublic } from '../../src/music/publicHttp.js';
+import { createMusicUpload } from '../../src/music/uploads.js';
 import { seedMusicRuntimeFixture, fixtureEvidenceProof, seedLargeRuntimeAudio } from './music-runtime-fixture.js';
 
 // Only bundled by the local test runner. Never deploy this fixture router or its synthetic approvals.
 export default {
   async fetch(request, env) {
     try {
+      if (new URL(request.url).pathname.startsWith('/fixture-cleanup/admin/api/music/')) {
+        const url = new URL(request.url); url.pathname = url.pathname.replace('/fixture-cleanup', '');
+        return handleMusicAdmin(new Request(url, request), { ...env, MUSIC_CLEANUP_ENABLED: 'true' }, async () => 'fixture@example.test');
+      }
       if (new URL(request.url).pathname.startsWith('/fixture-media/api/music/tracks/')) {
         const url = new URL(request.url); url.pathname = url.pathname.replace('/fixture-media', '');
         return handleMusicMedia(new Request(url, request), {
@@ -36,6 +41,9 @@ export default {
       const { db, bucket, flags } = musicRuntime(env), path = new URL(request.url).pathname;
       let result;
       if (path === '/database') result = { ...await checkMusicDatabase(db), flags };
+      else if (path === '/cleanup-seed') result = await createMusicUpload(db, await request.json(), {
+        actorId: 'fixture@example.test', key: crypto.randomUUID(), clock: () => Date.now() - 8 * 86400000 - 1000
+      });
       else if (path === '/seed') result = await seedMusicRuntimeFixture(db, await request.json());
       else if (path === '/stress-seed') result = await seedLargeRuntimeAudio(bucket, await request.json());
       else if (path === '/verify') result = await verifyStoredMusicAudio(bucket, await request.json());

@@ -17,7 +17,7 @@ let mf, db, bucket;
 function migrationStatements() {
   const parser = new DatabaseSync(':memory:'), migrations = [];
   try {
-    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql']) {
+    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql']) {
       const statements = [];
       let remaining = file(`migrations-music/${name}`).toString();
       while (remaining.trim()) {
@@ -95,6 +95,8 @@ test('missing schema is 503; actual migrations on local D1 enable primary readin
   assert.deepEqual(probe.body.flags, { public: false, uploads: false, vipDelivery: false, analytics: false });
   assert.equal((await adminCall('/status')).body.storage, null);
   assert.ok((await db.batch(migrations[2].map(sql => db.prepare(sql)))).every(r => r.success));
+  assert.equal((await adminCall('/status')).body.storage, null);
+  assert.ok((await db.batch(migrations[3].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.equal((await adminCall('/status')).body.storage.quotaBytes, 0);
   assert.deepEqual((await db.prepare('PRAGMA foreign_key_check').all()).results, []);
 });
@@ -488,6 +490,67 @@ test('native PUT concurrent writers cannot overwrite; lost response recovers and
   const refused = await uploadJson(`/uploads/${preexisting.uploadId}/body`, 'PUT', data, { 'Content-Type': 'text/plain' }, true);
   assert.equal(refused.body.code, 'UPLOAD_OBJECT_EXISTS'); assert.equal(refused.status, 409);
   assert.equal((await bucket.head(row.object_key)).etag, original.etag);
+});
+
+async function cleanupFixture(written = false) {
+  await db.prepare("UPDATE music_settings SET value_json='1073741824' WHERE key='storageQuotaBytes'").run();
+  const draft = await adminCall('/tracks','POST',adminDraft()); assert.equal(draft.status,200);
+  const bytes = new TextEncoder().encode('Retained until safely retired.');
+  const seeded = await call('/cleanup-seed',{ trackId: draft.body.trackId,kind: 'lyrics',format: 'txt',
+    byteSize: bytes.length,sha256: createHash('sha256').update(bytes).digest('hex') });
+  assert.equal(seeded.status,200,JSON.stringify(seeded.body));
+  const upload = seeded.body, asset = await db.prepare('SELECT * FROM music_assets WHERE id=?').bind(upload.assetId).first();
+  if (written) {
+    await db.prepare("UPDATE music_upload_sessions SET status='uploading',write_token=? WHERE id=?").bind(randomUUID(),upload.uploadId).run();
+    await db.prepare("UPDATE music_assets SET state='uploading' WHERE id=?").bind(asset.id).run();
+  }
+  const plan = (await adminCall('/cleanup')).body.items.find(i => i.uploadId === upload.uploadId);
+  return { upload,asset,bytes,draft: draft.body,plan };
+}
+async function cleanupExecute(f) {
+  const response = await mf.dispatchFetch(`http://music.local.test/fixture-cleanup/admin/api/music/cleanup/${f.upload.uploadId}`,{
+    method: 'POST',headers: { Origin: 'http://music.local.test','X-Requested-With': 'StationCatMusicAdmin',
+      'Content-Type': 'application/json','Idempotency-Key': randomUUID() },
+    body: JSON.stringify({ planHash: f.plan.planHash,reason: 'Native cleanup fixture.' }) });
+  return { status: response.status,body: await response.json() };
+}
+const putCleanupObject = f => bucket.put(f.asset.object_key,f.bytes,{ onlyIf: { etagDoesNotMatch: '*' },
+  httpMetadata: { contentType: 'text/plain' }, customMetadata: { musicUpload: f.upload.uploadId,musicAsset: f.asset.id } });
+
+test('native D1 cleanup releases once, retains history and fences a stale writer and revision', async () => {
+  const f = await cleanupFixture(), before = await dump();
+  assert.equal((await adminCall('/cleanup')).status,200); assert.deepEqual(await dump(),before);
+  assert.equal(f.plan.blockedReason,null);
+  const outcomes = await Promise.all(Array.from({ length: 4 },() => cleanupExecute(f)));
+  assert.ok(outcomes.every(r => r.status === 200 && r.body.cleanupState === 'released'),JSON.stringify(outcomes));
+  assert.equal((await db.prepare("SELECT COUNT(*) n FROM music_admin_audit_logs WHERE action='music.cleanup.release' AND target_id=?").bind(f.asset.id).first()).n,1);
+  await assert.rejects(db.prepare("UPDATE music_upload_sessions SET status='uploading',write_token=? WHERE id=?").bind(randomUUID(),f.upload.uploadId).run());
+  await assert.rejects(db.prepare('UPDATE music_track_revisions SET lyrics_asset_id=? WHERE id=?').bind(f.asset.id,f.draft.revisionId).run());
+  assert.equal((await db.prepare('SELECT COUNT(*) n FROM music_storage_charges WHERE asset_id=?').bind(f.asset.id).first()).n,0);
+});
+
+test('native R2 late write remains charged until observed; proof and deletion survive replay', async () => {
+  const f = await cleanupFixture(true), pending = await cleanupExecute(f);
+  assert.equal(pending.status,200); assert.equal(pending.body.code,'CLEANUP_WRITE_UNCONFIRMED');
+  assert.equal((await db.prepare('SELECT charged_bytes FROM music_storage_charges WHERE asset_id=?').bind(f.asset.id).first()).charged_bytes,f.bytes.length);
+  const object = await putCleanupObject(f); assert.ok(object.version);
+  const done = await cleanupExecute(f); assert.equal(done.status,200,JSON.stringify(done.body));
+  assert.equal(done.body.releasedBytes,f.bytes.length); assert.equal(await bucket.head(f.asset.object_key),null);
+  const stored = await db.prepare('SELECT * FROM music_upload_cleanup WHERE upload_id=?').bind(f.upload.uploadId).first();
+  assert.equal(JSON.parse(stored.proof_json).version,object.version); assert.ok(stored.released_at >= stored.proved_at);
+  assert.equal((await cleanupExecute(f)).body.replayed,true);
+});
+
+test('native ignored quota release rolls back audit and accounting after R2 deletion; retry recovers', async () => {
+  const f = await cleanupFixture(true); await putCleanupObject(f);
+  await db.prepare(`CREATE TRIGGER cleanup_test_ignore BEFORE UPDATE OF released_at ON music_upload_cleanup
+    BEGIN SELECT RAISE(IGNORE); END`).run();
+  try {
+    assert.equal((await cleanupExecute(f)).status,409); assert.equal(await bucket.head(f.asset.object_key),null);
+    assert.equal((await db.prepare('SELECT released_at FROM music_upload_cleanup WHERE upload_id=?').bind(f.upload.uploadId).first()).released_at,null);
+    assert.equal((await db.prepare('SELECT charged_bytes FROM music_storage_charges WHERE asset_id=?').bind(f.asset.id).first()).charged_bytes,f.bytes.length);
+  } finally { await db.prepare('DROP TRIGGER cleanup_test_ignore').run(); }
+  assert.equal((await cleanupExecute(f)).body.cleanupState,'released');
 });
 
 test('native unknown-length 32 MiB input streams to R2; actual overrun and truncated bodies cannot complete', { timeout: 30000 }, async () => {

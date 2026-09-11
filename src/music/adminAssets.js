@@ -1,4 +1,4 @@
-import { loadAssets } from './adminStore.js';
+import { loadAssets, primary, rows } from './adminStore.js';
 import { musicId, fail } from './adminValidation.js';
 import { checkAssetIdentity, checkStoredObject } from './resources.js';
 import { cancelBody } from './storage.js';
@@ -7,6 +7,7 @@ import { cancelBody } from './storage.js';
 export async function readAdminMusicAsset(db, bucket, id, request) {
   const asset = (await loadAssets(db, [musicId(id)]))[0];
   if (!asset || asset.state !== 'validated') fail('NOT_FOUND', 404);
+  if (rows(await primary(db).prepare('SELECT upload_id FROM music_upload_cleanup WHERE asset_id=?').bind(asset.id).all()).length) fail('NOT_FOUND', 404);
   checkAssetIdentity(asset);
   // Ignore conditional/range headers for this private review download. Public Range delivery is M2-04.
   let stopped = false, timer;

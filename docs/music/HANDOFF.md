@@ -1,6 +1,12 @@
 # 音乐系统交接记录
 
-## 最新：M2-01 公开读取
+## 最新：M2-05A 清理与配额回收
+
+PR #133 已合并 `main@1f6181e`，用户授权 M2-05，分支 `codex/music-storage-cleanup`。新增 0004（仅 MUSIC_DB）、只读分页 dry-run、独立维护开关下的单项清理、数据库停用与双向引用保护、R2 写入证明和删除后幂等回收。保留全部上传/资产/审计/幂等记录；未知迟到写入继续计费。详见 [M2_CLEANUP](M2_CLEANUP.md)。
+
+专项 15/15、原生 D1/R2 23/23、uploads 11/11、admin 23/23、collections 9/9、全仓 `npm test` 与 `npm run build` 均通过（146 页、111 条 sitemap）。远端 CI 待 PR 创建后运行。未迁移云端、未删真实对象、未改业务开关、未部署；真实多实例及恢复演练未运行。第二批继续 M2-05B 跨实例限流与诊断。
+
+## 历史：M2-01 公开读取
 
 2026-09-11，基线 `main@e2bf795`，分支 `codex/music-public-catalog`。公开目录、曲目详情、歌单详情、封面/歌词以及 capabilities/access 已接 Worker。公开 JSON 只用字段白名单，共享缓存不含账号资格；VIP 和资格响应保持 `private, no-store`。歌单不改变单曲策略，下架、版本冲突和存储异常在字节读取前关闭。详见 [M2_PUBLIC_READ](M2_PUBLIC_READ.md)。
 

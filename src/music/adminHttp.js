@@ -9,6 +9,7 @@ import { reviewMusicTechnical } from './technicalReview.js';
 import { readAdminMusicAsset } from './adminAssets.js';
 import { createAdminMusicCollection, listAdminMusicCollections, readAdminMusicCollection,
   saveAdminMusicCollection, saveAdminMusicCollectionTracks } from './collections.js';
+import { cleanupReadiness, planMusicCleanup, executeMusicCleanup } from './cleanup.js';
 
 export const isMusicAdminPath = path => path === '/admin/api/music' || path.startsWith('/admin/api/music/');
 function response(request, status, body, headers = {}) {
@@ -82,10 +83,15 @@ export async function handleMusicAdmin(request, env, authorize) {
     if (path === '/admin/api/music/status' && read) {
       fields(query, []);
       const upload = await uploadReadiness(runtime.db).catch(() => null);
+      const cleanup = await cleanupReadiness(runtime.db).catch(() => null);
       result = { ...settings, actorId, flags: runtime.flags, storage: upload,
+        cleanup: cleanup ? { ...cleanup, executionEnabled: env.MUSIC_CLEANUP_ENABLED === 'true' || env.MUSIC_CLEANUP_ENABLED === true } : null,
         capabilities: { drafts: true, rightsReview: true, unpublish: true, archive: true,
           uploads: runtime.flags.uploads && !!upload?.quotaBytes && typeof runtime.bucket.put === 'function',
           technicalReview: true, publish: true, collections: true, media: false, adminAssets: true } };
+    } else if (path === '/admin/api/music/cleanup' && read) {
+      fields(query, ['before']);
+      result = await planMusicCleanup(runtime.db, { before: query.before === undefined ? undefined : Number(query.before) });
     } else if (path === '/admin/api/music/tracks') {
       if (read) {
         fields(query, ['before', 'status', 'q']);
@@ -118,8 +124,14 @@ export async function handleMusicAdmin(request, env, authorize) {
       const upload = /^\/admin\/api\/music\/uploads\/([^/]+)(?:\/(body|complete))?$/.exec(path);
       const asset = /^\/admin\/api\/music\/assets\/([^/]+)$/.exec(path);
       const collection = /^\/admin\/api\/music\/collections\/([^/]+)(?:\/(tracks))?$/.exec(path);
+      const cleanup = /^\/admin\/api\/music\/cleanup\/([^/]+)$/.exec(path);
       if (asset && read) return await readAdminMusicAsset(runtime.db, runtime.bucket, asset[1], request);
-      if (collection) {
+      if (cleanup) {
+        if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED', 405);
+        if (env.MUSIC_CLEANUP_ENABLED !== 'true' && env.MUSIC_CLEANUP_ENABLED !== true) fail('MUSIC_CLEANUP_DISABLED', 503);
+        mutationKey(context.key);
+        result = await executeMusicCleanup(runtime.db, runtime.bucket, cleanup[1], await readBody(request), context);
+      } else if (collection) {
         const id = musicId(collection[1]);
         if (!collection[2] && read) result = await readAdminMusicCollection(runtime.db, id);
         else {

@@ -1,6 +1,12 @@
 # 测试矩阵
 
-## 最新：M2-01 公开读取
+## 最新：M2-05A 清理与配额回收
+
+`test:music:cleanup` 15/15，`test:music:runtime` 23/23。覆盖 dry-run 零写入与分页、7 天保留期、全部历史引用与审核证据、引用/停用竞态双向防护、旧写入者被拦、迟到 R2 对象、未知对象保守计费、删除回执丢失、删除后记账失败、四并发一次回收、Access/Origin/维护开关和原生 D1 零行写入回滚。没有用时间流逝替代写入结束证明。
+
+真实云端、多实例、S3/控制台并行维护、备份恢复演练未运行。M2-05B 限流仍待做，清理测试通过不代表可以开闸。
+
+## 历史：M2-01 公开读取
 
 2026-09-11，`main@e2bf795` 基线。`test:music:public` 9/9，Miniflare runtime 20/20，全仓 `npm test` 与 `npm run build` 通过；构建 146 页、111 条 sitemap。详见 [M2_PUBLIC_READ](M2_PUBLIC_READ.md)。
 
