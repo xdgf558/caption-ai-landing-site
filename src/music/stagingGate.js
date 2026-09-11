@@ -1,3 +1,6 @@
+import { isMusicPublicPath } from './publicHttp.js';
+import { isMusicMediaPath } from './mediaResponse.js';
+
 const staticPaths = new Set([
   '/favicon.ico',
   '/images/optimized/station-cat-logo-1668c2e5-160.webp',
@@ -21,8 +24,34 @@ export function isMusicStagingRequest(request) {
   }
 
   if (method !== 'GET' && method !== 'HEAD') return false;
+  if (isMusicPublicPath(url.pathname) || isMusicMediaPath(url.pathname)) return true;
   if (staticPaths.has(url.pathname)) return true;
   return staticPrefixes.some((prefix) => url.pathname.startsWith(prefix) && url.pathname.endsWith('.js'));
+}
+
+// Access is the outer staging gate. The shared music handlers still check a
+// separate, opaque reader session against the isolated staging identity DB.
+// Never forward the production reader cookie or fall back to WAITLIST_DB.
+export function musicStagingReaderRequest(request) {
+  const headers = new Headers(request.headers);
+  const cookie = (headers.get('Cookie') || '').split(';').map(value => value.trim())
+    .find(value => value.startsWith('station_cat_music_staging_session='));
+  headers.delete('Cookie');
+  if (cookie !== undefined) {
+    headers.set('Cookie', `station_cat_reader_session=${cookie.slice('station_cat_music_staging_session='.length)}`);
+  }
+  return new Request(request, { headers });
+}
+
+export function musicStagingResponse(response) {
+  const headers = new Headers(response.headers);
+  headers.set('Cache-Control', 'private, no-store');
+  headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  const vary = new Set((headers.get('Vary') || '').split(',').map(value => value.trim()).filter(Boolean));
+  vary.add('Cookie');
+  vary.add('Cf-Access-Jwt-Assertion');
+  headers.set('Vary', [...vary].join(', '));
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
 export function musicStagingHost(env) {

@@ -23,9 +23,9 @@
     "CF_ACCESS_TEAM_DOMAIN": "misty-limit-82d5.cloudflareaccess.com",
     "CF_ACCESS_AUD": "5ceda63da88e8ffb34a88338231028e473379ae51755ae3f6d69be218bb63e4a",
     "MUSIC_STAGING_EXPECTED_HOST": "music-staging.wwwstationcat.org",
-    "MUSIC_PUBLIC_ENABLED": "false",
+    "MUSIC_PUBLIC_ENABLED": "true",
     "MUSIC_UPLOADS_ENABLED": "false",
-    "MUSIC_VIP_DELIVERY_ENABLED": "false",
+    "MUSIC_VIP_DELIVERY_ENABLED": "true",
     "MUSIC_ANALYTICS_ENABLED": "false",
     "MUSIC_CLEANUP_ENABLED": "false"
   },
@@ -41,6 +41,12 @@
       "database_name": "station-cat-music-staging",
       "database_id": "8fe1a3e1-7325-4d87-a7e6-2c51338b9158",
       "migrations_dir": "../migrations-music"
+    },
+    {
+      "binding": "MUSIC_STAGING_MEMBERSHIP_DB",
+      "database_name": "station-cat-music-staging-identities",
+      "database_id": "cb7bbad3-bfbb-457d-b2f2-6fd3b02df651",
+      "migrations_dir": "./migrations-music-staging-identities"
     }
   ],
   "r2_buckets": [
