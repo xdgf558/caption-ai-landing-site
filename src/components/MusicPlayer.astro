@@ -64,6 +64,8 @@ const { previewLabel } = Astro.props;
         <input data-volume type="range" min="0" max="1" step="0.01" value="1" aria-label="音量" />
       </div>
     </div>
+    <p class="station-music-system-note station-music-device-volume">请用设备音量按键调节音量。</p>
+    <p class="station-music-system-note" data-system-notice role="status" hidden></p>
     <p class="station-music-dock-error" data-dock-error hidden></p>
     <p class="station-music-dock-error" data-dock-queue-notice hidden></p>
   </div>

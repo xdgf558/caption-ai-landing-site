@@ -88,7 +88,7 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
     remember(id, { back, forward });
     const changed = player.select(track, variant);
     if (restart && !changed && !player.seek(0)) { player.clear(); player.select(track, variant); }
-    player.play(); // Synchronous even for a queue button's user gesture.
+    player.play({ userInitiated: user }); // Synchronous, after the core's access guard.
     emit(); return true;
   };
   const nextCandidate = () => {
@@ -122,7 +122,7 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
     if (destroyed) return false;
     if (user) resetFailures();
     const next = nextCandidate();
-    return next ? start(next.id, 'full', { ...next, restart: user }) : stopAtBoundary(!user, failure);
+    return next ? start(next.id, 'full', { ...next, user, restart: user }) : stopAtBoundary(!user, failure);
   };
   const observe = state => {
     if (destroyed) return;
@@ -209,7 +209,7 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
       const limited = notice; resetFailures();
       const candidates = ids().filter(full), id = shuffle ? shuffled(candidates)[0] : candidates[0];
       if (!id) { player.clear(); return stopAtBoundary(true, false); }
-      const result = start(id, 'full', { restart: true });
+      const result = start(id, 'full', { user: true, restart: true });
       if (limited) notice = limited;
       emit(); return result;
     },
@@ -246,14 +246,14 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
       }
       resetFailures();
       if (shuffle) {
-        while (past.length) { const id = past.pop(); if (eligible(id)) return start(id, 'full', { back: true }); }
+        while (past.length) { const id = past.pop(); if (eligible(id)) return start(id, 'full', { user: true, back: true }); }
       } else {
         const order = ids(), index = order.indexOf(active());
         for (let step = 1; step <= order.length; step++) {
           const position = index - step;
           if (position < 0 && repeat !== 'all') break;
           const id = order[(position + order.length) % order.length];
-          if (eligible(id)) return start(id, 'full', { restart: true });
+          if (eligible(id)) return start(id, 'full', { user: true, restart: true });
         }
       }
       notice = 'QUEUE_START'; emit(); return false;
@@ -283,7 +283,7 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
       items = items.filter(track => track.id !== id);
       pending = pending.filter(value => value !== id); past = past.filter(value => value !== id); future = future.filter(value => value !== id);
       if (isCurrent) {
-        if (next && next.id !== id) start(next.id, 'full', next);
+        if (next && next.id !== id) start(next.id, 'full', { ...next, user: true });
         else player.clear();
       }
       notice = items.length ? null : 'QUEUE_EMPTY'; emit(); return true;

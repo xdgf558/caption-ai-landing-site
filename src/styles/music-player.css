@@ -66,6 +66,10 @@
 .station-music-volume button { display: grid; place-items: center; height: 44px; min-width: 44px; background: transparent; border: 0; color: var(--music-ink); padding: 0; }
 .station-music-volume input { min-width: 0; }
 .station-music-dock-error { max-width: var(--max, 1120px); margin: 8px auto 0; color: #943c2d; font-size: 13px; }
+.station-music-system-note { max-width: var(--max, 1120px); margin: 8px auto 0; color: var(--music-muted); font-size: 12px; }
+.station-music-device-volume { display: none; }
+[data-volume-mode="device"] .station-music-device-volume { display: block; }
+[data-page-hidden="true"] [data-loading-icon] { animation-play-state: paused; }
 .station-music-queue-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 20px; }
 .station-music-queue-tools button, .station-music-queue-dialog button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 44px; border: 1px solid var(--music-line); background: #fffdf9; border-radius: 8px; color: var(--music-ink); padding: 8px 12px; font-size: 13px; }
 .station-music-queue-tools button[aria-pressed='true'], .station-music-queue-tools button[data-active='true'] { background: #e3eee8; border-color: var(--music-accent); color: var(--music-accent); }
@@ -112,6 +116,7 @@
   .station-music-row-play { width: 48px; height: 48px; }
   .station-music-dock-inner { grid-template-columns: minmax(140px, 1fr) 176px minmax(160px, 1fr); gap: 16px; }
   .station-music-volume { display: none; }
+  .station-music-device-volume { display: block; }
 }
 @media (max-width: 600px) {
   .station-music-player { padding: 28px 20px 220px; }
