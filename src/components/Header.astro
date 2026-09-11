@@ -1,4 +1,7 @@
 ---
+import { Menu, X } from '@lucide/astro';
+import { isMusicPagePath } from '../music/pagePaths.js';
+import { musicText } from '../scripts/musicMessages.js';
 import LanguageSwitcher from './LanguageSwitcher.astro';
 import {
   brandNavigation,
@@ -17,6 +20,7 @@ interface Props {
 
 const { lang = 'zh-Hant' } = Astro.props;
 const path = Astro.url.pathname;
+const isMusic = isMusicPagePath(path), t = musicText(lang);
 const isProduct = path.includes('/apps/caption-ai');
 const nav = isProduct
   ? lang === 'ja'
@@ -53,6 +57,8 @@ const brandLabel = 'Station Cat';
       </span>
       <span>{brandLabel}</span>
     </a>
+    {isMusic && <button class="station-music-menu-toggle" data-music-menu-toggle type="button" aria-controls="music-site-menu" aria-expanded="false" aria-label={t('打开菜单')}><Menu size={26} /></button>}
+    <div class:list={{ 'station-music-nav-content': isMusic, 'nav-contents': !isMusic }} data-music-nav-content={isMusic || undefined}>
     <div class="nav-links">
       {nav.map((item) => (
         <a
@@ -66,5 +72,12 @@ const brandLabel = 'Station Cat';
       ))}
     </div>
     <LanguageSwitcher lang={lang} />
+    </div>
+    {isMusic && <dialog class="station-music-menu-dialog" data-menu-dialog id="music-site-menu" aria-labelledby="music-menu-heading">
+      <div class="station-music-sheet-heading"><h2 id="music-menu-heading">{t('菜单')}</h2><button data-panel-close="menu" type="button" aria-label={t('关闭菜单')} autofocus><X size={24} /></button></div>
+      <div data-nav-target></div>
+    </dialog>}
   </nav>
 </header>
+
+<style>.nav-contents { display: contents; }</style>

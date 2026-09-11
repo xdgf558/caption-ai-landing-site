@@ -1,12 +1,13 @@
 import { musicText } from './musicMessages.js';
 const repeatText = { off: '顺序播放', all: '列表循环', one: '单曲循环' };
 
-export function mountMusicQueueControls(root, { queue, player, getVisibleTracks, getAllTracks = getVisibleTracks }) {
+export function mountMusicQueueControls(root, { queue, player, getVisibleTracks, getAllTracks = getVisibleTracks, panels = null }) {
   const t = musicText(root.dataset.locale);
   const $ = selector => root.querySelector(selector), abort = new AbortController();
   const dialog = $('[data-queue-dialog]'), list = $('[data-queue-list]');
   const rows = new Map();
-  let signature = '', pendingRemoval = null;
+  let signature = '', pendingRemoval = null, queueOpener = null;
+  const toggles = [...root.querySelectorAll('[data-queue-toggle]')];
   const on = (node, event, callback) => node.addEventListener(event, callback, { signal: abort.signal });
   const text = (selector, value) => { const node = $(selector); if (node.textContent !== value) node.textContent = value; };
   const render = state => {
@@ -64,14 +65,16 @@ export function mountMusicQueueControls(root, { queue, player, getVisibleTracks,
   on($('[data-next]'), 'click', () => queue.next());
   on($('[data-shuffle]'), 'click', () => queue.setShuffle(!queue.snapshot().shuffle));
   on($('[data-repeat]'), 'click', () => queue.setRepeat({ off: 'all', all: 'one', one: 'off' }[queue.snapshot().repeat]));
-  on($('[data-queue-toggle]'), 'click', () => {
-    if (!dialog.open) dialog.showModal();
-    $('[data-queue-toggle]').setAttribute('aria-expanded', 'true');
+  for (const toggle of toggles) on(toggle, 'click', () => {
+    queueOpener = toggle;
+    if (panels) panels.open('queue', toggle); else if (!dialog.open) dialog.showModal();
+    toggles.forEach(node => node.setAttribute('aria-expanded', 'true'));
   });
-  on($('[data-queue-close]'), 'click', () => dialog.close());
+  on($('[data-queue-close]'), 'click', () => panels ? panels.close() : dialog.close());
   on(dialog, 'close', () => {
     pendingRemoval = null; $('[data-queue-confirm]').hidden = true;
-    $('[data-queue-toggle]').setAttribute('aria-expanded', 'false'); $('[data-queue-toggle]').focus();
+    toggles.forEach(node => node.setAttribute('aria-expanded', 'false'));
+    if (!panels) queueOpener?.focus();
   });
   on(list, 'click', event => {
     const button = event.target.closest('button'), row = button?.closest('[data-queue-id]');
@@ -79,7 +82,7 @@ export function mountMusicQueueControls(root, { queue, player, getVisibleTracks,
     if (button.hasAttribute('data-queue-play')) queue.playQueued(row.dataset.queueId);
     else if (queue.remove(row.dataset.queueId)?.requiresConfirmation) {
       pendingRemoval = row.dataset.queueId;
-      text('[data-queue-confirm-title]t(', `移除「${row.querySelector(')[data-queue-title]').textContent}」后：`);
+      text('[data-queue-confirm-title]', t('移除「{title}」后：', { title: row.querySelector('[data-queue-title]').textContent }));
       $('[data-queue-confirm]').hidden = false; $('[data-remove-next]').focus();
     }
   });

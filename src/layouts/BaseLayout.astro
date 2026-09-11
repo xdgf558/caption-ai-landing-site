@@ -55,7 +55,7 @@ const structuredDataScripts = (Array.isArray(structuredData) ? structuredData : 
 <html lang={lang}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content={bodyClass?.includes('station-music-page') ? "width=device-width, initial-scale=1, viewport-fit=cover" : "width=device-width, initial-scale=1"} />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     {robots && <meta name="robots" content={robots} />}

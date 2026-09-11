@@ -4,6 +4,8 @@ export function libraryFilters(tracks) {
   return Object.fromEntries(['genres', 'moods'].map(key => [key, [...new Set(tracks.flatMap(track => track[key] || []))].sort()]));
 }
 export function browseMusic(tracks, collections, { query = '', genres = [], moods = [], access = '', collection = '', mode = 'latest' } = {}) {
+  // Albums have no published data contract yet (M5). A playlist is not an album.
+  if (mode === 'albums') return [];
   const ids = collection ? collections.find(item => item.slug === collection)?.trackIds || [] : null;
   const rank = ids && new Map(ids.map((id, index) => [id, index]));
   const needle = normalizeMusicSearch(query);

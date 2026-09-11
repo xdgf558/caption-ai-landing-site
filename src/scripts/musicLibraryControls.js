@@ -9,6 +9,13 @@ export function mountMusicLibraryControls(root, { t, onChange, host = window }) 
   const on = (node, event, callback) => node.addEventListener(event, callback, { signal: abort.signal });
   const render = () => {
     const results = browseMusic(tracks, collections, state);
+    const albums = state.mode === 'albums';
+    $('[data-song-search]').hidden = albums;
+    $('[data-filter-panel]').hidden = albums;
+    $('[data-play-all]').hidden = albums;
+    $('[data-track-list]').hidden = albums;
+    $('[data-list-title]').textContent = t(albums ? '专辑' : '全部歌曲');
+    $('[data-library-count]').hidden = albums;
     $('[data-show-more]').hidden = results.length <= count;
     $('[data-library-count]').textContent = t('显示 {shown} / {total} 首', { shown: Math.min(count, results.length), total: results.length });
     $('[data-music-search]').value = state.query;
@@ -20,17 +27,19 @@ export function mountMusicLibraryControls(root, { t, onChange, host = window }) 
     $('[data-collection-description]').textContent = description; $('[data-collection-description]').hidden = !description;
     $('[data-picks-help]').hidden = state.mode !== 'picks';
     $('[data-clear-filters]').hidden = !state.query && !state.genres.length && !state.moods.length && !state.access && !state.collection && state.mode === 'latest';
+    const filterToggle = $('[data-filter-toggle]');
+    if (filterToggle) filterToggle.dataset.active = String(Boolean(state.genres.length || state.moods.length || state.access || state.collection));
     const missing = (state.track && !tracks.some(item => item.id === state.track)) || (state.collection && !collections.some(item => item.slug === state.collection));
     const notice = loaded && missing ? t('当前目录中未找到此歌曲或歌单。') : '';
     $('[data-library-notice]').textContent = notice; $('[data-library-notice]').hidden = !notice;
-    onChange({ results, shown: results.slice(0, count), trackId: state.track, loaded });
+    onChange({ results, shown: results.slice(0, count), trackId: state.track, loaded, mode: state.mode });
   };
   const save = (replace = false) => {
     const params = new URLSearchParams();
     if (state.track) params.set('track', state.track);
     if (state.collection) params.set('collection', state.collection);
     const query = musicSelection(params).toString();
-    host.history[replace ? 'replaceState' : 'pushState']({ musicLibrary: { ...state } }, '', host.location.pathname + (query ? `?${query}` : ''));
+    host.history[replace || host.history.state?.musicPanel ? 'replaceState' : 'pushState']({ ...host.history.state, musicLibrary: { ...state } }, '', host.location.pathname + (query ? `?${query}` : ''));
   };
   const change = (patch, replace = false) => { state = { ...state, ...patch }; count = 50; save(replace); render(); };
   on($('[data-music-search]'), 'input', event => change({ query: event.target.value.slice(0, 200) }, true));
@@ -45,7 +54,7 @@ export function mountMusicLibraryControls(root, { t, onChange, host = window }) 
     state = { ...libraryLocation(host.location.search), query: typeof old.query === 'string' ? old.query.slice(0, 200) : '',
       genres: Array.isArray(old.genres) ? tags.genres.filter(tag => old.genres.includes(tag)) : [],
       moods: Array.isArray(old.moods) ? tags.moods.filter(tag => old.moods.includes(tag)) : [],
-      access: ['free', 'vip'].includes(old.access) ? old.access : '', mode: old.mode === 'picks' ? 'picks' : 'latest' };
+      access: ['free', 'vip'].includes(old.access) ? old.access : '', mode: ['picks', 'albums'].includes(old.mode) ? old.mode : 'latest' };
     count = 50; render();
   });
   save(true);
