@@ -57,7 +57,9 @@ test('invalid input and either disabled flag read no bindings, counters, media o
   assert.equal((await handleMusicShareCard(request(path + '&key=private'), {})).status, 400);
 });
 test('PNG reads only current public cover, keeps VIP anonymous, QR links contain no identity', async () => {
-  const f = await fixture(), response = await handleMusicShareCard(request(), f.env, { clock: () => now });
+  const f = await fixture();
+  f.env.WAITLIST_DB = { prepare() { assert.fail('public card must not query reader identity'); } };
+  const response = await handleMusicShareCard(request(undefined, { headers: { 'CF-Connecting-IP': '192.0.2.9', Cookie: 'CF_Authorization=test-edge-session; reader_session=ignored-test-only' } }), f.env, { clock: () => now });
   assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'image/png');
   assert.equal(response.headers.get('cache-control'), 'private, no-store');
   const png = new Uint8Array(await response.arrayBuffer()), decoded = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -108,11 +110,11 @@ const detail = fresh => new Response(JSON.stringify({ schemaVersion: 2, track: f
 function fakePng(format = 'poster') { const out = new Uint8Array(24); out.set([137,80,78,71,13,10,26,10],0); out.set([73,72,68,82],12); const v=new DataView(out.buffer); v.setUint32(16,format==='poster'?1080:1200);v.setUint32(20,format==='poster'?1800:630); return new Response(out,{headers:{'Content-Type':'image/png'}}); }
 function client(fetcher) { const created = [], revoked = [], states = []; const api = createMusicShareCards({ locale: 'zh-Hans', origin, fetcher,
   urls: { createObjectURL(blob) { created.push(blob); return `blob:${created.length}`; }, revokeObjectURL(url) { revoked.push(url); } }, onChange: state => states.push(state) }); return { api, created, revoked, states }; }
-test('card preparation is lazy, fresh revision wins, opaque transport omits cookies and media URLs', async () => {
+test('card preparation is lazy, fresh revision wins, same-origin Access session never crosses redirects', async () => {
   const calls = [], f = client(async (path, options) => { calls.push([path, options]); return calls.length === 1 ? detail({ ...track, audioVersion: 2 }) : fakePng(); });
   assert.equal(calls.length,0); await f.api.prepare(track);
   assert.equal(f.api.snapshot().status,'ready'); assert.ok(calls[1][0].includes('v=2'));
-  assert.ok(calls.every(([,o])=>o.credentials==='omit' && o.cache==='no-store' && o.redirect==='error'));
+  assert.ok(calls.every(([,o])=>o.credentials==='same-origin' && o.cache==='no-store' && o.redirect==='error'));
   assert.doesNotMatch(calls.map(([p])=>p).join(' '), /audio\?|access\?|https:\/\/evil/);
   f.api.close(); assert.deepEqual(f.revoked,['blob:1']); assert.equal(f.api.snapshot().blob,null);
 });

@@ -51,7 +51,9 @@ export function createMusicShareCards({ fetcher = globalThis.fetch, origin = glo
       }, timeoutMs);
       try {
         musicShareCardPath(track.id, track.audioVersion, locale, format);
-        const options = { credentials: 'omit', cache: 'no-store', redirect: 'error', signal: active.signal };
+        // Preserve the browser's same-origin Access session at the edge. The public
+        // endpoint ignores reader identity; never forward credentials across redirects.
+        const options = { credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: active.signal };
         // Read the current public revision; stale queue/catalog rows are not publication proof.
         const detail = await fetcher(`/api/music/tracks/${track.id}?locale=${locale}`, options);
         if (!detail.ok) { void detail.body?.cancel().catch(() => {}); throw new Error(detail.status === 404 || detail.status === 410 ? 'SHARE_TRACK_UNAVAILABLE' : 'SHARE_CARD_UNAVAILABLE'); }
