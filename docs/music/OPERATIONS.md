@@ -28,6 +28,10 @@ MUSIC_BUCKET 使用私有 R2 Standard，验证 r2.dev 和自定义公开域都�
 
 没有真实云资源，当前不提供虚构月成本或“免费额度一定足够”的承诺。开资源前核对账户套餐、Worker/D1/R2 额度和预估流量，配置预算提醒；不以进程内 Map 作跨实例限流。
 
+## M2-05B 本地限流与诊断
+
+见 [M2_RATE_LIMITS](M2_RATE_LIMITS.md)。公开入口新增 0005 与独立 secret 的 readiness 要求，缺失时失败关闭；没有修改任何真实配置。Access 诊断入口为 `/admin/api/music/diagnostics`，返回组件可用性和汇总计数。来源计数按分钟/类别 HMAC，过期数据由后续请求逐批清理，未修改定时任务。真实开闸前需验证可信来源头、跨实例与延迟/成本、拖动播放及阈值；429 的 Retry-After 与 503 的不可用状态应分别处理。
+
 ## M2-05A 本地维护实现
 
 已实现受保护的只读清理预演与单项恢复流程，详见 [M2_CLEANUP](M2_CLEANUP.md)。执行依赖独立 MUSIC_DB 的 0004 及缺省关闭的 `MUSIC_CLEANUP_ENABLED`；本轮未执行远程迁移或真实对象维护。需先查看 dry-run 的引用证据/保留期，再以原 planHash/reason 执行或恢复。已开始写入但对象缺失仍计费；不得手动删除会话、审计或停用证明来释放额度。既有 cron/queues 未改动。

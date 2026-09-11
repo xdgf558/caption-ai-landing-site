@@ -7,6 +7,7 @@ import { handleMusicAdmin, isMusicAdminPath } from '../../src/music/adminHttp.js
 import { handleMusicMedia } from '../../src/music/mediaResponse.js';
 import { handleMusicPublic } from '../../src/music/publicHttp.js';
 import { createMusicUpload } from '../../src/music/uploads.js';
+import { checkMusicRateLimit } from '../../src/music/rateLimits.js';
 import { seedMusicRuntimeFixture, fixtureEvidenceProof, seedLargeRuntimeAudio } from './music-runtime-fixture.js';
 
 // Only bundled by the local test runner. Never deploy this fixture router or its synthetic approvals.
@@ -41,6 +42,13 @@ export default {
       const { db, bucket, flags } = musicRuntime(env), path = new URL(request.url).pathname;
       let result;
       if (path === '/database') result = { ...await checkMusicDatabase(db), flags };
+      else if (path === '/rate-check') {
+        const input = await request.json();
+        const limits = Object.fromEntries(['catalog','artwork','audio'].map(k => [k,{ source: input.source,global: input.global }]));
+        const limited = await checkMusicRateLimit(request,{ ...env,MUSIC_RATE_LIMITS_JSON: JSON.stringify(limits) },
+          input.category,{ clock: () => input.now });
+        result = { allowed: limited === null,...limited };
+      }
       else if (path === '/cleanup-seed') result = await createMusicUpload(db, await request.json(), {
         actorId: 'fixture@example.test', key: crypto.randomUUID(), clock: () => Date.now() - 8 * 86400000 - 1000
       });

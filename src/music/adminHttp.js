@@ -10,6 +10,7 @@ import { readAdminMusicAsset } from './adminAssets.js';
 import { createAdminMusicCollection, listAdminMusicCollections, readAdminMusicCollection,
   saveAdminMusicCollection, saveAdminMusicCollectionTracks } from './collections.js';
 import { cleanupReadiness, planMusicCleanup, executeMusicCleanup } from './cleanup.js';
+import { readMusicDiagnostics } from './diagnostics.js';
 
 export const isMusicAdminPath = path => path === '/admin/api/music' || path.startsWith('/admin/api/music/');
 function response(request, status, body, headers = {}) {
@@ -75,6 +76,10 @@ export async function handleMusicAdmin(request, env, authorize) {
     }
     const query = Object.fromEntries(url.searchParams);
     if ([...url.searchParams].length !== Object.keys(query).length) fail('INVALID_INPUT', 400);
+    if (path === '/admin/api/music/diagnostics' && read) {
+      fields(query, []);
+      return response(request, 200, { ok: true, ...await readMusicDiagnostics(env) });
+    }
     const runtime = musicRuntime(env);
     const settings = await checkMusicDatabase(runtime.db);
     const context = { actorId, key: request.headers.get('idempotency-key'), ifMatch: request.headers.get('if-match') };
