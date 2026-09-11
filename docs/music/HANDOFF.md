@@ -2,7 +2,7 @@
 
 ## 当前：M5-01A 后台 WAV 转 MP3
 
-2026-09-12，用户授权直接进入 M5。从 `codex/music-share-cards@566cde6` 创建 `codex/music-admin-wav-transcode`，#146/#147 尚未合并。当前实施浏览器 Worker 转码、取消、输入边界和原会话恢复；原 WAV 留在本机，转换后仍走已有上传与服务端核验。后续专辑模型/管理与批量上传分包推进，M5 未整体完成。合同见 [M5_WAV_TRANSCODE](M5_WAV_TRANSCODE.md)。本地执行材料不进入 PR；无部署、远程迁移、业务开关或支付/VIP 改动。
+2026-09-12，用户授权直接进入 M5。从 `codex/music-share-cards@566cde6` 创建 `codex/music-admin-wav-transcode`，#146/#147 尚未合并。PR #148 已实现浏览器 Worker 转码、取消、输入边界和原会话恢复，本地专项/全仓测试与构建通过，待独立 review；原 WAV 留在本机，转换后仍走已有上传与服务端核验。后续专辑模型/管理与批量上传分包推进，M5 未整体完成。合同见 [M5_WAV_TRANSCODE](M5_WAV_TRANSCODE.md)。本地执行材料不进入 PR；无部署、远程迁移、业务开关或支付/VIP 改动。
 
 ## 前一切片：M4-06 歌曲分享卡片
 
