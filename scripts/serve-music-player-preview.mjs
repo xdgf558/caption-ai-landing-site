@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tracks, demoWav } from './fixtures/music-player/data.mjs';
+import { MUSIC_ANALYTICS_VERSION, validateMusicEvents } from '../src/music/analytics.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const libraryPreview = process.env.MUSIC_LIBRARY_PREVIEW === 'true';
@@ -11,11 +12,19 @@ const output = resolve(root, '.generated/music-player-preview');
 const port = Number(process.env.MUSIC_PLAYER_PREVIEW_PORT || 4198);
 const origin = `http://127.0.0.1:${port}`;
 const wavs = new Map();
-const counters = { catalog: 0, track: 0, collection: 0, capabilities: 0, access: 0, audio: 0, lyrics: 0 };
+const analyticsPreview = process.env.MUSIC_ANALYTICS_PREVIEW === 'true';
+const counters = { catalog: 0, track: 0, collection: 0, capabilities: 0, access: 0, audio: 0, lyrics: 0, analytics: 0 };
+async function analyticsAvailable() {
+  if (!analyticsPreview) return false;
+  try { return JSON.parse(await readFile(resolve(root,'.generated/music-analytics-preview-state.json'),'utf8')).available === true; }
+  catch { return false; }
+}
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp' };
 const server = createServer(async (req, res) => {
-  if (req.headers.host !== `127.0.0.1:${port}` || !['GET', 'HEAD'].includes(req.method)) { res.writeHead(403); res.end(); return; }
   const url = new URL(req.url, origin);
+  const analyticsPost=analyticsPreview && req.method==='POST' && url.pathname==='/api/music/events' && !url.search &&
+    req.headers.origin===origin && req.headers['x-requested-with']==='StationCatMusicAnalytics';
+  if (req.headers.host !== `127.0.0.1:${port}` || url.origin!==origin || (!['GET', 'HEAD'].includes(req.method) && !analyticsPost)) { res.writeHead(403); res.end(); return; }
   const send = (status, data, type = 'application/json', headers = {}) => {
     const body = Buffer.isBuffer(data) ? data : Buffer.from(type === 'application/json' ? JSON.stringify(data) : data);
     res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff',
@@ -23,6 +32,20 @@ const server = createServer(async (req, res) => {
     res.end(req.method === 'HEAD' ? undefined : body);
   };
   try {
+    if(url.pathname==='/api/music/analytics/config') {
+      send(200,{available:await analyticsAvailable(),consentVersion:MUSIC_ANALYTICS_VERSION});return;
+    }
+    if(analyticsPost) {
+      if(!await analyticsAvailable()) {send(503,{error:{code:'LOCAL_STATISTICS_DISABLED'}});return;}
+      // Opt-in fixture only: validate and count, retain no event/session payload.
+      // Atomicity, publication and retention are tested in the separate D1 harness.
+      let length=0, chunks=[];
+      for await(const chunk of req) {length+=chunk.length;if(length>16384){send(413,{error:{code:'REQUEST_TOO_LARGE'}});return;}chunks.push(chunk);}
+      try {
+        const events=validateMusicEvents(JSON.parse(Buffer.concat(chunks).toString('utf8')),Date.now());
+        counters.analytics+=events.length;send(200,{ok:true,accepted:events.length});
+      } catch {send(400,{error:{code:'INVALID_INPUT'}});} return;
+    }
     const scenario = process.env.MUSIC_PLAYER_PREVIEW_SCENARIO;
     const sharingDemo = ['sharing-return', 'sharing-large-text'].includes(scenario);
     // Local-only switches live outside tracked files. They are not sessions or credentials.

@@ -1,0 +1,31 @@
+---
+interface Props { lang: 'zh-Hans' | 'zh-Hant' | 'en' | 'ja'; }
+const { lang } = Astro.props;
+const copy = {
+  'zh-Hans': ['音乐小站：本机记录与可选统计',
+    '收藏、最近播放、播放进度与偏好保存在此浏览器。可在音乐页面的“管理本机记录”中清除；不会随账号同步。会员收听资格由服务器通过原会员系统只读核验，播放仍须逐次授权。',
+    '可选的第一方收听统计默认关闭。只有本站完成配置、且你明确同意后，才发送随机统计会话、曲目和版本、试听或完整版、播放里程碑、时间及累计收听时长。听歌、登录、收藏和已有会员权益不以同意统计为条件；不上传收藏列表、完整浏览历史、账号或支付详情，不使用广告追踪、设备指纹或第三方统计 SDK。',
+    '同意后，随机统计会话保存在 sessionStorage，限此标签页，最长 24 小时。可在“收听统计与隐私”撤回，停止采集、清空待发事件并移除统计会话，保留收藏。已送达的事件不会因本机清除而追回。原始事件最多保留 30 天；不带会话标识的每日汇总最多 365 天。当前不采集会员权益归因，也不把入口点击当成购买。',
+    '托管平台可能记录必要的请求日志；不能理解为服务器没有访问记录。统计请求的防滥用计数只保存短期、按分钟变化的 IP HMAC，不保存原始 IP。现有账号、会员和财务记录继续由原系统按其规则管理；本机清除与统计撤回不会删除这些记录。'],
+  'zh-Hant': ['音樂小站：本機記錄與可選統計',
+    '收藏、最近播放、播放進度及偏好儲存在此瀏覽器。可在音樂頁面的「管理本機記錄」中清除；不隨帳號同步。會員收聽資格由伺服器透過原會員系統唯讀核驗，播放仍須逐次授權。',
+    '可選的第一方收聽統計預設關閉。只有本站完成設定且你明確同意後，才傳送隨機統計工作階段、曲目及版本、試聽或完整版、播放里程碑、時間及累計收聽時長。聽歌、登入、收藏與既有會員權益不以同意統計為條件；不傳送收藏清單、完整瀏覽歷史、帳號或付款詳情，不使用廣告追蹤、裝置指紋或第三方統計 SDK。',
+    '同意後，隨機統計工作階段儲存在 sessionStorage，限此分頁，最長 24 小時。可在「收聽統計與隱私」撤回，停止蒐集、清空待傳事件並移除統計工作階段，保留收藏。已送達的事件不會因本機清除而收回。原始事件最多保留 30 天；不含工作階段識別碼的每日彙總最多 365 天。目前不蒐集會員權益歸因，也不將入口點擊視為購買。',
+    '託管平台可能記錄必要的請求日誌；不代表伺服器沒有存取記錄。統計請求的防濫用計數只儲存短期、每分鐘變動的 IP HMAC，不儲存原始 IP。既有帳號、會員及財務記錄繼續由原系統依其規則管理；本機清除與統計撤回不會刪除這些記錄。'],
+  en: ['Music: local records and optional statistics',
+    'Saved songs, recent playback, positions and preferences stay in this browser. Clear them under “Manage local records” on the music page. They do not sync with your account. The server checks listening eligibility through a read-only connection to the existing membership system; each audio request still requires authorization.',
+    'Optional first-party listening statistics are off by default. Once the site is configured and you explicitly agree, events include a random statistics session, song and revision, preview or full version, playback milestones, timestamps and accumulated listening time. Listening, sign-in, saved songs and existing membership never require consent to statistics. We do not send saved-song lists, complete browsing history, account or payment details, or use advertising trackers, device fingerprints or third-party analytics SDKs.',
+    'After consent, the random statistics session is stored in sessionStorage for this tab for up to 24 hours. Withdraw under “Listening statistics & privacy” to stop collection, discard unsent events and remove that session while keeping saved songs. Clearing local data does not recall events already received. Raw events are retained for up to 30 days; daily totals without session identifiers for up to 365 days. Membership attribution is not collected, and an entry click is not counted as a purchase.',
+    'The hosting platform may keep necessary request logs; the server is not free of access records. Statistics abuse counters store only short-lived, minute-scoped IP HMACs, not raw IP addresses. Existing account, membership and financial records remain governed by the original system. Clearing local records or withdrawing statistics consent does not delete those records.'],
+  ja: ['音楽：ローカル記録と任意の統計',
+    'お気に入り、最近の再生、再生位置、設定はこのブラウザに保存されます。音楽ページの「ローカル記録を管理」から削除でき、アカウントとは同期されません。再生資格は既存の会員システムを読み取り専用で確認し、音源へのリクエストごとに認証します。',
+    '任意のファーストパーティ再生統計は初期状態で無効です。サイトの設定が完了し、明示的に同意した場合のみ、ランダムな統計セッション、曲と版、試聴・フル版、再生の到達点、日時、累計再生時間を送ります。再生、ログイン、お気に入り、既存の会員資格に統計への同意は不要です。お気に入り一覧、閲覧履歴全体、アカウントや決済情報は送信せず、広告トラッカー、端末指紋、第三者の統計 SDK は使用しません。',
+    '同意後、ランダムな統計セッションをこのタブの sessionStorage に最大24時間保存します。「再生統計とプライバシー」から撤回すると収集を停止し、未送信イベントと統計セッションを削除します。お気に入りは残ります。受信済みイベントはローカル削除では取り消されません。生のイベントは最大30日、セッション識別子を含まない日別集計は最大365日保存します。会員資格の帰属分析は収集せず、会員ページへのクリックを購入として数えません。',
+    'ホスティング基盤が必要なリクエストログを記録する場合があり、サーバーにアクセス記録がないという意味ではありません。統計の不正利用対策には、分ごとに変わる短期の IP HMAC のみを保存し、生の IP は保存しません。既存のアカウント、会員、財務記録は元のシステムの規則に従います。ローカル記録の削除や統計への同意撤回で、これらの記録は削除されません。']
+}[lang];
+---
+<section id="music" class="music-privacy" aria-labelledby="music-privacy-title">
+  <h2 id="music-privacy-title">{copy[0]}</h2>
+  {copy.slice(1).map(paragraph => <p>{paragraph}</p>)}
+</section>
+<style>.music-privacy{max-width:48rem;margin-block:3rem;scroll-margin-top:7rem}.music-privacy p{line-height:1.8}</style>

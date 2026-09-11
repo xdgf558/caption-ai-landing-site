@@ -8,6 +8,9 @@
 .station-music-local-data summary { width: fit-content; padding-block: .625rem; cursor: pointer; }
 .station-music-local-data p, .station-music-local-notice { font-size: .875rem; line-height: 1.6; }
 .station-music-local-data button { margin: 0 .5rem .5rem 0; }
+.station-music-analytics { max-width: 40rem; }
+.station-music-analytics button { min-height: 44px; white-space: normal; text-align: start; }
+.station-music-analytics a { display: inline-block; padding-block: .625rem; color: var(--music-accent); text-underline-offset: .2em; }
 .station-music-local-notice { color: var(--music-muted); }
 .station-music-player[data-library] .station-music-track { grid-template-columns: minmax(0, 1fr) auto 44px 44px; }
 .station-music-row-favorite { display: grid; place-items: center; width: 44px; padding: 0; color: var(--music-muted); background: transparent; border: 0; }

@@ -11,6 +11,7 @@ import { createAdminMusicCollection, listAdminMusicCollections, readAdminMusicCo
   saveAdminMusicCollection, saveAdminMusicCollectionTracks } from './collections.js';
 import { cleanupReadiness, planMusicCleanup, executeMusicCleanup } from './cleanup.js';
 import { readMusicDiagnostics } from './diagnostics.js';
+import { readMusicAnalytics } from './analytics.js';
 
 export const isMusicAdminPath = path => path === '/admin/api/music' || path.startsWith('/admin/api/music/');
 function response(request, status, body, headers = {}) {
@@ -79,6 +80,10 @@ export async function handleMusicAdmin(request, env, authorize) {
     if (path === '/admin/api/music/diagnostics' && read) {
       fields(query, []);
       return response(request, 200, { ok: true, ...await readMusicDiagnostics(env) });
+    }
+    if (path === '/admin/api/music/analytics' && read) {
+      fields(query, ['from', 'to']);
+      return response(request, 200, { ok: true, ...await readMusicAnalytics(env,query) });
     }
     const runtime = musicRuntime(env);
     const settings = await checkMusicDatabase(runtime.db);

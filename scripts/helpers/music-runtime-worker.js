@@ -8,12 +8,20 @@ import { handleMusicMedia } from '../../src/music/mediaResponse.js';
 import { handleMusicPublic } from '../../src/music/publicHttp.js';
 import { createMusicUpload } from '../../src/music/uploads.js';
 import { checkMusicRateLimit } from '../../src/music/rateLimits.js';
+import { handleMusicAnalytics, runMusicAnalyticsRetention, MUSIC_ANALYTICS_VERSION } from '../../src/music/analytics.js';
 import { seedMusicRuntimeFixture, fixtureEvidenceProof, seedLargeRuntimeAudio } from './music-runtime-fixture.js';
 
 // Only bundled by the local test runner. Never deploy this fixture router or its synthetic approvals.
 export default {
   async fetch(request, env) {
     try {
+      if (new URL(request.url).pathname.startsWith('/fixture-analytics/')) {
+        const url=new URL(request.url);url.pathname=url.pathname.replace('/fixture-analytics','');
+        const fixtureEnv={...env,MUSIC_PUBLIC_ENABLED:'true',MUSIC_ANALYTICS_ENABLED:'true',
+          MUSIC_ANALYTICS_PRIVACY_VERSION:MUSIC_ANALYTICS_VERSION,MUSIC_ANALYTICS_RETENTION_ENABLED:'true'};
+        if(url.pathname==='/retention') return Response.json(await runMusicAnalyticsRetention(fixtureEnv));
+        return handleMusicAnalytics(new Request(url,request),fixtureEnv);
+      }
       if (new URL(request.url).pathname.startsWith('/fixture-cleanup/admin/api/music/')) {
         const url = new URL(request.url); url.pathname = url.pathname.replace('/fixture-cleanup', '');
         return handleMusicAdmin(new Request(url, request), { ...env, MUSIC_CLEANUP_ENABLED: 'true' }, async () => 'fixture@example.test');

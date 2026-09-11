@@ -38,7 +38,7 @@ function sourceIp(request) {
   if (!value.includes(':') || !/^[0-9a-f:.]+$/i.test(value)) throw new Error('source');
   return new URL(`http://[${value}]/`).hostname;
 }
-async function sourceHash(request,env,category,window) {
+export async function musicRateSourceHash(request,env,category,window) {
   const encoder = new TextEncoder(), key = await crypto.subtle.importKey('raw',encoder.encode(secret(env)),
     { name: 'HMAC',hash: 'SHA-256' },false,['sign']);
   const digest = await crypto.subtle.sign('HMAC',key,encoder.encode(`${category}:${window}:${sourceIp(request)}`));
@@ -61,7 +61,7 @@ export async function checkMusicRateLimit(request,env,category,{ clock = Date.no
     const limits = musicRateLimits(env), group = limits[category];
     if (!group || !env.MUSIC_DB || env.MUSIC_DB === env.WAITLIST_DB) throw new Error('binding');
     const now = clock(); isoTime(now); const window = Math.floor(now/WINDOW_MS)*WINDOW_MS;
-    const hash = await sourceHash(request,env,category,window), s = primary(env.MUSIC_DB);
+    const hash = await musicRateSourceHash(request,env,category,window), s = primary(env.MUSIC_DB);
     const results = await bounded(() => s.batch([
       s.prepare(`DELETE FROM music_rate_sources WHERE rowid IN
         (SELECT rowid FROM music_rate_sources WHERE window_start<? ORDER BY window_start LIMIT 100)`)

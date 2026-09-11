@@ -1,6 +1,18 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+收听统计与隐私|收聽統計與隱私|Listening statistics & privacy|再生統計とプライバシー
+帮助了解作品的收听情况。仅在你同意后，发送曲目、试听或完整版、播放里程碑和累计收听时长；不发送收藏、账号或支付信息。|協助了解作品的收聽情況。僅在你同意後，傳送曲目、試聽或完整版、播放里程碑及累計收聽時長；不傳送收藏、帳號或付款資訊。|Help us understand how songs are heard. With your consent, we send the song, preview or full version, playback milestones and accumulated listening time. Saved songs, account and payment details are excluded.|作品の聴かれ方を把握するための任意の統計です。同意後に曲、試聴・フル版、再生の到達点、累計再生時間を送信します。お気に入り、アカウント、決済情報は送りません。
+原始事件最多保留 30 天，匿名每日汇总最多 365 天。撤回会停止采集并清除本机统计会话，已接收的数据按保留期到期。|原始事件最多保留 30 天，匿名每日彙總最多 365 天。撤回會停止蒐集並清除本機統計工作階段，已接收的資料依保留期限到期。|Raw events are kept for up to 30 days; anonymous daily totals for up to 365 days. Withdrawal stops collection and clears this browser’s statistics session. Data already received expires under these limits.|生のイベントは最大30日、匿名の日別集計は最大365日保存します。撤回すると収集を停止し、このブラウザの統計セッションを削除します。受信済みデータは保存期間に従って期限切れになります。
+正在核对统计设置…|正在核對統計設定…|Checking statistics settings…|統計設定を確認中…
+已同意此标签页的收听统计，可随时撤回。|已同意此分頁的收聽統計，可隨時撤回。|Listening statistics are enabled for this tab. You can withdraw at any time.|このタブの再生統計に同意済みです。いつでも撤回できます。
+尚未同意统计。收听与收藏照常可用。|尚未同意統計。收聽與收藏照常可用。|Statistics are off until you agree. Listening and saved songs work as usual.|統計には未同意です。再生とお気に入りは通常どおり使えます。
+本站统计暂未开放，收听与收藏照常可用。|本站統計暫未開放，收聽與收藏照常可用。|Site statistics are unavailable. Listening and saved songs work as usual.|サイトの統計機能は現在利用できません。再生とお気に入りは通常どおり使えます。
+浏览器无法保存统计同意，统计保持关闭。|瀏覽器無法儲存統計同意，統計維持關閉。|Your browser cannot save statistics consent, so statistics stay off.|ブラウザに統計への同意を保存できないため、統計は無効のままです。
+已按浏览器隐私偏好关闭统计。|已依瀏覽器隱私偏好關閉統計。|Statistics are off in response to your browser’s privacy preference.|ブラウザのプライバシー設定に従い、統計を無効にしています。
+同意此标签页的统计|同意此分頁的統計|Allow statistics for this tab|このタブの統計に同意
+撤回统计同意|撤回統計同意|Withdraw statistics consent|統計への同意を撤回
+音乐隐私说明|音樂隱私說明|Music privacy notice|音楽のプライバシー説明
 分享歌曲|分享歌曲|Share song|曲を共有
 分享歌单|分享歌單|Share playlist|プレイリストを共有
 复制链接|複製連結|Copy link|リンクをコピー

@@ -89,7 +89,7 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
     remember(id, { back, forward });
     const changed = player.select(track, variant);
     if (restart && !changed && !player.seek(0)) { player.clear(); player.select(track, variant); }
-    player.play({ userInitiated: user }); // Synchronous, after the core's access guard.
+    player.play({ userInitiated: user, restart }); // Synchronous, after the core's access guard.
     emit(); return true;
   };
   const nextCandidate = () => {

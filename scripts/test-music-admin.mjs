@@ -214,9 +214,12 @@ test('publishing requires real private objects; flags or client proof cannot ble
   assert.ok((denied.status === 422 && denied.body.code === 'MUSIC_STORAGE_ASSET_INVALID') ||
     (denied.status === 503 && denied.body.code === 'MUSIC_STORAGE_UNAVAILABLE'), JSON.stringify(denied));
   assert.equal((await call(f, `/tracks/${cmd.trackId}/publish`, 'POST', { ...body, verifyResources: true }, ifMatch(1))).status, 400);
-  for (const path of ['/uploads', '/assets/' + randomUUID(), '/analytics', '/tracks/x/technical-review']) {
+  for (const path of ['/uploads', '/assets/' + randomUUID(), '/tracks/x/technical-review']) {
     assert.equal((await call(f, path, 'GET')).status, 404);
   }
+  const analytics = await call(f, '/analytics', 'GET');
+  assert.equal(analytics.status, 200); assert.equal(analytics.body.available, false);
+  assert.equal(analytics.body.reason, 'MUSIC_ANALYTICS_DISABLED');
   assert.deepEqual(f.dump(), before);
 });
 

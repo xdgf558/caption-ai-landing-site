@@ -18,7 +18,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
   let state = {
     status: 'idle', activeTrackId: null, activeAudioVersion: null, activeVariant: null,
     activePolicyVersion: null, fullDurationSec: null, previewSourceStartSec: null,
-    currentTimeSec: 0, durationSec: null, sourceGeneration: 0, seeking: false,
+    currentTimeSec: 0, durationSec: null, sourceGeneration: 0, playbackGeneration: 0, seeking: false,
     volume: audio.volume, muted: audio.muted, volumeSupported: true, muteSupported: true, lastError: null
   };
   audio.preload = 'none';
@@ -133,12 +133,15 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
       currentTimeSec: preservePosition ? state.currentTimeSec : 0,
       lastError: code ? { code, message } : null });
   };
-  const play = ({ userInitiated = false } = {}) => {
+  const play = ({ userInitiated = false, restart = false } = {}) => {
     if (destroyed || !state.activeTrackId) return;
     const denied = playGuard?.(snapshot());
     if (denied) { unload(denied); return; }
     if (userInitiated) for (const listener of playListeners) listener(snapshot());
     const generation = state.sourceGeneration, invocation = ++attempt;
+    // Observation only: distinguishes an explicit restart/loop from resume even
+    // when both reuse the same media URL. It never authorizes or loads a source.
+    const playbackGeneration = state.playbackGeneration + Number(Boolean(restart || !expectedSource || audio.error || audio.ended));
     intent = true;
     if (!expectedSource || audio.error) {
       metadataReady = false;
@@ -148,7 +151,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
     } else if (audio.ended) {
       audio.currentTime = 0;
     }
-    publish({ status: 'loading', lastError: null });
+    publish({ status: 'loading', playbackGeneration, lastError: null });
     // No await before play(): preserve the user's transient activation.
     try {
       Promise.resolve(audio.play()).catch(error => {

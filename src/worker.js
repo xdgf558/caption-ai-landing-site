@@ -57,6 +57,7 @@ import { handleMusicMedia, isMusicMediaPath } from './music/mediaResponse.js';
 import { handleMusicPublic, isMusicPublicPath } from './music/publicHttp.js';
 import { isMusicPagePath } from './music/pagePaths.js';
 import { handleMusicPage } from './music/pageHttp.js';
+import { handleMusicAnalytics, isMusicAnalyticsPath, runMusicAnalyticsRetention } from './music/analytics.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -22873,6 +22874,7 @@ export default {
 
     if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
     if (isMusicPagePath(url.pathname)) return handleMusicPage(request, env);
+    if (isMusicAnalyticsPath(url.pathname)) return handleMusicAnalytics(request, env);
     if (isMusicMediaPath(url.pathname)) return handleMusicMedia(request, env);
     if (isMusicPublicPath(url.pathname)) return handleMusicPublic(request, env);
 
@@ -23357,10 +23359,16 @@ export default {
   },
 
   async scheduled(controller, env) {
-    await handleSignalCollectionSchedule(env, {
-      cron: cleanText(controller?.cron, 120),
-      scheduledTime: controller?.scheduledTime
-    });
+    const [signal, analytics] = await Promise.allSettled([
+      handleSignalCollectionSchedule(env, {
+        cron: cleanText(controller?.cron, 120), scheduledTime: controller?.scheduledTime
+      }),
+      runMusicAnalyticsRetention(env)
+    ]);
+    if (analytics.status === 'rejected' || (analytics.value?.available === false && analytics.value.reason !== 'RETENTION_DISABLED')) {
+      console.warn('MUSIC_ANALYTICS_RETENTION_UNAVAILABLE');
+    }
+    if (signal.status === 'rejected') throw signal.reason;
   },
 
   async queue(batch, env) {
