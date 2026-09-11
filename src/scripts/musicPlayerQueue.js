@@ -1,4 +1,5 @@
 import { readPlayerCatalog, playerVariant } from './musicPlayerCatalog.js';
+import { readMusicLookup } from './musicCatalogSelection.js';
 
 const queues = new WeakMap();
 const LIMIT = 500, FAILURE_LIMIT = 3;
@@ -176,10 +177,10 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
     setErrorHandler(handler) { errorHandler = handler; },
     markUnavailable(id) { unavailableIds.add(id); emit(); },
     subscribe(listener) { listeners.add(listener); listener(snapshot()); return () => listeners.delete(listener); },
-    updateCatalog(values) {
+    updateCatalog(values, { resetUnavailable = true } = {}) {
       if (destroyed) return;
-      const parsed = readPlayerCatalog({ schemaVersion: 2, tracks: values });
-      unavailableIds.clear();
+      const parsed = readMusicLookup(values);
+      if (resetUnavailable) unavailableIds.clear();
       catalog = new Map(parsed.map(track => [track.id, track]));
       if (active() && !catalog.has(active())) { player.clear(); notice = 'TRACK_UNAVAILABLE'; }
       emit();

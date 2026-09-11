@@ -42,7 +42,7 @@ export function bindMusicLocalPlayback(player, queue, store, { getTracks, host =
   host.addEventListener?.('pagehide', pagehide);
   return {
     touch() { touched = true; },
-    restore({ selection = null, capabilities = null } = {}) {
+    restore({ selection = null, capabilities = null, restoreCurrent = true } = {}) {
       if (restored) return;
       const saved = store.snapshot(), tracks = getTracks(), byId = new Map(tracks.map(track => [track.id, track]));
       restoring = true;
@@ -50,14 +50,14 @@ export function bindMusicLocalPlayback(player, queue, store, { getTracks, host =
         player.setVolume(saved.settings.volume); player.setMuted(saved.settings.muted);
         queue.setShuffle(saved.settings.shuffle); queue.setRepeat(saved.settings.repeat);
         queue.append(saved.queue.map(id => byId.get(id)).filter(Boolean));
-        const id = selection || saved.current?.trackId, track = byId.get(id);
+        const id = selection || (restoreCurrent ? saved.current?.trackId : null), track = byId.get(id);
         if (track) {
           const variant = playerVariant(track, capabilities) || 'preview';
           player.select(track, variant);
           const position = store.findPosition(track, variant);
           if (position) { player.restorePosition(position.positionSec); onNotice('restored'); }
           else if (saved.current?.trackId === id) onNotice('changed');
-        } else if (id) onNotice('missing');
+        } else if (id && !selection) onNotice('missing');
       }
       restoring = false; restored = true; previous = player.snapshot();
       store.savePlayback(options());

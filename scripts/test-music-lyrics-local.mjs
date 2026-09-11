@@ -124,6 +124,12 @@ test('saved VIP full never restores into preview or grants playback; changed ver
   const row = source(), newer = { ...tracks[0], audioVersion: 2 }, b = playback({ current: row, positions: [row] }, [newer]); b.binding.restore();
   assert.equal(b.player.snapshot().activeAudioVersion, 2); assert.equal(b.player.snapshot().currentTimeSec, 0); assert.deepEqual(b.notices, ['changed']); b.destroy();
 });
+test('a collection landing keeps its selection instead of restoring an unrelated saved current song', () => {
+  const h = playback({ current: source(), positions: [source()], settings: { volume: .3 } });
+  h.player.select(tracks[2], 'full'); h.binding.restore({ restoreCurrent: false });
+  assert.equal(h.player.snapshot().activeTrackId, tracks[2].id); assert.equal(h.player.snapshot().currentTimeSec, 0);
+  assert.equal(h.audio.volume, .3); assert.equal(h.audio.src, ''); assert.equal(h.audio.plays.length, 0); h.destroy();
+});
 test('explicit user choice before initial reads finish wins over saved current/queue/settings', () => {
   const row = source(), h = playback({ current: row, positions: [row], queue: [tracks[0].id], settings: { volume: .1 } });
   h.queue.playFromList(tracks[1].id, tracks); const src = h.audio.src;

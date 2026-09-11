@@ -11,7 +11,7 @@ const output = resolve(root, '.generated/music-player-preview');
 const port = Number(process.env.MUSIC_PLAYER_PREVIEW_PORT || 4198);
 const origin = `http://127.0.0.1:${port}`;
 const wavs = new Map();
-const counters = { catalog: 0, capabilities: 0, access: 0, audio: 0, lyrics: 0 };
+const counters = { catalog: 0, track: 0, collection: 0, capabilities: 0, access: 0, audio: 0, lyrics: 0 };
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp' };
 const server = createServer(async (req, res) => {
   if (req.headers.host !== `127.0.0.1:${port}` || !['GET', 'HEAD'].includes(req.method)) { res.writeHead(403); res.end(); return; }
@@ -24,12 +24,13 @@ const server = createServer(async (req, res) => {
   };
   try {
     const scenario = process.env.MUSIC_PLAYER_PREVIEW_SCENARIO;
+    const sharingDemo = ['sharing-return', 'sharing-large-text'].includes(scenario);
     // Local-only switches live outside tracked files. They are not sessions or credentials.
-    const fixture = scenario === 'access-lifecycle'
+    const fixture = sharingDemo ? { membership: 'member' } : scenario === 'access-lifecycle'
       ? JSON.parse(await readFile(resolve(root, '.generated/music-player-access-state.json'), 'utf8')) : {};
     const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(url.searchParams.get('locale')) ? url.searchParams.get('locale') : 'zh-Hans';
     const names = { 'zh-Hans': ['窗边的午后', '夜行小站', '慢慢醒来'], 'zh-Hant': ['窗邊的午後', '夜行小站', '慢慢醒來'], en: ['Afternoon by the Window', 'Night Station', 'Waking Slowly'], ja: ['窓辺の午後', '夜の小駅', 'ゆっくり目覚めて'] };
-    const lyricsDemo = ['lyrics-local', 'lyrics-error', 'lyrics-large-text'].includes(scenario);
+    const lyricsDemo = sharingDemo || ['lyrics-local', 'lyrics-error', 'lyrics-large-text'].includes(scenario);
     const mobileDesign = lyricsDemo || ['mobile-design', 'mobile-large-text'].includes(scenario);
     const mobileTracks = [tracks[0], tracks[2], tracks[1], { ...tracks[0], id: '44444444-4444-4444-8444-444444444444', art: 'rain', durationSec: 204 }];
     const mobileNames = { 'zh-Hans': ['窗边的午后', '清晨第一缕光', '晚安，小城市', '雨落在屋檐'], 'zh-Hant': ['窗邊的午後', '清晨第一縷光', '晚安，小城市', '雨落在屋簷'], en: ['Afternoon by the Window', 'The First Light of Morning', 'Goodnight, Little City', 'Rain on the Roof'], ja: ['窓辺の午後', '朝の最初の光', 'おやすみ、小さな街', '軒先に降る雨'] };
@@ -55,15 +56,34 @@ const server = createServer(async (req, res) => {
       counters.catalog++;
       if (scenario === 'catalog-error') { send(503, { error: { code: 'MUSIC_PUBLIC_DISABLED' } }); return; }
       send(200, { schemaVersion: 2, catalogVersion: 1, locale, collections,
-        tracks: scenario === 'empty' ? [] : demoTracks.map(({ art, ...track }) => track) }); return;
+        tracks: scenario === 'empty' ? [] : (sharingDemo ? demoTracks.slice(0, 1) : demoTracks).map(({ art, ...track }) => track) }); return;
+    }
+    const trackDetail = /^\/api\/music\/tracks\/([a-f0-9-]+)$/.exec(url.pathname);
+    if (trackDetail) {
+      counters.track++;
+      const track = demoTracks.find(item => item.id === trackDetail[1]);
+      send(track ? 200 : 404, track ? { schemaVersion: 2, track } : { error: { code: 'TRACK_NOT_FOUND' } }); return;
+    }
+    const collectionDetail = /^\/api\/music\/collections\/([a-z0-9-]+)$/.exec(url.pathname);
+    if (collectionDetail) {
+      counters.collection++;
+      const collection = collections.find(item => item.slug === collectionDetail[1]);
+      send(collection ? 200 : 404, collection ? { schemaVersion: 2, collection, tracks: collection.trackIds.map(id => demoTracks.find(track => track.id === id)) }
+        : { error: { code: 'COLLECTION_NOT_FOUND' } }); return;
     }
     if (url.pathname === '/api/music/me/capabilities') {
       counters.capabilities++;
       send(fixture.membership === 'unavailable' ? 503 : 200, {
-        authenticated: fixture.membership === 'vip', canPlayVipFull: vip, membershipStatus: vip ? 'active' : expired ? 'expired' : 'none',
-        musicVipDeliveryEnabled: scenario === 'access-lifecycle', serverNow: new Date().toISOString(),
+        authenticated: ['vip', 'member'].includes(fixture.membership), canPlayVipFull: vip, membershipStatus: vip ? 'active' : expired ? 'expired' : 'none',
+        musicVipDeliveryEnabled: sharingDemo || scenario === 'access-lifecycle', serverNow: new Date().toISOString(),
         validUntil: fixture.membership === 'vip' ? fixture.validUntil || new Date(Date.now() + 60000).toISOString() : null
       }); return;
+    }
+    // Read-only membership fixture. All POST requests remain rejected at the host gate.
+    if (sharingDemo && ['/api/readers/session', '/api/readers/credits', '/api/readers/bookmarks', '/api/readers/totp/status', '/api/novels/library', '/api/novels/payments/status'].includes(url.pathname)) {
+      send(200, { ok: true, authenticated: true, account: { id: 1, email: 'preview@example.test', username: 'Local preview', balanceCredits: 0 },
+        membership: { active: false, expiresAt: null }, membershipSettings: { enabled: false }, entitlements: [], bookmarks: [], ledger: [], packs: [],
+        totp: { enabled: false }, checkoutEnabled: false, publicCheckoutEnabled: false, readerCredits: { enabled: false, packs: [] } }); return;
     }
     const match = /^\/api\/music\/tracks\/([a-f0-9-]+)\/(cover|audio|access|lyrics)$/.exec(url.pathname);
     if (match) {
@@ -107,7 +127,7 @@ const server = createServer(async (req, res) => {
     const file = resolve(staticRoot, '.' + decodeURIComponent(url.pathname) + (url.pathname.endsWith('/') ? 'index.html' : ''));
     if (!file.startsWith(staticRoot + sep)) { send(404, 'Not found', 'text/plain'); return; }
     let bytes = await readFile(file);
-    if (['mobile-large-text', 'lyrics-large-text'].includes(scenario) && extname(file) === '.html') bytes = Buffer.from(bytes.toString().replace('</head>', '<style>html{font-size:200% !important}</style></head>'));
+    if (['mobile-large-text', 'lyrics-large-text', 'sharing-large-text'].includes(scenario) && extname(file) === '.html') bytes = Buffer.from(bytes.toString().replace('</head>', '<style>html{font-size:200% !important}</style></head>'));
     send(200, bytes, mime[extname(file)] || 'application/octet-stream');
   } catch { send(404, 'Local preview unavailable', 'text/plain'); }
 });

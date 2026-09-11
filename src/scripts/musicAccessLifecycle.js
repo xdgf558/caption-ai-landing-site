@@ -1,4 +1,5 @@
-import { readPlayerCatalog, readPlayerCollections, playerVariant } from './musicPlayerCatalog.js';
+import { playerVariant } from './musicPlayerCatalog.js';
+import { readMusicSelectionCatalog } from './musicCatalogSelection.js';
 import { watchReaderSession } from './readerSessionEvents.js';
 
 const mounts = new WeakMap(), MAX_TIMER = 2147483647;
@@ -27,12 +28,13 @@ export function readPlayerCapabilities(body, elapsed = 0) {
 export function createMusicAccessLifecycle(player, queue, {
   fetcher = globalThis.fetch.bind(globalThis), locale = 'zh-Hans', host = globalThis,
   document = globalThis.document, now = () => performance.now(), setTimer = setTimeout, clearTimer = clearTimeout,
-  onCatalog = () => {}, onChange = () => {}, onCatalogError = () => {}
+  onCatalog = () => {}, onChange = () => {}, onCatalogError = () => {}, getSelection = () => ({})
 } = {}) {
   if (mounts.has(player)) return mounts.get(player);
   let tracks = [], capabilities = null, deadline = null, timer = null, epoch = 0, disposed = false;
   let pending = null, checkingAccess = false, changingAccount = false, savedFullPosition = null, denial = null;
   let mediaRequest = null, mediaKey = '', refreshVersion = 0;
+  let catalogVersion = 0, browsing = null;
   const requests = new Set(), invalidVersions = new Set();
   const activeTrack = () => tracks.find(track => track.id === player.snapshot().activeTrackId);
   const protectedFull = () => player.snapshot().activeVariant === 'full' && activeTrack()?.effectiveAccess !== 'free';
@@ -69,11 +71,11 @@ export function createMusicAccessLifecycle(player, queue, {
       void refresh('expiry');
     }, Math.max(1, Math.min(MAX_TIMER, remaining)));
   };
-  const applyCatalog = (values, collections) => {
+  const applyCatalog = (values, collections, view, resetUnavailable) => {
     const state = player.snapshot(), old = activeTrack();
     tracks = values;
-    onCatalog(tracks, collections);
-    queue.updateCatalog(tracks);
+    onCatalog(tracks, collections, view);
+    queue.updateCatalog(tracks, { resetUnavailable });
     const current = activeTrack();
     if (old?.effectiveAccess === 'free' && current?.effectiveAccess === 'vip' && state.activeVariant === 'full' && playerVariant(current, capabilities) !== 'full') {
       unload(checkingAccess ? checking : unavailable);
@@ -85,18 +87,34 @@ export function createMusicAccessLifecycle(player, queue, {
   const enforce = () => {
     const state = player.snapshot();
     if (!state.activeTrackId) return;
+    if (!activeTrack()) { unload(contentError); return; }
     if (!protectedFull() || (capabilities && playerVariant(activeTrack(), capabilities) === 'full')) {
       if (['access_required', 'access_unavailable'].includes(state.status)) player.unload({ status: 'paused' });
       return;
     }
     unload(capabilities ? required(capabilities.authenticated ? 'VIP_REQUIRED' : 'AUTH_REQUIRED') : denial || unavailable);
   };
-  const refresh = (reason = 'manual') => {
-    if (disposed) return Promise.resolve();
+  const loadCatalog = async (version, currentEpoch, resetUnavailable = false) => {
+    const result = await read(`/api/music/catalog?locale=${locale}`);
+    if (result.status !== 200) throw new Error('CATALOG_UNAVAILABLE');
+    if (disposed || epoch !== currentEpoch || version !== catalogVersion) return;
+    const activeId = player.snapshot().activeTrackId;
+    const selected = await readMusicSelectionCatalog(result.body, { read, locale, selection: getSelection(),
+      activeId, retained: queue.snapshot().items });
+    if (disposed || epoch !== currentEpoch || version !== catalogVersion) return;
+    // The user may start another queue while a target read is outstanding. That
+    // read has no fresh metadata for the new audio, so it cannot replace its lookup.
+    if (player.snapshot().activeTrackId !== activeId) return;
+    if (resetUnavailable) invalidVersions.clear();
+    applyCatalog(selected.tracks, selected.collections, selected.view, resetUnavailable);
+  };
+  const refresh = (reason = 'manual', { signal } = {}) => {
+    if (disposed || signal?.aborted) return Promise.resolve();
     if (changingAccount && !['manual', 'foreground'].includes(reason)) return Promise.resolve();
     changingAccount = false;
     if (pending && ['foreground', 'initial'].includes(reason)) return pending;
     const version = ++refreshVersion, currentEpoch = ++epoch;
+    const catalogReadVersion = ++catalogVersion;
     abortReads(); cancelExpiry(); checkingAccess = true; denial = null; publishCapabilities(null);
     if (reason !== 'initial' && protectedFull()) unload(checking);
     const started = now();
@@ -110,18 +128,30 @@ export function createMusicAccessLifecycle(player, queue, {
       publishCapabilities(value);
       if (value.membershipStatus === 'active') { deadline = now() + value.remaining; armExpiry(); }
     }).catch(() => { if (!disposed && epoch === currentEpoch) publishCapabilities(null); });
-    const catalog = read(`/api/music/catalog?locale=${locale}`).then(result => {
+    const catalog = loadCatalog(catalogReadVersion, currentEpoch, true).catch(() => { if (!disposed && epoch === currentEpoch) onCatalogError(); });
+    const cancel = () => {
       if (disposed || epoch !== currentEpoch) return;
-      if (result.status !== 200) throw new Error('CATALOG_UNAVAILABLE');
-      const values = readPlayerCatalog(result.body);
-      applyCatalog(values, readPlayerCollections(result.body, values));
-      invalidVersions.clear();
-    }).catch(() => { if (!disposed && epoch === currentEpoch) onCatalogError(); });
+      epoch++; refreshVersion++; catalogVersion++; abortReads(); cancelExpiry(); pending = null;
+      checkingAccess = false; publishCapabilities(null); enforce();
+    };
+    signal?.addEventListener('abort', cancel, { once: true });
     const work = Promise.all([caps, catalog]).then(() => {
       if (disposed || epoch !== currentEpoch) return;
       checkingAccess = false; enforce(); emit();
-    }).finally(() => { if (refreshVersion === version) pending = null; });
+    }).finally(() => { signal?.removeEventListener('abort', cancel); if (refreshVersion === version) pending = null; });
     pending = work; return work;
+  };
+  const browse = () => {
+    if (disposed) return Promise.resolve();
+    if (pending) return pending.then(browse);
+    if (browsing) return browsing;
+    const version = ++catalogVersion, currentEpoch = epoch;
+    // Viewing a new target does not revoke capabilities or stop the current audio.
+    const work = loadCatalog(version, currentEpoch).then(() => {
+      if (!disposed && epoch === currentEpoch && version === catalogVersion) { enforce(); emit(); }
+    }).catch(() => { if (!disposed && epoch === currentEpoch && version === catalogVersion) onCatalogError(); })
+      .finally(() => { if (browsing === work) browsing = null; });
+    browsing = work; return work;
   };
   const accountChanged = phase => {
     if (disposed) return;
@@ -191,7 +221,7 @@ export function createMusicAccessLifecycle(player, queue, {
     if (state.status !== 'error') { mediaKey = ''; mediaRequest?.abort(); }
   });
   player.setPlayGuard(guard); queue.setErrorHandler(playbackError);
-  const api = { snapshot, refresh, accountChanged, destroy() {
+  const api = { snapshot, refresh, browse, accountChanged, destroy() {
     if (disposed) return;
     disposed = true; epoch++; cancelExpiry(); abortReads(); unsubscribe(); unwatch();
     document?.removeEventListener('visibilitychange', foreground); host.removeEventListener('focus', foreground); host.removeEventListener('pageshow', pageshow);

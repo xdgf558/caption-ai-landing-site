@@ -4,11 +4,13 @@ import { musicSelection } from '../music/pagePaths.js';
 // Browse state owns no audio, permission or queue state. History only restores the view.
 export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => ({}), host = window }) {
   const $ = selector => root.querySelector(selector), abort = new AbortController();
-  let tracks = [], collections = [], count = 50, loaded = false;
+  let tracks = [], catalogTracks = [], collections = [], view = null, count = 50, loaded = false;
   let state = { query: '', genres: [], moods: [], access: '', mode: 'latest', ...libraryLocation(host.location.search) };
   const on = (node, event, callback) => node.addEventListener(event, callback, { signal: abort.signal });
   const render = () => {
-    const results = browseMusic(tracks, collections, state, getLocal());
+    const candidates = state.collection && view?.selectedCollection?.slug === state.collection ? view.selectedCollection.tracks
+      : ['favorites', 'recent'].includes(state.mode) ? tracks : catalogTracks;
+    const results = browseMusic(candidates, collections, state, getLocal());
     const albums = state.mode === 'albums';
     $('[data-song-search]').hidden = albums;
     $('[data-filter-panel]').hidden = albums;
@@ -33,9 +35,12 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     const stored = state.mode === 'favorites' ? getLocal().favorites || [] : state.mode === 'recent' ? getLocal().recent || [] : [];
     const availableIds = new Set(tracks.map(track => track.id));
     const unavailable = stored.filter(id => !availableIds.has(id)).length;
-    const notice = loaded && missing ? t('当前目录中未找到此歌曲或歌单。') : loaded && unavailable ? t('有 {count} 首记录不在当前目录中，仍已保留。', { count: unavailable }) : '';
+    const issue = state.track && view?.selection?.track === state.track && view.issues.track
+      || state.collection && view?.selection?.collection === state.collection && view.issues.collection;
+    const notice = loaded && issue ? t(issue === 'missing' ? '分享的歌曲或歌单已不可用。' : '暂时无法读取这首歌曲或歌单，请重新加载。')
+      : loaded && missing ? t('正在读取指定歌曲或歌单…') : loaded && unavailable ? t('有 {count} 首记录不在当前目录中，仍已保留。', { count: unavailable }) : '';
     $('[data-library-notice]').textContent = notice; $('[data-library-notice]').hidden = !notice;
-    onChange({ results, shown: results.slice(0, count), trackId: state.track, loaded, mode: state.mode });
+    onChange({ results, shown: results.slice(0, count), trackId: state.track, collectionSlug: state.collection, loaded, mode: state.mode });
   };
   const save = (replace = false) => {
     const params = new URLSearchParams();
@@ -64,12 +69,13 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
   return {
     refreshLocal: render,
     selection: () => state.track || null,
+    target: () => ({ ...(state.track ? { track: state.track } : {}), ...(state.collection ? { collection: state.collection } : {}) }),
     select(id) { if (state.track !== id) { state = { ...state, track: id }; save(); render(); } },
-    update(values, groups) {
-      tracks = values; collections = groups; loaded = true;
+    update(values, groups, context = null) {
+      tracks = values; catalogTracks = context?.catalogTracks || values; collections = groups; view = context; loaded = true;
       const select = $('[data-collection-filter]');
       select.replaceChildren(new Option(t('全部歌曲'), ''), ...collections.map(item => new Option(`${item.title} · ${t('{count} 首', { count: item.trackIds.length })}`, item.slug)));
-      const tags = libraryFilters(tracks);
+      const tags = libraryFilters([...catalogTracks, ...(view?.selectedCollection?.tracks || [])]);
       for (const [key, selector] of [['genres', '[data-genre-filter]'], ['moods', '[data-mood-filter]']]) {
         const fieldset = $(selector);
         for (const label of fieldset.querySelectorAll('label')) label.remove();

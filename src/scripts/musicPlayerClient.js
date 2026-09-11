@@ -11,6 +11,9 @@ import { mountMusicLibraryControls } from './musicLibraryControls.js';
 import { createMusicLocalData } from './musicLocalData.js';
 import { bindMusicLocalPlayback } from './musicLocalPlayback.js';
 import { mountMusicLyrics } from './musicLyricsControls.js';
+import { musicMembershipHref, MUSIC_RETURN_HASH } from '../music/navigation.js';
+import { mountMusicSharing } from './musicSharingControls.js';
+import { createMusicReturnSync } from './musicReturnSync.js';
 
 const mounts = new WeakMap();
 const statusText = { idle: '尚未播放', loading: '正在载入', playing: '正在播放', paused: '已暂停',
@@ -20,6 +23,8 @@ const running = status => ['loading', 'playing', 'buffering'].includes(status);
 export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalThis) } = {}) {
   if (mounts.has(root)) return mounts.get(root);
   const t = musicText(root.dataset.locale), isLibrary = root.dataset.library === 'true';
+  const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(root.dataset.locale) ? root.dataset.locale : 'zh-Hans';
+  const returnedFromMembership = isLibrary && window.location.hash === MUSIC_RETURN_HASH;
   const $ = selector => root.querySelector(selector);
   const audio = $('[data-music-audio]'), player = createMusicPlayer(audio);
   const abort = new AbortController(), list = $('[data-track-list]'), rows = new Map();
@@ -27,10 +32,12 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   let visibleTracks = [], shownTracks = [], viewTrackId = null, libraryControls = null, localPlayback = null, localUnsubscribe = null;
   let tracks = [], capabilities = null, disposed = false, scrub = null, selectedOnce = false, accessState = { checking: false };
   let rowAbort = new AbortController(), systemState = { notice: null, coordinationSupported: true };
+  let catalogView = null, collections = [], browseScheduled = false, attemptedTarget = '', returnSync = null;
   const panels = isLibrary ? mountMusicPanels(root) : null;
   const local = isLibrary ? createMusicLocalData() : null;
   let favoriteIds = new Set(local?.snapshot().favorites || []);
   const lyrics = isLibrary ? mountMusicLyrics(root, { t, fetcher }) : null;
+  const sharing = isLibrary ? mountMusicSharing(root, { t, locale }) : null;
   const queue = createMusicQueue(player);
   const queueControls = mountMusicQueueControls(root, { queue, player, getVisibleTracks: () => visibleTracks, getAllTracks: () => tracks, panels });
   const listen = (target, event, callback) => target.addEventListener(event, callback, { signal: abort.signal });
@@ -55,6 +62,11 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     if (document.visibilityState === 'hidden') return;
     const selected = tracks.find(track => track.id === state.activeTrackId);
     const viewed = tracks.find(track => track.id === viewTrackId) || (!viewTrackId ? selected : null);
+    const target = libraryControls?.target() || {};
+    sharing?.update({ track: viewed, collection: collections.find(item => item.slug === target.collection) });
+    $('[data-membership-link]').href = musicMembershipHref(locale, new URLSearchParams({ ...target, ...(viewed ? { track: viewed.id } : {}) }));
+    $('[data-membership-link]').hidden = !viewed || viewed.effectiveAccess !== 'vip' || accessState.checking || capabilities?.membershipStatus === 'active';
+    if (isLibrary) $('[data-return-membership]').href = musicMembershipHref(locale, new URLSearchParams(target));
     root.dataset.status = state.status;
     root.dataset.volumeMode = state.volumeSupported ? 'software' : 'device';
     const notice = t(systemState.notice || '') || (!systemState.coordinationSupported ? t('当前浏览器的多个音乐标签页会独立播放。') : '');
@@ -104,7 +116,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     if (!selected) {
       setText('[data-play-status]', t('尚未播放'));
       $('[data-play-status]').dataset.state = 'idle';
-      for (const selector of ['[data-play-full]', '[data-play-preview]', '[data-membership-link]', '[data-play-error]']) $(selector).hidden = true;
+      for (const selector of ['[data-play-full]', '[data-play-preview]', '[data-play-error]']) $(selector).hidden = true;
       return;
     }
     setText('[data-mini-status]', t(statusText[state.status]));
@@ -128,7 +140,6 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     const message = state.lastError?.message || (unavailable ? t('这首作品暂未提供试听。') : '');
     $('[data-play-full]').hidden = viewed?.id !== selected.id || state.activeVariant !== 'preview' || playerVariant(selected, capabilities) !== 'full';
     $('[data-play-preview]').hidden = viewed?.id !== selected.id || state.activeVariant !== 'full' || !selected.previewAvailable;
-    $('[data-membership-link]').hidden = viewed?.id !== selected.id || state.status !== 'access_required';
     for (const selector of ['[data-play-error]', '[data-dock-error]']) {
       setText(selector, t(message)); $(selector).hidden = !message || (selector === '[data-play-error]' && viewed?.id !== selected.id);
     }
@@ -222,24 +233,26 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   listen($('[data-mute]'), 'click', () => player.setMuted(!player.snapshot().muted));
   listen(document, 'visibilitychange', () => render(player.snapshot()));
   const unsubscribe = player.subscribe(render);
-  const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(root.dataset.locale) ? root.dataset.locale : 'zh-Hans';
-  $('[data-membership-link]').href = { 'zh-Hans': '/zh-hans/library/', 'zh-Hant': '/zh-hant/library/', en: '/en/library/', ja: '/ja/library/' }[locale];
   const access = createMusicAccessLifecycle(player, queue, { fetcher, locale,
+    getSelection: () => libraryControls?.target() || {},
     onChange(value) {
       accessState = value; capabilities = value.capabilities;
       // Completion also covers a foreground retry after the first catalog read failed.
       // The lifecycle enforces current access before publishing checking=false.
-      if (!value.checking && tracks.length) localPlayback?.restore({ selection: libraryControls?.selection(), capabilities });
+      if (!value.checking && tracks.length) localPlayback?.restore({ selection: libraryControls?.selection(),
+        restoreCurrent: !libraryControls?.target().collection, capabilities });
       render(player.snapshot());
+      scheduleBrowse();
     },
-    onCatalog(values, collections) {
-      tracks = values;
-      if (libraryControls) libraryControls.update(values, collections);
+    onCatalog(values, groups, context) {
+      tracks = values; collections = groups; catalogView = context;
+      if (libraryControls) libraryControls.update(values, groups, context);
       else { visibleTracks = shownTracks = values; renderRows(); }
       $('[data-catalog-message]').hidden = visibleTracks.length > 0;
+      $('[data-catalog-retry]').hidden = !context?.issues.track && !context?.issues.collection;
       if (!isLibrary && !tracks.length) setText('[data-catalog-message]', t('小站还在准备音乐，稍后再来听听。'));
-      if (!selectedOnce && tracks.length && (!viewTrackId || tracks.some(track => track.id === viewTrackId))) { selectedOnce = true; const first = tracks.find(track => track.id === viewTrackId) || visibleTracks[0] || tracks[0];
-        player.select(first, playerVariant(first, capabilities) || 'preview'); }
+      const first = viewTrackId ? tracks.find(track => track.id === viewTrackId) : visibleTracks[0];
+      if (!selectedOnce && first) { selectedOnce = true; player.select(first, playerVariant(first, capabilities) || 'preview'); }
       render(player.snapshot());
     },
     onCatalogError() {
@@ -247,6 +260,18 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       $('[data-catalog-message]').hidden = false; $('[data-catalog-retry]').hidden = false;
     }
   });
+  function scheduleBrowse() {
+    if (!libraryControls || disposed || accessState.checking || browseScheduled) return;
+    const target = libraryControls.target(), key = JSON.stringify(target);
+    const unresolved = target.track && !tracks.some(track => track.id === target.track) && catalogView?.selection.track !== target.track
+      || target.collection && catalogView?.selection.collection !== target.collection;
+    if (!unresolved || key === attemptedTarget) return;
+    attemptedTarget = key; browseScheduled = true;
+    queueMicrotask(async () => {
+      if (!disposed) await access.browse();
+      browseScheduled = false; scheduleBrowse();
+    });
+  }
   if (isLibrary) {
     libraryControls = mountMusicLibraryControls(root, { t, getLocal: () => local.snapshot(), onChange({ results, shown, trackId, loaded, mode }) {
       visibleTracks = results; shownTracks = shown; viewTrackId = trackId || null;
@@ -257,6 +282,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
         setText('[data-catalog-message]', t(mode === 'albums' ? '暂无已发布专辑。专辑发布后会显示在这里。' : mode === 'favorites' ? '暂无可显示的收藏。未发布曲目的收藏仍会保留。' : mode === 'recent' ? '暂无可显示的播放记录。播放歌曲后会记录在这里。' : tracks.length ? '没有匹配的歌曲，试试其他条件。' : '小站还在准备音乐，稍后再来听听。'));
       }
       render(player.snapshot());
+      if (loaded) scheduleBrowse();
     } });
     listen($('[data-detail-play]'), 'click', () => {
       const track = tracks.find(item => item.id === (viewTrackId || player.snapshot().activeTrackId));
@@ -285,6 +311,17 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     listen($('[data-local-clear]'), 'click', () => {
       if (window.confirm(t('清除这个浏览器的收藏、播放记录和保存进度？当前播放不会停止。'))) { localPlayback.clear(); $('[data-resume-notice]').hidden = true; }
     });
+    returnSync = createMusicReturnSync(access, { onChange(status) {
+      if (disposed || status === 'stopped') return;
+      const messages = { checking: '会员权益正在同步，最多等待 60 秒。', ready: capabilities?.canPlayVipFull ? '权益已重新核验，点击播放继续。' : 'VIP 资格有效，完整音频暂未开放。',
+        login: '请登录会员中心后返回音乐。', timeout: '会员权益尚未确认，请稍后重新核验或返回会员中心。' };
+      setText('[data-music-return-notice]', t(messages[status])); $('[data-music-return-notice]').hidden = false;
+      $('[data-return-membership]').hidden = !['timeout', 'login'].includes(status);
+    } });
+    for (const selector of ['[data-membership-link]', '[data-return-membership]']) listen($(selector), 'click', event => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      player.pause(); localPlayback.flush();
+    });
   }
   const load = (reason = 'manual') => {
     $('[data-catalog-retry]').hidden = true;
@@ -304,11 +341,11 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const api = { player, queue, access, system, destroy() {
     if (disposed) return;
     disposed = true;
-    localPlayback?.destroy(); localUnsubscribe?.(); local?.destroy(); lyrics?.destroy(); panels?.destroy(); libraryControls?.destroy(); rowAbort.abort(); abort.abort(); unsubscribe(); system.destroy(); access.destroy(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
+    returnSync?.destroy(); sharing?.destroy(); localPlayback?.destroy(); localUnsubscribe?.(); local?.destroy(); lyrics?.destroy(); panels?.destroy(); libraryControls?.destroy(); rowAbort.abort(); abort.abort(); unsubscribe(); system.destroy(); access.destroy(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
   } };
   mounts.set(root, api);
   // Keep bfcache state: restoring a page does not mount a second player.
   listen(window, 'pagehide', event => { if (!event.persisted) api.destroy(); });
-  load('initial');
+  if (returnedFromMembership) returnSync.start(); else load('initial');
   return api;
 }

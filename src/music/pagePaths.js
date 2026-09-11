@@ -10,7 +10,7 @@ export function musicSelection(search) {
   const params = new URLSearchParams(search), result = new URLSearchParams();
   for (const [key, pattern] of [['track', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i], ['collection', /^[a-z0-9]+(?:-[a-z0-9]+)*$/]]) {
     const value = params.get(key);
-    if (params.getAll(key).length === 1 && value?.length <= 100 && pattern.test(value)) result.set(key, value);
+    if (params.getAll(key).length === 1 && value?.length <= 100 && pattern.test(value)) result.set(key, key === 'track' ? value.toLowerCase() : value);
   }
   return result;
 }
