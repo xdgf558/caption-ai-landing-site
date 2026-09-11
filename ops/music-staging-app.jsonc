@@ -26,7 +26,8 @@
     "MUSIC_PUBLIC_ENABLED": "false",
     "MUSIC_UPLOADS_ENABLED": "false",
     "MUSIC_VIP_DELIVERY_ENABLED": "false",
-    "MUSIC_ANALYTICS_ENABLED": "false"
+    "MUSIC_ANALYTICS_ENABLED": "false",
+    "MUSIC_CLEANUP_ENABLED": "false"
   },
   "assets": {
     "directory": "../.generated/music-staging-assets",

@@ -98,7 +98,7 @@ test('staging config exposes only the Access-protected music host and isolated b
   assert.equal(source.includes('WAITLIST_DB'), false);
   assert.equal(config.vars.CF_ACCESS_TEAM_DOMAIN, 'misty-limit-82d5.cloudflareaccess.com');
   assert.equal(config.vars.CF_ACCESS_AUD, '5ceda63da88e8ffb34a88338231028e473379ae51755ae3f6d69be218bb63e4a');
-  for (const key of ['MUSIC_PUBLIC_ENABLED', 'MUSIC_UPLOADS_ENABLED', 'MUSIC_VIP_DELIVERY_ENABLED', 'MUSIC_ANALYTICS_ENABLED']) {
+  for (const key of ['MUSIC_PUBLIC_ENABLED', 'MUSIC_UPLOADS_ENABLED', 'MUSIC_VIP_DELIVERY_ENABLED', 'MUSIC_ANALYTICS_ENABLED', 'MUSIC_CLEANUP_ENABLED']) {
     assert.equal(config.vars[key], 'false');
   }
 });
