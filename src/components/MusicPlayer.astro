@@ -32,6 +32,12 @@ const { previewLabel } = Astro.props;
       <p class="station-music-byline"><span data-track-creator></span><span aria-hidden="true"> · </span><span data-track-access></span></p>
       <span class="station-music-status" data-play-status role="status" aria-live="polite">尚未播放</span>
       <p class="station-music-error" data-play-error hidden></p>
+      <div class="station-music-queue-tools station-music-access-actions" aria-label="播放资格与版本">
+        <button data-play-full type="button" hidden>从头播放完整版</button>
+        <button data-play-preview type="button" hidden>播放试听</button>
+        <button data-access-refresh type="button">重新核验资格</button>
+        <a data-membership-link hidden>前往会员中心</a>
+      </div>
     </aside>
   </div>
   <div class="station-music-dock" data-player-dock hidden aria-label="播放控制">

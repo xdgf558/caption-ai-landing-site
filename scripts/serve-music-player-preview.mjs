@@ -10,7 +10,7 @@ const output = resolve(root, '.generated/music-player-preview');
 const port = Number(process.env.MUSIC_PLAYER_PREVIEW_PORT || 4198);
 const origin = `http://127.0.0.1:${port}`;
 const wavs = new Map();
-const counters = { catalog: 0, capabilities: 0, audio: 0 };
+const counters = { catalog: 0, capabilities: 0, access: 0, audio: 0 };
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp' };
 const server = createServer(async (req, res) => {
   if (req.headers.host !== `127.0.0.1:${port}` || !['GET', 'HEAD'].includes(req.method)) { res.writeHead(403); res.end(); return; }
@@ -22,30 +22,51 @@ const server = createServer(async (req, res) => {
     res.end(req.method === 'HEAD' ? undefined : body);
   };
   try {
+    const scenario = process.env.MUSIC_PLAYER_PREVIEW_SCENARIO;
+    // Local-only switches live outside tracked files. They are not sessions or credentials.
+    const fixture = scenario === 'access-lifecycle'
+      ? JSON.parse(await readFile(resolve(root, '.generated/music-player-access-state.json'), 'utf8')) : {};
+    const demoTracks = tracks.map(track => scenario === 'access-lifecycle' && fixture.catalog !== 'free' && track.art !== 'night'
+      ? { ...track, effectiveAccess: 'vip', previewAvailable: true, previewDurationSec: 30, previewSourceStartSec: 12 } : track);
+    const expired = fixture.validUntil && Date.parse(fixture.validUntil) <= Date.now();
+    const vip = fixture.membership === 'vip' && !expired;
+    const fullAccess = track => track.effectiveAccess === 'free' ? 200 : fixture.membership === 'unavailable' ? 503 : vip ? 200 : expired ? 403 : 401;
     if (url.pathname === '/__local/requests') { send(200, counters); return; }
     if (url.pathname === '/api/music/catalog') {
       counters.catalog++;
-      const scenario = process.env.MUSIC_PLAYER_PREVIEW_SCENARIO;
       if (scenario === 'catalog-error') { send(503, { error: { code: 'MUSIC_PUBLIC_DISABLED' } }); return; }
       send(200, { schemaVersion: 2, catalogVersion: 1, locale: 'zh-Hans', collections: [],
-        tracks: scenario === 'empty' ? [] : tracks.map(({ art, ...track }) => track) }); return;
+        tracks: scenario === 'empty' ? [] : demoTracks.map(({ art, ...track }) => track) }); return;
     }
     if (url.pathname === '/api/music/me/capabilities') {
       counters.capabilities++;
-      send(200, { canPlayVipFull: false, membershipStatus: 'none', musicVipDeliveryEnabled: false }); return;
+      send(fixture.membership === 'unavailable' ? 503 : 200, {
+        authenticated: fixture.membership === 'vip', canPlayVipFull: vip, membershipStatus: vip ? 'active' : expired ? 'expired' : 'none',
+        musicVipDeliveryEnabled: scenario === 'access-lifecycle', serverNow: new Date().toISOString(),
+        validUntil: fixture.membership === 'vip' ? fixture.validUntil || new Date(Date.now() + 60000).toISOString() : null
+      }); return;
     }
-    const match = /^\/api\/music\/tracks\/([a-f0-9-]+)\/(cover|audio)$/.exec(url.pathname);
+    const match = /^\/api\/music\/tracks\/([a-f0-9-]+)\/(cover|audio|access)$/.exec(url.pathname);
     if (match) {
-      const track = tracks.find(item => item.id === match[1]);
+      const track = demoTracks.find(item => item.id === match[1]);
       if (!track || url.searchParams.get('v') !== '1') { send(404, { error: { code: 'NOT_FOUND' } }); return; }
       if (match[2] === 'cover') { send(200, await readFile(resolve(root, 'scripts/fixtures/music-player/artwork', `${track.art}.webp`)), 'image/webp'); return; }
+      if (match[2] === 'access') {
+        counters.access++;
+        const status = fullAccess(track), code = status === 401 ? 'AUTH_REQUIRED' : status === 403 ? 'MEMBERSHIP_EXPIRED' : 'MEMBERSHIP_UNAVAILABLE';
+        send(status, { effectiveAccess: track.effectiveAccess, canPlayFull: status === 200, canPreview: track.previewAvailable,
+          ...(status === 200 ? {} : { error: { code } }) }); return;
+      }
       counters.audio++;
-      if (process.env.MUSIC_PLAYER_PREVIEW_SCENARIO === 'queue-errors') {
+      if (scenario === 'queue-errors' || fixture.audioError === true) {
         send(503, { error: { code: 'LOCAL_AUDIO_FAILURE' } }); return;
       }
-      if (url.searchParams.get('variant') !== 'full') { send(404, { error: { code: 'PREVIEW_UNAVAILABLE' } }); return; }
-      if (!wavs.has(track.id)) wavs.set(track.id, demoWav(track));
-      const bytes = wavs.get(track.id), range = /^bytes=(\d+)-(\d*)$/.exec(req.headers.range || '');
+      const variant = url.searchParams.get('variant');
+      if (!['full', 'preview'].includes(variant) || (variant === 'preview' && !track.previewAvailable)) { send(404, { error: { code: 'PREVIEW_UNAVAILABLE' } }); return; }
+      if (variant === 'full' && fullAccess(track) !== 200) { send(fullAccess(track), { error: { code: 'LOCAL_FULL_DENIED' } }); return; }
+      const key = `${track.id}:${variant}`;
+      if (!wavs.has(key)) wavs.set(key, demoWav(variant === 'preview' ? { ...track, durationSec: 30 } : track));
+      const bytes = wavs.get(key), range = /^bytes=(\d+)-(\d*)$/.exec(req.headers.range || '');
       if (range) {
         const start = Number(range[1]), end = range[2] ? Math.min(Number(range[2]), bytes.length - 1) : bytes.length - 1;
         if (start >= bytes.length || start > end) { send(416, '', 'audio/wav', { 'Content-Range': `bytes */${bytes.length}` }); return; }

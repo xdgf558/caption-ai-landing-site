@@ -23,12 +23,13 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
   let items = [], catalog = new Map(), capabilities = null, shuffle = false, repeat = 'off';
   let pending = [], past = [], future = [], failures = 0, notice = null, destroyed = false;
   let lastStarted = null;
+  let errorHandler = null;
   let terminal = '', previous = player.snapshot(), sample = null, continuous = 0;
-  const blocked = new Set(), listeners = new Set();
+  const blocked = new Set(), unavailableIds = new Set(), listeners = new Set();
   const copy = track => readPlayerCatalog({ schemaVersion: 2, tracks: [track] })[0];
   const active = () => player.snapshot().activeTrackId;
   const resolve = id => catalog.get(id) || null;
-  const full = id => Boolean(resolve(id)) && playerVariant(resolve(id), capabilities) === 'full';
+  const full = id => !unavailableIds.has(id) && Boolean(resolve(id)) && playerVariant(resolve(id), capabilities) === 'full';
   const eligible = id => full(id) && !blocked.has(id);
   const ids = () => items.map(track => track.id);
   const boundedPush = (stack, id) => { if (id) stack.push(id); if (stack.length > LIMIT) stack.shift(); };
@@ -42,7 +43,7 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
     return result;
   };
   const snapshot = () => ({
-    items: items.map(track => ({ ...track, available: Boolean(resolve(track.id)), canPlayFull: full(track.id) })),
+    items: items.map(track => ({ ...track, available: !unavailableIds.has(track.id) && Boolean(resolve(track.id)), canPlayFull: full(track.id) })),
     queueIndex: items.findIndex(track => track.id === active()), activeTrackId: active(),
     shuffle, repeat, consecutiveFailures: failures, pending: [...pending], history: [...past],
     notice: notice ? { code: notice, message: messages[notice] } : null
@@ -80,7 +81,7 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
   };
   const start = (id, variant, { user = false, back = false, forward = false, restart = false } = {}) => {
     const track = resolve(id);
-    if (!track || (variant === 'full' ? !full(id) : !track.previewAvailable)) {
+    if (!track || unavailableIds.has(id) || (variant === 'full' ? !full(id) : !track.previewAvailable)) {
       notice = 'TRACK_UNAVAILABLE'; emit(); return false;
     }
     if (user) resetFailures();
@@ -153,9 +154,18 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
           return;
         }
         if (!wasRunning) { emit(); return; }
-        failures++; blocked.add(state.activeTrackId);
-        if (failures >= FAILURE_LIMIT) { notice = 'FAILURE_LIMIT'; emit(); return; }
-        if (state.activeVariant === 'full') { advance({ failure: true }); return; }
+        let recovered = false;
+        const recover = () => {
+          const current = player.snapshot();
+          if (destroyed || recovered || current.sourceGeneration !== state.sourceGeneration || current.status !== 'error') return;
+          recovered = true;
+          failures++; blocked.add(state.activeTrackId);
+          if (failures >= FAILURE_LIMIT) { notice = 'FAILURE_LIMIT'; emit(); return; }
+          if (state.activeVariant === 'full') advance({ failure: true });
+          else emit();
+        };
+        if (errorHandler) { errorHandler(state, recover); return; }
+        recover(); return;
       }
     }
     if (changed) emit();
@@ -163,10 +173,13 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
   const unsubscribe = player.subscribe(observe);
   const api = {
     snapshot,
+    setErrorHandler(handler) { errorHandler = handler; },
+    markUnavailable(id) { unavailableIds.add(id); emit(); },
     subscribe(listener) { listeners.add(listener); listener(snapshot()); return () => listeners.delete(listener); },
     updateCatalog(values) {
       if (destroyed) return;
       const parsed = readPlayerCatalog({ schemaVersion: 2, tracks: values });
+      unavailableIds.clear();
       catalog = new Map(parsed.map(track => [track.id, track]));
       if (active() && !catalog.has(active())) { player.clear(); notice = 'TRACK_UNAVAILABLE'; }
       emit();
@@ -214,6 +227,11 @@ export function createMusicQueue(player, { random = Math.random, now = () => per
       const state = player.snapshot();
       if (state.activeTrackId === id && running(state.status)) { player.pause(); return true; }
       return variant ? start(id, variant, { user: true }) : false;
+    },
+    playVariant(id, variant, visible) {
+      if (destroyed || !['full', 'preview'].includes(variant)) return false;
+      if (!items.some(track => track.id === id) && !replace(visible, id)) return false;
+      return start(id, variant, { user: true, restart: true });
     },
     next() { return advance({ user: true }); },
     previous() {

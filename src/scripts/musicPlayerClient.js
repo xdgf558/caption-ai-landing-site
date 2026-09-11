@@ -1,7 +1,8 @@
 import { createMusicPlayer } from './musicPlayerCore.js';
 import { createMusicQueue } from './musicPlayerQueue.js';
 import { mountMusicQueueControls } from './musicQueueControls.js';
-import { readPlayerCatalog, playerVariant, formatMusicTime } from './musicPlayerCatalog.js';
+import { createMusicAccessLifecycle } from './musicAccessLifecycle.js';
+import { playerVariant, formatMusicTime } from './musicPlayerCatalog.js';
 
 const mounts = new WeakMap();
 const statusText = { idle: '尚未播放', loading: '正在载入', playing: '正在播放', paused: '已暂停',
@@ -13,10 +14,9 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const $ = selector => root.querySelector(selector);
   const audio = $('[data-music-audio]'), player = createMusicPlayer(audio);
   const abort = new AbortController(), list = $('[data-track-list]'), rows = new Map();
-  let tracks = [], capabilities = null, disposed = false, requestGeneration = 0, scrub = null;
+  let tracks = [], capabilities = null, disposed = false, scrub = null, selectedOnce = false, accessState = { checking: false };
   const queue = createMusicQueue(player);
   const queueControls = mountMusicQueueControls(root, { queue, player, getVisibleTracks: () => tracks });
-  const requests = new Set();
   const listen = (target, event, callback) => target.addEventListener(event, callback, { signal: abort.signal });
   const setText = (selector, text) => { const node = $(selector); if (node.textContent !== text) node.textContent = text; };
   const permission = track => track.effectiveAccess === 'free' ? '免费完整收听'
@@ -39,13 +39,16 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     if (scrub && scrub.generation !== state.sourceGeneration) scrub = null;
     $('[data-track-detail]').hidden = !selected;
     $('[data-player-dock]').hidden = !selected;
+    $('[data-access-refresh]').disabled = accessState.checking;
+    setText('[data-access-refresh]', state.lastError?.code === 'CONTENT_UNAVAILABLE' ? '重新加载曲目' : '重新核验资格');
     if (!selected) return;
     setImage($('[data-cover]'), selected.coverUrl);
     setImage($('[data-mini-cover]'), selected.coverUrl);
     $('[data-cover-fallback]').hidden = !$('[data-cover]').hidden;
     setText('[data-track-title]', selected.title);
     setText('[data-track-creator]', selected.creatorName);
-    const selectedAccess = state.activeVariant === 'preview' ? 'VIP · 正在使用试听' : permission(selected);
+    const selectedAccess = state.activeVariant === 'preview' && selected.previewAvailable
+      ? `${selected.effectiveAccess === 'vip' ? 'VIP · ' : ''}试听` : permission(selected);
     setText('[data-track-access]', selectedAccess);
     setText('[data-mini-title]', selected.title);
     setText('[data-mini-description]', `${selected.creatorName} · ${selectedAccess}`);
@@ -54,12 +57,16 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     $('[data-play-status]').dataset.state = state.status;
     const unavailable = playerVariant(selected, capabilities) === null;
     $('[data-main-play]').disabled = unavailable && !running(state.status);
-    const label = running(state.status) ? '暂停' : state.status === 'ended' ? '重新播放'
+    const blockedFull = state.activeVariant === 'full' && ['access_required', 'access_unavailable'].includes(state.status);
+    const label = running(state.status) ? '暂停' : blockedFull && selected.previewAvailable && playerVariant(selected, capabilities) !== 'full' ? '播放试听' : state.status === 'ended' ? '重新播放'
       : state.status === 'error' ? '重试播放' : state.currentTimeSec > 0 ? '继续播放'
       : state.activeVariant === 'preview' ? '播放试听' : '播放';
     setText('[data-play-label]', label);
     $('[data-main-play]').setAttribute('aria-label', `${label}：${selected.title}`);
-    const message = unavailable ? '这首作品暂未提供试听。' : state.lastError?.message || '';
+    const message = state.lastError?.message || (unavailable ? '这首作品暂未提供试听。' : '');
+    $('[data-play-full]').hidden = state.activeVariant !== 'preview' || playerVariant(selected, capabilities) !== 'full';
+    $('[data-play-preview]').hidden = state.activeVariant !== 'full' || !selected.previewAvailable;
+    $('[data-membership-link]').hidden = state.status !== 'access_required';
     for (const selector of ['[data-play-error]', '[data-dock-error]']) {
       setText(selector, message); $(selector).hidden = !message;
     }
@@ -79,6 +86,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     $('[data-mute-icon]').toggleAttribute('hidden', !state.muted);
     for (const track of tracks) {
       const row = rows.get(track.id), active = selected.id === track.id;
+      if (!row) continue;
       row.dataset.selected = String(active);
       row.querySelector('.station-music-select').setAttribute('aria-pressed', String(active));
       row.querySelector('[data-row-description]').textContent = `${track.creatorName} · ${permission(track)}`;
@@ -136,54 +144,42 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   listen($('[data-volume]'), 'input', event => player.setVolume(Number(event.target.value)));
   listen($('[data-mute]'), 'click', () => player.setMuted(!player.snapshot().muted));
   const unsubscribe = player.subscribe(render);
-  const json = async (path, controller) => {
-    const timer = setTimeout(() => controller.abort(), 8000);
-    try {
-      const response = await fetcher(path, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal, redirect: 'error' });
-      if (!response.ok) throw new Error(`HTTP_${response.status}`);
-      return await response.json();
-    } finally { clearTimeout(timer); requests.delete(controller); }
-  };
-  const load = () => {
-    const generation = ++requestGeneration;
-    for (const request of requests) request.abort();
-    requests.clear(); capabilities = null; queue.updateCapabilities(null);
+  const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(root.dataset.locale) ? root.dataset.locale : 'zh-Hans';
+  $('[data-membership-link]').href = { 'zh-Hans': '/zh-hans/library/', 'zh-Hant': '/zh-hant/library/', en: '/en/library/', ja: '/ja/library/' }[locale];
+  const access = createMusicAccessLifecycle(player, queue, { fetcher, locale,
+    onChange(value) { accessState = value; capabilities = value.capabilities; render(player.snapshot()); },
+    onCatalog(values) {
+      tracks = values; renderRows();
+      $('[data-catalog-message]').hidden = tracks.length > 0;
+      if (!tracks.length) setText('[data-catalog-message]', '小站还在准备音乐，稍后再来听听。');
+      if (!selectedOnce && tracks.length) { selectedOnce = true; choose(tracks[0], false); }
+      render(player.snapshot());
+    },
+    onCatalogError() {
+      setText('[data-catalog-message]', '曲目暂时无法加载，请稍后重试。');
+      $('[data-catalog-message]').hidden = false; $('[data-catalog-retry]').hidden = false;
+    }
+  });
+  const load = (reason = 'manual') => {
     $('[data-catalog-retry]').hidden = true;
     $('[data-catalog-message]').hidden = false;
     setText('[data-catalog-message]', '正在整理曲目…');
-    const catalogRequest = new AbortController(), capabilityRequest = new AbortController();
-    requests.add(catalogRequest); requests.add(capabilityRequest);
-    const locale = ['zh-Hans', 'zh-Hant', 'en', 'ja'].includes(root.dataset.locale) ? root.dataset.locale : 'zh-Hans';
-    // Capabilities failure must not withhold free tracks. Each request settles independently.
-    void json(`/api/music/me/capabilities?locale=${locale}`, capabilityRequest).then(body => {
-      if (disposed || generation !== requestGeneration) return;
-      capabilities = body; queue.updateCapabilities(body); render(player.snapshot());
-    }).catch(() => {});
-    void json(`/api/music/catalog?locale=${locale}`, catalogRequest).then(body => {
-      if (disposed || generation !== requestGeneration) return;
-      tracks = readPlayerCatalog(body);
-      queue.updateCatalog(tracks);
-      renderRows();
-      $('[data-catalog-message]').hidden = tracks.length > 0;
-      if (!tracks.length) setText('[data-catalog-message]', '小站还在准备音乐，稍后再来听听。');
-      if (tracks.length) choose(tracks[0], false);
-      render(player.snapshot());
-    }).catch(() => {
-      if (disposed || generation !== requestGeneration) return;
-      setText('[data-catalog-message]', '曲目暂时无法加载，请稍后重试。');
-      $('[data-catalog-retry]').hidden = false;
-    });
+    void access.refresh(reason);
   };
-  listen($('[data-catalog-retry]'), 'click', load);
-  const api = { player, queue, destroy() {
+  listen($('[data-catalog-retry]'), 'click', () => load());
+  listen($('[data-access-refresh]'), 'click', () => load());
+  for (const variant of ['full', 'preview']) listen($(`[data-play-${variant}]`), 'click', () => {
+    const id = player.snapshot().activeTrackId;
+    if (id) queue.playVariant(id, variant, tracks);
+  });
+  const api = { player, queue, access, destroy() {
     if (disposed) return;
-    disposed = true; requestGeneration++;
-    for (const request of requests) request.abort();
-    requests.clear(); abort.abort(); unsubscribe(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
+    disposed = true;
+    abort.abort(); unsubscribe(); access.destroy(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
   } };
   mounts.set(root, api);
   // Keep bfcache state: restoring a page does not mount a second player.
   listen(window, 'pagehide', event => { if (!event.persisted) api.destroy(); });
-  load();
+  load('initial');
   return api;
 }
