@@ -1,4 +1,13 @@
 // The return fragment requests fresh reads, never authorizes playback or payment.
+// Completed automatic polling does not freeze the UI: a later manual or account
+// refresh may confirm (or revoke) membership without starting another poll loop.
+export function musicReturnStatus(status, { checking, capabilities } = {}) {
+  if (checking) return status === 'checking' ? 'checking' : 'refreshing';
+  if (capabilities?.membershipStatus === 'active') return 'ready';
+  if (capabilities?.authenticated === false) return 'login';
+  return ['ready', 'login'].includes(status) ? 'timeout' : status;
+}
+
 export function createMusicReturnSync(access, { now = () => performance.now(), setTimer = setTimeout, clearTimer = clearTimeout,
   document = globalThis.document, onChange = () => {} } = {}) {
   let disposed = false, used = false, active = false, end = 0, index = 0, timer = null, deadlineTimer = null, controller = null;

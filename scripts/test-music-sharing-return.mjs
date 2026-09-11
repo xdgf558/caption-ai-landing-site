@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { musicReturnPath, musicMembershipHref, readMusicMembershipEntry, musicShareUrl, shareMusicLink, MUSIC_RETURN_HASH } from '../src/music/navigation.js';
 import { musicPagePaths } from '../src/music/pagePaths.js';
 import { readMusicSelectionCatalog, readMusicLookup } from '../src/scripts/musicCatalogSelection.js';
-import { createMusicReturnSync } from '../src/scripts/musicReturnSync.js';
+import { createMusicReturnSync, musicReturnStatus } from '../src/scripts/musicReturnSync.js';
 import { mountMusicMemberReturn } from '../src/scripts/musicMemberReturn.js';
 import { createMusicAccessLifecycle } from '../src/scripts/musicAccessLifecycle.js';
 import { createMusicPlayer } from '../src/scripts/musicPlayerCore.js';
@@ -166,6 +166,13 @@ test('return sync has increasing delays, stops at sixty seconds and never starts
   const sync=createMusicReturnSync(access,{...time,document:{hidden:false},onChange:s=>statuses.push(s)});sync.start();await flush();await time.advance(61000);
   assert.deepEqual(calls.map(x=>x[0]),[0,2000,6000,14000,24000,34000,44000,54000]);assert.equal(statuses.at(-1),'timeout');
   sync.start();await time.advance(120000);assert.equal(calls.length,8);sync.destroy();
+});
+test('manual verification after polling ends updates stale return notices without restarting automatic polling', () => {
+  assert.equal(musicReturnStatus('timeout',{checking:true}),'refreshing');
+  assert.equal(musicReturnStatus('timeout',{capabilities:vip}),'ready');
+  assert.equal(musicReturnStatus('ready',{checking:true}),'refreshing');
+  assert.equal(musicReturnStatus('ready',{capabilities:anonymous}),'login');
+  assert.equal(musicReturnStatus('ready',{capabilities:null}),'timeout');
 });
 test('return sync aborts an outstanding read at the deadline, ignores late completion and suspends hidden-page requests', async () => {
   const time=clock(),wait=deferred(),statuses=[];let signal,calls=0;

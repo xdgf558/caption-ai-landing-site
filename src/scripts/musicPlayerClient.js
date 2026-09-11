@@ -13,7 +13,7 @@ import { bindMusicLocalPlayback } from './musicLocalPlayback.js';
 import { mountMusicLyrics } from './musicLyricsControls.js';
 import { musicMembershipHref, MUSIC_RETURN_HASH } from '../music/navigation.js';
 import { mountMusicSharing } from './musicSharingControls.js';
-import { createMusicReturnSync } from './musicReturnSync.js';
+import { createMusicReturnSync, musicReturnStatus } from './musicReturnSync.js';
 
 const mounts = new WeakMap();
 const statusText = { idle: '尚未播放', loading: '正在载入', playing: '正在播放', paused: '已暂停',
@@ -32,7 +32,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   let visibleTracks = [], shownTracks = [], viewTrackId = null, libraryControls = null, localPlayback = null, localUnsubscribe = null;
   let tracks = [], capabilities = null, disposed = false, scrub = null, selectedOnce = false, accessState = { checking: false };
   let rowAbort = new AbortController(), systemState = { notice: null, coordinationSupported: true };
-  let catalogView = null, collections = [], browseScheduled = false, attemptedTarget = '', returnSync = null;
+  let catalogView = null, collections = [], browseScheduled = false, attemptedTarget = '', returnSync = null, returnStatus = null;
   const panels = isLibrary ? mountMusicPanels(root) : null;
   const local = isLibrary ? createMusicLocalData() : null;
   let favoriteIds = new Set(local?.snapshot().favorites || []);
@@ -67,6 +67,14 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     $('[data-membership-link]').href = musicMembershipHref(locale, new URLSearchParams({ ...target, ...(viewed ? { track: viewed.id } : {}) }));
     $('[data-membership-link]').hidden = !viewed || viewed.effectiveAccess !== 'vip' || accessState.checking || capabilities?.membershipStatus === 'active';
     if (isLibrary) $('[data-return-membership]').href = musicMembershipHref(locale, new URLSearchParams(target));
+    if (returnStatus) {
+      const status = musicReturnStatus(returnStatus, accessState);
+      const messages = { checking: '会员权益正在同步，最多等待 60 秒。', refreshing: '正在重新核验资格，请稍候。',
+        ready: capabilities?.canPlayVipFull ? '权益已重新核验，点击播放继续。' : 'VIP 资格有效，完整音频暂未开放。',
+        login: '请登录会员中心后返回音乐。', timeout: '会员权益尚未确认，请稍后重新核验或返回会员中心。' };
+      setText('[data-music-return-notice]', t(messages[status])); $('[data-music-return-notice]').hidden = false;
+      $('[data-return-membership]').hidden = !['timeout', 'login'].includes(status);
+    }
     root.dataset.status = state.status;
     root.dataset.volumeMode = state.volumeSupported ? 'software' : 'device';
     const notice = t(systemState.notice || '') || (!systemState.coordinationSupported ? t('当前浏览器的多个音乐标签页会独立播放。') : '');
@@ -313,10 +321,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     });
     returnSync = createMusicReturnSync(access, { onChange(status) {
       if (disposed || status === 'stopped') return;
-      const messages = { checking: '会员权益正在同步，最多等待 60 秒。', ready: capabilities?.canPlayVipFull ? '权益已重新核验，点击播放继续。' : 'VIP 资格有效，完整音频暂未开放。',
-        login: '请登录会员中心后返回音乐。', timeout: '会员权益尚未确认，请稍后重新核验或返回会员中心。' };
-      setText('[data-music-return-notice]', t(messages[status])); $('[data-music-return-notice]').hidden = false;
-      $('[data-return-membership]').hidden = !['timeout', 'login'].includes(status);
+      returnStatus = status; render(player.snapshot());
     } });
     for (const selector of ['[data-membership-link]', '[data-return-membership]']) listen($(selector), 'click', event => {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
