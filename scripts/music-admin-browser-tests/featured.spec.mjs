@@ -84,7 +84,8 @@ test('narrow management layout stays usable at 320 CSS pixels', async ({page}) =
 });
 
 test('public featured cards use the one player and viewing another card keeps the active source', async ({page}) => {
-  const tracks=fixtureTracks.map((track,index)=>({...track,coverUrl:null,durationSec:20,effectiveAccess:index===1?'vip':'free',previewAvailable:index===1}));
+  const tracks=fixtureTracks.map((track,index)=>({...track,coverUrl:null,durationSec:20,effectiveAccess:index===1?'vip':'free',previewAvailable:index===1,
+    previewDurationSec:index===1?8:null,previewSourceStartSec:index===1?0:null}));
   const collection={id:id(5),slug:'public-featured-album',type:'album',listeningMode:'mixed',title:'公开精选专辑',description:'',coverTrackId:null,trackIds:[tracks[0].id,tracks[1].id]};
   let audioRequests=0;
   await page.route('**/api/music/**',async route=>{
