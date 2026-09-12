@@ -55,11 +55,17 @@ async function bounded(task,timeoutMs) {
 
 // A single conditional UPSERT serializes source and global admission on the D1 primary.
 // JSON, HEAD, conditional responses and audio ranges all consume one request admission.
-export async function checkMusicRateLimit(request,env,category,{ clock = Date.now,timeoutMs = 1500 } = {}) {
+export async function checkMusicRateLimit(request,env,category,{ clock = Date.now,timeoutMs = 1500, ceiling = null } = {}) {
   try {
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10000) throw new Error('timeout');
-    const limits = musicRateLimits(env), group = limits[category];
+    const limits = musicRateLimits(env); let group = limits[category];
     if (!group || !env.MUSIC_DB || env.MUSIC_DB === env.WAITLIST_DB) throw new Error('binding');
+    // Expensive derived artwork shares the existing atomic counter, with a stricter
+    // admission ceiling. This can only reduce admission; it never resets a window.
+    if (ceiling) {
+      if (!Number.isSafeInteger(ceiling.source) || ceiling.source < 1 || !Number.isSafeInteger(ceiling.global) || ceiling.global < ceiling.source) throw new Error('ceiling');
+      group = { source: Math.min(group.source, ceiling.source), global: Math.min(group.global, ceiling.global) };
+    }
     const now = clock(); isoTime(now); const window = Math.floor(now/WINDOW_MS)*WINDOW_MS;
     const hash = await musicRateSourceHash(request,env,category,window), s = primary(env.MUSIC_DB);
     const results = await bounded(() => s.batch([

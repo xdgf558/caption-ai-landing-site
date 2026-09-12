@@ -37,6 +37,16 @@ test('switching from details to queue replaces the overlay entry instead of stac
   panel.destroy();
 });
 
+test('song sharing adds one presentation step and Back returns to the same details without URL or account data', () => {
+  const host = new HistoryHost(), changes = [], panel = createMusicPanelHistory(host, value => changes.push(value));
+  panel.open('detail'); panel.open('share');
+  assert.equal(host.entries.length, 3); assert.equal(changes.at(-1), 'share');
+  assert.deepEqual(Object.keys(host.history.state.musicPanel).sort(), ['kind', 'owner']);
+  panel.close(); assert.equal(changes.at(-1), 'detail'); assert.equal(host.index, 1);
+  panel.close(); assert.equal(changes.at(-1), null); assert.equal(host.index, 0);
+  panel.destroy();
+});
+
 test('a new panel requested during asynchronous Back survives the late popstate; double close never navigates twice', async () => {
   const host = new HistoryHost(), changes = [], panel = createMusicPanelHistory(host, value => changes.push(value));
   let backs = 0;

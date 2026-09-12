@@ -4,6 +4,7 @@ import '../styles/music-player.css';
 import '../styles/music-mobile.css';
 import '../styles/music-personal.css';
 import { musicText } from '../scripts/musicMessages.js';
+import MusicShareCardPanel from './MusicShareCardPanel.astro';
 interface Props { previewLabel?: string; lang?: 'zh-Hans' | 'zh-Hant' | 'en' | 'ja'; library?: boolean; }
 const { previewLabel, lang = 'zh-Hans', library = false } = Astro.props;
 const t = musicText(lang);
@@ -165,6 +166,7 @@ const t = musicText(lang);
     <div class="station-music-queue-footer"><button data-queue-add type="button" disabled>{t('加入当前曲目')}</button><button data-queue-clear type="button" disabled>{t('清空并停止')}</button></div>
   </dialog>
   {library && <>
+    <MusicShareCardPanel lang={lang} />
     <dialog class="station-music-detail-dialog" data-detail-dialog id="music-detail" aria-labelledby="music-detail-title">
       <div class="station-music-detail-sheet" data-detail-sheet>
         <div class="station-music-sheet-heading"><span>{t('歌曲详情')}</span><button data-panel-close="detail" type="button" aria-label={t('关闭详情')} autofocus><X size={24} /></button></div>
