@@ -142,6 +142,31 @@ test('logging failures cannot change 503 or touch protected media', async t => {
   assert.deepEqual(f.dump(),before); assert.equal(f.r2Reads,0);
 });
 
+test('default D1 budget admits a confirmed result after 1.5s but denies at 3s without retry', async t => {
+  t.mock.timers.enable({apis:['setTimeout']});
+  t.mock.method(console,'warn',() => {});
+  const f = fixture();
+  for (const complete of [true,false]) {
+    let started, resolveBatch, calls = 0, settled = false;
+    const ready = new Promise(r => { started = r; });
+    const db = {withSession() { return {prepare: () => ({bind() { return {}; }}),batch() {
+      calls++; started(); return new Promise(r => { resolveBatch = r; });
+    }}; }};
+    const pending = checkMusicRateLimit(request(),{...f.env,MUSIC_DB:db},'catalog').then(value => {settled=true;return value;});
+    await ready;
+    t.mock.timers.tick(2999); await new Promise(r => setImmediate(r));
+    assert.equal(settled,false);
+    const result = [{success:true,results:[]},{success:true,results:[]},{success:true,results:[{hits:1}]}];
+    if (complete) { resolveBatch(result); assert.equal(await pending,null); }
+    else {
+      t.mock.timers.tick(1);
+      assert.deepEqual(await pending,{status:503,code:'MUSIC_RATE_LIMIT_UNAVAILABLE',retryAfter:5});
+      resolveBatch(result); await new Promise(r => setImmediate(r));
+    }
+    assert.equal(calls,1);
+  }
+});
+
 test('closed public flag causes zero database reads and writes, including rate counters', async () => {
   const env = { MUSIC_PUBLIC_ENABLED: 'false',get MUSIC_DB() { assert.fail('closed gate touched database'); },
     get MUSIC_BUCKET() { assert.fail('closed gate touched R2'); } };

@@ -56,7 +56,7 @@ async function bounded(task,timeoutMs) {
 
 // A single conditional UPSERT serializes source and global admission on the D1 primary.
 // JSON, HEAD, conditional responses and audio ranges all consume one request admission.
-export async function checkMusicRateLimit(request,env,category,{ clock = Date.now,timeoutMs = 1500, ceiling = null } = {}) {
+export async function checkMusicRateLimit(request,env,category,{ clock = Date.now,timeoutMs = 3000, ceiling = null } = {}) {
   let stage = 'configuration';
   try {
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10000) throw new Error('timeout');
