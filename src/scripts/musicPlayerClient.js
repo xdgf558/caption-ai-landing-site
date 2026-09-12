@@ -14,6 +14,7 @@ import { mountMusicLyrics } from './musicLyricsControls.js';
 import { musicMembershipHref, MUSIC_RETURN_HASH } from '../music/navigation.js';
 import { mountMusicSharing } from './musicSharingControls.js';
 import { createMusicReturnSync, musicReturnStatus } from './musicReturnSync.js';
+import { mountMusicAnalytics } from './musicAnalyticsControls.js';
 
 const mounts = new WeakMap();
 const statusText = { idle: '尚未播放', loading: '正在载入', playing: '正在播放', paused: '已暂停',
@@ -38,6 +39,11 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   let favoriteIds = new Set(local?.snapshot().favorites || []);
   const lyrics = isLibrary ? mountMusicLyrics(root, { t, fetcher }) : null;
   const sharing = isLibrary ? mountMusicSharing(root, { t, locale }) : null;
+  // Subscribe before queue advancement so a natural ended event is measured
+  // before the queue can synchronously select the next source.
+  const analytics = isLibrary ? mountMusicAnalytics(root,player,{fetcher,t,
+    getViewedTrack:()=>tracks.find(track=>track.id===(viewTrackId || player.snapshot().activeTrackId)),
+    getVariant:track=>playerVariant(track,capabilities)}) : null;
   const queue = createMusicQueue(player);
   const queueControls = mountMusicQueueControls(root, { queue, player, getVisibleTracks: () => visibleTracks, getAllTracks: () => tracks, panels });
   const listen = (target, event, callback) => target.addEventListener(event, callback, { signal: abort.signal });
@@ -346,6 +352,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const api = { player, queue, access, system, destroy() {
     if (disposed) return;
     disposed = true;
+    analytics?.destroy();
     returnSync?.destroy(); sharing?.destroy(); localPlayback?.destroy(); localUnsubscribe?.(); local?.destroy(); lyrics?.destroy(); panels?.destroy(); libraryControls?.destroy(); rowAbort.abort(); abort.abort(); unsubscribe(); system.destroy(); access.destroy(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
   } };
   mounts.set(root, api);

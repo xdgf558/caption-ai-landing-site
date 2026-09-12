@@ -8,6 +8,7 @@ import { performance } from 'node:perf_hooks';
 import { build } from 'esbuild';
 import { Miniflare } from 'miniflare';
 import sharp from 'sharp';
+import { seedAnalyticsTrack } from './helpers/music-analytics-fixture.mjs';
 
 const root = new URL('../', import.meta.url), file = path => readFileSync(new URL(path, root));
 const manifest = JSON.parse(file('tests/fixtures/music-mp3/manifest.json')).files;
@@ -17,7 +18,7 @@ let mf, db, bucket;
 function migrationStatements() {
   const parser = new DatabaseSync(':memory:'), migrations = [];
   try {
-    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql']) {
+    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql']) {
       const statements = [];
       let remaining = file(`migrations-music/${name}`).toString();
       while (remaining.trim()) {
@@ -99,6 +100,7 @@ test('missing schema is 503; actual migrations on local D1 enable primary readin
   assert.equal((await adminCall('/status')).body.storage, null);
   assert.ok((await db.batch(migrations[3].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.ok((await db.batch(migrations[4].map(sql => db.prepare(sql)))).every(r => r.success));
+  assert.ok((await db.batch(migrations[5].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.equal((await adminCall('/status')).body.storage.quotaBytes, 0);
   assert.deepEqual((await db.prepare('PRAGMA foreign_key_check').all()).results, []);
 });
@@ -603,4 +605,36 @@ test('native unknown-length 32 MiB input streams to R2; actual overrun and trunc
     assert.equal(put.status, 413, JSON.stringify(put));
     assert.notEqual((await uploadJson(`/uploads/${u.body.uploadId}/complete`, 'POST', {})).status, 200);
   }
+});
+
+test('native D1 analytics admits exactly 60 event units and retries never inflate daily totals', async () => {
+  const track=await seedAnalyticsTrack(db), anon=randomUUID();
+  assert.equal((await call('/fixture-analytics/retention')).body.available,true);
+  const events=Array.from({length:20},()=>({eventId:randomUUID(),eventType:'play_start',playSessionId:randomUUID(),anonymousSessionId:anon,
+    trackId:track.id,revisionNo:1,variant:'full',occurredAt:Date.now(),listenedMs:0,entrySource:'player'}));
+  const send=()=>call('/fixture-analytics/api/music/events',{consentVersion:'music-analytics-v1',events},
+    {Origin:'http://music.local.test','X-Requested-With':'StationCatMusicAnalytics','CF-Connecting-IP':'192.0.2.201'});
+  const responses=await Promise.all(Array.from({length:8},send));
+  assert.equal(responses.filter(r=>r.status===200).length,3,JSON.stringify(responses));
+  assert.ok(responses.filter(r=>r.status!==200).every(r=>r.status===429));
+  assert.equal((await db.prepare('SELECT COUNT(*) n FROM music_analytics_events WHERE track_id=?').bind(track.id).first()).n,20);
+  assert.equal((await db.prepare('SELECT SUM(value) n FROM music_analytics_daily WHERE track_id=?').bind(track.id).first()).n,20);
+});
+
+test('native analytics global failure rolls back all admission rows; daily failure rolls back event',async()=>{
+  const track=await seedAnalyticsTrack(db), anon=randomUUID();
+  const event={eventId:randomUUID(),eventType:'play_start',playSessionId:randomUUID(),anonymousSessionId:anon,trackId:track.id,
+    revisionNo:1,variant:'full',occurredAt:Date.now(),listenedMs:0,entrySource:'player'};
+  const send=()=>call('/fixture-analytics/api/music/events',{consentVersion:'music-analytics-v1',events:[event]},
+    {Origin:'http://music.local.test','X-Requested-With':'StationCatMusicAnalytics','CF-Connecting-IP':'192.0.2.202'});
+  const before=(await db.prepare('SELECT * FROM music_analytics_rates ORDER BY scope,window_start,subject').all()).results;
+  await db.prepare("CREATE TRIGGER analytics_global_fault BEFORE UPDATE ON music_analytics_rates WHEN NEW.scope='global' BEGIN SELECT RAISE(IGNORE); END").run();
+  try { assert.equal((await send()).status,503); }
+  finally { await db.prepare('DROP TRIGGER analytics_global_fault').run(); }
+  assert.deepEqual((await db.prepare('SELECT * FROM music_analytics_rates ORDER BY scope,window_start,subject').all()).results,before);
+  await db.prepare('CREATE TRIGGER analytics_daily_fault BEFORE INSERT ON music_analytics_daily BEGIN SELECT RAISE(IGNORE); END').run();
+  try { assert.equal((await send()).status,503); }
+  finally { await db.prepare('DROP TRIGGER analytics_daily_fault').run(); }
+  assert.equal((await db.prepare('SELECT COUNT(*) n FROM music_analytics_events WHERE track_id=?').bind(track.id).first()).n,0);
+  assert.equal((await send()).status,200);
 });

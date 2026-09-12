@@ -155,3 +155,32 @@ test('keyboard tabs and desktop/mobile have no horizontal overflow; music servic
     await page.unroute('**/admin/api/music/status');
   }
 });
+
+test('statistics are read-only and unavailable does not become zero listeners',async({page})=>{
+  await page.goto('/admin/music/');
+  await page.getByRole('button',{name:'收听统计',exact:true}).click();
+  await expect(page.getByRole('dialog',{name:'收听统计'})).toBeVisible();
+  await expect(page.locator('#analytics-notice')).toContainText('统计不可用');
+  await expect(page.locator('#analytics-table')).toBeHidden();
+  await expect(page.getByText('会员中心到达、付费激活与续费归因：不可用。入口点击只表示意向，不代表开通或收入。')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog',{name:'收听统计'})).toBeHidden();
+});
+
+test('statistics panel labels preview/free/VIP policy separately and clears stale totals on failure',async({page})=>{
+  let failing=false;const requests=[];
+  await page.route('**/admin/api/music/analytics?**',async route=>{
+    requests.push(route.request().method());
+    await route.fulfill({status:failing ? 503 : 200,contentType:'application/json',body:JSON.stringify(failing ? {ok:false} :
+      {ok:true,available:true,metrics:[{metric:'qualified_play',variant:'preview',accessKind:'vip',value:2},
+        {metric:'qualified_play',variant:'full',accessKind:'free',value:3},{metric:'qualified_play',variant:'full',accessKind:'vip',value:1}]})});
+  });
+  await page.goto('/admin/music/');await page.getByRole('button',{name:'收听统计',exact:true}).click();
+  await expect(page.locator('#analytics-results tr')).toHaveCount(3);
+  await expect(page.locator('#analytics-table')).toContainText('免费完整版');
+  await expect(page.locator('#analytics-table')).toContainText('VIP 策略完整版');
+  failing=true;await page.getByRole('button',{name:'读取汇总',exact:true}).click();
+  await expect(page.locator('#analytics-notice')).toContainText('统计暂不可用');
+  await expect(page.locator('#analytics-table')).toBeHidden();
+  expect(requests).toEqual(['GET','GET']);
+});

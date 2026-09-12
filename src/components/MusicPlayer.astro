@@ -50,6 +50,15 @@ const t = musicText(lang);
               <button data-local-export type="button" hidden>{t('导出原始记录')}</button>
               <button data-local-clear type="button">{t('清除本机音乐记录')}</button>
             </details>
+            <details class="station-music-local-data station-music-analytics" data-analytics-controls>
+              <summary>{t('收听统计与隐私')}</summary>
+              <p>{t('帮助了解作品的收听情况。仅在你同意后，发送曲目、试听或完整版、播放里程碑和累计收听时长；不发送收藏、账号或支付信息。')}</p>
+              <p>{t('原始事件最多保留 30 天，匿名每日汇总最多 365 天。撤回会停止采集并清除本机统计会话，已接收的数据按保留期到期。')}</p>
+              <p data-analytics-status role="status">{t('正在核对统计设置…')}</p>
+              <button data-analytics-accept type="button" disabled>{t('同意此标签页的统计')}</button>
+              <button data-analytics-withdraw type="button" hidden>{t('撤回统计同意')}</button>
+              <a href={`/${lang.toLowerCase()}/privacy/#music`}>{t('音乐隐私说明')}</a>
+            </details>
           </div>
         </div>
         <p data-collection-description hidden></p>

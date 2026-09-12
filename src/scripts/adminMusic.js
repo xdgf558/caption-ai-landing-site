@@ -1,4 +1,5 @@
 import { request, createJournal, hashFile, fileFormat, assetUrl, bytes, policyForSave } from './musicAdminClient.js';
+import { mountMusicAdminAnalytics } from './musicAdminAnalytics.js';
 
 const $ = id => document.getElementById(id), all = selector => [...document.querySelectorAll(selector)];
 const names = { draft:'草稿', published:'已发布', unpublished:'已下架', archived:'已归档', audio:'完整音频', preview:'独立试听', cover:'封面', lyrics:'歌词', evidence:'权利凭证' };
@@ -379,3 +380,4 @@ $('music-reload').onclick = () => run(async () => {
 window.addEventListener('beforeunload',e => { if (dirty || assetsDirty || reviewDirty || busy || journal?.get().pending) { e.preventDefault(); e.returnValue = ''; } });
 window.addEventListener('pagehide',stopAudio);
 run(boot);
+mountMusicAdminAnalytics();

@@ -11,7 +11,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><meta name="robots" content="noindex,nofollow" />
   <title>音乐管理 | Station Cat</title><link rel="icon" href="/favicon.ico" /><link rel="stylesheet" href="/styles/admin-music.css" /></head>
 <body class="music-admin">
-<header class="music-topbar"><a href="/admin-v2/"><img src="/images/optimized/station-cat-logo-1668c2e5-160.webp" width="32" height="32" alt="" />Station Cat <span>/ 后台</span></a><button id="audit-open" type="button"><History size={16} />操作记录</button></header>
+<header class="music-topbar"><a href="/admin-v2/"><img src="/images/optimized/station-cat-logo-1668c2e5-160.webp" width="32" height="32" alt="" />Station Cat <span>/ 后台</span></a><div class="music-topbar-actions"><button id="analytics-open" type="button">收听统计</button><button id="audit-open" type="button"><History size={16} />操作记录</button></div></header>
 <main class="music-shell">
   <header class="music-heading"><div><p class="eyebrow">内容工作区</p><h1>音乐</h1></div><button id="track-new" class="primary" type="button" disabled><Plus size={18} />新建曲目</button></header>
   <div class="music-health"><span id="environment">正在连接音乐服务</span><span id="storage">配额待查询</span></div>
@@ -101,4 +101,12 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
 <dialog id="confirm-dialog" aria-labelledby="confirm-title"><form method="dialog" id="confirm-form"><header><h2 id="confirm-title"></h2></header><p id="confirm-description"></p><label id="confirm-reason-label">操作说明<input id="confirm-reason" maxlength="1000" /></label><footer class="music-actions"><button value="cancel" formnovalidate>取消</button><button id="confirm-accept" value="yes" class="primary">确认</button></footer></form></dialog>
 <dialog id="audit-dialog" aria-labelledby="audit-title"><header><h2 id="audit-title">操作记录</h2><button id="audit-close" type="button" aria-label="关闭操作记录" title="关闭操作记录"><X size={18} /></button></header><div id="audit-list"></div><button id="audit-next" type="button" hidden>加载更多</button></dialog>
 <script src="../../scripts/adminMusic.js"></script>
+<dialog id="analytics-dialog" aria-labelledby="analytics-title">
+  <header><h2 id="analytics-title">收听统计</h2><button id="analytics-close" type="button" aria-label="关闭收听统计"><X size={18} /></button></header>
+  <form id="analytics-form"><div class="field-grid"><label>开始日期（UTC）<input id="analytics-from" type="date" required /></label><label>结束日期（UTC）<input id="analytics-to" type="date" required /></label></div><p class="muted">每次最多查看 31 天，默认最近 7 天。</p><button id="analytics-refresh" type="submit"><RefreshCw size={16} />读取汇总</button></form>
+  <p id="analytics-notice" role="status">统计尚未读取。</p>
+  <table id="analytics-table" hidden><thead><tr><th>指标</th><th>音频</th><th>次数</th></tr></thead><tbody id="analytics-results"></tbody></table>
+  <p class="muted">有效收听：真实累计时长达到 30 秒或音频时长的 50%，取较短者。同一统计会话、曲目与音频版本类型在 30 分钟内最多一次。自然完成还需累计收听至少 90%。这些是本站口径。</p>
+  <p>会员中心到达、付费激活与续费归因：不可用。入口点击只表示意向，不代表开通或收入。</p>
+</dialog>
 </body></html>
