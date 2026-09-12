@@ -1,4 +1,4 @@
-import { request, createJournal, hashFile, fileFormat, assetUrl, bytes, policyForSave } from './musicAdminClient.js';
+import { request, createJournal, hashFile, fileFormat, assetUrl, bytes, policyForSave, uuid } from './musicAdminClient.js';
 import { mountMusicAdminAnalytics } from './musicAdminAnalytics.js';
 import { createWavConverter } from './musicWavClient.js';
 import { isWav, WAV_PROFILE } from './musicWav.js';
@@ -398,6 +398,12 @@ async function boot() {
   await loadList();
   const saved = journal.get().workspace;
   if (saved) restore(saved);
+  const params = new URLSearchParams(location.search), target = params.get('track');
+  if (params.getAll('track').length === 1 && uuid(target) && target !== track?.id) {
+    if (journal.get().pending) { status('请先核对此标签页的原操作，再打开目标曲目。',true); return; }
+    if (!await canLeave()) { status('已保留原编辑内容，未切换到目标曲目。'); return; }
+    await loadTrack(target); status('已载入目标曲目，请逐首补齐素材和审核。'); return;
+  }
   status(journal.get().pending ? '有一笔结果待确认的操作。请核对并重试原操作。' : saved ? '已恢复此标签页的编辑内容。' : '曲库已载入。');
 }
 $('music-reload').onclick = () => run(async () => {

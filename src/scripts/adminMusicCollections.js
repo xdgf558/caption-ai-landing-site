@@ -27,6 +27,8 @@ function sync() {
   $('collection-order-save').disabled=blocked||archived||!current?.id||dirty||!orderDirty;
   for(const action of ['publish','unpublish','archive']) $('collection-'+action).disabled=blocked||!current?.id||archived||dirty||orderDirty||
     (action==='unpublish'?current.status!=='published':current.status!=='draft');
+  $('album-batch-entry').hidden=current?.type!=='album';
+  $('album-batch-open').disabled=blocked||!current?.id||current.status!=='draft'||dirty||orderDirty;
   $('collection-reload').disabled=busy;
   $('collection-retry').hidden=!journal?.get().pending; $('collection-retry').disabled=busy||locked;
   if(current){$('collection-version').textContent=dirty||orderDirty?'有未保存修改':current.id?'编辑版本 '+current.editVersion:'尚未保存';
@@ -84,6 +86,7 @@ $('collection-search-form').onsubmit=e=>{e.preventDefault();run(async()=>{if(awa
 $('collection-prev').onclick=()=>run(async()=>{if(await leave()){page--;await loadList();}});$('collection-next').onclick=()=>run(async()=>{if(await leave()){cursors[++page]=nextBefore;await loadList();}});
 $('collection-retry').onclick=()=>run(async()=>{if(await ask('重试原操作？','沿用原内容、版本和幂等键核对，不创建新的操作。'))await replay();});
 $('collection-reload').onclick=()=>run(async()=>{if(!journal){await boot();return;}await checkActor();locked=false;if(journal?.get().pending){status('身份已核对，请明确重试原操作。');return;}if(!await leave())return;await loadList();ready=true;if(current?.id)await load(current.id);status('已重新载入。');});
+$('album-batch-open').onclick=()=>{if(!busy&&!locked&&!dirty&&!orderDirty&&!journal?.get().pending&&current?.type==='album'&&current?.id&&current.status==='draft')location.assign('/admin/music/collections/upload/?album='+current.id);};
 window.addEventListener('beforeunload',e=>{if(busy||dirty||orderDirty||journal?.get().pending){e.preventDefault();e.returnValue='';}});
 async function boot(){const service=await checkActor();actor=service.actorId;journal=createCollectionJournal(sessionStorage,actor);await loadList();ready=true;const saved=journal.get().workspace;if(saved){fill(saved.current);order=saved.order;applyForm(saved.form);$('collection-reason').value=saved.reason||'';$('collection-order-reason').value=saved.orderReason||'';dirty=saved.dirty;orderDirty=saved.orderDirty;renderOrder();}status(journal.get().pending?'有一笔结果待确认的操作，请核对原操作。':'专辑与歌单已载入。');}
 run(boot);

@@ -16,7 +16,7 @@ const locales = [['zh-Hans','简体中文'],['zh-Hant','繁體中文'],['en','En
       <div id="collection-list"></div><div class="pagination"><button id="collection-prev" type="button" disabled>上一页</button><span id="collection-page">第 1 页</span><button id="collection-next" type="button" disabled>下一页</button></div>
     </aside>
     <section class="music-workspace" aria-label="专辑与歌单编辑">
-      <div id="collection-empty"><h2>选择或新建一张专辑</h2><p class="muted">先保存资料，再从曲库加入歌曲并调整曲序。整张批量上传将在后续提供。</p></div>
+      <div id="collection-empty"><h2>选择或新建一张专辑</h2><p class="muted">先保存资料，再从曲库加入歌曲并调整曲序。也可在草稿专辑中批量上传新曲目。</p></div>
       <div id="collection-workspace" hidden>
         <header class="workspace-heading"><div><h2 id="collection-heading"></h2><p id="collection-version" class="muted"></p></div><span id="collection-state" class="badge"></span></header>
         <form id="collection-form"><fieldset id="collection-fields">
@@ -26,6 +26,7 @@ const locales = [['zh-Hans','简体中文'],['zh-Hant','繁體中文'],['en','En
           <label id="collection-reason-label">修改说明<input id="collection-reason" maxlength="1000" /></label>
           <footer class="music-actions"><button id="collection-save" class="primary" type="submit"><Save size={17} />保存资料</button></footer>
         </fieldset></form>
+        <div id="album-batch-entry" hidden><h3>上传新曲目</h3><p class="muted">多选 MP3 或 WAV，逐首创建草稿并验证。请先保存当前资料和曲序；已发布专辑须先下架。</p><button id="album-batch-open" type="button" disabled>专辑多文件上传</button></div>
         <section class="collection-members" aria-labelledby="collection-order-title"><h3 id="collection-order-title">曲序</h3><p class="muted">最多 500 首。可拖动排序，也可用上移／下移按钮；调整后需保存曲序。</p>
           <form id="member-search-form"><label for="member-search">从现有曲库添加歌曲</label><div class="upload-control"><input id="member-search" type="search" maxlength="120" placeholder="曲名或链接标识" /><button type="submit">查找歌曲</button></div></form>
           <div id="member-results" aria-live="polite"></div><button id="member-more" type="button" hidden>更多歌曲</button>
