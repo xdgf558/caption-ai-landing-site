@@ -2,6 +2,7 @@ import { primary, rows } from './adminStore.js';
 import { isoTime } from './policy.js';
 
 const WINDOW_MS = 60000;
+const DEADLINE_EXCEEDED = Symbol('music rate deadline');
 export const RATE_RETENTION_MS = 10 * WINDOW_MS;
 export const DEFAULT_MUSIC_RATE_LIMITS = Object.freeze({
   catalog: Object.freeze({ source: 120, global: 6000 }),
@@ -48,14 +49,15 @@ async function bounded(task,timeoutMs) {
   let timer;
   try {
     return await Promise.race([Promise.resolve().then(task),new Promise((_,reject) => {
-      timer = setTimeout(() => reject(new Error('timeout')),timeoutMs);
+      timer = setTimeout(() => reject(DEADLINE_EXCEEDED),timeoutMs);
     })]);
   } finally { clearTimeout(timer); }
 }
 
 // A single conditional UPSERT serializes source and global admission on the D1 primary.
 // JSON, HEAD, conditional responses and audio ranges all consume one request admission.
-export async function checkMusicRateLimit(request,env,category,{ clock = Date.now,timeoutMs = 1500, ceiling = null } = {}) {
+export async function checkMusicRateLimit(request,env,category,{ clock = Date.now,timeoutMs = 5000, ceiling = null } = {}) {
+  let stage = 'configuration';
   try {
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10000) throw new Error('timeout');
     const limits = musicRateLimits(env); let group = limits[category];
@@ -67,7 +69,10 @@ export async function checkMusicRateLimit(request,env,category,{ clock = Date.no
       group = { source: Math.min(group.source, ceiling.source), global: Math.min(group.global, ceiling.global) };
     }
     const now = clock(); isoTime(now); const window = Math.floor(now/WINDOW_MS)*WINDOW_MS;
-    const hash = await musicRateSourceHash(request,env,category,window), s = primary(env.MUSIC_DB);
+    stage = 'source';
+    const hash = await musicRateSourceHash(request,env,category,window);
+    stage = 'database';
+    const s = primary(env.MUSIC_DB);
     const results = await bounded(() => s.batch([
       s.prepare(`DELETE FROM music_rate_sources WHERE rowid IN
         (SELECT rowid FROM music_rate_sources WHERE window_start<? ORDER BY window_start LIMIT 100)`)
@@ -81,12 +86,23 @@ export async function checkMusicRateLimit(request,env,category,{ clock = Date.no
         ON CONFLICT(category,window_start,source_hash) DO UPDATE SET hits=hits+1 WHERE hits<?5
         RETURNING hits`).bind(category,window,hash,group.global,group.source)
     ]),timeoutMs);
+    stage = 'result';
     if (!Array.isArray(results) || results.length !== 3) throw new Error('results');
     const parsed = results.map(rows), accepted = parsed[2];
     if (accepted.length > 1 || (accepted.length === 1 &&
       (!Number.isSafeInteger(accepted[0].hits) || accepted[0].hits < 1 || accepted[0].hits > group.source))) throw new Error('counter');
     return accepted.length ? null : { status: 429,code: 'MUSIC_RATE_LIMITED',retryAfter: Math.max(1,Math.ceil((window+WINDOW_MS-now)/1000)) };
-  } catch { return { status: 503,code: 'MUSIC_RATE_LIMIT_UNAVAILABLE',retryAfter: 5 }; }
+  } catch (error) {
+    // Only fixed enums enter logs. Never serialize the request, hash, SQL or error.
+    // The deadline does not cancel D1: a late commit may still consume a slot.
+    try {
+      console.warn('music_rate_limit_failure', {
+        version: 1, category: ['catalog','artwork','audio'].includes(category) ? category : 'unknown',
+        stage, reason: error === DEADLINE_EXCEEDED ? 'deadline_exceeded' : 'operation_failed'
+      });
+    } catch { /* Logging failure must not change the denial response. */ }
+    return { status: 503,code: 'MUSIC_RATE_LIMIT_UNAVAILABLE',retryAfter: 5 };
+  }
 }
 
 export async function readMusicRateDiagnostics(env,{ clock = Date.now } = {}) {
