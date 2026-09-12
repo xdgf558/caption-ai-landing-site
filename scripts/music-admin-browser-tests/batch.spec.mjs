@@ -33,7 +33,7 @@ test('lost reservation restores journal, original key and reselected file withou
   await setup(page,[mp3]);const keys=[];await page.route('**/admin/api/music/uploads',async route=>{if(route.request().method()!=='POST')return route.continue();keys.push(route.request().headers()['idempotency-key']);if(keys.length===1){await route.fetch();await route.abort();}else await route.continue();});
   let puts=0;page.on('request',r=>{if(r.method()==='PUT'&&r.url().endsWith('/body'))puts++;});await start(page);await expect(page.locator('#batch-status')).toHaveAttribute('data-error','true');await expect(page.locator('#batch-retry')).toBeEnabled();expect(keys).toHaveLength(1);
   await page.reload();await expect(page.locator('#batch-start')).toBeDisabled();expect(keys).toHaveLength(1);expect(puts).toBe(0);
-  await page.locator('#batch-retry').click();await page.locator('#batch-confirm-accept').click();await expect(page.locator('#batch-retry')).toBeHidden();expect(keys).toHaveLength(2);expect(keys[0]).toBe(keys[1]);
+  await page.locator('#batch-retry').click();await page.locator('#batch-confirm-accept').click();await expect(page.locator('#batch-status')).toHaveText('原操作已确认。可继续批次。');await expect(page.locator('#batch-start')).toBeEnabled();await expect(page.locator('#batch-retry')).toBeHidden();expect(keys).toHaveLength(2);expect(keys[0]).toBe(keys[1]);
   await page.locator('.batch-row input[type=file]').setInputFiles(mp3);await page.locator('#batch-start').click();await expect(page.locator('#batch-summary')).toHaveText('草稿完成 1 / 1 · 已加入 0');expect(puts).toBe(1);
 });
 
