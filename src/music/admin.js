@@ -1,4 +1,4 @@
-import { policyFromRevision, utcMillis, validatePolicyTransition } from './policy.js';
+import { isoTime, policyFromRevision, utcMillis, validatePolicyTransition } from './policy.js';
 import { checkRights, publicationFingerprint } from './publicationValidation.js';
 import { draftInput, rightsInput, editVersion, fail, fields, musicId, text } from './adminValidation.js';
 import { primary, rows, loadTrack, loadAssets, mutate, trackGuard } from './adminStore.js';
@@ -12,11 +12,14 @@ function revisionView(r) {
 export async function readAdminMusicTrack(db, id) {
   const snap = await loadTrack(db, musicId(id));
   const { track: t, rights: r } = snap;
+  // Both saved revisions are needed for display-only role previews. No R2 or reader identity reads.
   const assets = await loadAssets(db, [...assetIds(snap.revision), ...snap.evidence.map(e => e.asset_id)]);
-  return { id: t.id, slug: t.slug, lifecycle: t.lifecycle, editVersion: t.edit_version, draft: t.draft_revision_id ? revisionView(snap.revision) : null,
+  assets.push(...await loadAssets(db, assetIds(snap.previous).filter(id => !assets.some(a => a.id === id))));
+  return { serverNow: isoTime(Date.now()), id: t.id, slug: t.slug, lifecycle: t.lifecycle, editVersion: t.edit_version, draft: t.draft_revision_id ? revisionView(snap.revision) : null,
     published: revisionView(snap.previous), rights: r ? { status: r.review_status, review: JSON.parse(r.review_json),
       reviewer: r.reviewer_id, reviewedAt: r.reviewed_at, evidenceIds: snap.evidence.map(e => e.asset_id) } : null,
-    assets: assets.map(a => ({ id: a.id, kind: a.kind, state: a.state, byteSize: a.byte_size, durationMs: a.duration_ms })) };
+    assets: assets.map(a => ({ id: a.id, kind: a.kind, state: a.state, byteSize: a.byte_size, durationMs: a.duration_ms,
+      derivedFromAssetId: a.derived_from_asset_id, sourceStartMs: a.source_start_ms, sourceEndMs: a.source_end_ms })) };
 }
 export async function listAdminMusicTracks(db, { before = Number.MAX_SAFE_INTEGER, status = '', q = '' } = {}) {
   if (!Number.isSafeInteger(before) || before < 1 || !['', 'draft', 'published', 'unpublished', 'archived'].includes(status)) fail('INVALID_INPUT', 400);

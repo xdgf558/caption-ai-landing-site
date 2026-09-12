@@ -28,7 +28,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
       <div id="workspace" hidden>
         <header class="workspace-heading"><div><h2 id="track-heading">新曲目</h2><p id="track-version" class="muted">未保存</p></div><span id="track-state" class="badge">草稿</span></header>
         <div role="tablist" aria-label="曲目工作区" class="music-tabs">
-          {['基本资料', '素材', '审核发布'].map((name, i) => <button type="button" id={`step-${i}`} role="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`panel-${i}`} tabindex={i === 0 ? 0 : -1}>{name}</button>)}
+          {['基本资料', '素材', '审核发布', '角色预览'].map((name, i) => <button type="button" id={`step-${i}`} role="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`panel-${i}`} tabindex={i === 0 ? 0 : -1}>{name}</button>)}
         </div>
         <section id="panel-0" role="tabpanel" aria-labelledby="step-0">
           <form id="track-form">
@@ -100,6 +100,26 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
             </fieldset></form>
           </details>
           <section class="publication"><h3>发布状态</h3><p id="publication-summary"></p><div class="music-actions"><button id="track-publish" type="button" class="primary">发布曲目</button><button id="track-unpublish" type="button">下架</button><button id="track-archive" type="button" class="danger">归档</button></div></section>
+        </section>
+        <section id="panel-3" role="tabpanel" aria-labelledby="step-3" hidden>
+          <div id="role-preview">
+            <h3>四种身份，同一首歌</h3>
+            <p>对照收听按钮与会员提示。预览只展示已保存内容，不发声、不登录，也不会发布曲目。</p>
+            <p data-role-unsaved class="notice" hidden>你有未保存修改。以下仍使用服务器已保存版本，编辑内容保留在原表单中。</p>
+            <fieldset data-role-controls disabled><div class="field-grid">
+              <label for="role-preview-revision">预览版本<select id="role-preview-revision" data-role-revision><option value="draft">已保存草稿</option><option value="published">发布版本</option></select></label>
+              <label for="role-preview-locale">内容语言<select id="role-preview-locale" data-role-locale>{locales.map(([value, name]) => <option value={value}>{name}</option>)}</select></label>
+              <label for="role-preview-scenario">预览场景<select id="role-preview-scenario" data-role-scenario><option value="current">当前发布状态与开关</option><option value="released">假设发布并开放公开及 VIP 播放</option></select></label>
+              <label for="role-preview-time">策略时刻<select id="role-preview-time" data-role-time><option value="read">服务器读取时</option><option value="boundary" data-role-boundary>抢先结束时（模拟）</option></select></label>
+            </div></fieldset>
+            <p data-role-flags class="muted"></p><p data-role-notice role="status" class="notice">保存曲目后可预览四种身份的收听界面。</p>
+            <div data-role-detail hidden><p data-role-policy></p><div data-role-cards class="role-cards"></div>
+              <p data-role-material class="muted"></p><details><summary>已保存的创作故事</summary><p data-role-story class="role-story"></p></details>
+            </div>
+            <p data-role-action role="status" aria-live="polite"></p>
+            <footer class="music-actions"><button data-role-refresh type="button"><RefreshCw size={16} />重新读取预览</button><button data-role-assets type="button">前往素材核对</button></footer>
+            <p class="muted">这不是发布检查通过证明。素材仍需技术与权利核对；真实完整音频按听众当次资格检查。</p>
+          </div>
         </section>
       </div>
     </section>

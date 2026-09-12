@@ -50,6 +50,17 @@
 .music-tabs { display:flex; border-bottom:1px solid #dbe2dd; gap:18px; margin-bottom:16px; }
 .music-tabs button { border:0; background:none; border-radius:0; padding:10px 0; color:#65736b; border-bottom:2px solid transparent; }
 .music-tabs button[aria-selected=true] { color:#326451; border-bottom-color:#326451; font-weight:700; }
+.music-tabs { flex-wrap:wrap; column-gap:18px; row-gap:0; }
+.role-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:20px 0; }
+.role-card { border:1px solid #dbe2dd; border-radius:5px; padding:16px; }
+.role-card header { display:flex; align-items:center; justify-content:space-between; gap:8px; border-bottom:1px solid #dbe2dd; padding-bottom:12px; }
+.role-card h3 { margin:0; }
+.role-card h4 { font-size:17px; line-height:1.5; margin:16px 0 4px; overflow-wrap:anywhere; }
+.role-card p { margin:8px 0 12px; }
+.role-card .role-message { min-height:3.2em; }
+.role-card button { max-width:100%; }
+.role-membership { margin:8px 0 0 8px; }
+.role-story { white-space:pre-wrap; }
 .field-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:20px; align-items:start; }
 .full { grid-column:1/-1; }
 .music-admin details { border-block-end:1px solid #dbe2dd; padding:8px 0; }
@@ -86,4 +97,5 @@
   #track-list { max-height:220px; }.music-workspace { border-left:0; padding:0 16px 22px; }
   .field-grid { grid-template-columns:minmax(0,1fr); gap:0; }.music-feedback { flex-wrap:wrap; padding:10px 0; }
   .music-actions button { flex-grow:1; }.music-tabs { gap:22px; }
+  .role-cards { grid-template-columns:minmax(0,1fr); }.role-membership { margin-left:0; }
 }

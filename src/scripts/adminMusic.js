@@ -2,6 +2,7 @@ import { request, createJournal, hashFile, fileFormat, assetUrl, bytes, policyFo
 import { mountMusicAdminAnalytics } from './musicAdminAnalytics.js';
 import { createWavConverter } from './musicWavClient.js';
 import { isWav, WAV_PROFILE } from './musicWav.js';
+import { mountAdminMusicRolePreview } from './adminMusicRolePreview.js';
 
 const $ = id => document.getElementById(id), all = selector => [...document.querySelectorAll(selector)];
 const names = { draft:'草稿', published:'已发布', unpublished:'已下架', archived:'已归档', audio:'完整音频', preview:'独立试听', cover:'封面', lyrics:'歌词', evidence:'权利凭证' };
@@ -12,6 +13,8 @@ const revision = () => track?.draft || track?.published;
 const status = (text, error = false) => { $('music-status').textContent = text; $('music-status').dataset.error = String(error); };
 const el = (tag, text, className) => { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (className) e.className = className; return e; };
 const wavConverter = createWavConverter();
+const rolePreview = mountAdminMusicRolePreview({ root:$('role-preview'), request, actorId:() => actor,
+  onAssets:() => tab(1,true), onAuthError:() => { locked = true; stopAudio(); status('后台身份已失效或发生变化，请重新登录并读取当前版本。',true); sync(); } });
 function uploadLabels() {
   for (const kind of ['audio', 'preview']) {
     document.querySelector('[data-upload-kind="' + kind + '"] span').textContent = isWav($('file-' + kind).files[0]) ? '转换并上传' : '上传';
@@ -50,6 +53,7 @@ function persist() {
   if (!journal || $('workspace').hidden) return;
   const inputs = {};
   all('#workspace input:not([type=file]), #workspace select, #workspace textarea').forEach(e => {
+    if (e.closest('#role-preview')) return;
     const key = e.id || (e.dataset.right ? 'r:' + e.dataset.right : e.dataset.titleLocale ? 't:' + e.dataset.titleLocale : e.dataset.summaryLocale ? 's:' + e.dataset.summaryLocale : '');
     if (key && !e.dataset.tech) inputs[key] = e.type === 'checkbox' ? e.checked : e.value;
   });
@@ -82,6 +86,8 @@ function sync() {
   $('assets-state').textContent = assetsDirty ? '有未保存的素材引用' : '素材与草稿一致';
   $('draft-notice').textContent = track?.published ? '保存修改不会替换已发布版本' : '保存草稿不会发布';
   uploadLabels();
+  rolePreview.update({ id:track?.id, editVersion:track?.editVersion, active:activeStep === 3,
+    dirty:dirty || assetsDirty || reviewDirty, blocked });
 }
 async function run(action) {
   if (busy) return;
@@ -111,13 +117,17 @@ function ask(title, description, reason = false) {
 $('confirm-reason').onkeydown = e => { if (e.key === 'Enter') e.preventDefault(); };
 async function canLeave() { return !(dirty || assetsDirty || reviewDirty) || !!await ask('放弃未保存的修改？', '已上传的文件仍保留在上传会话中，不会被删除。'); }
 function tab(index, focus = false) {
+  index = Number.isInteger(index) && index >= 0 && index < 4 ? index : 0;
+  if (index === 1 && activeStep === 3) renderAssets();
   activeStep = index;
-  for (let i = 0; i < 3; i++) { $('panel-' + i).hidden = i !== index; $('step-' + i).setAttribute('aria-selected', String(i === index)); $('step-' + i).tabIndex = i === index ? 0 : -1; }
+  if (index === 3) stopAudio();
+  for (let i = 0; i < 4; i++) { $('panel-' + i).hidden = i !== index; $('step-' + i).setAttribute('aria-selected', String(i === index)); $('step-' + i).tabIndex = i === index ? 0 : -1; }
   if (focus) $('step-' + index).focus();
+  sync();
 }
-for (let i = 0; i < 3; i++) {
+for (let i = 0; i < 4; i++) {
   $('step-' + i).onclick = () => { tab(i); persist(); };
-  $('step-' + i).onkeydown = e => { const next = { ArrowRight:(i+1)%3, ArrowLeft:(i+2)%3, Home:0, End:2 }[e.key]; if (next !== undefined) { e.preventDefault(); tab(next,true); persist(); } };
+  $('step-' + i).onkeydown = e => { const next = { ArrowRight:(i+1)%4, ArrowLeft:(i+3)%4, Home:0, End:3 }[e.key]; if (next !== undefined) { e.preventDefault(); tab(next,true); persist(); } };
 }
 function renderList() {
   $('track-list').replaceChildren();
@@ -343,6 +353,7 @@ for (const action of ['publish','unpublish','archive']) $('track-' + action).onc
   await mutate('/tracks/' + track.id + '/' + action,'POST',input,action);
 });
 all('#workspace input:not([type=file]), #workspace select, #workspace textarea').forEach(e => e.addEventListener('input',() => {
+  if (e.closest('#role-preview')) return;
   if (e.closest('#track-form')) dirty = true;
   if (e.closest('#rights-form')) reviewDirty = true;
   if (e.id === 'track-title' || e.id === 'track-summary') {
