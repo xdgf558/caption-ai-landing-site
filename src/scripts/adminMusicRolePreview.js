@@ -41,7 +41,8 @@ export function mountAdminMusicRolePreview({ root, request, actorId, onAssets, o
         const header = el('header', ''), identity = el('h3', labels[role.role]); header.append(identity, el('span','模拟','badge'));
         const content = el('div',''); content.lang = $('locale').value;
         content.append(el('h4',view.title), el('p',view.creatorName + (view.durationSec ? ' · ' + formatMusicTime(view.durationSec) : ''),'muted'), el('p',view.summary));
-        const reason = role.reason === 'VIP_DISABLED' && role.role !== 'vip' ? 'VIP 完整音频暂未开放。' : reasons[role.reason];
+        const reason = !view.previewDurationSec && ['LOGIN','EXPIRED','VIP_REQUIRED'].includes(role.reason) ? 'VIP · 暂无试听' :
+          role.reason === 'VIP_DISABLED' && role.role !== 'vip' ? 'VIP 完整音频暂未开放。' : reasons[role.reason];
         content.append(el('p', t(reason), 'role-message'));
         const action = el('button', role.variant === 'preview' ? t('播放试听') : role.variant === 'full' ? t('播放') : t('暂不可播放'), 'primary');
         action.type = 'button'; action.disabled = !role.variant; action.dataset.previewVariant = role.variant || '';

@@ -72,6 +72,17 @@ test('saved preview keeps unsaved input intact and published metadata independen
   await page.getByRole('tab',{name:'基本资料',exact:true}).press('End');
   await expect(page.getByRole('tab',{name:'角色预览',exact:true})).toBeFocused();
 });
+test('a protected track without a preview does not offer nonexistent listening to ineligible roles', async ({page}) => {
+  const state = await setup(page); state.row.draft.assets.preview = null;
+  await enter(page);
+  await page.getByLabel('预览场景',{exact:true}).selectOption('released');
+  for (const name of ['visitor','account','expired']) {
+    await expect(role(page,name)).toContainText('VIP · 暂无试听');
+    await expect(role(page,name).getByRole('button',{name:'暂不可播放',exact:true})).toBeDisabled();
+    await expect(role(page,name)).not.toContainText('手动播放试听');
+  }
+  await expect(role(page,'vip').getByRole('button',{name:'播放',exact:true})).toBeEnabled();
+});
 test('failed refresh and changed administrator clear old role cards; new server version does not overwrite editor', async ({page}) => {
   const state = await setup(page); await enter(page);
   state.row.editVersion = 4; state.row.draft.metadata.title['zh-Hans'] = '服务器新曲名';
