@@ -38,7 +38,7 @@ function render(){const snap=batch?.state(),b=snap?.state.batch,pending=!!snap?.
   });
   $('batch-start').textContent=b.started?'继续批次':'确认并开始上传';$('batch-start').disabled=blocked||pending||b.rows.every(r=>['ready','retired','cancelled'].includes(r.stage));
   $('batch-stop').hidden=!snap.busy;$('batch-stop').disabled=!snap.busy;
-  $('batch-retry').hidden=!pending;$('batch-retry').disabled=blocked;
+  $('batch-retry').hidden=!pending||blocked;$('batch-retry').disabled=blocked;
   $('batch-add').disabled=blocked||pending||ready.length===added.length;
   $('batch-add').textContent=`将 ${ready.length-added.length} 首成功曲目加入专辑`;
   $('batch-sync-album').disabled=blocked||pending;$('batch-clear').disabled=blocked||pending;
