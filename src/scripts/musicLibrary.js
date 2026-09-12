@@ -8,7 +8,8 @@ export function browseMusic(tracks, collections, { query = '', genres = [], mood
   // only changes this view; queue and /audio authorization remain separate.
   if (mode === 'albums' && !collections.some(item => item.slug === collection && item.type === 'album')) return [];
   const collectionIds = collection ? collections.find(item => item.slug === collection)?.trackIds || [] : null;
-  const ids = mode === 'favorites' ? local.favorites || [] : mode === 'recent' ? local.recent || [] : collectionIds;
+  const ids = mode === 'favorites' ? local.favorites || [] : mode === 'recent' ? local.recent || []
+    : mode === 'picks' && local.featuredTrackIds?.length ? local.featuredTrackIds : collectionIds;
   const inCollection = collectionIds && new Set(collectionIds);
   const rank = ids && new Map(ids.map((id, index) => [id, index]));
   const needle = normalizeMusicSearch(query);

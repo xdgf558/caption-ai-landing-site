@@ -1,5 +1,5 @@
 import { musicSelection } from '../music/pagePaths.js';
-import { readPlayerCatalog, readPlayerCollections } from './musicPlayerCatalog.js';
+import { readPlayerCatalog, readPlayerCollections, readPlayerFeatured } from './musicPlayerCatalog.js';
 
 // Each public response remains capped at 500. A bounded lookup also retains the
 // current queue while another collection is viewed; display and queue stay <=500.
@@ -14,6 +14,7 @@ export function readMusicLookup(values) {
 export async function readMusicSelectionCatalog(body, { read, locale, selection = {}, activeId = null, retained = [] } = {}) {
   const ids = Object.fromEntries(musicSelection(new URLSearchParams(selection)));
   const catalogTracks = readPlayerCatalog(body), collections = readPlayerCollections(body, catalogTracks);
+  const featured = readPlayerFeatured(body,catalogTracks,collections);
   const lookup = new Map(readPlayerCatalog({ schemaVersion: 2, tracks: retained.slice(0, 500) }).map(track => [track.id, track]));
   for (const track of catalogTracks) lookup.set(track.id, track);
   let selectedCollection = null;
@@ -41,5 +42,5 @@ export async function readMusicSelectionCatalog(body, { read, locale, selection 
   const groups = collections.filter(group => group.slug !== ids.collection);
   if (selectedCollection) groups.push(selectedCollection);
   return { tracks: readMusicLookup([...lookup.values()]), collections: groups,
-    view: { catalogTracks, selectedCollection, selection: ids, issues } };
+    view: { catalogTracks, selectedCollection, selection: ids, issues, featured } };
 }

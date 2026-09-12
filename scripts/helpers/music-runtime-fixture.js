@@ -7,7 +7,8 @@ async function insert(db, table, values) {
 }
 
 // Synthetic approvals solely for local D1 transaction tests, never real rights/technical reviews.
-export async function seedMusicRuntimeFixture(db, { audio, preview }) {
+export async function seedMusicRuntimeFixture(db, { audio, preview, accessMode = 'vip' }) {
+  if (!['free','vip'].includes(accessMode)) throw new Error('Invalid fixture access mode');
   const now = Date.now(), id = audio.owner_track_id, revisionId = crypto.randomUUID(), rightsId = crypto.randomUUID();
   await insert(db, 'music_tracks', { id, slug: `fixture-${id}`, created_at: now - 3000, updated_at: now - 1000 });
   for (const a of [audio, preview]) await insert(db, 'music_assets', { ...a, created_at: now - 2000 });
@@ -16,7 +17,7 @@ export async function seedMusicRuntimeFixture(db, { audio, preview }) {
     object_key: `fixture-evidence/${id}`, created_at: now - 2000 };
   await insert(db, 'music_assets', evidence);
   await insert(db, 'music_track_revisions', { id: revisionId, track_id: id, revision_no: 1,
-    audio_asset_id: audio.id, preview_asset_id: preview.id, access_mode: 'vip', created_at: now - 2000,
+    audio_asset_id: audio.id, preview_asset_id: preview.id, access_mode: accessMode, created_at: now - 2000,
     technical_reviewed_at: now - 1000, metadata_json: JSON.stringify({ originalLocale: 'zh-Hant',
       title: { 'zh-Hant': '本地合成測試', en: 'Synthetic fixture' }, summary: { 'zh-Hant': '本地測試', en: 'Not a published song.' },
       creatorName: 'Local fixture', instrumental: true, language: 'instrumental', genres: [], moods: [] }) });

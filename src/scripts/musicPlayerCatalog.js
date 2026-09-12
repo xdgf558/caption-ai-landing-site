@@ -71,3 +71,20 @@ export function readPlayerCollections(body, tracks) {
       trackIds: item.trackIds.filter(id => ids.has(id)) };
   }).filter(item => item.trackIds.length);
 }
+
+export function readPlayerFeatured(body, tracks, collections) {
+  if (body.featured === undefined) return { version:1, primaryTrackId:null, primarySource:'none', secondaryTrackIds:[], collectionIds:[] };
+  const value = body.featured, trackMap = new Map(tracks.map(track => [track.id,track])), collectionIds = new Set(collections.map(item => item.id));
+  if (!value || !Number.isSafeInteger(value.version) || value.version < 1 ||
+    !(value.primaryTrackId === null || idPattern.test(value.primaryTrackId) && trackMap.get(value.primaryTrackId)?.effectiveAccess === 'free') ||
+    !['none','primary','secondary','latest'].includes(value.primarySource) || (value.primaryTrackId === null) !== (value.primarySource === 'none') ||
+    !Array.isArray(value.secondaryTrackIds) || value.secondaryTrackIds.length > 6 ||
+    !Array.isArray(value.collectionIds) || value.collectionIds.length > 6 ||
+    value.secondaryTrackIds.some(id => !idPattern.test(id) || !trackMap.has(id)) ||
+    value.collectionIds.some(id => !idPattern.test(id) || !collectionIds.has(id)) ||
+    new Set(value.secondaryTrackIds).size !== value.secondaryTrackIds.length ||
+    new Set(value.collectionIds).size !== value.collectionIds.length ||
+    value.secondaryTrackIds.includes(value.primaryTrackId)) throw new Error('INVALID_FEATURED');
+  return { version:value.version, primaryTrackId:value.primaryTrackId, primarySource:value.primarySource,
+    secondaryTrackIds:[...value.secondaryTrackIds], collectionIds:[...value.collectionIds] };
+}

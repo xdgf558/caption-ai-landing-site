@@ -161,8 +161,41 @@ function projectCollection(record, locale, publicTracks) {
     trackIds: visible.map(item => item.track_id) };
 }
 
+function projectFeatured(featured, tracks, collections) {
+  if (!object(featured) || !positiveInteger(featured.version) || !Array.isArray(featured.items) || featured.items.length > 13) {
+    throw musicError('MUSIC_INVALID_FEATURED');
+  }
+  const trackMap = new Map(tracks.map(track => [track.id,track]));
+  const collectionMap = new Map(collections.map(collection => [collection.id,collection]));
+  const slots = { primary:[], secondary:[], collection:[] }, positions = new Set(), trackIds = new Set(), collectionIds = new Set();
+  for (const item of featured.items) {
+    if (!object(item) || !['primary','secondary','collection'].includes(item.slotKind) || !Number.isSafeInteger(item.position) || item.position < 0 ||
+      (item.slotKind === 'primary' ? item.position !== 0 : item.position > 5) || positions.has(`${item.slotKind}:${item.position}`)) {
+      throw musicError('MUSIC_INVALID_FEATURED');
+    }
+    positions.add(`${item.slotKind}:${item.position}`);
+    if (item.slotKind === 'collection') {
+      if (item.trackId !== null || !uuid(item.collectionId) || collectionIds.has(item.collectionId)) throw musicError('MUSIC_INVALID_FEATURED');
+      collectionIds.add(item.collectionId); slots.collection.push(item);
+    } else {
+      if (item.collectionId !== null || !uuid(item.trackId) || trackIds.has(item.trackId)) throw musicError('MUSIC_INVALID_FEATURED');
+      trackIds.add(item.trackId); slots[item.slotKind].push(item);
+    }
+  }
+  for (const values of Object.values(slots)) values.sort((a,b) => a.position-b.position);
+  const configuredPrimary = trackMap.get(slots.primary[0]?.trackId);
+  const secondary = slots.secondary.map(item => trackMap.get(item.trackId)).filter(Boolean);
+  const secondaryPrimary = secondary.find(track => track.effectiveAccess === 'free') || null;
+  const primary = configuredPrimary?.effectiveAccess === 'free' ? configuredPrimary
+    : secondaryPrimary || tracks.find(track => track.effectiveAccess === 'free') || null;
+  const primarySource = !primary ? 'none' : primary === configuredPrimary ? 'primary' : primary === secondaryPrimary ? 'secondary' : 'latest';
+  return { version:featured.version, primaryTrackId:primary?.id || null, primarySource,
+    secondaryTrackIds:secondary.filter(track => track.id !== primary?.id).slice(0,6).map(track => track.id),
+    collectionIds:slots.collection.map(item => collectionMap.get(item.collectionId)).filter(Boolean).slice(0,6).map(item => item.id) };
+}
+
 // Pure shared representation. Transport caching/authentication are separate M2 responsibilities.
-export async function buildPublicCatalog({ records, collections = [], catalogVersion, locale, now }) {
+export async function buildPublicCatalog({ records, collections = [], featured = { version:1, items:[] }, catalogVersion, locale, now }) {
   if (!MUSIC_LOCALES.includes(locale)) throw musicError('MUSIC_INVALID_LOCALE');
   isoTime(now);
   if (!Array.isArray(records) || records.length > 500 || !Array.isArray(collections) || collections.length > 500 ||
@@ -184,7 +217,7 @@ export async function buildPublicCatalog({ records, collections = [], catalogVer
   publicCollections.sort((a, b) => a.slug.localeCompare(b.slug));
   if (new Set(publicCollections.map(row => row.id)).size !== publicCollections.length) throw musicError('MUSIC_DUPLICATE_COLLECTION');
   const body = { schemaVersion: 2, catalogVersion, locale, nextPolicyChangeAt: changes[0] || null,
-    tracks, collections: publicCollections };
+    tracks, collections: publicCollections, featured:projectFeatured(featured,tracks,publicCollections) };
   const bytes = new TextEncoder().encode(JSON.stringify(body));
   const hash = await crypto.subtle.digest('SHA-256', bytes);
   const etag = '"music-' + Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('') + '"';

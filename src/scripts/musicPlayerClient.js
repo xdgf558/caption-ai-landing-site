@@ -29,11 +29,11 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const $ = selector => root.querySelector(selector);
   const audio = $('[data-music-audio]'), player = createMusicPlayer(audio);
   const abort = new AbortController(), list = $('[data-track-list]'), rows = new Map();
-  let rowSignature = '';
+  let rowSignature = '', featuredSignature = '';
   let visibleTracks = [], shownTracks = [], viewTrackId = null, libraryControls = null, localPlayback = null, localUnsubscribe = null;
   let tracks = [], capabilities = null, disposed = false, scrub = null, selectedOnce = false, accessState = { checking: false };
   let rowAbort = new AbortController(), systemState = { notice: null, coordinationSupported: true };
-  let catalogView = null, collections = [], browseScheduled = false, attemptedTarget = '', returnSync = null, returnStatus = null;
+  let catalogView = null, collections = [], featuredView = { primaryTrackId:null, primarySource:'none', secondaryTrackIds:[], collectionIds:[] }, browseScheduled = false, attemptedTarget = '', returnSync = null, returnStatus = null;
   const panels = isLibrary ? mountMusicPanels(root) : null;
   const local = isLibrary ? createMusicLocalData() : null;
   let favoriteIds = new Set(local?.snapshot().favorites || []);
@@ -56,6 +56,9 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   };
   listen($('[data-cover]'), 'error', () => { $('[data-cover]').hidden = true; $('[data-cover-fallback]').hidden = false; });
   if (isLibrary) listen($('[data-hero-cover]'), 'error', () => { $('[data-hero-cover]').hidden = true; });
+  if (isLibrary) listen($('[data-featured-primary-cover]'), 'error', () => {
+    $('[data-featured-primary-cover]').hidden = true; $('[data-featured-primary-fallback]').hidden = false;
+  });
   listen($('[data-mini-cover]'), 'error', () => { $('[data-mini-cover]').hidden = true; });
   const icons = (node, busy, playing) => {
     node.querySelector('[data-play-icon]').toggleAttribute('hidden', busy || playing);
@@ -69,6 +72,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     const selected = tracks.find(track => track.id === state.activeTrackId);
     const viewed = tracks.find(track => track.id === viewTrackId) || (!viewTrackId ? selected : null);
     const target = libraryControls?.target() || {};
+    if (isLibrary) renderFeatured();
     sharing?.update({ track: viewed, collection: collections.find(item => item.slug === target.collection) });
     $('[data-membership-link]').href = musicMembershipHref(locale, new URLSearchParams({ ...target, ...(viewed ? { track: viewed.id } : {}) }));
     $('[data-membership-link]').hidden = !viewed || viewed.effectiveAccess !== 'vip' || accessState.checking || capabilities?.membershipStatus === 'active';
@@ -185,6 +189,50 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     if (!player.snapshot().activeTrackId) player.select(track, playerVariant(track, capabilities) || 'preview');
     render(player.snapshot());
   };
+  function renderFeatured() {
+    const rootNode = $('[data-featured-home]');
+    const primary = tracks.find(track => track.id === featuredView.primaryTrackId && track.effectiveAccess === 'free');
+    const secondary = featuredView.secondaryTrackIds.map(id => tracks.find(track => track.id === id)).filter(Boolean);
+    const groups = featuredView.collectionIds.map(id => collections.find(item => item.id === id)).filter(Boolean);
+    const signature = JSON.stringify({ primary, secondary, groups, source:featuredView.primarySource, membership:capabilities?.membershipStatus,
+      full:capabilities?.canPlayVipFull, delivery:capabilities?.musicVipDeliveryEnabled });
+    if (signature === featuredSignature) return;
+    featuredSignature = signature;
+    rootNode.hidden = !primary && !secondary.length && !groups.length;
+    setText('[data-featured-label]',t(featuredView.primarySource === 'latest' ? '最新免费' : '站长推荐'));
+    $('[data-featured-primary]').hidden = !primary;
+    if (primary) {
+      $('[data-featured-primary]').dataset.trackId = primary.id;
+      setImage($('[data-featured-primary-cover]'),primary.coverUrl);
+      $('[data-featured-primary-fallback]').hidden = Boolean(primary.coverUrl);
+      setText('[data-featured-primary-title]',primary.title);
+      setText('[data-featured-kicker]',t(featuredView.primarySource === 'latest' ? '最新发布 · 免费完整收听'
+        : featuredView.primarySource === 'secondary' ? '推荐补位 · 免费完整收听' : '本期主推 · 免费完整收听'));
+      setText('[data-featured-primary-summary]',primary.summary);
+      setText('[data-featured-primary-meta]',`${primary.creatorName} · ${permission(primary)}`);
+    }
+    const secondaryList = $('[data-featured-secondary]'); secondaryList.replaceChildren();
+    for (const track of secondary) {
+      const row = $('[data-featured-track-template]').content.firstElementChild.cloneNode(true);
+      row.dataset.trackId = track.id; row.querySelector('strong').textContent = track.title;
+      row.querySelector('[data-featured-track-view] span').textContent = `${track.creatorName} · ${permission(track)}`;
+      const play = row.querySelector('[data-featured-track-play]'), variant = playerVariant(track,capabilities);
+      play.disabled = variant === null; play.querySelector('span').textContent = t(variant === 'preview' ? '试听' : '播放');
+      play.setAttribute('aria-label',t('{action}：{title}',{action:t(variant === 'preview' ? '试听' : '播放'),title:track.title}));
+      secondaryList.append(row);
+    }
+    $('[data-featured-secondary-block]').hidden = !secondary.length;
+    const collectionList = $('[data-featured-collections]'); collectionList.replaceChildren();
+    for (const group of groups) {
+      const row = $('[data-featured-collection-template]').content.firstElementChild.cloneNode(true);
+      row.dataset.collectionSlug = group.slug; row.querySelector('strong').textContent = group.title;
+      const allVip = group.trackIds.length && group.trackIds.every(id => tracks.find(track => track.id === id)?.effectiveAccess === 'vip');
+      row.querySelector('span').textContent = allVip ? t('VIP 专享 · 可逐首试听或登录会员')
+        : `${t(group.type === 'album' ? '专辑' : '歌单')} · ${t('{count} 首',{count:group.trackIds.length})}`;
+      row.querySelector('button').setAttribute('aria-label',t('查看：{title}',{title:group.title})); collectionList.append(row);
+    }
+    $('[data-featured-collections-block]').hidden = !groups.length;
+  }
   const renderRows = () => {
     const next = JSON.stringify(shownTracks);
     if (next === rowSignature) return;
@@ -260,6 +308,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     },
     onCatalog(values, groups, context) {
       tracks = values; collections = groups; catalogView = context;
+      featuredView = context?.featured || featuredView; featuredSignature = '';
       if (libraryControls) libraryControls.update(values, groups, context);
       else { visibleTracks = shownTracks = values; renderRows(); }
       $('[data-catalog-message]').hidden = visibleTracks.length > 0;
@@ -298,6 +347,17 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       render(player.snapshot());
       if (loaded) scheduleBrowse();
     } });
+    listen($('[data-featured-home]'),'click',event => {
+      const button = event.target.closest('button'); if (!button || button.disabled) return;
+      const trackId = button.closest('[data-track-id]')?.dataset.trackId || button.closest('[data-featured-primary]')?.dataset.trackId;
+      if (trackId) {
+        const track = tracks.find(item => item.id === trackId); if (!track) return;
+        const start = button.hasAttribute('data-featured-play') || button.hasAttribute('data-featured-track-play');
+        choose(track,start); if (!start) panels?.open('detail',button); return;
+      }
+      const collectionSlug = button.closest('[data-collection-slug]')?.dataset.collectionSlug;
+      if (collectionSlug) libraryControls.openCollection(collectionSlug);
+    });
     listen($('[data-detail-play]'), 'click', () => {
       const track = tracks.find(item => item.id === (viewTrackId || player.snapshot().activeTrackId));
       if (track) choose(track, true);

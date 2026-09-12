@@ -50,6 +50,13 @@ function collectionFromRow(row) {
   return { collection, items };
 }
 
+function featuredFromRows(rows) {
+  if (!rows.length || rows.length > 13 || rows.some(row => !Number.isSafeInteger(row.version) || row.version < 1)) unavailable();
+  return { version:rows[0].version, items:rows[0].slot_kind === null ? [] : rows.map(row => ({
+    slotKind:row.slot_kind, position:row.position, trackId:row.track_id, collectionId:row.collection_id
+  })) };
+}
+
 export async function loadPublishedMusicRecord(db, trackId, { includeSettings = false } = {}) {
   try {
     const session = primary(db);
@@ -79,26 +86,34 @@ export async function loadPublicMusicSnapshot(db, now) {
     const result = (await session.batch([
       session.prepare("SELECT key,value_json FROM music_settings WHERE key IN ('catalogVersion','previewLimitMs') ORDER BY key"),
       session.prepare(`SELECT * FROM music_tracks WHERE lifecycle='published' AND published_at<=?
-        ORDER BY published_at DESC,id LIMIT 500`).bind(now),
+        ORDER BY CASE WHEN EXISTS (SELECT 1 FROM music_featured_items f WHERE f.track_id=music_tracks.id) THEN 0 ELSE 1 END,
+          published_at DESC,id LIMIT 500`).bind(now),
       session.prepare(`SELECT r.* FROM music_track_revisions r JOIN
         (SELECT published_revision_id FROM music_tracks WHERE lifecycle='published' AND published_at<=?
-          ORDER BY published_at DESC,id LIMIT 500) t ON t.published_revision_id=r.id
+          ORDER BY CASE WHEN EXISTS (SELECT 1 FROM music_featured_items f WHERE f.track_id=music_tracks.id) THEN 0 ELSE 1 END,
+            published_at DESC,id LIMIT 500) t ON t.published_revision_id=r.id
         ORDER BY r.track_id`).bind(now),
       session.prepare(`SELECT a.* FROM music_assets a JOIN music_track_revisions r
         ON a.id IN (r.audio_asset_id,r.preview_asset_id,r.cover_asset_id,r.lyrics_asset_id) JOIN
         (SELECT published_revision_id FROM music_tracks WHERE lifecycle='published' AND published_at<=?
-          ORDER BY published_at DESC,id LIMIT 500) t ON t.published_revision_id=r.id
+          ORDER BY CASE WHEN EXISTS (SELECT 1 FROM music_featured_items f WHERE f.track_id=music_tracks.id) THEN 0 ELSE 1 END,
+            published_at DESC,id LIMIT 500) t ON t.published_revision_id=r.id
         ORDER BY a.owner_track_id,a.id LIMIT 2001`).bind(now),
       session.prepare(`SELECT c.*,
         COALESCE(json_group_array(json_object('collection_id',ct.collection_id,'track_id',ct.track_id,'position',ct.position))
           FILTER (WHERE ct.track_id IS NOT NULL),'[]') AS items_json
         FROM music_collections c LEFT JOIN music_collection_tracks ct ON ct.collection_id=c.id
-        WHERE c.status='published' GROUP BY c.id ORDER BY c.slug LIMIT 500`)
+        WHERE c.status='published' GROUP BY c.id
+        ORDER BY CASE WHEN EXISTS (SELECT 1 FROM music_featured_items f WHERE f.collection_id=c.id) THEN 0 ELSE 1 END,c.slug LIMIT 500`),
+      session.prepare(`SELECT h.version,i.slot_kind,i.position,i.track_id,i.collection_id
+        FROM music_featured_home h LEFT JOIN music_featured_items i ON 1=1 WHERE h.id=1
+        ORDER BY CASE i.slot_kind WHEN 'primary' THEN 0 WHEN 'secondary' THEN 1 ELSE 2 END,i.position LIMIT 14`)
     ])).map(rows);
     if (result[1].length > 500 || result[2].length > 500 || result[3].length > 2000 || result[4].length > 500) unavailable();
     const settings = catalogSettings(result[0]);
     const collections = result[4].map(collectionFromRow);
-    return { ...settings, records: recordsFromRows(result[1], result[2], result[3]), collections };
+    return { ...settings, records: recordsFromRows(result[1], result[2], result[3]), collections,
+      featured:featuredFromRows(result[5]) };
   } catch (error) {
     if (error?.code === 'MUSIC_DATABASE_UNAVAILABLE') throw error;
     unavailable();

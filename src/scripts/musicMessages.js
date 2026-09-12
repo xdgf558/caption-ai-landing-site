@@ -199,6 +199,21 @@ VIP · 暂无试听|VIP · 暫無試聽|VIP · no preview|VIP・試聴なし
 最新发布|最新發布|Latest releases|新着
 免费精选|免費精選|Free picks|無料のおすすめ
 按最新发布选取免费作品。|按最新發布選取免費作品。|Free tracks, newest first.|新しい無料の曲からご紹介。
+按人工推荐顺序显示其中可免费完整收听的作品。|依人工推薦順序顯示其中可免費完整收聽的作品。|Free full tracks in the editor's curated order.|運営のおすすめ順で、無料でフル再生できる曲を表示します。
+尚无人工推荐，按最新发布选取免费作品。|尚無人工推薦，依最新發布選取免費作品。|No curated picks yet. Showing the latest free tracks.|運営のおすすめはまだありません。新着の無料曲を表示します。
+站长推荐|站長推薦|Editor’s picks|運営のおすすめ
+最新免费|最新免費|Latest free|最新無料
+这期先听|這期先聽|Start here|まずはこちら
+推荐只影响展示，播放时仍会核验资格。|推薦只影響展示，播放時仍會核驗資格。|Featuring affects display only. Access is still checked when you play.|おすすめ表示のみです。再生時に資格を確認します。
+本期主推 · 免费完整收听|本期主推 · 免費完整收聽|Featured · free full track|今期の一曲・フル再生無料
+推荐补位 · 免费完整收听|推薦補位 · 免費完整收聽|Curated fallback · free full track|おすすめ補充・フル再生無料
+最新发布 · 免费完整收听|最新發佈 · 免費完整收聽|Latest release · free full track|最新公開・フル再生無料
+查看歌曲|查看歌曲|View song|曲を見る
+播放完整曲|播放完整曲|Play full track|フル再生
+更多推荐|更多推薦|More picks|ほかのおすすめ
+精选歌单与专辑|精選歌單與專輯|Featured playlists & albums|おすすめのプレイリストとアルバム
+VIP 专享 · 可逐首试听或登录会员|VIP 專享 · 可逐首試聽或登入會員|VIP exclusive · preview songs or sign in|VIP限定・曲ごとに試聴、またはログイン
+查看：{title}|查看：{title}|View: {title}|見る：{title}
 搜索歌曲、创作者或标签|搜尋歌曲、創作者或標籤|Search songs, creators or tags|曲名・制作者・タグで検索
 搜索|搜尋|Search|検索
 风格|風格|Genre|ジャンル
