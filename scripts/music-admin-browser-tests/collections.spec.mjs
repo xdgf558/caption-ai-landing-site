@@ -39,6 +39,10 @@ test('a failed initial status read can recover; account changes prevent a new wr
   await page.locator('#collection-new-album').click();await page.locator('#collection-slug').fill(unique());await page.locator('[data-collection-title="zh-Hans"]').fill('账号变化');
   await page.unroute('**/admin/api/music/status');await page.route('**/admin/api/music/status',async route=>{const r=await route.fetch(),body=await r.json();await route.fulfill({response:r,json:{...body,actorId:'changed@example.test'}});});
   let writes=0;page.on('request',r=>{if(r.method()==='POST'&&r.url().endsWith('/collections'))writes++;});await page.locator('#collection-save').click();await expect(page.locator('#collection-status')).toContainText('管理员账号已变化');expect(writes).toBe(0);await expect(page.locator('#collection-new-album')).toBeDisabled();
+  await page.unroute('**/admin/api/music/status');await page.locator('#collection-reload').click();
+  await expect(page.locator('#collection-retry')).toBeEnabled();expect(writes).toBe(0);
+  await page.locator('#collection-retry').click();expect(writes).toBe(0);await confirm(page);
+  await expect(page.locator('#collection-version')).toHaveText('编辑版本 1');expect(writes).toBe(1);
 });
 
 
