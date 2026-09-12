@@ -6,7 +6,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { handleMusicPublic, isMusicPublicPath } from '../src/music/publicHttp.js';
 
 const now = Date.parse('2026-09-11T00:00:00Z');
-const migrations = ['0001_music_foundation.sql', '0002_music_publication.sql', '0005_music_rate_limits.sql']
+const migrations = ['0001_music_foundation.sql', '0002_music_publication.sql', '0005_music_rate_limits.sql', '0007_music_albums.sql', '0008_music_featured.sql']
   .map(name => readFileSync(new URL(`../migrations-music/${name}`, import.meta.url), 'utf8'));
 const dbs = [];
 afterEach(() => { for (const db of dbs.splice(0)) db.close(); });
@@ -147,10 +147,15 @@ test('catalog is anonymous, localized and conditional while hiding corrupt track
   const f = fixture();
   const first = f.seedTrack({ slug: 'first-song', title: 'First', accessMode: 'free', publishedAt: now - 1000 });
   const second = f.seedTrack({ slug: 'second-song', title: 'Second', accessMode: 'vip', publishedAt: now - 2000 });
+  const fallback = f.seedTrack({ slug: 'fallback-song', title: 'Fallback', accessMode: 'free', publishedAt: now - 2500 });
   const corrupt = f.seedTrack({ slug: 'broken-song', title: 'Broken', bad: true, publishedAt: now - 3000 });
   const invalidStorage = f.seedTrack({ slug: 'wrong-storage', title: 'Wrong storage', badStorage: true, publishedAt: now - 4000 });
-  f.seedCollection('ordered-list', [second.id, corrupt.id, first.id]);
+  const ordered = f.seedCollection('ordered-list', [second.id, corrupt.id, first.id]);
   f.seedCollection('empty-list', [corrupt.id]);
+  insert(f.sql,'music_featured_items',{slot_kind:'primary',position:0,track_id:first.id});
+  insert(f.sql,'music_featured_items',{slot_kind:'secondary',position:0,track_id:second.id});
+  insert(f.sql,'music_featured_items',{slot_kind:'secondary',position:1,track_id:fallback.id});
+  insert(f.sql,'music_featured_items',{slot_kind:'collection',position:0,collection_id:ordered.id});
   f.sql.prepare("UPDATE music_settings SET value_json='7' WHERE key='catalogVersion'").run();
 
   const response = await handleMusicPublic(request('/api/music/catalog?locale=zh-Hant'), f.env, { clock: () => now });
@@ -158,12 +163,13 @@ test('catalog is anonymous, localized and conditional while hiding corrupt track
   assert.equal(response.headers.get('cache-control'), 'public, max-age=0, must-revalidate');
   assert.equal(response.headers.get('content-language'), 'zh-Hant');
   assert.match(response.headers.get('etag'), /^"music-[a-f0-9]{64}"$/);
-  assert.deepEqual(body.tracks.map(track => track.id), [first.id, second.id]);
+  assert.deepEqual(body.tracks.map(track => track.id), [first.id, second.id, fallback.id]);
   assert.ok(!body.tracks.some(track => track.id === invalidStorage.id));
   assert.equal(body.tracks[0].title, '繁中 First');
   assert.equal(body.catalogVersion, 7);
   assert.deepEqual(body.collections.map(item => item.slug), ['ordered-list']);
   assert.deepEqual(body.collections[0].trackIds, [second.id, first.id]);
+  assert.deepEqual(body.featured,{version:1,primaryTrackId:first.id,primarySource:'primary',secondaryTrackIds:[second.id,fallback.id],collectionIds:[ordered.id]});
   assert.doesNotMatch(JSON.stringify(body), /Story for|object_key|sha256|canPlayFull|validUntil|technical_fingerprint/);
 
   const cached = await handleMusicPublic(request('/api/music/catalog?locale=zh-Hant', {
@@ -171,6 +177,16 @@ test('catalog is anonymous, localized and conditional while hiding corrupt track
   assert.equal(cached.status, 304); assert.equal(await cached.text(), '');
   const head = await handleMusicPublic(request('/api/music/catalog?locale=zh-Hant', { method: 'HEAD' }), f.env, { clock: () => now });
   assert.equal(head.status, 200); assert.equal(await head.text(), ''); assert.equal(head.headers.get('etag'), response.headers.get('etag'));
+
+  f.sql.prepare("UPDATE music_tracks SET lifecycle='unpublished' WHERE id=?").run(first.id);
+  const changed = await json(await handleMusicPublic(request('/api/music/catalog?locale=zh-Hant'), f.env, { clock: () => now }), 200);
+  assert.equal(changed.featured.primaryTrackId,fallback.id);
+  assert.equal(changed.featured.primarySource,'secondary');
+  assert.deepEqual(changed.featured.secondaryTrackIds,[second.id]);
+  f.sql.prepare("DELETE FROM music_featured_items WHERE track_id=?").run(fallback.id);
+  const latest = await json(await handleMusicPublic(request('/api/music/catalog?locale=zh-Hant'), f.env, { clock: () => now }), 200);
+  assert.equal(latest.featured.primaryTrackId,fallback.id);
+  assert.equal(latest.featured.primarySource,'latest');
 });
 
 test('natural policy expiry changes the catalog projection and ETag without a catalogVersion write', async () => {

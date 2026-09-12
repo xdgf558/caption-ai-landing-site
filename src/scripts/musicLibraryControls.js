@@ -10,7 +10,8 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
   const render = () => {
     const candidates = state.collection && view?.selectedCollection?.slug === state.collection ? view.selectedCollection.tracks
       : ['favorites', 'recent'].includes(state.mode) ? tracks : catalogTracks;
-    const results = browseMusic(candidates, collections, state, getLocal());
+    const featuredTrackIds = [view?.featured?.primaryTrackId,...(view?.featured?.secondaryTrackIds || [])].filter(Boolean);
+    const results = browseMusic(candidates, collections, state, { ...getLocal(), featuredTrackIds });
     const selected = collections.find(item => item.slug === state.collection);
     const albums = state.mode === 'albums' && !state.collection;
     const albumItems = collections.filter(item => item.type === 'album');
@@ -47,6 +48,8 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     const description = collections.find(item => item.slug === state.collection)?.description || '';
     $('[data-collection-description]').textContent = description; $('[data-collection-description]').hidden = !description;
     $('[data-picks-help]').hidden = state.mode !== 'picks';
+    if (state.mode === 'picks') $('[data-picks-help]').textContent = t(featuredTrackIds.length
+      ? '按人工推荐顺序显示其中可免费完整收听的作品。' : '尚无人工推荐，按最新发布选取免费作品。');
     $('[data-clear-filters]').hidden = !state.query && !state.genres.length && !state.moods.length && !state.access && !state.collection && state.mode === 'latest';
     const filterToggle = $('[data-filter-toggle]');
     if (filterToggle) filterToggle.dataset.active = String(Boolean(state.genres.length || state.moods.length || state.access || state.collection));
@@ -90,6 +93,10 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     selection: () => state.track || null,
     target: () => ({ ...(state.track ? { track: state.track } : {}), ...(state.collection ? { collection: state.collection } : {}) }),
     select(id) { if (state.track !== id) { state = { ...state, track: id }; save(); render(); } },
+    openCollection(slug) {
+      const item = collections.find(group => group.slug === slug);
+      if (item) change({ collection:slug, track:undefined, query:'', genres:[], moods:[], access:'', mode:item.type === 'album' ? 'albums' : 'latest' });
+    },
     update(values, groups, context = null) {
       tracks = values; catalogTracks = context?.catalogTracks || values; collections = groups; view = context; loaded = true;
       const select = $('[data-collection-filter]');

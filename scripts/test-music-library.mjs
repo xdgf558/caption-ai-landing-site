@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import worker from '../src/worker.js';
 import { handleMusicPage } from '../src/music/pageHttp.js';
 import { musicPagePaths, musicPageHref, musicSelection, isMusicPagePath } from '../src/music/pagePaths.js';
-import { readPlayerCatalog, readPlayerCollections } from '../src/scripts/musicPlayerCatalog.js';
+import { readPlayerCatalog, readPlayerCollections, readPlayerFeatured } from '../src/scripts/musicPlayerCatalog.js';
 import { browseMusic, libraryFilters, normalizeMusicSearch } from '../src/scripts/musicLibrary.js';
 import { musicMessages, musicText, musicLocales } from '../src/scripts/musicMessages.js';
 import { shouldIncludeSitemapRoute } from './generate-sitemap.mjs';
@@ -88,6 +88,15 @@ test('collections preserve administrator order and cannot grant full access or i
   assert.equal(browseMusic(tracks, groups, { collection: 'missing' }).length, 0);
   assert.throws(() => readPlayerCollections({ collections: [{ ...group, trackIds: [tracks[0].id, tracks[0].id] }] }, tracks));
   assert.deepEqual(readPlayerCollections({ collections: [{ ...group, trackIds: ['aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'] }] }, tracks), []);
+});
+test('featured catalog is bounded, references public rows only and orders free picks without granting access',()=>{
+  const groups=readPlayerCollections({collections:[group]},tracks),featured=readPlayerFeatured({featured:{version:2,primaryTrackId:tracks[0].id,primarySource:'primary',
+    secondaryTrackIds:[tracks[3].id,tracks[2].id],collectionIds:[group.id]}},tracks,groups);
+  assert.deepEqual(browseMusic(tracks,groups,{mode:'picks'},{featuredTrackIds:[featured.primaryTrackId,...featured.secondaryTrackIds]}).map(row=>row.id),[tracks[0].id,tracks[2].id]);
+  assert.equal(tracks[3].effectiveAccess,'vip');
+  assert.throws(()=>readPlayerFeatured({featured:{...featured,primaryTrackId:tracks[1].id}},tracks,groups));
+  assert.throws(()=>readPlayerFeatured({featured:{...featured,secondaryTrackIds:Array(7).fill(tracks[2].id)}},tracks,groups));
+  assert.deepEqual(readPlayerFeatured({},tracks,groups),{version:1,primaryTrackId:null,primarySource:'none',secondaryTrackIds:[],collectionIds:[]});
 });
 test('50-row presentation does not truncate play-all and browsing never rewrites the queue', () => {
   const audio = new Audio(), player = createMusicPlayer(audio, { origin: 'https://music.example.test' }), queue = createMusicQueue(player);

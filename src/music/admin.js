@@ -1,4 +1,4 @@
-import { isoTime, policyFromRevision, utcMillis, validatePolicyTransition } from './policy.js';
+import { effectivePolicy, isoTime, policyFromRevision, utcMillis, validatePolicyTransition } from './policy.js';
 import { checkRights, publicationFingerprint } from './publicationValidation.js';
 import { draftInput, rightsInput, editVersion, fail, fields, musicId, text } from './adminValidation.js';
 import { primary, rows, loadTrack, loadAssets, mutate, trackGuard } from './adminStore.js';
@@ -24,12 +24,20 @@ export async function readAdminMusicTrack(db, id) {
 export async function listAdminMusicTracks(db, { before = Number.MAX_SAFE_INTEGER, status = '', q = '' } = {}) {
   if (!Number.isSafeInteger(before) || before < 1 || !['', 'draft', 'published', 'unpublished', 'archived'].includes(status)) fail('INVALID_INPUT', 400);
   text(q, 120, true);
-  const result = rows(await primary(db).prepare(`SELECT t.rowid AS cursor,t.id,t.slug,t.lifecycle,t.edit_version,r.metadata_json
+  const result = rows(await primary(db).prepare(`SELECT t.rowid AS cursor,t.id,t.slug,t.lifecycle,t.edit_version,r.metadata_json,
+    p.state AS published_state,p.access_mode,p.early_access_until,p.post_early_access_mode,p.policy_version
     FROM music_tracks t LEFT JOIN music_track_revisions r ON r.id=COALESCE(t.draft_revision_id,t.published_revision_id)
+    LEFT JOIN music_track_revisions p ON p.id=t.published_revision_id
     WHERE t.rowid<? AND (?='' OR t.lifecycle=?) AND (?='' OR instr(lower(t.slug),lower(?))>0 OR instr(lower(r.metadata_json),lower(?))>0)
     ORDER BY t.rowid DESC LIMIT 51`).bind(before, status, status, q, q, q).all());
-  const items = result.slice(0, 50).map(r => ({ id: r.id, slug: r.slug, lifecycle: r.lifecycle,
-    editVersion: r.edit_version, title: r.metadata_json ? JSON.parse(r.metadata_json).title : null }));
+  const now = Date.now();
+  const items = result.slice(0, 50).map(r => {
+    let effectiveAccess = null;
+    try { if (r.lifecycle === 'published' && r.published_state === 'sealed') effectiveAccess = effectivePolicy(policyFromRevision(r),now).effectiveAccess; }
+    catch { effectiveAccess = null; }
+    return { id: r.id, slug: r.slug, lifecycle: r.lifecycle, editVersion: r.edit_version,
+      effectiveAccess, title: r.metadata_json ? JSON.parse(r.metadata_json).title : null };
+  });
   return { items, nextBefore: result.length > 50 ? result[49].cursor : null };
 }
 export async function listAdminMusicAudit(db, before = Number.MAX_SAFE_INTEGER) {

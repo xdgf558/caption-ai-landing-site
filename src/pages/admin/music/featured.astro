@@ -1,0 +1,38 @@
+---
+import { ArrowLeft, RefreshCw, Save, Star } from '@lucide/astro';
+---
+<!doctype html>
+<html lang="zh-Hans">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><meta name="robots" content="noindex,nofollow" /><title>首页推荐 | Station Cat</title><link rel="stylesheet" href="/styles/admin-music.css" /><link rel="stylesheet" href="/styles/admin-music-featured.css" /></head>
+<body class="music-admin">
+<header class="music-topbar"><a href="/admin/music/"><ArrowLeft size={18} />返回曲目工作区</a><div class="music-topbar-actions"><a href="/admin/music/collections/">专辑与歌单</a><span>Station Cat / 后台</span></div></header>
+<main class="music-shell featured-shell">
+  <header class="music-heading"><div><p class="eyebrow">运营工作区</p><h1>首页推荐</h1></div><span id="featured-version" class="badge">正在读取</span></header>
+  <div class="music-feedback"><p id="featured-status" role="status" aria-live="polite">正在载入…</p><button id="featured-reload" type="button" aria-label="重新载入"><RefreshCw size={18} /></button><button id="featured-merge" type="button" hidden>载入新版本并保留编排</button><button id="featured-retry" type="button" hidden>核对并重试原操作</button></div>
+  <p class="notice">推荐位只决定首页展示和顺序，不改变单曲或专辑权限。主推只能选择当前可免费完整收听的已发布歌曲；次级推荐和集合在公开目录中失效后会自动隐藏。</p>
+  <div class="featured-grid">
+    <section class="featured-panel featured-primary-panel" aria-labelledby="featured-primary-title">
+      <header><div><p class="eyebrow">最多 1 首</p><h2 id="featured-primary-title">首页主推</h2></div><Star size={22} aria-hidden="true" /></header>
+      <div id="featured-primary"></div>
+      <form id="featured-primary-search"><label for="featured-primary-query">查找免费已发布歌曲</label><div class="upload-control"><input id="featured-primary-query" type="search" maxlength="120" /><button type="submit">查找</button></div></form>
+      <div id="featured-primary-results" class="featured-results" aria-live="polite"></div>
+    </section>
+    <section class="featured-panel" aria-labelledby="featured-secondary-title">
+      <header><div><p class="eyebrow">最多 6 首</p><h2 id="featured-secondary-title">次级推荐</h2></div></header>
+      <p class="muted">可包含免费或 VIP 曲目。拖动排序，也可使用上移／下移按钮。</p>
+      <ol id="featured-secondary" class="featured-order"></ol><p id="featured-secondary-empty" class="muted">尚未选择。</p>
+      <form id="featured-secondary-search"><label for="featured-secondary-query">从已发布歌曲添加</label><div class="upload-control"><input id="featured-secondary-query" type="search" maxlength="120" /><button type="submit">查找</button></div></form>
+      <div id="featured-secondary-results" class="featured-results" aria-live="polite"></div>
+    </section>
+    <section class="featured-panel featured-collections-panel" aria-labelledby="featured-collections-title">
+      <header><div><p class="eyebrow">最多 6 个</p><h2 id="featured-collections-title">首页歌单与专辑</h2></div></header>
+      <p class="muted">全 VIP 集合允许展示，但前台会明确标注试听或会员说明。</p>
+      <ol id="featured-collections" class="featured-order"></ol><p id="featured-collections-empty" class="muted">尚未选择。</p>
+      <form id="featured-collections-search"><label for="featured-collections-query">从已发布歌单或专辑添加</label><div class="upload-control"><input id="featured-collections-query" type="search" maxlength="120" /><button type="submit">查找</button></div></form>
+      <div id="featured-collections-results" class="featured-results" aria-live="polite"></div>
+    </section>
+  </div>
+  <section class="featured-save" aria-labelledby="featured-save-title"><h2 id="featured-save-title">保存编排</h2><p class="muted">一次保存三组位置并更新公开目录版本。版本冲突时，本页保留当前编排，可载入服务器新版本后重新核对。</p><label for="featured-reason">修改说明<input id="featured-reason" maxlength="1000" required /></label><div class="music-actions"><button id="featured-save" class="primary" type="button" disabled><Save size={17} />保存首页推荐</button></div></section>
+</main>
+<script>import '../../../scripts/adminMusicFeatured.js';</script>
+</body></html>

@@ -18,7 +18,7 @@ let mf, db, bucket;
 function migrationStatements() {
   const parser = new DatabaseSync(':memory:'), migrations = [];
   try {
-    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql']) {
+    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql', '0008_music_featured.sql']) {
       const statements = [];
       let remaining = file(`migrations-music/${name}`).toString();
       while (remaining.trim()) {
@@ -74,10 +74,10 @@ async function putFixture(name, kind = 'audio', owner = randomUUID()) {
   return { id, owner_track_id: owner, kind, object_key: key, state: 'validated', format: 'mp3',
     content_type: 'audio/mpeg', byte_size: f.bytes, duration_ms: f.packetDurationMs, sha256: f.sha256, etag: object.etag };
 }
-async function seed() {
+async function seed(accessMode = 'vip') {
   const audio = await putFixture('cbr-stereo.mp3'), preview = await putFixture('preview.mp3', 'preview', audio.owner_track_id);
   Object.assign(preview, { derived_from_asset_id: audio.id, source_start_ms: 0, source_end_ms: 1000 });
-  const response = await call('/seed', { audio, preview }); assert.equal(response.status, 200, JSON.stringify(response));
+  const response = await call('/seed', { audio, preview, accessMode }); assert.equal(response.status, 200, JSON.stringify(response));
   return { command: response.body, audio, preview };
 }
 async function dump() {
@@ -92,16 +92,17 @@ test('missing schema is 503; actual migrations on local D1 enable primary readin
   assert.ok((await db.batch(migrations[0].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.equal((await call('/database')).body.code, 'MUSIC_DATABASE_UNAVAILABLE');
   assert.ok((await db.batch(migrations[1].map(sql => db.prepare(sql)))).every(r => r.success));
-  const probe = await call('/database'); assert.equal(probe.status, 200, JSON.stringify(probe));
-  assert.equal(probe.body.catalogVersion, 0); assert.equal(probe.body.previewLimitMs, 45000);
-  assert.deepEqual(probe.body.flags, { public: false, uploads: false, vipDelivery: false, analytics: false });
-  assert.equal((await adminCall('/status')).body.storage, null);
+  assert.equal((await call('/database')).body.code, 'MUSIC_DATABASE_UNAVAILABLE');
   assert.ok((await db.batch(migrations[2].map(sql => db.prepare(sql)))).every(r => r.success));
-  assert.equal((await adminCall('/status')).body.storage, null);
   assert.ok((await db.batch(migrations[3].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.ok((await db.batch(migrations[4].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.ok((await db.batch(migrations[5].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.ok((await db.batch(migrations[6].map(sql => db.prepare(sql)))).every(r => r.success));
+  assert.equal((await call('/database')).body.code, 'MUSIC_DATABASE_UNAVAILABLE');
+  assert.ok((await db.batch(migrations[7].map(sql => db.prepare(sql)))).every(r => r.success));
+  const probe = await call('/database'); assert.equal(probe.status, 200, JSON.stringify(probe));
+  assert.equal(probe.body.catalogVersion, 0); assert.equal(probe.body.previewLimitMs, 45000);
+  assert.deepEqual(probe.body.flags, { public: false, uploads: false, vipDelivery: false, analytics: false });
   assert.equal((await adminCall('/status')).body.storage.quotaBytes, 0);
   assert.deepEqual((await db.prepare('PRAGMA foreign_key_check').all()).results, []);
 });
@@ -663,4 +664,20 @@ test('albums publish through native D1 guards, keep VIP audio private and reject
   const t=(await adminCall('/tracks/'+second.command.trackId)).body;
   assert.equal((await adminCall('/tracks/'+t.id+'/unpublish','POST',{revisionId:t.published.id,reason:'Downlist member'},{'If-Match':`"edit-${t.editVersion}"`})).status,200);
   const rejected=await adminCall(path,'PATCH',publishBody,{'If-Match':'"edit-4"'});assert.equal(rejected.status,422);assert.equal(rejected.body.code,'MUSIC_ALBUM_TRACKS_NOT_PUBLISHED');
+});
+
+test('featured curation uses native D1 CAS and public projection removes a downlisted primary',async()=>{
+  const free=await seed('free'),vip=await seed();
+  assert.equal((await call('/publish',free.command)).status,200);
+  assert.equal((await call('/publish',vip.command)).status,200);
+  const body={primaryTrackId:free.command.trackId,secondaryTrackIds:[vip.command.trackId],collectionIds:[],reason:'Native featured curation'};
+  const saved=await adminCall('/featured','PUT',body,{'If-Match':'"edit-1"'});
+  assert.equal(saved.status,200,JSON.stringify(saved.body));assert.equal(saved.body.editVersion,2);
+  const view=await adminCall('/featured');assert.equal(view.body.primaryTrackId,free.command.trackId);assert.deepEqual(view.body.secondaryTrackIds,[vip.command.trackId]);
+  let response=await publicCall('/catalog?locale=en'),catalog=await response.json();assert.equal(response.status,200);assert.equal(catalog.featured.primarySource,'primary');
+  assert.equal(catalog.featured.primaryTrackId,free.command.trackId);assert.deepEqual(catalog.featured.secondaryTrackIds,[vip.command.trackId]);
+  const track=(await adminCall('/tracks/'+free.command.trackId)).body;
+  assert.equal((await adminCall('/tracks/'+track.id+'/unpublish','POST',{revisionId:track.published.id,reason:'Native featured downlist'},{'If-Match':`"edit-${track.editVersion}"`})).status,200);
+  response=await publicCall('/catalog?locale=en');catalog=await response.json();assert.equal(response.status,200);
+  assert.equal(catalog.featured.primaryTrackId,null);assert.equal(catalog.featured.primarySource,'none');assert.deepEqual(catalog.featured.secondaryTrackIds,[vip.command.trackId]);
 });

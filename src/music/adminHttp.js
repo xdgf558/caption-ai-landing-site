@@ -12,6 +12,7 @@ import { createAdminMusicCollection, listAdminMusicCollections, readAdminMusicCo
 import { cleanupReadiness, planMusicCleanup, executeMusicCleanup } from './cleanup.js';
 import { readMusicDiagnostics } from './diagnostics.js';
 import { readMusicAnalytics } from './analytics.js';
+import { readAdminMusicFeatured, saveAdminMusicFeatured } from './featured.js';
 
 export const isMusicAdminPath = path => path === '/admin/api/music' || path.startsWith('/admin/api/music/');
 function response(request, status, body, headers = {}) {
@@ -98,7 +99,7 @@ export async function handleMusicAdmin(request, env, authorize) {
         cleanup: cleanup ? { ...cleanup, executionEnabled: env.MUSIC_CLEANUP_ENABLED === 'true' || env.MUSIC_CLEANUP_ENABLED === true } : null,
         capabilities: { drafts: true, rightsReview: true, unpublish: true, archive: true,
           uploads: runtime.flags.uploads && !!upload?.quotaBytes && typeof runtime.bucket.put === 'function',
-          technicalReview: true, publish: true, collections: true, media: false, adminAssets: true } };
+          technicalReview: true, publish: true, collections: true, featured: true, media: false, adminAssets: true } };
     } else if (path === '/admin/api/music/cleanup' && read) {
       fields(query, ['before']);
       result = await planMusicCleanup(runtime.db, { before: query.before === undefined ? undefined : Number(query.before) });
@@ -126,6 +127,14 @@ export async function handleMusicAdmin(request, env, authorize) {
         fields(query, []); mutationKey(context.key);
         result = await createAdminMusicCollection(runtime.db, await readBody(request), context);
       } else fail('METHOD_NOT_ALLOWED', 405);
+    } else if (path === '/admin/api/music/featured') {
+      fields(query, []);
+      if (read) result = await readAdminMusicFeatured(runtime.db);
+      else {
+        if (request.method !== 'PUT') fail('METHOD_NOT_ALLOWED', 405);
+        mutationKey(context.key); editVersion(context.ifMatch);
+        result = await saveAdminMusicFeatured(runtime.db, await readBody(request), context);
+      }
     } else {
       fields(query, []);
       const track = /^\/admin\/api\/music\/tracks\/([^/]+)(?:\/(publish|unpublish|archive))?$/.exec(path);
