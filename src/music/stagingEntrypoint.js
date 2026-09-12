@@ -4,6 +4,7 @@ import { handleMusicPublic, isMusicPublicPath } from './publicHttp.js';
 import { handleMusicMedia, isMusicMediaPath } from './mediaResponse.js';
 import {
   isMusicStagingRequest,
+  musicStagingCanonicalPath,
   musicStagingHost,
   musicStagingNotFound,
   musicStagingReaderRequest,
@@ -42,8 +43,9 @@ export default {
       return musicStagingResponse(await handler(readerRequest, musicEnv));
     }
 
-    if (url.pathname === '/admin/music') {
-      url.pathname = '/admin/music/';
+    const canonicalPath = musicStagingCanonicalPath(url.pathname);
+    if (canonicalPath && url.pathname !== canonicalPath) {
+      url.pathname = canonicalPath;
       return musicStagingResponse(Response.redirect(url.toString(), 308));
     }
 

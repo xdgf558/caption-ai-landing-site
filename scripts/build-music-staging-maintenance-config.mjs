@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const sourcePath = path.join(root, 'ops', 'music-staging-app.jsonc');
+const outputPath = path.join(root, '.generated', 'music-staging-maintenance.jsonc');
+const musicFlags = [
+  'MUSIC_PUBLIC_ENABLED',
+  'MUSIC_UPLOADS_ENABLED',
+  'MUSIC_VIP_DELIVERY_ENABLED',
+  'MUSIC_ANALYTICS_ENABLED',
+  'MUSIC_CLEANUP_ENABLED'
+];
+
+export function maintenanceConfig(source) {
+  const config = JSON.parse(source.replace(/^\s*\/\/.*$/gm, ''));
+  assert.equal(config.name, 'station-cat-music-staging');
+  assert.equal(config.workers_dev, false);
+  assert.equal(config.preview_urls, false);
+  assert.ok(config.vars && typeof config.vars === 'object');
+  for (const flag of musicFlags) {
+    assert.ok(Object.hasOwn(config.vars, flag), `Missing staging flag ${flag}.`);
+    config.vars[flag] = 'false';
+  }
+  return config;
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const config = maintenanceConfig(await readFile(sourcePath, 'utf8'));
+  await mkdir(path.dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
+  console.log('Prepared ignored maintenance config with all five music flags disabled.');
+}

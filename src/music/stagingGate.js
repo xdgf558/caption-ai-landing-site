@@ -3,19 +3,48 @@ import { isMusicMediaPath } from './mediaResponse.js';
 
 const staticPaths = new Set([
   '/favicon.ico',
+  '/favicon-64.png',
+  '/apple-touch-icon.png',
   '/images/optimized/station-cat-logo-1668c2e5-160.webp',
-  '/styles/admin-music.css'
+  '/styles/admin-music.css',
+  '/styles/admin-music-batch.css',
+  '/styles/admin-music-collections.css',
+  '/styles/admin-music-featured.css',
+  '/images/apps/mindbudget/warm-botanical.png',
+  '/images/apps/snapcopy-app-icon.png',
+  '/vendor/music-mp3/NOTICE.txt',
+  '/vendor/music-mp3/lamejs-1.2.7.js'
 ]);
 
-const staticPrefixes = [
-  '/_astro/music.astro_astro_type_script_index_0_lang.'
+const pagePaths = new Set([
+  '/admin/music',
+  '/admin/music/collections',
+  '/admin/music/collections/upload',
+  '/admin/music/featured',
+  '/music',
+  '/en/music',
+  '/ja/music',
+  '/zh-hans/music'
+]);
+
+const astroAssets = [
+  /^\/_astro\/(?:music|collections|featured|index)\.astro_astro_type_script_index_0_lang\.[A-Za-z0-9_-]+\.js$/,
+  /^\/_astro\/(?:LanguageSwitcher|MusicPlayer)\.astro_astro_type_script_index_0_lang\.[A-Za-z0-9_-]+\.js$/,
+  /^\/_astro\/(?:musicAdminClient|musicMessages|musicPlayerCatalog|musicWavClient|navigation|pagePaths)\.[A-Za-z0-9_-]+\.js$/,
+  /^\/_astro\/musicWavWorker-[A-Za-z0-9_-]+\.js$/,
+  /^\/_astro\/index\.[A-Za-z0-9_-]+\.css$/
 ];
+
+export function musicStagingCanonicalPath(pathname) {
+  const value = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+  return pagePaths.has(value) ? `${value}/` : null;
+}
 
 export function isMusicStagingRequest(request) {
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
 
-  if (url.pathname === '/admin/music' || url.pathname === '/admin/music/') {
+  if (musicStagingCanonicalPath(url.pathname)) {
     return method === 'GET' || method === 'HEAD';
   }
 
@@ -26,7 +55,7 @@ export function isMusicStagingRequest(request) {
   if (method !== 'GET' && method !== 'HEAD') return false;
   if (isMusicPublicPath(url.pathname) || isMusicMediaPath(url.pathname)) return true;
   if (staticPaths.has(url.pathname)) return true;
-  return staticPrefixes.some((prefix) => url.pathname.startsWith(prefix) && url.pathname.endsWith('.js'));
+  return astroAssets.some((pattern) => pattern.test(url.pathname));
 }
 
 // Access is the outer staging gate. The shared music handlers still check a
