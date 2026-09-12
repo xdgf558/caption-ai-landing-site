@@ -1,6 +1,11 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+公开音乐入口尚未开放。|公開音樂入口尚未開放。|Public music is not available yet.|音楽の公開はまだ開始されていません。
+此版本当前未公开。|此版本目前未公開。|This revision is not currently public.|このバージョンは現在公開されていません。
+尚未保存完整音频，无法预演播放按钮。|尚未儲存完整音訊，無法預演播放按鈕。|Save the full audio before previewing playback controls.|フル音源を保存してから再生ボタンを確認してください。
+VIP 完整音频暂未开放。|VIP 完整音訊暫未開放。|VIP full audio is not available yet.|VIPのフル音源はまだ利用できません。
+暂不可播放|暫不可播放|Playback unavailable|再生できません
 关闭分享卡片|關閉分享卡片|Close share card|シェアカードを閉じる
 卡片格式|卡片格式|Card format|カード形式
 微信海报|微信海報|WeChat poster|WeChat用ポスター

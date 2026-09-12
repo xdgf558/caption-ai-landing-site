@@ -117,6 +117,31 @@ test('new draft is VIP, response is private and creation retry recovers one audi
   assert.equal((await call(f, `/tracks/${first.body.trackId}`, 'HEAD')).body, null);
 });
 
+test('role preview reads both saved revisions with server time and safe asset measurements, no R2 or reader writes', async () => {
+  const f = fixture(), item = await seeded(f,true);
+  const old = (await call(f, `/tracks/${item.trackId}`)).body;
+  const changed = await call(f, `/tracks/${item.trackId}`, 'PATCH', {
+    slug:old.slug, metadata:{ ...old.published.metadata, title:{ en:'New draft title' }, originalLocale:'en' },
+    policy:old.published.policy, revisionId:old.published.id, reason:'Independent saved preview',
+    assets:{audio:null,preview:null,cover:null,lyrics:null}
+  }, ifMatch(old.editVersion));
+  assert.equal(changed.status,200,JSON.stringify(changed.body));
+  const before = f.dump(), read = await call(f, `/tracks/${item.trackId}`);
+  assert.deepEqual(f.dump(),before);
+  assert.equal(read.status,200);
+  assert.ok(Math.abs(Date.now() - Date.parse(read.body.serverNow)) < 5000);
+  assert.equal(read.body.draft.metadata.title.en,'New draft title');
+  assert.deepEqual(read.body.published,old.published);
+  assert.equal(read.body.draft.assets.audio,null);
+  assert.ok(read.body.assets.some(a => a.id === old.published.assets.audio && a.kind === 'audio'));
+  const preview = read.body.assets.find(a => a.kind === 'preview');
+  assert.equal(preview.derivedFromAssetId,old.published.assets.audio);
+  assert.equal(preview.sourceEndMs - preview.sourceStartMs,30000);
+  assert.doesNotMatch(JSON.stringify(read.body),/object_key|sha256|fingerprint|canPlayFull/);
+  assert.equal((await call(f, `/tracks/${item.trackId}?role=vip`)).status,400);
+  assert.equal((await call(f, `/tracks/${item.trackId}`, 'GET',undefined,{},async () => null)).status,401);
+});
+
 test('stalled or invalid UTF-8 request streams are cancelled without writes', async () => {
   const f = fixture(), before = f.dump(); let cancelled = false;
   const headers = { Origin: origin, 'X-Requested-With': 'StationCatMusicAdmin', 'Idempotency-Key': randomUUID(), 'Content-Type': 'application/json' };

@@ -220,10 +220,10 @@ test('keyboard tabs and desktop/mobile have no horizontal overflow; music servic
   await create(page);
   await page.getByRole('tab',{name:'基本资料',exact:true}).focus();
   await page.keyboard.press('ArrowRight'); await expect(page.getByRole('tab',{name:'素材',exact:true})).toHaveAttribute('aria-selected','true');
-  await page.keyboard.press('End'); await expect(page.getByRole('tab',{name:'审核发布',exact:true})).toBeFocused();
+  await page.keyboard.press('End'); await expect(page.getByRole('tab',{name:'角色预览',exact:true})).toBeFocused();
   for (const width of [1280,390]) {
     await page.setViewportSize({width,height:900});
-    for (const name of ['基本资料','素材','审核发布']) {
+    for (const name of ['基本资料','素材','审核发布','角色预览']) {
       await page.getByRole('tab',{name,exact:true}).click();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
