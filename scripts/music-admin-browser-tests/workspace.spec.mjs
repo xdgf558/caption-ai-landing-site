@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { wavFixture } from '../helpers/music-wav-fixture.mjs';
 const fixture = name => fileURLToPath(new URL('../../tests/fixtures/music-mp3/' + name,import.meta.url));
 const unique = () => 'ui-' + crypto.randomUUID();
 async function create(page, slug = unique()) {
@@ -119,6 +120,85 @@ test('unknown PUT outcome is recovered by GET/complete without another PUT or re
   await page.getByRole('button',{name:'查询并恢复',exact:true}).click();
   await expect(page.locator('#music-status')).toContainText('文件已验证');
   expect(puts).toBe(1); expect(reserves).toBe(1);
+});
+test('WAV converts locally to real MP3, supports a separate preview and still requires saving the draft',async ({page}) => {
+  await create(page); await page.getByRole('tab',{name:'素材',exact:true}).click();
+  const errors = [], uploads = []; page.on('pageerror',e => errors.push(e.message));
+  page.on('request',r => { if (r.method() === 'POST' && r.url().endsWith('/uploads')) uploads.push(r.postDataJSON()); });
+  await page.locator('#file-audio').setInputFiles({name:'full.wav',mimeType:'audio/wav',buffer:wavFixture({seconds:6,bits:24,sampleRate:48000,extensible:true})});
+  await expect(page.locator('[data-upload-kind=audio]')).toHaveText('转换并上传'); expect(uploads).toHaveLength(0);
+  await page.locator('[data-upload-kind=audio]').click();
+  await expect(page.locator('#music-status')).toContainText('文件已验证');
+  expect(uploads[0].format).toBe('mp3'); expect(uploads[0].byteSize).toBeLessThan(200000);
+  expect(Object.keys(uploads[0])).not.toContain('conversion');
+  await playMuted(page.locator('audio').first());
+  await page.locator('#preview-end').fill('1');
+  await upload(page,'preview',{name:'preview.wav',mimeType:'audio/wav',buffer:wavFixture({seconds:1})});
+  await playMuted(page.locator('audio').last());
+  await expect(page.locator('#assets-state')).toHaveText('有未保存的素材引用');
+  await page.locator('#assets-save').click(); await expect(page.locator('#track-version')).toHaveText('编辑版本 2');
+  expect(errors).toEqual([]); expect(uploads).toHaveLength(2);
+});
+test('WAV invalid data, cancellation and codec failure create no reservation; a later attempt works',async ({page}) => {
+  await create(page); await page.getByRole('tab',{name:'素材',exact:true}).click();
+  let reserves = 0;
+  page.on('request',r => { if (r.method() === 'POST' && r.url().endsWith('/uploads')) reserves++; });
+  const bad = wavFixture(); bad.write('RF64');
+  await page.locator('#file-audio').setInputFiles({name:'bad.wav',mimeType:'audio/wav',buffer:bad});
+  await page.locator('[data-upload-kind=audio]').click();
+  await expect(page.locator('#music-status')).toContainText('RIFF/WAVE'); expect(reserves).toBe(0);
+  // Hold the separate module response to exercise cancellation even on a fast CPU.
+  let unblock; const blocked = new Promise(resolve => { unblock=resolve; });
+  await page.route('**/vendor/music-mp3/lamejs-1.2.7.js',async route => { await blocked; await route.abort().catch(() => {}); });
+  await page.locator('#file-audio').setInputFiles({name:'cancel.wav',mimeType:'audio/wav',buffer:wavFixture({seconds:2})});
+  await page.locator('[data-upload-kind=audio]').click();
+  await page.locator('#wav-cancel-audio').click();
+  await expect(page.locator('#music-status')).toContainText('已取消转换'); expect(reserves).toBe(0);
+  unblock(); await page.unroute('**/vendor/music-mp3/lamejs-1.2.7.js');
+  await page.route('**/vendor/music-mp3/lamejs-1.2.7.js',route => route.abort());
+  await page.locator('[data-upload-kind=audio]').click();
+  await expect(page.locator('#wav-progress-audio')).toBeHidden();
+  await expect(page.locator('#music-status')).toHaveAttribute('data-error','true'); expect(reserves).toBe(0);
+  await page.unroute('**/vendor/music-mp3/lamejs-1.2.7.js');
+  await page.locator('[data-upload-kind=audio]').click();
+  await expect(page.locator('#music-status')).toContainText('文件已验证'); expect(reserves).toBe(1);
+});
+test('lost WAV reservation receipt reuses one session and deterministically regenerates the original MP3',async ({page}) => {
+  await create(page); await page.getByRole('tab',{name:'素材',exact:true}).click();
+  let reserves = 0, puts = 0; const keys = [];
+  await page.route('**/admin/api/music/uploads',async route => {
+    reserves++; keys.push(route.request().headers()['idempotency-key']);
+    if (reserves === 1) { await route.fetch(); await route.abort(); } else await route.continue();
+  });
+  page.on('request',r => { if (r.method() === 'PUT' && r.url().endsWith('/body')) puts++; });
+  const source = {name:'same.wav',mimeType:'audio/wav',buffer:wavFixture({seconds:2,bits:24})};
+  await page.locator('#file-audio').setInputFiles(source); await page.locator('[data-upload-kind=audio]').click();
+  await expect(page.locator('#mutation-retry')).toBeVisible(); expect(puts).toBe(0);
+  await page.reload(); await page.locator('#mutation-retry').click();
+  await expect(page.locator('#confirm-description')).toContainText('沿用原内容、版本和幂等键');
+  expect(reserves).toBe(1); expect(puts).toBe(0);
+  await page.locator('#confirm-accept').click();
+  await expect(page.locator('#mutation-retry')).toBeHidden();
+  await page.locator('#file-audio').setInputFiles({name:'different.wav',mimeType:'audio/wav',buffer:wavFixture({seconds:3})});
+  await page.getByRole('button',{name:'查询并恢复',exact:true}).click();
+  await expect(page.locator('#music-status')).toContainText('请重新选择原文件'); expect(puts).toBe(0);
+  await page.locator('#file-audio').setInputFiles(source);
+  await page.getByRole('button',{name:'查询并恢复',exact:true}).click();
+  await expect(page.locator('#music-status')).toContainText('文件已验证');
+  expect(puts).toBe(1); expect(reserves).toBe(2); expect(keys[1]).toBe(keys[0]);
+});
+test('unknown WAV PUT does not reconvert or upload again after reload',async ({page}) => {
+  await create(page); await page.getByRole('tab',{name:'素材',exact:true}).click();
+  let puts = 0, reserves = 0;
+  page.on('request',r => { if (r.method() === 'POST' && r.url().endsWith('/uploads')) reserves++; });
+  await page.route('**/uploads/*/body',async route => { puts++; await route.fetch(); await route.abort(); });
+  await page.locator('#file-audio').setInputFiles({name:'tone.wav',mimeType:'audio/wav',buffer:wavFixture({seconds:2})});
+  await page.locator('[data-upload-kind=audio]').click();
+  await expect(page.locator('#music-status')).toContainText('无法确认');
+  await page.reload(); await page.getByRole('tab',{name:'素材',exact:true}).click();
+  await page.route('**/vendor/music-mp3/**',() => { throw new Error('Recovery must not load encoder'); });
+  await page.getByRole('button',{name:'查询并恢复',exact:true}).click();
+  await expect(page.locator('#music-status')).toContainText('文件已验证'); expect(puts).toBe(1); expect(reserves).toBe(1);
 });
 test('dirty editor guards filters and navigation; conflict does not overwrite newer version',async ({page}) => {
   await create(page); await page.locator('#track-title').fill('保留修改');

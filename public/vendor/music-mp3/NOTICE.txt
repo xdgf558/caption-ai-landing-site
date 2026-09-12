@@ -1,0 +1,26 @@
+Station Cat uses @breezystack/lamejs 1.2.7, a JavaScript port of LAME.
+Copyright belongs to the LAME / lamejs contributors (including Alex Zhukov).
+LAME: https://lame.sourceforge.net/
+Original JavaScript port: https://github.com/zhuker/lamejs
+ES module fork: https://github.com/gideonstele/lamejs
+License: GNU LGPL version 3; see LGPL-3.0.txt and GPL-3.0.txt in this directory.
+The upstream package's notice is preserved in UPSTREAM-NOTICE.txt.
+
+lamejs-1.2.7.js is the UNMODIFIED dist/lamejs.js from the exact npm package.
+It is loaded as an independent ES module, not bundled into application code.
+You may replace that file with a compatible modified version under the LGPL.
+Reverse engineering for debugging modifications to this library is permitted.
+No warranty is provided; see the licenses for full terms.
+
+Corresponding source and build files: source-1.2.7.tar.gz (same directory).
+Upstream commit: 1fb0ef5fa177413107e2e107d054a9b994e3f79c (npm gitHead).
+Extract the archive, install its declared development dependencies and run
+npm run build. The upstream build produces dist/lamejs.js via Vite.
+Application integration source is available in the public repository:
+https://github.com/xdgf558/caption-ai-landing-site/tree/codex/music-admin-wav-transcode/src/scripts
+
+SHA-256:
+lamejs-1.2.7.js
+1c5f944911ccf2f6e29ab36c2e568363210ab16f50c0d76077060f40ecf91d28
+source-1.2.7.tar.gz
+af8f08f0ff9a13777f2ffff737b48e40019b53a4b21db270dd62e829574e2b83

@@ -1,7 +1,7 @@
 ---
 import { Plus, RefreshCw, ArrowLeft, ArrowRight, Save, Search, History, X, Upload, Music2 } from '@lucide/astro';
 const locales = [['zh-Hans', '简体中文'], ['zh-Hant', '繁體中文'], ['en', 'English'], ['ja', '日本語']];
-const kinds = [['audio', '完整音频', '.mp3', 'MP3 · 最大 32 MiB'], ['preview', '独立试听', '.mp3', 'MP3 · 最大 4 MiB'],
+const kinds = [['audio', '完整音频', '.mp3,.wav', 'MP3 ≤ 32 MiB · WAV ≤ 256 MiB'], ['preview', '独立试听', '.mp3,.wav', 'MP3 ≤ 4 MiB · WAV ≤ 32 MiB'],
   ['cover', '封面', '.jpg,.jpeg,.png,.webp', 'JPEG / PNG / WebP · 最大 5 MiB'], ['lyrics', '歌词', '.txt,.lrc', 'UTF-8 TXT / LRC · 最大 128 KiB'], ['evidence', '权利凭证', '.pdf,.jpg,.jpeg,.png', 'PDF / JPEG / PNG · 最大 10 MiB']];
 const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', '商业使用授权依据'], ['lyricsRightsNotes', '歌词权利说明'],
   ['coverRightsNotes', '封面权利说明'], ['audioInputRightsNotes', '音频输入权利说明']];
@@ -58,8 +58,15 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
             <header><h3>{name}</h3><span class="muted">{limit}</span></header>
             <div data-asset-kind={kind} class="asset-view"></div>
             {kind === 'preview' && <div class="field-grid"><label>原曲起点（秒）<input id="preview-start" type="number" min="0" step="0.001" value="0" /></label><label>原曲终点（秒）<input id="preview-end" type="number" min="0.001" step="0.001" /></label></div>}
-            <div class="upload-control"><label class="sr-only" for={`file-${kind}`}>选择{name}文件</label><input id={`file-${kind}`} type="file" accept={accept} /><button type="button" data-upload-kind={kind}><Upload size={16} />上传</button></div>
+            <div class="upload-control"><label class="sr-only" for={`file-${kind}`}>选择{name}文件</label><input id={`file-${kind}`} type="file" accept={accept} /><button type="button" data-upload-kind={kind}><Upload size={16} /><span>上传</span></button></div>
+            {['audio', 'preview'].includes(kind) && <>
+              <p class="muted wav-help">WAV 在本机转为 MP3 后上传，原文件留在你的电脑。{kind === 'audio' ? '最长 20 分钟。' : '最长 45 秒，且不得超过原曲一半；请先裁好试听。'}</p>
+              <div id={`wav-progress-${kind}`} class="wav-progress" hidden>
+                <label for={`wav-meter-${kind}`}>正在本机转换</label><progress id={`wav-meter-${kind}`} max="100" value="0"></progress><button id={`wav-cancel-${kind}`} type="button">取消转换</button>
+              </div>
+            </>}
           </section>)}</div>
+          <details class="wav-formats"><summary>WAV 格式与转换说明</summary><p class="muted">支持单／双声道，32、44.1 或 48 kHz，PCM 16/24/32 位或 Float 32 位。输出 MP3 192 kbps，保留采样率与声道，不做响度归一化；浮点超出满幅会裁限，高位深会转为 16 位。其他格式请先在本机导出 MP3。</p><p class="muted">取消仅停止本机转换。进入上传后，结果不明请使用“查询并恢复”，不要另开会话。转换和上传成功仍需试听与审核。</p><a href="/vendor/music-mp3/NOTICE.txt" target="_blank" rel="noopener">LAME 编码器许可与对应源码</a></details>
           <section id="upload-recovery" hidden><h3>上传会话</h3><div id="upload-sessions"></div></section>
           <p class="muted">失败或过期的上传仍占用预留额度；目前不能自动回收。</p>
           <footer class="music-actions"><button id="assets-save" class="primary" type="button"><Save size={17} />保存素材到草稿</button><span id="assets-state" class="muted"></span></footer>
