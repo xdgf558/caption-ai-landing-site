@@ -2,7 +2,7 @@
 
 更新：2026-09-12。
 
-当前开发：M5-03A 专辑模型与管理，分支 `codex/music-album-management` 基于 `main@9e51b4c`。独立专辑类型、四语资料、固定曲序/键盘排序、免费或 VIP 一致性配置、成员封面复用及公开专辑分类已实现；合同见 [M5_ALBUM_MANAGEMENT](M5_ALBUM_MANAGEMENT.md)。本切片单独 PR 审查，后续是 M5-01B 整张多文件上传。
+当前开发：M5-03A 专辑模型与管理，分支 `codex/music-album-management` 基于 `main@9e51b4c`。独立专辑类型、四语资料、固定曲序/键盘排序、免费或 VIP 一致性配置、成员封面复用及公开专辑分类已实现；合同见 [M5_ALBUM_MANAGEMENT](M5_ALBUM_MANAGEMENT.md)。本切片 PR #149 独立审查，后续是 M5-01B 整张多文件上传。
 
 已合并：#146 统计、#147 分享卡片、#148 后台 WAV → MP3；三包 CI 已通过后按用户授权合并。0006 仍未远程应用；本包新增 0007 也只在本地测试。未部署、未修改旗/配额/预发白名单，也不发布本地执行或 session 材料。
 

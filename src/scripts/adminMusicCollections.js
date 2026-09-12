@@ -21,6 +21,7 @@ function sync() {
   for(const id of ['collection-new-album','collection-new-playlist','collection-prev','collection-next']) $(id).disabled=blocked;
   $('collection-prev').disabled ||= page===0; $('collection-next').disabled ||= !nextBefore;
   all('#collection-search-form input,#collection-search-form select,#collection-search-form button,#collection-list button').forEach(n=>n.disabled=blocked);
+  all('#collection-list button').forEach(n=>n.setAttribute('aria-current',String(n.dataset.collectionId===current?.id)));
   $('collection-fields').disabled=blocked||archived||orderDirty;
   all('#member-search-form input,#member-search-form button,#member-results button,#member-more,#collection-order button,#collection-order-reason').forEach(n=>n.disabled=blocked||archived||!current?.id||dirty||n.dataset.boundary==='true');
   $('collection-order-save').disabled=blocked||archived||!current?.id||dirty||!orderDirty;
@@ -62,7 +63,7 @@ function fill(row){current=row;order=(row.tracks||[]).map(t=>({...t}));dirty=fal
   renderOrder();sync();
 }
 async function loadList(){const p=new URLSearchParams({q:$('collection-search').value.trim(),status:$('collection-status-filter').value,type:$('collection-type-filter').value});if(cursors[page])p.set('before',cursors[page]);const r=await request('/collections?'+p);nextBefore=r.nextBefore;$('collection-list').replaceChildren();
-  for(const row of r.items){const b=el('button');b.className='track-row';b.type='button';b.append(el('strong',label(row)),el('small',`${typeNames[row.type]} · ${stateNames[row.status]} · ${row.trackCount} 首`));b.onclick=()=>run(async()=>{if(await leave()){await load(row.id);status('已载入。');}});$('collection-list').append(b);}if(!r.items.length)$('collection-list').append(el('p','暂无符合条件的内容。'));$('collection-page').textContent=`第 ${page+1} 页`;
+  for(const row of r.items){const b=el('button');b.className='track-row';b.type='button';b.dataset.collectionId=row.id;b.append(el('strong',label(row)),el('small',`${typeNames[row.type]} · ${stateNames[row.status]} · ${row.trackCount} 首`));b.onclick=()=>run(async()=>{if(await leave()){await load(row.id);status('已载入。');}});$('collection-list').append(b);}if(!r.items.length)$('collection-list').append(el('p','暂无符合条件的内容。'));$('collection-page').textContent=`第 ${page+1} 页`;
 }
 async function load(id){fill(await request('/collections/'+id));persist();}
 async function replay(){const op=journal.get().pending;if(!op)return;await checkActor();let result;try{result=await request(op.path,op);}catch(e){if(!e.uncertain)journal.update({pending:null});throw e;}

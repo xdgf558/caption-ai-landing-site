@@ -6,6 +6,7 @@ async function confirm(page){await page.locator('#collection-confirm-accept').cl
 
 test('album metadata, keyboard order, reload and failed incomplete publication use isolated API',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await create(page);
+  await expect(page.locator('#collection-list button[aria-current="true"]')).toHaveCount(1);
   await page.locator('#member-search-form button').click();
   await page.getByRole('button',{name:'添加 晚风经过车站',exact:true}).click();await page.getByRole('button',{name:'添加 月台上的雨',exact:true}).click();
   await expect(page.locator('#collection-publish')).toBeDisabled();await expect(page.locator('#collection-save')).toBeDisabled();
