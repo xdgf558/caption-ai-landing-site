@@ -175,6 +175,9 @@ test('lost WAV reservation receipt reuses one session and deterministically rege
   await page.locator('#file-audio').setInputFiles(source); await page.locator('[data-upload-kind=audio]').click();
   await expect(page.locator('#mutation-retry')).toBeVisible(); expect(puts).toBe(0);
   await page.reload(); await page.locator('#mutation-retry').click();
+  await expect(page.locator('#confirm-description')).toContainText('沿用原内容、版本和幂等键');
+  expect(reserves).toBe(1); expect(puts).toBe(0);
+  await page.locator('#confirm-accept').click();
   await expect(page.locator('#mutation-retry')).toBeHidden();
   await page.locator('#file-audio').setInputFiles({name:'different.wav',mimeType:'audio/wav',buffer:wavFixture({seconds:3})});
   await page.getByRole('button',{name:'查询并恢复',exact:true}).click();
