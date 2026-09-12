@@ -17,7 +17,7 @@ async function add(page){await page.locator('#batch-add').click();await page.loc
 
 test('mixed MP3/WAV upload creates separate drafts; explicit per-song policy, order, membership and deep link',async({page})=>{
   const errors=[],calls=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.method()!=='GET'&&r.url().includes('/admin/api/music/'))calls.push(r);});
-  await setup(page);expect(calls.filter(r=>r.url().endsWith('/uploads'))).toHaveLength(0);
+  await setup(page);await page.locator('.batch-row input:not([type=file])').nth(1).fill('改名后的 WAV');expect(calls.filter(r=>r.url().endsWith('/uploads'))).toHaveLength(0);
   await page.locator('.batch-row').nth(1).getByRole('button',{name:'上移',exact:true}).press('Enter');
   await start(page);await expect(page.locator('#batch-summary')).toHaveText('草稿完成 2 / 2 · 已加入 0');
   const creates=calls.filter(r=>r.url().endsWith('/tracks')&&r.method()==='POST');expect(creates).toHaveLength(2);expect(creates.map(r=>r.postDataJSON().policy.accessMode)).toEqual(['vip','free']);
@@ -26,7 +26,7 @@ test('mixed MP3/WAV upload creates separate drafts; explicit per-song policy, or
   await add(page);await expect(page.locator('#batch-summary')).toHaveText('草稿完成 2 / 2 · 已加入 2');
   const order=calls.find(r=>r.method()==='PUT'&&r.url().endsWith('/tracks'));expect(order.postDataJSON().trackIds).toEqual(reserves.map(r=>r.postDataJSON().trackId));
   const href=await page.locator('.batch-row a').first().getAttribute('href');await page.locator('.batch-row a').first().click();await expect(page).toHaveURL(new RegExp(href.split('?')[1].split('=')[1]));
-  await expect(page.locator('#track-title')).toHaveValue('本机测试');await expect(page.locator('#access-mode')).toHaveValue('vip');await expect(page.locator('#track-state')).toHaveText('草稿');expect(errors).toEqual([]);
+  await expect(page.locator('#track-title')).toHaveValue('改名后的 WAV');await expect(page.locator('#access-mode')).toHaveValue('vip');await expect(page.locator('#track-state')).toHaveText('草稿');expect(errors).toEqual([]);
 });
 
 test('lost reservation restores journal, original key and reselected file without duplicate drafts',async({page})=>{

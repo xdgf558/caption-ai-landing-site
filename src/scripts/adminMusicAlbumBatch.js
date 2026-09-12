@@ -14,7 +14,7 @@ const rowNodes=new Map();
 function makeRow(r){const li=el('li');li.className='batch-row';li.dataset.rowId=r.id;
   const head=el('div');head.className='batch-row-header';const title=el('strong'),badge=el('span');badge.className='badge';head.append(title,badge);
   const info=el('small'),fields=el('div');fields.className='batch-row-fields';
-  const titleLabel=el('label','曲名'),input=el('input');input.maxLength=120;input.value=r.title;input.addEventListener('change',()=>{try{batch.edit(r.id,{title:input.value.trim()});}catch(e){input.value=batch.state().state.batch.rows.find(row=>row.id===r.id).title;status(e.message,true);}});titleLabel.append(input);
+  const titleLabel=el('label','曲名'),input=el('input');input.maxLength=120;input.value=r.title;input.addEventListener('input',()=>{try{batch.edit(r.id,{title:input.value.trim()});}catch(e){input.value=batch.state().state.batch.rows.find(row=>row.id===r.id).title;status(e.message,true);}});titleLabel.append(input);
   const policyLabel=el('label','单曲收听范围'),select=el('select');for(const [v,t] of [['','请逐首确认'],['free','免费'],['vip','VIP']])select.append(new Option(t,v));select.value=r.mode;select.onchange=()=>{try{batch.edit(r.id,{mode:select.value});}catch(e){status(e.message,true);}};policyLabel.append(select);fields.append(titleLabel,policyLabel);
   const actions=el('div');actions.className='batch-controls';const up=el('button','上移'),down=el('button','下移'),cancel=el('button','取消此项');
   for(const b of [up,down,cancel])b.type='button';up.onclick=()=>run(()=>batch.move(r.id,-1));down.onclick=()=>run(()=>batch.move(r.id,1));cancel.onclick=()=>run(()=>batch.cancelRow(r.id));actions.append(up,down,cancel);
@@ -64,6 +64,6 @@ $('batch-sync-album').onclick=()=>run(async()=>{if(await ask('采用服务器当
 $('batch-cancel-remaining').onclick=()=>run(async()=>{if(await ask('取消未开始的曲目？','仅取消还未创建草稿的项。已创建的曲目、已预留及结果未知的上传继续保留，需分别处理。')){batch.cancelRemaining();status('已取消未开始项，已有草稿与会话保持原状。');}});
 $('batch-clear').onclick=()=>run(async()=>{if(await ask('结束此批次？','仅清除本标签页的已处理清单。服务端草稿、已上传文件与预留额度均保留；未确认操作不能清除。')){batch.clear();rowNodes.clear();$('batch-rows').replaceChildren();await boot();}});
 $('batch-reload').onclick=()=>run(boot);
-window.addEventListener('beforeunload',e=>{if(batch?.state().state.batch){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{const snapshot=batch?.state(),b=snapshot?.state.batch;if(b&&(snapshot.busy||snapshot.state.pending||!b.started||b.rows.some(r=>!['cancelled','retired'].includes(r.stage)&&(r.stage!=='ready'||!b.album.expectedIds.includes(r.trackId))))){e.preventDefault();e.returnValue='';}});
 window.addEventListener('pagehide',()=>batch?.destroy());
 run(boot);

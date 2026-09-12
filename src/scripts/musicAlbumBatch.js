@@ -40,7 +40,7 @@ function validate(state) {
     for (const r of b.rows) {
       if (!keysOnly(r,['id','name','size','title','mode','stage','output','trackId','revisionId','editVersion','uploadId','assetId','writeKey','error']) || !uuid(r.id) ||
         !string(r.name,260) || !Number.isSafeInteger(r.size) || r.size<1 || r.size>(isWav(r)?WAV_LIMITS.audio:32*1048576) ||
-        !string(r.title,120) || !r.title.trim() || !['','free','vip'].includes(r.mode) || (b.started&&r.stage!=='cancelled'&&!r.mode) || !stages.includes(r.stage) || !string(r.error,500)) fail('批次曲目记录不可读。');
+        !string(r.title,120) || (b.started&&r.stage!=='cancelled'&&!r.title.trim()) || !['','free','vip'].includes(r.mode) || (b.started&&r.stage!=='cancelled'&&!r.mode) || !stages.includes(r.stage) || !string(r.error,500)) fail('批次曲目记录不可读。');
       size+=r.size;
       for(const k of ['trackId','revisionId','uploadId','assetId','writeKey']) if(r[k]!=null&&!uuid(r[k])) fail('批次编号无效。');
       if (r.output!=null && (!keysOnly(r.output,['size','sha256','conversion']) || !Number.isSafeInteger(r.output.size) || r.output.size<1 || r.output.size>32*1048576 || !/^[a-f0-9]{64}$/.test(r.output.sha256) || ![null,WAV_PROFILE].includes(r.output.conversion))) fail('批次文件证明无效。');
@@ -162,6 +162,7 @@ export function createAlbumBatch({journal,actor,api=request,hash=hashFile,conver
     continue:()=>run(async()=>{
       if(journal.get().pending)fail('先明确核对原操作，再继续批次。');
       const b=journal.get().batch;if(!b)fail('请先选择文件。');
+      if(b.rows.some(r=>r.stage!=='cancelled'&&!r.title.trim()))fail('请为每首待处理曲目填写曲名。');
       if(b.rows.some(r=>r.stage!=='cancelled'&&!['free','vip'].includes(r.mode)))fail('请逐首确认免费或 VIP；专辑设置不会替你修改单曲权限。');
       const service=await checkActor();if(!service.capabilities?.uploads)fail('上传未开放或配额未配置。');await checkAlbum();save({batch:{...b,started:true}});
       for(const r of b.rows){if(stop)break;if(['ready','cancelled','retired'].includes(row(r.id).stage))continue;

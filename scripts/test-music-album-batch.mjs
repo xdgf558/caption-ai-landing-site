@@ -54,7 +54,10 @@ test('selection is bounded, requires explicit per-track modes and does no IO or 
   const f=fixture();assert.equal(f.state.calls.length,0);const p=createBatchPlan(f.album,f.files,config);
   assert.ok(p.rows.every(r=>r.mode===''));assert.throws(()=>createBatchPlan({...f.album,status:'published'},f.files,config));
   assert.throws(()=>createBatchPlan(f.album,Array(BATCH_LIMIT+1).fill(file()),config));assert.throws(()=>createBatchPlan(f.album,[f.files[0],f.files[0]],config));
+  assert.throws(()=>createBatchPlan({...f.album,tracks:Array.from({length:500},()=>({id:randomUUID()}))},[file()],config));
+  assert.throws(()=>createBatchPlan(f.album,Array.from({length:5},(_,i)=>({name:i+'.wav',size:256*1048576,lastModified:0})),config));
   assert.throws(()=>createBatchPlan(f.album,[file('bad.zip')],config));assert.throws(()=>createBatchPlan(f.album,[{name:'large.wav',size:256*1048576+1}],config));
+  f.core.edit(f.journal.get().batch.rows[0].id,{title:''});await assert.rejects(f.core.continue(),/填写曲名/);f.core.edit(f.journal.get().batch.rows[0].id,{title:'已编辑标题'});
   f.core.edit(f.journal.get().batch.rows[0].id,{mode:''});await assert.rejects(f.core.continue(),/逐首确认/);assert.equal(writes(f).length,0);
 });
 
