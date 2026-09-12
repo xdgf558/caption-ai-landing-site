@@ -55,6 +55,11 @@ jobs:
         env:
           ALLOW_EMPTY_SERIAL_CONTENT: "1"
 
+      - name: Verify isolated music staging package
+        run: |
+          node scripts/build-music-staging-assets.mjs
+          node scripts/check-music-staging-assets.mjs
+
       - name: Run article browser tests
         run: npm run test:browser:articles
         env:

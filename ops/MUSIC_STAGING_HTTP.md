@@ -22,6 +22,19 @@ The staging configuration enables Access-protected public reads and VIP delivery
 Uploads, analytics and cleanup execution remain disabled. There is no seed, login,
 debug or IP-override HTTP endpoint, and no fixture Worker may be deployed.
 
+The checked-in configuration is the later read-acceptance configuration. For every
+schema migration or maintenance deployment, first run
+`npm run build:music:staging-maintenance-config` and deploy only the generated,
+ignored `.generated/music-staging-maintenance.jsonc`. The generator asserts the
+isolated target and forces public, uploads, VIP delivery, analytics and cleanup to
+false; never use the checked-in public/VIP values during a maintenance window.
+
+Run `npm run build:music:staging-assets` before deployment. The build copies only
+the four music administration pages, the four localized music pages and their
+recursive static dependencies. Its checker fails if a copied dependency is absent
+or blocked by the Worker gate. The exact page list and rollback contract are in
+[M6_STAGING_SURFACES](../docs/music/M6_STAGING_SURFACES.md).
+
 ## Operator preparation
 
 Use `cloudflared access login --quiet` for the configured staging application.
@@ -35,7 +48,8 @@ HTTP credentials through temporary private header files and never follows redire
 Do not import this helper into deployed code. A token or transport failure must be
 investigated without automatically retrying an uncertain upload.
 
-Before initial samples, deploy the guarded entrypoint with public reads closed and
+Before migrations or initial samples, deploy the guarded entrypoint with all five
+music flags closed and
 confirm that catalog/audio return `MUSIC_PUBLIC_DISABLED` without counter changes.
 In an explicitly authorized fixture window, keep public reads closed and temporarily
 enable uploads. `node ops/seed-music-staging-http.mjs` requires an empty catalog for

@@ -1,11 +1,15 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, extname, relative, resolve } from 'node:path';
 import test from 'node:test';
 import { musicTestDatabase } from './helpers/music-test-database.mjs';
+import { maintenanceConfig } from './build-music-staging-maintenance-config.mjs';
+import { checkMusicStagingAssets } from './check-music-staging-assets.mjs';
 import { fileURLToPath } from 'node:url';
 import {
   isMusicStagingRequest,
+  musicStagingCanonicalPath,
   musicStagingHost,
   musicStagingNotFound,
   musicStagingReaderRequest,
@@ -111,14 +115,32 @@ test('only music admin, public read routes and exact static dependencies are all
     ['/api/music/collections/staging?locale=en', 'GET'],
     ['/admin/music', 'GET'],
     ['/admin/music/', 'HEAD'],
+    ['/admin/music/collections/', 'GET'],
+    ['/admin/music/collections/upload', 'HEAD'],
+    ['/admin/music/featured/', 'GET'],
+    ['/music/', 'GET'],
+    ['/en/music', 'HEAD'],
+    ['/ja/music/', 'GET'],
+    ['/zh-hans/music/', 'HEAD'],
     ['/admin/api/music/status', 'GET'],
     ['/admin/api/music/tracks', 'POST'],
     ['/admin/api/music/tracks/track_1', 'PATCH'],
     ['/admin/api/music/uploads/up_1/bytes', 'PUT'],
     ['/styles/admin-music.css', 'GET'],
+    ['/styles/admin-music-batch.css', 'GET'],
+    ['/styles/admin-music-collections.css', 'GET'],
+    ['/styles/admin-music-featured.css', 'GET'],
+    ['/vendor/music-mp3/lamejs-1.2.7.js', 'GET'],
+    ['/images/apps/mindbudget/warm-botanical.png', 'GET'],
+    ['/images/apps/snapcopy-app-icon.png', 'GET'],
     ['/favicon.ico', 'HEAD'],
     ['/images/optimized/station-cat-logo-1668c2e5-160.webp', 'GET'],
-    ['/_astro/music.astro_astro_type_script_index_0_lang.hash.js', 'GET']
+    ['/_astro/music.astro_astro_type_script_index_0_lang.hash.js', 'GET'],
+    ['/_astro/collections.astro_astro_type_script_index_0_lang.hash.js', 'GET'],
+    ['/_astro/featured.astro_astro_type_script_index_0_lang.hash.js', 'GET'],
+    ['/_astro/MusicPlayer.astro_astro_type_script_index_0_lang.hash.js', 'GET'],
+    ['/_astro/musicWavWorker-hash.js', 'GET'],
+    ['/_astro/index.hash.css', 'GET']
   ]) assert.equal(isMusicStagingRequest(request(path, method)), true, `${method} ${path}`);
 });
 
@@ -131,16 +153,30 @@ test('main site, other admin surfaces, traversal variants and unsupported method
     ['/api/music/staging/seed', 'POST'],
     ['/admin-v2/', 'GET'],
     ['/admin/articles/', 'GET'],
+    ['/zh-hant/music/', 'GET'],
+    ['/en/library/', 'GET'],
     ['/api/readers/membership/redeem', 'POST'],
     ['/api/creem/webhook', 'POST'],
     ['/sitemap.xml', 'GET'],
     ['/_astro/articles.astro_hash.js', 'GET'],
+    ['/_astro/index.astro_other_page.hash.js', 'GET'],
     ['/_astro/music.astro_astro_type_script_index_0_lang.hash.css', 'GET'],
     ['/admin/%2e%2e/api/music/status', 'GET'],
     ['/admin/music/', 'POST'],
     ['/styles/admin-music.css', 'POST'],
     ['/admin/api/music/status', 'DELETE']
   ]) assert.equal(isMusicStagingRequest(request(path, method)), false, `${method} ${path}`);
+});
+
+test('only exact music page routes receive canonical trailing slash redirects', () => {
+  for (const path of ['/admin/music', '/admin/music/collections', '/admin/music/collections/upload',
+    '/admin/music/featured', '/music', '/en/music', '/ja/music', '/zh-hans/music']) {
+    assert.equal(musicStagingCanonicalPath(path), `${path}/`);
+    assert.equal(musicStagingCanonicalPath(`${path}/`), `${path}/`);
+  }
+  for (const path of ['/', '/admin', '/admin/music/unknown', '/zh-hant/music', '/en/library']) {
+    assert.equal(musicStagingCanonicalPath(path), null);
+  }
 });
 
 test('host and fail-closed responses are normalized and private', async () => {
@@ -203,6 +239,91 @@ test('staging config exposes only the Access-protected music host and isolated b
   for (const key of ['MUSIC_UPLOADS_ENABLED', 'MUSIC_ANALYTICS_ENABLED', 'MUSIC_CLEANUP_ENABLED']) {
     assert.equal(config.vars[key], 'false');
   }
+});
+
+test('maintenance deployments derive the same isolated config with all music flags closed', async () => {
+  const source = await readFile(new URL('../ops/music-staging-app.jsonc', import.meta.url), 'utf8');
+  const config = maintenanceConfig(source);
+  for (const key of ['MUSIC_PUBLIC_ENABLED', 'MUSIC_UPLOADS_ENABLED', 'MUSIC_VIP_DELIVERY_ENABLED',
+    'MUSIC_ANALYTICS_ENABLED', 'MUSIC_CLEANUP_ENABLED']) assert.equal(config.vars[key], 'false');
+  assert.equal(config.name, 'station-cat-music-staging');
+  assert.equal(config.account_id, '3f5394e0ef5a531c63c0ceaa74262e0d');
+  assert.deepEqual(config.d1_databases.map(({ binding, database_id: id }) => ({ binding, id })), [{
+    binding: 'MUSIC_DB',
+    id: '8fe1a3e1-7325-4d87-a7e6-2c51338b9158'
+  }, {
+    binding: 'MUSIC_STAGING_MEMBERSHIP_DB',
+    id: 'cb7bbad3-bfbb-457d-b2f2-6fd3b02df651'
+  }]);
+});
+
+test('moving the maintenance config preserves source, asset and both migration directories', async () => {
+  const root = fileURLToPath(new URL('../', import.meta.url));
+  const source = await readFile(resolve(root, 'ops/music-staging-app.jsonc'), 'utf8');
+  const original = JSON.parse(source.replace(/^\s*\/\/.*$/gm, ''));
+  const generated = maintenanceConfig(source);
+  const paths = config => [config.main, config.assets.directory,
+    ...config.d1_databases.map(database => database.migrations_dir)];
+  const before = paths(original), after = paths(generated);
+  for (let index = 0; index < before.length; index++) {
+    const originalTarget = resolve(root, 'ops', before[index]);
+    const generatedTarget = resolve(root, '.generated', after[index]);
+    assert.equal(generatedTarget, originalTarget);
+  }
+  for (const database of generated.d1_databases) {
+    await access(resolve(root, '.generated', database.migrations_dir));
+  }
+  const identities = generated.d1_databases.find(database => database.binding === 'MUSIC_STAGING_MEMBERSHIP_DB');
+  await access(resolve(root, '.generated', identities.migrations_dir, '0001_test_identities.sql'));
+});
+
+test('staging package validation checks exact HTML pages and their dependency closure', async t => {
+  const script = '/_astro/music.astro_astro_type_script_index_0_lang.fixture.js';
+  const stylesheet = '/styles/admin-music.css';
+  async function fixture(t) {
+    const root = await mkdtemp(resolve(tmpdir(), 'music-staging-assets-test-'));
+    t.after(() => rm(root, { recursive: true, force: true }));
+    const put = async (file, contents = '') => {
+      const target = resolve(root, `.${file}`);
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, contents);
+    };
+    for (const page of ['/admin/music', '/admin/music/collections', '/admin/music/collections/upload',
+      '/admin/music/featured', '/music', '/en/music', '/ja/music', '/zh-hans/music']) {
+      await put(`${page}/index.html`, `<link rel="stylesheet" href="${stylesheet}?v=1"><script src="${script}"></script><a href="/en/library/">Account</a>`);
+    }
+    await put(script);
+    await put(stylesheet);
+    return { root, put };
+  }
+  await t.test('complete pages and dependencies pass; navigation is not a static dependency', async t => {
+    const { root } = await fixture(t);
+    assert.deepEqual(await checkMusicStagingAssets(root), { pages: 8, assets: 2 });
+  });
+  for (const file of [script, stylesheet]) {
+    await t.test(`missing HTML dependency fails: ${file}`, async t => {
+      const { root } = await fixture(t);
+      await rm(resolve(root, `.${file}`));
+      await assert.rejects(checkMusicStagingAssets(root), /missing transitive staging asset/);
+    });
+  }
+  for (const file of ['/en/library/index.html', '/music/extra.html']) {
+    await t.test(`unexpected HTML fails: ${file}`, async t => {
+      const { root, put } = await fixture(t);
+      await put(file, '<p>Outside staging</p>');
+      await assert.rejects(checkMusicStagingAssets(root), /unexpected staging page/);
+    });
+  }
+  await t.test('missing transitive JS dependency fails', async t => {
+    const { root, put } = await fixture(t);
+    await put(script, 'import "./musicMessages.missing.js";');
+    await assert.rejects(checkMusicStagingAssets(root), /missing transitive staging asset/);
+  });
+  await t.test('present but forbidden chunks fail', async t => {
+    const { root, put } = await fixture(t);
+    await put('/_astro/articles.astro_hash.js');
+    await assert.rejects(checkMusicStagingAssets(root), /blocked by the staging gate/);
+  });
 });
 
 test('staging module graph includes only music, Access and the existing reader membership contract', async () => {
