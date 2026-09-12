@@ -34,6 +34,10 @@
 
 绑定不存在时返回 `configured:false`；某个组件失败时单独显示 unavailable。诊断 HTTP 200 表示获得了诊断快照，不表示已经可以开闸，也不把正常权限拒绝或下架响应当系统故障。原有 401/403/410 与资格/媒体 503 错误合同保留。
 
+限流拒绝服务时输出一条 `music_rate_limit_failure` 结构化警告，仅含 `version:1`、白名单 `category`（catalog/artwork/audio/unknown）、`stage`（configuration/source/database/result）和 `reason`（deadline_exceeded/operation_failed）。只有本地 D1 batch 截止定时器触发才记 `deadline_exceeded`；底层异常恰好叫 timeout 不算该证据。source 阶段包括 secret 校验、IP 规范化与 HMAC；database 包括 primary 会话与 batch；result 表示返回结构或计数不符。日志不序列化请求、URL、身份、Cookie、IP/散列、SQL、绑定、secret、异常消息或堆栈；正常放行和 429 不写此日志。日志写入异常仍返回原 503，公开 JSON 和只读 diagnostics 不增加失败详情。
+
+1.5 秒截止只停止等待，不能取消已提交到 D1 的工作，503 后仍可能迟到计次。不要因超时自动重试计数语句、放宽阈值或视为未执行。排查时关联同一请求的受保护运维日志与本机响应记录；整体 HTTP 耗时超过 1.5 秒本身不能证明 D1 batch 超时。[Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/) 可收集这些结构化警告；日志平台自身的请求元数据与权限、保留规则仍须单独管理。执行记录和脱敏结果不进仓库或 PR。
+
 ## 验证和发布边界
 
 - 限流/诊断专项 11/11：竞争下来源/全局上限、被拒不耗全局、IPv6 规范化、HMAC 窗口隔离、配置失败、全局计数故障回滚、受限回收、超时、总闸零访问、所有入口前置拦截及诊断只读。

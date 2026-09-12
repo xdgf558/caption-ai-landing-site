@@ -101,6 +101,47 @@ test('limiter failures and timeouts are 503 with no fallback allowance and consu
   assert.equal(result.status,503); reject(new Error('late private database failure'));
 });
 
+test('failure logs distinguish deadlines using fixed fields without serializing private failures', async t => {
+  const logs = [], warn = t.mock.method(console,'warn',(...args) => logs.push(args));
+  const f = fixture(), privateText = 'private cookie SQL key 192.0.2.1';
+  const denial = { status: 503,code: 'MUSIC_RATE_LIMIT_UNAVAILABLE',retryAfter: 5 };
+  const fakeDb = batch => ({ withSession() { return { prepare: () => ({ bind() { return {}; } }),batch }; } });
+  const check = (env, category = 'catalog', options = {}) => checkMusicRateLimit(request(),env,category,options);
+  const expected = (stage,reason = 'operation_failed',category = 'catalog') =>
+    ['music_rate_limit_failure',{ version: 1,category,stage,reason }];
+  assert.deepEqual(await check({...f.env,MUSIC_RATE_LIMITS_JSON:privateText}),denial);
+  assert.deepEqual(logs.pop(),expected('configuration'));
+  assert.deepEqual(await check(f.env,privateText),denial);
+  assert.deepEqual(logs.pop(),expected('configuration','operation_failed','unknown'));
+  assert.deepEqual(await check({...f.env,MUSIC_RATE_LIMIT_SECRET:''}),denial);
+  assert.deepEqual(logs.pop(),expected('source'));
+  const error = new Error(privateText); error.toJSON = () => { assert.fail('serialized private error'); };
+  assert.deepEqual(await check({...f.env,MUSIC_DB:fakeDb(async () => { throw error; })}),denial);
+  assert.deepEqual(logs.pop(),expected('database'));
+  // An external error named "timeout" is not evidence of our deadline firing.
+  assert.deepEqual(await check({...f.env,MUSIC_DB:fakeDb(async () => { throw new Error('timeout'); })}),denial);
+  assert.deepEqual(logs.pop(),expected('database'));
+  let resolve;
+  assert.deepEqual(await check({...f.env,MUSIC_DB:fakeDb(() => new Promise(r => { resolve = r; }))},'catalog',{timeoutMs:5}),denial);
+  assert.deepEqual(logs.pop(),expected('database','deadline_exceeded'));
+  resolve([{success:true,results:[]},{success:true,results:[]},{success:true,results:[{hits:1}]}]);
+  await new Promise(r => setImmediate(r)); assert.equal(logs.length,0);
+  assert.deepEqual(await check({...f.env,MUSIC_DB:fakeDb(async () => [{privateText}])}),denial);
+  assert.deepEqual(logs.pop(),expected('result'));
+  assert.equal(await f.check(),null); assert.equal(await f.check(),null); assert.equal((await f.check()).status,429);
+  assert.equal(logs.length,0);
+  assert.ok(warn.mock.calls.every(call => !JSON.stringify(call.arguments).includes(privateText)));
+});
+
+test('logging failures cannot change 503 or touch protected media', async t => {
+  t.mock.method(console,'warn',() => { throw new Error('logger failed'); });
+  const f = fixture(); f.env.MUSIC_RATE_LIMIT_SECRET = '';
+  const before = f.dump(), response = await handleMusicPublic(request(),f.env);
+  assert.equal(response.status,503); assert.equal(response.headers.get('retry-after'),'5');
+  assert.equal((await response.json()).error.code,'MUSIC_RATE_LIMIT_UNAVAILABLE');
+  assert.deepEqual(f.dump(),before); assert.equal(f.r2Reads,0);
+});
+
 test('closed public flag causes zero database reads and writes, including rate counters', async () => {
   const env = { MUSIC_PUBLIC_ENABLED: 'false',get MUSIC_DB() { assert.fail('closed gate touched database'); },
     get MUSIC_BUCKET() { assert.fail('closed gate touched R2'); } };
