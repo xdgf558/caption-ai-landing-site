@@ -1,5 +1,7 @@
 # 当前阶段
 
+2026-09-12 M5-01B：按用户授权合并 #149（main@cbbb975）后进入专辑多文件上传，分支 `codex/music-album-batch-upload`。每批 50 首、逐首 MP3/WAV、原键与会话恢复、显式把成功曲目加入草稿专辑已实现，待独立审查，详见 [批量上传合同](M5_ALBUM_BATCH_UPLOAD.md)。专辑 listeningMode 不批量改单曲权限；无部署、新迁移、预发白名单/配额/开关修改。本地执行及 session 材料不上传。后续仍为 M5-02 四角色公开预览、M5-03 人工主推/管理收尾。以下为历史记录。
+
 更新：2026-09-12。
 
 当前开发：M5-03A 专辑模型与管理，分支 `codex/music-album-management` 基于 `main@9e51b4c`。独立专辑类型、四语资料、固定曲序/键盘排序、免费或 VIP 一致性配置、成员封面复用及公开专辑分类已实现；合同见 [M5_ALBUM_MANAGEMENT](M5_ALBUM_MANAGEMENT.md)。本切片 PR #149 独立审查，后续是 M5-01B 整张多文件上传。
