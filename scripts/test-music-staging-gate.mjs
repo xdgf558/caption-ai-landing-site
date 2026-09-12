@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, extname, relative, resolve } from 'node:path';
 import test from 'node:test';
 import { musicTestDatabase } from './helpers/music-test-database.mjs';
 import { maintenanceConfig } from './build-music-staging-maintenance-config.mjs';
+import { checkMusicStagingAssets } from './check-music-staging-assets.mjs';
 import { fileURLToPath } from 'node:url';
 import {
   isMusicStagingRequest,
@@ -253,6 +255,75 @@ test('maintenance deployments derive the same isolated config with all music fla
     binding: 'MUSIC_STAGING_MEMBERSHIP_DB',
     id: 'cb7bbad3-bfbb-457d-b2f2-6fd3b02df651'
   }]);
+});
+
+test('moving the maintenance config preserves source, asset and both migration directories', async () => {
+  const root = fileURLToPath(new URL('../', import.meta.url));
+  const source = await readFile(resolve(root, 'ops/music-staging-app.jsonc'), 'utf8');
+  const original = JSON.parse(source.replace(/^\s*\/\/.*$/gm, ''));
+  const generated = maintenanceConfig(source);
+  const paths = config => [config.main, config.assets.directory,
+    ...config.d1_databases.map(database => database.migrations_dir)];
+  const before = paths(original), after = paths(generated);
+  for (let index = 0; index < before.length; index++) {
+    const originalTarget = resolve(root, 'ops', before[index]);
+    const generatedTarget = resolve(root, '.generated', after[index]);
+    assert.equal(generatedTarget, originalTarget);
+  }
+  for (const database of generated.d1_databases) {
+    await access(resolve(root, '.generated', database.migrations_dir));
+  }
+  const identities = generated.d1_databases.find(database => database.binding === 'MUSIC_STAGING_MEMBERSHIP_DB');
+  await access(resolve(root, '.generated', identities.migrations_dir, '0001_test_identities.sql'));
+});
+
+test('staging package validation checks exact HTML pages and their dependency closure', async t => {
+  const script = '/_astro/music.astro_astro_type_script_index_0_lang.fixture.js';
+  const stylesheet = '/styles/admin-music.css';
+  async function fixture(t) {
+    const root = await mkdtemp(resolve(tmpdir(), 'music-staging-assets-test-'));
+    t.after(() => rm(root, { recursive: true, force: true }));
+    const put = async (file, contents = '') => {
+      const target = resolve(root, `.${file}`);
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, contents);
+    };
+    for (const page of ['/admin/music', '/admin/music/collections', '/admin/music/collections/upload',
+      '/admin/music/featured', '/music', '/en/music', '/ja/music', '/zh-hans/music']) {
+      await put(`${page}/index.html`, `<link rel="stylesheet" href="${stylesheet}?v=1"><script src="${script}"></script><a href="/en/library/">Account</a>`);
+    }
+    await put(script);
+    await put(stylesheet);
+    return { root, put };
+  }
+  await t.test('complete pages and dependencies pass; navigation is not a static dependency', async t => {
+    const { root } = await fixture(t);
+    assert.deepEqual(await checkMusicStagingAssets(root), { pages: 8, assets: 2 });
+  });
+  for (const file of [script, stylesheet]) {
+    await t.test(`missing HTML dependency fails: ${file}`, async t => {
+      const { root } = await fixture(t);
+      await rm(resolve(root, `.${file}`));
+      await assert.rejects(checkMusicStagingAssets(root), /missing transitive staging asset/);
+    });
+  }
+  for (const file of ['/en/library/index.html', '/music/extra.html']) {
+    await t.test(`unexpected HTML fails: ${file}`, async t => {
+      const { root, put } = await fixture(t);
+      await put(file, '<p>Outside staging</p>');
+      await assert.rejects(checkMusicStagingAssets(root), /unexpected staging page/);
+    });
+  }
+  await t.test('missing transitive JS dependency fails', async t => {
+    const { root, put } = await fixture(t);
+    await put(script, 'import "./musicMessages.missing.js";');
+    await assert.rejects(checkMusicStagingAssets(root), /missing transitive staging asset/);
+  });
+  await t.test('present but forbidden chunks fail', async t => {
+    const { root, put } = await fixture(t);
+    await put('/_astro/articles.astro_hash.js');
+    await assert.rejects(checkMusicStagingAssets(root), /blocked by the staging gate/);
+  });
 });
 
 test('staging module graph includes only music, Access and the existing reader membership contract', async () => {

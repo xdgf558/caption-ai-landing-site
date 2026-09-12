@@ -24,6 +24,15 @@ export function maintenanceConfig(source) {
     assert.ok(Object.hasOwn(config.vars, flag), `Missing staging flag ${flag}.`);
     config.vars[flag] = 'false';
   }
+  // Wrangler resolves these paths relative to the config file. Moving the
+  // config from ops/ to .generated/ must preserve their original targets.
+  const relocate = value => path.relative(path.dirname(outputPath),
+    path.resolve(path.dirname(sourcePath), value)).replaceAll('\\', '/');
+  config.main = relocate(config.main);
+  config.assets.directory = relocate(config.assets.directory);
+  for (const database of config.d1_databases) {
+    if (database.migrations_dir) database.migrations_dir = relocate(database.migrations_dir);
+  }
   return config;
 }
 
