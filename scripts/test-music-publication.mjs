@@ -4,7 +4,8 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { executeMusicPublication } from '../src/music/publication.js';
-import { publicationFingerprint } from '../src/music/publicationValidation.js';
+import { publicationFingerprint, checkPublicationRights } from '../src/music/publicationValidation.js';
+import { reviewMusicTechnical } from '../src/music/technicalReview.js';
 import { projectPublicTrack } from '../src/music/catalog.js';
 import { verifyMusicAudioAsset, validateMeasuredPreview } from '../src/music/audioValidation.js';
 
@@ -97,6 +98,73 @@ const run = (f, input, opts = {}) => executeMusicPublication(f.db, input, { acto
 const dump = f => Object.fromEntries(f.sql.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all()
   .map(({ name }) => [name, f.sql.prepare(`SELECT * FROM ${name}`).all()]));
 const rejects = (promise, code) => assert.rejects(promise, error => error.code === code);
+async function optionalRights(f, ids, pending = false) {
+  f.sql.prepare('DELETE FROM music_rights_evidence WHERE review_id=?').run(ids.rightsId);
+  f.sql.prepare('DELETE FROM music_assets WHERE id=?').run(ids.evidence);
+  if (pending) f.sql.prepare("UPDATE music_rights_reviews SET review_json='{}',review_status='pending',revision_fingerprint=NULL WHERE id=?").run(ids.rightsId);
+  else f.sql.prepare('DELETE FROM music_rights_reviews WHERE id=?').run(ids.rightsId);
+  f.sql.prepare('UPDATE music_track_revisions SET technical_fingerprint=NULL,technical_reviewed_at=NULL WHERE id=?').run(ids.revisionId);
+}
+const technical = (f, ids, patch = {}) => reviewMusicTechnical(f.db, ids.revisionId,
+  { audioListened: true, previewListened: true, previewSourceConfirmed: true, artworkChecked: false, reason: 'Synthetic listening checklist.', ...patch },
+  { actorId: 'admin@example.test', ifMatch: `"edit-${snapshot(f, ids).track.edit_version}"`, key: randomUUID() }, verifier);
+
+test('absent or pending source materials allow technical review and publication without creating approval', async () => {
+  for (const mode of ['free', 'vip', 'early_access']) for (const pending of [false, true]) {
+    const f = database(), ids = await seed(f, mode); await optionalRights(f, ids, pending);
+    await rejects(technical(f, ids, { audioListened: false }), 'MUSIC_LISTENING_REVIEW_REQUIRED');
+    await rejects(technical(f, ids, { previewSourceConfirmed: false }), 'MUSIC_LISTENING_REVIEW_REQUIRED');
+    const before = dump(f); await assert.rejects(run(f, command(f, ids))); assert.deepEqual(dump(f), before);
+    await technical(f, ids);
+    const input = command(f, ids); assert.equal((await run(f, input)).action, 'publish');
+    const committed = dump(f); assert.equal((await run(f, input)).replayed, true); assert.deepEqual(dump(f), committed);
+    const rights = f.sql.prepare('SELECT * FROM music_rights_reviews').all();
+    assert.equal(rights.length, pending ? 1 : 0);
+    if (pending) { assert.equal(rights[0].review_status, 'pending'); assert.equal(rights[0].revision_fingerprint, null); }
+    assert.equal(f.sql.prepare('SELECT COUNT(*) AS n FROM music_rights_evidence').get().n, 0);
+  }
+});
+
+test('optional pending evidence is retained and still validates ownership and current resources', async () => {
+  const f = database(), ids = await seed(f);
+  f.sql.prepare("UPDATE music_rights_reviews SET review_status='pending',revision_fingerprint=NULL WHERE id=?").run(ids.rightsId);
+  const documents = f.sql.prepare('SELECT * FROM music_rights_reviews WHERE id=?').get(ids.rightsId);
+  const evidence = f.sql.prepare('SELECT * FROM music_rights_evidence WHERE review_id=?').all(ids.rightsId);
+  await technical(f, ids); await run(f, command(f, ids));
+  assert.deepEqual(f.sql.prepare('SELECT * FROM music_rights_reviews WHERE id=?').get(ids.rightsId), documents);
+  assert.deepEqual(f.sql.prepare('SELECT * FROM music_rights_evidence WHERE review_id=?').all(ids.rightsId), evidence);
+  const invalid = snapshot(f, ids);
+  invalid.assets.find(a => a.id === ids.evidence).owner_track_id = randomUUID();
+  assert.throws(() => checkPublicationRights(invalid, Date.now()), error => error.code === 'RIGHTS_REVIEW_REQUIRED');
+});
+
+test('optional documentation cannot bypass a block, stale technical review, missing preview or resource failure', async () => {
+  const f = database(), ids = await seed(f); await optionalRights(f, ids, true); await technical(f, ids);
+  f.sql.prepare("UPDATE music_rights_reviews SET review_status='blocked' WHERE id=?").run(ids.rightsId);
+  await rejects(run(f, command(f, ids)), 'MUSIC_RIGHTS_BLOCKED'); await rejects(technical(f, ids), 'MUSIC_RIGHTS_BLOCKED');
+  f.sql.prepare("UPDATE music_rights_reviews SET review_status='pending',review_json=? WHERE id=?").run('{"authorizationBasis":"new optional note"}', ids.rightsId);
+  await rejects(run(f, command(f, ids)), 'MUSIC_REVIEW_STALE'); await technical(f, ids);
+  await rejects(run(f, command(f, ids), { verifyResources: undefined }), 'MUSIC_TECHNICAL_VERIFIER_UNAVAILABLE');
+  const g = database(), other = await seed(g); await optionalRights(g, other);
+  g.sql.prepare('UPDATE music_track_revisions SET preview_asset_id=NULL WHERE id=?').run(other.revisionId);
+  await assert.rejects(technical(g, other));
+  assert.equal(g.sql.prepare('SELECT lifecycle FROM music_tracks WHERE id=?').get(other.id).lifecycle, 'draft');
+});
+
+test('first documentation or pending-to-blocked changes race atomically with technical review and publication', async () => {
+  for (const pending of [false, true]) for (const action of ['technical', 'publish']) {
+    const f = database(), ids = await seed(f); await optionalRights(f, ids, pending);
+    if (action === 'publish') await technical(f, ids);
+    let concurrent;
+    f.state.beforeWrite = () => {
+      if (pending) f.sql.prepare("UPDATE music_rights_reviews SET review_status='blocked' WHERE id=?").run(ids.rightsId);
+      else insert(f.sql, 'music_rights_reviews', { id: ids.rightsId, revision_id: ids.revisionId, review_json: '{}', review_status: 'blocked', reviewer_id: 'concurrent@example.test', reviewed_at: Date.now() });
+      concurrent = dump(f);
+    };
+    await rejects(action === 'technical' ? technical(f, ids) : run(f, command(f, ids)), action === 'technical' ? 'MUSIC_EDIT_CONFLICT' : 'MUSIC_PUBLICATION_CONFLICT');
+    assert.deepEqual(dump(f), concurrent);
+  }
+});
 async function newDraft(f, ids) {
   const before = snapshot(f, ids), revisionId = randomUUID(), rightsId = randomUUID();
   insert(f.sql, 'music_track_revisions', { ...before.revision, id: revisionId, revision_no: before.revision.revision_no + 1,

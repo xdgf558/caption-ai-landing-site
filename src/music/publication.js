@@ -94,10 +94,14 @@ function conditionalBatch(db, snapshot, command, actorId, key, hash, route, now,
   if (command.action === 'publish') {
     match('music_track_revisions', snapshot.revision);
     if (snapshot.previous) match('music_track_revisions', snapshot.previous);
-    match('music_rights_reviews', snapshot.rights);
+    if (snapshot.rights) match('music_rights_reviews', snapshot.rights);
+    else {
+      conditions.push('NOT EXISTS (SELECT 1 FROM music_rights_reviews WHERE revision_id=?)');
+      params.push(snapshot.revision.id);
+    }
     snapshot.assets.forEach(row => match('music_assets', row));
     conditions.push('(SELECT COUNT(*) FROM music_rights_evidence WHERE review_id=?)=?');
-    params.push(snapshot.rights.id, snapshot.evidence.length);
+    params.push(snapshot.rights?.id ?? null, snapshot.evidence.length);
     for (const e of snapshot.evidence) {
       conditions.push('EXISTS (SELECT 1 FROM music_rights_evidence WHERE review_id=? AND asset_id=?)'); params.push(e.review_id, e.asset_id);
     }

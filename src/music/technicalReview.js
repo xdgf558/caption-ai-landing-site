@@ -1,5 +1,5 @@
-import { checkRights, publicationFingerprint, validatePublication, verifyPublicationResources } from './publicationValidation.js';
-import { loadTrack, loadAssets, mutate, trackGuard, rows } from './adminStore.js';
+import { checkPublicationRights, publicationFingerprint, validatePublication, verifyPublicationResources } from './publicationValidation.js';
+import { loadTrack, loadAssets, mutate, trackGuard, rightsGuard, rows } from './adminStore.js';
 import { fields, musicId, editVersion, text, fail } from './adminValidation.js';
 
 export async function reviewMusicTechnical(db, revisionId, input, context, verifyResources) {
@@ -20,16 +20,17 @@ export async function reviewMusicTechnical(db, revisionId, input, context, verif
       (r.cover_asset_id && !command.artworkChecked)) fail('MUSIC_LISTENING_REVIEW_REQUIRED');
     snap.assets = await loadAssets(db, [r.audio_asset_id, r.preview_asset_id, r.cover_asset_id, r.lyrics_asset_id, ...snap.evidence.map(e => e.asset_id)]);
     snap.settings = rows(await s.prepare("SELECT * FROM music_settings WHERE key IN ('catalogVersion','previewLimitMs') ORDER BY key").all());
-    checkRights(snap, now);
+    checkPublicationRights(snap, now);
     const fingerprint = await publicationFingerprint(snap);
-    if (snap.rights.revision_fingerprint !== fingerprint) fail('MUSIC_REVIEW_STALE');
+    if (snap.rights?.review_status === 'approved' && snap.rights.revision_fingerprint !== fingerprint) fail('MUSIC_REVIEW_STALE');
     // Validate the same publication contract, with a server-only candidate approval.
     await validatePublication({ ...snap, revision: { ...r, technical_reviewed_at: now, technical_fingerprint: fingerprint } },
       { revisionId, confirmedPolicyVersion: r.policy_version }, now);
     const checkedAt = await verifyPublicationResources(snap, verifyResources, Date.now);
-    return { condition: `${guard.condition} AND EXISTS (SELECT 1 FROM music_rights_reviews WHERE id=? AND revision_fingerprint=? AND review_status='approved')
+    const documentation = rightsGuard(snap);
+    return { condition: `${guard.condition} AND ${documentation.condition}
       AND ?>=CAST((julianday('now')-2440587.5)*86400000 AS INTEGER)-15000`,
-      params: [...guard.params, snap.rights.id, fingerprint, checkedAt], writes: [
+      params: [...guard.params, ...documentation.params, checkedAt], writes: [
         s.prepare("UPDATE music_track_revisions SET technical_reviewed_at=?,technical_fingerprint=? WHERE id=? AND state='draft'")
           .bind(now, fingerprint, revisionId),
         s.prepare('UPDATE music_tracks SET edit_version=edit_version+1,updated_at=? WHERE id=? AND edit_version=?')

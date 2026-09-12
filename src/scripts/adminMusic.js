@@ -40,9 +40,9 @@ const errorMessages = {
   ADMIN_AUTH_REQUIRED:'后台登录已过期，请重新登录后回到此页核对。', ADMIN_FORBIDDEN:'此账号没有音乐管理权限。',
   MUSIC_BINDINGS_UNAVAILABLE:'音乐环境尚未配置。', MUSIC_NOT_CONFIGURED:'音乐环境尚未配置。', MUSIC_DATABASE_UNAVAILABLE:'音乐数据库尚不可用。',
   MUSIC_EDIT_CONFLICT:'曲目已被其他操作更新。请重新载入后核对，当前内容已保留。',
-  MUSIC_PUBLICATION_CONFLICT:'发布版本已变化，请重新载入核对。', MUSIC_REVIEW_STALE:'草稿已变化，请重新进行权利和技术核对。',
+  MUSIC_PUBLICATION_CONFLICT:'发布版本已变化，请重新载入核对。', MUSIC_REVIEW_STALE:'草稿已变化，请重新进行技术核对；如保留权利通过结论，也需重新核对该结论。',
   RIGHTS_REVIEW_REQUIRED:'权利资料不完整，请核对来源、日期、授权说明和凭证。',
-  RIGHTS_EXCEPTION_REQUIRED:'此作品需要例外授权依据及对应凭证。', PREVIEW_REQUIRED:'VIP 或抢先作品必须提供独立试听文件。',
+  RIGHTS_EXCEPTION_REQUIRED:'此作品需要例外授权依据及对应凭证。', MUSIC_RIGHTS_BLOCKED:'此曲目被明确标记为不通过，请先处理该结论。', PREVIEW_REQUIRED:'VIP 或抢先作品必须提供独立试听文件。',
   MUSIC_FREE_PROMISE_PROTECTED:'已向公众开放免费的作品不能改为付费收听。',
   MUSIC_STORAGE_QUOTA:'存储配额不足；失败和过期上传仍占用额度。', MUSIC_UPLOADS_DISABLED:'上传尚未开放。',
   MUSIC_UPLOADS_NOT_CONFIGURED:'上传配额或迁移尚未配置。', MUSIC_ASSET_REFERENCE:'素材与当前曲目或原曲不匹配。',
@@ -66,12 +66,12 @@ function sync() {
   $('track-new').disabled = blocked;
   $('metadata-fields').disabled = blocked || archived;
   $('rights-fields').disabled = blocked || !track?.draft || unsaved || archived;
-  $('technical-fields').disabled = blocked || !track?.draft || unsaved || reviewDirty || track?.rights?.status !== 'approved' || archived;
+  $('technical-fields').disabled = blocked || !track?.draft || unsaved || reviewDirty || track?.rights?.status === 'blocked' || archived;
   all('[data-upload-kind], .upload-control input, #preview-start, #preview-end').forEach(e => { e.disabled = blocked || !track?.draft || !service?.capabilities.uploads || dirty || archived ||
     (!!e.dataset.uploadKind && journal?.get().jobs.some(j => j.trackId === track?.id && j.kind === e.dataset.uploadKind && ['reserved','writing'].includes(j.stage))); });
   all('[data-remove-asset]').forEach(e => { e.disabled = blocked || archived; });
   $('assets-save').disabled = blocked || !track || !assetsDirty || dirty || archived;
-  $('track-publish').disabled = blocked || unsaved || reviewDirty || !track?.draft || !track.draft.technicalReviewedAt || track?.rights?.status !== 'approved';
+  $('track-publish').disabled = blocked || unsaved || reviewDirty || !track?.draft || !track.draft.technicalReviewedAt || track?.rights?.status === 'blocked';
   $('track-unpublish').disabled = blocked || unsaved || track?.lifecycle !== 'published';
   $('track-archive').disabled = blocked || unsaved || track?.lifecycle !== 'unpublished';
   all('#search-form input, #search-form button, #track-filter, .track-row').forEach(e => { e.disabled = blocked; });
@@ -267,9 +267,9 @@ function renderAssets() {
 }
 function renderReview() {
   const r = track?.draft;
-  $('rights-details').open = !!r && track?.rights?.status !== 'approved';
-  $('technical-details').open = !!r && track?.rights?.status === 'approved' && !r.technicalReviewedAt;
-  $('rights-state').textContent = ({ approved:'已通过', pending:'待审核', blocked:'不通过' })[track?.rights?.status] || '待审核';
+  $('rights-details').open = !!r && track?.rights?.status === 'blocked';
+  $('technical-details').open = !!r && track?.rights?.status !== 'blocked' && !r.technicalReviewedAt;
+  $('rights-state').textContent = ({ approved:'已通过', pending:'未核对（可选）', blocked:'不通过，已阻止发布' })[track?.rights?.status] || '未提供（可选）';
   $('technical-state').textContent = revision()?.technicalReviewedAt ? '已核对' : '待核对';
   $('review-state').textContent = !r ? '发布版本已封存。修改资料需先保存为新草稿。' : '当前草稿 v' + r.number + '。修改资料、素材或权利后，须重新核对。';
   $('check-preview').hidden = $('check-source').hidden = !assets.preview; $('check-artwork').hidden = !assets.cover;

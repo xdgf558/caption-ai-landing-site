@@ -1,5 +1,7 @@
 # M1-04 条件发布
 
+2026-09-13 规则更新：整个音乐后台的来源材料已改为可选，详见 [OPTIONAL_SOURCE_MATERIALS](OPTIONAL_SOURCE_MATERIALS.md)。以下历史描述中必填来源/凭证及必须先取得 approved 的要求被替代；明确 blocked 仍阻止技术核对/发布，主动提交 approved 的完整性校验和技术核对要求保留。
+
 日期：2026-09-10；代码基线 main@233d716（已合并 PR #121）。独立分支 `codex/music-conditional-publication`。仅交付本地可测试的命令服务、校验与增量迁移，不接 HTTP 路由、生产数据库或真实音频。
 
 ## 命令边界

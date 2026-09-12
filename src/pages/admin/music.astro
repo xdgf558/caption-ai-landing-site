@@ -73,7 +73,8 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
         </section>
         <section id="panel-2" role="tabpanel" aria-labelledby="step-2" hidden>
           <p id="review-state" class="notice"></p>
-          <details id="rights-details" open><summary>权利核对 <span id="rights-state" class="badge">待审核</span></summary>
+          <details id="rights-details"><summary>来源材料与权利核对（可选） <span id="rights-state" class="badge">未提供（可选）</span></summary>
+            <p class="muted">来源材料可留空，完成试听与技术核对后即可发布。未提供或未核对不代表授权已确认；明确选择“不通过”会阻止技术核对和发布。若选择“通过”，仍需填写完整依据及凭证。</p>
             <form id="rights-form"><fieldset id="rights-fields"><div class="field-grid">
               <label>来源平台<select data-right="sourcePlatform"><option value="">请选择</option><option value="suno">Suno</option></select></label>
               <label>来源歌曲链接<input data-right="sourceSongUrl" type="url" maxlength="500" placeholder="https://suno.com/…" /></label>
@@ -85,7 +86,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
               <label>授权用途<select data-right="permittedUse"><option value="">请选择</option><option value="commercial">商业使用</option></select></label>
             </div><details><summary>例外授权材料</summary><label>例外授权依据<input data-right="exceptionAuthorizationBasis" maxlength="4000" /></label><label>对应凭证<select data-right="exceptionEvidenceAssetId"><option value="">未选择</option></select></label></details>
             <p id="evidence-count" class="muted"></p>
-            <label>审核结论<select id="rights-decision"><option value="pending">待审核</option><option value="blocked">不通过</option><option value="approved">通过</option></select></label>
+            <label>审核结论<select id="rights-decision"><option value="pending">未核对（可选，不阻止发布）</option><option value="blocked">不通过（阻止发布）</option><option value="approved">通过</option></select></label>
             <label>审核说明<input id="rights-reason" required maxlength="1000" /></label>
             <footer class="music-actions"><button type="submit">提交权利核对</button></footer></fieldset></form>
           </details>
@@ -118,7 +119,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
             </div>
             <p data-role-action role="status" aria-live="polite"></p>
             <footer class="music-actions"><button data-role-refresh type="button"><RefreshCw size={16} />重新读取预览</button><button data-role-assets type="button">前往素材核对</button></footer>
-            <p class="muted">这不是发布检查通过证明。素材仍需技术与权利核对；真实完整音频按听众当次资格检查。</p>
+            <p class="muted">这不是发布检查通过证明。素材仍需技术核对，来源材料可选；真实完整音频按听众当次资格检查。</p>
           </div>
         </section>
       </div>
