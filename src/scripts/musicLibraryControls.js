@@ -4,7 +4,7 @@ import { musicSelection } from '../music/pagePaths.js';
 // Browse state owns no audio, permission or queue state. History only restores the view.
 export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => ({}), host = window }) {
   const $ = selector => root.querySelector(selector), abort = new AbortController();
-  let tracks = [], catalogTracks = [], collections = [], view = null, count = 50, loaded = false;
+  let tracks = [], catalogTracks = [], collections = [], view = null, count = 50, loaded = false, albumSignature = null;
   let state = { query: '', genres: [], moods: [], access: '', mode: 'latest', ...libraryLocation(host.location.search) };
   const on = (node, event, callback) => node.addEventListener(event, callback, { signal: abort.signal });
   const render = () => {
@@ -15,14 +15,19 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     const albums = state.mode === 'albums' && !state.collection;
     const albumItems = collections.filter(item => item.type === 'album');
     $('[data-album-list]').hidden = !albums;
-    $('[data-album-list]').replaceChildren();
-    if (albums) for (const item of albumItems) {
+    // Favorites/recent playback refresh the library too. Retain cards, focus and
+    // cover elements while the published album data stays unchanged.
+    const signature = JSON.stringify(albumItems);
+    if (albums && signature !== albumSignature) {
+      albumSignature = signature; $('[data-album-list]').replaceChildren();
+      for (const item of albumItems) {
       const li = document.createElement('li'), button = document.createElement('button'), title = document.createElement('strong'), info = document.createElement('span');
       button.type = 'button'; title.textContent = item.title;
       info.textContent = t('{count} 首', { count: item.trackIds.length }) + ' · ' + t(item.listeningMode === 'vip' ? 'VIP 专享' : item.listeningMode === 'free' ? '整张免费' : '按单曲收听');
       if (item.coverUrl) { const cover = document.createElement('img'); cover.src = item.coverUrl; cover.alt = ''; cover.width = 160; cover.height = 160; cover.loading = 'lazy'; button.append(cover); }
       button.append(title, info); button.onclick = () => change({ collection:item.slug, track:undefined, query:'', genres:[], moods:[], access:'' });
       li.append(button); $('[data-album-list]').append(li);
+      }
     }
     $('[data-collection-share-label]').textContent = t(selected?.type === 'album' ? '分享专辑' : '分享歌单');
     $('[data-share-url="collection"]').setAttribute('aria-label', t(selected?.type === 'album' ? '专辑链接' : '歌单链接'));

@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {tracks as fixtureTracks,demoWav} from '../fixtures/music-player/data.mjs';
 const unique=()=> 'album-ui-'+crypto.randomUUID();
 async function create(page){await page.goto('/admin/music/collections/');await page.locator('#collection-new-album').click();await page.locator('#collection-slug').fill(unique());await page.locator('[data-collection-title="zh-Hans"]').fill('隔离测试专辑');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 1');}
 async function confirm(page){await page.locator('#collection-confirm-accept').click();}
@@ -37,4 +38,28 @@ test('a failed initial status read can recover; account changes prevent a new wr
   await page.locator('#collection-new-album').click();await page.locator('#collection-slug').fill(unique());await page.locator('[data-collection-title="zh-Hans"]').fill('账号变化');
   await page.unroute('**/admin/api/music/status');await page.route('**/admin/api/music/status',async route=>{const r=await route.fetch(),body=await r.json();await route.fulfill({response:r,json:{...body,actorId:'changed@example.test'}});});
   let writes=0;page.on('request',r=>{if(r.method()==='POST'&&r.url().endsWith('/collections'))writes++;});await page.locator('#collection-save').click();await expect(page.locator('#collection-status')).toContainText('管理员账号已变化');expect(writes).toBe(0);await expect(page.locator('#collection-new-album')).toBeDisabled();
+});
+
+
+test('public album browsing keeps one paused source until play and retains cards during favorite updates',async({page})=>{
+  const tracks=fixtureTracks.map(t=>({...t,coverUrl:null,durationSec:20}));
+  const album={id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',slug:'album-test',type:'album',listeningMode:'mixed',title:'专辑夹具',description:'',coverTrackId:null,trackIds:tracks.map(t=>t.id).reverse()};
+  let audioRequests=0;
+  await page.route('**/api/music/**',async route=>{
+    const url=new URL(route.request().url());
+    if(url.pathname.endsWith('/catalog'))return route.fulfill({json:{schemaVersion:2,tracks,collections:[album]}});
+    if(url.pathname.includes('/collections/'))return route.fulfill({json:{schemaVersion:2,tracks,collection:album}});
+    if(url.pathname.endsWith('/capabilities'))return route.fulfill({json:{canPlayVipFull:false,musicVipDeliveryEnabled:false,authenticated:false,membershipStatus:'none',serverNow:new Date().toISOString(),validUntil:null}});
+    if(url.pathname.endsWith('/audio')){audioRequests++;return route.fulfill({status:200,contentType:'audio/wav',body:demoWav(tracks[2])});}
+    return route.fulfill({status:503,json:{error:{code:'MUSIC_PUBLIC_DISABLED'}}});
+  });
+  await page.goto('/zh-hans/music/');await expect(page.locator('[data-track-list] > li')).toHaveCount(3);
+  await page.getByRole('button',{name:'专辑',exact:true}).click();await page.locator('[data-album-list] button').click();
+  await expect(page.locator('[data-track-list]')).toContainText('慢慢醒来');await expect(page.locator('[data-list-title]')).toHaveText('专辑夹具');
+  expect(audioRequests).toBe(0);expect(await page.locator('audio').evaluate(a=>a.getAttribute('src'))).toBeNull();
+  await page.locator('[data-play-all]').click();await expect.poll(()=>page.locator('audio').evaluate(a=>!a.paused)).toBe(true);
+  const source=await page.locator('audio').getAttribute('src');await page.getByRole('button',{name:'专辑',exact:true}).click();
+  const card=page.locator('[data-album-list] button');await card.evaluate(n=>n.dataset.testIdentity='retained');
+  await page.locator('[data-detail-favorite]').click();await expect(card).toHaveAttribute('data-test-identity','retained');
+  expect(await page.locator('audio').getAttribute('src')).toBe(source);expect(audioRequests).toBe(1);
 });
