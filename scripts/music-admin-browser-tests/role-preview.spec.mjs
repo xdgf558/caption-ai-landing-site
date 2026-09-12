@@ -35,16 +35,16 @@ test('four role buttons, gate and boundary simulations use no public/media reque
   await expect(page.locator('[data-preview-variant]')).toHaveCount(4);
   await expect(role(page,'vip').getByRole('button',{name:'暂不可播放'})).toBeDisabled();
   const calls = state.requests.length;
-  await page.getByLabel('预览场景',{exact:true}).selectOption('released');
+  await page.getByRole('combobox',{name:'预览场景',exact:true}).selectOption('released');
   await expect(role(page,'vip').getByRole('button',{name:'播放',exact:true})).toBeEnabled();
   for (const name of ['visitor','account','expired']) await expect(role(page,name).getByRole('button',{name:'播放试听',exact:true})).toBeEnabled();
   await role(page,'vip').getByRole('button',{name:'播放',exact:true}).click();
   await expect(page.locator('[data-role-action]')).toContainText('不会请求音频');
   await role(page,'expired').getByRole('button',{name:'会员中心',exact:true}).click();
   await expect(page.locator('[data-role-action]')).toContainText('不修改会员资格');
-  await page.getByLabel('策略时刻',{exact:true}).selectOption('boundary');
+  await page.getByRole('combobox',{name:'策略时刻',exact:true}).selectOption('boundary');
   await expect(page.locator('[data-preview-variant="full"]')).toHaveCount(4);
-  await page.getByLabel('内容语言',{exact:true}).selectOption('en');
+  await page.getByRole('combobox',{name:'内容语言',exact:true}).selectOption('en');
   await expect(role(page,'visitor').getByRole('heading',{name:'Platform preview'})).toBeVisible();
   expect(state.requests.length).toBe(calls);
   expect(outside).toEqual([]); expect(state.requests.some(([method,path]) => method !== 'GET' || path.includes('/assets/'))).toBe(false);
@@ -62,11 +62,11 @@ test('saved preview keeps unsaved input intact and published metadata independen
   await page.getByLabel('曲名',{exact:true}).fill('仅在表单里的新曲名');
   await enter(page);
   await expect(page.locator('[data-role-unsaved]')).toBeVisible();
-  await page.getByLabel('预览场景',{exact:true}).selectOption('released');
+  await page.getByRole('combobox',{name:'预览场景',exact:true}).selectOption('released');
   await expect(role(page,'visitor').getByRole('heading',{name:'月台四角色测试'})).toBeVisible();
-  await page.getByLabel('预览版本',{exact:true}).selectOption('published');
+  await page.getByRole('combobox',{name:'预览版本',exact:true}).selectOption('published');
   await expect(role(page,'visitor').getByRole('heading',{name:'旧发布曲名'})).toBeVisible();
-  await expect(page.getByLabel('策略时刻',{exact:true})).toHaveValue('read');
+  await expect(page.getByRole('combobox',{name:'策略时刻',exact:true})).toHaveValue('read');
   await page.getByRole('tab',{name:'基本资料',exact:true}).click();
   await expect(page.getByLabel('曲名',{exact:true})).toHaveValue('仅在表单里的新曲名');
   await page.getByRole('tab',{name:'基本资料',exact:true}).press('End');
@@ -75,7 +75,7 @@ test('saved preview keeps unsaved input intact and published metadata independen
 test('a protected track without a preview does not offer nonexistent listening to ineligible roles', async ({page}) => {
   const state = await setup(page); state.row.draft.assets.preview = null;
   await enter(page);
-  await page.getByLabel('预览场景',{exact:true}).selectOption('released');
+  await page.getByRole('combobox',{name:'预览场景',exact:true}).selectOption('released');
   for (const name of ['visitor','account','expired']) {
     await expect(role(page,name)).toContainText('VIP · 暂无试听');
     await expect(role(page,name).getByRole('button',{name:'暂不可播放',exact:true})).toBeDisabled();
