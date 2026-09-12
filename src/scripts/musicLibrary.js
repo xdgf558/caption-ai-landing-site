@@ -4,8 +4,9 @@ export function libraryFilters(tracks) {
   return Object.fromEntries(['genres', 'moods'].map(key => [key, [...new Set(tracks.flatMap(track => track[key] || []))].sort()]));
 }
 export function browseMusic(tracks, collections, { query = '', genres = [], moods = [], access = '', collection = '', mode = 'latest' } = {}, local = {}) {
-  // Albums have no published data contract yet (M5). A playlist is not an album.
-  if (mode === 'albums') return [];
+  // The album overview has no implicit playback selection. Opening an album
+  // only changes this view; queue and /audio authorization remain separate.
+  if (mode === 'albums' && !collections.some(item => item.slug === collection && item.type === 'album')) return [];
   const collectionIds = collection ? collections.find(item => item.slug === collection)?.trackIds || [] : null;
   const ids = mode === 'favorites' ? local.favorites || [] : mode === 'recent' ? local.recent || [] : collectionIds;
   const inCollection = collectionIds && new Set(collectionIds);

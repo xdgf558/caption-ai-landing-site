@@ -52,14 +52,22 @@ export function formatMusicTime(value) {
 export function readPlayerCollections(body, tracks) {
   if (body.collections === undefined) return [];
   if (!Array.isArray(body.collections) || body.collections.length > 500) throw new Error('INVALID_COLLECTIONS');
-  const ids = new Set(tracks.map(track => track.id)), seen = new Set(), slugs = new Set();
+  const ids = new Map(tracks.map(track => [track.id,track])), seen = new Set(), slugs = new Set();
   return body.collections.map(item => {
     if (!item || !idPattern.test(item.id) || seen.has(item.id) || slugs.has(item.slug) ||
       typeof item.slug !== 'string' || item.slug.length > 100 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.slug) ||
       !text(item.title, 200) || typeof item.description !== 'string' || item.description.length > 500 ||
       !Array.isArray(item.trackIds) || item.trackIds.length > 500 || new Set(item.trackIds).size !== item.trackIds.length ||
       item.trackIds.some(id => !idPattern.test(id))) throw new Error('INVALID_COLLECTIONS');
+    const type = item.type === undefined ? 'playlist' : item.type;
+    const listeningMode = item.listeningMode ?? 'mixed';
+    if (!['playlist','album'].includes(type) || !['mixed','free','vip'].includes(listeningMode) ||
+      (type === 'album' && (item.trackIds.some(id => !ids.has(id)) ||
+        (listeningMode !== 'mixed' && item.trackIds.some(id => ids.get(id).effectiveAccess !== listeningMode)) ||
+        (item.coverTrackId != null && (!item.trackIds.includes(item.coverTrackId) || !ids.get(item.coverTrackId)?.coverUrl))))) throw new Error('INVALID_COLLECTIONS');
     seen.add(item.id); slugs.add(item.slug);
-    return { id: item.id, slug: item.slug, title: item.title, description: item.description, trackIds: item.trackIds.filter(id => ids.has(id)) };
+    return { id: item.id, slug: item.slug, title: item.title, description: item.description, type, listeningMode,
+      coverUrl:type === 'album' ? ids.get(item.coverTrackId)?.coverUrl || null : null,
+      trackIds: item.trackIds.filter(id => ids.has(id)) };
   }).filter(item => item.trackIds.length);
 }

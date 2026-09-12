@@ -18,7 +18,7 @@ let mf, db, bucket;
 function migrationStatements() {
   const parser = new DatabaseSync(':memory:'), migrations = [];
   try {
-    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql']) {
+    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql']) {
       const statements = [];
       let remaining = file(`migrations-music/${name}`).toString();
       while (remaining.trim()) {
@@ -101,6 +101,7 @@ test('missing schema is 503; actual migrations on local D1 enable primary readin
   assert.ok((await db.batch(migrations[3].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.ok((await db.batch(migrations[4].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.ok((await db.batch(migrations[5].map(sql => db.prepare(sql)))).every(r => r.success));
+  assert.ok((await db.batch(migrations[6].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.equal((await adminCall('/status')).body.storage.quotaBytes, 0);
   assert.deepEqual((await db.prepare('PRAGMA foreign_key_check').all()).results, []);
 });
@@ -637,4 +638,29 @@ test('native analytics global failure rolls back all admission rows; daily failu
   finally { await db.prepare('DROP TRIGGER analytics_daily_fault').run(); }
   assert.equal((await db.prepare('SELECT COUNT(*) n FROM music_analytics_events WHERE track_id=?').bind(track.id).first()).n,0);
   assert.equal((await send()).status,200);
+});
+
+test('albums publish through native D1 guards, keep VIP audio private and reject a downlisted member',async()=>{
+  const first=await seed(),second=await seed();
+  assert.equal((await call('/publish',first.command)).status,200);
+  assert.equal((await call('/publish',second.command)).status,200);
+  const body={slug:'runtime-album-'+randomUUID(),type:'album',listeningMode:'vip',originalLocale:'en',title:{en:'Native album'},description:{en:'Synthetic fixture'}};
+  const created=await adminCall('/collections','POST',body);assert.equal(created.status,200,JSON.stringify(created.body));
+  const path='/collections/'+created.body.collectionId;
+  assert.equal((await adminCall(path+'/tracks','PUT',{trackIds:[first.command.trackId,second.command.trackId],reason:'Both VIP members'}, {'If-Match':'"edit-1"'})).status,200);
+  const publishBody={...body,status:'published',reason:'Native album publication'};
+  await db.prepare(`CREATE TRIGGER album_test_ignore BEFORE INSERT ON music_mutations BEGIN SELECT RAISE(IGNORE); END`).run();
+  const before=await dump();
+  try {assert.equal((await adminCall(path,'PATCH',publishBody,{'If-Match':'"edit-2"'})).status,409);assert.deepEqual(await dump(),before);}
+  finally{await db.prepare('DROP TRIGGER album_test_ignore').run();}
+  assert.equal((await adminCall(path,'PATCH',publishBody,{'If-Match':'"edit-2"'})).status,200);
+  const publicResponse=await publicCall('/collections/'+body.slug+'?locale=en');assert.equal(publicResponse.status,200);
+  const value=await publicResponse.json();assert.equal(value.collection.type,'album');assert.equal(value.collection.listeningMode,'vip');assert.deepEqual(value.collection.trackIds,[first.command.trackId,second.command.trackId]);
+  assert.equal((await mediaCall(first.command.trackId,'full')).status,401);
+  assert.equal((await adminCall(path,'PATCH',{...body,status:'draft',reason:'Prepare race'},{'If-Match':'"edit-3"'})).status,200);
+  // The unrelated member remains public. Guard must lock every published pointer,
+  // not merely check EXISTS(any published member).
+  const t=(await adminCall('/tracks/'+second.command.trackId)).body;
+  assert.equal((await adminCall('/tracks/'+t.id+'/unpublish','POST',{revisionId:t.published.id,reason:'Downlist member'},{'If-Match':`"edit-${t.editVersion}"`})).status,200);
+  const rejected=await adminCall(path,'PATCH',publishBody,{'If-Match':'"edit-4"'});assert.equal(rejected.status,422);assert.equal(rejected.body.code,'MUSIC_ALBUM_TRACKS_NOT_PUBLISHED');
 });

@@ -29,7 +29,7 @@ export function policyForSave(mode, until, after, previous) {
 export async function request(path, { method = 'GET', body, key, etag, raw = false, type, timeout = 30000 } = {}) {
   const id = '[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}';
   const route = typeof path === 'string' ? path.split('?')[0] : '';
-  if (!new RegExp('^/(?:status|analytics|tracks|audit|uploads|tracks/' + id + '(?:/(?:publish|unpublish|archive))?|uploads/' + id +
+  if (!new RegExp('^/(?:status|analytics|tracks|audit|uploads|collections|collections/' + id + '(?:/tracks)?|tracks/' + id + '(?:/(?:publish|unpublish|archive))?|uploads/' + id +
     '(?:/(?:body|complete))?|revisions/' + id + '/(?:rights-review|technical-review)|assets/' + id + ')$','i').test(route) ||
     !['GET','POST','PATCH','PUT'].includes(method)) throw new Error('无效管理路径');
   const headers = {};

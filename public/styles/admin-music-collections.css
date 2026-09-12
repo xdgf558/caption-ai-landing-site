@@ -1,0 +1,14 @@
+.collection-list-filters { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.collection-members,.collection-publishing { border-top:1px solid #dbe2dd; padding-top:20px; margin-top:24px; }
+#collection-order { padding:0; list-style:none; }
+.collection-member { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid #e1e6e1; }
+.collection-member > div:first-child { min-width:0; overflow-wrap:anywhere; }
+.collection-member small { display:block; color:#657269; margin-top:4px; }
+.collection-member .music-actions { flex-shrink:0; flex-wrap:wrap; gap:4px; }
+#member-results { display:grid; gap:8px; margin:12px 0; }
+#collection-order-save { margin-top:12px; }
+@media(max-width:650px) { .collection-member { align-items:flex-start; flex-direction:column; } .music-heading { align-items:flex-start; gap:12px; flex-wrap:wrap; } }
+#collection-status {flex:1;margin:8px 0;}
+#collection-status[data-error=true] {color:#a2353c;}
+#collection-list {max-height:600px;overflow:auto;}
+.music-heading > .music-actions,.collection-member > .music-actions {margin:0;padding:0;border:0;}

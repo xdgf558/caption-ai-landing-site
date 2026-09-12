@@ -35,10 +35,10 @@ const t = musicText(lang);
           <div data-filter-panel>
             <div class="station-music-filters">
               <label>{t('收听方式')}<select data-access-filter><option value="">{t('全部')}</option><option value="free">{t('免费')}</option><option value="vip">VIP</option></select></label>
-              <label>{t('歌单')}<select data-collection-filter><option value="">{t('全部歌曲')}</option></select></label>
+              <label>{t('歌单与专辑')}<select data-collection-filter><option value="">{t('全部歌曲')}</option></select></label>
             </div>
             <div class="station-music-link-actions" data-collection-share hidden>
-              <button data-share-music="collection" type="button"><Share2 size={18} />{t('分享歌单')}</button>
+              <button data-share-music="collection" type="button"><Share2 size={18} /><span data-collection-share-label>{t('分享歌单')}</span></button>
               <button data-copy-music="collection" type="button"><Link size={18} />{t('复制链接')}</button>
               <p data-share-message="collection" role="status"></p>
               <input data-share-url="collection" readonly hidden aria-label={t('歌单链接')} />
@@ -79,6 +79,7 @@ const t = musicText(lang);
       <p class="station-music-queue-notice" data-queue-notice role="status" hidden></p>
       <div class="station-music-catalog-message" data-catalog-message role="status">{t('正在整理曲目…')}</div>
       <button class="station-music-retry" data-catalog-retry hidden type="button"><RefreshCw size={18} />{t('重新加载')}</button>
+      {library && <ul class="station-music-albums" data-album-list aria-label={t('专辑')} hidden></ul>}
       <ul class="station-music-tracks" data-track-list aria-label={t('选择歌曲')} aria-describedby="music-list-play-help"></ul>
       {library && <button class="station-music-more" data-show-more type="button" hidden>{t('再显示 50 首')}</button>}
     </div>

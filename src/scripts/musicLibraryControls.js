@@ -11,12 +11,26 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     const candidates = state.collection && view?.selectedCollection?.slug === state.collection ? view.selectedCollection.tracks
       : ['favorites', 'recent'].includes(state.mode) ? tracks : catalogTracks;
     const results = browseMusic(candidates, collections, state, getLocal());
-    const albums = state.mode === 'albums';
+    const selected = collections.find(item => item.slug === state.collection);
+    const albums = state.mode === 'albums' && !state.collection;
+    const albumItems = collections.filter(item => item.type === 'album');
+    $('[data-album-list]').hidden = !albums;
+    $('[data-album-list]').replaceChildren();
+    if (albums) for (const item of albumItems) {
+      const li = document.createElement('li'), button = document.createElement('button'), title = document.createElement('strong'), info = document.createElement('span');
+      button.type = 'button'; title.textContent = item.title;
+      info.textContent = t('{count} 首', { count: item.trackIds.length }) + ' · ' + t(item.listeningMode === 'vip' ? 'VIP 专享' : item.listeningMode === 'free' ? '整张免费' : '按单曲收听');
+      if (item.coverUrl) { const cover = document.createElement('img'); cover.src = item.coverUrl; cover.alt = ''; cover.width = 160; cover.height = 160; cover.loading = 'lazy'; button.append(cover); }
+      button.append(title, info); button.onclick = () => change({ collection:item.slug, track:undefined, query:'', genres:[], moods:[], access:'' });
+      li.append(button); $('[data-album-list]').append(li);
+    }
+    $('[data-collection-share-label]').textContent = t(selected?.type === 'album' ? '分享专辑' : '分享歌单');
+    $('[data-share-url="collection"]').setAttribute('aria-label', t(selected?.type === 'album' ? '专辑链接' : '歌单链接'));
     $('[data-song-search]').hidden = albums;
     $('[data-filter-panel]').hidden = albums;
     $('[data-play-all]').hidden = albums;
     $('[data-track-list]').hidden = albums;
-    $('[data-list-title]').textContent = t(albums ? '专辑' : state.mode === 'favorites' ? '我的收藏' : state.mode === 'recent' ? '最近播放' : '全部歌曲');
+    $('[data-list-title]').textContent = selected?.title || t(albums ? '专辑' : state.mode === 'favorites' ? '我的收藏' : state.mode === 'recent' ? '最近播放' : '全部歌曲');
     $('[data-library-count]').hidden = albums;
     $('[data-show-more]').hidden = results.length <= count;
     $('[data-library-count]').textContent = t('显示 {shown} / {total} 首', { shown: Math.min(count, results.length), total: results.length });
@@ -40,7 +54,7 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     const notice = loaded && issue ? t(issue === 'missing' ? '分享的歌曲或歌单已不可用。' : '暂时无法读取这首歌曲或歌单，请重新加载。')
       : loaded && missing ? t('正在读取指定歌曲或歌单…') : loaded && unavailable ? t('有 {count} 首记录不在当前目录中，仍已保留。', { count: unavailable }) : '';
     $('[data-library-notice]').textContent = notice; $('[data-library-notice]').hidden = !notice;
-    onChange({ results, shown: results.slice(0, count), trackId: state.track, collectionSlug: state.collection, loaded, mode: state.mode });
+    onChange({ results, shown: results.slice(0, count), trackId: state.track, collectionSlug: state.collection, loaded, mode: state.mode, albumOverview:albums, albumCount:albums ? albumItems.length : 0 });
   };
   const save = (replace = false) => {
     const params = new URLSearchParams();
@@ -52,7 +66,7 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
   const change = (patch, replace = false) => { state = { ...state, ...patch }; count = 50; save(replace); render(); };
   on($('[data-music-search]'), 'input', event => change({ query: event.target.value.slice(0, 200) }, true));
   on($('[data-access-filter]'), 'change', event => change({ access: event.target.value }));
-  on($('[data-collection-filter]'), 'change', event => change({ collection: event.target.value }));
+  on($('[data-collection-filter]'), 'change', event => change({ collection: event.target.value, mode:collections.find(item => item.slug === event.target.value)?.type === 'album' ? 'albums' : 'latest' }));
   for (const button of root.querySelectorAll('[data-browse-mode]')) on(button, 'click', () => change({ mode: button.dataset.browseMode, collection: '' }));
   for (const key of ['genres', 'moods']) on($(key === 'genres' ? '[data-genre-filter]' : '[data-mood-filter]'), 'change', () => change({ [key]: [...root.querySelectorAll(`[data-tag-group="${key}"]:checked`)].map(input => input.value) }));
   on($('[data-clear-filters]'), 'click', () => change({ query: '', genres: [], moods: [], access: '', collection: '', mode: 'latest' }));
@@ -74,7 +88,7 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     update(values, groups, context = null) {
       tracks = values; catalogTracks = context?.catalogTracks || values; collections = groups; view = context; loaded = true;
       const select = $('[data-collection-filter]');
-      select.replaceChildren(new Option(t('全部歌曲'), ''), ...collections.map(item => new Option(`${item.title} · ${t('{count} 首', { count: item.trackIds.length })}`, item.slug)));
+      select.replaceChildren(new Option(t('全部歌曲'), ''), ...collections.map(item => new Option(`${t(item.type === 'album' ? '专辑' : '歌单')} · ${item.title} · ${t('{count} 首', { count: item.trackIds.length })}`, item.slug)));
       const tags = libraryFilters([...catalogTracks, ...(view?.selectedCollection?.tracks || [])]);
       for (const [key, selector] of [['genres', '[data-genre-filter]'], ['moods', '[data-mood-filter]']]) {
         const fieldset = $(selector);

@@ -15,7 +15,7 @@ const mf = new Miniflare({ modules:true,script:bundle.outputFiles[0].text,compat
   d1Databases:{ MUSIC_DB:'ui-fixture-music',WAITLIST_DB:'ui-fixture-readers' },r2Buckets:{ MUSIC_BUCKET:'ui-fixture-private' },
   outboundService:() => new Response('External network disabled',{status:403}) });
 const db = await mf.getD1Database('MUSIC_DB'), parser = new DatabaseSync(':memory:');
-for (const name of ['0001_music_foundation.sql','0002_music_publication.sql','0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql']) {
+for (const name of ['0001_music_foundation.sql','0002_music_publication.sql','0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql']) {
   let sql = await readFile(resolve(root,'migrations-music',name),'utf8'); const statements = [];
   while (sql.trim()) { const stmt = parser.prepare(sql), source = stmt.sourceSQL; stmt.run(); statements.push(db.prepare(source)); sql = sql.slice(source.length); }
   await db.batch(statements);

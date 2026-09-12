@@ -125,7 +125,7 @@ export function projectPublicTrackDetail(record, options) {
   }
 }
 
-function projectCollection(record, locale, publicIds) {
+function projectCollection(record, locale, publicTracks) {
   if (!object(record)) return null;
   const { collection, items } = record;
   if (!collection || collection.status !== 'published') return null;
@@ -134,6 +134,11 @@ function projectCollection(record, locale, publicIds) {
   }
   const title = translated(parseObject(collection.title_json), locale, collection.original_locale, 200, true);
   const description = translated(parseObject(collection.description_json), locale, collection.original_locale, 500);
+  const type = collection.collection_type === undefined ? 'playlist' : collection.collection_type;
+  const listeningMode = collection.listening_mode === undefined ? 'mixed' : collection.listening_mode;
+  const coverTrackId = collection.cover_track_id ?? null;
+  if (!['playlist','album'].includes(type) || !['mixed','free','vip'].includes(listeningMode) ||
+    (type === 'playlist' && (listeningMode !== 'mixed' || coverTrackId !== null))) throw musicError('MUSIC_INVALID_COLLECTION');
   const seen = new Set();
   const positions = new Set();
   const visible = [];
@@ -142,10 +147,17 @@ function projectCollection(record, locale, publicIds) {
       item.position < 0 || seen.has(item.track_id) || positions.has(item.position)) throw musicError('MUSIC_INVALID_COLLECTION');
     seen.add(item.track_id);
     positions.add(item.position);
-    if (publicIds.has(item.track_id)) visible.push(item);
+    if (publicTracks.has(item.track_id)) visible.push(item);
   }
   visible.sort((a, b) => a.position - b.position);
-  return { id: collection.id, slug: collection.slug, title, description, version: collection.version,
+  // An album is an entire ordered release. Never silently turn a partial or
+  // policy-mismatched album into a successfully published subset.
+  if (type === 'album' && (visible.length !== items.length || !visible.length ||
+    (listeningMode !== 'mixed' && visible.some(item => publicTracks.get(item.track_id).effectiveAccess !== listeningMode)))) return null;
+  if (coverTrackId !== null && (!uuid(coverTrackId) || !seen.has(coverTrackId) || !publicTracks.get(coverTrackId)?.coverUrl)) return null;
+  const cover = type === 'album' ? (coverTrackId ? publicTracks.get(coverTrackId) : visible.map(item => publicTracks.get(item.track_id)).find(t => t.coverUrl)) : null;
+  return { id: collection.id, slug: collection.slug, title, description, version: collection.version, type,
+    ...(type === 'album' ? { listeningMode, coverTrackId:cover?.id || null, coverUrl:cover?.coverUrl || null } : {}),
     trackIds: visible.map(item => item.track_id) };
 }
 
@@ -156,7 +168,7 @@ export async function buildPublicCatalog({ records, collections = [], catalogVer
   if (!Array.isArray(records) || records.length > 500 || !Array.isArray(collections) || collections.length > 500 ||
     !Number.isSafeInteger(catalogVersion) || catalogVersion < 0) throw musicError('MUSIC_INVALID_CATALOG');
   const tracks = records.map(record => projectPublicTrack(record, { locale, now })).filter(Boolean);
-  const ids = new Set(tracks.map(track => track.id));
+  const ids = new Map(tracks.map(track => [track.id,track]));
   if (ids.size !== tracks.length) throw musicError('MUSIC_DUPLICATE_TRACK');
   tracks.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt) || a.id.localeCompare(b.id));
   const changes = tracks.map(track => track.nextPolicyChangeAt).filter(Boolean).sort();
