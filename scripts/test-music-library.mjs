@@ -101,11 +101,17 @@ test('50-row presentation does not truncate play-all and browsing never rewrites
   assert.equal(queue.snapshot().items.length, 500); assert.equal(audio.src, source); assert.equal(player.snapshot().sourceGeneration, generation);
   queue.destroy(); player.destroy();
 });
-test('album category stays empty until its own contract exists, without reclassifying playlists or changing playback', () => {
+test('album category separates playlists and opens ordered songs without changing playback', () => {
   const audio = new Audio(), player = createMusicPlayer(audio, { origin: 'https://music.example.test' }), queue = createMusicQueue(player);
   queue.updateCatalog(tracks); queue.playAll(tracks);
   const source = audio.src, generation = player.snapshot().sourceGeneration, items = queue.snapshot().items;
-  const groups = readPlayerCollections({ collections: [group] }, tracks);
+  const album = { ...group, id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', slug:'album', type:'album', listeningMode:'mixed', coverTrackId:tracks[0].id, coverUrl:'https://evil.test/cover' };
+  const groups = readPlayerCollections({ collections: [group, album] }, tracks);
+  assert.deepEqual(browseMusic(tracks, groups, {mode:'albums',collection:'album'}).map(t=>t.id), group.trackIds);
+  assert.equal(groups[1].coverUrl,tracks[0].coverUrl);
+  assert.throws(()=>readPlayerCollections({collections:[{...album,listeningMode:'free'}]},tracks));
+  assert.throws(()=>readPlayerCollections({collections:[album]},tracks.slice(0,2)));
+  assert.deepEqual(browseMusic(tracks,groups,{mode:'albums'}),[]);
   assert.deepEqual(browseMusic(tracks, groups, { mode: 'albums', collection: group.slug }), []);
   assert.deepEqual(browseMusic(tracks, groups, { collection: group.slug }).map(track => track.id), group.trackIds);
   assert.equal(audio.src, source); assert.equal(player.snapshot().sourceGeneration, generation);

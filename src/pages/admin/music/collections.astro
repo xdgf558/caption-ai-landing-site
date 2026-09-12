@@ -1,0 +1,42 @@
+---
+import { ArrowLeft, Plus, Save, RefreshCw } from '@lucide/astro';
+const locales = [['zh-Hans','简体中文'],['zh-Hant','繁體中文'],['en','English'],['ja','日本語']];
+---
+<!doctype html>
+<html lang="zh-Hans">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><meta name="robots" content="noindex,nofollow" /><title>专辑与歌单 | Station Cat</title><link rel="stylesheet" href="/styles/admin-music.css" /><link rel="stylesheet" href="/styles/admin-music-collections.css" /></head>
+<body class="music-admin">
+<header class="music-topbar"><a href="/admin/music/"><ArrowLeft size={18} />返回曲目工作区</a><span>Station Cat / 后台</span></header>
+<main class="music-shell">
+  <header class="music-heading"><div><p class="eyebrow">内容工作区</p><h1>专辑与歌单</h1></div><div class="music-actions"><button id="collection-new-playlist" type="button" disabled>新建歌单</button><button id="collection-new-album" class="primary" type="button" disabled><Plus size={18} />新建专辑</button></div></header>
+  <div class="music-feedback"><p id="collection-status" role="status" aria-live="polite">正在载入…</p><button id="collection-reload" type="button" aria-label="重新载入"><RefreshCw size={18} /></button><button id="collection-retry" type="button" hidden>核对并重试原操作</button></div>
+  <div class="music-layout">
+    <aside class="music-library" aria-label="专辑与歌单列表">
+      <form id="collection-search-form"><label for="collection-search">查找专辑或歌单</label><input id="collection-search" type="search" maxlength="120" /><div class="collection-list-filters"><label>类型<select id="collection-type-filter"><option value="">全部</option><option value="album">专辑</option><option value="playlist">歌单</option></select></label><label>状态<select id="collection-status-filter"><option value="">全部</option><option value="draft">草稿</option><option value="published">已发布</option><option value="archived">已归档</option></select></label></div><button type="submit">查询</button></form>
+      <div id="collection-list"></div><div class="pagination"><button id="collection-prev" type="button" disabled>上一页</button><span id="collection-page">第 1 页</span><button id="collection-next" type="button" disabled>下一页</button></div>
+    </aside>
+    <section class="music-workspace" aria-label="专辑与歌单编辑">
+      <div id="collection-empty"><h2>选择或新建一张专辑</h2><p class="muted">先保存资料，再从曲库加入歌曲并调整曲序。整张批量上传将在后续提供。</p></div>
+      <div id="collection-workspace" hidden>
+        <header class="workspace-heading"><div><h2 id="collection-heading"></h2><p id="collection-version" class="muted"></p></div><span id="collection-state" class="badge"></span></header>
+        <form id="collection-form"><fieldset id="collection-fields">
+          <div class="field-grid"><label>原文语言<select id="collection-locale">{locales.map(([v,n]) => <option value={v}>{n}</option>)}</select></label><label>链接标识<input id="collection-slug" required maxlength="100" pattern="[a-z0-9]+(-[a-z0-9]+)*" /></label></div>
+          <div class="field-grid">{locales.map(([v,n]) => <div><label>{n}标题<input data-collection-title={v} maxlength="120" /></label><label>{n}简介<textarea data-collection-description={v} maxlength="500" rows="2"></textarea></label></div>)}</div>
+          <div id="album-fields"><div class="field-grid"><label>专辑收听范围<select id="album-listening-mode"><option value="mixed">沿用单曲设置（可混合）</option><option value="free">整张免费</option><option value="vip">整张 VIP 专享</option></select></label><label>专辑封面<select id="album-cover-track"><option value="">自动使用首个有封面的成员曲目</option></select></label></div><p class="muted">封面选用成员曲目已发布、已审核的封面。范围设置只检查单曲，不批量修改权限；整张免费／VIP 需所有成员一致。</p></div>
+          <label id="collection-reason-label">修改说明<input id="collection-reason" maxlength="1000" /></label>
+          <footer class="music-actions"><button id="collection-save" class="primary" type="submit"><Save size={17} />保存资料</button></footer>
+        </fieldset></form>
+        <section class="collection-members" aria-labelledby="collection-order-title"><h3 id="collection-order-title">曲序</h3><p class="muted">最多 500 首。可拖动排序，也可用上移／下移按钮；调整后需保存曲序。</p>
+          <form id="member-search-form"><label for="member-search">从现有曲库添加歌曲</label><div class="upload-control"><input id="member-search" type="search" maxlength="120" placeholder="曲名或链接标识" /><button type="submit">查找歌曲</button></div></form>
+          <div id="member-results" aria-live="polite"></div><button id="member-more" type="button" hidden>更多歌曲</button>
+          <ol id="collection-order"></ol><p id="collection-order-empty" class="muted">尚未添加歌曲。</p>
+          <label>曲序修改说明<input id="collection-order-reason" maxlength="1000" /></label><button id="collection-order-save" type="button">保存曲序</button>
+        </section>
+        <section class="collection-publishing"><h3>发布</h3><p id="collection-publish-help" class="notice"></p><p class="muted">先保存资料和曲序。发布不修改歌曲权限，也不会打开音乐总闸。</p><div class="music-actions"><button id="collection-publish" type="button" class="primary">发布</button><button id="collection-unpublish" type="button">下架为草稿</button><button id="collection-archive" type="button">归档</button></div></section>
+      </div>
+    </section>
+  </div>
+</main>
+<dialog id="collection-confirm"><form method="dialog"><h2 id="collection-confirm-title"></h2><p id="collection-confirm-text"></p><label id="collection-confirm-reason-label">操作说明<input id="collection-confirm-reason" maxlength="1000" /></label><footer class="music-actions"><button value="cancel" formnovalidate>取消</button><button id="collection-confirm-accept" value="yes" class="primary">确认</button></footer></form></dialog>
+<script>import '../../../scripts/adminMusicCollections.js';</script>
+</body></html>

@@ -179,3 +179,12 @@
   .station-music-page .station-music-player { padding-bottom: 32px; }
   .station-music-filters { grid-template-columns: 1fr; }
 }
+
+/* Album browsing reuses the library and never owns a second player. */
+.station-music-albums {display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr));gap:16px;padding:0;list-style:none;}
+.station-music-albums button {display:flex;flex-direction:column;gap:10px;width:100%;height:100%;padding:16px;text-align:start;border:1px solid var(--music-border,#deded7);border-radius:16px;background:var(--music-surface,#fffdf8);color:inherit;cursor:pointer;overflow-wrap:anywhere;}
+.station-music-albums img {width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:10px;}
+.station-music-albums span {font-size:.85rem;line-height:1.6;}
+.station-music-albums strong {font-size:1.05rem;line-height:1.5;}
+.station-music-albums button:hover {border-color:currentColor;}
+.station-music-albums button:focus-visible {outline:3px solid currentColor;outline-offset:3px;}

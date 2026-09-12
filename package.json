@@ -7,7 +7,7 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "pretest": "npm run test:music:wav && npm run test:music:foundation && npm run test:music:membership && npm run test:music:publication && npm run test:music:mp3 && npm run test:music:storage && npm run test:music:media && npm run test:music:public && npm run test:music:admin && npm run test:music:collections && npm run test:music:cleanup && npm run test:music:rate-limits && npm run test:music:staging && npm run test:music:player && npm run test:music:queue && npm run test:music:access-lifecycle && npm run test:music:system-controls && npm run test:music:library && npm run test:music:panels && npm run test:music:lyrics-local && npm run test:music:sharing-return && npm run test:music:share-cards && npm run test:music:analytics && node scripts/test-membership-safety.mjs && node scripts/test-membership-refund-review.mjs && node scripts/test-signal-articles.mjs && node scripts/test-cat-life-interactions.mjs && node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs && node scripts/test-cat-life-release-history.mjs && node scripts/test-cat-life-music.mjs && node scripts/test-cat-life-share.mjs && node scripts/test-cat-life-motion.mjs",
+    "pretest": "npm run test:music:wav && npm run test:music:foundation && npm run test:music:membership && npm run test:music:publication && npm run test:music:mp3 && npm run test:music:storage && npm run test:music:media && npm run test:music:public && npm run test:music:admin && npm run test:music:collections && npm run test:music:albums && npm run test:music:cleanup && npm run test:music:rate-limits && npm run test:music:staging && npm run test:music:player && npm run test:music:queue && npm run test:music:access-lifecycle && npm run test:music:system-controls && npm run test:music:library && npm run test:music:panels && npm run test:music:lyrics-local && npm run test:music:sharing-return && npm run test:music:share-cards && npm run test:music:analytics && node scripts/test-membership-safety.mjs && node scripts/test-membership-refund-review.mjs && node scripts/test-signal-articles.mjs && node scripts/test-cat-life-interactions.mjs && node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs && node scripts/test-cat-life-release-history.mjs && node scripts/test-cat-life-music.mjs && node scripts/test-cat-life-share.mjs && node scripts/test-cat-life-motion.mjs",
     "test:music:foundation": "node --test scripts/test-music-foundation.mjs",
     "test:music:membership": "node --test scripts/test-music-membership.mjs",
     "test:music:publication": "node --test scripts/test-music-publication.mjs",
@@ -18,6 +18,7 @@
     "test:music:runtime": "node --test scripts/test-music-runtime.mjs",
     "test:music:staging": "node --test scripts/test-music-staging-gate.mjs",
     "test:music:admin": "node --test scripts/test-music-admin.mjs",
+    "test:music:albums": "node --test scripts/test-music-albums.mjs",
     "test:music:collections": "node --test scripts/test-music-collections.mjs",
     "test:music:uploads": "node --test scripts/test-music-uploads.mjs",
     "test:music:wav": "node --test scripts/test-music-wav.mjs",

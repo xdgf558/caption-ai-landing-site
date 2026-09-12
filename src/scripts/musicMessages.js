@@ -31,6 +31,12 @@ const rows = `
 撤回统计同意|撤回統計同意|Withdraw statistics consent|統計への同意を撤回
 音乐隐私说明|音樂隱私說明|Music privacy notice|音楽のプライバシー説明
 分享歌曲|分享歌曲|Share song|曲を共有
+歌单与专辑|歌單與專輯|Playlists and albums|プレイリストとアルバム
+分享专辑|分享專輯|Share album|アルバムを共有
+专辑链接|專輯連結|Album link|アルバムのリンク
+整张免费|整張免費|Free album|全曲無料
+VIP 专享|VIP 專享|VIP exclusive|VIP 限定
+按单曲收听|按單曲收聽|Access varies by song|曲ごとのアクセス設定
 分享歌单|分享歌單|Share playlist|プレイリストを共有
 复制链接|複製連結|Copy link|リンクをコピー
 歌曲链接|歌曲連結|Song link|曲のリンク

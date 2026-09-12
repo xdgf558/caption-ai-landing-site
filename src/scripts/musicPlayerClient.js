@@ -287,13 +287,13 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     });
   }
   if (isLibrary) {
-    libraryControls = mountMusicLibraryControls(root, { t, getLocal: () => local.snapshot(), onChange({ results, shown, trackId, loaded, mode }) {
+    libraryControls = mountMusicLibraryControls(root, { t, getLocal: () => local.snapshot(), onChange({ results, shown, trackId, loaded, mode, albumOverview, albumCount }) {
       visibleTracks = results; shownTracks = shown; viewTrackId = trackId || null;
       renderRows();
       $('[data-play-all]').disabled = !results.length;
       if (loaded) {
-        $('[data-catalog-message]').hidden = results.length > 0;
-        setText('[data-catalog-message]', t(mode === 'albums' ? '暂无已发布专辑。专辑发布后会显示在这里。' : mode === 'favorites' ? '暂无可显示的收藏。未发布曲目的收藏仍会保留。' : mode === 'recent' ? '暂无可显示的播放记录。播放歌曲后会记录在这里。' : tracks.length ? '没有匹配的歌曲，试试其他条件。' : '小站还在准备音乐，稍后再来听听。'));
+        $('[data-catalog-message]').hidden = results.length > 0 || albumCount > 0;
+        setText('[data-catalog-message]', t(albumOverview ? '暂无已发布专辑。专辑发布后会显示在这里。' : mode === 'favorites' ? '暂无可显示的收藏。未发布曲目的收藏仍会保留。' : mode === 'recent' ? '暂无可显示的播放记录。播放歌曲后会记录在这里。' : tracks.length ? '没有匹配的歌曲，试试其他条件。' : '小站还在准备音乐，稍后再来听听。'));
       }
       render(player.snapshot());
       if (loaded) scheduleBrowse();

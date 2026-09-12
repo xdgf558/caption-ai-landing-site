@@ -75,6 +75,9 @@ const server = createServer(async (req, res) => {
       publishedAt: new Date(Date.UTC(2026, 8, 11) - i * 86400000).toISOString(), coverUrl: `/api/music/tracks/${track.id}/cover?v=1`
     }));
     const collections = libraryPreview ? [{ id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', slug: 'quiet-days', title: locale === 'en' ? 'Quiet Days' : locale === 'ja' ? '静かな日々' : '安静的日常', description: '', trackIds: demoTracks.slice(0, 3).map(t => t.id).reverse() }] : [];
+    if (libraryPreview) collections.push({ id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', slug:'station-album', type:'album', listeningMode:'mixed',
+      title:locale==='en'?'Station Album':locale==='ja'?'小さな駅のアルバム':'小站日常 · 专辑', description:'',
+      trackIds:demoTracks.slice(0,3).map(t=>t.id).reverse(), coverTrackId:demoTracks[0].id, coverUrl:demoTracks[0].coverUrl });
     const expired = fixture.validUntil && Date.parse(fixture.validUntil) <= Date.now();
     const vip = fixture.membership === 'vip' && !expired;
     const fullAccess = track => track.effectiveAccess === 'free' ? 200 : fixture.membership === 'unavailable' ? 503 : vip ? 200 : expired ? 403 : 401;

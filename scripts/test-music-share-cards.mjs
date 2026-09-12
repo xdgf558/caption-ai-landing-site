@@ -159,7 +159,7 @@ test('actual workerd renders PNG with D1/R2/ASSETS and rewrites one set of song 
   const parser = new DatabaseSync(':memory:');
   try {
     const db = await mf.getD1Database('MUSIC_DB'), bucket = await mf.getR2Bucket('MUSIC_BUCKET');
-    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql']) {
+    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql']) {
       let sql = file('migrations-music/' + name).toString(); const statements = [];
       while (sql.trim()) { const statement = parser.prepare(sql), source = statement.sourceSQL; statement.run(); statements.push(db.prepare(source)); sql = sql.slice(source.length); }
       await db.batch(statements);

@@ -119,9 +119,9 @@ export async function handleMusicAdmin(request, env, authorize) {
       result = await listAdminMusicAudit(runtime.db, query.before === undefined ? undefined : Number(query.before));
     } else if (path === '/admin/api/music/collections') {
       if (read) {
-        fields(query, ['before', 'status', 'q']);
+        fields(query, ['before', 'status', 'q', 'type']);
         result = await listAdminMusicCollections(runtime.db, { before: query.before === undefined ? undefined : Number(query.before),
-          status: query.status, q: query.q });
+          status: query.status, q: query.q, type:query.type });
       } else if (request.method === 'POST') {
         fields(query, []); mutationKey(context.key);
         result = await createAdminMusicCollection(runtime.db, await readBody(request), context);
