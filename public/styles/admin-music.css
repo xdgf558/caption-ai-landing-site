@@ -96,6 +96,6 @@
   .music-shell { padding:20px 16px 48px; }.music-layout { grid-template-columns:minmax(0,1fr); gap:16px; }
   #track-list { max-height:220px; }.music-workspace { border-left:0; padding:0 16px 22px; }
   .field-grid { grid-template-columns:minmax(0,1fr); gap:0; }.music-feedback { flex-wrap:wrap; padding:10px 0; }
-  .music-actions button { flex-grow:1; }.music-tabs { column-gap:16px; row-gap:0; }
+  .music-actions button { flex-grow:1; }.music-tabs { column-gap:12px; row-gap:0; }
   .role-cards { grid-template-columns:minmax(0,1fr); }.role-membership { margin-left:0; }
 }
