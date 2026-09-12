@@ -64,6 +64,27 @@ export function checkRights(snapshot, now) {
   }
 }
 
+// Source documentation is optional. An explicit block still stops publication;
+// opting into an approved rights record must still satisfy its original contract.
+export function checkPublicationRights(snapshot, now) {
+  const { rights, revision, evidence, assets } = snapshot;
+  if (!rights) {
+    if (evidence.length) throw publicationError('RIGHTS_REVIEW_REQUIRED');
+    return;
+  }
+  if (rights.revision_id !== revision.id || !['pending', 'approved', 'blocked'].includes(rights.review_status)) {
+    throw publicationError('RIGHTS_REVIEW_REQUIRED');
+  }
+  if (rights.review_status === 'blocked') throw publicationError('MUSIC_RIGHTS_BLOCKED');
+  if (rights.review_status === 'approved') return checkRights(snapshot, now);
+  parse(rights.review_json);
+  if (evidence.length > 10 || evidence.some(row => {
+    const asset = assets.find(a => a.id === row.asset_id);
+    return row.review_id !== rights.id || !asset || asset.owner_track_id !== revision.track_id ||
+      asset.kind !== 'evidence' || asset.state !== 'validated' || asset.byte_size > 10485760;
+  })) throw publicationError('RIGHTS_REVIEW_REQUIRED');
+}
+
 export async function validatePublication(snapshot, command, now) {
   isoTime(now);
   const { track, revision, previous, assets, settings } = snapshot;
@@ -104,9 +125,9 @@ export async function validatePublication(snapshot, command, now) {
   if (policy.accessMode !== 'free' && !preview) throw publicationError('PREVIEW_REQUIRED');
   if (preview && (preview.source_end_ms - preview.source_start_ms > Math.min(previewLimit, Math.floor(full.duration_ms / 2)) ||
     preview.duration_ms > Math.min(previewLimit, Math.floor(full.duration_ms / 2)) + 250)) throw publicationError('PREVIEW_INVALID');
-  checkRights(snapshot, now);
+  checkPublicationRights(snapshot, now);
   const fingerprint = await publicationFingerprint(snapshot);
-  if (snapshot.rights.revision_fingerprint !== fingerprint || revision.technical_fingerprint !== fingerprint) {
+  if ((snapshot.rights?.review_status === 'approved' && snapshot.rights.revision_fingerprint !== fingerprint) || revision.technical_fingerprint !== fingerprint) {
     throw publicationError('MUSIC_REVIEW_STALE');
   }
   return fingerprint;

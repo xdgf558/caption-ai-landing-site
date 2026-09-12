@@ -467,6 +467,35 @@ test('real protected upload, review and publish HTTP chain uses actual MP3/cover
   assert.equal((await adminCall(`/tracks/${trackId}`)).body.published.id, revisionId);
 });
 
+test('native no-documentation upload and publication retain technical and VIP gates', { timeout: 30000 }, async () => {
+  await db.prepare("UPDATE music_settings SET value_json='200000000' WHERE key='storageQuotaBytes'").run();
+  const draft = adminDraft(), created = await adminCall('/tracks', 'POST', draft), trackId = created.body.trackId;
+  const audio = await uploadFile(trackId, 'audio', 'mp3', file('tests/fixtures/music-mp3/cbr-stereo.mp3'));
+  const preview = await uploadFile(trackId, 'preview', 'mp3', file('tests/fixtures/music-mp3/preview.mp3'),
+    { sourceAssetId: audio.assetId, sourceStartMs: 0, sourceEndMs: 1000 });
+  const policy = (await adminCall(`/tracks/${trackId}`)).body.draft.policy;
+  const saved = await adminCall(`/tracks/${trackId}`, 'PATCH', { ...draft, policy,
+    assets: { audio: audio.assetId, preview: preview.assetId }, revisionId: created.body.revisionId,
+    reason: 'Attach local fixture without documentation.' }, { 'If-Match': '"edit-1"' });
+  assert.equal(saved.status, 200, JSON.stringify(saved)); const revisionId = saved.body.revisionId;
+  const publishInput = { revisionId, confirmedPolicyVersion: 1, reason: 'Local optional documentation test.' };
+  assert.equal((await adminCall(`/tracks/${trackId}/publish`, 'POST', publishInput, { 'If-Match': '"edit-2"' })).status, 422);
+  const checklist = { audioListened: true, previewListened: true, previewSourceConfirmed: true, artworkChecked: false,
+    reason: 'Synthetic local technical checklist.' };
+  const checked = await adminCall(`/revisions/${revisionId}/technical-review`, 'PUT', checklist, { 'If-Match': '"edit-2"' });
+  assert.equal(checked.status, 200, JSON.stringify(checked));
+  const key = randomUUID(), headers = { 'If-Match': '"edit-3"', 'Idempotency-Key': key };
+  const published = await adminCall(`/tracks/${trackId}/publish`, 'POST', publishInput, headers);
+  assert.equal(published.status, 200, JSON.stringify(published));
+  assert.equal((await adminCall(`/tracks/${trackId}/publish`, 'POST', publishInput, headers)).body.replayed, true);
+  const current = (await adminCall(`/tracks/${trackId}`)).body;
+  assert.equal(current.lifecycle, 'published'); assert.equal(current.rights, null);
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM music_rights_reviews WHERE revision_id=?').bind(revisionId).first()).n, 0);
+  const denied = await mediaCall(trackId, 'full', { version: 2 }); assert.equal(denied.status, 401);
+  const allowed = await mediaCall(trackId, 'preview', { version: 2, headers: { Range: 'bytes=0-1' } });
+  assert.equal(allowed.status, 206); assert.deepEqual(Buffer.from(await allowed.arrayBuffer()), preview.bytes.subarray(0, 2));
+});
+
 test('native PUT concurrent writers cannot overwrite; lost response recovers and hash/size failures stay private', { timeout: 30000 }, async () => {
   const draft = (await adminCall('/tracks', 'POST', adminDraft())).body, data = Buffer.from('Native streaming text');
   const reserve = async (overrides = {}) => (await uploadJson('/uploads', 'POST', { trackId: draft.trackId, kind: 'lyrics', format: 'txt',

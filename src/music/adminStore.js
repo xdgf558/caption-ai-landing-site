@@ -91,6 +91,21 @@ export async function mutate(db, { actorId, route, key, command, clock = Date.no
   }
 }
 
+// Match optional documentation, including absence, in the same write transaction.
+// A concurrent block or first review must invalidate an in-flight technical check.
+export function rightsGuard({ revision, rights, evidence }) {
+  if (!rights) return { condition: 'NOT EXISTS (SELECT 1 FROM music_rights_reviews WHERE revision_id=?)', params: [revision.id] };
+  const fields = ['id', 'revision_id', 'review_json', 'review_status', 'reviewer_id', 'reviewed_at', 'revision_fingerprint'];
+  const conditions = [`EXISTS (SELECT 1 FROM music_rights_reviews WHERE ${fields.map(field => `${field} IS ?`).join(' AND ')})`,
+    '(SELECT COUNT(*) FROM music_rights_evidence WHERE review_id=?)=?'];
+  const params = [...fields.map(field => rights[field]), rights.id, evidence.length];
+  for (const row of evidence) {
+    conditions.push('EXISTS (SELECT 1 FROM music_rights_evidence WHERE review_id=? AND asset_id=?)');
+    params.push(row.review_id, row.asset_id);
+  }
+  return { condition: conditions.join(' AND '), params };
+}
+
 export function trackGuard(snapshot, version) {
   const { track, revision } = snapshot;
   if (track.edit_version !== version) fail('MUSIC_EDIT_CONFLICT', 409);

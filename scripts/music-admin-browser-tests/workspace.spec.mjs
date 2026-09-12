@@ -31,6 +31,7 @@ async function playMuted(audio) {
 }
 async function rights(page) {
   await page.getByRole('tab',{name:'审核发布',exact:true}).click();
+  if (!await page.locator('#rights-details').evaluate(e => e.open)) await page.locator('#rights-details > summary').click();
   const values = {sourcePlatform:'suno',planAtGeneration:'pro',planAtDownload:'pro',outputKind:'standard',downloadMethod:'official',permittedUse:'commercial'};
   for (const [key,v] of Object.entries(values)) await page.locator('[data-right="' + key + '"]').selectOption(v);
   for (const key of ['sourceSongId','authorizationBasis','lyricsRightsNotes','coverRightsNotes','audioInputRightsNotes']) await page.locator('[data-right="' + key + '"]').fill('本地合成夹具，不是正式授权');
@@ -89,6 +90,41 @@ test('Enter saves a draft; full upload, review, publish, revision, unpublish and
   await expect(page.locator('#track-state')).toHaveText('已归档');
   await page.getByRole('button',{name:'操作记录',exact:true}).click(); await expect(page.locator('#audit-list')).toContainText('music.archive');
   expect(errors).toEqual([]);
+});
+test('source materials are optional through upload, technical review and explicit publication',async ({page}) => {
+  let rightsWrites = 0;
+  page.on('request',r => { if (r.method() === 'PUT' && r.url().endsWith('/rights-review')) rightsWrites++; });
+  await create(page); await page.getByRole('tab',{name:'素材',exact:true}).click();
+  await upload(page,'audio',fixture('cbr-stereo.mp3'));
+  await page.locator('#preview-end').fill('1'); await upload(page,'preview',fixture('preview.mp3'));
+  await page.locator('#assets-save').click(); await expect(page.locator('#track-version')).toHaveText('编辑版本 2');
+  await page.getByRole('tab',{name:'审核发布',exact:true}).click();
+  await expect(page.locator('#rights-state')).toHaveText('未提供（可选）');
+  await expect(page.locator('#technical-fields button')).toBeEnabled();
+  await expect(page.locator('#track-publish')).toBeDisabled();
+  await page.locator('#technical-reason').fill('仅本地合成夹具技术回归');
+  await page.getByRole('button',{name:'提交技术核对',exact:true}).click();
+  await expect(page.locator('#music-status')).toContainText('请先完成实际试听');
+  for (const key of ['audioListened','previewListened','previewSourceConfirmed']) await page.locator('[data-tech="' + key + '"]').check();
+  await page.getByRole('button',{name:'提交技术核对',exact:true}).click();
+  await expect(page.locator('#technical-state')).toHaveText('已核对');
+  await expect(page.locator('#track-version')).toHaveText('编辑版本 3');
+  await page.locator('#track-publish').click(); await page.locator('#confirm-reason').fill('本地无材料流程回归');
+  await page.locator('#confirm-accept').click(); await expect(page.locator('#track-state')).toHaveText('已发布');
+  await page.reload(); await expect(page.locator('#rights-state')).toHaveText('未提供（可选）');
+  await expect(page.locator('#track-version')).toHaveText('编辑版本 4'); expect(rightsWrites).toBe(0);
+});
+test('explicit blocked decision disables technical review and publication; pending is not approval',async ({page}) => {
+  await create(page); await page.getByRole('tab',{name:'审核发布',exact:true}).click();
+  await page.locator('#rights-details > summary').click();
+  await page.locator('#rights-decision').selectOption('blocked'); await page.locator('#rights-reason').fill('本地明确阻止回归');
+  await page.getByRole('button',{name:'提交权利核对',exact:true}).click(); await page.locator('#confirm-accept').click();
+  await expect(page.locator('#rights-state')).toHaveText('不通过，已阻止发布');
+  await expect(page.locator('#technical-fields button')).toBeDisabled(); await expect(page.locator('#track-publish')).toBeDisabled();
+  await page.locator('#rights-decision').selectOption('pending'); await page.locator('#rights-reason').fill('本地可选记录回归');
+  await page.getByRole('button',{name:'提交权利核对',exact:true}).click(); await page.locator('#confirm-accept').click();
+  await expect(page.locator('#rights-state')).toHaveText('未核对（可选）'); await expect(page.locator('#technical-fields button')).toBeEnabled();
+  await expect(page.locator('#track-publish')).toBeDisabled();
 });
 test('lost create response survives reload and replays the exact key only on explicit retry',async ({page}) => {
   let originalKey, replayKey, count = 0;
