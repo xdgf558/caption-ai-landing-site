@@ -36,7 +36,7 @@
 
 限流拒绝服务时输出一条 `music_rate_limit_failure` 结构化警告，仅含 `version:1`、白名单 `category`（catalog/artwork/audio/unknown）、`stage`（configuration/source/database/result）和 `reason`（deadline_exceeded/operation_failed）。只有本地 D1 batch 截止定时器触发才记 `deadline_exceeded`；底层异常恰好叫 timeout 不算该证据。source 阶段包括 secret 校验、IP 规范化与 HMAC；database 包括 primary 会话与 batch；result 表示返回结构或计数不符。日志不序列化请求、URL、身份、Cookie、IP/散列、SQL、绑定、secret、异常消息或堆栈；正常放行和 429 不写此日志。日志写入异常仍返回原 503，公开 JSON 和只读 diagnostics 不增加失败详情。
 
-限流 batch 的默认等待上限为 3 秒，为 primary 往返及批量执行留出预算；每分钟计数阈值和原子性不变。必须拿到有效的计次结果才继续读目录、会员或 R2，超过上限仍返回原 503。截止只停止等待，不能取消已提交到 D1 的工作，503 后仍可能迟到计次。不要因超时自动重试计数语句、放宽阈值或视为未执行。排查时关联同一请求的受保护运维日志与本机响应记录；整体 HTTP 耗时超过等待上限本身不能证明 D1 batch 超时。[Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/) 可收集这些结构化警告；日志平台自身的请求元数据与权限、保留规则仍须单独管理。执行记录和脱敏结果不进仓库或 PR。
+限流 batch 的默认等待上限为 5 秒，为 primary 往返及批量执行留出预算；每分钟计数阈值和原子性不变。必须拿到有效的计次结果才继续读目录、会员或 R2，超过上限仍返回原 503。截止只停止等待，不能取消已提交到 D1 的工作，503 后仍可能迟到计次。不要因超时自动重试计数语句、放宽阈值或视为未执行。排查时关联同一请求的受保护运维日志与本机响应记录；整体 HTTP 耗时超过等待上限本身不能证明 D1 batch 超时。[Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/) 可收集这些结构化警告；日志平台自身的请求元数据与权限、保留规则仍须单独管理。执行记录和脱敏结果不进仓库或 PR。
 
 ## 验证和发布边界
 

@@ -142,7 +142,7 @@ test('logging failures cannot change 503 or touch protected media', async t => {
   assert.deepEqual(f.dump(),before); assert.equal(f.r2Reads,0);
 });
 
-test('default D1 budget admits a confirmed result after 1.5s but denies at 3s without retry', async t => {
+test('default D1 budget admits a confirmed result after 1.5s but denies at 5s without retry', async t => {
   t.mock.timers.enable({apis:['setTimeout']});
   t.mock.method(console,'warn',() => {});
   const f = fixture();
@@ -154,7 +154,7 @@ test('default D1 budget admits a confirmed result after 1.5s but denies at 3s wi
     }}; }};
     const pending = checkMusicRateLimit(request(),{...f.env,MUSIC_DB:db},'catalog').then(value => {settled=true;return value;});
     await ready;
-    t.mock.timers.tick(2999); await new Promise(r => setImmediate(r));
+    t.mock.timers.tick(4999); await new Promise(r => setImmediate(r));
     assert.equal(settled,false);
     const result = [{success:true,results:[]},{success:true,results:[]},{success:true,results:[{hits:1}]}];
     if (complete) { resolveBatch(result); assert.equal(await pending,null); }
