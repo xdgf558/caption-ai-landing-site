@@ -51,6 +51,11 @@ test('four role buttons, gate and boundary simulations use no public/media reque
   expect(await page.locator('audio').evaluateAll(nodes => nodes.every(a => !a.getAttribute('src') && a.paused))).toBe(true);
   const storage = await page.evaluate(() => Object.entries(sessionStorage).map(([,v]) => v).join(''));
   expect(storage).not.toMatch(/data-role|scenario|canPlayVipFull|membershipStatus/);
+  // Re-reading the editor while the role tab remains selected must not reattach hidden media.
+  await page.getByRole('button',{name:'重新读取服务状态',exact:true}).click();
+  await expect(page.locator('#music-status')).toHaveText('已重新读取当前版本。');
+  await expect(page.locator('[data-role-notice]')).toContainText('读取于');
+  expect(await page.locator('audio').evaluateAll(nodes => nodes.every(a => !a.getAttribute('src') && a.paused))).toBe(true);
 });
 test('saved preview keeps unsaved input intact and published metadata independent', async ({page}) => {
   await setup(page);

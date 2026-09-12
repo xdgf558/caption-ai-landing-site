@@ -118,8 +118,9 @@ $('confirm-reason').onkeydown = e => { if (e.key === 'Enter') e.preventDefault()
 async function canLeave() { return !(dirty || assetsDirty || reviewDirty) || !!await ask('放弃未保存的修改？', '已上传的文件仍保留在上传会话中，不会被删除。'); }
 function tab(index, focus = false) {
   index = Number.isInteger(index) && index >= 0 && index < 4 ? index : 0;
-  if (index === 1 && activeStep === 3) renderAssets();
+  const previousStep = activeStep;
   activeStep = index;
+  if (index !== 3 && previousStep === 3) renderAssets();
   if (index === 3) stopAudio();
   for (let i = 0; i < 4; i++) { $('panel-' + i).hidden = i !== index; $('step-' + i).setAttribute('aria-selected', String(i === index)); $('step-' + i).tabIndex = i === index ? 0 : -1; }
   if (focus) $('step-' + index).focus();
@@ -238,11 +239,14 @@ function renderAssets() {
     if (!ids.length) container.append(el('p','尚未添加','muted'));
     ids.forEach((id,i) => {
       if (['audio','preview'].includes(kind)) {
-        const audio = document.createElement('audio'); audio.controls = true; audio.preload = 'none'; audio.src = assetUrl(id); audio.setAttribute('aria-label',kind === 'preview' ? '独立试听' : '完整音频试听');
+        const audio = document.createElement('audio'); audio.controls = true; audio.preload = 'none';
+        if (activeStep !== 3) audio.src = assetUrl(id);
+        audio.setAttribute('aria-label',kind === 'preview' ? '独立试听' : '完整音频试听');
         audio.onplay = () => all('audio').forEach(other => { if (audio !== other) other.pause(); });
         audio.onerror = () => status('音频无法播放，请核对文件或后台登录状态。',true); container.append(audio);
       } else if (kind === 'cover') {
-        const img = document.createElement('img'); img.src = assetUrl(id); img.alt = '当前曲目封面'; img.width = 112; img.height = 112;
+        const img = document.createElement('img'); if (activeStep !== 3) img.src = assetUrl(id);
+        img.alt = '当前曲目封面'; img.width = 112; img.height = 112;
         img.onerror = () => { img.alt = '封面暂不可用'; }; container.append(img);
       } else { const a = el('a',kind === 'evidence' ? '查看凭证 ' + (i+1) : '下载歌词'); a.href = assetUrl(id); a.target = '_blank'; a.rel = 'noopener noreferrer'; container.append(a); }
       const info = track?.assets?.find(a => a.id === id) || journal?.get().jobs.find(j => j.assetId === id);
@@ -259,6 +263,7 @@ function renderAssets() {
   $('evidence-count').textContent = '当前关联凭证：' + evidence.length + ' 份';
   $('upload-availability').textContent = !track ? '请先保存曲目草稿。' : !track.draft ? '已发布版本不可直接上传，请先保存一份新草稿。' :
     !service?.capabilities.uploads ? '上传尚未开放或未配置正配额。' : '文件验证通过后，保存素材到草稿。VIP 试听不得超过 45 秒或原曲一半，以较短者为准。';
+  if (activeStep === 3) stopAudio();
 }
 function renderReview() {
   const r = track?.draft;
