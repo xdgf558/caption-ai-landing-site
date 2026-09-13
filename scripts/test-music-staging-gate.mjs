@@ -360,3 +360,41 @@ test('staging module graph includes only music, Access and the existing reader m
   assert.ok(!paths.includes('worker.js'));
   assert.deepEqual([...externalImports].sort(), ['@noble/hashes/sha2.js', 'mp3-parser/lib/lib.js']);
 });
+
+test('maintenance generator rejects resource, Access, route and execution drift before producing a config', async () => {
+  const source=JSON.parse((await readFile(new URL('../ops/music-staging-app.jsonc', import.meta.url),'utf8')).replace(/^\s*\/\/.*$/gm,''));
+  const changes=[
+    c=>c.account_id='another-account',
+    c=>c.main='../src/worker.js',
+    c=>c.routes[0].pattern='wwwstationcat.org',
+    c=>c.route='wwwstationcat.org/*',
+    c=>c.workers_dev=true,
+    c=>c.preview_urls=true,
+    c=>c.assets.run_worker_first=false,
+    c=>c.assets.directory='../dist',
+    c=>c.d1_databases[0].database_id='c4a8cb1a-6a94-4e8f-a6fb-a734afafca63',
+    c=>c.d1_databases[1].database_id=c.d1_databases[0].database_id,
+    c=>c.d1_databases[0].migrations_dir='../migrations',
+    c=>c.d1_databases[1].binding='WAITLIST_DB',
+    c=>c.r2_buckets[0].bucket_name='station-cat-content',
+    c=>c.r2_buckets.push({binding:'CONTENT_BUCKET',bucket_name:'station-cat-content'}),
+    c=>c.vars.CF_ACCESS_AUD='production-audience',
+    c=>c.vars.ADMIN_ALLOWED_EMAILS='someone@example.test',
+    c=>c.vars.MUSIC_STAGING_EXPECTED_HOST='wwwstationcat.org',
+    c=>c.vars.MUSIC_PUBLIC_ENABLED=true,
+    c=>delete c.vars.MUSIC_CLEANUP_ENABLED,
+    c=>c.vars.MUSIC_RATE_LIMIT_SECRET='must-not-echo-this-secret',
+    c=>c.observability.redact_query_string=false,
+    c=>c.triggers={crons:['* * * * *']},
+    c=>c.queues={producers:[]},
+    c=>c.env={production:{name:'caption-ai-landing-site'}},
+    c=>c.build={command:'unexpected-command'}
+  ];
+  for(const mutate of changes){
+    const c=structuredClone(source);mutate(c);
+    assert.throws(()=>maintenanceConfig(JSON.stringify(c)),e=>!e.message.includes('must-not-echo-this-secret'));
+  }
+  const shuffled=Object.fromEntries(Object.entries(source).reverse());
+  shuffled.assets=Object.fromEntries(Object.entries(shuffled.assets).reverse());
+  assert.equal(maintenanceConfig(JSON.stringify(shuffled)).vars.MUSIC_PUBLIC_ENABLED,'false');
+});
