@@ -1,4 +1,4 @@
-import { browseMusic, libraryFilters, libraryLocation } from './musicLibrary.js';
+import { browseMusic, libraryFilters, libraryLocation, libraryNoticeHash } from './musicLibrary.js';
 import { musicSelection } from '../music/pagePaths.js';
 
 // Browse state owns no audio, permission or queue state. History only restores the view.
@@ -69,7 +69,7 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     if (state.track) params.set('track', state.track);
     if (state.collection) params.set('collection', state.collection);
     const query = musicSelection(params).toString();
-    host.history[replace || host.history.state?.musicPanel ? 'replaceState' : 'pushState']({ ...host.history.state, musicLibrary: { ...state } }, '', host.location.pathname + (query ? `?${query}` : ''));
+    host.history[replace || host.history.state?.musicPanel ? 'replaceState' : 'pushState']({ ...host.history.state, musicLibrary: { ...state } }, '', host.location.pathname + (query ? `?${query}` : '') + libraryNoticeHash(host.location.hash));
   };
   const change = (patch, replace = false) => { state = { ...state, ...patch }; count = 50; save(replace); render(); };
   on($('[data-music-search]'), 'input', event => change({ query: event.target.value.slice(0, 200) }, true));

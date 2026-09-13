@@ -3,9 +3,10 @@ import { siteConfig } from '../data/site';
 
 interface Props {
   lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+  music?: boolean;
 }
 
-const { lang = 'zh-Hant' } = Astro.props;
+const { lang = 'zh-Hant', music = false } = Astro.props;
 const year = new Date().getFullYear();
 const links =
   lang === 'ja'
@@ -79,6 +80,14 @@ const links =
         { label: 'Android Waitlist', href: '/android/' },
         { label: 'X', href: siteConfig.xUrl }
       ];
+// Only music pages use their own notices; other products keep their existing destinations.
+const footerLinks = links.map(link => {
+  if (!music) return link;
+  if (link.href.endsWith('/apps/caption-ai/privacy/')) return { ...link, href: '#music-privacy' };
+  if (link.href.endsWith('/apps/caption-ai/terms/')) return { ...link, href: '#music-listening' };
+  if (link.href.endsWith('/apps/caption-ai/support/')) return { ...link, href: `mailto:${siteConfig.supportEmail}` };
+  return link;
+});
 ---
 
 <footer class="site-footer">
@@ -99,7 +108,7 @@ const links =
       </p>
     </div>
     <div class="footer-links">
-      {links.map((link) => (
+      {footerLinks.map((link) => (
         <a href={link.href}>{link.label}</a>
       ))}
       <a href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>

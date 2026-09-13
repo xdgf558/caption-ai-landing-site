@@ -1,14 +1,26 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import MusicPlayer from './MusicPlayer.astro';
+import MusicPrivacyNotice from './MusicPrivacyNotice.astro';
+import MusicListeningNotice from './MusicListeningNotice.astro';
+import { musicNotices } from '../data/music-notices.js';
 import { musicPagePaths } from '../music/pagePaths.js';
 import { musicText } from '../scripts/musicMessages.js';
 interface Props { lang?: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja'; }
 const { lang = 'zh-Hant' } = Astro.props;
 const t = musicText(lang);
 ---
-<BaseLayout lang={lang} title={t('音乐小站')} description={t('音乐作品、歌单与免费试听。')} canonicalPath={musicPagePaths[lang]} robots="noindex,nofollow" bodyClass="station-music-page"
+<BaseLayout lang={lang} musicFooter title={t('音乐小站')} description={t('音乐作品、歌单与免费试听。')} canonicalPath={musicPagePaths[lang]} robots="noindex,nofollow" bodyClass="station-music-page"
   alternates={Object.entries(musicPagePaths).map(([hrefLang, href]) => ({ hrefLang, href }))}>
   <MusicPlayer lang={lang} library />
   <noscript><p>{t('开启 JavaScript 后可浏览和播放音乐。')}</p></noscript>
+  <div class="music-notices">
+    <details id="music-listening"><summary>{musicNotices[lang].heading}</summary><MusicListeningNotice lang={lang} /></details>
+    <details id="music-privacy"><summary>{musicNotices[lang].privacy}</summary><MusicPrivacyNotice lang={lang} /></details>
+  </div>
 </BaseLayout>
+<style>
+  .music-notices{max-width:76rem;margin:0 auto;padding:1rem 1.5rem 2rem;overflow-wrap:anywhere}
+  .music-notices details{border-top:1px solid #d9d4c8;padding-block:1rem;scroll-margin-top:6rem}
+  .music-notices summary{cursor:pointer;min-height:2.75rem;align-content:center}
+</style>
