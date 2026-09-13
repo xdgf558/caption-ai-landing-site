@@ -71,17 +71,27 @@ test('album draft can be incomplete; publication requires every member and match
   assert.equal((await call(f,'/collections/'+c.id,'PATCH',save(c,{type:'playlist'}),match(c.editVersion))).body.code,'MUSIC_COLLECTION_IDENTITY');
 });
 
-test('only a member cover may be selected; public cover is canonical and no private fields escape',async()=>{
-  const f=fixture(),first=await published(f),cover=await published(f,{cover:true}),outside=await published(f,{cover:true});let c=await album(f);
-  c=await order(f,c,[first,cover]);
-  assert.equal((await publish(f,c,{coverTrackId:outside})).body.code,'MUSIC_ALBUM_COVER_INVALID');
-  assert.equal((await publish(f,c,{coverTrackId:first})).body.code,'MUSIC_ALBUM_COVER_INVALID');
-  assert.equal((await publish(f,c,{coverTrackId:cover})).status,200);
-  const result=await catalog(f),value=result.body.collections[0];
-  assert.equal(value.coverUrl,`/api/music/tracks/${cover}/cover?v=1`);assert.equal(value.coverTrackId,cover);assert.equal(value.type,'album');assert.deepEqual(value.trackIds,[first,cover]);
-  assert.doesNotMatch(JSON.stringify(result.body),/object_key|sha256|etag|rights|token|albums@example|canPlayFull/);
+test('album cover is independent, scoped to its album, and never falls back to member artwork',async()=>{
+  const f=fixture(),first=await published(f),member=await published(f,{cover:true});let c=await album(f);
+  c=await order(f,c,[first,member]);
+  assert.equal((await publish(f,c,{coverTrackId:member})).body.code,'MUSIC_ALBUM_COVER_INVALID');
+  assert.equal((await publish(f,c)).status,200);
+  assert.equal((await catalog(f)).body.collections[0].coverUrl,null);
   c=(await call(f,'/collections/'+c.id)).body;
-  assert.equal((await call(f,`/collections/${c.id}/tracks`,'PUT',{trackIds:[first],reason:'Cannot orphan cover'},match(c.editVersion))).body.code,'MUSIC_ALBUM_COVER_INVALID');
+  assert.equal((await call(f,'/collections/'+c.id,'PATCH',save(c,{status:'draft'}),match(c.editVersion))).status,200);
+  c=(await call(f,'/collections/'+c.id)).body;
+  const aid=randomUUID();
+  f.sql.prepare("INSERT INTO music_collection_assets(id,owner_collection_id,kind,state,object_key,format,content_type,byte_size,sha256,etag,created_at) VALUES(?,?,'cover','validated',?,'png','image/png',1000,?,'synthetic',?)").run(aid,c.id,`music/album-covers/${c.id}/${aid}.png`,'b'.repeat(64),Date.now());
+  const other=await album(f);
+  assert.equal((await call(f,'/collections/'+other.id,'PATCH',save(other,{coverAssetId:aid}),match(other.editVersion))).body.code,'MUSIC_ALBUM_COVER_INVALID');
+  assert.equal((await publish(f,c,{coverAssetId:aid})).status,200);
+  const result=await catalog(f),value=result.body.collections[0];
+  assert.equal(value.coverUrl,`/api/music/collections/${c.slug}/cover?v=${c.editVersion+1}`);assert.equal(value.coverTrackId,null);
+  assert.doesNotMatch(JSON.stringify(result.body),/object_key|sha256|etag|rights|token|owner_collection_id/);
+  c=(await call(f,'/collections/'+c.id)).body;
+  assert.equal((await call(f,'/collections/'+c.id,'PATCH',save(c,{coverAssetId:null}),match(c.editVersion))).body.code,'MUSIC_COLLECTION_UNPUBLISH_FIRST');
+  assert.equal((await call(f,`/collections/${c.id}/tracks`,'PUT',{trackIds:[first],reason:'Independent cover stays'},match(c.editVersion))).status,200);
+  assert.ok((await catalog(f)).body.collections[0].coverUrl);
 });
 
 test('whole album hides on downlist or natural policy transition; playlist continues filtering unavailable members',async()=>{

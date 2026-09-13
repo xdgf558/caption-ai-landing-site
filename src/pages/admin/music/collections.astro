@@ -24,10 +24,18 @@ import { ArrowLeft, Plus, Save, RefreshCw } from '@lucide/astro';
             <label class="full">简体中文标题<input data-collection-title="zh-Hans" required maxlength="120" /></label>
             <label class="full">简体中文简介<textarea data-collection-description="zh-Hans" maxlength="500" rows="3"></textarea></label>
           </div>
-          <div id="album-fields"><div class="field-grid"><label>专辑收听范围<select id="album-listening-mode"><option value="mixed">沿用单曲设置（可混合）</option><option value="free">整张免费</option><option value="vip">整张 VIP 专享</option></select></label><label>专辑封面<select id="album-cover-track"><option value="">自动使用首个有封面的成员曲目</option></select></label></div><p class="muted">封面选用成员曲目已发布、已审核的封面。范围设置只检查单曲，不批量修改权限；整张免费／VIP 需所有成员一致。</p></div>
+          <div id="album-fields"><div class="field-grid"><label>专辑收听范围<select id="album-listening-mode"><option value="mixed">沿用单曲设置（可混合）</option><option value="free">整张免费</option><option value="vip">整张 VIP 专享</option></select></label></div><p class="muted">专辑封面单独上传，不使用单曲封面。范围设置只检查单曲，不批量修改权限；整张免费／VIP 需所有成员一致。</p></div>
           <footer class="music-actions"><button id="collection-save" class="primary" type="submit"><Save size={17} />保存资料</button></footer>
         </fieldset></form>
-        <div id="album-batch-entry" hidden><h3>上传新曲目</h3><p class="muted">多选 MP3 或 WAV，逐首创建草稿并验证。请先保存当前资料和曲序；已发布专辑须先下架。</p><button id="album-batch-open" type="button" disabled>专辑多文件上传</button></div>
+        <section id="album-cover-section">
+  <h3>专辑封面</h3>
+  <p class="muted">独立上传 JPEG、PNG 或 WebP，最大 5 MiB、尺寸不超过 4096 × 4096。先保存专辑资料；已发布专辑须先下架才能更换封面。</p>
+  <img id="album-cover-preview" alt="专辑封面预览" width="160" height="160" hidden style="object-fit:contain;max-width:100%" />
+  <label>选择专辑封面<input id="album-cover-file" type="file" accept=".jpg,.jpeg,.png,.webp" /></label>
+  <div class="music-actions"><button id="album-cover-upload" type="button">上传封面</button><button id="album-cover-recover" type="button" hidden>查询并恢复</button><button id="album-cover-use" type="button" hidden>使用已上传封面</button><button id="album-cover-remove" type="button">移除封面</button></div>
+  <p id="album-cover-status" role="status">未上传封面时显示占位图。上传确认后还需保存资料。</p>
+</section>
+<div id="album-batch-entry" hidden><h3>上传新曲目</h3><p class="muted">多选 MP3 或 WAV，逐首创建草稿并验证。请先保存当前资料和曲序；已发布专辑须先下架。</p><button id="album-batch-open" type="button" disabled>专辑多文件上传</button></div>
         <section class="collection-members" aria-labelledby="collection-order-title"><h3 id="collection-order-title">曲序</h3><p class="muted">最多 500 首。可拖动排序，也可用上移／下移按钮；调整后需保存曲序。</p>
           <form id="member-search-form"><label for="member-search">从现有曲库添加歌曲</label><div class="upload-control"><input id="member-search" type="search" maxlength="120" placeholder="曲名或链接标识" /><button type="submit">查找歌曲</button></div></form>
           <div id="member-results" aria-live="polite"></div><button id="member-more" type="button" hidden>更多歌曲</button>

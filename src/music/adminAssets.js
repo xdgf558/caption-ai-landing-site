@@ -8,6 +8,11 @@ export async function readAdminMusicAsset(db, bucket, id, request) {
   const asset = (await loadAssets(db, [musicId(id)]))[0];
   if (!asset || asset.state !== 'validated') fail('NOT_FOUND', 404);
   if (rows(await primary(db).prepare('SELECT upload_id FROM music_upload_cleanup WHERE asset_id=?').bind(asset.id).all()).length) fail('NOT_FOUND', 404);
+  return readMusicAssetObject(bucket, asset, request);
+}
+
+// Internal caller must authorize publication or administrator access before invoking.
+export async function readMusicAssetObject(bucket, asset, request) {
   checkAssetIdentity(asset);
   // Ignore conditional/range headers for this private review download. Public Range delivery is M2-04.
   let stopped = false, timer;

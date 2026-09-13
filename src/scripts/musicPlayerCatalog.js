@@ -62,12 +62,12 @@ export function readPlayerCollections(body, tracks) {
     const type = item.type === undefined ? 'playlist' : item.type;
     const listeningMode = item.listeningMode ?? 'mixed';
     if (!['playlist','album'].includes(type) || !['mixed','free','vip'].includes(listeningMode) ||
-      (type === 'album' && (item.trackIds.some(id => !ids.has(id)) ||
+      (type === 'album' && ((item.coverUrl && (!Number.isSafeInteger(item.version) || item.version<1)) || item.trackIds.some(id => !ids.has(id)) ||
         (listeningMode !== 'mixed' && item.trackIds.some(id => ids.get(id).effectiveAccess !== listeningMode)) ||
         (item.coverTrackId != null && (!item.trackIds.includes(item.coverTrackId) || !ids.get(item.coverTrackId)?.coverUrl))))) throw new Error('INVALID_COLLECTIONS');
     seen.add(item.id); slugs.add(item.slug);
     return { id: item.id, slug: item.slug, title: item.title, description: item.description, type, listeningMode,
-      coverUrl:type === 'album' ? ids.get(item.coverTrackId)?.coverUrl || null : null,
+      coverUrl:type === 'album' && item.coverUrl ? `/api/music/collections/${item.slug}/cover?v=${item.version}` : null,
       trackIds: item.trackIds.filter(id => ids.has(id)) };
   }).filter(item => item.trackIds.length);
 }

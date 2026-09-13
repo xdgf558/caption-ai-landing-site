@@ -1,3 +1,4 @@
+import { checkAssetIdentity } from './resources.js';
 import { MUSIC_LOCALES, effectivePolicy, isoTime, musicError, policyFromRevision, positiveInteger } from './policy.js';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -154,10 +155,15 @@ function projectCollection(record, locale, publicTracks) {
   // policy-mismatched album into a successfully published subset.
   if (type === 'album' && (visible.length !== items.length || !visible.length ||
     (listeningMode !== 'mixed' && visible.some(item => publicTracks.get(item.track_id).effectiveAccess !== listeningMode)))) return null;
-  if (coverTrackId !== null && (!uuid(coverTrackId) || !seen.has(coverTrackId) || !publicTracks.get(coverTrackId)?.coverUrl)) return null;
-  const cover = type === 'album' ? (coverTrackId ? publicTracks.get(coverTrackId) : visible.map(item => publicTracks.get(item.track_id)).find(t => t.coverUrl)) : null;
+  let coverUrl=null;
+  if(type==='album' && collection.cover_asset_id != null) {
+    const a=record.coverAsset;
+    if(!a || a.id!==collection.cover_asset_id || a.owner_collection_id!==collection.id || a.kind!=='cover' || a.state!=='validated') return null;
+    try { checkAssetIdentity(a); } catch { return null; }
+    coverUrl=`/api/music/collections/${collection.slug}/cover?v=${collection.version}`;
+  }
   return { id: collection.id, slug: collection.slug, title, description, version: collection.version, type,
-    ...(type === 'album' ? { listeningMode, coverTrackId:cover?.id || null, coverUrl:cover?.coverUrl || null } : {}),
+    ...(type === 'album' ? { listeningMode, coverTrackId:null, coverUrl } : {}),
     trackIds: visible.map(item => item.track_id) };
 }
 

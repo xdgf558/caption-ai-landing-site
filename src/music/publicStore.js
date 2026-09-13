@@ -44,10 +44,12 @@ function recordsFromRows(tracks, revisions, assets) {
 }
 
 function collectionFromRow(row) {
-  const { items_json, ...collection } = row;
+  const { items_json, album_cover_json, ...collection } = row;
   let items;
   try { items = JSON.parse(items_json); } catch { items = null; }
-  return { collection, items };
+  let coverAsset;
+  try { coverAsset=album_cover_json ? JSON.parse(album_cover_json) : null; } catch { coverAsset=null; }
+  return { collection, items, coverAsset };
 }
 
 function featuredFromRows(rows) {
@@ -99,7 +101,7 @@ export async function loadPublicMusicSnapshot(db, now) {
           ORDER BY CASE WHEN EXISTS (SELECT 1 FROM music_featured_items f WHERE f.track_id=music_tracks.id) THEN 0 ELSE 1 END,
             published_at DESC,id LIMIT 500) t ON t.published_revision_id=r.id
         ORDER BY a.owner_track_id,a.id LIMIT 2001`).bind(now),
-      session.prepare(`SELECT c.*,
+      session.prepare(`SELECT c.*,(SELECT json_object('id',a.id,'owner_collection_id',a.owner_collection_id,'kind',a.kind,'state',a.state,'object_key',a.object_key,'format',a.format,'content_type',a.content_type,'byte_size',a.byte_size,'sha256',a.sha256,'etag',a.etag,'created_at',a.created_at) FROM music_collection_assets a WHERE a.id=c.cover_asset_id) AS album_cover_json,
         COALESCE(json_group_array(json_object('collection_id',ct.collection_id,'track_id',ct.track_id,'position',ct.position))
           FILTER (WHERE ct.track_id IS NOT NULL),'[]') AS items_json
         FROM music_collections c LEFT JOIN music_collection_tracks ct ON ct.collection_id=c.id
@@ -125,7 +127,7 @@ export async function loadPublicMusicCollectionSnapshot(db, slug, now) {
     const session = primary(db);
     const result = (await session.batch([
       session.prepare("SELECT key,value_json FROM music_settings WHERE key IN ('catalogVersion','previewLimitMs') ORDER BY key"),
-      session.prepare(`SELECT c.*,
+      session.prepare(`SELECT c.*,(SELECT json_object('id',a.id,'owner_collection_id',a.owner_collection_id,'kind',a.kind,'state',a.state,'object_key',a.object_key,'format',a.format,'content_type',a.content_type,'byte_size',a.byte_size,'sha256',a.sha256,'etag',a.etag,'created_at',a.created_at) FROM music_collection_assets a WHERE a.id=c.cover_asset_id) AS album_cover_json,
         COALESCE(json_group_array(json_object('collection_id',ct.collection_id,'track_id',ct.track_id,'position',ct.position))
           FILTER (WHERE ct.track_id IS NOT NULL),'[]') AS items_json
         FROM music_collections c LEFT JOIN music_collection_tracks ct ON ct.collection_id=c.id

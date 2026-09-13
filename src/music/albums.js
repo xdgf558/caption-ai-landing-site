@@ -9,11 +9,9 @@ export function albumTrackAccess(track, now) {
 }
 export function checkAlbum(collection, tracks, now, published = collection.status === 'published') {
   if (collectionType(collection) !== 'album') return;
-  if (collection.cover_track_id && !tracks.some(t => t.track_id === collection.cover_track_id)) fail('MUSIC_ALBUM_COVER_INVALID');
   if (!published) return;
   if (!tracks.length || tracks.some(t => !albumTrackAccess(t, now))) fail('MUSIC_ALBUM_TRACKS_NOT_PUBLISHED');
   if (collection.listening_mode !== 'mixed' && tracks.some(t => albumTrackAccess(t, now) !== collection.listening_mode)) fail('MUSIC_ALBUM_POLICY_MISMATCH');
-  if (collection.cover_track_id && !tracks.find(t => t.track_id === collection.cover_track_id)?.published_cover_valid) fail('MUSIC_ALBUM_COVER_INVALID');
 }
 
 // Sealed revisions are immutable. Guard the pointer and lifecycle in the same

@@ -18,7 +18,7 @@ let mf, db, bucket;
 function migrationStatements() {
   const parser = new DatabaseSync(':memory:'), migrations = [];
   try {
-    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql', '0008_music_featured.sql']) {
+    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql', '0008_music_featured.sql', '0009_music_album_covers.sql']) {
       const statements = [];
       let remaining = file(`migrations-music/${name}`).toString();
       while (remaining.trim()) {
@@ -100,6 +100,8 @@ test('missing schema is 503; actual migrations on local D1 enable primary readin
   assert.ok((await db.batch(migrations[6].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.equal((await call('/database')).body.code, 'MUSIC_DATABASE_UNAVAILABLE');
   assert.ok((await db.batch(migrations[7].map(sql => db.prepare(sql)))).every(r => r.success));
+  assert.equal((await call('/database')).body.code, 'MUSIC_DATABASE_UNAVAILABLE');
+  assert.ok((await db.batch(migrations[8].map(sql => db.prepare(sql)))).every(r => r.success));
   const probe = await call('/database'); assert.equal(probe.status, 200, JSON.stringify(probe));
   assert.equal(probe.body.catalogVersion, 0); assert.equal(probe.body.previewLimitMs, 45000);
   assert.deepEqual(probe.body.flags, { public: false, uploads: false, vipDelivery: false, analytics: false });
@@ -721,4 +723,45 @@ test('storage quota uses native D1 atomic CAS, audit and idempotency without cha
   const after=(await adminCall('/storage-quota')).body;assert.equal(after.quotaBytes,quotaMiB*1048576);assert.equal(after.chargedBytes,before.chargedBytes);
   assert.ok(after.updatedAt>before.updatedAt);
   assert.equal((await db.prepare("SELECT COUNT(*) n FROM music_admin_audit_logs WHERE action='music.storage.quota'").first()).n,1);
+});
+
+test('independent album cover upload retains quota, recovers one writer, and serves only a published eligible album',async()=>{
+  await db.prepare("UPDATE music_settings SET value_json='268435456' WHERE key='storageQuotaBytes'").run();
+  const body={slug:'cover-'+randomUUID(),type:'album',listeningMode:'mixed',originalLocale:'en',title:{en:'Cover fixture'},description:{en:''}};
+  const created=await adminCall('/collections','POST',body),id=created.body.collectionId;
+  assert.equal(created.status,200);
+  const image=await sharp({create:{width:32,height:32,channels:3,background:'#668877'}}).png().toBuffer();
+  const spec={collectionId:id,format:'png',byteSize:image.length,sha256:createHash('sha256').update(image).digest('hex')};
+  assert.equal((await adminCall('/collection-uploads','POST',spec)).body.code,'MUSIC_UPLOADS_DISABLED');
+  const usage=Number((await db.prepare('SELECT SUM(charged_bytes) AS n FROM music_storage_charges').first()).n);
+  const key=randomUUID(),r=await uploadJson('/collection-uploads','POST',spec,{'Idempotency-Key':key});
+  assert.equal(r.status,200,JSON.stringify(r));
+  assert.equal((await uploadJson('/collection-uploads','POST',spec,{'Idempotency-Key':key})).body.assetId,r.body.assetId);
+  assert.equal(Number((await db.prepare('SELECT SUM(charged_bytes) AS n FROM music_storage_charges').first()).n),usage+image.length);
+  assert.equal((await uploadJson('/collection-uploads','POST',{...spec,format:'mp3'})).status,415);
+  const uid=r.body.uploadId,assetId=r.body.assetId,writeKey=randomUUID();
+  const put=await uploadJson(`/collection-uploads/${uid}/body`,'PUT',image,{'Content-Type':'image/png','Idempotency-Key':writeKey},true);
+  assert.equal(put.status,200,JSON.stringify(put));
+  // Lost PUT acknowledgement: replay does not write a second body.
+  assert.equal((await uploadJson(`/collection-uploads/${uid}/body`,'PUT',image,{'Content-Type':'image/png','Idempotency-Key':writeKey},true)).body.status,'uploading');
+  assert.equal((await uploadJson(`/collection-uploads/${uid}/complete`,'POST',{})).status,200);
+  assert.equal((await uploadJson(`/collection-uploads/${uid}/complete`,'POST',{})).status,200);
+  assert.deepEqual(Buffer.from(await (await uploadApi('/collection-assets/'+assetId)).arrayBuffer()),image);
+  assert.equal((await publicCall(`/collections/${body.slug}/cover?v=1`)).status,404);
+  const track=await seed('free');assert.equal((await call('/publish',track.command)).status,200);
+  assert.equal((await adminCall(`/collections/${id}/tracks`,'PUT',{trackIds:[track.command.trackId],reason:'Member'},{'If-Match':'"edit-1"'})).status,200);
+  const published={...body,coverAssetId:assetId,status:'published',reason:'Publish with album art'};
+  assert.equal((await adminCall('/collections/'+id,'PATCH',published,{'If-Match':'"edit-2"'})).status,200);
+  const response=await publicCall(`/collections/${body.slug}/cover?v=3`);
+  assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
+  assert.deepEqual(Buffer.from(await response.arrayBuffer()),image);
+  assert.equal((await publicCall(`/collections/${body.slug}/cover?v=2`)).status,409);
+  const head=await publicCall(`/collections/${body.slug}/cover?v=3`,{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'');
+  assert.equal((await uploadJson('/collection-uploads','POST',spec)).body.code,'MUSIC_DRAFT_REQUIRED');
+  assert.equal((await mediaCall(track.command.trackId,'full')).status,200);
+  assert.equal((await adminCall('/collections/'+id,'PATCH',{...published,status:'draft'},{'If-Match':'"edit-3"'})).status,200);
+  assert.equal((await publicCall(`/collections/${body.slug}/cover?v=3`)).status,404);
+  await assert.rejects(db.prepare('DELETE FROM music_collection_upload_sessions WHERE id=?').bind(uid).run());
+  await assert.rejects(db.prepare("UPDATE music_collection_assets SET etag='changed' WHERE id=?").bind(assetId).run());
+  assert.deepEqual((await db.prepare('PRAGMA foreign_key_check').all()).results,[]);
 });

@@ -18,7 +18,7 @@
     "test:music:runtime": "node --test scripts/test-music-runtime.mjs",
     "test:music:staging": "node --test scripts/test-music-staging-gate.mjs",
     "test:music:admin": "node --test scripts/test-music-admin.mjs",
-    "test:music:albums": "node --test scripts/test-music-albums.mjs",
+    "test:music:albums": "node --test scripts/test-music-albums.mjs scripts/test-music-album-cover-client.mjs",
     "test:music:collections": "node --test scripts/test-music-collections.mjs",
     "test:music:uploads": "node --test scripts/test-music-uploads.mjs",
     "test:music:wav": "node --test scripts/test-music-wav.mjs",

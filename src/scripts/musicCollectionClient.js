@@ -18,6 +18,14 @@ export function createCollectionJournal(storage, actor) {
         Object.keys(op).some(k=>!['path','method','body','key','etag'].includes(k)) ||
         (op.method!=='POST'&&!/^"edit-[1-9][0-9]*"$/.test(op.etag))) throw new Error('专辑原操作记录不可读，请保留记录并联系维护者。');
     }
+    if(value.coverJobs !== undefined && (!Array.isArray(value.coverJobs) || value.coverJobs.length>31 || value.coverJobs.some(j=>
+      !j||!uuid(j.key)||!uuid(j.writeKey)||!uuid(j.completeKey)||!uuid(j.body?.collectionId)||
+      !['new','reserved','writing','completed','failed'].includes(j.stage)||
+      !['jpeg','png','webp'].includes(j.body.format)||j.type!==({jpeg:'image/jpeg',png:'image/png',webp:'image/webp'}[j.body.format])||
+      !Number.isSafeInteger(j.body.byteSize)||j.body.byteSize<1||j.body.byteSize>5242880||!/^[a-f0-9]{64}$/.test(j.body.sha256)||
+      (j.uploadId!=null&&!uuid(j.uploadId))||(j.assetId!=null&&!uuid(j.assetId))||
+      Object.keys(j).some(k=>!['key','writeKey','completeKey','type','stage','body','uploadId','assetId'].includes(k))||
+      Object.keys(j.body).some(k=>!['collectionId','format','byteSize','sha256'].includes(k))))) throw new Error('封面恢复记录不可读。');
     const w=value.workspace;
     if (w != null && (!w.current || !['album','playlist'].includes(w.current.type) || !w.form ||
       !Array.isArray(w.order) || w.order.length>500 || w.order.some(t=>!uuid(t?.id)))) throw new Error('专辑编辑记录不可读。');

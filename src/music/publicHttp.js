@@ -1,3 +1,4 @@
+import { readMusicAssetObject } from './adminAssets.js';
 import { musicAccess, musicCapabilities } from './access.js';
 import { buildPublicCatalog, projectPublicTrack, projectPublicTrackDetail } from './catalog.js';
 import { ASSET_LIMITS } from './assetFormats.js';
@@ -35,6 +36,8 @@ function route(pathname) {
   if (match) return { kind: match[2], trackId: match[1] };
   match = TRACK_PATH.exec(pathname);
   if (match) return { kind: 'track', trackId: match[1] };
+  match = /^\/api\/music\/collections\/([^/]+)\/cover$/.exec(pathname);
+  if (match) return { kind:'album-cover', slug:match[1] };
   match = COLLECTION_PATH.exec(pathname);
   if (match) return { kind: 'collection', slug: match[1] };
   return null;
@@ -169,12 +172,12 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
   }
 
   const locale = ['catalog', 'capabilities', 'track', 'collection'].includes(currentRoute.kind) ? localeInput(url) : null;
-  const revisionNo = ['cover', 'lyrics', 'access'].includes(currentRoute.kind) ? versionInput(url) : null;
+  const revisionNo = ['cover', 'lyrics', 'access', 'album-cover'].includes(currentRoute.kind) ? versionInput(url) : null;
   const trackId = currentRoute.trackId === undefined ? null : normalizedTrackId(currentRoute.trackId);
   if ((['catalog', 'capabilities', 'track', 'collection'].includes(currentRoute.kind) && !locale) ||
-    (['cover', 'lyrics', 'access'].includes(currentRoute.kind) && !revisionNo) ||
+    (['cover', 'lyrics', 'access', 'album-cover'].includes(currentRoute.kind) && !revisionNo) ||
     (currentRoute.trackId !== undefined && !trackId) ||
-    (currentRoute.kind === 'collection' && !validSlug(currentRoute.slug))) {
+    (['collection','album-cover'].includes(currentRoute.kind) && !validSlug(currentRoute.slug))) {
     return errorResponse(request, 400, 'INVALID_INPUT', currentRoute);
   }
   if (!musicRuntimeFlags(env).public) return errorResponse(request, 503, 'MUSIC_PUBLIC_DISABLED', currentRoute);
@@ -188,7 +191,7 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
   }
 
   const limited = await checkMusicRateLimit(request, env,
-    ['cover', 'lyrics'].includes(currentRoute.kind) ? 'artwork' : 'catalog', { clock: () => now, timeoutMs });
+    ['cover', 'lyrics', 'album-cover'].includes(currentRoute.kind) ? 'artwork' : 'catalog', { clock: () => now, timeoutMs });
   if (limited) return errorResponse(request, limited.status, limited.code, currentRoute, { 'Retry-After': String(limited.retryAfter) });
 
   if (currentRoute.kind === 'capabilities') {
@@ -197,14 +200,23 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
   }
 
   try {
-    if (currentRoute.kind === 'catalog' || currentRoute.kind === 'collection') {
+    if (['catalog','collection','album-cover'].includes(currentRoute.kind)) {
       const snapshot = currentRoute.kind === 'catalog' ? await loadPublicMusicSnapshot(runtime.db, now)
         : await loadPublicMusicCollectionSnapshot(runtime.db, currentRoute.slug, now);
       const catalog = await buildPublicCatalog({ ...snapshot,
-        records: snapshot.records.filter(publicationStorageReady), locale, now });
+        records: snapshot.records.filter(publicationStorageReady), locale:locale || 'zh-Hant', now });
       if (currentRoute.kind === 'catalog') return publicJson(request, catalog.body, locale, catalog.etag);
       const collection = catalog.body.collections.find(item => item.slug === currentRoute.slug);
       if (!collection) return errorResponse(request, 404, 'NOT_FOUND', currentRoute);
+      if (currentRoute.kind==='album-cover') {
+        if (collection.version!==revisionNo) return errorResponse(request,409,'VERSION_CONFLICT',currentRoute);
+        if (!collection.coverUrl) return errorResponse(request,404,'NOT_FOUND',currentRoute);
+        const a=snapshot.collections.find(r=>r.collection.id===collection.id)?.coverAsset;
+        const media=await readMusicAssetObject(runtime.bucket,a,request);
+        media.headers.set('Cache-Control','no-store'); media.headers.delete('Vary');
+        media.headers.set('Content-Disposition',`inline; filename="album-cover.${a.format}"`);
+        return media;
+      }
       const tracks = new Map(catalog.body.tracks.map(track => [track.id, track]));
       const body = { schemaVersion: 2, catalogVersion: catalog.body.catalogVersion, locale,
         nextPolicyChangeAt: catalog.body.nextPolicyChangeAt, collection,

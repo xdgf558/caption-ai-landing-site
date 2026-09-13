@@ -6,7 +6,7 @@ import { validMusicId } from './publicationValidation.js';
 import { fail } from './adminValidation.js';
 
 export function checkAssetIdentity(a) {
-  if (!a || !validMusicId(a.id) || !validMusicId(a.owner_track_id) ||
+  if (!a || !validMusicId(a.id) || !(a.owner_collection_id ? (a.owner_track_id == null && a.kind === 'cover' && validMusicId(a.owner_collection_id)) : validMusicId(a.owner_track_id)) ||
     !['uploaded', 'validated'].includes(a.state) || !Number.isSafeInteger(a.byte_size) || a.byte_size < 1 ||
     a.byte_size > ASSET_LIMITS[a.kind] || assetType(a.kind, a.format) !== a.content_type || assetKey(a) !== a.object_key ||
     !/^[a-f0-9]{64}$/.test(a.sha256 || '') || typeof a.etag !== 'string' || !/^[\x21-\x7e]{1,200}$/.test(a.etag) || /["\\]/.test(a.etag)) fail('MUSIC_STORAGE_ASSET_INVALID');

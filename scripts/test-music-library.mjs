@@ -119,10 +119,10 @@ test('album category separates playlists and opens ordered songs without changin
   const audio = new Audio(), player = createMusicPlayer(audio, { origin: 'https://music.example.test' }), queue = createMusicQueue(player);
   queue.updateCatalog(tracks); queue.playAll(tracks);
   const source = audio.src, generation = player.snapshot().sourceGeneration, items = queue.snapshot().items;
-  const album = { ...group, id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', slug:'album', type:'album', listeningMode:'mixed', coverTrackId:tracks[0].id, coverUrl:'https://evil.test/cover' };
+  const album = { ...group, id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', slug:'album', version:3, type:'album', listeningMode:'mixed', coverTrackId:tracks[0].id, coverUrl:'https://evil.test/cover' };
   const groups = readPlayerCollections({ collections: [group, album] }, tracks);
   assert.deepEqual(browseMusic(tracks, groups, {mode:'albums',collection:'album'}).map(t=>t.id), group.trackIds);
-  assert.equal(groups[1].coverUrl,tracks[0].coverUrl);
+  assert.equal(groups[1].coverUrl,'/api/music/collections/album/cover?v=3');
   assert.throws(()=>readPlayerCollections({collections:[{...album,listeningMode:'free'}]},tracks));
   assert.throws(()=>readPlayerCollections({collections:[album]},tracks.slice(0,2)));
   assert.deepEqual(browseMusic(tracks,groups,{mode:'albums'}),[]);
