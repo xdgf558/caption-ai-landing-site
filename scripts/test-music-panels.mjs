@@ -37,6 +37,27 @@ test('switching from details to queue replaces the overlay entry instead of stac
   panel.destroy();
 });
 
+test('now-playing children return to the same player; repeat open does not stack history', () => {
+  const host = new HistoryHost(), changes = [], panel = createMusicPanelHistory(host, value => changes.push(value));
+  panel.open('now'); panel.open('now'); assert.equal(host.entries.length, 2);
+  for (const kind of ['queue', 'share', 'detail']) {
+    panel.open(kind); assert.equal(changes.at(-1), kind);
+    assert.deepEqual(Object.keys(host.history.state.musicPanel).sort(), ['kind', 'owner']);
+    panel.close(); assert.equal(changes.at(-1), 'now'); assert.equal(host.index, 1);
+  }
+  panel.close(); assert.equal(changes.at(-1), null); assert.equal(host.index, 0);
+  panel.destroy();
+});
+
+test('opening lyrics for the playing song preserves its parent presentation after an explicit browse change', () => {
+  const host = new HistoryHost(), changes = [], panel = createMusicPanelHistory(host, value => changes.push(value));
+  panel.open('now');
+  host.history.replaceState({ ...host.history.state, musicLibrary: { track: 'B', query: '' } }, '', host.location.href);
+  panel.open('detail'); panel.close();
+  assert.equal(changes.at(-1), 'now'); assert.equal(host.history.state.musicLibrary.track, 'B');
+  panel.destroy();
+});
+
 test('song sharing adds one presentation step and Back returns to the same details without URL or account data', () => {
   const host = new HistoryHost(), changes = [], panel = createMusicPanelHistory(host, value => changes.push(value));
   panel.open('detail'); panel.open('share');

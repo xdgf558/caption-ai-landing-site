@@ -1,6 +1,8 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+收起播放器|收起播放器|Minimize player|プレーヤーを閉じる
+查看歌词|查看歌詞|View lyrics|歌詞を見る
 公开音乐入口尚未开放。|公開音樂入口尚未開放。|Public music is not available yet.|音楽の公開はまだ開始されていません。
 此版本当前未公开。|此版本目前未公開。|This revision is not currently public.|このバージョンは現在公開されていません。
 尚未保存完整音频，无法预演播放按钮。|尚未儲存完整音訊，無法預演播放按鈕。|Save the full audio before previewing playback controls.|フル音源を保存してから再生ボタンを確認してください。

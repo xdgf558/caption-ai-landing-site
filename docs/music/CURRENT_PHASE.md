@@ -1,5 +1,7 @@
 # 当前阶段
 
+2026-09-13 手机播放 UI：用户选定第一套银色唱机方案，`codex/music-mobile-turntable` 增加移动端“正在播放”面板，复用原 dock、单一 audio、队列、歌词与分享；浏览目标和当前播放仍分离。实现合同见 [MOBILE_TURNTABLE](MOBILE_TURNTABLE.md)。本切片不部署，不改变 M6 其余上线验收状态；截图、设计对照与执行材料仅本地保留。
+
 2026-09-13 M6 内容流程调整：按用户明确决定，在 `codex/music-optional-source-materials` 将整个音乐后台的来源材料改为可选；未提供/pending 可继续技术核对和显式发布，blocked 仍拦截，且不伪造权利通过记录。合同见 [OPTIONAL_SOURCE_MATERIALS](OPTIONAL_SOURCE_MATERIALS.md)。本包交付实现与合同供独立审查，无远程迁移、部署、开关、配额或正式内容发布。M6 真实媒体、公开播放器及上线验收继续独立推进；本地执行/session 材料不入库。以下为历史记录。
 
 2026-09-12 M6-01/M6-04：#152 已按用户授权合并为 `main@3664d10`，当前分支 `codex/music-m6-staging-validation` 为隔离预发补齐四个管理页、四语音乐页及精确静态依赖白名单，并增加强制五闸关闭的维护配置生成器。0006–0008 只应用到独立 MUSIC_DB，迁移前备份与执行证据保存在仓库外；正式站、生产会员、支付、导航、正式作品和业务开闸均未触碰。合同见 [M6 隔离预发表面与维护部署](M6_STAGING_SURFACES.md)。M6 全量回归、已登录 Access 验收、真机与正式内容仍按后续任务独立完成。以下为历史记录。

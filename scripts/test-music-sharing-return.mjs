@@ -6,6 +6,7 @@ import { musicPagePaths } from '../src/music/pagePaths.js';
 import { readMusicSelectionCatalog, readMusicLookup } from '../src/scripts/musicCatalogSelection.js';
 import { createMusicReturnSync, musicReturnStatus } from '../src/scripts/musicReturnSync.js';
 import { mountMusicMemberReturn } from '../src/scripts/musicMemberReturn.js';
+import { mountMusicSharing } from '../src/scripts/musicSharingControls.js';
 import { createMusicAccessLifecycle } from '../src/scripts/musicAccessLifecycle.js';
 import { createMusicPlayer } from '../src/scripts/musicPlayerCore.js';
 import { createMusicQueue } from '../src/scripts/musicPlayerQueue.js';
@@ -14,6 +15,43 @@ import { Audio } from './fixtures/music-player/fake-audio.mjs';
 import { tracks as fixtures } from './fixtures/music-player/data.mjs';
 
 const A=fixtures[0], B=fixtures[1], C=fixtures[2];
+
+test('now-playing share uses A while browsing B; later renders cannot redirect the open card to B', async () => {
+  const nodes = new Map();
+  class Element extends EventTarget {
+    constructor() { super(); this.dataset = {}; this.attributes = new Map(); this.textContent = ''; this.open = false; }
+    setAttribute(key, value) { this.attributes.set(key, value); }
+    removeAttribute(key) { this.attributes.delete(key); }
+    querySelector(selector) { if (!nodes.has(selector)) nodes.set(selector, new Element()); return nodes.get(selector); }
+    querySelectorAll() { return []; }
+  }
+  const root = new Element(), dialog = root.querySelector('[data-share-card-dialog]'), opens = [], requests = [];
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'MutationObserver');
+  Object.defineProperty(globalThis, 'MutationObserver', { configurable: true, value: class { observe() {} disconnect() {} } });
+  let sharing;
+  try {
+    const panels = { open(kind, opener) { opens.push({ kind, opener }); dialog.open = true; }, close() { dialog.open = false; dialog.dispatchEvent(new Event('close')); } };
+    sharing = mountMusicSharing(root, { t: key => key, locale: 'en', origin: 'https://music.example.test', navigator: {}, panels,
+      fetcher: async url => { requests.push(url); return new Response(null, { status: 503 }); } });
+    sharing.update({ track: B, now: A }); assert.deepEqual(requests, []);
+    const opener = new Element(); sharing.openNow(opener);
+    assert.equal(root.querySelector('[data-card-track]').textContent, A.title);
+    assert.deepEqual(opens.at(-1), { kind: 'share', opener });
+    assert.ok(requests[0].includes(A.id));
+    sharing.update({ track: C, now: A });
+    assert.equal(dialog.open, true); assert.equal(root.querySelector('[data-card-track]').textContent, A.title);
+    sharing.update({ track: B, now: C }); assert.equal(dialog.open, false);
+    root.querySelector('[data-share-music="track"]').dispatchEvent(new Event('click'));
+    assert.equal(root.querySelector('[data-card-track]').textContent, B.title);
+    assert.ok(requests.at(-1).includes(B.id));
+    sharing.update({ track: null, now: C }); assert.equal(dialog.open, false);
+    assert.ok(requests.every(url => !url.includes('/audio')));
+    await Promise.resolve();
+  } finally {
+    sharing?.destroy();
+    if (descriptor) Object.defineProperty(globalThis, 'MutationObserver', descriptor); else delete globalThis.MutationObserver;
+  }
+});
 const catalog = (tracks, collections=[]) => ({ schemaVersion:2, tracks, collections });
 const group = (tracks, slug='quiet') => ({ id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', slug, title:'Quiet', description:'Original test playlist', trackIds:tracks.map(t=>t.id) });
 const response = (body,status=200) => ({ status, body });
