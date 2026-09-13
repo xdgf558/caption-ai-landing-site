@@ -6,7 +6,7 @@
 
 `build-music-production-candidate.mjs` 以已审的完整生产 `wrangler.toml` 为基线，用 SHA-256 锁住其原文。任何变化（包括 Access、兼容日期、路由、变量、绑定、调度或构建配置）都会停止生成，需要重新审查整个基线后才更新该摘要。不要为了通过检查而直接改摘要。
 
-输入采用此前独立资源初始化留下的私有 JSON，字段只允许 `account_id`、`compatibility_date`、单个 `d1_databases` 和单个 `r2_buckets`。要求生产音乐资源名、MUSIC_DB/MUSIC_BUCKET 绑定、绝对音乐迁移目录；拒绝预发两库、原会员库、额外绑定和 secret/环境覆盖字段。资源文件的日期只作格式校验，**不会覆盖正式 Worker 的兼容日期**。
+输入采用此前独立资源初始化留下的私有严格 JSON（`resources.json`），不允许注释或尾随逗号；生成器使用 `JSON.parse`，不解析 JSONC。字段只允许 `account_id`、`compatibility_date`、单个 `d1_databases` 和单个 `r2_buckets`。要求生产音乐资源名、MUSIC_DB/MUSIC_BUCKET 绑定、绝对音乐迁移目录；拒绝预发两库、原会员库、额外绑定和 secret/环境覆盖字段。资源文件的日期只作格式校验，**不会覆盖正式 Worker 的兼容日期**。
 
 名称和 UUID 形状校验不能证明云端归属：每次准备/批准部署前，操作员必须用当前账号只读盘点，将私有 ID 与获批资源匹配，核对私有桶、迁移、配额、当前生产版本及绑定。不得把任意 UUID 填入同名资源字段来绕过这一步。
 
@@ -22,7 +22,7 @@
 
 ```sh
 npm run build
-npm run build:music:production-candidate -- --resources /absolute/private/resources.jsonc --output /absolute/private/closed-candidate.jsonc
+npm run build:music:production-candidate -- --resources /absolute/private/resources.json --output /absolute/private/closed-candidate.jsonc
 npm run test:music:production-candidate
 node --test scripts/test-music-production-assets.mjs
 ```
