@@ -14,6 +14,8 @@
 
 维护部署只能使用这个生成配置。受版本管理的 `ops/music-staging-app.jsonc` 保留后续受控 HTTP 验收所需的 public/VIP 值；不能在迁移窗口直接拿它部署。
 
+M6-04 增加源配置隔离守卫：维护生成器和运维 helper 均检查账号、入口、Access、两库、桶、静态/迁移路径及五旗，拒绝额外执行配置和明文 secret。该检查不验证远端状态；完整维护、恢复与预算步骤见 [MUSIC_OPERATIONS_READY](../../ops/MUSIC_OPERATIONS_READY.md)。
+
 生成器会按配置文件的新位置重新计算入口、静态目录与两个 D1 迁移目录的相对路径，确保仍指向原文件。身份库迁移目录仍在 `ops/migrations-music-staging-identities/`，不复制或改写迁移 SQL。
 
 ## 精确页面与静态资源

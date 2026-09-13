@@ -7,13 +7,14 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import { assertMusicStagingConfig } from './music-staging-config.mjs';
 
 const run = promisify(execFile);
 export const stagingOrigin = 'https://music-staging.wwwstationcat.org';
 export const stagingRoot = fileURLToPath(new URL('../../', import.meta.url));
 const configPath = 'ops/music-staging-app.jsonc';
 export async function stagingConfig() {
-  const config = JSON.parse((await readFile(resolve(stagingRoot, configPath), 'utf8')).replace(/^\s*\/\/.*$/gm, ''));
+  const config = assertMusicStagingConfig(JSON.parse((await readFile(resolve(stagingRoot, configPath), 'utf8')).replace(/^\s*\/\/.*$/gm, '')));
   assert.equal(config.name, 'station-cat-music-staging');
   assert.equal(config.account_id, '3f5394e0ef5a531c63c0ceaa74262e0d');
   assert.deepEqual(config.routes, [{ pattern: new URL(stagingOrigin).hostname, custom_domain: true }]);

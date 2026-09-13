@@ -2,25 +2,19 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertMusicStagingConfig, musicStagingFlags } from './helpers/music-staging-config.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sourcePath = path.join(root, 'ops', 'music-staging-app.jsonc');
 const outputPath = path.join(root, '.generated', 'music-staging-maintenance.jsonc');
-const musicFlags = [
-  'MUSIC_PUBLIC_ENABLED',
-  'MUSIC_UPLOADS_ENABLED',
-  'MUSIC_VIP_DELIVERY_ENABLED',
-  'MUSIC_ANALYTICS_ENABLED',
-  'MUSIC_CLEANUP_ENABLED'
-];
 
 export function maintenanceConfig(source) {
-  const config = JSON.parse(source.replace(/^\s*\/\/.*$/gm, ''));
+  const config = assertMusicStagingConfig(JSON.parse(source.replace(/^\s*\/\/.*$/gm, '')));
   assert.equal(config.name, 'station-cat-music-staging');
   assert.equal(config.workers_dev, false);
   assert.equal(config.preview_urls, false);
   assert.ok(config.vars && typeof config.vars === 'object');
-  for (const flag of musicFlags) {
+  for (const flag of musicStagingFlags) {
     assert.ok(Object.hasOwn(config.vars, flag), `Missing staging flag ${flag}.`);
     config.vars[flag] = 'false';
   }

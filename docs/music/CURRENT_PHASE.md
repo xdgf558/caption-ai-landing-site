@@ -1,5 +1,7 @@
 # 当前阶段
 
+2026-09-13 M6-04：基于 #157 已合入的 main，在 `codex/music-m6-ops-readiness` 完善隔离配置守卫、预算告警与备份恢复/关闭 runbook。生产资源、预算投递、云端恢复与演练须有真实结果后才判就绪；本地测试不能代替。执行入口见 [MUSIC_OPERATIONS_READY](../../ops/MUSIC_OPERATIONS_READY.md)，实际云端响应、备份和记录不入库；本切片不修改生产配置或自动部署。
+
 2026-09-13 M6-03：内容与四语告知切片本地完成，分支 `codex/music-m6-content-notices`，待独立审查。补齐音乐收听范围、支持/既有退款说明与音乐页内隐私入口；保留会员中心的未正式开放状态。来源材料继续可选，不新增批准结论、不发布正式作品。合同见 [M6_CONTENT_NOTICES](M6_CONTENT_NOTICES.md)；设备反馈、部署与内容执行记录仅在仓库外保存。本切片不部署或开闸，M6 其余未验收项目不随之标为完成。
 
 2026-09-13 手机播放 UI：用户选定第一套银色唱机方案，`codex/music-mobile-turntable` 增加移动端“正在播放”面板，复用原 dock、单一 audio、队列、歌词与分享；浏览目标和当前播放仍分离。实现合同见 [MOBILE_TURNTABLE](MOBILE_TURNTABLE.md)。本切片不部署，不改变 M6 其余上线验收状态；截图、设计对照与执行材料仅本地保留。
