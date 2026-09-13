@@ -180,3 +180,20 @@ export function createAlbumBatch({journal,actor,api=request,hash=hashFile,conver
     destroy(){stop=true;converter.cancel();files.clear();}
   };
 }
+
+// Called only after the operator confirms publishing this saved draft album.
+// Reuse the batch's durable order mutation; never upload or publish its tracks.
+export async function appendCompletedAlbumBatch({storage,actor,album,api=request}) {
+  if(album?.type!=='album'||album.status!=='draft')fail('请先选择草稿专辑。');
+  const journal=createBatchJournal(storage,actor,album.id),state=journal.get();
+  if(state.pending)fail('上传批次还有待确认操作。请先到“专辑多文件上传”页核对原操作，再发布专辑。');
+  if(!state.batch)return {added:0,editVersion:album.editVersion};
+  const ids=album.tracks.map(t=>t.id),ready=state.batch.rows.filter(r=>r.stage==='ready'&&!ids.includes(r.trackId));
+  if(!ready.length)return {added:0,editVersion:album.editVersion};
+  if(ids.length+ready.length>500)fail('加入后将超过专辑 500 首上限，请先调整曲序。');
+  // Keep all saved members in their current order; CAS/checkAlbum rejects any
+  // server edit since the editor snapshot. Uncertain writes retain the old key.
+  journal.update({batch:{...state.batch,album:{...state.batch.album,version:album.editVersion,baseIds:ids,expectedIds:ids}}});
+  const batch=createAlbumBatch({journal,actor,api});await batch.addReady();
+  return {added:ready.length,editVersion:journal.get().batch.album.version};
+}

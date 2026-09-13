@@ -1,3 +1,4 @@
+import { createBatchJournal, appendCompletedAlbumBatch } from './musicAlbumBatch.js';
 import { createAlbumCoverUploader } from './musicAlbumCoverClient.js';
 import { request, uuid } from './musicAdminClient.js';
 import { createCollectionJournal, reorderCollection, collectionChineseText } from './musicCollectionClient.js';
@@ -8,8 +9,12 @@ const el=(tag,text)=>{const node=document.createElement(tag); if(text!==undefine
 let translatedForm={},coverAssetId=null,coverUploader,uploadsEnabled=false;
 let actor,journal,current=null,order=[],dirty=false,orderDirty=false,busy=false,locked=false,ready=false,dragged=null;
 let cursors=[null],page=0,nextBefore=null,memberBefore=null,memberQuery='';
-const errors={MUSIC_COLLECTION_CONFLICT:'内容已被其他操作更新。请重新载入后核对，当前编辑已保留。',MUSIC_ALBUM_TRACKS_NOT_PUBLISHED:'专辑所有成员都必须已发布，不能发布不完整专辑。',MUSIC_ALBUM_POLICY_MISMATCH:'成员曲目的当前收听范围不一致。请先在曲目工作区调整并审核发布，或选择沿用单曲设置。',MUSIC_ALBUM_COVER_INVALID:'封面必须是当前专辑独立上传并已完成校验的图片。',MUSIC_COLLECTION_EMPTY:'至少需要一首已发布歌曲。',MUSIC_DATABASE_UNAVAILABLE:'专辑服务尚不可用，请核对数据库迁移或稍后重试。',ADMIN_AUTH_REQUIRED:'后台登录已过期，请重新登录后核对原操作。',ADMIN_FORBIDDEN:'没有音乐管理权限。'};
+const errors={MUSIC_COLLECTION_CONFLICT:'内容已被其他操作更新。请重新载入后核对，当前编辑已保留。',MUSIC_ALBUM_TRACKS_NOT_PUBLISHED:'成员歌曲尚未全部发布。请到曲目工作区逐首完成核对并发布，再重新载入专辑后重试。',MUSIC_ALBUM_POLICY_MISMATCH:'成员曲目的当前收听范围不一致。请先在曲目工作区调整并审核发布，或选择沿用单曲设置。',MUSIC_ALBUM_COVER_INVALID:'封面必须是当前专辑独立上传并已完成校验的图片。',MUSIC_COLLECTION_EMPTY:'至少需要一首已发布歌曲。',MUSIC_DATABASE_UNAVAILABLE:'专辑服务尚不可用，请核对数据库迁移或稍后重试。',ADMIN_AUTH_REQUIRED:'后台登录已过期，请重新登录后核对原操作。',ADMIN_FORBIDDEN:'没有音乐管理权限。'};
 const status=(text,error=false)=>{$('collection-status').textContent=text; $('collection-status').dataset.error=String(error);};
+function publishFeedback(text='',error=false) {
+  const node=$('collection-publish-result');node.textContent=text;node.hidden=!text;node.dataset.error=String(error);
+  if(error)node.focus();
+}
 function formValue() {
   const {title,description}=collectionChineseText(translatedForm,
     document.querySelector('[data-collection-title="zh-Hans"]').value,
@@ -45,8 +50,8 @@ function sync() {
   }
 }
 function canEditOrder(){return ready&&!busy&&!locked&&!journal?.get().pending&&!!current?.id&&current.status!=='archived'&&!dirty;}
-function localOrder(edit){if(!canEditOrder())return;try{edit();orderDirty=true;persist();renderOrder();status('曲序已调整，请保存曲序。');}catch(e){locked=true;status(e.message,true);}sync();}
-async function run(fn) { if(busy)return; busy=true;sync();try{await fn();}catch(e){if([401,403,409].includes(e.status))locked=true;status(errors[e.code]||e.message,true);}finally{busy=false;sync();} }
+function localOrder(edit){if(!canEditOrder())return;try{edit();publishFeedback();orderDirty=true;persist();renderOrder();status('曲序已调整，请保存曲序。');}catch(e){locked=true;status(e.message,true);}sync();}
+async function run(fn,publishing=false) { if(busy)return; busy=true;sync();try{await fn();}catch(e){if([401,403,409].includes(e.status))locked=true;const message=errors[e.code]||e.message;status(message,true);if(publishing)publishFeedback(message,true);}finally{busy=false;sync();} }
 async function checkActor(){const r=await request('/status');if(actor&&r.actorId!==actor)throw Object.assign(new Error('管理员账号已变化，请重新打开工作区。'),{status:403});if(!r.capabilities.collections)throw new Error('集合管理尚不可用。');uploadsEnabled=r.capabilities.uploads===true;return r;}
 function ask(title,text,reason=false){return new Promise(resolve=>{const d=$('collection-confirm');$('collection-confirm-title').textContent=title;$('collection-confirm-text').textContent=text;$('collection-confirm-reason-label').hidden=!reason;$('collection-confirm-reason').required=reason;$('collection-confirm-reason').value='';d.returnValue='';d.addEventListener('close',()=>resolve(d.returnValue==='yes'?{reason:$('collection-confirm-reason').value.trim()}:null),{once:true});d.showModal();});}
 $('collection-confirm-reason').onkeydown=e=>{if(e.key==='Enter')e.preventDefault();};
@@ -64,7 +69,7 @@ function renderOrder(focusId,action){
   });
   if(focusId)all('#collection-order button').find(n=>n.dataset.memberId===focusId&&n.dataset.move===action)?.focus();
 }
-function fill(row){current=row;order=(row.tracks||[]).map(t=>({...t}));dirty=false;orderDirty=false;$('collection-workspace').hidden=false;$('collection-empty').hidden=true;
+function fill(row){publishFeedback();current=row;order=(row.tracks||[]).map(t=>({...t}));dirty=false;orderDirty=false;$('collection-workspace').hidden=false;$('collection-empty').hidden=true;
   $('collection-heading').textContent=row.id?label(row):'新建'+typeNames[row.type];$('collection-state').textContent=typeNames[row.type]+' · '+stateNames[row.status];$('collection-slug').readOnly=!!row.id;$('album-fields').hidden=row.type!=='album';
   $('album-cover-file').value='';applyForm(row);$('member-results').replaceChildren();$('member-more').hidden=true;memberBefore=null;
   $('collection-publish-help').textContent=row.type==='album'?'专辑必须全员已发布且范围一致。成员下架或权限变化后不再符合条件时，公开入口会隐藏整张专辑。':'歌单只展示其中仍公开的曲目；至少一首公开曲目才可发布。';
@@ -80,9 +85,33 @@ async function replay(){const op=journal.get().pending;if(!op)return;await check
 }
 async function mutate(path,method,body){if(journal.get().pending)throw new Error('请先核对原操作。');persist();journal.update({pending:{path,method,body,key:crypto.randomUUID(),...(current.id?{etag:`"edit-${current.editVersion}"`}:{})}});await replay();}
 $('collection-form').onsubmit=e=>{e.preventDefault();if(!$('collection-form').reportValidity())return;run(async()=>{if(current.status==='published'&&!await ask('更新已发布资料？','保存后立即更新公开专辑或歌单；单曲权限不变。'))return;const body=formValue();if(current.id)Object.assign(body,{status:current.status,reason:'管理员保存'+typeNames[current.type]+'资料'});await mutate(current.id?'/collections/'+current.id:'/collections',current.id?'PATCH':'POST',body);});};
-all('#collection-form input,#collection-form textarea,#collection-form select').forEach(n=>n.addEventListener('input',()=>{dirty=true;try{persist();}catch(e){locked=true;status(e.message,true);}sync();}));
+all('#collection-form input,#collection-form textarea,#collection-form select').forEach(n=>n.addEventListener('input',()=>{publishFeedback();dirty=true;try{persist();}catch(e){locked=true;status(e.message,true);}sync();}));
 $('collection-order-save').onclick=()=>run(async()=>{const reason='管理员保存'+typeNames[current.type]+'曲序';if(current.status==='published'&&!await ask('更新已发布曲序？','保存后立即更新公开曲序。'))return;await mutate('/collections/'+current.id+'/tracks','PUT',{trackIds:order.map(t=>t.id),reason});});
-for(const [action,target] of [['publish','published'],['unpublish','draft'],['archive','archived']])$('collection-'+action).onclick=()=>run(async()=>{const confirmed=await ask({publish:'发布？',unpublish:'下架为草稿？',archive:'归档？'}[action],`${label(current)}。${action==='archive'?'归档后不提供恢复。':'此次操作不改变任何单曲的播放权限。'}`,action !== 'publish');if(confirmed)await mutate('/collections/'+current.id,'PATCH',{slug:current.slug,originalLocale:current.originalLocale,title:current.title,description:current.description,type:current.type,listeningMode:current.listeningMode,coverTrackId:null,coverAssetId:current.coverAssetId??null,status:target,reason:action === 'publish' ? '管理员确认发布集合' : confirmed.reason});});
+for(const [action,target] of [['publish','published'],['unpublish','draft'],['archive','archived']])$('collection-'+action).onclick=()=>run(async()=>{
+  publishFeedback();
+  const uploaded=action==='publish'&&current.type==='album'?createBatchJournal(sessionStorage,actor,current.id).get():null;
+  if(uploaded?.pending)throw new Error('上传批次还有待确认操作。请先到“专辑多文件上传”页核对原操作，再发布专辑。');
+  const hasReady=uploaded?.batch?.rows.some(r=>r.stage==='ready');
+  if(action==='publish'&&order.length===0&&!hasReady){
+    const message=current.type==='album'?'这张专辑还没有歌曲。请先完成“专辑多文件上传”，或从上方曲库添加歌曲并保存曲序。上传成功的曲目会在点击发布时自动加入。':'这个歌单还没有歌曲。请先从上方曲库添加歌曲并保存曲序。';
+    status(message,true);publishFeedback(message,true);return;
+  }
+  const confirmed=await ask({publish:'发布？',unpublish:'下架为草稿？',archive:'归档？'}[action],`${label(current)}。${action==='archive'?'归档后不提供恢复。':action==='publish'&&current.type==='album'?'将先自动加入本标签页上传批次中已完成的曲目，再检查发布条件。不会代替单曲审核或发布。':'此次操作不改变任何单曲的播放权限。'}`,action !== 'publish');
+  if(!confirmed)return;
+  if(action==='publish'){
+    publishFeedback('正在加入已完成曲目并核对发布条件，请稍候…');
+    if(current.type==='album'){
+      const result=await appendCompletedAlbumBatch({storage:sessionStorage,actor,album:current});
+      if(result.added){
+        await load(current.id);await loadList();
+        if(current.editVersion!==result.editVersion)throw Object.assign(new Error('专辑已被其他操作更新，请重新载入后核对再发布。'),{status:409});
+        publishFeedback(`已自动加入 ${result.added} 首曲目，正在核对发布条件…`);
+      }
+    }
+  }
+  await mutate('/collections/'+current.id,'PATCH',{slug:current.slug,originalLocale:current.originalLocale,title:current.title,description:current.description,type:current.type,listeningMode:current.listeningMode,coverTrackId:null,coverAssetId:current.coverAssetId??null,status:target,reason:action === 'publish' ? '管理员确认发布集合' : confirmed.reason});
+  if(action==='publish')publishFeedback(typeNames[current.type]+'已发布。');
+},action==='publish');
 for(const type of ['album','playlist'])$('collection-new-'+type).onclick=()=>run(async()=>{if(await leave()){fill({type,slug:'',originalLocale:'zh-Hans',title:{},description:{},status:'draft',listeningMode:'mixed',coverTrackId:null,coverAssetId:null,tracks:[]});persist();status('先保存资料，再添加歌曲。');}});
 async function searchMembers(more=false){if(!more){memberQuery=$('member-search').value.trim();memberBefore=null;$('member-results').replaceChildren();}const p=new URLSearchParams({q:memberQuery});if(memberBefore)p.set('before',memberBefore);const r=await request('/tracks?'+p);memberBefore=r.nextBefore;
   $('member-results').replaceChildren();

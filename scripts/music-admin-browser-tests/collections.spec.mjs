@@ -7,6 +7,11 @@ async function confirm(page){await page.locator('#collection-confirm-accept').cl
 test('album metadata, keyboard order, reload and failed incomplete publication use isolated API',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await create(page);
   await expect(page.locator('#collection-list button[aria-current="true"]')).toHaveCount(1);
+  const publications=[];page.on('request',r=>{if(r.method()==='PATCH'&&r.postDataJSON()?.status==='published')publications.push(r.url());});
+  await page.locator('#collection-publish').click();
+  await expect(page.locator('#collection-publish-result')).toContainText('这张专辑还没有歌曲');
+  await expect(page.locator('#collection-publish-result')).toBeFocused();
+  await expect(page.locator('#collection-confirm')).not.toBeVisible();expect(publications).toHaveLength(0);
   await page.locator('#member-search-form button').click();
   await page.getByRole('button',{name:'添加 晚风经过车站',exact:true}).click();await page.getByRole('button',{name:'添加 月台上的雨',exact:true}).click();
   await expect(page.locator('#collection-publish')).toBeDisabled();await expect(page.locator('#collection-save')).toBeDisabled();
@@ -16,7 +21,7 @@ test('album metadata, keyboard order, reload and failed incomplete publication u
   await page.reload();await expect(page.locator('#collection-order li')).toHaveCount(2);await expect(page.locator('#collection-order li').first()).toContainText('月台上的雨');
   await page.locator('#album-listening-mode').selectOption('vip');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');
   await page.locator('#collection-publish').click();await expect(page.locator('#collection-confirm-reason-label')).toBeHidden();await expect(page.locator('#collection-confirm-reason')).not.toHaveAttribute('required','');await expect(page.locator('#collection-confirm')).toBeVisible();await confirm(page);
-  await expect(page.locator('#collection-status')).toContainText('所有成员都必须已发布');await expect(page.locator('#collection-state')).toHaveText('专辑 · 草稿');expect(errors).toEqual([]);
+  await expect(page.locator('#collection-status')).toContainText('成员歌曲尚未全部发布');await expect(page.locator('#collection-publish-result')).toContainText('逐首完成核对并发布');await expect(page.locator('#collection-publish-result')).toBeFocused();await expect(page.locator('#collection-state')).toHaveText('专辑 · 草稿');expect(errors).toEqual([]);
 });
 
 test('unknown create receipt survives reload, blocks duplicates, and retries only the original key',async({page})=>{

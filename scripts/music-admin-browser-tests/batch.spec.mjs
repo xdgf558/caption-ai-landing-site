@@ -60,3 +60,18 @@ test('changed account blocks pending recovery; restored original identity may re
   await start(page);await expect(page.locator('#batch-status')).toContainText('账号已变化');expect(writes).toBe(0);
   changed=false;await start(page);await expect(page.locator('#batch-summary')).toHaveText('草稿完成 1 / 1 · 已加入 0');
 });
+
+test('publish joins completed batch tracks first and shows single-track publication requirement beside the button',async({page})=>{
+  await setup(page,[mp3]);await start(page);await expect(page.locator('#batch-summary')).toHaveText('草稿完成 1 / 1 · 已加入 0');
+  await page.getByRole('link',{name:'返回专辑工作区',exact:true}).click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 1');
+  const writes=[];page.on('request',r=>{if(r.method()!=='GET'&&r.url().includes('/admin/api/music/'))writes.push(r);});
+  await page.locator('#collection-publish').click();await expect(page.locator('#collection-confirm-text')).toContainText('先自动加入');
+  await page.locator('#collection-confirm').getByRole('button',{name:'取消',exact:true}).click();expect(writes).toHaveLength(0);
+  await page.locator('#collection-publish').click();await page.locator('#collection-confirm-accept').click();
+  await expect(page.locator('#collection-publish-result')).toContainText('逐首完成核对并发布');await expect(page.locator('#collection-publish-result')).toBeFocused();
+  await expect(page.locator('#collection-order li')).toHaveCount(1);await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
+  expect(writes.map(r=>r.method())).toEqual(['PUT','PATCH']);expect(writes[0].url()).toMatch(/\/collections\/[^/]+\/tracks$/);expect(writes[1].postDataJSON().status).toBe('published');
+  await page.locator('#collection-reload').click();await expect(page.locator('#collection-publish')).toBeEnabled();
+  await page.locator('#collection-publish').click();await page.locator('#collection-confirm-accept').click();await expect(page.locator('#collection-publish-result')).toContainText('逐首完成核对并发布');
+  expect(writes.filter(r=>r.method()==='PUT')).toHaveLength(1);await expect(page.locator('#collection-order li')).toHaveCount(1);
+});

@@ -42,7 +42,7 @@ import { ArrowLeft, Plus, Save, RefreshCw } from '@lucide/astro';
           <ol id="collection-order"></ol><p id="collection-order-empty" class="muted">尚未添加歌曲。</p>
           <button id="collection-order-save" type="button">保存曲序</button>
         </section>
-        <section class="collection-publishing"><h3>发布</h3><p id="collection-publish-help" class="notice"></p><p class="muted">先保存资料和曲序。发布不修改歌曲权限，也不会打开音乐总闸。</p><div class="music-actions"><button id="collection-publish" type="button" class="primary">发布</button><button id="collection-unpublish" type="button">下架为草稿</button><button id="collection-archive" type="button">归档</button></div></section>
+        <section class="collection-publishing"><h3>发布</h3><p id="collection-publish-result" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></p><p id="collection-publish-help" class="notice"></p><p class="muted">先保存资料和曲序。发布专辑时，会自动加入本标签页上传批次中已完成的曲目；单曲仍须逐首审核并发布。发布不修改歌曲权限。</p><div class="music-actions"><button id="collection-publish" type="button" class="primary" aria-describedby="collection-publish-result">发布</button><button id="collection-unpublish" type="button">下架为草稿</button><button id="collection-archive" type="button">归档</button></div></section>
       </div>
     </section>
   </div>
