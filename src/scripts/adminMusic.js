@@ -350,9 +350,10 @@ $('technical-form').onsubmit = e => { e.preventDefault(); run(async () => {
 for (const action of ['publish','unpublish','archive']) $('track-' + action).onclick = () => run(async () => {
   const label = { publish:'发布',unpublish:'下架',archive:'归档' }[action];
   const confirm = await ask(label + '曲目？',$('track-heading').textContent + ' · ' + ({ free:'免费精选',vip:'VIP 专享',early_access:'VIP 抢先听' })[revision()?.policy.accessMode] +
-    (action === 'archive' ? '。归档后本工作区不提供恢复操作。' : action === 'publish' ? '。将封存当前审核版本；不改变公开入口开关。' : '。将停止公开展示此曲目。'),true);
+    (action === 'archive' ? '。归档后本工作区不提供恢复操作。' : action === 'publish' ? '。将封存当前审核版本；不改变公开入口开关。' : '。将停止公开展示此曲目。'),action !== 'publish');
   if (!confirm) return;
-  const input = { reason:confirm.reason };
+  // Publication still records the explicit action; no handwritten note is required.
+  const input = { reason:action === 'publish' ? '管理员确认发布曲目' : confirm.reason };
   if (action !== 'archive') input.revisionId = (action === 'publish' ? track.draft : track.published).id;
   if (action === 'publish') input.confirmedPolicyVersion = track.draft.policy.policyVersion;
   await mutate('/tracks/' + track.id + '/' + action,'POST',input,action);

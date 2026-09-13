@@ -15,7 +15,7 @@ test('album metadata, keyboard order, reload and failed incomplete publication u
   await page.locator('#collection-order-reason').fill('先雨后晚风');await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
   await page.reload();await expect(page.locator('#collection-order li')).toHaveCount(2);await expect(page.locator('#collection-order li').first()).toContainText('月台上的雨');
   await page.locator('#album-listening-mode').selectOption('vip');await page.locator('#collection-reason').fill('VIP 专辑');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');
-  await page.locator('#collection-publish').click();await page.locator('#collection-confirm-reason').fill('测试拒绝不完整专辑');await page.locator('#collection-confirm-reason').press('Enter');await expect(page.locator('#collection-confirm')).toBeVisible();await confirm(page);
+  await page.locator('#collection-publish').click();await expect(page.locator('#collection-confirm-reason-label')).toBeHidden();await expect(page.locator('#collection-confirm-reason')).not.toHaveAttribute('required','');await expect(page.locator('#collection-confirm')).toBeVisible();await confirm(page);
   await expect(page.locator('#collection-status')).toContainText('所有成员都必须已发布');await expect(page.locator('#collection-state')).toHaveText('专辑 · 草稿');expect(errors).toEqual([]);
 });
 

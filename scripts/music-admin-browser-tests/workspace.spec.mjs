@@ -72,8 +72,8 @@ test('Enter saves a draft; full upload, review, publish, revision, unpublish and
   await expect(page.locator('#technical-state')).toHaveText('已核对');
   await page.locator('#track-publish').click();
   await expect(page.locator('#confirm-description')).toContainText('VIP 专享');
-  await page.locator('#confirm-reason').fill('合成夹具发布测试');
-  await page.locator('#confirm-reason').press('Enter');
+  await expect(page.locator('#confirm-reason-label')).toBeHidden();
+  await expect(page.locator('#confirm-reason')).not.toHaveAttribute('required','');
   await expect(page.locator('#confirm-dialog')).toBeVisible();
   await expect(page.locator('#track-state')).toHaveText('草稿');
   await page.locator('#confirm-accept').click();
@@ -109,7 +109,7 @@ test('source materials are optional through upload, technical review and explici
   await page.getByRole('button',{name:'提交技术核对',exact:true}).click();
   await expect(page.locator('#technical-state')).toHaveText('已核对');
   await expect(page.locator('#track-version')).toHaveText('编辑版本 3');
-  await page.locator('#track-publish').click(); await page.locator('#confirm-reason').fill('本地无材料流程回归');
+  await page.locator('#track-publish').click(); await expect(page.locator('#confirm-reason-label')).toBeHidden();
   await page.locator('#confirm-accept').click(); await expect(page.locator('#track-state')).toHaveText('已发布');
   await page.reload(); await expect(page.locator('#rights-state')).toHaveText('未提供（可选）');
   await expect(page.locator('#track-version')).toHaveText('编辑版本 4'); expect(rightsWrites).toBe(0);
