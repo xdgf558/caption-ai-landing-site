@@ -1,0 +1,92 @@
+/* The full-screen skin reuses the dock and its controls. Artwork is decorative. */
+.station-music-expanded-only { display: none; }
+@keyframes music-label-spin { to { transform: rotate(360deg); } }
+@media (max-width: 48rem) {
+  .station-music-player[data-library] .station-music-now-dialog {
+    position: fixed; inset: 0; margin: 0; padding: 0; border: 0;
+    width: 100%; height: 100dvh; max-width: none; max-height: none;
+    overflow: auto; overscroll-behavior: contain; background: linear-gradient(180deg, #fffaf3 0%, #fffaf3 55%, #fbe4c5 100%);
+    color: #252824; --music-accent: #345c51;
+  }
+  .station-music-now-dialog [data-now-target] { min-height: 100%; }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-dock {
+    position: static; inset: auto; width: 100%; max-width: 30rem; min-height: 100dvh; max-height: none; overflow: visible;
+    margin: auto; padding: calc(.5rem + env(safe-area-inset-top, 0px)) 1.5rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    border: 0; border-radius: 0; box-shadow: none; background: transparent;
+    display: flex; flex-direction: column; container-type: normal;
+  }
+  .station-music-now-dialog .station-music-expanded-only { display: flex; }
+  .station-music-now-dialog .station-music-detail-toggle { display: none; }
+  .station-music-now-dialog button { min-width: 44px; min-height: 44px; color: inherit; }
+  .station-music-now-dialog button svg { stroke-width: 1.6; }
+  .station-music-now-dialog button:focus-visible { outline: 2px solid var(--music-accent); outline-offset: 3px; }
+  .station-music-now-header { align-items: center; justify-content: space-between; gap: .5rem; min-height: 3.5rem; flex-shrink: 0; }
+  .station-music-now-header > div { text-align: center; }
+  .station-music-now-header > div > span { display: block; font-size: .6875rem; letter-spacing: .32em; font-weight: 650; }
+  .station-music-now-header p { margin: .25rem 0 0; color: #74736c; font-size: .75rem; letter-spacing: .12em; }
+  .station-music-now-header button { display: grid; place-items: center; background: none; border: 0; padding: 0; }
+  .station-music-now-dialog .station-music-turntable {
+    position: relative; display: block; width: calc(100% + 3rem); margin-inline: -1.5rem;
+    max-width: 30rem; align-self: center; aspect-ratio: 1; flex-shrink: 0;
+  }
+  .station-music-turntable-base { display: block; width: 100%; height: 100%; }
+  .station-music-record-label {
+    position: absolute; width: 32%; height: 32%; left: 33.65%; top: 33.3%;
+    overflow: hidden; border-radius: 50%; animation: music-label-spin 20s linear infinite;
+    animation-play-state: paused;
+  }
+  .station-music-record-label .station-music-record-fallback {
+    position: absolute; width: 312.5%; height: 312.5%; max-width: none; left: -105.16%; top: -104.06%;
+  }
+  .station-music-record-label [data-now-cover] { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .station-music-player[data-status='playing'][data-page-hidden='false'][data-active-panel='now'] .station-music-record-label { animation-play-state: running; }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-dock-inner {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; width: 100%; max-width: none; padding: 0;
+  }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-now {
+    grid-column: 1 / -1; display: flex; align-items: flex-start; gap: .5rem; padding-block: .25rem .875rem;
+  }
+  .station-music-now-dialog .station-music-now > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .45rem; }
+  .station-music-now-dialog .station-music-now > img { display: none !important; }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-now strong {
+    display: block; font-family: inherit; font-size: 1.75rem; font-weight: 750; line-height: 1.3; letter-spacing: -.03em;
+    overflow: visible; white-space: normal; overflow-wrap: anywhere;
+  }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-mini-status { display: none; }
+  .station-music-player[data-library] .station-music-now-dialog [data-mini-description] { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; white-space: normal; overflow: visible; }
+  .station-music-player[data-library] .station-music-now-dialog [data-mini-creator] { display: inline; font-size: .9375rem; color: #454843; }
+  .station-music-now-dialog [data-mini-access] { font-size: .6875rem; line-height: 1.5; border-radius: .55rem; padding: .2rem .5rem; color: #345c51; background: #e4e9e1; }
+  .station-music-now-favorite { flex-shrink: 0; align-items: center; justify-content: center; border: 0; background: none; padding: 0; }
+  .station-music-now-favorite[aria-pressed='true'] { color: #345c51; }
+  .station-music-now-favorite[aria-pressed='true'] svg { fill: currentColor; }
+  .station-music-now-lyrics { grid-column: 1 / -1; position: relative; min-height: 6rem; padding: .75rem 0; border-top: 1px solid #e9e3d9; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; color: #827a6d; }
+  .station-music-now-lyrics > span { font-size: .8125rem; text-align: center; }
+  .station-music-now-lyrics > svg { color: #aaa08e; }
+  .station-music-now-lyrics button { position: absolute; right: 0; top: .5rem; display: flex; align-items: center; padding: 0 .4rem; border: 0; background: none; font-size: .8125rem; }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-progress { grid-column: 1 / -1; grid-row: 3; display: grid; grid-template-columns: 1fr 1fr; gap: .125rem; padding-block: .5rem .25rem; font-size: .75rem; color: #77746a; }
+  .station-music-player[data-library] .station-music-now-dialog [data-progress] { grid-column: 1 / -1; grid-row: 1; width: 100%; margin: 0 0 -.75rem; accent-color: #345c51; min-height: 44px; appearance: none; background: transparent; border: 0; box-shadow: none; }
+  .station-music-now-dialog [data-progress]::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(to right, #345c51 var(--music-progress, 0%), #d7d0c5 var(--music-progress, 0%)); }
+  .station-music-now-dialog [data-progress]::-webkit-slider-thumb { appearance: none; width: 11px; height: 11px; margin-top: -4px; border-radius: 50%; background: #345c51; }
+  .station-music-now-dialog [data-progress]::-moz-range-track { height: 3px; border-radius: 2px; background: #d7d0c5; }
+  .station-music-now-dialog [data-progress]::-moz-range-progress { height: 3px; background: #345c51; }
+  .station-music-now-dialog [data-progress]::-moz-range-thumb { width: 11px; height: 11px; border: 0; border-radius: 50%; background: #345c51; }
+  .station-music-now-dialog [data-duration] { text-align: right; }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-transport { grid-column: 1 / 5; grid-row: 4; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; align-items: center; width: 100%; }
+  .station-music-now-dialog .station-music-transport > button { justify-self: center; border: 0; background: none; padding: 0; }
+  .station-music-now-dialog .station-music-now-repeat { align-items: center; justify-content: center; color: #77746a; }
+  .station-music-now-dialog .station-music-now-repeat[data-active='true'] { color: #345c51; }
+  .station-music-now-dialog .station-music-main-play { width: 100%; }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-main-play-circle { width: min(4.25rem, 100%); height: auto; aspect-ratio: 1; min-width: 44px; min-height: 44px; background: #345c51; color: #fffaf3; }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-step { display: grid; width: 44px; height: 44px; place-items: center; color: #252824; }
+  .station-music-now-dialog .station-music-step svg { width: 25px; height: 25px; }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-dock-queue { grid-column: 5; grid-row: 4; justify-self: center; align-self: center; color: #252824; }
+  .station-music-now-dialog .station-music-now-queue-footer { margin-top: auto; padding: 1.25rem 0 .25rem; align-items: center; justify-content: center; gap: .2rem; width: 100%; border: 0; background: none; color: #6f6b60; font-size: .8125rem; }
+  .station-music-now-dialog .station-music-dock-error { margin-block: .5rem 0; }
+}
+@media (max-width: 22rem) {
+  .station-music-player[data-library] .station-music-now-dialog .station-music-dock { padding-inline: 1rem; }
+  .station-music-now-dialog .station-music-turntable { width: calc(100% + 2rem); margin-inline: -1rem; }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-now strong { font-size: 1.5rem; }
+  .station-music-player[data-library] .station-music-now-dialog .station-music-main-play-circle { width: min(3.5rem, 100%); }
+}
+@media (prefers-reduced-motion: reduce) { .station-music-record-label { animation: none !important; } }

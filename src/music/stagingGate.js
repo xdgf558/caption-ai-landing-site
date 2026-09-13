@@ -6,6 +6,7 @@ const staticPaths = new Set([
   '/favicon-64.png',
   '/apple-touch-icon.png',
   '/images/optimized/station-cat-logo-1668c2e5-160.webp',
+  '/images/music-turntable-silver.webp',
   '/styles/admin-music.css',
   '/styles/admin-music-batch.css',
   '/styles/admin-music-collections.css',

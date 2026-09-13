@@ -33,6 +33,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   let visibleTracks = [], shownTracks = [], viewTrackId = null, libraryControls = null, localPlayback = null, localUnsubscribe = null;
   let tracks = [], capabilities = null, disposed = false, scrub = null, selectedOnce = false, accessState = { checking: false };
   let rowAbort = new AbortController(), systemState = { notice: null, coordinationSupported: true };
+  let nowQueueUnsubscribe = null;
   let catalogView = null, collections = [], featuredView = { primaryTrackId:null, primarySource:'none', secondaryTrackIds:[], collectionIds:[] }, browseScheduled = false, attemptedTarget = '', returnSync = null, returnStatus = null;
   const panels = isLibrary ? mountMusicPanels(root) : null;
   const local = isLibrary ? createMusicLocalData() : null;
@@ -60,6 +61,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     $('[data-featured-primary-cover]').hidden = true; $('[data-featured-primary-fallback]').hidden = false;
   });
   listen($('[data-mini-cover]'), 'error', () => { $('[data-mini-cover]').hidden = true; });
+  if (isLibrary) listen($('[data-now-cover]'), 'error', () => { $('[data-now-cover]').hidden = true; });
   const icons = (node, busy, playing) => {
     node.querySelector('[data-play-icon]').toggleAttribute('hidden', busy || playing);
     node.querySelector('[data-pause-icon]').toggleAttribute('hidden', !playing || busy);
@@ -73,7 +75,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     const viewed = tracks.find(track => track.id === viewTrackId) || (!viewTrackId ? selected : null);
     const target = libraryControls?.target() || {};
     if (isLibrary) renderFeatured();
-    sharing?.update({ track: viewed, collection: collections.find(item => item.slug === target.collection) });
+    sharing?.update({ track: viewed, now: selected, collection: collections.find(item => item.slug === target.collection) });
     $('[data-membership-link]').href = musicMembershipHref(locale, new URLSearchParams({ ...target, ...(viewed ? { track: viewed.id } : {}) }));
     $('[data-membership-link]').hidden = !viewed || viewed.effectiveAccess !== 'vip' || accessState.checking || capabilities?.membershipStatus === 'active';
     if (isLibrary) $('[data-return-membership]').href = musicMembershipHref(locale, new URLSearchParams(target));
@@ -144,6 +146,13 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     setText('[data-mini-title]', selected.title);
     setText('[data-mini-creator]', `${selected.creatorName} · `);
     setText('[data-mini-access]', selectedAccess);
+    if (isLibrary) {
+      setImage($('[data-now-cover]'), selected.coverUrl);
+      const favorite = favoriteIds.has(selected.id);
+      $('[data-now-favorite]').setAttribute('aria-pressed', String(favorite));
+      $('[data-now-favorite]').setAttribute('aria-label', t(favorite ? '取消收藏：{title}' : '收藏：{title}', { title: selected.title }));
+      setText('[data-now-lyrics-hint]', t(selected.instrumental ? '这首作品为纯音乐' : selected.lyricsKind === 'none' ? '暂未提供歌词' : '查看歌词'));
+    }
     const status = viewed?.id !== selected.id ? t('尚未播放') : state.activeVariant === 'preview' ? `${t('试听')} · ${t(statusText[state.status])}` : t(statusText[state.status]);
     setText('[data-play-status]', status);
     $('[data-play-status]').dataset.state = viewed?.id === selected.id ? state.status : 'idle';
@@ -166,6 +175,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     setText('[data-current-time]', formatMusicTime(time));
     setText('[data-duration]', formatMusicTime(state.durationSec));
     const slider = $('[data-progress]');
+    slider.style.setProperty('--music-progress', `${Math.max(0, Math.min(100, state.durationSec > 0 ? time / state.durationSec * 100 : 0))}%`);
     slider.max = String(state.durationSec || 1);
     slider.disabled = audio.readyState < 1 || !audio.seekable.length;
     if (!scrub) slider.value = String(state.currentTimeSec);
@@ -376,6 +386,28 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     listen($('[data-detail-favorite]'), 'click', () => {
       const id = viewTrackId || player.snapshot().activeTrackId; if (id) local.toggleFavorite(id);
     });
+    listen($('[data-now-favorite]'), 'click', () => {
+      const id = player.snapshot().activeTrackId; if (id) local.toggleFavorite(id);
+    });
+    listen($('[data-now-share]'), 'click', () => sharing.openNow($('[data-now-share]')));
+    listen($('[data-now-lyrics]'), 'click', () => {
+      const track = tracks.find(item => item.id === player.snapshot().activeTrackId);
+      if (!track) return;
+      choose(track, false);
+      panels.open('detail', $('[data-now-lyrics]'));
+      const panel = $('[data-lyrics-panel]'); panel.open = true;
+      panel.scrollIntoView({ block: 'start', behavior: 'auto' });
+    });
+    // Presentation controls delegate to the existing queue; they own no playback state.
+    listen($('[data-now-repeat]'), 'click', () => $('[data-repeat]').click());
+    nowQueueUnsubscribe = queue.subscribe(state => {
+      setText('[data-now-queue-count]', String(state.items.length));
+      const mode = t({ off: '顺序播放', all: '列表循环', one: '单曲循环' }[state.repeat]);
+      $('[data-now-repeat]').setAttribute('aria-label', t('{mode}，点击切换循环方式', { mode }));
+      $('[data-now-repeat]').dataset.active = String(state.repeat !== 'off');
+      $('[data-now-repeat-icon]').toggleAttribute('hidden', state.repeat === 'one');
+      $('[data-now-repeat-one-icon]').toggleAttribute('hidden', state.repeat !== 'one');
+    });
     listen($('[data-local-export]'), 'click', () => {
       const raw = local.original(); if (raw === null) return;
       const url = URL.createObjectURL(new Blob([raw], { type: 'application/json' }));
@@ -413,6 +445,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     if (disposed) return;
     disposed = true;
     analytics?.destroy();
+    nowQueueUnsubscribe?.();
     returnSync?.destroy(); sharing?.destroy(); localPlayback?.destroy(); localUnsubscribe?.(); local?.destroy(); lyrics?.destroy(); panels?.destroy(); libraryControls?.destroy(); rowAbort.abort(); abort.abort(); unsubscribe(); system.destroy(); access.destroy(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
   } };
   mounts.set(root, api);

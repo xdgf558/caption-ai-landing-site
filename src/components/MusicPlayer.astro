@@ -1,9 +1,10 @@
 ---
-import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ListMusic, X, Search, SlidersHorizontal, ChevronUp, Heart, Share2, Link } from '@lucide/astro';
+import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ListMusic, X, Search, SlidersHorizontal, ChevronUp, ChevronDown, ChevronRight, FileMusic, Heart, Share, Share2, Link } from '@lucide/astro';
 import '../styles/music-player.css';
 import '../styles/music-mobile.css';
 import '../styles/music-personal.css';
 import '../styles/music-featured.css';
+import '../styles/music-now-playing.css';
 import { musicText } from '../scripts/musicMessages.js';
 import MusicShareCardPanel from './MusicShareCardPanel.astro';
 interface Props { previewLabel?: string; lang?: 'zh-Hans' | 'zh-Hant' | 'en' | 'ja'; library?: boolean; }
@@ -130,13 +131,30 @@ const t = musicText(lang);
   </div>
   <div data-dock-home></div>
   <div class="station-music-dock" data-player-dock hidden aria-label={t('播放控制')}>
-    {library && <button class="station-music-detail-toggle" data-detail-toggle type="button" aria-expanded="false" aria-controls="music-detail"><ChevronUp size={22} /><span>{t('歌曲详情')}</span></button>}
+    {library && <button class="station-music-detail-toggle" data-now-toggle type="button" aria-expanded="false" aria-controls="music-now"><ChevronUp size={22} /><span>{t('正在播放')}</span></button>}
+    {library && <>
+      <header class="station-music-now-header station-music-expanded-only">
+        <button data-now-close type="button" aria-label={t('收起播放器')} autofocus><ChevronDown size={28} /></button>
+        <div><span>STATION CAT</span><p id="music-now-heading">{t('正在播放')}</p></div>
+        <button data-now-share type="button" aria-label={t('分享歌曲')}><Share size={25} /></button>
+      </header>
+      <div class="station-music-turntable station-music-expanded-only" aria-hidden="true">
+        <img class="station-music-turntable-base" src="/images/music-turntable-silver.webp" alt="" width="1024" height="1024" loading="lazy" />
+        <div class="station-music-record-label">
+          <img class="station-music-record-fallback" src="/images/music-turntable-silver.webp" alt="" width="1024" height="1024" loading="lazy" />
+          <img data-now-cover alt="" width="300" height="300" hidden />
+        </div>
+      </div>
+    </>}
     <div class="station-music-dock-inner">
       <div class="station-music-now">
         <img data-mini-cover alt="" width="80" height="80" hidden />
         <div><span class="station-music-mini-status" data-mini-status></span><strong data-mini-title></strong><span data-mini-description><span data-mini-creator></span><span data-mini-access></span></span></div>
+        {library && <button class="station-music-expanded-only station-music-now-favorite" data-now-favorite type="button" aria-label={t('收藏')} aria-pressed="false"><Heart size={30} /></button>}
       </div>
+      {library && <div class="station-music-now-lyrics station-music-expanded-only"><FileMusic size={30} aria-hidden="true" /><span data-now-lyrics-hint></span><button data-now-lyrics type="button">{t('歌词')}<ChevronRight size={18} /></button></div>}
       <div class="station-music-transport">
+        {library && <button class="station-music-expanded-only station-music-now-repeat" data-now-repeat type="button" aria-label={t('顺序播放')}><Repeat data-now-repeat-icon size={25} /><Repeat1 data-now-repeat-one-icon size={25} hidden /></button>}
         <button class="station-music-step" data-previous type="button" aria-label={t('上一首；超过三秒时回到开头')} disabled><SkipBack size={22} fill="currentColor" /></button>
         <button class="station-music-main-play" data-main-play type="button" aria-label={t('播放')} disabled>
         <span class="station-music-main-play-circle"><Play data-play-icon size={32} fill="currentColor" /><Pause data-pause-icon size={32} fill="currentColor" hidden /><LoaderCircle data-loading-icon size={32} hidden /></span>
@@ -155,6 +173,7 @@ const t = musicText(lang);
         <input data-volume type="range" min="0" max="1" step="0.01" value="1" aria-label={t('音量')} />
       </div>
     </div>
+    {library && <button class="station-music-now-queue-footer station-music-expanded-only" data-queue-toggle type="button" aria-expanded="false" aria-controls="music-queue"><span>{t('待播队列')} · <span data-now-queue-count>0</span></span><ChevronRight size={16} /></button>}
     <p class="station-music-system-note station-music-device-volume sr-only-mobile">{t('请用设备音量按键调节音量。')}</p>
     <p class="station-music-system-note" data-system-notice role="status" hidden></p>
     <p class="station-music-dock-error" data-dock-error hidden></p>
@@ -180,6 +199,7 @@ const t = musicText(lang);
   </dialog>
   {library && <>
     <MusicShareCardPanel lang={lang} />
+    <dialog class="station-music-now-dialog" data-now-dialog id="music-now" aria-labelledby="music-now-heading"><div data-now-target></div></dialog>
     <dialog class="station-music-detail-dialog" data-detail-dialog id="music-detail" aria-labelledby="music-detail-title">
       <div class="station-music-detail-sheet" data-detail-sheet>
         <div class="station-music-sheet-heading"><span>{t('歌曲详情')}</span><button data-panel-close="detail" type="button" aria-label={t('关闭详情')} autofocus><X size={24} /></button></div>

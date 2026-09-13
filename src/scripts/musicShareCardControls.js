@@ -21,12 +21,12 @@ export function mountMusicShareCardPanel(root, { t, locale, origin, navigator, f
     const code = state.code === 'SHARE_RATE_LIMITED' ? '制作太频繁，请稍后重试。' : state.code === 'SHARE_TRACK_UNAVAILABLE' ? '这首歌曲已不可用，无法制作卡片。' : '卡片暂时无法制作，仍可复制歌曲链接。';
     message.textContent = state.status === 'loading' ? t('正在制作歌曲卡片…') : state.status === 'ready' ? t('分享卡片已准备好。') : state.status === 'error' ? t(code) : '';
   } });
-  const open = () => {
+  const open = (opener = root.querySelector('[data-share-music="track"]')) => {
     if (!track) return;
     format = 'poster'; $('[data-card-track]').textContent = track.title;
     $('[data-card-x]').href = musicXShareHref(track.title, musicShareUrl(origin, locale, { track: track.id }));
     dialog.querySelectorAll('[data-card-format]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.cardFormat === format)));
-    panels.open('share', root.querySelector('[data-share-music="track"]'));
+    panels.open('share', opener);
     void controller.prepare(track, format);
   };
   on(dialog, 'close', () => { if (!dialog.open) { actionEpoch++; controller.close(); } });
