@@ -49,6 +49,11 @@ test('requests preserve original key/version and fail closed on redirected or un
     await assert.rejects(() => request('/status'),e => !e.uncertain && e.status === 409);
     globalThis.fetch = async () => new Response('<html>Access login</html>');
     await assert.rejects(() => request('/status'),e => e.uncertain);
+    globalThis.fetch = async () => new Response('<html>Worker exceeded resource limits; private diagnostic</html>', {status:503});
+    await assert.rejects(() => request('/uploads/00000000-0000-4000-8000-000000000001/complete', {method:'POST',body:{},key:'original-key'}), e => {
+      assert.equal(e.code,'MUSIC_SERVER_UNAVAILABLE'); assert.equal(e.status,503); assert.equal(e.uncertain,true);
+      assert.match(e.message,/服务器处理失败/); assert.doesNotMatch(e.message,/登录|private diagnostic/); return true;
+    });
   } finally { globalThis.fetch = old; }
 });
 test('admin shell remains private, explicit publish and no unsupported entrypoints',() => {

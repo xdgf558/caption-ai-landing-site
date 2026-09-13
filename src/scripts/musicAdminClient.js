@@ -43,8 +43,17 @@ export async function request(path, { method = 'GET', body, key, etag, raw = fal
   try {
     response = await fetch(API + path, { method, credentials:'same-origin', cache:'no-store', redirect:'error',
       signal:AbortSignal.timeout(timeout), headers, ...(body === undefined ? {} : { body:raw ? body : JSON.stringify(body) }) });
-    data = await response.json();
   } catch { throw Object.assign(new Error('网络或登录状态无法确认。请重新登录后核对原操作，不要重复创建。'), { uncertain:true }); }
+  try { data = await response.json(); }
+  catch {
+    // Edge/runtime failures can be HTML (e.g. Worker resource exhaustion).
+    // Preserve the original mutation for recovery and never display that HTML.
+    const serverFailure = response.status >= 500;
+    throw Object.assign(new Error(serverFailure
+      ? '服务器处理失败，结果尚未确认。请保留当前清单，稍后核对原操作，不要重复上传。'
+      : '未收到有效的后台回执。请核对登录状态并保留原操作，不要重复上传。'),
+    { code: serverFailure ? 'MUSIC_SERVER_UNAVAILABLE' : 'MUSIC_RESPONSE_INVALID', status: response.status, uncertain: true });
+  }
   if (!response.ok || data.ok !== true) {
     const code = data.code || 'MUSIC_ADMIN_UNAVAILABLE';
     throw Object.assign(new Error(code), { code, status:response.status, uncertain:response.status >= 500 || [408,429].includes(response.status) });
