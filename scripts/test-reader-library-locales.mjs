@@ -127,3 +127,11 @@ assert.doesNotMatch(chapterSource, /href="\/library\/"/);
 assert.doesNotMatch(chapterSource, /window\.location\.href = `\/library\//);
 
 console.log('reader library locale checks passed');
+
+// Reuse the existing public refund policy verbatim; music does not create a new refund rule.
+const { musicNotices } = await import('../src/data/music-notices.js');
+const pointsSource = await readFile(new URL('../src/components/StationPointsPage.astro', import.meta.url), 'utf8');
+assert.deepEqual(Object.keys(musicNotices).sort(), locales.slice().sort());
+for (const locale of locales) {
+  assert.ok(pointsSource.includes(musicNotices[locale].refund), `${locale}: music refund wording must match the existing points policy`);
+}

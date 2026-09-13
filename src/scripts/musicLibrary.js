@@ -21,3 +21,6 @@ export function browseMusic(tracks, collections, { query = '', genres = [], mood
     .sort((a, b) => rank ? rank.get(a.id) - rank.get(b.id) : (b.publishedAt || '').localeCompare(a.publishedAt || '') || a.id.localeCompare(b.id));
 }
 export const libraryLocation = search => Object.fromEntries(musicSelection(search));
+// Preserve only static notice anchors when normalizing browse history.
+// Membership-return and unknown fragments are still consumed, never copied into state.
+export const libraryNoticeHash = hash => ['#music-listening', '#music-privacy'].includes(hash) ? hash : '';

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import MusicPrivacyNotice from './MusicPrivacyNotice.astro';
+import MusicListeningNotice from './MusicListeningNotice.astro';
 import { stationPointsProduct } from '../data/products/station-points';
 
 interface Props {
@@ -109,5 +110,6 @@ const copy = {
       {copy.links.map(([label, href]) => <a href={href}>{label}</a>)}
     </div>
     {kind === 'privacy' && <MusicPrivacyNotice lang={lang} />}
+    {kind === 'terms' && <MusicListeningNotice lang={lang} />}
   </section>
 </BaseLayout>

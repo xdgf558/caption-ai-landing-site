@@ -5,7 +5,7 @@ import worker from '../src/worker.js';
 import { handleMusicPage } from '../src/music/pageHttp.js';
 import { musicPagePaths, musicPageHref, musicSelection, isMusicPagePath } from '../src/music/pagePaths.js';
 import { readPlayerCatalog, readPlayerCollections, readPlayerFeatured } from '../src/scripts/musicPlayerCatalog.js';
-import { browseMusic, libraryFilters, normalizeMusicSearch } from '../src/scripts/musicLibrary.js';
+import { browseMusic, libraryFilters, normalizeMusicSearch, libraryNoticeHash } from '../src/scripts/musicLibrary.js';
 import { musicMessages, musicText, musicLocales } from '../src/scripts/musicMessages.js';
 import { shouldIncludeSitemapRoute } from './generate-sitemap.mjs';
 import { createMusicPlayer } from '../src/scripts/musicPlayerCore.js';
@@ -18,6 +18,11 @@ const tracks = readPlayerCatalog({ schemaVersion: 2, tracks: Array.from({ length
   publishedAt: new Date(Date.UTC(2026, 8, 11) - i * 86400000).toISOString() })) });
 const group = { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', slug: 'quiet', title: 'Quiet', description: 'A quiet day', trackIds: [tracks[4].id, tracks[1].id, tracks[0].id] };
 const request = (path, method = 'GET') => new Request(`https://music.example.test${path}`, { method });
+
+test('browse normalization retains only static notice anchors, never a return or credential fragment', () => {
+  for (const value of ['#music-listening', '#music-privacy']) assert.equal(libraryNoticeHash(value), value);
+  for (const value of [undefined, '', '#membership-return', '#music-privacy?token=secret', '#token=secret', '#music%2Dprivacy']) assert.equal(libraryNoticeHash(value), '');
+});
 
 test('every HTML path, alias, slashless and nested asset path is gated with zero binding reads', async () => {
   for (const path of [...Object.values(musicPagePaths), '/zh-hant/music/', '/music', '/music/index.html', '/en/music/index.html', '/%6dusic/', '/music%2f', '/en/%6dusic/', '/%2fmusic/']) {

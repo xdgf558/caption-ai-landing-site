@@ -1,0 +1,13 @@
+---
+import { musicNotices } from '../data/music-notices.js';
+import { siteConfig } from '../data/site';
+interface Props { lang: 'zh-Hans' | 'zh-Hant' | 'en' | 'ja'; }
+const { lang } = Astro.props;
+const copy = musicNotices[lang];
+---
+<section class="music-listening" aria-labelledby="music-listening-title">
+  <h2 id="music-listening-title">{copy.heading}</h2>
+  {[copy.scope, copy.availability, copy.membership, copy.rights, copy.refund, copy.support].map(text => <p>{text}</p>)}
+  <a href={`mailto:${siteConfig.supportEmail}`}>{copy.contact} · {siteConfig.supportEmail}</a>
+</section>
+<style>.music-listening{max-width:48rem}.music-listening p{line-height:1.8}.music-listening a{overflow-wrap:anywhere}</style>

@@ -7,6 +7,7 @@ import '../styles/music-featured.css';
 import '../styles/music-now-playing.css';
 import { musicText } from '../scripts/musicMessages.js';
 import MusicShareCardPanel from './MusicShareCardPanel.astro';
+import { musicPagePaths } from '../music/pagePaths.js';
 interface Props { previewLabel?: string; lang?: 'zh-Hans' | 'zh-Hant' | 'en' | 'ja'; library?: boolean; }
 const { previewLabel, lang = 'zh-Hans', library = false } = Astro.props;
 const t = musicText(lang);
@@ -71,7 +72,7 @@ const t = musicText(lang);
               <p data-analytics-status role="status">{t('正在核对统计设置…')}</p>
               <button data-analytics-accept type="button" disabled>{t('同意此标签页的统计')}</button>
               <button data-analytics-withdraw type="button" hidden>{t('撤回统计同意')}</button>
-              <a href={`/${lang.toLowerCase()}/privacy/#music`}>{t('音乐隐私说明')}</a>
+              <a href={`${musicPagePaths[lang]}#music-privacy`} target="_blank" rel="noopener">{t('音乐隐私说明')}</a>
             </details>
           </div>
         </div>

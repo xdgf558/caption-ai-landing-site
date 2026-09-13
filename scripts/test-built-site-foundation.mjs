@@ -142,3 +142,22 @@ assert.match(homepage, /"@type":"WebSite"/);
 assert.doesNotMatch(homepage, /station-cat-logo\.png/);
 
 console.log('Built site foundation tests passed.');
+
+// Music notices must remain reachable inside the isolated eight-page staging surface.
+for (const [locale, route] of [['zh-hant', 'music'], ['zh-hans', 'zh-hans/music'], ['en', 'en/music'], ['ja', 'ja/music']]) {
+  const html = await readDist(`${route}/index.html`);
+  const footer = html.match(/<footer\b[\s\S]*?<\/footer>/)?.[0] || '';
+  assert.match(html, /<details\b[^>]*id="music-listening"/);
+  assert.match(html, /<details\b[^>]*id="music-privacy"/);
+  assert.match(html, new RegExp(`href="/${route}/#music-privacy" target="_blank" rel="noopener"`));
+  assert.match(footer, /href="#music-listening"/);
+  assert.match(footer, /href="#music-privacy"/);
+  assert.match(footer, /href="mailto:/);
+  assert.doesNotMatch(footer, /href="[^"]*caption-ai\/(?:privacy|terms|support)\//);
+  const terms = await readDist(`${locale}/terms/index.html`);
+  assert.match(terms, /id="music-listening-title"/);
+  // Generic product footers and the member center must not become music launch announcements.
+  assert.match(terms, new RegExp(`href="/${locale}/apps/caption-ai/privacy/"`));
+  assert.equal((html.match(/<audio\b/g) || []).length, 1);
+}
+console.log('Built music notices and scoped footer links passed for all four locales.');
