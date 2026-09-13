@@ -1,3 +1,4 @@
+import { readMusicStorageQuota, saveMusicStorageQuota } from './storageQuota.js';
 import { musicRuntime, checkMusicDatabase } from './runtime.js';
 import { executeMusicPublication } from './publication.js';
 import { createAdminMusicTrack, saveAdminMusicTrack, readAdminMusicTrack, listAdminMusicTracks,
@@ -127,6 +128,14 @@ export async function handleMusicAdmin(request, env, authorize) {
         fields(query, []); mutationKey(context.key);
         result = await createAdminMusicCollection(runtime.db, await readBody(request), context);
       } else fail('METHOD_NOT_ALLOWED', 405);
+    } else if (path === '/admin/api/music/storage-quota') {
+      fields(query, []);
+      if (read) result = await readMusicStorageQuota(runtime.db);
+      else {
+        if (request.method !== 'PUT') fail('METHOD_NOT_ALLOWED', 405);
+        mutationKey(context.key);
+        result = await saveMusicStorageQuota(runtime.db, await readBody(request), context);
+      }
     } else if (path === '/admin/api/music/featured') {
       fields(query, []);
       if (read) result = await readAdminMusicFeatured(runtime.db);

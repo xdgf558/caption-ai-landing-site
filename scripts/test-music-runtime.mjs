@@ -710,3 +710,15 @@ test('featured curation uses native D1 CAS and public projection removes a downl
   response=await publicCall('/catalog?locale=en');catalog=await response.json();assert.equal(response.status,200);
   assert.equal(catalog.featured.primaryTrackId,null);assert.equal(catalog.featured.primarySource,'none');assert.deepEqual(catalog.featured.secondaryTrackIds,[vip.command.trackId]);
 });
+
+test('storage quota uses native D1 atomic CAS, audit and idempotency without changing media charges',async()=>{
+  const before=(await adminCall('/storage-quota')).body, quotaMiB=Math.ceil(before.chargedBytes/1048576)+64;
+  const body={quotaMiB,expectedQuotaBytes:before.quotaBytes,expectedUpdatedAt:before.updatedAt};
+  const headers={'Idempotency-Key':randomUUID()};
+  const saved=await adminCall('/storage-quota','PUT',body,headers);assert.equal(saved.status,200,JSON.stringify(saved.body));
+  assert.equal((await adminCall('/storage-quota','PUT',body,headers)).body.replayed,true);
+  assert.equal((await adminCall('/storage-quota','PUT',{...body,quotaMiB:quotaMiB+1})).body.code,'MUSIC_QUOTA_CONFLICT');
+  const after=(await adminCall('/storage-quota')).body;assert.equal(after.quotaBytes,quotaMiB*1048576);assert.equal(after.chargedBytes,before.chargedBytes);
+  assert.ok(after.updatedAt>before.updatedAt);
+  assert.equal((await db.prepare("SELECT COUNT(*) n FROM music_admin_audit_logs WHERE action='music.storage.quota'").first()).n,1);
+});

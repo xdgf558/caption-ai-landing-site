@@ -5,7 +5,9 @@ import { isWav, WAV_PROFILE } from './musicWav.js';
 import { mountAdminMusicRolePreview } from './adminMusicRolePreview.js';
 
 const $ = id => document.getElementById(id), all = selector => [...document.querySelectorAll(selector)];
+const quotaErrors = { MUSIC_QUOTA_CONFLICT:'配额或占用已变化，请重新打开“调整总配额”后再保存。', MUSIC_QUOTA_BELOW_USAGE:'总配额不能低于已占用及已预留容量，请重新读取。' };
 const names = { draft:'草稿', published:'已发布', unpublished:'已下架', archived:'已归档', audio:'完整音频', preview:'独立试听', cover:'封面', lyrics:'歌词', evidence:'权利凭证' };
+let quotaSnapshot;
 let service, journal, actor, track = null, assets = {}, evidence = [], busy = false, locked = false, dirty = false, assetsDirty = false, reviewDirty = false;
 let items = [], cursors = [null], page = 0, nextBefore = null, filter = '', query = '', activeStep = 0, auditBefore = null;
 const value = id => $(id).value.trim();
@@ -64,6 +66,7 @@ function sync() {
   const blocked = busy || locked || !!journal?.get().pending || !service;
   const archived = track?.lifecycle === 'archived', unsaved = dirty || assetsDirty;
   $('track-new').disabled = blocked;
+  $('quota-open').disabled = blocked; $('quota-save').disabled = blocked;
   $('metadata-fields').disabled = blocked || archived;
   $('rights-fields').disabled = blocked || !track?.draft || unsaved || archived;
   $('technical-fields').disabled = blocked || !track?.draft || unsaved || reviewDirty || track?.rights?.status === 'blocked' || archived;
@@ -95,8 +98,8 @@ async function run(action) {
   try { await action(); }
   catch (e) {
     if ([401,403].includes(e.status)) { locked = true; stopAudio(); }
-    if (e.status === 409 && !e.code?.startsWith('UPLOAD_') && e.code !== 'MUSIC_STORAGE_QUOTA') locked = true;
-    status((errorMessages[e.code] || e.message) + (e.code ? ' (' + e.code + ')' : ''), true);
+    if (e.status === 409 && !e.code?.startsWith('UPLOAD_') && !['MUSIC_STORAGE_QUOTA','MUSIC_QUOTA_CONFLICT','MUSIC_QUOTA_BELOW_USAGE'].includes(e.code)) locked = true;
+    status((quotaErrors[e.code] || errorMessages[e.code] || e.message) + (e.code ? ' (' + e.code + ')' : ''), true);
   } finally { busy = false; sync(); }
 }
 async function checkActor() {
@@ -183,6 +186,7 @@ function attach(job, result) {
   }
 }
 async function applyResult(op, result) {
+  if (op.effect === 'quota') { await checkActor(); return; }
   if (op.effect === 'reserve') rememberJob({ ...op.job, uploadId:result.uploadId, assetId:result.assetId, stage:'reserved' });
   else if (op.effect === 'complete') attach(op.job,result);
   else {
@@ -390,6 +394,28 @@ async function loadAudit(append = false) {
   result.items.forEach(item => { const row = el('article',undefined,'audit-entry'); row.append(el('strong',item.action),el('p',item.actorId + ' · ' + new Date(item.createdAt).toLocaleString()),el('p','目标：' + item.targetId,'muted'),el('p',JSON.stringify(item.summary),'muted')); $('audit-list').append(row); });
   auditBefore = result.nextBefore; $('audit-next').hidden = !auditBefore;
 }
+$('quota-open').onclick = () => run(async () => {
+  await checkActor();
+  quotaSnapshot = await request('/storage-quota');
+  $('quota-usage').textContent = '当前总配额：' + bytes(quotaSnapshot.quotaBytes) + '；已占用及预留：' + bytes(quotaSnapshot.chargedBytes) + '。';
+  $('quota-mib').value = String(Math.ceil(quotaSnapshot.quotaBytes / 1048576));
+  $('quota-mib').min = String(Math.ceil(quotaSnapshot.chargedBytes / 1048576));
+  $('quota-mib').max = String(quotaSnapshot.maxQuotaMiB);
+  $('quota-dialog').showModal(); $('quota-mib').focus();
+});
+$('quota-cancel').onclick = () => $('quota-dialog').close();
+$('quota-form').onsubmit = e => {
+  e.preventDefault();
+  if (!$('quota-form').reportValidity() || !quotaSnapshot) return;
+  const quotaMiB = Number(value('quota-mib'));
+  if (!Number.isSafeInteger(quotaMiB)) return;
+  const body = { quotaMiB, expectedQuotaBytes:quotaSnapshot.quotaBytes, expectedUpdatedAt:quotaSnapshot.updatedAt };
+  $('quota-dialog').close();
+  run(async () => {
+    await mutate('/storage-quota','PUT',body,'quota',{ etag:undefined });
+    status('总配额已保存，当前容量已刷新。');
+  });
+};
 $('audit-open').onclick = () => run(async () => { await loadAudit(); $('audit-dialog').showModal(); });
 $('audit-close').onclick = () => $('audit-dialog').close(); $('audit-next').onclick = () => run(() => loadAudit(true));
 function restore(saved) {
