@@ -55,6 +55,9 @@ jobs:
         env:
           ALLOW_EMPTY_SERIAL_CONTENT: "1"
 
+      - name: Verify closed production music candidate assets
+        run: node --test scripts/test-music-production-assets.mjs
+
       - name: Verify isolated music staging package
         run: |
           node scripts/build-music-staging-assets.mjs
