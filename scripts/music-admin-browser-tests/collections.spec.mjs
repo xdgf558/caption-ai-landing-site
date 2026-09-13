@@ -12,9 +12,9 @@ test('album metadata, keyboard order, reload and failed incomplete publication u
   await expect(page.locator('#collection-publish')).toBeDisabled();await expect(page.locator('#collection-save')).toBeDisabled();
   await page.getByRole('button',{name:'上移 月台上的雨',exact:true}).press('Enter');
   await expect(page.locator('#collection-order li').first()).toContainText('月台上的雨');await expect(page.getByRole('button',{name:'上移 月台上的雨',exact:true})).toBeDisabled();
-  await page.locator('#collection-order-reason').fill('先雨后晚风');await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
+  await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
   await page.reload();await expect(page.locator('#collection-order li')).toHaveCount(2);await expect(page.locator('#collection-order li').first()).toContainText('月台上的雨');
-  await page.locator('#album-listening-mode').selectOption('vip');await page.locator('#collection-reason').fill('VIP 专辑');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');
+  await page.locator('#album-listening-mode').selectOption('vip');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');
   await page.locator('#collection-publish').click();await expect(page.locator('#collection-confirm-reason-label')).toBeHidden();await expect(page.locator('#collection-confirm-reason')).not.toHaveAttribute('required','');await expect(page.locator('#collection-confirm')).toBeVisible();await confirm(page);
   await expect(page.locator('#collection-status')).toContainText('所有成员都必须已发布');await expect(page.locator('#collection-state')).toHaveText('专辑 · 草稿');expect(errors).toEqual([]);
 });
@@ -27,7 +27,7 @@ test('unknown create receipt survives reload, blocks duplicates, and retries onl
 });
 
 test('narrow workspace stays usable and archive disables membership edits',async({page})=>{
-  await page.setViewportSize({width:390,height:844});await create(page);await page.locator('#member-search-form button').click();await page.getByRole('button',{name:'添加 晚风经过车站',exact:true}).click();await page.locator('#collection-order-reason').fill('曲序');await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
+  await page.setViewportSize({width:390,height:844});await create(page);await page.locator('#member-search-form button').click();await page.getByRole('button',{name:'添加 晚风经过车站',exact:true}).click();await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.locator('#collection-archive').click();await page.locator('#collection-confirm-reason').fill('隔离归档');await confirm(page);await expect(page.locator('#collection-state')).toHaveText('专辑 · 已归档');
   await expect(page.getByRole('button',{name:'移除 晚风经过车站',exact:true})).toBeDisabled();await expect(page.locator('#collection-save')).toBeDisabled();await expect(page.locator('#collection-order-save')).toBeDisabled();

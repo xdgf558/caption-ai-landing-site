@@ -30,3 +30,9 @@ export function reorderCollection(rows, from, to) {
   if (!Number.isInteger(from) || !Number.isInteger(to) || from<0 || to<0 || from>=rows.length || to>=rows.length) return rows;
   const next=rows.slice(), [row]=next.splice(from,1); next.splice(to,0,row); return next;
 }
+
+// Editing the simplified form must not erase translations that have no visible control.
+export function collectionChineseText(previous, title, description) {
+  return { title:{...previous?.title,'zh-Hans':title.trim()},
+    description:{...previous?.description,'zh-Hans':description.trim()} };
+}

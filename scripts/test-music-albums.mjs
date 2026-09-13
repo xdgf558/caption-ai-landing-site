@@ -10,7 +10,7 @@ import { seedMusicRuntimeFixture } from './helpers/music-runtime-fixture.js';
 import { musicTestDatabase } from './helpers/music-test-database.mjs';
 import { buildPublicCatalog } from '../src/music/catalog.js';
 import { loadPublicMusicSnapshot, loadPublicMusicCollectionSnapshot } from '../src/music/publicStore.js';
-import { createCollectionJournal, reorderCollection } from '../src/scripts/musicCollectionClient.js';
+import { createCollectionJournal, reorderCollection, collectionChineseText } from '../src/scripts/musicCollectionClient.js';
 
 const instances=[];
 afterEach(()=>{for(const f of instances.splice(0))f.sql.close();});
@@ -122,4 +122,14 @@ test('collection recovery is actor scoped, storage failure keeps old receipt and
   assert.throws(()=>journal.update({pending:{...pending,raw:true}}),/原操作记录不可读/);
   fail=true;assert.throws(()=>journal.update({pending:null}),/quota/);assert.deepEqual(journal.get().pending,pending);
   const rows=[{id:'a'},{id:'b'},{id:'c'}];assert.deepEqual(reorderCollection(rows,0,2).map(r=>r.id),['b','c','a']);assert.deepEqual(rows.map(r=>r.id),['a','b','c']);assert.equal(reorderCollection(rows,-1,0),rows);assert.equal(reorderCollection(rows,0,3),rows);
+});
+
+
+test('simplified collection text preserves hidden saved translations and original objects',()=>{
+  const saved={title:{en:'Original',ja:'原題','zh-Hant':'原標題'},description:{en:'Original summary',ja:'紹介'}};
+  const before=structuredClone(saved), edited=collectionChineseText(saved,' 新标题 ',' 新简介 ');
+  assert.deepEqual(edited.title,{...before.title,'zh-Hans':'新标题'});
+  assert.deepEqual(edited.description,{...before.description,'zh-Hans':'新简介'});
+  assert.deepEqual(saved,before);
+  assert.deepEqual(collectionChineseText(null,'首张专辑',''),{title:{'zh-Hans':'首张专辑'},description:{'zh-Hans':''}});
 });
