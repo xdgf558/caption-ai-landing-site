@@ -3,6 +3,7 @@ import { siteConfig } from './site';
 export const brandNavigation = [
   { label: 'Apps', href: '/en/apps/' },
   { label: 'Game', href: '/en/apps/cat-life-game/' },
+  { label: 'Music', href: '/en/music/' },
   { label: 'Points', href: '/en/points/' },
   { label: 'Serials', href: '/en/novel/' },
   { label: 'Notes & Essays', href: '/en/signal/' },
@@ -14,6 +15,7 @@ export const brandNavigation = [
 export const zhBrandNavigation = [
   { label: 'Apps', href: '/zh-hant/apps/' },
   { label: '遊戲', href: '/zh-hant/apps/cat-life-game/' },
+  { label: '音樂', href: '/music/' },
   { label: '積分價格', href: '/zh-hant/points/' },
   { label: '連載小說', href: '/novel/' },
   { label: '文章與觀察', href: '/signal/' },
@@ -25,6 +27,7 @@ export const zhBrandNavigation = [
 export const zhHansBrandNavigation = [
   { label: 'Apps', href: '/zh-hans/apps/' },
   { label: '游戏', href: '/zh-hans/apps/cat-life-game/' },
+  { label: '音乐', href: '/zh-hans/music/' },
   { label: '积分价格', href: '/zh-hans/points/' },
   { label: '连载小说', href: '/novel/' },
   { label: '文章与观察', href: '/zh-hans/signal/' },
@@ -36,6 +39,7 @@ export const zhHansBrandNavigation = [
 export const jaBrandNavigation = [
   { label: 'Apps', href: '/ja/apps/' },
   { label: 'ゲーム', href: '/ja/apps/cat-life-game/' },
+  { label: '音楽', href: '/ja/music/' },
   { label: 'ポイント価格', href: '/ja/points/' },
   { label: '連載小説', href: '/novel/' },
   { label: '記事と思考', href: '/ja/signal/' },

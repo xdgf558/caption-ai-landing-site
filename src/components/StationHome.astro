@@ -8,6 +8,7 @@ import { novelForgeAiProduct } from '../data/products/novelforge-ai';
 import { mindBudgetProduct } from '../data/products/mindbudget';
 import { catLifeGameProduct } from '../data/products/cat-life-game';
 import { siteConfig } from '../data/site';
+import { musicPagePaths } from '../music/pagePaths.js';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
 type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'book';
@@ -336,6 +337,14 @@ const copy = {
   }
 }[lang];
 
+const musicHome = {
+  'zh-Hant': { title: 'Station Cat 音樂', description: '把喜歡的歌留在身邊。瀏覽曲庫、歌單與專輯，在電腦或手機上收聽。', listen: '聽音樂', open: '進入曲庫' },
+  'zh-Hans': { title: 'Station Cat 音乐', description: '把喜欢的歌留在身边。浏览曲库、歌单与专辑，在电脑或手机上收听。', listen: '听音乐', open: '进入曲库' },
+  en: { title: 'Station Cat Music', description: 'Keep your favorite songs close. Explore songs, playlists, and albums on your computer or phone.', listen: 'Listen to music', open: 'Explore music' },
+  ja: { title: 'Station Cat 音楽', description: '好きな曲を、いつもそばに。曲やプレイリスト、アルバムを探して、パソコンでもスマートフォンでも楽しめます。', listen: '音楽を聴く', open: '曲一覧へ' }
+}[lang];
+const musicHref = musicPagePaths[lang];
+
 const catLifeCopy = {
   'zh-Hant': {
     title: '打工養貓日記',
@@ -525,6 +534,7 @@ const websiteStructuredData = {
       <div class="paper-actions" aria-label="Primary actions">
         <a class="ticket-button ticket-button--primary" href={paths.apps}>{copy.primaryCta}</a>
         <a class="ticket-button ticket-button--secondary" href="#recent-notes">{copy.secondaryCta}</a>
+        <a class="ticket-button ticket-button--secondary" href={musicHref}>{musicHome.listen}</a>
       </div>
     </div>
 
@@ -587,6 +597,22 @@ const websiteStructuredData = {
         </article>
       ))}
     </div>
+  </section>
+
+  <section id="music" class="paper-section" aria-labelledby="home-music-title">
+    <article class="bench-card">
+      <div class="bench-card__icon">
+        <img src="/images/music-turntable-silver.webp" alt="" width="1024" height="1024" loading="lazy" decoding="async" />
+      </div>
+      <div class="bench-card__copy">
+        <p class="paper-kicker">Music at the Station</p>
+        <h2 id="home-music-title">{musicHome.title}</h2>
+        <p>{musicHome.description}</p>
+        <div class="paper-actions">
+          <a class="ticket-button ticket-button--primary" href={musicHref}>{musicHome.open}</a>
+        </div>
+      </div>
+    </article>
   </section>
 
   <section id="apps" class="paper-section">

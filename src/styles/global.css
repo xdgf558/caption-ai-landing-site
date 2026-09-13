@@ -6204,8 +6204,8 @@ button.button {
     padding: 7px 9px;
   }
 
-  .station-home-v2 .nav-links a:nth-child(3),
   .station-home-v2 .nav-links a:nth-child(4),
+  .station-home-v2 .nav-links a:nth-child(5),
   .station-home-v2 .nav-links .mobile-hide {
     display: none;
   }
