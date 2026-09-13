@@ -107,15 +107,15 @@ VIP 资格有效，完整音频暂未开放。|VIP 資格有效，完整音訊�
 音乐小站|音樂小站|Music at Station Cat|音楽の小駅
 选一首，让日常慢下来。|選一首，讓日常慢下來。|A song for a slower day.|一曲選んで、ひと息。
 音乐播放器|音樂播放器|Music player|音楽プレーヤー
-队列设置|佇列設定|Queue settings|再生設定
+队列设置|列表設定|Queue settings|再生設定
 播放全部|播放全部|Play all|すべて再生
 随机|隨機|Shuffle|シャッフル
 顺序播放|順序播放|In order|順番に再生
 列表循环|清單循環|Repeat queue|全曲リピート
 单曲循环|單曲循環|Repeat track|1曲リピート
 {mode}，点击切换循环方式|{mode}，點擊切換循環方式|{mode}; change repeat mode|{mode}：リピート方法を変更
-队列|佇列|Queue|再生リスト
-点击列表的播放按钮，会按当前列表重建队列；底栏继续播放保留原队列。|點擊清單的播放按鈕，會按目前清單重建佇列；底欄繼續播放保留原佇列。|Playing a song here replaces the queue with these results. Resume in the bottom player to keep your queue.|一覧の再生ボタンで、この結果から再生リストを作り直します。下部の再生ボタンなら今のリストを保ちます。
+队列|列表|Queue|再生リスト
+点击列表的播放按钮，会按当前列表重建队列；底栏继续播放保留原队列。|點擊清單的播放按鈕，會按目前清單重建列表；底欄繼續播放保留原列表。|Playing a song here replaces the queue with these results. Resume in the bottom player to keep your queue.|一覧の再生ボタンで、この結果から再生リストを作り直します。下部の再生ボタンなら今のリストを保ちます。
 正在整理曲目…|正在整理曲目…|Loading songs…|曲を読み込み中…
 重新加载|重新載入|Reload|再読み込み
 选择歌曲|選擇歌曲|Choose a song|曲を選択
@@ -147,10 +147,10 @@ VIP 资格有效，完整音频暂未开放。|VIP 資格有效，完整音訊�
 静音|靜音|Mute|ミュート
 取消静音|取消靜音|Unmute|ミュート解除
 请用设备音量按键调节音量。|請用裝置音量按鍵調節音量。|Use your device volume buttons.|音量は端末のボタンで調節してください。
-待播队列|待播佇列|Up next|次に再生
-关闭队列|關閉佇列|Close queue|再生リストを閉じる
-从歌曲列表开始播放或点击“播放全部”会重建队列；只浏览歌曲不改变待播顺序。随机播放时，上一首返回实际收听历史。|從歌曲清單開始播放或點擊「播放全部」會重建佇列；只瀏覽歌曲不改變待播順序。隨機播放時，上一首返回實際收聽歷史。|Starting from the song list or Play all replaces the queue. Browsing leaves it unchanged. In shuffle mode, Previous follows your listening history.|一覧から再生するか「すべて再生」でリストを作り直します。閲覧だけでは変わりません。シャッフル中の「前の曲」は再生履歴をたどります。
-队列为空，选择歌曲或点击播放全部。|佇列為空，選擇歌曲或點擊播放全部。|Your queue is empty. Choose a song or Play all.|再生リストは空です。曲を選ぶか、すべて再生してください。
+待播队列|待播列表|Up next|次に再生
+关闭队列|關閉列表|Close queue|再生リストを閉じる
+从歌曲列表开始播放或点击“播放全部”会重建队列；只浏览歌曲不改变待播顺序。随机播放时，上一首返回实际收听历史。|從歌曲清單開始播放或點擊「播放全部」會重建列表；只瀏覽歌曲不改變待播順序。隨機播放時，上一首返回實際收聽歷史。|Starting from the song list or Play all replaces the queue. Browsing leaves it unchanged. In shuffle mode, Previous follows your listening history.|一覧から再生するか「すべて再生」でリストを作り直します。閲覧だけでは変わりません。シャッフル中の「前の曲」は再生履歴をたどります。
+队列为空，选择歌曲或点击播放全部。|列表為空，選擇歌曲或點擊播放全部。|Your queue is empty. Choose a song or Play all.|再生リストは空です。曲を選ぶか、すべて再生してください。
 没有下一首可完整收听的曲目时，将停止播放。|沒有下一首可完整收聽的曲目時，將停止播放。|Playback stops if no next full track is available.|次にフル再生できる曲がなければ停止します。
 移除并播放下一首|移除並播放下一首|Remove and play next|削除して次の曲へ
 移除并停止|移除並停止|Remove and stop|削除して停止
@@ -177,13 +177,13 @@ VIP · 暂无试听|VIP · 暫無試聽|VIP · no preview|VIP・試聴なし
 仅手动试听|僅手動試聽|Manual preview only|手動で試聴のみ
 暂无试听|暫無試聽|No preview|試聴なし
 当前曲目|目前曲目|Current song|現在の曲
-{action}队列曲目：{title}|{action}佇列曲目：{title}|{action} queued song: {title}|リストの曲を{action}：{title}
-移出队列：{title}|移出佇列：{title}|Remove from queue: {title}|リストから削除：{title}
+{action}队列曲目：{title}|{action}列表曲目：{title}|{action} queued song: {title}|リストの曲を{action}：{title}
+移出队列：{title}|移出列表：{title}|Remove from queue: {title}|リストから削除：{title}
 移除「{title}」后：|移除「{title}」後：|After removing “{title}”:|「{title}」を削除した後：
-队列最多保留 500 首，重复曲目只保留一次。|佇列最多保留 500 首，重複曲目只保留一次。|The queue holds up to 500 unique songs.|再生リストは重複なしで最大500曲です。
-队列中暂无可完整收听的曲目，可以选择单曲试听。|佇列中暫無可完整收聽的曲目，可以選擇單曲試聽。|No full tracks are available in this queue. You can preview songs individually.|フル再生できる曲がありません。各曲を個別に試聴できます。
-已到队列末尾。|已到佇列末尾。|End of queue.|再生リストの最後です。
-已到队列开头。|已到佇列開頭。|Start of queue.|再生リストの先頭です。
+队列最多保留 500 首，重复曲目只保留一次。|列表最多保留 500 首，重複曲目只保留一次。|The queue holds up to 500 unique songs.|再生リストは重複なしで最大500曲です。
+队列中暂无可完整收听的曲目，可以选择单曲试听。|列表中暫無可完整收聽的曲目，可以選擇單曲試聽。|No full tracks are available in this queue. You can preview songs individually.|フル再生できる曲がありません。各曲を個別に試聴できます。
+已到队列末尾。|已到列表末尾。|End of queue.|再生リストの最後です。
+已到队列开头。|已到列表開頭。|Start of queue.|再生リストの先頭です。
 试听已结束，再次收听请手动播放。|試聽已結束，再次收聽請手動播放。|Preview ended. Press Play to listen again.|試聴が終了しました。もう一度聴くには再生してください。
 连续三首播放失败，已停止。请稍后手动重试。|連續三首播放失敗，已停止。請稍後手動重試。|Stopped after three playback failures. Please try again later.|再生に3回連続で失敗したため停止しました。後でもう一度お試しください。
 可播放的曲目暂时无法载入，请稍后手动重试。|可播放的曲目暫時無法載入，請稍後手動重試。|Available songs could not be loaded. Please try again later.|再生可能な曲を読み込めません。後でもう一度お試しください。
