@@ -128,16 +128,16 @@ for (const [path, label, href] of [
   assert.doesNotMatch(html, /公開信號|公开信号|public signals|公開シグナル/);
   const articleLinks = [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)]
     .filter((match) => match[1].includes(`href="${href}"`));
-  assert.ok(articleLinks.length >= 3, `${path} must preserve header, card and footer article links`);
+  assert.ok(articleLinks.length >= 3, `${path} must preserve desktop navigation, mobile navigation and footer article links`);
   for (const link of articleLinks) {
     assert.ok(link[2].includes(label), `${path} article links must use the localized article name`);
   }
   assert.doesNotMatch(html, /信號簡報|信号简报|Signal strip|Signal board|シグナル速報/);
 }
-assert.match(homepage, /station-cat-logo-1668c2e5-160\.webp/);
+assert.match(homepage, /home-night\/cat-mark\.webp/);
 assert.match(homepage, /href="https:\/\/x\.com\/statiocat"/);
 assert.doesNotMatch(homepage, /bketck/);
-assert.match(homepage, /offline-future-cover-96c3c463-360\.webp/);
+assert.match(homepage, /home-night\/novel\.webp/);
 assert.match(homepage, /"@type":"Organization"/);
 assert.match(homepage, /"@type":"WebSite"/);
 assert.doesNotMatch(homepage, /station-cat-logo\.png/);
