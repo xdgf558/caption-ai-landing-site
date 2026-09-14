@@ -1,3 +1,4 @@
+import { checkMusicEntryAssets } from './check-music-entry-assets.mjs';
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -161,3 +162,6 @@ for (const [locale, route] of [['zh-hant', 'music'], ['zh-hans', 'zh-hans/music'
   assert.equal((html.match(/<audio\b/g) || []).length, 1);
 }
 console.log('Built music notices and scoped footer links passed for all four locales.');
+
+await checkMusicEntryAssets(new URL('../dist/', import.meta.url), process.env.PUBLIC_MUSIC_ENTRY_ENABLED === 'true');
+console.log('Built music launch entry checks passed for all four locales.');

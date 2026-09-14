@@ -21,11 +21,15 @@
 先完成正式站完整构建，再使用仓库外的私有资源文件及已存在的私有输出目录：
 
 ```sh
-npm run build
+npm run build:music:closed
 npm run build:music:production-candidate -- --resources /absolute/private/resources.json --output /absolute/private/closed-candidate.jsonc
 npm run test:music:production-candidate
 node --test scripts/test-music-production-assets.mjs
 ```
+
+静态展示与运行时开关分开：默认构建及 `build:music:closed` 均隐藏全站音乐导航、首页音乐推荐区和入口按钮，并把会员页、积分页的音乐权益恢复为待开放说明。`build:music:closed` 显式覆盖环境中的 `PUBLIC_MUSIC_ENTRY_ENABLED`，防止沿用上次激活设置。构建后检查覆盖四种语言的首页、会员页和积分页；生产候选测试会拒绝已经激活入口的静态包。
+
+需要上线展示时，另行使用 `npm run build:music:active`（`PUBLIC_MUSIC_ENTRY_ENABLED=true`）构建激活版本，并与已获批的公共音乐运行时开关配套部署。该构建命令本身不部署、不修改 Worker 开关或数据库。不要把激活后的 `dist` 与关闸候选配置混用；仅切换运行时开关不会重写静态导航或会员文案。重新准备关闭候选时必须重新执行上面的关闭构建和检查。
 
 生成器不调用云端或 shell，不默认选库，不覆写任何已有输出。资源文件和输出目录必须在 checkout 外；真实路径解析后仍在 checkout 内的符号链接也会被拒绝。新文件权限为 0600。错误仅输出固定错误码，不回显输入 JSON、秘密、资源 ID 或文件路径。
 

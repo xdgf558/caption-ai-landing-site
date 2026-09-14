@@ -57,3 +57,31 @@ export const vipMembershipCopy = {
     priceFallback: 'ログイン後に VIP の必要ポイントと有効期間を表示します。'
   }
 };
+
+const closedMusicCopy = {
+  "zh-Hant": {
+    "useIntro": "目前可用積分兌換 VIP 會員或解鎖單章小說。音樂與指定軟體下載尚未開放，後續將納入 VIP 服務，不另設積分價格或兌換入口。",
+    "musicDescription": "規劃納入 VIP 的音樂內容與聆聽服務。",
+    "notice": "音樂與軟體服務尚未開放，不包含在目前可用權益中；後續將作為 VIP 服務提供，不單獨扣點。支援範圍與使用條件會在上線時公布。"
+  },
+  "zh-Hans": {
+    "useIntro": "目前可用积分兑换 VIP 会员或解锁单章小说。音乐与指定软件下载尚未开放，后续将纳入 VIP 服务，不另设积分价格或兑换入口。",
+    "musicDescription": "规划纳入 VIP 的音乐内容与收听服务。",
+    "notice": "音乐与软件服务尚未开放，不包含在目前可用权益中；后续将作为 VIP 服务提供，不单独扣点。支持范围与使用条件会在上线时公布。"
+  },
+  "en": {
+    "useIntro": "Points currently redeem VIP membership or unlock individual fiction chapters. Music and selected software downloads are not yet available; they are planned as VIP services without separate points prices or redemption buttons.",
+    "musicDescription": "Music content and listening services planned for VIP.",
+    "notice": "Music and software services are not available or included in current access. They are planned as VIP services without separate points charges. Scope and terms will be announced at launch."
+  },
+  "ja": {
+    "useIntro": "現在はポイントで VIP 会員権や小説の章ごとの閲覧権を交換できます。音楽と対象ソフトウェアのダウンロードは未公開です。今後は VIP サービスに含め、個別のポイント価格や交換ボタンは設けません。",
+    "musicDescription": "VIP 向けの音楽コンテンツとリスニングサービスを予定しています。",
+    "notice": "音楽とソフトウェアのサービスは未公開で、現在の利用権には含まれません。VIP サービスとして提供予定で、個別のポイント課金は行いません。対象範囲と条件は公開時にお知らせします。"
+  }
+};
+
+export function getVipMembershipCopy(locale, musicEnabled = false) {
+  const copy = vipMembershipCopy[locale];
+  return musicEnabled ? copy : { ...copy, ...closedMusicCopy[locale] };
+}

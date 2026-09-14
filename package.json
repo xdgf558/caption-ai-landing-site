@@ -57,7 +57,9 @@
     "test:music:role-preview": "node --test scripts/test-music-role-preview.mjs",
     "test:music:featured": "node --test scripts/test-music-featured.mjs",
     "test:music:production-candidate": "node --test scripts/test-music-production-candidate.mjs",
-    "build:music:production-candidate": "node scripts/build-music-production-candidate.mjs"
+    "build:music:production-candidate": "node scripts/build-music-production-candidate.mjs",
+    "build:music:closed": "PUBLIC_MUSIC_ENTRY_ENABLED=false npm run build",
+    "build:music:active": "PUBLIC_MUSIC_ENTRY_ENABLED=true npm run build"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

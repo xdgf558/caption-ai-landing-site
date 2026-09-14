@@ -9,6 +9,7 @@ import { novelForgeAiProduct } from '../data/products/novelforge-ai';
 import { mindBudgetProduct } from '../data/products/mindbudget';
 import { catLifeGameProduct } from '../data/products/cat-life-game';
 import { siteConfig } from '../data/site';
+import { musicEntryEnabled } from '../data/music-entry.js';
 import { musicPagePaths } from '../music/pagePaths.js';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
@@ -535,7 +536,7 @@ const websiteStructuredData = {
       <div class="paper-actions" aria-label="Primary actions">
         <a class="ticket-button ticket-button--primary" href={paths.apps}>{copy.primaryCta}</a>
         <a class="ticket-button ticket-button--secondary" href="#recent-notes">{copy.secondaryCta}</a>
-        <a class="ticket-button ticket-button--secondary" href={musicHref}>{musicHome.listen}</a>
+        {musicEntryEnabled && <a class="ticket-button ticket-button--secondary" href={musicHref}>{musicHome.listen}</a>}
       </div>
     </div>
 
@@ -600,7 +601,7 @@ const websiteStructuredData = {
     </div>
   </section>
 
-  <section id="music" class="paper-section home-music-entry" aria-labelledby="home-music-title">
+  {musicEntryEnabled && <section id="music" class="paper-section home-music-entry" aria-labelledby="home-music-title">
     <div class="home-music-entry__copy">
       <p class="paper-kicker">Music at the Station</p>
       <h2 id="home-music-title">{musicHome.title}</h2>
@@ -613,7 +614,7 @@ const websiteStructuredData = {
       <img src="/images/music-home-shelf.webp" alt="" width="1914" height="822" loading="lazy" decoding="async" />
       <figcaption>{musicHome.shelf}</figcaption>
     </figure>
-  </section>
+  </section>}
 
   <section id="apps" class="paper-section">
     <div class="paper-section__heading">

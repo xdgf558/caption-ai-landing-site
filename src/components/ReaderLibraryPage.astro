@@ -3,7 +3,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CreemTrustBadge from './CreemTrustBadge.astro';
 import VipMark from './VipMark.astro';
 import { BookOpen, Headphones, Download } from '@lucide/astro';
-import { vipMembershipCopy } from '../data/vip-membership.js';
+import { musicEntryEnabled } from '../data/music-entry.js';
+import { getVipMembershipCopy } from '../data/vip-membership.js';
 import {
   getReaderLibraryMessages,
   readerErrorMessageKeys,
@@ -15,7 +16,7 @@ interface Props {
 }
 
 const { lang = 'zh-Hant' } = Astro.props;
-const vip = vipMembershipCopy[lang];
+const vip = getVipMembershipCopy(lang, musicEntryEnabled);
 const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
 const pointsPaths = {
   en: '/en/points/', ja: '/ja/points/', zhHant: '/zh-hant/points/', zhHans: '/zh-hans/points/'
@@ -409,7 +410,7 @@ const clientConfig = {
                   </li>
                   <li data-vip-planned>
                     <Headphones size={22} aria-hidden="true" />
-                    <div><h4>{vip.music}</h4><p>{vip.musicDescription}</p></div>
+                    <div><h4>{vip.music} {!musicEntryEnabled && <small>{vip.planned}</small>}</h4><p>{vip.musicDescription}</p></div>
                   </li>
                   <li data-vip-planned>
                     <Download size={22} aria-hidden="true" />
