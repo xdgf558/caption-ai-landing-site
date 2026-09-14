@@ -373,8 +373,8 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       if (track) choose(track, true);
     });
     localPlayback = bindMusicLocalPlayback(player, queue, local, { getTracks: () => tracks, host: window, onNotice(kind) {
-      const messages = { restored: '已恢复上次位置，点击播放继续。', changed: '音频版本或收听方式已变化，请重新选择播放。', missing: '上次曲目暂不可用，本机记录仍保留。' };
-      setText('[data-resume-notice]', t(messages[kind])); $('[data-resume-notice]').hidden = false;
+      const messages = { restored: '已恢复上次位置，点击播放继续。', changed: '音频版本或收听方式已变化，请重新选择播放。' };
+      setText('[data-resume-notice]', t(messages[kind] || '')); $('[data-resume-notice]').hidden = !messages[kind];
     } });
     localUnsubscribe = local.subscribe(value => {
       favoriteIds = new Set(value.favorites);

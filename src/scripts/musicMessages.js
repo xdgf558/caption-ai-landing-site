@@ -89,7 +89,6 @@ VIP 资格有效，完整音频暂未开放。|VIP 資格有效，完整音訊�
 暂无可显示的播放记录。播放歌曲后会记录在这里。|暫無可顯示的播放記錄。播放歌曲後會記錄在這裡。|No playback history to show. Played songs will appear here.|表示できる再生履歴はありません。再生した曲がここに表示されます。
 已恢复上次位置，点击播放继续。|已恢復上次位置，點擊播放繼續。|Your previous position is restored. Press play to continue.|前回の位置を復元しました。再生ボタンで続けられます。
 音频版本或收听方式已变化，请重新选择播放。|音訊版本或收聽方式已變更，請重新選擇播放。|The audio version or listening mode changed. Please choose playback again.|音源の版または再生モードが変わりました。再生を選び直してください。
-上次曲目暂不可用，本机记录仍保留。|上次曲目暫不可用，本機記錄仍保留。|The previous song is unavailable. Your local records are retained.|前回の曲は現在利用できません。ローカル記録は保持されます。
 本机记录暂时无法保存，本次播放仍可继续。|本機記錄暫時無法儲存，本次播放仍可繼續。|Local records cannot be saved right now. Playback can continue.|ローカル記録を保存できません。再生は続けられます。
 本机记录无法读取。原始记录已保留，可先导出；本次使用临时记录。|本機記錄無法讀取。原始記錄已保留，可先匯出；本次使用暫存記錄。|Local records could not be read. The original is retained for export; this session uses temporary records.|ローカル記録を読み込めません。元の記録はエクスポート用に保持し、今回は一時記録を使います。
 已迁移旧收藏与设置。旧进度未恢复，请重新选择歌曲。|已移轉舊收藏與設定。舊進度未恢復，請重新選擇歌曲。|Old saved songs and settings were migrated. Old positions were not restored; please select a song.|以前のお気に入りと設定を移行しました。再生位置は復元していません。曲を選び直してください。
