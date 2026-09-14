@@ -2,6 +2,7 @@
 .station-music-page { padding-bottom: calc(var(--music-dock-height, 0px) + 1rem); }
 html:has(> .station-music-page) { scroll-padding-bottom: calc(var(--music-dock-height, 0px) + 1rem); }
 .station-music-page .skip-link { top: 0; transform: translateY(-110%); }
+.station-music-page .skip-link:not(:focus) { clip-path: inset(50%); }
 .station-music-page .skip-link:focus { top: 1rem; transform: none; }
 .station-music-nav-content { display: contents; }
 .station-music-menu-toggle, .station-music-filter-toggle, .station-music-hero-cover,

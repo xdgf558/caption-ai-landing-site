@@ -48,6 +48,10 @@ export function mountMusicPanels(root, { host = window } = {}) {
   const doc = root.ownerDocument, abort = new AbortController();
   const $ = selector => root.querySelector(selector), on = (node, name, fn) => node?.addEventListener(name, fn, { signal: abort.signal });
   const mobile = host.matchMedia('(max-width: 48rem)');
+  // Some mobile browsers mark modal autofocus as focus-visible after a tap.
+  // Keep focus in the dialog, but show its ring only for keyboard navigation.
+  on(doc, 'pointerdown', () => { root.dataset.panelInput = 'pointer'; });
+  on(doc, 'keydown', event => { if (event.key === 'Tab') root.dataset.panelInput = 'keyboard'; });
   const nightPage = doc.body.classList.contains('station-music-page');
   const desktopPanel = kind => nightPage && kind === 'detail';
   const dialogs = { now: $('[data-now-dialog]'), detail: $('[data-detail-dialog]'), filter: $('[data-filter-dialog]'), queue: $('[data-queue-dialog]'), menu: doc.querySelector('[data-menu-dialog]'), share: $('[data-share-card-dialog]') };
@@ -55,7 +59,45 @@ export function mountMusicPanels(root, { host = window } = {}) {
   const nav = doc.querySelector('[data-music-nav-content]'), navHome = nav?.parentElement;
   const previous = $('[data-previous]'), next = $('[data-next]'), transport = previous.parentElement;
   const openers = new Map();
-  let active = null, oldOverflow = null, oldRootOverflow = null, disposed = false;
+  let active = null, unlockPage = null, disposed = false;
+  let closingTimer = null;
+  const reducedMotion = host.matchMedia('(prefers-reduced-motion: reduce)');
+  const motionTarget = kind => dialogs[kind]?.querySelector('.t-modal');
+  const cancelClosing = () => {
+    if (closingTimer !== null) host.clearTimeout(closingTimer);
+    closingTimer = null;
+    const target = motionTarget(active);
+    if (target?.classList.contains('is-closing')) {
+      target.classList.remove('is-closing'); target.classList.add('is-open');
+    }
+  };
+  const lockPage = () => {
+    if (unlockPage) return;
+    const x = host.scrollX, y = host.scrollY;
+    const saved = [];
+    const set = (style, property, value) => {
+      saved.push([style, property, style.getPropertyValue(property), style.getPropertyPriority(property)]);
+      style.setProperty(property, value);
+    };
+    set(doc.documentElement.style, 'overflow', 'hidden');
+    set(doc.body.style, 'overflow', 'hidden');
+    // iOS can still pan the document behind a modal with overflow alone.
+    // Keep the same lock while moving between player, lyrics, queue and share.
+    const fixed = mobile.matches;
+    if (fixed) {
+      set(doc.body.style, 'position', 'fixed');
+      set(doc.body.style, 'top', `${-y}px`);
+      set(doc.body.style, 'left', `${-x}px`);
+      set(doc.body.style, 'width', '100%');
+    }
+    unlockPage = () => {
+      for (const [style, property, value, priority] of saved.reverse()) {
+        if (value) style.setProperty(property, value, priority); else style.removeProperty(property);
+      }
+      if (fixed) host.scrollTo({ left: x, top: y, behavior: 'instant' });
+      unlockPage = null;
+    };
+  };
   const toggles = { now: '[data-now-toggle]', detail: '[data-detail-toggle]', filter: '[data-filter-toggle]', queue: '[data-queue-toggle]', menu: '[data-music-menu-toggle]', share: '[data-share-music="track"]' };
   const focusable = node => node?.isConnected && !node.disabled && node.getClientRects().length && !node.closest('[inert]');
   const restore = kind => {
@@ -69,21 +111,20 @@ export function mountMusicPanels(root, { host = window } = {}) {
   };
   const switchPanel = kind => {
     if (disposed) return;
+    cancelClosing();
     if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches && !desktopPanel(kind)) || (kind === 'detail' && detail.hidden) || (kind === 'now' && dock.hidden)) kind = null;
     if (active === kind) return;
     const last = active;
     if (active) {
       active = null;
       dialogs[last].close();
+      motionTarget(last)?.classList.remove('is-open', 'is-closing');
       if (last === 'detail' || last === 'now') $('[data-dock-home]').after(dock);
       if (last === 'now' && mobile.matches) $('[data-queue-steps]').append(previous, next);
       doc.querySelectorAll(toggles[last]).forEach(node => node.setAttribute('aria-expanded', 'false'));
     }
     if (kind) {
-      if (oldOverflow === null) {
-        oldOverflow = doc.body.style.overflow; doc.body.style.overflow = 'hidden';
-        oldRootOverflow = doc.documentElement.style.overflow; doc.documentElement.style.overflow = 'hidden';
-      }
+      lockPage();
       active = kind;
       if (kind === 'detail') $('[data-detail-dock]').append(dock);
       if (kind === 'now') {
@@ -91,23 +132,41 @@ export function mountMusicPanels(root, { host = window } = {}) {
         $('[data-main-play]').before(previous); transport.append(next);
       }
       dialogs[kind].showModal();
+      const target = motionTarget(kind);
+      if (target) {
+        target.classList.remove('is-open', 'is-closing');
+        void target.offsetWidth;
+        target.classList.add('is-open');
+      }
       dialogs[kind].querySelector('[autofocus]')?.focus({ preventScroll: true });
       doc.querySelectorAll(toggles[kind]).forEach(node => node.setAttribute('aria-expanded', 'true'));
     } else {
-      if (oldOverflow !== null) {
-        doc.body.style.overflow = oldOverflow; oldOverflow = null;
-        doc.documentElement.style.overflow = oldRootOverflow; oldRootOverflow = null;
-      }
+      unlockPage?.();
       if (last) restore(last);
     }
     root.dataset.activePanel = active || '';
     measure();
   };
   const history = createMusicPanelHistory(host, switchPanel);
+  const close = () => {
+    if (closingTimer !== null) return;
+    const target = motionTarget(active);
+    if (!target || reducedMotion.matches) { history.close(); return; }
+    // Delay only explicit dismissals. Back, resize and teardown stay immediate.
+    const value = host.getComputedStyle(target).getPropertyValue('--modal-close-dur').trim();
+    const ms = Number.parseFloat(value) * (value.endsWith('ms') ? 1 : 1000);
+    target.classList.remove('is-open'); target.classList.add('is-closing');
+    closingTimer = host.setTimeout(() => {
+      closingTimer = null;
+      target.classList.remove('is-closing');
+      history.close();
+    }, Number.isFinite(ms) ? ms : 150);
+  };
   const open = (kind, opener = doc.activeElement) => {
     if (kind === 'detail' && !mobile.matches && !nightPage) { $('[data-track-title]')?.focus({ preventScroll: true }); return; }
     if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches && !desktopPanel(kind)) || (kind === 'detail' && detail.hidden) || (kind === 'now' && dock.hidden)) return;
     openers.set(kind, opener);
+    cancelClosing();
     history.open(kind);
   };
   const adapt = () => {
@@ -123,9 +182,9 @@ export function mountMusicPanels(root, { host = window } = {}) {
   };
   on(mobile, 'change', adapt);
   for (const [kind, dialog] of Object.entries(dialogs)) {
-    on(dialog, 'cancel', event => { event.preventDefault(); history.close(); });
-    on(dialog, 'click', event => { if (event.target === dialog) history.close(); });
-    dialog?.querySelectorAll('[data-panel-close]').forEach(button => on(button, 'click', () => history.close()));
+    on(dialog, 'cancel', event => { event.preventDefault(); close(); });
+    on(dialog, 'click', event => { if (event.target === dialog) close(); });
+    dialog?.querySelectorAll('[data-panel-close]').forEach(button => on(button, 'click', close));
     on(dialog, 'keydown', event => {
       if (event.key !== 'Tab') return;
       const items = [...dialog.querySelectorAll('button, a[href], input, select, summary, [tabindex]')]
@@ -136,7 +195,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
       }
     });
   }
-  on($('[data-now-close]'), 'click', () => history.close());
+  on($('[data-now-close]'), 'click', close);
   for (const kind of ['now', 'detail', 'filter', 'menu']) {
     doc.querySelectorAll(toggles[kind]).forEach(button => on(button, 'click', () => open(kind, button)));
   }
@@ -145,12 +204,12 @@ export function mountMusicPanels(root, { host = window } = {}) {
   on(host, 'resize', measure);
   on(host.visualViewport, 'resize', measure);
   adapt();
-  return { open, close: () => history.close(), refresh() { if ((active === 'detail' && detail.hidden) || (active === 'now' && dock.hidden)) history.reset(); measure(); }, destroy() {
-    history.destroy(); disposed = true; abort.abort(); observer?.disconnect();
+  return { open, close, refresh() { if ((active === 'detail' && detail.hidden) || (active === 'now' && dock.hidden)) history.reset(); measure(); }, destroy() {
+    history.destroy(); unlockPage?.(); disposed = true; abort.abort(); observer?.disconnect();
     $('[data-detail-home]').append(detail); $('[data-filter-home]').append(filter);
     if (nav) navHome.append(nav);
     $('[data-main-play]').before(previous); transport.append(next);
-    delete root.dataset.mobile; delete root.dataset.activePanel; delete doc.body.dataset.musicMobile;
+    delete root.dataset.mobile; delete root.dataset.activePanel; delete root.dataset.panelInput; delete doc.body.dataset.musicMobile;
     doc.documentElement.style.removeProperty('--music-dock-height');
   } };
 }

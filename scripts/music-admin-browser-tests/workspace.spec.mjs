@@ -310,6 +310,10 @@ test('limited free exposes a custom local deadline and restores it from the save
   await page.getByLabel('修改说明',{exact:true}).fill('限时免费本地测试');
   await page.getByRole('button',{name:'保存草稿',exact:true}).click();
   await expect(page.locator('#track-version')).toHaveText('编辑版本 2');
+  // The revision renders before list refresh and journal acknowledgement finish.
+  // Reload only after the save completes, rather than testing interrupted recovery.
+  await expect(page.locator('#music-status')).toContainText('草稿已保存。');
+  await expect(page.locator('#metadata-fields')).toBeEnabled();
   await page.reload();
   await page.getByRole('button').filter({hasText:slug}).click();
   await expect(page.locator('#access-mode')).toHaveValue('limited_free');
