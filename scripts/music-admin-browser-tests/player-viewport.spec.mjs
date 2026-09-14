@@ -75,5 +75,22 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 320, height: 568 }
     await page.setViewportSize({ width: 1024, height: 768 });
     await expect(dialog).not.toBeVisible();
     await expect(page.locator('body')).toHaveCSS('position', 'static');
+    // Unmounting during a close animation releases the lock immediately.
+    await page.setViewportSize(viewport);
+    await page.evaluate(() => window.scrollTo({ top: 450, behavior: 'instant' }));
+    const beforeUnmount = await page.evaluate(() => window.scrollY);
+    await page.locator('[data-now-toggle]').click();
+    await expect(page.locator('body')).toHaveCSS('position', 'fixed');
+    await page.evaluate(() => {
+      document.querySelector('[data-now-close]').click();
+      window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false }));
+    });
+    await expect(dialog).not.toBeVisible();
+    await expect(page.locator('body')).toHaveCSS('position', 'static');
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(beforeUnmount);
+    expect(await page.locator('body').evaluate(body => ({ top: body.style.top, width: body.style.width, overflow: body.style.overflow })))
+      .toEqual({ top: '', width: '100%', overflow: '' });
+    await page.waitForTimeout(200);
+    await expect(page.locator('body')).toHaveCSS('position', 'static');
   });
 }

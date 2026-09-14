@@ -205,7 +205,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
   on(host.visualViewport, 'resize', measure);
   adapt();
   return { open, close, refresh() { if ((active === 'detail' && detail.hidden) || (active === 'now' && dock.hidden)) history.reset(); measure(); }, destroy() {
-    history.destroy(); disposed = true; abort.abort(); observer?.disconnect();
+    history.destroy(); unlockPage?.(); disposed = true; abort.abort(); observer?.disconnect();
     $('[data-detail-home]').append(detail); $('[data-filter-home]').append(filter);
     if (nav) navHome.append(nav);
     $('[data-main-play]').before(previous); transport.append(next);
