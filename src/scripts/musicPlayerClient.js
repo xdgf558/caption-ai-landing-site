@@ -64,8 +64,14 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   listen($('[data-mini-cover]'), 'error', () => { $('[data-mini-cover]').hidden = true; });
   if (isLibrary) listen($('[data-now-cover]'), 'error', () => { $('[data-now-cover]').hidden = true; });
   const icons = (node, busy, playing) => {
-    node.querySelector('[data-play-icon]').toggleAttribute('hidden', busy || playing);
-    node.querySelector('[data-pause-icon]').toggleAttribute('hidden', !playing || busy);
+    const swap = node.querySelector('[data-play-swap]');
+    if (swap) {
+      swap.hidden = busy;
+      swap.dataset.state = playing ? 'b' : 'a';
+    } else {
+      node.querySelector('[data-play-icon]').toggleAttribute('hidden', busy || playing);
+      node.querySelector('[data-pause-icon]').toggleAttribute('hidden', !playing || busy);
+    }
     node.querySelector('[data-loading-icon]').toggleAttribute('hidden', !busy);
   };
   const render = state => {
@@ -106,6 +112,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       if (isLibrary) {
         const favorite = favoriteIds.has(track.id), button = row.querySelector('[data-row-favorite]');
         button.setAttribute('aria-pressed', String(favorite));
+        button.dataset.liked = String(favorite);
         button.setAttribute('aria-label', t(favorite ? '取消收藏：{title}' : '收藏：{title}', { title: track.title }));
       }
       row.querySelector('.station-music-select').setAttribute('aria-pressed', String(viewed?.id === track.id));
@@ -129,6 +136,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       if (isLibrary) {
         const favorite = favoriteIds.has(viewed.id);
         $('[data-detail-favorite]').setAttribute('aria-pressed', String(favorite));
+        $('[data-detail-favorite]').dataset.liked = String(favorite);
         setText('[data-detail-favorite-label]', t(favorite ? '已收藏' : '收藏'));
         setText('[data-track-summary]', viewed.summary);
         $('[data-detail-play]').disabled = playerVariant(viewed, capabilities) === null;
@@ -152,6 +160,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       setImage($('[data-now-cover]'), selected.coverUrl);
       const favorite = favoriteIds.has(selected.id);
       $('[data-now-favorite]').setAttribute('aria-pressed', String(favorite));
+      $('[data-now-favorite]').dataset.liked = String(favorite);
       $('[data-now-favorite]').setAttribute('aria-label', t(favorite ? '取消收藏：{title}' : '收藏：{title}', { title: selected.title }));
     }
     const status = viewed?.id !== selected.id ? t('尚未播放') : state.activeVariant === 'preview' ? `${t('试听')} · ${t(statusText[state.status])}` : t(statusText[state.status]);

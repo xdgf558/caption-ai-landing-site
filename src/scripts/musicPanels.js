@@ -60,6 +60,17 @@ export function mountMusicPanels(root, { host = window } = {}) {
   const previous = $('[data-previous]'), next = $('[data-next]'), transport = previous.parentElement;
   const openers = new Map();
   let active = null, unlockPage = null, disposed = false;
+  let closingTimer = null;
+  const reducedMotion = host.matchMedia('(prefers-reduced-motion: reduce)');
+  const motionTarget = kind => dialogs[kind]?.querySelector('.t-modal');
+  const cancelClosing = () => {
+    if (closingTimer !== null) host.clearTimeout(closingTimer);
+    closingTimer = null;
+    const target = motionTarget(active);
+    if (target?.classList.contains('is-closing')) {
+      target.classList.remove('is-closing'); target.classList.add('is-open');
+    }
+  };
   const lockPage = () => {
     if (unlockPage) return;
     const x = host.scrollX, y = host.scrollY;
@@ -100,12 +111,14 @@ export function mountMusicPanels(root, { host = window } = {}) {
   };
   const switchPanel = kind => {
     if (disposed) return;
+    cancelClosing();
     if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches && !desktopPanel(kind)) || (kind === 'detail' && detail.hidden) || (kind === 'now' && dock.hidden)) kind = null;
     if (active === kind) return;
     const last = active;
     if (active) {
       active = null;
       dialogs[last].close();
+      motionTarget(last)?.classList.remove('is-open', 'is-closing');
       if (last === 'detail' || last === 'now') $('[data-dock-home]').after(dock);
       if (last === 'now' && mobile.matches) $('[data-queue-steps]').append(previous, next);
       doc.querySelectorAll(toggles[last]).forEach(node => node.setAttribute('aria-expanded', 'false'));
@@ -119,6 +132,12 @@ export function mountMusicPanels(root, { host = window } = {}) {
         $('[data-main-play]').before(previous); transport.append(next);
       }
       dialogs[kind].showModal();
+      const target = motionTarget(kind);
+      if (target) {
+        target.classList.remove('is-open', 'is-closing');
+        void target.offsetWidth;
+        target.classList.add('is-open');
+      }
       dialogs[kind].querySelector('[autofocus]')?.focus({ preventScroll: true });
       doc.querySelectorAll(toggles[kind]).forEach(node => node.setAttribute('aria-expanded', 'true'));
     } else {
@@ -129,10 +148,25 @@ export function mountMusicPanels(root, { host = window } = {}) {
     measure();
   };
   const history = createMusicPanelHistory(host, switchPanel);
+  const close = () => {
+    if (closingTimer !== null) return;
+    const target = motionTarget(active);
+    if (!target || reducedMotion.matches) { history.close(); return; }
+    // Delay only explicit dismissals. Back, resize and teardown stay immediate.
+    const value = host.getComputedStyle(target).getPropertyValue('--modal-close-dur').trim();
+    const ms = Number.parseFloat(value) * (value.endsWith('ms') ? 1 : 1000);
+    target.classList.remove('is-open'); target.classList.add('is-closing');
+    closingTimer = host.setTimeout(() => {
+      closingTimer = null;
+      target.classList.remove('is-closing');
+      history.close();
+    }, Number.isFinite(ms) ? ms : 150);
+  };
   const open = (kind, opener = doc.activeElement) => {
     if (kind === 'detail' && !mobile.matches && !nightPage) { $('[data-track-title]')?.focus({ preventScroll: true }); return; }
     if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches && !desktopPanel(kind)) || (kind === 'detail' && detail.hidden) || (kind === 'now' && dock.hidden)) return;
     openers.set(kind, opener);
+    cancelClosing();
     history.open(kind);
   };
   const adapt = () => {
@@ -148,9 +182,9 @@ export function mountMusicPanels(root, { host = window } = {}) {
   };
   on(mobile, 'change', adapt);
   for (const [kind, dialog] of Object.entries(dialogs)) {
-    on(dialog, 'cancel', event => { event.preventDefault(); history.close(); });
-    on(dialog, 'click', event => { if (event.target === dialog) history.close(); });
-    dialog?.querySelectorAll('[data-panel-close]').forEach(button => on(button, 'click', () => history.close()));
+    on(dialog, 'cancel', event => { event.preventDefault(); close(); });
+    on(dialog, 'click', event => { if (event.target === dialog) close(); });
+    dialog?.querySelectorAll('[data-panel-close]').forEach(button => on(button, 'click', close));
     on(dialog, 'keydown', event => {
       if (event.key !== 'Tab') return;
       const items = [...dialog.querySelectorAll('button, a[href], input, select, summary, [tabindex]')]
@@ -161,7 +195,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
       }
     });
   }
-  on($('[data-now-close]'), 'click', () => history.close());
+  on($('[data-now-close]'), 'click', close);
   for (const kind of ['now', 'detail', 'filter', 'menu']) {
     doc.querySelectorAll(toggles[kind]).forEach(button => on(button, 'click', () => open(kind, button)));
   }
@@ -170,7 +204,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
   on(host, 'resize', measure);
   on(host.visualViewport, 'resize', measure);
   adapt();
-  return { open, close: () => history.close(), refresh() { if ((active === 'detail' && detail.hidden) || (active === 'now' && dock.hidden)) history.reset(); measure(); }, destroy() {
+  return { open, close, refresh() { if ((active === 'detail' && detail.hidden) || (active === 'now' && dock.hidden)) history.reset(); measure(); }, destroy() {
     history.destroy(); disposed = true; abort.abort(); observer?.disconnect();
     $('[data-detail-home]').append(detail); $('[data-filter-home]').append(filter);
     if (nav) navHome.append(nav);

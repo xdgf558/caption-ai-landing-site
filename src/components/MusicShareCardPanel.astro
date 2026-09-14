@@ -9,7 +9,7 @@ const t = musicText(Astro.props.lang);
     <div><h2 id="music-share-card-heading" data-card-heading>{t('分享歌曲')}</h2><p data-card-track></p></div>
     <button data-panel-close="share" type="button" aria-label={t('关闭分享卡片')} autofocus><X size={24} /></button>
   </header>
-  <div class="station-music-share-layout">
+  <div class="station-music-share-layout t-modal">
     <div class="station-music-share-artwork">
       <div data-card-busy class="station-music-share-busy" hidden><LoaderCircle size={26} /><span>{t('正在制作分享卡片…')}</span></div>
       <img data-card-image alt="" hidden />

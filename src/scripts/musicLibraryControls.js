@@ -7,6 +7,29 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
   let tracks = [], catalogTracks = [], collections = [], view = null, count = 50, loaded = false, albumSignature = null;
   let state = { query: '', genres: [], moods: [], access: '', mode: 'latest', ...libraryLocation(host.location.search) };
   const on = (node, event, callback) => node.addEventListener(event, callback, { signal: abort.signal });
+  const indicator = $('[data-browse-indicator]');
+  let indicatorReady = false, indicatorFrame = null;
+  const moveIndicator = (animate = true) => {
+    if (!indicator || abort.signal.aborted) return;
+    const tab = root.querySelector('[data-browse-mode][aria-pressed="true"]');
+    if (!tab || !tab.offsetWidth) return;
+    const transition = indicator.style.transition;
+    if (!animate || !indicatorReady) indicator.style.transition = 'none';
+    indicator.style.transform = `translateX(${tab.offsetLeft}px)`;
+    indicator.style.width = `${tab.offsetWidth}px`;
+    if (!animate || !indicatorReady) { void indicator.offsetWidth; indicator.style.transition = transition; }
+    indicator.dataset.ready = ''; indicatorReady = true;
+  };
+  const resizeIndicator = () => {
+    if (indicatorFrame !== null) host.cancelAnimationFrame(indicatorFrame);
+    indicatorFrame = host.requestAnimationFrame(() => { indicatorFrame = null; moveIndicator(false); });
+  };
+  const indicatorObserver = indicator && typeof host.ResizeObserver === 'function' ? new host.ResizeObserver(resizeIndicator) : null;
+  if (indicator) {
+    indicatorObserver?.observe(indicator.parentElement);
+    for (const tab of root.querySelectorAll('[data-browse-mode]')) indicatorObserver?.observe(tab);
+    on(host, 'resize', resizeIndicator);
+  }
   const render = () => {
     for (const key of ['genres','moods']) if ($(`[data-night-${key}]`)) $(`[data-night-${key}]`).value = state[key][0] || '';
     const candidates = state.collection && view?.selectedCollection?.slug === state.collection ? view.selectedCollection.tracks
@@ -45,6 +68,7 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     $('[data-access-filter]').value = state.access;
     $('[data-collection-filter]').value = state.collection || '';
     for (const button of root.querySelectorAll('[data-browse-mode]')) button.setAttribute('aria-pressed', String(button.dataset.browseMode === state.mode));
+    moveIndicator();
     for (const input of root.querySelectorAll('[data-tag-group]')) input.checked = state[input.dataset.tagGroup].includes(input.value);
     const description = collections.find(item => item.slug === state.collection)?.description || '';
     $('[data-collection-description]').textContent = description; $('[data-collection-description]').hidden = !description;
@@ -118,6 +142,6 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
       }
       $('[data-tag-filters]').hidden = !tags.genres.length && !tags.moods.length;
       render();
-    }, destroy() { abort.abort(); }
+    }, destroy() { abort.abort(); indicatorObserver?.disconnect(); if (indicatorFrame !== null) host.cancelAnimationFrame(indicatorFrame); }
   };
 }
