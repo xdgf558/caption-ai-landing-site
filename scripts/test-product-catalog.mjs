@@ -65,7 +65,7 @@ assert.equal(existsSync(join(root, 'src/content/devlog')), true, 'Devlog content
 assert.match(stationHome, /anyTlsDesktopManagerProduct/);
 assert.match(stationHome, /<h3>NodePilot<\/h3>/);
 assert.match(stationHome, /nodePilotDownload/);
-assert.match(appsIndex, /title="NodePilot"/);
+assert.match(appsIndex, /title:\s*'NodePilot'/);
 assert.match(footer, /label: 'NodePilot'/);
 assert.equal(existsSync(join(root, 'src/pages/en/apps/nodepilot/index.astro')), true);
 assert.match(nodePilotProduct, /latestVersion: 'v0\.2\.26'/);
@@ -77,7 +77,7 @@ assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/NodePilot-Setup-0\.2\.26
 assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/latest-mac\.yml/);
 assert.match(worker, /anytls-desktop-manager\/0\.2\.26\/latest\.yml/);
 assert.match(stationHome, /mindBudgetProduct/);
-assert.match(appsIndex, /title=\{lang === 'zh-Hans' \|\| lang === 'zh-Hant' \? '花有數' : 'MindBudget'\}/);
+assert.match(appsIndex, /title:lang === 'zh-Hant' \? '花有數' : lang === 'zh-Hans' \? '花有数' : 'MindBudget'/);
 assert.match(footer, /apps\/mindbudget\//);
 for (const path of ['download.astro', 'privacy.astro', 'support.astro']) {
   assert.equal(existsSync(join(root, 'src/pages/en/apps/mindbudget', path)), true, `MindBudget route is missing: ${path}`);

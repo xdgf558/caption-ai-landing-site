@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ProductCard from './ProductCard.astro';
+import { ArrowRight, Mail, Rss } from '@lucide/astro';
+import { siteConfig } from '../data/site';
+import '../styles/apps-daylight.css';
 import { captionAiProduct } from '../data/products/caption-ai';
 import { anyTlsDesktopManagerProduct } from '../data/products/anytls-desktop-manager';
 import { simpleCutProProduct } from '../data/products/simplecut-pro';
@@ -217,106 +219,41 @@ const paths = {
     catLife: catLifeGameProduct.jaProductPath
   }
 }[lang];
+const ui = {
+ 'zh-Hant': {heading:['用小小的工具，','讓日常更美好。'],intro:['實用、有趣、溫暖，','由 Station Cat 打造的原創應用程式。'],explore:'探索所有 Apps',featured:'精選應用',featuredIntro:'從生活、創作到效率，這些是我最推薦的應用。',all:'查看全部',more:'更多應用',moreIntro:'探索更多有趣實用的小工具。',contactHeading:'持續創作，更多好用的應用正在路上。',contactIntro:'如果你有任何想法或建議，歡迎告訴我。',contact:'聯絡我',follow:'追蹤更新',budget:'記錄花費，也記錄更好的自己。',cat:'工作與生活，與貓一起慢慢過。',snap:'一張照片，變成溫柔的分享。',novel:'讓想像力，成為下一個故事。',pinyin:'本機中文輸入，讓文字自然流動。',cut:'剪輯日常，留下值得回看的片刻。',node:'把連線配置，整理得井井有條。',art:'應用情境示意',tags:{budget:'記帳理財',game:'養成遊戲',photo:'圖片工具',creative:'創作',input:'輸入工具',video:'影片剪輯',utility:'實用工具',life:'生活',web:'網頁',efficiency:'效率'}},
+ 'zh-Hans': {heading:['用小小的工具，','让日常更美好。'],intro:['实用、有趣、温暖，','由 Station Cat 打造的原创应用程序。'],explore:'探索所有 Apps',featured:'精选应用',featuredIntro:'从生活、创作到效率，这些是我最推荐的应用。',all:'查看全部',more:'更多应用',moreIntro:'探索更多有趣实用的小工具。',contactHeading:'持续创作，更多好用的应用正在路上。',contactIntro:'如果你有任何想法或建议，欢迎告诉我。',contact:'联系我',follow:'追踪更新',budget:'记录花费，也记录更好的自己。',cat:'工作与生活，与猫一起慢慢过。',snap:'一张照片，变成温柔的分享。',novel:'让想象力，成为下一个故事。',pinyin:'本地中文输入，让文字自然流动。',cut:'剪辑日常，留下值得回看的片刻。',node:'把连接配置，整理得井井有条。',art:'应用场景示意',tags:{budget:'记账理财',game:'养成游戏',photo:'图片工具',creative:'创作',input:'输入工具',video:'视频剪辑',utility:'实用工具',life:'生活',web:'网页',efficiency:'效率'}},
+ en: {heading:['Small tools.','Brighter days.'],intro:['Useful, playful, and made with care.','Original apps by Station Cat.'],explore:'Explore all apps',featured:'Featured apps',featuredIntro:'Little companions for life, creativity, and getting things done.',all:'View all',more:'More to explore',moreIntro:'Find your next useful little tool.',contactHeading:'Still creating. More good things are on the way.',contactIntro:'Have an idea or a suggestion? I would love to hear it.',contact:'Get in touch',follow:'Follow updates',budget:'Mind your spending. Make room for a better day.',cat:'A little work, a little rest, a cat by your side.',snap:'Turn a photo into something worth sharing.',novel:'Give your imagination a place to become a story.',pinyin:'Local Chinese input that keeps your words flowing.',cut:'Cut everyday moments into something to keep.',node:'A calmer home for your connection profiles.',art:'App concept illustration',tags:{budget:'Budgeting',game:'Life sim',photo:'Photo tools',creative:'Writing',input:'Input',video:'Video',utility:'Utilities',life:'Lifestyle',web:'Web',efficiency:'Productivity'}},
+ ja: {heading:['小さなツールで、','毎日をもっと豊かに。'],intro:['便利で、楽しく、あたたかい。','Station Cat がつくるオリジナルアプリ。'],explore:'すべてのアプリへ',featured:'おすすめアプリ',featuredIntro:'暮らしと創作に、ちょうどいい小さな道具。',all:'すべて見る',more:'もっと見つける',moreIntro:'毎日に役立つ、個性豊かなツール。',contactHeading:'つくり続ける。次の小さな便利も、もうすぐ。',contactIntro:'アイデアやご感想を、ぜひお聞かせください。',contact:'お問い合わせ',follow:'更新をフォロー',budget:'支出を記録して、毎日にゆとりを。',cat:'仕事も休息も、猫と一緒にゆっくり。',snap:'一枚の写真を、心に届く言葉に。',novel:'想像力を、次の物語へ。',pinyin:'言葉が自然に流れるローカル中国語入力。',cut:'毎日の瞬間を、見返したくなる作品に。',node:'接続設定を、すっきりひとつに。',art:'アプリのイメージ',tags:{budget:'家計簿',game:'育成ゲーム',photo:'写真',creative:'創作',input:'入力',video:'動画編集',utility:'ツール',life:'暮らし',web:'ウェブ',efficiency:'効率化'}}
+}[lang];
+const featured = [
+ {id:'mindbudget',title:lang === 'zh-Hant' ? '花有數' : lang === 'zh-Hans' ? '花有数' : 'MindBudget',icon:'/images/optimized/mindbudget-icon-3bd31000-256.webp',href:paths.mindBudget,description:ui.budget,status:copy.mindBudgetKicker,tags:[ui.tags.budget,'iOS',ui.tags.life],secondaryHref:paths.mindBudgetDownload,secondaryCta:copy.mindBudgetDownloadCta},
+ {id:'cat-life',title:lang === 'zh-Hant' ? catLifeGameProduct.zhHantName : lang === 'zh-Hans' ? catLifeGameProduct.zhHansName : lang === 'ja' ? catLifeGameProduct.jaName : catLifeGameProduct.name,icon:'/images/apps-daylight/cat-life-icon.webp',href:paths.catLife,description:ui.cat,status:copy.catLifeKicker,tags:[ui.tags.game,ui.tags.web,ui.tags.life],secondaryHref:`${catLifeGameProduct.gamePath}?lang=${encodeURIComponent(lang === 'zh-Hans' ? 'zh-CN' : lang)}`,secondaryCta:copy.catLifePlayCta},
+ {id:'snapcopy',title:'SnapCopy',icon:'/images/optimized/snapcopy-icon-91491f7c-256.webp',href:paths.snapcopy,description:ui.snap,status:copy.snapcopyKicker,tags:[ui.tags.photo,'iOS',ui.tags.efficiency],secondaryHref:paths.snapcopy,secondaryCta:copy.snapcopyCta}
+];
+const moreApps = [
+ {title:'NovelForge AI',icon:'/images/optimized/novelforge-icon-05ef05b9-256.webp',href:paths.novelForge,description:ui.novel,status:copy.novelForgeKicker,tags:[ui.tags.creative,'AI','macOS'],secondaryHref:paths.novelForgeDownload,secondaryCta:copy.novelForgeDownloadCta},
+ {title:'猫栈拼音',icon:'/images/optimized/privatepinyin-icon-6c79dbfe-256.webp',href:paths.privatePinyin,description:ui.pinyin,status:copy.privatePinyinKicker,tags:[ui.tags.input,'iOS',ui.tags.efficiency],secondaryHref:paths.privatePinyinDownload,secondaryCta:copy.privatePinyinDownloadCta},
+ {title:'SimpleCut Pro',icon:'/images/optimized/simplecut-icon-0268e767-256.webp',href:paths.simplecut,description:ui.cut,status:copy.simplecutKicker,tags:[ui.tags.video,'Mac / Windows'],secondaryHref:paths.simplecutDownload,secondaryCta:copy.simplecutDownloadCta},
+ {title:'NodePilot',icon:'/images/optimized/nodepilot-icon-fd4176df-256.webp',href:paths.anytls,description:ui.node,status:copy.anytlsKicker,tags:[ui.tags.utility,'Mac / Windows'],secondaryHref:paths.anytls,secondaryCta:copy.anytlsCta}
+];
 ---
-
-<BaseLayout
-  title={copy.title}
-  description={copy.description}
-  lang={lang}
-  canonicalPath={paths.canonical}
-  alternates={[
-    { hrefLang: 'zh-Hant', href: '/zh-hant/apps/' },
-    { hrefLang: 'zh-Hans', href: '/zh-hans/apps/' },
-    { hrefLang: 'en', href: '/en/apps/' },
-    { hrefLang: 'ja', href: '/ja/apps/' },
-    { hrefLang: 'x-default', href: '/zh-hant/apps/' }
-  ]}
->
-  <section class="page-shell">
-    <p class="section-kicker">{copy.kicker}</p>
-    <h1>{copy.heading}</h1>
-    <p>{copy.intro}</p>
+<BaseLayout title={copy.title} description={copy.description} lang={lang} canonicalPath={paths.canonical} bodyClass="station-apps-daylight" appsChrome={true} alternates={[
+ {hrefLang:'zh-Hant',href:'/zh-hant/apps/'},{hrefLang:'zh-Hans',href:'/zh-hans/apps/'},{hrefLang:'en',href:'/en/apps/'},{hrefLang:'ja',href:'/ja/apps/'},{hrefLang:'x-default',href:'/zh-hant/apps/'}
+]}>
+ <section class="apps-hero" aria-labelledby="apps-title">
+  <img class="apps-hero-art" src="/images/apps-daylight/hero.webp" width="1536" height="600" alt="" fetchpriority="high" />
+  <div class="apps-wrap apps-hero-copy"><p class="apps-eyebrow">SMALL APPS. A BRIGHTER DAY.</p><h1 id="apps-title">{ui.heading[0]}<br/>{ui.heading[1]}</h1><p class="apps-intro">{ui.intro[0]}<br/>{ui.intro[1]}</p><a href="#all-apps" class="apps-button"><ArrowRight size={19}/>{ui.explore}</a></div>
+ </section>
+ <div class="apps-wrap apps-content" id="all-apps">
+  <section aria-labelledby="apps-featured"><div class="apps-section-heading"><div><h2 id="apps-featured">{ui.featured}</h2><p>{ui.featuredIntro}</p></div><a href="#more-apps">{ui.all}<ArrowRight size={17}/></a></div>
+   <div class="apps-featured-grid">{featured.map(app => <article class="apps-featured-card">
+    <a class="apps-card-main" href={app.href}><div class="apps-card-heading"><img src={app.icon} width="78" height="78" alt=""/><div><h3>{app.title}</h3><p>{app.description}</p></div></div><div class="apps-card-art"><img src={`/images/apps-daylight/${app.id}.webp`} width="650" height="520" alt={`${app.title} · ${ui.art}`} loading="lazy"/></div><div class="apps-card-bottom"><div class="apps-tags">{app.tags.map(tag=><span>{tag}</span>)}</div><span class="apps-arrow"><ArrowRight size={19}/></span></div></a>
+    <div class="apps-release"><span>{app.status}</span><a href={app.secondaryHref}>{app.secondaryCta}<ArrowRight size={13}/></a></div>
+   </article>)}</div>
   </section>
-  <section class="page-section product-list">
-    <ProductCard
-      title={lang === 'zh-Hant' ? '打工養貓日記' : lang === 'zh-Hans' ? '打工养猫日记' : lang === 'ja' ? '働いて猫を育てる日記' : 'Cat Life Game'}
-      description={copy.catLifeDescription}
-      href={paths.catLife}
-      image={catLifeGameProduct.assets.icon}
-      imageAlt="Cat Life Game orange cat"
-      imageVariant="icon"
-      cta={copy.catLifeCta}
-      secondaryHref={`${catLifeGameProduct.gamePath}?lang=${encodeURIComponent(lang === 'zh-Hant' ? 'zh-Hant' : lang === 'zh-Hans' ? 'zh-CN' : lang)}`}
-      secondaryCta={copy.catLifePlayCta}
-      kicker={copy.catLifeKicker}
-    />
-    <ProductCard
-      title="SnapCopy"
-      description={copy.snapcopyDescription}
-      href={paths.snapcopy}
-      image={captionAiProduct.assets.icon}
-      imageAlt="SnapCopy app icon"
-      imageVariant="icon"
-      cta={copy.snapcopyCta}
-      kicker={copy.snapcopyKicker}
-    />
-    <ProductCard
-      title={lang === 'zh-Hans' || lang === 'zh-Hant' ? '花有數' : 'MindBudget'}
-      description={copy.mindBudgetDescription}
-      href={paths.mindBudget}
-      image={mindBudgetProduct.assets.icon}
-      imageAlt="MindBudget app icon"
-      imageVariant="icon"
-      cta={copy.mindBudgetCta}
-      secondaryHref={paths.mindBudgetDownload}
-      secondaryCta={copy.mindBudgetDownloadCta}
-      kicker={copy.mindBudgetKicker}
-    />
-    <ProductCard
-      title="NovelForge AI"
-      description={copy.novelForgeDescription}
-      href={paths.novelForge}
-      image={novelForgeAiProduct.assets.icon}
-      imageAlt="NovelForge AI app icon"
-      imageVariant="icon"
-      cta={copy.novelForgeCta}
-      secondaryHref={paths.novelForgeDownload}
-      secondaryCta={copy.novelForgeDownloadCta}
-      kicker={copy.novelForgeKicker}
-    />
-    <ProductCard
-      title="猫栈拼音"
-      description={copy.privatePinyinDescription}
-      href={paths.privatePinyin}
-      image={privatePinyinProduct.assets.icon}
-      imageAlt="猫栈拼音 app icon"
-      imageVariant="icon"
-      cta={copy.privatePinyinCta}
-      secondaryHref={paths.privatePinyinDownload}
-      secondaryCta={copy.privatePinyinDownloadCta}
-      kicker={copy.privatePinyinKicker}
-    />
-    <ProductCard
-      title="SimpleCut Pro"
-      description={copy.simplecutDescription}
-      href={paths.simplecut}
-      image={simpleCutProProduct.assets.icon}
-      imageAlt="SimpleCut Pro app icon"
-      imageVariant="icon"
-      cta={copy.simplecutCta}
-      secondaryHref={paths.simplecutDownload}
-      secondaryCta={copy.simplecutDownloadCta}
-      kicker={copy.simplecutKicker}
-    />
-    <ProductCard
-      title="NodePilot"
-      description={copy.anytlsDescription}
-      href={paths.anytls}
-      image={anyTlsDesktopManagerProduct.assets.icon}
-      imageAlt="NodePilot app icon"
-      imageVariant="icon"
-      cta={copy.anytlsCta}
-      kicker={copy.anytlsKicker}
-    />
+  <section id="more-apps" aria-labelledby="apps-more"><div class="apps-section-heading"><div><h2 id="apps-more">{ui.more}</h2><p>{ui.moreIntro}</p></div></div>
+   <div class="apps-more-grid">{moreApps.map(app => <article class="apps-small-card"><a class="apps-small-main" href={app.href}><img src={app.icon} width="72" height="72" alt="" loading="lazy"/><div><h3>{app.title}</h3><p>{app.description}</p><div class="apps-tags">{app.tags.map(tag=><span>{tag}</span>)}</div></div><span class="apps-arrow"><ArrowRight size={16}/></span></a><div class="apps-release"><span>{app.status}</span><a href={app.secondaryHref}>{app.secondaryCta}<ArrowRight size={13}/></a></div></article>)}</div>
   </section>
+  <section class="apps-contact" aria-labelledby="apps-contact-title"><img src="/images/apps-daylight/banner.webp" width="1536" height="370" alt="" loading="lazy"/><div><p class="apps-eyebrow">SMALL TOOLS. BIGGER POSSIBILITIES.</p><h2 id="apps-contact-title">{ui.contactHeading}</h2><p>{ui.contactIntro}</p><div class="apps-contact-actions"><a href={`mailto:${siteConfig.supportEmail}`} class="apps-button"><Mail size={17}/>{ui.contact}</a><a href={siteConfig.xUrl} target="_blank" rel="noopener noreferrer" class="apps-button apps-button-light"><Rss size={17}/>{ui.follow}</a></div></div></section>
+ </div>
 </BaseLayout>
