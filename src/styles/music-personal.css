@@ -2,7 +2,7 @@
 .station-music-player { --music-accent-soft: #e8efea; }
 .station-music-local-data button, .station-music-lyrics button {
   display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .625rem .875rem;
-  color: var(--music-ink); background: #fffdf9; border: 1px solid var(--music-line); border-radius: .5rem;
+  color: var(--music-ink); background: var(--music-control-bg, #fffdf9); border: 1px solid var(--music-line); border-radius: .5rem;
 }
 .station-music-local-data { margin-block: .5rem; color: var(--music-muted); font-size: .875rem; }
 .station-music-local-data summary { width: fit-content; padding-block: .625rem; cursor: pointer; }
@@ -24,7 +24,7 @@
 .station-music-lyrics-content [aria-current='true'] { color: var(--music-accent); border-left-color: var(--music-accent); background: var(--music-accent-soft); font-weight: 700; }
 .station-music-lyrics button { margin-top: .75rem; }
 .station-music-link-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
-.station-music-link-actions button { display: inline-flex; align-items: center; gap: .375rem; padding: .625rem .75rem; border: 1px solid var(--music-line); border-radius: .5rem; color: var(--music-ink); background: #fffdf9; }
+.station-music-link-actions button { display: inline-flex; align-items: center; gap: .375rem; padding: .625rem .75rem; border: 1px solid var(--music-line); border-radius: .5rem; color: var(--music-ink); background: var(--music-control-bg, #fffdf9); }
 .station-music-link-actions p { width: 100%; margin: 0; font-size: .875rem; }
 .station-music-link-actions input { width: 100%; min-width: 0; padding: .625rem; }
 @media (max-width: 48rem) {
@@ -35,6 +35,6 @@
 
 .station-music-player[data-library] [data-collection-share] { margin: .75rem 0 1rem; gap: .5rem; }
 .station-music-player[data-library] [data-collection-share] button { border-radius: 999px; font-size: .875rem; color: var(--music-accent); }
-.station-music-player[data-library] [data-collection-share] [data-share-music] { background: var(--music-accent); border-color: transparent; color: white; padding-inline: 1.125rem; }
+.station-music-player[data-library] [data-collection-share] [data-share-music] { background: var(--music-accent); border-color: transparent; color: var(--music-accent-ink, white); padding-inline: 1.125rem; }
 .station-music-player[data-library] [data-collection-share] [data-copy-music] { background: transparent; border-color: transparent; }
 .station-music-player[data-library] [data-collection-share] p:empty { display: none; }

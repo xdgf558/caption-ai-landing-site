@@ -2,6 +2,8 @@
 body.station-music-page {
   color-scheme: dark; --bg:#101417; --ink:#f2f0eb; --muted:#a5a9ac; --line:#343b40; --teal:#f1c27c;
   --music-bg:#181d21; --music-ink:#f2f0eb; --music-muted:#a5a9ac; --music-line:#343b40; --music-accent:#f1c27c;
+  --music-control-bg:#252c31; --music-control-hover:#343d44; --music-selected-bg:#393126; --music-accent-ink:#171a1d; --music-primary-hover:#f5d39a;
+  --music-surface:#20272b; --music-border:#343b40;
   background:#101417; color:var(--ink); background-image:none;
 }
 .station-music-page .site-header {position:relative;top:auto;background:#101316;border-bottom:1px solid #353a3f;backdrop-filter:none;z-index:45;}
@@ -266,3 +268,23 @@ body.station-music-page {
 .station-music-page .station-music-list-heading {justify-content:flex-start;gap:14px;}
 .station-music-page .station-music-list-heading [data-library-count] {margin:0;font-size:11px;color:#989fa4;}
 .station-music-page .station-music-list-heading .station-music-queue-tools {margin-left:auto;}
+
+/* Shared controls inherit the night palette, including native dialog contents. */
+.station-music-page .skip-link {background:var(--music-accent);color:var(--music-accent-ink);}
+.station-music-page .station-music-player[data-library] .station-music-filter-toggle {background:var(--music-control-bg);color:var(--music-accent);}
+.station-music-page .station-music-now-dialog :is(.station-music-now-repeat,.station-music-now-queue-footer) {color:#b9bec0;}
+.station-music-page .station-music-now-dialog .station-music-now-repeat[data-active='true'] {color:var(--music-accent);}
+.station-music-page .station-music-queue-tools button:is([aria-pressed='true'],[data-active='true']) {background:var(--music-selected-bg);color:var(--music-accent);border-color:var(--music-accent);}
+.station-music-page .station-music-queue-row[data-current='true'] {box-shadow:inset 3px 0 var(--music-accent);}
+.station-music-page .station-music-queue-row[data-current='true'] .station-music-queue-pick strong {color:var(--music-accent);}
+.station-music-page .station-music-player :is(.station-music-share-dialog,.station-music-queue-dialog) :is(button,a[data-card-save],a[data-card-x]) {border-radius:12px;}
+.station-music-page .station-music-player :is(.station-music-share-heading,.station-music-queue-heading) > button {border-radius:50%;background:transparent;color:var(--music-ink);}
+.station-music-page .station-music-player :is(.station-music-share-dialog,.station-music-queue-dialog) button:disabled {opacity:1;color:#838c93;background:#20262b;border-color:#353d43;}
+.station-music-page .station-music-share-options input {background:var(--music-control-bg);color:var(--music-ink);}
+.station-music-page .station-music-player[data-panel-input='pointer'] dialog :is(button,a):focus:not(:focus-visible),
+.station-music-page .station-music-player[data-panel-input='pointer'] dialog [autofocus]:focus {outline:none;}
+@media (hover:hover) {
+ .station-music-page .station-music-share-dialog :is(button,a[data-card-x]):hover:not(:disabled),
+ .station-music-page .station-music-queue-dialog button:hover:not(:disabled) {background:var(--music-control-hover);border-color:var(--music-accent);}
+ .station-music-page .station-music-share-dialog a[data-card-save]:hover {background:var(--music-primary-hover);}
+}
