@@ -9,6 +9,7 @@
     color: #252824; --music-accent: #345c51;
   }
   .station-music-now-dialog [data-now-target] { min-height: 100%; }
+  .station-music-player[data-library] .station-music-now-dialog::backdrop { background: #fffaf3; }
   .station-music-player[data-library] .station-music-now-dialog .station-music-dock {
     position: static; inset: auto; width: 100%; max-width: 30rem; min-height: 100dvh; max-height: none; overflow: visible;
     margin: auto; padding: calc(.5rem + env(safe-area-inset-top, 0px)) 1.5rem calc(1.5rem + env(safe-area-inset-bottom, 0px));

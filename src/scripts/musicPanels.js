@@ -55,7 +55,34 @@ export function mountMusicPanels(root, { host = window } = {}) {
   const nav = doc.querySelector('[data-music-nav-content]'), navHome = nav?.parentElement;
   const previous = $('[data-previous]'), next = $('[data-next]'), transport = previous.parentElement;
   const openers = new Map();
-  let active = null, oldOverflow = null, oldRootOverflow = null, disposed = false;
+  let active = null, unlockPage = null, disposed = false;
+  const lockPage = () => {
+    if (unlockPage) return;
+    const x = host.scrollX, y = host.scrollY;
+    const saved = [];
+    const set = (style, property, value) => {
+      saved.push([style, property, style.getPropertyValue(property), style.getPropertyPriority(property)]);
+      style.setProperty(property, value);
+    };
+    set(doc.documentElement.style, 'overflow', 'hidden');
+    set(doc.body.style, 'overflow', 'hidden');
+    // iOS can still pan the document behind a modal with overflow alone.
+    // Keep the same lock while moving between player, lyrics, queue and share.
+    const fixed = mobile.matches;
+    if (fixed) {
+      set(doc.body.style, 'position', 'fixed');
+      set(doc.body.style, 'top', `${-y}px`);
+      set(doc.body.style, 'left', `${-x}px`);
+      set(doc.body.style, 'width', '100%');
+    }
+    unlockPage = () => {
+      for (const [style, property, value, priority] of saved.reverse()) {
+        if (value) style.setProperty(property, value, priority); else style.removeProperty(property);
+      }
+      if (fixed) host.scrollTo({ left: x, top: y, behavior: 'instant' });
+      unlockPage = null;
+    };
+  };
   const toggles = { now: '[data-now-toggle]', detail: '[data-detail-toggle]', filter: '[data-filter-toggle]', queue: '[data-queue-toggle]', menu: '[data-music-menu-toggle]', share: '[data-share-music="track"]' };
   const focusable = node => node?.isConnected && !node.disabled && node.getClientRects().length && !node.closest('[inert]');
   const restore = kind => {
@@ -80,10 +107,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
       doc.querySelectorAll(toggles[last]).forEach(node => node.setAttribute('aria-expanded', 'false'));
     }
     if (kind) {
-      if (oldOverflow === null) {
-        oldOverflow = doc.body.style.overflow; doc.body.style.overflow = 'hidden';
-        oldRootOverflow = doc.documentElement.style.overflow; doc.documentElement.style.overflow = 'hidden';
-      }
+      lockPage();
       active = kind;
       if (kind === 'detail') $('[data-detail-dock]').append(dock);
       if (kind === 'now') {
@@ -94,10 +118,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
       dialogs[kind].querySelector('[autofocus]')?.focus({ preventScroll: true });
       doc.querySelectorAll(toggles[kind]).forEach(node => node.setAttribute('aria-expanded', 'true'));
     } else {
-      if (oldOverflow !== null) {
-        doc.body.style.overflow = oldOverflow; oldOverflow = null;
-        doc.documentElement.style.overflow = oldRootOverflow; oldRootOverflow = null;
-      }
+      unlockPage?.();
       if (last) restore(last);
     }
     root.dataset.activePanel = active || '';

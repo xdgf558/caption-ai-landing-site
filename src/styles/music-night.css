@@ -184,7 +184,8 @@ body.station-music-page {
  .station-music-page .station-music-detail {padding:12px 18px 24px;}
  .station-music-page .station-music-detail-sheet {bottom:var(--music-dock-height,0px);}
  .station-music-page .station-music-player[data-library] .station-music-now-dialog {background:#141a1f;color:#eee;--music-accent:#f1c27c;}
- .station-music-page .station-music-player[data-library] .station-music-now-dialog .station-music-dock {background:transparent;border:0;border-radius:0;padding:12px 22px;}
+ .station-music-page .station-music-player[data-library] .station-music-now-dialog::backdrop {background:#141a1f;}
+ .station-music-page .station-music-player[data-library] .station-music-now-dialog .station-music-dock {background:transparent;border:0;border-radius:0;padding:calc(12px + env(safe-area-inset-top,0px)) 22px calc(12px + env(safe-area-inset-bottom,0px));}
  .station-music-page .station-music-player[data-library] .station-music-now-dialog .station-music-dock-inner {grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;}
  .station-music-page .station-music-now-dialog [data-mini-creator],.station-music-page .station-music-now-dialog .station-music-step,.station-music-page .station-music-now-dialog .station-music-dock-queue {color:#c6c9c9;}
  .station-music-page .station-music-now-dialog [data-mini-access] {background:#393226;color:#f1c27c;}
