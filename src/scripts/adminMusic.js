@@ -45,7 +45,7 @@ const errorMessages = {
   MUSIC_PUBLICATION_CONFLICT:'发布版本已变化，请重新载入核对。', MUSIC_REVIEW_STALE:'草稿已变化，请重新进行技术核对；如保留权利通过结论，也需重新核对该结论。',
   RIGHTS_REVIEW_REQUIRED:'权利资料不完整，请核对来源、日期、授权说明和凭证。',
   RIGHTS_EXCEPTION_REQUIRED:'此作品需要例外授权依据及对应凭证。', MUSIC_RIGHTS_BLOCKED:'此曲目被明确标记为不通过，请先处理该结论。', PREVIEW_REQUIRED:'VIP 或抢先作品必须提供独立试听文件。',
-  MUSIC_FREE_PROMISE_PROTECTED:'已向公众开放免费的作品不能改为付费收听。',
+  MUSIC_FREE_UNTIL_NOT_FUTURE:'免费截止时间必须晚于当前时间。', MUSIC_FREE_PROMISE_PROTECTED:'已向公众开放免费的作品不能改为付费收听。',
   MUSIC_STORAGE_QUOTA:'存储配额不足；失败和过期上传仍占用额度。', MUSIC_UPLOADS_DISABLED:'上传尚未开放。',
   MUSIC_UPLOADS_NOT_CONFIGURED:'上传配额或迁移尚未配置。', MUSIC_ASSET_REFERENCE:'素材与当前曲目或原曲不匹配。',
   UPLOAD_EXPIRED:'上传会话已过期；预留额度尚未回收。', UPLOAD_REJECTED:'文件已被拒绝，预留额度尚未回收。',
@@ -83,6 +83,7 @@ function sync() {
   $('audit-open').disabled = busy || !service; $('audit-next').disabled = busy;
   all('[data-resume-upload]').forEach(e => { e.disabled = blocked; });
   $('save-reason-label').hidden = !track; $('save-reason').required = !!track;
+  $('limited-free-options').hidden=value('access-mode')!=='limited_free';$('free-until').required=value('access-mode')==='limited_free';
   $('early-options').hidden = value('access-mode') !== 'early_access';
   $('early-until').required = value('access-mode') === 'early_access';
   $('track-version').textContent = unsaved ? '有未保存修改' : track ? '编辑版本 ' + track.editVersion : '未保存';
@@ -163,7 +164,7 @@ function fill(row) {
   $('track-story').value = m?.story || '';
   all('[data-title-locale]').forEach(e => e.value = m?.title?.[e.dataset.titleLocale] || '');
   all('[data-summary-locale]').forEach(e => e.value = m?.summary?.[e.dataset.summaryLocale] || '');
-  $('access-mode').value = r?.policy.accessMode || 'vip'; $('early-until').value = localTime(r?.policy.earlyAccessUntil);
+  $('free-until').value=localTime(r?.policy.freeUntil);$('access-mode').value = r?.policy.accessMode || 'vip'; $('early-until').value = localTime(r?.policy.earlyAccessUntil);
   $('post-early').value = r?.policy.postEarlyAccessMode || 'vip';
   all('[data-right]').forEach(e => { const v = row?.rights?.review?.[e.dataset.right]; e.value = e.type === 'datetime-local' ? localTime(v) : v || ''; });
   $('rights-decision').value = row?.rights?.status || 'pending';
@@ -229,7 +230,7 @@ function metadata() {
 }
 async function saveDraft(assetOnly = false) {
   const meta = assetOnly ? revision().metadata : metadata();
-  const policy = assetOnly ? revision().policy : policyForSave(value('access-mode'),value('early-until'),value('post-early'),track?.published?.policy);
+  const policy = assetOnly ? revision().policy : policyForSave(value('access-mode'),value(value('access-mode')==='limited_free'?'free-until':'early-until'),value('post-early'),track?.published?.policy);
   const input = { slug:track?.published ? track.slug : value('track-slug'),metadata:meta,policy,assets };
   if (track) Object.assign(input,{ revisionId:revision().id,reason:assetOnly ? '更新曲目素材' : value('save-reason') });
   await mutate(track ? '/tracks/' + track.id : '/tracks',track ? 'PATCH' : 'POST',input,'draft');
@@ -353,7 +354,7 @@ $('technical-form').onsubmit = e => { e.preventDefault(); run(async () => {
 }); };
 for (const action of ['publish','unpublish','archive']) $('track-' + action).onclick = () => run(async () => {
   const label = { publish:'发布',unpublish:'下架',archive:'归档' }[action];
-  const confirm = await ask(label + '曲目？',$('track-heading').textContent + ' · ' + ({ free:'免费精选',vip:'VIP 专享',early_access:'VIP 抢先听' })[revision()?.policy.accessMode] +
+  const confirm = await ask(label + '曲目？',$('track-heading').textContent + ' · ' + ({ free:'免费精选',vip:'VIP 专享',limited_free:'限时免费，到期恢复 VIP',early_access:'VIP 抢先听' })[revision()?.policy.accessMode] +
     (action === 'archive' ? '。归档后本工作区不提供恢复操作。' : action === 'publish' ? '。将封存当前审核版本；不改变公开入口开关。' : '。将停止公开展示此曲目。'),action !== 'publish');
   if (!confirm) return;
   // Publication still records the explicit action; no handwritten note is required.

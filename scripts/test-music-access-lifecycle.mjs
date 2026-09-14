@@ -263,3 +263,16 @@ test('a stale access denial cannot affect a new failed attempt on the same sourc
   second.resolve(f.response(200, f.model.accessBody)); await flush();
   assert.equal(f.player.snapshot().activeTrackId, song(2).id);
 });
+
+
+test('limited-free expiry unloads anonymous full and stale catalog cannot restart it or create a timer loop',async t=>{
+ const f=setup(t);f.model.active=false;f.model.tracks=[{...song(1,'free'),freeUntil:new Date(baseTime+1000).toISOString()}];
+ await f.lifecycle.refresh('initial');f.play(1);assert.match(f.audio.src,/variant=full/);
+ // Simulate an old response at the boundary; local expiry still fails closed.
+ await f.advance(1000);assert.equal(f.audio.src,'');const plays=f.audio.plays.length;f.play(1);assert.equal(f.audio.plays.length,plays);await flush();
+ assert.equal(f.audio.src,'');assert.ok(f.timers.size<5);assert.ok(f.requests.length<12);
+});
+test('limited-free full requires a usable server clock but ordinary free tracks still play',async t=>{
+ const f=setup(t);f.model.active=false;f.model.capsStatus=503;f.model.tracks=[{...song(1,'free'),freeUntil:new Date(baseTime+1000).toISOString()},song(2,'free')];
+ await f.lifecycle.refresh('initial');f.play(1);assert.equal(f.audio.src,'');f.play(2);assert.match(f.audio.src,/variant=full/);
+});

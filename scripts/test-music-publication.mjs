@@ -19,6 +19,7 @@ function insert(db, table, values) {
 function database() {
   const sql = new DatabaseSync(':memory:'); dbs.push(sql); sql.exec('PRAGMA foreign_keys=ON');
   sql.exec(migration('0001_music_foundation.sql')); sql.exec(migration('0002_music_publication.sql'));
+  for(const name of ['0003_music_uploads.sql','0004_music_cleanup.sql','0005_music_rate_limits.sql','0006_music_analytics.sql','0007_music_albums.sql','0008_music_featured.sql','0009_music_album_covers.sql','0010_music_limited_free.sql'])sql.exec(migration(name));
   const state = { fail: null, skip: null, beforeWrite: null, lose: false, binds: 0 };
   class Statement {
     constructor(query, params = []) { Object.assign(this, { query, params }); }
@@ -471,5 +472,29 @@ test('missing title/summary/tags are publication validation errors, never an unc
     const before = dump(f);
     await assert.rejects(run(f, command(f, ids)), e => e.status === 422 && ['MUSIC_INVALID_METADATA', 'MUSIC_INVALID_PUBLICATION'].includes(e.code));
     assert.deepEqual(dump(f), before);
+  }
+});
+
+
+test('limited free is included in fingerprints, deadline guards and sealed revision immutability',async()=>{
+ const f=database(),ids=await seed(f),end=Date.now()+60000;
+ f.sql.prepare('UPDATE music_track_revisions SET free_until=? WHERE id=?').run(end,ids.revisionId);await stamp(f,ids);
+ const input=command(f,ids);await run(f,input);
+ const s=snapshot(f,ids);assert.equal(projectPublicTrack(s,{locale:'en',now:end-1}).effectiveAccess,'free');assert.equal(projectPublicTrack(s,{locale:'en',now:end}).effectiveAccess,'vip');
+ assert.throws(()=>f.sql.prepare('UPDATE music_track_revisions SET free_until=? WHERE id=?').run(end+1000,ids.revisionId),/MUSIC_SEALED_REVISION/);
+});
+
+test('limited-free deadline and concurrent deadline edits are checked again inside publication transaction', async () => {
+  for(const racingEdit of [false,true]) {
+    const f=database(), ids=await seed(f), end=Date.now()+60000;
+    f.sql.prepare('UPDATE music_track_revisions SET free_until=? WHERE id=?').run(end,ids.revisionId);await stamp(f,ids);
+    const input=command(f,ids), before=dump(f);
+    f.state.beforeWrite=()=>{
+      if(racingEdit) f.sql.prepare('UPDATE music_track_revisions SET free_until=? WHERE id=?').run(end+1000,ids.revisionId);
+      else f.sql.function('julianday',value=>{assert.equal(value,'now');return 2440587.5+(end+100)/86400000;});
+    };
+    await rejects(run(f,input),'MUSIC_PUBLICATION_CONFLICT');
+    if(!racingEdit)assert.deepEqual(dump(f),before);
+    assert.equal(snapshot(f,ids).track.lifecycle,'draft');
   }
 });

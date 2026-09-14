@@ -31,11 +31,26 @@ export function createMusicAccessLifecycle(player, queue, {
   onCatalog = () => {}, onChange = () => {}, onCatalogError = () => {}, getSelection = () => ({})
 } = {}) {
   if (mounts.has(player)) return mounts.get(player);
+  let policyTimer=null, serverClock=null;
   let tracks = [], capabilities = null, deadline = null, timer = null, epoch = 0, disposed = false;
   let pending = null, checkingAccess = false, changingAccount = false, savedFullPosition = null, denial = null;
   let mediaRequest = null, mediaKey = '', refreshVersion = 0;
   let catalogVersion = 0, browsing = null;
   const requests = new Set(), invalidVersions = new Set();
+  const promotionExpired = track => !!track?.freeUntil && (!serverClock || Date.parse(track.freeUntil)<=serverClock.server+now()-serverClock.local);
+  const armPromotion = () => {
+    clearTimer(policyTimer);policyTimer=null;
+    if(disposed||!serverClock)return;
+    const ends=tracks.filter(t=>t.effectiveAccess==='free'&&t.freeUntil).map(t=>Date.parse(t.freeUntil)-serverClock.server+serverClock.local);
+    if(!ends.length)return;
+    policyTimer=setTimer(()=>{
+      if(disposed)return;
+      const expired=tracks.some(t=>t.effectiveAccess==='free'&&promotionExpired(t));
+      if(!expired){armPromotion();return;}
+      tracks=tracks.map(t=>t.effectiveAccess==='free'&&promotionExpired(t)?{...t,effectiveAccess:'vip'}:t);
+      queue.updateCatalog(tracks);enforce();void refresh('promotion');
+    },Math.max(1,Math.min(MAX_TIMER,Math.min(...ends)-now())));
+  };
   const activeTrack = () => tracks.find(track => track.id === player.snapshot().activeTrackId);
   const protectedFull = () => player.snapshot().activeVariant === 'full' && activeTrack()?.effectiveAccess !== 'free';
   const snapshot = () => ({ capabilities: capabilities ? { ...capabilities } : null, checking: checkingAccess,
@@ -73,7 +88,7 @@ export function createMusicAccessLifecycle(player, queue, {
   };
   const applyCatalog = (values, collections, view, resetUnavailable) => {
     const state = player.snapshot(), old = activeTrack();
-    tracks = values;
+    tracks = values.map(t=>serverClock&&t.effectiveAccess==='free'&&promotionExpired(t)?{...t,effectiveAccess:'vip'}:t);armPromotion();
     onCatalog(tracks, collections, view);
     queue.updateCatalog(tracks, { resetUnavailable });
     const current = activeTrack();
@@ -125,6 +140,7 @@ export function createMusicAccessLifecycle(player, queue, {
         throw new Error('CAPABILITIES_UNAVAILABLE');
       }
       const value = readPlayerCapabilities(result.body, now() - started);
+      serverClock={server:Date.parse(value.serverNow),local:started};armPromotion();
       publishCapabilities(value);
       if (value.membershipStatus === 'active') { deadline = now() + value.remaining; armExpiry(); }
     }).catch(() => { if (!disposed && epoch === currentEpoch) publishCapabilities(null); });
@@ -165,7 +181,8 @@ export function createMusicAccessLifecycle(player, queue, {
     const track = activeTrack();
     if (!track || invalidVersions.has(`${state.activeTrackId}:${state.activeAudioVersion}`)) return contentError;
     if (state.activeVariant === 'preview') return track.previewAvailable ? null : contentError;
-    if (track.effectiveAccess === 'free') return null;
+    if (track.effectiveAccess === 'free' && !promotionExpired(track)) return null;
+    if (track.effectiveAccess === 'free' && promotionExpired(track)) { void refresh('promotion'); return checking; }
     if (deadline !== null && deadline <= now()) {
       publishCapabilities(null); cancelExpiry(); void refresh('expiry');
       return checking;
@@ -223,7 +240,7 @@ export function createMusicAccessLifecycle(player, queue, {
   player.setPlayGuard(guard); queue.setErrorHandler(playbackError);
   const api = { snapshot, refresh, browse, accountChanged, destroy() {
     if (disposed) return;
-    disposed = true; epoch++; cancelExpiry(); abortReads(); unsubscribe(); unwatch();
+    disposed = true; epoch++; clearTimer(policyTimer); cancelExpiry(); abortReads(); unsubscribe(); unwatch();
     document?.removeEventListener('visibilitychange', foreground); host.removeEventListener('focus', foreground); host.removeEventListener('pageshow', pageshow);
     player.setPlayGuard(null); queue.setErrorHandler(null); capabilities = null; savedFullPosition = null; mounts.delete(player);
   } };

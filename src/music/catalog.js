@@ -97,6 +97,7 @@ function publicTrack(record, locale, now) {
     accessMode: policy.accessMode, effectiveAccess: policy.effectiveAccess, policyVersion: policy.policyVersion,
     previewAvailable: preview !== null, previewDurationSec: preview ? preview.duration_ms / 1000 : null,
     previewSourceStartSec: preview ? preview.source_start_ms / 1000 : null,
+    ...(policy.accessMode==='limited_free'?{freeUntil:policy.freeUntil}:{}),
     earlyAccessUntil: policy.earlyAccessUntil, postEarlyAccessMode: policy.postEarlyAccessMode,
     publishedAt, nextPolicyChangeAt: policy.nextPolicyChangeAt };
 }

@@ -1,5 +1,5 @@
 // Synthetic metadata for isolated SQL tests; never a publication/rights approval.
-export async function seedAnalyticsTrack(db,{now=Date.now(),accessMode='vip'}={}) {
+export async function seedAnalyticsTrack(db,{now=Date.now(),accessMode='vip',freeUntil=null}={}) {
   const id=crypto.randomUUID(), revision=crypto.randomUUID(), audio=crypto.randomUUID(), preview=crypto.randomUUID();
   const insert=async (table,values)=>{
     const keys=Object.keys(values);
@@ -12,7 +12,7 @@ export async function seedAnalyticsTrack(db,{now=Date.now(),accessMode='vip'}={}
       ...(kind==='preview' ? {derived_from_asset_id:audio,source_start_ms:0,source_end_ms:30000} : {})});
   }
   await insert('music_track_revisions',{id:revision,track_id:id,revision_no:1,state:'sealed',metadata_json:'{}',
-    audio_asset_id:audio,preview_asset_id:preview,access_mode:accessMode,created_at:now-15000,
+    audio_asset_id:audio,preview_asset_id:preview,access_mode:accessMode,...(freeUntil===null?{}:{free_until:freeUntil}),created_at:now-15000,
     technical_reviewed_at:now-12000,technical_fingerprint:'b'.repeat(64)});
   await db.prepare("UPDATE music_tracks SET lifecycle='published',published_revision_id=?,first_published_at=?,published_at=? WHERE id=?")
     .bind(revision,now-10000,now-10000,id).run();

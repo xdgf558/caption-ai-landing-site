@@ -18,7 +18,7 @@ let mf, db, bucket;
 function migrationStatements() {
   const parser = new DatabaseSync(':memory:'), migrations = [];
   try {
-    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql', '0008_music_featured.sql', '0009_music_album_covers.sql']) {
+    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql', '0008_music_featured.sql', '0009_music_album_covers.sql', '0010_music_limited_free.sql']) {
       const statements = [];
       let remaining = file(`migrations-music/${name}`).toString();
       while (remaining.trim()) {
@@ -74,10 +74,10 @@ async function putFixture(name, kind = 'audio', owner = randomUUID()) {
   return { id, owner_track_id: owner, kind, object_key: key, state: 'validated', format: 'mp3',
     content_type: 'audio/mpeg', byte_size: f.bytes, duration_ms: f.packetDurationMs, sha256: f.sha256, etag: object.etag };
 }
-async function seed(accessMode = 'vip') {
+async function seed(accessMode = 'vip', freeUntil = null) {
   const audio = await putFixture('cbr-stereo.mp3'), preview = await putFixture('preview.mp3', 'preview', audio.owner_track_id);
   Object.assign(preview, { derived_from_asset_id: audio.id, source_start_ms: 0, source_end_ms: 1000 });
-  const response = await call('/seed', { audio, preview, accessMode }); assert.equal(response.status, 200, JSON.stringify(response));
+  const response = await call('/seed', { audio, preview, accessMode, freeUntil }); assert.equal(response.status, 200, JSON.stringify(response));
   return { command: response.body, audio, preview };
 }
 async function dump() {
@@ -102,6 +102,8 @@ test('missing schema is 503; actual migrations on local D1 enable primary readin
   assert.ok((await db.batch(migrations[7].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.equal((await call('/database')).body.code, 'MUSIC_DATABASE_UNAVAILABLE');
   assert.ok((await db.batch(migrations[8].map(sql => db.prepare(sql)))).every(r => r.success));
+  assert.equal((await call('/database')).body.code, 'MUSIC_DATABASE_UNAVAILABLE');
+  assert.ok((await db.batch(migrations[9].map(sql => db.prepare(sql)))).every(r => r.success));
   const probe = await call('/database'); assert.equal(probe.status, 200, JSON.stringify(probe));
   assert.equal(probe.body.catalogVersion, 0); assert.equal(probe.body.previewLimitMs, 45000);
   assert.deepEqual(probe.body.flags, { public: false, uploads: false, vipDelivery: false, analytics: false });
@@ -769,4 +771,19 @@ test('independent album cover upload retains quota, recovers one writer, and ser
   await assert.rejects(db.prepare('DELETE FROM music_collection_upload_sessions WHERE id=?').bind(uid).run());
   await assert.rejects(db.prepare("UPDATE music_collection_assets SET etag='changed' WHERE id=?").bind(assetId).run());
   assert.deepEqual((await db.prepare('PRAGMA foreign_key_check').all()).results,[]);
+});
+
+test('limited free expires on real D1/R2 full and Range requests, without a scheduled write', async () => {
+  const end = Date.now() + 5000, { command } = await seed('vip', end);
+  const published = await call('/publish', command); assert.equal(published.status, 200, JSON.stringify(published));
+  let response = await mediaCall(command.trackId, 'full', { headers: { Range: 'bytes=0-1' } });
+  assert.equal(response.status, 206); assert.equal((await response.arrayBuffer()).byteLength, 2);
+  const stored = await db.prepare('SELECT access_mode,free_until FROM music_track_revisions WHERE id=?').bind(command.revisionId).first();
+  assert.deepEqual(stored, {access_mode:'vip',free_until:end});
+  await new Promise(resolve => setTimeout(resolve, Math.max(1, end - Date.now() + 10)));
+  for (const options of [{}, {method:'HEAD'}, {headers:{Range:'bytes=0-1'}}]) {
+    response = await mediaCall(command.trackId, 'full', options); assert.equal(response.status, 401); await response.arrayBuffer();
+  }
+  response = await mediaCall(command.trackId, 'preview'); assert.equal(response.status, 200); await response.arrayBuffer();
+  assert.deepEqual(await db.prepare('SELECT access_mode,free_until FROM music_track_revisions WHERE id=?').bind(command.revisionId).first(), stored);
 });

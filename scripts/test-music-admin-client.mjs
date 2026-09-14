@@ -64,3 +64,12 @@ test('admin shell remains private, explicit publish and no unsupported entrypoin
   assert.doesNotMatch(client,/innerHTML|localStorage|canPlayFull/);
   assert.match(client,/confirmedPolicyVersion/); assert.match(client,/actorId !== actor/);
 });
+
+test('limited-free editor preserves the deadline and versions actual policy changes', () => {
+  const end = '2099-01-01T12:30:00.000Z';
+  const first = policyForSave('limited_free', end, null, null);
+  assert.equal(first.freeUntil, end); assert.equal(first.policyVersion, 1);
+  assert.deepEqual(policyForSave('limited_free', end, null, first), first);
+  assert.equal(policyForSave('limited_free', '2099-02-01T12:30:00.000Z', null, first).policyVersion, 2);
+  assert.equal(policyForSave('vip', '', null, first).freeUntil, undefined);
+});

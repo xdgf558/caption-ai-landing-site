@@ -75,7 +75,7 @@ function catalogVersion(row) {
 }
 
 const TRACK_SELECT = `SELECT t.id AS track_id,t.slug,t.lifecycle,t.published_revision_id,t.published_at,r.metadata_json,
-  p.track_id AS published_track_id,p.state AS published_state,p.access_mode,p.early_access_until,p.post_early_access_mode,p.policy_version,
+  p.track_id AS published_track_id,p.state AS published_state,p.access_mode,p.free_until,p.early_access_until,p.post_early_access_mode,p.policy_version,
   CASE WHEN a.id IS NOT NULL AND a.state='validated' AND a.kind='cover' AND a.owner_track_id=t.id THEN 1 ELSE 0 END AS published_cover_valid
   FROM music_tracks t LEFT JOIN music_track_revisions r ON r.id=COALESCE(t.draft_revision_id,t.published_revision_id)
   LEFT JOIN music_track_revisions p ON p.id=t.published_revision_id

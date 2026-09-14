@@ -49,7 +49,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const queueControls = mountMusicQueueControls(root, { queue, player, getVisibleTracks: () => visibleTracks, getAllTracks: () => tracks, panels });
   const listen = (target, event, callback) => target.addEventListener(event, callback, { signal: abort.signal });
   const setText = (selector, text) => { const node = $(selector); if (node.textContent !== text) node.textContent = text; };
-  const permission = track => track.effectiveAccess === 'free' ? t('免费完整收听')
+  const permission = track => track.effectiveAccess === 'free' ? track.freeUntil ? t('限时免费至 {time}，之后 VIP 专享', {time:new Date(track.freeUntil).toLocaleString(locale)}) : t('免费完整收听')
     : playerVariant(track, capabilities) === 'full' ? t('VIP 完整收听') : track.previewAvailable ? t('VIP · 可试听') : t('VIP · 暂无试听');
   const setImage = (node, url) => {
     if (!url) { node.hidden = true; node.removeAttribute('src'); return; }

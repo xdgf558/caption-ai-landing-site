@@ -22,7 +22,7 @@ export function musicRolePreview(row, flags, {
   if (!r) throw new Error('ROLE_PREVIEW_NO_REVISION');
   if (!validId(r.id) || !Number.isSafeInteger(r.number) || r.number < 1 ||
     r.state !== (revision === 'draft' ? 'draft' : 'sealed') || !Array.isArray(row.assets) || row.assets.length > 18) invalid();
-  const now = at === 'boundary' ? utcMillis(r.policy?.earlyAccessUntil) : readAt;
+  const now = at === 'boundary' ? utcMillis(r.policy?.accessMode === 'limited_free' ? r.policy.freeUntil : r.policy?.earlyAccessUntil) : readAt;
   const policy = effectivePolicy(r.policy, now), m = r.metadata;
   if (!MUSIC_LOCALES.includes(m?.originalLocale)) invalid();
   const translated = (values, max, required = false) => {

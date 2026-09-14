@@ -23,7 +23,8 @@ export async function hashFile(file, progress = () => {}) {
 export function policyForSave(mode, until, after, previous) {
   const candidate = { accessMode: mode, earlyAccessUntil: mode === 'early_access' ? new Date(until).toISOString() : null,
     postEarlyAccessMode: mode === 'early_access' ? after : null, policyVersion: 1 };
-  if (previous) candidate.policyVersion = previous.policyVersion + Number(['accessMode','earlyAccessUntil','postEarlyAccessMode'].some(k => candidate[k] !== previous[k]));
+  if (mode === 'limited_free') candidate.freeUntil = new Date(until).toISOString();
+  if (previous) candidate.policyVersion = previous.policyVersion + Number(['accessMode','earlyAccessUntil','postEarlyAccessMode','freeUntil'].some(k => candidate[k] !== previous[k]));
   return candidate;
 }
 export async function request(path, { method = 'GET', body, key, etag, raw = false, type, timeout = 30000 } = {}) {

@@ -1,6 +1,7 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+限时免费至 {time}，之后 VIP 专享|限時免費至 {time}，之後 VIP 專享|Free until {time}, then VIP only|{time}まで無料、その後はVIP限定
 收起播放器|收起播放器|Minimize player|プレーヤーを閉じる
 查看歌词|查看歌詞|View lyrics|歌詞を見る
 公开音乐入口尚未开放。|公開音樂入口尚未開放。|Public music is not available yet.|音楽の公開はまだ開始されていません。

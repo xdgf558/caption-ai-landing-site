@@ -45,9 +45,9 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
             </div>
             <details><summary>多语言曲名与简介</summary><div class="field-grid">{locales.map(([value, name]) => <div><label>{name} 曲名<input data-title-locale={value} maxlength="120" /></label><label>{name} 简介<input data-summary-locale={value} maxlength="500" /></label></div>)}</div></details>
             <h3>收听范围</h3><div class="field-grid">
-              <label>访问策略<select id="access-mode"><option value="vip">VIP 专享</option><option value="free">免费精选</option><option value="early_access">VIP 抢先听</option></select></label>
+              <label>访问策略<select id="access-mode"><option value="vip">VIP 专享</option><option value="free">免费精选</option><option value="limited_free">限时免费</option><option value="early_access">VIP 抢先听</option></select></label>
               <div id="early-options" class="field-grid full" hidden><label>抢先结束时间（本地时区）<input id="early-until" type="datetime-local" step="1" /></label><label>结束后<select id="post-early"><option value="vip">VIP 专享</option><option value="free">免费精选</option></select></label></div>
-            </div>
+            <div id="limited-free-options" class="full" hidden><label>免费截止时间（本地时区）<input id="free-until" type="datetime-local" step="1" /></label><p>截止后自动恢复 VIP 专享。请选择未来时间；VIP 阶段仍需独立试听。</p></div></div>
             <label id="save-reason-label">修改说明<input id="save-reason" maxlength="1000" /></label>
             <footer class="music-actions"><button id="track-save" class="primary" type="submit"><Save size={17} />保存草稿</button><span id="draft-notice" class="muted">尚未发布</span></footer></fieldset>
           </form>
@@ -111,7 +111,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
               <label for="role-preview-revision">预览版本<select id="role-preview-revision" data-role-revision><option value="draft">已保存草稿</option><option value="published">发布版本</option></select></label>
               <label for="role-preview-locale">内容语言<select id="role-preview-locale" data-role-locale>{locales.map(([value, name]) => <option value={value}>{name}</option>)}</select></label>
               <label for="role-preview-scenario">预览场景<select id="role-preview-scenario" data-role-scenario><option value="current">当前发布状态与开关</option><option value="released">假设发布并开放公开及 VIP 播放</option></select></label>
-              <label for="role-preview-time">策略时刻<select id="role-preview-time" data-role-time><option value="read">服务器读取时</option><option value="boundary" data-role-boundary>抢先结束时（模拟）</option></select></label>
+              <label for="role-preview-time">策略时刻<select id="role-preview-time" data-role-time><option value="read">服务器读取时</option><option value="boundary" data-role-boundary>限时策略结束时（模拟）</option></select></label>
             </div></fieldset>
             <p data-role-flags class="muted"></p><p data-role-notice role="status" class="notice">保存曲目后可预览四种身份的收听界面。</p>
             <div data-role-detail hidden><p data-role-policy></p><div data-role-cards class="role-cards"></div>

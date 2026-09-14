@@ -6,7 +6,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { handleMusicPublic, isMusicPublicPath } from '../src/music/publicHttp.js';
 
 const now = Date.parse('2026-09-11T00:00:00Z');
-const migrations = ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0007_music_albums.sql', '0008_music_featured.sql', '0009_music_album_covers.sql']
+const migrations = ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql', '0008_music_featured.sql', '0009_music_album_covers.sql', '0010_music_limited_free.sql']
   .map(name => readFileSync(new URL(`../migrations-music/${name}`, import.meta.url), 'utf8'));
 const dbs = [];
 afterEach(() => { for (const db of dbs.splice(0)) db.close(); });
