@@ -181,7 +181,7 @@ test('restored positions are discarded on source selection and cannot override a
 });
 
 class Element extends EventTarget {
-  constructor() { super(); this.children=[]; this.hidden=false; this.open=true; this.textContent=''; this.attrs=new Map(); this.offsetTop=0; this.offsetHeight=30; this.clientHeight=100; }
+  constructor() { super(); this.children=[]; this.hidden=false; this.open=true; this.textContent=''; this.attrs=new Map(); this.offsetTop=0; this.offsetHeight=30; this.clientHeight=30; this.scrollHeight=1000; }
   replaceChildren() { this.children=[]; this.textContent=''; }
   append(node) { node.offsetTop=this.children.length*30; this.children.push(node); }
   setAttribute(k,v) { this.attrs.set(k,v); } removeAttribute(k) { this.attrs.delete(k); }

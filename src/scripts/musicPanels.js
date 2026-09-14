@@ -1,3 +1,5 @@
+import { mountMusicPlayerMotion } from './musicPlayerMotion.js';
+
 // Panels own presentation/history only. They never receive an audio, queue or access API.
 export function createMusicPanelHistory(host, onChange) {
   const owner = `music-${Math.random().toString(36).slice(2)}`;
@@ -59,6 +61,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
   const nav = doc.querySelector('[data-music-nav-content]'), navHome = nav?.parentElement;
   const previous = $('[data-previous]'), next = $('[data-next]'), transport = previous.parentElement;
   const openers = new Map();
+  const playerMotion = mountMusicPlayerMotion(root, { host });
   let active = null, unlockPage = null, disposed = false;
   let closingTimer = null;
   const reducedMotion = host.matchMedia('(prefers-reduced-motion: reduce)');
@@ -68,6 +71,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
     closingTimer = null;
     const target = motionTarget(active);
     if (target?.classList.contains('is-closing')) {
+      if (active === 'now') playerMotion.reset();
       target.classList.remove('is-closing'); target.classList.add('is-open');
     }
   };
@@ -115,6 +119,8 @@ export function mountMusicPanels(root, { host = window } = {}) {
     if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches && !desktopPanel(kind)) || (kind === 'detail' && detail.hidden) || (kind === 'now' && dock.hidden)) kind = null;
     if (active === kind) return;
     const last = active;
+    if (kind === 'now') playerMotion.capture();
+    playerMotion.reset();
     if (active) {
       active = null;
       dialogs[last].close();
@@ -138,6 +144,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
         void target.offsetWidth;
         target.classList.add('is-open');
       }
+      if (kind === 'now') playerMotion.open();
       dialogs[kind].querySelector('[autofocus]')?.focus({ preventScroll: true });
       doc.querySelectorAll(toggles[kind]).forEach(node => node.setAttribute('aria-expanded', 'true'));
     } else {
@@ -156,6 +163,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
     const value = host.getComputedStyle(target).getPropertyValue('--modal-close-dur').trim();
     const ms = Number.parseFloat(value) * (value.endsWith('ms') ? 1 : 1000);
     target.classList.remove('is-open'); target.classList.add('is-closing');
+    if (active === 'now') playerMotion.close();
     closingTimer = host.setTimeout(() => {
       closingTimer = null;
       target.classList.remove('is-closing');
@@ -204,8 +212,8 @@ export function mountMusicPanels(root, { host = window } = {}) {
   on(host, 'resize', measure);
   on(host.visualViewport, 'resize', measure);
   adapt();
-  return { open, close, refresh() { if ((active === 'detail' && detail.hidden) || (active === 'now' && dock.hidden)) history.reset(); measure(); }, destroy() {
-    history.destroy(); unlockPage?.(); disposed = true; abort.abort(); observer?.disconnect();
+  return { open, close, setCover: playerMotion.setCover, refresh() { if ((active === 'detail' && detail.hidden) || (active === 'now' && dock.hidden)) history.reset(); measure(); }, destroy() {
+    history.destroy(); playerMotion.destroy(); unlockPage?.(); disposed = true; abort.abort(); observer?.disconnect();
     $('[data-detail-home]').append(detail); $('[data-filter-home]').append(filter);
     if (nav) navHome.append(nav);
     $('[data-main-play]').before(previous); transport.append(next);
