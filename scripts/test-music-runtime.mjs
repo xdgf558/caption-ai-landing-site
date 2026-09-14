@@ -672,7 +672,7 @@ test('native analytics global failure rolls back all admission rows; daily failu
   assert.equal((await send()).status,200);
 });
 
-test('albums publish through native D1 guards, keep VIP audio private and reject a downlisted member',async()=>{
+test('albums publish through native D1 guards, keep VIP audio private and filter downlisted members',async()=>{
   const first=await seed(),second=await seed();
   assert.equal((await call('/publish',first.command)).status,200);
   assert.equal((await call('/publish',second.command)).status,200);
@@ -694,7 +694,12 @@ test('albums publish through native D1 guards, keep VIP audio private and reject
   // not merely check EXISTS(any published member).
   const t=(await adminCall('/tracks/'+second.command.trackId)).body;
   assert.equal((await adminCall('/tracks/'+t.id+'/unpublish','POST',{revisionId:t.published.id,reason:'Downlist member'},{'If-Match':`"edit-${t.editVersion}"`})).status,200);
-  const rejected=await adminCall(path,'PATCH',publishBody,{'If-Match':'"edit-4"'});assert.equal(rejected.status,422);assert.equal(rejected.body.code,'MUSIC_ALBUM_TRACKS_NOT_PUBLISHED');
+  const accepted=await adminCall(path,'PATCH',publishBody,{'If-Match':'"edit-4"'});assert.equal(accepted.status,200);
+  const partial=await publicCall('/collections/'+body.slug+'?locale=en');assert.equal(partial.status,200);assert.deepEqual((await partial.json()).collection.trackIds,[first.command.trackId]);
+  assert.equal((await mediaCall(second.command.trackId,'full')).status,410);
+  const remaining=(await adminCall('/tracks/'+first.command.trackId)).body;
+  assert.equal((await adminCall('/tracks/'+remaining.id+'/unpublish','POST',{revisionId:remaining.published.id,reason:'Metadata-only album'},{'If-Match':`"edit-${remaining.editVersion}"`})).status,200);
+  const empty=await publicCall('/collections/'+body.slug+'?locale=en');assert.equal(empty.status,200);const emptyBody=await empty.json();assert.deepEqual(emptyBody.collection.trackIds,[]);assert.deepEqual(emptyBody.tracks,[]);
 });
 
 test('featured curation uses native D1 CAS and public projection removes a downlisted primary',async()=>{

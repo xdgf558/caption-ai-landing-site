@@ -199,13 +199,13 @@ export async function saveAdminMusicCollection(db, id, input, context) {
     if (current.status==='published' && config.cover_asset_id !== current.cover_asset_id) fail('MUSIC_COLLECTION_UNPUBLISH_FIRST',409);
     checkAlbum(config,snapshot.tracks,now,clean.status === 'published');
     if (current.status === 'published' && clean.status === 'archived') fail('MUSIC_COLLECTION_UNPUBLISH_FIRST', 409);
-    if (clean.status === 'published' && !snapshot.tracks.some(track => track.lifecycle === 'published')) {
+    if (config.collection_type !== 'album' && clean.status === 'published' && !snapshot.tracks.some(track => track.lifecycle === 'published')) {
       fail('MUSIC_COLLECTION_EMPTY');
     }
     const affectsCatalog = current.status === 'published' || clean.status === 'published';
     const guard = snapshotCondition(snapshot, affectsCatalog);
     if (config.collection_type === 'album') guardAlbumTracks(guard,snapshot.tracks);
-    if (clean.status === 'published') {
+    if (config.collection_type !== 'album' && clean.status === 'published') {
       guard.condition += ` AND EXISTS (SELECT 1 FROM music_collection_tracks ct JOIN music_tracks t ON t.id=ct.track_id
         WHERE ct.collection_id=? AND t.lifecycle='published')`;
       guard.params.push(id);
@@ -238,7 +238,7 @@ export async function saveAdminMusicCollectionTracks(db, id, input, context) {
     if (selected.length !== clean.trackIds.length || selected.some(track => track.lifecycle === 'archived')) {
       fail('MUSIC_COLLECTION_TRACK_INVALID');
     }
-    if (current.status === 'published' && !selected.some(track => track.lifecycle === 'published')) {
+    if (current.collection_type !== 'album' && current.status === 'published' && !selected.some(track => track.lifecycle === 'published')) {
       fail('MUSIC_COLLECTION_EMPTY');
     }
     const guard = snapshotCondition(snapshot, current.status === 'published');

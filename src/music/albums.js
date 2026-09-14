@@ -10,8 +10,11 @@ export function albumTrackAccess(track, now) {
 export function checkAlbum(collection, tracks, now, published = collection.status === 'published') {
   if (collectionType(collection) !== 'album') return;
   if (!published) return;
-  if (!tracks.length || tracks.some(t => !albumTrackAccess(t, now))) fail('MUSIC_ALBUM_TRACKS_NOT_PUBLISHED');
-  if (collection.listening_mode !== 'mixed' && tracks.some(t => albumTrackAccess(t, now) !== collection.listening_mode)) fail('MUSIC_ALBUM_POLICY_MISMATCH');
+  if (!tracks.length) fail('MUSIC_COLLECTION_EMPTY');
+  // Album metadata may publish ahead of its songs. Only released members
+  // participate in the listening-range check; this never publishes a track.
+  const released = tracks.map(t => albumTrackAccess(t, now)).filter(Boolean);
+  if (collection.listening_mode !== 'mixed' && released.some(access => access !== collection.listening_mode)) fail('MUSIC_ALBUM_POLICY_MISMATCH');
 }
 
 // Sealed revisions are immutable. Guard the pointer and lifecycle in the same

@@ -161,3 +161,10 @@ test('native asset router cannot serve encoded music HTML before the closed gate
     assert.equal(await (await mf.dispatchFetch('http://localhost/plain.txt')).text(), 'ordinary asset');
   } finally { await mf.dispose(); await rm(directory, { recursive: true, force: true }); }
 });
+
+
+test('metadata-only published album stays browsable with no available tracks',()=>{
+  const album={...group,type:'album',listeningMode:'free',coverTrackId:null,coverUrl:null,trackIds:[]};
+  const groups=readPlayerCollections({collections:[album]},tracks);assert.equal(groups.length,1);assert.deepEqual(groups[0].trackIds,[]);
+  assert.deepEqual(browseMusic(tracks,groups,{mode:'albums',collection:album.slug}),[]);
+});

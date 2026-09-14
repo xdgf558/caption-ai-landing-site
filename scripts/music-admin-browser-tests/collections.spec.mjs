@@ -4,7 +4,7 @@ const unique=()=> 'album-ui-'+crypto.randomUUID();
 async function create(page){await page.goto('/admin/music/collections/');await page.locator('#collection-new-album').click();await page.locator('#collection-slug').fill(unique());await page.locator('[data-collection-title="zh-Hans"]').fill('隔离测试专辑');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 1');}
 async function confirm(page){await page.locator('#collection-confirm-accept').click();}
 
-test('album metadata, keyboard order, reload and failed incomplete publication use isolated API',async({page})=>{
+test('album metadata, keyboard order, reload and draft-member publication use isolated API',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await create(page);
   await expect(page.locator('#collection-list button[aria-current="true"]')).toHaveCount(1);
   const publications=[];page.on('request',r=>{if(r.method()==='PATCH'&&r.postDataJSON()?.status==='published')publications.push(r.url());});
@@ -21,7 +21,7 @@ test('album metadata, keyboard order, reload and failed incomplete publication u
   await page.reload();await expect(page.locator('#collection-order li')).toHaveCount(2);await expect(page.locator('#collection-order li').first()).toContainText('月台上的雨');
   await page.locator('#album-listening-mode').selectOption('vip');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');
   await page.locator('#collection-publish').click();await expect(page.locator('#collection-confirm-reason-label')).toBeHidden();await expect(page.locator('#collection-confirm-reason')).not.toHaveAttribute('required','');await expect(page.locator('#collection-confirm')).toBeVisible();await confirm(page);
-  await expect(page.locator('#collection-status')).toContainText('成员歌曲尚未全部发布');await expect(page.locator('#collection-publish-result')).toContainText('逐首完成核对并发布');await expect(page.locator('#collection-publish-result')).toBeFocused();await expect(page.locator('#collection-state')).toHaveText('专辑 · 草稿');expect(errors).toEqual([]);
+  await expect(page.locator('#collection-publish-result')).toHaveText('专辑已发布。');await expect(page.locator('#collection-state')).toHaveText('专辑 · 已发布');await expect(page.locator('#collection-order li').first()).toContainText('草稿');expect(errors).toEqual([]);
 });
 
 test('unknown create receipt survives reload, blocks duplicates, and retries only the original key',async({page})=>{
@@ -72,4 +72,19 @@ test('public album browsing keeps one paused source until play and retains cards
   const card=page.locator('[data-album-list] button');await card.evaluate(n=>n.dataset.testIdentity='retained');
   await page.locator('[data-detail-favorite]').click();await expect(card).toHaveAttribute('data-test-identity','retained');
   expect(await page.locator('audio').getAttribute('src')).toBe(source);expect(audioRequests).toBe(1);
+});
+
+
+test('metadata-only album remains visible and opens with no songs or audio requests',async({page})=>{
+  const album={id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',slug:'album-empty',type:'album',listeningMode:'free',title:'即将更新的专辑',description:'',coverTrackId:null,trackIds:[]};let audioRequests=0;
+  await page.route('**/api/music/**',async route=>{
+    const url=new URL(route.request().url());
+    if(url.pathname.endsWith('/catalog'))return route.fulfill({json:{schemaVersion:2,tracks:fixtureTracks,collections:[album]}});
+    if(url.pathname.includes('/collections/'))return route.fulfill({json:{schemaVersion:2,tracks:[],collection:album}});
+    if(url.pathname.endsWith('/capabilities'))return route.fulfill({json:{canPlayVipFull:false,musicVipDeliveryEnabled:false,authenticated:false,membershipStatus:'none',serverNow:new Date().toISOString(),validUntil:null}});
+    if(url.pathname.endsWith('/audio'))audioRequests++;
+    return route.fulfill({status:503,json:{error:{code:'MUSIC_PUBLIC_DISABLED'}}});
+  });
+  await page.goto('/zh-hans/music/');await page.getByRole('button',{name:'专辑',exact:true}).click();await expect(page.locator('[data-album-list] button')).toContainText('即将更新的专辑');await page.locator('[data-album-list] button').click();
+  await expect(page.locator('[data-list-title]')).toHaveText('即将更新的专辑');await expect(page.locator('[data-track-list] > li')).toHaveCount(0);expect(audioRequests).toBe(0);expect(await page.locator('audio').getAttribute('src')).toBeNull();
 });

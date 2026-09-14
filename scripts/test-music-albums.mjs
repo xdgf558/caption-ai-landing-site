@@ -54,11 +54,14 @@ test('0007 preserves existing playlist identity and rejects type changes and inv
   }finally{sql.close();}
 });
 
-test('album draft can be incomplete; publication requires every member and matching current policies without rewriting songs',async()=>{
+test('album may publish before all songs; released member policies still match without rewriting songs',async()=>{
   const f=fixture(),vip=await published(f),free=await published(f,{mode:'free'}),d=await draft(f);
   let c=await album(f,{listeningMode:'vip'});
-  assert.equal((await publish(f,c)).body.code,'MUSIC_ALBUM_TRACKS_NOT_PUBLISHED');
-  c=await order(f,c,[vip,d]);assert.equal((await publish(f,c)).body.code,'MUSIC_ALBUM_TRACKS_NOT_PUBLISHED');
+  assert.equal((await publish(f,c)).body.code,'MUSIC_COLLECTION_EMPTY');
+  c=await order(f,c,[vip,d]);assert.equal((await publish(f,c)).status,200);
+  c=(await call(f,'/collections/'+c.id)).body;
+  assert.equal((await call(f,'/collections/'+c.id,'PATCH',save(c,{status:'draft'}),match(c.editVersion))).status,200);
+  c=(await call(f,'/collections/'+c.id)).body;
   c=await order(f,c,[vip,free]);const before=f.dump();
   assert.equal((await publish(f,c)).body.code,'MUSIC_ALBUM_POLICY_MISMATCH');assert.deepEqual(f.dump(),before);
   const result=await publish(f,c,{listeningMode:'mixed'});assert.equal(result.status,200,JSON.stringify(result.body));
@@ -66,8 +69,9 @@ test('album draft can be incomplete; publication requires every member and match
   assert.equal((await call(f,'/collections?type=album')).body.items.length,1);
   assert.equal((await call(f,'/collections?type=playlist')).body.items.length,0);
   c=(await call(f,'/collections/'+c.id)).body;
-  const result2=await call(f,`/collections/${c.id}/tracks`,'PUT',{trackIds:[vip,d],reason:'Cannot replace published members with drafts'},match(c.editVersion));
-  assert.equal(result2.body.code,'MUSIC_ALBUM_TRACKS_NOT_PUBLISHED');
+  const result2=await call(f,`/collections/${c.id}/tracks`,'PUT',{trackIds:[vip,d],reason:'Keep draft members while album stays published'},match(c.editVersion));
+  assert.equal(result2.status,200);c=(await call(f,'/collections/'+c.id)).body;
+  assert.deepEqual((await catalog(f)).body.collections[0].trackIds,[vip]);
   assert.equal((await call(f,'/collections/'+c.id,'PATCH',save(c,{type:'playlist'}),match(c.editVersion))).body.code,'MUSIC_COLLECTION_IDENTITY');
 });
 
@@ -94,16 +98,16 @@ test('album cover is independent, scoped to its album, and never falls back to m
   assert.ok((await catalog(f)).body.collections[0].coverUrl);
 });
 
-test('whole album hides on downlist or natural policy transition; playlist continues filtering unavailable members',async()=>{
+test('album filters downlisted members but still hides on conflicting released policy transition',async()=>{
   const f=fixture(),until=Date.now()+60000,early=await published(f,{mode:'early_access',until}),second=await published(f);
   let c=await album(f,{listeningMode:'vip'});c=await order(f,c,[second,early]);assert.equal((await publish(f,c)).status,200);
   let p=await album(f,{type:'playlist'});p=await order(f,p,[second,early]);assert.equal((await publish(f,p)).status,200);
   const before=await catalog(f,until-1),after=await catalog(f,until);
   assert.equal(before.body.collections.length,2);assert.equal(after.body.collections.length,1);assert.equal(after.body.collections[0].type,'playlist');assert.notEqual(before.etag,after.etag);
   f.sql.prepare("UPDATE music_tracks SET lifecycle='unpublished' WHERE id=?").run(second);
-  const down=await catalog(f);assert.equal(down.body.collections.length,1);assert.deepEqual(down.body.collections[0].trackIds,[early]);
+  const down=await catalog(f);assert.equal(down.body.collections.length,2);assert.ok(down.body.collections.every(c=>JSON.stringify(c.trackIds)===JSON.stringify([early])));
   const snapshot=await loadPublicMusicCollectionSnapshot(f.db,c.slug,Date.now());
-  assert.deepEqual((await buildPublicCatalog({...snapshot,locale:'en',now:Date.now()})).body.collections,[]);
+  assert.deepEqual((await buildPublicCatalog({...snapshot,locale:'en',now:Date.now()})).body.collections[0].trackIds,[early]);
 });
 
 test('album publication guard catches a member downlist even when another published member remains',async()=>{
@@ -142,4 +146,21 @@ test('simplified collection text preserves hidden saved translations and origina
   assert.deepEqual(edited.description,{...before.description,'zh-Hans':'新简介'});
   assert.deepEqual(saved,before);
   assert.deepEqual(collectionChineseText(null,'首张专辑',''),{title:{'zh-Hans':'首张专辑'},description:{'zh-Hans':''}});
+});
+
+
+test('all-draft album publishes metadata only; catalog and direct view never expose draft identity or audio',async()=>{
+  const f=fixture(),d=await draft(f);let c=await album(f,{listeningMode:'free'});c=await order(f,c,[d]);
+  const before=f.dump(),result=await publish(f,c);assert.equal(result.status,200,JSON.stringify(result.body));
+  for(const table of ['music_tracks','music_track_revisions','music_assets','music_upload_sessions','music_rights_reviews'])assert.deepEqual(f.dump()[table],before[table],table);
+  const all=await catalog(f);assert.equal(all.body.collections.length,1);assert.deepEqual(all.body.collections[0].trackIds,[]);assert.deepEqual(all.body.tracks,[]);
+  assert.equal(all.body.collections[0].title,'Album fixture');assert.ok(!JSON.stringify(all.body).includes(d));assert.doesNotMatch(JSON.stringify(all.body),/Draft|object_key|sha256|audio_asset_id/);
+  const snapshot=await loadPublicMusicCollectionSnapshot(f.db,c.slug,Date.now());
+  const direct=await buildPublicCatalog({...snapshot,locale:'en',now:Date.now()});assert.equal(direct.body.collections.length,1);assert.deepEqual(direct.body.collections[0].trackIds,[]);assert.deepEqual(direct.body.tracks,[]);
+  // Later released songs appear without republishing the album; drafts stay private.
+  const released=await published(f,{mode:'free'});c=(await call(f,'/collections/'+c.id)).body;c=await order(f,c,[d,released]);
+  assert.deepEqual((await catalog(f)).body.collections[0].trackIds,[released]);
+  f.sql.prepare("UPDATE music_tracks SET lifecycle='unpublished' WHERE id=?").run(released);
+  const hidden=await catalog(f);assert.equal(hidden.body.collections.length,1);assert.deepEqual(hidden.body.collections[0].trackIds,[]);assert.deepEqual(hidden.body.tracks,[]);
+  const empty=await call(f,`/collections/${c.id}/tracks`,'PUT',{trackIds:[],reason:'Empty is still invalid'},match(c.editVersion));assert.equal(empty.body.code,'MUSIC_COLLECTION_EMPTY');
 });
