@@ -25,7 +25,11 @@ const t = musicText(lang);
         <header class="station-music-featured-heading"><div><p data-featured-label>{t('站长推荐')}</p><h2 id="music-featured-title">{t('这期先听')}</h2></div><span>{t('推荐只影响展示，播放时仍会核验资格。')}</span></header>
         <article class="station-music-featured-primary" data-featured-primary hidden>
           <div class="station-music-featured-cover"><img data-featured-primary-cover alt="" width="320" height="320" hidden /><div data-featured-primary-fallback><Music2 size={54} /><span>{t('暂无封面')}</span></div></div>
-          <div class="station-music-featured-copy"><span class="station-music-featured-kicker" data-featured-kicker>{t('本期主推 · 免费完整收听')}</span><h3 data-featured-primary-title></h3><p data-featured-primary-summary></p><p data-featured-primary-meta></p><div class="station-music-featured-actions"><button data-featured-view type="button">{t('查看歌曲')}</button><button data-featured-play class="primary" type="button"><Play size={18} fill="currentColor" /><span>{t('播放完整曲')}</span></button></div></div>
+          <div class="station-music-featured-copy"><span class="station-music-featured-kicker" data-featured-kicker>{t('本期主推 · 免费完整收听')}</span><h3 data-featured-primary-title></h3><p data-featured-primary-summary></p><p data-featured-primary-meta></p></div>
+          <div class="station-music-featured-actions">
+            <button data-featured-view type="button" aria-label={t('查看歌曲')}><span>{t('歌曲详情')}</span><ChevronRight size={16} aria-hidden="true" /></button>
+            <button data-featured-play class="primary" type="button" aria-label={t('播放完整曲')}><Play size={16} fill="currentColor" aria-hidden="true" /><span>{t('播放')}</span></button>
+          </div>
         </article>
         <div class="station-music-featured-groups">
           <section data-featured-secondary-block hidden><h3>{t('更多推荐')}</h3><ul data-featured-secondary></ul></section>
