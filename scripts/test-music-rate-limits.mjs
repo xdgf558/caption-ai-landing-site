@@ -222,3 +222,32 @@ test('successful catalog, conditional 304 and HEAD share a budget without positi
   assert.equal(head.status,429); assert.equal(await head.text(),'');
   assert.equal(f.sql.prepare('SELECT hits FROM music_rate_windows').get().hits,2);
 });
+
+
+test('share source/global budgets are independent from artwork, atomic and expire normally', async () => {
+  const f = fixture(240, 12000);
+  for (let i = 0; i < 130; i++) assert.equal(await f.check('192.0.2.1', 'artwork'), null);
+  const same = await Promise.all(Array.from({ length: 12 }, () => f.check('192.0.2.1', 'share')));
+  assert.equal(same.filter(x => x === null).length, 6);
+  const others = await Promise.all(Array.from({ length: 120 }, (_, i) => f.check(`198.51.100.${i + 1}`, 'share')));
+  assert.equal(others.filter(x => x === null).length, 114);
+  assert.equal(f.sql.prepare('SELECT hits FROM music_share_rate_windows').get().hits, 120);
+  assert.equal(await f.check('192.0.2.1', 'artwork'), null);
+  assert.equal(f.sql.prepare('SELECT hits FROM music_rate_windows').get().hits, 131);
+  assert.equal(await f.check('192.0.2.1', 'share', now + 60000), null);
+  assert.equal(await f.check('192.0.2.1', 'share', now + RATE_RETENTION_MS + 120000), null);
+  // Pruning is deliberately bounded to 100 source rows per request.
+  assert.equal(await f.check('192.0.2.1', 'share', now + RATE_RETENTION_MS + 120000), null);
+  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM music_share_rate_windows').get().n, 1);
+});
+
+test('missing or broken share counters fail closed without affecting ordinary artwork', async () => {
+  const f = fixture(240, 12000);
+  assert.equal(await f.check('192.0.2.1', 'share'), null);
+  f.sql.exec('CREATE TRIGGER broken_share BEFORE UPDATE ON music_share_rate_windows BEGIN SELECT RAISE(IGNORE); END;');
+  assert.equal((await f.check('192.0.2.1', 'share')).status, 503);
+  assert.equal(f.sql.prepare('SELECT hits FROM music_share_rate_sources').get().hits, 1);
+  f.sql.exec('DROP TABLE music_share_rate_sources');
+  assert.equal((await f.check('192.0.2.1', 'share')).status, 503);
+  assert.equal(await f.check('192.0.2.1', 'artwork'), null);
+});

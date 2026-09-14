@@ -8,6 +8,7 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
   let state = { query: '', genres: [], moods: [], access: '', mode: 'latest', ...libraryLocation(host.location.search) };
   const on = (node, event, callback) => node.addEventListener(event, callback, { signal: abort.signal });
   const render = () => {
+    for (const key of ['genres','moods']) if ($(`[data-night-${key}]`)) $(`[data-night-${key}]`).value = state[key][0] || '';
     const candidates = state.collection && view?.selectedCollection?.slug === state.collection ? view.selectedCollection.tracks
       : ['favorites', 'recent'].includes(state.mode) ? tracks : catalogTracks;
     const featuredTrackIds = [view?.featured?.primaryTrackId,...(view?.featured?.secondaryTrackIds || [])].filter(Boolean);
@@ -74,6 +75,7 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
   const change = (patch, replace = false) => { state = { ...state, ...patch }; count = 50; save(replace); render(); };
   on($('[data-music-search]'), 'input', event => change({ query: event.target.value.slice(0, 200) }, true));
   on($('[data-access-filter]'), 'change', event => change({ access: event.target.value }));
+  for (const key of ['genres','moods']) if ($(`[data-night-${key}]`)) on($(`[data-night-${key}]`),'change',event => change({ [key]:event.target.value ? [event.target.value] : [] }));
   on($('[data-collection-filter]'), 'change', event => change({ collection: event.target.value, mode:collections.find(item => item.slug === event.target.value)?.type === 'album' ? 'albums' : 'latest' }));
   for (const button of root.querySelectorAll('[data-browse-mode]')) on(button, 'click', () => change({ mode: button.dataset.browseMode, collection: '' }));
   for (const key of ['genres', 'moods']) on($(key === 'genres' ? '[data-genre-filter]' : '[data-mood-filter]'), 'change', () => change({ [key]: [...root.querySelectorAll(`[data-tag-group="${key}"]:checked`)].map(input => input.value) }));
@@ -103,6 +105,8 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
       select.replaceChildren(new Option(t('全部歌曲'), ''), ...collections.map(item => new Option(`${t(item.type === 'album' ? '专辑' : '歌单')} · ${item.title} · ${t('{count} 首', { count: item.trackIds.length })}`, item.slug)));
       const tags = libraryFilters([...catalogTracks, ...(view?.selectedCollection?.tracks || [])]);
       for (const [key, selector] of [['genres', '[data-genre-filter]'], ['moods', '[data-mood-filter]']]) {
+        const nightSelect = $(`[data-night-${key}]`);
+        if (nightSelect) nightSelect.replaceChildren(new Option(t('全部'),''),...tags[key].map(tag => new Option(tag,tag)));
         const fieldset = $(selector);
         for (const label of fieldset.querySelectorAll('label')) label.remove();
         for (const tag of tags[key]) {

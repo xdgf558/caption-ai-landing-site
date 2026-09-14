@@ -1,8 +1,19 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+立即播放|立即播放|Play now|今すぐ再生
+探索歌单|探索歌單|Explore music|音楽を探す
+在这里，音乐是生活的呼吸。|在這裡，音樂是生活的呼吸。|Music is the rhythm of everyday life.|音楽とともに、日常にひと息。
+独立创作 · 温柔陪伴 · 献给每一个认真生活的你。|獨立創作 · 溫柔陪伴 · 獻給每一個認真生活的你。|Independent music. Gentle company. Made for your everyday.|自主制作の音楽で、あなたの毎日に寄り添う。
+好的音乐，总会在对的时候，遇见对的人。|好的音樂，總會在對的時候，遇見對的人。|Good music finds you at just the right moment.|いい音楽は、ちょうどいい時に出会える。
+微信朋友圈|微信朋友圈|WeChat Moments|WeChatモーメンツ
 限时免费至 {time}，之后 VIP 专享|限時免費至 {time}，之後 VIP 專享|Free until {time}, then VIP only|{time}まで無料、その後はVIP限定
 收起播放器|收起播放器|Minimize player|プレーヤーを閉じる
+专辑分享卡片：{title}|專輯分享卡片：{title}|Album share card: {title}|アルバム共有カード：{title}
+将这张专辑分享给朋友，扫码即可打开专辑页面。|將這張專輯分享給朋友，掃碼即可開啟專輯頁面。|Share this album with friends. Scan to open the album page.|友達にアルバムを共有。スキャンしてアルバムを開けます。
+内容已不可用，无法制作卡片。|內容已無法使用，無法製作卡片。|This content is unavailable. A card cannot be created.|このコンテンツは利用できないため、カードを作成できません。
+卡片暂时无法制作，仍可复制链接。|卡片暫時無法製作，仍可複製連結。|The card is unavailable. You can still copy the link.|カードを作成できません。リンクはコピーできます。
+正在制作分享卡片…|正在製作分享卡片…|Creating share card…|共有カードを作成中…
 查看歌词|查看歌詞|View lyrics|歌詞を見る
 公开音乐入口尚未开放。|公開音樂入口尚未開放。|Public music is not available yet.|音楽の公開はまだ開始されていません。
 此版本当前未公开。|此版本目前未公開。|This revision is not currently public.|このバージョンは現在公開されていません。
@@ -16,6 +27,7 @@ VIP 完整音频暂未开放。|VIP 完整音訊暫未開放。|VIP full audio i
 保存图片|儲存圖片|Save image|画像を保存
 分享图片|分享圖片|Share image|画像をシェア
 前往 X 分享|前往 X 分享|Share on X|X でシェア
+请在 {seconds} 秒后重试。|請在 {seconds} 秒後重試。|Try again in {seconds} seconds.|{seconds} 秒後に再試行してください。
 重新制作卡片|重新製作卡片|Retry card|カードを再作成
 正在制作歌曲卡片…|正在製作歌曲卡片…|Preparing song card…|曲のカードを作成中…
 分享卡片已准备好。|分享卡片已準備好。|Your share card is ready.|シェアカードを作成しました。

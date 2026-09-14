@@ -1,9 +1,10 @@
 import { fetchMusicLyrics, currentLyricIndex } from './musicLyrics.js';
 
-export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocument } = {}) {
-  const panel = root.querySelector('[data-lyrics-panel]');
-  const message = root.querySelector('[data-lyrics-message]'), content = root.querySelector('[data-lyrics-content]');
-  const back = root.querySelector('[data-lyrics-follow]'), retry = root.querySelector('[data-lyrics-retry]');
+export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocument, prefix = 'lyrics', isOpen = null, quiet = false } = {}) {
+  const panel = root.querySelector(`[data-${prefix}-panel]`);
+  const message = root.querySelector(`[data-${prefix}-message]`), content = root.querySelector(`[data-${prefix}-content]`);
+  const back = root.querySelector(`[data-${prefix}-follow]`), retry = root.querySelector(`[data-${prefix}-retry]`);
+  const open = isOpen || (() => panel.open);
   const abort = new AbortController();
   let track = null, state = null, key = '', epoch = 0, request = null, timer = null, parsed = null, active = -1, following = true, loading = false, failed = false;
   const on = (node, event, handler) => node.addEventListener(event, handler, { signal: abort.signal });
@@ -18,12 +19,12 @@ export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocume
     if (index >= 0) {
       const line = content.children[index]; line?.setAttribute('aria-current', 'true');
       // Scroll only the lyric region, never the page or another song's drawer.
-      if (line && following && panel.open && !document.hidden && content.getClientRects().length) content.scrollTo({ top: line.offsetTop - content.clientHeight / 2 + line.offsetHeight / 2, behavior: 'auto' });
+      if (line && following && open() && !document.hidden && content.getClientRects().length) content.scrollTo({ top: line.offsetTop - content.clientHeight / 2 + line.offsetHeight / 2, behavior: 'auto' });
     }
   };
   const load = async () => {
     // Progress renders must not turn a failed read into an automatic retry loop.
-    if (!panel.open || !track || parsed || loading || failed) return;
+    if (!open() || !track || parsed || loading || failed) return;
     if (track.instrumental) { message.textContent = t('这首作品为纯音乐'); return; }
     if (track.lyricsKind === 'none') { message.textContent = t('暂未提供歌词'); return; }
     stop(); const generation = epoch, selected = track;
@@ -36,19 +37,21 @@ export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocume
       parsed = result; content.replaceChildren();
       if (result.kind === 'lrc') for (const row of result.lines) { const node = document.createElement('p'); node.textContent = row.text || ' '; content.append(node); }
       else content.textContent = result.text;
-      message.textContent = result.kind === 'txt' && result.warnings ? t('时间标记不可用，显示普通歌词。') : result.kind === 'lrc' ? t('手动滚动可暂停跟随。') : '';
+      message.textContent = quiet ? '' : result.kind === 'txt' && result.warnings ? t('时间标记不可用，显示普通歌词。') : result.kind === 'lrc' ? t('手动滚动可暂停跟随。') : '';
       highlight();
     } catch {
       if (generation === epoch) { failed = true; message.textContent = t('歌词暂时无法加载，请重试。'); retry.hidden = false; }
     } finally { if (generation === epoch) { clearTimeout(timer); request = null; loading = false; } }
   };
-  on(panel, 'toggle', () => { if (panel.open) { active = -1; void load(); highlight(); } else stop(); });
+  const refresh = () => { if (open() && !document.hidden) { active = -1; void load(); highlight(); } else stop(); };
+  on(panel, 'toggle', refresh);
   on(retry, 'click', () => { failed = false; parsed = null; void load(); });
   const manual = () => { following = false; back.hidden = active < 0; };
   on(content, 'wheel', manual); on(content, 'touchmove', manual); on(content, 'pointerdown', manual);
   on(content, 'keydown', event => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) manual(); });
   on(back, 'click', () => { following = true; active = -1; highlight(); });
   return {
+    refresh,
     update(value, snapshot) {
       track = value; state = snapshot;
       const next = track ? `${track.id}:${track.audioVersion}:${track.lyricsKind}:${track.instrumental}` : '';

@@ -42,7 +42,7 @@ const canonicalUrl = new URL(canonicalPath, siteConfig.baseUrl).toString();
 const ogImageUrl = new URL(ogImage, siteConfig.baseUrl).toString();
 const usesDefaultOgImage = ogImage === siteConfig.ogImage;
 const isAdminPage = Astro.url.pathname.startsWith('/admin');
-const shouldUsePaperTheme = !isAdminPage && !bodyClass?.includes('station-home-v2');
+const shouldUsePaperTheme = !isAdminPage && !bodyClass?.includes('station-home-v2') && !bodyClass?.includes('station-music-page');
 const resolvedBodyClass = [
   isAdminPage ? 'admin-page' : '',
   shouldUsePaperTheme ? 'station-paper-page' : '',

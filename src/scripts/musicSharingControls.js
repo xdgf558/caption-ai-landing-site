@@ -11,7 +11,7 @@ export function mountMusicSharing(root, { t, locale, origin = globalThis.locatio
     for (const action of ['share', 'copy']) root.querySelector(`[data-${action}-music="${kind}"]`).addEventListener('click', async () => {
       const value = selected[kind], key = id(kind);
       if (!key) return;
-      if (kind === 'track' && action === 'share' && cards) { cardOrigin = 'track'; cards.update(selected.track); cards.open(); return; }
+      if (action === 'share' && cards && (kind === 'track' || value.type === 'album')) { cardOrigin = kind; cards.update(value); cards.open(root.querySelector(`[data-share-music="${kind}"]`)); return; }
       const epoch = ++epochs[kind]; input.hidden = true; message.textContent = '';
       const result = await shareMusicLink({ title: value.title, url: musicShareUrl(origin, locale, { [kind]: key }) }, { navigator, copyOnly: action === 'copy' });
       if (abort.signal.aborted || epochs[kind] !== epoch || id(kind) !== key) return;

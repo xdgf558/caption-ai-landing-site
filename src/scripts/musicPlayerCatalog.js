@@ -68,7 +68,7 @@ export function readPlayerCollections(body, tracks) {
         (listeningMode !== 'mixed' && item.trackIds.some(id => ids.get(id).effectiveAccess !== listeningMode)) ||
         (item.coverTrackId != null && (!item.trackIds.includes(item.coverTrackId) || !ids.get(item.coverTrackId)?.coverUrl))))) throw new Error('INVALID_COLLECTIONS');
     seen.add(item.id); slugs.add(item.slug);
-    return { id: item.id, slug: item.slug, title: item.title, description: item.description, type, listeningMode,
+    return { id: item.id, slug: item.slug, title: item.title, description: item.description, type, listeningMode, version: item.version,
       coverUrl:type === 'album' && item.coverUrl ? `/api/music/collections/${item.slug}/cover?v=${item.version}` : null,
       trackIds: item.trackIds.filter(id => ids.has(id)) };
   }).filter(item => item.type === 'album' || item.trackIds.length);

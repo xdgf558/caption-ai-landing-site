@@ -1,5 +1,5 @@
-import { musicShareCardPath, musicShareCardData, MUSIC_SHARE_FORMATS, MUSIC_SHARE_MAX_PNG } from '../music/shareCard.js';
-import { readPlayerCatalog } from './musicPlayerCatalog.js';
+import { musicShareCardPath, musicShareCardData, musicAlbumShareCardPath, musicAlbumShareCardData, MUSIC_SHARE_FORMATS, MUSIC_SHARE_MAX_PNG } from '../music/shareCard.js';
+import { readPlayerCatalog, readPlayerCollections } from './musicPlayerCatalog.js';
 
 async function bytes(response, limit, signal) {
   const declared = response.headers.get('content-length');
@@ -31,18 +31,21 @@ export function validateMusicSharePng(data, format) {
 
 // An export observer only: no audio, queue, account or storage API is accepted.
 export function createMusicShareCards({ fetcher = globalThis.fetch, origin = globalThis.location.origin, locale,
-  urls = globalThis.URL, timeoutMs = 12000, onChange = () => {} } = {}) {
-  let epoch = 0, controller = null, objectUrl = null, disposed = false;
+  urls = globalThis.URL, clock = Date.now, timeoutMs = 12000, onChange = () => {} } = {}) {
+  let epoch = 0, controller = null, objectUrl = null, disposed = false, retryUntil = 0;
   let state = { status: 'idle', format: 'poster', data: null, blob: null, imageUrl: null, code: null };
   const emit = () => onChange({ ...state });
   const clear = () => {
     epoch++; controller?.abort(); controller = null;
     if (objectUrl) urls.revokeObjectURL(objectUrl); objectUrl = null;
-    state = { ...state, blob: null, imageUrl: null, data: null, code: null };
+    state = { ...state, blob: null, imageUrl: null, data: null, code: null, retryAfter: 0 };
   };
   return {
     async prepare(track, format = 'poster') {
       if (disposed) return;
+      if (retryUntil > clock()) {
+        state = { ...state, status: 'error', code: 'SHARE_RATE_LIMITED', retryAfter: Math.ceil((retryUntil - clock()) / 1000) }; emit(); return;
+      }
       clear(); const generation = epoch;
       state = { ...state, status: 'loading', format }; emit();
       controller = new AbortController(); const active = controller, timer = setTimeout(() => {
@@ -50,27 +53,35 @@ export function createMusicShareCards({ fetcher = globalThis.fetch, origin = glo
         if (!disposed && generation === epoch) { state = { ...state, status: 'error', code: 'SHARE_CARD_UNAVAILABLE' }; emit(); }
       }, timeoutMs);
       try {
-        musicShareCardPath(track.id, track.audioVersion, locale, format);
+        const album = track.type === 'album';
+        const path = value => album ? musicAlbumShareCardPath(value.slug, value.version, locale, format) : musicShareCardPath(value.id, value.audioVersion, locale, format);
+        path(track);
         // Preserve the browser's same-origin Access session at the edge. The public
         // endpoint ignores reader identity; never forward credentials across redirects.
         const options = { credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: active.signal };
         // Read the current public revision; stale queue/catalog rows are not publication proof.
-        const detail = await fetcher(`/api/music/tracks/${track.id}?locale=${locale}`, options);
+        const detail = await fetcher(album ? `/api/music/collections/${track.slug}?locale=${locale}` : `/api/music/tracks/${track.id}?locale=${locale}`, options);
         if (!detail.ok) { void detail.body?.cancel().catch(() => {}); throw new Error(detail.status === 404 || detail.status === 410 ? 'SHARE_TRACK_UNAVAILABLE' : 'SHARE_CARD_UNAVAILABLE'); }
-        const body = JSON.parse(new TextDecoder().decode(await bytes(detail, 65536, active.signal)));
-        const fresh = readPlayerCatalog({ schemaVersion: body.schemaVersion, tracks: [body.track] })[0];
+        const body = JSON.parse(new TextDecoder().decode(await bytes(detail, album ? 2097152 : 65536, active.signal)));
+        const fresh = album ? readPlayerCollections({collections:[body.collection]}, readPlayerCatalog(body))[0] : readPlayerCatalog({ schemaVersion: body.schemaVersion, tracks: [body.track] })[0];
+        if (album && (fresh?.type !== 'album' || fresh.slug !== track.slug)) throw new Error('SHARE_RESPONSE_INVALID');
         if (fresh.id !== track.id) throw new Error('SHARE_RESPONSE_INVALID');
         if (disposed || generation !== epoch || active.signal.aborted) return;
-        const response = await fetcher(musicShareCardPath(fresh.id, fresh.audioVersion, locale, format), options);
+        const response = await fetcher(path(fresh), options);
+        if (response.status === 429) {
+          const raw = Number(response.headers.get('retry-after'));
+          const seconds = Number.isSafeInteger(raw) && raw >= 1 && raw <= 60 ? raw : 60;
+          retryUntil = clock() + seconds * 1000;
+        }
         if (!response.ok) { void response.body?.cancel().catch(() => {}); throw new Error(response.status === 429 ? 'SHARE_RATE_LIMITED' : response.status === 404 || response.status === 410 ? 'SHARE_TRACK_UNAVAILABLE' : 'SHARE_CARD_UNAVAILABLE'); }
         if (response.headers.get('content-type')?.split(';')[0] !== 'image/png') { void response.body?.cancel().catch(() => {}); throw new Error('SHARE_RESPONSE_INVALID'); }
         const png = await bytes(response, MUSIC_SHARE_MAX_PNG, active.signal); validateMusicSharePng(png, format);
         if (disposed || generation !== epoch || active.signal.aborted) return;
         const blob = new Blob([png], { type: 'image/png' }); objectUrl = urls.createObjectURL(blob);
-        state = { status: 'ready', format, data: musicShareCardData(fresh, origin, locale), blob, imageUrl: objectUrl, code: null }; emit();
+        state = { status: 'ready', format, data: album ? musicAlbumShareCardData(fresh, origin, locale) : musicShareCardData(fresh, origin, locale), blob, imageUrl: objectUrl, code: null }; emit();
       } catch (error) {
         if (disposed || generation !== epoch) return;
-        state = { ...state, status: 'error', code: active.signal.aborted ? 'SHARE_CARD_UNAVAILABLE' : error.message }; emit();
+        state = { ...state, status: 'error', code: active.signal.aborted ? 'SHARE_CARD_UNAVAILABLE' : error.message, retryAfter: Math.max(0, Math.ceil((retryUntil - clock()) / 1000)) }; emit();
       } finally { clearTimeout(timer); if (controller === active) controller = null; }
     },
     snapshot: () => ({ ...state }),

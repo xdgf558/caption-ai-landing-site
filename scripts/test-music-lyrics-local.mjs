@@ -224,3 +224,24 @@ test('late lyric A never overwrites B; manual scrolling suspends follow and anot
   nodes.get('[data-lyrics-follow]').dispatchEvent(new Event('click')); assert.notEqual(content.scrolled,before);
   view.destroy();
 });
+
+test('inline player lyrics load on opening while paused, stay quiet, and cancel on close', async () => {
+  const nodes = new Map(['panel','message','content','follow','retry'].map(key=>[`[data-now-lyrics-${key}]`,new Element()]));
+  let open = false, calls = 0, finish;
+  const view = mountMusicLyrics({ownerDocument:{hidden:false,createElement:()=>new Element()},querySelector:s=>nodes.get(s)}, {
+    t:x=>x, prefix:'now-lyrics', isOpen:()=>open, quiet:true,
+    fetcher:()=>{calls++; return new Promise(resolve=>{finish=resolve;});}
+  });
+  const track = {...tracks[0],lyricsKind:'lrc',instrumental:false};
+  const state = {activeTrackId:track.id,activeAudioVersion:track.audioVersion,activeVariant:'full',currentTimeSec:2,status:'paused'};
+  view.update(track,state); assert.equal(calls,0);
+  open=true; view.refresh(); assert.equal(calls,1);
+  open=false; view.refresh(); finish(new Response('[00:01]stale',{headers:{'content-type':'text/plain'}}));
+  await new Promise(r=>setImmediate(r)); assert.equal(nodes.get('[data-now-lyrics-content]').children.length,0);
+  open=true; view.refresh(); assert.equal(calls,2);
+  finish(new Response('[00:01]current',{headers:{'content-type':'text/plain'}}));
+  await new Promise(r=>setImmediate(r));
+  assert.equal(nodes.get('[data-now-lyrics-content]').children[0].attrs.get('aria-current'),'true');
+  assert.equal(nodes.get('[data-now-lyrics-message]').textContent,'');
+  view.destroy();
+});

@@ -1,14 +1,14 @@
-import { projectPublicTrack } from './catalog.js';
+import { buildPublicCatalog, projectPublicTrack } from './catalog.js';
 import { checkAssetIdentity, checkStoredObject } from './resources.js';
-import { loadPublishedMusicRecord } from './publicStore.js';
+import { loadPublicMusicCollectionSnapshot, loadPublishedMusicRecord } from './publicStore.js';
 import { musicRuntime } from './runtime.js';
 import { checkMusicRateLimit } from './rateLimits.js';
 import { boundedBody, cancelBody } from './storage.js';
 import { MUSIC_LOCALES } from './policy.js';
 import { validMusicId } from './publicationValidation.js';
-import { MUSIC_SHARE_FONT, MUSIC_SHARE_FONT_BYTES, MUSIC_SHARE_FONT_SHA256, musicShareCardData, MUSIC_SHARE_FORMATS } from './shareCard.js';
+import { MUSIC_SHARE_FONT, MUSIC_SHARE_FONT_BYTES, MUSIC_SHARE_FONT_SHA256, musicShareCardData, musicAlbumShareCardData, MUSIC_SHARE_FORMATS } from './shareCard.js';
 
-const path = /^\/api\/music\/tracks\/([^/]+)\/share\.png$/;
+const path = /^\/api\/music\/(tracks|collections)\/([^/]+)\/share\.png$/;
 export const isMusicShareCardPath = pathname => path.test(pathname);
 const headers = { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex, nofollow' };
 const failure = (request, status, code, extra = {}) => new Response(request.method === 'HEAD' ? null : JSON.stringify({ error: { code } }), {
@@ -54,27 +54,41 @@ export async function handleMusicShareCard(request, env, { clock = Date.now, ren
   if (!match) return failure(request, 404, 'NOT_FOUND');
   if (!['GET', 'HEAD'].includes(request.method)) return failure(request, 405, 'METHOD_NOT_ALLOWED', { Allow: 'GET, HEAD' });
   const locale = url.searchParams.get('locale'), version = url.searchParams.get('v'), format = url.searchParams.get('format');
-  if (!validMusicId(match[1]) || !MUSIC_LOCALES.includes(locale) || !/^[1-9][0-9]*$/.test(version || '') || !Number.isSafeInteger(Number(version)) ||
+  const album = match[1] === 'collections';
+  if (!(album ? match[2].length <= 100 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(match[2]) : validMusicId(match[2])) || !MUSIC_LOCALES.includes(locale) || !/^[1-9][0-9]*$/.test(version || '') || !Number.isSafeInteger(Number(version)) ||
     !Object.hasOwn(MUSIC_SHARE_FORMATS, format) || [...url.searchParams.keys()].sort().join(',') !== 'format,locale,v') return failure(request, 400, 'INVALID_INPUT');
   // Flags before runtime, source counters, publication, R2, fonts or WASM work.
   if (env.MUSIC_PUBLIC_ENABLED !== 'true') return failure(request, 503, 'MUSIC_PUBLIC_DISABLED');
   if (env.MUSIC_SHARE_CARDS_ENABLED !== 'true') return failure(request, 503, 'MUSIC_SHARE_CARDS_DISABLED');
-  const now = clock(), limited = await checkMusicRateLimit(request, env, 'artwork', { clock: () => now, ceiling: { source: 6, global: 120 } });
+  const now = clock(), limited = await checkMusicRateLimit(request, env, 'share', { clock: () => now });
   if (limited) return failure(request, limited.status, limited.code, { 'Retry-After': String(limited.retryAfter) });
   try {
-    const runtime = musicRuntime(env), id = match[1].toLowerCase();
-    const record = await bounded(() => loadPublishedMusicRecord(runtime.db, id));
-    if (['unpublished', 'archived'].includes(record.track?.lifecycle)) return failure(request, 410, 'TRACK_UNAVAILABLE');
-    for (const asset of record.assets) checkAssetIdentity(asset);
-    const track = projectPublicTrack(record, { locale, now });
-    if (!track) return failure(request, 404, 'NOT_FOUND');
-    if (track.audioVersion !== Number(version)) return failure(request, 409, 'VERSION_CONFLICT');
+    const runtime = musicRuntime(env), id = match[2].toLowerCase();
+    let data, cover;
+    if (album) {
+      const snapshot = await bounded(() => loadPublicMusicCollectionSnapshot(runtime.db, id, now));
+      const records = snapshot.records.filter(record => { try { record.assets.forEach(checkAssetIdentity); return true; } catch { return false; } });
+      const catalog = await buildPublicCatalog({ ...snapshot, records, locale, now });
+      const collection = catalog.body.collections.find(item => item.slug === id && item.type === 'album');
+      if (!collection) return failure(request, 404, 'NOT_FOUND');
+      if (collection.version !== Number(version)) return failure(request, 409, 'VERSION_CONFLICT');
+      data = musicAlbumShareCardData(collection, url.origin, locale);
+      cover = collection.coverUrl ? snapshot.collections.find(item => item.collection.id === collection.id)?.coverAsset : null;
+    } else {
+      const record = await bounded(() => loadPublishedMusicRecord(runtime.db, id));
+      if (['unpublished', 'archived'].includes(record.track?.lifecycle)) return failure(request, 410, 'TRACK_UNAVAILABLE');
+      for (const asset of record.assets) checkAssetIdentity(asset);
+      const track = projectPublicTrack(record, { locale, now });
+      if (!track) return failure(request, 404, 'NOT_FOUND');
+      if (track.audioVersion !== Number(version)) return failure(request, 409, 'VERSION_CONFLICT');
+      data = musicShareCardData(track, url.origin, locale);
+      cover = record.assets.find(asset => asset.id === record.revision.cover_asset_id);
+    }
     const responseHeaders = { ...headers, 'Content-Type': 'image/png', 'Content-Language': locale,
       'Content-Disposition': `inline; filename="station-cat-${id}-${format}.png"` };
     if (request.method === 'HEAD') return new Response(null, { headers: responseHeaders });
     if (!env.ASSETS?.fetch) throw new Error('SHARE_FONT_UNAVAILABLE');
     const { normalizeMusicCardCover, renderMusicShareCard } = await import('./shareCardRender.js');
-    const cover = record.assets.find(asset => asset.id === record.revision.cover_asset_id);
     const png = cover ? await coverBytes(runtime.bucket, cover, normalizeMusicCardCover) : null;
     const font = await bounded(() => env.ASSETS.fetch(new Request(new URL(MUSIC_SHARE_FONT, url.origin))), response => cancelBody(response));
     const declared = font.headers.get('content-length');
@@ -82,7 +96,7 @@ export async function handleMusicShareCard(request, env, { clock = Date.now, ren
     const fontBytes = await readMusicShareBytes(font.body, MUSIC_SHARE_FONT_BYTES, MUSIC_SHARE_FONT_BYTES);
     const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', fontBytes)), b => b.toString(16).padStart(2, '0')).join('');
     if (digest !== MUSIC_SHARE_FONT_SHA256) throw new Error('SHARE_FONT_UNAVAILABLE');
-    const bytes = await (render || renderMusicShareCard)(musicShareCardData(track, url.origin, locale), format, png, fontBytes);
+    const bytes = await (render || renderMusicShareCard)(data, format, png, fontBytes);
     return new Response(bytes, { headers: { ...responseHeaders, 'Content-Length': String(bytes.length) } });
   } catch { return failure(request, 503, 'MUSIC_SHARE_CARD_UNAVAILABLE'); }
 }

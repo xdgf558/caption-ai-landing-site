@@ -14,6 +14,9 @@ export function normalizeMusicCardCover(bytes, contentType) {
   if (!format || !(bytes instanceof Uint8Array) || !bytes.length || bytes.length > 5242880) throw new Error('SHARE_COVER_INVALID');
   const dimensions = inspectSmallAsset({ kind: 'cover', format, content_type: contentType }, bytes);
   if (dimensions.width * dimensions.height > 4194304) throw new Error('SHARE_COVER_TOO_LARGE');
+  // PNG is already directly supported by resvg. Preserve its bounded, hash-checked
+  // bytes instead of resizing and encoding an intermediate PNG that is decoded again.
+  if (format === 'png') return bytes;
   let input, output;
   try {
     input = PhotonImage.new_from_byteslice(bytes);
@@ -38,8 +41,33 @@ function qrSvg(url, x, y, box) {
   return svg;
 }
 
+function albumShareSvg(data, format, coverPng) {
+  const poster = format === 'poster', [width, height] = MUSIC_SHARE_FORMATS[format];
+  const slot = poster ? {x:90,y:174,size:900} : {x:48,y:48,size:470};
+  const cover = coverPng ? `<image x="${slot.x}" y="${slot.y}" width="${slot.size}" height="${slot.size}" preserveAspectRatio="xMidYMid slice" clip-path="url(#album-cover)" href="data:image/png;base64,${b64(coverPng)}"/>`
+    : text(data.station,slot.x+slot.size/2,slot.y+slot.size/2,40,'#52685e','text-anchor="middle"');
+  let content = cover;
+  if (poster) {
+    content += text('STATION CAT / MUSIC',90,100,23,'#2c473b','letter-spacing="5"') +
+      text(data.station,990,100,26,'#2c473b','text-anchor="end"') +
+      lines(musicShareLines(data.title,8.3,2),90,1194,105,112) +
+      text(data.creator,94,1360,43,'#2c473b','letter-spacing="3"') + text(data.count,94,1415,27,'#52685e','letter-spacing="3"') +
+      lines(musicShareLines(data.description,26,3),94,1480,32,43) +
+      '<line x1="90" y1="1620" x2="990" y2="1620" stroke="#89988b"/>' +
+      text(data.scan,94,1690,27,'#2c473b') + text(data.host,94,1740,24,'#52685e','letter-spacing="2"') + qrSvg(data.url,825,1638,168);
+  } else {
+    content += text('STATION CAT / MUSIC',565,78,19,'#52685e','letter-spacing="3"') +
+      lines(musicShareLines(data.title,9,2),563,185,62,82) + text(`${data.creator} · ${data.count}`,565,325,26,'#52685e') +
+      lines(musicShareLines(data.description,20,3),565,390,27,40) +
+      '<line x1="48" y1="554" x2="1152" y2="554" stroke="#89988b"/>' +
+      text(data.station,48,599,24,'#2c473b') + text(data.host,1152,599,23,'#52685e','text-anchor="end"');
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="Noto Serif SC" font-weight="700"><rect width="100%" height="100%" fill="#f7f3e9"/><defs><clipPath id="album-cover"><rect x="${slot.x}" y="${slot.y}" width="${slot.size}" height="${slot.size}"/></clipPath></defs>${content}</svg>`;
+}
+
 export function musicShareCardSvg(data, format, coverPng) {
   const size = MUSIC_SHARE_FORMATS[format]; if (!size) throw new Error('INVALID_SHARE_FORMAT');
+  if (data.kind === 'album') return albumShareSvg(data, format, coverPng);
   const poster = format === 'poster';
   const comma = /^(.{1,4}[，、])(.{1,5})$/u.exec(data.title);
   const splitComma = comma && comma.slice(1).every(value => Array.from(value).length <= (poster ? 5 : 4));
@@ -72,13 +100,59 @@ export function musicShareCardSvg(data, format, coverPng) {
     <rect width="100%" height="100%" fill="#fffaf4"/><defs><clipPath id="cover"><rect x="${slot.x}" y="${slot.y}" width="${slot.size}" height="${slot.size}" rx="14"/></clipPath></defs>${content}</svg>`;
 }
 
+// Native compression avoids the CPU-heavy WASM PNG encoder. Pixel data is
+// unchanged: PNG Sub filtering and CRC-32 frame a bounded RGBA deflate stream.
+const pngCrcTable = Uint32Array.from({ length: 256 }, (_, value) => {
+  for (let i = 0; i < 8; i++) value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+  return value >>> 0;
+});
+const pngChunk = (type, bytes) => {
+  const chunk = new Uint8Array(bytes.length + 12), view = new DataView(chunk.buffer);
+  view.setUint32(0, bytes.length);
+  chunk.set(new TextEncoder().encode(type), 4); chunk.set(bytes, 8);
+  let crc = 0xffffffff;
+  for (let i = 4; i < chunk.length - 4; i++) crc = pngCrcTable[(crc ^ chunk[i]) & 255] ^ (crc >>> 8);
+  view.setUint32(chunk.length - 4, (crc ^ 0xffffffff) >>> 0); return chunk;
+};
+export async function encodeMusicRgbaPng(pixels, width, height) {
+  if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width < 1 || height < 1 ||
+    width * height > 1944000 || !(pixels instanceof Uint8Array) || pixels.length !== width * height * 4) throw new Error('SHARE_RASTER_INVALID');
+  const stride = width * 4, scanlines = new Uint8Array((stride + 1) * height);
+  for (let y = 0; y < height; y++) {
+    const start = y * stride, out = y * (stride + 1); scanlines[out] = 1;
+    for (let x = 0; x < stride; x++) scanlines[out + x + 1] = (pixels[start + x] - (x >= 4 ? pixels[start + x - 4] : 0)) & 255;
+  }
+  const source = new ReadableStream({ start(controller) { controller.enqueue(scanlines); controller.close(); } });
+  const reader = source.pipeThrough(new CompressionStream('deflate')).getReader();
+  const parts = []; let length = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      length += value.length; if (length + 57 > MUSIC_SHARE_MAX_PNG) throw new Error('SHARE_CARD_TOO_LARGE');
+      parts.push(value);
+    }
+  } finally { await reader.cancel().catch(() => {}); }
+  const compressed = new Uint8Array(length); let offset = 0;
+  for (const part of parts) { compressed.set(part, offset); offset += part.length; }
+  const header = new Uint8Array(13), fields = new DataView(header.buffer);
+  fields.setUint32(0, width); fields.setUint32(4, height); header[8] = 8; header[9] = 6;
+  const chunks = [new Uint8Array([137,80,78,71,13,10,26,10]), pngChunk('IHDR', header), pngChunk('IDAT', compressed), pngChunk('IEND', new Uint8Array())];
+  const png = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0)); offset = 0;
+  for (const chunk of chunks) { png.set(chunk, offset); offset += chunk.length; }
+  return png;
+}
+
 export async function renderMusicShareCard(data, format, coverPng, fontBuffer) {
   let renderer, raster;
   try {
     renderer = await Resvg.async(musicShareCardSvg(data, format, coverPng), {
+      // Avoid the expensive default photo resampler; text and QR remain vector-sharp.
+      imageRendering: 1,
       font: { fontBuffers: [fontBuffer], defaultFontFamily: 'Noto Serif SC', serifFamily: 'Noto Serif SC', sansSerifFamily: 'Noto Serif SC', loadSystemFonts: false }
     });
-    raster = renderer.render(); const bytes = raster.asPng();
+    raster = renderer.render(); const pixels = raster.pixels, width = raster.width, height = raster.height;
+    raster.free(); raster = null; renderer.free(); renderer = null;
+    const bytes = await encodeMusicRgbaPng(pixels, width, height);
     if (!bytes.length || bytes.length > MUSIC_SHARE_MAX_PNG) throw new Error('SHARE_CARD_TOO_LARGE');
     return bytes;
   } finally { raster?.free(); renderer?.free(); }
