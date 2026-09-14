@@ -48,6 +48,10 @@ export function mountMusicPanels(root, { host = window } = {}) {
   const doc = root.ownerDocument, abort = new AbortController();
   const $ = selector => root.querySelector(selector), on = (node, name, fn) => node?.addEventListener(name, fn, { signal: abort.signal });
   const mobile = host.matchMedia('(max-width: 48rem)');
+  // Some mobile browsers mark modal autofocus as focus-visible after a tap.
+  // Keep focus in the dialog, but show its ring only for keyboard navigation.
+  on(doc, 'pointerdown', () => { root.dataset.panelInput = 'pointer'; });
+  on(doc, 'keydown', event => { if (event.key === 'Tab') root.dataset.panelInput = 'keyboard'; });
   const nightPage = doc.body.classList.contains('station-music-page');
   const desktopPanel = kind => nightPage && kind === 'detail';
   const dialogs = { now: $('[data-now-dialog]'), detail: $('[data-detail-dialog]'), filter: $('[data-filter-dialog]'), queue: $('[data-queue-dialog]'), menu: doc.querySelector('[data-menu-dialog]'), share: $('[data-share-card-dialog]') };
@@ -171,7 +175,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
     $('[data-detail-home]').append(detail); $('[data-filter-home]').append(filter);
     if (nav) navHome.append(nav);
     $('[data-main-play]').before(previous); transport.append(next);
-    delete root.dataset.mobile; delete root.dataset.activePanel; delete doc.body.dataset.musicMobile;
+    delete root.dataset.mobile; delete root.dataset.activePanel; delete root.dataset.panelInput; delete doc.body.dataset.musicMobile;
     doc.documentElement.style.removeProperty('--music-dock-height');
   } };
 }

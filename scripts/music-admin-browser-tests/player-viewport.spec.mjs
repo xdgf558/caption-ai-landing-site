@@ -28,6 +28,18 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 320, height: 568 }
     await page.locator('[data-now-toggle]').click();
     const dialog = page.locator('[data-now-dialog]');
     await expect(dialog).toBeVisible();
+    await expect(page.locator('[data-now-close]')).toBeFocused();
+    await expect(page.locator('[data-now-close]')).toHaveCSS('outline-style', 'none');
+    await page.keyboard.press('Tab');
+    // WebKit's native Tab order follows the host OS keyboard-access setting.
+    await page.locator('[data-now-share]').focus();
+    await expect(page.locator('[data-now-share]')).toBeFocused();
+    await expect(page.locator('[data-now-share]')).toHaveCSS('outline-style', 'solid');
+    await page.keyboard.press('Shift+Tab');
+    await page.locator('[data-now-close]').focus();
+    await expect(page.locator('[data-now-close]')).toHaveCSS('outline-style', 'solid');
+    await page.locator('#music-now-heading').click();
+    await expect(page.locator('[data-now-close]')).toHaveCSS('outline-style', 'none');
     await expect(page.locator('body')).toHaveCSS('position', 'fixed');
     expect(await page.locator('body').evaluate(body => body.style.top)).toBe(`${-scrollY}px`);
     const covered = async () => page.evaluate(() => {

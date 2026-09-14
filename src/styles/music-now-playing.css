@@ -21,6 +21,7 @@
   .station-music-now-dialog button { min-width: 44px; min-height: 44px; color: inherit; }
   .station-music-now-dialog button svg { stroke-width: 1.6; }
   .station-music-now-dialog button:focus-visible { outline: 2px solid var(--music-accent); outline-offset: 3px; }
+  .station-music-player[data-panel-input='pointer'] .station-music-now-dialog button:focus { outline: none; }
   .station-music-now-header { align-items: center; justify-content: space-between; gap: .5rem; min-height: 3.5rem; flex-shrink: 0; }
   .station-music-now-header > div { text-align: center; }
   .station-music-now-header > div > span { display: block; font-size: .6875rem; letter-spacing: .32em; font-weight: 650; }
