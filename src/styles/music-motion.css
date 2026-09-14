@@ -220,3 +220,35 @@
 .station-music-player [data-now-target].t-modal { transform-origin: center top; }
 .station-music-player [data-detail-sheet].t-modal { transform-origin: center bottom; }
 
+
+/* GSAP owns only the full-player inner sheet; the opaque dialog stays fixed. */
+.station-music-player [data-now-target].t-modal {
+  --modal-close-dur: 380ms;
+  transform: none; opacity: 1; transition: none; pointer-events: auto;
+}
+.station-music-player [data-now-target].t-modal.is-closing { transform: none; opacity: 1; }
+@media (max-width: 48rem) {
+  .station-music-page .station-music-player[data-library] .station-music-now-dialog {
+    --music-cover-tint: #293139;
+    background: radial-gradient(ellipse at 25% 18%, var(--music-cover-tint), transparent 75%), #141a1f;
+  }
+  .station-music-player .station-music-now-lyrics .station-music-lyrics-content {
+    height: 10rem; max-height: 28dvh; scroll-behavior: auto;
+    mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent);
+    -webkit-mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent);
+  }
+  .station-music-player .station-music-now-lyrics [data-lyrics-kind='lrc'] { padding-block: 4rem; }
+  .station-music-player .station-music-now-lyrics .station-music-lyrics-content p {
+    font-size: 1.05rem; font-weight: 600; line-height: 1.65; padding: .55rem .4rem;
+    opacity: .42; transform: scale(.96); transform-origin: center;
+    transition: opacity 350ms ease, color 350ms ease, transform 450ms cubic-bezier(.22,1,.36,1);
+  }
+  .station-music-player .station-music-now-lyrics .station-music-lyrics-content [data-lyric-distance='1'] { opacity: .72; }
+  .station-music-player .station-music-now-lyrics .station-music-lyrics-content [data-lyric-distance='none'] { opacity: .85; }
+  .station-music-player .station-music-now-lyrics .station-music-lyrics-content [aria-current='true'] {
+    opacity: 1; transform: scale(1); font-weight: 750;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .station-music-player .station-music-now-lyrics .station-music-lyrics-content p { transition: none; transform: none; }
+}

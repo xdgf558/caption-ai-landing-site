@@ -1,3 +1,4 @@
+import { gsap } from 'gsap';
 import { fetchMusicLyrics, currentLyricIndex } from './musicLyrics.js';
 
 export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocument, prefix = 'lyrics', isOpen = null, quiet = false } = {}) {
@@ -6,9 +7,13 @@ export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocume
   const back = root.querySelector(`[data-${prefix}-follow]`), retry = root.querySelector(`[data-${prefix}-retry]`);
   const open = isOpen || (() => panel.open);
   const abort = new AbortController();
+  const reduced = document.defaultView?.matchMedia('(prefers-reduced-motion: reduce)');
+  let scrollTween = null;
+  const cancelScroll = () => { scrollTween?.kill(); scrollTween = null; };
+  reduced?.addEventListener('change', () => { scrollTween?.progress(1); cancelScroll(); }, { signal: abort.signal });
   let track = null, state = null, key = '', epoch = 0, request = null, timer = null, parsed = null, active = -1, following = true, loading = false, failed = false;
   const on = (node, event, handler) => node.addEventListener(event, handler, { signal: abort.signal });
-  const stop = () => { epoch++; request?.abort(); request = null; clearTimeout(timer); loading = false; };
+  const stop = () => { cancelScroll(); epoch++; request?.abort(); request = null; clearTimeout(timer); loading = false; };
   const highlight = () => {
     const matches = track && state?.activeTrackId === track.id && state.activeAudioVersion === track.audioVersion;
     const index = matches && parsed?.kind === 'lrc' ? currentLyricIndex(parsed.lines, state.currentTimeSec, state.activeVariant === 'preview' ? state.previewSourceStartSec || 0 : 0) : -1;
@@ -16,10 +21,19 @@ export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocume
     if (index === active) return;
     if (active >= 0) content.children[active]?.removeAttribute('aria-current');
     active = index;
+    for (const [i, row] of [...content.children].entries()) {
+      row.setAttribute('data-lyric-distance', index < 0 ? 'none' : String(Math.min(3, Math.abs(i - index))));
+      if (i !== index) row.removeAttribute('aria-current');
+    }
     if (index >= 0) {
       const line = content.children[index]; line?.setAttribute('aria-current', 'true');
       // Scroll only the lyric region, never the page or another song's drawer.
-      if (line && following && open() && !document.hidden && content.getClientRects().length) content.scrollTo({ top: line.offsetTop - content.clientHeight / 2 + line.offsetHeight / 2, behavior: 'auto' });
+      if (line && following && open() && !document.hidden && content.getClientRects().length) {
+        const top = Math.max(0, Math.min(content.scrollHeight - content.clientHeight, line.offsetTop - content.clientHeight / 2 + line.offsetHeight / 2));
+        cancelScroll();
+        if (prefix === 'now-lyrics' && document.defaultView && !reduced?.matches) scrollTween = gsap.to(content, { scrollTop: top, duration: .55, ease: 'power2.out', overwrite: true });
+        else content.scrollTo({ top, behavior: 'auto' });
+      }
     }
   };
   const load = async () => {
@@ -34,7 +48,7 @@ export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocume
     try {
       const result = await fetchMusicLyrics(selected, { fetcher, signal: request.signal });
       if (generation !== epoch) return;
-      parsed = result; content.replaceChildren();
+      parsed = result; content.setAttribute('data-lyrics-kind', result.kind); content.replaceChildren();
       if (result.kind === 'lrc') for (const row of result.lines) { const node = document.createElement('p'); node.textContent = row.text || ' '; content.append(node); }
       else content.textContent = result.text;
       message.textContent = quiet ? '' : result.kind === 'txt' && result.warnings ? t('时间标记不可用，显示普通歌词。') : result.kind === 'lrc' ? t('手动滚动可暂停跟随。') : '';
@@ -46,7 +60,7 @@ export function mountMusicLyrics(root, { t, fetcher, document = root.ownerDocume
   const refresh = () => { if (open() && !document.hidden) { active = -1; void load(); highlight(); } else stop(); };
   on(panel, 'toggle', refresh);
   on(retry, 'click', () => { failed = false; parsed = null; void load(); });
-  const manual = () => { following = false; back.hidden = active < 0; };
+  const manual = () => { cancelScroll(); following = false; back.hidden = active < 0; };
   on(content, 'wheel', manual); on(content, 'touchmove', manual); on(content, 'pointerdown', manual);
   on(content, 'keydown', event => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) manual(); });
   on(back, 'click', () => { following = true; active = -1; highlight(); });

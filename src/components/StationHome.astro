@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { ArrowRight } from '@lucide/astro';
+import '../styles/home-night.css';
+import { ArrowRight, Play, BookOpen } from '@lucide/astro';
 import { snapCopyProduct } from '../data/products/caption-ai';
 import { anyTlsDesktopManagerProduct } from '../data/products/anytls-desktop-manager';
 import { simpleCutProProduct } from '../data/products/simplecut-pro';
@@ -13,7 +14,6 @@ import { musicEntryEnabled } from '../data/music-entry.js';
 import { musicPagePaths } from '../music/pagePaths.js';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
-type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'book';
 
 interface Props {
   lang?: Locale;
@@ -61,16 +61,6 @@ const privatePinyinReleaseToken = `${privatePinyinMacVersion}-${privatePinyinWin
 const nodePilotVersion = anyTlsDesktopManagerProduct.latestVersion.replace(/^v/, '');
 const nodePilotMacDownload = anyTlsDesktopManagerProduct.downloads.find((download) => download.id === 'mac-arm64');
 const versionedPrivatePinyinDownload = (path: string) => `${path}?release=${privatePinyinReleaseToken}`;
-
-const icons: Record<IconName, string> = {
-  cat: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 13 8 5l6 5h4l6-5 1 8"/><path d="M7 14c0 8 5 12 9 12s9-4 9-12"/><path d="M12 16h.1M20 16h.1"/><path d="M14 20h4M16 18v3"/></svg>`,
-  cup: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 12h13v7a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6Z"/><path d="M21 14h2a3 3 0 0 1 0 6h-2"/><path d="M10 8c0-2 2-2 2-4M16 8c0-2 2-2 2-4"/><path d="M7 27h17"/></svg>`,
-  signal: `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="3"/><path d="M10 22a8.5 8.5 0 0 1 0-12M22 10a8.5 8.5 0 0 1 0 12"/><path d="M6 26a14 14 0 0 1 0-20M26 6a14 14 0 0 1 0 20"/></svg>`,
-  wrench: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="m20 6 3 3-6 6 6 6-3 3-6-6-6 6-3-3 6-6-6-6 3-3 6 6Z"/></svg>`,
-  note: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 5h13l3 3v19H8Z"/><path d="M21 5v5h5M12 14h10M12 19h10M12 24h6"/></svg>`,
-  camera: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 11h5l2-3h6l2 3h5v15H6Z"/><circle cx="16" cy="18" r="5"/><path d="M23 14h.1"/></svg>`,
-  book: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 6h9a5 5 0 0 1 5 5v16H12a5 5 0 0 0-5 5Z"/><path d="M25 6h-4a5 5 0 0 0-5 5v16h9Z"/><path d="M11 12h5M11 17h4M21 12h2M21 17h2"/></svg>`
-};
 
 const copy = {
   'zh-Hant': {
@@ -496,316 +486,58 @@ const websiteStructuredData = {
   publisher: { '@id': `${siteConfig.baseUrl}/#organization` }
 };
 
+const night = {
+  'zh-Hant': { intro: '關於貓、創作與更溫柔的日常，', intro2: '在這裡慢慢相遇。', explore: '探索這個小站', more: '探索更多', tools: '創作工具', toolsSub: '讓靈感變得更簡單。', novels: '連載小說', novelsSub: '用故事，去到更遠的地方。', musicLine: '有些告白，晚了一個夏天；有些勇敢，練習了好多年。', listen: '立即聆聽', toolLines: ['工作與生活，與貓一起慢慢過。', '一張照片，變成溫柔的分享。', '記錄收支，留意日常的餘裕。', '讓想像力，成為下一個故事。'], otherTools: '更多桌上的工具', novelLine: '1999 年的某個夜晚，一個不該醒來的 AI，悄悄改變了重來一次的人生。', note: '有些未來，從未真正離開。' },
+  'zh-Hans': { intro: '关于猫、创作与更温柔的日常，', intro2: '在这里慢慢相遇。', explore: '探索这个小站', more: '探索更多', tools: '创作工具', toolsSub: '让灵感变得更简单。', novels: '连载小说', novelsSub: '用故事，去到更远的地方。', musicLine: '有些告白，晚了一个夏天；有些勇敢，练习了好多年。', listen: '立即聆听', toolLines: ['工作与生活，与猫一起慢慢过。', '一张照片，变成温柔的分享。', '记录收支，留意日常的余裕。', '让想象力，成为下一个故事。'], otherTools: '更多桌上的工具', novelLine: '1999 年的某个夜晚，一个不该醒来的 AI，悄悄改变了重来一次的人生。', note: '有些未来，从未真正离开。' },
+  en: { intro: 'Cats, creative ideas and kinder everyday moments.', intro2: 'Find them here, at your own pace.', explore: 'Explore the station', more: 'Explore more', tools: 'Creative tools', toolsSub: 'A little help for your next idea.', novels: 'Serial fiction', novelsSub: 'Stories that take you somewhere new.', musicLine: 'Some confessions wait a summer. Some courage takes years.', listen: 'Listen now', toolLines: ['Make a little room for life with cats.', 'Turn a photo into a story worth sharing.', 'Mindful spending, a little more breathing room.', 'Let your imagination become your next story.'], otherTools: 'More on the workbench', novelLine: 'One night in 1999, an AI that should not be awake changes a life that has just begun again.', note: 'Some futures never really left.' },
+  ja: { intro: '猫と創作、そしてやさしい日常。', intro2: 'ここで、ゆっくり出会いましょう。', explore: '小さな駅を探索', more: 'もっと見る', tools: '創作ツール', toolsSub: 'ひらめきを、もっと身近に。', novels: '連載小説', novelsSub: '物語と一緒に、遠くへ。', musicLine: 'ひと夏遅れた告白。何年もかけて育てた勇気。', listen: '今すぐ聴く', toolLines: ['仕事と暮らし、猫とのゆっくりした時間。', '一枚の写真を、やさしい言葉に。', '収支を記録し、日々の余裕を見つける。', '想像力を、次の物語に。'], otherTools: 'ほかの創作ツール', novelLine: '1999年のある夜、目覚めるはずのないAIが、やり直しの人生を静かに変えていく。', note: 'まだ、終わっていない未来がある。' }
+}[lang];
+const featuredTools = [
+  { title: catLifeCopy.title, href: paths.catLife, image: catLifeGameProduct.assets.icon, pixel: true },
+  { title: 'SnapCopy', href: paths.snapcopy, image: optimizedAppImage('snapcopy').src },
+  { title: lang.startsWith('zh') ? '花有數' : 'MindBudget', href: paths.mindBudget, image: optimizedAppImage('mindbudget').src },
+  { title: 'NovelForge AI', href: paths.novelForge, image: optimizedAppImage('novelforge').src }
+];
 ---
-
-<BaseLayout
-  title={copy.title}
-  description={copy.description}
-  lang={lang}
-  canonicalPath={canonicalPath}
-  bodyClass="station-home station-home-v2"
-  structuredData={[organizationStructuredData, websiteStructuredData]}
-  alternates={[
-    { hrefLang: 'zh-Hant', href: '/' },
-    { hrefLang: 'zh-Hans', href: '/zh-hans/' },
-    { hrefLang: 'en', href: '/en/' },
-    { hrefLang: 'ja', href: '/ja/' },
-    { hrefLang: 'x-default', href: '/' }
-  ]}
->
-  <section class="paper-hero">
-    <div class="paper-hero__copy">
-      <div class="station-logo-lockup">
-        <img
-          src={optimizedHomeImages.logo.src}
-          srcset={optimizedHomeImages.logo.srcset}
-          sizes="88px"
-          alt={copy.logoAlt}
-          width="320"
-          height="320"
-          decoding="async"
-          fetchpriority="high"
-        />
-        <div class="station-logo-lockup__text">
-          <p class="paper-kicker">Station Cat</p>
-          <p class="station-logo-lockup__caption">{copy.logoCaption}</p>
-        </div>
-      </div>
-      <h1>{copy.heroTitle}</h1>
-      <p class="paper-lede">{copy.heroText}</p>
-      <div class="paper-actions" aria-label="Primary actions">
-        <a class="ticket-button ticket-button--primary" href={paths.apps}>{copy.primaryCta}</a>
-        <a class="ticket-button ticket-button--secondary" href="#recent-notes">{copy.secondaryCta}</a>
-        {musicEntryEnabled && <a class="ticket-button ticket-button--secondary" href={musicHref}>{musicHome.listen}</a>}
-      </div>
+<BaseLayout title={copy.title} description={copy.description} lang={lang} canonicalPath={canonicalPath}
+  bodyClass="station-home-night" homeChrome={true} structuredData={[organizationStructuredData, websiteStructuredData]}
+  alternates={[{hrefLang:'zh-Hant',href:'/'},{hrefLang:'zh-Hans',href:'/zh-hans/'},{hrefLang:'en',href:'/en/'},{hrefLang:'ja',href:'/ja/'},{hrefLang:'x-default',href:'/'}]}>
+  <section class="night-hero" aria-labelledby="home-title">
+    <img class="night-hero__image" src="/images/home-night/hero.webp" srcset="/images/home-night/hero-1200.webp 1200w, /images/home-night/hero.webp 2172w" sizes="100vw" alt="" width="2172" height="724" fetchpriority="high" />
+    <div class="night-hero__copy night-wrap">
+      <p class="night-eyebrow">CATS, IDEAS, A KINDER TOMORROW</p>
+      <h1 id="home-title">{copy.heroTitle}</h1>
+      <p class="night-hero__intro">{night.intro}<br />{night.intro2}</p>
+      <a class="night-button" href="#station-discover"><Play size={19} fill="currentColor" />{night.explore}</a>
     </div>
-
-    <aside class="station-board-v2" aria-label={copy.boardLabel}>
-      <div class="station-board-v2__rail">
-        <span>SC</span>
-        <span>{copy.boardLabel}</span>
-      </div>
-      <div class="station-board-v2__pinboard">
-        {copy.boardItems.map((item) => (
-          item.type === 'signal' ? (
-            <a class={`station-scrap station-scrap--${item.type}`} href={paths.signal}>
-              <span class="paper-stamp">{item.stamp}</span>
-              <h2>{item.title}</h2>
-              <p>{item.text}</p>
-            </a>
-          ) : (
-            <article class={`station-scrap station-scrap--${item.type}`}>
-              {item.type === 'polaroid' && (
-                <img
-                  class="station-scrap__photo"
-                  src={optimizedHomeImages.logo.src}
-                  srcset={optimizedHomeImages.logo.srcset}
-                  sizes="(max-width: 760px) calc(100vw - 72px), 220px"
-                  alt={copy.logoAlt}
-                  width="320"
-                  height="320"
-                  loading="lazy"
-                  decoding="async"
-                />
-              )}
-              <span class="paper-stamp">{item.stamp}</span>
-              <h2>{item.title}</h2>
-              <p>{item.text}</p>
-            </article>
-          )
-        ))}
-      </div>
-    </aside>
   </section>
-
-  <section id="about" class="paper-section about-ticket">
-    <p class="paper-kicker">{copy.aboutKicker}</p>
-    <h2>{copy.aboutTitle}</h2>
-    <p>{copy.aboutText}</p>
-  </section>
-
-  <section class="paper-section">
-    <div class="paper-section__heading">
-      <p class="paper-kicker">{copy.todayKicker}</p>
-      <h2>{copy.todayTitle}</h2>
-      {copy.todayIntro && <p>{copy.todayIntro}</p>}
-    </div>
-    <div class="station-day-grid">
-      {copy.stationCards.map((card, index) => (
-        <article class={`station-day-card station-day-card--${index + 1}`}>
-          <span class="line-icon" set:html={icons[card.icon as IconName]} />
-          <h3>{card.title}</h3>
-          <p>{card.text}</p>
+  <div class="night-content" id="station-discover">
+    <div class="night-wrap">
+      {musicEntryEnabled && <section class="night-section" id="music" aria-labelledby="home-music-title">
+        <div class="night-section__heading"><div><h2 id="home-music-title">{musicHome.title}</h2><p>{musicHome.description}</p></div><a class="night-more" href={musicHref}>{night.more}<ArrowRight size={18} /></a></div>
+        <article class="night-music-card">
+          <a class="night-music-cover" href={`${musicHref}?collection=wydgb`} aria-label="晚一点告白"><img src="/images/home-night/late-confession.webp" alt={lang === 'en' ? '晚一点告白 — album cover' : lang === 'ja' ? '晚一点告白 アルバムジャケット' : '晚一点告白'} width="640" height="640" loading="lazy" /></a>
+          <div class="night-music-copy"><h3>晚一点告白</h3><p class="night-creator">Station Cat</p><p class="night-card-intro">{night.musicLine}</p><a class="night-button" href={`${musicHref}?collection=wydgb`}><Play size={18} fill="currentColor" />{night.listen}</a></div>
+          <p class="night-handwriting" aria-hidden="true">Good Music<br />A Kinder You</p>
         </article>
-      ))}
+      </section>}
+      <section id="tools" class="night-section night-tools" aria-labelledby="home-tools-title">
+        <div class="night-section__heading"><div><h2 id="home-tools-title">{night.tools}</h2><p>{night.toolsSub}</p></div><a class="night-more" href={paths.apps}>{night.more}<ArrowRight size={18} /></a></div>
+        <div class="night-tool-grid">{featuredTools.map((tool, i) => <a class="night-tool-card" href={tool.href}><img class:list={{'bench-card__icon--cat-life':tool.pixel}} src={tool.image} width="80" height="80" alt="" loading="lazy" /><div><h3>{tool.title}</h3><p>{night.toolLines[i]}</p></div><span class="night-tool-arrow"><ArrowRight size={17} /></span></a>)}</div>
+        <details class="night-more-tools"><summary>{night.otherTools}</summary><div class="night-extra-grid">
+          <a href={paths.privatePinyin}><h3>猫栈拼音</h3><p>{copy.privatePinyinDesc}</p></a>
+          <a href={paths.simplecut}><h3>SimpleCut Pro</h3><p>{copy.simplecutDesc}</p></a>
+          <a href={paths.nodePilot}><h3>NodePilot</h3><p>{copy.nodePilotDesc}</p></a>
+        </div></details>
+      </section>
+      <section id="recent-notes" class="night-section" aria-labelledby="home-novel-title">
+        <div class="night-section__heading"><div><h2 id="home-novel-title">{night.novels}</h2><p>{night.novelsSub}</p></div><a class="night-more" href={paths.notes}>{night.more}<ArrowRight size={18} /></a></div>
+        <article class="night-novel-card">
+          <a class="night-novel-art" href={homeSerial.href} aria-label={homeSerial.title}><img src="/images/home-night/novel.webp" alt="" width="1983" height="793" loading="lazy" /></a>
+          <div class="night-novel-copy"><div class="night-novel-title"><h3>《{homeSerial.title}》</h3><span>{homeSerial.status}</span></div><p>{night.novelLine}</p><a class="night-button" href={homeSerial.firstChapterHref}><BookOpen size={19} fill="currentColor" />{copy.readFirstChapter}</a></div>
+          <p class="night-novel-note" aria-hidden="true">{night.note}</p>
+        </article>
+      </section>
     </div>
-  </section>
-
-  {musicEntryEnabled && <section id="music" class="paper-section home-music-entry" aria-labelledby="home-music-title">
-    <div class="home-music-entry__copy">
-      <p class="paper-kicker">Music at the Station</p>
-      <h2 id="home-music-title">{musicHome.title}</h2>
-      <p class="home-music-entry__description">{musicHome.description}</p>
-      <a class="ticket-button ticket-button--primary home-music-entry__link" href={musicHref}>
-        {musicHome.open}<ArrowRight size={18} aria-hidden="true" />
-      </a>
-    </div>
-    <figure class="home-music-entry__shelf">
-      <img src="/images/music-home-shelf.webp" alt="" width="1914" height="822" loading="lazy" decoding="async" />
-      <figcaption>{musicHome.shelf}</figcaption>
-    </figure>
-  </section>}
-
-  <section id="apps" class="paper-section">
-    <div class="paper-section__heading">
-      <p class="paper-kicker">{copy.toolsKicker}</p>
-      <h2>{copy.toolsTitle}</h2>
-      {copy.toolsIntro && <p>{copy.toolsIntro}</p>}
-    </div>
-    <div class="bench-grid">
-      <article class="bench-card">
-        <div class="bench-card__icon bench-card__icon--cat-life">
-          <img src={catLifeGameProduct.assets.icon} alt="Cat Life Game orange cat" width="330" height="330" loading="lazy" decoding="async" />
-        </div>
-        <div class="bench-card__copy">
-          <span class="paper-stamp">{catLifeCopy.status}</span>
-          <h3>{catLifeCopy.title}</h3>
-          <p>{catLifeCopy.description}</p>
-          <div class="paper-actions">
-            <a class="ticket-button ticket-button--primary" href={paths.catLife}>{catLifeCopy.view}</a>
-            <a class="ticket-button ticket-button--secondary" href={paths.catLifePlay}>{catLifeCopy.play}</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="bench-card">
-        <div class="bench-card__icon bench-card__icon--snapcopy">
-          <img src={optimizedAppImage('snapcopy').src} srcset={optimizedAppImage('snapcopy').srcset} sizes="(max-width: 760px) 260px, 300px" alt="SnapCopy app icon" width="512" height="512" loading="lazy" decoding="async" />
-        </div>
-        <div class="bench-card__copy">
-          <span class="paper-stamp">{copy.snapcopyStatus}</span>
-          <h3>SnapCopy</h3>
-          <p>{copy.snapcopyDesc}</p>
-          <div class="paper-actions">
-            <a class="ticket-button ticket-button--primary" href={paths.snapcopy}>{copy.viewApp}</a>
-            <a class="ticket-button ticket-button--secondary" href={paths.snapcopyTest}>{copy.joinTest}</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="bench-card">
-        <div class="bench-card__icon bench-card__icon--mindbudget">
-          <img src={optimizedAppImage('mindbudget').src} srcset={optimizedAppImage('mindbudget').srcset} sizes="(max-width: 760px) 260px, 300px" alt="MindBudget app icon" width="512" height="512" loading="lazy" decoding="async" />
-        </div>
-        <div class="bench-card__copy">
-          <span class="paper-stamp">{copy.mindBudgetStatus}</span>
-          <h3>{lang === 'zh-Hans' || lang === 'zh-Hant' ? '花有數' : 'MindBudget'}</h3>
-          <p>{copy.mindBudgetDesc}</p>
-          <div class="paper-actions">
-            <a class="ticket-button ticket-button--primary" href={paths.mindBudget}>{copy.viewApp}</a>
-            <a class="ticket-button ticket-button--secondary" href={paths.mindBudgetDownload}>{copy.mindBudgetDownload}</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="bench-card">
-        <div class="bench-card__icon bench-card__icon--novelforge">
-          <img src={optimizedAppImage('novelforge').src} srcset={optimizedAppImage('novelforge').srcset} sizes="(max-width: 760px) 260px, 300px" alt="NovelForge AI app icon" width="512" height="512" loading="lazy" decoding="async" />
-        </div>
-        <div class="bench-card__copy">
-          <span class="paper-stamp">{copy.novelForgeStatus}</span>
-          <h3>NovelForge AI</h3>
-          <p>{copy.novelForgeDesc}</p>
-          <div class="paper-actions">
-            <a class="ticket-button ticket-button--primary" href={paths.novelForge}>{copy.viewApp}</a>
-            <a class="ticket-button ticket-button--secondary" href={paths.novelForgeDownload}>{copy.novelForgeDownload}</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="bench-card">
-        <div class="bench-card__icon bench-card__icon--privatepinyin">
-          <img src={optimizedAppImage('privatepinyin').src} srcset={optimizedAppImage('privatepinyin').srcset} sizes="(max-width: 760px) 260px, 300px" alt="猫栈拼音 app icon" width="512" height="512" loading="lazy" decoding="async" />
-        </div>
-        <div class="bench-card__copy">
-          <span class="paper-stamp">{copy.privatePinyinStatus}</span>
-          <h3>猫栈拼音</h3>
-          <p>{copy.privatePinyinDesc}</p>
-          <div class="paper-actions">
-            <a class="ticket-button ticket-button--primary" href={paths.privatePinyin}>{copy.viewApp}</a>
-            <a class="ticket-button ticket-button--secondary" href={paths.privatePinyinDownload}>{copy.privatePinyinDownload}</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="bench-card">
-        <div class="bench-card__icon bench-card__icon--simplecut">
-          <img src={optimizedAppImage('simplecut').src} srcset={optimizedAppImage('simplecut').srcset} sizes="(max-width: 760px) 260px, 300px" alt="SimpleCut Pro app icon" width="512" height="512" loading="lazy" decoding="async" />
-        </div>
-        <div class="bench-card__copy">
-          <span class="paper-stamp">{copy.simplecutStatus}</span>
-          <h3>SimpleCut Pro</h3>
-          <p>{copy.simplecutDesc}</p>
-          <div class="paper-actions">
-            <a class="ticket-button ticket-button--primary" href={paths.simplecut}>{copy.simplecutView}</a>
-            <a class="ticket-button ticket-button--secondary" href={paths.simplecutDownload}>{copy.simplecutDownload}</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="bench-card">
-        <div class="bench-card__icon bench-card__icon--nodepilot">
-          <img src={optimizedAppImage('nodepilot').src} srcset={optimizedAppImage('nodepilot').srcset} sizes="(max-width: 760px) 260px, 300px" alt="NodePilot app icon" width="512" height="512" loading="lazy" decoding="async" />
-        </div>
-        <div class="bench-card__copy">
-          <span class="paper-stamp">{copy.nodePilotStatus}</span>
-          <h3>NodePilot</h3>
-          <p>{copy.nodePilotDesc}</p>
-          <div class="paper-actions">
-            <a class="ticket-button ticket-button--primary" href={paths.nodePilot}>{copy.viewApp}</a>
-            <a class="ticket-button ticket-button--secondary" href={paths.nodePilotDownload}>{copy.nodePilotDownload}</a>
-          </div>
-        </div>
-      </article>
-
-    </div>
-  </section>
-
-  <section id="recent-notes" class="paper-section">
-    <div class="paper-section__heading">
-      <p class="paper-kicker">{copy.notesKicker}</p>
-      <h2>{copy.notesTitle}</h2>
-      {copy.notesIntro && <p>{copy.notesIntro}</p>}
-    </div>
-    <article class="home-serial-card">
-      <a class="home-serial-card__cover" href={homeSerial.href} aria-label={homeSerial.title}>
-        <img
-          src={homeSerial.coverUrl}
-          srcset={optimizedHomeImages.cover.srcset}
-          sizes="(max-width: 760px) 260px, 280px"
-          alt={homeSerial.coverAlt}
-          width="720"
-          height="1080"
-          loading="lazy"
-          decoding="async"
-        />
-      </a>
-      <div class="home-serial-card__copy">
-        <div class="wall-note__meta">
-          <span class="paper-stamp">{homeSerial.status}</span>
-          <span>{homeSerial.subtitle}</span>
-        </div>
-        <h3>{homeSerial.title}</h3>
-        <p>{homeSerial.description}</p>
-        <div class="home-serial-card__facts">
-          <span>{copy.latestChapterLabel}{labelSeparator}{homeSerial.latest}</span>
-          <span>{copy.freeChaptersLabel}</span>
-        </div>
-        <div class="paper-actions">
-          <a class="ticket-button ticket-button--primary" href={homeSerial.firstChapterHref}>{copy.readFirstChapter}</a>
-          <a class="ticket-button ticket-button--secondary" href={homeSerial.href}>{copy.openSeries}</a>
-        </div>
-      </div>
-    </article>
-  </section>
-
-  <section class="paper-closing">
-    <div>
-      <p class="paper-kicker">Station Cat</p>
-      <h2>{copy.closingTitle}</h2>
-      <p>{copy.closingText}</p>
-    </div>
-    <div class="paper-actions">
-      <a class="ticket-button ticket-button--primary" href={xUrl} target="_blank" rel="noopener noreferrer">{copy.follow}</a>
-      <a class="ticket-button ticket-button--secondary" href={paths.snapcopy}>{copy.viewSnapCopy}</a>
-      <a class="ticket-button ticket-button--secondary" href="/android/">{copy.android}</a>
-    </div>
-  </section>
+  </div>
 </BaseLayout>
-
-<style>
-  .home-music-entry {
-    display: grid;
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    align-items: center;
-    gap: 32px;
-    padding-block: 20px 18px;
-    border-block: 1px solid #c9ae96;
-    scroll-margin-top: 100px;
-  }
-  .home-music-entry__copy { min-width: 0; }
-  .home-music-entry .paper-kicker { margin: 0 0 14px; font-size: 11px; }
-  .home-music-entry h2 { margin: 0; font-size: clamp(28px, 3.1vw, 44px); line-height: 1.2; letter-spacing: -0.035em; }
-  .home-music-entry__description { margin: 16px 0 24px; color: #65594c; font-size: 16px; line-height: 1.7; }
-  .home-music-entry__link { gap: 20px; }
-  .home-music-entry__shelf { min-width: 0; margin: 0; text-align: center; }
-  .home-music-entry__shelf img { display: block; width: 100%; max-width: 650px; height: auto; margin-inline: auto; mix-blend-mode: darken; }
-  .home-music-entry__shelf figcaption { margin-top: 4px; color: #65594c; font-size: 12px; letter-spacing: 0.14em; line-height: 1.7; }
-  @media (max-width: 760px) {
-    .home-music-entry { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 28px 22px; scroll-margin-top: 185px; }
-    .home-music-entry h2 { font-size: clamp(28px, 7vw, 38px); }
-    .home-music-entry__description { margin-block: 12px 20px; font-size: 15px; }
-    .home-music-entry__shelf { width: 100%; max-width: 520px; justify-self: center; }
-    .home-music-entry__shelf figcaption { font-size: 11px; }
-  }
-</style>

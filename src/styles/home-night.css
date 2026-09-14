@@ -1,0 +1,94 @@
+/* Homepage-only night desk theme; product pages and the music player keep their own chrome. */
+body.station-home-night{--bg:#09131a;--surface:#131f27;--ink:#f1f1ed;--muted:#abb3b9;--line:#2b3943;--gold:#f5ca80;--night-serif:Georgia,'Songti SC','Noto Serif TC','Noto Serif CJK TC',serif;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,'PingFang TC','Microsoft JhengHei',sans-serif;-webkit-font-smoothing:antialiased}
+.station-home-night #main{max-width:none;padding:0;margin:0;width:100%}
+.station-home-night a{text-decoration:none}
+.station-home-night p{color:var(--muted)}
+.station-home-night h1,.station-home-night h2,.station-home-night h3{color:var(--ink)}
+.station-home-night :focus-visible{outline:2px solid var(--gold);outline-offset:5px}
+.station-home-night .skip-link{color:#09131a;background:var(--gold)}
+.night-wrap{width:calc(100% - 108px);max-width:1220px;margin-inline:auto}
+.night-header{height:60px;padding:0 3.4%;display:flex;align-items:center;gap:30px;background:#09131a;border-bottom:1px solid #28333c;position:relative;z-index:5}
+.night-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;color:var(--gold)}
+.night-brand img{width:38px;height:47px;object-fit:contain}
+.night-brand strong{font-family:var(--night-serif);font-size:23px;line-height:1.1;font-weight:700;display:block;white-space:nowrap;color:var(--gold)}
+.night-brand small{font-size:10px;letter-spacing:4px;display:block;margin-top:3px;color:var(--gold)}
+.night-desktop-nav{display:flex;align-items:center;justify-content:center;gap:26px;flex:1;min-width:0}
+.night-desktop-nav a{font-size:12px;white-space:nowrap;color:#d2d5d8;transition:color 180ms}
+.night-desktop-nav a:hover,.night-footer a:hover{color:var(--gold)}
+.night-header-actions{display:flex;align-items:center;gap:15px}
+.night-member,.night-follow{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:24px;white-space:nowrap;font-size:12px;min-height:35px;padding:0 20px}
+.night-member{border:1px solid #82898d;color:#e9ebec}
+.night-follow{background:var(--gold);color:#171710;border:1px solid #ffdd9c}
+.night-mobile-menu{display:none}
+.night-hero{height:330px;position:relative;isolation:isolate;overflow:hidden;background:#0a151d}
+.night-hero__image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 53%;z-index:-1}
+.night-hero__copy{padding:47px 10px 0}
+.station-home-night .night-eyebrow{font-size:10px;font-weight:600;letter-spacing:4.5px;color:var(--gold);margin-bottom:22px;line-height:1.5}
+.station-home-night .night-hero h1{font-family:var(--night-serif);font-size:44px;letter-spacing:2px;line-height:1.3;max-width:650px;text-wrap:balance;text-shadow:0 2px 18px #03080c}
+.station-home-night .night-hero__intro{font-size:19px;line-height:1.65;letter-spacing:2px;color:#e0e4e6;margin:6px 0 25px;max-width:580px;text-shadow:0 2px 10px #03080c}
+.night-button{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:43px;padding:0 29px;border:1px solid #ffdda0;border-radius:28px;background:#f5ca80;color:#16170f;font-weight:650;font-size:14px;box-shadow:0 0 24px #f5ca801c;transition:background 180ms,transform 180ms}
+.night-button:hover{background:#ffdc9f;transform:translateY(-2px)}
+.night-button:active{transform:translateY(0)}
+.night-content{padding:65px 0 86px;background:#09131a;position:relative;isolation:isolate}.night-content::before{content:'';position:absolute;inset:auto 0 0;height:110px;background:url('/images/home-night/music.webp') center 55%/cover;opacity:.4;z-index:-1}
+.night-section+.night-section{margin-top:45px}
+.night-section__heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:0 11px 15px}
+.night-section__heading>div{display:flex;align-items:baseline;gap:20px;min-width:0}
+.station-home-night .night-section__heading h2{font-family:var(--night-serif);font-size:29px;letter-spacing:1px;line-height:1.2}
+.station-home-night .night-section__heading p{font-size:13px;letter-spacing:1px;line-height:1.5}
+.night-more{display:inline-flex;align-items:center;gap:8px;color:var(--gold);font-size:13px;font-weight:600;white-space:nowrap;min-height:32px}
+.night-music-card{border:1px solid var(--line);border-radius:11px;overflow:hidden;display:flex;align-items:center;gap:38px;padding:12px 50px;min-height:203px;background:#0d1922 url('/images/home-night/music.webp') right center/cover no-repeat}
+.night-music-cover{flex-shrink:0;width:235px;height:180px;overflow:hidden;border:1px solid #676055;border-radius:9px}
+.night-music-cover img{width:100%;height:100%;object-fit:cover;object-position:50% 46%}
+.night-music-copy{min-width:0;max-width:385px}
+.station-home-night .night-music-copy h3{font-family:var(--night-serif);font-size:28px;line-height:1.2;color:#ffda96;margin-bottom:5px}
+.station-home-night .night-creator{font-size:14px;color:#d5d9db}
+.station-home-night .night-card-intro{font-size:14px;line-height:1.7;margin:10px 0 13px;color:#d0d5d8}
+.station-home-night .night-handwriting{font-family:'Snell Roundhand','Segoe Script',cursive;font-size:25px;line-height:1.4;transform:rotate(-12deg);color:#b99f75;opacity:.8;text-align:center;flex:1;min-width:150px;align-self:center}
+.night-tool-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.night-tool-card{display:flex;align-items:center;gap:15px;min-width:0;min-height:121px;padding:18px 18px;background:#142028;border:1px solid #29343e;border-radius:9px;position:relative;transition:background 180ms,border-color 180ms,transform 180ms}
+.night-tool-card:hover{background:#1b2932;border-color:#857151;transform:translateY(-3px)}
+.night-tool-card img{width:69px;height:69px;object-fit:cover;flex-shrink:0;border-radius:15px}
+.night-tool-card img.bench-card__icon--cat-life{image-rendering:pixelated;object-fit:contain;background:#233649}
+.night-tool-card>div{min-width:0;padding-bottom:10px}
+.station-home-night .night-tool-card h3{font-size:15px;font-weight:650;line-height:1.4;letter-spacing:.3px;margin-bottom:5px}
+.station-home-night .night-tool-card p{font-size:11px;line-height:1.6;color:#bdc6cc;padding-right:2px}
+.night-tool-arrow{width:27px;height:27px;border-radius:50%;border:1px solid #b79758;color:var(--gold);display:flex;align-items:center;justify-content:center;position:absolute;right:12px;bottom:16px;background:#142028}
+.night-more-tools{margin-top:11px;border-bottom:1px solid #1d2a33;padding-bottom:9px}
+.night-more-tools summary{font-size:11px;line-height:1.7;color:#b2bbc3;cursor:pointer;width:fit-content}
+.night-extra-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:18px 0}
+.station-home-night .night-extra-grid h3{font-size:17px;margin-bottom:8px}
+.station-home-night .night-extra-grid p{font-size:13px}
+.night-tools+.night-section{margin-top:28px}
+.night-novel-card{display:flex;align-items:stretch;min-height:173px;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#455460 url('/images/home-night/music.webp') right center/cover no-repeat;background-blend-mode:multiply}
+.night-novel-art{width:45%;flex-shrink:0;position:relative;overflow:hidden}
+.night-novel-art img{position:absolute;width:100%;height:100%;object-fit:cover}
+.night-novel-copy{padding:25px 22px 15px;flex:1;min-width:0;max-width:385px}
+.night-novel-title{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.station-home-night .night-novel-title h3{font-family:var(--night-serif);font-size:23px;white-space:nowrap}
+.night-novel-title span{font-size:10px;color:var(--gold);border:1px solid #8e7751;border-radius:20px;padding:3px 12px;white-space:nowrap}
+.station-home-night .night-novel-copy p{font-size:13px;line-height:1.7;margin-bottom:13px;color:#c9d0d5}
+.night-novel-copy .night-button{font-size:13px;min-height:38px;padding-inline:23px;gap:10px}
+.station-home-night .night-novel-note{align-self:center;font-family:var(--night-serif);font-size:18px;line-height:1.8;color:#c1ab85;writing-mode:vertical-rl;max-height:110px;margin:0 27px 0 0;transform:rotate(7deg);letter-spacing:2px}
+.night-footer{border-top:1px solid #2b3740;background:#09131a;padding:27px 3.4% 40px;min-height:132px}
+.night-footer-inner{max-width:1280px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:28px}
+.night-footer .night-brand strong{font-size:19px}
+.night-footer .night-brand span{display:flex;align-items:center;gap:15px}
+.night-footer .night-brand small{font-size:10px;letter-spacing:1px;margin:0}
+.night-footer .night-brand img{height:42px;width:36px}
+.station-home-night .night-footer-brand>p{font-size:11px;padding-left:46px;line-height:1.6}
+.night-footer nav{display:flex;gap:22px;flex-shrink:0;font-size:11px}
+.night-footer-social{display:flex;align-items:center;justify-content:center;gap:23px;margin-bottom:9px}
+.station-home-night .night-footer-end>p{font-size:10px;white-space:nowrap}
+.station-home-night .night-footer .language-switcher{padding:0;margin:0;min-width:0}
+.station-home-night .night-footer .language-select{background:#142028;color:#e1e5e8;border:1px solid #39464e;border-radius:6px;font-size:11px;width:73px;min-height:29px;padding:3px 7px}
+@media(min-width:1400px){.night-hero{height:410px}.night-hero__copy{padding-top:70px}.station-home-night .night-hero h1{font-size:53px}.night-content{padding-top:70px}.night-music-card{min-height:230px}.night-music-cover{height:205px;width:250px}}
+@media(max-width:1100px){.night-header{gap:20px;padding-inline:3%}.night-desktop-nav{gap:19px}.night-header-actions{gap:10px}.night-member,.night-follow{padding-inline:13px}.night-brand strong{font-size:21px}.night-wrap{width:calc(100% - 72px)}.night-music-card{padding-inline:24px;gap:25px}.night-music-cover{width:215px}.night-tool-card{padding:14px 12px;gap:10px}.night-tool-card img{width:57px;height:57px}.night-tool-card p{padding-right:9px}.night-tool-arrow{right:8px;bottom:9px;width:23px;height:23px}.night-footer-inner{gap:20px}.night-footer nav{gap:13px}.night-footer .night-brand span{gap:8px}.night-footer .night-brand small{display:none}}
+@media(max-width:900px){.night-desktop-nav,.night-header-actions{display:none}.night-header{justify-content:space-between;height:64px}.night-mobile-menu{display:block}.night-mobile-menu summary{display:flex;align-items:center;justify-content:center;width:44px;height:44px;cursor:pointer;color:var(--gold);list-style:none;border:1px solid #3c4850;border-radius:50%}.night-mobile-menu summary::-webkit-details-marker{display:none}.night-mobile-menu nav{position:absolute;top:63px;left:0;right:0;background:#101c25;border-bottom:1px solid #4b5050;padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;box-shadow:0 15px 25px #0005}.night-mobile-menu nav>a{padding:11px 8px;font-size:14px}.night-mobile-locales{grid-column:1/-1;display:flex;gap:23px;border-top:1px solid var(--line);padding:15px 8px 0;font-size:13px;color:var(--gold)}.night-hero{height:340px}.night-hero__image{object-position:61% center}.night-hero__copy{padding-top:50px}.station-home-night .night-hero h1{font-size:36px;max-width:480px}.station-home-night .night-hero__intro{font-size:16px}.night-content{padding-top:45px}.night-handwriting{display:none}.night-tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.night-tool-card{padding:18px;gap:18px}.night-tool-card img{width:68px;height:68px}.night-tool-card h3{font-size:17px}.night-tool-card p{font-size:13px}.night-tool-arrow{width:26px;height:26px;right:13px;bottom:14px}.night-section__heading>div{gap:14px}.station-home-night .night-section__heading h2{font-size:25px}.night-novel-note{display:none}.night-novel-copy{max-width:none}.night-novel-art{width:43%}.night-footer-inner{flex-wrap:wrap}.night-footer-end{margin-left:auto}.night-footer-brand{width:100%}}
+@media(max-width:580px){.night-wrap{width:calc(100% - 36px)}.night-header{padding-inline:18px}.night-brand strong{font-size:22px}.night-brand small{font-size:9px}.night-hero{height:480px}.night-hero__image{object-fit:cover;object-position:72% bottom;height:250px;top:auto;bottom:0}.night-hero__copy{padding:30px 3px 0;position:relative}.station-home-night .night-eyebrow{font-size:8px;letter-spacing:2.7px;margin-bottom:15px}.station-home-night .night-hero h1{font-size:32px;line-height:1.4;max-width:350px;letter-spacing:1px}.station-home-night .night-hero__intro{font-size:14px;line-height:1.8;letter-spacing:1px;margin:10px 0 18px;max-width:340px}.night-button{font-size:13px;min-height:43px;padding-inline:24px}.night-content{padding:28px 0 45px;background-size:auto 350px}.night-section__heading{margin:0 1px 14px;gap:12px;align-items:flex-start}.night-section__heading>div{display:block}.station-home-night .night-section__heading h2{font-size:23px;letter-spacing:.3px}.station-home-night .night-section__heading p{font-size:11px;margin-top:7px;letter-spacing:0}.night-more{font-size:11px;gap:5px}.night-more svg{width:15px}.night-music-card{padding:17px;gap:16px;flex-wrap:wrap}.night-music-cover{width:110px;height:110px;border-radius:7px}.night-music-copy{flex:1;min-width:145px}.station-home-night .night-music-copy h3{font-size:24px}.station-home-night .night-creator{font-size:12px}.station-home-night .night-card-intro{font-size:12px;line-height:1.6;margin:7px 0 12px}.night-music-copy .night-button{min-height:38px;padding-inline:18px;font-size:12px;gap:8px}.night-section+.night-section{margin-top:33px}.night-tool-grid{gap:10px}.night-tool-card{display:block;padding:15px 13px;min-height:182px}.night-tool-card img{width:54px;height:54px;margin-bottom:14px}.night-tool-card>div{padding-bottom:14px}.station-home-night .night-tool-card h3{font-size:14px}.station-home-night .night-tool-card p{font-size:11px;padding-right:14px}.night-tool-arrow{bottom:11px;right:10px;width:23px;height:23px}.night-extra-grid{grid-template-columns:1fr}.night-novel-card{display:block}.night-novel-art{display:block;width:100%;height:160px}.night-novel-copy{padding:20px}.station-home-night .night-novel-title h3{font-size:23px}.station-home-night .night-novel-copy p{font-size:13px}.night-footer{padding:26px 20px 30px}.night-footer-inner{gap:23px}.night-footer nav{font-size:11px;gap:21px}.night-footer-end{margin:0;width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:4px}.night-footer-social{gap:22px}.night-footer .night-brand span{display:block}.night-footer .night-brand small{display:block;margin-top:4px;font-size:9px;letter-spacing:2px}.station-home-night .night-footer-brand>p{font-size:10px;padding-left:0;margin-top:11px}.night-footer .night-brand strong{font-size:21px}}
+@media(prefers-reduced-motion:reduce){.station-home-night{scroll-behavior:auto}.station-home-night *{scroll-behavior:auto!important;transition:none!important}}
+
+@media(min-width:901px){.night-footer nav{gap:17px}.night-footer-inner{gap:20px}.night-footer-brand{max-width:405px}.night-footer .night-brand small{letter-spacing:.5px}}
+/* Longer locale labels must not push navigation or mobile controls off screen. */
+.station-home-night:lang(en) .night-header .night-brand small{font-size:8px;letter-spacing:1px;max-width:185px}
+@media(min-width:901px){.station-home-night:lang(en) .night-desktop-nav{gap:19px}.station-home-night:lang(en) .night-hero__copy{padding-top:32px}.station-home-night:lang(en) .night-hero__intro{letter-spacing:.5px;font-size:17px}.station-home-night:lang(en) .night-hero h1{font-size:40px;max-width:590px}}
+@media(max-width:580px){.night-music-card{background-color:#4e5a63;background-blend-mode:multiply}.station-home-night .night-card-intro{font-size:13px;color:#e0e4e6}.station-home-night .night-tool-card p{font-size:12px}.night-tool-card{min-height:192px}.night-footer nav{flex-wrap:wrap}}

@@ -158,6 +158,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     setText('[data-mini-access]', selectedAccess);
     if (isLibrary) {
       setImage($('[data-now-cover]'), selected.coverUrl);
+      panels.setCover(selected.coverUrl);
       const favorite = favoriteIds.has(selected.id);
       $('[data-now-favorite]').setAttribute('aria-pressed', String(favorite));
       $('[data-now-favorite]').dataset.liked = String(favorite);

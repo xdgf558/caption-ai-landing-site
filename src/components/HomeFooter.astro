@@ -1,0 +1,20 @@
+---
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import { Mail, X } from '@lucide/astro';
+import {siteConfig} from '../data/site';
+interface Props { lang: 'zh-Hant'|'zh-Hans'|'en'|'ja' }
+const {lang} = Astro.props;
+const prefix = lang === 'zh-Hant' ? 'zh-hant' : lang === 'zh-Hans' ? 'zh-hans' : lang;
+const article = { 'zh-Hant': ['文章與觀察','/signal/'], 'zh-Hans': ['文章与观察','/zh-hans/signal/'], en: ['Notes & Essays','/en/signal/'], ja: ['記事と思考','/ja/signal/'] }[lang];
+const copy = {
+ 'zh-Hant':{caption:'個人創作小站',line:'用貓咪、工具與文字，陪你走過每一個平凡的日子。',privacy:'隱私政策',terms:'服務條款',support:'聯絡我們'},
+ 'zh-Hans':{caption:'个人创作小站',line:'用猫咪、工具与文字，陪你走过每一个平凡的日子。',privacy:'隐私政策',terms:'服务条款',support:'联系我们'},
+ en:{caption:'Independent creations',line:'Cats, tools and stories. A little company for everyday life.',privacy:'Privacy',terms:'Terms',support:'Contact'},
+ ja:{caption:'小さな創作の駅',line:'猫とツールと物語で、何気ない毎日に寄り添います。',privacy:'プライバシー',terms:'利用規約',support:'お問い合わせ'}
+}[lang];
+---
+<footer class="night-footer"><div class="night-footer-inner">
+  <div class="night-footer-brand"><a class="night-brand" href={lang === 'zh-Hant' ? '/' : `/${prefix}/`}><img src="/images/home-night/cat-mark.webp" width="42" height="50" alt=""/><span><strong>Station Cat</strong><small>{copy.caption}</small></span></a><p>{copy.line}</p></div>
+  <nav aria-label="Footer"><a href="/about/">About</a><a href={article[1]}>{article[0]}</a><a href={`/${prefix}/privacy/`}>{copy.privacy}</a><a href={`/${prefix}/terms/`}>{copy.terms}</a></nav>
+  <div class="night-footer-end"><div class="night-footer-social"><a href={`mailto:${siteConfig.supportEmail}`} aria-label={copy.support}><Mail size={18}/></a><a href={siteConfig.xUrl} aria-label="Follow on X" target="_blank" rel="noopener noreferrer"><X size={18}/></a><LanguageSwitcher lang={lang}/></div><p>© {new Date().getFullYear()} Station Cat. All rights reserved.</p></div>
+</div></footer>

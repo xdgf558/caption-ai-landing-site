@@ -135,8 +135,8 @@ for (const route of [
 }
 
 assert.match(appsIndex, /title="NovelForge AI"/);
-assert.match(stationHome, /<h3>NovelForge AI<\/h3>/);
-assert.match(stationHome, /bench-card__icon--novelforge/);
+assert.match(stationHome, /title: 'NovelForge AI', href: paths\.novelForge/);
+assert.match(stationHome, /optimizedAppImage\('novelforge'\)\.src/);
 assert.match(footer, /label: 'NovelForge AI'/);
 assert.equal(existsSync(join(root, 'src/pages/zh-hant/apps/novelforge-ai/download.astro')), true);
 
