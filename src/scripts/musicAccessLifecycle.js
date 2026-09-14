@@ -36,7 +36,17 @@ export function createMusicAccessLifecycle(player, queue, {
   let pending = null, checkingAccess = false, changingAccount = false, savedFullPosition = null, denial = null;
   let mediaRequest = null, mediaKey = '', refreshVersion = 0;
   let catalogVersion = 0, browsing = null;
+  let catalogCollections = [], catalogView;
   const requests = new Set(), invalidVersions = new Set();
+  const publishCatalog = (collections = catalogCollections, view = catalogView) => {
+    const byId = new Map(tracks.map(track => [track.id, track]));
+    const project = values => values.map(track => byId.get(track.id) || track);
+    const projectCollection = group => group?.tracks ? { ...group, tracks: project(group.tracks) } : group;
+    catalogCollections = collections?.map(projectCollection);
+    catalogView = view ? { ...view, catalogTracks: project(view.catalogTracks),
+      selectedCollection: projectCollection(view.selectedCollection) } : view;
+    onCatalog(tracks, catalogCollections, catalogView);
+  };
   const promotionExpired = track => !!track?.freeUntil && (!serverClock || Date.parse(track.freeUntil)<=serverClock.server+now()-serverClock.local);
   const armPromotion = () => {
     clearTimer(policyTimer);policyTimer=null;
@@ -48,7 +58,10 @@ export function createMusicAccessLifecycle(player, queue, {
       const expired=tracks.some(t=>t.effectiveAccess==='free'&&promotionExpired(t));
       if(!expired){armPromotion();return;}
       tracks=tracks.map(t=>t.effectiveAccess==='free'&&promotionExpired(t)?{...t,effectiveAccess:'vip'}:t);
-      queue.updateCatalog(tracks);enforce();void refresh('promotion');
+      // Publish the local deadline before any network refresh can fail. Retain
+      // the current album/selection context so the page does not lose its view.
+      publishCatalog();
+      queue.updateCatalog(tracks);enforce();armPromotion();void refresh('promotion');
     },Math.max(1,Math.min(MAX_TIMER,Math.min(...ends)-now())));
   };
   const activeTrack = () => tracks.find(track => track.id === player.snapshot().activeTrackId);
@@ -89,7 +102,7 @@ export function createMusicAccessLifecycle(player, queue, {
   const applyCatalog = (values, collections, view, resetUnavailable) => {
     const state = player.snapshot(), old = activeTrack();
     tracks = values.map(t=>serverClock&&t.effectiveAccess==='free'&&promotionExpired(t)?{...t,effectiveAccess:'vip'}:t);armPromotion();
-    onCatalog(tracks, collections, view);
+    publishCatalog(collections, view);
     queue.updateCatalog(tracks, { resetUnavailable });
     const current = activeTrack();
     if (old?.effectiveAccess === 'free' && current?.effectiveAccess === 'vip' && state.activeVariant === 'full' && playerVariant(current, capabilities) !== 'full') {
