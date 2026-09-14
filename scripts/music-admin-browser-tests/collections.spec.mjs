@@ -2,9 +2,9 @@ import {test,expect} from '@playwright/test';
 import {tracks as fixtureTracks,demoWav} from '../fixtures/music-player/data.mjs';
 const unique=()=> 'album-ui-'+crypto.randomUUID();
 async function create(page){await page.goto('/admin/music/collections/');await page.locator('#collection-new-album').click();await page.locator('#collection-slug').fill(unique());await page.locator('[data-collection-title="zh-Hans"]').fill('隔离测试专辑');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 1');}
-async function confirm(page){await page.locator('#collection-confirm-accept').click();}
+async function confirm(page){if(await page.locator('#collection-confirm-listening-label').isVisible())await page.locator('#collection-confirm-listening').check();await page.locator('#collection-confirm-accept').click();}
 
-test('album metadata, keyboard order, reload and draft-member publication use isolated API',async({page})=>{
+test('album metadata, keyboard order, reload and missing member media feedback use isolated API',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await create(page);
   await expect(page.locator('#collection-list button[aria-current="true"]')).toHaveCount(1);
   const publications=[];page.on('request',r=>{if(r.method()==='PATCH'&&r.postDataJSON()?.status==='published')publications.push(r.url());});
@@ -19,9 +19,9 @@ test('album metadata, keyboard order, reload and draft-member publication use is
   await expect(page.locator('#collection-order li').first()).toContainText('月台上的雨');await expect(page.getByRole('button',{name:'上移 月台上的雨',exact:true})).toBeDisabled();
   await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
   await page.reload();await expect(page.locator('#collection-order li')).toHaveCount(2);await expect(page.locator('#collection-order li').first()).toContainText('月台上的雨');
-  await page.locator('#album-listening-mode').selectOption('vip');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');
+  await page.locator('#album-listening-mode').selectOption('mixed');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');
   await page.locator('#collection-publish').click();await expect(page.locator('#collection-confirm-reason-label')).toBeHidden();await expect(page.locator('#collection-confirm-reason')).not.toHaveAttribute('required','');await expect(page.locator('#collection-confirm')).toBeVisible();await confirm(page);
-  await expect(page.locator('#collection-publish-result')).toHaveText('专辑已发布。');await expect(page.locator('#collection-state')).toHaveText('专辑 · 已发布');await expect(page.locator('#collection-order li').first()).toContainText('草稿');expect(errors).toEqual([]);
+  await expect(page.locator('#collection-publish-result')).toContainText('缺少已验证的完整音频');await expect(page.locator('#collection-publish-result')).toBeFocused();await expect(page.locator('#collection-state')).toHaveText('专辑 · 草稿');expect(errors).toEqual([]);
 });
 
 test('unknown create receipt survives reload, blocks duplicates, and retries only the original key',async({page})=>{

@@ -42,11 +42,11 @@ import { ArrowLeft, Plus, Save, RefreshCw } from '@lucide/astro';
           <ol id="collection-order"></ol><p id="collection-order-empty" class="muted">尚未添加歌曲。</p>
           <button id="collection-order-save" type="button">保存曲序</button>
         </section>
-        <section class="collection-publishing"><h3>发布</h3><p id="collection-publish-result" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></p><p id="collection-publish-help" class="notice"></p><p class="muted">先保存资料和曲序。发布专辑时，会自动加入本标签页上传批次中已完成的曲目；不要求所有单曲已发布，未发布歌曲不会公开。发布不修改歌曲权限。</p><div class="music-actions"><button id="collection-publish" type="button" class="primary" aria-describedby="collection-publish-result">发布</button><button id="collection-unpublish" type="button">下架为草稿</button><button id="collection-archive" type="button">归档</button></div></section>
+        <section class="collection-publishing"><h3>发布</h3><p id="collection-publish-result" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></p><p id="collection-publish-help" class="notice"></p><p class="muted">先保存资料和曲序。发布专辑时，会自动加入本标签页上传批次中已完成的曲目；确认试听后会逐首校验并发布歌曲，最后发布专辑。发布不修改歌曲权限。</p><div class="music-actions"><button id="collection-song-retry" type="button" hidden>核对上次歌曲操作</button><button id="collection-publish" type="button" class="primary" aria-describedby="collection-publish-result">发布</button><button id="collection-unpublish" type="button">下架为草稿</button><button id="collection-archive" type="button">归档</button></div></section>
       </div>
     </section>
   </div>
 </main>
-<dialog id="collection-confirm"><form method="dialog"><h2 id="collection-confirm-title"></h2><p id="collection-confirm-text"></p><label id="collection-confirm-reason-label">操作说明<input id="collection-confirm-reason" maxlength="1000" /></label><footer class="music-actions"><button value="cancel" formnovalidate>取消</button><button id="collection-confirm-accept" value="yes" class="primary">确认</button></footer></form></dialog>
+<dialog id="collection-confirm"><form method="dialog"><h2 id="collection-confirm-title"></h2><p id="collection-confirm-text"></p><label id="collection-confirm-reason-label">操作说明<input id="collection-confirm-reason" maxlength="1000" /></label><label id="collection-confirm-listening-label" hidden><input id="collection-confirm-listening" type="checkbox" />我已实际试听本次待发布歌曲，确认声音正常；如有独立试听或图片，也已核对其内容及试听来源。</label><footer class="music-actions"><button value="cancel" formnovalidate>取消</button><button id="collection-confirm-accept" value="yes" class="primary">确认</button></footer></form></dialog>
 <script>import '../../../scripts/adminMusicCollections.js';</script>
 </body></html>

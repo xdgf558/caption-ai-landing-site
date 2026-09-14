@@ -53,7 +53,7 @@
     "test:music:analytics": "node --test scripts/test-music-analytics.mjs scripts/test-music-analytics-client.mjs",
     "test:music:sharing-return": "node --test scripts/test-music-sharing-return.mjs",
     "test:music:share-cards": "node --test scripts/test-music-share-cards.mjs",
-    "test:music:album-batch": "node --test scripts/test-music-album-batch.mjs",
+    "test:music:album-batch": "node --test scripts/test-music-album-batch.mjs scripts/test-music-album-publication.mjs",
     "test:music:role-preview": "node --test scripts/test-music-role-preview.mjs",
     "test:music:featured": "node --test scripts/test-music-featured.mjs",
     "test:music:production-candidate": "node --test scripts/test-music-production-candidate.mjs",
