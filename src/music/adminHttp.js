@@ -1,3 +1,6 @@
+import { createAlbumCoverUpload, readAlbumCoverUpload, writeAlbumCoverUpload, completeAlbumCoverUpload } from './albumCoverUploads.js';
+import { primary, rows } from './adminStore.js';
+import { readMusicStorageQuota, saveMusicStorageQuota } from './storageQuota.js';
 import { musicRuntime, checkMusicDatabase } from './runtime.js';
 import { executeMusicPublication } from './publication.js';
 import { createAdminMusicTrack, saveAdminMusicTrack, readAdminMusicTrack, listAdminMusicTracks,
@@ -6,7 +9,7 @@ import { editVersion, fail, fields, isObject, musicId, mutationKey, text } from 
 import { createMusicUpload, readMusicUpload, writeMusicUpload, completeMusicUpload, uploadReadiness } from './uploads.js';
 import { musicResourceVerifier } from './resources.js';
 import { reviewMusicTechnical } from './technicalReview.js';
-import { readAdminMusicAsset } from './adminAssets.js';
+import { readAdminMusicAsset, readMusicAssetObject } from './adminAssets.js';
 import { createAdminMusicCollection, listAdminMusicCollections, readAdminMusicCollection,
   saveAdminMusicCollection, saveAdminMusicCollectionTracks } from './collections.js';
 import { cleanupReadiness, planMusicCleanup, executeMusicCleanup } from './cleanup.js';
@@ -115,6 +118,10 @@ export async function handleMusicAdmin(request, env, authorize) {
       fields(query, []); mutationKey(context.key);
       if (!runtime.flags.uploads) fail('MUSIC_UPLOADS_DISABLED', 503);
       result = await createMusicUpload(runtime.db, await readBody(request), context);
+    } else if (path === '/admin/api/music/collection-uploads' && request.method === 'POST') {
+      fields(query, []); mutationKey(context.key);
+      if (!runtime.flags.uploads) fail('MUSIC_UPLOADS_DISABLED', 503);
+      result = await createAlbumCoverUpload(runtime.db, await readBody(request), context);
     } else if (path === '/admin/api/music/audit' && read) {
       fields(query, ['before']);
       result = await listAdminMusicAudit(runtime.db, query.before === undefined ? undefined : Number(query.before));
@@ -127,6 +134,14 @@ export async function handleMusicAdmin(request, env, authorize) {
         fields(query, []); mutationKey(context.key);
         result = await createAdminMusicCollection(runtime.db, await readBody(request), context);
       } else fail('METHOD_NOT_ALLOWED', 405);
+    } else if (path === '/admin/api/music/storage-quota') {
+      fields(query, []);
+      if (read) result = await readMusicStorageQuota(runtime.db);
+      else {
+        if (request.method !== 'PUT') fail('METHOD_NOT_ALLOWED', 405);
+        mutationKey(context.key);
+        result = await saveMusicStorageQuota(runtime.db, await readBody(request), context);
+      }
     } else if (path === '/admin/api/music/featured') {
       fields(query, []);
       if (read) result = await readAdminMusicFeatured(runtime.db);
@@ -140,12 +155,29 @@ export async function handleMusicAdmin(request, env, authorize) {
       const track = /^\/admin\/api\/music\/tracks\/([^/]+)(?:\/(publish|unpublish|archive))?$/.exec(path);
       const rights = /^\/admin\/api\/music\/revisions\/([^/]+)\/rights-review$/.exec(path);
       const technical = /^\/admin\/api\/music\/revisions\/([^/]+)\/technical-review$/.exec(path);
+      const coverUpload = /^\/admin\/api\/music\/collection-uploads\/([^/]+)(?:\/(body|complete))?$/.exec(path);
+      const coverAsset = /^\/admin\/api\/music\/collection-assets\/([^/]+)$/.exec(path);
       const upload = /^\/admin\/api\/music\/uploads\/([^/]+)(?:\/(body|complete))?$/.exec(path);
       const asset = /^\/admin\/api\/music\/assets\/([^/]+)$/.exec(path);
       const collection = /^\/admin\/api\/music\/collections\/([^/]+)(?:\/(tracks))?$/.exec(path);
       const cleanup = /^\/admin\/api\/music\/cleanup\/([^/]+)$/.exec(path);
       if (asset && read) return await readAdminMusicAsset(runtime.db, runtime.bucket, asset[1], request);
-      if (cleanup) {
+      if (coverAsset && read) {
+        const a=rows(await primary(runtime.db).prepare("SELECT * FROM music_collection_assets WHERE id=? AND state='validated'").bind(musicId(coverAsset[1])).all())[0];
+        if (!a) fail('NOT_FOUND',404);
+        return await readMusicAssetObject(runtime.bucket,a,request);
+      }
+      if (coverUpload) {
+        const id=musicId(coverUpload[1]);
+        if (!coverUpload[2] && read) result=await readAlbumCoverUpload(runtime.db,id,actorId);
+        else {
+          if (!coverUpload[2] || request.method !== (coverUpload[2]==='body'?'PUT':'POST')) fail('METHOD_NOT_ALLOWED',405);
+          mutationKey(context.key);
+          if (!runtime.flags.uploads) fail('MUSIC_UPLOADS_DISABLED',503);
+          result=coverUpload[2]==='body' ? await writeAlbumCoverUpload(runtime.db,runtime.bucket,id,request,context)
+            : await completeAlbumCoverUpload(runtime.db,runtime.bucket,id,await readBody(request),context);
+        }
+      } else if (cleanup) {
         if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED', 405);
         if (env.MUSIC_CLEANUP_ENABLED !== 'true' && env.MUSIC_CLEANUP_ENABLED !== true) fail('MUSIC_CLEANUP_DISABLED', 503);
         mutationKey(context.key);

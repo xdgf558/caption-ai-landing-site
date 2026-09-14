@@ -13,7 +13,9 @@ export const musicShareCopy = locale => ({
   en: { station: 'Music Library', free: 'Free full listening', preview: 'VIP · Preview available', vip: 'VIP · No preview', scan: 'Scan to open song' },
   ja: { station: '音楽ライブラリ', free: 'フル再生無料', preview: 'VIP・試聴あり', vip: 'VIP・試聴なし', scan: 'スキャンして曲を開く' }
 }[locale] || musicShareCopy('zh-Hant'));
-const clean = (value, limit) => Array.from(String(value ?? '').replace(/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, '').trim()).slice(0, limit).join('');
+// SVG text renders Unicode line/paragraph separators as missing glyphs. Flatten
+// whitespace before removing controls so pasted paragraphs keep word boundaries.
+const clean = (value, limit) => Array.from(String(value ?? '').replace(/[\s\u0085]+/gu, ' ').replace(/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, '').trim()).slice(0, limit).join('');
 
 export function musicShareCardPath(id, version, locale, format = 'poster') {
   if (!validMusicId(id) || !Number.isSafeInteger(version) || version < 1 || !MUSIC_LOCALES.includes(locale) || !Object.hasOwn(MUSIC_SHARE_FORMATS, format)) throw new Error('INVALID_SHARE_TARGET');
@@ -28,6 +30,28 @@ export function musicShareCardData(track, origin, locale) {
   return { title, creator, station: copy.station,
     access: track.effectiveAccess === 'free' ? copy.free : track.previewAvailable ? copy.preview : copy.vip,
     scan: copy.scan, url: musicShareUrl(origin, locale, { track: track.id }), host: new URL(origin).host };
+}
+export function musicAlbumShareCardPath(slug, version, locale, format = 'poster') {
+  if (typeof slug !== 'string' || slug.length > 100 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ||
+    !Number.isSafeInteger(version) || version < 1 || !MUSIC_LOCALES.includes(locale) || !Object.hasOwn(MUSIC_SHARE_FORMATS, format)) throw new Error('INVALID_SHARE_TARGET');
+  return `/api/music/collections/${slug}/share.png?${new URLSearchParams({ locale, v: String(version), format })}`;
+}
+export function musicAlbumShareCardData(album, origin, locale) {
+  musicAlbumShareCardPath(album.slug, album.version, locale);
+  if (album.type !== 'album' || !Array.isArray(album.trackIds) || album.trackIds.length > 500 ||
+    album.trackIds.some(id => !validMusicId(id)) || new Set(album.trackIds).size !== album.trackIds.length) throw new Error('INVALID_SHARE_ALBUM');
+  const title = clean(album.title, 200);
+  if (!title) throw new Error('INVALID_SHARE_ALBUM');
+  const count = album.trackIds.length;
+  const copy = {
+    'zh-Hans': { count: `${count} 首作品`, scan: '扫码收听专辑' },
+    'zh-Hant': { count: `${count} 首作品`, scan: '掃碼收聽專輯' },
+    en: { count: `${count} ${count === 1 ? 'track' : 'tracks'}`, scan: 'Scan to listen' },
+    ja: { count: `${count} 曲`, scan: 'スキャンしてアルバムを聴く' }
+  }[locale];
+  return { kind: 'album', title, creator: 'Station Cat', station: musicShareCopy(locale).station,
+    description: clean(album.description, 500), count: copy.count, scan: copy.scan,
+    url: musicShareUrl(origin, locale, { collection: album.slug }), host: new URL(origin).host };
 }
 export function musicXShareHref(title, url) {
   const site = new URL(url);
@@ -60,10 +84,11 @@ export function musicShareLines(value, width, maxLines) {
 }
 
 export function musicShareMetadata(track, origin, locale) {
-  const data = musicShareCardData(track, origin, locale), e = escapeMusicShare;
-  const image = new URL(musicShareCardPath(track.id, track.audioVersion, locale, 'card'), origin).href;
+  const album = track.type === 'album';
+  const data = album ? musicAlbumShareCardData(track, origin, locale) : musicShareCardData(track, origin, locale), e = escapeMusicShare;
+  const image = new URL(album ? musicAlbumShareCardPath(track.slug, track.version, locale, 'card') : musicShareCardPath(track.id, track.audioVersion, locale, 'card'), origin).href;
   const title = `${data.title} · ${data.creator} | ${data.station}`;
-  const description = `${data.creator} · ${data.access} · ${data.station}`;
+  const description = album ? `${data.count} · ${data.description || data.station}` : `${data.creator} · ${data.access} · ${data.station}`;
   return `<title>${e(title)}</title><link rel="canonical" href="${e(data.url)}"><meta name="description" content="${e(description)}">` +
     Object.entries({ 'og:type': 'website', 'og:site_name': 'Station Cat', 'og:title': title, 'og:description': description,
       'og:url': data.url, 'og:image': image, 'og:image:type': 'image/png', 'og:image:width': '1200', 'og:image:height': '630', 'og:image:alt': title })

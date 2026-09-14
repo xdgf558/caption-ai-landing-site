@@ -7,6 +7,7 @@ const staticPaths = new Set([
   '/apple-touch-icon.png',
   '/images/optimized/station-cat-logo-1668c2e5-160.webp',
   '/images/music-turntable-silver.webp',
+  '/images/music-night-hero.webp',
   '/styles/admin-music.css',
   '/styles/admin-music-batch.css',
   '/styles/admin-music-collections.css',
@@ -31,7 +32,7 @@ const pagePaths = new Set([
 const astroAssets = [
   /^\/_astro\/(?:music|collections|featured|index)\.astro_astro_type_script_index_0_lang\.[A-Za-z0-9_-]+\.js$/,
   /^\/_astro\/(?:LanguageSwitcher|MusicPlayer)\.astro_astro_type_script_index_0_lang\.[A-Za-z0-9_-]+\.js$/,
-  /^\/_astro\/(?:musicAdminClient|musicMessages|musicPlayerCatalog|musicWavClient|navigation|pagePaths)\.[A-Za-z0-9_-]+\.js$/,
+  /^\/_astro\/(?:musicAdminClient|musicMessages|musicPlayerCatalog|musicWavClient|musicAlbumBatch|musicWav|policy|navigation|pagePaths)\.[A-Za-z0-9_-]+\.js$/,
   /^\/_astro\/musicWavWorker-[A-Za-z0-9_-]+\.js$/,
   /^\/_astro\/index\.[A-Za-z0-9_-]+\.css$/
 ];

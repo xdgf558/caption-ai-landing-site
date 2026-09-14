@@ -27,12 +27,14 @@ export function readPlayerCatalog(body) {
     if (publishedAt && !Number.isFinite(Date.parse(publishedAt))) throw new Error('INVALID_CATALOG');
     if (track.instrumental !== undefined && typeof track.instrumental !== 'boolean') throw new Error('INVALID_CATALOG');
     if (track.lyricsKind !== undefined && !['none', 'txt', 'lrc'].includes(track.lyricsKind)) throw new Error('INVALID_CATALOG');
+    const freeUntil=track.freeUntil??null;
+    if(freeUntil!==null&&(typeof freeUntil!=='string'||!/T.*Z$/.test(freeUntil)||!Number.isFinite(Date.parse(freeUntil))))throw new Error('INVALID_CATALOG');
     seen.add(track.id);
     // Reconstruct canonical same-origin URLs, never trust a URL from JSON.
     return { summary: optionalText('summary', 500), genres: tags('genres'), moods: tags('moods'), publishedAt,
       instrumental: track.instrumental === true, lyricsKind: track.lyricsKind || 'none',
       id: track.id, title: track.title, creatorName: track.creatorName, durationSec: track.durationSec,
-      audioVersion: track.audioVersion, policyVersion: track.policyVersion, effectiveAccess: track.effectiveAccess,
+      audioVersion: track.audioVersion, policyVersion: track.policyVersion, freeUntil, effectiveAccess: track.effectiveAccess,
       previewAvailable: track.previewAvailable, previewDurationSec: track.previewDurationSec,
       previewSourceStartSec: track.previewSourceStartSec,
       coverUrl: track.coverUrl ? `/api/music/tracks/${track.id}/cover?v=${track.audioVersion}` : null };
@@ -62,14 +64,14 @@ export function readPlayerCollections(body, tracks) {
     const type = item.type === undefined ? 'playlist' : item.type;
     const listeningMode = item.listeningMode ?? 'mixed';
     if (!['playlist','album'].includes(type) || !['mixed','free','vip'].includes(listeningMode) ||
-      (type === 'album' && (item.trackIds.some(id => !ids.has(id)) ||
+      (type === 'album' && ((item.coverUrl && (!Number.isSafeInteger(item.version) || item.version<1)) || item.trackIds.some(id => !ids.has(id)) ||
         (listeningMode !== 'mixed' && item.trackIds.some(id => ids.get(id).effectiveAccess !== listeningMode)) ||
         (item.coverTrackId != null && (!item.trackIds.includes(item.coverTrackId) || !ids.get(item.coverTrackId)?.coverUrl))))) throw new Error('INVALID_COLLECTIONS');
     seen.add(item.id); slugs.add(item.slug);
-    return { id: item.id, slug: item.slug, title: item.title, description: item.description, type, listeningMode,
-      coverUrl:type === 'album' ? ids.get(item.coverTrackId)?.coverUrl || null : null,
+    return { id: item.id, slug: item.slug, title: item.title, description: item.description, type, listeningMode, version: item.version,
+      coverUrl:type === 'album' && item.coverUrl ? `/api/music/collections/${item.slug}/cover?v=${item.version}` : null,
       trackIds: item.trackIds.filter(id => ids.has(id)) };
-  }).filter(item => item.trackIds.length);
+  }).filter(item => item.type === 'album' || item.trackIds.length);
 }
 
 export function readPlayerFeatured(body, tracks, collections) {

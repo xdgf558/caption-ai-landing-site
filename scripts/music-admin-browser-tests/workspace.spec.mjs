@@ -72,8 +72,8 @@ test('Enter saves a draft; full upload, review, publish, revision, unpublish and
   await expect(page.locator('#technical-state')).toHaveText('已核对');
   await page.locator('#track-publish').click();
   await expect(page.locator('#confirm-description')).toContainText('VIP 专享');
-  await page.locator('#confirm-reason').fill('合成夹具发布测试');
-  await page.locator('#confirm-reason').press('Enter');
+  await expect(page.locator('#confirm-reason-label')).toBeHidden();
+  await expect(page.locator('#confirm-reason')).not.toHaveAttribute('required','');
   await expect(page.locator('#confirm-dialog')).toBeVisible();
   await expect(page.locator('#track-state')).toHaveText('草稿');
   await page.locator('#confirm-accept').click();
@@ -109,7 +109,7 @@ test('source materials are optional through upload, technical review and explici
   await page.getByRole('button',{name:'提交技术核对',exact:true}).click();
   await expect(page.locator('#technical-state')).toHaveText('已核对');
   await expect(page.locator('#track-version')).toHaveText('编辑版本 3');
-  await page.locator('#track-publish').click(); await page.locator('#confirm-reason').fill('本地无材料流程回归');
+  await page.locator('#track-publish').click(); await expect(page.locator('#confirm-reason-label')).toBeHidden();
   await page.locator('#confirm-accept').click(); await expect(page.locator('#track-state')).toHaveText('已发布');
   await page.reload(); await expect(page.locator('#rights-state')).toHaveText('未提供（可选）');
   await expect(page.locator('#track-version')).toHaveText('编辑版本 4'); expect(rightsWrites).toBe(0);
@@ -299,4 +299,22 @@ test('statistics panel labels preview/free/VIP policy separately and clears stal
   await expect(page.locator('#analytics-notice')).toContainText('统计暂不可用');
   await expect(page.locator('#analytics-table')).toBeHidden();
   expect(requests).toEqual(['GET','GET']);
+});
+
+test('limited free exposes a custom local deadline and restores it from the saved draft', async ({page}) => {
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const slug=await create(page);
+  await page.locator('#access-mode').selectOption('limited_free');
+  await expect(page.locator('#limited-free-options')).toBeVisible();
+  await page.locator('#free-until').fill('2099-06-01T18:30');
+  await page.getByLabel('修改说明',{exact:true}).fill('限时免费本地测试');
+  await page.getByRole('button',{name:'保存草稿',exact:true}).click();
+  await expect(page.locator('#track-version')).toHaveText('编辑版本 2');
+  await page.reload();
+  await page.getByRole('button').filter({hasText:slug}).click();
+  await expect(page.locator('#access-mode')).toHaveValue('limited_free');
+  await expect(page.locator('#free-until')).toHaveValue('2099-06-01T18:30');
+  await page.locator('#access-mode').selectOption('vip');
+  await expect(page.locator('#limited-free-options')).toBeHidden();
+  expect(errors).toEqual([]);
 });

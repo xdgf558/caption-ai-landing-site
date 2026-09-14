@@ -25,7 +25,7 @@ export async function listAdminMusicTracks(db, { before = Number.MAX_SAFE_INTEGE
   if (!Number.isSafeInteger(before) || before < 1 || !['', 'draft', 'published', 'unpublished', 'archived'].includes(status)) fail('INVALID_INPUT', 400);
   text(q, 120, true);
   const result = rows(await primary(db).prepare(`SELECT t.rowid AS cursor,t.id,t.slug,t.lifecycle,t.edit_version,r.metadata_json,
-    p.state AS published_state,p.access_mode,p.early_access_until,p.post_early_access_mode,p.policy_version
+    p.state AS published_state,p.access_mode,p.free_until,p.early_access_until,p.post_early_access_mode,p.policy_version
     FROM music_tracks t LEFT JOIN music_track_revisions r ON r.id=COALESCE(t.draft_revision_id,t.published_revision_id)
     LEFT JOIN music_track_revisions p ON p.id=t.published_revision_id
     WHERE t.rowid<? AND (?='' OR t.lifecycle=?) AND (?='' OR instr(lower(t.slug),lower(?))>0 OR instr(lower(r.metadata_json),lower(?))>0)
@@ -51,9 +51,9 @@ export async function listAdminMusicAudit(db, before = Number.MAX_SAFE_INTEGER) 
 function revisionInsert(s, id, trackId, number, input, now) {
   const p = input.policy;
   return s.prepare(`INSERT INTO music_track_revisions(id,track_id,revision_no,metadata_json,audio_asset_id,preview_asset_id,
-    cover_asset_id,lyrics_asset_id,access_mode,early_access_until,post_early_access_mode,policy_version,created_at)
-    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(id, trackId, number, JSON.stringify(input.metadata), input.assets.audio, input.assets.preview,
-      input.assets.cover, input.assets.lyrics, p.accessMode, p.earlyAccessUntil === null ? null : utcMillis(p.earlyAccessUntil), p.postEarlyAccessMode, p.policyVersion, now);
+    cover_asset_id,lyrics_asset_id,access_mode,early_access_until,post_early_access_mode,policy_version,created_at,free_until)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(id, trackId, number, JSON.stringify(input.metadata), input.assets.audio, input.assets.preview,
+      input.assets.cover, input.assets.lyrics, p.accessMode==='limited_free'?'vip':p.accessMode, p.earlyAccessUntil === null ? null : utcMillis(p.earlyAccessUntil), p.postEarlyAccessMode, p.policyVersion, now, p.accessMode==='limited_free'?utcMillis(p.freeUntil):null);
 }
 function validateAssets(assets, references, owner) {
   for (const [kind, id] of Object.entries(references)) {

@@ -1,7 +1,19 @@
 // UI text only; catalog titles/tags retain the server's actual translation/original.
 export const musicLocales = ['zh-Hans', 'zh-Hant', 'en', 'ja'];
 const rows = `
+立即播放|立即播放|Play now|今すぐ再生
+探索歌单|探索歌單|Explore music|音楽を探す
+在这里，音乐是生活的呼吸。|在這裡，音樂是生活的呼吸。|Music is the rhythm of everyday life.|音楽とともに、日常にひと息。
+独立创作 · 温柔陪伴 · 献给每一个认真生活的你。|獨立創作 · 溫柔陪伴 · 獻給每一個認真生活的你。|Independent music. Gentle company. Made for your everyday.|自主制作の音楽で、あなたの毎日に寄り添う。
+好的音乐，总会在对的时候，遇见对的人。|好的音樂，總會在對的時候，遇見對的人。|Good music finds you at just the right moment.|いい音楽は、ちょうどいい時に出会える。
+微信朋友圈|微信朋友圈|WeChat Moments|WeChatモーメンツ
+限时免费至 {time}，之后 VIP 专享|限時免費至 {time}，之後 VIP 專享|Free until {time}, then VIP only|{time}まで無料、その後はVIP限定
 收起播放器|收起播放器|Minimize player|プレーヤーを閉じる
+专辑分享卡片：{title}|專輯分享卡片：{title}|Album share card: {title}|アルバム共有カード：{title}
+将这张专辑分享给朋友，扫码即可打开专辑页面。|將這張專輯分享給朋友，掃碼即可開啟專輯頁面。|Share this album with friends. Scan to open the album page.|友達にアルバムを共有。スキャンしてアルバムを開けます。
+内容已不可用，无法制作卡片。|內容已無法使用，無法製作卡片。|This content is unavailable. A card cannot be created.|このコンテンツは利用できないため、カードを作成できません。
+卡片暂时无法制作，仍可复制链接。|卡片暫時無法製作，仍可複製連結。|The card is unavailable. You can still copy the link.|カードを作成できません。リンクはコピーできます。
+正在制作分享卡片…|正在製作分享卡片…|Creating share card…|共有カードを作成中…
 查看歌词|查看歌詞|View lyrics|歌詞を見る
 公开音乐入口尚未开放。|公開音樂入口尚未開放。|Public music is not available yet.|音楽の公開はまだ開始されていません。
 此版本当前未公开。|此版本目前未公開。|This revision is not currently public.|このバージョンは現在公開されていません。
@@ -15,6 +27,7 @@ VIP 完整音频暂未开放。|VIP 完整音訊暫未開放。|VIP full audio i
 保存图片|儲存圖片|Save image|画像を保存
 分享图片|分享圖片|Share image|画像をシェア
 前往 X 分享|前往 X 分享|Share on X|X でシェア
+请在 {seconds} 秒后重试。|請在 {seconds} 秒後重試。|Try again in {seconds} seconds.|{seconds} 秒後に再試行してください。
 重新制作卡片|重新製作卡片|Retry card|カードを再作成
 正在制作歌曲卡片…|正在製作歌曲卡片…|Preparing song card…|曲のカードを作成中…
 分享卡片已准备好。|分享卡片已準備好。|Your share card is ready.|シェアカードを作成しました。
@@ -88,7 +101,6 @@ VIP 资格有效，完整音频暂未开放。|VIP 資格有效，完整音訊�
 暂无可显示的播放记录。播放歌曲后会记录在这里。|暫無可顯示的播放記錄。播放歌曲後會記錄在這裡。|No playback history to show. Played songs will appear here.|表示できる再生履歴はありません。再生した曲がここに表示されます。
 已恢复上次位置，点击播放继续。|已恢復上次位置，點擊播放繼續。|Your previous position is restored. Press play to continue.|前回の位置を復元しました。再生ボタンで続けられます。
 音频版本或收听方式已变化，请重新选择播放。|音訊版本或收聽方式已變更，請重新選擇播放。|The audio version or listening mode changed. Please choose playback again.|音源の版または再生モードが変わりました。再生を選び直してください。
-上次曲目暂不可用，本机记录仍保留。|上次曲目暫不可用，本機記錄仍保留。|The previous song is unavailable. Your local records are retained.|前回の曲は現在利用できません。ローカル記録は保持されます。
 本机记录暂时无法保存，本次播放仍可继续。|本機記錄暫時無法儲存，本次播放仍可繼續。|Local records cannot be saved right now. Playback can continue.|ローカル記録を保存できません。再生は続けられます。
 本机记录无法读取。原始记录已保留，可先导出；本次使用临时记录。|本機記錄無法讀取。原始記錄已保留，可先匯出；本次使用暫存記錄。|Local records could not be read. The original is retained for export; this session uses temporary records.|ローカル記録を読み込めません。元の記録はエクスポート用に保持し、今回は一時記録を使います。
 已迁移旧收藏与设置。旧进度未恢复，请重新选择歌曲。|已移轉舊收藏與設定。舊進度未恢復，請重新選擇歌曲。|Old saved songs and settings were migrated. Old positions were not restored; please select a song.|以前のお気に入りと設定を移行しました。再生位置は復元していません。曲を選び直してください。
@@ -107,15 +119,15 @@ VIP 资格有效，完整音频暂未开放。|VIP 資格有效，完整音訊�
 音乐小站|音樂小站|Music at Station Cat|音楽の小駅
 选一首，让日常慢下来。|選一首，讓日常慢下來。|A song for a slower day.|一曲選んで、ひと息。
 音乐播放器|音樂播放器|Music player|音楽プレーヤー
-队列设置|佇列設定|Queue settings|再生設定
+队列设置|列表設定|Queue settings|再生設定
 播放全部|播放全部|Play all|すべて再生
 随机|隨機|Shuffle|シャッフル
 顺序播放|順序播放|In order|順番に再生
 列表循环|清單循環|Repeat queue|全曲リピート
 单曲循环|單曲循環|Repeat track|1曲リピート
 {mode}，点击切换循环方式|{mode}，點擊切換循環方式|{mode}; change repeat mode|{mode}：リピート方法を変更
-队列|佇列|Queue|再生リスト
-点击列表的播放按钮，会按当前列表重建队列；底栏继续播放保留原队列。|點擊清單的播放按鈕，會按目前清單重建佇列；底欄繼續播放保留原佇列。|Playing a song here replaces the queue with these results. Resume in the bottom player to keep your queue.|一覧の再生ボタンで、この結果から再生リストを作り直します。下部の再生ボタンなら今のリストを保ちます。
+队列|列表|Queue|再生リスト
+点击列表的播放按钮，会按当前列表重建队列；底栏继续播放保留原队列。|點擊清單的播放按鈕，會按目前清單重建列表；底欄繼續播放保留原列表。|Playing a song here replaces the queue with these results. Resume in the bottom player to keep your queue.|一覧の再生ボタンで、この結果から再生リストを作り直します。下部の再生ボタンなら今のリストを保ちます。
 正在整理曲目…|正在整理曲目…|Loading songs…|曲を読み込み中…
 重新加载|重新載入|Reload|再読み込み
 选择歌曲|選擇歌曲|Choose a song|曲を選択
@@ -147,10 +159,10 @@ VIP 资格有效，完整音频暂未开放。|VIP 資格有效，完整音訊�
 静音|靜音|Mute|ミュート
 取消静音|取消靜音|Unmute|ミュート解除
 请用设备音量按键调节音量。|請用裝置音量按鍵調節音量。|Use your device volume buttons.|音量は端末のボタンで調節してください。
-待播队列|待播佇列|Up next|次に再生
-关闭队列|關閉佇列|Close queue|再生リストを閉じる
-从歌曲列表开始播放或点击“播放全部”会重建队列；只浏览歌曲不改变待播顺序。随机播放时，上一首返回实际收听历史。|從歌曲清單開始播放或點擊「播放全部」會重建佇列；只瀏覽歌曲不改變待播順序。隨機播放時，上一首返回實際收聽歷史。|Starting from the song list or Play all replaces the queue. Browsing leaves it unchanged. In shuffle mode, Previous follows your listening history.|一覧から再生するか「すべて再生」でリストを作り直します。閲覧だけでは変わりません。シャッフル中の「前の曲」は再生履歴をたどります。
-队列为空，选择歌曲或点击播放全部。|佇列為空，選擇歌曲或點擊播放全部。|Your queue is empty. Choose a song or Play all.|再生リストは空です。曲を選ぶか、すべて再生してください。
+待播队列|待播列表|Up next|次に再生
+关闭队列|關閉列表|Close queue|再生リストを閉じる
+从歌曲列表开始播放或点击“播放全部”会重建队列；只浏览歌曲不改变待播顺序。随机播放时，上一首返回实际收听历史。|從歌曲清單開始播放或點擊「播放全部」會重建列表；只瀏覽歌曲不改變待播順序。隨機播放時，上一首返回實際收聽歷史。|Starting from the song list or Play all replaces the queue. Browsing leaves it unchanged. In shuffle mode, Previous follows your listening history.|一覧から再生するか「すべて再生」でリストを作り直します。閲覧だけでは変わりません。シャッフル中の「前の曲」は再生履歴をたどります。
+队列为空，选择歌曲或点击播放全部。|列表為空，選擇歌曲或點擊播放全部。|Your queue is empty. Choose a song or Play all.|再生リストは空です。曲を選ぶか、すべて再生してください。
 没有下一首可完整收听的曲目时，将停止播放。|沒有下一首可完整收聽的曲目時，將停止播放。|Playback stops if no next full track is available.|次にフル再生できる曲がなければ停止します。
 移除并播放下一首|移除並播放下一首|Remove and play next|削除して次の曲へ
 移除并停止|移除並停止|Remove and stop|削除して停止
@@ -177,13 +189,13 @@ VIP · 暂无试听|VIP · 暫無試聽|VIP · no preview|VIP・試聴なし
 仅手动试听|僅手動試聽|Manual preview only|手動で試聴のみ
 暂无试听|暫無試聽|No preview|試聴なし
 当前曲目|目前曲目|Current song|現在の曲
-{action}队列曲目：{title}|{action}佇列曲目：{title}|{action} queued song: {title}|リストの曲を{action}：{title}
-移出队列：{title}|移出佇列：{title}|Remove from queue: {title}|リストから削除：{title}
+{action}队列曲目：{title}|{action}列表曲目：{title}|{action} queued song: {title}|リストの曲を{action}：{title}
+移出队列：{title}|移出列表：{title}|Remove from queue: {title}|リストから削除：{title}
 移除「{title}」后：|移除「{title}」後：|After removing “{title}”:|「{title}」を削除した後：
-队列最多保留 500 首，重复曲目只保留一次。|佇列最多保留 500 首，重複曲目只保留一次。|The queue holds up to 500 unique songs.|再生リストは重複なしで最大500曲です。
-队列中暂无可完整收听的曲目，可以选择单曲试听。|佇列中暫無可完整收聽的曲目，可以選擇單曲試聽。|No full tracks are available in this queue. You can preview songs individually.|フル再生できる曲がありません。各曲を個別に試聴できます。
-已到队列末尾。|已到佇列末尾。|End of queue.|再生リストの最後です。
-已到队列开头。|已到佇列開頭。|Start of queue.|再生リストの先頭です。
+队列最多保留 500 首，重复曲目只保留一次。|列表最多保留 500 首，重複曲目只保留一次。|The queue holds up to 500 unique songs.|再生リストは重複なしで最大500曲です。
+队列中暂无可完整收听的曲目，可以选择单曲试听。|列表中暫無可完整收聽的曲目，可以選擇單曲試聽。|No full tracks are available in this queue. You can preview songs individually.|フル再生できる曲がありません。各曲を個別に試聴できます。
+已到队列末尾。|已到列表末尾。|End of queue.|再生リストの最後です。
+已到队列开头。|已到列表開頭。|Start of queue.|再生リストの先頭です。
 试听已结束，再次收听请手动播放。|試聽已結束，再次收聽請手動播放。|Preview ended. Press Play to listen again.|試聴が終了しました。もう一度聴くには再生してください。
 连续三首播放失败，已停止。请稍后手动重试。|連續三首播放失敗，已停止。請稍後手動重試。|Stopped after three playback failures. Please try again later.|再生に3回連続で失敗したため停止しました。後でもう一度お試しください。
 可播放的曲目暂时无法载入，请稍后手动重试。|可播放的曲目暫時無法載入，請稍後手動重試。|Available songs could not be loaded. Please try again later.|再生可能な曲を読み込めません。後でもう一度お試しください。

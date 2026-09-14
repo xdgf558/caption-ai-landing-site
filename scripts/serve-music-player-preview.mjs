@@ -5,7 +5,7 @@ import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tracks, demoWav } from './fixtures/music-player/data.mjs';
 import { MUSIC_ANALYTICS_VERSION, validateMusicEvents } from '../src/music/analytics.js';
-import { musicShareCardData, musicShareMetadata, MUSIC_SHARE_FONT } from '../src/music/shareCard.js';
+import { musicShareCardData, musicAlbumShareCardData, musicShareMetadata, MUSIC_SHARE_FONT } from '../src/music/shareCard.js';
 import { normalizeMusicCardCover, renderMusicShareCard } from '../src/music/shareCardRender.js';
 import { musicPageLocale } from '../src/music/pagePaths.js';
 
@@ -75,13 +75,26 @@ const server = createServer(async (req, res) => {
       publishedAt: new Date(Date.UTC(2026, 8, 11) - i * 86400000).toISOString(), coverUrl: `/api/music/tracks/${track.id}/cover?v=1`
     }));
     const collections = libraryPreview ? [{ id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', slug: 'quiet-days', title: locale === 'en' ? 'Quiet Days' : locale === 'ja' ? '静かな日々' : '安静的日常', description: '', trackIds: demoTracks.slice(0, 3).map(t => t.id).reverse() }] : [];
-    if (libraryPreview) collections.push({ id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', slug:'station-album', type:'album', listeningMode:'mixed',
+    if (libraryPreview) collections.push({ id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', slug:'station-album', version:1, type:'album', listeningMode:'mixed',
       title:locale==='en'?'Station Album':locale==='ja'?'小さな駅のアルバム':'小站日常 · 专辑', description:'',
-      trackIds:demoTracks.slice(0,3).map(t=>t.id).reverse(), coverTrackId:demoTracks[0].id, coverUrl:demoTracks[0].coverUrl });
+      trackIds:demoTracks.slice(0,3).map(t=>t.id).reverse(), coverTrackId:null, coverUrl:'/api/music/collections/station-album/cover?v=1' });
     const expired = fixture.validUntil && Date.parse(fixture.validUntil) <= Date.now();
     const vip = fixture.membership === 'vip' && !expired;
     const fullAccess = track => track.effectiveAccess === 'free' ? 200 : fixture.membership === 'unavailable' ? 503 : vip ? 200 : expired ? 403 : 401;
     if (url.pathname === '/__local/requests') { send(200, counters); return; }
+    if (/^\/api\/music\/collections\/station-album\/cover$/.test(url.pathname)) {
+      send(200,await readFile(resolve(root,'scripts/fixtures/music-player/artwork/afternoon.webp')),'image/webp'); return;
+    }
+    const albumShare = /^\/api\/music\/collections\/([a-z0-9-]+)\/share\.png$/.exec(url.pathname);
+    if (albumShare) {
+      const album = collections.find(item => item.slug === albumShare[1] && item.type === 'album');
+      const format = url.searchParams.get('format');
+      if (!sharePreview || !album || url.searchParams.get('v') !== '1' || !['card','poster'].includes(format)) { send(404, {}); return; }
+      counters.cards++;
+      const cover = normalizeMusicCardCover(await readFile(resolve(root,'scripts/fixtures/music-player/artwork/afternoon.webp')), 'image/webp');
+      const card = await renderMusicShareCard(musicAlbumShareCardData(album,origin,locale),format,cover,await readFile(resolve(root,'public'+MUSIC_SHARE_FONT)));
+      send(200,Buffer.from(card),'image/png'); return;
+    }
     const shareMatch = /^\/api\/music\/tracks\/([a-f0-9-]+)\/share\.png$/.exec(url.pathname);
     if (shareMatch) {
       if (!sharePreview) { send(503, { error: { code: 'MUSIC_SHARE_CARDS_DISABLED' } }); return; }

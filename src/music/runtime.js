@@ -23,11 +23,11 @@ export async function checkMusicDatabase(db) {
     const session = db.withSession('first-primary');
     const results = await session.batch([
       session.prepare("SELECT key,value_json FROM music_settings WHERE key IN ('catalogVersion','previewLimitMs') ORDER BY key"),
-      session.prepare('SELECT technical_fingerprint FROM music_track_revisions LIMIT 0'),
+      session.prepare('SELECT technical_fingerprint,free_until FROM music_track_revisions LIMIT 0'),
       session.prepare('SELECT revision_fingerprint FROM music_rights_reviews LIMIT 0'),
       session.prepare('SELECT operation_token,passed FROM music_publication_guards LIMIT 0'),
       session.prepare('SELECT request_hash,result_json FROM music_mutations LIMIT 0'),
-      session.prepare('SELECT h.version,i.slot_kind,i.position,i.track_id,i.collection_id FROM music_featured_home h LEFT JOIN music_featured_items i ON 1=1 LIMIT 0')
+      session.prepare('SELECT c.cover_asset_id,a.owner_collection_id,h.version,i.slot_kind,i.position,i.track_id,i.collection_id FROM music_featured_home h LEFT JOIN music_featured_items i ON 1=1 LEFT JOIN music_collections c ON 1=0 LEFT JOIN music_collection_assets a ON 1=0 LIMIT 0')
     ]);
     if (results.length !== 6 || results.some(r => r.success !== true || !Array.isArray(r.results))) throw new Error('results');
     const settings = results[0].results;

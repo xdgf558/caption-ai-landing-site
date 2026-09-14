@@ -114,9 +114,9 @@ export function trackGuard(snapshot, version) {
   if (revision) {
     conditions.push(`EXISTS (SELECT 1 FROM music_track_revisions WHERE id=? AND state=? AND metadata_json=?
       AND audio_asset_id IS ? AND preview_asset_id IS ? AND cover_asset_id IS ? AND lyrics_asset_id IS ?
-      AND access_mode=? AND early_access_until IS ? AND post_early_access_mode IS ? AND policy_version=?)`);
+      AND access_mode=? AND free_until IS ? AND early_access_until IS ? AND post_early_access_mode IS ? AND policy_version=?)`);
     params.push(revision.id, revision.state, revision.metadata_json, revision.audio_asset_id, revision.preview_asset_id,
-      revision.cover_asset_id, revision.lyrics_asset_id, revision.access_mode, revision.early_access_until, revision.post_early_access_mode, revision.policy_version);
+      revision.cover_asset_id, revision.lyrics_asset_id, revision.access_mode, revision.free_until ?? null, revision.early_access_until, revision.post_early_access_mode, revision.policy_version);
   }
   return { condition: conditions.join(' AND '), params };
 }

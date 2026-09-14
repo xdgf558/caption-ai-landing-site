@@ -3,6 +3,11 @@ import { Mp3Stream, MP3_LIMITS, mp3Error } from './mp3Stream.js';
 
 const ascii = (bytes, offset, length) => String.fromCharCode(...bytes.subarray(offset, offset + length));
 const view = bytes => new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+const marker = (bytes, offset, text) => {
+  if (offset + text.length > bytes.length) return false;
+  for (let i = 0; i < text.length; i++) if (bytes[offset + i] !== text.charCodeAt(i)) return false;
+  return true;
+};
 
 async function skipId3(reader) {
   const header = await reader.peek(10);
@@ -39,9 +44,9 @@ function frameHeader(bytes) {
 }
 
 function infoHeader(bytes, h) {
-  if (ascii(bytes, 36, 4) === 'VBRI') throw mp3Error('MUSIC_MP3_VBRI_UNSUPPORTED');
+  if (marker(bytes, 36, 'VBRI')) throw mp3Error('MUSIC_MP3_VBRI_UNSUPPORTED');
   let offset = 4 + h.sideLength;
-  if (!['Xing', 'Info'].includes(ascii(bytes, offset, 4))) return null;
+  if (!marker(bytes, offset, 'Xing') && !marker(bytes, offset, 'Info')) return null;
   if (bytes.subarray(4, offset).some(b => b !== 0) || offset + 8 > bytes.length) throw mp3Error('MUSIC_MP3_INFO_INVALID');
   const dv = view(bytes), flags = dv.getUint32(offset + 4); offset += 8;
   if (flags & ~15) throw mp3Error('MUSIC_MP3_INFO_INVALID');
@@ -64,20 +69,30 @@ export async function inspectMp3(stream, options) {
     reader = new Mp3Stream(stream, options);
     let tagBytes = await skipId3(reader), sampleCount = 0, frameCount = 0, frameBytes = 0, audioBytes = 0;
     let format = null, info = null, reservoirAvailable = 0, bitrate = null, vbr = false;
-    while (await reader.peek(1)) {
-      const prefix = await reader.peek(5);
+    // Repeated headers in CBR/VBR files share exactly the same parser result.
+    // Cache is request-local and bounded even for adversarial input.
+    const headers = new Map();
+    while (reader.peekBuffered(1) || await reader.peek(1)) {
+      reader.check();
+      const prefix = reader.peekBuffered(5) || await reader.peek(5);
       if (!prefix) throw mp3Error('MUSIC_MP3_TRUNCATED');
-      if (ascii(prefix, 0, 3) === 'TAG') {
+      if (marker(prefix, 0, 'TAG')) {
         await reader.skip(128); tagBytes += 128;
         if (tagBytes > reader.limits.tagBytes) throw mp3Error('MUSIC_MP3_TAG_BUDGET');
         if (await reader.peek(1)) throw mp3Error('MUSIC_MP3_TRAILING_DATA');
         break;
       }
-      const h = frameHeader(prefix);
+      const key = prefix[0] * 16777216 + prefix[1] * 65536 + prefix[2] * 256 + prefix[3];
+      let h = headers.get(key);
+      if (!h) {
+        h = frameHeader(prefix);
+        if (headers.size === 64) headers.clear();
+        headers.set(key, h);
+      }
       if (frameCount + (info ? 1 : 0) >= reader.limits.frames) throw mp3Error('MUSIC_MP3_FRAME_BUDGET');
       if (format && (h.version !== format.version || h.sampleRate !== format.sampleRate || h.channels !== format.channels)) throw mp3Error('MUSIC_MP3_FORMAT_CHANGED');
       format = h;
-      const bytes = await reader.read(h.length); frameBytes += bytes.length;
+      const bytes = reader.readBuffered(h.length) || await reader.read(h.length); frameBytes += bytes.length;
       const tag = infoHeader(bytes, h);
       if (tag) {
         if (frameCount || info) throw mp3Error('MUSIC_MP3_CONCATENATED');
@@ -95,7 +110,7 @@ export async function inspectMp3(stream, options) {
     if (frameBytes + tagBytes !== reader.bytes) throw mp3Error('MUSIC_MP3_SIZE_MISMATCH');
     // Keep encoder delay/padding: untrusted LAME trim values must never shorten the enforced limit.
     const result = { measurement: 'mp3-frames', structureValid: true, contentType: 'audio/mpeg',
-      byteSize: reader.bytes, sha256: reader.digest(), durationMs: Math.ceil(sampleCount * 1000 / format.sampleRate),
+      byteSize: reader.bytes, sha256: await reader.digest(), durationMs: Math.ceil(sampleCount * 1000 / format.sampleRate),
       sampleCount, sampleRate: format.sampleRate, channels: format.channels, mpegVersion: format.version === 3 ? 1 : 2,
       frameCount, audioBytes, tagBytes, infoFrame: info !== null, vbr,
       bufferCapacityBytes: reader.buffer.length, reads: reader.reads };

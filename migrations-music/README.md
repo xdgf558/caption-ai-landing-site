@@ -26,3 +26,9 @@ Provisioning and remote migration require separate approval.
 
 See [M1 contract](../docs/music/M1_FOUNDATION.md) for constraints and incomplete
 publication, authentication, parsing and media-delivery responsibilities.
+
+`0011_music_share_rate_limits.sql` adds independent share-image source/global
+counters and their atomic increment guards. It does not alter ordinary artwork,
+audio or catalog counters, music content, permissions, or quotas. Apply it before
+deploying a Worker that uses the `share` category. A rollback to the previous Worker
+may leave these additive tables in place; the old Worker ignores them.

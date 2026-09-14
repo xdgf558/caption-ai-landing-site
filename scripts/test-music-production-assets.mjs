@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { checkMusicEntryAssets } from './check-music-entry-assets.mjs';
 import test from 'node:test';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -19,6 +20,7 @@ test('complete built site and production-date Worker keep native music asset rou
     'admin/music/featured/index.html','images/music-turntable-silver.webp']) {
     assert.ok((await stat(path.join(config.assets.directory,relative))).size>0,relative);
   }
+  await checkMusicEntryAssets(config.assets.directory, false);
   const bundle = await build({entryPoints:[config.main],bundle:true,format:'esm',platform:'browser',
     conditions:['workerd','worker'],write:false,loader:{'.wasm':'binary'}});
   let outbound=0;

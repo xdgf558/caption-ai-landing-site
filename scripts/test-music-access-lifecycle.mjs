@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { Audio } from './fixtures/music-player/fake-audio.mjs';
 import { createMusicPlayer } from '../src/scripts/musicPlayerCore.js';
+import { browseMusic } from '../src/scripts/musicLibrary.js';
+import { playerVariant } from '../src/scripts/musicPlayerCatalog.js';
 import { createMusicQueue } from '../src/scripts/musicPlayerQueue.js';
 import { createMusicAccessLifecycle, readPlayerCapabilities } from '../src/scripts/musicAccessLifecycle.js';
 import { notifyReaderSession, watchReaderSession, withReaderSessionChange, READER_SESSION_EVENT } from '../src/scripts/readerSessionEvents.js';
@@ -22,12 +24,13 @@ class Host extends EventTarget {
 }
 function setup(t) {
   let clock = 0, timerId = 0;
+  const catalogs = [];
   const timers = new Map(), requests = [], host = new Host(), document = new EventTarget(); document.visibilityState = 'visible';
   const setTimer = (fn, delay) => { const id = ++timerId; timers.set(id, { fn, at: clock + delay }); return id; };
   const clearTimer = id => timers.delete(id);
   const audio = new Audio(), player = createMusicPlayer(audio, { origin: 'https://music.example.test' });
   const queue = createMusicQueue(player, { now: () => clock });
-  const model = { active: true, delivery: true, ttl: 60000, tracks: [song(1), song(2, 'free'), song(3)], capsStatus: 200,
+  const model = { active: true, delivery: true, ttl: 60000, tracks: [song(1), song(2, 'free'), song(3)], capsStatus: 200, catalogStatus: 200,
     accessStatus: 200, accessBody: { effectiveAccess: 'vip', canPlayFull: true, canPreview: true }, capOverride: null, accessOverride: null };
   const caps = () => ({ authenticated: model.active, membershipStatus: model.active ? 'active' : 'none',
     canPlayVipFull: model.active && model.delivery, musicVipDeliveryEnabled: model.delivery,
@@ -36,11 +39,11 @@ function setup(t) {
   const fetcher = async (url, options) => {
     requests.push({ url, options });
     if (url.includes('/capabilities')) return model.capOverride ? model.capOverride() : response(model.capsStatus, caps());
-    if (url.includes('/catalog')) return response(200, { schemaVersion: 2, tracks: model.tracks });
+    if (url.includes('/catalog')) return response(model.catalogStatus, { schemaVersion: 2, tracks: model.tracks });
     if (url.includes('/access?')) return model.accessOverride ? model.accessOverride() : response(model.accessStatus, model.accessBody);
     throw new Error('Unexpected media fetch');
   };
-  const lifecycle = createMusicAccessLifecycle(player, queue, { fetcher, host, document, now: () => clock, setTimer, clearTimer });
+  const lifecycle = createMusicAccessLifecycle(player, queue, { fetcher, host, document, now: () => clock, setTimer, clearTimer, onCatalog: (...args) => catalogs.push(args) });
   const play = (id = 1, variant = 'full') => { queue.playVariant(song(id).id, variant, model.tracks); audio.metadata(variant === 'full' ? 120 : 30); audio.playing(); };
   const fail = () => { audio.currentSrc = audio.src; audio.error = { code: 3 }; audio.emit('error'); };
   const advance = async ms => {
@@ -53,7 +56,7 @@ function setup(t) {
     }
   };
   t.after(() => { lifecycle.destroy(); queue.destroy(); player.destroy(); });
-  return { lifecycle, player, queue, audio, model, host, document, requests, caps, response, play, fail, advance, timers,
+  return { catalogs, lifecycle, player, queue, audio, model, host, document, requests, caps, response, play, fail, advance, timers,
     tickClock: ms => { clock += ms; } };
 }
 
@@ -262,4 +265,41 @@ test('a stale access denial cannot affect a new failed attempt on the same sourc
   assert.equal(f.player.snapshot().lastError.code, 'MEDIA_3'); assert.notEqual(f.audio.src, '');
   second.resolve(f.response(200, f.model.accessBody)); await flush();
   assert.equal(f.player.snapshot().activeTrackId, song(2).id);
+});
+
+
+test('limited-free expiry unloads anonymous full and stale catalog cannot restart it or create a timer loop',async t=>{
+ const f=setup(t);f.model.active=false;f.model.tracks=[{...song(1,'free'),freeUntil:new Date(baseTime+1000).toISOString()}];
+ await f.lifecycle.refresh('initial');f.play(1);assert.match(f.audio.src,/variant=full/);
+ // Simulate an old response at the boundary; local expiry still fails closed.
+ await f.advance(1000);assert.equal(f.audio.src,'');const plays=f.audio.plays.length;f.play(1);assert.equal(f.audio.plays.length,plays);await flush();
+ assert.equal(f.audio.src,'');assert.ok(f.timers.size<5);assert.ok(f.requests.length<12);
+});
+test('limited-free full requires a usable server clock but ordinary free tracks still play',async t=>{
+ const f=setup(t);f.model.active=false;f.model.capsStatus=503;f.model.tracks=[{...song(1,'free'),freeUntil:new Date(baseTime+1000).toISOString()},song(2,'free')];
+ await f.lifecycle.refresh('initial');f.play(1);assert.equal(f.audio.src,'');f.play(2);assert.match(f.audio.src,/variant=full/);
+});
+
+
+test('promotion expiry immediately publishes VIP display state even when both refreshes fail', async t => {
+  const f = setup(t); f.model.active = false;
+  f.model.tracks = [{ ...song(1, 'free'), previewAvailable: false,
+    freeUntil: new Date(baseTime + 1000).toISOString() }];
+  await f.lifecycle.refresh('initial'); f.play(1);
+  const [before, groups, context] = f.catalogs.at(-1);
+  assert.equal(playerVariant(before[0], f.lifecycle.snapshot().capabilities), 'full');
+  f.model.catalogStatus = 503; f.model.capsStatus = 503;
+  await f.advance(1000);
+  const [displayed, retainedGroups, retainedContext] = f.catalogs.at(-1);
+  assert.equal(f.catalogs.length, 2);
+  assert.equal(displayed[0].effectiveAccess, 'vip');
+  assert.equal(playerVariant(displayed[0], f.lifecycle.snapshot().capabilities), null);
+  assert.equal(displayed.some(track => track.effectiveAccess === 'free'), false);
+  assert.deepEqual(retainedGroups, groups);
+  assert.deepEqual(retainedContext.selection, context.selection);
+  assert.deepEqual(retainedContext.featured, context.featured);
+  assert.equal(retainedContext.catalogTracks[0].effectiveAccess, 'vip');
+  assert.deepEqual(browseMusic(retainedContext.catalogTracks, retainedGroups, { access: 'free' }), []);
+  assert.equal(f.audio.src, '');
+  assert.equal(f.queue.playVariant(displayed[0].id, 'full', displayed), false);
 });

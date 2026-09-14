@@ -2,21 +2,26 @@ import {test,expect} from '@playwright/test';
 import {tracks as fixtureTracks,demoWav} from '../fixtures/music-player/data.mjs';
 const unique=()=> 'album-ui-'+crypto.randomUUID();
 async function create(page){await page.goto('/admin/music/collections/');await page.locator('#collection-new-album').click();await page.locator('#collection-slug').fill(unique());await page.locator('[data-collection-title="zh-Hans"]').fill('隔离测试专辑');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 1');}
-async function confirm(page){await page.locator('#collection-confirm-accept').click();}
+async function confirm(page){if(await page.locator('#collection-confirm-listening-label').isVisible())await page.locator('#collection-confirm-listening').check();await page.locator('#collection-confirm-accept').click();}
 
-test('album metadata, keyboard order, reload and failed incomplete publication use isolated API',async({page})=>{
+test('album metadata, keyboard order, reload and missing member media feedback use isolated API',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await create(page);
   await expect(page.locator('#collection-list button[aria-current="true"]')).toHaveCount(1);
+  const publications=[];page.on('request',r=>{if(r.method()==='PATCH'&&r.postDataJSON()?.status==='published')publications.push(r.url());});
+  await page.locator('#collection-publish').click();
+  await expect(page.locator('#collection-publish-result')).toContainText('这张专辑还没有歌曲');
+  await expect(page.locator('#collection-publish-result')).toBeFocused();
+  await expect(page.locator('#collection-confirm')).not.toBeVisible();expect(publications).toHaveLength(0);
   await page.locator('#member-search-form button').click();
   await page.getByRole('button',{name:'添加 晚风经过车站',exact:true}).click();await page.getByRole('button',{name:'添加 月台上的雨',exact:true}).click();
   await expect(page.locator('#collection-publish')).toBeDisabled();await expect(page.locator('#collection-save')).toBeDisabled();
   await page.getByRole('button',{name:'上移 月台上的雨',exact:true}).press('Enter');
   await expect(page.locator('#collection-order li').first()).toContainText('月台上的雨');await expect(page.getByRole('button',{name:'上移 月台上的雨',exact:true})).toBeDisabled();
-  await page.locator('#collection-order-reason').fill('先雨后晚风');await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
+  await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
   await page.reload();await expect(page.locator('#collection-order li')).toHaveCount(2);await expect(page.locator('#collection-order li').first()).toContainText('月台上的雨');
-  await page.locator('#album-listening-mode').selectOption('vip');await page.locator('#collection-reason').fill('VIP 专辑');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');
-  await page.locator('#collection-publish').click();await page.locator('#collection-confirm-reason').fill('测试拒绝不完整专辑');await page.locator('#collection-confirm-reason').press('Enter');await expect(page.locator('#collection-confirm')).toBeVisible();await confirm(page);
-  await expect(page.locator('#collection-status')).toContainText('所有成员都必须已发布');await expect(page.locator('#collection-state')).toHaveText('专辑 · 草稿');expect(errors).toEqual([]);
+  await page.locator('#album-listening-mode').selectOption('mixed');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');
+  await page.locator('#collection-publish').click();await expect(page.locator('#collection-confirm-reason-label')).toBeHidden();await expect(page.locator('#collection-confirm-reason')).not.toHaveAttribute('required','');await expect(page.locator('#collection-confirm')).toBeVisible();await confirm(page);
+  await expect(page.locator('#collection-publish-result')).toContainText('缺少已验证的完整音频');await expect(page.locator('#collection-publish-result')).toBeFocused();await expect(page.locator('#collection-state')).toHaveText('专辑 · 草稿');expect(errors).toEqual([]);
 });
 
 test('unknown create receipt survives reload, blocks duplicates, and retries only the original key',async({page})=>{
@@ -27,7 +32,7 @@ test('unknown create receipt survives reload, blocks duplicates, and retries onl
 });
 
 test('narrow workspace stays usable and archive disables membership edits',async({page})=>{
-  await page.setViewportSize({width:390,height:844});await create(page);await page.locator('#member-search-form button').click();await page.getByRole('button',{name:'添加 晚风经过车站',exact:true}).click();await page.locator('#collection-order-reason').fill('曲序');await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
+  await page.setViewportSize({width:390,height:844});await create(page);await page.locator('#member-search-form button').click();await page.getByRole('button',{name:'添加 晚风经过车站',exact:true}).click();await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.locator('#collection-archive').click();await page.locator('#collection-confirm-reason').fill('隔离归档');await confirm(page);await expect(page.locator('#collection-state')).toHaveText('专辑 · 已归档');
   await expect(page.getByRole('button',{name:'移除 晚风经过车站',exact:true})).toBeDisabled();await expect(page.locator('#collection-save')).toBeDisabled();await expect(page.locator('#collection-order-save')).toBeDisabled();
@@ -65,6 +70,23 @@ test('public album browsing keeps one paused source until play and retains cards
   await page.locator('[data-play-all]').click();await expect.poll(()=>page.locator('audio').evaluate(a=>!a.paused)).toBe(true);
   const source=await page.locator('audio').getAttribute('src');await page.getByRole('button',{name:'专辑',exact:true}).click();
   const card=page.locator('[data-album-list] button');await card.evaluate(n=>n.dataset.testIdentity='retained');
-  await page.locator('[data-detail-favorite]').click();await expect(card).toHaveAttribute('data-test-identity','retained');
+  await page.locator('[data-featured-view]').click();await expect(page.locator('[data-detail-dialog]')).toBeVisible();
+  await page.locator('[data-detail-favorite]').click();await page.locator('[data-panel-close="detail"]').click();
+  await expect(card).toHaveAttribute('data-test-identity','retained');
   expect(await page.locator('audio').getAttribute('src')).toBe(source);expect(audioRequests).toBe(1);
+});
+
+
+test('metadata-only album remains visible and opens with no songs or audio requests',async({page})=>{
+  const album={id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',slug:'album-empty',type:'album',listeningMode:'free',title:'即将更新的专辑',description:'',coverTrackId:null,trackIds:[]};let audioRequests=0;
+  await page.route('**/api/music/**',async route=>{
+    const url=new URL(route.request().url());
+    if(url.pathname.endsWith('/catalog'))return route.fulfill({json:{schemaVersion:2,tracks:fixtureTracks,collections:[album]}});
+    if(url.pathname.includes('/collections/'))return route.fulfill({json:{schemaVersion:2,tracks:[],collection:album}});
+    if(url.pathname.endsWith('/capabilities'))return route.fulfill({json:{canPlayVipFull:false,musicVipDeliveryEnabled:false,authenticated:false,membershipStatus:'none',serverNow:new Date().toISOString(),validUntil:null}});
+    if(url.pathname.endsWith('/audio'))audioRequests++;
+    return route.fulfill({status:503,json:{error:{code:'MUSIC_PUBLIC_DISABLED'}}});
+  });
+  await page.goto('/zh-hans/music/');await page.getByRole('button',{name:'专辑',exact:true}).click();await expect(page.locator('[data-album-list] button')).toContainText('即将更新的专辑');await page.locator('[data-album-list] button').click();
+  await expect(page.locator('[data-list-title]')).toHaveText('即将更新的专辑');await expect(page.locator('[data-track-list] > li')).toHaveCount(0);expect(audioRequests).toBe(0);expect(await page.locator('audio').getAttribute('src')).toBeNull();
 });

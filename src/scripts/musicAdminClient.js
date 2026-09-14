@@ -23,14 +23,15 @@ export async function hashFile(file, progress = () => {}) {
 export function policyForSave(mode, until, after, previous) {
   const candidate = { accessMode: mode, earlyAccessUntil: mode === 'early_access' ? new Date(until).toISOString() : null,
     postEarlyAccessMode: mode === 'early_access' ? after : null, policyVersion: 1 };
-  if (previous) candidate.policyVersion = previous.policyVersion + Number(['accessMode','earlyAccessUntil','postEarlyAccessMode'].some(k => candidate[k] !== previous[k]));
+  if (mode === 'limited_free') candidate.freeUntil = new Date(until).toISOString();
+  if (previous) candidate.policyVersion = previous.policyVersion + Number(['accessMode','earlyAccessUntil','postEarlyAccessMode','freeUntil'].some(k => candidate[k] !== previous[k]));
   return candidate;
 }
 export async function request(path, { method = 'GET', body, key, etag, raw = false, type, timeout = 30000 } = {}) {
   const id = '[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}';
   const route = typeof path === 'string' ? path.split('?')[0] : '';
-  if (!new RegExp('^/(?:status|analytics|featured|tracks|audit|uploads|collections|collections/' + id + '(?:/tracks)?|tracks/' + id + '(?:/(?:publish|unpublish|archive))?|uploads/' + id +
-    '(?:/(?:body|complete))?|revisions/' + id + '/(?:rights-review|technical-review)|assets/' + id + ')$','i').test(route) ||
+  if (!new RegExp('^/(?:status|storage-quota|analytics|featured|tracks|audit|uploads|collection-uploads|collections|collections/' + id + '(?:/tracks)?|tracks/' + id + '(?:/(?:publish|unpublish|archive))?|uploads/' + id +
+    '(?:/(?:body|complete))?|collection-uploads/' + id + '(?:/(?:body|complete))?|collection-assets/' + id + '|revisions/' + id + '/(?:rights-review|technical-review)|assets/' + id + ')$','i').test(route) ||
     !['GET','POST','PATCH','PUT'].includes(method)) throw new Error('无效管理路径');
   const headers = {};
   if (method !== 'GET') {
@@ -43,8 +44,17 @@ export async function request(path, { method = 'GET', body, key, etag, raw = fal
   try {
     response = await fetch(API + path, { method, credentials:'same-origin', cache:'no-store', redirect:'error',
       signal:AbortSignal.timeout(timeout), headers, ...(body === undefined ? {} : { body:raw ? body : JSON.stringify(body) }) });
-    data = await response.json();
   } catch { throw Object.assign(new Error('网络或登录状态无法确认。请重新登录后核对原操作，不要重复创建。'), { uncertain:true }); }
+  try { data = await response.json(); }
+  catch {
+    // Edge/runtime failures can be HTML (e.g. Worker resource exhaustion).
+    // Preserve the original mutation for recovery and never display that HTML.
+    const serverFailure = response.status >= 500;
+    throw Object.assign(new Error(serverFailure
+      ? '服务器处理失败，结果尚未确认。请保留当前清单，稍后核对原操作，不要重复上传。'
+      : '未收到有效的后台回执。请核对登录状态并保留原操作，不要重复上传。'),
+    { code: serverFailure ? 'MUSIC_SERVER_UNAVAILABLE' : 'MUSIC_RESPONSE_INVALID', status: response.status, uncertain: true });
+  }
   if (!response.ok || data.ok !== true) {
     const code = data.code || 'MUSIC_ADMIN_UNAVAILABLE';
     throw Object.assign(new Error(code), { code, status:response.status, uncertain:response.status >= 500 || [408,429].includes(response.status) });

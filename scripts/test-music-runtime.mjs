@@ -18,7 +18,7 @@ let mf, db, bucket;
 function migrationStatements() {
   const parser = new DatabaseSync(':memory:'), migrations = [];
   try {
-    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql', '0008_music_featured.sql']) {
+    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql', '0008_music_featured.sql', '0009_music_album_covers.sql', '0010_music_limited_free.sql']) {
       const statements = [];
       let remaining = file(`migrations-music/${name}`).toString();
       while (remaining.trim()) {
@@ -74,10 +74,10 @@ async function putFixture(name, kind = 'audio', owner = randomUUID()) {
   return { id, owner_track_id: owner, kind, object_key: key, state: 'validated', format: 'mp3',
     content_type: 'audio/mpeg', byte_size: f.bytes, duration_ms: f.packetDurationMs, sha256: f.sha256, etag: object.etag };
 }
-async function seed(accessMode = 'vip') {
+async function seed(accessMode = 'vip', freeUntil = null) {
   const audio = await putFixture('cbr-stereo.mp3'), preview = await putFixture('preview.mp3', 'preview', audio.owner_track_id);
   Object.assign(preview, { derived_from_asset_id: audio.id, source_start_ms: 0, source_end_ms: 1000 });
-  const response = await call('/seed', { audio, preview, accessMode }); assert.equal(response.status, 200, JSON.stringify(response));
+  const response = await call('/seed', { audio, preview, accessMode, freeUntil }); assert.equal(response.status, 200, JSON.stringify(response));
   return { command: response.body, audio, preview };
 }
 async function dump() {
@@ -100,6 +100,10 @@ test('missing schema is 503; actual migrations on local D1 enable primary readin
   assert.ok((await db.batch(migrations[6].map(sql => db.prepare(sql)))).every(r => r.success));
   assert.equal((await call('/database')).body.code, 'MUSIC_DATABASE_UNAVAILABLE');
   assert.ok((await db.batch(migrations[7].map(sql => db.prepare(sql)))).every(r => r.success));
+  assert.equal((await call('/database')).body.code, 'MUSIC_DATABASE_UNAVAILABLE');
+  assert.ok((await db.batch(migrations[8].map(sql => db.prepare(sql)))).every(r => r.success));
+  assert.equal((await call('/database')).body.code, 'MUSIC_DATABASE_UNAVAILABLE');
+  assert.ok((await db.batch(migrations[9].map(sql => db.prepare(sql)))).every(r => r.success));
   const probe = await call('/database'); assert.equal(probe.status, 200, JSON.stringify(probe));
   assert.equal(probe.body.catalogVersion, 0); assert.equal(probe.body.previewLimitMs, 45000);
   assert.deepEqual(probe.body.flags, { public: false, uploads: false, vipDelivery: false, analytics: false });
@@ -670,7 +674,7 @@ test('native analytics global failure rolls back all admission rows; daily failu
   assert.equal((await send()).status,200);
 });
 
-test('albums publish through native D1 guards, keep VIP audio private and reject a downlisted member',async()=>{
+test('albums publish through native D1 guards, keep VIP audio private and filter downlisted members',async()=>{
   const first=await seed(),second=await seed();
   assert.equal((await call('/publish',first.command)).status,200);
   assert.equal((await call('/publish',second.command)).status,200);
@@ -692,7 +696,12 @@ test('albums publish through native D1 guards, keep VIP audio private and reject
   // not merely check EXISTS(any published member).
   const t=(await adminCall('/tracks/'+second.command.trackId)).body;
   assert.equal((await adminCall('/tracks/'+t.id+'/unpublish','POST',{revisionId:t.published.id,reason:'Downlist member'},{'If-Match':`"edit-${t.editVersion}"`})).status,200);
-  const rejected=await adminCall(path,'PATCH',publishBody,{'If-Match':'"edit-4"'});assert.equal(rejected.status,422);assert.equal(rejected.body.code,'MUSIC_ALBUM_TRACKS_NOT_PUBLISHED');
+  const accepted=await adminCall(path,'PATCH',publishBody,{'If-Match':'"edit-4"'});assert.equal(accepted.status,200);
+  const partial=await publicCall('/collections/'+body.slug+'?locale=en');assert.equal(partial.status,200);assert.deepEqual((await partial.json()).collection.trackIds,[first.command.trackId]);
+  assert.equal((await mediaCall(second.command.trackId,'full')).status,410);
+  const remaining=(await adminCall('/tracks/'+first.command.trackId)).body;
+  assert.equal((await adminCall('/tracks/'+remaining.id+'/unpublish','POST',{revisionId:remaining.published.id,reason:'Metadata-only album'},{'If-Match':`"edit-${remaining.editVersion}"`})).status,200);
+  const empty=await publicCall('/collections/'+body.slug+'?locale=en');assert.equal(empty.status,200);const emptyBody=await empty.json();assert.deepEqual(emptyBody.collection.trackIds,[]);assert.deepEqual(emptyBody.tracks,[]);
 });
 
 test('featured curation uses native D1 CAS and public projection removes a downlisted primary',async()=>{
@@ -709,4 +718,72 @@ test('featured curation uses native D1 CAS and public projection removes a downl
   assert.equal((await adminCall('/tracks/'+track.id+'/unpublish','POST',{revisionId:track.published.id,reason:'Native featured downlist'},{'If-Match':`"edit-${track.editVersion}"`})).status,200);
   response=await publicCall('/catalog?locale=en');catalog=await response.json();assert.equal(response.status,200);
   assert.equal(catalog.featured.primaryTrackId,null);assert.equal(catalog.featured.primarySource,'none');assert.deepEqual(catalog.featured.secondaryTrackIds,[vip.command.trackId]);
+});
+
+test('storage quota uses native D1 atomic CAS, audit and idempotency without changing media charges',async()=>{
+  const before=(await adminCall('/storage-quota')).body, quotaMiB=Math.ceil(before.chargedBytes/1048576)+64;
+  const body={quotaMiB,expectedQuotaBytes:before.quotaBytes,expectedUpdatedAt:before.updatedAt};
+  const headers={'Idempotency-Key':randomUUID()};
+  const saved=await adminCall('/storage-quota','PUT',body,headers);assert.equal(saved.status,200,JSON.stringify(saved.body));
+  assert.equal((await adminCall('/storage-quota','PUT',body,headers)).body.replayed,true);
+  assert.equal((await adminCall('/storage-quota','PUT',{...body,quotaMiB:quotaMiB+1})).body.code,'MUSIC_QUOTA_CONFLICT');
+  const after=(await adminCall('/storage-quota')).body;assert.equal(after.quotaBytes,quotaMiB*1048576);assert.equal(after.chargedBytes,before.chargedBytes);
+  assert.ok(after.updatedAt>before.updatedAt);
+  assert.equal((await db.prepare("SELECT COUNT(*) n FROM music_admin_audit_logs WHERE action='music.storage.quota'").first()).n,1);
+});
+
+test('independent album cover upload retains quota, recovers one writer, and serves only a published eligible album',async()=>{
+  await db.prepare("UPDATE music_settings SET value_json='268435456' WHERE key='storageQuotaBytes'").run();
+  const body={slug:'cover-'+randomUUID(),type:'album',listeningMode:'mixed',originalLocale:'en',title:{en:'Cover fixture'},description:{en:''}};
+  const created=await adminCall('/collections','POST',body),id=created.body.collectionId;
+  assert.equal(created.status,200);
+  const image=await sharp({create:{width:32,height:32,channels:3,background:'#668877'}}).png().toBuffer();
+  const spec={collectionId:id,format:'png',byteSize:image.length,sha256:createHash('sha256').update(image).digest('hex')};
+  assert.equal((await adminCall('/collection-uploads','POST',spec)).body.code,'MUSIC_UPLOADS_DISABLED');
+  const usage=Number((await db.prepare('SELECT SUM(charged_bytes) AS n FROM music_storage_charges').first()).n);
+  const key=randomUUID(),r=await uploadJson('/collection-uploads','POST',spec,{'Idempotency-Key':key});
+  assert.equal(r.status,200,JSON.stringify(r));
+  assert.equal((await uploadJson('/collection-uploads','POST',spec,{'Idempotency-Key':key})).body.assetId,r.body.assetId);
+  assert.equal(Number((await db.prepare('SELECT SUM(charged_bytes) AS n FROM music_storage_charges').first()).n),usage+image.length);
+  assert.equal((await uploadJson('/collection-uploads','POST',{...spec,format:'mp3'})).status,415);
+  const uid=r.body.uploadId,assetId=r.body.assetId,writeKey=randomUUID();
+  const put=await uploadJson(`/collection-uploads/${uid}/body`,'PUT',image,{'Content-Type':'image/png','Idempotency-Key':writeKey},true);
+  assert.equal(put.status,200,JSON.stringify(put));
+  // Lost PUT acknowledgement: replay does not write a second body.
+  assert.equal((await uploadJson(`/collection-uploads/${uid}/body`,'PUT',image,{'Content-Type':'image/png','Idempotency-Key':writeKey},true)).body.status,'uploading');
+  assert.equal((await uploadJson(`/collection-uploads/${uid}/complete`,'POST',{})).status,200);
+  assert.equal((await uploadJson(`/collection-uploads/${uid}/complete`,'POST',{})).status,200);
+  assert.deepEqual(Buffer.from(await (await uploadApi('/collection-assets/'+assetId)).arrayBuffer()),image);
+  assert.equal((await publicCall(`/collections/${body.slug}/cover?v=1`)).status,404);
+  const track=await seed('free');assert.equal((await call('/publish',track.command)).status,200);
+  assert.equal((await adminCall(`/collections/${id}/tracks`,'PUT',{trackIds:[track.command.trackId],reason:'Member'},{'If-Match':'"edit-1"'})).status,200);
+  const published={...body,coverAssetId:assetId,status:'published',reason:'Publish with album art'};
+  assert.equal((await adminCall('/collections/'+id,'PATCH',published,{'If-Match':'"edit-2"'})).status,200);
+  const response=await publicCall(`/collections/${body.slug}/cover?v=3`);
+  assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
+  assert.deepEqual(Buffer.from(await response.arrayBuffer()),image);
+  assert.equal((await publicCall(`/collections/${body.slug}/cover?v=2`)).status,409);
+  const head=await publicCall(`/collections/${body.slug}/cover?v=3`,{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'');
+  assert.equal((await uploadJson('/collection-uploads','POST',spec)).body.code,'MUSIC_DRAFT_REQUIRED');
+  assert.equal((await mediaCall(track.command.trackId,'full')).status,200);
+  assert.equal((await adminCall('/collections/'+id,'PATCH',{...published,status:'draft'},{'If-Match':'"edit-3"'})).status,200);
+  assert.equal((await publicCall(`/collections/${body.slug}/cover?v=3`)).status,404);
+  await assert.rejects(db.prepare('DELETE FROM music_collection_upload_sessions WHERE id=?').bind(uid).run());
+  await assert.rejects(db.prepare("UPDATE music_collection_assets SET etag='changed' WHERE id=?").bind(assetId).run());
+  assert.deepEqual((await db.prepare('PRAGMA foreign_key_check').all()).results,[]);
+});
+
+test('limited free expires on real D1/R2 full and Range requests, without a scheduled write', async () => {
+  const end = Date.now() + 5000, { command } = await seed('vip', end);
+  const published = await call('/publish', command); assert.equal(published.status, 200, JSON.stringify(published));
+  let response = await mediaCall(command.trackId, 'full', { headers: { Range: 'bytes=0-1' } });
+  assert.equal(response.status, 206); assert.equal((await response.arrayBuffer()).byteLength, 2);
+  const stored = await db.prepare('SELECT access_mode,free_until FROM music_track_revisions WHERE id=?').bind(command.revisionId).first();
+  assert.deepEqual(stored, {access_mode:'vip',free_until:end});
+  await new Promise(resolve => setTimeout(resolve, Math.max(1, end - Date.now() + 10)));
+  for (const options of [{}, {method:'HEAD'}, {headers:{Range:'bytes=0-1'}}]) {
+    response = await mediaCall(command.trackId, 'full', options); assert.equal(response.status, 401); await response.arrayBuffer();
+  }
+  response = await mediaCall(command.trackId, 'preview'); assert.equal(response.status, 200); await response.arrayBuffer();
+  assert.deepEqual(await db.prepare('SELECT access_mode,free_until FROM music_track_revisions WHERE id=?').bind(command.revisionId).first(), stored);
 });

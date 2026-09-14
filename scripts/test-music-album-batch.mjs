@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { randomUUID } from 'node:crypto';
-import { createAlbumBatch, createBatchJournal, createBatchPlan, BATCH_LIMIT } from '../src/scripts/musicAlbumBatch.js';
+import { createAlbumBatch, createBatchJournal, createBatchPlan, appendCompletedAlbumBatch, BATCH_LIMIT } from '../src/scripts/musicAlbumBatch.js';
 import { WAV_PROFILE } from '../src/scripts/musicWav.js';
 const clone=v=>structuredClone(v),actor='batch@example.test';
 const config={locale:'zh-Hans',creator:'测试创作者',language:'无人声',instrumental:true};
@@ -151,4 +151,36 @@ test('cancel remaining items never discards created or uncertain work and cannot
   const f=fixture();f.state.gate=async c=>{if(c.path.endsWith('/body'))f.core.stop();};await f.core.continue();f.core.cancelRemaining();
   assert.deepEqual(f.journal.get().batch.rows.map(r=>r.stage),['ready','cancelled']);assert.throws(()=>f.core.clear(),/未完成/);await f.core.addReady();f.core.clear();assert.equal(f.state.tracks.size,1);
   const g=fixture();g.state.fail={when:'after',match:c=>c.path==='/tracks'};await assert.rejects(g.core.continue());assert.throws(()=>g.core.cancelRemaining(),/核对当前/);assert.ok(g.journal.get().pending);
+});
+
+
+const appendForPublish=f=>appendCompletedAlbumBatch({storage:f.storage,actor,album:clone(f.album),api:f.api});
+test('confirmed publication appends ready batch tracks after saved members, deduplicates retries and never publishes tracks',async()=>{
+  const f=fixture();await f.core.continue();const rows=f.journal.get().batch.rows;
+  const outside=randomUUID();f.album.tracks=[{id:outside},{id:rows[1].trackId}];f.album.editVersion++;
+  f.state.calls=[];const result=await appendForPublish(f);
+  assert.deepEqual(result,{added:1,editVersion:3});assert.deepEqual(f.album.tracks.map(t=>t.id),[outside,rows[1].trackId,rows[0].trackId]);
+  assert.equal(writes(f).length,1);assert.equal(writes(f)[0].method,'PUT');assert.equal(writes(f)[0].path,'/collections/'+f.album.id+'/tracks');
+  assert.equal((await appendForPublish(f)).added,0);assert.equal(writes(f).length,1);
+});
+test('publication only appends completed rows from this actor and album; waiting rows do not upload',async()=>{
+  const f=fixture();f.state.gate=async c=>{if(c.path.endsWith('/body'))f.core.stop();};await f.core.continue();f.state.calls=[];
+  assert.equal((await appendCompletedAlbumBatch({storage:f.storage,actor:'other',album:f.album,api:f.api})).added,0);
+  assert.equal((await appendCompletedAlbumBatch({storage:f.storage,actor,album:{...f.album,id:randomUUID()},api:f.api})).added,0);
+  assert.equal(f.state.calls.length,0);assert.equal((await appendForPublish(f)).added,1);assert.equal(f.album.tracks.length,1);
+  assert.equal(writes(f).length,1);assert.equal(puts(f).length,0);assert.equal(f.state.tracks.size,1);
+});
+test('publication append retains uncertain order receipt and refuses another write until original batch recovery',async()=>{
+  const f=fixture();await f.core.continue();f.state.calls=[];f.state.fail={when:'after',match:c=>c.method==='PUT'};
+  await assert.rejects(appendForPublish(f),/network/);const restored=f.make(),original=f.journal.get().pending;
+  assert.equal(original.kind,'order');await assert.rejects(appendForPublish(f),/待确认操作/);assert.equal(writes(f).length,1);
+  await restored.retry();assert.equal(writes(f).length,2);assert.equal(writes(f)[1].key,original.key);
+  assert.deepEqual(writes(f)[1].body,original.request.body);assert.equal((await appendForPublish(f)).added,0);assert.equal(f.album.tracks.length,2);
+});
+test('publication append rejects changed identity, stale album snapshot and a full album without overwriting members',async()=>{
+  const f=fixture();await f.core.continue();const snapshot=clone(f.album);f.album.editVersion++;f.state.calls=[];
+  await assert.rejects(appendCompletedAlbumBatch({storage:f.storage,actor,album:snapshot,api:f.api}),/专辑已变化/);assert.equal(writes(f).length,0);
+  f.state.actor='changed';await assert.rejects(appendForPublish(f),/账号已变化/);assert.equal(writes(f).length,0);
+  f.state.actor=actor;f.album.tracks=Array.from({length:500},()=>({id:randomUUID()}));
+  await assert.rejects(appendForPublish(f),/500 首上限/);assert.equal(f.album.tracks.length,500);assert.equal(writes(f).length,0);
 });

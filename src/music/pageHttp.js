@@ -22,9 +22,10 @@ export async function handleMusicPage(request, env, { clock = Date.now } = {}) {
   if (!env.ASSETS?.fetch) return error(503, 'MUSIC_PAGE_UNAVAILABLE');
   try {
     let metadata = null;
-    if (env.MUSIC_SHARE_CARDS_ENABLED === 'true' && url.searchParams.has('track')) {
+    if (env.MUSIC_SHARE_CARDS_ENABLED === 'true' && (url.searchParams.has('track') || url.searchParams.has('collection'))) {
       const locale = musicPageLocale(url.pathname);
-      const publicUrl = new URL(`/api/music/tracks/${url.searchParams.get('track')}?locale=${locale}`, url.origin);
+      const album = !url.searchParams.has('track');
+      const publicUrl = new URL(album ? `/api/music/collections/${url.searchParams.get('collection')}?locale=${locale}` : `/api/music/tracks/${url.searchParams.get('track')}?locale=${locale}`, url.origin);
       const forwarded = new Headers();
       if (request.headers.has('CF-Connecting-IP')) forwarded.set('CF-Connecting-IP', request.headers.get('CF-Connecting-IP'));
       const detail = await handleMusicPublic(new Request(publicUrl, { headers: forwarded }), env, { clock });
@@ -32,7 +33,8 @@ export async function handleMusicPage(request, env, { clock = Date.now } = {}) {
         // No stale or generic song card on unpublished/missing/limited publication reads.
         return new Response(request.method === 'HEAD' ? null : detail.body, { status: detail.status, headers: { ...Object.fromEntries(detail.headers), ...headers } });
       }
-      metadata = musicShareMetadata((await detail.json()).track, url.origin, locale);
+      const body = await detail.json();
+      if (!album || body.collection?.type === 'album') metadata = musicShareMetadata(album ? body.collection : body.track, url.origin, locale);
     }
     // Dynamic metadata cannot use an ASSETS 304 or ranged body.
     const assetHeaders = new Headers(request.headers);

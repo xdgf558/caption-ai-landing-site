@@ -14,7 +14,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
 <header class="music-topbar"><a href="/admin-v2/"><img src="/images/optimized/station-cat-logo-1668c2e5-160.webp" width="32" height="32" alt="" />Station Cat <span>/ 后台</span></a><div class="music-topbar-actions"><a href="/admin/music/featured/">首页推荐</a><a href="/admin/music/collections/">专辑与歌单</a><button id="analytics-open" type="button">收听统计</button><button id="audit-open" type="button"><History size={16} />操作记录</button></div></header>
 <main class="music-shell">
   <header class="music-heading"><div><p class="eyebrow">内容工作区</p><h1>音乐</h1></div><button id="track-new" class="primary" type="button" disabled><Plus size={18} />新建曲目</button></header>
-  <div class="music-health"><span id="environment">正在连接音乐服务</span><span id="storage">配额待查询</span></div>
+  <div class="music-health"><span id="environment">正在连接音乐服务</span><div class="music-storage-control"><span id="storage">配额待查询</span><button id="quota-open" type="button" disabled>调整总配额</button></div></div>
   <div class="music-feedback"><p id="music-status" role="status" aria-live="polite">正在读取曲库。</p><button id="music-reload" type="button" title="重新读取服务状态" aria-label="重新读取服务状态"><RefreshCw size={17} /></button><button id="mutation-retry" type="button" hidden>核对并重试原操作</button></div>
   <div class="music-layout">
     <aside aria-label="曲目列表" class="music-library">
@@ -45,9 +45,9 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
             </div>
             <details><summary>多语言曲名与简介</summary><div class="field-grid">{locales.map(([value, name]) => <div><label>{name} 曲名<input data-title-locale={value} maxlength="120" /></label><label>{name} 简介<input data-summary-locale={value} maxlength="500" /></label></div>)}</div></details>
             <h3>收听范围</h3><div class="field-grid">
-              <label>访问策略<select id="access-mode"><option value="vip">VIP 专享</option><option value="free">免费精选</option><option value="early_access">VIP 抢先听</option></select></label>
+              <label>访问策略<select id="access-mode"><option value="vip">VIP 专享</option><option value="free">免费精选</option><option value="limited_free">限时免费</option><option value="early_access">VIP 抢先听</option></select></label>
               <div id="early-options" class="field-grid full" hidden><label>抢先结束时间（本地时区）<input id="early-until" type="datetime-local" step="1" /></label><label>结束后<select id="post-early"><option value="vip">VIP 专享</option><option value="free">免费精选</option></select></label></div>
-            </div>
+            <div id="limited-free-options" class="full" hidden><label>免费截止时间（本地时区）<input id="free-until" type="datetime-local" step="1" /></label><p>截止后自动恢复 VIP 专享。请选择未来时间；VIP 阶段仍需独立试听。</p></div></div>
             <label id="save-reason-label">修改说明<input id="save-reason" maxlength="1000" /></label>
             <footer class="music-actions"><button id="track-save" class="primary" type="submit"><Save size={17} />保存草稿</button><span id="draft-notice" class="muted">尚未发布</span></footer></fieldset>
           </form>
@@ -111,7 +111,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
               <label for="role-preview-revision">预览版本<select id="role-preview-revision" data-role-revision><option value="draft">已保存草稿</option><option value="published">发布版本</option></select></label>
               <label for="role-preview-locale">内容语言<select id="role-preview-locale" data-role-locale>{locales.map(([value, name]) => <option value={value}>{name}</option>)}</select></label>
               <label for="role-preview-scenario">预览场景<select id="role-preview-scenario" data-role-scenario><option value="current">当前发布状态与开关</option><option value="released">假设发布并开放公开及 VIP 播放</option></select></label>
-              <label for="role-preview-time">策略时刻<select id="role-preview-time" data-role-time><option value="read">服务器读取时</option><option value="boundary" data-role-boundary>抢先结束时（模拟）</option></select></label>
+              <label for="role-preview-time">策略时刻<select id="role-preview-time" data-role-time><option value="read">服务器读取时</option><option value="boundary" data-role-boundary>限时策略结束时（模拟）</option></select></label>
             </div></fieldset>
             <p data-role-flags class="muted"></p><p data-role-notice role="status" class="notice">保存曲目后可预览四种身份的收听界面。</p>
             <div data-role-detail hidden><p data-role-policy></p><div data-role-cards class="role-cards"></div>
@@ -126,6 +126,13 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
     </section>
   </div>
 </main>
+<dialog id="quota-dialog" aria-labelledby="quota-title"><form id="quota-form">
+  <header><h2 id="quota-title">调整音乐总配额</h2></header>
+  <p id="quota-usage" class="muted"></p>
+  <label>总配额（MiB）<input id="quota-mib" type="number" min="0" max="1048576" step="1" required aria-describedby="quota-help" /></label>
+  <p id="quota-help" class="muted">按整数 MiB 填写，1 GiB = 1024 MiB。不能低于已占用及已预留容量，最高 1 TiB。修改不删除文件，也不改变单个文件的上传限制。</p>
+  <footer class="music-actions"><button id="quota-cancel" type="button">取消</button><button id="quota-save" type="submit" class="primary">保存配额</button></footer>
+</form></dialog>
 <dialog id="confirm-dialog" aria-labelledby="confirm-title"><form method="dialog" id="confirm-form"><header><h2 id="confirm-title"></h2></header><p id="confirm-description"></p><label id="confirm-reason-label">操作说明<input id="confirm-reason" maxlength="1000" /></label><footer class="music-actions"><button value="cancel" formnovalidate>取消</button><button id="confirm-accept" value="yes" class="primary">确认</button></footer></form></dialog>
 <dialog id="audit-dialog" aria-labelledby="audit-title"><header><h2 id="audit-title">操作记录</h2><button id="audit-close" type="button" aria-label="关闭操作记录" title="关闭操作记录"><X size={18} /></button></header><div id="audit-list"></div><button id="audit-next" type="button" hidden>加载更多</button></dialog>
 <script src="../../scripts/adminMusic.js"></script>

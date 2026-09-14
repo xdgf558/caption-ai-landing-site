@@ -18,7 +18,7 @@
     "test:music:runtime": "node --test scripts/test-music-runtime.mjs",
     "test:music:staging": "node --test scripts/test-music-staging-gate.mjs",
     "test:music:admin": "node --test scripts/test-music-admin.mjs",
-    "test:music:albums": "node --test scripts/test-music-albums.mjs",
+    "test:music:albums": "node --test scripts/test-music-albums.mjs scripts/test-music-album-cover-client.mjs",
     "test:music:collections": "node --test scripts/test-music-collections.mjs",
     "test:music:uploads": "node --test scripts/test-music-uploads.mjs",
     "test:music:wav": "node --test scripts/test-music-wav.mjs",
@@ -53,11 +53,13 @@
     "test:music:analytics": "node --test scripts/test-music-analytics.mjs scripts/test-music-analytics-client.mjs",
     "test:music:sharing-return": "node --test scripts/test-music-sharing-return.mjs",
     "test:music:share-cards": "node --test scripts/test-music-share-cards.mjs",
-    "test:music:album-batch": "node --test scripts/test-music-album-batch.mjs",
+    "test:music:album-batch": "node --test scripts/test-music-album-batch.mjs scripts/test-music-album-publication.mjs",
     "test:music:role-preview": "node --test scripts/test-music-role-preview.mjs",
     "test:music:featured": "node --test scripts/test-music-featured.mjs",
     "test:music:production-candidate": "node --test scripts/test-music-production-candidate.mjs",
-    "build:music:production-candidate": "node scripts/build-music-production-candidate.mjs"
+    "build:music:production-candidate": "node scripts/build-music-production-candidate.mjs",
+    "build:music:closed": "PUBLIC_MUSIC_ENTRY_ENABLED=false npm run build",
+    "build:music:active": "PUBLIC_MUSIC_ENTRY_ENABLED=true npm run build"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

@@ -60,10 +60,12 @@ export async function checkMusicRateLimit(request,env,category,{ clock = Date.no
   let stage = 'configuration';
   try {
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10000) throw new Error('timeout');
-    const limits = musicRateLimits(env); let group = limits[category];
+    const limits = musicRateLimits(env); let group = category === 'share' ? { source: Math.min(limits.artwork.source, 6), global: Math.min(limits.artwork.global, 120) } : limits[category];
+    // Only this internal enum selects SQL identifiers; no request value is interpolated.
+    const tables = category === 'share' ? 'music_share_rate' : 'music_rate';
     if (!group || !env.MUSIC_DB || env.MUSIC_DB === env.WAITLIST_DB) throw new Error('binding');
-    // Expensive derived artwork shares the existing atomic counter, with a stricter
-    // admission ceiling. This can only reduce admission; it never resets a window.
+    // Optional internal ceilings only reduce admission within the selected budget.
+    // Share rendering uses separate tables so ordinary covers cannot exhaust it.
     if (ceiling) {
       if (!Number.isSafeInteger(ceiling.source) || ceiling.source < 1 || !Number.isSafeInteger(ceiling.global) || ceiling.global < ceiling.source) throw new Error('ceiling');
       group = { source: Math.min(group.source, ceiling.source), global: Math.min(group.global, ceiling.global) };
@@ -74,15 +76,15 @@ export async function checkMusicRateLimit(request,env,category,{ clock = Date.no
     stage = 'database';
     const s = primary(env.MUSIC_DB);
     const results = await bounded(() => s.batch([
-      s.prepare(`DELETE FROM music_rate_sources WHERE rowid IN
-        (SELECT rowid FROM music_rate_sources WHERE window_start<? ORDER BY window_start LIMIT 100)`)
+      s.prepare(`DELETE FROM ${tables}_sources WHERE rowid IN
+        (SELECT rowid FROM ${tables}_sources WHERE window_start<? ORDER BY window_start LIMIT 100)`)
         .bind(window - RATE_RETENTION_MS),
-      s.prepare(`DELETE FROM music_rate_windows WHERE rowid IN
-        (SELECT w.rowid FROM music_rate_windows w WHERE w.window_start<? AND NOT EXISTS
-          (SELECT 1 FROM music_rate_sources s WHERE s.category=w.category AND s.window_start=w.window_start)
+      s.prepare(`DELETE FROM ${tables}_windows WHERE rowid IN
+        (SELECT w.rowid FROM ${tables}_windows w WHERE w.window_start<? AND NOT EXISTS
+          (SELECT 1 FROM ${tables}_sources s WHERE s.category=w.category AND s.window_start=w.window_start)
           ORDER BY w.window_start LIMIT 30)`).bind(window - RATE_RETENTION_MS),
-      s.prepare(`INSERT INTO music_rate_sources(category,window_start,source_hash,hits)
-        SELECT ?1,?2,?3,1 WHERE COALESCE((SELECT hits FROM music_rate_windows WHERE category=?1 AND window_start=?2),0)<?4
+      s.prepare(`INSERT INTO ${tables}_sources(category,window_start,source_hash,hits)
+        SELECT ?1,?2,?3,1 WHERE COALESCE((SELECT hits FROM ${tables}_windows WHERE category=?1 AND window_start=?2),0)<?4
         ON CONFLICT(category,window_start,source_hash) DO UPDATE SET hits=hits+1 WHERE hits<?5
         RETURNING hits`).bind(category,window,hash,group.global,group.source)
     ]),timeoutMs);
@@ -97,7 +99,7 @@ export async function checkMusicRateLimit(request,env,category,{ clock = Date.no
     // The deadline does not cancel D1: a late commit may still consume a slot.
     try {
       console.warn('music_rate_limit_failure', {
-        version: 1, category: ['catalog','artwork','audio'].includes(category) ? category : 'unknown',
+        version: 1, category: ['catalog','artwork','audio','share'].includes(category) ? category : 'unknown',
         stage, reason: error === DEADLINE_EXCEEDED ? 'deadline_exceeded' : 'operation_failed'
       });
     } catch { /* Logging failure must not change the denial response. */ }

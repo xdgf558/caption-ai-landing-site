@@ -5,7 +5,9 @@ import { isWav, WAV_PROFILE } from './musicWav.js';
 import { mountAdminMusicRolePreview } from './adminMusicRolePreview.js';
 
 const $ = id => document.getElementById(id), all = selector => [...document.querySelectorAll(selector)];
+const quotaErrors = { MUSIC_QUOTA_CONFLICT:'配额或占用已变化，请重新打开“调整总配额”后再保存。', MUSIC_QUOTA_BELOW_USAGE:'总配额不能低于已占用及已预留容量，请重新读取。' };
 const names = { draft:'草稿', published:'已发布', unpublished:'已下架', archived:'已归档', audio:'完整音频', preview:'独立试听', cover:'封面', lyrics:'歌词', evidence:'权利凭证' };
+let quotaSnapshot;
 let service, journal, actor, track = null, assets = {}, evidence = [], busy = false, locked = false, dirty = false, assetsDirty = false, reviewDirty = false;
 let items = [], cursors = [null], page = 0, nextBefore = null, filter = '', query = '', activeStep = 0, auditBefore = null;
 const value = id => $(id).value.trim();
@@ -43,7 +45,7 @@ const errorMessages = {
   MUSIC_PUBLICATION_CONFLICT:'发布版本已变化，请重新载入核对。', MUSIC_REVIEW_STALE:'草稿已变化，请重新进行技术核对；如保留权利通过结论，也需重新核对该结论。',
   RIGHTS_REVIEW_REQUIRED:'权利资料不完整，请核对来源、日期、授权说明和凭证。',
   RIGHTS_EXCEPTION_REQUIRED:'此作品需要例外授权依据及对应凭证。', MUSIC_RIGHTS_BLOCKED:'此曲目被明确标记为不通过，请先处理该结论。', PREVIEW_REQUIRED:'VIP 或抢先作品必须提供独立试听文件。',
-  MUSIC_FREE_PROMISE_PROTECTED:'已向公众开放免费的作品不能改为付费收听。',
+  MUSIC_FREE_UNTIL_NOT_FUTURE:'免费截止时间必须晚于当前时间。', MUSIC_FREE_PROMISE_PROTECTED:'已向公众开放免费的作品不能改为付费收听。',
   MUSIC_STORAGE_QUOTA:'存储配额不足；失败和过期上传仍占用额度。', MUSIC_UPLOADS_DISABLED:'上传尚未开放。',
   MUSIC_UPLOADS_NOT_CONFIGURED:'上传配额或迁移尚未配置。', MUSIC_ASSET_REFERENCE:'素材与当前曲目或原曲不匹配。',
   UPLOAD_EXPIRED:'上传会话已过期；预留额度尚未回收。', UPLOAD_REJECTED:'文件已被拒绝，预留额度尚未回收。',
@@ -64,6 +66,7 @@ function sync() {
   const blocked = busy || locked || !!journal?.get().pending || !service;
   const archived = track?.lifecycle === 'archived', unsaved = dirty || assetsDirty;
   $('track-new').disabled = blocked;
+  $('quota-open').disabled = blocked; $('quota-save').disabled = blocked;
   $('metadata-fields').disabled = blocked || archived;
   $('rights-fields').disabled = blocked || !track?.draft || unsaved || archived;
   $('technical-fields').disabled = blocked || !track?.draft || unsaved || reviewDirty || track?.rights?.status === 'blocked' || archived;
@@ -80,6 +83,7 @@ function sync() {
   $('audit-open').disabled = busy || !service; $('audit-next').disabled = busy;
   all('[data-resume-upload]').forEach(e => { e.disabled = blocked; });
   $('save-reason-label').hidden = !track; $('save-reason').required = !!track;
+  $('limited-free-options').hidden=value('access-mode')!=='limited_free';$('free-until').required=value('access-mode')==='limited_free';
   $('early-options').hidden = value('access-mode') !== 'early_access';
   $('early-until').required = value('access-mode') === 'early_access';
   $('track-version').textContent = unsaved ? '有未保存修改' : track ? '编辑版本 ' + track.editVersion : '未保存';
@@ -95,8 +99,8 @@ async function run(action) {
   try { await action(); }
   catch (e) {
     if ([401,403].includes(e.status)) { locked = true; stopAudio(); }
-    if (e.status === 409 && !e.code?.startsWith('UPLOAD_') && e.code !== 'MUSIC_STORAGE_QUOTA') locked = true;
-    status((errorMessages[e.code] || e.message) + (e.code ? ' (' + e.code + ')' : ''), true);
+    if (e.status === 409 && !e.code?.startsWith('UPLOAD_') && !['MUSIC_STORAGE_QUOTA','MUSIC_QUOTA_CONFLICT','MUSIC_QUOTA_BELOW_USAGE'].includes(e.code)) locked = true;
+    status((quotaErrors[e.code] || errorMessages[e.code] || e.message) + (e.code ? ' (' + e.code + ')' : ''), true);
   } finally { busy = false; sync(); }
 }
 async function checkActor() {
@@ -160,7 +164,7 @@ function fill(row) {
   $('track-story').value = m?.story || '';
   all('[data-title-locale]').forEach(e => e.value = m?.title?.[e.dataset.titleLocale] || '');
   all('[data-summary-locale]').forEach(e => e.value = m?.summary?.[e.dataset.summaryLocale] || '');
-  $('access-mode').value = r?.policy.accessMode || 'vip'; $('early-until').value = localTime(r?.policy.earlyAccessUntil);
+  $('free-until').value=localTime(r?.policy.freeUntil);$('access-mode').value = r?.policy.accessMode || 'vip'; $('early-until').value = localTime(r?.policy.earlyAccessUntil);
   $('post-early').value = r?.policy.postEarlyAccessMode || 'vip';
   all('[data-right]').forEach(e => { const v = row?.rights?.review?.[e.dataset.right]; e.value = e.type === 'datetime-local' ? localTime(v) : v || ''; });
   $('rights-decision').value = row?.rights?.status || 'pending';
@@ -183,6 +187,7 @@ function attach(job, result) {
   }
 }
 async function applyResult(op, result) {
+  if (op.effect === 'quota') { await checkActor(); return; }
   if (op.effect === 'reserve') rememberJob({ ...op.job, uploadId:result.uploadId, assetId:result.assetId, stage:'reserved' });
   else if (op.effect === 'complete') attach(op.job,result);
   else {
@@ -225,7 +230,7 @@ function metadata() {
 }
 async function saveDraft(assetOnly = false) {
   const meta = assetOnly ? revision().metadata : metadata();
-  const policy = assetOnly ? revision().policy : policyForSave(value('access-mode'),value('early-until'),value('post-early'),track?.published?.policy);
+  const policy = assetOnly ? revision().policy : policyForSave(value('access-mode'),value(value('access-mode')==='limited_free'?'free-until':'early-until'),value('post-early'),track?.published?.policy);
   const input = { slug:track?.published ? track.slug : value('track-slug'),metadata:meta,policy,assets };
   if (track) Object.assign(input,{ revisionId:revision().id,reason:assetOnly ? '更新曲目素材' : value('save-reason') });
   await mutate(track ? '/tracks/' + track.id : '/tracks',track ? 'PATCH' : 'POST',input,'draft');
@@ -349,10 +354,11 @@ $('technical-form').onsubmit = e => { e.preventDefault(); run(async () => {
 }); };
 for (const action of ['publish','unpublish','archive']) $('track-' + action).onclick = () => run(async () => {
   const label = { publish:'发布',unpublish:'下架',archive:'归档' }[action];
-  const confirm = await ask(label + '曲目？',$('track-heading').textContent + ' · ' + ({ free:'免费精选',vip:'VIP 专享',early_access:'VIP 抢先听' })[revision()?.policy.accessMode] +
-    (action === 'archive' ? '。归档后本工作区不提供恢复操作。' : action === 'publish' ? '。将封存当前审核版本；不改变公开入口开关。' : '。将停止公开展示此曲目。'),true);
+  const confirm = await ask(label + '曲目？',$('track-heading').textContent + ' · ' + ({ free:'免费精选',vip:'VIP 专享',limited_free:'限时免费，到期恢复 VIP',early_access:'VIP 抢先听' })[revision()?.policy.accessMode] +
+    (action === 'archive' ? '。归档后本工作区不提供恢复操作。' : action === 'publish' ? '。将封存当前审核版本；不改变公开入口开关。' : '。将停止公开展示此曲目。'),action !== 'publish');
   if (!confirm) return;
-  const input = { reason:confirm.reason };
+  // Publication still records the explicit action; no handwritten note is required.
+  const input = { reason:action === 'publish' ? '管理员确认发布曲目' : confirm.reason };
   if (action !== 'archive') input.revisionId = (action === 'publish' ? track.draft : track.published).id;
   if (action === 'publish') input.confirmedPolicyVersion = track.draft.policy.policyVersion;
   await mutate('/tracks/' + track.id + '/' + action,'POST',input,action);
@@ -389,6 +395,28 @@ async function loadAudit(append = false) {
   result.items.forEach(item => { const row = el('article',undefined,'audit-entry'); row.append(el('strong',item.action),el('p',item.actorId + ' · ' + new Date(item.createdAt).toLocaleString()),el('p','目标：' + item.targetId,'muted'),el('p',JSON.stringify(item.summary),'muted')); $('audit-list').append(row); });
   auditBefore = result.nextBefore; $('audit-next').hidden = !auditBefore;
 }
+$('quota-open').onclick = () => run(async () => {
+  await checkActor();
+  quotaSnapshot = await request('/storage-quota');
+  $('quota-usage').textContent = '当前总配额：' + bytes(quotaSnapshot.quotaBytes) + '；已占用及预留：' + bytes(quotaSnapshot.chargedBytes) + '。';
+  $('quota-mib').value = String(Math.ceil(quotaSnapshot.quotaBytes / 1048576));
+  $('quota-mib').min = String(Math.ceil(quotaSnapshot.chargedBytes / 1048576));
+  $('quota-mib').max = String(quotaSnapshot.maxQuotaMiB);
+  $('quota-dialog').showModal(); $('quota-mib').focus();
+});
+$('quota-cancel').onclick = () => $('quota-dialog').close();
+$('quota-form').onsubmit = e => {
+  e.preventDefault();
+  if (!$('quota-form').reportValidity() || !quotaSnapshot) return;
+  const quotaMiB = Number(value('quota-mib'));
+  if (!Number.isSafeInteger(quotaMiB)) return;
+  const body = { quotaMiB, expectedQuotaBytes:quotaSnapshot.quotaBytes, expectedUpdatedAt:quotaSnapshot.updatedAt };
+  $('quota-dialog').close();
+  run(async () => {
+    await mutate('/storage-quota','PUT',body,'quota',{ etag:undefined });
+    status('总配额已保存，当前容量已刷新。');
+  });
+};
 $('audit-open').onclick = () => run(async () => { await loadAudit(); $('audit-dialog').showModal(); });
 $('audit-close').onclick = () => $('audit-dialog').close(); $('audit-next').onclick = () => run(() => loadAudit(true));
 function restore(saved) {

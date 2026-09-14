@@ -9,9 +9,10 @@ import { Miniflare } from 'miniflare';
 import sharp from 'sharp';
 import jsQR from 'jsqr';
 import { musicTestDatabase } from './helpers/music-test-database.mjs';
+import { checkMusicRateLimit } from '../src/music/rateLimits.js';
 import { handleMusicShareCard, readMusicShareBytes } from '../src/music/shareCardHttp.js';
-import { musicShareCardData, musicShareCardPath, musicShareMetadata, musicShareLines, MUSIC_SHARE_FONT } from '../src/music/shareCard.js';
-import { normalizeMusicCardCover, renderMusicShareCard } from '../src/music/shareCardRender.js';
+import { musicShareCardData, musicShareCardPath, musicAlbumShareCardData, musicAlbumShareCardPath, musicShareMetadata, musicShareLines, MUSIC_SHARE_FONT } from '../src/music/shareCard.js';
+import { normalizeMusicCardCover, renderMusicShareCard, encodeMusicRgbaPng } from '../src/music/shareCardRender.js';
 import { createMusicShareCards, shareMusicCardFile } from '../src/scripts/musicShareCardClient.js';
 import { tracks } from './fixtures/music-player/data.mjs';
 
@@ -76,7 +77,7 @@ test('HEAD/version/downlisting/limit failure precede R2 and renderer', async () 
   for (let i = 0; i < 3; i++) await handleMusicShareCard(request(), f.env, options);
   const limited = await handleMusicShareCard(request(), f.env, options); assert.equal(limited.status, 429); assert.ok(Number(limited.headers.get('retry-after')) > 0);
   assert.equal(f.state.r2.length, 0); assert.equal(f.state.assets.length, 0);
-  assert.equal(f.sql.prepare("SELECT hits FROM music_rate_windows WHERE category='artwork'").get().hits, 6);
+  assert.equal(f.sql.prepare("SELECT hits FROM music_share_rate_windows WHERE category='share'").get().hits, 6);
 });
 test('bad source/secret/database fail closed, changed cover and missing font never yield an image', async () => {
   const f = await fixture();
@@ -108,7 +109,7 @@ test('all supported raster formats render; titles/QR/XML cannot inject remote im
 
 const detail = fresh => new Response(JSON.stringify({ schemaVersion: 2, track: fresh }), { headers: { 'Content-Type': 'application/json' } });
 function fakePng(format = 'poster') { const out = new Uint8Array(24); out.set([137,80,78,71,13,10,26,10],0); out.set([73,72,68,82],12); const v=new DataView(out.buffer); v.setUint32(16,format==='poster'?1080:1200);v.setUint32(20,format==='poster'?1800:630); return new Response(out,{headers:{'Content-Type':'image/png'}}); }
-function client(fetcher) { const created = [], revoked = [], states = []; const api = createMusicShareCards({ locale: 'zh-Hans', origin, fetcher,
+function client(fetcher, options = {}) { const created = [], revoked = [], states = []; const api = createMusicShareCards({ locale: 'zh-Hans', origin, fetcher, ...options,
   urls: { createObjectURL(blob) { created.push(blob); return `blob:${created.length}`; }, revokeObjectURL(url) { revoked.push(url); } }, onChange: state => states.push(state) }); return { api, created, revoked, states }; }
 test('card preparation is lazy, fresh revision wins, same-origin Access session never crosses redirects', async () => {
   const calls = [], f = client(async (path, options) => { calls.push([path, options]); return calls.length === 1 ? detail({ ...track, audioVersion: 2 }) : fakePng(); });
@@ -159,7 +160,7 @@ test('actual workerd renders PNG with D1/R2/ASSETS and rewrites one set of song 
   const parser = new DatabaseSync(':memory:');
   try {
     const db = await mf.getD1Database('MUSIC_DB'), bucket = await mf.getR2Bucket('MUSIC_BUCKET');
-    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql']) {
+    for (const name of ['0001_music_foundation.sql', '0002_music_publication.sql', '0003_music_uploads.sql', '0004_music_cleanup.sql', '0005_music_rate_limits.sql', '0006_music_analytics.sql', '0007_music_albums.sql', '0008_music_featured.sql', '0009_music_album_covers.sql', '0010_music_limited_free.sql', '0011_music_share_rate_limits.sql']) {
       let sql = file('migrations-music/' + name).toString(); const statements = [];
       while (sql.trim()) { const statement = parser.prepare(sql), source = statement.sourceSQL; statement.run(); statements.push(db.prepare(source)); sql = sql.slice(source.length); }
       await db.batch(statements);
@@ -178,6 +179,14 @@ test('actual workerd renders PNG with D1/R2/ASSETS and rewrites one set of song 
     assert.equal((content.match(/property="og:title"/g) || []).length, 1); assert.equal((content.match(/<title>/g) || []).length, 1);
     assert.match(content, /晚安，小城市/); assert.doesNotMatch(content, /wrong\.test|content="generic"|token=/);
     assert.match(content, /format=card/); assert.equal(html.headers.get('cache-control'), 'private, no-store');
+    const albumId='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    await db.prepare(`INSERT INTO music_collections(id,slug,original_locale,title_json,description_json,status,version,created_at,updated_at,collection_type,listening_mode)
+      VALUES(?,'runtime-album','zh-Hans',?,'{"zh-Hans":""}','published',1,?,?,'album','mixed')`).bind(albumId,JSON.stringify({'zh-Hans':'专辑测试'}),now,now).run();
+    await db.prepare('INSERT INTO music_collection_tracks(collection_id,track_id,position) VALUES(?,?,0)').bind(albumId,id).run();
+    const albumHtml=await mf.dispatchFetch('http://music.test/zh-hans/music/?collection=runtime-album',{headers});
+    assert.equal(albumHtml.status,200);const albumContent=await albumHtml.text();
+    assert.match(albumContent,/专辑测试/);assert.match(albumContent,/collections\/runtime-album\/share\.png/);
+    assert.equal((albumContent.match(/property="og:title"/g)||[]).length,1);
     const images = await Promise.all([0, 1, 2].map(() => mf.dispatchFetch('http://music.test' + musicShareCardPath(id, 1, 'zh-Hans'), { headers })));
     for (const response of images) {
       assert.equal(response.status, 200); const bytes = new Uint8Array(await response.arrayBuffer()); assert.equal((await sharp(bytes).metadata()).height, 1800);
@@ -186,4 +195,115 @@ test('actual workerd renders PNG with D1/R2/ASSETS and rewrites one set of song 
     assert.equal((await mf.dispatchFetch('http://music.test' + musicShareCardPath(id, 1, 'zh-Hans'), { headers })).status, 410);
     assert.equal((await mf.dispatchFetch(`http://music.test/zh-hans/music/?track=${id}`, { headers })).status, 410);
   } finally { parser.close(); await mf.dispose(); }
+});
+
+async function albumFixture() {
+  const f = await fixture(), albumId = randomUUID(), assetId = randomUUID();
+  f.sql.prepare(`INSERT INTO music_collections(id,slug,original_locale,title_json,description_json,status,version,created_at,updated_at,collection_type,listening_mode)
+    VALUES(?, 'album-card', 'zh-Hans', ?, ?, 'draft', 1, ?, ?, 'album', 'mixed')`).run(albumId,JSON.stringify({'zh-Hans':'晚一点告白'}),JSON.stringify({'zh-Hans':'有些告白，晚了一个夏天；有些勇敢，练习了好多年。'}),now,now);
+  f.sql.prepare('INSERT INTO music_collection_tracks(collection_id,track_id,position) VALUES(?,?,0)').run(albumId,id);
+  const key = `music/album-covers/${albumId}/${assetId}.webp`;
+  f.sql.prepare(`INSERT INTO music_collection_assets(id,owner_collection_id,kind,object_key,state,content_type,format,byte_size,sha256,etag,created_at)
+    VALUES(?,?,'cover',?,'validated','image/webp','webp',?,?, 'fixture',?)`).run(assetId,albumId,key,webp.length,createHash('sha256').update(webp).digest('hex'),now);
+  f.sql.prepare('UPDATE music_collections SET cover_asset_id=? WHERE id=?').run(assetId,albumId);
+  f.sql.prepare("UPDATE music_collections SET status='published' WHERE id=?").run(albumId);
+  f.objects.set(key,{bytes:webp,asset:{content_type:'image/webp'}});
+  return {...f,albumId,key};
+}
+test('album card uses only the independent published cover and its QR opens the album', async () => {
+  const f=await albumFixture();
+  const response=await handleMusicShareCard(request(musicAlbumShareCardPath('album-card',1,'zh-Hans')),f.env,{clock:()=>now});
+  assert.equal(response.status,200);
+  const decoded=await sharp(new Uint8Array(await response.arrayBuffer())).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  assert.equal(decoded.info.width,1080); assert.equal(decoded.info.height,1800);
+  assert.equal(jsQR(new Uint8ClampedArray(decoded.data),1080,1800).data,`${origin}/zh-hans/music/?collection=album-card`);
+  assert.deepEqual(f.state.r2,[f.key]);
+});
+test('album cards reject stale revisions and drafts before storage, and never expose unpublished members', async () => {
+  const f=await albumFixture();
+  const head=(version=1)=>request(musicAlbumShareCardPath('album-card',version,'en'),{method:'HEAD',headers:{'CF-Connecting-IP':'192.0.2.9'}});
+  assert.equal((await handleMusicShareCard(head(2),f.env,{clock:()=>now})).status,409);
+  f.sql.prepare("UPDATE music_tracks SET lifecycle='unpublished' WHERE id=?").run(id);
+  let projected;
+  assert.equal((await handleMusicShareCard(request(musicAlbumShareCardPath('album-card',1,'en')),f.env,{clock:()=>now,render(data){projected=data;return new Uint8Array([1]);}})).status,200);
+  assert.equal(projected.count,'0 tracks'); assert.doesNotMatch(JSON.stringify(projected),new RegExp(id));
+  f.state.r2.length=0; f.state.assets.length=0;
+  f.sql.prepare("UPDATE music_collections SET status='draft' WHERE id=?").run(f.albumId);
+  assert.equal((await handleMusicShareCard(head(),f.env,{clock:()=>now})).status,404);
+  assert.deepEqual(f.state.r2,[]); assert.deepEqual(f.state.assets,[]);
+  assert.equal((await handleMusicShareCard(head(),{MUSIC_PUBLIC_ENABLED:'true'})).status,503);
+});
+test('album share metadata escapes text and uses collection-only canonical and image URLs', () => {
+  const album={type:'album',slug:'album-card',version:2,title:'<script>title</script>',description:'"quoted"',trackIds:[id]};
+  const data=musicAlbumShareCardData(album,origin,'en');
+  assert.equal(data.count,'1 track'); assert.ok(data.url.endsWith('?collection=album-card'));
+  const html=musicShareMetadata(album,origin,'en');
+  assert.ok(html.includes('/api/music/collections/album-card/share.png')); assert.doesNotMatch(html,/<script>/);
+  assert.throws(()=>musicAlbumShareCardPath('../private',1,'en'));
+});
+
+test('album client re-reads current metadata/version and rejects a substituted collection', async () => {
+  const album={id,slug:'album-card',version:1,type:'album',listeningMode:'mixed',title:'Album',description:'',trackIds:[track.id]};
+  const calls=[];
+  const f=client(async path=>{calls.push(path);return calls.length===1?new Response(JSON.stringify({schemaVersion:2,collection:{...album,version:3},tracks:[track]})):fakePng();});
+  await f.api.prepare(album);
+  assert.equal(f.api.snapshot().status,'ready');assert.equal(f.api.snapshot().data.kind,'album');
+  assert.ok(calls[1].includes('/collections/album-card/share.png?'));assert.ok(calls[1].includes('v=3'));
+  f.api.close();assert.deepEqual(f.revoked,['blob:1']);
+  const bad=client(async()=>new Response(JSON.stringify({schemaVersion:2,collection:{...album,slug:'other-album'},tracks:[track]})));
+  await bad.api.prepare(album);assert.equal(bad.api.snapshot().status,'error');assert.equal(bad.created.length,0);bad.api.destroy();f.api.destroy();
+});
+
+test('PNG covers bypass intermediate raster encoding while preserving the original bounded bytes', async () => {
+  const png=new Uint8Array(await sharp(webp).resize(1200,1200).png().toBuffer());
+  assert.equal(normalizeMusicCardCover(png,'image/png'),png);
+  const data=musicAlbumShareCardData({slug:'large-cover',version:1,type:'album',title:'封面',description:'',trackIds:[]},origin,'zh-Hans');
+  const rendered=await renderMusicShareCard(data,'poster',png,file('public'+MUSIC_SHARE_FONT));
+  assert.equal((await sharp(rendered).metadata()).height,1800);
+});
+
+test('native PNG compression preserves RGBA pixels including transparency and rejects oversized rasters', async () => {
+  const rgba=new Uint8Array([255,0,0,255,0,255,0,128,0,0,255,0,20,40,60,255]);
+  const png=await encodeMusicRgbaPng(rgba,2,2);
+  assert.deepEqual(new Uint8Array(await sharp(png).ensureAlpha().raw().toBuffer()),rgba);
+  await assert.rejects(encodeMusicRgbaPng(rgba,4096,4096),/SHARE_RASTER_INVALID/);
+});
+
+
+test('loading ordinary covers cannot deny the first album or song share request', async () => {
+  const f = await fixture();
+  for (let i = 0; i < 12; i++) assert.equal(await checkMusicRateLimit(request(), f.env, 'artwork', { clock: () => now }), null);
+  const response = await handleMusicShareCard(request(), f.env, { clock: () => now, render: () => new Uint8Array([1]) });
+  assert.equal(response.status, 200);
+  assert.equal(f.sql.prepare("SELECT hits FROM music_rate_windows WHERE category='artwork'").get().hits, 12);
+  assert.equal(f.sql.prepare("SELECT hits FROM music_share_rate_windows WHERE category='share'").get().hits, 1);
+});
+
+test('share Retry-After prevents immediate or format-switch retries without automatic requests', async () => {
+  let time = now, calls = 0;
+  const f = client(async path => {
+    calls++; return path.includes('share.png') ? new Response('', { status: 429, headers: { 'Retry-After': '30' } }) : detail(track);
+  }, { clock: () => time });
+  await f.api.prepare(track); assert.equal(f.api.snapshot().retryAfter, 30); assert.equal(calls, 2);
+  time += 10000; await f.api.prepare(track, 'card'); assert.equal(calls, 2); assert.equal(f.api.snapshot().retryAfter, 20);
+  f.api.close(); await f.api.prepare(track); assert.equal(calls, 2);
+  time += 20000; await f.api.prepare(track); assert.equal(calls, 4);
+  f.api.destroy();
+});
+
+
+test('pasted paragraph separators render exactly like normal spaces in album cards', async () => {
+  const album = { type: 'album', slug: 'paragraphs', version: 1, title: '晚一点告白', trackIds: [id],
+    description: '有些告白。\u2028从同桌之间的距离。\u2029Station\r\nCat\t首发专辑。\u0085下一段。' };
+  const original = album.description;
+  const data = musicAlbumShareCardData(album, origin, 'zh-Hant');
+  assert.equal(data.description, '有些告白。 从同桌之间的距离。 Station Cat 首发专辑。 下一段。');
+  assert.equal(album.description, original, 'stored author text must not be modified');
+  const expected = musicAlbumShareCardData({ ...album, description: data.description }, origin, 'zh-Hant');
+  const actualPng = await renderMusicShareCard(data, 'poster', null, font);
+  const expectedPng = await renderMusicShareCard(expected, 'poster', null, font);
+  assert.deepEqual(actualPng, expectedPng);
+  const metadata = musicShareMetadata(album, origin, 'zh-Hant');
+  assert.doesNotMatch(metadata, /[\u2028\u2029\u0085\r\n\t]/);
+  assert.match(metadata, /Station Cat/);
 });

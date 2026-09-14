@@ -32,10 +32,15 @@ export function createEarlyAccessPolicy(effectiveAt, postEarlyAccessMode) {
 }
 
 export function validatePolicy(policy) {
-  if (!policy || !['free', 'vip', 'early_access'].includes(policy.accessMode) || !positiveInteger(policy.policyVersion)) {
+  if (!policy || !['free', 'vip', 'early_access', 'limited_free'].includes(policy.accessMode) || !positiveInteger(policy.policyVersion)) {
     throw musicError('MUSIC_INVALID_POLICY');
   }
   const { accessMode, earlyAccessUntil, postEarlyAccessMode, policyVersion } = policy;
+  if (accessMode === 'limited_free') {
+    if (earlyAccessUntil !== null || postEarlyAccessMode !== null) throw musicError('MUSIC_INVALID_POLICY');
+    return {accessMode, earlyAccessUntil:null, postEarlyAccessMode:null, freeUntil:isoTime(utcMillis(policy.freeUntil)), policyVersion};
+  }
+  if (policy.freeUntil != null) throw musicError('MUSIC_INVALID_POLICY');
   if (accessMode === 'early_access') {
     if (!['free', 'vip'].includes(postEarlyAccessMode)) throw musicError('MUSIC_INVALID_POLICY');
     return { accessMode, earlyAccessUntil: isoTime(utcMillis(earlyAccessUntil)), postEarlyAccessMode, policyVersion };
@@ -45,7 +50,9 @@ export function validatePolicy(policy) {
 }
 
 export function policyFromRevision(revision) {
-  return validatePolicy({ accessMode: revision.access_mode,
+  if (revision.free_until != null && revision.access_mode !== 'vip') throw musicError('MUSIC_INVALID_POLICY');
+  return validatePolicy({ accessMode: revision.free_until != null ? 'limited_free' : revision.access_mode,
+    ...(revision.free_until != null ? {freeUntil:isoTime(revision.free_until)} : {}),
     earlyAccessUntil: revision.early_access_until === null ? null : isoTime(revision.early_access_until),
     postEarlyAccessMode: revision.post_early_access_mode, policyVersion: revision.policy_version });
 }
@@ -54,6 +61,10 @@ export function effectivePolicy(policy, now) {
   isoTime(now);
   const clean = validatePolicy(policy);
   const early = clean.accessMode === 'early_access' && now < utcMillis(clean.earlyAccessUntil);
+  if (clean.accessMode === 'limited_free') {
+    const active=now<utcMillis(clean.freeUntil);
+    return {...clean,effectiveAccess:active?'free':'vip',nextPolicyChangeAt:active?clean.freeUntil:null};
+  }
   return { ...clean,
     effectiveAccess: clean.accessMode === 'early_access' ? (early ? 'vip' : clean.postEarlyAccessMode) : clean.accessMode,
     nextPolicyChangeAt: early ? clean.earlyAccessUntil : null };
@@ -71,12 +82,13 @@ export function validatePolicyTransition(next, previous, effectiveAt) {
   isoTime(effectiveAt);
   const prior = previous == null ? null : validatePolicy(previous);
   const same = prior && clean.accessMode === prior.accessMode && clean.earlyAccessUntil === prior.earlyAccessUntil &&
-    clean.postEarlyAccessMode === prior.postEarlyAccessMode;
+    clean.postEarlyAccessMode === prior.postEarlyAccessMode && clean.freeUntil === prior.freeUntil;
   if (prior && (same ? clean.policyVersion !== prior.policyVersion : clean.policyVersion !== prior.policyVersion + 1)) {
     throw musicError('MUSIC_POLICY_VERSION_CONFLICT');
   }
   if (clean.accessMode === 'early_access' && !same && utcMillis(clean.earlyAccessUntil) <= effectiveAt) {
     throw musicError('MUSIC_EARLY_ACCESS_NOT_FUTURE');
   }
+  if (clean.accessMode === 'limited_free' && !same && utcMillis(clean.freeUntil) <= effectiveAt) throw musicError('MUSIC_FREE_UNTIL_NOT_FUTURE');
   return clean;
 }

@@ -49,6 +49,11 @@ test('requests preserve original key/version and fail closed on redirected or un
     await assert.rejects(() => request('/status'),e => !e.uncertain && e.status === 409);
     globalThis.fetch = async () => new Response('<html>Access login</html>');
     await assert.rejects(() => request('/status'),e => e.uncertain);
+    globalThis.fetch = async () => new Response('<html>Worker exceeded resource limits; private diagnostic</html>', {status:503});
+    await assert.rejects(() => request('/uploads/00000000-0000-4000-8000-000000000001/complete', {method:'POST',body:{},key:'original-key'}), e => {
+      assert.equal(e.code,'MUSIC_SERVER_UNAVAILABLE'); assert.equal(e.status,503); assert.equal(e.uncertain,true);
+      assert.match(e.message,/服务器处理失败/); assert.doesNotMatch(e.message,/登录|private diagnostic/); return true;
+    });
   } finally { globalThis.fetch = old; }
 });
 test('admin shell remains private, explicit publish and no unsupported entrypoints',() => {
@@ -58,4 +63,13 @@ test('admin shell remains private, explicit publish and no unsupported entrypoin
   const client = readFileSync(new URL('../src/scripts/adminMusic.js',import.meta.url),'utf8');
   assert.doesNotMatch(client,/innerHTML|localStorage|canPlayFull/);
   assert.match(client,/confirmedPolicyVersion/); assert.match(client,/actorId !== actor/);
+});
+
+test('limited-free editor preserves the deadline and versions actual policy changes', () => {
+  const end = '2099-01-01T12:30:00.000Z';
+  const first = policyForSave('limited_free', end, null, null);
+  assert.equal(first.freeUntil, end); assert.equal(first.policyVersion, 1);
+  assert.deepEqual(policyForSave('limited_free', end, null, first), first);
+  assert.equal(policyForSave('limited_free', '2099-02-01T12:30:00.000Z', null, first).policyVersion, 2);
+  assert.equal(policyForSave('vip', '', null, first).freeUntil, undefined);
 });

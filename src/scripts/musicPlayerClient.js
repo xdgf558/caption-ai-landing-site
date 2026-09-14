@@ -39,6 +39,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const local = isLibrary ? createMusicLocalData() : null;
   let favoriteIds = new Set(local?.snapshot().favorites || []);
   const lyrics = isLibrary ? mountMusicLyrics(root, { t, fetcher }) : null;
+  const nowLyrics = isLibrary ? mountMusicLyrics(root, { t, fetcher, prefix: 'now-lyrics', isOpen: () => root.dataset.activePanel === 'now', quiet: true }) : null;
   const sharing = isLibrary ? mountMusicSharing(root, { t, locale, fetcher, panels }) : null;
   // Subscribe before queue advancement so a natural ended event is measured
   // before the queue can synchronously select the next source.
@@ -49,7 +50,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const queueControls = mountMusicQueueControls(root, { queue, player, getVisibleTracks: () => visibleTracks, getAllTracks: () => tracks, panels });
   const listen = (target, event, callback) => target.addEventListener(event, callback, { signal: abort.signal });
   const setText = (selector, text) => { const node = $(selector); if (node.textContent !== text) node.textContent = text; };
-  const permission = track => track.effectiveAccess === 'free' ? t('免费完整收听')
+  const permission = track => track.effectiveAccess === 'free' ? track.freeUntil ? t('限时免费至 {time}，之后 VIP 专享', {time:new Date(track.freeUntil).toLocaleString(locale)}) : t('免费完整收听')
     : playerVariant(track, capabilities) === 'full' ? t('VIP 完整收听') : track.previewAvailable ? t('VIP · 可试听') : t('VIP · 暂无试听');
   const setImage = (node, url) => {
     if (!url) { node.hidden = true; node.removeAttribute('src'); return; }
@@ -117,6 +118,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     }
     panels?.refresh();
     lyrics?.update(viewed, state);
+    nowLyrics?.update(selected, state);
     if (viewed) {
       setImage($('[data-cover]'), viewed.coverUrl);
       if (isLibrary) setImage($('[data-hero-cover]'), viewed.coverUrl);
@@ -151,7 +153,6 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       const favorite = favoriteIds.has(selected.id);
       $('[data-now-favorite]').setAttribute('aria-pressed', String(favorite));
       $('[data-now-favorite]').setAttribute('aria-label', t(favorite ? '取消收藏：{title}' : '收藏：{title}', { title: selected.title }));
-      setText('[data-now-lyrics-hint]', t(selected.instrumental ? '这首作品为纯音乐' : selected.lyricsKind === 'none' ? '暂未提供歌词' : '查看歌词'));
     }
     const status = viewed?.id !== selected.id ? t('尚未播放') : state.activeVariant === 'preview' ? `${t('试听')} · ${t(statusText[state.status])}` : t(statusText[state.status]);
     setText('[data-play-status]', status);
@@ -201,23 +202,30 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   };
   function renderFeatured() {
     const rootNode = $('[data-featured-home]');
-    const primary = tracks.find(track => track.id === featuredView.primaryTrackId && track.effectiveAccess === 'free');
-    const secondary = featuredView.secondaryTrackIds.map(id => tracks.find(track => track.id === id)).filter(Boolean);
-    const groups = featuredView.collectionIds.map(id => collections.find(item => item.id === id)).filter(Boolean);
-    const signature = JSON.stringify({ primary, secondary, groups, source:featuredView.primarySource, membership:capabilities?.membershipStatus,
+    const primary = tracks.find(track => track.id === featuredView.primaryTrackId && track.effectiveAccess === 'free')
+      || tracks.find(track => track.effectiveAccess === 'free');
+    const primarySource = primary && primary.id !== featuredView.primaryTrackId ? 'latest' : featuredView.primarySource;
+    const curated = featuredView.secondaryTrackIds.map(id => tracks.find(track => track.id === id)).filter(Boolean);
+    const secondary = curated.length ? curated : tracks.filter(track => track.id !== primary?.id).slice(0,3);
+    const featuredGroups = featuredView.collectionIds.map(id => collections.find(item => item.id === id)).filter(Boolean);
+    const groups = featuredGroups.length ? featuredGroups : collections.slice(0,6);
+    const signature = JSON.stringify({ primary, secondary, groups, source:primarySource, membership:capabilities?.membershipStatus,
       full:capabilities?.canPlayVipFull, delivery:capabilities?.musicVipDeliveryEnabled });
     if (signature === featuredSignature) return;
     featuredSignature = signature;
     rootNode.hidden = !primary && !secondary.length && !groups.length;
-    setText('[data-featured-label]',t(featuredView.primarySource === 'latest' ? '最新免费' : '站长推荐'));
+    rootNode.dataset.hasPrimary = String(Boolean(primary));
+    rootNode.querySelector('.station-music-featured-heading').hidden = !primary;
+    $('[data-hero-play]').disabled = !tracks.some(track => playerVariant(track,capabilities) !== null);
+    setText('[data-featured-label]',t(primarySource === 'latest' ? '最新免费' : '站长推荐'));
     $('[data-featured-primary]').hidden = !primary;
     if (primary) {
       $('[data-featured-primary]').dataset.trackId = primary.id;
       setImage($('[data-featured-primary-cover]'),primary.coverUrl);
       $('[data-featured-primary-fallback]').hidden = Boolean(primary.coverUrl);
       setText('[data-featured-primary-title]',primary.title);
-      setText('[data-featured-kicker]',t(featuredView.primarySource === 'latest' ? '最新发布 · 免费完整收听'
-        : featuredView.primarySource === 'secondary' ? '推荐补位 · 免费完整收听' : '本期主推 · 免费完整收听'));
+      setText('[data-featured-kicker]',t(primarySource === 'latest' ? '最新发布 · 免费完整收听'
+        : primarySource === 'secondary' ? '推荐补位 · 免费完整收听' : '本期主推 · 免费完整收听'));
       setText('[data-featured-primary-summary]',primary.summary);
       setText('[data-featured-primary-meta]',`${primary.creatorName} · ${permission(primary)}`);
     }
@@ -225,6 +233,9 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     for (const track of secondary) {
       const row = $('[data-featured-track-template]').content.firstElementChild.cloneNode(true);
       row.dataset.trackId = track.id; row.querySelector('strong').textContent = track.title;
+      const cover = row.querySelector('[data-featured-card-cover]'), fallback = row.querySelector('[data-featured-card-fallback]');
+      setImage(cover,track.coverUrl); fallback.toggleAttribute('hidden',Boolean(track.coverUrl));
+      cover.addEventListener('error', () => { cover.hidden = true; fallback.removeAttribute('hidden'); }, { once:true });
       row.querySelector('[data-featured-track-view] span').textContent = `${track.creatorName} · ${permission(track)}`;
       const play = row.querySelector('[data-featured-track-play]'), variant = playerVariant(track,capabilities);
       play.disabled = variant === null; play.querySelector('span').textContent = t(variant === 'preview' ? '试听' : '播放');
@@ -236,6 +247,9 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     for (const group of groups) {
       const row = $('[data-featured-collection-template]').content.firstElementChild.cloneNode(true);
       row.dataset.collectionSlug = group.slug; row.querySelector('strong').textContent = group.title;
+      const cover = row.querySelector('[data-featured-card-cover]'), fallback = row.querySelector('[data-featured-card-fallback]');
+      setImage(cover,group.coverUrl); fallback.toggleAttribute('hidden',Boolean(group.coverUrl));
+      cover.addEventListener('error', () => { cover.hidden = true; fallback.removeAttribute('hidden'); }, { once:true });
       const allVip = group.trackIds.length && group.trackIds.every(id => tracks.find(track => track.id === id)?.effectiveAccess === 'vip');
       row.querySelector('span').textContent = allVip ? t('VIP 专享 · 可逐首试听或登录会员')
         : `${t(group.type === 'album' ? '专辑' : '歌单')} · ${t('{count} 首',{count:group.trackIds.length})}`;
@@ -261,6 +275,10 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       row.querySelector('[data-row-play]').setAttribute('aria-label', t('{action}：{title}', { action: t('播放'), title: track.title }));
       row.querySelector('[data-row-play]').disabled = playerVariant(track, capabilities) === null;
       row.querySelector('[data-row-duration]').textContent = formatMusicTime(track.durationSec);
+      const tagList = row.querySelector('[data-row-tags]');
+      if (tagList) for (const label of [...(track.genres || []),...(track.moods || [])].slice(0,3)) {
+        const tag = document.createElement('span'); tag.textContent = label; tagList.append(tag);
+      }
       const image = row.querySelector('[data-row-cover]');
       setImage(image, track.coverUrl);
       row.querySelector('[data-row-fallback]').toggleAttribute('hidden', Boolean(track.coverUrl));
@@ -357,6 +375,11 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       render(player.snapshot());
       if (loaded) scheduleBrowse();
     } });
+    listen($('[data-hero-play]'),'click',() => {
+      const track = tracks.find(item => item.id === featuredView.primaryTrackId && playerVariant(item,capabilities) !== null)
+        || tracks.find(item => playerVariant(item,capabilities) !== null);
+      if (track) choose(track,true);
+    });
     listen($('[data-featured-home]'),'click',event => {
       const button = event.target.closest('button'); if (!button || button.disabled) return;
       const trackId = button.closest('[data-track-id]')?.dataset.trackId || button.closest('[data-featured-primary]')?.dataset.trackId;
@@ -373,8 +396,8 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       if (track) choose(track, true);
     });
     localPlayback = bindMusicLocalPlayback(player, queue, local, { getTracks: () => tracks, host: window, onNotice(kind) {
-      const messages = { restored: '已恢复上次位置，点击播放继续。', changed: '音频版本或收听方式已变化，请重新选择播放。', missing: '上次曲目暂不可用，本机记录仍保留。' };
-      setText('[data-resume-notice]', t(messages[kind])); $('[data-resume-notice]').hidden = false;
+      const messages = { changed: '音频版本或收听方式已变化，请重新选择播放。' };
+      setText('[data-resume-notice]', t(messages[kind] || '')); $('[data-resume-notice]').hidden = !messages[kind];
     } });
     localUnsubscribe = local.subscribe(value => {
       favoriteIds = new Set(value.favorites);
@@ -390,6 +413,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       const id = player.snapshot().activeTrackId; if (id) local.toggleFavorite(id);
     });
     listen($('[data-now-share]'), 'click', () => sharing.openNow($('[data-now-share]')));
+    listen($('[data-now-dialog]'), 'toggle', () => nowLyrics.refresh());
     listen($('[data-now-lyrics]'), 'click', () => {
       const track = tracks.find(item => item.id === player.snapshot().activeTrackId);
       if (!track) return;
@@ -446,7 +470,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     disposed = true;
     analytics?.destroy();
     nowQueueUnsubscribe?.();
-    returnSync?.destroy(); sharing?.destroy(); localPlayback?.destroy(); localUnsubscribe?.(); local?.destroy(); lyrics?.destroy(); panels?.destroy(); libraryControls?.destroy(); rowAbort.abort(); abort.abort(); unsubscribe(); system.destroy(); access.destroy(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
+    returnSync?.destroy(); sharing?.destroy(); localPlayback?.destroy(); localUnsubscribe?.(); local?.destroy(); lyrics?.destroy(); nowLyrics?.destroy(); panels?.destroy(); libraryControls?.destroy(); rowAbort.abort(); abort.abort(); unsubscribe(); system.destroy(); access.destroy(); queueControls.destroy(); queue.destroy(); player.destroy(); mounts.delete(root);
   } };
   mounts.set(root, api);
   // Keep bfcache state: restoring a page does not mount a second player.

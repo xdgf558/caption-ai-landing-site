@@ -75,3 +75,10 @@ jobs:
 
       - name: Run music admin browser tests
         run: npx playwright test --config playwright.music-admin.config.mjs
+
+      - name: Verify explicit music activation presentation
+        run: |
+          npm run build:music:active
+          PUBLIC_MUSIC_ENTRY_ENABLED=true npx playwright test --config playwright.payments.config.mjs vip-membership.spec.mjs
+        env:
+          ALLOW_EMPTY_SERIAL_CONTENT: "1"

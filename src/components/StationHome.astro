@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { ArrowRight } from '@lucide/astro';
 import { snapCopyProduct } from '../data/products/caption-ai';
 import { anyTlsDesktopManagerProduct } from '../data/products/anytls-desktop-manager';
 import { simpleCutProProduct } from '../data/products/simplecut-pro';
@@ -8,6 +9,8 @@ import { novelForgeAiProduct } from '../data/products/novelforge-ai';
 import { mindBudgetProduct } from '../data/products/mindbudget';
 import { catLifeGameProduct } from '../data/products/cat-life-game';
 import { siteConfig } from '../data/site';
+import { musicEntryEnabled } from '../data/music-entry.js';
+import { musicPagePaths } from '../music/pagePaths.js';
 
 type Locale = 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
 type IconName = 'cat' | 'cup' | 'signal' | 'wrench' | 'note' | 'camera' | 'book';
@@ -336,6 +339,14 @@ const copy = {
   }
 }[lang];
 
+const musicHome = {
+  'zh-Hant': { title: 'Station Cat 音樂', description: '把喜歡的歌留在身邊。', shelf: '曲庫 · 歌單 · 專輯', listen: '聽音樂', open: '進入曲庫' },
+  'zh-Hans': { title: 'Station Cat 音乐', description: '把喜欢的歌留在身边。', shelf: '曲库 · 歌单 · 专辑', listen: '听音乐', open: '进入曲库' },
+  en: { title: 'Station Cat Music', description: 'Keep your favorite songs close.', shelf: 'Songs · Playlists · Albums', listen: 'Listen to music', open: 'Explore music' },
+  ja: { title: 'Station Cat 音楽', description: '好きな曲を、いつもそばに。', shelf: '楽曲 · プレイリスト · アルバム', listen: '音楽を聴く', open: '曲一覧へ' }
+}[lang];
+const musicHref = musicPagePaths[lang];
+
 const catLifeCopy = {
   'zh-Hant': {
     title: '打工養貓日記',
@@ -525,6 +536,7 @@ const websiteStructuredData = {
       <div class="paper-actions" aria-label="Primary actions">
         <a class="ticket-button ticket-button--primary" href={paths.apps}>{copy.primaryCta}</a>
         <a class="ticket-button ticket-button--secondary" href="#recent-notes">{copy.secondaryCta}</a>
+        {musicEntryEnabled && <a class="ticket-button ticket-button--secondary" href={musicHref}>{musicHome.listen}</a>}
       </div>
     </div>
 
@@ -588,6 +600,21 @@ const websiteStructuredData = {
       ))}
     </div>
   </section>
+
+  {musicEntryEnabled && <section id="music" class="paper-section home-music-entry" aria-labelledby="home-music-title">
+    <div class="home-music-entry__copy">
+      <p class="paper-kicker">Music at the Station</p>
+      <h2 id="home-music-title">{musicHome.title}</h2>
+      <p class="home-music-entry__description">{musicHome.description}</p>
+      <a class="ticket-button ticket-button--primary home-music-entry__link" href={musicHref}>
+        {musicHome.open}<ArrowRight size={18} aria-hidden="true" />
+      </a>
+    </div>
+    <figure class="home-music-entry__shelf">
+      <img src="/images/music-home-shelf.webp" alt="" width="1914" height="822" loading="lazy" decoding="async" />
+      <figcaption>{musicHome.shelf}</figcaption>
+    </figure>
+  </section>}
 
   <section id="apps" class="paper-section">
     <div class="paper-section__heading">
@@ -755,3 +782,30 @@ const websiteStructuredData = {
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .home-music-entry {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: center;
+    gap: 32px;
+    padding-block: 20px 18px;
+    border-block: 1px solid #c9ae96;
+    scroll-margin-top: 100px;
+  }
+  .home-music-entry__copy { min-width: 0; }
+  .home-music-entry .paper-kicker { margin: 0 0 14px; font-size: 11px; }
+  .home-music-entry h2 { margin: 0; font-size: clamp(28px, 3.1vw, 44px); line-height: 1.2; letter-spacing: -0.035em; }
+  .home-music-entry__description { margin: 16px 0 24px; color: #65594c; font-size: 16px; line-height: 1.7; }
+  .home-music-entry__link { gap: 20px; }
+  .home-music-entry__shelf { min-width: 0; margin: 0; text-align: center; }
+  .home-music-entry__shelf img { display: block; width: 100%; max-width: 650px; height: auto; margin-inline: auto; mix-blend-mode: darken; }
+  .home-music-entry__shelf figcaption { margin-top: 4px; color: #65594c; font-size: 12px; letter-spacing: 0.14em; line-height: 1.7; }
+  @media (max-width: 760px) {
+    .home-music-entry { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 28px 22px; scroll-margin-top: 185px; }
+    .home-music-entry h2 { font-size: clamp(28px, 7vw, 38px); }
+    .home-music-entry__description { margin-block: 12px 20px; font-size: 15px; }
+    .home-music-entry__shelf { width: 100%; max-width: 520px; justify-self: center; }
+    .home-music-entry__shelf figcaption { font-size: 11px; }
+  }
+</style>

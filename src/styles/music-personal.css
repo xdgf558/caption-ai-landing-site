@@ -32,3 +32,9 @@
   .station-music-player[data-library] [data-row-creator] { display: none; }
   .station-music-player[data-library] .station-music-browse-modes { column-gap: .375rem; }
 }
+
+.station-music-player[data-library] [data-collection-share] { margin: .75rem 0 1rem; gap: .5rem; }
+.station-music-player[data-library] [data-collection-share] button { border-radius: 999px; font-size: .875rem; color: var(--music-accent); }
+.station-music-player[data-library] [data-collection-share] [data-share-music] { background: var(--music-accent); border-color: transparent; color: white; padding-inline: 1.125rem; }
+.station-music-player[data-library] [data-collection-share] [data-copy-music] { background: transparent; border-color: transparent; }
+.station-music-player[data-library] [data-collection-share] p:empty { display: none; }

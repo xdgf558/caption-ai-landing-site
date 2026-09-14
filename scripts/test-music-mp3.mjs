@@ -25,6 +25,42 @@ function stream(data, size = 16384, state = {}) {
 const inspect = (data, options = {}, size) => inspectMp3(stream(data, size), { kind: 'audio', expectedBytes: data.length,
   contentType: 'audio/mpeg', ...options });
 const rejects = (promise, code) => assert.rejects(promise, e => e.code === code);
+
+test('native streaming digest matches fallback measurements and bounds outstanding writes', async () => {
+  const descriptor = Object.getOwnPropertyDescriptor(crypto, 'DigestStream');
+  const expected = await inspect(raw); let largest = 0, outstanding = 0, peak = 0, closed = 0;
+  class DigestStream extends WritableStream {
+    constructor(algorithm) {
+      assert.equal(algorithm, 'SHA-256');
+      const hash = createHash('sha256'); let resolve, reject;
+      const digest = new Promise((yes, no) => { resolve = yes; reject = no; });
+      super({ async write(bytes) {
+        outstanding++; peak = Math.max(peak, outstanding); largest = Math.max(largest, bytes.length);
+        await Promise.resolve(); hash.update(bytes); outstanding--;
+      }, close() { closed++; resolve(hash.digest()); }, abort() { reject(new Error('aborted')); } });
+      this.digest = digest;
+    }
+  }
+  try {
+    Object.defineProperty(crypto, 'DigestStream', { value: DigestStream, configurable: true });
+    const actual = await inspect(raw, {}, 313);
+    assert.deepEqual({ ...actual, reads: 0 }, { ...expected, reads: 0 });
+    assert.equal(peak, 1); assert.ok(largest <= 65536); assert.equal(closed, 1);
+    const damaged = Buffer.from(raw); damaged[0] = 0;
+    await rejects(inspect(damaged), 'MUSIC_MP3_FRAME_INVALID');
+    class BrokenDigestStream extends WritableStream {
+      constructor() {
+        super({ write() { throw Error('native failure'); } });
+        this.digest = new Promise(() => {});
+      }
+    }
+    Object.defineProperty(crypto, 'DigestStream', { value: BrokenDigestStream, configurable: true });
+    await rejects(inspect(raw), 'MUSIC_MP3_READ_FAILED');
+  } finally {
+    if (descriptor) Object.defineProperty(crypto, 'DigestStream', descriptor);
+    else delete crypto.DigestStream;
+  }
+});
 const synchsafe = size => [size >>> 21 & 127, size >>> 14 & 127, size >>> 7 & 127, size & 127];
 function id3(payload, version = 4, footer = false) {
   const header = Buffer.from([73, 68, 51, version, 0, footer ? 16 : 0, ...synchsafe(payload.length)]);

@@ -113,3 +113,10 @@ test('failed refresh clears prior view; invalid target or response is not accept
   mode = 'other'; await reader.read(id(1)); assert.equal(changes.at(-1).state,'error');
   await reader.read('https://evil.example/'); assert.equal(changes.at(-1).state,'error');
 });
+
+test('limited-free role preview switches to VIP exactly at its chosen deadline', () => {
+  const row = fixture();
+  row.draft.policy = {...policy('limited_free'),freeUntil:'2026-09-12T12:00:00.000Z'};
+  assert.deepEqual(variants(project(row)), Array(4).fill('full'));
+  assert.deepEqual(variants(project(row,{at:'boundary'})), ['preview','preview','full','preview']);
+});

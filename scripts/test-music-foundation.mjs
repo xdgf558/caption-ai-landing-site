@@ -292,3 +292,15 @@ test('analytics models reject arbitrary attributes and cannot become a VIP ledge
   for (const field of ['account_id', 'expires_at', 'membership_level', 'is_vip']) assert(!columns.includes(field));
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM music_analytics_daily').get().n, 0);
 });
+
+
+test('limited free ends at its exact deadline and cannot create a permanent free promise',()=>{
+ const p=policy('limited_free',{freeUntil:isoTime(now)});
+ assert.equal(effectivePolicy(p,now-1).effectiveAccess,'free');assert.equal(effectivePolicy(p,now).effectiveAccess,'vip');assert.equal(effectivePolicy(p,now+1).effectiveAccess,'vip');
+ assert.equal(effectivePolicy(p,now-1).nextPolicyChangeAt,isoTime(now));assert.equal(effectivePolicy(p,now).nextPolicyChangeAt,null);
+ assert.equal(variantRequirement(p,'full',now-1).requiredAccess,'public');assert.equal(variantRequirement(p,'full',now).requiredAccess,'vip');
+ assert.equal(variantRequirement(p,'preview',now).requiredAccess,'public');
+ assert.throws(()=>validatePolicyTransition(p,null,now),/MUSIC_FREE_UNTIL_NOT_FUTURE/);
+ assert.doesNotThrow(()=>validatePolicyTransition(p,p,now+1));
+ assert.throws(()=>validatePolicy({...p,freeUntil:'2026-99-01T00:00:00Z'}));assert.throws(()=>validatePolicy({...p,earlyAccessUntil:isoTime(now)}));
+});

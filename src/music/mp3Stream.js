@@ -25,7 +25,15 @@ export class Mp3Stream {
     this.reader = stream.getReader(); this.expectedBytes = expectedBytes;
     this.buffer = new Uint8Array(MP3_LIMITS.chunkBytes + MP3_LIMITS.frameBytes);
     this.start = 0; this.end = 0; this.bytes = 0; this.reads = 0; this.eof = false;
-    this.hash = sha256.create(); this.signal = signal;
+    // Workers' native streaming digest avoids spending the request CPU budget
+    // hashing multi-MiB audio in JavaScript. Await each write: no tee or queue
+    // retaining the full object. Browsers/Node retain the incremental fallback.
+    if (typeof globalThis.crypto?.DigestStream === 'function') {
+      this.digestStream = new crypto.DigestStream('SHA-256');
+      this.hashWriter = this.digestStream.getWriter();
+      this.digestStream.digest.catch(() => {});
+    } else this.hash = sha256.create();
+    this.signal = signal;
     this.stop = new Promise((_, reject) => {
       this.timer = setTimeout(() => reject(mp3Error('MUSIC_MP3_TIMEOUT', 503)), this.limits.timeoutMs);
       this.onAbort = () => reject(mp3Error('MUSIC_MP3_ABORTED', 499));
@@ -58,7 +66,8 @@ export class Mp3Stream {
       if (this.bytes > this.expectedBytes) throw mp3Error('MUSIC_MP3_SIZE_MISMATCH');
       this.buffer.copyWithin(0, this.start, this.end); this.end -= this.start; this.start = 0;
       this.buffer.set(value, this.end); this.end += value.byteLength;
-      this.hash.update(value);
+      if (this.hashWriter) await Promise.race([this.hashWriter.write(value), this.stop]);
+      else this.hash.update(value);
     }
     return this.end - this.start >= n;
   }
@@ -66,9 +75,19 @@ export class Mp3Stream {
     if (!await this.ensure(n)) return null;
     return this.buffer.subarray(this.start, this.start + n);
   }
+  // Views are valid only until the next refill. The parser consumes them
+  // synchronously, avoiding promises and frame copies for already-buffered data.
+  peekBuffered(n) {
+    return this.end - this.start >= n ? this.buffer.subarray(this.start, this.start + n) : null;
+  }
+  readBuffered(n) {
+    const value = this.peekBuffered(n);
+    if (value) this.start += n;
+    return value;
+  }
   async read(n) {
     if (!await this.ensure(n)) throw mp3Error('MUSIC_MP3_TRUNCATED');
-    const value = this.buffer.slice(this.start, this.start + n); this.start += n; return value;
+    return this.readBuffered(n);
   }
   async skip(n) {
     while (n > 0) {
@@ -76,11 +95,22 @@ export class Mp3Stream {
       const used = Math.min(n, this.end - this.start); this.start += used; n -= used;
     }
   }
-  digest() { return Array.from(this.hash.digest(), b => b.toString(16).padStart(2, '0')).join(''); }
+  async digest() {
+    let bytes;
+    if (this.hashWriter) {
+      await Promise.race([this.hashWriter.close(), this.stop]);
+      bytes = new Uint8Array(await Promise.race([this.digestStream.digest, this.stop]));
+    } else bytes = this.hash.digest();
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  }
   close(success) {
     clearTimeout(this.timer); this.signal?.removeEventListener('abort', this.onAbort);
     if (!success) Promise.resolve(this.reader.cancel()).catch(() => {});
     try { this.reader.releaseLock(); } catch { /* A cancelled read can settle after teardown. */ }
-    this.hash.destroy();
+    if (this.hashWriter) {
+      if (!success) void this.hashWriter.abort().catch(() => {});
+      try { this.hashWriter.releaseLock(); } catch {}
+    }
+    this.hash?.destroy();
   }
 }

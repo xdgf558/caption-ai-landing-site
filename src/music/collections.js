@@ -4,7 +4,7 @@ import { editVersion, fail, fields, musicId, text } from './adminValidation.js';
 import { mutate, primary, rows } from './adminStore.js';
 
 const STATUSES = ['draft', 'published', 'archived'];
-const COLLECTION_FIELDS = ['id', 'slug', 'original_locale', 'title_json', 'description_json', 'status', 'version', 'created_at', 'updated_at', 'collection_type', 'listening_mode', 'cover_track_id'];
+const COLLECTION_FIELDS = ['id', 'slug', 'original_locale', 'title_json', 'description_json', 'status', 'version', 'created_at', 'updated_at', 'collection_type', 'listening_mode', 'cover_track_id', 'cover_asset_id'];
 
 function slug(value) {
   if (typeof value !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) || value.length > 100) {
@@ -25,8 +25,8 @@ function translations(value, originalLocale, max, required) {
 
 function collectionInput(input, create = false) {
   fields(input, create
-    ? ['slug', 'originalLocale', 'title', 'description', 'type', 'listeningMode', 'coverTrackId']
-    : ['slug', 'originalLocale', 'title', 'description', 'status', 'reason', 'type', 'listeningMode', 'coverTrackId']);
+    ? ['slug', 'originalLocale', 'title', 'description', 'type', 'listeningMode', 'coverTrackId', 'coverAssetId']
+    : ['slug', 'originalLocale', 'title', 'description', 'status', 'reason', 'type', 'listeningMode', 'coverTrackId', 'coverAssetId']);
   if (!MUSIC_LOCALES.includes(input.originalLocale)) fail('MUSIC_INVALID_COLLECTION');
   const clean = {
     slug: slug(input.slug),
@@ -38,6 +38,7 @@ function collectionInput(input, create = false) {
   if (input.type !== undefined) { if (!['playlist','album'].includes(input.type)) fail('MUSIC_INVALID_COLLECTION'); clean.type = input.type; }
   if (input.listeningMode !== undefined) { if (!['mixed','free','vip'].includes(input.listeningMode)) fail('MUSIC_INVALID_COLLECTION'); clean.listeningMode = input.listeningMode; }
   if (input.coverTrackId !== undefined) clean.coverTrackId = input.coverTrackId === null ? null : musicId(input.coverTrackId);
+  if (input.coverAssetId !== undefined) clean.coverAssetId = input.coverAssetId === null ? null : musicId(input.coverAssetId);
   if (!create) {
     if (!STATUSES.includes(input.status)) fail('MUSIC_INVALID_COLLECTION');
     Object.assign(clean, { status: input.status, reason: text(input.reason, 1000) });
@@ -74,16 +75,17 @@ function catalogVersion(row) {
 }
 
 const TRACK_SELECT = `SELECT t.id AS track_id,t.slug,t.lifecycle,t.published_revision_id,t.published_at,r.metadata_json,
-  p.track_id AS published_track_id,p.state AS published_state,p.access_mode,p.early_access_until,p.post_early_access_mode,p.policy_version,
+  p.track_id AS published_track_id,p.state AS published_state,p.access_mode,p.free_until,p.early_access_until,p.post_early_access_mode,p.policy_version,
   CASE WHEN a.id IS NOT NULL AND a.state='validated' AND a.kind='cover' AND a.owner_track_id=t.id THEN 1 ELSE 0 END AS published_cover_valid
   FROM music_tracks t LEFT JOIN music_track_revisions r ON r.id=COALESCE(t.draft_revision_id,t.published_revision_id)
   LEFT JOIN music_track_revisions p ON p.id=t.published_revision_id
   LEFT JOIN music_assets a ON a.id=p.cover_asset_id`;
-function configured(clean, current = {collection_type:'playlist',listening_mode:'mixed',cover_track_id:null}) {
+function configured(clean, current = {collection_type:'playlist',listening_mode:'mixed',cover_track_id:null,cover_asset_id:null}) {
   const c = { ...current, collection_type:clean.type ?? current.collection_type,
     listening_mode:clean.listeningMode ?? current.listening_mode,
-    cover_track_id:clean.coverTrackId === undefined ? current.cover_track_id : clean.coverTrackId };
-  if (c.collection_type !== 'album' && (c.listening_mode !== 'mixed' || c.cover_track_id)) fail('MUSIC_INVALID_COLLECTION');
+    cover_track_id:null, cover_asset_id:clean.coverAssetId === undefined ? (current.cover_asset_id ?? null) : clean.coverAssetId };
+  if (clean.coverTrackId != null) fail('MUSIC_ALBUM_COVER_INVALID');
+  if (c.collection_type !== 'album' && (c.listening_mode !== 'mixed' || c.cover_asset_id)) fail('MUSIC_INVALID_COLLECTION');
   return c;
 }
 
@@ -104,7 +106,7 @@ async function loadCollection(db, id) {
 function collectionView(snapshot) {
   const c = snapshot.collection;
   return {
-    type: collectionType(c), listeningMode:c.listening_mode, coverTrackId:c.cover_track_id,
+    type: collectionType(c), listeningMode:c.listening_mode, coverTrackId:null, coverAssetId:c.cover_asset_id ?? null,
     id: c.id,
     slug: c.slug,
     originalLocale: c.original_locale,
@@ -167,7 +169,7 @@ export async function createAdminMusicCollection(db, input, context) {
   return mutate(db, { ...context, route: '/admin/api/music/collections', command: clean,
     conflictCode: 'MUSIC_COLLECTION_CONFLICT' }, async (session, now) => {
     const id = crypto.randomUUID(), config = configured(clean);
-    if (config.cover_track_id) fail('MUSIC_ALBUM_COVER_INVALID'); // Add members before selecting a cover.
+    if (config.cover_asset_id) fail('MUSIC_ALBUM_COVER_INVALID'); // Save the album before uploading its own cover.
     return {
       condition: 'NOT EXISTS (SELECT 1 FROM music_collections WHERE slug=?)',
       params: [clean.slug],
@@ -193,28 +195,30 @@ export async function saveAdminMusicCollection(db, id, input, context) {
     if (current.status === 'archived') fail('MUSIC_COLLECTION_ARCHIVED', 409);
     if (clean.slug !== current.slug || (clean.type !== undefined && clean.type !== current.collection_type)) fail('MUSIC_COLLECTION_IDENTITY', 409);
     const config = configured(clean,current);
+    if (config.cover_asset_id && !rows(await session.prepare("SELECT id FROM music_collection_assets WHERE id=? AND owner_collection_id=? AND kind='cover' AND state='validated'").bind(config.cover_asset_id,id).all()).length) fail('MUSIC_ALBUM_COVER_INVALID');
+    if (current.status==='published' && config.cover_asset_id !== current.cover_asset_id) fail('MUSIC_COLLECTION_UNPUBLISH_FIRST',409);
     checkAlbum(config,snapshot.tracks,now,clean.status === 'published');
     if (current.status === 'published' && clean.status === 'archived') fail('MUSIC_COLLECTION_UNPUBLISH_FIRST', 409);
-    if (clean.status === 'published' && !snapshot.tracks.some(track => track.lifecycle === 'published')) {
+    if (config.collection_type !== 'album' && clean.status === 'published' && !snapshot.tracks.some(track => track.lifecycle === 'published')) {
       fail('MUSIC_COLLECTION_EMPTY');
     }
     const affectsCatalog = current.status === 'published' || clean.status === 'published';
     const guard = snapshotCondition(snapshot, affectsCatalog);
     if (config.collection_type === 'album') guardAlbumTracks(guard,snapshot.tracks);
-    if (clean.status === 'published') {
+    if (config.collection_type !== 'album' && clean.status === 'published') {
       guard.condition += ` AND EXISTS (SELECT 1 FROM music_collection_tracks ct JOIN music_tracks t ON t.id=ct.track_id
         WHERE ct.collection_id=? AND t.lifecycle='published')`;
       guard.params.push(id);
     }
     const writes = [session.prepare(`UPDATE music_collections SET original_locale=?,title_json=?,description_json=?,status=?,
-      version=version+1,updated_at=?,listening_mode=?,cover_track_id=? WHERE id=? AND version=?`).bind(clean.originalLocale, JSON.stringify(clean.title),
-      JSON.stringify(clean.description), clean.status, now, config.listening_mode, config.cover_track_id, id, version)];
+      version=version+1,updated_at=?,listening_mode=?,cover_track_id=NULL,cover_asset_id=? WHERE id=? AND version=?`).bind(clean.originalLocale, JSON.stringify(clean.title),
+      JSON.stringify(clean.description), clean.status, now, config.listening_mode, config.cover_asset_id, id, version)];
     if (affectsCatalog) writes.push(catalogWrite(session, snapshot, now));
     const action = current.status !== clean.status
       ? `music.collection.${clean.status === 'draft' ? 'unpublish' : clean.status === 'published' ? 'publish' : 'archive'}`
       : 'music.collection.update';
     return { ...guard, writes, action, targetId: id,
-      summary: { oldStatus: current.status, newStatus: clean.status, type:config.collection_type, listeningMode:config.listening_mode, coverTrackId:config.cover_track_id, trackCount: snapshot.tracks.length, reason: clean.reason },
+      summary: { oldStatus: current.status, newStatus: clean.status, type:config.collection_type, listeningMode:config.listening_mode, coverAssetId:config.cover_asset_id, trackCount: snapshot.tracks.length, reason: clean.reason },
       result: { collectionId: id, editVersion: version + 1, status: clean.status,
         catalogVersion: affectsCatalog ? snapshot.catalogVersion + 1 : snapshot.catalogVersion } };
   });
@@ -234,7 +238,7 @@ export async function saveAdminMusicCollectionTracks(db, id, input, context) {
     if (selected.length !== clean.trackIds.length || selected.some(track => track.lifecycle === 'archived')) {
       fail('MUSIC_COLLECTION_TRACK_INVALID');
     }
-    if (current.status === 'published' && !selected.some(track => track.lifecycle === 'published')) {
+    if (current.collection_type !== 'album' && current.status === 'published' && !selected.some(track => track.lifecycle === 'published')) {
       fail('MUSIC_COLLECTION_EMPTY');
     }
     const guard = snapshotCondition(snapshot, current.status === 'published');

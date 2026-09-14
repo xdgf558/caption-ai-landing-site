@@ -3,7 +3,7 @@ import { editVersion, fail, fields, musicId, text } from './adminValidation.js';
 import { mutate, primary, rows } from './adminStore.js';
 
 const ITEM_FIELDS = ['slot_kind','position','track_id','collection_id'];
-const TRACK_FIELDS = ['id','lifecycle','published_revision_id','state','access_mode','early_access_until','post_early_access_mode','policy_version'];
+const TRACK_FIELDS = ['id','lifecycle','published_revision_id','state','access_mode','free_until','early_access_until','post_early_access_mode','policy_version'];
 const COLLECTION_FIELDS = ['id','status','version'];
 
 function parseMap(value) {
@@ -50,7 +50,7 @@ async function loadFeatured(db) {
 
 async function targetTracks(db, ids) {
   if (!ids.length) return [];
-  return rows(await primary(db).prepare(`SELECT t.id,t.lifecycle,t.published_revision_id,r.state,r.access_mode,r.early_access_until,
+  return rows(await primary(db).prepare(`SELECT t.id,t.lifecycle,t.published_revision_id,r.state,r.access_mode,r.free_until,r.early_access_until,
     r.post_early_access_mode,r.policy_version,r.metadata_json
     FROM music_tracks t LEFT JOIN music_track_revisions r ON r.id=t.published_revision_id
     WHERE t.id IN (SELECT CAST(value AS TEXT) FROM json_each(?)) ORDER BY t.id`).bind(JSON.stringify(ids)).all());
@@ -117,9 +117,9 @@ export async function saveAdminMusicFeatured(db, input, context) {
     if (trackIds.length) {
       const encodedIds = JSON.stringify(trackIds), stable = tracks.map(row => Object.fromEntries(TRACK_FIELDS.map(field => [field,row[field]])));
       guard.condition += ` AND COALESCE((SELECT json_group_array(json_object('id',id,'lifecycle',lifecycle,
-        'published_revision_id',published_revision_id,'state',state,'access_mode',access_mode,'early_access_until',early_access_until,
+        'published_revision_id',published_revision_id,'state',state,'access_mode',access_mode,'free_until',free_until,'early_access_until',early_access_until,
         'post_early_access_mode',post_early_access_mode,'policy_version',policy_version)) FROM
-        (SELECT t.id,t.lifecycle,t.published_revision_id,r.state,r.access_mode,r.early_access_until,r.post_early_access_mode,r.policy_version
+        (SELECT t.id,t.lifecycle,t.published_revision_id,r.state,r.access_mode,r.free_until,r.early_access_until,r.post_early_access_mode,r.policy_version
           FROM music_tracks t LEFT JOIN music_track_revisions r ON r.id=t.published_revision_id
           WHERE t.id IN (SELECT CAST(value AS TEXT) FROM json_each(?)) ORDER BY t.id)),'[]')=?`;
       guard.params.push(encodedIds,JSON.stringify(stable));

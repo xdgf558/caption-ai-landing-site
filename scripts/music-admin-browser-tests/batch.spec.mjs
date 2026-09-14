@@ -60,3 +60,27 @@ test('changed account blocks pending recovery; restored original identity may re
   await start(page);await expect(page.locator('#batch-status')).toContainText('账号已变化');expect(writes).toBe(0);
   changed=false;await start(page);await expect(page.locator('#batch-summary')).toHaveText('草稿完成 1 / 1 · 已加入 0');
 });
+
+async function preparePublication(page){
+  await setup(page,[mp3]);await start(page);await expect(page.locator('#batch-summary')).toHaveText('草稿完成 1 / 1 · 已加入 0');
+  await page.getByRole('link',{name:'返回专辑工作区',exact:true}).click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 1');
+  await page.locator('#album-listening-mode').selectOption('free');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
+}
+async function publishAlbum(page){await page.locator('#collection-publish').click();await page.locator('#collection-confirm-listening').check();await page.locator('#collection-confirm-accept').click();}
+test('publish joins completed tracks, reviews and releases songs, then publishes album with one explicit confirmation',async({page})=>{
+  await preparePublication(page);const writes=[];page.on('request',r=>{if(r.method()!=='GET'&&r.url().includes('/admin/api/music/'))writes.push(r);});
+  await page.locator('#collection-publish').click();await expect(page.locator('#collection-confirm-text')).toContainText('先自动加入');
+  await page.locator('#collection-confirm-accept').click();await expect(page.locator('#collection-confirm')).toBeVisible();expect(writes).toHaveLength(0);
+  await page.locator('#collection-confirm').getByRole('button',{name:'取消',exact:true}).click();expect(writes).toHaveLength(0);
+  await publishAlbum(page);await expect(page.locator('#collection-publish-result')).toHaveText('专辑已发布。');await expect(page.locator('#collection-state')).toHaveText('专辑 · 已发布');await expect(page.locator('#collection-order li')).toContainText('已发布');
+  await expect(page.locator('#collection-version')).toHaveText('编辑版本 4');
+  expect(writes.map(r=>r.method())).toEqual(['PUT','PUT','POST','PATCH']);expect(writes[1].url()).toMatch(/technical-review$/);expect(writes[2].url()).toMatch(/publish$/);
+  await publishAlbum(page);await expect(page.locator('#collection-version')).toHaveText('编辑版本 5');expect(writes.filter(r=>r.method()==='POST')).toHaveLength(1);
+});
+test('unknown song publish receipt reloads without repeating writes and recovers only its original key',async({page})=>{
+  await preparePublication(page);const keys=[];await page.route('**/admin/api/music/tracks/*/publish',async route=>{keys.push(route.request().headers()['idempotency-key']);if(keys.length===1){await route.fetch();await route.abort();}else await route.continue();});
+  await publishAlbum(page);await expect(page.locator('#collection-song-retry')).toBeVisible();await expect(page.locator('#collection-publish')).toBeDisabled();
+  await page.reload();await expect(page.locator('#collection-song-retry')).toBeVisible();expect(keys).toHaveLength(1);
+  await page.locator('#collection-song-retry').click();await page.locator('#collection-confirm-accept').click();await expect(page.locator('#collection-publish-result')).toContainText('原歌曲操作已确认');expect(keys).toHaveLength(2);expect(keys[0]).toBe(keys[1]);
+  await publishAlbum(page);await expect(page.locator('#collection-state')).toHaveText('专辑 · 已发布');expect(keys).toHaveLength(2);
+});

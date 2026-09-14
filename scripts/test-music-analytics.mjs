@@ -164,3 +164,13 @@ test('retention backlog never marks an incomplete bounded pass healthy',async t=
   assert.equal(pass.reason,'RETENTION_BACKLOG');assert.equal(f.count('music_analytics_rates'),1);
   assert.equal((await f.sweep()).available,true);assert.equal(f.count('music_analytics_rates'),0);
 });
+
+test('limited-free analytics classify by server receipt time before and at expiry', async t => {
+  const f=await fixture(t), end=NOW+1000;
+  const track=await seedAnalyticsTrack(f.db,{now:NOW,freeUntil:end});
+  await expect(await f.send([f.event('play_start',{trackId:track.id})]),200);
+  f.time(end);
+  await expect(await f.send([f.event('play_start',{trackId:track.id})]),200);
+  const rows=f.sql.prepare('SELECT access_kind,value FROM music_analytics_daily WHERE track_id=? ORDER BY access_kind').all(track.id);
+  assert.deepEqual(rows.map(r=>({...r})),[{access_kind:'free',value:1},{access_kind:'vip',value:1}]);
+});

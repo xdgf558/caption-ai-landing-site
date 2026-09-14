@@ -23,7 +23,7 @@ export function mountAdminMusicRolePreview({ root, request, actorId, onAssets, o
     if (state !== 'ready' || !snapshot) { $('flags').textContent = ''; return; }
     try {
       const revision = $('revision').value;
-      $('boundary').disabled = snapshot.row[revision]?.policy.accessMode !== 'early_access';
+      $('boundary').disabled = !['early_access','limited_free'].includes(snapshot.row[revision]?.policy.accessMode);
       if ($('boundary').disabled) $('time').value = 'read';
       const view = musicRolePreview(snapshot.row, snapshot.flags, { revision, locale:$('locale').value, scenario:$('scenario').value, at:$('time').value });
       const t = musicText($('locale').value);
@@ -33,6 +33,7 @@ export function mountAdminMusicRolePreview({ root, request, actorId, onAssets, o
       $('flags').textContent = `实际开关快照：公开入口${snapshot.flags.public ? '开' : '关'} · VIP 完整播放${snapshot.flags.vipDelivery ? '开' : '关'}`;
       $('policy').textContent = '此刻策略：' + (view.policy.effectiveAccess === 'free' ? '免费' : 'VIP') +
         (view.policy.accessMode === 'early_access' ? ` · 抢先结束 ${view.policy.earlyAccessUntil}，之后${view.policy.postEarlyAccessMode === 'free' ? '免费' : 'VIP'}` : '') +
+        (view.policy.accessMode === 'limited_free' ? ` · 免费截止 ${view.policy.freeUntil}，之后 VIP 专享` : '') +
         ($('time').value === 'boundary' ? ' · 正在模拟结束时刻' : '');
       $('material').textContent = `${view.coverAvailable ? '已关联封面' : '未关联封面'} · ${view.lyricsAvailable ? '已关联歌词' : '未关联歌词'}。发布后的封面与歌词对四种身份均公开展示；此处不加载素材。`;
       $('story').textContent = view.story || '尚未填写创作故事。'; $('detail').hidden = false;

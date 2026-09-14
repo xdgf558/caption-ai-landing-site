@@ -428,3 +428,51 @@ test('production imports never include fixture verifier; music bindings, switche
   const configText = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
   assert.doesNotMatch(configText, /MUSIC_DB|MUSIC_BUCKET|MUSIC_PUBLIC_ENABLED|MUSIC_UPLOADS_ENABLED/);
 });
+
+const mib = 1048576;
+const quotaBody = (snapshot, quotaMiB) => ({ quotaMiB, expectedQuotaBytes:snapshot.quotaBytes, expectedUpdatedAt:snapshot.updatedAt });
+test('quota controls require Access and same-origin writes; validate integer MiB and strict fields', async () => {
+  const f=fixture(), snapshot=(await call(f,'/storage-quota')).body;
+  assert.equal(snapshot.quotaBytes,0);
+  assert.equal((await call(f,'/storage-quota','GET',undefined,{},async()=>null)).status,401);
+  assert.equal((await call(f,'/storage-quota','PUT',quotaBody(snapshot,32),{Origin:'https://evil.test'})).status,403);
+  for(const n of [-1,0.5,'32',1048577,null]) assert.equal((await call(f,'/storage-quota','PUT',quotaBody(snapshot,n))).status,400);
+  assert.equal((await call(f,'/storage-quota','PUT',{...quotaBody(snapshot,32),key:'secret'})).status,400);
+  assert.equal((await call(f,'/storage-quota','POST',quotaBody(snapshot,32))).status,405);
+  assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM music_admin_audit_logs WHERE action='music.storage.quota'").get().n,0);
+});
+test('quota save replays once, preserves stale-edit protection and leaves accounting/content unchanged', async () => {
+  const f=fixture();await seeded(f);const before=f.dump(), snapshot=(await call(f,'/storage-quota')).body;
+  const key=randomUUID(),body=quotaBody(snapshot,32),h={'Idempotency-Key':key};
+  const first=await call(f,'/storage-quota','PUT',body,h);assert.equal(first.status,200);
+  assert.equal((await call(f,'/storage-quota','PUT',body,h)).body.replayed,true);
+  assert.equal((await call(f,'/storage-quota','PUT',quotaBody(snapshot,64),h)).body.code,'IDEMPOTENCY_CONFLICT');
+  assert.equal((await call(f,'/storage-quota','PUT',quotaBody(snapshot,64))).body.code,'MUSIC_QUOTA_CONFLICT');
+  const current=(await call(f,'/storage-quota')).body;assert.equal(current.quotaBytes,32*mib);assert.ok(current.updatedAt>snapshot.updatedAt);
+  assert.equal((await call(f,'/storage-quota','PUT',quotaBody(current,0))).body.code,'MUSIC_QUOTA_BELOW_USAGE');
+  const after=f.dump();for(const t of ['music_tracks','music_assets','music_upload_sessions'])assert.deepEqual(after[t],before[t]);
+  assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM music_admin_audit_logs WHERE action='music.storage.quota'").get().n,1);
+});
+test('quota shrink rechecks concurrent upload reservations in the write transaction', async () => {
+  const f=fixture();const track=await seeded(f);f.env.MUSIC_UPLOADS_ENABLED='true';
+  f.sql.exec("UPDATE music_settings SET value_json='33554432' WHERE key='storageQuotaBytes'");
+  const snapshot=(await call(f,'/storage-quota')).body;
+  f.state.beforeWrite=async()=>{
+    const r=await call(f,'/uploads','POST',{trackId:track.trackId,kind:'audio',format:'mp3',byteSize:2*mib,sha256:'a'.repeat(64)});
+    assert.equal(r.status,200,JSON.stringify(r.body));
+  };
+  const r=await call(f,'/storage-quota','PUT',quotaBody(snapshot,1));assert.equal(r.body.code,'MUSIC_QUOTA_CONFLICT');
+  const current=(await call(f,'/storage-quota')).body;assert.equal(current.quotaBytes,32*mib);assert.ok(current.chargedBytes>=2*mib);
+});
+test('quota concurrent editors and audit failures roll back; lost acknowledgement replays exact receipt', async () => {
+  const f=fixture();const initial=(await call(f,'/storage-quota')).body;
+  f.state.beforeWrite=async()=>{assert.equal((await call(f,'/storage-quota','PUT',quotaBody(initial,64))).status,200);};
+  assert.equal((await call(f,'/storage-quota','PUT',quotaBody(initial,32))).body.code,'MUSIC_QUOTA_CONFLICT');
+  const current=(await call(f,'/storage-quota')).body;assert.equal(current.quotaBytes,64*mib);
+  const before=f.dump();f.state.fail=/INSERT INTO music_admin_audit_logs/;
+  assert.equal((await call(f,'/storage-quota','PUT',quotaBody(current,128))).status,503);assert.deepEqual(f.dump(),before);
+  f.state.fail=null;f.state.lose=true;const h={'Idempotency-Key':randomUUID()},body=quotaBody(current,128);
+  assert.equal((await call(f,'/storage-quota','PUT',body,h)).status,200);
+  assert.equal((await call(f,'/storage-quota','PUT',body,h)).body.replayed,true);
+  assert.equal((await call(f,'/storage-quota')).body.quotaBytes,128*mib);
+});

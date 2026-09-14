@@ -31,7 +31,9 @@ MPEG-2.5、Layer I/II、CRC-protected、free-format、VBRI、ID3v2.2、其他标
 | 总帧/读取次数 | 150,000 / 65,536（含 EOF 读取；极碎块可能达到次数上限） |
 | I/O 总时限 | 10 秒；支持 AbortSignal，中断/失败取消 reader 并释放锁 |
 
-限额可在可信调用方收紧，不可调大或传入 NaN。流式 SHA-256 使用 [noble-hashes](https://github.com/paulmillr/noble-hashes)，在每块到达时更新。提前终止、迟到的 read 拒绝和不推进的流不能返回成功证明。M2 须提供符合块大小合同的私有对象读取适配，不能先 arrayBuffer 整首音频再切片。
+限额可在可信调用方收紧，不可调大或传入 NaN。Worker 使用原生 `crypto.DigestStream('SHA-256')`，每块等待写入完成后才继续读取，不 tee、不排队缓存整曲；不支持该 API 的本机/浏览器环境使用 [noble-hashes](https://github.com/paulmillr/noble-hashes) 增量哈希。两条路径都校验全部字节，摘要完成前不得返回成功证明。提前终止、迟到的 read 拒绝和不推进的流不能返回成功证明。M2 须提供符合块大小合同的私有对象读取适配，不能先 arrayBuffer 整首音频再切片。
+
+解析已缓冲的帧使用短期字节视图，仅在补充流数据时等待；视图不得跨下一次补充读取保留。每个请求最多缓存 64 个完整帧头的解析结果，仍逐帧检查格式、信息头、reservoir、帧数与时间预算。此优化不改变接受格式、配额、上传幂等或发布要求。管理端收到非 JSON 的 5xx 时保留原操作并提示服务器处理失败，不当成登录失效，也不自动重传。
 
 10 秒是墙钟/I/O保护，不宣称是 CPU 硬中断。Cloudflare 的 [计时 API](https://developers.cloudflare.com/workers/runtime-apis/performance/) 在无 I/O 时不持续推进；因此同步工作量另受字节/帧数硬预算限制，实际 CPU 上限仍依赖平台。M2 上线前必须按实际套餐和 [Workers limits](https://developers.cloudflare.com/workers/platform/limits/) 配 CPU/并发上限并压测，不能凭本地测量声称免费套餐可运行。固定 carry 也不等于整个 isolate 的总内存占用。
 

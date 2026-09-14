@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { vipMembershipCopy } from '../../src/data/vip-membership.js';
+import { getVipMembershipCopy } from '../../src/data/vip-membership.js';
 import { getReaderLibraryMessages } from '../../src/data/reader-library-client.js';
 
 async function mockMembership(page, options = {}) {
@@ -32,6 +32,7 @@ async function mockMembership(page, options = {}) {
   return writes;
 }
 
+const musicEnabled = process.env.PUBLIC_MUSIC_ENTRY_ENABLED === 'true';
 const locales = { 'zh-hant': 'zh-Hant', 'zh-hans': 'zh-Hans', en: 'en', ja: 'ja' };
 async function expectVipBadge(root) {
   const mark = root.locator('.vip-mark');
@@ -48,7 +49,7 @@ async function expectVipBadge(root) {
 }
 
 for (const width of [390, 768, 1280]) for (const [path, locale] of Object.entries(locales)) {
-  test(`VIP ${locale} ${width}px: readable layout, planned services and existing redemption only`, async ({ page }) => {
+  test(`VIP ${locale} ${width}px: readable layout, build-mode services and existing redemption only`, async ({ page }) => {
     await page.setViewportSize({ width, height: 960 });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -58,12 +59,13 @@ for (const width of [390, 768, 1280]) for (const [path, locale] of Object.entrie
     const button = panel.locator('#reader-membership-redeem');
     const messages = getReaderLibraryMessages(locale);
     await expect(panel).toBeVisible();
-    await expect(panel.locator('#reader-vip-title')).toHaveText(vipMembershipCopy[locale].name);
+    await expect(panel.locator('#reader-vip-title')).toHaveText(getVipMembershipCopy(locale, musicEnabled).name);
     await expect(panel.locator('#reader-membership-summary-title')).toHaveText(messages.membershipInactive);
     await expect(button).toContainText('VIP');
     await expect(button).toBeEnabled();
     await expect(panel.locator('button')).toHaveCount(1);
     await expect(panel.locator('[data-vip-planned]')).toHaveCount(2);
+    await expect(panel.locator('[data-vip-planned]').first()).toContainText(getVipMembershipCopy(locale, musicEnabled).musicDescription);
     await expect(panel.locator('[data-vip-planned] button, [data-vip-planned] a')).toHaveCount(0);
     await expectVipBadge(panel);
     expect(writes).toEqual([]);
@@ -88,7 +90,7 @@ for (const width of [390, 768, 1280]) for (const [path, locale] of Object.entrie
     }
     expect(errors).toEqual([]);
     await page.goto(`/${path}/points/`);
-    const vip = vipMembershipCopy[locale];
+    const vip = getVipMembershipCopy(locale, musicEnabled);
     const capabilities = page.locator('.station-points-capabilities');
     await expectVipBadge(capabilities);
     await expect(capabilities).toContainText(vip.name);

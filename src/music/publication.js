@@ -4,7 +4,7 @@ import { publicationError, publicationHash, validMusicId, validatePublication, v
 const columns = {
   music_tracks: ['id', 'slug', 'lifecycle', 'draft_revision_id', 'published_revision_id', 'edit_version', 'first_published_at', 'published_at', 'created_at', 'updated_at'],
   music_track_revisions: ['id', 'track_id', 'revision_no', 'state', 'metadata_json', 'audio_asset_id', 'preview_asset_id', 'cover_asset_id', 'lyrics_asset_id',
-    'access_mode', 'early_access_until', 'post_early_access_mode', 'policy_version', 'technical_reviewed_at', 'created_at', 'technical_fingerprint'],
+    'access_mode', 'free_until', 'early_access_until', 'post_early_access_mode', 'policy_version', 'technical_reviewed_at', 'created_at', 'technical_fingerprint'],
   music_assets: ['id', 'owner_track_id', 'kind', 'object_key', 'state', 'content_type', 'format', 'byte_size', 'duration_ms',
     'derived_from_asset_id', 'source_start_ms', 'source_end_ms', 'sha256', 'etag', 'created_at'],
   music_rights_reviews: ['id', 'revision_id', 'review_json', 'review_status', 'reviewer_id', 'reviewed_at', 'revision_fingerprint'],
@@ -114,6 +114,7 @@ function conditionalBatch(db, snapshot, command, actorId, key, hash, route, now,
       r.access_mode !== 'free' && !(r.access_mode === 'early_access' && r.post_early_access_mode === 'free' && r.early_access_until <= now)) {
       conditions.push(`? > ${sqlNow}`); params.push(p.early_access_until);
     }
+    if (r.free_until != null && (!p || r.free_until !== p.free_until)) { conditions.push(`? > ${sqlNow}`); params.push(r.free_until); }
     if (r.access_mode === 'early_access' && (!p || r.early_access_until !== p.early_access_until || r.post_early_access_mode !== p.post_early_access_mode || r.access_mode !== p.access_mode)) {
       conditions.push(`? > ${sqlNow}`); params.push(r.early_access_until);
     }

@@ -12,3 +12,7 @@
 #collection-status[data-error=true] {color:#a2353c;}
 #collection-list {max-height:600px;overflow:auto;}
 .music-heading > .music-actions,.collection-member > .music-actions {margin:0;padding:0;border:0;}
+
+#collection-publish-result { margin:12px 0; padding:12px 14px; border:1px solid #c4d7cf; background:#eef5f1; color:#294f42; overflow-wrap:anywhere; }
+#collection-publish-result[data-error=true] { border-color:#dcabb0; background:#fff3f3; color:#8e2832; }
+#collection-publish-result:focus-visible { outline:2px solid currentColor; outline-offset:3px; }

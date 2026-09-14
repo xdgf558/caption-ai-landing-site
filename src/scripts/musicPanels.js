@@ -48,6 +48,8 @@ export function mountMusicPanels(root, { host = window } = {}) {
   const doc = root.ownerDocument, abort = new AbortController();
   const $ = selector => root.querySelector(selector), on = (node, name, fn) => node?.addEventListener(name, fn, { signal: abort.signal });
   const mobile = host.matchMedia('(max-width: 48rem)');
+  const nightPage = doc.body.classList.contains('station-music-page');
+  const desktopPanel = kind => nightPage && kind === 'detail';
   const dialogs = { now: $('[data-now-dialog]'), detail: $('[data-detail-dialog]'), filter: $('[data-filter-dialog]'), queue: $('[data-queue-dialog]'), menu: doc.querySelector('[data-menu-dialog]'), share: $('[data-share-card-dialog]') };
   const dock = $('[data-player-dock]'), detail = $('[data-track-detail]'), filter = $('[data-filter-panel]');
   const nav = doc.querySelector('[data-music-nav-content]'), navHome = nav?.parentElement;
@@ -67,7 +69,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
   };
   const switchPanel = kind => {
     if (disposed) return;
-    if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches) || (kind === 'detail' && detail.hidden) || (kind === 'now' && dock.hidden)) kind = null;
+    if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches && !desktopPanel(kind)) || (kind === 'detail' && detail.hidden) || (kind === 'now' && dock.hidden)) kind = null;
     if (active === kind) return;
     const last = active;
     if (active) {
@@ -103,8 +105,8 @@ export function mountMusicPanels(root, { host = window } = {}) {
   };
   const history = createMusicPanelHistory(host, switchPanel);
   const open = (kind, opener = doc.activeElement) => {
-    if (kind === 'detail' && !mobile.matches) { $('[data-track-title]')?.focus({ preventScroll: true }); return; }
-    if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches) || (kind === 'detail' && detail.hidden) || (kind === 'now' && dock.hidden)) return;
+    if (kind === 'detail' && !mobile.matches && !nightPage) { $('[data-track-title]')?.focus({ preventScroll: true }); return; }
+    if (!dialogs[kind] || (!['queue', 'share'].includes(kind) && !mobile.matches && !desktopPanel(kind)) || (kind === 'detail' && detail.hidden) || (kind === 'now' && dock.hidden)) return;
     openers.set(kind, opener);
     history.open(kind);
   };
@@ -112,7 +114,7 @@ export function mountMusicPanels(root, { host = window } = {}) {
     history.reset();
     root.dataset.mobile = String(mobile.matches);
     doc.body.dataset.musicMobile = String(mobile.matches);
-    (mobile.matches ? $('[data-detail-target]') : $('[data-detail-home]')).append(detail);
+    (mobile.matches || nightPage ? $('[data-detail-target]') : $('[data-detail-home]')).append(detail);
     (mobile.matches ? $('[data-filter-target]') : $('[data-filter-home]')).append(filter);
     if (nav) (mobile.matches ? doc.querySelector('[data-nav-target]') : navHome).append(nav);
     if (mobile.matches) $('[data-queue-steps]').append(previous, next);

@@ -8,7 +8,7 @@ export function assetType(kind, format) {
   if (!Object.hasOwn(kinds, kind) || !kinds[kind].includes(format)) fail('UNSUPPORTED_MEDIA_TYPE', 415);
   return formats[format];
 }
-export const assetKey = a => `music/${folders[a.kind]}/${a.owner_track_id}/${a.id}.${a.format}`;
+export const assetKey = a => a.owner_collection_id ? `music/album-covers/${a.owner_collection_id}/${a.id}.${a.format}` : `music/${folders[a.kind]}/${a.owner_track_id}/${a.id}.${a.format}`;
 const ascii = (b, start, length) => String.fromCharCode(...b.subarray(start, start + length));
 const invalid = () => fail('MUSIC_FILE_STRUCTURE_INVALID');
 const crcTable = Uint32Array.from({ length: 256 }, (_, value) => {

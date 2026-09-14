@@ -1,6 +1,5 @@
 ---
 import { ArrowLeft, Plus, Save, RefreshCw } from '@lucide/astro';
-const locales = [['zh-Hans','简体中文'],['zh-Hant','繁體中文'],['en','English'],['ja','日本語']];
 ---
 <!doctype html>
 <html lang="zh-Hans">
@@ -20,24 +19,34 @@ const locales = [['zh-Hans','简体中文'],['zh-Hant','繁體中文'],['en','En
       <div id="collection-workspace" hidden>
         <header class="workspace-heading"><div><h2 id="collection-heading"></h2><p id="collection-version" class="muted"></p></div><span id="collection-state" class="badge"></span></header>
         <form id="collection-form"><fieldset id="collection-fields">
-          <div class="field-grid"><label>原文语言<select id="collection-locale">{locales.map(([v,n]) => <option value={v}>{n}</option>)}</select></label><label>链接标识<input id="collection-slug" required maxlength="100" pattern="[a-z0-9]+(-[a-z0-9]+)*" /></label></div>
-          <div class="field-grid">{locales.map(([v,n]) => <div><label>{n}标题<input data-collection-title={v} maxlength="120" /></label><label>{n}简介<textarea data-collection-description={v} maxlength="500" rows="2"></textarea></label></div>)}</div>
-          <div id="album-fields"><div class="field-grid"><label>专辑收听范围<select id="album-listening-mode"><option value="mixed">沿用单曲设置（可混合）</option><option value="free">整张免费</option><option value="vip">整张 VIP 专享</option></select></label><label>专辑封面<select id="album-cover-track"><option value="">自动使用首个有封面的成员曲目</option></select></label></div><p class="muted">封面选用成员曲目已发布、已审核的封面。范围设置只检查单曲，不批量修改权限；整张免费／VIP 需所有成员一致。</p></div>
-          <label id="collection-reason-label">修改说明<input id="collection-reason" maxlength="1000" /></label>
+          <div class="field-grid">
+            <label class="full">链接标识<input id="collection-slug" required maxlength="100" pattern="[a-z0-9]+(-[a-z0-9]+)*" /></label>
+            <label class="full">简体中文标题<input data-collection-title="zh-Hans" required maxlength="120" /></label>
+            <label class="full">简体中文简介<textarea data-collection-description="zh-Hans" maxlength="500" rows="3"></textarea></label>
+          </div>
+          <div id="album-fields"><div class="field-grid"><label>专辑收听范围<select id="album-listening-mode"><option value="mixed">沿用单曲设置（可混合）</option><option value="free">整张免费</option><option value="vip">整张 VIP 专享</option></select></label></div><p class="muted">专辑封面单独上传，不使用单曲封面。范围设置只检查单曲，不批量修改权限；整张免费／VIP 需已发布成员一致。</p></div>
           <footer class="music-actions"><button id="collection-save" class="primary" type="submit"><Save size={17} />保存资料</button></footer>
         </fieldset></form>
-        <div id="album-batch-entry" hidden><h3>上传新曲目</h3><p class="muted">多选 MP3 或 WAV，逐首创建草稿并验证。请先保存当前资料和曲序；已发布专辑须先下架。</p><button id="album-batch-open" type="button" disabled>专辑多文件上传</button></div>
+        <section id="album-cover-section">
+  <h3>专辑封面</h3>
+  <p class="muted">独立上传 JPEG、PNG 或 WebP，最大 5 MiB、尺寸不超过 4096 × 4096。先保存专辑资料；已发布专辑须先下架才能更换封面。</p>
+  <img id="album-cover-preview" alt="专辑封面预览" width="160" height="160" hidden style="object-fit:contain;max-width:100%" />
+  <label>选择专辑封面<input id="album-cover-file" type="file" accept=".jpg,.jpeg,.png,.webp" /></label>
+  <div class="music-actions"><button id="album-cover-upload" type="button">上传封面</button><button id="album-cover-recover" type="button" hidden>查询并恢复</button><button id="album-cover-use" type="button" hidden>使用已上传封面</button><button id="album-cover-remove" type="button">移除封面</button></div>
+  <p id="album-cover-status" role="status">未上传封面时显示占位图。上传确认后还需保存资料。</p>
+</section>
+<div id="album-batch-entry" hidden><h3>上传新曲目</h3><p class="muted">多选 MP3 或 WAV，逐首创建草稿并验证。请先保存当前资料和曲序；已发布专辑须先下架。</p><button id="album-batch-open" type="button" disabled>专辑多文件上传</button></div>
         <section class="collection-members" aria-labelledby="collection-order-title"><h3 id="collection-order-title">曲序</h3><p class="muted">最多 500 首。可拖动排序，也可用上移／下移按钮；调整后需保存曲序。</p>
           <form id="member-search-form"><label for="member-search">从现有曲库添加歌曲</label><div class="upload-control"><input id="member-search" type="search" maxlength="120" placeholder="曲名或链接标识" /><button type="submit">查找歌曲</button></div></form>
           <div id="member-results" aria-live="polite"></div><button id="member-more" type="button" hidden>更多歌曲</button>
           <ol id="collection-order"></ol><p id="collection-order-empty" class="muted">尚未添加歌曲。</p>
-          <label>曲序修改说明<input id="collection-order-reason" maxlength="1000" /></label><button id="collection-order-save" type="button">保存曲序</button>
+          <button id="collection-order-save" type="button">保存曲序</button>
         </section>
-        <section class="collection-publishing"><h3>发布</h3><p id="collection-publish-help" class="notice"></p><p class="muted">先保存资料和曲序。发布不修改歌曲权限，也不会打开音乐总闸。</p><div class="music-actions"><button id="collection-publish" type="button" class="primary">发布</button><button id="collection-unpublish" type="button">下架为草稿</button><button id="collection-archive" type="button">归档</button></div></section>
+        <section class="collection-publishing"><h3>发布</h3><p id="collection-publish-result" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></p><p id="collection-publish-help" class="notice"></p><p class="muted">先保存资料和曲序。发布专辑时，会自动加入本标签页上传批次中已完成的曲目；确认试听后会逐首校验并发布歌曲，最后发布专辑。发布不修改歌曲权限。</p><div class="music-actions"><button id="collection-song-retry" type="button" hidden>核对上次歌曲操作</button><button id="collection-publish" type="button" class="primary" aria-describedby="collection-publish-result">发布</button><button id="collection-unpublish" type="button">下架为草稿</button><button id="collection-archive" type="button">归档</button></div></section>
       </div>
     </section>
   </div>
 </main>
-<dialog id="collection-confirm"><form method="dialog"><h2 id="collection-confirm-title"></h2><p id="collection-confirm-text"></p><label id="collection-confirm-reason-label">操作说明<input id="collection-confirm-reason" maxlength="1000" /></label><footer class="music-actions"><button value="cancel" formnovalidate>取消</button><button id="collection-confirm-accept" value="yes" class="primary">确认</button></footer></form></dialog>
+<dialog id="collection-confirm"><form method="dialog"><h2 id="collection-confirm-title"></h2><p id="collection-confirm-text"></p><label id="collection-confirm-reason-label">操作说明<input id="collection-confirm-reason" maxlength="1000" /></label><label id="collection-confirm-listening-label" hidden><input id="collection-confirm-listening" type="checkbox" />我已实际试听本次待发布歌曲，确认声音正常；如有独立试听或图片，也已核对其内容及试听来源。</label><footer class="music-actions"><button value="cancel" formnovalidate>取消</button><button id="collection-confirm-accept" value="yes" class="primary">确认</button></footer></form></dialog>
 <script>import '../../../scripts/adminMusicCollections.js';</script>
 </body></html>

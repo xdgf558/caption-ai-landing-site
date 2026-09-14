@@ -1,0 +1,267 @@
+/* Music-only night edition. Existing audio, access and sharing controls remain live. */
+body.station-music-page {
+  color-scheme: dark; --bg:#101417; --ink:#f2f0eb; --muted:#a5a9ac; --line:#343b40; --teal:#f1c27c;
+  --music-bg:#181d21; --music-ink:#f2f0eb; --music-muted:#a5a9ac; --music-line:#343b40; --music-accent:#f1c27c;
+  background:#101417; color:var(--ink); background-image:none;
+}
+.station-music-page .site-header {position:relative;top:auto;background:#101316;border-bottom:1px solid #353a3f;backdrop-filter:none;z-index:45;}
+.station-music-page .site-header .nav-wrap {max-width:1440px;min-height:64px;padding:8px 30px;gap:25px;flex-wrap:nowrap;}
+.station-music-page .brand-mark {color:#f2c888;font-family:Georgia,'Songti SC',serif;font-size:23px;white-space:nowrap;gap:10px;}
+.station-music-page .brand-icon {box-shadow:none;background:transparent;border:0;}
+.station-music-page .nav-links {background:transparent;border:0;border-radius:0;box-shadow:none;gap:22px;padding:0;flex-wrap:nowrap;}
+.station-music-page .nav-links a {font-size:12px;font-weight:500;color:#d8d9db;white-space:nowrap;padding:11px 0;}
+.station-music-page .nav-links a[href$='/music/'] {color:#f1c27c;border-bottom:2px solid #f1c27c;}
+.station-music-page .nav-links a[href*='library'] {border:1px solid #797d7f;border-radius:30px;padding:7px 14px;}
+.station-music-page .nav-links a[href*='x.com'] {border-radius:30px;background:#f1c27c;color:#141618;padding:8px 18px;}
+.station-music-page .language-select {background:#1d2226;color:#d9dbdd;border-color:#3b4248;font-size:12px;}
+.station-music-page .language-switcher {margin-left:auto;}
+.station-music-page .station-music-player[data-library] {--music-bg:#181d21;--music-ink:#f2f0eb;--music-muted:#a5a9ac;--music-line:#343b40;--music-accent:#f1c27c;--music-accent-soft:#30291f;padding:0 30px 26px;}
+.station-music-page .station-music-layout {display:block;max-width:1380px;margin:auto;}
+.station-music-page .station-music-hero {position:relative;isolation:isolate;min-height:330px;margin:0 -30px 22px;padding:22px 6.6%;display:flex;align-items:center;overflow:hidden;}
+.station-music-page .music-night-scene {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:-2;}
+.station-music-page .station-music-hero::after {content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#0b11152e,transparent 70%),linear-gradient(0deg,#101417,transparent 18%);pointer-events:none;}
+.station-music-page .music-night-hero-copy {width:min(520px,52%);}
+.station-music-page .music-night-eyebrow {margin:0 0 8px;color:#d6b27f;font-size:10px;letter-spacing:.32em;}
+.station-music-page .station-music-player[data-library] h1 {font-size:62px;letter-spacing:.13em;font-weight:700;margin:0;line-height:1.15;}
+.station-music-page .station-music-intro {font-family:'Kaiti SC','STKaiti','Songti SC',serif;font-size:29px;letter-spacing:.1em;font-weight:400;margin:6px 0 10px;line-height:1.5;}
+.station-music-page .music-night-story {font-size:14px;color:#d1d2d0;line-height:1.65;margin:8px 0 16px;}
+.station-music-page .music-night-hero-actions {display:flex;gap:16px;align-items:center;}
+.station-music-page .music-night-hero-actions :is(button,a) {display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:46px;border:1px solid #b7b5af;border-radius:40px;padding:10px 29px;font-size:14px;font-weight:600;text-decoration:none;color:#f2f0eb;background:#14191c55;}
+.station-music-page .music-night-hero-actions button {background:linear-gradient(115deg,#f5d38d,#efb979);color:#121617;border-color:#f5d38d;box-shadow:0 4px 20px #efbb7829;}
+.station-music-page .music-night-caption {display:flex;align-items:center;gap:8px;font-size:11px;color:#adaeaa;margin:12px 0 0;}
+.station-music-page .station-music-hero-cover {display:none!important;}
+.station-music-page .station-music-featured {display:grid;grid-template-columns:3fr 1.9fr;grid-template-rows:auto auto auto;gap:0 22px;margin:0 0 22px;padding:0;border:0;background:transparent;border-radius:0;}
+.station-music-page .station-music-featured-heading {grid-column:1;grid-row:1;margin:0;padding:14px 16px 8px;border:1px solid #424344;border-bottom:0;border-radius:12px 12px 0 0;background:#1e2224;}
+.station-music-page .station-music-featured-heading > div {display:flex;align-items:center;gap:16px;}
+.station-music-page .station-music-featured-heading h2 {font:700 23px var(--music-display);}
+.station-music-page .station-music-featured-heading p {color:#f1c27c;font-size:11px;letter-spacing:.03em;margin:0;}
+.station-music-page .station-music-featured-primary {grid-column:1;grid-row:2;grid-template-columns:40% minmax(0,1fr);gap:12px 16px;padding:0 16px 16px;border:1px solid #424344;border-top:0;border-radius:0 0 12px 12px;background:linear-gradient(110deg,#212629,#181d20);}
+.station-music-page .station-music-featured-cover {grid-row:1/3;border-radius:7px;align-self:stretch;aspect-ratio:1;min-height:210px;}
+.station-music-page .station-music-featured-copy h3 {font:600 20px/1.45 var(--music-display);margin:8px 0;}
+.station-music-page .station-music-featured-copy p {font-size:13px;line-height:1.65;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.station-music-page .station-music-featured-kicker {font-size:10px;font-weight:500;}
+.station-music-page .station-music-featured-actions {gap:4px;align-self:end;}
+.station-music-page .station-music-featured-actions .primary {order:-1;background:linear-gradient(115deg,#f5d38d,#efb979);color:#161a1d;padding-inline:23px;}
+.station-music-page .station-music-featured-actions button:hover {background:#3d362b;color:#f5d38d;}
+.station-music-page .station-music-featured-actions button {font-size:13px;white-space:nowrap;}
+.station-music-page .station-music-featured-groups {display:contents;}
+.station-music-page [data-featured-secondary-block] {grid-column:2;grid-row:1/3;min-width:0;padding-top:18px;}
+.station-music-page .station-music-featured-groups h3 {font:700 21px var(--music-display);margin:0 0 14px;}
+.station-music-page .station-music-featured-groups ul {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;border:0;}
+.station-music-page .station-music-featured-item {position:relative;display:block;border:0;min-width:0;}
+.station-music-page .station-music-featured-item > button:first-child {display:flex;flex-direction:column;align-items:stretch;width:100%;min-width:0;padding:0;color:var(--music-ink);text-align:left;}
+.station-music-page .music-night-card-art {display:grid;place-items:center;position:relative;aspect-ratio:.72;background:#242a2e;border:1px solid #4b4e50;border-radius:7px;overflow:hidden;margin-bottom:8px;}
+.station-music-page .music-night-card-art img {width:100%;height:100%;position:absolute;object-fit:cover;}
+.station-music-page .music-night-card-art svg {color:#ad9778;}
+.station-music-page .station-music-featured-item strong {font-size:14px;font-weight:500;line-height:1.5;}
+.station-music-page .station-music-featured-item span {font-size:11px;line-height:1.6;}
+.station-music-page .station-music-featured-item [data-featured-track-play] {position:absolute;top:auto;bottom:54px;right:6px;border:1px solid #f1c27c;border-radius:50%;width:36px;height:36px;min-width:36px;min-height:36px;padding:0;display:grid;place-items:center;color:#f1c27c;background:#101417c9;}
+.station-music-page [data-featured-secondary] {container-type:inline-size;}
+.station-music-page [data-featured-collections-block] {grid-column:1/-1;grid-row:3;margin-top:24px;}
+.station-music-page .station-music-featured-groups [data-featured-collections] {grid-template-columns:repeat(6,minmax(0,1fr));}
+.station-music-page .station-music-featured-collection .music-night-card-art {aspect-ratio:1.05;}
+.station-music-page .station-music-featured-collection button {position:relative;}
+.station-music-page .station-music-featured-collection .music-night-card-art::after {content:'';position:absolute;inset:35% 0 0;background:linear-gradient(transparent,#101417e8);}
+.station-music-page .station-music-featured-collection strong {position:absolute;bottom:35px;left:12px;right:10px;font:600 15px var(--music-display);color:#fff;}
+.station-music-page .station-music-featured-collection button > span {position:absolute;bottom:17px;left:12px;color:#c0c2c4;}
+.station-music-page .station-music-browser {scroll-margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;align-items:start;}
+.station-music-page .station-music-player[data-library] .station-music-search-row {margin:0;padding:12px;background:#1c2226;border:1px solid #373f45;border-radius:10px;}
+.station-music-page .station-music-search input,.station-music-page .station-music-filters select {background:#252b30;color:#f1f0ed;border-color:#3b444c;border-radius:8px;font-size:13px;}
+.station-music-page .station-music-browse-modes {grid-column:1/-1;grid-row:2;gap:22px;margin:7px 0 4px;border-bottom:1px solid #343b40;}
+.station-music-page .station-music-browse-modes button {background:none;border:0;border-radius:0;padding:7px 0;font-size:13px;color:#aeb0b3;}
+.station-music-page .station-music-browse-modes [aria-pressed='true'] {color:#f1c27c;border-bottom:2px solid #f1c27c;background:none;}
+.station-music-page [data-filter-home] {grid-column:2;grid-row:1;}
+.station-music-page [data-filter-panel] {display:flex;flex-wrap:wrap;gap:0 15px;align-items:start;}
+.station-music-page .station-music-filters {flex-basis:100%;grid-template-columns:1fr 1.6fr;gap:12px;margin:0;}
+.station-music-page .station-music-filters label {font-size:10px;gap:3px;}
+.station-music-page .station-music-filters select {min-height:44px;padding:10px;}
+.station-music-page [data-filter-panel] > details {font-size:11px;margin:2px 0;}
+.station-music-page [data-filter-panel] > details > summary {min-height:30px;padding:5px 0;}
+.station-music-page [data-filter-panel] > details[open] {flex-basis:100%;padding:8px;background:#20262b;}
+.station-music-page .station-music-browser > p,.station-music-page [data-collection-share] {grid-column:1/-1;margin:0 0 8px;font-size:13px;color:#b7b9ba;}
+.station-music-page .station-music-list-heading {margin:10px 0 8px;}
+.station-music-page .station-music-list-heading > h2 {font-size:23px;}
+.station-music-page .station-music-queue-tools button {background:transparent;border-color:#394249;color:#e2c28f;font-size:12px;}
+.station-music-page .station-music-player[data-library] .station-music-track {min-height:64px;padding:6px 8px 6px 0;border-left:0;grid-template-columns:minmax(0,1fr) 60px 44px 44px;gap:14px;}
+.station-music-page .station-music-track[data-selected='true'] {background:#20272b;border-radius:4px;border-bottom:1px solid #393f42;}
+.station-music-page .station-music-select img {width:50px;height:50px;border-radius:4px;}
+.station-music-page .station-music-select > svg {width:30px;height:30px;margin:10px;}
+.station-music-page .station-music-select {gap:18px;}
+.station-music-page .station-music-player[data-library] .station-music-track-copy {display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:14px;width:100%;}
+.station-music-page .station-music-player[data-library] .station-music-track-copy strong {font:500 14px/1.5 -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;}
+.station-music-page .station-music-player[data-library] .station-music-track-copy > span {font-size:12px;}
+.station-music-page .station-music-row-play {width:36px;height:36px;min-height:36px!important;min-width:36px!important;border-color:#be9c66;}
+.station-music-page .station-music-row-play svg {width:17px;height:17px;}
+.station-music-page .station-music-row-play:hover {background:#413626;}
+.station-music-page .station-music-detail-home {display:none;}
+.station-music-page .station-music-player dialog {background:#181d21;color:#f2f0eb;border-color:#3b4145;}
+.station-music-page .station-music-player .station-music-detail-dialog {width:min(760px,calc(100% - 40px));max-height:calc(100dvh - 40px);padding:0;border:1px solid #41474b;border-radius:18px;}
+.station-music-page .station-music-detail-sheet {background:#181d21;}
+.station-music-page .station-music-sheet-heading {background:#181d21;color:#f2f0eb;}
+.station-music-page .station-music-detail {padding:16px 24px 28px;}
+.station-music-page .station-music-art {max-width:360px;margin:auto;}
+.station-music-page .station-music-player[data-library] .station-music-detail .station-music-access-actions [data-detail-play] {color:#171a1c;}
+.station-music-page .station-music-player[data-library] .station-music-detail .station-music-access-actions [data-detail-favorite] {background:#2d3338;}
+.station-music-page .station-music-status {background:#2d3338;color:#c6c7c4;}
+.station-music-page .station-music-player[data-library] .station-music-dock {background:#191e22f5;border:1px solid #454d54;border-radius:12px 12px 0 0;padding:14px 30px;box-shadow:0 -8px 30px #0002;}
+.station-music-page .station-music-dock-inner {max-width:1380px;grid-template-columns:minmax(210px,1fr) 146px minmax(180px,1fr) 140px;gap:20px;}
+.station-music-page .station-music-now img {width:58px;height:58px;}
+.station-music-page .station-music-player[data-library] .station-music-now strong {font:600 14px/1.45 sans-serif;}
+.station-music-page .station-music-player[data-library] .station-music-now div > span {font-size:11px;}
+.station-music-page .station-music-main-play-circle {width:48px;height:48px;background:transparent;border:1px solid #e0e0dd;color:#f1eee9;}
+.station-music-page .station-music-main-play:hover .station-music-main-play-circle {background:#3a342c;}
+.station-music-page .station-music-main-play > span:last-child:not(.station-music-main-play-circle) {display:none;}
+.station-music-page .station-music-transport {grid-template-columns:44px 48px 44px;gap:5px;}
+.station-music-page .station-music-step {margin-top:2px;color:#ddd;}
+.station-music-page .station-music-player[data-library] input[type='range'] {accent-color:#e5c48d;}
+.station-music-page .station-music-progress {font-size:11px;gap:10px;}
+.station-music-page .station-music-volume {padding-left:10px;}
+.station-music-page .music-notices {max-width:1440px;padding:10px 30px;font-size:12px;color:#939a9e;}
+.station-music-page .music-notices details {border-color:#30383d;padding-block:0;}
+.station-music-page .site-footer {max-width:1380px;margin:auto;background:transparent;border-top:1px solid #333b40;padding:20px 30px;color:#9ca2a6;}
+.station-music-page .footer-grid {grid-template-columns:1fr 2fr;gap:30px;}
+.station-music-page .footer-brand {font-size:18px;}
+.station-music-page .site-footer :is(p,a) {font-size:11px;color:#aab0b4;}
+.station-music-page .footer-links {gap:9px 20px;}
+.station-music-page .site-footer .fine-print {margin-top:10px;}
+.station-music-page :is(button,a):focus-visible {outline:2px solid #f5c987;outline-offset:4px;}
+@media(min-width:769px) and (max-width:1190px) {
+ .station-music-page .site-header .nav-wrap {gap:18px;padding-inline:25px;}
+ .station-music-page .nav-links {gap:16px;}
+ .station-music-page .nav-links a {font-size:11px;}
+ .station-music-page .brand-mark {font-size:20px;}
+ .station-music-page .language-switcher {display:none;}
+}
+@media(max-width:48rem) {
+ .station-music-page .site-header .nav-wrap {min-height:64px;padding:8px 18px;max-width:none;}
+ .station-music-page .station-music-menu-toggle {color:#f1c27c;border-color:#4c4840;}
+ .station-music-page .station-music-menu-dialog {background:#181d21;color:#eee;}
+ .station-music-page .site-header .station-music-menu-dialog .nav-links a {font-size:13px;}
+ .station-music-page .station-music-player[data-library] {padding:0 18px 20px;}
+ .station-music-page .station-music-player[data-library] .station-music-layout {max-width:none;}
+ .station-music-page .station-music-player[data-library] .station-music-hero {display:flex;min-height:440px;margin:0 -18px 18px;padding:24px 22px;align-items:end;}
+ .station-music-page .music-night-scene {object-position:67% center;}
+ .station-music-page .station-music-hero::after {background:linear-gradient(0deg,#101417 0%,#101417df 25%,#10141745 64%,transparent);}
+ .station-music-page .music-night-hero-copy {width:100%;}
+ .station-music-page .station-music-player[data-library] h1 {font-size:42px;letter-spacing:.08em;}
+ .station-music-page .station-music-player[data-library] .station-music-intro {font-size:23px;letter-spacing:.03em;margin:4px 0 8px;}
+ .station-music-page .music-night-story {font-size:12px;margin:8px 0 14px;}
+ .station-music-page .music-night-hero-actions {gap:10px;}
+ .station-music-page .music-night-hero-actions :is(button,a) {padding:10px 23px;font-size:13px;}
+ .station-music-page .music-night-caption {font-size:10px;}
+ .station-music-page .station-music-featured {display:flex;flex-direction:column;gap:0;}
+ .station-music-page .station-music-featured-heading {padding:12px 12px 8px;}
+ .station-music-page .station-music-featured-heading h2 {font-size:21px;}
+ .station-music-page .station-music-featured-primary {grid-template-columns:38% minmax(0,1fr);padding:0 12px 14px;gap:10px 12px;}
+ .station-music-page .station-music-featured-cover {min-height:0;grid-row:1;}
+ .station-music-page .station-music-featured-copy h3 {font-size:18px;}
+ .station-music-page .station-music-featured-copy p {font-size:11px;}
+ .station-music-page .station-music-featured-actions {grid-column:1/-1;justify-content:flex-end;}
+ .station-music-page [data-featured-secondary-block] {padding-top:23px;}
+ .station-music-page .station-music-featured-groups h3 {font-size:20px;}
+ .station-music-page .station-music-featured-groups ul {gap:10px;}
+ .station-music-page .station-music-featured-item strong {font-size:12px;}
+ .station-music-page .station-music-featured-item span {font-size:10px;}
+ .station-music-page .station-music-featured-groups [data-featured-collections] {grid-template-columns:repeat(2,minmax(0,1fr));}
+ .station-music-page .station-music-browser {display:block;}
+ .station-music-page .station-music-player[data-library] .station-music-search-row {padding:8px;gap:5px;}
+ .station-music-page .station-music-filter-toggle {background:none;border:0;color:#f1c27c;}
+ .station-music-page .station-music-browse-modes {gap:0;justify-content:space-between;margin:12px 0;}
+ .station-music-page .station-music-browse-modes button {font-size:12px;}
+ .station-music-page .station-music-player[data-library] .station-music-track {grid-template-columns:minmax(0,1fr) 40px 40px;gap:4px;}
+ .station-music-page .station-music-player[data-library] .station-music-track-copy {display:grid;grid-template-columns:1fr;gap:2px;}
+ .station-music-page .station-music-player[data-library] .station-music-track-copy strong {font-size:13px;}
+ .station-music-page .station-music-player[data-library] .station-music-track-copy > span {font-size:10px;}
+ .station-music-page .station-music-select {gap:10px;}
+ .station-music-page .station-music-select img {width:44px;height:44px;}
+ .station-music-page .station-music-player[data-library] .station-music-dock {padding:8px 16px calc(10px + env(safe-area-inset-bottom,0px));border-radius:14px 14px 0 0;}
+ .station-music-page .station-music-player[data-library] .station-music-dock-inner {grid-template-columns:minmax(0,1fr) 48px 44px;gap:5px 8px;}
+ .station-music-page .station-music-now img {width:44px;height:44px;}
+ .station-music-page .station-music-now {gap:10px;}
+ .station-music-page .station-music-player[data-library] .station-music-now strong {font-size:13px;}
+ .station-music-page .station-music-player[data-library] .station-music-now div > span {font-size:10px;}
+ .station-music-page .station-music-player[data-library] .station-music-detail-dialog {width:100%;max-height:none;height:100dvh;inset:0;border:0;border-radius:0;background:transparent;}
+ .station-music-page .station-music-detail {padding:12px 18px 24px;}
+ .station-music-page .station-music-detail-sheet {bottom:var(--music-dock-height,0px);}
+ .station-music-page .station-music-player[data-library] .station-music-now-dialog {background:#141a1f;color:#eee;--music-accent:#f1c27c;}
+ .station-music-page .station-music-player[data-library] .station-music-now-dialog .station-music-dock {background:transparent;border:0;border-radius:0;padding:12px 22px;}
+ .station-music-page .station-music-player[data-library] .station-music-now-dialog .station-music-dock-inner {grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;}
+ .station-music-page .station-music-now-dialog [data-mini-creator],.station-music-page .station-music-now-dialog .station-music-step,.station-music-page .station-music-now-dialog .station-music-dock-queue {color:#c6c9c9;}
+ .station-music-page .station-music-now-dialog [data-mini-access] {background:#393226;color:#f1c27c;}
+ .station-music-page .station-music-player[data-library] .station-music-now-dialog .station-music-main-play-circle {background:#f1c27c;color:#171a1d;}
+ .station-music-page .music-notices {padding-inline:18px;}
+ .station-music-page .footer-grid {grid-template-columns:1fr;gap:16px;}
+ .station-music-page .site-footer {padding-inline:18px;}
+}
+@media(prefers-reduced-motion:reduce) {.station-music-page * {scroll-behavior:auto;}}
+.station-music-page .footer-links {display:flex;flex-wrap:wrap;align-content:start;}
+.station-music-page .music-notices details {margin:0;padding:0;}
+@media(max-width:48rem) {
+ .station-music-page .station-music-featured-item [data-featured-track-play] {bottom:60px;}
+ .station-music-page .station-music-row-play {width:44px;height:44px;min-width:44px!important;min-height:44px!important;}
+}
+.music-night-tag-select,.music-night-row-tags {display:none;}
+.station-music-page .music-night-tag-select {display:grid;}
+.station-music-page [data-tag-filters] {display:none;}
+.station-music-page .station-music-browser {grid-template-columns:1fr 1.8fr;}
+.station-music-page .station-music-filters {grid-template-columns:.85fr 1.35fr .8fr .8fr;}
+.station-music-page .station-music-player[data-library] .station-music-track {grid-template-columns:minmax(0,1fr) 220px 50px 44px 44px;}
+.station-music-page .music-night-row-tags {display:flex;gap:6px;flex-wrap:wrap;}
+.station-music-page .music-night-row-tags span {font-size:10px;line-height:1.5;color:#c3c5c6;padding:3px 9px;border:1px solid #394147;border-radius:30px;background:#242a2e;}
+.station-music-page .station-music-track-copy > [data-row-description] {display:grid;gap:3px;}
+.station-music-page [data-row-access] {color:#d9b987;font-size:10px;}
+@media(max-width:1000px) {.station-music-page .station-music-player[data-library] .station-music-track {grid-template-columns:minmax(0,1fr) 44px 44px;}.station-music-page .music-night-row-tags {display:none;}}
+@media(max-width:48rem) {
+ .station-music-page .station-music-filters {grid-template-columns:1fr 1fr;}
+ .station-music-page .station-music-player[data-library] .station-music-track-copy {grid-template-columns:1fr;}
+ .station-music-page .station-music-player[data-library] .station-music-filters {grid-template-columns:1fr 1fr;}
+}
+.station-music-page .station-music-featured-cover {width:100%;min-width:0;}
+@media(max-width:48rem) {.station-music-page .station-music-featured-cover {align-self:start;}}
+@media(max-width:48rem) {
+ .station-music-page .station-music-now-dialog .station-music-turntable {width:min(75vw,300px);margin:0 auto 12px;}
+ .station-music-page .station-music-player[data-library] .station-music-now-dialog .station-music-now strong {font-size:22px;}
+ .station-music-page .station-music-player[data-library] .station-music-now-dialog [data-mini-creator] {color:#bbc0c2;}
+ .station-music-page .station-music-player[data-library] .station-music-now-dialog .station-music-step,
+ .station-music-page .station-music-player[data-library] .station-music-now-dialog .station-music-dock-queue {color:#e2e4e4;}
+ .station-music-page .station-music-now-dialog .station-music-now-lyrics {border-color:#3a4247;color:#c4c7c7;}
+ .station-music-page .station-music-now-dialog .station-music-lyrics-content [aria-current='true'] {color:#f1c27c;}
+ .station-music-page .station-music-now-dialog .station-music-now-favorite[aria-pressed='true'] {color:#f1c27c;}
+ .station-music-page .station-music-now-dialog [data-progress]::-webkit-slider-runnable-track {background:linear-gradient(to right,#f1c27c var(--music-progress,0%),#474f55 var(--music-progress,0%));}
+ .station-music-page .station-music-now-dialog [data-progress]::-webkit-slider-thumb {background:#f1c27c;}
+ .station-music-page .station-music-now-header p,.station-music-page .station-music-player[data-library] .station-music-now-dialog .station-music-progress {color:#b9bec0;}
+}
+@media(min-width:769px) {
+ .station-music-page .site-header .nav-wrap {min-height:60px;}
+ .station-music-page .site-header .nav-links {margin-left:0;flex:1;justify-content:flex-start;gap:22px;}
+ .station-music-page .site-header .nav-links a {font-size:13px;}
+ .station-music-page .site-header .nav-links a[href*='x.com'] {margin-left:auto;}
+ .station-music-page .station-music-hero {padding-block:16px;margin-bottom:6px;}
+}
+.station-music-page .station-music-featured[data-has-primary='false'] [data-featured-secondary-block] {grid-column:1/-1;}
+.station-music-page .station-music-featured[data-has-primary='false'] [data-featured-secondary] {grid-template-columns:repeat(6,minmax(0,1fr));}
+@media(max-width:48rem) {.station-music-page .station-music-featured[data-has-primary='false'] [data-featured-secondary] {grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(min-width:769px) and (max-width:1024px) {
+ .station-music-page .site-header .nav-wrap {flex-wrap:wrap;gap:4px 16px;}
+ .station-music-page .site-header .nav-links {flex-basis:100%;justify-content:space-between;gap:12px;}
+}
+.station-music-page .site-header .nav-wrap {flex-direction:row;}
+@media(max-width:48rem) {.station-music-page .site-header .nav-wrap {justify-content:space-between;gap:12px;}}
+@media(min-width:769px) {
+ .station-music-page .language-switcher {display:flex;margin-left:0;}
+ .station-music-page .language-select {width:66px;min-width:66px;max-width:66px;padding:6px;font-size:11px;}
+ .station-music-page .site-header .nav-links {gap:16px;}
+ .station-music-page .site-header .nav-wrap {gap:18px;}
+ .station-music-page .site-header .brand-mark {font-size:20px;}
+}
+.station-music-page .site-footer .footer-links {display:flex;flex-wrap:wrap;flex-direction:row;align-content:start;gap:9px 20px;}
+.station-music-page .site-footer .footer-grid {display:grid;grid-template-columns:1fr 2fr;gap:30px;}
+.station-music-page main .music-notices {max-width:1440px;margin:auto;padding:8px 30px 14px;display:flex;flex-wrap:wrap;gap:12px 28px;}
+.station-music-page main .music-notices details {border:0;padding:0;margin:0;}
+.station-music-page main .music-notices details[open] {flex-basis:100%;}
+.station-music-page main .music-notices summary {min-height:44px;font-size:12px;}
+.station-music-page .station-music-browser {margin-bottom:8px;}
+@media(max-width:48rem) {.station-music-page .site-footer .footer-grid {grid-template-columns:1fr;gap:16px;}.station-music-page main .music-notices {padding-inline:18px;}}
+.station-music-page .station-music-list-heading {justify-content:flex-start;gap:14px;}
+.station-music-page .station-music-list-heading [data-library-count] {margin:0;font-size:11px;color:#989fa4;}
+.station-music-page .station-music-list-heading .station-music-queue-tools {margin-left:auto;}

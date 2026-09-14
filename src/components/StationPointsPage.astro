@@ -2,7 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CreemTrustBadge from './CreemTrustBadge.astro';
 import VipMark from './VipMark.astro';
-import { vipMembershipCopy } from '../data/vip-membership.js';
+import { musicEntryEnabled } from '../data/music-entry.js';
+import { getVipMembershipCopy } from '../data/vip-membership.js';
 import { stationPointsProduct } from '../data/products/station-points';
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 }
 
 const { lang = 'zh-Hant' } = Astro.props;
-const vip = vipMembershipCopy[lang];
+const vip = getVipMembershipCopy(lang, musicEntryEnabled);
 const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
 const copy = {
   'zh-Hant': {
@@ -18,7 +19,7 @@ const copy = {
     description: 'Station Cat 全站通用積分的公開價格、目前用途、未來規劃、退款與帳戶規則。公開價格與實際結帳設定保持一致。',
     kicker: 'STATION POINTS',
     heading: '一份餘額，通用於整個 Station Cat。',
-    intro: 'Station 積分是 Station Cat 的全站通用數位權益單位，可兌換 VIP 會員及已開放的內容。音樂與指定軟體下載規劃作為 VIP 服務提供，目前尚未開放。',
+    intro: musicEntryEnabled ? 'Station 積分是 Station Cat 的全站通用數位權益單位，可兌換 VIP 會員及已開放的內容。VIP 服務涵蓋指定小說章節與 VIP 音樂完整收聽；指定軟體下載仍在規劃中。' : 'Station 積分是 Station Cat 的全站通用數位權益單位，可兌換 VIP 會員及已開放的內容。音樂與指定軟體下載規劃作為 VIP 服務提供，目前尚未開放。',
     billing: '一次性購買 · 無自動續費',
     cta: '登入會員中心購買',
     support: '付款或積分協助',
@@ -28,12 +29,13 @@ const copy = {
     availableStatus: '可使用',
     availableUses: [
       { title: vip.name, body: vip.readingDescription },
+      ...(musicEntryEnabled ? [{ title: vip.music, body: vip.musicDescription }] : []),
       { title: '付費小說章節', body: '兌換指定章節的閱讀權限。' }
     ],
     plannedHeading: vip.plannedHeading,
     plannedStatus: '規劃中',
     plannedUses: [
-      { title: vip.music, body: vip.musicDescription },
+      ...(!musicEntryEnabled ? [{ title: vip.music, body: vip.musicDescription }] : []),
       { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: '每次兌換都由你確認',
@@ -59,7 +61,7 @@ const copy = {
     description: 'Station Cat 全站通用积分的公开价格、目前用途、未来规划、退款与账户规则。公开价格与实际结账设置保持一致。',
     kicker: 'STATION POINTS',
     heading: '一份余额，通用于整个 Station Cat。',
-    intro: 'Station 积分是 Station Cat 的全站通用数字权益单位，可兑换 VIP 会员及已开放的内容。音乐与指定软件下载规划作为 VIP 服务提供，目前尚未开放。',
+    intro: musicEntryEnabled ? 'Station 积分是 Station Cat 的全站通用数字权益单位，可兑换 VIP 会员及已开放的内容。VIP 服务涵盖指定小说章节与 VIP 音乐完整收听；指定软件下载仍在规划中。' : 'Station 积分是 Station Cat 的全站通用数字权益单位，可兑换 VIP 会员及已开放的内容。音乐与指定软件下载规划作为 VIP 服务提供，目前尚未开放。',
     billing: '一次性购买 · 无自动续费',
     cta: '登录会员中心购买',
     support: '付款或积分协助',
@@ -69,12 +71,13 @@ const copy = {
     availableStatus: '可使用',
     availableUses: [
       { title: vip.name, body: vip.readingDescription },
+      ...(musicEntryEnabled ? [{ title: vip.music, body: vip.musicDescription }] : []),
       { title: '付费小说章节', body: '兑换指定章节的阅读权限。' }
     ],
     plannedHeading: vip.plannedHeading,
     plannedStatus: '规划中',
     plannedUses: [
-      { title: vip.music, body: vip.musicDescription },
+      ...(!musicEntryEnabled ? [{ title: vip.music, body: vip.musicDescription }] : []),
       { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: '每次兑换都由你确认',
@@ -100,7 +103,7 @@ const copy = {
     description: 'Public pricing, current uses, planned capabilities, refunds, and account rules for the site-wide Station Points balance.',
     kicker: 'STATION POINTS',
     heading: 'One balance across Station Cat.',
-    intro: 'Station Points are Station Cat’s site-wide digital access units for VIP membership and available content. Music and selected software downloads are planned as VIP services and are not available yet.',
+    intro: musicEntryEnabled ? 'Station Points are Station Cat’s site-wide digital access units for VIP membership and available content. VIP services cover eligible fiction chapters and full playback of VIP music. Selected software downloads are still planned.' : 'Station Points are Station Cat’s site-wide digital access units for VIP membership and available content. Music and selected software downloads are planned as VIP services and are not available yet.',
     billing: 'One-time purchase · No automatic renewal',
     cta: 'Sign in to purchase',
     support: 'Payment or points support',
@@ -110,12 +113,13 @@ const copy = {
     availableStatus: 'LIVE',
     availableUses: [
       { title: vip.name, body: vip.readingDescription },
+      ...(musicEntryEnabled ? [{ title: vip.music, body: vip.musicDescription }] : []),
       { title: 'Paid fiction chapters', body: 'Redeem access to a specific chapter.' }
     ],
     plannedHeading: vip.plannedHeading,
     plannedStatus: 'PLANNED',
     plannedUses: [
-      { title: vip.music, body: vip.musicDescription },
+      ...(!musicEntryEnabled ? [{ title: vip.music, body: vip.musicDescription }] : []),
       { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: 'You confirm every redemption',
@@ -141,7 +145,7 @@ const copy = {
     description: 'Station Cat 共通の Station Points に関する公開価格、現在の用途、今後の予定、返金、アカウント規則。',
     kicker: 'STATION POINTS',
     heading: 'Station Cat 全体で使う、ひとつの残高。',
-    intro: 'Station Points は Station Cat 共通のデジタル利用単位で、VIP 会員権や公開済みのコンテンツと交換できます。音楽と対象ソフトウェアのダウンロードは VIP サービスとして予定しており、現在は未公開です。',
+    intro: musicEntryEnabled ? 'Station Points は Station Cat 共通のデジタル利用単位で、VIP 会員権や公開済みのコンテンツと交換できます。VIP サービスには対象の小説の章と VIP 楽曲のフル再生が含まれます。対象ソフトウェアのダウンロードは引き続き予定段階です。' : 'Station Points は Station Cat 共通のデジタル利用単位で、VIP 会員権や公開済みのコンテンツと交換できます。音楽と対象ソフトウェアのダウンロードは VIP サービスとして予定しており、現在は未公開です。',
     billing: '一回払い · 自動更新なし',
     cta: 'ログインして購入',
     support: '支払い・ポイントのサポート',
@@ -151,12 +155,13 @@ const copy = {
     availableStatus: '利用可能',
     availableUses: [
       { title: vip.name, body: vip.readingDescription },
+      ...(musicEntryEnabled ? [{ title: vip.music, body: vip.musicDescription }] : []),
       { title: '有料小説の章', body: '指定した章の閲覧権と交換できます。' }
     ],
     plannedHeading: vip.plannedHeading,
     plannedStatus: '予定',
     plannedUses: [
-      { title: vip.music, body: vip.musicDescription },
+      ...(!musicEntryEnabled ? [{ title: vip.music, body: vip.musicDescription }] : []),
       { title: vip.software, body: vip.softwareDescription }
     ],
     redemptionHeading: '交換内容は毎回確認できます',

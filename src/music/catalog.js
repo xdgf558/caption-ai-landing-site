@@ -1,3 +1,4 @@
+import { checkAssetIdentity } from './resources.js';
 import { MUSIC_LOCALES, effectivePolicy, isoTime, musicError, policyFromRevision, positiveInteger } from './policy.js';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -96,6 +97,7 @@ function publicTrack(record, locale, now) {
     accessMode: policy.accessMode, effectiveAccess: policy.effectiveAccess, policyVersion: policy.policyVersion,
     previewAvailable: preview !== null, previewDurationSec: preview ? preview.duration_ms / 1000 : null,
     previewSourceStartSec: preview ? preview.source_start_ms / 1000 : null,
+    ...(policy.accessMode==='limited_free'?{freeUntil:policy.freeUntil}:{}),
     earlyAccessUntil: policy.earlyAccessUntil, postEarlyAccessMode: policy.postEarlyAccessMode,
     publishedAt, nextPolicyChangeAt: policy.nextPolicyChangeAt };
 }
@@ -150,14 +152,19 @@ function projectCollection(record, locale, publicTracks) {
     if (publicTracks.has(item.track_id)) visible.push(item);
   }
   visible.sort((a, b) => a.position - b.position);
-  // An album is an entire ordered release. Never silently turn a partial or
-  // policy-mismatched album into a successfully published subset.
-  if (type === 'album' && (visible.length !== items.length || !visible.length ||
+  // Published album metadata is independent of its members' release status.
+  // Draft/unavailable members never expose IDs, metadata or media in this view.
+  if (type === 'album' && (!items.length ||
     (listeningMode !== 'mixed' && visible.some(item => publicTracks.get(item.track_id).effectiveAccess !== listeningMode)))) return null;
-  if (coverTrackId !== null && (!uuid(coverTrackId) || !seen.has(coverTrackId) || !publicTracks.get(coverTrackId)?.coverUrl)) return null;
-  const cover = type === 'album' ? (coverTrackId ? publicTracks.get(coverTrackId) : visible.map(item => publicTracks.get(item.track_id)).find(t => t.coverUrl)) : null;
+  let coverUrl=null;
+  if(type==='album' && collection.cover_asset_id != null) {
+    const a=record.coverAsset;
+    if(!a || a.id!==collection.cover_asset_id || a.owner_collection_id!==collection.id || a.kind!=='cover' || a.state!=='validated') return null;
+    try { checkAssetIdentity(a); } catch { return null; }
+    coverUrl=`/api/music/collections/${collection.slug}/cover?v=${collection.version}`;
+  }
   return { id: collection.id, slug: collection.slug, title, description, version: collection.version, type,
-    ...(type === 'album' ? { listeningMode, coverTrackId:cover?.id || null, coverUrl:cover?.coverUrl || null } : {}),
+    ...(type === 'album' ? { listeningMode, coverTrackId:null, coverUrl } : {}),
     trackIds: visible.map(item => item.track_id) };
 }
 
@@ -209,7 +216,7 @@ export async function buildPublicCatalog({ records, collections = [], featured =
   for (const row of collections) {
     try {
       const collection = projectCollection(row, locale, ids);
-      if (collection?.trackIds.length) publicCollections.push(collection);
+      if (collection && (collection.type === 'album' || collection.trackIds.length)) publicCollections.push(collection);
     } catch (error) {
       if (!(error instanceof SyntaxError) && !error.code?.startsWith('MUSIC_')) throw error;
     }
