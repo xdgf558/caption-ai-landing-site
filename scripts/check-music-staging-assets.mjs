@@ -45,8 +45,10 @@ export async function checkMusicStagingAssets(root = defaultRoot) {
       assert.ok(pageRoutes.has(file), `unexpected staging page ${file}`);
     }
     const requestPath = pageRoutes.get(file) || file;
-    assert.equal(isMusicStagingRequest(new Request(`https://music-staging.wwwstationcat.org${requestPath}`)), true,
-      `deployed asset is blocked by the staging gate: ${file}`);
+    for (const method of ['GET', 'HEAD']) {
+      assert.equal(isMusicStagingRequest(new Request(`https://music-staging.wwwstationcat.org${requestPath}`, { method })), true,
+        `deployed asset is blocked by the staging gate: ${method} ${file}`);
+    }
     if (!/\.(?:css|html|js)$/i.test(file)) continue;
     const source = await readFile(path.join(root, file.slice(1)), 'utf8');
     for (const pattern of references) {

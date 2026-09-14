@@ -140,6 +140,10 @@ test('only music admin, public read routes and exact static dependencies are all
     ['/_astro/featured.astro_astro_type_script_index_0_lang.hash.js', 'GET'],
     ['/_astro/MusicPlayer.astro_astro_type_script_index_0_lang.hash.js', 'GET'],
     ['/_astro/musicWavWorker-hash.js', 'GET'],
+    ['/_astro/musicAlbumBatch.D_0hL1LF.js', 'GET'],
+    ['/_astro/musicWav.9BdbpA8K.js', 'GET'],
+    ['/_astro/policy.BI0F0d4k.js', 'HEAD'],
+    ['/images/music-night-hero.webp', 'GET'],
     ['/_astro/index.hash.css', 'GET']
   ]) assert.equal(isMusicStagingRequest(request(path, method)), true, `${method} ${path}`);
 });
@@ -159,6 +163,10 @@ test('main site, other admin surfaces, traversal variants and unsupported method
     ['/api/creem/webhook', 'POST'],
     ['/sitemap.xml', 'GET'],
     ['/_astro/articles.astro_hash.js', 'GET'],
+    ['/_astro/musicAlbumBatchExtra.hash.js', 'GET'],
+    ['/_astro/policy.hash.js.map', 'GET'],
+    ['/_astro/arbitrary.hash.js', 'GET'],
+    ['/images/unrelated-hero.webp', 'GET'],
     ['/_astro/index.astro_other_page.hash.js', 'GET'],
     ['/_astro/music.astro_astro_type_script_index_0_lang.hash.css', 'GET'],
     ['/admin/%2e%2e/api/music/status', 'GET'],
