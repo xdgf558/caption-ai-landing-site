@@ -70,7 +70,9 @@ test('public album browsing keeps one paused source until play and retains cards
   await page.locator('[data-play-all]').click();await expect.poll(()=>page.locator('audio').evaluate(a=>!a.paused)).toBe(true);
   const source=await page.locator('audio').getAttribute('src');await page.getByRole('button',{name:'专辑',exact:true}).click();
   const card=page.locator('[data-album-list] button');await card.evaluate(n=>n.dataset.testIdentity='retained');
-  await page.locator('[data-detail-favorite]').click();await expect(card).toHaveAttribute('data-test-identity','retained');
+  await page.locator('[data-featured-view]').click();await expect(page.locator('[data-detail-dialog]')).toBeVisible();
+  await page.locator('[data-detail-favorite]').click();await page.locator('[data-panel-close="detail"]').click();
+  await expect(card).toHaveAttribute('data-test-identity','retained');
   expect(await page.locator('audio').getAttribute('src')).toBe(source);expect(audioRequests).toBe(1);
 });
 

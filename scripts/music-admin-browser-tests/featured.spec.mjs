@@ -107,6 +107,9 @@ test('public featured cards use the one player and viewing another card keeps th
   const source=await page.locator('audio').getAttribute('src'); expect(audioRequests).toBe(1);
   await page.locator('[data-featured-track-view]').click();
   expect(await page.locator('audio').getAttribute('src')).toBe(source); expect(audioRequests).toBe(1);
+  await expect(page.locator('[data-detail-dialog]')).toBeVisible();
+  await page.locator('[data-panel-close="detail"]').click();
+  await expect(page.locator('[data-detail-dialog]')).not.toBeVisible();
   await page.locator('[data-featured-collection-open]').click();
   await expect(page.locator('[data-list-title]')).toHaveText('公开精选专辑');
   expect(await page.locator('audio').getAttribute('src')).toBe(source); expect(audioRequests).toBe(1);
