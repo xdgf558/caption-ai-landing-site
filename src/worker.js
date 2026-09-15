@@ -22878,7 +22878,7 @@ export default {
     if (isMusicShareCardPath(url.pathname)) return handleMusicShareCard(request, env);
     if (isMusicAnalyticsPath(url.pathname)) return handleMusicAnalytics(request, env);
     if (isMusicMediaPath(url.pathname)) return handleMusicMedia(request, env);
-    if (isMusicPublicPath(url.pathname)) return handleMusicPublic(request, env);
+    if (isMusicPublicPath(url.pathname)) return handleMusicPublic(request, env, { ctx });
 
     if (legacyWorksRedirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
       const redirectUrl = new URL(legacyWorksRedirectPath, url.origin);

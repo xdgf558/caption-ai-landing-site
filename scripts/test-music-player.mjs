@@ -118,7 +118,7 @@ test('volume and mute follow native properties; snapshots cannot mutate internal
 });
 test('public catalog adapter canonicalizes media identity and fails closed on malformed policy', () => {
   const parsed = readPlayerCatalog({ schemaVersion: 2, tracks: [track('a', { coverUrl: 'https://evil.example/cover' })] });
-  assert.equal(parsed[0].coverUrl, `/api/music/tracks/${track('a').id}/cover?v=1`);
+  assert.equal(parsed[0].coverUrl, `/api/music/tracks/${track('a').id}/cover?v=1&size=display`);
   for (const patch of [{ id: '../evil' }, { durationSec: Infinity }, { effectiveAccess: 'unknown' }, { previewDurationSec: 999 }]) {
     assert.throws(() => readPlayerCatalog({ schemaVersion: 2, tracks: [track('a', patch)] }));
   }

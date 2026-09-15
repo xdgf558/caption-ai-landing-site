@@ -3,7 +3,7 @@ import { checkMusicEntryAssets } from './check-music-entry-assets.mjs';
 import test from 'node:test';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
-import { build } from 'esbuild';
+import { musicWorkerBundle } from './helpers/music-worker-bundle.mjs';
 import { Miniflare } from 'miniflare';
 import { musicProductionCandidate, productionRoot } from './build-music-production-candidate.mjs';
 
@@ -21,10 +21,9 @@ test('complete built site and production-date Worker keep native music asset rou
     assert.ok((await stat(path.join(config.assets.directory,relative))).size>0,relative);
   }
   await checkMusicEntryAssets(config.assets.directory, false);
-  const bundle = await build({entryPoints:[config.main],bundle:true,format:'esm',platform:'browser',
-    conditions:['workerd','worker'],write:false,loader:{'.wasm':'binary'}});
+  const bundle = await musicWorkerBundle({entryPoints:[config.main]});
   let outbound=0;
-  const mf = new Miniflare({modules:true,script:bundle.outputFiles[0].text,compatibilityDate:config.compatibility_date,
+  const mf = new Miniflare({...bundle,compatibilityDate:config.compatibility_date,
     ...(config.compatibility_flags ? {compatibilityFlags:config.compatibility_flags} : {}),
     host:'127.0.0.1',port:0,bindings:config.vars,
     assets:{directory:config.assets.directory,binding:config.assets.binding,routerConfig:{has_user_worker:true,

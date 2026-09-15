@@ -33,7 +33,7 @@ const t = musicText(lang);
       {library && <section class="station-music-featured" data-featured-home aria-labelledby="music-featured-title" hidden>
         <header class="station-music-featured-heading"><div><h2 id="music-featured-title">{t('这期先听')}</h2><p data-featured-label>{t('站长推荐')}</p></div></header>
         <article class="station-music-featured-primary" data-featured-primary hidden>
-          <div class="station-music-featured-cover"><img data-featured-primary-cover alt="" width="320" height="320" hidden /><div data-featured-primary-fallback><Music2 size={54} /><span>{t('暂无封面')}</span></div></div>
+          <div class="station-music-featured-cover"><img data-featured-primary-cover decoding="async" fetchpriority="high" alt="" width="320" height="320" hidden /><div data-featured-primary-fallback><Music2 size={54} /><span>{t('暂无封面')}</span></div></div>
           <div class="station-music-featured-copy"><span class="station-music-featured-kicker" data-featured-kicker>{t('本期主推 · 免费完整收听')}</span><h3 data-featured-primary-title></h3><p data-featured-primary-summary></p><p data-featured-primary-meta></p></div>
           <div class="station-music-featured-actions">
             <button data-featured-view type="button" aria-label={t('查看歌曲')}><span>{t('歌曲详情')}</span><ChevronRight size={16} aria-hidden="true" /></button>

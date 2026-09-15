@@ -37,7 +37,7 @@ export function readPlayerCatalog(body) {
       audioVersion: track.audioVersion, policyVersion: track.policyVersion, freeUntil, effectiveAccess: track.effectiveAccess,
       previewAvailable: track.previewAvailable, previewDurationSec: track.previewDurationSec,
       previewSourceStartSec: track.previewSourceStartSec,
-      coverUrl: track.coverUrl ? `/api/music/tracks/${track.id}/cover?v=${track.audioVersion}` : null };
+      coverUrl: track.coverUrl ? `/api/music/tracks/${track.id}/cover?v=${track.audioVersion}&size=display` : null };
   });
 }
 export function playerVariant(track, capabilities) {
@@ -69,7 +69,7 @@ export function readPlayerCollections(body, tracks) {
         (item.coverTrackId != null && (!item.trackIds.includes(item.coverTrackId) || !ids.get(item.coverTrackId)?.coverUrl))))) throw new Error('INVALID_COLLECTIONS');
     seen.add(item.id); slugs.add(item.slug);
     return { id: item.id, slug: item.slug, title: item.title, description: item.description, type, listeningMode, version: item.version,
-      coverUrl:type === 'album' && item.coverUrl ? `/api/music/collections/${item.slug}/cover?v=${item.version}` : null,
+      coverUrl:type === 'album' && item.coverUrl ? `/api/music/collections/${item.slug}/cover?v=${item.version}&size=display` : null,
       trackIds: item.trackIds.filter(id => ids.has(id)) };
   }).filter(item => item.type === 'album' || item.trackIds.length);
 }

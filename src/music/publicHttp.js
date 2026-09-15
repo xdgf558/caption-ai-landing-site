@@ -1,3 +1,4 @@
+import { musicDisplayCover } from './coverDisplay.js';
 import { readMusicAssetObject } from './adminAssets.js';
 import { musicAccess, musicCapabilities } from './access.js';
 import { buildPublicCatalog, projectPublicTrack, projectPublicTrackDetail } from './catalog.js';
@@ -65,8 +66,13 @@ function localeInput(url) {
   return MUSIC_LOCALES.includes(locale) ? locale : null;
 }
 
-function versionInput(url) {
-  const raw = exactParam(url, 'v');
+function versionInput(url, displayCover = false) {
+  const params = new URL(url);
+  if (displayCover && params.searchParams.has('size')) {
+    if (params.searchParams.getAll('size').length !== 1 || params.searchParams.get('size') !== 'display') return null;
+    params.searchParams.delete('size');
+  }
+  const raw = exactParam(params, 'v');
   if (!/^[1-9][0-9]*$/.test(raw || '')) return null;
   const value = Number(raw);
   return positiveInteger(value) ? value : null;
@@ -128,7 +134,7 @@ function publicationStorageReady(record) {
   } catch { return false; }
 }
 
-async function assetResponse(request, runtime, record, kind, trackId, revisionNo) {
+async function assetResponse(request, runtime, record, kind, trackId, revisionNo, coverOptions) {
   const status = publishedStatus(record);
   if (status) return errorResponse(request, status.status, status.code, { kind });
   if (!publicationStorageReady(record)) return errorResponse(request, 404, 'NOT_FOUND', { kind });
@@ -139,6 +145,11 @@ async function assetResponse(request, runtime, record, kind, trackId, revisionNo
   try { asset = publicAsset(record, kind, trackId); }
   catch { return errorResponse(request, 503, 'MEDIA_UNAVAILABLE', { kind }); }
   if (!asset) return errorResponse(request, 404, 'NOT_FOUND', { kind });
+  if (kind === 'cover' && new URL(request.url).searchParams.get('size') === 'display') {
+    try {
+      return await musicDisplayCover(request, runtime.bucket, asset, coverOptions);
+    } catch { return errorResponse(request, 503, 'MEDIA_UNAVAILABLE', { kind }); }
+  }
   let object;
   try {
     object = await runtime.bucket.get(asset.object_key, { onlyIf: { etagMatches: asset.etag } });
@@ -164,7 +175,7 @@ async function assetResponse(request, runtime, record, kind, trackId, revisionNo
   return new Response(object.body, { status: 200, headers });
 }
 
-export async function handleMusicPublic(request, env, { clock = Date.now, timeoutMs = 1500 } = {}) {
+export async function handleMusicPublic(request, env, { clock = Date.now, timeoutMs = 1500, coverCache, ctx } = {}) {
   const url = new URL(request.url), currentRoute = route(url.pathname);
   if (!currentRoute) return errorResponse(request, 404, 'NOT_FOUND', currentRoute);
   if (!['GET', 'HEAD'].includes(request.method)) {
@@ -172,7 +183,7 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
   }
 
   const locale = ['catalog', 'capabilities', 'track', 'collection'].includes(currentRoute.kind) ? localeInput(url) : null;
-  const revisionNo = ['cover', 'lyrics', 'access', 'album-cover'].includes(currentRoute.kind) ? versionInput(url) : null;
+  const revisionNo = ['cover', 'lyrics', 'access', 'album-cover'].includes(currentRoute.kind) ? versionInput(url, ['cover', 'album-cover'].includes(currentRoute.kind)) : null;
   const trackId = currentRoute.trackId === undefined ? null : normalizedTrackId(currentRoute.trackId);
   if ((['catalog', 'capabilities', 'track', 'collection'].includes(currentRoute.kind) && !locale) ||
     (['cover', 'lyrics', 'access', 'album-cover'].includes(currentRoute.kind) && !revisionNo) ||
@@ -212,6 +223,11 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
         if (collection.version!==revisionNo) return errorResponse(request,409,'VERSION_CONFLICT',currentRoute);
         if (!collection.coverUrl) return errorResponse(request,404,'NOT_FOUND',currentRoute);
         const a=snapshot.collections.find(r=>r.collection.id===collection.id)?.coverAsset;
+        if (url.searchParams.get('size') === 'display') {
+          try {
+            return await musicDisplayCover(request, runtime.bucket, a, { cache: coverCache, ctx });
+          } catch { return errorResponse(request, 503, 'MEDIA_UNAVAILABLE', currentRoute); }
+        }
         const media=await readMusicAssetObject(runtime.bucket,a,request);
         media.headers.set('Cache-Control','no-store'); media.headers.delete('Vary');
         media.headers.set('Content-Disposition',`inline; filename="album-cover.${a.format}"`);
@@ -234,7 +250,7 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
         vipDeliveryEnabled: runtime.flags.vipDelivery, clock: () => now, timeoutMs });
     }
     if (currentRoute.kind === 'cover' || currentRoute.kind === 'lyrics') {
-      return assetResponse(request, runtime, record, currentRoute.kind, trackId, revisionNo);
+      return assetResponse(request, runtime, record, currentRoute.kind, trackId, revisionNo, { cache: coverCache, ctx });
     }
     const status = publishedStatus(record);
     if (status) return errorResponse(request, status.status, status.code, currentRoute);

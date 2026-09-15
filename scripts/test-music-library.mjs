@@ -122,7 +122,7 @@ test('album category separates playlists and opens ordered songs without changin
   const album = { ...group, id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', slug:'album', version:3, type:'album', listeningMode:'mixed', coverTrackId:tracks[0].id, coverUrl:'https://evil.test/cover' };
   const groups = readPlayerCollections({ collections: [group, album] }, tracks);
   assert.deepEqual(browseMusic(tracks, groups, {mode:'albums',collection:'album'}).map(t=>t.id), group.trackIds);
-  assert.equal(groups[1].coverUrl,'/api/music/collections/album/cover?v=3');
+  assert.equal(groups[1].coverUrl,'/api/music/collections/album/cover?v=3&size=display');
   assert.throws(()=>readPlayerCollections({collections:[{...album,listeningMode:'free'}]},tracks));
   assert.throws(()=>readPlayerCollections({collections:[album]},tracks.slice(0,2)));
   assert.deepEqual(browseMusic(tracks,groups,{mode:'albums'}),[]);
@@ -142,17 +142,17 @@ test('all UI dictionary entries have four translations and preserve placeholders
 
 test('native asset router cannot serve encoded music HTML before the closed gate', async () => {
   const { Miniflare } = await import('miniflare');
-  const { build } = await import('esbuild');
+  const { musicWorkerBundle } = await import('./helpers/music-worker-bundle.mjs');
   const { mkdtemp, mkdir, writeFile, rm } = await import('node:fs/promises');
   const { tmpdir } = await import('node:os');
   const { join } = await import('node:path');
   const directory = await mkdtemp(join(tmpdir(), 'music-html-assets-'));
   for (const path of ['music', 'en/music']) { await mkdir(join(directory, path), { recursive: true }); await writeFile(join(directory, path, 'index.html'), 'music shell'); }
   await writeFile(join(directory, 'plain.txt'), 'ordinary asset');
-  const compiled = await build({ stdin: { contents: `import {isMusicPagePath} from './src/music/pagePaths.js'; import {handleMusicPage} from './src/music/pageHttp.js'; export default {fetch(r,e){return isMusicPagePath(new URL(r.url).pathname)?handleMusicPage(r,e):e.ASSETS.fetch(r)}}`, resolveDir: process.cwd() }, bundle: true, format: 'esm', write: false });
+  const compiled = await musicWorkerBundle({ stdin: { contents: `import {isMusicPagePath} from './src/music/pagePaths.js'; import {handleMusicPage} from './src/music/pageHttp.js'; export default {fetch(r,e){return isMusicPagePath(new URL(r.url).pathname)?handleMusicPage(r,e):e.ASSETS.fetch(r)}}`, resolveDir: process.cwd() } });
   const config = await readFile(new URL('../wrangler.toml', import.meta.url), 'utf8');
   const patterns = [...config.match(/run_worker_first = \[([\s\S]*?)\]/)[1].matchAll(/"([^"]+)"/g)].map(match => match[1]);
-  const mf = new Miniflare({ modules: true, script: compiled.outputFiles[0].text, compatibilityDate: '2026-08-01', assets: { directory, binding: 'ASSETS', routerConfig: { has_user_worker: true, static_routing: { user_worker: patterns } } } });
+  const mf = new Miniflare({ ...compiled, compatibilityDate: '2026-08-01', assets: { directory, binding: 'ASSETS', routerConfig: { has_user_worker: true, static_routing: { user_worker: patterns } } } });
   try {
     for (const path of ['/music/', '/music', '/music/index.html', '/%6dusic/', '/m%75sic/', '/music%2f', '/music%2findex.html', '/en/%6dusic/', '/en%2fmusic/', '/%2fmusic/']) {
       const response = await mf.dispatchFetch(`http://localhost${path}`, { redirect: 'manual' });
