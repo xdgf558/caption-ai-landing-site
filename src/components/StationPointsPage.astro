@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CreemTrustBadge from './CreemTrustBadge.astro';
+import VipMark from './VipMark.astro';
 import '../styles/home-night.css';
 import '../styles/points-night.css';
 import { musicEntryEnabled } from '../data/music-entry.js';
@@ -257,8 +258,8 @@ const clientConfig = {
       <div class="station-points-capability-columns">
         <section class="station-points-capability-group" aria-labelledby="station-points-available-title">
           <div class="station-points-capability-heading"><img src={icon('book-open')} alt="" width="28" height="28"/><h3 id="station-points-available-title">{copy.availableHeading}</h3></div>
-          <div class="station-points-capability-list">{copy.availableUses.map(item => <article>
-            <img src={icon(item.title === vip.name ? 'crown' : item.title === vip.music ? 'music-notes' : 'file-text')} alt="" width="30" height="30"/>
+          <div class="station-points-capability-list">{copy.availableUses.map(item => <article class:list={{'points-vip-benefit': item.title === vip.name}}>
+            {item.title === vip.name ? <VipMark /> : <img src={icon(item.title === vip.music ? 'music-notes' : 'file-text')} alt="" width="30" height="30"/>}
             <strong>{item.title}</strong><p>{item.body}</p><span class="points-state" data-state="active">{copy.availableStatus}</span>
           </article>)}</div>
         </section>
@@ -271,11 +272,11 @@ const clientConfig = {
           <p class="points-planned-note">{vip.notice}</p>
         </section>
       </div>
-    </section>
     <section class="points-redemption" aria-labelledby="points-steps-title">
       <div class="points-section-heading"><h2 id="points-steps-title">{design.steps}</h2></div>
       <ol class="points-steps">{design.stepTitles.map((title,i) => <li><span class="points-step-number">{i+1}</span><img src={icon(['shopping-cart','file-text','check-circle'][i])} alt="" width="30" height="30"/><div><h3>{title}</h3><p>{design.stepBodies[i]}</p></div></li>)}</ol>
       <div class="station-points-redemption-note"><strong>{copy.redemptionHeading}</strong><p>{copy.redemptionBody}</p></div>
+    </section>
     </section>
     <section class="points-rules" aria-labelledby="station-points-rules-title">
       <div class="points-section-heading"><h2 id="station-points-rules-title">{copy.rulesHeading}</h2></div>

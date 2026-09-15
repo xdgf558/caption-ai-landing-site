@@ -23,3 +23,7 @@ body.station-points-night{--gold:#f5c877;--ink:#f6f4ef;--muted:#aab6c0;--line:#2
 .station-points-night .points-hero:before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#06141d99,#06141d80 42%,transparent 65%);pointer-events:none}
 @media(max-width:600px){.station-points-night .points-hero:before{display:none}.station-points-night .points-title-lead{display:inline}}
 body.station-points-night{min-width:0}
+
+.station-points-night .points-redemption{margin-top:22px}
+.station-points-night .station-points-capability-list .points-vip-benefit{grid-template-columns:64px 1fr auto}
+.station-points-night .points-vip-benefit>.vip-mark{grid-column:1;grid-row:1/3}
