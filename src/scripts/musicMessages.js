@@ -211,20 +211,26 @@ VIP · 暂无试听|VIP · 暫無試聽|VIP · no preview|VIP・試聴なし
 歌曲已更新或暂不可用，请重新加载曲目。|歌曲已更新或暫不可用，請重新載入曲目。|This song has changed or is unavailable. Reload songs.|曲が更新されたか、利用できません。曲を再読み込みしてください。
 浏览曲库|瀏覽曲庫|Browse music|曲を探す
 最新发布|最新發布|Latest releases|新着
+热门播放|熱門播放|Most played|人気順
 免费精选|免費精選|Free picks|無料のおすすめ
+按近 365 天有效播放量排序。达到 30 秒或歌曲一半计一次，仅汇总已同意统计的匿名收听。|依近 365 天有效播放量排序。播放達 30 秒或歌曲一半計一次，只彙總已同意統計的匿名收聽。|Sorted by qualified plays from the last 365 days. A play counts after 30 seconds or half the song, using only consented anonymous listening.|過去365日間の有効再生数順です。30秒または曲の半分で1回とし、同意済みの匿名再生だけを集計します。
+播放统计暂不可用，当前按最新发布时间显示。|播放統計暫時無法使用，目前依最新發佈時間顯示。|Play statistics are temporarily unavailable. Showing the latest releases instead.|再生統計を利用できないため、新着順で表示しています。
 按最新发布选取免费作品。|按最新發布選取免費作品。|Free tracks, newest first.|新しい無料の曲からご紹介。
 按人工推荐顺序显示其中可免费完整收听的作品。|依人工推薦順序顯示其中可免費完整收聽的作品。|Free full tracks in the editor's curated order.|運営のおすすめ順で、無料でフル再生できる曲を表示します。
 尚无人工推荐，按最新发布选取免费作品。|尚無人工推薦，依最新發布選取免費作品。|No curated picks yet. Showing the latest free tracks.|運営のおすすめはまだありません。新着の無料曲を表示します。
 站长推荐|站長推薦|Editor’s picks|運営のおすすめ
 最新免费|最新免費|Latest free|最新無料
+热门作品|熱門作品|Most played|人気の曲
 这期先听|這期先聽|Start here|まずはこちら
 推荐只影响展示，播放时仍会核验资格。|推薦只影響展示，播放時仍會核驗資格。|Featuring affects display only. Access is still checked when you play.|おすすめ表示のみです。再生時に資格を確認します。
 本期主推 · 免费完整收听|本期主推 · 免費完整收聽|Featured · free full track|今期の一曲・フル再生無料
 推荐补位 · 免费完整收听|推薦補位 · 免費完整收聽|Curated fallback · free full track|おすすめ補充・フル再生無料
 最新发布 · 免费完整收听|最新發佈 · 免費完整收聽|Latest release · free full track|最新公開・フル再生無料
+热门收听 · 免费完整收听|熱門收聽 · 免費完整收聽|Most played · free full track|人気の曲・フル再生無料
 查看歌曲|查看歌曲|View song|曲を見る
 播放完整曲|播放完整曲|Play full track|フル再生
 更多推荐|更多推薦|More picks|ほかのおすすめ
+热门推荐|熱門推薦|Popular picks|人気のおすすめ
 精选歌单与专辑|精選歌單與專輯|Featured playlists & albums|おすすめのプレイリストとアルバム
 VIP 专享 · 可逐首试听或登录会员|VIP 專享 · 可逐首試聽或登入會員|VIP exclusive · preview songs or sign in|VIP限定・曲ごとに試聴、またはログイン
 查看：{title}|查看：{title}|View: {title}|見る：{title}
@@ -239,6 +245,8 @@ VIP 专享 · 可逐首试听或登录会员|VIP 專享 · 可逐首試聽或登
 全部歌曲|全部歌曲|All songs|すべての曲
 清除筛选|清除篩選|Clear filters|絞り込みを解除
 显示 {shown} / {total} 首|顯示 {shown} / {total} 首|Showing {shown} of {total} songs|{total}曲中{shown}曲を表示
+{count} 次有效播放|{count} 次有效播放|{count} qualified plays|有効再生 {count} 回
+近 365 天共 {count} 次有效播放|近 365 天共 {count} 次有效播放|{count} qualified plays in the last 365 days|過去365日間の有効再生 {count} 回
 再显示 50 首|再顯示 50 首|Show 50 more|さらに50曲表示
 没有匹配的歌曲，试试其他条件。|沒有符合的歌曲，試試其他條件。|No songs match. Try different filters.|該当する曲がありません。条件を変えてみてください。
 当前目录中未找到此歌曲或歌单。|目前目錄中未找到此歌曲或歌單。|This song or collection is not in the current catalog.|この曲またはコレクションは現在の曲一覧にありません。

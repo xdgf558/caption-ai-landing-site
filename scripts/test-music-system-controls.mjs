@@ -54,7 +54,7 @@ test('accepted user play registers independent actions and canonical public artw
   const f = setup(t); f.play();
   assert.equal(f.audio.plays.length, 1); assert.equal(f.handlers.size, 8);
   assert.equal(f.media.metadata.title, 'Song 1'); assert.equal(f.media.playbackState, 'playing');
-  assert.deepEqual(f.media.metadata.artwork, [{ src: `${origin}/api/music/tracks/${tracks[0].id}/cover?v=1` }]);
+  assert.deepEqual(f.media.metadata.artwork, [{ src: `${origin}/api/music/tracks/${tracks[0].id}/cover?v=1&size=display` }]);
   assert.equal(f.bus.sent.length, 1);
   assert.deepEqual(Object.keys(f.bus.sent[0]).sort(), ['instanceId', 'stamp', 'type', 'version']);
   assert.equal([...f.bus.ports][0].name, MUSIC_PLAYBACK_CHANNEL);

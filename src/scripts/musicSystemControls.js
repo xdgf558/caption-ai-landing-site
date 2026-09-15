@@ -87,7 +87,7 @@ export function createMusicSystemControls(player, queue, {
       try {
         metadata = new host.MediaMetadata({ title: `${track.title}${state.activeVariant === 'preview' ? ` · ${musicText(locale)('试听')}` : ''}`,
           artist: track.creatorName, album: 'Station Cat', artwork: track.coverUrl ? [{
-            src: new URL(`/api/music/tracks/${track.id}/cover?v=${state.activeAudioVersion}`, host.location.origin).href
+            src: new URL(`/api/music/tracks/${track.id}/cover?v=${state.activeAudioVersion}&size=display`, host.location.origin).href
           }] : [] });
         session.metadata = metadata; metadataOwned = true;
       } catch { metadata = null; metadataOwned = false; }

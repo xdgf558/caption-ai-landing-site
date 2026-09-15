@@ -1,3 +1,5 @@
+import { musicDisplayCover } from './coverDisplay.js';
+import { readPublicMusicPopularity } from './analytics.js';
 import { readMusicAssetObject } from './adminAssets.js';
 import { musicAccess, musicCapabilities } from './access.js';
 import { buildPublicCatalog, projectPublicTrack, projectPublicTrackDetail } from './catalog.js';
@@ -65,8 +67,13 @@ function localeInput(url) {
   return MUSIC_LOCALES.includes(locale) ? locale : null;
 }
 
-function versionInput(url) {
-  const raw = exactParam(url, 'v');
+function versionInput(url, displayCover = false) {
+  const params = new URL(url);
+  if (displayCover && params.searchParams.has('size')) {
+    if (params.searchParams.getAll('size').length !== 1 || params.searchParams.get('size') !== 'display') return null;
+    params.searchParams.delete('size');
+  }
+  const raw = exactParam(params, 'v');
   if (!/^[1-9][0-9]*$/.test(raw || '')) return null;
   const value = Number(raw);
   return positiveInteger(value) ? value : null;
@@ -101,6 +108,16 @@ async function publicJson(request, body, locale, etag = null) {
   return new Response(request.method === 'HEAD' ? null : encoded, { status: 200, headers });
 }
 
+function popularityProjection(tracks, popularity) {
+  const counts=new Map(popularity.counts.map(row=>[row.trackId,row.qualifiedPlayCount]));
+  return tracks.map(track=>({...track,qualifiedPlayCount:popularity.available ? counts.get(track.id) || 0 : null}));
+}
+
+function catalogWithPopularity(body,popularity) {
+  return {...body,popularity:{available:popularity.available,metric:popularity.metric,windowDays:popularity.windowDays},
+    tracks:popularityProjection(body.tracks,popularity)};
+}
+
 function publishedStatus(record) {
   if (!record.track) return { status: 404, code: 'NOT_FOUND' };
   if (['unpublished', 'archived'].includes(record.track.lifecycle)) return { status: 410, code: 'TRACK_UNAVAILABLE' };
@@ -128,7 +145,7 @@ function publicationStorageReady(record) {
   } catch { return false; }
 }
 
-async function assetResponse(request, runtime, record, kind, trackId, revisionNo) {
+async function assetResponse(request, runtime, record, kind, trackId, revisionNo, coverOptions) {
   const status = publishedStatus(record);
   if (status) return errorResponse(request, status.status, status.code, { kind });
   if (!publicationStorageReady(record)) return errorResponse(request, 404, 'NOT_FOUND', { kind });
@@ -139,6 +156,11 @@ async function assetResponse(request, runtime, record, kind, trackId, revisionNo
   try { asset = publicAsset(record, kind, trackId); }
   catch { return errorResponse(request, 503, 'MEDIA_UNAVAILABLE', { kind }); }
   if (!asset) return errorResponse(request, 404, 'NOT_FOUND', { kind });
+  if (kind === 'cover' && new URL(request.url).searchParams.get('size') === 'display') {
+    try {
+      return await musicDisplayCover(request, runtime.bucket, asset, coverOptions);
+    } catch { return errorResponse(request, 503, 'MEDIA_UNAVAILABLE', { kind }); }
+  }
   let object;
   try {
     object = await runtime.bucket.get(asset.object_key, { onlyIf: { etagMatches: asset.etag } });
@@ -164,7 +186,7 @@ async function assetResponse(request, runtime, record, kind, trackId, revisionNo
   return new Response(object.body, { status: 200, headers });
 }
 
-export async function handleMusicPublic(request, env, { clock = Date.now, timeoutMs = 1500 } = {}) {
+export async function handleMusicPublic(request, env, { clock = Date.now, timeoutMs = 1500, coverManifest } = {}) {
   const url = new URL(request.url), currentRoute = route(url.pathname);
   if (!currentRoute) return errorResponse(request, 404, 'NOT_FOUND', currentRoute);
   if (!['GET', 'HEAD'].includes(request.method)) {
@@ -172,7 +194,7 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
   }
 
   const locale = ['catalog', 'capabilities', 'track', 'collection'].includes(currentRoute.kind) ? localeInput(url) : null;
-  const revisionNo = ['cover', 'lyrics', 'access', 'album-cover'].includes(currentRoute.kind) ? versionInput(url) : null;
+  const revisionNo = ['cover', 'lyrics', 'access', 'album-cover'].includes(currentRoute.kind) ? versionInput(url, ['cover', 'album-cover'].includes(currentRoute.kind)) : null;
   const trackId = currentRoute.trackId === undefined ? null : normalizedTrackId(currentRoute.trackId);
   if ((['catalog', 'capabilities', 'track', 'collection'].includes(currentRoute.kind) && !locale) ||
     (['cover', 'lyrics', 'access', 'album-cover'].includes(currentRoute.kind) && !revisionNo) ||
@@ -201,25 +223,35 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
 
   try {
     if (['catalog','collection','album-cover'].includes(currentRoute.kind)) {
+      const popularityRead=currentRoute.kind==='album-cover' ? Promise.resolve(null) : readPublicMusicPopularity(env,{clock:()=>now});
       const snapshot = currentRoute.kind === 'catalog' ? await loadPublicMusicSnapshot(runtime.db, now)
         : await loadPublicMusicCollectionSnapshot(runtime.db, currentRoute.slug, now);
       const catalog = await buildPublicCatalog({ ...snapshot,
         records: snapshot.records.filter(publicationStorageReady), locale:locale || 'zh-Hant', now });
-      if (currentRoute.kind === 'catalog') return publicJson(request, catalog.body, locale, catalog.etag);
+      const popularity=await popularityRead;
+      const publicCatalog=popularity ? catalogWithPopularity(catalog.body,popularity) : catalog.body;
+      // Popularity changes independently from catalogVersion, so its projection
+      // must participate in the response ETag.
+      if (currentRoute.kind === 'catalog') return publicJson(request, publicCatalog, locale);
       const collection = catalog.body.collections.find(item => item.slug === currentRoute.slug);
       if (!collection) return errorResponse(request, 404, 'NOT_FOUND', currentRoute);
       if (currentRoute.kind==='album-cover') {
         if (collection.version!==revisionNo) return errorResponse(request,409,'VERSION_CONFLICT',currentRoute);
         if (!collection.coverUrl) return errorResponse(request,404,'NOT_FOUND',currentRoute);
         const a=snapshot.collections.find(r=>r.collection.id===collection.id)?.coverAsset;
+        if (url.searchParams.get('size') === 'display') {
+          try {
+            return await musicDisplayCover(request, runtime.bucket, a, { assets: env.ASSETS, manifest: coverManifest });
+          } catch { return errorResponse(request, 503, 'MEDIA_UNAVAILABLE', currentRoute); }
+        }
         const media=await readMusicAssetObject(runtime.bucket,a,request);
         media.headers.set('Cache-Control','no-store'); media.headers.delete('Vary');
         media.headers.set('Content-Disposition',`inline; filename="album-cover.${a.format}"`);
         return media;
       }
-      const tracks = new Map(catalog.body.tracks.map(track => [track.id, track]));
+      const tracks = new Map(publicCatalog.tracks.map(track => [track.id, track]));
       const body = { schemaVersion: 2, catalogVersion: catalog.body.catalogVersion, locale,
-        nextPolicyChangeAt: catalog.body.nextPolicyChangeAt, collection,
+        nextPolicyChangeAt: catalog.body.nextPolicyChangeAt, popularity:publicCatalog.popularity, collection,
         tracks: collection.trackIds.map(id => tracks.get(id)).filter(Boolean) };
       return publicJson(request, body, locale);
     }
@@ -234,14 +266,17 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
         vipDeliveryEnabled: runtime.flags.vipDelivery, clock: () => now, timeoutMs });
     }
     if (currentRoute.kind === 'cover' || currentRoute.kind === 'lyrics') {
-      return assetResponse(request, runtime, record, currentRoute.kind, trackId, revisionNo);
+      return assetResponse(request, runtime, record, currentRoute.kind, trackId, revisionNo, { assets: env.ASSETS, manifest: coverManifest });
     }
     const status = publishedStatus(record);
     if (status) return errorResponse(request, status.status, status.code, currentRoute);
     if (!publicationStorageReady(record)) return errorResponse(request, 404, 'NOT_FOUND', currentRoute);
-    const track = projectPublicTrackDetail(record, { locale, now });
+    let track = projectPublicTrackDetail(record, { locale, now });
     if (!track) return errorResponse(request, 404, 'NOT_FOUND', currentRoute);
-    return publicJson(request, { schemaVersion: 2, catalogVersion: record.catalogVersion, locale, track }, locale);
+    const popularity=await readPublicMusicPopularity(env,{clock:()=>now});
+    track=popularityProjection([track],popularity)[0];
+    return publicJson(request, { schemaVersion: 2, catalogVersion: record.catalogVersion, locale,
+      popularity:{available:popularity.available,metric:popularity.metric,windowDays:popularity.windowDays},track }, locale);
   } catch (error) {
     const code = error?.code === 'MUSIC_NOT_CONFIGURED' ? error.code : 'MUSIC_DATABASE_UNAVAILABLE';
     return errorResponse(request, 503, code, currentRoute);

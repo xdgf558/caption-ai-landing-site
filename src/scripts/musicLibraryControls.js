@@ -60,7 +60,7 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     $('[data-filter-panel]').hidden = albums;
     $('[data-play-all]').hidden = albums;
     $('[data-track-list]').hidden = albums;
-    $('[data-list-title]').textContent = selected?.title || t(albums ? '专辑' : state.mode === 'favorites' ? '我的收藏' : state.mode === 'recent' ? '最近播放' : '全部歌曲');
+    $('[data-list-title]').textContent = selected?.title || t(albums ? '专辑' : state.mode === 'popular' ? '热门播放' : state.mode === 'favorites' ? '我的收藏' : state.mode === 'recent' ? '最近播放' : '全部歌曲');
     $('[data-library-count]').hidden = albums;
     $('[data-show-more]').hidden = results.length <= count;
     $('[data-library-count]').textContent = t('显示 {shown} / {total} 首', { shown: Math.min(count, results.length), total: results.length });
@@ -72,9 +72,12 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     for (const input of root.querySelectorAll('[data-tag-group]')) input.checked = state[input.dataset.tagGroup].includes(input.value);
     const description = collections.find(item => item.slug === state.collection)?.description || '';
     $('[data-collection-description]').textContent = description; $('[data-collection-description]').hidden = !description;
-    $('[data-picks-help]').hidden = state.mode !== 'picks';
+    $('[data-picks-help]').hidden = !['picks','popular'].includes(state.mode);
     if (state.mode === 'picks') $('[data-picks-help]').textContent = t(featuredTrackIds.length
       ? '按人工推荐顺序显示其中可免费完整收听的作品。' : '尚无人工推荐，按最新发布选取免费作品。');
+    if (state.mode === 'popular') $('[data-picks-help]').textContent = t(catalogTracks.some(track=>Number.isSafeInteger(track.qualifiedPlayCount))
+      ? '按近 365 天有效播放量排序。达到 30 秒或歌曲一半计一次，仅汇总已同意统计的匿名收听。'
+      : '播放统计暂不可用，当前按最新发布时间显示。');
     $('[data-clear-filters]').hidden = !state.query && !state.genres.length && !state.moods.length && !state.access && !state.collection && state.mode === 'latest';
     const filterToggle = $('[data-filter-toggle]');
     if (filterToggle) filterToggle.dataset.active = String(Boolean(state.genres.length || state.moods.length || state.access || state.collection));
@@ -110,7 +113,7 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     state = { ...libraryLocation(host.location.search), query: typeof old.query === 'string' ? old.query.slice(0, 200) : '',
       genres: Array.isArray(old.genres) ? tags.genres.filter(tag => old.genres.includes(tag)) : [],
       moods: Array.isArray(old.moods) ? tags.moods.filter(tag => old.moods.includes(tag)) : [],
-      access: ['free', 'vip'].includes(old.access) ? old.access : '', mode: ['picks', 'albums', 'favorites', 'recent'].includes(old.mode) ? old.mode : 'latest' };
+      access: ['free', 'vip'].includes(old.access) ? old.access : '', mode: ['popular','picks', 'albums', 'favorites', 'recent'].includes(old.mode) ? old.mode : 'latest' };
     count = 50; render();
   });
   save(true);

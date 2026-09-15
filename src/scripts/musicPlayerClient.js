@@ -3,7 +3,7 @@ import { createMusicQueue } from './musicPlayerQueue.js';
 import { mountMusicQueueControls } from './musicQueueControls.js';
 import { createMusicAccessLifecycle } from './musicAccessLifecycle.js';
 import { createMusicSystemControls } from './musicSystemControls.js';
-import { playerVariant, formatMusicTime } from './musicPlayerCatalog.js';
+import { playerVariant, formatMusicTime, compareMusicPopularity, formatMusicPlayCount } from './musicPlayerCatalog.js';
 
 import { musicText } from './musicMessages.js';
 import { mountMusicPanels } from './musicPanels.js';
@@ -34,7 +34,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   let tracks = [], capabilities = null, disposed = false, scrub = null, selectedOnce = false, accessState = { checking: false };
   let rowAbort = new AbortController(), systemState = { notice: null, coordinationSupported: true };
   let nowQueueUnsubscribe = null;
-  let catalogView = null, collections = [], featuredView = { primaryTrackId:null, primarySource:'none', secondaryTrackIds:[], collectionIds:[] }, browseScheduled = false, attemptedTarget = '', returnSync = null, returnStatus = null;
+  let catalogView = null, collections = [], featuredView = { primaryTrackId:null, primarySource:'none', secondaryTrackIds:[], collectionIds:[] }, featuredPrimaryId = null, browseScheduled = false, attemptedTarget = '', returnSync = null, returnStatus = null;
   const panels = isLibrary ? mountMusicPanels(root) : null;
   const local = isLibrary ? createMusicLocalData() : null;
   let favoriteIds = new Set(local?.snapshot().favorites || []);
@@ -52,6 +52,14 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   const setText = (selector, text) => { const node = $(selector); if (node.textContent !== text) node.textContent = text; };
   const permission = track => track.effectiveAccess === 'free' ? track.freeUntil ? t('限时免费至 {time}，之后 VIP 专享', {time:new Date(track.freeUntil).toLocaleString(locale)}) : t('免费完整收听')
     : playerVariant(track, capabilities) === 'full' ? t('VIP 完整收听') : track.previewAvailable ? t('VIP · 可试听') : t('VIP · 暂无试听');
+  const playCountLabel = (track,compact=true) => Number.isSafeInteger(track?.qualifiedPlayCount)
+    ? t('{count} 次有效播放',{count:compact ? formatMusicPlayCount(track.qualifiedPlayCount,locale) : track.qualifiedPlayCount.toLocaleString(locale)}) : '';
+  const showPlayCount = (container,value,track) => {
+    const label=playCountLabel(track),exact=playCountLabel(track,false);
+    container.hidden=!label;
+    if(label){value.textContent=label;container.title=t('近 365 天共 {count} 次有效播放',{count:track.qualifiedPlayCount.toLocaleString(locale)});container.setAttribute('aria-label',exact);}
+    else{value.textContent='';container.removeAttribute('title');container.removeAttribute('aria-label');}
+  };
   const setImage = (node, url) => {
     if (!url) { node.hidden = true; node.removeAttribute('src'); return; }
     if (node.getAttribute('src') !== url) { node.hidden = false; node.src = url; }
@@ -139,6 +147,8 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
         $('[data-detail-favorite]').dataset.liked = String(favorite);
         setText('[data-detail-favorite-label]', t(favorite ? '已收藏' : '收藏'));
         setText('[data-track-summary]', viewed.summary);
+        showPlayCount($('[data-track-plays]'),$('[data-track-play-count]'),viewed);
+        $('[data-track-play-separator]').hidden=!Number.isSafeInteger(viewed.qualifiedPlayCount);
         $('[data-detail-play]').disabled = playerVariant(viewed, capabilities) === null;
         setText('[data-detail-play]', viewed.id === selected?.id && running(state.status) ? t('暂停') : playerVariant(viewed, capabilities) === 'preview' ? t('播放试听') : t('播放'));
       }
@@ -212,11 +222,18 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
   };
   function renderFeatured() {
     const rootNode = $('[data-featured-home]');
-    const primary = tracks.find(track => track.id === featuredView.primaryTrackId && track.effectiveAccess === 'free')
-      || tracks.find(track => track.effectiveAccess === 'free');
-    const primarySource = primary && primary.id !== featuredView.primaryTrackId ? 'latest' : featuredView.primarySource;
+    const featuredTracks=catalogView?.catalogTracks||tracks;
+    const popularityAvailable=featuredTracks.some(track=>Number.isSafeInteger(track.qualifiedPlayCount));
+    const ranked=popularityAvailable?[...featuredTracks].sort(compareMusicPopularity):featuredTracks;
+    const configured=featuredTracks.find(track => track.id === featuredView.primaryTrackId && track.effectiveAccess === 'free');
+    const usePopularFallback=popularityAvailable&&(!configured||featuredView.primarySource==='latest');
+    const primary=(usePopularFallback ? ranked.find(track=>track.effectiveAccess==='free') : configured)
+      || featuredTracks.find(track => track.effectiveAccess === 'free');
+    const primarySource=usePopularFallback&&primary ? 'popular' : primary && primary.id !== featuredView.primaryTrackId ? 'latest' : featuredView.primarySource;
+    featuredPrimaryId=primary?.id||null;
     const curated = featuredView.secondaryTrackIds.map(id => tracks.find(track => track.id === id)).filter(Boolean);
-    const secondary = curated.length ? curated : tracks.filter(track => track.id !== primary?.id).slice(0,3);
+    const secondary = popularityAvailable ? ranked.filter(track=>track.id!==primary?.id).slice(0,3)
+      : curated.length ? curated : featuredTracks.filter(track => track.id !== primary?.id).slice(0,3);
     const featuredGroups = featuredView.collectionIds.map(id => collections.find(item => item.id === id)).filter(Boolean);
     const groups = featuredGroups.length ? featuredGroups : collections.slice(0,6);
     const signature = JSON.stringify({ primary, secondary, groups, source:primarySource, membership:capabilities?.membershipStatus,
@@ -227,17 +244,18 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
     rootNode.dataset.hasPrimary = String(Boolean(primary));
     rootNode.querySelector('.station-music-featured-heading').hidden = !primary;
     $('[data-hero-play]').disabled = !tracks.some(track => playerVariant(track,capabilities) !== null);
-    setText('[data-featured-label]',t(primarySource === 'latest' ? '最新免费' : '站长推荐'));
+    setText('[data-featured-label]',t(primarySource === 'popular' ? '热门作品' : primarySource === 'latest' ? '最新免费' : '站长推荐'));
+    setText('[data-featured-secondary-heading]',t(popularityAvailable ? '热门推荐' : '更多推荐'));
     $('[data-featured-primary]').hidden = !primary;
     if (primary) {
       $('[data-featured-primary]').dataset.trackId = primary.id;
       setImage($('[data-featured-primary-cover]'),primary.coverUrl);
       $('[data-featured-primary-fallback]').hidden = Boolean(primary.coverUrl);
       setText('[data-featured-primary-title]',primary.title);
-      setText('[data-featured-kicker]',t(primarySource === 'latest' ? '最新发布 · 免费完整收听'
+      setText('[data-featured-kicker]',t(primarySource === 'popular' ? '热门收听 · 免费完整收听' : primarySource === 'latest' ? '最新发布 · 免费完整收听'
         : primarySource === 'secondary' ? '推荐补位 · 免费完整收听' : '本期主推 · 免费完整收听'));
       setText('[data-featured-primary-summary]',primary.summary);
-      setText('[data-featured-primary-meta]',`${primary.creatorName} · ${permission(primary)}`);
+      setText('[data-featured-primary-meta]',`${primary.creatorName} · ${permission(primary)}${playCountLabel(primary)?` · ${playCountLabel(primary)}`:''}`);
     }
     const secondaryList = $('[data-featured-secondary]'); secondaryList.replaceChildren();
     for (const track of secondary) {
@@ -246,7 +264,8 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       const cover = row.querySelector('[data-featured-card-cover]'), fallback = row.querySelector('[data-featured-card-fallback]');
       setImage(cover,track.coverUrl); fallback.toggleAttribute('hidden',Boolean(track.coverUrl));
       cover.addEventListener('error', () => { cover.hidden = true; fallback.removeAttribute('hidden'); }, { once:true });
-      row.querySelector('[data-featured-track-view] span').textContent = `${track.creatorName} · ${permission(track)}`;
+      row.querySelector('[data-featured-track-meta]').textContent = `${track.creatorName} · ${permission(track)}`;
+      showPlayCount(row.querySelector('[data-featured-track-plays]'),row.querySelector('[data-featured-track-play-count]'),track);
       const play = row.querySelector('[data-featured-track-play]'), variant = playerVariant(track,capabilities);
       play.disabled = variant === null; play.querySelector('span').textContent = t(variant === 'preview' ? '试听' : '播放');
       play.setAttribute('aria-label',t('{action}：{title}',{action:t(variant === 'preview' ? '试听' : '播放'),title:track.title}));
@@ -285,6 +304,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       row.querySelector('[data-row-play]').setAttribute('aria-label', t('{action}：{title}', { action: t('播放'), title: track.title }));
       row.querySelector('[data-row-play]').disabled = playerVariant(track, capabilities) === null;
       row.querySelector('[data-row-duration]').textContent = formatMusicTime(track.durationSec);
+      showPlayCount(row.querySelector('[data-row-plays]'),row.querySelector('[data-row-play-count]'),track);
       const tagList = row.querySelector('[data-row-tags]');
       if (tagList) for (const label of [...(track.genres || []),...(track.moods || [])].slice(0,3)) {
         const tag = document.createElement('span'); tag.textContent = label; tagList.append(tag);
@@ -386,7 +406,7 @@ export function mountMusicPlayer(root, { fetcher = globalThis.fetch.bind(globalT
       if (loaded) scheduleBrowse();
     } });
     listen($('[data-hero-play]'),'click',() => {
-      const track = tracks.find(item => item.id === featuredView.primaryTrackId && playerVariant(item,capabilities) !== null)
+      const track = tracks.find(item => item.id === featuredPrimaryId && playerVariant(item,capabilities) !== null)
         || tracks.find(item => playerVariant(item,capabilities) !== null);
       if (track) choose(track,true);
     });
