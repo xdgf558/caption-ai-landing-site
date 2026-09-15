@@ -54,6 +54,7 @@ import { applyMembershipRedemption, readMembershipReceipt, validMembershipReques
 import { listMembershipRefundReviews, getMembershipRefundReview, decideMembershipRefundReview } from './membershipRefundReview.js';
 import { handleMusicAdmin, isMusicAdminPath, musicAdminDenied } from './music/adminHttp.js';
 import { handleMusicMedia, isMusicMediaPath } from './music/mediaResponse.js';
+import { isMusicDisplayAssetPath } from './music/coverDisplay.js';
 import { handleMusicPublic, isMusicPublicPath } from './music/publicHttp.js';
 import { isMusicPagePath } from './music/pagePaths.js';
 import { handleMusicPage } from './music/pageHttp.js';
@@ -22849,6 +22850,8 @@ export const __readerTotpTestHooks = {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // Generated thumbnails are private assets; public access must pass live music checks.
+    if (isMusicDisplayAssetPath(url.pathname)) return new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } });
     if (url.protocol === 'http:' && !isLocalRequest(request, env)) {
       url.protocol = 'https:';
       return Response.redirect(url.toString(), 301);
@@ -22878,7 +22881,7 @@ export default {
     if (isMusicShareCardPath(url.pathname)) return handleMusicShareCard(request, env);
     if (isMusicAnalyticsPath(url.pathname)) return handleMusicAnalytics(request, env);
     if (isMusicMediaPath(url.pathname)) return handleMusicMedia(request, env);
-    if (isMusicPublicPath(url.pathname)) return handleMusicPublic(request, env, { ctx });
+    if (isMusicPublicPath(url.pathname)) return handleMusicPublic(request, env);
 
     if (legacyWorksRedirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
       const redirectUrl = new URL(legacyWorksRedirectPath, url.origin);

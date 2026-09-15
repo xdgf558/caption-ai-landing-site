@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 import sharp from 'sharp';
-import { renderMusicDisplayCover } from '../src/music/coverDisplay.js';
+import { isMusicDisplayAssetPath } from '../src/music/coverDisplay.js';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
@@ -291,7 +291,7 @@ test('capabilities and access are wired as private UI hints and never act as med
 test('production worker wiring keeps public content separate from the versioned audio handler', () => {
   const worker = readFileSync(new URL('../src/worker.js', import.meta.url), 'utf8');
   assert.match(worker, /if \(isMusicMediaPath\(url\.pathname\)\) return handleMusicMedia\(request, env\)/);
-  assert.match(worker, /if \(isMusicPublicPath\(url\.pathname\)\) return handleMusicPublic\(request, env, \{ ctx \}\)/);
+  assert.match(worker, /if \(isMusicPublicPath\(url\.pathname\)\) return handleMusicPublic\(request, env\)/);
   assert.doesNotMatch(worker, /api\/music[^\n]+(?:object_key|\?key=)/);
 });
 
@@ -300,12 +300,14 @@ async function displayFixture() {
   // An uncompressed opaque raster makes the bandwidth regression measurable.
   const bytes = await sharp({ create: { width: 1000, height: 800, channels: 3, background: '#527668' } }).png({ compressionLevel: 0 }).toBuffer();
   const track = f.seedTrack({ slug: 'display-cover', title: 'Display', coverBytes: bytes });
-  const entries = new Map(), counts = { hits: 0, writes: 0 };
-  const coverCache = {
-    async match(key) { counts.hits++; return entries.get(key.url)?.clone(); },
-    async put(key, response) { counts.writes++; entries.set(key.url, response); }
-  };
-  return { ...f, track, bytes, entries, counts, options: { clock: () => now, coverCache },
+  const displayBytes = await sharp(bytes).resize({ width: 768, height: 768, fit: 'inside' }).jpeg({ quality: 82 }).toBuffer();
+  const sha256 = createHash('sha256').update(displayBytes).digest('hex');
+  const variant = { sha256, bytes: displayBytes.length, sourceBytes: bytes.length, contentType: 'image/jpeg', path: `/api/music/__cover-files/${sha256}.jpg` };
+  const counts = { hits: 0 };
+  f.env.ASSETS = { async fetch(req) { counts.hits++; assert.equal(new URL(req.url).pathname, variant.path);
+    return new Response(req.method === 'HEAD' ? null : displayBytes, { headers: { 'Content-Type': variant.contentType, 'Content-Length': String(variant.bytes) } }); } };
+  return { ...f, track, bytes, displayBytes, counts, variant,
+    options: { clock: () => now, coverManifest: { [createHash('sha256').update(bytes).digest('hex')]: variant } },
     path: `/api/music/tracks/${track.id}/cover?v=1&size=display` };
 }
 
@@ -317,10 +319,10 @@ test('display cover is small, shares cached encoding, and revalidates browser by
   const bytes = Buffer.from(await first.arrayBuffer()), image = await sharp(bytes).metadata();
   assert.equal(image.width, 768); assert.equal(image.height, 614); assert.ok(bytes.length < f.bytes.length / 10);
   const second = await handleMusicPublic(request(f.path), f.env, f.options);
-  assert.deepEqual(Buffer.from(await second.arrayBuffer()), bytes); assert.equal(f.counts.writes, 1);
+  assert.deepEqual(Buffer.from(await second.arrayBuffer()), bytes); assert.equal(f.counts.hits, 2);
   const etag = first.headers.get('etag');
   const cached = await handleMusicPublic(request(f.path, { headers: { 'If-None-Match': `W/${etag}` } }), f.env, f.options);
-  assert.equal(cached.status, 304); assert.equal(await cached.text(), ''); assert.equal(f.counts.writes, 1);
+  assert.equal(cached.status, 304); assert.equal(await cached.text(), ''); assert.equal(f.counts.hits, 2);
   const head = await handleMusicPublic(request(f.path, { method: 'HEAD' }), f.env, f.options);
   assert.equal(head.status, 200); assert.equal(await head.text(), ''); assert.equal(Number(head.headers.get('content-length')), bytes.length);
   assert.equal(f.state.r2.length, 4); // Even cache hits check current storage identity.
@@ -355,16 +357,16 @@ test('display selector is bounded and applies only to cover routes', async () =>
   assert.equal(f.state.r2.length, 0); assert.equal(f.state.reads, 0);
 });
 
-test('cache outages do not prevent encoding; corruption and truncated bodies are never cached', async () => {
+test('missing display files and newly uploaded covers fall back to the original without runtime encoding', async () => {
   const f = await displayFixture();
-  const unavailable = { async match() { throw Error('cache unavailable'); }, async put() { throw Error('cache unavailable'); } };
-  const response = await handleMusicPublic(request(f.path), f.env, { ...f.options, coverCache: unavailable });
-  assert.equal(response.status, 200); await response.arrayBuffer();
-  f.state.objectPatch = object => { object.body.cancel(); return { ...object, body: new Response(new Uint8Array(f.bytes.length)).body }; };
-  await json(await handleMusicPublic(request(f.path), f.env, f.options), 503, 'MEDIA_UNAVAILABLE');
-  f.state.objectPatch = object => { object.body.cancel(); return { ...object, body: new Response(new Uint8Array(8)).body }; };
-  await json(await handleMusicPublic(request(f.path), f.env, f.options), 503, 'MEDIA_UNAVAILABLE');
-  assert.equal(f.counts.writes, 0);
+  for (const service of [{ async fetch() { return new Response(null, { status: 404 }); } }, { async fetch() { throw Error('assets offline'); } }]) {
+    f.env.ASSETS = service;
+    const response = await handleMusicPublic(request(f.path), f.env, f.options);
+    assert.equal(response.status, 200); assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), f.bytes);
+  }
+  const response = await handleMusicPublic(request(f.path), f.env, { ...f.options, coverManifest: {} });
+  assert.equal(response.status, 200); assert.deepEqual(Buffer.from(await response.arrayBuffer()), f.bytes);
 });
 
 test('album display cover stays tied to the live album version and independent cover', async () => {
@@ -387,12 +389,43 @@ test('album display cover stays tied to the live album version and independent c
   assert.equal((await handleMusicPublic(request(path.replace('v=1', 'v=2'), init), f.env, f.options)).status, 404);
 });
 
-test('display renderer preserves transparency and avoids decoding over-budget rasters', async () => {
-  const asset = { kind: 'cover', format: 'png', content_type: 'image/png' };
-  const transparent = await sharp({ create: { width: 900, height: 900, channels: 4, background: { r: 20, g: 40, b: 30, alpha: 0.5 } } }).png({ compressionLevel: 0 }).toBuffer();
-  const output = await renderMusicDisplayCover(transparent, asset);
-  assert.equal(output.contentType, 'image/png');
-  const decoded = await sharp(output.bytes).metadata(); assert.equal(decoded.hasAlpha, true); assert.equal(decoded.width, 768);
-  const huge = await sharp({ create: { width: 2049, height: 2049, channels: 3, background: '#fff' } }).png().toBuffer();
-  assert.equal(await renderMusicDisplayCover(huge, asset), null);
+test('display route cannot expose the generated files directly or import an image encoder', () => {
+  const source = readFileSync(new URL('../src/music/coverDisplay.js', import.meta.url)).toString(), worker = readFileSync(new URL('../src/worker.js', import.meta.url)).toString();
+  assert.doesNotMatch(source, /photon|resvg|sharp|renderMusic/);
+  assert.match(worker, /isMusicDisplayAssetPath\(url\.pathname\)/);
+  for (const path of ['/api/music/__cover-files/a.jpg', '/api/music/%5f%5fcover-files/a.jpg', '/api/music/%255f%255fcover-files/a.jpg', '/api/music%2f__cover-files%2fa.jpg']) assert.equal(isMusicDisplayAssetPath(path), true);
+  assert.equal(isMusicDisplayAssetPath('/api/music/tracks/a/cover'), false);
+  assert.equal(isMusicPublicPath('/api/music/__cover-files/' + 'a'.repeat(64) + '.jpg'), false);
+});
+
+
+test('native static assets serve a small cover while direct and escaped asset paths stay private', { timeout: 30000 }, async () => {
+  const { Miniflare } = await import('miniflare'), { build } = await import('esbuild');
+  const { mkdtemp, mkdir, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os'), { join } = await import('node:path');
+  const f = await displayFixture(), directory = await mkdtemp(join(tmpdir(), 'music-display-'));
+  const original = [...f.objects.values()].find(item => item.asset.kind === 'cover');
+  const asset = { ...original.asset, etag: createHash('md5').update(f.bytes).digest('hex') };
+  await mkdir(join(directory, 'api/music/__cover-files'), { recursive: true });
+  await writeFile(directory + f.variant.path, f.displayBytes);
+  const compiled = await build({ stdin: { resolveDir: process.cwd(), contents: `
+    import { musicDisplayCover, isMusicDisplayAssetPath } from './src/music/coverDisplay.js';
+    export default {fetch(request,env){
+      if(isMusicDisplayAssetPath(new URL(request.url).pathname)) return new Response(null,{status:404});
+      return musicDisplayCover(request,env.R2,${JSON.stringify(asset)},{assets:env.ASSETS,manifest:${JSON.stringify(f.options.coverManifest)}});
+    }}
+  ` }, bundle: true, format: 'esm', platform: 'browser', write: false });
+  const mf = new Miniflare({ modules: true, script: compiled.outputFiles[0].text, compatibilityDate: '2026-05-17',
+    r2Buckets: ['R2'], assets: { directory, binding: 'ASSETS', routerConfig: { has_user_worker: true, static_routing: { user_worker: ['/*'] } } } });
+  try {
+    const bucket = await mf.getR2Bucket('R2');
+    await bucket.put(asset.object_key, f.bytes, { httpMetadata: { contentType: asset.content_type } });
+    const response = await mf.dispatchFetch('https://music.test/cover'); assert.equal(response.status, 200);
+    const received = Buffer.from(await response.arrayBuffer()); assert.equal(received.length, f.displayBytes.length, JSON.stringify(Object.fromEntries(response.headers))); assert.deepEqual(received, f.displayBytes);
+    const cached = await mf.dispatchFetch('https://music.test/cover', { headers: { 'If-None-Match': response.headers.get('ETag') } });
+    assert.equal(cached.status, 304);
+    for(const path of [f.variant.path, f.variant.path.replace('__cover', '%5f%5fcover'), f.variant.path.replace('__cover', '%255f%255fcover')]) {
+      assert.equal((await mf.dispatchFetch('https://music.test' + path)).status, 404);
+    }
+  } finally { await mf.dispose(); await rm(directory, { recursive: true, force: true }); }
 });

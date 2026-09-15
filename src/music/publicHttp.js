@@ -175,7 +175,7 @@ async function assetResponse(request, runtime, record, kind, trackId, revisionNo
   return new Response(object.body, { status: 200, headers });
 }
 
-export async function handleMusicPublic(request, env, { clock = Date.now, timeoutMs = 1500, coverCache, ctx } = {}) {
+export async function handleMusicPublic(request, env, { clock = Date.now, timeoutMs = 1500, coverManifest } = {}) {
   const url = new URL(request.url), currentRoute = route(url.pathname);
   if (!currentRoute) return errorResponse(request, 404, 'NOT_FOUND', currentRoute);
   if (!['GET', 'HEAD'].includes(request.method)) {
@@ -225,7 +225,7 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
         const a=snapshot.collections.find(r=>r.collection.id===collection.id)?.coverAsset;
         if (url.searchParams.get('size') === 'display') {
           try {
-            return await musicDisplayCover(request, runtime.bucket, a, { cache: coverCache, ctx });
+            return await musicDisplayCover(request, runtime.bucket, a, { assets: env.ASSETS, manifest: coverManifest });
           } catch { return errorResponse(request, 503, 'MEDIA_UNAVAILABLE', currentRoute); }
         }
         const media=await readMusicAssetObject(runtime.bucket,a,request);
@@ -250,7 +250,7 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
         vipDeliveryEnabled: runtime.flags.vipDelivery, clock: () => now, timeoutMs });
     }
     if (currentRoute.kind === 'cover' || currentRoute.kind === 'lyrics') {
-      return assetResponse(request, runtime, record, currentRoute.kind, trackId, revisionNo, { cache: coverCache, ctx });
+      return assetResponse(request, runtime, record, currentRoute.kind, trackId, revisionNo, { assets: env.ASSETS, manifest: coverManifest });
     }
     const status = publishedStatus(record);
     if (status) return errorResponse(request, status.status, status.code, currentRoute);

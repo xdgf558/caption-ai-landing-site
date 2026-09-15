@@ -5,7 +5,7 @@ import { validMusicId } from './publicationValidation.js';
 export const MUSIC_SHARE_FONT = '/fonts/music/NotoSerifSC-Bold.otf';
 export const MUSIC_SHARE_FONT_BYTES = 12094336;
 export const MUSIC_SHARE_FONT_SHA256 = '24693d48bdb9152f0a06b02af625638a1097abd6de4010ebba027f6e82710527';
-export { MUSIC_SHARE_MAX_PNG } from './rasterPng.js';
+export const MUSIC_SHARE_MAX_PNG = 4194304;
 export const MUSIC_SHARE_FORMATS = Object.freeze({ card: [1200, 630], poster: [1080, 1800] });
 export const musicShareCopy = locale => ({
   'zh-Hans': { station: '音乐小站', free: '免费完整收听', preview: 'VIP · 可试听', vip: 'VIP · 暂无试听', scan: '扫码打开歌曲' },

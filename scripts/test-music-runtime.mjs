@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomUUID } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
-import { musicWorkerBundle } from './helpers/music-worker-bundle.mjs';
+import { build } from 'esbuild';
 import { Miniflare } from 'miniflare';
 import sharp from 'sharp';
 import { seedAnalyticsTrack } from './helpers/music-analytics-fixture.mjs';
@@ -33,8 +33,9 @@ function migrationStatements() {
 }
 
 before(async () => {
-  const bundle = await musicWorkerBundle({ entryPoints: [fileURLToPath(new URL('scripts/helpers/music-runtime-worker.js', root))] });
-  mf = new Miniflare({ ...bundle, compatibilityDate: '2026-07-30',
+  const bundle = await build({ entryPoints: [fileURLToPath(new URL('scripts/helpers/music-runtime-worker.js', root))],
+    bundle: true, format: 'esm', platform: 'browser', write: false });
+  mf = new Miniflare({ modules: true, script: bundle.outputFiles[0].text, compatibilityDate: '2026-07-30',
     host: '127.0.0.1', port: 0, d1Databases: { MUSIC_DB: 'music-test-only', WAITLIST_DB: 'reader-test-only' },
     r2Buckets: { MUSIC_BUCKET: 'music-test-only' }, bindings: { MUSIC_RATE_LIMIT_SECRET: 'runtime-fixture-secret-not-for-deployment' },
     outboundService: () => new Response('Network disabled in local music tests', { status: 403 }) });
@@ -736,7 +737,7 @@ test('independent album cover upload retains quota, recovers one writer, and ser
   const body={slug:'cover-'+randomUUID(),type:'album',listeningMode:'mixed',originalLocale:'en',title:{en:'Cover fixture'},description:{en:''}};
   const created=await adminCall('/collections','POST',body),id=created.body.collectionId;
   assert.equal(created.status,200);
-  const image=await sharp({create:{width:1000,height:800,channels:3,background:'#668877'}}).png({compressionLevel:0}).toBuffer();
+  const image=await sharp({create:{width:32,height:32,channels:3,background:'#668877'}}).png().toBuffer();
   const spec={collectionId:id,format:'png',byteSize:image.length,sha256:createHash('sha256').update(image).digest('hex')};
   assert.equal((await adminCall('/collection-uploads','POST',spec)).body.code,'MUSIC_UPLOADS_DISABLED');
   const usage=Number((await db.prepare('SELECT SUM(charged_bytes) AS n FROM music_storage_charges').first()).n);
@@ -761,16 +762,6 @@ test('independent album cover upload retains quota, recovers one writer, and ser
   const response=await publicCall(`/collections/${body.slug}/cover?v=3`);
   assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
   assert.deepEqual(Buffer.from(await response.arrayBuffer()),image);
-  const displayPath = `/collections/${body.slug}/cover?v=3&size=display`;
-  const display = await publicCall(displayPath); assert.equal(display.status, 200);
-  const displayBytes = Buffer.from(await display.arrayBuffer());
-  assert.equal((await sharp(displayBytes).metadata()).width, 768);
-  assert.equal(display.headers.get('content-type'), 'image/jpeg');
-  assert.ok(displayBytes.length < image.length / 10);
-  const hot = await publicCall(displayPath); assert.equal(hot.status, 200);
-  assert.deepEqual(Buffer.from(await hot.arrayBuffer()), displayBytes);
-  const revalidated = await publicCall(displayPath, { headers: { 'If-None-Match': display.headers.get('etag') } });
-  assert.equal(revalidated.status, 304); assert.equal(await revalidated.text(), '');
   assert.equal((await publicCall(`/collections/${body.slug}/cover?v=2`)).status,409);
   const head=await publicCall(`/collections/${body.slug}/cover?v=3`,{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'');
   assert.equal((await uploadJson('/collection-uploads','POST',spec)).body.code,'MUSIC_DRAFT_REQUIRED');

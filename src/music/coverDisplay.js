@@ -1,123 +1,63 @@
-import { Resvg, initResvg } from '@cf-wasm/resvg';
-import encodeJpeg from './vendor/jpeg-encoder.js';
-import { encodeMusicRgbaPng } from './rasterPng.js';
-import { inspectSmallAsset } from './assetFormats.js';
+import { musicDisplayCoverManifest } from './displayCoverManifest.js';
 import { checkAssetIdentity, checkStoredObject } from './resources.js';
-import { boundedBody, cancelBody } from './storage.js';
+import { cancelBody } from './storage.js';
 
-const VERSION = 'display-768-q82-v3';
-const MAX_BYTES = 5242880, MAX_PIXELS = 4194304;
-const clientHeaders = {
-  // Always revisit publication/storage checks before reusing browser bytes.
-  'Cache-Control': 'private, max-age=0, must-revalidate',
-  'Cross-Origin-Resource-Policy': 'same-origin',
-  'X-Content-Type-Options': 'nosniff'
-};
-const matches = (value, etag) => value?.split(',').some(part =>
-  ['*', etag, `W/${etag}`].includes(part.trim()));
+const headers = { 'Cache-Control': 'private, max-age=0, must-revalidate',
+  'Cross-Origin-Resource-Policy': 'same-origin', 'X-Content-Type-Options': 'nosniff' };
+const matches = (value, etag) => value?.split(',').some(part => ['*', etag, `W/${etag}`].includes(part.trim()));
+const validVariant = (variant, asset) => variant && variant.sourceBytes === asset.byte_size &&
+  ['image/jpeg', 'image/webp'].includes(variant.contentType) && /^[a-f0-9]{64}$/.test(variant.sha256) &&
+  variant.path === `/api/music/__cover-files/${variant.sha256}.${variant.contentType === 'image/jpeg' ? 'jpg' : 'webp'}` &&
+  Number.isSafeInteger(variant.bytes) && variant.bytes > 0 && variant.bytes < asset.byte_size;
 
-async function readBytes(body, expected) {
-  const input = boundedBody(body), reader = input.stream.getReader(), bytes = new Uint8Array(expected);
-  let timer, offset = 0;
-  const deadline = new Promise((_, reject) => {
-    timer = setTimeout(() => { input.close(); reject(new Error('COVER_READ_TIMEOUT')); }, 5000);
-  });
-  try {
-    for (let reads = 0; reads < 65536; reads++) {
-      const { done, value } = await Promise.race([reader.read(), deadline]);
-      if (done) {
-        if (offset !== expected) throw new Error('COVER_TRUNCATED');
-        return bytes;
-      }
-      if (offset + value.length > expected) throw new Error('COVER_TOO_LARGE');
-      bytes.set(value, offset); offset += value.length;
-    }
-    throw new Error('COVER_READ_BUDGET');
-  } finally { clearTimeout(timer); input.close(); }
-}
-
-export async function renderMusicDisplayCover(bytes, asset) {
-  const dimensions = inspectSmallAsset(asset, bytes);
-  if (dimensions.width * dimensions.height > MAX_PIXELS) return null;
-  // WebP is already compressed. Keep it intact rather than growing a second
-  // WASM heap alongside the renderer used by sharing posters in this isolate.
-  if (asset.content_type === 'image/webp') return { bytes, contentType: asset.content_type };
-  const ratio = Math.min(1, 768 / Math.max(dimensions.width, dimensions.height));
-  const width = Math.max(1, Math.round(dimensions.width * ratio));
-  const height = Math.max(1, Math.round(dimensions.height * ratio));
-  // Await initialization before constructing large strings. Once ready, decode,
-  // resize and release synchronously so concurrent covers cannot retain several
-  // SVG/base64 copies while waiting for the same renderer initialization.
-  await initResvg.ensure();
-  let binary = '';
-  for (let offset = 0; offset < bytes.length; offset += 16384) {
-    binary += String.fromCharCode(...bytes.subarray(offset, offset + 16384));
-  }
-  let renderer, raster, pixels;
-  try {
-    renderer = new Resvg(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><image width="${width}" height="${height}" preserveAspectRatio="none" href="data:${asset.content_type};base64,${btoa(binary)}"/></svg>`, {
-      imageRendering: 1, font: { loadSystemFonts: false }
-    });
-    raster = renderer.render(); pixels = raster.pixels;
-  } finally { raster?.free(); renderer?.free(); }
-  binary = '';
-  let transparent = false;
-  for (let i = 3; i < pixels.length; i += 4) if (pixels[i] !== 255) { transparent = true; break; }
-  // Encode after releasing the raster. Resvg's shared heap is reused by posters;
-  // JPEG encoding allocates only garbage-collectable JavaScript memory.
-  const encoded = transparent ? await encodeMusicRgbaPng(pixels, width, height)
-    : encodeJpeg({ data: pixels, width, height }, 82).data;
-  return encoded.length < bytes.length ? { bytes: encoded, contentType: transparent ? 'image/png' : 'image/jpeg' }
-    : { bytes, contentType: asset.content_type };
-}
-
-// Internal helper: callers MUST establish live public visibility and revision first.
-// Cached bytes are never an authorization source or a directly addressable route.
-export async function musicDisplayCover(request, bucket, asset, { cache = globalThis.caches?.default, ctx } = {}) {
+// Callers establish live publication/version first. Raw generated files are
+// blocked at the Worker boundary, including when the public music gate is off.
+export async function musicDisplayCover(request, bucket, asset, { assets, manifest = musicDisplayCoverManifest } = {}) {
   checkAssetIdentity(asset);
-  if (asset.kind !== 'cover' || asset.state !== 'validated' || asset.byte_size > MAX_BYTES) throw new Error('COVER_INVALID');
-  let object, stopped = false, timer;
+  if (asset.kind !== 'cover' || asset.state !== 'validated') throw new Error('COVER_INVALID');
+  let object, response, stopped = false, timer;
   try {
     const pending = Promise.resolve().then(() => bucket.get(asset.object_key, { onlyIf: { etagMatches: asset.etag } }));
     pending.then(value => { if (stopped) cancelBody(value); }, () => {});
     object = await Promise.race([pending, new Promise((_, reject) => {
       timer = setTimeout(() => reject(new Error('COVER_STORAGE_TIMEOUT')), 5000);
     })]);
-    clearTimeout(timer);
-    checkStoredObject(object, asset);
-    const etag = `"music-${VERSION}-${asset.sha256}"`;
-    if (matches(request.headers.get('If-None-Match'), etag)) {
-      return new Response(null, { status: 304, headers: { ...clientHeaders, ETag: etag } });
+    clearTimeout(timer); checkStoredObject(object, asset);
+    const variant = manifest[asset.sha256];
+    if (assets?.fetch && validVariant(variant, asset)) {
+      const etag = `"music-display-static-v1-${variant.sha256}"`;
+      if (matches(request.headers.get('If-None-Match'), etag)) return new Response(null, { status: 304, headers: { ...headers, ETag: etag } });
+      try {
+        response = await assets.fetch(new Request(new URL(variant.path, request.url), { method: request.method }));
+        if (response.status === 200 && response.headers.get('Content-Type')?.split(';')[0] === variant.contentType &&
+          (response.headers.get('Content-Length') === null || Number(response.headers.get('Content-Length')) === variant.bytes)) {
+          const body = request.method === 'HEAD' ? null : response.body;
+          if (request.method === 'HEAD') cancelBody(response);
+          response = null;
+          return new Response(body, { headers: { ...headers, 'Content-Type': variant.contentType,
+            'Content-Length': String(variant.bytes), ETag: etag } });
+        }
+      } catch { /* Missing generated assets never make the original cover unusable. */ }
+      cancelBody(response); response = null;
     }
-    // The identity includes the asset id, digest and transform version. This path
-    // sits under run_worker_first /api/* with no public handler. Incoming cookies
-    // and conditional headers aren't copied.
-    const key = new Request(new URL(`/api/music/__cover-cache/${asset.id}/${asset.sha256}/${VERSION}`, request.url));
-    let cached;
-    try { cached = await cache?.match(key); } catch { /* Cache availability is optional. */ }
-    if (cached?.status === 200 && cached.headers.get('ETag') === etag) {
-      const headers = new Headers(cached.headers);
-      for (const [name, value] of Object.entries(clientHeaders)) headers.set(name, value);
-      if (request.method === 'HEAD') { cancelBody(cached); return new Response(null, { headers }); }
-      return new Response(cached.body, { headers });
-    }
-    cancelBody(cached);
-    const bytes = await readBytes(object.body, asset.byte_size);
-    const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), b => b.toString(16).padStart(2, '0')).join('');
-    if (digest !== asset.sha256) throw new Error('COVER_HASH_MISMATCH');
-    const rendered = await renderMusicDisplayCover(bytes, asset);
-    // Oversized pixel dimensions retain the original streaming contract, without
-    // storing that large fallback in the thumbnail cache or claiming a variant ETag.
-    if (!rendered) return new Response(request.method === 'HEAD' ? null : bytes, { headers: {
-      ...clientHeaders, 'Cache-Control': 'no-store', 'Content-Type': asset.content_type, 'Content-Length': String(bytes.length)
-    } });
-    const headers = { ...clientHeaders, 'Content-Type': rendered.contentType,
-      'Content-Length': String(rendered.bytes.length), ETag: etag };
-    if (cache) {
-      const stored = new Response(rendered.bytes, { headers: { ...headers, 'Cache-Control': 'public, max-age=86400' } });
-      const write = Promise.resolve().then(() => cache.put(key, stored)).catch(() => {});
-      if (ctx) ctx.waitUntil(write); else await write;
-    }
-    return new Response(request.method === 'HEAD' ? null : rendered.bytes, { headers });
-  } finally { stopped = true; clearTimeout(timer); cancelBody(object); }
+    // New artwork remains visible until the next release generates its display
+    // asset. No image decoding or encoding runs in the request-serving Worker.
+    const body = request.method === 'HEAD' ? null : object.body;
+    if (request.method === 'HEAD') cancelBody(object);
+    object = null;
+    return new Response(body, { headers: { ...headers, 'Cache-Control': 'no-store',
+      'Content-Type': asset.content_type, 'Content-Length': String(asset.byte_size) } });
+  } finally { stopped = true; clearTimeout(timer); cancelBody(object); cancelBody(response); }
+}
+
+// Asset routing can decode escaped path segments; deny the reserved directory
+// before dispatch even when an incoming URL uses percent-encoded characters.
+export function isMusicDisplayAssetPath(pathname) {
+  let value = pathname;
+  for (let i = 0; i < 4; i++) {
+    if (/(?:^|\/)__cover-files(?:\/|$)/.test(value.replaceAll('\\', '/'))) return true;
+    try { const next = decodeURIComponent(value); if (next === value) break; value = next; }
+    catch { break; }
+  }
+  return false;
 }

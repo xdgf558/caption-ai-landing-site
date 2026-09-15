@@ -366,7 +366,7 @@ test('staging module graph includes only music, Access and the existing reader m
   assert.ok(paths.includes('adminAccess.js'));
   assert.ok(paths.includes('music/stagingEntrypoint.js'));
   assert.ok(!paths.includes('worker.js'));
-  assert.deepEqual([...externalImports].sort(), ['@cf-wasm/resvg', '@noble/hashes/sha2.js', 'mp3-parser/lib/lib.js']);
+  assert.deepEqual([...externalImports].sort(), ['@noble/hashes/sha2.js', 'mp3-parser/lib/lib.js']);
 });
 
 test('maintenance generator rejects resource, Access, route and execution drift before producing a config', async () => {
