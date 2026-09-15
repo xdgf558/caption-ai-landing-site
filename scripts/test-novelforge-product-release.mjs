@@ -134,7 +134,7 @@ for (const route of [
   assert.ok(existsSync(join(root, route)), `${route} should exist`);
 }
 
-assert.match(appsIndex, /title="NovelForge AI"/);
+assert.match(appsIndex, /title:\s*'NovelForge AI'/);
 assert.match(stationHome, /title: 'NovelForge AI', href: paths\.novelForge/);
 assert.match(stationHome, /optimizedAppImage\('novelforge'\)\.src/);
 assert.match(footer, /label: 'NovelForge AI'/);

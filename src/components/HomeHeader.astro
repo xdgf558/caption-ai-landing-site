@@ -1,8 +1,8 @@
 ---
 import { Menu, X } from '@lucide/astro';
 import { brandNavigation, zhBrandNavigation, zhHansBrandNavigation, jaBrandNavigation } from '../data/navigation';
-interface Props { lang: 'zh-Hant'|'zh-Hans'|'en'|'ja' }
-const {lang} = Astro.props;
+interface Props { lang: 'zh-Hant'|'zh-Hans'|'en'|'ja'; apps?: boolean }
+const {lang, apps = false} = Astro.props;
 const items = {en:brandNavigation,'zh-Hant':zhBrandNavigation,'zh-Hans':zhHansBrandNavigation,ja:jaBrandNavigation}[lang];
 const member = items.find(i => i.href.endsWith('/library/'))!;
 const follow = items.find(i => i.label === 'Follow on X')!;
@@ -10,10 +10,12 @@ const nav = items.filter(i => i !== member && i !== follow);
 const subtitle = {'zh-Hant':'個人創作小站','zh-Hans':'个人创作小站',en:'An independent creative station',ja:'小さな創作の駅'}[lang];
 const menuLabel = {en:'Menu',ja:'メニュー','zh-Hant':'選單','zh-Hans':'菜单'}[lang];
 const home = lang === 'zh-Hant' ? '/' : `/${lang === 'zh-Hans' ? 'zh-hans' : lang}/`;
+const homeLabel = {'zh-Hant':'首頁','zh-Hans':'首页',en:'Home',ja:'ホーム'}[lang];
+const localeLink = (prefix: string) => apps ? `/${prefix}/apps/` : prefix === 'zh-hant' ? '/' : `/${prefix}/`;
 ---
 <header class="night-header">
   <a class="night-brand" href={home} aria-label="Station Cat home"><img src="/images/home-night/cat-mark.webp" alt="" width="42" height="50" /><span><strong>Station Cat</strong><small>{subtitle}</small></span></a>
-  <nav class="night-desktop-nav" aria-label={menuLabel}>{nav.map(i => <a href={i.href}>{i.label}</a>)}</nav>
+  <nav class="night-desktop-nav" aria-label={menuLabel}>{apps && <a href={home}>{homeLabel}</a>}{nav.map(i => <a href={i.href} aria-current={apps && i.label === 'Apps' ? 'page' : undefined}>{i.label}</a>)}</nav>
   <div class="night-header-actions"><a class="night-member" href={member.href}>{member.label}</a><a class="night-follow" href={follow.href} target="_blank" rel="noopener noreferrer"><X size={18}/>{follow.label}</a></div>
-  <details class="night-mobile-menu"><summary aria-label={menuLabel}><Menu size={23} /></summary><nav aria-label={menuLabel}>{items.map(i => <a href={i.href}>{i.label}</a>)}<div class="night-mobile-locales"><a href="/">繁中</a><a href="/zh-hans/">简中</a><a href="/en/">EN</a><a href="/ja/">日本語</a></div></nav></details>
+  <details class="night-mobile-menu"><summary aria-label={menuLabel}><Menu size={23} /></summary><nav aria-label={menuLabel}>{apps && <a href={home}>{homeLabel}</a>}{items.map(i => <a href={i.href} aria-current={apps && i.label === 'Apps' ? 'page' : undefined}>{i.label}</a>)}<div class="night-mobile-locales"><a href={localeLink('zh-hant')}>繁中</a><a href={localeLink('zh-hans')}>简中</a><a href={localeLink('en')}>EN</a><a href={localeLink('ja')}>日本語</a></div></nav></details>
 </header>
