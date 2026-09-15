@@ -1,0 +1,1 @@
+Noto Serif SC Bold subset, from ../music/NotoSerifSC-Bold.otf (SIL OFL). Generated with fontTools for the four-language Cat Life landing h1/h2 headings and Station Cat brand. Other text uses the existing system font stack. Regenerate the subset when headings change; fallback fonts remain available.

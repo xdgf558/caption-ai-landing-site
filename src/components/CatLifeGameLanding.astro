@@ -1,4 +1,7 @@
 ---
+import { ArrowRight, House, Gamepad2, Monitor, Smartphone, ShoppingBag, Armchair, Sparkles, MapPin, ClipboardCheck, Cross, BookOpen, Cloud, FileJson, History, Languages, ChevronDown } from '@lucide/astro';
+import '../styles/home-night.css';
+import '../styles/cat-life-night.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { catLifeGameProduct } from '../data/products/cat-life-game';
 import { siteConfig } from '../data/site';
@@ -31,7 +34,7 @@ const copy = {
       ['安排一天', '在工作、休息、飲食與心情之間找平衡，時間會持續前進。'],
       ['照顧貓咪', '餵食、清潔、陪玩、看病，觀察每隻貓不同的狀態與成長。'],
       ['打造自己的家', '購買家具和用品，調整房間配置，再到貓咪鎮拜訪鄰居。'],
-      ['持續保存進度', '遊客進度會自動保存在目前瀏覽器；登入會員後可同步雲端存檔，也可匯出或匯入 JSON 備份。']
+      ['持續保存進度', '本機自動存檔，登入會員後可同步雲端存檔；也支援 JSON 備份。']
     ],
     shopKicker: 'Life around the station',
     shopTitle: '小店、房間和貓咪鎮，都在同一段日常裡。',
@@ -70,7 +73,7 @@ const copy = {
       ['安排一天', '在工作、休息、饮食与心情之间找平衡，时间会持续前进。'],
       ['照顾猫咪', '喂食、清洁、陪玩、看病，观察每只猫不同的状态与成长。'],
       ['打造自己的家', '购买家具和用品，调整房间配置，再到猫咪镇拜访邻居。'],
-      ['持续保存进度', '游客进度会自动保存在当前浏览器；登录会员后可同步云存档，也可导出或导入 JSON 备份。']
+      ['持续保存进度', '本机自动存档，会员可同步云端；也支持 JSON 备份。']
     ],
     shopKicker: 'Life around the station',
     shopTitle: '小店、房间和猫咪镇，都在同一段日常里。',
@@ -109,7 +112,7 @@ const copy = {
       ['Plan a day', 'Balance work, rest, meals, energy, and mood while in-game time keeps moving.'],
       ['Care for cats', 'Feed, clean, play with, and treat cats while watching their individual needs change.'],
       ['Build a home', 'Buy furniture and supplies, arrange your room, and visit neighbors across Cat Town.'],
-      ['Keep your progress', 'Guest progress autosaves in this browser. Signed-in members can sync a cloud save and export or import JSON backups.']
+      ['Keep your progress', 'Signed-in members can sync a cloud save. Guest autosave and JSON backups are also supported.']
     ],
     shopKicker: 'Life around the station',
     shopTitle: 'The shop, your room, and Cat Town share one daily rhythm.',
@@ -148,7 +151,7 @@ const copy = {
       ['一日を組み立てる', '仕事、休息、食事、体力、気分のバランスを取りながら時間を進めます。'],
       ['猫を世話する', '食事、掃除、遊び、治療を行い、それぞれの猫の状態と成長を見守ります。'],
       ['自分の家を作る', '家具や用品を購入して部屋を整え、猫の町の隣人を訪ねます。'],
-      ['進行状況を保存する', 'ゲストの進行はこのブラウザに自動保存されます。ログイン中の会員はクラウドセーブと JSON バックアップの書き出し・読み込みを利用できます。']
+      ['進行状況を保存する', 'ゲストはローカル保存、会員はクラウド同期。JSON バックアップにも対応。']
     ],
     shopKicker: 'Life around the station',
     shopTitle: 'お店、部屋、猫の町が、ひとつの日常につながります。',
@@ -177,6 +180,57 @@ const paths = {
   ja: { canonical: catLifeGameProduct.jaProductPath, apps: '/ja/apps/', gameLanguage: 'ja' }
 }[lang];
 const playUrl = `${catLifeGameProduct.gamePath}?lang=${encodeURIComponent(paths.gameLanguage)}`;
+
+const details = {
+  'zh-Hant': {
+    heading: ['打工、生活，','然後把貓照顧好。'], devices: '桌面 / 手機可玩',
+    intro: '一款在瀏覽器中遊玩的生活模擬遊戲。安排工作與休息、管理金幣與體力、照顧貓咪，慢慢佈置自己的小家，探索貓咪鎮。',
+    rhythm: '從打工到生活，慢慢把喜歡的日常變成現實。',
+    shop: ['購買物品','收藏家具','解鎖裝飾','打造溫暖的家'], town: ['探索地圖','接取任務','貓咪醫院','街機遊戲','收藏圖鑑'],
+    illustration: '夜間貓咪生活情境插畫，非遊戲畫面', shopAlt: '暖光中的貓咪商店情境插畫', townAlt: '月夜貓咪鎮情境插畫',
+    accountIntro: '不論是隨時來逛逛，還是長期經營，都能安心保存你的遊戲進度。',
+    saves: [['遊客本機自動存檔','打開頁面就能玩，進度會留在本機瀏覽器。'],['會員可同步雲端','登入後可同步，存檔有差異時由你選擇。'],['可匯出 / 匯入 JSON 備份','自由備份，保留屬於你的存檔。'],['最近 5 份雲端記錄可恢復','不小心遺失也能找回。'],['多語言介面','遊戲支援簡中 / English / 日本語。']],
+    saveDetails: '查看存檔與語言說明', looks: '用積分兌換喜歡的外觀，讓遊戲世界更有個人風格。',
+    moon: '月夜虎斑', moonDesc: '初始橘貓專屬外觀', room: '車站小屋', roomDesc: '四項房間主題，溫暖的小家', scope: '裝扮內容與使用說明',
+  },
+  'zh-Hans': {
+    heading: ['打工、生活，','然后把猫照顾好。'], devices: '桌面 / 手机可玩',
+    intro: '一款在浏览器中游玩的生活模拟游戏。安排工作与休息、管理金币与体力、照顾猫咪，慢慢布置自己的小家，探索猫咪镇。',
+    rhythm: '从打工到生活，慢慢把喜欢的日常变成现实。',
+    shop: ['购买物品','收藏家具','解锁装饰','打造温暖的家'], town: ['探索地图','接取任务','猫咪医院','街机游戏','收藏图鉴'],
+    illustration: '夜间猫咪生活情境插画，非游戏画面', shopAlt: '暖光中的猫咪商店情境插画', townAlt: '月夜猫咪镇情境插画',
+    accountIntro: '不论是随时来逛逛，还是长期经营，都能安心保存你的游戏进度。',
+    saves: [['游客本机自动存档','打开页面就能玩，进度会留在本机浏览器。'],['会员可同步云端','登录后可同步，存档有差异时由你选择。'],['可导出 / 导入 JSON 备份','自由备份，保留属于你的存档。'],['最近 5 份云端记录可恢复','不小心遗失也能找回。'],['多语言界面','游戏支持简中 / English / 日本語。']],
+    saveDetails: '查看存档与语言说明', looks: '用积分兑换喜欢的外观，让游戏世界更有个人风格。',
+    moon: '月夜虎斑', moonDesc: '初始橘猫专属外观', room: '车站小屋', roomDesc: '四项房间主题，温暖的小家', scope: '装扮内容与使用说明',
+  },
+  en: {
+    heading: ['Work, live,','and care for your cats.'], devices: 'Desktop / mobile', intro: copy.intro,
+    rhythm: 'Make room for the little everyday things you love.',
+    shop: ['Shop supplies','Collect furniture','Unlock decor','Make a cozy home'], town: ['Explore the town','Take on tasks','Cat hospital','Arcade games','Collections'],
+    illustration: 'Nighttime cat life concept illustration, not a gameplay screenshot', shopAlt: 'Illustration of a warmly lit cat shop', townAlt: 'Illustration of Cat Town in moonlight',
+    accountIntro: 'Drop in for a moment or settle into a routine. Your progress has a place to stay.',
+    saves: [['Guest autosave','Your progress stays in this browser.'],['Member cloud save','Sign in to sync. You choose between conflicting saves.'],['Export / import JSON','Keep a backup of your own save.'],['Five cloud versions','Recover from the five latest cloud saves.'],['Play in your language','Simplified Chinese, English and Japanese.']],
+    saveDetails: 'Save and language details', looks: 'Redeem points for optional looks that feel like you.',
+    moon: 'Moonlit Tabby', moonDesc: 'A look for your starter orange cat', room: 'Station Room', roomDesc: 'Four cozy room theme options', scope: 'What is included and how to use it',
+  },
+  ja: {
+    heading: ['働いて、暮らして、','猫たちを大切に。'], devices: 'PC / スマートフォン', intro: copy.intro,
+    rhythm: '好きな日常を、少しずつ自分のものに。',
+    shop: ['用品を買う','家具を集める','飾りを楽しむ','心地よい家に'], town: ['町を探索','タスクを受ける','猫の病院','アーケード','コレクション'],
+    illustration: '猫との夜の暮らしを描いたイラスト。ゲーム画面ではありません', shopAlt: '暖かな猫のお店のイラスト', townAlt: '月夜の猫の町のイラスト',
+    accountIntro: '少しだけ遊ぶ日も、じっくり過ごす日も。進行を大切に保存します。',
+    saves: [['ゲストの自動保存','進行はこのブラウザに保存されます。'],['会員クラウドセーブ','ログインして同期。異なる版は自分で選べます。'],['JSON 書き出し / 読み込み','自分のセーブをバックアップ。'],['最近 5 件から復元','過去のクラウドセーブを取り戻せます。'],['多言語に対応','簡体字中国語・英語・日本語で遊べます。']],
+    saveDetails: '保存と言語について', looks: 'ポイントで好きな見た目を、自分らしい世界に。',
+    moon: '月夜のキジトラ', moonDesc: '最初の茶トラ猫専用の見た目', room: '駅の部屋', roomDesc: '温かな4つの部屋テーマ', scope: 'セット内容と使い方',
+  }
+}[lang];
+const featureIcons = ['calendar-dots','cat','house','floppy-disk'];
+const shopIcons = [ShoppingBag, Armchair, Sparkles, House];
+const townIcons = [MapPin, ClipboardCheck, Cross, Gamepad2, BookOpen];
+const saveIcons = [Monitor, Cloud, FileJson, History, Languages];
+const ruleIcons = ['heart','star','gift'];
+
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
@@ -194,13 +248,9 @@ const structuredData = {
 ---
 
 <BaseLayout
-  title={copy.title}
-  description={copy.description}
-  lang={lang}
-  canonicalPath={paths.canonical}
-  ogImage={catLifeGameProduct.assets.icon}
-  bodyClass="cat-life-game-page"
-  structuredData={structuredData}
+  title={copy.title} description={copy.description} lang={lang}
+  canonicalPath={paths.canonical} ogImage="/images/cat-life-night/hero.webp"
+  bodyClass="cat-life-night" homeChrome={true} structuredData={structuredData}
   alternates={[
     { hrefLang: 'zh-Hant', href: catLifeGameProduct.zhHantProductPath },
     { hrefLang: 'zh-Hans', href: catLifeGameProduct.zhHansProductPath },
@@ -209,96 +259,54 @@ const structuredData = {
     { hrefLang: 'x-default', href: catLifeGameProduct.zhHantProductPath }
   ]}
 >
-  <section class="cat-life-hero">
-    <img class="cat-life-hero__art" src={catLifeGameProduct.assets.community} alt="" width="1122" height="1402" fetchpriority="high" />
-    <div class="cat-life-hero__copy">
-      <p class="section-kicker">{copy.kicker}</p>
-      <h1>{copy.heading}</h1>
-      <p class="cat-life-hero__intro">{copy.intro}</p>
-      <p class="cat-life-status">{copy.status}</p>
-      <div class="button-row">
-        <a class="button button-primary" href={playUrl}>{copy.play}</a>
-        <a class="button button-secondary" href={paths.apps}>{copy.apps}</a>
-      </div>
-    </div>
-    <div class="cat-life-hero__snapshot" aria-label={copy.previewLabel}>
-      <img src={catLifeGameProduct.assets.icon} alt={copy.previewLabel} width="330" height="330" />
-      <div class="cat-life-hero__stats" aria-hidden="true">
-        <span>{copy.statDay}</span>
-        <span>{copy.statCoins}</span>
-        <span>{copy.statCats}</span>
-      </div>
-    </div>
-  </section>
-
-  <section class="page-section cat-life-section">
-    <div class="section-heading">
-      <p class="section-kicker">Version {catLifeGameProduct.latestVersion}</p>
-      <h2>{copy.nowTitle}</h2>
-      <p>{copy.nowIntro}</p>
-    </div>
-    <div class="cat-life-feature-grid">
-      {copy.features.map(([title, text], index) => (
-        <article>
-          <span aria-hidden="true">0{index + 1}</span>
-          <h3>{title}</h3>
-          <p>{text}</p>
-        </article>
-      ))}
-    </div>
-  </section>
-
-  <section class="page-section cat-life-world">
-    <div class="cat-life-world__media">
-      <img src={catLifeGameProduct.assets.shopFood} alt="" width="800" height="600" loading="lazy" />
-      <img src={catLifeGameProduct.assets.shopBed} alt="" width="800" height="600" loading="lazy" />
-    </div>
-    <div class="cat-life-world__copy">
-      <p class="section-kicker">{copy.shopKicker}</p>
-      <h2>{copy.shopTitle}</h2>
-      <p>{copy.shopText}</p>
-    </div>
-  </section>
-
-  <section class="page-section cat-life-account-note" aria-labelledby="cat-life-account-title">
-    <div>
-      <p class="section-kicker">{copy.accountKicker}</p>
-      <h2 id="cat-life-account-title">{copy.accountTitle}</h2>
-    </div>
-    <div>
-      <p>{copy.accountText}</p>
-      <p class="cat-life-language-note">{copy.languages}</p>
-    </div>
-  </section>
-
-  <section class="page-section cat-life-commerce" aria-labelledby="cat-life-commerce-title">
-    <div class="cat-life-commerce__media">
-      <figure class="cat-life-commerce__preview">
-        <img src={catLifeGameProduct.assets.stationRoom} alt="" width="759" height="428" loading="lazy" />
-        <figcaption>{copy.commercePreview}</figcaption>
-      </figure>
-      <img src={catLifeGameProduct.assets.moonlitTabby} alt="" width="480" height="480" loading="lazy" />
-    </div>
-    <div class="cat-life-commerce__copy">
-      <p class="section-kicker">{copy.commerceKicker}</p>
-      <h2 id="cat-life-commerce-title">{copy.commerceTitle}</h2>
-      <p>{copy.commerceText}</p>
-      <p>{copy.commerceScope}</p>
-      <ul>
-        {copy.commerceNotes.map((note) => <li>{note}</li>)}
+  <section class="game-hero" aria-labelledby="game-title">
+    <picture class="game-hero-art"><source media="(max-width: 600px)" srcset="/images/cat-life-night/hero-960.webp" /><img src="/images/cat-life-night/hero.webp" alt={details.illustration} width="1792" height="640" fetchpriority="high" decoding="async" /></picture>
+    <div class="game-wrap game-hero-inner"><div class="game-hero-copy">
+      <p class="game-eyebrow">STATION CAT GAME</p>
+      <h1 id="game-title">{details.heading.map(line=><span>{line}</span>)}</h1>
+      <p class="game-intro">{details.intro}</p>
+      <ul class="game-badges" aria-label={copy.status}>
+        <li><Gamepad2 size={13}/>{copy.status.split(' · ')[0]}</li>
+        <li><Monitor size={13}/>{copy.status.split(' · ')[1]}</li>
+        <li><Smartphone size={13}/>{details.devices}</li><li>Version {catLifeGameProduct.latestVersion}</li>
       </ul>
-      <p><a href={`/${lang.toLowerCase()}/points/`}>{copy.commerceRules}</a></p>
-      <p><a href={`mailto:${siteConfig.supportEmail}`}>{copy.commerceSupport}</a></p>
-    </div>
+      <div class="game-actions"><a class="game-button" href={playUrl}>{copy.play}<ArrowRight size={17}/></a><a class="game-button game-button-outline" href={paths.apps}>{copy.apps}</a></div>
+    </div></div>
   </section>
 
-  <section class="page-section cat-life-final">
-    <img src={catLifeGameProduct.assets.icon} alt="" width="330" height="330" loading="lazy" />
-    <div>
-      <p class="section-kicker">Cat Life Game</p>
-      <h2>{copy.finalTitle}</h2>
-      <p>{copy.finalText}</p>
-    </div>
-    <a class="button button-primary" href={playUrl}>{copy.play}</a>
-  </section>
+  <div class="game-wrap game-content">
+    <section class="game-features" aria-labelledby="game-features-title">
+      <div class="game-heading"><h2 id="game-features-title">{copy.nowTitle}</h2><p>{details.rhythm}</p></div>
+      <div class="game-feature-grid">{copy.features.map(([title,text],i)=>{const Icon=featureIcons[i];return <article class="game-feature"><span class="game-feature-icon"><img src={`/images/cat-life-night/icons/${Icon}.svg`} width="32" height="32" alt=""/></span><div><h3>{title}</h3><p>{text}</p></div></article>})}</div>
+    </section>
+
+    <section class="game-world" aria-labelledby="game-world-title">
+      <div class="game-heading game-heading-stack"><h2 id="game-world-title">{copy.shopTitle}</h2><p>{copy.shopText}</p></div>
+      <div class="game-world-grid">
+        <article class="game-scene"><img src="/images/cat-life-night/shop.webp" width="960" height="480" loading="lazy" decoding="async" alt={details.shopAlt}/><ul>{details.shop.map((item,i)=>{const Icon=shopIcons[i];return <li><Icon size={18}/><span>{item}</span></li>})}</ul></article>
+        <article class="game-scene"><img src="/images/cat-life-night/town.webp" width="960" height="480" loading="lazy" decoding="async" alt={details.townAlt}/><ul>{details.town.map((item,i)=>{const Icon=townIcons[i];return <li><Icon size={18}/><span>{item}</span></li>})}</ul></article>
+      </div>
+    </section>
+
+    <section class="game-account" aria-labelledby="game-account-title">
+      <div class="game-account-grid">
+        <div class="game-account-intro"><h2 id="game-account-title">{copy.accountTitle}</h2><p>{details.accountIntro}</p><img src="/images/cat-life-night/account.webp" alt="" width="768" height="256" loading="lazy" decoding="async"/></div>
+        <div class="game-save-list">{details.saves.slice(0,2).map(([title,text],i)=>{const Icon=saveIcons[i];return <div><Icon size={22}/><div><h3>{title}</h3><p>{text}</p></div></div>})}</div>
+        <div class="game-save-list">{details.saves.slice(2).map(([title,text],i)=>{const Icon=saveIcons[i+2];return <div><Icon size={20}/><div><h3>{title}</h3><p>{text}</p></div></div>})}</div>
+      </div>
+      <details class="game-details"><summary>{details.saveDetails}<ChevronDown size={15}/></summary><div><p>{copy.accountText}</p><p>{copy.languages}</p></div></details>
+    </section>
+
+    <section class="game-commerce" aria-labelledby="game-commerce-title">
+      <div class="game-commerce-layout"><div>
+        <div class="game-heading game-heading-stack"><h2 id="game-commerce-title">{copy.commerceTitle}</h2><p>{details.looks}</p></div>
+        <div class="game-looks">
+          <article><img src={catLifeGameProduct.assets.moonlitTabby} width="480" height="480" loading="lazy" alt={details.moon}/><div><h3>{details.moon}</h3><p>{details.moonDesc}</p></div></article>
+          <article><img src={catLifeGameProduct.assets.stationRoom} width="759" height="428" loading="lazy" alt={copy.commercePreview}/><div><h3>{details.room}</h3><p>{details.roomDesc}</p></div></article>
+        </div>
+      </div><ul class="game-commerce-rules">{copy.commerceNotes.map((note,i)=>{const Icon=ruleIcons[i];return <li><img src={`/images/cat-life-night/icons/${Icon}.svg`} width="21" height="21" alt=""/><span>{note}</span></li>})}</ul></div>
+      <details class="game-details game-commerce-details"><summary>{details.scope}<ChevronDown size={15}/></summary><div><p>{copy.commerceText}</p><p>{copy.commerceScope}</p><figure><img src={catLifeGameProduct.assets.stationRoom} alt="" width="759" height="428" loading="lazy"/><figcaption>{copy.commercePreview}</figcaption></figure><p class="game-help-links"><a href={`/${lang.toLowerCase()}/points/`}>{copy.commerceRules}<ArrowRight size={15}/></a><a href={`mailto:${siteConfig.supportEmail}`}>{copy.commerceSupport}</a></p></div></details>
+    </section>
+  </div>
+  <section class="game-final"><img class="game-final-art" src="/images/cat-life-night/cta.webp" alt="" width="1200" height="400" loading="lazy" decoding="async"/><div><h2>{copy.finalTitle}</h2><p>{copy.finalText}</p></div><a class="game-button" href={playUrl}>{copy.play}<ArrowRight size={17}/></a></section>
 </BaseLayout>
