@@ -17,7 +17,20 @@ env.ASSETS.fetch = async request => {
   try { return new Response(await readFile(path), { headers: { 'content-type': types[extname(path)] || 'application/octet-stream' } }); }
   catch { return new Response('Not found', { status: 404 }); }
 };
-for (const [id, title, description, markdown, locale] of [
+if (process.env.ARTICLE_PREVIEW_SNAPSHOT) {
+  const rows = JSON.parse(await readFile(process.env.ARTICLE_PREVIEW_SNAPSHOT, 'utf8'));
+  for (const row of rows) {
+    const coverR2Key = row.cover ? new URL(row.cover).searchParams.get('key') : '';
+    if (coverR2Key && process.env.ARTICLE_PREVIEW_COVERS) {
+      const bytes = await readFile(resolve(process.env.ARTICLE_PREVIEW_COVERS, coverR2Key.split('/').at(-1)));
+      await env.CONTENT_BUCKET.put(coverR2Key, bytes, { httpMetadata: { contentType: 'image/png' } });
+    }
+    const response = await hooks.handleAdminArticles(new Request(base + '/admin/api/articles', { method:'POST', headers:{origin:base,'content-type':'application/json'}, body:JSON.stringify({...row, coverR2Key, status:'published'}) }), env);
+    if (!response.ok) throw new Error(await response.text());
+    const {entry} = await response.json();
+    sqlite.prepare('UPDATE content_entries SET published_at = ? WHERE id = ?').run(row.date || '2026-09-01', entry.id);
+  }
+} else for (const [id, title, description, markdown, locale] of [
   ['1001', '本地示例：把一个想法慢慢做成游戏', '从第一张草图到一个可以散步的小家，记录创作过程中的选择与取舍。', '## 从一个小想法开始\n\n这是本地预览内容，不会发布到线上。\n\n## 留出日常的空间\n\n把复杂的操作藏在简单的界面后面，让玩家把注意力留给生活。', 'zh-Hans'],
   ['1002', 'Local preview: a quieter place to write', 'A small collection of thoughts about independent making, useful tools, and everyday life.', '', 'en']
 ]) {

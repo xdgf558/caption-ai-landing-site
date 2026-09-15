@@ -81,9 +81,15 @@ const renderArticleShareDialog = (locale) => {
     <input data-share-url aria-label="${e(copy.copy)}" readonly>
   </dialog>`;
 };
+const journalCopy = (locale) => ({
+  'zh-Hant': { heading: '在日常裡，留一點思考。', note: '把好奇寫下來，讓想法慢慢長成自己的模樣。', browse: '開始閱讀', follow: '在 X 追蹤', languages: '頁面語言' },
+  'zh-Hans': { heading: '在日常里，留一点思考。', note: '把好奇写下来，让想法慢慢长成自己的模样。', browse: '开始阅读', follow: '在 X 关注', languages: '页面语言' },
+  en: { heading: 'A little room for thought.', note: 'Following curiosity, one idea and one ordinary day at a time.', browse: 'Start reading', follow: 'Follow on X', languages: 'Page language' },
+  ja: { heading: '日々の中に、考える余白を。', note: '小さな好奇心を書き留めて、考えをゆっくり育てる。', browse: '記事を読む', follow: 'X をフォロー', languages: 'ページの言語' }
+}[locale] || journalCopy('zh-Hant'));
 const coverUrl = (row) => row.cover_r2_key ? `/api/content/media?key=${encodeURIComponent(row.cover_r2_key)}` : '';
 export function renderArticleIndex(locale, rows, { page = 1, hasMore = false } = {}) {
-  const e = escapeArticleHtml, copy = articleCopy(locale), base = articleBasePath(locale);
+  const e = escapeArticleHtml, copy = articleCopy(locale), base = articleBasePath(locale), journal = journalCopy(locale);
   // Legacy/admin data can be malformed: one broken reference must not take down the collection.
   const visibleRows = rows.flatMap(row => {
     const meta = articleMetadata(row);
@@ -92,12 +98,17 @@ export function renderArticleIndex(locale, rows, { page = 1, hasMore = false } =
       return [{ row, meta, href: meta.hasBody ? `${articleBasePath(row.locale)}${row.slug}/` : source.url }];
     } catch { return []; }
   });
-  return `<section class="articles-intro"><p class="articles-eyebrow">STATION CAT / JOURNAL</p><h1>${e(copy.title)}</h1><p>${e(copy.description)}</p><a href="https://x.com/statiocat">@statiocat</a></section>
-    <h2 class="articles-list-heading">${e(copy.latest)}</h2>
-    <section class="articles-list" aria-label="${e(copy.latest)}">${visibleRows.length ? visibleRows.map(({row, meta, href}) => {
-      return `<article class="article-row${coverUrl(row) ? ' has-cover' : ''}" lang="${e(row.locale)}">
+  return `<section class="articles-intro">
+      <img class="articles-hero-image" src="/images/home-night/novel.webp" alt="" width="1983" height="793" fetchpriority="high">
+      <div class="articles-intro-copy"><p class="articles-eyebrow">STATION CAT / JOURNAL</p><h1>${e(copy.title)}</h1><p class="articles-hero-heading">${e(journal.heading)}</p><p class="articles-hero-description">${e(copy.description)}</p>
+      <div class="articles-hero-actions"><a class="articles-primary" href="#articles">${e(journal.browse)} <span aria-hidden="true">→</span></a><a class="articles-follow" href="https://x.com/statiocat">${e(journal.follow)} <span aria-hidden="true">↗</span></a></div></div>
+    </section>
+    <div class="articles-section-heading" id="articles"><div><p class="articles-eyebrow">THE LATEST NOTES</p><h2 class="articles-list-heading">${e(copy.latest)}</h2><p>${e(journal.note)}</p></div>
+    <nav class="articles-languages" aria-label="${e(journal.languages)}">${[['zh-Hant', '繁中'], ['zh-Hans', '简中'], ['en', 'EN'], ['ja', '日本語']].map(([code, label]) => `<a href="${articleBasePath(code)}" lang="${code}"${code === locale ? ' aria-current="page"' : ''}>${label}</a>`).join('')}</nav></div>
+    <section class="articles-list" aria-label="${e(copy.latest)}">${visibleRows.length ? visibleRows.map(({row, meta, href}, index) => {
+      return `<article class="article-row${index === 0 ? ' article-row--featured' : ''}${coverUrl(row) ? ' has-cover' : ''}" lang="${e(row.locale)}">
         ${coverUrl(row) ? `<a class="article-thumbnail" href="${e(href)}" tabindex="-1" aria-hidden="true"><img src="${e(coverUrl(row))}" alt="" width="480" height="320" loading="lazy"></a>` : ''}
-        <div><div class="article-meta"><time datetime="${e(dateLabel(row))}">${e(dateLabel(row))}</time><span>${e(languageName(row.locale))}</span>${meta.hasBody ? `<span>${row.reading_minutes || 1} ${e(copy.minutes)}</span>` : '<span>X Articles</span>'}</div>
+        <div class="article-row-copy"><div class="article-meta"><time datetime="${e(dateLabel(row))}">${e(dateLabel(row))}</time><span>${e(languageName(row.locale))}</span>${meta.hasBody ? `<span>${row.reading_minutes || 1} ${e(copy.minutes)}</span>` : '<span>X Articles</span>'}</div>
         <h2><a href="${e(href)}">${e(row.title)}</a></h2><p>${e(row.description)}</p><div class="article-row-actions"><a class="article-read" href="${e(href)}">${e(meta.hasBody ? copy.read : copy.original)} <span aria-hidden="true">↗</span></a>${renderArticleShare(locale, row)}</div></div></article>`;
     }).join('') : `<p class="articles-empty">${e(copy.empty)}</p>`}</section>
     <nav class="articles-pagination" aria-label="${e(copy.latest)}">${page > 1 ? `<a href="${base}?page=${page - 1}">${e(copy.previous)}</a>` : ''}${hasMore ? `<a href="${base}?page=${page + 1}">${e(copy.more)}</a>` : ''}</nav>${renderArticleShareDialog(locale)}`;
