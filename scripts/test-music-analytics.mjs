@@ -104,10 +104,10 @@ test('preview completion and free/VIP full totals stay separate, with server-der
   assert.equal(result.unavailableMetrics.paidActivations.available,false);
   assert.doesNotMatch(JSON.stringify(result),/anonymousSessionId|playSessionId|object_key|192\.0|fixture-only-not/);
 });
-test('public popularity exposes only retained qualified-play totals and never fabricates missing data',async t=>{
+test('public popularity exposes retained qualified-play totals and reports healthy empty aggregates as zero',async t=>{
   const f=await fixture(t);
   assert.deepEqual(await readPublicMusicPopularity(f.env,{clock:()=>NOW}),
-    {available:false,metric:'qualified_play',windowDays:365,counts:[]});
+    {available:true,metric:'qualified_play',windowDays:365,counts:[]});
   const start=f.event(),qualified=f.event('qualified_play',{playSessionId:start.playSessionId,listenedMs:30000});
   await expect(await f.send([start,qualified]),200);
   const result=await readPublicMusicPopularity(f.env,{clock:()=>NOW});

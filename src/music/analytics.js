@@ -226,7 +226,8 @@ export async function readMusicAnalytics(env,query={}, {clock=Date.now}={}) {
 // Public popularity is derived only from the anonymous daily aggregates. It
 // never exposes raw events, sessions, request sources or account information.
 // When collection/retention is unavailable, callers must retain their normal
-// catalog ordering instead of presenting an invented zero.
+// catalog ordering. Once both are healthy, an empty aggregate is an accurate
+// zero-play result for every published track.
 export async function readPublicMusicPopularity(env, { clock=Date.now }={}) {
   const base={available:false,metric:'qualified_play',windowDays:MUSIC_ANALYTICS_RETENTION.dailyDays,counts:[]};
   const config=musicAnalyticsConfiguration(env);
@@ -241,7 +242,6 @@ export async function readPublicMusicPopularity(env, { clock=Date.now }={}) {
       const counts=rows((await s.batch([s.prepare(`SELECT track_id AS trackId,SUM(value) AS qualifiedPlayCount
         FROM music_analytics_daily WHERE metric='qualified_play' AND day_start_ms>?
         GROUP BY track_id ORDER BY qualifiedPlayCount DESC,track_id`).bind(now-MUSIC_ANALYTICS_RETENTION.dailyDays*DAY)]))[0]);
-      if(!counts.length)return base;
       if(counts.some(row=>!validMusicId(row.trackId)||!integer(row.qualifiedPlayCount)))return base;
       return {...base,available:true,counts:counts.map(row=>({trackId:row.trackId.toLowerCase(),qualifiedPlayCount:row.qualifiedPlayCount}))};
     },350);
