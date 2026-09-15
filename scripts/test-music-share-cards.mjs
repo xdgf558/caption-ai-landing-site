@@ -319,6 +319,10 @@ test('thumbnails followed by posters reuse the raster heap without growing Photo
     export default { async fetch(request, env) {
       const bytes = new Uint8Array(await request.arrayBuffer());
       const photon = await initPhoton.ensure(), before = photon.memory.buffer.byteLength;
+      const covers = await Promise.all(Array.from({ length: 8 }, () => renderMusicDisplayCover(bytes, { kind: 'cover', format: 'png', content_type: 'image/png' })));
+      for (const cover of covers) {
+        if (cover.contentType !== 'image/jpeg' || cover.bytes.length >= bytes.length) throw new Error('COVER_ENCODING');
+      }
       for (let i = 0; i < 3; i++) {
         const cover = await renderMusicDisplayCover(bytes, { kind: 'cover', format: 'png', content_type: 'image/png' });
         if (cover.contentType !== 'image/jpeg' || cover.bytes.length >= bytes.length) throw new Error('COVER_ENCODING');

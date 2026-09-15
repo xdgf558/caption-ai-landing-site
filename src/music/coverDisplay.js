@@ -1,11 +1,11 @@
-import { Resvg } from '@cf-wasm/resvg';
+import { Resvg, initResvg } from '@cf-wasm/resvg';
 import encodeJpeg from './vendor/jpeg-encoder.js';
 import { encodeMusicRgbaPng } from './rasterPng.js';
 import { inspectSmallAsset } from './assetFormats.js';
 import { checkAssetIdentity, checkStoredObject } from './resources.js';
 import { boundedBody, cancelBody } from './storage.js';
 
-const VERSION = 'display-768-q82-v2';
+const VERSION = 'display-768-q82-v3';
 const MAX_BYTES = 5242880, MAX_PIXELS = 4194304;
 const clientHeaders = {
   // Always revisit publication/storage checks before reusing browser bytes.
@@ -45,17 +45,22 @@ export async function renderMusicDisplayCover(bytes, asset) {
   const ratio = Math.min(1, 768 / Math.max(dimensions.width, dimensions.height));
   const width = Math.max(1, Math.round(dimensions.width * ratio));
   const height = Math.max(1, Math.round(dimensions.height * ratio));
+  // Await initialization before constructing large strings. Once ready, decode,
+  // resize and release synchronously so concurrent covers cannot retain several
+  // SVG/base64 copies while waiting for the same renderer initialization.
+  await initResvg.ensure();
   let binary = '';
   for (let offset = 0; offset < bytes.length; offset += 16384) {
     binary += String.fromCharCode(...bytes.subarray(offset, offset + 16384));
   }
   let renderer, raster, pixels;
   try {
-    renderer = await Resvg.async(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><image width="${width}" height="${height}" preserveAspectRatio="none" href="data:${asset.content_type};base64,${btoa(binary)}"/></svg>`, {
+    renderer = new Resvg(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><image width="${width}" height="${height}" preserveAspectRatio="none" href="data:${asset.content_type};base64,${btoa(binary)}"/></svg>`, {
       imageRendering: 1, font: { loadSystemFonts: false }
     });
     raster = renderer.render(); pixels = raster.pixels;
   } finally { raster?.free(); renderer?.free(); }
+  binary = '';
   let transparent = false;
   for (let i = 3; i < pixels.length; i += 4) if (pixels[i] !== 255) { transparent = true; break; }
   // Encode after releasing the raster. Resvg's shared heap is reused by posters;
