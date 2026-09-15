@@ -1,0 +1,1 @@
+Original AI-generated night desk and window illustrations made for Station Cat Points on 2026-09-15, following the supplied design reference. WebP display assets; hero has a responsive 960px variant. coins.webp has transparent alpha. All meaningful page text is HTML. Icons are Phosphor Icons (MIT), see icons/.

@@ -12,8 +12,9 @@ const menuLabel = {en:'Menu',ja:'メニュー','zh-Hant':'選單','zh-Hans':'菜
 const home = lang === 'zh-Hant' ? '/' : `/${lang === 'zh-Hans' ? 'zh-hans' : lang}/`;
 const homeLabel = {'zh-Hant':'首頁','zh-Hans':'首页',en:'Home',ja:'ホーム'}[lang];
 const gamePage = /\/apps\/cat-life-game\/$/.test(Astro.url.pathname);
-const current = (item: {href:string;label:string}) => (gamePage && item.href === Astro.url.pathname) || (apps && item.label === 'Apps');
-const localeLink = (prefix: string) => gamePage ? `/${prefix}/apps/cat-life-game/` : apps ? `/${prefix}/apps/` : prefix === 'zh-hant' ? '/' : `/${prefix}/`;
+const pointsPage = /\/points\/$/.test(Astro.url.pathname);
+const current = (item: {href:string;label:string}) => ((gamePage || pointsPage) && item.href === Astro.url.pathname) || (apps && item.label === 'Apps');
+const localeLink = (prefix: string) => pointsPage ? `/${prefix}/points/` : gamePage ? `/${prefix}/apps/cat-life-game/` : apps ? `/${prefix}/apps/` : prefix === 'zh-hant' ? '/' : `/${prefix}/`;
 ---
 <header class="night-header">
   <a class="night-brand" href={home} aria-label="Station Cat home"><img src="/images/home-night/cat-mark.webp" alt="" width="42" height="50" /><span><strong>Station Cat</strong><small>{subtitle}</small></span></a>
