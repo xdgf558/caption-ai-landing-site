@@ -1,0 +1,50 @@
+/* Novel collection only; chapter reader typography and themes remain independent. */
+.station-novel-night .works-hero{display:grid;background:none;border:0;box-shadow:none;border-radius:0;padding:0;gap:0;margin:0}
+.station-novel-night .serials-bookshelf__intro{min-height:340px;padding:54px max(36px,calc((100vw - 1180px)/2));background:linear-gradient(90deg,#09131af5 12%,#09131acc 42%,#09131a22 80%),url('/images/home-night/novel.webp') right center/cover;gap:18px;align-content:center;border-bottom:1px solid var(--line)}
+.station-novel-night .serials-bookshelf__intro h1{font:600 clamp(32px,3.6vw,48px)/1.35 var(--night-serif);max-width:600px;letter-spacing:1px}
+.station-novel-night .serials-bookshelf__intro>p{max-width:560px;font-size:15px;line-height:1.8;color:#c0cbd2}
+.station-novel-night .station-kicker{color:var(--gold);letter-spacing:2px;font-size:11px}
+.station-novel-night .serials-bookshelf__filters{gap:10px;margin-top:8px}
+.station-novel-night .serials-bookshelf__filters button{background:#10212bcc;border:1px solid #53616a;color:#d6dde1;min-height:40px;padding:8px 20px;font-weight:500}
+.station-novel-night .serials-bookshelf__filters button.is-active,.station-novel-night .serials-bookshelf__filters button:hover{background:var(--gold);border-color:var(--gold);color:#16212a}
+.station-novel-night .serials-bookshelf__body{width:calc(100% - 72px);max-width:1180px;margin:36px auto 0;padding:28px;border:1px solid var(--line);border-radius:14px;background:#101e27;grid-template-columns:210px minmax(0,1fr);gap:30px}
+.station-novel-night .serials-bookshelf__rail{border-left:0;padding-left:0;gap:12px}
+.station-novel-night .serials-bookshelf__book{background:#152731;color:var(--ink);border:1px solid #334550;border-radius:8px;box-shadow:none;padding:16px;min-height:90px}
+.station-novel-night .serials-bookshelf__book.is-active,.station-novel-night .serials-bookshelf__book:hover{border-color:#b99b62;background:#283239;box-shadow:none;transform:none}
+.station-novel-night .serials-bookshelf__book span{color:var(--gold);font-weight:500}
+.station-novel-night .serials-bookshelf__book strong{font-family:var(--night-serif);font-size:20px;line-height:1.4}
+.station-novel-night .serials-bookshelf__preview{grid-template-columns:170px minmax(0,1fr);gap:26px}
+.station-novel-night .serials-bookshelf__thumb{max-width:170px;background:#203440;border:1px solid #4e5a61;border-radius:6px;box-shadow:0 12px 26px #0005}
+.station-novel-night .serials-bookshelf__copy h2{font:600 34px/1.35 var(--night-serif);color:var(--ink)}
+.station-novel-night .serials-bookshelf__copy p{font-size:14px;line-height:1.85}
+.station-novel-night .serials-bookshelf__meta span{background:#253440;border-color:#40515d;color:#c3d0d8;font-size:11px;font-weight:500}
+.station-novel-night .serials-bookshelf__meta span:first-child{color:var(--gold);background:#f5ca8012;border-color:#f5ca8040}
+.station-novel-night .button{border-radius:999px;min-height:44px;padding:10px 22px;font-size:13px;font-weight:600;box-shadow:none;background:#192b35;border:1px solid #53616a;color:var(--ink);white-space:normal}
+.station-novel-night .button::before,.station-novel-night .button::after{display:none}
+.station-novel-night .button-primary{background:var(--gold);border-color:var(--gold);color:#15212a}
+.station-novel-night .button:hover{background:#2b404c;transform:none;color:var(--ink)}
+.station-novel-night .button-primary:hover{background:#ffdda1;color:#15212a}
+.station-novel-night .station-section{width:calc(100% - 72px);max-width:1180px;margin:44px auto;padding:0}
+.station-novel-night .station-section__heading{margin-bottom:22px}
+.station-novel-night .station-section__heading h2{font:600 29px/1.4 var(--night-serif)}
+.station-novel-night :is(.serial-feature-card,.serial-card,.backend-content-card){background:#111f28;border:1px solid var(--line);border-radius:14px;box-shadow:none;color:var(--ink)}
+.station-novel-night .serial-feature-card{padding:32px;gap:44px;grid-template-columns:minmax(0,1fr) 220px}
+.station-novel-night .serial-feature-card__copy{gap:18px}
+.station-novel-night .serial-feature-card__copy h2{font:600 30px/1.3 var(--night-serif)}
+.station-novel-night .serial-feature-card__facts{padding:18px 0;border-block:1px solid var(--line);gap:20px}
+.station-novel-night .serial-feature-card__facts span,.station-novel-night .serial-card__meta dt{color:var(--muted)}
+.station-novel-night .serial-feature-card__facts strong,.station-novel-night .serial-card__meta dd{color:#d7e0e5;font-weight:500;font-size:14px}
+.station-novel-night .serial-feature-card__aside p{color:var(--muted);font-size:12px;line-height:1.7}
+.station-novel-night .serial-cover{border-radius:7px;border:1px solid #40515b;background:#1a2f3c;box-shadow:none}
+.station-novel-night .serials-bookshelf__empty{border-color:var(--line);color:var(--muted)}
+.station-novel-night .fine-print,.station-novel-night .empty-state{color:var(--muted)}
+.station-novel-night [hidden]{display:none!important}
+@media(max-width:1000px){.station-novel-night .serials-bookshelf__body{grid-template-columns:1fr}.station-novel-night .serials-bookshelf__rail{grid-template-columns:repeat(2,minmax(0,1fr))}.station-novel-night .serials-bookshelf__preview{grid-template-columns:170px 1fr}}
+@media(max-width:600px){.station-novel-night .serials-bookshelf__intro{padding:35px 22px;min-height:360px;background-position:65% center;background-image:linear-gradient(90deg,#09131af2,#09131a99),url('/images/home-night/novel.webp')}.station-novel-night .serials-bookshelf__intro h1{font-size:32px}.station-novel-night .serials-bookshelf__filters{gap:7px}.station-novel-night .serials-bookshelf__filters button{padding:7px 15px;font-size:13px}.station-novel-night .serials-bookshelf__body{width:calc(100% - 36px);padding:20px;gap:26px;margin-top:22px}.station-novel-night .serials-bookshelf__preview{grid-template-columns:1fr;gap:22px}.station-novel-night .serials-bookshelf__thumb{width:160px;max-width:160px;margin:auto}.station-novel-night .serials-bookshelf__copy h2{font-size:29px}.station-novel-night .button-row{gap:9px}.station-novel-night .button{padding:10px 18px}.station-novel-night .station-section{width:calc(100% - 36px);margin:32px auto}.station-novel-night .serial-feature-card{grid-template-columns:1fr;padding:22px;gap:26px}.station-novel-night .serial-feature-card__aside{max-width:200px;justify-self:center}.station-novel-night .serial-feature-card__facts{grid-template-columns:1fr}.station-novel-night .serials-bookshelf__book{padding:12px}.station-novel-night .serials-bookshelf__book strong{font-size:18px}}
+
+body.station-novel-night .works-hero{width:100%;max-width:none}
+body.station-novel-night .serials-bookshelf__intro .station-kicker{color:var(--gold)}
+body.station-novel-night .backend-content-card__body h3 a{color:var(--ink)}
+body.station-novel-night .backend-content-card__body p,body.station-novel-night .backend-content-card__meta{color:var(--muted)}
+body.station-novel-night .backend-content-card .paper-link{color:var(--gold)}
+@media(max-width:600px){body.station-novel-night .serials-bookshelf__filters{flex-wrap:wrap;margin:8px 0 0;padding:0;overflow:visible}body.station-novel-night .serials-bookshelf__rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;padding:0;border:0;overflow:visible}body.station-novel-night .serials-bookshelf__book{min-width:0}body.station-novel-night .serials-bookshelf__intro h1{font-size:30px}}
