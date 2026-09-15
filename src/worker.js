@@ -19320,10 +19320,10 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
     ? `<header class="signal-station-header">
         <div class="signal-station-header__inner">
           <a class="signal-station-brand" href="${escapeHtml(homePath)}">
-            ${pageKind === 'articles' ? '<img class="articles-brand-logo" src="/images/optimized/station-cat-logo-1668c2e5-160.webp" width="40" height="40" alt="" />' : '<span class="signal-station-brand__mark">SC</span>'}
+            ${pageKind === 'articles' ? '<img class="articles-brand-logo" src="/images/home-night/cat-mark.webp" width="40" height="40" alt="" />' : '<span class="signal-station-brand__mark">SC</span>'}
             <span class="signal-station-brand__copy">
-              <strong>STATION CAT</strong>
-              <small>${escapeHtml(signalPageCopy.platformLabel)}</small>
+              <strong>${pageKind === 'articles' ? 'Station Cat' : 'STATION CAT'}</strong>
+              <small>${escapeHtml(pageKind === 'articles' ? navCopy.signal : signalPageCopy.platformLabel)}</small>
             </span>
           </a>
           <nav class="signal-station-nav" aria-label="${escapeHtml(signalPageCopy.primaryNavigation)}">
@@ -19352,7 +19352,7 @@ const dynamicHtmlShell = ({ body, canonicalPath, description, lang, ogImage = ''
         <div class="signal-station-footer__inner">
           <div class="signal-station-footer__brand">
             <span>SC</span>
-            <p>© STATION CAT · ${escapeHtml(signalPageCopy.footerLabel)}</p>
+            <p>© STATION CAT · ${escapeHtml(pageKind === 'articles' ? navCopy.signal : signalPageCopy.footerLabel)}</p>
           </div>
           <p>SIGNAL &gt; NOISE</p>
         </div>
