@@ -1,5 +1,5 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import ProductNightLayout from '../layouts/ProductNightLayout.astro';
 import { mindBudgetProduct } from '../data/products/mindbudget';
 
 interface Props {
@@ -127,34 +127,86 @@ const downloadPath = lang === 'zh-Hant' ? mindBudgetProduct.zhHantDownloadPagePa
 const privacyPath = mindBudgetProduct.privacyPaths[lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang];
 ---
 
-<BaseLayout title={copy.title} description={copy.intro} lang={lang} canonicalPath={canonicalPath} ogImage={mindBudgetProduct.assets.icon} bodyClass="station-paper-page mindbudget-page" alternates={[
-  { hrefLang: 'zh-Hant', href: mindBudgetProduct.zhHantProductPath }, { hrefLang: 'zh-Hans', href: mindBudgetProduct.zhHansProductPath },
-  { hrefLang: 'en', href: mindBudgetProduct.productPath }, { hrefLang: 'ja', href: mindBudgetProduct.jaProductPath },
-  { hrefLang: 'x-default', href: mindBudgetProduct.zhHantProductPath }
-]}>
-  <section class="mindbudget-hero">
-    <div class="mindbudget-hero__copy">
-      <p class="section-kicker">{copy.eyebrow} · {mindBudgetProduct.latestVersion}</p>
-      <div class="mindbudget-brand"><img src={mindBudgetProduct.assets.icon} alt="MindBudget app icon" width="1024" height="1024" /><span>{lang === 'zh-Hans' ? '花有数' : 'MindBudget'}</span></div>
-      <h1>{copy.headline}</h1>
-      <p>{copy.intro}</p>
-      <div class="button-row"><a class="button button-primary" href={mindBudgetProduct.testFlightUrl} target="_blank" rel="noreferrer">{copy.join}</a><a class="button button-secondary" href={downloadPath}>{copy.testInfo}</a><a class="button button-secondary" href={privacyPath}>{copy.privacy}</a></div>
-    </div>
-    <div class="mindbudget-hero__visual"><img class="mindbudget-phone" src={mindBudgetProduct.assets.dashboard} alt={copy.screenshots[0][0]} width="1206" height="2622" /></div>
-  </section>
+<ProductNightLayout
+  title={copy.title}
+  description={copy.intro}
+  lang={lang}
+  canonicalPath={canonicalPath}
+  ogImage={mindBudgetProduct.assets.icon}
+  bodyClass="mindbudget-night"
+  alternates={[
+    { hrefLang: 'zh-Hant', href: mindBudgetProduct.zhHantProductPath },
+    { hrefLang: 'zh-Hans', href: mindBudgetProduct.zhHansProductPath },
+    { hrefLang: 'en', href: mindBudgetProduct.productPath },
+    { hrefLang: 'ja', href: mindBudgetProduct.jaProductPath },
+    { hrefLang: 'x-default', href: mindBudgetProduct.zhHantProductPath }
+  ]}
+>
+  <div class="pn-wrap">
+    <section class="pn-hero mindbudget-night-hero">
+      <div class="pn-hero__copy">
+        <p class="pn-eyebrow">{copy.eyebrow} · {mindBudgetProduct.latestVersion}</p>
+        <div class="pn-brand-lockup">
+          <img src={mindBudgetProduct.assets.icon} alt="MindBudget app icon" width="64" height="64" />
+          <span>{lang === 'zh-Hans' ? '花有数' : 'MindBudget'}</span>
+        </div>
+        <h1>{copy.headline}</h1>
+        <p class="pn-hero__intro">{copy.intro}</p>
+        <div class="pn-button-row">
+          <a class="pn-button pn-button-primary" href={mindBudgetProduct.testFlightUrl} target="_blank" rel="noreferrer">{copy.join}</a>
+          <a class="pn-button pn-button-secondary" href={downloadPath}>{copy.testInfo}</a>
+          <a class="pn-button pn-button-secondary" href={privacyPath}>{copy.privacy}</a>
+        </div>
+      </div>
+      <div class="pn-hero__visual">
+        <img class="pn-mindbudget-phone" src={mindBudgetProduct.assets.dashboard} alt={copy.screenshots[0][0]} width="1206" height="2622" />
+      </div>
+    </section>
 
-  <section class="page-section mindbudget-showcase">
-    <div class="section-heading"><p class="section-kicker">Product showcase</p><h2>{copy.showcaseTitle}</h2></div>
-    <div class="mindbudget-screen-grid">{copy.screenshots.map(([title, description, image]) => <figure><div><img src={image} alt={title} width="1206" height="2622" loading="lazy" /></div><figcaption><strong>{title}</strong><span>{description}</span></figcaption></figure>)}</div>
-  </section>
+    <section class="pn-section mindbudget-showcase">
+      <p class="pn-section-kicker">Product showcase</p>
+      <h2>{copy.showcaseTitle}</h2>
+      <div class="pn-screen-grid">
+        {copy.screenshots.map(([title, description, image]) => (
+          <figure class="pn-screen-card">
+            <div>
+              <img src={image} alt={title} width="1206" height="2622" loading="lazy" />
+            </div>
+            <figcaption>
+              <strong>{title}</strong>
+              <span>{description}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
 
-  <section class="page-section">
-    <div class="section-heading"><p class="section-kicker">Local-first budgeting</p><h2>{copy.featuresTitle}</h2></div>
-    <div class="radar-feature-grid">{copy.features.map(([title, text]) => <article><h3>{title}</h3><p>{text}</p></article>)}</div>
-  </section>
+    <section class="pn-section">
+      <p class="pn-section-kicker">Local-first budgeting</p>
+      <h2>{copy.featuresTitle}</h2>
+      <div class="pn-feature-grid">
+        {copy.features.map(([title, text]) => (
+          <article class="pn-feature-card">
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
 
-  <section class="page-section mindbudget-release-band">
-    <div><p class="section-kicker">TestFlight</p><h2>{copy.releaseTitle}</h2><ul>{copy.releaseNotes.map((note) => <li>{note}</li>)}</ul></div>
-    <div><p class="section-kicker">Scope</p><h2>{copy.boundaryTitle}</h2><ul>{copy.boundaryNotes.map((note) => <li>{note}</li>)}</ul></div>
-  </section>
-</BaseLayout>
+    <section class="pn-section">
+      <div class="pn-note-panel-split">
+        <div>
+          <p class="pn-section-kicker">TestFlight</p>
+          <h2>{copy.releaseTitle}</h2>
+          <ul>{copy.releaseNotes.map((note) => <li>{note}</li>)}</ul>
+        </div>
+        <div>
+          <p class="pn-section-kicker">Scope</p>
+          <h2>{copy.boundaryTitle}</h2>
+          <ul>{copy.boundaryNotes.map((note) => <li>{note}</li>)}</ul>
+        </div>
+      </div>
+    </section>
+  </div>
+</ProductNightLayout>

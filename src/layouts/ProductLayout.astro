@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import ProductNightLayout from './ProductNightLayout.astro';
 
 interface AlternateLink {
   hrefLang: string;
@@ -25,9 +26,11 @@ const {
   bodyClass,
   ogImage = '/images/apps/snapcopy-app-icon.png'
 } = Astro.props;
+// Only the redesigned product landing opts into the night theme.
+const Layout = bodyClass?.split(/\s+/).includes('caption-product-page') ? ProductNightLayout : BaseLayout;
 ---
 
-<BaseLayout
+<Layout
   title={title}
   description={description}
   lang={lang}
@@ -37,4 +40,4 @@ const {
   bodyClass={bodyClass}
 >
   <slot />
-</BaseLayout>
+</Layout>

@@ -1,5 +1,5 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import ProductNightLayout from '../layouts/ProductNightLayout.astro';
 import { privatePinyinProduct } from '../data/products/privatepinyin';
 
 interface Props {
@@ -288,13 +288,13 @@ const legalLinks =
           };
 ---
 
-<BaseLayout
+<ProductNightLayout
   title={copy.title}
   description={copy.intro}
   lang={lang}
   canonicalPath={canonicalPath}
   ogImage={privatePinyinProduct.assets.icon}
-  bodyClass="station-paper-page radar-page privatepinyin-page"
+  bodyClass="privatepinyin-night"
   alternates={[
     { hrefLang: 'zh-Hant', href: privatePinyinProduct.zhHantProductPath },
     { hrefLang: 'zh-Hans', href: privatePinyinProduct.zhHansProductPath },
@@ -303,131 +303,125 @@ const legalLinks =
     { hrefLang: 'x-default', href: privatePinyinProduct.zhHantProductPath }
   ]}
 >
-  <section class="radar-hero privatepinyin-hero">
-    <div class="radar-hero__copy">
-      <p class="section-kicker">{copy.eyebrow}</p>
-      <h1>{copy.headline}</h1>
-      <p>{copy.intro}</p>
-      <div class="button-row">
-        <a class="button button-primary" href={macDownload.downloadPath}>{copy.primary}</a>
-        {windowsDownload && <a class="button button-secondary" href={windowsDownload.downloadPath}>{copy.windowsCta}</a>}
-        <a class="button button-secondary" href={iosAppStore.url} target="_blank" rel="noreferrer">{copy.iosCta}</a>
-        <a class="button button-secondary" href={copy.downloadHref}>{copy.secondary}</a>
-        <a class="button button-secondary" href={legalLinks.privacy}>{legalLinks.privacyLabel}</a>
-        <a class="button button-secondary" href={legalLinks.support}>{legalLinks.supportLabel}</a>
+  <div class="pn-wrap">
+    <section class="pn-hero privatepinyin-night-hero">
+      <div class="pn-hero__copy">
+        <p class="pn-eyebrow">{copy.eyebrow}</p>
+        <div class="pn-brand-lockup">
+          <img src={privatePinyinProduct.assets.icon} alt={`${copy.title} app icon`} width="64" height="64" />
+          <span>{lang === 'en' ? 'Maozhan Pinyin' : '猫栈拼音'}</span>
+        </div>
+        <h1>{copy.headline}</h1>
+        <p class="pn-hero__intro">{copy.intro}</p>
+        <div class="pn-button-row">
+          <a class="pn-button pn-button-primary" href={macDownload.downloadPath}>{copy.primary}</a>
+          {windowsDownload && <a class="pn-button pn-button-secondary" href={windowsDownload.downloadPath}>{copy.windowsCta}</a>}
+          <a class="pn-button pn-button-secondary" href={iosAppStore.url} target="_blank" rel="noreferrer">{copy.iosCta}</a>
+          <a class="pn-button pn-button-secondary" href={copy.downloadHref}>{copy.secondary}</a>
+          <a class="pn-button pn-button-secondary" href={legalLinks.privacy}>{legalLinks.privacyLabel}</a>
+          <a class="pn-button pn-button-secondary" href={legalLinks.support}>{legalLinks.supportLabel}</a>
+        </div>
       </div>
-    </div>
-    <div class="privatepinyin-preview-card" aria-label={`${copy.title} app icon`}>
-      <img src={privatePinyinProduct.assets.icon} alt={`${copy.title} app icon`} width="512" height="512" />
-      <div>
-        <p class="section-kicker">Windows {windowsVersion} · macOS {macVersion} · iOS {iosAppStore.version}</p>
-        <h2>{copy.title}</h2>
-        <p>{internalName}</p>
-        <p>macOS / Windows / iOS</p>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="page-section">
-    <div class="section-heading">
-      <p class="section-kicker">Input Method</p>
+    <section class="pn-section">
+      <p class="pn-section-kicker">Input Method</p>
       <h2>{copy.featuresTitle}</h2>
-    </div>
-    <div class="radar-feature-grid">
-      {copy.features.map(([title, text]) => (
-        <article>
-          <h3>{title}</h3>
-          <p>{text}</p>
-        </article>
-      ))}
-    </div>
-  </section>
-
-  <section class="page-section">
-    <div class="radar-note-panel">
-      <div>
-        <p class="section-kicker">{copy.title}</p>
-        <h2>{copy.notesTitle}</h2>
+      <div class="pn-feature-grid">
+        {copy.features.map(([title, text]) => (
+          <article class="pn-feature-card">
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </article>
+        ))}
       </div>
-      <ul>
-        {copy.notes.filter(Boolean).map((note) => <li>{note}</li>)}
-      </ul>
-    </div>
-  </section>
+    </section>
 
-  <section class="page-section privatepinyin-feedback" aria-labelledby={`privatepinyin-feedback-title-${lang}`}>
-    <div class="section-heading">
-      <p class="section-kicker">{feedbackCopy.kicker}</p>
+    <section class="pn-section">
+      <div class="pn-note-panel">
+        <div>
+          <p class="pn-section-kicker">{copy.title}</p>
+          <h2>{copy.notesTitle}</h2>
+        </div>
+        <ul>
+          {copy.notes.filter(Boolean).map((note) => <li>{note}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <section class="pn-section privatepinyin-feedback" aria-labelledby={`privatepinyin-feedback-title-${lang}`}>
+      <p class="pn-section-kicker">{feedbackCopy.kicker}</p>
       <h2 id={`privatepinyin-feedback-title-${lang}`}>{feedbackCopy.title}</h2>
-      <p>{feedbackCopy.intro}</p>
-    </div>
-    <form
-      class="privatepinyin-feedback-form"
-      data-product-feedback-form
-      data-locale={lang}
-      data-mac-version={macVersion}
-      data-windows-version={windowsVersion}
-      data-submitting-label={feedbackCopy.submitting}
-      data-success-message={feedbackCopy.success}
-      data-error-message={feedbackCopy.error}
-    >
-      <div class="privatepinyin-feedback-grid">
-        <label>
-          {feedbackCopy.platform}
-          <select name="platform" required>
-            <option value="macos">macOS</option>
-            <option value="windows">Windows</option>
-            <option value="ios">iOS</option>
-            <option value="other">Other</option>
-          </select>
+      <p class="pn-section-intro">{feedbackCopy.intro}</p>
+
+      <form
+        class="privatepinyin-feedback-form"
+        data-product-feedback-form
+        data-locale={lang}
+        data-mac-version={macVersion}
+        data-windows-version={windowsVersion}
+        data-submitting-label={feedbackCopy.submitting}
+        data-success-message={feedbackCopy.success}
+        data-error-message={feedbackCopy.error}
+      >
+        <div class="pn-feedback-grid">
+          <label>
+            {feedbackCopy.platform}
+            <select name="platform" required>
+              <option value="macos">macOS</option>
+              <option value="windows">Windows</option>
+              <option value="ios">iOS</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>
+            {feedbackCopy.version}
+            <input name="appVersion" value={macVersion} maxlength="40" required />
+          </label>
+          <label>
+            {feedbackCopy.issueType}
+            <select name="issueType" required>
+              {feedbackCopy.issueOptions.map(([value, label]) => <option value={value}>{label}</option>)}
+            </select>
+          </label>
+          <label>
+            {feedbackCopy.impact}
+            <select name="impact" required>
+              {feedbackCopy.impactOptions.map(([value, label]) => <option value={value} selected={value === 'normal'}>{label}</option>)}
+            </select>
+          </label>
+          <label class="pn-feedback-wide">
+            {feedbackCopy.summary}
+            <input name="summary" minlength="4" maxlength="120" placeholder={feedbackCopy.summaryPlaceholder} required />
+          </label>
+          <label class="pn-feedback-wide">
+            {feedbackCopy.details}
+            <textarea name="details" rows="6" minlength="20" maxlength="4000" placeholder={feedbackCopy.detailsPlaceholder} required></textarea>
+          </label>
+          <label class="pn-feedback-wide">
+            {feedbackCopy.steps}
+            <textarea name="reproductionSteps" rows="4" maxlength="2000" placeholder={feedbackCopy.stepsPlaceholder}></textarea>
+          </label>
+          <label>
+            {feedbackCopy.environment}
+            <input name="environment" maxlength="500" placeholder={feedbackCopy.environmentPlaceholder} />
+          </label>
+          <label>
+            {feedbackCopy.email}
+            <input name="contactEmail" type="email" maxlength="254" autocomplete="email" placeholder={feedbackCopy.emailPlaceholder} />
+          </label>
+        </div>
+        <label class="product-feedback-honeypot" aria-hidden="true" style="display:none">
+          Website
+          <input name="website" tabindex="-1" autocomplete="off" />
         </label>
-        <label>
-          {feedbackCopy.version}
-          <input name="appVersion" value={macVersion} maxlength="40" required />
-        </label>
-        <label>
-          {feedbackCopy.issueType}
-          <select name="issueType" required>
-            {feedbackCopy.issueOptions.map(([value, label]) => <option value={value}>{label}</option>)}
-          </select>
-        </label>
-        <label>
-          {feedbackCopy.impact}
-          <select name="impact" required>
-            {feedbackCopy.impactOptions.map(([value, label]) => <option value={value} selected={value === 'normal'}>{label}</option>)}
-          </select>
-        </label>
-        <label class="privatepinyin-feedback-wide">
-          {feedbackCopy.summary}
-          <input name="summary" minlength="4" maxlength="120" placeholder={feedbackCopy.summaryPlaceholder} required />
-        </label>
-        <label class="privatepinyin-feedback-wide">
-          {feedbackCopy.details}
-          <textarea name="details" rows="6" minlength="20" maxlength="4000" placeholder={feedbackCopy.detailsPlaceholder} required></textarea>
-        </label>
-        <label class="privatepinyin-feedback-wide">
-          {feedbackCopy.steps}
-          <textarea name="reproductionSteps" rows="4" maxlength="2000" placeholder={feedbackCopy.stepsPlaceholder}></textarea>
-        </label>
-        <label>
-          {feedbackCopy.environment}
-          <input name="environment" maxlength="500" placeholder={feedbackCopy.environmentPlaceholder} />
-        </label>
-        <label>
-          {feedbackCopy.email}
-          <input name="contactEmail" type="email" maxlength="254" autocomplete="email" placeholder={feedbackCopy.emailPlaceholder} />
-        </label>
-      </div>
-      <label class="product-feedback-honeypot" aria-hidden="true">
-        Website
-        <input name="website" tabindex="-1" autocomplete="off" />
-      </label>
-      <div class="privatepinyin-feedback-actions">
-        <button class="button button-primary" type="submit" data-product-feedback-submit>{feedbackCopy.submit}</button>
-        <p class="privatepinyin-feedback-status" data-product-feedback-status role="status" aria-live="polite"></p>
-      </div>
-    </form>
-  </section>
+        <div class="pn-feedback-actions">
+          <button class="pn-button pn-button-primary" type="submit" data-product-feedback-submit>{feedbackCopy.submit}</button>
+          <p class="pn-feedback-status" data-product-feedback-status role="status" aria-live="polite"></p>
+        </div>
+      </form>
+    </section>
+  </div>
 
   <script is:inline>
     document.querySelectorAll('[data-product-feedback-form]').forEach((form) => {
@@ -497,4 +491,4 @@ const legalLinks =
       });
     });
   </script>
-</BaseLayout>
+</ProductNightLayout>

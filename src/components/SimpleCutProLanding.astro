@@ -1,5 +1,5 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import ProductNightLayout from '../layouts/ProductNightLayout.astro';
 import { simpleCutProProduct } from '../data/products/simplecut-pro';
 
 interface Props {
@@ -123,13 +123,13 @@ const canonicalPath =
         : simpleCutProProduct.productPath;
 ---
 
-<BaseLayout
+<ProductNightLayout
   title={copy.title}
   description={copy.intro}
   lang={lang}
   canonicalPath={canonicalPath}
   ogImage={simpleCutProProduct.assets.icon}
-  bodyClass="station-paper-page radar-page"
+  bodyClass="simplecut-night"
   alternates={[
     { hrefLang: 'zh-Hant', href: simpleCutProProduct.zhHantProductPath },
     { hrefLang: 'zh-Hans', href: simpleCutProProduct.zhHansProductPath },
@@ -138,46 +138,47 @@ const canonicalPath =
     { hrefLang: 'x-default', href: simpleCutProProduct.zhHantProductPath }
   ]}
 >
-  <section class="radar-hero">
-    <div class="radar-hero__copy">
-      <p class="section-kicker">{copy.eyebrow}</p>
-      <h1>{copy.headline}</h1>
-      <p>{copy.intro}</p>
-      <div class="button-row">
-        <a class="button button-primary" href={macDownload.downloadPath}>{copy.primaryMac}</a>
-        <a class="button button-secondary" href={windowsDownload.downloadPath}>{copy.primaryWindows}</a>
-        <a class="button button-secondary" href={copy.detailsHref}>{copy.details}</a>
+  <div class="pn-wrap">
+    <section class="pn-hero simplecut-night-hero">
+      <div class="pn-hero__copy">
+        <p class="pn-eyebrow">{copy.eyebrow} · Version {currentVersion}</p>
+        <div class="pn-brand-lockup">
+          <img src={simpleCutProProduct.assets.icon} alt={copy.iconAlt} width="64" height="64" />
+          <span>SimpleCut Pro</span>
+        </div>
+        <h1>{copy.headline}</h1>
+        <p class="pn-hero__intro">{copy.intro}</p>
+        <div class="pn-button-row">
+          <a class="pn-button pn-button-primary" href={macDownload.downloadPath}>{copy.primaryMac}</a>
+          <a class="pn-button pn-button-secondary" href={windowsDownload.downloadPath}>{copy.primaryWindows}</a>
+          <a class="pn-button pn-button-secondary" href={copy.detailsHref}>{copy.details}</a>
+        </div>
       </div>
-    </div>
-    <div class="radar-preview-card anytls-icon-preview" aria-label="SimpleCut Pro app icon">
-      <img src={simpleCutProProduct.assets.icon} alt={copy.iconAlt} width="1024" height="1024" />
-    </div>
-  </section>
+    </section>
 
-  <section class="page-section">
-    <div class="section-heading">
-      <p class="section-kicker">Editing workflow</p>
+    <section class="pn-section">
+      <p class="pn-section-kicker">Editing workflow</p>
       <h2>{copy.featuresTitle}</h2>
-    </div>
-    <div class="radar-feature-grid">
-      {copy.features.map(([title, text]) => (
-        <article>
-          <h3>{title}</h3>
-          <p>{text}</p>
-        </article>
-      ))}
-    </div>
-  </section>
-
-  <section class="page-section">
-    <div class="radar-note-panel">
-      <div>
-        <p class="section-kicker">Version {simpleCutProProduct.latestVersion}</p>
-        <h2>{copy.releaseTitle}</h2>
+      <div class="pn-feature-grid">
+        {copy.features.map(([title, text]) => (
+          <article class="pn-feature-card">
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </article>
+        ))}
       </div>
-      <ul>
-        {copy.releaseNotes.map((note) => <li>{note}</li>)}
-      </ul>
-    </div>
-  </section>
-</BaseLayout>
+    </section>
+
+    <section class="pn-section">
+      <div class="pn-note-panel">
+        <div>
+          <p class="pn-section-kicker">Version {simpleCutProProduct.latestVersion}</p>
+          <h2>{copy.releaseTitle}</h2>
+        </div>
+        <ul>
+          {copy.releaseNotes.map((note) => <li>{note}</li>)}
+        </ul>
+      </div>
+    </section>
+  </div>
+</ProductNightLayout>
