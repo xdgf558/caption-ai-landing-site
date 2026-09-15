@@ -1,5 +1,5 @@
 import { Resvg } from '@cf-wasm/resvg';
-import encodeJpeg from 'jpeg-js/lib/encoder.js';
+import encodeJpeg from './vendor/jpeg-encoder.js';
 import { encodeMusicRgbaPng } from './rasterPng.js';
 import { inspectSmallAsset } from './assetFormats.js';
 import { checkAssetIdentity, checkStoredObject } from './resources.js';
