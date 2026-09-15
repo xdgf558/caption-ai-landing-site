@@ -390,9 +390,9 @@ test('album display cover stays tied to the live album version and independent c
 test('display renderer preserves transparency and avoids decoding over-budget rasters', async () => {
   const asset = { kind: 'cover', format: 'png', content_type: 'image/png' };
   const transparent = await sharp({ create: { width: 900, height: 900, channels: 4, background: { r: 20, g: 40, b: 30, alpha: 0.5 } } }).png({ compressionLevel: 0 }).toBuffer();
-  const output = renderMusicDisplayCover(transparent, asset);
-  assert.equal(output.contentType, 'image/webp');
+  const output = await renderMusicDisplayCover(transparent, asset);
+  assert.equal(output.contentType, 'image/png');
   const decoded = await sharp(output.bytes).metadata(); assert.equal(decoded.hasAlpha, true); assert.equal(decoded.width, 768);
   const huge = await sharp({ create: { width: 2049, height: 2049, channels: 3, background: '#fff' } }).png().toBuffer();
-  assert.equal(renderMusicDisplayCover(huge, asset), null);
+  assert.equal(await renderMusicDisplayCover(huge, asset), null);
 });

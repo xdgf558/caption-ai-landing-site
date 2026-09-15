@@ -6,6 +6,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { basename, resolve } from 'node:path';
 import { build } from 'esbuild';
 import { Miniflare } from 'miniflare';
+import { musicWorkerBundle } from './helpers/music-worker-bundle.mjs';
 import sharp from 'sharp';
 import jsQR from 'jsqr';
 import { musicTestDatabase } from './helpers/music-test-database.mjs';
@@ -306,4 +307,39 @@ test('pasted paragraph separators render exactly like normal spaces in album car
   const metadata = musicShareMetadata(album, origin, 'zh-Hant');
   assert.doesNotMatch(metadata, /[\u2028\u2029\u0085\r\n\t]/);
   assert.match(metadata, /Station Cat/);
+});
+
+
+test('thumbnails followed by posters reuse the raster heap without growing Photon memory', { timeout: 60000 }, async () => {
+  const compiled = await musicWorkerBundle({ stdin: { resolveDir: process.cwd(), contents: `
+    import { renderMusicDisplayCover } from './src/music/coverDisplay.js';
+    import { renderMusicShareCard } from './src/music/shareCardRender.js';
+    import { musicAlbumShareCardData, MUSIC_SHARE_FONT } from './src/music/shareCard.js';
+    import { initPhoton } from '@cf-wasm/photon';
+    export default { async fetch(request, env) {
+      const bytes = new Uint8Array(await request.arrayBuffer());
+      const photon = await initPhoton.ensure(), before = photon.memory.buffer.byteLength;
+      for (let i = 0; i < 3; i++) {
+        const cover = await renderMusicDisplayCover(bytes, { kind: 'cover', format: 'png', content_type: 'image/png' });
+        if (cover.contentType !== 'image/jpeg' || cover.bytes.length >= bytes.length) throw new Error('COVER_ENCODING');
+      }
+      if (photon.memory.buffer.byteLength !== before) throw new Error('PHOTON_HEAP_GREW');
+      const font = await (await env.ASSETS.fetch(new Request('http://music.test' + MUSIC_SHARE_FONT))).arrayBuffer();
+      const data = musicAlbumShareCardData({ slug: 'album', version: 1, type: 'album', title: '晚一点告白', description: '有些告白，晚了一个夏天。', trackIds: [] }, 'https://music.test', 'zh-Hans');
+      const poster = await renderMusicShareCard(data, 'poster', bytes, new Uint8Array(font));
+      return new Response(poster, { headers: { 'Content-Type': 'image/png', 'X-Photon-Bytes': String(before) } });
+    }}
+  ` } });
+  const mf = new Miniflare({ ...compiled, compatibilityDate: '2026-08-01',
+    assets: { directory: resolve('public'), binding: 'ASSETS', routerConfig: { has_user_worker: true, static_routing: { user_worker: ['/*'] } } },
+    outboundService: () => new Response(null, { status: 403 }) });
+  try {
+    const cover = await sharp(webp).resize(1254, 1254).removeAlpha().png({ compressionLevel: 1 }).toBuffer();
+    for (let i = 0; i < 2; i++) {
+      const response = await mf.dispatchFetch('http://music.test/test', { method: 'POST', body: cover });
+      assert.equal(response.status, 200, response.status === 200 ? '' : await response.text());
+      assert.ok(Number(response.headers.get('X-Photon-Bytes')) < 2 * 1024 * 1024);
+      assert.equal((await sharp(Buffer.from(await response.arrayBuffer())).metadata()).height, 1800);
+    }
+  } finally { await mf.dispose(); }
 });

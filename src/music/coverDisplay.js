@@ -1,9 +1,11 @@
-import { PhotonImage, resize, SamplingFilter } from '@cf-wasm/photon';
+import { Resvg } from '@cf-wasm/resvg';
+import encodeJpeg from 'jpeg-js/lib/encoder.js';
+import { encodeMusicRgbaPng } from './rasterPng.js';
 import { inspectSmallAsset } from './assetFormats.js';
 import { checkAssetIdentity, checkStoredObject } from './resources.js';
 import { boundedBody, cancelBody } from './storage.js';
 
-const VERSION = 'display-768-q82-v1';
+const VERSION = 'display-768-q82-v2';
 const MAX_BYTES = 5242880, MAX_PIXELS = 4194304;
 const clientHeaders = {
   // Always revisit publication/storage checks before reusing browser bytes.
@@ -34,25 +36,34 @@ async function readBytes(body, expected) {
   } finally { clearTimeout(timer); input.close(); }
 }
 
-export function renderMusicDisplayCover(bytes, asset) {
+export async function renderMusicDisplayCover(bytes, asset) {
   const dimensions = inspectSmallAsset(asset, bytes);
-  // Larger validated originals still display; avoid unbounded WASM allocations.
   if (dimensions.width * dimensions.height > MAX_PIXELS) return null;
-  let input, output;
+  // WebP is already compressed. Keep it intact rather than growing a second
+  // WASM heap alongside the renderer used by sharing posters in this isolate.
+  if (asset.content_type === 'image/webp') return { bytes, contentType: asset.content_type };
+  const ratio = Math.min(1, 768 / Math.max(dimensions.width, dimensions.height));
+  const width = Math.max(1, Math.round(dimensions.width * ratio));
+  const height = Math.max(1, Math.round(dimensions.height * ratio));
+  let binary = '';
+  for (let offset = 0; offset < bytes.length; offset += 16384) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 16384));
+  }
+  let renderer, raster, pixels;
   try {
-    input = PhotonImage.new_from_byteslice(bytes);
-    if (input.get_width() !== dimensions.width || input.get_height() !== dimensions.height) throw new Error('COVER_DIMENSIONS');
-    const ratio = Math.min(1, 768 / Math.max(dimensions.width, dimensions.height));
-    output = resize(input, Math.max(1, Math.round(dimensions.width * ratio)),
-      Math.max(1, Math.round(dimensions.height * ratio)), SamplingFilter.Lanczos3);
-    const pixels = output.get_raw_pixels();
-    let transparent = false;
-    for (let i = 3; i < pixels.length; i += 4) if (pixels[i] !== 255) { transparent = true; break; }
-    const encoded = transparent ? output.get_bytes_webp() : output.get_bytes_jpeg(82);
-    // Preserve transparent art, and don't enlarge already small source images.
-    return encoded.length < bytes.length ? { bytes: encoded, contentType: transparent ? 'image/webp' : 'image/jpeg' }
-      : { bytes, contentType: asset.content_type };
-  } finally { output?.free(); input?.free(); }
+    renderer = await Resvg.async(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><image width="${width}" height="${height}" preserveAspectRatio="none" href="data:${asset.content_type};base64,${btoa(binary)}"/></svg>`, {
+      imageRendering: 1, font: { loadSystemFonts: false }
+    });
+    raster = renderer.render(); pixels = raster.pixels;
+  } finally { raster?.free(); renderer?.free(); }
+  let transparent = false;
+  for (let i = 3; i < pixels.length; i += 4) if (pixels[i] !== 255) { transparent = true; break; }
+  // Encode after releasing the raster. Resvg's shared heap is reused by posters;
+  // JPEG encoding allocates only garbage-collectable JavaScript memory.
+  const encoded = transparent ? await encodeMusicRgbaPng(pixels, width, height)
+    : encodeJpeg({ data: pixels, width, height }, 82).data;
+  return encoded.length < bytes.length ? { bytes: encoded, contentType: transparent ? 'image/png' : 'image/jpeg' }
+    : { bytes, contentType: asset.content_type };
 }
 
 // Internal helper: callers MUST establish live public visibility and revision first.
@@ -89,7 +100,7 @@ export async function musicDisplayCover(request, bucket, asset, { cache = global
     const bytes = await readBytes(object.body, asset.byte_size);
     const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), b => b.toString(16).padStart(2, '0')).join('');
     if (digest !== asset.sha256) throw new Error('COVER_HASH_MISMATCH');
-    const rendered = renderMusicDisplayCover(bytes, asset);
+    const rendered = await renderMusicDisplayCover(bytes, asset);
     // Oversized pixel dimensions retain the original streaming contract, without
     // storing that large fallback in the thumbnail cache or claiming a variant ETag.
     if (!rendered) return new Response(request.method === 'HEAD' ? null : bytes, { headers: {
