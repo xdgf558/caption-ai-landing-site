@@ -1,4 +1,6 @@
 ---
+import '../styles/home-night.css';
+import '../styles/reader-center-night.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CreemTrustBadge from './CreemTrustBadge.astro';
 import VipMark from './VipMark.astro';
@@ -197,7 +199,8 @@ const clientConfig = {
   title={copy.metaTitle}
   description={copy.metaDescription}
   lang={lang}
-  bodyClass="reader-center-page"
+  bodyClass="station-home-night reader-center-page reader-center-night"
+  homeChrome={true}
   canonicalPath={readerLibraryPaths[lang]}
   alternates={[
     { hrefLang: 'zh-Hant', href: readerLibraryPaths['zh-Hant'] },
@@ -214,6 +217,7 @@ const clientConfig = {
     </section>
     <section class="reader-auth-shell" id="reader-auth-shell" aria-labelledby="reader-auth-heading">
       <div class="reader-auth-intro">
+        <img class="reader-night-art" src="/images/points-night/hero-960.webp" alt="" width="960" height="384" fetchpriority="high" />
         <p class="reader-v2-kicker">Member Center</p>
         <h1 id="reader-auth-heading">{ui.authHeading}</h1>
         <p class="reader-auth-intro__lead">{ui.authDesc}</p>

@@ -1,4 +1,6 @@
 ---
+import '../../styles/home-night.css';
+import '../../styles/novel-night.css';
 import { getCollection } from 'astro:content';
 import SerialsHubPage from '../../components/SerialsHubPage.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -19,7 +21,8 @@ const featuredLatestChapter = featuredSerial
   description={copy.description}
   lang="zh-Hant"
   canonicalPath={basePath}
-  bodyClass="station-home"
+  bodyClass="station-home-night station-novel-night"
+  homeChrome={true}
   alternates={[
     { hrefLang: 'zh-Hant', href: '/novel/' },
     { hrefLang: 'x-default', href: '/novel/' }

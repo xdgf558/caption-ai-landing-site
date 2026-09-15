@@ -13,12 +13,14 @@ const home = lang === 'zh-Hant' ? '/' : `/${lang === 'zh-Hans' ? 'zh-hans' : lan
 const homeLabel = {'zh-Hant':'首頁','zh-Hans':'首页',en:'Home',ja:'ホーム'}[lang];
 const gamePage = /\/apps\/cat-life-game\/$/.test(Astro.url.pathname);
 const pointsPage = /\/points\/$/.test(Astro.url.pathname);
-const current = (item: {href:string;label:string}) => ((gamePage || pointsPage) && item.href === Astro.url.pathname) || (apps && item.label === 'Apps');
-const localeLink = (prefix: string) => pointsPage ? `/${prefix}/points/` : gamePage ? `/${prefix}/apps/cat-life-game/` : apps ? `/${prefix}/apps/` : prefix === 'zh-hant' ? '/' : `/${prefix}/`;
+const libraryPage = /\/library\/$/.test(Astro.url.pathname);
+const novelPage = Astro.url.pathname === '/novel/';
+const current = (item: {href:string;label:string}) => ((gamePage || pointsPage || libraryPage || novelPage) && item.href === Astro.url.pathname) || (apps && item.label === 'Apps');
+const localeLink = (prefix: string) => libraryPage ? `/${prefix}/library/` : novelPage ? (prefix === 'en' ? '/en/novel/' : prefix === 'zh-hant' ? '/novel/' : `/${prefix}/`) : pointsPage ? `/${prefix}/points/` : gamePage ? `/${prefix}/apps/cat-life-game/` : apps ? `/${prefix}/apps/` : prefix === 'zh-hant' ? '/' : `/${prefix}/`;
 ---
 <header class="night-header">
   <a class="night-brand" href={home} aria-label="Station Cat home"><img src="/images/home-night/cat-mark.webp" alt="" width="42" height="50" /><span><strong>Station Cat</strong><small>{subtitle}</small></span></a>
   <nav class="night-desktop-nav" aria-label={menuLabel}>{apps && <a href={home}>{homeLabel}</a>}{nav.map(i => <a href={i.href} aria-current={current(i) ? 'page' : undefined}>{i.label}</a>)}</nav>
-  <div class="night-header-actions"><a class="night-member" href={member.href}>{member.label}</a><a class="night-follow" href={follow.href} target="_blank" rel="noopener noreferrer"><X size={18}/>{follow.label}</a></div>
+  <div class="night-header-actions"><a class="night-member" href={member.href} aria-current={libraryPage ? 'page' : undefined}>{member.label}</a><a class="night-follow" href={follow.href} target="_blank" rel="noopener noreferrer"><X size={18}/>{follow.label}</a></div>
   <details class="night-mobile-menu"><summary aria-label={menuLabel}><Menu size={23} /></summary><nav aria-label={menuLabel}>{apps && <a href={home}>{homeLabel}</a>}{items.map(i => <a href={i.href} aria-current={current(i) ? 'page' : undefined}>{i.label}</a>)}<div class="night-mobile-locales"><a href={localeLink('zh-hant')}>繁中</a><a href={localeLink('zh-hans')}>简中</a><a href={localeLink('en')}>EN</a><a href={localeLink('ja')}>日本語</a></div></nav></details>
 </header>
