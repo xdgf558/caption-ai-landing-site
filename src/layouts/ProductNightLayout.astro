@@ -1,0 +1,213 @@
+---
+import { siteConfig } from '../data/site';
+import { brandNavigation, zhBrandNavigation, zhHansBrandNavigation, jaBrandNavigation } from '../data/navigation';
+import LanguageSwitcher from '../components/LanguageSwitcher.astro';
+import '../styles/global.css';
+import '../styles/product-night.css';
+
+interface AlternateLink {
+  hrefLang: string;
+  href: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+  canonicalPath?: string;
+  ogImage?: string;
+  alternates?: AlternateLink[];
+  bodyClass?: string;
+}
+
+const {
+  title,
+  description,
+  lang = 'zh-Hant',
+  canonicalPath = Astro.url.pathname,
+  ogImage = siteConfig.ogImage,
+  alternates = [],
+  bodyClass = ''
+} = Astro.props;
+
+const fullTitle = title.includes(siteConfig.name)
+  ? title
+  : `${title} | ${siteConfig.name}`;
+const canonicalUrl = new URL(canonicalPath, siteConfig.baseUrl).toString();
+const ogImageUrl = new URL(ogImage, siteConfig.baseUrl).toString();
+
+const navMap = {
+  en: brandNavigation,
+  'zh-Hant': zhBrandNavigation,
+  'zh-Hans': zhHansBrandNavigation,
+  ja: jaBrandNavigation
+};
+const items = navMap[lang] || zhBrandNavigation;
+const member = items.find((i) => i.href.endsWith('/library/')) || { label: 'Member', href: '/library/' };
+const follow = items.find((i) => i.label === 'Follow on X' || i.href.includes('x.com')) || { label: 'Follow on X', href: siteConfig.xUrl };
+const nav = items.filter((i) => i !== member && i !== follow);
+
+const subtitleMap = {
+  'zh-Hant': '個人創作小站',
+  'zh-Hans': '个人创作小站',
+  en: 'An independent creative station',
+  ja: '小さな創作の駅'
+};
+const subtitle = subtitleMap[lang] || subtitleMap['zh-Hant'];
+
+const menuLabelMap = {
+  en: 'Menu',
+  ja: 'メニュー',
+  'zh-Hant': '選單',
+  'zh-Hans': '菜单'
+};
+const menuLabel = menuLabelMap[lang] || 'Menu';
+
+const homeHref = lang === 'zh-Hant' ? '/' : `/${lang === 'zh-Hans' ? 'zh-hans' : lang}/`;
+
+const footerCopy = {
+  'zh-Hant': { caption: '個人創作小站', line: '用貓咪、工具與文字，陪你走過每一個平凡的日子。', privacy: '隱私政策', terms: '服務條款', support: '聯絡我們', essay: '文章與觀察', essayHref: '/signal/' },
+  'zh-Hans': { caption: '个人创作小站', line: '用猫咪、工具与文字，陪你走过每一个平凡的日子。', privacy: '隐私政策', terms: '服务条款', support: '联系我们', essay: '文章与观察', essayHref: '/zh-hans/signal/' },
+  en: { caption: 'Independent creations', line: 'Cats, tools and stories. A little company for everyday life.', privacy: 'Privacy', terms: 'Terms', support: 'Contact', essay: 'Notes & Essays', essayHref: '/en/signal/' },
+  ja: { caption: '小さな創作の駅', line: '猫とツールと物語で、何気ない毎日に寄り添います。', privacy: 'プライバシー', terms: '利用規約', support: 'お問い合わせ', essay: '記事と思考', essayHref: '/ja/signal/' }
+}[lang] || { caption: '個人創作小站', line: '用貓咪、工具與文字，陪你走過每一個平凡的日子。', privacy: '隱私政策', terms: '服務條款', support: '聯絡我們', essay: '文章與觀察', essayHref: '/signal/' };
+
+const localePrefix = lang === 'zh-Hant' ? 'zh-hant' : lang === 'zh-Hans' ? 'zh-hans' : lang;
+const currentPath = Astro.url.pathname;
+const legalPrefix = `/${localePrefix}`;
+const productPath = currentPath.replace(/^\/(?:zh-hant|zh-hans|en|ja)(?=\/)/, '');
+const mobileLocales = [
+  { lang: 'zh-Hant', label: '繁中', prefix: '/zh-hant' },
+  { lang: 'zh-Hans', label: '简中', prefix: '/zh-hans' },
+  { lang: 'en', label: 'EN', prefix: '/en' },
+  { lang: 'ja', label: '日本語', prefix: '/ja' }
+].map((locale) => ({
+  ...locale,
+  href: alternates.find((alternate) => alternate.hrefLang === locale.lang)?.href
+    ?? `${locale.prefix}${productPath}`
+}));
+const resolvedBodyClass = ['product-night', bodyClass].filter(Boolean).join(' ');
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {alternates.map((alternate) => (
+      <link rel="alternate" hreflang={alternate.hrefLang} href={new URL(alternate.href, siteConfig.baseUrl).toString()} />
+    ))}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content={`${fullTitle} social preview`} />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+  </head>
+  <body class={resolvedBodyClass}>
+    <a class="skip-link" href="#main">{lang === 'ja' ? '本文へ移動' : lang === 'zh-Hant' ? '跳到主要內容' : lang === 'zh-Hans' ? '跳到主要内容' : 'Skip to content'}</a>
+
+    <header class="pn-header">
+      <a class="pn-brand" href={homeHref} aria-label="Station Cat home">
+        <img src="/images/home-night/cat-mark.webp" alt="Station Cat" width="34" height="34" />
+        <span>
+          <strong>Station Cat</strong>
+          <small>{subtitle}</small>
+        </span>
+      </a>
+
+      <nav class="pn-desktop-nav" aria-label={menuLabel}>
+        {nav.map((item) => (
+          <a
+            href={item.href}
+            aria-current={currentPath === item.href || (item.label === 'Apps' && currentPath.includes('/apps/')) ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
+
+      <div class="pn-header-actions">
+        <a class="pn-member" href={member.href}>{member.label}</a>
+        <a class="pn-follow" href={follow.href} target="_blank" rel="noopener noreferrer">{follow.label}</a>
+      </div>
+
+      <details class="pn-mobile-menu">
+        <summary aria-label={menuLabel}>
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="18" x2="20" y2="18"></line>
+          </svg>
+        </summary>
+        <nav aria-label={menuLabel}>
+          {items.map((item) => (
+            <a href={item.href} aria-current={currentPath === item.href ? 'page' : undefined}>
+              {item.label}
+            </a>
+          ))}
+          <div class="pn-mobile-locales">
+            {mobileLocales.map((locale) => (
+              <a href={locale.href} hreflang={locale.lang} lang={locale.lang} aria-current={lang === locale.lang ? 'page' : undefined}>{locale.label}</a>
+            ))}
+          </div>
+        </nav>
+      </details>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="pn-footer">
+      <div class="pn-footer-inner">
+        <div class="pn-footer-brand">
+          <a class="pn-brand" href={homeHref}>
+            <img src="/images/home-night/cat-mark.webp" alt="Station Cat" width="34" height="34" />
+            <span>
+              <strong>Station Cat</strong>
+              <small>{footerCopy.caption}</small>
+            </span>
+          </a>
+          <p>{footerCopy.line}</p>
+        </div>
+
+        <nav aria-label="Footer navigation">
+          <a href="/about/">About</a>
+          <a href={footerCopy.essayHref}>{footerCopy.essay}</a>
+          <a href={`${legalPrefix}/privacy/`}>{footerCopy.privacy}</a>
+          <a href={`${legalPrefix}/terms/`}>{footerCopy.terms}</a>
+        </nav>
+
+        <div class="pn-footer-end">
+          <div class="pn-footer-social">
+            <a href={`mailto:${siteConfig.supportEmail}`} aria-label={footerCopy.support}>
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+              </svg>
+            </a>
+            <a href={siteConfig.xUrl} aria-label="Follow on X" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 4l11.733 16h4.267l-11.733 -16z"></path>
+                <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path>
+              </svg>
+            </a>
+            <LanguageSwitcher lang={lang} />
+          </div>
+          <p class="pn-fine-print">&copy; {new Date().getFullYear()} {siteConfig.legalName}. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
