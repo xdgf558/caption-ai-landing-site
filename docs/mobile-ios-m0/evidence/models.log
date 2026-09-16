@@ -1,0 +1,36 @@
+test_cas_zero_rolls_back (test_recovery.Models) ... ok
+test_concurrent_same_operation_only_one_rotation (test_recovery.Models) ... ok
+test_confirm_response_lost_after_revocation (test_recovery.Models) ... ok
+test_deletion_transaction_rollback (test_recovery.Models) ... ok
+test_different_id_reuse_revokes (test_recovery.Models) ... ok
+test_duplicate_prepare_cannot_create_second_job (test_recovery.Models) ... ok
+test_explicit_reject_wins_over_old_success (test_recovery.Models) ... ok
+test_four_actual_process_exit_points (test_recovery.Models) ... ok
+test_full_buffer_soft_failures_stop_at_hard_deadline (test_recovery.Models) ... ok
+test_invalid_grant_and_scope_rejected (test_recovery.Models) ... ok
+test_late_grant_never_autoplays (test_recovery.Models) ... ok
+test_logout_does_not_clear_separate_receipt (test_recovery.Models) ... ok
+test_logout_or_account_switch_discards_late_result (test_recovery.Models) ... ok
+test_media_identity_matrix_and_no_delivery (test_recovery.Models) ... ok
+test_outbox_delivery_failure_leaves_durable_work (test_recovery.Models) ... ok
+test_preparation_expiry_does_not_delete (test_recovery.Models) ... ok
+test_prepare_response_lost_still_queryable (test_recovery.Models) ... ok
+test_prepare_write_failure_prevents_http (test_recovery.Models) ... ok
+test_public_mode_cannot_escalate_vip (test_recovery.Models) ... ok
+test_receipt_write_failure_prevents_prepare (test_recovery.Models) ... ok
+test_receipt_wrong_task_expiry_and_query_failure (test_recovery.Models) ... ok
+test_result_write_failure_keeps_pending (test_recovery.Models) ... ok
+test_same_id_changed_body (test_recovery.Models) ... ok
+test_same_result_no_renewal (test_recovery.Models) ... ok
+test_sleep_and_wall_clock_cannot_extend (test_recovery.Models) ... ok
+test_status_survives_account_cleanup (test_recovery.Models) ... ok
+test_superseded_does_not_revoke (test_recovery.Models) ... ok
+test_transaction_failures_rollback_both (test_recovery.Models) ... ok
+test_unknown_token_cannot_revoke (test_recovery.Models) ... ok
+test_unsent_request_after_window_still_works (test_recovery.Models) ... ok
+test_window_expired_tombstone_does_not_revoke (test_recovery.Models) ... ok
+
+----------------------------------------------------------------------
+Ran 31 tests in 0.157s
+
+OK

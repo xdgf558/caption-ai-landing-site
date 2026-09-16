@@ -1,0 +1,11 @@
+[
+  "package.json",
+  "scripts/test-music-player.mjs",
+  "scripts/test-music-public.mjs",
+  "scripts/test-music-system-controls.mjs",
+  "src/components/MusicPlayer.astro",
+  "src/music/publicHttp.js",
+  "src/scripts/musicPlayerCatalog.js",
+  "src/scripts/musicSystemControls.js",
+  "src/worker.js"
+]

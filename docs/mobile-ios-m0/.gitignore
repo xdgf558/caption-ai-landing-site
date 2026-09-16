@@ -1,0 +1,4 @@
+experiments/native/build/
+**/__pycache__/
+evidence/private-*
+.DS_Store
