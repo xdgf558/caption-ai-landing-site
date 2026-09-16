@@ -1,0 +1,2 @@
+clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios18.0.0-simulator' [-Wincompatible-sysroot]
+build/M0Probe.app: replacing existing signature

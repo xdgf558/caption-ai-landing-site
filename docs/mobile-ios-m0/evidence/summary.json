@@ -1,0 +1,31 @@
+{
+  "specVersion": "1.0.1",
+  "gitMain": "3dc0007323b9cced51761bd0e6f59bcce215cf67",
+  "productionVersion": "1d9e4830-495e-4db6-a7ca-b681e3f41408",
+  "xcode": "27.0 beta 6 / 27A5252f",
+  "sdk": "iPhoneSimulator27.0",
+  "device": "iPhone 17 Pro simulator / iOS 27.0",
+  "minimumTarget": "iOS18.0",
+  "modelTests": {
+    "total": 31,
+    "pass": 31
+  },
+  "websiteTests": {
+    "total": 81,
+    "pass": 80,
+    "fail": 1,
+    "skip": 0
+  },
+  "httpMatrix": {
+    "total": 16,
+    "pass": 16
+  },
+  "keychain": {
+    "passed": false,
+    "osStatus": -34018,
+    "temporaryEntitlementAttempt": "App failed to launch; reverted to original ad-hoc simulation build"
+  },
+  "physicalDeviceTested": false,
+  "productionWrites": false,
+  "M1Started": false
+}

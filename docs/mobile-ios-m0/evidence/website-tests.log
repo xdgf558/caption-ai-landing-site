@@ -1,0 +1,115 @@
+✔ initial reads do not load media; one lifecycle per audio controller (8.5785ms)
+✔ invalid capability timestamps and inconsistent authorization fail closed (0.18825ms)
+✔ capabilities failure preserves free full and explicit preview without VIP full (0.873041ms)
+✔ free catalog becomes available while the independent capability request is unresolved (4.5295ms)
+✔ expiry unloads protected full, preserves only in-memory full position and ignores late play rejection (2.265375ms)
+✔ renewal at expiry remains paused and can resume only after a new user action (0.7605ms)
+✔ a blocked timer cannot let a user play with an expired hint (0.578166ms)
+✔ account invalidation is immediate, rejects stale successful reads, and never inherits a previous full source (1.411ms)
+✔ account changes leave free full and previews playing, while clearing old hints (0.913584ms)
+✔ upgrade does not switch an active preview; explicit full starts at zero (0.433708ms)
+✔ foreground events coalesce, pause protected full and do not resume after checking (1.265792ms)
+✔ page hidden does not interrupt ordinary playback; bfcache restore rechecks (0.956917ms)
+✔ fresh free policy permits full after expiry without assuming VIP is permanent (1.034458ms)
+✔ known free-to-VIP policy or version changes unload the previous resource (0.989542ms)
+✔ full media failure makes one access probe and handles 401/AUTH_REQUIRED without advancing (1.00425ms)
+✔ full media failure makes one access probe and handles 403/MEMBERSHIP_EXPIRED without advancing (0.588792ms)
+✔ full media failure makes one access probe and handles 403/ACCOUNT_RESTRICTED without advancing (0.453084ms)
+✔ full media failure makes one access probe and handles 503/MEMBERSHIP_UNAVAILABLE without advancing (2.331959ms)
+✔ full media failure makes one access probe and handles 409/VERSION_CONFLICT without advancing (0.613542ms)
+✔ full media failure makes one access probe and handles 410/TRACK_UNAVAILABLE without advancing (0.73025ms)
+✔ healthy access preserves bounded three-failure media recovery, not a payment prompt (1.469542ms)
+✔ a preview error plus full access 403 stays a media error and never prompts payment (0.424ms)
+✔ stale access denial cannot unload a later selected song; stale success cannot resume after pause (0.664667ms)
+✔ destroy aborts requests, timers and subscriptions without later playback or refresh (0.206583ms)
+✔ session notifications contain no identity, deduplicate transports and release listeners (0.396167ms)
+✔ session mutation signals invalidate before the request and settle on success or uncertainty (0.379041ms)
+✔ missing session-change completion can be recovered by explicit recheck (0.331417ms)
+✔ known unavailable versions stay out of subsequent full queue traversal until catalog refresh (1.273167ms)
+✔ long-lived hints use bounded timer chunks instead of overflowing into a refresh loop (0.693708ms)
+✔ an access timeout stops full playback without another probe or queue advance (1.198ms)
+✔ notification transport failures cannot block the underlying account request (0.399167ms)
+✔ a stale access denial cannot affect a new failed attempt on the same source generation (0.688042ms)
+✔ limited-free expiry unloads anonymous full and stale catalog cannot restart it or create a timer loop (0.690667ms)
+✔ limited-free full requires a usable server clock but ordinary free tracks still play (0.668042ms)
+✔ promotion expiry immediately publishes VIP display state even when both refreshes fail (1.803541ms)
+✔ browse normalization retains only static notice anchors, never a return or credential fragment (0.375667ms)
+✔ every HTML path, alias, slashless and nested asset path is gated with zero binding reads (5.249041ms)
+✔ alias and slashless redirects preserve only unique valid public identifiers (0.384042ms)
+✔ enabled HTML streams assets but is never positively cached; HEAD and method handling (0.465458ms)
+✔ music routes run before asset fallthrough, stay out of sitemap, and use explicit language mapping (7.356417ms)
+✔ 500-track catalog is bounded, rejects duplicate IDs and unsafe fields, and canonicalizes covers (0.2025ms)
+✔ search NFKC/case normalization, tag OR/group AND, access and stable latest order (10.472833ms)
+✔ collections preserve administrator order and cannot grant full access or inject private fields (0.349958ms)
+✔ featured catalog is bounded, references public rows only and orders free picks without granting access (0.292208ms)
+✔ 50-row presentation does not truncate play-all and browsing never rewrites the queue (2.2095ms)
+✖ album category separates playlists and opens ordered songs without changing playback (1.700959ms)
+✔ all UI dictionary entries have four translations and preserve placeholders (0.663584ms)
+✔ native asset router cannot serve encoded music HTML before the closed gate (336.827125ms)
+✔ metadata-only published album stays browsable with no available tracks (0.178417ms)
+✔ media route and input are exact; disabled public flag touches no database or storage (29.593333ms)
+✔ preview and free full stream without membership lookup and use only their canonical object (8.224209ms)
+✔ VIP denial and service failures never touch R2 or reveal media metadata (4.634208ms)
+✔ published version, lifecycle and dedicated preview guards run before R2 (1.566292ms)
+✔ single byte, open, suffix, clipped and oversized suffix ranges return exact 206 bytes (2.420542ms)
+✔ invalid and multi-ranges are ignored; authorized out-of-range is 416 after object validation (1.488375ms)
+✔ If-Range accepts only matching strong ETag or fresh HTTP date; other validators never produce 304 (1.685ms)
+✔ HEAD ignores Range, returns full headers and cancels storage body (2.178583ms)
+✔ changed, missing or malformed storage stays a private generic 503 (1.9355ms)
+✔ range parser boundaries and production wiring keep a versioned non-generic route (1.61675ms)
+✔ anonymous and invalid cookies never query private data; claims cannot grant VIP (29.664ms)
+✔ duplicate reader cookies match the existing first-cookie rule, never fall through to a later valid token (7.605917ms)
+✔ invalid clocks and budgets return private 503 instead of throwing or granting access (4.003792ms)
+✔ query rejection after timeout is consumed, and a clock throwing after lookup never leaks (63.015667ms)
+✔ trusted session hash + joined account + real membership only; absolutely no writes (4.269292ms)
+✔ expired, revoked, missing and future sessions fail; restricted accounts do not get an upsell (2.602708ms)
+✔ membership [start,end) milliseconds, SQL UTC, future and equal-period boundaries (1.751542ms)
+✔ unknown level, corrupt dates and purported lifetime never become VIP or a purchase prompt (2.698ms)
+✔ duplicate grants, mismatched owner and malformed query results are unavailable (2.766083ms)
+✔ missing binding/table/session API and database errors return 503, not none (2.853875ms)
+✔ timeout denies; late completion cannot mutate result or database (51.61125ms)
+✔ query completion time is used; session expiry bounds capability recheck (2.153583ms)
+✔ no cross-request cache: logout, account switch, expiry, renewal and disable take effect (1.812125ms)
+✔ balances and work-specific grants cannot enable or disable site-wide membership (1.166625ms)
+✔ capabilities use real localized paths and minimal fields; VIP flag defaults closed (2.739ms)
+✔ free full and independent preview bypass membership DB even when broken or VIP delivery disabled (1.773584ms)
+✔ VIP full differentiates unauthenticated, none, expired, restricted, unavailable and disabled (1.518667ms)
+✔ content/version/variant guards run first; unknown policy cannot fall back to full (1.289042ms)
+✔ early access exact expiry honors both post-period policies without a write (1.8285ms)
+✔ HEAD/Range/conditional headers cannot bypass eligibility; every response is private no-store (2.548417ms)
+✔ real redemption and manual refund functions change next read; remaining renewal is preserved (4.258541ms)
+reader TOTP tests passed
+✔ scripts/test-reader-totp.mjs (294.838292ms)
+ℹ tests 81
+ℹ suites 0
+ℹ pass 80
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 648.641291
+
+✖ failing tests:
+
+test at scripts/test-music-library.mjs:118:1
+✖ album category separates playlists and opens ordered songs without changing playback (1.700959ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '/api/music/collections/album/cover?v=3&size=display'
+  - '/api/music/collections/album/cover?v=3'
+
+      at TestContext.<anonymous> ([deployed-source]/scripts/test-music-library.mjs:125:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/api/music/collections/album/cover?v=3&size=display',
+    expected: '/api/music/collections/album/cover?v=3',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
