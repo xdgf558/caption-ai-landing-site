@@ -1,0 +1,114 @@
+[
+  {
+    "principal": "missing",
+    "method": "GET",
+    "range": null,
+    "status": 401,
+    "pass": true
+  },
+  {
+    "principal": "B",
+    "method": "GET",
+    "range": null,
+    "status": 403,
+    "pass": true
+  },
+  {
+    "principal": "A-other-session",
+    "method": "GET",
+    "range": null,
+    "status": 403,
+    "pass": true
+  },
+  {
+    "principal": "A",
+    "method": "GET",
+    "range": null,
+    "status": 200,
+    "pass": true
+  },
+  {
+    "principal": "missing",
+    "method": "GET",
+    "range": "bytes=0-1",
+    "status": 401,
+    "pass": true
+  },
+  {
+    "principal": "B",
+    "method": "GET",
+    "range": "bytes=0-1",
+    "status": 403,
+    "pass": true
+  },
+  {
+    "principal": "A-other-session",
+    "method": "GET",
+    "range": "bytes=0-1",
+    "status": 403,
+    "pass": true
+  },
+  {
+    "principal": "A",
+    "method": "GET",
+    "range": "bytes=0-1",
+    "status": 206,
+    "pass": true
+  },
+  {
+    "principal": "missing",
+    "method": "HEAD",
+    "range": null,
+    "status": 401,
+    "pass": true
+  },
+  {
+    "principal": "B",
+    "method": "HEAD",
+    "range": null,
+    "status": 403,
+    "pass": true
+  },
+  {
+    "principal": "A-other-session",
+    "method": "HEAD",
+    "range": null,
+    "status": 403,
+    "pass": true
+  },
+  {
+    "principal": "A",
+    "method": "HEAD",
+    "range": null,
+    "status": 200,
+    "pass": true
+  },
+  {
+    "principal": "missing",
+    "method": "HEAD",
+    "range": "bytes=0-1",
+    "status": 401,
+    "pass": true
+  },
+  {
+    "principal": "B",
+    "method": "HEAD",
+    "range": "bytes=0-1",
+    "status": 403,
+    "pass": true
+  },
+  {
+    "principal": "A-other-session",
+    "method": "HEAD",
+    "range": "bytes=0-1",
+    "status": 403,
+    "pass": true
+  },
+  {
+    "principal": "A",
+    "method": "HEAD",
+    "range": "bytes=0-1",
+    "status": 206,
+    "pass": true
+  }
+]

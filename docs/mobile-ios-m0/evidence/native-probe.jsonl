@@ -1,0 +1,14 @@
+{"value":true,"event":"audio_session"}
+{"value":true,"event":"https_callback_constructed"}
+{"value":[-34018,-34018,-34018],"event":"keychain_status_codes"}
+{"value":false,"event":"simulator_keychain_atomic_item"}
+{"value":true,"event":"remote_controls_registered"}
+{"value":1,"event":"item_status"}
+{"value":true,"event":"playing_before_seek"}
+{"value":true,"event":"seek_requested"}
+{"value":4.0489795918367344,"event":"buffered_to"}
+{"value":1,"event":"rate_before_stop"}
+{"value":2.3344109259999999,"event":"time_before_stop"}
+{"event":"loads_cancelled","value":true}
+{"value":true,"event":"hard_stop"}
+{"value":true,"event":"late_permission_response"}
