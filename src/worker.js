@@ -1,4 +1,6 @@
 import { novelPaymentConfig } from './generated/novelPaymentConfig.js';
+import { handleMobile, isMobilePath } from './mobile/http.js';
+import { runMobileMaintenance } from './mobile/maintenance.js';
 import { protectedSerialContent } from './generated/protectedSerialContent.js';
 import {
   collectSignalSource,
@@ -3745,7 +3747,7 @@ const normalizeReaderRegisterPayload = (payload) => {
   };
 };
 
-const handleReaderRegister = async (request, env) => {
+const handleReaderRegister = async (request, env, { createWebSession = true } = {}) => {
   const db = env.WAITLIST_DB;
   if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
 
@@ -3856,6 +3858,7 @@ const handleReaderRegister = async (request, env) => {
     throw error;
   }
 
+  if (!createWebSession) return privateJson({ ok: true });
   const sessionToken = await createReaderSession(db, account.id, request);
   return privateJson(
     {
@@ -3979,6 +3982,38 @@ const handleReaderLogin = async (request, env) => {
       }
     }
   );
+};
+
+// Native auth shares the existing password/TOTP implementations and account tables.
+// It intentionally requires TOTP when enabled, without changing legacy web login behavior.
+export const verifyMobileReaderIdentity = async (env, payload, expectedAccountId = null) => {
+  const db = env.WAITLIST_DB.withSession('first-primary');
+  const password = payload.password;
+  if (typeof password !== 'string' || password.length < 1 || password.length > 128) return null;
+  const identifier = cleanText(payload.identifier, 254);
+  if (!expectedAccountId && !identifier) return null;
+  const email = normalizeEmail(identifier);
+  const row = await db.prepare(`SELECT a.id, p.password_hash, p.password_salt, p.password_iterations,
+      p.password_algorithm,p.last_password_change_at,t.enabled_at,t.disabled_at
+    FROM reader_accounts a JOIN reader_password_credentials p ON p.account_id=a.id
+    LEFT JOIN reader_totp_credentials t ON t.account_id=a.id
+    WHERE a.status='active' AND ${expectedAccountId ? 'a.id=?' : isEmail(email) ? 'a.normalized_email=?' : 'p.normalized_username=?'} LIMIT 1`)
+    .bind(expectedAccountId || (isEmail(email) ? email : normalizeUsername(identifier))).first();
+  if (!row || row.password_algorithm !== readerPasswordAlgorithm) return null;
+  const result = await hashReaderPassword(password,row.password_salt,Number(row.password_iterations || readerPasswordIterations));
+  if (!timingSafeEqualString(result,row.password_hash)) return null;
+  if (isReaderTotpEnabled(row)) {
+    const verification = await verifyAndConsumeReaderTotpCode(db,row.id,payload.totpCode);
+    if (!verification.ok) return null;
+  }
+  return { id:row.id, passwordVersion:row.password_hash,
+    totpVersion:JSON.stringify([row.enabled_at || '',row.disabled_at || '']) };
+};
+
+export const mobileReaderIdentity = {
+  verify: verifyMobileReaderIdentity,
+  register: async (request,env) => (await handleReaderRegister(request,env,{createWebSession:false})).json(),
+  reset: async (request,env) => (await handleReaderPasswordResetConfirm(request,env,{createWebSession:false})).json()
 };
 
 const handleReaderTotpStatus = async (request, env) => {
@@ -4162,7 +4197,7 @@ const handleReaderPasswordResetRequest = async (request, env) => {
   );
 };
 
-const handleReaderPasswordResetConfirm = async (request, env) => {
+const handleReaderPasswordResetConfirm = async (request, env, { createWebSession = true } = {}) => {
   const db = env.WAITLIST_DB;
   if (!db) return privateJson({ ok: false, message: 'Reader database is not configured.' }, { status: 500 });
 
@@ -4338,6 +4373,7 @@ const handleReaderPasswordResetConfirm = async (request, env) => {
     ]);
     await clearReaderTotpResetFailures(db, limitKeys);
 
+    if (!createWebSession) return privateJson({ ok: true });
     const sessionToken = await createReaderSession(db, resetAccount.id, request);
     return privateJson(
       {
@@ -22850,6 +22886,7 @@ export const __readerTotpTestHooks = {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (isMobilePath(url.pathname)) return handleMobile(request, env, mobileReaderIdentity);
     // Generated thumbnails are private assets; public access must pass live music checks.
     if (isMusicDisplayAssetPath(url.pathname)) return new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } });
     if (url.protocol === 'http:' && !isLocalRequest(request, env)) {
@@ -23364,16 +23401,18 @@ export default {
   },
 
   async scheduled(controller, env) {
-    const [signal, analytics] = await Promise.allSettled([
+    const [signal, analytics, mobile] = await Promise.allSettled([
       handleSignalCollectionSchedule(env, {
         cron: cleanText(controller?.cron, 120), scheduledTime: controller?.scheduledTime
       }),
-      runMusicAnalyticsRetention(env)
+      runMusicAnalyticsRetention(env),
+      runMobileMaintenance(env)
     ]);
     if (analytics.status === 'rejected' || (analytics.value?.available === false && analytics.value.reason !== 'RETENTION_DISABLED')) {
       console.warn('MUSIC_ANALYTICS_RETENTION_UNAVAILABLE');
     }
     if (signal.status === 'rejected') throw signal.reason;
+    if (mobile.status === 'rejected') throw new Error('MOBILE_MAINTENANCE_UNAVAILABLE');
   },
 
   async queue(batch, env) {

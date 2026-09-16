@@ -1,0 +1,13 @@
+{
+  ".github/workflows/ci.yml": "77488dadffc070ba09212affe59f24ea82749d076f1ca7cfec1c54649cb00a5a",
+  "migrations-mobile/0001_native_auth.sql": "e74329fd93ccc85915a296de9bad1549aa919b093c5a707e9f78a0656fe2dc5b",
+  "package.json": "2d42dec7c98d6550200b5ff4860dae76ec4f5cf62fac9b06e6b5bce135997a23",
+  "scripts/helpers/mobile-runtime-worker.js": "b6c4f382f2efa4ac30b43e00732af93bd37ea02ce47ae1ce52506abdd6485cb8",
+  "scripts/test-mobile-auth.mjs": "4157bf8c1069d54543b1d0f5a4467783e7bf270bf2a346f64461887d9469b068",
+  "src/mobile/deletion.js": "a1f4e0ba704c89a82ff720b6cad4ac2d282030e4371508424b142ec2a0c1998a",
+  "src/mobile/http.js": "a2668bc976391fa0889688ef3b413bf406dbb719d8d8699a8809a6bd15cef4b3",
+  "src/mobile/maintenance.js": "accef95736717289f652cf12582552c7348b87605e3f83ad1a159d978cf7fc12",
+  "src/mobile/security.js": "0f23d68f2abd2a74e59a32a347031d0da3e4398911f2713c88c8bf104e903d5d",
+  "src/mobile/sessions.js": "be2bd9f1c6a0a9f92d125388b78f5805eef704286865b87491da79e407090a24",
+  "src/worker.js": "331d3876ae54e898ff5248bbbcb28cf00acbeeb8008b3d291990dc0b5e3ded44"
+}

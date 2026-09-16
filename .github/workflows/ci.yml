@@ -37,6 +37,9 @@ jobs:
       - name: Verify isolated music Workers D1 and R2 runtime
         run: npm run test:music:runtime
 
+      - name: Verify isolated native authentication and deletion recovery
+        run: npm run test:mobile:auth
+
       - name: Verify reproducible Cat Life motion bundle
         run: |
           npm ci --prefix experiments/orange-cat-preview
