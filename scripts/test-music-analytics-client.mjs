@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 import {Audio} from './fixtures/music-player/fake-audio.mjs';
 import {createMusicPlayer} from '../src/scripts/musicPlayerCore.js';
 import {createMusicQueue} from '../src/scripts/musicPlayerQueue.js';
-import {createMusicAnalytics,MUSIC_ANALYTICS_SESSION_KEY,MUSIC_ANALYTICS_CONSENT_VERSION} from '../src/scripts/musicAnalytics.js';
+import {createMusicAnalytics,MUSIC_ANALYTICS_SESSION_KEY,MUSIC_ANALYTICS_OPT_OUT_KEY,MUSIC_ANALYTICS_CONSENT_VERSION} from '../src/scripts/musicAnalytics.js';
 
 const track=(n=1)=>({id:`${String(n).padStart(8,'0')}-1111-4111-8111-111111111111`,audioVersion:1,policyVersion:1,
   title:`Test ${n}`,creatorName:'Test',coverUrl:null,durationSec:120,effectiveAccess:'free',previewAvailable:true,previewDurationSec:30,previewSourceStartSec:12});
@@ -40,11 +40,12 @@ async function setup(t,opts={}) {
   t.after(()=>{analytics.destroy();queue.destroy();player.destroy();});
   return {audio,player,analytics,queue,posts,data,timers,state,play,hear,advance,end,runNext,drain,events,ids:()=>ids};
 }
-test('default opt-out creates no identifier/events, never sets initial source or conditions playback',async t=>{
-  const f=await setup(t); assert.equal(f.ids(),0); assert.equal(f.data.size,0); assert.equal(f.audio.src,'');
-  f.play();f.hear(120);f.end();await f.drain();
-  assert.equal(f.posts.length,0);assert.equal(f.ids(),0);assert.equal(f.audio.plays.length,1);
-  f.analytics.cta(track(),'full');assert.equal(f.ids(),0);
+test('default anonymous collection creates only a session id and never conditions playback',async t=>{
+  const f=await setup(t); assert.equal(f.ids(),1); assert.equal(f.data.size,1); assert.equal(f.audio.src,'');
+  assert.ok(f.data.has(MUSIC_ANALYTICS_SESSION_KEY));
+  f.play();f.hear(30);await f.drain();
+  assert.deepEqual(f.events().map(e=>e.eventType),['play_start','qualified_play']);
+  assert.equal(f.audio.plays.length,1);
 });
 test('operator-off, storage failure and GPC keep collection off without affecting the player',async t=>{
   for(const patch of [{available:false},{storageBlocked:true},{gpc:true}]) {
@@ -53,7 +54,7 @@ test('operator-off, storage failure and GPC keep collection off without affectin
   }
 });
 test('playing milestones use actual accumulated time; pause/resume and refresh keep one play session',async t=>{
-  const f=await setup(t);assert.equal(f.analytics.accept(),true);
+  const f=await setup(t);
   assert.equal(f.data.size,1);assert.ok(f.data.has(MUSIC_ANALYTICS_SESSION_KEY));
   f.play();f.hear(10);f.player.pause();f.advance(40,0);await f.analytics.refresh();
   f.player.play({userInitiated:true});f.audio.playing();f.hear(20);await f.drain();
@@ -62,7 +63,7 @@ test('playing milestones use actual accumulated time; pause/resume and refresh k
   assert.ok(f.posts.every(p=>p.options.credentials==='omit' && !p.options.headers.Cookie));
 });
 test('click/loading, seeks, stalls, buffering, paused late playing and long gaps do not qualify',async t=>{
-  const f=await setup(t);f.analytics.accept();
+  const f=await setup(t);
   f.player.select(track());f.player.play({userInitiated:true});f.audio.metadata(120);await f.drain();assert.equal(f.posts.length,0);
   f.audio.playing();f.hear(5);
   f.audio.seeking=true;f.audio.currentTime=100;f.audio.emit('seeking');f.audio.seeking=false;f.audio.emit('seeked');
@@ -72,14 +73,14 @@ test('click/loading, seeks, stalls, buffering, paused late playing and long gaps
   assert.deepEqual(f.events().map(e=>e.eventType),['play_start']);assert.equal(f.player.snapshot().status,'paused');
 });
 test('natural preview completion stays preview and paused queued ended cannot complete',async t=>{
-  const f=await setup(t);f.analytics.accept();f.play('preview');f.hear(30);f.end();await f.drain();
+  const f=await setup(t);f.play('preview');f.hear(30);f.end();await f.drain();
   assert.deepEqual(f.events().map(e=>e.eventType),['play_start','qualified_play','play_complete','preview_end']);
   assert.ok(f.events().every(e=>e.variant==='preview'));
   f.play('full',track(2));f.hear(110);f.player.pause();f.end();await f.drain();
   assert.equal(f.events().filter(e=>e.eventType==='play_complete').length,1);
 });
 test('reentrant queue advance and single repeat each create a new play session after measuring ended',async t=>{
-  const f=await setup(t);f.analytics.accept();f.queue.setRepeat('one');f.queue.playAll([track()]);
+  const f=await setup(t);f.queue.setRepeat('one');f.queue.playAll([track()]);
   f.audio.metadata(120);f.audio.playing();f.hear(120);f.end();
   f.audio.ended=false;f.audio.metadata(120);f.audio.playing();f.hear(35);await f.drain();
   assert.equal(f.events().filter(e=>e.eventType==='play_complete').length,1);
@@ -87,15 +88,17 @@ test('reentrant queue advance and single repeat each create a new play session a
   assert.notEqual(starts[0].playSessionId,starts[1].playSessionId);
 });
 test('withdraw clears session and queued/in-flight retries, retaining unrelated local preferences',async t=>{
-  const f=await setup(t);f.data.set('stationcat.music.v2','favorite-only');f.analytics.accept();f.play();f.hear(35);
+  const f=await setup(t);f.data.set('stationcat.music.v2','favorite-only');f.play();f.hear(35);
   let finish;f.state.delay=new Promise(resolve=>{finish=resolve;});await f.runNext();assert.equal(f.posts.length,1);
   const signal=f.posts[0].options.signal;f.analytics.withdraw();assert.equal(signal.aborted,true);
   assert.equal(f.analytics.snapshot().queued,0);assert.equal(f.data.get('stationcat.music.v2'),'favorite-only');
   assert.equal(f.data.has(MUSIC_ANALYTICS_SESSION_KEY),false);
+  assert.equal(f.data.get(MUSIC_ANALYTICS_OPT_OUT_KEY),'1');
+  await f.analytics.refresh();assert.equal(f.analytics.snapshot().status,'declined');
   finish(new Response(null,{status:503}));await settle();f.hear(35);await f.drain();assert.equal(f.posts.length,1);
 });
 test('100-event memory cap, 20-event batches and at most two retries are finite',async t=>{
-  const f=await setup(t,{fail:true});f.analytics.accept();
+  const f=await setup(t,{fail:true});
   for(let i=0;i<120;i++) f.analytics.cta(track(),'full');
   assert.equal(f.analytics.snapshot().queued,100);await f.drain();
   assert.equal(f.posts.length,18);assert.equal(f.analytics.snapshot().queued,0);
@@ -103,11 +106,14 @@ test('100-event memory cap, 20-event batches and at most two retries are finite'
   for(let i=0;i<18;i+=3) assert.deepEqual(f.posts[i].body,f.posts[i+2].body);
   assert.equal(f.timers.size,0);
 });
-test('consent during existing playback fabricates no start; session expires and GPC withdrawal is immediate',async t=>{
-  const f=await setup(t);f.play();f.analytics.accept();f.hear(40);await f.drain();assert.equal(f.posts.length,0);
-  f.player.pause();f.player.play({userInitiated:true});f.audio.playing();f.hear(1);await f.drain();assert.equal(f.events()[0].eventType,'play_start');
+test('manual opt-out persists; re-enable measures from that point; expiry and GPC stop collection',async t=>{
+  const f=await setup(t);assert.equal(f.analytics.withdraw(),true);f.play();f.hear(5);await f.drain();assert.equal(f.posts.length,0);
+  assert.equal(f.data.get(MUSIC_ANALYTICS_OPT_OUT_KEY),'1');await f.analytics.refresh();assert.equal(f.analytics.snapshot().enabled,false);
+  assert.equal(f.analytics.accept(),true);assert.equal(f.data.has(MUSIC_ANALYTICS_OPT_OUT_KEY),false);
+  f.hear(30);await f.drain();assert.deepEqual(f.events().map(e=>e.eventType),['play_start','qualified_play']);
+  assert.equal(f.events()[1].listenedMs,30000);
   f.state.gpc=true;f.advance();assert.equal(f.data.has(MUSIC_ANALYTICS_SESSION_KEY),false);
-  f.state.gpc=false;await f.analytics.refresh();f.analytics.accept();f.advance(86401,0);
+  f.state.gpc=false;await f.analytics.refresh();f.advance(86401,0);
   assert.equal(f.analytics.snapshot().enabled,false);
 });
 test('integration stays outside audio authorization, local preference schema and member transactions',()=>{
@@ -117,12 +123,12 @@ test('integration stays outside audio authorization, local preference schema and
   const collector=read('src/scripts/musicAnalytics.js');
   assert.doesNotMatch(collector,/localStorage|sendBeacon|BroadcastChannel|player\.(play|pause|unload|seek)\(/);
   const messages=read('src/scripts/musicMessages.js');
-  for(const key of ['收听统计与隐私','同意此标签页的统计','撤回统计同意','音乐隐私说明']) assert.match(messages,new RegExp(key+'\\|[^\\n]+\\|[^\\n]+\\|[^\\n]+'));
+  for(const key of ['收听统计与隐私','开启匿名播放统计','关闭匿名播放统计','音乐隐私说明']) assert.match(messages,new RegExp(key+'\\|[^\\n]+\\|[^\\n]+\\|[^\\n]+'));
   assert.match(read('src/components/GeneralLegalIndex.astro'),/kind === 'privacy' && <MusicPrivacyNotice/);
 });
 
 test('CTA starts a bounded keepalive request before navigation; page teardown never schedules a retry',async t=>{
-  const f=await setup(t);f.analytics.accept();let finish;
+  const f=await setup(t);let finish;
   f.state.delay=new Promise(resolve=>{finish=resolve;});f.analytics.cta(track(),'full');
   assert.equal(f.posts.length,1);assert.equal(f.posts[0].body.events[0].eventType,'vip_cta_click');
   assert.equal(f.posts[0].options.keepalive,true);
@@ -131,7 +137,7 @@ test('CTA starts a bounded keepalive request before navigation; page teardown ne
 });
 
 test('explicit play-all restart on the same loaded source differs from pause/resume',async t=>{
-  const f=await setup(t);f.analytics.accept();f.queue.playAll([track()]);f.audio.metadata(120);f.audio.playing();f.hear(5);
+  const f=await setup(t);f.queue.playAll([track()]);f.audio.metadata(120);f.audio.playing();f.hear(5);
   const source=f.audio.src, generation=f.player.snapshot().sourceGeneration;
   f.queue.playAll([track()]);f.audio.playing();f.hear(1);await f.drain();
   assert.equal(f.audio.src,source);assert.equal(f.player.snapshot().sourceGeneration,generation);

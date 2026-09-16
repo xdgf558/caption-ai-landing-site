@@ -76,7 +76,7 @@ export function mountMusicLibraryControls(root, { t, onChange, getLocal = () => 
     if (state.mode === 'picks') $('[data-picks-help]').textContent = t(featuredTrackIds.length
       ? '按人工推荐顺序显示其中可免费完整收听的作品。' : '尚无人工推荐，按最新发布选取免费作品。');
     if (state.mode === 'popular') $('[data-picks-help]').textContent = t(catalogTracks.some(track=>Number.isSafeInteger(track.qualifiedPlayCount))
-      ? '按近 365 天有效播放量排序。达到 30 秒或歌曲一半计一次，仅汇总已同意统计的匿名收听。'
+      ? '按近 365 天有效播放量排序。达到 30 秒或歌曲一半计一次，仅汇总未被用户或浏览器隐私设置关闭的匿名收听。'
       : '播放统计暂不可用，当前按最新发布时间显示。');
     $('[data-clear-filters]').hidden = !state.query && !state.genres.length && !state.moods.length && !state.access && !state.collection && state.mode === 'latest';
     const filterToggle = $('[data-filter-toggle]');

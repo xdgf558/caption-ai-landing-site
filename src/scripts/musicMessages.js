@@ -39,16 +39,16 @@ VIP 完整音频暂未开放。|VIP 完整音訊暫未開放。|VIP full audio i
 将这首歌分享给朋友。扫码后打开歌曲页面，收听资格以页面为准。|將這首歌分享給朋友。掃碼後開啟歌曲頁面，收聽資格以頁面為準。|Share this song with a friend. The QR code opens its page, where listening access is checked.|この曲を友だちに。QRコードで曲のページを開き、再生資格を確認します。
 微信中可长按图片保存，再发送给朋友或朋友圈。|微信中可長按圖片儲存，再傳送給朋友或朋友圈。|In WeChat, long-press to save the image, then send it to friends or Moments.|WeChatでは画像を長押しして保存し、友だちやモーメンツに送れます。
 收听统计与隐私|收聽統計與隱私|Listening statistics & privacy|再生統計とプライバシー
-帮助了解作品的收听情况。仅在你同意后，发送曲目、试听或完整版、播放里程碑和累计收听时长；不发送收藏、账号或支付信息。|協助了解作品的收聽情況。僅在你同意後，傳送曲目、試聽或完整版、播放里程碑及累計收聽時長；不傳送收藏、帳號或付款資訊。|Help us understand how songs are heard. With your consent, we send the song, preview or full version, playback milestones and accumulated listening time. Saved songs, account and payment details are excluded.|作品の聴かれ方を把握するための任意の統計です。同意後に曲、試聴・フル版、再生の到達点、累計再生時間を送信します。お気に入り、アカウント、決済情報は送りません。
-原始事件最多保留 30 天，匿名每日汇总最多 365 天。撤回会停止采集并清除本机统计会话，已接收的数据按保留期到期。|原始事件最多保留 30 天，匿名每日彙總最多 365 天。撤回會停止蒐集並清除本機統計工作階段，已接收的資料依保留期限到期。|Raw events are kept for up to 30 days; anonymous daily totals for up to 365 days. Withdrawal stops collection and clears this browser’s statistics session. Data already received expires under these limits.|生のイベントは最大30日、匿名の日別集計は最大365日保存します。撤回すると収集を停止し、このブラウザの統計セッションを削除します。受信済みデータは保存期間に従って期限切れになります。
+为显示播放量、热门排序和推荐，本站默认启用第一方匿名收听统计；发送曲目、试听或完整版、播放里程碑和累计收听时长，不发送收藏、账号或支付信息。|為顯示播放量、熱門排序與推薦，本站預設啟用第一方匿名收聽統計；傳送曲目、試聽或完整版、播放里程碑及累計收聽時長，不傳送收藏、帳號或付款資訊。|To show play counts, popularity rankings and recommendations, this site enables anonymous first-party listening statistics by default. We send the song, preview or full version, playback milestones and accumulated listening time, but not saved songs, account or payment details.|再生回数、人気順、レコメンドを表示するため、匿名のファーストパーティ再生統計を初期状態で有効にします。曲、試聴・フル版、再生の到達点、累計再生時間を送信しますが、お気に入り、アカウント、決済情報は送信しません。
+原始事件最多保留 30 天，匿名每日汇总最多 365 天。关闭会停止此标签页后续采集并清除本机统计会话，已接收的数据按保留期到期。|原始事件最多保留 30 天，匿名每日彙總最多 365 天。關閉會停止此分頁後續蒐集並清除本機統計工作階段，已接收的資料依保留期限到期。|Raw events are kept for up to 30 days; anonymous daily totals for up to 365 days. Turning statistics off stops further collection in this tab and clears its local statistics session. Data already received expires under these limits.|生のイベントは最大30日、匿名の日別集計は最大365日保存します。統計を無効にすると、このタブでの以後の収集を停止し、ローカルの統計セッションを削除します。受信済みデータは保存期間に従って期限切れになります。
 正在核对统计设置…|正在核對統計設定…|Checking statistics settings…|統計設定を確認中…
-已同意此标签页的收听统计，可随时撤回。|已同意此分頁的收聽統計，可隨時撤回。|Listening statistics are enabled for this tab. You can withdraw at any time.|このタブの再生統計に同意済みです。いつでも撤回できます。
-尚未同意统计。收听与收藏照常可用。|尚未同意統計。收聽與收藏照常可用。|Statistics are off until you agree. Listening and saved songs work as usual.|統計には未同意です。再生とお気に入りは通常どおり使えます。
+匿名有效播放统计已开启，可随时关闭。|匿名有效播放統計已開啟，可隨時關閉。|Anonymous qualified-play statistics are on. You can turn them off at any time.|匿名の有効再生統計は有効です。いつでも無効にできます。
+你已关闭此标签页的匿名播放统计。|你已關閉此分頁的匿名播放統計。|You turned off anonymous playback statistics for this tab.|このタブの匿名再生統計は無効です。
 本站统计暂未开放，收听与收藏照常可用。|本站統計暫未開放，收聽與收藏照常可用。|Site statistics are unavailable. Listening and saved songs work as usual.|サイトの統計機能は現在利用できません。再生とお気に入りは通常どおり使えます。
-浏览器无法保存统计同意，统计保持关闭。|瀏覽器無法儲存統計同意，統計維持關閉。|Your browser cannot save statistics consent, so statistics stay off.|ブラウザに統計への同意を保存できないため、統計は無効のままです。
+浏览器无法保存匿名统计设置，统计保持关闭。|瀏覽器無法儲存匿名統計設定，統計維持關閉。|Your browser cannot save the anonymous statistics setting, so statistics stay off.|ブラウザに匿名統計の設定を保存できないため、統計は無効のままです。
 已按浏览器隐私偏好关闭统计。|已依瀏覽器隱私偏好關閉統計。|Statistics are off in response to your browser’s privacy preference.|ブラウザのプライバシー設定に従い、統計を無効にしています。
-同意此标签页的统计|同意此分頁的統計|Allow statistics for this tab|このタブの統計に同意
-撤回统计同意|撤回統計同意|Withdraw statistics consent|統計への同意を撤回
+开启匿名播放统计|開啟匿名播放統計|Turn on anonymous playback statistics|匿名再生統計を有効にする
+关闭匿名播放统计|關閉匿名播放統計|Turn off anonymous playback statistics|匿名再生統計を無効にする
 音乐隐私说明|音樂隱私說明|Music privacy notice|音楽のプライバシー説明
 分享歌曲|分享歌曲|Share song|曲を共有
 歌单与专辑|歌單與專輯|Playlists and albums|プレイリストとアルバム
@@ -213,7 +213,7 @@ VIP · 暂无试听|VIP · 暫無試聽|VIP · no preview|VIP・試聴なし
 最新发布|最新發布|Latest releases|新着
 热门播放|熱門播放|Most played|人気順
 免费精选|免費精選|Free picks|無料のおすすめ
-按近 365 天有效播放量排序。达到 30 秒或歌曲一半计一次，仅汇总已同意统计的匿名收听。|依近 365 天有效播放量排序。播放達 30 秒或歌曲一半計一次，只彙總已同意統計的匿名收聽。|Sorted by qualified plays from the last 365 days. A play counts after 30 seconds or half the song, using only consented anonymous listening.|過去365日間の有効再生数順です。30秒または曲の半分で1回とし、同意済みの匿名再生だけを集計します。
+按近 365 天有效播放量排序。达到 30 秒或歌曲一半计一次，仅汇总未被用户或浏览器隐私设置关闭的匿名收听。|依近 365 天有效播放量排序。播放達 30 秒或歌曲一半計一次，只彙總未被使用者或瀏覽器隱私設定關閉的匿名收聽。|Sorted by qualified plays from the last 365 days. A play counts after 30 seconds or half the song, using anonymous listening that has not been disabled by the user or browser privacy settings.|過去365日間の有効再生数順です。30秒または曲の半分で1回とし、利用者またはブラウザのプライバシー設定で無効にされていない匿名再生のみを集計します。
 播放统计暂不可用，当前按最新发布时间显示。|播放統計暫時無法使用，目前依最新發佈時間顯示。|Play statistics are temporarily unavailable. Showing the latest releases instead.|再生統計を利用できないため、新着順で表示しています。
 按最新发布选取免费作品。|按最新發布選取免費作品。|Free tracks, newest first.|新しい無料の曲からご紹介。
 按人工推荐顺序显示其中可免费完整收听的作品。|依人工推薦順序顯示其中可免費完整收聽的作品。|Free full tracks in the editor's curated order.|運営のおすすめ順で、無料でフル再生できる曲を表示します。

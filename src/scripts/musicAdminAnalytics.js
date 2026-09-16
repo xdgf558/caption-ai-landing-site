@@ -16,7 +16,7 @@ export function mountMusicAdminAnalytics() {
       const query=new URLSearchParams({from:$('analytics-from').value,to:$('analytics-to').value});
       const data=await request('/analytics?'+query);
       if(own!==epoch) return;
-      $('analytics-notice').textContent=data.available ? '仅包含同意统计且成功送达的事件，不代表全部听众。' : '统计不可用：'+(reasons[data.reason] || '暂时无法核对数据。');
+      $('analytics-notice').textContent=data.available ? '仅包含未被用户或浏览器隐私设置关闭、且成功送达的匿名事件，不代表全部听众。' : '统计不可用：'+(reasons[data.reason] || '暂时无法核对数据。');
       if(data.available) for(const row of data.metrics) {
         if(!names[row.metric] || !['full','preview'].includes(row.variant) || !Number.isSafeInteger(row.value) || row.value<0) continue;
         const tr=document.createElement('tr');
