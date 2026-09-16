@@ -4,7 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {musicTestDatabase} from './helpers/music-test-database.mjs';
 import {seedAnalyticsTrack} from './helpers/music-analytics-fixture.mjs';
-import {handleMusicAnalytics,readMusicAnalytics,runMusicAnalyticsRetention,MUSIC_ANALYTICS_VERSION} from '../src/music/analytics.js';
+import {handleMusicAnalytics,readMusicAnalytics,readPublicMusicPopularity,runMusicAnalyticsRetention,MUSIC_ANALYTICS_VERSION} from '../src/music/analytics.js';
 import {handleMusicAdmin} from '../src/music/adminHttp.js';
 
 const NOW=Date.parse('2026-09-11T12:00:30Z'), DAY=86400000;
@@ -103,6 +103,18 @@ test('preview completion and free/VIP full totals stay separate, with server-der
   assert.equal(result.metrics.find(r=>r.metric==='play_start' && r.variant==='full').accessKind,'free');
   assert.equal(result.unavailableMetrics.paidActivations.available,false);
   assert.doesNotMatch(JSON.stringify(result),/anonymousSessionId|playSessionId|object_key|192\.0|fixture-only-not/);
+});
+test('public popularity exposes retained qualified-play totals and reports healthy empty aggregates as zero',async t=>{
+  const f=await fixture(t);
+  assert.deepEqual(await readPublicMusicPopularity(f.env,{clock:()=>NOW}),
+    {available:true,metric:'qualified_play',windowDays:365,counts:[]});
+  const start=f.event(),qualified=f.event('qualified_play',{playSessionId:start.playSessionId,listenedMs:30000});
+  await expect(await f.send([start,qualified]),200);
+  const result=await readPublicMusicPopularity(f.env,{clock:()=>NOW});
+  assert.equal(result.available,true);assert.deepEqual(result.counts,[{trackId:f.track.id,qualifiedPlayCount:1}]);
+  assert.doesNotMatch(JSON.stringify(result),/anonymousSessionId|playSessionId|received_at|192\.0/);
+  f.env.MUSIC_ANALYTICS_ENABLED='false';
+  assert.equal((await readPublicMusicPopularity(f.env,{clock:()=>NOW})).available,false);
 });
 test('60 event units per minute, source/global rollback and rotating sessions cannot bypass limits',async t=>{
   const f=await fixture(t);

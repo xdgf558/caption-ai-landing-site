@@ -2,6 +2,7 @@
 const idPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const text = (value, max) => typeof value === 'string' && value.trim() && value.length <= max;
 const seconds = value => Number.isFinite(value) && value > 0 && value <= 86400;
+const playCount = value => value === null || Number.isSafeInteger(value) && value >= 0;
 export function readPlayerCatalog(body) {
   if (body?.schemaVersion !== 2 || !Array.isArray(body.tracks) || body.tracks.length > 500) throw new Error('INVALID_CATALOG');
   const seen = new Set();
@@ -29,16 +30,31 @@ export function readPlayerCatalog(body) {
     if (track.lyricsKind !== undefined && !['none', 'txt', 'lrc'].includes(track.lyricsKind)) throw new Error('INVALID_CATALOG');
     const freeUntil=track.freeUntil??null;
     if(freeUntil!==null&&(typeof freeUntil!=='string'||!/T.*Z$/.test(freeUntil)||!Number.isFinite(Date.parse(freeUntil))))throw new Error('INVALID_CATALOG');
+    const qualifiedPlayCount=track.qualifiedPlayCount??null;
+    if(!playCount(qualifiedPlayCount))throw new Error('INVALID_CATALOG');
     seen.add(track.id);
     // Reconstruct canonical same-origin URLs, never trust a URL from JSON.
     return { summary: optionalText('summary', 500), genres: tags('genres'), moods: tags('moods'), publishedAt,
       instrumental: track.instrumental === true, lyricsKind: track.lyricsKind || 'none',
       id: track.id, title: track.title, creatorName: track.creatorName, durationSec: track.durationSec,
       audioVersion: track.audioVersion, policyVersion: track.policyVersion, freeUntil, effectiveAccess: track.effectiveAccess,
+      qualifiedPlayCount,
       previewAvailable: track.previewAvailable, previewDurationSec: track.previewDurationSec,
       previewSourceStartSec: track.previewSourceStartSec,
-      coverUrl: track.coverUrl ? `/api/music/tracks/${track.id}/cover?v=${track.audioVersion}` : null };
+      coverUrl: track.coverUrl ? `/api/music/tracks/${track.id}/cover?v=${track.audioVersion}&size=display` : null };
   });
+}
+
+export function compareMusicPopularity(a,b) {
+  const left=Number.isSafeInteger(a?.qualifiedPlayCount)?a.qualifiedPlayCount:-1;
+  const right=Number.isSafeInteger(b?.qualifiedPlayCount)?b.qualifiedPlayCount:-1;
+  return right-left||(b?.publishedAt||'').localeCompare(a?.publishedAt||'')||(a?.id||'').localeCompare(b?.id||'');
+}
+
+export function formatMusicPlayCount(value,locale='zh-Hans') {
+  if(!Number.isSafeInteger(value)||value<0)return '';
+  try{return new Intl.NumberFormat(locale,{notation:'compact',maximumFractionDigits:1}).format(value);}
+  catch{return String(value);}
 }
 export function playerVariant(track, capabilities) {
   if (track.effectiveAccess === 'free') return 'full';
@@ -69,7 +85,7 @@ export function readPlayerCollections(body, tracks) {
         (item.coverTrackId != null && (!item.trackIds.includes(item.coverTrackId) || !ids.get(item.coverTrackId)?.coverUrl))))) throw new Error('INVALID_COLLECTIONS');
     seen.add(item.id); slugs.add(item.slug);
     return { id: item.id, slug: item.slug, title: item.title, description: item.description, type, listeningMode, version: item.version,
-      coverUrl:type === 'album' && item.coverUrl ? `/api/music/collections/${item.slug}/cover?v=${item.version}` : null,
+      coverUrl:type === 'album' && item.coverUrl ? `/api/music/collections/${item.slug}/cover?v=${item.version}&size=display` : null,
       trackIds: item.trackIds.filter(id => ids.has(id)) };
   }).filter(item => item.type === 'album' || item.trackIds.length);
 }

@@ -1,5 +1,5 @@
 ---
-import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ListMusic, X, Search, SlidersHorizontal, ChevronUp, ChevronDown, ChevronRight, FileMusic, Heart, Share, Share2, Link } from '@lucide/astro';
+import { Play, Pause, Volume2, VolumeX, Music2, LoaderCircle, RefreshCw, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ListMusic, X, Search, SlidersHorizontal, ChevronUp, ChevronDown, ChevronRight, FileMusic, Heart, Share, Share2, Link, Headphones } from '@lucide/astro';
 import '../styles/music-player.css';
 import '../styles/music-mobile.css';
 import '../styles/music-personal.css';
@@ -33,7 +33,7 @@ const t = musicText(lang);
       {library && <section class="station-music-featured" data-featured-home aria-labelledby="music-featured-title" hidden>
         <header class="station-music-featured-heading"><div><h2 id="music-featured-title">{t('这期先听')}</h2><p data-featured-label>{t('站长推荐')}</p></div></header>
         <article class="station-music-featured-primary" data-featured-primary hidden>
-          <div class="station-music-featured-cover"><img data-featured-primary-cover alt="" width="320" height="320" hidden /><div data-featured-primary-fallback><Music2 size={54} /><span>{t('暂无封面')}</span></div></div>
+          <div class="station-music-featured-cover"><img data-featured-primary-cover decoding="async" fetchpriority="high" alt="" width="320" height="320" hidden /><div data-featured-primary-fallback><Music2 size={54} /><span>{t('暂无封面')}</span></div></div>
           <div class="station-music-featured-copy"><span class="station-music-featured-kicker" data-featured-kicker>{t('本期主推 · 免费完整收听')}</span><h3 data-featured-primary-title></h3><p data-featured-primary-summary></p><p data-featured-primary-meta></p></div>
           <div class="station-music-featured-actions">
             <button data-featured-view type="button" aria-label={t('查看歌曲')}><span>{t('歌曲详情')}</span><ChevronRight size={16} aria-hidden="true" /></button>
@@ -41,7 +41,7 @@ const t = musicText(lang);
           </div>
         </article>
         <div class="station-music-featured-groups">
-          <section data-featured-secondary-block hidden><h3>{t('更多推荐')}</h3><ul data-featured-secondary></ul></section>
+          <section data-featured-secondary-block hidden><h3 data-featured-secondary-heading>{t('更多推荐')}</h3><ul data-featured-secondary></ul></section>
           <section data-featured-collections-block hidden><h3>{t('精选歌单与专辑')}</h3><ul data-featured-collections></ul></section>
         </div>
       </section>}
@@ -53,6 +53,7 @@ const t = musicText(lang);
         <div class="station-music-browse-modes t-tabs" aria-label={t('浏览曲库')}>
           <span class="t-tabs-pill" data-browse-indicator aria-hidden="true"></span>
           <button class="t-tab" type="button" data-browse-mode="latest" aria-pressed="true">{t('最新发布')}</button>
+          <button class="t-tab" type="button" data-browse-mode="popular" aria-pressed="false">{t('热门播放')}</button>
           <button class="t-tab" type="button" data-browse-mode="picks" aria-pressed="false">{t('免费精选')}</button>
           <button class="t-tab" type="button" data-browse-mode="albums" aria-pressed="false">{t('专辑')}</button>
           <button class="t-tab" type="button" data-browse-mode="favorites" aria-label={t('我的收藏')} aria-pressed="false">{t('收藏夹')}</button>
@@ -77,11 +78,11 @@ const t = musicText(lang);
             </details>
             <details class="station-music-local-data station-music-analytics" data-analytics-controls>
               <summary>{t('收听统计与隐私')}</summary>
-              <p>{t('帮助了解作品的收听情况。仅在你同意后，发送曲目、试听或完整版、播放里程碑和累计收听时长；不发送收藏、账号或支付信息。')}</p>
-              <p>{t('原始事件最多保留 30 天，匿名每日汇总最多 365 天。撤回会停止采集并清除本机统计会话，已接收的数据按保留期到期。')}</p>
+              <p>{t('为显示播放量、热门排序和推荐，本站默认启用第一方匿名收听统计；发送曲目、试听或完整版、播放里程碑和累计收听时长，不发送收藏、账号或支付信息。')}</p>
+              <p>{t('原始事件最多保留 30 天，匿名每日汇总最多 365 天。关闭会停止此标签页后续采集并清除本机统计会话，已接收的数据按保留期到期。')}</p>
               <p data-analytics-status role="status">{t('正在核对统计设置…')}</p>
-              <button data-analytics-accept type="button" disabled>{t('同意此标签页的统计')}</button>
-              <button data-analytics-withdraw type="button" hidden>{t('撤回统计同意')}</button>
+              <button data-analytics-accept type="button" disabled>{t('开启匿名播放统计')}</button>
+              <button data-analytics-withdraw type="button" hidden>{t('关闭匿名播放统计')}</button>
               <a href={`${musicPagePaths[lang]}#music-privacy`} target="_blank" rel="noopener">{t('音乐隐私说明')}</a>
             </details>
           </div>
@@ -119,7 +120,7 @@ const t = musicText(lang);
       </div>
       <h2 data-track-title id="music-detail-title" tabindex="-1"></h2>
       {library && <p class="station-music-summary" data-track-summary></p>}
-      <p class="station-music-byline"><span data-track-creator></span><span aria-hidden="true"> · </span><span data-track-access></span></p>
+      <p class="station-music-byline"><span data-track-creator></span><span aria-hidden="true"> · </span><span data-track-access></span><span data-track-play-separator aria-hidden="true" hidden> · </span><span class="station-music-play-count" data-track-plays hidden><Headphones size={14} aria-hidden="true" /><span data-track-play-count></span></span></p>
       <span class="station-music-status" data-play-status role="status" aria-live="polite">{t('尚未播放')}</span>
       <p class="station-music-error" data-play-error hidden></p>
       <div class="station-music-queue-tools station-music-access-actions" aria-label={t('播放资格与版本')}>
@@ -244,7 +245,7 @@ const t = musicText(lang);
       <button class="station-music-select" type="button">
         <img data-row-cover alt="" width="88" height="88" loading="lazy" decoding="async" />
         <Music2 data-row-fallback size={40} hidden />
-        <span class="station-music-track-copy"><strong data-row-title></strong><span data-row-description><span data-row-creator></span><span data-row-access></span></span></span>
+        <span class="station-music-track-copy"><strong data-row-title></strong><span data-row-description><span><span data-row-creator></span><span data-row-access></span></span><span class="station-music-play-count" data-row-plays hidden><Headphones size={13} aria-hidden="true" /><span data-row-play-count></span></span></span></span>
       </button>
       {library && <span class="music-night-row-tags" data-row-tags></span>}
       <span class="station-music-track-duration" data-row-duration></span>
@@ -252,7 +253,7 @@ const t = musicText(lang);
       <button class="station-music-row-play" data-row-play type="button"><span class="t-icon-swap" data-play-swap data-state="a" aria-hidden="true"><span class="t-icon" data-icon="a"><Play data-play-icon size={23} fill="currentColor" /></span><span class="t-icon" data-icon="b"><Pause data-pause-icon size={23} fill="currentColor" /></span></span><LoaderCircle data-loading-icon size={23} hidden /></button>
     </li>
   </template>
-  {library && <template data-featured-track-template><li class="station-music-featured-item"><button data-featured-track-view type="button"><div class="music-night-card-art"><img data-featured-card-cover alt="" width="180" height="240" loading="lazy" hidden /><Music2 data-featured-card-fallback size={32} /></div><strong></strong><span></span></button><button data-featured-track-play type="button"><Play size={18} fill="currentColor" /><span class="sr-only">{t('播放')}</span></button></li></template>}
+  {library && <template data-featured-track-template><li class="station-music-featured-item"><button data-featured-track-view type="button"><div class="music-night-card-art"><img data-featured-card-cover alt="" width="180" height="240" loading="lazy" hidden /><Music2 data-featured-card-fallback size={32} /></div><strong></strong><span data-featured-track-meta></span><span class="station-music-play-count" data-featured-track-plays hidden><Headphones size={12} aria-hidden="true" /><span data-featured-track-play-count></span></span></button><button data-featured-track-play type="button"><Play size={18} fill="currentColor" /><span class="sr-only">{t('播放')}</span></button></li></template>}
   {library && <template data-featured-collection-template><li class="station-music-featured-item station-music-featured-collection"><button data-featured-collection-open type="button"><div class="music-night-card-art"><img data-featured-card-cover alt="" width="180" height="180" loading="lazy" hidden /><Music2 data-featured-card-fallback size={32} /></div><strong></strong><span></span></button></li></template>}
 </section>
 <script>

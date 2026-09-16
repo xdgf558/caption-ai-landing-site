@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
-import { randomUUID } from 'node:crypto';
+import sharp from 'sharp';
+import { isMusicDisplayAssetPath } from '../src/music/coverDisplay.js';
+import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { handleMusicPublic, isMusicPublicPath } from '../src/music/publicHttp.js';
@@ -20,7 +22,7 @@ function insert(db, table, values) {
 function fixture() {
   const sql = new DatabaseSync(':memory:'); dbs.push(sql);
   sql.exec('PRAGMA foreign_keys=ON'); migrations.forEach(value => sql.exec(value));
-  const state = { reads: 0, r2: [], cancels: 0, failDatabase: false, objectPatch: null };
+  const state = { reads: 0, r2: [], cancels: 0, failDatabase: false, failPopularity:false, objectPatch: null };
   class Statement {
     constructor(query, params = []) { Object.assign(this, { query, params }); }
     bind(...params) { return new Statement(this.query, params); }
@@ -42,6 +44,7 @@ function fixture() {
       }
       state.reads++;
       if (state.failDatabase) throw new Error('private database failure');
+      if (state.failPopularity && statements.some(statement=>statement.query.includes('music_analytics_daily'))) throw new Error('analytics unavailable');
       return statements.map(statement => ({ success: true,
         results: sql.prepare(statement.query).all(...statement.params) }));
     } };
@@ -53,7 +56,7 @@ function fixture() {
     if (!item) return null;
     const object = { key, size: item.bytes.length, etag: item.asset.etag,
       httpMetadata: { contentType: item.asset.content_type },
-      body: new ReadableStream({ start(controller) { controller.enqueue(item.bytes); controller.close(); },
+      body: new ReadableStream({ type: 'bytes', start(controller) { controller.enqueue(Uint8Array.from(item.bytes)); controller.close(); },
         cancel() { state.cancels++; } }) };
     return state.objectPatch ? state.objectPatch(object) : object;
   } };
@@ -61,12 +64,12 @@ function fixture() {
     MUSIC_VIP_DELIVERY_ENABLED: 'true', MUSIC_RATE_LIMIT_SECRET: 'public-unit-fixture-secret-not-for-deployment' };
 
   function seedTrack({ slug, title, accessMode = 'vip', publishedAt = now - 10000, bad = false,
-    badStorage = false, lifecycle = 'published', earlyAccessUntil = null, postEarlyAccessMode = null } = {}) {
+    coverBytes = null, badStorage = false, lifecycle = 'published', earlyAccessUntil = null, postEarlyAccessMode = null } = {}) {
     const id = randomUUID(), revision = randomUUID(), audio = randomUUID(), preview = randomUUID();
     const cover = randomUUID(), lyrics = randomUUID();
     insert(sql, 'music_tracks', { id, slug, lifecycle: 'draft', created_at: now - 30000, updated_at: now - 10000 });
     const bytes = { audio: Uint8Array.of(1, 2, 3), preview: Uint8Array.of(4, 5),
-      cover: Uint8Array.of(137, 80, 78, 71), lyrics: new TextEncoder().encode('[00:00.00]Fixture lyric') };
+      cover: coverBytes || Uint8Array.of(137, 80, 78, 71), lyrics: new TextEncoder().encode('[00:00.00]Fixture lyric') };
     const base = { owner_track_id: id, state: 'validated', sha256: 'a'.repeat(64), created_at: now - 20000 };
     const assets = [
       { ...base, id: audio, kind: 'audio', object_key: badStorage ? `private/${audio}.mp3` : `music/audio/${id}/${audio}.mp3`, content_type: 'audio/mpeg',
@@ -75,7 +78,7 @@ function fixture() {
         format: 'mp3', byte_size: bytes.preview.length, duration_ms: 30000, derived_from_asset_id: audio,
         source_start_ms: 10000, source_end_ms: 40000, etag: `preview-${id}` },
       { ...base, id: cover, kind: 'cover', object_key: `music/covers/${id}/${cover}.png`, content_type: 'image/png',
-        format: 'png', byte_size: bytes.cover.length, etag: `cover-${id}` },
+        format: 'png', byte_size: bytes.cover.length, sha256: createHash('sha256').update(bytes.cover).digest('hex'), etag: `cover-${id}` },
       { ...base, id: lyrics, kind: 'lyrics', object_key: `music/lyrics/${id}/${lyrics}.lrc`, content_type: 'text/plain',
         format: 'lrc', byte_size: bytes.lyrics.length, etag: `lyrics-${id}` }
     ];
@@ -96,9 +99,9 @@ function fixture() {
     return { id, revision, audio, preview, cover, lyrics, slug, assets, metadata };
   }
 
-  function seedCollection(slug, trackIds) {
+  function seedCollection(slug, trackIds, type = 'playlist') {
     const id = randomUUID();
-    insert(sql, 'music_collections', { id, slug, original_locale: 'en', title_json: JSON.stringify({ en: `List ${slug}` }),
+    insert(sql, 'music_collections', { id, slug, collection_type: type, original_locale: 'en', title_json: JSON.stringify({ en: `List ${slug}` }),
       description_json: JSON.stringify({ en: 'Public collection.' }), status: 'published', version: 1,
       created_at: now - 5000, updated_at: now - 5000 });
     trackIds.forEach((trackId, position) => insert(sql, 'music_collection_tracks', { collection_id: id, track_id: trackId, position }));
@@ -201,6 +204,28 @@ test('natural policy expiry changes the catalog projection and ETag without a ca
   assert.equal(afterBody.nextPolicyChangeAt, null); assert.notEqual(after.headers.get('etag'), before.headers.get('etag'));
 });
 
+test('catalog publishes anonymous effective-play totals, refreshes its ETag and degrades without blocking music',async()=>{
+  const f=fixture(),first=f.seedTrack({slug:'popular-first',title:'Popular first',accessMode:'free'}),
+    second=f.seedTrack({slug:'popular-second',title:'Popular second',accessMode:'free',publishedAt:now-20000});
+  Object.assign(f.env,{MUSIC_ANALYTICS_ENABLED:'true',MUSIC_ANALYTICS_PRIVACY_VERSION:'music-analytics-v1',MUSIC_ANALYTICS_RETENTION_ENABLED:'true'});
+  insert(f.sql,'music_analytics_health',{id:1,last_sweep_at:now});
+  insert(f.sql,'music_analytics_daily',{day_start_ms:now,metric:'qualified_play',track_id:second.id,variant:'full',access_kind:'free',value:8});
+  const response=await handleMusicPublic(request('/api/music/catalog?locale=en'),f.env,{clock:()=>now});
+  const body=await json(response,200);
+  assert.deepEqual(body.popularity,{available:true,metric:'qualified_play',windowDays:365});
+  assert.equal(body.tracks.find(track=>track.id===first.id).qualifiedPlayCount,0);
+  assert.equal(body.tracks.find(track=>track.id===second.id).qualifiedPlayCount,8);
+  assert.doesNotMatch(JSON.stringify(body),/anonymousSessionId|playSessionId|received_at/);
+  f.sql.prepare("UPDATE music_analytics_daily SET value=9 WHERE track_id=?").run(second.id);
+  const changed=await handleMusicPublic(request('/api/music/catalog?locale=en',{headers:{'If-None-Match':response.headers.get('etag')}}),f.env,{clock:()=>now});
+  assert.equal(changed.status,200);assert.notEqual(changed.headers.get('etag'),response.headers.get('etag'));
+  assert.equal((await changed.json()).tracks.find(track=>track.id===second.id).qualifiedPlayCount,9);
+  f.state.failPopularity=true;
+  const degraded=await json(await handleMusicPublic(request('/api/music/catalog?locale=en'),f.env,{clock:()=>now}),200);
+  assert.equal(degraded.popularity.available,false);
+  assert.ok(degraded.tracks.every(track=>track.qualifiedPlayCount===null));
+});
+
 test('track detail adds the public story and collection detail preserves order without changing access', async () => {
   const f = fixture();
   const free = f.seedTrack({ slug: 'free-song', title: 'Free', accessMode: 'free' });
@@ -291,4 +316,139 @@ test('production worker wiring keeps public content separate from the versioned 
   assert.match(worker, /if \(isMusicMediaPath\(url\.pathname\)\) return handleMusicMedia\(request, env\)/);
   assert.match(worker, /if \(isMusicPublicPath\(url\.pathname\)\) return handleMusicPublic\(request, env\)/);
   assert.doesNotMatch(worker, /api\/music[^\n]+(?:object_key|\?key=)/);
+});
+
+async function displayFixture() {
+  const f = fixture();
+  // An uncompressed opaque raster makes the bandwidth regression measurable.
+  const bytes = await sharp({ create: { width: 1000, height: 800, channels: 3, background: '#527668' } }).png({ compressionLevel: 0 }).toBuffer();
+  const track = f.seedTrack({ slug: 'display-cover', title: 'Display', coverBytes: bytes });
+  const displayBytes = await sharp(bytes).resize({ width: 768, height: 768, fit: 'inside' }).jpeg({ quality: 82 }).toBuffer();
+  const sha256 = createHash('sha256').update(displayBytes).digest('hex');
+  const variant = { sha256, bytes: displayBytes.length, sourceBytes: bytes.length, contentType: 'image/jpeg', path: `/api/music/__cover-files/${sha256}.jpg` };
+  const counts = { hits: 0 };
+  f.env.ASSETS = { async fetch(req) { counts.hits++; assert.equal(new URL(req.url).pathname, variant.path);
+    return new Response(req.method === 'HEAD' ? null : displayBytes, { headers: { 'Content-Type': variant.contentType, 'Content-Length': String(variant.bytes) } }); } };
+  return { ...f, track, bytes, displayBytes, counts, variant,
+    options: { clock: () => now, coverManifest: { [createHash('sha256').update(bytes).digest('hex')]: variant } },
+    path: `/api/music/tracks/${track.id}/cover?v=1&size=display` };
+}
+
+test('display cover is small, shares cached encoding, and revalidates browser bytes without a body', async () => {
+  const f = await displayFixture();
+  const first = await handleMusicPublic(request(f.path), f.env, f.options);
+  assert.equal(first.status, 200); assert.equal(first.headers.get('content-type'), 'image/jpeg');
+  assert.equal(first.headers.get('cache-control'), 'private, max-age=0, must-revalidate');
+  const bytes = Buffer.from(await first.arrayBuffer()), image = await sharp(bytes).metadata();
+  assert.equal(image.width, 768); assert.equal(image.height, 614); assert.ok(bytes.length < f.bytes.length / 10);
+  const second = await handleMusicPublic(request(f.path), f.env, f.options);
+  assert.deepEqual(Buffer.from(await second.arrayBuffer()), bytes); assert.equal(f.counts.hits, 2);
+  const etag = first.headers.get('etag');
+  const cached = await handleMusicPublic(request(f.path, { headers: { 'If-None-Match': `W/${etag}` } }), f.env, f.options);
+  assert.equal(cached.status, 304); assert.equal(await cached.text(), ''); assert.equal(f.counts.hits, 2);
+  const head = await handleMusicPublic(request(f.path, { method: 'HEAD' }), f.env, f.options);
+  assert.equal(head.status, 200); assert.equal(await head.text(), ''); assert.equal(Number(head.headers.get('content-length')), bytes.length);
+  assert.equal(f.state.r2.length, 4); // Even cache hits check current storage identity.
+});
+
+test('warm cache and If-None-Match cannot bypass shutdown, downlisting, version, storage or DB failures', async () => {
+  const f = await displayFixture();
+  const first = await handleMusicPublic(request(f.path), f.env, f.options); await first.arrayBuffer();
+  const init = { headers: { 'If-None-Match': first.headers.get('etag') } };
+  f.env.MUSIC_PUBLIC_ENABLED = 'false';
+  await json(await handleMusicPublic(request(f.path, init), f.env, f.options), 503, 'MUSIC_PUBLIC_DISABLED');
+  f.env.MUSIC_PUBLIC_ENABLED = 'true';
+  await json(await handleMusicPublic(request(f.path.replace('v=1', 'v=2'), init), f.env, f.options), 409, 'VERSION_CONFLICT');
+  f.sql.prepare("UPDATE music_tracks SET lifecycle='unpublished' WHERE id=?").run(f.track.id);
+  await json(await handleMusicPublic(request(f.path, init), f.env, f.options), 410, 'TRACK_UNAVAILABLE');
+  assert.equal(f.state.r2.length, 1); assert.equal(f.counts.hits, 1);
+  f.sql.prepare("UPDATE music_tracks SET lifecycle='published' WHERE id=?").run(f.track.id);
+  f.state.objectPatch = object => ({ ...object, etag: 'changed' });
+  await json(await handleMusicPublic(request(f.path, init), f.env, f.options), 503, 'MEDIA_UNAVAILABLE');
+  await json(await handleMusicPublic(request(f.path), f.env, f.options), 503, 'MEDIA_UNAVAILABLE');
+  f.state.objectPatch = null; f.state.failDatabase = true;
+  await json(await handleMusicPublic(request(f.path, init), f.env, f.options), 503, 'MUSIC_DATABASE_UNAVAILABLE');
+  assert.equal(f.counts.hits, 1);
+});
+
+test('display selector is bounded and applies only to cover routes', async () => {
+  const f = await displayFixture();
+  for (const path of [f.path + '&size=display', f.path.replace('display', '4096'), f.path + '&other=1',
+    f.path.replace('/cover?', '/lyrics?'), f.path.replace('/cover?', '/access?')]) {
+    await json(await handleMusicPublic(request(path), f.env, f.options), 400, 'INVALID_INPUT');
+  }
+  assert.equal(f.state.r2.length, 0); assert.equal(f.state.reads, 0);
+});
+
+test('missing display files and newly uploaded covers fall back to the original without runtime encoding', async () => {
+  const f = await displayFixture();
+  for (const service of [{ async fetch() { return new Response(null, { status: 404 }); } }, { async fetch() { throw Error('assets offline'); } }]) {
+    f.env.ASSETS = service;
+    const response = await handleMusicPublic(request(f.path), f.env, f.options);
+    assert.equal(response.status, 200); assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), f.bytes);
+  }
+  const response = await handleMusicPublic(request(f.path), f.env, { ...f.options, coverManifest: {} });
+  assert.equal(response.status, 200); assert.deepEqual(Buffer.from(await response.arrayBuffer()), f.bytes);
+});
+
+test('album display cover stays tied to the live album version and independent cover', async () => {
+  const f = await displayFixture(), album = f.seedCollection('display-album', [f.track.id], 'album'), aid = randomUUID();
+  f.sql.prepare("UPDATE music_collections SET status='draft' WHERE id=?").run(album.id);
+  const asset = { id: aid, owner_collection_id: album.id, kind: 'cover', state: 'validated',
+    object_key: `music/album-covers/${album.id}/${aid}.png`, format: 'png', content_type: 'image/png',
+    byte_size: f.bytes.length, sha256: createHash('sha256').update(f.bytes).digest('hex'), etag: 'album-cover', created_at: now - 2000 };
+  insert(f.sql, 'music_collection_assets', asset); f.objects.set(asset.object_key, { asset, bytes: f.bytes });
+  f.sql.prepare("UPDATE music_collections SET cover_asset_id=?,status='published' WHERE id=?").run(aid, album.id);
+  const path = `/api/music/collections/${album.slug}/cover?v=1&size=display`;
+  const first = await handleMusicPublic(request(path), f.env, f.options);
+  assert.equal(first.status, 200); await first.arrayBuffer();
+  assert.equal(f.state.r2[0].key, asset.object_key);
+  const init = { headers: { 'If-None-Match': first.headers.get('etag') } };
+  assert.equal((await handleMusicPublic(request(path, init), f.env, f.options)).status, 304);
+  f.sql.prepare('UPDATE music_collections SET version=2 WHERE id=?').run(album.id);
+  assert.equal((await handleMusicPublic(request(path, init), f.env, f.options)).status, 409);
+  f.sql.prepare("UPDATE music_collections SET status='draft' WHERE id=?").run(album.id);
+  assert.equal((await handleMusicPublic(request(path.replace('v=1', 'v=2'), init), f.env, f.options)).status, 404);
+});
+
+test('display route cannot expose the generated files directly or import an image encoder', () => {
+  const source = readFileSync(new URL('../src/music/coverDisplay.js', import.meta.url)).toString(), worker = readFileSync(new URL('../src/worker.js', import.meta.url)).toString();
+  assert.doesNotMatch(source, /photon|resvg|sharp|renderMusic/);
+  assert.match(worker, /isMusicDisplayAssetPath\(url\.pathname\)/);
+  for (const path of ['/api/music/__cover-files/a.jpg', '/api/music/%5f%5fcover-files/a.jpg', '/api/music/%255f%255fcover-files/a.jpg', '/api/music%2f__cover-files%2fa.jpg']) assert.equal(isMusicDisplayAssetPath(path), true);
+  assert.equal(isMusicDisplayAssetPath('/api/music/tracks/a/cover'), false);
+  assert.equal(isMusicPublicPath('/api/music/__cover-files/' + 'a'.repeat(64) + '.jpg'), false);
+});
+
+
+test('native static assets serve a small cover while direct and escaped asset paths stay private', { timeout: 30000 }, async () => {
+  const { Miniflare } = await import('miniflare'), { build } = await import('esbuild');
+  const { mkdtemp, mkdir, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os'), { join } = await import('node:path');
+  const f = await displayFixture(), directory = await mkdtemp(join(tmpdir(), 'music-display-'));
+  const original = [...f.objects.values()].find(item => item.asset.kind === 'cover');
+  const asset = { ...original.asset, etag: createHash('md5').update(f.bytes).digest('hex') };
+  await mkdir(join(directory, 'api/music/__cover-files'), { recursive: true });
+  await writeFile(directory + f.variant.path, f.displayBytes);
+  const compiled = await build({ stdin: { resolveDir: process.cwd(), contents: `
+    import { musicDisplayCover, isMusicDisplayAssetPath } from './src/music/coverDisplay.js';
+    export default {fetch(request,env){
+      if(isMusicDisplayAssetPath(new URL(request.url).pathname)) return new Response(null,{status:404});
+      return musicDisplayCover(request,env.R2,${JSON.stringify(asset)},{assets:env.ASSETS,manifest:${JSON.stringify(f.options.coverManifest)}});
+    }}
+  ` }, bundle: true, format: 'esm', platform: 'browser', write: false });
+  const mf = new Miniflare({ modules: true, script: compiled.outputFiles[0].text, compatibilityDate: '2026-05-17',
+    r2Buckets: ['R2'], assets: { directory, binding: 'ASSETS', routerConfig: { has_user_worker: true, static_routing: { user_worker: ['/*'] } } } });
+  try {
+    const bucket = await mf.getR2Bucket('R2');
+    await bucket.put(asset.object_key, f.bytes, { httpMetadata: { contentType: asset.content_type } });
+    const response = await mf.dispatchFetch('https://music.test/cover'); assert.equal(response.status, 200);
+    const received = Buffer.from(await response.arrayBuffer()); assert.equal(received.length, f.displayBytes.length, JSON.stringify(Object.fromEntries(response.headers))); assert.deepEqual(received, f.displayBytes);
+    const cached = await mf.dispatchFetch('https://music.test/cover', { headers: { 'If-None-Match': response.headers.get('ETag') } });
+    assert.equal(cached.status, 304);
+    for(const path of [f.variant.path, f.variant.path.replace('__cover', '%5f%5fcover'), f.variant.path.replace('__cover', '%255f%255fcover')]) {
+      assert.equal((await mf.dispatchFetch('https://music.test' + path)).status, 404);
+    }
+  } finally { await mf.dispose(); await rm(directory, { recursive: true, force: true }); }
 });

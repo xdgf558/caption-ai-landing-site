@@ -1,6 +1,7 @@
-// Optional first-party measurements only. This module never controls the audio,
+// Anonymous first-party measurements only. This module never controls the audio,
 // reads identity, changes membership, or writes stationcat.music.v2.
 export const MUSIC_ANALYTICS_SESSION_KEY = 'stationcat.music.analytics.v1';
+export const MUSIC_ANALYTICS_OPT_OUT_KEY = 'stationcat.music.analytics.disabled.v1';
 export const MUSIC_ANALYTICS_CONSENT_VERSION = 'music-analytics-v1';
 const uuid = value => typeof value==='string' && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(value);
 const positive = value => Number.isFinite(value) && value>0;
@@ -69,7 +70,7 @@ export function createMusicAnalytics(player, { fetcher=globalThis.fetch.bind(glo
       if(!allowed()) { previous=state; sample=null; return; }
       if(session && (session.key!==key || (['ended','error'].includes(previous.status) && state.status==='loading'))) { session=null; sample=null; }
       // A status transition to playing is published only after a current native
-      // playing event. Consenting halfway through a running song is not a start.
+      // playing event. Enabling collection starts a fresh measurement window.
       if(!session && state.status==='playing' && previous.status!=='playing' && uuid(state.activeTrackId) &&
         Number.isSafeInteger(state.activeAudioVersion) && state.activeAudioVersion>0 && positive(state.durationSec)) {
         const id=randomId(); if(!uuid(id)) return;
@@ -94,6 +95,22 @@ export function createMusicAnalytics(player, { fetcher=globalThis.fetch.bind(glo
     } catch { stop('unavailable'); previous=state; }
   }
   const unsubscribe=player.subscribe(observe);
+  const enableCollection=(store,resumePlaying=true)=>{
+    if(destroyed || !config?.available || privacySignal()) return false;
+    try {
+      const next={version:MUSIC_ANALYTICS_CONSENT_VERSION,anonymousSessionId:randomId(),expiresAt:clock()+86400000};
+      if(!uuid(next.anonymousSessionId)) throw new Error('id');
+      store.removeItem(MUSIC_ANALYTICS_OPT_OUT_KEY);
+      store.setItem(MUSIC_ANALYTICS_SESSION_KEY,JSON.stringify(next));
+      reset(); consent=next; status='enabled'; emit();
+      const current=player.snapshot();
+      // Automatic collection may become ready just after playback starts. Begin
+      // measuring from this point without claiming the earlier listening time.
+      previous=resumePlaying && current.status==='playing' ? {...current,status:'loading'} : current;
+      if(resumePlaying && current.status==='playing') observe(current);
+      return true;
+    } catch { stop('storage-unavailable'); return false; }
+  };
   async function refresh() {
     if(destroyed) return;
     configAbort?.abort(); const controller=new AbortController(); configAbort=controller;
@@ -111,35 +128,38 @@ export function createMusicAnalytics(player, { fetcher=globalThis.fetch.bind(glo
       config=value;
       if(!config.available) { stop('unavailable'); return; }
       if(privacySignal()) { stop('privacy-signal'); return; }
-      let saved;
-      try { saved=JSON.parse(storage().getItem(MUSIC_ANALYTICS_SESSION_KEY)||'null'); } catch { stop('storage-unavailable'); return; }
+      let saved,store;
+      try {
+        store=storage();
+        if(store.getItem(MUSIC_ANALYTICS_OPT_OUT_KEY)==='1') { stop('declined'); return; }
+        saved=JSON.parse(store.getItem(MUSIC_ANALYTICS_SESSION_KEY)||'null');
+      } catch { stop('storage-unavailable'); return; }
       if(saved && Object.keys(saved).sort().join(',')==='anonymousSessionId,expiresAt,version' &&
         saved.version===MUSIC_ANALYTICS_CONSENT_VERSION && uuid(saved.anonymousSessionId) &&
         Number.isSafeInteger(saved.expiresAt) && saved.expiresAt>clock() && saved.expiresAt<=clock()+86400000) {
         consent=saved; status='enabled'; emit();
-      } else { stop('declined'); }
+      } else { removeConsent(); enableCollection(store); }
     } catch { if(!destroyed && configAbort===controller) stop('unavailable'); }
     finally { cancel(timeout); }
   }
   return {
     refresh,
     accept() {
-      if(destroyed || !config?.available || privacySignal()) return false;
-      try {
-        const next={version:MUSIC_ANALYTICS_CONSENT_VERSION,anonymousSessionId:randomId(),expiresAt:clock()+86400000};
-        if(!uuid(next.anonymousSessionId)) throw new Error('id');
-        storage().setItem(MUSIC_ANALYTICS_SESSION_KEY,JSON.stringify(next));
-        reset(); consent=next; previous=player.snapshot(); status='enabled'; emit(); return true;
-      } catch { stop('storage-unavailable'); return false; }
+      try { return enableCollection(storage()); }
+      catch { stop('storage-unavailable'); return false; }
     },
-    withdraw() { stop('declined'); },
+    withdraw() {
+      try { storage().setItem(MUSIC_ANALYTICS_OPT_OUT_KEY,'1'); }
+      catch { stop('storage-unavailable'); return false; }
+      stop('declined'); return true;
+    },
     cta(track,variant) {
       try {
         if(!allowed() || !track || !uuid(track.id) || !Number.isSafeInteger(track.audioVersion) || !['full','preview'].includes(variant)) return;
         const id=randomId(); if(!uuid(id)) return;
         enqueue('vip_cta_click',{playSessionId:id,trackId:track.id,revisionNo:track.audioVersion,variant,listenedMs:0,entrySource:'detail'});
         // Start the bounded request before normal link navigation. No await, no
-        // navigation delay; only already consented, already in-flight work survives.
+        // navigation delay; only already-enabled, already in-flight work survives.
         void flush();
       } catch { stop('unavailable'); }
     },

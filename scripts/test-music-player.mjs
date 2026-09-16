@@ -117,9 +117,12 @@ test('volume and mute follow native properties; snapshots cannot mutate internal
   player.snapshot().volume = 99; assert.equal(player.snapshot().volume, .4); player.destroy();
 });
 test('public catalog adapter canonicalizes media identity and fails closed on malformed policy', () => {
-  const parsed = readPlayerCatalog({ schemaVersion: 2, tracks: [track('a', { coverUrl: 'https://evil.example/cover' })] });
-  assert.equal(parsed[0].coverUrl, `/api/music/tracks/${track('a').id}/cover?v=1`);
-  for (const patch of [{ id: '../evil' }, { durationSec: Infinity }, { effectiveAccess: 'unknown' }, { previewDurationSec: 999 }]) {
+  const parsed = readPlayerCatalog({ schemaVersion: 2, tracks: [track('a', { coverUrl: 'https://evil.example/cover', qualifiedPlayCount: 1234 })] });
+  assert.equal(parsed[0].coverUrl, `/api/music/tracks/${track('a').id}/cover?v=1&size=display`);
+  assert.equal(parsed[0].qualifiedPlayCount,1234);
+  assert.equal(readPlayerCatalog({schemaVersion:2,tracks:[track('b') ]})[0].qualifiedPlayCount,null);
+  for (const patch of [{ id: '../evil' }, { durationSec: Infinity }, { effectiveAccess: 'unknown' }, { previewDurationSec: 999 },
+    {qualifiedPlayCount:-1},{qualifiedPlayCount:1.5}]) {
     assert.throws(() => readPlayerCatalog({ schemaVersion: 2, tracks: [track('a', patch)] }));
   }
   assert.throws(() => readPlayerCatalog({ schemaVersion: 2, tracks: [track('a'), track('a')] }));

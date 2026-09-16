@@ -60,6 +60,14 @@ async function retentionReady(s, now) {
   const last = result[0][0]?.last_sweep_at;
   return integer(last) && last <= now && now-last <= 2*HOUR && result[1][0]?.pending === 0;
 }
+async function publicAggregateRetentionReady(s,now){
+  const result=(await s.batch([
+    s.prepare('SELECT last_sweep_at FROM music_analytics_health WHERE id=1'),
+    s.prepare('SELECT EXISTS(SELECT 1 FROM music_analytics_daily WHERE day_start_ms<=?) AS pending').bind(now-MUSIC_ANALYTICS_RETENTION.dailyDays*DAY)
+  ])).map(rows);
+  const last=result[0][0]?.last_sweep_at;
+  return integer(last)&&last<=now&&now-last<=2*HOUR&&result[1][0]?.pending===0;
+}
 // Independent of the collection switch: withdrawing/turning collection off must
 // not stop expiry of previously accepted data. Never touches objects or accounts.
 export async function runMusicAnalyticsRetention(env, { clock = Date.now, rounds = 20 } = {}) {
@@ -213,4 +221,29 @@ export async function readMusicAnalytics(env,query={}, {clock=Date.now}={}) {
       return {...base,available:metrics.length>0,reason:metrics.length ? null : 'NO_DATA',metrics};
     });
   } catch { return {...base,available:false,reason:'MUSIC_ANALYTICS_UNAVAILABLE'}; }
+}
+
+// Public popularity is derived only from the anonymous daily aggregates. It
+// never exposes raw events, sessions, request sources or account information.
+// When collection/retention is unavailable, callers must retain their normal
+// catalog ordering. Once both are healthy, an empty aggregate is an accurate
+// zero-play result for every published track.
+export async function readPublicMusicPopularity(env, { clock=Date.now }={}) {
+  const base={available:false,metric:'qualified_play',windowDays:MUSIC_ANALYTICS_RETENTION.dailyDays,counts:[]};
+  const config=musicAnalyticsConfiguration(env);
+  if(!config.available)return base;
+  try {
+    return await bounded(async()=>{
+      const now=clock();if(!integer(now))throw new Error('clock');
+      const s=database(env);
+      // The public catalog checks only aggregate retention. It never queries
+      // attribution or membership tables.
+      if(!await publicAggregateRetentionReady(s,now))return base;
+      const counts=rows((await s.batch([s.prepare(`SELECT track_id AS trackId,SUM(value) AS qualifiedPlayCount
+        FROM music_analytics_daily WHERE metric='qualified_play' AND day_start_ms>?
+        GROUP BY track_id ORDER BY qualifiedPlayCount DESC,track_id`).bind(now-MUSIC_ANALYTICS_RETENTION.dailyDays*DAY)]))[0]);
+      if(counts.some(row=>!validMusicId(row.trackId)||!integer(row.qualifiedPlayCount)))return base;
+      return {...base,available:true,counts:counts.map(row=>({trackId:row.trackId.toLowerCase(),qualifiedPlayCount:row.qualifiedPlayCount}))};
+    },350);
+  } catch{return base;}
 }

@@ -85,6 +85,10 @@ test('search NFKC/case normalization, tag OR/group AND, access and stable latest
   assert.equal(browseMusic(tracks, [], { mode: 'picks' }).every(track => track.effectiveAccess === 'free'), true);
   assert.deepEqual(libraryFilters(tracks), { genres: ['Folk', 'Jazz', 'Piano'], moods: ['Bright', 'Calm'] });
   assert.equal(browseMusic(tracks, [], { query: 'not a song' }).length, 0);
+  const popular=[{...tracks[0],qualifiedPlayCount:4},{...tracks[1],qualifiedPlayCount:12},{...tracks[2],qualifiedPlayCount:12}];
+  assert.deepEqual(browseMusic(popular,[],{mode:'popular'}).map(track=>track.id),[tracks[1].id,tracks[2].id,tracks[0].id]);
+  assert.deepEqual(browseMusic(popular.map(track=>({...track,qualifiedPlayCount:null})),[],{mode:'popular'}).map(track=>track.id),
+    [tracks[0].id,tracks[1].id,tracks[2].id]);
 });
 test('collections preserve administrator order and cannot grant full access or inject private fields', () => {
   const groups = readPlayerCollections({ collections: [{ ...group, token: 'secret' }] }, tracks);
@@ -122,7 +126,7 @@ test('album category separates playlists and opens ordered songs without changin
   const album = { ...group, id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', slug:'album', version:3, type:'album', listeningMode:'mixed', coverTrackId:tracks[0].id, coverUrl:'https://evil.test/cover' };
   const groups = readPlayerCollections({ collections: [group, album] }, tracks);
   assert.deepEqual(browseMusic(tracks, groups, {mode:'albums',collection:'album'}).map(t=>t.id), group.trackIds);
-  assert.equal(groups[1].coverUrl,'/api/music/collections/album/cover?v=3');
+  assert.equal(groups[1].coverUrl,'/api/music/collections/album/cover?v=3&size=display');
   assert.throws(()=>readPlayerCollections({collections:[{...album,listeningMode:'free'}]},tracks));
   assert.throws(()=>readPlayerCollections({collections:[album]},tracks.slice(0,2)));
   assert.deepEqual(browseMusic(tracks,groups,{mode:'albums'}),[]);
