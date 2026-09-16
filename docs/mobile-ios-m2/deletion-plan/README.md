@@ -88,3 +88,7 @@ python3 scripts/test-account-deletion-audit.py
 ```
 
 脚本只使用 `sqlite3.connect(':memory:')`，没有数据库文件参数、网络或删除执行入口。新增/变化的迁移会使 snapshot 检查失败，必须重新审查分类后生成。需要更新时用 `--write`，但这只写文档，不批准政策、不改变运行时。
+
+## 复审修订（2026-09-17）
+
+外键盘点现在保留 SQLite 的 id / seq，并按同一约束的列序输出成对列元组，避免把复合外键误读为独立关系。新增 music_assets 自引用及 music_track_revisions 四组复合约束的回归断言，审计测试增至 11 项。本 PR 可独立审查；iOS A11–A13 的稳定 CI 驱动修复在原生 PR #3 单独验收，不以本 PR 通过代表原生恢复验收完成。

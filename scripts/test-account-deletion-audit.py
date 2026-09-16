@@ -58,6 +58,18 @@ class DeletionAuditTests(unittest.TestCase):
         self.db.execute("INSERT INTO mobile_deletions(id,account_id,prepare_id,receipt_hash,scope_version,prepare_until,receipt_until,status) VALUES('fixture-delete',1,'fixture-prepare','fixture-hash','station-account-v1',1,2,'prepared')")
         self.db.execute('DELETE FROM reader_accounts WHERE id=1')
         self.assertEqual(self.db.execute('SELECT account_id FROM mobile_deletions').fetchone()[0],1)
+    def test_composite_foreign_keys_preserve_ordered_column_pairs(self):
+        music=audit.inventory('music')
+        groups=audit.foreign_key_groups(music['music_assets']['foreignKeys'])
+        pairs=[[(r['column'],r['parentColumn']) for r in group] for group in groups]
+        self.assertIn([('owner_track_id','owner_track_id'),('derived_from_asset_id','id')],pairs)
+        revisions=[g for g in audit.foreign_key_groups(music['music_track_revisions']['foreignKeys']) if len(g)>1]
+        self.assertEqual(len(revisions),4)
+        for group in revisions:
+            self.assertEqual([r['seq'] for r in group],list(range(len(group))))
+            self.assertEqual(len({r['id'] for r in group}),1)
+        matrix=audit.render(audit.inspect())
+        self.assertIn('(owner_track_id, derived_from_asset_id) → music_assets (owner_track_id, id)',matrix)
     def test_music_schema_has_no_reader_owned_catalog_or_library(self):
         music=audit.inventory('music')
         self.assertTrue(all('account_id' not in table['columns'] for table in music.values()))

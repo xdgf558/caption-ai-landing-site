@@ -212,6 +212,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "entry_id",
             "parent": "content_entries",
             "parentColumn": "id",
@@ -237,6 +239,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "entry_id",
             "parent": "content_entries",
             "parentColumn": "id",
@@ -273,12 +277,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "purchase_id",
             "parent": "game_purchases",
             "parentColumn": "id",
             "onDelete": "RESTRICT"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -314,18 +322,24 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "product_id",
             "parent": "game_products",
             "parentColumn": "product_id",
             "onDelete": "RESTRICT"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "entitlement_id",
             "parent": "game_entitlements",
             "parentColumn": "id",
             "onDelete": "RESTRICT"
           },
           {
+            "id": 2,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -356,18 +370,24 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "purchase_id",
             "parent": "game_purchases",
             "parentColumn": "id",
             "onDelete": "RESTRICT"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "product_id",
             "parent": "game_products",
             "parentColumn": "product_id",
             "onDelete": "RESTRICT"
           },
           {
+            "id": 2,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -421,24 +441,32 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "reversal_ledger_id",
             "parent": "reader_credit_ledger",
             "parentColumn": "id",
             "onDelete": "RESTRICT"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "ledger_id",
             "parent": "reader_credit_ledger",
             "parentColumn": "id",
             "onDelete": "RESTRICT"
           },
           {
+            "id": 2,
+            "seq": 0,
             "column": "product_id",
             "parent": "game_products",
             "parentColumn": "product_id",
             "onDelete": "RESTRICT"
           },
           {
+            "id": 3,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -455,12 +483,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "reversal_id",
             "parent": "membership_refund_reviews",
             "parentColumn": "reversal_id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "redemption_ledger_id",
             "parent": "reader_credit_ledger",
             "parentColumn": "id",
@@ -486,12 +518,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "reversal_id",
             "parent": "reader_credit_ledger",
             "parentColumn": "id",
@@ -534,6 +570,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -551,6 +589,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "job_id",
             "parent": "mobile_deletions",
             "parentColumn": "id",
@@ -598,6 +638,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "family_id",
             "parent": "mobile_sessions",
             "parentColumn": "family_id",
@@ -614,6 +656,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "family_id",
             "parent": "mobile_sessions",
             "parentColumn": "family_id",
@@ -641,6 +685,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -669,6 +715,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -708,6 +756,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -732,6 +782,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "order_id",
             "parent": "novel_orders",
             "parentColumn": "id",
@@ -759,12 +811,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
             "onDelete": "SET NULL"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "order_id",
             "parent": "novel_orders",
             "parentColumn": "id",
@@ -834,6 +890,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -863,6 +921,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -883,6 +943,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -908,6 +970,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -932,6 +996,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -950,6 +1016,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -971,6 +1039,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -996,6 +1066,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -1019,6 +1091,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -1045,12 +1119,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "ledger_id",
             "parent": "reader_credit_ledger",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -1074,6 +1152,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -1098,6 +1178,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -1119,6 +1201,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -1143,6 +1227,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -1187,6 +1273,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "account_id",
             "parent": "reader_accounts",
             "parentColumn": "id",
@@ -1219,12 +1307,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "source_id",
             "parent": "signal_sources",
             "parentColumn": "id",
             "onDelete": "SET NULL"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "run_id",
             "parent": "signal_collection_runs",
             "parentColumn": "id",
@@ -1249,6 +1341,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "last_run_id",
             "parent": "signal_collection_runs",
             "parentColumn": "id",
@@ -1275,18 +1369,24 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "run_id",
             "parent": "signal_collection_runs",
             "parentColumn": "id",
             "onDelete": "SET NULL"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "source_id",
             "parent": "signal_sources",
             "parentColumn": "id",
             "onDelete": "RESTRICT"
           },
           {
+            "id": 2,
+            "seq": 0,
             "column": "candidate_id",
             "parent": "signal_candidates",
             "parentColumn": "id",
@@ -1308,6 +1408,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "candidate_id",
             "parent": "signal_candidates",
             "parentColumn": "id",
@@ -1346,12 +1448,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "run_id",
             "parent": "signal_collection_runs",
             "parentColumn": "id",
             "onDelete": "SET NULL"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "source_id",
             "parent": "signal_sources",
             "parentColumn": "id",
@@ -1382,6 +1488,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "previous_run_id",
             "parent": "signal_collection_runs",
             "parentColumn": "id",
@@ -1410,12 +1518,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "source_id",
             "parent": "signal_sources",
             "parentColumn": "id",
             "onDelete": "RESTRICT"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "run_id",
             "parent": "signal_collection_runs",
             "parentColumn": "id",
@@ -1549,6 +1661,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "track_id",
             "parent": "music_tracks",
             "parentColumn": "id",
@@ -1574,12 +1688,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "track_id",
             "parent": "music_track_revisions",
             "parentColumn": "track_id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 0,
+            "seq": 1,
             "column": "revision_no",
             "parent": "music_track_revisions",
             "parentColumn": "revision_no",
@@ -1626,18 +1744,24 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "owner_track_id",
             "parent": "music_assets",
             "parentColumn": "owner_track_id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 0,
+            "seq": 1,
             "column": "derived_from_asset_id",
             "parent": "music_assets",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "owner_track_id",
             "parent": "music_tracks",
             "parentColumn": "id",
@@ -1662,6 +1786,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "owner_collection_id",
             "parent": "music_collections",
             "parentColumn": "id",
@@ -1678,12 +1804,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "track_id",
             "parent": "music_tracks",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "collection_id",
             "parent": "music_collections",
             "parentColumn": "id",
@@ -1707,6 +1837,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "asset_id",
             "parent": "music_collection_assets",
             "parentColumn": "id",
@@ -1733,12 +1865,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "cover_asset_id",
             "parent": "music_collection_assets",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "cover_track_id",
             "parent": "music_tracks",
             "parentColumn": "id",
@@ -1765,12 +1901,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "collection_id",
             "parent": "music_collections",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "track_id",
             "parent": "music_tracks",
             "parentColumn": "id",
@@ -1790,6 +1930,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "entry_track_id",
             "parent": "music_tracks",
             "parentColumn": "id",
@@ -1845,12 +1987,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "asset_id",
             "parent": "music_assets",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "review_id",
             "parent": "music_rights_reviews",
             "parentColumn": "id",
@@ -1871,6 +2017,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "revision_id",
             "parent": "music_track_revisions",
             "parentColumn": "id",
@@ -1929,54 +2077,72 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "track_id",
             "parent": "music_assets",
             "parentColumn": "owner_track_id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 0,
+            "seq": 1,
             "column": "lyrics_asset_id",
             "parent": "music_assets",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "track_id",
             "parent": "music_assets",
             "parentColumn": "owner_track_id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 1,
             "column": "cover_asset_id",
             "parent": "music_assets",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 2,
+            "seq": 0,
             "column": "track_id",
             "parent": "music_assets",
             "parentColumn": "owner_track_id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 2,
+            "seq": 1,
             "column": "preview_asset_id",
             "parent": "music_assets",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 3,
+            "seq": 0,
             "column": "track_id",
             "parent": "music_assets",
             "parentColumn": "owner_track_id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 3,
+            "seq": 1,
             "column": "audio_asset_id",
             "parent": "music_assets",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 4,
+            "seq": 0,
             "column": "track_id",
             "parent": "music_tracks",
             "parentColumn": "id",
@@ -2000,24 +2166,32 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "id",
             "parent": "music_track_revisions",
             "parentColumn": "track_id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 0,
+            "seq": 1,
             "column": "published_revision_id",
             "parent": "music_track_revisions",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "id",
             "parent": "music_track_revisions",
             "parentColumn": "track_id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 1,
             "column": "draft_revision_id",
             "parent": "music_track_revisions",
             "parentColumn": "id",
@@ -2040,12 +2214,16 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "asset_id",
             "parent": "music_assets",
             "parentColumn": "id",
             "onDelete": "NO ACTION"
           },
           {
+            "id": 1,
+            "seq": 0,
             "column": "upload_id",
             "parent": "music_upload_sessions",
             "parentColumn": "id",
@@ -2069,6 +2247,8 @@
         ],
         "foreignKeys": [
           {
+            "id": 0,
+            "seq": 0,
             "column": "asset_id",
             "parent": "music_assets",
             "parentColumn": "id",
