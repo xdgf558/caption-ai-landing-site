@@ -40,6 +40,9 @@ jobs:
       - name: Verify isolated native authentication and deletion recovery
         run: npm run test:mobile:auth
 
+      - name: Verify account deletion schema inventory and isolation hazards
+        run: python3 scripts/test-account-deletion-audit.py
+
       - name: Verify reproducible Cat Life motion bundle
         run: |
           npm ci --prefix experiments/orange-cat-preview

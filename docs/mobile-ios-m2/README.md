@@ -45,3 +45,12 @@ ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build
 需要独立 HTTPS origin、已登记 Team/App ID、AASA、服务端密钥托管、仅隔离数据库绑定及审查后的迁移流程；再测 ASWebAuthenticationSession、真实重启恢复、iPhone 首次解锁前 Keychain 与多设备竞争。A11–A13 三个时点的真实进程故障、实体机证据和全站账号删除完成路径目前不足。音频授权、个人同步与 StoreKit 属于后续阶段，不能通过开启本次 auth 标志冒充完成。
 
 配套 iOS `docs/M2-report.md` 有主规格 A01–A21 / S02–S14 逐组证据和未完成项；M0/M1 文档保持历史原貌。
+
+
+## M2 恢复验收补充（2026-09-16）
+
+在已合并网站 #172 / iOS #2 的基础上，新增 [全站销户数据与执行方案草案](deletion-plan/README.md)，覆盖 86 张实际迁移表和 10 项内存数据库风险测试。政策尚未批准，消费者仍停在 retention_policy_review，没有接入真实清理。
+
+`scripts/helpers/mobile-crash-service.mjs` 是配套 iOS A11–A13 进程终止测试的本机桥接器。它启动真实隔离 Worker 和临时 D1，只监听 loopback，以随机密钥保护测试入口，屏蔽全部外部请求；合成账号通过真实授权码流程创建会话。A11 在服务端提交后扣留响应，A12/A13 由原生测试目标在 Keychain 写入前/后退出进程。配套驱动及精确来源版本见 iOS `docs/M2-recovery-acceptance.md`。辅助服务绝不能部署。
+
+本机三组实际进程终止与恢复已通过，使用原有 120 秒重放期限、真实模拟器 Keychain，无假时钟或产品故障钩子。它们补足此前 A11–A13 的本机故障证据，但不代表真实 HTTPS/AASA、实体 iPhone、锁定设备 Keychain 或完整销户通过。本轮重跑 29 项隔离认证、10 项销户审计测试及 153 页编译验证；空小说构建仍不是生产包。此前各阶段记录保留为历史证据。

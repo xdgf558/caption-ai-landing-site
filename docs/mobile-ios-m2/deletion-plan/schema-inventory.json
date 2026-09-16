@@ -1,0 +1,2082 @@
+{
+  "kind": "repository-schema-only",
+  "liveDataAccess": false,
+  "sources": {
+    "migrations/0001_waitlist.sql": "9834ce3b7e12c217db2196742150046bf58f3fa759fbef505d5ee8dcb9dcb7c5",
+    "migrations/0002_download_rate_limits.sql": "50f9e00a7360c5ed3cf259520314bc15e6609bfdc54e3a3e8844bc94a3f2ce62",
+    "migrations/0003_reader_accounts.sql": "49eb30c6d38f11bb458911af2c66591b8ad800cb43674b4855d70715f98fb5b0",
+    "migrations/0004_novel_entitlements.sql": "2ba8b9e57a1ea888776c294e9615fbd4be5aa35e1fb942edee02d5e2bd39d2ae",
+    "migrations/0005_novel_payments.sql": "5246a24004579863c1a9394e7d7359d932f103e68cedfcc87a1da612155f0856",
+    "migrations/0006_reader_credits.sql": "b7e4bea9b57fac3e1546ccf9b8e925da31a67fb9211238148f115e5e676555f1",
+    "migrations/0007_backend_content_platform.sql": "c174517367bf8874ebdd7b66eb5f29cad7ee9a176b69e302028fe0d8ef60dcfb",
+    "migrations/0008_admin_content_settings.sql": "c7b67595eb1874703274891675d674f5a51608252a81a1b94ef32102a2ba7ab4",
+    "migrations/0009_reader_memberships.sql": "9584450be399df6dbd233541b3bf640b97a1a6ba90f16694800dce7e4c506f43",
+    "migrations/0010_reader_bookmarks.sql": "1eb2b1b4ba5fde5699ec058f20f37ee4d9335a292bf5c4c33345940308ee3837",
+    "migrations/0011_reader_password_credentials.sql": "55d4f627346a1b6dc896132d0b7dc27ace6c890dc89beaac377b51318c11d663",
+    "migrations/0012_reader_totp_credentials.sql": "c1eeb055a807f5a511e46ccd618fdcbd4d5f717c0ea7d3c1b1c4d5bfc9666b2a",
+    "migrations/0013_reader_totp_reset_attempts.sql": "17f9d73814af92340aec6c32c374f1541858d8973b982f9666b408df6d11fc23",
+    "migrations/0014_reading_events.sql": "a163af85548b36fc60e3c88fe962ba9f7e0f63e51858e995cd2c6e9264c3d5a1",
+    "migrations/0015_chapter_stats.sql": "3ffaab11f0a2b6dae46a73a67fbda71d65967b5c9fc720a2c69133a87e78eb90",
+    "migrations/0016_ai_insights.sql": "80c7268d4fbcfa68c9e9590775d3d7625d2523a215fb8ff70e245da3a1f01026",
+    "migrations/0017_reader_comments.sql": "de786764d8286153a9ec6e6d340d7225909111c30b4d1e29f93cc789efc1a247",
+    "migrations/0018_product_feedback.sql": "d952c5d5305087d757880fa5a1221b295a7754133f8343bd94ac4c6924eaeaf3",
+    "migrations/0019_signal_automation.sql": "f37ecde19fbaebae7d57e720fcf5bf82a4686b81f64d2f9d23a300b6022c0aa6",
+    "migrations/0020_signal_collection.sql": "ebf22836312c95ee518614062f7620c06b492d3062e7e9acd1fbb5e9bae8fb7f",
+    "migrations/0021_signal_candidate_triage.sql": "615080e3ac443a7fab1bf19d10bf6e2918cc919c0dd3a17a4cd3274669bcb182",
+    "migrations/0022_signal_source_adapters.sql": "460ade3cc1e9d78c744436adcb22add4e2636a275bc2e95b396e37aa32d366f0",
+    "migrations/0023_signal_candidate_deduplication.sql": "d74c8046cc2a0e40d69254120a458ea5f2df676a57ff49f1c12880aef9b29546",
+    "migrations/0024_signal_operations.sql": "ba13024d261c788b45d83e07b9f3affcb3edba035fcf07bbfa8d5a8104c51adc",
+    "migrations/0025_signal_model_rollout.sql": "e918bcc56c96d00bc0ebf5dc400df9f423fe49c5a122e2827ad377eb3b51fc22",
+    "migrations/0026_archive_paused_signal_sources.sql": "263e818818d17b6273e6a3c2de77a966310d831db1eff5c64eea63d88da38816",
+    "migrations/0027_content_import_review_indexes.sql": "3256ea8d4ca0209e477b08763c27fdcaee24b391ff48340f05e88419e96b3cf6",
+    "migrations/0028_station_points.sql": "07592a7fb9b994f25545a32a80d3db7b61d6c3cfd18f6993b10eff17e84b1ebe",
+    "migrations/0029_creem_credit_topup_idempotency.sql": "880b7fd8aec712ae9687dada631cfcc4ec0f6bbfcf311bfaa131b10215668a85",
+    "migrations/0030_creem_reversals_and_event_ids.sql": "5aae0f645d543e6e945816995786ee4385b2de0c61c2462a9a5dd0697a549b72",
+    "migrations/0031_reader_game_saves.sql": "fe47874df69798b4aa11d48861ac3f318aa0ad9178527e3bf88afea97d7d0bae",
+    "migrations/0032_reader_game_save_recovery.sql": "44267eca8c9a83bf3384080570fada7318d6c0e617baa4b4c762984a874d2045",
+    "migrations/0033_cat_life_game_commerce.sql": "7bd11508ff80dadb9d8c0a246f87ecc177b9fb30d7ed8d86f21682c7b6612d86",
+    "migrations/0034_cat_life_game_commerce_api.sql": "7f1651968dd0b6d14f62ab4fb6e3a50c40b245d96fcfa32f19ca0effe10f436f",
+    "migrations/0035_cat_life_game_commerce_admin.sql": "fcc129eeb5b4c98c7c1d395162d1942a6973598351dfe7d670be4241dbfb8b58",
+    "migrations/0036_reader_membership_redemptions.sql": "5da3296aab5535c123fd007805cd0f9aa4faeb4926ac775783198c6c3765e9cd",
+    "migrations/0037_membership_refund_reviews.sql": "c572ac43dc4b8248aa71534399711019e1cf5f708b44bd80fabb9f6876c6f8f4",
+    "migrations-mobile/0001_native_auth.sql": "e74329fd93ccc85915a296de9bad1549aa919b093c5a707e9f78a0656fe2dc5b",
+    "migrations-music/0001_music_foundation.sql": "d63ea6a4f2870d7a15c49f2c5af5c7c75a8a4fef14821cd8041995a0d4d70008",
+    "migrations-music/0002_music_publication.sql": "8b301c3a1d13be40eb574ce7d950531ed39492dc321f95627b2cb0c9c061e3b9",
+    "migrations-music/0003_music_uploads.sql": "fb0cc9eafa2bee35cb2ba6efacfd0125837a812fdc809a174e330c950d5f83b3",
+    "migrations-music/0004_music_cleanup.sql": "c23f1b218d4e43a11c1d2c1c88c53a809814f9d99560759b6c54a66027c28c92",
+    "migrations-music/0005_music_rate_limits.sql": "013ea8db47ff0c217bc5c7d244c27b1cfa047d029048ea19263e2367062466be",
+    "migrations-music/0006_music_analytics.sql": "40cf617fef180deb882192b7b0fffeb3d4f3b53a027067825f1d9d42c27bc780",
+    "migrations-music/0007_music_albums.sql": "89daadecae0b8ed59a60577a78694252977de71e7fb7359e13ac67e2a6dae9ea",
+    "migrations-music/0008_music_featured.sql": "1dc063cff7d806254516af1572b1bf69acc7d30535cb5e22f4de60f6faaf7bd4",
+    "migrations-music/0009_music_album_covers.sql": "6c0f7f616d40e95514f019b964ca7d6e26e0d020a1c9fda48f40487d56c549f8",
+    "migrations-music/0010_music_limited_free.sql": "6acfbaebe38ec0831696ce6e321561d4ea8b3f35410596fbc7a653afefd86b24",
+    "migrations-music/0011_music_share_rate_limits.sql": "05d0be34b289df948c9eb92ffcecb22c2d75f716a8ebfff49e12c7defd3bbfa1"
+  },
+  "databases": {
+    "reader": {
+      "admin_audit_logs": {
+        "columns": [
+          "id",
+          "actor_email",
+          "action",
+          "target_type",
+          "target_id",
+          "target_slug",
+          "metadata_json",
+          "created_at"
+        ],
+        "foreignKeys": [],
+        "category": "admin_audit_review"
+      },
+      "admin_content_settings": {
+        "columns": [
+          "setting_key",
+          "setting_json",
+          "updated_by",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "ai_insights": {
+        "columns": [
+          "id",
+          "series_slug",
+          "chapter_slug",
+          "locale",
+          "window_days",
+          "insight_json",
+          "model",
+          "source_stats_updated_at",
+          "generated_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "chapter_stats": {
+        "columns": [
+          "id",
+          "series_slug",
+          "chapter_slug",
+          "locale",
+          "window_days",
+          "total_events",
+          "unique_sessions",
+          "account_readers",
+          "open_count",
+          "close_count",
+          "completion_count",
+          "like_count",
+          "bookmark_count",
+          "comment_count",
+          "avg_read_time_seconds",
+          "avg_scroll_depth",
+          "completion_rate",
+          "drop_off_rate",
+          "engagement_score",
+          "scroll_depth_distribution_json",
+          "drop_off_points_json",
+          "event_window_start",
+          "event_window_end",
+          "calculated_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "content_entries": {
+        "columns": [
+          "id",
+          "entry_type",
+          "locale",
+          "slug",
+          "parent_slug",
+          "title",
+          "subtitle",
+          "description",
+          "excerpt",
+          "status",
+          "visibility",
+          "access_level",
+          "author_name",
+          "featured",
+          "sort_order",
+          "chapter_number",
+          "volume_title",
+          "tags_json",
+          "seo_json",
+          "metadata_json",
+          "pricing_json",
+          "body_format",
+          "markdown_r2_key",
+          "html_r2_key",
+          "import_r2_key",
+          "cover_r2_key",
+          "cover_alt",
+          "word_count",
+          "reading_minutes",
+          "source_kind",
+          "source_ref",
+          "scheduled_at",
+          "published_at",
+          "archived_at",
+          "created_by",
+          "updated_by",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "content_imports": {
+        "columns": [
+          "id",
+          "import_type",
+          "filename",
+          "r2_key",
+          "status",
+          "entries_created",
+          "entries_updated",
+          "warnings_json",
+          "errors_json",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "content_pricing_rules": {
+        "columns": [
+          "id",
+          "entry_id",
+          "scope_type",
+          "entry_type",
+          "series_slug",
+          "chapter_slug",
+          "rule_type",
+          "label",
+          "amount",
+          "currency",
+          "credits",
+          "discount_percent",
+          "minimum_chapters",
+          "is_enabled",
+          "metadata_json",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "entry_id",
+            "parent": "content_entries",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "content_revisions": {
+        "columns": [
+          "id",
+          "entry_id",
+          "revision_number",
+          "status",
+          "title",
+          "summary",
+          "metadata_json",
+          "pricing_json",
+          "markdown_r2_key",
+          "html_r2_key",
+          "created_by",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "entry_id",
+            "parent": "content_entries",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "download_rate_limits": {
+        "columns": [
+          "download_key",
+          "ip_hash",
+          "day_key",
+          "window_key",
+          "daily_count",
+          "window_count",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "short_ttl"
+      },
+      "game_commerce_events": {
+        "columns": [
+          "id",
+          "account_id",
+          "purchase_id",
+          "event_type",
+          "event_key",
+          "product_id",
+          "entitlement_key",
+          "points_delta",
+          "metadata_json",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "purchase_id",
+            "parent": "game_purchases",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          },
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "game_commerce_rate_limits": {
+        "columns": [
+          "account_id",
+          "action",
+          "window_started_at",
+          "request_count",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "private_data_purge"
+      },
+      "game_entitlement_events": {
+        "columns": [
+          "id",
+          "account_id",
+          "entitlement_id",
+          "event_type",
+          "event_key",
+          "product_id",
+          "entitlement_key",
+          "actor_email",
+          "reason",
+          "metadata_json",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "product_id",
+            "parent": "game_products",
+            "parentColumn": "product_id",
+            "onDelete": "RESTRICT"
+          },
+          {
+            "column": "entitlement_id",
+            "parent": "game_entitlements",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          },
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "game_entitlements": {
+        "columns": [
+          "id",
+          "account_id",
+          "game_key",
+          "entitlement_key",
+          "product_id",
+          "purchase_id",
+          "grant_source",
+          "source_ref",
+          "grant_reason",
+          "granted_by",
+          "metadata_json",
+          "granted_at",
+          "expires_at",
+          "revoked_at",
+          "revoke_reason",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "purchase_id",
+            "parent": "game_purchases",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          },
+          {
+            "column": "product_id",
+            "parent": "game_products",
+            "parentColumn": "product_id",
+            "onDelete": "RESTRICT"
+          },
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "game_products": {
+        "columns": [
+          "product_id",
+          "game_key",
+          "product_type",
+          "points_price",
+          "lifecycle_status",
+          "entitlement_key",
+          "catalog_revision",
+          "names_json",
+          "metadata_json",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "game_purchases": {
+        "columns": [
+          "id",
+          "account_id",
+          "game_key",
+          "product_id",
+          "product_type",
+          "entitlement_key",
+          "points_spent",
+          "balance_before",
+          "balance_after",
+          "catalog_revision",
+          "product_snapshot_json",
+          "idempotency_key",
+          "status",
+          "ledger_id",
+          "ledger_source",
+          "ledger_source_ref",
+          "reversal_id",
+          "reversal_reason",
+          "reversal_ledger_id",
+          "completed_at",
+          "reversed_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "reversal_ledger_id",
+            "parent": "reader_credit_ledger",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          },
+          {
+            "column": "ledger_id",
+            "parent": "reader_credit_ledger",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          },
+          {
+            "column": "product_id",
+            "parent": "game_products",
+            "parentColumn": "product_id",
+            "onDelete": "RESTRICT"
+          },
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "membership_refund_review_items": {
+        "columns": [
+          "redemption_ledger_id",
+          "reversal_id",
+          "removed_seconds"
+        ],
+        "foreignKeys": [
+          {
+            "column": "reversal_id",
+            "parent": "membership_refund_reviews",
+            "parentColumn": "reversal_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "redemption_ledger_id",
+            "parent": "reader_credit_ledger",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "membership_refund_reviews": {
+        "columns": [
+          "reversal_id",
+          "account_id",
+          "operation_token",
+          "intent_hash",
+          "decision",
+          "actor_email",
+          "reason",
+          "before_json",
+          "after_expires_at",
+          "removed_seconds",
+          "applied",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "reversal_id",
+            "parent": "reader_credit_ledger",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "mobile_assert": {
+        "columns": [
+          "value"
+        ],
+        "foreignKeys": [],
+        "category": "short_ttl"
+      },
+      "mobile_browser_flows": {
+        "columns": [
+          "id",
+          "cookie_hash",
+          "challenge",
+          "state",
+          "redirect_uri",
+          "expires_at",
+          "used"
+        ],
+        "foreignKeys": [],
+        "category": "short_ttl"
+      },
+      "mobile_codes": {
+        "columns": [
+          "hash",
+          "account_id",
+          "challenge",
+          "redirect_uri",
+          "password_version",
+          "totp_version",
+          "authenticated_at",
+          "expires_at",
+          "used"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "credentials_purge"
+      },
+      "mobile_deletion_outbox": {
+        "columns": [
+          "job_id",
+          "status",
+          "attempts",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "job_id",
+            "parent": "mobile_deletions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "receipt_minimal"
+      },
+      "mobile_deletions": {
+        "columns": [
+          "id",
+          "account_id",
+          "prepare_id",
+          "receipt_hash",
+          "scope_version",
+          "prepare_until",
+          "receipt_until",
+          "status",
+          "confirm_id",
+          "confirmed_at",
+          "completed_at",
+          "stage"
+        ],
+        "foreignKeys": [],
+        "category": "receipt_minimal"
+      },
+      "mobile_rate_limits": {
+        "columns": [
+          "key",
+          "window",
+          "count"
+        ],
+        "foreignKeys": [],
+        "category": "short_ttl"
+      },
+      "mobile_refresh_operations": {
+        "columns": [
+          "family_id",
+          "request_id",
+          "old_generation",
+          "digest",
+          "result",
+          "result_until",
+          "absolute_until"
+        ],
+        "foreignKeys": [
+          {
+            "column": "family_id",
+            "parent": "mobile_sessions",
+            "parentColumn": "family_id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "credentials_purge"
+      },
+      "mobile_refresh_tokens": {
+        "columns": [
+          "hash",
+          "family_id",
+          "generation"
+        ],
+        "foreignKeys": [
+          {
+            "column": "family_id",
+            "parent": "mobile_sessions",
+            "parentColumn": "family_id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "credentials_purge"
+      },
+      "mobile_sessions": {
+        "columns": [
+          "id",
+          "family_id",
+          "account_id",
+          "generation",
+          "access_hash",
+          "access_until",
+          "refresh_until",
+          "absolute_until",
+          "authenticated_at",
+          "password_version",
+          "totp_version",
+          "recent_auth_at",
+          "recent_auth_totp_version",
+          "revoked"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "credentials_purge"
+      },
+      "novel_entitlements": {
+        "columns": [
+          "id",
+          "account_id",
+          "series_slug",
+          "chapter_slug",
+          "scope",
+          "access_level",
+          "source",
+          "source_ref",
+          "note",
+          "granted_by",
+          "granted_at",
+          "expires_at",
+          "revoked_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "novel_orders": {
+        "columns": [
+          "id",
+          "order_token",
+          "account_id",
+          "provider",
+          "provider_order_id",
+          "provider_payment_id",
+          "provider_invoice_id",
+          "order_type",
+          "series_slug",
+          "chapter_slug",
+          "entitlement_scope",
+          "entitlement_access_level",
+          "price_amount",
+          "price_currency",
+          "pay_amount",
+          "pay_currency",
+          "payment_url",
+          "status",
+          "provider_status",
+          "customer_email",
+          "metadata_json",
+          "expires_at",
+          "confirmed_at",
+          "finished_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "novel_payment_events": {
+        "columns": [
+          "id",
+          "provider",
+          "order_id",
+          "provider_order_id",
+          "provider_payment_id",
+          "event_type",
+          "status",
+          "signature_valid",
+          "payload_json",
+          "received_at",
+          "provider_event_id"
+        ],
+        "foreignKeys": [
+          {
+            "column": "order_id",
+            "parent": "novel_orders",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "novel_tips": {
+        "columns": [
+          "id",
+          "order_id",
+          "account_id",
+          "provider",
+          "provider_order_id",
+          "provider_payment_id",
+          "series_slug",
+          "amount",
+          "currency",
+          "message",
+          "status",
+          "metadata_json",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          },
+          {
+            "column": "order_id",
+            "parent": "novel_orders",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "product_feedback": {
+        "columns": [
+          "id",
+          "product",
+          "platform",
+          "app_version",
+          "issue_type",
+          "impact",
+          "summary",
+          "details",
+          "reproduction_steps",
+          "environment",
+          "contact_email",
+          "status",
+          "admin_note",
+          "source_path",
+          "locale",
+          "metadata_json",
+          "ip_hash",
+          "user_agent_hash",
+          "updated_by",
+          "resolved_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "soft_link_review"
+      },
+      "reader_accounts": {
+        "columns": [
+          "id",
+          "email",
+          "normalized_email",
+          "display_name",
+          "status",
+          "last_login_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "identity_tombstone"
+      },
+      "reader_bookmarks": {
+        "columns": [
+          "id",
+          "account_id",
+          "series_slug",
+          "chapter_slug",
+          "series_title",
+          "chapter_title",
+          "locale",
+          "source_path",
+          "progress_percent",
+          "position_label",
+          "note",
+          "metadata_json",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "private_data_purge"
+      },
+      "reader_comments": {
+        "columns": [
+          "id",
+          "account_id",
+          "series_slug",
+          "chapter_slug",
+          "locale",
+          "body",
+          "status",
+          "source_path",
+          "metadata_json",
+          "ip_hash",
+          "user_agent_hash",
+          "reviewed_by",
+          "reviewed_at",
+          "hidden_reason",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "comments_decision"
+      },
+      "reader_credit_accounts": {
+        "columns": [
+          "account_id",
+          "balance_credits",
+          "lifetime_purchased_credits",
+          "lifetime_spent_credits",
+          "currency_label",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "reader_credit_ledger": {
+        "columns": [
+          "id",
+          "account_id",
+          "entry_type",
+          "credits_delta",
+          "balance_after",
+          "source",
+          "source_ref",
+          "series_slug",
+          "chapter_slug",
+          "note",
+          "metadata_json",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "reader_game_save_backups": {
+        "columns": [
+          "id",
+          "account_id",
+          "game_key",
+          "save_version",
+          "save_json",
+          "save_hash",
+          "save_bytes",
+          "revision",
+          "client_updated_at",
+          "created_at",
+          "schema_version"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "private_data_purge"
+      },
+      "reader_game_save_rate_limits": {
+        "columns": [
+          "account_id",
+          "game_key",
+          "window_started_at",
+          "write_count",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "private_data_purge"
+      },
+      "reader_game_save_recovery_events": {
+        "columns": [
+          "id",
+          "account_id",
+          "game_key",
+          "source_backup_revision",
+          "previous_revision",
+          "restored_revision",
+          "restored_save_hash",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "private_data_purge"
+      },
+      "reader_game_saves": {
+        "columns": [
+          "id",
+          "account_id",
+          "game_key",
+          "save_version",
+          "save_json",
+          "save_hash",
+          "save_bytes",
+          "revision",
+          "client_updated_at",
+          "created_at",
+          "updated_at",
+          "schema_version"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "private_data_purge"
+      },
+      "reader_login_tokens": {
+        "columns": [
+          "id",
+          "account_id",
+          "normalized_email",
+          "token_hash",
+          "purpose",
+          "expires_at",
+          "consumed_at",
+          "request_ip_hash",
+          "user_agent",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "credentials_purge"
+      },
+      "reader_membership_redemptions": {
+        "columns": [
+          "account_id",
+          "request_key",
+          "operation_token",
+          "cost_credits",
+          "duration_months",
+          "unit_label",
+          "covers_paid",
+          "balance_before",
+          "previous_expires_at",
+          "membership_json",
+          "ledger_id",
+          "applied",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "ledger_id",
+            "parent": "reader_credit_ledger",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "reader_memberships": {
+        "columns": [
+          "account_id",
+          "membership_level",
+          "source",
+          "source_ref",
+          "started_at",
+          "expires_at",
+          "last_redeemed_at",
+          "metadata_json",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "financial_review"
+      },
+      "reader_password_credentials": {
+        "columns": [
+          "id",
+          "account_id",
+          "username",
+          "normalized_username",
+          "password_hash",
+          "password_salt",
+          "password_iterations",
+          "password_algorithm",
+          "created_at",
+          "updated_at",
+          "last_password_change_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "credentials_purge"
+      },
+      "reader_sessions": {
+        "columns": [
+          "id",
+          "account_id",
+          "session_hash",
+          "expires_at",
+          "revoked_at",
+          "user_agent",
+          "created_at",
+          "last_seen_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "credentials_purge"
+      },
+      "reader_totp_credentials": {
+        "columns": [
+          "id",
+          "account_id",
+          "secret_base32",
+          "issuer",
+          "label",
+          "verified_at",
+          "enabled_at",
+          "disabled_at",
+          "last_used_step",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "credentials_purge"
+      },
+      "reader_totp_reset_attempts": {
+        "columns": [
+          "id",
+          "scope",
+          "scope_key",
+          "failure_count",
+          "locked_until_epoch",
+          "last_failed_epoch",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "soft_link_review"
+      },
+      "reading_events": {
+        "columns": [
+          "id",
+          "client_event_id",
+          "account_id",
+          "session_id",
+          "series_slug",
+          "chapter_slug",
+          "locale",
+          "event_type",
+          "event_value",
+          "progress_percent",
+          "block_index",
+          "duration_ms",
+          "source_path",
+          "metadata_json",
+          "ip_hash",
+          "user_agent_hash",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          }
+        ],
+        "category": "private_data_purge"
+      },
+      "signal_automation_alerts": {
+        "columns": [
+          "id",
+          "dedupe_key",
+          "alert_type",
+          "severity",
+          "status",
+          "title",
+          "message",
+          "run_id",
+          "source_id",
+          "occurrence_count",
+          "metadata_json",
+          "first_seen_at",
+          "last_seen_at",
+          "last_notified_at",
+          "notification_count",
+          "resolved_at",
+          "resolved_by",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "source_id",
+            "parent": "signal_sources",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          },
+          {
+            "column": "run_id",
+            "parent": "signal_collection_runs",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "signal_automation_runtime": {
+        "columns": [
+          "id",
+          "last_cron_started_at",
+          "last_cron_finished_at",
+          "last_cron_scheduled_at",
+          "last_cron_status",
+          "last_run_id",
+          "last_queued_count",
+          "consecutive_failures",
+          "last_error",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "last_run_id",
+            "parent": "signal_collection_runs",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "signal_candidate_occurrences": {
+        "columns": [
+          "id",
+          "candidate_id",
+          "source_id",
+          "run_id",
+          "canonical_url",
+          "title",
+          "summary",
+          "published_at",
+          "content_hash",
+          "title_fingerprint",
+          "match_reason",
+          "metadata_json",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "run_id",
+            "parent": "signal_collection_runs",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          },
+          {
+            "column": "source_id",
+            "parent": "signal_sources",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          },
+          {
+            "column": "candidate_id",
+            "parent": "signal_candidates",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "signal_candidate_reviews": {
+        "columns": [
+          "id",
+          "candidate_id",
+          "action",
+          "from_status",
+          "to_status",
+          "note",
+          "actor_email",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "candidate_id",
+            "parent": "signal_candidates",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "signal_candidates": {
+        "columns": [
+          "id",
+          "source_id",
+          "run_id",
+          "external_id",
+          "canonical_url",
+          "title",
+          "summary",
+          "author",
+          "published_at",
+          "language",
+          "category",
+          "status",
+          "relevance_score",
+          "content_hash",
+          "raw_payload_json",
+          "metadata_json",
+          "reviewed_by",
+          "reviewed_at",
+          "created_at",
+          "updated_at",
+          "score_breakdown_json",
+          "cluster_key",
+          "decision_note",
+          "scored_at",
+          "title_fingerprint"
+        ],
+        "foreignKeys": [
+          {
+            "column": "run_id",
+            "parent": "signal_collection_runs",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          },
+          {
+            "column": "source_id",
+            "parent": "signal_sources",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "signal_collection_runs": {
+        "columns": [
+          "id",
+          "trigger_type",
+          "status",
+          "requested_source_ids_json",
+          "source_count",
+          "fetched_count",
+          "accepted_count",
+          "duplicate_count",
+          "failed_count",
+          "error_json",
+          "started_at",
+          "finished_at",
+          "created_by",
+          "created_at",
+          "updated_at",
+          "processed_source_count",
+          "previous_run_id"
+        ],
+        "foreignKeys": [
+          {
+            "column": "previous_run_id",
+            "parent": "signal_collection_runs",
+            "parentColumn": "id",
+            "onDelete": "SET NULL"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "signal_collection_tasks": {
+        "columns": [
+          "id",
+          "run_id",
+          "source_id",
+          "status",
+          "attempts",
+          "fetched_count",
+          "accepted_count",
+          "duplicate_count",
+          "http_status",
+          "response_not_modified",
+          "last_error",
+          "started_at",
+          "finished_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "source_id",
+            "parent": "signal_sources",
+            "parentColumn": "id",
+            "onDelete": "RESTRICT"
+          },
+          {
+            "column": "run_id",
+            "parent": "signal_collection_runs",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "signal_model_rollout": {
+        "columns": [
+          "id",
+          "rollout_mode",
+          "deepseek_model",
+          "last_smoke_status",
+          "last_smoke_at",
+          "last_smoke_model",
+          "last_smoke_finish_reason",
+          "last_smoke_message",
+          "last_smoke_usage_json",
+          "last_smoke_candidate_count",
+          "updated_by",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "signal_sources": {
+        "columns": [
+          "id",
+          "name",
+          "publisher",
+          "source_type",
+          "category",
+          "trust_tier",
+          "endpoint_url",
+          "homepage_url",
+          "language",
+          "is_enabled",
+          "fetch_interval_minutes",
+          "max_items_per_run",
+          "requires_api_key",
+          "config_json",
+          "notes",
+          "last_fetched_at",
+          "last_success_at",
+          "last_error_at",
+          "last_error",
+          "created_by",
+          "updated_by",
+          "created_at",
+          "updated_at",
+          "http_etag",
+          "http_last_modified",
+          "last_http_status",
+          "last_item_count",
+          "consecutive_failures",
+          "archived_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "waitlist_entries": {
+        "columns": [
+          "id",
+          "product",
+          "platform",
+          "locale",
+          "email",
+          "normalized_email",
+          "source",
+          "landing_path",
+          "utm_source",
+          "utm_medium",
+          "utm_campaign",
+          "utm_content",
+          "invite_status",
+          "invite_url",
+          "invite_delivered_at",
+          "user_agent",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "soft_link_review"
+      },
+      "waitlist_settings": {
+        "columns": [
+          "product",
+          "platform",
+          "public_link",
+          "capacity",
+          "distributed_count",
+          "is_active",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      }
+    },
+    "music": {
+      "music_admin_audit_logs": {
+        "columns": [
+          "id",
+          "actor_id",
+          "action",
+          "target_id",
+          "summary_json",
+          "request_id",
+          "created_at"
+        ],
+        "foreignKeys": [],
+        "category": "admin_audit_review"
+      },
+      "music_analytics_admission_guard": {
+        "columns": [
+          "singleton",
+          "passed"
+        ],
+        "foreignKeys": [],
+        "category": "anonymous_analytics_ttl"
+      },
+      "music_analytics_daily": {
+        "columns": [
+          "day_start_ms",
+          "metric",
+          "track_id",
+          "variant",
+          "access_kind",
+          "value"
+        ],
+        "foreignKeys": [
+          {
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "anonymous_analytics_ttl"
+      },
+      "music_analytics_events": {
+        "columns": [
+          "event_id",
+          "event_type",
+          "play_session_id",
+          "anonymous_session_id",
+          "track_id",
+          "revision_no",
+          "variant",
+          "occurred_at",
+          "received_at",
+          "listened_ms",
+          "entry_source",
+          "consent_version"
+        ],
+        "foreignKeys": [
+          {
+            "column": "track_id",
+            "parent": "music_track_revisions",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "revision_no",
+            "parent": "music_track_revisions",
+            "parentColumn": "revision_no",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "anonymous_analytics_ttl"
+      },
+      "music_analytics_health": {
+        "columns": [
+          "id",
+          "last_sweep_at"
+        ],
+        "foreignKeys": [],
+        "category": "anonymous_analytics_ttl"
+      },
+      "music_analytics_rates": {
+        "columns": [
+          "scope",
+          "window_start",
+          "subject",
+          "hits"
+        ],
+        "foreignKeys": [],
+        "category": "anonymous_analytics_ttl"
+      },
+      "music_assets": {
+        "columns": [
+          "id",
+          "owner_track_id",
+          "kind",
+          "object_key",
+          "state",
+          "content_type",
+          "format",
+          "byte_size",
+          "duration_ms",
+          "derived_from_asset_id",
+          "source_start_ms",
+          "source_end_ms",
+          "sha256",
+          "etag",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "owner_track_id",
+            "parent": "music_assets",
+            "parentColumn": "owner_track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "derived_from_asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "owner_track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "music_collection_assets": {
+        "columns": [
+          "id",
+          "owner_collection_id",
+          "kind",
+          "object_key",
+          "state",
+          "content_type",
+          "format",
+          "byte_size",
+          "sha256",
+          "etag",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "owner_collection_id",
+            "parent": "music_collections",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "music_collection_tracks": {
+        "columns": [
+          "collection_id",
+          "track_id",
+          "position"
+        ],
+        "foreignKeys": [
+          {
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "collection_id",
+            "parent": "music_collections",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "music_collection_upload_sessions": {
+        "columns": [
+          "id",
+          "asset_id",
+          "actor_id",
+          "status",
+          "declared_bytes",
+          "actual_bytes",
+          "expires_at",
+          "created_at",
+          "expected_sha256",
+          "write_token"
+        ],
+        "foreignKeys": [
+          {
+            "column": "asset_id",
+            "parent": "music_collection_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "admin_audit_review"
+      },
+      "music_collections": {
+        "columns": [
+          "id",
+          "slug",
+          "original_locale",
+          "title_json",
+          "description_json",
+          "status",
+          "version",
+          "created_at",
+          "updated_at",
+          "collection_type",
+          "listening_mode",
+          "cover_track_id",
+          "cover_asset_id"
+        ],
+        "foreignKeys": [
+          {
+            "column": "cover_asset_id",
+            "parent": "music_collection_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "cover_track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "music_featured_home": {
+        "columns": [
+          "id",
+          "version",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "music_featured_items": {
+        "columns": [
+          "slot_kind",
+          "position",
+          "track_id",
+          "collection_id"
+        ],
+        "foreignKeys": [
+          {
+            "column": "collection_id",
+            "parent": "music_collections",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "music_membership_attributions": {
+        "columns": [
+          "verified_grant_ref",
+          "anonymous_session_id",
+          "entry_track_id",
+          "observed_at",
+          "qualification",
+          "reversed_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "entry_track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "anonymous_analytics_ttl"
+      },
+      "music_mutations": {
+        "columns": [
+          "actor_id",
+          "route",
+          "idempotency_key",
+          "request_hash",
+          "result_json",
+          "expires_at",
+          "created_at"
+        ],
+        "foreignKeys": [],
+        "category": "admin_audit_review"
+      },
+      "music_publication_guards": {
+        "columns": [
+          "operation_token",
+          "passed"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "music_rate_sources": {
+        "columns": [
+          "category",
+          "window_start",
+          "source_hash",
+          "hits"
+        ],
+        "foreignKeys": [],
+        "category": "short_ttl"
+      },
+      "music_rate_windows": {
+        "columns": [
+          "category",
+          "window_start",
+          "hits"
+        ],
+        "foreignKeys": [],
+        "category": "short_ttl"
+      },
+      "music_rights_evidence": {
+        "columns": [
+          "review_id",
+          "asset_id"
+        ],
+        "foreignKeys": [
+          {
+            "column": "asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "review_id",
+            "parent": "music_rights_reviews",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "music_rights_reviews": {
+        "columns": [
+          "id",
+          "revision_id",
+          "review_json",
+          "review_status",
+          "reviewer_id",
+          "reviewed_at",
+          "revision_fingerprint"
+        ],
+        "foreignKeys": [
+          {
+            "column": "revision_id",
+            "parent": "music_track_revisions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "admin_audit_review"
+      },
+      "music_settings": {
+        "columns": [
+          "key",
+          "value_json",
+          "updated_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "music_share_rate_sources": {
+        "columns": [
+          "category",
+          "window_start",
+          "source_hash",
+          "hits"
+        ],
+        "foreignKeys": [],
+        "category": "short_ttl"
+      },
+      "music_share_rate_windows": {
+        "columns": [
+          "category",
+          "window_start",
+          "hits"
+        ],
+        "foreignKeys": [],
+        "category": "short_ttl"
+      },
+      "music_track_revisions": {
+        "columns": [
+          "id",
+          "track_id",
+          "revision_no",
+          "state",
+          "metadata_json",
+          "audio_asset_id",
+          "preview_asset_id",
+          "cover_asset_id",
+          "lyrics_asset_id",
+          "access_mode",
+          "early_access_until",
+          "post_early_access_mode",
+          "policy_version",
+          "technical_reviewed_at",
+          "created_at",
+          "technical_fingerprint",
+          "free_until"
+        ],
+        "foreignKeys": [
+          {
+            "column": "track_id",
+            "parent": "music_assets",
+            "parentColumn": "owner_track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "lyrics_asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "track_id",
+            "parent": "music_assets",
+            "parentColumn": "owner_track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "cover_asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "track_id",
+            "parent": "music_assets",
+            "parentColumn": "owner_track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "preview_asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "track_id",
+            "parent": "music_assets",
+            "parentColumn": "owner_track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "audio_asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "music_tracks": {
+        "columns": [
+          "id",
+          "slug",
+          "lifecycle",
+          "draft_revision_id",
+          "published_revision_id",
+          "edit_version",
+          "first_published_at",
+          "published_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "id",
+            "parent": "music_track_revisions",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "published_revision_id",
+            "parent": "music_track_revisions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "id",
+            "parent": "music_track_revisions",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "draft_revision_id",
+            "parent": "music_track_revisions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "music_upload_cleanup": {
+        "columns": [
+          "upload_id",
+          "asset_id",
+          "actor_id",
+          "reason",
+          "plan_hash",
+          "claimed_at",
+          "proof_json",
+          "proved_at",
+          "released_at"
+        ],
+        "foreignKeys": [
+          {
+            "column": "asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "column": "upload_id",
+            "parent": "music_upload_sessions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "admin_audit_review"
+      },
+      "music_upload_sessions": {
+        "columns": [
+          "id",
+          "asset_id",
+          "actor_id",
+          "status",
+          "declared_bytes",
+          "actual_bytes",
+          "expires_at",
+          "created_at",
+          "expected_sha256",
+          "write_token"
+        ],
+        "foreignKeys": [
+          {
+            "column": "asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "admin_audit_review"
+      }
+    }
+  }
+}
