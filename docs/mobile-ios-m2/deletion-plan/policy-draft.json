@@ -1,0 +1,146 @@
+{
+  "version": "draft-1",
+  "approved": false,
+  "executionEnabled": false,
+  "actions": {
+    "identity_tombstone": "拟先停止账号并去除登录身份；最小财务关联 ID 仅在批准保留期内保留，不能称为匿名；无保留义务后再物理删除。",
+    "credentials_purge": "撤销后清除密码、TOTP、登录 token、会话及刷新密文；按依赖顺序清理，不等待普通会话期限。",
+    "private_data_purge": "删除个人书签、阅读原始事件、云存档与备份；只处理已证实属于该账号的记录。",
+    "comments_decision": "待用户确认；拟删除评论正文与作者关联。",
+    "financial_review": "停止可用权益，余额不自动清零/退款；订单、账本、退款和游戏兑换凭据按批准的最小字段与期限隔离保留。",
+    "receipt_minimal": "删除任务/只读回执与 outbox 最小状态独立保留；期限结束后按批准规则清理，不保留凭据或原始账号信息。",
+    "soft_link_review": "不能靠 reader_accounts 外键找到；按确认的账号/订单/邮箱所有权和字段映射处理，禁止全库字符串匹配删除。",
+    "short_ttl": "无可靠账号关联的安全计数/未认证 flow 沿既有短期清理；有账号作用域的计数要单独清除。",
+    "publisher_content_keep": "站点公开内容、运维设置和发布者资产不是普通读者资产；不随读者销户删除。管理员主体另行核验。",
+    "anonymous_analytics_ttl": "音乐随机会话统计不伪造账号关联；遵循现有 30/365 天规则；归因当前不采集，若启用须先定义软关联清理。",
+    "admin_audit_review": "保留所需审计事件但最小化其中读者邮箱/ID/自由文本；管理员标识与普通会员主体不可混同。"
+  },
+  "tables": {
+    "reader": {
+      "identity_tombstone": [
+        "reader_accounts"
+      ],
+      "credentials_purge": [
+        "reader_login_tokens",
+        "reader_password_credentials",
+        "reader_totp_credentials",
+        "reader_sessions",
+        "mobile_codes",
+        "mobile_sessions",
+        "mobile_refresh_tokens",
+        "mobile_refresh_operations"
+      ],
+      "private_data_purge": [
+        "reader_bookmarks",
+        "reading_events",
+        "reader_game_saves",
+        "reader_game_save_backups",
+        "reader_game_save_rate_limits",
+        "reader_game_save_recovery_events",
+        "game_commerce_rate_limits"
+      ],
+      "comments_decision": [
+        "reader_comments"
+      ],
+      "financial_review": [
+        "reader_credit_accounts",
+        "reader_credit_ledger",
+        "reader_memberships",
+        "reader_membership_redemptions",
+        "membership_refund_reviews",
+        "membership_refund_review_items",
+        "novel_orders",
+        "novel_tips",
+        "novel_payment_events",
+        "novel_entitlements",
+        "game_purchases",
+        "game_entitlements",
+        "game_commerce_events",
+        "game_entitlement_events"
+      ],
+      "receipt_minimal": [
+        "mobile_deletions",
+        "mobile_deletion_outbox"
+      ],
+      "soft_link_review": [
+        "product_feedback",
+        "waitlist_entries",
+        "reader_totp_reset_attempts"
+      ],
+      "short_ttl": [
+        "mobile_browser_flows",
+        "mobile_rate_limits",
+        "download_rate_limits",
+        "mobile_assert"
+      ],
+      "admin_audit_review": [
+        "admin_audit_logs"
+      ],
+      "publisher_content_keep": [
+        "admin_content_settings",
+        "ai_insights",
+        "chapter_stats",
+        "content_entries",
+        "content_imports",
+        "content_pricing_rules",
+        "content_revisions",
+        "game_products",
+        "signal_automation_alerts",
+        "signal_automation_runtime",
+        "signal_candidate_occurrences",
+        "signal_candidate_reviews",
+        "signal_candidates",
+        "signal_collection_runs",
+        "signal_collection_tasks",
+        "signal_model_rollout",
+        "signal_sources",
+        "waitlist_settings"
+      ]
+    },
+    "music": {
+      "anonymous_analytics_ttl": [
+        "music_analytics_events",
+        "music_analytics_daily",
+        "music_analytics_health",
+        "music_analytics_admission_guard",
+        "music_analytics_rates",
+        "music_membership_attributions"
+      ],
+      "admin_audit_review": [
+        "music_admin_audit_logs",
+        "music_mutations",
+        "music_upload_sessions",
+        "music_collection_upload_sessions",
+        "music_upload_cleanup",
+        "music_rights_reviews"
+      ],
+      "short_ttl": [
+        "music_rate_sources",
+        "music_rate_windows",
+        "music_share_rate_sources",
+        "music_share_rate_windows"
+      ],
+      "publisher_content_keep": [
+        "music_assets",
+        "music_collection_assets",
+        "music_collection_tracks",
+        "music_collections",
+        "music_featured_home",
+        "music_featured_items",
+        "music_publication_guards",
+        "music_rights_evidence",
+        "music_settings",
+        "music_track_revisions",
+        "music_tracks"
+      ]
+    }
+  },
+  "decisions": {
+    "publicComments": "pending-owner-choice; proposed delete",
+    "unsettledBalance": "pending-owner-choice; proposed separate review without blocking personal cleanup",
+    "financialRetentionDays": null,
+    "financialFieldAllowlist": "requires review",
+    "receiptAuditRetentionDays": null,
+    "providerAndBackupRetention": "requires verification"
+  }
+}
