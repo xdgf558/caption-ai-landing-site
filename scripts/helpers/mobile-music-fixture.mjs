@@ -46,3 +46,21 @@ export async function seed(mode='vip',freeUntil=null,lyricText=null){
 }
 export async function grant(t,a,variant='full'){const r=await call(`/music/tracks/${t.id}/playback-grants`,{body:{audioVersion:1,variant},headers:a?.headers});const j=await r.json();assert.equal(r.status,200,JSON.stringify(j));return j.data;}
 export async function denied(path,options,status){const r=await call(path,options);assert.equal(r.status,status,await r.text());assert.equal(r.headers.get('x-fixture-r2-reads'),'0');}
+
+// Shared by the backend regression and the actual Swift cross-repository probe.
+export async function seedFeaturedFixture(){
+ const tracks=[];for(let i=0;i<7;i++){
+  const track=await seed('free');tracks.push(track);
+ }
+ const collections=[];for(let i=0;i<3;i++){
+  const id=randomUUID();collections.push(id);
+  await music.prepare("INSERT INTO music_collections(id,slug,status,original_locale,title_json,description_json,created_at,updated_at,collection_type,listening_mode) VALUES(?,?,'published','en',?,?,? ,?,'album','free')")
+   .bind(id,'featured-'+i+'-'+id,JSON.stringify({en:'Featured '+i}),JSON.stringify({en:'Synthetic'}),Date.now(),Date.now()).run();
+  await music.prepare('INSERT INTO music_collection_tracks(collection_id,track_id,position) VALUES(?,?,0)').bind(id,tracks[i].id).run();
+ }
+ await music.prepare('DELETE FROM music_featured_items').run();
+ await music.prepare("INSERT INTO music_featured_items(slot_kind,position,track_id) VALUES('primary',0,?)").bind(tracks[0].id).run();
+ for(const [position,index] of [4,2].entries())await music.prepare("INSERT INTO music_featured_items(slot_kind,position,track_id) VALUES('secondary',?,?)").bind(position,tracks[index].id).run();
+ for(const [position,index] of [2,0].entries())await music.prepare("INSERT INTO music_featured_items(slot_kind,position,collection_id) VALUES('collection',?,?)").bind(position,collections[index]).run();
+ return {primaryTrackId:tracks[0].id,trackIds:[0,4,2].map(i=>tracks[i].id),collectionIds:[collections[2],collections[0]]};
+}

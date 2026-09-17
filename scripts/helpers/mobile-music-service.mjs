@@ -3,13 +3,15 @@
 import {createServer} from 'node:http';
 import {writeFileSync} from 'node:fs';
 import {randomBytes} from 'node:crypto';
-import {setup,close,call,account,seed,db} from './mobile-music-fixture.mjs';
+import {setup,close,call,account,seed,db,music,seedFeaturedFixture} from './mobile-music-fixture.mjs';
 const directory=process.argv[2],key=randomBytes(32).toString('base64url');
 await setup();const a=await account(),track=await seed();const requests=[];
 const server=createServer(async(req,res)=>{
  try {
   if(req.headers['x-probe-key']!==key){res.writeHead(403).end();return;}
   if(req.url==='/fixture/bootstrap'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({accountId:String(a.id),sessionId:a.sid,token:a.token,trackId:track.id}));return;}
+  if(req.url==='/fixture/featured'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify(await seedFeaturedFixture()));return;}
+  if(req.url==='/fixture/featured-clear'){await music.prepare('DELETE FROM music_featured_items').run();res.end('{}');return;}
   if(req.url==='/fixture/revoke'){await db.prepare('UPDATE mobile_sessions SET revoked=1 WHERE id=?').bind(a.sid).run();res.end('{}');return;}
   if(req.url==='/fixture/evidence'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify(requests));return;}
   let bytes=0,body='';for await(const b of req){bytes+=b.length;if(bytes>8192)throw Error('large body');body+=b;}

@@ -159,7 +159,14 @@ async function processMusic(request,env,db,config,clock,signal) {
     if(cursor){const match=/^(\d+):(\d+)$/.exec(cursor);requireValue(match && match[1]===String(item.version),'VERSION_CONFLICT',409);offset=Number(match[2]);requireValue(Number.isSafeInteger(offset)&&offset<=500);}
     return json({...item,tracks:item.tracks.slice(offset,offset+limit),nextCursor:offset+limit<item.tracks.length?item.version+':'+(offset+limit):null},clock());
   }
-  if(path==='/music/featured')return json({tracks:body.tracks.slice(0,6).map(dto),collections:collections.slice(0,6).map(c=>({...c,tracks:c.tracks.slice(0,10),nextCursor:c.tracks.length>10?c.version+':10':null}))},clock());
+  if(path==='/music/featured') {
+    // The shared web projection may supply an automatic latest-free primary.
+    // Native discovery is curated only: never turn an empty configuration into recommendations.
+    const featured=body.featured, collectionMap=new Map(collections.map(c=>[c.id,c]));
+    const ids=[featured.primarySource==='latest'?null:featured.primaryTrackId,...featured.secondaryTrackIds].filter(Boolean);
+    return json({tracks:[...new Set(ids)].map(id=>map.get(id)).filter(Boolean),
+      collections:featured.collectionIds.map(id=>collectionMap.get(id)).filter(Boolean).map(c=>({...c,tracks:c.tracks.slice(0,10),nextCursor:c.tracks.length>10?c.version+':10':null}))},clock());
+  }
   const q=url.searchParams.get('q')||'',access=url.searchParams.get('access')||'all',rawLimit=url.searchParams.get('limit')||'50';
   requireValue(q.length<=200 && ['all','free','vip'].includes(access) && /^(?:[1-9]\d?|100)$/.test(rawLimit));
   const limit=Number(rawLimit),cursor=url.searchParams.get('cursor'),tag=String(snapshot.catalogVersion);

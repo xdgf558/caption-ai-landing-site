@@ -25,7 +25,7 @@ D1 与 R2 没有跨绑定原子事务；这些检查属于每个媒体请求的�
 
 ## 本机验证
 
-- `node --test --test-timeout=90000 scripts/test-mobile-music.mjs scripts/test-mobile-auth.mjs scripts/test-music-media.mjs scripts/test-music-membership.mjs`：75 项通过（新增原生音乐 15 项、原生认证 29 项及原网页媒体/会员回归）。
+- `node --test --test-timeout=90000 scripts/test-mobile-music.mjs scripts/test-mobile-auth.mjs scripts/test-music-media.mjs scripts/test-music-membership.mjs`：76 项通过（新增原生音乐 16 项、原生认证 29 项及原网页媒体/会员回归）。
 - 销户审计 11/11；87 表分类与复合外键快照检查通过。
 - `ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build`：153 页和 postbuild 断言通过。这是缺少小说内容的本机编译验证，**不得用于生产部署**。
 - 原生端使用 `scripts/helpers/mobile-music-service.mjs` 桥接到真实本机 workerd + 临时 D1/R2，只有随机 loopback 端口并要求一次性测试 proof，出站请求禁用。音频来自仓库中本机生成的正弦波，不含真实用户音乐或账号。
@@ -34,3 +34,7 @@ D1 与 R2 没有跨绑定原子事务；这些检查属于每个媒体请求的�
 ## 后续门槛
 
 本机 HTTP 测试桥不代表真实 HTTPS/AASA 回调验收；本机 Xcode 27 beta 不替代固定 Xcode 26.4.1 CI 或实体 iPhone。PR 后须完成远端稳定 CI。实体机锁屏/后台/中断、正式签名、域名与 Team ID、长曲弱网续期、完整队列/系统控制、个人数据同步、完整销户执行、StoreKit 均不在本批已完成声明中。旧 M2 崩溃恢复仍使用其独立固定后端提交，本批不更改该验收基线。
+
+## PR #174 审查修复：推荐配置
+
+原生 featured 现在按共享投影中的主推荐、次推荐和集合 ID 顺序映射，保留配置主推荐在最新六首之外的情况；不会把普通目录前六项当作推荐。共享网页投影的 `primarySource=latest` 自动回退不会进入原生推荐页，因此清空配置得到空数组；网页原有回退行为未改。回归使用真实临时 D1/R2 的七首免费歌曲和三个专辑，断言主推荐、次推荐顺序、集合顺序以及清空后的结果。相同 fixture 供 iOS 的真实 Worker → NativeMusicAPI → AppModel 发现页数据测试使用。

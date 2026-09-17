@@ -5,7 +5,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {randomUUID,randomBytes,createHash} from 'node:crypto';
 import {build} from 'esbuild';
 import {Miniflare} from 'miniflare';
-import {setup,close,call,account,seed,grant,denied,db,music,bucket} from './helpers/mobile-music-fixture.mjs';
+import {setup,close,call,account,seed,grant,denied,db,music,bucket,seedFeaturedFixture} from './helpers/mobile-music-fixture.mjs';
 const hash=x=>createHash('sha256').update(x).digest('hex'),secret=()=>randomBytes(32).toString('base64url');
 before(setup,{timeout:60000});after(close);
 test('isolated gates stay closed unless explicitly enabled; config accurately reports music',async()=>{
@@ -90,4 +90,15 @@ test('replaced storage object is rejected; malformed mode and version never auth
  const r=await call(g.playbackUrl);assert.equal(r.status,503);assert.equal(r.headers.get('content-type'),'application/json; charset=utf-8');
  await denied(`/music/tracks/${t.id}/playback-grants`,{body:{audioVersion:2,variant:'full'}},409);
  await denied(`/music/tracks/${t.id}/playback-grants`,{body:{audioVersion:1,variant:'full',authMode:'public'}},400);
+});
+
+test('featured preserves configured primary/secondary/collection order and never invents empty recommendations',async()=>{
+ const fixture=await seedFeaturedFixture();
+ const latest=(await (await call('/music/catalog?limit=6')).json()).data.items;
+ assert.ok(!latest.some(t=>t.id===fixture.primaryTrackId));
+ const featured=(await (await call('/music/featured')).json()).data;
+ assert.deepEqual(featured.tracks.map(t=>t.id),fixture.trackIds);
+ assert.deepEqual(featured.collections.map(c=>c.id),fixture.collectionIds);
+ await music.prepare('DELETE FROM music_featured_items').run();
+ assert.deepEqual((await (await call('/music/featured')).json()).data,{tracks:[],collections:[]});
 });
