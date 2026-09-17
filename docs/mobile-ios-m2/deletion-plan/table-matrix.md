@@ -26,6 +26,7 @@
 | reader / `mobile_codes` | `credentials_purge` | FK 0 (account_id) → reader_accounts (id)：NO ACTION |
 | reader / `mobile_deletion_outbox` | `receipt_minimal` | FK 0 (job_id) → mobile_deletions (id)：NO ACTION |
 | reader / `mobile_deletions` | `receipt_minimal` | 无外键；仍须核对软关联/JSON |
+| reader / `mobile_playback_grants` | `credentials_purge` | FK 0 (session_id) → mobile_sessions (id)：CASCADE；FK 1 (account_id) → reader_accounts (id)：CASCADE |
 | reader / `mobile_rate_limits` | `short_ttl` | 无外键；仍须核对软关联/JSON |
 | reader / `mobile_refresh_operations` | `credentials_purge` | FK 0 (family_id) → mobile_sessions (family_id)：CASCADE |
 | reader / `mobile_refresh_tokens` | `credentials_purge` | FK 0 (family_id) → mobile_sessions (family_id)：CASCADE |

@@ -1,4 +1,5 @@
 import {MobileError,configuration,requireValue,validID,validSecret,randomSecret,hash,readBody,exactKeys,iso,assertChanged,clearAssert} from './security.js';
+import {handleNativeMusic,nativeMusicEnabled} from './music.js';
 import {principal,exchange,refresh} from './sessions.js';
 import {prepareDeletion,confirmDeletion,deletionStatus} from './deletion.js';
 
@@ -47,9 +48,12 @@ export async function handleMobile(request,env,identity) {
     // Primary-first session for all related reads/batches; no stale replica can replay a revoked session.
     const db=env.WAITLIST_DB.withSession('first-primary');
     const path=url.pathname;
-    await limit(db,'ip:'+String(request.headers.get('cf-connecting-ip')||'missing'),now,120);
+    const mediaRequest=/^\/api\/mobile\/v1\/music\/media\//.test(path);
+    const grantRequest=path.endsWith('/playback-grants');
+    await limit(db,(mediaRequest?'audio:':grantRequest?'grant:':'ip:')+String(request.headers.get('cf-connecting-ip')||'missing'),now,mediaRequest?600:grantRequest?30:120);
     if(path==='/api/mobile/v1/config' && request.method==='GET')return response({apiVersion:'1',minimumAppVersion:'0.1.0',storeUrl:null,
-      capabilities:{musicCatalog:false,nativeAuthentication:true,musicPlayback:false,personalSync:false,accountDeletion:true,musicPurchases:false}},now);
+      capabilities:{musicCatalog:nativeMusicEnabled(env),nativeAuthentication:true,musicPlayback:nativeMusicEnabled(env),personalSync:false,accountDeletion:true,musicPurchases:false}},now);
+    if(path.startsWith('/api/mobile/v1/music/') || path==='/api/mobile/v1/me/entitlements')return await handleNativeMusic(request,env,db,config);
     if(path==='/auth/mobile/callback' && request.method==='GET')return html('<!doctype html><meta charset="utf-8"><p>Return to Station Cat Music.</p>');
     if(path==='/auth/mobile/authorize' && request.method==='GET') {
       const p=Object.fromEntries(url.searchParams);requireValue([...url.searchParams].length===Object.keys(p).length);

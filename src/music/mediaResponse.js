@@ -141,7 +141,13 @@ export async function handleMusicMedia(request, env, { clock = Date.now, timeout
     return jsonResponse(request, 503, 'MEDIA_UNAVAILABLE');
   }
 
-  const lastModified = Math.floor(record.track.published_at / 1000) * 1000;
+  return serveValidatedMusicMedia(request, runtime.bucket, asset, record.track);
+}
+
+// Callers MUST finish their own current-request authorization before calling this.
+// Shared byte/range/object validation only; this helper never grants access.
+export async function serveValidatedMusicMedia(request, bucket, asset, track) {
+  const lastModified = Math.floor(track.published_at / 1000) * 1000;
   let range = null;
   if (request.method === 'GET' && request.headers.has('Range') &&
     musicIfRangeMatches(request.headers.get('If-Range'), asset.etag, lastModified)) {
@@ -152,7 +158,7 @@ export async function handleMusicMedia(request, env, { clock = Date.now, timeout
   try {
     const options = { onlyIf: { etagMatches: asset.etag } };
     if (range && !range.unsatisfiable) options.range = { offset: range.start, length: range.length };
-    object = await runtime.bucket.get(asset.object_key, options);
+    object = await bucket.get(asset.object_key, options);
     if (!validObject(object, asset, range)) {
       cancelBody(object);
       return jsonResponse(request, 503, 'MEDIA_UNAVAILABLE');
@@ -170,7 +176,7 @@ export async function handleMusicMedia(request, env, { clock = Date.now, timeout
   }
 
   const partial = range !== null;
-  const headers = mediaHeaders(asset, record.track, partial ? range.length : asset.byte_size);
+  const headers = mediaHeaders(asset, track, partial ? range.length : asset.byte_size);
   if (partial) headers['Content-Range'] = `bytes ${range.start}-${range.end}/${asset.byte_size}`;
   if (request.method === 'HEAD') {
     cancelBody(object);

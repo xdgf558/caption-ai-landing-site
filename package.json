@@ -61,7 +61,8 @@
     "build:music:production-candidate": "node scripts/build-music-production-candidate.mjs",
     "build:music:closed": "PUBLIC_MUSIC_ENTRY_ENABLED=false npm run build",
     "build:music:active": "npm run build:music:display-covers && PUBLIC_MUSIC_ENTRY_ENABLED=true npm run build",
-    "build:music:display-covers": "node scripts/generate-music-display-covers.mjs"
+    "build:music:display-covers": "node scripts/generate-music-display-covers.mjs",
+    "test:mobile:music": "node --test --test-timeout=90000 scripts/test-mobile-music.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",
