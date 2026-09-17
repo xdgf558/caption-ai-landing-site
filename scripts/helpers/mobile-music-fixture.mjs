@@ -46,4 +46,3 @@ export async function seed(mode='vip',freeUntil=null,lyricText=null){
 }
 export async function grant(t,a,variant='full'){const r=await call(`/music/tracks/${t.id}/playback-grants`,{body:{audioVersion:1,variant},headers:a?.headers});const j=await r.json();assert.equal(r.status,200,JSON.stringify(j));return j.data;}
 export async function denied(path,options,status){const r=await call(path,options);assert.equal(r.status,status,await r.text());assert.equal(r.headers.get('x-fixture-r2-reads'),'0');}
-
