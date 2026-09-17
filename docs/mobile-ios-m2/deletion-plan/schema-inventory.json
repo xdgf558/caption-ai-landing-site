@@ -40,6 +40,7 @@
     "migrations/0036_reader_membership_redemptions.sql": "5da3296aab5535c123fd007805cd0f9aa4faeb4926ac775783198c6c3765e9cd",
     "migrations/0037_membership_refund_reviews.sql": "c572ac43dc4b8248aa71534399711019e1cf5f708b44bd80fabb9f6876c6f8f4",
     "migrations-mobile/0001_native_auth.sql": "e74329fd93ccc85915a296de9bad1549aa919b093c5a707e9f78a0656fe2dc5b",
+    "migrations-mobile/0002_music_playback_grants.sql": "f47f0d8bb9275b58870751b3f427e85dd153c5d847c90ab0273ce524040b3b31",
     "migrations-music/0001_music_foundation.sql": "d63ea6a4f2870d7a15c49f2c5af5c7c75a8a4fef14821cd8041995a0d4d70008",
     "migrations-music/0002_music_publication.sql": "8b301c3a1d13be40eb574ce7d950531ed39492dc321f95627b2cb0c9c061e3b9",
     "migrations-music/0003_music_uploads.sql": "fb0cc9eafa2bee35cb2ba6efacfd0125837a812fdc809a174e330c950d5f83b3",
@@ -616,6 +617,39 @@
         ],
         "foreignKeys": [],
         "category": "receipt_minimal"
+      },
+      "mobile_playback_grants": {
+        "columns": [
+          "hash",
+          "auth_mode",
+          "account_id",
+          "session_id",
+          "track_id",
+          "revision_no",
+          "variant",
+          "created_at",
+          "expires_at",
+          "revoked"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "session_id",
+            "parent": "mobile_sessions",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "credentials_purge"
       },
       "mobile_rate_limits": {
         "columns": [

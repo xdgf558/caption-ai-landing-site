@@ -28,7 +28,8 @@
         "mobile_codes",
         "mobile_sessions",
         "mobile_refresh_tokens",
-        "mobile_refresh_operations"
+        "mobile_refresh_operations",
+        "mobile_playback_grants"
       ],
       "private_data_purge": [
         "reader_bookmarks",
