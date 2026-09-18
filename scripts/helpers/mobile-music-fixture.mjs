@@ -65,3 +65,13 @@ export async function seedFeaturedFixture(){
  for(const [position,index] of [2,0].entries())await music.prepare("INSERT INTO music_featured_items(slot_kind,position,collection_id) VALUES('collection',?,?)").bind(position,collections[index]).run();
  return {primaryTrackId:tracks[0].id,trackIds:[0,4,2].map(i=>tracks[i].id),collectionIds:[collections[2],collections[0]]};
 }
+
+// Durable refresh seed for the real NativeAuthenticationService long-running probe.
+// Only synthetic temporary D1 data; refresh itself uses the unchanged Worker route.
+export async function rotationAccount(){
+ const a=await account(),row=await db.prepare('SELECT * FROM mobile_sessions WHERE id=?').bind(a.sid).first();
+ const refreshToken=secret();
+ await db.prepare('INSERT INTO mobile_refresh_tokens(hash,family_id,generation) VALUES(?,?,0)').bind(hash(refreshToken),row.family_id).run();
+ return {schemaVersion:1,scope:{environment:'development',accountID:String(a.id)},sessionID:a.sid,familyID:row.family_id,generation:0,refreshToken,pending:null,
+  refreshExpiresAt:new Date(row.refresh_until).toISOString(),absoluteExpiresAt:new Date(row.absolute_until).toISOString()};
+}

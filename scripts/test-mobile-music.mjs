@@ -5,7 +5,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {randomUUID,randomBytes,createHash} from 'node:crypto';
 import {build} from 'esbuild';
 import {Miniflare} from 'miniflare';
-import {setup,close,call,account,seed,grant,denied,db,music,bucket,seedFeaturedFixture} from './helpers/mobile-music-fixture.mjs';
+import {setup,close,call,account,seed,grant,denied,db,music,bucket,seedFeaturedFixture,rotationAccount} from './helpers/mobile-music-fixture.mjs';
 const hash=x=>createHash('sha256').update(x).digest('hex'),secret=()=>randomBytes(32).toString('base64url');
 before(setup,{timeout:60000});after(close);
 test('isolated gates stay closed unless explicitly enabled; config accurately reports music',async()=>{
@@ -101,4 +101,16 @@ test('featured preserves configured primary/secondary/collection order and never
  assert.deepEqual(featured.collections.map(c=>c.id),fixture.collectionIds);
  await music.prepare('DELETE FROM music_featured_items').run();
  assert.deepEqual((await (await call('/music/featured')).json()).data,{tracks:[],collections:[]});
+});
+
+test('rotation fixture uses real refresh route and preserves family absolute expiry',async()=>{
+ const seed=await rotationAccount();
+ const response=await call('/auth/refresh',{body:{clientId:'station-cat-ios',refreshToken:seed.refreshToken,refreshRequestId:randomUUID(),generation:0}});
+ assert.equal(response.status,200);const envelope=await response.json(),token=envelope.data;
+ assert.equal(token.accountId,seed.scope.accountID);assert.equal(token.sessionId,seed.sessionID);assert.equal(token.tokenFamilyId,seed.familyID);
+ assert.equal(token.generation,1);assert.equal(token.absoluteExpiresAt,seed.absoluteExpiresAt);
+ assert.equal(Date.parse(token.accessExpiresAt)-Date.parse(envelope.serverNow),300000);
+ assert.equal(Date.parse(token.replayUntil)-Date.parse(envelope.serverNow),120000);
+ const row=await db.prepare('SELECT generation,revoked FROM mobile_sessions WHERE id=?').bind(seed.sessionID).first();
+ assert.equal(row.generation,1);assert.equal(row.revoked,0);
 });
