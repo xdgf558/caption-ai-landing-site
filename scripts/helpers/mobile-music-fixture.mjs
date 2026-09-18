@@ -28,11 +28,12 @@ export async function account(vip=true,existing){
  const token=secret(),sid=randomUUID(),family=randomUUID();await db.prepare(`INSERT INTO mobile_sessions(id,family_id,account_id,generation,access_hash,access_until,refresh_until,absolute_until,authenticated_at,password_version,totp_version) VALUES(?,?,?,0,?,?,?,?,?,'synthetic-password','["",""]')`).bind(sid,family,id,hash(token),now+300000,now+3600000,now+7200000,now).run();
  return {id,sid,token,headers:{Authorization:'Bearer '+token}};
 }
-export async function seed(mode='vip',freeUntil=null,lyricText=null){
+export async function seed(mode='vip',freeUntil=null,lyricText=null,long=false){
  const manifest=JSON.parse(readFileSync('tests/fixtures/music-mp3/manifest.json')).files;
+ if(long)manifest.push(JSON.parse(readFileSync('tests/fixtures/music-mp3/mobile-long.json')));
  const owner=randomUUID();const put=async(name,kind)=>{const m=manifest.find(f=>f.file===name),id=randomUUID(),key=`music/${kind==='audio'?'audio':'previews'}/${owner}/${id}.mp3`,data=readFileSync('tests/fixtures/music-mp3/'+name),o=await bucket.put(key,data,{httpMetadata:{contentType:'audio/mpeg'}});
  return {id,owner_track_id:owner,kind,object_key:key,state:'validated',format:'mp3',content_type:'audio/mpeg',byte_size:data.length,duration_ms:m.packetDurationMs,sha256:m.sha256,etag:o.etag};};
- const audio=await put('cbr-stereo.mp3','audio'),preview=await put('preview.mp3','preview');Object.assign(preview,{derived_from_asset_id:audio.id,source_start_ms:0,source_end_ms:1000});
+ const audio=await put(long?'long-cbr.mp3':'cbr-stereo.mp3','audio'),preview=await put('preview.mp3','preview');Object.assign(preview,{derived_from_asset_id:audio.id,source_start_ms:0,source_end_ms:1000});
  const res=await mf.dispatchFetch(origin+'/fixture/seed',{method:'POST',body:JSON.stringify({audio,preview,accessMode:mode,freeUntil})});const cmd=await res.json();
  assert.equal(res.status,200);
  if(lyricText!==null){
