@@ -1,0 +1,25 @@
+{
+  "file": "long-cbr.mp3",
+  "bytes": 1440539,
+  "sha256": "6f90592956e867eea0edf89da9c697fc08bad4c87d8d7a38d5beb086faaaf54b",
+  "packetDurationMs": 180036,
+  "sourceSeconds": 180,
+  "source": "Locally synthesized sine wave; no song, voice, or third-party recording.",
+  "generator": "ffmpeg version 7.1 Copyright (c) 2000-2024 the FFmpeg developers",
+  "encodingArguments": [
+    "-f",
+    "lavfi",
+    "-i",
+    "sine=frequency=330:sample_rate=44100:duration=180",
+    "-ac",
+    "1",
+    "-c:a",
+    "libmp3lame",
+    "-b:a",
+    "64k",
+    "-write_xing",
+    "1",
+    "-id3v2_version",
+    "3"
+  ]
+}
