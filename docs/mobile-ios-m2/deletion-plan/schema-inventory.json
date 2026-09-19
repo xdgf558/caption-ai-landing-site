@@ -41,6 +41,8 @@
     "migrations/0037_membership_refund_reviews.sql": "c572ac43dc4b8248aa71534399711019e1cf5f708b44bd80fabb9f6876c6f8f4",
     "migrations-mobile/0001_native_auth.sql": "e74329fd93ccc85915a296de9bad1549aa919b093c5a707e9f78a0656fe2dc5b",
     "migrations-mobile/0002_music_playback_grants.sql": "f47f0d8bb9275b58870751b3f427e85dd153c5d847c90ab0273ce524040b3b31",
+    "migrations-mobile/0003_personal_music.sql": "d733869052d49b3c590d67f0ba08d2fe827d4509fba869f57455c8d440273566",
+    "migrations-mobile/0004_music_listen_receipt.sql": "52f79afaafbf352f1055e6d4ad4577ea7ad889259966588b79082f321d88c7ab",
     "migrations-music/0001_music_foundation.sql": "d63ea6a4f2870d7a15c49f2c5af5c7c75a8a4fef14821cd8041995a0d4d70008",
     "migrations-music/0002_music_publication.sql": "8b301c3a1d13be40eb574ce7d950531ed39492dc321f95627b2cb0c9c061e3b9",
     "migrations-music/0003_music_uploads.sql": "fb0cc9eafa2bee35cb2ba6efacfd0125837a812fdc809a174e330c950d5f83b3",
@@ -617,6 +619,86 @@
         ],
         "foreignKeys": [],
         "category": "receipt_minimal"
+      },
+      "mobile_music_favorites": {
+        "columns": [
+          "account_id",
+          "track_id",
+          "favorite",
+          "version",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "private_data_purge"
+      },
+      "mobile_music_operations": {
+        "columns": [
+          "account_id",
+          "id",
+          "digest",
+          "result",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "private_data_purge"
+      },
+      "mobile_music_recent": {
+        "columns": [
+          "account_id",
+          "track_id",
+          "played_at",
+          "position",
+          "received_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "private_data_purge"
+      },
+      "mobile_music_state": {
+        "columns": [
+          "account_id",
+          "revision",
+          "history_enabled",
+          "history_epoch",
+          "preference_version"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "account_id",
+            "parent": "reader_accounts",
+            "parentColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "category": "private_data_purge"
       },
       "mobile_playback_grants": {
         "columns": [

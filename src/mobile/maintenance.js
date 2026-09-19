@@ -7,5 +7,6 @@ export async function runMobileMaintenance(env) {
   const db=env.WAITLIST_DB.withSession('first-primary'),now=Date.now();
   await cleanup(db,now);
   if(env.MOBILE_MUSIC_ENABLED==='true')await db.prepare('DELETE FROM mobile_playback_grants WHERE expires_at<=? OR revoked=1').bind(now).run();
+  if(env.MOBILE_PERSONAL_SYNC_ENABLED==='true')await db.prepare('DELETE FROM mobile_music_recent WHERE played_at<=?').bind(now-90*86400000).run();
   await processDeletionOutbox(db,now);
 }
