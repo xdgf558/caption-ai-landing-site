@@ -3,17 +3,25 @@
 import {createServer} from 'node:http';
 import {writeFileSync} from 'node:fs';
 import {createHash,randomBytes} from 'node:crypto';
-import {setup,close,call,account,seed,db,music,seedFeaturedFixture} from './mobile-music-fixture.mjs';
+import {setup,close,call,account,seed,db,music,seedFeaturedFixture,rotationAccount} from './mobile-music-fixture.mjs';
 const directory=process.argv[2],key=randomBytes(32).toString('base64url');
 await setup();const a=await account(),track=await seed();const requests=[];
 // Prepare heavy R2/featured fixtures before announcing readiness, not inside a five-second product request.
 const featured=await seedFeaturedFixture();let stabilityAccount=await account();
 const longVip=await seed('vip',null,null,true),longFree=await seed('free',null,null,true);
 const identity=(t,who=stabilityAccount)=>({accountId:String(who.id),sessionId:who.sid,token:who.token,trackId:t.id,durationSeconds:t.audio.duration_ms/1000});
+let rotation=null;
 let serial=0;const grantIDs=new Map();
 const server=createServer(async(req,res)=>{
  try {
   if(req.headers['x-probe-key']!==key){res.writeHead(403).end();return;}
+  if(req.url==='/fixture/rotation'){rotation=await rotationAccount();res.end(JSON.stringify({credential:rotation,trackId:longVip.id,durationSeconds:longVip.audio.duration_ms/1000}));return;}
+  if(req.url==='/fixture/rotation-evidence'){
+   if(!rotation){res.writeHead(404).end();return;}
+   const session=await db.prepare('SELECT generation,revoked,absolute_until FROM mobile_sessions WHERE id=?').bind(rotation.sessionID).first();
+   const operations=await db.prepare('SELECT old_generation FROM mobile_refresh_operations WHERE family_id=? ORDER BY old_generation').bind(rotation.familyID).all();
+   res.end(JSON.stringify({generation:session.generation,revoked:session.revoked,absoluteUntil:session.absolute_until,operations:operations.results.map(x=>x.old_generation)}));return;
+  }
   if(req.url==='/fixture/bootstrap'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({accountId:String(a.id),sessionId:a.sid,token:a.token,trackId:track.id}));return;}
   if(req.url==='/fixture/featured'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify(featured));return;}
   if(req.url==='/fixture/featured-clear'){await music.prepare('DELETE FROM music_featured_items').run();res.end('{}');return;}
