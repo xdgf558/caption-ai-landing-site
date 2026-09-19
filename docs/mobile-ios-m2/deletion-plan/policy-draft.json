@@ -38,7 +38,11 @@
         "reader_game_save_backups",
         "reader_game_save_rate_limits",
         "reader_game_save_recovery_events",
-        "game_commerce_rate_limits"
+        "game_commerce_rate_limits",
+        "mobile_music_state",
+        "mobile_music_favorites",
+        "mobile_music_recent",
+        "mobile_music_operations"
       ],
       "comments_decision": [
         "reader_comments"
