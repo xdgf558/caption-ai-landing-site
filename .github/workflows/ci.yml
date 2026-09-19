@@ -38,7 +38,7 @@ jobs:
         run: npm run test:music:runtime
 
       - name: Verify isolated native authentication and deletion recovery
-        run: npm run test:mobile:auth && npm run test:mobile:music
+        run: npm run test:mobile:auth && npm run test:mobile:music && npm run test:mobile:library
 
       - name: Verify account deletion schema inventory and isolation hazards
         run: python3 scripts/test-account-deletion-audit.py
