@@ -17,7 +17,7 @@ export async function personalMusic(request,env,db,s,now) {
   requireValue(['favorites','recent'].includes(path));
   const limit=Number(url.searchParams.get('limit')||50);requireValue(integer(limit)&&limit>0&&limit<=100);
   let offset=0;const cursor=url.searchParams.get('cursor');
-  if(cursor){requireValue(/^\d+:\d+$/.test(cursor));const [revision,n]=cursor.split(':').map(Number);requireValue(revision===state.revision,'CURSOR_EXPIRED',409);requireValue(integer(n)&&n<=10000);offset=n;}
+  if(cursor){requireValue(/^\d+:\d+$/.test(cursor));const [revision,n]=cursor.split(':').map(Number);requireValue(revision===state.revision,'CURSOR_EXPIRED',409);requireValue(integer(n)&&n<=100000);offset=n;}
   const rows=path==='favorites'?(await db.prepare('SELECT * FROM mobile_music_favorites WHERE account_id=? ORDER BY track_id LIMIT ? OFFSET ?').bind(account,limit+1,offset).all()).results:
    (await db.prepare('SELECT * FROM mobile_music_recent WHERE account_id=? AND played_at>? ORDER BY played_at DESC,track_id LIMIT ? OFFSET ?').bind(account,now-90*86400000,limit+1,offset).all()).results;
   return {items:rows.slice(0,limit).map(path==='favorites'?favorite:r=>({trackId:r.track_id,lastPlayedAt:iso(r.played_at),positionSeconds:r.position})),
