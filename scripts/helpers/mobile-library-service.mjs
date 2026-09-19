@@ -5,11 +5,11 @@ import {randomBytes} from 'node:crypto';
 import {setup,close,call,seed,rotationAccount,db} from './mobile-music-fixture.mjs';
 const directory=process.argv[2],key=randomBytes(32).toString('base64url');
 await setup({personalSync:true});
-const first=await rotationAccount(),second=await rotationAccount(Number(first.scope.accountID)),other=await rotationAccount(),track=await seed('free',null,null,true);
+const first=await rotationAccount(),second=await rotationAccount(Number(first.scope.accountID)),other=await rotationAccount(),track=await seed('free',null,null,true),anotherTrack=await seed('free');
 const server=createServer(async(req,res)=>{
  try {
   if(req.headers['x-probe-key']!==key){res.writeHead(403).end();return;}
-  if(req.url==='/fixture/bootstrap'){res.end(JSON.stringify({first,second,other,trackId:track.id,durationSeconds:track.audio.duration_ms/1000}));return;}
+  if(req.url==='/fixture/bootstrap'){res.end(JSON.stringify({first,second,other,trackId:track.id,anotherTrackId:anotherTrack.id,durationSeconds:track.audio.duration_ms/1000}));return;}
   if(req.url==='/fixture/evidence'){
    const counts={};for(const name of ['favorites','recent','operations'])counts[name]=(await db.prepare(`SELECT count(*) n FROM mobile_music_${name} WHERE account_id=?`).bind(Number(first.scope.accountID)).first()).n;
    res.end(JSON.stringify(counts));return;
