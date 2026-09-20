@@ -1,13 +1,13 @@
 {
-  "version": "draft-1",
+  "version": "draft-2-owner-choices-20260920",
   "approved": false,
   "executionEnabled": false,
   "actions": {
     "identity_tombstone": "拟先停止账号并去除登录身份；最小财务关联 ID 仅在批准保留期内保留，不能称为匿名；无保留义务后再物理删除。",
     "credentials_purge": "撤销后清除密码、TOTP、登录 token、会话及刷新密文；按依赖顺序清理，不等待普通会话期限。",
     "private_data_purge": "删除个人书签、阅读原始事件、云存档与备份；只处理已证实属于该账号的记录。",
-    "comments_decision": "待用户确认；拟删除评论正文与作者关联。",
-    "financial_review": "停止可用权益，余额不自动清零/退款；订单、账本、退款和游戏兑换凭据按批准的最小字段与期限隔离保留。",
+    "comments_decision": "用户已确认：公开评论匿名保留；须解除作者关联并最小化元数据，当前 account_id NOT NULL / CASCADE 结构尚需迁移和读取适配。正文可能包含自述个人信息，不能仅去掉作者就宣称不可再识别。未公开评论不擅自改为公开。",
+    "financial_review": "用户已确认：个人资料清理继续，余额及争议独立建案；不自动退款、不清零，不恢复可用权益。必要账务凭据最小字段和保留期限仍待确定。",
     "receipt_minimal": "删除任务/只读回执与 outbox 最小状态独立保留；期限结束后按批准规则清理，不保留凭据或原始账号信息。",
     "soft_link_review": "不能靠 reader_accounts 外键找到；按确认的账号/订单/邮箱所有权和字段映射处理，禁止全库字符串匹配删除。",
     "short_ttl": "无可靠账号关联的安全计数/未认证 flow 沿既有短期清理；有账号作用域的计数要单独清除。",
@@ -141,8 +141,8 @@
     }
   },
   "decisions": {
-    "publicComments": "pending-owner-choice; proposed delete",
-    "unsettledBalance": "pending-owner-choice; proposed separate review without blocking personal cleanup",
+    "publicComments": "owner-confirmed: retain public comments anonymously",
+    "unsettledBalance": "owner-confirmed: separate review without blocking personal cleanup; no automatic refund or balance reset",
     "financialRetentionDays": null,
     "financialFieldAllowlist": "requires review",
     "receiptAuditRetentionDays": null,
