@@ -1,3 +1,4 @@
+import {compactFixtureReceipts,restoreFixtureReceipts} from './isolated-lifecycle/compact-receipts.js';
 import assert from 'node:assert/strict';
 import {before,after,test} from 'node:test';
 import {randomUUID} from 'node:crypto';
@@ -67,4 +68,48 @@ test('same resource concurrent edit remains a real version conflict',async()=>{
  const outcomes=await Promise.all([put(a,t),put(a,t)]);
  assert.deepEqual(outcomes.map(x=>x.status).sort(),[200,409]);assert.equal(outcomes.find(x=>x.status===409).error.code,'VERSION_CONFLICT');
  assert.equal((await request(a,'favorites')).data.items[0].version,1);
+});
+
+test('receipt compaction preserves lost acknowledgements, old favorite conflicts and history epochs',async()=>{
+ await db.prepare("CREATE TABLE r1_fixture_provenance(id INTEGER PRIMARY KEY,dataset TEXT)").run();
+ await db.prepare("INSERT INTO r1_fixture_provenance VALUES(1,'synthetic-r1')").run();
+ const a=await account(),b=await account(),t=await seed('free');
+ const addedBody={mutationId:randomUUID()},added=await put(a,t,addedBody);
+ const removedBody={mutationId:randomUUID(),favorite:false,expectedVersion:1},removed=await put(a,t,removedBody);
+ const privacyBody={historyEnabled:false,expectedVersion:0,mutationId:randomUUID()};
+ const privacy=await request(a,'preferences',privacyBody,'PATCH');
+ await put(b,t);
+ const before=(await db.prepare('SELECT * FROM mobile_music_operations WHERE account_id=? ORDER BY id').bind(a.id).all()).results;
+ const other=(await db.prepare('SELECT * FROM mobile_music_operations WHERE account_id=?').bind(b.id).all()).results;
+ const options={environment:'isolated',dataset:'synthetic-r1',account:a.id};
+ assert.equal((await compactFixtureReceipts(db,options)).compacted,3);
+ const after=(await db.prepare('SELECT * FROM mobile_music_operations WHERE account_id=? ORDER BY id').bind(a.id).all()).results;
+ assert.deepEqual(after.map(({result,...rest})=>rest),before.map(({result,...rest})=>rest));
+ assert.ok(after.reduce((n,x)=>n+x.result.length,0)<before.reduce((n,x)=>n+x.result.length,0));
+ assert.deepEqual((await put(a,t,addedBody)).data,added.data);assert.deepEqual((await put(a,t,removedBody)).data,removed.data);
+ assert.deepEqual((await request(a,'preferences',privacyBody,'PATCH')).data,privacy.data);
+ assert.equal((await request(a,'favorites')).data.items[0].favorite,false);
+ assert.equal((await put(a,t)).error.code,'VERSION_CONFLICT');
+ assert.equal((await request(a,'listens',listen(t,0),'POST')).error.code,'HISTORY_DISABLED');
+ assert.deepEqual((await db.prepare('SELECT * FROM mobile_music_operations WHERE account_id=?').bind(b.id).all()).results,other);
+ assert.equal((await compactFixtureReceipts(db,options)).compacted,0);
+ assert.equal(await restoreFixtureReceipts(db,options),3);
+ assert.deepEqual((await db.prepare('SELECT * FROM mobile_music_operations WHERE account_id=? ORDER BY id').bind(a.id).all()).results,before);
+ await assert.rejects(()=>compactFixtureReceipts(db,{...options,environment:'production'}),/ISOLATION/);
+});
+test('receipt compaction is bounded, retains old keys and can be resumed',async()=>{
+ const a=await account(),result=JSON.stringify({historyEnabled:false,historyEpoch:1,version:1});
+ await db.batch(Array.from({length:205},(_,i)=>db.prepare('INSERT INTO mobile_music_operations VALUES(?,?,?,?,0)').bind(a.id,`old-${String(i).padStart(3,'0')}`,`digest-${i}`,result)));
+ const options={environment:'isolated',dataset:'synthetic-r1',account:a.id};
+ assert.equal((await compactFixtureReceipts(db,options)).compacted,200);
+ assert.equal((await compactFixtureReceipts(db,options)).compacted,5);
+ assert.equal((await db.prepare('SELECT count(*) n FROM mobile_music_operations WHERE account_id=? AND created_at=0').bind(a.id).first()).n,205);
+ assert.equal(await restoreFixtureReceipts(db,options),200);assert.equal(await restoreFixtureReceipts(db,options),5);
+ assert.equal((await db.prepare('SELECT count(*) n FROM mobile_music_operations WHERE account_id=? AND result=?').bind(a.id,result).first()).n,205);
+});
+test('unknown receipt format aborts compaction without partial conversion',async()=>{
+ const a=await account(),valid=JSON.stringify({historyEnabled:true,historyEpoch:0,version:0}),invalid=JSON.stringify({unknown:'unreviewed-future-receipt-format'});
+ await db.batch([db.prepare('INSERT INTO mobile_music_operations VALUES(?,?,?,?,0)').bind(a.id,'a-valid','d',valid),db.prepare('INSERT INTO mobile_music_operations VALUES(?,?,?,?,0)').bind(a.id,'z-unknown','d',invalid)]);
+ await assert.rejects(()=>compactFixtureReceipts(db,{environment:'isolated',dataset:'synthetic-r1',account:a.id}));
+ assert.equal((await db.prepare("SELECT result FROM mobile_music_operations WHERE account_id=? AND id='a-valid'").bind(a.id).first()).result,valid);
 });

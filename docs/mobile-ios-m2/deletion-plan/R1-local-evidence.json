@@ -1,0 +1,42 @@
+{
+  "date": "2026-09-21",
+  "scope": "local-synthetic-only",
+  "productionEnabled": false,
+  "deletionCompleted": false,
+  "checks": {
+    "miniflareDeletionLifecycle": {
+      "passed": 9
+    },
+    "receiptCodec": {
+      "passed": 2
+    },
+    "mobileLibraryD1": {
+      "passed": 18
+    },
+    "mobileAuthD1": {
+      "passed": 29
+    },
+    "deletionAudit": {
+      "passed": 11
+    },
+    "readerComments": "passed",
+    "build": {
+      "passed": true,
+      "pages": 153,
+      "ALLOW_EMPTY_SERIAL_CONTENT": true,
+      "productionArtifact": false
+    }
+  },
+  "sourceSHA256": {
+    "src/mobile/library.js": "2c70c296eeba564709b7102150a7f111ee263885555380d347b25d81f91c4f53",
+    "src/mobile/libraryReceipts.js": "bf5a46d0b6f27cbdcd0d3bcababfd75581a3699a3239742d5b9634e9126eec11",
+    "src/worker.js": "31895fb86af174f1f8364141e5d10683e3d82b020dd17f65c0620a54b9fb2e74",
+    "scripts/isolated-lifecycle/schema.sql": "c3daf9ab91d54bfc6eaa1d8e737b17f960bb5513b670c54292e8136b37fd2024",
+    "scripts/isolated-lifecycle/executor.js": "020f334d4fe9078ffca3961d11707ddfcd6673dc97b768ded2aab2c7b5240b8d",
+    "scripts/isolated-lifecycle/guard-manifest.json": "c12dd496787f2370c9c56d2bf634a87f030744479fd129361da632d59f02b0c5",
+    "scripts/isolated-lifecycle/compact-receipts.js": "0fe6acc7e4a48fac6595596f2d644758dc2f19e44124c1220ba615e4f41968f2",
+    "scripts/test-deletion-lifecycle.mjs": "6cc4232153d5758da55038d48136c3d6502e749d44f29d4f72cdfbaed7998f15",
+    "scripts/test-mobile-library.mjs": "f0b93d0f4f3b18103f2b38c097b93ea0da29d10df083234bfc968a4a1ce3f59f",
+    "scripts/test-library-receipts.mjs": "69f1e39884a9cb31a2da2f496746245213c5ef0c00facea1da76da6a9d373b23"
+  }
+}

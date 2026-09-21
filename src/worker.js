@@ -1635,6 +1635,7 @@ const novelPaymentEventToJson = (row) => ({
 });
 
 const readerCommentPublicName = (row) => {
+  if (row.account_id === null) return ({ 'zh-Hant': '匿名讀者', 'zh-Hans': '匿名读者', en: 'Anonymous reader', ja: '匿名の読者' })[row.locale] || 'Anonymous reader';
   const displayName = cleanText(row.display_name, 80);
   if (displayName) return displayName;
   const username = cleanText(row.username, 80);
@@ -7255,7 +7256,7 @@ const selectReaderCommentById = async (db, id) =>
         reader_accounts.display_name,
         reader_password_credentials.username
        FROM reader_comments
-       INNER JOIN reader_accounts ON reader_accounts.id = reader_comments.account_id
+       LEFT JOIN reader_accounts ON reader_accounts.id = reader_comments.account_id
        LEFT JOIN reader_password_credentials ON reader_password_credentials.account_id = reader_accounts.id
        WHERE reader_comments.id = ?
        LIMIT 1`
@@ -7492,7 +7493,7 @@ const handlePublicNovelComments = async (request, env) => {
         reader_accounts.display_name,
         reader_password_credentials.username
        FROM reader_comments
-       INNER JOIN reader_accounts ON reader_accounts.id = reader_comments.account_id
+       LEFT JOIN reader_accounts ON reader_accounts.id = reader_comments.account_id
        LEFT JOIN reader_password_credentials ON reader_password_credentials.account_id = reader_accounts.id
        WHERE reader_comments.series_slug = ?
          AND reader_comments.chapter_slug = ?
@@ -10718,7 +10719,7 @@ const handleAdminListReaderComments = async (request, env) => {
         reader_accounts.display_name,
         reader_password_credentials.username
        FROM reader_comments
-       INNER JOIN reader_accounts ON reader_accounts.id = reader_comments.account_id
+       LEFT JOIN reader_accounts ON reader_accounts.id = reader_comments.account_id
        LEFT JOIN reader_password_credentials ON reader_password_credentials.account_id = reader_accounts.id
        WHERE ${clauses.join(' AND ')}
        ORDER BY
