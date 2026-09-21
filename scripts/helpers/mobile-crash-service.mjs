@@ -29,7 +29,8 @@ for(const file of ['migrations/0003_reader_accounts.sql','migrations/0011_reader
  await db.batch(statements);
 }
 parser.close();
-let active=null,ip=0;
+let active=null,ip=0,preparing=false,prepared=null;
+const attemptedStages=new Set();
 async function worker(path,body,headers={}){
  return mf.dispatchFetch(origin+path,{method:body===undefined?'GET':'POST',redirect:'manual',headers:{'CF-Connecting-IP':`192.0.2.${++ip%250+1}`,...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});
 }
@@ -37,7 +38,8 @@ async function seed(stage){
  if(!['A11','A12','A13'].includes(stage))throw new Error('Unsupported crash stage');
  const name='crash-'+randomUUID(),password=secret(),salt=secret();
  const a=await step('seed_account',()=>db.prepare('INSERT INTO reader_accounts(email,normalized_email,display_name) VALUES(?,?,?) RETURNING id').bind(name+'@example.test',name+'@example.test',name).first());
- await step('seed_password',()=>db.prepare('INSERT INTO reader_password_credentials(account_id,username,normalized_username,password_hash,password_salt,password_iterations,password_algorithm) VALUES(?,?,?,?,?,100000,?)').bind(a.id,name,name,pbkdf2Sync(password,salt,100000,32,'sha256').toString('hex'),salt,'PBKDF2-SHA256').run());
+ const passwordHash=await step('seed_password_hash',()=>pbkdf2Sync(password,salt,100000,32,'sha256').toString('hex'));
+ await step('seed_password_write',()=>db.prepare('INSERT INTO reader_password_credentials(account_id,username,normalized_username,password_hash,password_salt,password_iterations,password_algorithm) VALUES(?,?,?,?,?,100000,?)').bind(a.id,name,name,passwordHash,salt,'PBKDF2-SHA256').run());
  const verifier=secret(),challenge=createHash('sha256').update(verifier).digest('base64url');
  const page=await step('authorize_get',()=>worker('/auth/mobile/authorize?'+new URLSearchParams({client_id:'station-cat-ios',redirect_uri:callback,state:secret(),code_challenge:challenge,code_challenge_method:'S256'})));
  const html=await step('authorize_body',()=>page.text()),flow=/name="flow" value="([^"]+)"/.exec(html)?.[1],cookie=page.headers.get('set-cookie')?.split(';')[0];
@@ -56,8 +58,21 @@ const server=createServer(async(req,res)=>{
   const supplied=Buffer.from(req.headers['x-probe-key']||''),expected=Buffer.from(nonce);
   if(supplied.length!==expected.length||!timingSafeEqual(supplied,expected))return send(res,403,{error:'Probe key required'});
   let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>16384)return send(res,413,{error:'Too large'});}
-  const path=new URL(req.url,'http://127.0.0.1').pathname;
-  if(path==='/fixture/seed'&&req.method==='POST')return send(res,200,await seed(JSON.parse(body).stage));
+  const url=new URL(req.url,'http://127.0.0.1'),path=url.pathname;
+  // One host-side preparation per stage, before launching the crash process.
+  // A failed/ambiguous preparation is never replayed; terminate this fixture.
+  if(path==='/fixture/prepare'&&req.method==='POST'){
+   const stage=JSON.parse(body).stage;
+   if(!['A11','A12','A13'].includes(stage))return send(res,400,{error:'Unsupported stage'});
+   if(preparing||attemptedStages.has(stage))return send(res,409,{error:'Preparation already attempted'});
+   preparing=true;attemptedStages.add(stage);prepared=null;active=null;
+   try{const envelope=await seed(stage);prepared={stage,envelope};return send(res,200,{stage,ready:true});}
+   finally{preparing=false;}
+  }
+  if(path==='/fixture/seed'&&req.method==='GET'){
+   if(!prepared||prepared.stage!==url.searchParams.get('stage'))return send(res,409,{error:'Stage not prepared'});
+   return send(res,200,prepared.envelope);
+  }
   if(path==='/fixture/evidence'&&req.method==='GET'){
    if(!active)return send(res,404,{error:'No probe'});
    const session=await step('evidence_session',()=>db.prepare('SELECT generation,revoked FROM mobile_sessions WHERE family_id=?').bind(active.family).first());

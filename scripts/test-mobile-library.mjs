@@ -113,3 +113,22 @@ test('unknown receipt format aborts compaction without partial conversion',async
  await assert.rejects(()=>compactFixtureReceipts(db,{environment:'isolated',dataset:'synthetic-r1',account:a.id}));
  assert.equal((await db.prepare("SELECT result FROM mobile_music_operations WHERE account_id=? AND id='a-valid'").bind(a.id).first()).result,valid);
 });
+for(const length of [16,36,80,81,128])test(`accepted ${length}-character track ID replays before/after compaction and restoration`,async()=>{
+ await db.prepare('CREATE TABLE IF NOT EXISTS r1_fixture_provenance(id INTEGER PRIMARY KEY,dataset TEXT)').run();
+ await db.prepare("INSERT OR IGNORE INTO r1_fixture_provenance VALUES(1,'synthetic-r1')").run();
+ const a=await account(),t={id:'T'.repeat(length)},body={favorite:false,expectedVersion:0,mutationId:randomUUID()};
+ const first=await put(a,t,body);assert.equal(first.status,200);assert.equal(first.data.trackId,t.id);
+ const original=(await db.prepare('SELECT * FROM mobile_music_operations WHERE account_id=?').bind(a.id).all()).results;
+ const options={environment:'isolated',dataset:'synthetic-r1',account:a.id};
+ for(const phase of ['legacy','compact','restored']){
+  if(phase==='compact')assert.equal((await compactFixtureReceipts(db,options)).compacted,1);
+  if(phase==='restored')assert.equal(await restoreFixtureReceipts(db,options),1);
+  for(let n=0;n<3;n++){
+   const replay=await put(a,t,body);assert.equal(replay.status,200,phase);assert.deepEqual(replay.data,first.data);
+  }
+  const rows=(await db.prepare('SELECT * FROM mobile_music_operations WHERE account_id=?').bind(a.id).all()).results;
+  assert.equal(rows.length,1);assert.equal(rows[0].id,body.mutationId);assert.equal(rows[0].digest,original[0].digest);
+  assert.equal((await db.prepare('SELECT version FROM mobile_music_favorites WHERE account_id=? AND track_id=?').bind(a.id,t.id).first()).version,1);
+ }
+ assert.deepEqual((await db.prepare('SELECT * FROM mobile_music_operations WHERE account_id=?').bind(a.id).all()).results,original);
+});
