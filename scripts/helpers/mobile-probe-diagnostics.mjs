@@ -1,7 +1,7 @@
 // Test fixture only: fixed labels/categories; never serialize arbitrary errors or values.
 import {openSync, writeSync, fsyncSync, closeSync} from 'node:fs';
 import {createHash} from 'node:crypto';
-const phases=new Set(['startup','seed_account','seed_password','authorize_get','authorize_body','authorize_post','token_exchange','token_body','evidence_session','evidence_operations','refresh','refresh_body','request','response','held','shutdown']);
+const phases=new Set(['startup','seed_account','seed_password','seed_password_hash','seed_password_write','authorize_get','authorize_body','authorize_post','token_exchange','token_body','evidence_snapshot','evidence_session','evidence_operations','refresh','refresh_body','request','response','held','shutdown']);
 const codes=new Set(['ECONNRESET','ECONNREFUSED','ETIMEDOUT','EPIPE','UND_ERR_SOCKET','UND_ERR_CONNECT_TIMEOUT','UND_ERR_HEADERS_TIMEOUT','UND_ERR_BODY_TIMEOUT','SQLITE_BUSY','SQLITE_LOCKED']);
 export function classify(error) {
  const chain=[error,error?.cause], code=chain.map(e=>e?.code).find(c=>codes.has(c))??'OTHER';

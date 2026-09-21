@@ -1,3 +1,4 @@
+import {decodeLibraryReceipt} from './libraryReceipts.js';
 import {MobileError,requireValue,validID,readBody,exactKeys,hash,iso,assertChanged,clearAssert} from './security.js';
 import {principal} from './sessions.js';
 import {loadPublishedMusicRecord} from '../music/publicStore.js';
@@ -48,7 +49,7 @@ async function personalMusicAttempt(request,env,db,s,now) {
  else {requireValue(path==='recent'&&request.method==='DELETE');exactKeys(body,['confirmed','historyEpoch','mutationId']);requireValue(body.confirmed===true&&integer(body.historyEpoch));}
  const id=isListen?body.eventId:body.mutationId;requireValue(validID(id));
  const digest=await hash(JSON.stringify([request.method,path,Object.keys(body).sort().map(k=>[k,body[k]])]));
- const replay=async()=>{const r=await db.prepare('SELECT * FROM mobile_music_operations WHERE account_id=? AND id=?').bind(account,id).first();if(r){requireValue(r.digest===digest,'IDEMPOTENCY_CONFLICT',409);return JSON.parse(r.result);}return null;};
+ const replay=async()=>{const r=await db.prepare('SELECT * FROM mobile_music_operations WHERE account_id=? AND id=?').bind(account,id).first();if(r){requireValue(r.digest===digest,'IDEMPOTENCY_CONFLICT',409);return decodeLibraryReceipt(r.result);}return null;};
  const previous=await replay();if(previous)return previous;
  requireValue((await db.prepare('SELECT count(*) n FROM mobile_music_operations WHERE account_id=?').bind(account).first()).n<100000,'LIBRARY_LIMIT',409);
  const writes=[];let result;
