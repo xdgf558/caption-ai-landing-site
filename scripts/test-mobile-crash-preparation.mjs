@@ -22,9 +22,10 @@ test('prepare once before host launch; seed reads never create or replace sessio
   assert.equal((await request('/fixture/seed',{stage:'A11'})).status,404);
   assert.equal((await request('/fixture/prepare',{stage:'OTHER'})).status,400);
   const preparing=request('/fixture/prepare',{stage:'A11'});
-  // Observe the durable start marker before attempting a concurrent setup.
+  // Attempt the same setup after its durable start. It must be rejected even
+  // if a loaded CI runner pauses this test until the first setup has finished.
   while(!readFileSync(join(dir,'diagnostics.jsonl'),'utf8').includes('seed_account'))await delay(5);
-  assert.equal((await request('/fixture/prepare',{stage:'A12'})).status,409);
+  assert.equal((await request('/fixture/prepare',{stage:'A11'})).status,409);
   const ready=await preparing;assert.equal(ready.status,200);assert.deepEqual(await ready.json(),{stage:'A11',ready:true});
   const first=await request('/fixture/seed?stage=A11');assert.equal(first.status,200);const envelope=await first.json();
   assert.ok(envelope.data.tokenFamilyId);assert.equal(envelope.data.generation,0);
