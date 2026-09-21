@@ -19,3 +19,11 @@ iOS 宿主给完整准备请求一个独立的 90 秒绝对上限（含连接、
 新增真实 Worker/D1 桥测试检查单次准备、并发拒绝、重复/错误阶段拒绝、读取稳定性及 refresh 尚未发生；诊断测试继续检查脱敏和预算。实际模拟器验证与新 head CI 记录见 iOS 配套复审报告。原失败被保留，不能因另一条 PR CI 成功而将其标记为已解释的环境波动。
 
 本次本机结果：资料库 23/23、生命周期与编解码 12/12、认证 29/29、准备桥与诊断 3/3；Astro 验证构建通过（ALLOW_EMPTY_SERIAL_CONTENT=1，不能作为生产包）。
+
+## 最新 push 的第二处瓶颈
+
+`af8a50e` 的 push `35581775938` 再次失败，但新证据明确区别于原问题：准备只用0.777秒，宿主已完成 seedDecode、sessionInstall、authRestore；失败阶段是 heldPolling，四次 evidence GET 超时。诊断显示前一 GET 的两次 D1 查询尚未结束，新的轮询又进入 D1，多个查询重叠；真实 refresh 已完成并记录 held。保留该失败，不将其算为恢复通过。
+
+测试桥改为在准备和每次 refresh 完成后，用一次 D1 batch 读取真实 session 与 operation 行，再原子替换脱敏 evidence 文件和内存快照。GET 轮询只读完整快照，不再查询 D1 或同步写日志；held 只在真实提交后的证据准备好后发布。生成中的 GET 得到上一份完整证据，原断言仍校验阶段、请求数、generation、revoked、操作ID和120秒窗口。没有用 token 响应推造数据库结果。
+
+新增实际 Worker/D1 回归验证刷新后的 generation 与 operation 行，以及十次 GET 不增加 D1 snapshot 次数。最后一份脱敏提交证据另随 CI 归档，方便在 HTTP 读取失败时保留实际提交状态；该文件不用于绕过验收。

@@ -5,6 +5,7 @@ import {spawn} from 'node:child_process';
 import {mkdtempSync,existsSync,readFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {randomUUID} from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
 
 test('prepare once before host launch; seed reads never create or replace sessions', {timeout:120000}, async()=>{
@@ -38,9 +39,31 @@ test('prepare once before host launch; seed reads never create or replace sessio
   for(const phase of ['seed_account','seed_password_hash','seed_password_write','authorize_get','authorize_post','token_exchange'])
    assert.deepEqual(rows.filter(r=>r.phase===phase).map(r=>r.event),['start','done']);
   assert.ok(!JSON.stringify(rows).includes(envelope.data.tokenFamilyId));
+  assert.deepEqual(JSON.parse(readFileSync(join(dir,'evidence.json'),'utf8')),evidence);
+  // A12 returns a real refresh response. Read the published snapshot repeatedly:
+  // the D1 diagnostic count cannot increase merely because readers poll.
+  assert.equal((await request('/fixture/prepare',{stage:'A12'})).status,200);
+  assert.equal((await request('/fixture/seed?stage=A11')).status,409);
+  const second=await (await request('/fixture/seed?stage=A12')).json();
+  const mutation={clientId:'station-cat-ios',refreshToken:second.data.refreshToken,refreshRequestId:randomUUID(),generation:0};
+  assert.equal((await request('/api/mobile/v1/auth/refresh',mutation)).status,200);
+  const beforePoll=readFileSync(join(dir,'diagnostics.jsonl'),'utf8').trim().split('\n').map(JSON.parse).filter(r=>r.phase==='evidence_snapshot');
+  for(let n=0;n<10;n++){
+   const committed=await (await request('/fixture/evidence')).json();
+   assert.equal(committed.stage,'A12');assert.equal(committed.session.generation,1);assert.equal(committed.session.revoked,0);
+   assert.deepEqual(committed.operations,[{request_id:mutation.refreshRequestId,old_generation:0}]);
+   assert.equal(committed.requests.length,1);assert.equal(committed.requests[0].status,200);
+   assert.deepEqual(JSON.parse(readFileSync(join(dir,'evidence.json'),'utf8')),committed);
+  }
+  const afterPoll=readFileSync(join(dir,'diagnostics.jsonl'),'utf8').trim().split('\n').map(JSON.parse).filter(r=>r.phase==='evidence_snapshot');
+  assert.deepEqual(afterPoll,beforePoll);assert.equal(afterPoll.length,6); // two seeds and one refresh, start+done
+
  }finally{
-  child.kill('SIGTERM');
-  await Promise.race([new Promise(resolve=>child.once('exit',resolve)),delay(10000).then(()=>child.kill('SIGKILL'))]);
+  if(child.exitCode===null&&child.signalCode===null){
+   const exited=new Promise(resolve=>child.once('exit',resolve));
+   const timer=setTimeout(()=>child.kill('SIGKILL'),10000);
+   child.kill('SIGTERM');await exited;clearTimeout(timer);
+  }
   rmSync(dir,{recursive:true,force:true});
  }
 });

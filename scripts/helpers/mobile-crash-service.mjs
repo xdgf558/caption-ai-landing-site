@@ -1,6 +1,6 @@
 // Test-only loopback bridge to the real isolated Worker/D1. Never deploy this file.
 import {createServer} from 'node:http';
-import {readFileSync,writeFileSync,mkdtempSync,rmSync,mkdirSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdtempSync,rmSync,mkdirSync,renameSync} from 'node:fs';
 import {join,resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 import {randomBytes,randomUUID,createHash,pbkdf2Sync,timingSafeEqual} from 'node:crypto';
@@ -49,10 +49,23 @@ async function seed(stage){
  const code=new URL(authorized.headers.get('location')).searchParams.get('code');
  const r=await step('token_exchange',()=>worker('/api/mobile/v1/auth/token',{clientId:'station-cat-ios',code,codeVerifier:verifier,redirectUri:callback}));
  if(r.status!==200)throw new Error('Synthetic token exchange failed');
- const envelope=await step('token_body',()=>r.json());active={stage,family:envelope.data.tokenFamilyId,requests:[],held:false};return envelope;
+ const envelope=await step('token_body',()=>r.json());active={stage,family:envelope.data.tokenFamilyId,requests:[],held:false};await captureEvidence(active);return envelope;
+}
+async function captureEvidence(probe){
+ // Read committed D1 rows once per mutation, in one batch. Never infer them from
+ // the token response, and never issue D1 reads for a polling GET.
+ const [sessions,operations]=await step('evidence_snapshot',()=>db.batch([
+  db.prepare('SELECT generation,revoked FROM mobile_sessions WHERE family_id=?').bind(probe.family),
+  db.prepare('SELECT request_id,old_generation FROM mobile_refresh_operations WHERE family_id=? ORDER BY old_generation').bind(probe.family)
+ ]));
+ const evidence={stage:probe.stage,held:probe.held,requests:probe.requests.map(r=>({...r})),session:sessions.results[0],operations:operations.results};
+ // A single atomic replacement publishes only the complete coherent snapshot.
+ writeFileSync(join(state,'evidence.tmp'),JSON.stringify(evidence),{mode:0o600});
+ renameSync(join(state,'evidence.tmp'),join(state,'evidence.json'));
+ probe.evidence=evidence;
 }
 const sockets=new Set();
-function send(res,status,body){diagnostics.record('response','marker');res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(body));}
+function send(res,status,body,trace=true){if(trace)diagnostics.record('response','marker');res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(body));}
 const server=createServer(async(req,res)=>{
  try{
   const supplied=Buffer.from(req.headers['x-probe-key']||''),expected=Buffer.from(nonce);
@@ -74,15 +87,15 @@ const server=createServer(async(req,res)=>{
    return send(res,200,prepared.envelope);
   }
   if(path==='/fixture/evidence'&&req.method==='GET'){
-   if(!active)return send(res,404,{error:'No probe'});
-   const session=await step('evidence_session',()=>db.prepare('SELECT generation,revoked FROM mobile_sessions WHERE family_id=?').bind(active.family).first());
-   const operations=await step('evidence_operations',()=>db.prepare('SELECT request_id,old_generation FROM mobile_refresh_operations WHERE family_id=? ORDER BY old_generation').bind(active.family).all());
-   return send(res,200,{stage:active.stage,held:active.held,requests:active.requests,session,operations:operations.results});
+   if(!active?.evidence)return send(res,404,{error:'No probe'});
+   return send(res,200,active.evidence,false);
   }
   if(path!=='/api/mobile/v1/auth/refresh'||req.method!=='POST'||!active)return send(res,404,{error:'Unsupported test route'});
   const payload=JSON.parse(body),result=await step('refresh',()=>worker(path,payload)),envelope=await step('refresh_body',()=>result.json());
   active.requests.push({requestId:payload.refreshRequestId,generation:payload.generation,status:result.status,resultFingerprint:sha(JSON.stringify(envelope.data||envelope.error)),resultGeneration:envelope.data?.generation,committedAt:Date.now()});
-  if(active.stage==='A11'&&active.requests.length===1&&result.status===200){active.held=true;diagnostics.record('held','marker');return;} // Deliberately never send the committed response.
+  const hold=active.stage==='A11'&&active.requests.length===1&&result.status===200;
+  active.held ||= hold;await captureEvidence(active);
+  if(hold){diagnostics.record('held','marker');return;} // Deliberately never send the committed response.
   return send(res,result.status,envelope);
  }catch(error){diagnostics.record('request','failed',error);send(res,500,{error:'Local probe failed'});}
 });
