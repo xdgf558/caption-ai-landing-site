@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "origin": "https://station-cat-music-r2.yehao1105.workers.dev",
+  "appID": "2AM5S7BM2N.org.stationcat.music.staging",
+  "startedAt": "2026-09-22T06:09:43.093Z",
+  "scope": "synthetic-https-api-only",
+  "success": true,
+  "checks": [
+    {
+      "name": "aasa_health_capabilities",
+      "passed": true,
+      "durationMs": 1999
+    },
+    {
+      "name": "restricted_routes",
+      "passed": true,
+      "durationMs": 979
+    },
+    {
+      "name": "catalog_featured_lyrics",
+      "passed": true,
+      "durationMs": 3902
+    },
+    {
+      "name": "password_pkce_single_use_cookie_boundary",
+      "passed": true,
+      "durationMs": 8008
+    },
+    {
+      "name": "refresh_idempotent_replay",
+      "passed": true,
+      "durationMs": 2269
+    },
+    {
+      "name": "free_vip_grants_head_range_authorization",
+      "passed": true,
+      "durationMs": 10277
+    },
+    {
+      "name": "favorites_cross_session_replay_account_isolation",
+      "passed": true,
+      "durationMs": 7955
+    },
+    {
+      "name": "history_cross_session_clear_epoch_account_isolation",
+      "passed": true,
+      "durationMs": 13058
+    },
+    {
+      "name": "logout_revokes_session_and_vip_media",
+      "passed": true,
+      "durationMs": 3423
+    }
+  ],
+  "requests": 68,
+  "responseBytes": 18258,
+  "statusCounts": {
+    "200": 43,
+    "206": 2,
+    "302": 3,
+    "401": 11,
+    "403": 2,
+    "404": 5,
+    "409": 2
+  },
+  "limitations": [
+    "Not an iOS browser callback or Universal Link acceptance test",
+    "Not physical device, production, subscription or complete account deletion acceptance"
+  ],
+  "cleanup": {
+    "sessionsCreated": 3,
+    "sessionsRevoked": 3,
+    "failures": 0
+  },
+  "finishedAt": "2026-09-22T06:10:34.969Z",
+  "durationMs": 51876
+}

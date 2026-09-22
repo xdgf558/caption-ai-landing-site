@@ -15,3 +15,6 @@ ops/evidence/music-staging-http-*.json
 
 # Design comparisons and execution evidence are local-only.
 /design-qa.md
+
+# Shared local dependency symlink.
+/node_modules

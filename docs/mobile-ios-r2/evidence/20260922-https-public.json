@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "origin": "https://station-cat-music-r2.yehao1105.workers.dev",
+  "appID": "2AM5S7BM2N.org.stationcat.music.staging",
+  "startedAt": "2026-09-22T06:46:38.811Z",
+  "scope": "synthetic-https-public-only",
+  "success": true,
+  "checks": [
+    {
+      "name": "aasa_health_capabilities",
+      "passed": true,
+      "durationMs": 1952
+    },
+    {
+      "name": "restricted_routes",
+      "passed": true,
+      "durationMs": 943
+    },
+    {
+      "name": "catalog_featured_lyrics",
+      "passed": true,
+      "durationMs": 1974
+    },
+    {
+      "name": "album_projection_cover_integrity",
+      "passed": true,
+      "durationMs": 2060
+    },
+    {
+      "name": "album_track_link_fallback_aasa_paths",
+      "passed": true,
+      "durationMs": 2178
+    }
+  ],
+  "requests": 21,
+  "responseBytes": 6633,
+  "statusCounts": {
+    "200": 15,
+    "404": 6
+  },
+  "limitations": [
+    "Not an iOS browser callback or Universal Link acceptance test",
+    "Not physical device, production, subscription or complete account deletion acceptance"
+  ],
+  "cleanup": {
+    "sessionsCreated": 0,
+    "sessionsRevoked": 0,
+    "failures": 0
+  },
+  "finishedAt": "2026-09-22T06:46:47.923Z",
+  "durationMs": 9112
+}

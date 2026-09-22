@@ -48,6 +48,20 @@ test('closed gate, exact redirects and S256 required',async()=>{
  assert.equal((await call('/auth/mobile/authorize?'+new URLSearchParams(query))).status,400);
  query.redirect_uri=redirect;query.code_challenge_method='plain';assert.equal((await call('/auth/mobile/authorize?'+new URLSearchParams(query))).status,400);
 });
+test('mobile browser forms keep legible inherited control text without disabling user zoom',async()=>{
+ for(const locale of ['zh-Hans','zh-Hant','en','ja']){
+  const query={client_id:'station-cat-ios',redirect_uri:redirect,state:secret(),code_challenge:secret(),code_challenge_method:'S256',locale};
+  const r=await call('/auth/mobile/authorize?'+new URLSearchParams(query));assert.equal(r.status,200);
+  assert.equal(r.headers.get('referrer-policy'),'strict-origin');
+  const viewport=/<meta name="viewport" content="([^"]+)">/.exec(r.body)?.[1];
+  assert.equal(viewport,'width=device-width,initial-scale=1');
+  assert.doesNotMatch(r.body,/user-scalable\s*=\s*no|maximum-scale\s*=|touch-action\s*:\s*none/i);
+  // 16px is the iOS focus-zoom threshold; larger inherited user text must still win.
+  const controls=/input,button\{([^}]+)\}/.exec(r.body)?.[1];
+  assert.match(controls,/font:inherit(?:;|$)/);assert.match(controls,/font-size:max\(1em,16px\)(?:;|$)/);
+  assert.match(r.body,/input\{[^}]*box-sizing:border-box;[^}]*width:100%/);
+ }
+});
 test('password login, code bound to verifier and single-use; no tokens in redirect',async()=>{
  const a=await account(),b=await browser(a);assert.equal(b.post.status,302);const u=new URL(b.post.headers.get('location'));assert.deepEqual([...u.searchParams.keys()],['code','state']);
  const body={clientId:'station-cat-ios',code:u.searchParams.get('code'),codeVerifier:secret(),redirectUri:redirect};assert.equal((await call('/api/mobile/v1/auth/token',body)).status,401);
@@ -60,6 +74,32 @@ test('no Cookie fallback; unknown Bearer rejected; response never cacheable',asy
 test('browser flow cookie and Origin required; blocked account cannot login',async()=>{
  const a=await account();await db.prepare("UPDATE reader_accounts SET status='blocked' WHERE id=?").bind(a.id).run();assert.equal((await browser(a)).post.status,401);
  const r=await mf.dispatchFetch(origin+'/auth/mobile/authorize',{method:'POST',headers:{Origin:'https://evil.example','Content-Type':'application/x-www-form-urlencoded'},body:'flow=invalid'});assert.equal(r.status,403);
+});
+test('browser form rejects missing null and foreign Origin without consuming its flow',async()=>{
+ const a=await account();
+ const query={client_id:'station-cat-ios',redirect_uri:redirect,state:secret(),code_challenge:secret(),code_challenge_method:'S256',locale:'en'};
+ const page=await call('/auth/mobile/authorize?'+new URLSearchParams(query));assert.equal(page.status,200);
+ assert.equal(page.headers.get('referrer-policy'),'strict-origin');
+ const flow=/name="flow" value="([^"]+)"/.exec(page.body)[1],cookie=page.headers.get('set-cookie').split(';')[0];
+ for(const path of ['sign-in','register','reset']){
+  const support=await call('/auth/mobile/'+path+'?'+new URLSearchParams({flow,locale:'en'}),undefined,{Cookie:cookie});
+  assert.equal(support.status,200);assert.equal(support.headers.get('referrer-policy'),'strict-origin');
+ }
+ const post=async source=>mf.dispatchFetch(origin+'/auth/mobile/authorize',{method:'POST',redirect:'manual',
+  headers:{...(source===undefined?{}:{Origin:source}),Cookie:cookie,'Content-Type':'application/x-www-form-urlencoded','CF-Connecting-IP':`192.0.2.${++ip}`},
+  body:new URLSearchParams({flow,identifier:a.name,password:pass,totpCode:'',locale:'en'}).toString()});
+ for(const source of [undefined,'null','https://evil.example']){
+  const rejected=await post(source);assert.equal(rejected.status,403);
+  assert.equal((await rejected.json()).error.code,'ACCESS_DENIED');assert.equal(rejected.headers.get('referrer-policy'),'no-referrer');
+  assert.equal((await db.prepare('SELECT used FROM mobile_browser_flows WHERE id=?').bind(flow).first()).used,0);
+  assert.equal((await db.prepare('SELECT count(*) n FROM mobile_codes WHERE account_id=?').bind(a.id).first()).n,0);
+ }
+ const accepted=await post(origin);assert.equal(accepted.status,302);assert.equal(accepted.headers.get('referrer-policy'),'no-referrer');
+ const callback=new URL(accepted.headers.get('location'));
+ assert.equal(callback.origin,origin);assert.deepEqual([...callback.searchParams.keys()],['code','state']);
+ const result=await call(callback.pathname+callback.search);assert.equal(result.status,200);
+ assert.equal(result.headers.get('referrer-policy'),'no-referrer');assert.doesNotMatch(result.body,/<form\b/i);
+ const config=await call('/api/mobile/v1/config');assert.equal(config.headers.get('referrer-policy'),'no-referrer');
 });
 test('TOTP required and cannot replay consumed step',async()=>{
  const a=await account();const base32='GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';await db.prepare('INSERT INTO reader_totp_credentials(account_id,secret_base32,verified_at,enabled_at) VALUES(?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)').bind(a.id,base32).run();
