@@ -1,0 +1,18 @@
+{
+  "scope": "local-headless-chrome-real-form-navigation-temporary-miniflare",
+  "success": true,
+  "results": [
+    {
+      "policy": "no-referrer",
+      "origin": "null",
+      "referrer": "missing",
+      "status": 403
+    },
+    {
+      "policy": "strict-origin",
+      "origin": "same",
+      "referrer": "origin-only",
+      "status": 302
+    }
+  ]
+}

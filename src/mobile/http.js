@@ -21,7 +21,7 @@ function page(flow,locale='en',message='',support='') {
   const form=support==='register'?field('username',c[2])+field('email','Email','email')+field('password',c[3],'password'):
     support==='reset'?field('identifier',c[2])+field('totpCode',c[4])+field('password',c[3],'password'):field('identifier',c[2])+field('password',c[3],'password')+field('totpCode',c[4]);
   return `<!doctype html><html lang="${escape(locale)}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${c[0]}</title>
-  <style>html{color-scheme:dark;font-family:system-ui;background:#10191f;color:#f5efe5}body{max-width:28rem;margin:8vh auto;padding:24px}h1{font-size:1.8rem}label{display:block;margin:20px 0}input{display:block;box-sizing:border-box;width:100%;padding:14px;background:#1e2a32;color:inherit;border:1px solid #617079;border-radius:10px}button,a{min-height:44px}button{padding:14px 24px;border:0;border-radius:24px;background:#f5c979;color:#151719;font-weight:600}a{color:#f5c979;display:inline-block;margin:20px 20px 0 0}p{line-height:1.6}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #f5c979;outline-offset:3px}</style>
+  <style>html{color-scheme:dark;font-family:system-ui;background:#10191f;color:#f5efe5}body{max-width:28rem;margin:8vh auto;padding:24px}h1{font-size:1.8rem}label{display:block;margin:20px 0}input,button{font:inherit;font-size:max(1em,16px)}input{display:block;box-sizing:border-box;width:100%;padding:14px;background:#1e2a32;color:inherit;border:1px solid #617079;border-radius:10px}button,a{min-height:44px}button{padding:14px 24px;border:0;border-radius:24px;background:#f5c979;color:#151719;font-weight:600}a{color:#f5c979;display:inline-block;margin:20px 20px 0 0}p{line-height:1.6}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #f5c979;outline-offset:3px}</style>
   <h1>${c[0]}</h1><p>${c[1]}</p>${message?`<p role="alert">${escape(message)}</p>`:''}
   <form method="post" action="/auth/mobile/${support||'authorize'}">${hidden}${form}<button>${support==='register'?c[6]:support==='reset'?c[7]:c[5]}</button></form>
   ${support?`<a href="/auth/mobile/sign-in?flow=${escape(flow)}&locale=${escape(locale)}">${c[8]}</a>`:
@@ -29,6 +29,9 @@ function page(flow,locale='en',message='',support='') {
 }
 function html(body,status=200,extra={}) {return new Response(body,{status,headers:{...headers,'Content-Type':'text/html;charset=utf-8',
   'Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",...extra}});}
+// Real form navigation is non-CORS: no-referrer makes its Origin opaque (null).
+// Keep only the origin for form documents; code redirects, callbacks and APIs retain no-referrer.
+function formHtml(body,status=200,extra={}) {return html(body,status,{...extra,'Referrer-Policy':'strict-origin'});}
 async function limit(db,key,now,max=30) {
   const window=Math.floor(now/60_000);
   const r=await db.prepare(`INSERT INTO mobile_rate_limits(key,window,count) VALUES(?,?,1)
@@ -63,11 +66,11 @@ export async function handleMobile(request,env,identity) {
       const flow=crypto.randomUUID(),cookie=randomSecret();
       await db.prepare('INSERT INTO mobile_browser_flows(id,cookie_hash,challenge,state,redirect_uri,expires_at) VALUES(?,?,?,?,?,?)')
         .bind(flow,await hash(cookie),p.code_challenge,p.state,config.redirect,now+600_000).run();
-      return html(page(flow,p.locale),200,{'Set-Cookie':`${cookieName}=${cookie}; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=600`});
+      return formHtml(page(flow,p.locale),200,{'Set-Cookie':`${cookieName}=${cookie}; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=600`});
     }
     if(['/auth/mobile/register','/auth/mobile/reset','/auth/mobile/sign-in'].includes(path) && request.method==='GET') {
       const flow=await browserFlow(db,request,url.searchParams.get('flow'),now);
-      return html(page(flow.id,url.searchParams.get('locale'),'',path.endsWith('/sign-in')?'':path.split('/').at(-1)));
+      return formHtml(page(flow.id,url.searchParams.get('locale'),'',path.endsWith('/sign-in')?'':path.split('/').at(-1)));
     }
     if(path.startsWith('/auth/mobile/') && request.method==='POST') {
       requireValue(request.headers.get('origin')===config.origin,'ACCESS_DENIED',403);
@@ -77,11 +80,11 @@ export async function handleMobile(request,env,identity) {
         const handler=path.endsWith('/register')?identity.register:identity.reset;
         requireValue(handler,'SERVICE_UNAVAILABLE',503);
         const result=await handler(new Request(request.url,{method:'POST',headers:{'content-type':'application/json','cf-connecting-ip':request.headers.get('cf-connecting-ip')||''},body:JSON.stringify(path.endsWith('/register')?{username:body.username,email:body.email,password:body.password}:{identifier:body.identifier,password:body.password,totpCode:body.totpCode})}),env);
-        return html(page(flow.id,body.locale,result.ok?(copy[body.locale]||copy.en)[9]:'Unable to complete this request. Please check your details.',path.split('/').at(-1)),result.ok?200:400);
+        return formHtml(page(flow.id,body.locale,result.ok?(copy[body.locale]||copy.en)[9]:'Unable to complete this request. Please check your details.',path.split('/').at(-1)),result.ok?200:400);
       }
       requireValue(path==='/auth/mobile/authorize');
       const account=await identity.verify(env,body);
-      if(!account)return html(page(flow.id,body.locale,'Sign-in failed. Check your password and two-step code.'),401);
+      if(!account)return formHtml(page(flow.id,body.locale,'Sign-in failed. Check your password and two-step code.'),401);
       const secret=randomSecret();
       await db.batch([
         db.prepare('UPDATE mobile_browser_flows SET used=1 WHERE id=? AND used=0 AND expires_at>?').bind(flow.id,now),assertChanged(db),

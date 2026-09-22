@@ -1,0 +1,49 @@
+{
+  "name": "station-cat-music-r2",
+  "main": "src/mobile/isolatedWorker.js",
+  "account_id": "3f5394e0ef5a531c63c0ceaa74262e0d",
+  "compatibility_date": "2026-07-30",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {
+    "enabled": false
+  },
+  "vars": {
+    "MOBILE_ENVIRONMENT": "isolated",
+    "MOBILE_AUTH_ENABLED": "true",
+    "MOBILE_AUTH_ORIGIN": "https://station-cat-music-r2.yehao1105.workers.dev",
+    "MOBILE_REDIRECT_URI": "https://station-cat-music-r2.yehao1105.workers.dev/auth/mobile/callback",
+    "MOBILE_RESULT_KEY_VERSION": "r2-v1",
+    "MOBILE_MUSIC_ENABLED": "true",
+    "MOBILE_PERSONAL_SYNC_ENABLED": "true",
+    "MUSIC_PUBLIC_ENABLED": "true",
+    "MUSIC_VIP_DELIVERY_ENABLED": "true",
+    "MUSIC_UPLOADS_ENABLED": "false",
+    "MUSIC_ANALYTICS_ENABLED": "false"
+  },
+  "triggers": {
+    "crons": [
+      "17 * * * *"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "WAITLIST_DB",
+      "database_name": "station-cat-music-r2-reader",
+      "database_id": "254cd4bd-49e3-4459-8d68-5c9995e8465f",
+      "migrations_dir": ".generated/r2/reader-migrations"
+    },
+    {
+      "binding": "MUSIC_DB",
+      "database_name": "station-cat-music-r2-catalog",
+      "database_id": "19595ea0-7359-4ab3-b168-d82247edefa5",
+      "migrations_dir": "migrations-music"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MUSIC_BUCKET",
+      "bucket_name": "station-cat-music-r2-audio"
+    }
+  ]
+}

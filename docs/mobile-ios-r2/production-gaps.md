@@ -1,0 +1,18 @@
+# R2 → production: explicit integration gaps
+
+R2 uses synthetic data in a separately deployed `station-cat-music-r2` Worker. Passing R2 does not authorize deploying this Worker or its settings onto the website, or changing `isolated` to a production value.
+
+| Boundary | Current implementation | Required production work |
+| --- | --- | --- |
+| Native server configuration | `src/mobile/security.js` requires `MOBILE_ENVIRONMENT=isolated` and rejects stationcat.org / wwwstationcat.org. `music.js` and `library.js` also require isolated mode. | Design and review a distinct production configuration with exact approved origins, callbacks, deployment/account/storage checks and negative tests. Do not remove the guard without a replacement. |
+| iOS configuration | `NativeAuthConfiguration` only permits explicitly enabled Development/Staging. Production defaults remain closed and have no R2 local include. | Add a separately reviewed production path, verified signing/profile, final host and production association; maintain clean-checkout closed defaults until release authorization. |
+| Account reuse | The R2 identity database contains only two synthetic accounts and necessary reader/native tables. | Plan native migrations against the real reader schema with backup/rollback, test old website sessions and memberships, and prove no Bearer-to-Cookie fallback. No production migrations have been applied. |
+| Music/storage | Dedicated test catalog and private R2 bucket contain generated test media. No real songs were copied. | Validate real publication/rights data, R2 bindings and existing full/preview access rules; preserve website behavior and account-scoped grants. Do not import R2 test rows into production. |
+| Authentication and keys | A separate `r2-v1` result key is stored as a Worker secret. Browser credentials are only provisioned test credentials. | Choose independent production key custody/rotation/retention, tested TLS/callback handling and abuse limits. Do not copy R2 keys, passwords or refresh tokens. |
+| Account lifecycle | The current mobile route/maintenance keeps deletion at `attention_required`; the separate R1 executor is not integrated as a completed deletion service. | Complete reviewed deletion orchestration, comment anonymization, financial/minimal-retention/backup policy and completion checks before claiming full account deletion. |
+| Registration/recovery | Public registration/reset endpoints are deliberately absent from the R2 entry. | Decide and validate v1 account creation/recovery UX and supporting endpoints; don't ship test-only notices or test credentials. |
+| Operational evidence | R2 disables Worker request logs, exposes no admin or fixture provisioning route, and has bounded synthetic tests. | Establish approved redacted diagnostics, alerting, cleanup/retention, budget and rollback procedures without logging codes/tokens/passwords. |
+| Signing and links | Apple registration, CDN AASA retrieval, actual system-browser callback and cold/warm OS song/album links are verified for the Staging identifier on the simulator. | Validate physical-device provisioning and links, then the production bundle/profile/AASA separately. The local simulated signing and successful Staging UI flow do not establish production association or device acceptance. |
+| Device/release | Local simulator builds use Xcode 27 beta; no App Store upload. | Fixed stable CI, real iPhone minimum OS, locked Keychain/background/interruption/network/AirPlay checks, TestFlight and release materials remain separately gated. |
+
+The first release still excludes subscription sales. This work adds no StoreKit product, purchase/recovery button, website recharge link or alternate payment flow to the iOS app.
