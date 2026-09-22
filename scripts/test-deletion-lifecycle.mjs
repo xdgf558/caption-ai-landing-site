@@ -1,4 +1,4 @@
-import {test,before,after} from 'node:test';
+import {test as nodeTest,before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync,mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -10,6 +10,13 @@ import {Miniflare} from 'miniflare';
 import {claimDeletion,runDeletionStep,planDeletion} from './isolated-lifecycle/executor.js';
 import {deletionDTO,confirmDeletion} from '../src/mobile/deletion.js';
 const options={environment:'isolated',dataset:'synthetic-r1'};let mf,db;
+// Node's CLI timeout also covers this entire file, including all nine sequential
+// persistent-D1 scenarios. Keep each case bounded separately from the 10-minute
+// file budget; no deletion lease, replay window or product clock is changed.
+function test(name,run){return nodeTest(name,{timeout:120_000},async()=>{
+ const started=performance.now();console.log('LIFECYCLE_CASE_START '+name);
+ try{await run();}finally{console.log('LIFECYCLE_CASE_END '+JSON.stringify({name,durationMs:Math.round(performance.now()-started)}));}
+});}
 const now=Date.now(),owner=()=>randomUUID(),persist=mkdtempSync(join(tmpdir(),'r1-lifecycle-'));
 async function start(){
  mf=new Miniflare({modules:true,script:'export default {fetch(){return new Response("No HTTP execution entry",{status:404})}}',compatibilityDate:'2026-07-30',host:'127.0.0.1',port:0,d1Databases:{DB:'synthetic-lifecycle'},d1Persist:persist,outboundService:()=>new Response('',{status:503})});
@@ -25,8 +32,8 @@ before(async()=>{
  await start();
  await migrate([...['migrations','migrations-mobile'].flatMap(dir=>readdirSync(dir).filter(x=>x.endsWith('.sql')).sort().map(x=>dir+'/'+x)),'scripts/isolated-lifecycle/schema.sql']);
  await db.prepare("INSERT INTO r1_fixture_provenance VALUES(1,'synthetic-r1')").run();
-});
-after(async()=>{await mf?.dispose();rmSync(persist,{recursive:true,force:true});});
+},{timeout:60_000});
+after(async()=>{await mf?.dispose();rmSync(persist,{recursive:true,force:true});},{timeout:30_000});
 async function fixture({bulk=0}={}){
  const id=randomUUID(),email=id+'@example.test';
  const account=(await db.prepare('INSERT INTO reader_accounts(email,normalized_email,display_name) VALUES(?,?,?) RETURNING id').bind(email,email,'Synthetic').first()).id;
