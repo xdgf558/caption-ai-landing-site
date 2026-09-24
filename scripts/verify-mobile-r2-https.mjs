@@ -134,10 +134,14 @@ async function media(grant,s) {
     range.headers.get('cache-control')?.includes('no-store'),'invalid_media_range');
 }
 
-async function run({onlyPublic=false}={}) {
+async function run({onlyPublic=false,realAlbum=false}={}) {
   phase='private_inputs';
   // The public subset must not read account passwords or create sessions.
   const credentials=onlyPublic?null:privateJSON('credentials.json'), tracks=privateJSON('tracks.json');
+  const real=realAlbum?JSON.parse(readFileSync(new URL('.generated/r3-real/private/manifest.json',ROOT),'utf8')):null;
+  if(real)requireSafe(real.schema===1 && real.origin===ORIGIN && real.database==='station-cat-music-r2-catalog' &&
+    real.bucket==='station-cat-music-r2-audio' && real.collection?.slug==='wydgb' && real.tracks?.length===7 &&
+    real.tracks.every(t=>t.access==='free') && new Set(real.tracks.map(t=>t.id)).size===7,'invalid_real_manifest');
   if(!onlyPublic)requireSafe(Array.isArray(credentials) && credentials.length===2,'invalid_private_inputs');
   for(const role of ['free','vip']) {
     if(!onlyPublic) {
@@ -161,12 +165,42 @@ async function run({onlyPublic=false}={}) {
   const details={};
   await check('catalog_featured_lyrics',async()=>{
     const catalog=await api('/music/catalog?locale=en');
-    requireSafe(catalog.items?.length===2 && catalog.nextCursor===null && ['free','vip'].every(role=>catalog.items.some(t=>t.id===tracks[role])),'unexpected_test_catalog');
-    const featured=await api('/music/featured?locale=en');requireSafe(featured.tracks?.[0]?.id===tracks.free,'featured_mismatch');
+    const expectedIds=[tracks.free,tracks.vip,...(real?.tracks.map(t=>t.id)||[])].sort();
+    requireSafe(same(catalog.items?.map(t=>t.id).sort(),expectedIds) && catalog.nextCursor===null,'unexpected_test_catalog');
+    const featured=await api('/music/featured?locale=en');requireSafe(featured.tracks?.[0]?.id===(real?.primary||tracks.free) && featured.tracks.some(t=>t.id===tracks.free),'featured_mismatch');
     for(const role of ['free','vip']) {
       details[role]=await api('/music/tracks/'+tracks[role]+'?locale=en');
       const d=details[role];requireSafe(d.track?.id===tracks[role] && d.lyrics?.kind==='timed' && d.lyrics.lines?.length>=2 && d.lyrics.audioVersion===d.track.audioVersion,'lyrics_mismatch');
     }
+  });
+  if(real)await check('real_album_audio_lyrics_covers_and_permissions',async()=>{
+    const album=await api('/music/collections/'+real.collection.slug+'?locale=zh-Hans');
+    requireSafe(album.id===real.collection.id && album.version===real.collection.version && album.nextCursor===null &&
+      same(album.tracks?.map(t=>t.id),real.tracks.map(t=>t.id)),'real_album_order');
+    const cover=await bounded(`/api/music/collections/${real.collection.slug}/cover?v=${real.collection.version}&size=display`,{maxBytes:2097152});
+    requireSafe(createHash('sha256').update(cover.bytes).digest('hex')===real.collection.coverSHA256,'real_album_cover');
+    for(const expected of real.tracks) {
+      const detail=await api('/music/tracks/'+expected.id+'?locale=zh-Hans');
+      requireSafe(detail.track?.title===expected.title && detail.track.id===expected.id && detail.track.access==='free' &&
+        detail.track.audioVersion===expected.audioVersion && detail.track.durationSeconds>0 &&
+        detail.lyrics?.kind==='timed' && detail.lyrics.audioVersion===expected.audioVersion && detail.lyrics.lines?.length>0 &&
+        detail.lyrics.lines.every((line,i,lines)=>Number.isFinite(line.startSeconds) && line.startSeconds>=0 &&
+          (i===0 || line.startSeconds>=lines[i-1].startSeconds) && !line.text.includes('\uFFFD')),'real_track_detail');
+      const image=await bounded(detail.track.coverUrl,{maxBytes:2097152});
+      requireSafe(image.headers.get('content-type')?.startsWith('image/jpeg') &&
+        createHash('sha256').update(image.bytes).digest('hex')===expected.coverSHA256,'real_track_cover');
+      const grant=await api('/music/tracks/'+expected.id+'/playback-grants',payload({audioVersion:expected.audioVersion,variant:'full'}));
+      requireSafe(grant.authMode==='public' && grant.variant==='full','real_track_grant');
+      const head=await bounded(grant.playbackUrl,{method:'HEAD',maxBytes:0});
+      requireSafe(Number(head.headers.get('content-length'))===expected.audioBytes,'real_audio_length');
+      const range=await bounded(grant.playbackUrl,{headers:{Range:'bytes=0-4095'},expected:206,maxBytes:4096});
+      const object=real.objects.find(o=>o.key.startsWith('music/audio/'+expected.id+'/'));
+      requireSafe(object && /^objects\/[a-f0-9-]+\.mp3$/.test(object.file),'real_audio_input');
+      const local=readFileSync(new URL('.generated/r3-real/private/'+object.file,ROOT));
+      requireSafe(range.bytes.equals(local.subarray(0,4096)) && range.headers.get('content-range')===`bytes 0-4095/${expected.audioBytes}` &&
+        range.headers.get('cache-control')?.includes('no-store'),'real_audio_range');
+    }
+    await denied(API+'/music/tracks/'+tracks.vip+'/playback-grants',payload({audioVersion:details.vip.track.audioVersion,variant:'full'}),401,'AUTH_REQUIRED');
   });
   const album=privateJSON('album.json');
   requireSafe(album?.schema===1 && typeof album.id==='string' && /^[A-Za-z0-9_-]{16,128}$/.test(album.id) &&
@@ -290,15 +324,17 @@ async function run({onlyPublic=false}={}) {
 async function main() {
   const args=process.argv.slice(2);
   if(!args.includes('--run')) {
-    console.log('No network or private-file access performed. Explicit invocation: node scripts/verify-mobile-r2-https.mjs --run [--only-public]');
+    console.log('No network or private-file access performed. Explicit invocation: node scripts/verify-mobile-r2-https.mjs --run [--only-public] [--real-album]');
     return;
   }
   const onlyPublic=args.includes('--only-public');
-  requireSafe(args.length===(onlyPublic?2:1) && new Set(args).size===args.length && args.every(x=>['--run','--only-public'].includes(x)),'invalid_arguments');
-  const outputName=onlyPublic?'https-public-evidence.json':'https-evidence.json';
+  const realAlbum=args.includes('--real-album');
+  requireSafe(new Set(args).size===args.length && args.every(x=>['--run','--only-public','--real-album'].includes(x)),'invalid_arguments');
+  const outputName=(realAlbum?'real-album-':'')+(onlyPublic?'https-public-evidence.json':'https-evidence.json');
   const output=new URL('.generated/r2/'+outputName,ROOT);
   if(onlyPublic)evidence.scope='synthetic-https-public-only';
-  try { await run({onlyPublic}); }
+  if(realAlbum)evidence.scope=onlyPublic?'real-album-https-public-only':'real-album-and-synthetic-https-api';
+  try { await run({onlyPublic,realAlbum}); }
   catch(error) {
     evidence.failure={phase,category:error instanceof SafeFailure?error.category:'local_failure'};
     console.error('FAIL '+phase+' ('+evidence.failure.category+')');process.exitCode=1;

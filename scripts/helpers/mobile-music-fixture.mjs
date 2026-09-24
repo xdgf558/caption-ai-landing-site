@@ -11,7 +11,7 @@ export async function setup({personalSync=false}={}){
  const bundle=await build({entryPoints:['scripts/helpers/mobile-music-worker.js'],bundle:true,format:'esm',platform:'browser',write:false});
  mf=new Miniflare({modules:true,script:bundle.outputFiles[0].text,compatibilityDate:'2026-07-30',host:'127.0.0.1',port:0,
  d1Databases:{WAITLIST_DB:'m3-reader-only',MUSIC_DB:'m3-music-only'},r2Buckets:{MUSIC_BUCKET:'m3-synthetic-only'},bindings:{
- MOBILE_PERSONAL_SYNC_ENABLED:String(personalSync),MOBILE_AUTH_ENABLED:'true',MOBILE_MUSIC_ENABLED:'true',MOBILE_ENVIRONMENT:'isolated',MOBILE_AUTH_ORIGIN:origin,MOBILE_REDIRECT_URI:origin+'/auth/mobile/callback',
+ MOBILE_PERSONAL_SYNC_ENABLED:String(personalSync),MOBILE_AUTH_ENABLED:'true',MOBILE_MUSIC_ENABLED:'true',MOBILE_FREE_OFFLINE_ENABLED:'true',MOBILE_ENVIRONMENT:'isolated',MOBILE_AUTH_ORIGIN:origin,MOBILE_REDIRECT_URI:origin+'/auth/mobile/callback',
  MOBILE_RESULT_KEY_VERSION:'fixture',MOBILE_RESULT_KEYS_JSON:JSON.stringify({fixture:secret()}),MUSIC_PUBLIC_ENABLED:'true',MUSIC_VIP_DELIVERY_ENABLED:'true'},
  outboundService:()=>new Response('No outbound',{status:503})});
  db=await mf.getD1Database('WAITLIST_DB');music=await mf.getD1Database('MUSIC_DB');bucket=await mf.getR2Bucket('MUSIC_BUCKET');

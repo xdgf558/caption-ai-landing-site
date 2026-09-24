@@ -12,6 +12,7 @@ import {checkAssetIdentity,checkStoredObject} from '../music/resources.js';
 import {serveValidatedMusicMedia} from '../music/mediaResponse.js';
 
 export const nativeMusicEnabled=env=>env.MOBILE_MUSIC_ENABLED==='true' && env.MOBILE_ENVIRONMENT==='isolated' && env.MOBILE_AUTH_ENABLED==='true';
+const offlineEligible=t=>t.accessMode==='free' && t.effectiveAccess==='free' && !t.nextPolicyChangeAt;
 const trackDTO=t=>({id:t.id,title:t.title,artist:t.creatorName,durationSeconds:t.durationSec,audioVersion:t.audioVersion,
   access:t.effectiveAccess==='free'?'free':t.previewAvailable?'preview':'vip'});
 const json=(data,now)=>Response.json({data,requestId:crypto.randomUUID(),serverNow:iso(now)},
@@ -74,7 +75,7 @@ export async function handleNativeMusic(request,env,db,config,{clock=Date.now}={
 async function processMusic(request,env,db,config,clock,signal) {
   requireValue(nativeMusicEnabled(env),'SERVICE_UNAVAILABLE',503);
   const runtime=musicRuntime(env);requireValue(runtime.flags.public,'SERVICE_UNAVAILABLE',503);
-  const dto=t=>({...trackDTO(t),coverUrl:t.coverUrl?config.origin+t.coverUrl+'&size=display':null});
+  const dto=t=>({...trackDTO(t),offlineEligible:env.MOBILE_FREE_OFFLINE_ENABLED==='true' && offlineEligible(t),coverUrl:t.coverUrl?config.origin+t.coverUrl+'&size=display':null});
   const url=new URL(request.url),path=url.pathname.replace('/api/mobile/v1','');
   let s=request.headers.has('authorization')?await principal(db,request,clock()):null;
   const locale=url.searchParams.get('locale')||'en';requireValue(MUSIC_LOCALES.includes(locale));
@@ -112,6 +113,22 @@ async function processMusic(request,env,db,config,clock,signal) {
     const asset=validateMusicMediaAsset(record.assets.find(a=>a.id===id),grant.variant==='full'?'audio':'preview',track.id);
     const result=await serveValidatedMusicMedia(request,runtime.bucket,asset,record.track);
     result.headers.set('Vary','Authorization');result.headers.set('Referrer-Policy','no-referrer');return result;
+  }
+  const offlinePath=/^\/music\/tracks\/([^/]+)\/offline-permit$/.exec(path);
+  if(offlinePath) {
+    query(url,[]); requireValue(request.method==='POST');
+    requireValue(env.MOBILE_FREE_OFFLINE_ENABLED==='true','SERVICE_UNAVAILABLE',503);
+    const body=await readBody(request);exactKeys(body,['audioVersion']);
+    const {record,track}=await published(runtime.db,offlinePath[1],locale,clock());
+    requireValue(Number.isSafeInteger(body.audioVersion) && body.audioVersion===track.audioVersion,'VERSION_CONFLICT',409);
+    // Explicit permanent-free policy only. Limited-free, preview and paid early-access
+    // never acquire offline rights, even when the caller currently has VIP.
+    requireValue(offlineEligible(track),'ACCESS_DENIED',403);
+    const asset=validateMusicMediaAsset(record.assets.find(a=>a.id===record.revision.audio_asset_id),'audio',track.id);
+    const now=clock();
+    return json({trackId:track.id,audioVersion:track.audioVersion,policyVersion:track.policyVersion,
+      accessMode:'free',variant:'full',byteSize:asset.byte_size,sha256:asset.sha256,
+      durationSeconds:track.durationSec,validUntil:iso(now+7*86400000)},now);
   }
   const grantPath=/^\/music\/tracks\/([^/]+)\/playback-grants$/.exec(path);
   if(grantPath) {

@@ -68,14 +68,28 @@ test('R2 album cover GET/HEAD return exact PNG bytes and consume artwork admissi
   const head=await call(item,'HEAD');assert.equal(head.status,200);assert.equal((await head.arrayBuffer()).byteLength,0);
   for(const response of [get,head]){
     assert.equal(response.headers.get('content-type'),'image/png');assert.equal(Number(response.headers.get('content-length')),png.length);
-    assert.equal(response.headers.get('cache-control'),'no-store');assert.equal(response.headers.get('set-cookie'),null);
+    assert.equal(response.headers.get('cache-control'),'public, max-age=300');assert.equal(response.headers.get('set-cookie'),null);
+    assert.equal(response.headers.get('cloudflare-cdn-cache-control'),'no-store');
+    assert.equal(response.headers.get('cdn-cache-control'),'no-store');
+    assert.ok(Number.isFinite(Date.parse(response.headers.get('date'))));
   }
   assert.equal((await item.db.prepare("SELECT sum(hits) n FROM music_rate_windows WHERE category='artwork'").first()).n,2);
+});
+test('R2 unpublished covers and wrong versions never become cacheable',async()=>{
+  const item=profiles.get('configured');
+  const wrong=await item.mf.dispatchFetch(origin+item.path.replace('v=2','v=1'));
+  assert.equal(wrong.status,409);assert.match(wrong.headers.get('cache-control'),/no-store/);await wrong.body.cancel();
+  await item.db.prepare("UPDATE music_collections SET status='draft'").run();
+  try {
+    const hidden=await call(item,'GET');assert.equal(hidden.status,404);
+    assert.match(hidden.headers.get('cache-control'),/no-store/);await hidden.body.cancel();
+  } finally { await item.db.prepare("UPDATE music_collections SET status='published'").run(); }
 });
 test('R2 album cover refuses changed R2 object identity after successful delivery',async()=>{
   const item=profiles.get('configured');
   await item.bucket.put(item.objectKey,Buffer.concat([png,Buffer.from('changed')]),{httpMetadata:{contentType:'image/png'}});
   const response=await call(item,'GET');assert.equal(response.status,503);
+  assert.match(response.headers.get('cache-control'),/no-store/);
   assert.equal(response.headers.get('content-type'),'application/json; charset=utf-8');
   await response.body.cancel();
 });

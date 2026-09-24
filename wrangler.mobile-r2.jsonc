@@ -15,6 +15,7 @@
     "MOBILE_REDIRECT_URI": "https://station-cat-music-r2.yehao1105.workers.dev/auth/mobile/callback",
     "MOBILE_RESULT_KEY_VERSION": "r2-v1",
     "MOBILE_MUSIC_ENABLED": "true",
+    "MOBILE_FREE_OFFLINE_ENABLED": "true",
     "MOBILE_PERSONAL_SYNC_ENABLED": "true",
     "MUSIC_PUBLIC_ENABLED": "true",
     "MUSIC_VIP_DELIVERY_ENABLED": "true",
