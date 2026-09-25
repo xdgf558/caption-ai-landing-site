@@ -114,3 +114,28 @@ test('rotation fixture uses real refresh route and preserves family absolute exp
  const row=await db.prepare('SELECT generation,revoked FROM mobile_sessions WHERE id=?').bind(seed.sessionID).first();
  assert.equal(row.generation,1);assert.equal(row.revoked,0);
 });
+
+
+test('offline permits are isolated, revision-bound permanent-free full audio only',async()=>{
+ const free=await seed('free'),vip=await seed('vip'),limited=await seed('vip',Date.now()+600000);
+ const path=t=>`/music/tracks/${t.id}/offline-permit`,body={audioVersion:1};
+ const response=await call(path(free),{body});assert.equal(response.status,200);
+ assert.equal(response.headers.get('cache-control'),'private, no-store');
+ const envelope=await response.json(),p=envelope.data;
+ assert.equal(p.trackId,free.id);assert.equal(p.variant,'full');assert.equal(p.accessMode,'free');
+ assert.equal(p.byteSize,free.audio.byte_size);assert.equal(p.sha256,free.audio.sha256);
+ assert.deepEqual(Object.keys(p).sort(),['trackId','audioVersion','policyVersion','accessMode','variant','byteSize','sha256','durationSeconds','validUntil'].sort());
+ const detail=(await (await call('/music/tracks/'+free.id)).json()).data.track;
+ assert.equal(p.audioVersion,detail.audioVersion);assert.equal(p.policyVersion,1);assert.equal(p.durationSeconds,detail.durationSeconds);
+ assert.equal(Object.hasOwn(p,'playbackUrl'),false);
+ assert.equal(Date.parse(p.validUntil)-Date.parse(envelope.serverNow),7*86400000);
+ assert.equal((await (await call('/music/tracks/'+free.id)).json()).data.track.offlineEligible,true);
+ assert.equal((await (await call('/music/tracks/'+limited.id)).json()).data.track.offlineEligible,false);
+ for(const t of [vip,limited])await denied(path(t),{body},403);
+ await denied(path(free),{body:{audioVersion:2}},409);
+ await denied(path(free),{body:{audioVersion:1,variant:'preview'}},400);
+ await denied(path(free),{body,headers:{'x-fixture-disabled':'MOBILE_FREE_OFFLINE_ENABLED'}},503);
+ await denied(path(free),{body,headers:{Authorization:'Bearer '+secret()}},401);
+ await music.prepare("UPDATE music_tracks SET lifecycle='unpublished' WHERE id=?").bind(free.id).run();
+ await denied(path(free),{body},404);
+});
