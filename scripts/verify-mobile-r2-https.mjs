@@ -28,6 +28,12 @@ function safeURL(path) {
   requireSafe(url.origin===ORIGIN && url.protocol==='https:' && !url.username && !url.password && !url.hash, 'origin_boundary');
   return url;
 }
+function privateCover(response) {
+  requireSafe(response.headers.get('cache-control')==='private, max-age=300' &&
+    response.headers.get('cdn-cache-control')==='no-store' &&
+    response.headers.get('cloudflare-cdn-cache-control')==='no-store' &&
+    !response.headers.has('set-cookie') && !response.headers.has('vary'),'cover_private_cache_policy');
+}
 async function bounded(path, {method='GET', headers={}, body, expected=200, maxBytes=MAX_JSON, timeoutMs=REQUEST_MS, redirect=false}={}) {
   const url = safeURL(path), controller = new AbortController();
   const timer = setTimeout(()=>controller.abort(), timeoutMs);
@@ -178,17 +184,25 @@ async function run({onlyPublic=false,realAlbum=false}={}) {
     requireSafe(album.id===real.collection.id && album.version===real.collection.version && album.nextCursor===null &&
       same(album.tracks?.map(t=>t.id),real.tracks.map(t=>t.id)),'real_album_order');
     const cover=await bounded(`/api/music/collections/${real.collection.slug}/cover?v=${real.collection.version}&size=display`,{maxBytes:2097152});
+    privateCover(cover);
     requireSafe(createHash('sha256').update(cover.bytes).digest('hex')===real.collection.coverSHA256,'real_album_cover');
     for(const expected of real.tracks) {
       const detail=await api('/music/tracks/'+expected.id+'?locale=zh-Hans');
       requireSafe(detail.track?.title===expected.title && detail.track.id===expected.id && detail.track.access==='free' &&
-        detail.track.audioVersion===expected.audioVersion && detail.track.durationSeconds>0 &&
+        detail.track.audioVersion===expected.audioVersion && detail.track.offlineEligible===true && detail.track.durationSeconds>0 &&
         detail.lyrics?.kind==='timed' && detail.lyrics.audioVersion===expected.audioVersion && detail.lyrics.lines?.length>0 &&
         detail.lyrics.lines.every((line,i,lines)=>Number.isFinite(line.startSeconds) && line.startSeconds>=0 &&
           (i===0 || line.startSeconds>=lines[i-1].startSeconds) && !line.text.includes('\uFFFD')),'real_track_detail');
       const image=await bounded(detail.track.coverUrl,{maxBytes:2097152});
+      privateCover(image);
       requireSafe(image.headers.get('content-type')?.startsWith('image/jpeg') &&
         createHash('sha256').update(image.bytes).digest('hex')===expected.coverSHA256,'real_track_cover');
+      const receipt=await json(API+'/music/tracks/'+expected.id+'/offline-permit',payload({audioVersion:expected.audioVersion}));
+      const permit=receipt.data;
+      requireSafe(permit && same(Object.keys(permit).sort(),['trackId','audioVersion','policyVersion','accessMode','variant','byteSize','sha256','durationSeconds','validUntil'].sort()) &&
+        permit.trackId===expected.id && permit.audioVersion===expected.audioVersion && Number.isSafeInteger(permit.policyVersion) && permit.policyVersion>0 &&
+        permit.accessMode==='free' && permit.variant==='full' && permit.byteSize===expected.audioBytes && permit.durationSeconds===detail.track.durationSeconds &&
+        /^[a-f0-9]{64}$/.test(permit.sha256) && Date.parse(permit.validUntil)-Date.parse(receipt.serverNow)===7*86400000,'real_offline_permit');
       const grant=await api('/music/tracks/'+expected.id+'/playback-grants',payload({audioVersion:expected.audioVersion,variant:'full'}));
       requireSafe(grant.authMode==='public' && grant.variant==='full','real_track_grant');
       const head=await bounded(grant.playbackUrl,{method:'HEAD',maxBytes:0});
@@ -197,9 +211,12 @@ async function run({onlyPublic=false,realAlbum=false}={}) {
       const object=real.objects.find(o=>o.key.startsWith('music/audio/'+expected.id+'/'));
       requireSafe(object && /^objects\/[a-f0-9-]+\.mp3$/.test(object.file),'real_audio_input');
       const local=readFileSync(new URL('.generated/r3-real/private/'+object.file,ROOT));
+      requireSafe(createHash('sha256').update(local).digest('hex')===permit.sha256,'real_offline_integrity');
       requireSafe(range.bytes.equals(local.subarray(0,4096)) && range.headers.get('content-range')===`bytes 0-4095/${expected.audioBytes}` &&
         range.headers.get('cache-control')?.includes('no-store'),'real_audio_range');
     }
+    requireSafe(details.vip.track.offlineEligible===false,'vip_offline_eligibility');
+    await denied(API+'/music/tracks/'+tracks.vip+'/offline-permit',payload({audioVersion:details.vip.track.audioVersion}),403,'ACCESS_DENIED');
     await denied(API+'/music/tracks/'+tracks.vip+'/playback-grants',payload({audioVersion:details.vip.track.audioVersion,variant:'full'}),401,'AUTH_REQUIRED');
   });
   const album=privateJSON('album.json');

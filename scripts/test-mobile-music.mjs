@@ -124,6 +124,10 @@ test('offline permits are isolated, revision-bound permanent-free full audio onl
  const envelope=await response.json(),p=envelope.data;
  assert.equal(p.trackId,free.id);assert.equal(p.variant,'full');assert.equal(p.accessMode,'free');
  assert.equal(p.byteSize,free.audio.byte_size);assert.equal(p.sha256,free.audio.sha256);
+ assert.deepEqual(Object.keys(p).sort(),['trackId','audioVersion','policyVersion','accessMode','variant','byteSize','sha256','durationSeconds','validUntil'].sort());
+ const detail=(await (await call('/music/tracks/'+free.id)).json()).data.track;
+ assert.equal(p.audioVersion,detail.audioVersion);assert.equal(p.policyVersion,1);assert.equal(p.durationSeconds,detail.durationSeconds);
+ assert.equal(Object.hasOwn(p,'playbackUrl'),false);
  assert.equal(Date.parse(p.validUntil)-Date.parse(envelope.serverNow),7*86400000);
  assert.equal((await (await call('/music/tracks/'+free.id)).json()).data.track.offlineEligible,true);
  assert.equal((await (await call('/music/tracks/'+limited.id)).json()).data.track.offlineEligible,false);

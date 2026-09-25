@@ -17,7 +17,7 @@ export default {
     if (!enabled(env)) return new Response('Isolated service unavailable', {status:503,headers:noStore});
     if (url.pathname === '/.well-known/apple-app-site-association' && ['GET','HEAD'].includes(request.method) && !url.search) {
       const body = JSON.stringify({applinks:{details:[{appIDs:[isolatedAppID],components:[{'/':'/music/'},{'/':'/auth/mobile/callback'}]}]},webcredentials:{apps:[isolatedAppID]}});
-      return new Response(request.method === 'HEAD' ? null : body, {headers:{...noStore,'Content-Type':'application/json','Cache-Control':'public, max-age=300'}});
+      return new Response(request.method === 'HEAD' ? null : body, {headers:{...noStore,'Content-Type':'application/json','Cache-Control':'private, max-age=300'}});
     }
     if (url.pathname === '/health' && request.method === 'GET') return Response.json({environment:'isolated',purchases:false},{headers:noStore});
     // R2 accounts are provisioned offline. No public signup, reset, admin, payment or fixture routes.
@@ -40,7 +40,7 @@ export default {
           !/^[1-9][0-9]*$/.test(url.searchParams.get('v') || '') ||
           !(Number(result.headers.get('Content-Length')) > 0 && Number(result.headers.get('Content-Length')) <= 2097152)) return result;
       const headers = new Headers(result.headers);
-      headers.set('Cache-Control','public, max-age=300');
+      headers.set('Cache-Control','private, max-age=300');
       headers.set('CDN-Cache-Control','no-store');
       headers.set('Cloudflare-CDN-Cache-Control','no-store');
       headers.set('Date',new Date().toUTCString());

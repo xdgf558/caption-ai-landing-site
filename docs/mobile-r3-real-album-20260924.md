@@ -28,7 +28,7 @@
 - `node scripts/verify-mobile-r2-https.mjs --run --only-public --real-album`：6 组、59 次真实 HTTPS 请求成功（约 40.5 秒），没有读取测试账号密码或建立登录会话。
 - HTTPS 检查精确要求 9 首歌（7 首真实 + 2 首合成）；验证真实专辑 7 首顺序、版本、免费策略、时间轴歌词、8 张封面 SHA-256、每首音频 HEAD 长度及首 4096 字节 Range 内容；合成 VIP 的匿名完整版申请仍返回 401。
 - 既有合成专辑、歌词、AASA 路径、受限路由和无订阅能力断言继续通过。默认 R2 验证仍要求原来的 2 首合成曲；只有显式 `--real-album` 才读取本次私密清单并要求精确的扩展曲库，未将断言放宽为任意数量。
-- `npm run test:mobile:r2`：11/11 通过。
+- `npm run test:mobile:r2`：导入阶段为 11/11；本 PR 加入封面缓存用例后为 12/12。
 - `ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build` 通过；这是本机空小说构建检查，不是可部署生产包。
 
 真实 AVPlayer、音频连续续期及实体机表现记录在 iOS 仓库的 R3 报告中，不由服务器 HEAD/Range 成功替代。当前导入属于测试副本，不会自动同步未来网站改动；正式曲库、统一账号及生产接入另行验收。
