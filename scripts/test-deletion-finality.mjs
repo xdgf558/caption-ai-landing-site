@@ -13,6 +13,7 @@ import {prepareSyntheticCompletion,recordSyntheticCompletionReview,installSynthe
 import {requiredReviews} from './isolated-lifecycle/completion-contract.js';
 import {deletionDTO,deletionStatus} from '../src/mobile/deletion.js';
 import {encode,hashBytes} from '../src/mobile/security.js';
+import {__readerTotpTestHooks as totpHooks} from '../src/worker.js';
 
 const options={environment:'isolated',dataset:'synthetic-r1',completionProfile:'synthetic-finality-v1'};
 const now=Date.now(),persist=mkdtempSync(join(tmpdir(),'r1-finality-'));
@@ -47,7 +48,7 @@ function policy(){return {
  jsonShapes:Object.fromEntries(Object.entries(retentionSpecs).flatMap(([table,s])=>s.reviewColumns.filter(c=>s.classifications[c]==='raw_json')
   .map(c=>[`${table}.${c}`,[financialJsonShape({}),financialJsonShape(null)]])))
 };}
-async function fixture({dirty=false}={}){
+async function fixture({dirty=false,freeze=true}={}){
  const id=randomUUID(),email=id+'@example.test';
  const account=(await db.prepare('INSERT INTO reader_accounts(email,normalized_email,display_name) VALUES(?,?,?) RETURNING id').bind(email,email,'Synthetic').first()).id;
  await db.prepare('INSERT INTO reader_credit_accounts(account_id,balance_credits) VALUES(?,100)').bind(account).run();
@@ -60,7 +61,7 @@ async function fixture({dirty=false}={}){
  await db.prepare('INSERT INTO mobile_deletion_outbox(job_id,updated_at) VALUES(?,?)').bind(id,now).run();
  await db.prepare("INSERT INTO reader_totp_reset_attempts(scope,scope_key) VALUES('account',?)").bind(String(account)).run();
  await db.prepare("INSERT INTO reader_totp_reset_attempts(scope,scope_key) VALUES('ip',?)").bind('unrelated-'+id).run();
- await db.prepare("UPDATE reader_accounts SET status='deletion_pending' WHERE id=?").bind(account).run();
+ if(freeze)await db.prepare("UPDATE reader_accounts SET status='deletion_pending' WHERE id=?").bind(account).run();
  return {id,account,receipt,policy:policy()};
 }
 async function personal(f){for(let i=0;i<80;i++){
@@ -91,6 +92,67 @@ test('account-scoped TOTP reset is counted and deleted; other accounts and unrel
  assert.ok(await db.prepare("SELECT id FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=?").bind(String(b.account)).first());
  assert.ok(await db.prepare("SELECT id FROM reader_totp_reset_attempts WHERE scope='ip' AND scope_key=?").bind('unrelated-'+a.id).first());
  assert.equal((await dto(a)).completedAt,null);
+});
+
+test('TOTP write fences reject inactive account writes and scope moves without blocking active or non-account limits',async()=>{
+ const frozen=await fixture(),active=await fixture({freeze:false}),epoch=Math.floor(now/1000);
+ const row=await db.prepare("SELECT * FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=?").bind(String(frozen.account)).first();
+ // Exercise the product UPSERT and its separate lock UPDATE while an old row still exists.
+ await assert.rejects(()=>totpHooks.reserveReaderTotpResetAttempt(db,[{scope:'account',key:String(frozen.account)}],epoch),/R1_INACTIVE_ACCOUNT/);
+ await assert.rejects(()=>db.prepare('UPDATE reader_totp_reset_attempts SET locked_until_epoch=? WHERE id=?').bind(epoch+60,row.id).run(),/R1_INACTIVE_ACCOUNT/);
+ await assert.rejects(()=>db.prepare("UPDATE reader_totp_reset_attempts SET scope='ip' WHERE id=?").bind(row.id).run(),/R1_INACTIVE_ACCOUNT/);
+ await assert.rejects(()=>db.prepare("UPDATE reader_totp_reset_attempts SET scope='account',scope_key=? WHERE scope='ip' AND scope_key=?")
+  .bind(String(frozen.account),'unrelated-'+frozen.id).run(),/R1_INACTIVE_ACCOUNT/);
+ assert.deepEqual(await db.prepare('SELECT * FROM reader_totp_reset_attempts WHERE id=?').bind(row.id).first(),row);
+ await db.prepare('DELETE FROM reader_totp_reset_attempts WHERE id=?').bind(row.id).run();
+ await assert.rejects(()=>db.prepare("INSERT INTO reader_totp_reset_attempts(scope,scope_key) VALUES('account',?)").bind(String(frozen.account)).run(),/R1_INACTIVE_ACCOUNT/);
+ // Active account requests still increment and eventually lock; other scopes are not account identities.
+ let result;
+ for(let i=0;i<=totpHooks.readerTotpResetFailureThreshold;i++)result=await totpHooks.reserveReaderTotpResetAttempt(db,[{scope:'account',key:String(active.account)}],epoch);
+ assert.equal(result.ok,false);assert.ok(result.retryAfterSeconds>0);
+ for(const scope of ['ip','ip_ua','identifier_ip']){
+  const key='independent-'+scope+'-'+frozen.id;
+  assert.equal((await totpHooks.reserveReaderTotpResetAttempt(db,[{scope,key}],epoch)).ok,true);
+  assert.equal((await totpHooks.reserveReaderTotpResetAttempt(db,[{scope,key}],epoch)).ok,true);
+  assert.equal((await db.prepare('SELECT failure_count FROM reader_totp_reset_attempts WHERE scope=? AND scope_key=?').bind(scope,key).first()).failure_count,2);
+ }
+});
+
+test('an in-flight product TOTP reset cannot recreate account counters after completed deletion or restart',async()=>{
+ const f=await fixture({freeze:false});
+ // Match the product order: read the active account, then reserve its TOTP reset limit.
+ const captured=await db.prepare("SELECT id FROM reader_accounts WHERE id=? AND status='active'").bind(f.account).first();
+ assert.ok(captured);
+ let signalEntered,release;
+ const entered=new Promise(resolve=>{signalEntered=resolve;}),resume=new Promise(resolve=>{release=resolve;});
+ let intercepted=false;
+ const paused={prepare(sql){
+  const statement=db.prepare(sql);
+  if(!sql.includes('INSERT INTO reader_totp_reset_attempts'))return statement;
+  return {bind(...args){const bound=statement.bind(...args);return {async run(){
+   assert.equal(intercepted,false);intercepted=true;signalEntered();await resume;return bound.run();
+  }};}};
+ }};
+ const inFlight=totpHooks.reserveReaderTotpResetAttempt(paused,[{scope:'account',key:String(captured.id)}],Math.floor(now/1000));
+ // Install a rejection handler before releasing the pending request.
+ const rejected=assert.rejects(inFlight,/R1_INACTIVE_ACCOUNT/);
+ await entered;
+ try{
+  await db.prepare("UPDATE reader_accounts SET status='deletion_pending' WHERE id=?").bind(f.account).run();
+  await personal(f);await reviewed(f);
+  const ticket=await claimSyntheticCompletion(db,f.id,randomUUID(),now,options);
+  assert.equal((await finishSyntheticCompletion(db,ticket,now,options)).accountDeletionCompleted,true);
+ }finally{release();}
+ await rejected;assert.equal(intercepted,true);
+ const completed=await dto(f);assert.equal(completed.status,'completed');
+ assert.equal((await db.prepare("SELECT count(*) n FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=?").bind(String(f.account)).first()).n,0);
+ // The database fence remains effective after the process that completed deletion exits.
+ await mf.dispose();await start();
+ await assert.rejects(()=>totpHooks.reserveReaderTotpResetAttempt(db,[{scope:'account',key:String(captured.id)}],Math.floor(now/1000)),/R1_INACTIVE_ACCOUNT/);
+ await assert.rejects(()=>db.prepare("UPDATE reader_totp_reset_attempts SET scope='account',scope_key=? WHERE scope='ip' AND scope_key=?")
+  .bind(String(f.account),'unrelated-'+f.id).run(),/R1_INACTIVE_ACCOUNT/);
+ assert.equal((await db.prepare("SELECT count(*) n FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=?").bind(String(f.account)).first()).n,0);
+ assert.deepEqual(await dto(f),completed);
 });
 
 test('personal completion alone and the real unapproved draft cannot unlock finality',async()=>{
@@ -201,9 +263,17 @@ test('late cross-account financial links fail the completion transaction after t
  assert.equal((await db.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id=?').bind(other.account).first()).balance_credits,100);
 });
 
-test('a late account reset record or unknown schema cannot be hidden by old completion evidence',async()=>{
+test('missing TOTP fences, pre-existing reset records and unknown schema cannot be hidden by old completion evidence',async()=>{
  const f=await fixture();await personal(f);await reviewed(f);
- await db.prepare("INSERT INTO reader_totp_reset_attempts(scope,scope_key) VALUES('account',?)").bind(String(f.account)).run();
+ for(const name of ['r1_reader_totp_reset_attempts_update','r1_reader_totp_reset_attempts_insert']){
+  const guard=await db.prepare("SELECT sql FROM sqlite_master WHERE type='trigger' AND name=?").bind(name).first();
+  await db.prepare('DROP TRIGGER '+name).run();
+  try{
+   await assert.rejects(()=>syntheticCompletionReadiness(db,f.id,now,options),/GUARD_DRIFT/);
+   // Explicit fault injection models a residual written before the fence was installed.
+   if(name.endsWith('_insert'))await db.prepare("INSERT INTO reader_totp_reset_attempts(scope,scope_key) VALUES('account',?)").bind(String(f.account)).run();
+  }finally{await db.prepare(guard.sql).run();}
+ }
  await assert.rejects(()=>syntheticCompletionReadiness(db,f.id,now,options),/RESIDUAL_PERSONAL_DATA/);
  assert.equal((await dto(f)).completedAt,null);
  await db.prepare("DELETE FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=?").bind(String(f.account)).run();
