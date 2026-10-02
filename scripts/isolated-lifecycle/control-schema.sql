@@ -16,6 +16,17 @@ CREATE TABLE r1_control_restores (
  restore_id TEXT PRIMARY KEY, reader_ref TEXT NOT NULL, namespace TEXT NOT NULL, snapshot_digest TEXT NOT NULL,
  watermark INTEGER NOT NULL, digest TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('blocked','replaying','ready'))
 );
+CREATE TABLE r1_control_restore_verifications (
+ restore_id TEXT PRIMARY KEY REFERENCES r1_control_restores(restore_id), ledger_id TEXT NOT NULL,
+ reader_ref TEXT NOT NULL, namespace TEXT NOT NULL, snapshot_digest TEXT NOT NULL,
+ watermark INTEGER NOT NULL, digest TEXT NOT NULL,
+ data_revision INTEGER NOT NULL CHECK(typeof(data_revision)='integer' AND data_revision>=0),
+ workflow_revision INTEGER NOT NULL CHECK(typeof(workflow_revision)='integer' AND workflow_revision>=0),
+ verification_cursor INTEGER NOT NULL CHECK(typeof(verification_cursor)='integer' AND verification_cursor>=0 AND verification_cursor<=watermark),
+ chain_digest TEXT NOT NULL,
+ state TEXT NOT NULL CHECK(state IN ('verifying','sealed')),
+ version INTEGER NOT NULL DEFAULT 0 CHECK(typeof(version)='integer' AND version>=0)
+);
 CREATE TRIGGER r1_control_provenance_update BEFORE UPDATE ON r1_control_provenance BEGIN SELECT RAISE(ABORT,'CONTROL_IMMUTABLE'); END;
 CREATE TRIGGER r1_control_provenance_delete BEFORE DELETE ON r1_control_provenance BEGIN SELECT RAISE(ABORT,'CONTROL_IMMUTABLE'); END;
 CREATE TRIGGER r1_control_tombstones_update BEFORE UPDATE ON r1_control_tombstones BEGIN SELECT RAISE(ABORT,'CONTROL_IMMUTABLE'); END;

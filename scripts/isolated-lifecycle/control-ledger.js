@@ -9,6 +9,7 @@ export const controlCheck=(condition,code)=>{if(!condition)throw Error(code);};
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const digest=/^[a-f0-9]{64}$/;
 export const controlLedgerCapacity=10000;
+export const controlPageLimit=25;
 const normalize=sql=>sql.replace(/;$/,'').replace(/\s+/g,' ').trim();
 const schema=new DatabaseSync(':memory:');schema.exec(controlSchemaSQL);
 const expected=schema.prepare("SELECT type,name,sql FROM sqlite_master WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%' ORDER BY type,name").all().map(x=>({...x,sql:normalize(x.sql)}));schema.close();
@@ -21,6 +22,7 @@ export function controlContext(ctx){
 function validAnchor(a){return a&&a.schemaVersion===1&&uuid.test(a.ledgerId)&&typeof a.namespace==='string'&&Number.isSafeInteger(a.watermark)&&a.watermark>=0&&digest.test(a.digest);}
 const sameAnchor=(a,b)=>validAnchor(a)&&validAnchor(b)&&['schemaVersion','ledgerId','namespace','watermark','digest'].every(k=>a[k]===b[k]);
 const seedDigest=(ledgerId,namespace)=>controlHash(['synthetic-control-v1',ledgerId,namespace]);
+export const controlGenesisDigest=seedDigest;
 const tombstoneDigest=(ledgerId,row)=>controlHash(['tombstone-v1',ledgerId,row.seq,row.namespace,row.account_id,row.scope_version,row.job_id,row.confirmed_at,row.previous_digest]);
 export async function initializeControlLedger(db,ledgerId,ctx){
  controlContext(ctx);controlCheck(uuid.test(ledgerId),'INVALID_LEDGER_ID');
@@ -75,6 +77,54 @@ async function state(db,ctx,{allowAhead=false}={}){
 export async function readControlSnapshot(db,ctx){return (await state(db,ctx)).snapshot;}
 export async function assertControlSnapshot(db,expectedSnapshot,ctx){const current=await readControlSnapshot(db,ctx);controlCheck(sameAnchor(current,expectedSnapshot),'CONTROL_SNAPSHOT_STALE');return current;}
 export async function readControlTombstones(db,snapshot,ctx){const current=await state(db,ctx);controlCheck(sameAnchor(current.snapshot,snapshot),'CONTROL_SNAPSHOT_STALE');return current.rows;}
+
+// Bounded admission checkpoint for a separately sealed, completely verified
+// restore. Full-chain auditing remains readControlSnapshot(). The immutable
+// CONTROL schema and protected anchor are trusted; arbitrary privileged SQL
+// bypassing those guards requires a new full audit, never this fast path.
+export async function readControlCheckpoint(db,ctx){
+ controlContext(ctx);await validateControlSchema(db);
+ const provenance=await db.prepare('SELECT * FROM r1_control_provenance WHERE id=1').first();
+ const head=await db.prepare('SELECT * FROM r1_control_head WHERE id=1').first();
+ controlCheck(provenance?.dataset==='synthetic-control-r1'&&provenance.schema_version===1&&uuid.test(provenance.ledger_id)&&provenance.namespace===ctx.namespace&&head,'CONTROL_PROVENANCE_REQUIRED');
+ const anchor=await ctx.anchorStore.load();
+ controlCheck(validAnchor(anchor)&&anchor.ledgerId===provenance.ledger_id&&anchor.namespace===ctx.namespace,'CONTROL_ANCHOR_MISMATCH');
+ controlCheck(Number.isSafeInteger(head.watermark)&&head.watermark>=anchor.watermark&&head.watermark<=controlLedgerCapacity,'CONTROL_WATERMARK_ROLLBACK');
+ const snapshot={schemaVersion:1,ledgerId:provenance.ledger_id,namespace:ctx.namespace,watermark:head.watermark,digest:head.digest};
+ controlCheck(sameAnchor(anchor,snapshot),'CONTROL_ANCHOR_PENDING');
+ if(head.watermark===0)controlCheck(head.digest===await seedDigest(snapshot.ledgerId,ctx.namespace),'CONTROL_CHAIN_INVALID');
+ else{
+  const tail=await db.prepare('SELECT * FROM r1_control_tombstones WHERE seq=?').bind(head.watermark).first();
+  controlCheck(tail&&tail.namespace===ctx.namespace&&tail.scope_version==='station-account-v1'&&uuid.test(tail.job_id)&&
+   Number.isSafeInteger(tail.account_id)&&tail.account_id>0&&Number.isSafeInteger(tail.confirmed_at)&&tail.confirmed_at>0&&
+   tail.digest===head.digest&&tail.digest===await tombstoneDigest(snapshot.ledgerId,tail),'CONTROL_CHAIN_INVALID');
+ }
+ return snapshot;
+}
+export async function assertControlCheckpoint(db,snapshot,ctx){
+ const current=await readControlCheckpoint(db,ctx);controlCheck(sameAnchor(current,snapshot),'CONTROL_SNAPSHOT_STALE');return current;
+}
+export async function readControlTombstonePage(db,snapshot,after,limit,ctx,previousDigest){
+ controlCheck(Number.isSafeInteger(after)&&after>=0&&after<=snapshot.watermark&&Number.isSafeInteger(limit)&&limit>0&&limit<=controlPageLimit,'INVALID_CONTROL_PAGE');
+ await assertControlCheckpoint(db,snapshot,ctx);
+ let previous=previousDigest;
+ if(previous===undefined)previous=after===0?await seedDigest(snapshot.ledgerId,ctx.namespace):
+  (await db.prepare('SELECT digest FROM r1_control_tombstones WHERE seq=?').bind(after).first())?.digest;
+ controlCheck(digest.test(previous),'CONTROL_CHAIN_INVALID');
+ if(after===0)controlCheck(previous===await seedDigest(snapshot.ledgerId,ctx.namespace),'CONTROL_CHAIN_INVALID');
+ const rows=(await db.prepare('SELECT * FROM r1_control_tombstones WHERE seq>? AND seq<=? ORDER BY seq LIMIT ?')
+  .bind(after,snapshot.watermark,limit).all()).results;
+ controlCheck(rows.length===Math.min(limit,snapshot.watermark-after),'CONTROL_CHAIN_INVALID');
+ for(let i=0;i<rows.length;i++){
+  const row=rows[i];
+  controlCheck(row.seq===after+i+1&&row.namespace===ctx.namespace&&row.scope_version==='station-account-v1'&&uuid.test(row.job_id)&&
+   Number.isSafeInteger(row.account_id)&&row.account_id>0&&Number.isSafeInteger(row.confirmed_at)&&row.confirmed_at>0&&
+   row.previous_digest===previous&&row.digest===await tombstoneDigest(snapshot.ledgerId,row),'CONTROL_CHAIN_INVALID');
+  previous=row.digest;
+ }
+ if(after+rows.length===snapshot.watermark)controlCheck(previous===snapshot.digest,'CONTROL_CHAIN_INVALID');
+ await assertControlCheckpoint(db,snapshot,ctx);return rows;
+}
 async function sourceTask(reader,id,ctx){
  controlCheck(await ctx.assertReaderNamespace(reader,ctx.namespace),'READER_NAMESPACE_MISMATCH');
  await assertSyntheticIsolation(reader,ctx);

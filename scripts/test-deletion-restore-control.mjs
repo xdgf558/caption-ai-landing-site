@@ -56,7 +56,9 @@ async function freeze(account,id=randomUUID()){
 async function finish(id=restoreId){
  for(let index=0;index<150;index++){
   const row=await restored.prepare('SELECT * FROM r1_restore_gate WHERE id=1').first();
-  if(row.cursor===row.watermark&&row.phase===0)return verifyControlledRestore(control,restored,id,now,ctx);
+  if(row.cursor===row.watermark&&row.phase===0){
+   const result=await verifyControlledRestore(control,restored,id,now,ctx);if(result.ready)return result;continue;
+  }
   const step=await replayControlledRestoreStep(control,restored,id,ctx);assert.equal(step.ready,false);
  }throw Error('RESTORE_DID_NOT_PROGRESS');
 }
@@ -105,7 +107,7 @@ test('old restored reader begins blocked, replay cleans only tombstoned account 
  await assert.rejects(()=>restored.prepare("INSERT INTO reader_password_credentials(account_id,username,normalized_username,password_hash,password_salt,password_iterations) VALUES(202,'late','late','p','s',100000)").run(),/RESTORE_QUARANTINED/);
  await replayControlledRestoreStep(control,restored,restoreId,ctx);
  assert.equal((await restored.prepare('SELECT status FROM reader_accounts WHERE id=101').first()).status,'deletion_pending');
- proof=await finish();assert.equal(proof.ready,true);await assertRestoreAdmission(control,restored,proof,now+1,ctx);
+ proof=await finish();assert.equal(proof.ready,true);await assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx);
  for(const table of ['reader_password_credentials','mobile_music_state','mobile_music_favorites']){
   assert.equal((await restored.prepare(`SELECT count(*) n FROM ${table} WHERE account_id=101`).first()).n,0);
   assert.equal((await restored.prepare(`SELECT count(*) n FROM ${table} WHERE account_id=202`).first()).n,1);
@@ -120,19 +122,58 @@ test('old restored reader begins blocked, replay cleans only tombstoned account 
 test('persisted reader/control restart requires current CONTROL and a fresh readiness proof',async()=>{
  await instances.get('restored').dispose();await instances.get('control').dispose();
  restored=await start('restored');control=await start('control');
- await assertRestoreAdmission(control,restored,proof,now+2,ctx);
- await assert.rejects(()=>assertRestoreAdmission(control,restored,proof,now+30000,ctx),/RESTORE_PROOF_EXPIRED/);
- proof=await verifyControlledRestore(control,restored,restoreId,now+30000,ctx);
- await assertRestoreAdmission(control,restored,proof,now+30001,ctx);
+ await assertRestoreAdmission(control,restored,proof,proof.issuedAt+2,ctx);
+ const expiredAt=proof.expiresAt;
+ await assert.rejects(()=>assertRestoreAdmission(control,restored,proof,expiredAt,ctx),/RESTORE_PROOF_EXPIRED/);
+ proof=await verifyControlledRestore(control,restored,restoreId,expiredAt,ctx);
+ await assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx);
  // A permanent anchor survives time; the admission certificate does not.
  assert.equal((await readControlSnapshot(control,ctx)).watermark,1);
+},{timeout:120000});
+
+test('ready seal is invalidated by INSERT UPDATE DELETE and cannot roll data revision back',async()=>{
+ const before=await restored.prepare('SELECT data_revision FROM r1_restore_gate').first();
+ await restored.prepare("DELETE FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key='303'").run();
+ await restored.prepare("INSERT INTO reader_totp_reset_attempts(scope,scope_key,failure_count,last_failed_epoch) VALUES('account','303',1,?)").bind(now).run();
+ await restored.prepare("UPDATE reader_totp_reset_attempts SET failure_count=failure_count+1 WHERE scope='account' AND scope_key='303'").run();
+ await restored.prepare("DELETE FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key='303'").run();
+ const after=await restored.prepare('SELECT data_revision FROM r1_restore_gate').first();
+ assert.equal(after.data_revision,before.data_revision+4);
+ await assert.rejects(()=>assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx),/RESTORE_SEAL_STALE/);
+ await assert.rejects(()=>restored.prepare('UPDATE r1_restore_gate SET data_revision=? WHERE id=1').bind(before.data_revision).run(),/RESTORE_REVISION_ROLLBACK/);
+ proof=await finish();await assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx);
+ assert.equal(proof.dataRevision,after.data_revision);
+},{timeout:120000});
+
+test('a concurrent reader mutation discards the already-read result and requires a fresh seal',async()=>{
+ let delivered=false;
+ const read=withControlledRestoreRead(control,restored,proof,proof.issuedAt+1,ctx,async db=>{
+  const result=await db.prepare('SELECT display_name FROM reader_accounts WHERE id=303').first();
+  // Inject another writer after the SELECT, before the wrapper can publish it.
+  await restored.prepare("UPDATE reader_accounts SET display_name='Synthetic changed' WHERE id=303").run();return result;
+ }).then(result=>{delivered=true;return result;});
+ await assert.rejects(read,/RESTORE_SEAL_STALE/);assert.equal(delivered,false);
+ proof=await finish();await assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx);
+},{timeout:120000});
+
+test('reader ready without committed CONTROL seal stays closed and resumes after a persistent restart',async()=>{
+ await restored.prepare("UPDATE reader_accounts SET display_name='Synthetic 303' WHERE id=303").run();
+ const interrupted={prepare:control.prepare.bind(control),batch:async()=>{throw Error('INJECTED_SEAL_COMMIT_CRASH');}};
+ await assert.rejects(()=>verifyControlledRestore(interrupted,restored,restoreId,now,ctx),/INJECTED_SEAL_COMMIT_CRASH/);
+ assert.equal((await restored.prepare('SELECT state FROM r1_restore_gate').first()).state,'ready');
+ assert.equal((await control.prepare('SELECT state FROM r1_control_restore_verifications WHERE restore_id=?').bind(restoreId).first()).state,'verifying');
+ await assert.rejects(()=>assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx),/RESTORE_SEAL_STALE/);
+ await instances.get('restored').dispose();await instances.get('control').dispose();
+ restored=await start('restored');control=await start('control');
+ proof=await finish();assert.equal(proof.ready,true);
+ await assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx);
 },{timeout:120000});
 
 test('old or tampered control cannot satisfy the independent protected anchor',async()=>{
  const old=await start('old-control');await apply(old,controlSchemaSQL);
  await old.prepare("INSERT INTO r1_control_provenance VALUES(1,'synthetic-control-r1',1,?,?)").bind(ledgerId,namespace).run();
  await old.prepare('INSERT INTO r1_control_head VALUES(1,0,?)').bind(anchorInitial.digest).run();
- await assert.rejects(()=>assertRestoreAdmission(old,restored,proof,now+30001,ctx),/CONTROL_WATERMARK_ROLLBACK/);
+ await assert.rejects(()=>assertRestoreAdmission(old,restored,proof,proof.issuedAt+1,ctx),/CONTROL_WATERMARK_ROLLBACK/);
  const immutable=await control.prepare("SELECT sql FROM sqlite_master WHERE name='r1_control_tombstones_update'").first();
  await control.prepare('DROP TRIGGER r1_control_tombstones_update').run();
  await control.prepare('UPDATE r1_control_tombstones SET confirmed_at=confirmed_at+1 WHERE seq=1').run();
@@ -140,7 +181,7 @@ test('old or tampered control cannot satisfy the independent protected anchor',a
  await assert.rejects(()=>readControlSnapshot(control,ctx),/CONTROL_CHAIN_INVALID/);
  await control.prepare('DROP TRIGGER r1_control_tombstones_update').run();
  await control.prepare('UPDATE r1_control_tombstones SET confirmed_at=confirmed_at-1 WHERE seq=1').run();await control.prepare(immutable.sql).run();
- await assertRestoreAdmission(control,restored,proof,now+30001,ctx);
+ await assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx);
 },{timeout:120000});
 
 test('a concurrent newly confirmed deletion invalidates all old restore plans and requires replay again',async()=>{
@@ -172,16 +213,16 @@ test('a concurrent newly confirmed deletion invalidates all old restore plans an
  proof=await finish();assert.equal(proof.watermark,2);
  assert.equal((await restored.prepare('SELECT count(*) n FROM reader_password_credentials WHERE account_id=202').first()).n,0);
  assert.equal((await restored.prepare('SELECT count(*) n FROM reader_password_credentials WHERE account_id=303').first()).n,1);
- await assertRestoreAdmission(control,restored,proof,now+1,ctx);
+ await assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx);
 },{timeout:120000});
 async function startReaderAgain(){return start('restored');}
 
 test('missing CONTROL or anchor leaves the restored reader inaccessible even after earlier success',async()=>{
- await assert.rejects(()=>assertRestoreAdmission(undefined,restored,proof,now+1,ctx));
+ await assert.rejects(()=>assertRestoreAdmission(undefined,restored,proof,proof.issuedAt+1,ctx));
  const saved=readFileSync(anchorFile,'utf8');rmSync(anchorFile);
- await assert.rejects(()=>assertRestoreAdmission(control,restored,proof,now+1,ctx),/CONTROL_ANCHOR_MISMATCH/);
+ await assert.rejects(()=>assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx),/CONTROL_ANCHOR_MISMATCH/);
  await assert.rejects(()=>initializeControlLedger(control,ledgerId,ctx),/PROTECTED_ANCHOR_LOST/);
- writeFileSync(anchorFile,saved,{mode:0o600});await assertRestoreAdmission(control,restored,proof,now+1,ctx);
+ writeFileSync(anchorFile,saved,{mode:0o600});await assertRestoreAdmission(control,restored,proof,proof.issuedAt+1,ctx);
  const missingRestore=await start('missing-restore');await apply(missingRestore,oldSnapshot);
  await assert.rejects(()=>beginControlledRestore(undefined,missingRestore,{restoreId:randomUUID(),readerRef:randomUUID(),snapshotDigest:'b'.repeat(64)},ctx));
  assert.equal((await missingRestore.prepare('SELECT state FROM r1_restore_gate').first()).state,'blocked');
