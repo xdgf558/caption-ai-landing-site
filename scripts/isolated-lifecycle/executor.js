@@ -2,6 +2,8 @@
 import inventory from '../../docs/mobile-ios-m2/deletion-plan/schema-inventory.json' with {type:'json'};
 import guards from './guard-manifest.json' with {type:'json'};
 import {completionTables} from './completion-contract.js';
+import {financialExecutionTables,financialExecutionGuards,replacedFinancialGuards} from './financial-contract.js';
+import {externalCleanupTables,externalCleanupGuards} from './external-contract.js';
 const reviewed=inventory.databases.reader;
 import {assertChanged,clearAssert} from '../../src/mobile/security.js';
 const extra=['r1_fixture_provenance','r1_deletion_jobs','r1_financial_reviews'];
@@ -14,19 +16,37 @@ export async function assertSyntheticIsolation(db,options){
  check(options?.environment==='isolated' && options?.dataset==='synthetic-r1','ISOLATION_REQUIRED');
  check((await db.prepare('SELECT dataset FROM r1_fixture_provenance WHERE id=1').first())?.dataset==='synthetic-r1','SYNTHETIC_DATA_REQUIRED');
  const names=(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='_cf_METADATA'").all()).results.map(x=>x.name).sort();
- const additions=options.completionProfile==='synthetic-finality-v1'?Object.keys(completionTables):[];
+ check(options.executionProfile===undefined||options.executionProfile==='synthetic-erasure-v1','UNKNOWN_EXECUTION_PROFILE');
+ const execution=options.executionProfile==='synthetic-erasure-v1';
+ check(!execution||options.completionProfile==='synthetic-finality-v1','FINALITY_PROFILE_REQUIRED');
+ const additionSpecs={...(options.completionProfile==='synthetic-finality-v1'?completionTables:{}),
+  ...(execution?{...financialExecutionTables,...externalCleanupTables}:{})};
+ const additions=Object.keys(additionSpecs);
  check(JSON.stringify(names)===JSON.stringify([...Object.keys(reviewed),...extra,...additions].sort()),'SCHEMA_DRIFT');
  const installed=(await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger'").all()).results;
- for(const [name,sql] of Object.entries(guards))check(installed.some(x=>x.name===name&&x.sql.replace(/;$/, '').replace(/\s+/g,' ').trim()===sql),'GUARD_DRIFT');
+ const requiredGuards={...Object.fromEntries(Object.entries(guards).filter(([name])=>!execution||!replacedFinancialGuards.includes(name))),
+  ...(execution?{...financialExecutionGuards,...externalCleanupGuards}:{})};
+ if(execution)check(JSON.stringify(installed.map(x=>x.name).sort())===JSON.stringify(Object.keys(requiredGuards).sort()),'GUARD_DRIFT');
+ for(const [name,sql] of Object.entries(requiredGuards))check(installed.some(x=>x.name===name&&x.sql.replace(/;$/, '').replace(/\s+/g,' ').trim()===sql.replace(/\s+/g,' ').trim()),'GUARD_DRIFT');
  const commentColumns=(await db.prepare('PRAGMA table_info(reader_comments)').all()).results;
  check(commentColumns.find(x=>x.name==='account_id')?.notnull===0,'COMMENTS_MIGRATION_REQUIRED');
- for(const [table,spec] of Object.entries(reviewed)){
-  const columns=(await db.prepare(`PRAGMA table_info(${table})`).all()).results.map(x=>x.name);
-  check(JSON.stringify(columns)===JSON.stringify(spec.columns),'SCHEMA_DRIFT');
- }
- for(const name of additions){
-  const columns=(await db.prepare(`PRAGMA table_info(${name})`).all()).results.map(x=>x.name);
-  check(JSON.stringify(columns)===JSON.stringify(completionTables[name]),'COMPLETION_SCHEMA_DRIFT');
+ if(execution){
+  // No cached verdict: every call obtains one atomic read-only schema snapshot.
+  // Batching reduces local D1 IPC while retaining every original per-table assertion.
+  const entries=[...Object.entries(reviewed).map(([name,spec])=>[name,spec.columns,'SCHEMA_DRIFT']),
+   ...additions.map(name=>[name,additionSpecs[name],'COMPLETION_SCHEMA_DRIFT'])];
+  const snapshots=await db.batch(entries.map(([name])=>db.prepare(`PRAGMA table_info(${name})`)));
+  check(snapshots.length===entries.length,'SCHEMA_DRIFT');
+  entries.forEach(([,expected,code],i)=>check(JSON.stringify(snapshots[i].results.map(x=>x.name))===JSON.stringify(expected),code));
+ }else{
+  for(const [table,spec] of Object.entries(reviewed)){
+   const columns=(await db.prepare(`PRAGMA table_info(${table})`).all()).results.map(x=>x.name);
+   check(JSON.stringify(columns)===JSON.stringify(spec.columns),'SCHEMA_DRIFT');
+  }
+  for(const name of additions){
+   const columns=(await db.prepare(`PRAGMA table_info(${name})`).all()).results.map(x=>x.name);
+   check(JSON.stringify(columns)===JSON.stringify(additionSpecs[name]),'COMPLETION_SCHEMA_DRIFT');
+  }
  }
 }
 const gate=assertSyntheticIsolation;

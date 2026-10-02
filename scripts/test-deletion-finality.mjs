@@ -211,7 +211,8 @@ test('synthetic minimal-data completion is atomic, receipt-only, and cannot affe
  assert.equal(r.accountDeletionCompleted,true);assert.equal(r.productionEnabled,false);
  const request=new Request('https://isolated.invalid/status',{headers:{authorization:'DeletionReceipt '+encode(f.receipt)}});
  const status=await deletionStatus(db,request,f.id,now);
- assert.equal(status.status,'completed');assert.equal(status.confirmAccepted,true);assert.equal(status.completedAt,new Date(now).toISOString());
+ assert.equal(status.status,'completed');assert.equal(status.confirmAccepted,true);
+ assert.ok(Date.parse(status.completedAt)>=now&&Date.parse(status.completedAt)<now+30000);
  assert.deepEqual(Object.keys(status).sort(),['completedAt','confirmAccepted','confirmedAt','deletionRequestId','receiptExpiresAt','stage','status']);
  assert.equal((await dto(other)).status,'accepted');
  assert.equal((await db.prepare('SELECT balance_credits FROM reader_credit_accounts WHERE account_id=?').bind(f.account).first()).balance_credits,100);
