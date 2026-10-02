@@ -1,5 +1,7 @@
 # R1 隔离销户执行验证
 
+2026-10-02 新增显式 `synthetic-finality-v1` 的最终条件实验、只读财务报告和评论迁移候选。说明与未实现边界见 [当前候选报告](../../docs/mobile-ios-r1-completion-20261002.md)。下文的默认个人阶段仍停在 `attention_required`；只有预先最小化的合成数据、虚构测试政策及人工合成凭据齐全时，最终条件实验才写 completed，不代表外部清理或生产销户完成。
+
 本目录只操作测试脚本创建的临时 D1、合成账号。`schema.sql` 不在任何迁移目录，执行器未被 `src/`、Worker 路由、定时任务或 Wrangler 配置引用。它不是可部署的生产销户服务。
 
 运行：`npm run test:mobile:lifecycle`。测试服务绑定随机 loopback 端口，拒绝所有 HTTP 执行请求及出站访问；测试通过临时 D1 binding 调用执行内核。D1 持久化目录在测试结束后删除。

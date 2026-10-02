@@ -1,6 +1,7 @@
 // Test-only execution kernel. Intentionally not imported by src/, scheduled(), or Wrangler.
 import inventory from '../../docs/mobile-ios-m2/deletion-plan/schema-inventory.json' with {type:'json'};
 import guards from './guard-manifest.json' with {type:'json'};
+import {completionTables} from './completion-contract.js';
 const reviewed=inventory.databases.reader;
 import {assertChanged,clearAssert} from '../../src/mobile/security.js';
 const extra=['r1_fixture_provenance','r1_deletion_jobs','r1_financial_reviews'];
@@ -9,11 +10,12 @@ const privateTables=Object.entries(reviewed).filter(([,x])=>x.category==='privat
 const stages=['credentials','private_data','comments','identity','verify','retention_policy_review'];
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function check(value,message){if(!value)throw new Error(message);}
-async function gate(db,options){
+export async function assertSyntheticIsolation(db,options){
  check(options?.environment==='isolated' && options?.dataset==='synthetic-r1','ISOLATION_REQUIRED');
  check((await db.prepare('SELECT dataset FROM r1_fixture_provenance WHERE id=1').first())?.dataset==='synthetic-r1','SYNTHETIC_DATA_REQUIRED');
  const names=(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='_cf_METADATA'").all()).results.map(x=>x.name).sort();
- check(JSON.stringify(names)===JSON.stringify([...Object.keys(reviewed),...extra].sort()),'SCHEMA_DRIFT:'+names.filter(x=>!reviewed[x]&&!extra.includes(x)).join(','));
+ const additions=options.completionProfile==='synthetic-finality-v1'?Object.keys(completionTables):[];
+ check(JSON.stringify(names)===JSON.stringify([...Object.keys(reviewed),...extra,...additions].sort()),'SCHEMA_DRIFT');
  const installed=(await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger'").all()).results;
  for(const [name,sql] of Object.entries(guards))check(installed.some(x=>x.name===name&&x.sql.replace(/;$/, '').replace(/\s+/g,' ').trim()===sql),'GUARD_DRIFT');
  const commentColumns=(await db.prepare('PRAGMA table_info(reader_comments)').all()).results;
@@ -22,7 +24,12 @@ async function gate(db,options){
   const columns=(await db.prepare(`PRAGMA table_info(${table})`).all()).results.map(x=>x.name);
   check(JSON.stringify(columns)===JSON.stringify(spec.columns),'SCHEMA_DRIFT');
  }
+ for(const name of additions){
+  const columns=(await db.prepare(`PRAGMA table_info(${name})`).all()).results.map(x=>x.name);
+  check(JSON.stringify(columns)===JSON.stringify(completionTables[name]),'COMPLETION_SCHEMA_DRIFT');
+ }
 }
+const gate=assertSyntheticIsolation;
 const predicate=table=>table.startsWith('mobile_refresh_')?'family_id IN (SELECT family_id FROM mobile_sessions WHERE account_id=?)':'account_id=?';
 async function count(db,table,account){return (await db.prepare(`SELECT count(*) n FROM ${table} WHERE ${predicate(table)}`).bind(account).first()).n;}
 async function eligible(db,id){
@@ -32,6 +39,7 @@ async function eligible(db,id){
 export async function planDeletion(db,id,options){
  check(uuid.test(id),'INVALID_ID');await gate(db,options);const task=await eligible(db,id);
  const counts={};for(const table of [...credentials,...privateTables,'reader_comments'])counts[table]=await count(db,table,task.account_id);
+ counts.reader_totp_reset_attempts=(await db.prepare("SELECT count(*) n FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=?").bind(String(task.account_id)).first()).n;
  return {requestId:id,counts,completionBlockedBy:['financial_policy','soft_links_and_audit','provider_and_backup_verification'],productionEnabled:false};
 }
 export async function claimDeletion(db,id,owner,now,options){
@@ -57,6 +65,8 @@ export async function runDeletionStep(db,ticket,now,options){
   // One bounded chunk from one table per claim; checkpoints and rows commit together.
   const table=await (async()=>{for(const table of tables)if(await count(db,table,task.account_id))return table;return null;})();
   if(table)statements.push(db.prepare(`DELETE FROM ${table} WHERE rowid IN (SELECT rowid FROM ${table} WHERE ${predicate(table)} LIMIT 200)`).bind(task.account_id));
+  else if(ticket.stage==='private_data'&&(await db.prepare("SELECT 1 FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=? LIMIT 1").bind(String(task.account_id)).first()))
+   statements.push(db.prepare("DELETE FROM reader_totp_reset_attempts WHERE rowid IN (SELECT rowid FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=? LIMIT 200)").bind(String(task.account_id)));
   else next=stages[stages.indexOf(ticket.stage)+1];
  }else if(ticket.stage==='comments'){
   if(await count(db,'reader_comments',task.account_id))statements.push(db.prepare(`UPDATE reader_comments SET account_id=NULL,source_path='',metadata_json='{}',ip_hash='',user_agent_hash='',reviewed_by='',hidden_reason='',updated_at=CURRENT_TIMESTAMP
@@ -68,6 +78,7 @@ export async function runDeletionStep(db,ticket,now,options){
   next='verify';
  }else if(ticket.stage==='verify'){
   for(const table of [...credentials,...privateTables,'reader_comments'])check(await count(db,table,task.account_id)===0,'RESIDUAL_PERSONAL_DATA');
+  check(!(await db.prepare("SELECT 1 FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=? LIMIT 1").bind(String(task.account_id)).first()),'RESIDUAL_PERSONAL_DATA');
   const account=await db.prepare('SELECT * FROM reader_accounts WHERE id=?').bind(task.account_id).first();
   check(account.status==='deleted_pending_review'&&account.email===`deleted+${ticket.id}@invalid`&&account.normalized_email===account.email&&account.display_name===''&&account.last_login_at===null,'RESIDUAL_IDENTITY');
   check(await db.prepare('SELECT job_id FROM r1_financial_reviews WHERE job_id=? AND account_id=?').bind(ticket.id,task.account_id).first(),'FINANCIAL_REVIEW_MISSING');
@@ -78,4 +89,17 @@ export async function runDeletionStep(db,ticket,now,options){
  }else throw new Error('POLICY_REQUIRED');
  await guardedBatch(db,ticket,now,statements,next);
  return {stage:next,personalCleanupVerified:next==='retention_policy_review',accountDeletionCompleted:false};
+}
+
+// Independent final verification. Read-only and reusable by the finality gate;
+// no lease or a prior personal_completed_at marker substitutes for these checks.
+export async function verifyPersonalDeletion(db,id,options){
+ await gate(db,options);
+ const task=await db.prepare('SELECT d.*,a.status account_status,j.personal_completed_at FROM mobile_deletions d JOIN reader_accounts a ON a.id=d.account_id JOIN r1_deletion_jobs j ON j.id=d.id WHERE d.id=?').bind(id).first();
+ check(task?.confirmed_at&&task.confirm_id&&task.personal_completed_at&&task.account_status==='deleted_pending_review','PERSONAL_CLEANUP_REQUIRED');
+ for(const table of [...credentials,...privateTables,'reader_comments'])check(await count(db,table,task.account_id)===0,'RESIDUAL_PERSONAL_DATA');
+ check(!(await db.prepare("SELECT 1 FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=? LIMIT 1").bind(String(task.account_id)).first()),'RESIDUAL_PERSONAL_DATA');
+ const a=await db.prepare('SELECT * FROM reader_accounts WHERE id=?').bind(task.account_id).first();
+ check(a.email===`deleted+${id}@invalid`&&a.normalized_email===a.email&&a.display_name===''&&a.last_login_at===null,'RESIDUAL_IDENTITY');
+ return task;
 }

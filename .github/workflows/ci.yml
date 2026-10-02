@@ -41,7 +41,7 @@ jobs:
         run: node --test scripts/test-mobile-probe-diagnostics.mjs scripts/test-mobile-crash-preparation.mjs && npm run test:mobile:auth && npm run test:mobile:music && npm run test:mobile:library && npm run test:mobile:lifecycle && npm run test:mobile:r2
 
       - name: Verify account deletion schema inventory and isolation hazards
-        run: python3 scripts/test-account-deletion-audit.py
+        run: python3 scripts/test-account-deletion-audit.py && python3 scripts/test-comment-author-migration.py
 
       - name: Verify reproducible Cat Life motion bundle
         run: |
