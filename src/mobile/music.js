@@ -10,8 +10,9 @@ import {validMusicId} from '../music/publicationValidation.js';
 import {validateMusicMediaAsset,cancelBody} from '../music/storage.js';
 import {checkAssetIdentity,checkStoredObject} from '../music/resources.js';
 import {serveValidatedMusicMedia} from '../music/mediaResponse.js';
+import {mobileAuthenticationEnabled} from './environment.js';
 
-export const nativeMusicEnabled=env=>env.MOBILE_MUSIC_ENABLED==='true' && env.MOBILE_ENVIRONMENT==='isolated' && env.MOBILE_AUTH_ENABLED==='true';
+export const nativeMusicEnabled=(env,config)=>env.MOBILE_MUSIC_ENABLED==='true' && mobileAuthenticationEnabled(env,config);
 const offlineEligible=t=>t.accessMode==='free' && t.effectiveAccess==='free' && !t.nextPolicyChangeAt;
 const trackDTO=t=>({id:t.id,title:t.title,artist:t.creatorName,durationSeconds:t.durationSec,audioVersion:t.audioVersion,
   access:t.effectiveAccess==='free'?'free':t.previewAvailable?'preview':'vip'});
@@ -60,7 +61,7 @@ async function lyrics(bucket,record,version,signal) {
   } finally {cancelBody(object);}
 }
 
-// Only called behind handleMobile's validated isolated origin/configuration.
+// Only called behind handleMobile's validated origin/configuration and bindings.
 // No web Cookie is translated into native authority. A supplied invalid Bearer
 // fails even on otherwise public routes.
 export async function handleNativeMusic(request,env,db,config,{clock=Date.now}={}) {
@@ -73,7 +74,7 @@ export async function handleNativeMusic(request,env,db,config,{clock=Date.now}={
   finally{clearTimeout(timer);}
 }
 async function processMusic(request,env,db,config,clock,signal) {
-  requireValue(nativeMusicEnabled(env),'SERVICE_UNAVAILABLE',503);
+  requireValue(nativeMusicEnabled(env,config),'SERVICE_UNAVAILABLE',503);
   const runtime=musicRuntime(env);requireValue(runtime.flags.public,'SERVICE_UNAVAILABLE',503);
   const dto=t=>({...trackDTO(t),offlineEligible:env.MOBILE_FREE_OFFLINE_ENABLED==='true' && offlineEligible(t),coverUrl:t.coverUrl?config.origin+t.coverUrl+'&size=display':null});
   const url=new URL(request.url),path=url.pathname.replace('/api/mobile/v1','');

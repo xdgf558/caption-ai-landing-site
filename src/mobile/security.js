@@ -1,3 +1,6 @@
+import {MobileError,requireValue} from './errors.js';
+import {mobileEnvironmentProfile} from './environment.js';
+export {MobileError,requireValue} from './errors.js';
 const encoder = new TextEncoder();
 export const encode = bytes => btoa(String.fromCharCode(...bytes)).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
 export const randomSecret = () => encode(crypto.getRandomValues(new Uint8Array(32)));
@@ -14,26 +17,16 @@ export const equal = async (a,b) => {
   const x = encoder.encode(String(a)), y = encoder.encode(String(b));
   return x.byteLength === y.byteLength && crypto.subtle.timingSafeEqual(x,y);
 };
-export class MobileError extends Error {
-  constructor(code, status = 400) { super(code); this.code = code; this.status = status; }
-}
-export function requireValue(condition, code = 'INVALID_REQUEST', status = 400) {
-  if (!condition) throw new MobileError(code,status);
-}
 export const validID = value => typeof value === 'string' && /^[A-Za-z0-9_-]{16,128}$/.test(value);
 export const validSecret = value => typeof value === 'string' && /^[A-Za-z0-9_-]{43}$/.test(value);
 export const iso = ms => new Date(ms).toISOString();
 export function configuration(env) {
-  requireValue(env.MOBILE_AUTH_ENABLED === 'true' && env.MOBILE_ENVIRONMENT === 'isolated', 'SERVICE_UNAVAILABLE',503);
-  const origin = new URL(env.MOBILE_AUTH_ORIGIN);
-  requireValue(origin.protocol === 'https:' && origin.origin === env.MOBILE_AUTH_ORIGIN && !origin.username && !origin.password &&
-    !['wwwstationcat.org','stationcat.org'].includes(origin.hostname), 'SERVICE_UNAVAILABLE',503);
-  const redirect = new URL(env.MOBILE_REDIRECT_URI);
-  requireValue(redirect.origin === origin.origin && redirect.pathname === '/auth/mobile/callback' && !redirect.search && !redirect.hash, 'SERVICE_UNAVAILABLE',503);
+  const profile = mobileEnvironmentProfile(env);
   const keys = JSON.parse(env.MOBILE_RESULT_KEYS_JSON || '{}');
-  requireValue(typeof env.MOBILE_RESULT_KEY_VERSION === 'string' && keys[env.MOBILE_RESULT_KEY_VERSION] &&
+  requireValue(keys && typeof keys==='object' && !Array.isArray(keys) && typeof env.MOBILE_RESULT_KEY_VERSION === 'string' && Object.hasOwn(keys,env.MOBILE_RESULT_KEY_VERSION) &&
     Object.values(keys).every(k => decode(k).length === 32), 'SERVICE_UNAVAILABLE',503);
-  return {origin:origin.origin, redirect:redirect.href, keys, keyVersion:env.MOBILE_RESULT_KEY_VERSION};
+  if(profile.environment==='production')requireValue(Object.keys(keys).every(key=>/^production-v[1-9][0-9]*$/.test(key)), 'SERVICE_UNAVAILABLE',503);
+  return {...profile, keys, keyVersion:env.MOBILE_RESULT_KEY_VERSION};
 }
 export async function seal(value, config, aad) {
   const iv = crypto.getRandomValues(new Uint8Array(12));

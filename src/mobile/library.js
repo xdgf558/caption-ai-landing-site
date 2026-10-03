@@ -3,16 +3,17 @@ import {MobileError,requireValue,validID,readBody,exactKeys,hash,iso,assertChang
 import {principal} from './sessions.js';
 import {loadPublishedMusicRecord} from '../music/publicStore.js';
 import {projectPublicTrack} from '../music/catalog.js';
-export const personalSyncEnabled=env=>env.MOBILE_PERSONAL_SYNC_ENABLED==='true' && env.MOBILE_ENVIRONMENT==='isolated' && env.MOBILE_AUTH_ENABLED==='true' && env.MOBILE_MUSIC_ENABLED==='true';
+import {mobileAuthenticationEnabled} from './environment.js';
+export const personalSyncEnabled=(env,config)=>env.MOBILE_PERSONAL_SYNC_ENABLED==='true' && mobileAuthenticationEnabled(env,config) && env.MOBILE_MUSIC_ENABLED==='true';
 const integer=x=>Number.isSafeInteger(x)&&x>=0;
 const preferences=s=>({historyEnabled:!!s.history_enabled,historyEpoch:s.history_epoch,version:s.preference_version});
 const favorite=r=>({trackId:r.track_id,favorite:!!r.favorite,version:r.version,updatedAt:iso(r.updated_at)});
 class AccountContention extends Error {}
-export async function personalMusic(request,env,db,s,now) {
+export async function personalMusic(request,env,db,s,now,config) {
  // Re-evaluate resource versions after unrelated account writes; keep the same body/ID.
  // Exhaustion is transient (503), never a resource conflict that discards client intent.
  for(let attempt=0;attempt<3;attempt++) {
-  try {return await personalMusicAttempt(request.clone(),env,db,s,now);}
+  try {return await personalMusicAttempt(request.clone(),env,db,s,now,config);}
   catch(error) {
    if(!(error instanceof AccountContention))throw error;
    if(attempt===2)throw new MobileError('LIBRARY_BUSY',503);
@@ -20,8 +21,8 @@ export async function personalMusic(request,env,db,s,now) {
   }
  }
 }
-async function personalMusicAttempt(request,env,db,s,now) {
- requireValue(personalSyncEnabled(env),'SERVICE_UNAVAILABLE',503);
+async function personalMusicAttempt(request,env,db,s,now,config) {
+ requireValue(personalSyncEnabled(env,config),'SERVICE_UNAVAILABLE',503);
  const account=s.account_id,url=new URL(request.url),path=url.pathname.split('/me/music/')[1];
  await db.prepare('INSERT OR IGNORE INTO mobile_music_state(account_id) VALUES(?)').bind(account).run();
  const state=await db.prepare('SELECT * FROM mobile_music_state WHERE account_id=?').bind(account).first();
