@@ -9,6 +9,10 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const digest=/^[a-f0-9]{64}$/;
 const day=86400_000,lease=30_000,reviewFreshness=300_000;
 function check(ok,code){if(!ok)throw Error(code);}
+function completionClock(now){
+ const started=performance.now();
+ return ()=>{const current=now+Math.max(0,Math.ceil(performance.now()-started));check(Number.isSafeInteger(current),'INVALID_ARGUMENT');return current;};
+}
 async function gate(db,options){
  check(options?.completionProfile==='synthetic-finality-v1','FINALITY_PROFILE_REQUIRED');
  await assertSyntheticIsolation(db,options);
@@ -88,26 +92,32 @@ async function retainedFieldsMinimal(db,account){
  return true;
 }
 
-export async function syntheticCompletionReadiness(db,id,now,options){
+async function completionReadiness(db,id,now,options,clock){
  await gate(db,options);check(uuid.test(id)&&Number.isSafeInteger(now),'INVALID_ARGUMENT');
  const task=await verifyPersonalDeletion(db,id,options),row=await readJob(db,id),blockers=[];
  if(!row)return response(['RETENTION_POLICY_REQUIRED','EXTERNAL_REVIEWS_REQUIRED','RESTORE_BARRIER_REQUIRED']);
  const policy=jobPolicy(row);
  check(await retentionPolicyDigest(validateSyntheticRetentionPolicy(policy))===row.policy_digest,'POLICY_CHANGED');
- if(now<task.confirmed_at||row.financial_until<=now||row.receipt_audit_until<=now)blockers.push('RETENTION_PERIOD_INVALID');
  const plan=await planFinancialRetention(db,id,options,policy);
  if(plan.status!=='ready_for_synthetic_review')blockers.push('FINANCIAL_PLAN_BLOCKED');
  if(!await retainedFieldsMinimal(db,task.account_id))blockers.push('FINANCIAL_MINIMIZATION_REQUIRED');
  const reviews=(await db.prepare('SELECT * FROM r1_completion_reviews WHERE job_id=?').bind(id).all()).results;
+ const b=await db.prepare('SELECT * FROM r1_backup_barriers WHERE account_id=?').bind(task.account_id).first();
+ // Every awaited schema/personal/financial/barrier read consumes validity time.
+ now=clock();
+ if(now<task.confirmed_at||row.financial_until<=now||row.receipt_audit_until<=now)blockers.push('RETENTION_PERIOD_INVALID');
  for(const category of requiredReviews){
   if(!reviews.some(x=>x.category===category&&x.policy_digest===row.policy_digest&&x.scope_version===task.scope_version&&
    x.confirmed_at===task.confirmed_at&&x.checked_at>=Math.max(task.personal_completed_at,now-reviewFreshness)&&x.checked_at<=now&&
    digest.test(x.evidence_digest)))blockers.push('REVIEW_REQUIRED_'+category.toUpperCase());
  }
- const b=await db.prepare('SELECT * FROM r1_backup_barriers WHERE account_id=?').bind(task.account_id).first();
  if(!b||b.job_id!==id||b.policy_digest!==row.policy_digest||b.confirmed_at!==task.confirmed_at||b.scope_version!==task.scope_version)
   blockers.push('RESTORE_BARRIER_REQUIRED');
  return response(blockers);
+}
+export async function syntheticCompletionReadiness(db,id,now,options){
+ check(uuid.test(id)&&Number.isSafeInteger(now),'INVALID_ARGUMENT');
+ return completionReadiness(db,id,now,options,completionClock(now));
 }
 
 export async function claimSyntheticCompletion(db,id,owner,now,options){
@@ -120,11 +130,32 @@ export async function claimSyntheticCompletion(db,id,owner,now,options){
 }
 
 export async function finishSyntheticCompletion(db,ticket,now,options){
- await gate(db,options);check(ticket&&uuid.test(ticket.id)&&uuid.test(ticket.owner)&&Number.isSafeInteger(now),'INVALID_TICKET');
- const readiness=await syntheticCompletionReadiness(db,ticket.id,now,options);
+ check(ticket&&uuid.test(ticket.id)&&uuid.test(ticket.owner)&&Number.isSafeInteger(now),'INVALID_TICKET');
+ const clock=completionClock(now);
+ await gate(db,options);
+ const readiness=await completionReadiness(db,ticket.id,now,options,clock);
  const task=await verifyPersonalDeletion(db,ticket.id,options);
- const writes=[];
+ const writes=[],timeChecks=[],completionWrites=[];
  if(readiness.ready){
+  // Pin time and evidence to the same claimed ticket INSIDE the completion batch.
+  // The lease CAS below advances exactly this ticket's version before these checks.
+  const deadlineCheck=db.prepare(`INSERT INTO mobile_assert(value) SELECT CASE WHEN EXISTS(
+   SELECT 1 FROM r1_completion_jobs c JOIN mobile_deletions d ON d.id=c.id JOIN r1_deletion_jobs j ON j.id=d.id
+   WHERE c.id=? AND c.policy_digest=? AND c.version=? AND c.financial_until>? AND c.receipt_audit_until>?
+   AND d.account_id=? AND d.scope_version=? AND d.confirmed_at=? AND d.confirmed_at<=?
+   AND d.status='attention_required' AND j.personal_completed_at=?
+   AND EXISTS(SELECT 1 FROM r1_backup_barriers b WHERE b.account_id=d.account_id AND b.job_id=d.id
+    AND b.scope_version=d.scope_version AND b.confirmed_at=d.confirmed_at AND b.policy_digest=c.policy_digest)
+   ) THEN 1 ELSE 0 END`);
+  timeChecks.push(commitNow=>deadlineCheck.bind(ticket.id,ticket.policyDigest,ticket.version+1,commitNow,commitNow,
+    task.account_id,task.scope_version,task.confirmed_at,commitNow,task.personal_completed_at));
+  for(const category of requiredReviews){const reviewCheck=db.prepare(`INSERT INTO mobile_assert(value) SELECT CASE WHEN EXISTS(
+   SELECT 1 FROM r1_completion_reviews r WHERE r.job_id=? AND r.category=? AND r.policy_digest=?
+   AND r.scope_version=? AND r.confirmed_at=? AND r.checked_at>=MAX(?,?) AND r.checked_at<=?
+   AND length(r.evidence_digest)=64 AND r.evidence_digest NOT GLOB '*[^0-9a-f]*'
+   ) THEN 1 ELSE 0 END`);
+   timeChecks.push(commitNow=>reviewCheck.bind(ticket.id,category,ticket.policyDigest,task.scope_version,task.confirmed_at,
+    task.personal_completed_at,commitNow-reviewFreshness,commitNow));}
   // Recheck raw financial fields and account-owned reset counters INSIDE the
   // same D1 transaction as the completion flag, not just during the read plan.
   for(const [table,spec] of Object.entries(retentionSpecs)){
@@ -149,16 +180,20 @@ export async function finishSyntheticCompletion(db,ticket,now,options){
    }
    if(conditions.length)writes.push(db.prepare(`INSERT INTO mobile_assert(value) SELECT CASE WHEN ${conditions.join(' AND ')} THEN 1 ELSE 0 END`).bind(...args));
   }
-  writes.push(db.prepare(`UPDATE mobile_deletions SET status='completed',stage='completed',completed_at=? WHERE id=? AND status='attention_required'
-   AND NOT EXISTS(SELECT 1 FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=?)`).bind(now,ticket.id,String(task.account_id)),assertChanged(db));
-  writes.push(db.prepare("UPDATE mobile_deletion_outbox SET status='completed',updated_at=? WHERE job_id=?").bind(now,ticket.id));
-  writes.push(db.prepare("UPDATE r1_financial_reviews SET status='independent_review' WHERE job_id=?").bind(ticket.id));
+  const complete=db.prepare(`UPDATE mobile_deletions SET status='completed',stage='completed',completed_at=? WHERE id=? AND status='attention_required'
+   AND NOT EXISTS(SELECT 1 FROM reader_totp_reset_attempts WHERE scope='account' AND scope_key=?)`),completedCheck=assertChanged(db);
+  const outbox=db.prepare("UPDATE mobile_deletion_outbox SET status='completed',updated_at=? WHERE job_id=?");
+  const financialReview=db.prepare("UPDATE r1_financial_reviews SET status='independent_review' WHERE job_id=?").bind(ticket.id);
+  completionWrites.push(commitNow=>complete.bind(commitNow,ticket.id,String(task.account_id)),()=>completedCheck,
+   commitNow=>outbox.bind(commitNow,ticket.id),()=>financialReview);
  }
+ const claimUpdate=db.prepare(`UPDATE r1_completion_jobs SET owner=NULL,lease_until=0,version=version+1,last_checked_at=?,last_blockers=?
+   WHERE id=? AND owner=? AND version=? AND policy_digest=? AND lease_until>?`),claimCheck=assertChanged(db),clear=clearAssert(db);
+ // Capture immediately before binding/submitting, after all awaited reads and SQL preparation.
+ const commitNow=clock();
  await db.batch([
-  db.prepare(`UPDATE r1_completion_jobs SET owner=NULL,lease_until=0,version=version+1,last_checked_at=?,last_blockers=?
-   WHERE id=? AND owner=? AND version=? AND policy_digest=? AND lease_until>?`)
-   .bind(now,JSON.stringify(readiness.blockers),ticket.id,ticket.owner,ticket.version,ticket.policyDigest,now),assertChanged(db),
-  ...writes,clearAssert(db)
+  claimUpdate.bind(commitNow,JSON.stringify(readiness.blockers),ticket.id,ticket.owner,ticket.version,ticket.policyDigest,commitNow),claimCheck,
+  ...timeChecks.map(bind=>bind(commitNow)),...writes,...completionWrites.map(bind=>bind(commitNow)),clear
  ]);
  return {...readiness,accountDeletionCompleted:readiness.ready};
 }
