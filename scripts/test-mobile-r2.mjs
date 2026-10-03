@@ -26,7 +26,7 @@ after(async()=>await mf?.dispose());
 test('AASA is JSON without redirect and only associates the registered staging App',async()=>{
  const r=await call('/.well-known/apple-app-site-association');assert.equal(r.status,200);assert.equal(r.headers.get('location'),null);assert.equal(r.headers.get('content-type'),'application/json');
  const a=await r.json();assert.deepEqual(a.webcredentials.apps,['2AM5S7BM2N.org.stationcat.music.staging']);assert.deepEqual(a.applinks.details[0].appIDs,a.webcredentials.apps);
- assert.deepEqual(a.applinks.details[0].components,[{'/':'/music/'},{'/':'/auth/mobile/callback'}]);
+ assert.deepEqual(a.applinks.details[0].components,[{'/':'/music'},{'/':'/music/'},{'/':'/auth/mobile/callback'}]);
 });
 test('wrong host, fixture, admin, payments, signup and reset stay inaccessible',async()=>{
  assert.equal((await mf.dispatchFetch('https://wwwstationcat.org/api/mobile/v1/config')).status,404);

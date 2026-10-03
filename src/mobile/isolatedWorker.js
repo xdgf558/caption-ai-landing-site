@@ -16,7 +16,7 @@ export default {
     if (url.origin !== isolatedOrigin) return missing();
     if (!enabled(env)) return new Response('Isolated service unavailable', {status:503,headers:noStore});
     if (url.pathname === '/.well-known/apple-app-site-association' && ['GET','HEAD'].includes(request.method) && !url.search) {
-      const body = JSON.stringify({applinks:{details:[{appIDs:[isolatedAppID],components:[{'/':'/music/'},{'/':'/auth/mobile/callback'}]}]},webcredentials:{apps:[isolatedAppID]}});
+      const body = JSON.stringify({applinks:{details:[{appIDs:[isolatedAppID],components:[{'/':'/music'},{'/':'/music/'},{'/':'/auth/mobile/callback'}]}]},webcredentials:{apps:[isolatedAppID]}});
       return new Response(request.method === 'HEAD' ? null : body, {headers:{...noStore,'Content-Type':'application/json','Cache-Control':'private, max-age=300'}});
     }
     if (url.pathname === '/health' && request.method === 'GET') return Response.json({environment:'isolated',purchases:false},{headers:noStore});

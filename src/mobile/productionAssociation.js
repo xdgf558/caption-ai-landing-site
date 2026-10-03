@@ -18,7 +18,13 @@ export async function productionAssociation(request, env) {
     await verifyMobileBindings(env,config);
     const appID = PRODUCTION_MOBILE_PROFILE.appID;
     const body = JSON.stringify({
-      applinks:{details:[{appIDs:[appID],components:[{'/':'/music/'},{'/':'/auth/mobile/callback'}]}]},
+      // Exact public music routes and their existing canonical redirects.
+      // Do not claim descendants, other locales, or unrelated website pages.
+      applinks:{details:[{appIDs:[appID],components:[
+        '/music', '/music/', '/en/music', '/en/music/', '/ja/music', '/ja/music/',
+        '/zh-hans/music', '/zh-hans/music/', '/zh-hant/music', '/zh-hant/music/',
+        '/auth/mobile/callback'
+      ].map(path => ({'/':path}))}]},
       webcredentials:{apps:[appID]}
     });
     return new Response(request.method === 'HEAD' ? null : body, {headers:{...headers,'Content-Type':'application/json'}});
