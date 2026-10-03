@@ -3,6 +3,7 @@ import {personalMusic,personalSyncEnabled} from './library.js';
 import {handleNativeMusic,nativeMusicEnabled} from './music.js';
 import {principal,exchange,refresh} from './sessions.js';
 import {prepareDeletion,confirmDeletion,deletionStatus} from './deletion.js';
+import {verifyMobileBindings,mobileAccountDeletionEnabled} from './environment.js';
 
 const headers={'Cache-Control':'private, no-store','Pragma':'no-cache','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff'};
 const response=(data,now,status=200)=>Response.json({data,requestId:crypto.randomUUID(),serverNow:iso(now)},{status,headers});
@@ -49,14 +50,16 @@ export async function handleMobile(request,env,identity) {
   const now=Date.now(),url=new URL(request.url);
   try {
     const config=configuration(env);requireValue(url.origin===config.origin,'ACCESS_DENIED',403);
-    // Primary-first session for all related reads/batches; no stale replica can replay a revoked session.
-    const db=env.WAITLIST_DB.withSession('first-primary');
     const path=url.pathname;
+    // This production boundary precedes even marker reads and rate-limit writes.
+    if(path.includes('/deletion-requests'))requireValue(mobileAccountDeletionEnabled(env,config),'SERVICE_UNAVAILABLE',503);
+    // Primary-first session for all related reads/batches; no stale replica can replay a revoked session.
+    const {readerDb:db}=await verifyMobileBindings(env,config);
     const mediaRequest=/^\/api\/mobile\/v1\/music\/media\//.test(path);
     const grantRequest=path.endsWith('/playback-grants');
     await limit(db,(mediaRequest?'audio:':grantRequest?'grant:':'ip:')+String(request.headers.get('cf-connecting-ip')||'missing'),now,mediaRequest?600:grantRequest?30:120);
     if(path==='/api/mobile/v1/config' && request.method==='GET')return response({apiVersion:'1',minimumAppVersion:'0.1.0',storeUrl:null,
-      capabilities:{musicCatalog:nativeMusicEnabled(env),nativeAuthentication:true,musicPlayback:nativeMusicEnabled(env),personalSync:personalSyncEnabled(env),accountDeletion:true,musicPurchases:false}},now);
+      capabilities:{musicCatalog:nativeMusicEnabled(env,config),nativeAuthentication:true,musicPlayback:nativeMusicEnabled(env,config),personalSync:personalSyncEnabled(env,config),accountDeletion:mobileAccountDeletionEnabled(env,config),musicPurchases:false}},now);
     if(path.startsWith('/api/mobile/v1/music/') || path==='/api/mobile/v1/me/entitlements')return await handleNativeMusic(request,env,db,config);
     if(path==='/auth/mobile/callback' && request.method==='GET')return html('<!doctype html><meta charset="utf-8"><p>Return to Station Cat Music.</p>');
     if(path==='/auth/mobile/authorize' && request.method==='GET') {
@@ -110,7 +113,7 @@ export async function handleMobile(request,env,identity) {
     const status=/^\/api\/mobile\/v1\/deletion-requests\/([^/]+)\/status$/.exec(path);
     if(status && request.method==='GET')return response(await deletionStatus(db,request,status[1],now),now);
     const s=await principal(db,request,now);
-    if(path.startsWith(prefix+'/me/music/'))return response(await personalMusic(request,env,db,s,now),now);
+    if(path.startsWith(prefix+'/me/music/'))return response(await personalMusic(request,env,db,s,now,config),now);
     if(path===prefix+'/me' && request.method==='GET')return response({accountId:String(s.account_id),displayName:s.display_name||'Station Cat',status:'active'},now);
     if(path===prefix+'/auth/logout' && request.method==='POST') {
       await db.prepare('UPDATE mobile_sessions SET revoked=1 WHERE id=?').bind(s.id).run();return response({accepted:true},now);

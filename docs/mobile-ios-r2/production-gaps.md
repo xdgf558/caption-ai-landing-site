@@ -1,8 +1,10 @@
 # R2 → production: explicit integration gaps
 
+**2026-10-03 update:** The table below describes the original R2 baseline. A distinct, still-disabled production code path and local full-schema coexistence tests now exist; see [the production candidate report](../mobile-ios-production/README.md). Neither server nor iOS production settings have been activated. The new profile does not remove the remaining real-resource, production-signing, policy, deletion, or release requirements. Shared website/native registration now rejects existing passwordless accounts pending a verified ownership-migration flow.
+
 R2 uses synthetic data in a separately deployed `station-cat-music-r2` Worker. Passing R2 does not authorize deploying this Worker or its settings onto the website, or changing `isolated` to a production value.
 
-| Boundary | Current implementation | Required production work |
+| Boundary | Original R2 implementation | Production acceptance still required |
 | --- | --- | --- |
 | Native server configuration | `src/mobile/security.js` requires `MOBILE_ENVIRONMENT=isolated` and rejects stationcat.org / wwwstationcat.org. `music.js` and `library.js` also require isolated mode. | Design and review a distinct production configuration with exact approved origins, callbacks, deployment/account/storage checks and negative tests. Do not remove the guard without a replacement. |
 | iOS configuration | `NativeAuthConfiguration` only permits explicitly enabled Development/Staging. Production defaults remain closed and have no R2 local include. | Add a separately reviewed production path, verified signing/profile, final host and production association; maintain clean-checkout closed defaults until release authorization. |

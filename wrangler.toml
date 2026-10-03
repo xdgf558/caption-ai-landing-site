@@ -33,6 +33,9 @@ binding = "ASSETS"
 not_found_handling = "404-page"
 run_worker_first = [
   "/api/*",
+  # Native browser forms and association must use their closed-by-default gate.
+  "/auth/mobile/*",
+  "/.well-known/apple-app-site-association",
   # Music HTML must pass its public gate before static asset lookup.
   "/music",
   "/music/*",

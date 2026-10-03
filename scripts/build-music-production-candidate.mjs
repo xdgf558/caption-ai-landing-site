@@ -4,14 +4,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import { parse } from 'smol-toml';
+import { NONPRODUCTION_DATABASE_IDS } from '../src/mobile/environment.js';
 
 export const productionRoot = fileURLToPath(new URL('../', import.meta.url));
 // Re-review the complete production baseline if it changes; never silently
 // inherit a changed Access boundary, routes, bindings, build, env or cron.
-const sourceDigest = 'f0aac5afb8a02d7445912d2add5a25c060f2afa2b7d8eb77629bf1663b3cec4f';
+const sourceDigest = 'f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2';
 const productionAccount = '3f5394e0ef5a531c63c0ceaa74262e0d';
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-const stagingDatabases = ['8fe1a3e1-7325-4d87-a7e6-2c51338b9158', 'cb7bbad3-bfbb-457d-b2f2-6fd3b02df651'];
+const stagingDatabases = NONPRODUCTION_DATABASE_IDS;
 export const closedMusicVariables = Object.freeze(Object.fromEntries([
   'MUSIC_PUBLIC_ENABLED', 'MUSIC_UPLOADS_ENABLED', 'MUSIC_VIP_DELIVERY_ENABLED',
   'MUSIC_ANALYTICS_ENABLED', 'MUSIC_CLEANUP_ENABLED', 'MUSIC_SHARE_CARDS_ENABLED',

@@ -1,5 +1,6 @@
 import { novelPaymentConfig } from './generated/novelPaymentConfig.js';
 import { handleMobile, isMobilePath } from './mobile/http.js';
+import { productionAssociation, productionAssociationPath } from './mobile/productionAssociation.js';
 import { runMobileMaintenance } from './mobile/maintenance.js';
 import { protectedSerialContent } from './generated/protectedSerialContent.js';
 import {
@@ -3805,53 +3806,28 @@ const handleReaderRegister = async (request, env, { createWebSession = true } = 
   }
 
   if (existingAccount) {
-    const existingCredential = await db
-      .prepare(
-        `SELECT id
-         FROM reader_password_credentials
-         WHERE account_id = ?
-         LIMIT 1`
-      )
-      .bind(existingAccount.id)
-      .first();
-    if (existingCredential) {
-      return privateJson({ ok: false, code: 'EMAIL_TAKEN', message: '这个 Email 已经注册，请直接登录。' }, { status: 409 });
-    }
+    // Neither a public registration nor a native browser flow proves ownership
+    // of an existing email. Legacy accounts need a verified migration flow.
+    return privateJson({ ok: false, code: 'EMAIL_TAKEN', message: '这个 Email 已经注册，请使用已有账号登入。' }, { status: 409 });
   }
 
-  const account = existingAccount || (await upsertReaderAccount(db, data.email, data.normalizedEmail));
   const salt = randomHex();
   const passwordHash = await hashReaderPassword(data.password, salt, readerPasswordIterations);
-
+  let account;
   try {
-    await db.batch([
-      db
-        .prepare(
-          `UPDATE reader_accounts
-           SET email = ?,
-               display_name = ?,
-               updated_at = CURRENT_TIMESTAMP
-           WHERE id = ?`
-        )
-        .bind(data.email, data.username, account.id),
-      db
-        .prepare(
-          `INSERT INTO reader_password_credentials (
-            account_id, username, normalized_username, password_hash, password_salt,
-            password_iterations, password_algorithm
-          )
-          VALUES (?, ?, ?, ?, ?, ?, ?)`
-        )
-        .bind(
-          account.id,
-          data.username,
-          data.normalizedUsername,
-          passwordHash,
-          salt,
-          readerPasswordIterations,
-          readerPasswordAlgorithm
-        )
+    // INSERT, never upsert: the unique email constraint rejects an account
+    // created after the preceding read. Website and native registration use the
+    // same transaction; credential failures cannot leave an orphan or claim a peer.
+    const results = await db.batch([
+      db.prepare(`INSERT INTO reader_accounts (email,normalized_email,display_name) VALUES (?,?,?)
+        RETURNING id,email,normalized_email,display_name,status,created_at`)
+        .bind(data.email,data.normalizedEmail,data.username),
+      db.prepare(`INSERT INTO reader_password_credentials (
+        account_id,username,normalized_username,password_hash,password_salt,password_iterations,password_algorithm
+      ) SELECT id,?,?,?,?,?,? FROM reader_accounts WHERE normalized_email=?`)
+        .bind(data.username,data.normalizedUsername,passwordHash,salt,readerPasswordIterations,readerPasswordAlgorithm,data.normalizedEmail)
     ]);
+    account = results[0].results[0];
   } catch (error) {
     if (/UNIQUE constraint failed/i.test(error?.message || '')) {
       return privateJson({ ok: false, message: '这个用户名或 Email 已经注册。' }, { status: 409 });
@@ -22888,6 +22864,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (isMobilePath(url.pathname)) return handleMobile(request, env, mobileReaderIdentity);
+    if (url.pathname === productionAssociationPath) return productionAssociation(request, env);
     // Generated thumbnails are private assets; public access must pass live music checks.
     if (isMusicDisplayAssetPath(url.pathname)) return new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } });
     if (url.protocol === 'http:' && !isLocalRequest(request, env)) {

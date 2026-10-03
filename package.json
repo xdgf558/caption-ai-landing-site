@@ -65,7 +65,8 @@
     "build:music:display-covers": "node scripts/generate-music-display-covers.mjs",
     "test:mobile:music": "node --test --test-timeout=90000 scripts/test-mobile-music.mjs",
     "test:mobile:library": "node --test scripts/test-mobile-library.mjs",
-    "test:mobile:r2": "node --test --test-timeout=90000 scripts/test-mobile-r2.mjs scripts/test-mobile-r2-import.mjs scripts/test-mobile-r2-covers.mjs"
+    "test:mobile:r2": "node --test --test-timeout=90000 scripts/test-mobile-r2.mjs scripts/test-mobile-r2-import.mjs scripts/test-mobile-r2-covers.mjs",
+    "test:mobile:production": "node --test --test-timeout=120000 scripts/test-mobile-production.mjs scripts/test-mobile-production-association.mjs && python3 scripts/test-mobile-production-migrations.py"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",
