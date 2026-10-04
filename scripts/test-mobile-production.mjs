@@ -193,7 +193,7 @@ test('ready production AASA GET and HEAD use the same binding proof and expose o
   const path='/.well-known/apple-app-site-association',before=(await reader.prepare('SELECT count(*) n FROM mobile_rate_limits').first()).n;
   const get=await call(path);assert.equal(get.status,200);assert.equal(get.headers.get('x-fixture-marker-reads'),'1,1,1');
   assert.equal(get.headers.get('content-type'),'application/json');assert.equal(get.headers.get('location'),null);
-  assert.deepEqual(await get.json(),{applinks:{details:[{appIDs:[profile.appID],components:[{'/':'/music/'},{'/':'/auth/mobile/callback'}]}]},webcredentials:{apps:[profile.appID]}});
+  assert.deepEqual(await get.json(),{applinks:{details:[{appIDs:[profile.appID],components:[...['/music','/music/','/en/music','/en/music/','/ja/music','/ja/music/','/zh-hans/music','/zh-hans/music/','/zh-hant/music','/zh-hant/music/','/auth/mobile/callback'].map(path=>({'/':path}))]}]},webcredentials:{apps:[profile.appID]}});
   const head=await call(path,{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'');assert.equal(head.headers.get('x-fixture-marker-reads'),'1,1,1');
   await music.prepare("UPDATE station_native_binding_identity SET binding_nonce='wrong' WHERE singleton=1").run();
   try {const denied=await call(path);assert.equal(denied.status,503);assert.doesNotMatch(await denied.text(),new RegExp(manifest.catalog.id));}
