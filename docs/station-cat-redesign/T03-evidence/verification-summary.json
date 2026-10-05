@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-05T13:41:09.315592+00:00",
+  "sourceReviewCommit": "877a331214ca3747a50f15bb9ee3b17348dac536",
+  "applicationBaseline": "6cbb19725cd12ae718ea395711f920adef346824",
+  "t02": {
+    "pullRequest": "https://github.com/xdgf558/caption-ai-landing-site/pull/187",
+    "review": "approved-by-user",
+    "headCommit": "877a331214ca3747a50f15bb9ee3b17348dac536",
+    "ciRun": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37313606638",
+    "ciConclusion": "success",
+    "mergeCommit": "dffc4c268af0b7f365283d0c7adab292787bc718"
+  },
+  "scope": "T03 evidence only; no application, runtime configuration, migration, payment or production data changes",
+  "tests": [
+    {
+      "id": "web-music-contracts",
+      "commands": [
+        "node --test scripts/test-music-membership.mjs scripts/test-music-access-lifecycle.mjs scripts/test-music-library.mjs",
+        "node --test scripts/test-music-library.mjs"
+      ],
+      "result": "passed-after-environment-retry",
+      "uniqueTests": 70,
+      "skipped": 0,
+      "initialRun": {
+        "tests": 70,
+        "passed": 69,
+        "failed": 1,
+        "cause": "sandbox EPERM listening on 127.0.0.1 in native asset router test"
+      },
+      "retry": {
+        "suite": "music-library only",
+        "tests": 14,
+        "passed": 14,
+        "failed": 0
+      },
+      "environment": "synthetic membership/policy records; in-memory local storage; local asset fixture server",
+      "localLogs": [
+        {
+          "filename": "station-cat-t03-web-music-tests.log",
+          "sha256": "de6676ceb4cbe96c9d5ac778390901732eda1020d8c3a60213eb23634ea31d0b",
+          "finishedAt": "2026-10-05T13:13:09.237811+00:00"
+        },
+        {
+          "filename": "station-cat-t03-web-library-retry.log",
+          "sha256": "cec76107849731fcdefd0a5461b1e3da747ad0a8315b5cfe180fe65342b3f2bf",
+          "finishedAt": "2026-10-05T13:14:23.944963+00:00"
+        }
+      ]
+    },
+    {
+      "id": "music-runtime-and-native-library",
+      "commands": [
+        "node --test --test-timeout=120000 scripts/test-music-runtime.mjs scripts/test-mobile-library.mjs"
+      ],
+      "result": "passed",
+      "tests": 56,
+      "passed": 56,
+      "skipped": 0,
+      "environment": "local Miniflare D1/R2, synthetic accounts and media, outbound forbidden",
+      "localLogs": [
+        {
+          "filename": "station-cat-t03-isolated-runtime-tests.log",
+          "sha256": "808f73248749728bc26d8ec58ba521f651108ffe5cb10f865277bde105a88c8d",
+          "finishedAt": "2026-10-05T13:13:28.031638+00:00"
+        }
+      ]
+    },
+    {
+      "id": "native-music",
+      "commands": [
+        "node --test --test-timeout=90000 scripts/test-mobile-music.mjs"
+      ],
+      "result": "passed",
+      "tests": 18,
+      "passed": 18,
+      "skipped": 0,
+      "environment": "local Miniflare D1/R2 and native authentication fixtures, outbound forbidden",
+      "localLogs": [
+        {
+          "filename": "station-cat-t03-native-music-tests.log",
+          "sha256": "722f5a3d284dfd668bc0ec0e1acae6b97b70039e84df78690c0ce625bd1535f6",
+          "finishedAt": "2026-10-05T13:17:16.713026+00:00"
+        }
+      ]
+    },
+    {
+      "id": "game-cloud-saves",
+      "commands": [
+        "node scripts/test-cat-life-cloud-saves.mjs"
+      ],
+      "result": "passed",
+      "environment": "SQLite memory adapter, synthetic account sessions and save revisions",
+      "localLogs": [
+        {
+          "filename": "station-cat-t03-cloud-save-tests.log",
+          "sha256": "2317c8edaf0e1c46efa28983e96bac2a160f3bbbaba427a183cd28919359b487",
+          "finishedAt": "2026-10-05T13:13:07.778205+00:00"
+        }
+      ]
+    },
+    {
+      "id": "game-commerce",
+      "commands": [
+        "node scripts/test-cat-life-commerce-api.mjs"
+      ],
+      "result": "passed",
+      "environment": "SQLite memory adapter, synthetic credits/orders/entitlements; public rollout in fixtures only",
+      "localLogs": [
+        {
+          "filename": "station-cat-t03-game-entitlement-tests.log",
+          "sha256": "f6b11877d4b4eb634fa64d9f791865f8e31ef7a20b8cf5a7b1876ca55b716f4d",
+          "finishedAt": "2026-10-05T13:13:07.779694+00:00"
+        }
+      ]
+    },
+    {
+      "id": "membership-safety",
+      "commands": [
+        "node scripts/test-membership-safety.mjs"
+      ],
+      "result": "passed",
+      "environment": "SQLite memory adapter, synthetic sessions and balances; outbound fetch forbidden",
+      "localLogs": [
+        {
+          "filename": "station-cat-t03-membership-tests.log",
+          "sha256": "f8b62679d6bcca515b0922a06067712886a64fb667a4a7d0126c7c242df1b71a",
+          "finishedAt": "2026-10-05T13:13:07.781660+00:00"
+        }
+      ]
+    },
+    {
+      "id": "payment-contracts",
+      "commands": [
+        "node scripts/test-creem-payments.mjs"
+      ],
+      "result": "passed",
+      "environment": "SQLite memory adapter, synthetic orders/HMAC; provider fetch mocked; no real charges",
+      "localLogs": [
+        {
+          "filename": "station-cat-t03-payment-tests.log",
+          "sha256": "b403f2fe1f8a1e9e4717f16f20902d2ce70730ecf5e33f48358361199acee65f",
+          "finishedAt": "2026-10-05T13:17:49.388256+00:00"
+        }
+      ]
+    },
+    {
+      "id": "browser-game-saves",
+      "commands": [
+        "node node_modules/@playwright/test/cli.js test --config /private/tmp/station-cat-t03-playwright.config.mjs cat-life-cloud-save.spec.mjs"
+      ],
+      "result": "passed",
+      "tests": 4,
+      "passed": 4,
+      "environment": "temporary system Chrome, localhost fixture server; cloud/session API mocked",
+      "configOverride": {
+        "testDir": "scripts/browser-tests",
+        "workers": 1,
+        "channel": "chrome",
+        "baseURL": "http://127.0.0.1:4178",
+        "viewport": {
+          "width": 1280,
+          "height": 900
+        },
+        "webServerCommand": "node scripts/serve-cat-life-browser-test.mjs",
+        "reuseExistingServer": false,
+        "repoConfigurationChanged": false
+      },
+      "localLogs": [
+        {
+          "filename": "station-cat-t03-browser-save-tests.log",
+          "sha256": "d8e8d2d5b9536de2c7512307c2533462ae8883d1655af2477e4310612fd04f72",
+          "finishedAt": "2026-10-05T13:17:24.684425+00:00"
+        }
+      ]
+    },
+    {
+      "id": "local-save-audit",
+      "commands": [
+        "node docs/station-cat-redesign/tools/audit-local-save-contract.mjs --output docs/station-cat-redesign/T03-evidence/local-save-audit.json"
+      ],
+      "result": "expected-behavior-confirmed-including-known-risk",
+      "cases": 8,
+      "evidence": "local-save-audit.json",
+      "environment": "actual local modules in VM; synthetic memory Map only; network forbidden; no browser profile",
+      "knownRisk": "corrupt-json-start overwrites corrupt synthetic bytes; A13 not satisfied"
+    },
+    {
+      "id": "development-build",
+      "commands": [
+        "ALLOW_EMPTY_SERIAL_CONTENT=1 ASTRO_TELEMETRY_DISABLED=1 npm run build"
+      ],
+      "result": "passed",
+      "builtPages": 153,
+      "publicSitemapRoutes": 111,
+      "environment": "private serial body content absent; permitted empty development build; not a production package or deployment",
+      "localLogs": [
+        {
+          "filename": "station-cat-t03-build.log",
+          "sha256": "5819fc2f6122343ff4ac47c5796c68d1aac5aa6f6eff463cd404fe08e9ff7f47",
+          "finishedAt": "2026-10-05T13:31:17.490977+00:00"
+        }
+      ]
+    }
+  ],
+  "acceptance": {
+    "A04": "existing server isolation locally verified; promotion media and end-state UI pending",
+    "A13": "save contract verified; corrupt-start risk identified; safe continue probe/recovery integration required in T12",
+    "A14": "source and isolated key paths verified; actual historical account/order/balance/support HTTP pending"
+  },
+  "unverified": [
+    "production D1 schema and resource identities",
+    "production R2 visibility and Access policies",
+    "merchant live configuration, callbacks and real historical orders",
+    "actual client versions, devices and production cloud synchronization",
+    "platform release URLs and operator material decisions"
+  ],
+  "operatorReply": "稍后确定",
+  "nextTask": "T04 only after user reviews T03; invoke product-design:index and ideate for 3 templates, then await selection before visual coding"
+}

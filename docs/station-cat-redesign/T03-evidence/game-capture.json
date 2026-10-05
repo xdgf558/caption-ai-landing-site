@@ -1,0 +1,62 @@
+{
+  "capturedAt": "2026-10-05T13:20:40.329Z",
+  "records": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "version": "1.28.0",
+      "schemaVersion": 3,
+      "storageKey": "catGameSaveV1",
+      "catCount": 3,
+      "cloudStatus": "本地存档",
+      "loadedImages": 8,
+      "pageErrors": [],
+      "origin": "local fixture",
+      "account": "synthetic guest",
+      "outboundRequests": "blocked",
+      "screenshot": "cat-life-desktop.png",
+      "sha256": "7f13ef824364e7b9f593cdca01d08273d738c6a65b37a3d6dbe5d7122ed2af94",
+      "bytes": 421384
+    },
+    {
+      "name": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "version": "1.28.0",
+      "schemaVersion": 3,
+      "storageKey": "catGameSaveV1",
+      "catCount": 3,
+      "cloudStatus": "本地存档",
+      "loadedImages": 8,
+      "pageErrors": [],
+      "origin": "local fixture",
+      "account": "synthetic guest",
+      "outboundRequests": "blocked",
+      "screenshot": "cat-life-mobile.png",
+      "sha256": "c5362cfccf34597966a791df2c7456f0f2125e702f27cafa5cecfa65fbfb001b",
+      "bytes": 214935
+    }
+  ],
+  "schemaVersion": 1,
+  "sourceReviewCommit": "877a331214ca3747a50f15bb9ee3b17348dac536",
+  "applicationBaseline": "6cbb19725cd12ae718ea395711f920adef346824",
+  "runtimePath": "/games/cat-life/",
+  "fixtureCommand": "node scripts/serve-cat-life-browser-test.mjs",
+  "browserLaunch": {
+    "browser": "chromium",
+    "channel": "chrome",
+    "headless": true,
+    "profile": "temporary new contexts"
+  },
+  "limits": [
+    "Cloud/session API responses are synthetic anonymous fixtures.",
+    "Only localhost traffic permitted; no real browser profile or production save used.",
+    "Mobile is a viewport simulation, not a physical device check.",
+    "Screens show the existing runtime, not the redesign."
+  ]
+}
