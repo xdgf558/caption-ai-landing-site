@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "applicationBaseline": "6cbb19725cd12ae718ea395711f920adef346824",
+  "sourceReviewCommit": "877a331214ca3747a50f15bb9ee3b17348dac536",
+  "observations": [
+    {
+      "method": "GET",
+      "url": "https://wwwstationcat.org/api/music/catalog?locale=zh-Hans",
+      "observedAt": "2026-10-05T13:10:17.167230+00:00",
+      "responseSha256": "b25fa6ee9674f048e19868db0194ce1590e0a3274307a6bf3cdf12bde5e42962",
+      "httpStatus": 200,
+      "trackCount": 11,
+      "allEffectiveAccess": "free",
+      "previewAvailableCount": 0,
+      "featured": {
+        "version": 1,
+        "primaryTrackId": "6a009e51-f7e1-454b-83cf-f37c7ca98d9b",
+        "primarySource": "latest",
+        "secondaryTrackIds": [],
+        "collectionIds": []
+      }
+    },
+    {
+      "method": "GET",
+      "url": "https://wwwstationcat.org/api/music/tracks/6a009e51-f7e1-454b-83cf-f37c7ca98d9b?locale=zh-Hans",
+      "observedAt": "2026-10-05T13:11:01.750909+00:00",
+      "responseSha256": "40869363c11ded84827f8df451a149c662875b73f07d0445ff8e638719687e0c",
+      "httpStatus": 200,
+      "track": {
+        "id": "6a009e51-f7e1-454b-83cf-f37c7ca98d9b",
+        "slug": "track-accbd4b2-a1e9-41fa-a345-6a60d49bfc31",
+        "title": "原来已经这么远",
+        "creatorName": "Station Cat",
+        "durationSec": 338.832,
+        "audioVersion": 4,
+        "coverUrl": "/api/music/tracks/6a009e51-f7e1-454b-83cf-f37c7ca98d9b/cover?v=4",
+        "accessMode": "free",
+        "effectiveAccess": "free",
+        "previewAvailable": false,
+        "publishedAt": "2026-09-19T20:54:27.421Z"
+      },
+      "platformReleaseFieldsPresent": false
+    },
+    {
+      "method": "HEAD",
+      "url": "https://wwwstationcat.org/api/music/tracks/6a009e51-f7e1-454b-83cf-f37c7ca98d9b/cover?v=4",
+      "observedAt": "2026-10-05T13:24:09.877895+00:00",
+      "httpStatus": 200,
+      "contentType": "image/png",
+      "contentLength": 2232981,
+      "pixelsDownloaded": false
+    }
+  ],
+  "operatorConfirmation": {
+    "status": "deferred-by-user",
+    "reply": "稍后确定",
+    "pending": [
+      "primary track",
+      "platform release status and real URLs",
+      "promotion preview enablement",
+      "published short video/MV"
+    ]
+  },
+  "limits": [
+    "Public API snapshot does not prove the deployment SHA, production schema, private media configuration or use rights.",
+    "Website publishedAt is not a platform release timestamp.",
+    "latest fallback is a candidate, not a user-selected promotion track.",
+    "No platform URLs provided does not mean unreleased; previewAvailable=false does not establish the future promotion switch.",
+    "No audio, lyrics, production identity or private data copied into this artifact."
+  ]
+}

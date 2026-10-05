@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "877a331214ca3747a50f15bb9ee3b17348dac536",
+  "sourceFilesModified": false,
+  "storage": "synthetic Map only",
+  "network": "forbidden",
+  "gameVersion": "1.28.0",
+  "saveSchema": 3,
+  "saveKey": "catGameSaveV1",
+  "sourceModules": [
+    "src/js/core/namespace.js",
+    "src/js/utils/storage.js",
+    "src/js/utils/format.js",
+    "src/js/utils/catArt.js",
+    "src/js/data/itemsData.js",
+    "src/js/data/jobsData.js",
+    "src/js/data/catsData.js",
+    "src/js/data/diseasesData.js",
+    "src/js/data/tasksData.js",
+    "src/js/data/communityData.js",
+    "src/js/state/saveMigrations.js",
+    "src/js/state/careLearningState.js",
+    "src/js/state/catMemoryState.js",
+    "src/js/state/gameState.js",
+    "src/js/state/saveSystem.js"
+  ],
+  "cases": [
+    {
+      "id": "missing",
+      "readResult": "null",
+      "writes": 0,
+      "sourcePreserved": true,
+      "limitation": "null alone cannot distinguish absence from a read/parse failure"
+    },
+    {
+      "id": "valid-current",
+      "readResult": "compatible progress",
+      "gold": 42,
+      "writes": 0,
+      "sourcePreserved": true
+    },
+    {
+      "id": "legacy-v0",
+      "readResult": "migrated copy",
+      "schemaVersion": 3,
+      "gold": 27,
+      "writes": 0,
+      "sourcePreserved": true
+    },
+    {
+      "id": "corrupt-json-read",
+      "readResult": "null",
+      "writes": 0,
+      "sourcePreserved": true,
+      "limitation": "same read result as a missing save"
+    },
+    {
+      "id": "corrupt-json-start",
+      "readResult": "new progress",
+      "writes": 1,
+      "sourcePreserved": false,
+      "finding": "existing loadOrCreateGame overwrites corrupt bytes in synthetic memory; do not reuse for T12 continue detection"
+    },
+    {
+      "id": "storage-denied",
+      "readResult": "null",
+      "startResult": "write error",
+      "writes": 0,
+      "sourcePreserved": true,
+      "limitation": "read error is hidden; it must not be classified as an empty save"
+    },
+    {
+      "id": "future-schema",
+      "readResult": "separate compatibility slot",
+      "writes": 1,
+      "sourcePreserved": true,
+      "writeKey": "catGameSaveV1:compat-v3",
+      "limitation": "a new compatibility save is not continuation of the future save"
+    },
+    {
+      "id": "empty-object",
+      "readResult": "normalizer fills defaults",
+      "writes": 0,
+      "sourcePreserved": true,
+      "limitation": "normalization success alone does not prove meaningful compatible progress"
+    }
+  ],
+  "findings": [
+    "T12 needs a read-only save status check that distinguishes missing, corrupt, inaccessible and unsupported saves; existing startup/load helpers are insufficient."
+  ]
+}
