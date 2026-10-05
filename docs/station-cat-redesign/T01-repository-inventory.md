@@ -1,6 +1,6 @@
 # T01 仓库与运行方式盘点
 
-盘点日期：2026-10-05（UTC+08:00）。状态：交付待验收。本轮范围为 T01；完整旧 URL 退出清单属于 T02，权限与素材矩阵属于 T03。
+盘点日期：2026-10-05（UTC+08:00）。状态：用户审查通过，P2 范围已补充；PR 当前头 CI 另行核对。本轮范围为 T01；完整旧 URL 退出清单属于 T02，权限与素材矩阵属于 T03。
 
 ## 结论与代码版本
 
@@ -46,13 +46,13 @@ Station Cat 主站的目标仓库是 `xdgf558/caption-ai-landing-site`，使用 
 | --- | --- | --- |
 | 首页及语言 | `/` 默认繁体；`/zh-hant/`、`/zh-hans/`、`/en/`、`/ja/` 各有页面，内容语言枚举为 `zh-Hant`、`zh-Hans`、`en`、`ja` | [site.ts L5–13](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/data/site.ts#L5-L13)，[src/pages](https://github.com/xdgf558/caption-ai-landing-site/tree/6cbb19725cd12ae718ea395711f920adef346824/src/pages) |
 | 旧公开栏目 | 现有导航同时包含 Apps、游戏、积分、小说、文章、会员；音乐入口受构建开关控制 | [navigation.ts L4–49](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/data/navigation.ts#L4-L49) |
-| 音乐 | `/music/` 默认繁体，另有三种语言路径；现有单曲/合集选择通过 `?track=`、`?collection=`，不是主文档建议的独立 slug 详情路由 | [pagePaths.js L1–19](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/music/pagePaths.js#L1-L19)、[pageHttp.js L17–21](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/music/pageHttp.js#L17-L21) |
+| 音乐 | `/music/` 默认繁体，另有三种语言路径；规范分享页面通过 `?track=`、`?collection=` 选曲；Worker 匹配器还覆盖 `/music/*` 及四种语言下的后代路径，包含 `/zh-hant/music` 别名、无斜线和编码/重复斜线归一化入口。匹配范围不等于有效详情页：当前 handler 在门禁后只接受音乐根页面，后代路径为 404；不是主文档建议的独立 slug 路由 | [pagePaths.js L1–19](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/music/pagePaths.js#L1-L19)、[pageHttp.js L17–21](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/music/pageHttp.js#L17-L21) |
 | 游戏介绍与运行 | 四种语言介绍页为 `/{locale}/apps/cat-life-game/`；开始按钮直接打开 `/games/cat-life/?lang=...` 静态游戏 | [产品路径 L7–11](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/data/products/cat-life-game.ts#L7-L11)、[启动 URL L182](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/components/CatLifeGameLanding.astro#L182) |
 | 账号与服务 | 四种语言 `/library/` 页面使用现有 `/api/readers/*`；游戏读写、积分、会员与支付仍走 Worker | [账号和游戏服务 L22937–23009](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/worker.js#L22937-L23009) |
 | 后台 | `/admin/`、`/admin-v2/`、`/admin/music/` 及 `/admin/api/*`，由 Worker 先鉴权后分发 | [后台门禁 L22882–22894](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/worker.js#L22882-L22894) |
 | 动态内容及旧地址 | Worker 还提供小说、文章、内容查询和既有重定向；静态目录不是完整服务路由清单 | [重定向 L22901–22914](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/worker.js#L22901-L22914)、[内容查询 L23059–23068](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/worker.js#L23059-L23068) |
 
-以上只定位路由族，不制定或执行逐地址关闭动作。T02 需要同时检查静态页面、Worker 路由、语言别名、既有跳转和历史服务调用；本轮保持旧入口可用。
+以上只定位路由族，不制定或执行逐地址关闭动作。T02 需要同时检查静态页面、Worker 路由、语言别名、既有跳转和历史服务调用；本轮保持旧入口可用。T02 必须覆盖音乐匹配器后代路径、语言别名和无斜线/查询参数重定向，不只枚举四个规范分享页面。
 
 ## 数据库、CMS、鉴权、支付与存储
 
@@ -70,6 +70,8 @@ Station Cat 主站的目标仓库是 `xdgf558/caption-ai-landing-site`，使用 
 | 音乐后台 | 已实现：草稿、版权审核、技术审核、上传、发布、下架、专辑/歌单、精选、存储配额、统计和清理能力；启用需要对应数据库、桶和开关 | [adminHttp.js L1–18](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/music/adminHttp.js#L1-L18)、[状态与能力 L92–105](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/music/adminHttp.js#L92-L105) |
 | 收藏与最近播放 | 已实现：`stationcat.music.v2` 保存浏览器收藏、最近播放、队列、设置及位置，不是账号云同步。需保留现有键与兼容逻辑 | [musicLocalData.js L1–41](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/scripts/musicLocalData.js#L1-L41) |
 | 原生移动端 | 已实现：`/api/mobile/*` 和 `/auth/mobile/*` 路由、独立门禁、认证及资料/音乐能力；本轮网站改版没有改动此系统 | [Worker L22866–22867](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/worker.js#L22866-L22867)、[mobile/http.js L48–64](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/mobile/http.js#L48-L64) |
+
+网页本地收藏与原生账号资料库是两套数据路径。原生 `/api/mobile/v1/me/music/` 包含 favorites、recent、preferences、listens，使用认证会话、独立开关和 `mobile_music_*` 表，见 [library.js L7–50](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/mobile/library.js#L7-L50)、[http.js L115–116](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/mobile/http.js#L115-L116)。T14 必须分别核对网页本地键与原生账号同步服务，保留前者不能证明后者已覆盖；生产开关和远程表版本仍未核验。
 
 主配置没有音乐绑定/开关，与公开首页读取到音乐展示不能合并为“音乐生产服务已启用”的结论。页面入口、构建开关 `PUBLIC_MUSIC_ENTRY_ENABLED`、Worker 的 `MUSIC_PUBLIC_ENABLED`、VIP 交付和统计开关是不同层次，分别见 [music-entry.js L1–3](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/data/music-entry.js#L1-L3)、[runtime.js L5–9](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/music/runtime.js#L5-L9) 和 [音乐 HTML 门禁 L11–22](https://github.com/xdgf558/caption-ai-landing-site/blob/6cbb19725cd12ae718ea395711f920adef346824/src/music/pageHttp.js#L11-L22)。远程实际配置和部署提交留作待核验事项。
 
