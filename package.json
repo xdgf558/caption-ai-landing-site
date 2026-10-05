@@ -66,7 +66,10 @@
     "test:mobile:music": "node --test --test-timeout=90000 scripts/test-mobile-music.mjs",
     "test:mobile:library": "node --test scripts/test-mobile-library.mjs",
     "test:mobile:r2": "node --test --test-timeout=90000 scripts/test-mobile-r2.mjs scripts/test-mobile-r2-import.mjs scripts/test-mobile-r2-covers.mjs",
-    "test:mobile:production": "node --test --test-timeout=120000 scripts/test-mobile-production.mjs scripts/test-mobile-production-association.mjs scripts/test-mobile-production-service.mjs && python3 scripts/test-mobile-production-migrations.py"
+    "test:mobile:production": "node --test --test-timeout=120000 scripts/test-mobile-production.mjs scripts/test-mobile-production-association.mjs scripts/test-mobile-production-service.mjs && python3 scripts/test-mobile-production-migrations.py",
+    "test:redesign:routes": "node --test scripts/test-station-redesign-routes.mjs",
+    "build:redesign:preview": "astro build --config scripts/fixtures/station-redesign/astro.config.mjs",
+    "preview:redesign": "npm run build:redesign:preview && node scripts/serve-station-redesign-preview.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

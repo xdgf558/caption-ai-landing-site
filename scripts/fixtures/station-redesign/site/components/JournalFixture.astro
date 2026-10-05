@@ -1,0 +1,171 @@
+---
+import { ArrowRight, X } from '@lucide/astro';
+import StationBrandLayout from '../../../../../src/layouts/StationBrandLayout.astro';
+import { stationHref } from '../../../../../src/redesign/routes.js';
+interface Props { lang: 'zh-Hans' | 'zh-Hant' | 'en' | 'ja' }
+const { lang } = Astro.props;
+// Candidate art/copy for visual evaluation only. No promotion, publication, access or audio config.
+const copy = {
+  'zh-Hans': { subtitle: '音乐与游戏', line: '把旋律留在路上，把温柔带回家。', note: ['在平凡的日子里，', '总有一首歌，', '和一只猫，', '让生活多一点温柔。'], explore: '探索音乐', work: '音乐作品', song: '原来已经这么远', artist: 'Station Cat', intro: '重走熟悉的街，让回忆慢慢亮起来。', view: '查看作品', platforms: '平台发行信息待更新', caption: '有些路，走着走着，就成了回忆。', gameLabel: '游戏作品', game: '打工养猫日记', gameIntro: '工作与生活，与猫一起慢慢过。', gameAction: '了解游戏', coverAlt: '《原来已经这么远》封面：暮色中的老街，两个人沿石阶走向暖灯。', gameAlt: '打工养猫日记本地画面：小橘在家中欢迎玩家。' },
+  'zh-Hant': { subtitle: '音樂與遊戲', line: '把旋律留在路上，把溫柔帶回家。', note: ['在平凡的日子裡，', '總有一首歌，', '和一隻貓，', '讓生活多一點溫柔。'], explore: '探索音樂', work: '音樂作品', song: '原来已经这么远', artist: 'Station Cat', intro: '重走熟悉的街，讓回憶慢慢亮起來。', view: '查看作品', platforms: '平台發行資訊待更新', caption: '有些路，走著走著，就成了回憶。', gameLabel: '遊戲作品', game: '打工養貓日記', gameIntro: '工作與生活，與貓一起慢慢過。', gameAction: '了解遊戲', coverAlt: '《原来已经这么远》封面：暮色中的老街，兩個人沿石階走向暖燈。', gameAlt: '打工養貓日記本機畫面：小橘在家中歡迎玩家。' },
+  en: { subtitle: 'Music & games', line: 'Melodies for the journey. Warmth to bring home.', note: ['In everyday moments,', 'there is a song,', 'and a little cat,', 'to make life warmer.'], explore: 'Explore music', work: 'MUSIC', song: '原来已经这么远', artist: 'Station Cat', intro: 'Walk a familiar street. Let the memories light up slowly.', view: 'View music', platforms: 'Platform release information coming soon', caption: 'Some roads become memories, one step at a time.', gameLabel: 'GAMES', game: 'Cat Life Diary', gameIntro: 'Work, life, and a little cat to share the day.', gameAction: 'Explore the game', coverAlt: 'Original song cover: two people climbing an old street at dusk toward a warm light.', gameAlt: 'Local Cat Life Diary screen showing the orange cat greeting the player at home.' },
+  ja: { subtitle: '音楽とゲーム', line: '道にメロディーを、帰る場所に温もりを。', note: ['何気ない日々に、', '一曲の歌と、', '一匹の猫。', '暮らしに少しの温もりを。'], explore: '音楽を探す', work: '音楽作品', song: '原来已经这么远', artist: 'Station Cat', intro: 'なじみの道を歩く。思い出がゆっくり灯り始める。', view: '作品を見る', platforms: '配信情報は後日ご案内します', caption: '歩いてきた道が、いつか思い出になる。', gameLabel: 'ゲーム作品', game: '猫との暮らし日記', gameIntro: '仕事も暮らしも、猫と一緒にゆっくりと。', gameAction: 'ゲームを知る', coverAlt: '楽曲のジャケット：夕暮れの古い通りで、二人が暖かな灯りへ石段を上る。', gameAlt: 'ローカルのゲーム画面：家でプレイヤーを迎えるオレンジ色の猫。' },
+}[lang];
+---
+<StationBrandLayout lang={lang} title="车站手记 · T04 视觉与导航预览" preview>
+  <div class="sc-container">
+    <section class="journal-hero" aria-labelledby="journal-title">
+      <div>
+        <h1 class="sc-heading" id="journal-title">Station Cat</h1>
+        <p class="journal-subtitle">{copy.subtitle}</p>
+        <p class="journal-tagline">{copy.line}</p>
+      </div>
+      <aside class="journal-note">
+        <p>{copy.note.map(line => <span>{line}<br /></span>)}</p>
+        <span class="journal-note-rule" aria-hidden="true">—</span>
+        <a class="sc-button" href={stationHref(lang, 'music')}>{copy.explore}<ArrowRight size={24} aria-hidden="true" /></a>
+      </aside>
+    </section>
+    <hr class="sc-rule" />
+    <section class="journal-work" aria-labelledby="journal-song">
+      <figure>
+        <img class="journal-cover" src="/preview-assets/candidate-cover.png" width="1024" height="1024" alt={copy.coverAlt} />
+        <figcaption>{copy.caption}</figcaption>
+      </figure>
+      <div class="journal-work-copy">
+        <p class="journal-label">{copy.work}</p>
+        <h2 class="sc-heading" id="journal-song">{copy.song}</h2>
+        <p class="journal-artist">{copy.artist}</p>
+        <p class="journal-description">{copy.intro}</p>
+        <a class="sc-button" href={stationHref(lang, 'music')}>{copy.view}<ArrowRight size={24} aria-hidden="true" /></a>
+        <p class="journal-platforms">{copy.platforms}</p>
+      </div>
+    </section>
+    <hr class="sc-rule" />
+    <section class="journal-game" aria-labelledby="journal-game-title">
+      <div>
+        <p class="journal-label">{copy.gameLabel}</p>
+        <h2 class="sc-heading" id="journal-game-title">{copy.game}</h2>
+        <p class="journal-description">{copy.gameIntro}</p>
+        <a class="sc-button" href={stationHref(lang, 'games')}>{copy.gameAction}<ArrowRight size={24} aria-hidden="true" /></a>
+      </div>
+      <img class="journal-game-image" src="/preview-assets/cat-life-desktop.png" width="1280" height="900" alt={copy.gameAlt} loading="lazy" />
+    </section>
+  </div>
+  <div slot="player" class="fixture-player" aria-label="底部占位测量样例，无音频">
+    <div><strong>底部占位测量</strong><span>样例区域，不加载音频</span></div>
+    <button type="button" data-fixture-player-close aria-label="收起底部占位"><X size={20} aria-hidden="true" /></button>
+  </div>
+  <details slot="fixture-controls" class="fixture-tools sc-container">
+    <summary>本地预览检查</summary>
+    <p>仅供 T04 视觉与组件检查。候选歌曲未设为主推；不连接账号、存档、推广配置或音频服务。</p>
+    <div class="fixture-actions">
+      <button type="button" data-fixture-dock aria-pressed="false">显示底部占位</button>
+      <button type="button" data-fixture-tall aria-pressed="false">增加占位高度</button>
+      <button type="button" data-fixture-safe aria-pressed="false">模拟 34px 安全区域</button>
+      <button type="button" data-fixture-runtime aria-pressed="false">模拟游戏布局</button>
+    </div>
+    <p data-fixture-status role="status">网站布局 · 底部占位已收起</p>
+    <a href="#journal-title" data-fixture-last>返回页首</a>
+  </details>
+</StationBrandLayout>
+<script>
+  const shell = document.querySelector<HTMLElement>('[data-station-shell]');
+  const dock = document.querySelector<HTMLElement>('[data-sc-player-dock]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-fixture-dock]');
+  const tall = document.querySelector<HTMLButtonElement>('[data-fixture-tall]');
+  const runtime = document.querySelector<HTMLButtonElement>('[data-fixture-runtime]');
+  const safe = document.querySelector<HTMLButtonElement>('[data-fixture-safe]');
+  const close = document.querySelector<HTMLButtonElement>('[data-fixture-player-close]');
+  const status = document.querySelector('[data-fixture-status]');
+  function announce() {
+    if (status) status.textContent = `${shell?.dataset.gameRuntime === 'true' ? '游戏布局' : '网站布局'} · 底部占位${dock?.hidden ? '已收起' : '已显示'}`;
+  }
+  toggle?.addEventListener('click', () => { if (dock) { dock.hidden = !dock.hidden; toggle.setAttribute('aria-pressed', String(!dock.hidden)); announce(); } });
+  close?.addEventListener('click', () => { if (dock) { dock.hidden = true; toggle?.setAttribute('aria-pressed', 'false'); toggle?.focus(); announce(); } });
+  tall?.addEventListener('click', () => {
+    const enabled = tall.getAttribute('aria-pressed') !== 'true';
+    tall.setAttribute('aria-pressed', String(enabled)); dock?.classList.toggle('fixture-player-tall', enabled);
+  });
+  runtime?.addEventListener('click', () => {
+    if (shell) { const enabled = shell.dataset.gameRuntime !== 'true'; shell.dataset.gameRuntime = String(enabled); runtime.setAttribute('aria-pressed', String(enabled)); announce(); }
+  });
+  safe?.addEventListener('click', () => {
+    const enabled = safe.getAttribute('aria-pressed') !== 'true';
+    safe.setAttribute('aria-pressed', String(enabled));
+    if (shell) { if (enabled) shell.style.setProperty('--sc-safe-bottom', '34px'); else shell.style.removeProperty('--sc-safe-bottom'); }
+  });
+</script>
+<style is:global>
+  /* Mock content belongs only to this fixture, not to a production homepage. */
+  .journal-hero { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 48px; padding-block: 32px 20px; }
+  .journal-hero h1 { margin: 0; font-size: clamp(64px, 9.8vw, 120px); line-height: 1.06; white-space: nowrap; }
+  .journal-subtitle { font-family: var(--sc-serif); font-size: 32px; line-height: 1.4; margin: 4px 0 14px; }
+  .journal-tagline { font-family: var(--sc-serif); font-size: clamp(23px, 2.8vw, 34px); line-height: 1.55; margin: 0; }
+  .journal-note { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; padding-top: 8px; }
+  .journal-note p { align-self: flex-start; margin: 0; color: var(--sc-muted); font-family: var(--sc-serif); font-size: 15px; line-height: 1.8; letter-spacing: .12em; }
+  .journal-note-rule { align-self: flex-start; color: var(--sc-muted); margin-bottom: 22px; }
+  .journal-note .sc-button { margin-top: 12px; }
+  .journal-work { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.1fr); gap: 48px; padding: 36px 0 32px; }
+  .journal-work figure { margin: 0; }
+  .journal-cover { width: 100%; aspect-ratio: 1; height: auto; object-fit: cover; border-radius: 2px; }
+  .journal-work figcaption { font-family: var(--sc-serif); color: var(--sc-muted); font-size: 14px; line-height: 1.6; margin-top: 12px; }
+  .journal-work-copy { padding-top: 24px; }
+  .journal-label { display: flex; align-items: center; gap: 20px; color: var(--sc-coral); font-family: var(--sc-serif); font-size: 16px; letter-spacing: .2em; margin: 0 0 28px; }
+  .journal-label::after { content: ''; height: 1px; width: 44px; background: currentColor; }
+  .journal-work h2 { font-size: clamp(36px, 5.2vw, 64px); margin: 0; letter-spacing: -.045em; }
+  .journal-artist { color: var(--sc-muted); font-family: var(--sc-serif); font-size: 27px; letter-spacing: .16em; margin: 8px 0 32px; }
+  .journal-description { font-family: var(--sc-serif); font-size: 22px; line-height: 1.65; margin: 0 0 34px; }
+  .journal-platforms { color: var(--sc-muted); font-size: 15px; letter-spacing: .08em; margin: 24px 0 0; }
+  .journal-game { display: grid; grid-template-columns: minmax(0, .6fr) minmax(0, 1.1fr); align-items: center; gap: 64px; padding-block: 32px 40px; }
+  .journal-game .journal-label { margin-bottom: 24px; }
+  .journal-game h2 { font-size: clamp(34px, 4.6vw, 56px); margin: 0 0 22px; }
+  .journal-game .journal-description { font-size: 21px; margin-bottom: 30px; }
+  .journal-game-image { width: 100%; aspect-ratio: 2.35; height: auto; object-fit: cover; object-position: top; border-radius: 5px; border: 1px solid #eadfce; }
+  .fixture-tools { border-top: 1px dashed var(--sc-line); padding-block: 16px 24px; font-size: 14px; color: var(--sc-muted); }
+  .fixture-tools summary { cursor: pointer; min-height: 44px; display: list-item; }
+  .fixture-tools button, .fixture-player button { min-height: 44px; padding: 8px 14px; border: 1px solid var(--sc-line); border-radius: 4px; background: var(--sc-paper); color: var(--sc-ink); cursor: pointer; }
+  .fixture-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .fixture-tools button[aria-pressed='true'] { border-color: var(--sc-teal); color: var(--sc-teal); }
+  .fixture-tools a { display: inline-flex; align-items: center; min-height: 44px; }
+  .fixture-player { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 12px var(--sc-gutter); min-height: 76px; }
+  .fixture-player span, .fixture-player strong { display: block; font-size: 14px; }
+  .fixture-player span { color: var(--sc-muted); font-size: 12px; }
+  .fixture-player-tall .fixture-player { min-height: 124px; }
+  @media (min-width: 768px) and (max-width: 1000px) {
+    .journal-hero { grid-template-columns: minmax(0, 1fr) 200px; gap: 28px; }
+    .journal-hero h1 { font-size: 74px; }
+    .journal-tagline { font-size: 24px; }
+    .sc-top-links { gap: 20px; }
+    .sc-header { gap: 18px; }
+    .sc-brand strong { font-size: 25px; }
+    .sc-language { padding-left: 18px; }
+    .journal-work { gap: 32px; }
+    .journal-work h2 { font-size: 36px; }
+    .journal-description { font-size: 18px; }
+    .journal-game { gap: 32px; }
+    .journal-game h2 { font-size: 32px; }
+  }
+  @media (max-width: 767px) {
+    .journal-hero { display: block; padding-block: 28px 32px; }
+    .journal-hero h1 { font-size: clamp(48px, 13.8vw, 90px); letter-spacing: -.055em; }
+    .journal-subtitle { font-size: 23px; margin-block: 10px 16px; }
+    .journal-tagline { font-size: 23px; line-height: 1.6; max-width: 24em; }
+    .journal-note { display: block; padding: 0; }
+    .journal-note p, .journal-note-rule { display: none; }
+    .journal-note .sc-button { margin-top: 24px; }
+    .sc-button { font-size: 18px; min-height: 48px; padding-inline: 22px; }
+    .journal-work { display: block; padding-block: 28px; }
+    .journal-work figcaption { font-size: 13px; }
+    .journal-work-copy { padding-top: 28px; }
+    .journal-label { margin-bottom: 16px; font-size: 14px; }
+    .journal-work h2 { font-size: clamp(31px, 8.5vw, 52px); line-height: 1.35; }
+    .journal-artist { font-size: 21px; margin-bottom: 20px; }
+    .journal-description { font-size: 19px; margin-bottom: 24px; }
+    .journal-platforms { font-size: 13px; margin-top: 20px; }
+    .journal-game { display: flex; flex-direction: column; align-items: stretch; gap: 28px; padding-block: 28px; }
+    .journal-game h2 { font-size: 34px; margin-bottom: 16px; }
+    .journal-game .journal-description { font-size: 19px; margin-bottom: 24px; }
+    .journal-game-image { aspect-ratio: 1.75; }
+  }
+</style>

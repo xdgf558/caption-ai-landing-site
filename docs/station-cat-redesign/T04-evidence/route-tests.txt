@@ -1,0 +1,18 @@
+
+> landing-site@0.1.0 test:redesign:routes
+> node --test scripts/test-station-redesign-routes.mjs
+
+✔ four locales keep canonical home/music paths and the existing account entry (0.509125ms)
+✔ language changes retain valid public music selections, discarding private and duplicated parameters (0.578584ms)
+✔ future single-song and game routes keep their entity when switching language (0.131625ms)
+✔ selected state recognizes descendants and aliases without confusing service paths (0.08125ms)
+✔ language links never move the existing game runtime into a localized introduction path (0.047958ms)
+✔ policy links retain four existing locale prefixes and reject arbitrary destinations (0.12625ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 33.132666

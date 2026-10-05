@@ -1,0 +1,49 @@
+---
+import BrandNavigation from '../components/redesign/BrandNavigation.astro';
+import { stationCopy, stationPolicyHref } from '../redesign/routes.js';
+import { siteConfig } from '../data/site';
+import '../redesign/journal.css';
+interface Props {
+  lang?: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
+  title: string;
+  description?: string;
+  gameRuntime?: boolean;
+  playerSelected?: boolean;
+  preview?: boolean;
+}
+const { lang = 'zh-Hant', title, description = '', gameRuntime = false, playerSelected = false, preview = false } = Astro.props;
+const copy = stationCopy[lang];
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title} | Station Cat</title>
+    {description && <meta name="description" content={description} />}
+    {preview && <meta name="robots" content="noindex,nofollow" />}
+    <link rel="icon" href="/images/home-night/cat-mark.webp" />
+    <slot name="head" />
+  </head>
+  <body class="station-journal" data-station-shell data-game-runtime={String(gameRuntime)}>
+    <a class="sc-skip" href="#station-main">{copy.skip}</a>
+    <BrandNavigation lang={lang} />
+    <main id="station-main" tabindex="-1"><slot /></main>
+    <footer class="sc-footer sc-container" data-station-chrome>
+      <span>Station Cat · {copy.subtitle}</span>
+      <nav aria-label={lang === 'en' ? 'Policies and contact' : lang === 'ja' ? '規約とお問い合わせ' : lang === 'zh-Hant' ? '政策與聯絡' : '政策与联系'}>
+        <a href={stationPolicyHref(lang, 'terms')}>{copy.terms}</a>
+        <a href={`mailto:${siteConfig.supportEmail}`}>{copy.support}</a>
+        <a href={stationPolicyHref(lang, 'privacy')}>{copy.privacy}</a>
+      </nav>
+    </footer>
+    <div class="sc-player-dock" data-sc-player-dock data-station-chrome hidden={!playerSelected || !Astro.slots.has('player')}><slot name="player" /></div>
+    <slot name="fixture-controls" />
+  </body>
+</html>
+<script>
+  import { mountStationChrome } from '../redesign/chrome.js';
+  let dispose = mountStationChrome();
+  document.addEventListener('astro:before-swap', () => dispose());
+  document.addEventListener('astro:page-load', () => { dispose(); dispose = mountStationChrome(); });
+</script>

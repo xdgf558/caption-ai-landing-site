@@ -1,0 +1,434 @@
+[
+  {
+    "active": [
+      "首页",
+      "首页"
+    ],
+    "buttons": [
+      {
+        "height": 49,
+        "text": "探索音乐",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 49,
+        "text": "查看作品",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 49,
+        "text": "了解游戏",
+        "whiteSpace": "nowrap"
+      }
+    ],
+    "header": {
+      "bottom": 80.59375,
+      "height": 80.59375,
+      "left": 24,
+      "right": 336,
+      "top": 0,
+      "width": 312,
+      "x": 24,
+      "y": 0
+    },
+    "horizontalOverflow": false,
+    "lang": "zh-Hans",
+    "languageLabels": [
+      {
+        "href": "/",
+        "name": "繁體中文"
+      },
+      {
+        "href": "/zh-hans/",
+        "name": "简体中文"
+      },
+      {
+        "href": "/en/",
+        "name": "English"
+      },
+      {
+        "href": "/ja/",
+        "name": "日本語"
+      }
+    ],
+    "width": 375
+  },
+  {
+    "active": [
+      "首页",
+      "首页"
+    ],
+    "buttons": [
+      {
+        "height": 52,
+        "text": "探索音乐",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 52,
+        "text": "查看作品",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 52,
+        "text": "了解游戏",
+        "whiteSpace": "nowrap"
+      }
+    ],
+    "header": {
+      "bottom": 102.1953125,
+      "height": 102.1953125,
+      "left": 39.9375,
+      "right": 713.0625,
+      "top": 0,
+      "width": 673.125,
+      "x": 39.9375,
+      "y": 0
+    },
+    "horizontalOverflow": false,
+    "lang": "zh-Hans",
+    "languageLabels": [
+      {
+        "href": "/",
+        "name": "繁體中文"
+      },
+      {
+        "href": "/zh-hans/",
+        "name": "简体中文"
+      },
+      {
+        "href": "/en/",
+        "name": "English"
+      },
+      {
+        "href": "/ja/",
+        "name": "日本語"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "active": [
+      "Home",
+      "Home"
+    ],
+    "buttons": [
+      {
+        "height": 49,
+        "text": "Explore music",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 49,
+        "text": "View music",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 49,
+        "text": "Explore the game",
+        "whiteSpace": "nowrap"
+      }
+    ],
+    "header": {
+      "bottom": 80.59375,
+      "height": 80.59375,
+      "left": 24,
+      "right": 336,
+      "top": 0,
+      "width": 312,
+      "x": 24,
+      "y": 0
+    },
+    "horizontalOverflow": false,
+    "lang": "en",
+    "languageLabels": [
+      {
+        "href": "/",
+        "name": "繁體中文"
+      },
+      {
+        "href": "/zh-hans/",
+        "name": "简体中文"
+      },
+      {
+        "href": "/en/",
+        "name": "English"
+      },
+      {
+        "href": "/ja/",
+        "name": "日本語"
+      }
+    ],
+    "width": 375
+  },
+  {
+    "active": [
+      "Home",
+      "Home"
+    ],
+    "buttons": [
+      {
+        "height": 52,
+        "text": "Explore music",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 52,
+        "text": "View music",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 52,
+        "text": "Explore the game",
+        "whiteSpace": "nowrap"
+      }
+    ],
+    "header": {
+      "bottom": 102.1953125,
+      "height": 102.1953125,
+      "left": 39.9375,
+      "right": 713.0625,
+      "top": 0,
+      "width": 673.125,
+      "x": 39.9375,
+      "y": 0
+    },
+    "horizontalOverflow": false,
+    "lang": "en",
+    "languageLabels": [
+      {
+        "href": "/",
+        "name": "繁體中文"
+      },
+      {
+        "href": "/zh-hans/",
+        "name": "简体中文"
+      },
+      {
+        "href": "/en/",
+        "name": "English"
+      },
+      {
+        "href": "/ja/",
+        "name": "日本語"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "active": [
+      "ホーム",
+      "ホーム"
+    ],
+    "buttons": [
+      {
+        "height": 49,
+        "text": "音楽を探す",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 49,
+        "text": "作品を見る",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 49,
+        "text": "ゲームを知る",
+        "whiteSpace": "nowrap"
+      }
+    ],
+    "header": {
+      "bottom": 80.59375,
+      "height": 80.59375,
+      "left": 24,
+      "right": 336,
+      "top": 0,
+      "width": 312,
+      "x": 24,
+      "y": 0
+    },
+    "horizontalOverflow": false,
+    "lang": "ja",
+    "languageLabels": [
+      {
+        "href": "/",
+        "name": "繁體中文"
+      },
+      {
+        "href": "/zh-hans/",
+        "name": "简体中文"
+      },
+      {
+        "href": "/en/",
+        "name": "English"
+      },
+      {
+        "href": "/ja/",
+        "name": "日本語"
+      }
+    ],
+    "width": 375
+  },
+  {
+    "active": [
+      "ホーム",
+      "ホーム"
+    ],
+    "buttons": [
+      {
+        "height": 52,
+        "text": "音楽を探す",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 52,
+        "text": "作品を見る",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 52,
+        "text": "ゲームを知る",
+        "whiteSpace": "nowrap"
+      }
+    ],
+    "header": {
+      "bottom": 102.1953125,
+      "height": 102.1953125,
+      "left": 39.9375,
+      "right": 713.0625,
+      "top": 0,
+      "width": 673.125,
+      "x": 39.9375,
+      "y": 0
+    },
+    "horizontalOverflow": false,
+    "lang": "ja",
+    "languageLabels": [
+      {
+        "href": "/",
+        "name": "繁體中文"
+      },
+      {
+        "href": "/zh-hans/",
+        "name": "简体中文"
+      },
+      {
+        "href": "/en/",
+        "name": "English"
+      },
+      {
+        "href": "/ja/",
+        "name": "日本語"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "active": [
+      "首頁",
+      "首頁"
+    ],
+    "buttons": [
+      {
+        "height": 49,
+        "text": "探索音樂",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 49,
+        "text": "查看作品",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 49,
+        "text": "了解遊戲",
+        "whiteSpace": "nowrap"
+      }
+    ],
+    "header": {
+      "bottom": 80.59375,
+      "height": 80.59375,
+      "left": 24,
+      "right": 336,
+      "top": 0,
+      "width": 312,
+      "x": 24,
+      "y": 0
+    },
+    "horizontalOverflow": false,
+    "lang": "zh-Hant",
+    "languageLabels": [
+      {
+        "href": "/",
+        "name": "繁體中文"
+      },
+      {
+        "href": "/zh-hans/",
+        "name": "简体中文"
+      },
+      {
+        "href": "/en/",
+        "name": "English"
+      },
+      {
+        "href": "/ja/",
+        "name": "日本語"
+      }
+    ],
+    "width": 375
+  },
+  {
+    "active": [
+      "首頁",
+      "首頁"
+    ],
+    "buttons": [
+      {
+        "height": 52,
+        "text": "探索音樂",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 52,
+        "text": "查看作品",
+        "whiteSpace": "nowrap"
+      },
+      {
+        "height": 52,
+        "text": "了解遊戲",
+        "whiteSpace": "nowrap"
+      }
+    ],
+    "header": {
+      "bottom": 102.1953125,
+      "height": 102.1953125,
+      "left": 39.9375,
+      "right": 713.0625,
+      "top": 0,
+      "width": 673.125,
+      "x": 39.9375,
+      "y": 0
+    },
+    "horizontalOverflow": false,
+    "lang": "zh-Hant",
+    "languageLabels": [
+      {
+        "href": "/",
+        "name": "繁體中文"
+      },
+      {
+        "href": "/zh-hans/",
+        "name": "简体中文"
+      },
+      {
+        "href": "/en/",
+        "name": "English"
+      },
+      {
+        "href": "/ja/",
+        "name": "日本語"
+      }
+    ],
+    "width": 768
+  }
+]

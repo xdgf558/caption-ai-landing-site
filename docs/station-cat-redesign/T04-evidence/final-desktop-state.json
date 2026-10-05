@@ -1,0 +1,45 @@
+{
+  "capturedAt": "2026-10-05T23:29:11.621Z",
+  "density": 1,
+  "dockHidden": true,
+  "footer": {
+    "bottom": 1382.6484375,
+    "height": 101,
+    "left": 61.046875,
+    "right": 1112.9453125,
+    "top": 1281.6484375,
+    "width": 1051.8984375,
+    "x": 61.046875,
+    "y": 1281.6484375
+  },
+  "gameTitleSize": "54.004px",
+  "height": 900,
+  "images": [
+    {
+      "loaded": true,
+      "src": "/images/home-night/cat-mark.webp"
+    },
+    {
+      "loaded": true,
+      "src": "/preview-assets/candidate-cover.png"
+    },
+    {
+      "loaded": true,
+      "src": "/preview-assets/cat-life-desktop.png"
+    }
+  ],
+  "main": {
+    "bottom": 1281.6484375,
+    "height": 1173.703125,
+    "left": 0,
+    "right": 1174,
+    "top": 107.9453125,
+    "width": 1174,
+    "x": 0,
+    "y": 107.9453125
+  },
+  "mediaCount": 0,
+  "path": "/zh-hans/",
+  "theme": "station-journal",
+  "width": 1174
+}

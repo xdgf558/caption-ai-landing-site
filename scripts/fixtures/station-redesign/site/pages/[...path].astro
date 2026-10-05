@@ -1,0 +1,12 @@
+---
+import JournalFixture from '../components/JournalFixture.astro';
+export function getStaticPaths() {
+  return [
+    ...['zh-hans', 'en', 'ja'].map(prefix => ({ params: { path: prefix }, props: { lang: prefix === 'zh-hans' ? 'zh-Hans' : prefix } })),
+    ...[['', 'zh-Hant'], ['zh-hant', 'zh-Hant'], ['zh-hans', 'zh-Hans'], ['en', 'en'], ['ja', 'ja']].flatMap(([prefix, lang]) =>
+      ['music', 'games', 'games/cat-life-game', 'music/tracks/sample-song', 'library', 'privacy', 'terms'].map(suffix => ({ params: { path: [prefix, suffix].filter(Boolean).join('/') }, props: { lang } }))),
+  ];
+}
+const { lang } = Astro.props;
+---
+<JournalFixture lang={lang} />

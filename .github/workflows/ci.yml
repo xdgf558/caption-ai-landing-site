@@ -34,6 +34,11 @@ jobs:
       - name: Build isolated music player preview
         run: npm run build:music:player-preview
 
+      - name: Verify Station Cat redesign routes and isolated preview
+        run: |
+          npm run test:redesign:routes
+          npm run build:redesign:preview
+
       - name: Verify isolated music Workers D1 and R2 runtime
         run: npm run test:music:runtime
 

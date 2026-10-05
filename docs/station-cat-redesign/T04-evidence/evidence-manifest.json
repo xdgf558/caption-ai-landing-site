@@ -1,0 +1,304 @@
+{
+  "createdAt": "2026-10-05T23:30:19.615Z",
+  "files": [
+    {
+      "file": "build-isolation.json",
+      "bytes": 286,
+      "sha256": "f93adad8b1d5f91702c8ff1cd6da38595d16f7a2bfab0427841dd4e3122971c9"
+    },
+    {
+      "file": "comparison-before-game-title.jpg",
+      "bytes": 494109,
+      "sha256": "4fb53c29654999c7a4f09f5fec3d046b46ca4aeb6c349aad544a45080b562c3c",
+      "pixels": [
+        2318,
+        1372
+      ]
+    },
+    {
+      "file": "comparison-final.jpg",
+      "bytes": 494683,
+      "sha256": "5f876642d5901d8d424a7ed2f2274816f3f59e23dda600a725290b78da3cd5fb",
+      "pixels": [
+        2318,
+        1365
+      ]
+    },
+    {
+      "file": "comparison-initial.jpg",
+      "bytes": 460053,
+      "sha256": "c92d99af4096e31efba2de474919935957d02fadac582b0a0b2f13eebeb63cd8",
+      "pixels": [
+        2318,
+        1481
+      ]
+    },
+    {
+      "file": "comparison-navigation.jpg",
+      "bytes": 20228,
+      "sha256": "f20dca3bc2a34fbc56428e0aad2f7bf2c16bb5f539173bea66cdb583b2269a52",
+      "pixels": [
+        2318,
+        110
+      ]
+    },
+    {
+      "file": "comparison-revised.jpg",
+      "bytes": 461161,
+      "sha256": "cfd14da4520f6718c3532a3f1cfae68d22ef577e4f791f17b22ecf2246505fff",
+      "pixels": [
+        2318,
+        1481
+      ]
+    },
+    {
+      "file": "comparison-typography.jpg",
+      "bytes": 86294,
+      "sha256": "f45b1ef2ba8f1ac248a8b0b9368ec5561833836f4513d40628ceb81ecfa843ba",
+      "pixels": [
+        2318,
+        270
+      ]
+    },
+    {
+      "file": "design-qa.md",
+      "bytes": 6678,
+      "sha256": "10390aee6df1b339779cb5c75116314a33ed899ee6eebcdca91ad4cf2c5af315"
+    },
+    {
+      "file": "desktop-before-game-title.jpg",
+      "bytes": 153577,
+      "sha256": "5a09a36bd05ef95434b0a937902d482d1e3e6fdeaf855c0f4dfde55acfa83953",
+      "pixels": [
+        1159,
+        1481
+      ]
+    },
+    {
+      "file": "desktop-final.jpg",
+      "bytes": 154410,
+      "sha256": "6a7156ef149826a4185b5f281dfbce681dadbe133803888f54b5353e060bc132",
+      "pixels": [
+        1174,
+        1491
+      ]
+    },
+    {
+      "file": "desktop-initial.jpg",
+      "bytes": 153075,
+      "sha256": "06906556a883069905eefb0c1c54a106d7551e33858bc035b130eb4de880c49f",
+      "pixels": [
+        1144,
+        1481
+      ]
+    },
+    {
+      "file": "desktop-revised.jpg",
+      "bytes": 153577,
+      "sha256": "5a09a36bd05ef95434b0a937902d482d1e3e6fdeaf855c0f4dfde55acfa83953",
+      "pixels": [
+        1159,
+        1481
+      ]
+    },
+    {
+      "file": "final-desktop-state.json",
+      "bytes": 888,
+      "sha256": "8513384653af3360643cd35e1886527dfa36029efdef4c166ce209576a820059"
+    },
+    {
+      "file": "keyboard-observations.json",
+      "bytes": 223,
+      "sha256": "25f28de8f06e337e4cea7d90e7a8c678d5a2e4a9f46be83dfb636c588b9761c3"
+    },
+    {
+      "file": "language-switch-observations.json",
+      "bytes": 233,
+      "sha256": "1e542a4c1d12a8fd29149b25630cc6750d3b97b8b9d58cbc7835d0d2325e46a0"
+    },
+    {
+      "file": "locale-en-375.jpg",
+      "bytes": 87885,
+      "sha256": "7a70b32cb8ca6582a92662bbeea1fabe1cd158958da7d9c1614e8aea3f3074fc",
+      "pixels": [
+        360,
+        1950
+      ]
+    },
+    {
+      "file": "locale-en-768.jpg",
+      "bytes": 104450,
+      "sha256": "24ed694553e0895d27ca5de53819c356f19c768bc828c959e137f0cf23955cc3",
+      "pixels": [
+        753,
+        1397
+      ]
+    },
+    {
+      "file": "locale-ja-375.jpg",
+      "bytes": 87039,
+      "sha256": "1b40e4671b8daa2bb689a201700f2999ea1cc8ec016e5fec1e6578a4d0eacbc7",
+      "pixels": [
+        360,
+        1950
+      ]
+    },
+    {
+      "file": "locale-ja-768.jpg",
+      "bytes": 104231,
+      "sha256": "b61c1d7b7d37d61cca16c4f161543cf104d58e28f1a92d85358c1eab1cd52da4",
+      "pixels": [
+        753,
+        1462
+      ]
+    },
+    {
+      "file": "locale-observations.json",
+      "bytes": 7749,
+      "sha256": "9066500e2de404675654569f2fe04382e8c6d11933ecdbf70dcb4e9966a52ebb"
+    },
+    {
+      "file": "locale-zh-Hans-768.jpg",
+      "bytes": 97214,
+      "sha256": "209d0aa9960fd697a42e4c521d26a36207186b60551929d8bdadef8d2e49db69",
+      "pixels": [
+        753,
+        1367
+      ]
+    },
+    {
+      "file": "main-build.txt",
+      "bytes": 21914,
+      "sha256": "b12da0db25bc4bc888f4bb7161f3d2d351e9f29cc1e5136c0964451f056e9c4d"
+    },
+    {
+      "file": "mobile-home-390.jpg",
+      "bytes": 38290,
+      "sha256": "c6332131ac5d08a9483760e2bb107b5a53b4d51b3826d976004fd1f8653652eb",
+      "pixels": [
+        375,
+        812
+      ]
+    },
+    {
+      "file": "mobile-stacked-390.jpg",
+      "bytes": 29135,
+      "sha256": "cb93e6e1518ca1f142d4f3c2da86394089b0f6c83b4d7f98a26c95f88b5ec62c",
+      "pixels": [
+        375,
+        812
+      ]
+    },
+    {
+      "file": "navigation-and-console-observations.json",
+      "bytes": 606,
+      "sha256": "aef123edd8685277e01372ea4e58820e8b3b2425855f4feba4e368a553faa429"
+    },
+    {
+      "file": "preview-build.txt",
+      "bytes": 3095,
+      "sha256": "d9c57e2e88d100ca7a6aca7a49f4f4a22ea937dfcb9c74c1474b29e3fb072b34"
+    },
+    {
+      "file": "responsive-observations.json",
+      "bytes": 3280,
+      "sha256": "41c4bdd75ed44cfdec17866722112ca706082fafd0dceec0e2fc04bba7ea56d3"
+    },
+    {
+      "file": "route-tests.txt",
+      "bytes": 819,
+      "sha256": "d291be46fe3b9a5dc59523a2fea0074f8e633b421f827e367ebecfd917575279"
+    },
+    {
+      "file": "runtime-shell-390.jpg",
+      "bytes": 39824,
+      "sha256": "351b20204cdbc41b4611e6d4106c84f20ebd5f21aa165de611eb5f67955c2689",
+      "pixels": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "stack-and-runtime-observations.json",
+      "bytes": 1108,
+      "sha256": "9a28b76d5d2b37857c7917f014c2cd38c8932837ec330f6060086b16d84ead1f"
+    },
+    {
+      "file": "template-1.png",
+      "bytes": 1570629,
+      "sha256": "050167ae28083093063f35cff26c763168d33f6d9fe96985be586fa0c33682c9",
+      "pixels": [
+        1374,
+        1145
+      ]
+    },
+    {
+      "file": "template-2-selected.png",
+      "bytes": 1514296,
+      "sha256": "38a27934cab53afa810f106696bf6c9283dd17c48c71d66490e3cd918610dd59",
+      "pixels": [
+        1159,
+        1358
+      ]
+    },
+    {
+      "file": "template-3.png",
+      "bytes": 1336575,
+      "sha256": "167c4421068e09e03c83e6c2f390bcd52e92da457aa1c2b9b78be123c855fb51",
+      "pixels": [
+        1159,
+        1358
+      ]
+    },
+    {
+      "file": "template-selection.json",
+      "bytes": 366,
+      "sha256": "10943b3b3bf8d7dc020eb821fae26833418e1dd9841234d477a596d63b509b6a"
+    },
+    {
+      "file": "width-1280.jpg",
+      "bytes": 165952,
+      "sha256": "d58b399619782573671dedee8be2becb6f2365b6eb763dc0cd77f79837cb7122",
+      "pixels": [
+        1280,
+        1547
+      ]
+    },
+    {
+      "file": "width-1440.jpg",
+      "bytes": 168393,
+      "sha256": "c80f21eae9e06cc3e6a1af14ce3368f049361101ef4f4a4ed295fbe50650f960",
+      "pixels": [
+        1440,
+        1547
+      ]
+    },
+    {
+      "file": "width-375.jpg",
+      "bytes": 83553,
+      "sha256": "1e2abd99be8a5040a9b18d1eb31440ec57c7a04fd25d2dbc098e59319b82170c",
+      "pixels": [
+        360,
+        1887
+      ]
+    },
+    {
+      "file": "width-390.jpg",
+      "bytes": 86732,
+      "sha256": "1ea4c09a17137908661527902b076dfd36f07207b52fc2373ed45a3409ca7b54",
+      "pixels": [
+        375,
+        1915
+      ]
+    },
+    {
+      "file": "width-768.jpg",
+      "bytes": 97084,
+      "sha256": "0739a6be9295a6d299e4bdfe0abf877900eabee93e843462665b61808b0b5dc2",
+      "pixels": [
+        753,
+        1397
+      ]
+    }
+  ]
+}

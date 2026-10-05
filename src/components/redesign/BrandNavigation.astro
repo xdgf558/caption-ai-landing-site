@@ -1,0 +1,54 @@
+---
+import { Home, Music2, Gamepad2, UserRound, ChevronDown, Check } from '@lucide/astro';
+import { stationLocales, stationSections, stationCopy, stationHref, stationSection, stationLanguageHref, stationLanguageNames, stationLanguageAccessibleNames } from '../../redesign/routes.js';
+interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+const { lang } = Astro.props;
+const copy = stationCopy[lang];
+const active = stationSection(Astro.url.pathname);
+const icons = { home: Home, music: Music2, games: Gamepad2, my: UserRound };
+---
+<header class="sc-header sc-container" data-station-chrome>
+  <a class="sc-brand" href={stationHref(lang, 'home')} aria-label={`Station Cat · ${copy.home}`}>
+    <img src="/images/home-night/cat-mark.webp" width="44" height="54" alt="" />
+    <span><strong>Station Cat</strong><small>{copy.subtitle}</small></span>
+  </a>
+  <nav class="sc-top-links" aria-label={copy.navigation}>
+    {stationSections.map(section => <a href={stationHref(lang, section)} aria-current={active === section ? 'page' : undefined}>{copy[section]}</a>)}
+  </nav>
+  <details class="sc-language" data-sc-language-menu>
+    <summary aria-label={copy.language}><span>{stationLanguageNames[lang]}</span><ChevronDown aria-hidden="true" /></summary>
+    <ul class="sc-language-options">
+      {stationLocales.map(locale => <li><a href={stationLanguageHref(locale, Astro.url.pathname)} data-sc-language={locale} lang={locale} hreflang={locale} aria-label={stationLanguageAccessibleNames[locale]} aria-current={locale === lang ? 'true' : undefined}>
+        {stationLanguageNames[locale]}{locale === lang && <Check size={16} aria-hidden="true" />}
+      </a></li>)}
+    </ul>
+  </details>
+</header>
+<nav class="sc-bottom-nav" aria-label={copy.navigation} data-sc-bottom-nav data-station-chrome>
+  {stationSections.map(section => {
+    const Icon = icons[section];
+    return <a href={stationHref(lang, section)} aria-current={active === section ? 'page' : undefined}><Icon aria-hidden="true" /><span>{copy[section]}</span></a>;
+  })}
+</nav>
+<script>
+  import { stationLanguageHref } from '../../redesign/routes.js';
+  function mountLanguageMenus() {
+    document.querySelectorAll<HTMLDetailsElement>('[data-sc-language-menu]').forEach(menu => {
+      if (menu.dataset.mounted) return;
+      menu.dataset.mounted = 'true';
+      menu.querySelectorAll<HTMLAnchorElement>('[data-sc-language]').forEach(link => {
+        link.href = stationLanguageHref(link.dataset.scLanguage, location.pathname, location.search);
+      });
+      const summary = menu.querySelector('summary');
+      menu.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && menu.open) { menu.open = false; summary?.focus(); event.preventDefault(); }
+      });
+      // One menu per shell; outside clicks close it without stealing the clicked focus.
+      const closeOutside = (event: MouseEvent) => { if (menu.open && !menu.contains(event.target as Node)) menu.open = false; };
+      document.addEventListener('click', closeOutside);
+      document.addEventListener('astro:before-swap', () => document.removeEventListener('click', closeOutside), { once: true });
+    });
+  }
+  mountLanguageMenus();
+  document.addEventListener('astro:page-load', mountLanguageMenus);
+</script>
