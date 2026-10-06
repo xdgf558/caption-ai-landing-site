@@ -1,0 +1,92 @@
+{
+  "verifiedAt": "2026-10-06T15:11:53.849788+00:00",
+  "baseCommit": "781c8d9e04c729406f6083aac9e865b0e21ad966",
+  "nodeVersion": "v24.15.0",
+  "migrationSha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+  "checks": [
+    {
+      "command": "node --test --test-timeout=90000 --test-reporter=tap scripts/test-station-redesign-model.mjs",
+      "exitCode": 0,
+      "tests": 26,
+      "passed": 26,
+      "failed": 0,
+      "scope": "includes old catalog/details, old admin CRUD/publication and cleanup after 0012, plus ephemeral native D1 rollback",
+      "output": "model-tests.tap"
+    },
+    {
+      "command": "node --test --test-reporter=tap scripts/test-music-public.mjs scripts/test-music-publication.mjs scripts/test-music-admin.mjs scripts/test-music-cleanup.mjs scripts/test-music-analytics.mjs scripts/test-music-foundation.mjs scripts/test-music-membership.mjs",
+      "exitCode": 0,
+      "tests": 143,
+      "passed": 143,
+      "failed": 0,
+      "scope": "original suites retain their own legacy-schema fixtures; not additional production/0012 schema proof",
+      "output": "legacy-domain-tests.tap",
+      "initialSandboxRun": {
+        "exitCode": 1,
+        "tests": 143,
+        "passed": 142,
+        "failed": 1,
+        "reason": "native static-cover test could not bind loopback (EPERM); rerun with local-port permission passed",
+        "output": "legacy-domain-tests-sandbox.tap"
+      }
+    },
+    {
+      "command": "node --test --test-reporter=tap scripts/test-station-redesign-home.mjs scripts/test-station-redesign-routes.mjs",
+      "exitCode": 0,
+      "tests": 26,
+      "passed": 26,
+      "failed": 0,
+      "output": "home-and-routes.tap"
+    },
+    {
+      "command": "node scripts/rehearse-station-redesign-migration.mjs",
+      "exitCode": 0,
+      "scope": "synthetic local SQLite and ephemeral Miniflare D1; no remote state",
+      "output": "migration-rehearsal.json"
+    },
+    {
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "exitCode": 0,
+      "builtPages": 153,
+      "sitemapPublicRoutes": 111,
+      "output": "local-build.log",
+      "warning": "serials/serialChapters content directories are absent; empty-content local build is not a production package"
+    }
+  ],
+  "ci": {
+    "status": "current T06 head not yet verified on hosted CI",
+    "note": "workflow now runs test:redesign:model; T05 success is not a T06 CI result"
+  },
+  "production": {
+    "databaseApplied": false,
+    "workerDeployed": false,
+    "officialPagesMounted": false,
+    "oldEntriesClosed": false,
+    "realOrdersMembershipOrR2Verified": false
+  },
+  "pending": [
+    "T07 public queries, audio authorization and current resource validation",
+    "T16 administrator publishing, CAS, references, media quotas and audit integration",
+    "T18 real media event semantics and admission/deduplication",
+    "T20 production HTTP permissions and old-path migration review"
+  ],
+  "hashes": {
+    "docs/station-cat-redesign/T06-evidence/build-isolation.json": "8e1e33fba78f79435066138fbb0282ec75e7629bc9ccd527dec2bc192bb75611",
+    "docs/station-cat-redesign/T06-evidence/home-and-routes.tap": "bb23f61d33ff055857f7f6c1aaea7f5e9d36e0dba40928a773501d0bf7a0ffd6",
+    "docs/station-cat-redesign/T06-evidence/legacy-domain-tests-sandbox.tap": "028e3a8829636a95ec3a6ccb8bb9817da86b9d42311f63b37f26987c9e45acbb",
+    "docs/station-cat-redesign/T06-evidence/legacy-domain-tests.tap": "bcd67b49e0d6d4b193be58bc9ce5d8e9065a0d645c729bd8748d593dd348d1c8",
+    "docs/station-cat-redesign/T06-evidence/local-build.log": "9497c9c644a9fec81b97bef1b88e9409230196a4ed65561d8deaf66fbbada687",
+    "docs/station-cat-redesign/T06-evidence/migration-rehearsal.json": "84e6a6232757612cab60fd9c9f80c733c5e27d4accb9a2dbf754ea3fbaf2d081",
+    "docs/station-cat-redesign/T06-evidence/model-tests.tap": "3e55d78a7a2165cbaea1e952c432c9dcec0615ac5a8e022877e1d794c3419b29",
+    "migrations-music/0012_station_redesign.sql": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+    "scripts/helpers/station-redesign-database.mjs": "b813795e6b6e768d2b5e578ea6a2ae27cf90a31bc24b447f7ac0faf59f7423e2",
+    "scripts/rehearse-station-redesign-migration.mjs": "4142ff471c0d5038da1f5b5e22a29900ab5d1a30d159d87dc88896fa31da6961",
+    "scripts/test-station-redesign-model.mjs": "d6bc46851b45d2d7318385109e323c510f023e92009787afac05d436014314a7"
+  },
+  "outputNormalizations": {
+    "docs/station-cat-redesign/T06-evidence/local-build.log": {
+      "operation": "strip trailing horizontal whitespace only; all build messages retained",
+      "originalSha256": "c9c4b1a368e32f9612a2690332ebda2adf6fbf40a6373bc034b36c09d58272b3"
+    }
+  }
+}

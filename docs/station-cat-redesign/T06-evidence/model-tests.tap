@@ -1,0 +1,166 @@
+TAP version 13
+# Subtest: populated migration, repeated application and old-reader rollback retain both old and new data
+ok 1 - populated migration, repeated application and old-reader rollback retain both old and new data
+  ---
+  duration_ms: 67.90575
+  type: 'test'
+  ...
+# Subtest: empty migration seeds only an unpublished home draft with no selected materials
+ok 2 - empty migration seeds only an unpublished home draft with no selected materials
+  ---
+  duration_ms: 20.975375
+  type: 'test'
+  ...
+# Subtest: backfill preserves stable IDs, exact legacy slugs and existing policy sources without promotion inference
+ok 3 - backfill preserves stable IDs, exact legacy slugs and existing policy sources without promotion inference
+  ---
+  duration_ms: 22.93275
+  type: 'test'
+  ...
+# Subtest: legacy-accepted noncanonical slugs are retained verbatim, while new managed routes use the normalized format
+ok 4 - legacy-accepted noncanonical slugs are retained verbatim, while new managed routes use the normalized format
+  ---
+  duration_ms: 32.196417
+  type: 'test'
+  ...
+# Subtest: old music table definitions and five cleanup reference columns remain compatible
+ok 5 - old music table definitions and five cleanup reference columns remain compatible
+  ---
+  duration_ms: 23.01075
+  type: 'test'
+  ...
+# Subtest: old administrator create, draft save, revision conflict and idempotency receipts still work after migration
+ok 6 - old administrator create, draft save, revision conflict and idempotency receipts still work after migration
+  ---
+  duration_ms: 36.410834
+  type: 'test'
+  ...
+# Subtest: a website publication can have no site audio or external release, and a later draft does not replace its sealed snapshot
+ok 7 - a website publication can have no site audio or external release, and a later draft does not replace its sealed snapshot
+  ---
+  duration_ms: 23.477792
+  type: 'test'
+  ...
+# Subtest: old guarded publication and replay still seal the original audio revision after the additive migration
+ok 8 - old guarded publication and replay still seal the original audio revision after the additive migration
+  ---
+  duration_ms: 25.599416
+  type: 'test'
+  ...
+# Subtest: full-audio modes and covers must point to the same owner; mode labels never add an entitlement
+ok 9 - full-audio modes and covers must point to the same owner; mode labels never add an entitlement
+  ---
+  duration_ms: 22.910833
+  type: 'test'
+  ...
+# Subtest: station_track_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected
+ok 10 - station_track_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected
+  ---
+  duration_ms: 22.964875
+  type: 'test'
+  ...
+# Subtest: station_game_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected
+ok 11 - station_game_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected
+  ---
+  duration_ms: 23.035333
+  type: 'test'
+  ...
+# Subtest: station_clip_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected
+ok 12 - station_clip_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected
+  ---
+  duration_ms: 22.954792
+  type: 'test'
+  ...
+# Subtest: station_promotion_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected
+ok 13 - station_promotion_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected
+  ---
+  duration_ms: 22.953125
+  type: 'test'
+  ...
+# Subtest: station_home_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected
+ok 14 - station_home_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected
+  ---
+  duration_ms: 23.507708
+  type: 'test'
+  ...
+# Subtest: slug changes keep the old alias and cannot reassign or reclaim another track address
+ok 15 - slug changes keep the old alias and cannot reassign or reclaim another track address
+  ---
+  duration_ms: 34.178042
+  type: 'test'
+  ...
+# Subtest: platform regions are canonical sets and live links require a URL and verification timestamp
+ok 16 - platform regions are canonical sets and live links require a URL and verification timestamp
+  ---
+  duration_ms: 23.429708
+  type: 'test'
+  ...
+# Subtest: promotion previews, platform selections and clips cannot borrow another song or an audio master
+ok 17 - promotion previews, platform selections and clips cannot borrow another song or an audio master
+  ---
+  duration_ms: 22.886625
+  type: 'test'
+  ...
+# Subtest: home selections use stable existing IDs with bounded, duplicate-free arrays
+ok 18 - home selections use stable existing IDs with bounded, duplicate-free arrays
+  ---
+  duration_ms: 22.934125
+  type: 'test'
+  ...
+# Subtest: game introduction slug cannot occupy the runtime directory and a runtime key grants no new save capability
+ok 19 - game introduction slug cannot occupy the runtime directory and a runtime key grants no new save capability
+  ---
+  duration_ms: 22.846292
+  type: 'test'
+  ...
+# Subtest: clip assets and posters belong to the clip and media type, with immutable validated bytes and terminal revocation
+ok 20 - clip assets and posters belong to the clip and media type, with immutable validated bytes and terminal revocation
+  ---
+  duration_ms: 23.3625
+  type: 'test'
+  ...
+# Subtest: rights start pending, require review metadata and cannot change resource identity or scope
+ok 21 - rights start pending, require review metadata and cannot change resource identity or scope
+  ---
+  duration_ms: 22.706417
+  type: 'test'
+  ...
+# Subtest: new cover, lyrics, preview and rights references block the old cleanup before any storage call
+ok 22 - new cover, lyrics, preview and rights references block the old cleanup before any storage call
+  ---
+  duration_ms: 25.136417
+  type: 'test'
+  ...
+# Subtest: assets already claimed by the old cleaner cannot gain a new website, preview or rights reference
+ok 23 - assets already claimed by the old cleaner cannot gain a new website, preview or rights reference
+  ---
+  duration_ms: 22.873834
+  type: 'test'
+  ...
+# Subtest: clip platform publications are independent records, campaigns cannot borrow another track clip, and routes remain proposals
+ok 24 - clip platform publications are independent records, campaigns cannot borrow another track clip, and routes remain proposals
+  ---
+  duration_ms: 22.941542
+  type: 'test'
+  ...
+# Subtest: new event IDs are immutable and deduplicated while the old preview threshold remains unchanged
+ok 25 - new event IDs are immutable and deduplicated while the old preview threshold remains unchanged
+  ---
+  duration_ms: 23.464584
+  type: 'test'
+  ...
+# Subtest: native local D1 batches replay safely, retain new writes, and roll back wrong-binding or late failures
+ok 26 - native local D1 batches replay safely, retain new writes, and roll back wrong-binding or late failures
+  ---
+  duration_ms: 5345.992042
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6054.413541

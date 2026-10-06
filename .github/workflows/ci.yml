@@ -43,6 +43,9 @@ jobs:
       - name: Verify isolated music Workers D1 and R2 runtime
         run: npm run test:music:runtime
 
+      - name: Verify additive Station Cat models and isolated D1 migration rollback
+        run: npm run test:redesign:model
+
       - name: Verify isolated native authentication and deletion recovery
         run: node --test scripts/test-mobile-probe-diagnostics.mjs scripts/test-mobile-crash-preparation.mjs && npm run test:mobile:auth && npm run test:mobile:music && npm run test:mobile:library && npm run test:mobile:lifecycle && npm run test:mobile:r2
 

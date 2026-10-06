@@ -1,0 +1,166 @@
+TAP version 13
+# Subtest: unselected draft remains empty without choosing a free/latest fallback
+ok 1 - unselected draft remains empty without choosing a free/latest fallback
+  ---
+  duration_ms: 1.040125
+  type: 'test'
+  ...
+# Subtest: published IDs and revision drive direct destinations, three selections and four clips
+ok 2 - published IDs and revision drive direct destinations, three selections and four clips
+  ---
+  duration_ms: 0.535458
+  type: 'test'
+  ...
+# Subtest: synthetic configuration needs explicit fixture option and cannot enter a normal consumer
+ok 3 - synthetic configuration needs explicit fixture option and cannot enter a normal consumer
+  ---
+  duration_ms: 0.300416
+  type: 'test'
+  ...
+# Subtest: draft, mismatched revision, scheduled/future or missing configuration cannot publish
+ok 4 - draft, mismatched revision, scheduled/future or missing configuration cannot publish
+  ---
+  duration_ms: 0.734458
+  type: 'test'
+  ...
+# Subtest: promotion must be explicitly enabled, published and refer to a public parent
+ok 5 - promotion must be explicitly enabled, published and refer to a public parent
+  ---
+  duration_ms: 0.481541
+  type: 'test'
+  ...
+# Subtest: missing, revoked, private, mismatched or duplicate cover references hide the work
+ok 6 - missing, revoked, private, mismatched or duplicate cover references hide the work
+  ---
+  duration_ms: 0.437958
+  type: 'test'
+  ...
+# Subtest: repeated track IDs are ambiguous and never pick a row by order
+ok 7 - repeated track IDs are ambiguous and never pick a row by order
+  ---
+  duration_ms: 0.101625
+  type: 'test'
+  ...
+# Subtest: selectors de-duplicate IDs and exclude the featured work
+ok 8 - selectors de-duplicate IDs and exclude the featured work
+  ---
+  duration_ms: 0.189708
+  type: 'test'
+  ...
+# Subtest: empty optional summary does not hide an otherwise published song or game
+ok 9 - empty optional summary does not hide an otherwise published song or game
+  ---
+  duration_ms: 0.162208
+  type: 'test'
+  ...
+# Subtest: missing video and missing platforms produce distinct honest states
+ok 10 - missing video and missing platforms produce distinct honest states
+  ---
+  duration_ms: 0.179084
+  type: 'test'
+  ...
+# Subtest: only selected, live, verified and correctly owned platform links survive
+ok 11 - only selected, live, verified and correctly owned platform links survive
+  ---
+  duration_ms: 0.589916
+  type: 'test'
+  ...
+# Subtest: public link syntax rejects credentials, tokens, scripts, private hosts and fixture paths
+ok 12 - public link syntax rejects credentials, tokens, scripts, private hosts and fixture paths
+  ---
+  duration_ms: 0.992916
+  type: 'test'
+  ...
+# Subtest: preview requires enabled, ready, independently typed public and rights-confirmed clip
+ok 13 - preview requires enabled, ready, independently typed public and rights-confirmed clip
+  ---
+  duration_ms: 0.641625
+  type: 'test'
+  ...
+# Subtest: revoking a clip, poster or platform removes the reference on next projection
+ok 14 - revoking a clip, poster or platform removes the reference on next projection
+  ---
+  duration_ms: 0.128334
+  type: 'test'
+  ...
+# Subtest: clips require both selection lists, public parent, ready poster and public media
+ok 15 - clips require both selection lists, public parent, ready poster and public media
+  ---
+  duration_ms: 0.486334
+  type: 'test'
+  ...
+# Subtest: game revocation removes its card and related update without starting a runtime
+ok 16 - game revocation removes its card and related update without starting a runtime
+  ---
+  duration_ms: 0.124917
+  type: 'test'
+  ...
+# Subtest: a game introduction never occupies the existing cat-life runtime namespace
+ok 17 - a game introduction never occupies the existing cat-life runtime namespace
+  ---
+  duration_ms: 0.295042
+  type: 'test'
+  ...
+# Subtest: locale routing and translation fallback retain the stable selected IDs
+ok 18 - locale routing and translation fallback retain the stable selected IDs
+  ---
+  duration_ms: 0.289334
+  type: 'test'
+  ...
+# Subtest: allowlist projection never forwards private audio, storage, entitlement or extra fields
+ok 19 - allowlist projection never forwards private audio, storage, entitlement or extra fields
+  ---
+  duration_ms: 0.12875
+  type: 'test'
+  ...
+# Subtest: four locales keep canonical home/music paths and five navigation entries reuse existing services
+ok 20 - four locales keep canonical home/music paths and five navigation entries reuse existing services
+  ---
+  duration_ms: 0.548208
+  type: 'test'
+  ...
+# Subtest: five-entry navigation uses the existing member and about pages
+ok 21 - five-entry navigation uses the existing member and about pages
+  ---
+  duration_ms: 0.31875
+  type: 'test'
+  ...
+# Subtest: language changes retain valid public music selections, discarding private and duplicated parameters
+ok 22 - language changes retain valid public music selections, discarding private and duplicated parameters
+  ---
+  duration_ms: 0.198458
+  type: 'test'
+  ...
+# Subtest: future single-song and game routes keep their entity when switching language
+ok 23 - future single-song and game routes keep their entity when switching language
+  ---
+  duration_ms: 0.099958
+  type: 'test'
+  ...
+# Subtest: selected state recognizes descendants and aliases without confusing service paths
+ok 24 - selected state recognizes descendants and aliases without confusing service paths
+  ---
+  duration_ms: 0.068917
+  type: 'test'
+  ...
+# Subtest: language links never move the existing game runtime into a localized introduction path
+ok 25 - language links never move the existing game runtime into a localized introduction path
+  ---
+  duration_ms: 0.036
+  type: 'test'
+  ...
+# Subtest: policy links retain four existing locale prefixes and reject arbitrary destinations
+ok 26 - policy links retain four existing locale prefixes and reject arbitrary destinations
+  ---
+  duration_ms: 0.127209
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 41.933167

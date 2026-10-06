@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-06T15:11:53.849454+00:00",
+  "scope": "normal local Astro HTML/CSS/JS only; ALLOW_EMPTY_SERIAL_CONTENT=1; not deployment proof",
+  "scannedFiles": 271,
+  "needles": [
+    "data-home-config",
+    "data-home-fixture-wishlist",
+    "__home-fixture",
+    "preview-assets/gentle-station",
+    "sc-bottom-nav",
+    "data-station-shell"
+  ],
+  "matches": []
+}

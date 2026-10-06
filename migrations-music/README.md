@@ -32,3 +32,24 @@ counters and their atomic increment guards. It does not alter ordinary artwork,
 audio or catalog counters, music content, permissions, or quotas. Apply it before
 deploying a Worker that uses the `share` category. A rollback to the previous Worker
 may leave these additive tables in place; the old Worker ignores them.
+
+`0012_station_redesign.sql` adds website publication snapshots, retained track
+routes, platform links, clips/games and their media, explicit asset-use reviews,
+promotion/home snapshots, campaigns, new analytics event storage and route
+proposals. Existing music physical tables and full-audio policies are retained.
+The old cleanup reference view keeps its six output columns and also protects new
+cover, lyrics, preview and review references. Its view replacement and every
+backfill must execute in the same atomic migration batch.
+
+Existing songs backfill to website drafts only. The sole initial home draft has
+no selected content; no promotion, platform release, preview authorization, game,
+video, license or redirect is inferred. Replays preserve newer drafts, published
+snapshots, aliases and post-migration data. A rollback to the old application
+keeps the extension schema and the expanded reference view; do not overwrite new
+data with a pre-migration backup or drop these tables.
+
+Run `npm run test:redesign:model` and `npm run rehearse:redesign:migration` for
+ephemeral local SQLite/D1 verification. The rehearsal has no remote option or
+existing database target. See [T06 mapping and rollback](../docs/station-cat-redesign/T06-data-model-and-migration.md)
+for fields, deployment prerequisites and the remaining T07/T16/T18 responsibilities.
+Merging this file does not apply it to staging or production.

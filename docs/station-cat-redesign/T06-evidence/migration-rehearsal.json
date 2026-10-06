@@ -1,0 +1,59 @@
+{
+  "executedAt": "2026-10-06T15:06:45.414Z",
+  "scope": "synthetic local SQLite and ephemeral Miniflare D1; no remote state",
+  "migrationSha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+  "sqlite": {
+    "migration": "0012_station_redesign.sql",
+    "migrationSha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+    "legacyTrackCount": 8,
+    "legacyPublicTrackCount": 5,
+    "locales": [
+      "zh-Hant",
+      "zh-Hans",
+      "en",
+      "ja"
+    ],
+    "newTableCount": 18,
+    "checks": {
+      "legacyRowsUnchanged": true,
+      "legacyCatalogAndDetailsUnchanged": true,
+      "repeatedMigrationUnchanged": true,
+      "postMigrationRowsRetained": true,
+      "oldReaderRollbackWithNewData": true,
+      "foreignKeysValid": true
+    },
+    "postMigrationRowsSha256": "26dc1200b98561f600144593ff58488860c1d249c850b68f1cb155653cb47878"
+  },
+  "nativeD1": {
+    "migration": "0012_station_redesign.sql",
+    "migrationSha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+    "legacyTrackCount": 8,
+    "legacyPublicTrackCount": 5,
+    "locales": [
+      "zh-Hant",
+      "zh-Hans",
+      "en",
+      "ja"
+    ],
+    "newTableCount": 18,
+    "checks": {
+      "legacyRowsUnchanged": true,
+      "legacyCatalogAndDetailsUnchanged": true,
+      "repeatedMigrationUnchanged": true,
+      "postMigrationRowsRetained": true,
+      "oldReaderRollbackWithNewData": true,
+      "foreignKeysValid": true,
+      "wrongBindingRolledBack": true,
+      "lateFailureRollsBackDdlAndBackfill": true
+    },
+    "postMigrationRowsSha256": "26dc1200b98561f600144593ff58488860c1d249c850b68f1cb155653cb47878"
+  },
+  "excludes": [
+    "production schema",
+    "real orders or membership",
+    "R2 object readiness or licenses",
+    "HTTP publication or authorization",
+    "cache invalidation",
+    "old entry closure"
+  ]
+}

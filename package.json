@@ -70,7 +70,9 @@
     "test:redesign:routes": "node --test scripts/test-station-redesign-routes.mjs",
     "build:redesign:preview": "astro build --config scripts/fixtures/station-redesign/astro.config.mjs",
     "preview:redesign": "npm run build:redesign:preview && node scripts/serve-station-redesign-preview.mjs",
-    "test:redesign:home": "node --test scripts/test-station-redesign-home.mjs"
+    "test:redesign:home": "node --test scripts/test-station-redesign-home.mjs",
+    "test:redesign:model": "node --test --test-timeout=90000 scripts/test-station-redesign-model.mjs",
+    "rehearse:redesign:migration": "node scripts/rehearse-station-redesign-migration.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",
