@@ -1,0 +1,22 @@
+[
+  {
+    "lang": "zh-Hant",
+    "clear": true,
+    "gameActions": {
+      "bottom": 443.9375,
+      "top": 399.9375
+    },
+    "navTop": 780,
+    "scrollY": 788.5
+  },
+  {
+    "lang": "en",
+    "clear": true,
+    "gameActions": {
+      "bottom": 497.8359375,
+      "top": 399.8359375
+    },
+    "navTop": 780,
+    "scrollY": 847
+  }
+]

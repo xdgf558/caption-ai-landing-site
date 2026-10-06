@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-06T14:07:07.978Z",
+  "scope": "Normal Astro output only; ALLOW_EMPTY_SERIAL_CONTENT=1. Static isolation check, not deployment proof.",
+  "scannedFiles": 271,
+  "needles": [
+    "data-home-config",
+    "data-home-fixture-wishlist",
+    "__home-fixture",
+    "preview-assets/gentle-station",
+    "sc-bottom-nav",
+    "data-station-shell"
+  ],
+  "matches": []
+}

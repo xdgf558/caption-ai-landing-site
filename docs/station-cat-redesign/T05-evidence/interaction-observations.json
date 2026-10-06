@@ -1,0 +1,58 @@
+[
+  {
+    "action": "hero-music-keyboard",
+    "url": "http://127.0.0.1:4204/music/tracks/sample-song/",
+    "heading": "晚一點告白"
+  },
+  {
+    "action": "hero-game",
+    "url": "http://127.0.0.1:4204/games/cat-life-game/",
+    "heading": "打工養貓日記"
+  },
+  {
+    "action": "selected-track",
+    "url": "http://127.0.0.1:4204/music/tracks/quiet-night/",
+    "heading": "靜夜版本",
+    "clips": 0
+  },
+  {
+    "action": "clip-to-parent",
+    "url": "http://127.0.0.1:4204/music/tracks/sample-song/#clip-ca710005-0000-4000-8000-000000000020",
+    "hashTarget": true,
+    "media": 0
+  },
+  {
+    "action": "platform-local-demonstration",
+    "url": "http://127.0.0.1:4204/__home-fixture/platform/netease/",
+    "note": "这是本地平台按钮说明页，没有填入虚构的歌曲发行链接。"
+  },
+  {
+    "action": "preview-navigation",
+    "url": "http://127.0.0.1:4204/music/tracks/sample-song/#preview",
+    "hashTarget": true,
+    "media": 0
+  },
+  {
+    "action": "fixture-wishlist",
+    "pressedAfterClick": true,
+    "notice": "已加入本次預覽清單，未同步至帳號。",
+    "pressedAfterReload": "false"
+  },
+  {
+    "action": "mobile-bottom-after-wishlist",
+    "clear": true,
+    "lastAction": {
+      "bottom": 731.9921875,
+      "top": 687.9921875
+    },
+    "nav": {
+      "bottom": 844,
+      "top": 780
+    },
+    "scrollY": 2450,
+    "viewport": [
+      390,
+      844
+    ]
+  }
+]

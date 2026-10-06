@@ -1,0 +1,450 @@
+[
+  {
+    "state": "complete",
+    "badImages": [],
+    "client": 1356,
+    "clipSizes": [
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      }
+    ],
+    "clips": 4,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/tracks/sample-song/"
+      },
+      {
+        "height": 44,
+        "href": "/games/cat-life-game/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [],
+    "footer": {
+      "bottom": 1471.578125,
+      "height": 78,
+      "width": 1296,
+      "x": 30,
+      "y": 1393.578125
+    },
+    "heroCopy": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 615,
+      "x": 0,
+      "y": 62
+    },
+    "heroImage": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 1356,
+      "x": 0,
+      "y": 62
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "platforms": [
+      "/__home-fixture/platform/netease/",
+      "/__home-fixture/platform/qishui/",
+      "/__home-fixture/platform/apple_music/"
+    ],
+    "preview": null,
+    "revision": "1",
+    "scroll": 1356,
+    "selected": 3,
+    "tracks": 1,
+    "url": "http://127.0.0.1:4204/home-preview/complete/",
+    "viewport": [
+      1371,
+      996
+    ]
+  },
+  {
+    "state": "no-video",
+    "badImages": [],
+    "client": 1356,
+    "clipSizes": [],
+    "clips": 0,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/tracks/sample-song/"
+      },
+      {
+        "height": 44,
+        "href": "/games/cat-life-game/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [],
+    "footer": {
+      "bottom": 1145.109375,
+      "height": 78,
+      "width": 1296,
+      "x": 30,
+      "y": 1067.109375
+    },
+    "heroCopy": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 615,
+      "x": 0,
+      "y": 62
+    },
+    "heroImage": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 1356,
+      "x": 0,
+      "y": 62
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "platforms": [
+      "/__home-fixture/platform/netease/",
+      "/__home-fixture/platform/qishui/",
+      "/__home-fixture/platform/apple_music/"
+    ],
+    "preview": null,
+    "revision": "1",
+    "scroll": 1356,
+    "selected": 3,
+    "tracks": 1,
+    "url": "http://127.0.0.1:4204/home-preview/no-video/",
+    "viewport": [
+      1371,
+      996
+    ]
+  },
+  {
+    "state": "no-platform",
+    "badImages": [],
+    "client": 1356,
+    "clipSizes": [
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      }
+    ],
+    "clips": 4,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/tracks/sample-song/"
+      },
+      {
+        "height": 44,
+        "href": "/games/cat-life-game/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [],
+    "footer": {
+      "bottom": 1471.578125,
+      "height": 78,
+      "width": 1296,
+      "x": 30,
+      "y": 1393.578125
+    },
+    "heroCopy": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 615,
+      "x": 0,
+      "y": 62
+    },
+    "heroImage": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 1356,
+      "x": 0,
+      "y": 62
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "platforms": [],
+    "preview": null,
+    "revision": "1",
+    "scroll": 1356,
+    "selected": 3,
+    "tracks": 1,
+    "url": "http://127.0.0.1:4204/home-preview/no-platform/",
+    "viewport": [
+      1371,
+      996
+    ]
+  },
+  {
+    "state": "pending",
+    "badImages": [],
+    "client": 1356,
+    "clipSizes": [],
+    "clips": 0,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/"
+      },
+      {
+        "height": 44,
+        "href": "/games/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [
+      "music",
+      "game"
+    ],
+    "footer": {
+      "bottom": 824.5625,
+      "height": 78,
+      "width": 1296,
+      "x": 30,
+      "y": 746.5625
+    },
+    "heroCopy": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 615,
+      "x": 0,
+      "y": 62
+    },
+    "heroImage": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 1356,
+      "x": 0,
+      "y": 62
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "platforms": [],
+    "preview": null,
+    "revision": null,
+    "scroll": 1356,
+    "selected": 0,
+    "tracks": 0,
+    "url": "http://127.0.0.1:4204/home-preview/pending/",
+    "viewport": [
+      1371,
+      996
+    ]
+  },
+  {
+    "state": "preview-enabled",
+    "badImages": [],
+    "client": 1356,
+    "clipSizes": [
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      }
+    ],
+    "clips": 4,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/tracks/sample-song/"
+      },
+      {
+        "height": 44,
+        "href": "/games/cat-life-game/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [],
+    "footer": {
+      "bottom": 1471.578125,
+      "height": 78,
+      "width": 1296,
+      "x": 30,
+      "y": 1393.578125
+    },
+    "heroCopy": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 615,
+      "x": 0,
+      "y": 62
+    },
+    "heroImage": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 1356,
+      "x": 0,
+      "y": 62
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "platforms": [
+      "/__home-fixture/platform/netease/",
+      "/__home-fixture/platform/qishui/",
+      "/__home-fixture/platform/apple_music/"
+    ],
+    "preview": "/music/tracks/sample-song/#preview",
+    "revision": "1",
+    "scroll": 1356,
+    "selected": 3,
+    "tracks": 1,
+    "url": "http://127.0.0.1:4204/home-preview/preview-enabled/",
+    "viewport": [
+      1371,
+      996
+    ]
+  },
+  {
+    "state": "revoked",
+    "badImages": [],
+    "client": 1356,
+    "clipSizes": [
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      }
+    ],
+    "clips": 3,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/tracks/sample-song/"
+      },
+      {
+        "height": 44,
+        "href": "/games/cat-life-game/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [],
+    "footer": {
+      "bottom": 1471.578125,
+      "height": 78,
+      "width": 1296,
+      "x": 30,
+      "y": 1393.578125
+    },
+    "heroCopy": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 615,
+      "x": 0,
+      "y": 62
+    },
+    "heroImage": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 1356,
+      "x": 0,
+      "y": 62
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "platforms": [
+      "/__home-fixture/platform/qishui/",
+      "/__home-fixture/platform/apple_music/"
+    ],
+    "preview": null,
+    "revision": "1",
+    "scroll": 1356,
+    "selected": 3,
+    "tracks": 1,
+    "url": "http://127.0.0.1:4204/home-preview/revoked/",
+    "viewport": [
+      1371,
+      996
+    ]
+  }
+]

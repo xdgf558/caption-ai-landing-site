@@ -1,13 +1,22 @@
 ---
 import GentleStationFixture from '../components/GentleStationFixture.astro';
+import HomeScenarioFixture from '../components/HomeScenarioFixture.astro';
+import HomeDestinationFixture from '../components/HomeDestinationFixture.astro';
+import { homeScenarioNames } from '../../home-scenarios.js';
 export function getStaticPaths() {
   return [
     { params: { path: "about" }, props: { lang: "zh-Hant" } },
-    ...['zh-hans', 'en', 'ja'].map(prefix => ({ params: { path: prefix }, props: { lang: prefix === 'zh-hans' ? 'zh-Hans' : prefix } })),
+    ...['zh-hans', 'en', 'ja'].map(prefix => ({ params: { path: prefix }, props: { lang: prefix === 'zh-hans' ? 'zh-Hans' : prefix, kind: 'home' } })),
+    ...[['', 'zh-Hant'], ['zh-hans', 'zh-Hans'], ['en', 'en'], ['ja', 'ja']].flatMap(([prefix, lang]) => [
+      ...Object.keys(homeScenarioNames).map(scenario => ({ params: { path: [prefix, 'home-preview', scenario].filter(Boolean).join('/') }, props: { lang, kind: 'home', scenario } })),
+      { params: { path: [prefix, 'visual'].filter(Boolean).join('/') }, props: { lang } },
+      ...['quiet-night', 'little-light', 'kinder-days'].map(slug => ({ params: { path: [prefix, 'music', 'tracks', slug].filter(Boolean).join('/') }, props: { lang, kind: 'track', slug } })),
+    ]),
+    ...['netease', 'qishui', 'apple_music', 'youtube', 'spotify'].map(slug => ({ params: { path: `__home-fixture/platform/${slug}` }, props: { lang: 'zh-Hant', kind: 'platform', slug } })),
     ...[['', 'zh-Hant'], ['zh-hant', 'zh-Hant'], ['zh-hans', 'zh-Hans'], ['en', 'en'], ['ja', 'ja']].flatMap(([prefix, lang]) =>
-      ['music', 'games', 'games/cat-life-game', 'music/tracks/sample-song', 'library', 'privacy', 'terms'].map(suffix => ({ params: { path: [prefix, suffix].filter(Boolean).join('/') }, props: { lang } }))),
+      ['music', 'games', 'games/cat-life-game', 'music/tracks/sample-song', 'library', 'privacy', 'terms'].map(suffix => ({ params: { path: [prefix, suffix].filter(Boolean).join('/') }, props: { lang, kind: suffix === 'games/cat-life-game' ? 'game' : suffix === 'music/tracks/sample-song' ? 'track' : undefined, slug: suffix.split('/').at(-1) } }))),
   ];
 }
-const { lang } = Astro.props;
+const { lang, kind, scenario, slug } = Astro.props;
 ---
-<GentleStationFixture lang={lang} />
+{kind === 'home' ? <HomeScenarioFixture lang={lang} scenario={scenario} /> : kind ? <HomeDestinationFixture lang={lang} kind={kind} slug={slug} /> : <GentleStationFixture lang={lang} />}

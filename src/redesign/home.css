@@ -1,0 +1,150 @@
+/* Shared geometry from the user-approved T04 reference; opt-in consumers only. */
+  .gentle-hero { position: relative; min-height: 313px; background: #f4f1ff; overflow: hidden; }
+  .gentle-hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .gentle-hero-content { position: relative; padding: 27px 68px 23px; width: 615px; max-width: 55%; }
+  .gentle-eyebrow { color: #58669b; font-size: 8px; letter-spacing: .38em; font-weight: 550; margin: 0 0 12px; }
+  .gentle-hero h1 { margin: 0 0 12px; font-size: 39px; font-weight: 900; line-height: 1.26; letter-spacing: -.035em; }
+  .gentle-lede { color: #515e8d; font-size: 15px; line-height: 1.5; margin: 0 0 17px; }
+  .gentle-hero-actions { display: flex; gap: 14px; }
+  .gentle-content { padding-top: 10px; }
+  .gentle-features { display: grid; grid-template-columns: 1.095fr 1fr; gap: 16px; }
+  .gentle-feature { padding: 13px 24px 18px; border-radius: 13px; min-width: 0; }
+  .gentle-music { background: var(--sc-music-surface); }
+  .gentle-games { background: var(--sc-game-surface); }
+  .gentle-section-header { display: flex; align-items: center; gap: 13px; min-height: 39px; margin-bottom: 10px; }
+  .gentle-section-header h2 { margin: 0; font-size: 23px; line-height: 1.35; font-weight: 750; white-space: nowrap; letter-spacing: -.035em; }
+  .gentle-section-header p { margin: 0; color: var(--sc-muted); font-size: 12px; line-height: 1.5; }
+  .gentle-music .gentle-section-header > .sc-glyph { color: var(--sc-music); }
+  .gentle-games .gentle-section-header > .sc-glyph, .gentle-games .gentle-section-header h2 { color: var(--sc-game); }
+  .gentle-more { display: inline-flex; justify-content: flex-end; gap: 8px; align-items: center; min-height: 44px; margin-block: -3px; margin-left: auto; color: var(--sc-accent) !important; text-decoration: none; font-size: 12px; white-space: nowrap; }
+  .gentle-more:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .gentle-feature-body { display: grid; grid-template-columns: 183px minmax(0, 1fr); grid-template-rows: 1fr auto; gap: 12px 28px; min-height: 183px; }
+  .gentle-cover { grid-row: 1 / 3; width: 100%; height: 183px; object-fit: cover; border-radius: 8px; }
+  .gentle-work-copy { position: relative; padding-top: 4px; min-width: 0; }
+  .gentle-work-copy > .gentle-badge { display: flex; width: fit-content; }
+  .gentle-work-copy h3 { font-size: 22px; font-weight: 750; margin: 5px 0 5px; line-height: 1.35; letter-spacing: -.03em; }
+  .gentle-work-copy p { color: var(--sc-muted); font-size: 13px; line-height: 1.65; margin: 0; }
+  .gentle-badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 10px; background: #f4ddef; color: #974071; font-size: 10px; line-height: 1.5; font-weight: 650; }
+  .gentle-play { position: absolute; top: 35px; right: 0; width: 48px; height: 48px; }
+  .gentle-play:disabled { cursor: default; color: #7b7d9d; }
+  .gentle-music .gentle-work-copy { padding-right: 50px; }
+  .gentle-platforms { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .gentle-platforms button { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 5px; min-height: 44px; color: #505980; border: 1px solid #eae3f3; border-radius: 9px; background: #fefcff; font-size: 10px; font-weight: 600; line-height: 1.35; }
+  .gentle-platforms small { display: block; font-size: 9px; font-weight: 400; color: #707b9c; }
+  .gentle-games .gentle-feature-body { grid-template-columns: 210px minmax(0, 1fr); gap: 12px 24px; }
+  .gentle-games .gentle-badge, .gentle-badge-games { color: #237895; background: #d6f0f8; }
+  .gentle-paw { position: absolute; right: 0; top: 26px; color: #b7ccdf; }
+  .gentle-game-actions { display: flex; gap: 10px; }
+  .gentle-game-actions .sc-button { padding-inline: 19px; min-height: 44px; font-size: 12px; }
+  [data-fixture-wishlist][aria-pressed='true'] { color: #974071 !important; border-color: #d2a6c6; background: #fff8fe; }
+  .gentle-promotion { margin-top: 13px; display: grid; grid-template-columns: minmax(230px, 1.85fr) repeat(4, minmax(0, 1fr)) 58px; gap: 10px; align-items: center; background: var(--sc-promo-surface); border-radius: 12px; padding: 12px 18px; min-height: 84px; }
+  .gentle-promotion-intro { display: flex; align-items: center; gap: 12px; color: var(--sc-accent); }
+  .gentle-promotion-intro h2 { margin: 0 0 3px; font-size: 17px; line-height: 1.4; font-weight: 750; }
+  .gentle-promotion-intro p { margin: 0; color: var(--sc-muted); font-size: 10px; line-height: 1.6; }
+  .gentle-pillar { display: flex; align-items: center; gap: 10px; min-height: 61px; background: #fafaff; border: 1px solid #e8e7f7; border-radius: 12px; padding: 8px 9px; text-decoration: none; color: var(--sc-accent) !important; }
+  .gentle-pillar:hover { border-color: #bfc2e5; background: #fff; }
+  .gentle-pillar-icon { display: inline-flex; align-items: center; justify-content: center; width: 41px; height: 41px; flex-shrink: 0; background: #edebff; border-radius: 50%; }
+  .gentle-pillar-music .gentle-pillar-icon { color: var(--sc-music); background: #f6e5f4; }
+  .gentle-pillar-crown .gentle-pillar-icon { color: #c07134; background: #fff0e9; }
+  .gentle-pillar strong { display: block; font-size: 12px; line-height: 1.5; }
+  .gentle-pillar small { display: block; color: var(--sc-muted); font-size: 10px; line-height: 1.5; }
+  .gentle-promotion-paw { display: flex; justify-content: center; color: #9baae1; }
+  .gentle-news { margin-top: 16px; }
+  .gentle-news > .gentle-section-header { min-height: 29px; margin-bottom: 3px; }
+  .gentle-news .gentle-more { margin-block: -8px; }
+  .gentle-news-item .gentle-badge { display: flex; width: fit-content; line-height: 1.2; }
+  .gentle-news h2 { font-size: 19px; }
+  .gentle-news-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .gentle-news-item { position: relative; display: flex; align-items: center; gap: 18px; min-height: 125px; padding: 10px 12px; border: 1px solid var(--sc-line); border-radius: 12px; }
+  .gentle-news-item > img { width: 96px; height: 100px; object-fit: cover; border-radius: 7px; }
+  .gentle-news-item > div { flex: 1; padding-right: 0; min-width: 0; }
+  .gentle-news-item h3 { padding-right: 36px; font-size: 16px; margin: 5px 0 4px; font-weight: 750; line-height: 1.4; }
+  .gentle-news-item p { margin: 0; color: var(--sc-muted); font-size: 12px; line-height: 1.55; }
+  .gentle-news-item > .sc-icon-button { position: absolute; top: 20px; right: 13px; width: 40px; height: 40px; min-width: 44px; min-height: 44px; background: transparent; }
+  .gentle-badge-paw { color: #6b5bc4; background: #ede8ff; }
+  .fixture-tools { border-top: 1px dashed var(--sc-line); padding-block: 16px 24px; font-size: 14px; color: var(--sc-muted); }
+  .fixture-tools summary { cursor: pointer; min-height: 44px; display: list-item; }
+  .fixture-tools button, .fixture-player button { min-height: 44px; padding: 8px 14px; border: 1px solid var(--sc-line); border-radius: 8px; background: var(--sc-paper); color: var(--sc-ink); cursor: pointer; }
+  .fixture-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .fixture-tools button[aria-pressed='true'] { border-color: var(--sc-accent); color: var(--sc-accent); }
+  .fixture-tools a { display: inline-flex; align-items: center; min-height: 44px; }
+  .fixture-player { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 12px var(--sc-gutter); min-height: 76px; }
+  .fixture-player span, .fixture-player strong { display: block; font-size: 14px; }
+  .fixture-player span { color: var(--sc-muted); font-size: 12px; }
+  .fixture-player-tall .fixture-player { min-height: 124px; }
+  @media (min-width: 1001px) and (max-width: 1280px) {
+    .gentle-section-header { gap: 8px; flex-wrap: wrap; }
+    .gentle-section-header p { display: none; }
+    .gentle-games .gentle-feature-body { grid-template-columns: 160px minmax(0, 1fr); gap: 12px 16px; }
+    .gentle-feature-body { grid-template-columns: 160px minmax(0, 1fr); gap: 12px 16px; }
+    .gentle-game-actions { flex-wrap: wrap; }
+    .gentle-platforms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .gentle-promotion { grid-template-columns: 1.5fr repeat(4, minmax(0, 1fr)); }
+    .gentle-promotion-paw { display: none; }
+    .gentle-news-item { gap: 12px; } .gentle-news-item > img { width: 80px; height: 100px; }
+  }
+  @media (max-width: 1000px) {
+    .gentle-hero-content { padding-inline: 30px; width: 575px; max-width: 70%; }
+    .gentle-hero h1 { font-size: 34px; }
+    .gentle-features { grid-template-columns: 1fr; }
+    .gentle-feature-body, .gentle-games .gentle-feature-body { grid-template-columns: 180px minmax(0, 1fr); }
+    .gentle-promotion { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .gentle-promotion-intro { grid-column: 1 / -1; }
+    .gentle-promotion-paw { display: none; }
+    .gentle-news-grid { grid-template-columns: 1fr; }
+    .gentle-news-item > div { padding-right: 48px; }
+  }
+  @media (min-width: 768px) and (max-width: 1000px) {
+    .gentle-hero { display: flex; flex-direction: column; }
+    .gentle-hero-image { position: static; order: 2; width: 100%; height: 220px; object-position: right center; }
+    .gentle-hero-content { width: 100%; max-width: none; }
+    .gentle-hero h1 { max-width: 640px; }
+    html[lang='en'] .gentle-hero h1, html[lang='ja'] .gentle-hero h1 { font-size: 28px; }
+    html[lang='en'] .gentle-hero h1 { text-wrap: balance; }
+    html[lang='en'] .gentle-hero h1 br { display: none; }
+  }
+  @media (max-width: 767px) {
+    .gentle-hero { display: flex; flex-direction: column; }
+    .gentle-hero-image { position: static; order: 2; width: 100%; height: 200px; object-position: right center; }
+    .gentle-hero-content { padding: 24px 22px; width: 100%; max-width: none; }
+    .gentle-eyebrow { font-size: 7px; letter-spacing: .27em; margin-bottom: 12px; }
+    .gentle-hero h1 { font-size: clamp(27px, 7.3vw, 38px); line-height: 1.35; margin-bottom: 13px; text-wrap: balance; }
+    .gentle-hero h1 br { display: none; }
+    .gentle-lede { font-size: 13px; line-height: 1.65; margin-bottom: 18px; }
+    .gentle-lede br { display: none; }
+    .gentle-hero-actions { flex-wrap: wrap; gap: 10px; }
+    .gentle-hero-actions .sc-button { padding-inline: 15px; gap: 8px; font-size: 12px; }
+    .gentle-content { padding-top: 12px; }
+    .gentle-feature { padding: 14px; }
+    .gentle-section-header { flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .gentle-section-header > .sc-glyph { --glyph-size: 28px !important; }
+    .gentle-section-header h2 { font-size: 21px; }
+    .gentle-section-header p { display: none; }
+    .gentle-more { font-size: 11px; gap: 5px; }
+    .gentle-feature-body, .gentle-games .gentle-feature-body { grid-template-columns: 110px minmax(0, 1fr); gap: 14px; min-height: 0; }
+    .gentle-cover { grid-row: auto; height: 143px; object-fit: cover; }
+    .gentle-work-copy { padding-top: 0; }
+    .gentle-work-copy h3 { font-size: 19px; margin-top: 7px; }
+    .gentle-work-copy p { font-size: 12px; line-height: 1.65; }
+    .gentle-music .gentle-work-copy { padding-right: 0; padding-bottom: 50px; }
+    .gentle-play { top: auto; bottom: 0; width: 44px; height: 44px; }
+    .gentle-platforms { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .gentle-platforms button { font-size: 11px; justify-content: flex-start; padding-inline: 12px; gap: 9px; }
+    .gentle-platforms small { font-size: 10px; }
+    .gentle-game-actions { grid-column: 1 / -1; flex-wrap: wrap; }
+    .gentle-game-actions .sc-button { flex-grow: 1; padding-inline: 13px; font-size: 12px; }
+    .gentle-paw { display: none; }
+    .gentle-promotion { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; gap: 10px; margin-top: 14px; }
+    .gentle-promotion-intro h2 { font-size: 16px; }
+    .gentle-promotion-intro p { font-size: 10px; }
+    .gentle-pillar { gap: 8px; padding: 8px; }
+    .gentle-pillar-icon { width: 34px; height: 34px; }
+    .gentle-pillar strong { font-size: 11px; } .gentle-pillar small { font-size: 10px; }
+    .gentle-news { margin-top: 13px; }
+    .gentle-news h2 { font-size: 20px; }
+    .gentle-news-item { min-height: 115px; gap: 13px; padding: 10px; }
+    .gentle-news-item > img { width: 78px; height: 92px; }
+    .gentle-news-item h3 { font-size: 15px; }
+    .gentle-news-item p { font-size: 11px; }
+    .gentle-news-item > .sc-icon-button { right: 10px; }
+  }

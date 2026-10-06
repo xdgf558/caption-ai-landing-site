@@ -4,7 +4,7 @@
 
 ## 当前执行约定
 
-用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01、T02、T03 已审查通过并在各自当前提交 CI 通过后合并；本轮交付 **T04 视觉变量与导航组件**，审查通过后才进入 T05。
+用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01 至 T04 已审查通过并在各自当前提交 CI 通过后合并；本轮交付 **T05 首页与首页配置**，审查通过后才进入 T06。
 
 这项约定优先于基线文档中建议的 R0–R7 批次及启动指令中的连续推进方式；三份规范正文已按本次审查同步逐项执行要求。PR 创建、构建通过与生产发布是独立状态；本轮没有生产发布授权，待用户审查的 PR 不自动合并。
 
@@ -13,8 +13,9 @@
 | T01 仓库与运行方式盘点 | 审查通过，已合并 | [PR #186](https://github.com/xdgf558/caption-ai-landing-site/pull/186)，修订头 CI 通过，已补音乐后代路径与原生资料库范围 |
 | T02 路由与业务依赖清单 | 审查通过，已合并 | [PR #187](https://github.com/xdgf558/caption-ai-landing-site/pull/187)，当前头 CI 通过；[说明](T02-route-and-service-inventory.md)、[逐地址 CSV](T02-route-inventory.csv) 作为源码依赖基线，实际 HTTP 留 T20 验证 |
 | T03 权益、存档与素材核对 | 审查通过，已合并 | [PR #188](https://github.com/xdgf558/caption-ai-landing-site/pull/188)，审查头 CI 重跑通过，合并为 `b15b233`；[权限矩阵、存档格式与素材缺口](T03-entitlements-saves-and-materials.md)、[验证摘要](T03-evidence/verification-summary.json)、[内存存档核对工具](tools/audit-local-save-contract.mjs)；素材继续“稍后确定” |
-| T04 视觉变量与导航组件 | 完成，待审查 | 用户新图“温柔小站”已取代模板 2，并确认五项导航；[代码接入、范围与验证](T04-visual-system-and-navigation.md)、[当前选择](T04-evidence/gentle-station/design-selection.json)、[当前设计 QA](T04-evidence/gentle-station/design-qa.md)，隔离预览 `npm run preview:redesign` |
-| T05–T22 | 未开始 | 沿用任务清单中的依赖，每个任务单独提交、审查后继续 |
+| T04 视觉变量与导航组件 | 审查通过，已合并 | [PR #189](https://github.com/xdgf558/caption-ai-landing-site/pull/189)，审查头 `f3d17c3` CI 通过，合并为 `0fe6b4e`；用户新图与五项导航已确认；[交付说明](T04-visual-system-and-navigation.md)、[选定记录](T04-evidence/gentle-station/design-selection.json)、[历史设计 QA](T04-evidence/gentle-station/design-qa.md) |
+| T05 首页与首页配置 | 完成，待审查 | [配置合同、范围与验证](T05-home-and-configuration.md)、[设计 QA](T05-evidence/design-qa.md)、[证据清单](T05-evidence/manifest.json)；隔离预览 `npm run preview:redesign`，默认素材待定，完整示例位于 `/home-preview/complete/` |
+| T06–T22 | 未开始 | 沿用任务清单中的依赖，每个任务单独提交、审查后继续 |
 
 ## 需求基线
 
@@ -32,6 +33,8 @@ T04 原先用 UI 技能生成 3 个模板、选择第 2 张。用户于 2026-10-
 
 目标仓库为 [xdgf558/caption-ai-landing-site](https://github.com/xdgf558/caption-ai-landing-site)，独立本地检出从 `main` 的 `6cbb19725cd12ae718ea395711f920adef346824` 开始。T01 分支为 `codex/station-cat-redesign-t01`，修订提交 `020e970f7376601e8c6708562e3143f79f056d35` 是 T02 的盘点基线；T02 工作分支为 `codex/station-cat-redesign-t02`。已有其他本地检出没有修改。
 
-T01 至 T03 修改文档、核对工具与证据。T01 当前头 CI 通过后合并为 `eef728d`；T02 当前头 `877a331` 的 CI 通过后合并为 `dffc4c2`；T03 审查头 `d6d1638` 的 CI 重跑全部通过后合并为 `b15b233`。T04 分支为 `codex/station-cat-redesign-t04`，以已合并 T03 的 `main` 为基线，新增尚未接入生产页面的视觉布局与导航、隔离夹具和 CI 编译检查；没有修改 API、数据库迁移、生产配置、付费规则或游戏运行文件。
+T01 至 T03 修改文档、核对工具与证据。T01 当前头 CI 通过后合并为 `eef728d`；T02 当前头 `877a331` 的 CI 通过后合并为 `dffc4c2`；T03 审查头 `d6d1638` 的 CI 重跑全部通过后合并为 `b15b233`。T04 审查头 `f3d17c3` 的 CI 通过后合并为 `0fe6b4e`，增加尚未接入生产页面的视觉布局、导航与隔离夹具。
+
+T05 分支为 `codex/station-cat-redesign-t05`，基线为已合并 T04 的 `0fe6b4ece67f47df3d3cb20dfeaa4969833459a1`。新增首页组件、文件配置、公开记录白名单投影、状态夹具和测试；普通构建不含新首页或夹具标记。主推、平台、试听和视频仍待定，发布配置与媒体播放没有接入生产。关于仅现有 `/about/` 和未知音乐后代的 T08/T20 映射缺口继续保留。T05 托管 CI 以该任务 PR 当前头为准，本地空正文构建不作为生产包或远程通过证据。
 
 T03 已记录当前游戏启动流程在合成内存中覆盖损坏 JSON 的行为。T12 必须使用可区分缺失、损坏、不支持版本和不可访问存储的只读检测，并保护恢复衔接，不能把现有自动新建函数当作“继续游戏”检查。该发现不影响 T03 核对交付，但 A13 尚未完成。

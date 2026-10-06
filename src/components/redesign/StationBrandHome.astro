@@ -1,0 +1,112 @@
+---
+import { ArrowRight, Play } from '@lucide/astro';
+import StationBrandLayout from '../../layouts/StationBrandLayout.astro';
+import Glyph from './Glyph.astro';
+import { stationHref } from '../../redesign/routes.js';
+import { homeCopy } from '../../redesign/home-copy.js';
+import { homeStateCopy } from '../../redesign/home-state-copy.js';
+import '../../redesign/home.css';
+interface Props { home: any; heroImage: string; preview?: boolean }
+const { home, heroImage, preview = false } = Astro.props;
+const { locale: lang, music, game } = home;
+const copy = homeCopy[lang], state = homeStateCopy[lang];
+const providers = { netease: copy.netease, qishui: copy.qishui, apple_music: 'Apple Music', youtube: 'YouTube', spotify: 'Spotify' };
+const pillars = [
+  { icon: 'music', title: copy.complete, text: copy.completeText, href: music?.href || stationHref(lang, 'music') },
+  { icon: 'headphones', title: copy.platforms, text: copy.platformText, href: music ? '#station-platforms' : stationHref(lang, 'music') },
+  { icon: 'youtube', title: copy.shortVideo, text: copy.videoText, href: home.clips.length ? '#station-clips' : stationHref(lang, 'music') },
+  { icon: 'crown', title: copy.member, text: copy.memberText, href: stationHref(lang, 'member') },
+];
+---
+<StationBrandLayout lang={lang} title={state.title} preview={preview} activeSection="home">
+  <section class="gentle-hero" aria-labelledby="station-title" data-home-config={home.configId} data-home-revision={home.publishedRevision}>
+    <img class="gentle-hero-image" src={heroImage} width="2172" height="724" alt={copy.heroAlt} fetchpriority="high" />
+    <div class="gentle-hero-content">
+      <p class="gentle-eyebrow">CATS, IDEAS, A KINDER TOMORROW</p>
+      <h1 class="sc-heading" id="station-title">{copy.headline[0]}<br />{' ' + copy.headline[1]}</h1>
+      <p class="gentle-lede">{copy.intro.map(line => <span>{line}<br /></span>)}</p>
+      <div class="gentle-hero-actions">
+        <a class="sc-button" href={music?.href || stationHref(lang, 'music')}><Glyph name="music" size={22} />{copy.goMusic}<ArrowRight size={16} aria-hidden="true" /></a>
+        <a class="sc-button sc-button-secondary" href={game?.href || stationHref(lang, 'games')}><Glyph name="games" size={23} />{copy.goGames}<ArrowRight size={16} aria-hidden="true" /></a>
+      </div>
+    </div>
+  </section>
+  <div class="sc-container gentle-content" id="station-work">
+    <div class="gentle-features">
+      <section class="gentle-feature gentle-music" aria-labelledby="station-music-title">
+        <div class="gentle-section-header"><Glyph name="music" size={34} /><h2 id="station-music-title">{copy.music}</h2><p>{copy.musicTagline}</p><a class="gentle-more" href={stationHref(lang, 'music')}>{copy.moreMusic}<ArrowRight size={15} aria-hidden="true" /></a></div>
+        {music ? <div class={'gentle-feature-body home-feature-body' + (music.preview ? ' has-preview' : '')} data-home-track={music.id}>
+          <a class="home-cover-link" href={music.href} aria-label={state.details + ' · ' + music.title}><img class="gentle-cover" src={music.coverUrl} width="1024" height="1024" alt={music.title} /></a>
+          <div class="gentle-work-copy">
+            <span class="gentle-badge">{home.fixture ? state.sample : state.featured}</span>
+            <h3><a href={music.href}>{music.title}</a></h3><p class="home-artist">{state.artist} · {music.artist}</p><p>{music.summary}</p>
+            {music.preview && <a class="sc-icon-button gentle-play" href={music.preview.href} aria-label={state.preview + ' · ' + music.title + ' · ' + music.preview.durationSec + 's'}><Play size={20} fill="currentColor" aria-hidden="true" /></a>}
+          </div>
+          <div class="gentle-platforms home-platforms" id="station-platforms" aria-label={copy.platforms}>
+            {music.platforms.length ? music.platforms.map(link => <a href={link.href} target={home.fixture ? undefined : '_blank'} rel={home.fixture ? undefined : 'noopener noreferrer'} data-home-platform={link.id}><Glyph name={link.icon} size={21} /><span>{providers[link.provider]}{home.fixture && <small>{state.platformSample}</small>}</span></a>) : <p class="home-platform-empty">{state.noPlatforms}</p>}
+          </div>
+        </div> : <div class="home-empty" data-home-empty="music"><h3>{state.musicEmpty}</h3><p>{state.musicEmptyText}</p><a class="sc-button sc-button-secondary" href={stationHref(lang, 'music')}>{copy.moreMusic}<ArrowRight size={16} aria-hidden="true" /></a></div>}
+      </section>
+      <section class="gentle-feature gentle-games" aria-labelledby="station-games-title">
+        <div class="gentle-section-header"><Glyph name="games" size={36} /><h2 id="station-games-title">{copy.games}</h2><p>{copy.gamesTagline}</p><a class="gentle-more" href={stationHref(lang, 'games')}>{copy.moreGames}<ArrowRight size={15} aria-hidden="true" /></a></div>
+        {game ? <div class="gentle-feature-body home-game-body" data-home-game={game.id}>
+          <a class="home-cover-link" href={game.href} aria-label={copy.viewGame + ' · ' + game.title}><img class="gentle-cover" src={game.screenshotUrl} width="1254" height="1254" alt={home.fixture ? copy.gameAlt : game.title} /></a>
+          <div class="gentle-work-copy"><span class="gentle-badge">{home.fixture ? state.sample : state.gameFeatured}</span><h3><a href={game.href}>{game.title}</a></h3><p>{game.summary}</p><Glyph name="paw" size={48} class="gentle-paw" /></div>
+          <div class="gentle-game-actions"><a class="sc-button" href={game.href}>{copy.viewGame}<ArrowRight size={16} aria-hidden="true" /></a><slot name="game-actions" /></div>
+        </div> : <div class="home-empty" data-home-empty="game"><h3>{state.gameEmpty}</h3><p>{state.gameEmptyText}</p><a class="sc-button sc-button-secondary" href={stationHref(lang, 'games')}>{copy.moreGames}<ArrowRight size={16} aria-hidden="true" /></a></div>}
+      </section>
+    </div>
+    <section class="gentle-promotion" aria-labelledby="station-promotion-title">
+      <div class="gentle-promotion-intro"><Glyph name="chart" size={33} /><div><h2 id="station-promotion-title">{copy.promotion}</h2><p>{copy.promotionText}</p></div></div>
+      {pillars.map(pillar => <a class={'gentle-pillar gentle-pillar-' + pillar.icon} href={pillar.href}><span class="gentle-pillar-icon"><Glyph name={pillar.icon} size={25} /></span><span><strong>{pillar.title}</strong><small>{pillar.text}</small></span></a>)}
+      <span class="gentle-promotion-paw" aria-hidden="true"><Glyph name="paw" size={30} /></span>
+    </section>
+    {home.selectedTracks.length > 0 && <section class="home-selected" aria-labelledby="station-selected-title"><h2 id="station-selected-title">{state.selected}</h2><div class="home-selected-grid">{home.selectedTracks.map(track => <a class="home-selected-item" href={track.href} data-selected-track={track.id}><img src={track.coverUrl} width="72" height="72" alt="" loading="lazy" /><span><strong>{track.title}</strong><small>{track.artist}</small></span><ArrowRight size={16} aria-hidden="true" /></a>)}</div></section>}
+    {home.clips.length > 0 && <section class="home-clips" id="station-clips" aria-labelledby="station-clips-title"><div class="gentle-section-header"><h2 id="station-clips-title">{state.clips}</h2><p>{state.clipsText}</p></div><div class="home-clip-grid">{home.clips.map(clip => <a class="home-clip-card" href={clip.href} data-home-clip={clip.id}><img src={clip.posterUrl} width="1024" height="1024" alt="" loading="lazy" /><span class="home-clip-duration">{Math.ceil(clip.durationSec)}s</span><strong>{clip.title}</strong><span class="home-clip-action"><Play size={15} aria-hidden="true" />{state.watch}{home.fixture && <small> · {state.sample}</small>}</span></a>)}</div></section>}
+    {home.updates.length > 0 && <section class="gentle-news" aria-labelledby="station-news-title"><div class="gentle-section-header"><h2 id="station-news-title">{copy.latest}</h2><p>{copy.latestText}</p></div><div class="gentle-news-grid">{home.updates.map(item => <article class="gentle-news-item" data-home-update={item.id}><img src={item.imageUrl} width="100" height="100" alt="" loading="lazy" /><div><span class={'gentle-badge gentle-badge-' + (item.kind === 'life' ? 'paw' : item.kind)}><Glyph name={item.kind === 'life' ? 'paw' : item.kind} size={12} />{home.fixture ? state.sample : state.update}</span><h3>{item.title}</h3><p>{item.summary}</p></div><a class="sc-icon-button" href={item.href} aria-label={copy.view + ' · ' + item.title}><ArrowRight size={18} aria-hidden="true" /></a></article>)}</div></section>}
+  </div>
+  <slot name="fixture-controls" slot="fixture-controls" />
+</StationBrandLayout>
+<style is:global>
+  .home-feature-body .home-cover-link, .home-game-body .home-cover-link { grid-row: 1 / 3; }
+  .home-cover-link .gentle-cover { grid-row: auto; }
+  .home-feature-body .gentle-work-copy { padding-right: 0; }
+  .home-feature-body.has-preview .gentle-work-copy { padding-right: 50px; }
+  .home-feature-body h3 a, .home-game-body h3 a { text-decoration: none; }
+  .home-feature-body h3 a:hover, .home-game-body h3 a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .gentle-work-copy .home-artist { font-size: 11px; margin-bottom: 4px; }
+  .home-platforms { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-platforms a { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 6px; min-height: 44px; color: #505980; border: 1px solid #eae3f3; border-radius: 9px; background: #fefcff; font-size: 11px; line-height: 1.35; text-decoration: none; }
+  .home-platforms a:hover { border-color: #bfb1d3; }
+  .home-platform-empty { grid-column: 1 / -1; color: var(--sc-muted); font-size: 12px; margin: 0; align-self: center; }
+  .home-empty { min-height: 183px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 8px 0; }
+  .home-empty h3 { font-size: 22px; line-height: 1.45; margin: 0 0 8px; }
+  .home-empty p { color: var(--sc-muted); font-size: 14px; max-width: 36em; margin: 0 0 16px; }
+  .home-game-body .gentle-work-copy { padding-right: 40px; }
+  .home-selected, .home-clips { margin-top: 24px; }
+  .home-selected h2, .home-clips h2 { font-size: 19px; font-weight: 750; margin: 0 0 10px; line-height: 1.45; }
+  .home-selected-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .home-selected-item { border: 1px solid var(--sc-line); border-radius: 12px; display: flex; align-items: center; gap: 14px; padding: 10px 12px; text-decoration: none; min-width: 0; }
+  .home-selected-item img { width: 64px; height: 64px; border-radius: 7px; object-fit: cover; }
+  .home-selected-item span { flex: 1; min-width: 0; }
+  .home-selected-item strong { display: block; font-size: 14px; line-height: 1.5; }
+  .home-selected-item small { color: var(--sc-muted); }
+  .home-clip-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .home-clip-card { position: relative; text-decoration: none; padding: 10px; border: 1px solid var(--sc-line); border-radius: 12px; min-width: 0; }
+  .home-clip-card img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 7px; }
+  .home-clip-card strong { display: block; font-size: 15px; line-height: 1.5; margin-top: 9px; }
+  .home-clip-duration { position: absolute; right: 18px; top: 18px; background: #171c38; color: #fff; border-radius: 6px; padding: 2px 6px; font-size: 10px; }
+  .home-clip-action { display: flex; align-items: center; gap: 5px; font-size: 12px; min-height: 36px; color: var(--sc-accent); }
+  @media (max-width: 1000px) { .home-selected-grid { grid-template-columns: 1fr; } .home-clip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 767px) {
+    .home-feature-body .home-cover-link, .home-game-body .home-cover-link { grid-row: auto; }
+    .home-feature-body .gentle-work-copy { padding-bottom: 0; }
+    .home-feature-body.has-preview .gentle-work-copy { padding-right: 0; padding-bottom: 50px; }
+    .home-game-body .gentle-work-copy { padding-right: 0; }
+    .home-platforms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .home-platforms a { justify-content: flex-start; gap: 9px; padding-inline: 12px; }
+    .home-empty { min-height: 170px; } .home-empty h3 { font-size: 20px; }
+    .home-clip-grid { gap: 10px; } .home-clip-card { padding: 8px; } .home-clip-card strong { font-size: 13px; }
+    .home-clips .gentle-section-header p { display: none; } .home-clip-action { flex-wrap: wrap; font-size: 11px; }
+  }
+</style>

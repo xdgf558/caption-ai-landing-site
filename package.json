@@ -69,7 +69,8 @@
     "test:mobile:production": "node --test --test-timeout=120000 scripts/test-mobile-production.mjs scripts/test-mobile-production-association.mjs scripts/test-mobile-production-service.mjs && python3 scripts/test-mobile-production-migrations.py",
     "test:redesign:routes": "node --test scripts/test-station-redesign-routes.mjs",
     "build:redesign:preview": "astro build --config scripts/fixtures/station-redesign/astro.config.mjs",
-    "preview:redesign": "npm run build:redesign:preview && node scripts/serve-station-redesign-preview.mjs"
+    "preview:redesign": "npm run build:redesign:preview && node scripts/serve-station-redesign-preview.mjs",
+    "test:redesign:home": "node --test scripts/test-station-redesign-home.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

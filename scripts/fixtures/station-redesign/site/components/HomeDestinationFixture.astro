@@ -1,0 +1,24 @@
+---
+import StationBrandLayout from '../../../../../src/layouts/StationBrandLayout.astro';
+import { stationHref } from '../../../../../src/redesign/routes.js';
+import { homeScenario } from '../../home-scenarios.js';
+import { buildHomeView } from '../../../../../src/redesign/home.js';
+interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja'; kind: 'track' | 'game' | 'platform'; slug?: string }
+const { lang, kind, slug } = Astro.props;
+const home = buildHomeView({ ...homeScenario('preview-enabled'), locale: lang, fixture: true });
+const tracks = [home.music, ...home.selectedTracks];
+const track = tracks.find(track => track?.href.split('/').at(-2) === slug);
+const title = kind === 'game' ? home.game.title : kind === 'track' ? track?.title : ({ netease: '网易云音乐', qishui: '汽水音乐', apple_music: 'Apple Music', youtube: 'YouTube', spotify: 'Spotify' })[slug];
+---
+<StationBrandLayout lang={lang} title={`T05 作品导航预览 · ${title}`} preview activeSection={kind === 'game' ? 'games' : 'music'}>
+  <div class="sc-container fixture-destination">
+    <p>本地导航验收 · 设计示例</p><h1>{title}</h1>
+    <p>这里确认首页直接指向对应作品。该页面与发布、发行、试听权限或游戏运行没有连接。</p>
+    {kind === 'track' && track?.id === home.music.id && <><section id="preview"><h2>试听入口</h2><p>本站推广素材尚未确定。真实播放器和权限接入将在 T09–T11 完成；本页没有音频。</p></section>{home.clips.map(clip => <section id={`clip-${clip.id}`}><h2>{clip.title}</h2><p>仅核对短视频的歌曲关联与目标位置，没有加载媒体。</p></section>)}</>}
+    {kind === 'platform' && <p>这是本地平台按钮说明页，没有填入虚构的歌曲发行链接。</p>}
+    {kind === 'game' && <p>游戏介绍留 T12；现有运行地址仍为 /games/cat-life/，本页不启动游戏或读取存档。</p>}
+    <a class="sc-button" href={`${lang === 'zh-Hant' ? '' : lang === 'zh-Hans' ? '/zh-hans' : '/' + lang}/home-preview/complete/`}>返回首页验收</a>
+    <a class="sc-button sc-button-secondary" href={stationHref(lang, 'home')}>查看待定素材首页</a>
+  </div>
+</StationBrandLayout>
+<style>.fixture-destination { padding-block: 32px; } .fixture-destination h1 { font-size: 32px; } .fixture-destination p { max-width: 50em; } .fixture-destination a { margin: 8px 8px 8px 0; } section { scroll-margin-top: 20px; }</style>

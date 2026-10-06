@@ -1,0 +1,35 @@
+---
+import StationBrandHome from '../../../../../src/components/redesign/StationBrandHome.astro';
+import { Heart } from '@lucide/astro';
+import { homeCopy } from '../../../../../src/redesign/home-copy.js';
+import { buildHomeView } from '../../../../../src/redesign/home.js';
+import { stationLocales, stationLanguageAccessibleNames } from '../../../../../src/redesign/routes.js';
+import { homeScenario, homeScenarioNames } from '../../home-scenarios.js';
+interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja'; scenario?: string }
+const { lang, scenario = 'pending' } = Astro.props;
+const home = buildHomeView({ ...homeScenario(scenario), locale: lang, fixture: true });
+const copy = homeCopy[lang];
+const prefix = locale => locale === 'zh-Hant' ? '' : locale === 'zh-Hans' ? '/zh-hans' : `/${locale}`;
+---
+<StationBrandHome home={home} heroImage="/preview-assets/gentle-station/hero.webp" preview>
+  {home.game && <div slot="game-actions"><button class="sc-button sc-button-secondary" type="button" data-home-fixture-wishlist aria-pressed="false" data-initial={copy.wishlist} data-added={copy.wishlisted} data-notice={copy.wishlistNotice}><Heart size={20} aria-hidden="true" /><span>{copy.wishlist}</span></button><span class="sc-sr-only" role="status" data-home-wishlist-status></span></div>}
+  <aside class="fixture-tools sc-container" slot="fixture-controls" aria-label="T05 本地验收状态">
+    <p><strong>T05 本地验收 · {homeScenarioNames[scenario]}</strong></p>
+    <p>正式素材仍“稍后确定”。示例作品、插画、发布状态仅用于隔离验证；示例平台入口跳到本地说明页。试听与视频按钮只验证作品导航，媒体播放留 T09–T11。</p>
+    <nav class="fixture-actions" aria-label="首页验收状态">{Object.entries(homeScenarioNames).map(([key, label]) => <a href={`${prefix(lang)}/home-preview/${key}/`} aria-current={scenario === key ? 'page' : undefined}>{label}</a>)}</nav>
+    <nav class="fixture-actions" aria-label="验收状态语言">{stationLocales.map(locale => <a href={`${prefix(locale)}/home-preview/${scenario}/`} lang={locale} aria-current={lang === locale ? 'true' : undefined}>{stationLanguageAccessibleNames[locale]}</a>)}</nav>
+    <a href={prefix(lang) + '/visual/'}>查看 T04 原图视觉样例</a>
+  </aside>
+</StationBrandHome>
+<script>
+  const wishlist = document.querySelector<HTMLButtonElement>('[data-home-fixture-wishlist]');
+  wishlist?.addEventListener('click', () => {
+    const added = wishlist.getAttribute('aria-pressed') !== 'true';
+    wishlist.setAttribute('aria-pressed', String(added));
+    const label = wishlist.querySelector('span');
+    if (label) label.textContent = (added ? wishlist.dataset.added : wishlist.dataset.initial) || '';
+    const notice = document.querySelector('[data-home-wishlist-status]');
+    if (notice) notice.textContent = added ? wishlist.dataset.notice || '' : '';
+  });
+</script>
+<style is:global>.home-game-body .gentle-game-actions > div { display: flex; flex-grow: 1; } [data-home-fixture-wishlist][aria-pressed='true'] { color: #974071 !important; border-color: #d2a6c6; }</style>
