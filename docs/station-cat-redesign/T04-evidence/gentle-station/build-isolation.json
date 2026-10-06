@@ -1,0 +1,16 @@
+{
+  "filesScanned": 271,
+  "markers": [
+    "data-station-shell",
+    "preview-assets/gentle-station",
+    "data-fixture-wishlist",
+    "data-fixture-runtime",
+    "station-search-query",
+    "gentle-copy.js",
+    "GentleStationFixture"
+  ],
+  "violations": [],
+  "passed": true,
+  "build": "ALLOW_EMPTY_SERIAL_CONTENT=1 ASTRO_TELEMETRY_DISABLED=1 npm run build",
+  "limit": "Local empty-content build. Not a production package, production HTTP, cloud permissions, or deployment evidence. Public brand mark may be copied, but no production page mounts the new shell."
+}

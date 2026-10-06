@@ -1,0 +1,22 @@
+---
+// Unmodified Phosphor library SVGs, MIT. See src/assets/redesign/icons/provenance.json.
+import music from '../../assets/redesign/icons/music-notes-fill.svg?raw';
+import games from '../../assets/redesign/icons/game-controller-fill.svg?raw';
+import paw from '../../assets/redesign/icons/paw-print-fill.svg?raw';
+import headphones from '../../assets/redesign/icons/headphones-fill.svg?raw';
+import crown from '../../assets/redesign/icons/crown-fill.svg?raw';
+import chart from '../../assets/redesign/icons/chart-bar-fill.svg?raw';
+import spotify from '../../assets/redesign/icons/spotify-logo-fill.svg?raw';
+import youtube from '../../assets/redesign/icons/youtube-logo-fill.svg?raw';
+import instagram from '../../assets/redesign/icons/instagram-logo-fill.svg?raw';
+import x from '../../assets/redesign/icons/x-logo-fill.svg?raw';
+import apple from '../../assets/redesign/icons/apple-logo-fill.svg?raw';
+const glyphs = { music, games, paw, headphones, crown, chart, spotify, youtube, instagram, x, apple };
+interface Props { name: keyof typeof glyphs; size?: number; class?: string }
+const { name, size = 24, class: className = '' } = Astro.props;
+---
+<span class:list={['sc-glyph', className]} style={`--glyph-size:${size}px`} aria-hidden="true" set:html={glyphs[name]} />
+<style is:global>
+  .sc-glyph { display: inline-flex; width: var(--glyph-size); height: var(--glyph-size); flex-shrink: 0; }
+  .sc-glyph svg { width: 100%; height: 100%; fill: currentColor; }
+</style>

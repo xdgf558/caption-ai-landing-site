@@ -1,0 +1,172 @@
+[
+  {
+    "bodyBottomPadding": "88px",
+    "density": 1,
+    "dockHidden": true,
+    "height": 900,
+    "horizontalOverflow": false,
+    "links": [
+      {
+        "height": 51,
+        "href": "/zh-hans/",
+        "name": "首页"
+      },
+      {
+        "height": 51,
+        "href": "/zh-hans/music/",
+        "name": "音乐"
+      },
+      {
+        "height": 51,
+        "href": "/zh-hans/games/",
+        "name": "游戏"
+      },
+      {
+        "height": 51,
+        "href": "/zh-hans/library/",
+        "name": "我的"
+      }
+    ],
+    "mediaCount": 0,
+    "navHeight": 64,
+    "navReserve": "64px",
+    "navVisible": true,
+    "width": 375
+  },
+  {
+    "bodyBottomPadding": "88px",
+    "density": 1,
+    "dockHidden": true,
+    "height": 900,
+    "horizontalOverflow": false,
+    "links": [
+      {
+        "height": 51,
+        "href": "/zh-hans/",
+        "name": "首页"
+      },
+      {
+        "height": 51,
+        "href": "/zh-hans/music/",
+        "name": "音乐"
+      },
+      {
+        "height": 51,
+        "href": "/zh-hans/games/",
+        "name": "游戏"
+      },
+      {
+        "height": 51,
+        "href": "/zh-hans/library/",
+        "name": "我的"
+      }
+    ],
+    "mediaCount": 0,
+    "navHeight": 64,
+    "navReserve": "64px",
+    "navVisible": true,
+    "width": 390
+  },
+  {
+    "bodyBottomPadding": "24px",
+    "density": 1,
+    "dockHidden": true,
+    "height": 900,
+    "horizontalOverflow": false,
+    "links": [
+      {
+        "height": 0,
+        "href": "/zh-hans/",
+        "name": "首页"
+      },
+      {
+        "height": 0,
+        "href": "/zh-hans/music/",
+        "name": "音乐"
+      },
+      {
+        "height": 0,
+        "href": "/zh-hans/games/",
+        "name": "游戏"
+      },
+      {
+        "height": 0,
+        "href": "/zh-hans/library/",
+        "name": "我的"
+      }
+    ],
+    "mediaCount": 0,
+    "navHeight": 0,
+    "navReserve": "0px",
+    "navVisible": false,
+    "width": 768
+  },
+  {
+    "bodyBottomPadding": "24px",
+    "density": 1,
+    "dockHidden": true,
+    "height": 900,
+    "horizontalOverflow": false,
+    "links": [
+      {
+        "height": 0,
+        "href": "/zh-hans/",
+        "name": "首页"
+      },
+      {
+        "height": 0,
+        "href": "/zh-hans/music/",
+        "name": "音乐"
+      },
+      {
+        "height": 0,
+        "href": "/zh-hans/games/",
+        "name": "游戏"
+      },
+      {
+        "height": 0,
+        "href": "/zh-hans/library/",
+        "name": "我的"
+      }
+    ],
+    "mediaCount": 0,
+    "navHeight": 0,
+    "navReserve": "0px",
+    "navVisible": false,
+    "width": 1280
+  },
+  {
+    "bodyBottomPadding": "24px",
+    "density": 1,
+    "dockHidden": true,
+    "height": 900,
+    "horizontalOverflow": false,
+    "links": [
+      {
+        "height": 0,
+        "href": "/zh-hans/",
+        "name": "首页"
+      },
+      {
+        "height": 0,
+        "href": "/zh-hans/music/",
+        "name": "音乐"
+      },
+      {
+        "height": 0,
+        "href": "/zh-hans/games/",
+        "name": "游戏"
+      },
+      {
+        "height": 0,
+        "href": "/zh-hans/library/",
+        "name": "我的"
+      }
+    ],
+    "mediaCount": 0,
+    "navHeight": 0,
+    "navReserve": "0px",
+    "navVisible": false,
+    "width": 1440
+  }
+]

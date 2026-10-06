@@ -1,0 +1,71 @@
+{
+  "search": {
+    "openFocus": "station-search-query",
+    "filtered": [
+      "音乐"
+    ],
+    "emptyVisible": true,
+    "destination": "http://127.0.0.1:4204/zh-hans/music/",
+    "escapeFinal": {
+      "closed": true,
+      "focusReturned": true
+    },
+    "closeButtonFinal": {
+      "closed": true,
+      "focusReturned": true
+    },
+    "closeFocusInitial": false
+  },
+  "wishlist": {
+    "label": "已加入清单",
+    "pressed": "true",
+    "status": "已加入本次预览清单，未同步至账号。",
+    "afterReload": "false"
+  },
+  "skip": {
+    "active": "sc-skip",
+    "afterEnter": "station-main"
+  },
+  "languageEscape": {
+    "closed": true,
+    "focus": "SUMMARY"
+  },
+  "languageSwitch": "http://127.0.0.1:4204/en/music/?track=6a009e51-f7e1-454b-83cf-f37c7ca98d9b&collection=quiet-days",
+  "fiveNavigation": [
+    {
+      "active": [
+        "首页"
+      ],
+      "lang": "zh-Hans",
+      "url": "http://127.0.0.1:4204/zh-hans/"
+    },
+    {
+      "active": [
+        "音乐"
+      ],
+      "lang": "zh-Hans",
+      "url": "http://127.0.0.1:4204/zh-hans/music/"
+    },
+    {
+      "active": [
+        "游戏"
+      ],
+      "lang": "zh-Hans",
+      "url": "http://127.0.0.1:4204/zh-hans/games/"
+    },
+    {
+      "active": [
+        "会员"
+      ],
+      "lang": "zh-Hans",
+      "url": "http://127.0.0.1:4204/zh-hans/library/"
+    },
+    {
+      "active": [
+        "關於"
+      ],
+      "lang": "zh-Hant",
+      "url": "http://127.0.0.1:4204/about/"
+    }
+  ]
+}

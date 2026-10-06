@@ -1,0 +1,15 @@
+{
+  "selected": 2,
+  "selectedOn": "2026-10-05",
+  "source": "用户在按显示顺序 1、2、3 的选择问答中回复 2",
+  "templates": [
+    "template-1.png",
+    "template-2-selected.png",
+    "template-3.png"
+  ],
+  "materialsDecision": "主推、平台入口、试听开关、视频仍稍后确定",
+  "scope": "T04 视觉变量与导航；T05 未开始",
+  "status": "historical, superseded by user image",
+  "supersededOn": "2026-10-06",
+  "supersededBy": "gentle-station/design-selection.json"
+}

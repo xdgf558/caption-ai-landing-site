@@ -1,0 +1,13 @@
+{
+  "firstKeyboardFocus": {
+    "href": "#station-main",
+    "text": "跳到主要内容"
+  },
+  "skipResult": {
+    "focusedId": "station-main"
+  },
+  "languageEscape": {
+    "focusReturned": true,
+    "open": false
+  }
+}

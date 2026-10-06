@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-10-05T23:15:10.349Z",
+  "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 ASTRO_TELEMETRY_DISABLED=1 npm run build",
+  "node": "v24.15.0",
+  "checkedTextFiles": 271,
+  "fixtureMatches": [],
+  "fixturePaths": [],
+  "passed": true,
+  "productionDeploymentVerified": false
+}

@@ -1,0 +1,297 @@
+---
+import { ArrowRight, Heart, Play, X } from '@lucide/astro';
+import StationBrandLayout from '../../../../../src/layouts/StationBrandLayout.astro';
+import Glyph from '../../../../../src/components/redesign/Glyph.astro';
+import { stationHref } from '../../../../../src/redesign/routes.js';
+import { gentleCopy } from './gentle-copy.js';
+interface Props { lang: 'zh-Hans' | 'zh-Hant' | 'en' | 'ja' }
+const { lang } = Astro.props;
+const copy = gentleCopy[lang];
+// User's image is visual truth. Its album, illustration and news are design samples,
+// never promotion configuration, a release assertion, or actual game screenshots.
+const platforms = [
+  { title: copy.netease, icon: 'music' }, { title: copy.qishui, icon: 'headphones' },
+  { title: 'Apple Music', icon: 'apple' }, { title: copy.video, icon: 'youtube' },
+];
+const pillars = [
+  { icon: 'music', title: copy.complete, text: copy.completeText, section: 'music' },
+  { icon: 'headphones', title: copy.platforms, text: copy.platformText, section: 'music' },
+  { icon: 'youtube', title: copy.shortVideo, text: copy.videoText, section: 'music' },
+  { icon: 'crown', title: copy.member, text: copy.memberText, section: 'member' },
+];
+const news = [
+  { image: 'music-cover.webp', category: copy.musicSample, title: copy.song, text: copy.songNews, kind: 'music', section: 'music' },
+  { image: 'game-cover.webp', category: copy.gameSample, title: copy.game, text: copy.gameNews, kind: 'games', section: 'games' },
+  { image: 'daily.webp', category: copy.daily, title: copy.stationTitle, text: copy.stationNews, kind: 'paw', section: 'about' },
+];
+---
+<StationBrandLayout lang={lang} title={copy.pageTitle} preview>
+  <section class="gentle-hero" aria-labelledby="station-title">
+    <img class="gentle-hero-image" src="/preview-assets/gentle-station/hero.webp" width="2172" height="724" alt={copy.heroAlt} fetchpriority="high" />
+    <div class="gentle-hero-content">
+      <p class="gentle-eyebrow">CATS, IDEAS, A KINDER TOMORROW</p>
+      <h1 class="sc-heading" id="station-title">{copy.headline[0]}<br />{' ' + copy.headline[1]}</h1>
+      <p class="gentle-lede">{copy.intro.map(line => <span>{line}<br /></span>)}</p>
+      <div class="gentle-hero-actions">
+        <a class="sc-button" href={stationHref(lang, 'music')}><Glyph name="music" size={22} />{copy.goMusic}<ArrowRight size={16} aria-hidden="true" /></a>
+        <a class="sc-button sc-button-secondary" href={stationHref(lang, 'games')}><Glyph name="games" size={23} />{copy.goGames}<ArrowRight size={16} aria-hidden="true" /></a>
+      </div>
+    </div>
+  </section>
+  <div class="sc-container gentle-content" id="station-work">
+    <div class="gentle-features">
+      <section class="gentle-feature gentle-music" aria-labelledby="station-music-title">
+        <div class="gentle-section-header">
+          <Glyph name="music" size={34} /><h2 id="station-music-title">{copy.music}</h2><p>{copy.musicTagline}</p>
+          <a class="gentle-more" href={stationHref(lang, 'music')}>{copy.moreMusic}<ArrowRight size={15} aria-hidden="true" /></a>
+        </div>
+        <div class="gentle-feature-body">
+          <img class="gentle-cover" src="/preview-assets/gentle-station/music-cover.webp" width="1024" height="1024" alt={copy.musicAlt} />
+          <div class="gentle-work-copy">
+            <span class="gentle-badge">{copy.musicSample}</span>
+            <h3>{copy.song}</h3><p>{copy.songText.map(line => <span>{line}<br /></span>)}</p>
+            <button class="sc-icon-button gentle-play" type="button" disabled aria-label={copy.noPreview} title={copy.noPreview}><Play size={20} fill="currentColor" aria-hidden="true" /></button>
+          </div>
+          <div class="gentle-platforms" aria-label={copy.pendingPlatform}>
+            {platforms.map(platform => <button type="button" disabled title={copy.pendingPlatform}><Glyph name={platform.icon as any} size={21} /><span>{platform.title}<small>{copy.pending}</small></span></button>)}
+          </div>
+        </div>
+      </section>
+      <section class="gentle-feature gentle-games" aria-labelledby="station-games-title">
+        <div class="gentle-section-header">
+          <Glyph name="games" size={36} /><h2 id="station-games-title">{copy.games}</h2><p>{copy.gamesTagline}</p>
+          <a class="gentle-more" href={stationHref(lang, 'games')}>{copy.moreGames}<ArrowRight size={15} aria-hidden="true" /></a>
+        </div>
+        <div class="gentle-feature-body">
+          <img class="gentle-cover" src="/preview-assets/gentle-station/game-cover.webp" width="1254" height="1254" alt={copy.gameAlt} />
+          <div class="gentle-work-copy">
+            <span class="gentle-badge">{copy.gameSample}</span>
+            <h3>{copy.game}</h3><p>{copy.gameText.map(line => <span>{line}<br /></span>)}</p>
+            <Glyph name="paw" size={48} class="gentle-paw" />
+          </div>
+          <div class="gentle-game-actions">
+            <a class="sc-button" href={stationHref(lang, 'games')}>{copy.viewGame}<ArrowRight size={16} aria-hidden="true" /></a>
+            <button class="sc-button sc-button-secondary" type="button" data-fixture-wishlist aria-pressed="false" data-initial={copy.wishlist} data-added={copy.wishlisted} data-notice={copy.wishlistNotice}><Heart size={20} aria-hidden="true" /><span data-wishlist-label>{copy.wishlist}</span></button>
+          </div>
+        </div>
+        <span class="sc-sr-only" role="status" data-wishlist-status></span>
+      </section>
+    </div>
+    <section class="gentle-promotion" aria-labelledby="station-promotion-title">
+      <div class="gentle-promotion-intro"><Glyph name="chart" size={33} /><div><h2 id="station-promotion-title">{copy.promotion}</h2><p>{copy.promotionText}</p></div></div>
+      {pillars.map(pillar => <a class={'gentle-pillar gentle-pillar-' + pillar.icon} href={stationHref(lang, pillar.section)}><span class="gentle-pillar-icon"><Glyph name={pillar.icon as any} size={25} /></span><span><strong>{pillar.title}</strong><small>{pillar.text}</small></span></a>)}
+      <span class="gentle-promotion-paw" aria-hidden="true"><Glyph name="paw" size={30} /></span>
+    </section>
+    <section class="gentle-news" aria-labelledby="station-news-title">
+      <div class="gentle-section-header"><h2 id="station-news-title">{copy.latest}</h2><p>{copy.latestText}</p><a class="gentle-more" href={stationHref(lang, 'about')}>{copy.viewAll}<ArrowRight size={15} aria-hidden="true" /></a></div>
+      <div class="gentle-news-grid">{news.map(item => <article class="gentle-news-item">
+        <img src={'/preview-assets/gentle-station/' + item.image} width="100" height="100" alt="" loading="lazy" />
+        <div><span class={'gentle-badge gentle-badge-' + item.kind}><Glyph name={item.kind as any} size={12} />{item.category}</span><h3>{item.title}</h3><p>{item.text.map(line => <span>{line}<br /></span>)}</p></div>
+        <a class="sc-icon-button" href={stationHref(lang, item.section)} aria-label={copy.view + ' · ' + item.title}><ArrowRight size={18} aria-hidden="true" /></a>
+      </article>)}</div>
+    </section>
+  </div>
+  <div slot="player" class="fixture-player" aria-label="底部占位测量样例，无音频">
+    <div><strong>底部占位测量</strong><span>样例区域，不加载音频</span></div>
+    <button type="button" data-fixture-player-close aria-label="收起底部占位"><X size={20} aria-hidden="true" /></button>
+  </div>
+  <details slot="fixture-controls" class="fixture-tools sc-container">
+    <summary>本地预览检查</summary>
+    <p>仅供 T04 视觉与组件检查。图中作品只作设计示例；不连接账号、存档、推广配置或音频服务。</p>
+    <div class="fixture-actions">
+      <button type="button" data-fixture-dock aria-pressed="false">显示底部占位</button>
+      <button type="button" data-fixture-tall aria-pressed="false">增加占位高度</button>
+      <button type="button" data-fixture-safe aria-pressed="false">模拟 34px 安全区域</button>
+      <button type="button" data-fixture-runtime aria-pressed="false">模拟游戏布局</button>
+    </div>
+    <p data-fixture-status role="status">网站布局 · 底部占位已收起</p>
+    <a href="#station-title" data-fixture-last>返回页首</a>
+  </details>
+</StationBrandLayout>
+<script>
+  const shell = document.querySelector<HTMLElement>('[data-station-shell]');
+  const dock = document.querySelector<HTMLElement>('[data-sc-player-dock]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-fixture-dock]');
+  const tall = document.querySelector<HTMLButtonElement>('[data-fixture-tall]');
+  const runtime = document.querySelector<HTMLButtonElement>('[data-fixture-runtime]');
+  const safe = document.querySelector<HTMLButtonElement>('[data-fixture-safe]');
+  const close = document.querySelector<HTMLButtonElement>('[data-fixture-player-close]');
+  const status = document.querySelector('[data-fixture-status]');
+  function announce() {
+    if (status) status.textContent = `${shell?.dataset.gameRuntime === 'true' ? '游戏布局' : '网站布局'} · 底部占位${dock?.hidden ? '已收起' : '已显示'}`;
+  }
+  toggle?.addEventListener('click', () => { if (dock) { dock.hidden = !dock.hidden; toggle.setAttribute('aria-pressed', String(!dock.hidden)); announce(); } });
+  close?.addEventListener('click', () => { if (dock) { dock.hidden = true; toggle?.setAttribute('aria-pressed', 'false'); toggle?.focus(); announce(); } });
+  tall?.addEventListener('click', () => {
+    const enabled = tall.getAttribute('aria-pressed') !== 'true';
+    tall.setAttribute('aria-pressed', String(enabled)); dock?.classList.toggle('fixture-player-tall', enabled);
+  });
+  runtime?.addEventListener('click', () => {
+    if (shell) { const enabled = shell.dataset.gameRuntime !== 'true'; shell.dataset.gameRuntime = String(enabled); runtime.setAttribute('aria-pressed', String(enabled)); announce(); }
+  });
+  safe?.addEventListener('click', () => {
+    const enabled = safe.getAttribute('aria-pressed') !== 'true';
+    safe.setAttribute('aria-pressed', String(enabled));
+    if (shell) { if (enabled) shell.style.setProperty('--sc-safe-bottom', '34px'); else shell.style.removeProperty('--sc-safe-bottom'); }
+  });
+  const wishlist = document.querySelector<HTMLButtonElement>('[data-fixture-wishlist]');
+  wishlist?.addEventListener('click', () => {
+    const added = wishlist.getAttribute('aria-pressed') !== 'true';
+    wishlist.setAttribute('aria-pressed', String(added));
+    const label = wishlist.querySelector('[data-wishlist-label]');
+    if (label) label.textContent = added ? wishlist.dataset.added || '' : wishlist.dataset.initial || '';
+    const notice = document.querySelector('[data-wishlist-status]');
+    if (notice) notice.textContent = added ? wishlist.dataset.notice || '' : '';
+  });
+</script>
+<style is:global>
+  .gentle-hero { position: relative; min-height: 313px; background: #f4f1ff; overflow: hidden; }
+  .gentle-hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .gentle-hero-content { position: relative; padding: 27px 68px 23px; width: 615px; max-width: 55%; }
+  .gentle-eyebrow { color: #58669b; font-size: 8px; letter-spacing: .38em; font-weight: 550; margin: 0 0 12px; }
+  .gentle-hero h1 { margin: 0 0 12px; font-size: 39px; font-weight: 900; line-height: 1.26; letter-spacing: -.035em; }
+  .gentle-lede { color: #515e8d; font-size: 15px; line-height: 1.5; margin: 0 0 17px; }
+  .gentle-hero-actions { display: flex; gap: 14px; }
+  .gentle-content { padding-top: 10px; }
+  .gentle-features { display: grid; grid-template-columns: 1.095fr 1fr; gap: 16px; }
+  .gentle-feature { padding: 13px 24px 18px; border-radius: 13px; min-width: 0; }
+  .gentle-music { background: var(--sc-music-surface); }
+  .gentle-games { background: var(--sc-game-surface); }
+  .gentle-section-header { display: flex; align-items: center; gap: 13px; min-height: 39px; margin-bottom: 10px; }
+  .gentle-section-header h2 { margin: 0; font-size: 23px; line-height: 1.35; font-weight: 750; white-space: nowrap; letter-spacing: -.035em; }
+  .gentle-section-header p { margin: 0; color: var(--sc-muted); font-size: 12px; line-height: 1.5; }
+  .gentle-music .gentle-section-header > .sc-glyph { color: var(--sc-music); }
+  .gentle-games .gentle-section-header > .sc-glyph, .gentle-games .gentle-section-header h2 { color: var(--sc-game); }
+  .gentle-more { display: inline-flex; justify-content: flex-end; gap: 8px; align-items: center; min-height: 44px; margin-block: -3px; margin-left: auto; color: var(--sc-accent) !important; text-decoration: none; font-size: 12px; white-space: nowrap; }
+  .gentle-more:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .gentle-feature-body { display: grid; grid-template-columns: 183px minmax(0, 1fr); grid-template-rows: 1fr auto; gap: 12px 28px; min-height: 183px; }
+  .gentle-cover { grid-row: 1 / 3; width: 100%; height: 183px; object-fit: cover; border-radius: 8px; }
+  .gentle-work-copy { position: relative; padding-top: 4px; min-width: 0; }
+  .gentle-work-copy > .gentle-badge { display: flex; width: fit-content; }
+  .gentle-work-copy h3 { font-size: 22px; font-weight: 750; margin: 5px 0 5px; line-height: 1.35; letter-spacing: -.03em; }
+  .gentle-work-copy p { color: var(--sc-muted); font-size: 13px; line-height: 1.65; margin: 0; }
+  .gentle-badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 10px; background: #f4ddef; color: #974071; font-size: 10px; line-height: 1.5; font-weight: 650; }
+  .gentle-play { position: absolute; top: 35px; right: 0; width: 48px; height: 48px; }
+  .gentle-play:disabled { cursor: default; color: #7b7d9d; }
+  .gentle-music .gentle-work-copy { padding-right: 50px; }
+  .gentle-platforms { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .gentle-platforms button { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 5px; min-height: 44px; color: #505980; border: 1px solid #eae3f3; border-radius: 9px; background: #fefcff; font-size: 10px; font-weight: 600; line-height: 1.35; }
+  .gentle-platforms small { display: block; font-size: 9px; font-weight: 400; color: #707b9c; }
+  .gentle-games .gentle-feature-body { grid-template-columns: 210px minmax(0, 1fr); gap: 12px 24px; }
+  .gentle-games .gentle-badge, .gentle-badge-games { color: #237895; background: #d6f0f8; }
+  .gentle-paw { position: absolute; right: 0; top: 26px; color: #b7ccdf; }
+  .gentle-game-actions { display: flex; gap: 10px; }
+  .gentle-game-actions .sc-button { padding-inline: 19px; min-height: 44px; font-size: 12px; }
+  [data-fixture-wishlist][aria-pressed='true'] { color: #974071 !important; border-color: #d2a6c6; background: #fff8fe; }
+  .gentle-promotion { margin-top: 13px; display: grid; grid-template-columns: minmax(230px, 1.85fr) repeat(4, minmax(0, 1fr)) 58px; gap: 10px; align-items: center; background: var(--sc-promo-surface); border-radius: 12px; padding: 12px 18px; min-height: 84px; }
+  .gentle-promotion-intro { display: flex; align-items: center; gap: 12px; color: var(--sc-accent); }
+  .gentle-promotion-intro h2 { margin: 0 0 3px; font-size: 17px; line-height: 1.4; font-weight: 750; }
+  .gentle-promotion-intro p { margin: 0; color: var(--sc-muted); font-size: 10px; line-height: 1.6; }
+  .gentle-pillar { display: flex; align-items: center; gap: 10px; min-height: 61px; background: #fafaff; border: 1px solid #e8e7f7; border-radius: 12px; padding: 8px 9px; text-decoration: none; color: var(--sc-accent) !important; }
+  .gentle-pillar:hover { border-color: #bfc2e5; background: #fff; }
+  .gentle-pillar-icon { display: inline-flex; align-items: center; justify-content: center; width: 41px; height: 41px; flex-shrink: 0; background: #edebff; border-radius: 50%; }
+  .gentle-pillar-music .gentle-pillar-icon { color: var(--sc-music); background: #f6e5f4; }
+  .gentle-pillar-crown .gentle-pillar-icon { color: #c07134; background: #fff0e9; }
+  .gentle-pillar strong { display: block; font-size: 12px; line-height: 1.5; }
+  .gentle-pillar small { display: block; color: var(--sc-muted); font-size: 10px; line-height: 1.5; }
+  .gentle-promotion-paw { display: flex; justify-content: center; color: #9baae1; }
+  .gentle-news { margin-top: 16px; }
+  .gentle-news > .gentle-section-header { min-height: 29px; margin-bottom: 3px; }
+  .gentle-news .gentle-more { margin-block: -8px; }
+  .gentle-news-item .gentle-badge { display: flex; width: fit-content; line-height: 1.2; }
+  .gentle-news h2 { font-size: 19px; }
+  .gentle-news-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .gentle-news-item { position: relative; display: flex; align-items: center; gap: 18px; min-height: 125px; padding: 10px 12px; border: 1px solid var(--sc-line); border-radius: 12px; }
+  .gentle-news-item > img { width: 96px; height: 100px; object-fit: cover; border-radius: 7px; }
+  .gentle-news-item > div { flex: 1; padding-right: 0; min-width: 0; }
+  .gentle-news-item h3 { padding-right: 36px; font-size: 16px; margin: 5px 0 4px; font-weight: 750; line-height: 1.4; }
+  .gentle-news-item p { margin: 0; color: var(--sc-muted); font-size: 12px; line-height: 1.55; }
+  .gentle-news-item > .sc-icon-button { position: absolute; top: 20px; right: 13px; width: 40px; height: 40px; min-width: 44px; min-height: 44px; background: transparent; }
+  .gentle-badge-paw { color: #6b5bc4; background: #ede8ff; }
+  .fixture-tools { border-top: 1px dashed var(--sc-line); padding-block: 16px 24px; font-size: 14px; color: var(--sc-muted); }
+  .fixture-tools summary { cursor: pointer; min-height: 44px; display: list-item; }
+  .fixture-tools button, .fixture-player button { min-height: 44px; padding: 8px 14px; border: 1px solid var(--sc-line); border-radius: 8px; background: var(--sc-paper); color: var(--sc-ink); cursor: pointer; }
+  .fixture-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .fixture-tools button[aria-pressed='true'] { border-color: var(--sc-accent); color: var(--sc-accent); }
+  .fixture-tools a { display: inline-flex; align-items: center; min-height: 44px; }
+  .fixture-player { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 12px var(--sc-gutter); min-height: 76px; }
+  .fixture-player span, .fixture-player strong { display: block; font-size: 14px; }
+  .fixture-player span { color: var(--sc-muted); font-size: 12px; }
+  .fixture-player-tall .fixture-player { min-height: 124px; }
+  @media (min-width: 1001px) and (max-width: 1280px) {
+    .gentle-section-header { gap: 8px; flex-wrap: wrap; }
+    .gentle-section-header p { display: none; }
+    .gentle-games .gentle-feature-body { grid-template-columns: 160px minmax(0, 1fr); gap: 12px 16px; }
+    .gentle-feature-body { grid-template-columns: 160px minmax(0, 1fr); gap: 12px 16px; }
+    .gentle-game-actions { flex-wrap: wrap; }
+    .gentle-platforms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .gentle-promotion { grid-template-columns: 1.5fr repeat(4, minmax(0, 1fr)); }
+    .gentle-promotion-paw { display: none; }
+    .gentle-news-item { gap: 12px; } .gentle-news-item > img { width: 80px; height: 100px; }
+  }
+  @media (max-width: 1000px) {
+    .gentle-hero-content { padding-inline: 30px; width: 575px; max-width: 70%; }
+    .gentle-hero h1 { font-size: 34px; }
+    .gentle-features { grid-template-columns: 1fr; }
+    .gentle-feature-body, .gentle-games .gentle-feature-body { grid-template-columns: 180px minmax(0, 1fr); }
+    .gentle-promotion { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .gentle-promotion-intro { grid-column: 1 / -1; }
+    .gentle-promotion-paw { display: none; }
+    .gentle-news-grid { grid-template-columns: 1fr; }
+    .gentle-news-item > div { padding-right: 48px; }
+  }
+  @media (min-width: 768px) and (max-width: 1000px) {
+    .gentle-hero { display: flex; flex-direction: column; }
+    .gentle-hero-image { position: static; order: 2; width: 100%; height: 220px; object-position: right center; }
+    .gentle-hero-content { width: 100%; max-width: none; }
+    .gentle-hero h1 { max-width: 640px; }
+    html[lang='en'] .gentle-hero h1, html[lang='ja'] .gentle-hero h1 { font-size: 28px; }
+    html[lang='en'] .gentle-hero h1 { text-wrap: balance; }
+    html[lang='en'] .gentle-hero h1 br { display: none; }
+  }
+  @media (max-width: 767px) {
+    .gentle-hero { display: flex; flex-direction: column; }
+    .gentle-hero-image { position: static; order: 2; width: 100%; height: 200px; object-position: right center; }
+    .gentle-hero-content { padding: 24px 22px; width: 100%; max-width: none; }
+    .gentle-eyebrow { font-size: 7px; letter-spacing: .27em; margin-bottom: 12px; }
+    .gentle-hero h1 { font-size: clamp(27px, 7.3vw, 38px); line-height: 1.35; margin-bottom: 13px; text-wrap: balance; }
+    .gentle-hero h1 br { display: none; }
+    .gentle-lede { font-size: 13px; line-height: 1.65; margin-bottom: 18px; }
+    .gentle-lede br { display: none; }
+    .gentle-hero-actions { flex-wrap: wrap; gap: 10px; }
+    .gentle-hero-actions .sc-button { padding-inline: 15px; gap: 8px; font-size: 12px; }
+    .gentle-content { padding-top: 12px; }
+    .gentle-feature { padding: 14px; }
+    .gentle-section-header { flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .gentle-section-header > .sc-glyph { --glyph-size: 28px !important; }
+    .gentle-section-header h2 { font-size: 21px; }
+    .gentle-section-header p { display: none; }
+    .gentle-more { font-size: 11px; gap: 5px; }
+    .gentle-feature-body, .gentle-games .gentle-feature-body { grid-template-columns: 110px minmax(0, 1fr); gap: 14px; min-height: 0; }
+    .gentle-cover { grid-row: auto; height: 143px; object-fit: cover; }
+    .gentle-work-copy { padding-top: 0; }
+    .gentle-work-copy h3 { font-size: 19px; margin-top: 7px; }
+    .gentle-work-copy p { font-size: 12px; line-height: 1.65; }
+    .gentle-music .gentle-work-copy { padding-right: 0; padding-bottom: 50px; }
+    .gentle-play { top: auto; bottom: 0; width: 44px; height: 44px; }
+    .gentle-platforms { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .gentle-platforms button { font-size: 11px; justify-content: flex-start; padding-inline: 12px; gap: 9px; }
+    .gentle-platforms small { font-size: 10px; }
+    .gentle-game-actions { grid-column: 1 / -1; flex-wrap: wrap; }
+    .gentle-game-actions .sc-button { flex-grow: 1; padding-inline: 13px; font-size: 12px; }
+    .gentle-paw { display: none; }
+    .gentle-promotion { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; gap: 10px; margin-top: 14px; }
+    .gentle-promotion-intro h2 { font-size: 16px; }
+    .gentle-promotion-intro p { font-size: 10px; }
+    .gentle-pillar { gap: 8px; padding: 8px; }
+    .gentle-pillar-icon { width: 34px; height: 34px; }
+    .gentle-pillar strong { font-size: 11px; } .gentle-pillar small { font-size: 10px; }
+    .gentle-news { margin-top: 13px; }
+    .gentle-news h2 { font-size: 20px; }
+    .gentle-news-item { min-height: 115px; gap: 13px; padding: 10px; }
+    .gentle-news-item > img { width: 78px; height: 92px; }
+    .gentle-news-item h3 { font-size: 15px; }
+    .gentle-news-item p { font-size: 11px; }
+    .gentle-news-item > .sc-icon-button { right: 10px; }
+  }
+</style>

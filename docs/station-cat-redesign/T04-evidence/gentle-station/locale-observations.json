@@ -1,0 +1,786 @@
+[
+  {
+    "buttons": [
+      {
+        "bottom": 1285.265625,
+        "height": 44,
+        "left": 30,
+        "right": 161,
+        "top": 1241.265625,
+        "width": 131,
+        "x": 30,
+        "y": 1241.265625
+      },
+      {
+        "bottom": 1285.265625,
+        "height": 44,
+        "left": 171,
+        "right": 330,
+        "top": 1241.265625,
+        "width": 159,
+        "x": 171,
+        "y": 1241.265625
+      }
+    ],
+    "clientWidth": 360,
+    "cta": [
+      {
+        "box": {
+          "bottom": 365.390625,
+          "height": 44,
+          "left": 22,
+          "right": 180,
+          "top": 321.390625,
+          "width": 158,
+          "x": 22,
+          "y": 321.390625
+        },
+        "text": " 前往音樂小站   "
+      },
+      {
+        "box": {
+          "bottom": 419.390625,
+          "height": 44,
+          "left": 22,
+          "right": 181,
+          "top": 375.390625,
+          "width": 159,
+          "x": 22,
+          "y": 375.390625
+        },
+        "text": " 探索遊戲世界   "
+      }
+    ],
+    "header": {
+      "actions": {
+        "bottom": 56,
+        "height": 44,
+        "left": 254,
+        "right": 344,
+        "top": 12,
+        "width": 90,
+        "x": 254,
+        "y": 12
+      },
+      "brand": {
+        "bottom": 49.5,
+        "height": 31,
+        "left": 16,
+        "right": 154.90625,
+        "top": 18.5,
+        "width": 138.90625,
+        "x": 16,
+        "y": 18.5
+      },
+      "nav": {
+        "bottom": 0,
+        "height": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "heading": {
+      "bottom": 226.0546875,
+      "height": 110.859375,
+      "left": 22,
+      "right": 338,
+      "top": 115.1953125,
+      "width": 316,
+      "x": 22,
+      "y": 115.1953125
+    },
+    "lang": "zh-Hant",
+    "scrollWidth": 360,
+    "width": 375
+  },
+  {
+    "buttons": [
+      {
+        "bottom": 909.03125,
+        "height": 44,
+        "left": 258,
+        "right": 374,
+        "top": 865.03125,
+        "width": 116,
+        "x": 258,
+        "y": 865.03125
+      },
+      {
+        "bottom": 909.03125,
+        "height": 44,
+        "left": 384,
+        "right": 528,
+        "top": 865.03125,
+        "width": 144,
+        "x": 384,
+        "y": 865.03125
+      }
+    ],
+    "clientWidth": 753,
+    "cta": [
+      {
+        "box": {
+          "bottom": 339.96875,
+          "height": 44,
+          "left": 30,
+          "right": 220,
+          "top": 295.96875,
+          "width": 190,
+          "x": 30,
+          "y": 295.96875
+        },
+        "text": " 前往音樂小站   "
+      },
+      {
+        "box": {
+          "bottom": 339.96875,
+          "height": 44,
+          "left": 234,
+          "right": 425,
+          "top": 295.96875,
+          "width": 191,
+          "x": 234,
+          "y": 295.96875
+        },
+        "text": " 探索遊戲世界   "
+      }
+    ],
+    "header": {
+      "actions": {
+        "bottom": 53,
+        "height": 44,
+        "left": 627,
+        "right": 723,
+        "top": 9,
+        "width": 96,
+        "x": 627,
+        "y": 9
+      },
+      "brand": {
+        "bottom": 48,
+        "height": 34,
+        "left": 30,
+        "right": 189.234375,
+        "top": 14,
+        "width": 159.234375,
+        "x": 30,
+        "y": 14
+      },
+      "nav": {
+        "bottom": 53,
+        "height": 44,
+        "left": 271.5,
+        "right": 481.5,
+        "top": 9,
+        "width": 210,
+        "x": 271.5,
+        "y": 9
+      }
+    },
+    "heading": {
+      "bottom": 199.46875,
+      "height": 85.671875,
+      "left": 30,
+      "right": 497.09375,
+      "top": 113.796875,
+      "width": 467.09375,
+      "x": 30,
+      "y": 113.796875
+    },
+    "lang": "zh-Hant",
+    "scrollWidth": 753,
+    "width": 768
+  },
+  {
+    "buttons": [
+      {
+        "bottom": 1285.265625,
+        "height": 44,
+        "left": 30,
+        "right": 161,
+        "top": 1241.265625,
+        "width": 131,
+        "x": 30,
+        "y": 1241.265625
+      },
+      {
+        "bottom": 1285.265625,
+        "height": 44,
+        "left": 171,
+        "right": 330,
+        "top": 1241.265625,
+        "width": 159,
+        "x": 171,
+        "y": 1241.265625
+      }
+    ],
+    "clientWidth": 360,
+    "cta": [
+      {
+        "box": {
+          "bottom": 365.390625,
+          "height": 44,
+          "left": 22,
+          "right": 180,
+          "top": 321.390625,
+          "width": 158,
+          "x": 22,
+          "y": 321.390625
+        },
+        "text": " 前往音乐小站   "
+      },
+      {
+        "box": {
+          "bottom": 419.390625,
+          "height": 44,
+          "left": 22,
+          "right": 181,
+          "top": 375.390625,
+          "width": 159,
+          "x": 22,
+          "y": 375.390625
+        },
+        "text": " 探索游戏世界   "
+      }
+    ],
+    "header": {
+      "actions": {
+        "bottom": 56,
+        "height": 44,
+        "left": 254,
+        "right": 344,
+        "top": 12,
+        "width": 90,
+        "x": 254,
+        "y": 12
+      },
+      "brand": {
+        "bottom": 49.5,
+        "height": 31,
+        "left": 16,
+        "right": 154.90625,
+        "top": 18.5,
+        "width": 138.90625,
+        "x": 16,
+        "y": 18.5
+      },
+      "nav": {
+        "bottom": 0,
+        "height": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "heading": {
+      "bottom": 226.0546875,
+      "height": 110.859375,
+      "left": 22,
+      "right": 338,
+      "top": 115.1953125,
+      "width": 316,
+      "x": 22,
+      "y": 115.1953125
+    },
+    "lang": "zh-Hans",
+    "scrollWidth": 360,
+    "width": 375
+  },
+  {
+    "buttons": [
+      {
+        "bottom": 909.03125,
+        "height": 44,
+        "left": 258,
+        "right": 374,
+        "top": 865.03125,
+        "width": 116,
+        "x": 258,
+        "y": 865.03125
+      },
+      {
+        "bottom": 909.03125,
+        "height": 44,
+        "left": 384,
+        "right": 528,
+        "top": 865.03125,
+        "width": 144,
+        "x": 384,
+        "y": 865.03125
+      }
+    ],
+    "clientWidth": 753,
+    "cta": [
+      {
+        "box": {
+          "bottom": 339.96875,
+          "height": 44,
+          "left": 30,
+          "right": 220,
+          "top": 295.96875,
+          "width": 190,
+          "x": 30,
+          "y": 295.96875
+        },
+        "text": " 前往音乐小站   "
+      },
+      {
+        "box": {
+          "bottom": 339.96875,
+          "height": 44,
+          "left": 234,
+          "right": 425,
+          "top": 295.96875,
+          "width": 191,
+          "x": 234,
+          "y": 295.96875
+        },
+        "text": " 探索游戏世界   "
+      }
+    ],
+    "header": {
+      "actions": {
+        "bottom": 53,
+        "height": 44,
+        "left": 627,
+        "right": 723,
+        "top": 9,
+        "width": 96,
+        "x": 627,
+        "y": 9
+      },
+      "brand": {
+        "bottom": 48,
+        "height": 34,
+        "left": 30,
+        "right": 189.234375,
+        "top": 14,
+        "width": 159.234375,
+        "x": 30,
+        "y": 14
+      },
+      "nav": {
+        "bottom": 53,
+        "height": 44,
+        "left": 271.5,
+        "right": 481.5,
+        "top": 9,
+        "width": 210,
+        "x": 271.5,
+        "y": 9
+      }
+    },
+    "heading": {
+      "bottom": 199.46875,
+      "height": 85.671875,
+      "left": 30,
+      "right": 497.09375,
+      "top": 113.796875,
+      "width": 467.09375,
+      "x": 30,
+      "y": 113.796875
+    },
+    "lang": "zh-Hans",
+    "scrollWidth": 753,
+    "width": 768
+  },
+  {
+    "buttons": [
+      {
+        "bottom": 1326.5078125,
+        "height": 44,
+        "left": 30,
+        "right": 330,
+        "top": 1282.5078125,
+        "width": 300,
+        "x": 30,
+        "y": 1282.5078125
+      },
+      {
+        "bottom": 1380.5078125,
+        "height": 44,
+        "left": 30,
+        "right": 330,
+        "top": 1336.5078125,
+        "width": 300,
+        "x": 30,
+        "y": 1336.5078125
+      }
+    ],
+    "clientWidth": 360,
+    "cta": [
+      {
+        "box": {
+          "bottom": 386.8359375,
+          "height": 44,
+          "left": 22,
+          "right": 240.90625,
+          "top": 342.8359375,
+          "width": 218.90625,
+          "x": 22,
+          "y": 342.8359375
+        },
+        "text": " Visit the music station   "
+      },
+      {
+        "box": {
+          "bottom": 440.8359375,
+          "height": 44,
+          "left": 22,
+          "right": 219.28125,
+          "top": 396.8359375,
+          "width": 197.28125,
+          "x": 22,
+          "y": 396.8359375
+        },
+        "text": " Explore the games   "
+      }
+    ],
+    "header": {
+      "actions": {
+        "bottom": 56,
+        "height": 44,
+        "left": 254,
+        "right": 344,
+        "top": 12,
+        "width": 90,
+        "x": 254,
+        "y": 12
+      },
+      "brand": {
+        "bottom": 49.5,
+        "height": 31,
+        "left": 16,
+        "right": 154.90625,
+        "top": 18.5,
+        "width": 138.90625,
+        "x": 16,
+        "y": 18.5
+      },
+      "nav": {
+        "bottom": 0,
+        "height": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "heading": {
+      "bottom": 226.0546875,
+      "height": 110.859375,
+      "left": 22,
+      "right": 338,
+      "top": 115.1953125,
+      "width": 316,
+      "x": 22,
+      "y": 115.1953125
+    },
+    "lang": "en",
+    "scrollWidth": 360,
+    "width": 375
+  },
+  {
+    "buttons": [
+      {
+        "bottom": 962.3359375,
+        "height": 44,
+        "left": 258,
+        "right": 413.6640625,
+        "top": 918.3359375,
+        "width": 155.6640625,
+        "x": 258,
+        "y": 918.3359375
+      },
+      {
+        "bottom": 962.3359375,
+        "height": 44,
+        "left": 423.6640625,
+        "right": 583.8671875,
+        "top": 918.3359375,
+        "width": 160.203125,
+        "x": 423.6640625,
+        "y": 918.3359375
+      }
+    ],
+    "clientWidth": 753,
+    "cta": [
+      {
+        "box": {
+          "bottom": 405.3046875,
+          "height": 44,
+          "left": 30,
+          "right": 284.234375,
+          "top": 361.3046875,
+          "width": 254.234375,
+          "x": 30,
+          "y": 361.3046875
+        },
+        "text": " Visit the music station   "
+      },
+      {
+        "box": {
+          "bottom": 405.3046875,
+          "height": 44,
+          "left": 298.234375,
+          "right": 529.4140625,
+          "top": 361.3046875,
+          "width": 231.1796875,
+          "x": 298.234375,
+          "y": 361.3046875
+        },
+        "text": " Explore the games   "
+      }
+    ],
+    "header": {
+      "actions": {
+        "bottom": 53,
+        "height": 44,
+        "left": 627,
+        "right": 723,
+        "top": 9,
+        "width": 96,
+        "x": 627,
+        "y": 9
+      },
+      "brand": {
+        "bottom": 48,
+        "height": 34,
+        "left": 30,
+        "right": 189.234375,
+        "top": 14,
+        "width": 159.234375,
+        "x": 30,
+        "y": 14
+      },
+      "nav": {
+        "bottom": 53,
+        "height": 44,
+        "left": 231.1171875,
+        "right": 521.8828125,
+        "top": 9,
+        "width": 290.765625,
+        "x": 231.1171875,
+        "y": 9
+      }
+    },
+    "heading": {
+      "bottom": 242.3046875,
+      "height": 128.5078125,
+      "left": 30,
+      "right": 497.09375,
+      "top": 113.796875,
+      "width": 467.09375,
+      "x": 30,
+      "y": 113.796875
+    },
+    "lang": "en",
+    "scrollWidth": 753,
+    "width": 768
+  },
+  {
+    "buttons": [
+      {
+        "bottom": 1306.7109375,
+        "height": 44,
+        "left": 30,
+        "right": 161,
+        "top": 1262.7109375,
+        "width": 131,
+        "x": 30,
+        "y": 1262.7109375
+      },
+      {
+        "bottom": 1306.7109375,
+        "height": 44,
+        "left": 171,
+        "right": 330,
+        "top": 1262.7109375,
+        "width": 159,
+        "x": 171,
+        "y": 1262.7109375
+      }
+    ],
+    "clientWidth": 360,
+    "cta": [
+      {
+        "box": {
+          "bottom": 386.8359375,
+          "height": 44,
+          "left": 22,
+          "right": 204,
+          "top": 342.8359375,
+          "width": 182,
+          "x": 22,
+          "y": 342.8359375
+        },
+        "text": " 音楽の小さな駅へ   "
+      },
+      {
+        "box": {
+          "bottom": 440.8359375,
+          "height": 44,
+          "left": 22,
+          "right": 217,
+          "top": 396.8359375,
+          "width": 195,
+          "x": 22,
+          "y": 396.8359375
+        },
+        "text": " ゲームの世界を探す   "
+      }
+    ],
+    "header": {
+      "actions": {
+        "bottom": 56,
+        "height": 44,
+        "left": 244,
+        "right": 344,
+        "top": 12,
+        "width": 100,
+        "x": 244,
+        "y": 12
+      },
+      "brand": {
+        "bottom": 49.5,
+        "height": 31,
+        "left": 16,
+        "right": 154.90625,
+        "top": 18.5,
+        "width": 138.90625,
+        "x": 16,
+        "y": 18.5
+      },
+      "nav": {
+        "bottom": 0,
+        "height": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "heading": {
+      "bottom": 226.0546875,
+      "height": 110.859375,
+      "left": 22,
+      "right": 338,
+      "top": 115.1953125,
+      "width": 316,
+      "x": 22,
+      "y": 115.1953125
+    },
+    "lang": "ja",
+    "scrollWidth": 360,
+    "width": 375
+  },
+  {
+    "buttons": [
+      {
+        "bottom": 939.8359375,
+        "height": 44,
+        "left": 258,
+        "right": 398,
+        "top": 895.8359375,
+        "width": 140,
+        "x": 258,
+        "y": 895.8359375
+      },
+      {
+        "bottom": 939.8359375,
+        "height": 44,
+        "left": 408,
+        "right": 576,
+        "top": 895.8359375,
+        "width": 168,
+        "x": 408,
+        "y": 895.8359375
+      }
+    ],
+    "clientWidth": 753,
+    "cta": [
+      {
+        "box": {
+          "bottom": 382.8046875,
+          "height": 44,
+          "left": 30,
+          "right": 246,
+          "top": 338.8046875,
+          "width": 216,
+          "x": 30,
+          "y": 338.8046875
+        },
+        "text": " 音楽の小さな駅へ   "
+      },
+      {
+        "box": {
+          "bottom": 382.8046875,
+          "height": 44,
+          "left": 260,
+          "right": 490,
+          "top": 338.8046875,
+          "width": 230,
+          "x": 260,
+          "y": 338.8046875
+        },
+        "text": " ゲームの世界を探す   "
+      }
+    ],
+    "header": {
+      "actions": {
+        "bottom": 53,
+        "height": 44,
+        "left": 620,
+        "right": 723,
+        "top": 9,
+        "width": 103,
+        "x": 620,
+        "y": 9
+      },
+      "brand": {
+        "bottom": 48,
+        "height": 34,
+        "left": 30,
+        "right": 189.234375,
+        "top": 14,
+        "width": 159.234375,
+        "x": 30,
+        "y": 14
+      },
+      "nav": {
+        "bottom": 53,
+        "height": 44,
+        "left": 258.5,
+        "right": 494.5,
+        "top": 9,
+        "width": 236,
+        "x": 258.5,
+        "y": 9
+      }
+    },
+    "heading": {
+      "bottom": 242.3046875,
+      "height": 128.5078125,
+      "left": 30,
+      "right": 497.09375,
+      "top": 113.796875,
+      "width": 467.09375,
+      "x": 30,
+      "y": 113.796875
+    },
+    "lang": "ja",
+    "scrollWidth": 753,
+    "width": 768
+  }
+]

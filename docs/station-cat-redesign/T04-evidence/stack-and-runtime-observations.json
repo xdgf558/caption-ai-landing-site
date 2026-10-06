@@ -1,0 +1,58 @@
+{
+  "stackedGeometry": {
+    "dock": {
+      "bottom": 746,
+      "height": 125,
+      "left": 0,
+      "right": 375,
+      "top": 621,
+      "width": 375,
+      "x": 0,
+      "y": 621
+    },
+    "dockAboveNav": true,
+    "height": 844,
+    "lastTarget": {
+      "bottom": 572.8203125,
+      "height": 44,
+      "left": 24,
+      "right": 80,
+      "top": 528.8203125,
+      "width": 56,
+      "x": 24,
+      "y": 528.8203125
+    },
+    "lastTargetAboveDock": true,
+    "nav": {
+      "bottom": 844,
+      "height": 98,
+      "left": 0,
+      "right": 375,
+      "top": 746,
+      "width": 375,
+      "x": 0,
+      "y": 746
+    },
+    "navReserve": "64px",
+    "padding": "247px",
+    "pageHeight": 2343,
+    "playerHidden": false,
+    "playerReserve": "125px",
+    "safe": "34px",
+    "scrollY": 1499.5,
+    "width": 390
+  },
+  "runtimeGeometry": {
+    "navReserve": "0px",
+    "padding": "0px",
+    "playerReserve": "0px",
+    "runtime": "true",
+    "visibleChrome": 0
+  },
+  "closeObservation": {
+    "bodyPadding": "122px",
+    "dockHidden": true,
+    "focusReturned": true,
+    "navVisible": true
+  }
+}

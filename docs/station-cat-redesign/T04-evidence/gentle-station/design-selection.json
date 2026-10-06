@@ -1,0 +1,18 @@
+{
+  "confirmedDate": "2026-10-06",
+  "source": "source.png",
+  "sourceOriginalPath": "/Users/shaola/Desktop/Station Cat 温柔小站首页.png",
+  "userInstruction": "UI界面，我重新设计了，你用我新设计的",
+  "navigationConfirmation": "采用新图的五项导航（会员沿用现有账号入口）",
+  "navigation": [
+    "home",
+    "music",
+    "games",
+    "member",
+    "about"
+  ],
+  "supersedes": "../template-selection.json",
+  "previousDesign": "Template 2, journal; historical only",
+  "promotionMaterials": "稍后确定",
+  "scope": "T04 isolated visual system and navigation; T05 not started; no production deployment or old-entry retirement"
+}

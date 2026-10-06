@@ -1,0 +1,64 @@
+[
+  {
+    "file": "scripts/fixtures/station-redesign/assets/gentle-station/hero.webp",
+    "dimensions": [
+      2172,
+      724
+    ],
+    "pngBytes": 1779980,
+    "webpBytes": 211586,
+    "originalPngSha256": "a98c0e223b52fa6f5eb3a788131b7c2adc1dd8f3bc0a3917f4f9f61773e93192",
+    "webpSha256": "71c0c665caa5110849e5f29718152a0a8e3158c278325072977cb710f54c05b7",
+    "processing": "Same dimensions, WebP quality 94. Original generated PNG retained at image_gen output path."
+  },
+  {
+    "file": "scripts/fixtures/station-redesign/assets/gentle-station/music-cover.webp",
+    "dimensions": [
+      1024,
+      1024
+    ],
+    "pngBytes": 1629988,
+    "webpBytes": 242694,
+    "originalPngSha256": "00fd0cf5ecf04aa7248c2d966d6a7bd49ed593d1ace091b1652cb7c3322467f8",
+    "webpSha256": "ad993186c2e4ac62bc0b6b7ace721602c3a0b6ea4e000676db526d9fcaef49a6",
+    "processing": "Same dimensions, WebP quality 94. Original generated PNG retained at image_gen output path."
+  },
+  {
+    "file": "scripts/fixtures/station-redesign/assets/gentle-station/game-cover.webp",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "pngBytes": 2515292,
+    "webpBytes": 474728,
+    "originalPngSha256": "4cfac2133a8d3105dc10c020931502afdad2720520369a16babc761e5ceec37d",
+    "webpSha256": "f48741a6dd20b87f23eaf6597a5305b52187b265cfb9a0dfc82431b5da69eb37",
+    "processing": "Same dimensions, WebP quality 94. Original generated PNG retained at image_gen output path."
+  },
+  {
+    "file": "scripts/fixtures/station-redesign/assets/gentle-station/daily.webp",
+    "dimensions": [
+      1024,
+      1024
+    ],
+    "pngBytes": 1681898,
+    "webpBytes": 246022,
+    "originalPngSha256": "0c07d81bd24842f0e2a2c8ac12876109ec7263667a1580d5bb7c94a94062a747",
+    "webpSha256": "8f1b15265cef5cb0e8b58da8907565a6916965f99252645937fc6c7bf96b18e3",
+    "processing": "Same dimensions, WebP quality 94. Original generated PNG retained at image_gen output path."
+  },
+  {
+    "file": "public/images/station-gentle/cat-mark.webp",
+    "dimensions": [
+      128,
+      128
+    ],
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "originalPngSha256": "e19650d25568b6f08831893d19b8fc3e2aca6e25800ce4d369148036d3584203",
+    "webpSha256": "2115e55b0a14dd80b1fed50dea645ac6ae4012a87ea83af5d7374e0619571aaa",
+    "processing": "128px web serving derivative, lossless WebP with alpha. Original generated PNG retained at image_gen output path."
+  }
+]

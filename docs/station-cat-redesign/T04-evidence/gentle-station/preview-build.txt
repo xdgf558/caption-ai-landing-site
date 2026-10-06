@@ -1,0 +1,69 @@
+
+> landing-site@0.1.0 build:redesign:preview
+> astro build --config scripts/fixtures/station-redesign/astro.config.mjs
+
+08:31:02 [content] Syncing content
+08:31:02 [content] Synced content
+08:31:02 [types] Generated 13ms
+08:31:02 [build] output: "static"
+08:31:02 [build] mode: "static"
+08:31:02 [build] directory: /Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/.generated/station-redesign-preview/
+08:31:02 [build] Collecting build info...
+08:31:02 [build] ✓ Completed in 22ms.
+08:31:02 [build] Building static entrypoints...
+08:31:03 [vite] ✓ built in 830ms
+08:31:03 [build] ✓ Completed in 843ms.
+
+ building client (vite)
+08:31:03 [vite] transforming...
+08:31:03 [vite] ✓ 6 modules transformed.
+08:31:03 [vite] rendering chunks...
+08:31:03 [vite] ✓ built in 10ms
+
+ generating static routes
+08:31:03 ▶ scripts/fixtures/station-redesign/site/pages/index.astro
+08:31:03   └─ /index.html (+8ms)
+08:31:03 ▶ scripts/fixtures/station-redesign/site/pages/[...path].astro
+08:31:03   ├─ /about/index.html (+2ms)
+08:31:03   ├─ /zh-hans/index.html (+1ms)
+08:31:03   ├─ /en/index.html (+1ms)
+08:31:03   ├─ /ja/index.html (+1ms)
+08:31:03   ├─ /music/index.html (+1ms)
+08:31:03   ├─ /games/index.html (+1ms)
+08:31:03   ├─ /games/cat-life-game/index.html (+1ms)
+08:31:03   ├─ /music/tracks/sample-song/index.html (+1ms)
+08:31:03   ├─ /library/index.html (+1ms)
+08:31:03   ├─ /privacy/index.html (+1ms)
+08:31:03   ├─ /terms/index.html (+1ms)
+08:31:03   ├─ /zh-hant/music/index.html (+1ms)
+08:31:03   ├─ /zh-hant/games/index.html (+1ms)
+08:31:03   ├─ /zh-hant/games/cat-life-game/index.html (+1ms)
+08:31:03   ├─ /zh-hant/music/tracks/sample-song/index.html (+1ms)
+08:31:03   ├─ /zh-hant/library/index.html (+1ms)
+08:31:03   ├─ /zh-hant/privacy/index.html (+1ms)
+08:31:03   ├─ /zh-hant/terms/index.html (+1ms)
+08:31:03   ├─ /zh-hans/music/index.html (+1ms)
+08:31:03   ├─ /zh-hans/games/index.html (+1ms)
+08:31:03   ├─ /zh-hans/games/cat-life-game/index.html (+1ms)
+08:31:03   ├─ /zh-hans/music/tracks/sample-song/index.html (+1ms)
+08:31:03   ├─ /zh-hans/library/index.html (+1ms)
+08:31:03   ├─ /zh-hans/privacy/index.html (+1ms)
+08:31:03   ├─ /zh-hans/terms/index.html (+1ms)
+08:31:03   ├─ /en/music/index.html (+1ms)
+08:31:03   ├─ /en/games/index.html (+1ms)
+08:31:03   ├─ /en/games/cat-life-game/index.html (+1ms)
+08:31:03   ├─ /en/music/tracks/sample-song/index.html (+1ms)
+08:31:03   ├─ /en/library/index.html (+1ms)
+08:31:03   ├─ /en/privacy/index.html (+2ms)
+08:31:03   ├─ /en/terms/index.html (+1ms)
+08:31:03   ├─ /ja/music/index.html (+1ms)
+08:31:03   ├─ /ja/games/index.html (+1ms)
+08:31:03   ├─ /ja/games/cat-life-game/index.html (+1ms)
+08:31:03   ├─ /ja/music/tracks/sample-song/index.html (+1ms)
+08:31:03   ├─ /ja/library/index.html (+1ms)
+08:31:03   ├─ /ja/privacy/index.html (+1ms)
+08:31:03   └─ /ja/terms/index.html (+1ms)
+08:31:03 ✓ Completed in 50ms.
+
+08:31:03 [build] 40 page(s) built in 937ms
+08:31:03 [build] Complete!
