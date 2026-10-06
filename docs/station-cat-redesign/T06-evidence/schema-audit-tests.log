@@ -1,0 +1,17 @@
+test_blind_account_delete_cascades_financial_ledger (__main__.DeletionAuditTests) ... ok
+test_cloud_saves_backups_and_comments_require_explicit_policy (__main__.DeletionAuditTests) ... ok
+test_composite_foreign_keys_preserve_ordered_column_pairs (__main__.DeletionAuditTests) ... ok
+test_deletion_receipt_outlives_account_but_still_needs_minimization (__main__.DeletionAuditTests) ... ok
+test_game_commerce_blocks_blind_account_deletion (__main__.DeletionAuditTests) ... ok
+test_music_schema_has_no_reader_owned_catalog_or_library (__main__.DeletionAuditTests) ... ok
+test_non_fk_account_rate_limit_survives (__main__.DeletionAuditTests) ... ok
+test_payment_payload_survives_order_removal (__main__.DeletionAuditTests) ... ok
+test_redesign_classifications_do_not_enable_reader_erasure_or_old_event_ttl (__main__.DeletionAuditTests) ... ok
+test_refund_review_blocks_ledger_or_account_removal (__main__.DeletionAuditTests) ... ok
+test_schema_inventory_and_draft_are_current (__main__.DeletionAuditTests) ... ok
+test_set_null_keeps_order_email_and_metadata (__main__.DeletionAuditTests) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.212s
+
+OK

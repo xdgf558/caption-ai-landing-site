@@ -54,8 +54,11 @@
     }
   ],
   "ci": {
-    "status": "current T06 head not yet verified on hosted CI",
-    "note": "workflow now runs test:redesign:model; T05 success is not a T06 CI result"
+    "status": "initial reviewed head 8ac1d499 failed schema inventory; repair head hosted CI pending",
+    "initialHead": "8ac1d4992c7b4d7f8ed376c91557c816f42a586c",
+    "initialRun": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37486032731",
+    "repairEvidence": "schema-audit-repair.json",
+    "note": "original checks above retain their original verification time; repair does not imply a hosted CI pass"
   },
   "production": {
     "databaseApplied": false,

@@ -1,0 +1,132 @@
+{
+  "verifiedAt": "2026-10-06T15:50:24.123062+00:00",
+  "reviewBase": "8ac1d4992c7b4d7f8ed376c91557c816f42a586c",
+  "nodeVersion": "v24.15.0",
+  "initialHostedCI": {
+    "runId": 37486032731,
+    "url": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37486032731",
+    "head": "8ac1d4992c7b4d7f8ed376c91557c816f42a586c",
+    "conclusion": "failure",
+    "step": "Verify account deletion schema inventory and isolation hazards",
+    "auditTests": 11,
+    "passed": 9,
+    "failed": 2,
+    "reason": "18 station_* tables missing explicit review-only schema classifications"
+  },
+  "repair": {
+    "runtimeChanged": false,
+    "migrationChanged": false,
+    "auditGeneratorChanged": false,
+    "readerTablesUnchanged": 64,
+    "legacyMusicTablesUnchanged": 27,
+    "readerClassificationsUnchanged": true,
+    "legacyMusicClassificationsUnchanged": true,
+    "oldPolicyActionsAndDecisionsUnchanged": true,
+    "existingMigrationHashesUnchanged": 52,
+    "newTableClassifications": {
+      "admin_audit_review": 1,
+      "publisher_content_keep": 16,
+      "redesign_analytics_review": 1
+    },
+    "currentInventory": {
+      "reader": 64,
+      "music": 45,
+      "total": 109
+    },
+    "policyApproved": false,
+    "executionEnabled": false
+  },
+  "checks": [
+    {
+      "command": "python3 scripts/test-account-deletion-audit.py",
+      "exitCode": 0,
+      "tests": 12,
+      "passed": 12,
+      "failed": 0,
+      "output": "schema-audit-tests.log"
+    },
+    {
+      "command": "python3 scripts/test-comment-author-migration.py",
+      "exitCode": 0,
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "output": "comment-author-tests.log"
+    },
+    {
+      "command": "node --test --test-reporter=tap scripts/test-deletion-retention.mjs",
+      "exitCode": 0,
+      "tests": 11,
+      "passed": 11,
+      "failed": 0,
+      "output": "retention-tests.tap"
+    },
+    {
+      "command": "node --test --test-timeout=120000 --test-reporter=tap scripts/test-deletion-finality.mjs",
+      "exitCode": 0,
+      "tests": 12,
+      "passed": 12,
+      "failed": 0,
+      "output": "finality-tests.tap"
+    },
+    {
+      "command": "python3 scripts/audit-account-deletion.py",
+      "exitCode": 0,
+      "scope": "generated snapshot and all 109 explicit classifications checked"
+    },
+    {
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "exitCode": 0,
+      "builtPages": 153,
+      "sitemapPublicRoutes": 111,
+      "output": "schema-repair-build.log",
+      "warning": "local empty-serial-content build; not a production package"
+    }
+  ],
+  "buildIsolation": {
+    "scannedFiles": 271,
+    "needles": [
+      "data-home-config",
+      "data-home-fixture-wishlist",
+      "__home-fixture",
+      "preview-assets/gentle-station",
+      "sc-bottom-nav",
+      "data-station-shell"
+    ],
+    "matches": []
+  },
+  "pending": [
+    "current repair head hosted CI and user review before merge",
+    "production MUSIC_DB binding and actual schema verification before activation",
+    "T07 public-resource queries and full-audio legacy authorization",
+    "T18 collector validation, retention policy and controlled cleanup compatibility for new immutable events"
+  ],
+  "productionActions": {
+    "remoteMigrationExecuted": false,
+    "deploymentExecuted": false,
+    "formalPagesMounted": false,
+    "oldEntriesClosed": false,
+    "accountCleanupEnabled": false
+  },
+  "hashes": {
+    "docs/mobile-ios-m2/deletion-plan/README.md": "35ef4c5e6dd555a40d33d6ffed8d22d7365cc5134781bacad1ad6d8d54320c31",
+    "docs/mobile-ios-m2/deletion-plan/policy-draft.json": "f817fb46b61efd40d0a4466fc815ba2ef9aed3df1b910c3ab310e9a08838d6b8",
+    "docs/mobile-ios-m2/deletion-plan/schema-inventory.json": "23db63b37d0a909f461819ebd4673a45dac55e0f6b21ec313808d1485bed59b7",
+    "docs/mobile-ios-m2/deletion-plan/table-matrix.md": "62a88cd707ebe93b56b99c8b9051fd13247bc30e9757d6b1c1f82ee3ea4d157b",
+    "scripts/test-account-deletion-audit.py": "535dd1e0dceb417a7637a03be7271af93259ea963c4a76b4c9d16ab180e7ef03",
+    "docs/station-cat-redesign/README.md": "4dc3771f8c2e06692ab0711a3ca8f45f73d117ffd93c6155e6fe81561077420c",
+    "docs/station-cat-redesign/T06-data-model-and-migration.md": "6168afc8478b4c18d70935d0d90f83a5b724e2756f348bf682167019ea578132",
+    "migrations-music/0012_station_redesign.sql": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+    "docs/station-cat-redesign/T06-evidence/schema-audit-tests.log": "ad28951228df9524644ce4d8230ee4f4942e2428010044efa951258aaacf10c6",
+    "docs/station-cat-redesign/T06-evidence/comment-author-tests.log": "52e4fe248f6de82ff908f73a2dae526808bae8b5b4fdc58928000e9b747641ac",
+    "docs/station-cat-redesign/T06-evidence/retention-tests.tap": "681329f99de952a75add9e66ea8d7104f04e2008631136c26b537b910b4b44f6",
+    "docs/station-cat-redesign/T06-evidence/finality-tests.tap": "0f9fca2c6a66ee328bc8464689bbe7869e842547534c0e3d4b494085ad04ec54",
+    "docs/station-cat-redesign/T06-evidence/schema-repair-build.log": "0633e9e07ee73bde1f7b5344626e8aa2b241f81c1292cc4d3faf39c625b9f6c0"
+  },
+  "outputNormalizations": {
+    "docs/station-cat-redesign/T06-evidence/schema-repair-build.log": {
+      "operation": "strip trailing horizontal whitespace only; build messages retained",
+      "originalSha256": "e26177919b04dd71e16c138c74b53ed8c32faaa85fb0f398e72a5feabf9e0a9e"
+    }
+  }
+}

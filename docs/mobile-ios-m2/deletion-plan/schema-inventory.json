@@ -53,7 +53,8 @@
     "migrations-music/0008_music_featured.sql": "1dc063cff7d806254516af1572b1bf69acc7d30535cb5e22f4de60f6faaf7bd4",
     "migrations-music/0009_music_album_covers.sql": "6c0f7f616d40e95514f019b964ca7d6e26e0d020a1c9fda48f40487d56c549f8",
     "migrations-music/0010_music_limited_free.sql": "6acfbaebe38ec0831696ce6e321561d4ea8b3f35410596fbc7a653afefd86b24",
-    "migrations-music/0011_music_share_rate_limits.sql": "05d0be34b289df948c9eb92ffcecb22c2d75f716a8ebfff49e12c7defd3bbfa1"
+    "migrations-music/0011_music_share_rate_limits.sql": "05d0be34b289df948c9eb92ffcecb22c2d75f716a8ebfff49e12c7defd3bbfa1",
+    "migrations-music/0012_station_redesign.sql": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498"
   },
   "databases": {
     "reader": {
@@ -2372,6 +2373,775 @@
           }
         ],
         "category": "admin_audit_review"
+      },
+      "station_analytics_events": {
+        "columns": [
+          "event_id",
+          "event_name",
+          "occurred_at",
+          "received_at",
+          "track_id",
+          "clip_id",
+          "game_id",
+          "campaign_id",
+          "platform_link_id",
+          "session_id",
+          "playback_id",
+          "interaction_id",
+          "launch_id",
+          "save_operation_id"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_platform_links",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "platform_link_id",
+            "parent": "station_platform_links",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_clips",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 1,
+            "column": "clip_id",
+            "parent": "station_clips",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 2,
+            "seq": 0,
+            "column": "campaign_id",
+            "parent": "station_campaigns",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 3,
+            "seq": 0,
+            "column": "game_id",
+            "parent": "station_games",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 4,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "redesign_analytics_review"
+      },
+      "station_asset_rights": {
+        "columns": [
+          "id",
+          "music_asset_id",
+          "media_asset_id",
+          "scope",
+          "status",
+          "basis",
+          "reviewer_id",
+          "reviewed_at",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "media_asset_id",
+            "parent": "station_media_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "music_asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "admin_audit_review"
+      },
+      "station_campaigns": {
+        "columns": [
+          "id",
+          "source",
+          "medium",
+          "track_id",
+          "clip_id",
+          "landing_path",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_clips",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "clip_id",
+            "parent": "station_clips",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_clip_publications": {
+        "columns": [
+          "id",
+          "clip_id",
+          "channel",
+          "post_id",
+          "post_url",
+          "external_published_at",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "clip_id",
+            "parent": "station_clips",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_clip_revisions": {
+        "columns": [
+          "id",
+          "revision",
+          "state",
+          "metadata_json",
+          "media_asset_id",
+          "poster_asset_id",
+          "duration_ms",
+          "subtitles_json",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_media_assets",
+            "parentColumn": "owner_clip_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "poster_asset_id",
+            "parent": "station_media_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_media_assets",
+            "parentColumn": "owner_clip_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 1,
+            "column": "media_asset_id",
+            "parent": "station_media_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 2,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_clips",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_clips": {
+        "columns": [
+          "id",
+          "track_id",
+          "type",
+          "status",
+          "draft_revision",
+          "published_revision",
+          "edit_version",
+          "scheduled_at",
+          "published_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_clip_revisions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "published_revision",
+            "parent": "station_clip_revisions",
+            "parentColumn": "revision",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_clip_revisions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 1,
+            "column": "draft_revision",
+            "parent": "station_clip_revisions",
+            "parentColumn": "revision",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 2,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_game_revisions": {
+        "columns": [
+          "id",
+          "revision",
+          "state",
+          "metadata_json",
+          "launch_url",
+          "supported_devices_json",
+          "screenshot_ids_json",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_games",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_games": {
+        "columns": [
+          "id",
+          "slug",
+          "runtime_key",
+          "status",
+          "draft_revision",
+          "published_revision",
+          "edit_version",
+          "scheduled_at",
+          "published_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_game_revisions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "published_revision",
+            "parent": "station_game_revisions",
+            "parentColumn": "revision",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_game_revisions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 1,
+            "column": "draft_revision",
+            "parent": "station_game_revisions",
+            "parentColumn": "revision",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_home_configs": {
+        "columns": [
+          "id",
+          "status",
+          "draft_revision",
+          "published_revision",
+          "edit_version",
+          "scheduled_at",
+          "published_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_home_revisions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "published_revision",
+            "parent": "station_home_revisions",
+            "parentColumn": "revision",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_home_revisions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 1,
+            "column": "draft_revision",
+            "parent": "station_home_revisions",
+            "parentColumn": "revision",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_home_revisions": {
+        "columns": [
+          "id",
+          "revision",
+          "state",
+          "featured_track_id",
+          "featured_game_id",
+          "selected_track_ids_json",
+          "selected_clip_ids_json",
+          "selected_update_ids_json",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "featured_game_id",
+            "parent": "station_games",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "featured_track_id",
+            "parent": "station_promotions",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 2,
+            "seq": 0,
+            "column": "id",
+            "parent": "station_home_configs",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_media_assets": {
+        "columns": [
+          "id",
+          "owner_clip_id",
+          "owner_game_id",
+          "kind",
+          "object_key",
+          "content_type",
+          "state",
+          "byte_size",
+          "duration_ms",
+          "width",
+          "height",
+          "sha256",
+          "etag",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "owner_game_id",
+            "parent": "station_games",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "owner_clip_id",
+            "parent": "station_clips",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_platform_links": {
+        "columns": [
+          "id",
+          "track_id",
+          "provider",
+          "territories_json",
+          "status",
+          "url",
+          "verified_at",
+          "external_released_at",
+          "sort_order",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_promotion_revisions": {
+        "columns": [
+          "track_id",
+          "revision",
+          "state",
+          "enabled",
+          "preview_enabled",
+          "preview_asset_id",
+          "selected_platform_ids_json",
+          "selected_clip_ids_json",
+          "sort_order",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_assets",
+            "parentColumn": "owner_track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "preview_asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_promotions",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_promotions": {
+        "columns": [
+          "track_id",
+          "status",
+          "draft_revision",
+          "published_revision",
+          "edit_version",
+          "scheduled_at",
+          "published_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_promotion_revisions",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "published_revision",
+            "parent": "station_promotion_revisions",
+            "parentColumn": "revision",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_promotion_revisions",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 1,
+            "column": "draft_revision",
+            "parent": "station_promotion_revisions",
+            "parentColumn": "revision",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 2,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_track_publications",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_route_migrations": {
+        "columns": [
+          "old_path",
+          "action",
+          "new_path",
+          "reason",
+          "approved_at",
+          "created_at"
+        ],
+        "foreignKeys": [],
+        "category": "publisher_content_keep"
+      },
+      "station_track_publications": {
+        "columns": [
+          "track_id",
+          "origin",
+          "status",
+          "draft_revision",
+          "published_revision",
+          "edit_version",
+          "scheduled_at",
+          "published_at",
+          "created_at",
+          "updated_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_track_revisions",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "published_revision",
+            "parent": "station_track_revisions",
+            "parentColumn": "revision",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_track_revisions",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 1,
+            "column": "draft_revision",
+            "parent": "station_track_revisions",
+            "parentColumn": "revision",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 2,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_track_revisions": {
+        "columns": [
+          "track_id",
+          "revision",
+          "state",
+          "metadata_json",
+          "legacy_revision_id",
+          "site_audio_mode",
+          "duration_ms",
+          "cover_asset_id",
+          "lyrics_asset_id",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_assets",
+            "parentColumn": "owner_track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "lyrics_asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_assets",
+            "parentColumn": "owner_track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 1,
+            "column": "cover_asset_id",
+            "parent": "music_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 2,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_track_revisions",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 2,
+            "seq": 1,
+            "column": "legacy_revision_id",
+            "parent": "music_track_revisions",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 3,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_track_publications",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
+      "station_track_routes": {
+        "columns": [
+          "slug",
+          "track_id",
+          "role",
+          "origin",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
       }
     }
   }

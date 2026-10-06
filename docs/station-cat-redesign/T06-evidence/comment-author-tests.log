@@ -1,0 +1,20 @@
+test_account_delete_keeps_comment_rows_and_other_account (__main__.CommentAuthorMigrationTests) ... ok
+test_forward_preserves_all_fields_and_indexes (__main__.CommentAuthorMigrationTests) ... ok
+test_forward_supports_anonymous_authors_and_keeps_moderation (__main__.CommentAuthorMigrationTests) ... ok
+test_inbound_foreign_keys_require_review (__main__.CommentAuthorMigrationTests) ... ok
+test_index_direction_and_partial_constraints_require_review (__main__.CommentAuthorMigrationTests) ... ok
+test_original_schema_rejects_anonymous_author (__main__.CommentAuthorMigrationTests) ... ok
+test_preflight_does_not_write_or_claim_approval (__main__.CommentAuthorMigrationTests) ... ok
+test_referencing_views_require_review (__main__.CommentAuthorMigrationTests) ... ok
+test_rollback_before_anonymization_restores_original_constraints (__main__.CommentAuthorMigrationTests) ... ok
+test_rollback_refuses_anonymous_without_changing_data (__main__.CommentAuthorMigrationTests) ... ok
+test_rollback_sql_itself_refuses_anonymous_atomically (__main__.CommentAuthorMigrationTests) ... ok
+test_sql_guard_rejects_changed_indexes_without_helper (__main__.CommentAuthorMigrationTests) ... ok
+test_unknown_column_refuses_without_changing_comments (__main__.CommentAuthorMigrationTests) ... ok
+test_unknown_index_requires_review (__main__.CommentAuthorMigrationTests) ... ok
+test_unknown_trigger_requires_review (__main__.CommentAuthorMigrationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.166s
+
+OK
