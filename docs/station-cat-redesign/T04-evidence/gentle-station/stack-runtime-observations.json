@@ -1,0 +1,54 @@
+{
+  "stack": {
+    "dock": {
+      "bottom": 746,
+      "height": 125,
+      "left": 0,
+      "right": 375,
+      "top": 621,
+      "width": 375,
+      "x": 0,
+      "y": 621
+    },
+    "last": {
+      "bottom": 573.140625,
+      "height": 44,
+      "left": 16,
+      "right": 72,
+      "top": 529.140625,
+      "width": 56,
+      "x": 16,
+      "y": 529.140625
+    },
+    "nav": {
+      "bottom": 844,
+      "height": 98,
+      "left": 0,
+      "right": 375,
+      "top": 746,
+      "width": 375,
+      "x": 0,
+      "y": 746
+    },
+    "navHeight": "64px",
+    "padding": "247px",
+    "playerHeight": "125px",
+    "safe": "34px",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  "runtime": {
+    "dockHeight": 0,
+    "navHeight": 0,
+    "padding": "0px",
+    "visibleChrome": 0
+  },
+  "restored": {
+    "focusReturned": true,
+    "hidden": true,
+    "navHeight": 98,
+    "padding": "122px"
+  }
+}

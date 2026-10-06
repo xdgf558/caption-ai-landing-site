@@ -13,7 +13,7 @@
 | T01 仓库与运行方式盘点 | 审查通过，已合并 | [PR #186](https://github.com/xdgf558/caption-ai-landing-site/pull/186)，修订头 CI 通过，已补音乐后代路径与原生资料库范围 |
 | T02 路由与业务依赖清单 | 审查通过，已合并 | [PR #187](https://github.com/xdgf558/caption-ai-landing-site/pull/187)，当前头 CI 通过；[说明](T02-route-and-service-inventory.md)、[逐地址 CSV](T02-route-inventory.csv) 作为源码依赖基线，实际 HTTP 留 T20 验证 |
 | T03 权益、存档与素材核对 | 审查通过，已合并 | [PR #188](https://github.com/xdgf558/caption-ai-landing-site/pull/188)，审查头 CI 重跑通过，合并为 `b15b233`；[权限矩阵、存档格式与素材缺口](T03-entitlements-saves-and-materials.md)、[验证摘要](T03-evidence/verification-summary.json)、[内存存档核对工具](tools/audit-local-save-contract.mjs)；素材继续“稍后确定” |
-| T04 视觉变量与导航组件 | 完成，待审查 | 用户已选择模板 2；[代码接入、范围与验证](T04-visual-system-and-navigation.md)、[选择记录](T04-evidence/template-selection.json)、[设计 QA](T04-evidence/design-qa.md)，隔离预览 `npm run preview:redesign` |
+| T04 视觉变量与导航组件 | 完成，待审查 | 用户新图“温柔小站”已取代模板 2，并确认五项导航；[代码接入、范围与验证](T04-visual-system-and-navigation.md)、[当前选择](T04-evidence/gentle-station/design-selection.json)、[当前设计 QA](T04-evidence/gentle-station/design-qa.md)，隔离预览 `npm run preview:redesign` |
 | T05–T22 | 未开始 | 沿用任务清单中的依赖，每个任务单独提交、审查后继续 |
 
 ## 需求基线
@@ -26,7 +26,7 @@
 
 已确认的约束：有效试听按主文档的前台实际累计至少 10 秒或试听结束计算，同一 `playback_id` 一次；推广歌曲由既有后台的专门模块配置，游客试听随独立公开试听开关验收；新版开发完成并上线后关闭被替代的旧公开入口，同时保护账号、支付、历史权益和存档服务。
 
-T04 已直接使用 `product-design:index` 与 `product-design:ideate` 生成 3 个可视化模板；用户明确选第 2 张后，按 `product-design:image-to-code` 与设计 QA 流程实现。视觉样例只用于本地隔离预览，候选素材没有成为实际主推或推广配置。
+T04 原先用 UI 技能生成 3 个模板、选择第 2 张。用户于 2026-10-06 提供“温柔小站”新图并要求采用，随后确认首页、音乐、游戏、会员、关于五项导航；该指令取代旧模板与四入口建议，仓库规范已同步。当前按 `product-design:image-to-code` 与设计 QA 流程实现新图，原模板与证据保留为历史记录。视觉样例只用于本地隔离预览，图中《晚一点告白》与插画不作为实际主推、发行或游戏截图证据。
 
 ## 本轮代码基线
 

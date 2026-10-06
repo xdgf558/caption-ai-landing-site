@@ -1,28 +1,39 @@
 ---
-import { Home, Music2, Gamepad2, UserRound, ChevronDown, Check } from '@lucide/astro';
+import { Home, Music2, Gamepad2, UserRound, Info, Search, ArrowRight, X, ChevronDown, Check } from '@lucide/astro';
 import { stationLocales, stationSections, stationCopy, stationHref, stationSection, stationLanguageHref, stationLanguageNames, stationLanguageAccessibleNames } from '../../redesign/routes.js';
 interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
 const { lang } = Astro.props;
 const copy = stationCopy[lang];
 const active = stationSection(Astro.url.pathname);
-const icons = { home: Home, music: Music2, games: Gamepad2, my: UserRound };
+const icons = { home: Home, music: Music2, games: Gamepad2, member: UserRound, about: Info };
+const search = {
+  'zh-Hant': { title: '搜尋小站', label: '找一個入口', placeholder: '音樂、遊戲、會員…', empty: '沒有找到相符的入口。', close: '關閉搜尋' },
+  'zh-Hans': { title: '搜索小站', label: '找一个入口', placeholder: '音乐、游戏、会员…', empty: '没有找到相符的入口。', close: '关闭搜索' },
+  en: { title: 'Search the station', label: 'Find a destination', placeholder: 'Music, games, member…', empty: 'No matching destination.', close: 'Close search' },
+  ja: { title: '小さな駅を検索', label: '行き先を探す', placeholder: '音楽、ゲーム、会員…', empty: '一致する行き先がありません。', close: '検索を閉じる' },
+}[lang];
 ---
 <header class="sc-header sc-container" data-station-chrome>
-  <a class="sc-brand" href={stationHref(lang, 'home')} aria-label={`Station Cat · ${copy.home}`}>
-    <img src="/images/home-night/cat-mark.webp" width="44" height="54" alt="" />
-    <span><strong>Station Cat</strong><small>{copy.subtitle}</small></span>
+  <a class="sc-brand" href={stationHref(lang, 'home')} aria-label={'Station Cat · ' + copy.home}>
+    <img src="/images/station-gentle/cat-mark.webp" width="34" height="34" alt="" />
+    <strong>Station Cat</strong>
+    <span class="sc-brand-note">{copy.subtitle}</span>
   </a>
   <nav class="sc-top-links" aria-label={copy.navigation}>
     {stationSections.map(section => <a href={stationHref(lang, section)} aria-current={active === section ? 'page' : undefined}>{copy[section]}</a>)}
   </nav>
-  <details class="sc-language" data-sc-language-menu>
-    <summary aria-label={copy.language}><span>{stationLanguageNames[lang]}</span><ChevronDown aria-hidden="true" /></summary>
-    <ul class="sc-language-options">
-      {stationLocales.map(locale => <li><a href={stationLanguageHref(locale, Astro.url.pathname)} data-sc-language={locale} lang={locale} hreflang={locale} aria-label={stationLanguageAccessibleNames[locale]} aria-current={locale === lang ? 'true' : undefined}>
-        {stationLanguageNames[locale]}{locale === lang && <Check size={16} aria-hidden="true" />}
-      </a></li>)}
-    </ul>
-  </details>
+  <div class="sc-header-actions">
+    <button type="button" class="sc-icon-button sc-search-trigger" data-sc-search-open aria-label={search.title} aria-haspopup="dialog" aria-controls="station-search"><Search size={19} aria-hidden="true" /></button>
+    <details class="sc-language" data-sc-language-menu>
+      <summary aria-label={copy.language}><span>{stationLanguageNames[lang]}</span><ChevronDown aria-hidden="true" /></summary>
+      <ul class="sc-language-options">
+        {stationLocales.map(locale => <li><a href={stationLanguageHref(locale, Astro.url.pathname)} data-sc-language={locale} lang={locale} hreflang={locale} aria-label={stationLanguageAccessibleNames[locale]} aria-current={locale === lang ? 'true' : undefined}>
+          {stationLanguageNames[locale]}{locale === lang && <Check size={16} aria-hidden="true" />}
+        </a></li>)}
+      </ul>
+    </details>
+    <a class="sc-button sc-entry" href={stationHref(lang, 'home') + '#station-work'}>{copy.enter}<ArrowRight size={16} aria-hidden="true" /></a>
+  </div>
 </header>
 <nav class="sc-bottom-nav" aria-label={copy.navigation} data-sc-bottom-nav data-station-chrome>
   {stationSections.map(section => {
@@ -30,9 +41,16 @@ const icons = { home: Home, music: Music2, games: Gamepad2, my: UserRound };
     return <a href={stationHref(lang, section)} aria-current={active === section ? 'page' : undefined}><Icon aria-hidden="true" /><span>{copy[section]}</span></a>;
   })}
 </nav>
+<dialog id="station-search" class="sc-search-dialog" aria-labelledby="station-search-title" data-station-chrome>
+  <div class="sc-search-heading"><h2 id="station-search-title">{search.title}</h2><form method="dialog"><button class="sc-icon-button" aria-label={search.close}><X size={20} aria-hidden="true" /></button></form></div>
+  <label for="station-search-query">{search.label}</label>
+  <input id="station-search-query" type="search" placeholder={search.placeholder} autocomplete="off" />
+  <ul class="sc-search-results">{stationSections.map(section => <li data-sc-search-entry><a href={stationHref(lang, section)}>{copy[section]}<ArrowRight size={16} aria-hidden="true" /></a></li>)}</ul>
+  <p class="sc-search-empty" hidden role="status">{search.empty}</p>
+</dialog>
 <script>
   import { stationLanguageHref } from '../../redesign/routes.js';
-  function mountLanguageMenus() {
+  function mountStationNavigation() {
     document.querySelectorAll<HTMLDetailsElement>('[data-sc-language-menu]').forEach(menu => {
       if (menu.dataset.mounted) return;
       menu.dataset.mounted = 'true';
@@ -43,12 +61,31 @@ const icons = { home: Home, music: Music2, games: Gamepad2, my: UserRound };
       menu.addEventListener('keydown', event => {
         if (event.key === 'Escape' && menu.open) { menu.open = false; summary?.focus(); event.preventDefault(); }
       });
-      // One menu per shell; outside clicks close it without stealing the clicked focus.
       const closeOutside = (event: MouseEvent) => { if (menu.open && !menu.contains(event.target as Node)) menu.open = false; };
       document.addEventListener('click', closeOutside);
       document.addEventListener('astro:before-swap', () => document.removeEventListener('click', closeOutside), { once: true });
     });
+    const dialog = document.querySelector<HTMLDialogElement>('#station-search');
+    const trigger = document.querySelector<HTMLButtonElement>('[data-sc-search-open]');
+    const query = document.querySelector<HTMLInputElement>('#station-search-query');
+    if (!dialog || !trigger || !query || dialog.dataset.mounted) return;
+    dialog.dataset.mounted = 'true';
+    const entries = Array.from(dialog.querySelectorAll<HTMLElement>('[data-sc-search-entry]'));
+    const empty = dialog.querySelector<HTMLElement>('.sc-search-empty');
+    const filter = () => {
+      const text = query.value.trim().toLocaleLowerCase();
+      for (const entry of entries) entry.hidden = !entry.textContent?.toLocaleLowerCase().includes(text);
+      if (empty) empty.hidden = entries.some(entry => !entry.hidden);
+    };
+    trigger.addEventListener('click', () => { query.value = ''; filter(); dialog.showModal(); query.focus(); });
+    query.addEventListener('input', filter);
+    // A search input can consume Escape to clear its value before native dialog
+    // cancellation. Handle it in capture phase so one Escape always closes.
+    dialog.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { event.preventDefault(); dialog.close(); trigger.focus(); }
+    }, { capture: true });
+    dialog.addEventListener('close', () => trigger.focus());
   }
-  mountLanguageMenus();
-  document.addEventListener('astro:page-load', mountLanguageMenus);
+  mountStationNavigation();
+  document.addEventListener('astro:page-load', mountStationNavigation);
 </script>

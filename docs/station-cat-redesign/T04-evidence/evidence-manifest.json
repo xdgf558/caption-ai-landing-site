@@ -62,8 +62,8 @@
     },
     {
       "file": "design-qa.md",
-      "bytes": 6678,
-      "sha256": "10390aee6df1b339779cb5c75116314a33ed899ee6eebcdca91ad4cf2c5af315"
+      "bytes": 6892,
+      "sha256": "0e9daf4278145ecee762c5175bf5a4556583ac8e8355f932ad876fc044c7b106"
     },
     {
       "file": "desktop-before-game-title.jpg",
@@ -252,8 +252,8 @@
     },
     {
       "file": "template-selection.json",
-      "bytes": 366,
-      "sha256": "10943b3b3bf8d7dc020eb821fae26833418e1dd9841234d477a596d63b509b6a"
+      "bytes": 508,
+      "sha256": "d776edfb7d67d36db2631f8de12feec9ac6dca109f66e26b18535b210d0c2b0b"
     },
     {
       "file": "width-1280.jpg",
@@ -300,5 +300,8 @@
         1397
       ]
     }
-  ]
+  ],
+  "updatedAt": "2026-10-06T00:36:33.276398+00:00",
+  "status": "historical template-2 evidence; superseded UI",
+  "supersededBy": "gentle-station/evidence-manifest.json"
 }

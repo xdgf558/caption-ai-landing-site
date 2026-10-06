@@ -1,18 +1,16 @@
 ---
 import BrandNavigation from '../components/redesign/BrandNavigation.astro';
-import { stationCopy, stationPolicyHref } from '../redesign/routes.js';
+import Glyph from '../components/redesign/Glyph.astro';
+import { stationCopy, stationSections, stationHref, stationPolicyHref } from '../redesign/routes.js';
 import { siteConfig } from '../data/site';
-import '../redesign/journal.css';
+import '../redesign/gentle.css';
 interface Props {
-  lang?: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja';
-  title: string;
-  description?: string;
-  gameRuntime?: boolean;
-  playerSelected?: boolean;
-  preview?: boolean;
+  lang?: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja'; title: string; description?: string;
+  gameRuntime?: boolean; playerSelected?: boolean; preview?: boolean;
 }
 const { lang = 'zh-Hant', title, description = '', gameRuntime = false, playerSelected = false, preview = false } = Astro.props;
 const copy = stationCopy[lang];
+const pending = { 'zh-Hant': '平台連結待更新', 'zh-Hans': '平台链接待更新', en: 'Platform link coming soon', ja: '配信リンクは後日ご案内' }[lang];
 ---
 <!doctype html>
 <html lang={lang}>
@@ -22,21 +20,34 @@ const copy = stationCopy[lang];
     <title>{title} | Station Cat</title>
     {description && <meta name="description" content={description} />}
     {preview && <meta name="robots" content="noindex,nofollow" />}
-    <link rel="icon" href="/images/home-night/cat-mark.webp" />
+    <link rel="icon" href="/images/station-gentle/cat-mark.webp" />
     <slot name="head" />
   </head>
-  <body class="station-journal" data-station-shell data-game-runtime={String(gameRuntime)}>
+  <body class="station-gentle" data-station-shell data-game-runtime={String(gameRuntime)}>
     <a class="sc-skip" href="#station-main">{copy.skip}</a>
-    <BrandNavigation lang={lang} />
-    <main id="station-main" tabindex="-1"><slot /></main>
-    <footer class="sc-footer sc-container" data-station-chrome>
-      <span>Station Cat · {copy.subtitle}</span>
-      <nav aria-label={lang === 'en' ? 'Policies and contact' : lang === 'ja' ? '規約とお問い合わせ' : lang === 'zh-Hant' ? '政策與聯絡' : '政策与联系'}>
-        <a href={stationPolicyHref(lang, 'terms')}>{copy.terms}</a>
-        <a href={`mailto:${siteConfig.supportEmail}`}>{copy.support}</a>
-        <a href={stationPolicyHref(lang, 'privacy')}>{copy.privacy}</a>
-      </nav>
-    </footer>
+    <div class="sc-site-width">
+      <BrandNavigation lang={lang} />
+      <main id="station-main" tabindex="-1"><slot /></main>
+      <footer class="sc-footer sc-container" data-station-chrome>
+        <a class="sc-brand sc-footer-brand" href={stationHref(lang, 'home')}>
+          <img src="/images/station-gentle/cat-mark.webp" width="30" height="30" alt="" />
+          <span><strong>Station Cat</strong><small>Music, Games, and a kinder tomorrow.</small></span>
+        </a>
+        <nav class="sc-footer-links" aria-label={copy.navigation}>{stationSections.map(section => <a href={stationHref(lang, section)}>{copy[section]}</a>)}</nav>
+        <div class="sc-footer-end">
+          <div class="sc-social">
+            <button type="button" disabled title={pending} aria-label={'Spotify · ' + pending}><Glyph name="spotify" size={17} /></button>
+            <button type="button" disabled title={pending} aria-label={'YouTube · ' + pending}><Glyph name="youtube" size={17} /></button>
+            <button type="button" disabled title={pending} aria-label={'Instagram · ' + pending}><Glyph name="instagram" size={17} /></button>
+            <a href={siteConfig.xUrl} aria-label="Station Cat on X" target="_blank" rel="noopener noreferrer"><Glyph name="x" size={17} /></a>
+          </div>
+          <nav class="sc-footer-policies" aria-label={copy.privacy + ' · ' + copy.terms}>
+            <a href={stationPolicyHref(lang, 'privacy')}>{copy.privacy}</a><a href={stationPolicyHref(lang, 'terms')}>{copy.terms}</a>
+          </nav>
+          <span>© {new Date().getUTCFullYear()} Station Cat · <a href={'mailto:' + siteConfig.supportEmail}>{copy.support}</a></span>
+        </div>
+      </footer>
+    </div>
     <div class="sc-player-dock" data-sc-player-dock data-station-chrome hidden={!playerSelected || !Astro.slots.has('player')}><slot name="player" /></div>
     <slot name="fixture-controls" />
   </body>

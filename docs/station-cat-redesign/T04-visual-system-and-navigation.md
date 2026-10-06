@@ -1,68 +1,67 @@
-# T04 视觉变量与导航组件
+# T04 温柔小站视觉系统与五项导航
 
-用户在三张 UI 模板的选择问答中明确回复 **“2”**。本项采用第 2 张的米白纸面、深色衬线标题、墨绿操作与书页式留白，实现可复用布局、四入口导航和底部空间计算，并提供隔离的 Astro 预览。首页配置、推广内容读取、实际播放器、游戏目录及“我的”功能分别继续属于后续任务。
+当前依据是用户于 **2026-10-06** 提供的 [《Station Cat 温柔小站首页.png》](T04-evidence/gentle-station/source.png)。用户明确要求采用新设计，随后确认 **“采用新图的五项导航（会员沿用现有账号入口）”**。这两项指令取代原模板 2 与四入口建议，三份仓库规范已同步；原模板、选择和验证文件保留为历史证据，不能用它们证明当前界面通过。
 
-T03 已由用户审查通过，原审查头 `d6d163889e596cda0e95f3e835ffd12a9459b76a` 的 [CI 重跑 attempt 2](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37319304002/attempts/2) 全部通过后，[PR #188](https://github.com/xdgf558/caption-ai-landing-site/pull/188) 于 2026-10-05 14:59:02 UTC 合并为 `b15b2337b7323eb100ac90ed13ca09389bcecbc4`。T04 以该 `main` 为基线单独提交，等待用户审查，不连续进入 T05。
+本项在 [PR #189](https://github.com/xdgf558/caption-ai-landing-site/pull/189) 内更新，以已合并 T03 的 `b15b2337b7323eb100ac90ed13ca09389bcecbc4` 为基线。仍是一任务一 PR，等待用户审查；T05–T22 未开始，没有生产部署或旧入口关闭。
 
-## 选择与素材证据
+## 当前实现
 
-设计阶段直接使用 `product-design:index`、`product-design:ideate`，分别生成三张图片；选择后使用 `product-design:image-to-code` 与设计 QA 流程。三个方案及选定记录都保存在仓库中：[模板 1](T04-evidence/template-1.png)、[选中的模板 2](T04-evidence/template-2-selected.png)、[模板 3](T04-evidence/template-3.png)、[选择记录](T04-evidence/template-selection.json)。
+[gentle.css](../../src/redesign/gentle.css) 用 `.station-gentle` 隔离新视觉变量：浅白 `#fcfbff`、深蓝文字 `#171c38`、次要文字 `#58628b`、紫蓝操作 `#333b84`、音乐粉 `#a1317b`、游戏蓝 `#09618a`，配粉色、浅蓝、淡紫卡片，圆角卡片与胶囊按钮。内容上限 1296px，站点宽度上限 1356px，间距以 4/8/12/16/24/32/48px 为基准，主要操作目标至少 44px。
 
-金色坐猫标志沿用 `public/images/home-night/cat-mark.webp`。预览音乐图片来自 T03 核对过的公开候选封面；游戏图片复用 T03 的本地夹具截图。两张图片均为真实来源的静态展示，未用 CSS 绘画、emoji 或自绘 SVG 代替。导航及箭头沿用项目已有 `@lucide/astro`，细线图标与所选方案相符。
+标题改用粗无衬线字，首屏中文 39px / 900；字体栈按 Noto Sans TC/SC 与系统 CJK 字体回退，品牌手写副标采用系统楷体回退。没有依赖字集不完整的旧标题子集或外站字体加载，实际字形以设备字体为准。[Noto 官方使用说明](https://github.com/notofonts/noto-docs/blob/main/docs/website/use.md) 作为字体风格核对来源；本机观测不代表跨平台字体完全一致。
 
-《原来已经这么远》仍只作为视觉核对的候选素材。用户先前答复的主推歌曲、平台入口、试听开关和视频 **“稍后确定”** 继续有效；本项没有生成或修改运营配置。夹具没有音频、视频、播放按钮或平台外链。“平台发行信息待更新”不能推断歌曲尚未在外部平台发行。
+[BrandNavigation.astro](../../src/components/redesign/BrandNavigation.astro) 提供 **首页、音乐、游戏、会员、关于**。桌面导航居中，右侧为搜索、语言和进入小站；小于 768px 使用五项手机底栏，顶部保留品牌、搜索和语言。当前入口有可见标识与 `aria-current`。四语言菜单保留完整可读名称、键盘操作、Escape 关闭与焦点返回。
 
-## 代码与接入约定
+搜索弹窗只筛选这五个站点入口，包含输入、结果、空态、关闭和焦点返回，不宣称完成 T08 的曲目目录搜索。原生 search 输入会先消费 Escape 清空内容，已在捕获阶段处理，确保一次 Escape 关闭并返回搜索按钮；[实际交互记录](T04-evidence/gentle-station/interaction-observations.json) 保留修复前失败和修复后通过。
 
-[journal.css](../../src/redesign/journal.css) 把现有纸面、墨色和墨绿调色板整理为 `--sc-*` 变量，作用域限于 `.station-journal`。显示文字采用 Times New Roman / Georgia，中文采用 Songti 系统字体回退；正文采用系统无衬线字体。没有把字集不完整的游戏标题子集字体用于所有文本。字体与字形的本次截图验证限于本机浏览器，跨平台字形和真机结果留待后续设备验证。
+[routes.js](../../src/redesign/routes.js) 保留现有四语言首页/音乐规则。会员接到已有 `/zh-hant/library/`、`/zh-hans/library/`、`/en/library/`、`/ja/library/`，`my` 作为链接兼容别名；不新建账号或权益体系。关于复用真实存在的 **`/about/`**，目前只有繁中生产页，语言切换不假造其他生产版本。本地关于样例同样使用繁中。正式接入前须更新它的品牌内容，并在 T20 地址计划中覆盖原清单对旧关于内容的退役提案：新版关于保留该地址，旧小说/工具介绍不能继续作为新版内容。T02 的 CSV 保留当时源码与构建盘点，不把这次选择改写成 HTTP 验收。
 
-核心颜色为纸面 `#fffaf4`、墨色 `#1f2d29`、次要文字 `#64736d`、操作 `#08796d`、悬停 `#075e55`；选中导航的陶红加深为 `#b9412d`，保持可读对比度。间距以 4 / 8 / 12 / 16 / 24 / 32 / 48px 为基准，正文内容上限 1120px，手机操作目标至少 44px。所选模板的矩形按钮与细分隔线优先于早期规范里的圆角参考。
+音乐语言切换继续保留单个有效 `track`、`collection`，移除其他参数；未来单曲 ASCII slug 保持实体。旧命名空间匹配器、别名、重定向和 AASA 未修改。游戏目录仍为未来 `/games/`，实际运行地址 **`/games/cat-life/`** 保持不变；未来介绍 `/games/cat-life-game/` 不占用运行目录。
 
-[BrandNavigation.astro](../../src/components/redesign/BrandNavigation.astro) 提供首页、音乐、游戏、我的四个入口。桌面采用顶部文字导航；小于 768px 时采用底部图标与文字，顶部保留品牌和语言菜单。当前入口具有可见选中状态和 `aria-current`。语言选项有完整的读屏名称，原生 disclosure 支持键盘打开，Escape 关闭后焦点返回触发器。
+[StationBrandLayout.astro](../../src/layouts/StationBrandLayout.astro) 提供品牌页脚、五项入口、现有政策/联系地址、可选 player 插槽和 gameRuntime 开关。默认无选中媒体时隐藏整个 dock。游戏布局隐藏所有站点控件，但实际暂停、启动失败恢复、退出衔接仍留 T13。
 
-[routes.js](../../src/redesign/routes.js) 为该布局提供统一链接规则，保留现有繁中根首页与音乐根页、简中/英文/日文前缀，以及四种语言已有的 `/library/` 账号入口。新的游戏目录链接为 `/{locale}/games/`；目录尚属 T12，本项只在夹具中提供这些地址。原生资料库仍是独立 `/api/mobile/v1/me/music/*`，本项没有把网页入口或本机收藏当作原生同步能力。
+[chrome.js](../../src/redesign/chrome.js) 继续用实际尺寸计算底栏与占位，正文末尾预留 `导航主体 + player 高度 + 安全区域 + 24px`，dock 位于底栏上方。它仅处理几何与监听清理，不读存储、不控制音频或存档。
 
-语言切换保留音乐根页的单个有效 `track` 与 `collection`，移除其余参数；预留单曲 ASCII slug 路径可保持对应实体。音乐命名空间匹配器、语言别名和现有无斜线重定向没有修改。旧后代地址的实体映射仍须由 T08/T20 完成，本函数不是 HTTP 迁移处理器，也没有扩充 AASA。
+## 新图素材与首页样例
 
-游戏运行地址 `/games/cat-life/` 保持原地址；语言链接不会另造带语言前缀的运行目录。未来介绍路径 `/games/cat-life-game/` 与运行地址分开。本项未修改游戏运行文件、存档模块或启动链。
+[GentleStationFixture.astro](../../scripts/fixtures/station-redesign/site/components/GentleStationFixture.astro) 按新图展示夜色猫咪首屏、并排音乐/游戏卡片、推广说明、三张动态卡片和页脚；手机与平板文字/插画分排，卡片纵向排列，避免正文落入插画深色区域。
 
-[StationBrandLayout.astro](../../src/layouts/StationBrandLayout.astro) 提供正文、法律与联系页脚、可选 `player` 插槽，以及 `gameRuntime` 布局开关。默认 `playerSelected=false`，未选中曲目时整个占位容器隐藏；T09 接入真实播放器时须同步外层 `data-sc-player-dock` 的 `hidden` 状态。游戏布局隐藏所有 `data-station-chrome` 控件，包括导航和播放器，但真实媒体暂停、启动失败恢复与退出游戏衔接仍属于 T13。
+用户只提供一张合成设计图，没有独立原始插画。用内置 image_gen 按图重建 hero、音乐封面、游戏封面、日常缩略图与透明猫头标志，未用 CSS 绘画、emoji 或自绘 SVG 代替。原图与重建图的笔触、局部文字和构图存在小幅差异，不能宣称逐像素提取。资源路径、完整提示词与处理信息见 [素材记录](T04-evidence/gentle-station/asset-prompts.md)、[导出记录](T04-evidence/gentle-station/asset-processing.json)。四张插画只在夹具中使用，WebP 总资源（含标志）约 1.18MB；标志提供透明 128px 派生图。
 
-[chrome.js](../../src/redesign/chrome.js) 用 ResizeObserver 测量底部导航与播放器外层的实际高度，安全区域单独计算。正文末尾统一预留 `导航高度 + 播放器高度 + 安全区域 + 24px`，播放器位于导航和安全区域之上。字体、文字换行、窗口尺寸与占位显隐变化后重新计算，并提供监听清理；不访问任何存储或媒体状态。
+实心音乐、游戏、耳机、爪印等采用 [Phosphor 官方图标](https://github.com/phosphor-icons/core/tree/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill)，固定版本与 MIT 许可随文件保存；箭头、搜索、心形等复用已有 Lucide。网易云/汽水待配置按钮采用普通音乐/耳机符号，不伪造平台商标。
 
-## 隔离预览与现网边界
+《晚一点告白》沿用新图作为 **设计示例**，不是替用户选定主推；T03 的《原来已经这么远》仍只保留其公开目录回退候选记录。主推、外部链接、试听开关和视频仍是用户答复的 **“稍后确定”**。样例将发行/主打徽章改为示例标记，未配置平台按钮显示待配置并禁用，试听按钮禁用且有可读说明；没有音频或视频。T05 正式页面须按真实配置隐藏不可用试听，不能把这里的示例按钮当成已开启试听。
 
-运行 `npm run preview:redesign`，打开 `http://127.0.0.1:4204/zh-hans/`。构建图位于 `scripts/fixtures/station-redesign`，输出仅到 `.generated/station-redesign-preview`。服务器只监听 loopback，限制 GET/HEAD，图片只按固定白名单读取，不加载 Worker、凭证、账号、数据库、音频或存档。
+愿望清单只展示本次页面内可撤销的选中状态，刷新清空，并明确未同步账号；不写入网页本地键，不接原生资料库或服务器。动态文案、封面与游戏插画不作为真实发布记录、实际游戏截图或存档验收证据。页脚仅沿用真实已有 X 链接，其他未配置社交入口禁用；没有代填推广平台 URL。图中 `stationcat.co` 和 2024 年是视觉内容，站点域名仍是 `https://wwwstationcat.org`。
 
-39 个夹具地址用于检验语言链接和导航选中状态，内容复用同一个视觉样例；它们不是正式首页、音乐目录、游戏介绍、账号或政策页面的业务实现。底部“本地预览检查”折叠区及“底部占位测量”只属于夹具，不进入生产构建。占位不是试听播放器；34px 安全区域开关是人工模拟，不是真机测量。
+## 隔离运行与现网边界
 
-现有 `Header`、`HomeHeader`、`BaseLayout` 与所有生产页面保持原有接入。本项新增布局尚未被任何生产页面使用，正常站点构建没有夹具资源或测试控件。账号、支付、会员、历史权益、网页/原生收藏、游戏运行、D1/R2 配置、AASA 和旧 URL 清单未改变；没有发布或关闭旧入口。
+运行 `npm run preview:redesign`，打开 **http://127.0.0.1:4204/**。单独 Astro 构建输出 `.generated/station-redesign-preview`；loopback 服务器仅允许自身 Host、GET/HEAD 和固定图片白名单，不加载 Worker、凭证、账号、数据库、存档或媒体服务。
 
-## 已执行验证
+40 个夹具地址只验证导航和语言规则，复用同一视觉样例，不是正式目录、账号、政策或关于页面业务实现。底部折叠检查区、测量 dock 和 34px 安全区域开关只属于夹具。原有 Header、BaseLayout、生产页面与服务未接入本项 shell。正常输出可复制新品牌图片，但没有新 shell、夹具插画或调试控件。
 
-| 核对项 | 实际结果与证据 |
+## 实际验证
+
+| 核对 | 本轮结果与证据 |
 | --- | --- |
-| 链接规则 | `npm run test:redesign:routes` 6/6，通过四语言 URL、音乐安全查询、未来实体路径、运行地址保护、选中状态及法律链接；[原始日志](T04-evidence/route-tests.txt) |
-| 夹具编译 | `npm run build:redesign:preview` 成功，39 个静态样例；[原始日志](T04-evidence/preview-build.txt) |
-| 正常构建 | `ALLOW_EMPTY_SERIAL_CONTENT=1 ASTRO_TELEMETRY_DISABLED=1 npm run build` 成功，153 页、111 个 sitemap 条目，原有构建核对通过；[原始日志](T04-evidence/main-build.txt)。空正文构建不作为生产包或部署证据 |
-| 五个宽度 | 375、390、768、1280、1440px 本地浏览器检查均无横向溢出；手机导航目标高度 51px；[观测 JSON](T04-evidence/responsive-observations.json) |
-| 四种语言 | 每种语言均在 375 / 768px 检查，按钮保持单行，导航和语言链接正确；[观测 JSON](T04-evidence/locale-observations.json) |
-| 底部叠放 | 390×844px 视口，导航主体 64px、增高占位实测 125px、模拟安全区域 34px，正文预留 247px；占位底边等于导航顶边，最后一个操作在占位上方；[观测 JSON](T04-evidence/stack-and-runtime-observations.json)、[截图](T04-evidence/mobile-stacked-390.jpg) |
-| 游戏布局开关 | 模拟游戏布局后网站控件可见数为 0，正文底部预留为 0；恢复布局后导航恢复；不代表实际游戏媒体衔接通过 |
-| 键盘 | 首个 Tab 到跳转正文链接，Enter 后正文获得焦点；语言菜单 Escape 关闭并返回触发器；收起占位后返回检查按钮；[观测 JSON](T04-evidence/keyboard-observations.json) |
-| 分享与入口 | 实际点击语言链接保留歌曲/歌单安全标识，四个手机入口选中状态正确；[语言切换](T04-evidence/language-switch-observations.json)、[导航及控制台](T04-evidence/navigation-and-console-observations.json) |
-| 初次静音 | 夹具默认占位隐藏，`audio/video` 数量为 0；所检查页面浏览器 error/warn 为 0。真实推广试听须由后续任务另验 |
-| 构建隔离 | 正常输出没有 `preview-assets/`、夹具操作或本项 opt-in shell；[核对 JSON](T04-evidence/build-isolation.json) |
-| 设计对照 | 保存全页、导航与文字区域的并排对照；修复字体混用、平板按钮折行和标题比例后复验；[QA 报告](T04-evidence/design-qa.md) |
+| 链接合同 | `npm run test:redesign:routes` **7/7**；四语言、五项入口、账号/关于复用、安全查询、未来实体、游戏运行地址和政策；[日志](T04-evidence/gentle-station/route-tests.txt) |
+| 隔离编译 | `npm run build:redesign:preview` **40 页**；[日志](T04-evidence/gentle-station/preview-build.txt) |
+| 正常构建 | `ALLOW_EMPTY_SERIAL_CONTENT=1 ASTRO_TELEMETRY_DISABLED=1 npm run build` **153 页、111 sitemap 项**，原有构建检查通过；[日志](T04-evidence/gentle-station/main-build.txt)。空正文构建不作为生产包或部署证明 |
+| 构建隔离 | 扫描 271 个 HTML/JS/CSS 文件，夹具标记匹配为 0；[结果](T04-evidence/gentle-station/build-isolation.json) |
+| 五个宽度 | 375/390/768/1280/1440px 无横向溢出；手机底栏五个目标高度 51px，主 CTA 44px；[初次尺寸](T04-evidence/gentle-station/responsive-observations.json)，768px 最终以 [平板记录](T04-evidence/gentle-station/tablet-final-observations.json) 为准 |
+| 四语言 | 四语言 375/768px 检查，手机均无溢出；修复孤立换行后，[手机记录](T04-evidence/gentle-station/locale-final-observations.json) 与 [平板最终记录](T04-evidence/gentle-station/tablet-final-observations.json)；平板正文和插画矩形不重叠 |
+| 实际交互 | 五入口逐一点击选中；会员进入既有资料库，关于进入繁中 /about/；搜索结果/空态/关闭，愿望状态/刷新清空，skip link、Escape 返回，语言点击保留公共歌曲/歌单参数；[记录](T04-evidence/gentle-station/interaction-observations.json) |
+| 底部叠放 | 390×844，导航主体 64px + 增高占位 125px + 模拟安全 34px + 24px = **247px**；占位底边/导航顶边均 746px，末端操作底边 573.14px < 占位顶边 621px；[记录](T04-evidence/gentle-station/stack-runtime-observations.json) |
+| 游戏布局模拟 | 可见站点控件 0、底部预留 0；恢复后导航可见，关闭占位返回触发按钮；只验证 shell，不证明实际游戏衔接 |
+| 静音/控制台 | audio/video 数量 0、默认 dock 隐藏，所检查标签 error/warn 为 0；[记录](T04-evidence/gentle-station/console-observations.json) |
+| 视觉 QA | 新图与最新实现放在同一输入中，同宽全页及导航/首屏/卡片/动态局部对照；修复导航、字重、密度、日常插画、换行、搜索 Escape 和平板可读性后通过；[报告](T04-evidence/gentle-station/design-qa.md)、[并排](T04-evidence/gentle-station/comparison-final.jpg) |
 
-本机 Node 为 24.15.0。日志保存原始输出内容，只移除行尾空白。截图来自 Codex 内置浏览器，视口模拟不等于实体手机，截图内容宽度可能排除浏览器滚动条。手机 full-page 截图中固定导航仍位于首次视口底部，这是长截图特性；判断遮挡使用独立视口截图和页末几何记录。
+桌面源内容为 1356×996px；内置浏览器 CSS 视口 1371×996px、DPR 1，实际内容宽 1356px，滚动条 15px，页脚底边 997.77px。比较排除了源浏览器框与夹具检查区；没有把额外 15px 当成布局溢出。截图是本机内置浏览器视口模拟，非实体手机、实际读屏、生产云服务或 HTTP 验收。完整长截图中的固定导航留在初始视口位置，判断遮挡采用独立 viewport 截图和几何记录。
 
-桌面结果：[最终截图](T04-evidence/desktop-final.jpg)、[原图/实现并排](T04-evidence/comparison-final.jpg)。手机结果：[首屏](T04-evidence/mobile-home-390.jpg)、[底部叠放](T04-evidence/mobile-stacked-390.jpg)。平板修正结果：[768px](T04-evidence/locale-zh-Hans-768.jpg)。
+当前 [桌面截图](T04-evidence/gentle-station/desktop-review.jpg)、[手机首屏](T04-evidence/gentle-station/mobile-home-390.jpg)、[叠放截图](T04-evidence/gentle-station/mobile-stacked-390.jpg) 与 [文件校验清单](T04-evidence/gentle-station/evidence-manifest.json) 可独立审阅。CI 保留既有检查与超时设置，并执行本项路由测试和隔离编译；远程当前提交的状态以 PR Checks 为准，本地通过不替代远程状态。
 
-CI 新增明确的链接测试与隔离预览编译步骤，保留原检查与超时设置。T04 的远程当前头检查状态由本 PR 的 Checks 栏记录；本地通过不能替代该状态。
+## 后续依赖
 
-## 验收与后续
+A01/A16/A22 本项仅验证样例静音、组件几何、可读名称和键盘路径，不能标记整个首页、真实播放器或全部无障碍已验收。实际推广配置/空态留 T05–T07，音乐功能留 T08–T11，游戏目录/损坏槽位只读识别与防覆盖留 T12，媒体衔接留 T13，会员/历史服务回归留 T14。网页 stationcat.music.v2 与原生 /api/mobile/v1/me/music/* 仍独立。750000 字节云存档上限、历史购买不授予音乐 VIP 和 T03 损坏 JSON 覆盖风险继续有效。
 
-A01 本项只确认样例导航与默认静音，正式首页公开内容留 T05。A16 的底部计算通过本地几何验证，真实播放器与歌词仍留 T08/T09。A22 已确认本项键盘操作、名称和焦点返回，完整音视频弹层与实际读屏/设备验收继续由 T11/T21 完成。本项没有把这些编号标成整个改版已验收通过。
-
-T03 对损坏存档自动覆盖的记录继续有效；T12 必须先完成四类只读检查与恢复保护，不能用现有自动创建函数检测“继续游戏”。T04 审查通过后再进入 T05，素材待定时采用实际空态，所有生产发布和旧入口关闭仍遵循用户后续授权及 T20–T22 的先后顺序。
+T04 审查通过后再进入 T05。回退本项可还原该 PR 的 opt-in 布局与夹具；现网未切换，账号、支付与存档无需业务回滚。旧公开入口只在新版完成并上线后的授权范围内处理。

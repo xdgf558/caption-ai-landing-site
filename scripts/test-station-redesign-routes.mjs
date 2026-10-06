@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { stationHref, stationSection, stationLanguageHref, stationPolicyHref } from '../src/redesign/routes.js';
+import { stationHref, stationSection, stationLanguageHref, stationPolicyHref, stationSections } from '../src/redesign/routes.js';
 
-test('four locales keep canonical home/music paths and the existing account entry', () => {
+test('four locales keep canonical home/music paths and five navigation entries reuse existing services', () => {
   const expected = {
     'zh-Hant': ['/', '/music/', '/games/', '/zh-hant/library/'],
     'zh-Hans': ['/zh-hans/', '/zh-hans/music/', '/zh-hans/games/', '/zh-hans/library/'],
@@ -10,8 +10,18 @@ test('four locales keep canonical home/music paths and the existing account entr
     ja: ['/ja/', '/ja/music/', '/ja/games/', '/ja/library/'],
   };
   for (const [locale, paths] of Object.entries(expected)) {
-    assert.deepEqual(['home', 'music', 'games', 'my'].map(section => stationHref(locale, section)), paths);
+    assert.deepEqual(['home', 'music', 'games', 'member'].map(section => stationHref(locale, section)), paths);
   }
+});
+
+test('five-entry navigation uses the existing member and about pages', () => {
+  assert.deepEqual(stationSections, ['home', 'music', 'games', 'member', 'about']);
+  for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
+    assert.equal(stationHref(locale, 'member'), stationHref(locale, 'my'));
+    assert.equal(stationHref(locale, 'about'), '/about/');
+    assert.equal(stationLanguageHref(locale, '/about/'), '/about/');
+  }
+  assert.equal(stationSection('/about/'), 'about');
 });
 
 test('language changes retain valid public music selections, discarding private and duplicated parameters', () => {
@@ -37,7 +47,7 @@ test('selected state recognizes descendants and aliases without confusing servic
   assert.equal(stationSection('/zh-hant/music/descendant/'), 'music');
   assert.equal(stationSection('/games/cat-life/'), 'games');
   assert.equal(stationSection('/ja/apps/cat-life-game/'), 'games');
-  assert.equal(stationSection('/en/library/'), 'my');
+  assert.equal(stationSection('/en/library/'), 'member');
   assert.equal(stationSection('/zh-hant/'), 'home');
   assert.equal(stationSection('/api/mobile/v1/me/music/'), null);
   assert.equal(stationSection('/en/privacy/'), null);

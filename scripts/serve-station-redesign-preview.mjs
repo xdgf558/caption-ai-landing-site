@@ -10,9 +10,10 @@ const port = Number(process.env.STATION_REDESIGN_PREVIEW_PORT || 4204);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new TypeError('Invalid preview port');
 const host = `127.0.0.1:${port}`;
 const assets = new Map([
-  ['/images/home-night/cat-mark.webp', resolve(root, 'public/images/home-night/cat-mark.webp')],
-  ['/preview-assets/candidate-cover.png', resolve(root, 'scripts/fixtures/station-redesign/assets/candidate-cover.png')],
-  ['/preview-assets/cat-life-desktop.png', resolve(root, 'docs/station-cat-redesign/T03-evidence/cat-life-desktop.png')],
+  ['/images/station-gentle/cat-mark.webp', resolve(root, 'public/images/station-gentle/cat-mark.webp')],
+  ...['hero.webp', 'music-cover.webp', 'game-cover.webp', 'daily.webp'].map(name => [
+    `/preview-assets/gentle-station/${name}`, resolve(root, `scripts/fixtures/station-redesign/assets/gentle-station/${name}`),
+  ]),
 ]);
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.webp': 'image/webp', '.woff2': 'font/woff2' };
 const server = createServer(async (req, res) => {

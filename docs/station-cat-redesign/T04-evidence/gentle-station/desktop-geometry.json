@@ -1,0 +1,110 @@
+{
+  "boxes": {
+    ".gentle-features": {
+      "bottom": 648.59375,
+      "height": 263.03125,
+      "left": 30,
+      "right": 1326,
+      "top": 385.5625,
+      "width": 1296,
+      "x": 30,
+      "y": 385.5625
+    },
+    ".gentle-hero": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "left": 0,
+      "right": 1356,
+      "top": 62,
+      "width": 1356,
+      "x": 0,
+      "y": 62
+    },
+    ".gentle-news-grid": {
+      "bottom": 932.7734375,
+      "height": 133.1796875,
+      "left": 30,
+      "right": 1326,
+      "top": 799.59375,
+      "width": 1296,
+      "x": 30,
+      "y": 799.59375
+    },
+    ".gentle-promotion": {
+      "bottom": 746.59375,
+      "height": 85,
+      "left": 30,
+      "right": 1326,
+      "top": 661.59375,
+      "width": 1296,
+      "x": 30,
+      "y": 661.59375
+    },
+    ".sc-footer": {
+      "bottom": 1010.7734375,
+      "height": 78,
+      "left": 30,
+      "right": 1326,
+      "top": 932.7734375,
+      "width": 1296,
+      "x": 30,
+      "y": 932.7734375
+    },
+    ".sc-top-links": {
+      "bottom": 53,
+      "height": 44,
+      "left": 533,
+      "right": 823,
+      "top": 9,
+      "width": 290,
+      "x": 533,
+      "y": 9
+    }
+  },
+  "contentWidth": 1356,
+  "fonts": {
+    "title": "\"Noto Sans TC\", \"Noto Sans SC\", -apple-system, \"system-ui\", \"Segoe UI\", \"PingFang TC\", \"PingFang SC\", \"Hiragino Sans\", \"Microsoft YaHei\", sans-serif",
+    "weight": "900"
+  },
+  "images": [
+    {
+      "loaded": true,
+      "src": "/images/station-gentle/cat-mark.webp"
+    },
+    {
+      "loaded": true,
+      "src": "/preview-assets/gentle-station/hero.webp"
+    },
+    {
+      "loaded": true,
+      "src": "/preview-assets/gentle-station/music-cover.webp"
+    },
+    {
+      "loaded": true,
+      "src": "/preview-assets/gentle-station/game-cover.webp"
+    },
+    {
+      "loaded": true,
+      "src": "/preview-assets/gentle-station/music-cover.webp"
+    },
+    {
+      "loaded": true,
+      "src": "/preview-assets/gentle-station/game-cover.webp"
+    },
+    {
+      "loaded": true,
+      "src": "/preview-assets/gentle-station/daily.webp"
+    },
+    {
+      "loaded": true,
+      "src": "/images/station-gentle/cat-mark.webp"
+    }
+  ],
+  "mediaCount": 0,
+  "scrollWidth": 1356,
+  "viewport": {
+    "dpr": 1,
+    "height": 996,
+    "width": 1371
+  }
+}

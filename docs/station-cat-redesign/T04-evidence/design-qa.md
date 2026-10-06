@@ -1,3 +1,5 @@
+> Historical evidence for superseded template 2. The current user-selected 温柔小站 source and QA are in [gentle-station/design-qa.md](gentle-station/design-qa.md). This report does not accept the revised UI.
+
 # T04 所选模板设计 QA
 
 **Findings**

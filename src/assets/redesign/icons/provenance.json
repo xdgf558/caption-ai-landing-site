@@ -1,0 +1,79 @@
+{
+  "library": "Phosphor Icons",
+  "commit": "2b75f3ad12b420c9504ef05df8d2564a28f8500e",
+  "license": "MIT",
+  "files": [
+    {
+      "file": "music-notes-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/music-notes-fill.svg",
+      "sha256": "ddfa03bf39856870a4898b830525136583179dc019aa0ab8689eb5b7a65bc50d",
+      "bytes": 255
+    },
+    {
+      "file": "game-controller-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/game-controller-fill.svg",
+      "sha256": "9dcb7af7b4854bb2da15ab1852292428c4d95314b06cd25aa5f45f21b3134884",
+      "bytes": 674
+    },
+    {
+      "file": "paw-print-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/paw-print-fill.svg",
+      "sha256": "7eafc5e69cf447b8eaa919b7b5c229f92e8901750c65a12ef5bf9d03c4c474db",
+      "bytes": 461
+    },
+    {
+      "file": "headphones-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/headphones-fill.svg",
+      "sha256": "35db98ea0b59f4c8c81902d066a8f6db58680f99e48d1a36e6e167e3ef1a6751",
+      "bytes": 357
+    },
+    {
+      "file": "crown-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/crown-fill.svg",
+      "sha256": "a285272ce54401826e1458e5437aaa5dd78b5bb92b75092093f091eb024b0a45",
+      "bytes": 440
+    },
+    {
+      "file": "chart-bar-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/chart-bar-fill.svg",
+      "sha256": "a417cc075c304374043e7d47f7622606b15f14e4c65663fd7a8a9898d768362a",
+      "bytes": 283
+    },
+    {
+      "file": "spotify-logo-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/spotify-logo-fill.svg",
+      "sha256": "50360bee2998f48367780b6f1637d208169acb0d3384e27e145f29b456b73bd4",
+      "bytes": 538
+    },
+    {
+      "file": "youtube-logo-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/youtube-logo-fill.svg",
+      "sha256": "fce097e65d0df0cb2bb84cd282bb6cc08ccb47ec18d41b7c22870830257065be",
+      "bytes": 509
+    },
+    {
+      "file": "instagram-logo-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/instagram-logo-fill.svg",
+      "sha256": "24444c671b0c50580b39138453762225d4d53b7d04c978244b8027a84c719746",
+      "bytes": 360
+    },
+    {
+      "file": "x-logo-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/x-logo-fill.svg",
+      "sha256": "b760dcebe932bafc69784799231eb8ce988dc33fa5d68d20e706508b24264526",
+      "bytes": 351
+    },
+    {
+      "file": "apple-logo-fill.svg",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/assets/fill/apple-logo-fill.svg",
+      "sha256": "33ead3c1edb57ee1ca6a6dea012e2b871dd285ad5446eeb4c65b1d60408be00a",
+      "bytes": 568
+    },
+    {
+      "file": "LICENSE",
+      "source": "https://raw.githubusercontent.com/phosphor-icons/core/2b75f3ad12b420c9504ef05df8d2564a28f8500e/LICENSE",
+      "sha256": "b5b1f1da112d18ea2147decfd48ddc1bf2b5aeb6c265381579340e95b15a2bb2",
+      "bytes": 1071
+    }
+  ]
+}
