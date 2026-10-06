@@ -1,0 +1,67 @@
+{
+  "clientWidth": 1356,
+  "dpr": 1,
+  "regions": {
+    ".gentle-features": {
+      "bottom": 648.5625,
+      "height": 263,
+      "width": 1296,
+      "x": 30,
+      "y": 385.5625
+    },
+    ".gentle-hero": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 1356,
+      "x": 0,
+      "y": 62
+    },
+    ".gentle-news": {
+      "bottom": 1393.578125,
+      "height": 157,
+      "width": 1296,
+      "x": 30,
+      "y": 1236.578125
+    },
+    ".gentle-promotion": {
+      "bottom": 746.5625,
+      "height": 85,
+      "width": 1296,
+      "x": 30,
+      "y": 661.5625
+    },
+    ".home-clips": {
+      "bottom": 1220.578125,
+      "height": 302.46875,
+      "width": 1296,
+      "x": 30,
+      "y": 918.109375
+    },
+    ".home-selected": {
+      "bottom": 894.109375,
+      "height": 123.546875,
+      "width": 1296,
+      "x": 30,
+      "y": 770.5625
+    },
+    ".sc-footer": {
+      "bottom": 1471.578125,
+      "height": 78,
+      "width": 1296,
+      "x": 30,
+      "y": 1393.578125
+    },
+    ".sc-header": {
+      "bottom": 62,
+      "height": 62,
+      "width": 1220,
+      "x": 68,
+      "y": 0
+    }
+  },
+  "url": "http://127.0.0.1:4204/home-preview/complete/",
+  "viewport": [
+    1371,
+    996
+  ]
+}

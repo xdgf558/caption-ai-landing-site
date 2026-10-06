@@ -37,6 +37,7 @@ jobs:
       - name: Verify Station Cat redesign routes and isolated preview
         run: |
           npm run test:redesign:routes
+          npm run test:redesign:home
           npm run build:redesign:preview
 
       - name: Verify isolated music Workers D1 and R2 runtime

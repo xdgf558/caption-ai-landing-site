@@ -7,8 +7,9 @@ import '../redesign/gentle.css';
 interface Props {
   lang?: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja'; title: string; description?: string;
   gameRuntime?: boolean; playerSelected?: boolean; preview?: boolean;
+  activeSection?: 'home' | 'music' | 'games' | 'member' | 'about';
 }
-const { lang = 'zh-Hant', title, description = '', gameRuntime = false, playerSelected = false, preview = false } = Astro.props;
+const { lang = 'zh-Hant', title, description = '', gameRuntime = false, playerSelected = false, preview = false, activeSection } = Astro.props;
 const copy = stationCopy[lang];
 const pending = { 'zh-Hant': '平台連結待更新', 'zh-Hans': '平台链接待更新', en: 'Platform link coming soon', ja: '配信リンクは後日ご案内' }[lang];
 ---
@@ -26,7 +27,7 @@ const pending = { 'zh-Hant': '平台連結待更新', 'zh-Hans': '平台链接�
   <body class="station-gentle" data-station-shell data-game-runtime={String(gameRuntime)}>
     <a class="sc-skip" href="#station-main">{copy.skip}</a>
     <div class="sc-site-width">
-      <BrandNavigation lang={lang} />
+      <BrandNavigation lang={lang} activeSection={activeSection} />
       <main id="station-main" tabindex="-1"><slot /></main>
       <footer class="sc-footer sc-container" data-station-chrome>
         <a class="sc-brand sc-footer-brand" href={stationHref(lang, 'home')}>

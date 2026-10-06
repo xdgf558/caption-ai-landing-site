@@ -1,0 +1,472 @@
+[
+  {
+    "width": 375,
+    "badImages": [],
+    "client": 360,
+    "clipSizes": [
+      {
+        "height": 79.3125,
+        "width": 141
+      },
+      {
+        "height": 79.3125,
+        "width": 141
+      },
+      {
+        "height": 79.3125,
+        "width": 141
+      },
+      {
+        "height": 79.3125,
+        "width": 141
+      }
+    ],
+    "clips": 4,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/tracks/sample-song/"
+      },
+      {
+        "height": 44,
+        "href": "/games/cat-life-game/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [],
+    "footer": {
+      "bottom": 2895.0078125,
+      "height": 242,
+      "width": 328,
+      "x": 16,
+      "y": 2653.0078125
+    },
+    "heroCopy": {
+      "bottom": 406.4375,
+      "height": 338.4375,
+      "width": 360,
+      "x": 0,
+      "y": 68
+    },
+    "heroImage": {
+      "bottom": 606.4375,
+      "height": 200,
+      "width": 360,
+      "x": 0,
+      "y": 406.4375
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 844,
+      "height": 64,
+      "width": 360,
+      "x": 0,
+      "y": 780
+    },
+    "platforms": [
+      "/__home-fixture/platform/netease/",
+      "/__home-fixture/platform/qishui/",
+      "/__home-fixture/platform/apple_music/"
+    ],
+    "preview": null,
+    "revision": "1",
+    "scroll": 360,
+    "selected": 3,
+    "tracks": 1,
+    "url": "http://127.0.0.1:4204/home-preview/complete/",
+    "viewport": [
+      375,
+      844
+    ],
+    "gameButtons": [
+      {
+        "height": 44,
+        "text": "查看遊戲",
+        "width": 131
+      },
+      {
+        "height": 44,
+        "text": "加入願望清單",
+        "width": 159
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "badImages": [],
+    "client": 375,
+    "clipSizes": [
+      {
+        "height": 83.53125,
+        "width": 148.5
+      },
+      {
+        "height": 83.53125,
+        "width": 148.5
+      },
+      {
+        "height": 83.53125,
+        "width": 148.5
+      },
+      {
+        "height": 83.53125,
+        "width": 148.5
+      }
+    ],
+    "clips": 4,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/tracks/sample-song/"
+      },
+      {
+        "height": 44,
+        "href": "/games/cat-life-game/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [],
+    "footer": {
+      "bottom": 2845.3984375,
+      "height": 242,
+      "width": 343,
+      "x": 16,
+      "y": 2603.3984375
+    },
+    "heroCopy": {
+      "bottom": 355.390625,
+      "height": 287.390625,
+      "width": 375,
+      "x": 0,
+      "y": 68
+    },
+    "heroImage": {
+      "bottom": 555.390625,
+      "height": 200,
+      "width": 375,
+      "x": 0,
+      "y": 355.390625
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 844,
+      "height": 64,
+      "width": 375,
+      "x": 0,
+      "y": 780
+    },
+    "platforms": [
+      "/__home-fixture/platform/netease/",
+      "/__home-fixture/platform/qishui/",
+      "/__home-fixture/platform/apple_music/"
+    ],
+    "preview": null,
+    "revision": "1",
+    "scroll": 375,
+    "selected": 3,
+    "tracks": 1,
+    "url": "http://127.0.0.1:4204/home-preview/complete/",
+    "viewport": [
+      390,
+      844
+    ],
+    "gameButtons": [
+      {
+        "height": 44,
+        "text": "查看遊戲",
+        "width": 138.5
+      },
+      {
+        "height": 44,
+        "text": "加入願望清單",
+        "width": 166.5
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "badImages": [],
+    "client": 753,
+    "clipSizes": [
+      {
+        "height": 178.59375,
+        "width": 317.5
+      },
+      {
+        "height": 178.59375,
+        "width": 317.5
+      },
+      {
+        "height": 178.59375,
+        "width": 317.5
+      },
+      {
+        "height": 178.59375,
+        "width": 317.5
+      }
+    ],
+    "clips": 4,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/tracks/sample-song/"
+      },
+      {
+        "height": 44,
+        "href": "/games/cat-life-game/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [],
+    "footer": {
+      "bottom": 2844.5,
+      "height": 132,
+      "width": 693,
+      "x": 30,
+      "y": 2712.5
+    },
+    "heroCopy": {
+      "bottom": 362.96875,
+      "height": 300.96875,
+      "width": 753,
+      "x": 0,
+      "y": 62
+    },
+    "heroImage": {
+      "bottom": 582.96875,
+      "height": 220,
+      "width": 753,
+      "x": 0,
+      "y": 362.96875
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "platforms": [
+      "/__home-fixture/platform/netease/",
+      "/__home-fixture/platform/qishui/",
+      "/__home-fixture/platform/apple_music/"
+    ],
+    "preview": null,
+    "revision": "1",
+    "scroll": 753,
+    "selected": 3,
+    "tracks": 1,
+    "url": "http://127.0.0.1:4204/home-preview/complete/",
+    "viewport": [
+      768,
+      844
+    ],
+    "gameButtons": [
+      {
+        "height": 44,
+        "text": "查看遊戲",
+        "width": 116
+      },
+      {
+        "height": 44,
+        "text": "加入願望清單",
+        "width": 144
+      }
+    ]
+  },
+  {
+    "width": 1280,
+    "badImages": [],
+    "client": 1265,
+    "clipSizes": [
+      {
+        "height": 151.171875,
+        "width": 268.75
+      },
+      {
+        "height": 151.171875,
+        "width": 268.75
+      },
+      {
+        "height": 151.171875,
+        "width": 268.75
+      },
+      {
+        "height": 151.171875,
+        "width": 268.75
+      }
+    ],
+    "clips": 4,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/tracks/sample-song/"
+      },
+      {
+        "height": 44,
+        "href": "/games/cat-life-game/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [],
+    "footer": {
+      "bottom": 1458.78125,
+      "height": 78,
+      "width": 1205,
+      "x": 30,
+      "y": 1380.78125
+    },
+    "heroCopy": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 615,
+      "x": 0,
+      "y": 62
+    },
+    "heroImage": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 1265,
+      "x": 0,
+      "y": 62
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "platforms": [
+      "/__home-fixture/platform/netease/",
+      "/__home-fixture/platform/qishui/",
+      "/__home-fixture/platform/apple_music/"
+    ],
+    "preview": null,
+    "revision": "1",
+    "scroll": 1265,
+    "selected": 3,
+    "tracks": 1,
+    "url": "http://127.0.0.1:4204/home-preview/complete/",
+    "viewport": [
+      1280,
+      844
+    ],
+    "gameButtons": [
+      {
+        "height": 44,
+        "text": "查看遊戲",
+        "width": 116
+      },
+      {
+        "height": 44,
+        "text": "加入願望清單",
+        "width": 144
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "badImages": [],
+    "client": 1425,
+    "clipSizes": [
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      },
+      {
+        "height": 163.96875,
+        "width": 291.5
+      }
+    ],
+    "clips": 4,
+    "cta": [
+      {
+        "height": 44,
+        "href": "/music/tracks/sample-song/"
+      },
+      {
+        "height": 44,
+        "href": "/games/cat-life-game/"
+      }
+    ],
+    "dockHidden": true,
+    "dpr": 1,
+    "empty": [],
+    "footer": {
+      "bottom": 1471.578125,
+      "height": 78,
+      "width": 1296,
+      "x": 64.5,
+      "y": 1393.578125
+    },
+    "heroCopy": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 615,
+      "x": 34.5,
+      "y": 62
+    },
+    "heroImage": {
+      "bottom": 375.5625,
+      "height": 313.5625,
+      "width": 1356,
+      "x": 34.5,
+      "y": 62
+    },
+    "lang": "zh-Hant",
+    "media": 0,
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "platforms": [
+      "/__home-fixture/platform/netease/",
+      "/__home-fixture/platform/qishui/",
+      "/__home-fixture/platform/apple_music/"
+    ],
+    "preview": null,
+    "revision": "1",
+    "scroll": 1425,
+    "selected": 3,
+    "tracks": 1,
+    "url": "http://127.0.0.1:4204/home-preview/complete/",
+    "viewport": [
+      1440,
+      844
+    ],
+    "gameButtons": [
+      {
+        "height": 44,
+        "text": "查看遊戲",
+        "width": 116
+      },
+      {
+        "height": 44,
+        "text": "加入願望清單",
+        "width": 144
+      }
+    ]
+  }
+]
