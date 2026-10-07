@@ -5,6 +5,7 @@ import { musicIcon, musicTime } from './musicRender.js';
 import { stationHref } from './routes.js';
 
 let mounted = null;
+export const peekStationMusicSession = () => mounted?.session || null;
 const active = state => ['playing', 'loading', 'buffering'].includes(state.status);
 export function stationMusicNotice(state, copy) {
   if (state.notice) return ({ checking: copy.prepare, ready: copy.ready, denied: copy.denied, stale: copy.stale,

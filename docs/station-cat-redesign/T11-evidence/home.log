@@ -1,0 +1,31 @@
+
+> landing-site@0.1.0 test:redesign:home
+> node --test scripts/test-station-redesign-home.mjs
+
+✔ unselected draft remains empty without choosing a free/latest fallback (1.688292ms)
+✔ published IDs and revision drive direct destinations, three selections and four clips (0.548541ms)
+✔ synthetic configuration needs explicit fixture option and cannot enter a normal consumer (0.33325ms)
+✔ draft, mismatched revision, scheduled/future or missing configuration cannot publish (0.358709ms)
+✔ promotion must be explicitly enabled, published and refer to a public parent (0.502125ms)
+✔ missing, revoked, private, mismatched or duplicate cover references hide the work (0.406667ms)
+✔ repeated track IDs are ambiguous and never pick a row by order (0.090875ms)
+✔ selectors de-duplicate IDs and exclude the featured work (0.182584ms)
+✔ empty optional summary does not hide an otherwise published song or game (0.36875ms)
+✔ missing video and missing platforms produce distinct honest states (0.214708ms)
+✔ only selected, live, verified and correctly owned platform links survive (0.502875ms)
+✔ public link syntax rejects credentials, tokens, scripts, private hosts and fixture paths (0.99125ms)
+✔ preview requires enabled, ready, independently typed public and rights-confirmed clip (1.067875ms)
+✔ revoking a clip, poster or platform removes the reference on next projection (0.080625ms)
+✔ clips require both selection lists, public parent, ready poster and public media (0.508958ms)
+✔ game revocation removes its card and related update without starting a runtime (0.106792ms)
+✔ a game introduction never occupies the existing cat-life runtime namespace (0.229875ms)
+✔ locale routing and translation fallback retain the stable selected IDs (0.290792ms)
+✔ allowlist projection never forwards private audio, storage, entitlement or extra fields (0.142458ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 53.046166

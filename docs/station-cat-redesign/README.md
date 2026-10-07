@@ -4,7 +4,7 @@
 
 ## 当前执行约定
 
-用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01 至 T09 已审查通过并在各自审查头 CI 通过后合并。T06 原头 `8ac1d499` 的销户审计失败已通过只读清单修订解决；修订头 `31e19a6` 经用户复审及托管 CI 通过后合并。本轮仅执行 **T10 发行平台入口与降级**，审查后才进入 T11。
+用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01 至 T10 已审查通过并在各自审查头 CI 通过后合并。T06 原头 `8ac1d499` 的销户审计失败已通过只读清单修订解决；修订头 `31e19a6` 经用户复审及托管 CI 通过后合并。本轮仅执行 **T11 短视频与 MV 播放**，审查后才进入 T12。
 
 这项约定优先于基线文档中建议的 R0–R7 批次及启动指令中的连续推进方式；三份规范正文已按本次审查同步逐项执行要求。PR 创建、构建通过与生产发布是独立状态；本轮没有生产发布授权，待用户审查的 PR 不自动合并。
 
@@ -19,8 +19,9 @@
 | T07 公开查询与资源权限 | 审查通过，已合并 | [PR #192](https://github.com/xdgf558/caption-ai-landing-site/pull/192)，审查头 `0b9d7b6` 的完整 CI 通过，合并为 `828d5a9`；[查询与权限合同](T07-public-queries-and-resource-access.md)、[验证摘要](T07-evidence/verification-summary.json)；生产绑定与 schema 仍未确认 |
 | T08 音乐目录与单曲页 | 第二次复审通过，已合并 | [PR #193](https://github.com/xdgf558/caption-ai-landing-site/pull/193)、[页面与播放合同](T08-music-catalog-and-detail.md)、[修订记录](T08-review-fixes.md)、[第一次修订设计 QA](T08-review-evidence/design-qa.md)、[第一次修订证据](T08-review-evidence/verification-summary.json)、[开关修订证据](T08-gate-evidence/verification-summary.json)；审查头 `f09f8de9` 的完整托管 CI 通过，合并为 `14cbead7`；生产开关关闭，旧入口未退役，真实素材待定 |
 | T09 音频播放器与请求竞态 | 审查通过，已合并 | [PR #194](https://github.com/xdgf558/caption-ai-landing-site/pull/194)，审查头 `00fe1096` 的完整托管 CI 通过，合并为 `7e46ed37`；[播放器合同与验收](T09-audio-player-and-request-races.md)、[验证摘要](T09-evidence/verification-summary.json)、[设计 QA](T09-evidence/design-qa.md)；缓冲及会话内准备窗口的 P3 限制保留 |
-| T10 发行平台入口与降级 | 开发与本地验收完成，待用户审查 | [平台合同与验收](T10-release-platforms-and-fallbacks.md)、[验证摘要](T10-evidence/verification-summary.json)、[设计 QA](T10-evidence/design-qa.md)；真实发行链接待定，托管 CI 须按本批当前头独立确认 |
-| T11–T22 | 未开始 | 沿用任务清单中的依赖，每个任务单独提交、审查后继续 |
+| T10 发行平台入口与降级 | 审查通过，已合并 | [PR #195](https://github.com/xdgf558/caption-ai-landing-site/pull/195)，审查头 `9c687670` 的完整托管 CI 通过，合并为 `7ecaab47`；[平台合同与验收](T10-release-platforms-and-fallbacks.md)、[验证摘要](T10-evidence/verification-summary.json)、[设计 QA](T10-evidence/design-qa.md)；历史测试时序和真实平台验收的 P3 边界保留 |
+| T11 短视频与 MV 播放 | 开发与本地验收完成，待用户审查 | [播放合同与验收](T11-clips-and-mv-playback.md)、[最终源码验证摘要](T11-evidence/verification-summary.json)、[设计 QA](T11-evidence/design-qa.md)；真实视频待定，正式首页仍未挂载，托管 CI 须按本批实际头独立确认 |
+| T12–T22 | 未开始 | 沿用任务清单中的依赖，每个任务单独提交、审查后继续 |
 
 ## 需求基线
 
@@ -56,4 +57,6 @@ T08 第二次复审头 `f09f8de960227301ef34d06d438a79c1d7a4490a` 的 [完整托
 
 T09 审查头 `00fe1096ac3b2452d7b1a664c0fc0c45b8336585` 的 [完整托管 CI](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37601788613/job/112727652731) 于 2026-10-07 10:08:22 UTC 完成，31 个步骤全部成功。用户审查通过后，于 12:09:47 UTC squash 合并为 `7e46ed374597cba3365b10c2bd4dc09e2db51b7a`；[独立 CI](T10-evidence/T09-approved-head-ci.json) 与 [合并状态](T10-evidence/T09-merge-result.json) 可复核。历史 T09 文档保留当时等待状态，不作为当前头的 CI 记录。共享播放器挂在默认关闭的新音乐壳中；持续完整播放期间不重新核权、已经缓冲内容可能播完、30 秒准备窗口仅限页面会话的 P3 边界继续保留，T10 没有更改播放器核心。
 
-当前任务为 T10，分支 `codex/station-cat-redesign-t10` 从上述实际合并提交建立。新增安全的平台可用状态、原生 HTTPS 入口和四语言手动/按钮复制降级，复用现有平台记录与运营排序。没有平台 App 唤起或新统计采集器。音乐页面与公开查询仍由原来的两个关闭开关共同控制；首页组件仍未挂载正式首页。真实平台发行、原生内置浏览器、生产缓存及会员验收分别留待素材确认与后续任务。一任务一 PR 的审查顺序保持不变，本批不执行远程迁移、开关启用、生产发布或旧入口退役。
+T10 分支 `codex/station-cat-redesign-t10` 从上述实际合并提交建立，增加安全的平台可用状态、原生 HTTPS 入口和四语言手动/按钮复制降级，复用现有平台记录与运营排序。审查头 `9c68767014b1ef968d5e017d85f0887bcc6661eb` 的 [完整托管 CI](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37622314516/job/112795355911) 于 2026-10-07 13:05:04 UTC 完成，32 个步骤全部成功。用户审查通过后，于 13:14:01 UTC squash 合并为 `7ecaab47e98204ad30a6e5e7a35d10b641311a73`；[独立 CI](T11-evidence/T10-approved-head-ci.json) 与 [合并状态](T11-evidence/T10-merge-result.json) 可复核。历史 T10 文档保留当时等待状态，不作为当前头 CI。63 项公开查询和 18 项关闭态回归早于最终地址收紧的 P3 边界保留；合成外链未真实点击，也没有真机、内置浏览器或 VoiceOver 验收。
+
+当前任务为 T11，分支 `codex/station-cat-redesign-t11` 从该实际主分支建立。首页组件及歌曲页复用点击创建的原生 inline 视频播放器，接入 T09 音视频互斥、即时清理、关闭焦点恢复、错误重试和播放结束入口。隔离首页只绑定公开首页/推广已选视频，正式首页仍未挂载。最终源码的 274 项本地测试、主构建、独立四语言首页构建及 staging 资源核验通过，完整原始日志与哈希单独保存；本地构建仍使用空正文选项，不能替代生产包或本 PR 实际头托管 CI。真实媒体和使用权、移动浏览器与读屏验收继续留待后续。一任务一 PR 的审查顺序保持不变，本批不执行远程迁移、开关启用、生产发布或旧入口退役。

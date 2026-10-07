@@ -1,0 +1,380 @@
+{
+  "beforeFinal": [
+    {
+      "case": "music-before-video",
+      "data": {
+        "currentTime": 0.159769,
+        "ended": false,
+        "paused": false,
+        "readyState": 4
+      }
+    },
+    {
+      "case": "music-after-video",
+      "data": {
+        "audioEnded": false,
+        "audioPaused": true,
+        "audioTime": 0.21188,
+        "videoCount": 1,
+        "videoPaused": false,
+        "videoReady": 1,
+        "videoTime": 0
+      }
+    },
+    {
+      "case": "native-video-decoded",
+      "data": {
+        "clipId": "ca760000-0000-4000-8000-000000000500",
+        "count": 1,
+        "currentTime": 30,
+        "duration": 30,
+        "open": true,
+        "paused": true,
+        "readyState": 4,
+        "state": "ended"
+      }
+    },
+    {
+      "case": "rapid-switch-short-mv-short-mv",
+      "data": {
+        "audioPaused": true,
+        "clipId": "ca760000-0000-4000-8000-000000008000",
+        "count": 1,
+        "open": true,
+        "src": "/api/station/content/assets/ca760000-0000-4000-8000-000000008001",
+        "state": "playing"
+      }
+    },
+    {
+      "case": "escape-close-stop-and-focus",
+      "data": {
+        "audioPaused": true,
+        "focus": "播放影片 · Synthetic video · 00:30",
+        "open": false,
+        "videoCount": 0
+      }
+    },
+    {
+      "case": "codec-error-fallback",
+      "data": {
+        "focus": "關閉影片",
+        "href": "https://www.youtube.com/watch?v=synthetic-fixture-error",
+        "originalVisible": true,
+        "retryVisible": true,
+        "state": "error",
+        "status": "影片暫時無法播放。請重試。",
+        "videoCount": 0
+      }
+    },
+    {
+      "case": "retry-bad-resource-remains-safe-error",
+      "data": {
+        "audioPaused": true,
+        "focus": "關閉影片",
+        "state": "error",
+        "videoCount": 0
+      }
+    },
+    {
+      "case": "focus-wrap-backward",
+      "data": {
+        "focus": null,
+        "inside": false
+      }
+    },
+    {
+      "case": "focus-wrap-forward",
+      "data": {
+        "focus": null,
+        "inside": false
+      }
+    },
+    {
+      "case": "final-focus-wrap-backward",
+      "data": {
+        "focus": "切換影片",
+        "inside": true
+      }
+    },
+    {
+      "case": "final-focus-wrap-forward",
+      "data": {
+        "focus": "關閉影片",
+        "inside": true
+      }
+    },
+    {
+      "phase": "final",
+      "case": "music-before-video",
+      "data": {
+        "currentTime": 0.343158,
+        "ended": false,
+        "paused": false,
+        "readyState": 4
+      }
+    },
+    {
+      "phase": "final",
+      "case": "music-after-video",
+      "data": {
+        "audioPaused": true,
+        "audioTime": 0.389439,
+        "count": 1,
+        "open": true,
+        "src": "/api/station/content/assets/ca760000-0000-4000-8000-000000000501",
+        "state": "playing"
+      }
+    },
+    {
+      "phase": "final",
+      "case": "rapid-switch-and-native-decode",
+      "data": {
+        "audioPaused": true,
+        "clipId": "ca760000-0000-4000-8000-000000008000",
+        "controls": "",
+        "count": 1,
+        "currentTime": 20.065249,
+        "duration": 30,
+        "inline": "",
+        "readyState": 4
+      }
+    },
+    {
+      "phase": "final",
+      "case": "escape-close-focus",
+      "data": {
+        "audioPaused": true,
+        "count": 0,
+        "focus": "播放影片 · Synthetic video · 00:30",
+        "open": false
+      }
+    },
+    {
+      "phase": "final",
+      "case": "error-retry-original-link",
+      "data": {
+        "count": 0,
+        "focus": "關閉影片",
+        "original": "https://www.youtube.com/watch?v=synthetic-fixture-error",
+        "originalHidden": false,
+        "state": "error",
+        "status": "影片暫時無法播放。請重試。"
+      }
+    },
+    {
+      "phase": "final",
+      "case": "client-router-leaves-video-empty",
+      "data": {
+        "audioPaused": true,
+        "count": 0,
+        "open": false,
+        "options": 0,
+        "url": "/music/"
+      }
+    },
+    {
+      "phase": "final",
+      "case": "locale-en",
+      "data": {
+        "clientWidth": 375,
+        "close": "Close video",
+        "docWidth": 375,
+        "locale": "en",
+        "state": "playing",
+        "title": "A station evening · MV sample"
+      }
+    },
+    {
+      "phase": "final",
+      "case": "locale-ja",
+      "data": {
+        "clientWidth": 375,
+        "close": "動画を閉じる",
+        "docWidth": 375,
+        "locale": "ja",
+        "state": "playing",
+        "title": "小さな駅の夜 · MV サンプル"
+      }
+    },
+    {
+      "phase": "final",
+      "case": "locale-zh-hans",
+      "data": {
+        "clientWidth": 375,
+        "close": "关闭视频",
+        "docWidth": 375,
+        "locale": "zh-Hans",
+        "state": "playing",
+        "title": "小站的夜晚 · MV 示例"
+      }
+    }
+  ],
+  "final": [
+    {
+      "phase": "complete-final",
+      "case": "homepage-video-ended-song-entry",
+      "data": {
+        "currentTime": 30,
+        "duration": 30,
+        "ended": true,
+        "nextHidden": false,
+        "paused": true,
+        "platforms": 0,
+        "song": "/music/tracks/vip/",
+        "state": "ended",
+        "url": "/__preview/home-clips/zh-Hant/"
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "homepage-close-focus-and-no-media",
+      "data": {
+        "focus": "ca760000-0000-4000-8000-000000000500",
+        "open": false,
+        "url": "/__preview/home-clips/zh-Hant/",
+        "videoCount": 0
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "homepage-en",
+      "data": {
+        "clientWidth": 375,
+        "docWidth": 375,
+        "locale": "en",
+        "open": true,
+        "state": "playing",
+        "url": "/__preview/home-clips/en/",
+        "videoCount": 1
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "homepage-ja",
+      "data": {
+        "clientWidth": 375,
+        "docWidth": 375,
+        "locale": "ja",
+        "open": true,
+        "state": "playing",
+        "url": "/__preview/home-clips/ja/",
+        "videoCount": 1
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "homepage-zh-Hans",
+      "data": {
+        "clientWidth": 375,
+        "docWidth": 375,
+        "locale": "zh-Hans",
+        "open": true,
+        "state": "playing",
+        "url": "/__preview/home-clips/zh-Hans/",
+        "videoCount": 1
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "music-before-video",
+      "data": {
+        "ended": false,
+        "paused": false,
+        "ready": 4,
+        "time": 0.525267
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "video-pauses-active-music",
+      "data": {
+        "audioPaused": true,
+        "open": true,
+        "time": 0.573811,
+        "videoCount": 1
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "keyboard-backward-boundary",
+      "data": {
+        "focus": "切換影片",
+        "inside": true
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "keyboard-forward-boundary",
+      "data": {
+        "focus": "關閉影片",
+        "inside": true
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "escape-immediate-stop-during-animation",
+      "data": {
+        "audioPaused": true,
+        "count": 0,
+        "focus": "關閉影片",
+        "open": true
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "error-retry-fallback",
+      "data": {
+        "count": 0,
+        "original": "https://www.youtube.com/watch?v=synthetic-fixture-error",
+        "originalHidden": false,
+        "retryHidden": false,
+        "state": "error"
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "close-finished-focus-restored",
+      "data": {
+        "count": 0,
+        "focus": "播放影片 · 暫時無法播放 · 測試片段 · 00:30",
+        "open": false
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "detail-en",
+      "data": {
+        "clientWidth": 375,
+        "count": 1,
+        "documentWidth": 375,
+        "locale": "en",
+        "open": true,
+        "state": "playing"
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "detail-ja",
+      "data": {
+        "clientWidth": 375,
+        "count": 1,
+        "documentWidth": 375,
+        "locale": "ja",
+        "open": true,
+        "state": "playing"
+      }
+    },
+    {
+      "phase": "complete-final",
+      "case": "detail-zh-hans",
+      "data": {
+        "clientWidth": 375,
+        "count": 1,
+        "documentWidth": 375,
+        "locale": "zh-Hans",
+        "open": true,
+        "state": "playing"
+      }
+    }
+  ]
+}

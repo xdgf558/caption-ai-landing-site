@@ -1,0 +1,12 @@
+---
+import { readFileSync } from 'node:fs';
+import StationBrandHome from '../../../../../src/components/redesign/StationBrandHome.astro';
+export function getStaticPaths() {
+  const models = JSON.parse(readFileSync('.generated/station-clip-home-models.json', 'utf8'));
+  return Object.entries(models).map(([locale, value]) => ({ params: { locale }, props: { value } }));
+}
+const { value } = Astro.props;
+---
+<StationBrandHome home={value.home} clipModels={value.clips} heroImage="/__preview/station-hero.webp" preview>
+  <aside class="sc-container" slot="fixture-controls"><p>T11 本地首頁影片驗收 · 一次性 D1/R2 的公開 DTO；插畫與合成測試音，非正式作品或本期主推。歌曲和影片均待營運者確認，這個構建不可部署。</p><nav aria-label="T11 preview language">{['zh-Hant', 'zh-Hans', 'en', 'ja'].map(lang => <a href={`/__preview/home-clips/${lang}/`} style="margin-right:16px">{lang}</a>)}</nav><a href="/music/tracks/vip/">查看歌曲與 MV 播放</a></aside>
+</StationBrandHome>

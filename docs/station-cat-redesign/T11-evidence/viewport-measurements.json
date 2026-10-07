@@ -1,0 +1,217 @@
+[
+  {
+    "phase": "complete-final",
+    "size": {
+      "width": 1440,
+      "height": 900
+    },
+    "data": {
+      "bodyWidth": 1425,
+      "clientWidth": 1425,
+      "close": {
+        "height": 44,
+        "width": 44,
+        "x": 1095.5,
+        "y": 126.5390625
+      },
+      "dialog": {
+        "height": 692.9140625,
+        "width": 900,
+        "x": 262.5,
+        "y": 103.5390625
+      },
+      "documentWidth": 1425,
+      "dpr": 1,
+      "duration": 30,
+      "innerHeight": 900,
+      "innerWidth": 1440,
+      "ready": 4,
+      "select": {
+        "height": 44,
+        "width": 200.5,
+        "x": 367.5,
+        "y": 729.453125
+      },
+      "state": "playing",
+      "video": {
+        "height": 480.375,
+        "width": 854,
+        "x": 285.5,
+        "y": 201.078125
+      },
+      "videoCount": 1
+    }
+  },
+  {
+    "phase": "complete-final",
+    "size": {
+      "width": 768,
+      "height": 900
+    },
+    "data": {
+      "bodyWidth": 753,
+      "clientWidth": 753,
+      "close": {
+        "height": 44,
+        "width": 44,
+        "x": 677.5,
+        "y": 172.6640625
+      },
+      "dialog": {
+        "height": 600.6640625,
+        "width": 736,
+        "x": 8.5,
+        "y": 149.6640625
+      },
+      "documentWidth": 753,
+      "dpr": 1,
+      "duration": 30,
+      "innerHeight": 900,
+      "innerWidth": 768,
+      "ready": 4,
+      "select": {
+        "height": 44,
+        "width": 200.5,
+        "x": 113.5,
+        "y": 683.328125
+      },
+      "state": "playing",
+      "video": {
+        "height": 388.125,
+        "width": 690,
+        "x": 31.5,
+        "y": 247.203125
+      },
+      "videoCount": 1
+    }
+  },
+  {
+    "phase": "complete-final",
+    "size": {
+      "width": 390,
+      "height": 844
+    },
+    "data": {
+      "bodyWidth": 375,
+      "clientWidth": 375,
+      "close": {
+        "height": 44,
+        "width": 44,
+        "x": 305.5,
+        "y": 222.5
+      },
+      "dialog": {
+        "height": 432.9921875,
+        "width": 358,
+        "x": 8.5,
+        "y": 205.5
+      },
+      "documentWidth": 375,
+      "dpr": 1,
+      "duration": 30,
+      "innerHeight": 844,
+      "innerWidth": 390,
+      "ready": 4,
+      "select": {
+        "height": 44,
+        "width": 324,
+        "x": 25.5,
+        "y": 577.4921875
+      },
+      "state": "playing",
+      "video": {
+        "height": 182.25,
+        "width": 324,
+        "x": 25.5,
+        "y": 291.2421875
+      },
+      "videoCount": 1
+    }
+  },
+  {
+    "phase": "complete-final",
+    "size": {
+      "width": 375,
+      "height": 844
+    },
+    "data": {
+      "bodyWidth": 360,
+      "clientWidth": 360,
+      "close": {
+        "height": 44,
+        "width": 44,
+        "x": 290.5,
+        "y": 226.71875
+      },
+      "dialog": {
+        "height": 424.5546875,
+        "width": 343,
+        "x": 8.5,
+        "y": 209.71875
+      },
+      "documentWidth": 360,
+      "dpr": 1,
+      "duration": 30,
+      "innerHeight": 844,
+      "innerWidth": 375,
+      "ready": 4,
+      "select": {
+        "height": 44,
+        "width": 309,
+        "x": 25.5,
+        "y": 573.2734375
+      },
+      "state": "playing",
+      "video": {
+        "height": 173.8125,
+        "width": 309,
+        "x": 25.5,
+        "y": 295.4609375
+      },
+      "videoCount": 1
+    }
+  },
+  {
+    "phase": "complete-final",
+    "size": {
+      "width": 320,
+      "height": 740
+    },
+    "data": {
+      "bodyWidth": 305,
+      "clientWidth": 305,
+      "close": {
+        "height": 44,
+        "width": 44,
+        "x": 235.5,
+        "y": 190.1875
+      },
+      "dialog": {
+        "height": 393.6171875,
+        "width": 288,
+        "x": 8.5,
+        "y": 173.1875
+      },
+      "documentWidth": 305,
+      "dpr": 1,
+      "duration": 30,
+      "innerHeight": 740,
+      "innerWidth": 320,
+      "ready": 4,
+      "select": {
+        "height": 44,
+        "width": 254,
+        "x": 25.5,
+        "y": 505.8046875
+      },
+      "state": "playing",
+      "video": {
+        "height": 142.875,
+        "width": 254,
+        "x": 25.5,
+        "y": 258.9296875
+      },
+      "videoCount": 1
+    }
+  }
+]
