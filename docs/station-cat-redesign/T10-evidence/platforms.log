@@ -1,0 +1,27 @@
+
+> landing-site@0.1.0 test:redesign:platforms
+> node --test --test-timeout=90000 scripts/test-station-platforms.mjs scripts/test-station-platform-runtime.mjs
+
+✔ actual Worker and D1 produce all five release states, withholding every unavailable URL (3852.433125ms)
+✔ all four SSR locales keep a real HTTPS anchor plus a manual no-JS path; public pages have no full source or iframe (21.478042ms)
+✔ untrusted destination/country claims do not choose a link or change availability (7.212333ms)
+✔ all providers use verified HTTPS entries in the operator order, independent of device preference (1.144458ms)
+✔ ambiguous IDs and oversized public arrays cannot render or copy a first matching target (0.147625ms)
+✔ public status distinguishes upcoming, withdrawn, confirmed regional exclusion and unknown country without URLs (0.388ms)
+✔ four languages retain ordinary anchors and readable no-JS manual fallback, without an app-open claim (0.476875ms)
+✔ URL attacks, unknown note fields and withdrawn-only data never become clickable links or copy inputs (0.160209ms)
+✔ clipboard invocation happens in the gesture, only resolution claims success, denial or absence preserves manual use (0.165791ms)
+✔ sync/rejected/hanging statistics never throw or retain control of navigation and only receive public dimensions (2.287542ms)
+✔ delegated native click with offline observer does not prevent navigation; copy denial selects its readable URL (0.378041ms)
+✔ a late clipboard result cannot overwrite a newer attempt or an unloaded page (0.213458ms)
+✔ real local queries preserve operator order and never forward unpublished/withdrawn/unverified targets (44.040125ms)
+✔ country comes only from trusted cf; a spoofed country header cannot enable a regional anchor (30.656625ms)
+✔ withdrawal changes the next projection and no raw platform URL remains in the DTO or HTML (33.506625ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4093.721916

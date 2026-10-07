@@ -1,0 +1,26 @@
+✔ complete built site and production-date Worker keep native music asset routing closed (441.659375ms)
+✔ production Worker dispatch is default closed; actual empty D1 fails readiness without automatic DDL (429.532208ms)
+✔ explicit local fixture migration enables published queries only, with a separate reader binding and actual ledger (1787.747083ms)
+✔ native D1 publication pointer coexists with drafts; clip/game/home DTO and actual R2 streaming agree (24.830709ms)
+✔ native guest preview is independent; generic assets cannot deliver audio; private full responses use real existing membership (33.538416ms)
+✔ actual R2 replacement and rights revocation are visible immediately, including conditional requests and home (43.437625ms)
+✔ old UUID catalog and real game runtime address still dispatch separately; no new event writes (22.035667ms)
+✔ each incomplete flag pair preserves actual legacy HTTP behavior; internal templates cannot be requested directly, including aliases and encoded paths (3752.444125ms)
+✔ local metadata uses the actual loopback origin while public canonical and noindex remain controlled (30.242458ms)
+✔ actual Astro shell receives server-rendered songs and bounded bootstrap; metadata and language links describe the real route (19.890625ms)
+✔ HEAD/method/failure behavior is bounded and no missing binding or asset is provisioned (27.991583ms)
+✔ roots and detail normalize aliases/slashes, remove credentials, preserve only single valid campaign values (6.29475ms)
+✔ mapped old UUID and slug share destinations are temporary; collection, unknown UUID and unknown descendants retain the old handler (18.948583ms)
+✔ actual SQL finite paging and title/artist searches agree with SSR empty and long-title states (28.5465ms)
+✔ real synthetic cover/audio bytes match sealed metadata, Range is correct, and promotion preview is an independent source (24.269917ms)
+✔ full playback hint is not an authorization; guest, ordinary account, expired member and active member still use old policy (27.882458ms)
+✔ SSR title/story/bootstrap treat operator markup as text, not executable HTML (28.568333ms)
+✔ preview-off, no-audio and revoked-rights states remove play/resource UI immediately; no new events or route migrations are written (74.97825ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4221.760375

@@ -7,6 +7,7 @@ import { indexStationMusicTracks } from './musicPlayback.js';
 import { requestStationMusic } from './musicRequest.js';
 import { getStationMusicSession, rememberStationMusicTrigger, stationMusicNotice } from './musicPlayerView.js';
 import { readMusicResponse } from './musicResponse.js';
+import { mountStationPlatforms } from './platformClient.js';
 
 export function mountStationMusic() {
   const root = document.querySelector('[data-sc-music-page]'), bootstrap = document.getElementById('sc-music-bootstrap');
@@ -20,6 +21,7 @@ export function mountStationMusic() {
   const tracks = new Map(), session = getStationMusicSession(model.locale);
   if (!session) { delete root.dataset.mounted; return () => {}; }
   const local = session.local;
+  const disposePlatforms = mountStationPlatforms(root, model.locale);
   const $ = selector => document.querySelector(selector);
   let disposed = false, catalogGeneration = 0, catalogRequest, pendingCatalog = null;
   const listen = (target, type, callback, options = {}) => target?.addEventListener(type, callback, { ...options, signal: listeners.signal });
@@ -168,7 +170,7 @@ export function mountStationMusic() {
   function dispose() {
     if (disposed) return; disposed = true; catalogGeneration++; session.cancelPending();
     requests.forEach(controller => controller.abort()); requests.clear(); listeners.abort();
-    localSubscription(); playerSubscription(); delete root.dataset.mounted;
+    disposePlatforms(); localSubscription(); playerSubscription(); delete root.dataset.mounted;
   }
   listen(window, 'pagehide', event => {
     catalogGeneration++; session.suspend(); requests.forEach(controller => controller.abort());

@@ -1,0 +1,375 @@
+
+> landing-site@0.1.0 build
+> npm run build:novel-payment-config && astro build
+
+
+> landing-site@0.1.0 build:novel-payment-config
+> node scripts/build-novel-payment-config.mjs
+
+Content directory is missing and ALLOW_EMPTY_SERIAL_CONTENT=1 is set: src/content/serials
+Content directory is missing and ALLOW_EMPTY_SERIAL_CONTENT=1 is set: src/content/serialChapters
+Generated src/generated/novelPaymentConfig.js
+Generated src/generated/protectedSerialContent.js
+Generated .generated/protected-serial-content/manifest.json
+20:34:06 [content] Syncing content
+20:34:06 [WARN] [glob-loader] The base directory "/Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/src/content/serials/" does not exist.
+20:34:06 [WARN] [glob-loader] The base directory "/Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/src/content/serialChapters/" does not exist.
+20:34:06 [content] Synced content
+20:34:06 [types] Generated 108ms
+20:34:06 [build] output: "static"
+20:34:06 [build] mode: "static"
+20:34:06 [build] directory: /Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/dist/
+20:34:06 [build] Collecting build info...
+20:34:06 [build] ✓ Completed in 125ms.
+20:34:06 [build] Building static entrypoints...
+20:34:08 [vite] ✓ built in 1.75s
+20:34:08 [build] ✓ Completed in 1.76s.
+
+ building client (vite) 
+20:34:08 [vite] transforming...
+20:34:08 [vite] ✓ 139 modules transformed.
+20:34:09 [vite] rendering chunks...
+20:34:09 [vite] computing gzip size...
+20:34:09 [vite] dist/_astro/musicWavWorker-C01nK5QT.js                                             3.92 kB
+20:34:09 [vite] dist/_astro/musicWav.9BdbpA8K.js                                                   0.22 kB │ gzip:  0.20 kB
+20:34:09 [vite] dist/_astro/LanguageSwitcher.astro_astro_type_script_index_0_lang.0w10PJ6o.js      0.28 kB │ gzip:  0.22 kB
+20:34:09 [vite] dist/_astro/pagePaths.Adk3jqEz.js                                                  0.82 kB │ gzip:  0.48 kB
+20:34:09 [vite] dist/_astro/routes.aEcEp9VA.js                                                     1.06 kB │ gzip:  0.52 kB
+20:34:09 [vite] dist/_astro/readerSessionEvents.w3_YrQMX.js                                        1.24 kB │ gzip:  0.67 kB
+20:34:09 [vite] dist/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.K1Wc2ITw.js       1.49 kB │ gzip:  0.65 kB
+20:34:09 [vite] dist/_astro/musicWavClient.B5OSgJBY.js                                             1.62 kB │ gzip:  1.03 kB
+20:34:09 [vite] dist/_astro/policy.BI0F0d4k.js                                                     1.74 kB │ gzip:  0.67 kB
+20:34:09 [vite] dist/_astro/navigation.-iYZuZPj.js                                                 2.08 kB │ gzip:  1.01 kB
+20:34:09 [vite] dist/_astro/musicPlayerCatalog.CpHbaAqm.js                                         5.62 kB │ gzip:  1.95 kB
+20:34:09 [vite] dist/_astro/membership-refunds.astro_astro_type_script_index_0_lang.D5AVE-_i.js    7.88 kB │ gzip:  3.49 kB
+20:34:09 [vite] dist/_astro/musicAdminClient.DZjb8Vic.js                                           8.79 kB │ gzip:  4.60 kB
+20:34:09 [vite] dist/_astro/index.astro_astro_type_script_index_0_lang.CAs18f6E.js                 9.32 kB │ gzip:  4.30 kB
+20:34:09 [vite] dist/_astro/featured.astro_astro_type_script_index_0_lang.CD52UChh.js              9.91 kB │ gzip:  4.33 kB
+20:34:09 [vite] dist/_astro/musicLocalData.CrQj7ZwP.js                                            12.55 kB │ gzip:  5.03 kB
+20:34:09 [vite] dist/_astro/musicAlbumBatch.D_0hL1LF.js                                           14.16 kB │ gzip:  5.69 kB
+20:34:09 [vite] dist/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js         15.36 kB │ gzip:  5.28 kB
+20:34:09 [vite] dist/_astro/collections.astro_astro_type_script_index_0_lang.BDNE4DA4.js          26.09 kB │ gzip:  9.69 kB
+20:34:09 [vite] dist/_astro/musicMessages.CEK1zCWu.js                                             35.42 kB │ gzip: 13.29 kB
+20:34:09 [vite] dist/_astro/MusicShell.astro_astro_type_script_index_0_lang.3Cj_8LVu.js           35.74 kB │ gzip: 13.86 kB
+20:34:09 [vite] dist/_astro/music.astro_astro_type_script_index_0_lang.Di2tC65X.js                37.61 kB │ gzip: 14.67 kB
+20:34:09 [vite] dist/_astro/ReaderLibraryPage.astro_astro_type_script_index_0_lang.DuFphAyF.js    48.73 kB │ gzip: 16.35 kB
+20:34:09 [vite] dist/_astro/articles.astro_astro_type_script_index_0_lang.BcPitxtp.js            139.70 kB │ gzip: 58.17 kB
+20:34:09 [vite] dist/_astro/MusicPlayer.astro_astro_type_script_index_0_lang.Cqp0zIpX.js         169.09 kB │ gzip: 63.39 kB
+20:34:09 [vite] ✓ built in 370ms
+
+ generating static routes 
+20:34:09 ▶ src/pages/404.astro
+20:34:09   └─ /404.html (+3ms) 
+20:34:09 ▶ src/pages/about.astro
+20:34:09   └─ /about/index.html (+1ms) 
+20:34:09 ▶ src/pages/admin/articles.astro
+20:34:09   └─ /admin/articles/index.html (+2ms) 
+20:34:09 ▶ src/pages/admin/membership-refunds.astro
+20:34:09   └─ /admin/membership-refunds/index.html (+0ms) 
+20:34:09 ▶ src/pages/admin/music/collections/upload/index.astro
+20:34:09   └─ /admin/music/collections/upload/index.html (+1ms) 
+20:34:09 ▶ src/pages/admin/music/collections.astro
+20:34:09   └─ /admin/music/collections/index.html (+1ms) 
+20:34:09 ▶ src/pages/admin/music/featured.astro
+20:34:09   └─ /admin/music/featured/index.html (+0ms) 
+20:34:09 ▶ src/pages/admin/music.astro
+20:34:09   └─ /admin/music/index.html (+1ms) 
+20:34:09 ▶ src/pages/admin/waitlist.astro
+20:34:09   └─ /admin/waitlist/index.html (+1ms) 
+20:34:09 ▶ src/pages/admin.astro
+20:34:09   └─ /admin/index.html (+0ms) 
+20:34:09 ▶ src/pages/admin-v2/index.astro
+20:34:09   └─ /admin-v2/index.html (+4ms) 
+20:34:09 ▶ src/pages/android.astro
+20:34:09   └─ /android/index.html (+0ms) 
+20:34:09 ▶ src/pages/devlog/[slug].astro
+20:34:09   ├─ /devlog/2026-05-17-snapcopy-testing/index.html (+1ms) 
+20:34:09   ├─ /devlog/2026-05-17-station-cat-homepage/index.html (+0ms) 
+20:34:09   ├─ /devlog/2026-05-19-snapcopy-v1-4-devlog/index.html (+1ms) 
+20:34:09   ├─ /devlog/2026-05-31-snapcopy-v1-64-devlog/index.html (+0ms) 
+20:34:09   ├─ /devlog/2026-06-14-simplecut-pro-user-first-video-editing/index.html (+0ms) 
+20:34:09   └─ /devlog/2026-06-21-station-cat-serial-fiction-channel/index.html (+0ms) 
+20:34:09 ▶ src/pages/devlog/index.astro
+20:34:09   └─ /devlog/index.html (+1ms) 
+20:34:09 ▶ src/pages/download.astro
+20:34:09   └─ /download/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/404.astro
+20:34:09   └─ /en/404/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/apps/caption-ai/android.astro
+20:34:09   └─ /en/apps/caption-ai/android/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/apps/caption-ai/download.astro
+20:34:09   └─ /en/apps/caption-ai/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/apps/caption-ai/privacy.astro
+20:34:09   └─ /en/apps/caption-ai/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/apps/caption-ai/support.astro
+20:34:09   └─ /en/apps/caption-ai/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/apps/caption-ai/terms.astro
+20:34:09   └─ /en/apps/caption-ai/terms/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/apps/caption-ai/index.astro
+20:34:09   └─ /en/apps/caption-ai/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/apps/cat-life-game/index.astro
+20:34:09   └─ /en/apps/cat-life-game/index.html (+2ms) 
+20:34:09 ▶ src/pages/en/apps/mindbudget/download.astro
+20:34:09   └─ /en/apps/mindbudget/download/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/apps/mindbudget/privacy.astro
+20:34:09   └─ /en/apps/mindbudget/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/apps/mindbudget/support.astro
+20:34:09   └─ /en/apps/mindbudget/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/apps/mindbudget/index.astro
+20:34:09   └─ /en/apps/mindbudget/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/apps/nodepilot/index.astro
+20:34:09   └─ /en/apps/nodepilot/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/apps/novelforge-ai/download.astro
+20:34:09   └─ /en/apps/novelforge-ai/download/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/apps/novelforge-ai/index.astro
+20:34:09   └─ /en/apps/novelforge-ai/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/apps/privatepinyin/download.astro
+20:34:09   └─ /en/apps/privatepinyin/download/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/apps/privatepinyin/privacy.astro
+20:34:09   └─ /en/apps/privatepinyin/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/apps/privatepinyin/support.astro
+20:34:09   └─ /en/apps/privatepinyin/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/apps/privatepinyin/index.astro
+20:34:09   └─ /en/apps/privatepinyin/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/apps/simplecut-pro/download.astro
+20:34:09   └─ /en/apps/simplecut-pro/download/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/apps/simplecut-pro/index.astro
+20:34:09   └─ /en/apps/simplecut-pro/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/apps/index.astro
+20:34:09   └─ /en/apps/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/library/index.astro
+20:34:09   └─ /en/library/index.html (+2ms) 
+20:34:09 ▶ src/pages/en/music/index.astro
+20:34:09   └─ /en/music/index.html (+2ms) 
+20:34:09 ▶ src/pages/en/points.astro
+20:34:09   └─ /en/points/index.html (+1ms) 
+20:34:09 ▶ src/pages/en/privacy.astro
+20:34:09   └─ /en/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/support.astro
+20:34:09   └─ /en/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/terms.astro
+20:34:09   └─ /en/terms/index.html (+0ms) 
+20:34:09 ▶ src/pages/en/index.astro
+20:34:09   └─ /en/index.html (+1ms) 
+20:34:09 ▶ src/pages/ja/404.astro
+20:34:09   └─ /ja/404/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/caption-ai/android.astro
+20:34:09   └─ /ja/apps/caption-ai/android/index.html (+1ms) 
+20:34:09 ▶ src/pages/ja/apps/caption-ai/download.astro
+20:34:09   └─ /ja/apps/caption-ai/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/caption-ai/privacy.astro
+20:34:09   └─ /ja/apps/caption-ai/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/caption-ai/support.astro
+20:34:09   └─ /ja/apps/caption-ai/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/caption-ai/terms.astro
+20:34:09   └─ /ja/apps/caption-ai/terms/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/caption-ai/index.astro
+20:34:09   └─ /ja/apps/caption-ai/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/cat-life-game/index.astro
+20:34:09   └─ /ja/apps/cat-life-game/index.html (+1ms) 
+20:34:09 ▶ src/pages/ja/apps/mindbudget/download.astro
+20:34:09   └─ /ja/apps/mindbudget/download/index.html (+1ms) 
+20:34:09 ▶ src/pages/ja/apps/mindbudget/privacy.astro
+20:34:09   └─ /ja/apps/mindbudget/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/mindbudget/support.astro
+20:34:09   └─ /ja/apps/mindbudget/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/mindbudget/index.astro
+20:34:09   └─ /ja/apps/mindbudget/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/nodepilot/index.astro
+20:34:09   └─ /ja/apps/nodepilot/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/novelforge-ai/download.astro
+20:34:09   └─ /ja/apps/novelforge-ai/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/novelforge-ai/index.astro
+20:34:09   └─ /ja/apps/novelforge-ai/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/privatepinyin/download.astro
+20:34:09   └─ /ja/apps/privatepinyin/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/privatepinyin/privacy.astro
+20:34:09   └─ /ja/apps/privatepinyin/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/privatepinyin/support.astro
+20:34:09   └─ /ja/apps/privatepinyin/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/privatepinyin/index.astro
+20:34:09   └─ /ja/apps/privatepinyin/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/simplecut-pro/download.astro
+20:34:09   └─ /ja/apps/simplecut-pro/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/simplecut-pro/index.astro
+20:34:09   └─ /ja/apps/simplecut-pro/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/apps/index.astro
+20:34:09   └─ /ja/apps/index.html (+1ms) 
+20:34:09 ▶ src/pages/ja/library/index.astro
+20:34:09   └─ /ja/library/index.html (+1ms) 
+20:34:09 ▶ src/pages/ja/music/index.astro
+20:34:09   └─ /ja/music/index.html (+1ms) 
+20:34:09 ▶ src/pages/ja/points.astro
+20:34:09   └─ /ja/points/index.html (+1ms) 
+20:34:09 ▶ src/pages/ja/privacy.astro
+20:34:09   └─ /ja/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/ja/terms.astro
+20:34:09   └─ /ja/terms/index.html (+2ms) 
+20:34:09 ▶ src/pages/ja/index.astro
+20:34:09   └─ /ja/index.html (+1ms) 
+20:34:09 ▶ src/pages/music/site-shell/[locale].astro
+20:34:09   ├─ /music/site-shell/zh-Hant/index.html (+2ms) 
+20:34:09   ├─ /music/site-shell/zh-Hans/index.html (+1ms) 
+20:34:09   ├─ /music/site-shell/en/index.html (+1ms) 
+20:34:09   └─ /music/site-shell/ja/index.html (+1ms) 
+20:34:09 ▶ src/pages/music/index.astro
+20:34:09   └─ /music/index.html (+1ms) 
+20:34:09 ▶ src/pages/novel/[bookId]/chapter/[chapterId].astro
+The collection "serials" does not exist or is empty. Please check your content config file for errors.
+The collection "serialChapters" does not exist or is empty. Please check your content config file for errors.
+20:34:09 ▶ src/pages/novel/[bookId]/index.astro
+The collection "serials" does not exist or is empty. Please check your content config file for errors.
+20:34:09 ▶ src/pages/novel/index.astro
+20:34:09   └─ /novel/index.htmlThe collection "serials" does not exist or is empty. Please check your content config file for errors.
+ (+1ms) 
+20:34:09 ▶ src/pages/zh-hans/404.astro
+20:34:09   └─ /zh-hans/404/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/caption-ai/android.astro
+20:34:09   └─ /zh-hans/apps/caption-ai/android/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/caption-ai/download.astro
+20:34:09   └─ /zh-hans/apps/caption-ai/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/caption-ai/privacy.astro
+20:34:09   └─ /zh-hans/apps/caption-ai/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/caption-ai/support.astro
+20:34:09   └─ /zh-hans/apps/caption-ai/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/caption-ai/terms.astro
+20:34:09   └─ /zh-hans/apps/caption-ai/terms/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/caption-ai/index.astro
+20:34:09   └─ /zh-hans/apps/caption-ai/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/cat-life-game/index.astro
+20:34:09   └─ /zh-hans/apps/cat-life-game/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/mindbudget/download.astro
+20:34:09   └─ /zh-hans/apps/mindbudget/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/mindbudget/privacy.astro
+20:34:09   └─ /zh-hans/apps/mindbudget/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/mindbudget/support.astro
+20:34:09   └─ /zh-hans/apps/mindbudget/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/mindbudget/index.astro
+20:34:09   └─ /zh-hans/apps/mindbudget/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/nodepilot/index.astro
+20:34:09   └─ /zh-hans/apps/nodepilot/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/novelforge-ai/download.astro
+20:34:09   └─ /zh-hans/apps/novelforge-ai/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/novelforge-ai/index.astro
+20:34:09   └─ /zh-hans/apps/novelforge-ai/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/privatepinyin/download.astro
+20:34:09   └─ /zh-hans/apps/privatepinyin/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/privatepinyin/privacy.astro
+20:34:09   └─ /zh-hans/apps/privatepinyin/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/privatepinyin/support.astro
+20:34:09   └─ /zh-hans/apps/privatepinyin/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/privatepinyin/index.astro
+20:34:09   └─ /zh-hans/apps/privatepinyin/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/simplecut-pro/download.astro
+20:34:09   └─ /zh-hans/apps/simplecut-pro/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/simplecut-pro/index.astro
+20:34:09   └─ /zh-hans/apps/simplecut-pro/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/apps/index.astro
+20:34:09   └─ /zh-hans/apps/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hans/library/index.astro
+20:34:09   └─ /zh-hans/library/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hans/music/index.astro
+20:34:09   └─ /zh-hans/music/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hans/points.astro
+20:34:09   └─ /zh-hans/points/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hans/privacy.astro
+20:34:09   └─ /zh-hans/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/terms.astro
+20:34:09   └─ /zh-hans/terms/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hans/index.astro
+20:34:09   └─ /zh-hans/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hant/404.astro
+20:34:09   └─ /zh-hant/404/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/caption-ai/android.astro
+20:34:09   └─ /zh-hant/apps/caption-ai/android/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/caption-ai/download.astro
+20:34:09   └─ /zh-hant/apps/caption-ai/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/caption-ai/privacy.astro
+20:34:09   └─ /zh-hant/apps/caption-ai/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/caption-ai/support.astro
+20:34:09   └─ /zh-hant/apps/caption-ai/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/caption-ai/terms.astro
+20:34:09   └─ /zh-hant/apps/caption-ai/terms/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/caption-ai/index.astro
+20:34:09   └─ /zh-hant/apps/caption-ai/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/cat-life-game/index.astro
+20:34:09   └─ /zh-hant/apps/cat-life-game/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/mindbudget/download.astro
+20:34:09   └─ /zh-hant/apps/mindbudget/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/mindbudget/privacy.astro
+20:34:09   └─ /zh-hant/apps/mindbudget/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/mindbudget/support.astro
+20:34:09   └─ /zh-hant/apps/mindbudget/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/mindbudget/index.astro
+20:34:09   └─ /zh-hant/apps/mindbudget/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/nodepilot/index.astro
+20:34:09   └─ /zh-hant/apps/nodepilot/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/novelforge-ai/download.astro
+20:34:09   └─ /zh-hant/apps/novelforge-ai/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/novelforge-ai/index.astro
+20:34:09   └─ /zh-hant/apps/novelforge-ai/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/privatepinyin/download.astro
+20:34:09   └─ /zh-hant/apps/privatepinyin/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/privatepinyin/privacy.astro
+20:34:09   └─ /zh-hant/apps/privatepinyin/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/privatepinyin/support.astro
+20:34:09   └─ /zh-hant/apps/privatepinyin/support/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/privatepinyin/index.astro
+20:34:09   └─ /zh-hant/apps/privatepinyin/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/simplecut-pro/download.astro
+20:34:09   └─ /zh-hant/apps/simplecut-pro/download/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/simplecut-pro/index.astro
+20:34:09   └─ /zh-hant/apps/simplecut-pro/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/apps/index.astro
+20:34:09   └─ /zh-hant/apps/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hant/library/index.astro
+20:34:09   └─ /zh-hant/library/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hant/points.astro
+20:34:09   └─ /zh-hant/points/index.html (+1ms) 
+20:34:09 ▶ src/pages/zh-hant/privacy.astro
+20:34:09   └─ /zh-hant/privacy/index.html (+0ms) 
+20:34:09 ▶ src/pages/zh-hant/terms.astro
+20:34:09   └─ /zh-hant/terms/index.html (+0ms) 
+20:34:09 ▶ src/pages/[locale]/devlog/[slug].astro
+20:34:09   ├─ /en/devlog/2026-05-17-snapcopy-testing/index.html (+1ms) 
+20:34:09   ├─ /zh-hans/devlog/2026-05-17-SnapCopy-testflight-beta.md/index.html (+1ms) 
+20:34:09   ├─ /ja/devlog/2026-05-17-snapcopy-testing/index.html (+1ms) 
+20:34:09   ├─ /en/devlog/2026-05-17-station-cat-homepage/index.html (+0ms) 
+20:34:09   ├─ /ja/devlog/2026-05-17-station-cat-homepage/index.html (+0ms) 
+20:34:09   ├─ /zh-hans/devlog/2026-05-17-station-cat-homepage/index.html (+0ms) 
+20:34:09   ├─ /en/devlog/2026-05-19-snapcopy-v1-4-devlog/index.html (+0ms) 
+20:34:09   ├─ /zh-hans/devlog/2026-05-17-snapcopy-testing/index.html (+0ms) 
+20:34:09   ├─ /ja/devlog/2026-05-19-snapcopy-v1-4-devlog/index.html (+0ms) 
+20:34:09   ├─ /zh-hans/devlog/2026-05-19-snapcopy-v1-4-devlog/index.html (+0ms) 
+20:34:09   ├─ /zh-hans/devlog/2026-05-31-snapcopy-v1-64-devlog/index.html (+0ms) 
+20:34:09   ├─ /ja/devlog/2026-05-31-snapcopy-v1-64-devlog/index.html (+0ms) 
+20:34:09   ├─ /en/devlog/2026-06-14-simplecut-pro-user-first-video-editing/index.html (+0ms) 
+20:34:09   ├─ /ja/devlog/2026-06-14-simplecut-pro-user-first-video-editing/index.html (+0ms) 
+20:34:09   ├─ /en/devlog/2026-05-31-snapcopy-v1-64-devlog/index.html (+0ms) 
+20:34:09   └─ /zh-hans/devlog/2026-06-14-simplecut-pro-user-first-video-editing/index.html (+0ms) 
+20:34:09 ▶ src/pages/[locale]/devlog/index.astro
+20:34:09   ├─ /zh-hans/devlog/index.html (+3ms) 
+20:34:09   ├─ /en/devlog/index.html (+1ms) 
+20:34:09   └─ /ja/devlog/index.html (+1ms) 
+20:34:09 ▶ src/pages/index.astro
+20:34:09   └─ /index.html (+1ms) 
+20:34:09 ✓ Completed in 152ms.
+
+ generating optimized images 
+20:34:09   ▶ /_astro/vip-badge.C99Fh2OO_2mebGa.webp (reused cache entry) (+0ms) (1/3)
+20:34:09   ▶ /_astro/vip-badge.C99Fh2OO_na9Ih.webp (reused cache entry) (+0ms) (2/3)
+20:34:09   ▶ /_astro/vip-badge.C99Fh2OO_N0rVQ.webp (reused cache entry) (+0ms) (3/3)
+20:34:09 ✓ Completed in 1ms.
+
+20:34:09 [build] 157 page(s) built in 2.48s
+20:34:09 [build] Complete!
+
+> landing-site@0.1.0 postbuild
+> node scripts/generate-static-redirects.mjs && node scripts/generate-sitemap.mjs && node scripts/test-built-site-foundation.mjs
+
+Static trailing-slash redirects are resolved by the Worker after asset lookup.
+Generated 4 localized 404.html fallbacks.
+Generated sitemap.xml with 111 public routes and lastmod 2026-10-07.
+Built site foundation tests passed.
+Built music notices and scoped footer links passed for all four locales.
+Built music launch entry checks passed for all four locales.

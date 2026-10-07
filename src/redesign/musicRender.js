@@ -1,6 +1,8 @@
 import { musicCopy, providerName } from './musicCopy.js';
 import { stationHref } from './routes.js';
 import { contentBase, uuid, slug, positive, plain, platformUrl, localizedPath } from './publicValidation.js';
+import { stationPlatformLinks, stationPlatformNotes } from './platformView.js';
+import { renderPlatformBackup } from './platformRender.js';
 
 export const escapeMusicHtml = value => String(value ?? '').replace(/[&<>"']/g,
   c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -35,12 +37,11 @@ function favorite(track, copy) {
 }
 export function musicPlatforms(track, locale) {
   const copy = musicCopy[locale];
-  const links = Array.isArray(track.platforms) ? track.platforms.slice(0, 25).filter(link =>
-    link.status === 'live' && providerName(link.provider, locale) && platformUrl(link.href, link.provider)) : [];
-  if (!links.length) return `<p class="sc-music-muted sc-platform-pending">${copy.pending}</p>`;
+  const links = stationPlatformLinks(track), notes = stationPlatformNotes(track.platformAvailability);
+  if (!links.length && !notes.length) return `<p class="sc-music-muted sc-platform-pending">${track.platformAvailability?.state === 'removed' ? copy.platformUnavailable : copy.pending}</p>`;
   const glyph = provider => ({ apple_music: 'apple', youtube: 'youtube', spotify: 'spotify', netease: 'music', qishui: 'headphones' }[provider]);
-  return `<section class="sc-song-platforms" aria-label="${copy.platforms}"><h2>${copy.platforms}</h2><div>${links.map(link =>
-    `<a href="${e(platformUrl(link.href, link.provider))}" target="_blank" rel="noopener noreferrer" class="sc-platform-link" aria-label="${e(copy.visit + ' ' + providerName(link.provider, locale))}">${musicIcon(glyph(link.provider))}<span>${e(providerName(link.provider, locale))}</span>${musicIcon('arrow')}</a>`).join('')}</div></section>`;
+  return `<section class="sc-song-platforms" aria-label="${copy.platforms}"><h2>${links.length ? copy.platforms : copy.platformInfo}</h2><div>${links.map(link =>
+    `<a href="${e(link.href)}" target="_blank" rel="noopener noreferrer" class="sc-platform-link" data-sc-platform-link data-track-id="${e(track.id)}" data-link-id="${e(link.id)}" data-provider="${link.provider}" aria-label="${e(copy.visit + ' ' + providerName(link.provider, locale))}">${musicIcon(glyph(link.provider))}<span>${e(providerName(link.provider, locale))}</span>${musicIcon('arrow')}</a>`).join('')}</div>${notes.length ? '<p class="sc-platform-notes">' + notes.map(note => '<span>' + e(providerName(note.provider, locale)) + ' · ' + e(({ planned: copy.platformPlanned, region_unavailable: copy.platformRegion, region_unconfirmed: copy.platformRegionUnknown })[note.status]) + '</span>').join('') + '</p>' : ''}${renderPlatformBackup(track, locale)}</section>`;
 }
 function previewButton(track, copy, { compact = false } = {}) {
   if (!slug(track.slug) || !positive(track.revision) || !positive(track.preview?.revision) || !positive(track.preview?.durationMs) ||

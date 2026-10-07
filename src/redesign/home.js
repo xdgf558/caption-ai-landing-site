@@ -1,4 +1,5 @@
 import { stationHref, stationLocales } from './routes.js';
+import { platformUrl } from './publicValidation.js';
 
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
@@ -87,10 +88,12 @@ export function buildHomeView({ config, content, locale = 'zh-Hant', now = new D
   const promotion = get(promotions, config.featuredTrackId);
   const primary = track(config.featuredTrackId);
   if (primary && published(promotion, clock) && integer(promotion.revision) && promotion.enabled === true) {
+    const hrefFor = link => isFixture && /^\/__home-fixture\/platform\/(?:netease|qishui|apple_music|youtube|spotify)\/$/.test(link.url)
+      ? link.url : platformUrl(link.url, link.provider);
     const links = ids(promotion.selectedPlatformLinkIds).map(id => get(platforms, id)).filter(link =>
       link && link.trackId === primary.id && Object.hasOwn(providers, link.provider) && link.status === 'live' &&
-      time(link.verifiedAt) && Date.parse(link.verifiedAt) <= clock && publicUrl(link.url, isFixture, 'platform'))
-      .map(link => ({ id: link.id, provider: link.provider, icon: providers[link.provider], href: publicUrl(link.url, isFixture, 'platform') }));
+      time(link.verifiedAt) && Date.parse(link.verifiedAt) <= clock && hrefFor(link))
+      .map(link => ({ id: link.id, provider: link.provider, icon: providers[link.provider], href: hrefFor(link), status: 'live', verifiedAt: link.verifiedAt }));
     const asset = get(assets, promotion.previewAssetId);
     const previewReady = promotion.previewEnabled === true && asset && asset.ownerId === primary.id &&
       asset.kind === 'preview' && asset.state === 'ready' && asset.visibility === 'public' && asset.rightsConfirmed === true &&

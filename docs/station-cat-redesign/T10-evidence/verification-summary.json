@@ -1,0 +1,373 @@
+{
+  "task": "T10 发行平台入口与降级",
+  "recordedAt": "2026-10-07T12:35:20.846079+00:00",
+  "branch": "codex/station-cat-redesign-t10",
+  "baseCommit": "7e46ed374597cba3365b10c2bd4dc09e2db51b7a",
+  "sourceSnapshot": "Uncommitted T10 working tree immediately before the PR commit. Source hashes bind tested implementation; submitted PR head and its independent hosted CI must be verified separately. Earlier regression phases are explicitly retained.",
+  "hostedCI": {
+    "T09ApprovedHead": "00fe1096ac3b2452d7b1a664c0fc0c45b8336585",
+    "T09Result": "success",
+    "T09Evidence": "T09-approved-head-ci.json",
+    "T09MergeEvidence": "T09-merge-result.json",
+    "T10Result": "not established at capture; local and T09 results do not substitute for T10 exact-head CI",
+    "T10Placement": "test:redesign:platforms runs after Astro Build because real Worker page tests require dist music shells"
+  },
+  "commands": [
+    {
+      "command": "npm run test:redesign:platforms",
+      "log": "platforms.log",
+      "result": "passed",
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "phase": "after final frontend ISO guard, nonvisual home fixture-marker correction, and final production build"
+    },
+    {
+      "command": "node --test --test-timeout=90000 scripts/test-station-content-public.mjs scripts/test-station-music-pages.mjs scripts/test-station-redesign-home.mjs",
+      "log": "public-and-pages.log",
+      "result": "passed",
+      "tests": 63,
+      "passed": 63,
+      "failed": 0,
+      "phase": "before final frontend ISO-prefix guard; not relabeled as a final-build rerun"
+    },
+    {
+      "command": "node --test --test-timeout=90000 scripts/test-station-content-runtime.mjs scripts/test-station-music-runtime.mjs scripts/test-music-production-assets.mjs",
+      "log": "worker-runtime.log",
+      "result": "passed",
+      "tests": 18,
+      "passed": 18,
+      "failed": 0,
+      "phase": "before final frontend ISO-prefix guard; includes one prior closed-production package check"
+    },
+    {
+      "command": "node --test scripts/test-music-production-assets.mjs",
+      "log": "closed-production-assets.log",
+      "result": "passed",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "phase": "after final build; repeated closed-production check reported separately"
+    },
+    {
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "log": "build.log",
+      "result": "passed",
+      "pages": 157,
+      "sitemapPublicRoutes": 111,
+      "limitation": "Local empty-serial-body build; not a production package or deployment."
+    },
+    {
+      "command": "node scripts/build-music-staging-assets.mjs && node scripts/check-music-staging-assets.mjs",
+      "log": "staging-assets.log",
+      "result": "passed",
+      "pages": 8,
+      "exactDependencies": 34,
+      "phase": "regenerated after final build"
+    },
+    {
+      "command": "npm run build:redesign:preview",
+      "log": "home-preview-build.log",
+      "result": "passed",
+      "pages": 85,
+      "phase": "final source; isolated home fixture output only",
+      "limitation": "Compiles normal shared component but previews fixture home only; no normal-home browser interaction or production mount claim."
+    }
+  ],
+  "browser": {
+    "runtime": "Codex IAB tab 5; actual compiled Worker; temporary local D1/R2; loopback GET/HEAD; anonymous; outbound runtime network disabled",
+    "url": "http://127.0.0.1:4208/music/tracks/local-sample-1/",
+    "optIn": "STATION_MUSIC_PREVIEW_PLATFORM_CASES=1",
+    "observations": "browser-observations.json",
+    "viewports": "viewport-measurements.json",
+    "screenshots": "image-metadata.json",
+    "qa": "design-qa.md",
+    "console": "browser-console.json",
+    "actualInteractions": [
+      "five availability states",
+      "four locales",
+      "keyboard Enter expand",
+      "keyboard Enter clipboard resolved success",
+      "readonly URL select-all"
+    ],
+    "externalPlatformLinksClicked": false,
+    "realReleaseURLs": false,
+    "realDevice": false,
+    "VoiceOver": false,
+    "statisticsFaults": "Controlled optional observer throws, rejection and hanging Promise only; no T18 endpoint or production fault claim.",
+    "clipboardDenied": "Controlled test doubles only; actual IAB verified a successful copy and manual field selection.",
+    "noJavaScript": "SSR native details/readable input contract; no actual browser-JS disabling experiment.",
+    "homeComponent": "Normal-home helper tightened and shared backup component compiled by independent 85-page home preview build; internal fixture links omit observer/copy controls. Production home is unmounted and normal-home browser interaction unverified.",
+    "temporaryViewportReset": true
+  },
+  "isolation": {
+    "remoteMigrationExecuted": false,
+    "productionFlagsEnabled": false,
+    "productionDeployed": false,
+    "oldEntriesRetired": false,
+    "accountCleanupEnabled": false,
+    "realPromotionChosen": false,
+    "newAnalyticsCollectorInstalled": false,
+    "appWakeupInstalled": false,
+    "nativeCloudMusicClaimed": false,
+    "schema0012UnchangedFromBase": true,
+    "schema0012": {
+      "path": "migrations/0012_reader_totp_credentials.sql",
+      "bytes": 646,
+      "sha256": "c1eeb055a807f5a511e46ccd618fdcbd4d5f717c0ea7d3c1b1c4d5bfc9666b2a"
+    }
+  },
+  "knownFollowups": [
+    "Actual platform release URLs, promotion and video remain user pending.",
+    "Production schema/bindings/resources and remote cache withdrawal remain unverified.",
+    "Actual iOS/Android/platform/WeChat in-app browsers require subsequent manual verification; HTTPS/copy does not promise app launch.",
+    "Already-loaded pages do not subscribe to operator withdrawal; next projection test is not live cache invalidation.",
+    "T09 uninterrupted full playback does not reauthorize until pause; buffered bytes may finish and 30-second preparation is session memory only.",
+    "Normal home shared backup requires browser QA after a supported home integration; sitewide navigation remains future work.",
+    "T18 analytics collector/session policy and final preview counting are not installed."
+  ],
+  "sourceFiles": {
+    ".github/workflows/ci.yml": {
+      "bytes": 3977,
+      "sha256": "2dd0bcbc7a0cfd993dde6f2ce7312f57f0a431c935e53e148839bd08a218aae7"
+    },
+    "astro.config.mjs": {
+      "bytes": 143,
+      "sha256": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f"
+    },
+    "docs/station-cat-redesign/README.md": {
+      "bytes": 12631,
+      "sha256": "82731e02c9bde125ac847f0602f2aa706b8f1ab71c8b8d6afc0df6abe8fc340f"
+    },
+    "docs/station-cat-redesign/T10-release-platforms-and-fallbacks.md": {
+      "bytes": 8987,
+      "sha256": "14b5264729e1e46a17405ade1891842d6c002dce38ae2bd34f57e5287e4f184e"
+    },
+    "package.json": {
+      "bytes": 11503,
+      "sha256": "f5d4cdec6c227c7898cfab81185aaf05a28b9789f5322496522f55c77fa3a1ec"
+    },
+    "scripts/helpers/station-music-runtime.mjs": {
+      "bytes": 3999,
+      "sha256": "0ff01f9d82f4abadde50d4a907392ce10c0870d764b0a8d5bbb554ad98df960e"
+    },
+    "scripts/helpers/station-platform-fixture.mjs": {
+      "bytes": 1442,
+      "sha256": "4ef7a1d8b7a376ece00d71ffcb216fd530a0665bdfc02797010b03f0e4b9997c"
+    },
+    "scripts/serve-station-music-preview.mjs": {
+      "bytes": 4222,
+      "sha256": "30c6d5572995a827784602a5aa379eb9c7acf663d905483b4653cce9286035d8"
+    },
+    "scripts/test-station-music-pages.mjs": {
+      "bytes": 16064,
+      "sha256": "07e78964a570b37042b4b53a1f1c7e032fdc72ca0e023cf260028f6d92de9c1b"
+    },
+    "scripts/test-station-platform-runtime.mjs": {
+      "bytes": 2877,
+      "sha256": "852025f95723691a47bfd19e5ff3a812df7f12b3805a7edf2c26cb051823da03"
+    },
+    "scripts/test-station-platforms.mjs": {
+      "bytes": 12421,
+      "sha256": "19e7888d4971ac5c439f7bc3516bb7bf2020cffbdc7cc28d301f62550ed5ee0b"
+    },
+    "scripts/test-station-redesign-home.mjs": {
+      "bytes": 9939,
+      "sha256": "f90dd146ea3c112942de094669727062d72fb6757cb0b18f62069313a3c769a0"
+    },
+    "src/components/redesign/MusicShell.astro": {
+      "bytes": 4072,
+      "sha256": "0d8572870adec2779009326c69c98c698c87d37fcb47a67a7ea746160452a205"
+    },
+    "src/components/redesign/StationBrandHome.astro": {
+      "bytes": 13599,
+      "sha256": "9ef34953ddb89b8f6062f2c2a4c862d203b4d6338eb22656819766b4ba09da00"
+    },
+    "src/redesign/home.js": {
+      "bytes": 10037,
+      "sha256": "f85ffdaa288643126aa342086d036cb165c22cef0c369f7d3c0d5651a6e06205"
+    },
+    "src/redesign/musicClient.js": {
+      "bytes": 12406,
+      "sha256": "d060017693559de9603b00dabe50366b7b97fb44478e93c3b062c609e4808e78"
+    },
+    "src/redesign/musicCopy.js": {
+      "bytes": 12994,
+      "sha256": "13fa1bc0aa1fdfb4382e9f8fabf97cb2dff9790a70b58a9c86c5e44cedc3c515"
+    },
+    "src/redesign/musicRender.js": {
+      "bytes": 13823,
+      "sha256": "3a60e356f32f9a8a17ed6dc1afe3e28209a5fe6a817f6c42afca6d2725184db1"
+    },
+    "src/redesign/musicSession.js": {
+      "bytes": 9733,
+      "sha256": "e0d8230cbf6229830337e0e14dea8fdc54aff2327411ab8e9a2c596eb4eed737"
+    },
+    "src/redesign/platformClient.js": {
+      "bytes": 2647,
+      "sha256": "74b0886be07ee8d987d4080bb6247312cc67bbb6fb40cfcdaf751f9d29ac1688"
+    },
+    "src/redesign/platformRender.js": {
+      "bytes": 1285,
+      "sha256": "a7f23f915ca3a6f1ff2398b23c3585f8e9cd170f82821e4dccdff9b7cb9302a8"
+    },
+    "src/redesign/platformView.js": {
+      "bytes": 3262,
+      "sha256": "1ec60674b9595d52e06a69c02a99264480b9d844b8ac3a53e61bac9f100f5fc4"
+    },
+    "src/redesign/platforms.css": {
+      "bytes": 1501,
+      "sha256": "3a1fbc49d341cd710bdc7465f7327546ddf543f4dd1f1bba6e36487ba38d0fac"
+    },
+    "src/redesign/publicContent.js": {
+      "bytes": 12901,
+      "sha256": "3a265125d2f62f263c9f7649b333500fdb945d61b887fcda8c56128b48fd3697"
+    },
+    "src/redesign/publicHttp.js": {
+      "bytes": 14540,
+      "sha256": "c123a49ae9bce1ea0b3f9cceebc027cc2043ea80b01f3ad070650243760fb6cf"
+    },
+    "src/redesign/publicValidation.js": {
+      "bytes": 8517,
+      "sha256": "a92471da74957ad731043ab638eab6965212e098cd84b1f2603999a03c398a09"
+    },
+    "src/worker.js": {
+      "bytes": 909036,
+      "sha256": "df81f43e823840af5bc0bbf0def9060711bf3150d16457359e795fab12a17ed5"
+    },
+    "wrangler.toml": {
+      "bytes": 3163,
+      "sha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2"
+    }
+  },
+  "evidenceFiles": {
+    "docs/station-cat-redesign/T10-evidence/T09-approved-head-ci.json": {
+      "bytes": 5990,
+      "sha256": "0011c0cda03561e3afc57734d0fc892b088263d73d22dbdbbeac3cb7f12f3fa1"
+    },
+    "docs/station-cat-redesign/T10-evidence/T09-merge-result.json": {
+      "bytes": 242,
+      "sha256": "140aa60f80442b557f4a6ad7c0d8028f4459cb00abb59c425bcf7de59b36ca55"
+    },
+    "docs/station-cat-redesign/T10-evidence/browser-console.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "docs/station-cat-redesign/T10-evidence/browser-observations.json": {
+      "bytes": 3791,
+      "sha256": "502790d18246a50a499bff7025ecf227c3484f5819ad1b85e17f0d02082e534d"
+    },
+    "docs/station-cat-redesign/T10-evidence/build.log": {
+      "bytes": 23123,
+      "sha256": "c91779d8106fba3c6370d82b8c37eebab05715377aaec1d46dd3ee4e91cd0847"
+    },
+    "docs/station-cat-redesign/T10-evidence/closed-production-assets.log": {
+      "bytes": 220,
+      "sha256": "d2a4ac88ae7ee9b64d4ca4d1574118bc4999779f9f75004c1a394e31cbcd5eeb"
+    },
+    "docs/station-cat-redesign/T10-evidence/comparison-mobile.jpg": {
+      "bytes": 106891,
+      "sha256": "2463fd36b34e6b1927347c2ed3159aa9e30c4b900aeb7df870123e3e86815190"
+    },
+    "docs/station-cat-redesign/T10-evidence/comparison-platform-controls.jpg": {
+      "bytes": 22313,
+      "sha256": "0780a68d1d4ea16100444b7492549add475a3e12df02656942b07bb64f8dd446"
+    },
+    "docs/station-cat-redesign/T10-evidence/comparison-reference-before-current.jpg": {
+      "bytes": 157108,
+      "sha256": "cfe405d040a102b9ae9f5f26a9d09c1cd9821fc67b3eed599a76c3f14527d411"
+    },
+    "docs/station-cat-redesign/T10-evidence/design-qa.md": {
+      "bytes": 6250,
+      "sha256": "44f74e37603ee020f39ad5d605bd5373c0317b8cc7d2eabccbd687829e6991bb"
+    },
+    "docs/station-cat-redesign/T10-evidence/home-preview-build.log": {
+      "bytes": 6277,
+      "sha256": "c99656826f444514fd5c7f762c14185e9731ab1da5d2ca3b4b5bb0e3a7ac292a"
+    },
+    "docs/station-cat-redesign/T10-evidence/image-metadata.json": {
+      "bytes": 2417,
+      "sha256": "00c1819de77e69bc7d98fbb3378ee02a321dd16db1e72b4f43aaf30b33db2e9d"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-collapsed-1440.jpg": {
+      "bytes": 67685,
+      "sha256": "723f4a9530404dd73337ca47d72c9435816fd1197a6453c6e4d2a98584656e2c"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-collapsed-desktop.jpg": {
+      "bytes": 63262,
+      "sha256": "81064009b2242fc8a9f89fac3ae318046919ba1405a581c4ef09b182012056f7"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-controls-desktop.jpg": {
+      "bytes": 8729,
+      "sha256": "965b3031592cb3e8c6f0a9d0c193a4dfe840dc6e076c9bd5b0915ddca766d75c"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-copy-viewport-390.jpg": {
+      "bytes": 33737,
+      "sha256": "6e2a4c502e97e390c40669887909faf6257515c07f28bf6b839279433fe15b4d"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-en-390.jpg": {
+      "bytes": 70304,
+      "sha256": "d8ec37a102fc4b3583959019342994fb9537346d14ddf7d429657708ae0e0f7c"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-ja-390.jpg": {
+      "bytes": 67946,
+      "sha256": "74b710362ecadd179a6dc1ce99077dfe21060d2e12cb3d61ace3fe54cb5e48d0"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-live-1440.jpg": {
+      "bytes": 105020,
+      "sha256": "ff93f41fa18107edfc88e7848f785e43a3f3ba6bba99e9c52dbec93f910cea1d"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-live-320.jpg": {
+      "bytes": 61588,
+      "sha256": "0184affbf3bc4375da3b41eedcfbd95c3a0cb9493a13d3800837351ff4836151"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-live-390.jpg": {
+      "bytes": 65109,
+      "sha256": "c9189f7448fad1896c9f464726abf40bfee79f79e8ed159f1c387505b564d1f8"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-live-desktop.jpg": {
+      "bytes": 105020,
+      "sha256": "ff93f41fa18107edfc88e7848f785e43a3f3ba6bba99e9c52dbec93f910cea1d"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-manual-390.jpg": {
+      "bytes": 65995,
+      "sha256": "6c2667f5f64fd9ae85ad6184c38f80351613b24a73fbc041a7f1036ef8ec6ba4"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-planned-390.jpg": {
+      "bytes": 45935,
+      "sha256": "31c099cca60aed3fa913d7741cd5fc6498d42f60480d134febce98cf8d4ab461"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-regional-390.jpg": {
+      "bytes": 43322,
+      "sha256": "2188c1a8956e92f661de9ee7d73aefe7ee36c10953b28b0876fbf1436aa48fc4"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-removed-390.jpg": {
+      "bytes": 40975,
+      "sha256": "f589d37ec136f4c04439687187b43fe08b804716e17ab79abf2c57dc941eece2"
+    },
+    "docs/station-cat-redesign/T10-evidence/platform-unverified-390.jpg": {
+      "bytes": 41119,
+      "sha256": "f898ebd83c1d4259455168df424979411972616b6b70476e70f3fbd504b6045b"
+    },
+    "docs/station-cat-redesign/T10-evidence/platforms.log": {
+      "bytes": 2019,
+      "sha256": "3daf39deadaffdbc1c19e4c859e8f7f33f81d0216b75a684f7ca03fd53640313"
+    },
+    "docs/station-cat-redesign/T10-evidence/public-and-pages.log": {
+      "bytes": 7241,
+      "sha256": "109a2e98b42d23a112d925341290b2135a2ef31b33d54c87d00b036409515074"
+    },
+    "docs/station-cat-redesign/T10-evidence/staging-assets.log": {
+      "bytes": 51,
+      "sha256": "5981ce8f2b86aca3a9c797e6c7f83b5547600728388f12f4ce9a3ccd4a987279"
+    },
+    "docs/station-cat-redesign/T10-evidence/viewport-measurements.json": {
+      "bytes": 3108,
+      "sha256": "fe5e21714771706972f5f64efd5c8ead114be755d13cf04a068fb801eaf12d4e"
+    },
+    "docs/station-cat-redesign/T10-evidence/worker-runtime.log": {
+      "bytes": 2419,
+      "sha256": "ecc470716b2100642a6273825e41c7ba2f1a7174ea173dbb8aec1f423782060f"
+    }
+  }
+}
