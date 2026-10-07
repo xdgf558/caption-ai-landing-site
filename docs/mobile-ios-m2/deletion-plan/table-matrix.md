@@ -95,3 +95,21 @@
 | music / `music_tracks` | `publisher_content_keep` | FK 0 (id, published_revision_id) → music_track_revisions (track_id, id)：NO ACTION；FK 1 (id, draft_revision_id) → music_track_revisions (track_id, id)：NO ACTION |
 | music / `music_upload_cleanup` | `admin_audit_review` | FK 0 (asset_id) → music_assets (id)：NO ACTION；FK 1 (upload_id) → music_upload_sessions (id)：NO ACTION |
 | music / `music_upload_sessions` | `admin_audit_review` | FK 0 (asset_id) → music_assets (id)：NO ACTION |
+| music / `station_analytics_events` | `redesign_analytics_review` | FK 0 (track_id, platform_link_id) → station_platform_links (track_id, id)：NO ACTION；FK 1 (track_id, clip_id) → station_clips (track_id, id)：NO ACTION；FK 2 (campaign_id) → station_campaigns (id)：NO ACTION；FK 3 (game_id) → station_games (id)：NO ACTION；FK 4 (track_id) → music_tracks (id)：NO ACTION |
+| music / `station_asset_rights` | `admin_audit_review` | FK 0 (media_asset_id) → station_media_assets (id)：NO ACTION；FK 1 (music_asset_id) → music_assets (id)：NO ACTION |
+| music / `station_campaigns` | `publisher_content_keep` | FK 0 (track_id, clip_id) → station_clips (track_id, id)：NO ACTION；FK 1 (track_id) → music_tracks (id)：NO ACTION |
+| music / `station_clip_publications` | `publisher_content_keep` | FK 0 (clip_id) → station_clips (id)：NO ACTION |
+| music / `station_clip_revisions` | `publisher_content_keep` | FK 0 (id, poster_asset_id) → station_media_assets (owner_clip_id, id)：NO ACTION；FK 1 (id, media_asset_id) → station_media_assets (owner_clip_id, id)：NO ACTION；FK 2 (id) → station_clips (id)：NO ACTION |
+| music / `station_clips` | `publisher_content_keep` | FK 0 (id, published_revision) → station_clip_revisions (id, revision)：NO ACTION；FK 1 (id, draft_revision) → station_clip_revisions (id, revision)：NO ACTION；FK 2 (track_id) → music_tracks (id)：NO ACTION |
+| music / `station_game_revisions` | `publisher_content_keep` | FK 0 (id) → station_games (id)：NO ACTION |
+| music / `station_games` | `publisher_content_keep` | FK 0 (id, published_revision) → station_game_revisions (id, revision)：NO ACTION；FK 1 (id, draft_revision) → station_game_revisions (id, revision)：NO ACTION |
+| music / `station_home_configs` | `publisher_content_keep` | FK 0 (id, published_revision) → station_home_revisions (id, revision)：NO ACTION；FK 1 (id, draft_revision) → station_home_revisions (id, revision)：NO ACTION |
+| music / `station_home_revisions` | `publisher_content_keep` | FK 0 (featured_game_id) → station_games (id)：NO ACTION；FK 1 (featured_track_id) → station_promotions (track_id)：NO ACTION；FK 2 (id) → station_home_configs (id)：NO ACTION |
+| music / `station_media_assets` | `publisher_content_keep` | FK 0 (owner_game_id) → station_games (id)：NO ACTION；FK 1 (owner_clip_id) → station_clips (id)：NO ACTION |
+| music / `station_platform_links` | `publisher_content_keep` | FK 0 (track_id) → music_tracks (id)：NO ACTION |
+| music / `station_promotion_revisions` | `publisher_content_keep` | FK 0 (track_id, preview_asset_id) → music_assets (owner_track_id, id)：NO ACTION；FK 1 (track_id) → station_promotions (track_id)：NO ACTION |
+| music / `station_promotions` | `publisher_content_keep` | FK 0 (track_id, published_revision) → station_promotion_revisions (track_id, revision)：NO ACTION；FK 1 (track_id, draft_revision) → station_promotion_revisions (track_id, revision)：NO ACTION；FK 2 (track_id) → station_track_publications (track_id)：NO ACTION |
+| music / `station_route_migrations` | `publisher_content_keep` | 无外键；仍须核对软关联/JSON |
+| music / `station_track_publications` | `publisher_content_keep` | FK 0 (track_id, published_revision) → station_track_revisions (track_id, revision)：NO ACTION；FK 1 (track_id, draft_revision) → station_track_revisions (track_id, revision)：NO ACTION；FK 2 (track_id) → music_tracks (id)：NO ACTION |
+| music / `station_track_revisions` | `publisher_content_keep` | FK 0 (track_id, lyrics_asset_id) → music_assets (owner_track_id, id)：NO ACTION；FK 1 (track_id, cover_asset_id) → music_assets (owner_track_id, id)：NO ACTION；FK 2 (track_id, legacy_revision_id) → music_track_revisions (track_id, id)：NO ACTION；FK 3 (track_id) → station_track_publications (track_id)：NO ACTION |
+| music / `station_track_routes` | `publisher_content_keep` | FK 0 (track_id) → music_tracks (id)：NO ACTION |

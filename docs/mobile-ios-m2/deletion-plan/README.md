@@ -100,3 +100,13 @@ python3 scripts/test-account-deletion-audit.py
 ## 复审修订（2026-09-17）
 
 外键盘点现在保留 SQLite 的 id / seq，并按同一约束的列序输出成对列元组，避免把复合外键误读为独立关系。新增 music_assets 自引用及 music_track_revisions 四组复合约束的回归断言，审计测试增至 11 项。本 PR 可独立审查；iOS A11–A13 的稳定 CI 驱动修复在原生 PR #3 单独验收，不以本 PR 通过代表原生恢复验收完成。
+
+## 网站兼容模型增量（2026-10-06，T06）
+
+[T06](../../station-cat-redesign/T06-data-model-and-migration.md) 追加 MUSIC_DB 的 18 张 `station_*` 表后，仓库内存重建清单更新为 reader 64 张、music 45 张，共 109 张。原 reader 表、旧 music 表的字段、外键与分类保持不变；只补新表分类、迁移哈希和生成矩阵，未批准销户政策，也未改变运行时或远程 schema。
+
+其中 16 张是发布者作品、快照、地址、平台、素材、推广、首页、Campaign 和路由提案，归入 `publisher_content_keep`。`owner_track_id`、`owner_clip_id`、`owner_game_id` 是作品归属，不是读者主体，不按普通会员销户清除。`station_asset_rights` 的 `reviewer_id`、`basis` 属于管理员审核及自由文本，归入 `admin_audit_review`，须按管理员主体和实际内容另行审查，不能默认完全没有个人信息。
+
+`station_analytics_events` 单独归入 `redesign_analytics_review`。当前没有采集器或清理执行器；`session_id` 的使用和归因约束留 T18 验证，不能把任意会话字符串称为已匿名。主改版文档的 90 天原始事件、12 个月汇总只是待确认建议，不继承旧音乐事件的 30/365 天规则。当前新事件表的不可变删除触发器也不能充当到期清理机制，T18 须审查保留规则及受控清理的兼容实现后再启用采集。本次没有执行事件删除或账号清理。
+
+审计测试增至 12 项，新增检查锁定 18 张表的分类、作品外键范围、reader 隔离和 `approved=false` / `executionEnabled=false`。生成清单仍只是仓库迁移在内存中的结果，不是生产确认。

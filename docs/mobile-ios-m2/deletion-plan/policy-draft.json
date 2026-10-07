@@ -13,7 +13,8 @@
     "short_ttl": "无可靠账号关联的安全计数/未认证 flow 沿既有短期清理；有账号作用域的计数要单独清除。",
     "publisher_content_keep": "站点公开内容、运维设置和发布者资产不是普通读者资产；不随读者销户删除。管理员主体另行核验。",
     "anonymous_analytics_ttl": "音乐随机会话统计不伪造账号关联；遵循现有 30/365 天规则；归因当前不采集，若启用须先定义软关联清理。",
-    "admin_audit_review": "保留所需审计事件但最小化其中读者邮箱/ID/自由文本；管理员标识与普通会员主体不可混同。"
+    "admin_audit_review": "保留所需审计事件但最小化其中读者邮箱/ID/自由文本；管理员标识与普通会员主体不可混同。",
+    "redesign_analytics_review": "网站改版新事件字典尚未接入采集；session_id 未经采集器验证，不能仅因没有 account_id 就认定匿名。保留期限、会话关联与可执行清理机制留 T18 审查，不套用旧音乐 30/365 天规则，不启用账号清理或删除事件。"
   },
   "tables": {
     "reader": {
@@ -117,7 +118,8 @@
         "music_upload_sessions",
         "music_collection_upload_sessions",
         "music_upload_cleanup",
-        "music_rights_reviews"
+        "music_rights_reviews",
+        "station_asset_rights"
       ],
       "short_ttl": [
         "music_rate_sources",
@@ -136,7 +138,26 @@
         "music_rights_evidence",
         "music_settings",
         "music_track_revisions",
-        "music_tracks"
+        "music_tracks",
+        "station_track_publications",
+        "station_track_revisions",
+        "station_track_routes",
+        "station_platform_links",
+        "station_games",
+        "station_game_revisions",
+        "station_clips",
+        "station_clip_revisions",
+        "station_media_assets",
+        "station_clip_publications",
+        "station_promotions",
+        "station_promotion_revisions",
+        "station_home_configs",
+        "station_home_revisions",
+        "station_campaigns",
+        "station_route_migrations"
+      ],
+      "redesign_analytics_review": [
+        "station_analytics_events"
       ]
     }
   },

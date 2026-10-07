@@ -1,0 +1,76 @@
+TAP version 13
+# Subtest: all 14 reviewed tables classify every actual migration column exactly once
+ok 1 - all 14 reviewed tables classify every actual migration column exactly once
+  ---
+  duration_ms: 13.341708
+  type: 'test'
+  ...
+# Subtest: missing policy reports blocked counts and leaves all financial rows and the real draft unchanged
+ok 2 - missing policy reports blocked counts and leaves all financial rows and the real draft unchanged
+  ---
+  duration_ms: 14.331958
+  type: 'test'
+  ...
+# Subtest: approved synthetic policy produces a canonical digest and cannot claim erasure completion
+ok 3 - approved synthetic policy produces a canonical digest and cannot claim erasure completion
+  ---
+  duration_ms: 20.518542
+  type: 'test'
+  ...
+# Subtest: policy validation requires explicit synthetic basis, positive durations and every table and column
+ok 4 - policy validation requires explicit synthetic basis, positive durations and every table and column
+  ---
+  duration_ms: 0.751875
+  type: 'test'
+  ...
+# Subtest: exact order links include a detached tip, without matching an unrelated identical email or JSON value
+ok 5 - exact order links include a detached tip, without matching an unrelated identical email or JSON value
+  ---
+  duration_ms: 13.649667
+  type: 'test'
+  ...
+# Subtest: cross-account order and reversal links fail closed even when foreign keys are valid
+ok 6 - cross-account order and reversal links fail closed even when foreign keys are valid
+  ---
+  duration_ms: 13.1015
+  type: 'test'
+  ...
+# Subtest: unreviewed JSON blocks until its exact nested key and type shape is explicitly approved
+ok 7 - unreviewed JSON blocks until its exact nested key and type shape is explicitly approved
+  ---
+  duration_ms: 17.175875
+  type: 'test'
+  ...
+# Subtest: malformed, oversized and nested encoded JSON cannot hide unknown fields
+ok 8 - malformed, oversized and nested encoded JSON cannot hide unknown fields
+  ---
+  duration_ms: 14.888625
+  type: 'test'
+  ...
+# Subtest: unknown column fails schema review before any financial row is inspected
+ok 9 - unknown column fails schema review before any financial row is inspected
+  ---
+  duration_ms: 12.324417
+  type: 'test'
+  ...
+# Subtest: real environment, unproven dataset and unconfirmed deletion are refused
+ok 10 - real environment, unproven dataset and unconfirmed deletion are refused
+  ---
+  duration_ms: 12.203917
+  type: 'test'
+  ...
+# Subtest: bounded scan cannot approve financial JSON rows it did not inspect
+ok 11 - bounded scan cannot approve financial JSON rows it did not inspect
+  ---
+  duration_ms: 13.97675
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 182.549959

@@ -1,0 +1,106 @@
+TAP version 13
+# FINALITY_CASE_START account-scoped TOTP reset is counted and deleted; other accounts and unrelated scopes survive
+# FINALITY_CASE_END {"name":"account-scoped TOTP reset is counted and deleted; other accounts and unrelated scopes survive","durationMs":8836}
+# FINALITY_CASE_START TOTP write fences reject inactive account writes and scope moves without blocking active or non-account limits
+# Subtest: account-scoped TOTP reset is counted and deleted; other accounts and unrelated scopes survive
+ok 1 - account-scoped TOTP reset is counted and deleted; other accounts and unrelated scopes survive
+  ---
+  duration_ms: 10679.797375
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"TOTP write fences reject inactive account writes and scope moves without blocking active or non-account limits","durationMs":561}
+# FINALITY_CASE_START an in-flight product TOTP reset cannot recreate account counters after completed deletion or restart
+# Subtest: TOTP write fences reject inactive account writes and scope moves without blocking active or non-account limits
+ok 2 - TOTP write fences reject inactive account writes and scope moves without blocking active or non-account limits
+  ---
+  duration_ms: 561.369875
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"an in-flight product TOTP reset cannot recreate account counters after completed deletion or restart","durationMs":17271}
+# FINALITY_CASE_START personal completion alone and the real unapproved draft cannot unlock finality
+# Subtest: an in-flight product TOTP reset cannot recreate account counters after completed deletion or restart
+ok 3 - an in-flight product TOTP reset cannot recreate account counters after completed deletion or restart
+  ---
+  duration_ms: 17271.405958
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"personal completion alone and the real unapproved draft cannot unlock finality","durationMs":8371}
+# FINALITY_CASE_START policy pinning, receipt coverage and scoped reviews reject incorrect or future evidence
+# Subtest: personal completion alone and the real unapproved draft cannot unlock finality
+ok 4 - personal completion alone and the real unapproved draft cannot unlock finality
+  ---
+  duration_ms: 8370.935042
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"policy pinning, receipt coverage and scoped reviews reject incorrect or future evidence","durationMs":24314}
+# FINALITY_CASE_START missing or stale external reviews and backup barriers remain observable and incomplete
+# Subtest: policy pinning, receipt coverage and scoped reviews reject incorrect or future evidence
+ok 5 - policy pinning, receipt coverage and scoped reviews reject incorrect or future evidence
+  ---
+  duration_ms: 24313.8585
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"missing or stale external reviews and backup barriers remain observable and incomplete","durationMs":21938}
+# FINALITY_CASE_START raw retained personal fields block completion without changing balance, ledger or payload
+# Subtest: missing or stale external reviews and backup barriers remain observable and incomplete
+ok 6 - missing or stale external reviews and backup barriers remain observable and incomplete
+  ---
+  duration_ms: 21938.623041
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"raw retained personal fields block completion without changing balance, ledger or payload","durationMs":18513}
+# FINALITY_CASE_START synthetic minimal-data completion is atomic, receipt-only, and cannot affect another account
+# Subtest: raw retained personal fields block completion without changing balance, ledger or payload
+ok 7 - raw retained personal fields block completion without changing balance, ledger or payload
+  ---
+  duration_ms: 18513.6195
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"synthetic minimal-data completion is atomic, receipt-only, and cannot affect another account","durationMs":22942}
+# FINALITY_CASE_START lease takeover, persisted restart and transaction failure do not report partial completion
+# Subtest: synthetic minimal-data completion is atomic, receipt-only, and cannot affect another account
+ok 8 - synthetic minimal-data completion is atomic, receipt-only, and cannot affect another account
+  ---
+  duration_ms: 22942.566833
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"lease takeover, persisted restart and transaction failure do not report partial completion","durationMs":27706}
+# FINALITY_CASE_START backup preflight uses the current control ledger and refuses deleted accounts after restart
+# Subtest: lease takeover, persisted restart and transaction failure do not report partial completion
+ok 9 - lease takeover, persisted restart and transaction failure do not report partial completion
+  ---
+  duration_ms: 27707
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"backup preflight uses the current control ledger and refuses deleted accounts after restart","durationMs":15789}
+# FINALITY_CASE_START late cross-account financial links fail the completion transaction after the read plan
+# Subtest: backup preflight uses the current control ledger and refuses deleted accounts after restart
+ok 10 - backup preflight uses the current control ledger and refuses deleted accounts after restart
+  ---
+  duration_ms: 15789.513375
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"late cross-account financial links fail the completion transaction after the read plan","durationMs":19172}
+# FINALITY_CASE_START missing TOTP fences, pre-existing reset records and unknown schema cannot be hidden by old completion evidence
+# Subtest: late cross-account financial links fail the completion transaction after the read plan
+ok 11 - late cross-account financial links fail the completion transaction after the read plan
+  ---
+  duration_ms: 19171.681083
+  type: 'test'
+  ...
+# FINALITY_CASE_END {"name":"missing TOTP fences, pre-existing reset records and unknown schema cannot be hidden by old completion evidence","durationMs":16243}
+# Subtest: missing TOTP fences, pre-existing reset records and unknown schema cannot be hidden by old completion evidence
+ok 12 - missing TOTP fences, pre-existing reset records and unknown schema cannot be hidden by old completion evidence
+  ---
+  duration_ms: 16242.862333
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 203810.308292

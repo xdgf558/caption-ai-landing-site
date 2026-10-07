@@ -76,4 +76,21 @@ class DeletionAuditTests(unittest.TestCase):
         self.assertFalse(any('favorite' in name for name in music))
         self.assertIn('anonymous_session_id',music['music_analytics_events']['columns'])
         self.assertIn('owner_track_id',music['music_assets']['columns'])
+    def test_redesign_classifications_do_not_enable_reader_erasure_or_old_event_ttl(self):
+        policy=json.loads((audit.DOC/'policy-draft.json').read_text())
+        snapshot=audit.inspect()
+        station={name:table for name,table in snapshot['databases']['music'].items() if name.startswith('station_')}
+        self.assertEqual(len(station),18)
+        self.assertFalse(policy['approved'])
+        self.assertFalse(policy['executionEnabled'])
+        self.assertEqual(station['station_analytics_events']['category'],'redesign_analytics_review')
+        self.assertNotIn('station_analytics_events',policy['tables']['music']['anonymous_analytics_ttl'])
+        self.assertEqual(station['station_asset_rights']['category'],'admin_audit_review')
+        self.assertIn('reviewer_id',station['station_asset_rights']['columns'])
+        for name,table in station.items():
+            self.assertNotIn('account_id',table['columns'])
+            self.assertTrue(all(fk['parent'].startswith(('station_','music_')) for fk in table['foreignKeys']))
+            if name not in ['station_analytics_events','station_asset_rights']:
+                self.assertEqual(table['category'],'publisher_content_keep')
+        self.assertFalse(any(name.startswith('station_') for name in snapshot['databases']['reader']))
 if __name__=='__main__':unittest.main(verbosity=2)

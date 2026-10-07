@@ -1,0 +1,881 @@
+TAP version 13
+# Subtest: no verifier identity, binding alias, missing migrations and missing settings fail closed
+ok 1 - no verifier identity, binding alias, missing migrations and missing settings fail closed
+  ---
+  duration_ms: 37.669917
+  type: 'test'
+  ...
+# Subtest: strict origin, custom CSRF header and JSON required before every write, including HEAD/OPTIONS probes
+ok 2 - strict origin, custom CSRF header and JSON required before every write, including HEAD/OPTIONS probes
+  ---
+  duration_ms: 16.438917
+  type: 'test'
+  ...
+# Subtest: stream-counted 64KiB body limit, malformed JSON, unknown fields and invalid schemas do not write
+ok 3 - stream-counted 64KiB body limit, malformed JSON, unknown fields and invalid schemas do not write
+  ---
+  duration_ms: 12.900625
+  type: 'test'
+  ...
+# Subtest: new draft is VIP, response is private and creation retry recovers one audit and revision
+ok 4 - new draft is VIP, response is private and creation retry recovers one audit and revision
+  ---
+  duration_ms: 15.901542
+  type: 'test'
+  ...
+# Subtest: role preview reads both saved revisions with server time and safe asset measurements, no R2 or reader writes
+ok 5 - role preview reads both saved revisions with server time and safe asset measurements, no R2 or reader writes
+  ---
+  duration_ms: 17.699709
+  type: 'test'
+  ...
+# Subtest: stalled or invalid UTF-8 request streams are cancelled without writes
+ok 6 - stalled or invalid UTF-8 request streams are cancelled without writes
+  ---
+  duration_ms: 3009.558709
+  type: 'test'
+  ...
+# Subtest: identical concurrent creations return one track and receipt; slug and actor conflicts do not duplicate
+ok 7 - identical concurrent creations return one track and receipt; slug and actor conflicts do not duplicate
+  ---
+  duration_ms: 12.257875
+  type: 'test'
+  ...
+# Subtest: PATCH requires explicit matching version, creates a new revision and discards old review approvals
+ok 8 - PATCH requires explicit matching version, creates a new revision and discards old review approvals
+  ---
+  duration_ms: 11.068292
+  type: 'test'
+  ...
+# Subtest: editing a published song keeps old sealed public content and permanent slug intact
+ok 9 - editing a published song keeps old sealed public content and permanent slug intact
+  ---
+  duration_ms: 10.801667
+  type: 'test'
+  ...
+# Subtest: cross-track or wrong-kind assets, forged fingerprints and invalid policy versions are refused
+ok 10 - cross-track or wrong-kind assets, forged fingerprints and invalid policy versions are refused
+  ---
+  duration_ms: 10.188041
+  type: 'test'
+  ...
+# Subtest: rights review uses verified actor and server fingerprint, clears technical stamp and requires same-track evidence
+ok 11 - rights review uses verified actor and server fingerprint, clears technical stamp and requires same-track evidence
+  ---
+  duration_ms: 11.538542
+  type: 'test'
+  ...
+# Subtest: publishing requires real private objects; flags or client proof cannot bless synthetic assets
+ok 12 - publishing requires real private objects; flags or client proof cannot bless synthetic assets
+  ---
+  duration_ms: 9.038417
+  type: 'test'
+  ...
+# Subtest: downlisting and archiving work with flags off, retain media and audit, and cannot be used to republish
+ok 13 - downlisting and archiving work with flags off, retain media and audit, and cannot be used to republish
+  ---
+  duration_ms: 8.754458
+  type: 'test'
+  ...
+# Subtest: every zero-write/failure rolls back draft, version, audit and receipt; original key can retry
+ok 14 - every zero-write/failure rolls back draft, version, audit and receipt; original key can retry
+  ---
+  duration_ms: 39.890625
+  type: 'test'
+  ...
+# Subtest: concurrent different draft edits and review-vs-save never overwrite the winning version
+ok 15 - concurrent different draft edits and review-vs-save never overwrite the winning version
+  ---
+  duration_ms: 8.247292
+  type: 'test'
+  ...
+# Subtest: rights zero-write or audit failure rolls back evidence, fingerprints and version as a unit
+ok 16 - rights zero-write or audit failure rolls back evidence, fingerprints and version as a unit
+  ---
+  duration_ms: 59.227792
+  type: 'test'
+  ...
+# Subtest: list and audit pagination are bounded, reject ambiguous query and do not expose object locators
+ok 17 - list and audit pagination are bounded, reject ambiguous query and do not expose object locators
+  ---
+  duration_ms: 21.456042
+  type: 'test'
+  ...
+# Subtest: shared Access input parsing rejects insecure domains and malformed cookies
+ok 18 - shared Access input parsing rejects insecure domains and malformed cookies
+  ---
+  duration_ms: 0.195375
+  type: 'test'
+  ...
+# Subtest: music actor contract requires a signed JWT and preserves fail-closed status codes
+ok 19 - music actor contract requires a signed JWT and preserves fail-closed status codes
+  ---
+  duration_ms: 2.475625
+  type: 'test'
+  ...
+# Subtest: music actor rejects non-signing or malformed RSA keys before importKey
+ok 20 - music actor rejects non-signing or malformed RSA keys before importKey
+  ---
+  duration_ms: 0.671125
+  type: 'test'
+  ...
+# admin_access_denied { message: 'Invalid JWT audience' }
+# admin_access_denied { message: 'Invalid JWT issuer' }
+# admin_access_denied { message: 'JWT expired' }
+# admin_access_denied { message: 'Invalid JWT signature' }
+# Subtest: actual Worker route checks Access signature, audience, issuer, expiry and allowlist before music DB
+ok 21 - actual Worker route checks Access signature, audience, issuer, expiry and allowlist before music DB
+  ---
+  duration_ms: 10.563916
+  type: 'test'
+  ...
+# Subtest: spoofed Host/email/local bypass and malformed Access cookie cannot bypass the music-specific actor check
+ok 22 - spoofed Host/email/local bypass and malformed Access cookie cannot bypass the music-specific actor check
+  ---
+  duration_ms: 7.167875
+  type: 'test'
+  ...
+# Subtest: actual Worker write attributes audit to the verified JWT, not the forwarded email
+ok 23 - actual Worker write attributes audit to the verified JWT, not the forwarded email
+  ---
+  duration_ms: 7.732375
+  type: 'test'
+  ...
+# Subtest: production imports never include fixture verifier; music bindings, switches, payment and schema config remain untouched
+ok 24 - production imports never include fixture verifier; music bindings, switches, payment and schema config remain untouched
+  ---
+  duration_ms: 2.322125
+  type: 'test'
+  ...
+# Subtest: quota controls require Access and same-origin writes; validate integer MiB and strict fields
+ok 25 - quota controls require Access and same-origin writes; validate integer MiB and strict fields
+  ---
+  duration_ms: 7.532875
+  type: 'test'
+  ...
+# Subtest: quota save replays once, preserves stale-edit protection and leaves accounting/content unchanged
+ok 26 - quota save replays once, preserves stale-edit protection and leaves accounting/content unchanged
+  ---
+  duration_ms: 8.849708
+  type: 'test'
+  ...
+# Subtest: quota shrink rechecks concurrent upload reservations in the write transaction
+ok 27 - quota shrink rechecks concurrent upload reservations in the write transaction
+  ---
+  duration_ms: 8.075959
+  type: 'test'
+  ...
+# Subtest: quota concurrent editors and audit failures roll back; lost acknowledgement replays exact receipt
+ok 28 - quota concurrent editors and audit failures roll back; lost acknowledgement replays exact receipt
+  ---
+  duration_ms: 8.317667
+  type: 'test'
+  ...
+# Subtest: disabled switches and absent privacy configuration perform zero D1/R2 reads
+ok 29 - disabled switches and absent privacy configuration perform zero D1/R2 reads
+  ---
+  duration_ms: 12.841042
+  type: 'test'
+  ...
+# Subtest: strict envelope, types, 20 events, time skew, credentials and server-only event rejection
+ok 30 - strict envelope, types, 20 events, time skew, credentials and server-only event rejection
+  ---
+  duration_ms: 25.451209
+  type: 'test'
+  ...
+# Subtest: real streamed body cap applies without Content-Length, including UTF-8 bytes
+ok 31 - real streamed body cap applies without Content-Length, including UTF-8 bytes
+  ---
+  duration_ms: 10.807
+  type: 'test'
+  ...
+# Subtest: published revision/variant/duration are checked in the same event transaction
+ok 32 - published revision/variant/duration are checked in the same event transaction
+  ---
+  duration_ms: 16.701125
+  type: 'test'
+  ...
+# Subtest: lost receipt replay, per-play milestones and rolling qualified dedupe increment daily once
+ok 33 - lost receipt replay, per-play milestones and rolling qualified dedupe increment daily once
+  ---
+  duration_ms: 11.350792
+  type: 'test'
+  ...
+# Subtest: preview completion and free/VIP full totals stay separate, with server-derived access policy
+ok 34 - preview completion and free/VIP full totals stay separate, with server-derived access policy
+  ---
+  duration_ms: 9.529125
+  type: 'test'
+  ...
+# Subtest: public popularity exposes retained qualified-play totals and reports healthy empty aggregates as zero
+ok 35 - public popularity exposes retained qualified-play totals and reports healthy empty aggregates as zero
+  ---
+  duration_ms: 15.738333
+  type: 'test'
+  ...
+# Subtest: 60 event units per minute, source/global rollback and rotating sessions cannot bypass limits
+ok 36 - 60 event units per minute, source/global rollback and rotating sessions cannot bypass limits
+  ---
+  duration_ms: 21.301584
+  type: 'test'
+  ...
+# Subtest: counter or aggregate faults fail closed; event and daily insert roll back together
+ok 37 - counter or aggregate faults fail closed; event and daily insert roll back together
+  ---
+  duration_ms: 9.560416
+  type: 'test'
+  ...
+# Subtest: retention is bounded, runs with collection disabled, and stale/missing sweeps close admission
+ok 38 - retention is bounded, runs with collection disabled, and stale/missing sweeps close admission
+  ---
+  duration_ms: 10.9715
+  type: 'test'
+  ...
+# Subtest: admin Access precedes analytics; no data is unavailable, never fabricated zero
+ok 39 - admin Access precedes analytics; no data is unavailable, never fabricated zero
+  ---
+  duration_ms: 12.106375
+  type: 'test'
+  ...
+# Subtest: retention backlog never marks an incomplete bounded pass healthy
+ok 40 - retention backlog never marks an incomplete bounded pass healthy
+  ---
+  duration_ms: 14.888125
+  type: 'test'
+  ...
+# Subtest: limited-free analytics classify by server receipt time before and at expiry
+ok 41 - limited-free analytics classify by server receipt time before and at expiry
+  ---
+  duration_ms: 8.923542
+  type: 'test'
+  ...
+# Subtest: dry-run is read-only, bounded, private metadata with reference evidence and seven-day retention
+ok 42 - dry-run is read-only, bounded, private metadata with reference evidence and seven-day retention
+  ---
+  duration_ms: 49.528625
+  type: 'test'
+  ...
+# Subtest: never-started retirement releases quota once while retaining sessions, assets and audit receipts
+ok 43 - never-started retirement releases quota once while retaining sessions, assets and audit receipts
+  ---
+  duration_ms: 17.378667
+  type: 'test'
+  ...
+# Subtest: started but absent object stays charged; a late committed object is proved then deleted on resume
+ok 44 - started but absent object stays charged; a late committed object is proved then deleted on resume
+  ---
+  duration_ms: 14.467042
+  type: 'test'
+  ...
+# Subtest: completed unreferenced bytes can be reclaimed; retired assets cannot be downloaded or reattached
+ok 45 - completed unreferenced bytes can be reclaimed; retired assets cannot be downloaded or reattached
+  ---
+  duration_ms: 20.985917
+  type: 'test'
+  ...
+# Subtest: all historical revisions, rights JSON, evidence, derivatives and substantive audits retain bytes
+ok 46 - all historical revisions, rights JSON, evidence, derivatives and substantive audits retain bytes
+  ---
+  duration_ms: 61.438042
+  type: 'test'
+  ...
+# Subtest: a reference added between plan validation and claim wins without touching R2
+ok 47 - a reference added between plan validation and claim wins without touching R2
+  ---
+  duration_ms: 10.646167
+  type: 'test'
+  ...
+# Subtest: retirement wins against every new reference path and the old upload writer
+ok 48 - retirement wins against every new reference path and the old upload writer
+  ---
+  duration_ms: 14.845875
+  type: 'test'
+  ...
+# Subtest: stale writer snapshot, unknown input and mismatched plan cannot retire or touch storage
+ok 49 - stale writer snapshot, unknown input and mismatched plan cannot retire or touch storage
+  ---
+  duration_ms: 12.022833
+  type: 'test'
+  ...
+# Subtest: claim/proof/final accounting roll back on zero-write receipts and recover without duplicate release
+ok 50 - claim/proof/final accounting roll back on zero-write receipts and recover without duplicate release
+  ---
+  duration_ms: 10.522667
+  type: 'test'
+  ...
+# Subtest: lost delete acknowledgement keeps charge until a retry proves absence using persisted proof
+ok 51 - lost delete acknowledgement keeps charge until a retry proves absence using persisted proof
+  ---
+  duration_ms: 12.352833
+  type: 'test'
+  ...
+# Subtest: deletion succeeds but accounting failure retains charge and retries the final transaction
+ok 52 - deletion succeeds but accounting failure retains charge and retries the final transaction
+  ---
+  duration_ms: 11.014166
+  type: 'test'
+  ...
+# Subtest: four competing executors release once and no retry reuses a retired upload
+ok 53 - four competing executors release once and no retry reuses a retired upload
+  ---
+  duration_ms: 14.297125
+  type: 'test'
+  ...
+# Subtest: unknown/mismatched objects, changed versions and failed HEAD never free quota or delete blindly
+ok 54 - unknown/mismatched objects, changed versions and failed HEAD never free quota or delete blindly
+  ---
+  duration_ms: 31.718625
+  type: 'test'
+  ...
+# Subtest: storage timeout leaves a recoverable retired reservation and consumes late promise errors
+ok 55 - storage timeout leaves a recoverable retired reservation and consumes late promise errors
+  ---
+  duration_ms: 15.539584
+  type: 'test'
+  ...
+# Subtest: HTTP requires Access, same-origin, explicit execution flag and idempotency; dry-run stays read-only
+ok 56 - HTTP requires Access, same-origin, explicit execution flag and idempotency; dry-run stays read-only
+  ---
+  duration_ms: 15.778875
+  type: 'test'
+  ...
+# Subtest: independent fresh schema, no account seeds, one-time migration and integrity
+ok 57 - independent fresh schema, no account seeds, one-time migration and integrity
+  ---
+  duration_ms: 4.395083
+  type: 'test'
+  ...
+# Subtest: new drafts default VIP; explicit free publication stays free while editing
+ok 58 - new drafts default VIP; explicit free publication stays free while editing
+  ---
+  duration_ms: 4.713584
+  type: 'test'
+  ...
+# Subtest: foreign keys/kind guards reject cross-track publication/media and evidence-as-audio
+ok 59 - foreign keys/kind guards reject cross-track publication/media and evidence-as-audio
+  ---
+  duration_ms: 4.217875
+  type: 'test'
+  ...
+# Subtest: sealed revisions, assets, rights, evidence and public slug are retained and immutable
+ok 60 - sealed revisions, assets, rights, evidence and public slug are retained and immutable
+  ---
+  duration_ms: 2.558042
+  type: 'test'
+  ...
+# Subtest: database policy combinations, JSON and integer dates fail closed
+ok 61 - database policy combinations, JSON and integer dates fail closed
+  ---
+  duration_ms: 2.534125
+  type: 'test'
+  ...
+# Subtest: completed uploads cannot reopen; append-only audits and scoped mutation uniqueness
+ok 62 - completed uploads cannot reopen; append-only audits and scoped mutation uniqueness
+  ---
+  duration_ms: 3.616375
+  type: 'test'
+  ...
+# Subtest: strict UTC and exact millisecond early-access end boundary
+ok 63 - strict UTC and exact millisecond early-access end boundary
+  ---
+  duration_ms: 0.769625
+  type: 'test'
+  ...
+# Subtest: unknown policies and implicit variants never authorize full playback
+ok 64 - unknown policies and implicit variants never authorize full playback
+  ---
+  duration_ms: 0.817792
+  type: 'test'
+  ...
+# Subtest: policy editing retains historical early window and versions actual changes
+ok 65 - policy editing retains historical early window and versions actual changes
+  ---
+  duration_ms: 0.460167
+  type: 'test'
+  ...
+# Subtest: real database rows project four locales with original fallback and no private fields
+ok 66 - real database rows project four locales with original fallback and no private fields
+  ---
+  duration_ms: 9.469042
+  type: 'test'
+  ...
+# Subtest: ETag changes at natural expiry without a database write; remains stable otherwise
+ok 67 - ETag changes at natural expiry without a database write; remains stable otherwise
+  ---
+  duration_ms: 3.407375
+  type: 'test'
+  ...
+# Subtest: malformed published records cannot poison catalog; preview metadata fails closed
+ok 68 - malformed published records cannot poison catalog; preview metadata fails closed
+  ---
+  duration_ms: 5.599375
+  type: 'test'
+  ...
+# Subtest: collections filter hidden tracks, preserve order and cannot unlock VIP
+ok 69 - collections filter hidden tracks, preserve order and cannot unlock VIP
+  ---
+  duration_ms: 12.005042
+  type: 'test'
+  ...
+# Subtest: 500-track limit, deterministic order and ETag, duplicate rejection
+ok 70 - 500-track limit, deterministic order and ETag, duplicate rejection
+  ---
+  duration_ms: 22.45225
+  type: 'test'
+  ...
+# Subtest: OR REPLACE cannot bypass immutable publication, assets or append-only audit
+ok 71 - OR REPLACE cannot bypass immutable publication, assets or append-only audit
+  ---
+  duration_ms: 1.872125
+  type: 'test'
+  ...
+# Subtest: private evidence belongs to the same draft; unvalidated files cannot be sealed
+ok 72 - private evidence belongs to the same draft; unvalidated files cannot be sealed
+  ---
+  duration_ms: 2.005208
+  type: 'test'
+  ...
+# Subtest: analytics models reject arbitrary attributes and cannot become a VIP ledger
+ok 73 - analytics models reject arbitrary attributes and cannot become a VIP ledger
+  ---
+  duration_ms: 2.495083
+  type: 'test'
+  ...
+# Subtest: limited free ends at its exact deadline and cannot create a permanent free promise
+ok 74 - limited free ends at its exact deadline and cannot create a permanent free promise
+  ---
+  duration_ms: 0.35025
+  type: 'test'
+  ...
+# Subtest: anonymous and invalid cookies never query private data; claims cannot grant VIP
+ok 75 - anonymous and invalid cookies never query private data; claims cannot grant VIP
+  ---
+  duration_ms: 15.894125
+  type: 'test'
+  ...
+# Subtest: duplicate reader cookies match the existing first-cookie rule, never fall through to a later valid token
+ok 76 - duplicate reader cookies match the existing first-cookie rule, never fall through to a later valid token
+  ---
+  duration_ms: 5.702
+  type: 'test'
+  ...
+# Subtest: invalid clocks and budgets return private 503 instead of throwing or granting access
+ok 77 - invalid clocks and budgets return private 503 instead of throwing or granting access
+  ---
+  duration_ms: 3.719
+  type: 'test'
+  ...
+# Subtest: query rejection after timeout is consumed, and a clock throwing after lookup never leaks
+ok 78 - query rejection after timeout is consumed, and a clock throwing after lookup never leaks
+  ---
+  duration_ms: 63.21225
+  type: 'test'
+  ...
+# Subtest: trusted session hash + joined account + real membership only; absolutely no writes
+ok 79 - trusted session hash + joined account + real membership only; absolutely no writes
+  ---
+  duration_ms: 2.926333
+  type: 'test'
+  ...
+# Subtest: expired, revoked, missing and future sessions fail; restricted accounts do not get an upsell
+ok 80 - expired, revoked, missing and future sessions fail; restricted accounts do not get an upsell
+  ---
+  duration_ms: 1.890167
+  type: 'test'
+  ...
+# Subtest: membership [start,end) milliseconds, SQL UTC, future and equal-period boundaries
+ok 81 - membership [start,end) milliseconds, SQL UTC, future and equal-period boundaries
+  ---
+  duration_ms: 1.266875
+  type: 'test'
+  ...
+# Subtest: unknown level, corrupt dates and purported lifetime never become VIP or a purchase prompt
+ok 82 - unknown level, corrupt dates and purported lifetime never become VIP or a purchase prompt
+  ---
+  duration_ms: 1.570625
+  type: 'test'
+  ...
+# Subtest: duplicate grants, mismatched owner and malformed query results are unavailable
+ok 83 - duplicate grants, mismatched owner and malformed query results are unavailable
+  ---
+  duration_ms: 1.400583
+  type: 'test'
+  ...
+# Subtest: missing binding/table/session API and database errors return 503, not none
+ok 84 - missing binding/table/session API and database errors return 503, not none
+  ---
+  duration_ms: 1.564375
+  type: 'test'
+  ...
+# Subtest: timeout denies; late completion cannot mutate result or database
+ok 85 - timeout denies; late completion cannot mutate result or database
+  ---
+  duration_ms: 53.461875
+  type: 'test'
+  ...
+# Subtest: query completion time is used; session expiry bounds capability recheck
+ok 86 - query completion time is used; session expiry bounds capability recheck
+  ---
+  duration_ms: 2.252417
+  type: 'test'
+  ...
+# Subtest: no cross-request cache: logout, account switch, expiry, renewal and disable take effect
+ok 87 - no cross-request cache: logout, account switch, expiry, renewal and disable take effect
+  ---
+  duration_ms: 2.17425
+  type: 'test'
+  ...
+# Subtest: balances and work-specific grants cannot enable or disable site-wide membership
+ok 88 - balances and work-specific grants cannot enable or disable site-wide membership
+  ---
+  duration_ms: 1.382375
+  type: 'test'
+  ...
+# Subtest: capabilities use real localized paths and minimal fields; VIP flag defaults closed
+ok 89 - capabilities use real localized paths and minimal fields; VIP flag defaults closed
+  ---
+  duration_ms: 3.132666
+  type: 'test'
+  ...
+# Subtest: free full and independent preview bypass membership DB even when broken or VIP delivery disabled
+ok 90 - free full and independent preview bypass membership DB even when broken or VIP delivery disabled
+  ---
+  duration_ms: 1.109708
+  type: 'test'
+  ...
+# Subtest: VIP full differentiates unauthenticated, none, expired, restricted, unavailable and disabled
+ok 91 - VIP full differentiates unauthenticated, none, expired, restricted, unavailable and disabled
+  ---
+  duration_ms: 1.749084
+  type: 'test'
+  ...
+# Subtest: content/version/variant guards run first; unknown policy cannot fall back to full
+ok 92 - content/version/variant guards run first; unknown policy cannot fall back to full
+  ---
+  duration_ms: 1.761
+  type: 'test'
+  ...
+# Subtest: early access exact expiry honors both post-period policies without a write
+ok 93 - early access exact expiry honors both post-period policies without a write
+  ---
+  duration_ms: 1.564958
+  type: 'test'
+  ...
+# Subtest: HEAD/Range/conditional headers cannot bypass eligibility; every response is private no-store
+ok 94 - HEAD/Range/conditional headers cannot bypass eligibility; every response is private no-store
+  ---
+  duration_ms: 2.085917
+  type: 'test'
+  ...
+# Subtest: real redemption and manual refund functions change next read; remaining renewal is preserved
+ok 95 - real redemption and manual refund functions change next read; remaining renewal is preserved
+  ---
+  duration_ms: 4.513875
+  type: 'test'
+  ...
+# Subtest: route matching, methods, inputs and the public flag fail before database or storage access
+ok 96 - route matching, methods, inputs and the public flag fail before database or storage access
+  ---
+  duration_ms: 22.722333
+  type: 'test'
+  ...
+# Subtest: catalog is anonymous, localized and conditional while hiding corrupt tracks and empty collections
+ok 97 - catalog is anonymous, localized and conditional while hiding corrupt tracks and empty collections
+  ---
+  duration_ms: 29.850959
+  type: 'test'
+  ...
+# Subtest: natural policy expiry changes the catalog projection and ETag without a catalogVersion write
+ok 98 - natural policy expiry changes the catalog projection and ETag without a catalogVersion write
+  ---
+  duration_ms: 14.323583
+  type: 'test'
+  ...
+# Subtest: catalog publishes anonymous effective-play totals, refreshes its ETag and degrades without blocking music
+ok 99 - catalog publishes anonymous effective-play totals, refreshes its ETag and degrades without blocking music
+  ---
+  duration_ms: 16.413209
+  type: 'test'
+  ...
+# Subtest: track detail adds the public story and collection detail preserves order without changing access
+ok 100 - track detail adds the public story and collection detail preserves order without changing access
+  ---
+  duration_ms: 12.410833
+  type: 'test'
+  ...
+# Subtest: direct collection lookup is not limited by the 500-item catalog window
+ok 101 - direct collection lookup is not limited by the 500-item catalog window
+  ---
+  duration_ms: 34.329333
+  type: 'test'
+  ...
+# Subtest: VIP cover and lyrics stay anonymous while full audio access remains protected
+ok 102 - VIP cover and lyrics stay anonymous while full audio access remains protected
+  ---
+  duration_ms: 20.020667
+  type: 'test'
+  ...
+# Subtest: changed storage and database failures stay generic and never disclose private identifiers
+ok 103 - changed storage and database failures stay generic and never disclose private identifiers
+  ---
+  duration_ms: 10.507708
+  type: 'test'
+  ...
+# Subtest: capabilities and access are wired as private UI hints and never act as media grants
+ok 104 - capabilities and access are wired as private UI hints and never act as media grants
+  ---
+  duration_ms: 11.379792
+  type: 'test'
+  ...
+# Subtest: production worker wiring keeps public content separate from the versioned audio handler
+ok 105 - production worker wiring keeps public content separate from the versioned audio handler
+  ---
+  duration_ms: 1.38875
+  type: 'test'
+  ...
+# Subtest: display cover is small, shares cached encoding, and revalidates browser bytes without a body
+ok 106 - display cover is small, shares cached encoding, and revalidates browser bytes without a body
+  ---
+  duration_ms: 24.162709
+  type: 'test'
+  ...
+# Subtest: warm cache and If-None-Match cannot bypass shutdown, downlisting, version, storage or DB failures
+ok 107 - warm cache and If-None-Match cannot bypass shutdown, downlisting, version, storage or DB failures
+  ---
+  duration_ms: 19.7055
+  type: 'test'
+  ...
+# Subtest: display selector is bounded and applies only to cover routes
+ok 108 - display selector is bounded and applies only to cover routes
+  ---
+  duration_ms: 18.134125
+  type: 'test'
+  ...
+# Subtest: missing display files and newly uploaded covers fall back to the original without runtime encoding
+ok 109 - missing display files and newly uploaded covers fall back to the original without runtime encoding
+  ---
+  duration_ms: 19.909291
+  type: 'test'
+  ...
+# Subtest: album display cover stays tied to the live album version and independent cover
+ok 110 - album display cover stays tied to the live album version and independent cover
+  ---
+  duration_ms: 20.184875
+  type: 'test'
+  ...
+# Subtest: display route cannot expose the generated files directly or import an image encoder
+ok 111 - display route cannot expose the generated files directly or import an image encoder
+  ---
+  duration_ms: 0.649333
+  type: 'test'
+  ...
+# Subtest: native static assets serve a small cover while direct and escaped asset paths stay private
+not ok 112 - native static assets serve a small cover while direct and escaped asset paths stay private
+  ---
+  duration_ms: 164.992583
+  type: 'test'
+  location: '/Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/scripts/test-music-public.mjs:425:1'
+  failureType: 'uncaughtException'
+  error: 'listen EPERM: operation not permitted 127.0.0.1'
+  code: 'EPERM'
+  stack: |-
+    Server.setupListenHandle [as _listen2] (node:net:1986:21)
+    listenInCluster (node:net:2065:12)
+    node:net:2274:7
+    process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+  ...
+# Subtest: absent or pending source materials allow technical review and publication without creating approval
+ok 113 - absent or pending source materials allow technical review and publication without creating approval
+  ---
+  duration_ms: 110.346458
+  type: 'test'
+  ...
+# Subtest: optional pending evidence is retained and still validates ownership and current resources
+ok 114 - optional pending evidence is retained and still validates ownership and current resources
+  ---
+  duration_ms: 13.03225
+  type: 'test'
+  ...
+# Subtest: optional documentation cannot bypass a block, stale technical review, missing preview or resource failure
+ok 115 - optional documentation cannot bypass a block, stale technical review, missing preview or resource failure
+  ---
+  duration_ms: 19.821875
+  type: 'test'
+  ...
+# Subtest: first documentation or pending-to-blocked changes race atomically with technical review and publication
+ok 116 - first documentation or pending-to-blocked changes race atomically with technical review and publication
+  ---
+  duration_ms: 46.202125
+  type: 'test'
+  ...
+# Subtest: append-only migration preserves legacy data and blocks mutation UPDATE/REPLACE/DELETE
+ok 117 - append-only migration preserves legacy data and blocks mutation UPDATE/REPLACE/DELETE
+  ---
+  duration_ms: 11.341083
+  type: 'test'
+  ...
+# Subtest: publish atomically seals revision, switches pointers, bumps versions and writes one audit/receipt
+ok 118 - publish atomically seals revision, switches pointers, bumps versions and writes one audit/receipt
+  ---
+  duration_ms: 8.377542
+  type: 'test'
+  ...
+# Subtest: real MP3 resource verifier blocks corrupted bytes before any publication write
+ok 119 - real MP3 resource verifier blocks corrupted bytes before any publication write
+  ---
+  duration_ms: 21.580792
+  type: 'test'
+  ...
+# Subtest: same key replays exact result, changed payload conflicts, lost commit response recovers
+ok 120 - same key replays exact result, changed payload conflicts, lost commit response recovers
+  ---
+  duration_ms: 10.694125
+  type: 'test'
+  ...
+# Subtest: identical concurrent requests share one receipt and audit
+ok 121 - identical concurrent requests share one receipt and audit
+  ---
+  duration_ms: 10.667791
+  type: 'test'
+  ...
+# Subtest: replacement failure retains old public revision; success switches without losing first publication time
+ok 122 - replacement failure retains old public revision; success switches without losing first publication time
+  ---
+  duration_ms: 12.703458
+  type: 'test'
+  ...
+# Subtest: concurrent different tracks cannot lose catalogVersion updates; loser can retry same key
+ok 123 - concurrent different tracks cannot lose catalogVersion updates; loser can retry same key
+  ---
+  duration_ms: 13.710042
+  type: 'test'
+  ...
+# Subtest: unpublish zero-write failures roll back status, versions, audit and receipt
+ok 124 - unpublish zero-write failures roll back status, versions, audit and receipt
+  ---
+  duration_ms: 11.672417
+  type: 'test'
+  ...
+# Subtest: early-to-free promise expiring between validation and SQL cannot acquire a VIP paywall
+ok 125 - early-to-free promise expiring between validation and SQL cannot acquire a VIP paywall
+  ---
+  duration_ms: 10.816542
+  type: 'test'
+  ...
+# Subtest: actor-scoped keys and stale If-Match never overwrite the winner
+ok 126 - actor-scoped keys and stale If-Match never overwrite the winner
+  ---
+  duration_ms: 11.955125
+  type: 'test'
+  ...
+# Subtest: every business zero-write is forced to roll back all preceding writes
+ok 127 - every business zero-write is forced to roll back all preceding writes
+  ---
+  duration_ms: 52.136833
+  type: 'test'
+  ...
+# Subtest: SQL failures at all steps roll back; retry can safely complete
+ok 128 - SQL failures at all steps roll back; retry can safely complete
+  ---
+  duration_ms: 63.000958
+  type: 'test'
+  ...
+# Subtest: racing unversioned metadata, review, evidence and settings edits fail the transaction snapshot guard
+ok 129 - racing unversioned metadata, review, evidence and settings edits fail the transaction snapshot guard
+  ---
+  duration_ms: 41.894209
+  type: 'test'
+  ...
+# Subtest: rights are commercial + official + version-specific, not an approved boolean alone
+ok 130 - rights are commercial + official + version-specific, not an approved boolean alone
+  ---
+  duration_ms: 66.071875
+  type: 'test'
+  ...
+# Subtest: free-origin/remix exceptions require a specific permission document and explanation
+ok 131 - free-origin/remix exceptions require a specific permission document and explanation
+  ---
+  duration_ms: 8.169541
+  type: 'test'
+  ...
+# Subtest: approval fingerprints become stale after edits and cannot be copied to new revisions
+ok 132 - approval fingerprints become stale after edits and cannot be copied to new revisions
+  ---
+  duration_ms: 9.016292
+  type: 'test'
+  ...
+# Subtest: slug and metadata limits share public projection checks; invalid drafts stay private
+ok 133 - slug and metadata limits share public projection checks; invalid drafts stay private
+  ---
+  duration_ms: 23.2615
+  type: 'test'
+  ...
+# Subtest: protected tracks require a separate preview and configurable half-length/limit validation
+ok 134 - protected tracks require a separate preview and configurable half-length/limit validation
+  ---
+  duration_ms: 7.855083
+  type: 'test'
+  ...
+# Subtest: missing verifier/metadata-only duration/missing object/stale proof never publishes
+ok 135 - missing verifier/metadata-only duration/missing object/stale proof never publishes
+  ---
+  duration_ms: 7.950667
+  type: 'test'
+  ...
+# Subtest: publication count guard enforces 500 even when another publisher takes the last slot
+ok 136 - publication count guard enforces 500 even when another publisher takes the last slot
+  ---
+  duration_ms: 70.952709
+  type: 'test'
+  ...
+# Subtest: unpublish is atomic, retains sealed media and works with verifier offline; old publish receipt cannot republish
+ok 137 - unpublish is atomic, retains sealed media and works with verifier offline; old publish receipt cannot republish
+  ---
+  duration_ms: 8.753959
+  type: 'test'
+  ...
+# Subtest: previously free publication cannot acquire a paywall; explicit policy version must match
+ok 138 - previously free publication cannot acquire a paywall; explicit policy version must match
+  ---
+  duration_ms: 8.635417
+  type: 'test'
+  ...
+# Subtest: early-access expired window survives a copy edit; policy change requires a future end
+ok 139 - early-access expired window survives a copy edit; policy change requires a future end
+  ---
+  duration_ms: 9.266709
+  type: 'test'
+  ...
+# Subtest: invalid command, absent migration and missing bindings fail closed
+ok 140 - invalid command, absent migration and missing bindings fail closed
+  ---
+  duration_ms: 8.45175
+  type: 'test'
+  ...
+# Subtest: missing title/summary/tags are publication validation errors, never an uncaught TypeError
+ok 141 - missing title/summary/tags are publication validation errors, never an uncaught TypeError
+  ---
+  duration_ms: 32.495333
+  type: 'test'
+  ...
+# Subtest: limited free is included in fingerprints, deadline guards and sealed revision immutability
+ok 142 - limited free is included in fingerprints, deadline guards and sealed revision immutability
+  ---
+  duration_ms: 8.154083
+  type: 'test'
+  ...
+# Subtest: limited-free deadline and concurrent deadline edits are checked again inside publication transaction
+ok 143 - limited-free deadline and concurrent deadline edits are checked again inside publication transaction
+  ---
+  duration_ms: 18.11825
+  type: 'test'
+  ...
+1..143
+# tests 143
+# suites 0
+# pass 142
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3643.741792
