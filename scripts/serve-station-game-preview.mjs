@@ -7,7 +7,7 @@ import { readMusicResponse } from '../src/redesign/musicResponse.js';
 const port = Number(process.env.STATION_GAME_PREVIEW_PORT || 4212);
 if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid loopback port');
 const runtime = await createStationMusicRuntime({ gameCases: true }), records = [];
-const cases = ['missing', 'valid', 'corrupt', 'future', 'unavailable', 'identity-error', 'member-corrupt'];
+const cases = ['missing', 'valid', 'corrupt', 'future', 'unavailable', 'identity-error', 'member-corrupt', 'legacy-empty', 'cached-session-error'];
 const save = catLifeSaveHarness().game.state.game; save.player.gold = 87; save.meta.scT12Fixture = 'agent-preview-only';
 const script = await readFile(new URL('./fixtures/station-games/control.js', import.meta.url), 'utf8');
 const headers = { 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex, nofollow' };
@@ -27,7 +27,8 @@ const server = http.createServer(async (incoming, outgoing) => {
     } else if (url.pathname === '/__preview/requests') {
       response = Response.json(records, { headers });
     } else if (url.pathname === '/api/readers/session') {
-      response = Response.json(scenario === 'identity-error' ? { ok: false } : { ok: true, authenticated: scenario === 'member-corrupt', ...(scenario === 'member-corrupt' ? { account: { id: 7, displayName: 'Local fixture account' } } : {}) }, { status: scenario === 'identity-error' ? 503 : 200, headers });
+      const sessionError = ['identity-error', 'cached-session-error'].includes(scenario);
+      response = Response.json(sessionError ? { ok: false } : { ok: true, authenticated: scenario === 'member-corrupt', ...(scenario === 'member-corrupt' ? { account: { id: 7, displayName: 'Local fixture account' } } : {}) }, { status: sessionError ? 503 : 200, headers });
     } else if (url.pathname === '/api/readers/game-saves/cat-life') {
       response = Response.json({ ok: true, save: null }, { headers });
     } else {

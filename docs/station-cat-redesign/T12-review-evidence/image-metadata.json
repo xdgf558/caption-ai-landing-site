@@ -1,0 +1,60 @@
+{
+  "images": [
+    {
+      "path": "cached-session-error-runtime.jpg",
+      "format": "JPEG",
+      "width": 432,
+      "height": 1253,
+      "bytes": 28253,
+      "sha256": "d79e62b7e93658a2c70f0a135ddfc37a2b91df4c4eae4330d6396fbd5f2dc1f9"
+    },
+    {
+      "path": "changed-before-exit-runtime.jpg",
+      "format": "JPEG",
+      "width": 432,
+      "height": 3000,
+      "bytes": 140411,
+      "sha256": "28c6679efabf2bdeb89ee3393eef898cd2ed7bc6c97535bf56a1030eb8e75533"
+    },
+    {
+      "path": "comparison-source-before-current.png",
+      "format": "PNG",
+      "width": 1772,
+      "height": 643,
+      "bytes": 693375,
+      "sha256": "af68ff4147568eaf707a449975493ef6974545fee38112971e25a3c038c140a4"
+    },
+    {
+      "path": "corrupt-runtime.jpg",
+      "format": "JPEG",
+      "width": 432,
+      "height": 1253,
+      "bytes": 33371,
+      "sha256": "117c66284a6ff1f11f898bf2ce6e229bcc32b788b2a34bb74bbab90da8730a92"
+    },
+    {
+      "path": "legacy-empty-runtime.jpg",
+      "format": "JPEG",
+      "width": 432,
+      "height": 3000,
+      "bytes": 140198,
+      "sha256": "e33a5e6c8354d02b860fd897b8966d8b70f4836a577474861cfa983be34b621c"
+    },
+    {
+      "path": "preview-final-desktop.jpg",
+      "format": "JPEG",
+      "width": 1425,
+      "height": 1579,
+      "bytes": 159904,
+      "sha256": "0754b4103a3fefbe817137acf89d3c187853c90343c88920d183503dc08d8778"
+    },
+    {
+      "path": "preview-final-mobile.jpg",
+      "format": "JPEG",
+      "width": 375,
+      "height": 2190,
+      "bytes": 90236,
+      "sha256": "fdda5ed990e3e76ac67fe9b354e364c36f453055d3f8276476e109b7eaf0d5e8"
+    }
+  ]
+}

@@ -21,7 +21,7 @@
 | T09 音频播放器与请求竞态 | 审查通过，已合并 | [PR #194](https://github.com/xdgf558/caption-ai-landing-site/pull/194)，审查头 `00fe1096` 的完整托管 CI 通过，合并为 `7e46ed37`；[播放器合同与验收](T09-audio-player-and-request-races.md)、[验证摘要](T09-evidence/verification-summary.json)、[设计 QA](T09-evidence/design-qa.md)；缓冲及会话内准备窗口的 P3 限制保留 |
 | T10 发行平台入口与降级 | 审查通过，已合并 | [PR #195](https://github.com/xdgf558/caption-ai-landing-site/pull/195)，审查头 `9c687670` 的完整托管 CI 通过，合并为 `7ecaab47`；[平台合同与验收](T10-release-platforms-and-fallbacks.md)、[验证摘要](T10-evidence/verification-summary.json)、[设计 QA](T10-evidence/design-qa.md)；历史测试时序和真实平台验收的 P3 边界保留 |
 | T11 短视频与 MV 播放 | 审查通过，已合并 | [PR #196](https://github.com/xdgf558/caption-ai-landing-site/pull/196)，审查头 `d804f4b1` 的完整托管 CI 通过，合并为 `99b0ba00`；[播放合同与验收](T11-clips-and-mv-playback.md)、[最终源码验证摘要](T11-evidence/verification-summary.json)、[设计 QA](T11-evidence/design-qa.md)；真实媒体与真机的 P3 缺口保留 |
-| T12 游戏作品页与存档入口 | 开发与本地验收完成，待用户审查 | [页面与存档保护合同](T12-game-pages-and-save-safety.md)、[最终源码验证摘要](T12-evidence/verification-summary.json)、[设计 QA](T12-evidence/design-qa.md)；默认关闭，实际游戏运行地址保留；托管 CI 须按本批实际头独立确认 |
+| T12 游戏作品页与存档入口 | 原头审查无阻断，CI 修订待复审 | [PR #197](https://github.com/xdgf558/caption-ai-landing-site/pull/197)、[页面合同](T12-game-pages-and-save-safety.md)、[CI 修订说明](T12-ci-browser-review-fixes.md)、[修订验证摘要](T12-review-evidence/verification-summary.json)；原头 `16cde762` 托管浏览器检查失败，修订头须独立 CI 及用户复审，尚未合并 |
 | T13–T22 | 未开始 | 沿用任务清单中的依赖，每个任务单独提交、审查后继续 |
 
 ## 需求基线
@@ -65,3 +65,5 @@ T11 分支 `codex/station-cat-redesign-t11` 从该实际主分支建立。首页
 T11 审查头 `d804f4b173e0ba67bb4b6aa193b106e39fa7d85e` 的 [完整托管 CI](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37633497177/job/112833555385) 于 2026-10-07 14:35:32 UTC 完成，33 个步骤全部成功。用户审查通过后，于 14:37:20 UTC squash 合并为 `99b0ba003c1618018e40c5c756d44f2b94ef7f63`；[独立 CI](T12-evidence/T11-approved-head-ci.json) 与 [合并状态](T12-evidence/T11-merge-result.json) 可复核。插画加合成音的视频、未点击原链接、移动浏览器/VoiceOver、生产资源和缓存撤销的 P3 边界继续保留。
 
 当前任务为 T12，分支 `codex/station-cat-redesign-t12` 从上述实际合并提交建立。新增默认关闭的四语言游戏目录和介绍页，使用 T03 实际旧游戏截图；介绍与 `/games/cat-life/` 运行目录分离。只读存档状态、现有账号会话与运行端写入保护已接通：异常槽位暂停启动、自动保存和后续云衔接，显式恢复先备份原文，再替换相容文件。最终源码 177 项本地测试、空正文主构建及 staging 资源核验通过，原始日志与源码哈希可独立复算。A13/A14/A19 仅完成本机夹具范围，生产云同步和真机仍未验收。T13 网站媒体协调尚未实施。本批不执行远程迁移、开关启用、生产发布或旧入口退役，待用户审查后再继续。
+
+用户于 2026-10-08 审查 T12 未发现阻断，继续保留已发云写入/跨标签页比较不是原子操作及生产验收缺口。随后核对发现原头 `16cde7622e8f729875d1a5625a03fb44e78950ec` 的托管 CI 在 146 项浏览器检查中有 4 项失败、142 项通过，后续步骤未执行，因此没有合并或开始 T13。修订恢复 schema 0–2 空猫列表的既有迁移、处理退出时预期写入拒绝，并同步旧浏览器夹具与缓存身份验收；本机新一轮 178 项测试、空正文构建、staging 资源检查通过。原头的 177 项及截图保留为历史，修订原始日志和源码哈希单独保存。修订头仍待独立托管 CI 和用户复审，本地通过不替代它。

@@ -10,9 +10,11 @@
       if (!plain(data)) return { status: "corrupt" };
       var version = data.schemaVersion === undefined ? 0 : data.schemaVersion;
       if (!Number.isInteger(version) || version < 0 || version > (supported === undefined ? 3 : supported)) return { status: "unsupported" };
+      // Older schemas repaired empty cat lists without discarding currency/settings.
+      // Missing lists or empty current-schema lists still indicate damaged data.
       var gold = data.player && (version === 0 && data.player.gold === undefined ? data.player.coins : data.player.gold);
       if (!plain(data.meta) || !plain(data.player) || !plain(data.inventory) || !plain(data.settings) ||
-          typeof gold !== "number" || !Number.isFinite(gold) || !Array.isArray(data.cats) || !data.cats.length ||
+          typeof gold !== "number" || !Number.isFinite(gold) || !Array.isArray(data.cats) || (version >= 3 && !data.cats.length) ||
           data.cats.some(function (cat) { return !plain(cat) || typeof cat.id !== "string" || !cat.id; })) return { status: "corrupt" };
       if (["tasks", "home", "shop", "lottery", "community", "flags"].some(function (key) { return data[key] !== undefined && !plain(data[key]); })) return { status: "corrupt" };
       if (data.jobs !== undefined && (!Array.isArray(data.jobs) || data.jobs.some(function (job) { return !plain(job) || typeof job.id !== "string"; }))) return { status: "corrupt" };

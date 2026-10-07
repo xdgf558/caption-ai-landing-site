@@ -1,0 +1,175 @@
+{
+  "task": "T12 CI browser repair",
+  "recordedAt": "2026-10-07T23:30:11.890974+00:00",
+  "branch": "codex/station-cat-redesign-t12",
+  "baseCommit": "99b0ba003c1618018e40c5c756d44f2b94ef7f63",
+  "originalReviewedHead": "16cde7622e8f729875d1a5625a03fb44e78950ec",
+  "sourceFingerprintSha256": "e9f251a3dc872532a7387d598e3aba2c5f00bd35820800ae5180a476ebabdaed",
+  "sourceManifest": "source-manifest.json",
+  "testRuns": [
+    {
+      "name": "games",
+      "command": "npm run test:redesign:games",
+      "exitCode": 0,
+      "reportedTests": 51,
+      "passed": 51,
+      "failed": 0,
+      "log": "games-final.log",
+      "bytes": 5069,
+      "sha256": "2afa82ea9dce006d993b304b5d8b5667b1b8159d6a6ab42fe7b2ed1cd9cb5f29",
+      "logModifiedAt": "2026-10-07T23:23:06.234161+00:00"
+    },
+    {
+      "name": "legacy",
+      "command": "node --test scripts/test-cat-life-interactions.mjs scripts/test-cat-life-gentle-care.mjs scripts/test-cat-life-onboarding.mjs scripts/test-cat-life-memories.mjs scripts/test-cat-life-release-history.mjs scripts/test-cat-life-music.mjs scripts/test-cat-life-share.mjs scripts/test-cat-life-motion.mjs scripts/test-cat-life-game-integration.mjs scripts/test-cat-life-commerce-contract.mjs scripts/test-cat-life-cloud-saves.mjs",
+      "exitCode": 0,
+      "reportedTests": 66,
+      "passed": 66,
+      "failed": 0,
+      "log": "legacy-final.log",
+      "bytes": 6878,
+      "sha256": "fc49f21e7dcfa7bb9c818e86fa162cf7b8cde64c22bd8d69ddf4a8932840b96f",
+      "logModifiedAt": "2026-10-07T23:21:46.919641+00:00"
+    },
+    {
+      "name": "public",
+      "command": "npm run test:redesign:public",
+      "exitCode": 0,
+      "reportedTests": 35,
+      "passed": 35,
+      "failed": 0,
+      "log": "public-final.log",
+      "bytes": 4604,
+      "sha256": "dd8edf78cbf57fd0793412386a2aee662660dc049b67eab6dfe7446f34db3b2b",
+      "logModifiedAt": "2026-10-07T23:23:06.698511+00:00"
+    },
+    {
+      "name": "music",
+      "command": "npm run test:redesign:music",
+      "exitCode": 0,
+      "reportedTests": 26,
+      "passed": 26,
+      "failed": 0,
+      "log": "music-final.log",
+      "bytes": 3465,
+      "sha256": "c8aab27e00168014af842e51e79c2b7504db5761f9d7658e0221e08f8bab1288",
+      "logModifiedAt": "2026-10-07T23:23:09.260952+00:00"
+    }
+  ],
+  "totalReportedTests": 178,
+  "buildRuns": [
+    {
+      "name": "build",
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "exitCode": 0,
+      "log": "build-final.log.gz",
+      "bytes": 3266,
+      "sha256": "645065b323a452825e9f94d8a324884a15d3021552340ef1d009848d4dbcb7bd",
+      "logModifiedAt": "2026-10-07T23:21:50.262472+00:00",
+      "encoding": "gzip; decompress to original UTF-8 log",
+      "rawBytes": 23546,
+      "rawSha256": "230868d363d49434b540040e753ba56358ac4a02fe498ec726aba57e9d652604"
+    },
+    {
+      "name": "staging-build",
+      "command": "node scripts/build-music-staging-assets.mjs",
+      "exitCode": 0,
+      "log": "staging-build-final.log.gz",
+      "bytes": 87,
+      "sha256": "c820a21555bb362acd106ee31316053b11b6edb54105806e18db1c7a50df1318",
+      "logModifiedAt": "2026-10-07T23:23:00.980815+00:00",
+      "encoding": "gzip; decompress to original UTF-8 log",
+      "rawBytes": 71,
+      "rawSha256": "c78131513bda4a9e1254ada2c8a675c9e7fec5463f06d0ad1ae1b8e06f4ee6a0"
+    },
+    {
+      "name": "staging-check",
+      "command": "node scripts/check-music-staging-assets.mjs",
+      "exitCode": 0,
+      "log": "staging-check-final.log.gz",
+      "bytes": 71,
+      "sha256": "326bd5252ee0e7760f9befcf1a68bc93f1377fcaf701e64f1e7081982b6d3bff",
+      "logModifiedAt": "2026-10-07T23:23:10.787871+00:00",
+      "encoding": "gzip; decompress to original UTF-8 log",
+      "rawBytes": 51,
+      "rawSha256": "5981ce8f2b86aca3a9c797e6c7f83b5547600728388f12f4ce9a3ccd4a987279"
+    }
+  ],
+  "staging": {
+    "pages": 8,
+    "exactAssets": 34
+  },
+  "originalHostedCI": {
+    "headSha": "16cde7622e8f729875d1a5625a03fb44e78950ec",
+    "status": "completed",
+    "conclusion": "failure",
+    "url": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37644051608",
+    "completedAt": "2026-10-07T16:03:55Z",
+    "jobSteps": 34,
+    "successfulSteps": 20,
+    "browserTests": 146,
+    "browserPassed": 142,
+    "browserFailed": 4,
+    "statusRecord": "original-head-ci-failure.json",
+    "reviewRecord": "original-reviewed-pr.json",
+    "rawLog": {
+      "log": "original-workflow-failure.log.gz",
+      "bytes": 123997,
+      "sha256": "80559a46e9e23da69644c4053f5bbb6efd876c6987c035f27d4e4340f5185451",
+      "logModifiedAt": "2026-10-07T23:19:20.482046+00:00",
+      "encoding": "gzip; decompress to original UTF-8 log",
+      "rawBytes": 781499,
+      "rawSha256": "a068d7e3a73aa324d4cf5c4dfcaa4f8aa6131c42d49ca561527e368b5516bd2e"
+    }
+  },
+  "repairHostedCI": {
+    "status": "Not asserted by this pre-commit record",
+    "expectedBrowserTests": 148,
+    "verification": "Inspect exact repair PR head and its complete hosted CI separately; local tests do not substitute for it"
+  },
+  "browser": {
+    "origin": "http://127.0.0.1:4212",
+    "provider": "IAB",
+    "tab": "6",
+    "scenarios": [
+      "legacy-empty: 42 gold retained",
+      "valid external change: 923 gold retained after reload",
+      "cached-session-error: identity protection and original preservation indicator",
+      "corrupt: protection and original preservation indicator"
+    ],
+    "scenarioEvidence": "browser-observations.json",
+    "viewportCases": 2,
+    "widths": [
+      390,
+      1440
+    ],
+    "viewportEvidence": "browser-viewports.json",
+    "viewportOverrideReset": true,
+    "consoleEvidence": "browser-console.json",
+    "previous20ResponsiveCases": "Historical original-head evidence only, not rerun in this repair",
+    "browserCLIExecutedLocally": false,
+    "downloadToDisk": "Not observed"
+  },
+  "boundaries": {
+    "productionDeployment": false,
+    "remoteMigration": false,
+    "productionFlagChanges": false,
+    "oldEntranceRetirement": false,
+    "realProductionCloudTest": false,
+    "nativeDeviceTest": false,
+    "voiceOverTest": false,
+    "t13Started": false,
+    "t12Merged": false,
+    "legacyRuntimeSafetyModified": true,
+    "fixtureSession": true,
+    "emptySerialBuild": true
+  },
+  "limits": [
+    "Already issued cloud writes are not cancelled and may still be accepted after session changes",
+    "localStorage comparison and setItem are not cross-process atomic CAS",
+    "Session checks and server writes are not an atomic transaction",
+    "Runtime save protection deploys independently of game page flags",
+    "Production D1/R2, cloud conflicts, real devices and VoiceOver remain unverified",
+    "Raw browser export download to disk remains unobserved"
+  ]
+}

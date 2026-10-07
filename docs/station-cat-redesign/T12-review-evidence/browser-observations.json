@@ -1,0 +1,38 @@
+{
+  "scopeStart": "2026-10-07T23:23:17.854Z",
+  "observations": [
+    {
+      "case": "legacy-empty",
+      "header": "猫打工养猫日记第 1 天·2026-10-08 07:23:35·v1.28.0●42金币♪体力100心情80饥饿20睡觉会按真实时间持续恢复体力和心情；饥饿会随时间升高，太饿时不能去打工。睡觉随时可以睡觉恢复体力和心情。",
+      "url": "http://127.0.0.1:4212/games/cat-life/?sc_entry=1&lang=zh-Hant",
+      "wall": null
+    },
+    {
+      "case": "changed-before-exit",
+      "header": "猫打工养猫日记第 1 天·2026-10-08 07:23:41·v1.28.0●923金币♪体力100心情80饥饿20睡觉会按真实时间持续恢复体力和心情；饥饿会随时间升高，太饿时不能去打工。睡觉随时可以睡觉恢复体力和心情。",
+      "url": "http://127.0.0.1:4212/games/cat-life/?sc_entry=1&lang=zh-Hant",
+      "wall": null
+    },
+    {
+      "case": "cached-session-error",
+      "focus": "先保留你的遊戲進度",
+      "homeRendered": false,
+      "importShown": false,
+      "preserved": "异常存档原文保留：是（当前槽位）",
+      "url": "http://127.0.0.1:4212/games/cat-life/?sc_entry=1&lang=zh-Hant",
+      "wall": "identity"
+    },
+    {
+      "case": "corrupt-unchanged",
+      "focus": "先保留你的遊戲進度",
+      "homeRendered": false,
+      "preserved": "异常存档原文保留：是（当前槽位）",
+      "wall": "corrupt"
+    }
+  ],
+  "viewportOverrideReset": true,
+  "provider": "IAB",
+  "tab": "6",
+  "loopback": "http://127.0.0.1:4212",
+  "production": false
+}

@@ -97,6 +97,16 @@
     game.state.saveSystem.autoSave();
   }
 
+  function persistBeforeLeaving() {
+    if (saveBlocked) return;
+    try { game.state.saveSystem.saveGame(game.state.game); }
+    catch (error) {
+      // The save system already locks writes and announces its protection state.
+      // A rejected exit save must not become an uncaught lifecycle exception.
+      if (!error.saveStatus) throw error;
+    }
+  }
+
   function updateShellText() {
     document.title = t("appTitle");
     document.documentElement.lang = game.utils.i18n.getLanguage();
@@ -1425,12 +1435,10 @@
         game.systems.musicSystem.syncForState(game.state.currentPage);
       }
     });
-    window.addEventListener("beforeunload", function () {
-      if (!saveBlocked) game.state.saveSystem.saveGame(game.state.game);
-    });
+    window.addEventListener("beforeunload", persistBeforeLeaving);
     window.addEventListener("pagehide", function () {
       game.ui.shareDialog.dismiss();
-      if (!saveBlocked) game.state.saveSystem.saveGame(game.state.game);
+      persistBeforeLeaving();
     });
 
     syncRealtime("init");

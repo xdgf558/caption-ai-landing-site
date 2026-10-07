@@ -12,7 +12,7 @@ for (const [status, raw] of Object.entries(statuses)) test(`read-only classifier
 });
 test('empty strings, empty objects, null, arrays, incomplete state and malformed cats are corrupt, never missing', () => {
   const h = catLifeSaveHarness();
-  for (const raw of ['', '{}', 'null', '[]', '{"player":{"gold":200}}', JSON.stringify({ ...JSON.parse(sample()), cats: [null] })]) assert.equal(h.context.CatGameSaveStatus.inspectRaw(raw).status, 'corrupt');
+  for (const raw of ['', '{}', 'null', '[]', '{"player":{"gold":200}}', JSON.stringify({ ...JSON.parse(sample()), cats: [null] }), JSON.stringify({ ...JSON.parse(sample()), cats: [] })]) assert.equal(h.context.CatGameSaveStatus.inspectRaw(raw).status, 'corrupt');
 });
 test('unavailable storage is distinct from missing and cannot be created', () => {
   const h = catLifeSaveHarness({ deniedRead: true }); assert.equal(h.game.state.saveSystem.inspect().status, 'unavailable');
@@ -25,6 +25,19 @@ test('legacy schema 0, 1 and 2 are detected without writes and migrate real prog
     const raw = JSON.stringify(data), h = catLifeSaveHarness({ initial: { [base]: raw } });
     assert.equal(h.game.state.saveSystem.inspect().status, 'valid'); assert.equal(h.game.state.saveSystem.loadGame().player.gold, 91);
     assert.equal(h.values.get(base), raw); assert.equal(h.writes.length, 0);
+  }
+});
+test('legacy empty cat arrays retain currency and volume through the established repair migration', () => {
+  for (const schema of [0, 1, 2]) {
+    const data = JSON.parse(sample()); data.schemaVersion = schema; data.cats = []; data.player.gold = 42;
+    if (!schema) { data.player.coins = 42; delete data.player.gold; }
+    if (schema < 2) { delete data.settings.bgmVolume; delete data.settings.sfxVolume; data.settings.musicVolume = 55; }
+    const raw = JSON.stringify(data), h = catLifeSaveHarness({ initial: { [base]: raw } }), s = h.game.state.saveSystem;
+    assert.equal(s.inspect().status, 'valid'); h.game.state.game = s.loadGame();
+    assert.equal(h.game.state.game.player.gold, 42); assert.ok(h.game.state.game.cats.length);
+    if (schema < 2) { assert.equal(h.game.state.game.settings.bgmVolume, 55); assert.equal(h.game.state.game.settings.sfxVolume, 55); }
+    assert.equal(h.values.get(base), raw); assert.equal(h.writes.length, 0);
+    s.saveGame(); assert.equal(JSON.parse(h.values.get(base)).player.gold, 42); assert.equal(s.inspect().status, 'valid');
   }
 });
 for (const status of ['corrupt', 'unsupported']) test(`${status} is preserved through load, create, save, autosave and rejected import`, () => {
