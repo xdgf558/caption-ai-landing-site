@@ -1,0 +1,36 @@
+✔ staging cookies cannot inherit a production session, including duplicates (8.024917ms)
+✔ Access-protected responses stay private without changing streams, HEAD, 304 or ranges (1.152042ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ real Access verification precedes all bindings; shared limits precede isolated membership (40.894625ms)
+✔ only music admin, public read routes and exact static dependencies are allowed (0.508334ms)
+✔ main site, other admin surfaces, traversal variants and unsupported methods stay closed (0.166875ms)
+✔ only exact music page routes receive canonical trailing slash redirects (0.037333ms)
+✔ host and fail-closed responses are normalized and private (0.09ms)
+✔ the deployed entrypoint blocks other hosts and keeps admin closed without Access config (0.563792ms)
+✔ staging config exposes only the Access-protected music host and isolated bindings (0.784875ms)
+✔ maintenance deployments derive the same isolated config with all music flags closed (0.487042ms)
+✔ moving the maintenance config preserves source, asset and both migration directories (0.373083ms)
+▶ staging package validation checks exact HTML pages and their dependency closure
+  ✔ complete pages and dependencies pass; navigation is not a static dependency (6.730291ms)
+  ✔ missing HTML dependency fails: /_astro/music.astro_astro_type_script_index_0_lang.fixture.js (4.18075ms)
+  ✔ missing HTML dependency fails: /styles/admin-music.css (3.512083ms)
+  ✔ unexpected HTML fails: /en/library/index.html (4.249083ms)
+  ✔ unexpected HTML fails: /music/extra.html (4.502042ms)
+  ✔ missing transitive JS dependency fails (3.378042ms)
+  ✔ present but forbidden chunks fail (3.20025ms)
+✔ staging package validation checks exact HTML pages and their dependency closure (30.106125ms)
+✔ staging module graph includes only music, Access and the existing reader membership contract (3.730708ms)
+✔ maintenance generator rejects resource, Access, route and execution drift before producing a config (1.481334ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 137.961208

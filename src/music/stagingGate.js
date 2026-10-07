@@ -32,7 +32,7 @@ const pagePaths = new Set([
 const astroAssets = [
   /^\/_astro\/(?:music|collections|featured|index)\.astro_astro_type_script_index_0_lang\.[A-Za-z0-9_-]+\.js$/,
   /^\/_astro\/(?:LanguageSwitcher|MusicPlayer)\.astro_astro_type_script_index_0_lang\.[A-Za-z0-9_-]+\.js$/,
-  /^\/_astro\/(?:musicAdminClient|musicMessages|musicPlayerCatalog|musicWavClient|musicAlbumBatch|musicWav|policy|navigation|pagePaths)\.[A-Za-z0-9_-]+\.js$/,
+  /^\/_astro\/(?:musicAdminClient|musicMessages|musicPlayerCatalog|musicWavClient|musicAlbumBatch|musicWav|musicLyrics|policy|navigation|pagePaths)\.[A-Za-z0-9_-]+\.js$/,
   /^\/_astro\/musicWavWorker-[A-Za-z0-9_-]+\.js$/,
   /^\/_astro\/index\.[A-Za-z0-9_-]+\.css$/
 ];

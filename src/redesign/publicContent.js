@@ -43,27 +43,40 @@ export async function projectTrack(runtime, row, options, { detailed = false } =
     const asset = byId.get(promo.previewAssetId), source = byId.get(asset?.derived_from_asset_id);
     if (previewIdentity(asset, source, row.id, now) && await resourceReady(runtime, asset, run)) {
       ready.set(asset.id, asset);
-      preview = { durationMs: asset.duration_ms, playbackPath: contentBase + '/tracks/' + row.slug + '/playback?variant=preview' };
+      preview = { durationMs: asset.duration_ms, revision: promo.revision,
+        playbackPath: contentBase + '/tracks/' + row.slug + '/playback?variant=preview' };
     }
   }
   const links = rawLinks.filter(link => link.track_id === row.id).map(link => platform(link, country, now)).filter(Boolean);
   const releases = links.map(link => link.releasedAt).filter(Boolean).sort();
+  // A release date is global operator metadata, independent of which HTTPS
+  // buttons apply to this visitor. It never makes an invalid URL clickable.
+  const globalDates = rawLinks.filter(link => link.track_id === row.id && link.status === 'live' &&
+    millis(link.verified_at) && link.verified_at <= now && millis(link.external_released_at) && link.external_released_at <= now)
+    .map(link => link.external_released_at);
   // No spread of metadata/DB rows. In particular, site_audio_mode, legacy
   // versions, private full-audio URLs, storage keys and rights text stay inside.
   const dto = {
     id: row.id, slug: row.slug, revision: row.published_revision, originalLocale: meta.originalLocale,
     title: meta.title, artist: meta.artist, summary: meta.summary,
     publishedAt: iso(row.published_at), releasedAt: releases[0] || null,
+    catalogReleasedAt: globalDates.length ? iso(Math.min(...globalDates)) : null,
     durationMs: positive(row.duration_ms) ? row.duration_ms : null,
     href: localizedPath(locale, 'music/tracks', row.slug),
     coverUrl: ready.has(row.cover_asset_id) ? assetPath(ready.get(row.cover_asset_id)) : null,
     preview,
+    // This is only a permission handshake, never an audio URL or a free/VIP
+    // grant. The private endpoint rechecks the existing reader policy and R2.
+    fullPlayback: runtime.flags.public && row.existing_full_reference === 1 &&
+      ['free_full', 'existing_entitlement'].includes(row.site_audio_mode)
+      ? { playbackPath: contentBase + '/tracks/' + row.slug + '/playback?variant=full', requiresAccessCheck: true } : null,
     platforms: links.map(link => ({ id: link.id, provider: link.provider, status: link.status, href: link.href,
       verifiedAt: link.verifiedAt, releasedAt: link.releasedAt }))
   };
   if (detailed) {
     dto.story = meta.story;
     dto.lyricsUrl = ready.has(row.lyrics_asset_id) ? assetPath(ready.get(row.lyrics_asset_id)) : null;
+    dto.lyricsKind = ready.has(row.lyrics_asset_id) ? ready.get(row.lyrics_asset_id).format : null;
   }
   return { dto, ready, meta, promotion: promo, links };
 }

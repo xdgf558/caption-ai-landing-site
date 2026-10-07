@@ -1,0 +1,30 @@
+✖ route boundaries retain aliases and refuse runtime/API namespaces; either flag off preserves the old handler without reading bindings (8.927333ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 62.648959
+
+✖ failing tests:
+
+test at scripts/test-station-music-pages.mjs:84:1
+✖ route boundaries retain aliases and refuse runtime/API namespaces; either flag off preserves the old handler without reading bindings (8.927333ms)
+  AssertionError [ERR_ASSERTION]: {"STATION_MUSIC_PAGES_ENABLED":"true"} GET /music/
+  + actual - expected
+  
+  + Response {}
+  - null
+  
+      at TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-music-pages.mjs:99:60)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: {},
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

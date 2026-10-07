@@ -1,0 +1,153 @@
+{
+  "task": "T08 review follow-up 2: joint HTML route gate",
+  "recordedAt": "2026-10-07T08:14:29.326Z",
+  "reviewedHead": "620ae94bebb01f5b9df5979e8d446766b439da9f",
+  "base": "828d5a9d345e171dd2d28b159943c09beeaa63c4",
+  "scope": "Final working-tree source hashes before committing the second revision. Previous T08 and review evidence remain historical records.",
+  "localRuntime": "v24.15.0",
+  "regressionBeforeFix": {
+    "command": "node --test --test-name-pattern='either flag off' scripts/test-station-music-pages.mjs",
+    "tests": 1,
+    "pass": 0,
+    "fail": 1,
+    "expectedExitCode": 1,
+    "log": "regression-before-fix.log",
+    "reproduced": "Pages enabled with content flag absent returned Response instead of null on GET /music/."
+  },
+  "tests": [
+    {
+      "command": "npm run test:redesign:music",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "log": "music-runtime.log"
+    },
+    {
+      "command": "node --test --test-timeout=90000 scripts/test-music-staging-gate.mjs",
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "log": "staging-gate.log"
+    }
+  ],
+  "routeChecks": {
+    "incompleteFlagConfigurations": 9,
+    "directRequestCases": 189,
+    "methods": [
+      "GET",
+      "HEAD",
+      "POST"
+    ],
+    "noBindingReads": [
+      "MUSIC_DB",
+      "MUSIC_BUCKET",
+      "ASSETS"
+    ],
+    "workerFlagPairs": [
+      "neither enabled",
+      "content only",
+      "pages only"
+    ],
+    "legacyParity": [
+      "status",
+      "content-type",
+      "location",
+      "allow",
+      "cache-control",
+      "x-robots-tag",
+      "body"
+    ],
+    "bothEnabledSSRAndMissingBindingsCovered": true,
+    "productionHTTP": false
+  },
+  "build": {
+    "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+    "pages": 157,
+    "sitemapRoutes": 111,
+    "productionPackage": false,
+    "log": "build.log"
+  },
+  "stagingPackage": {
+    "commands": [
+      "node scripts/build-music-staging-assets.mjs",
+      "node scripts/check-music-staging-assets.mjs"
+    ],
+    "pages": 8,
+    "assets": 33,
+    "log": "staging-package.log",
+    "remoteExecution": false
+  },
+  "hostedCI": {
+    "previousReviewedHead": "620ae94bebb01f5b9df5979e8d446766b439da9f",
+    "previousRunObservedStatus": "IN_PROGRESS",
+    "previousRunObservedConclusion": null,
+    "previousRunUrl": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37590455846/job/112690416550",
+    "revisionResult": "Requires an independent run on the new committed head; local results do not establish hosted CI success."
+  },
+  "browser": {
+    "uiChanged": false,
+    "newScreenshotsTaken": false,
+    "previousVisualEvidence": "../T08-review-evidence/",
+    "actualDevices": false
+  },
+  "productionFlagsModified": false,
+  "remoteMigrations": false,
+  "remoteDeployment": false,
+  "oldEntranceRetirement": false,
+  "T09Started": false,
+  "materials": "稍后确定",
+  "source": [
+    {
+      "file": "src/redesign/musicPages.js",
+      "sha256": "83558f8779e0c92711a1ee7ad699b497a2db1f1fa7e1d617a7026987fac5520e"
+    },
+    {
+      "file": "scripts/test-station-music-pages.mjs",
+      "sha256": "47c123393c1f1bf23f54f10215857c03433ce97484a07f46c15bfd483734c029"
+    },
+    {
+      "file": "scripts/test-station-music-runtime.mjs",
+      "sha256": "2a167bfc7facb0ce9c0d9284a18b8aec82ea7daf3c78f38646d826ac4aadec1b"
+    },
+    {
+      "file": "scripts/helpers/station-music-runtime-worker.js",
+      "sha256": "2bd009f5163c8618297aea405c12d435849c2a966e4c415e2116cc512c98ea7f"
+    },
+    {
+      "file": "migrations-music/0012_station_redesign.sql",
+      "sha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498"
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "build.log",
+      "bytes": 22871,
+      "sha256": "6ccf254337e88d358307548dfb9ca8b73f0f6d50e57566f1d31739153b053e00"
+    },
+    {
+      "file": "music-runtime.log",
+      "bytes": 3468,
+      "sha256": "b928654c1ff543b1aed969569da5843be643a036416556784b6d0ad3cf056a7c"
+    },
+    {
+      "file": "regression-before-fix.log",
+      "bytes": 1168,
+      "sha256": "345955ea613f06bbbe8834ed8ead9ba9fe4dda31cca55e2163c0865b8dd6aa71"
+    },
+    {
+      "file": "staging-gate.log",
+      "bytes": 2225,
+      "sha256": "a10447e7922eb8e375dda110f5ec9ce465ebee265f9322e4f06b2541f75d49ed"
+    },
+    {
+      "file": "staging-package.log",
+      "bytes": 122,
+      "sha256": "154afbae6ea7a963beaa60948172232960889320e8cfdced36116a082c102ce8"
+    },
+    {
+      "file": "unit.log",
+      "bytes": 1874,
+      "sha256": "3a0b5fb65e786225b96ce954d5e2079ee7c3fa68ff1297a335d4647d5fdd12ee"
+    }
+  ]
+}

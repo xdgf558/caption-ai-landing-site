@@ -1,0 +1,406 @@
+{
+  "task": "T08",
+  "baseCommit": "828d5a9d345e171dd2d28b159943c09beeaa63c4",
+  "branch": "codex/station-cat-redesign-t08",
+  "recordedAt": "2026-10-07T07:03:06Z",
+  "previousTask": {
+    "pr": "https://github.com/xdgf558/caption-ai-landing-site/pull/192",
+    "approvedHead": "0b9d7b67974f447d8e543415fce64ec84d2ba25f",
+    "ci": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37577847229/job/112650635781",
+    "ciCompleted": "2026-10-07T06:16:59Z",
+    "mergedAt": "2026-10-07T06:18:41Z"
+  },
+  "checks": [
+    {
+      "command": "npm run test:redesign:music",
+      "passed": 23,
+      "failed": 0,
+      "log": "music-runtime.log",
+      "scope": "13 unit/SQLite/adapter + 10 actual Worker/D1/R2/built shell tests"
+    },
+    {
+      "command": "node --test scripts/test-station-music-pages.mjs",
+      "passed": 13,
+      "failed": 0,
+      "log": "music-pages-unit.log",
+      "scope": "subset of 23, not counted twice"
+    },
+    {
+      "command": "node --test --test-timeout=90000 scripts/test-station-content-public.mjs scripts/test-station-content-runtime.mjs scripts/test-music-player.mjs scripts/test-station-redesign-routes.mjs scripts/test-station-redesign-home.mjs",
+      "passed": 74,
+      "failed": 0,
+      "log": "regression.log"
+    },
+    {
+      "command": "node --test scripts/test-music-library.mjs scripts/test-music-sharing-return.mjs",
+      "passed": 34,
+      "failed": 0,
+      "log": "local-library-regression.log",
+      "initialSandbox": "33 passed; only loopback asset fixture failed EPERM, preserved in local-library-regression-sandbox.log"
+    },
+    {
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "passed": true,
+      "pages": 157,
+      "sitemapRoutes": 111,
+      "log": "build.log",
+      "productionPackage": false
+    }
+  ],
+  "ui": {
+    "browser": "Codex IAB",
+    "designQA": "passed",
+    "source": "../T04-evidence/gentle-station/reference-content.png",
+    "widths": [
+      320,
+      390,
+      768,
+      1024,
+      1371
+    ],
+    "locales": [
+      "zh-Hant",
+      "zh-Hans",
+      "en",
+      "ja"
+    ],
+    "observations": "browser-observations.json",
+    "noAutoplay": "no-autoplay.json",
+    "preview": "http://127.0.0.1:4208/music/",
+    "trueDeviceOrVoiceOver": false
+  },
+  "migration": {
+    "path": "migrations-music/0012_station_redesign.sql",
+    "sha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+    "remoteApplied": false
+  },
+  "release": {
+    "stationContentPublicEnabledInProduction": false,
+    "stationMusicPagesEnabledInProduction": false,
+    "deploymentAuthorized": false,
+    "legacyEntrancesClosed": false,
+    "t09Started": false,
+    "currentHeadHostedCI": "pending PR head; local results do not substitute"
+  },
+  "materials": {
+    "promotedSong": "稍后确定",
+    "platformLinks": "稍后确定",
+    "previewSwitch": "稍后确定",
+    "video": "稍后确定",
+    "syntheticAudio": true,
+    "videoBytesMetadataOnly": true,
+    "realRightsConfirmed": false
+  },
+  "files": [
+    {
+      "path": "browser-observations.json",
+      "bytes": 4115,
+      "sha256": "fe4ab635d06a0dbab390adff09fcd81ea5bfa4007a15f1bdf7d03d3fc8f6fe1e"
+    },
+    {
+      "path": "browser-requests.json",
+      "bytes": 35779,
+      "sha256": "380a5375ebada9f7326b6988fc57642cfe623378a26833bd5153e68155560820"
+    },
+    {
+      "path": "build.log",
+      "bytes": 22871,
+      "sha256": "087deb83c30ed5652fe00ff2dc9f81d7a460b102d6b00af89677937263179cd8"
+    },
+    {
+      "path": "catalog-1024.jpg",
+      "bytes": 68935,
+      "sha256": "87be5e7ea890b9be2874f0443cb6c453f8ab10b0d10e8915a2a3d1771e44cdf5",
+      "image": {
+        "width": 1009,
+        "height": 899,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "catalog-1371.jpg",
+      "bytes": 94778,
+      "sha256": "b1f516641ee45092c934bcb2537d83ba74744aac4467abd5a805faad31b15965",
+      "image": {
+        "width": 1356,
+        "height": 902,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "catalog-320-initial.jpg",
+      "bytes": 33283,
+      "sha256": "d8763bc7bc8701502ff317756377b1ed7e1c36f293ce0ccccb05b60786eb55fe",
+      "image": {
+        "width": 305,
+        "height": 869,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "catalog-320.jpg",
+      "bytes": 32084,
+      "sha256": "74cd4fe4f43494d7768f3c60af5cd12132997c983345e69bc2d01d30bd16d8d0",
+      "image": {
+        "width": 305,
+        "height": 869,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "catalog-390.jpg",
+      "bytes": 35094,
+      "sha256": "8161d996aa2901d149c6722e4b8b483929e04eaff176e444e97e0766942ff547",
+      "image": {
+        "width": 375,
+        "height": 877,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "catalog-768.jpg",
+      "bytes": 63803,
+      "sha256": "89f06050111002273f1c49fc0c237bbd32ebf9052ad764d77169d373c20f1afd",
+      "image": {
+        "width": 753,
+        "height": 894,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "catalog-en-mobile.jpg",
+      "bytes": 35981,
+      "sha256": "d487a35ff8fb5b13af3ee128619c86e036dd817d44bd803f29c3657b311a1af1",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "catalog-ja-mobile.jpg",
+      "bytes": 35994,
+      "sha256": "278d6ebab5f54e858048f79399c2dd30750b48a570adc317fa7f8d8c4a4aa8a3",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "catalog-zh-Hans-mobile.jpg",
+      "bytes": 32263,
+      "sha256": "d921f26f7e4c29411a856847c55c36f4be963cca7d904423a8953c50bcb49b9c",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "catalog-zh-Hant-mobile.jpg",
+      "bytes": 32500,
+      "sha256": "b39bf8e488fe0e91295515fd2b68a19d5be08f6a9299836d37360aaff280006f",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "comparison-desktop.jpg",
+      "bytes": 402144,
+      "sha256": "42bbaca57256d57d0cac0be655579ada782520293aeef8e8927a9f1e1aa7ca27",
+      "image": {
+        "width": 2712,
+        "height": 902,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "comparison-header.jpg",
+      "bytes": 35225,
+      "sha256": "9ac105ed03650b8ec1f75e85e447a031fdd6038c6507d44bc932b4c45405f5ca",
+      "image": {
+        "width": 1356,
+        "height": 124,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "design-qa.md",
+      "bytes": 8131,
+      "sha256": "680c2b42fbf18c69ad4af4fedf4bd20e04e99383bc244d9324dfa4f2ae5cfb04"
+    },
+    {
+      "path": "detail-1024.jpg",
+      "bytes": 70823,
+      "sha256": "0b44c11217d0907a28a348407ef386d39877d721f854a4ddfae2f4757e5d7108",
+      "image": {
+        "width": 1009,
+        "height": 899,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "detail-1371.jpg",
+      "bytes": 69595,
+      "sha256": "9c40db43a0eeee7e40ac0356ce2e8eacbf8570e4bd7ea43efae3570799027efa",
+      "image": {
+        "width": 1356,
+        "height": 902,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "detail-320.jpg",
+      "bytes": 29426,
+      "sha256": "c5ce79a4348d4de41cdcdf280c107acedc351173ed2d8280c8f133cc44888985",
+      "image": {
+        "width": 305,
+        "height": 869,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "detail-390.jpg",
+      "bytes": 32210,
+      "sha256": "c40b6211a8e0859c1e47b495cadefbbef14497ee6f451afbaa8d44e16d74a70c",
+      "image": {
+        "width": 375,
+        "height": 877,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "detail-768.jpg",
+      "bytes": 58721,
+      "sha256": "32b2b0fcf016f9ff4ce727edf3eb591454900d34511e86cc154900ce6325e469",
+      "image": {
+        "width": 753,
+        "height": 894,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "detail-en-mobile.jpg",
+      "bytes": 32182,
+      "sha256": "669eb7e06e2e33a07b1ca42e46ab2c6ad5a040757ff09c76432de27f5b8982ad",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "detail-ja-mobile.jpg",
+      "bytes": 33146,
+      "sha256": "8ebca5b25c51ad9d1f927ccd1cfde839fae30e87d7dc930703c8ea88b99dda92",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "detail-zh-Hans-mobile.jpg",
+      "bytes": 31423,
+      "sha256": "a2cda3100cc98909629d3f489d4108fb25933f9bf72a2e71d186fa2c15dbf060",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "detail-zh-Hant-mobile.jpg",
+      "bytes": 31458,
+      "sha256": "d9485bc52739cb59801b529900f70f055f7fd78f95927816a0c1e668809b48ad",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "empty-mobile.jpg",
+      "bytes": 28890,
+      "sha256": "bd8ebfa034d51de4dc404800fb775b480b75bc2ba731a900238e327ce6650ec7",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "error-mobile.jpg",
+      "bytes": 26624,
+      "sha256": "cd1cd8623b02361222dceaa5ea111afa5d81bdaa1ffa2eab5b58846ecd66ecb3",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "free-full-explicit-mobile.jpg",
+      "bytes": 29562,
+      "sha256": "525caf4a57fa1d63f08b51541744fa93af0ddfceab4498ecb12c237ea7a9a225",
+      "image": {
+        "width": 305,
+        "height": 804,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "local-library-regression-sandbox.log",
+      "bytes": 4444,
+      "sha256": "bd09d030c529105df038138975fda7d7807f647390d2cc0ba85572cd4733dd76"
+    },
+    {
+      "path": "local-library-regression.log",
+      "bytes": 3918,
+      "sha256": "f2646931b3c4d48b7535740d6616f5e64745c570d39e787d52d5fc02e1689118"
+    },
+    {
+      "path": "long-mobile.jpg",
+      "bytes": 36223,
+      "sha256": "27db4085de2dca2e5e991fa996a016c045f0f7244817f515d919b577cf1502d2",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "music-pages-unit.log",
+      "bytes": 1586,
+      "sha256": "143f3d8079c9827c6bcc8c269e001b29ad6c11fb1b79663bd5ef0787a10788ed"
+    },
+    {
+      "path": "music-runtime.log",
+      "bytes": 3046,
+      "sha256": "bd61f071c5e87223c1f6af5a5a7264a2e1aa0f99da83e17f413f3aa2dab6e9de"
+    },
+    {
+      "path": "no-autoplay.json",
+      "bytes": 209,
+      "sha256": "fc748bf82f4cb7b62175cd3b9e337a79245462f3d0a1a280b35e61ba297650c8"
+    },
+    {
+      "path": "player-mobile.jpg",
+      "bytes": 31949,
+      "sha256": "1e980786872017904f267582f6937e1deecc3e4ae20ae2b6152db664d1555137",
+      "image": {
+        "width": 375,
+        "height": 812,
+        "format": "jpeg"
+      }
+    },
+    {
+      "path": "regression.log",
+      "bytes": 8195,
+      "sha256": "4eac9fc69b7dfba69ae47d2cfddeff0f9943f284bcd4bc71adb8064e65df2019"
+    }
+  ]
+}
