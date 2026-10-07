@@ -1,11 +1,11 @@
-import { createMusicLocalData } from '../scripts/musicLocalData.js';
-import { createMusicPlayer } from '../scripts/musicPlayerCore.js';
 import { parseMusicLyrics, LYRICS_BYTES } from '../scripts/musicLyrics.js';
 import { stationLocales, stationHref } from './routes.js';
 import { contentBase, uuid, slug, positive } from './publicValidation.js';
 import { musicCopy } from './musicCopy.js';
 import { musicIcon, musicTime, musicCatalogHref, renderCatalogResults } from './musicRender.js';
-import { stationMusicSource, previewPlayerTrack, fullPlayerTrack, indexStationMusicTracks } from './musicPlayback.js';
+import { indexStationMusicTracks } from './musicPlayback.js';
+import { requestStationMusic } from './musicRequest.js';
+import { getStationMusicSession, rememberStationMusicTrigger, stationMusicNotice } from './musicPlayerView.js';
 import { readMusicResponse } from './musicResponse.js';
 
 export function mountStationMusic() {
@@ -17,14 +17,15 @@ export function mountStationMusic() {
   if (!stationLocales.includes(model.locale) || !['catalog', 'detail'].includes(model.mode)) return () => {};
   root.dataset.mounted = 'true';
   const copy = musicCopy[model.locale], listeners = new AbortController(), requests = new Set();
-  const tracks = new Map(), prepared = new Map(), local = createMusicLocalData();
-  const audio = document.querySelector('[data-sc-music-audio]'), dock = document.querySelector('[data-sc-player-dock]');
-  const player = createMusicPlayer(audio, { origin: location.origin, sourceFor: stationMusicSource });
+  const tracks = new Map(), session = getStationMusicSession(model.locale);
+  if (!session) { delete root.dataset.mounted; return () => {}; }
+  const local = session.local;
   const $ = selector => document.querySelector(selector);
-  let disposed = false, catalogGeneration = 0, playbackGeneration = 0, catalogRequest, pendingCatalog = null, fullRequest, currentTrack = null, lastTrigger;
+  let disposed = false, catalogGeneration = 0, catalogRequest, pendingCatalog = null;
   const listen = (target, type, callback, options = {}) => target?.addEventListener(type, callback, { ...options, signal: listeners.signal });
   function remember() {
     indexStationMusicTracks(model, tracks);
+    session.observeTracks(tracks.values());
   }
   remember();
   function feedback(message, login = false) {
@@ -35,19 +36,10 @@ export function mountStationMusic() {
       node.append(link);
     }
   }
-  const stopFullRequest = () => { playbackGeneration++; fullRequest?.abort(); fullRequest = null; };
   async function getResponse(path, controller = new AbortController()) {
-    if (!path.startsWith(contentBase + '/') || path.startsWith('//')) throw new Error('INVALID_ENDPOINT');
     requests.add(controller);
-    const timer = setTimeout(() => controller.abort(), 10000);
-    try {
-      const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: controller.signal });
-      const text = await readMusicResponse(response);
-      let body;
-      try { body = JSON.parse(text); } catch { throw new Error('INVALID_RESPONSE'); }
-      if (!response.ok) throw Object.assign(new Error('QUERY_FAILED'), { status: response.status, code: body.code });
-      return body;
-    } finally { clearTimeout(timer); requests.delete(controller); }
+    try { return await requestStationMusic(path, controller); }
+    finally { requests.delete(controller); }
   }
   const localSubscription = local.subscribe(snapshot => {
     for (const button of root.querySelectorAll('[data-sc-favorite]')) {
@@ -59,30 +51,26 @@ export function mountStationMusic() {
     const note = root.querySelector('[data-sc-local-note]');
     if (note) note.textContent = snapshot.warning === 'corrupt' ? copy.corrupt : snapshot.warning === 'limit' ? copy.limit : snapshot.persistent ? copy.local : copy.temporary;
   });
-  const initialLocal = local.snapshot();
-  player.setVolume(initialLocal.settings.volume); player.setMuted(initialLocal.settings.muted);
-  const playerSubscription = player.subscribe(state => {
+  function renderPlayerButtons(state) {
     if (disposed) return;
-    dock.dataset.playbackState = state.status;
     const active = ['playing', 'loading', 'buffering'].includes(state.status);
-    const toggle = $('[data-sc-play-toggle]');
-    toggle.innerHTML = musicIcon(active ? 'pause' : 'play'); toggle.setAttribute('aria-label', active ? copy.pause : copy.play);
-    $('[data-sc-now-title]').textContent = currentTrack?.title || '';
-    $('[data-sc-now-artist]').textContent = currentTrack?.artist || '';
-    $('[data-sc-current-time]').textContent = musicTime(Math.floor(state.currentTimeSec * 1000)) || '00:00';
-    $('[data-sc-duration]').textContent = musicTime(Math.floor((state.durationSec || 0) * 1000)) || '00:00';
-    const seek = $('[data-sc-seek]'); seek.max = String(state.durationSec || 1); seek.value = String(state.currentTimeSec); seek.disabled = audio.readyState < 1;
-    $('[data-sc-volume]').value = String(state.volume); $('[data-sc-volume]').closest('label').hidden = !state.volumeSupported;
-    $('[data-sc-player-status]').textContent = state.lastError ? state.lastError.code === 'PLAY_NOT_ALLOWED' ? copy.blocked : copy.playbackFailed : state.status === 'ended' ? copy.ended : '';
     for (const button of root.querySelectorAll('[data-sc-preview]')) {
       const dto = tracks.get(button.dataset.scPreview), playing = active && state.activeVariant === 'preview' && state.activeTrackId === dto?.id;
-      const label = (playing ? copy.pause : copy.preview) + ' · ' + (dto?.title || '');
-      button.setAttribute('aria-label', label);
+      button.setAttribute('aria-label', (playing ? copy.pause : copy.preview) + ' · ' + (dto?.title || ''));
       button.innerHTML = musicIcon(playing ? 'pause' : 'play') + (button.classList.contains('sc-button')
         ? '<span>' + (playing ? copy.pause : copy.preview + ' ' + musicTime(dto?.preview?.durationMs)) + '</span>' : '');
     }
+    for (const button of root.querySelectorAll('[data-sc-full-check]')) {
+      const dto = tracks.get(button.dataset.scFullCheck);
+      button.disabled = state.pendingTrackId === dto?.id;
+      const playing = active && state.activeVariant === 'full' && state.activeTrackId === dto?.id;
+      button.querySelector('span').textContent = button.disabled ? copy.prepare : playing ? copy.pause : session.isPrepared(dto) ? copy.ready : copy.full;
+    }
+  }
+  const playerSubscription = session.subscribe(state => {
+    renderPlayerButtons(state);
+    feedback(state.notice ? stationMusicNotice(state, copy) : '', state.notice?.code === 'denied');
   });
-  const playedSubscription = player.onUserPlay(state => local.recordPlayed(state.activeTrackId));
   async function loadCatalog({ append = false, cursor = null, updateHistory = true } = {}) {
     if (model.mode !== 'catalog' || disposed) return;
     pendingCatalog = { append, cursor, updateHistory };
@@ -115,6 +103,7 @@ export function mountStationMusic() {
         results.innerHTML = renderCatalogResults(model); results.removeAttribute('aria-busy');
         root.querySelector('[data-sc-curated]')?.toggleAttribute('hidden', Boolean(model.query.q));
         remember();
+        renderPlayerButtons(session.snapshot());
         // Reapply the real local state after replacing only the result region.
         const state = local.snapshot();
         for (const button of root.querySelectorAll('[data-sc-favorite]')) {
@@ -125,44 +114,16 @@ export function mountStationMusic() {
       }
     }
   }
-  async function prepareFull(button, dto) {
-    stopFullRequest(); player.pause();
-    const generation = playbackGeneration, controller = new AbortController(); fullRequest = controller;
-    button.disabled = true; button.querySelector('span').textContent = copy.prepare;
-    try {
-      const expected = contentBase + '/tracks/' + dto.slug + '/playback?variant=full';
-      if (dto.fullPlayback?.requiresAccessCheck !== true || dto.fullPlayback.playbackPath !== expected) throw new Error('INVALID_ENDPOINT');
-      const body = await getResponse(expected + '&locale=' + model.locale, controller);
-      if (disposed || generation !== playbackGeneration) return;
-      prepared.set(dto.id, fullPlayerTrack(dto, body));
-      button.dataset.ready = 'true'; button.querySelector('span').textContent = copy.ready;
-      feedback(copy.ready);
-    } catch (error) {
-      if (!disposed && generation === playbackGeneration) feedback(error.status === 401 || error.status === 403 ? copy.denied : error.status === 409 ? copy.stale : copy.playbackFailed,
-        error.status === 401 || error.status === 403);
-    } finally {
-      if (!disposed && button.isConnected) {
-        button.disabled = false;
-        if (button.dataset.ready !== 'true') button.querySelector('span').textContent = copy.full;
-      }
-    }
-  }
-  function play(dto, variant, button) {
-    stopFullRequest();
-    try {
-      const selection = variant === 'preview' ? previewPlayerTrack(dto) : prepared.get(dto.id);
-      if (!selection) return;
-      currentTrack = dto; lastTrigger = button; dock.hidden = false; $('[data-sc-account-help]').hidden = true; feedback('');
-      player.playTrack(selection, variant);
-    } catch { feedback(copy.stale); }
-  }
   listen(root, 'click', event => {
     const button = event.target.closest('button, a'); if (!button) return;
     if (button.hasAttribute('data-sc-favorite')) local.toggleFavorite(button.dataset.scFavorite);
-    else if (button.hasAttribute('data-sc-preview')) { const dto = tracks.get(button.dataset.scPreview); if (dto) play(dto, 'preview', button); }
+    else if (button.hasAttribute('data-sc-preview')) { const dto = tracks.get(button.dataset.scPreview); if (dto) { rememberStationMusicTrigger(button); session.play(dto, 'preview'); } }
     else if (button.hasAttribute('data-sc-full-check')) {
       const dto = tracks.get(button.dataset.scFullCheck); if (!dto) return;
-      if (button.dataset.ready === 'true') play(dto, 'full', button); else void prepareFull(button, dto);
+      rememberStationMusicTrigger(button);
+      const state = session.snapshot();
+      if (session.isPrepared(dto) || (state.activeTrackId === dto.id && state.activeVariant === 'full' && ['playing', 'loading', 'buffering'].includes(state.status))) session.play(dto, 'full');
+      else void session.prepareFull(dto);
     } else if (button.hasAttribute('data-sc-more')) { event.preventDefault(); if (!root.querySelector('[data-sc-catalog-results]')?.hasAttribute('aria-busy')) void loadCatalog({ append: true, cursor: model.nextCursor }); }
     else if (button.hasAttribute('data-sc-page-retry') && model.mode === 'catalog') { event.preventDefault(); void loadCatalog({ append: Boolean(model.items?.length), cursor: model.items?.length ? model.nextCursor : null }); }
   });
@@ -173,22 +134,6 @@ export function mountStationMusic() {
     if (!form) return;
     const query = new URL(location.href).searchParams; form.elements.q.value = query.get('q') || ''; form.elements.sort.value = query.get('sort') === 'release' ? 'release' : 'default';
     void loadCatalog({ updateHistory: false });
-  });
-  listen($('[data-sc-play-toggle]'), 'click', () => {
-    if (['playing', 'loading', 'buffering'].includes(player.snapshot().status)) player.pause(); else player.play({ userInitiated: true });
-  });
-  function resetPrepared() {
-    prepared.clear();
-    for (const button of root.querySelectorAll('[data-sc-full-check]')) {
-      delete button.dataset.ready; button.disabled = false; button.querySelector('span').textContent = copy.full;
-    }
-  }
-  listen($('[data-sc-player-close]'), 'click', () => { stopFullRequest(); player.clear(); dock.hidden = true; resetPrepared();
-    if (lastTrigger?.isConnected) lastTrigger.focus(); else document.getElementById('station-main')?.focus(); });
-  listen($('[data-sc-seek]'), 'input', event => player.seek(Number(event.target.value)));
-  listen($('[data-sc-volume]'), 'input', event => {
-    player.setVolume(Number(event.target.value)); const saved = local.snapshot();
-    local.savePlayback({ queue: saved.queue, settings: { ...saved.settings, volume: player.snapshot().volume } });
   });
   for (const details of root.querySelectorAll('[data-sc-lyrics]')) {
     let loaded = false, loading = false;
@@ -221,14 +166,12 @@ export function mountStationMusic() {
     }
   }, { capture: true });
   function dispose() {
-    if (disposed) return; disposed = true; catalogGeneration++; stopFullRequest();
+    if (disposed) return; disposed = true; catalogGeneration++; session.cancelPending();
     requests.forEach(controller => controller.abort()); requests.clear(); listeners.abort();
-    localSubscription(); playerSubscription(); playedSubscription(); player.destroy(); local.destroy(); prepared.clear();
-    dock.hidden = true; delete root.dataset.mounted;
+    localSubscription(); playerSubscription(); delete root.dataset.mounted;
   }
   listen(window, 'pagehide', event => {
-    catalogGeneration++; stopFullRequest(); resetPrepared();
-    player.clear(); dock.hidden = true; requests.forEach(controller => controller.abort());
+    catalogGeneration++; session.suspend(); requests.forEach(controller => controller.abort());
     if (!event.persisted) dispose();
   });
   listen(window, 'pageshow', event => {

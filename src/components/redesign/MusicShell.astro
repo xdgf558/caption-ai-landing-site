@@ -7,12 +7,14 @@ import StationBrandLayout from '../../layouts/StationBrandLayout.astro';
 import { musicCopy } from '../../redesign/musicCopy.js';
 import { stationHref } from '../../redesign/routes.js';
 import '../../redesign/music.css';
+import { ClientRouter } from 'astro:transitions';
 interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
 const { lang } = Astro.props;
 const copy = musicCopy[lang];
 const inner = (source: string) => source.slice(source.indexOf('>') + 1, source.lastIndexOf('</svg>'));
 ---
-<StationBrandLayout lang={lang} title={copy.title} description={copy.intro} activeSection="music" preview>
+<StationBrandLayout lang={lang} title={copy.title} description={copy.intro} activeSection="music" persistentPlayer preview>
+  <ClientRouter slot="head" fallback="swap" />
   <div data-sc-music-page></div>
   <p class="sc-container sc-music-feedback" data-sc-music-feedback role="status" hidden></p>
   <div slot="player" class="sc-music-player" role="region" aria-label={copy.player}>
@@ -43,7 +45,16 @@ const inner = (source: string) => source.slice(source.indexOf('>') + 1, source.l
 </StationBrandLayout>
 <script>
   import { mountStationMusic } from '../../redesign/musicClient.js';
-  let dispose = mountStationMusic();
-  document.addEventListener('astro:before-swap', () => dispose());
-  document.addEventListener('astro:page-load', () => { dispose(); dispose = mountStationMusic(); });
+  import { disposeStationMusicSession } from '../../redesign/musicPlayerView.js';
+  let dispose = () => {};
+  function mountPage() {
+    if (!document.querySelector('[data-sc-music-page]')?.hasAttribute('data-mounted')) dispose = mountStationMusic();
+  }
+  mountPage();
+  document.addEventListener('astro:before-swap', event => {
+    dispose(); dispose = () => {};
+    if (!event.newDocument.querySelector('[data-sc-music-page]')) disposeStationMusicSession();
+  });
+  document.addEventListener('astro:page-load', mountPage);
+  document.addEventListener('astro:after-swap', mountPage);
 </script>

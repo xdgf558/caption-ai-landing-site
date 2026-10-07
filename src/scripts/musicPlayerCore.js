@@ -3,6 +3,15 @@ const players = new WeakMap();
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const finite = value => Number.isFinite(value) && value >= 0;
 const positive = value => Number.isSafeInteger(value) && value > 0;
+const newPlaybackId = () => {
+  try { return globalThis.crypto.randomUUID(); } catch {}
+  // Older webviews may lack randomUUID outside secure contexts. Observation
+  // must never prevent playback; this fallback is not used for authorization.
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
+    const value = Math.floor(Math.random() * 16);
+    return (char === 'x' ? value : (value & 3) | 8).toString(16);
+  });
+};
 
 export function musicSource(track, variant) {
   if (!track || !uuid.test(track.id) || !positive(track.audioVersion) || !['full', 'preview'].includes(variant)) {
@@ -11,14 +20,15 @@ export function musicSource(track, variant) {
   return `/api/music/tracks/${track.id}/audio?v=${track.audioVersion}&variant=${variant}`;
 }
 
-export function createMusicPlayer(audio, { origin = globalThis.location?.origin, sourceFor = musicSource } = {}) {
+export function createMusicPlayer(audio, { origin = globalThis.location?.origin, sourceFor = musicSource, resetRestoredEnd = false } = {}) {
   if (players.has(audio)) return players.get(audio);
-  const listeners = new Set(), playListeners = new Set(), events = new Map();
+  const listeners = new Set(), playListeners = new Set(), startListeners = new Set(), events = new Map();
+  let startedPlaybackId = null;
   let destroyed = false, intent = false, attempt = 0, expectedSource = '', selectedPath = '', metadataReady = false;
   let state = {
     status: 'idle', activeTrackId: null, activeAudioVersion: null, activeVariant: null,
     activePolicyVersion: null, fullDurationSec: null, previewSourceStartSec: null,
-    currentTimeSec: 0, durationSec: null, sourceGeneration: 0, playbackGeneration: 0, seeking: false,
+    currentTimeSec: 0, durationSec: null, sourceGeneration: 0, playbackGeneration: 0, playbackId: null, seeking: false,
     volume: audio.volume, muted: audio.muted, volumeSupported: true, muteSupported: true, lastError: null
   };
   audio.preload = 'none';
@@ -42,7 +52,8 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin,
   const progress = () => {
     if (!current() || !metadataReady || audio.readyState < 1) return;
     if (resumePosition !== null && audio.seekable.length) {
-      const position = resumePosition; resumePosition = null;
+      const position = resetRestoredEnd && finite(audio.duration) && audio.duration > 0 && resumePosition >= audio.duration ? 0 : resumePosition;
+      resumePosition = null;
       if (api.seek(position)) return;
     }
     const durationSec = finite(audio.duration) && audio.duration > 0 ? audio.duration : state.durationSec;
@@ -63,6 +74,12 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin,
     if (!current() || audio.readyState < 2 || audio.paused || audio.ended) return;
     if (!intent) { audio.pause(); return; }
     publish({ status: 'playing', lastError: null });
+    // A resolved play() is not evidence of audible playback. Emit once only
+    // after the current native resource actually enters playing.
+    if (state.playbackId && startedPlaybackId !== state.playbackId) {
+      startedPlaybackId = state.playbackId;
+      for (const listener of startListeners) { try { listener(snapshot()); } catch {} }
+    }
   });
   on('waiting', () => {
     if (current() && intent && !audio.paused && audio.readyState < 3) publish({ status: 'buffering' });
@@ -118,7 +135,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin,
       activeVariant: variant, activePolicyVersion: track.policyVersion,
       fullDurationSec: track.durationSec, previewSourceStartSec: variant === 'preview' ? track.previewSourceStartSec : null,
       currentTimeSec: 0, seeking: false, durationSec: variant === 'preview' ? track.previewDurationSec : track.durationSec,
-      sourceGeneration: state.sourceGeneration + 1, lastError: null });
+      sourceGeneration: state.sourceGeneration + 1, playbackId: null, lastError: null });
     return true;
   };
   const pause = () => {
@@ -134,6 +151,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin,
     stopSource();
     resumePosition = preservePosition ? state.currentTimeSec : null;
     publish({ status, seeking: false, sourceGeneration: state.sourceGeneration + 1,
+      playbackId: status === 'paused' && preservePosition && !code ? state.playbackId : null,
       currentTimeSec: preservePosition ? state.currentTimeSec : 0,
       lastError: code ? { code, message } : null });
   };
@@ -146,16 +164,26 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin,
     // Observation only: distinguishes an explicit restart/loop from resume even
     // when both reuse the same media URL. It never authorizes or loads a source.
     const playbackGeneration = state.playbackGeneration + Number(Boolean(restart || !expectedSource || audio.error || audio.ended));
+    // A re-authorized ended source has already been unloaded. Its saved end
+    // position is not a resume position for the user's next explicit replay.
+    if (restart || audio.ended || state.status === 'ended') resumePosition = null;
+    let playbackId = state.playbackId;
+    if (!playbackId || restart || audio.error || audio.ended || state.status === 'ended' || state.status === 'error') {
+      // This ID is observation only, never a credential. Keep numeric legacy
+      // playbackGeneration semantics for the existing analytics/queue clients.
+      playbackId = newPlaybackId();
+    }
     intent = true;
     if (!expectedSource || audio.error) {
       metadataReady = false;
       expectedSource = new URL(selectedPath, origin).href;
       audio.src = expectedSource;
       audio.load();
-    } else if (audio.ended) {
+    } else if (audio.ended || restart) {
       audio.currentTime = 0;
+      resumePosition = null;
     }
-    publish({ status: 'loading', playbackGeneration, lastError: null });
+    publish({ status: 'loading', playbackGeneration, playbackId, lastError: null });
     // No await before play(): preserve the user's transient activation.
     try {
       Promise.resolve(audio.play()).catch(error => {
@@ -176,6 +204,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin,
     snapshot,
     subscribe(listener) { listeners.add(listener); listener(snapshot()); return () => listeners.delete(listener); },
     onUserPlay(listener) { playListeners.add(listener); return () => playListeners.delete(listener); },
+    onPlaybackStart(listener) { startListeners.add(listener); return () => startListeners.delete(listener); },
     select,
     play,
     pause,
@@ -196,7 +225,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin,
       resumePosition = null;
       publish({ status: 'idle', activeTrackId: null, activeAudioVersion: null, activeVariant: null,
         activePolicyVersion: null, fullDurationSec: null, previewSourceStartSec: null,
-        currentTimeSec: 0, durationSec: null, seeking: false, sourceGeneration: state.sourceGeneration + 1, lastError: null });
+        currentTimeSec: 0, durationSec: null, seeking: false, sourceGeneration: state.sourceGeneration + 1, playbackId: null, lastError: null });
     },
     playTrack(track, variant = 'full') {
       const changed = select(track, variant);
@@ -233,7 +262,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin,
       stopSource();
       destroyed = true;
       for (const [event, handler] of events) audio.removeEventListener(event, handler);
-      listeners.clear(); playListeners.clear();
+      listeners.clear(); playListeners.clear(); startListeners.clear();
       players.delete(audio);
     }
   };

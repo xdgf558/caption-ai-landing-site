@@ -1,0 +1,171 @@
+{
+  "recordedAt": "2026-10-07T09:32:22.331Z",
+  "scope": "Final source after view-transition pointer-events fix; viewport simulation, DPR 1, not real devices; desktop screenshot capture dimensions differ from DOM viewport.",
+  "measurements": [
+    {
+      "buttons": [
+        {
+          "height": 44,
+          "label": "確認完整收聽權限",
+          "width": 44
+        },
+        {
+          "height": 44,
+          "label": "收起播放器",
+          "width": 44
+        }
+      ],
+      "documentWidth": 1371,
+      "dpr": 1,
+      "height": 996,
+      "navigation": {
+        "height": 0,
+        "top": 0
+      },
+      "overflow": false,
+      "paddingBottom": "124px",
+      "player": {
+        "bottom": 996,
+        "height": 99.59375,
+        "left": 0,
+        "right": 1371
+      },
+      "reducedMotion": false,
+      "reservedNavigation": "0px",
+      "reservedPlayer": "100px",
+      "width": 1371
+    },
+    {
+      "buttons": [
+        {
+          "height": 44,
+          "label": "確認完整收聽權限",
+          "width": 44
+        },
+        {
+          "height": 44,
+          "label": "收起播放器",
+          "width": 44
+        }
+      ],
+      "documentWidth": 768,
+      "dpr": 1,
+      "height": 900,
+      "navigation": {
+        "height": 0,
+        "top": 0
+      },
+      "overflow": false,
+      "paddingBottom": "124px",
+      "player": {
+        "bottom": 900,
+        "height": 99.59375,
+        "left": 0,
+        "right": 768
+      },
+      "reducedMotion": false,
+      "reservedNavigation": "0px",
+      "reservedPlayer": "100px",
+      "width": 768
+    },
+    {
+      "buttons": [
+        {
+          "height": 44,
+          "label": "確認完整收聽權限",
+          "width": 44
+        },
+        {
+          "height": 44,
+          "label": "收起播放器",
+          "width": 44
+        }
+      ],
+      "documentWidth": 601,
+      "dpr": 1,
+      "height": 844,
+      "navigation": {
+        "height": 64,
+        "top": 780
+      },
+      "overflow": false,
+      "paddingBottom": "217px",
+      "player": {
+        "bottom": 780,
+        "height": 128.6875,
+        "left": 0,
+        "right": 601
+      },
+      "reducedMotion": false,
+      "reservedNavigation": "64px",
+      "reservedPlayer": "129px",
+      "width": 601
+    },
+    {
+      "buttons": [
+        {
+          "height": 44,
+          "label": "確認完整收聽權限",
+          "width": 44
+        },
+        {
+          "height": 44,
+          "label": "收起播放器",
+          "width": 44
+        }
+      ],
+      "documentWidth": 390,
+      "dpr": 1,
+      "height": 844,
+      "navigation": {
+        "height": 64,
+        "top": 780
+      },
+      "overflow": false,
+      "paddingBottom": "217px",
+      "player": {
+        "bottom": 780,
+        "height": 128.6875,
+        "left": 0,
+        "right": 390
+      },
+      "reducedMotion": false,
+      "reservedNavigation": "64px",
+      "reservedPlayer": "129px",
+      "width": 390
+    },
+    {
+      "buttons": [
+        {
+          "height": 44,
+          "label": "確認完整收聽權限",
+          "width": 44
+        },
+        {
+          "height": 44,
+          "label": "收起播放器",
+          "width": 44
+        }
+      ],
+      "documentWidth": 320,
+      "dpr": 1,
+      "height": 740,
+      "navigation": {
+        "height": 64,
+        "top": 676
+      },
+      "overflow": false,
+      "paddingBottom": "217px",
+      "player": {
+        "bottom": 676,
+        "height": 128.6875,
+        "left": 0,
+        "right": 320
+      },
+      "reducedMotion": false,
+      "reservedNavigation": "64px",
+      "reservedPlayer": "129px",
+      "width": 320
+    }
+  ]
+}

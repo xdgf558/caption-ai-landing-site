@@ -25,6 +25,9 @@ jobs:
       - name: Verify Station Cat public queries and isolated Worker permissions
         run: npm run test:redesign:public
 
+      - name: Verify shared Station Cat player sessions and legacy audio lifecycle
+        run: npm run test:redesign:player
+
       - name: Run tests
         run: npm test
 
