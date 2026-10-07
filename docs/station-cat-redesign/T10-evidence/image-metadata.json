@@ -1,0 +1,123 @@
+{
+  "source": {
+    "file": "T04-evidence/gentle-station/source.png",
+    "width": 1448,
+    "height": 1086
+  },
+  "sourceCrop": {
+    "left": 46,
+    "top": 72,
+    "width": 1356,
+    "height": 994
+  },
+  "implementations": [
+    {
+      "file": "comparison-mobile.jpg",
+      "width": 660,
+      "height": 1100,
+      "format": "jpeg"
+    },
+    {
+      "file": "comparison-platform-controls.jpg",
+      "width": 620,
+      "height": 340,
+      "format": "jpeg"
+    },
+    {
+      "file": "comparison-reference-before-current.jpg",
+      "width": 1640,
+      "height": 500,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-collapsed-1440.jpg",
+      "width": 1367,
+      "height": 891,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-collapsed-desktop.jpg",
+      "width": 1367,
+      "height": 891,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-controls-desktop.jpg",
+      "width": 940,
+      "height": 131,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-copy-viewport-390.jpg",
+      "width": 375,
+      "height": 812,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-en-390.jpg",
+      "width": 375,
+      "height": 1604,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-ja-390.jpg",
+      "width": 375,
+      "height": 1616,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-live-1440.jpg",
+      "width": 1425,
+      "height": 1244,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-live-320.jpg",
+      "width": 305,
+      "height": 1742,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-live-390.jpg",
+      "width": 375,
+      "height": 1572,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-live-desktop.jpg",
+      "width": 1425,
+      "height": 1244,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-manual-390.jpg",
+      "width": 375,
+      "height": 1542,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-planned-390.jpg",
+      "width": 375,
+      "height": 1179,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-regional-390.jpg",
+      "width": 375,
+      "height": 1124,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-removed-390.jpg",
+      "width": 375,
+      "height": 1110,
+      "format": "jpeg"
+    },
+    {
+      "file": "platform-unverified-390.jpg",
+      "width": 375,
+      "height": 1110,
+      "format": "jpeg"
+    }
+  ]
+}

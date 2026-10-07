@@ -186,7 +186,7 @@ test('HTML/JSON escaping preserves readable titles and story without executable 
 test('external buttons revalidate provider hosts and never fabricate planned or missing links', () => {
   assert(!musicPlatforms(dto, 'en').includes('<a '));
   const html = musicPlatforms({ ...dto, platforms: [
-    { provider: 'apple_music', status: 'live', href: 'https://music.apple.com/song/synthetic-fixture' },
+    { id: fixtureId(440), verifiedAt: new Date(now - 1).toISOString(), provider: 'apple_music', status: 'live', href: 'https://music.apple.com/song/synthetic-fixture' },
     { provider: 'spotify', status: 'planned', href: 'https://open.spotify.com/track/synthetic-fixture' },
     { provider: 'youtube', status: 'live', href: 'https://youtube.com.evil.test/watch' }] }, 'en');
   assert.equal((html.match(/<a /g) || []).length, 1); assert.match(html, /noopener noreferrer/); assert(!html.includes('evil.test'));

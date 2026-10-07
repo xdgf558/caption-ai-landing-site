@@ -1,0 +1,140 @@
+[
+  {
+    "case": "live-keyboard-copy",
+    "readback": {
+      "activeElement": {
+        "tag": "BUTTON",
+        "text": "複製"
+      },
+      "copyStatus": [
+        "連結已複製。"
+      ],
+      "openBackup": true,
+      "platformOrder": [
+        "apple_music",
+        "qishui",
+        "netease"
+      ],
+      "skip": {
+        "focused": false,
+        "height": 48,
+        "top": -100,
+        "transform": "none"
+      },
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-1/"
+    }
+  },
+  {
+    "case": "planned",
+    "readback": {
+      "content": "平台發行資訊網易雲音樂 · 即將上線汽水音樂 · 即將上線Apple Music · 即將上線",
+      "copyFields": 0,
+      "links": 0,
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-2/"
+    }
+  },
+  {
+    "case": "removed",
+    "readback": {
+      "copyFields": 0,
+      "links": 0,
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-3/"
+    }
+  },
+  {
+    "case": "regional",
+    "readback": {
+      "content": "平台發行資訊Apple Music · 目前不適用於你的地區",
+      "copyFields": 0,
+      "links": 0,
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-4/"
+    }
+  },
+  {
+    "case": "unverified",
+    "readback": {
+      "copyFields": 0,
+      "links": 0,
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-5/"
+    }
+  },
+  {
+    "case": "locale-zh-hans",
+    "readback": {
+      "buttons": [
+        {
+          "hidden": false,
+          "label": "复制"
+        },
+        {
+          "hidden": false,
+          "label": "复制"
+        },
+        {
+          "hidden": false,
+          "label": "复制"
+        }
+      ],
+      "language": "zh-Hans",
+      "platformText": "选择收听平台Apple Music汽水音乐网易云音乐打不开平台？复制链接可复制网址，在系统浏览器中打开；也可以选取下方网址手动复制。Apple Music复制汽水音乐复制网易云音乐复制",
+      "url": "http://127.0.0.1:4208/zh-hans/music/tracks/local-sample-1/"
+    }
+  },
+  {
+    "case": "locale-en",
+    "readback": {
+      "buttons": [
+        {
+          "hidden": false,
+          "label": "Copy"
+        },
+        {
+          "hidden": false,
+          "label": "Copy"
+        },
+        {
+          "hidden": false,
+          "label": "Copy"
+        }
+      ],
+      "language": "en",
+      "platformText": "Choose where to listenApple MusicQishui MusicNetEase MusicLink not opening? Copy itCopy a link and open it in your system browser, or select the address below to copy it manually.Apple MusicCopyQishui MusicCopyNetEase MusicCopy",
+      "url": "http://127.0.0.1:4208/en/music/tracks/local-sample-1/"
+    }
+  },
+  {
+    "case": "locale-ja",
+    "readback": {
+      "buttons": [
+        {
+          "hidden": false,
+          "label": "コピー"
+        },
+        {
+          "hidden": false,
+          "label": "コピー"
+        },
+        {
+          "hidden": false,
+          "label": "コピー"
+        }
+      ],
+      "language": "ja",
+      "platformText": "聴く場所を選ぶApple MusicQishui MusicNetEase Music開けないときはリンクをコピーリンクをコピーして標準ブラウザで開いてください。下のURLを選択して手動でコピーすることもできます。Apple MusicコピーQishui MusicコピーNetEase Musicコピー",
+      "url": "http://127.0.0.1:4208/ja/music/tracks/local-sample-1/"
+    }
+  },
+  {
+    "case": "manual-select-url",
+    "readback": {
+      "copyButtons": 3,
+      "label": "Apple Music · 平台網址",
+      "readOnly": true,
+      "selectionEnd": 62,
+      "selectionStart": 0,
+      "tag": "INPUT",
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-1/",
+      "valueLength": 62
+    }
+  }
+]

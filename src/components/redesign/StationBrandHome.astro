@@ -5,7 +5,9 @@ import Glyph from './Glyph.astro';
 import { stationHref } from '../../redesign/routes.js';
 import { homeCopy } from '../../redesign/home-copy.js';
 import { homeStateCopy } from '../../redesign/home-state-copy.js';
+import { renderPlatformBackup } from '../../redesign/platformRender.js';
 import '../../redesign/home.css';
+import '../../redesign/platforms.css';
 interface Props { home: any; heroImage: string; preview?: boolean }
 const { home, heroImage, preview = false } = Astro.props;
 const { locale: lang, music, game } = home;
@@ -43,7 +45,8 @@ const pillars = [
             {music.preview && <a class="sc-icon-button gentle-play" href={music.preview.href} aria-label={state.preview + ' · ' + music.title + ' · ' + music.preview.durationSec + 's'}><Play size={20} fill="currentColor" aria-hidden="true" /></a>}
           </div>
           <div class="gentle-platforms home-platforms" id="station-platforms" aria-label={copy.platforms}>
-            {music.platforms.length ? music.platforms.map(link => <a href={link.href} target={home.fixture ? undefined : '_blank'} rel={home.fixture ? undefined : 'noopener noreferrer'} data-home-platform={link.id}><Glyph name={link.icon} size={21} /><span>{providers[link.provider]}{home.fixture && <small>{state.platformSample}</small>}</span></a>) : <p class="home-platform-empty">{state.noPlatforms}</p>}
+            {music.platforms.length ? music.platforms.map(link => <a href={link.href} target={home.fixture ? undefined : '_blank'} rel={home.fixture ? undefined : 'noopener noreferrer'} data-home-platform={link.id} data-sc-platform-link={home.fixture ? undefined : true} data-track-id={music.id} data-link-id={link.id} data-provider={link.provider}><Glyph name={link.icon} size={21} /><span>{providers[link.provider]}{home.fixture && <small>{state.platformSample}</small>}</span></a>) : <p class="home-platform-empty">{state.noPlatforms}</p>}
+            {!home.fixture && <Fragment set:html={renderPlatformBackup(music, lang)} />}
           </div>
         </div> : <div class="home-empty" data-home-empty="music"><h3>{state.musicEmpty}</h3><p>{state.musicEmptyText}</p><a class="sc-button sc-button-secondary" href={stationHref(lang, 'music')}>{copy.moreMusic}<ArrowRight size={16} aria-hidden="true" /></a></div>}
       </section>
@@ -67,6 +70,20 @@ const pillars = [
   </div>
   <slot name="fixture-controls" slot="fixture-controls" />
 </StationBrandLayout>
+<script>
+  import { mountStationPlatforms } from '../../redesign/platformClient.js';
+  let dispose = () => {};
+  function mount() {
+    const root = document.getElementById('station-platforms');
+    if (!root || root.hasAttribute('data-platforms-mounted')) return;
+    root.setAttribute('data-platforms-mounted', '');
+    dispose = mountStationPlatforms(root, document.documentElement.lang);
+  }
+  mount();
+  document.addEventListener('astro:before-swap', () => { dispose(); dispose = () => {}; });
+  document.addEventListener('astro:after-swap', mount);
+  document.addEventListener('astro:page-load', mount);
+</script>
 <style is:global>
   .home-feature-body .home-cover-link, .home-game-body .home-cover-link { grid-row: 1 / 3; }
   .home-cover-link .gentle-cover { grid-row: auto; }
@@ -76,6 +93,7 @@ const pillars = [
   .home-feature-body h3 a:hover, .home-game-body h3 a:hover { text-decoration: underline; text-underline-offset: 4px; }
   .gentle-work-copy .home-artist { font-size: 11px; margin-bottom: 4px; }
   .home-platforms { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-platforms .sc-platform-backup { grid-column: 1/-1; }
   .home-platforms a { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 6px; min-height: 44px; color: #505980; border: 1px solid #eae3f3; border-radius: 9px; background: #fefcff; font-size: 11px; line-height: 1.35; text-decoration: none; }
   .home-platforms a:hover { border-color: #bfb1d3; }
   .home-platform-empty { grid-column: 1 / -1; color: var(--sc-muted); font-size: 12px; margin: 0; align-self: center; }

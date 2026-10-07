@@ -1,0 +1,77 @@
+✔ namespace stays separate from UUID music/native/services; default flag stops before any binding access (11.863084ms)
+✔ actual schema columns, ledger and cleanup view are required; probes never install missing schema (34.340375ms)
+✔ ledger alone cannot prove the extension view; read failures are fixed 503 errors (56.523459ms)
+✔ migration/backfilled home remains empty until explicitly published; no latest-free fallback (29.83125ms)
+✔ public fields are allowlisted; platform-only works and locale fallback never spreads metadata (35.868375ms)
+✔ draft edits do not replace sealed public snapshots; scheduled, future and archived heads disappear (35.700875ms)
+✔ invalid query, duplicate parameters, methods and paths fail before DB/R2 (25.583459ms)
+✔ keyset pagination has stable ID tie breaks, title/artist search, bounded limits and filtered-page progress (33.5905ms)
+✔ canonical alias lookup returns canonical links without treating old music descendants as already migrated (25.915583ms)
+✔ default 20/max 50 are actual SQL page limits and cannot dump the whole catalog (34.210125ms)
+✔ duplicate/escaped keys, prototypes and oversized stored metadata are rejected, including related references (27.609833ms)
+✔ platform visibility requires actual live verification, provider host and trusted territory; query/header claims cannot override (26.513792ms)
+✔ independent guest preview requires current enabled promotion and owned approved resource; no account/full object lookup (28.239875ms)
+✔ stopped/draft/future promotions revoke current preview and home; old free featured state is irrelevant (29.128084ms)
+✔ rights, source identity and object freshness independently prevent preview delivery (28.587209ms)
+✔ a preview copied from the entire full file or referencing another owner cannot pass independent clip proof (26.000333ms)
+✔ free_full hint on VIP does not grant access; guest, ordinary, expired and real member responses stay distinct (32.96875ms)
+✔ finite account/session revocation and membership DB failures are rechecked on direct HEAD/Range requests (55.522458ms)
+✔ legacy flags and current legacy revision still control full media, including time-limited free music (29.511375ms)
+✔ authorized audio streams bounded ranges, HEAD and If-Range; no GET on denied HEAD or stale website versions (28.57725ms)
+✔ generic asset paths never deliver full/preview files, even to members; public cover and lyric stream only current references (28.254125ms)
+✔ object replacement between HEAD and conditional GET cannot leak different bytes (25.614917ms)
+✔ an R2 body arriving after the request deadline is cancelled instead of becoming a late response (118.177125ms)
+✔ video requires current published parent, matching video/poster rights, dimensions and ready objects (29.684458ms)
+✔ game detail preserves the real runtime directory; unregistered stored launch paths cannot become launch promises (27.476875ms)
+✔ asset IDs colliding across music/media domains are omitted rather than resolved by arrival order (26.746542ms)
+✔ published home ignores concurrent drafts and removes revoked promotions/media on each fresh projection (30.944042ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ bounded rate admission distinguishes 429 from service failure and request budgets expire without publication writes (141.324916ms)
+✔ existing UUID catalog retains its contract and old qualification metric after the extension is populated (38.025959ms)
+✔ operational order prefers only current enabled promotion, keeps stable ties, and preserves legacy no-sort contract (58.286708ms)
+✔ latest release uses first global live verified date; unknowns follow, planned/future rows do not rank (34.661584ms)
+✔ new cursors bind sort, search and locale while v1 no-sort callers continue to page (34.321959ms)
+✔ stale legacy audio hint cannot publish a full source; the hint never contains a private audio URL (29.215625ms)
+✔ route boundaries retain aliases and refuse runtime/API namespaces; either flag off preserves the old handler without reading bindings (2.274708ms)
+✔ an enabled detail route must prove a published mapping before claiming an unknown or withdrawn address (30.686625ms)
+✔ a public full-playback hint is rendered as unchecked access in every language, without ready or entitlement claims (0.458125ms)
+✔ public preview adapter controls both versions, and full adapter needs an exact private handshake (0.199167ms)
+✔ a selected home summary cannot erase the catalog media contract for the same song (0.075667ms)
+✔ shared player retains old UUID default, has no source before explicit play, and resets on promotion source change (0.567792ms)
+✔ untrusted custom sources cannot disturb a selected source (0.154125ms)
+✔ HTML/JSON escaping preserves readable titles and story without executable markup; missing sections collapse (0.214792ms)
+✔ external buttons revalidate provider hosts and never fabricate planned or missing links (0.169917ms)
+✔ selected songs remain visible without a featured promotion; an entirely unconfigured catalog stays empty (0.162166ms)
+✔ bounded response readers reject deceptive length and invalid UTF-8 and cancel oversized streams (0.462667ms)
+✔ unselected draft remains empty without choosing a free/latest fallback (1.628166ms)
+✔ published IDs and revision drive direct destinations, three selections and four clips (0.847792ms)
+✔ synthetic configuration needs explicit fixture option and cannot enter a normal consumer (0.359542ms)
+✔ draft, mismatched revision, scheduled/future or missing configuration cannot publish (0.716667ms)
+✔ promotion must be explicitly enabled, published and refer to a public parent (0.699875ms)
+✔ missing, revoked, private, mismatched or duplicate cover references hide the work (0.455625ms)
+✔ repeated track IDs are ambiguous and never pick a row by order (0.110958ms)
+✔ selectors de-duplicate IDs and exclude the featured work (0.202083ms)
+✔ empty optional summary does not hide an otherwise published song or game (0.545459ms)
+✔ missing video and missing platforms produce distinct honest states (0.404042ms)
+✔ only selected, live, verified and correctly owned platform links survive (1.033083ms)
+✔ public link syntax rejects credentials, tokens, scripts, private hosts and fixture paths (1.923083ms)
+✔ preview requires enabled, ready, independently typed public and rights-confirmed clip (1.329125ms)
+✔ revoking a clip, poster or platform removes the reference on next projection (0.175292ms)
+✔ clips require both selection lists, public parent, ready poster and public media (1.056458ms)
+✔ game revocation removes its card and related update without starting a runtime (0.132667ms)
+✔ a game introduction never occupies the existing cat-life runtime namespace (0.287666ms)
+✔ locale routing and translation fallback retain the stable selected IDs (0.605708ms)
+✔ allowlist projection never forwards private audio, storage, entitlement or extra fields (0.433125ms)
+ℹ tests 63
+ℹ suites 0
+ℹ pass 63
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1153.617459

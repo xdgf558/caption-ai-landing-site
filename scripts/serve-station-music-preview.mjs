@@ -5,8 +5,10 @@ import { readMusicResponse } from '../src/redesign/musicResponse.js';
 
 const port = Number(process.env.STATION_MUSIC_PREVIEW_PORT || 4208);
 if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid local preview port');
-const runtime = await createStationMusicRuntime(), records = [];
+const runtime = await createStationMusicRuntime({ platformCases: process.env.STATION_MUSIC_PREVIEW_PLATFORM_CASES === '1' }), records = [];
 const banner = '<aside class="sc-container" style="padding:10px 14px;background:var(--sc-promo-surface);border-radius:8px;font-size:12px;color:var(--sc-muted);margin-top:14px" data-preview-only>本地預覽 · 示例作品與合成測試音，不代表真實發行或推廣配置。平台素材仍待確認。</aside>';
+const platformBanner = runtime.platformScenarios ? '<aside class="sc-container" style="font-size:12px;line-height:1.8;margin-top:8px" data-preview-platform-cases>平台互動夾具：全部外鏈是不存在作品的合成地址，不代表真實發行。' +
+  Object.entries(runtime.platformScenarios).map(([state, name]) => '<a style="margin-left:12px" href="/music/tracks/' + name + '/">' + state + '</a>').join('') + '</aside>' : '';
 const server = http.createServer(async (incoming, outgoing) => {
   if (!['GET', 'HEAD'].includes(incoming.method) || !['127.0.0.1:' + port, 'localhost:' + port].includes(incoming.headers.host) || !incoming.url.startsWith('/') || incoming.url.startsWith('//')) {
     outgoing.writeHead(405, { Allow: 'GET, HEAD', 'Cache-Control': 'no-store' }); outgoing.end(); return;
@@ -30,7 +32,7 @@ const server = http.createServer(async (incoming, outgoing) => {
     if (incoming.method === 'GET' && response.headers.get('content-type')?.includes('text/html') && response.status !== 302) {
       const text = await readMusicResponse(response, 1024 * 1024), output = new Headers(response.headers);
       output.delete('Content-Length'); output.delete('ETag');
-      response = new Response(text.replace(/(<main\b[^>]*>)/, '$1' + banner), { status: response.status, headers: output });
+      response = new Response(text.replace(/(<main\b[^>]*>)/, '$1' + banner + platformBanner), { status: response.status, headers: output });
     }
     const output = Object.fromEntries(response.headers); output['x-robots-tag'] = 'noindex, nofollow'; output['cache-control'] = 'private, no-store';
     outgoing.writeHead(response.status, output);

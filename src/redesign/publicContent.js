@@ -3,6 +3,7 @@ import { buildHomeView } from './home.js';
 import { uuid, slug, positive, millis, metadata, strictJson, idList, platform, platformUrl, contentBase, localizedPath } from './publicValidation.js';
 import { assetPath, publicAssetIdentity, previewIdentity, resourceReady } from './publicResources.js';
 import { publishedHome, contentTrack, contentClip, contentGame } from './publicStore.js';
+import { platformAvailability } from './platformView.js';
 
 function jsonRows(source, max) {
   try {
@@ -70,6 +71,7 @@ export async function projectTrack(runtime, row, options, { detailed = false } =
     fullPlayback: runtime.flags.public && row.existing_full_reference === 1 &&
       ['free_full', 'existing_entitlement'].includes(row.site_audio_mode)
       ? { playbackPath: contentBase + '/tracks/' + row.slug + '/playback?variant=full', requiresAccessCheck: true } : null,
+    platformAvailability: platformAvailability(rawLinks, row.id, country, now),
     platforms: links.map(link => ({ id: link.id, provider: link.provider, status: link.status, href: link.href,
       verifiedAt: link.verifiedAt, releasedAt: link.releasedAt }))
   };

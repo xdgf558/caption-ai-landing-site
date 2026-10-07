@@ -1,0 +1,167 @@
+[
+  {
+    "requested": {
+      "width": 1440,
+      "height": 900
+    },
+    "observed": {
+      "bodyWidth": 1425,
+      "clientWidth": 1425,
+      "copyButtons": [
+        {
+          "height": 44,
+          "width": 64
+        },
+        {
+          "height": 44,
+          "width": 64
+        },
+        {
+          "height": 44,
+          "width": 64
+        }
+      ],
+      "documentWidth": 1425,
+      "dpr": 1,
+      "innerHeight": 900,
+      "innerWidth": 1440,
+      "summary": {
+        "height": 44,
+        "width": 141.171875
+      },
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-1/"
+    }
+  },
+  {
+    "requested": {
+      "width": 768,
+      "height": 900
+    },
+    "observed": {
+      "bodyWidth": 753,
+      "clientWidth": 753,
+      "copyButtons": [
+        {
+          "height": 44,
+          "width": 64
+        },
+        {
+          "height": 44,
+          "width": 64
+        },
+        {
+          "height": 44,
+          "width": 64
+        }
+      ],
+      "documentWidth": 753,
+      "dpr": 1,
+      "innerHeight": 900,
+      "innerWidth": 768,
+      "summary": {
+        "height": 44,
+        "width": 141.171875
+      },
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-1/"
+    }
+  },
+  {
+    "requested": {
+      "width": 390,
+      "height": 844
+    },
+    "observed": {
+      "bodyWidth": 375,
+      "clientWidth": 375,
+      "copyButtons": [
+        {
+          "height": 44,
+          "width": 54
+        },
+        {
+          "height": 44,
+          "width": 54
+        },
+        {
+          "height": 44,
+          "width": 54
+        }
+      ],
+      "documentWidth": 375,
+      "dpr": 1,
+      "innerHeight": 844,
+      "innerWidth": 390,
+      "summary": {
+        "height": 44,
+        "width": 141.171875
+      },
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-1/"
+    }
+  },
+  {
+    "requested": {
+      "width": 375,
+      "height": 844
+    },
+    "observed": {
+      "bodyWidth": 360,
+      "clientWidth": 360,
+      "copyButtons": [
+        {
+          "height": 44,
+          "width": 54
+        },
+        {
+          "height": 44,
+          "width": 54
+        },
+        {
+          "height": 44,
+          "width": 54
+        }
+      ],
+      "documentWidth": 360,
+      "dpr": 1,
+      "innerHeight": 844,
+      "innerWidth": 375,
+      "summary": {
+        "height": 44,
+        "width": 141.171875
+      },
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-1/"
+    }
+  },
+  {
+    "requested": {
+      "width": 320,
+      "height": 740
+    },
+    "observed": {
+      "bodyWidth": 305,
+      "clientWidth": 305,
+      "copyButtons": [
+        {
+          "height": 44,
+          "width": 54
+        },
+        {
+          "height": 44,
+          "width": 54
+        },
+        {
+          "height": 44,
+          "width": 54
+        }
+      ],
+      "documentWidth": 305,
+      "dpr": 1,
+      "innerHeight": 740,
+      "innerWidth": 320,
+      "summary": {
+        "height": 44,
+        "width": 141.171875
+      },
+      "url": "http://127.0.0.1:4208/music/tracks/local-sample-1/"
+    }
+  }
+]

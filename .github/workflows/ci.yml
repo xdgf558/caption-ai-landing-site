@@ -85,6 +85,9 @@ jobs:
       - name: Verify isolated Station Cat music pages against the built Astro shell
         run: npm run test:redesign:music
 
+      - name: Verify Station Cat release platforms and nonblocking fallbacks
+        run: npm run test:redesign:platforms
+
       - name: Verify closed production music candidate assets
         run: node --test scripts/test-music-production-assets.mjs
 

@@ -93,7 +93,7 @@ test('public link syntax rejects credentials, tokens, scripts, private hosts and
     assert.equal(render(input).music.platforms.length, 2, url);
   }
   const input = complete(); input.content.platforms[0].url = 'https://music.163.com/';
-  assert.equal(render(input).music.platforms[0].href, 'https://music.163.com/');
+  assert.equal(render(input).music.platforms.length, 2); // A provider homepage is not a verified work entry.
 });
 test('preview requires enabled, ready, independently typed public and rights-confirmed clip', () => {
   const base = () => structuredClone(homeScenario('preview-enabled'));

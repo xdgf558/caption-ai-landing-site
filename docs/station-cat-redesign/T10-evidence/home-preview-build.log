@@ -1,0 +1,116 @@
+
+> landing-site@0.1.0 build:redesign:preview
+> astro build --config scripts/fixtures/station-redesign/astro.config.mjs
+
+20:34:09 [content] Syncing content
+20:34:09 [content] Synced content
+20:34:09 [types] Generated 12ms
+20:34:09 [build] output: "static"
+20:34:09 [build] mode: "static"
+20:34:09 [build] directory: /Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/.generated/station-redesign-preview/
+20:34:09 [build] Collecting build info...
+20:34:09 [build] ✓ Completed in 19ms.
+20:34:09 [build] Building static entrypoints...
+20:34:10 [vite] ✓ built in 946ms
+20:34:10 [build] ✓ Completed in 957ms.
+
+ building client (vite) 
+20:34:10 [vite] transforming...
+20:34:10 [vite] ✓ 16 modules transformed.
+20:34:10 [vite] rendering chunks...
+20:34:10 [vite] computing gzip size...
+20:34:10 [vite] .generated/station-redesign-preview/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.BrpLPQap.js  14.15 kB │ gzip: 5.95 kB
+20:34:10 [vite] ✓ built in 20ms
+
+ generating static routes 
+20:34:10 ▶ scripts/fixtures/station-redesign/site/pages/index.astro
+20:34:10   └─ /index.html (+6ms) 
+20:34:10 ▶ scripts/fixtures/station-redesign/site/pages/[...path].astro
+20:34:10   ├─ /about/index.html (+2ms) 
+20:34:10   ├─ /zh-hans/index.html (+1ms) 
+20:34:10   ├─ /en/index.html (+1ms) 
+20:34:10   ├─ /ja/index.html (+1ms) 
+20:34:10   ├─ /home-preview/pending/index.html (+1ms) 
+20:34:10   ├─ /home-preview/complete/index.html (+2ms) 
+20:34:10   ├─ /home-preview/no-video/index.html (+3ms) 
+20:34:10   ├─ /home-preview/no-platform/index.html (+1ms) 
+20:34:10   ├─ /home-preview/preview-enabled/index.html (+1ms) 
+20:34:10   ├─ /home-preview/revoked/index.html (+1ms) 
+20:34:10   ├─ /visual/index.html (+1ms) 
+20:34:10   ├─ /music/tracks/quiet-night/index.html (+1ms) 
+20:34:10   ├─ /music/tracks/little-light/index.html (+1ms) 
+20:34:10   ├─ /music/tracks/kinder-days/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/home-preview/pending/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/home-preview/complete/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/home-preview/no-video/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/home-preview/no-platform/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/home-preview/preview-enabled/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/home-preview/revoked/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/visual/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/music/tracks/quiet-night/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/music/tracks/little-light/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/music/tracks/kinder-days/index.html (+1ms) 
+20:34:10   ├─ /en/home-preview/pending/index.html (+1ms) 
+20:34:10   ├─ /en/home-preview/complete/index.html (+1ms) 
+20:34:10   ├─ /en/home-preview/no-video/index.html (+1ms) 
+20:34:10   ├─ /en/home-preview/no-platform/index.html (+1ms) 
+20:34:10   ├─ /en/home-preview/preview-enabled/index.html (+1ms) 
+20:34:10   ├─ /en/home-preview/revoked/index.html (+1ms) 
+20:34:10   ├─ /en/visual/index.html (+1ms) 
+20:34:10   ├─ /en/music/tracks/quiet-night/index.html (+1ms) 
+20:34:10   ├─ /en/music/tracks/little-light/index.html (+1ms) 
+20:34:10   ├─ /en/music/tracks/kinder-days/index.html (+1ms) 
+20:34:10   ├─ /ja/home-preview/pending/index.html (+1ms) 
+20:34:10   ├─ /ja/home-preview/complete/index.html (+1ms) 
+20:34:10   ├─ /ja/home-preview/no-video/index.html (+3ms) 
+20:34:10   ├─ /ja/home-preview/no-platform/index.html (+1ms) 
+20:34:10   ├─ /ja/home-preview/preview-enabled/index.html (+1ms) 
+20:34:10   ├─ /ja/home-preview/revoked/index.html (+1ms) 
+20:34:10   ├─ /ja/visual/index.html (+1ms) 
+20:34:10   ├─ /ja/music/tracks/quiet-night/index.html (+1ms) 
+20:34:10   ├─ /ja/music/tracks/little-light/index.html (+1ms) 
+20:34:10   ├─ /ja/music/tracks/kinder-days/index.html (+1ms) 
+20:34:10   ├─ /__home-fixture/platform/netease/index.html (+1ms) 
+20:34:10   ├─ /__home-fixture/platform/qishui/index.html (+1ms) 
+20:34:10   ├─ /__home-fixture/platform/apple_music/index.html (+0ms) 
+20:34:10   ├─ /__home-fixture/platform/youtube/index.html (+1ms) 
+20:34:10   ├─ /__home-fixture/platform/spotify/index.html (+1ms) 
+20:34:10   ├─ /music/index.html (+1ms) 
+20:34:10   ├─ /games/index.html (+1ms) 
+20:34:10   ├─ /games/cat-life-game/index.html (+1ms) 
+20:34:10   ├─ /music/tracks/sample-song/index.html (+1ms) 
+20:34:10   ├─ /library/index.html (+1ms) 
+20:34:10   ├─ /privacy/index.html (+1ms) 
+20:34:10   ├─ /terms/index.html (+1ms) 
+20:34:10   ├─ /zh-hant/music/index.html (+1ms) 
+20:34:10   ├─ /zh-hant/games/index.html (+1ms) 
+20:34:10   ├─ /zh-hant/games/cat-life-game/index.html (+1ms) 
+20:34:10   ├─ /zh-hant/music/tracks/sample-song/index.html (+1ms) 
+20:34:10   ├─ /zh-hant/library/index.html (+1ms) 
+20:34:10   ├─ /zh-hant/privacy/index.html (+1ms) 
+20:34:10   ├─ /zh-hant/terms/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/music/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/games/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/games/cat-life-game/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/music/tracks/sample-song/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/library/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/privacy/index.html (+1ms) 
+20:34:10   ├─ /zh-hans/terms/index.html (+1ms) 
+20:34:10   ├─ /en/music/index.html (+1ms) 
+20:34:10   ├─ /en/games/index.html (+1ms) 
+20:34:10   ├─ /en/games/cat-life-game/index.html (+1ms) 
+20:34:10   ├─ /en/music/tracks/sample-song/index.html (+2ms) 
+20:34:10   ├─ /en/library/index.html (+1ms) 
+20:34:10   ├─ /en/privacy/index.html (+1ms) 
+20:34:10   ├─ /en/terms/index.html (+1ms) 
+20:34:10   ├─ /ja/music/index.html (+1ms) 
+20:34:10   ├─ /ja/games/index.html (+1ms) 
+20:34:10   ├─ /ja/games/cat-life-game/index.html (+1ms) 
+20:34:10   ├─ /ja/music/tracks/sample-song/index.html (+1ms) 
+20:34:10   ├─ /ja/library/index.html (+1ms) 
+20:34:10   ├─ /ja/privacy/index.html (+1ms) 
+20:34:10   └─ /ja/terms/index.html (+1ms) 
+20:34:10 ✓ Completed in 86ms.
+
+20:34:10 [build] 85 page(s) built in 1.10s
+20:34:10 [build] Complete!
