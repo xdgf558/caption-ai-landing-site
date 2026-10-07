@@ -9,8 +9,8 @@ import { fixtureId } from './helpers/station-redesign-database.mjs';
 let runtime;
 before(async () => { runtime = await createStationMusicRuntime(); }, { timeout: 60000 });
 after(async () => { await runtime?.close(); });
-const call = (path, { prefix = '/fixture-pages-on', method = 'GET', account, headers = {} } = {}) =>
-  runtime.mf.dispatchFetch('https://wwwstationcat.org' + prefix + path, { method, redirect: 'manual',
+const call = (path, { prefix = '/fixture-pages-on', method = 'GET', account, headers = {}, origin = 'https://wwwstationcat.org' } = {}) =>
+  runtime.mf.dispatchFetch(origin + prefix + path, { method, redirect: 'manual',
     headers: { 'CF-Connecting-IP': '192.0.2.91', ...(account ? { Cookie: 'station_cat_reader_session=fixture-session-' + account } : {}), ...headers } });
 async function html(path, options) {
   const response = await call(path, options), text = await response.text();
@@ -22,9 +22,27 @@ const model = text => JSON.parse(/<script id="sc-music-bootstrap" type="applicat
 test('default production route is unchanged; internal templates cannot be requested directly, including aliases and encoded paths', async () => {
   const old = await call('/music/', { prefix: '' }); assert.equal(old.status, 200);
   const oldHtml = await old.text(); assert(!oldHtml.includes('sc-music-bootstrap'));
-  const off = await call('/music/tracks/vip/', { prefix: '' }); assert.equal(off.status, 503); await off.text();
+  for (const prefix of ['', '/fixture-content-only']) {
+    for (const path of ['/music/tracks/vip/', '/en/music/tracks/not-mapped?token=fixture-secret']) {
+      const off = await call(path, { prefix }); assert.equal(off.status, 404); assert.equal((await off.json()).error.code, 'NOT_FOUND');
+      const head = await call(path, { prefix, method: 'HEAD' }); assert.equal(head.status, 404); assert.equal(await head.text(), '');
+      const method = await call(path, { prefix, method: 'POST' }); assert.equal(method.status, 405); assert.equal((await method.json()).error.code, 'METHOD_NOT_ALLOWED');
+    }
+  }
   for (const path of ['/music/site-shell/en/', '/en/music/site-shell/en/', '/music/%73ite-shell/en/', '/music//site-shell/en/']) {
     const response = await call(path); assert.equal(response.status, 404, path); assert.equal(await response.text(), '');
+  }
+});
+
+test('local metadata uses the actual loopback origin while public canonical and noindex remain controlled', async () => {
+  for (const [origin, expected] of [['http://127.0.0.1:4208', 'http://127.0.0.1:4208'], ['http://localhost:4208', 'http://localhost:4208'],
+    ['https://preview.example.test', 'https://wwwstationcat.org']]) {
+    const text = await html('/en/music/tracks/vip/', { origin, headers: { 'X-Forwarded-Host': 'evil.example', 'X-Forwarded-Proto': 'https' } });
+    assert(text.includes('rel="canonical" href="' + expected + '/en/music/tracks/vip/"'));
+    assert(text.includes('property="og:url" content="' + expected + '/en/music/tracks/vip/"'));
+    assert(text.includes('hreflang="ja" href="' + expected + '/ja/music/tracks/vip/"'));
+    assert.match(text, /name="robots" content="noindex,nofollow"/);
+    assert(!text.includes('evil.example'));
   }
 });
 
@@ -81,7 +99,7 @@ test('mapped old UUID and slug share destinations are temporary; collection, unk
   for (const path of ['/music/?collection=old-album', '/music/?track=' + fixtureId(99999)]) {
     const text = await html(path); assert(!text.includes('sc-music-bootstrap'));
   }
-  for (const path of ['/music/unknown-child/', '/en/music/old/deeper/']) {
+  for (const path of ['/music/unknown-child/', '/en/music/old/deeper/', '/music/tracks/not-mapped/', '/en/music/tracks/not-mapped']) {
     const response = await call(path); assert.equal(response.status, 404);
     assert.equal((await response.json()).error.code, 'NOT_FOUND');
   }
@@ -115,7 +133,8 @@ test('real synthetic cover/audio bytes match sealed metadata, Range is correct, 
 });
 
 test('full playback hint is not an authorization; guest, ordinary account, expired member and active member still use old policy', async () => {
-  const text = await html('/music/tracks/vip/'); assert(model(text).track.fullPlayback);
+  const text = await html('/music/tracks/vip/'); assert.equal(model(text).track.fullPlayback.requiresAccessCheck, true);
+  assert.match(text, /確認完整收聽權限/); assert.match(text, /完整播放前，需確認/); assert(!text.includes('已準備好，點擊播放'));
   const path = base + '/tracks/vip/playback?variant=full';
   for (const [account, status] of [[null, 401], [2, 403], [3, 403]]) {
     const response = await call(path, { account }); assert.equal(response.status, status); await response.json();

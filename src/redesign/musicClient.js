@@ -131,7 +131,7 @@ export function mountStationMusic() {
     button.disabled = true; button.querySelector('span').textContent = copy.prepare;
     try {
       const expected = contentBase + '/tracks/' + dto.slug + '/playback?variant=full';
-      if (dto.fullPlayback?.playbackPath !== expected) throw new Error('INVALID_ENDPOINT');
+      if (dto.fullPlayback?.requiresAccessCheck !== true || dto.fullPlayback.playbackPath !== expected) throw new Error('INVALID_ENDPOINT');
       const body = await getResponse(expected + '&locale=' + model.locale, controller);
       if (disposed || generation !== playbackGeneration) return;
       prepared.set(dto.id, fullPlayerTrack(dto, body));

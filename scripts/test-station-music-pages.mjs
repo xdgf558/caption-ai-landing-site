@@ -5,6 +5,7 @@ import { handleStationMusicPage, stationMusicRoute, isStationMusicTemplate } fro
 import { musicBootstrap, renderMusicPage, renderSongHero, musicPlatforms } from '../src/redesign/musicRender.js';
 import { stationMusicSource, previewPlayerTrack, fullPlayerTrack, indexStationMusicTracks } from '../src/redesign/musicPlayback.js';
 import { readMusicResponse } from '../src/redesign/musicResponse.js';
+import { musicCopy } from '../src/redesign/musicCopy.js';
 import { createMusicPlayer, musicSource } from '../src/scripts/musicPlayerCore.js';
 import { Audio } from './fixtures/music-player/fake-audio.mjs';
 import { contentFixture, base, now, promotionFixture, platformFixture } from './helpers/station-content-fixture.mjs';
@@ -73,6 +74,7 @@ test('stale legacy audio hint cannot publish a full source; the hint never conta
   const f = await fixture(), vip = f.content.tracks[1];
   let dto = (await body(f, '/tracks/vip')).track;
   assert.equal(dto.fullPlayback.playbackPath, base + '/tracks/vip/playback?variant=full');
+  assert.equal(dto.fullPlayback.requiresAccessCheck, true);
   assert(!JSON.stringify(dto).includes('audio?'));
   f.music.sql.prepare("UPDATE music_tracks SET lifecycle='draft',published_revision_id=NULL WHERE id=?").run(vip.id);
   dto = (await body(f, '/tracks/vip')).track; assert.equal(dto.fullPlayback, null);
@@ -84,15 +86,42 @@ test('route boundaries retain aliases and refuse runtime/API namespaces; default
   assert.equal(stationMusicRoute('/zh-hant/music/').locale, 'zh-Hant');
   for (const path of ['/games/cat-life/', '/api/mobile/v1/me/music/', '/music/a/deeper/', '/about/']) assert.equal(stationMusicRoute(path), null);
   for (const path of ['/music/site-shell/en/', '/en/music/site-shell/', '/music/%73ite-shell/en/', '/music//site-shell/en/']) assert(isStationMusicTemplate(path));
-  const env = { get MUSIC_DB() { throw new Error('must not read'); } };
-  assert.equal(await handleStationMusicPage(new Request('https://wwwstationcat.org/music/'), env), null);
-  assert.equal((await handleStationMusicPage(new Request('https://wwwstationcat.org/music/tracks/vip/'), env)).status, 503);
+  const env = { get MUSIC_DB() { throw new Error('must not read'); }, get ASSETS() { throw new Error('must not read'); } };
+  for (const flags of [{}, { STATION_MUSIC_PAGES_ENABLED: 'false' }, { STATION_CONTENT_PUBLIC_ENABLED: 'true' }]) {
+    for (const path of ['/music/?q=one&q=two', '/en/music?track=' + fixtureId(1), '/music/tracks/vip/', '/ja/music/tracks/unknown', '/music/old-share/']) {
+      for (const method of ['GET', 'HEAD', 'POST']) assert.equal(await handleStationMusicPage(new Request('https://wwwstationcat.org' + path, { method }), { ...flags,
+        get MUSIC_DB() { return env.MUSIC_DB; }, get ASSETS() { return env.ASSETS; } }), null, method + ' ' + path);
+    }
+  }
   assert.equal((await handleStationMusicPage(new Request('https://wwwstationcat.org/music/site-shell/en/'), env)).status, 404);
+});
+
+test('an enabled detail route must prove a published mapping before claiming an unknown or withdrawn address', async () => {
+  const f = await fixture(), env = { ...f.env, STATION_MUSIC_PAGES_ENABLED: 'true', get ASSETS() { throw new Error('unmapped route must not read the shell'); } };
+  const pageRequest = path => new Request('https://wwwstationcat.org' + path, { headers: { 'CF-Connecting-IP': '192.0.2.90' } });
+  for (const path of ['/music/tracks/not-mapped/', '/en/music/tracks/not-mapped?token=fixture-secret', '/ja/music/not-mapped/']) {
+    assert.equal(await handleStationMusicPage(pageRequest(path), env, { clock: () => now }), null);
+  }
+  f.music.sql.prepare("UPDATE station_track_publications SET status='draft' WHERE track_id=?").run(f.content.tracks[1].id);
+  assert.equal(await handleStationMusicPage(pageRequest('/music/tracks/vip/'), env, { clock: () => now }), null);
 });
 
 const dto = { id: fixtureId(1), slug: 'a-song', revision: 2, href: '/en/music/tracks/a-song/', title: 'A song', artist: 'Station Cat',
   durationMs: 120000, summary: '', platforms: [], coverUrl: null,
   preview: { revision: 1, durationMs: 30000, playbackPath: base + '/tracks/a-song/playback?variant=preview' } };
+
+test('a public full-playback hint is rendered as unchecked access in every language, without ready or entitlement claims', () => {
+  const fullPlayback = { playbackPath: base + '/tracks/a-song/playback?variant=full', requiresAccessCheck: true };
+  for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
+    const track = { ...dto, href: ({ 'zh-Hant': '', 'zh-Hans': '/zh-hans', en: '/en', ja: '/ja' })[locale] + '/music/tracks/a-song/', fullPlayback };
+    const html = renderSongHero(track, locale, { detail: true }), copy = musicCopy[locale];
+    assert(html.includes(copy.full)); assert(html.includes(copy.fullAccessHint)); assert(!html.includes(copy.ready));
+    assert.match(html, /aria-describedby="sc-full-access-note" data-sc-full-check=/);
+    assert(!html.includes('data-ready=')); assert(!html.includes('isVip'));
+    assert(!renderSongHero({ ...track, fullPlayback: { playbackPath: fullPlayback.playbackPath } }, locale).includes('data-sc-full-check='));
+    assert(!renderSongHero({ ...track, fullPlayback: null }, locale).includes('sc-full-access-note'));
+  }
+});
 test('public preview adapter controls both versions, and full adapter needs an exact private handshake', () => {
   const preview = previewPlayerTrack(dto);
   assert.equal(stationMusicSource(preview, 'preview'), base + '/tracks/a-song/audio?variant=preview&v=2&p=1');

@@ -1,0 +1,77 @@
+✔ staging cookies cannot inherit a production session, including duplicates (9.658667ms)
+✔ Access-protected responses stay private without changing streams, HEAD, 304 or ranges (1.109334ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ real Access verification precedes all bindings; shared limits precede isolated membership (69.612375ms)
+✔ only music admin, public read routes and exact static dependencies are allowed (0.536542ms)
+✔ main site, other admin surfaces, traversal variants and unsupported methods stay closed (0.18725ms)
+✔ only exact music page routes receive canonical trailing slash redirects (0.040792ms)
+✔ host and fail-closed responses are normalized and private (0.098375ms)
+✔ the deployed entrypoint blocks other hosts and keeps admin closed without Access config (0.688167ms)
+✔ staging config exposes only the Access-protected music host and isolated bindings (0.887458ms)
+✔ maintenance deployments derive the same isolated config with all music flags closed (0.521125ms)
+✔ moving the maintenance config preserves source, asset and both migration directories (0.40325ms)
+▶ staging package validation checks exact HTML pages and their dependency closure
+  ✔ complete pages and dependencies pass; navigation is not a static dependency (7.300917ms)
+  ✔ missing HTML dependency fails: /_astro/music.astro_astro_type_script_index_0_lang.fixture.js (5.232292ms)
+  ✔ missing HTML dependency fails: /styles/admin-music.css (5.346375ms)
+  ✔ unexpected HTML fails: /en/library/index.html (5.758167ms)
+  ✔ unexpected HTML fails: /music/extra.html (5.993959ms)
+  ✔ missing transitive JS dependency fails (5.972542ms)
+  ✔ present but forbidden chunks fail (20.237917ms)
+✔ staging package validation checks exact HTML pages and their dependency closure (56.443792ms)
+✔ staging module graph includes only music, Access and the existing reader membership contract (16.249708ms)
+✔ maintenance generator rejects resource, Access, route and execution drift before producing a config (1.69775ms)
+✔ namespace stays separate from UUID music/native/services; default flag stops before any binding access (11.587375ms)
+✔ actual schema columns, ledger and cleanup view are required; probes never install missing schema (35.540541ms)
+✔ ledger alone cannot prove the extension view; read failures are fixed 503 errors (60.648041ms)
+✔ migration/backfilled home remains empty until explicitly published; no latest-free fallback (38.550167ms)
+✔ public fields are allowlisted; platform-only works and locale fallback never spreads metadata (37.353875ms)
+✔ draft edits do not replace sealed public snapshots; scheduled, future and archived heads disappear (97.575375ms)
+✔ invalid query, duplicate parameters, methods and paths fail before DB/R2 (39.534333ms)
+✔ keyset pagination has stable ID tie breaks, title/artist search, bounded limits and filtered-page progress (41.488ms)
+✔ canonical alias lookup returns canonical links without treating old music descendants as already migrated (32.694542ms)
+✔ default 20/max 50 are actual SQL page limits and cannot dump the whole catalog (42.262333ms)
+✔ duplicate/escaped keys, prototypes and oversized stored metadata are rejected, including related references (36.726792ms)
+✔ platform visibility requires actual live verification, provider host and trusted territory; query/header claims cannot override (31.974875ms)
+✔ independent guest preview requires current enabled promotion and owned approved resource; no account/full object lookup (33.243458ms)
+✔ stopped/draft/future promotions revoke current preview and home; old free featured state is irrelevant (35.56325ms)
+✔ rights, source identity and object freshness independently prevent preview delivery (36.301209ms)
+✔ a preview copied from the entire full file or referencing another owner cannot pass independent clip proof (44.003584ms)
+✔ free_full hint on VIP does not grant access; guest, ordinary, expired and real member responses stay distinct (38.70575ms)
+✔ finite account/session revocation and membership DB failures are rechecked on direct HEAD/Range requests (85.61225ms)
+✔ legacy flags and current legacy revision still control full media, including time-limited free music (36.027417ms)
+✔ authorized audio streams bounded ranges, HEAD and If-Range; no GET on denied HEAD or stale website versions (32.268583ms)
+✔ generic asset paths never deliver full/preview files, even to members; public cover and lyric stream only current references (32.025083ms)
+✔ object replacement between HEAD and conditional GET cannot leak different bytes (29.1335ms)
+✔ an R2 body arriving after the request deadline is cancelled instead of becoming a late response (119.864458ms)
+✔ video requires current published parent, matching video/poster rights, dimensions and ready objects (33.762833ms)
+✔ game detail preserves the real runtime directory; unregistered stored launch paths cannot become launch promises (31.751333ms)
+✔ asset IDs colliding across music/media domains are omitted rather than resolved by arrival order (31.456083ms)
+✔ published home ignores concurrent drafts and removes revoked promotions/media on each fresh projection (35.477041ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ bounded rate admission distinguishes 429 from service failure and request budgets expire without publication writes (144.390666ms)
+✔ existing UUID catalog retains its contract and old qualification metric after the extension is populated (34.191083ms)
+✔ production Worker dispatch is default closed; actual empty D1 fails readiness without automatic DDL (497.198625ms)
+✔ explicit local fixture migration enables published queries only, with a separate reader binding and actual ledger (1834.910125ms)
+✔ native D1 publication pointer coexists with drafts; clip/game/home DTO and actual R2 streaming agree (29.697166ms)
+✔ native guest preview is independent; generic assets cannot deliver audio; private full responses use real existing membership (36.098541ms)
+✔ actual R2 replacement and rights revocation are visible immediately, including conditional requests and home (45.001208ms)
+✔ old UUID catalog and real game runtime address still dispatch separately; no new event writes (22.446625ms)
+ℹ tests 56
+ℹ suites 0
+ℹ pass 56
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2634.815416

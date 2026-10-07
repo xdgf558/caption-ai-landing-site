@@ -113,7 +113,7 @@
   .sc-song-hero-copy > .sc-music-eyebrow, .sc-song-hero-copy > h1, .sc-song-hero-copy > h2, .sc-song-hero-copy > .sc-song-artist { grid-column: 2; }
   .sc-song-hero-copy > h1, .sc-song-hero-copy > h2 { font-size: 24px; margin-bottom: 0; }
   .sc-song-hero-copy > .sc-music-eyebrow { letter-spacing: 1.5px; font-size: 9px; margin-bottom: 0; }
-  .sc-song-hero-copy > .sc-song-intro, .sc-song-hero-copy > .sc-song-hero-actions, .sc-song-hero-copy > .sc-song-platforms, .sc-song-hero-copy > .sc-platform-pending, .sc-song-hero-copy > .sc-song-detail-link { grid-column: 1/-1; }
+  .sc-song-hero-copy > .sc-song-intro, .sc-song-hero-copy > .sc-song-hero-actions, .sc-song-hero-copy > .sc-full-access-note, .sc-song-hero-copy > .sc-song-platforms, .sc-song-hero-copy > .sc-platform-pending, .sc-song-hero-copy > .sc-song-detail-link { grid-column: 1/-1; }
   .sc-song-no-cover .sc-song-hero-copy > * { grid-column: 1/-1; }
   .sc-song-intro { margin-bottom: 0; font-size: 14px; }
   .sc-song-hero-actions { margin: 14px 0 8px; }

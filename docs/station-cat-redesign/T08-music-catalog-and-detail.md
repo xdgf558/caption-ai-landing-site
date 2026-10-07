@@ -11,7 +11,7 @@ HTML 路由新增独立 `STATION_MUSIC_PAGES_ENABLED` 开关，生产配置没�
 | 地址 | 开关开启并通过校验后的行为 | 默认关闭时 |
 | --- | --- | --- |
 | 四语言 `/music/` 根页面 | 服务端生成目录；主推和精选仅来自已发布首页配置 | 交回旧音乐 HTML 处理器 |
-| `/{locale}/music/tracks/:slug/` | 当前已发布作品详情；alias/无斜线等规范化使用临时 302 | 503 + noindex，不宣称作品不存在 |
+| `/{locale}/music/tracks/:slug/` | 仅当前已发布实体可被新处理器认领；alias/无斜线等规范化使用临时 302；查无映射返回 null 交回旧处理器 | 交回旧音乐 HTML 处理器 |
 | 根页唯一合法 `?track=UUID` | 先读取实际发布实体，再以详情查询核对 canonical；匹配成功才 302 | 原处理器 |
 | 旧单层 `/music/:slug/` | T07 可查到当前 canonical 时 302 | 原处理器 |
 | `?collection=`、未映射 UUID、未知后代 | 原处理器；不在本批推断对应单曲、关闭或迁移 | 原处理器 |
@@ -19,7 +19,9 @@ HTML 路由新增独立 `STATION_MUSIC_PAGES_ENABLED` 开关，生产配置没�
 
 繁中 canonical 仍为 `/music/`，其余为 `/zh-hans/music/`、`/en/music/`、`/ja/music/`。`/zh-hant/music/` 是规范化别名。旧后代路径的完整生产实体、动态 D1 slug、外部推广链接及客户端清单仍须 T20 实际核对；本批只解析当前可证明的映射。AASA 没有扩展到单曲路由。关于仍只有原 `/about/`，游戏介绍仍待 T12，`/games/cat-life/` 没有被占用或重定向为介绍。
 
-页面仅 GET/HEAD，其他方法 405；HEAD 经过同样查询/校验但无正文。响应 `private, no-store`、`noindex,nofollow`，没有新增 sitemap 地址。T20 再决定正式索引和关闭被替代入口。规范化仅保留合法且唯一的目录参数与四个 UTM 参数，去掉 token 等未知参数；UTM 未被采集，也不是访问凭证。
+新处理器默认关闭时，对目录、旧分享和单曲路径统一返回 null，不读取绑定或先验证查询/方法；最终状态仍由旧处理器决定，不意味着旧处理器已有详情页。内部静态壳继续保持外部 404。页面开关开启但查询开关关闭，仍按配置不可用返回 503。
+
+被新处理器认领的页面仅 GET/HEAD，其他方法 405；HEAD 经过同样查询/校验但无正文。响应 `private, no-store`、`noindex,nofollow`，没有新增 sitemap 地址。loopback 预览的 canonical、OG 和 hreflang 使用实际本机来源；公开主机仍固定正式域名，不相信转发头。两者均不能作为正式索引验收。T20 再决定正式索引和关闭被替代入口。规范化仅保留合法且唯一的目录参数与四个 UTM 参数，去掉 token 等未知参数；UTM 未被采集，也不是访问凭证。
 
 内部四语言 Astro 壳被普通构建打包，Worker 以 ASSETS 读取指定壳并通过 HTMLRewriter 写入静态作品内容、title/description/canonical/OG/hreflang 和受限 JSON。查询成功不依赖浏览器执行脚本，主要作品信息和搜索/下一页链接无 JavaScript 也可访问。壳不含示例作品或音频源；缺少绑定、schema 或壳时拒绝并提供重试。生产 `run_worker_first` 已覆盖音乐、语言及编码路径，本批未改变该配置。
 
@@ -45,7 +47,7 @@ HTML、属性和 JSON 分别转义，用户或运营内容不会作为 HTML 执�
 
 页面只挂载一个 `audio preload=none`，无 src/autoplay。推广试听使用当前网站版本 v 和独立推广版本 p，用户点击后同步调用旧播放器核心的 play；媒体端每次重新校验独立资源、权利、版本和推广开关。停止推广不因为浏览器已有 DTO 而继续授权下一次请求。实际已经下载的浏览器缓冲不会由服务端追溯清除；T09 继续处理播放生命周期和失效状态。
 
-新增公开 `fullPlayback.playbackPath` **仅提示私有权限握手入口**，不返回音频地址，也不授予免费或 VIP。提示要求旧当前发布指针与网站引用相符；媒体可用性及最终权限仍由 T07 的旧 `resolveMusicAccess()`、会话、有限期会员和 R2 检查决定。`site_audio_mode` 没有被用作放行条件。
+新增公开 `fullPlayback.playbackPath` **仅提示私有权限握手入口**，并明确带 `requiresAccessCheck: true`，不返回音频地址，也不授予免费或 VIP。四语言入口先显示“确认完整收听权限”和待确认说明；只有私有握手成功后才显示准备播放。拒绝、关闭播放器或恢复页面时回到待确认态。提示要求旧当前发布指针与网站引用相符；媒体可用性及最终权限仍由 T07 的旧 `resolveMusicAccess()`、会话、有限期会员和 R2 检查决定。`site_audio_mode` 没有被用作放行条件。
 
 完整音频先由一次点击请求私有 playback，返回严格匹配的 trackId/revision/variant/受控 audioPath 后显示“已准备好，点击播放”；再次主动点击才赋 src 并 play，保留浏览器用户激活。失败显示真实提示及现有会员入口，未授权不查完整 R2。关闭播放器卸载源并清除准备状态，不留“已准备好但无法播放”的按钮。旧播放器默认 UUID 地址不变，新增的同步 sourceFor 仅供该页面受控适配器使用。
 

@@ -1,0 +1,337 @@
+{
+  "task": "T08 review follow-up",
+  "recordedAt": "2026-10-07T07:54:47.971Z",
+  "reviewedHead": "8a314220ef4365984fd8b691472e8c9807cbecdb",
+  "base": "828d5a9d345e171dd2d28b159943c09beeaa63c4",
+  "scope": "Final working-tree source hashes before committing the revision; original T08 evidence describes the original reviewed head.",
+  "localRuntime": "v24.15.0",
+  "tests": [
+    {
+      "command": "npm run test:redesign:music",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "log": "music-runtime.log"
+    },
+    {
+      "command": "node --test --test-timeout=90000 scripts/test-station-content-public.mjs scripts/test-station-content-runtime.mjs scripts/test-music-staging-gate.mjs",
+      "tests": 56,
+      "pass": 56,
+      "fail": 0,
+      "log": "regression.log"
+    }
+  ],
+  "build": {
+    "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+    "pages": 157,
+    "sitemapRoutes": 111,
+    "productionPackage": false,
+    "log": "build.log"
+  },
+  "stagingPackage": {
+    "commands": [
+      "node scripts/build-music-staging-assets.mjs",
+      "node scripts/check-music-staging-assets.mjs"
+    ],
+    "pages": 8,
+    "assets": 33,
+    "log": "staging-package.log",
+    "remoteExecution": false
+  },
+  "hostedCI": {
+    "head": "8a314220ef4365984fd8b691472e8c9807cbecdb",
+    "conclusion": "FAILURE",
+    "completedAt": "2026-10-07T07:37:40Z",
+    "url": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37585511430/job/112674592325",
+    "failedStep": "Verify isolated music staging package",
+    "reason": "musicLyrics.BMGksCdJ.js blocked by exact staging dependency gate",
+    "revisionResult": "Requires a separate run on the new committed head; local pass does not amend the original hosted result."
+  },
+  "browser": {
+    "surface": "Codex IAB",
+    "designQA": "passed",
+    "observations": "browser-observations.json",
+    "requestedViewports": [
+      {
+        "width": 1371,
+        "height": 996
+      },
+      {
+        "width": 320,
+        "height": 844
+      },
+      {
+        "width": 390,
+        "height": 844
+      }
+    ],
+    "deviceScaleFactor": 1,
+    "actualDevices": false,
+    "voiceOver": false,
+    "mediaIsSynthetic": true,
+    "consoleWarnings": 0,
+    "consoleErrors": 0
+  },
+  "flags": {
+    "STATION_MUSIC_PAGES_ENABLED": false,
+    "STATION_CONTENT_PUBLIC_ENABLED": false
+  },
+  "remoteMigrations": false,
+  "remoteDeployment": false,
+  "oldEntranceRetirement": false,
+  "T09Started": false,
+  "materials": "稍后确定",
+  "source": [
+    {
+      "file": "src/redesign/musicPages.js",
+      "sha256": "6f0c5c9e2d023552c6d7f360407e648e9a5148ee509a5e28f5ef647a0ad5f45a"
+    },
+    {
+      "file": "src/redesign/publicContent.js",
+      "sha256": "2bf2308ce6720057c2bdf16ca9be5b455330d5f7ab6a929f97ec320bbccd16e7"
+    },
+    {
+      "file": "src/redesign/musicRender.js",
+      "sha256": "6ed586189521d5e3bf46de4e11fc0e391741122ff82cc9f74892df075418d23f"
+    },
+    {
+      "file": "src/redesign/musicCopy.js",
+      "sha256": "c44199f92ba9240752af34e61b36b7e1bc73311415f03d1547c79975bf8a2a17"
+    },
+    {
+      "file": "src/redesign/musicClient.js",
+      "sha256": "3dd507f615a1fa200ee101145b5ade0c1ce3b547a4be50bd5307f3c95101c1ee"
+    },
+    {
+      "file": "src/redesign/music.css",
+      "sha256": "e8e7c68e048794c1886fb0d10780f8885326f7b9d72bcd6f8327b692fddcfa0a"
+    },
+    {
+      "file": "src/music/stagingGate.js",
+      "sha256": "40c96f4f189d4909f3e5c55674498e738d590d2c6461b93f4500f2bff081c34b"
+    },
+    {
+      "file": "scripts/test-station-music-pages.mjs",
+      "sha256": "924af8498ad0a9222336fc93b6badf217fbcd61cd68ec63bb48afdb1f4fac247"
+    },
+    {
+      "file": "scripts/test-station-music-runtime.mjs",
+      "sha256": "b769a2668fa261c95310fafcd5320b9480a7799ad05001a81eaccec2940411f0"
+    },
+    {
+      "file": "scripts/test-music-staging-gate.mjs",
+      "sha256": "480eb4cca8e41707b048cc1b934a783030afd98d4029796d26789101e65ab61a"
+    },
+    {
+      "file": "migrations-music/0012_station_redesign.sql",
+      "sha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498"
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "browser-observations.json",
+      "bytes": 8597,
+      "sha256": "bc1b899697656d54f8334e0e638ba12f0e38cc046ac2aacff3e16d6c5b86926d"
+    },
+    {
+      "file": "build.log",
+      "bytes": 22871,
+      "sha256": "3a6c100a4ba2f18b5d25f48ea430f5ce084876d5931dac5e5e3b2cd7c07c2795"
+    },
+    {
+      "file": "catalog-desktop.jpg",
+      "bytes": 97143,
+      "sha256": "69c25dece751c60fa146d16f7fa3d577a2b2d2abc5fd18df3abb3dfedbd430f0",
+      "width": 1356,
+      "height": 902
+    },
+    {
+      "file": "comparison-catalog-before-after.jpg",
+      "bytes": 230228,
+      "sha256": "d0d0cfa33141b0a52d33656c7f23145d14b27dd8d52e30ea0c2c4dc3e4cd882f",
+      "width": 2712,
+      "height": 902
+    },
+    {
+      "file": "comparison-free-states-initial.jpg",
+      "bytes": 112896,
+      "sha256": "664efbd847a18c07ab376b294078038c8b8850af6b9fc0e08e75c68673a0eec4",
+      "width": 1125,
+      "height": 812
+    },
+    {
+      "file": "comparison-free-states.jpg",
+      "bytes": 114067,
+      "sha256": "2d802a82da64417a1e22da2d89d01b508d5c8c2f8a01d38da4f7ef33316de67c",
+      "width": 1125,
+      "height": 812
+    },
+    {
+      "file": "comparison-header.jpg",
+      "bytes": 23634,
+      "sha256": "a901a9f039acdb6054a8a5085070b5c7c6ae642baec6975aaed78afea866ddf9",
+      "width": 2712,
+      "height": 62
+    },
+    {
+      "file": "comparison-mobile-locales-initial.jpg",
+      "bytes": 145426,
+      "sha256": "95e4b419b8192f1a66b18c4c5565abb9722c4951ef5d57595402d83bf29116aa",
+      "width": 1220,
+      "height": 804
+    },
+    {
+      "file": "comparison-mobile-locales.jpg",
+      "bytes": 146489,
+      "sha256": "f74eb58bed0b50a14af8f353ba52be410d359e26f0027dc1f593990c8b17526e",
+      "width": 1220,
+      "height": 804
+    },
+    {
+      "file": "comparison-narrow-hint-before-after.jpg",
+      "bytes": 69682,
+      "sha256": "7fb53419b30f0e9284436515d259837fc035384cbc4bc604553083952c9f4665",
+      "width": 610,
+      "height": 804
+    },
+    {
+      "file": "comparison-source-current.jpg",
+      "bytes": 372379,
+      "sha256": "912c0a7f70cdc0d1f0baacabaec7ab5086858bf0920aa0280204598d8003917d",
+      "width": 2712,
+      "height": 902
+    },
+    {
+      "file": "design-qa.md",
+      "bytes": 3910,
+      "sha256": "cc3ddb0aca62eda6871e63b03f0ffc3bc41a237c3cd5351bdb3240db5c583260"
+    },
+    {
+      "file": "detail-desktop.jpg",
+      "bytes": 71747,
+      "sha256": "542fb73c9c3511cbc9dfc053c48d90e4342f7f99d378d5679ff3c97eead6752f",
+      "width": 1356,
+      "height": 902
+    },
+    {
+      "file": "detail-en-320-initial.jpg",
+      "bytes": 28346,
+      "sha256": "08bb3a6ece778bba8cc55819e482ce9189926bae97e744aa3f586a24d2a51036",
+      "width": 305,
+      "height": 804
+    },
+    {
+      "file": "detail-en-320.jpg",
+      "bytes": 29493,
+      "sha256": "e280b302c3b1cfb0e76a3cb4ecde4258be090c86b67469227489a65002863350",
+      "width": 305,
+      "height": 804
+    },
+    {
+      "file": "detail-ja-320-initial.jpg",
+      "bytes": 30078,
+      "sha256": "953816615ba9183727e3a7f8a3d0a33937c87c9f8fd566c60f35499be9789bbe",
+      "width": 305,
+      "height": 804
+    },
+    {
+      "file": "detail-ja-320.jpg",
+      "bytes": 30002,
+      "sha256": "376c70d6592ca42319eada365bd5aaca222b2ea839585a14c507be4792557c41",
+      "width": 305,
+      "height": 804
+    },
+    {
+      "file": "detail-zh-Hans-320-initial.jpg",
+      "bytes": 28627,
+      "sha256": "cb2b111aebe18a1def7861c93870f73e480342156b0170b938afa6964404cbbe",
+      "width": 305,
+      "height": 804
+    },
+    {
+      "file": "detail-zh-Hans-320.jpg",
+      "bytes": 28497,
+      "sha256": "35a9abf183c79a991a184664a159ee7909f4400d8e67ff53d049187ab79c3d7f",
+      "width": 305,
+      "height": 804
+    },
+    {
+      "file": "detail-zh-Hant-320-initial.jpg",
+      "bytes": 28669,
+      "sha256": "38136b50330bc7300ea8c58b7ec43b046d753383d1f58c1cf3ce0f75cc97adb6",
+      "width": 305,
+      "height": 804
+    },
+    {
+      "file": "detail-zh-Hant-320.jpg",
+      "bytes": 28601,
+      "sha256": "8325d4e3e15fa2b5f2d598d795ce8d81aa6571da74d5b57d73c5e60a07ac3f29",
+      "width": 305,
+      "height": 804
+    },
+    {
+      "file": "free-close-390-initial.jpg",
+      "bytes": 29995,
+      "sha256": "c5ad29133a48a07deb6e23912b5b8322dbb3cf2829c1297ee076545ead695270",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "free-close-390.jpg",
+      "bytes": 30255,
+      "sha256": "4c79784652062961cceebf6925cdf292b129cab609f947270cfd5506bf57bb7c",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "free-playing-390-initial.jpg",
+      "bytes": 31540,
+      "sha256": "6ea7a5eb7d11d3099e6d9e592e48de92e627eb789e058b5b51403218c91054cd",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "free-playing-390.jpg",
+      "bytes": 32118,
+      "sha256": "abb465a07070259d41b3bcdf4e6798d31d8896add57358d9a2cf31c2164cb118",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "free-ready-390-initial.jpg",
+      "bytes": 30106,
+      "sha256": "1db7d4075b43ae107109a9752fea4007ffd05d78d10e74f86137d400be59e347",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "free-ready-390.jpg",
+      "bytes": 30350,
+      "sha256": "efde9a39c4ffe5dc9051df07b9ade13f6591f5331272cb0efbab6c80a2acde23",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "music-runtime.log",
+      "bytes": 3420,
+      "sha256": "ffe51b53883254379c64f6bab71c9e7216a1902faea818056337bf09ac665cde"
+    },
+    {
+      "file": "regression.log",
+      "bytes": 6556,
+      "sha256": "5a4a34cd09afacd42051e1c0e7187b268de144f50d921f9aa643d226371a1ac0"
+    },
+    {
+      "file": "staging-package.log",
+      "bytes": 122,
+      "sha256": "154afbae6ea7a963beaa60948172232960889320e8cfdced36116a082c102ce8"
+    },
+    {
+      "file": "vip-denied-390.jpg",
+      "bytes": 33115,
+      "sha256": "50d4025e263ce188a63849441b01ba9685f68c42a9f0dddbc4ba71b10f4522cd",
+      "width": 375,
+      "height": 812
+    }
+  ]
+}

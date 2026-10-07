@@ -142,6 +142,8 @@ test('only music admin, public read routes and exact static dependencies are all
     ['/_astro/musicWavWorker-hash.js', 'GET'],
     ['/_astro/musicAlbumBatch.D_0hL1LF.js', 'GET'],
     ['/_astro/musicWav.9BdbpA8K.js', 'GET'],
+    ['/_astro/musicLyrics.BMGksCdJ.js', 'GET'],
+    ['/_astro/musicLyrics.BMGksCdJ.js', 'HEAD'],
     ['/_astro/policy.BI0F0d4k.js', 'HEAD'],
     ['/images/music-night-hero.webp', 'GET'],
     ['/_astro/index.hash.css', 'GET']
@@ -164,6 +166,9 @@ test('main site, other admin surfaces, traversal variants and unsupported method
     ['/sitemap.xml', 'GET'],
     ['/_astro/articles.astro_hash.js', 'GET'],
     ['/_astro/musicAlbumBatchExtra.hash.js', 'GET'],
+    ['/_astro/musicLyricsExtra.hash.js', 'GET'],
+    ['/_astro/musicLyrics.hash.js.map', 'GET'],
+    ['/_astro/musicLyrics.hash.js', 'POST'],
     ['/_astro/policy.hash.js.map', 'GET'],
     ['/_astro/arbitrary.hash.js', 'GET'],
     ['/images/unrelated-hero.webp', 'GET'],

@@ -1,0 +1,307 @@
+{
+  "observations": [
+    {
+      "audioSrc": null,
+      "button": "確認完整收聽權限",
+      "canonical": "http://127.0.0.1:4208/music/",
+      "clientWidth": 1356,
+      "dpr": 1,
+      "height": 996,
+      "ready": null,
+      "scrollWidth": 1356,
+      "url": "http://127.0.0.1:4208/music/",
+      "width": 1371,
+      "phase": "before-narrow-hint-repair"
+    },
+    {
+      "audioSrc": null,
+      "button": "確認完整收聽權限",
+      "canonical": "http://127.0.0.1:4208/music/tracks/vip/",
+      "clientWidth": 1356,
+      "dpr": 1,
+      "height": 996,
+      "ready": null,
+      "scrollWidth": 1356,
+      "url": "http://127.0.0.1:4208/music/tracks/vip/",
+      "width": 1371,
+      "phase": "before-narrow-hint-repair"
+    },
+    {
+      "audioSrc": null,
+      "button": "確認完整收聽權限",
+      "buttonBox": {
+        "height": 44,
+        "left": 37,
+        "right": 197,
+        "width": 160
+      },
+      "canonical": "http://127.0.0.1:4208/music/tracks/vip/",
+      "clientWidth": 305,
+      "dpr": 1,
+      "height": 844,
+      "hint": "完整播放前，需確認這首作品目前的收聽權限。",
+      "lang": "zh-Hant",
+      "ready": null,
+      "scrollWidth": 305,
+      "url": "http://127.0.0.1:4208/music/tracks/vip/",
+      "width": 320,
+      "phase": "before-narrow-hint-repair"
+    },
+    {
+      "audioSrc": null,
+      "button": "确认完整收听权限",
+      "buttonBox": {
+        "height": 44,
+        "left": 37,
+        "right": 197,
+        "width": 160
+      },
+      "canonical": "http://127.0.0.1:4208/zh-hans/music/tracks/vip/",
+      "clientWidth": 305,
+      "dpr": 1,
+      "height": 844,
+      "hint": "完整播放前，需确认这首作品目前的收听权限。",
+      "lang": "zh-Hans",
+      "ready": null,
+      "scrollWidth": 305,
+      "url": "http://127.0.0.1:4208/zh-hans/music/tracks/vip/",
+      "width": 320,
+      "phase": "before-narrow-hint-repair"
+    },
+    {
+      "audioSrc": null,
+      "button": "Check full listening access",
+      "buttonBox": {
+        "height": 44,
+        "left": 37,
+        "right": 263.171875,
+        "width": 226.171875
+      },
+      "canonical": "http://127.0.0.1:4208/en/music/tracks/vip/",
+      "clientWidth": 305,
+      "dpr": 1,
+      "height": 844,
+      "hint": "Listening access to this song must be checked before full playback.",
+      "lang": "en",
+      "ready": null,
+      "scrollWidth": 305,
+      "url": "http://127.0.0.1:4208/en/music/tracks/vip/",
+      "width": 320,
+      "phase": "before-narrow-hint-repair"
+    },
+    {
+      "audioSrc": null,
+      "button": "フル再生の利用条件を確認",
+      "buttonBox": {
+        "height": 44,
+        "left": 37,
+        "right": 249,
+        "width": 212
+      },
+      "canonical": "http://127.0.0.1:4208/ja/music/tracks/vip/",
+      "clientWidth": 305,
+      "dpr": 1,
+      "height": 844,
+      "hint": "フル再生の前に、この曲を聴く権限を確認します。",
+      "lang": "ja",
+      "ready": null,
+      "scrollWidth": 305,
+      "url": "http://127.0.0.1:4208/ja/music/tracks/vip/",
+      "width": 320,
+      "phase": "before-narrow-hint-repair"
+    },
+    {
+      "audioSrc": null,
+      "button": "確認完整收聽權限",
+      "clientWidth": 375,
+      "dockHidden": true,
+      "feedback": "完整收聽需要現有帳號與有效權益。查看會員與帳號",
+      "feedbackHidden": false,
+      "ready": null,
+      "scenario": "anonymous-vip-denial",
+      "scrollWidth": 375,
+      "url": "http://127.0.0.1:4208/music/tracks/vip/",
+      "phase": "before-narrow-hint-repair"
+    },
+    {
+      "audioSrc": null,
+      "button": "已準備好，點擊播放",
+      "dockHidden": true,
+      "ready": "true",
+      "scenario": "free-private-handshake-ready",
+      "phase": "before-narrow-hint-repair"
+    },
+    {
+      "audioSrc": "http://127.0.0.1:4208/api/station/content/tracks/permanent-free/audio?variant=full&v=3",
+      "button": "已準備好，點擊播放",
+      "dockHidden": false,
+      "paused": false,
+      "scenario": "free-explicit-full-play",
+      "phase": "before-narrow-hint-repair"
+    },
+    {
+      "audioSrc": null,
+      "button": "確認完整收聽權限",
+      "dockHidden": true,
+      "ready": null,
+      "scenario": "free-close-resets-access-state",
+      "phase": "before-narrow-hint-repair"
+    },
+    {
+      "audioSrc": null,
+      "button": "確認完整收聽權限",
+      "buttonBox": {
+        "height": 44,
+        "left": 37,
+        "right": 197,
+        "width": 160
+      },
+      "canonical": "http://127.0.0.1:4208/music/tracks/vip/",
+      "clientWidth": 305,
+      "dpr": 1,
+      "height": 844,
+      "hint": "完整播放前，需確認這首作品目前的收聽權限。",
+      "hintBox": {
+        "height": 41.59375,
+        "width": 231
+      },
+      "lang": "zh-Hant",
+      "ready": null,
+      "scrollWidth": 305,
+      "url": "http://127.0.0.1:4208/music/tracks/vip/",
+      "width": 320,
+      "phase": "final"
+    },
+    {
+      "audioSrc": null,
+      "button": "确认完整收听权限",
+      "buttonBox": {
+        "height": 44,
+        "left": 37,
+        "right": 197,
+        "width": 160
+      },
+      "canonical": "http://127.0.0.1:4208/zh-hans/music/tracks/vip/",
+      "clientWidth": 305,
+      "dpr": 1,
+      "height": 844,
+      "hint": "完整播放前，需确认这首作品目前的收听权限。",
+      "hintBox": {
+        "height": 41.59375,
+        "width": 231
+      },
+      "lang": "zh-Hans",
+      "ready": null,
+      "scrollWidth": 305,
+      "url": "http://127.0.0.1:4208/zh-hans/music/tracks/vip/",
+      "width": 320,
+      "phase": "final"
+    },
+    {
+      "audioSrc": null,
+      "button": "Check full listening access",
+      "buttonBox": {
+        "height": 44,
+        "left": 37,
+        "right": 263.171875,
+        "width": 226.171875
+      },
+      "canonical": "http://127.0.0.1:4208/en/music/tracks/vip/",
+      "clientWidth": 305,
+      "dpr": 1,
+      "height": 844,
+      "hint": "Listening access to this song must be checked before full playback.",
+      "hintBox": {
+        "height": 41.59375,
+        "width": 231
+      },
+      "lang": "en",
+      "ready": null,
+      "scrollWidth": 305,
+      "url": "http://127.0.0.1:4208/en/music/tracks/vip/",
+      "width": 320,
+      "phase": "final"
+    },
+    {
+      "audioSrc": null,
+      "button": "フル再生の利用条件を確認",
+      "buttonBox": {
+        "height": 44,
+        "left": 37,
+        "right": 249,
+        "width": 212
+      },
+      "canonical": "http://127.0.0.1:4208/ja/music/tracks/vip/",
+      "clientWidth": 305,
+      "dpr": 1,
+      "height": 844,
+      "hint": "フル再生の前に、この曲を聴く権限を確認します。",
+      "hintBox": {
+        "height": 41.59375,
+        "width": 231
+      },
+      "lang": "ja",
+      "ready": null,
+      "scrollWidth": 305,
+      "url": "http://127.0.0.1:4208/ja/music/tracks/vip/",
+      "width": 320,
+      "phase": "final"
+    },
+    {
+      "audioSrc": null,
+      "button": "已準備好，點擊播放",
+      "phase": "final",
+      "ready": "true",
+      "scenario": "free-private-handshake-ready"
+    },
+    {
+      "audioSrc": "http://127.0.0.1:4208/api/station/content/tracks/permanent-free/audio?variant=full&v=3",
+      "paused": false,
+      "phase": "final",
+      "scenario": "free-explicit-full-play"
+    },
+    {
+      "audioSrc": null,
+      "button": "確認完整收聽權限",
+      "dockHidden": true,
+      "phase": "final",
+      "ready": null,
+      "scenario": "free-close-resets-access-state"
+    },
+    {
+      "audioSrc": null,
+      "button": "確認完整收聽權限",
+      "feedback": "完整收聽需要現有帳號與有效權益。查看會員與帳號",
+      "phase": "final",
+      "ready": null,
+      "scenario": "anonymous-vip-denial"
+    },
+    {
+      "audioSrc": null,
+      "button": "確認完整收聽權限",
+      "canonical": "http://127.0.0.1:4208/music/",
+      "clientWidth": 1356,
+      "dpr": 1,
+      "height": 996,
+      "phase": "final",
+      "ready": null,
+      "scrollWidth": 1356,
+      "url": "http://127.0.0.1:4208/music/",
+      "width": 1371
+    },
+    {
+      "audioSrc": null,
+      "button": "確認完整收聽權限",
+      "canonical": "http://127.0.0.1:4208/music/tracks/vip/",
+      "clientWidth": 1356,
+      "dpr": 1,
+      "height": 996,
+      "phase": "final",
+      "ready": null,
+      "scrollWidth": 1356,
+      "url": "http://127.0.0.1:4208/music/tracks/vip/",
+      "width": 1371
+    }
+  ],
+  "console": []
+}

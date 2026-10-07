@@ -69,7 +69,7 @@ export async function projectTrack(runtime, row, options, { detailed = false } =
     // grant. The private endpoint rechecks the existing reader policy and R2.
     fullPlayback: runtime.flags.public && row.existing_full_reference === 1 &&
       ['free_full', 'existing_entitlement'].includes(row.site_audio_mode)
-      ? { playbackPath: contentBase + '/tracks/' + row.slug + '/playback?variant=full' } : null,
+      ? { playbackPath: contentBase + '/tracks/' + row.slug + '/playback?variant=full', requiresAccessCheck: true } : null,
     platforms: links.map(link => ({ id: link.id, provider: link.provider, status: link.status, href: link.href,
       verifiedAt: link.verifiedAt, releasedAt: link.releasedAt }))
   };

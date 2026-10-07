@@ -46,18 +46,21 @@ function failurePage(request, route, status = 503) {
   return new Response(request.method === 'HEAD' ? null : `<!doctype html><html lang="${route.locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="robots" content="noindex,nofollow"><title>${e(copy.failed)} | Station Cat</title></head><body><main><h1>${e(status === 404 ? copy.notFound : copy.failed)}</h1><a href="${e(href)}">${e(copy.retry)}</a> · <a href="${stationHref(route.locale, 'music')}">${copy.back}</a></main></body></html>`,
     { status, headers: { ...headers, ...(status === 405 ? { Allow: 'GET, HEAD' } : {}) } });
 }
-function pageMetadata(model) {
+function pageMetadata(model, requestUrl) {
+  // Preview metadata stays on the actual loopback origin. Public hosts retain
+  // the configured production canonical; headers cannot select an origin.
+  const pageOrigin = ['127.0.0.1', 'localhost', '[::1]'].includes(requestUrl.hostname) ? requestUrl.origin : origin;
   const copy = musicCopy[model.locale], track = model.track;
   const title = track ? track.title + ' · ' + track.artist + ' | Station Cat' : copy.title + ' | Station Cat';
   const description = track ? track.summary || track.artist : copy.intro;
   const canonicalPath = track?.href || (model.mode === 'detail' ? localizedPath(model.locale, 'music/tracks', model.detailSlug) : stationHref(model.locale, 'music'));
-  const canonical = origin + canonicalPath;
-  const image = track?.coverUrl ? origin + track.coverUrl : null;
+  const canonical = pageOrigin + canonicalPath;
+  const image = track?.coverUrl ? pageOrigin + track.coverUrl : null;
   return `<title>${e(title)}</title><meta name="description" content="${e(description)}"><meta name="robots" content="noindex,nofollow"><link rel="canonical" href="${e(canonical)}">` +
     Object.entries({ 'og:type': 'website', 'og:site_name': 'Station Cat', 'og:title': title, 'og:description': description,
       'og:url': canonical, ...(image ? { 'og:image': image, 'og:image:alt': track.title } : {}) })
       .map(([key, value]) => `<meta property="${key}" content="${e(value)}">`).join('') +
-    stationLocales.map(locale => `<link rel="alternate" hreflang="${locale}" href="${origin}${model.mode === 'detail' ? localizedPath(locale, 'music/tracks', track?.slug || model.detailSlug) : stationHref(locale, 'music')}">`).join('');
+    stationLocales.map(locale => `<link rel="alternate" hreflang="${locale}" href="${pageOrigin}${model.mode === 'detail' ? localizedPath(locale, 'music/tracks', track?.slug || model.detailSlug) : stationHref(locale, 'music')}">`).join('');
 }
 async function template(request, env, model, status) {
   if (typeof env.ASSETS?.fetch !== 'function') return failurePage(request, { locale: model.locale, kind: model.mode === 'detail' ? 'detail' : 'catalog', slug: model.detailSlug }, 503);
@@ -69,7 +72,7 @@ async function template(request, env, model, status) {
   if (request.method === 'HEAD') return new Response(null, { status, headers });
   const rewriter = new HTMLRewriter()
     .on('title, meta[name="description"], meta[name="robots"], link[rel="canonical"], link[rel="alternate"], meta[property^="og:"], meta[name^="twitter:"]', { element(node) { node.remove(); } })
-    .on('head', { element(node) { node.append(pageMetadata(model), { html: true }); } })
+    .on('head', { element(node) { node.append(pageMetadata(model, new URL(request.url)), { html: true }); } })
     .on('[data-sc-language]', { element(node) {
       node.setAttribute('href', stationLanguageHref(node.getAttribute('data-sc-language'), new URL(request.url).pathname));
     } })
@@ -84,7 +87,7 @@ export async function handleStationMusicPage(request, env, { clock = Date.now, d
   const url = new URL(request.url), route = stationMusicRoute(url.pathname);
   if (isStationMusicTemplate(url.pathname)) return new Response(null, { status: 404, headers });
   if (!route) return null;
-  if (!enabled(env.STATION_MUSIC_PAGES_ENABLED)) return route.kind === 'detail' ? failurePage(request, route) : null;
+  if (!enabled(env.STATION_MUSIC_PAGES_ENABLED)) return null;
   if (!['GET', 'HEAD'].includes(request.method)) return failurePage(request, route, 405);
   if (!enabled(env.STATION_CONTENT_PUBLIC_ENABLED)) return failurePage(request, route);
   const end = Date.now() + deadlineMs, run = requestDeadline(deadlineMs);
@@ -147,7 +150,12 @@ export async function handleStationMusicPage(request, env, { clock = Date.now, d
         if (url.pathname + url.search !== target) return redirect(request, target);
         try { model.clips = (await run(() => get('/tracks/' + model.track.slug + '/clips?locale=' + route.locale + '&limit=4'))).items; }
         catch { model.clipsError = true; }
-      } catch (error) { model.error = { status: error.status || 503 }; status = model.error.status; }
+      } catch (error) {
+        // A syntactically valid detail slug is not a proven entity mapping.
+        // Let the existing namespace handler decide unresolvable addresses.
+        if (error.status === 404) return null;
+        model.error = { status: error.status || 503 }; status = model.error.status;
+      }
     }
     return await run(() => template(request, env, model, status));
   } catch (error) { return failurePage(request, route, [400, 404, 405, 429].includes(error.status) ? error.status : 503); }
