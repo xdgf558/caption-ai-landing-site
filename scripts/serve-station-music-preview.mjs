@@ -38,5 +38,5 @@ const server = http.createServer(async (incoming, outgoing) => {
     else Readable.fromWeb(response.body).on('error', () => outgoing.destroy()).pipe(outgoing);
   } catch { outgoing.writeHead(503, { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' }); outgoing.end('Local preview unavailable'); }
 });
-server.listen(port, '127.0.0.1', () => console.log('Station Cat T08 isolated preview: http://127.0.0.1:' + port + '/music/'));
+server.listen(port, '127.0.0.1', () => console.log('Station Cat isolated music preview: http://127.0.0.1:' + port + '/music/'));
 for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => server.close(() => { void runtime.close().finally(() => process.exit()); }));

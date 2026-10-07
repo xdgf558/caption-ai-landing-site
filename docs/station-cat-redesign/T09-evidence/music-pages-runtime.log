@@ -1,0 +1,38 @@
+
+> landing-site@0.1.0 test:redesign:music
+> node --test --test-timeout=90000 scripts/test-station-music-pages.mjs scripts/test-station-music-runtime.mjs
+
+✔ operational order prefers only current enabled promotion, keeps stable ties, and preserves legacy no-sort contract (54.491375ms)
+✔ latest release uses first global live verified date; unknowns follow, planned/future rows do not rank (38.236625ms)
+✔ new cursors bind sort, search and locale while v1 no-sort callers continue to page (32.4195ms)
+✔ stale legacy audio hint cannot publish a full source; the hint never contains a private audio URL (32.574334ms)
+✔ route boundaries retain aliases and refuse runtime/API namespaces; either flag off preserves the old handler without reading bindings (1.657375ms)
+✔ an enabled detail route must prove a published mapping before claiming an unknown or withdrawn address (31.114875ms)
+✔ a public full-playback hint is rendered as unchecked access in every language, without ready or entitlement claims (0.394333ms)
+✔ public preview adapter controls both versions, and full adapter needs an exact private handshake (0.198125ms)
+✔ a selected home summary cannot erase the catalog media contract for the same song (0.0715ms)
+✔ shared player retains old UUID default, has no source before explicit play, and resets on promotion source change (0.561917ms)
+✔ untrusted custom sources cannot disturb a selected source (0.155584ms)
+✔ HTML/JSON escaping preserves readable titles and story without executable markup; missing sections collapse (0.212208ms)
+✔ external buttons revalidate provider hosts and never fabricate planned or missing links (0.0895ms)
+✔ selected songs remain visible without a featured promotion; an entirely unconfigured catalog stays empty (0.156166ms)
+✔ bounded response readers reject deceptive length and invalid UTF-8 and cancel oversized streams (0.485417ms)
+✔ each incomplete flag pair preserves actual legacy HTTP behavior; internal templates cannot be requested directly, including aliases and encoded paths (3955.275125ms)
+✔ local metadata uses the actual loopback origin while public canonical and noindex remain controlled (30.758584ms)
+✔ actual Astro shell receives server-rendered songs and bounded bootstrap; metadata and language links describe the real route (20.316041ms)
+✔ HEAD/method/failure behavior is bounded and no missing binding or asset is provisioned (29.574291ms)
+✔ roots and detail normalize aliases/slashes, remove credentials, preserve only single valid campaign values (6.771542ms)
+✔ mapped old UUID and slug share destinations are temporary; collection, unknown UUID and unknown descendants retain the old handler (19.743333ms)
+✔ actual SQL finite paging and title/artist searches agree with SSR empty and long-title states (28.297375ms)
+✔ real synthetic cover/audio bytes match sealed metadata, Range is correct, and promotion preview is an independent source (26.015167ms)
+✔ full playback hint is not an authorization; guest, ordinary account, expired member and active member still use old policy (29.611208ms)
+✔ SSR title/story/bootstrap treat operator markup as text, not executable HTML (31.418167ms)
+✔ preview-off, no-audio and revoked-rights states remove play/resource UI immediately; no new events or route migrations are written (83.545375ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4433.72075

@@ -4,7 +4,7 @@
 
 ## 当前执行约定
 
-用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01 至 T07 已审查通过并在各自审查头 CI 通过后合并。T06 原头 `8ac1d499` 的销户审计失败已通过只读清单修订解决；修订头 `31e19a6` 经用户复审及托管 CI 通过后合并。本轮仅执行 **T08 音乐目录与单曲页**，审查后才进入 T09。
+用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01 至 T08 已审查通过并在各自审查头 CI 通过后合并。T06 原头 `8ac1d499` 的销户审计失败已通过只读清单修订解决；修订头 `31e19a6` 经用户复审及托管 CI 通过后合并。本轮仅执行 **T09 音频播放器与请求竞态**，审查后才进入 T10。
 
 这项约定优先于基线文档中建议的 R0–R7 批次及启动指令中的连续推进方式；三份规范正文已按本次审查同步逐项执行要求。PR 创建、构建通过与生产发布是独立状态；本轮没有生产发布授权，待用户审查的 PR 不自动合并。
 
@@ -17,8 +17,9 @@
 | T05 首页与首页配置 | 审查通过，已合并 | [PR #190](https://github.com/xdgf558/caption-ai-landing-site/pull/190)，审查头 `c4df9ff` CI 通过，合并为 `781c8d9`；[配置合同](T05-home-and-configuration.md)、[设计 QA](T05-evidence/design-qa.md)、[证据清单](T05-evidence/manifest.json)；默认素材待定，预览仍隔离 |
 | T06 兼容数据模型与迁移 | 修订复审通过，已合并 | [PR #191](https://github.com/xdgf558/caption-ai-landing-site/pull/191)，修订头 `31e19a6` 的托管 CI 通过，合并为 `1c81fc7`；[字段映射、迁移与回退](T06-data-model-and-migration.md)、[演练报告](T06-evidence/migration-rehearsal.json)、[清单修订证据](T06-evidence/schema-audit-repair.json)；生产 schema 未确认 |
 | T07 公开查询与资源权限 | 审查通过，已合并 | [PR #192](https://github.com/xdgf558/caption-ai-landing-site/pull/192)，审查头 `0b9d7b6` 的完整 CI 通过，合并为 `828d5a9`；[查询与权限合同](T07-public-queries-and-resource-access.md)、[验证摘要](T07-evidence/verification-summary.json)；生产绑定与 schema 仍未确认 |
-| T08 音乐目录与单曲页 | 第二次复审修订完成，PR #193 待用户复审 | [PR #193](https://github.com/xdgf558/caption-ai-landing-site/pull/193)、[页面与播放合同](T08-music-catalog-and-detail.md)、[修订记录](T08-review-fixes.md)、[第一次修订设计 QA](T08-review-evidence/design-qa.md)、[第一次修订证据](T08-review-evidence/verification-summary.json)、[开关修订证据](T08-gate-evidence/verification-summary.json)；生产开关关闭，旧入口未退役，真实素材待定，T09 未开始 |
-| T09–T22 | 未开始 | 沿用任务清单中的依赖，每个任务单独提交、审查后继续 |
+| T08 音乐目录与单曲页 | 第二次复审通过，已合并 | [PR #193](https://github.com/xdgf558/caption-ai-landing-site/pull/193)、[页面与播放合同](T08-music-catalog-and-detail.md)、[修订记录](T08-review-fixes.md)、[第一次修订设计 QA](T08-review-evidence/design-qa.md)、[第一次修订证据](T08-review-evidence/verification-summary.json)、[开关修订证据](T08-gate-evidence/verification-summary.json)；审查头 `f09f8de9` 的完整托管 CI 通过，合并为 `14cbead7`；生产开关关闭，旧入口未退役，真实素材待定 |
+| T09 音频播放器与请求竞态 | 开发与本地验收完成，待用户审查 | [播放器合同与验收](T09-audio-player-and-request-races.md)、[验证摘要](T09-evidence/verification-summary.json)、[设计 QA](T09-evidence/design-qa.md)；生产开关关闭，正式素材待定 |
+| T10–T22 | 未开始 | 沿用任务清单中的依赖，每个任务单独提交、审查后继续 |
 
 ## 需求基线
 
@@ -49,3 +50,7 @@ T03 已记录当前游戏启动流程在合成内存中覆盖损坏 JSON 的行�
 T07 审查头 `0b9d7b67974f447d8e543415fce64ec84d2ba25f` 的 [完整 CI](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37577847229/job/112650635781) 于 2026-10-07 06:16:59 UTC 成功，随后于 06:18:41 UTC squash 合并为 `828d5a9d345e171dd2d28b159943c09beeaa63c4`。T08 分支 `codex/station-cat-redesign-t08` 从该实际合并提交开始。默认关闭的 HTML 路由、有限目录查询和显式播放适配器已经实现，正式启用仍要求生产绑定/schema/资源核对与后续发布授权；游戏介绍尚属 T12，原生关联尚未扩大。
 
 T08 原审查头 `8a314220` 的托管 CI 在旧音乐 staging 静态包核验失败（新增共享 musicLyrics 代码块未获精确文件名匹配）。第一次修订补充该代码依赖并修正关闭态/未映射详情路径回退和权限待确认文案；第二次修订将接管条件统一为页面、查询两个开关均开启，只开页面时也交回旧处理器。原失败记录不改写为通过，新修订头仍须独立托管 CI 和用户复审，本机通过不替代托管结果。
+
+T08 第二次复审头 `f09f8de960227301ef34d06d438a79c1d7a4490a` 的 [完整托管 CI](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37592569293/job/112697326340) 于 2026-10-07 08:49:31 UTC 成功，30 个步骤全部通过。用户复审通过后，于 08:54:44 UTC squash 合并为 `14cbead7d868d23154baf263c8d86b616c8d2268`。这是 T09 分支 `codex/station-cat-redesign-t09` 的实际主分支基线。历史 T08 修订记录保留当时的等待状态，不作为当前状态。
+
+当前任务为 T09。共享播放器挂在默认关闭的新音乐壳中，在目录、详情、四语言和前进/后退之间保留原生 audio。其他正式页面还没有挂载新壳，完整全站导航、视频互斥与游戏协调仍分别留在后续接入和 T11/T13/T20；一任务一 PR 的审查顺序保持不变。本批不执行远程迁移、开关启用、生产发布或旧入口退役。

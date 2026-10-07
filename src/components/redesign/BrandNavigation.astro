@@ -88,4 +88,5 @@ const search = {
   }
   mountStationNavigation();
   document.addEventListener('astro:page-load', mountStationNavigation);
+  document.addEventListener('astro:after-swap', mountStationNavigation);
 </script>

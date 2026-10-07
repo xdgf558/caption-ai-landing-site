@@ -15,7 +15,7 @@ export const musicCopy = Object.freeze({
     loading: '正在載入…', shown: '已顯示', songs: '首作品', releaseDate: '發行日期', volume: '音量', seek: '播放進度',
     close: '收起播放器', player: '小站播放器', playbackFailed: '暫時無法播放，請重試或選擇收聽平台。',
     denied: '完整收聽需要現有帳號與有效權益。', login: '查看會員與帳號', stale: '歌曲設定已更新，請重新載入作品。',
-    blocked: '瀏覽器尚未開始播放，請再次點擊播放。', ended: '播放完畢', clipsFailed: '影片資訊暫時無法載入。'
+    blocked: '瀏覽器尚未開始播放，請再次點擊播放。', ended: '播放完畢', paused: '已暫停', buffering: '正在緩衝…', clipsFailed: '影片資訊暫時無法載入。'
   },
   'zh-Hans': {
     title: '音乐小站', tagline: '选一首，让日常慢下来。', intro: '音乐记录情绪，也陪你走过平凡的日子。',
@@ -33,7 +33,7 @@ export const musicCopy = Object.freeze({
     loading: '正在加载…', shown: '已显示', songs: '首作品', releaseDate: '发行日期', volume: '音量', seek: '播放进度',
     close: '收起播放器', player: '小站播放器', playbackFailed: '暂时无法播放，请重试或选择收听平台。',
     denied: '完整收听需要现有账号与有效权益。', login: '查看会员与账号', stale: '歌曲设置已更新，请重新加载作品。',
-    blocked: '浏览器尚未开始播放，请再次点击播放。', ended: '播放完毕', clipsFailed: '视频信息暂时无法加载。'
+    blocked: '浏览器尚未开始播放，请再次点击播放。', ended: '播放完毕', paused: '已暂停', buffering: '正在缓冲…', clipsFailed: '视频信息暂时无法加载。'
   },
   en: {
     title: 'The music station', tagline: 'Pick a song. Let the day slow down.', intro: 'Songs for the feelings and the ordinary days we share.',
@@ -51,7 +51,7 @@ export const musicCopy = Object.freeze({
     loading: 'Loading…', shown: 'Showing', songs: 'songs', releaseDate: 'Release date', volume: 'Volume', seek: 'Playback position',
     close: 'Close player', player: 'Station player', playbackFailed: 'Playback is unavailable. Try again or choose a listening platform.',
     denied: 'Full listening requires an existing account and valid access.', login: 'Account and membership', stale: 'Song settings changed. Reload the song.',
-    blocked: 'Your browser has not started playback. Click play again.', ended: 'Finished', clipsFailed: 'Video information could not be loaded.'
+    blocked: 'Your browser has not started playback. Click play again.', ended: 'Finished', paused: 'Paused', buffering: 'Buffering…', clipsFailed: 'Video information could not be loaded.'
   },
   ja: {
     title: '音楽の小さな駅', tagline: '一曲選んで、日常をゆっくりと。', intro: '気持ちを記録する音楽。何気ない日々に寄り添う歌。',
@@ -69,7 +69,7 @@ export const musicCopy = Object.freeze({
     loading: '読み込み中…', shown: '表示中', songs: '曲', releaseDate: 'リリース日', volume: '音量', seek: '再生位置',
     close: 'プレーヤーを閉じる', player: '小さな駅のプレーヤー', playbackFailed: '再生できません。再試行するか配信サービスをお選びください。',
     denied: 'フル再生には既存アカウントと有効な権利が必要です。', login: 'アカウント・会員情報', stale: '曲の設定が更新されました。再読み込みしてください。',
-    blocked: '再生が始まりませんでした。もう一度再生をクリックしてください。', ended: '再生終了', clipsFailed: '動画情報を読み込めませんでした。'
+    blocked: '再生が始まりませんでした。もう一度再生をクリックしてください。', ended: '再生終了', paused: '一時停止中', buffering: 'バッファリング中…', clipsFailed: '動画情報を読み込めませんでした。'
   }
 });
 

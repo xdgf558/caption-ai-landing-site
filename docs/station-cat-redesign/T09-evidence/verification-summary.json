@@ -1,0 +1,359 @@
+{
+  "task": "T09 音频播放器与请求竞态",
+  "recordedAt": "2026-10-07T09:34:44.771495+00:00",
+  "branch": "codex/station-cat-redesign-t09",
+  "baseCommit": "14cbead7d868d23154baf263c8d86b616c8d2268",
+  "sourceSnapshot": "Uncommitted T09 working tree immediately before the PR commit. The hashes identify tested files; PR head and its independent hosted CI must be verified separately.",
+  "hostedCI": {
+    "T08ApprovedHead": "f09f8de960227301ef34d06d438a79c1d7a4490a",
+    "T08Result": "success",
+    "T08Evidence": "T08-approved-head-ci.json",
+    "T09Result": "not established at evidence capture; no T08 or local result substitutes for T09 current-head hosted CI"
+  },
+  "commands": [
+    {
+      "command": "npm run test:redesign:player",
+      "log": "player-and-legacy.log",
+      "result": "passed",
+      "tests": 147,
+      "passed": 147,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:redesign:music",
+      "log": "music-pages-runtime.log",
+      "result": "passed",
+      "tests": 26,
+      "passed": 26,
+      "failed": 0
+    },
+    {
+      "command": "node --test scripts/test-music-staging-gate.mjs",
+      "log": "staging-gate.log",
+      "result": "passed",
+      "tests": 21,
+      "passed": 21,
+      "failed": 0
+    },
+    {
+      "command": "node --test scripts/test-music-production-assets.mjs",
+      "log": "closed-production-assets.log",
+      "result": "passed",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:redesign:routes",
+      "log": "brand-routes.log",
+      "result": "passed",
+      "tests": 7,
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:redesign:home",
+      "log": "home.log",
+      "result": "passed",
+      "tests": 19,
+      "passed": 19,
+      "failed": 0
+    },
+    {
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "log": "build.log",
+      "result": "passed",
+      "sitemapPublicRoutes": 111,
+      "limitation": "Empty serial body option; local build, not a production release package or deployment."
+    },
+    {
+      "command": "node scripts/build-music-staging-assets.mjs && node scripts/check-music-staging-assets.mjs",
+      "log": "staging-assets.log",
+      "result": "passed",
+      "pages": 8,
+      "exactDependencies": 34
+    }
+  ],
+  "newSessionTestCount": 24,
+  "browser": {
+    "runtime": "Codex IAB tab 4, loopback actual compiled Worker with temporary local D1/R2",
+    "url": "http://127.0.0.1:4208/music/",
+    "observations": "browser-observations.json",
+    "finalInteractionSubset": "overlay-fixed-* (last three observations)",
+    "developmentObservations": "Earlier observations document iterations and are not all final-source reruns. The failed before-overlay-fix click is preserved as fixed history.",
+    "viewportMeasurements": "viewport-measurements.json",
+    "console": "browser-console.json",
+    "realDevice": false,
+    "VoiceOver": false,
+    "browserPolicyDenial": "NotAllowedError exercised with controlled test doubles only",
+    "audio": "1-second independent preview and 4-second full FFmpeg synthetic sine fixtures; not real releases or copyrights"
+  },
+  "screenshots": {
+    "detail-desktop.jpg": {
+      "imageWidth": 1371,
+      "imageHeight": 912,
+      "domWidth": 1371,
+      "domHeight": 996,
+      "phase": "final",
+      "limitation": "Native capture omits desktop bottom 84 px and does not visually show the dock."
+    },
+    "detail-390.jpg": {
+      "imageWidth": 390,
+      "imageHeight": 844,
+      "phase": "final"
+    },
+    "detail-320.jpg": {
+      "imageWidth": 320,
+      "imageHeight": 740,
+      "phase": "final"
+    },
+    "before-catalog.jpg": {
+      "imageWidth": 432,
+      "imageHeight": 585,
+      "phase": "before",
+      "content": "T08 single-track page despite historical catalog filename"
+    },
+    "player-paused-390.jpg": {
+      "imageWidth": 390,
+      "imageHeight": 844,
+      "phase": "development before overlay fix"
+    },
+    "comparison-reference-before-current.jpg": {
+      "phase": "comparison",
+      "content": "User source home, accepted T08 detail, final T09 detail; contain composition"
+    },
+    "comparison-mobile.jpg": {
+      "phase": "final comparison",
+      "content": "320 and 390 screenshots; contain composition"
+    }
+  },
+  "isolation": {
+    "remoteMigrationExecuted": false,
+    "productionFlagsEnabled": false,
+    "productionDeployed": false,
+    "oldEntriesRetired": false,
+    "accountCleanupEnabled": false,
+    "realPromotionChosen": false,
+    "newAnalyticsCollectorInstalled": false,
+    "nativeCloudMusicClaimed": false,
+    "schema0012UnchangedFromBase": true,
+    "schema0012": {
+      "bytes": 53788,
+      "sha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498"
+    }
+  },
+  "knownFollowups": [
+    "Actual production schema/bindings and media rights remain unverified.",
+    "Site-wide shell, videos and game media coordination require subsequent tasks.",
+    "Actual membership expiry, renewal and production buffer behavior require T14/T20; no new expiry polling in this session.",
+    "Natural playing hook is an observation point only; T18 collector and new qualified preview rules are not implemented."
+  ],
+  "sourceFiles": {
+    ".github/workflows/ci.yml": {
+      "bytes": 3854,
+      "sha256": "96fa1f7a870be05bf7638832792ff80289cd0afa6c36c555d8f239c2ec03eb46"
+    },
+    "astro.config.mjs": {
+      "bytes": 143,
+      "sha256": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f"
+    },
+    "docs/station-cat-redesign/README.md": {
+      "bytes": 11187,
+      "sha256": "bd02cf46ba2f2c0ca4ed0fe8a9c8178f2378e60a9f0cd1c31ae0695afd59dea8"
+    },
+    "docs/station-cat-redesign/T09-audio-player-and-request-races.md": {
+      "bytes": 8600,
+      "sha256": "251ee4c4b45f2b6645d33f9ef0691a537734da81dc7b217d52f32ac0189089f2"
+    },
+    "migrations-music/0012_station_redesign.sql": {
+      "bytes": 53788,
+      "sha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498"
+    },
+    "package-lock.json": {
+      "bytes": 257485,
+      "sha256": "b81e63fc2580e6e768dcfe5d799eb5944e95bf1fb51a056b8697ece1e6c9d4b0"
+    },
+    "package.json": {
+      "bytes": 11359,
+      "sha256": "bb8c8b34b02f76fb071a8e90f2b1cfe21b1b56f6e1149a26a9af7a927229a37f"
+    },
+    "scripts/serve-station-music-preview.mjs": {
+      "bytes": 3692,
+      "sha256": "9e7e267eb640b57394c094ff48732ea3201e97c4e09bcfb28b6d1aecad99ffa2"
+    },
+    "scripts/test-music-staging-gate.mjs": {
+      "bytes": 23298,
+      "sha256": "ea79f44c9f26b028c5c3de4dd7ca519b7489b42db42c46423b183cad41fc6b6e"
+    },
+    "scripts/test-station-music-session.mjs": {
+      "bytes": 20028,
+      "sha256": "43e7462c7dcc7cf65a34592623522b80cbdb24c7d6260a66f7d01f3a6163b4b7"
+    },
+    "src/components/redesign/BrandNavigation.astro": {
+      "bytes": 6713,
+      "sha256": "4df32d60e2bed21fecc8607c47a8bcfddfe8c9c25cc3143adae5567cc45280fa"
+    },
+    "src/components/redesign/MusicShell.astro": {
+      "bytes": 4033,
+      "sha256": "c7c0638211c92c2040365439fd59747f4873dbcbfaead2e55fb9ae3963bfe860"
+    },
+    "src/layouts/StationBrandLayout.astro": {
+      "bytes": 4179,
+      "sha256": "45ef26bde6bbea3a8873163b75acb92c41109b783a369c5e2bae7698fa5544ad"
+    },
+    "src/music/stagingGate.js": {
+      "bytes": 4305,
+      "sha256": "c03c5feb5dec407966d6e7edd9e26edd86b45f9f4dacf10c94923ece9063eb2f"
+    },
+    "src/redesign/music.css": {
+      "bytes": 13008,
+      "sha256": "a8b53dadfe813094deddb3de6d10e02955fc79f9bca90167ce45d42d14ae9a26"
+    },
+    "src/redesign/musicClient.js": {
+      "bytes": 12255,
+      "sha256": "9944ec46d80a4cf6d5368c7745f350d7710380605c022206388ad3718a3d2c1b"
+    },
+    "src/redesign/musicCopy.js": {
+      "bytes": 10411,
+      "sha256": "7dbb1b392b9d42f46590b641f1e7f6c0566d65316e93226f8c5f3210964eb17b"
+    },
+    "src/redesign/musicCursor.js": {
+      "bytes": 1216,
+      "sha256": "29b0c47e716676b89aa4cb92ed66c7877e728cdb72fccef2c96a4e3027ddf294"
+    },
+    "src/redesign/musicPages.js": {
+      "bytes": 12075,
+      "sha256": "83558f8779e0c92711a1ee7ad699b497a2db1f1fa7e1d617a7026987fac5520e"
+    },
+    "src/redesign/musicPlayback.js": {
+      "bytes": 2219,
+      "sha256": "efdf8560bd38f46dfa8fe67a396940d1b146bc0e3ed263dbc4b8176f6c470cc5"
+    },
+    "src/redesign/musicPlayerView.js": {
+      "bytes": 4754,
+      "sha256": "0c0507e987859fb88179bd5f37b5013fc726baedeb2039aefdb83cee9b324cc8"
+    },
+    "src/redesign/musicRender.js": {
+      "bytes": 13226,
+      "sha256": "6ed586189521d5e3bf46de4e11fc0e391741122ff82cc9f74892df075418d23f"
+    },
+    "src/redesign/musicRequest.js": {
+      "bytes": 988,
+      "sha256": "8cf69fc988a32577eff0566f3bdec968c43e73236b1e93439275ed2856e7c7df"
+    },
+    "src/redesign/musicResponse.js": {
+      "bytes": 952,
+      "sha256": "f4d7a46f86f2658cd42a597ac99d9bed6c4831edd5ed6324569597b8a713f1b0"
+    },
+    "src/redesign/musicResume.js": {
+      "bytes": 2274,
+      "sha256": "49426d22022fb32cf90fa1321120c76190be07ff93dab9bdd75080c9977b5a3a"
+    },
+    "src/redesign/musicSession.js": {
+      "bytes": 9733,
+      "sha256": "e0d8230cbf6229830337e0e14dea8fdc54aff2327411ab8e9a2c596eb4eed737"
+    },
+    "src/scripts/musicLocalData.js": {
+      "bytes": 6234,
+      "sha256": "b981a40c3ba1e80638f43f95280efe6556e7210ae7c7fec1269f95a5246a1988"
+    },
+    "src/scripts/musicPlayerCore.js": {
+      "bytes": 13805,
+      "sha256": "8d05c4f2c19bb7070ad67a3cbe6ae1b39e351a70818f61b62f169225a0640183"
+    },
+    "src/scripts/readerSessionEvents.js": {
+      "bytes": 2241,
+      "sha256": "ecc81df7c62df7bd287e7415cda616988a66f3c3d0880dd52de8c5888505ff0a"
+    },
+    "wrangler.toml": {
+      "bytes": 3163,
+      "sha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2"
+    }
+  },
+  "evidenceFiles": {
+    "T08-approved-head-ci.json": {
+      "bytes": 5762,
+      "sha256": "dc4287ea8498bbed5fb06bc52f3c28bd95be9a237f92923506a0e4754fdedc2f"
+    },
+    "T08-merge-result.json": {
+      "bytes": 242,
+      "sha256": "0b9dedd8ad2b0c53be92884af1510812ca74491bf36af224fc6c495413a91bac"
+    },
+    "before-catalog.jpg": {
+      "bytes": 28652,
+      "sha256": "0a5b20dd0e3bdc2b0ba570197f5ad5849740ff90ba1ede6ff729054b8677c6f9"
+    },
+    "brand-routes.log": {
+      "bytes": 922,
+      "sha256": "cb6970577c99d35b3f50f5bad2178decb0118a325bfc30fca9cb27a343d01aca"
+    },
+    "browser-console.json": {
+      "bytes": 188,
+      "sha256": "0ce08c6bcb2f01d1159284b724d69739a8b3ae2d17e48bccb50bfcbc136768bb"
+    },
+    "browser-observations.json": {
+      "bytes": 12522,
+      "sha256": "20d65a6515c7bcc92fff1d163895d5268d4ffe920c4fe4809925e3205f85e129"
+    },
+    "build.log": {
+      "bytes": 23123,
+      "sha256": "cf6e946cddd8a4232f4a9a6a18429e97d63dac539a930f5647b9484e4ade44bb"
+    },
+    "closed-production-assets.log": {
+      "bytes": 220,
+      "sha256": "b57fa18dbfd1ebb9477c39ee97f5be4ca9cd48bae4483d279ef58123bb02eeb0"
+    },
+    "comparison-mobile.jpg": {
+      "bytes": 80587,
+      "sha256": "65f8ec4720f8453fc24f812f068cc10d8279fead5bef7e5c67d316969b944960"
+    },
+    "comparison-reference-before-current.jpg": {
+      "bytes": 197948,
+      "sha256": "00f670ef81fde1e4d1243d040e78f74f7b2409a6bbea315c0be9158576ebaa2c"
+    },
+    "design-qa.md": {
+      "bytes": 4939,
+      "sha256": "6a367a04a184354e4c833020f7a8d782f20fd7508adaebdcb313aecc2a83894f"
+    },
+    "detail-320.jpg": {
+      "bytes": 31013,
+      "sha256": "3604519cc828889bd9b25d9eaeb68f2045f13918803364ae8d8fb0821eeda11e"
+    },
+    "detail-390.jpg": {
+      "bytes": 37192,
+      "sha256": "eca0b69393df1a7a5091d21de71df19c2b6bf197a83e2a6d0c9996a254dce001"
+    },
+    "detail-desktop.jpg": {
+      "bytes": 79173,
+      "sha256": "29c9129f53aadd4b963ab35bea4bfafae2d4c30c1aed96ef21d1a9855c029beb"
+    },
+    "home.log": {
+      "bytes": 1995,
+      "sha256": "a07d5ce7586af7fe2c71699b8230fd879c9237acdc75820bb1e38a368d86415b"
+    },
+    "music-pages-runtime.log": {
+      "bytes": 3468,
+      "sha256": "0b23c288841466618aaa86438903a6e299b6670e1ab44d689372bc6e0f5bcd21"
+    },
+    "player-and-legacy.log": {
+      "bytes": 15633,
+      "sha256": "69b9547221b0a4d97498c1a02e834b8a9e3323e48c344b3a69ea4281120fac88"
+    },
+    "player-paused-390.jpg": {
+      "bytes": 38051,
+      "sha256": "dff791086a2f4efb6c5c1e81527c763d669a1f945a0bd5f0cf53fdc164dfd737"
+    },
+    "staging-assets.log": {
+      "bytes": 122,
+      "sha256": "55fdd64a35d0bb2d3d8b205f312f82728c03a6bf53286e414e265da6d0b453c7"
+    },
+    "staging-gate.log": {
+      "bytes": 2222,
+      "sha256": "0ecff0b57ab0640985801381430559d15cc7366b6e3b05edc2b596145305e922"
+    },
+    "viewport-measurements.json": {
+      "bytes": 3690,
+      "sha256": "831604d7a37c68ae178734572e397ec02b148b331fea52a5ac4ad78a30f30433"
+    }
+  }
+}

@@ -94,6 +94,12 @@
 .sc-music-player-status { grid-column: 1/-1; margin: 0; color: var(--sc-muted); font-size: 12px; line-height: 1.5; }
 .sc-music-player-status:empty { display: none; }
 .sc-music-account-help { grid-column: 1/-1; font-size: 13px; color: var(--sc-accent); }
+/* Keep a just-swapped page interactive while native snapshot cleanup finishes. */
+::view-transition,
+::view-transition-group(*),
+::view-transition-image-pair(*),
+::view-transition-old(*),
+::view-transition-new(*) { animation: none; pointer-events: none; }
 @media (max-width: 1100px) {
   .sc-music-curated { grid-template-columns: 1fr; }
   .sc-music-selected { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
