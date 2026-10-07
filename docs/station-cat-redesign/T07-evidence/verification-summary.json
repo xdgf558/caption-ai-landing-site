@@ -1,0 +1,225 @@
+{
+  "task": "T07",
+  "recordedDate": "2026-10-07",
+  "timezone": "Asia/Singapore",
+  "repository": "xdgf558/caption-ai-landing-site",
+  "branch": "codex/station-cat-redesign-t07",
+  "baseCommit": "1c81fc7c9fd0e1399314f15408ae38ed58ddbd65",
+  "approvedT06Head": "31e19a67f7c9cb7f5f79d7771b87748b697ca2ab",
+  "approvedT06CI": {
+    "conclusion": "SUCCESS",
+    "runId": 37491024228,
+    "jobId": 112363480480,
+    "completedAt": "2026-10-06T16:25:10Z",
+    "url": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37491024228/job/112363480480"
+  },
+  "localNode": "v24.15.0",
+  "T07HostedCI": "not-yet-verified-for-PR-head",
+  "tests": {
+    "newHTTPAndWorker": 35,
+    "legacyCompatibilityPassed": 185,
+    "deletionAuditPassed": 12,
+    "totalPassedExcludingBuildChecks": 232,
+    "firstCompatibilityAttempt": {
+      "exitCode": 1,
+      "passed": 107,
+      "failed": 1,
+      "reason": "Only native static asset loopback test hit sandbox EPERM",
+      "retryLog": "compatibility-loopback.log",
+      "retryPassed": 1
+    },
+    "newWorkerFirstAttempt": {
+      "exitCode": 1,
+      "reason": "Before hook listen EPERM at 127.0.0.1",
+      "successfulRetryLog": "workers-runtime.log"
+    },
+    "logs": [
+      {
+        "log": "public-http.log",
+        "passed": 29,
+        "failed": 0,
+        "sha256": "a87fb7f358caf6ed967c24746cdba602f46195afbda4659d7132f9c683a87215"
+      },
+      {
+        "log": "workers-runtime.log",
+        "passed": 6,
+        "failed": 0,
+        "sha256": "820bfa43a2d1c6400c791f748be74aea62c99914fe4f5132c4165cf6a2f8cf88"
+      },
+      {
+        "log": "compatibility.log",
+        "passed": 107,
+        "failed": 1,
+        "sha256": "32d95c5f802fa7cc5782e8138c646c69b3df9546c96700e5eed73f8366ccb1e7"
+      },
+      {
+        "log": "compatibility-loopback.log",
+        "passed": 1,
+        "failed": 0,
+        "sha256": "862a15a5b2b711ac68a05d580c0b4a361c8b51cac00aaa6405f29c48caaad9c9"
+      },
+      {
+        "log": "compatibility-runtime.log",
+        "passed": 77,
+        "failed": 0,
+        "sha256": "7965d419d4ad8447e9a0dc9b26a9ca70a2e0d7a2f49922701bbfc2069dcd4c03"
+      }
+    ],
+    "commands": [
+      "node --test scripts/test-station-content-public.mjs",
+      "node --test --test-timeout=90000 scripts/test-station-content-runtime.mjs",
+      "node --test scripts/test-music-foundation.mjs scripts/test-music-membership.mjs scripts/test-music-media.mjs scripts/test-music-public.mjs scripts/test-music-rate-limits.mjs scripts/test-station-redesign-home.mjs scripts/test-station-redesign-routes.mjs",
+      "node --test --test-name-pattern='native static assets serve' scripts/test-music-public.mjs",
+      "node --test --test-timeout=120000 scripts/test-station-redesign-model.mjs scripts/test-music-runtime.mjs scripts/test-mobile-music.mjs",
+      "python3 scripts/test-account-deletion-audit.py"
+    ]
+  },
+  "build": {
+    "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+    "exitCode": 0,
+    "emptySerialContent": true,
+    "builtPages": 153,
+    "sitemapRoutes": 111,
+    "isolationReport": "build-isolation.json",
+    "productionPackageVerified": false
+  },
+  "migration": {
+    "path": "migrations-music/0012_station_redesign.sql",
+    "sha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+    "changed": false,
+    "remoteApplied": false
+  },
+  "boundaries": {
+    "productionBindingAndSchemaConfirmed": false,
+    "productionFlagConfigured": false,
+    "productionDeployed": false,
+    "formalPagesMounted": false,
+    "oldEntriesClosed": false,
+    "accountErasureEnabled": false,
+    "newAnalyticsCollected": false,
+    "realRightsConfirmed": false,
+    "realMediaDecodeValidated": false,
+    "promotionSelection": "稍后确定",
+    "nativeMusicCloudAndWebLocalLibraryRemainSeparate": true,
+    "legacyFullAudioMembershipReused": true,
+    "T08Started": false
+  },
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 3602,
+      "sha256": "79d5d9aaa25cc61db21042496c08945197361f9ea70b039068467648deb9fce7"
+    },
+    {
+      "path": "docs/station-cat-redesign/T07-evidence/build-isolation.json",
+      "bytes": 397,
+      "sha256": "f805879c636ea83f458e19af92a3c5faa57076af2e12abdd2310533b834ae493"
+    },
+    {
+      "path": "docs/station-cat-redesign/T07-evidence/build.log",
+      "bytes": 22070,
+      "sha256": "c7fa9ab9daf2335a109a8d1ac88969cf4a9f788a37905e4e3d9789193061c579"
+    },
+    {
+      "path": "docs/station-cat-redesign/T07-evidence/compatibility-loopback.log",
+      "bytes": 224,
+      "sha256": "862a15a5b2b711ac68a05d580c0b4a361c8b51cac00aaa6405f29c48caaad9c9"
+    },
+    {
+      "path": "docs/station-cat-redesign/T07-evidence/compatibility-runtime.log",
+      "bytes": 9174,
+      "sha256": "7965d419d4ad8447e9a0dc9b26a9ca70a2e0d7a2f49922701bbfc2069dcd4c03"
+    },
+    {
+      "path": "docs/station-cat-redesign/T07-evidence/compatibility.log",
+      "bytes": 13503,
+      "sha256": "32d95c5f802fa7cc5782e8138c646c69b3df9546c96700e5eed73f8366ccb1e7"
+    },
+    {
+      "path": "docs/station-cat-redesign/T07-evidence/deletion-audit.log",
+      "bytes": 1190,
+      "sha256": "d474c28f3ec1978777efc66c02a40f4e7979f74aa77cd2759977d53a0b0ba917"
+    },
+    {
+      "path": "docs/station-cat-redesign/T07-evidence/public-http.log",
+      "bytes": 3689,
+      "sha256": "a87fb7f358caf6ed967c24746cdba602f46195afbda4659d7132f9c683a87215"
+    },
+    {
+      "path": "docs/station-cat-redesign/T07-evidence/workers-runtime.log",
+      "bytes": 1138,
+      "sha256": "820bfa43a2d1c6400c791f748be74aea62c99914fe4f5132c4165cf6a2f8cf88"
+    },
+    {
+      "path": "package.json",
+      "bytes": 10816,
+      "sha256": "43dffb77e79bb301513b55000f822215fee531b59680d468be8b6680b41ec5b6"
+    },
+    {
+      "path": "scripts/helpers/station-content-fixture.mjs",
+      "bytes": 13342,
+      "sha256": "f4aad9805339af3bcf970e85cc1807a2b026cdc13fd1e2e994e649405db3b66f"
+    },
+    {
+      "path": "scripts/helpers/station-content-runtime-worker.js",
+      "bytes": 870,
+      "sha256": "cf65404446c7897bd341284ad3ca56dd664640bb4eccd41bcb8fdce08270cd78"
+    },
+    {
+      "path": "scripts/helpers/station-redesign-database.mjs",
+      "bytes": 16774,
+      "sha256": "c9a55cb4702746a3f42b13de575b77b35dba3e40f6b40d32744d41e3485c3320"
+    },
+    {
+      "path": "scripts/test-station-content-public.mjs",
+      "bytes": 33757,
+      "sha256": "81ea1172b887d8987a917910e4d5929e0ba969cff5ecfc9366dc4556488e058c"
+    },
+    {
+      "path": "scripts/test-station-content-runtime.mjs",
+      "bytes": 9867,
+      "sha256": "6389a79c70156a2e291e0fe8ca2133de768797292c7621079fbd5fb0d814a08d"
+    },
+    {
+      "path": "src/redesign/home.js",
+      "bytes": 9803,
+      "sha256": "3c3430d476e57ecb5dc629680822116eac9a87e908695d79b58658f5cb8d1948"
+    },
+    {
+      "path": "src/redesign/publicContent.js",
+      "bytes": 11686,
+      "sha256": "b8ede1b5833f9e97bb7057db57dedeff62590a9fcb5a2bb69ea9b6f149356fef"
+    },
+    {
+      "path": "src/redesign/publicHttp.js",
+      "bytes": 14369,
+      "sha256": "1aa571a22d61f6187f16b22d7fe4a483b98b3e0d46dbebf0bcb3768268752dc7"
+    },
+    {
+      "path": "src/redesign/publicResources.js",
+      "bytes": 6492,
+      "sha256": "ad7813797ad1422dd877669617ab7f1041abb3b36bd3c6fb72e997b71c252252"
+    },
+    {
+      "path": "src/redesign/publicStore.js",
+      "bytes": 12932,
+      "sha256": "5f8762fddf464b341607b673479384ae4999f28b0fd17133fc92fa6ffddaa052"
+    },
+    {
+      "path": "src/redesign/publicValidation.js",
+      "bytes": 8009,
+      "sha256": "2ce4e7f19402dcb4e298d98327ee17aeeb5174361c63a823abef95c223f73d0b"
+    },
+    {
+      "path": "src/worker.js",
+      "bytes": 908845,
+      "sha256": "13b1b23ea891e050b608a95c22990a28ceb171464a0b32b53241ccf4521588a3"
+    }
+  ],
+  "diffCheck": {
+    "command": "git diff --cached --check -- . ':!docs/station-cat-redesign/T07-evidence/build.log'",
+    "sourceAndDocsPassed": true,
+    "rawOutputExcluded": "build.log",
+    "reason": "Preserve original Astro stdout, including trailing spaces; the log SHA-256 covers raw bytes."
+  }
+}

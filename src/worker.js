@@ -63,6 +63,7 @@ import { isMusicPagePath } from './music/pagePaths.js';
 import { handleMusicPage } from './music/pageHttp.js';
 import { isMusicShareCardPath, handleMusicShareCard } from './music/shareCardHttp.js';
 import { handleMusicAnalytics, isMusicAnalyticsPath, runMusicAnalyticsRetention } from './music/analytics.js';
+import { handleStationContent, isStationContentPath } from './redesign/publicHttp.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -22897,6 +22898,7 @@ export default {
     if (isMusicAnalyticsPath(url.pathname)) return handleMusicAnalytics(request, env);
     if (isMusicMediaPath(url.pathname)) return handleMusicMedia(request, env);
     if (isMusicPublicPath(url.pathname)) return handleMusicPublic(request, env);
+    if (isStationContentPath(url.pathname)) return handleStationContent(request, env);
 
     if (legacyWorksRedirectPath && (request.method === 'GET' || request.method === 'HEAD')) {
       const redirectUrl = new URL(legacyWorksRedirectPath, url.origin);

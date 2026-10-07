@@ -62,7 +62,7 @@ export async function databaseRows(db, prefix = 'music_') {
   return plain(Object.fromEntries(tables.map(({ name }, index) => [name, rows[index].results])));
 }
 
-export async function seedLegacyFixture(db) {
+export async function seedLegacyFixture(db, { materializeAsset } = {}) {
   const now = rehearsalTime, tracks = [];
   const policies = [
     { name: 'permanent-free', access_mode: 'free' },
@@ -90,7 +90,10 @@ export async function seedLegacyFixture(db) {
         object_key: 'music/covers/' + track.id + '/' + track.cover + '.png' },
       { id: track.lyrics, kind: 'lyrics', format: 'lrc', content_type: 'text/plain',
         object_key: 'music/lyrics/' + track.id + '/' + track.lyrics + '.lrc' },
-    ]) await insertFixture(db, 'music_assets', { ...common, ...asset });
+    ]) {
+      const values = { ...common, ...asset };
+      await insertFixture(db, 'music_assets', { ...values, ...(materializeAsset ? await materializeAsset(values) : {}) });
+    }
     track.metadata = { originalLocale: 'en', title: { en: policy.name, 'zh-Hant': '夾具 ' + policy.name },
       summary: { en: 'Isolated fixture.' }, creatorName: 'Station Cat fixture', instrumental: false,
       language: 'en', genres: ['ambient'], moods: ['calm'], story: 'Synthetic metadata, no actual release or license.' };
