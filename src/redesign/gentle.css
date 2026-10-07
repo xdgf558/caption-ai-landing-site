@@ -10,7 +10,7 @@
   --sc-content-width: 1296px; --sc-site-width: 1356px; --sc-gutter: 30px; --sc-touch: 44px;
   --sc-nav-bar-height: 0px; --sc-player-height: 0px; --sc-safe-bottom: env(safe-area-inset-bottom, 0px);
   --sc-bottom-reserve: calc(var(--sc-nav-bar-height) + var(--sc-player-height) + var(--sc-safe-bottom) + 24px);
-  margin: 0; min-width: 320px; padding-bottom: var(--sc-bottom-reserve); color: var(--sc-ink);
+  margin: 0; min-width: 0; padding-bottom: var(--sc-bottom-reserve); color: var(--sc-ink);
   background: var(--sc-paper); font-family: var(--sc-sans); font-size: 15px; line-height: 1.6; overflow-wrap: break-word;
 }
 .station-gentle *, .station-gentle *::before, .station-gentle *::after { box-sizing: border-box; }

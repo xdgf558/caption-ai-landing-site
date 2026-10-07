@@ -73,6 +73,8 @@
     "test:redesign:home": "node --test scripts/test-station-redesign-home.mjs",
     "test:redesign:model": "node --test --test-timeout=90000 scripts/test-station-redesign-model.mjs",
     "test:redesign:public": "node --test --test-timeout=90000 scripts/test-station-content-public.mjs scripts/test-station-content-runtime.mjs",
+    "test:redesign:music": "node --test --test-timeout=90000 scripts/test-station-music-pages.mjs scripts/test-station-music-runtime.mjs",
+    "preview:redesign:music": "npm run build && node scripts/serve-station-music-preview.mjs",
     "rehearse:redesign:migration": "node scripts/rehearse-station-redesign-migration.mjs"
   },
   "dependencies": {

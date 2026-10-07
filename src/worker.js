@@ -64,6 +64,7 @@ import { handleMusicPage } from './music/pageHttp.js';
 import { isMusicShareCardPath, handleMusicShareCard } from './music/shareCardHttp.js';
 import { handleMusicAnalytics, isMusicAnalyticsPath, runMusicAnalyticsRetention } from './music/analytics.js';
 import { handleStationContent, isStationContentPath } from './redesign/publicHttp.js';
+import { handleStationMusicPage } from './redesign/musicPages.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -22893,6 +22894,8 @@ export default {
     }
 
     if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
+    const stationMusicPage = await handleStationMusicPage(request, env);
+    if (stationMusicPage) return stationMusicPage;
     if (isMusicPagePath(url.pathname)) return handleMusicPage(request, env);
     if (isMusicShareCardPath(url.pathname)) return handleMusicShareCard(request, env);
     if (isMusicAnalyticsPath(url.pathname)) return handleMusicAnalytics(request, env);

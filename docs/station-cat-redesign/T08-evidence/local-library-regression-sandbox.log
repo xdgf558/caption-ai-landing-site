@@ -1,0 +1,57 @@
+✔ browse normalization retains only static notice anchors, never a return or credential fragment (0.332583ms)
+✔ every HTML path, alias, slashless and nested asset path is gated with zero binding reads (4.555333ms)
+✔ alias and slashless redirects preserve only unique valid public identifiers (0.312625ms)
+✔ enabled HTML streams assets but is never positively cached; HEAD and method handling (0.511291ms)
+✔ music routes run before asset fallthrough, stay out of sitemap, and use explicit language mapping (6.166ms)
+✔ 500-track catalog is bounded, rejects duplicate IDs and unsafe fields, and canonicalizes covers (0.177459ms)
+✔ search NFKC/case normalization, tag OR/group AND, access and stable latest order (5.16975ms)
+✔ collections preserve administrator order and cannot grant full access or inject private fields (0.295875ms)
+✔ featured catalog is bounded, references public rows only and orders free picks without granting access (0.258209ms)
+✔ 50-row presentation does not truncate play-all and browsing never rewrites the queue (2.042959ms)
+✔ album category separates playlists and opens ordered songs without changing playback (1.457208ms)
+✔ all UI dictionary entries have four translations and preserve placeholders (0.451667ms)
+✖ native asset router cannot serve encoded music HTML before the closed gate (96.778083ms)
+✔ metadata-only published album stays browsable with no available tracks (0.377584ms)
+✔ now-playing share uses A while browsing B; later renders cannot redirect the open card to B (10.198041ms)
+✔ share links use canonical locale routes and public IDs only, with one target per link (0.25ms)
+✔ music return allowlist rejects external, encoded, malformed and non-music paths; strips unrelated queries (0.245375ms)
+✔ membership paths round-trip four locales without identity, and reject duplicate navigation parameters (0.246791ms)
+✔ native share is invoked in the gesture; cancellation never copies; unsupported/failed clipboard exposes manual fallback (0.165958ms)
+✔ member return banner only offers a validated explicit link; checkout retains the same public navigation context (0.145417ms)
+✔ the member page preserves existing redemption safeguards and only changes navigation around login/checkout (2.405417ms)
+✔ a track beyond the catalog window is resolved from its own endpoint without replacing the base list (0.493291ms)
+✔ a shared collection reads its complete public order, including songs outside the current catalog (0.304709ms)
+✔ retained queue metadata does not stand in for the current active or requested track read (0.106916ms)
+✔ wrong identities, schema, collection membership and network failures never become valid shared targets (0.153041ms)
+✔ separate 500-row responses can form a bounded lookup while the queue still caps at 500 (4.279959ms)
+✔ browsing B outside the catalog keeps playing A and its queue; fresh metadata still uses the original playback guard (1.599709ms)
+✔ aborted return refresh rejects late VIP/cross-account responses without cancelling a newer refresh (0.477625ms)
+✔ a late B detail read cannot evict C after the user starts a new queue (0.301209ms)
+✔ browsing does not reset a media version rejected by access; explicit refresh can retry it (0.543541ms)
+✔ return sync has increasing delays, stops at sixty seconds and never starts a second automatic visit (0.727125ms)
+✔ manual verification after polling ends updates stale return notices without restarting automatic polling (0.033416ms)
+✔ return sync aborts an outstanding read at the deadline, ignores late completion and suspends hidden-page requests (0.479542ms)
+✔ valid membership ends syncing even when delivery is closed; anonymous visitors get login, with no repeated purchase or playback (0.104959ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 33
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 313.4195
+
+✖ failing tests:
+
+test at scripts/test-music-library.mjs:147:1
+✖ native asset router cannot serve encoded music HTML before the closed gate (96.778083ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:1986:21)
+      at listenInCluster (node:net:2065:12)
+      at node:net:2274:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }

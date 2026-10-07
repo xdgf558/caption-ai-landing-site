@@ -1,0 +1,8 @@
+---
+import MusicShell from '../../../components/redesign/MusicShell.astro';
+export function getStaticPaths() {
+  return ['zh-Hant', 'zh-Hans', 'en', 'ja'].map(lang => ({ params: { locale: lang }, props: { lang } }));
+}
+const { lang } = Astro.props;
+---
+<MusicShell lang={lang} />

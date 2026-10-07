@@ -1,4 +1,5 @@
 import { stationLocales } from './routes.js';
+import { readMusicCursor } from './musicCursor.js';
 
 export const contentBase = '/api/station/content';
 export const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
@@ -126,16 +127,21 @@ export function requestInput(url, allowed) {
   if ((rawLimit !== null && !/^[1-9]\d*$/.test(rawLimit)) || !positive(limit) || limit > 50) throw new TypeError('Invalid limit');
   const q = url.searchParams.get('q') || '';
   if (!plain(q, 100)) throw new TypeError('Invalid search');
+  // Existing callers without sort retain T07's publication order/cursor.
+  // The new website explicitly requests default (operator order) or release.
+  const sort = url.searchParams.get('sort') ?? 'published';
+  if (url.searchParams.has('sort') && (!allowed.includes('sort') || !['default', 'release'].includes(sort))) throw new TypeError('Invalid sort');
   let cursor = null;
   const rawCursor = url.searchParams.get('cursor');
   if (rawCursor !== null) {
-    if (!/^[A-Za-z0-9_-]{1,200}$/.test(rawCursor)) throw new TypeError('Invalid cursor');
+    if (!/^[A-Za-z0-9_-]{1,512}$/.test(rawCursor)) throw new TypeError('Invalid cursor');
     try {
-      cursor = strictJson(atob(rawCursor.replace(/-/g, '+').replace(/_/g, '/')), 200);
-      if (!object(cursor) || Object.keys(cursor).sort().join(',') !== 'at,id' || !millis(cursor.at) || !uuid(cursor.id)) throw new TypeError('Invalid cursor');
+      cursor = strictJson(atob(rawCursor.replace(/-/g, '+').replace(/_/g, '/')), 384);
+      if (sort !== 'published') cursor = readMusicCursor(cursor, { locale, q, sort });
+      else if (!object(cursor) || Object.keys(cursor).sort().join(',') !== 'at,id' || !millis(cursor.at) || !uuid(cursor.id)) throw new TypeError('Invalid cursor');
     } catch { throw new TypeError('Invalid cursor'); }
   }
-  return { locale, limit, q, cursor };
+  return { locale, limit, q, cursor, sort };
 }
 export const cursorFor = row => btoa(JSON.stringify({ at: row.published_at, id: row.id })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 export const localizedPath = (locale, section, name) => (locale === 'zh-Hant' ? '' : locale === 'zh-Hans' ? '/zh-hans' : '/' + locale) + '/' + section + '/' + name + '/';

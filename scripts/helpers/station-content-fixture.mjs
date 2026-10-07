@@ -103,14 +103,14 @@ export async function publishTrack(db, track, overrides = {}) {
     .bind(revision, now - 100, now, track.id).run();
   return revision;
 }
-export async function promotionFixture(db, track, { enabled = 1, preview = 1, platforms = [], clips = [] } = {}) {
+export async function promotionFixture(db, track, { enabled = 1, preview = 1, platforms = [], clips = [], order = 0 } = {}) {
   const head = await db.prepare('SELECT published_revision FROM station_promotions WHERE track_id=?').bind(track.id).first();
   if (!head) await insertFixture(db, 'station_promotions', { track_id: track.id, created_at: now, updated_at: now });
   const latest = await db.prepare('SELECT max(revision) AS n FROM station_promotion_revisions WHERE track_id=?').bind(track.id).first();
   const revision = (latest.n || 0) + 1;
   await insertFixture(db, 'station_promotion_revisions', { track_id: track.id, revision, state: 'sealed', enabled,
     preview_enabled: preview, preview_asset_id: preview ? track.preview : null,
-    selected_platform_ids_json: JSON.stringify(platforms), selected_clip_ids_json: JSON.stringify(clips), created_at: now });
+    selected_platform_ids_json: JSON.stringify(platforms), selected_clip_ids_json: JSON.stringify(clips), sort_order: order, created_at: now });
   await db.prepare("UPDATE station_promotions SET status='published',published_revision=?,draft_revision=NULL,published_at=?,edit_version=edit_version+1 WHERE track_id=?")
     .bind(revision, now - 100, track.id).run();
   return revision;
@@ -131,19 +131,21 @@ export async function platformFixture(db, track, values = {}) {
     external_released_at: now - 1000, created_at: now - 1000, updated_at: now, ...values });
   return id;
 }
-export async function mediaFixture(db, bucket, owner, kind, id) {
+export async function mediaFixture(db, bucket, owner, kind, id, materializeMedia) {
   const key = 'station-test-only/' + owner + '/' + id;
-  const bytes = new Uint8Array(100).fill(kind === 'poster' ? 11 : 29);
+  const material = materializeMedia ? await materializeMedia(kind) : null;
+  const bytes = material?.bytes || new Uint8Array(100).fill(kind === 'poster' ? 11 : 29);
   const content_type = ['poster', 'game_screenshot'].includes(kind) ? 'image/png' : 'video/mp4';
   const object = await bucket.put(key, bytes, { httpMetadata: { contentType: content_type } });
   await insertFixture(db, 'station_media_assets', { id, [kind === 'game_screenshot' ? 'owner_game_id' : 'owner_clip_id']: owner,
     kind, object_key: key, content_type, state: 'validated', byte_size: bytes.length,
     ...(kind === 'short_video' || kind === 'mv' ? { duration_ms: 30000 } : {}),
-    width: 1280, height: 720, sha256: createHash('sha256').update(bytes).digest('hex'), etag: object.etag, created_at: now });
+    width: material?.width || 1280, height: material?.height || 720, sha256: createHash('sha256').update(bytes).digest('hex'), etag: object.etag, created_at: now });
   await approve(db, id, kind, true);
 }
-export async function seedContent(db, bucket, { publish = true } = {}) {
+export async function seedContent(db, bucket, { publish = true, materializeAsset, materializeMedia, externalLinks = true } = {}) {
   const legacy = await seedLegacyFixture(db, { materializeAsset: async asset => {
+    if (materializeAsset) return materializeAsset(asset, bucket);
     const bytes = new Uint8Array(100).fill(asset.kind === 'preview' ? 71 : 37);
     const object = await bucket.put(asset.object_key, bytes, { httpMetadata: { contentType: asset.content_type } });
     return { sha256: createHash('sha256').update(bytes).digest('hex'), etag: object.etag };
@@ -158,26 +160,26 @@ export async function seedContent(db, bucket, { publish = true } = {}) {
   const platformTrack = legacy.draft;
   await publishTrack(db, platformTrack, { metadata_json: JSON.stringify({ originalLocale: 'en',
     title: { en: 'Platform-only song' }, summary: {}, creatorName: 'Fixture', story: 'Two lines\nSecond line' }) });
-  const platformId = await platformFixture(db, legacy.tracks[1]);
+  const platformId = externalLinks ? await platformFixture(db, legacy.tracks[1]) : null;
   const clip = { id: fixtureId(500), video: fixtureId(501), poster: fixtureId(502) };
   await insertFixture(db, 'station_clips', { id: clip.id, track_id: legacy.tracks[1].id, type: 'short_video', created_at: now, updated_at: now });
-  await mediaFixture(db, bucket, clip.id, 'short_video', clip.video);
-  await mediaFixture(db, bucket, clip.id, 'poster', clip.poster);
+  await mediaFixture(db, bucket, clip.id, 'short_video', clip.video, materializeMedia);
+  await mediaFixture(db, bucket, clip.id, 'poster', clip.poster, materializeMedia);
   await insertFixture(db, 'station_clip_revisions', { id: clip.id, revision: 1, state: 'sealed',
     metadata_json: JSON.stringify({ originalLocale: 'en', title: { en: 'Synthetic video' } }),
     media_asset_id: clip.video, poster_asset_id: clip.poster, duration_ms: 30000, created_at: now });
   await db.prepare("UPDATE station_clips SET status='published',published_revision=1,published_at=? WHERE id=?").bind(now - 100, clip.id).run();
-  await insertFixture(db, 'station_clip_publications', { id: fixtureId(503), clip_id: clip.id, channel: 'youtube',
+  if (externalLinks) await insertFixture(db, 'station_clip_publications', { id: fixtureId(503), clip_id: clip.id, channel: 'youtube',
     post_id: 'synthetic-fixture', post_url: 'https://www.youtube.com/watch?v=synthetic-fixture',
     external_published_at: now - 1000, created_at: now });
   const game = { id: fixtureId(600), slug: 'cat-life-game', screenshot: fixtureId(601) };
   await insertFixture(db, 'station_games', { id: game.id, slug: game.slug, runtime_key: 'cat-life', created_at: now, updated_at: now });
-  await mediaFixture(db, bucket, game.id, 'game_screenshot', game.screenshot);
+  await mediaFixture(db, bucket, game.id, 'game_screenshot', game.screenshot, materializeMedia);
   await insertFixture(db, 'station_game_revisions', { id: game.id, revision: 1, state: 'sealed',
     metadata_json: JSON.stringify({ originalLocale: 'en', title: { en: 'Synthetic game' }, summary: { en: 'Existing runtime' } }),
     launch_url: '/games/cat-life/', supported_devices_json: '["desktop","mobile"]', screenshot_ids_json: JSON.stringify([game.screenshot]), created_at: now });
   await db.prepare("UPDATE station_games SET status='published',published_revision=1,published_at=? WHERE id=?").bind(now - 100, game.id).run();
-  await promotionFixture(db, legacy.tracks[1], { platforms: [platformId], clips: [clip.id] });
+  await promotionFixture(db, legacy.tracks[1], { platforms: platformId ? [platformId] : [], clips: [clip.id] });
   await homeFixture(db, { track: legacy.tracks[1].id, game: game.id, clips: [clip.id] });
   return { ...legacy, platformTrack, platformId, clip, game };
 }

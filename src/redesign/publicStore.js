@@ -86,6 +86,8 @@ const platforms = `COALESCE((SELECT json_group_array(json_object(
   FROM (SELECT * FROM station_platform_links WHERE track_id=p.track_id ORDER BY sort_order,id LIMIT 26) a),'[]') AS platforms_json`;
 const trackSelect = `SELECT p.track_id AS id,p.published_at,p.published_revision,r.metadata_json,
   r.legacy_revision_id,r.site_audio_mode,r.duration_ms,r.cover_asset_id,r.lyrics_asset_id,c.slug,
+  EXISTS(SELECT 1 FROM music_tracks old WHERE old.id=p.track_id AND old.lifecycle='published'
+    AND old.published_revision_id=r.legacy_revision_id) AS existing_full_reference,
   pp.published_at AS promotion_at,pr.revision AS promotion_revision,pr.enabled,pr.preview_enabled,pr.preview_asset_id,
   pr.selected_platform_ids_json,pr.selected_clip_ids_json,pr.sort_order AS promotion_sort_order,
   ${musicAssets},${platforms}
@@ -96,7 +98,27 @@ const trackSelect = `SELECT p.track_id AS id,p.published_at,p.published_revision
   LEFT JOIN station_promotion_revisions pr ON pr.track_id=pp.track_id AND pr.revision=pp.published_revision AND pr.state='sealed'
   WHERE p.status='published' AND p.published_at<=?`;
 
-export async function listContentTracks(session, { now, locale, limit, q, cursor }) {
+export async function listContentTracks(session, { now, locale, limit, q, cursor, sort = 'published' }) {
+  if (sort !== 'published') {
+    const query = `WITH visible AS (${trackSelect} AND (?='' OR instr(lower(COALESCE(
+      json_extract(r.metadata_json,?),json_extract(r.metadata_json,'$.title.' || json_extract(r.metadata_json,'$.originalLocale')),'')),lower(?))>0
+      OR instr(lower(COALESCE(json_extract(r.metadata_json,'$.creatorName'),'')),lower(?))>0)),
+      releases AS (SELECT visible.*,(SELECT MIN(json_extract(value,'$.external_released_at')) FROM json_each(platforms_json)
+        WHERE json_extract(value,'$.status')='live' AND json_type(value,'$.verified_at')='integer'
+        AND json_extract(value,'$.verified_at') BETWEEN 0 AND ?
+        AND json_type(value,'$.external_released_at')='integer'
+        AND json_extract(value,'$.external_released_at') BETWEEN 0 AND ?) AS catalog_release_at FROM visible),
+      ordered AS (SELECT releases.*,
+        ${sort === 'default' ? 'CASE WHEN enabled=1 THEN 0 ELSE 1 END' : 'CASE WHEN catalog_release_at IS NULL THEN 1 ELSE 0 END'} AS catalog_group,
+        ${sort === 'default' ? 'CASE WHEN enabled=1 THEN promotion_sort_order ELSE 0 END' : '0'} AS catalog_order,
+        ${sort === 'default' ? 'published_at' : 'COALESCE(catalog_release_at,0)'} AS catalog_time FROM releases)
+      SELECT * FROM ordered WHERE (? IS NULL OR catalog_group>? OR (catalog_group=? AND
+        (catalog_order>? OR (catalog_order=? AND (catalog_time<? OR (catalog_time=? AND id>?))))))
+      ORDER BY catalog_group,catalog_order,catalog_time DESC,id LIMIT ?`;
+    return resultRows(await session.prepare(query).bind(now, now, q, '$.title."' + locale + '"', q, q, now, now,
+      cursor?.group ?? null, cursor?.group ?? null, cursor?.group ?? null, cursor?.order ?? null,
+      cursor?.order ?? null, cursor?.time ?? null, cursor?.time ?? null, cursor?.id ?? null, limit + 1).all());
+  }
   const query = trackSelect + ` AND (?='' OR instr(lower(COALESCE(
     json_extract(r.metadata_json,?),json_extract(r.metadata_json,'$.title.' || json_extract(r.metadata_json,'$.originalLocale')),'')),lower(?))>0
     OR instr(lower(COALESCE(json_extract(r.metadata_json,'$.creatorName'),'')),lower(?))>0)

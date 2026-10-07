@@ -1,0 +1,42 @@
+✔ browse normalization retains only static notice anchors, never a return or credential fragment (0.300958ms)
+✔ every HTML path, alias, slashless and nested asset path is gated with zero binding reads (4.379083ms)
+✔ alias and slashless redirects preserve only unique valid public identifiers (0.296834ms)
+✔ enabled HTML streams assets but is never positively cached; HEAD and method handling (0.403291ms)
+✔ music routes run before asset fallthrough, stay out of sitemap, and use explicit language mapping (2.837083ms)
+✔ 500-track catalog is bounded, rejects duplicate IDs and unsafe fields, and canonicalizes covers (0.196208ms)
+✔ search NFKC/case normalization, tag OR/group AND, access and stable latest order (4.816583ms)
+✔ collections preserve administrator order and cannot grant full access or inject private fields (0.4015ms)
+✔ featured catalog is bounded, references public rows only and orders free picks without granting access (0.393084ms)
+✔ 50-row presentation does not truncate play-all and browsing never rewrites the queue (2.591833ms)
+✔ album category separates playlists and opens ordered songs without changing playback (2.058125ms)
+✔ all UI dictionary entries have four translations and preserve placeholders (0.542333ms)
+✔ native asset router cannot serve encoded music HTML before the closed gate (177.536541ms)
+✔ metadata-only published album stays browsable with no available tracks (0.148166ms)
+✔ now-playing share uses A while browsing B; later renders cannot redirect the open card to B (9.834417ms)
+✔ share links use canonical locale routes and public IDs only, with one target per link (0.241708ms)
+✔ music return allowlist rejects external, encoded, malformed and non-music paths; strips unrelated queries (0.260459ms)
+✔ membership paths round-trip four locales without identity, and reject duplicate navigation parameters (0.231459ms)
+✔ native share is invoked in the gesture; cancellation never copies; unsupported/failed clipboard exposes manual fallback (0.162375ms)
+✔ member return banner only offers a validated explicit link; checkout retains the same public navigation context (0.143292ms)
+✔ the member page preserves existing redemption safeguards and only changes navigation around login/checkout (2.332958ms)
+✔ a track beyond the catalog window is resolved from its own endpoint without replacing the base list (0.4725ms)
+✔ a shared collection reads its complete public order, including songs outside the current catalog (0.312334ms)
+✔ retained queue metadata does not stand in for the current active or requested track read (0.107333ms)
+✔ wrong identities, schema, collection membership and network failures never become valid shared targets (0.16ms)
+✔ separate 500-row responses can form a bounded lookup while the queue still caps at 500 (3.192417ms)
+✔ browsing B outside the catalog keeps playing A and its queue; fresh metadata still uses the original playback guard (1.431ms)
+✔ aborted return refresh rejects late VIP/cross-account responses without cancelling a newer refresh (0.441666ms)
+✔ a late B detail read cannot evict C after the user starts a new queue (0.301458ms)
+✔ browsing does not reset a media version rejected by access; explicit refresh can retry it (0.433792ms)
+✔ return sync has increasing delays, stops at sixty seconds and never starts a second automatic visit (0.618167ms)
+✔ manual verification after polling ends updates stale return notices without restarting automatic polling (0.033417ms)
+✔ return sync aborts an outstanding read at the deadline, ignores late completion and suspends hidden-page requests (0.462333ms)
+✔ valid membership ends syncing even when delivery is closed; anonymous visitors get login, with no repeated purchase or playback (0.102334ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 369.473083

@@ -7,6 +7,7 @@ import { checkedContentRuntime, contentFailure, requestDeadline, contentTrack, c
 import { contentBase, uuid, slug, positive, millis, metadata, strictJson, requestInput, cursorFor } from './publicValidation.js';
 import { promotion, projectTrack, projectClip, projectGame, publicHome } from './publicContent.js';
 import { previewIdentity, resourceReady, streamContentAsset } from './publicResources.js';
+import { musicCursorFor } from './musicCursor.js';
 
 export const isStationContentPath = pathname => pathname === contentBase || pathname.startsWith(contentBase + '/');
 const messages = Object.freeze({
@@ -58,7 +59,8 @@ async function page(request, runtime, rows, projector, options, context) {
     if (projection) items.push(projection.dto);
   }
   return json(request, { schemaVersion: 1, locale: options.locale, items,
-    nextCursor: rows.length > limit ? cursorFor(rows[limit - 1]) : null }, context);
+    nextCursor: rows.length > limit ? (projector === projectTrack && options.sort !== 'published'
+      ? musicCursorFor(rows[limit - 1], options) : cursorFor(rows[limit - 1])) : null }, context);
 }
 async function playbackAsset(request, env, runtime, row, variant, options) {
   const { now, run, clock, timeoutMs } = options;
@@ -110,7 +112,7 @@ export async function handleStationContent(request, env, { clock = Date.now, tim
   if (!['GET', 'HEAD'].includes(request.method)) return error(request, 'METHOD_NOT_ALLOWED', 405, context, { Allow: 'GET, HEAD' });
   let input, variant = null, expectedRevision = null, expectedPromotion = null;
   try {
-    const allowed = ['tracks', 'games'].includes(currentRoute.kind) ? ['locale', 'limit', 'cursor', ...(currentRoute.kind === 'tracks' ? ['q'] : [])] :
+    const allowed = ['tracks', 'games'].includes(currentRoute.kind) ? ['locale', 'limit', 'cursor', ...(currentRoute.kind === 'tracks' ? ['q', 'sort'] : [])] :
       currentRoute.kind === 'clips' ? ['locale', 'limit', 'cursor'] :
       ['audio', 'playback'].includes(currentRoute.kind) ? ['variant', ...(currentRoute.kind === 'audio' ? ['v', 'p'] : ['locale'])] :
       currentRoute.kind === 'asset' ? [] : ['locale'];

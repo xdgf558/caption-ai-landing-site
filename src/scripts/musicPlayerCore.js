@@ -11,10 +11,10 @@ export function musicSource(track, variant) {
   return `/api/music/tracks/${track.id}/audio?v=${track.audioVersion}&variant=${variant}`;
 }
 
-export function createMusicPlayer(audio, { origin = globalThis.location?.origin } = {}) {
+export function createMusicPlayer(audio, { origin = globalThis.location?.origin, sourceFor = musicSource } = {}) {
   if (players.has(audio)) return players.get(audio);
   const listeners = new Set(), playListeners = new Set(), events = new Map();
-  let destroyed = false, intent = false, attempt = 0, expectedSource = '', metadataReady = false;
+  let destroyed = false, intent = false, attempt = 0, expectedSource = '', selectedPath = '', metadataReady = false;
   let state = {
     status: 'idle', activeTrackId: null, activeAudioVersion: null, activeVariant: null,
     activePolicyVersion: null, fullDurationSec: null, previewSourceStartSec: null,
@@ -107,8 +107,12 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
   const select = (track, variant = 'full') => {
     if (destroyed) return false;
     musicSource(track, variant); // Validate before disturbing the current source.
-    if (state.activeTrackId === track.id && state.activeAudioVersion === track.audioVersion && state.activePolicyVersion === track.policyVersion && state.activeVariant === variant) return false;
+    const path = sourceFor(track, variant);
+    if (typeof path !== 'string' || !path.startsWith('/api/') || path.startsWith('//') ||
+      /[\\#\s]/.test(path) || new URL(path, origin).origin !== origin) throw new TypeError('Invalid controlled music source');
+    if (state.activeTrackId === track.id && state.activeAudioVersion === track.audioVersion && state.activePolicyVersion === track.policyVersion && state.activeVariant === variant && selectedPath === path) return false;
     stopSource();
+    selectedPath = path;
     resumePosition = null;
     publish({ status: 'idle', activeTrackId: track.id, activeAudioVersion: track.audioVersion,
       activeVariant: variant, activePolicyVersion: track.policyVersion,
@@ -145,7 +149,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
     intent = true;
     if (!expectedSource || audio.error) {
       metadataReady = false;
-      expectedSource = new URL(musicSource({ id: state.activeTrackId, audioVersion: state.activeAudioVersion }, state.activeVariant), origin).href;
+      expectedSource = new URL(selectedPath, origin).href;
       audio.src = expectedSource;
       audio.load();
     } else if (audio.ended) {
@@ -188,6 +192,7 @@ export function createMusicPlayer(audio, { origin = globalThis.location?.origin 
     clear() {
       if (destroyed) return;
       stopSource();
+      selectedPath = '';
       resumePosition = null;
       publish({ status: 'idle', activeTrackId: null, activeAudioVersion: null, activeVariant: null,
         activePolicyVersion: null, fullDurationSec: null, previewSourceStartSec: null,

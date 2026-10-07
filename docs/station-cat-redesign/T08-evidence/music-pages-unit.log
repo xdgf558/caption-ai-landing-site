@@ -1,0 +1,21 @@
+✔ operational order prefers only current enabled promotion, keeps stable ties, and preserves legacy no-sort contract (103.114875ms)
+✔ latest release uses first global live verified date; unknowns follow, planned/future rows do not rank (68.563625ms)
+✔ new cursors bind sort, search and locale while v1 no-sort callers continue to page (62.333542ms)
+✔ stale legacy audio hint cannot publish a full source; the hint never contains a private audio URL (59.28575ms)
+✔ route boundaries retain aliases and refuse runtime/API namespaces; default closed does not read bindings (1.23075ms)
+✔ public preview adapter controls both versions, and full adapter needs an exact private handshake (0.690125ms)
+✔ a selected home summary cannot erase the catalog media contract for the same song (0.245ms)
+✔ shared player retains old UUID default, has no source before explicit play, and resets on promotion source change (1.2605ms)
+✔ untrusted custom sources cannot disturb a selected source (0.409875ms)
+✔ HTML/JSON escaping preserves readable titles and story without executable markup; missing sections collapse (0.628875ms)
+✔ external buttons revalidate provider hosts and never fabricate planned or missing links (0.16875ms)
+✔ selected songs remain visible without a featured promotion; an entirely unconfigured catalog stays empty (0.277125ms)
+✔ bounded response readers reject deceptive length and invalid UTF-8 and cancel oversized streams (2.957375ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 384.424167
