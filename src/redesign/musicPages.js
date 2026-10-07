@@ -87,9 +87,8 @@ export async function handleStationMusicPage(request, env, { clock = Date.now, d
   const url = new URL(request.url), route = stationMusicRoute(url.pathname);
   if (isStationMusicTemplate(url.pathname)) return new Response(null, { status: 404, headers });
   if (!route) return null;
-  if (!enabled(env.STATION_MUSIC_PAGES_ENABLED)) return null;
+  if (!enabled(env.STATION_MUSIC_PAGES_ENABLED) || !enabled(env.STATION_CONTENT_PUBLIC_ENABLED)) return null;
   if (!['GET', 'HEAD'].includes(request.method)) return failurePage(request, route, 405);
-  if (!enabled(env.STATION_CONTENT_PUBLIC_ENABLED)) return failurePage(request, route);
   const end = Date.now() + deadlineMs, run = requestDeadline(deadlineMs);
   const get = async path => {
     const response = await handleStationContent(new Request(new URL(contentBase + path, request.url),

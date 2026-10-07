@@ -81,16 +81,24 @@ test('stale legacy audio hint cannot publish a full source; the hint never conta
   assert(dto.preview);
 });
 
-test('route boundaries retain aliases and refuse runtime/API namespaces; default closed does not read bindings', async () => {
+test('route boundaries retain aliases and refuse runtime/API namespaces; either flag off preserves the old handler without reading bindings', async () => {
   assert.deepEqual(stationMusicRoute('/en/music/tracks/a-song'), { locale: 'en', kind: 'detail', slug: 'a-song' });
   assert.equal(stationMusicRoute('/zh-hant/music/').locale, 'zh-Hant');
   for (const path of ['/games/cat-life/', '/api/mobile/v1/me/music/', '/music/a/deeper/', '/about/']) assert.equal(stationMusicRoute(path), null);
   for (const path of ['/music/site-shell/en/', '/en/music/site-shell/', '/music/%73ite-shell/en/', '/music//site-shell/en/']) assert(isStationMusicTemplate(path));
-  const env = { get MUSIC_DB() { throw new Error('must not read'); }, get ASSETS() { throw new Error('must not read'); } };
-  for (const flags of [{}, { STATION_MUSIC_PAGES_ENABLED: 'false' }, { STATION_CONTENT_PUBLIC_ENABLED: 'true' }]) {
-    for (const path of ['/music/?q=one&q=two', '/en/music?track=' + fixtureId(1), '/music/tracks/vip/', '/ja/music/tracks/unknown', '/music/old-share/']) {
+  const env = { get MUSIC_DB() { throw new Error('must not read'); }, get MUSIC_BUCKET() { throw new Error('must not read'); }, get ASSETS() { throw new Error('must not read'); } };
+  for (const flags of [
+    {}, { STATION_MUSIC_PAGES_ENABLED: 'false' }, { STATION_CONTENT_PUBLIC_ENABLED: 'true' },
+    { STATION_MUSIC_PAGES_ENABLED: 'true' }, { STATION_MUSIC_PAGES_ENABLED: 'true', STATION_CONTENT_PUBLIC_ENABLED: 'false' },
+    { STATION_MUSIC_PAGES_ENABLED: 'false', STATION_CONTENT_PUBLIC_ENABLED: 'true' },
+    { STATION_MUSIC_PAGES_ENABLED: true }, { STATION_MUSIC_PAGES_ENABLED: true, STATION_CONTENT_PUBLIC_ENABLED: false },
+    { STATION_MUSIC_PAGES_ENABLED: false, STATION_CONTENT_PUBLIC_ENABLED: true }
+  ]) {
+    for (const path of ['/music/', '/music/?q=one&q=two', '/en/music?track=' + fixtureId(1), '/zh-hans/music/?collection=old-album',
+      '/music/tracks/vip/', '/ja/music/tracks/unknown', '/zh-hant/music/old-share/']) {
       for (const method of ['GET', 'HEAD', 'POST']) assert.equal(await handleStationMusicPage(new Request('https://wwwstationcat.org' + path, { method }), { ...flags,
-        get MUSIC_DB() { return env.MUSIC_DB; }, get ASSETS() { return env.ASSETS; } }), null, method + ' ' + path);
+        get MUSIC_DB() { return env.MUSIC_DB; }, get MUSIC_BUCKET() { return env.MUSIC_BUCKET; }, get ASSETS() { return env.ASSETS; } }),
+        null, JSON.stringify(flags) + ' ' + method + ' ' + path);
     }
   }
   assert.equal((await handleStationMusicPage(new Request('https://wwwstationcat.org/music/site-shell/en/'), env)).status, 404);

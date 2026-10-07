@@ -17,7 +17,7 @@
 | T05 首页与首页配置 | 审查通过，已合并 | [PR #190](https://github.com/xdgf558/caption-ai-landing-site/pull/190)，审查头 `c4df9ff` CI 通过，合并为 `781c8d9`；[配置合同](T05-home-and-configuration.md)、[设计 QA](T05-evidence/design-qa.md)、[证据清单](T05-evidence/manifest.json)；默认素材待定，预览仍隔离 |
 | T06 兼容数据模型与迁移 | 修订复审通过，已合并 | [PR #191](https://github.com/xdgf558/caption-ai-landing-site/pull/191)，修订头 `31e19a6` 的托管 CI 通过，合并为 `1c81fc7`；[字段映射、迁移与回退](T06-data-model-and-migration.md)、[演练报告](T06-evidence/migration-rehearsal.json)、[清单修订证据](T06-evidence/schema-audit-repair.json)；生产 schema 未确认 |
 | T07 公开查询与资源权限 | 审查通过，已合并 | [PR #192](https://github.com/xdgf558/caption-ai-landing-site/pull/192)，审查头 `0b9d7b6` 的完整 CI 通过，合并为 `828d5a9`；[查询与权限合同](T07-public-queries-and-resource-access.md)、[验证摘要](T07-evidence/verification-summary.json)；生产绑定与 schema 仍未确认 |
-| T08 音乐目录与单曲页 | 复审修订完成，PR #193 待用户复审 | [PR #193](https://github.com/xdgf558/caption-ai-landing-site/pull/193)、[页面与播放合同](T08-music-catalog-and-detail.md)、[修订记录](T08-review-fixes.md)、[复审设计 QA](T08-review-evidence/design-qa.md)、[修订证据](T08-review-evidence/verification-summary.json)；生产开关关闭，旧入口未退役，真实素材待定，T09 未开始 |
+| T08 音乐目录与单曲页 | 第二次复审修订完成，PR #193 待用户复审 | [PR #193](https://github.com/xdgf558/caption-ai-landing-site/pull/193)、[页面与播放合同](T08-music-catalog-and-detail.md)、[修订记录](T08-review-fixes.md)、[第一次修订设计 QA](T08-review-evidence/design-qa.md)、[第一次修订证据](T08-review-evidence/verification-summary.json)、[开关修订证据](T08-gate-evidence/verification-summary.json)；生产开关关闭，旧入口未退役，真实素材待定，T09 未开始 |
 | T09–T22 | 未开始 | 沿用任务清单中的依赖，每个任务单独提交、审查后继续 |
 
 ## 需求基线
@@ -48,4 +48,4 @@ T03 已记录当前游戏启动流程在合成内存中覆盖损坏 JSON 的行�
 
 T07 审查头 `0b9d7b67974f447d8e543415fce64ec84d2ba25f` 的 [完整 CI](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37577847229/job/112650635781) 于 2026-10-07 06:16:59 UTC 成功，随后于 06:18:41 UTC squash 合并为 `828d5a9d345e171dd2d28b159943c09beeaa63c4`。T08 分支 `codex/station-cat-redesign-t08` 从该实际合并提交开始。默认关闭的 HTML 路由、有限目录查询和显式播放适配器已经实现，正式启用仍要求生产绑定/schema/资源核对与后续发布授权；游戏介绍尚属 T12，原生关联尚未扩大。
 
-T08 原审查头 `8a314220` 的托管 CI 在旧音乐 staging 静态包核验失败（新增共享 musicLyrics 代码块未获精确文件名匹配）。本次补充该代码依赖并修正关闭态/未映射详情路径回退和权限待确认文案，本机专项、回归、构建及 staging 包已验证；原失败记录不改写为通过，修订头仍须独立托管 CI 和用户复审。
+T08 原审查头 `8a314220` 的托管 CI 在旧音乐 staging 静态包核验失败（新增共享 musicLyrics 代码块未获精确文件名匹配）。第一次修订补充该代码依赖并修正关闭态/未映射详情路径回退和权限待确认文案；第二次修订将接管条件统一为页面、查询两个开关均开启，只开页面时也交回旧处理器。原失败记录不改写为通过，新修订头仍须独立托管 CI 和用户复审，本机通过不替代托管结果。

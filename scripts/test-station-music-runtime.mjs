@@ -19,14 +19,30 @@ async function html(path, options) {
 }
 const model = text => JSON.parse(/<script id="sc-music-bootstrap" type="application\/json">([^]*?)<\/script>/.exec(text)[1]);
 
-test('default production route is unchanged; internal templates cannot be requested directly, including aliases and encoded paths', async () => {
+test('each incomplete flag pair preserves actual legacy HTTP behavior; internal templates cannot be requested directly, including aliases and encoded paths', async () => {
   const old = await call('/music/', { prefix: '' }); assert.equal(old.status, 200);
   const oldHtml = await old.text(); assert(!oldHtml.includes('sc-music-bootstrap'));
-  for (const prefix of ['', '/fixture-content-only']) {
+  for (const prefix of ['', '/fixture-content-only', '/fixture-pages-only']) {
     for (const path of ['/music/tracks/vip/', '/en/music/tracks/not-mapped?token=fixture-secret']) {
       const off = await call(path, { prefix }); assert.equal(off.status, 404); assert.equal((await off.json()).error.code, 'NOT_FOUND');
       const head = await call(path, { prefix, method: 'HEAD' }); assert.equal(head.status, 404); assert.equal(await head.text(), '');
       const method = await call(path, { prefix, method: 'POST' }); assert.equal(method.status, 405); assert.equal((await method.json()).error.code, 'METHOD_NOT_ALLOWED');
+    }
+  }
+  for (const path of ['/music/', '/en/music', '/zh-hant/music/', '/ja/music/?q=one&q=two',
+    '/music/?track=' + runtime.content.tracks[1].id, '/zh-hans/music/?collection=old-album', '/music/vip/']) {
+    for (const method of ['GET', 'HEAD', 'POST']) {
+      const baseline = await call(path, { prefix: '', method }), baselineBody = await baseline.text();
+      for (const prefix of ['/fixture-content-only', '/fixture-pages-only']) {
+        const response = await call(path, { prefix, method }), actual = await response.text();
+        const label = prefix + ' ' + method + ' ' + path;
+        assert.equal(response.status, baseline.status, label);
+        for (const name of ['content-type', 'location', 'allow', 'cache-control', 'x-robots-tag']) {
+          assert.equal(response.headers.get(name), baseline.headers.get(name), label + ' ' + name);
+        }
+        assert.equal(actual, baselineBody, label);
+        assert(!actual.includes('sc-music-bootstrap'), label);
+      }
     }
   }
   for (const path of ['/music/site-shell/en/', '/en/music/site-shell/en/', '/music/%73ite-shell/en/', '/music//site-shell/en/']) {
