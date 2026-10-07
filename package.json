@@ -78,7 +78,9 @@
     "test:redesign:platforms": "node --test --test-timeout=90000 scripts/test-station-platforms.mjs scripts/test-station-platform-runtime.mjs",
     "preview:redesign:music": "npm run build && node scripts/serve-station-music-preview.mjs",
     "rehearse:redesign:migration": "node scripts/rehearse-station-redesign-migration.mjs",
-    "test:redesign:clips": "node --test --test-timeout=90000 scripts/test-station-clips.mjs scripts/test-station-clip-runtime.mjs"
+    "test:redesign:clips": "node --test --test-timeout=90000 scripts/test-station-clips.mjs scripts/test-station-clip-runtime.mjs",
+    "test:redesign:games": "node --test --test-timeout=90000 scripts/test-station-game-saves.mjs scripts/test-station-game-pages.mjs scripts/test-station-game-client.mjs scripts/test-station-game-runtime.mjs",
+    "preview:redesign:games": "npm run build && node scripts/serve-station-game-preview.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

@@ -1,0 +1,9 @@
+.save-safety { max-width: 680px; margin: 3rem auto; padding: clamp(24px, 5vw, 48px); background: #fffaf1; border: 1px solid #d8c8ae; border-radius: 18px; line-height: 1.7; }
+.save-safety h1 { font-size: clamp(24px, 4vw, 32px); }
+.save-safety button { margin: 6px 10px 6px 0; }
+.save-safety-file { display: grid; gap: 10px; margin: 20px 0; font-weight: 700; }
+.save-safety-file input { max-width: 100%; }
+.save-safety :focus-visible { outline: 3px solid #765438; outline-offset: 4px; }
+
+[data-save-blocked] .layout-body { display: block; }
+[data-save-blocked] #app-header, [data-save-blocked] #app-navigation, [data-save-blocked] #app-mobile-navigation, [data-save-blocked] #app-toast { display: none !important; }

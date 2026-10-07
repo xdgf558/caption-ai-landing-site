@@ -1,0 +1,146 @@
+{
+  "task": "T12",
+  "recordedAt": "2026-10-07T15:25:15.863Z",
+  "branch": "codex/station-cat-redesign-t12",
+  "baseCommit": "99b0ba003c1618018e40c5c756d44f2b94ef7f63",
+  "sourceFingerprintSha256": "f377a0ca400dca1f82b27b6ff77f4c24eae363d95021f42808e25a5e981feb62",
+  "sourceManifest": "source-manifest.json",
+  "testRuns": [
+    {
+      "name": "games",
+      "command": "npm run test:redesign:games",
+      "exitCode": 0,
+      "reportedTests": 50,
+      "passed": 50,
+      "failed": 0,
+      "log": "games-final.log",
+      "bytes": 4953,
+      "sha256": "d98b45286f1abc356ee3a2b3e063e2e4d1a24a9c1555270f046efaa58f448206",
+      "finishedAt": "2026-10-07T15:17:38.875Z"
+    },
+    {
+      "name": "legacy",
+      "command": "node --test scripts/test-cat-life-interactions.mjs scripts/test-cat-life-gentle-care.mjs scripts/test-cat-life-onboarding.mjs scripts/test-cat-life-memories.mjs scripts/test-cat-life-release-history.mjs scripts/test-cat-life-music.mjs scripts/test-cat-life-share.mjs scripts/test-cat-life-motion.mjs scripts/test-cat-life-game-integration.mjs scripts/test-cat-life-commerce-contract.mjs scripts/test-cat-life-cloud-saves.mjs",
+      "exitCode": 0,
+      "reportedTests": 66,
+      "passed": 66,
+      "failed": 0,
+      "log": "legacy-final.log",
+      "bytes": 6873,
+      "sha256": "9a442afea305e3b4710da51aeaec563a8d5beac4862b6c7ceac42f8752681642",
+      "finishedAt": "2026-10-07T15:17:36.809Z"
+    },
+    {
+      "name": "public",
+      "command": "npm run test:redesign:public",
+      "exitCode": 0,
+      "reportedTests": 35,
+      "passed": 35,
+      "failed": 0,
+      "log": "public-final.log",
+      "bytes": 4602,
+      "sha256": "1eecf12ea0a60d4c20894154b5d27988541266ae2ce6a11fc55910fb22b99b75",
+      "finishedAt": "2026-10-07T15:20:10.000Z"
+    },
+    {
+      "name": "music",
+      "command": "npm run test:redesign:music",
+      "exitCode": 0,
+      "reportedTests": 26,
+      "passed": 26,
+      "failed": 0,
+      "log": "music-final.log",
+      "bytes": 3468,
+      "sha256": "3013c8392514a4c4a7891294e852f50ac028600c03fe9941935e1e4e59290af1",
+      "finishedAt": "2026-10-07T15:20:11.743Z"
+    }
+  ],
+  "totalReportedTests": 177,
+  "buildRuns": [
+    {
+      "name": "build",
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "exitCode": 0,
+      "log": "build-final.log.gz",
+      "encoding": "gzip; decompress to original UTF-8 log",
+      "rawBytes": 23546,
+      "rawSha256": "279d29d672234f45191891a4e5e0fd718ee8123fecc917a59b9b3093e641bc82",
+      "compressedSha256": "83265818788b1a870e57ccaabacc29f20037f2d62cb675fec9086e50b8990659",
+      "finishedAt": "2026-10-07T15:17:31.929Z"
+    },
+    {
+      "name": "staging-build",
+      "command": "node scripts/build-music-staging-assets.mjs",
+      "exitCode": 0,
+      "log": "staging-build-final.log.gz",
+      "encoding": "gzip; decompress to original UTF-8 log",
+      "rawBytes": 71,
+      "rawSha256": "c78131513bda4a9e1254ada2c8a675c9e7fec5463f06d0ad1ae1b8e06f4ee6a0",
+      "compressedSha256": "d68e5a2455556cb4f73c8d4a6e350354eec1a0d651f4110310d57af82caf20af",
+      "finishedAt": "2026-10-07T15:20:01.545Z"
+    },
+    {
+      "name": "staging-check",
+      "command": "node scripts/check-music-staging-assets.mjs",
+      "exitCode": 0,
+      "log": "staging-check-final.log.gz",
+      "encoding": "gzip; decompress to original UTF-8 log",
+      "rawBytes": 51,
+      "rawSha256": "5981ce8f2b86aca3a9c797e6c7f83b5547600728388f12f4ce9a3ccd4a987279",
+      "compressedSha256": "4f9c2a053bd4dfe43b9fb685e1eaab668ecf63905e5661bcd83a366dbab1780a",
+      "finishedAt": "2026-10-07T15:20:32.330Z"
+    }
+  ],
+  "staging": {
+    "pages": 8,
+    "exactAssets": 34
+  },
+  "hostedCI": {
+    "status": "Not asserted by this pre-commit record",
+    "verification": "Inspect the exact PR head separately after creating the PR; local results do not substitute for hosted CI"
+  },
+  "browser": {
+    "origin": "http://127.0.0.1:4212",
+    "tab": "6",
+    "provider": "IAB",
+    "responsiveCases": 20,
+    "locales": [
+      "zh-Hant",
+      "zh-Hans",
+      "en",
+      "ja"
+    ],
+    "widths": [
+      360,
+      390,
+      768,
+      1280,
+      1440
+    ],
+    "viewportOverrideReset": true,
+    "finalSafetyRecaptures": true,
+    "keyboardFileRestore": "Actual filechooser, confirmation, restored gold 73 and new original recovery copy observed",
+    "downloadToDisk": "Not observed; module Blob byte test passed"
+  },
+  "boundaries": {
+    "productionDeployment": false,
+    "remoteMigration": false,
+    "productionFlagChanges": false,
+    "oldEntranceRetirement": false,
+    "realProductionCloudTest": false,
+    "nativeDeviceTest": false,
+    "voiceOverTest": false,
+    "t13Started": false,
+    "legacyRuntimeSafetyModified": true,
+    "fixtureSession": true,
+    "fixtureRights": true,
+    "emptySerialBuild": true
+  },
+  "limits": [
+    "localStorage comparison is not cross-process atomic CAS",
+    "Already issued cloud requests are not cancelled or rolled back",
+    "Fresh session checks and cookie changes are not an atomic server transaction",
+    "Runtime actual-main harness uses a UI stub; browser observations are separate",
+    "Production screenshot rights, bindings/schema and device compatibility remain unverified"
+  ]
+}

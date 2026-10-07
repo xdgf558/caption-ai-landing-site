@@ -1,0 +1,216 @@
+{
+  "scope": "Changed code, fixtures, test scripts and runtime dependency anchors before commit; no evidence files",
+  "fingerprintSha256": "f377a0ca400dca1f82b27b6ff77f4c24eae363d95021f42808e25a5e981feb62",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 4275,
+      "sha256": "20d21390f17a84d96ba66baf92745c34f24880b969f57382f8a2623fdd23e2d8"
+    },
+    {
+      "path": "astro.config.mjs",
+      "bytes": 143,
+      "sha256": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 257485,
+      "sha256": "b81e63fc2580e6e768dcfe5d799eb5944e95bf1fb51a056b8697ece1e6c9d4b0"
+    },
+    {
+      "path": "package.json",
+      "bytes": 11939,
+      "sha256": "1fa1328d7902774752c7069000e8a6a10292309754f9bcc8f37ddc3c29da7f34"
+    },
+    {
+      "path": "public/games/cat-life/cloud-sync-policy.js",
+      "bytes": 888,
+      "sha256": "4f9bad338f0cb9088c07da466be1c8bb6273dac6f9bfd7bede74d9a64351e8d6"
+    },
+    {
+      "path": "public/games/cat-life/cloud-sync.js",
+      "bytes": 28523,
+      "sha256": "a83614a75f1ccfe90032bdc2274c3bb16e87a18a640cedae9e02a1823fa3a43b"
+    },
+    {
+      "path": "public/games/cat-life/index.html",
+      "bytes": 10620,
+      "sha256": "c1030f69788330397e6f89dc16a75ffb3d6f4c1cfe53aff7f93e3d53ab1cbd1e"
+    },
+    {
+      "path": "public/games/cat-life/site-integration.js",
+      "bytes": 3721,
+      "sha256": "9f11206673d49f95db0f4d54c27da3a903e52034cea017b6b97c5a042aa6d327"
+    },
+    {
+      "path": "public/games/cat-life/src/js/core/namespace.js",
+      "bytes": 18465,
+      "sha256": "2c05aa2809629347d34b6d7866c6014f3493c0c58288ed26c76a053c2d3a0a6d"
+    },
+    {
+      "path": "public/games/cat-life/src/js/main.js",
+      "bytes": 55713,
+      "sha256": "371c9a6efa46fd077de082a75b2d5c129d611ed5895622dd2f143cc6f42180de"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/gameState.js",
+      "bytes": 30410,
+      "sha256": "f18858b816c4ab149aff294300d03ce0c6c7bb3388108f48fb1ba6b445dd33c9"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/saveMigrations.js",
+      "bytes": 3129,
+      "sha256": "1c6f96f3b2a9df1594a20e19e31bc74a5d67f5c203a2c151d6d08980f0117e59"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/saveRecovery.js",
+      "bytes": 8408,
+      "sha256": "faf82204cc6ea0a0882f4708bafe09b2239cf6707d5437d8ff2244ffa8d2dfaa"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/saveStatus.js",
+      "bytes": 3910,
+      "sha256": "77a68f7b858b1cae87b90864b2bee5420c27d1fd6f315534accd9d8670b98dcb"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/saveSystem.js",
+      "bytes": 6729,
+      "sha256": "1f3088066ab372753ef74445a52794b82125e215f5362fc6db8851b39db3ee10"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/musicSystem.js",
+      "bytes": 7340,
+      "sha256": "f61b9a3be87e1080d6eb6979dd3c0a0576ddac011ff66724392ac7e6cbca213a"
+    },
+    {
+      "path": "public/games/cat-life/src/styles/save-safety.css",
+      "bytes": 714,
+      "sha256": "a63458e9663e3b24dc5f093e232d1a180e05ccca066526856772d0e36b8f5c0e"
+    },
+    {
+      "path": "scripts/fixtures/station-games/control.js",
+      "bytes": 5511,
+      "sha256": "b54c015b066a646038d5cf489b7b5ca24849107041e444b4eabbe8d8a6d44849"
+    },
+    {
+      "path": "scripts/helpers/cat-life-save-harness.mjs",
+      "bytes": 3143,
+      "sha256": "c1fd081587909aba9aa5682e9dd731cf1136e8af632cabdbd68db79bbdaeeab4"
+    },
+    {
+      "path": "scripts/helpers/station-content-fixture.mjs",
+      "bytes": 13798,
+      "sha256": "12702c75335300755d010393d20bf03e927b631ce80a6be243c9b2e8d64dcb05"
+    },
+    {
+      "path": "scripts/helpers/station-game-assets.mjs",
+      "bytes": 1547,
+      "sha256": "a18e1b5b003e276f7ee175e1364d5ab847950c1934b9467424a17bbfe721140c"
+    },
+    {
+      "path": "scripts/helpers/station-game-fixture.mjs",
+      "bytes": 1208,
+      "sha256": "b27152d55cd50890ec526be025fc2be0e9c895876bdac8fdb8d72e1b1bfb3748"
+    },
+    {
+      "path": "scripts/helpers/station-game-runtime-worker.js",
+      "bytes": 765,
+      "sha256": "bc509220772da08d7b3a2ef6cb8b62696423584083914ebe6ee6b14d3a8f7b33"
+    },
+    {
+      "path": "scripts/helpers/station-music-fixture.mjs",
+      "bytes": 7308,
+      "sha256": "03e58ccd2fe4803d05222dc829f17b1fcd88d901eae1540c9b5dd8c418d9b699"
+    },
+    {
+      "path": "scripts/helpers/station-music-runtime.mjs",
+      "bytes": 4570,
+      "sha256": "4a443cb17bc36a19c1bb5a67c4e69fefa6da7e23eff3e202a459d11621fc5976"
+    },
+    {
+      "path": "scripts/serve-station-game-preview.mjs",
+      "bytes": 4821,
+      "sha256": "d83297de2b76090c25020cd0a5c1a04cfa8b0867f61a20a3d7ab5466905a5bf6"
+    },
+    {
+      "path": "scripts/test-cat-life-game-integration.mjs",
+      "bytes": 32875,
+      "sha256": "98fef2288ff550dbdf8890e17ba62bc13278564c5ee30f33b0f01cc3d8eaefb1"
+    },
+    {
+      "path": "scripts/test-cat-life-gentle-care.mjs",
+      "bytes": 17954,
+      "sha256": "cf7b6bd6447778989222b167d91bcadfd0a6bd439e1e695ff1d67987432d6de7"
+    },
+    {
+      "path": "scripts/test-station-game-client.mjs",
+      "bytes": 3356,
+      "sha256": "25503d0f59b1a287508468524bb3fd9172c392c6fcf58e4ed02f8e33c01513fc"
+    },
+    {
+      "path": "scripts/test-station-game-pages.mjs",
+      "bytes": 3094,
+      "sha256": "26f9d7e52a958b7e61ba1157aa62464a4736a6f5a91d8829f772e421a8fb92b1"
+    },
+    {
+      "path": "scripts/test-station-game-runtime.mjs",
+      "bytes": 4344,
+      "sha256": "7b42b03b9eb2fb551297205ed2018fda02e6652456c0567fa6432fd020159b23"
+    },
+    {
+      "path": "scripts/test-station-game-saves.mjs",
+      "bytes": 11971,
+      "sha256": "b6469612e3f46f2edc61feabfc5812938c10d56429cbf0f62bad1ac2583760e1"
+    },
+    {
+      "path": "src/components/redesign/GameShell.astro",
+      "bytes": 1113,
+      "sha256": "b80e97e44c010fb71a2e539f3916636c02f6fd00929c1ebe6e8a0f45b0051d42"
+    },
+    {
+      "path": "src/layouts/StationBrandLayout.astro",
+      "bytes": 4179,
+      "sha256": "45ef26bde6bbea3a8873163b75acb92c41109b783a369c5e2bae7698fa5544ad"
+    },
+    {
+      "path": "src/pages/games/site-shell/[locale].astro",
+      "bytes": 277,
+      "sha256": "86a172ca7441b480904023188c8f579a294659cf60556521e033435f1ae1e714"
+    },
+    {
+      "path": "src/redesign/gameClient.js",
+      "bytes": 2241,
+      "sha256": "c95b84477f493c42d1a6d4496a70f5af2c171e947a386ce2eae80a9a19591218"
+    },
+    {
+      "path": "src/redesign/gameCopy.js",
+      "bytes": 8705,
+      "sha256": "f87b034c93661af02e454fe86a252077917a89296d79ea7532715d947637b956"
+    },
+    {
+      "path": "src/redesign/gamePages.js",
+      "bytes": 6129,
+      "sha256": "73c48c70fd52d20ae43bf2fee552963e0dd2736eaa219a529258d152d91746a8"
+    },
+    {
+      "path": "src/redesign/gameRender.js",
+      "bytes": 3544,
+      "sha256": "ea7b7f58d50e5d1307693176b0e5a4c75c288bf9d61d2281f812b140b86c9abb"
+    },
+    {
+      "path": "src/redesign/games.css",
+      "bytes": 3414,
+      "sha256": "7a6eebe9228997a4f92fae3b374e0c6db2f248db6e9c2b2abbe66740cb33c5d2"
+    },
+    {
+      "path": "src/worker.js",
+      "bytes": 909222,
+      "sha256": "186386d310beb45bbf099e7f1eaf9e67a4f477d6dbbc72cedd38b99b5ca0ffce"
+    },
+    {
+      "path": "wrangler.toml",
+      "bytes": 3163,
+      "sha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2"
+    }
+  ]
+}

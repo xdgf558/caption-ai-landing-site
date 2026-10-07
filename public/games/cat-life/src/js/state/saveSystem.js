@@ -1,128 +1,116 @@
 (function (game) {
   var activeStorageKey = game.config.storageKey;
-
-  function getStorageKey() {
-    return activeStorageKey;
-  }
-
+  var observed;
+  var blocked = false;
+  function getStorageKey() { return activeStorageKey; }
   function setStorageKey(storageKey) {
-    var nextKey = String(storageKey || "").trim();
-    activeStorageKey = nextKey || game.config.storageKey;
+    activeStorageKey = String(storageKey || "").trim() || game.config.storageKey;
+    observed = undefined;
+    blocked = false;
     return activeStorageKey;
   }
-
+  function inspect() {
+    try { return window.CatGameSaveStatus.inspect(localStorage, activeStorageKey, game.config.saveSchemaVersion); }
+    catch (error) { return { status: "unavailable" }; }
+  }
+  function fail(status) {
+    blocked = true;
+    var error = new Error("SAVE_BLOCKED: " + status);
+    error.code = status === "unsupported" ? "SAVE_SCHEMA_UNSUPPORTED" : "SAVE_BLOCKED";
+    error.saveStatus = status;
+    if (typeof window.dispatchEvent === "function") window.dispatchEvent(new CustomEvent("catgame:save-blocked", { detail: { status: status } }));
+    throw error;
+  }
+  function writable() {
+    var slot = inspect();
+    if (blocked) return fail(slot.status === "valid" || slot.status === "missing" ? "changed" : slot.status);
+    if (slot.status !== "valid" && slot.status !== "missing") { if (observed === undefined) observed = slot.raw; return fail(slot.status); }
+    if (observed !== undefined && observed !== slot.raw) return fail("changed");
+    return slot;
+  }
   function saveGame(saveData) {
-    var nextData = saveData || game.state.game;
+    var slot = writable(), nextData = saveData || game.state.game;
+    if (!nextData || window.CatGameSaveStatus.inspectRaw(JSON.stringify(nextData), game.config.saveSchemaVersion).status !== "valid") return fail("corrupt");
+    var previous = nextData.meta.lastSavedAt;
     nextData.meta.lastSavedAt = new Date().toISOString();
     nextData.meta.lastPlayedDate = game.utils.format.formatDateKey(new Date());
-    game.utils.storage.saveJSON(activeStorageKey, nextData);
-    if (window.CatGameCloud && typeof window.CatGameCloud.onLocalSave === "function") {
-      window.CatGameCloud.onLocalSave(nextData);
+    var raw = JSON.stringify(nextData);
+    try {
+      if (localStorage.getItem(activeStorageKey) !== slot.raw) return fail("changed");
+      localStorage.setItem(activeStorageKey, raw);
+      if (localStorage.getItem(activeStorageKey) !== raw) return fail("unavailable");
+    } catch (error) {
+      nextData.meta.lastSavedAt = previous;
+      if (error.saveStatus) throw error;
+      return fail("unavailable");
     }
+    observed = raw;
+    if (window.CatGameCloud && typeof window.CatGameCloud.onLocalSave === "function") window.CatGameCloud.onLocalSave(nextData);
     return nextData;
   }
-
   function backupBeforeCareRecovery() {
+    writable();
     var key = activeStorageKey + ":before-care-recovery";
-    // Keep the first snapshot; later recoveries must not overwrite this safety net.
     if (!game.utils.storage.loadJSON(key)) game.utils.storage.saveJSON(key, game.state.game);
   }
-
-  function getCareRecoveryBackup() {
-    return game.utils.storage.loadJSON(activeStorageKey + ":before-care-recovery");
-  }
-
+  function getCareRecoveryBackup() { return game.utils.storage.loadJSON(activeStorageKey + ":before-care-recovery"); }
   function downloadCareRecoveryBackup() {
     var backup = getCareRecoveryBackup();
     if (backup) downloadExport(backup, "cat-care-before-recovery-");
   }
-
   function loadGame() {
-    var saved = game.utils.storage.loadJSON(activeStorageKey);
-    if (!saved) {
-      return null;
-    }
-    try {
-      return game.state.normalizeGameData(saved);
-    } catch (error) {
-      if (!error || error.code !== "SAVE_SCHEMA_UNSUPPORTED") throw error;
-
-      var sourceStorageKey = activeStorageKey;
-      var compatibilityStorageKey = sourceStorageKey + ":compat-v" + String(game.config.saveSchemaVersion);
-      var existingCompatibilitySave = game.utils.storage.loadJSON(compatibilityStorageKey);
-      activeStorageKey = compatibilityStorageKey;
-      console.warn("存档来自较新的游戏版本，已切换到独立兼容存档槽。", {
-        compatibilityStorageKey: compatibilityStorageKey,
-        sourceStorageKey: sourceStorageKey,
-      });
-      if (!existingCompatibilitySave) return null;
-      return game.state.normalizeGameData(existingCompatibilitySave);
-    }
+    var slot = inspect();
+    observed = slot.raw;
+    if (slot.status !== "missing" && slot.status !== "valid") return fail(slot.status);
+    if (slot.status === "missing") return null;
+    try { return game.state.normalizeGameData(slot.data); }
+    catch (error) { return fail(error.code === "SAVE_SCHEMA_UNSUPPORTED" ? "unsupported" : "corrupt"); }
   }
-
-  function createAndSaveGame() {
-    var fresh = game.state.createNewGame();
-    saveGame(fresh);
-    return fresh;
-  }
-
-  function loadOrCreateGame() {
-    return loadGame() || createAndSaveGame();
-  }
-
-  function autoSave() {
-    if (game.state.game && game.state.game.settings.autoSave) {
-      saveGame(game.state.game);
-    }
-  }
-
-  function exportText() {
-    return JSON.stringify(game.state.game, null, 2);
-  }
-
-  function downloadExport(saveData, filePrefix) {
-    var blob = new Blob([saveData ? JSON.stringify(saveData, null, 2) : exportText()], { type: "application/json" });
-    var url = URL.createObjectURL(blob);
-    var anchor = document.createElement("a");
-    anchor.href = url;
+  function createAndSaveGame() { var fresh = game.state.createNewGame(); saveGame(fresh); return fresh; }
+  function loadOrCreateGame() { return loadGame() || createAndSaveGame(); }
+  function autoSave() { if (game.state.game && game.state.game.settings.autoSave) saveGame(game.state.game); }
+  function exportText() { return JSON.stringify(game.state.game, null, 2); }
+  function downloadRaw(raw, filePrefix) {
+    if (typeof raw !== "string") throw new Error("NO_READABLE_SAVE");
+    var blob = new Blob([raw], { type: "application/json" }), url = URL.createObjectURL(blob);
+    var anchor = document.createElement("a"); anchor.href = url;
     anchor.download = (filePrefix || "cat-game-save-") + game.utils.format.formatDateKey(new Date()) + ".json";
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    setTimeout(function () {
-      URL.revokeObjectURL(url);
-    }, 0);
+    document.body.appendChild(anchor); anchor.click(); document.body.removeChild(anchor);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 0);
   }
-
+  function downloadExport(saveData, filePrefix) { downloadRaw(saveData ? JSON.stringify(saveData, null, 2) : exportText(), filePrefix); }
+  // Explicit recovery preserves exact original bytes before replacing a slot.
+  // Failure to back up, a concurrent edit or unreadable storage never grants a write.
   function importText(rawText) {
-    var parsed = JSON.parse(rawText);
-    var normalized = game.state.normalizeGameData(parsed);
-    game.state.game = normalized;
-    saveGame(normalized);
-    return normalized;
+    var incoming = window.CatGameSaveStatus.inspectRaw(rawText, game.config.saveSchemaVersion);
+    if (incoming.status !== "valid") {
+      var error = new Error("INVALID_IMPORT"); error.code = incoming.status === "unsupported" ? "SAVE_SCHEMA_UNSUPPORTED" : "INVALID_IMPORT"; throw error;
+    }
+    var normalized = game.state.normalizeGameData(incoming.data), slot = inspect();
+    if (slot.status === "unavailable") return fail("unavailable");
+    if (observed !== undefined && observed !== slot.raw) return fail("changed");
+    var backupKey = null;
+    try {
+      if (slot.raw !== null) {
+        backupKey = activeStorageKey + ":recovery:" + Date.now() + ":" + Math.random().toString(36).slice(2);
+        if (localStorage.getItem(backupKey) !== null) return fail("changed");
+        localStorage.setItem(backupKey, slot.raw);
+        if (localStorage.getItem(backupKey) !== slot.raw) return fail("unavailable");
+      }
+      if (localStorage.getItem(activeStorageKey) !== slot.raw) return fail("changed");
+      var serialized = JSON.stringify(normalized);
+      localStorage.setItem(activeStorageKey, serialized);
+      if (localStorage.getItem(activeStorageKey) !== serialized) return fail("unavailable");
+      observed = serialized; blocked = false;
+      game.state.game = normalized;
+      if (window.CatGameCloud && typeof window.CatGameCloud.onLocalSave === "function") window.CatGameCloud.onLocalSave(normalized);
+      return normalized;
+    } catch (error) { if (error.saveStatus) throw error; return fail("unavailable"); }
   }
-
-  function resetGame() {
-    var fresh = game.state.createNewGame();
-    game.state.game = fresh;
-    saveGame(fresh);
-    return fresh;
-  }
-
-  game.state.saveSystem = {
-    getStorageKey: getStorageKey,
-    backupBeforeCareRecovery: backupBeforeCareRecovery,
-    getCareRecoveryBackup: getCareRecoveryBackup,
-    downloadCareRecoveryBackup: downloadCareRecoveryBackup,
-    setStorageKey: setStorageKey,
-    saveGame: saveGame,
-    loadGame: loadGame,
-    createAndSaveGame: createAndSaveGame,
-    loadOrCreateGame: loadOrCreateGame,
-    autoSave: autoSave,
-    exportText: exportText,
-    downloadExport: downloadExport,
-    importText: importText,
-    resetGame: resetGame,
-  };
+  function resetGame() { return importText(JSON.stringify(game.state.createNewGame())); }
+  game.state.saveSystem = { getStorageKey: getStorageKey, setStorageKey: setStorageKey, inspect: inspect, assertUnchanged: writable,
+    backupBeforeCareRecovery: backupBeforeCareRecovery, getCareRecoveryBackup: getCareRecoveryBackup,
+    downloadCareRecoveryBackup: downloadCareRecoveryBackup, saveGame: saveGame, loadGame: loadGame,
+    createAndSaveGame: createAndSaveGame, loadOrCreateGame: loadOrCreateGame, autoSave: autoSave,
+    exportText: exportText, downloadRaw: downloadRaw, downloadExport: downloadExport, importText: importText, resetGame: resetGame };
 })(window.CatGame);

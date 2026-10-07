@@ -1,0 +1,53 @@
+
+> landing-site@0.1.0 test:redesign:public
+> node --test --test-timeout=90000 scripts/test-station-content-public.mjs scripts/test-station-content-runtime.mjs
+
+✔ namespace stays separate from UUID music/native/services; default flag stops before any binding access (12.447417ms)
+✔ actual schema columns, ledger and cleanup view are required; probes never install missing schema (35.476292ms)
+✔ ledger alone cannot prove the extension view; read failures are fixed 503 errors (61.172833ms)
+✔ migration/backfilled home remains empty until explicitly published; no latest-free fallback (42.505417ms)
+✔ public fields are allowlisted; platform-only works and locale fallback never spreads metadata (48.367541ms)
+✔ draft edits do not replace sealed public snapshots; scheduled, future and archived heads disappear (36.793792ms)
+✔ invalid query, duplicate parameters, methods and paths fail before DB/R2 (28.256875ms)
+✔ keyset pagination has stable ID tie breaks, title/artist search, bounded limits and filtered-page progress (41.638541ms)
+✔ canonical alias lookup returns canonical links without treating old music descendants as already migrated (33.046333ms)
+✔ default 20/max 50 are actual SQL page limits and cannot dump the whole catalog (37.579292ms)
+✔ duplicate/escaped keys, prototypes and oversized stored metadata are rejected, including related references (30.433417ms)
+✔ platform visibility requires actual live verification, provider host and trusted territory; query/header claims cannot override (28.512458ms)
+✔ independent guest preview requires current enabled promotion and owned approved resource; no account/full object lookup (30.604959ms)
+✔ stopped/draft/future promotions revoke current preview and home; old free featured state is irrelevant (30.37175ms)
+✔ rights, source identity and object freshness independently prevent preview delivery (30.936291ms)
+✔ a preview copied from the entire full file or referencing another owner cannot pass independent clip proof (29.374291ms)
+✔ free_full hint on VIP does not grant access; guest, ordinary, expired and real member responses stay distinct (32.744125ms)
+✔ finite account/session revocation and membership DB failures are rechecked on direct HEAD/Range requests (57.260583ms)
+✔ legacy flags and current legacy revision still control full media, including time-limited free music (34.025833ms)
+✔ authorized audio streams bounded ranges, HEAD and If-Range; no GET on denied HEAD or stale website versions (30.19925ms)
+✔ generic asset paths never deliver full/preview files, even to members; public cover and lyric stream only current references (29.927584ms)
+✔ object replacement between HEAD and conditional GET cannot leak different bytes (25.6405ms)
+✔ an R2 body arriving after the request deadline is cancelled instead of becoming a late response (118.425083ms)
+✔ video requires current published parent, matching video/poster rights, dimensions and ready objects (31.072417ms)
+✔ game detail preserves the real runtime directory; unregistered stored launch paths cannot become launch promises (28.463625ms)
+✔ asset IDs colliding across music/media domains are omitted rather than resolved by arrival order (28.680042ms)
+✔ published home ignores concurrent drafts and removes revoked promotions/media on each fresh projection (32.303583ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ bounded rate admission distinguishes 429 from service failure and request budgets expire without publication writes (142.33225ms)
+✔ existing UUID catalog retains its contract and old qualification metric after the extension is populated (33.332125ms)
+✔ production Worker dispatch is default closed; actual empty D1 fails readiness without automatic DDL (429.67ms)
+✔ explicit local fixture migration enables published queries only, with a separate reader binding and actual ledger (1784.903334ms)
+✔ native D1 publication pointer coexists with drafts; clip/game/home DTO and actual R2 streaming agree (22.826333ms)
+✔ native guest preview is independent; generic assets cannot deliver audio; private full responses use real existing membership (33.194958ms)
+✔ actual R2 replacement and rights revocation are visible immediately, including conditional requests and home (43.963041ms)
+✔ old UUID catalog and real game runtime address still dispatch separately; no new event writes (22.314208ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2511.664041

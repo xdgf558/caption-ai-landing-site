@@ -1,0 +1,325 @@
+{
+  "note": "Pixel dimensions are captured file dimensions, not CSS viewport or physical device dimensions. Composite references differ in content and state.",
+  "images": [
+    {
+      "file": "catalog-en-1440.png",
+      "width": 1425,
+      "height": 1423,
+      "format": "jpeg",
+      "bytes": 127029,
+      "sha256": "ebc6930ae7258bd81dfbca44808095c341890eeff529a96503d46e2d2c07e3ed"
+    },
+    {
+      "file": "catalog-ja-1440.png",
+      "width": 1425,
+      "height": 1393,
+      "format": "jpeg",
+      "bytes": 119993,
+      "sha256": "ddcce8d37f12ecec1d6646cca6bfeb99402c14b6775bfb645976e16801247c1a"
+    },
+    {
+      "file": "catalog-zh-Hans-1440.png",
+      "width": 1425,
+      "height": 1393,
+      "format": "jpeg",
+      "bytes": 114400,
+      "sha256": "8314b7b19427d6174dac134ef0d5886c25f5e5b3d7549f13fbb7033cd3e88f15"
+    },
+    {
+      "file": "catalog-zh-Hant-1440.png",
+      "width": 1425,
+      "height": 1393,
+      "format": "jpeg",
+      "bytes": 114679,
+      "sha256": "ba110e982604989d97503d24fc18e923f9f83ed97121b9c81750b16fff628c56"
+    },
+    {
+      "file": "catalog-zh-Hant-390.png",
+      "width": 375,
+      "height": 1543,
+      "format": "jpeg",
+      "bytes": 72789,
+      "sha256": "744ca08b448bbd993b5510b0636fc3c0e55b1f08c0b77bd0e27f4ffe22452859"
+    },
+    {
+      "file": "comparison-desktop.png",
+      "width": 1376,
+      "height": 665,
+      "format": "png",
+      "bytes": 838565,
+      "sha256": "fd1efedccddc994371612e2a81e3594795fb7e5873ff0925dede12a2f6f889e4"
+    },
+    {
+      "file": "comparison-header.png",
+      "width": 1356,
+      "height": 138,
+      "format": "png",
+      "bytes": 135639,
+      "sha256": "50b851e9af15a26d03344a987465ad1b459fa28ed056ebc50e2fe697fb98f3b7"
+    },
+    {
+      "file": "comparison-mobile.png",
+      "width": 766,
+      "height": 2164,
+      "format": "png",
+      "bytes": 592054,
+      "sha256": "90e8187cb3421719b915032e1dd0357678ffb2317f3cbbc030f3ace95f31fab6"
+    },
+    {
+      "file": "detail-en-1280.png",
+      "width": 1265,
+      "height": 1540,
+      "format": "jpeg",
+      "bytes": 159487,
+      "sha256": "e83fa29204d45bd57fda1ccbaf43e2297bbe49e493823a1244901c7ae07f801d"
+    },
+    {
+      "file": "detail-en-1440.png",
+      "width": 1425,
+      "height": 1579,
+      "format": "jpeg",
+      "bytes": 168312,
+      "sha256": "9f8d463402d3b6b9472285f19ec89202edaadcbc8d34ff1b93ca78d5c840769f"
+    },
+    {
+      "file": "detail-en-360.png",
+      "width": 345,
+      "height": 2291,
+      "format": "jpeg",
+      "bytes": 96691,
+      "sha256": "8362ab4867a2f24feae56b099e6031e50646b733085c32c7ace67f47016b6aa2"
+    },
+    {
+      "file": "detail-en-390.png",
+      "width": 375,
+      "height": 2263,
+      "format": "jpeg",
+      "bytes": 98776,
+      "sha256": "c2e4a07cbd2b6fbe449208144c6e3fd128838180c805bcf598024365d41184b9"
+    },
+    {
+      "file": "detail-en-768.png",
+      "width": 753,
+      "height": 1799,
+      "format": "jpeg",
+      "bytes": 112800,
+      "sha256": "adec076af29e31128dc7c2b12f9f9d19b5c4adb6575ace81cbbd05db4b5f4210"
+    },
+    {
+      "file": "detail-ja-1280.png",
+      "width": 1265,
+      "height": 1540,
+      "format": "jpeg",
+      "bytes": 163692,
+      "sha256": "b401fcc9e5f450505c3bcb9224503e4619ffb007c54f4342a497bc41415aa11a"
+    },
+    {
+      "file": "detail-ja-1440.png",
+      "width": 1425,
+      "height": 1579,
+      "format": "jpeg",
+      "bytes": 171509,
+      "sha256": "a7c0ad7b1def4819f8f3bb5a1d5e9471b3e12d38950a72b549c77900e8753487"
+    },
+    {
+      "file": "detail-ja-360.png",
+      "width": 345,
+      "height": 2391,
+      "format": "jpeg",
+      "bytes": 101721,
+      "sha256": "7c8d164d572ed5b698be8f9c032b3f15c669c017048b920747f6094253d24ba5"
+    },
+    {
+      "file": "detail-ja-390.png",
+      "width": 375,
+      "height": 2336,
+      "format": "jpeg",
+      "bytes": 102172,
+      "sha256": "ff49fd16045b84787d4431ccdabffb4e0eef40be21603ad7e15593f547a2d230"
+    },
+    {
+      "file": "detail-ja-768.png",
+      "width": 753,
+      "height": 1711,
+      "format": "jpeg",
+      "bytes": 115493,
+      "sha256": "b182569a44672185341d8af55752573c31372bdb89a438b70e290cb39bd8e618"
+    },
+    {
+      "file": "detail-zh-Hans-1280.png",
+      "width": 1265,
+      "height": 1540,
+      "format": "jpeg",
+      "bytes": 149100,
+      "sha256": "af1b19ab475d4be462bd745c2642d3ccdd82ca3c9973e062b7b6f2660f6d6e13"
+    },
+    {
+      "file": "detail-zh-Hans-1440.png",
+      "width": 1425,
+      "height": 1579,
+      "format": "jpeg",
+      "bytes": 156709,
+      "sha256": "33b483bc9ef6256e363c6d6886284b07766dfee3efbe18e5a7f0e9909c8843b3"
+    },
+    {
+      "file": "detail-zh-Hans-360.png",
+      "width": 345,
+      "height": 2143,
+      "format": "jpeg",
+      "bytes": 85502,
+      "sha256": "8d7601b30528ea31f0c5cb2aabe8d6e6c915ee1d169ae43e4ca78602fdb0c4aa"
+    },
+    {
+      "file": "detail-zh-Hans-390.png",
+      "width": 375,
+      "height": 2164,
+      "format": "jpeg",
+      "bytes": 87140,
+      "sha256": "2f8286df9fa4467fde0d36c6f5e966bd8383a58d63c8a05b3ffacd054d798658"
+    },
+    {
+      "file": "detail-zh-Hans-768.png",
+      "width": 753,
+      "height": 1607,
+      "format": "jpeg",
+      "bytes": 102230,
+      "sha256": "41343596c195b9444b10987e31720876f3c6abb0e4fb5b070a379b97345317e9"
+    },
+    {
+      "file": "detail-zh-Hant-1280.png",
+      "width": 1265,
+      "height": 1540,
+      "format": "jpeg",
+      "bytes": 149943,
+      "sha256": "b85ad53c391a6065f677655a79ef2f98e1e588a21680207a98fe1f62d8364105"
+    },
+    {
+      "file": "detail-zh-Hant-1440.png",
+      "width": 1425,
+      "height": 1579,
+      "format": "jpeg",
+      "bytes": 157756,
+      "sha256": "c10e735ac900c8a503bc258aac4ac253f85e9db727f9ba06a9690a9bf1f54f3b"
+    },
+    {
+      "file": "detail-zh-Hant-360.png",
+      "width": 345,
+      "height": 2143,
+      "format": "jpeg",
+      "bytes": 85897,
+      "sha256": "ad4661ef97e5c96e88087ee838f523ec6347a95e235a69859f9b978f90533d44"
+    },
+    {
+      "file": "detail-zh-Hant-390.png",
+      "width": 375,
+      "height": 2164,
+      "format": "jpeg",
+      "bytes": 87763,
+      "sha256": "c145cf205d3a16d41b816ca13d6576b6bc380b24913c94ec03bc78d82a2a4639"
+    },
+    {
+      "file": "detail-zh-Hant-768.png",
+      "width": 753,
+      "height": 1633,
+      "format": "jpeg",
+      "bytes": 100882,
+      "sha256": "140968d9b88d98f62c130c182145203b139c5e13ec6af23453b08faa6a8082d5"
+    },
+    {
+      "file": "entry-identity-error.png",
+      "width": 1425,
+      "height": 1579,
+      "format": "jpeg",
+      "bytes": 156535,
+      "sha256": "921094a208bf28f2e691e49feb4fe27e9c5d2e1bb3d92cff79132769b01adc4f"
+    },
+    {
+      "file": "entry-mobile-keyboard.png",
+      "width": 375,
+      "height": 812,
+      "format": "jpeg",
+      "bytes": 33072,
+      "sha256": "b7ea3a9822c8ce237041935a6e5b2d42b995ce01c425b0f3a05d7968a501fd52"
+    },
+    {
+      "file": "preview-final-desktop.png",
+      "width": 1425,
+      "height": 1579,
+      "format": "jpeg",
+      "bytes": 156841,
+      "sha256": "f66a2cf32e2c986571f775734aa291adf497efd0049e89b1ec91fd194a7c2cbc"
+    },
+    {
+      "file": "preview-final.png",
+      "width": 432,
+      "height": 585,
+      "format": "jpeg",
+      "bytes": 29367,
+      "sha256": "e339c9e0d071095694e7afd74666edbd7021f139559f36959d8eb1c448c9e6f0"
+    },
+    {
+      "file": "responsive-contact-sheet.jpg",
+      "width": 1264,
+      "height": 2600,
+      "format": "jpeg",
+      "bytes": 304895,
+      "sha256": "26169953b1c3ce65c6ddef835de7cf9e2d7f8628480d7c3568533973fcca2f20"
+    },
+    {
+      "file": "runtime-corrupt.png",
+      "width": 375,
+      "height": 1230,
+      "format": "jpeg",
+      "bytes": 50590,
+      "sha256": "a9bd4fa663092642d986f43b2cbee21b4fa7cdc36108f17fd611f15f8c8a985a"
+    },
+    {
+      "file": "runtime-future.png",
+      "width": 375,
+      "height": 1230,
+      "format": "jpeg",
+      "bytes": 51222,
+      "sha256": "39712a5b26a0dead0dd97f9baa228753ffb24ad30118ce355eee8f5e21d81d96"
+    },
+    {
+      "file": "runtime-member-corrupt.png",
+      "width": 375,
+      "height": 1230,
+      "format": "jpeg",
+      "bytes": 49814,
+      "sha256": "c4f7e7c399b276decbf7112c8eba53c193125b7e0bb448d56230c2f3bb65c61b"
+    },
+    {
+      "file": "runtime-new.png",
+      "width": 1425,
+      "height": 1790,
+      "format": "jpeg",
+      "bytes": 233266,
+      "sha256": "b5a45241090e470f841cd227ab76d4de76bd2d23c45406ab4b678a58a8b5f480"
+    },
+    {
+      "file": "runtime-restored.png",
+      "width": 1425,
+      "height": 1790,
+      "format": "jpeg",
+      "bytes": 232648,
+      "sha256": "d541faf5e4f60eea2bf8c9ef470c0dae4ff9793e38070f14e167e8ad8c31b1db"
+    },
+    {
+      "file": "runtime-unavailable.png",
+      "width": 375,
+      "height": 1230,
+      "format": "jpeg",
+      "bytes": 46280,
+      "sha256": "3012f4b8f4842792eb5edcbb4439ca95557d96d99c255fb889bc6b365cfd055e"
+    },
+    {
+      "file": "runtime-valid.png",
+      "width": 1425,
+      "height": 1790,
+      "format": "jpeg",
+      "bytes": 233332,
+      "sha256": "af45c781ff654dda0d3d1463ba3255a885c79ea360cac91c24f74c463ed71f95"
+    }
+  ]
+}

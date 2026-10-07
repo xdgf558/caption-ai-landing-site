@@ -143,7 +143,7 @@ export async function mediaFixture(db, bucket, owner, kind, id, materializeMedia
     width: material?.width || 1280, height: material?.height || 720, sha256: createHash('sha256').update(bytes).digest('hex'), etag: object.etag, created_at: now });
   await approve(db, id, kind, true);
 }
-export async function seedContent(db, bucket, { publish = true, materializeAsset, materializeMedia, externalLinks = true } = {}) {
+export async function seedContent(db, bucket, { publish = true, materializeAsset, materializeMedia, externalLinks = true, gameMetadata = null } = {}) {
   const legacy = await seedLegacyFixture(db, { materializeAsset: async asset => {
     if (materializeAsset) return materializeAsset(asset, bucket);
     const bytes = new Uint8Array(100).fill(asset.kind === 'preview' ? 71 : 37);
@@ -176,7 +176,7 @@ export async function seedContent(db, bucket, { publish = true, materializeAsset
   await insertFixture(db, 'station_games', { id: game.id, slug: game.slug, runtime_key: 'cat-life', created_at: now, updated_at: now });
   await mediaFixture(db, bucket, game.id, 'game_screenshot', game.screenshot, materializeMedia);
   await insertFixture(db, 'station_game_revisions', { id: game.id, revision: 1, state: 'sealed',
-    metadata_json: JSON.stringify({ originalLocale: 'en', title: { en: 'Synthetic game' }, summary: { en: 'Existing runtime' } }),
+    metadata_json: JSON.stringify(gameMetadata || { originalLocale: 'en', title: { en: 'Synthetic game' }, summary: { en: 'Existing runtime' } }),
     launch_url: '/games/cat-life/', supported_devices_json: '["desktop","mobile"]', screenshot_ids_json: JSON.stringify([game.screenshot]), created_at: now });
   await db.prepare("UPDATE station_games SET status='published',published_revision=1,published_at=? WHERE id=?").bind(now - 100, game.id).run();
   await promotionFixture(db, legacy.tracks[1], { platforms: platformId ? [platformId] : [], clips: [clip.id] });

@@ -4,6 +4,8 @@
   var getText = game.utils.i18n.getDataText;
   var dom = {};
   var liveTickId = null;
+  var saveBlocked = false;
+  var entryIdentity = null;
   var arcadeSpinTimerId = null;
   var lotteryCelebrationTimerId = null;
   var toastTimerId = null;
@@ -87,6 +89,7 @@
   }
 
   function persistGame(force) {
+    if (saveBlocked) return;
     if (force) {
       game.state.saveSystem.saveGame(game.state.game);
       return;
@@ -316,6 +319,7 @@
   }
 
   function syncRealtime(source) {
+    if (saveBlocked) return;
     var result = game.systems.timeSystem.syncRealtimeState(source);
     var today = game.systems.timeSystem.getNow().toISOString().slice(0, 10);
     var journeyDayChanged = careJourneyDate !== today;
@@ -414,6 +418,7 @@
   }
 
   function render(preserveDrafts) {
+    if (saveBlocked) return;
     var restoreFocus = preserveDrafts === true ? captureBackgroundFocus() : null;
     // Disclosure state is transient UI, not save data. Preserve both open and
     // closed states on background updates, before restoring a summary's focus.
@@ -563,6 +568,7 @@
 
   function replaceGameState(saveData, options) {
     var settings = options || {};
+    if (settings.save !== false) game.state.saveSystem.assertUnchanged();
     var localSettings = game.state.game && game.state.game.settings || {};
     var imported = game.state.normalizeGameData(saveData);
     if (settings.preserveCustomMusic) {
@@ -587,14 +593,17 @@
 
   function activateMemberStorage(accountId, options) {
     var settings = options || {};
-    var storageKey = game.config.storageKey + ":member:" + String(accountId);
+    var sourceKey = game.state.saveSystem.getStorageKey();
+    var sourceSlot = game.state.saveSystem.assertUnchanged();
+    var storageKey = window.CatGameSaveStatus.memberKey(accountId);
+    entryIdentity = { key: storageKey, member: true, id: String(accountId) };
     game.state.saveSystem.setStorageKey(storageKey);
 
     var memberSave = game.state.saveSystem.loadGame();
     if (memberSave) {
       return { source: "member", game: replaceGameState(memberSave, { save: false, reason: "member" }) };
     }
-    if (settings.allowGuestImport) {
+    if (settings.allowGuestImport && sourceKey === game.config.storageKey && sourceSlot.status === "valid") {
       game.state.saveSystem.saveGame(game.state.game);
       return { source: "guest", game: game.state.game };
     }
@@ -615,6 +624,7 @@
   };
 
   function handleClick(event) {
+    if (saveBlocked) return;
     var shareButton = event.target.closest("[data-game-share-open]");
     if (shareButton) { game.ui.shareDialog.open(shareButton); return; }
     var pageButton = event.target.closest("[data-page-target]");
@@ -1108,6 +1118,7 @@
   }
 
   function handleKeyDown(event) {
+    if (saveBlocked) return;
     var shopTab = event.target.closest("[data-shop-category]");
     var categories = ["cat", "player", "furniture", "sale"];
     var currentIndex;
@@ -1143,6 +1154,7 @@
   }
 
   function handleChange(event) {
+    if (saveBlocked) return;
     var target = event.target;
 
     if (target.matches("[data-setting-key]")) {
@@ -1292,6 +1304,7 @@
   }
 
   function handlePointerDown(event) {
+    if (saveBlocked) return;
     var furniture = event.target.closest(".room-furniture[data-furniture-id]");
     var scene;
 
@@ -1325,6 +1338,7 @@
   }
 
   function handlePointerMove(event) {
+    if (saveBlocked) return;
     if (!game.state.roomDrag || game.state.roomDrag.pointerId !== event.pointerId) {
       return;
     }
@@ -1334,6 +1348,7 @@
   }
 
   function finishRoomDrag(event) {
+    if (saveBlocked) return;
     var drag = game.state.roomDrag;
 
     if (!drag || (event && drag.pointerId !== event.pointerId)) {
@@ -1354,7 +1369,7 @@
     persistGame(true);
   }
 
-  function init() {
+  function startGame() {
     dom.header = document.getElementById("app-header");
     dom.main = document.getElementById("app-main");
     dom.navigation = document.getElementById("app-navigation");
@@ -1395,12 +1410,14 @@
     document.addEventListener("pointerup", finishRoomDrag);
     document.addEventListener("pointercancel", finishRoomDrag);
     window.addEventListener("focus", function () {
+      if (saveBlocked) return;
       syncRealtime("focus");
       if (game.systems.musicSystem) {
         game.systems.musicSystem.syncForState(game.state.currentPage);
       }
     });
     document.addEventListener("visibilitychange", function () {
+      if (saveBlocked) return;
       if (!document.hidden) {
         syncRealtime("visibility");
       }
@@ -1409,11 +1426,11 @@
       }
     });
     window.addEventListener("beforeunload", function () {
-      game.state.saveSystem.saveGame(game.state.game);
+      if (!saveBlocked) game.state.saveSystem.saveGame(game.state.game);
     });
     window.addEventListener("pagehide", function () {
       game.ui.shareDialog.dismiss();
-      game.state.saveSystem.saveGame(game.state.game);
+      if (!saveBlocked) game.state.saveSystem.saveGame(game.state.game);
     });
 
     syncRealtime("init");
@@ -1440,5 +1457,31 @@
     }, 1000);
   }
 
+  function blockSave(status) {
+    if (status === "identity") entryIdentity = null;
+    saveBlocked = true;
+    if (liveTickId) window.clearInterval(liveTickId);
+    if (game.systems.musicSystem && game.systems.musicSystem.suspend) game.systems.musicSystem.suspend();
+    window.CatGameSaveRecovery.show(status, entryIdentity);
+  }
+  window.addEventListener("catgame:save-blocked", function (event) { blockSave(event.detail.status); });
+  async function init() {
+    try {
+      var mandatory = new URLSearchParams(window.location.search).get("sc_entry") === "1";
+      var guest = game.state.saveSystem.inspect();
+      var cached;
+      try { cached = localStorage.getItem("catGameMemberAccountV1"); } catch (error) { throw Object.assign(new Error(), { saveStatus: "unavailable" }); }
+      if (mandatory || (cached && cached !== "guest") || (guest.status !== "missing" && guest.status !== "valid")) {
+        window.CatGameSaveRecovery.show("checking");
+        try { entryIdentity = await window.CatGameSaveRecovery.selectSlot(); }
+        catch (error) { throw Object.assign(new Error(), { saveStatus: "identity" }); }
+        game.state.saveSystem.setStorageKey(entryIdentity.key);
+      }
+      saveBlocked = false;
+      if (document.body) document.body.removeAttribute("data-save-blocked");
+      ["app-header", "app-navigation", "app-mobile-navigation", "app-toast"].forEach(function (id) { var node = document.getElementById(id); if (node) node.hidden = false; });
+      startGame();
+    } catch (error) { blockSave(error.saveStatus || "corrupt"); }
+  }
   window.addEventListener("DOMContentLoaded", init);
 })(window.CatGame);
