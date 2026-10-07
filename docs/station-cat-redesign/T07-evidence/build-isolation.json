@@ -1,0 +1,16 @@
+{
+  "kind": "static-artifacts-only",
+  "htmlFilesChecked": 158,
+  "leakedRedesignOrFixtureMarkers": [],
+  "needles": [
+    "data-station-redesign",
+    "fixture-enabled",
+    "Station Cat fixture",
+    "synthetic-fixture",
+    "STATION_CONTENT_PUBLIC_ENABLED",
+    "/preview-assets/gentle-station/",
+    "ca760000-0000"
+  ],
+  "productionDeploymentVerified": false,
+  "emptySerialContent": true
+}

@@ -1,0 +1,95 @@
+✔ isolated gates stay closed unless explicitly enabled; config accurately reports music (2205.058625ms)
+✔ free catalog/search/detail project no storage keys or credentials; pagination rejects stale cursor (50.058917ms)
+✔ free grant and separate preview stream GET HEAD Range with object identity checks (83.594208ms)
+✔ VIP grants require same account AND same session on every request, never Cookie fallback (123.766958ms)
+✔ invalid Bearer does not silently become anonymous, even for free/preview/catalog (36.606166ms)
+✔ free and preview remain public; non-VIP cannot mint full VIP grant (56.351833ms)
+✔ expiry, revocation, blocked account, password changes deny before R2 (296.373458ms)
+✔ membership expiry, VIP delivery off, publication withdrawn are checked every Range (118.334542ms)
+✔ limited free expires at boundary; old grant cannot deliver free bytes afterwards (1636.849834ms)
+✔ token rotation in same session retains grant binding; old bearer fails (82.153ms)
+✔ entitlements are music projection only and do not mutate site membership (62.290458ms)
+✔ missing membership DB table fails closed without R2 access (74.670625ms)
+✔ lyrics retain Unicode, offset, multi-timestamps and audio version (53.229209ms)
+✔ album order and pagination use only visible published members (87.663ms)
+✔ replaced storage object is rejected; malformed mode and version never authorize (33.84775ms)
+✔ featured preserves configured primary/secondary/collection order and never invents empty recommendations (288.627583ms)
+✔ rotation fixture uses real refresh route and preserves family absolute expiry (59.050583ms)
+✔ offline permits are isolated, revision-bound permanent-free full audio only (102.463917ms)
+✔ missing schema is 503; actual migrations on local D1 enable primary readiness (549.115416ms)
+✔ admin create/save/rights HTTP lifecycle executes real D1 without changing public catalog (27.545583ms)
+✔ admin last receipt RAISE(IGNORE) rolls back all earlier real D1 writes (136.961459ms)
+✔ four identical admin requests share one receipt and competing saves never overwrite (19.255625ms)
+✔ collection lifecycle and exact order execute through native D1 JSON guards (58.630833ms)
+✔ native D1 public catalog, track and collection reads share the filtered projection (51.5065ms)
+✔ admin unpublish and archive retain fixture media and sealed history with all flags off (57.707ms)
+✔ native R2 BYOB + conditional GET measures all five encoded fixtures (39.712209ms)
+✔ real R2 missing/precondition/MIME failures prevent any publication write (288.516208ms)
+✔ full publication executes json_object guards in D1 and replays one receipt (152.141167ms)
+✔ matching R2 hash/ETag cannot bless damaged MP3 frames into D1 publication (119.126458ms)
+✔ real D1 zero-row late write triggers changes() guard and rolls back entire publish (124.6865ms)
+✔ same-key concurrent runtime requests leave one audit and mutation receipt (32.874459ms)
+✔ separate local reader D1 returns INTEGER identity and stays read-only during VIP query (41.06225ms)
+✔ native D1 publication and R2 object serve exact preview/full Range bytes behind the shared guard (37.71875ms)
+✔ fixture worker is not wired into site or deployment (1.193ms)
+✔ native R2 maximum sizes and concurrent reads retain bounded parser input (599.625292ms)
+ℹ {"kind":"audio","bytes":33554432,"concurrency":1,"wallMs":36,"chunkMax":65536,"carryBytes":67584,"note":"Local wall time, not production CPU or isolate heap measurement"}
+ℹ {"kind":"audio","bytes":33554432,"concurrency":4,"wallMs":131,"chunkMax":65536,"carryBytes":67584,"note":"Local wall time, not production CPU or isolate heap measurement"}
+ℹ {"kind":"preview","bytes":4194304,"concurrency":1,"wallMs":6,"chunkMax":65536,"carryBytes":67584,"note":"Local wall time, not production CPU or isolate heap measurement"}
+ℹ {"kind":"preview","bytes":4194304,"concurrency":4,"wallMs":21,"chunkMax":65536,"carryBytes":67584,"note":"Local wall time, not production CPU or isolate heap measurement"}
+✔ real protected upload, review and publish HTTP chain uses actual MP3/cover/lyrics/evidence bytes (355.510458ms)
+✔ native no-documentation upload and publication retain technical and VIP gates (59.026666ms)
+✔ native PUT concurrent writers cannot overwrite; lost response recovers and hash/size failures stay private (81.19475ms)
+✔ native D1 cleanup releases once, retains history and fences a stale writer and revision (161.606875ms)
+✔ native R2 late write remains charged until observed; proof and deletion survive replay (70.924ms)
+✔ native ignored quota release rolls back audit and accounting after R2 deletion; retry recovers (72.7095ms)
+✔ native D1 source/global rate limits admit exactly the configured budget under concurrent requests (28.793458ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'database',
+  reason: 'operation_failed'
+}
+✔ native ignored global counter fails closed and rolls back the admitted source increment (23.856708ms)
+✔ native unknown-length 32 MiB input streams to R2; actual overrun and truncated bodies cannot complete (641.130792ms)
+✔ native D1 analytics admits exactly 60 event units and retries never inflate daily totals (67.53125ms)
+✔ native analytics global failure rolls back all admission rows; daily failure rolls back event (87.834458ms)
+✔ albums publish through native D1 guards, keep VIP audio private and filter downlisted members (160.038666ms)
+✔ featured curation uses native D1 CAS and public projection removes a downlisted primary (39.55375ms)
+✔ storage quota uses native D1 atomic CAS, audit and idempotency without changing media charges (11.920833ms)
+✔ independent album cover upload retains quota, recovers one writer, and serves only a published eligible album (84.401208ms)
+✔ limited free expires on real D1/R2 full and Range requests, without a scheduled write (5046.938792ms)
+✔ populated migration, repeated application and old-reader rollback retain both old and new data (93.668625ms)
+✔ empty migration seeds only an unpublished home draft with no selected materials (27.9975ms)
+✔ backfill preserves stable IDs, exact legacy slugs and existing policy sources without promotion inference (41.546666ms)
+✔ legacy-accepted noncanonical slugs are retained verbatim, while new managed routes use the normalized format (48.350375ms)
+✔ old music table definitions and five cleanup reference columns remain compatible (36.743333ms)
+✔ old administrator create, draft save, revision conflict and idempotency receipts still work after migration (54.71775ms)
+✔ a website publication can have no site audio or external release, and a later draft does not replace its sealed snapshot (38.617541ms)
+✔ old guarded publication and replay still seal the original audio revision after the additive migration (35.137875ms)
+✔ full-audio modes and covers must point to the same owner; mode labels never add an entitlement (30.785833ms)
+✔ station_track_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected (28.343709ms)
+✔ station_game_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected (29.52875ms)
+✔ station_clip_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected (29.130667ms)
+✔ station_promotion_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected (29.813542ms)
+✔ station_home_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected (28.431ms)
+✔ slug changes keep the old alias and cannot reassign or reclaim another track address (42.215666ms)
+✔ platform regions are canonical sets and live links require a URL and verification timestamp (28.664459ms)
+✔ promotion previews, platform selections and clips cannot borrow another song or an audio master (27.731542ms)
+✔ home selections use stable existing IDs with bounded, duplicate-free arrays (28.446709ms)
+✔ game introduction slug cannot occupy the runtime directory and a runtime key grants no new save capability (29.455791ms)
+✔ clip assets and posters belong to the clip and media type, with immutable validated bytes and terminal revocation (28.783792ms)
+✔ rights start pending, require review metadata and cannot change resource identity or scope (29.602959ms)
+✔ new cover, lyrics, preview and rights references block the old cleanup before any storage call (31.725458ms)
+✔ assets already claimed by the old cleaner cannot gain a new website, preview or rights reference (43.22225ms)
+✔ clip platform publications are independent records, campaigns cannot borrow another track clip, and routes remain proposals (33.833708ms)
+✔ new event IDs are immutable and deduplicated while the old preview threshold remains unchanged (36.400959ms)
+✔ native local D1 batches replay safely, retain new writes, and roll back wrong-binding or late failures (5158.716417ms)
+ℹ tests 77
+ℹ suites 0
+ℹ pass 77
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9535.945792

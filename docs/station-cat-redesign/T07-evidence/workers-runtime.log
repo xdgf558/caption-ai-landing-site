@@ -1,0 +1,18 @@
+Command: node --test --test-timeout=90000 scripts/test-station-content-runtime.mjs
+Execution: local loopback Miniflare, outboundService rejects outbound network; sandbox EPERM retry.
+Source: captured successful exec session 35502 output; not hosted CI or production evidence.
+
+✔ production Worker dispatch is default closed; actual empty D1 fails readiness without automatic DDL (1123.955208ms)
+✔ explicit local fixture migration enables published queries only, with a separate reader binding and actual ledger (1569.19375ms)
+✔ native D1 publication pointer coexists with drafts; clip/game/home DTO and actual R2 streaming agree (23.01ms)
+✔ native guest preview is independent; generic assets cannot deliver audio; private full responses use real existing membership (32.576ms)
+✔ actual R2 replacement and rights revocation are visible immediately, including conditional requests and home (39.010625ms)
+✔ old UUID catalog and real game runtime address still dispatch separately; no new event writes (22.702458ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2985.775

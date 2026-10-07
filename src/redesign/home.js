@@ -36,6 +36,7 @@ function publicUrl(value, fixture, kind) {
   if (fixture && /^\/preview-assets\/gentle-station\/(?:hero|music-cover|game-cover|daily)\.webp$/.test(value) && kind === 'image') return value;
   if (kind === 'image' && /^\/images\/[a-z0-9/_-]+\.(?:png|jpe?g|webp)$/i.test(value) && !value.includes('..')) return value;
   if (kind === 'image' && /^\/api\/music\/tracks\/[a-f0-9-]{36}\/cover\?v=[1-9]\d*$/.test(value)) return value;
+  if (kind === 'image' && /^\/api\/station\/content\/assets\/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value)) return value;
   try {
     const url = new URL(value);
     if (url.protocol !== 'https:' || url.username || url.password || url.port || url.hash ||

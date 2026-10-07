@@ -1,0 +1,43 @@
+✔ namespace stays separate from UUID music/native/services; default flag stops before any binding access (9.969584ms)
+✔ actual schema columns, ledger and cleanup view are required; probes never install missing schema (34.772375ms)
+✔ ledger alone cannot prove the extension view; read failures are fixed 503 errors (56.561334ms)
+✔ migration/backfilled home remains empty until explicitly published; no latest-free fallback (27.906958ms)
+✔ public fields are allowlisted; platform-only works and locale fallback never spreads metadata (32.294375ms)
+✔ draft edits do not replace sealed public snapshots; scheduled, future and archived heads disappear (33.032167ms)
+✔ invalid query, duplicate parameters, methods and paths fail before DB/R2 (25.966042ms)
+✔ keyset pagination has stable ID tie breaks, title/artist search, bounded limits and filtered-page progress (31.934083ms)
+✔ canonical alias lookup returns canonical links without treating old music descendants as already migrated (26.805583ms)
+✔ default 20/max 50 are actual SQL page limits and cannot dump the whole catalog (34.159416ms)
+✔ duplicate/escaped keys, prototypes and oversized stored metadata are rejected, including related references (27.210459ms)
+✔ platform visibility requires actual live verification, provider host and trusted territory; query/header claims cannot override (27.013583ms)
+✔ independent guest preview requires current enabled promotion and owned approved resource; no account/full object lookup (28.058ms)
+✔ stopped/draft/future promotions revoke current preview and home; old free featured state is irrelevant (29.631083ms)
+✔ rights, source identity and object freshness independently prevent preview delivery (28.76725ms)
+✔ a preview copied from the entire full file or referencing another owner cannot pass independent clip proof (27.783375ms)
+✔ free_full hint on VIP does not grant access; guest, ordinary, expired and real member responses stay distinct (32.709375ms)
+✔ finite account/session revocation and membership DB failures are rechecked on direct HEAD/Range requests (56.65525ms)
+✔ legacy flags and current legacy revision still control full media, including time-limited free music (30.603709ms)
+✔ authorized audio streams bounded ranges, HEAD and If-Range; no GET on denied HEAD or stale website versions (29.788584ms)
+✔ generic asset paths never deliver full/preview files, even to members; public cover and lyric stream only current references (28.370292ms)
+✔ object replacement between HEAD and conditional GET cannot leak different bytes (26.191125ms)
+✔ an R2 body arriving after the request deadline is cancelled instead of becoming a late response (118.396625ms)
+✔ video requires current published parent, matching video/poster rights, dimensions and ready objects (30.118166ms)
+✔ game detail preserves the real runtime directory; unregistered stored launch paths cannot become launch promises (26.724583ms)
+✔ asset IDs colliding across music/media domains are omitted rather than resolved by arrival order (28.400042ms)
+✔ published home ignores concurrent drafts and removes revoked promotions/media on each fresh projection (30.340584ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ bounded rate admission distinguishes 429 from service failure and request budgets expire without publication writes (139.028666ms)
+✔ existing UUID catalog retains its contract and old qualification metric after the extension is populated (30.71075ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1133.602791
