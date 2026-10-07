@@ -1,0 +1,15 @@
+---
+import { X } from '@lucide/astro';
+import { musicCopy } from '../../redesign/musicCopy.js';
+interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+const { lang } = Astro.props; const copy = musicCopy[lang];
+---
+<dialog id="sc-video-dialog" class="sc-video-dialog" data-sc-clip-dialog aria-labelledby="sc-video-title">
+  <div class="sc-video-panel t-modal">
+    <header class="sc-video-heading"><div><p data-sc-video-kind></p><h2 id="sc-video-title" data-sc-video-title>{copy.short}</h2></div><button type="button" class="sc-icon-button" data-sc-video-close aria-label={copy.clipClose} autofocus><X size={20} aria-hidden="true" /></button></header>
+    <div class="sc-video-host" data-sc-video-host></div>
+    <p class="sc-video-status" data-sc-video-status role="status"></p>
+    <nav class="sc-video-next" data-sc-video-next aria-label={copy.related} hidden><a class="sc-button sc-button-secondary" data-sc-video-song>{copy.detail}</a><div data-sc-video-platforms></div></nav>
+    <div class="sc-video-actions"><button type="button" class="sc-button sc-button-secondary" data-sc-video-retry hidden>{copy.clipRetry}</button><a data-sc-video-original target="_blank" rel="noopener noreferrer" hidden>{copy.watch}</a><label data-sc-video-selector hidden><span class="sc-sr-only">{copy.clipChoose}</span><select data-sc-video-select aria-label={copy.clipChoose}></select></label></div>
+  </div>
+</dialog>

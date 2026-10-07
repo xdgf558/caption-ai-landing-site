@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Local T11 decoder fixture only. Station design illustration plus synthetic sine tone; no actual song, film, release or production rights.",
+  "encoder": "ffmpeg version 4.4 Copyright (c) 2000-2021 the FFmpeg developers",
+  "localEncoderPackage": "@ffmpeg-installer/darwin-arm64@4.1.5 (temporary tooling, install scripts skipped)",
+  "source": {
+    "path": "scripts/fixtures/station-redesign/assets/gentle-station/hero.webp",
+    "sha256": "71c0c665caa5110849e5f29718152a0a8e3158c278325072977cb710f54c05b7",
+    "posterSha256": "599c720f4f888472a2070574bb0702770c750eeb71c4bc52cfd6a069f4d51b00"
+  },
+  "recipe": {
+    "image": "640x360 cover-fit PNG, looped",
+    "audio": "sine=frequency=440:sample_rate=48000:duration=30",
+    "options": [
+      "-t",
+      "30",
+      "-vf",
+      "format=yuv420p",
+      "-r",
+      "12",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-crf",
+      "32",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "48k",
+      "-movflags",
+      "+faststart"
+    ]
+  },
+  "files": [
+    {
+      "file": "gentle-synthetic.mp4",
+      "sha256": "e636211940913a0534c5c81c66a11600747860689fc56a07d52bce5f35f7c5b4",
+      "bytes": 239372,
+      "durationMs": 30000,
+      "width": 640,
+      "height": 360,
+      "videoCodec": "h264/yuv420p",
+      "audioCodec": "aac"
+    }
+  ]
+}

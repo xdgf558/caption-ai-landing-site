@@ -1,0 +1,61 @@
+/* Modal motion: transitions-dev/06-modal.md, unchanged portable snippet. */
+:root {
+  --modal-open-dur: 250ms;
+  --modal-close-dur: 150ms;
+  --modal-scale: 0.96;
+  --modal-scale-close: 0.96;
+  --modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.t-modal {
+  transform-origin: center;
+  transform: scale(var(--modal-scale));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--modal-open-dur) var(--modal-ease),
+    opacity   var(--modal-open-dur) var(--modal-ease);
+  will-change: transform, opacity;
+}
+.t-modal.is-open {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.t-modal.is-closing {
+  transform: scale(var(--modal-scale-close));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--modal-close-dur) var(--modal-ease),
+    opacity   var(--modal-close-dur) var(--modal-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-modal { transition: none !important; }
+}
+.sc-clip-card > .sc-clip-art { padding: 0; position: relative; }
+.sc-clip-open { position: absolute; inset: 0; margin: auto; width: 48px; height: 48px; border: 1px solid var(--sc-line); border-radius: 50%; background: #fff; color: var(--sc-ink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.sc-clip-open[hidden], .sc-video-dialog [hidden] { display: none; }
+.sc-clip-open:focus-visible { outline: 3px solid var(--sc-accent); outline-offset: 4px; }
+.sc-video-dialog { width: min(900px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); padding: 0; border: 0; background: transparent; color: var(--sc-ink); overflow: auto; }
+.sc-video-dialog::backdrop { background: rgba(22, 26, 51, .64); }
+.sc-video-panel { padding: 22px; border: 1px solid var(--sc-line); border-radius: 16px; background: var(--sc-paper, #fff); }
+.sc-video-heading { display: flex; align-items: start; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+.sc-video-heading h2 { margin: 0; font-size: 23px; line-height: 1.45; overflow-wrap: anywhere; }
+.sc-video-heading p { margin: 0 0 6px; font-size: 12px; color: var(--sc-muted); }
+.sc-video-heading .sc-icon-button { flex: 0 0 44px; width: 44px; height: 44px; }
+.sc-video-host:empty { display: none; }
+.sc-video-host video { display: block; width: 100%; height: auto; max-height: 58dvh; aspect-ratio: 16/9; object-fit: contain; border-radius: 10px; background: #161a33; }
+.sc-video-status { min-height: 24px; margin: 12px 0; color: var(--sc-muted); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.sc-video-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.sc-video-actions .sc-button, .sc-video-actions a, .sc-video-actions select { min-height: 44px; font-size: 14px; }
+.sc-video-actions a { display: inline-flex; align-items: center; color: var(--sc-accent); }
+.sc-video-actions label { min-width: 0; max-width: 100%; }
+.sc-video-actions select { max-width: 100%; padding: 8px; border: 1px solid var(--sc-line); border-radius: 8px; background: #fff; color: var(--sc-ink); font: inherit; }
+.sc-video-next { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
+.sc-video-next > div { display: flex; flex-wrap: wrap; gap: 12px; }
+.sc-video-next > div a { display: inline-flex; align-items: center; min-height: 44px; color: var(--sc-accent); font-size: 14px; }
+@media (max-width: 600px) {
+  .sc-video-panel { padding: 16px; }
+  .sc-video-heading h2 { font-size: 19px; }
+  .sc-video-actions label, .sc-video-actions select { width: 100%; }
+}

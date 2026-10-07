@@ -4,10 +4,11 @@ import { readFileSync } from 'node:fs';
 import sharp from 'sharp';
 import { seedContent, publishTrack, homeFixture, approve, now } from './station-content-fixture.mjs';
 import { fixtureId, insertFixture } from './station-redesign-database.mjs';
+import { stationVideoBytes } from './station-video-fixture.mjs';
 
 // This module is test tooling. Covers are T04 design illustrations; audio is
 // the checked-in FFmpeg sine-wave fixture, never an operational song/license.
-export async function seedStationMusicPages(db, bucket) {
+export async function seedStationMusicPages(db, bucket, { videoCases = false } = {}) {
   const cover = readFileSync(new URL('../fixtures/station-redesign/assets/gentle-station/music-cover.webp', import.meta.url));
   const hero = readFileSync(new URL('../fixtures/station-redesign/assets/gentle-station/hero.webp', import.meta.url));
   const manifest = JSON.parse(readFileSync(new URL('../../tests/fixtures/music-mp3/manifest.json', import.meta.url)));
@@ -29,7 +30,7 @@ export async function seedStationMusicPages(db, bucket) {
       sha256: createHash('sha256').update(bytes).digest('hex'), etag: object.etag };
   };
   const fixture = await seedContent(db, bucket, { materializeAsset,
-    materializeMedia: async kind => ['poster', 'game_screenshot'].includes(kind) ? { bytes: poster, width: 640, height: 360 } : null,
+    materializeMedia: async kind => ['poster', 'game_screenshot'].includes(kind) ? { bytes: poster, width: 640, height: 360 } : videoCases ? stationVideoBytes() : null,
     externalLinks: false });
   const names = [
     ['小小的光', '小小的光', 'A Little Light', '小さな光'],
@@ -65,7 +66,7 @@ export async function seedStationMusicPages(db, bucket) {
     await db.prepare("UPDATE station_track_publications SET status='published',published_revision=1,published_at=? WHERE track_id=?").bind(now - index * 1000, id).run();
     additional.push({ id, slug: name });
   }
-  await homeFixture(db, { track: fixture.tracks[1].id, tracks: [fixture.tracks[0].id, fixture.tracks[2].id, fixture.tracks[3].id] });
+  await homeFixture(db, { track: fixture.tracks[1].id, tracks: [fixture.tracks[0].id, fixture.tracks[2].id, fixture.tracks[3].id], clips: videoCases ? [fixture.clip.id] : [] });
   return { ...fixture, additional, mediaProof: { fullMs: full.durationMs, previewMs: preview.durationMs,
-    coverBytes: cover.length, audioIsSynthetic: true, videoBytesAreMetadataOnly: true } };
+    coverBytes: cover.length, audioIsSynthetic: true, videoBytesAreMetadataOnly: !videoCases } };
 }

@@ -1,0 +1,110 @@
+{
+  "base": "7ecaab47e98204ad30a6e5e7a35d10b641311a73",
+  "phase": "Final source after homepage clip integration, ended actions and both builds",
+  "files": {
+    "src/components/redesign/ClipDialog.astro": {
+      "bytes": 1413,
+      "sha256": "a5ba0d5623c241ef526a5f2b842aad2a8b66d91d96887d139e60da5751ed1933"
+    },
+    "src/components/redesign/MusicShell.astro": {
+      "bytes": 4208,
+      "sha256": "106237c10de08315d0a5914146da808dcafe261b6d34df41c62372999524f6fa"
+    },
+    "src/components/redesign/StationBrandHome.astro": {
+      "bytes": 14542,
+      "sha256": "7b408f9dd8f2533957be781d83504e0d64b867da3e8d62cb7b739911800d2807"
+    },
+    "src/redesign/clipView.js": {
+      "bytes": 3219,
+      "sha256": "45ecc11deb95288f1bf3474a0669a145a7230fb9d812453775c546a05fc43799"
+    },
+    "src/redesign/clipSession.js": {
+      "bytes": 2710,
+      "sha256": "607cebcd08aea157d51adb22327bdf104cd43ade4452f57f2f6a3ab006618490"
+    },
+    "src/redesign/clipClient.js": {
+      "bytes": 6584,
+      "sha256": "b3e1763b1cb1ef6f71d9eb95f2932f552345672bb3afe98bed1e958806600317"
+    },
+    "src/redesign/clips.css": {
+      "bytes": 3528,
+      "sha256": "c85c49a815d7f3e9fecb322f0b9bebfcd21e2aca47f588e3be99b36cc8521634"
+    },
+    "src/redesign/homeClipClient.js": {
+      "bytes": 920,
+      "sha256": "6ce4044224474b4627bd384fb4e882fd0d24b5649f2f9e49007a957018eef209"
+    },
+    "src/redesign/musicClient.js": {
+      "bytes": 12539,
+      "sha256": "412d30b5619bd34f3cd353b6168647b38c796dd7879f1da9e23d77ac155cd33b"
+    },
+    "src/redesign/musicPlayerView.js": {
+      "bytes": 4825,
+      "sha256": "3360ed1a559d1061404ade9943d70c7552c120a80732b5c4fdb3ef44a15dcdcb"
+    },
+    "src/redesign/musicCopy.js": {
+      "bytes": 14289,
+      "sha256": "2c0960972ce6e0b4ee5faa8f21063645b43f9c5e850c6771b235276b12e4e3ec"
+    },
+    "src/redesign/musicRender.js": {
+      "bytes": 13947,
+      "sha256": "f81f0d065d022b21e16e30689d49bb51bec4ac4b8567665451fdb38910416262"
+    },
+    "scripts/helpers/station-music-fixture.mjs": {
+      "bytes": 6926,
+      "sha256": "634295bfb3283f5c8162dd8457f68c1ad803b6119af679dad948f650a25d734e"
+    },
+    "scripts/helpers/station-music-runtime.mjs": {
+      "bytes": 4217,
+      "sha256": "9873b63a8ea67ab34936b1a3be308e51414fdaaa4445049f2f1b8eccd4d66d96"
+    },
+    "scripts/helpers/station-video-fixture.mjs": {
+      "bytes": 3101,
+      "sha256": "0fadfaf7aadc05c8756d55d31f078463bffaf8bf72f6973389b567f1aba49ee1"
+    },
+    "scripts/serve-station-music-preview.mjs": {
+      "bytes": 6056,
+      "sha256": "665819f4ecd150facf0755e8c7ae70308f86bdd25d75d4d114ab1346e56b4ffc"
+    },
+    "scripts/build-station-clip-home-preview.mjs": {
+      "bytes": 1390,
+      "sha256": "642ea2af1d28b570415d9b16c843fd69fcb0e75b9add92fb401094898badf7ef"
+    },
+    "scripts/generate-station-video-fixture.mjs": {
+      "bytes": 3073,
+      "sha256": "345456f3eb9410f72fb7f3a7d1bb1c336e44e12ca39f4604de68a59c427d12a0"
+    },
+    "scripts/fixtures/station-clips/astro.config.mjs": {
+      "bytes": 409,
+      "sha256": "4fc79d01f1c6a5d43783dc9ecaaa11280dda34d89e080650c8aa83464f8057a9"
+    },
+    "scripts/fixtures/station-clips/site/pages/[locale].astro": {
+      "bytes": 1030,
+      "sha256": "278a545ea11d63a1ecb7de84e549be86a02de8f5af75a2f2dd2277ddd6fe67d0"
+    },
+    "scripts/test-station-clips.mjs": {
+      "bytes": 22177,
+      "sha256": "ce3b5f7a1e7218e359f02fe2a496030fa34ffda410b06013e709a76a35663855"
+    },
+    "scripts/test-station-clip-runtime.mjs": {
+      "bytes": 8380,
+      "sha256": "f1fef1dc52b14d2fe52f517cb0af690d66b6bd419ad2ad29790fa33d43941c4d"
+    },
+    "tests/fixtures/station-video/manifest.json": {
+      "bytes": 1366,
+      "sha256": "206929a54f2efd0630993ee3e8f1c99031a33a90a6a2594d806410200d8c1bed"
+    },
+    "tests/fixtures/station-video/gentle-synthetic.mp4": {
+      "bytes": 239372,
+      "sha256": "e636211940913a0534c5c81c66a11600747860689fc56a07d52bce5f35f7c5b4"
+    },
+    "package.json": {
+      "bytes": 11635,
+      "sha256": "d9d00ae913add0162e2f58d345e2aa464eeb73ea0aae93e86d5511ec4bd7b902"
+    },
+    ".github/workflows/ci.yml": {
+      "bytes": 4162,
+      "sha256": "e9aedbdba767bcac4dbc5ecb9541e1dee454218e89aaa5f965bdd9f8d437882a"
+    }
+  }
+}

@@ -7,6 +7,7 @@ import { migrationStatements } from './station-redesign-database.mjs';
 import { readerStatements, seedReaders, iso } from './station-content-fixture.mjs';
 import { seedStationMusicPages } from './station-music-fixture.mjs';
 import { seedStationPlatformCases } from './station-platform-fixture.mjs';
+import { seedStationVideoCases } from './station-video-fixture.mjs';
 
 const dist = fileURLToPath(new URL('../../dist/', import.meta.url));
 export async function stationMusicAssets(request) {
@@ -23,7 +24,7 @@ export async function stationMusicAssets(request) {
     return new Response(bytes, { headers: { 'Content-Type': type + (type.startsWith('text/') ? '; charset=utf-8' : ''), 'Content-Length': String(bytes.length), 'Cache-Control': 'no-store' } });
   } catch { return new Response(null, { status: 404 }); }
 }
-export async function createStationMusicRuntime({ platformCases = false } = {}) {
+export async function createStationMusicRuntime({ platformCases = false, videoCases = false } = {}) {
   const output = await build({ entryPoints: [fileURLToPath(new URL('station-music-runtime-worker.js', import.meta.url))],
     bundle: true, format: 'esm', platform: 'browser', write: false, loader: { '.wasm': 'binary' } });
   const mf = new Miniflare({ modules: true, script: output.outputFiles[0].text,
@@ -37,12 +38,13 @@ export async function createStationMusicRuntime({ platformCases = false } = {}) 
   try {
     const db = await mf.getD1Database('MUSIC_DB'), reader = await mf.getD1Database('WAITLIST_DB'), bucket = await mf.getR2Bucket('MUSIC_BUCKET');
     for (const group of migrationStatements().slice(0, -1)) await db.batch(group.statements.map(sql => db.prepare(sql)));
-    const content = await seedStationMusicPages(db, bucket);
+    const content = await seedStationMusicPages(db, bucket, { videoCases });
+    const videoScenarios = videoCases ? await seedStationVideoCases(db, bucket, content) : null;
     const platformScenarios = platformCases ? await seedStationPlatformCases(db, content) : null;
     await reader.batch(readerStatements().map(sql => reader.prepare(sql))); await seedReaders(reader);
     const time = Date.now();
     await reader.prepare('UPDATE reader_sessions SET created_at=?,expires_at=?').bind(iso(time - 60000), iso(time + 3600000)).run();
     await reader.prepare('UPDATE reader_memberships SET started_at=?,expires_at=? WHERE account_id=1').bind(iso(time - 60000), iso(time + 3600000)).run();
-    return { mf, db, reader, bucket, content, platformScenarios, async close() { await mf.dispose(); } };
+    return { mf, db, reader, bucket, content, platformScenarios, videoScenarios, async close() { await mf.dispose(); } };
   } catch (error) { await mf.dispose(); throw error; }
 }

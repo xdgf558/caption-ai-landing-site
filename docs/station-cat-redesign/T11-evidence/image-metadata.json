@@ -1,0 +1,122 @@
+[
+  {
+    "file": "clip-controls-1440.jpg",
+    "width": 658,
+    "height": 373
+  },
+  {
+    "file": "clip-controls-live-1440.jpg",
+    "width": 1367,
+    "height": 891
+  },
+  {
+    "file": "clips-cards-1440.jpg",
+    "width": 1367,
+    "height": 891
+  },
+  {
+    "file": "clips-detail-full-1440.jpg",
+    "width": 1425,
+    "height": 2135
+  },
+  {
+    "file": "clips-detail-full-390.jpg",
+    "width": 375,
+    "height": 2747
+  },
+  {
+    "file": "comparison-clips-and-player.jpg",
+    "width": 1812,
+    "height": 650
+  },
+  {
+    "file": "comparison-locales.jpg",
+    "width": 1224,
+    "height": 850
+  },
+  {
+    "file": "comparison-mobile.jpg",
+    "width": 1224,
+    "height": 850
+  },
+  {
+    "file": "comparison-reference-before-current.jpg",
+    "width": 2124,
+    "height": 700
+  },
+  {
+    "file": "home-clips-1440.jpg",
+    "width": 1367,
+    "height": 891
+  },
+  {
+    "file": "home-clips-390.jpg",
+    "width": 375,
+    "height": 812
+  },
+  {
+    "file": "home-video-en-390.jpg",
+    "width": 375,
+    "height": 812
+  },
+  {
+    "file": "home-video-ended-1440.jpg",
+    "width": 1367,
+    "height": 891
+  },
+  {
+    "file": "home-video-ja-390.jpg",
+    "width": 375,
+    "height": 812
+  },
+  {
+    "file": "home-video-zh-Hans-390.jpg",
+    "width": 375,
+    "height": 812
+  },
+  {
+    "file": "video-en-390.jpg",
+    "width": 375,
+    "height": 812
+  },
+  {
+    "file": "video-error-390.jpg",
+    "width": 375,
+    "height": 812
+  },
+  {
+    "file": "video-ja-390.jpg",
+    "width": 375,
+    "height": 812
+  },
+  {
+    "file": "video-open-1440.jpg",
+    "width": 1367,
+    "height": 891
+  },
+  {
+    "file": "video-open-320.jpg",
+    "width": 305,
+    "height": 705
+  },
+  {
+    "file": "video-open-375.jpg",
+    "width": 360,
+    "height": 810
+  },
+  {
+    "file": "video-open-390.jpg",
+    "width": 375,
+    "height": 812
+  },
+  {
+    "file": "video-open-768.jpg",
+    "width": 753,
+    "height": 882
+  },
+  {
+    "file": "video-zh-hans-390.jpg",
+    "width": 375,
+    "height": 812
+  }
+]

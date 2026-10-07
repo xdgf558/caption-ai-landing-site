@@ -77,7 +77,8 @@
     "test:redesign:player": "node --test --test-timeout=90000 scripts/test-station-music-session.mjs scripts/test-music-player.mjs scripts/test-music-queue.mjs scripts/test-music-lyrics-local.mjs scripts/test-music-library.mjs scripts/test-music-analytics-client.mjs scripts/test-music-access-lifecycle.mjs",
     "test:redesign:platforms": "node --test --test-timeout=90000 scripts/test-station-platforms.mjs scripts/test-station-platform-runtime.mjs",
     "preview:redesign:music": "npm run build && node scripts/serve-station-music-preview.mjs",
-    "rehearse:redesign:migration": "node scripts/rehearse-station-redesign-migration.mjs"
+    "rehearse:redesign:migration": "node scripts/rehearse-station-redesign-migration.mjs",
+    "test:redesign:clips": "node --test --test-timeout=90000 scripts/test-station-clips.mjs scripts/test-station-clip-runtime.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

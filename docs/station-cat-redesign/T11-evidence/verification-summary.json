@@ -1,0 +1,134 @@
+{
+  "task": "T11",
+  "base": "7ecaab47e98204ad30a6e5e7a35d10b641311a73",
+  "verifiedAt": "2026-10-07T13:57:09.717Z",
+  "phase": "After final source, main build and isolated home-preview build",
+  "tests": {
+    "total": 274,
+    "passed": 274,
+    "failed": 0,
+    "counts": {
+      "clips": 31,
+      "public": 35,
+      "music": 26,
+      "platforms": 15,
+      "player": 147,
+      "home": 19,
+      "closed-production-assets": 1
+    }
+  },
+  "build": {
+    "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+    "pages": 157,
+    "productionPackage": false
+  },
+  "homePreviewBuild": {
+    "command": "node scripts/build-station-clip-home-preview.mjs",
+    "pages": 4,
+    "isolated": true
+  },
+  "stagingAssets": "Local staging build and asset dependency audit passed",
+  "logs": {
+    "build": {
+      "path": "build.log.gz",
+      "bytes": 3172,
+      "sha256": "74c7fb2b185eebbcbf0e803e88cbc678b7120ea438993b965c6c00cc9b8befde",
+      "encoding": "gzip",
+      "rawBytes": 23123,
+      "rawSha256": "85947133e7f20fd84bebdaec59c9564c48edf0fe52f88192a9996b71e6b6d6ea"
+    },
+    "home-preview-build": {
+      "path": "home-preview-build.log.gz",
+      "bytes": 638,
+      "sha256": "ec6f248cc2a7c008c128422aab6155fffb7ca79d1507e52f820df612264997da",
+      "encoding": "gzip",
+      "rawBytes": 1573,
+      "rawSha256": "e41d880de9d281c47435d9df9aad3a4639190eb2333179e28ecb16c9cfd3d51b"
+    },
+    "clips": {
+      "path": "clips.log",
+      "bytes": 3976,
+      "sha256": "85d73c0cdeb809ad3ed7e31290517105e11117df5a752449f86fed4308c38917"
+    },
+    "public": {
+      "path": "public.log",
+      "bytes": 4595,
+      "sha256": "ac87741aeea4b4ba8a71343a280aeff04ae492b36059e82757f81886e8e868de"
+    },
+    "music": {
+      "path": "music.log",
+      "bytes": 3468,
+      "sha256": "51b65bdca8a573917534286de1dc9ea59d4b40e39e629af3a89fd82ad6fffe52"
+    },
+    "platforms": {
+      "path": "platforms.log",
+      "bytes": 2017,
+      "sha256": "363f41c37de971499013f78e159b687cb731fc25910e6131284a8f3e330d6227"
+    },
+    "player": {
+      "path": "player.log",
+      "bytes": 15621,
+      "sha256": "60c91ab750a9879aab05b2035ec0e43ce1d2cd7bd22246d61c60c37110d2af1c"
+    },
+    "home": {
+      "path": "home.log",
+      "bytes": 2000,
+      "sha256": "4d0a706c110462481e60940d50a94cc683b209a9abb39206a8f5b7139bf31e2c"
+    },
+    "closed-production-assets": {
+      "path": "closed-production-assets.log",
+      "bytes": 220,
+      "sha256": "e8d213d87c4b9470de42aea16ecdb1ea37bee96429b62bcaf4c06e27b79961f9"
+    },
+    "staging-assets": {
+      "path": "staging-assets.log",
+      "bytes": 122,
+      "sha256": "55fdd64a35d0bb2d3d8b205f312f82728c03a6bf53286e414e265da6d0b453c7"
+    }
+  },
+  "sourceHashes": "source-hashes.json",
+  "browser": {
+    "surface": "Local Codex IAB / Chromium",
+    "languages": [
+      "zh-Hant",
+      "zh-Hans",
+      "en",
+      "ja"
+    ],
+    "cssViewports": [
+      {
+        "width": 1440,
+        "height": 900
+      },
+      {
+        "width": 768,
+        "height": 900
+      },
+      {
+        "width": 390,
+        "height": 844
+      },
+      {
+        "width": 375,
+        "height": 844
+      },
+      {
+        "width": 320,
+        "height": 740
+      }
+    ],
+    "finalSourceObservations": "browser-observations.json",
+    "dimensions": "viewport-measurements.json",
+    "console": "browser-console.json"
+  },
+  "hostedCI": {
+    "status": "Pending independent exact PR head verification; local checks do not substitute for hosted CI"
+  },
+  "limits": [
+    "Synthetic local D1/R2 media only; no production schema/binding/cache or real media rights proof",
+    "Original external platform links were not clicked; no real iOS, Android, platform webview or VoiceOver acceptance",
+    "ALLOW_EMPTY_SERIAL_CONTENT build is not a production release package",
+    "Formal homepage is not mounted; preview is a separate local-only graph",
+    "Both production content/music flags remain disabled; no remote migration, deployment or old-entry retirement"
+  ]
+}
