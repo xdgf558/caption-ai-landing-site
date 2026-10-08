@@ -1,0 +1,1048 @@
+{
+  "baseCommit": "d2c7f6b4a759734286c1496bd042f673c49756de",
+  "generatedAt": "2026-10-08T11:57:32.231Z",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 4644,
+      "sha256": "b34cca6babf6d30d52305f7fe01d1cd975be0fcef234f70528c1ee35e09a096e",
+      "baseSha256": "9933b801f4228989dd021a6c101fa24c9496dce4754e5b936691321ce94d5c30",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "docs/station-cat-redesign/README.md",
+      "bytes": 19942,
+      "sha256": "6533e709710a717fee446c8233abde786577de8ab692ed25a79411c3de248efd",
+      "baseSha256": "fb5fbe3c8da8657389e836d00f1663eae1b7d96f570d0ca774cc1e6baaa6bd63",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "docs/station-cat-redesign/T14-member-and-historical-services.md",
+      "bytes": 11578,
+      "sha256": "1da30f37e6e9f22fce9d2420f0a8de2aa41460e9dae2db9cdbda2c550d8dff6d",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "docs/station-cat-redesign/tools/build-member-comparisons.mjs",
+      "bytes": 3610,
+      "sha256": "44eedf6ad7544aa684e593b9de9158a970d98248ed58897c02b7a0063950524e",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "docs/station-cat-redesign/tools/capture-member-verification.mjs",
+      "bytes": 8071,
+      "sha256": "7c7a2db6e6a2d5d6d271cf32d9851865044e9adcedce1a1ef2d225aebcd4d0a3",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "package.json",
+      "bytes": 12647,
+      "sha256": "9afb50db5d76f60f757fa7046838452a2c70f600bde6be3a507219990c5ac77a",
+      "baseSha256": "d49c14fc730115cfcdeb24543bcf4e81df755d32a5c49f40f2d688374b2dba01",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "public/images/station-gentle/member-hero.webp",
+      "bytes": 211586,
+      "sha256": "71c0c665caa5110849e5f29718152a0a8e3158c278325072977cb710f54c05b7",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "scripts/fixtures/station-member/astro.config.mjs",
+      "bytes": 630,
+      "sha256": "54350377adf0a7d236e8e0575417d39e04301b2bd6b0127e09ff6d07d303b0b9",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "scripts/fixtures/station-member/site/src/pages/games/site-shell/[lang].astro",
+      "bytes": 286,
+      "sha256": "ea8ec52468ddc8e4c545e7240be2d9a0c15bc110aa1f36d203de1c58a5105081",
+      "baseSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "scripts/fixtures/station-member/site/src/pages/member/site-shell/[lang].astro",
+      "bytes": 310,
+      "sha256": "13f26668b28a4d830f0921281383d73775a011dbf769b711fa59b5d29bd9e66d",
+      "baseSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "scripts/fixtures/station-member/site/src/pages/music/site-shell/[lang].astro",
+      "bytes": 289,
+      "sha256": "461ed5f90cf6089c3c2afae50706db354babf9692cc21dce5159bfb643a20651",
+      "baseSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "scripts/helpers/station-member-runtime-worker.js",
+      "bytes": 609,
+      "sha256": "8c1af3eea0cc8e25a641ca98046027241b0366bcf370e3bdeacaaa33bbcb120d",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "scripts/helpers/station-member-runtime.mjs",
+      "bytes": 7964,
+      "sha256": "4e24df4e5edc007f87a5856170ef49d2da39243f230f09546d19752c03708189",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "scripts/serve-station-member-preview.mjs",
+      "bytes": 8554,
+      "sha256": "3eb7bb4fbd4d38269f6dee701f2bf6d7d7bb875595f573b18fe111945a04f7ae",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "scripts/test-music-staging-gate.mjs",
+      "bytes": 23641,
+      "sha256": "98cb704ac618d6e5fc346a4b5282a37b4cde7e890f7cf27f11290ed05a2d6df4",
+      "baseSha256": "ea79f44c9f26b028c5c3de4dd7ca519b7489b42db42c46423b183cad41fc6b6e",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "scripts/test-reader-library-locales.mjs",
+      "bytes": 7305,
+      "sha256": "40f61a81e0c31827998846a415a5a1b0e1344dfb6fcfa72040fccdb3fc4e2dbd",
+      "baseSha256": "2110862a4d9981c094d49bf04af2b8b1c6e30eeb3c9afbf2bb41c9b01180de92",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "scripts/test-station-member-readouts.mjs",
+      "bytes": 14568,
+      "sha256": "91e86f7e0049ecbe7be2088cda78fe66ffedcc247075db5c982dba6ef099b953",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "scripts/test-station-member-runtime.mjs",
+      "bytes": 8347,
+      "sha256": "a0359b5e4407f46399ea7103282b55cedd28eedbef04e6ddfa01c7d980f31dcd",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "src/components/ReaderLibraryPage.astro",
+      "bytes": 121650,
+      "sha256": "0653b0588f215b46e62169d3d4726f504bec2a9db84fa6e486a1d5752529a22d",
+      "baseSha256": "e0146e41ae2df73151e95bb7d66584f497ddb2206dc36474a01df5e6b23e64a4",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "src/components/redesign/BrandNavigation.astro",
+      "bytes": 6893,
+      "sha256": "3c60ce59a5d601cebc95b100bd767b81608db9b4ddc1d9c15a1d27b7a725eee3",
+      "baseSha256": "4df32d60e2bed21fecc8607c47a8bcfddfe8c9c25cc3143adae5567cc45280fa",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "src/components/redesign/MemberServices.astro",
+      "bytes": 4329,
+      "sha256": "d5c7489e5e5b4b36f65bef1185c586ed7eb9ede9610d38b8bfd1825dcad983b5",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "src/components/redesign/StationBrandHome.astro",
+      "bytes": 14605,
+      "sha256": "8b52a4874bbe37ced74c756ba95540182267372e603441ceb7a89614e6a3d20f",
+      "baseSha256": "7b408f9dd8f2533957be781d83504e0d64b867da3e8d62cb7b739911800d2807",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "src/components/redesign/StationPlayer.astro",
+      "bytes": 1433,
+      "sha256": "5a4f0297edd911663028e66e0417d9b2e60f179382b2e7107d59eca949e00b38",
+      "baseSha256": "54fc62f3e6b6da917dca05a9f099746b9d0e15e96a5e01bf2195236fae5ffc56",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "src/layouts/StationBrandLayout.astro",
+      "bytes": 4239,
+      "sha256": "613e12aaef5b30b6b48ea055aad182ed3941b2e498fc9a43199e9597392d077f",
+      "baseSha256": "45ef26bde6bbea3a8873163b75acb92c41109b783a369c5e2bae7698fa5544ad",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "src/music/stagingGate.js",
+      "bytes": 4321,
+      "sha256": "d2d10e35e6f108063e57180ac0b32c87925754b0bb6c28431e7d35766d0e16d5",
+      "baseSha256": "c03c5feb5dec407966d6e7edd9e26edd86b45f9f4dacf10c94923ece9063eb2f",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "src/pages/member/site-shell/[locale].astro",
+      "bytes": 301,
+      "sha256": "77b288fc94fb091107a715367f938524c53c33e2027bf995ebe73afaf1e11f4d",
+      "baseSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "src/redesign/gameRender.js",
+      "bytes": 3862,
+      "sha256": "5803b26cddceb0bf480021cadc8eee1d9a6383c4e55d5e92ee824048b48a846a",
+      "baseSha256": "a6c5b7658d944919f42d55e297a1e0aaaaef6616c3a50cd24d7c1c898dc76450",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "src/redesign/member.css",
+      "bytes": 15566,
+      "sha256": "2d85e19818077761c39a23921a158b49240a4a6dcfc9b4f35e8fb8e7e5bc484b",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "src/redesign/memberClient.js",
+      "bytes": 8472,
+      "sha256": "68f35eda297a6f976c35a1c2e1788937332b631a0def4b8d77befb2c864d73ef",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "src/redesign/memberCopy.js",
+      "bytes": 15344,
+      "sha256": "aa3ddffab6ac2dd482bf5c10ef43649787c3c4b13ff4ef05a0542b6e1774a8e3",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "src/redesign/memberPages.js",
+      "bytes": 3842,
+      "sha256": "b7e3ff293d33e66e90f50b87c32fb646e4a3e1e367153ed9bc8795faf19ea461",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "src/redesign/memberPrivacy.js",
+      "bytes": 987,
+      "sha256": "894b0a7462f58dba20e29d786d78073ea49486717b391671a13972471ec08139",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "src/redesign/memberReaderEpoch.js",
+      "bytes": 1382,
+      "sha256": "36b60fe5808c70be3356fdd8eb02466ee9130887bc83850ea823017ecc27648d",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "src/redesign/memberReadouts.js",
+      "bytes": 8497,
+      "sha256": "d623b133c9f7869537b2db49fe258ad1e1292eb2be021bb5318f399d96c03d0c",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "src/redesign/musicClient.js",
+      "bytes": 12760,
+      "sha256": "2c28100c799dc98473a15a150f465e4aa57d9a05ce988d852f26aa8af83dcaf6",
+      "baseSha256": "412d30b5619bd34f3cd353b6168647b38c796dd7879f1da9e23d77ac155cd33b",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "src/redesign/musicPlayerView.js",
+      "bytes": 4917,
+      "sha256": "7a8dbc361e32d7aa266a7e7dc4e0d1cb4bb26c57a90f0a9e8ceb2151ea5e8d92",
+      "baseSha256": "3360ed1a559d1061404ade9943d70c7552c120a80732b5c4fdb3ef44a15dcdcb",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "src/worker.js",
+      "bytes": 909801,
+      "sha256": "0585bb01a02ed12e83353da935bf99589a2e272ebbec957187566166e2bd04d5",
+      "baseSha256": "a41561c4246f15f8c9a058ae6806975ec2b0cca3adf16731abc39636bedcde33",
+      "unchangedFromBase": false
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 257485,
+      "sha256": "b81e63fc2580e6e768dcfe5d799eb5944e95bf1fb51a056b8697ece1e6c9d4b0",
+      "baseSha256": "b81e63fc2580e6e768dcfe5d799eb5944e95bf1fb51a056b8697ece1e6c9d4b0",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "astro.config.mjs",
+      "bytes": 143,
+      "sha256": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f",
+      "baseSha256": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "wrangler.toml",
+      "bytes": 3163,
+      "sha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2",
+      "baseSha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "public/_headers",
+      "bytes": 1284,
+      "sha256": "a3f8168e2f304598ad81a21c75ea2fe77ab5d5482aa2462bf349b7eb2278f3dd",
+      "baseSha256": "a3f8168e2f304598ad81a21c75ea2fe77ab5d5482aa2462bf349b7eb2278f3dd",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/readerMembership.js",
+      "bytes": 6486,
+      "sha256": "b61588511a693a05b5f39d8e69629bf0b4f3b189e129a8252c4e96ccb733af6e",
+      "baseSha256": "b61588511a693a05b5f39d8e69629bf0b4f3b189e129a8252c4e96ccb733af6e",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/music/access.js",
+      "bytes": 4183,
+      "sha256": "ed9ae85dff0887783e468f7e8da85127409af9b19a8ddbf1642eb9e955614c67",
+      "baseSha256": "ed9ae85dff0887783e468f7e8da85127409af9b19a8ddbf1642eb9e955614c67",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/music/membership.js",
+      "bytes": 5061,
+      "sha256": "8b0e2be33adeb41ea150f199fbb9236163f3a108b1e679bcaa092b27e1da004f",
+      "baseSha256": "8b0e2be33adeb41ea150f199fbb9236163f3a108b1e679bcaa092b27e1da004f",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/music/navigation.js",
+      "bytes": 2451,
+      "sha256": "7f44e09dfe89c88a4e94be740cf9bc362345e843325406e09fd11b36d2eaa04c",
+      "baseSha256": "7f44e09dfe89c88a4e94be740cf9bc362345e843325406e09fd11b36d2eaa04c",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/scripts/musicLocalData.js",
+      "bytes": 6234,
+      "sha256": "b981a40c3ba1e80638f43f95280efe6556e7210ae7c7fec1269f95a5246a1988",
+      "baseSha256": "b981a40c3ba1e80638f43f95280efe6556e7210ae7c7fec1269f95a5246a1988",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/scripts/musicMemberReturn.js",
+      "bytes": 754,
+      "sha256": "cb7c8d424c4f97e5c9bba0e99f960074a5998b47368ad7bc6e5501db111f83a0",
+      "baseSha256": "cb7c8d424c4f97e5c9bba0e99f960074a5998b47368ad7bc6e5501db111f83a0",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/scripts/readerSessionEvents.js",
+      "bytes": 2241,
+      "sha256": "ecc81df7c62df7bd287e7415cda616988a66f3c3d0880dd52de8c5888505ff0a",
+      "baseSha256": "ecc81df7c62df7bd287e7415cda616988a66f3c3d0880dd52de8c5888505ff0a",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/mobile/library.js",
+      "bytes": 10126,
+      "sha256": "ab5c4634c0f5b4c660587b09b958aaa845858353acacd9d06c78ce90801ea134",
+      "baseSha256": "ab5c4634c0f5b4c660587b09b958aaa845858353acacd9d06c78ce90801ea134",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/mobile/music.js",
+      "bytes": 15079,
+      "sha256": "9e3b0bc4f6c509c5889200af1bb6fb98e5c1bb2aa2e0050f296bb8be506b3f94",
+      "baseSha256": "9e3b0bc4f6c509c5889200af1bb6fb98e5c1bb2aa2e0050f296bb8be506b3f94",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/mobile/musicEntitlements.js",
+      "bytes": 1302,
+      "sha256": "528fb94e61c9f73ad470be19a399633a64c9282492abc2e40a2e47278e84c1d7",
+      "baseSha256": "528fb94e61c9f73ad470be19a399633a64c9282492abc2e40a2e47278e84c1d7",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/mobile/sessions.js",
+      "bytes": 9392,
+      "sha256": "be2bd9f1c6a0a9f92d125388b78f5805eef704286865b87491da79e407090a24",
+      "baseSha256": "be2bd9f1c6a0a9f92d125388b78f5805eef704286865b87491da79e407090a24",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/mobile/deletion.js",
+      "bytes": 7047,
+      "sha256": "a1f4e0ba704c89a82ff720b6cad4ac2d282030e4371508424b142ec2a0c1998a",
+      "baseSha256": "a1f4e0ba704c89a82ff720b6cad4ac2d282030e4371508424b142ec2a0c1998a",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "src/mobile/environment.js",
+      "bytes": 6194,
+      "sha256": "68cd65fbe6e8862abfbaa89214b1ff75ddafeafa1bed282647150326ba351b5b",
+      "baseSha256": "68cd65fbe6e8862abfbaa89214b1ff75ddafeafa1bed282647150326ba351b5b",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "public/games/cat-life/src/js/main.js",
+      "bytes": 56640,
+      "sha256": "25b3e0b289c2f2aee5a895905901c3d52d34a183becea3efdd0beb4ce67fbdfe",
+      "baseSha256": "25b3e0b289c2f2aee5a895905901c3d52d34a183becea3efdd0beb4ce67fbdfe",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/saveStatus.js",
+      "bytes": 4096,
+      "sha256": "478e5e7c831701d13d4cc4d356d1ed9a714df129cc40531f2d97c6bee0e7f4ee",
+      "baseSha256": "478e5e7c831701d13d4cc4d356d1ed9a714df129cc40531f2d97c6bee0e7f4ee",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/saveSystem.js",
+      "bytes": 6729,
+      "sha256": "1f3088066ab372753ef74445a52794b82125e215f5362fc6db8851b39db3ee10",
+      "baseSha256": "1f3088066ab372753ef74445a52794b82125e215f5362fc6db8851b39db3ee10",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "public/games/cat-life/src/js/utils/storage.js",
+      "bytes": 525,
+      "sha256": "20bb0f940d87cf5833cd6d32df734fbcc4c2ad7bd006ca96f1c7435dbe142fd4",
+      "baseSha256": "20bb0f940d87cf5833cd6d32df734fbcc4c2ad7bd006ca96f1c7435dbe142fd4",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "public/games/cat-life/cloud-sync.js",
+      "bytes": 28627,
+      "sha256": "dc662a2a80dba0b41de2864c5389fe9d4e0d102f3a1da353e99688031da55860",
+      "baseSha256": "dc662a2a80dba0b41de2864c5389fe9d4e0d102f3a1da353e99688031da55860",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "public/games/cat-life/cloud-sync-policy.js",
+      "bytes": 888,
+      "sha256": "4f9bad338f0cb9088c07da466be1c8bb6273dac6f9bfd7bede74d9a64351e8d6",
+      "baseSha256": "4f9bad338f0cb9088c07da466be1c8bb6273dac6f9bfd7bede74d9a64351e8d6",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "public/games/cat-life/host-bridge.js",
+      "bytes": 2011,
+      "sha256": "9a989c88c2fe8aa6c4357af4e1cfdaaeac2e7310b9667322a2934b7154d6be36",
+      "baseSha256": "9a989c88c2fe8aa6c4357af4e1cfdaaeac2e7310b9667322a2934b7154d6be36",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "docs/station-cat-redesign/T04-evidence/gentle-station/source.png",
+      "bytes": 1751648,
+      "sha256": "55030259c5c555c96ee66405b4646fa13e298ab0a75b79e21b39d09d99e6d254",
+      "baseSha256": null,
+      "unchangedFromBase": null
+    },
+    {
+      "path": "scripts/fixtures/station-redesign/assets/gentle-station/hero.webp",
+      "bytes": 211586,
+      "sha256": "71c0c665caa5110849e5f29718152a0a8e3158c278325072977cb710f54c05b7",
+      "baseSha256": "71c0c665caa5110849e5f29718152a0a8e3158c278325072977cb710f54c05b7",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-mobile-candidate/0001_binding_identity.sql",
+      "bytes": 534,
+      "sha256": "77f440fa76d20f266f6ff946c249a5cf6bd2c58aae8aaf9af4c1980feced1493",
+      "baseSha256": "77f440fa76d20f266f6ff946c249a5cf6bd2c58aae8aaf9af4c1980feced1493",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-mobile/0001_native_auth.sql",
+      "bytes": 3169,
+      "sha256": "e74329fd93ccc85915a296de9bad1549aa919b093c5a707e9f78a0656fe2dc5b",
+      "baseSha256": "e74329fd93ccc85915a296de9bad1549aa919b093c5a707e9f78a0656fe2dc5b",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-mobile/0002_music_playback_grants.sql",
+      "bytes": 1100,
+      "sha256": "f47f0d8bb9275b58870751b3f427e85dd153c5d847c90ab0273ce524040b3b31",
+      "baseSha256": "f47f0d8bb9275b58870751b3f427e85dd153c5d847c90ab0273ce524040b3b31",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-mobile/0003_personal_music.sql",
+      "bytes": 1308,
+      "sha256": "d733869052d49b3c590d67f0ba08d2fe827d4509fba869f57455c8d440273566",
+      "baseSha256": "d733869052d49b3c590d67f0ba08d2fe827d4509fba869f57455c8d440273566",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-mobile/0004_music_listen_receipt.sql",
+      "bytes": 223,
+      "sha256": "52f79afaafbf352f1055e6d4ad4577ea7ad889259966588b79082f321d88c7ab",
+      "baseSha256": "52f79afaafbf352f1055e6d4ad4577ea7ad889259966588b79082f321d88c7ab",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0001_music_foundation.sql",
+      "bytes": 18693,
+      "sha256": "d63ea6a4f2870d7a15c49f2c5af5c7c75a8a4fef14821cd8041995a0d4d70008",
+      "baseSha256": "d63ea6a4f2870d7a15c49f2c5af5c7c75a8a4fef14821cd8041995a0d4d70008",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0002_music_publication.sql",
+      "bytes": 1441,
+      "sha256": "8b301c3a1d13be40eb574ce7d950531ed39492dc321f95627b2cb0c9c061e3b9",
+      "baseSha256": "8b301c3a1d13be40eb574ce7d950531ed39492dc321f95627b2cb0c9c061e3b9",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0003_music_uploads.sql",
+      "bytes": 1790,
+      "sha256": "fb0cc9eafa2bee35cb2ba6efacfd0125837a812fdc809a174e330c950d5f83b3",
+      "baseSha256": "fb0cc9eafa2bee35cb2ba6efacfd0125837a812fdc809a174e330c950d5f83b3",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0004_music_cleanup.sql",
+      "bytes": 6449,
+      "sha256": "c23f1b218d4e43a11c1d2c1c88c53a809814f9d99560759b6c54a66027c28c92",
+      "baseSha256": "c23f1b218d4e43a11c1d2c1c88c53a809814f9d99560759b6c54a66027c28c92",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0005_music_rate_limits.sql",
+      "bytes": 2128,
+      "sha256": "013ea8db47ff0c217bc5c7d244c27b1cfa047d029048ea19263e2367062466be",
+      "baseSha256": "013ea8db47ff0c217bc5c7d244c27b1cfa047d029048ea19263e2367062466be",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0006_music_analytics.sql",
+      "bytes": 6433,
+      "sha256": "40cf617fef180deb882192b7b0fffeb3d4f3b53a027067825f1d9d42c27bc780",
+      "baseSha256": "40cf617fef180deb882192b7b0fffeb3d4f3b53a027067825f1d9d42c27bc780",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0007_music_albums.sql",
+      "bytes": 1282,
+      "sha256": "89daadecae0b8ed59a60577a78694252977de71e7fb7359e13ac67e2a6dae9ea",
+      "baseSha256": "89daadecae0b8ed59a60577a78694252977de71e7fb7359e13ac67e2a6dae9ea",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0008_music_featured.sql",
+      "bytes": 1735,
+      "sha256": "1dc063cff7d806254516af1572b1bf69acc7d30535cb5e22f4de60f6faaf7bd4",
+      "baseSha256": "1dc063cff7d806254516af1572b1bf69acc7d30535cb5e22f4de60f6faaf7bd4",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0009_music_album_covers.sql",
+      "bytes": 6081,
+      "sha256": "6c0f7f616d40e95514f019b964ca7d6e26e0d020a1c9fda48f40487d56c549f8",
+      "baseSha256": "6c0f7f616d40e95514f019b964ca7d6e26e0d020a1c9fda48f40487d56c549f8",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0010_music_limited_free.sql",
+      "bytes": 1113,
+      "sha256": "6acfbaebe38ec0831696ce6e321561d4ea8b3f35410596fbc7a653afefd86b24",
+      "baseSha256": "6acfbaebe38ec0831696ce6e321561d4ea8b3f35410596fbc7a653afefd86b24",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0011_music_share_rate_limits.sql",
+      "bytes": 2271,
+      "sha256": "05d0be34b289df948c9eb92ffcecb22c2d75f716a8ebfff49e12c7defd3bbfa1",
+      "baseSha256": "05d0be34b289df948c9eb92ffcecb22c2d75f716a8ebfff49e12c7defd3bbfa1",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations-music/0012_station_redesign.sql",
+      "bytes": 53788,
+      "sha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+      "baseSha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0001_waitlist.sql",
+      "bytes": 1497,
+      "sha256": "9834ce3b7e12c217db2196742150046bf58f3fa759fbef505d5ee8dcb9dcb7c5",
+      "baseSha256": "9834ce3b7e12c217db2196742150046bf58f3fa759fbef505d5ee8dcb9dcb7c5",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0002_download_rate_limits.sql",
+      "bytes": 452,
+      "sha256": "50f9e00a7360c5ed3cf259520314bc15e6609bfdc54e3a3e8844bc94a3f2ce62",
+      "baseSha256": "50f9e00a7360c5ed3cf259520314bc15e6609bfdc54e3a3e8844bc94a3f2ce62",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0003_reader_accounts.sql",
+      "bytes": 1649,
+      "sha256": "49eb30c6d38f11bb458911af2c66591b8ad800cb43674b4855d70715f98fb5b0",
+      "baseSha256": "49eb30c6d38f11bb458911af2c66591b8ad800cb43674b4855d70715f98fb5b0",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0004_novel_entitlements.sql",
+      "bytes": 1140,
+      "sha256": "2ba8b9e57a1ea888776c294e9615fbd4be5aa35e1fb942edee02d5e2bd39d2ae",
+      "baseSha256": "2ba8b9e57a1ea888776c294e9615fbd4be5aa35e1fb942edee02d5e2bd39d2ae",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0005_novel_payments.sql",
+      "bytes": 3475,
+      "sha256": "5246a24004579863c1a9394e7d7359d932f103e68cedfcc87a1da612155f0856",
+      "baseSha256": "5246a24004579863c1a9394e7d7359d932f103e68cedfcc87a1da612155f0856",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0006_reader_credits.sql",
+      "bytes": 1286,
+      "sha256": "b7e4bea9b57fac3e1546ccf9b8e925da31a67fb9211238148f115e5e676555f1",
+      "baseSha256": "b7e4bea9b57fac3e1546ccf9b8e925da31a67fb9211238148f115e5e676555f1",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0007_backend_content_platform.sql",
+      "bytes": 5111,
+      "sha256": "c174517367bf8874ebdd7b66eb5f29cad7ee9a176b69e302028fe0d8ef60dcfb",
+      "baseSha256": "c174517367bf8874ebdd7b66eb5f29cad7ee9a176b69e302028fe0d8ef60dcfb",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0008_admin_content_settings.sql",
+      "bytes": 276,
+      "sha256": "c7b67595eb1874703274891675d674f5a51608252a81a1b94ef32102a2ba7ab4",
+      "baseSha256": "c7b67595eb1874703274891675d674f5a51608252a81a1b94ef32102a2ba7ab4",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0009_reader_memberships.sql",
+      "bytes": 642,
+      "sha256": "9584450be399df6dbd233541b3bf640b97a1a6ba90f16694800dce7e4c506f43",
+      "baseSha256": "9584450be399df6dbd233541b3bf640b97a1a6ba90f16694800dce7e4c506f43",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0010_reader_bookmarks.sql",
+      "bytes": 990,
+      "sha256": "1eb2b1b4ba5fde5699ec058f20f37ee4d9335a292bf5c4c33345940308ee3837",
+      "baseSha256": "1eb2b1b4ba5fde5699ec058f20f37ee4d9335a292bf5c4c33345940308ee3837",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0011_reader_password_credentials.sql",
+      "bytes": 751,
+      "sha256": "55d4f627346a1b6dc896132d0b7dc27ace6c890dc89beaac377b51318c11d663",
+      "baseSha256": "55d4f627346a1b6dc896132d0b7dc27ace6c890dc89beaac377b51318c11d663",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0012_reader_totp_credentials.sql",
+      "bytes": 646,
+      "sha256": "c1eeb055a807f5a511e46ccd618fdcbd4d5f717c0ea7d3c1b1c4d5bfc9666b2a",
+      "baseSha256": "c1eeb055a807f5a511e46ccd618fdcbd4d5f717c0ea7d3c1b1c4d5bfc9666b2a",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0013_reader_totp_reset_attempts.sql",
+      "bytes": 678,
+      "sha256": "17f9d73814af92340aec6c32c374f1541858d8973b982f9666b408df6d11fc23",
+      "baseSha256": "17f9d73814af92340aec6c32c374f1541858d8973b982f9666b408df6d11fc23",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0014_reading_events.sql",
+      "bytes": 1372,
+      "sha256": "a163af85548b36fc60e3c88fe962ba9f7e0f63e51858e995cd2c6e9264c3d5a1",
+      "baseSha256": "a163af85548b36fc60e3c88fe962ba9f7e0f63e51858e995cd2c6e9264c3d5a1",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0015_chapter_stats.sql",
+      "bytes": 1592,
+      "sha256": "3ffaab11f0a2b6dae46a73a67fbda71d65967b5c9fc720a2c69133a87e78eb90",
+      "baseSha256": "3ffaab11f0a2b6dae46a73a67fbda71d65967b5c9fc720a2c69133a87e78eb90",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0016_ai_insights.sql",
+      "bytes": 820,
+      "sha256": "80c7268d4fbcfa68c9e9590775d3d7625d2523a215fb8ff70e245da3a1f01026",
+      "baseSha256": "80c7268d4fbcfa68c9e9590775d3d7625d2523a215fb8ff70e245da3a1f01026",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0017_reader_comments.sql",
+      "bytes": 1083,
+      "sha256": "de786764d8286153a9ec6e6d340d7225909111c30b4d1e29f93cc789efc1a247",
+      "baseSha256": "de786764d8286153a9ec6e6d340d7225909111c30b4d1e29f93cc789efc1a247",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0018_product_feedback.sql",
+      "bytes": 1235,
+      "sha256": "d952c5d5305087d757880fa5a1221b295a7754133f8343bd94ac4c6924eaeaf3",
+      "baseSha256": "d952c5d5305087d757880fa5a1221b295a7754133f8343bd94ac4c6924eaeaf3",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0019_signal_automation.sql",
+      "bytes": 7037,
+      "sha256": "f37ecde19fbaebae7d57e720fcf5bf82a4686b81f64d2f9d23a300b6022c0aa6",
+      "baseSha256": "f37ecde19fbaebae7d57e720fcf5bf82a4686b81f64d2f9d23a300b6022c0aa6",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0020_signal_collection.sql",
+      "bytes": 2455,
+      "sha256": "ebf22836312c95ee518614062f7620c06b492d3062e7e9acd1fbb5e9bae8fb7f",
+      "baseSha256": "ebf22836312c95ee518614062f7620c06b492d3062e7e9acd1fbb5e9bae8fb7f",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0021_signal_candidate_triage.sql",
+      "bytes": 1598,
+      "sha256": "615080e3ac443a7fab1bf19d10bf6e2918cc919c0dd3a17a4cd3274669bcb182",
+      "baseSha256": "615080e3ac443a7fab1bf19d10bf6e2918cc919c0dd3a17a4cd3274669bcb182",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0022_signal_source_adapters.sql",
+      "bytes": 1760,
+      "sha256": "460ade3cc1e9d78c744436adcb22add4e2636a275bc2e95b396e37aa32d366f0",
+      "baseSha256": "460ade3cc1e9d78c744436adcb22add4e2636a275bc2e95b396e37aa32d366f0",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0023_signal_candidate_deduplication.sql",
+      "bytes": 2218,
+      "sha256": "d74c8046cc2a0e40d69254120a458ea5f2df676a57ff49f1c12880aef9b29546",
+      "baseSha256": "d74c8046cc2a0e40d69254120a458ea5f2df676a57ff49f1c12880aef9b29546",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0024_signal_operations.sql",
+      "bytes": 2960,
+      "sha256": "ba13024d261c788b45d83e07b9f3affcb3edba035fcf07bbfa8d5a8104c51adc",
+      "baseSha256": "ba13024d261c788b45d83e07b9f3affcb3edba035fcf07bbfa8d5a8104c51adc",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0025_signal_model_rollout.sql",
+      "bytes": 1135,
+      "sha256": "e918bcc56c96d00bc0ebf5dc400df9f423fe49c5a122e2827ad377eb3b51fc22",
+      "baseSha256": "e918bcc56c96d00bc0ebf5dc400df9f423fe49c5a122e2827ad377eb3b51fc22",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0026_archive_paused_signal_sources.sql",
+      "bytes": 882,
+      "sha256": "263e818818d17b6273e6a3c2de77a966310d831db1eff5c64eea63d88da38816",
+      "baseSha256": "263e818818d17b6273e6a3c2de77a966310d831db1eff5c64eea63d88da38816",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0027_content_import_review_indexes.sql",
+      "bytes": 218,
+      "sha256": "3256ea8d4ca0209e477b08763c27fdcaee24b391ff48340f05e88419e96b3cf6",
+      "baseSha256": "3256ea8d4ca0209e477b08763c27fdcaee24b391ff48340f05e88419e96b3cf6",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0028_station_points.sql",
+      "bytes": 470,
+      "sha256": "07592a7fb9b994f25545a32a80d3db7b61d6c3cfd18f6993b10eff17e84b1ebe",
+      "baseSha256": "07592a7fb9b994f25545a32a80d3db7b61d6c3cfd18f6993b10eff17e84b1ebe",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0029_creem_credit_topup_idempotency.sql",
+      "bytes": 204,
+      "sha256": "880b7fd8aec712ae9687dada631cfcc4ec0f6bbfcf311bfaa131b10215668a85",
+      "baseSha256": "880b7fd8aec712ae9687dada631cfcc4ec0f6bbfcf311bfaa131b10215668a85",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0030_creem_reversals_and_event_ids.sql",
+      "bytes": 496,
+      "sha256": "5aae0f645d543e6e945816995786ee4385b2de0c61c2462a9a5dd0697a549b72",
+      "baseSha256": "5aae0f645d543e6e945816995786ee4385b2de0c61c2462a9a5dd0697a549b72",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0031_reader_game_saves.sql",
+      "bytes": 1967,
+      "sha256": "fe47874df69798b4aa11d48861ac3f318aa0ad9178527e3bf88afea97d7d0bae",
+      "baseSha256": "fe47874df69798b4aa11d48861ac3f318aa0ad9178527e3bf88afea97d7d0bae",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0032_reader_game_save_recovery.sql",
+      "bytes": 988,
+      "sha256": "44267eca8c9a83bf3384080570fada7318d6c0e617baa4b4c762984a874d2045",
+      "baseSha256": "44267eca8c9a83bf3384080570fada7318d6c0e617baa4b4c762984a874d2045",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0033_cat_life_game_commerce.sql",
+      "bytes": 5609,
+      "sha256": "7bd11508ff80dadb9d8c0a246f87ecc177b9fb30d7ed8d86f21682c7b6612d86",
+      "baseSha256": "7bd11508ff80dadb9d8c0a246f87ecc177b9fb30d7ed8d86f21682c7b6612d86",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0034_cat_life_game_commerce_api.sql",
+      "bytes": 445,
+      "sha256": "7f1651968dd0b6d14f62ab4fb6e3a50c40b245d96fcfa32f19ca0effe10f436f",
+      "baseSha256": "7f1651968dd0b6d14f62ab4fb6e3a50c40b245d96fcfa32f19ca0effe10f436f",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0035_cat_life_game_commerce_admin.sql",
+      "bytes": 3158,
+      "sha256": "fcc129eeb5b4c98c7c1d395162d1942a6973598351dfe7d670be4241dbfb8b58",
+      "baseSha256": "fcc129eeb5b4c98c7c1d395162d1942a6973598351dfe7d670be4241dbfb8b58",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0036_reader_membership_redemptions.sql",
+      "bytes": 815,
+      "sha256": "5da3296aab5535c123fd007805cd0f9aa4faeb4926ac775783198c6c3765e9cd",
+      "baseSha256": "5da3296aab5535c123fd007805cd0f9aa4faeb4926ac775783198c6c3765e9cd",
+      "unchangedFromBase": true
+    },
+    {
+      "path": "migrations/0037_membership_refund_reviews.sql",
+      "bytes": 1190,
+      "sha256": "c572ac43dc4b8248aa71534399711019e1cf5f708b44bd80fabb9f6876c6f8f4",
+      "baseSha256": "c572ac43dc4b8248aa71534399711019e1cf5f708b44bd80fabb9f6876c6f8f4",
+      "unchangedFromBase": true
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "T13-approved-head-ci.json",
+      "bytes": 6739,
+      "sha256": "d0c719be1419ae8757bbc82a88f13db4eba0c0279d8f9ab216b9de3674b852b5"
+    },
+    {
+      "name": "T13-merge-result.json",
+      "bytes": 255,
+      "sha256": "a61af30b6cbb3231b6b70e395c0292d65a20073cb47329647761b579586f8c03"
+    },
+    {
+      "name": "browser-observations.json",
+      "bytes": 23154,
+      "sha256": "bd77b4cda4df0caff9b99da3e2cb33d639f5ab80f5d21f78e564efe21f462072"
+    },
+    {
+      "name": "build.log",
+      "bytes": 24730,
+      "sha256": "053e52331d8225a41ac079ad7f50c32a2e3d94106d7184238c68d2960d253dee"
+    },
+    {
+      "name": "cloud-error-1440.png",
+      "bytes": 195313,
+      "sha256": "5c4364965be43f3b4accfdd71de0c8e30c974ffcbc13d869ff48622fe4427efc"
+    },
+    {
+      "name": "comparison-brand-and-member.png",
+      "bytes": 942957,
+      "sha256": "680b842698856ef20b1015dac2fe8212480fb3291faa98c07c1e9e52303d1975"
+    },
+    {
+      "name": "comparison-header.png",
+      "bytes": 115886,
+      "sha256": "0d309e781b4feacb214f9bb4aef7b65beb001e74b0de47ec9177059220d7bcba"
+    },
+    {
+      "name": "comparison-mobile-account.png",
+      "bytes": 295606,
+      "sha256": "6293cb268c4c833b5f8deb7cdfa7fc74fa4143c70eedcd0d741c639942dba338"
+    },
+    {
+      "name": "console-normal-final.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "name": "design-qa.md",
+      "bytes": 4598,
+      "sha256": "f2a11febdacc805b00f91285b500302221d6a3c1b46a2a9b3ac853ad0e487a24"
+    },
+    {
+      "name": "game-session-tests.log",
+      "bytes": 1606,
+      "sha256": "eea849be52a7f13a5395325ae1cc714e0f101c7d2edceabdc1d9a36a2bc46f5a"
+    },
+    {
+      "name": "games-tests.log",
+      "bytes": 5169,
+      "sha256": "7d6f1ed1f386b1528d5b656ed92b9ea462ff9c36c3718b59d72a77801f269a35"
+    },
+    {
+      "name": "guest-corrupt-zh-Hant-390.png",
+      "bytes": 125575,
+      "sha256": "c0b6598209186ca40706aba4f9468deb397218dc1712acfa2f2bcec0bec5546a"
+    },
+    {
+      "name": "guest-desktop-viewport.png",
+      "bytes": 558617,
+      "sha256": "926a9e5a4dde4ecdf7bbd51935fb267b38d00eed54639243b479c68650b62839"
+    },
+    {
+      "name": "guest-en-1440.png",
+      "bytes": 183045,
+      "sha256": "d23f36e48d8fccb04908cdbbbe252b22e3090b3f1948865dba048897ef5bddd7"
+    },
+    {
+      "name": "guest-en-360.png",
+      "bytes": 146516,
+      "sha256": "b3b827711c207404878641e6ba5dadd94927b8908ba6b730c960973c553b55eb"
+    },
+    {
+      "name": "guest-ja-1440.png",
+      "bytes": 187616,
+      "sha256": "69c44ae45764cd418db0a34cdffbc53d5bfd9902f25df0e90c750b23ee71f0a8"
+    },
+    {
+      "name": "guest-ja-360.png",
+      "bytes": 150787,
+      "sha256": "0fff023a18285b37b81a7d2d29617e127ca2899dff822cfe982a6ff2d3ca3201"
+    },
+    {
+      "name": "guest-zh-hans-1440.png",
+      "bytes": 154399,
+      "sha256": "b9150fa2e1049b3a76e1f1046ae83eb9cd89b67986b62a93024ebf3b94890025"
+    },
+    {
+      "name": "guest-zh-hans-360.png",
+      "bytes": 120200,
+      "sha256": "46aec70bc6e47102916f9f44ce18f87517b74178fbffa5077197fcb1c1e1a6ed"
+    },
+    {
+      "name": "guest-zh-hant-1440.png",
+      "bytes": 155648,
+      "sha256": "f7e07c812b4fb86951f71be54c934b8c1fb1745b4d037240a16b3ff8f90df103"
+    },
+    {
+      "name": "guest-zh-hant-360.png",
+      "bytes": 121481,
+      "sha256": "3af0506770b0783499786348faacc79185446cd8c4700a2d00fd54f09c180cff"
+    },
+    {
+      "name": "history-overview-zh-Hant-1440.png",
+      "bytes": 196359,
+      "sha256": "745e8ea0990327e6023d9bd3492d87a16f5f3628cd724ff7c807f90af60cece8"
+    },
+    {
+      "name": "history-security-zh-Hant-1440.png",
+      "bytes": 163772,
+      "sha256": "0415063575e6239bd19ae3310d30367db48ca2ee1c19e2488f2a67d5f2032e2b"
+    },
+    {
+      "name": "history-shelf-zh-Hant-1440.png",
+      "bytes": 153355,
+      "sha256": "3d9db8c2af4abcdf6024bbc6086a60cc396695a808d44b55a8d476feaf8cdb6f"
+    },
+    {
+      "name": "home-preview-build.log",
+      "bytes": 6583,
+      "sha256": "57f755e0310348190348bf159fe9bc26e69d8980d572a4f3f52ef4eb99c3e242"
+    },
+    {
+      "name": "http-contract.json",
+      "bytes": 16017,
+      "sha256": "a94b0e6dfe7809fb5b12b9379e5fbd1a3e9032708e519021232b9aca001a4182"
+    },
+    {
+      "name": "image-metadata.json",
+      "bytes": 1642,
+      "sha256": "1ac0bccb9f3bec8098d2b87b737c478a680e21a8ec023d7482fdbf1ebf149de2"
+    },
+    {
+      "name": "member-tests.log",
+      "bytes": 3538,
+      "sha256": "1f654a6119ccccca9ee058669c57653cce81f6776aa7bab03aab200aa5be274d"
+    },
+    {
+      "name": "member-zh-Hant-1440.png",
+      "bytes": 197484,
+      "sha256": "0fac5633c85debe6444bf96c768c3dabd7a86aeb7bc201f20979f8cf135a7755"
+    },
+    {
+      "name": "member-zh-Hant-390-before-logout.png",
+      "bytes": 165780,
+      "sha256": "57b93dba9e140c24fb9d6ddf6165fbcba4007cea79a7c94b9a79ff09621ddcf5"
+    },
+    {
+      "name": "member-zh-Hant-390.png",
+      "bytes": 166805,
+      "sha256": "b2cdbdc308ad482d00d45bc0ad43a29a61c84577e94bd05b246487b7a2d9d786"
+    },
+    {
+      "name": "mobile-library.log",
+      "bytes": 2256,
+      "sha256": "4bf57df09824933aa2f1965038fe8b590c4d915745e027726959bc942c06a8da"
+    },
+    {
+      "name": "mobile-music.log",
+      "bytes": 1960,
+      "sha256": "5dd3fa20a825091c63147d63e5794c4470bf53bff8bd357715884a97c154354b"
+    },
+    {
+      "name": "music-corrupt-1440.png",
+      "bytes": 200755,
+      "sha256": "dae370348bb59ae28ef3eba3fe1bf1cfd2161efa32a055b06a445e54dabae93a"
+    },
+    {
+      "name": "music-legacy-1440.png",
+      "bytes": 200022,
+      "sha256": "fc2f71566ee1e9ff783f2448e37c60e7fd82c934219f45cdba41944ca5d36f63"
+    },
+    {
+      "name": "music-member-return-1440.png",
+      "bytes": 164380,
+      "sha256": "caaa52e908b8f2eab74584341c4d1e1b651edc2339c8824b5bbb6c9a4f9da797"
+    },
+    {
+      "name": "npm-test.log",
+      "bytes": 76531,
+      "sha256": "8c5bdc159051782eb86a4fcc1e469f93d2d9315909e90ef5da8c582b90611548"
+    },
+    {
+      "name": "player-tests.log",
+      "bytes": 15864,
+      "sha256": "47cbaaf521231eb5c42e8456cf7e6a1a4bd7d1b2dbddc55ddcaabd4dbe34cefd"
+    },
+    {
+      "name": "preview-build.log",
+      "bytes": 4602,
+      "sha256": "7fb4ac4f2d3919c2c1098683bac8dc052ff2f0a94073c7204dedd29170489208"
+    },
+    {
+      "name": "session-error-1440.png",
+      "bytes": 165301,
+      "sha256": "22ad0f48e9dedfe0320efe46d95437e1de252b67d7989bf34a564b946022cd7e"
+    },
+    {
+      "name": "staging-build.log",
+      "bytes": 71,
+      "sha256": "b859b57c5aa0017355616f3635030b5d01d5c44328842b15210fa20b5ffbaab7"
+    },
+    {
+      "name": "staging-check.log",
+      "bytes": 51,
+      "sha256": "3d026e1408c63b0263f0163d2cfb9622a9b88d62ca09490c07ba6d3cc2b243f2"
+    },
+    {
+      "name": "verification-summary.json",
+      "bytes": 6321,
+      "sha256": "7b337e6070bfaa9d7d427c4bc03e5e60a61a936b58049233bb5a24948c0194b9"
+    }
+  ],
+  "note": "Raw logs and their final source bytes, not GitHub CI, deployment or production evidence."
+}

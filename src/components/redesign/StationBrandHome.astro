@@ -66,7 +66,7 @@ const pillars = [
     </div>
     <section class="gentle-promotion" aria-labelledby="station-promotion-title">
       <div class="gentle-promotion-intro"><Glyph name="chart" size={33} /><div><h2 id="station-promotion-title">{copy.promotion}</h2><p>{copy.promotionText}</p></div></div>
-      {pillars.map(pillar => <a class={'gentle-pillar gentle-pillar-' + pillar.icon} href={pillar.href}><span class="gentle-pillar-icon"><Glyph name={pillar.icon} size={25} /></span><span><strong>{pillar.title}</strong><small>{pillar.text}</small></span></a>)}
+      {pillars.map(pillar => <a class={'gentle-pillar gentle-pillar-' + pillar.icon} href={pillar.href} data-astro-reload={pillar.icon === 'crown' ? true : undefined}><span class="gentle-pillar-icon"><Glyph name={pillar.icon} size={25} /></span><span><strong>{pillar.title}</strong><small>{pillar.text}</small></span></a>)}
       <span class="gentle-promotion-paw" aria-hidden="true"><Glyph name="paw" size={30} /></span>
     </section>
     {home.selectedTracks.length > 0 && <section class="home-selected" aria-labelledby="station-selected-title"><h2 id="station-selected-title">{state.selected}</h2><div class="home-selected-grid">{home.selectedTracks.map(track => <a class="home-selected-item" href={track.href} data-selected-track={track.id}><img src={track.coverUrl} width="72" height="72" alt="" loading="lazy" /><span><strong>{track.title}</strong><small>{track.artist}</small></span><ArrowRight size={16} aria-hidden="true" /></a>)}</div></section>}

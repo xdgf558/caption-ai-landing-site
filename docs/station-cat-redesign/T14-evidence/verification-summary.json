@@ -1,0 +1,149 @@
+{
+  "task": "T14",
+  "generatedAt": "2026-10-08T11:57:32.231Z",
+  "baseCommit": "d2c7f6b4a759734286c1496bd042f673c49756de",
+  "branch": "codex/station-cat-redesign-t14",
+  "environment": {
+    "os": "macOS local",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "browser": "Codex IAB; 1440/360px four-language guests, 390px confirmed current member; viewport only",
+    "remoteCredentials": false,
+    "productionRequests": false
+  },
+  "results": [
+    {
+      "name": "member-tests",
+      "command": "STATION_MEMBER_EVIDENCE_FILE=/private/tmp/station-cat-t14-http-contract.json npm run test:redesign:member",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:51:45.318Z",
+      "count": 32,
+      "sha256": "1f654a6119ccccca9ee058669c57653cce81f6776aa7bab03aab200aa5be274d",
+      "rawLog": "member-tests.log"
+    },
+    {
+      "name": "player-tests",
+      "command": "npm run test:redesign:player",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:51:45.796Z",
+      "count": 149,
+      "sha256": "47cbaaf521231eb5c42e8456cf7e6a1a4bd7d1b2dbddc55ddcaabd4dbe34cefd",
+      "rawLog": "player-tests.log"
+    },
+    {
+      "name": "games-tests",
+      "command": "npm run test:redesign:games",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:51:50.168Z",
+      "count": 52,
+      "sha256": "7d6f1ed1f386b1528d5b656ed92b9ea462ff9c36c3718b59d72a77801f269a35",
+      "rawLog": "games-tests.log"
+    },
+    {
+      "name": "game-session-tests",
+      "command": "npm run test:redesign:game-session",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:51:50.332Z",
+      "count": 13,
+      "sha256": "eea849be52a7f13a5395325ae1cc714e0f101c7d2edceabdc1d9a36a2bc46f5a",
+      "rawLog": "game-session-tests.log"
+    },
+    {
+      "name": "mobile-music",
+      "command": "npm run test:mobile:music",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:51:56.405Z",
+      "count": 18,
+      "sha256": "5dd3fa20a825091c63147d63e5794c4470bf53bff8bd357715884a97c154354b",
+      "rawLog": "mobile-music.log"
+    },
+    {
+      "name": "mobile-library",
+      "command": "npm run test:mobile:library",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:52:06.056Z",
+      "count": 23,
+      "sha256": "4bf57df09824933aa2f1965038fe8b590c4d915745e027726959bc942c06a8da",
+      "rawLog": "mobile-library.log"
+    },
+    {
+      "name": "npm-test",
+      "command": "npm test",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:52:26.945Z",
+      "count": null,
+      "sha256": "8c5bdc159051782eb86a4fcc1e469f93d2d9315909e90ef5da8c582b90611548",
+      "rawLog": "npm-test.log"
+    },
+    {
+      "name": "preview-build",
+      "command": "npm run build:redesign:member",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:47:52.054Z",
+      "count": null,
+      "sha256": "7fb4ac4f2d3919c2c1098683bac8dc052ff2f0a94073c7204dedd29170489208",
+      "rawLog": "preview-build.log"
+    },
+    {
+      "name": "home-preview-build",
+      "command": "npm run build:redesign:preview",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:51:36.975Z",
+      "count": null,
+      "sha256": "57f755e0310348190348bf159fe9bc26e69d8980d572a4f3f52ef4eb99c3e242",
+      "rawLog": "home-preview-build.log"
+    },
+    {
+      "name": "build",
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 ASTRO_TELEMETRY_DISABLED=1 npm run build",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:47:55.002Z",
+      "count": null,
+      "sha256": "053e52331d8225a41ac079ad7f50c32a2e3d94106d7184238c68d2960d253dee",
+      "rawLog": "build.log"
+    },
+    {
+      "name": "staging-build",
+      "command": "node scripts/build-music-staging-assets.mjs",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:47:55.061Z",
+      "count": null,
+      "sha256": "b859b57c5aa0017355616f3635030b5d01d5c44328842b15210fa20b5ffbaab7",
+      "rawLog": "staging-build.log"
+    },
+    {
+      "name": "staging-check",
+      "command": "node scripts/check-music-staging-assets.mjs",
+      "exitCode": 0,
+      "recordedExitCodeSource": "completed exec shell result; not inferred from absence of errors",
+      "completedAt": "2026-10-08T11:47:55.108Z",
+      "count": null,
+      "sha256": "3d026e1408c63b0263f0163d2cfb9622a9b88d62ca09490c07ba6d3cc2b243f2",
+      "rawLog": "staging-check.log"
+    }
+  ],
+  "migrationsUnchanged": 54,
+  "sourceManifest": "manifest.json",
+  "browserObservations": 43,
+  "uiResult": "passed for documented local scope",
+  "hostedCi": "Not evidenced here; verify this PR exact head independently",
+  "caveats": [
+    "The main build permits empty protected serial body content; it is not a production bundle.",
+    "Synthetic cloud revision=4 proves existence display only, not save validity or synchronization.",
+    "Original browser storage bytes and disabled storage are model-test evidence, not a native browser settings/export check.",
+    "In-flight writes, Cookie/write atomicity, localStorage atomicity, T13 one-second exit/no sandbox remain unchanged.",
+    "No production bindings/schema, real media/orders, real devices, embedded browsers, VoiceOver or full keyboard certification.",
+    "Original npm test has many scripts; no invented aggregate unique-test total."
+  ]
+}

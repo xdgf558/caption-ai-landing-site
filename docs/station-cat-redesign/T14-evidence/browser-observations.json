@@ -1,0 +1,960 @@
+[
+  {
+    "name": "history-order-and-security",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "ArchiveFriend · archivefriend@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "23",
+    "cloud": "已有雲存檔 · 版本 4 · 2026年10月8日 下午07:17",
+    "items": "帳號已購裝扮：1 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "尚未開通 VIP 會員",
+    "musicWarning": "",
+    "order": "已完成交付 · 2.00 USD",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "history-readonly-local-favorites",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "ArchiveFriend · archivefriend@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "23",
+    "cloud": "已有雲存檔 · 版本 4 · 2026年10月8日 下午07:21",
+    "items": "帳號已購裝扮：1 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "尚未開通 VIP 會員",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "history-refunded-order",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "ArchiveFriend · archivefriend@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "23",
+    "cloud": "已有雲存檔 · 版本 4 · 2026年10月8日 下午07:21",
+    "items": "帳號已購裝扮：1 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "尚未開通 VIP 會員",
+    "musicWarning": "",
+    "order": "已退款或撤銷入帳 · 2.00 USD",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "current-member-desktop",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "GentleMember · gentlemember@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "100",
+    "cloud": "此帳號沒有雲存檔",
+    "items": "帳號已購裝扮：0 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "VIP 會員有效中",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "current-member-mobile",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "GentleMember · gentlemember@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "100",
+    "cloud": "此帳號沒有雲存檔",
+    "items": "帳號已購裝扮：0 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "VIP 會員有效中",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      390,
+      844
+    ],
+    "width": [
+      375,
+      375
+    ]
+  },
+  {
+    "name": "current-member-mobile-with-logout",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "GentleMember · gentlemember@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "100",
+    "cloud": "此帳號沒有雲存檔",
+    "items": "帳號已購裝扮：0 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "VIP 會員有效中",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      390,
+      844
+    ],
+    "width": [
+      375,
+      375
+    ]
+  },
+  {
+    "name": "mobile-logout-guest-corrupt-slot",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "0",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未開通 VIP 會員",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      390,
+      844
+    ],
+    "width": [
+      375,
+      375
+    ]
+  },
+  {
+    "name": "guest-unbound-order",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "0",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未開通 VIP 會員",
+    "musicWarning": "",
+    "order": "已完成交付 · 2.00 USD",
+    "viewport": [
+      390,
+      844
+    ],
+    "width": [
+      375,
+      375
+    ]
+  },
+  {
+    "name": "guest-bound-order-denied",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "0",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未開通 VIP 會員",
+    "musicWarning": "",
+    "order": "請登入訂單所屬帳號",
+    "viewport": [
+      390,
+      844
+    ],
+    "width": [
+      375,
+      375
+    ]
+  },
+  {
+    "name": "guest-zh-hant-360",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      360,
+      800
+    ],
+    "width": [
+      345,
+      345
+    ]
+  },
+  {
+    "name": "guest-zh-hans-360",
+    "url": "http://127.0.0.1:4214/zh-hans/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登录后可查看账号云存档",
+    "items": "登录后可查看已购装扮",
+    "local": "存档损坏，原文保留",
+    "locale": "zh-Hans",
+    "membership": "尚未登录",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      360,
+      800
+    ],
+    "width": [
+      345,
+      345
+    ]
+  },
+  {
+    "name": "guest-en-360",
+    "url": "http://127.0.0.1:4214/en/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "Sign in to view your account cloud save",
+    "items": "Sign in to view purchased game items",
+    "local": "Damaged save; original preserved",
+    "locale": "en",
+    "membership": "Not signed in",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      360,
+      800
+    ],
+    "width": [
+      345,
+      345
+    ]
+  },
+  {
+    "name": "guest-ja-360",
+    "url": "http://127.0.0.1:4214/ja/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "ログインするとクラウドセーブを確認できます",
+    "items": "購入済みアイテムはログイン後に確認できます",
+    "local": "セーブが破損しています。元のデータは保持しています",
+    "locale": "ja",
+    "membership": "未ログイン",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      360,
+      800
+    ],
+    "width": [
+      345,
+      345
+    ]
+  },
+  {
+    "name": "guest-zh-hant-1440",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "guest-zh-hans-1440",
+    "url": "http://127.0.0.1:4214/zh-hans/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登录后可查看账号云存档",
+    "items": "登录后可查看已购装扮",
+    "local": "存档损坏，原文保留",
+    "locale": "zh-Hans",
+    "membership": "尚未登录",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "guest-en-1440",
+    "url": "http://127.0.0.1:4214/en/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "Sign in to view your account cloud save",
+    "items": "Sign in to view purchased game items",
+    "local": "Damaged save; original preserved",
+    "locale": "en",
+    "membership": "Not signed in",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "guest-ja-1440",
+    "url": "http://127.0.0.1:4214/ja/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "ログインするとクラウドセーブを確認できます",
+    "items": "購入済みアイテムはログイン後に確認できます",
+    "local": "セーブが破損しています。元のデータは保持しています",
+    "locale": "ja",
+    "membership": "未ログイン",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "session-error-does-not-look-empty",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "暫時無法確認雲存檔",
+    "items": "暫時無法確認已購裝扮",
+    "local": "無法確認目前帳號，請重新核對。",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "session-error-retry-after-service-restored",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "暫時無法確認雲存檔",
+    "items": "暫時無法確認已購裝扮",
+    "local": "無法確認目前帳號，請重新核對。",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "final-unified-retry-restored-guest",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "cloud-error-keeps-purchased-items",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "ArchiveFriend · archivefriend@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "23",
+    "cloud": "暫時無法確認雲存檔",
+    "items": "帳號已購裝扮：1 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "尚未開通 VIP 會員",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "final-login-secrets-cleared",
+    "loginIdentifierCleared": true,
+    "loginPasswordCleared": true
+  },
+  {
+    "name": "cross-tab-login-while-old-credits-pending",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "GentleMember · gentlemember@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "100",
+    "cloud": "此帳號沒有雲存檔",
+    "items": "帳號已購裝扮：0 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "VIP 會員有效中",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "corrupt-music-storage-event",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "GentleMember · gentlemember@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "100",
+    "cloud": "此帳號沒有雲存檔",
+    "items": "帳號已購裝扮：0 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "VIP 會員有效中",
+    "musicWarning": "本機音樂資料格式不相容或損壞，原資料已保留。請回到音樂頁處理。",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "legacy-music-storage-event",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "GentleMember · gentlemember@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "100",
+    "cloud": "此帳號沒有雲存檔",
+    "items": "帳號已購裝扮：0 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "VIP 會員有效中",
+    "musicWarning": "正在顯示舊版本機收藏；這裡不會改寫資料。",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "member-before-music-return-check",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "music-permission-to-member-final",
+    "url": "http://127.0.0.1:4214/zh-hant/library/?source=music&returnTo=%2Fmusic%2F%3Ftrack%3Dca760000-0000-4000-8000-000000000020",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "final-manual-music-return-paused",
+    "audio": [
+      {
+        "paused": true,
+        "sourcePresent": false
+      }
+    ],
+    "dockHidden": true
+  },
+  {
+    "name": "final-guest-zh-hant-1440",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "final-guest-zh-hans-1440",
+    "url": "http://127.0.0.1:4214/zh-hans/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登录后可查看账号云存档",
+    "items": "登录后可查看已购装扮",
+    "local": "存档损坏，原文保留",
+    "locale": "zh-Hans",
+    "membership": "尚未登录",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "final-guest-en-1440",
+    "url": "http://127.0.0.1:4214/en/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "Sign in to view your account cloud save",
+    "items": "Sign in to view purchased game items",
+    "local": "Damaged save; original preserved",
+    "locale": "en",
+    "membership": "Not signed in",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "final-guest-ja-1440",
+    "url": "http://127.0.0.1:4214/ja/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "ログインするとクラウドセーブを確認できます",
+    "items": "購入済みアイテムはログイン後に確認できます",
+    "local": "セーブが破損しています。元のデータは保持しています",
+    "locale": "ja",
+    "membership": "未ログイン",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "final-guest-zh-hant-360",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      360,
+      844
+    ],
+    "width": [
+      345,
+      345
+    ]
+  },
+  {
+    "name": "final-guest-zh-hans-360",
+    "url": "http://127.0.0.1:4214/zh-hans/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登录后可查看账号云存档",
+    "items": "登录后可查看已购装扮",
+    "local": "存档损坏，原文保留",
+    "locale": "zh-Hans",
+    "membership": "尚未登录",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      360,
+      844
+    ],
+    "width": [
+      345,
+      345
+    ]
+  },
+  {
+    "name": "final-guest-en-360",
+    "url": "http://127.0.0.1:4214/en/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "Sign in to view your account cloud save",
+    "items": "Sign in to view purchased game items",
+    "local": "Damaged save; original preserved",
+    "locale": "en",
+    "membership": "Not signed in",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      360,
+      844
+    ],
+    "width": [
+      345,
+      345
+    ]
+  },
+  {
+    "name": "final-guest-ja-360",
+    "url": "http://127.0.0.1:4214/ja/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "ログインするとクラウドセーブを確認できます",
+    "items": "購入済みアイテムはログイン後に確認できます",
+    "local": "セーブが破損しています。元のデータは保持しています",
+    "locale": "ja",
+    "membership": "未ログイン",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      360,
+      844
+    ],
+    "width": [
+      345,
+      345
+    ]
+  },
+  {
+    "name": "final-member-zh-hant-390",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      390,
+      844
+    ],
+    "width": [
+      375,
+      375
+    ]
+  },
+  {
+    "name": "final-member-zh-hant-1440",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "final-confirmed-member-zh-hant-1440",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "GentleMember · gentlemember@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "100",
+    "cloud": "此帳號沒有雲存檔",
+    "items": "帳號已購裝扮：0 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "VIP 會員有效中",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  },
+  {
+    "name": "final-confirmed-member-zh-hant-390",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "GentleMember · gentlemember@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "100",
+    "cloud": "此帳號沒有雲存檔",
+    "items": "帳號已購裝扮：0 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "VIP 會員有效中",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      390,
+      844
+    ],
+    "width": [
+      375,
+      375
+    ]
+  },
+  {
+    "name": "final-mobile-logout-clears-account",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "0",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未開通 VIP 會員",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      390,
+      844
+    ],
+    "width": [
+      375,
+      375
+    ]
+  },
+  {
+    "name": "final-local-case-reselection-after-logout",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "GentleMember · gentlemember@example.test",
+    "audioCount": 0,
+    "authVisible": false,
+    "balance": "100",
+    "cloud": "此帳號沒有雲存檔",
+    "items": "帳號已購裝扮：0 項",
+    "local": "未找到目前槽位的存檔",
+    "locale": "zh-Hant",
+    "membership": "VIP 會員有效中",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      390,
+      844
+    ],
+    "width": [
+      375,
+      375
+    ]
+  },
+  {
+    "name": "final-game-intro-to-member",
+    "url": "http://127.0.0.1:4214/zh-hant/library/",
+    "account": "",
+    "audioCount": 0,
+    "authVisible": true,
+    "balance": "—",
+    "cloud": "登入後可查看帳號雲存檔",
+    "items": "登入後可查看已購裝扮",
+    "local": "存檔損壞，原文保留",
+    "locale": "zh-Hant",
+    "membership": "尚未登入",
+    "musicWarning": "",
+    "order": "",
+    "viewport": [
+      1440,
+      900
+    ],
+    "width": [
+      1425,
+      1425
+    ]
+  }
+]

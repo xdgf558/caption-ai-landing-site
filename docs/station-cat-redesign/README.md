@@ -4,7 +4,7 @@
 
 ## 当前执行约定
 
-用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01 至 T12 已审查通过并在各自审查头 CI 通过后合并。T06 原头 `8ac1d499` 的销户审计失败已通过只读清单修订解决；修订头 `31e19a6` 经用户复审及托管 CI 通过后合并。本轮仅执行 **T13 游戏运行与媒体协调**，独立 PR 审查后才进入 T14。
+用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01 至 T13 已审查通过并在各自审查头 CI 通过后合并。T06 原头 `8ac1d499` 的销户审计失败已通过只读清单修订解决；修订头 `31e19a6` 经用户复审及托管 CI 通过后合并。本轮仅执行 **T14 会员与历史服务回归**，独立 PR 审查后才进入 T15。
 
 这项约定优先于基线文档中建议的 R0–R7 批次及启动指令中的连续推进方式；三份规范正文已按本次审查同步逐项执行要求。PR 创建、构建通过与生产发布是独立状态；本轮没有生产发布授权，待用户审查的 PR 不自动合并。
 
@@ -22,8 +22,9 @@
 | T10 发行平台入口与降级 | 审查通过，已合并 | [PR #195](https://github.com/xdgf558/caption-ai-landing-site/pull/195)，审查头 `9c687670` 的完整托管 CI 通过，合并为 `7ecaab47`；[平台合同与验收](T10-release-platforms-and-fallbacks.md)、[验证摘要](T10-evidence/verification-summary.json)、[设计 QA](T10-evidence/design-qa.md)；历史测试时序和真实平台验收的 P3 边界保留 |
 | T11 短视频与 MV 播放 | 审查通过，已合并 | [PR #196](https://github.com/xdgf558/caption-ai-landing-site/pull/196)，审查头 `d804f4b1` 的完整托管 CI 通过，合并为 `99b0ba00`；[播放合同与验收](T11-clips-and-mv-playback.md)、[最终源码验证摘要](T11-evidence/verification-summary.json)、[设计 QA](T11-evidence/design-qa.md)；真实媒体与真机的 P3 缺口保留 |
 | T12 游戏作品页与存档入口 | 用户审查通过，精确头完整 CI 通过，已合并 | [PR #197](https://github.com/xdgf558/caption-ai-landing-site/pull/197)、[页面合同](T12-game-pages-and-save-safety.md)；新头 `24270c0c` 的 CI `37716107001` 成功后 squash 为 `31ba265c`，新加坡时间 2026-10-08 14:28:09 合并；原失败与并发/生产边界保留 |
-| T13 游戏运行与媒体协调 | 本机实现与验证完成，待独立 PR 审查及精确头托管 CI | [合同](T13-game-runtime-and-media-handoff.md)、[验证摘要](T13-evidence/verification-summary.json)、[设计 QA](T13-evidence/design-qa.md)；不开生产开关，不合并或进入 T14 |
-| T14–T22 | 未开始 | 每个任务单独提交、审查后继续 |
+| T13 游戏运行与媒体协调 | 用户审查通过，精确头完整 CI 通过，已合并 | [PR #198](https://github.com/xdgf558/caption-ai-landing-site/pull/198)、[合同](T13-game-runtime-and-media-handoff.md)；审查头 `84fbf0ef` 的 CI `37745379135` 成功，squash 为 `d2c7f6b4`，新加坡 2026-10-08 16:36:02 合并；退出等待与同源无 sandbox 边界保留 |
+| T14 会员与历史服务回归 | 本机实现与验证完成，待用户审查及精确头托管 CI | [合同](T14-member-and-historical-services.md)、[验证摘要](T14-evidence/verification-summary.json)、[设计 QA](T14-evidence/design-qa.md)；默认新开关关闭，旧服务继续，不合并或进入 T15 |
+| T15–T22 | 未开始 | 每个任务单独提交、审查后继续 |
 
 ## 需求基线
 
@@ -74,3 +75,7 @@ T12 执行时，分支 `codex/station-cat-redesign-t12` 从上述实际合并提
 T12 修订头 `24270c0cd8178c6746350f20f190a1dd243150c8` 在 [完整托管 CI](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37716107001) 成功后，于 2026-10-08 06:28:09 UTC（新加坡 14:28:09）合并为 `31ba265c2a125c35f8d17204cb160e96e433e967`。T13 从该实际主分支建立；[GitHub 合并事实](T13-evidence/T12-merge-result.json) 可独立核对。T12 已发云写入、跨进程窗口和生产验收缺口继续保留。
 
 本轮 T13 接入单实例游戏 dialog、同源就绪/停止协议、20 秒超时、音视频暂停与清理、静音返回及共享播放器。原运行地址保持，条件嵌入仅在两个默认关闭开关同时开启时允许同源。最终专项、完整回归、空正文主构建、私有八页预览和 staging 核验通过，原始日志与源码哈希保存；本机证据不替代本 PR 精确头 CI 或真机/生产验收。T14 未开始；不合并、开生产开关、远程迁移、部署或关闭旧入口。
+
+以上保留 T13 当时的交付状态。随后用户审查通过并授权合并；审查头 `84fbf0ef4eab4ac9ec1b9df2f250c75b5482f222` 的 [完整 CI](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37745379135) 成功后，2026-10-08 08:36:02 UTC squash 为 `d2c7f6b4a759734286c1496bd042f673c49756de`。T14 从该实际主分支开始，[合并事实](T14-evidence/T13-merge-result.json) 和 [精确头 CI](T14-evidence/T13-approved-head-ci.json) 分开保存。
+
+本轮 T14 为现有四语言 `/library/` 新增默认关闭的温柔小站会员壳，延续旧账号、余额、会员和历史服务；新增只读本机收藏、存档状态、原订单查询与支持入口，原生资料库独立保留。会话变化清除旧账号视图和隐藏认证字段，音乐进入会员完整载入、手动返回保持暂停。四个旧 GET 响应新增私有缓存策略，不依赖页面开关；财务权限、价格、期限、退款和销户关闭态未改变。最终专项、完整 npm test、主开发构建、私有预览、staging 核验和 IAB 证据保存，仍不能当作精确头 CI、生产或真机通过。不自动合并、开始 T15、部署、启用生产开关或关闭旧入口。

@@ -1,0 +1,25 @@
+
+> landing-site@0.1.0 test:redesign:game-session
+> node --test --test-timeout=90000 scripts/test-station-game-session.mjs
+
+✔ gesture pauses owned media before creating exactly one allowed runtime; load never means ready (0.848959ms)
+✔ origin, source, protocol, game and per-attempt launch identity are all required (0.159083ms)
+✔ quick return waits for stopped acknowledgement; old ready and late errors cannot replace a retry (0.170291ms)
+✔ timeout and failed runtime restore only after retirement, without any save API (0.156709ms)
+✔ save recovery is separate from successful startup and cannot become ready on a delayed message (0.076417ms)
+✔ construction errors and final disposal cannot leave a mounted frame, timer or listener (0.121708ms)
+✔ closed/half-enabled runtime policy returns null before accessing the asset binding (7.340167ms)
+✔ same-origin embedding only touches exact valid HTML requests; streams media without reading body (1.518416ms)
+✔ runtime bridge is dormant on standalone, invalid and unmarked addresses (17.998709ms)
+✔ actual runtime bridge refuses foreign/old exits and emits only fixed identity fields to exact origin (3.281958ms)
+✔ actual main emits recovery rather than ready and never writes a damaged slot on exit (3.464917ms)
+✔ embedded account login leaves the host while preserving the original account destination (3.2045ms)
+✔ return during the actual pending account check never creates a game or overwrites any slot (4.97ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 79.449333
