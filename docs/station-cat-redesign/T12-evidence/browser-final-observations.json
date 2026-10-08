@@ -1,0 +1,48 @@
+{
+  "capturedAt": "2026-10-07T15:21:49.280Z",
+  "finalCompiledPreview": true,
+  "states": [
+    {
+      "focus": "先保留你的遊戲進度",
+      "preserved": "异常存档原文保留：是（当前槽位）",
+      "status": "corrupt",
+      "url": "http://127.0.0.1:4212/games/cat-life/?sc_entry=1&lang=zh-Hant"
+    },
+    {
+      "focus": "先保留你的遊戲進度",
+      "preserved": "异常存档原文保留：是（当前槽位）",
+      "url": "http://127.0.0.1:4212/games/cat-life/?sc_entry=1&lang=zh-Hant"
+    },
+    {
+      "focus": "先保留你的遊戲進度",
+      "preserved": "异常存档原文保留：是（当前槽位）",
+      "status": "unsupported",
+      "url": "http://127.0.0.1:4212/games/cat-life/?sc_entry=1&lang=zh-Hant"
+    },
+    {
+      "buttons": [],
+      "focus": "先保留你的遊戲進度",
+      "status": "unavailable",
+      "url": "http://127.0.0.1:4212/games/cat-life/?sc_entry=1&lang=zh-Hant"
+    }
+  ],
+  "mobileKeyboard": {
+    "bottomNav": null,
+    "focus": "重新核對",
+    "launch": {
+      "bottom": 444.234375,
+      "height": 44,
+      "width": 102,
+      "x": 41,
+      "y": 400.234375
+    },
+    "overflow": false,
+    "scrollY": 563.5,
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  "finalUrl": "http://127.0.0.1:4212/games/cat-life-game/",
+  "viewportOverrideReset": true
+}

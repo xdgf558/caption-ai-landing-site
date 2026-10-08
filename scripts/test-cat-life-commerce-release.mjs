@@ -27,7 +27,7 @@ assert.match(apiTest, /missing rollout configuration must fail closed/);
 assert.match(apiTest, /allowlist mode must not expose products to guests/);
 assert.match(apiTest, /closed rollout must still replay a completed purchase safely/);
 assert.match(browserTest, /does not reuse another account offline entitlement cache/);
-assert.match(browserTest, /keeps the current account cosmetic offline without enabling redemption/);
+assert.match(browserTest, /keeps cosmetics offline after verifying the same account without enabling redemption/);
 assert.match(browserTest, /removes equipped premium visuals after the server revokes their entitlements/);
 assert.match(browserTest, /expect\(redemptionRequests\)\.toBe\(1\)/);
 

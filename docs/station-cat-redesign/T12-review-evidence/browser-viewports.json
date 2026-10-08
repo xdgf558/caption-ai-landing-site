@@ -1,0 +1,20 @@
+[
+  {
+    "clientWidth": 375,
+    "heading": "打工養貓日記",
+    "height": 844,
+    "saveStatus": "valid",
+    "scrollWidth": 375,
+    "url": "http://127.0.0.1:4212/games/cat-life-game/",
+    "width": 390
+  },
+  {
+    "clientWidth": 1425,
+    "heading": "打工養貓日記",
+    "height": 1000,
+    "saveStatus": "valid",
+    "scrollWidth": 1425,
+    "url": "http://127.0.0.1:4212/games/cat-life-game/",
+    "width": 1440
+  }
+]

@@ -32,12 +32,29 @@ async function seedAbsence(page, hours, legacy = false) {
       delete cat.careStatus;
       delete cat.careLastSyncAt;
     }
-    // pagehide saves live state; keep it aligned with the fixture before reloading.
+    // Use the actual writer so both live state and its observed storage baseline
+    // describe this fixture; raw edits now correctly trigger the concurrency guard.
     game.state.game = save;
-    localStorage.setItem(game.state.saveSystem.getStorageKey(), JSON.stringify(save));
+    game.state.saveSystem.saveGame(save);
   }, { hours, legacy });
   await page.reload();
 }
+
+test('leaving does not overwrite a compatible slot changed outside the running game', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/games/cat-life/?lang=en');
+  await expect(page.locator('.home-journal-page')).toBeVisible();
+  await page.evaluate(() => {
+    const save = window.CatGame.state.createNewGame(); save.player.gold = 923; save.settings.language = 'en';
+    localStorage.setItem(window.CatGame.state.saveSystem.getStorageKey(), JSON.stringify(save));
+  });
+  await page.reload();
+  await expect(page.locator('.home-journal-page')).toBeVisible();
+  expect(await page.evaluate(() => window.CatGame.state.game.player.gold)).toBe(923);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem(window.CatGame.state.saveSystem.getStorageKey())).player.gold)).toBe(923);
+  expect(errors).toEqual([]);
+});
 
 test('390px: welcome back after a week, rescue and emergency meal remain usable after reload', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });

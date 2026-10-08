@@ -5,10 +5,11 @@ import sharp from 'sharp';
 import { seedContent, publishTrack, homeFixture, approve, now } from './station-content-fixture.mjs';
 import { fixtureId, insertFixture } from './station-redesign-database.mjs';
 import { stationVideoBytes } from './station-video-fixture.mjs';
+import { stationGameMaterials } from './station-game-fixture.mjs';
 
 // This module is test tooling. Covers are T04 design illustrations; audio is
 // the checked-in FFmpeg sine-wave fixture, never an operational song/license.
-export async function seedStationMusicPages(db, bucket, { videoCases = false } = {}) {
+export async function seedStationMusicPages(db, bucket, { videoCases = false, gameCases = false } = {}) {
   const cover = readFileSync(new URL('../fixtures/station-redesign/assets/gentle-station/music-cover.webp', import.meta.url));
   const hero = readFileSync(new URL('../fixtures/station-redesign/assets/gentle-station/hero.webp', import.meta.url));
   const manifest = JSON.parse(readFileSync(new URL('../../tests/fixtures/music-mp3/manifest.json', import.meta.url)));
@@ -29,9 +30,11 @@ export async function seedStationMusicPages(db, bucket, { videoCases = false } =
     return { ...extra, object_key: key, content_type, byte_size: bytes.length,
       sha256: createHash('sha256').update(bytes).digest('hex'), etag: object.etag };
   };
+  const gameMaterials = gameCases ? await stationGameMaterials() : null;
+  const gameScreenshot = gameCases ? readFileSync(gameMaterials.screenshotPath) : null;
   const fixture = await seedContent(db, bucket, { materializeAsset,
-    materializeMedia: async kind => ['poster', 'game_screenshot'].includes(kind) ? { bytes: poster, width: 640, height: 360 } : videoCases ? stationVideoBytes() : null,
-    externalLinks: false });
+    materializeMedia: async kind => gameCases && kind === 'game_screenshot' ? { bytes: gameScreenshot, width: 1280, height: 900 } : ['poster', 'game_screenshot'].includes(kind) ? { bytes: poster, width: 640, height: 360 } : videoCases ? stationVideoBytes() : null,
+    externalLinks: false, gameMetadata: gameMaterials?.metadata });
   const names = [
     ['小小的光', '小小的光', 'A Little Light', '小さな光'],
     ['晚一點告白', '晚一点告白', 'A Little Late to Say', '少し遅い告白'],

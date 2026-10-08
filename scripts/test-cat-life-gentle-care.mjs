@@ -362,13 +362,10 @@ test('P3: current v3 build preserves a future v4 save through repeated loads, sa
   const raw = JSON.stringify(future);
   storage.set(key, raw);
   saveSystem.setStorageKey(key);
-  game.state.game = saveSystem.loadOrCreateGame();
-  assert.equal(game.state.game.schemaVersion, 3);
-  assert.equal(saveSystem.getStorageKey(), key + ':compat-v3');
-  game.state.game.player.gold = 51;
-  saveSystem.saveGame();
-  saveSystem.setStorageKey(key);
-  assert.equal(saveSystem.loadOrCreateGame().player.gold, 51);
+  assert.throws(() => saveSystem.loadOrCreateGame(), error => error.code === 'SAVE_SCHEMA_UNSUPPORTED');
+  assert.equal(saveSystem.getStorageKey(), key);
+  assert.throws(() => saveSystem.saveGame(), error => error.code === 'SAVE_SCHEMA_UNSUPPORTED');
+  assert.equal(storage.has(key + ':compat-v3'), false);
   assert.equal(storage.get(key), raw);
   const before = snapshot(game.state.game);
   assert.throws(() => saveSystem.importText(raw), (error) => error.code === 'SAVE_SCHEMA_UNSUPPORTED');

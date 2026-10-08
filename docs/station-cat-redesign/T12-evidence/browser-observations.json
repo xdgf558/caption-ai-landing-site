@@ -1,0 +1,59 @@
+{
+  "scope": "IAB tab 6, disposable local preview only",
+  "runtime": {
+    "newGuest": {
+      "gold": 200,
+      "wall": false,
+      "screenshot": "runtime-new.png"
+    },
+    "valid": {
+      "gold": 87,
+      "wall": false,
+      "screenshot": "runtime-valid.png"
+    },
+    "corrupt": {
+      "originalRetained": true,
+      "screenshot": "runtime-corrupt.png",
+      "finalCompiledRecapture": true
+    },
+    "future": {
+      "schema": 4,
+      "originalRetained": true,
+      "screenshot": "runtime-future.png",
+      "finalCompiledRecapture": true
+    },
+    "memberCorrupt": {
+      "fixtureMember": 7,
+      "originalRetained": true,
+      "loginHidden": true,
+      "screenshot": "runtime-member-corrupt.png",
+      "finalCompiledRecapture": true
+    },
+    "unavailable": {
+      "method": "explicit fixture localStorage getter denial",
+      "importExportHidden": true,
+      "screenshot": "runtime-unavailable.png",
+      "finalCompiledRecapture": true
+    },
+    "sessionFailure": {
+      "launchHref": null,
+      "screenshot": "entry-identity-error.png"
+    },
+    "explicitRestore": {
+      "file": "/private/tmp/station-cat-t12-valid-import.json",
+      "gold": 73,
+      "confirmed": true,
+      "newOriginalRecoveryCopy": true,
+      "screenshot": "runtime-restored.png"
+    }
+  },
+  "earlierPositiveImages": "New, valid and restored observations precede the final added structural guard/session checks; final Node tests cover those changes. Final intro and abnormal runtime images were captured after rebuilding and restarting.",
+  "export": {
+    "browserDownloadObserved": false,
+    "moduleExactBlobBytesPassed": true
+  },
+  "responsive": "browser-viewports.json",
+  "final": "browser-final-observations.json",
+  "console": "browser-console.json",
+  "productionEvidence": false
+}

@@ -173,7 +173,7 @@ assert.match(settingsPanel, /saveSystem\.getStorageKey\(\)/);
 assert.doesNotMatch(i18n, /does not upload progress to a server|\u6e38\u620f\u4e0d\u4f1a\u4e0a\u4f20\u5230\u670d\u52a1\u5668|\u30b5\u30fc\u30d0\u30fc\u3078\u9001\u4fe1\u3055\u308cません/);
 assert.match(gameMain, /applyCloudSave/);
 assert.match(gameMain, /activateMemberStorage/);
-assert.match(gameMain, /:member:/);
+assert.match(gameMain, /CatGameSaveStatus\.memberKey/);
 assert.match(gameMain, /CatGameCloud\.init\(game\.state\.game\)/);
 assert.match(gameMain, /CatGameCommerce\.init\(\)/);
 assert.match(commerce, /\/api\/games\/cat-life\/catalog/);
@@ -653,51 +653,33 @@ assert.equal(
 );
 
 const storage = new Map();
+const localStorage = { getItem(key) { return storage.has(key) ? storage.get(key) : null; }, setItem(key, value) { storage.set(key, String(value)); } };
+const sampleSave = gold => ({ schemaVersion: 2, meta: {}, player: { gold }, cats: [{ id: 'cat_001' }], inventory: {}, settings: {} });
 const saveContext = {
-  window: {
-    CatGame: {
-      config: { storageKey: 'catGameSaveV1', saveSchemaVersion: 2 },
-      state: {
-        game: null,
-        normalizeGameData(value) { return value; }
-      },
-      utils: {
-        format: { formatDateKey() { return '2026-08-30'; } },
-        storage: {
-          loadJSON(key) { return storage.get(key) || null; },
-          saveJSON(key, value) { storage.set(key, value); }
-        }
-      }
-    }
-  }
+  localStorage, window: { CatGame: {
+    config: { storageKey: 'catGameSaveV1', saveSchemaVersion: 2 },
+    state: { game: null, normalizeGameData(value) { return value; }, createNewGame() { return sampleSave(200); } },
+    utils: { format: { formatDateKey() { return '2026-08-30'; } }, storage: {
+      loadJSON(key) { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; },
+      saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+    } }
+  } }
 };
+vm.runInNewContext(read(`${gameRoot}/src/js/state/saveStatus.js`), saveContext);
 vm.runInNewContext(saveSystem, saveContext);
 const memberSaveSystem = saveContext.window.CatGame.state.saveSystem;
-memberSaveSystem.setStorageKey('catGameSaveV1:member:1');
-memberSaveSystem.saveGame({ meta: {}, player: { coins: 10 } });
-memberSaveSystem.setStorageKey('catGameSaveV1:member:2');
-memberSaveSystem.saveGame({ meta: {}, player: { coins: 20 } });
-assert.equal(storage.get('catGameSaveV1:member:1').player.coins, 10);
-assert.equal(storage.get('catGameSaveV1:member:2').player.coins, 20);
+memberSaveSystem.setStorageKey('catGameSaveV1:member:1'); memberSaveSystem.saveGame(sampleSave(10));
+memberSaveSystem.setStorageKey('catGameSaveV1:member:2'); memberSaveSystem.saveGame(sampleSave(20));
+assert.equal(JSON.parse(storage.get('catGameSaveV1:member:1')).player.gold, 10);
+assert.equal(JSON.parse(storage.get('catGameSaveV1:member:2')).player.gold, 20);
 assert.equal(storage.has('catGameSaveV1'), false, 'member saves must not overwrite the shared guest slot');
-
-const futureSave = { schemaVersion: 3, meta: {}, player: { gold: 99 } };
+const futureSave = JSON.stringify({ ...sampleSave(99), schemaVersion: 3 });
 storage.set('catGameSaveV1:member:3', futureSave);
-saveContext.window.CatGame.state.normalizeGameData = (value) => {
-  if (value.schemaVersion > 2) {
-    const error = new Error('unsupported');
-    error.code = 'SAVE_SCHEMA_UNSUPPORTED';
-    throw error;
-  }
-  return value;
-};
-saveContext.window.CatGame.state.createNewGame = () => ({ schemaVersion: 2, meta: {}, player: { gold: 200 } });
 memberSaveSystem.setStorageKey('catGameSaveV1:member:3');
-const compatibilitySave = memberSaveSystem.loadOrCreateGame();
-assert.equal(compatibilitySave.schemaVersion, 2);
-assert.equal(memberSaveSystem.getStorageKey(), 'catGameSaveV1:member:3:compat-v2');
-assert.deepEqual(storage.get('catGameSaveV1:member:3'), futureSave, 'future saves must remain untouched');
-assert.equal(storage.get('catGameSaveV1:member:3:compat-v2').schemaVersion, 2);
+assert.throws(() => memberSaveSystem.loadOrCreateGame(), error => error.code === 'SAVE_SCHEMA_UNSUPPORTED');
+assert.equal(memberSaveSystem.getStorageKey(), 'catGameSaveV1:member:3');
+assert.equal(storage.get('catGameSaveV1:member:3'), futureSave);
+assert.equal(storage.has('catGameSaveV1:member:3:compat-v2'), false);
 
 const migrationContext = { window: {} };
 vm.runInNewContext(saveMigrations, migrationContext);

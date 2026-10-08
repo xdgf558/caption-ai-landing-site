@@ -1,0 +1,98 @@
+{
+  "task": "T12 release check name synchronization",
+  "recordedAt": "2026-10-08T02:03:56.313863+00:00",
+  "branch": "codex/station-cat-redesign-t12",
+  "reviewedHead": "e3b577bcc7d4adb49682f5e568125691adec5719",
+  "baseCommit": "99b0ba003c1618018e40c5c756d44f2b94ef7f63",
+  "changedExecutableFile": "scripts/test-cat-life-commerce-release.mjs",
+  "runtimeChanges": false,
+  "sourceManifest": "source-manifest.json",
+  "sourceFingerprintSha256": "15c254686340cea7d93ea37b79217cfae0a61d464f0b92ce1f86797112abf0cd",
+  "localRuns": [
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "coverage": "Complete existing npm test chain, including commerce release check and later existing service checks",
+      "reportedTestCount": "Not claimed: chain combines standalone assertions and Node test output",
+      "log": "npm-test.log.gz",
+      "encoding": "gzip; decompress to original UTF-8 log",
+      "rawBytes": 76504,
+      "rawSha256": "ce5e98018b611b47bb559d0ee32c1428425c759d9ff97ae47a8fb41605b71156",
+      "compressedBytes": 24439,
+      "compressedSha256": "a6591dfde56f8646e7c796615d2989c7b37111566d858babfec3422f78f11bbf",
+      "logModifiedAt": "2026-10-08T02:02:25.007983+00:00"
+    },
+    {
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "exitCode": 0,
+      "pages": 161,
+      "productionPackage": false,
+      "log": "build.log.gz",
+      "encoding": "gzip; decompress to original UTF-8 log",
+      "rawBytes": 23546,
+      "rawSha256": "0ddb68278f186b760e8e574f0ed5fadd219aa8d6c927563631e6c8ad788a0ee7",
+      "compressedBytes": 3209,
+      "compressedSha256": "c7be3eda3bf5fb3f55d669b9965ef0e03c9fabf1a421fb788b7c6ce799526dbd",
+      "logModifiedAt": "2026-10-08T02:02:46.484421+00:00"
+    }
+  ],
+  "reusedRuntimeValidation": {
+    "record": "../T12-review-evidence/verification-summary.json",
+    "sourceManifest": "../T12-review-evidence/source-manifest.json",
+    "matchedSourceFiles": 44,
+    "fingerprintSha256": "e9f251a3dc872532a7387d598e3aba2c5f00bd35820800ae5180a476ebabdaed",
+    "reportedTests": 178,
+    "rerunThisFollowup": false,
+    "reason": "All previous source/test/dependency anchor bytes match; only a separate release-check name assertion changed",
+    "browserEvidence": "Previous IAB fixture observations only; no new viewport/device or export download test"
+  },
+  "reviewedHostedCI": {
+    "headSha": "e3b577bcc7d4adb49682f5e568125691adec5719",
+    "status": "completed",
+    "conclusion": "failure",
+    "url": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37702711946",
+    "jobUrl": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37702711946/job/113069710517",
+    "completedAt": "2026-10-07T23:32:00Z",
+    "jobSteps": 34,
+    "successfulSteps": 8,
+    "failedSteps": 1,
+    "skippedSteps": 25,
+    "failedStep": "Run tests",
+    "failure": "Commerce release check still matches the browser test former title",
+    "browserStepExecuted": false,
+    "statusRecord": "reviewed-repair-head-ci-failure.json",
+    "prRecord": "reviewed-repair-pr.json",
+    "rawLog": {
+      "log": "reviewed-repair-workflow-failure.log.gz",
+      "encoding": "gzip; decompress to original UTF-8 log",
+      "rawBytes": 505499,
+      "rawSha256": "20902148886a5aaed54b4d2bc9bad113b6f057127c03f35b50b360c0a89e0a78",
+      "compressedBytes": 81895,
+      "compressedSha256": "1bff549ce2bb1618ad42e282e84f4b8c7f4250eda306f13614039fa291fb7b92",
+      "logModifiedAt": "2026-10-08T02:01:23.818246+00:00"
+    }
+  },
+  "newHeadHostedCI": {
+    "status": "Not asserted by pre-commit evidence",
+    "verification": "Inspect new PR head independently after push; local npm test success is not hosted CI approval"
+  },
+  "boundaries": {
+    "t12Merged": false,
+    "t13Started": false,
+    "productionDeployment": false,
+    "remoteMigration": false,
+    "productionFlagChanges": false,
+    "oldEntranceRetirement": false,
+    "realProductionCloudTest": false,
+    "nativeDeviceTest": false,
+    "voiceOverTest": false,
+    "rawBrowserExportDownloadObserved": false
+  },
+  "limits": [
+    "Already issued cloud PUT/POST is not cancelled or rolled back and may be accepted after Cookie changes",
+    "Account check and server write are not an atomic transaction",
+    "localStorage comparison plus setItem is not cross-process atomic; a window remains after the final comparison",
+    "Runtime protections activate on deployment independently of game-page flags",
+    "Production cloud conflicts, real D1/R2, iOS, Android and VoiceOver remain unverified"
+  ]
+}

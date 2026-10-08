@@ -1,0 +1,22 @@
+---
+import { ArrowRight, ShieldCheck, Monitor, Smartphone } from '@lucide/astro';
+import StationBrandLayout from '../../layouts/StationBrandLayout.astro';
+import { gameCopy } from '../../redesign/gameCopy.js';
+import '../../redesign/games.css';
+interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+const { lang } = Astro.props;
+const copy = gameCopy[lang];
+---
+<StationBrandLayout lang={lang} title={copy.title} description={copy.intro} activeSection="games" preview>
+  <div data-sc-game-page></div>
+  <svg slot="fixture-controls" class="sc-game-symbols" width="0" height="0" aria-hidden="true" focusable="false"><defs>
+    <symbol id="sc-game-arrow" viewBox="0 0 24 24"><ArrowRight size={24} /></symbol>
+    <symbol id="sc-game-shield" viewBox="0 0 24 24"><ShieldCheck size={24} /></symbol>
+    <symbol id="sc-game-desktop" viewBox="0 0 24 24"><Monitor size={24} /></symbol>
+    <symbol id="sc-game-mobile" viewBox="0 0 24 24"><Smartphone size={24} /></symbol>
+  </defs></svg>
+</StationBrandLayout>
+<script>
+  import { mountGameEntry } from '../../redesign/gameClient.js';
+  mountGameEntry();
+</script>

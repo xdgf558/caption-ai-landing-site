@@ -10,6 +10,7 @@
   var offset = 0;
   var unlocked = false;
   var hiddenByPage = false;
+  var safetySuspended = false;
   var desiredMode = null;
   var revision = 0;
   var initialized = false;
@@ -162,7 +163,7 @@
   }
 
   function syncForState() {
-    var mode = !unlocked || document.hidden || hiddenByPage || getVolumeLevel() <= 0 ? null : hasCustomMusic() ? "custom" : "default";
+    var mode = !unlocked || document.hidden || hiddenByPage || safetySuspended || getVolumeLevel() <= 0 ? null : hasCustomMusic() ? "custom" : "default";
     if (mode !== desiredMode) {
       desiredMode = mode;
       revision += 1;
@@ -201,6 +202,7 @@
   }
 
   game.systems.musicSystem = {
+    suspend: function () { safetySuspended = true; syncForState(); },
     init: init, unlock: unlock, syncForState: syncForState, applyVolume: applyVolume,
     getCurrentTrackLabel: getCurrentTrackLabel, hasCustomMusic: hasCustomMusic, clearCustomMusic: clearCustomMusic
   };

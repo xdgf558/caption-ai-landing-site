@@ -93,6 +93,9 @@ jobs:
           node scripts/build-station-clip-home-preview.mjs
           npm run test:redesign:clips
 
+      - name: Verify Station Cat game pages and protected save handoff
+        run: npm run test:redesign:games
+
       - name: Verify closed production music candidate assets
         run: node --test scripts/test-music-production-assets.mjs
 

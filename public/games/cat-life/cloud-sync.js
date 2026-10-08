@@ -10,6 +10,7 @@
   var cloudSave = null;
   var conflict = null;
   var initialized = false;
+  var storageBlocked = false;
   var authenticated = false;
   var applyingRemote = false;
   var syncInFlight = false;
@@ -246,11 +247,11 @@
     if (elements.login) elements.login.hidden = true;
     if (elements.action) {
       elements.action.textContent = copy.resolve;
-      elements.action.hidden = !conflict;
+      elements.action.hidden = storageBlocked || !conflict;
     }
     if (elements.recoveryAction) {
       elements.recoveryAction.textContent = copy.recovery;
-      elements.recoveryAction.hidden = false;
+      elements.recoveryAction.hidden = storageBlocked;
     }
   }
 
@@ -427,6 +428,7 @@
   }
 
   async function restoreBackup(backup) {
+    if (storageBlocked) return;
     var copy = getCopy();
     if (!cloudSave || !window.confirm(copy.restoreConfirm)) return;
     elements.recoveryStatus.textContent = copy.recovering;
@@ -444,6 +446,7 @@
       elements.recoveryStatus.textContent = copy.recovered;
       await loadRecoveryHistory();
     } catch (error) {
+      if (storageBlocked) return false;
       if (error.status === 409 && error.data && error.data.save) {
         cloudSave = error.data.save;
         closeRecoveryDialog();
@@ -490,7 +493,20 @@
     showConflictDialog();
   }
 
+  async function confirmAccount() {
+    var identity;
+    try { identity = await window.CatGameSaveStatus.session(window.fetch.bind(window)); }
+    catch (error) { identity = null; }
+    if (storageBlocked || !identity || !identity.member || !account || identity.id !== String(account.id)) {
+      window.dispatchEvent(new CustomEvent("catgame:save-blocked", { detail: { status: "identity" } }));
+      throw new Error("SAVE_SESSION_CHANGED");
+    }
+  }
   async function requestJson(path, options) {
+    if (options && options.method && options.method !== "GET") {
+      if (storageBlocked) throw new Error("SAVE_BLOCKED");
+      await confirmAccount();
+    }
     var response = await fetch(path, options);
     var data = await response.json();
     if (!response.ok || !data.ok) {
@@ -503,6 +519,8 @@
   }
 
   async function uploadSave(saveData, baseRevision) {
+    if (storageBlocked) return false;
+    try { window.CatGame.state.saveSystem.assertUnchanged(); } catch (error) { return false; }
     var normalized = normalizeSave(saveData);
     if (!normalized || !authenticated || conflict) return false;
     if (syncInFlight) {
@@ -519,6 +537,8 @@
         return false;
       }
       var localDigest = await digestSave(normalized);
+      if (storageBlocked) return false;
+      try { window.CatGame.state.saveSystem.assertUnchanged(); } catch (error) { return false; }
       var result = await requestJson(apiPath, {
         method: "PUT",
         headers: { "content-type": "application/json" },
@@ -528,11 +548,13 @@
           saveData: normalized
         })
       });
+      if (storageBlocked) return false;
       cloudSave = result.save;
       writeMarker(cloudSave, localDigest);
       setStatus(getCopy().synced);
       return true;
     } catch (error) {
+      if (storageBlocked) return false;
       if (error.status === 409 && error.data && error.data.save) {
         cloudSave = error.data.save;
         enterConflict(latestLocalSave, cloudSave);
@@ -555,7 +577,7 @@
   }
 
   function scheduleSync() {
-    if (!initialized || !authenticated || conflict || applyingRemote || !latestLocalSave) return;
+    if (storageBlocked || !initialized || !authenticated || conflict || applyingRemote || !latestLocalSave) return;
     if (syncTimer) window.clearTimeout(syncTimer);
     syncTimer = window.setTimeout(function () {
       syncTimer = null;
@@ -564,12 +586,15 @@
   }
 
   function onLocalSave(saveData) {
+    if (storageBlocked) return;
     latestLocalSave = saveData;
     if (!applyingRemote) scheduleSync();
   }
 
   async function applyRemoteSave(remoteSave) {
+    if (storageBlocked) return;
     if (!remoteSave || !remoteSave.data || !window.CatGameApp) return;
+    window.CatGame.state.saveSystem.assertUnchanged();
     if (account && latestLocalSave) {
       try {
         localStorage.setItem(
@@ -596,6 +621,7 @@
   }
 
   async function useLocalSave() {
+    if (storageBlocked) return;
     if (!conflict) return;
     elements.dialogStatus.textContent = getCopy().syncing;
     var localSave = conflict.local;
@@ -619,6 +645,7 @@
     setStatus(getCopy().loading);
     try {
       var session = await requestJson("/api/readers/session");
+      if (storageBlocked) return;
       authenticated = Boolean(session.authenticated);
       account = session.account || null;
       if (!authenticated) {
@@ -631,7 +658,10 @@
       publishMemberSession(account.id);
       renderMember();
       var result = await requestJson(apiPath);
+      if (storageBlocked) return;
       cloudSave = result.save || null;
+      await confirmAccount();
+      if (storageBlocked) return;
       var claimedAccountId = readGuestClaim();
       var activation = null;
       if (window.CatGameApp && typeof window.CatGameApp.activateMemberStorage === "function") {
@@ -670,6 +700,7 @@
 
       enterConflict(latestLocalSave, cloudSave);
     } catch (error) {
+      if (storageBlocked) return;
       initialized = true;
       if (error.status === 401) {
         authenticated = false;
@@ -687,6 +718,14 @@
     if (elements.dialogStatus) elements.dialogStatus.textContent = getCopy().failed;
   }
 
+  window.addEventListener("catgame:save-blocked", function () {
+    storageBlocked = true;
+    if (syncTimer) window.clearTimeout(syncTimer);
+    syncTimer = null; pendingAfterSync = false;
+    closeConflictDialog(); closeRecoveryDialog();
+    if (elements.action) elements.action.hidden = true;
+    if (elements.recoveryAction) elements.recoveryAction.hidden = true;
+  });
   if (elements.action) elements.action.addEventListener("click", showConflictDialog);
   if (elements.recoveryAction) elements.recoveryAction.addEventListener("click", function () {
     showRecoveryDialog().catch(handleAsyncError);

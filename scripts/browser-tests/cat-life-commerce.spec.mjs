@@ -544,6 +544,8 @@ test('keeps forged premium room values visually locked for a guest and fits mobi
       schemaVersion: 2,
       meta: { createdAt: new Date().toISOString() },
       player: { name: 'Guest', gold: 500 },
+      cats: [{ id: 'cat_001' }],
+      inventory: {},
       home: { roomScene: { wall: 'station-green', floor: 'station-stripe', decor: 'station-signal', layout: 'station-waiting' } },
       settings: { language: 'en' }
     }));
@@ -557,6 +559,7 @@ test('keeps forged premium room values visually locked for a guest and fits mobi
   }));
 
   await page.goto('/games/cat-life/?lang=en');
+  await expect(page.locator('.home-journal-page')).toBeVisible();
   const scene = await page.evaluate(() => window.CatGame.systems.homeSystem.getRenderableRoomScene(
     window.CatGame.state.game.home.roomScene
   ));
@@ -595,7 +598,7 @@ test('does not reuse another account offline entitlement cache after an account 
   expect(await page.evaluate(() => window.CatGameCommerce.getSnapshot().account)).toBeNull();
 });
 
-test('keeps the current account cosmetic offline without enabling redemption', async ({ page }) => {
+test('keeps cosmetics offline after verifying the same account without enabling redemption', async ({ page }) => {
   await page.addInitScript(({ member, skinEntitlement }) => {
     localStorage.setItem('catGameMemberAccountV1', String(member.id));
     localStorage.setItem('catGameCommerceLastAccountV1', String(member.id));
@@ -608,7 +611,7 @@ test('keeps the current account cosmetic offline without enabling redemption', a
       equippedSkin: 'cat-life.skin.moonlit-tabby'
     }));
   }, { member: account, skinEntitlement: entitlementFor(skinProduct) });
-  await page.route('**/api/readers/session', (route) => route.abort('failed'));
+  await mockCloudMember(page, account);
   await page.route('**/api/games/cat-life/catalog?*', (route) => route.abort('failed'));
   await page.route('**/api/games/cat-life/entitlements?*', (route) => route.abort('failed'));
 
@@ -621,6 +624,26 @@ test('keeps the current account cosmetic offline without enabling redemption', a
   expect(await page.evaluate(() => window.CatGameCommerce.getSnapshot().authenticated)).toBe(false);
   await page.locator('[data-page-target="member_store"]').first().click();
   await expect(page.locator('[data-cat-commerce-section]')).not.toContainText('Redeem for');
+});
+
+test('cached account and cosmetics cannot start the game when the session is unavailable', async ({ page }) => {
+  const memberRaw = ' {cached member original\n ';
+  await page.addInitScript(({ member, skinEntitlement, memberRaw }) => {
+    localStorage.setItem('catGameMemberAccountV1', String(member.id));
+    localStorage.setItem('catGameCommerceLastAccountV1', String(member.id));
+    localStorage.setItem(`catGameSaveV1:member:${member.id}`, memberRaw);
+    localStorage.setItem(`catGameCommerceEntitlementsV1:${member.id}`, JSON.stringify({ account: member, entitlements: [skinEntitlement], cachedAt: new Date().toISOString() }));
+  }, { member: account, skinEntitlement: entitlementFor(skinProduct), memberRaw });
+  await page.route('**/api/readers/session', route => route.abort('failed'));
+  let writes = 0;
+  await page.route('**/api/readers/game-saves/cat-life', route => { if (route.request().method() !== 'GET') writes++; return route.abort('failed'); });
+  await page.goto('/games/cat-life/?lang=en');
+  await expect(page.locator('[data-save-safety="identity"]')).toBeVisible();
+  await expect(page.locator('.home-journal-page')).toHaveCount(0);
+  expect(await page.evaluate(() => window.CatGame.state.game)).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('catGameSaveV1:member:17'))).toBe(memberRaw);
+  expect(await page.evaluate(() => localStorage.getItem('catGameSaveV1'))).toBeNull();
+  expect(writes).toBe(0);
 });
 
 test('removes equipped premium visuals after the server revokes their entitlements', async ({ page }) => {
