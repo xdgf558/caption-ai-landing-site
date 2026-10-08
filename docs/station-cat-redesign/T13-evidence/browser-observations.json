@@ -1,0 +1,81 @@
+[
+  {
+    "audioSource": null,
+    "bodyOverflow": "hidden",
+    "case": "music-to-game-final-worker",
+    "chrome": "none",
+    "frames": 1,
+    "launchId": "d03c5ff8-189b-456e-a72f-838f46045fdc",
+    "musicPaused": true,
+    "readyMs": "118",
+    "state": "ready"
+  },
+  {
+    "case": "return-final-worker",
+    "chrome": "flex",
+    "focusLaunch": true,
+    "frames": 0,
+    "musicPaused": true,
+    "state": "idle"
+  },
+  {
+    "case": "video-to-game-final-worker",
+    "clipOpen": false,
+    "frames": 1,
+    "musicPaused": true,
+    "state": "ready",
+    "videos": 0
+  },
+  {
+    "case": "engine-failure-final-worker",
+    "feedback": "遊戲未能啟動。你的存檔不會因這次失敗而重置。重新啟動遊戲",
+    "focusRetry": true,
+    "frames": 0,
+    "state": "error"
+  },
+  {
+    "case": "failed-retry-final-1",
+    "frames": 0,
+    "musicPaused": true,
+    "state": "error"
+  },
+  {
+    "case": "failed-retry-final-2",
+    "frames": 0,
+    "musicPaused": true,
+    "state": "error"
+  },
+  {
+    "case": "missing-ready-timeout-final-worker",
+    "chrome": "flex",
+    "feedback": "遊戲準備時間較長，已返回小站。你可以重試。重新啟動遊戲",
+    "frames": 0,
+    "musicPaused": true,
+    "saveStatus": "找到可讀取、相容的本機存檔。",
+    "state": "error"
+  },
+  {
+    "case": "quick-return-final-worker",
+    "focusLaunch": true,
+    "frames": 0,
+    "musicPaused": true,
+    "state": "idle"
+  },
+  {
+    "case": "corrupt-recovery-final-worker",
+    "frames": 1,
+    "readyMs": "",
+    "state": "recovery"
+  },
+  {
+    "case": "corrupt-return-final-worker",
+    "frames": 0,
+    "preserved": "true",
+    "state": "idle",
+    "text": "异常存档原文保留：是（当前槽位）"
+  },
+  {
+    "case": "embedded-login-target",
+    "target": "_top"
+  }
+]

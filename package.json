@@ -80,7 +80,10 @@
     "rehearse:redesign:migration": "node scripts/rehearse-station-redesign-migration.mjs",
     "test:redesign:clips": "node --test --test-timeout=90000 scripts/test-station-clips.mjs scripts/test-station-clip-runtime.mjs",
     "test:redesign:games": "node --test --test-timeout=90000 scripts/test-station-game-saves.mjs scripts/test-station-game-pages.mjs scripts/test-station-game-client.mjs scripts/test-station-game-runtime.mjs",
-    "preview:redesign:games": "npm run build && node scripts/serve-station-game-preview.mjs"
+    "preview:redesign:games": "npm run build && node scripts/serve-station-game-preview.mjs",
+    "test:redesign:game-session": "node --test --test-timeout=90000 scripts/test-station-game-session.mjs",
+    "preview:redesign:game-session": "npm run build:redesign:game-session && node scripts/serve-station-game-handoff-preview.mjs",
+    "build:redesign:game-session": "astro build --config scripts/fixtures/station-handoff/astro.config.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

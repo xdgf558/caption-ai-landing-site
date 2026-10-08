@@ -1,0 +1,125 @@
+[
+  {
+    "client": 1440,
+    "frames": 1,
+    "headerDisplay": "none",
+    "lang": "ja",
+    "return": {
+      "bottom": 54,
+      "height": 44,
+      "left": 16,
+      "right": 189,
+      "top": 10,
+      "width": 173,
+      "x": 16,
+      "y": 10
+    },
+    "scroll": 1440,
+    "state": "ready",
+    "viewport": "1440x900"
+  },
+  {
+    "client": 360,
+    "frames": 1,
+    "headerDisplay": "none",
+    "lang": "zh-Hant",
+    "playerDisplay": "none",
+    "readyMs": "88",
+    "return": {
+      "bottom": 54,
+      "height": 44,
+      "left": 16,
+      "right": 150,
+      "top": 10,
+      "width": 134,
+      "x": 16,
+      "y": 10
+    },
+    "scroll": 360,
+    "state": "ready",
+    "viewport": "360x900",
+    "returned": {
+      "frames": 0,
+      "paused": true,
+      "state": "idle"
+    }
+  },
+  {
+    "client": 360,
+    "frames": 1,
+    "headerDisplay": "none",
+    "lang": "zh-Hans",
+    "playerDisplay": "none",
+    "readyMs": "82",
+    "return": {
+      "bottom": 54,
+      "height": 44,
+      "left": 16,
+      "right": 150,
+      "top": 10,
+      "width": 134,
+      "x": 16,
+      "y": 10
+    },
+    "scroll": 360,
+    "state": "ready",
+    "viewport": "360x900",
+    "returned": {
+      "frames": 0,
+      "paused": true,
+      "state": "idle"
+    }
+  },
+  {
+    "client": 360,
+    "frames": 1,
+    "headerDisplay": "none",
+    "lang": "en",
+    "playerDisplay": "none",
+    "readyMs": "85",
+    "return": {
+      "bottom": 54,
+      "height": 44,
+      "left": 16,
+      "right": 217.8984375,
+      "top": 10,
+      "width": 201.8984375,
+      "x": 16,
+      "y": 10
+    },
+    "scroll": 360,
+    "state": "ready",
+    "viewport": "360x900",
+    "returned": {
+      "frames": 0,
+      "paused": true,
+      "state": "idle"
+    }
+  },
+  {
+    "client": 360,
+    "frames": 1,
+    "headerDisplay": "none",
+    "lang": "ja",
+    "playerDisplay": "none",
+    "readyMs": "88",
+    "return": {
+      "bottom": 54.3984375,
+      "height": 44,
+      "left": 16,
+      "right": 189,
+      "top": 10.3984375,
+      "width": 173,
+      "x": 16,
+      "y": 10.3984375
+    },
+    "scroll": 360,
+    "state": "ready",
+    "viewport": "360x900",
+    "returned": {
+      "frames": 0,
+      "paused": true,
+      "state": "idle"
+    }
+  }
+]

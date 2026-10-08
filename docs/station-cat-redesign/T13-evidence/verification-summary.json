@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-08",
+  "timezone": "Asia/Singapore",
+  "branch": "codex/station-cat-redesign-t13",
+  "baseline": "31ba265c2a125c35f8d17204cb160e96e433e967",
+  "localResults": {
+    "counts": {
+      "session": 68,
+      "games": 52,
+      "music": 26,
+      "clips": 32,
+      "platforms": 15
+    },
+    "uniqueTargetedTestNames": 164,
+    "completeNpmTest": "passed, exit 0",
+    "build": "passed; ALLOW_EMPTY_SERIAL_CONTENT=1; not a production content package",
+    "previewBuild": "8 pages in private Astro graph",
+    "staging": "8 pages / 35 exact assets",
+    "designQA": "passed"
+  },
+  "hostedCI": "pending; local logs do not establish a hosted result",
+  "browserEvidence": {
+    "observations": "browser-observations.json",
+    "dimensions": "responsive.json",
+    "screenshots": "image-metadata.json",
+    "console": "normal-console.json",
+    "executionNotes": "execution-notes.md"
+  },
+  "limits": [
+    "No production migration, deploy, flags or retirement",
+    "T14 not started",
+    "Existing in-flight cloud writes and cross-process localStorage races remain",
+    "No real-device, VoiceOver or production-cloud acceptance"
+  ],
+  "sourceManifest": "source-manifest.json"
+}

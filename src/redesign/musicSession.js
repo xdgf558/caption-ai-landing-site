@@ -12,7 +12,7 @@ export function createStationMusicSession(audio, { origin = globalThis.location?
   const player = createMusicPlayer(audio, { origin, sourceFor: stationMusicSource, resetRestoredEnd: true });
   const subscribers = new Set();
   let currentTrack = null, selectedVariant = null, restored = null, prepared = null, pending = null, notice = null;
-  let controller = null, requestVersion = 0, destroyed = false, locale = 'zh-Hant', lastSavedSecond = -1, lastSavedStatus = '';
+  let controller = null, requestVersion = 0, destroyed = false, gameActive = false, locale = 'zh-Hant', lastSavedSecond = -1, lastSavedStatus = '';
   const snapshot = () => {
     const state = player.snapshot();
     return { ...state, ...(restored && state.activeTrackId === null ? {
@@ -47,7 +47,7 @@ export function createStationMusicSession(audio, { origin = globalThis.location?
     save(true); emit();
   }
   async function prepareFull(dto) {
-    if (destroyed) return false;
+    if (destroyed || gameActive) return false;
     cancelRequest();
     // A check never starts media. Existing audio stops immediately, and a full
     // source is unloaded before a new private grant can be used.
@@ -75,7 +75,7 @@ export function createStationMusicSession(audio, { origin = globalThis.location?
   }
   const isPrepared = dto => Boolean(prepared && prepared.id === dto?.id && prepared.revision === dto.revision && prepared.expiresAt >= now());
   function play(dto, variant) {
-    if (destroyed) return false;
+    if (destroyed || gameActive) return false;
     if (currentTrack?.id === dto?.id && currentTrack.revision === dto.revision && selectedVariant === variant &&
       (variant === 'full' || currentTrack.preview?.revision === dto.preview?.revision) && active(player.snapshot())) { pause(); return true; }
     let selection;
@@ -90,7 +90,7 @@ export function createStationMusicSession(audio, { origin = globalThis.location?
     save(true); emit(); return true;
   }
   async function restore() {
-    const saved = store.read(); if (!saved || destroyed || currentTrack) return;
+    const saved = store.read(); if (!saved || destroyed || gameActive || currentTrack) return;
     cancelRequest(); const version = requestVersion, request = new AbortController(); controller = request;
     try {
       const body = await requestStationMusic(contentBase + '/tracks/' + saved.slug + '?locale=' + locale, request, fetcher);
@@ -120,6 +120,7 @@ export function createStationMusicSession(audio, { origin = globalThis.location?
   }
   return {
     player, local, snapshot, isPrepared, prepareFull, play, pause, restore,
+    setGameActive(value) { gameActive = Boolean(value); if (gameActive) suspend(); },
     subscribe(fn) { subscribers.add(fn); fn(snapshot()); return () => subscribers.delete(fn); },
     setLocale(value) { if (stationLocales.includes(value)) { locale = value; emit(); } },
     observeTracks(tracks) {
@@ -132,7 +133,7 @@ export function createStationMusicSession(audio, { origin = globalThis.location?
       } else { currentTrack = dto; emit(); } // Localize display; never select the viewed song.
     },
     toggle() {
-      if (!currentTrack) return;
+      if (!currentTrack || gameActive) return;
       if (active(player.snapshot())) pause();
       else if (selectedVariant === 'full' && !isPrepared(currentTrack)) void prepareFull(currentTrack);
       else play(currentTrack, selectedVariant);

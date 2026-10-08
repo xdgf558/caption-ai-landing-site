@@ -1,0 +1,14 @@
+---
+import { ArrowLeft } from '@lucide/astro';
+import { gameHostCopy } from '../../redesign/gameHostCopy.js';
+interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+const { lang } = Astro.props; const copy = gameHostCopy[lang];
+---
+<dialog class="sc-game-dialog" data-sc-game-dialog aria-labelledby="sc-game-runtime-title">
+  <header class="sc-game-runtime-bar">
+    <button type="button" class="sc-button sc-button-secondary" data-sc-game-exit autofocus><ArrowLeft size={20} aria-hidden="true" />{copy.back}</button>
+    <h2 id="sc-game-runtime-title">{copy.frame}</h2>
+    <p data-sc-game-runtime-status role="status"></p>
+  </header>
+  <div class="sc-game-runtime-host" data-sc-game-host></div>
+</dialog>

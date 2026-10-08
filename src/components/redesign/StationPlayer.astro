@@ -1,0 +1,17 @@
+---
+import { Play, X } from '@lucide/astro';
+import { musicCopy } from '../../redesign/musicCopy.js';
+import { stationHref } from '../../redesign/routes.js';
+interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+const { lang } = Astro.props; const copy = musicCopy[lang];
+---
+  <div class="sc-music-player" role="region" aria-label={copy.player}>
+    <audio data-sc-music-audio preload="none"></audio>
+    <div class="sc-music-now"><strong data-sc-now-title></strong><span data-sc-now-artist></span></div>
+    <button type="button" class="sc-icon-button" data-sc-play-toggle aria-label={copy.play}><Play size={20} aria-hidden="true" /></button>
+    <div class="sc-music-progress"><span data-sc-current-time>00:00</span><label><span class="sc-sr-only">{copy.seek}</span><input type="range" data-sc-seek min="0" max="1" step="0.1" value="0" disabled /></label><span data-sc-duration>00:00</span></div>
+    <label class="sc-music-volume"><span class="sc-sr-only">{copy.volume}</span><input type="range" data-sc-volume min="0" max="1" step="0.01" value="1" /></label>
+    <button type="button" class="sc-icon-button" data-sc-player-close aria-label={copy.close}><X size={18} aria-hidden="true" /></button>
+    <p class="sc-music-player-status" data-sc-player-status role="status"></p>
+    <a class="sc-music-account-help" href={stationHref(lang, 'member')} data-sc-account-help hidden>{copy.login}</a>
+  </div>

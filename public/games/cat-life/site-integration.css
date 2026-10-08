@@ -554,3 +554,5 @@
     justify-content: flex-start;
   }
 }
+
+body[data-station-embedded="true"] .station-site-brand, body[data-station-embedded="true"] .station-site-links, body[data-station-embedded="true"] .station-site-language { display: none; }

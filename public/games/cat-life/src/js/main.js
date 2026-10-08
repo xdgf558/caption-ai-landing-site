@@ -5,6 +5,7 @@
   var dom = {};
   var liveTickId = null;
   var saveBlocked = false;
+  var gameStarted = false;
   var entryIdentity = null;
   var arcadeSpinTimerId = null;
   var lotteryCelebrationTimerId = null;
@@ -1463,6 +1464,7 @@
     liveTickId = window.setInterval(function () {
       syncRealtime("timer");
     }, 1000);
+    gameStarted = true;
   }
 
   function blockSave(status) {
@@ -1471,7 +1473,14 @@
     if (liveTickId) window.clearInterval(liveTickId);
     if (game.systems.musicSystem && game.systems.musicSystem.suspend) game.systems.musicSystem.suspend();
     window.CatGameSaveRecovery.show(status, entryIdentity);
+    if (window.CatGameHostBridge) window.CatGameHostBridge.recovery();
   }
+  window.addEventListener("catgame:host-exit", function () {
+    if (gameStarted) persistBeforeLeaving();
+    saveBlocked = true;
+    if (liveTickId) window.clearInterval(liveTickId);
+    if (game.systems.musicSystem && game.systems.musicSystem.suspend) game.systems.musicSystem.suspend();
+  });
   window.addEventListener("catgame:save-blocked", function (event) { blockSave(event.detail.status); });
   async function init() {
     try {
@@ -1485,11 +1494,16 @@
         catch (error) { throw Object.assign(new Error(), { saveStatus: "identity" }); }
         game.state.saveSystem.setStorageKey(entryIdentity.key);
       }
+      if (window.CatGameHostBridge && window.CatGameHostBridge.isStopped()) return;
       saveBlocked = false;
       if (document.body) document.body.removeAttribute("data-save-blocked");
       ["app-header", "app-navigation", "app-mobile-navigation", "app-toast"].forEach(function (id) { var node = document.getElementById(id); if (node) node.hidden = false; });
       startGame();
-    } catch (error) { blockSave(error.saveStatus || "corrupt"); }
+      if (!saveBlocked && window.CatGameHostBridge) window.CatGameHostBridge.ready();
+    } catch (error) {
+      if (window.CatGameHostBridge && window.CatGameHostBridge.isStopped()) return;
+      blockSave(error.saveStatus || "corrupt");
+    }
   }
   window.addEventListener("DOMContentLoaded", init);
 })(window.CatGame);

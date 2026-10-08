@@ -38,3 +38,17 @@
  .sc-game-save { padding: 24px; } .sc-game-card-copy { padding: 22px; }
  .sc-game-device-note { padding: 22px; margin-top: 24px; }
 }
+
+body.station-gentle[data-game-runtime="true"] { overflow: hidden; }
+.sc-game-dialog { position: fixed; inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; padding: 0; margin: 0; border: 0; background: var(--sc-paper, #fff); color: var(--sc-ink); overflow: hidden; }
+.sc-game-dialog[open] { display: flex; flex-direction: column; }
+.sc-game-dialog::backdrop { background: #fff; }
+.sc-game-runtime-bar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: calc(10px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--sc-line); flex: 0 0 auto; }
+.sc-game-runtime-bar .sc-button { min-height: 44px; flex: 0 0 auto; }
+.sc-game-runtime-bar h2 { margin: 0; font-size: 16px; }
+.sc-game-runtime-bar p { margin: 0 0 0 auto; font-size: 13px; color: var(--sc-muted); }
+.sc-game-runtime-host { flex: 1 1 auto; min-height: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.sc-game-runtime-host iframe { display: block; width: 100%; height: 100%; border: 0; }
+[data-sc-game-feedback] { flex-basis: 100%; }
+[data-sc-game-feedback][hidden] { display: none; }
+@media (max-width: 600px) { .sc-game-runtime-bar { gap: 8px 12px; } .sc-game-runtime-bar h2 { flex: 1 1 110px; font-size: 14px; } .sc-game-runtime-bar p { flex-basis: 100%; margin: 0; } .sc-game-runtime-bar p:empty { display: none; } }

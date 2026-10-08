@@ -24,6 +24,7 @@ export function mountGameEntry({ document = window.document, probe = window.CatG
       launch.href = '/games/cat-life/?sc_entry=1&lang=' + encodeURIComponent(locale === 'zh-Hans' ? 'zh-CN' : locale);
       launch.hidden = false;
     }
+    if (root.dispatchEvent) root.dispatchEvent(new CustomEvent('station:game-entry-checked'));
   }
   const recheck = () => { check(); };
   retry.addEventListener('click', recheck);

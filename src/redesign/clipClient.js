@@ -82,5 +82,6 @@ export function mountStationClips(root, model, music) {
   // but late/scripted audio state must still be unable to overlap video.
   const unsubscribe = music.subscribe(state => { if (controller.snapshot().clip && ['playing', 'loading', 'buffering'].includes(state.status)) close({ immediate: true }); });
   listen(window, 'pagehide', () => close({ immediate: true, focus: false }));
+  listen(window, 'station:game-enter', () => close({ immediate: true, focus: false }));
   return () => { if (disposed) return; disposed = true; close({ immediate: true, focus: false }); handlers.abort(); unsubscribe(); controller.destroy(); };
 }

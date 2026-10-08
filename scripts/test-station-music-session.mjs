@@ -33,6 +33,24 @@ const starts = player => { const events = []; player.onPlaybackStart(state => ev
 const saved = (track, variant = 'preview', positionSec = 12) => JSON.stringify({ schemaVersion: 1, trackId: track.id, slug: track.slug,
   revision: track.revision, variant, previewRevision: variant === 'preview' ? track.preview.revision : null, positionSec, savedAt: time });
 
+test('game handoff unloads real preview audio, locks background intents and returns paused at the same position', () => {
+  const f = setup(), song = dto('a'); f.session.play(song, 'preview'); f.audio.metadata(30); f.audio.playing(); f.session.seek(11);
+  const plays = f.audio.plays.length; f.session.setGameActive(true);
+  assert.equal(f.audio.src, ''); assert(f.audio.paused); assert.equal(f.session.snapshot().status, 'paused');
+  assert.equal(f.session.snapshot().currentTimeSec, 11); assert.equal(f.session.play(song, 'preview'), false);
+  f.session.toggle(); assert.equal(f.audio.plays.length, plays); f.session.setGameActive(false);
+  assert.equal(f.audio.plays.length, plays); f.session.toggle(); assert.equal(f.audio.plays.length, plays + 1);
+  f.audio.metadata(30); assert.equal(f.audio.currentTime, 11); f.session.destroy();
+});
+test('game handoff cancels a pending real private handshake; late responses and new checks cannot prepare audio', async () => {
+  const p = pendingFetch(), f = setup(p.fetcher), song = dto('a');
+  const checking = f.session.prepareFull(song); f.session.setGameActive(true);
+  assert(p.calls[0].options.signal.aborted); assert.equal(await f.session.prepareFull(song), false);
+  p.calls[0].resolve(response(grant(song))); assert.equal(await checking, false);
+  assert.equal(f.session.isPrepared(song), false); assert.equal(f.audio.src, ''); assert.equal(f.audio.plays.length, 0);
+  f.session.setGameActive(false); assert.equal(f.audio.plays.length, 0); f.session.destroy();
+});
+
 test('one audio/controller stays current when views subscribe and detach; viewing B never selects B', () => {
   const { audio, session } = setup(); session.play(dto('a'), 'preview'); audio.metadata(30); audio.playing();
   const before = session.snapshot(), detach = session.subscribe(() => {}); detach();

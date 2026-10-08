@@ -22,6 +22,24 @@ test('half-enabled rollout does not own new game paths; registered runtime remai
   }
   assert.equal((await get('/games/cat-life/')).status, 200);
 });
+test('actual Worker only enables same-origin runtime framing for gated valid launch requests', async () => {
+  const query = '?sc_entry=1&sc_launch_id=ff000000-0000-4000-8000-000000000001';
+  for (const prefix of ['', '/fixture-pages-only', '/fixture-content-only']) {
+    const r = await get(prefix + '/games/cat-life/' + query);
+    assert.equal(r.status, 200); assert.equal(r.headers.get('X-Frame-Options'), 'DENY');
+    assert.equal(r.headers.get('Content-Security-Policy'), "frame-ancestors 'none'"); await r.body.cancel();
+  }
+  const embedded = await get('/fixture-pages-on/games/cat-life/' + query);
+  assert.equal(embedded.status, 200); assert.equal(embedded.headers.get('X-Frame-Options'), 'SAMEORIGIN');
+  assert.match(embedded.headers.get('Content-Security-Policy'), /frame-ancestors 'self'/);
+  assert.equal(embedded.headers.get('Cache-Control'), 'private, no-store'); assert.match(await embedded.text(), /host-bridge.js/);
+  for (const suffix of ['', '?sc_entry=1&sc_launch_id=bad', query + '&sc_launch_id=ff000000-0000-4000-8000-000000000002']) {
+    const r = await get('/fixture-pages-on/games/cat-life/' + suffix);
+    assert.equal(r.headers.get('X-Frame-Options'), 'DENY'); await r.body.cancel();
+  }
+  const asset = await get('/fixture-pages-on/games/cat-life/src/js/main.js' + query);
+  assert.equal(asset.status, 200); assert.equal(asset.headers.get('X-Frame-Options'), null); await asset.body.cancel();
+});
 test('canonical alias/no-slash redirects, unmapped detail and method/query errors', async () => {
   const alias = await get('/fixture-pages-on/zh-hant/games/cat-life-game'); assert.equal(alias.status, 302); assert.equal(alias.headers.get('Location'), '/games/cat-life-game/');
   const unknown = await get('/fixture-pages-on/games/missing/'); assert.equal(unknown.status, 404);

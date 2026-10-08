@@ -1,22 +1,49 @@
 ---
-import { ArrowRight, ShieldCheck, Monitor, Smartphone } from '@lucide/astro';
+import { ArrowRight, ShieldCheck, Monitor, Smartphone, Play, Pause, Headphones } from '@lucide/astro';
 import StationBrandLayout from '../../layouts/StationBrandLayout.astro';
+import StationPlayer from './StationPlayer.astro';
+import GameDialog from './GameDialog.astro';
+import { ClientRouter } from 'astro:transitions';
+import '../../redesign/music.css';
 import { gameCopy } from '../../redesign/gameCopy.js';
 import '../../redesign/games.css';
 interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
 const { lang } = Astro.props;
 const copy = gameCopy[lang];
 ---
-<StationBrandLayout lang={lang} title={copy.title} description={copy.intro} activeSection="games" preview>
+<StationBrandLayout lang={lang} title={copy.title} description={copy.intro} activeSection="games" persistentPlayer preview>
+  <ClientRouter slot="head" fallback="swap" />
+  <StationPlayer slot="player" lang={lang} />
+  <GameDialog lang={lang} />
   <div data-sc-game-page></div>
   <svg slot="fixture-controls" class="sc-game-symbols" width="0" height="0" aria-hidden="true" focusable="false"><defs>
     <symbol id="sc-game-arrow" viewBox="0 0 24 24"><ArrowRight size={24} /></symbol>
     <symbol id="sc-game-shield" viewBox="0 0 24 24"><ShieldCheck size={24} /></symbol>
     <symbol id="sc-game-desktop" viewBox="0 0 24 24"><Monitor size={24} /></symbol>
     <symbol id="sc-game-mobile" viewBox="0 0 24 24"><Smartphone size={24} /></symbol>
+    <symbol id="sc-icon-play" viewBox="0 0 24 24"><Play size={24} /></symbol>
+    <symbol id="sc-icon-pause" viewBox="0 0 24 24"><Pause size={24} /></symbol>
+    <symbol id="sc-icon-headphones" viewBox="0 0 24 24"><Headphones size={24} /></symbol>
   </defs></svg>
 </StationBrandLayout>
 <script>
   import { mountGameEntry } from '../../redesign/gameClient.js';
-  mountGameEntry();
+  import { mountStationGameHost } from '../../redesign/gameHost.js';
+  import { getStationMusicSession, disposeStationMusicSession } from '../../redesign/musicPlayerView.js';
+  let dispose = () => {};
+  function mountPage() {
+    const root = document.querySelector('[data-sc-game-page]');
+    if (!root || root.hasAttribute('data-mounted')) return;
+    root.setAttribute('data-mounted', 'true');
+    getStationMusicSession(document.documentElement.lang);
+    const entry = mountGameEntry(), host = mountStationGameHost();
+    dispose = () => { host(); entry(); root.removeAttribute('data-mounted'); };
+  }
+  mountPage();
+  document.addEventListener('astro:before-swap', event => {
+    dispose(); dispose = () => {};
+    if (!event.newDocument.querySelector('[data-sc-music-audio]')) disposeStationMusicSession();
+  });
+  document.addEventListener('astro:page-load', mountPage);
+  document.addEventListener('astro:after-swap', mountPage);
 </script>
