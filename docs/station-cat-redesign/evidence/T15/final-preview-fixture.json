@@ -1,0 +1,52 @@
+{
+  "scope": "final preview after ephemeral restart; seeded via loopback API",
+  "createdAt": "2026-10-08T14:19:45.330Z",
+  "records": [
+    {
+      "name": "valid synthetic MP4",
+      "reserveStatus": 200,
+      "putStatus": 200,
+      "completeStatus": 200,
+      "result": {
+        "ok": true,
+        "uploadId": "00675dc9-c185-4875-9004-74598993f8c4",
+        "assetId": "11e99b85-b902-4199-8345-3612e5f0c73d",
+        "ownerId": "90334503-a47e-47b7-a28b-8bc883f28145",
+        "kind": "short_video",
+        "status": "completed",
+        "phase": "ready",
+        "expired": false,
+        "declaredBytes": 239372,
+        "actualBytes": 239372,
+        "durationMs": 30000,
+        "width": 640,
+        "height": 360,
+        "contentType": "video/mp4",
+        "expiresAt": 1791555585268,
+        "createdAt": 1791469185268,
+        "errorCode": null,
+        "recovery": null,
+        "measurement": "mp4-container-sps-v1"
+      }
+    },
+    {
+      "name": "corrupt synthetic MP4",
+      "reserveStatus": 200,
+      "putStatus": 200,
+      "completeStatus": 422,
+      "result": {
+        "ok": false,
+        "code": "STATION_VIDEO_STRUCTURE_INVALID"
+      }
+    }
+  ],
+  "checks": {
+    "page": 200,
+    "robots": "noindex, nofollow, noarchive, noindex, nofollow, noarchive",
+    "vendor": 200,
+    "forbiddenHost": 403,
+    "forbiddenOrigin": 403,
+    "publicRoute": 403
+  },
+  "hostProbe": "node:http sends the explicit Host; fetch normalizes Host to the URL."
+}

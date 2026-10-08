@@ -54,7 +54,8 @@
     "migrations-music/0009_music_album_covers.sql": "6c0f7f616d40e95514f019b964ca7d6e26e0d020a1c9fda48f40487d56c549f8",
     "migrations-music/0010_music_limited_free.sql": "6acfbaebe38ec0831696ce6e321561d4ea8b3f35410596fbc7a653afefd86b24",
     "migrations-music/0011_music_share_rate_limits.sql": "05d0be34b289df948c9eb92ffcecb22c2d75f716a8ebfff49e12c7defd3bbfa1",
-    "migrations-music/0012_station_redesign.sql": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498"
+    "migrations-music/0012_station_redesign.sql": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+    "migrations-music/0013_station_media_uploads.sql": "fca37ba533ddd2821335aa44749e699da546f145182a5f5886ebdac02c637021"
   },
   "databases": {
     "reader": {
@@ -2856,6 +2857,33 @@
           }
         ],
         "category": "publisher_content_keep"
+      },
+      "station_media_upload_sessions": {
+        "columns": [
+          "id",
+          "asset_id",
+          "actor_id",
+          "status",
+          "declared_bytes",
+          "expected_sha256",
+          "actual_bytes",
+          "write_token",
+          "validation_started_at",
+          "error_code",
+          "created_at",
+          "expires_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "asset_id",
+            "parent": "station_media_assets",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "admin_audit_review"
       },
       "station_platform_links": {
         "columns": [

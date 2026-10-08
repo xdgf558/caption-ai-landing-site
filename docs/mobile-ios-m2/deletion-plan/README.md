@@ -110,3 +110,9 @@ python3 scripts/test-account-deletion-audit.py
 `station_analytics_events` 单独归入 `redesign_analytics_review`。当前没有采集器或清理执行器；`session_id` 的使用和归因约束留 T18 验证，不能把任意会话字符串称为已匿名。主改版文档的 90 天原始事件、12 个月汇总只是待确认建议，不继承旧音乐事件的 30/365 天规则。当前新事件表的不可变删除触发器也不能充当到期清理机制，T18 须审查保留规则及受控清理的兼容实现后再启用采集。本次没有执行事件删除或账号清理。
 
 审计测试增至 12 项，新增检查锁定 18 张表的分类、作品外键范围、reader 隔离和 `approved=false` / `executionEnabled=false`。生成清单仍只是仓库迁移在内存中的结果，不是生产确认。
+
+## 素材上传审计增量（2026-10-08，T15）
+
+[T15](../../station-cat-redesign/T15-media-upload-and-validation.md) 只追加 `station_media_upload_sessions`，内存清单现为 reader 64 张、旧 music 27 张、station 19 张，共 110 张。原表、分类与历史迁移哈希不变。新表的 actor_id 为 Access 管理员身份，与读者账号不同；记录含文件 SHA、资产/会话编号、状态与审计时间，归 `admin_audit_review`，保留期限和最小化仍需按管理员主体审查，不能称为匿名记录。
+
+上传会话不可删除，未知/失败结果仍计入配额；这不代表账号清理政策已批准或无需到期治理。普通读者销户不因此取得删除作品、历史引用或管理员记录的权限。approved/executionEnabled 仍为 false，没有远程迁移、事件/对象清理或运行时销户改动。12 项审计测试覆盖新的 19 表分类。

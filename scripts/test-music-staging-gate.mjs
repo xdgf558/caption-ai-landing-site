@@ -151,6 +151,8 @@ test('only music admin, public read routes and exact static dependencies are all
     ['/_astro/musicPlayerCore.BLCSmwrZ.js', 'GET'],
     ['/_astro/musicPlayerCore.BLCSmwrZ.js', 'HEAD'],
     ['/_astro/policy.BI0F0d4k.js', 'HEAD'],
+    ['/_astro/publicationValidation.fixture.js', 'GET'],
+    ['/_astro/publicationValidation.fixture.js', 'HEAD'],
     ['/images/music-night-hero.webp', 'GET'],
     ['/_astro/index.hash.css', 'GET']
   ]) assert.equal(isMusicStagingRequest(request(path, method)), true, `${method} ${path}`);
@@ -357,12 +359,14 @@ test('staging package validation checks exact HTML pages and their dependency cl
   });
 });
 
-test('staging module graph includes only music, Access and the existing reader membership contract', async () => {
+test('staging module graph includes only music, Access, membership and the four gated media-upload modules', async () => {
   const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url));
   const entry = fileURLToPath(new URL('../src/music/stagingEntrypoint.js', import.meta.url));
   const pending = [entry];
   const visited = new Set();
   const externalImports = new Set();
+  const allowedShared = new Set(['adminAccess.js', 'readerMembership.js', 'data/reader-library-client.js',
+    'redesign/mediaUploads.js', 'redesign/mediaResources.js', 'redesign/mediaFormats.js', 'redesign/mp4Validation.js']);
 
   while (pending.length) {
     const file = pending.pop();
@@ -380,7 +384,7 @@ test('staging module graph includes only music, Access and the existing reader m
       }
       const resolved = resolve(dirname(file), extname(specifier) ? specifier : `${specifier}.js`);
       const repoPath = relative(sourceRoot, resolved).replaceAll('\\', '/');
-      assert.ok(['adminAccess.js', 'readerMembership.js', 'data/reader-library-client.js'].includes(repoPath) || repoPath.startsWith('music/'), `unexpected staging import: ${repoPath}`);
+      assert.ok(allowedShared.has(repoPath) || repoPath.startsWith('music/'), `unexpected staging import: ${repoPath}`);
       pending.push(resolved);
     }
   }
@@ -389,6 +393,7 @@ test('staging module graph includes only music, Access and the existing reader m
   assert.ok(paths.includes('adminAccess.js'));
   assert.ok(paths.includes('music/stagingEntrypoint.js'));
   assert.ok(!paths.includes('worker.js'));
+  assert.deepEqual(paths.filter(path => path.startsWith('redesign/')), [...allowedShared].filter(path => path.startsWith('redesign/')).sort());
   assert.deepEqual([...externalImports].sort(), ['@noble/hashes/sha2.js', 'mp3-parser/lib/lib.js']);
 });
 

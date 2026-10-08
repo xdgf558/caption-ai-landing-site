@@ -1,0 +1,22 @@
+{
+  "keyboard": [
+    {
+      "focused": "media-owner",
+      "outline": "rgb(173, 124, 55) solid 3px"
+    },
+    {
+      "focused": "media-file",
+      "outline": "rgb(173, 124, 55) solid 3px"
+    }
+  ],
+  "normalLogs": [],
+  "successAssetId": "fff6552f-b91d-4d40-8ac1-c73adb62ad48",
+  "corruptFixture": {
+    "source": "loopback API",
+    "reserveStatus": 200,
+    "putStatus": 200,
+    "completeStatus": 422,
+    "code": "STATION_VIDEO_STRUCTURE_INVALID",
+    "declaredBytes": 45
+  }
+}

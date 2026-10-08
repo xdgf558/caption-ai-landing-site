@@ -16,6 +16,8 @@ import { cleanupReadiness, planMusicCleanup, executeMusicCleanup } from './clean
 import { readMusicDiagnostics } from './diagnostics.js';
 import { readMusicAnalytics } from './analytics.js';
 import { readAdminMusicFeatured, saveAdminMusicFeatured } from './featured.js';
+import { stationMediaReadiness, stationMediaOwners, listStationMediaUploads, createStationMediaUpload,
+  readStationMediaUpload, writeStationMediaUpload, completeStationMediaUpload } from '../redesign/mediaUploads.js';
 
 export const isMusicAdminPath = path => path === '/admin/api/music' || path.startsWith('/admin/api/music/');
 function response(request, status, body, headers = {}) {
@@ -89,12 +91,41 @@ export async function handleMusicAdmin(request, env, authorize) {
       fields(query, ['from', 'to']);
       return response(request, 200, { ok: true, ...await readMusicAnalytics(env,query) });
     }
+    const siteUpload = path === '/admin/api/music/site-uploads' || path.startsWith('/admin/api/music/site-uploads/');
+    if (siteUpload && !((env.MUSIC_UPLOADS_ENABLED === true || env.MUSIC_UPLOADS_ENABLED === 'true') &&
+      (env.STATION_MEDIA_UPLOADS_ENABLED === true || env.STATION_MEDIA_UPLOADS_ENABLED === 'true'))) fail('STATION_MEDIA_UPLOADS_DISABLED', 503);
     const runtime = musicRuntime(env);
     const settings = await checkMusicDatabase(runtime.db);
     const context = { actorId, key: request.headers.get('idempotency-key'), ifMatch: request.headers.get('if-match') };
     const verifyResources = musicResourceVerifier(runtime.bucket, settings.previewLimitMs);
     let result;
-    if (path === '/admin/api/music/status' && read) {
+    if (siteUpload) {
+      const storage = await stationMediaReadiness(runtime.db);
+      if (path === '/admin/api/music/site-uploads/status' && read) {
+        fields(query, []); result = { actorId, storage, enabled: storage.quotaBytes > 0 && typeof runtime.bucket.put === 'function' };
+      } else if (path === '/admin/api/music/site-uploads/owners' && read) {
+        result = await stationMediaOwners(runtime.db, query);
+      } else if (path === '/admin/api/music/site-uploads') {
+        if (read) result = await listStationMediaUploads(runtime.db, actorId, query);
+        else {
+          if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED', 405);
+          fields(query, []); mutationKey(context.key);
+          result = await createStationMediaUpload(runtime.db, await readBody(request), context);
+        }
+      } else {
+        fields(query, []);
+        const upload = /^\/admin\/api\/music\/site-uploads\/([^/]+)(?:\/(body|complete))?$/.exec(path);
+        if (!upload) fail('NOT_FOUND', 404);
+        const id = musicId(upload[1]);
+        if (!upload[2] && read) result = await readStationMediaUpload(runtime.db, id, actorId);
+        else {
+          if (!upload[2] || request.method !== (upload[2] === 'body' ? 'PUT' : 'POST')) fail('METHOD_NOT_ALLOWED', 405);
+          mutationKey(context.key);
+          result = upload[2] === 'body' ? await writeStationMediaUpload(runtime.db, runtime.bucket, id, request, context)
+            : await completeStationMediaUpload(runtime.db, runtime.bucket, id, await readBody(request), context, { signal: request.signal });
+        }
+      }
+    } else if (path === '/admin/api/music/status' && read) {
       fields(query, []);
       const upload = await uploadReadiness(runtime.db).catch(() => null);
       const cleanup = await cleanupReadiness(runtime.db).catch(() => null);

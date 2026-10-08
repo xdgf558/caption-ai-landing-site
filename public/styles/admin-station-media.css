@@ -1,0 +1,33 @@
+.station-media-shell { max-width:1180px; }
+.station-media-shell .music-heading { align-items:flex-start; }
+.station-media-shell .music-heading .muted { margin-bottom:0; }
+.station-media-shell #media-status { flex:1; margin:8px 0; }
+.station-media-shell #media-status[data-error=true] { color:#a2353c; }
+.station-media-layout { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:32px; align-items:start; }
+.station-media-upload { border:1px solid #dbe2dd; border-radius:5px; padding:4px 24px 24px; }
+.station-media-shell h2 { display:flex; align-items:center; gap:9px; }
+.station-media-file { border:1px dashed #b6c7bd; border-radius:5px; padding:24px; background:#f6f9f7; text-align:center; justify-items:center; }
+.station-media-file input { max-width:100%; }
+.station-media-file small { font-weight:400; color:#596c61; }
+.station-media-shell progress { width:100%; accent-color:#326451; }
+.station-media-audio { display:flex; align-items:center; gap:12px; border-top:1px solid #dbe2dd; padding-top:18px; margin-top:22px; text-decoration:none; }
+.station-media-audio span { flex:1; }
+.station-media-audio small { display:block; color:#65736b; font-size:12px; }
+.station-media-forward { transform:rotate(180deg); }
+.station-media-history ol { list-style:none; padding:0; margin:0; }
+.station-media-history li { border-bottom:1px solid #dbe2dd; padding:16px 0; }
+.station-media-history li header { display:flex; gap:12px; justify-content:space-between; align-items:flex-start; }
+.station-media-history li strong { font-size:14px; overflow-wrap:anywhere; }
+.station-media-history li p { margin:6px 0; }
+.station-media-history .media-history-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.station-media-history .media-history-actions input { font-size:12px; }
+.station-media-history .badge[data-phase=failed] { color:#a2353c; background:#fcf0f0; border-color:#e1c3c4; }
+@media(max-width:900px) {
+  .station-media-layout { grid-template-columns:minmax(0,1fr); gap:24px; }
+}
+@media(max-width:760px) {
+  .station-media-upload { padding-inline:18px; }
+  .station-media-shell .music-heading { flex-wrap:wrap; }
+  .station-media-file { padding:18px 12px; }
+  .station-media-shell .field-grid { grid-template-columns:minmax(0,1fr); }
+}

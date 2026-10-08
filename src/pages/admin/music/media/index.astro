@@ -1,0 +1,36 @@
+---
+import { ArrowLeft, Upload, RefreshCw, Music2, Film, Image } from '@lucide/astro';
+---
+<!doctype html><html lang="zh-Hans"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><meta name="robots" content="noindex,nofollow" /><title>作品素材 | Station Cat</title><link rel="stylesheet" href="/styles/admin-music.css" /><link rel="stylesheet" href="/styles/admin-station-media.css" /></head>
+<body class="music-admin"><header class="music-topbar"><a href="/admin/music/"><ArrowLeft size={18} />返回音乐工作区</a><span>Station Cat / 后台</span></header>
+<main class="music-shell station-media-shell">
+  <header class="music-heading"><div><p class="eyebrow">素材工作区</p><h1>把作品的画面，准备好。</h1><p class="muted">上传视频、海报与游戏截图，供之后的内容编辑选用。</p></div><span class="badge">上传后待审核</span></header>
+  <div class="music-health"><span id="media-quota">正在读取配额…</span><span id="media-actor">正在核对管理员…</span></div>
+  <div class="music-feedback"><p id="media-status" role="status" aria-live="polite">正在连接素材服务。</p><button id="media-reload" type="button" aria-label="重新核对素材服务"><RefreshCw size={18} /></button></div>
+  <div class="station-media-layout">
+    <section class="music-workspace station-media-upload" aria-labelledby="media-upload-heading">
+      <header class="workspace-heading"><h2 id="media-upload-heading"><Upload size={19} />上传素材</h2><span class="badge" id="media-phase">待选择</span></header>
+      <form id="media-form"><fieldset id="media-fields" disabled>
+        <div class="field-grid"><label>素材用途<select id="media-kind"><option value="short_video">歌曲短片</option><option value="mv">音乐 MV</option><option value="poster">视频海报</option><option value="game_screenshot">游戏截图</option></select></label><label>所属作品<select id="media-owner" required><option value="">正在加载…</option></select></label></div>
+        <button id="media-more-owners" type="button" hidden>加载更多作品</button>
+        <p id="media-owner-empty" class="notice" hidden>还没有可以选用的作品草稿。请先准备视频或游戏的资料，再上传对应素材。</p>
+        <label for="media-file" class="station-media-file"><Film size={24} /><span>选择一份素材</span><input id="media-file" type="file" accept=".mp4" required /><small id="media-file-limit">MP4 · 最大 256 MiB · 最长 30 分钟</small></label>
+        <p id="media-file-name" class="muted">还没有选择文件。</p>
+        <p id="media-format-help" class="muted">视频需使用 H.264 画面，可搭配 AAC 音频。请保留本机原文件。</p>
+        <div id="media-progress" hidden><label id="media-progress-label" for="media-meter">正在核对文件</label><progress id="media-meter" max="100" value="0"></progress></div>
+        <footer class="music-actions"><button id="media-start" type="submit" class="primary"><Upload size={17} />上传并校验</button></footer>
+      </fieldset></form>
+      <p class="notice">校验就绪后仍需审核与发布。替换素材会生成新版本，保留已有文件。</p>
+      <a class="station-media-audio" href="/admin/music/"><Music2 size={18} /><span>完整音频与独立试听<small>在曲目的「素材」页分别上传和核对。</small></span><ArrowLeft class="station-media-forward" size={18} /></a>
+    </section>
+    <section class="station-media-history" aria-labelledby="media-history-heading">
+      <header class="workspace-heading"><h2 id="media-history-heading"><Image size={19} />上传记录</h2><span class="muted">当前管理员</span></header>
+      <p id="media-recovery-note" class="notice" hidden>有一项上传需要核对。刷新不会自动发送文件；请使用原记录查询或继续。</p>
+      <ol id="media-history"><li class="muted">正在读取上传记录…</li></ol>
+      <button id="media-more-history" type="button" hidden>查看更早记录</button>
+      <p class="muted">失败或结果未确认的上传仍占用预留配额。此处可查询和重试。</p>
+    </section>
+  </div>
+</main>
+<script>import '../../../../scripts/adminStationMedia.js';</script>
+</body></html>
