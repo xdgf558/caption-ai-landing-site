@@ -718,14 +718,16 @@
     if (elements.dialogStatus) elements.dialogStatus.textContent = getCopy().failed;
   }
 
-  window.addEventListener("catgame:save-blocked", function () {
+  function stopProtectedSync() {
     storageBlocked = true;
     if (syncTimer) window.clearTimeout(syncTimer);
     syncTimer = null; pendingAfterSync = false;
     closeConflictDialog(); closeRecoveryDialog();
     if (elements.action) elements.action.hidden = true;
     if (elements.recoveryAction) elements.recoveryAction.hidden = true;
-  });
+  }
+  window.addEventListener("catgame:save-blocked", stopProtectedSync);
+  window.addEventListener("catgame:host-exit", stopProtectedSync);
   if (elements.action) elements.action.addEventListener("click", showConflictDialog);
   if (elements.recoveryAction) elements.recoveryAction.addEventListener("click", function () {
     showRecoveryDialog().catch(handleAsyncError);

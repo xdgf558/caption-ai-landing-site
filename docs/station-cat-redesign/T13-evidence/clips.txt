@@ -1,0 +1,76 @@
+15:39:41 [content] Syncing content
+15:39:41 [content] Synced content
+15:39:41 [types] Generated 13ms
+15:39:41 [build] output: "static"
+15:39:41 [build] mode: "static"
+15:39:41 [build] directory: /Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/.generated/station-clip-home-preview/
+15:39:41 [build] Collecting build info...
+15:39:41 [build] ✓ Completed in 20ms.
+15:39:41 [build] Building static entrypoints...
+15:39:41 [vite] ✓ built in 736ms
+15:39:41 [build] ✓ Completed in 747ms.
+
+ building client (vite) 
+15:39:41 [vite] transforming...
+15:39:41 [vite] ✓ 30 modules transformed.
+15:39:41 [vite] rendering chunks...
+15:39:41 [vite] computing gzip size...
+15:39:41 [vite] .generated/station-clip-home-preview/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.DUx-6lX3.js    1.46 kB │ gzip: 0.63 kB
+15:39:41 [vite] .generated/station-clip-home-preview/_astro/routes.ZSLcpnYL.js                                                  1.67 kB │ gzip: 0.76 kB
+15:39:41 [vite] .generated/station-clip-home-preview/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.BY129h6U.js  24.17 kB │ gzip: 9.56 kB
+15:39:41 [vite] ✓ built in 30ms
+
+ generating static routes 
+15:39:41 ▶ scripts/fixtures/station-clips/site/pages/[locale].astro
+15:39:41   ├─ /zh-Hant/index.html (+6ms) 
+15:39:41   ├─ /zh-Hans/index.html (+2ms) 
+15:39:41   ├─ /en/index.html (+1ms) 
+15:39:41   └─ /ja/index.html (+1ms) 
+15:39:41 ✓ Completed in 13ms.
+
+15:39:41 [build] 4 page(s) built in 817ms
+15:39:41 [build] Complete!
+
+> landing-site@0.1.0 test:redesign:clips
+> node --test --test-timeout=90000 scripts/test-station-clips.mjs scripts/test-station-clip-runtime.mjs
+
+✔ separate four-language homepage graph only binds selected T07 clip DTOs, keeps native detail fallback, and contains no video/audio (4049.641125ms)
+✔ final built four-language detail shell has associated cards, empty accessible dialog, lazy posters and no video source/iframe (53.379583ms)
+✔ native D1/R2 returns actual pinned MP4 bytes and poster via current public asset checks (17.669541ms)
+✔ video range and HEAD agree with the same pinned media; invalid range never streams the full object (11.083583ms)
+✔ both ordinary flag pairs remain closed for pages, and a disabled public service never streams these videos (5.927ms)
+✔ intentional bad codec fixture retains only a safe synthetic original link; it cannot masquerade as decoded media evidence (5.444375ms)
+✔ revoked poster rights immediately remove the associated clip and deny its already-known video URL (26.371875ms)
+✔ missing R2 media removes the clip and refuses a stale URL without altering its publication (26.33825ms)
+✔ unpublished parent cannot expose a clip/video, and requesting clip bytes never grants full song entitlement (27.087041ms)
+✔ home player DTOs cannot add cards outside the published home/promotion selection or replace its owned poster (0.939958ms)
+✔ end-of-video navigation only returns the owning localized song and currently live verified platforms (0.352083ms)
+✔ cards require published, bounded, unambiguous clips associated with this exact song (0.147083ms)
+✔ media and poster only use exact controlled asset paths, never foreign URLs or private query strings (0.28475ms)
+✔ fallback URLs are past, verified provider HTTPS addresses; ambiguity and oversized arrays cannot leak targets (0.204958ms)
+✔ four languages render escaped posters/durations and no-JS original links without any video or eager media source (0.652458ms)
+✔ nothing creates or plays media before a gesture; music pauses before video construction and play (0.341459ms)
+✔ playing, buffering, pause and end reflect native events, not a fulfilled play promise (1.756958ms)
+✔ rapid switching tears down all previous elements; late promises/events cannot revive or overwrite the latest video (0.556208ms)
+✔ closing immediately clears source, aborts listeners, and does not resume audio when a pending play resolves (0.240167ms)
+✔ codec and browser denial show distinct recoverable errors; retry makes a fresh element and retires the failed attempt (0.35775ms)
+✔ synchronous music pause/video construction/play failure stays recoverable without a live element (0.124666ms)
+✔ destroy is final and ignores late events, retries and new open attempts (0.239541ms)
+✔ video cancels a real T09 pending private handshake; its late successful response cannot prepare or play full audio (7.989375ms)
+✔ video stops an actual T09 audio source before starting; closing leaves the music paused (1.099583ms)
+✔ dialog escape stops immediately and returns focus to the exact triggering card (0.625375ms)
+✔ game entry closes the actual T11 dialog immediately, clears media and cannot return focus behind the game (0.162666ms)
+✔ validated home card uses the same click player; unsupported dialog leaves ordinary navigation intact (0.178958ms)
+✔ HTML action boundaries keep Tab in the dialog while native video controls retain their own sequence (0.175041ms)
+✔ close animation never owns media; rapid re-open and an old native close event cannot destroy the new attempt (201.843333ms)
+✔ a new music intent closes video synchronously, while paused/error music cannot close a new video (0.480459ms)
+✔ pagehide and view disposal unload video without resuming audio or letting detached clicks re-open it (0.16625ms)
+✔ removed trigger falls back to main focus, and unsupported native dialog keeps inert play controls hidden (0.137834ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4385.342417

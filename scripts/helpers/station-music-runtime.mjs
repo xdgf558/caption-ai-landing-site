@@ -26,7 +26,7 @@ export async function stationMusicAssets(request) {
     return new Response(bytes, { headers: { 'Content-Type': type + (type.startsWith('text/') ? '; charset=utf-8' : ''), 'Content-Length': String(bytes.length), 'Cache-Control': 'no-store' } });
   } catch { return new Response(null, { status: 404 }); }
 }
-export async function createStationMusicRuntime({ platformCases = false, videoCases = false, gameCases = false } = {}) {
+export async function createStationMusicRuntime({ platformCases = false, videoCases = false, gameCases = false, gameAssets = request => stationGameAssets(request) } = {}) {
   const output = await build({ entryPoints: [fileURLToPath(new URL(gameCases ? 'station-game-runtime-worker.js' : 'station-music-runtime-worker.js', import.meta.url))],
     bundle: true, format: 'esm', platform: 'browser', write: false, loader: { '.wasm': 'binary' } });
   const mf = new Miniflare({ modules: true, script: output.outputFiles[0].text,
@@ -35,7 +35,7 @@ export async function createStationMusicRuntime({ platformCases = false, videoCa
     r2Buckets: { MUSIC_BUCKET: 'station-music-pages-only' },
     bindings: { MUSIC_PUBLIC_ENABLED: 'true', MUSIC_VIP_DELIVERY_ENABLED: 'true',
       MUSIC_RATE_LIMIT_SECRET: 'station-music-pages-local-test-secret-no-production' },
-    serviceBindings: { ASSETS: gameCases ? stationGameAssets : stationMusicAssets },
+    serviceBindings: { ASSETS: gameCases ? gameAssets : stationMusicAssets },
     outboundService: () => new Response('Outbound network disabled in local music preview', { status: 403 }) });
   try {
     const db = await mf.getD1Database('MUSIC_DB'), reader = await mf.getD1Database('WAITLIST_DB'), bucket = await mf.getR2Bucket('MUSIC_BUCKET');

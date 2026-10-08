@@ -1,0 +1,235 @@
+{
+  "baseline": "31ba265c2a125c35f8d17204cb160e96e433e967",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 4466,
+      "sha256": "9933b801f4228989dd021a6c101fa24c9496dce4754e5b936691321ce94d5c30"
+    },
+    {
+      "path": "astro.config.mjs",
+      "bytes": 143,
+      "sha256": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 257485,
+      "sha256": "b81e63fc2580e6e768dcfe5d799eb5944e95bf1fb51a056b8697ece1e6c9d4b0"
+    },
+    {
+      "path": "package.json",
+      "bytes": 12287,
+      "sha256": "d49c14fc730115cfcdeb24543bcf4e81df755d32a5c49f40f2d688374b2dba01"
+    },
+    {
+      "path": "public/_headers",
+      "bytes": 1284,
+      "sha256": "a3f8168e2f304598ad81a21c75ea2fe77ab5d5482aa2462bf349b7eb2278f3dd"
+    },
+    {
+      "path": "public/games/cat-life/cloud-sync.js",
+      "bytes": 28627,
+      "sha256": "dc662a2a80dba0b41de2864c5389fe9d4e0d102f3a1da353e99688031da55860"
+    },
+    {
+      "path": "public/games/cat-life/host-bridge.js",
+      "bytes": 2011,
+      "sha256": "9a989c88c2fe8aa6c4357af4e1cfdaaeac2e7310b9667322a2934b7154d6be36"
+    },
+    {
+      "path": "public/games/cat-life/index.html",
+      "bytes": 10665,
+      "sha256": "3935e0e9589625dda0ac49034ee22b72e81dbe556e3d703a53ee079dbdbbb775"
+    },
+    {
+      "path": "public/games/cat-life/site-integration.css",
+      "bytes": 10369,
+      "sha256": "039ef227359823d83721efa16bd682ee70188823f725cba8330950405c8f5714"
+    },
+    {
+      "path": "public/games/cat-life/src/js/main.js",
+      "bytes": 56640,
+      "sha256": "25b3e0b289c2f2aee5a895905901c3d52d34a183becea3efdd0beb4ce67fbdfe"
+    },
+    {
+      "path": "scripts/fixtures/station-games/handoff-control.js",
+      "bytes": 4752,
+      "sha256": "0e7c810f90a5764989c88544255a4cad9ddedea67c650a2e27bdff6cb5ca6d11"
+    },
+    {
+      "path": "scripts/fixtures/station-handoff/astro.config.mjs",
+      "bytes": 643,
+      "sha256": "ce853711745f76fcbc6c72a5b83aae2dca5ee483c1f62047470475fd7a883d54"
+    },
+    {
+      "path": "scripts/fixtures/station-handoff/site/src/pages/games/site-shell/[lang].astro",
+      "bytes": 368,
+      "sha256": "bd4fbf53a3c0311c9a276cb18cac929745725a0a6135a313b52fc38eb2ff1e96"
+    },
+    {
+      "path": "scripts/fixtures/station-handoff/site/src/pages/music/site-shell/[lang].astro",
+      "bytes": 289,
+      "sha256": "461ed5f90cf6089c3c2afae50706db354babf9692cc21dce5159bfb643a20651"
+    },
+    {
+      "path": "scripts/helpers/cat-life-save-harness.mjs",
+      "bytes": 3143,
+      "sha256": "c1fd081587909aba9aa5682e9dd731cf1136e8af632cabdbd68db79bbdaeeab4"
+    },
+    {
+      "path": "scripts/helpers/station-game-assets.mjs",
+      "bytes": 1774,
+      "sha256": "4ec881a0c1285b225da892294615660ed0fe287d3d70290b7e8c8418248acb90"
+    },
+    {
+      "path": "scripts/helpers/station-game-runtime-worker.js",
+      "bytes": 848,
+      "sha256": "59dfdea52fc22582c80ebde246bfe476d3a8792821d43e0a2ba22b0d4c3cfe45"
+    },
+    {
+      "path": "scripts/helpers/station-music-runtime.mjs",
+      "bytes": 4615,
+      "sha256": "0e245ad8579b6acf88b9fb80f17321662e30e63075004950571ed4a89283f4bd"
+    },
+    {
+      "path": "scripts/serve-station-game-handoff-preview.mjs",
+      "bytes": 5865,
+      "sha256": "a9d8b32301fe3a0c3b3be8fe489874bf1d140ac83c360c216df899892844922e"
+    },
+    {
+      "path": "scripts/test-station-clips.mjs",
+      "bytes": 22785,
+      "sha256": "412b3019f89087d7a137f12f91ac77872574d08fabb413f5c0e2baa54591907f"
+    },
+    {
+      "path": "scripts/test-station-game-runtime.mjs",
+      "bytes": 5774,
+      "sha256": "e00902d7fa832f84b762eb50483e11c525530a612a37d37b63b2c34ac9bb3db3"
+    },
+    {
+      "path": "scripts/test-station-game-session.mjs",
+      "bytes": 12254,
+      "sha256": "aecb3803b942d0ccf84eaeb012525a90421a74d93367ef1d6ccb0982303416fd"
+    },
+    {
+      "path": "scripts/test-station-music-session.mjs",
+      "bytes": 21546,
+      "sha256": "9cbae215111a7977c1408d056ec596bdb5e66e4bc3e86da3851fd7541e8e8e7f"
+    },
+    {
+      "path": "src/components/redesign/GameDialog.astro",
+      "bytes": 715,
+      "sha256": "12a8673a4c3a388d28f41abbedb4bd5cbcb11a3204fdb3e9d47062cbce4fadca"
+    },
+    {
+      "path": "src/components/redesign/GameShell.astro",
+      "bytes": 2625,
+      "sha256": "5415ebd65fd5195148e7bdcfe295b502ff9fac7148ef109464c4a9fb945ac0da"
+    },
+    {
+      "path": "src/components/redesign/MusicShell.astro",
+      "bytes": 3161,
+      "sha256": "706acf1a5e06c098c3fd0edab3bd03baae9f123461ef4aeafc0b00f6a981599c"
+    },
+    {
+      "path": "src/components/redesign/StationPlayer.astro",
+      "bytes": 1415,
+      "sha256": "54fc62f3e6b6da917dca05a9f099746b9d0e15e96a5e01bf2195236fae5ffc56"
+    },
+    {
+      "path": "src/layouts/StationBrandLayout.astro",
+      "bytes": 4179,
+      "sha256": "45ef26bde6bbea3a8873163b75acb92c41109b783a369c5e2bae7698fa5544ad"
+    },
+    {
+      "path": "src/redesign/clipClient.js",
+      "bytes": 6672,
+      "sha256": "58744ea1460676a439d1b31fca66392baa4d4a9cbdc3e694e9f23a7c2505e7ad"
+    },
+    {
+      "path": "src/redesign/gameClient.js",
+      "bytes": 2336,
+      "sha256": "3972c07a5a81f610777ca04e3185f59e4dd1121f31e765b3cbc7840c9c055a01"
+    },
+    {
+      "path": "src/redesign/gameHost.js",
+      "bytes": 5029,
+      "sha256": "46513277a3b4a6ec03a850f69ee72c8ca7ece8f790c97aeb0a0fae9df3ce6e30"
+    },
+    {
+      "path": "src/redesign/gameHostCopy.js",
+      "bytes": 1921,
+      "sha256": "9120b5298e1dac286d00ca38b315918c113010e9fd024385db41f975afd71ad7"
+    },
+    {
+      "path": "src/redesign/gamePages.js",
+      "bytes": 6129,
+      "sha256": "73c48c70fd52d20ae43bf2fee552963e0dd2736eaa219a529258d152d91746a8"
+    },
+    {
+      "path": "src/redesign/gameProtocol.js",
+      "bytes": 666,
+      "sha256": "d1d06939ee052e642296fcfdb18f18760007d09daabb4de1d0933bfbbe12ca88"
+    },
+    {
+      "path": "src/redesign/gameRender.js",
+      "bytes": 3844,
+      "sha256": "a6c5b7658d944919f42d55e297a1e0aaaaef6616c3a50cd24d7c1c898dc76450"
+    },
+    {
+      "path": "src/redesign/gameRuntime.js",
+      "bytes": 1539,
+      "sha256": "5cec76e01c71fa8fddec3bea527aadc5ccb3b72de925465f4e35bd1242e2a720"
+    },
+    {
+      "path": "src/redesign/gameSession.js",
+      "bytes": 4009,
+      "sha256": "6a59c325c4a894bf7e441f5e9ec9c3f4115841ca6c2f4a26c1e1b440d58dd3b2"
+    },
+    {
+      "path": "src/redesign/games.css",
+      "bytes": 4846,
+      "sha256": "ddbd4e5917e4af696f35b80ec3b53c7688a5762a2c6ceeb39f7e6235bf548ed0"
+    },
+    {
+      "path": "src/redesign/gentle.css",
+      "bytes": 10447,
+      "sha256": "cbed64a16d1d11952c93ab87d703bde9f9d39c208376fc1cfadea3e51be8461d"
+    },
+    {
+      "path": "src/redesign/musicPlayback.js",
+      "bytes": 2219,
+      "sha256": "efdf8560bd38f46dfa8fe67a396940d1b146bc0e3ed263dbc4b8176f6c470cc5"
+    },
+    {
+      "path": "src/redesign/musicPlayerView.js",
+      "bytes": 4825,
+      "sha256": "3360ed1a559d1061404ade9943d70c7552c120a80732b5c4fdb3ef44a15dcdcb"
+    },
+    {
+      "path": "src/redesign/musicResume.js",
+      "bytes": 2274,
+      "sha256": "49426d22022fb32cf90fa1321120c76190be07ff93dab9bdd75080c9977b5a3a"
+    },
+    {
+      "path": "src/redesign/musicSession.js",
+      "bytes": 9895,
+      "sha256": "78c5d5fb9fd1a30c807855bef64d3c8bb70f78a6385aaafc6eaa7da5c92ea8ab"
+    },
+    {
+      "path": "src/scripts/musicLocalData.js",
+      "bytes": 6234,
+      "sha256": "b981a40c3ba1e80638f43f95280efe6556e7210ae7c7fec1269f95a5246a1988"
+    },
+    {
+      "path": "src/scripts/musicPlayerCore.js",
+      "bytes": 13805,
+      "sha256": "8d05c4f2c19bb7070ad67a3cbe6ae1b39e351a70818f61b62f169225a0640183"
+    },
+    {
+      "path": "src/worker.js",
+      "bytes": 909424,
+      "sha256": "a41561c4246f15f8c9a058ae6806975ec2b0cca3adf16731abc39636bedcde33"
+    }
+  ]
+}

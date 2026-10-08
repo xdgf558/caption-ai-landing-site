@@ -1,0 +1,224 @@
+{
+  "files": [
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/T12-merge-result.json",
+      "bytes": 242,
+      "sha256": "a0bbfeb21018618e2b2bf4e95d44715215782eeb247ac217b832a8610b112981"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/browser-observations.json",
+      "bytes": 1818,
+      "sha256": "d57c63cb2be929fcf58694dc9391c9f55ea1460078c72589f8eaad01b6a1b7f5"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/build.txt",
+      "bytes": 23798,
+      "sha256": "2afe8b722e018652bd7a8b8e8f5bec31b41e6b549369044a6eadfbdfe53cdd6b"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/clips.txt",
+      "bytes": 5666,
+      "sha256": "476ba5982097d6a858fa7aa21e92d7a78c421aa776f15ce1454e292a19d2a5e6"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/comparison-brand-and-intro.png",
+      "bytes": 606534,
+      "sha256": "e5b6f9a435ed1e3c2dc41057bbcdf33181f611b1f85bb9df00a83a74f07ac3a0"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/comparison-header-detail.png",
+      "bytes": 217984,
+      "sha256": "6f87f97e3eb48a7a32a91c8df3424d9104681e90ddec73a166d6a2e475bdabe2"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/comparison-mobile.png",
+      "bytes": 471399,
+      "sha256": "02c9ba33cf1d162054947a7f05e27970b475931d60cb3c631ad5b72518f262d9"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/comparison-runtime-scroll.png",
+      "bytes": 459055,
+      "sha256": "6a4822273a297356fc556fcec33bb3b8481d113fe5b9ee8b62afc5b6aa6ff65e"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/design-qa.md",
+      "bytes": 4590,
+      "sha256": "6f84ff7460823f68aa46b0bcb05f15b292ac959d84dfbc7f1e7fc5d2149d17f9"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/engine-failure-1440.png",
+      "bytes": 196224,
+      "sha256": "f6ca94f072064571676f976a3e536c6a61d799b963e9cc7cba508cefcce526dd"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/execution-notes.md",
+      "bytes": 659,
+      "sha256": "76675b8f930e5d2f365cef44873b118da0da4a29e8472b5b3e6fed4c9934f38b"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/games.txt",
+      "bytes": 5176,
+      "sha256": "0d3dfbdf03939f138c36722a23780405a6c30fa5a8f91cc7b633149e13fb3110"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/history-games-adapter-failure.txt",
+      "bytes": 11347,
+      "sha256": "9a197cb878130c60595e6cde3bfc9127a5967880f5f16cc7629e523bfe046a0c"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/image-metadata.json",
+      "bytes": 2458,
+      "sha256": "d9a7999109382fdb25982a82a63266ddbc729bd19de3834ff6ac9255b72efb99"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/intro-1440.png",
+      "bytes": 191978,
+      "sha256": "b1081b4f53330a9ce4399bb823eb40de61f13d92cd960161c405b03c9d1fee56"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/intro-390.png",
+      "bytes": 118419,
+      "sha256": "e95338dcefcb2b1ecc8ffeed0b63f3999572342b491e5cb63b8439dc07e5dc75"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/intro-missing-1440.png",
+      "bytes": 192145,
+      "sha256": "4aa075fbf2a8a0bd1f974ab1716bf3089cfd4c799894ef06e1eb2d09abb9495b"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/intro-missing-390.png",
+      "bytes": 116153,
+      "sha256": "2c68fcc85e67f47e4d3017b29e94cc33a1b5fa0f9d271fd3616b3638cbbf6a56"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/media-runtime-1440.png",
+      "bytes": 99762,
+      "sha256": "ee37b11e8b5621833476760c09dd57501b9a131dddaa6e3e05653e88e3d4e338"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/music.txt",
+      "bytes": 3473,
+      "sha256": "12e8f7a4cbbc8d5abde8df19a1dc79aeaf344851f61a619e679e487996144639"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/normal-console.json",
+      "bytes": 136,
+      "sha256": "de041e7b854fab598b2a0074267efcf3e736ca58ab90ccbad98ddd968e3ff953"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/npm-test.txt",
+      "bytes": 76550,
+      "sha256": "7bba8781dca27ffe3b0676d338d59f8d0c1452d730cf7f7be28b1e71249c9c4c"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/platforms.txt",
+      "bytes": 2016,
+      "sha256": "27c66ed464408b8cde2e5b9b2b83eb7f51e70b745c5880c64cfe515a376cd97d"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/preview.txt",
+      "bytes": 2915,
+      "sha256": "f1ebcdef5c255da4894f69b680f91ca8d76bae4d29b0be23a50e49f5013fe8bb"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/recovery-1440.png",
+      "bytes": 45634,
+      "sha256": "971fdc3e56d248383a694b6b4f09d783a5d25fd533338ae7154a7afc20281f29"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/responsive.json",
+      "bytes": 2238,
+      "sha256": "22501daede74d22d16eaf6573737654c9c6ba2b46e6adc0b80dfd3a3a3b36dbd"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-1440.png",
+      "bytes": 128863,
+      "sha256": "b744e7507034db2665fc022fbc8fbbee6fb3c0e3b6ee6edd5dada34f41f0e6a6"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-390.png",
+      "bytes": 51020,
+      "sha256": "638be9bf3696a9c0299750b65898a674a058a2f7097291ef523ad7814497472f"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-en-1440.png",
+      "bytes": 133603,
+      "sha256": "94a8c5b23ac17118b66e7ae08d85e508e40b287b53d57d27529b95311ae6f802"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-en-360.png",
+      "bytes": 53106,
+      "sha256": "c84b1420b5aec0e2f84158e39346088bcf9797e12110d5eb41e827ebc417aaff"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-final-1440.png",
+      "bytes": 128890,
+      "sha256": "b1e302309f8717ff182f6fa868521ac39eaade0a92916a128bc19a97c504772b"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-ja-1440.png",
+      "bytes": 133222,
+      "sha256": "65f0e647e032bbd672e5897f17f2e0bd26bf37f8e6eaca45801af573190312f6"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-ja-360.png",
+      "bytes": 53910,
+      "sha256": "b0b28f4a9adc615af83075c06394323c819c9a6c0977fe9494ac6c336723be66"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-zh-Hans-1440.png",
+      "bytes": 125923,
+      "sha256": "aca6ccd651f38d880fefe5203d49585223520a74f89102e40b3b48a601efe845"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-zh-Hans-360.png",
+      "bytes": 53294,
+      "sha256": "f40503de9a0e53f33e4dd44ecc21592861cec5a0255dea891167f2d38f3d3f8e"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-zh-Hant-1280.png",
+      "bytes": 123214,
+      "sha256": "03049887356c74682a3b4ec652085d46759e5df17b796ae7831b5faa34644757"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-zh-Hant-1440.png",
+      "bytes": 128855,
+      "sha256": "f4d6426a905c2f8257329189dda2952d7648de222bdd4a71381f8f8b3448094e"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-zh-Hant-360.png",
+      "bytes": 52168,
+      "sha256": "e36ca41821fa6f7916cc08cf5c83d3181f1bc3d9edafe109573e23653a3da4d3"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/runtime-zh-Hant-768.png",
+      "bytes": 84746,
+      "sha256": "dc92b4c1f33db518570b1a326f0f3c313e62b82de839e813dc97b5317a15f7ff"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/session.txt",
+      "bytes": 7431,
+      "sha256": "afc78726fc8ff56bc318aed9e54a72f90f96ddc73ce517b409a902bfa48aaad4"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/source-manifest.json",
+      "bytes": 7834,
+      "sha256": "5edb1118afcd5730f96f2dcfd3890ecaadf96fc767811ab58b756204e92583b3"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/staging.txt",
+      "bytes": 122,
+      "sha256": "466fcdb0234eea6eb4ec3ebf482662f0785821552e52b8ed04787b1cf2ea22a9"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/timeout-1440.png",
+      "bytes": 196365,
+      "sha256": "06fd2f3d453bea56c1a9ad02a65c4ec1ee3abf24edea8d3fadd424e7c4c1e4b2"
+    },
+    {
+      "path": "docs/station-cat-redesign/T13-evidence/verification-summary.json",
+      "bytes": 1197,
+      "sha256": "52e3b81e85196e0c77c0107aa2b60204b3e4af0b16b91a5544df325e9dd53497"
+    }
+  ]
+}

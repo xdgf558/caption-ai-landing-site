@@ -5,6 +5,7 @@ import youtube from '../../assets/redesign/icons/youtube-logo-fill.svg?raw';
 import spotify from '../../assets/redesign/icons/spotify-logo-fill.svg?raw';
 import StationBrandLayout from '../../layouts/StationBrandLayout.astro';
 import ClipDialog from './ClipDialog.astro';
+import StationPlayer from './StationPlayer.astro';
 import { musicCopy } from '../../redesign/musicCopy.js';
 import { stationHref } from '../../redesign/routes.js';
 import '../../redesign/music.css';
@@ -20,16 +21,7 @@ const inner = (source: string) => source.slice(source.indexOf('>') + 1, source.l
   <ClientRouter slot="head" fallback="swap" />
   <div data-sc-music-page></div>
   <p class="sc-container sc-music-feedback" data-sc-music-feedback role="status" hidden></p>
-  <div slot="player" class="sc-music-player" role="region" aria-label={copy.player}>
-    <audio data-sc-music-audio preload="none"></audio>
-    <div class="sc-music-now"><strong data-sc-now-title></strong><span data-sc-now-artist></span></div>
-    <button type="button" class="sc-icon-button" data-sc-play-toggle aria-label={copy.play}><Play size={20} aria-hidden="true" /></button>
-    <div class="sc-music-progress"><span data-sc-current-time>00:00</span><label><span class="sc-sr-only">{copy.seek}</span><input type="range" data-sc-seek min="0" max="1" step="0.1" value="0" disabled /></label><span data-sc-duration>00:00</span></div>
-    <label class="sc-music-volume"><span class="sc-sr-only">{copy.volume}</span><input type="range" data-sc-volume min="0" max="1" step="0.01" value="1" /></label>
-    <button type="button" class="sc-icon-button" data-sc-player-close aria-label={copy.close}><X size={18} aria-hidden="true" /></button>
-    <p class="sc-music-player-status" data-sc-player-status role="status"></p>
-    <a class="sc-music-account-help" href={stationHref(lang, 'member')} data-sc-account-help hidden>{copy.login}</a>
-  </div>
+  <StationPlayer slot="player" lang={lang} />
   <Fragment slot="fixture-controls">
   <svg class="sc-music-symbols" width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
@@ -59,7 +51,7 @@ const inner = (source: string) => source.slice(source.indexOf('>') + 1, source.l
   mountPage();
   document.addEventListener('astro:before-swap', event => {
     dispose(); dispose = () => {};
-    if (!event.newDocument.querySelector('[data-sc-music-page]')) disposeStationMusicSession();
+    if (!event.newDocument.querySelector('[data-sc-music-audio]')) disposeStationMusicSession();
   });
   document.addEventListener('astro:page-load', mountPage);
   document.addEventListener('astro:after-swap', mountPage);

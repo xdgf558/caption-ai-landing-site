@@ -208,6 +208,15 @@ test('dialog escape stops immediately and returns focus to the exact triggering 
     assert(event.defaultPrevented); assert.equal(f.dialog.open, false); assert.equal(f.videos[0].src, ''); assert.equal(f.doc.activeElement, f.buttons[1]);
   } finally { f.cleanup(); }
 });
+test('game entry closes the actual T11 dialog immediately, clears media and cannot return focus behind the game', () => {
+  const f = clientFixture({ reduced: false }); try {
+    f.click(0); const focus = f.doc.activeElement;
+    window.dispatchEvent(new Event('station:game-enter'));
+    assert.equal(f.dialog.open, false); assert.equal(f.videos[0].src, ''); assert(f.videos[0].paused);
+    assert.equal(f.doc.activeElement, focus);
+    f.dispose(); const count = f.videos.length; window.dispatchEvent(new Event('station:game-enter')); assert.equal(f.videos.length, count);
+  } finally { f.cleanup(); }
+});
 test('validated home card uses the same click player; unsupported dialog leaves ordinary navigation intact', () => {
   let f = clientFixture(); try { f.buttons[0].tagName = 'A'; assert(f.click(0).defaultPrevented); f.videos[0].event('ended'); assert.equal(f.dialog.querySelector('[data-sc-video-next]').hidden, false); assert.equal(f.dialog.querySelector('[data-sc-video-song]').href, track.href); } finally { f.cleanup(); }
   f = clientFixture({ supported: false }); try { f.buttons[0].tagName = 'A'; assert(!f.click(0).defaultPrevented); } finally { f.cleanup(); }

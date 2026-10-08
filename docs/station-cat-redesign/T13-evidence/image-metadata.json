@@ -1,0 +1,127 @@
+{
+  "user": {
+    "path": "docs/station-cat-redesign/T04-evidence/gentle-station/source.png",
+    "width": 1448,
+    "height": 1086
+  },
+  "prior": {
+    "path": "docs/station-cat-redesign/T12-evidence/detail-zh-Hant-1440.png",
+    "width": 1425,
+    "height": 1579
+  },
+  "current": {
+    "path": "docs/station-cat-redesign/T13-evidence/intro-missing-1440.png",
+    "width": 1425,
+    "height": 1831
+  },
+  "prior-mobile": {
+    "path": "docs/station-cat-redesign/T12-evidence/detail-zh-Hant-390.png",
+    "width": 375,
+    "height": 2164
+  },
+  "current-mobile": {
+    "path": "docs/station-cat-redesign/T13-evidence/intro-missing-390.png",
+    "width": 375,
+    "height": 2620
+  },
+  "comparison-brand-and-intro.png": {
+    "width": 1772,
+    "height": 580
+  },
+  "comparison-header-detail.png": {
+    "width": 1425,
+    "height": 712
+  },
+  "comparison-mobile.png": {
+    "width": 770,
+    "height": 1850
+  },
+  "engine-failure-1440.png": {
+    "width": 1425,
+    "height": 1831
+  },
+  "intro-1440.png": {
+    "width": 1425,
+    "height": 1831
+  },
+  "intro-390.png": {
+    "width": 375,
+    "height": 2534
+  },
+  "media-runtime-1440.png": {
+    "width": 1425,
+    "height": 891
+  },
+  "recovery-1440.png": {
+    "width": 1403,
+    "height": 891
+  },
+  "runtime-1440.png": {
+    "width": 1417,
+    "height": 900
+  },
+  "runtime-390.png": {
+    "width": 390,
+    "height": 844
+  },
+  "runtime-en-1440.png": {
+    "width": 1417,
+    "height": 900
+  },
+  "runtime-en-360.png": {
+    "width": 360,
+    "height": 900
+  },
+  "runtime-ja-1440.png": {
+    "width": 1417,
+    "height": 900
+  },
+  "runtime-ja-360.png": {
+    "width": 360,
+    "height": 900
+  },
+  "runtime-zh-Hans-1440.png": {
+    "width": 1417,
+    "height": 900
+  },
+  "runtime-zh-Hans-360.png": {
+    "width": 360,
+    "height": 900
+  },
+  "runtime-zh-Hant-1280.png": {
+    "width": 1280,
+    "height": 900
+  },
+  "runtime-zh-Hant-1440.png": {
+    "width": 1417,
+    "height": 900
+  },
+  "runtime-zh-Hant-360.png": {
+    "width": 360,
+    "height": 900
+  },
+  "runtime-zh-Hant-768.png": {
+    "width": 768,
+    "height": 900
+  },
+  "timeout-1440.png": {
+    "width": 1425,
+    "height": 1831
+  },
+  "comparison-runtime-scroll.png": {
+    "width": 1420,
+    "height": 470
+  },
+  "intro-missing-1440.png": {
+    "width": 1425,
+    "height": 1831
+  },
+  "intro-missing-390.png": {
+    "width": 375,
+    "height": 2620
+  },
+  "runtime-final-1440.png": {
+    "width": 1417,
+    "height": 900
+  }
+}

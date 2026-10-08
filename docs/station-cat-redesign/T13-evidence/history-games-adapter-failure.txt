@@ -1,0 +1,192 @@
+
+> landing-site@0.1.0 test:redesign:games
+> node --test --test-timeout=90000 scripts/test-station-game-saves.mjs scripts/test-station-game-pages.mjs scripts/test-station-game-client.mjs scripts/test-station-game-runtime.mjs
+
+✔ entry missing offers only the appropriate action without writes (10.275334ms)
+✔ entry valid offers only the appropriate action without writes (9.332833ms)
+✔ entry corrupt offers only the appropriate action without writes (4.197958ms)
+✔ entry unsupported offers only the appropriate action without writes (3.708333ms)
+✔ member missing is local-only evidence; unreadable storage is not a new game (8.797334ms)
+✔ late successful session cannot re-enable launch after a newer failed check or disposal (3.873791ms)
+✔ zh-Hant: canonical catalog, safe detail and reserved runtime (11.953958ms)
+✔ zh-Hans: canonical catalog, safe detail and reserved runtime (0.171958ms)
+✔ en: canonical catalog, safe detail and reserved runtime (0.078ms)
+✔ ja: canonical catalog, safe detail and reserved runtime (0.074958ms)
+✔ closed page ownership before method, query and binding: {} (0.590208ms)
+✔ closed page ownership before method, query and binding: {"STATION_GAME_PAGES_ENABLED":"true"} (0.297875ms)
+✔ closed page ownership before method, query and binding: {"STATION_CONTENT_PUBLIC_ENABLED":"true"} (0.268375ms)
+✔ closed page ownership before method, query and binding: {"STATION_GAME_PAGES_ENABLED":"true","STATION_CONTENT_PUBLIC_ENABLED":"false"} (0.210375ms)
+✔ internal shells are never directly published and unknown descendants remain with existing handler (0.421333ms)
+✔ rendered DTO is escaped, has no unconfirmed continue button and unregistered launch paths cannot navigate (0.716542ms)
+✖ zh-Hant: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (3582.351166ms)
+✖ zh-Hans: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (4.698667ms)
+✖ en: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (3.206458ms)
+✖ ja: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (3.002417ms)
+✖ half-enabled rollout does not own new game paths; registered runtime remains reachable under every mode (4.710083ms)
+✖ actual Worker only enables same-origin runtime framing for gated valid launch requests (1.122542ms)
+✔ canonical alias/no-slash redirects, unmapped detail and method/query errors (10.984875ms)
+✖ screenshots are actual prior runtime capture bytes and go through controlled assets with revocation (21.831959ms)
+✔ read-only classifier: corrupt (5.678959ms)
+✔ read-only classifier: unsupported (3.3325ms)
+✔ read-only classifier: missing (3.397708ms)
+✔ read-only classifier: valid (3.768625ms)
+✔ empty strings, empty objects, null, arrays, incomplete state and malformed cats are corrupt, never missing (12.126208ms)
+✔ unavailable storage is distinct from missing and cannot be created (3.64225ms)
+✔ legacy schema 0, 1 and 2 are detected without writes and migrate real progress only when loaded (21.607708ms)
+✔ legacy empty cat arrays retain currency and volume through the established repair migration (20.75525ms)
+✔ corrupt is preserved through load, create, save, autosave and rejected import (4.565917ms)
+✔ unsupported is preserved through load, create, save, autosave and rejected import (3.05775ms)
+✔ fresh game writes only a missing slot and a quota error does not report a successful save (3.213292ms)
+✔ valid slot changed by another tab is not overwritten, including another compatible save (10.304334ms)
+✔ explicit recovery backs up exact damaged bytes then imports compatible progress (6.281042ms)
+✔ backup denial, backup verification failure and target race all refuse replacement (20.369083ms)
+✔ guest claim and account slot selection are read-only and never use a cached ID as authentication (6.543916ms)
+✔ actual main startup and lifecycle retain corrupt guest (4.24075ms)
+✔ actual main startup and lifecycle retain future guest (3.551958ms)
+✔ actual main startup and lifecycle retain unreadable storage (3.526083ms)
+✔ actual main startup and lifecycle retain corrupt member (3.210125ms)
+✔ actual main startup and lifecycle retain unknown session (4.646167ms)
+✔ actual account activation refuses corrupt destination and never copies member A to missing member B (12.129625ms)
+✔ existing duplicate cat identities use the established repair migration without rewriting during detection (6.370958ms)
+✔ explicit restore refuses an already-observed target changed before file selection completes (11.55775ms)
+✔ original export Blob contains exact input bytes and causes no save writes (3.121291ms)
+✔ actual cloud client rechecks session after-cloud-read (7.972583ms)
+✔ actual cloud client rechecks session before-upload (13.452459ms)
+✔ actual cloud client rechecks session same-account (8.566125ms)
+✔ malformed known progress blocks are preserved instead of being normalised into fresh defaults (23.879375ms)
+ℹ tests 52
+ℹ suites 0
+ℹ pass 45
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3798.889875
+
+✖ failing tests:
+
+test at scripts/test-station-game-runtime.mjs:8:106
+✖ zh-Hant: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (3582.351166ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  503 !== 200
+  
+      at TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-game-runtime.mjs:9:79)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/test-station-game-runtime.mjs:8:106
+✖ zh-Hans: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (4.698667ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  503 !== 200
+  
+      at TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-game-runtime.mjs:9:79)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/test-station-game-runtime.mjs:8:106
+✖ en: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (3.206458ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  503 !== 200
+  
+      at TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-game-runtime.mjs:9:79)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/test-station-game-runtime.mjs:8:106
+✖ ja: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (3.002417ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  503 !== 200
+  
+      at TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-game-runtime.mjs:9:79)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/test-station-game-runtime.mjs:18:1
+✖ half-enabled rollout does not own new game paths; registered runtime remains reachable under every mode (4.710083ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  500 !== 200
+  
+      at TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-game-runtime.mjs:21:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/test-station-game-runtime.mjs:25:1
+✖ actual Worker only enables same-origin runtime framing for gated valid launch requests (1.122542ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  500 !== 200
+  
+      at TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-game-runtime.mjs:29:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/test-station-game-runtime.mjs:52:1
+✖ screenshots are actual prior runtime capture bytes and go through controlled assets with revocation (21.831959ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  503 !== 200
+  
+      at TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-game-runtime.mjs:60:78)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

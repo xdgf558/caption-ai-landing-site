@@ -66,6 +66,7 @@ import { handleMusicAnalytics, isMusicAnalyticsPath, runMusicAnalyticsRetention 
 import { handleStationContent, isStationContentPath } from './redesign/publicHttp.js';
 import { handleStationMusicPage } from './redesign/musicPages.js';
 import { handleStationGamePage } from './redesign/gamePages.js';
+import { handleStationGameRuntime } from './redesign/gameRuntime.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -22895,6 +22896,8 @@ export default {
     }
 
     if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
+    const stationGameRuntime = await handleStationGameRuntime(request, env);
+    if (stationGameRuntime) return stationGameRuntime;
     const stationGamePage = await handleStationGamePage(request, env);
     if (stationGamePage) return stationGamePage;
 

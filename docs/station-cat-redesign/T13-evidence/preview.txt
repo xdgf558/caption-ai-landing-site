@@ -1,0 +1,46 @@
+
+> landing-site@0.1.0 build:redesign:game-session
+> astro build --config scripts/fixtures/station-handoff/astro.config.mjs
+
+15:34:46 [content] Syncing content
+15:34:46 [content] Synced content
+15:34:46 [types] Generated 13ms
+15:34:46 [build] output: "static"
+15:34:46 [build] mode: "static"
+15:34:46 [build] directory: /Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/.generated/station-game-handoff-preview/
+15:34:46 [build] Collecting build info...
+15:34:46 [build] ✓ Completed in 18ms.
+15:34:46 [build] Building static entrypoints...
+15:34:47 [vite] ✓ built in 906ms
+15:34:47 [build] ✓ Completed in 917ms.
+
+ building client (vite) 
+15:34:47 [vite] transforming...
+15:34:47 [vite] ✓ 55 modules transformed.
+15:34:47 [vite] rendering chunks...
+15:34:47 [vite] computing gzip size...
+15:34:47 [vite] .generated/station-game-handoff-preview/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.Bx3vuHua.js   1.46 kB │ gzip:  0.63 kB
+15:34:47 [vite] .generated/station-game-handoff-preview/_astro/routes.CrTT2bnb.js                                                 1.68 kB │ gzip:  0.76 kB
+15:34:47 [vite] .generated/station-game-handoff-preview/_astro/_lang_.astro_astro_type_script_index_0_lang.CIwb0TiL.js            3.48 kB │ gzip:  1.77 kB
+15:34:47 [vite] .generated/station-game-handoff-preview/_astro/clipClient.CLVKwJLq.js                                             7.30 kB │ gzip:  3.04 kB
+15:34:47 [vite] .generated/station-game-handoff-preview/_astro/MusicShell.astro_astro_type_script_index_0_lang.CMjMCxE7.js        9.99 kB │ gzip:  4.04 kB
+15:34:47 [vite] .generated/station-game-handoff-preview/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js     15.36 kB │ gzip:  5.28 kB
+15:34:47 [vite] .generated/station-game-handoff-preview/_astro/GameShell.astro_astro_type_script_index_0_lang.DtbkPb3I.js        19.52 kB │ gzip:  8.43 kB
+15:34:47 [vite] .generated/station-game-handoff-preview/_astro/musicPlayerView.CG4M0G99.js                                       39.69 kB │ gzip: 15.28 kB
+15:34:47 [vite] ✓ built in 69ms
+
+ generating static routes 
+15:34:47 ▶ scripts/fixtures/station-handoff/site/src/pages/games/site-shell/[lang].astro
+15:34:47   ├─ /games/site-shell/zh-Hant/index.html (+5ms) 
+15:34:47   ├─ /games/site-shell/zh-Hans/index.html (+1ms) 
+15:34:47   ├─ /games/site-shell/en/index.html (+1ms) 
+15:34:47   └─ /games/site-shell/ja/index.html (+1ms) 
+15:34:47 ▶ scripts/fixtures/station-handoff/site/src/pages/music/site-shell/[lang].astro
+15:34:47   ├─ /music/site-shell/zh-Hant/index.html (+1ms) 
+15:34:47   ├─ /music/site-shell/zh-Hans/index.html (+1ms) 
+15:34:47   ├─ /music/site-shell/en/index.html (+1ms) 
+15:34:47   └─ /music/site-shell/ja/index.html (+1ms) 
+15:34:47 ✓ Completed in 17ms.
+
+15:34:47 [build] 8 page(s) built in 1.05s
+15:34:47 [build] Complete!
