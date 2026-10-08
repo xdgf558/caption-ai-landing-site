@@ -2,7 +2,7 @@ import { createStationMusicSession } from './musicSession.js';
 import { watchReaderSession } from '../scripts/readerSessionEvents.js';
 import { musicCopy } from './musicCopy.js';
 import { musicIcon, musicTime } from './musicRender.js';
-import { stationHref } from './routes.js';
+import { musicMembershipHref } from '../music/navigation.js';
 
 let mounted = null;
 export const peekStationMusicSession = () => mounted?.session || null;
@@ -46,7 +46,8 @@ export function getStationMusicSession(locale) {
       $('[data-sc-player-close]').setAttribute('aria-label', copy.close);
       const ownNotice = state.notice?.trackId === state.track?.id ? state.notice : null;
       $('[data-sc-player-status]').textContent = stationMusicNotice({ ...state, notice: ownNotice }, copy);
-      const account = $('[data-sc-account-help]'); account.href = stationHref(state.locale, 'member'); account.textContent = copy.login;
+      const account = $('[data-sc-account-help]'); account.href = musicMembershipHref(state.locale,
+        new URLSearchParams(state.track ? { track: state.track.id } : {})); account.textContent = copy.login;
       account.hidden = ownNotice?.code !== 'denied';
     });
     listen($('[data-sc-play-toggle]'), 'click', () => session.toggle());

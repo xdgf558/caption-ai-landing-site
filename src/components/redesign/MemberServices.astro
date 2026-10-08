@@ -1,0 +1,47 @@
+---
+import { Heart, History, Gamepad2, ReceiptText, LifeBuoy, Smartphone, ArrowRight, RefreshCw, ChevronDown } from '@lucide/astro';
+import { memberCopy } from '../../redesign/memberCopy.js';
+import { stationHref, stationPolicyHref } from '../../redesign/routes.js';
+import { siteConfig } from '../../data/site';
+interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+const { lang } = Astro.props, copy = memberCopy[lang];
+const points = stationHref(lang, 'member').replace('/library/', '/points/');
+---
+<section class="sc-member-services" data-sc-member-services data-locale={lang} aria-labelledby="sc-member-services-title">
+  <header class="sc-member-section-heading"><h2 id="sc-member-services-title">{copy.services}</h2><p>{copy.servicesIntro}</p></header>
+  <div class="sc-member-service-grid">
+    <article class="sc-member-card sc-member-music">
+      <header><Heart size={25} aria-hidden="true" /><h3>{copy.music}</h3></header>
+      <p>{copy.musicIntro}</p>
+      <p class="sc-member-status" data-sc-member-music-status role="status"></p>
+      <details data-sc-member-list="favorites"><summary><span>{copy.favorites}</span><strong data-sc-member-count="favorites">{copy.checking}</strong><ChevronDown size={16} aria-hidden="true" /></summary><ul data-sc-member-tracks="favorites"></ul><button type="button" class="sc-member-more" data-sc-member-more="favorites" hidden>{copy.more}</button></details>
+      <details data-sc-member-list="recent"><summary><span><History size={16} aria-hidden="true" />{copy.recent}</span><strong data-sc-member-count="recent">{copy.checking}</strong><ChevronDown size={16} aria-hidden="true" /></summary><ul data-sc-member-tracks="recent"></ul><button type="button" class="sc-member-more" data-sc-member-more="recent" hidden>{copy.more}</button></details>
+      <a class="sc-button sc-button-secondary" href={stationHref(lang, 'music')}>{copy.openMusic}<ArrowRight size={16} aria-hidden="true" /></a>
+      <div class="sc-member-native"><Smartphone size={19} aria-hidden="true" /><div><h4>{copy.native}</h4><p>{copy.nativeIntro}</p></div></div>
+    </article>
+    <article class="sc-member-card sc-member-game">
+      <header><Gamepad2 size={26} aria-hidden="true" /><h3>{copy.game}</h3></header>
+      <p>{copy.gameIntro}</p>
+      <p class="sc-member-status" data-sc-member-identity role="status">{copy.checking}</p>
+      <dl class="sc-member-save-status"><div><dt>{copy.local}</dt><dd data-sc-member-local>{copy.checking}</dd></div><div><dt>{copy.cloud}</dt><dd data-sc-member-cloud>{copy.checking}</dd></div></dl>
+      <p class="sc-member-status" data-sc-member-items>{copy.checking}</p>
+      <div class="sc-member-actions"><a class="sc-button sc-button-secondary" href="/games/cat-life/" data-astro-reload>{copy.gameOpen}<ArrowRight size={16} aria-hidden="true" /></a><button type="button" class="sc-icon-button" data-sc-member-refresh aria-label={copy.retry}><RefreshCw size={17} aria-hidden="true" /></button></div>
+    </article>
+    <article class="sc-member-card sc-member-orders">
+      <header><ReceiptText size={25} aria-hidden="true" /><h3>{copy.orders}</h3></header>
+      <p>{copy.ordersIntro}</p>
+      <form data-sc-member-order-form><label for="sc-member-order-reference">{copy.orderLabel}</label><input id="sc-member-order-reference" type="text" maxlength="80" autocomplete="off" spellcheck="false" required /><button type="submit" class="sc-button">{copy.orderSubmit}<ArrowRight size={16} aria-hidden="true" /></button></form>
+      <p class="sc-member-status" data-sc-member-order-status role="status"></p>
+    </article>
+    <article class="sc-member-card sc-member-support">
+      <header><LifeBuoy size={25} aria-hidden="true" /><h3>{copy.support}</h3></header>
+      <p>{copy.supportIntro}</p>
+      <a class="sc-button sc-button-secondary" href={'mailto:' + siteConfig.supportEmail}>{copy.contact}<ArrowRight size={16} aria-hidden="true" /></a>
+      <nav aria-label={copy.support}><a href={points} data-astro-reload>{copy.points}</a><a href={stationPolicyHref(lang, 'privacy')} data-astro-reload>{copy.privacy}</a><a href={stationPolicyHref(lang, 'terms')} data-astro-reload>{copy.terms}</a></nav>
+    </article>
+  </div>
+</section>
+<script>
+  import { mountMemberServices } from '../../redesign/memberClient.js';
+  mountMemberServices();
+</script>

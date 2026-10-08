@@ -35,7 +35,7 @@ const pending = { 'zh-Hant': '平台連結待更新', 'zh-Hans': '平台链接�
           <img src="/images/station-gentle/cat-mark.webp" width="30" height="30" alt="" />
           <span><strong>Station Cat</strong><small>Music, Games, and a kinder tomorrow.</small></span>
         </a>
-        <nav class="sc-footer-links" aria-label={copy.navigation}>{stationSections.map(section => <a href={stationHref(lang, section)}>{copy[section]}</a>)}</nav>
+        <nav class="sc-footer-links" aria-label={copy.navigation}>{stationSections.map(section => <a href={stationHref(lang, section)} data-astro-reload={section === 'member' ? true : undefined}>{copy[section]}</a>)}</nav>
         <div class="sc-footer-end">
           <div class="sc-social">
             <button type="button" disabled title={pending} aria-label={'Spotify · ' + pending}><Glyph name="spotify" size={17} /></button>

@@ -1,0 +1,35 @@
+
+> landing-site@0.1.0 test:mobile:library
+> node --test scripts/test-mobile-library.mjs
+
+✔ sync gated, bearer required, no cookie fallback (2459.267666ms)
+✔ favorite persistence, tombstones, conflict and isolated owners (144.904167ms)
+✔ idempotent replay and payload mismatch, concurrent duplicate executes once (86.187292ms)
+✔ stable pagination invalidates concurrent snapshots (113.603084ms)
+✔ listens only after threshold, dedup, clear invalidates offline event (82.713416ms)
+✔ account history disabled at server; enabling cannot resurrect old epoch (72.651333ms)
+✔ history 90 day retention, account/session revocation, invalid payload (87.390041ms)
+✔ active favorite limit rejects overflow but allows removal (89.501041ms)
+✔ recent cap physically trims to 1000 and expired rows (90.712334ms)
+✔ favorite tombstone pagination remains readable beyond ten thousand rows (57.309917ms)
+✔ different songs concurrently favorited both survive account CAS (143.276459ms)
+✔ late offline listen preserves newer occurrence and position plus receipt time (129.405042ms)
+✔ listen timestamps reject missing old or excessive future values, small skew clamps (80.056041ms)
+✔ account contention retries are bounded and exhausted writes remain safely retryable (567.105667ms)
+✔ same resource concurrent edit remains a real version conflict (88.62675ms)
+✔ receipt compaction preserves lost acknowledgements, old favorite conflicts and history epochs (271.077584ms)
+✔ receipt compaction is bounded, retains old keys and can be resumed (3922.893ms)
+✔ unknown receipt format aborts compaction without partial conversion (68.270792ms)
+✔ accepted 16-character track ID replays before/after compaction and restoration (179.524667ms)
+✔ accepted 36-character track ID replays before/after compaction and restoration (176.790667ms)
+✔ accepted 80-character track ID replays before/after compaction and restoration (167.900334ms)
+✔ accepted 81-character track ID replays before/after compaction and restoration (166.483ms)
+✔ accepted 128-character track ID replays before/after compaction and restoration (173.402916ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9562.510666

@@ -20,7 +20,7 @@ const search = {
     <span class="sc-brand-note">{copy.subtitle}</span>
   </a>
   <nav class="sc-top-links" aria-label={copy.navigation}>
-    {stationSections.map(section => <a href={stationHref(lang, section)} aria-current={active === section ? 'page' : undefined}>{copy[section]}</a>)}
+    {stationSections.map(section => <a href={stationHref(lang, section)} data-astro-reload={section === 'member' ? true : undefined} aria-current={active === section ? 'page' : undefined}>{copy[section]}</a>)}
   </nav>
   <div class="sc-header-actions">
     <button type="button" class="sc-icon-button sc-search-trigger" data-sc-search-open aria-label={search.title} aria-haspopup="dialog" aria-controls="station-search"><Search size={19} aria-hidden="true" /></button>
@@ -38,14 +38,14 @@ const search = {
 <nav class="sc-bottom-nav" aria-label={copy.navigation} data-sc-bottom-nav data-station-chrome>
   {stationSections.map(section => {
     const Icon = icons[section];
-    return <a href={stationHref(lang, section)} aria-current={active === section ? 'page' : undefined}><Icon aria-hidden="true" /><span>{copy[section]}</span></a>;
+    return <a href={stationHref(lang, section)} data-astro-reload={section === 'member' ? true : undefined} aria-current={active === section ? 'page' : undefined}><Icon aria-hidden="true" /><span>{copy[section]}</span></a>;
   })}
 </nav>
 <dialog id="station-search" class="sc-search-dialog" aria-labelledby="station-search-title" data-station-chrome>
   <div class="sc-search-heading"><h2 id="station-search-title">{search.title}</h2><form method="dialog"><button class="sc-icon-button" aria-label={search.close}><X size={20} aria-hidden="true" /></button></form></div>
   <label for="station-search-query">{search.label}</label>
   <input id="station-search-query" type="search" placeholder={search.placeholder} autocomplete="off" />
-  <ul class="sc-search-results">{stationSections.map(section => <li data-sc-search-entry><a href={stationHref(lang, section)}>{copy[section]}<ArrowRight size={16} aria-hidden="true" /></a></li>)}</ul>
+  <ul class="sc-search-results">{stationSections.map(section => <li data-sc-search-entry><a href={stationHref(lang, section)} data-astro-reload={section === 'member' ? true : undefined}>{copy[section]}<ArrowRight size={16} aria-hidden="true" /></a></li>)}</ul>
   <p class="sc-search-empty" hidden role="status">{search.empty}</p>
 </dialog>
 <script>

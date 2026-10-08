@@ -2,9 +2,13 @@
 import '../styles/home-night.css';
 import '../styles/reader-center-night.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import StationBrandLayout from '../layouts/StationBrandLayout.astro';
+import MemberServices from './redesign/MemberServices.astro';
+import { memberCopy } from '../redesign/memberCopy.js';
+import '../redesign/member.css';
 import CreemTrustBadge from './CreemTrustBadge.astro';
 import VipMark from './VipMark.astro';
-import { BookOpen, Headphones, Download } from '@lucide/astro';
+import { BookOpen, Headphones, Download, Home, Coins, ShieldCheck, LogOut, ArrowRight, Plus } from '@lucide/astro';
 import { musicEntryEnabled } from '../data/music-entry.js';
 import { getVipMembershipCopy } from '../data/vip-membership.js';
 import {
@@ -15,9 +19,13 @@ import {
 
 interface Props {
   lang?: 'en' | 'ja' | 'zh-Hant' | 'zh-Hans';
+  redesign?: boolean;
 }
 
-const { lang = 'zh-Hant' } = Astro.props;
+const { lang = 'zh-Hant', redesign = false } = Astro.props;
+const LibraryLayout = redesign ? StationBrandLayout : BaseLayout;
+const PageHeading = redesign ? 'h2' : 'h1';
+const member = memberCopy[lang];
 const vip = getVipMembershipCopy(lang, musicEntryEnabled);
 const localeKey = lang === 'zh-Hant' ? 'zhHant' : lang === 'zh-Hans' ? 'zhHans' : lang;
 const pointsPaths = {
@@ -173,6 +181,7 @@ const ui = {
 
 const clientConfig = {
   locale: lang,
+  redesign,
   libraryPath: readerLibraryPaths[lang],
   pointsPath: pointsPaths[localeKey],
   messages: getReaderLibraryMessages(lang),
@@ -195,10 +204,12 @@ const clientConfig = {
 };
 ---
 
-<BaseLayout
-  title={copy.metaTitle}
-  description={copy.metaDescription}
+<LibraryLayout
+  title={redesign ? member.title : copy.metaTitle}
+  description={redesign ? member.intro : copy.metaDescription}
   lang={lang}
+  activeSection="member"
+  preview={redesign}
   bodyClass="station-home-night reader-center-page reader-center-night"
   homeChrome={true}
   canonicalPath={readerLibraryPaths[lang]}
@@ -211,16 +222,18 @@ const clientConfig = {
   ]}
 >
   <script id="reader-client-config" type="application/json" set:html={JSON.stringify(clientConfig)} />
-  <div class="reader-center-v2">
+  <div class="reader-center-v2" data-sc-member={redesign ? true : undefined}>
+    {redesign && <header class="sc-member-heading"><p class="sc-member-kicker">YOUR LITTLE STATION</p><h1>{member.title}</h1><p>{member.intro}</p></header>}
+    {redesign && <div class="sc-member-account-status" role="status" aria-live="polite" hidden><p id="sc-member-account-message"></p><button type="button" id="sc-member-account-refresh">{member.retry}</button></div>}
     <section class="reader-panel music-member-return" data-music-member-return hidden>
       <a class="reader-v2-button reader-v2-button--secondary"></a><p></p>
     </section>
     <section class="reader-auth-shell" id="reader-auth-shell" aria-labelledby="reader-auth-heading">
       <div class="reader-auth-intro">
-        <img class="reader-night-art" src="/images/points-night/hero-960.webp" alt="" width="960" height="384" fetchpriority="high" />
+        <img class="reader-night-art" src={redesign ? '/images/station-gentle/member-hero.webp' : '/images/points-night/hero-960.webp'} alt="" width={redesign ? '2172' : '960'} height={redesign ? '724' : '384'} fetchpriority="high" />
         <p class="reader-v2-kicker">Member Center</p>
-        <h1 id="reader-auth-heading">{ui.authHeading}</h1>
-        <p class="reader-auth-intro__lead">{ui.authDesc}</p>
+        <PageHeading id="reader-auth-heading">{redesign ? member.authHeading : ui.authHeading}</PageHeading>
+        <p class="reader-auth-intro__lead">{redesign ? member.authDesc : ui.authDesc}</p>
         <div class="reader-auth-benefits">
           <article>
             <span aria-hidden="true">◇</span>
@@ -332,10 +345,10 @@ const clientConfig = {
       <aside class="reader-dashboard-sidebar" aria-label={ui.memberCenter}>
         <p class="reader-v2-kicker">Member Center</p>
         <nav class="reader-dashboard-nav">
-          <button class="is-active" type="button" data-reader-view="overview" aria-current="true"><span aria-hidden="true">⌂</span>{ui.overview}</button>
-          <button type="button" data-reader-view="points"><span aria-hidden="true">◇</span>{ui.pointsPack}</button>
-          <button type="button" data-reader-view="shelf"><span aria-hidden="true">▤</span>{ui.shelf}</button>
-          <button type="button" data-reader-view="security"><span aria-hidden="true">◈</span>{ui.security}</button>
+          <button class="is-active" type="button" data-reader-view="overview" aria-current="true"><span aria-hidden="true">{redesign ? <Home size={20} /> : '⌂'}</span>{ui.overview}</button>
+          <button type="button" data-reader-view="points"><span aria-hidden="true">{redesign ? <Coins size={20} /> : '◇'}</span>{ui.pointsPack}</button>
+          <button type="button" data-reader-view="shelf"><span aria-hidden="true">{redesign ? <BookOpen size={20} /> : '▤'}</span>{ui.shelf}</button>
+          <button type="button" data-reader-view="security"><span aria-hidden="true">{redesign ? <ShieldCheck size={20} /> : '◈'}</span>{ui.security}</button>
         </nav>
 
         <div class="reader-sidebar-balance">
@@ -346,20 +359,20 @@ const clientConfig = {
 
         <div class="reader-sidebar-account">
           <p id="reader-sidebar-account"></p>
-          <button id="reader-logout" type="button"><span aria-hidden="true">↪</span>{copy.logout}</button>
+          <button id="reader-logout" type="button"><span aria-hidden="true">{redesign ? <LogOut size={18} /> : '↪'}</span>{copy.logout}</button>
         </div>
       </aside>
 
-      <main class="reader-dashboard-main">
+      <div class="reader-dashboard-main">
         <section class="reader-dashboard-view is-active" data-reader-view-panel="overview">
           <div class="reader-overview-hero">
             <div class="reader-overview-copy">
               <p class="reader-v2-kicker">{ui.overviewKicker}</p>
-              <h1>{ui.overviewHeading}</h1>
+              <PageHeading>{ui.overviewHeading}</PageHeading>
               <p>{ui.overviewDesc}</p>
               <div class="reader-overview-actions">
-                <button class="reader-v2-button reader-v2-button--primary" type="button" data-reader-view-target="points"><span aria-hidden="true">◇</span>{ui.buyPack}</button>
-                <button class="reader-v2-button reader-v2-button--outline" type="button" data-reader-view-target="shelf">{ui.openShelf}<span aria-hidden="true">→</span></button>
+                <button class="reader-v2-button reader-v2-button--primary" type="button" data-reader-view-target="points"><span aria-hidden="true">{redesign ? <Plus size={18} /> : '◇'}</span>{ui.buyPack}</button>
+                <button class="reader-v2-button reader-v2-button--outline" type="button" data-reader-view-target="shelf">{ui.openShelf}<span aria-hidden="true">{redesign ? <ArrowRight size={18} /> : '→'}</span></button>
               </div>
             </div>
             <div class="reader-balance-visual">
@@ -451,7 +464,7 @@ const clientConfig = {
         <section class="reader-dashboard-view" data-reader-view-panel="points" hidden>
           <header class="reader-page-heading">
             <p class="reader-v2-kicker">{ui.pointsKicker}</p>
-            <h1>{ui.pointsHeading}</h1>
+            <PageHeading>{ui.pointsHeading}</PageHeading>
             <p>{ui.pointsDesc}</p>
           </header>
 
@@ -473,7 +486,7 @@ const clientConfig = {
           <header class="reader-shelf-heading">
             <div>
               <p class="reader-v2-kicker">{ui.shelfKicker}</p>
-              <h1>{ui.shelfHeading}</h1>
+            <PageHeading>{ui.shelfHeading}</PageHeading>
               <p>{ui.shelfDesc}</p>
             </div>
             <div class="reader-shelf-tabs" role="tablist">
@@ -526,7 +539,7 @@ const clientConfig = {
         <section class="reader-dashboard-view" data-reader-view-panel="security" hidden>
           <header class="reader-page-heading">
             <p class="reader-v2-kicker">{ui.securityKicker}</p>
-            <h1>{ui.securityHeading}</h1>
+            <PageHeading>{ui.securityHeading}</PageHeading>
             <p>{ui.securityDesc}</p>
           </header>
 
@@ -540,7 +553,7 @@ const clientConfig = {
               </div>
               <p>{ui.passwordDesc}</p>
               <div class="reader-account-profile">
-                <span class="reader-account-avatar" aria-hidden="true">SC</span>
+                <span class="reader-account-avatar" aria-hidden="true">{redesign ? <img src="/images/station-gentle/cat-mark.webp" alt="" width="24" height="24" /> : 'SC'}</span>
                 <p id="reader-account-email" class="reader-account-email"></p>
               </div>
               <form class="reader-password-form" id="reader-password-form">
@@ -614,13 +627,13 @@ const clientConfig = {
             </div>
           </div>
         </section>
-      </main>
+      </div>
 
       <nav class="reader-mobile-nav" aria-label={ui.memberCenter}>
-        <button class="is-active" type="button" data-reader-view="overview"><span aria-hidden="true">⌂</span>{ui.overview}</button>
-        <button type="button" data-reader-view="points"><span aria-hidden="true">◇</span>{ui.pointsPack}</button>
-        <button type="button" data-reader-view="shelf"><span aria-hidden="true">▤</span>{ui.shelf}</button>
-        <button type="button" data-reader-view="security"><span aria-hidden="true">◈</span>{ui.security}</button>
+        <button class="is-active" type="button" data-reader-view="overview"><span aria-hidden="true">{redesign ? <Home size={20} /> : '⌂'}</span>{ui.overview}</button>
+        <button type="button" data-reader-view="points"><span aria-hidden="true">{redesign ? <Coins size={20} /> : '◇'}</span>{ui.pointsPack}</button>
+        <button type="button" data-reader-view="shelf"><span aria-hidden="true">{redesign ? <BookOpen size={20} /> : '▤'}</span>{ui.shelf}</button>
+        <button type="button" data-reader-view="security"><span aria-hidden="true">{redesign ? <ShieldCheck size={20} /> : '◈'}</span>{ui.security}</button>
       </nav>
     </section>
 
@@ -642,9 +655,13 @@ const clientConfig = {
         <CreemTrustBadge lang={lang} />
       </form>
     </dialog>
+    {redesign && <MemberServices lang={lang} />}
   </div>
   <script>
-    import { notifyReaderSession, withReaderSessionChange } from '../scripts/readerSessionEvents.js';
+    import { notifyReaderSession, watchReaderSession, withReaderSessionChange as broadcastSessionChange } from '../scripts/readerSessionEvents.js';
+    import { createMemberReaderEpoch } from '../redesign/memberReaderEpoch.js';
+    import { readMusicResponse } from '../redesign/musicResponse.js';
+    import { memberText } from '../redesign/memberCopy.js';
     import qrcode from 'qrcode-generator';
     import { safeReturnPath } from '../safeReturnPath.js';
     import { pendingMembershipKey } from '../data/membership-redemption-client.js';
@@ -756,14 +773,29 @@ const clientConfig = {
     const checkoutTotal = document.getElementById('reader-checkout-total');
     const checkoutConfirm = document.getElementById('reader-checkout-confirm');
     let authMode = 'login';
-    let activeReaderView = 'overview';
+    let activeReaderView = readerClientConfig.redesign && ['points', 'shelf', 'security'].includes(window.location.hash.slice(1))
+      ? window.location.hash.slice(1) : 'overview';
     let activeShelfTab = 'unlocked';
     let pendingCreditPack = null;
     let currentReaderEmail = '';
+    let ownSessionChanges = 0;
+    const readerEpoch = createMemberReaderEpoch({ enabled: readerClientConfig.redesign === true,
+      onInvalidate: () => clearPrivateReaderView(),
+      onMismatch: () => { notifyReaderSession('changing'); setStatus(memberText(readerLocale, 'refreshSession'), 'error'); }
+    });
+    const readReaderBody = response => readerClientConfig.redesign
+      ? readMusicResponse(response, 256 * 1024).then(JSON.parse) : response.json();
+    const withReaderSessionChange = async operation => {
+      ++ownSessionChanges;
+      try { return await broadcastSessionChange(operation); }
+      finally { --ownSessionChanges; }
+    };
 
     const setStatus = (message, tone = 'neutral') => {
       statusBox.textContent = message;
       statusBox.dataset.tone = tone;
+      const shared = document.getElementById('sc-member-account-message');
+      if (shared) { shared.textContent = message; shared.parentElement.hidden = tone !== 'error' || !message; }
     };
 
     const closeCheckoutDialog = () => {
@@ -897,6 +929,7 @@ const clientConfig = {
         ? accountLabel
         : '';
       sidebarAccount.textContent = accountLabel;
+      if (signedIn && readerClientConfig.redesign) clearAuthSecrets();
       if (signedIn) setReaderView(activeReaderView);
       setMembershipSummary(
         formatReaderMessage(signedIn ? 'loading' : 'signedOut'),
@@ -904,6 +937,28 @@ const clientConfig = {
         signedIn ? 'loading' : 'neutral'
       );
     };
+
+    function clearAuthSecrets() {
+      for (const input of [identifierInput, loginPasswordInput, usernameInput, emailInput, registerPasswordInput,
+        registerPasswordConfirmInput, resetIdentifierInput, resetTotpCodeInput, resetPasswordInput, resetPasswordConfirmInput]) input.value = '';
+    }
+
+    function clearPrivateReaderView() {
+      setSignedIn({ authenticated: false });
+      libraryList.replaceChildren(); bookmarkList.replaceChildren(); recentActivity.replaceChildren(); ledgerHistory.replaceChildren();
+      creditBalance.textContent = sidebarCreditBalance.textContent = '—'; memberSince.textContent = '';
+      pendingCreditPack = null; closeCheckoutDialog();
+      checkoutConfirm.disabled = false;
+      membershipRedeem.disabled = true;
+      membershipOverviewCredits.textContent = '';
+      creditStatus.textContent = ''; membershipStatus.textContent = ''; bookmarkStatus.textContent = '';
+      totpSetupBox.hidden = true; totpQr.replaceChildren(); totpSecretInput.value = ''; totpUriInput.value = '';
+      totpConfirmCodeInput.value = ''; passwordStatus.textContent = ''; totpStatus.textContent = '';
+      if (ownSessionChanges === 0) {
+        clearAuthSecrets();
+        currentPasswordInput.value = ''; newPasswordInput.value = ''; newPasswordConfirmInput.value = ''; passwordTotpCodeInput.value = '';
+      }
+    }
 
     const entitlementTitle = (item) => {
       const target = item.scope === 'series'
@@ -933,6 +988,10 @@ const clientConfig = {
       const cover = document.createElement('div');
       cover.className = `reader-shelf-cover reader-shelf-cover--${variant % 4}`;
       cover.setAttribute('aria-hidden', 'true');
+      if (readerClientConfig.redesign) {
+        const image = document.createElement('img'); image.src = '/images/station-gentle/cat-mark.webp';
+        image.alt = ''; image.width = image.height = 36; cover.append(image); return cover;
+      }
       const mark = document.createElement('span');
       mark.textContent = shelfMonogram(label);
       cover.append(mark);
@@ -1063,16 +1122,24 @@ const clientConfig = {
     };
 
     const loadLibrary = async () => {
-      const response = await fetch('/api/novels/library');
-      const data = await response.json();
+      const version = readerEpoch.capture();
+      const response = await fetch('/api/novels/library', { cache: 'no-store' });
+      const data = await readReaderBody(response);
+      if (!readerEpoch.current(version)) return;
+      if (data.authenticated === false) { readerEpoch.accept(version, data); return; }
       if (!response.ok || !data.ok) throw createReaderError('libraryLoadFailed', data);
+      if (!readerEpoch.accept(version, data)) return;
       renderLibrary(data.entitlements || []);
     };
 
     const loadBookmarks = async () => {
-      const response = await fetch('/api/readers/bookmarks');
-      const data = await response.json();
+      const version = readerEpoch.capture();
+      const response = await fetch('/api/readers/bookmarks', { cache: 'no-store' });
+      const data = await readReaderBody(response);
+      if (!readerEpoch.current(version)) return;
+      if (data.authenticated === false) { readerEpoch.accept(version, data); return; }
       if (!response.ok || !data.ok) throw createReaderError('bookmarkLoadFailed', data);
+      if (!readerEpoch.accept(version, data)) return;
       if (!data.authenticated) return;
       renderBookmarks(data.bookmarks || []);
       setBookmarkStatus('');
@@ -1095,6 +1162,7 @@ const clientConfig = {
       if (!bookmarkId) return;
 
       const previousText = deleteButton.textContent;
+      const version = readerEpoch.capture();
       deleteButton.disabled = true;
       deleteButton.textContent = formatReaderMessage('deletingBookmark');
       setBookmarkStatus(formatReaderMessage('deletingBookmark'));
@@ -1104,12 +1172,14 @@ const clientConfig = {
           method: 'DELETE'
         });
         const data = await response.json().catch(() => ({}));
+        if (!readerEpoch.current(version)) return;
         if (!response.ok || !data.ok) {
           throw createReaderError('deleteBookmarkFailed', data);
         }
         renderBookmarks(data.bookmarks || []);
         setBookmarkStatus(formatReaderMessage('bookmarkDeleted'), 'success');
       } catch (error) {
+        if (!readerEpoch.current(version)) return;
         deleteButton.disabled = false;
         deleteButton.textContent = previousText || formatReaderMessage('deleteBookmark');
         setBookmarkStatus(caughtReaderMessage(error, 'deleteBookmarkFailed'), 'error');
@@ -1334,9 +1404,13 @@ const clientConfig = {
     };
 
     const loadTotpStatus = async () => {
-      const response = await fetch('/api/readers/totp/status');
-      const data = await response.json();
+      const version = readerEpoch.capture();
+      const response = await fetch('/api/readers/totp/status', { cache: 'no-store' });
+      const data = await readReaderBody(response);
+      if (!readerEpoch.current(version)) return;
+      if (data.authenticated === false) { readerEpoch.accept(version, data, { ownerRequired: false }); return; }
       if (!response.ok || !data.ok) throw createReaderError('totpLoadFailed', data);
+      if (!readerEpoch.accept(version, data, { ownerRequired: false })) return;
       if (!data.authenticated) return;
       if (data.setupRequired) {
         renderTotpStatus({ enabled: false });
@@ -1348,9 +1422,11 @@ const clientConfig = {
     };
 
     const safeLoadTotpStatus = async () => {
+      const version = readerEpoch.capture();
       try {
         await loadTotpStatus();
       } catch (error) {
+        if (!readerEpoch.current(version)) return;
         renderTotpStatus({ enabled: false });
         setTotpStatus(caughtReaderMessage(error, 'totpLoadFailed'), 'error');
       }
@@ -1381,9 +1457,13 @@ const clientConfig = {
     };
 
     const loadCredits = async () => {
-      const response = await fetch('/api/readers/credits');
-      const data = await response.json();
+      const version = readerEpoch.capture();
+      const response = await fetch('/api/readers/credits', { cache: 'no-store' });
+      const data = await readReaderBody(response);
+      if (!readerEpoch.current(version)) return;
+      if (data.authenticated === false) { readerEpoch.accept(version, data); return; }
       if (!response.ok || !data.ok) throw createReaderError('creditsLoadFailed', data);
+      if (!readerEpoch.accept(version, data)) return;
       if (!data.authenticated) return;
 
       const balance = Number(data.account?.balanceCredits || 0);
@@ -1423,13 +1503,16 @@ const clientConfig = {
     };
 
     const refreshReturnedPaymentOrder = async () => {
+      const version = readerEpoch.capture();
       const orderToken = query.get('order') || '';
       if (query.get('payment') !== 'success' || !orderToken) return;
 
       setCreditStatus(formatReaderMessage('paymentReturnedPending'), 'neutral');
       for (let attempt = 0; attempt < 12; attempt += 1) {
+        if (!readerEpoch.current(version)) return;
         const response = await fetch(`/api/novels/payments/order?order=${encodeURIComponent(orderToken)}`);
-        const data = await response.json();
+        const data = await readReaderBody(response);
+        if (!readerEpoch.current(version)) return;
         if (!response.ok || !data.ok) throw createReaderError('orderLoadFailed', data);
 
         const fulfillment = data.fulfillment || {};
@@ -1449,9 +1532,13 @@ const clientConfig = {
     };
 
     const loadSession = async () => {
-      const response = await fetch('/api/readers/session');
-      const data = await response.json();
+      const version = readerEpoch.begin();
+      if (readerClientConfig.redesign) setStatus('');
+      const response = await fetch('/api/readers/session', { cache: 'no-store' });
+      const data = await readReaderBody(response);
+      if (!readerEpoch.current(version)) return;
       if (!response.ok || !data.ok) throw createReaderError('sessionLoadFailed', data);
+      if (!readerEpoch.bind(version, data)) throw createReaderError('sessionLoadFailed');
       setSignedIn(data);
       if (data.authenticated) {
         await Promise.all([loadLibrary(), loadCredits(), loadBookmarks(), safeLoadTotpStatus()]);
@@ -1572,13 +1659,16 @@ const clientConfig = {
           };
         }
 
-        const response = await withReaderSessionChange(() => fetch(endpoint, {
+        let version;
+        const response = await withReaderSessionChange(() => { version = readerEpoch.capture(); return fetch(endpoint, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(body)
-        }));
-        const data = await response.json();
+        }); });
+        const data = await readReaderBody(response);
+        if (!readerEpoch.current(version)) return;
         if (!response.ok || !data.ok) throw createReaderError('loginFailed', data);
+        if (!readerEpoch.bind(version, data)) throw createReaderError('loginFailed');
 
         setStatus(formatReaderMessage('signedIn'), 'success');
         setSignedIn(data);
@@ -1599,7 +1689,11 @@ const clientConfig = {
     logoutButton.addEventListener('click', async () => {
       logoutButton.disabled = true;
       try {
-        await withReaderSessionChange(() => fetch('/api/readers/logout', { method: 'POST' }));
+        const response = await withReaderSessionChange(() => fetch('/api/readers/logout', { method: 'POST' }));
+        if (readerClientConfig.redesign && !response.ok) {
+          await loadSession(); throw createReaderError('sessionLoadFailed');
+        }
+        if (readerClientConfig.redesign) clearAuthSecrets();
         setSignedIn({ authenticated: false });
         renderLibrary([]);
         renderBookmarks([]);
@@ -1614,6 +1708,8 @@ const clientConfig = {
         setReaderView('overview');
         setAuthMode('login');
         setStatus(formatReaderMessage('signedOutSuccess'), 'success');
+      } catch (error) {
+        setStatus(caughtReaderMessage(error, 'sessionLoadFailed'), 'error');
       } finally {
         logoutButton.disabled = false;
       }
@@ -1641,8 +1737,10 @@ const clientConfig = {
         newPasswordInput.value = '';
         newPasswordConfirmInput.value = '';
         passwordTotpCodeInput.value = '';
+        if (readerClientConfig.redesign) await loadSession();
         setPasswordStatus(formatReaderMessage('passwordUpdated'), 'success');
       } catch (error) {
+        if (readerClientConfig.redesign) await loadSession().catch(() => {});
         setPasswordStatus(caughtReaderMessage(error, 'passwordUpdateFailed'), 'error');
       } finally {
         passwordSubmitButton.disabled = false;
@@ -1650,12 +1748,14 @@ const clientConfig = {
     });
 
     totpSetupButton.addEventListener('click', async () => {
+      const version = readerEpoch.capture();
       totpSetupButton.disabled = true;
       setTotpStatus(formatReaderMessage('totpGenerating'), 'neutral');
 
       try {
         const response = await fetch('/api/readers/totp/setup', { method: 'POST' });
-        const data = await response.json();
+        const data = await readReaderBody(response);
+        if (!readerEpoch.current(version)) return;
         if (!response.ok || !data.ok) throw createReaderError('totpGenerateFailed', data);
 
         if (data.setup) {
@@ -1674,6 +1774,7 @@ const clientConfig = {
           setTotpStatus(formatReaderMessage('totpUpdated'), data.totp?.enabled ? 'success' : 'neutral');
         }
       } catch (error) {
+        if (!readerEpoch.current(version)) return;
         setTotpStatus(caughtReaderMessage(error, 'totpGenerateFailed'), 'error');
       } finally {
         totpSetupButton.disabled = false;
@@ -1681,6 +1782,7 @@ const clientConfig = {
     });
 
     totpConfirmButton.addEventListener('click', async () => {
+      const version = readerEpoch.capture();
       totpConfirmButton.disabled = true;
       setTotpStatus(formatReaderMessage('totpConfirming'), 'neutral');
 
@@ -1692,11 +1794,13 @@ const clientConfig = {
             code: totpConfirmCodeInput.value
           })
         });
-        const data = await response.json();
+        const data = await readReaderBody(response);
+        if (!readerEpoch.current(version)) return;
         if (!response.ok || !data.ok) throw createReaderError('totpBindFailed', data);
         renderTotpStatus(data.totp || { enabled: true });
         setTotpStatus(formatReaderMessage('totpBound'), 'success');
       } catch (error) {
+        if (!readerEpoch.current(version)) return;
         setTotpStatus(caughtReaderMessage(error, 'totpBindFailed'), 'error');
       } finally {
         totpConfirmButton.disabled = false;
@@ -1732,6 +1836,7 @@ const clientConfig = {
 
     checkoutConfirm.addEventListener('click', async () => {
       if (!pendingCreditPack) return;
+      const version = readerEpoch.capture();
 
       const buttons = Array.from(creditPacks.querySelectorAll('button'));
       buttons.forEach((item) => {
@@ -1751,13 +1856,15 @@ const clientConfig = {
             returnPath: musicEntry?.checkoutReturnPath || readerLibraryPath
           })
         });
-        const data = await response.json();
+        const data = await readReaderBody(response);
+        if (!readerEpoch.current(version)) return;
         if (!response.ok || !data.ok) throw createReaderError('checkoutFailed', data);
         if (!data.paymentUrl) throw createReaderError('paymentUrlMissing');
         setCreditStatus(formatReaderMessage('checkoutOpening'), 'success');
         closeCheckoutDialog();
         window.location.href = data.paymentUrl;
       } catch (error) {
+        if (!readerEpoch.current(version)) return;
         setCreditStatus(caughtReaderMessage(error, 'checkoutFailed'), 'error');
         buttons.forEach((item) => {
           item.disabled = false;
@@ -1770,6 +1877,7 @@ const clientConfig = {
     membershipRedeem.addEventListener('click', async () => {
       if (membershipBusy || !membershipAccountId) return;
       const accountId = membershipAccountId;
+      const version = readerEpoch.capture();
       membershipBusy = true;
       membershipRedeem.disabled = true;
       setMembershipStatus(formatReaderMessage('membershipRedeeming'), 'neutral');
@@ -1782,6 +1890,7 @@ const clientConfig = {
           const pending = pendingMembershipKey(window.localStorage, accountId);
           const sessionResponse = await fetch('/api/readers/session', { cache: 'no-store' });
           const session = await sessionResponse.json();
+          if (!readerEpoch.current(version)) return;
           if (!sessionResponse.ok || !session.authenticated || Number(session.account?.id) !== accountId) {
             throw createReaderError('signInRequired');
           }
@@ -1789,6 +1898,7 @@ const clientConfig = {
             method: 'POST', headers: { 'Idempotency-Key': pending.key, 'X-Reader-Account': String(accountId) }
           });
           const data = await response.json();
+          if (!readerEpoch.current(version)) return;
           if (!response.ok || !data.ok) {
             throw createReaderError('membershipRetrySafe', data);
           }
@@ -1801,6 +1911,7 @@ const clientConfig = {
           setMembershipStatus(formatReaderMessage('membershipRedeemed'), 'success');
         });
       } catch (error) {
+        if (!readerEpoch.current(version)) return;
         setMembershipStatus(caughtReaderMessage(error, 'membershipRetrySafe'), 'error');
       } finally {
         membershipBusy = false;
@@ -1813,12 +1924,25 @@ const clientConfig = {
       setStatus(formatReaderMessage('setNewPassword'), 'neutral');
     }
 
+    if (readerClientConfig.redesign) {
+      const refresh = () => { void loadSession().catch(error => setStatus(caughtReaderMessage(error, 'sessionLoadFailed'), 'error')); };
+      document.getElementById('sc-member-account-refresh').addEventListener('click', () => {
+        refresh(); document.dispatchEvent(new CustomEvent('station-cat:member-refresh'));
+      });
+      const unwatch = watchReaderSession(phase => {
+        if (phase === 'changing') readerEpoch.invalidate();
+        if (phase === 'changed' && ownSessionChanges === 0) refresh();
+      });
+      window.addEventListener('focus', refresh);
+      window.addEventListener('pageshow', event => { if (event.persisted) refresh(); });
+      window.addEventListener('pagehide', event => { readerEpoch.invalidate(); if (!event.persisted) { unwatch(); window.removeEventListener('focus', refresh); } });
+    }
     loadPublicPointsPrice();
     loadSession()
       .then(refreshReturnedPaymentOrder)
       .catch((error) => setStatus(caughtReaderMessage(error, 'sessionLoadFailed'), 'error'));
   </script>
-</BaseLayout>
+</LibraryLayout>
 <style>
   .music-member-return { margin-bottom: 1.5rem; padding: 1.25rem; }
   .music-member-return p { margin: .75rem 0 0; overflow-wrap: anywhere; }

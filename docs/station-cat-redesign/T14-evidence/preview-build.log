@@ -1,0 +1,64 @@
+
+> landing-site@0.1.0 build:redesign:member
+> astro build --config scripts/fixtures/station-member/astro.config.mjs
+
+19:47:50 [content] Syncing content
+19:47:50 [content] Synced content
+19:47:50 [types] Generated 14ms
+19:47:50 [build] output: "static"
+19:47:50 [build] mode: "static"
+19:47:50 [build] directory: /Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/.generated/station-member-preview/
+19:47:50 [build] Collecting build info...
+19:47:50 [build] ✓ Completed in 23ms.
+19:47:50 [build] Building static entrypoints...
+19:47:51 [vite] ✓ built in 1.07s
+19:47:51 [build] ✓ Completed in 1.09s.
+
+ building client (vite) 
+19:47:51 [vite] transforming...
+19:47:51 [vite] ✓ 69 modules transformed.
+19:47:52 [vite] rendering chunks...
+19:47:52 [vite] computing gzip size...
+19:47:52 [vite] .generated/station-member-preview/_astro/LanguageSwitcher.astro_astro_type_script_index_0_lang.0w10PJ6o.js    0.28 kB │ gzip:  0.22 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/pagePaths.Adk3jqEz.js                                                0.82 kB │ gzip:  0.48 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/routes.aEcEp9VA.js                                                   1.06 kB │ gzip:  0.52 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/navigation.D604fbwK.js                                               1.27 kB │ gzip:  0.64 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.K1Wc2ITw.js     1.49 kB │ gzip:  0.65 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/readerSessionEvents.7gPOH-uA.js                                      1.77 kB │ gzip:  0.95 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/saveStatus.paMg3Qau.js                                               2.45 kB │ gzip:  1.15 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/musicLocalData.BSRJFoKV.js                                           3.50 kB │ gzip:  1.58 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/MemberServices.astro_astro_type_script_index_0_lang.CvxZAWJq.js     10.08 kB │ gzip:  3.85 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/memberCopy.C4PFFiz1.js                                              14.27 kB │ gzip:  5.32 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js       15.36 kB │ gzip:  5.28 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/GameShell.astro_astro_type_script_index_0_lang.szGZ11h6.js          17.25 kB │ gzip:  7.48 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/MusicShell.astro_astro_type_script_index_0_lang.ZTB0ue_G.js         17.40 kB │ gzip:  6.62 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/musicPlayerView._Y9ctIMG.js                                         35.13 kB │ gzip: 13.57 kB
+19:47:52 [vite] .generated/station-member-preview/_astro/ReaderLibraryPage.astro_astro_type_script_index_0_lang.DQlgjzG1.js  87.80 kB │ gzip: 31.19 kB
+19:47:52 [vite] ✓ built in 120ms
+
+ generating static routes 
+19:47:52 ▶ scripts/fixtures/station-member/site/src/pages/games/site-shell/[lang].astro
+19:47:52   ├─ /games/site-shell/zh-Hant/index.html (+5ms) 
+19:47:52   ├─ /games/site-shell/zh-Hans/index.html (+1ms) 
+19:47:52   ├─ /games/site-shell/en/index.html (+1ms) 
+19:47:52   └─ /games/site-shell/ja/index.html (+1ms) 
+19:47:52 ▶ scripts/fixtures/station-member/site/src/pages/music/site-shell/[lang].astro
+19:47:52   ├─ /music/site-shell/zh-Hant/index.html (+1ms) 
+19:47:52   ├─ /music/site-shell/zh-Hans/index.html (+1ms) 
+19:47:52   ├─ /music/site-shell/en/index.html (+1ms) 
+19:47:52   └─ /music/site-shell/ja/index.html (+1ms) 
+19:47:52 ▶ scripts/fixtures/station-member/site/src/pages/member/site-shell/[lang].astro
+19:47:52   ├─ /member/site-shell/zh-Hant/index.html (+4ms) 
+19:47:52   ├─ /member/site-shell/zh-Hans/index.html (+2ms) 
+19:47:52   ├─ /member/site-shell/en/index.html (+2ms) 
+19:47:52   └─ /member/site-shell/ja/index.html (+1ms) 
+19:47:52 ✓ Completed in 29ms.
+
+ generating optimized images 
+19:47:52   ▶ /_astro/vip-badge.C99Fh2OO_2mebGa.webp (reused cache entry) (+0ms) (1/3)
+19:47:52   ▶ /_astro/vip-badge.C99Fh2OO_na9Ih.webp (reused cache entry) (+0ms) (2/3)
+19:47:52   ▶ /_astro/vip-badge.C99Fh2OO_N0rVQ.webp (reused cache entry) (+0ms) (3/3)
+19:47:52 ✓ Completed in 1ms.
+
+19:47:52 [build] 12 page(s) built in 1.29s
+19:47:52 [build] Complete!

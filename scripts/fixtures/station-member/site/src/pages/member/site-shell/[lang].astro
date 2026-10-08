@@ -1,0 +1,6 @@
+---
+import ReaderLibraryPage from '../../../../../../../../src/components/ReaderLibraryPage.astro';
+export function getStaticPaths() { return ['zh-Hant', 'zh-Hans', 'en', 'ja'].map(lang => ({ params: { lang }, props: { lang } })); }
+const { lang } = Astro.props;
+---
+<ReaderLibraryPage lang={lang} redesign />

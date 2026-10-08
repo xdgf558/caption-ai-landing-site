@@ -13,5 +13,5 @@ const { lang } = Astro.props; const copy = musicCopy[lang];
     <label class="sc-music-volume"><span class="sc-sr-only">{copy.volume}</span><input type="range" data-sc-volume min="0" max="1" step="0.01" value="1" /></label>
     <button type="button" class="sc-icon-button" data-sc-player-close aria-label={copy.close}><X size={18} aria-hidden="true" /></button>
     <p class="sc-music-player-status" data-sc-player-status role="status"></p>
-    <a class="sc-music-account-help" href={stationHref(lang, 'member')} data-sc-account-help hidden>{copy.login}</a>
+    <a class="sc-music-account-help" href={stationHref(lang, 'member')} data-sc-account-help data-astro-reload hidden>{copy.login}</a>
   </div>

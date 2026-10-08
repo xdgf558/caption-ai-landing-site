@@ -67,6 +67,8 @@ import { handleStationContent, isStationContentPath } from './redesign/publicHtt
 import { handleStationMusicPage } from './redesign/musicPages.js';
 import { handleStationGamePage } from './redesign/gamePages.js';
 import { handleStationGameRuntime } from './redesign/gameRuntime.js';
+import { handleStationMemberPage } from './redesign/memberPages.js';
+import { privateReaderRequest } from './redesign/memberPrivacy.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -22896,6 +22898,8 @@ export default {
     }
 
     if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
+    const stationMemberPage = await handleStationMemberPage(request, env);
+    if (stationMemberPage) return stationMemberPage;
     const stationGameRuntime = await handleStationGameRuntime(request, env);
     if (stationGameRuntime) return stationGameRuntime;
     const stationGamePage = await handleStationGamePage(request, env);
@@ -22987,7 +22991,7 @@ export default {
     }
 
     if (request.method === 'GET' && url.pathname === '/api/readers/session') {
-      return handleReaderSession(request, env);
+      return privateReaderRequest(() => handleReaderSession(request, env));
     }
 
     if (request.method === 'POST' && url.pathname === '/api/readers/logout') {
@@ -23022,11 +23026,11 @@ export default {
     }
 
     if (request.method === 'GET' && url.pathname === '/api/readers/credits') {
-      return handleReaderCredits(request, env);
+      return privateReaderRequest(() => handleReaderCredits(request, env));
     }
 
     if (url.pathname === '/api/readers/bookmarks') {
-      if (request.method === 'GET') return handleReaderBookmarks(request, env);
+      if (request.method === 'GET') return privateReaderRequest(() => handleReaderBookmarks(request, env));
       if (request.method === 'POST') return handleReaderBookmarkSave(request, env);
       if (request.method === 'DELETE') return handleReaderBookmarkDelete(request, env);
       return json({ ok: false, message: 'Method not allowed.' }, { status: 405 });
@@ -23049,7 +23053,7 @@ export default {
     }
 
     if (request.method === 'GET' && url.pathname === '/api/novels/library') {
-      return handleNovelLibrary(request, env);
+      return privateReaderRequest(() => handleNovelLibrary(request, env));
     }
 
     if (request.method === 'GET' && url.pathname === '/api/novels/payments/status') {

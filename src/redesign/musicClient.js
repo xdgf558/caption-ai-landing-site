@@ -1,5 +1,6 @@
 import { parseMusicLyrics, LYRICS_BYTES } from '../scripts/musicLyrics.js';
-import { stationLocales, stationHref } from './routes.js';
+import { stationLocales } from './routes.js';
+import { musicMembershipHref } from '../music/navigation.js';
 import { contentBase, uuid, slug, positive } from './publicValidation.js';
 import { musicCopy } from './musicCopy.js';
 import { musicIcon, musicTime, musicCatalogHref, renderCatalogResults } from './musicRender.js';
@@ -32,11 +33,13 @@ export function mountStationMusic() {
     session.observeTracks(tracks.values());
   }
   remember();
-  function feedback(message, login = false) {
+  function feedback(message, login = false, trackId = '') {
     const node = $('[data-sc-music-feedback]');
     node.hidden = !message; node.textContent = message || '';
     if (login) {
-      const link = document.createElement('a'); link.href = stationHref(model.locale, 'member'); link.textContent = copy.login;
+      const link = document.createElement('a');
+      link.href = musicMembershipHref(model.locale, new URLSearchParams(uuid(trackId) ? { track: trackId } : {}));
+      link.setAttribute('data-astro-reload', ''); link.textContent = copy.login;
       node.append(link);
     }
   }
@@ -73,7 +76,7 @@ export function mountStationMusic() {
   }
   const playerSubscription = session.subscribe(state => {
     renderPlayerButtons(state);
-    feedback(state.notice ? stationMusicNotice(state, copy) : '', state.notice?.code === 'denied');
+    feedback(state.notice ? stationMusicNotice(state, copy) : '', state.notice?.code === 'denied', state.notice?.trackId || state.track?.id);
   });
   async function loadCatalog({ append = false, cursor = null, updateHistory = true } = {}) {
     if (model.mode !== 'catalog' || disposed) return;

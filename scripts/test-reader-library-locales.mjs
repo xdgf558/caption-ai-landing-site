@@ -78,7 +78,7 @@ assert.equal(
   'Every Member Center locale must provide a safe chapter-cost fallback'
 );
 const libraryServerMarkup = librarySource.slice(
-  librarySource.indexOf('<BaseLayout'),
+  librarySource.indexOf('<LibraryLayout'),
   librarySource.indexOf('  <script>')
 );
 assert.match(libraryServerMarkup, /id="reader-credit-cost">\{copy\.chapterCostFallback\}<\/p>/);

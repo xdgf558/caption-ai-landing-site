@@ -1,0 +1,76 @@
+{
+  "guest-zh-hant-1440.png": {
+    "width": 1425,
+    "height": 1663
+  },
+  "member-zh-Hant-1440.png": {
+    "width": 1425,
+    "height": 2347
+  },
+  "member-zh-Hant-390.png": {
+    "width": 375,
+    "height": 4247
+  },
+  "member-zh-Hant-390-before-logout.png": {
+    "width": 375,
+    "height": 4185
+  },
+  "guest-zh-hant-360.png": {
+    "width": 345,
+    "height": 2951
+  },
+  "guest-zh-hans-1440.png": {
+    "width": 1425,
+    "height": 1663
+  },
+  "guest-zh-hans-360.png": {
+    "width": 345,
+    "height": 2951
+  },
+  "guest-en-1440.png": {
+    "width": 1425,
+    "height": 1685
+  },
+  "guest-en-360.png": {
+    "width": 345,
+    "height": 3332
+  },
+  "guest-ja-1440.png": {
+    "width": 1425,
+    "height": 1705
+  },
+  "guest-ja-360.png": {
+    "width": 345,
+    "height": 3383
+  },
+  "source": {
+    "format": "png",
+    "width": 1448,
+    "height": 1086,
+    "space": "srgb",
+    "channels": 3,
+    "depth": "uchar",
+    "density": 72,
+    "isProgressive": false,
+    "isPalette": false,
+    "bitsPerSample": 8,
+    "hasProfile": false,
+    "hasAlpha": false,
+    "autoOrient": {
+      "width": 1448,
+      "height": 1086
+    },
+    "crop": {
+      "left": 46,
+      "top": 72,
+      "width": 1356,
+      "height": 994
+    }
+  },
+  "comparison": {
+    "source": "home reference: browser frame removed",
+    "desktop": "Member guest/current-account: 1425px content in 1440px viewport; common width 600px",
+    "header": "Reference above, implementation below; common width 1200px",
+    "mobile": "Before fix left, after fix right; same current member, 390px viewport, 375px raster content, 844px top crop; fixture dates differ"
+  }
+}
