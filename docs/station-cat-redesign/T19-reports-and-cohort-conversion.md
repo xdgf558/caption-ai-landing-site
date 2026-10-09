@@ -39,7 +39,11 @@ T19 在既有音乐后台增加 `/admin/music/reports/`，从 T18 已接收事�
 
 近期查询保守使用最近 89 个 UTC 日期，避开 T18 的 90 天原始事件删除边界及其清理宽限。SQL 对同一时间窗精确去重，不向管理员返回会话 ID、事件 ID、原始 IP、账号信息、音频地址或认证信息。每次最多处理 20,000 个筛选后事件，超限返回明确错误，不截断成成功报表。
 
-0017 追加六张 STRICT 表：`station_report_snapshots`、`station_report_jobs`、`station_report_health`、`station_report_retention_guard`、`station_external_metrics`、`station_report_operations`。快照只保存 17 个白名单非负整数和查询维度，不保存访客标识；已经生成的快照不可更新。每日任务在实际出现的维度交集及其“不限定”父维度上建快照，同时覆盖五个平台。单日最多 512 个查询键，每次 cron 最多处理 16 个，游标与快照在同一 D1 批次推进。
+0017 追加六张 STRICT 表：`station_report_snapshots`、`station_report_jobs`、`station_report_health`、`station_report_retention_guard`、`station_external_metrics`、`station_report_operations`。修订 0018 追加 `station_report_window_seal` 和 `station_event_inflight`，保护已封存的时间边界。快照只保存 17 个白名单非负整数和查询维度，不保存访客标识；封存后生成的快照不可更新。每日任务在实际出现的维度交集及其“不限定”父维度上建快照，同时覆盖五个平台。单日最多 512 个查询键，每次 cron 最多处理 16 个，游标与快照在同一 D1 批次推进。
+
+事件采集在异步核对维度/媒体前登记随机请求令牌，保留原服务端接收时间；最终 D1 批次同时核对原令牌、写入事件和释放令牌。手工快照与每日任务先在主库事务中封存窗口，再读取数量或枚举维度。结束时间之前仍有有效在途令牌时返回 `REPORT_WINDOW_DRAINING`，不创建快照或任务，不推进已有游标。令牌最长 60 秒、最多 4096 个，不保存事件、会话、账号或正文；封存事务及事件/报表清理会撤销过期令牌。撤销不是假设请求已停止，迟到批次必须核对令牌，失效时整个批次回滚并返回 503，不能收到成功回执。重新提交沿用原事件 UUID，接收时间属于新的服务端请求。数据库触发器也拒绝旧版本采集器向已封存窗口补写。
+
+0018 一次性迁移使既有未封存快照、每日任务和对应快照操作回执失效，并重置聚合覆盖游标；原始事件、人工平台记录和人工登记回执不动。仍在原始保留期内的数据可按新规则重建，已过期且无法复算的数据保持“暂无数据”，不继续沿用可能漏记的历史值。既有 0016/0017 文件未改；迁移不能在请求路径重放，本批没有远程执行。
 
 原有 cron 为每小时一次：即便没有故障，384 个键/天的理论吞吐也不能保证持续覆盖每天 512 个键的上限。T20 启用前必须结合实际维度规模、套餐和原有 cron 工作量核对覆盖进度；积压、超限或原始来源过期会停在原游标，不跳过并宣称完成。本批没有生产补算、调高 cron 频率或承诺历史覆盖完整。
 
@@ -59,16 +63,20 @@ T19 在既有音乐后台增加 `/admin/music/reports/`，从 T18 已接收事�
 
 API 位于 `/admin/api/music/site-content/reports`。沿用实际验证的 Cloudflare Access JWT 和原后台角色，GET/HEAD 是私有 `no-store`，所有写入要求同源 CSRF 检查及发布者身份；编辑者只读。报表页 `noindex,nofollow,noarchive`，正式用户导航不改。读取历史报表不要求 R2 或公开音乐页面开关。
 
-服务要求独立 MUSIC_DB、实际 0016/0017 账本及所有查询依赖表列，不根据迁移文件存在自动建表。需要原 `STATION_CONTENT_ADMIN_ENABLED`、`STATION_REPORTS_ENABLED=true` 和 `STATION_REPORT_POLICY_VERSION=station-reports-v1`。定时聚合另需 `STATION_REPORT_AGGREGATION_ENABLED=true`；写入/聚合还需 `STATION_REPORT_RETENTION_ENABLED=true` 及清理健康。新开关没有加入生产启用值，0017 只在临时本机 SQLite/D1 执行。
+服务要求独立 MUSIC_DB、实际 0016/0017/0018 账本及所有查询依赖表列，不根据迁移文件存在自动建表。需要原 `STATION_CONTENT_ADMIN_ENABLED`、`STATION_REPORTS_ENABLED=true` 和 `STATION_REPORT_POLICY_VERSION=station-reports-v1`。定时聚合另需 `STATION_REPORT_AGGREGATION_ENABLED=true`；写入/聚合还需 `STATION_REPORT_RETENTION_ENABLED=true` 及清理健康。新开关没有加入生产启用值，0017/0018 只在临时本机 SQLite/D1 执行。仅有 T18 schema 的库仍可按旧规则采集，但不能提供报表封存；0018 到位后写入协调自动生效，T20 须核对实际部署顺序。
 
 报表有独立的本机恢复键 `station-reports-admin:v1:<actor>`，与旧内容发布日志互相拒绝跨范围重放。操作先保存原命令、版本和幂等键；丢回执、刷新或身份变化不生成新操作。服务端操作回执只保留最小结果约一天，旧永久 mutation 日志和审计不写统计值或来源说明。
 
+写入端点成功后的身份复核与本机日志清除是独立阶段。后续 401/403、管理员变化、网络异常或日志清除失败均保留原命令和操作键，禁止新登记，且不向新管理员返回旧管理员的结果。恢复时的任何错误也不能证明首次写入失败，不能清除待核对记录；恢复权限后只重放原操作。初次写入本身返回确定的版本/输入错误时，才沿用原控制器的终止处理。该修复同时覆盖旧内容后台和报表后台；页面提示已提交但复核未完成，并将焦点移到“核对原操作”。
+
 幂等键携带首次操作时间，服务端要求不晚于当前时间五分钟、且未超过 24 小时；回执到期与该键一致。即使到期回执已清理，原键也返回 `REPORT_OPERATION_EXPIRED`，不会再次插入。过期 pending 保持阻止后续写入，需人工核对登记结果后受控恢复本机日志；本批没有自动丢弃或重建按钮。客户端 30 秒超时只停止等待，不撤销已发 D1 请求；D1 批次解决本库 CAS 和回执原子性，不构成 D1/R2/Access 跨系统回滚。
 
-账号销户清单为六张表补只读分类，`approved=false`、`executionEnabled=false` 保持不变。原 64 张读者表、27 张旧音乐表及既有分类不因本任务被授权删除。
+账号销户清单为八张 T19 表补只读分类，`approved=false`、`executionEnabled=false` 保持不变。原 64 张读者表、27 张旧音乐表及既有分类不因本任务被授权删除。
 
 ## 验证和交付边界
 
 最终验证见 [摘要与原始日志](evidence/T19/verification-summary.json)、[设计 QA](evidence/T19/design-qa.md) 和五个宽度的截图。专项覆盖固定算术、重复/跨歌/跨窗口、缺失与零值、真实 Worker Access/CSRF、原生临时 D1 CAS/幂等、到期清理后拒绝重试、独立角色/日志及构建页。浏览器实际核对零值登记、修订、丢回执刷新恢复、只读/关闭/缺库/空态、键盘和 320–1440 CSS 视口；不是 iOS、Android、内置浏览器或 VoiceOver 验收。
+
+上述 51 项和截图是初版记录；修订证据独立保存在 [T19-review](evidence/T19-review/verification-summary.json)，不覆盖旧日志。新增跨午夜在途写入、过期令牌与迟到注册、数据库旧写入拒绝、旧快照失效、成功 POST 后真实 Access 401、刷新重放及两套工作区的权限/存储失败回归。修订专项为 71 项，另保留 112 项 T16–T18 回归、完整 npm test、空正文构建、精确 staging 检查和只读 schema 审计。托管 CI 必须核对修订头，不能引用初版 bb2e7638 的成功代替。
 
 完整 npm test、本机专项、空正文构建和精确 staging 资源核验不能替代本 PR 当前头的完整托管 CI。生产 MUSIC_DB、R2、Access 策略、套餐容量、真实素材、云冲突和缓存仍未验证。T12 已发云写入和本机跨进程窗口、T13 同源 iframe 与一秒退出等待、T15 失败上传占配额等历史边界继续保留。本任务提交独立 PR 等用户审查，不自动合并或进入 T20；没有远程迁移、生产部署、开关启用或旧入口关闭。

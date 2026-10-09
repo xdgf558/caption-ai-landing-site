@@ -28,7 +28,7 @@
 | T16 编辑发布与内容回退 | 用户审查通过，精确头完整 CI 通过，已合并 | [PR #201](https://github.com/xdgf558/caption-ai-landing-site/pull/201)；头 `982e2e8d` 的 CI `37875077351` 成功，squash 为 `4ddec4f6`，新加坡时间 2026-10-09 11:11:43 合并；跨系统原子提交及生产验收边界保留 |
 | T17 Campaign 与链接生成 | 审查通过，已合并 | [PR #202](https://github.com/xdgf558/caption-ai-landing-site/pull/202)，精确头 `d616333d` 的完整 CI 通过，squash 为 `73fc199d`；0015 未远程执行，生产开关关闭 |
 | T18 事件接收与去重 | 用户审查通过，精确头完整 CI 通过，已合并 | [PR #203](https://github.com/xdgf558/caption-ai-landing-site/pull/203)；头 `42cd0b30` 的 CI `37904880728`（40 步）成功，squash 为 `cd1ea339`，新加坡时间 2026-10-09 16:59:07 合并；0016 未远程执行，生产统计关闭 |
-| T19 聚合与运营报表 | 本机实现与验证完成，独立 PR 待用户审查 | [合同](T19-reports-and-cohort-conversion.md)、[验证摘要](evidence/T19/verification-summary.json)、[设计 QA](evidence/T19/design-qa.md)；0017 未远程执行，报表、聚合与清理未启用，真实平台数据待定 |
+| T19 聚合与运营报表 | 两项 P2 已修订，本机验证完成，同一 PR 待复审 | [合同](T19-reports-and-cohort-conversion.md)、[初版证据](evidence/T19/verification-summary.json)、[修订证据](evidence/T19-review/verification-summary.json)；0017/0018 未远程执行，报表、聚合与清理未启用，真实平台数据待定 |
 | T20–T22 | 未开始 | 每个任务单独提交、审查后继续 |
 
 ## 需求基线
@@ -104,3 +104,5 @@ T18 从该实际合并提交建立，接入显式允许的十项新事件、原�
 以上保留 T18 当时交付状态。随后用户审查并授权合并，精确头 `42cd0b303af0edf9414592cc9886c23f2af78d2d` 的 [完整 CI](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37904880728)（40 步）成功后，于 2026-10-09 08:59:07 UTC（新加坡 16:59:07）squash 为 `cd1ea33964f47c2e3806f81c8b01a12f772caf4e`；[合并事实](evidence/T19/T18-merge-result.json) 与 [精确头 CI](evidence/T19/T18-approved-head-ci.json) 独立保存。
 
 T19 从该主分支建立，新增访问/试听/点击/短片/游戏报表与来源登记，按同窗同歌同会话计算转化，重复点击不重复计入转化分子。每日历史只合计次数，精确保存的时间窗保留去重分母；缺失值、真实零值与无运行端确认分开。0017 为本机追加迁移，默认开关、账号销户关闭态及旧入口保持原状。51 项最终专项、37 项原后台回归、完整 npm test、空正文构建和 staging 精确资源核验通过；五视口、零值登记/修订和丢回执刷新恢复的 IAB 证据保存。原失败时序和对应修正单独记录，本机结果不替代本 PR 当前头完整托管 CI。独立 PR 等用户审查，不自动合并、进入 T20、执行远程迁移、部署、启用开关或关闭旧入口。
+
+以上是 T19 初版记录。复审提出的在途事件漏入不可变快照、成功写入后身份核验失败清空恢复日志两项 P2 已在同一 PR #204 修订：0018 加入窗口水位和短期写入令牌，未封存旧聚合失效后按原始保留期重建；客户端区分提交与后续复核，并保留原键跨刷新恢复。修订专项 71 项、相关回归 112 项及 123 张表的只读分类审计通过，后续托管结论须核对修订头。初版日志不覆盖，新增记录见 [修订证据](evidence/T19-review/verification-summary.json)。仍等用户复审，不自动合并或进入 T20。

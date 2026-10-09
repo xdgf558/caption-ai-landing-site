@@ -3,22 +3,24 @@ import { fail, mutationKey, text, editVersion } from '../music/adminValidation.j
 import { publicationHash } from '../music/publicationValidation.js';
 import { DAY, REPORT_MIGRATION, REPORT_VERSION, REPORT_STATS, enabled, reportFlags, dayFloor, calendarYear, liveStart, queryKey, reportQuery, validateStats, reportView, externalInput, reportOperationStarted } from './reportsModel.js';
 import { liveStats } from './reportsQuery.js';
+import { REPORT_SEAL_MIGRATION, sealReportWindow } from './reportSealing.js';
 
 export async function reportReadiness(env,{allowDisabled=false}={}){
   if(!allowDisabled&&!reportFlags(env))fail('STATION_REPORTS_DISABLED',503);
   if(!env.MUSIC_DB||env.MUSIC_DB===env.WAITLIST_DB)fail('REPORT_DATABASE_UNAVAILABLE',503);
   try{
     const s=primary(env.MUSIC_DB),r=await s.batch([
-      s.prepare("SELECT name FROM d1_migrations WHERE name IN ('0016_station_event_collection.sql',?) ORDER BY name").bind(REPORT_MIGRATION),
+      s.prepare("SELECT name FROM d1_migrations WHERE name IN ('0016_station_event_collection.sql',?,?) ORDER BY name").bind(REPORT_MIGRATION,REPORT_SEAL_MIGRATION),
       s.prepare(`SELECT e.event_name,e.consent_version,e.session_id,e.received_at,e.track_id,e.clip_id,e.campaign_id,e.platform_link_id,e.session_scope,e.attribution_kind,e.campaign_source,e.time_anomaly,
         c.clip_id,p.provider FROM station_analytics_events e LEFT JOIN station_campaigns c ON c.id=e.campaign_id LEFT JOIN station_platform_links p ON p.id=e.platform_link_id AND p.track_id=e.track_id LIMIT 0`),
       s.prepare('SELECT id,window_start,window_end,query_key,stats_json,generated_at,expires_at FROM station_report_snapshots LIMIT 0'),
       s.prepare('SELECT window_start,window_end,keys_json,cursor,edit_version,status,expires_at FROM station_report_jobs LIMIT 0'),
-      s.prepare('SELECT coverage_start,next_day,last_sweep_at,last_aggregate_at FROM station_report_health LIMIT 0'),
-      s.prepare('SELECT singleton,cutoff FROM station_report_retention_guard LIMIT 0'),
+      s.prepare(`SELECT h.coverage_start,h.next_day,h.last_sweep_at,h.last_aggregate_at,g.singleton,g.cutoff,w.sealed_before,w.updated_at,f.token,f.received_at,f.expires_at
+        FROM station_report_health h JOIN station_report_window_seal w ON w.singleton=h.singleton
+        LEFT JOIN station_report_retention_guard g ON g.singleton=h.singleton LEFT JOIN station_event_inflight f ON 1=1 LIMIT 0`),
       s.prepare('SELECT id,track_id,clip_id,campaign_id,metric,provider,value,source_kind,source_label,window_start,window_end,observed_at,updated_at,status,edit_version,expires_at FROM station_external_metrics LIMIT 0'),
       s.prepare('SELECT actor_id,route,idempotency_key,request_hash,result_json,expires_at FROM station_report_operations LIMIT 0')
-    ]);r.forEach(rows);if(rows(r[0]).length!==2)throw new Error('ledger');return {db:env.MUSIC_DB,s};
+    ]);r.forEach(rows);if(rows(r[0]).length!==3)throw new Error('ledger');return {db:env.MUSIC_DB,s};
   }catch{fail('REPORT_SCHEMA_UNAVAILABLE',503);}
 }
 export async function reportHealth(s,now){
@@ -123,6 +125,7 @@ export async function saveReportSnapshot(runtime,env,input,context,{clock=Date.n
   const now=clock(),q=reportQuery(input,now);if(q.end>now||q.start<liveStart(now))fail('REPORT_SNAPSHOT_WINDOW_INVALID',422);
   await reportWriteReady(env,runtime.s,now);await validateDimensions(runtime.s,q.filters);
   return reportMutation(runtime,{...context,route:'/reports/snapshots',command:q,clock},async(s,stamp)=>{
+    await sealReportWindow(s,q.end,stamp);
     const old=rows(await s.prepare('SELECT id FROM station_report_snapshots WHERE window_start=? AND window_end=? AND query_key=?').bind(q.start,q.end,queryKey(q.filters)).all())[0];
     const id=old?.id??crypto.randomUUID(),stats=old?null:await liveStats(s,q);
     return {condition:old?'EXISTS(SELECT 1 FROM station_report_snapshots WHERE id=?)':'NOT EXISTS(SELECT 1 FROM station_report_snapshots WHERE window_start=? AND window_end=? AND query_key=?)',params:old?[id]:[q.start,q.end,queryKey(q.filters)],

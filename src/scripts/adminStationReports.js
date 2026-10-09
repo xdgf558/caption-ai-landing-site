@@ -9,7 +9,8 @@ const utc=n=>new Date(n).toISOString().replace('T',' ').replace(/\.\d{3}Z$/,' UT
 const day=n=>new Date(n).toISOString().slice(0,10),local=n=>new Date(n).toISOString().slice(0,19);
 function message(text,error=false){set('report-status',text);$('report-status').dataset.error=String(error);}
 const messages={STATION_REPORTS_DISABLED:'推广报表尚未启用。',STATION_JOURNAL_UNAVAILABLE:'本机恢复记录不可用，写入已停止，请先核对原操作。',REPORT_SCHEMA_UNAVAILABLE:'报表数据库尚未准备好，请先核对迁移账本。',REPORT_RETENTION_UNREADY:'报表留存任务未就绪，已停止写入。',REPORT_WINDOW_INVALID:'请选择 12 个月内、最长 31 天的有效时间窗。',REPORT_EVENT_BUDGET:'此范围的记录超出安全查询预算，请缩短时间窗。',REPORT_DIMENSION_INVALID:'所选歌曲与资料不匹配，请调整筛选。',REPORT_EXTERNAL_BUDGET:'外部记录较多，请缩小歌曲或时间范围。',REPORT_OPTION_BUDGET:'筛选资料超出预算，请管理员核对。',REPORT_EDIT_CONFLICT:'记录版本已变化，请重新读取后修订。',REPORT_OPERATION_EXPIRED:'原操作的重试期限已过，请先人工核对登记结果。',REPORT_OPERATION_CLOCK_INVALID:'本机时间与服务器时间不一致，请校准后重新核对。',STATION_ACTOR_CHANGED:'管理员已变化，已清空当前报表，请重新载入。',STATION_PUBLISHER_REQUIRED:'当前角色只能查看报表。',INVALID_INPUT:'请核对日期、来源和数据格式。',ADMIN_AUTH_REQUIRED:'请先通过后台访问验证。'};
-function failure(e){if(e.code==='STATION_ACTOR_CHANGED'){status=null;current=null;clear();$('report-filter-fields').disabled=true;}message(messages[e.code]??(e.uncertain?'操作结果尚未确认，保留原操作编号后核对。':'报表暂时无法读取，请重新核对。'),true);}
+function failure(e){if(e.code==='STATION_ACTOR_CHANGED'){status=null;current=null;clear();$('report-filter-fields').disabled=true;}
+  message(e.postWrite?'操作已提交，后续身份或本机复核未完成。请恢复访问权限后核对原操作，避免重复登记。':e.code==='REPORT_WINDOW_DRAINING'?'这个时间窗仍有事件正在写入，尚未保存快照，请稍后核对。':messages[e.code]??(e.uncertain?'操作结果尚未确认，保留原操作编号后核对。':'报表暂时无法读取，请重新核对。'),true);}
 function canWrite(){return status?.role==='publisher'&&status.retentionEnabled&&status.health.retentionReady&&!writing&&!controller.pending();}
 function controls(){
   $('report-recovery').hidden=!controller.pending();$('report-retry').disabled=writing;
@@ -79,7 +80,7 @@ function editRecord(r){
   for(const id of ['track','clip','campaign','metric','provider','from','to'])$('external-'+id).disabled=true;
   $('external-recognized').checked=false;set('report-edit-note','正在修订版本 '+r.editVersion+'。所属作品、指标和时间窗固定；修改归属时请新建记录并撤回原记录。');set('external-submit','保存修订');$('report-import').open=true;$('report-import').scrollIntoView({behavior:'auto',block:'start'});$('external-value').focus();
 }
-async function write(task){writing=true;controls();try{const result=await task();message(result.replayed?'原操作已确认，没有重复登记。':'操作已确认。');newRecord();await load();}catch(e){failure(e);}finally{writing=false;controls();if(current)renderExternal(current.external);}}
+async function write(task){writing=true;controls();let focusRecovery=false;try{const result=await task();message(result.replayed?'原操作已确认，没有重复登记。':'操作已确认。');newRecord();await load();}catch(e){failure(e);focusRecovery=e.postWrite===true;}finally{writing=false;controls();if(current)renderExternal(current.external);if(focusRecovery&&controller.pending())$('report-retry').focus();}}
 async function connect(){
   loader.dispose();clear();$('report-filter-fields').disabled=true;message('正在核对报表权限与资料…');
   try{status=await controller.connect();options=await contentRequest('/reports/options');await controller.verifyActor();populate();set('report-role',status.role==='publisher'?'发布者 · 可登记平台数据':'编辑者 · 只读');$('report-filter-fields').disabled=false;controls();newRecord();await load();}catch(e){status=null;set('report-role','暂不可用');controls();failure(e);}

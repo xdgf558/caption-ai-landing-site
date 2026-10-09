@@ -1,0 +1,11 @@
+{
+  "observedAt": "2026-10-09T13:36:06.056Z",
+  "kind": "local IAB + native temporary D1 fixture",
+  "importDisabled": false,
+  "matchingRecords": [
+    "网易云音乐 · 平台播放量\n\n7\n\n所属歌曲\n本机示例 · 推广资料 A\n数据来源\n平台导出 · T19复审 · 写入成功后401恢复夹具\n统计时间\n2026-10-08 00:00:00 UTC → 2026-10-09 00:00:00 UTC\n数据截至\n2026-10-09 13:33:32 UTC\n登记更新\n2026-10-09 13:33:55 UTC\n关联资料\n未限定 Campaign\n\n时间窗或归因范围不一致，无法计算精确转化率。\n\n修订此记录"
+  ],
+  "recoveryVisible": false,
+  "scrollWidth": 1265,
+  "width": 1265
+}

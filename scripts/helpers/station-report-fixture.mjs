@@ -9,16 +9,19 @@ import { platformFixture } from './station-content-fixture.mjs';
 import { REPORT_MIGRATION, REPORT_VERSION, DAY, dayFloor } from '../../src/redesign/reportsModel.js';
 import { reportReadiness, saveExternalMetric } from '../../src/redesign/reportsStore.js';
 import { runStationReportRetention } from '../../src/redesign/reportsSchedule.js';
+import { REPORT_SEAL_MIGRATION } from '../../src/redesign/reportSealing.js';
 
 export const reportSql=readFileSync(new URL('../../migrations-music/'+REPORT_MIGRATION,import.meta.url),'utf8');
+export const reportSealSql=readFileSync(new URL('../../migrations-music/'+REPORT_SEAL_MIGRATION,import.meta.url),'utf8');
 export const reportBindings={...eventBindings,STATION_REPORTS_ENABLED:'true',STATION_REPORT_POLICY_VERSION:REPORT_VERSION,STATION_REPORT_AGGREGATION_ENABLED:'true',STATION_REPORT_RETENTION_ENABLED:'true',STATION_CONTENT_ADMIN_ENABLED:'true'};
 export function reportMigrationGroups(){const groups=eventMigrationGroups(),parser=new DatabaseSync(':memory:');try{
-  for(const g of groups)for(const sql of g.statements)parser.exec(sql);let rest=reportSql;const statements=[];
-  while(rest.trim()){const s=parser.prepare(rest),sql=s.sourceSQL;s.run();statements.push(sql);rest=rest.slice(sql.length);}return [...groups,{name:REPORT_MIGRATION,statements}];
+  for(const g of groups)for(const sql of g.statements)parser.exec(sql);
+  for(const [name,source]of [[REPORT_MIGRATION,reportSql],[REPORT_SEAL_MIGRATION,reportSealSql]]){let rest=source;const statements=[];
+    while(rest.trim()){const s=parser.prepare(rest),sql=s.sourceSQL;s.run();statements.push(sql);rest=rest.slice(sql.length);}groups.push({name,statements});}return groups;
 }finally{parser.close();}}
-export async function reportFixture({sample=true,migrated=true,now=Date.now()}={}){
-  const f=await eventFixture();if(migrated){f.sql.exec(reportSql);await f.db.prepare('INSERT INTO d1_migrations(name,applied_at) VALUES(?,?)').bind(REPORT_MIGRATION,new Date(now).toISOString()).run();}
-  f.env={...f.env,...reportBindings};if(migrated)await runStationReportRetention(f.env,{clock:()=>now});
+export async function reportFixture({sample=true,migrated=true,sealing=true,now=Date.now()}={}){
+  const f=await eventFixture();if(migrated){for(const [name,source]of [[REPORT_MIGRATION,reportSql],...(sealing?[[REPORT_SEAL_MIGRATION,reportSealSql]]:[])]){f.sql.exec(source);await f.db.prepare('INSERT INTO d1_migrations(name,applied_at) VALUES(?,?)').bind(name,new Date(now).toISOString()).run();}}
+  f.env={...f.env,...reportBindings};if(migrated&&sealing)await runStationReportRetention(f.env,{clock:()=>now});
   if(sample&&migrated)f.sample=await seedReportSample(f.db,f,{now});return f;
 }
 // Synthetic accepted-receipt shapes for aggregation arithmetic. This does not

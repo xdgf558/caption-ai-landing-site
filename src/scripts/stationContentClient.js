@@ -21,11 +21,18 @@ export function createContentController({request=contentRequest,storage,makeId=(
   let actor=null,journal=null,busy=false;
   const write=value=>{storage.setItem(journalPrefix+actor,JSON.stringify(value));journal=value;};
   async function sameActor(){const status=await request(statusPath);if(status.actorId!==actor)throw Object.assign(new Error('管理员已变化，请重新载入工作区。'),{code:'STATION_ACTOR_CHANGED'});return status;}
-  async function sendPending(){
+  async function sendPending(recovering=false){
     if(!journal?.pending)throw new Error('没有待核对的操作。');
     await sameActor();const op=journal.pending;
-    try {const result=await request(op.path,{method:op.method,body:op.body,key:op.key,etag:op.etag});await sameActor();write({pending:null});return result;}
-    catch(e){if(!e.uncertain&&e.code!=='STATION_ACTOR_CHANGED'&&e.code!=='REPORT_OPERATION_EXPIRED')write({pending:null});throw e;}
+    let result;
+    try {result=await request(op.path,{method:op.method,body:op.body,key:op.key,etag:op.etag});}
+    catch(e){if(!recovering&&!e.uncertain&&e.code!=='STATION_ACTOR_CHANGED'&&e.code!=='REPORT_OPERATION_EXPIRED')write({pending:null});throw e;}
+    // Success is already acknowledged by the write endpoint. A later 401/403,
+    // actor change, network error or local clear failure cannot revoke it. Keep
+    // the original command/key (also on disk) and never expose an old actor's
+    // result. Reload/recovery must replay the original idempotent operation.
+    try{await sameActor();write({pending:null});return result;}
+    catch(e){throw Object.assign(new Error('操作已提交，后续身份或本机复核未完成，请核对原操作。'),{code:e.code,status:e.status,uncertain:true,postWrite:true});}
   }
   const serial=async task=>{if(busy)throw new Error('正在核对上一次操作。');busy=true;try{return await task();}finally{busy=false;}};
   return {
@@ -37,7 +44,9 @@ export function createContentController({request=contentRequest,storage,makeId=(
     async mutate(path,method,body,version=null){return serial(async()=>{
       if(!actor||!journal)throw new Error('请先核对管理员。');if(journal.pending)throw new Error('请先核对原操作。');if(!allowed(path)||!['POST','PATCH','PUT'].includes(method))throw new Error('无效内容管理路径');
       await sameActor();const nonce=makeId(),key=scope==='reports'?`r1_${clock()}_${nonce}`:nonce;write({pending:{path,method,body:JSON.parse(JSON.stringify(body)),etag:version===null?null:`"edit-${version}"`,key}});return sendPending();});},
-    async retry(){return serial(sendPending);},
+    // A recovery request may now fail authorization even though its original
+    // request committed. No recovery error is proof that the first write failed.
+    async retry(){return serial(()=>sendPending(true));},
     async verifyActor(){return sameActor();}
   };
 }

@@ -3,9 +3,10 @@ import { fail } from '../music/adminValidation.js';
 import { DAY, REPORT_VERSION, REPORT_STATS, enabled, reportFlags, dayFloor, calendarYear, liveStart, queryKey, filters } from './reportsModel.js';
 import { statsSql, dailyKeys } from './reportsQuery.js';
 import { reportReadiness, reportHealth } from './reportsStore.js';
+import { sealReportWindow } from './reportSealing.js';
 
-// Four T19 tables only. Collection, reader erasure, content and old analytics
-// remain independent. Even disabled reports do not stop this controlled expiry.
+// Report expiry and short-lived flight revocation only. Reader erasure, content
+// and raw-event TTL remain independent. Disabled queries do not stop expiry.
 export async function runStationReportRetention(env,{clock=Date.now,runtime}={}){
   if(!enabled(env.STATION_REPORT_RETENTION_ENABLED)||env.STATION_REPORT_POLICY_VERSION!==REPORT_VERSION)return {available:false,reason:'RETENTION_DISABLED'};
   try{
@@ -13,6 +14,7 @@ export async function runStationReportRetention(env,{clock=Date.now,runtime}={})
     const tables=['station_report_snapshots','station_report_jobs','station_external_metrics','station_report_operations'];
     const r=await s.batch([
       s.prepare('INSERT INTO station_report_retention_guard(singleton,cutoff) VALUES(1,?)').bind(now),
+      s.prepare('DELETE FROM station_event_inflight WHERE expires_at<=?').bind(now),
       ...tables.map(t=>s.prepare(`DELETE FROM ${t} WHERE rowid IN (SELECT rowid FROM ${t} WHERE expires_at<=? ORDER BY expires_at LIMIT 1000)`).bind(now)),
       s.prepare('DELETE FROM station_report_retention_guard WHERE singleton=1'),
       s.prepare('SELECT '+tables.map(t=>`EXISTS(SELECT 1 FROM ${t} WHERE expires_at<=?)`).join(' OR ')+' AS pending').bind(now,now,now,now)
@@ -36,6 +38,7 @@ export async function runStationReportAggregation(env,{clock=Date.now,runtime,ba
     if(!Number.isSafeInteger(day))fail('REPORT_AGGREGATE_UNAVAILABLE',503);
     if(day<liveStart(now))return {available:false,reason:'REPORT_SOURCE_EXPIRED'};
     if(day>=dayFloor(now))return {available:true,idle:true};
+    await sealReportWindow(s,day+DAY,now);
     let job=rows(await s.prepare('SELECT * FROM station_report_jobs WHERE window_start=?').bind(day).all())[0];
     if(!job){
       const keys=await dailyKeys(s,day,day+DAY);
@@ -61,7 +64,7 @@ export async function runStationReportAggregation(env,{clock=Date.now,runtime,ba
       s.prepare('DELETE FROM music_publication_guards WHERE operation_token=?').bind(token));
     (await s.batch(batch)).forEach(rows);
     return {available:true,day,processed:end-job.cursor,complete,remaining:keys.length-end};
-  }catch(e){return {available:false,reason:['REPORT_EVENT_BUDGET','REPORT_DIMENSION_BUDGET'].includes(e.code)?e.code:'REPORT_AGGREGATION_UNAVAILABLE'};}
+  }catch(e){return {available:false,reason:['REPORT_EVENT_BUDGET','REPORT_DIMENSION_BUDGET','REPORT_WINDOW_DRAINING'].includes(e.code)?e.code:'REPORT_AGGREGATION_UNAVAILABLE'};}
 }
 export async function runStationReportMaintenance(env,options={}){
   if(!enabled(env.STATION_REPORT_RETENTION_ENABLED)||env.STATION_REPORT_POLICY_VERSION!==REPORT_VERSION)return {available:false,reason:'RETENTION_DISABLED'};

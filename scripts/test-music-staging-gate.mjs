@@ -370,7 +370,7 @@ test('staging module graph includes only music, Access, membership and explicitl
     'data/station-home.js', 'redesign/contentAdmin.js', 'redesign/contentAdminHttp.js', 'redesign/contentAdminModel.js',
     'redesign/contentAdminStore.js', 'redesign/contentAdminValidation.js', 'redesign/contentSchedule.js',
     'redesign/campaignStore.js', 'redesign/campaignLinks.js',
-    'redesign/reportsHttp.js', 'redesign/reportsStore.js', 'redesign/reportsModel.js', 'redesign/reportsQuery.js',
+    'redesign/reportsHttp.js', 'redesign/reportsStore.js', 'redesign/reportsModel.js', 'redesign/reportsQuery.js', 'redesign/reportSealing.js',
     'redesign/musicCursor.js', 'redesign/publicResources.js', 'redesign/publicStore.js', 'redesign/publicValidation.js', 'redesign/routes.js']);
 
   while (pending.length) {

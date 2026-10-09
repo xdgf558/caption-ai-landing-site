@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';import {test} from 'node:test';import {randomUUID} from 'node:crypto';
-import {createReportRuntime} from './helpers/station-report-fixture.mjs';
+import {createReportRuntime,reportBindings} from './helpers/station-report-fixture.mjs';
 import {reportAssets} from './helpers/station-report-assets.mjs';
-import {REPORT_MIGRATION} from '../src/redesign/reportsModel.js';
+import {REPORT_MIGRATION,DAY,dayFloor} from '../src/redesign/reportsModel.js';
+import {REPORT_SEAL_MIGRATION} from '../src/redesign/reportSealing.js';
+import {createContentController} from '../src/scripts/stationContentClient.js';
+import {collectStationEvents,runStationEventRetention} from '../src/redesign/analyticsStore.js';
+import {reportReadiness,saveReportSnapshot} from '../src/redesign/reportsStore.js';
+import {runStationReportRetention} from '../src/redesign/reportsSchedule.js';
+import {event,eventRequest} from './helpers/station-event-fixture.mjs';
 const base='/admin/api/music/site-content/reports';
 test('actual Worker, verified Access and native D1 report transactions',async t=>{
  const f=await createReportRuntime({assets:reportAssets});t.after(()=>f.close());
@@ -16,6 +22,7 @@ test('actual Worker, verified Access and native D1 report transactions',async t=
  await t.test('actual native report reproduces the sample math and private cache policy',async()=>{const {r,data}=await json(base+'?'+query);assert.equal(r.status,200,JSON.stringify(data));assert.equal(data.visitSessions,3);assert.equal(data.platformRate.value,2/3);assert.equal(data.counts.platform_click,5);assert.equal(r.headers.get('cache-control'),'private, no-store');assert.match(r.headers.get('x-robots-tag'),/noindex/);assert.equal(r.headers.get('x-content-type-options'),'nosniff');const head=await send(base+'?'+query,{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'');assert.ok(!JSON.stringify(data).includes(sample.session1));});
  await t.test('duplicate query, unknown dimensions and wrong methods fail without data',async()=>{assert.equal((await send(base+'?'+query+'&from='+sample.from)).status,400);assert.equal((await send(base+'?'+query+'&accountId=1')).status,400);assert.equal((await send(base+'/options',{method:'DELETE'})).status,405);assert.equal((await send(base+'/unknown')).status,404);});
  await t.test('0017 ledger deletion fails closed and schema is not auto-created',async()=>{await f.db.prepare('DELETE FROM d1_migrations WHERE name=?').bind(REPORT_MIGRATION).run();const {r,data}=await json(base+'/status');assert.equal(r.status,503);assert.equal(data.code,'REPORT_SCHEMA_UNAVAILABLE');await f.db.prepare('INSERT INTO d1_migrations(name,applied_at) VALUES(?,?)').bind(REPORT_MIGRATION,new Date().toISOString()).run();});
+ await t.test('0018 sealing ledger must be confirmed independently',async()=>{await f.db.prepare('DELETE FROM d1_migrations WHERE name=?').bind(REPORT_SEAL_MIGRATION).run();assert.equal((await json(base+'/status')).data.code,'REPORT_SCHEMA_UNAVAILABLE');await f.db.prepare('INSERT INTO d1_migrations(name,applied_at) VALUES(?,?)').bind(REPORT_SEAL_MIGRATION,new Date().toISOString()).run();});
  await t.test('same-origin write gate and read-only editor protect native inserts',async()=>{assert.equal((await send(base+'/external',{method:'POST',body:input,origin:'https://evil.test'})).status,403);assert.equal((await send(base+'/external',{method:'POST',body:input,headers:{'Sec-Fetch-Site':'same-site'}})).status,403);assert.equal((await send(base+'/external',{method:'POST',body:input,headers:{'X-Requested-With':''}})).status,403);const token=await f.token({email:'second-content-fixture@example.test'});assert.equal((await json(base+'/status',{token})).data.role,'editor');assert.equal((await send(base+'?'+query,{token})).status,200);assert.equal((await send(base+'/external',{method:'POST',body:input,token})).status,403);assert.equal((await send(base+'/snapshots',{method:'POST',body:sample.cohort,token})).status,403);});
  await t.test('retention-off blocks writes, aggregation-off blocks capture without blocking reads',async()=>{assert.equal((await send('/fixture-report-retention-off'+base+'/external',{method:'POST',body:input})).status,503);assert.equal((await send('/fixture-report-aggregation-off'+base+'/snapshots',{method:'POST',body:sample.cohort})).status,503);assert.equal((await send('/fixture-report-aggregation-off'+base+'?'+query)).status,200);});
  let saved;
@@ -23,5 +30,36 @@ test('actual Worker, verified Access and native D1 report transactions',async t=
  await t.test('stale/native edit conflict cannot alter an imported identity',async()=>{assert.equal((await send(base+'/external/'+saved,{method:'PATCH',body:{...input,value:12},version:1})).status,200);assert.equal((await send(base+'/external/'+saved,{method:'PATCH',body:{...input,value:99},version:1})).status,409);assert.equal((await send(base+'/external/'+saved,{method:'PATCH',body:{...input,provider:'apple_music'},version:2})).status,409);assert.equal((await send(base+'/external/'+saved,{method:'PATCH',body:input,headers:{'If-Match':''}})).status,428);});
  await t.test('expired keys cannot insert again when no operation receipt remains',async()=>{const before=(await f.db.prepare('SELECT COUNT(*) AS n FROM station_external_metrics').first()).n,key=`r1_${Date.now()-86400001}_${randomUUID()}`;assert.equal(await f.db.prepare('SELECT result_json FROM station_report_operations WHERE idempotency_key=?').bind(key).first(),null);const {r,data}=await json(base+'/external',{method:'POST',body:input,key});assert.equal(r.status,409);assert.equal(data.code,'REPORT_OPERATION_EXPIRED');assert.equal((await f.db.prepare('SELECT COUNT(*) AS n FROM station_external_metrics').first()).n,before);assert.equal((await send(base+'/external',{method:'POST',body:input,key:randomUUID()})).status,400);});
  await t.test('closed native capture is idempotent and audit excludes report payload',async()=>{const op={method:'POST',body:sample.cohort,key:operationKey()},a=await json(base+'/snapshots',op),b=await json(base+'/snapshots',op);assert.equal(a.r.status,200,JSON.stringify(a.data));assert.equal(b.data.id,a.data.id);assert.equal(b.data.replayed,true);const audit=await f.db.prepare("SELECT summary_json FROM music_admin_audit_logs WHERE action LIKE 'station.report.%'").all();for(const r of audit.results)assert.doesNotMatch(r.summary_json,/source_label|value|platform_click|session_id/);assert.equal((await f.db.prepare('SELECT COUNT(*) AS n FROM music_publication_guards').first()).n,0);});
+ await t.test('real successful POST followed by verified Access 401 recovers the original key without a second row',async()=>{
+  const values=new Map(),storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)},before=(await f.db.prepare('SELECT COUNT(*) n FROM station_external_metrics').first()).n,commands=[];
+  let authenticated=true,inject=true;
+  const request=async(path,op)=>{const {r,data}=await json('/admin/api/music/site-content'+path,{...op,token:authenticated?f.actorToken:'forged'});if(!r.ok)throw Object.assign(new Error(data.code),{status:r.status,code:data.code});if(op){commands.push(structuredClone(op));if(inject)authenticated=false;}return data;};
+  const controller=createContentController({scope:'reports',request,storage});await controller.connect();await assert.rejects(controller.mutate('/reports/external','POST',{...input,value:7}),{status:401});assert.ok(controller.pending());
+  await assert.rejects(controller.mutate('/reports/external','POST',{...input,value:7}));authenticated=true;inject=false;
+  const restored=createContentController({scope:'reports',request,storage});await restored.connect();assert.equal((await restored.retry()).replayed,true);assert.deepEqual(commands[0],commands[1]);assert.equal(restored.pending(),null);
+  assert.equal((await f.db.prepare('SELECT COUNT(*) n FROM station_external_metrics').first()).n,before+1);
+ });
  await t.test('real built admin shell is noindex and existing content workspace links it',async()=>{const page=await send('/admin/music/reports/');assert.equal(page.status,200);const html=await page.text();assert.match(html,/noindex,nofollow,noarchive/);assert.match(html,/id="report-filter"/);assert.match(html,/id="report-external-form"/);assert.match(html,/class="music-admin"/);assert.doesNotMatch(html,/session_id.*[a-f0-9-]{36}/);const content=await (await send('/admin/music/content/')).text();assert.match(content,/href="\/admin\/music\/reports\/"/);});
+});
+test('native D1 transaction fences delayed appends against manual window sealing',async t=>{
+ const f=await createReportRuntime({sample:false});t.after(()=>f.close());const env={...reportBindings,MUSIC_DB:f.db,MUSIC_BUCKET:f.bucket};
+ for(const expired of [false,true])await t.test(expired?'expired flight cannot commit after sealing':'active flight drains before immutable capture',async()=>{
+  const end=dayFloor(Date.now())+(expired?DAY:0),before=end-1,after=end+(expired?60001:1),q={from:new Date(end-DAY).toISOString().slice(0,10),to:new Date(end).toISOString().slice(0,10)};
+  // Use synthetic clocks to deterministically cross UTC midnight; the native
+  // D1 queries/transactions below are real. No physical playback is claimed.
+  await runStationEventRetention(env,{clock:()=>before});await runStationReportRetention(env,{clock:()=>after});
+  await f.db.prepare('UPDATE station_track_publications SET published_at=MIN(published_at,?),edit_version=edit_version+1').bind(before-1000).run();
+  let release,enter;const blocked=new Promise(r=>enter=r),resumed=new Promise(r=>release=r);
+  const wrap=(raw,query)=>({raw,query,bind(...params){return wrap(raw.bind(...params),query);},all:()=>raw.all(),first:()=>raw.first(),run:()=>raw.run()});
+  const session={prepare:query=>wrap(f.db.prepare(query),query),async batch(statements){if(statements.some(s=>s.query.includes('INSERT INTO station_analytics_events'))){enter();await resumed;}return f.db.batch(statements.map(s=>s.raw));}};
+  const e=event('track_view',{trackId:f.content.tracks[0].id}),write=collectStationEvents(eventRequest([e]),{...env,MUSIC_DB:{withSession:()=>session}},[e],before);
+  const rejected=expired?assert.rejects(write,{code:'EVENT_WRITE_FENCED',status:503}):null;
+  try{
+   await blocked;const runtime=await reportReadiness(env),context={actorId:'native-boundary',key:`r1_${after}_${randomUUID()}`};
+   if(!expired){await assert.rejects(saveReportSnapshot(runtime,env,q,context,{clock:()=>after}),{code:'REPORT_WINDOW_DRAINING'});release();assert.equal((await write).accepted,1);}
+   await saveReportSnapshot(runtime,env,q,context,{clock:()=>after});if(expired){release();await rejected;}
+   const snapshot=await f.db.prepare('SELECT stats_json FROM station_report_snapshots WHERE window_start=?').bind(end-DAY).first();assert.equal(JSON.parse(snapshot.stats_json).track_view,expired?0:1);
+   assert.equal((await f.db.prepare('SELECT COUNT(*) n FROM station_event_inflight').first()).n,0);assert.equal((await f.db.prepare('SELECT COUNT(*) n FROM music_publication_guards').first()).n,0);
+  }finally{release();await write.catch(()=>{});}
+ });
 });
