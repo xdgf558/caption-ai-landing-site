@@ -1,0 +1,37 @@
+[
+  {
+    "requestedWidth": 320,
+    "clientWidth": 305,
+    "left": 36,
+    "panelWidth": 233,
+    "top": 2149
+  },
+  {
+    "requestedWidth": 390,
+    "clientWidth": 375,
+    "left": 36,
+    "panelWidth": 303,
+    "top": 2111
+  },
+  {
+    "requestedWidth": 768,
+    "clientWidth": 753,
+    "left": 289,
+    "panelWidth": 414,
+    "top": 1237
+  },
+  {
+    "requestedWidth": 1024,
+    "clientWidth": 1009,
+    "left": 341,
+    "panelWidth": 612,
+    "top": 1156
+  },
+  {
+    "requestedWidth": 1440,
+    "clientWidth": 1425,
+    "left": 341,
+    "panelWidth": 1028,
+    "top": 1156
+  }
+]

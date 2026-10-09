@@ -97,6 +97,7 @@
 | music / `music_upload_sessions` | `admin_audit_review` | FK 0 (asset_id) → music_assets (id)：NO ACTION |
 | music / `station_analytics_events` | `redesign_analytics_review` | FK 0 (track_id, platform_link_id) → station_platform_links (track_id, id)：NO ACTION；FK 1 (track_id, clip_id) → station_clips (track_id, id)：NO ACTION；FK 2 (campaign_id) → station_campaigns (id)：NO ACTION；FK 3 (game_id) → station_games (id)：NO ACTION；FK 4 (track_id) → music_tracks (id)：NO ACTION |
 | music / `station_asset_rights` | `admin_audit_review` | FK 0 (media_asset_id) → station_media_assets (id)：NO ACTION；FK 1 (music_asset_id) → music_assets (id)：NO ACTION |
+| music / `station_campaign_legacy_sources` | `publisher_content_keep` | FK 0 (campaign_id) → station_campaigns (id)：NO ACTION |
 | music / `station_campaigns` | `publisher_content_keep` | FK 0 (track_id, clip_id) → station_clips (track_id, id)：NO ACTION；FK 1 (track_id) → music_tracks (id)：NO ACTION |
 | music / `station_clip_publications` | `publisher_content_keep` | FK 0 (clip_id) → station_clips (id)：NO ACTION |
 | music / `station_clip_revisions` | `publisher_content_keep` | FK 0 (id, poster_asset_id) → station_media_assets (owner_clip_id, id)：NO ACTION；FK 1 (id, media_asset_id) → station_media_assets (owner_clip_id, id)：NO ACTION；FK 2 (id) → station_clips (id)：NO ACTION |

@@ -4,13 +4,19 @@ import { contentAdminReadiness, contentRole, requirePublisher, readContentObject
 import { createContentObject, saveContentObject, contentPublication, contentPreflight, saveContentPlatform, saveContentRights, addClipPublication } from './contentAdmin.js';
 import { platformData } from './contentAdminModel.js';
 import { runStationContentSchedule } from './contentSchedule.js';
+import { campaignEnabled } from './campaignLinks.js';
+import { campaignReadiness, listCampaigns, createCampaign, readCampaign, setCampaignStatus } from './campaignStore.js';
 
 export async function handleContentAdmin(request,env,actor,query,readBody) {
   if(env.STATION_CONTENT_ADMIN_ENABLED!==true&&env.STATION_CONTENT_ADMIN_ENABLED!=='true')fail('STATION_CONTENT_ADMIN_DISABLED',503);
-  const runtime=await contentAdminReadiness(env),path=new URL(request.url).pathname.slice('/admin/api/music/site-content'.length);
+  const path=new URL(request.url).pathname.slice('/admin/api/music/site-content'.length);
+  const campaignPath=/^\/campaigns(?:\/|$)/.test(path)||/^\/promotions\/[^/]+\/campaigns$/.test(path);
+  if(campaignPath&&request.method!=='GET'&&request.method!=='HEAD'&&!campaignEnabled(env.STATION_CAMPAIGNS_ENABLED))fail('STATION_CAMPAIGNS_DISABLED',503);
+  if(/^\/campaigns(?:\/|$)/.test(path)&&!campaignEnabled(env.STATION_CAMPAIGNS_ENABLED))fail('STATION_CAMPAIGNS_DISABLED',503);
+  const runtime=await contentAdminReadiness(env);
   const read=['GET','HEAD'].includes(request.method),context={actorId:actor,key:request.headers.get('idempotency-key'),ifMatch:request.headers.get('if-match')};
   if(!read)mutationKey(context.key);
-  if(path==='/status'&&read){fields(query,[]);return {actorId:actor,role:contentRole(env,actor),enabled:true,schedulesEnabled:env.STATION_CONTENT_SCHEDULES_ENABLED===true||env.STATION_CONTENT_SCHEDULES_ENABLED==='true',cachePolicy:'no-store'};}
+  if(path==='/status'&&read){fields(query,[]);return {actorId:actor,role:contentRole(env,actor),enabled:true,campaignsEnabled:campaignEnabled(env.STATION_CAMPAIGNS_ENABLED),schedulesEnabled:env.STATION_CONTENT_SCHEDULES_ENABLED===true||env.STATION_CONTENT_SCHEDULES_ENABLED==='true',cachePolicy:'no-store'};}
   if(path==='/assets'&&read)return contentAssets(runtime.db,query);
   if(path==='/audit'&&read) {
     fields(query,['before']);const before=query.before===undefined?Number.MAX_SAFE_INTEGER:Number(query.before);if(!Number.isSafeInteger(before)||before<1)fail('INVALID_INPUT',400);
@@ -18,6 +24,9 @@ export async function handleContentAdmin(request,env,actor,query,readBody) {
     return {items:result.slice(0,20).map(r=>({actorId:r.actor_id,action:r.action,targetId:r.target_id,summary:JSON.parse(r.summary_json),createdAt:r.created_at})),nextBefore:result.length>20?result[19].cursor:null};
   }
   if(path==='/jobs/run'&&request.method==='POST') {fields(query,[]);fields(await readBody(request),[]);requirePublisher(env,actor);return runStationContentSchedule(env);}
+  const campaign=/^\/campaigns\/([a-z0-9][a-z0-9_-]{0,63})$/.exec(path);
+  if(campaign){fields(query,[]);await campaignReadiness(runtime);if(read)return readCampaign(runtime,campaign[1]);
+    if(request.method!=='PATCH')fail('METHOD_NOT_ALLOWED',405);requirePublisher(env,actor);return setCampaignStatus(runtime,campaign[1],await readBody(request),context);}
   const asset=/^\/assets\/([^/]+)\/rights$/.exec(path);
   if(asset){if(request.method!=='PUT')fail('METHOD_NOT_ALLOWED',405);fields(query,[]);requirePublisher(env,actor);return saveContentRights(runtime,asset[1],await readBody(request),context);}
   const platform=/^\/platforms(?:\/([^/]+))?$/.exec(path);
@@ -45,8 +54,13 @@ export async function handleContentAdmin(request,env,actor,query,readBody) {
   }
   musicId(id);
   if(action==='revisions'&&read)return contentRevisionHistory(runtime.db,type,id,query);
-  if(action==='campaigns'&&read){fields(query,[]);if(type!=='promotions')fail('NOT_FOUND',404);
-    return {items:rows(await primary(runtime.db).prepare('SELECT id,source,medium,track_id,clip_id,landing_path,status FROM station_campaigns WHERE track_id=? ORDER BY created_at DESC,id LIMIT 20').bind(id).all()),creationAvailable:false,nextTask:'T17'};}
+  if(action==='campaigns'){
+    if(type!=='promotions')fail('NOT_FOUND',404);
+    if(!campaignEnabled(env.STATION_CAMPAIGNS_ENABLED)) {fields(query,[]);return {items:rows(await primary(runtime.db).prepare('SELECT id,source,medium,track_id,clip_id,landing_path,status FROM station_campaigns WHERE track_id=? ORDER BY created_at DESC,id LIMIT 20').bind(id).all()),creationAvailable:false,enabled:false};}
+    await campaignReadiness(runtime);if(read)return listCampaigns(runtime,id,query);
+    if(request.method!=='POST')fail('METHOD_NOT_ALLOWED',405);fields(query,[]);
+    const input=await readBody(request);if(input.status!=='draft')requirePublisher(env,actor);return createCampaign(runtime,id,input,context);
+  }
   if(action==='publications') {
     if(type!=='clips')fail('NOT_FOUND',404);fields(query,[]);
     if(read) return {items:rows(await primary(runtime.db).prepare('SELECT id,channel,post_id,post_url,external_published_at FROM station_clip_publications WHERE clip_id=? ORDER BY external_published_at DESC,id LIMIT 10').bind(id).all())};

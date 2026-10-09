@@ -56,7 +56,8 @@
     "migrations-music/0011_music_share_rate_limits.sql": "05d0be34b289df948c9eb92ffcecb22c2d75f716a8ebfff49e12c7defd3bbfa1",
     "migrations-music/0012_station_redesign.sql": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
     "migrations-music/0013_station_media_uploads.sql": "fca37ba533ddd2821335aa44749e699da546f145182a5f5886ebdac02c637021",
-    "migrations-music/0014_station_content_operations.sql": "c457774b05fa286fa8ec51f7ddc08db4eba3893902df44e359b288153954c0dd"
+    "migrations-music/0014_station_content_operations.sql": "c457774b05fa286fa8ec51f7ddc08db4eba3893902df44e359b288153954c0dd",
+    "migrations-music/0015_station_campaign_links.sql": "c530d98acc09ab6806e136970eb36d6611f7b30dd0716103d78e6072c077232f"
   },
   "databases": {
     "reader": {
@@ -2486,6 +2487,24 @@
         ],
         "category": "admin_audit_review"
       },
+      "station_campaign_legacy_sources": {
+        "columns": [
+          "source_key",
+          "campaign_id",
+          "created_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "campaign_id",
+            "parent": "station_campaigns",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "publisher_content_keep"
+      },
       "station_campaigns": {
         "columns": [
           "id",
@@ -2496,7 +2515,9 @@
           "landing_path",
           "status",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "content_value",
+          "edit_version"
         ],
         "foreignKeys": [
           {

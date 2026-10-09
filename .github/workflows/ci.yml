@@ -88,6 +88,9 @@ jobs:
       - name: Verify product landing themes and locale routes
         run: node scripts/test-product-night.mjs
 
+      - name: Verify registered Campaigns, QR destinations and attribution contexts
+        run: npm run test:redesign:campaigns
+
       - name: Verify isolated Station Cat music pages against the built Astro shell
         run: npm run test:redesign:music
 

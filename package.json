@@ -90,7 +90,9 @@
     "test:redesign:uploads": "node --test --test-timeout=90000 scripts/test-station-media-uploads.mjs scripts/test-station-media-client.mjs scripts/test-station-media-runtime.mjs",
     "preview:redesign:uploads": "npm run build && node scripts/serve-station-media-preview.mjs",
     "test:redesign:content-admin": "node --test --test-timeout=90000 scripts/test-station-content-admin.mjs scripts/test-station-content-client.mjs scripts/test-station-content-admin-runtime.mjs",
-    "preview:redesign:content-admin": "npm run build && node scripts/serve-station-content-admin-preview.mjs"
+    "preview:redesign:content-admin": "npm run build && node scripts/serve-station-content-admin-preview.mjs",
+    "test:redesign:campaigns": "node --test --test-timeout=90000 scripts/test-station-campaigns.mjs scripts/test-station-attribution-session.mjs scripts/test-station-campaign-runtime.mjs",
+    "preview:redesign:campaigns": "npm run build && node scripts/serve-station-campaign-preview.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

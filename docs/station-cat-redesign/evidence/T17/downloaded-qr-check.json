@@ -1,0 +1,11 @@
+{
+  "file": "docs/station-cat-redesign/evidence/T17/ui-downloaded-qr.svg",
+  "bytes": 39694,
+  "sha256": "4d80aa672fe510725a7a7634878e1a4afe5abcec8e0ebc182cd049601d0f7137",
+  "decoder": "sharp rasterization + jsQR 1.4.0",
+  "decodedUrl": "https://wwwstationcat.org/music/tracks/permanent-free/?utm_source=bilibili&utm_medium=short_video&utm_campaign=ui-local-bilibili&utm_content=cc611ac6-be80-4572-bbc2-29c95ea480d9",
+  "copiedUrl": "https://wwwstationcat.org/music/tracks/permanent-free/?utm_source=bilibili&utm_medium=short_video&utm_campaign=ui-local-bilibili&utm_content=cc611ac6-be80-4572-bbc2-29c95ea480d9",
+  "exactMatch": true,
+  "width": 366,
+  "height": 366
+}

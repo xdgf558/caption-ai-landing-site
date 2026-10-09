@@ -10,6 +10,7 @@ import { getStationMusicSession, rememberStationMusicTrigger, stationMusicNotice
 import { readMusicResponse } from './musicResponse.js';
 import { mountStationPlatforms } from './platformClient.js';
 import { mountStationClips } from './clipClient.js';
+import { mountCampaignAttribution } from './attributionSession.js';
 
 export function mountStationMusic() {
   const root = document.querySelector('[data-sc-music-page]'), bootstrap = document.getElementById('sc-music-bootstrap');
@@ -19,9 +20,10 @@ export function mountStationMusic() {
   catch { return () => {}; }
   if (!stationLocales.includes(model.locale) || !['catalog', 'detail'].includes(model.mode)) return () => {};
   root.dataset.mounted = 'true';
+  const disposeAttribution = mountCampaignAttribution(model.attribution);
   const copy = musicCopy[model.locale], listeners = new AbortController(), requests = new Set();
   const tracks = new Map(), session = getStationMusicSession(model.locale);
-  if (!session) { delete root.dataset.mounted; return () => {}; }
+  if (!session) { disposeAttribution(); delete root.dataset.mounted; return () => {}; }
   const local = session.local;
   const disposePlatforms = mountStationPlatforms(root, model.locale);
   const disposeClips = mountStationClips(root, model, session);
@@ -175,7 +177,7 @@ export function mountStationMusic() {
   function dispose() {
     if (disposed) return; disposed = true; catalogGeneration++; session.cancelPending();
     requests.forEach(controller => controller.abort()); requests.clear(); listeners.abort();
-    disposeClips(); disposePlatforms(); localSubscription(); playerSubscription(); delete root.dataset.mounted;
+    disposeAttribution(); disposeClips(); disposePlatforms(); localSubscription(); playerSubscription(); delete root.dataset.mounted;
   }
   listen(window, 'pagehide', event => {
     catalogGeneration++; session.suspend(); requests.forEach(controller => controller.abort());
