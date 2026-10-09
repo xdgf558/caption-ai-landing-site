@@ -53,3 +53,12 @@ ephemeral local SQLite/D1 verification. The rehearsal has no remote option or
 existing database target. See [T06 mapping and rollback](../docs/station-cat-redesign/T06-data-model-and-migration.md)
 for fields, deployment prerequisites and the remaining T07/T16/T18 responsibilities.
 Merging this file does not apply it to staging or production.
+
+`0015_station_campaign_links.sql` is a one-time additive Campaign migration on
+top of 0012–0014. It adds immutable link content and edit versions, and an
+explicit retained legacy `src` mapping table. Existing Campaigns remain
+unverified; there is no activation, promotion/media seed, event collection or
+route retirement. Use the normal migration ledger once, never in request paths.
+Only ephemeral SQLite/native D1 fixtures have applied it. Production binding,
+ledger and schema remain unconfirmed; merge is not remote-migration approval.
+See [T17 contract](../docs/station-cat-redesign/T17-campaign-links-and-attribution.md).

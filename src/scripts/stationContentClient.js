@@ -1,6 +1,6 @@
 const base='/admin/api/music/site-content';
 const uuid='[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}';
-const validPath=new RegExp('^/(?:status|assets|audit|jobs/run|platforms(?:/'+uuid+')?|assets/'+uuid+'/rights|(?:tracks|promotions|clips|games|home)(?:/'+uuid+'(?:/(?:publish|unpublish|rollback|schedule|cancel-schedule|preflight|publications|campaigns|revisions))?)?)$','i');
+const validPath=new RegExp('^/(?:status|assets|audit|jobs/run|campaigns/[a-z0-9][a-z0-9_-]{0,63}|platforms(?:/'+uuid+')?|assets/'+uuid+'/rights|(?:tracks|promotions|clips|games|home)(?:/'+uuid+'(?:/(?:publish|unpublish|rollback|schedule|cancel-schedule|preflight|publications|campaigns|revisions))?)?)$','i');
 export async function contentRequest(path,{method='GET',body,key,etag}={}) {
   if(typeof path!=='string'||!validPath.test(path.split('?')[0])||!['GET','POST','PATCH','PUT'].includes(method))throw new Error('无效内容管理路径');
   const headers={};if(method!=='GET'){headers['X-Requested-With']='StationCatMusicAdmin';headers['Content-Type']='application/json';if(key)headers['Idempotency-Key']=key;if(etag)headers['If-Match']=etag;}

@@ -156,6 +156,7 @@
         "station_home_configs",
         "station_home_revisions",
         "station_campaigns",
+        "station_campaign_legacy_sources",
         "station_route_migrations"
       ],
       "redesign_analytics_review": [

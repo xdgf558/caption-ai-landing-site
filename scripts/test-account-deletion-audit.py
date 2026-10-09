@@ -80,7 +80,7 @@ class DeletionAuditTests(unittest.TestCase):
         policy=json.loads((audit.DOC/'policy-draft.json').read_text())
         snapshot=audit.inspect()
         station={name:table for name,table in snapshot['databases']['music'].items() if name.startswith('station_')}
-        self.assertEqual(len(station),20)
+        self.assertEqual(len(station),21)
         self.assertFalse(policy['approved'])
         self.assertFalse(policy['executionEnabled'])
         self.assertEqual(station['station_analytics_events']['category'],'redesign_analytics_review')

@@ -7,6 +7,8 @@ import { contentBase, plain, slug, localizedPath } from './publicValidation.js';
 import { musicCopy } from './musicCopy.js';
 import { renderMusicPage, escapeMusicHtml as e, musicBootstrap, musicCatalogHref } from './musicRender.js';
 import { readMusicResponse } from './musicResponse.js';
+import { campaignEnabled, campaignInput, campaignRedirectSearch } from './campaignLinks.js';
+import { resolveCampaignAttribution, publicAttribution } from './campaignAttribution.js';
 
 const origin = 'https://wwwstationcat.org';
 const locales = { en: 'en', ja: 'ja', 'zh-hans': 'zh-Hans', 'zh-hant': 'zh-Hant' };
@@ -98,6 +100,23 @@ export async function handleStationMusicPage(request, env, { clock = Date.now, d
     if (!response.ok) throw Object.assign(new Error('CONTENT_QUERY_FAILED'), { status: response.status, code: body.code });
     return body;
   };
+  const attributed=async trackId=>{
+    if(!campaignEnabled(env.STATION_CAMPAIGNS_ENABLED))return {search:tracking(url).toString(),value:{enabled:false,kind:'direct_or_unknown'}};
+    let value;
+    const input=campaignInput(url.search);
+    if(!trackId&&input.kind!=='none')value={enabled:true,kind:'unknown'};
+    else if(['none','unknown'].includes(input.kind))value=await resolveCampaignAttribution(null,env,url.search,trackId,{clock});
+    else {
+      try { const runtime=await run(()=>checkedContentRuntime(env));value=await run(()=>resolveCampaignAttribution(runtime,env,url.search,trackId,{clock})); }
+      catch { value={enabled:true,kind:'unknown'}; }
+    }
+    // A referrer establishes only that the entry is unknown; never guess a channel,
+    // or serialize the raw referrer/query into the browser's context or dimensions.
+    if(value.kind==='direct_or_unknown'&&request.headers.get('referer')){
+      try{if(new URL(request.headers.get('referer')).origin!==url.origin)value={...value,kind:'unknown'};}catch{value={...value,kind:'unknown'};}
+    }
+    return {search:campaignRedirectSearch(value),value:publicAttribution(value)};
+  };
   try {
     const legacy = musicSelection(url.search);
     if (route.kind === 'catalog' && (url.searchParams.has('track') || url.searchParams.has('collection'))) {
@@ -110,24 +129,25 @@ export async function handleStationMusicPage(request, env, { clock = Date.now, d
       let detail;
       try { detail = await run(() => get('/tracks/' + row.slug + '?locale=' + route.locale)); }
       catch (error) { if (error.status === 404) return null; throw error; }
-      const campaign = tracking(url).toString();
+      const campaign = (await attributed(detail.track.id)).search;
       return redirect(request, detail.track.href + (campaign ? '?' + campaign : ''));
     }
     if (route.kind === 'legacy') {
       let detail;
       try { detail = await run(() => get('/tracks/' + route.slug + '?locale=' + route.locale)); }
       catch (error) { if (error.status === 404) return null; throw error; }
-      const campaign = tracking(url).toString();
+      const campaign = (await attributed(detail.track.id)).search;
       return redirect(request, detail.track.href + (campaign ? '?' + campaign : ''));
     }
     let model, status = 200;
     if (route.kind === 'catalog') {
       const query = catalogInput(url), target = new URL(musicCatalogHref(route.locale, query), url.origin);
-      for (const [key, value] of tracking(url)) target.searchParams.set(key, value);
+      const attribution=await attributed(null);
+      for (const [key, value] of new URLSearchParams(attribution.search)) target.searchParams.set(key, value);
       if (url.pathname + url.search !== target.pathname + target.search) return redirect(request, target.pathname + target.search);
       const params = new URLSearchParams({ locale: route.locale, limit: '20', sort: query.sort });
       if (query.q) params.set('q', query.q); if (query.cursor) params.set('cursor', query.cursor);
-      model = { mode: 'catalog', locale: route.locale, query, items: [], nextCursor: null, featured: null, selected: [], error: null };
+      model = { mode: 'catalog', locale: route.locale, query, items: [], nextCursor: null, featured: null, selected: [], error: null,attribution:attribution.value };
       try {
         const body = await run(() => get('/tracks?' + params)); model.items = body.items; model.nextCursor = body.nextCursor;
       } catch (error) { model.error = { status: error.status || 503 }; status = model.error.status; }
@@ -145,7 +165,7 @@ export async function handleStationMusicPage(request, env, { clock = Date.now, d
       model = { mode: 'detail', locale: route.locale, detailSlug: route.slug, track: null, related: [], clips: [], error: null };
       try {
         const detail = await run(() => get('/tracks/' + route.slug + '?locale=' + route.locale)); model.track = detail.track; model.related = detail.related.slice(0, 3);
-        const campaign = tracking(url).toString(), target = detail.track.href + (campaign ? '?' + campaign : '');
+        const attribution=await attributed(detail.track.id),campaign=attribution.search,target=detail.track.href+(campaign?'?'+campaign:'');model.attribution=attribution.value;
         if (url.pathname + url.search !== target) return redirect(request, target);
         try { model.clips = (await run(() => get('/tracks/' + model.track.slug + '/clips?locale=' + route.locale + '&limit=4'))).items; }
         catch { model.clipsError = true; }
