@@ -55,7 +55,8 @@
     "migrations-music/0010_music_limited_free.sql": "6acfbaebe38ec0831696ce6e321561d4ea8b3f35410596fbc7a653afefd86b24",
     "migrations-music/0011_music_share_rate_limits.sql": "05d0be34b289df948c9eb92ffcecb22c2d75f716a8ebfff49e12c7defd3bbfa1",
     "migrations-music/0012_station_redesign.sql": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
-    "migrations-music/0013_station_media_uploads.sql": "fca37ba533ddd2821335aa44749e699da546f145182a5f5886ebdac02c637021"
+    "migrations-music/0013_station_media_uploads.sql": "fca37ba533ddd2821335aa44749e699da546f145182a5f5886ebdac02c637021",
+    "migrations-music/0014_station_content_operations.sql": "c457774b05fa286fa8ec51f7ddc08db4eba3893902df44e359b288153954c0dd"
   },
   "databases": {
     "reader": {
@@ -2462,7 +2463,8 @@
           "basis",
           "reviewer_id",
           "reviewed_at",
-          "created_at"
+          "created_at",
+          "edit_version"
         ],
         "foreignKeys": [
           {
@@ -3008,6 +3010,23 @@
           }
         ],
         "category": "publisher_content_keep"
+      },
+      "station_publish_jobs": {
+        "columns": [
+          "id",
+          "object_type",
+          "object_id",
+          "revision",
+          "edit_version",
+          "actor_id",
+          "due_at",
+          "status",
+          "error_code",
+          "created_at",
+          "finished_at"
+        ],
+        "foreignKeys": [],
+        "category": "admin_audit_review"
       },
       "station_route_migrations": {
         "columns": [

@@ -18,6 +18,7 @@ import { readMusicAnalytics } from './analytics.js';
 import { readAdminMusicFeatured, saveAdminMusicFeatured } from './featured.js';
 import { stationMediaReadiness, stationMediaOwners, listStationMediaUploads, createStationMediaUpload,
   readStationMediaUpload, writeStationMediaUpload, completeStationMediaUpload } from '../redesign/mediaUploads.js';
+import { handleContentAdmin } from '../redesign/contentAdminHttp.js';
 
 export const isMusicAdminPath = path => path === '/admin/api/music' || path.startsWith('/admin/api/music/');
 function response(request, status, body, headers = {}) {
@@ -90,6 +91,10 @@ export async function handleMusicAdmin(request, env, authorize) {
     if (path === '/admin/api/music/analytics' && read) {
       fields(query, ['from', 'to']);
       return response(request, 200, { ok: true, ...await readMusicAnalytics(env,query) });
+    }
+    if(path==='/admin/api/music/site-content'||path.startsWith('/admin/api/music/site-content/')) {
+      const result=await handleContentAdmin(request,env,actorId,query,readBody);
+      return response(request,200,{ok:true,...result},result.editVersion?{ETag:`"edit-${result.editVersion}"`}:{});
     }
     const siteUpload = path === '/admin/api/music/site-uploads' || path.startsWith('/admin/api/music/site-uploads/');
     if (siteUpload && !((env.MUSIC_UPLOADS_ENABLED === true || env.MUSIC_UPLOADS_ENABLED === 'true') &&
@@ -266,6 +271,7 @@ export async function handleMusicAdmin(request, env, authorize) {
   } catch (error) {
     const known = Number.isInteger(error.status) && error.status >= 400 && error.status <= 599 &&
       typeof error.code === 'string' && /^[A-Z][A-Z0-9_]{1,80}$/.test(error.code);
-    return response(request, known ? error.status : 503, { ok: false, code: known ? error.code : 'MUSIC_ADMIN_UNAVAILABLE' });
+    return response(request, known ? error.status : 503, { ok: false, code: known ? error.code : 'MUSIC_ADMIN_UNAVAILABLE',
+      ...(known && typeof error.field==='string' && /^[a-zA-Z.]{1,100}$/.test(error.field)?{field:error.field}:{}) });
   }
 }

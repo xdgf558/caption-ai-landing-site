@@ -69,6 +69,7 @@ import { handleStationGamePage } from './redesign/gamePages.js';
 import { handleStationGameRuntime } from './redesign/gameRuntime.js';
 import { handleStationMemberPage } from './redesign/memberPages.js';
 import { privateReaderRequest } from './redesign/memberPrivacy.js';
+import { runStationContentSchedule } from './redesign/contentSchedule.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -23395,18 +23396,20 @@ export default {
   },
 
   async scheduled(controller, env) {
-    const [signal, analytics, mobile] = await Promise.allSettled([
+    const [signal, analytics, mobile, stationContent] = await Promise.allSettled([
       handleSignalCollectionSchedule(env, {
         cron: cleanText(controller?.cron, 120), scheduledTime: controller?.scheduledTime
       }),
       runMusicAnalyticsRetention(env),
-      runMobileMaintenance(env)
+      runMobileMaintenance(env),
+      runStationContentSchedule(env)
     ]);
     if (analytics.status === 'rejected' || (analytics.value?.available === false && analytics.value.reason !== 'RETENTION_DISABLED')) {
       console.warn('MUSIC_ANALYTICS_RETENTION_UNAVAILABLE');
     }
     if (signal.status === 'rejected') throw signal.reason;
     if (mobile.status === 'rejected') throw new Error('MOBILE_MAINTENANCE_UNAVAILABLE');
+    if (stationContent.status === 'rejected') console.warn('STATION_CONTENT_SCHEDULE_UNAVAILABLE');
   },
 
   async queue(batch, env) {

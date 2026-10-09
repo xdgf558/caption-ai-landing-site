@@ -1,0 +1,187 @@
+{
+  "task": "T16",
+  "baseCommit": "86341e9e415901e58cde7dc414a0716ce4144cf0",
+  "generatedAt": "2026-10-09T02:30:39.716276+00:00",
+  "environment": {
+    "node": "24.15.0",
+    "timezone": "Asia/Singapore",
+    "workerCompatibilityDate": "2026-05-17",
+    "miniflare": "4.20260730.0"
+  },
+  "checks": [
+    {
+      "command": "npm run test:redesign:content-admin",
+      "exitCode": 0,
+      "tests": 37,
+      "log": "logs/content-admin.log.gz",
+      "rawBytes": 4373,
+      "rawSha256": "ad9b7fcd7e2f6f3e13d0763a62b4506a92bb6a2aff54a6ddd44aa2dde9a26911",
+      "completedAt": "2026-10-09T02:18:45.162343+00:00"
+    },
+    {
+      "command": "npm run test:redesign:public",
+      "exitCode": 0,
+      "tests": 35,
+      "log": "logs/public.log.gz",
+      "rawBytes": 4598,
+      "rawSha256": "969cd5393d2635a1610bf57d787743288363f0c123abdd5ba5c197f833d31f34",
+      "completedAt": "2026-10-09T02:19:14.069117+00:00"
+    },
+    {
+      "command": "npm run test:redesign:uploads",
+      "exitCode": 0,
+      "tests": 36,
+      "log": "logs/uploads.log.gz",
+      "rawBytes": 4293,
+      "rawSha256": "7fd76228a80f9db52d71cec347e2434e8d2e0edb4da9fda1b87be3f8bc20bf49",
+      "completedAt": "2026-10-09T02:19:15.960773+00:00"
+    },
+    {
+      "command": "npm run test:redesign:model",
+      "exitCode": 0,
+      "tests": 26,
+      "log": "logs/model.log.gz",
+      "rawBytes": 3340,
+      "rawSha256": "f412a928fdaf083632c7a6b3e867064bdaeb86077b836033564bbafe37c0ff8a",
+      "completedAt": "2026-10-09T02:19:21.987818+00:00"
+    },
+    {
+      "command": "python3 scripts/test-account-deletion-audit.py",
+      "exitCode": 0,
+      "tests": 12,
+      "log": "logs/account-audit.log.gz",
+      "rawBytes": 1190,
+      "rawSha256": "54e2683650b4bc5e45ced50427516b71504ad3e026ed5472c02d1ae68d4d6c49",
+      "completedAt": "2026-10-09T02:19:22.274476+00:00"
+    },
+    {
+      "command": "node --test scripts/test-music-staging-gate.mjs",
+      "exitCode": 0,
+      "tests": 21,
+      "log": "logs/staging-contract.log.gz",
+      "rawBytes": 2242,
+      "rawSha256": "33b27f15037869dae9f1c77cf6b5799a1d9cd9551856f8f6e4fbf125898d17da",
+      "completedAt": "2026-10-09T02:19:22.500138+00:00"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/full-regression.log.gz",
+      "rawBytes": 76606,
+      "rawSha256": "aa0c0775b507aceccc872b553765a3f42d3fe573e99e5d848ffe58982eed271d",
+      "completedAt": "2026-10-09T02:19:36.479051+00:00"
+    },
+    {
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/build.log.gz",
+      "rawBytes": 25330,
+      "rawSha256": "a5bc50d174a9a3098b5cea11b5ee8da275464f82979e4be6dfa09352a417f8f4",
+      "completedAt": "2026-10-09T02:27:27.665916+00:00"
+    },
+    {
+      "command": "node scripts/build-music-staging-assets.mjs && node scripts/check-music-staging-assets.mjs",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/staging-assets.log.gz",
+      "rawBytes": 122,
+      "rawSha256": "a6cbbb6eae4edd386f20c89fcfc81db502dfb8fcefe7f19921741631f445fa5c",
+      "completedAt": "2026-10-09T02:29:17.666343+00:00"
+    }
+  ],
+  "sourceSha256": {
+    ".github/workflows/ci.yml": "94765a32cecfa2d28117c9a48306d1e72cb3e191b93a10161c119d51eb6ed4db",
+    "migrations-music/0014_station_content_operations.sql": "c457774b05fa286fa8ec51f7ddc08db4eba3893902df44e359b288153954c0dd",
+    "package-lock.json": "b81e63fc2580e6e768dcfe5d799eb5944e95bf1fb51a056b8697ece1e6c9d4b0",
+    "package.json": "6ca9b473b548a6d90c91df2c577b7a402b96753b68c124f38428c058450f42a8",
+    "public/styles/admin-music.css": "cd9ab09f6d1f7471b38516d0c7a9252669de6f0f89838e9d2b979e7f0d534c3f",
+    "public/styles/admin-station-content.css": "591446b1a3bbb967fc38052372d66d063bed8ba10f11ba546bd3b020af15f974",
+    "scripts/helpers/station-content-admin-fixture.mjs": "e270f8d897b236b026a776ec11dfb3354fe8bda253b645528f802143be8d9a02",
+    "scripts/helpers/station-content-admin-runtime-worker.js": "1e85eaaf13a15385f3f950a98e53292ad69e249abd5f8e1813d54c80902126ff",
+    "scripts/helpers/station-content-admin-runtime.mjs": "f239542c46cd048285377ce0f2b5c762f45921b0f9620cee9b1a6c656c19f2e9",
+    "scripts/serve-station-content-admin-preview.mjs": "ab12200d65175e9aa5dbba1b3e77c7e511952050d044482c01240c79cc7dacde",
+    "scripts/test-account-deletion-audit.py": "b6d85142f8dae63089e07e0497856807555a1ebaf6e357fc12e466092046b35b",
+    "scripts/test-music-staging-gate.mjs": "2ecddb946dc7c507cebbac8744c898d8cc0d9f43f4924f628f838477d9b40d57",
+    "scripts/test-station-content-admin-runtime.mjs": "9f98975e6841eb712faf68e7ff04c33fd1069e277cb52b28950d55a1d6d7cac8",
+    "scripts/test-station-content-admin.mjs": "3b7cfaa6107e394c6f0d96e8d082bb0c473e2af29d9fa1293bcfc561c8f33c16",
+    "scripts/test-station-content-client.mjs": "e7547868ba23414d132b552f13f6c5dd246e963ee1b2f872c7b33c5acd877956",
+    "scripts/test-station-content-public.mjs": "81ea1172b887d8987a917910e4d5929e0ba969cff5ecfc9366dc4556488e058c",
+    "scripts/test-station-content-runtime.mjs": "6389a79c70156a2e291e0fe8ca2133de768797292c7621079fbd5fb0d814a08d",
+    "src/music/adminHttp.js": "74bb61c518a670c13705786bc0be22a993740cb6c41e4946e525d7109c38f7f3",
+    "src/pages/admin/music/content/index.astro": "6c1711692f207a6bda84d880cc12f25980c94a75e9e6f07e2d0ead1e4c67e1ee",
+    "src/pages/admin/music.astro": "066f942959d9d84c2d9f28434c09c9ee911a016563598dc5473837649e1fd6ef",
+    "src/redesign/contentAdmin.js": "b0fcec2ffe2f3ee0882b1a46dce740e1504a1b6668e1c13fd19238b9f39a483c",
+    "src/redesign/contentAdminHttp.js": "6b0a2a31e29bc9350c7c9af4a799503cec14a656209bf7fc7b165dfbd6c5d8ca",
+    "src/redesign/contentAdminModel.js": "846d83f844c29665e7d0be68d1d033947664f134fcb687f06af48a63fa11b526",
+    "src/redesign/contentAdminStore.js": "97384da425ae126e138fee003762bd93e4f748cbf70bd34bf4edf6ba34530f8b",
+    "src/redesign/contentAdminValidation.js": "cf998dca6ff3eb9f0ae9eab9d97ba69b0ba6fd85a2cbc03bf18bd83b631bbff5",
+    "src/redesign/contentSchedule.js": "de9c2b8e2041b35696030ab67b5225deff55ea2c729dc2cd9dc7f5554d411ab9",
+    "src/redesign/publicContent.js": "1a4d459783386d852ca6fd61f061b6ec01683585a9f6ee6307116d8f984e4569",
+    "src/scripts/adminStationContent.js": "1b74fb05f1398f694325822195389e848c543c62d05eb5137ade199d45a7af90",
+    "src/scripts/stationContentClient.js": "5c1b6c4f428727e15291a10a4c374053f75eda10679e1746504c5c49e84845e0",
+    "src/worker.js": "9f671394ce02238f43024ccb8b5a4f448f8d69cac0e308ba443fadc8ebe86a89",
+    "wrangler.toml": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2",
+    "astro.config.mjs": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f",
+    "docs/mobile-ios-m2/deletion-plan/policy-draft.json": "91f1240ed02e5e0d94a5c939777b633a282b70f6be30ab730751a9e467d51170",
+    "docs/mobile-ios-m2/deletion-plan/schema-inventory.json": "8e46546fc990752b2a662402c4a816407724eed9a292857476135b8f4e366bdb"
+  },
+  "scopeNotes": [
+    "Program checks cover backend/runtime/controller, not browser visual fidelity.",
+    "Final UI-only labels, record selection and choice pagination were separately rebuilt and browser checked.",
+    "The snapshot is the final reproduction anchor, not proof of production deployment or hosted CI."
+  ],
+  "hostedCI": {
+    "currentT16Head": "pending until commit",
+    "status": "not confirmed",
+    "localPassDoesNotSubstitute": true
+  },
+  "production": {
+    "migrationExecuted": false,
+    "flagsEnabled": false,
+    "deployed": false,
+    "oldEntrancesClosed": false,
+    "mainPromotionSelected": false,
+    "accountDeletionEnabled": false
+  },
+  "browser": {
+    "url": "http://127.0.0.1:4216/admin/music/content/",
+    "tool": "CUA IAB",
+    "viewportSimulated": true,
+    "rollbackObserved": "sealed revision 2 copied to new public revision 4",
+    "audioPlayed": false,
+    "realPlatformUrlsClicked": false,
+    "voiceOverVerified": false,
+    "realDevicesVerified": false
+  },
+  "evidenceSha256": {
+    "T15-approved-head-ci.json": "54fecfee7f31110beca279f1e43293748e52c3bd67eccfc64ca73e80071eeecb",
+    "T15-merge-result.json": "c607a259c98698e05362f42e3cb6dbf247717c95a300261841e4de4320847a9e",
+    "admin-desktop.png": "47f6322cb1a71b8c3c29c6a7454a0b8524dff7f6b98b80155903991b7749bf2c",
+    "admin-final.png": "69b6fd3717beb6d750d458d69b9dd507eb40550293f4aca654bf876c4075add3",
+    "audit-selection.png": "4763f5dae5ff1ccfa18c4c7216ae13c45c8a8e7aa608801b000353d7cf28af9d",
+    "design-qa.md": "04026e7ba8880748aab90c8b4f9d9ad824767ec0a1936ddabb0a912588176c85",
+    "logs/account-audit.log.gz": "ec22455dc058f70bf51efe77bb0cc441e1afa776bb8216aa53d1d530ae14759d",
+    "logs/build.log.gz": "532d72e3255b82c102f2fe28b514f9de331c5da292d949bf7b52c99a25040398",
+    "logs/content-admin.log.gz": "e8b60a4f7ea93c25428ff1bff7becf3d59b9367103e828d0cc0b998d3f5889d0",
+    "logs/full-regression.log.gz": "c3a598f751ff24378084ea2f559bf9abfdcce9a247db6d10f060124104850743",
+    "logs/model.log.gz": "1e4aa28c6596d87cea76fffd4fa561401ba1f875567ceb48aeed77ef2fb9d24b",
+    "logs/public.log.gz": "4c0232d48018fb49ee86706d3c50694a7993677bc1978c36322e7a3e5a5a207c",
+    "logs/staging-assets.log.gz": "eef5686c2ce40e3275bd72d42f5cb538d6bb038b9b064e8ccb22aa3520821278",
+    "logs/staging-contract.log.gz": "148378ed67220055f4d0c2e7d8e2c5f89a7b7ee17c79369e4e52ab4ef35c925c",
+    "logs/uploads.log.gz": "11307333be1942c9d10e1cc714d89824376c15c42960f56d91a21a63f22547b0",
+    "module-checks.json": "a4be88f6a8485b7cf41fae71a81dc58b87ce823a09a606f4b1d8ab5d2021f3c2",
+    "private-metadata-preview.png": "c917924c538ec977a99fb60e2f7feacd1b054a0d9efd40ad637dab8c65628701",
+    "promotion-1024.png": "52eb2a477f4811ed20f2589ea95acad6fd1be9a22214d6d527a9489effeac6ad",
+    "promotion-1440.png": "69b6fd3717beb6d750d458d69b9dd507eb40550293f4aca654bf876c4075add3",
+    "promotion-320.png": "8776e441e05d52acb6f7df31d22fa92b386f153c3a73d94bcb07e0bd3bb6de47",
+    "promotion-768.png": "567044faabd94557bf1d83c3e6c4d7d89dad8867ba85581712c112627f8db7ac",
+    "promotion-mobile-390.png": "0c8231bac5c5235473f0b3c737ded21c73d2bb5ed19a0276c715268f30ff9415",
+    "promotion-reference-width.png": "f0337f7b3db3a6a1c85b5b8749e1b3a260d5c4d98d03133b91c65e6292046710",
+    "promotion-stopped.png": "e8b5e937056bc7fe513772db13cf5679aa0d90d94a06fd86b9df328c07dc762b",
+    "rights-required.png": "3af5148d5d13a4c96784155aef979280279d0f2e9f8b6f726d6465cb2276d23e",
+    "rollback-result.png": "0f12cd9bfc8ba1147cb5b644a5f0406c1cc7e1180847c2083b98199164858a75",
+    "viewport-checks.json": "e9d1b2ca5c494d26a549244c2b2bc96538565b40cfc1bda8ca82c93985f0bbcc"
+  }
+}

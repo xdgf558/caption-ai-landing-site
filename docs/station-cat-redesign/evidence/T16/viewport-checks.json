@@ -1,0 +1,31 @@
+[
+  {
+    "viewport": 390,
+    "client": 375,
+    "scrollWidth": 375
+  },
+  {
+    "client": 305,
+    "columns": "273px",
+    "scrollWidth": 305,
+    "viewport": 320
+  },
+  {
+    "client": 753,
+    "columns": "220px 459px",
+    "scrollWidth": 753,
+    "viewport": 768
+  },
+  {
+    "client": 1009,
+    "columns": "260px 669px",
+    "scrollWidth": 1009,
+    "viewport": 1024
+  },
+  {
+    "client": 1425,
+    "columns": "260px 1085px",
+    "scrollWidth": 1425,
+    "viewport": 1440
+  }
+]
