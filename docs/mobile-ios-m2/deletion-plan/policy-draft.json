@@ -14,7 +14,7 @@
     "publisher_content_keep": "站点公开内容、运维设置和发布者资产不是普通读者资产；不随读者销户删除。管理员主体另行核验。",
     "anonymous_analytics_ttl": "音乐随机会话统计不伪造账号关联；遵循现有 30/365 天规则；归因当前不采集，若启用须先定义软关联清理。",
     "admin_audit_review": "保留所需审计事件但最小化其中读者邮箱/ID/自由文本；管理员标识与普通会员主体不可混同。",
-    "redesign_analytics_review": "网站改版新事件字典尚未接入采集；session_id 未经采集器验证，不能仅因没有 account_id 就认定匿名。保留期限、会话关联与可执行清理机制留 T18 审查，不套用旧音乐 30/365 天规则，不启用账号清理或删除事件。"
+    "redesign_analytics_review": "T18 新事件与短期会话保留随机标识，不能据此承诺唯一访客。原始事件最长 90 天，限流计数 2 小时；采集、隐私版本和独立受控到期清理均需显式配置并核验 0016 与清理健康。生产开关仍关闭，销户清单保持未批准、执行关闭，不套用旧音乐 TTL，也不授予读者删除作品或事件的权限。"
   },
   "tables": {
     "reader": {
@@ -160,7 +160,10 @@
         "station_route_migrations"
       ],
       "redesign_analytics_review": [
-        "station_analytics_events"
+        "station_analytics_events",
+        "station_event_rates",
+        "station_event_retention_health",
+        "station_event_retention_guard"
       ]
     }
   },

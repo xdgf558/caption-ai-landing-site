@@ -48,6 +48,7 @@ const pending = { 'zh-Hant': '平台連結待更新', 'zh-Hans': '平台链接�
           </nav>
           <span>© {new Date().getUTCFullYear()} Station Cat · <a href={'mailto:' + siteConfig.supportEmail}>{copy.support}</a></span>
         </div>
+        <slot name="analytics-controls" />
       </footer>
     </div>
     <div class="sc-player-dock" data-sc-player-dock data-station-chrome transition:persist={persistentPlayer ? 'station-music-player' : undefined} transition:animate="none" hidden={!playerSelected || !Astro.slots.has('player')}><slot name="player" /></div>
@@ -56,12 +57,15 @@ const pending = { 'zh-Hant': '平台連結待更新', 'zh-Hans': '平台链接�
 </html>
 <script>
   import { mountStationChrome } from '../redesign/chrome.js';
+  import { mountStationAnalytics } from '../redesign/analyticsControls.js';
   let dispose = () => {};
+  let disposeAnalytics = () => {};
   function mountChrome() {
     if (!document.querySelector('[data-station-shell]')?.hasAttribute('data-chrome-mounted')) dispose = mountStationChrome();
+    if (!document.querySelector('[data-sc-event-controls]')?.hasAttribute('data-mounted')) disposeAnalytics = mountStationAnalytics();
   }
   mountChrome();
-  document.addEventListener('astro:before-swap', () => { dispose(); dispose = () => {}; });
+  document.addEventListener('astro:before-swap', () => { dispose(); disposeAnalytics(); dispose = () => {}; disposeAnalytics = () => {}; });
   document.addEventListener('astro:after-swap', mountChrome);
   document.addEventListener('astro:page-load', mountChrome);
 </script>

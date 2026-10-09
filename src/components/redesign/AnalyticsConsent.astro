@@ -1,0 +1,24 @@
+---
+import { stationPolicyHref } from '../../redesign/routes.js';
+interface Props { lang:'zh-Hant'|'zh-Hans'|'en'|'ja' }
+const {lang}=Astro.props;
+const copy={
+ 'zh-Hant':{title:'站內統計',accept:'允許統計',withdraw:'關閉統計',details:'統計說明',privacyLink:'隱私政策',policy:'只統計作品瀏覽、實際播放、平台點擊、遊戲就緒與本機存檔成功。原始事件最多保留 90 天，不記錄帳號、存檔內容、私人播放網址或原始 IP。選擇僅在此分頁暫存，可隨時關閉；拒絕後仍可正常收聽和遊玩。',checking:'正在核對統計設定…',choice:'是否允許這個分頁的站內統計？',enabled:'已允許站內統計，可隨時關閉。',declined:'統計已關閉，收聽與遊玩照常可用。',privacy:'已依瀏覽器隱私偏好關閉統計。',unavailable:'統計暫未開放，收聽與遊玩照常可用。',memory:'瀏覽器無法保存設定，僅在此頁暫時生效。'},
+ 'zh-Hans':{title:'站内统计',accept:'允许统计',withdraw:'关闭统计',details:'统计说明',privacyLink:'隐私政策',policy:'只统计作品浏览、实际播放、平台点击、游戏就绪与本机存档成功。原始事件最多保留 90 天，不记录账号、存档内容、私人播放网址或原始 IP。选择仅在此标签页暂存，可随时关闭；拒绝后仍可正常收听和游玩。',checking:'正在核对统计设置…',choice:'是否允许这个标签页的站内统计？',enabled:'已允许站内统计，可随时关闭。',declined:'统计已关闭，收听与游玩照常可用。',privacy:'已按浏览器隐私偏好关闭统计。',unavailable:'统计暂未开放，收听与游玩照常可用。',memory:'浏览器无法保存设置，仅在此页暂时生效。'},
+ en:{title:'Site statistics',accept:'Allow statistics',withdraw:'Turn off statistics',details:'What we measure',privacyLink:'Privacy policy',policy:'We measure work views, actual playback, platform clicks, game readiness and confirmed local saves. Raw events are kept for at most 90 days. We do not record accounts, saved-game content, private playback URLs or raw IP addresses. Your choice is temporary in this tab and can be withdrawn anytime. Listening and playing work with statistics off.',checking:'Checking statistics settings…',choice:'Allow site statistics for this tab?',enabled:'Site statistics are allowed. You can turn them off anytime.',declined:'Statistics are off. Listening and playing remain available.',privacy:'Statistics are off to respect your browser privacy preference.',unavailable:'Statistics are unavailable. Listening and playing remain available.',memory:'Settings cannot be saved; this choice applies only to this page.'},
+ ja:{title:'サイト内の統計',accept:'統計を許可',withdraw:'統計を停止',details:'記録する内容',privacyLink:'プライバシーポリシー',policy:'作品の閲覧、実際の再生、配信リンクのクリック、ゲームの準備完了と端末への保存成功を記録します。元のイベントは最大90日間保持します。アカウント、セーブ内容、非公開の再生URL、生のIPアドレスは記録しません。選択はこのタブに一時保存され、いつでも停止できます。統計を拒否しても音楽とゲームを利用できます。',checking:'統計の設定を確認しています…',choice:'このタブのサイト内統計を許可しますか？',enabled:'統計を許可しました。いつでも停止できます。',declined:'統計は停止中です。音楽とゲームを利用できます。',privacy:'ブラウザーのプライバシー設定に従い統計を停止しました。',unavailable:'統計は現在利用できません。音楽とゲームを利用できます。',memory:'設定を保存できません。このページだけに適用されます。'}
+}[lang];
+const decline={'zh-Hant':'暫不統計','zh-Hans':'暂不统计',en:'Keep statistics off',ja:'統計を許可しない'}[lang];
+---
+<section class="sc-event-controls" data-sc-event-controls hidden aria-label={copy.title}>
+ <div><strong>{copy.title}</strong><p data-sc-event-status role="status">{copy.checking}</p>
+ <details><summary>{copy.details}</summary><p>{copy.policy} <a href={stationPolicyHref(lang,'privacy')}>{copy.privacyLink}</a></p></details></div>
+ <div class="sc-event-actions"><button type="button" class="sc-button sc-button-secondary" data-sc-event-accept disabled>{copy.accept}</button><button type="button" class="sc-button sc-button-secondary" data-sc-event-withdraw hidden>{copy.withdraw}</button></div>
+ <script type="application/json" data-sc-event-copy set:html={JSON.stringify({...copy,decline})} />
+</section>
+<style>
+ :global(.sc-footer:has(.sc-event-controls:not([hidden]))){flex-wrap:wrap}
+ .sc-event-controls{display:flex;align-items:flex-start;justify-content:space-between;gap:1.25rem;padding:1rem 0;border-top:1px solid var(--sc-line,#e6e5ef);font-size:.875rem;color:var(--sc-muted,#565d83);grid-column:1/-1;width:100%;flex:1 0 100%}
+ .sc-event-controls[hidden]{display:none}.sc-event-controls p{margin:.35rem 0;max-width:72ch;line-height:1.65}.sc-event-controls strong{color:var(--sc-ink,#181d36)}.sc-event-controls summary{cursor:pointer;padding:.4rem 0}.sc-event-controls button{white-space:normal;min-height:44px}.sc-event-controls [hidden]{display:none}.sc-event-actions{display:flex;gap:.65rem;flex-shrink:0}
+ @media(max-width:600px){.sc-event-controls{flex-direction:column;gap:.65rem}.sc-event-actions{width:100%;flex-direction:column}.sc-event-actions button{width:100%}}
+</style>

@@ -21,7 +21,7 @@ export function mountStationPlatforms(root, locale, { observer, navigator = glob
   root.addEventListener('click', event => {
     const anchor = event.target.closest('a[data-sc-platform-link]');
     if (anchor && root.contains(anchor) && platformUrl(anchor.getAttribute('href'), anchor.dataset.provider)) {
-      observeStationPlatform(observer, { trackId: anchor.dataset.trackId, linkId: anchor.dataset.linkId, provider: anchor.dataset.provider });
+      if(event.isTrusted!==false)observeStationPlatform(observer, { trackId: anchor.dataset.trackId, linkId: anchor.dataset.linkId, provider: anchor.dataset.provider });
       return; // Native HTTPS anchor; never preventDefault(), await, or redirect.
     }
     const button = event.target.closest('[data-sc-platform-copy]');
@@ -35,5 +35,10 @@ export function mountStationPlatforms(root, locale, { observer, navigator = glob
       if (state.status !== 'copied') { input.focus(); input.select(); }
     });
   }, { signal: handlers.signal });
+  root.addEventListener('auxclick',event=>{
+    if(event.button!==1||event.isTrusted===false)return;
+    const anchor=event.target.closest('a[data-sc-platform-link]');
+    if(anchor&&root.contains(anchor)&&platformUrl(anchor.getAttribute('href'),anchor.dataset.provider))observeStationPlatform(observer,{trackId:anchor.dataset.trackId,linkId:anchor.dataset.linkId,provider:anchor.dataset.provider});
+  },{signal:handlers.signal});
   return () => { disposed = true; handlers.abort(); };
 }

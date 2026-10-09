@@ -9,6 +9,7 @@ import { renderMusicPage, escapeMusicHtml as e, musicBootstrap, musicCatalogHref
 import { readMusicResponse } from './musicResponse.js';
 import { campaignEnabled, campaignInput, campaignRedirectSearch } from './campaignLinks.js';
 import { resolveCampaignAttribution, publicAttribution } from './campaignAttribution.js';
+import { eventPageConfiguration } from './analyticsModel.js';
 
 const origin = 'https://wwwstationcat.org';
 const locales = { en: 'en', ja: 'ja', 'zh-hans': 'zh-Hans', 'zh-hant': 'zh-Hant' };
@@ -176,6 +177,7 @@ export async function handleStationMusicPage(request, env, { clock = Date.now, d
         model.error = { status: error.status || 503 }; status = model.error.status;
       }
     }
+    model.analytics=eventPageConfiguration(env);
     return await run(() => template(request, env, model, status));
   } catch (error) { return failurePage(request, route, [400, 404, 405, 429].includes(error.status) ? error.status : 503); }
 }

@@ -9,6 +9,12 @@
   window.CatGameHostBridge = {
     isStopped: function () { return stopped; },
     ready: function () { if (!stopped) { ready = true; send("ready"); } },
+    localSaved: function () {
+      if (!stopped && ready && window.crypto && typeof window.crypto.randomUUID === "function") {
+        window.parent.postMessage({ protocol: protocol, type: "save_success", game_id: "cat-life", launch_id: id,
+          save_kind: "local", save_operation_id: window.crypto.randomUUID() }, origin);
+      }
+    },
     recovery: function () { if (!stopped) send("recovery"); }
   };
   window.addEventListener("message", function (event) {

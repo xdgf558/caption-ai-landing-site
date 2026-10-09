@@ -6,6 +6,7 @@ import spotify from '../../assets/redesign/icons/spotify-logo-fill.svg?raw';
 import StationBrandLayout from '../../layouts/StationBrandLayout.astro';
 import ClipDialog from './ClipDialog.astro';
 import StationPlayer from './StationPlayer.astro';
+import AnalyticsConsent from './AnalyticsConsent.astro';
 import { musicCopy } from '../../redesign/musicCopy.js';
 import { stationHref } from '../../redesign/routes.js';
 import '../../redesign/music.css';
@@ -22,6 +23,7 @@ const inner = (source: string) => source.slice(source.indexOf('>') + 1, source.l
   <div data-sc-music-page></div>
   <p class="sc-container sc-music-feedback" data-sc-music-feedback role="status" hidden></p>
   <StationPlayer slot="player" lang={lang} />
+  <AnalyticsConsent slot="analytics-controls" lang={lang} />
   <Fragment slot="fixture-controls">
   <svg class="sc-music-symbols" width="0" height="0" aria-hidden="true" focusable="false">
     <defs>

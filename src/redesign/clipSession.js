@@ -1,17 +1,19 @@
 // One native video per attempt, created only inside a user gesture. A retired
 // element has no source/listeners; late events and play promises cannot revive it.
-export function createStationClipSession({ clips, createVideo, pauseMusic, mount = () => {}, view = () => {} }) {
+export function createStationClipSession({ clips, createVideo, pauseMusic, mount = () => {}, view = () => {}, observer=()=>{} }) {
   const byId = new Map(clips.map(clip => [clip.id, clip]));
   let clip = null, video = null, handlers = null, generation = 0, status = 'idle', error = null, destroyed = false;
+  let playbackId=null;
+  const observe=()=>{try{observer({clip,video,playbackId,status});}catch{}};
   const snapshot = () => ({ clip, status, error, generation });
-  const emit = () => { if (!destroyed) view(snapshot()); };
+  const emit = () => { if (!destroyed) { view(snapshot());observe();} };
   function unload(node) {
     if (!node) return;
     node.pause(); node.removeAttribute('src'); node.removeAttribute('poster'); node.load(); node.remove();
   }
   function stop() {
     generation++; handlers?.abort(); handlers = null;
-    const previous = video; video = null; unload(previous);
+    const previous = video; video = null;playbackId=null;unload(previous);observe();
   }
   function failed(code) { stop(); status = 'error'; error = code; emit(); }
   function open(id) {
@@ -20,6 +22,7 @@ export function createStationClipSession({ clips, createVideo, pauseMusic, mount
     try {
       pauseMusic(); // Also cancels a pending private handshake through T09 pause().
       const node = createVideo(); video = node; handlers = new AbortController();
+      playbackId=crypto.randomUUID();
       const attempt = generation, live = () => !destroyed && attempt === generation && video === node;
       const listen = (type, fn) => node.addEventListener(type, () => { if (live()) fn(); }, { signal: handlers.signal });
       node.controls = true; node.playsInline = true; node.preload = 'none';
@@ -30,6 +33,7 @@ export function createStationClipSession({ clips, createVideo, pauseMusic, mount
       listen('waiting', () => { status = 'buffering'; emit(); });
       listen('pause', () => { if (!node.ended) { status = 'paused'; emit(); } });
       listen('ended', () => { status = 'ended'; emit(); });
+      listen('timeupdate',observe);listen('seeking',observe);listen('seeked',observe);
       listen('error', () => failed('PLAY_FAILED'));
       mount(node, clip); emit();
       Promise.resolve(node.play()).then(() => { if (!live()) unload(node); }, cause => {

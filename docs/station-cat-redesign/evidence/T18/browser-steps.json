@@ -1,0 +1,163 @@
+[
+  {
+    "state": "played_before_consent",
+    "observed": {
+      "counts": [],
+      "media": {
+        "previewMs": 1045,
+        "fullMs": 4049,
+        "synthetic": true
+      },
+      "networkFailure": false
+    }
+  },
+  {
+    "state": "accepted_and_played_to_native_end",
+    "observed": {
+      "counts": [
+        {
+          "name": "preview_qualified",
+          "count": 1
+        },
+        {
+          "name": "preview_start",
+          "count": 1
+        },
+        {
+          "name": "track_view",
+          "count": 1
+        }
+      ],
+      "media": {
+        "previewMs": 1045,
+        "fullMs": 4049,
+        "synthetic": true
+      },
+      "networkFailure": false
+    }
+  },
+  {
+    "state": "clip_actual_ended_no_seek",
+    "observed": {
+      "counts": [
+        {
+          "name": "clip_complete",
+          "count": 1
+        },
+        {
+          "name": "clip_start",
+          "count": 1
+        },
+        {
+          "name": "preview_qualified",
+          "count": 1
+        },
+        {
+          "name": "preview_start",
+          "count": 1
+        },
+        {
+          "name": "track_view",
+          "count": 1
+        }
+      ],
+      "media": {
+        "previewMs": 1045,
+        "fullMs": 4049,
+        "synthetic": true
+      },
+      "networkFailure": false
+    }
+  },
+  {
+    "state": "withdrawn_then_replayed",
+    "observed": {
+      "counts": [
+        {
+          "name": "clip_complete",
+          "count": 1
+        },
+        {
+          "name": "clip_start",
+          "count": 1
+        },
+        {
+          "name": "preview_qualified",
+          "count": 1
+        },
+        {
+          "name": "preview_start",
+          "count": 1
+        },
+        {
+          "name": "track_view",
+          "count": 1
+        }
+      ],
+      "media": {
+        "previewMs": 1045,
+        "fullMs": 4049,
+        "synthetic": true
+      },
+      "networkFailure": false
+    }
+  },
+  {
+    "state": "statistics_503_after_actual_playback",
+    "observed": {
+      "counts": [
+        {
+          "name": "clip_complete",
+          "count": 1
+        },
+        {
+          "name": "clip_start",
+          "count": 1
+        },
+        {
+          "name": "preview_qualified",
+          "count": 1
+        },
+        {
+          "name": "preview_start",
+          "count": 1
+        },
+        {
+          "name": "track_view",
+          "count": 1
+        }
+      ],
+      "media": {
+        "previewMs": 1045,
+        "fullMs": 4049,
+        "synthetic": true
+      },
+      "networkFailure": true
+    }
+  },
+  {
+    "state": "phase_2_fresh_temporary_db_game_ready_and_local_write",
+    "observed": {
+      "counts": [
+        {
+          "name": "game_launch_request",
+          "count": 1
+        },
+        {
+          "name": "game_ready",
+          "count": 1
+        },
+        {
+          "name": "save_success",
+          "count": 1
+        }
+      ],
+      "media": {
+        "previewMs": 1045,
+        "fullMs": 4049,
+        "synthetic": true
+      },
+      "networkFailure": false
+    }
+  }
+]

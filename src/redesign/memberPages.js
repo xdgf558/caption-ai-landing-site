@@ -3,6 +3,7 @@ import { readMusicResponse } from './musicResponse.js';
 import { escapeMusicHtml as e } from './musicRender.js';
 import { requestDeadline } from './publicStore.js';
 import { stationHref } from './routes.js';
+import { eventPageConfiguration } from './analyticsModel.js';
 
 const locales = { en: 'en', ja: 'ja', 'zh-hans': 'zh-Hans', 'zh-hant': 'zh-Hant' };
 const headers = Object.freeze({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store',
@@ -45,6 +46,7 @@ export async function handleStationMemberPage(request, env, { deadlineMs = 10000
     return new HTMLRewriter()
       .on('link[rel="canonical"]', { element(node) { node.remove(); } })
       .on('head', { element(node) { node.append(`<link rel="canonical" href="${e(origin + canonical)}">`, { html: true }); } })
+      .on('body', { element(node) { node.append('<script id="sc-event-bootstrap" type="application/json">'+JSON.stringify(eventPageConfiguration(env))+'</script>',{html:true}); } })
       .transform(new Response(html, { headers }));
   } catch { return failure(request, route.locale, 503); }
 }

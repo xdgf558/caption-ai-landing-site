@@ -2,6 +2,7 @@
 import { ArrowRight, ShieldCheck, Monitor, Smartphone, Play, Pause, Headphones } from '@lucide/astro';
 import StationBrandLayout from '../../layouts/StationBrandLayout.astro';
 import StationPlayer from './StationPlayer.astro';
+import AnalyticsConsent from './AnalyticsConsent.astro';
 import GameDialog from './GameDialog.astro';
 import { ClientRouter } from 'astro:transitions';
 import '../../redesign/music.css';
@@ -14,6 +15,7 @@ const copy = gameCopy[lang];
 <StationBrandLayout lang={lang} title={copy.title} description={copy.intro} activeSection="games" persistentPlayer preview>
   <ClientRouter slot="head" fallback="swap" />
   <StationPlayer slot="player" lang={lang} />
+  <AnalyticsConsent slot="analytics-controls" lang={lang} />
   <GameDialog lang={lang} />
   <div data-sc-game-page></div>
   <svg slot="fixture-controls" class="sc-game-symbols" width="0" height="0" aria-hidden="true" focusable="false"><defs>
