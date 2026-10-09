@@ -105,6 +105,7 @@
 | music / `station_event_rates` | `redesign_analytics_review` | 无外键；仍须核对软关联/JSON |
 | music / `station_event_retention_guard` | `redesign_analytics_review` | 无外键；仍须核对软关联/JSON |
 | music / `station_event_retention_health` | `redesign_analytics_review` | 无外键；仍须核对软关联/JSON |
+| music / `station_external_metrics` | `redesign_analytics_review` | FK 0 (track_id, clip_id) → station_clips (track_id, id)：NO ACTION；FK 1 (campaign_id) → station_campaigns (id)：NO ACTION；FK 2 (track_id) → music_tracks (id)：NO ACTION |
 | music / `station_game_revisions` | `publisher_content_keep` | FK 0 (id) → station_games (id)：NO ACTION |
 | music / `station_games` | `publisher_content_keep` | FK 0 (id, published_revision) → station_game_revisions (id, revision)：NO ACTION；FK 1 (id, draft_revision) → station_game_revisions (id, revision)：NO ACTION |
 | music / `station_home_configs` | `publisher_content_keep` | FK 0 (id, published_revision) → station_home_revisions (id, revision)：NO ACTION；FK 1 (id, draft_revision) → station_home_revisions (id, revision)：NO ACTION |
@@ -115,6 +116,11 @@
 | music / `station_promotion_revisions` | `publisher_content_keep` | FK 0 (track_id, preview_asset_id) → music_assets (owner_track_id, id)：NO ACTION；FK 1 (track_id) → station_promotions (track_id)：NO ACTION |
 | music / `station_promotions` | `publisher_content_keep` | FK 0 (track_id, published_revision) → station_promotion_revisions (track_id, revision)：NO ACTION；FK 1 (track_id, draft_revision) → station_promotion_revisions (track_id, revision)：NO ACTION；FK 2 (track_id) → station_track_publications (track_id)：NO ACTION |
 | music / `station_publish_jobs` | `admin_audit_review` | 无外键；仍须核对软关联/JSON |
+| music / `station_report_health` | `redesign_analytics_review` | 无外键；仍须核对软关联/JSON |
+| music / `station_report_jobs` | `redesign_analytics_review` | 无外键；仍须核对软关联/JSON |
+| music / `station_report_operations` | `admin_audit_review` | 无外键；仍须核对软关联/JSON |
+| music / `station_report_retention_guard` | `redesign_analytics_review` | 无外键；仍须核对软关联/JSON |
+| music / `station_report_snapshots` | `redesign_analytics_review` | 无外键；仍须核对软关联/JSON |
 | music / `station_route_migrations` | `publisher_content_keep` | 无外键；仍须核对软关联/JSON |
 | music / `station_track_publications` | `publisher_content_keep` | FK 0 (track_id, published_revision) → station_track_revisions (track_id, revision)：NO ACTION；FK 1 (track_id, draft_revision) → station_track_revisions (track_id, revision)：NO ACTION；FK 2 (track_id) → music_tracks (id)：NO ACTION |
 | music / `station_track_revisions` | `publisher_content_keep` | FK 0 (track_id, lyrics_asset_id) → music_assets (owner_track_id, id)：NO ACTION；FK 1 (track_id, cover_asset_id) → music_assets (owner_track_id, id)：NO ACTION；FK 2 (track_id, legacy_revision_id) → music_track_revisions (track_id, id)：NO ACTION；FK 3 (track_id) → station_track_publications (track_id)：NO ACTION |

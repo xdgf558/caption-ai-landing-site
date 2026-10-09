@@ -1,0 +1,45 @@
+{
+  "kind": "IAB local loopback synthetic fixtures only",
+  "recordedAt": "2026-10-09T12:33:30.125948+00:00",
+  "preview": "http://127.0.0.1:4219/admin/music/reports/?fixture=healthy",
+  "steps": [
+    {
+      "action": "Song A + event-douyin + one UTC day",
+      "observed": "4 visits; 3 starts; 3 qualified; 5 clicks; 2/3 session conversion"
+    },
+    {
+      "action": "NetEase platform filter",
+      "observed": "4 clicks; 1/3 conversion; visit denominator remains 3"
+    },
+    {
+      "action": "Manual platform plays import with explicit source and zero",
+      "observed": "0 record saved; minute-only midnight dates accepted; scoped song/platform/Campaign match; site counts unchanged"
+    },
+    {
+      "action": "Revise same synthetic record from 0 to 7",
+      "observed": "Saved revision; seven identity fields disabled; mobile form remains within 305px client width"
+    },
+    {
+      "action": "Tab from editable value in 320px form",
+      "observed": "Focus moved to source-kind, skipping disabled identities; checkbox label is >=44px high"
+    },
+    {
+      "action": "Lost acknowledgement, reload, retry",
+      "observed": "Pending survived reload; original-key retry confirmed and recovery cleared. Native/client tests independently verify one insertion and original request identity."
+    },
+    {
+      "action": "off / missing-schema / editor / recent-empty / historical-missing",
+      "observed": "See state-checks.json; fail-closed writes, readable editor, known zero, unavailable missing history"
+    },
+    {
+      "action": "one transient preview read error",
+      "observed": "Explicit recheck recovered. Same-origin Referer fixture fallback added for preview cookie isolation."
+    }
+  ],
+  "productionData": false,
+  "externalPlatformsClicked": false,
+  "voiceOver": false,
+  "physicalDevices": false,
+  "viewportReset": true,
+  "console": "browser-console.json"
+}

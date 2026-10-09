@@ -1,0 +1,196 @@
+{
+  "task": "T19",
+  "kind": "local validation, synthetic SQLite/native D1/R2/Access and CSS viewport evidence",
+  "base": "cd1ea33964f47c2e3806f81c8b01a12f772caf4e",
+  "branch": "codex/station-cat-redesign-t19",
+  "recordedAt": "2026-10-09T12:33:30.126653+00:00",
+  "runtime": "v24.15.0",
+  "finalChecks": [
+    {
+      "name": "reports-final",
+      "command": "npm run test:redesign:reports",
+      "exitCode": 0,
+      "tests": 51,
+      "log": "logs/reports-final.log.gz",
+      "uncompressedSha256": "05b8eaa99f7a182efaf4172ae89ce084583885894548c1755f4d1e2cce7bc64c",
+      "gzipSha256": "930b03ce09cc37b1e3fbea85791f3cd9b7520c153d624ef1d48f27b1d19485d7",
+      "lastWrittenAt": "2026-10-09T12:19:18.556138+00:00"
+    },
+    {
+      "name": "related-final",
+      "command": "node --test --test-timeout=90000 [T16, T17, T18 nine test files]",
+      "exitCode": 0,
+      "tests": 112,
+      "log": "logs/related-final.log.gz",
+      "uncompressedSha256": "f07064d957c6d58ef202727aaffcc26563977f3fefd428f2756c80ad1d6157f4",
+      "gzipSha256": "70e9e3384071a04eee89a9b62b31880337b6a63b05049a9106e082702479fce4",
+      "lastWrittenAt": "2026-10-09T12:31:20.679983+00:00"
+    },
+    {
+      "name": "content-admin-final",
+      "command": "npm run test:redesign:content-admin",
+      "exitCode": 0,
+      "tests": 37,
+      "log": "logs/content-admin-final.log.gz",
+      "uncompressedSha256": "e89cb2ad8d33e443efe3edf7508b037efcc4141f0ea2724f6e75b0d71a14fe61",
+      "gzipSha256": "c7d5154120ddee01fdff39e44e14adfadf6090ce7fe627692b666fdaf229bbd8",
+      "lastWrittenAt": "2026-10-09T12:17:56.197289+00:00"
+    },
+    {
+      "name": "npm-final",
+      "command": "npm test",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/npm-final.log.gz",
+      "uncompressedSha256": "d34b0e6d9fb9adc79bf500a6e5700a0a75acb35fbd67c27ab67aafc6caf29c28",
+      "gzipSha256": "d9acb167ff606f3c8c6d2e7402f88cebe31e55c56cc826ff0fd7643a96ea641a",
+      "lastWrittenAt": "2026-10-09T12:17:37.385865+00:00"
+    },
+    {
+      "name": "build-final",
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/build-final.log.gz",
+      "uncompressedSha256": "70b52fa33df2d88f6dc9258eb0d1ef1426954bd841d2b0ff107cc0af21bfd1ec",
+      "gzipSha256": "1cc518157a3d7b05f1d9cb80ec62e387dfc8fdd1f98f8065ecb4c1c1b5299166",
+      "lastWrittenAt": "2026-10-09T12:15:11.290103+00:00"
+    },
+    {
+      "name": "staging-build-final",
+      "command": "node scripts/build-music-staging-assets.mjs",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/staging-build-final.log.gz",
+      "uncompressedSha256": "55f7ae71fdb373ec8a8e0a6119034a02f1f655ecbe23a3781476e0add2af3892",
+      "gzipSha256": "8888c41ad71d49cfd59eafab50bff479f23caea83fe67cb116d993050328d5d8",
+      "lastWrittenAt": "2026-10-09T12:17:09.620027+00:00"
+    },
+    {
+      "name": "staging-check-final",
+      "command": "node scripts/check-music-staging-assets.mjs",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/staging-check-final.log.gz",
+      "uncompressedSha256": "6c85a9cf933779b71186ad71bb4b89f469773aabb76b0c5e8a19001a50d43658",
+      "gzipSha256": "2003defc3e15e170d0ac32caad65903932e17f71d2272b26ea40d67822faeaa4",
+      "lastWrittenAt": "2026-10-09T12:17:27.822846+00:00"
+    },
+    {
+      "name": "deletion-audit-final",
+      "command": "python3 scripts/audit-account-deletion.py",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/deletion-audit-final.log.gz",
+      "uncompressedSha256": "c663e42106c75e8a376ab7e0d246a615bb8aa3c35b5fb071311d21dd058fc440",
+      "gzipSha256": "ac9e9b2afcd3a6aafbb70e9506ec6a2c5fe2dd64c14b1eeb4ba01f7b2de1b5f4",
+      "lastWrittenAt": "2026-10-09T12:31:02.892873+00:00"
+    },
+    {
+      "name": "deletion-tests-final",
+      "command": "python3 scripts/test-account-deletion-audit.py",
+      "exitCode": 0,
+      "tests": 12,
+      "log": "logs/deletion-tests-final.log.gz",
+      "uncompressedSha256": "6c207ba6703f5aa8bc9f124db7b39f6ee42907ce06a2b82a8d1182edb88a5a4b",
+      "gzipSha256": "157141235e29ba10504bb1ff51d7bef471a9531d5bb16ef4eeeb088798ec95bc",
+      "lastWrittenAt": "2026-10-09T12:31:03.160836+00:00"
+    },
+    {
+      "name": "arithmetic-final",
+      "command": "node scripts/rehearse-station-reports.mjs",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/arithmetic-final.log.gz",
+      "uncompressedSha256": "b546793c33daf5adc2ac17468d71d0096c360975be23502cb873787228c1a579",
+      "gzipSha256": "c17cce6f0d6be96576ddc9d1c03a49034037491864ae1a7641a91a290136dfec",
+      "lastWrittenAt": "2026-10-09T12:19:06.833995+00:00"
+    }
+  ],
+  "earlierFailures": [
+    {
+      "log": "logs/npm-before-shared-allowlist.log.gz",
+      "sha256": "eee7fd525e87151b0354a43aca1e243692467755a637105627fd848d865ac6af",
+      "reason": "Initial staging dependency allowlist omitted four newly reachable, default-disabled report modules. The exact shared-module allowlist was corrected and final npm test passed.",
+      "superseded": true
+    },
+    {
+      "log": "logs/reports-before-fixture-key-update.log.gz",
+      "sha256": "13772ce2c51cde14bd77b9dc4cb3139f74d439086d6012e0db4f9ca8d25e19e3",
+      "reason": "After adding time-bound report operation keys, the synthetic seed still used its old UUID. The failed native startup was stopped, the seed and failure cleanup were corrected, and all final 51 tests passed.",
+      "superseded": true
+    }
+  ],
+  "sourceSha256": {
+    ".github/workflows/ci.yml": "a7054e49fe9f1ab009d0d63995ff5ab5737a1ef5bc25c57e60d3c09e0dfb8fb5",
+    "migrations-music/0017_station_reports.sql": "c54f66b828d253c5b9045f9cf12434a6e85d08c53a86ff30bae560c0ebb541e6",
+    "package.json": "80505c3074cb41cc7b0f58a00bd317ee42be1fba3cd6727b9e9a2c6712f6f7d3",
+    "public/styles/admin-station-reports.css": "fbee228eb4df7cfeba9c8346ac539c5bfcdd2f6b3f0e38655a0958e09362d64e",
+    "scripts/helpers/station-report-assets.mjs": "8dc76613aea097e2abeba0f239031cd401d1784de8ffdceb21c66928e2f2c422",
+    "scripts/helpers/station-report-fixture.mjs": "4a3855c646249786cf65f6143c5c3cafe90774a8d73a36e81627f6e729fac2be",
+    "scripts/helpers/station-report-runtime-worker.js": "11372bf94c1c6970afaccf7cf0180898edb5cf54f7d3aada0ea7088b51b1dad8",
+    "scripts/rehearse-station-reports.mjs": "7969e03f137d068f15cb0aae829dcfa4f52a8de9593a1705ae73c01b50c8ecc1",
+    "scripts/serve-station-report-preview.mjs": "ef2aa73889e3a94de4baba0c66df9d286df6f52fee041ba29b704de17c554951",
+    "scripts/test-account-deletion-audit.py": "d84e3cbaf95d135cbb20ec5238ddf7d9e47102462a0b4377e19a9bb0c75a4321",
+    "scripts/test-music-staging-gate.mjs": "04abcbf0eb2e684690bb2c06bb72f3c94f1a062bbbc6c63d5cd425a2c34c6f4f",
+    "scripts/test-station-report-client.mjs": "7935d0aa8c51ede1d795128fa2d1ed77e1ac8030e1c672b4b024c99dc22a500e",
+    "scripts/test-station-report-runtime.mjs": "6f7940a5019706a28bacae97fa63b8ab4dd496aa625aa3dfbdf6d3ac6ded63f1",
+    "scripts/test-station-reports.mjs": "463758c98021c229839c64e428ff9d31b166df871ae57a20f0ad3f33826fbbd2",
+    "src/pages/admin/music/content/index.astro": "f8139ce499ab3c5be48cf46017ad8a4eb491be79c96c6f50da81f57de41cf373",
+    "src/pages/admin/music/reports/index.astro": "5e1512ea7b16c12583e775a6fdce744d3e0a74174de88a2328302f9acc85211b",
+    "src/redesign/contentAdminHttp.js": "f4fef72f2c88d72160a05d79a92721582b0212d7d90bad1dfb238191b3bfc7d1",
+    "src/redesign/reportsHttp.js": "7edfbfb90ca7f9768db5232372cc9b1bf7d6b3c02a4a7696f2e7c3b161f0fe59",
+    "src/redesign/reportsModel.js": "8a51fc481e84cb0a5518580cf60a35746b50318a675d292c5a90ef4c88a52186",
+    "src/redesign/reportsQuery.js": "0166f8687dd5fa493b5cc4cfbcee958bc58ff74a5efbb039becec3c3714bd2dd",
+    "src/redesign/reportsSchedule.js": "bab0bbc400d72ffb9c9bcb66b0f15238e93b6426e27394e0b3bc9267ecbe589f",
+    "src/redesign/reportsStore.js": "835aaad2868ac3c7e322f41c1185f46d469822c5da67ce1a6ccc82bb31b6d40b",
+    "src/scripts/adminStationReports.js": "91b722c0fd032e07557b54ce1f965957faa9762195697de9adfcbdd9e67bfd4b",
+    "src/scripts/stationContentClient.js": "05da594e814b8a851da8b2c97c18f8047db0e36c3b4029757b52620d278690b6",
+    "src/scripts/stationReportsClient.js": "f2203a47c8881859de8fb7e3f1a6f494b19a6709e1abcd6210929a6ab5028993",
+    "src/worker.js": "ed8016a198dc456af64f91c8b740ccfdbb1f647953993370a5c410a6f987c50a"
+  },
+  "unchangedProductionConfigurations": {
+    "wrangler.toml": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2",
+    "wrangler.mobile-r2.jsonc": "1404c481291448344e413d70a09964cec60d40f2345e67fe839db39c70238897",
+    "astro.config.mjs": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f",
+    "package-lock.json": "b81e63fc2580e6e768dcfe5d799eb5944e95bf1fb51a056b8697ece1e6c9d4b0"
+  },
+  "arithmetic": "arithmetic.json",
+  "schemaAudit": "schema-audit-comparison.json",
+  "designQA": "design-qa.md",
+  "responsive": "viewport-metrics.json",
+  "stateChecks": "state-checks.json",
+  "browserInteractions": "browser-interactions.json",
+  "build": {
+    "emptySerialContent": true,
+    "astroPages": 168,
+    "publicSitemapRoutes": 115,
+    "productionPackage": false
+  },
+  "staging": {
+    "pages": 8,
+    "exactAssets": 37,
+    "additionalPublicRoutes": false
+  },
+  "testTiming": "Final runtime/client source was frozen before the final 51 tests, final 112 related tests, npm test and build. Later changes were the isolated preview Referer fallback/diagnostics and documentation/evidence. Reports use the final built shell; screenshots were recaptured after restart. The standalone 37 tests overlap the 112 related tests; do not sum them as independent coverage.",
+  "hostedCI": "not observed for T19; must be checked against the eventual exact PR head",
+  "remoteMigration": false,
+  "deployment": false,
+  "productionFlagsEnabled": false,
+  "oldEntrancesClosed": false,
+  "realMaterialsSelected": false,
+  "remainingEvidenceGaps": [
+    "Actual production 0012-0017 ledgers, bindings, R2/Access, capacity and aggregate coverage",
+    "Real platform source/rights and operator-provided two-week baseline",
+    "Physical iOS/Android, built-in browsers and VoiceOver",
+    "Existing game in-flight cloud writes, localStorage races, same-origin iframe and exit timeout",
+    "Existing failed-upload quota and cross-system publication atomicity"
+  ],
+  "constraints": [
+    "UTC half-open windows <=31 days; raw recent range is 89 UTC dates",
+    "20000 selected events / 512 daily dimension keys / 16 keys per hourly cron; backlog is explicit",
+    "Historical multi-day unique session rates unavailable without an exact saved window",
+    "Manual records independent; no automatic external sums/conversions; options max200 each, records max100",
+    "Operation keys expire at 24h from encoded initial time (future clock skew allowance <=5min), even after receipt cleanup; expired pending requires explicit reconciliation"
+  ]
+}

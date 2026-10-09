@@ -58,7 +58,8 @@
     "migrations-music/0013_station_media_uploads.sql": "fca37ba533ddd2821335aa44749e699da546f145182a5f5886ebdac02c637021",
     "migrations-music/0014_station_content_operations.sql": "c457774b05fa286fa8ec51f7ddc08db4eba3893902df44e359b288153954c0dd",
     "migrations-music/0015_station_campaign_links.sql": "c530d98acc09ab6806e136970eb36d6611f7b30dd0716103d78e6072c077232f",
-    "migrations-music/0016_station_event_collection.sql": "feaeed6ac1dc78aba311c9a40532289f2b8acffc233f670415e6b5bab5131ceb"
+    "migrations-music/0016_station_event_collection.sql": "feaeed6ac1dc78aba311c9a40532289f2b8acffc233f670415e6b5bab5131ceb",
+    "migrations-music/0017_station_reports.sql": "c54f66b828d253c5b9045f9cf12434a6e85d08c53a86ff30bae560c0ebb541e6"
   },
   "databases": {
     "reader": {
@@ -2722,6 +2723,61 @@
         "foreignKeys": [],
         "category": "redesign_analytics_review"
       },
+      "station_external_metrics": {
+        "columns": [
+          "id",
+          "track_id",
+          "clip_id",
+          "campaign_id",
+          "metric",
+          "provider",
+          "value",
+          "source_kind",
+          "source_label",
+          "window_start",
+          "window_end",
+          "observed_at",
+          "updated_at",
+          "status",
+          "edit_version",
+          "expires_at"
+        ],
+        "foreignKeys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "station_clips",
+            "parentColumn": "track_id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 0,
+            "seq": 1,
+            "column": "clip_id",
+            "parent": "station_clips",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "column": "campaign_id",
+            "parent": "station_campaigns",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          },
+          {
+            "id": 2,
+            "seq": 0,
+            "column": "track_id",
+            "parent": "music_tracks",
+            "parentColumn": "id",
+            "onDelete": "NO ACTION"
+          }
+        ],
+        "category": "redesign_analytics_review"
+      },
       "station_game_revisions": {
         "columns": [
           "id",
@@ -3087,6 +3143,63 @@
         ],
         "foreignKeys": [],
         "category": "admin_audit_review"
+      },
+      "station_report_health": {
+        "columns": [
+          "singleton",
+          "coverage_start",
+          "next_day",
+          "last_sweep_at",
+          "last_aggregate_at"
+        ],
+        "foreignKeys": [],
+        "category": "redesign_analytics_review"
+      },
+      "station_report_jobs": {
+        "columns": [
+          "window_start",
+          "window_end",
+          "keys_json",
+          "cursor",
+          "edit_version",
+          "status",
+          "expires_at"
+        ],
+        "foreignKeys": [],
+        "category": "redesign_analytics_review"
+      },
+      "station_report_operations": {
+        "columns": [
+          "actor_id",
+          "route",
+          "idempotency_key",
+          "request_hash",
+          "result_json",
+          "expires_at"
+        ],
+        "foreignKeys": [],
+        "category": "admin_audit_review"
+      },
+      "station_report_retention_guard": {
+        "columns": [
+          "singleton",
+          "cutoff"
+        ],
+        "foreignKeys": [],
+        "category": "redesign_analytics_review"
+      },
+      "station_report_snapshots": {
+        "columns": [
+          "id",
+          "window_start",
+          "window_end",
+          "query_key",
+          "stats_json",
+          "generated_at",
+          "expires_at"
+        ],
+        "foreignKeys": [],
+        "category": "redesign_analytics_review"
       },
       "station_route_migrations": {
         "columns": [

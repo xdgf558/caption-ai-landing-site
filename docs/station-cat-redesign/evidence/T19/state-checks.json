@@ -1,0 +1,129 @@
+[
+  {
+    "mode": "off",
+    "filterDisabled": true,
+    "importHidden": true,
+    "message": "推广报表尚未启用。",
+    "resultHidden": true,
+    "role": "暂不可用",
+    "snapshotDisabled": true
+  },
+  {
+    "mode": "empty",
+    "filterDisabled": true,
+    "importHidden": true,
+    "message": "报表数据库尚未准备好，请先核对迁移账本。",
+    "resultHidden": true,
+    "role": "暂不可用",
+    "snapshotDisabled": true
+  },
+  {
+    "mode": "editor",
+    "filterDisabled": false,
+    "importHidden": true,
+    "message": "报表已核对。次数与会话转化分别展示。",
+    "resultHidden": false,
+    "role": "编辑者 · 只读",
+    "snapshotDisabled": true
+  },
+  {
+    "mode": "recent-empty",
+    "from": "2026-10-01",
+    "to": "2026-10-02",
+    "message": "报表已核对。次数与会话转化分别展示。",
+    "metrics": [
+      {
+        "name": "track_view",
+        "value": "0"
+      },
+      {
+        "name": "preview_start",
+        "value": "0"
+      },
+      {
+        "name": "preview_qualified",
+        "value": "0"
+      },
+      {
+        "name": "platform_click",
+        "value": "0"
+      },
+      {
+        "name": "clip_start",
+        "value": "0"
+      },
+      {
+        "name": "clip_complete",
+        "value": "0"
+      },
+      {
+        "name": "game_launch_request",
+        "value": "0"
+      },
+      {
+        "name": "game_ready",
+        "value": "暂无数据"
+      },
+      {
+        "name": "save_success",
+        "value": "0"
+      },
+      {
+        "name": "full_audio_start",
+        "value": "0"
+      }
+    ],
+    "platformRate": "暂无数据",
+    "previewRate": "暂无数据"
+  },
+  {
+    "mode": "historical-missing",
+    "from": "2026-01-01",
+    "to": "2026-01-02",
+    "message": "所选历史时间窗缺少完整聚合，暂无数据。",
+    "metrics": [
+      {
+        "name": "track_view",
+        "value": "暂无数据"
+      },
+      {
+        "name": "preview_start",
+        "value": "暂无数据"
+      },
+      {
+        "name": "preview_qualified",
+        "value": "暂无数据"
+      },
+      {
+        "name": "platform_click",
+        "value": "暂无数据"
+      },
+      {
+        "name": "clip_start",
+        "value": "暂无数据"
+      },
+      {
+        "name": "clip_complete",
+        "value": "暂无数据"
+      },
+      {
+        "name": "game_launch_request",
+        "value": "暂无数据"
+      },
+      {
+        "name": "game_ready",
+        "value": "暂无数据"
+      },
+      {
+        "name": "save_success",
+        "value": "暂无数据"
+      },
+      {
+        "name": "full_audio_start",
+        "value": "暂无数据"
+      }
+    ],
+    "platformRate": "暂无数据",
+    "previewRate": "暂无数据"
+  }
+]

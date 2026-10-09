@@ -1,0 +1,92 @@
+{
+  "checkboxLabelHeight": 75.5859375,
+  "client": 305,
+  "controls": [
+    {
+      "height": 44,
+      "id": "external-track",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-metric",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-provider",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-value",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-campaign",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-clip",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-source-kind",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-status",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-from",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-to",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-observed",
+      "width": 231
+    },
+    {
+      "height": 44,
+      "id": "external-source-label",
+      "width": 231
+    },
+    {
+      "height": 18,
+      "id": "external-recognized",
+      "width": 18
+    },
+    {
+      "height": 44,
+      "id": "external-submit",
+      "width": 90
+    },
+    {
+      "height": 44,
+      "id": "external-new",
+      "width": 132
+    }
+  ],
+  "focused": "external-source-kind",
+  "identityDisabled": [
+    "external-track",
+    "external-metric",
+    "external-provider",
+    "external-campaign",
+    "external-clip",
+    "external-from",
+    "external-to"
+  ],
+  "scroll": 305
+}

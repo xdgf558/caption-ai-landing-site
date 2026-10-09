@@ -72,6 +72,7 @@ import { privateReaderRequest } from './redesign/memberPrivacy.js';
 import { runStationContentSchedule } from './redesign/contentSchedule.js';
 import { handleStationEvents, isStationEventPath } from './redesign/analyticsHttp.js';
 import { runStationEventRetention } from './redesign/analyticsStore.js';
+import { runStationReportMaintenance } from './redesign/reportsSchedule.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -23399,14 +23400,15 @@ export default {
   },
 
   async scheduled(controller, env) {
-    const [signal, analytics, mobile, stationContent, stationEvents] = await Promise.allSettled([
+    const [signal, analytics, mobile, stationContent, stationEvents, stationReports] = await Promise.allSettled([
       handleSignalCollectionSchedule(env, {
         cron: cleanText(controller?.cron, 120), scheduledTime: controller?.scheduledTime
       }),
       runMusicAnalyticsRetention(env),
       runMobileMaintenance(env),
       runStationContentSchedule(env),
-      runStationEventRetention(env)
+      runStationEventRetention(env),
+      runStationReportMaintenance(env)
     ]);
     if (analytics.status === 'rejected' || (analytics.value?.available === false && analytics.value.reason !== 'RETENTION_DISABLED')) {
       console.warn('MUSIC_ANALYTICS_RETENTION_UNAVAILABLE');
@@ -23415,6 +23417,7 @@ export default {
     if (mobile.status === 'rejected') throw new Error('MOBILE_MAINTENANCE_UNAVAILABLE');
     if (stationContent.status === 'rejected') console.warn('STATION_CONTENT_SCHEDULE_UNAVAILABLE');
     if (stationEvents.status === 'rejected' || (stationEvents.value?.available === false && stationEvents.value.reason !== 'RETENTION_DISABLED')) console.warn('STATION_EVENT_RETENTION_UNAVAILABLE');
+    if (stationReports.status === 'rejected' || (stationReports.value?.available === false && stationReports.value.reason !== 'RETENTION_DISABLED') || (stationReports.value?.aggregation?.available === false && stationReports.value.aggregation.reason !== 'AGGREGATION_DISABLED')) console.warn('STATION_REPORT_MAINTENANCE_UNAVAILABLE');
   },
 
   async queue(batch, env) {

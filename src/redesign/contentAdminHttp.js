@@ -6,10 +6,12 @@ import { platformData } from './contentAdminModel.js';
 import { runStationContentSchedule } from './contentSchedule.js';
 import { campaignEnabled } from './campaignLinks.js';
 import { campaignReadiness, listCampaigns, createCampaign, readCampaign, setCampaignStatus } from './campaignStore.js';
+import { handleReportAdmin } from './reportsHttp.js';
 
 export async function handleContentAdmin(request,env,actor,query,readBody) {
   if(env.STATION_CONTENT_ADMIN_ENABLED!==true&&env.STATION_CONTENT_ADMIN_ENABLED!=='true')fail('STATION_CONTENT_ADMIN_DISABLED',503);
   const path=new URL(request.url).pathname.slice('/admin/api/music/site-content'.length);
+  if(/^\/reports(?:\/|$)/.test(path))return handleReportAdmin(request,env,actor,query,readBody);
   const campaignPath=/^\/campaigns(?:\/|$)/.test(path)||/^\/promotions\/[^/]+\/campaigns$/.test(path);
   if(campaignPath&&request.method!=='GET'&&request.method!=='HEAD'&&!campaignEnabled(env.STATION_CAMPAIGNS_ENABLED))fail('STATION_CAMPAIGNS_DISABLED',503);
   if(/^\/campaigns(?:\/|$)/.test(path)&&!campaignEnabled(env.STATION_CAMPAIGNS_ENABLED))fail('STATION_CAMPAIGNS_DISABLED',503);
