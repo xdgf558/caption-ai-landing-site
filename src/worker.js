@@ -70,6 +70,8 @@ import { handleStationGameRuntime } from './redesign/gameRuntime.js';
 import { handleStationMemberPage } from './redesign/memberPages.js';
 import { privateReaderRequest } from './redesign/memberPrivacy.js';
 import { runStationContentSchedule } from './redesign/contentSchedule.js';
+import { handleStationEvents, isStationEventPath } from './redesign/analyticsHttp.js';
+import { runStationEventRetention } from './redesign/analyticsStore.js';
 import {
   defaultAdminEmail,
   getAccessToken,
@@ -22911,6 +22913,7 @@ export default {
     if (isMusicPagePath(url.pathname)) return handleMusicPage(request, env);
     if (isMusicShareCardPath(url.pathname)) return handleMusicShareCard(request, env);
     if (isMusicAnalyticsPath(url.pathname)) return handleMusicAnalytics(request, env);
+    if (isStationEventPath(url.pathname)) return handleStationEvents(request, env);
     if (isMusicMediaPath(url.pathname)) return handleMusicMedia(request, env);
     if (isMusicPublicPath(url.pathname)) return handleMusicPublic(request, env);
     if (isStationContentPath(url.pathname)) return handleStationContent(request, env);
@@ -23396,13 +23399,14 @@ export default {
   },
 
   async scheduled(controller, env) {
-    const [signal, analytics, mobile, stationContent] = await Promise.allSettled([
+    const [signal, analytics, mobile, stationContent, stationEvents] = await Promise.allSettled([
       handleSignalCollectionSchedule(env, {
         cron: cleanText(controller?.cron, 120), scheduledTime: controller?.scheduledTime
       }),
       runMusicAnalyticsRetention(env),
       runMobileMaintenance(env),
-      runStationContentSchedule(env)
+      runStationContentSchedule(env),
+      runStationEventRetention(env)
     ]);
     if (analytics.status === 'rejected' || (analytics.value?.available === false && analytics.value.reason !== 'RETENTION_DISABLED')) {
       console.warn('MUSIC_ANALYTICS_RETENTION_UNAVAILABLE');
@@ -23410,6 +23414,7 @@ export default {
     if (signal.status === 'rejected') throw signal.reason;
     if (mobile.status === 'rejected') throw new Error('MOBILE_MAINTENANCE_UNAVAILABLE');
     if (stationContent.status === 'rejected') console.warn('STATION_CONTENT_SCHEDULE_UNAVAILABLE');
+    if (stationEvents.status === 'rejected' || (stationEvents.value?.available === false && stationEvents.value.reason !== 'RETENTION_DISABLED')) console.warn('STATION_EVENT_RETENTION_UNAVAILABLE');
   },
 
   async queue(batch, env) {

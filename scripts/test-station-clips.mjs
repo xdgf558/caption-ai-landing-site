@@ -190,8 +190,8 @@ function clientFixture({ reduced = true, supported = true } = {}) {
   for (const name of ['host', 'retry', 'status', 'title', 'kind', 'select', 'original', 'selector', 'close', 'song', 'next', 'platforms']) dialog.nodes.set('[data-sc-video-' + name + ']', new Node());
   let subscriber, pauses = 0;
   const music = { pause() { pauses++; subscriber?.({ status: 'paused' }); }, subscribe(fn) { subscriber = fn; fn(status); return () => { subscriber = null; }; } };
-  const doc = { activeElement: null, documentElement: {}, querySelector: () => dialog, getElementById: () => main,
-    createElement(type) { if (type !== 'video') return new Node(); const v = new Video([], () => Promise.resolve()); videos.push(v); return v; } };
+  const doc = Object.assign(new EventTarget(), { activeElement: null, documentElement: {}, visibilityState:'visible', querySelector: () => dialog, getElementById: () => main,
+    createElement(type) { if (type !== 'video') return new Node(); const v = new Video([], () => Promise.resolve()); videos.push(v); return v; } });
   Object.defineProperty(globalThis, 'document', { configurable: true, value: doc }); Object.defineProperty(globalThis, 'window', { configurable: true, value: new EventTarget() });
   Object.defineProperty(globalThis, 'matchMedia', { configurable: true, value: () => ({ matches: reduced }) });
   Object.defineProperty(globalThis, 'getComputedStyle', { configurable: true, value: () => ({ getPropertyValue: () => '150ms' }) });

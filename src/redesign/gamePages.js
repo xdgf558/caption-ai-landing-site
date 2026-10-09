@@ -6,6 +6,7 @@ import { readMusicResponse } from './musicResponse.js';
 import { escapeMusicHtml as e } from './musicRender.js';
 import { gameCopy } from './gameCopy.js';
 import { renderGamePage } from './gameRender.js';
+import { eventPageConfiguration } from './analyticsModel.js';
 const locales = { en: 'en', ja: 'ja', 'zh-hans': 'zh-Hans', 'zh-hant': 'zh-Hant' };
 const enabled = value => value === true || value === 'true';
 const headers = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store',
@@ -36,6 +37,7 @@ async function template(request, env, model, status) {
     .on('head', { element(node) { node.append(metadata, { html: true }); } })
     .on('[data-sc-language]', { element(node) { node.setAttribute('href', stationLanguageHref(node.getAttribute('data-sc-language'), url.pathname)); } })
     .on('[data-sc-game-page]', { element(node) { node.setInnerContent(renderGamePage(model), { html: true }); } })
+    .on('body', { element(node) { node.append('<script id="sc-event-bootstrap" type="application/json">'+JSON.stringify(eventPageConfiguration(env))+'</script>',{html:true}); } })
     .transform(new Response(html, { status, headers }));
 }
 export async function handleStationGamePage(request, env, { clock = Date.now, deadlineMs = 10000 } = {}) {

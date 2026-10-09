@@ -2,10 +2,11 @@ import { GAME_PROTOCOL, GAME_ID, GAME_PATH, GAME_START_TIMEOUT_MS, GAME_STOP_TIM
 // One frame per gesture. A ready message, never iframe load, confirms startup.
 export function createStationGameSession({ origin, locale, createFrame, mount, pauseMedia, view = () => {},
   uuid = () => crypto.randomUUID(), clock = () => performance.now(), timer = setTimeout, clearTimer = clearTimeout,
-  startTimeoutMs = GAME_START_TIMEOUT_MS, stopTimeoutMs = GAME_STOP_TIMEOUT_MS } = {}) {
+  startTimeoutMs = GAME_START_TIMEOUT_MS, stopTimeoutMs = GAME_STOP_TIMEOUT_MS, observer=()=>{} } = {}) {
   let frame = null, handlers = null, deadline = null, status = 'idle', error = null, launchId = null, startedAt = 0, elapsedMs = null, destroyed = false, finishStop = null;
   const snapshot = () => ({ status, error, launchId, elapsedMs });
   const emit = () => { if (!destroyed) view(snapshot()); };
+  const observe=(name,details={})=>{try{observer(name,{launchId,...details});}catch{}};
   function retire() {
     clearTimer(deadline); deadline = null; handlers?.abort(); handlers = null; finishStop = null;
     const previous = frame; frame = null; launchId = null;
@@ -32,7 +33,7 @@ export function createStationGameSession({ origin, locale, createFrame, mount, p
     try {
       pauseMedia();
       const id = uuid(); if (!gameLaunchId(id)) throw new Error('Invalid launch ID');
-      launchId = id; startedAt = clock(); frame = createFrame(); handlers = new AbortController();
+      launchId = id; startedAt = clock();observe('game_launch_request');frame = createFrame(); handlers = new AbortController();
       const current = frame;
       current.addEventListener('error', () => { if (frame === current) stop('error', 'load'); }, { signal: handlers.signal });
       const url = new URL(GAME_PATH, origin);
@@ -51,8 +52,9 @@ export function createStationGameSession({ origin, locale, createFrame, mount, p
     if (data.type === 'stopped' && status === 'stopping') { finishStop?.(); return true; }
     if (status === 'stopping') return false;
     if (data.type === 'ready' && status === 'loading') {
-      clearTimer(deadline); deadline = null; elapsedMs = Math.max(0, clock() - startedAt); status = 'ready'; emit(); return true;
+      clearTimer(deadline); deadline = null; elapsedMs = Math.max(0, clock() - startedAt); status = 'ready'; emit();observe('game_ready');return true;
     }
+    if(data.type==='save_success'&&status==='ready'&&data.save_kind==='local'&&gameLaunchId(data.save_operation_id)){observe('save_success',{saveOperationId:data.save_operation_id});return true;}
     if (data.type === 'recovery' && ['loading', 'ready', 'recovery'].includes(status)) {
       clearTimer(deadline); deadline = null; status = 'recovery'; emit(); return true;
     }

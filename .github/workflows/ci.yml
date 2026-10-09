@@ -91,6 +91,9 @@ jobs:
       - name: Verify registered Campaigns, QR destinations and attribution contexts
         run: npm run test:redesign:campaigns
 
+      - name: Verify Station Cat consent, confirmed events, dedupe and controlled retention
+        run: npm run test:redesign:events
+
       - name: Verify isolated Station Cat music pages against the built Astro shell
         run: npm run test:redesign:music
 

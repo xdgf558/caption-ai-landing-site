@@ -5,11 +5,16 @@ import { contentBase, uuid, slug, positive } from './publicValidation.js';
 import { stationLocales } from './routes.js';
 import { requestStationMusic } from './musicRequest.js';
 import { createStationPlaybackStore } from './musicResume.js';
+import { createStationMediaMeasurement } from './analyticsMedia.js';
+import { observeStationEvent, stationEventsAllowed } from './analyticsControls.js';
 
 const active = state => ['playing', 'loading', 'buffering'].includes(state.status);
 export function createStationMusicSession(audio, { origin = globalThis.location?.origin, fetcher = globalThis.fetch,
   local = createMusicLocalData(), store = createStationPlaybackStore(), now = Date.now } = {}) {
   const player = createMusicPlayer(audio, { origin, sourceFor: stationMusicSource, resetRestoredEnd: true });
+  const measurement=createStationMediaMeasurement({kind:'music',emit:observeStationEvent,enabled:stationEventsAllowed});
+  const visibility=()=>measurement.resetSample();
+  globalThis.document?.addEventListener('visibilitychange',visibility);
   const subscribers = new Set();
   let currentTrack = null, selectedVariant = null, restored = null, prepared = null, pending = null, notice = null;
   let controller = null, requestVersion = 0, destroyed = false, gameActive = false, locale = 'zh-Hant', lastSavedSecond = -1, lastSavedStatus = '';
@@ -33,7 +38,10 @@ export function createStationMusicSession(audio, { origin = globalThis.location?
       previewRevision: selectedVariant === 'preview' ? currentTrack.preview.revision : null,
       positionSec: state.status === 'ended' ? 0 : state.currentTimeSec });
   }
-  const stateSubscription = player.subscribe(() => { save(); emit(); });
+  const stateSubscription = player.subscribe(state => { save(); emit();
+    measurement.observe({playbackId:state.playbackId,trackId:state.activeTrackId,variant:state.activeVariant,status:state.status,
+      positionSec:state.currentTimeSec,seeking:state.seeking,nativeEnded:audio.ended===true});
+  });
   const startSubscription = player.onPlaybackStart(state => local.recordPlayed(state.activeTrackId));
   const settings = local.snapshot().settings;
   player.setVolume(settings.volume); player.setMuted(settings.muted);
@@ -152,6 +160,6 @@ export function createStationMusicSession(audio, { origin = globalThis.location?
     seek(value) { return player.seek(value); },
     setVolume(value) { player.setVolume(value); const saved = local.snapshot(); local.savePlayback({ queue: saved.queue,
       settings: { ...saved.settings, volume: player.snapshot().volume } }); },
-    destroy() { if (destroyed) return; suspend(); destroyed = true; stateSubscription(); startSubscription(); player.destroy(); local.destroy(); subscribers.clear(); }
+    destroy() { if (destroyed) return; suspend(); destroyed = true; globalThis.document?.removeEventListener('visibilitychange',visibility); measurement.reset();stateSubscription(); startSubscription(); player.destroy(); local.destroy(); subscribers.clear(); }
   };
 }

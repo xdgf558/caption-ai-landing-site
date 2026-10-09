@@ -16,7 +16,7 @@ export function campaignMigrationGroups(){
     return [...groups,{name:campaignMigration,statements}];
   }finally{parser.close();}
 }
-export async function seedCampaignObjects(runtime,tracks,actor=contentAdminActor){
+export async function seedCampaignObjects(runtime,tracks,actor=contentAdminActor,materializeMedia){
   const ctx=(v=1)=>({actorId:actor,key:randomUUID(),ifMatch:`"edit-${v}"`});
   for(const [index,t]of tracks.slice(0,2).entries()){
     const metadata={...t.metadata,originalLocale:'zh-Hans',title:{'zh-Hans':'本机示例 · 推广资料 '+(index?'B':'A')},summary:{'zh-Hans':'仅用于 Campaign 操作核对，主推作品与真实发行信息仍待确定。'}};
@@ -25,7 +25,7 @@ export async function seedCampaignObjects(runtime,tracks,actor=contentAdminActor
     await contentPublication(runtime,'tracks',t.id,'publish',{revision:1,reason:'本机测试公开'},ctx());
   }
   const parent=tracks[0],clip=(await createContentObject(runtime,'clips',{trackId:parent.id,clipType:'short_video',data:{metadata:{originalLocale:'zh-Hans',title:{'zh-Hans':'本机示例 · 推广短片'}}},reason:'隔离测试短片'},ctx())).id;
-  const video=randomUUID(),poster=randomUUID();await mediaFixture(runtime.db,runtime.bucket,clip,'short_video',video);await mediaFixture(runtime.db,runtime.bucket,clip,'poster',poster);
+  const video=randomUUID(),poster=randomUUID();await mediaFixture(runtime.db,runtime.bucket,clip,'short_video',video,materializeMedia);await mediaFixture(runtime.db,runtime.bucket,clip,'poster',poster,materializeMedia);
   await saveContentObject(runtime,'clips',clip,{revision:1,data:{metadata:{originalLocale:'zh-Hans',title:{'zh-Hans':'本机示例 · 推广短片'}},mediaAssetId:video,posterAssetId:poster,durationMs:30000},reason:'本机素材'},ctx());
   await contentPublication(runtime,'clips',clip,'publish',{revision:2,reason:'本机公开短片'},ctx(2));
   for(const [i,t]of tracks.slice(0,2).entries()){

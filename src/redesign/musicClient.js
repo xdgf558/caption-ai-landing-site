@@ -11,6 +11,7 @@ import { readMusicResponse } from './musicResponse.js';
 import { mountStationPlatforms } from './platformClient.js';
 import { mountStationClips } from './clipClient.js';
 import { mountCampaignAttribution } from './attributionSession.js';
+import { observeStationEvent } from './analyticsControls.js';
 
 export function mountStationMusic() {
   const root = document.querySelector('[data-sc-music-page]'), bootstrap = document.getElementById('sc-music-bootstrap');
@@ -25,7 +26,7 @@ export function mountStationMusic() {
   const tracks = new Map(), session = getStationMusicSession(model.locale);
   if (!session) { disposeAttribution(); delete root.dataset.mounted; return () => {}; }
   const local = session.local;
-  const disposePlatforms = mountStationPlatforms(root, model.locale);
+  const disposePlatforms = mountStationPlatforms(root, model.locale,{observer:payload=>observeStationEvent('platform_click',{trackId:payload.trackId,platformLinkId:payload.linkId,interactionId:crypto.randomUUID()},true)});
   const disposeClips = mountStationClips(root, model, session);
   const $ = selector => document.querySelector(selector);
   let disposed = false, catalogGeneration = 0, catalogRequest, pendingCatalog = null;

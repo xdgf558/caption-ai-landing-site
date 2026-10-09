@@ -45,6 +45,9 @@
       return fail("unavailable");
     }
     observed = raw;
+    // Telemetry follows the read-back confirmation. It never controls the write,
+    // serializes a save, or claims that a queued cloud upload has succeeded.
+    try { window.CatGameHostBridge?.localSaved?.(); } catch (error) {}
     if (window.CatGameCloud && typeof window.CatGameCloud.onLocalSave === "function") window.CatGameCloud.onLocalSave(nextData);
     return nextData;
   }
@@ -102,6 +105,7 @@
       localStorage.setItem(activeStorageKey, serialized);
       if (localStorage.getItem(activeStorageKey) !== serialized) return fail("unavailable");
       observed = serialized; blocked = false;
+      try { window.CatGameHostBridge?.localSaved?.(); } catch (error) {}
       game.state.game = normalized;
       if (window.CatGameCloud && typeof window.CatGameCloud.onLocalSave === "function") window.CatGameCloud.onLocalSave(normalized);
       return normalized;

@@ -1,6 +1,7 @@
 import { createStationGameSession } from './gameSession.js';
 import { getStationMusicSession, peekStationMusicSession } from './musicPlayerView.js';
 import { gameHostCopy } from './gameHostCopy.js';
+import { observeStationEvent,stationRuntimeGameId } from './analyticsControls.js';
 export function mountStationGameHost() {
   const entry = document.querySelector('[data-sc-game-entry]'), shell = document.querySelector('[data-station-shell]');
   const dialog = document.querySelector('[data-sc-game-dialog]');
@@ -28,6 +29,7 @@ export function mountStationGameHost() {
     }
   }
   const session = createStationGameSession({ origin: location.origin, locale,
+    observer(name,details){const gameId=stationRuntimeGameId();if(gameId)observeStationEvent(name,{...details,gameId});},
     createFrame() {
       const frame = document.createElement('iframe'); frame.title = copy.frame;
       frame.setAttribute('referrerpolicy', 'same-origin'); return frame;

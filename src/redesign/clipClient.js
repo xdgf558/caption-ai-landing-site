@@ -1,6 +1,8 @@
 import { stationClips, clipOriginalLinks, clipNextLinks } from './clipView.js';
 import { createStationClipSession } from './clipSession.js';
 import { musicCopy, providerName } from './musicCopy.js';
+import { createStationMediaMeasurement } from './analyticsMedia.js';
+import { observeStationEvent,stationEventsAllowed } from './analyticsControls.js';
 
 export function mountStationClips(root, model, music) {
   const clips = stationClips(model), dialog = document.querySelector('[data-sc-clip-dialog]'), copy = musicCopy[model.locale];
@@ -8,14 +10,18 @@ export function mountStationClips(root, model, music) {
   const handlers = new AbortController(), panel = dialog.querySelector('.t-modal'), host = dialog.querySelector('[data-sc-video-host]');
   const $ = selector => dialog.querySelector(selector);
   const next = clipNextLinks(model.track, model.locale);
+  const measurement=createStationMediaMeasurement({kind:'clip',emit:observeStationEvent,enabled:stationEventsAllowed});
   if (next.song) $('[data-sc-video-song]').href = next.song.href;
   for (const entry of next.platforms) {
     const link = document.createElement('a'); link.href = entry.href; link.target = '_blank'; link.rel = 'noopener noreferrer';
     link.textContent = providerName(entry.provider, model.locale); $('[data-sc-video-platforms]').append(link);
+    const clicked=event=>{if(event.isTrusted===false||event.type==='auxclick'&&event.button!==1)return;observeStationEvent('platform_click',{trackId:model.track.id,platformLinkId:entry.id,interactionId:crypto.randomUUID()},true);};
+    link.addEventListener('click',clicked,{signal:handlers.signal});link.addEventListener('auxclick',clicked,{signal:handlers.signal});
   }
   let trigger = null, disposed = false, closing = false, closeTimer = null, closeVersion = 0;
   const listen = (target, type, fn) => target.addEventListener(type, fn, { signal: handlers.signal });
   const controller = createStationClipSession({ clips, createVideo: () => document.createElement('video'), pauseMusic: () => music.pause(),
+    observer({clip,video,playbackId,status}){measurement.observe({playbackId,trackId:clip?.trackId,clipId:clip?.id,variant:'clip',status:status==='playing'&&(video?.paused||video?.readyState<2)?'paused':status,positionSec:video?.currentTime??0,seeking:video?.seeking,nativeEnded:video?.ended===true});},
     mount(node) { host.replaceChildren(node); },
     view(state) {
       dialog.dataset.videoState = state.status; dialog.dataset.clipId = state.clip?.id || '';
@@ -83,5 +89,6 @@ export function mountStationClips(root, model, music) {
   const unsubscribe = music.subscribe(state => { if (controller.snapshot().clip && ['playing', 'loading', 'buffering'].includes(state.status)) close({ immediate: true }); });
   listen(window, 'pagehide', () => close({ immediate: true, focus: false }));
   listen(window, 'station:game-enter', () => close({ immediate: true, focus: false }));
+  listen(document,'visibilitychange',()=>measurement.resetSample());
   return () => { if (disposed) return; disposed = true; close({ immediate: true, focus: false }); handlers.abort(); unsubscribe(); controller.destroy(); };
 }

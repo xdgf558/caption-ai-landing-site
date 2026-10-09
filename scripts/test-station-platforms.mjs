@@ -87,9 +87,9 @@ function domFixture() {
   const button = { hidden: true, isConnected: true, closest: selector => selector.includes('row') ? rowNode : selector.includes('copy') ? button : null };
   const anchor = { dataset: { trackId: track.id, linkId: link.id, provider: link.provider }, getAttribute: () => link.href,
     closest: selector => selector.startsWith('a[') ? anchor : null };
-  let handler;
-  const root = { querySelectorAll: () => [button], contains: node => node === anchor || node === button, addEventListener: (type, fn) => { handler = fn; } };
-  return { root, result, input, button, anchor, click(node) { handler({ target: node, preventDefault() { assert.fail('native navigation intercepted'); } }); } };
+  const handlers = new Map();
+  const root = { querySelectorAll: () => [button], contains: node => node === anchor || node === button, addEventListener: (type, fn) => { handlers.set(type,fn); } };
+  return { root, result, input, button, anchor, click(node, type='click', extra={}) { handlers.get(type)?.({ target: node, ...extra, preventDefault() { assert.fail('native navigation intercepted'); } }); } };
 }
 test('delegated native click with offline observer does not prevent navigation; copy denial selects its readable URL', async () => {
   const dom = domFixture();
@@ -104,6 +104,11 @@ test('a late clipboard result cannot overwrite a newer attempt or an unloaded pa
   dom.click(dom.button); dom.click(dom.button); resolves[0]();
   await new Promise(resolve => setImmediate(resolve)); assert.equal(dom.result.textContent, 'Copying…');
   dispose(); resolves[1](); await new Promise(resolve => setImmediate(resolve)); assert.equal(dom.result.textContent, 'Copying…');
+});
+test('confirmed middle-button intent is observed once; synthetic clicks and copying do not claim navigation',()=>{
+  const dom=domFixture(),seen=[];const dispose=mountStationPlatforms(dom.root,'en',{observer:value=>seen.push(value),navigator:{}});
+  dom.click(dom.anchor,'click',{isTrusted:false});dom.click(dom.anchor,'auxclick',{isTrusted:true,button:2});assert.equal(seen.length,0);
+  dom.click(dom.anchor,'auxclick',{isTrusted:true,button:1});assert.equal(seen.length,1);dispose();
 });
 
 async function apiFixture() { const f = await contentFixture({ externalLinks: false }); fixtures.push(f); return f; }

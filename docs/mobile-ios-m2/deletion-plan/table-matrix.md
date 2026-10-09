@@ -102,6 +102,9 @@
 | music / `station_clip_publications` | `publisher_content_keep` | FK 0 (clip_id) → station_clips (id)：NO ACTION |
 | music / `station_clip_revisions` | `publisher_content_keep` | FK 0 (id, poster_asset_id) → station_media_assets (owner_clip_id, id)：NO ACTION；FK 1 (id, media_asset_id) → station_media_assets (owner_clip_id, id)：NO ACTION；FK 2 (id) → station_clips (id)：NO ACTION |
 | music / `station_clips` | `publisher_content_keep` | FK 0 (id, published_revision) → station_clip_revisions (id, revision)：NO ACTION；FK 1 (id, draft_revision) → station_clip_revisions (id, revision)：NO ACTION；FK 2 (track_id) → music_tracks (id)：NO ACTION |
+| music / `station_event_rates` | `redesign_analytics_review` | 无外键；仍须核对软关联/JSON |
+| music / `station_event_retention_guard` | `redesign_analytics_review` | 无外键；仍须核对软关联/JSON |
+| music / `station_event_retention_health` | `redesign_analytics_review` | 无外键；仍须核对软关联/JSON |
 | music / `station_game_revisions` | `publisher_content_keep` | FK 0 (id) → station_games (id)：NO ACTION |
 | music / `station_games` | `publisher_content_keep` | FK 0 (id, published_revision) → station_game_revisions (id, revision)：NO ACTION；FK 1 (id, draft_revision) → station_game_revisions (id, revision)：NO ACTION |
 | music / `station_home_configs` | `publisher_content_keep` | FK 0 (id, published_revision) → station_home_revisions (id, revision)：NO ACTION；FK 1 (id, draft_revision) → station_home_revisions (id, revision)：NO ACTION |

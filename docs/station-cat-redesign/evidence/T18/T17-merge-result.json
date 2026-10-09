@@ -1,0 +1,22 @@
+{
+  "headRefOid": "d616333d1f4fc516398db578d79316b9e0b905db",
+  "mergeCommit": {
+    "oid": "73fc199dcd367a3721ce0115e2bf34aead80ff90"
+  },
+  "mergeable": "UNKNOWN",
+  "mergedAt": "2026-10-09T07:04:39Z",
+  "state": "MERGED",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-09T07:04:15Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/37893794646/job/113700421248",
+      "name": "test",
+      "startedAt": "2026-10-09T06:29:38Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    }
+  ],
+  "url": "https://github.com/xdgf558/caption-ai-landing-site/pull/202"
+}

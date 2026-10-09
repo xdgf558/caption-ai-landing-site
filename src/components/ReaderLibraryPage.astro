@@ -4,6 +4,7 @@ import '../styles/reader-center-night.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StationBrandLayout from '../layouts/StationBrandLayout.astro';
 import MemberServices from './redesign/MemberServices.astro';
+import AnalyticsConsent from './redesign/AnalyticsConsent.astro';
 import { memberCopy } from '../redesign/memberCopy.js';
 import '../redesign/member.css';
 import CreemTrustBadge from './CreemTrustBadge.astro';
@@ -222,6 +223,7 @@ const clientConfig = {
   ]}
 >
   <script id="reader-client-config" type="application/json" set:html={JSON.stringify(clientConfig)} />
+  {redesign && <AnalyticsConsent slot="analytics-controls" lang={lang} />}
   <div class="reader-center-v2" data-sc-member={redesign ? true : undefined}>
     {redesign && <header class="sc-member-heading"><p class="sc-member-kicker">YOUR LITTLE STATION</p><h1>{member.title}</h1><p>{member.intro}</p></header>}
     {redesign && <div class="sc-member-account-status" role="status" aria-live="polite" hidden><p id="sc-member-account-message"></p><button type="button" id="sc-member-account-refresh">{member.retry}</button></div>}
