@@ -1,0 +1,19 @@
+{
+  "kind": "source schema and draft classification only",
+  "base": "cd1ea33964f47c2e3806f81c8b01a12f772caf4e",
+  "readerTablesUnchanged": 64,
+  "existingMusicTablesUnchanged": 27,
+  "existingStationTablesUnchanged": 24,
+  "existingMigrationHashesUnchanged": 57,
+  "newTables": {
+    "station_external_metrics": "redesign_analytics_review",
+    "station_report_health": "redesign_analytics_review",
+    "station_report_jobs": "redesign_analytics_review",
+    "station_report_operations": "admin_audit_review",
+    "station_report_retention_guard": "redesign_analytics_review",
+    "station_report_snapshots": "redesign_analytics_review"
+  },
+  "approved": false,
+  "executionEnabled": false,
+  "noLiveData": true
+}

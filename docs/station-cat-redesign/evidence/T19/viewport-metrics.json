@@ -1,0 +1,562 @@
+[
+  {
+    "width": 320,
+    "client": 305,
+    "font": "system-ui, -apple-system, \"PingFang SC\", sans-serif",
+    "scroll": 305,
+    "titleSize": "28px",
+    "viewport": 320,
+    "visibleControls": [
+      {
+        "height": 44,
+        "id": "report-reload",
+        "label": "重新核对报表工作区",
+        "width": 44
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "7 天",
+        "width": 73
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "14 天",
+        "width": 73
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "30 天",
+        "width": 73
+      },
+      {
+        "height": 44,
+        "id": "report-from",
+        "label": "",
+        "width": 231
+      },
+      {
+        "height": 44,
+        "id": "report-to",
+        "label": "",
+        "width": 231
+      },
+      {
+        "height": 44,
+        "id": "report-track",
+        "label": "全部歌曲archived-no-audiodraft-no-audioearly-accesslimited-activelimited-expired本机示例 · 推广资料 Aunpublished本机示例 · 推广资料 B",
+        "width": 231
+      },
+      {
+        "height": 44,
+        "id": "report-source",
+        "label": "全部渠道douyin直接 / 未提供渠道无法核验的归因",
+        "width": 231
+      },
+      {
+        "height": 44,
+        "id": "report-campaign",
+        "label": "全部 Campaignevent-douyin · douyin",
+        "width": 231
+      },
+      {
+        "height": 44,
+        "id": "report-clip",
+        "label": "全部素材短片 · ad9ebcad",
+        "width": 231
+      },
+      {
+        "height": 44,
+        "id": "report-provider",
+        "label": "全部平台网易云音乐汽水音乐Apple MusicSpotifyYouTube",
+        "width": 231
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "查看报表",
+        "width": 231
+      },
+      {
+        "height": 56,
+        "id": "",
+        "label": "统计口径与留存",
+        "width": 231
+      },
+      {
+        "height": 44,
+        "id": "report-save-snapshot",
+        "label": "保留此时间窗的精确聚合",
+        "width": 273
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "修订此记录",
+        "width": 96
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "修订此记录",
+        "width": 96
+      },
+      {
+        "height": 56,
+        "id": "",
+        "label": "登记或修订平台数据",
+        "width": 231
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "client": 375,
+    "font": "system-ui, -apple-system, \"PingFang SC\", sans-serif",
+    "scroll": 375,
+    "titleSize": "28px",
+    "viewport": 390,
+    "visibleControls": [
+      {
+        "height": 44,
+        "id": "report-reload",
+        "label": "重新核对报表工作区",
+        "width": 44
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "7 天",
+        "width": 96
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "14 天",
+        "width": 96
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "30 天",
+        "width": 96
+      },
+      {
+        "height": 44,
+        "id": "report-from",
+        "label": "",
+        "width": 301
+      },
+      {
+        "height": 44,
+        "id": "report-to",
+        "label": "",
+        "width": 301
+      },
+      {
+        "height": 44,
+        "id": "report-track",
+        "label": "全部歌曲archived-no-audiodraft-no-audioearly-accesslimited-activelimited-expired本机示例 · 推广资料 Aunpublished本机示例 · 推广资料 B",
+        "width": 301
+      },
+      {
+        "height": 44,
+        "id": "report-source",
+        "label": "全部渠道douyin直接 / 未提供渠道无法核验的归因",
+        "width": 301
+      },
+      {
+        "height": 44,
+        "id": "report-campaign",
+        "label": "全部 Campaignevent-douyin · douyin",
+        "width": 301
+      },
+      {
+        "height": 44,
+        "id": "report-clip",
+        "label": "全部素材短片 · ad9ebcad",
+        "width": 301
+      },
+      {
+        "height": 44,
+        "id": "report-provider",
+        "label": "全部平台网易云音乐汽水音乐Apple MusicSpotifyYouTube",
+        "width": 301
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "查看报表",
+        "width": 301
+      },
+      {
+        "height": 56,
+        "id": "",
+        "label": "统计口径与留存",
+        "width": 301
+      },
+      {
+        "height": 44,
+        "id": "report-save-snapshot",
+        "label": "保留此时间窗的精确聚合",
+        "width": 343
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "修订此记录",
+        "width": 96
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "修订此记录",
+        "width": 96
+      },
+      {
+        "height": 56,
+        "id": "",
+        "label": "登记或修订平台数据",
+        "width": 301
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "client": 753,
+    "font": "system-ui, -apple-system, \"PingFang SC\", sans-serif",
+    "scroll": 753,
+    "titleSize": "26px",
+    "viewport": 768,
+    "visibleControls": [
+      {
+        "height": 44,
+        "id": "report-reload",
+        "label": "重新核对报表工作区",
+        "width": 44
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "7 天",
+        "width": 60
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "14 天",
+        "width": 67
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "30 天",
+        "width": 69
+      },
+      {
+        "height": 44,
+        "id": "report-from",
+        "label": "",
+        "width": 312
+      },
+      {
+        "height": 44,
+        "id": "report-to",
+        "label": "",
+        "width": 312
+      },
+      {
+        "height": 44,
+        "id": "report-track",
+        "label": "全部歌曲archived-no-audiodraft-no-audioearly-accesslimited-activelimited-expired本机示例 · 推广资料 Aunpublished本机示例 · 推广资料 B",
+        "width": 312
+      },
+      {
+        "height": 44,
+        "id": "report-source",
+        "label": "全部渠道douyin直接 / 未提供渠道无法核验的归因",
+        "width": 312
+      },
+      {
+        "height": 44,
+        "id": "report-campaign",
+        "label": "全部 Campaignevent-douyin · douyin",
+        "width": 312
+      },
+      {
+        "height": 44,
+        "id": "report-clip",
+        "label": "全部素材短片 · ad9ebcad",
+        "width": 312
+      },
+      {
+        "height": 44,
+        "id": "report-provider",
+        "label": "全部平台网易云音乐汽水音乐Apple MusicSpotifyYouTube",
+        "width": 312
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "查看报表",
+        "width": 312
+      },
+      {
+        "height": 56,
+        "id": "",
+        "label": "统计口径与留存",
+        "width": 647
+      },
+      {
+        "height": 44,
+        "id": "report-save-snapshot",
+        "label": "保留此时间窗的精确聚合",
+        "width": 205
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "修订此记录",
+        "width": 96
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "修订此记录",
+        "width": 96
+      },
+      {
+        "height": 56,
+        "id": "",
+        "label": "登记或修订平台数据",
+        "width": 643
+      }
+    ]
+  },
+  {
+    "width": 1024,
+    "client": 1009,
+    "font": "system-ui, -apple-system, \"PingFang SC\", sans-serif",
+    "scroll": 1009,
+    "titleSize": "26px",
+    "viewport": 1024,
+    "visibleControls": [
+      {
+        "height": 44,
+        "id": "report-reload",
+        "label": "重新核对报表工作区",
+        "width": 44
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "7 天",
+        "width": 60
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "14 天",
+        "width": 67
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "30 天",
+        "width": 69
+      },
+      {
+        "height": 44,
+        "id": "report-from",
+        "label": "",
+        "width": 440
+      },
+      {
+        "height": 44,
+        "id": "report-to",
+        "label": "",
+        "width": 440
+      },
+      {
+        "height": 44,
+        "id": "report-track",
+        "label": "全部歌曲archived-no-audiodraft-no-audioearly-accesslimited-activelimited-expired本机示例 · 推广资料 Aunpublished本机示例 · 推广资料 B",
+        "width": 440
+      },
+      {
+        "height": 44,
+        "id": "report-source",
+        "label": "全部渠道douyin直接 / 未提供渠道无法核验的归因",
+        "width": 440
+      },
+      {
+        "height": 44,
+        "id": "report-campaign",
+        "label": "全部 Campaignevent-douyin · douyin",
+        "width": 440
+      },
+      {
+        "height": 44,
+        "id": "report-clip",
+        "label": "全部素材短片 · ad9ebcad",
+        "width": 440
+      },
+      {
+        "height": 44,
+        "id": "report-provider",
+        "label": "全部平台网易云音乐汽水音乐Apple MusicSpotifyYouTube",
+        "width": 440
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "查看报表",
+        "width": 440
+      },
+      {
+        "height": 56,
+        "id": "",
+        "label": "统计口径与留存",
+        "width": 903
+      },
+      {
+        "height": 44,
+        "id": "report-save-snapshot",
+        "label": "保留此时间窗的精确聚合",
+        "width": 205
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "修订此记录",
+        "width": 96
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "修订此记录",
+        "width": 96
+      },
+      {
+        "height": 56,
+        "id": "",
+        "label": "登记或修订平台数据",
+        "width": 899
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "client": 1425,
+    "font": "system-ui, -apple-system, \"PingFang SC\", sans-serif",
+    "scroll": 1425,
+    "titleSize": "26px",
+    "viewport": 1440,
+    "visibleControls": [
+      {
+        "height": 44,
+        "id": "report-reload",
+        "label": "重新核对报表工作区",
+        "width": 44
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "7 天",
+        "width": 60
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "14 天",
+        "width": 67
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "30 天",
+        "width": 69
+      },
+      {
+        "height": 44,
+        "id": "report-from",
+        "label": "",
+        "width": 314
+      },
+      {
+        "height": 44,
+        "id": "report-to",
+        "label": "",
+        "width": 314
+      },
+      {
+        "height": 44,
+        "id": "report-track",
+        "label": "全部歌曲archived-no-audiodraft-no-audioearly-accesslimited-activelimited-expired本机示例 · 推广资料 Aunpublished本机示例 · 推广资料 B",
+        "width": 314
+      },
+      {
+        "height": 44,
+        "id": "report-source",
+        "label": "全部渠道douyin直接 / 未提供渠道无法核验的归因",
+        "width": 314
+      },
+      {
+        "height": 44,
+        "id": "report-campaign",
+        "label": "全部 Campaignevent-douyin · douyin",
+        "width": 314
+      },
+      {
+        "height": 44,
+        "id": "report-clip",
+        "label": "全部素材短片 · ad9ebcad",
+        "width": 314
+      },
+      {
+        "height": 44,
+        "id": "report-provider",
+        "label": "全部平台网易云音乐汽水音乐Apple MusicSpotifyYouTube",
+        "width": 314
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "查看报表",
+        "width": 314
+      },
+      {
+        "height": 56,
+        "id": "",
+        "label": "统计口径与留存",
+        "width": 1319
+      },
+      {
+        "height": 44,
+        "id": "report-save-snapshot",
+        "label": "保留此时间窗的精确聚合",
+        "width": 205
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "修订此记录",
+        "width": 96
+      },
+      {
+        "height": 44,
+        "id": "",
+        "label": "修订此记录",
+        "width": 96
+      },
+      {
+        "height": 56,
+        "id": "",
+        "label": "登记或修订平台数据",
+        "width": 1315
+      }
+    ]
+  }
+]

@@ -6,6 +6,7 @@ import { STATION_EVENT_VERSION, STATION_EVENT_RETENTION, eventEnabled, eventConf
 import { campaignEnabled, validCampaignRecord, campaignLocales, campaignLandingPath } from './campaignLinks.js';
 import { campaignEligibility } from './campaignStore.js';
 import { uuid, platform } from './publicValidation.js';
+import { beginEventFlight, pruneEventFlights } from './reportSealing.js';
 
 const MINUTE=60000, HOUR=60*MINUTE, DAY=24*HOUR;
 export const eventMigration='0016_station_event_collection.sql';
@@ -48,6 +49,7 @@ export async function runStationEventRetention(env,{clock=Date.now,rounds=10}={}
   try {
     const now=clock();if(!Number.isSafeInteger(now)||now<0||!Number.isInteger(rounds)||rounds<1||rounds>10)throw new Error('input');
     const s=database(env);await schema(s);
+    await pruneEventFlights(s,now);
     const cutoff=now+HOUR;
     for(let i=0;i<rounds;i++){
       const result=(await s.batch([
@@ -132,24 +134,45 @@ async function validFull(s,e,request,env,now) {
 }
 export async function collectStationEvents(request,env,events,now) {
   const s=await checkedEventStore(env,now);await admit(s,request,env,events,now);
-  const statements=[],attributionCache=new Map();
-  for(const e of events){
-    // Lost-response retry: never overwrite a receipt or require the content to
-    // remain published. A changed payload with the same UUID cannot append.
-    if(rows(await s.prepare('SELECT event_id FROM station_analytics_events WHERE event_id=? LIMIT 1').bind(e.eventId).all()).length)continue;
-    if(e.name==='platform_click')await validPlatform(s,e,request,now);
-    if(e.name==='full_audio_start')await validFull(s,e,request,env,now);
-    const d=await dimensions(s,e,env,now,attributionCache),guard=eventGuard(e,now);
-    const values=[e.eventId,e.name,e.occurredAt,now,e.trackId,e.clipId,e.gameId,d.id,e.platformLinkId,e.sessionId,e.playbackId,e.interactionId,e.launchId,e.saveOperationId,e.contextId,e.sessionScope,d.kind,d.source,d.medium,d.first,e.deviceClass,e.listenedMs,Number(e.mediaEnded),Number(Math.abs(e.occurredAt-now)>5*MINUTE),STATION_EVENT_VERSION,now+90*DAY];
-    // Content guard, semantic dedupe and append happen on the primary inside a
-    // D1 batch. In-batch starts precede completions. No SELECT-then-increment.
-    const placeholders=values.map((_,i)=>'?'+(guard.params.length+i+1));
-    const duplicates=`NOT EXISTS(SELECT 1 FROM station_analytics_events WHERE event_id=${placeholders[0]} OR (event_name=${placeholders[1]} AND (playback_id IS NOT NULL AND playback_id=${placeholders[10]} OR interaction_id IS NOT NULL AND interaction_id=${placeholders[11]} OR event_name IN ('game_launch_request','game_ready') AND launch_id=${placeholders[12]} OR save_operation_id IS NOT NULL AND save_operation_id=${placeholders[13]})))`;
-    statements.push(s.prepare(`INSERT INTO station_analytics_events(event_id,event_name,occurred_at,received_at,track_id,clip_id,game_id,campaign_id,platform_link_id,session_id,playback_id,interaction_id,launch_id,save_operation_id,context_id,session_scope,attribution_kind,campaign_source,campaign_medium,first_campaign_id,device_class,listened_ms,media_ended,time_anomaly,consent_version,expires_at) SELECT ${placeholders.join(',')} WHERE ${guard.sql} AND ${duplicates} RETURNING event_id`).bind(...guard.params,...values));
+  let flight=null;
+  try{
+    flight=await beginEventFlight(s,now);
+    const statements=[],attributionCache=new Map();
+    for(const e of events){
+      // Lost-response retry: never overwrite a receipt or require the content to
+      // remain published. A changed payload with the same UUID cannot append.
+      if(rows(await s.prepare('SELECT event_id FROM station_analytics_events WHERE event_id=? LIMIT 1').bind(e.eventId).all()).length)continue;
+      if(e.name==='platform_click')await validPlatform(s,e,request,now);
+      if(e.name==='full_audio_start')await validFull(s,e,request,env,now);
+      const d=await dimensions(s,e,env,now,attributionCache),guard=eventGuard(e,now);
+      const values=[e.eventId,e.name,e.occurredAt,now,e.trackId,e.clipId,e.gameId,d.id,e.platformLinkId,e.sessionId,e.playbackId,e.interactionId,e.launchId,e.saveOperationId,e.contextId,e.sessionScope,d.kind,d.source,d.medium,d.first,e.deviceClass,e.listenedMs,Number(e.mediaEnded),Number(Math.abs(e.occurredAt-now)>5*MINUTE),STATION_EVENT_VERSION,now+90*DAY];
+      // Content guard, semantic dedupe and append happen on the primary inside a
+      // D1 batch. In-batch starts precede completions. No SELECT-then-increment.
+      const placeholders=values.map((_,i)=>'?'+(guard.params.length+i+1));
+      const duplicates=`NOT EXISTS(SELECT 1 FROM station_analytics_events WHERE event_id=${placeholders[0]} OR (event_name=${placeholders[1]} AND (playback_id IS NOT NULL AND playback_id=${placeholders[10]} OR interaction_id IS NOT NULL AND interaction_id=${placeholders[11]} OR event_name IN ('game_launch_request','game_ready') AND launch_id=${placeholders[12]} OR save_operation_id IS NOT NULL AND save_operation_id=${placeholders[13]})))`;
+      statements.push(s.prepare(`INSERT INTO station_analytics_events(event_id,event_name,occurred_at,received_at,track_id,clip_id,game_id,campaign_id,platform_link_id,session_id,playback_id,interaction_id,launch_id,save_operation_id,context_id,session_scope,attribution_kind,campaign_source,campaign_medium,first_campaign_id,device_class,listened_ms,media_ended,time_anomaly,consent_version,expires_at) SELECT ${placeholders.join(',')} WHERE ${guard.sql} AND ${duplicates} RETURNING event_id`).bind(...guard.params,...values));
+    }
+    if(!statements.length)return {accepted:0};
+    // Token verification, all appends and token release are one transaction. A
+    // sealer may revoke an expired flight; its delayed batch then rolls back.
+    const batch=flight?[
+      s.prepare(`INSERT INTO music_publication_guards(operation_token,passed) VALUES(?,CASE WHEN EXISTS
+        (SELECT 1 FROM station_event_inflight f JOIN station_report_window_seal w ON w.singleton=1
+         WHERE f.token=? AND f.received_at=? AND w.sealed_before<=f.received_at) THEN 1 ELSE NULL END)`).bind(flight,flight,now),
+      ...statements,
+      s.prepare('DELETE FROM station_event_inflight WHERE token=?').bind(flight),
+      s.prepare('DELETE FROM music_publication_guards WHERE operation_token=?').bind(flight)
+    ]:statements;
+    const completed=await s.batch(batch),result=flight?completed.slice(1,1+statements.length):completed;
+    return {accepted:result.reduce((n,r)=>n+rows(r).length,0)};
+  }catch(error){
+    if(/STATION_EVENT_WRITE_FENCED|music_publication_guards\.passed/.test(String(error?.message)))fail('EVENT_WRITE_FENCED',503);
+    throw error;
+  }finally{
+    // A lost commit acknowledgement may leave no flight. A failed cleanup is
+    // bounded by fencing expiry; it never permits a late old-window append.
+    if(flight)try{rows(await s.prepare('DELETE FROM station_event_inflight WHERE token=? RETURNING token').bind(flight).all());}catch{}
   }
-  if(!statements.length)return {accepted:0};
-  const result=await s.batch(statements);
-  return {accepted:result.reduce((n,r)=>n+rows(r).length,0)};
 }
 export async function stationEventReadiness(env,now,request) {
   const config=eventConfiguration(env);if(!config.available)return config;

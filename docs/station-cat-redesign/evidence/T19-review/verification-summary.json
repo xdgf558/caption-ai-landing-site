@@ -1,0 +1,179 @@
+{
+  "task": "T19",
+  "kind": "review repair / local SQLite and native temporary D1, synthetic Access / IAB evidence",
+  "pr": 204,
+  "reviewedHead": "bb2e7638d79518e48f375473a512030a350f027c",
+  "recordedAt": "2026-10-09T13:48:43.378672+00:00",
+  "finalChecks": [
+    {
+      "name": "reports",
+      "command": "npm run test:redesign:reports",
+      "exitCode": 0,
+      "tests": 71,
+      "log": "logs/reports.log.gz",
+      "uncompressedSha256": "40fea3974177c85c90770d806ea5195ab4634989da6a762f830894ae34c218e1",
+      "gzipSha256": "2f5e6954de584b5803b7626b8b0d385de93d8c48b544fcdb226271f9addf5de1",
+      "lastWrittenAt": "2026-10-09T13:44:08.162110+00:00"
+    },
+    {
+      "name": "related",
+      "command": "node --test --test-timeout=90000 [T16/T17/T18 nine test files]",
+      "exitCode": 0,
+      "tests": 112,
+      "log": "logs/related.log.gz",
+      "uncompressedSha256": "642a4a2511c81139e441e6d2c849b82417349b918c8c4e6f4a24b572d66fc843",
+      "gzipSha256": "13ffa14bdc66fcb9c480e0ea397eeea1c5281332ac3c01a19c0e492e736a6712",
+      "lastWrittenAt": "2026-10-09T13:30:31.980679+00:00"
+    },
+    {
+      "name": "npm",
+      "command": "npm test",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/npm.log.gz",
+      "uncompressedSha256": "a1f45d98f2b24f14d758458c0752030e3a3c9a6d38effd7712657cd7f049528c",
+      "gzipSha256": "f980ceb9764b6532c4e80b838ecd18fb5bdbb599ed4a26514eb03a2984de3efe",
+      "lastWrittenAt": "2026-10-09T13:41:33.308051+00:00"
+    },
+    {
+      "name": "build",
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/build.log.gz",
+      "uncompressedSha256": "88480d25427201d403b59985e48437a5916da090b066cf08dd1d4ceef95c4293",
+      "gzipSha256": "b69bfa15ff119430ada82da31de01ff85fab02d88f1ba35e77cfb3d186133f4e",
+      "lastWrittenAt": "2026-10-09T13:37:10.192322+00:00"
+    },
+    {
+      "name": "staging-build",
+      "command": "node scripts/build-music-staging-assets.mjs",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/staging-build.log.gz",
+      "uncompressedSha256": "55f7ae71fdb373ec8a8e0a6119034a02f1f655ecbe23a3781476e0add2af3892",
+      "gzipSha256": "8888c41ad71d49cfd59eafab50bff479f23caea83fe67cb116d993050328d5d8",
+      "lastWrittenAt": "2026-10-09T13:45:32.046623+00:00"
+    },
+    {
+      "name": "staging-check",
+      "command": "node scripts/check-music-staging-assets.mjs",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/staging-check.log.gz",
+      "uncompressedSha256": "6c85a9cf933779b71186ad71bb4b89f469773aabb76b0c5e8a19001a50d43658",
+      "gzipSha256": "2003defc3e15e170d0ac32caad65903932e17f71d2272b26ea40d67822faeaa4",
+      "lastWrittenAt": "2026-10-09T13:47:26.354630+00:00"
+    },
+    {
+      "name": "schema-check",
+      "command": "python3 scripts/audit-account-deletion.py",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/schema-check.log.gz",
+      "uncompressedSha256": "0011254b200eac256a87f71185b016517d9277a34e7323cb34e89dca2f4577e9",
+      "gzipSha256": "f79cdc08ff943493a413ff5fab13a92c83c2a09ba66e0f70f186acfd9d31ca5a",
+      "lastWrittenAt": "2026-10-09T13:41:02.893987+00:00"
+    },
+    {
+      "name": "audit",
+      "command": "python3 scripts/test-account-deletion-audit.py",
+      "exitCode": 0,
+      "tests": 12,
+      "log": "logs/audit.log.gz",
+      "uncompressedSha256": "11472048163cfefc1886988237567e4220c75a261ce7288a2a5995c7e6577323",
+      "gzipSha256": "1d1617792084b095a7e4c4c2b65d1eeca91acfa9bd96d136ca59416f8e8b45aa",
+      "lastWrittenAt": "2026-10-09T13:47:26.668598+00:00"
+    }
+  ],
+  "negativeRegressionLog": "logs/regressions-before.log.gz",
+  "negativeRegressionScope": "Before repair: snapshot capture did not wait for in-flight work and successful POST + 401 cleared pending. The later deterministic midnight fixture also backdates its synthetic publication so the delayed event is eligible. Final tests cover accepted=1 / captured=1 and expired batch rollback.",
+  "sourceSha256": {
+    ".github/workflows/ci.yml": "a7054e49fe9f1ab009d0d63995ff5ab5737a1ef5bc25c57e60d3c09e0dfb8fb5",
+    "migrations-music/0017_station_reports.sql": "c54f66b828d253c5b9045f9cf12434a6e85d08c53a86ff30bae560c0ebb541e6",
+    "migrations-music/0018_station_report_window_seals.sql": "ce9517d0549ed33026d02a56ebc57f4b3f58f8a0c3467f198d66fce6f239e186",
+    "package.json": "fe0eb7d6fbec80f5f359d4838a49f0b9b9f9ecaef5a540e556110b40659929dc",
+    "public/styles/admin-station-reports.css": "fbee228eb4df7cfeba9c8346ac539c5bfcdd2f6b3f0e38655a0958e09362d64e",
+    "scripts/helpers/station-report-assets.mjs": "8dc76613aea097e2abeba0f239031cd401d1784de8ffdceb21c66928e2f2c422",
+    "scripts/helpers/station-report-fixture.mjs": "5013532118610fb2561bee49debb3d5a17fe8510b9e4e37019b300849cc986c1",
+    "scripts/helpers/station-report-runtime-worker.js": "11372bf94c1c6970afaccf7cf0180898edb5cf54f7d3aada0ea7088b51b1dad8",
+    "scripts/rehearse-station-reports.mjs": "7969e03f137d068f15cb0aae829dcfa4f52a8de9593a1705ae73c01b50c8ecc1",
+    "scripts/serve-station-report-preview.mjs": "927c7f62c2c71eed88ac1c7781caf3291724ce65c85ac835de73f577f2d97244",
+    "scripts/test-account-deletion-audit.py": "8cee6898643d02ff2698cafdc17c3d3b18e2aa4cc2807544b19595ff9f7c65ba",
+    "scripts/test-music-staging-gate.mjs": "0bdeaa58f800650f4025238c95e40e434b4e568a29b6cd85403d85cf99455553",
+    "scripts/test-station-report-boundaries.mjs": "a75421d75d0d50cb913db02df5cd956ec2a8e02dae119df9511bbe33b89d230a",
+    "scripts/test-station-report-client.mjs": "7935d0aa8c51ede1d795128fa2d1ed77e1ac8030e1c672b4b024c99dc22a500e",
+    "scripts/test-station-report-runtime.mjs": "20d541096a28387cd45ea8a74d58da972e9739e2a8c599e2e3e862a8122eed18",
+    "scripts/test-station-reports.mjs": "f0279f0798d64cae72c3425f90951e71f203faf20880c04eee60cf11b7938ac9",
+    "src/pages/admin/music/content/index.astro": "f8139ce499ab3c5be48cf46017ad8a4eb491be79c96c6f50da81f57de41cf373",
+    "src/pages/admin/music/reports/index.astro": "5e1512ea7b16c12583e775a6fdce744d3e0a74174de88a2328302f9acc85211b",
+    "src/redesign/analyticsStore.js": "6e202323b04015bea0b32bcd7dd51a837459fb6ac916b532b9bc341239972d5f",
+    "src/redesign/contentAdminHttp.js": "f4fef72f2c88d72160a05d79a92721582b0212d7d90bad1dfb238191b3bfc7d1",
+    "src/redesign/reportSealing.js": "c541dc7ed2b02af181712afa7026e53ed05f253e48135679995e9aeb207e3da6",
+    "src/redesign/reportsHttp.js": "7edfbfb90ca7f9768db5232372cc9b1bf7d6b3c02a4a7696f2e7c3b161f0fe59",
+    "src/redesign/reportsModel.js": "8a51fc481e84cb0a5518580cf60a35746b50318a675d292c5a90ef4c88a52186",
+    "src/redesign/reportsQuery.js": "0166f8687dd5fa493b5cc4cfbcee958bc58ff74a5efbb039becec3c3714bd2dd",
+    "src/redesign/reportsSchedule.js": "e66685d17e962f3c800b3bb18bce3f7a4a0d24d589cf7bfd496d92c46628f2e1",
+    "src/redesign/reportsStore.js": "b8d4b2a465d23fbc2cb628f968a85f7de16cd1c4649c78efe30382d6acac6313",
+    "src/scripts/adminStationReports.js": "905f7560f141a26cce7bdc0ac360158d73063f8d3b6a2fc352bfdb8f375dfaaf",
+    "src/scripts/stationContentClient.js": "c385346db492a0f60a634a05d6e63afb24180b8df3c735cfa2dd1136f7253e45",
+    "src/scripts/stationReportsClient.js": "f2203a47c8881859de8fb7e3f1a6f494b19a6709e1abcd6210929a6ab5028993",
+    "src/worker.js": "ed8016a198dc456af64f91c8b740ccfdbb1f647953993370a5c410a6f987c50a"
+  },
+  "configuration": {
+    "wrangler.toml": {
+      "sha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2",
+      "unchangedFromReviewedHead": true
+    },
+    "wrangler.mobile-r2.jsonc": {
+      "sha256": "1404c481291448344e413d70a09964cec60d40f2345e67fe839db39c70238897",
+      "unchangedFromReviewedHead": true
+    },
+    "astro.config.mjs": {
+      "sha256": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f",
+      "unchangedFromReviewedHead": true
+    },
+    "package-lock.json": {
+      "sha256": "b81e63fc2580e6e768dcfe5d799eb5944e95bf1fb51a056b8697ece1e6c9d4b0",
+      "unchangedFromReviewedHead": true
+    }
+  },
+  "schemaAudit": {
+    "tables": 123,
+    "stationTables": 32,
+    "existingMigrationHashesUnchanged": 58,
+    "onlyAddedMigration": "migrations-music/0018_station_report_window_seals.sql",
+    "readerErasureApproved": false,
+    "readerErasureExecutionEnabled": false
+  },
+  "testTiming": "Final 71 reports cover the runtime plus native D1 and the final test cleanup. The final full npm test/build followed the UI recovery focus change. Related 112 tests cover unchanged final backend/client behavior; subsequent changes to those runtime files were comments only. Native tests and local build are not production evidence.",
+  "browser": {
+    "file": "browser-recovery.json",
+    "actualContentWidth": 1265,
+    "actions": [
+      "POST succeeded then status 401; original pending remained",
+      "refresh retained pending and blocked new writes",
+      "same original key replay left one sourced value=7 record",
+      "PATCH succeeded then status 401; recovery button focused; refresh/replay did not create a row"
+    ],
+    "screenshots": [
+      "01-report-before.png",
+      "02-committed-then-401.png",
+      "03-pending-default.png",
+      "04-reloaded-pending.png",
+      "05-recovered-once.png",
+      "06-focused-recovery.png"
+    ],
+    "viewportLimitation": "Requested viewport overrides did not affect this tab; actual width remained 1265. No mobile viewport success is claimed for this repair. Overrides reset."
+  },
+  "hostedCi": "Must verify the final pushed head independently; original reviewed-head SUCCESS is not repair evidence.",
+  "notPerformed": [
+    "remote migrations",
+    "production feature switches",
+    "deployment",
+    "legacy entry retirement",
+    "reader erasure",
+    "merge",
+    "T20"
+  ]
+}

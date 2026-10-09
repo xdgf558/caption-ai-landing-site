@@ -80,7 +80,7 @@ class DeletionAuditTests(unittest.TestCase):
         policy=json.loads((audit.DOC/'policy-draft.json').read_text())
         snapshot=audit.inspect()
         station={name:table for name,table in snapshot['databases']['music'].items() if name.startswith('station_')}
-        self.assertEqual(len(station),24)
+        self.assertEqual(len(station),32)
         self.assertFalse(policy['approved'])
         self.assertFalse(policy['executionEnabled'])
         self.assertEqual(station['station_analytics_events']['category'],'redesign_analytics_review')
@@ -93,7 +93,11 @@ class DeletionAuditTests(unittest.TestCase):
         for name,table in station.items():
             self.assertNotIn('account_id',table['columns'])
             self.assertTrue(all(fk['parent'].startswith(('station_','music_')) for fk in table['foreignKeys']))
-            if name not in ['station_analytics_events','station_event_rates','station_event_retention_health','station_event_retention_guard','station_asset_rights','station_media_upload_sessions','station_publish_jobs']:
+            if name not in ['station_analytics_events','station_event_rates','station_event_retention_health','station_event_retention_guard','station_asset_rights','station_media_upload_sessions','station_publish_jobs','station_report_snapshots','station_report_jobs','station_report_health','station_report_retention_guard','station_external_metrics','station_report_operations','station_report_window_seal','station_event_inflight']:
                 self.assertEqual(table['category'],'publisher_content_keep')
+        self.assertEqual(station['station_report_operations']['category'],'admin_audit_review')
+        for name in ['station_report_snapshots','station_report_jobs','station_report_health','station_report_retention_guard','station_external_metrics','station_report_window_seal','station_event_inflight']:
+            self.assertEqual(station[name]['category'],'redesign_analytics_review')
+            self.assertNotIn('session_id',station[name]['columns'])
         self.assertFalse(any(name.startswith('station_') for name in snapshot['databases']['reader']))
 if __name__=='__main__':unittest.main(verbosity=2)

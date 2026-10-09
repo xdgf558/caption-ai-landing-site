@@ -1,0 +1,839 @@
+{
+  "kind": "isolated SQLite arithmetic, synthetic accepted-receipt shapes; native D1/Access tested separately",
+  "version": "station-reports-v1",
+  "recordedAt": "2026-10-09T12:19:06.833Z",
+  "window": {
+    "from": "2026-10-08",
+    "to": "2026-10-09",
+    "clock": "received_at",
+    "boundary": "[from,to) UTC"
+  },
+  "manualRows": [
+    {
+      "pair": "S1/song A",
+      "views": 2,
+      "previewStarts": 2,
+      "qualified": 2,
+      "neteaseClicks": 4
+    },
+    {
+      "pair": "S2/song A",
+      "views": 1,
+      "previewStarts": 1,
+      "qualified": 1,
+      "appleClicks": 1
+    },
+    {
+      "pair": "S3/song A",
+      "views": 1,
+      "previewStarts": 0,
+      "qualified": 0,
+      "clicks": 0
+    }
+  ],
+  "independentRows": [
+    {
+      "pair": "S1/song B",
+      "views": 1,
+      "previewStarts": 1,
+      "neteaseClicks": 1
+    },
+    {
+      "pair": "unknown/song A",
+      "visitsInSelectedDay": 0,
+      "clicks": 2,
+      "explanation": "one missing visit; one preceding visit lies outside the selected day"
+    }
+  ],
+  "expected": {
+    "songA": {
+      "views": 4,
+      "visitSessions": 3,
+      "previewStarts": 3,
+      "previewSessions": 2,
+      "qualified": 3,
+      "clicks": 5,
+      "clickSessions": 2,
+      "rate": "2/3 = 66.7%"
+    },
+    "netease": {
+      "clicks": 4,
+      "visitSessions": 3,
+      "clickSessions": 1,
+      "rate": "1/3 = 33.3%"
+    },
+    "crossDay": {
+      "views": 5,
+      "dailySessionSum": 4,
+      "exactWindowSessions": 3,
+      "historicalRate": null,
+      "capturedExactRate": "2/3"
+    }
+  },
+  "observed": {
+    "songA": {
+      "version": "station-reports-v1",
+      "from": 1791417600000,
+      "to": 1791504000000,
+      "asOf": 1791548346768,
+      "partial": false,
+      "filters": {
+        "trackId": "ca760000-0000-4000-8000-000000000010",
+        "source": null,
+        "campaignId": "event-douyin",
+        "clipId": null,
+        "provider": null
+      },
+      "available": true,
+      "basis": "live",
+      "generatedAt": 1791548346768,
+      "counts": {
+        "track_view": 4,
+        "preview_start": 3,
+        "full_audio_start": 1,
+        "preview_qualified": 3,
+        "platform_click": 5,
+        "clip_start": 1,
+        "clip_complete": 1,
+        "game_launch_request": 0,
+        "game_ready": 0,
+        "save_success": 0
+      },
+      "visitSessions": 3,
+      "previewRate": {
+        "numerator": 2,
+        "denominator": 3,
+        "unlinked": 0,
+        "value": 0.6666666666666666,
+        "reason": null
+      },
+      "platformRate": {
+        "numerator": 2,
+        "denominator": 3,
+        "unlinked": 0,
+        "value": 0.6666666666666666,
+        "reason": null
+      },
+      "gameReady": null,
+      "memoryEvents": 0,
+      "timeAnomalies": 0,
+      "daily": [],
+      "external": [
+        {
+          "id": "243953a6-8965-4bb5-aa57-f5cfe827a1ae",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "platform_plays",
+          "provider": "netease",
+          "value": 72,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        },
+        {
+          "id": "70bdd7c8-aa43-4790-a44f-3747a0da0193",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "impressions",
+          "provider": "netease",
+          "value": 1800,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        }
+      ],
+      "health": {
+        "coverageStart": null,
+        "nextDay": null,
+        "lastSweepAt": 1791548346723,
+        "lastAggregateAt": 0,
+        "retentionReady": true
+      },
+      "definitions": {
+        "clock": "received_at",
+        "window": "[from,to) UTC",
+        "denominator": "distinct session_id + track_id in selected track_view receipts",
+        "linkWindowMs": 1800000,
+        "provider": "filters platform_click only; visits and previews retain the selected cohort",
+        "scope": "consented accepted receipts, not unique visitors",
+        "qualified": "10 seconds of actual foreground playback OR native ended",
+        "save": "local write and readback only",
+        "external": "manual platform figures; never derived from clicks; never summed automatically"
+      }
+    },
+    "netease": {
+      "version": "station-reports-v1",
+      "from": 1791417600000,
+      "to": 1791504000000,
+      "asOf": 1791548346769,
+      "partial": false,
+      "filters": {
+        "trackId": "ca760000-0000-4000-8000-000000000010",
+        "source": null,
+        "campaignId": "event-douyin",
+        "clipId": null,
+        "provider": "netease"
+      },
+      "available": true,
+      "basis": "live",
+      "generatedAt": 1791548346769,
+      "counts": {
+        "track_view": 4,
+        "preview_start": 3,
+        "full_audio_start": 1,
+        "preview_qualified": 3,
+        "platform_click": 4,
+        "clip_start": 1,
+        "clip_complete": 1,
+        "game_launch_request": 0,
+        "game_ready": 0,
+        "save_success": 0
+      },
+      "visitSessions": 3,
+      "previewRate": {
+        "numerator": 2,
+        "denominator": 3,
+        "unlinked": 0,
+        "value": 0.6666666666666666,
+        "reason": null
+      },
+      "platformRate": {
+        "numerator": 1,
+        "denominator": 3,
+        "unlinked": 0,
+        "value": 0.3333333333333333,
+        "reason": null
+      },
+      "gameReady": null,
+      "memoryEvents": 0,
+      "timeAnomalies": 0,
+      "daily": [],
+      "external": [
+        {
+          "id": "243953a6-8965-4bb5-aa57-f5cfe827a1ae",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "platform_plays",
+          "provider": "netease",
+          "value": 72,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        },
+        {
+          "id": "70bdd7c8-aa43-4790-a44f-3747a0da0193",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "impressions",
+          "provider": "netease",
+          "value": 1800,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        }
+      ],
+      "health": {
+        "coverageStart": null,
+        "nextDay": null,
+        "lastSweepAt": 1791548346723,
+        "lastAggregateAt": 0,
+        "retentionReady": true
+      },
+      "definitions": {
+        "clock": "received_at",
+        "window": "[from,to) UTC",
+        "denominator": "distinct session_id + track_id in selected track_view receipts",
+        "linkWindowMs": 1800000,
+        "provider": "filters platform_click only; visits and previews retain the selected cohort",
+        "scope": "consented accepted receipts, not unique visitors",
+        "qualified": "10 seconds of actual foreground playback OR native ended",
+        "save": "local write and readback only",
+        "external": "manual platform figures; never derived from clicks; never summed automatically"
+      }
+    },
+    "unlinked": {
+      "version": "station-reports-v1",
+      "from": 1791417600000,
+      "to": 1791504000000,
+      "asOf": 1791548346769,
+      "partial": false,
+      "filters": {
+        "trackId": "ca760000-0000-4000-8000-000000000010",
+        "source": "unknown",
+        "campaignId": null,
+        "clipId": null,
+        "provider": null
+      },
+      "available": true,
+      "basis": "live",
+      "generatedAt": 1791548346769,
+      "counts": {
+        "track_view": 0,
+        "preview_start": 0,
+        "full_audio_start": 0,
+        "preview_qualified": 0,
+        "platform_click": 2,
+        "clip_start": 0,
+        "clip_complete": 0,
+        "game_launch_request": 0,
+        "game_ready": 0,
+        "save_success": 0
+      },
+      "visitSessions": 0,
+      "previewRate": {
+        "numerator": 0,
+        "denominator": 0,
+        "unlinked": 0,
+        "value": null,
+        "reason": "NO_VISIT_SESSIONS"
+      },
+      "platformRate": {
+        "numerator": 0,
+        "denominator": 0,
+        "unlinked": 2,
+        "value": null,
+        "reason": "NO_VISIT_SESSIONS"
+      },
+      "gameReady": null,
+      "memoryEvents": 2,
+      "timeAnomalies": 1,
+      "daily": [],
+      "external": [
+        {
+          "id": "243953a6-8965-4bb5-aa57-f5cfe827a1ae",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "platform_plays",
+          "provider": "netease",
+          "value": 72,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        },
+        {
+          "id": "70bdd7c8-aa43-4790-a44f-3747a0da0193",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "impressions",
+          "provider": "netease",
+          "value": 1800,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        }
+      ],
+      "health": {
+        "coverageStart": null,
+        "nextDay": null,
+        "lastSweepAt": 1791548346723,
+        "lastAggregateAt": 0,
+        "retentionReady": true
+      },
+      "definitions": {
+        "clock": "received_at",
+        "window": "[from,to) UTC",
+        "denominator": "distinct session_id + track_id in selected track_view receipts",
+        "linkWindowMs": 1800000,
+        "provider": "filters platform_click only; visits and previews retain the selected cohort",
+        "scope": "consented accepted receipts, not unique visitors",
+        "qualified": "10 seconds of actual foreground playback OR native ended",
+        "save": "local write and readback only",
+        "external": "manual platform figures; never derived from clicks; never summed automatically"
+      }
+    },
+    "empty": {
+      "version": "station-reports-v1",
+      "from": 1790553600000,
+      "to": 1790640000000,
+      "asOf": 1791548346770,
+      "partial": false,
+      "filters": {
+        "trackId": null,
+        "source": null,
+        "campaignId": null,
+        "clipId": null,
+        "provider": null
+      },
+      "available": true,
+      "basis": "live",
+      "generatedAt": 1791548346770,
+      "counts": {
+        "track_view": 0,
+        "preview_start": 0,
+        "full_audio_start": 0,
+        "preview_qualified": 0,
+        "platform_click": 0,
+        "clip_start": 0,
+        "clip_complete": 0,
+        "game_launch_request": 0,
+        "game_ready": 0,
+        "save_success": 0
+      },
+      "visitSessions": 0,
+      "previewRate": {
+        "numerator": 0,
+        "denominator": 0,
+        "unlinked": 0,
+        "value": null,
+        "reason": "NO_VISIT_SESSIONS"
+      },
+      "platformRate": {
+        "numerator": 0,
+        "denominator": 0,
+        "unlinked": 0,
+        "value": null,
+        "reason": "NO_VISIT_SESSIONS"
+      },
+      "gameReady": null,
+      "memoryEvents": 0,
+      "timeAnomalies": 0,
+      "daily": [],
+      "external": [],
+      "health": {
+        "coverageStart": null,
+        "nextDay": null,
+        "lastSweepAt": 1791548346723,
+        "lastAggregateAt": 0,
+        "retentionReady": true
+      },
+      "definitions": {
+        "clock": "received_at",
+        "window": "[from,to) UTC",
+        "denominator": "distinct session_id + track_id in selected track_view receipts",
+        "linkWindowMs": 1800000,
+        "provider": "filters platform_click only; visits and previews retain the selected cohort",
+        "scope": "consented accepted receipts, not unique visitors",
+        "qualified": "10 seconds of actual foreground playback OR native ended",
+        "save": "local write and readback only",
+        "external": "manual platform figures; never derived from clicks; never summed automatically"
+      }
+    },
+    "crossDayRaw": {
+      "version": "station-reports-v1",
+      "from": 1791331200000,
+      "to": 1791504000000,
+      "asOf": 1791548346770,
+      "partial": false,
+      "filters": {
+        "trackId": "ca760000-0000-4000-8000-000000000010",
+        "source": null,
+        "campaignId": "event-douyin",
+        "clipId": null,
+        "provider": null
+      },
+      "available": true,
+      "basis": "live",
+      "generatedAt": 1791548346770,
+      "counts": {
+        "track_view": 5,
+        "preview_start": 3,
+        "full_audio_start": 1,
+        "preview_qualified": 3,
+        "platform_click": 5,
+        "clip_start": 1,
+        "clip_complete": 1,
+        "game_launch_request": 0,
+        "game_ready": 0,
+        "save_success": 0
+      },
+      "visitSessions": 3,
+      "previewRate": {
+        "numerator": 2,
+        "denominator": 3,
+        "unlinked": 0,
+        "value": 0.6666666666666666,
+        "reason": null
+      },
+      "platformRate": {
+        "numerator": 2,
+        "denominator": 3,
+        "unlinked": 0,
+        "value": 0.6666666666666666,
+        "reason": null
+      },
+      "gameReady": null,
+      "memoryEvents": 0,
+      "timeAnomalies": 0,
+      "daily": [],
+      "external": [
+        {
+          "id": "243953a6-8965-4bb5-aa57-f5cfe827a1ae",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "platform_plays",
+          "provider": "netease",
+          "value": 72,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        },
+        {
+          "id": "70bdd7c8-aa43-4790-a44f-3747a0da0193",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "impressions",
+          "provider": "netease",
+          "value": 1800,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        }
+      ],
+      "health": {
+        "coverageStart": null,
+        "nextDay": null,
+        "lastSweepAt": 1791548346723,
+        "lastAggregateAt": 0,
+        "retentionReady": true
+      },
+      "definitions": {
+        "clock": "received_at",
+        "window": "[from,to) UTC",
+        "denominator": "distinct session_id + track_id in selected track_view receipts",
+        "linkWindowMs": 1800000,
+        "provider": "filters platform_click only; visits and previews retain the selected cohort",
+        "scope": "consented accepted receipts, not unique visitors",
+        "qualified": "10 seconds of actual foreground playback OR native ended",
+        "save": "local write and readback only",
+        "external": "manual platform figures; never derived from clicks; never summed automatically"
+      }
+    },
+    "crossDayDaily": {
+      "version": "station-reports-v1",
+      "from": 1791331200000,
+      "to": 1791504000000,
+      "asOf": 1799410746768,
+      "partial": false,
+      "filters": {
+        "trackId": "ca760000-0000-4000-8000-000000000010",
+        "source": null,
+        "campaignId": "event-douyin",
+        "clipId": null,
+        "provider": null
+      },
+      "available": true,
+      "basis": "daily",
+      "generatedAt": 1791548346768,
+      "counts": {
+        "track_view": 5,
+        "preview_start": 3,
+        "full_audio_start": 1,
+        "preview_qualified": 3,
+        "platform_click": 5,
+        "clip_start": 1,
+        "clip_complete": 1,
+        "game_launch_request": 0,
+        "game_ready": 0,
+        "save_success": 0
+      },
+      "visitSessions": null,
+      "previewRate": {
+        "numerator": null,
+        "denominator": null,
+        "unlinked": 0,
+        "value": null,
+        "reason": "HISTORICAL_DISTINCT_UNAVAILABLE"
+      },
+      "platformRate": {
+        "numerator": null,
+        "denominator": null,
+        "unlinked": 0,
+        "value": null,
+        "reason": "HISTORICAL_DISTINCT_UNAVAILABLE"
+      },
+      "gameReady": null,
+      "memoryEvents": 0,
+      "timeAnomalies": 0,
+      "daily": [
+        {
+          "from": 1791331200000,
+          "to": 1791417600000,
+          "available": true,
+          "counts": {
+            "track_view": 1,
+            "preview_start": 0,
+            "full_audio_start": 0,
+            "preview_qualified": 0,
+            "platform_click": 0,
+            "clip_start": 0,
+            "clip_complete": 0,
+            "game_launch_request": 0,
+            "game_ready": 0,
+            "save_success": 0
+          },
+          "visitSessions": 1,
+          "previewRate": {
+            "numerator": 0,
+            "denominator": 1,
+            "unlinked": 0,
+            "value": 0,
+            "reason": null
+          },
+          "platformRate": {
+            "numerator": 0,
+            "denominator": 1,
+            "unlinked": 0,
+            "value": 0,
+            "reason": null
+          },
+          "gameReady": null,
+          "memoryEvents": 0,
+          "timeAnomalies": 0,
+          "generatedAt": 1791548346768
+        },
+        {
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "available": true,
+          "counts": {
+            "track_view": 4,
+            "preview_start": 3,
+            "full_audio_start": 1,
+            "preview_qualified": 3,
+            "platform_click": 5,
+            "clip_start": 1,
+            "clip_complete": 1,
+            "game_launch_request": 0,
+            "game_ready": 0,
+            "save_success": 0
+          },
+          "visitSessions": 3,
+          "previewRate": {
+            "numerator": 2,
+            "denominator": 3,
+            "unlinked": 0,
+            "value": 0.6666666666666666,
+            "reason": null
+          },
+          "platformRate": {
+            "numerator": 2,
+            "denominator": 3,
+            "unlinked": 0,
+            "value": 0.6666666666666666,
+            "reason": null
+          },
+          "gameReady": null,
+          "memoryEvents": 0,
+          "timeAnomalies": 0,
+          "generatedAt": 1791548346768
+        }
+      ],
+      "external": [
+        {
+          "id": "243953a6-8965-4bb5-aa57-f5cfe827a1ae",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "platform_plays",
+          "provider": "netease",
+          "value": 72,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        },
+        {
+          "id": "70bdd7c8-aa43-4790-a44f-3747a0da0193",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "impressions",
+          "provider": "netease",
+          "value": 1800,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        }
+      ],
+      "health": {
+        "coverageStart": 1791331200000,
+        "nextDay": 1791504000000,
+        "lastSweepAt": 1791548346723,
+        "lastAggregateAt": 1791548346768,
+        "retentionReady": false
+      },
+      "definitions": {
+        "clock": "received_at",
+        "window": "[from,to) UTC",
+        "denominator": "distinct session_id + track_id in selected track_view receipts",
+        "linkWindowMs": 1800000,
+        "provider": "filters platform_click only; visits and previews retain the selected cohort",
+        "scope": "consented accepted receipts, not unique visitors",
+        "qualified": "10 seconds of actual foreground playback OR native ended",
+        "save": "local write and readback only",
+        "external": "manual platform figures; never derived from clicks; never summed automatically"
+      }
+    },
+    "crossDayExactSnapshot": {
+      "version": "station-reports-v1",
+      "from": 1791331200000,
+      "to": 1791504000000,
+      "asOf": 1799410746768,
+      "partial": false,
+      "filters": {
+        "trackId": "ca760000-0000-4000-8000-000000000010",
+        "source": null,
+        "campaignId": "event-douyin",
+        "clipId": null,
+        "provider": null
+      },
+      "available": true,
+      "basis": "snapshot",
+      "generatedAt": 1791548346768,
+      "counts": {
+        "track_view": 5,
+        "preview_start": 3,
+        "full_audio_start": 1,
+        "preview_qualified": 3,
+        "platform_click": 5,
+        "clip_start": 1,
+        "clip_complete": 1,
+        "game_launch_request": 0,
+        "game_ready": 0,
+        "save_success": 0
+      },
+      "visitSessions": 3,
+      "previewRate": {
+        "numerator": 2,
+        "denominator": 3,
+        "unlinked": 0,
+        "value": 0.6666666666666666,
+        "reason": null
+      },
+      "platformRate": {
+        "numerator": 2,
+        "denominator": 3,
+        "unlinked": 0,
+        "value": 0.6666666666666666,
+        "reason": null
+      },
+      "gameReady": null,
+      "memoryEvents": 0,
+      "timeAnomalies": 0,
+      "daily": [],
+      "external": [
+        {
+          "id": "243953a6-8965-4bb5-aa57-f5cfe827a1ae",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "platform_plays",
+          "provider": "netease",
+          "value": 72,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        },
+        {
+          "id": "70bdd7c8-aa43-4790-a44f-3747a0da0193",
+          "trackId": "ca760000-0000-4000-8000-000000000010",
+          "clipId": null,
+          "campaignId": null,
+          "metric": "impressions",
+          "provider": "netease",
+          "value": 1800,
+          "sourceKind": "platform_dashboard",
+          "sourceLabel": "本机合成平台报表 · 不是真实发行数据",
+          "from": 1791417600000,
+          "to": 1791504000000,
+          "observedAt": 1791548346000,
+          "updatedAt": 1791548346723,
+          "status": "active",
+          "editVersion": 1,
+          "aligned": false
+        }
+      ],
+      "health": {
+        "coverageStart": 1791331200000,
+        "nextDay": 1791504000000,
+        "lastSweepAt": 1791548346723,
+        "lastAggregateAt": 1791548346768,
+        "retentionReady": false
+      },
+      "definitions": {
+        "clock": "received_at",
+        "window": "[from,to) UTC",
+        "denominator": "distinct session_id + track_id in selected track_view receipts",
+        "linkWindowMs": 1800000,
+        "provider": "filters platform_click only; visits and previews retain the selected cohort",
+        "scope": "consented accepted receipts, not unique visitors",
+        "qualified": "10 seconds of actual foreground playback OR native ended",
+        "save": "local write and readback only",
+        "external": "manual platform figures; never derived from clicks; never summed automatically"
+      }
+    }
+  }
+}

@@ -94,7 +94,9 @@
     "test:redesign:campaigns": "node --test --test-timeout=90000 scripts/test-station-campaigns.mjs scripts/test-station-attribution-session.mjs scripts/test-station-campaign-runtime.mjs",
     "preview:redesign:campaigns": "npm run build && node scripts/serve-station-campaign-preview.mjs",
     "test:redesign:events": "node --test --test-timeout=90000 scripts/test-station-events.mjs scripts/test-station-event-client.mjs scripts/test-station-event-runtime.mjs",
-    "preview:redesign:events": "npm run build && node scripts/serve-station-event-preview.mjs"
+    "preview:redesign:events": "npm run build && node scripts/serve-station-event-preview.mjs",
+    "test:redesign:reports": "node --test --test-timeout=90000 scripts/test-station-reports.mjs scripts/test-station-report-client.mjs scripts/test-station-report-boundaries.mjs scripts/test-station-report-runtime.mjs",
+    "preview:redesign:reports": "npm run build && node scripts/serve-station-report-preview.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",
