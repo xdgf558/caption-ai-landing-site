@@ -1,0 +1,239 @@
+{
+  "createdAt": "2026-10-08T14:21:42.946Z",
+  "repository": "xdgf558/caption-ai-landing-site",
+  "branch": "codex/station-cat-redesign-t15",
+  "baseline": "766ef0e0768912964c9446562c8155fcf11a4d62",
+  "scope": "local synthetic fixtures and source/build evidence; not production or hosted CI",
+  "checks": [
+    {
+      "name": "uploads",
+      "command": "npm run test:redesign:uploads",
+      "exitCode": 0,
+      "tests": 36,
+      "log": "logs/uploads.log",
+      "sha256": "9973b1414ec23b3f8cd4e582b0cfffee34454d4337f97cef9a5bd05fd9b1e9bd"
+    },
+    {
+      "name": "legacy-uploads",
+      "command": "npm run test:music:uploads",
+      "exitCode": 0,
+      "tests": 11,
+      "log": "logs/legacy-uploads.log",
+      "sha256": "8b0da90763d234df18ece15fec5882003f57711e49f7be66c9c76dd9476c82bd"
+    },
+    {
+      "name": "admin-client",
+      "command": "npm run test:music:admin-ui",
+      "exitCode": 0,
+      "tests": 7,
+      "log": "logs/admin-client.log",
+      "sha256": "ec30df38a59d8572bc7252786abe71677abd06d158cd2e72b0705514e04d0171"
+    },
+    {
+      "name": "model",
+      "command": "npm run test:redesign:model",
+      "exitCode": 0,
+      "tests": 26,
+      "log": "logs/model.log",
+      "sha256": "5b5a83302fbf36ce57c71246bfa484a76826878914ec2d09275ce589afd31366"
+    },
+    {
+      "name": "full-regression",
+      "command": "npm test",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/full-regression.log",
+      "sha256": "5a3b9d2fae804dfd799a41ae216826e091e602c99bc0288bcc04641fb31e3e0e",
+      "note": "pretest + project regression; console assertions are not included in a single test count"
+    },
+    {
+      "name": "account-audit",
+      "command": "python3 scripts/audit-account-deletion.py",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/account-audit.log",
+      "sha256": "f549f839b94251f3ce07fb45d9d8de180fe462b309d79b1bd2bea3a47fe1c24f"
+    },
+    {
+      "name": "account-audit-tests",
+      "command": "python3 scripts/test-account-deletion-audit.py",
+      "exitCode": 0,
+      "tests": 12,
+      "log": "logs/account-audit-tests.log",
+      "sha256": "2fe826507228608ee4870d3ce0f7ab505392c438104e58ac378078f0ea8f2817"
+    },
+    {
+      "name": "build",
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/build.log.gz",
+      "sha256": "fe037602ba9e6ef94c3b586a06914626b1b2bfdd09327d25946759887e5fedb2",
+      "note": "166 pages, 115 public sitemap routes; empty正文 development build, not production package",
+      "rawSha256": "d37ef97d2f49536fc24c5f9154e1b5e57503e89da91b8897a29f6f7baea29d50",
+      "compression": "gzip; exact original stdout retained, including whitespace"
+    },
+    {
+      "name": "staging",
+      "command": "node scripts/build-music-staging-assets.mjs && node scripts/check-music-staging-assets.mjs",
+      "exitCode": 0,
+      "tests": null,
+      "log": "logs/staging.log",
+      "sha256": "6c85a9cf933779b71186ad71bb4b89f469773aabb76b0c5e8a19001a50d43658",
+      "note": "8 pages, 37 exact assets; preparation and validation both exited 0"
+    }
+  ],
+  "sourceAnchors": {
+    ".github/workflows/ci.yml": "cdfabf8644ace6ad6f856d09b357fbe668568caa789e29e00dcd5047cf32c43f",
+    "migrations-music/0013_station_media_uploads.sql": "fca37ba533ddd2821335aa44749e699da546f145182a5f5886ebdac02c637021",
+    "package.json": "d21069c1c09e5140b84ee3544a566c71b0cb295bffe21fe675c9ab453d6d9970",
+    "public/styles/admin-music.css": "cd9ab09f6d1f7471b38516d0c7a9252669de6f0f89838e9d2b979e7f0d534c3f",
+    "public/styles/admin-station-media.css": "9b4255e7098144780b3dce4b2679641d7661e920e386ce093b52813d25453a51",
+    "scripts/helpers/music-test-database.mjs": "90135851d40a07ebac8b7b83680395a2267dffd2eeee4cb6dc4f280665d7183e",
+    "scripts/helpers/station-media-fixture.mjs": "3be7885b6845192f1b6029912e620946f4026fd3c0398f7e3b0f24ba3f1cdb5b",
+    "scripts/helpers/station-media-runtime-worker.js": "834fe9705dcbbce58432e2e4a00b215d04a9d14b31b5cc284d2cc8d15f494784",
+    "scripts/helpers/station-media-runtime.mjs": "e3d0a2f9354b003be575c9eb76a09fe795d6cddb97adb5faabfe4dd840fcc1d8",
+    "scripts/helpers/station-redesign-database.mjs": "c9a55cb4702746a3f42b13de575b77b35dba3e40f6b40d32744d41e3485c3320",
+    "scripts/helpers/station-video-fixture.mjs": "0fadfaf7aadc05c8756d55d31f078463bffaf8bf72f6973389b567f1aba49ee1",
+    "scripts/serve-station-media-preview.mjs": "565ca57ddd1413c02c8ce1f6c6d4270222c013596ddcf29af4759f701d0ba9bc",
+    "scripts/test-account-deletion-audit.py": "98ea30c20212c6566dd01cb377f0390ee8f73a292f90a4a383d2e1083271255d",
+    "scripts/test-music-staging-gate.mjs": "1be5c8b22ba1985dbdbd2c3f8da4a38e7847bde58e975f17625069c8f1f37cb0",
+    "scripts/test-station-media-client.mjs": "bbc4b02136078a1f357d058dc186ef9379efe54de106514172417896496df914",
+    "scripts/test-station-media-runtime.mjs": "11e109c205a8e6b71db32e2978f4e2cb752316395a7d0f56703ad313c3e53b60",
+    "scripts/test-station-media-uploads.mjs": "06df6687c8dd9d0b399b78684fc6564988c1e9140c222be18830d0ed2b252024",
+    "src/adminAccess.js": "0f8cde5fbc25e7c1847207000be71586605c165cb871fb18408301fa4662405d",
+    "src/music/adminHttp.js": "5b16812da6303c6765f423239eb2365109719008ee0b709fc7ae48ea73f62572",
+    "src/music/adminStore.js": "9019ddc52adf309eceb1d3cc7dd440a79fe8d9a52362ea49ad62957f89556e0d",
+    "src/music/assetFormats.js": "e59089c88554a64726842be3be9706a55c013de17b3af8ad1ae70e358b3c7932",
+    "src/music/audioValidation.js": "b79274867a3ca2a70462a9f2566d0756847a53d76e4461f819c8e080cd2ff72a",
+    "src/music/resources.js": "19647b4084af5a5fb6380fef0e8e616c122171d22dee758cdd66c8d0c13a005b",
+    "src/music/stagingGate.js": "a63ae2dabe06f51f55f72c41d8f27915a250f1bd6744a81b32b09533fa19b138",
+    "src/music/storage.js": "178991f457735cc98eb6c45c9d45ba637ddb1914c712de69e2290260e4f09699",
+    "src/music/uploads.js": "751f06271d3d3bc66bde7d2db5f80ce897b9106ddab99ac43cf652c2c38f136b",
+    "src/pages/admin/music.astro": "d37b15f59db945b82f43e72041d2a9087d9e13f6efeea643d603bcf31fd6e8dc",
+    "src/pages/admin/music/media/index.astro": "81baff302dce72791cd57ea03d5b1d486fadab613f984b4ff23741d370318ce2",
+    "src/redesign/mediaFormats.js": "bbdd104dabcb6564e006ccbb8d092bc4f532d9aa79fc4d239b5d73bcfe5b4855",
+    "src/redesign/mediaResources.js": "cda8607c1abcc8676c51c2a82e43e813fb8e2735c59eeaf0a3823a9b75d98e37",
+    "src/redesign/mediaUploads.js": "66403923b6a586fd2ddf0dbed2e6e88cf0b18ff77bf11377da61fc05c8430ef3",
+    "src/redesign/mp4Validation.js": "52ebc70e213066ad8c717a881a2479fbbc74b60d60579c42a537c0776ac715a9",
+    "src/scripts/adminStationMedia.js": "92c6fdf0b4c733639e27fedf86dc054a8b4c9aed7a42a64c9f127c75ecaec117",
+    "src/scripts/musicAdminClient.js": "ce3d9bcc3399f8c81506019e9e733f64dc4cb2b5f1f8b1f282bd420158cda90d",
+    "src/scripts/stationMediaUploader.js": "a1b911bd8728be3d3d5d985ccda354583017d3d88a26708a1580656027e1cd5b",
+    "src/worker.js": "0585bb01a02ed12e83353da935bf99589a2e272ebbec957187566166e2bd04d5",
+    "tests/fixtures/music-mp3/cbr-stereo.mp3": "c9dccab675f2631d92c5bc454ab4c66bfc168036c7a85875021c189d37d7077a",
+    "tests/fixtures/music-mp3/preview.mp3": "5f523627bf897087d11d8be93ae0683577b3203974ecbe5185013a6c5b5dcfef",
+    "tests/fixtures/station-video/gentle-synthetic.mp4": "e636211940913a0534c5c81c66a11600747860689fc56a07d52bce5f35f7c5b4",
+    "tests/fixtures/station-video/manifest.json": "206929a54f2efd0630993ee3e8f1c99031a33a90a6a2594d806410200d8c1bed"
+  },
+  "images": [
+    {
+      "file": "desktop-empty-final.png",
+      "sha256": "99b03f5f40108e01aa657578f4a0ab249c5bb7f7773ba68e2af802b42ccb6cf8",
+      "width": 1265,
+      "height": 1062,
+      "role": "earlier real UI observation; see design-qa.md for final revisions"
+    },
+    {
+      "file": "desktop-initial.png",
+      "sha256": "72888ccf3e9684c2ea0e736f67011ba3fd80181ba43f5536a0c8200d75ed5d56",
+      "width": 1425,
+      "height": 1062,
+      "role": "earlier real UI observation; see design-qa.md for final revisions"
+    },
+    {
+      "file": "desktop-ready.png",
+      "sha256": "36e40a53a4588fdb6f4f18675f1e7f55e57538e1e2026c13c98aede42cd61836",
+      "width": 1265,
+      "height": 1062,
+      "role": "earlier real UI observation; see design-qa.md for final revisions"
+    },
+    {
+      "file": "final-preview-default.png",
+      "sha256": "0c99c1945e0b9b9712d4ce989f98b293f60d635f1aa592cbdc9fd833473d0a3c",
+      "width": 1265,
+      "height": 1062,
+      "role": "final layout"
+    },
+    {
+      "file": "mobile-failed-390.png",
+      "sha256": "b447d93c3691d1362d758a3305795b83174707aad2d7aeff9ca23c0e8a816231",
+      "width": 375,
+      "height": 1626,
+      "role": "earlier real UI observation; see design-qa.md for final revisions"
+    },
+    {
+      "file": "mobile-ready-390.png",
+      "sha256": "d209514baaf7e2c00835fefe23168798b752b6ebee4caed948159a16d665d08f",
+      "width": 375,
+      "height": 1485,
+      "role": "earlier real UI observation; see design-qa.md for final revisions"
+    },
+    {
+      "file": "source-existing-music-assets.png",
+      "sha256": "038d0af439368f2343e70ac37d40a9b68e1394f627898cd00e6a0817041e7969",
+      "width": 1265,
+      "height": 1840,
+      "role": "rendered reference"
+    },
+    {
+      "file": "viewport-1024.png",
+      "sha256": "abcc3e3f26fc4b71968180f4520021461370c74b7fb20c6d5ecc54f74ff1ee44",
+      "width": 1009,
+      "height": 1062,
+      "role": "final layout"
+    },
+    {
+      "file": "viewport-1440.png",
+      "sha256": "a0db2bf04d115f5ba89ee0ce0e607bd5cac60cee22c3b41121fb5240c755aaee",
+      "width": 1425,
+      "height": 1062,
+      "role": "final layout"
+    },
+    {
+      "file": "viewport-320.png",
+      "sha256": "ac4d4992525104f7b1ced6794747e8e97e37a7377d0e1da288ce035239eb4547",
+      "width": 305,
+      "height": 1807,
+      "role": "final layout"
+    },
+    {
+      "file": "viewport-390.png",
+      "sha256": "6f72cad8bd5b92c81aa27634c18d6a41d791b5c5be29a15cc46ef0e1c54a8722",
+      "width": 375,
+      "height": 1630,
+      "role": "final layout"
+    },
+    {
+      "file": "viewport-768.png",
+      "sha256": "c090e42ca7ff2969fba16793684933e0c944ada412b46e72db0a6856d5143697",
+      "width": 753,
+      "height": 1442,
+      "role": "final layout"
+    }
+  ],
+  "schema": {
+    "tables": 110,
+    "reader": 64,
+    "legacyMusic": 27,
+    "station": 19,
+    "unchangedHistoricalMigrations": 53,
+    "addedMigration": "migrations-music/0013_station_media_uploads.sql",
+    "historicalTablesAndClassificationsUnchanged": true,
+    "approved": false,
+    "executionEnabled": false
+  },
+  "preview": {
+    "url": "http://127.0.0.1:4215/admin/music/media/",
+    "finalFixture": "final-preview-fixture.json",
+    "browser": "IAB",
+    "viewportReset": true,
+    "deliverableTabRetained": true
+  },
+  "limits": [
+    "No production MUSIC_DB/R2/Access confirmation or remote migration",
+    "No flags enabled, deployment, retirement, deletion or T16",
+    "Video container/SPS inspection is not codec decode, malware or rights review",
+    "Synthetic media; no real maximum-file or iOS/Android/VoiceOver acceptance",
+    "Full regression before final DOM-only wording/layout edits; final build and IAB cover those edits."
+  ]
+}

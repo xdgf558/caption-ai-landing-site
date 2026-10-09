@@ -15,6 +15,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
 <main class="music-shell">
   <header class="music-heading"><div><p class="eyebrow">内容工作区</p><h1>音乐</h1></div><button id="track-new" class="primary" type="button" disabled><Plus size={18} />新建曲目</button></header>
   <div class="music-health"><span id="environment">正在连接音乐服务</span><div class="music-storage-control"><span id="storage">配额待查询</span><button id="quota-open" type="button" disabled>调整总配额</button></div></div>
+  <p class="muted"><a href="/admin/music/media/">管理视频、海报与游戏截图</a></p>
   <div class="music-feedback"><p id="music-status" role="status" aria-live="polite">正在读取曲库。</p><button id="music-reload" type="button" title="重新读取服务状态" aria-label="重新读取服务状态"><RefreshCw size={17} /></button><button id="mutation-retry" type="button" hidden>核对并重试原操作</button></div>
   <div class="music-layout">
     <aside aria-label="曲目列表" class="music-library">

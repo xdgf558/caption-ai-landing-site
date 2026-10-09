@@ -1,0 +1,23 @@
+
+> landing-site@0.1.0 test:music:uploads
+> node --test scripts/test-music-uploads.mjs
+
+✔ migration leaves quota closed and protects session identity, replacement, transitions and accounting (12.54275ms)
+✔ quota reservation is atomic under competing requests and includes failed/expired reservations (8.202834ms)
+✔ reserve replays lost acknowledgements once; key conflict, actor isolation and rollback are explicit (9.304917ms)
+✔ uploads reject wrong kinds, path injection, over-limit bodies and unbound previews before reservation (7.772959ms)
+✔ same actor has at most ten live reservations; existing bytes without sessions also count (10.334292ms)
+✔ real PNG/JPEG/WebP headers, dimensions and static containers pass; forged/truncated/animated media fail (3.419459ms)
+✔ lyrics require bounded strict UTF-8 and line count; PDF evidence checks envelope, never renders HTML (0.247709ms)
+✔ complete reads actual immutable bytes, not MIME/hash claims, and commits asset/audit/session atomically (10.922084ms)
+✔ small resource verifier fails for wrong actual hash, bytes, identity and changed objects (0.458375ms)
+✔ expired upload cannot complete or read any R2 object; its reservation remains charged (7.907292ms)
+✔ invalid completed bytes are audited rejected, never selectable, without unsafe quota release (7.900417ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 134.305166

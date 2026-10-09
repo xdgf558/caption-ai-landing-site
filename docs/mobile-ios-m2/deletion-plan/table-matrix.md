@@ -106,6 +106,7 @@
 | music / `station_home_configs` | `publisher_content_keep` | FK 0 (id, published_revision) → station_home_revisions (id, revision)：NO ACTION；FK 1 (id, draft_revision) → station_home_revisions (id, revision)：NO ACTION |
 | music / `station_home_revisions` | `publisher_content_keep` | FK 0 (featured_game_id) → station_games (id)：NO ACTION；FK 1 (featured_track_id) → station_promotions (track_id)：NO ACTION；FK 2 (id) → station_home_configs (id)：NO ACTION |
 | music / `station_media_assets` | `publisher_content_keep` | FK 0 (owner_game_id) → station_games (id)：NO ACTION；FK 1 (owner_clip_id) → station_clips (id)：NO ACTION |
+| music / `station_media_upload_sessions` | `admin_audit_review` | FK 0 (asset_id) → station_media_assets (id)：NO ACTION |
 | music / `station_platform_links` | `publisher_content_keep` | FK 0 (track_id) → music_tracks (id)：NO ACTION |
 | music / `station_promotion_revisions` | `publisher_content_keep` | FK 0 (track_id, preview_asset_id) → music_assets (owner_track_id, id)：NO ACTION；FK 1 (track_id) → station_promotions (track_id)：NO ACTION |
 | music / `station_promotions` | `publisher_content_keep` | FK 0 (track_id, published_revision) → station_promotion_revisions (track_id, revision)：NO ACTION；FK 1 (track_id, draft_revision) → station_promotion_revisions (track_id, revision)：NO ACTION；FK 2 (track_id) → station_track_publications (track_id)：NO ACTION |

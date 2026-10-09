@@ -86,7 +86,9 @@
     "build:redesign:game-session": "astro build --config scripts/fixtures/station-handoff/astro.config.mjs",
     "test:redesign:member": "node --test --test-timeout=90000 scripts/test-station-member-readouts.mjs scripts/test-station-member-runtime.mjs",
     "build:redesign:member": "astro build --config scripts/fixtures/station-member/astro.config.mjs",
-    "preview:redesign:member": "npm run build:redesign:member && node scripts/serve-station-member-preview.mjs"
+    "preview:redesign:member": "npm run build:redesign:member && node scripts/serve-station-member-preview.mjs",
+    "test:redesign:uploads": "node --test --test-timeout=90000 scripts/test-station-media-uploads.mjs scripts/test-station-media-client.mjs scripts/test-station-media-runtime.mjs",
+    "preview:redesign:uploads": "npm run build && node scripts/serve-station-media-preview.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

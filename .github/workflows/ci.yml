@@ -34,6 +34,9 @@ jobs:
       - name: Verify music upload validation and quota guards
         run: npm run test:music:uploads
 
+      - name: Verify Station Cat media uploads, immutable versions and Access permissions
+        run: npm run test:redesign:uploads
+
       - name: Verify music admin client contracts
         run: npm run test:music:admin-ui
 

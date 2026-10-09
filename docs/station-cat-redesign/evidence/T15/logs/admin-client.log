@@ -1,0 +1,19 @@
+
+> landing-site@0.1.0 test:music:admin-ui
+> node --test scripts/test-music-admin-client.mjs
+
+✔ asset paths reject external URLs and non-UUID identifiers (0.658459ms)
+✔ file hashing is incremental and exact; extension does not authorize the server (3.366125ms)
+✔ policy versions follow the published policy, never the draft counter (0.082ms)
+✔ journal survives reload, isolates actors and refuses unavailable storage (0.119541ms)
+✔ requests preserve original key/version and fail closed on redirected or uncertain replies (7.935334ms)
+✔ admin shell remains private, explicit publish and no unsupported entrypoints (0.813959ms)
+✔ limited-free editor preserves the deadline and versions actual policy changes (0.504542ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 48.954417

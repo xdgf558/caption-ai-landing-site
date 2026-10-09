@@ -119,6 +119,7 @@
         "music_collection_upload_sessions",
         "music_upload_cleanup",
         "music_rights_reviews",
+        "station_media_upload_sessions",
         "station_asset_rights"
       ],
       "short_ttl": [

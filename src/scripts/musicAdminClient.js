@@ -31,7 +31,7 @@ export async function request(path, { method = 'GET', body, key, etag, raw = fal
   const id = '[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}';
   const route = typeof path === 'string' ? path.split('?')[0] : '';
   if (!new RegExp('^/(?:status|storage-quota|analytics|featured|tracks|audit|uploads|collection-uploads|collections|collections/' + id + '(?:/tracks)?|tracks/' + id + '(?:/(?:publish|unpublish|archive))?|uploads/' + id +
-    '(?:/(?:body|complete))?|collection-uploads/' + id + '(?:/(?:body|complete))?|collection-assets/' + id + '|revisions/' + id + '/(?:rights-review|technical-review)|assets/' + id + ')$','i').test(route) ||
+    '(?:/(?:body|complete))?|collection-uploads/' + id + '(?:/(?:body|complete))?|site-uploads(?:/(?:status|owners|' + id + '(?:/(?:body|complete))?))?|collection-assets/' + id + '|revisions/' + id + '/(?:rights-review|technical-review)|assets/' + id + ')$','i').test(route) ||
     !['GET','POST','PATCH','PUT'].includes(method)) throw new Error('无效管理路径');
   const headers = {};
   if (method !== 'GET') {
