@@ -359,14 +359,17 @@ test('staging package validation checks exact HTML pages and their dependency cl
   });
 });
 
-test('staging module graph includes only music, Access, membership and the four gated media-upload modules', async () => {
+test('staging module graph includes only music, Access, membership and explicitly gated website content modules', async () => {
   const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url));
   const entry = fileURLToPath(new URL('../src/music/stagingEntrypoint.js', import.meta.url));
   const pending = [entry];
   const visited = new Set();
   const externalImports = new Set();
   const allowedShared = new Set(['adminAccess.js', 'readerMembership.js', 'data/reader-library-client.js',
-    'redesign/mediaUploads.js', 'redesign/mediaResources.js', 'redesign/mediaFormats.js', 'redesign/mp4Validation.js']);
+    'redesign/mediaUploads.js', 'redesign/mediaResources.js', 'redesign/mediaFormats.js', 'redesign/mp4Validation.js',
+    'data/station-home.js', 'redesign/contentAdmin.js', 'redesign/contentAdminHttp.js', 'redesign/contentAdminModel.js',
+    'redesign/contentAdminStore.js', 'redesign/contentAdminValidation.js', 'redesign/contentSchedule.js',
+    'redesign/musicCursor.js', 'redesign/publicResources.js', 'redesign/publicStore.js', 'redesign/publicValidation.js', 'redesign/routes.js']);
 
   while (pending.length) {
     const file = pending.pop();

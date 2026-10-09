@@ -161,7 +161,7 @@ export async function publicHome(runtime, options) {
   for (const id of [...new Set([config.featuredTrackId, ...selectedTrackIds].filter(Boolean))]) {
     const record = await run(() => contentTrack(runtime.session, now, { id }));
     const projected = await projectTrack(runtime, record, options);
-    if (!projected) continue;
+    if (!projected || !projected.promotion) continue;
     const { dto, meta, promotion: promo } = projected;
     content.tracks.push({ id: dto.id, slug: dto.slug, title: meta.titleMap,
       summary: { [meta.originalLocale]: '', ...meta.summaryMap }, originalLocale: meta.originalLocale,

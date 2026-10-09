@@ -37,6 +37,9 @@ jobs:
       - name: Verify Station Cat media uploads, immutable versions and Access permissions
         run: npm run test:redesign:uploads
 
+      - name: Verify Station Cat content publishing, revisions and scheduled recovery
+        run: npm run test:redesign:content-admin
+
       - name: Verify music admin client contracts
         run: npm run test:music:admin-ui
 
