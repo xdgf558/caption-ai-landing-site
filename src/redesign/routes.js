@@ -19,11 +19,11 @@ function validLocale(locale) { return stationLocales.includes(locale) ? locale :
 // The new game directory is an opt-in destination for T12. No live route is replaced here.
 // User's 2026-10-06 design replaces the four-entry proposal with five entries.
 // Member retains the existing account/library; About uses its one existing URL.
-export function stationHref(locale, section, search = '') {
+export function stationHref(locale, section, search = '', { brandRoutes = false } = {}) {
   locale = validLocale(locale);
   if (section === 'music') return musicPageHref(locale, search);
   if (section === 'member' || section === 'my') return `${explicitPrefixes[locale]}/library/`;
-  if (section === 'about') return '/about/';
+  if (section === 'about') return brandRoutes ? `${localePrefixes[locale]}/about/` : '/about/';
   if (section === 'games') return `${localePrefixes[locale]}/games/`;
   return `${localePrefixes[locale]}/`;
 }
@@ -42,7 +42,7 @@ export function stationSection(pathname) {
   return null;
 }
 
-export function stationLanguageHref(locale, pathname, search = '') {
+export function stationLanguageHref(locale, pathname, search = '', context = {}) {
   locale = validLocale(locale);
   const path = logicalPath(pathname);
   // The game's own controls manage its language. Never invent another runtime URL.
@@ -58,7 +58,7 @@ export function stationLanguageHref(locale, pathname, search = '') {
     return `${localePrefixes[locale]}${path.replace(/\/?$/, '/')}`;
   }
   if (/^\/(?:library|account)\/?$/.test(path)) return stationHref(locale, 'member');
-  if (/^\/about\/?$/.test(path)) return stationHref(locale, 'about');
+  if (/^\/about\/?$/.test(path)) return stationHref(locale, 'about', '', context);
   if (/^\/(?:privacy|terms)\/?$/.test(path)) return `${explicitPrefixes[locale]}${path.replace(/\/?$/, '/')}`;
   return stationHref(locale, 'home');
 }

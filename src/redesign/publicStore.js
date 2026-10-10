@@ -180,6 +180,34 @@ export async function contentGame(session, now, { id, slug } = {}) {
   return resultRows(await session.prepare(gameSelect + (id ? ' AND g.id=?' : ' AND g.slug=?') + ' LIMIT 2')
     .bind(now, id || slug).all(), 1)[0] || null;
 }
+// Separate bounded sitemap reads. Public page/catalog cursor contracts stay
+// unchanged. Every candidate is projected through live resource/rights checks.
+export async function sitemapBoundaries(session, at) {
+  const output = await session.batch([
+    session.prepare(`SELECT p.track_id AS id FROM station_track_publications p
+      JOIN station_track_revisions r ON r.track_id=p.track_id AND r.revision=p.published_revision AND r.state='sealed'
+      JOIN station_track_routes c ON c.track_id=p.track_id AND c.role='canonical'
+      WHERE p.status='published' AND p.published_at<=? ORDER BY p.track_id LIMIT 10001`).bind(at),
+    session.prepare(`SELECT g.id FROM station_games g
+      JOIN station_game_revisions r ON r.id=g.id AND r.revision=g.published_revision AND r.state='sealed'
+      WHERE g.status='published' AND g.published_at<=? AND g.slug<>'cat-life' ORDER BY g.id LIMIT 10001`).bind(at)
+  ]);
+  if (!Array.isArray(output) || output.length !== 2) throw contentFailure();
+  return output.map(result => {
+    const rows = resultRows(result, 10001);
+    if (rows.length > 10000) throw contentFailure('SITEMAP_CAPACITY_EXCEEDED');
+    return rows;
+  });
+}
+export async function sitemapRecords(session, { kind, now, at, from, until, limit }) {
+  if (kind === 'tracks') return resultRows(await session.prepare(trackSelect +
+    ' AND p.published_at<=? AND p.track_id>=? AND (? IS NULL OR p.track_id<?) ORDER BY p.track_id LIMIT ?')
+    .bind(now, now, at, from, until, until, limit).all(), limit);
+  if (kind === 'games') return resultRows(await session.prepare(gameSelect +
+    ' AND g.published_at<=? AND g.id>=? AND (? IS NULL OR g.id<?) ORDER BY g.id LIMIT ?')
+    .bind(now, at, from, until, until, limit).all(), limit);
+  throw contentFailure();
+}
 export async function publishedHome(session, now) {
   return resultRows(await session.prepare(`SELECT h.id,h.published_at,h.published_revision,r.featured_track_id,r.featured_game_id,
     r.selected_track_ids_json,r.selected_clip_ids_json,r.selected_update_ids_json

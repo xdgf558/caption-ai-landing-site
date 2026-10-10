@@ -55,7 +55,8 @@ const search = {
       if (menu.dataset.mounted) return;
       menu.dataset.mounted = 'true';
       menu.querySelectorAll<HTMLAnchorElement>('[data-sc-language]').forEach(link => {
-        link.href = stationLanguageHref(link.dataset.scLanguage, location.pathname, location.search);
+        link.href = stationLanguageHref(link.dataset.scLanguage, location.pathname, location.search,
+          { brandRoutes: document.documentElement.dataset.scRouteProfile === 'brand' });
       });
       const summary = menu.querySelector('summary');
       menu.addEventListener('keydown', event => {

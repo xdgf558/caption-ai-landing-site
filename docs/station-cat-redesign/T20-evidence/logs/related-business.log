@@ -1,0 +1,229 @@
+
+> landing-site@0.1.0 test:redesign:public
+> node --test --test-timeout=90000 scripts/test-station-content-public.mjs scripts/test-station-content-runtime.mjs
+
+✔ namespace stays separate from UUID music/native/services; default flag stops before any binding access (12.486ms)
+✔ actual schema columns, ledger and cleanup view are required; probes never install missing schema (37.18275ms)
+✔ ledger alone cannot prove the extension view; read failures are fixed 503 errors (59.495167ms)
+✔ migration/backfilled home remains empty until explicitly published; no latest-free fallback (34.881625ms)
+✔ public fields are allowlisted; platform-only works and locale fallback never spreads metadata (39.464167ms)
+✔ draft edits do not replace sealed public snapshots; scheduled, future and archived heads disappear (36.841209ms)
+✔ invalid query, duplicate parameters, methods and paths fail before DB/R2 (30.537291ms)
+✔ keyset pagination has stable ID tie breaks, title/artist search, bounded limits and filtered-page progress (38.18575ms)
+✔ canonical alias lookup returns canonical links without treating old music descendants as already migrated (32.805042ms)
+✔ default 20/max 50 are actual SQL page limits and cannot dump the whole catalog (41.061417ms)
+✔ duplicate/escaped keys, prototypes and oversized stored metadata are rejected, including related references (33.894625ms)
+✔ platform visibility requires actual live verification, provider host and trusted territory; query/header claims cannot override (32.954792ms)
+✔ independent guest preview requires current enabled promotion and owned approved resource; no account/full object lookup (33.014208ms)
+✔ stopped/draft/future promotions revoke current preview and home; old free featured state is irrelevant (33.268959ms)
+✔ rights, source identity and object freshness independently prevent preview delivery (35.441875ms)
+✔ a preview copied from the entire full file or referencing another owner cannot pass independent clip proof (32.51775ms)
+✔ free_full hint on VIP does not grant access; guest, ordinary, expired and real member responses stay distinct (38.159958ms)
+✔ finite account/session revocation and membership DB failures are rechecked on direct HEAD/Range requests (60.102208ms)
+✔ legacy flags and current legacy revision still control full media, including time-limited free music (34.470291ms)
+✔ authorized audio streams bounded ranges, HEAD and If-Range; no GET on denied HEAD or stale website versions (31.572625ms)
+✔ generic asset paths never deliver full/preview files, even to members; public cover and lyric stream only current references (32.1515ms)
+✔ object replacement between HEAD and conditional GET cannot leak different bytes (27.443333ms)
+✔ an R2 body arriving after the request deadline is cancelled instead of becoming a late response (122.390333ms)
+✔ video requires current published parent, matching video/poster rights, dimensions and ready objects (33.841916ms)
+✔ game detail preserves the real runtime directory; unregistered stored launch paths cannot become launch promises (29.829083ms)
+✔ asset IDs colliding across music/media domains are omitted rather than resolved by arrival order (28.872792ms)
+✔ published home ignores concurrent drafts and removes revoked promotions/media on each fresh projection (40.097792ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ bounded rate admission distinguishes 429 from service failure and request budgets expire without publication writes (146.743167ms)
+✔ existing UUID catalog retains its contract and old qualification metric after the extension is populated (34.92475ms)
+✔ production Worker dispatch is default closed; actual empty D1 fails readiness without automatic DDL (461.938625ms)
+✔ explicit local fixture migration enables published queries only, with a separate reader binding and actual ledger (1852.382667ms)
+✔ native D1 publication pointer coexists with drafts; clip/game/home DTO and actual R2 streaming agree (23.415583ms)
+✔ native guest preview is independent; generic assets cannot deliver audio; private full responses use real existing membership (32.979083ms)
+✔ actual R2 replacement and rights revocation are visible immediately, including conditional requests and home (45.143375ms)
+✔ old UUID catalog and real game runtime address still dispatch separately; no new event writes (23.884208ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2603.083834
+
+> landing-site@0.1.0 test:redesign:music
+> node --test --test-timeout=90000 scripts/test-station-music-pages.mjs scripts/test-station-music-runtime.mjs
+
+✔ operational order prefers only current enabled promotion, keeps stable ties, and preserves legacy no-sort contract (59.4475ms)
+✔ latest release uses first global live verified date; unknowns follow, planned/future rows do not rank (36.781708ms)
+✔ new cursors bind sort, search and locale while v1 no-sort callers continue to page (34.671541ms)
+✔ stale legacy audio hint cannot publish a full source; the hint never contains a private audio URL (35.088291ms)
+✔ route boundaries retain aliases and refuse runtime/API namespaces; either flag off preserves the old handler without reading bindings (1.675084ms)
+✔ an enabled detail route must prove a published mapping before claiming an unknown or withdrawn address (32.710291ms)
+✔ a public full-playback hint is rendered as unchecked access in every language, without ready or entitlement claims (0.5175ms)
+✔ public preview adapter controls both versions, and full adapter needs an exact private handshake (0.215ms)
+✔ a selected home summary cannot erase the catalog media contract for the same song (0.07975ms)
+✔ shared player retains old UUID default, has no source before explicit play, and resets on promotion source change (0.612167ms)
+✔ untrusted custom sources cannot disturb a selected source (0.346083ms)
+✔ HTML/JSON escaping preserves readable titles and story without executable markup; missing sections collapse (0.612708ms)
+✔ external buttons revalidate provider hosts and never fabricate planned or missing links (0.326708ms)
+✔ selected songs remain visible without a featured promotion; an entirely unconfigured catalog stays empty (0.181916ms)
+✔ bounded response readers reject deceptive length and invalid UTF-8 and cancel oversized streams (0.648833ms)
+✔ each incomplete flag pair preserves actual legacy HTTP behavior; internal templates cannot be requested directly, including aliases and encoded paths (3838.699708ms)
+✔ local metadata uses the actual loopback origin while public canonical and noindex remain controlled (33.396583ms)
+✔ actual Astro shell receives server-rendered songs and bounded bootstrap; metadata and language links describe the real route (21.034542ms)
+✔ HEAD/method/failure behavior is bounded and no missing binding or asset is provisioned (31.808417ms)
+✔ roots and detail normalize aliases/slashes, remove credentials, preserve only single valid campaign values (7.096708ms)
+✔ mapped old UUID and slug share destinations are temporary; collection, unknown UUID and unknown descendants retain the old handler (20.477916ms)
+✔ actual SQL finite paging and title/artist searches agree with SSR empty and long-title states (31.538625ms)
+✔ real synthetic cover/audio bytes match sealed metadata, Range is correct, and promotion preview is an independent source (27.11425ms)
+✔ full playback hint is not an authorization; guest, ordinary account, expired member and active member still use old policy (33.146583ms)
+✔ SSR title/story/bootstrap treat operator markup as text, not executable HTML (32.324917ms)
+✔ preview-off, no-audio and revoked-rights states remove play/resource UI immediately; no new events or route migrations are written (81.451584ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4348.07025
+
+> landing-site@0.1.0 test:redesign:games
+> node --test --test-timeout=90000 scripts/test-station-game-saves.mjs scripts/test-station-game-pages.mjs scripts/test-station-game-client.mjs scripts/test-station-game-runtime.mjs
+
+✔ entry missing offers only the appropriate action without writes (19.654125ms)
+✔ entry valid offers only the appropriate action without writes (11.389375ms)
+✔ entry corrupt offers only the appropriate action without writes (4.461417ms)
+✔ entry unsupported offers only the appropriate action without writes (4.45ms)
+✔ member missing is local-only evidence; unreadable storage is not a new game (8.601125ms)
+✔ late successful session cannot re-enable launch after a newer failed check or disposal (4.638458ms)
+✔ zh-Hant: canonical catalog, safe detail and reserved runtime (11.392834ms)
+✔ zh-Hans: canonical catalog, safe detail and reserved runtime (0.207042ms)
+✔ en: canonical catalog, safe detail and reserved runtime (0.095ms)
+✔ ja: canonical catalog, safe detail and reserved runtime (0.080208ms)
+✔ closed page ownership before method, query and binding: {} (0.67025ms)
+✔ closed page ownership before method, query and binding: {"STATION_GAME_PAGES_ENABLED":"true"} (0.403666ms)
+✔ closed page ownership before method, query and binding: {"STATION_CONTENT_PUBLIC_ENABLED":"true"} (0.267209ms)
+✔ closed page ownership before method, query and binding: {"STATION_GAME_PAGES_ENABLED":"true","STATION_CONTENT_PUBLIC_ENABLED":"false"} (0.359083ms)
+✔ internal shells are never directly published and unknown descendants remain with existing handler (0.925333ms)
+✔ rendered DTO is escaped, has no unconfirmed continue button and unregistered launch paths cannot navigate (0.285208ms)
+✔ zh-Hant: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (3655.339917ms)
+✔ zh-Hans: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (11.136834ms)
+✔ en: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (10.87525ms)
+✔ ja: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (10.982583ms)
+✔ half-enabled rollout does not own new game paths; registered runtime remains reachable under every mode (5.882834ms)
+✔ actual Worker only enables same-origin runtime framing for gated valid launch requests (12.680375ms)
+✔ canonical alias/no-slash redirects, unmapped detail and method/query errors (11.026625ms)
+✔ screenshots are actual prior runtime capture bytes and go through controlled assets with revocation (25.82ms)
+✔ read-only classifier: corrupt (6.17ms)
+✔ read-only classifier: unsupported (3.692125ms)
+✔ read-only classifier: missing (3.678708ms)
+✔ read-only classifier: valid (4.006417ms)
+✔ empty strings, empty objects, null, arrays, incomplete state and malformed cats are corrupt, never missing (12.32775ms)
+✔ unavailable storage is distinct from missing and cannot be created (3.937041ms)
+✔ legacy schema 0, 1 and 2 are detected without writes and migrate real progress only when loaded (23.734334ms)
+✔ legacy empty cat arrays retain currency and volume through the established repair migration (22.344834ms)
+✔ corrupt is preserved through load, create, save, autosave and rejected import (3.820875ms)
+✔ unsupported is preserved through load, create, save, autosave and rejected import (4.771958ms)
+✔ fresh game writes only a missing slot and a quota error does not report a successful save (3.496625ms)
+✔ valid slot changed by another tab is not overwritten, including another compatible save (11.032584ms)
+✔ explicit recovery backs up exact damaged bytes then imports compatible progress (7.12475ms)
+✔ backup denial, backup verification failure and target race all refuse replacement (20.356083ms)
+✔ guest claim and account slot selection are read-only and never use a cached ID as authentication (8.230541ms)
+✔ actual main startup and lifecycle retain corrupt guest (4.254708ms)
+✔ actual main startup and lifecycle retain future guest (3.351083ms)
+✔ actual main startup and lifecycle retain unreadable storage (3.060417ms)
+✔ actual main startup and lifecycle retain corrupt member (3.658417ms)
+✔ actual main startup and lifecycle retain unknown session (3.567041ms)
+✔ actual account activation refuses corrupt destination and never copies member A to missing member B (13.028958ms)
+✔ existing duplicate cat identities use the established repair migration without rewriting during detection (7.953917ms)
+✔ explicit restore refuses an already-observed target changed before file selection completes (13.675167ms)
+✔ original export Blob contains exact input bytes and causes no save writes (3.614375ms)
+✔ actual cloud client rechecks session after-cloud-read (9.868584ms)
+✔ actual cloud client rechecks session before-upload (15.442416ms)
+✔ actual cloud client rechecks session same-account (10.818958ms)
+✔ malformed known progress blocks are preserved instead of being normalised into fresh defaults (30.970208ms)
+ℹ tests 52
+ℹ suites 0
+ℹ pass 52
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3928.939875
+
+> landing-site@0.1.0 test:redesign:member
+> node --test --test-timeout=90000 scripts/test-station-member-readouts.mjs scripts/test-station-member-runtime.mjs
+
+✔ opening Member reads v2/v1 without writing, migrating, adopting or leaking stored playback secrets (0.92ms)
+✔ damaged, future and inaccessible local music are distinct from a genuinely empty library (0.126125ms)
+✔ current data takes precedence over legacy without overwriting either copy (0.060292ms)
+✔ identity, cloud presence and game items require the confirmed same account (0.309542ms)
+✔ order projection preserves anonymous historical access and reports refund/reversal before old delivery (0.11625ms)
+✔ guest readout probes only the guest slot and never reads cloud/private native music (11.543792ms)
+✔ confirmed account probes its own local slot, never claims the guest slot, and errors do not become missing saves (0.68925ms)
+✔ late read responses after an account change cannot revive identity, saves or items even when abort is ignored (3.248834ms)
+✔ returned different owner clears the whole readout rather than borrowing permissions (0.269584ms)
+✔ failed identity never probes a slot, and a later explicit retry recovers (0.249542ms)
+✔ historical order authentication, missing and service failure remain distinct (0.518416ms)
+✔ late historical order result is dropped and aborted when session changes or page is disposed (0.711333ms)
+✔ oversized service bodies fail closed instead of displaying partial records (0.645541ms)
+✔ reader presentation epoch rejects late responses, other-account credits and invalid session shapes (0.21125ms)
+✔ closed member rollout does not touch bindings, methods, redirects or content flags (1.241625ms)
+✔ enabled shell failures are private, retryable and do not read D1 (0.413958ms)
+✔ private reader policy preserves status, cookies, existing vary and exact response body (0.282416ms)
+✔ all Member readout states have complete four-language messages (0.087709ms)
+✔ reader database failures return a private retryable response without stack or SQL details (0.106167ms)
+✔ zh-Hant: actual opt-in shell retains account forms and manual music return without token metadata (3959.276292ms)
+✔ zh-Hans: actual opt-in shell retains account forms and manual music return without token metadata (4.533666ms)
+✔ en: actual opt-in shell retains account forms and manual music return without token metadata (4.206209ms)
+✔ ja: actual opt-in shell retains account forms and manual music return without token metadata (8.2805ms)
+✔ flag-off uses the original Member page; internal templates stay hidden; wrong method and missing assets fail closed (9.263125ms)
+✔ actual reader HTTP permissions and cache policy for visitor (7.94775ms)
+✔ actual reader HTTP permissions and cache policy for account 1 (14.571458ms)
+✔ actual reader HTTP permissions and cache policy for account 2 (13.265625ms)
+✔ actual reader HTTP permissions and cache policy for account 3 (13.446375ms)
+✔ historical novel/game purchases do not grant current membership or a new music entitlement (7.460083ms)
+✔ original historical order token keeps visitor, owner and other-account access distinctions (7.589917ms)
+✔ a local login/logout still uses the original cookie contract and identity (11.684458ms)
+✔ missing reader schema does not become a successful authenticated/empty service result (5.926375ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4258.783875
+
+> landing-site@0.1.0 test:mobile:music
+> node --test --test-timeout=90000 scripts/test-mobile-music.mjs
+
+✔ isolated gates stay closed unless explicitly enabled; config accurately reports music (2609.574709ms)
+✔ free catalog/search/detail project no storage keys or credentials; pagination rejects stale cursor (52.604375ms)
+✔ free grant and separate preview stream GET HEAD Range with object identity checks (90.280208ms)
+✔ VIP grants require same account AND same session on every request, never Cookie fallback (119.081708ms)
+✔ invalid Bearer does not silently become anonymous, even for free/preview/catalog (32.981042ms)
+✔ free and preview remain public; non-VIP cannot mint full VIP grant (59.577292ms)
+✔ expiry, revocation, blocked account, password changes deny before R2 (342.071041ms)
+✔ membership expiry, VIP delivery off, publication withdrawn are checked every Range (113.312958ms)
+✔ limited free expires at boundary; old grant cannot deliver free bytes afterwards (1640.07975ms)
+✔ token rotation in same session retains grant binding; old bearer fails (78.774167ms)
+✔ entitlements are music projection only and do not mutate site membership (54.014292ms)
+✔ missing membership DB table fails closed without R2 access (78.12425ms)
+✔ lyrics retain Unicode, offset, multi-timestamps and audio version (92.509959ms)
+✔ album order and pagination use only visible published members (87.405917ms)
+✔ replaced storage object is rejected; malformed mode and version never authorize (38.365875ms)
+✔ featured preserves configured primary/secondary/collection order and never invents empty recommendations (315.864208ms)
+✔ rotation fixture uses real refresh route and preserves family absolute expiry (63.930416ms)
+✔ offline permits are isolated, revision-bound permanent-free full audio only (107.789833ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6158.569125

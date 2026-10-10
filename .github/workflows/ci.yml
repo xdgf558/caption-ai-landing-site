@@ -97,6 +97,11 @@ jobs:
       - name: Verify Station Cat report cohorts, provenance and controlled aggregate retention
         run: npm run test:redesign:reports
 
+      - name: Verify isolated legacy exits, preserved services and search routing
+        run: |
+          npm run test:redesign:migration
+          npm run rehearse:redesign:routes
+
       - name: Verify isolated Station Cat music pages against the built Astro shell
         run: npm run test:redesign:music
 

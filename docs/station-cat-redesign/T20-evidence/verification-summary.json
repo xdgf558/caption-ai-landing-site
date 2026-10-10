@@ -1,0 +1,960 @@
+{
+  "task": "T20",
+  "baseline": "062ee92416f391099711bf397c9d15cedd7d8ef9",
+  "createdAt": "2026-10-10T00:58:16.322Z",
+  "production": false,
+  "sourceChangeFinishedBeforeFinalChecks": true,
+  "logs": [
+    {
+      "name": "build",
+      "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+      "exitCode": 0,
+      "testCount": 176,
+      "path": "logs/build.log",
+      "bytes": 27160,
+      "sha256": "0a8f771ecb8aeebeb06a843352294d7bc6b1ad995e934d7f3f930f6d68117216",
+      "tapSummaries": []
+    },
+    {
+      "name": "full-npm-test",
+      "command": "npm test",
+      "exitCode": 0,
+      "testCount": null,
+      "path": "logs/full-npm-test.log",
+      "bytes": 76578,
+      "sha256": "d59bab7fcb39ef458200a1285cad71756d6012e65054fbd44f3776c55b7956fb",
+      "tapSummaries": [
+        {
+          "type": "tests",
+          "value": 9
+        },
+        {
+          "type": "pass",
+          "value": 9
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 18
+        },
+        {
+          "type": "pass",
+          "value": 18
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 21
+        },
+        {
+          "type": "pass",
+          "value": 21
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 31
+        },
+        {
+          "type": "pass",
+          "value": 31
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 22
+        },
+        {
+          "type": "pass",
+          "value": 22
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 12
+        },
+        {
+          "type": "pass",
+          "value": 12
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 10
+        },
+        {
+          "type": "pass",
+          "value": 10
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 17
+        },
+        {
+          "type": "pass",
+          "value": 17
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 28
+        },
+        {
+          "type": "pass",
+          "value": 28
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 9
+        },
+        {
+          "type": "pass",
+          "value": 9
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 12
+        },
+        {
+          "type": "pass",
+          "value": 12
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 26
+        },
+        {
+          "type": "pass",
+          "value": 26
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 6
+        },
+        {
+          "type": "pass",
+          "value": 6
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 15
+        },
+        {
+          "type": "pass",
+          "value": 15
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 16
+        },
+        {
+          "type": "pass",
+          "value": 16
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 21
+        },
+        {
+          "type": "pass",
+          "value": 21
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 13
+        },
+        {
+          "type": "pass",
+          "value": 13
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 29
+        },
+        {
+          "type": "pass",
+          "value": 29
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 35
+        },
+        {
+          "type": "pass",
+          "value": 35
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 24
+        },
+        {
+          "type": "pass",
+          "value": 24
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 14
+        },
+        {
+          "type": "pass",
+          "value": 14
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 11
+        },
+        {
+          "type": "pass",
+          "value": 11
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 20
+        },
+        {
+          "type": "pass",
+          "value": 20
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 20
+        },
+        {
+          "type": "pass",
+          "value": 20
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 20
+        },
+        {
+          "type": "pass",
+          "value": 20
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 25
+        },
+        {
+          "type": "pass",
+          "value": 25
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 11
+        },
+        {
+          "type": "pass",
+          "value": 11
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 8
+        },
+        {
+          "type": "pass",
+          "value": 8
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 14
+        },
+        {
+          "type": "pass",
+          "value": 14
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 8
+        },
+        {
+          "type": "pass",
+          "value": 8
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 4
+        },
+        {
+          "type": "pass",
+          "value": 4
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 8
+        },
+        {
+          "type": "pass",
+          "value": 8
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 7
+        },
+        {
+          "type": "pass",
+          "value": 7
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 3
+        },
+        {
+          "type": "pass",
+          "value": 3
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 9
+        },
+        {
+          "type": "pass",
+          "value": 9
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 6
+        },
+        {
+          "type": "pass",
+          "value": 6
+        },
+        {
+          "type": "fail",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "migration",
+      "command": "npm run test:redesign:migration",
+      "exitCode": 0,
+      "testCount": 24,
+      "path": "logs/migration.log",
+      "bytes": 3246,
+      "sha256": "ab88b33b6afca4650060f82b9b47586087525f9fd0a7585ee77ea423e2e8a82e",
+      "tapSummaries": [
+        {
+          "type": "tests",
+          "value": 24
+        },
+        {
+          "type": "pass",
+          "value": 24
+        },
+        {
+          "type": "fail",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "related-business",
+      "command": "test:redesign:public + music + games + member + test:mobile:music",
+      "exitCode": 0,
+      "testCount": 163,
+      "path": "logs/related-business.log",
+      "bytes": 18743,
+      "sha256": "78e5a3d5f9c5e7e6785f8470b8650afb0f0c078a678b069d3798b4ba84331e43",
+      "tapSummaries": [
+        {
+          "type": "tests",
+          "value": 35
+        },
+        {
+          "type": "pass",
+          "value": 35
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 26
+        },
+        {
+          "type": "pass",
+          "value": 26
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 52
+        },
+        {
+          "type": "pass",
+          "value": 52
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 32
+        },
+        {
+          "type": "pass",
+          "value": 32
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 18
+        },
+        {
+          "type": "pass",
+          "value": 18
+        },
+        {
+          "type": "fail",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "ui-and-player-sandbox-attempt",
+      "command": "routes 7 + home 19 passed; player 148/149, one listen EPERM",
+      "exitCode": 1,
+      "testCount": null,
+      "path": "logs/ui-and-player-sandbox-attempt.log",
+      "bytes": 19315,
+      "sha256": "186724db75507937cd77f38287d3f399813ee3197f8387d755dc4595901b0f4e",
+      "tapSummaries": [
+        {
+          "type": "tests",
+          "value": 7
+        },
+        {
+          "type": "pass",
+          "value": 7
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 19
+        },
+        {
+          "type": "pass",
+          "value": 19
+        },
+        {
+          "type": "fail",
+          "value": 0
+        },
+        {
+          "type": "tests",
+          "value": 149
+        },
+        {
+          "type": "pass",
+          "value": 148
+        },
+        {
+          "type": "fail",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "player-loopback-retry",
+      "command": "npm run test:redesign:player",
+      "exitCode": 0,
+      "testCount": 149,
+      "path": "logs/player-loopback-retry.log",
+      "bytes": 15871,
+      "sha256": "1563843892344c8bf25db3f8240d060d0c9937e3cc13268a97a9421c5427f04a",
+      "tapSummaries": [
+        {
+          "type": "tests",
+          "value": 149
+        },
+        {
+          "type": "pass",
+          "value": 149
+        },
+        {
+          "type": "fail",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "route-audit",
+      "command": "node scripts/rehearse-station-route-migrations.mjs --output=docs/station-cat-redesign/T20-evidence",
+      "exitCode": 0,
+      "testCount": null,
+      "path": "logs/route-audit.log",
+      "bytes": 520,
+      "sha256": "275ef7f8509553460848359aa89cdbfb227fab73b34223b716b4b1ffa92531f2",
+      "tapSummaries": []
+    },
+    {
+      "name": "schema-audit",
+      "command": "python3 scripts/test-account-deletion-audit.py",
+      "exitCode": 0,
+      "testCount": 12,
+      "path": "logs/schema-audit.log",
+      "bytes": 1190,
+      "sha256": "9fc2b1097da0a6de970e81fb9ce998c963634fe84bc47e64beb5b12ebce0acfc",
+      "tapSummaries": []
+    },
+    {
+      "name": "staging",
+      "command": "build-music-staging-assets + check-music-staging-assets (8 pages/37 assets)",
+      "exitCode": 0,
+      "testCount": null,
+      "path": "logs/staging.log",
+      "bytes": 122,
+      "sha256": "a6cbbb6eae4edd386f20c89fcfc81db502dfb8fcefe7f19921741631f445fa5c",
+      "tapSummaries": []
+    }
+  ],
+  "sourceAnchors": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 5501,
+      "sha256": "8ef652372fc163a1913b4f155caa98753a6b1273599c513e1632dc3251a74ae4"
+    },
+    {
+      "path": "package.json",
+      "bytes": 14500,
+      "sha256": "571c7e62dc7da509de341449747631c4dfc922f6031be747a366397c80d20dc1"
+    },
+    {
+      "path": "src/components/redesign/BrandNavigation.astro",
+      "bytes": 6981,
+      "sha256": "1d7589ad4f1f22f12ae212a18bcf6512cc651e075550797d875722bae274c735"
+    },
+    {
+      "path": "src/components/redesign/StationBrandHome.astro",
+      "bytes": 15427,
+      "sha256": "56d26fde7f499e9a6a79c4222b1150ed7bc14cbe1bade0610ec3705f8366151c"
+    },
+    {
+      "path": "src/redesign/publicStore.js",
+      "bytes": 16720,
+      "sha256": "dd5a40aab37a9a444830a529ac55707be388ce601f73f30571131448292b7a4e"
+    },
+    {
+      "path": "src/redesign/routes.js",
+      "bytes": 4981,
+      "sha256": "0264fe9feefcbea1b228b4e42f2bb012eeb9eac4c03569d572488ee58bc03002"
+    },
+    {
+      "path": "src/worker.js",
+      "bytes": 911479,
+      "sha256": "d0af5f6377ae612c2aad197052646ac1e6d9ff1c3f456e4c7f18b7225993eca1"
+    },
+    {
+      "path": "scripts/build-station-legacy-inventory.mjs",
+      "bytes": 2628,
+      "sha256": "111e339bfa7b007060b31866e6eb1febe70db0c5a5fb81b3d03028df16b00304"
+    },
+    {
+      "path": "scripts/helpers/station-route-runtime-worker.js",
+      "bytes": 1006,
+      "sha256": "b4962535492885f550c07434b8e61493bb060923ba1e5fa338ad098a67e79de3"
+    },
+    {
+      "path": "scripts/helpers/station-route-runtime.mjs",
+      "bytes": 6239,
+      "sha256": "5a7430b63637ecb0b61abf1d73f260fd77ad2b912657114d42f3421f3ce617bb"
+    },
+    {
+      "path": "scripts/rehearse-station-route-migrations.mjs",
+      "bytes": 6777,
+      "sha256": "93efe77059bca863cae7e8fa68185b2cc87e7477d92a3d10e92b57c886898a2e"
+    },
+    {
+      "path": "scripts/serve-station-route-preview.mjs",
+      "bytes": 2452,
+      "sha256": "ffaa806f6b71f8cec4cf0511e5fa306b4d5409e70fed5d04b75cf88be064e60c"
+    },
+    {
+      "path": "scripts/test-station-route-migrations.mjs",
+      "bytes": 5054,
+      "sha256": "6902f6eeb8d8d399150dc067fffb14a041268bc2d828f120909e28bee3dd80fb"
+    },
+    {
+      "path": "scripts/test-station-route-runtime.mjs",
+      "bytes": 14954,
+      "sha256": "e29a63bb0af2f423f36f4552fb3f820dfa04088eb85d1d8e7795937c7e50486c"
+    },
+    {
+      "path": "src/generated/stationLegacyRouteInventory.js",
+      "bytes": 4246,
+      "sha256": "691b9d5adedba1b69b2903afca67bfe6967c742a9a2ce31c7fa5c2fffbd1dd12"
+    },
+    {
+      "path": "src/pages/music/site-shell/brand-about/[locale].astro",
+      "bytes": 2478,
+      "sha256": "1c3245b0eba52226a1740c7d1b8df9dc8978666b5237ffa8498ea7b02947e8c6"
+    },
+    {
+      "path": "src/pages/music/site-shell/brand-home/[locale].astro",
+      "bytes": 566,
+      "sha256": "c8ab1301f304b00ec4ce1a296e601789dcb2d9eaaaf05d88b3b7f1ab18638349"
+    },
+    {
+      "path": "src/redesign/aboutCopy.js",
+      "bytes": 3372,
+      "sha256": "707e090cf830fbf887c7f8fbb6a1291466084b3b53bb821b1cd95fd665c78bcb"
+    },
+    {
+      "path": "src/redesign/brandHomeRender.js",
+      "bytes": 4731,
+      "sha256": "bf8ebf5b2ab9bfeb3b7374eca239fc16c417a5f0fde0922ebf1e15d08da03f87"
+    },
+    {
+      "path": "src/redesign/brandPages.js",
+      "bytes": 3623,
+      "sha256": "26bb78efba4295cb1c91e24102f5a2144961db3eae1bc1e4cc6c9b3171c6e164"
+    },
+    {
+      "path": "src/redesign/legacyRouteStore.js",
+      "bytes": 3091,
+      "sha256": "98f0b12c0819c4a46b79c7b8f030b6bc6dfc9533531fd3d8ff2df90a66564164"
+    },
+    {
+      "path": "src/redesign/routeMigrationPaths.js",
+      "bytes": 5118,
+      "sha256": "5fdd4fcd6e8211d993610000311305fecb5dddec80f98bea2e1328c6882522f5"
+    },
+    {
+      "path": "src/redesign/routeMigrationProfile.js",
+      "bytes": 1148,
+      "sha256": "c77c9aff7bb5bc5c1e1645be38b2b26a33b9cf8f52bc0ac52e94c69ed0a010db"
+    },
+    {
+      "path": "src/redesign/routeMigrations.js",
+      "bytes": 8079,
+      "sha256": "4692092794211b85dcdad666808e707b5851ff2b3dfe599e542bf862fb8a722a"
+    },
+    {
+      "path": "src/redesign/searchIndex.js",
+      "bytes": 5620,
+      "sha256": "ae793f838969df513237cd6ddeaefe058849f4c6036d0041e85ad688eee63081"
+    },
+    {
+      "path": "src/redesign/searchMetadata.js",
+      "bytes": 4492,
+      "sha256": "214d2beb4bd98eae7a853c8e8382b5bef443d983428a4a1f31ff555f72fef4e0"
+    }
+  ],
+  "protectedAnchors": [
+    {
+      "path": "wrangler.toml",
+      "sha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2",
+      "baselineSha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2",
+      "unchanged": true
+    },
+    {
+      "path": "astro.config.mjs",
+      "sha256": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f",
+      "baselineSha256": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f",
+      "unchanged": true
+    },
+    {
+      "path": "public/_headers",
+      "sha256": "a3f8168e2f304598ad81a21c75ea2fe77ab5d5482aa2462bf349b7eb2278f3dd",
+      "baselineSha256": "a3f8168e2f304598ad81a21c75ea2fe77ab5d5482aa2462bf349b7eb2278f3dd",
+      "unchanged": true
+    },
+    {
+      "path": "public/_redirects",
+      "sha256": "65bcbe16d2f32fbb1c666bc361942739f09ea4aac825c80b2e90d009e7b6edd5",
+      "baselineSha256": "65bcbe16d2f32fbb1c666bc361942739f09ea4aac825c80b2e90d009e7b6edd5",
+      "unchanged": true
+    }
+  ],
+  "evidence": [
+    {
+      "path": "T19-approved-head-ci.json",
+      "bytes": 8079,
+      "sha256": "e9e55c5ef9228f6bf049e6017da08e070c070be0f191f19f830ce4f2b4d6c1e2"
+    },
+    {
+      "path": "T19-merge-result.json",
+      "bytes": 255,
+      "sha256": "854e2e536b52c42c947b0ac045bc8fe8725635b94bc2d3f8de485ba56d5cf624"
+    },
+    {
+      "path": "about-en-320.png",
+      "bytes": 62193,
+      "sha256": "0fc020699d6a22a4c8cb5c202bf0e5a25fb96e7c0ca8bb83548bdc2132b00e00"
+    },
+    {
+      "path": "about-en-390.png",
+      "bytes": 58197,
+      "sha256": "259faa7f1926cd527bd7fe791c46f0ec4df7f707e21d96d72c0eb39ab77b553d"
+    },
+    {
+      "path": "about-en-768.png",
+      "bytes": 66654,
+      "sha256": "05a07bb9e6decaeb5fd7c4bfa69f46390717882e57c63ca38f7b605ec12518da"
+    },
+    {
+      "path": "baseline-source-and-paths.json",
+      "bytes": 6668,
+      "sha256": "53f0b895e52a6904e26153599443b35bb863d9de254df14297e8091df552b4c9"
+    },
+    {
+      "path": "browser-checks.json",
+      "bytes": 1636,
+      "sha256": "d61bafe13aa712182e9a94195ab896f5544cab86f3950a3fa6bdf3945af878be"
+    },
+    {
+      "path": "comparison-footer.jpg",
+      "bytes": 19600,
+      "sha256": "16317f5085d5caeabcd9590de5e09d2be98a5488c39677d652aa7ec4404d2484"
+    },
+    {
+      "path": "comparison-nav-hero.jpg",
+      "bytes": 171532,
+      "sha256": "e05882f2b1dac42abda6722ea1d9f2e067666631ea502ad7d36abf298f3a25fe"
+    },
+    {
+      "path": "comparison-original-reference.jpg",
+      "bytes": 492006,
+      "sha256": "95745849ac303fd6d5efbe9a9a5f957fa49915ba8ffcaeebf14520c11090978c"
+    },
+    {
+      "path": "comparison-pending-cards.jpg",
+      "bytes": 62105,
+      "sha256": "6efb578727c76e988e39856b3769690fb4a0b11bd018b5d0b9abf52f64db2227"
+    },
+    {
+      "path": "comparison-pending-desktop.jpg",
+      "bytes": 367702,
+      "sha256": "143ea14ae1dede3f706f685b305a10d3e66f45ea92cbc77f2550c413e1033eff"
+    },
+    {
+      "path": "comparison-pending-mobile.jpg",
+      "bytes": 219066,
+      "sha256": "13d63db75982fc419f9ad9bb430598fa8f2826c9750d8c731207c4836b96eb31"
+    },
+    {
+      "path": "fixture-reference-backup.json",
+      "bytes": 10706,
+      "sha256": "25476534d7322d3ced08b3c0d2469d38b0a15c5a6a442215340497defb1c9641"
+    },
+    {
+      "path": "home-pending-1371.png",
+      "bytes": 148376,
+      "sha256": "59a6114c4864bd91f15a0e0d4dba5ff8149cba77c9db7dfc03180826ee358672"
+    },
+    {
+      "path": "home-pending-320.png",
+      "bytes": 82285,
+      "sha256": "569ce1af72ff6281eef18c8f8bfcadca9ecab6f1458fd697f151c21386377d2f"
+    },
+    {
+      "path": "home-pending-390.png",
+      "bytes": 87816,
+      "sha256": "9b744c8bc6b86244de62b121cbec7cc32a30ccd8badf9c2e7b3c943f31d0cbb6"
+    },
+    {
+      "path": "home-pending-default.png",
+      "bytes": 139937,
+      "sha256": "2abf2a5c8e30967984dce1109bf2b220b870219048567bc9f31245eb3acae2ac"
+    },
+    {
+      "path": "home-pending-matched.png",
+      "bytes": 147564,
+      "sha256": "cfbf40f550f6cd53ffd79821b01ee5d69bae7aa9e209794c9b2925d715f7c9c0"
+    },
+    {
+      "path": "recovery-boundary.json",
+      "bytes": 197,
+      "sha256": "be9f4494d7dfcc6aedaeb5bb54c307379875ea52a1c07c8daef80a5ea03aca9a"
+    },
+    {
+      "path": "route-http-report.json",
+      "bytes": 645481,
+      "sha256": "51ddc9a131f737ac06db0288320afaaf5f2abadb6b2cd45d9a333fa759543613"
+    }
+  ],
+  "routeSummary": {
+    "rows": 780,
+    "literalRequests": 626,
+    "verification": {
+      "isolated-response-observed": 35,
+      "source-template-or-matcher": 154,
+      "original-handler-status-retained": 260,
+      "unchanged-fixture-unavailable": 176,
+      "isolated-exit-status-observed": 154,
+      "existing-member-page-canonicalization": 1
+    },
+    "productionVerified": false,
+    "methodsAndPermissionContractVerified": false,
+    "primaryRouting": {
+      "satisfied": false,
+      "missing": [
+        "/",
+        "/about/",
+        "/robots.txt",
+        "/sitemaps/tracks-1.xml",
+        "/apps/",
+        "/apps/example/",
+        "/games/",
+        "/games/cat-life/",
+        "/library/"
+      ]
+    }
+  },
+  "hostedCi": {
+    "verification": "Must independently inspect the exact PR head; local evidence does not prove hosted CI"
+  },
+  "limits": [
+    "Empty-body build is not a production package",
+    "176 unchanged fixture-unavailable rows are not service permission acceptance",
+    "154 templates/matchers are not concrete HTTP acceptance",
+    "No production migrations, config switches, deployment, cleanup or legacy closure",
+    "No true-device, VoiceOver, real release media, production D1/R2 or cloud-conflict acceptance"
+  ],
+  "designQa": "../../../design-qa.md"
+}
