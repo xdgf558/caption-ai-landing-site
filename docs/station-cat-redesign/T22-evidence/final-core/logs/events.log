@@ -1,0 +1,53 @@
+
+> landing-site@0.1.0 test:redesign:events
+> node --test --test-timeout=90000 scripts/test-station-events.mjs scripts/test-station-event-client.mjs scripts/test-station-event-runtime.mjs
+
+✔ statistics require explicit choice; no event identifiers or requests before consent (8.27475ms)
+✔ GPC and shared old opt-out override saved consent; withdraw purges and aborts pending work (0.767333ms)
+✔ disabled storage keeps explicit page-only consent and random memory scope, playback independent (0.4895ms)
+✔ queue is bounded at 100, batches at 20 and failures retry the exact immutable event (1.076333ms)
+✔ retry exhaustion drops only failed batch; 429 uses bounded Retry-After (0.4175ms)
+✔ Campaign changes affect new events only; malicious producer fields do not replace envelope (0.240375ms)
+✔ thirty-minute inactivity rotates random visit session while playback UUID belongs to media (0.185125ms)
+✔ queued events spanning visit expiry are sent as separate valid session batches (0.218666ms)
+✔ expired tab choice purges queued events and returns to an actionable choice (0.158708ms)
+✔ confirmed native playing only starts once; ten actual seconds qualifies once across pause/resume (0.245ms)
+✔ waiting, hidden time, seeks and long sample gaps never inflate foreground listening (0.074958ms)
+✔ actual ended may qualify short preview; seek alone or fake ended does not (0.056292ms)
+✔ clip complete uses ended and conservative major-skip rejection, never 90% elapsed (0.073541ms)
+✔ full playback gets its own start; consent off and new playback reset measurement (0.33975ms)
+▶ native Worker/D1: guarded batches, exact schema, atomic retry/dedupe, current published pages
+  ✔ each rollout/privacy/retention prerequisite closes collection before bindings (22.580666ms)
+  ✔ concurrent lost-response retries append one receipt on actual D1 primary (28.256ms)
+  ✔ native transactional start/qualification and semantic duplicates (9.033625ms)
+  ✔ global admission rejection rolls back other counters in same batch (28.937959ms)
+  ✔ live verified platform IDs only; removed/planned/regional URLs never become clicks (85.491208ms)
+  ✔ full audio start independently reuses old free/entitlement permission decision (385.999833ms)
+  ✔ published Astro detail exposes only rollout boolean; collector config contains no credentials (19.634792ms)
+✔ native Worker/D1: guarded batches, exact schema, atomic retry/dedupe, current published pages (7801.944875ms)
+✔ game observer accepts launch, verified ready and confirmed local-save only; iframe load is silent (1.338333ms)
+✔ local save telemetry happens after verified read-back; denied/corrupt storage and observer exceptions do not fake success (13.799875ms)
+✔ embedded bridge exposes only operation UUID after ready, never saved-game/identity data (0.709667ms)
+✔ exact event dictionary, batch limits, types and no arbitrary dimensions or private data (0.729583ms)
+✔ disabled or half-configured collection never reads bindings or installs schema (1.48525ms)
+✔ origin, method, GPC, media type and streaming/declaration limits precede writes (44.692125ms)
+✔ 0016 missing ledger/columns and stale retention fail closed with private responses (58.527166ms)
+✔ event_id retries and semantic playback dedupe are immutable, atomic and not replace (39.841792ms)
+✔ same session/song visit is a sliding 30-minute window across attribution contexts (44.2425ms)
+✔ playback and launch identifiers cannot be reused by another session or media kind (38.406208ms)
+✔ qualifications require a matching start; ten foreground seconds OR actual ended, no 90% rule (38.665584ms)
+✔ game_ready and save_success require same current game/launch/session confirmation (41.347334ms)
+✔ clip start/completion identity and browser completion claims never grant content rights (37.075334ms)
+✔ campaign dimensions come from registered active records, unknown IDs are not stored (39.741875ms)
+✔ an untrusted country header cannot admit a regional platform click (35.253625ms)
+✔ unpublished/deleted content does not append; client time is flagged and windows use received_at (35.18725ms)
+✔ session/source/global event-unit admission also meters retries and rotating IDs (84.276375ms)
+✔ controlled expiry keeps live receipts and content, works with collection off, leaves no guard (38.667541ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7987.232583

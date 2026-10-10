@@ -1,0 +1,48 @@
+{
+  "name": "station-cat-t22-local-only",
+  "main": "../src/worker.js",
+  "compatibility_date": "2026-05-17",
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "../dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": true
+  },
+  "vars": {
+    "STATION_ROUTE_MIGRATIONS_ENABLED": "false",
+    "STATION_CONTENT_PUBLIC_ENABLED": "false",
+    "STATION_MUSIC_PAGES_ENABLED": "false",
+    "STATION_GAME_PAGES_ENABLED": "false",
+    "STATION_MEMBER_PAGES_ENABLED": "false",
+    "STATION_SEARCH_INDEXING_ENABLED": "false",
+    "STATION_MEDIA_UPLOADS_ENABLED": "false",
+    "STATION_CONTENT_ADMIN_ENABLED": "false",
+    "STATION_CONTENT_SCHEDULES_ENABLED": "false",
+    "STATION_CAMPAIGNS_ENABLED": "false",
+    "STATION_EVENTS_ENABLED": "false",
+    "STATION_EVENTS_RETENTION_ENABLED": "false",
+    "STATION_REPORTS_ENABLED": "false",
+    "STATION_REPORT_AGGREGATION_ENABLED": "false",
+    "STATION_REPORT_RETENTION_ENABLED": "false",
+    "MUSIC_PUBLIC_ENABLED": "false",
+    "MUSIC_UPLOADS_ENABLED": "false",
+    "MUSIC_VIP_DELIVERY_ENABLED": "false",
+    "MUSIC_ANALYTICS_ENABLED": "false",
+    "MUSIC_CLEANUP_ENABLED": "false",
+    "MOBILE_AUTH_ENABLED": "false",
+    "MOBILE_MUSIC_ENABLED": "false",
+    "MOBILE_PERSONAL_SYNC_ENABLED": "false",
+    "MOBILE_ACCOUNT_DELETION_ENABLED": "false"
+  },
+  "d1_databases": [
+    { "binding": "WAITLIST_DB", "database_name": "station-cat-t22-local-readers", "database_id": "00000000-0000-0000-0000-000000000022", "migrations_dir": "../migrations" },
+    { "binding": "MUSIC_DB", "database_name": "station-cat-t22-local-music", "database_id": "00000000-0000-0000-0000-000000000023", "migrations_dir": "../migrations-music" }
+  ],
+  "r2_buckets": [
+    { "binding": "MUSIC_BUCKET", "bucket_name": "station-cat-t22-local-music" },
+    { "binding": "CONTENT_BUCKET", "bucket_name": "station-cat-t22-local-content" },
+    { "binding": "DOWNLOADS_BUCKET", "bucket_name": "station-cat-t22-local-downloads" }
+  ]
+}

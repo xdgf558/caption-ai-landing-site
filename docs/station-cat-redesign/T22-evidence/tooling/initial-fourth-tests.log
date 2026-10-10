@@ -1,0 +1,49 @@
+
+> landing-site@0.1.0 test:redesign:release
+> node --test --test-timeout=120000 scripts/test-station-release.mjs
+
+✔ candidate closes every Station flag and covers the complete routing contract without altering its source (0.604792ms)
+✔ candidate rejects wrong worker (0.143792ms)
+✔ candidate rejects wrong account (0.048791ms)
+✔ candidate rejects preview exposure (0.044709ms)
+✔ candidate rejects hidden environment overrides (0.051041ms)
+✔ candidate rejects wrong assets (0.046958ms)
+✔ candidate rejects missing music binding (0.051833ms)
+✔ candidate rejects staging database (0.05175ms)
+✔ candidate rejects duplicate bindings (0.062125ms)
+✔ candidate rejects reader mistaken for music (0.078291ms)
+✔ candidate rejects wrong bucket (0.072709ms)
+✔ private writer requires the exact baseline, never overwrites and does not follow an output symlink (4.083ms)
+✔ release readiness keeps preparation, deployment and closure separate and refuses missing gates (0.314167ms)
+✖ native release rehearsal restores into clones and retains post-migration orders, saves and revisions (8156.591166ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 13
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8319.363375
+
+✖ failing tests:
+
+test at scripts/test-station-release.mjs:65:1
+✖ native release rehearsal restores into clones and retains post-migration orders, saves and revisions (8156.591166ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '/en/games/cat-life-game/'
+  - '/games/cat-life-game/'
+  
+      at rehearseStationRelease (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/helpers/station-release-rehearsal.mjs:142:112)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-release.mjs:66:22)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/en/games/cat-life-game/',
+    expected: '/games/cat-life-game/',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

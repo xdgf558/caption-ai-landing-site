@@ -1,0 +1,43 @@
+
+> landing-site@0.1.0 test:redesign:release
+> node --test --test-timeout=120000 scripts/test-station-release.mjs
+
+✔ candidate closes every Station flag and covers the complete routing contract without altering its source (0.626541ms)
+✔ candidate rejects wrong worker (0.176584ms)
+✔ candidate rejects wrong account (0.048625ms)
+✔ candidate rejects preview exposure (0.04375ms)
+✔ candidate rejects hidden environment overrides (0.054792ms)
+✔ candidate rejects wrong assets (0.051292ms)
+✔ candidate rejects missing music binding (0.056833ms)
+✔ candidate rejects staging database (0.054542ms)
+✔ candidate rejects duplicate bindings (0.061125ms)
+✔ candidate rejects reader mistaken for music (0.084125ms)
+✔ candidate rejects wrong bucket (0.068667ms)
+✔ candidate rejects missing existing content bucket (0.056ms)
+✔ candidate rejects missing existing downloads bucket (0.04575ms)
+✔ private writer requires the exact baseline, never overwrites and does not follow an output symlink (4.331958ms)
+✔ release readiness keeps preparation, deployment and closure separate and refuses missing gates (0.558084ms)
+▶ native release rehearsal restores into clones and retains post-migration orders, saves and revisions
+  ✔ preMigrationBackupRestores (0.1455ms)
+  ✔ objectBytesAndMetadataRestore (0.037125ms)
+  ✔ legacyRowsAndReadsRetained (0.030583ms)
+  ✔ backfillStillUnpublished (0.028708ms)
+  ✔ newOrdersAndBalanceRetained (0.024334ms)
+  ✔ oldEntitlementsAndMembershipRetained (0.02425ms)
+  ✔ newCloudRevisionRetainedAndWritableAfterRollback (0.024959ms)
+  ✔ newDraftPlatformAndEventRetained (0.024333ms)
+  ✔ contentRollbackAppendsRevision (0.026833ms)
+  ✔ currentRightsRechecked (0.024541ms)
+  ✔ liveBackupOverwriteRefused (0.044666ms)
+  ✔ partialActivationKeepsOldHome (0.026292ms)
+  ✔ statisticsOffKeepsMusicAndRuntime (0.024209ms)
+  ✔ runtimeBytesPreserved (0.023084ms)
+✔ native release rehearsal restores into clones and retains post-migration orders, saves and revisions (13260.380333ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13437.58075

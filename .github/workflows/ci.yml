@@ -91,6 +91,11 @@ jobs:
       - name: Verify integrated Station Cat core acceptance fixture and HTTP boundaries
         run: npm run test:redesign:acceptance
 
+      - name: Verify closed release candidate and isolated backup-compatible rollback
+        run: |
+          npm run test:redesign:release
+          npm run check:redesign:release
+
       - name: Verify registered Campaigns, QR destinations and attribution contexts
         run: npm run test:redesign:campaigns
 

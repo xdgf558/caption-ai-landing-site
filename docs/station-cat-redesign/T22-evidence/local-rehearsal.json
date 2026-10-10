@@ -1,0 +1,806 @@
+{
+  "executedAt": "2026-10-10T12:59:31.259Z",
+  "production": false,
+  "remoteOperations": 0,
+  "routing": {
+    "satisfied": true,
+    "missing": []
+  },
+  "nativeAssetsRouter": true,
+  "appliedMigrations": [
+    {
+      "name": "0012_station_redesign.sql",
+      "sha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498"
+    },
+    {
+      "name": "0013_station_media_uploads.sql",
+      "sha256": "fca37ba533ddd2821335aa44749e699da546f145182a5f5886ebdac02c637021"
+    },
+    {
+      "name": "0014_station_content_operations.sql",
+      "sha256": "c457774b05fa286fa8ec51f7ddc08db4eba3893902df44e359b288153954c0dd"
+    },
+    {
+      "name": "0015_station_campaign_links.sql",
+      "sha256": "c530d98acc09ab6806e136970eb36d6611f7b30dd0716103d78e6072c077232f"
+    },
+    {
+      "name": "0016_station_event_collection.sql",
+      "sha256": "feaeed6ac1dc78aba311c9a40532289f2b8acffc233f670415e6b5bab5131ceb"
+    },
+    {
+      "name": "0017_station_reports.sql",
+      "sha256": "c54f66b828d253c5b9045f9cf12434a6e85d08c53a86ff30bae560c0ebb541e6"
+    },
+    {
+      "name": "0018_station_report_window_seals.sql",
+      "sha256": "ce9517d0549ed33026d02a56ebc57f4b3f58f8a0c3467f198d66fce6f239e186"
+    }
+  ],
+  "beforeRestore": {
+    "music": {
+      "sha256": "17bca9a382c897ee68e9c0d16c206c86abccd63ad6b4272d9abcf2cd269917c2",
+      "fingerprint": "ef37ab4d9661fd0f219719919d48351705cda62a65a5dba7265ddafc8a08cf06",
+      "sqliteIntegrity": "ok",
+      "nativeD1ForeignKeys": "ok",
+      "counts": {
+        "d1_migrations": 11,
+        "music_admin_audit_logs": 1,
+        "music_analytics_admission_guard": 0,
+        "music_analytics_daily": 0,
+        "music_analytics_events": 0,
+        "music_analytics_health": 0,
+        "music_analytics_rates": 0,
+        "music_assets": 24,
+        "music_collection_assets": 0,
+        "music_collection_tracks": 1,
+        "music_collection_upload_sessions": 0,
+        "music_collections": 1,
+        "music_featured_home": 1,
+        "music_featured_items": 1,
+        "music_membership_attributions": 0,
+        "music_mutations": 0,
+        "music_publication_guards": 0,
+        "music_rate_sources": 0,
+        "music_rate_windows": 0,
+        "music_rights_evidence": 0,
+        "music_rights_reviews": 0,
+        "music_settings": 3,
+        "music_share_rate_sources": 0,
+        "music_share_rate_windows": 0,
+        "music_track_revisions": 6,
+        "music_tracks": 8,
+        "music_upload_cleanup": 0,
+        "music_upload_sessions": 0
+      }
+    },
+    "reader": {
+      "sha256": "9494eb4b43c33ab31ca750d1eec4c13aab64b0767ce037e443e5bb2b9d408815",
+      "fingerprint": "a5507a62ee88de030b4d8c78ed4a3fbfde10da752604dd03116242469d65fae4",
+      "sqliteIntegrity": "ok",
+      "nativeD1ForeignKeys": "ok",
+      "counts": {
+        "admin_audit_logs": 0,
+        "admin_content_settings": 0,
+        "content_entries": 0,
+        "content_imports": 0,
+        "content_pricing_rules": 0,
+        "content_revisions": 0,
+        "download_rate_limits": 0,
+        "game_commerce_events": 0,
+        "game_commerce_rate_limits": 0,
+        "game_entitlement_events": 0,
+        "game_entitlements": 0,
+        "game_products": 2,
+        "game_purchases": 0,
+        "membership_refund_review_items": 0,
+        "membership_refund_reviews": 0,
+        "novel_entitlements": 1,
+        "novel_orders": 1,
+        "novel_payment_events": 0,
+        "novel_tips": 0,
+        "reader_accounts": 2,
+        "reader_bookmarks": 0,
+        "reader_credit_accounts": 2,
+        "reader_credit_ledger": 0,
+        "reader_game_save_backups": 0,
+        "reader_game_save_rate_limits": 0,
+        "reader_game_save_recovery_events": 0,
+        "reader_game_saves": 1,
+        "reader_login_tokens": 0,
+        "reader_membership_redemptions": 0,
+        "reader_memberships": 1,
+        "reader_password_credentials": 0,
+        "reader_sessions": 2,
+        "reader_totp_credentials": 0,
+        "reader_totp_reset_attempts": 0,
+        "waitlist_entries": 0,
+        "waitlist_settings": 2
+      }
+    },
+    "objects": [
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000010/ca760000-0000-4000-8000-000000000012.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000020/ca760000-0000-4000-8000-000000000022.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000030/ca760000-0000-4000-8000-000000000032.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000040/ca760000-0000-4000-8000-000000000042.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000050/ca760000-0000-4000-8000-000000000052.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000060/ca760000-0000-4000-8000-000000000062.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000010/ca760000-0000-4000-8000-000000000014.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000020/ca760000-0000-4000-8000-000000000024.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000030/ca760000-0000-4000-8000-000000000034.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000040/ca760000-0000-4000-8000-000000000044.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000050/ca760000-0000-4000-8000-000000000054.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000060/ca760000-0000-4000-8000-000000000064.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000010/ca760000-0000-4000-8000-000000000015.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000020/ca760000-0000-4000-8000-000000000025.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000030/ca760000-0000-4000-8000-000000000035.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000040/ca760000-0000-4000-8000-000000000045.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000050/ca760000-0000-4000-8000-000000000055.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000060/ca760000-0000-4000-8000-000000000065.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000010/ca760000-0000-4000-8000-000000000013.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000020/ca760000-0000-4000-8000-000000000023.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000030/ca760000-0000-4000-8000-000000000033.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000040/ca760000-0000-4000-8000-000000000043.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000050/ca760000-0000-4000-8000-000000000053.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000060/ca760000-0000-4000-8000-000000000063.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      }
+    ]
+  },
+  "afterRestore": {
+    "music": {
+      "sha256": "f03d270483af47b52bb8dc883c2c89102e3128b8d991c80a7fc0150ca83bdd03",
+      "fingerprint": "3dd81143289b89efaf00be932c27f824a43766b350e460a4996abf9a4df10921",
+      "sqliteIntegrity": "ok",
+      "nativeD1ForeignKeys": "ok",
+      "counts": {
+        "d1_migrations": 18,
+        "music_admin_audit_logs": 12,
+        "music_analytics_admission_guard": 0,
+        "music_analytics_daily": 0,
+        "music_analytics_events": 0,
+        "music_analytics_health": 0,
+        "music_analytics_rates": 0,
+        "music_assets": 24,
+        "music_collection_assets": 0,
+        "music_collection_tracks": 1,
+        "music_collection_upload_sessions": 0,
+        "music_collections": 1,
+        "music_featured_home": 1,
+        "music_featured_items": 1,
+        "music_membership_attributions": 0,
+        "music_mutations": 11,
+        "music_publication_guards": 0,
+        "music_rate_sources": 7,
+        "music_rate_windows": 1,
+        "music_rights_evidence": 0,
+        "music_rights_reviews": 0,
+        "music_settings": 3,
+        "music_share_rate_sources": 0,
+        "music_share_rate_windows": 0,
+        "music_track_revisions": 7,
+        "music_tracks": 9,
+        "music_upload_cleanup": 0,
+        "music_upload_sessions": 0,
+        "station_analytics_events": 1,
+        "station_asset_rights": 2,
+        "station_campaign_legacy_sources": 0,
+        "station_campaigns": 0,
+        "station_clip_publications": 0,
+        "station_clip_revisions": 0,
+        "station_clips": 0,
+        "station_event_inflight": 0,
+        "station_event_rates": 3,
+        "station_event_retention_guard": 0,
+        "station_event_retention_health": 1,
+        "station_external_metrics": 0,
+        "station_game_revisions": 2,
+        "station_games": 1,
+        "station_home_configs": 1,
+        "station_home_revisions": 1,
+        "station_media_assets": 1,
+        "station_media_upload_sessions": 0,
+        "station_platform_links": 1,
+        "station_promotion_revisions": 0,
+        "station_promotions": 0,
+        "station_publish_jobs": 0,
+        "station_report_health": 1,
+        "station_report_jobs": 0,
+        "station_report_operations": 0,
+        "station_report_retention_guard": 0,
+        "station_report_snapshots": 0,
+        "station_report_window_seal": 1,
+        "station_route_migrations": 0,
+        "station_track_publications": 9,
+        "station_track_revisions": 12,
+        "station_track_routes": 9
+      }
+    },
+    "reader": {
+      "sha256": "76a25e385ee2c442d05ea31e04195637c5723ce14f81d9808e2b394069b87885",
+      "fingerprint": "aa9b4218242bc75fef679b843250647c16ee76a939e077e6f17a844834e4ecbe",
+      "sqliteIntegrity": "ok",
+      "nativeD1ForeignKeys": "ok",
+      "counts": {
+        "admin_audit_logs": 0,
+        "admin_content_settings": 0,
+        "content_entries": 0,
+        "content_imports": 0,
+        "content_pricing_rules": 0,
+        "content_revisions": 0,
+        "download_rate_limits": 0,
+        "game_commerce_events": 0,
+        "game_commerce_rate_limits": 0,
+        "game_entitlement_events": 0,
+        "game_entitlements": 0,
+        "game_products": 2,
+        "game_purchases": 0,
+        "membership_refund_review_items": 0,
+        "membership_refund_reviews": 0,
+        "novel_entitlements": 1,
+        "novel_orders": 2,
+        "novel_payment_events": 0,
+        "novel_tips": 0,
+        "reader_accounts": 2,
+        "reader_bookmarks": 0,
+        "reader_credit_accounts": 2,
+        "reader_credit_ledger": 1,
+        "reader_game_save_backups": 2,
+        "reader_game_save_rate_limits": 1,
+        "reader_game_save_recovery_events": 0,
+        "reader_game_saves": 1,
+        "reader_login_tokens": 0,
+        "reader_membership_redemptions": 0,
+        "reader_memberships": 1,
+        "reader_password_credentials": 0,
+        "reader_sessions": 2,
+        "reader_totp_credentials": 0,
+        "reader_totp_reset_attempts": 0,
+        "waitlist_entries": 0,
+        "waitlist_settings": 2
+      }
+    },
+    "objects": [
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000010/ca760000-0000-4000-8000-000000000012.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000020/ca760000-0000-4000-8000-000000000022.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000030/ca760000-0000-4000-8000-000000000032.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000040/ca760000-0000-4000-8000-000000000042.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000050/ca760000-0000-4000-8000-000000000052.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/audio/ca760000-0000-4000-8000-000000000060/ca760000-0000-4000-8000-000000000062.mp3",
+        "byteSize": 100,
+        "sha256": "7d465ba69bcd711a850a8af37e79f328c512980e9845b7ffa30dc3a84dfd6ae8"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000010/ca760000-0000-4000-8000-000000000014.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000020/ca760000-0000-4000-8000-000000000024.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000030/ca760000-0000-4000-8000-000000000034.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000040/ca760000-0000-4000-8000-000000000044.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000050/ca760000-0000-4000-8000-000000000054.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/covers/ca760000-0000-4000-8000-000000000060/ca760000-0000-4000-8000-000000000064.png",
+        "byteSize": 100,
+        "sha256": "0226d7097f3413312690e76e1fe1b9e0aaac1dd7010b656827ad27f01fee66db"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000010/ca760000-0000-4000-8000-000000000015.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000020/ca760000-0000-4000-8000-000000000025.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000030/ca760000-0000-4000-8000-000000000035.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000040/ca760000-0000-4000-8000-000000000045.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000050/ca760000-0000-4000-8000-000000000055.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/lyrics/ca760000-0000-4000-8000-000000000060/ca760000-0000-4000-8000-000000000065.lrc",
+        "byteSize": 100,
+        "sha256": "9427b82dcd09ce70f9de9c9677c460f18a86aec076fbdc79d8e9709f58127d22"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000010/ca760000-0000-4000-8000-000000000013.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000020/ca760000-0000-4000-8000-000000000023.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000030/ca760000-0000-4000-8000-000000000033.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000040/ca760000-0000-4000-8000-000000000043.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000050/ca760000-0000-4000-8000-000000000053.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "music/previews/ca760000-0000-4000-8000-000000000060/ca760000-0000-4000-8000-000000000063.mp3",
+        "byteSize": 100,
+        "sha256": "de577cc8152fad5ddc31d41026a136384d24a6e0c44f2033dc30819652b94a73"
+      },
+      {
+        "key": "station-test-only/bca9cded-7e55-4bed-adfa-389bec0c504f/66fc7a4a-bff2-46a2-86c1-9b11456ee532",
+        "byteSize": 100,
+        "sha256": "44cda1bce4e2de527d02384782e8a15163dfb7eb9cf651b0cbc8c282ac53287a"
+      }
+    ]
+  },
+  "http": [
+    {
+      "path": "/api/readers/game-saves/cat-life",
+      "method": "PUT",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/api/station/events",
+      "method": "POST",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/apps/",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 410,
+      "location": null
+    },
+    {
+      "path": "/apps/cat-life-game/",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 301,
+      "location": "/en/games/cat-life-game/"
+    },
+    {
+      "path": "/en/games/cat-life-game/",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/robots.txt",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/sitemap.xml",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/sitemaps/tracks-1.xml",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 400,
+      "location": null
+    },
+    {
+      "path": "/en/about/",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/zh-hant/music",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 302,
+      "location": "/music/"
+    },
+    {
+      "path": "/music/tracks/permanent-free/",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/%61pps/",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 410,
+      "location": null
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "mode": "STATION_ROUTE_MIGRATIONS_ENABLED",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "mode": "STATION_CONTENT_PUBLIC_ENABLED",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "mode": "STATION_MUSIC_PAGES_ENABLED",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "mode": "STATION_GAME_PAGES_ENABLED",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "mode": "STATION_MEMBER_PAGES_ENABLED",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/api/station/events",
+      "method": "POST",
+      "mode": "statistics-off",
+      "status": 503,
+      "location": null
+    },
+    {
+      "path": "/music/tracks/permanent-free/",
+      "method": "GET",
+      "mode": "statistics-off",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/games/cat-life/",
+      "method": "GET",
+      "mode": "statistics-off",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "mode": "rollback",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/apps/",
+      "method": "GET",
+      "mode": "rollback",
+      "status": 301,
+      "location": "/en/apps/"
+    },
+    {
+      "path": "/games/cat-life/",
+      "method": "GET",
+      "mode": "rollback",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/games/cat-life/",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/api/readers/session",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/api/readers/session",
+      "method": "GET",
+      "mode": "rollback",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/api/readers/membership",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 404,
+      "location": null
+    },
+    {
+      "path": "/api/readers/membership",
+      "method": "GET",
+      "mode": "rollback",
+      "status": 404,
+      "location": null
+    },
+    {
+      "path": "/api/readers/orders",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 404,
+      "location": null
+    },
+    {
+      "path": "/api/readers/orders",
+      "method": "GET",
+      "mode": "rollback",
+      "status": 404,
+      "location": null
+    },
+    {
+      "path": "/api/readers/game-saves/cat-life",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/api/readers/game-saves/cat-life",
+      "method": "GET",
+      "mode": "rollback",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/api/mobile/v1/me/music/likes",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 503,
+      "location": null
+    },
+    {
+      "path": "/api/mobile/v1/me/music/likes",
+      "method": "GET",
+      "mode": "rollback",
+      "status": 503,
+      "location": null
+    },
+    {
+      "path": "/.well-known/apple-app-site-association",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 503,
+      "location": null
+    },
+    {
+      "path": "/.well-known/apple-app-site-association",
+      "method": "GET",
+      "mode": "rollback",
+      "status": 503,
+      "location": null
+    },
+    {
+      "path": "/admin/api/music/tracks",
+      "method": "GET",
+      "mode": "candidate",
+      "status": 503,
+      "location": null
+    },
+    {
+      "path": "/admin/api/music/tracks",
+      "method": "GET",
+      "mode": "rollback",
+      "status": 503,
+      "location": null
+    },
+    {
+      "path": "/api/readers/game-saves/cat-life",
+      "method": "PUT",
+      "mode": "rollback",
+      "status": 200,
+      "location": null
+    }
+  ],
+  "checks": {
+    "preMigrationBackupRestores": true,
+    "objectBytesAndMetadataRestore": true,
+    "legacyRowsAndReadsRetained": true,
+    "backfillStillUnpublished": true,
+    "newOrdersAndBalanceRetained": true,
+    "oldEntitlementsAndMembershipRetained": true,
+    "newCloudRevisionRetainedAndWritableAfterRollback": true,
+    "newDraftPlatformAndEventRetained": true,
+    "contentRollbackAppendsRevision": true,
+    "currentRightsRechecked": true,
+    "liveBackupOverwriteRefused": true,
+    "partialActivationKeepsOldHome": true,
+    "statisticsOffKeepsMusicAndRuntime": true,
+    "runtimeBytesPreserved": true
+  },
+  "observations": {
+    "ordersBefore": 1,
+    "ordersAfter": 2,
+    "balanceBefore": 125,
+    "balanceAfter": 225,
+    "cloudRevisionBefore": 4,
+    "cloudRevisionAfterWrite": 5,
+    "cloudRevisionAfterRollbackWrite": 6,
+    "contentPublishedBeforeRollback": 3,
+    "contentPublishedAfterRollback": 4,
+    "retainedEditedRevision": 3,
+    "eventRows": 1,
+    "activeDatabaseWasRestored": false,
+    "homePromotion": "pending",
+    "beforeRollbackMusicFingerprint": "59777d0a5f0b47f9c7cd62f48c5600ad7344e6e273581aeb8eca4dd3e59f92b6"
+  },
+  "limits": [
+    "Synthetic local D1/R2 and representative reader fixture only; no production backup, migration or cloud conflict verification",
+    "Order and balance writes are fixture SQL, not merchant callbacks or real payment proof",
+    "Small synthetic R2 bytes check identity and backup integrity, not media decoding, performance or rights",
+    "Worker flags are local test overrides; actual deployment, production routing and retirement remain unexecuted",
+    "In-flight cloud writes, cross-process local storage and iframe/exit limits remain unchanged"
+  ]
+}

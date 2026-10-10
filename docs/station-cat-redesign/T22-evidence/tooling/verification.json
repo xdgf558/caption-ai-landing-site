@@ -1,0 +1,31 @@
+{
+  "version": "4.131.1",
+  "dependencyInstalledOrUpgraded": false,
+  "productionConfigChanged": false,
+  "localConfiguration": "ops/station-release-local.jsonc",
+  "dryRun": {
+    "exitCode": 0,
+    "remoteUpload": false,
+    "log": "tooling/wrangler-local-dry-run.log"
+  },
+  "types": {
+    "firstAttempt": "sandbox loopback denied",
+    "retryExitCode": 0,
+    "log": "tooling/wrangler-types-success.log",
+    "generatedArtifact": "tooling/station-release-env.d.ts.gz",
+    "uncompressedSha256": "be19439f1fa02a3b1e2a222215df77b223c0e74b91ec805e5c3f7ba59df0aac3",
+    "runtimeGenerator": "workerd@1.20260911.1"
+  },
+  "requireReady": {
+    "exitCode": 2,
+    "expectedBlocked": true,
+    "log": "tooling/require-ready-blocked.log"
+  },
+  "officialReferences": [
+    "https://developers.cloudflare.com/workers/static-assets/binding/",
+    "https://developers.cloudflare.com/workers/versions-and-deployments/",
+    "https://developers.cloudflare.com/workers/versions-and-deployments/rollbacks/",
+    "https://developers.cloudflare.com/d1/best-practices/import-export-data/"
+  ],
+  "scope": "Local dry-run/types/help only. Production metadata/schema SELECTs recorded separately. No deployment or mutation."
+}

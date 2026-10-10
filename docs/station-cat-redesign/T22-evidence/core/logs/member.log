@@ -1,0 +1,44 @@
+
+> landing-site@0.1.0 test:redesign:member
+> node --test --test-timeout=90000 scripts/test-station-member-readouts.mjs scripts/test-station-member-runtime.mjs
+
+✔ opening Member reads v2/v1 without writing, migrating, adopting or leaking stored playback secrets (0.804459ms)
+✔ damaged, future and inaccessible local music are distinct from a genuinely empty library (0.119542ms)
+✔ current data takes precedence over legacy without overwriting either copy (0.054708ms)
+✔ identity, cloud presence and game items require the confirmed same account (0.268ms)
+✔ order projection preserves anonymous historical access and reports refund/reversal before old delivery (0.104417ms)
+✔ guest readout probes only the guest slot and never reads cloud/private native music (8.544708ms)
+✔ confirmed account probes its own local slot, never claims the guest slot, and errors do not become missing saves (0.36025ms)
+✔ late read responses after an account change cannot revive identity, saves or items even when abort is ignored (2.626333ms)
+✔ returned different owner clears the whole readout rather than borrowing permissions (0.230666ms)
+✔ failed identity never probes a slot, and a later explicit retry recovers (0.217959ms)
+✔ historical order authentication, missing and service failure remain distinct (0.433875ms)
+✔ late historical order result is dropped and aborted when session changes or page is disposed (0.456833ms)
+✔ oversized service bodies fail closed instead of displaying partial records (0.298333ms)
+✔ reader presentation epoch rejects late responses, other-account credits and invalid session shapes (0.099375ms)
+✔ closed member rollout does not touch bindings, methods, redirects or content flags (0.953042ms)
+✔ enabled shell failures are private, retryable and do not read D1 (0.377708ms)
+✔ private reader policy preserves status, cookies, existing vary and exact response body (0.247083ms)
+✔ all Member readout states have complete four-language messages (0.083291ms)
+✔ reader database failures return a private retryable response without stack or SQL details (0.091625ms)
+✔ zh-Hant: actual opt-in shell retains account forms and manual music return without token metadata (4183.256208ms)
+✔ zh-Hans: actual opt-in shell retains account forms and manual music return without token metadata (4.751584ms)
+✔ en: actual opt-in shell retains account forms and manual music return without token metadata (4.18175ms)
+✔ ja: actual opt-in shell retains account forms and manual music return without token metadata (8.080791ms)
+✔ flag-off uses the original Member page; internal templates stay hidden; wrong method and missing assets fail closed (8.613542ms)
+✔ actual reader HTTP permissions and cache policy for visitor (7.84325ms)
+✔ actual reader HTTP permissions and cache policy for account 1 (12.412917ms)
+✔ actual reader HTTP permissions and cache policy for account 2 (10.751458ms)
+✔ actual reader HTTP permissions and cache policy for account 3 (10.82475ms)
+✔ historical novel/game purchases do not grant current membership or a new music entitlement (6.414959ms)
+✔ original historical order token keeps visitor, owner and other-account access distinctions (5.607458ms)
+✔ a local login/logout still uses the original cookie contract and identity (10.065541ms)
+✔ missing reader schema does not become a successful authenticated/empty service result (4.486792ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4431.11125

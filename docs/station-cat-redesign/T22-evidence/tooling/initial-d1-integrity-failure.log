@@ -1,0 +1,17 @@
+node:internal/process/task_queues:104
+    runMicrotasks();
+    ^
+
+Error: D1_ERROR: not authorized: SQLITE_AUTH
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async restoreFixtureClone (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/helpers/station-release-backup.mjs:43:17)
+    at async rehearseStationRelease (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/helpers/station-release-rehearsal.mjs:84:33)
+    at async file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/rehearse-station-release.mjs:7:45 {
+  [cause]: Error: not authorized: SQLITE_AUTH
+      at D1DatabaseSessionAlwaysPrimary._sendOrThrow (cloudflare-internal:d1-api:147:24)
+      at async cloudflare-internal:d1-api:331:39 {
+    [cause]: undefined
+  }
+}
+
+Node.js v24.15.0

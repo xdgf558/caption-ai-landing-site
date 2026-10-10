@@ -1,0 +1,96 @@
+
+> landing-site@0.1.0 test:redesign:release
+> node --test --test-timeout=120000 scripts/test-station-release.mjs
+
+✔ candidate closes every Station flag and covers the complete routing contract without altering its source (0.613417ms)
+✔ candidate rejects wrong worker (0.148334ms)
+✔ candidate rejects wrong account (0.049041ms)
+✔ candidate rejects preview exposure (0.045125ms)
+✔ candidate rejects hidden environment overrides (0.055541ms)
+✔ candidate rejects wrong assets (0.05ms)
+✔ candidate rejects missing music binding (0.0545ms)
+✔ candidate rejects staging database (0.056333ms)
+✔ candidate rejects duplicate bindings (0.063291ms)
+✔ candidate rejects reader mistaken for music (0.084792ms)
+✔ candidate rejects wrong bucket (0.06275ms)
+✔ private writer requires the exact baseline, never overwrites and does not follow an output symlink (4.08ms)
+✔ release readiness keeps preparation, deployment and closure separate and refuses missing gates (0.298291ms)
+✖ native release rehearsal restores into clones and retains post-migration orders, saves and revisions (10015.949333ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 13
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10178.966958
+
+✖ failing tests:
+
+test at scripts/test-station-release.mjs:65:1
+✖ native release rehearsal restores into clones and retains post-migration orders, saves and revisions (10015.949333ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      catalogs: {
+        'zh-Hans': {
+          body: {
+            catalogVersion: 0,
+  ...
+        {
+  +       audit_ref: 1,
+  -       audit_ref: 0,
+          derived_ref: 0,
+          evidence_ref: 0,
+          id: 'ca760000-0000-4000-8000-000000000014',
+          revision_ref: 1,
+  +       rights_ref: 1
+  -       rights_ref: 0
+        },
+        {
+          audit_ref: 0,
+          derived_ref: 0,
+          evidence_ref: 0,
+  
+      at rehearseStationRelease (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/helpers/station-release-rehearsal.mjs:182:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-release.mjs:66:22)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      readiness: { catalogVersion: 0, previewLimitMs: 45000 },
+      catalogs: { 'zh-Hant': [Object], 'zh-Hans': [Object], en: [Object], ja: [Object] },
+      details: { 'zh-Hant': [Array], 'zh-Hans': [Array], en: [Array], ja: [Array] },
+      cleanupReferences: [
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object]
+      ]
+    },
+    expected: {
+      readiness: { catalogVersion: 0, previewLimitMs: 45000 },
+      catalogs: { 'zh-Hant': [Object], 'zh-Hans': [Object], en: [Object], ja: [Object] },
+      details: { 'zh-Hant': [Array], 'zh-Hans': [Array], en: [Array], ja: [Array] },
+      cleanupReferences: [
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object],
+        [Object], [Object], [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
