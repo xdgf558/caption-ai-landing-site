@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "profile": "brand-games",
+  "navigation": ["home", "music", "games", "member", "about"],
+  "game": { "slug": "cat-life-game", "runtimePath": "/games/cat-life/" },
+  "music": { "featuredTrackId": null, "selectedTrackIds": [], "previewEnabled": false, "videoEnabled": false },
+  "legacy": { "publicContentClosed": true, "deleteStoredData": false },
+  "productionDeployed": false
+}

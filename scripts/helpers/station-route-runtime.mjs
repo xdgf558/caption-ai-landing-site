@@ -10,7 +10,8 @@ import { memberFixtureMigrations } from './station-member-runtime.mjs';
 import { migrationFlags } from '../../src/redesign/routeMigrationPaths.js';
 
 export const routeFixtureCookie = id => 'station_cat_reader_session=t20-local-session-' + id;
-export async function createStationRouteRuntime({ videoCases = false, bindings = {} } = {}) {
+export async function createStationRouteRuntime({ videoCases = false, bindings = {},
+  assetsDirectory = fileURLToPath(new URL('../../dist/', import.meta.url)) } = {}) {
   const output = await build({ entryPoints: [fileURLToPath(new URL('station-route-runtime-worker.js', import.meta.url))],
     bundle: true, format: 'esm', platform: 'browser', write: false, loader: { '.wasm': 'binary' } });
   const mf = new Miniflare({ modules: true, script: output.outputFiles[0].text, compatibilityDate: '2026-05-17', host: '127.0.0.1', port: 0,
@@ -22,7 +23,7 @@ export async function createStationRouteRuntime({ videoCases = false, bindings =
       ALLOW_LOCAL_ADMIN: 'false', MOBILE_PRODUCTION_ASSOCIATION_ENABLED: 'false', ...bindings },
     // Actual Workers asset router, not a filesystem handler approximation.
     // It parses the built _redirects/_headers and uses the real asset manifest.
-    assets: { directory: fileURLToPath(new URL('../../dist/', import.meta.url)), binding: 'ASSETS',
+    assets: { directory: assetsDirectory, binding: 'ASSETS',
       routerConfig: { invoke_user_worker_ahead_of_assets: true, has_user_worker: true }, assetConfig: { not_found_handling: '404-page' } },
     outboundService: () => new Response('Outbound network disabled in T20 fixture', { status: 403 }) });
   try {

@@ -88,6 +88,11 @@ jobs:
       - name: Verify product landing themes and locale routes
         run: node scripts/test-product-night.mjs
 
+      - name: Verify brand and game launch package and closed legacy website content
+        run: |
+          npm run build:station:first-launch
+          npm run test:station:first-launch
+
       - name: Verify integrated Station Cat core acceptance fixture and HTTP boundaries
         run: npm run test:redesign:acceptance
 

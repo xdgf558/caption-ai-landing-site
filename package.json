@@ -105,7 +105,9 @@
     "preview:redesign:core": "node scripts/serve-station-core-preview.mjs",
     "test:redesign:release": "node --test --test-timeout=120000 scripts/test-station-release.mjs",
     "rehearse:redesign:release": "node scripts/rehearse-station-release.mjs",
-    "check:redesign:release": "node scripts/verify-station-release-readiness.mjs"
+    "check:redesign:release": "node scripts/verify-station-release-readiness.mjs",
+    "build:station:first-launch": "node scripts/build-station-first-launch.mjs",
+    "test:station:first-launch": "node --test --test-timeout=120000 scripts/test-station-first-launch.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

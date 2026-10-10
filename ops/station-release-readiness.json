@@ -1,6 +1,6 @@
 {
   "task": "T22",
-  "reviewBaseline": "07088e0068a368f298575d8870d7bf2b94591328",
+  "reviewBaseline": "6a334ab11bc0e0a542923e7b016babfa0800f4f1",
   "productionDeployed": false,
   "legacyClosureVerified": false,
   "gates": [
@@ -8,15 +8,15 @@
       "id": "exact-head-ci",
       "status": "pending",
       "evidence": [],
-      "reason": "T22 PR 精确头完整托管 CI 待独立核对；T21 通过不能替代。"
+      "reason": "L01 首发范围 PR 的精确头完整托管 CI 待独立核对；已合并 T22 的成功不能替代。"
     },
     {
       "id": "production-schema",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/T22-evidence/production-readonly-inventory.json"
+        "docs/station-cat-redesign/L01-evidence/production-readonly-inventory.json"
       ],
-      "reason": "已只读确认实际版本的 D1/R2 绑定；MUSIC_DB 仅有 0001–0011 账本，没有 station_* 表，清理视图未扩展。0012–0018、Access/完整字段核验仍待授权迁移后验收。"
+      "reason": "本批新核对仍只有 0001–0011、没有 station_* 表；0012–0018 和实际生产合同尚未执行验收。"
     },
     {
       "id": "production-backup",
@@ -27,14 +27,16 @@
     {
       "id": "real-promotion-rights",
       "status": "pending",
-      "evidence": [],
-      "reason": "主推作品、真实平台链接、游客试听开关、视频与素材权利仍稍后确定。"
+      "evidence": [
+        "docs/station-cat-redesign/L01-first-launch-scope.md"
+      ],
+      "reason": "用户已选择品牌与游戏首发，音乐主推/试听/视频留空；需发布真实游戏与空音乐首页并核对游戏/品牌资源权限，不能使用合成夹具代替。"
     },
     {
       "id": "production-build",
       "status": "pending",
       "evidence": [],
-      "reason": "开发构建允许空正文；正式内容生产包和精确静态资源仍待构建验证。"
+      "reason": "已实现不使用空正文开发开关的专用品牌/游戏候选包并保留兼容清单；完整真实生产基线和最终发布包仍需审核。"
     },
     {
       "id": "production-route-contract",
@@ -49,7 +51,7 @@
         "docs/station-cat-redesign/T21-evidence/browser/mobile-lab-runs.json",
         "docs/station-cat-redesign/T21-evidence/browser/song-lcp-diagnostic.json"
       ],
-      "reason": "歌曲页 LCP 3.37–3.43 秒，超过 2.5 秒；需要真实授权海报/封面和相同网络复测。"
+      "reason": "T21 歌曲页 3.37–3.43 秒失败保留，不因首发音乐关闭而记通过；实际品牌/游戏首发页面需性能复测。"
     },
     {
       "id": "devices-accessibility",
@@ -61,13 +63,17 @@
       "id": "compatible-rollback-monitoring",
       "status": "pending",
       "evidence": [],
-      "reason": "需确定实际受控旧界面版本、现有生产服务配置、内容版本、资源可恢复性及监控分母；生产云冲突未验收。"
+      "reason": "用户已要求关闭全部旧公开内容；需验证保留关闭合同的新品牌维护/内容回退，不能用全关闭开关恢复旧小说。真实备份恢复和云冲突仍未验收。"
     },
     {
       "id": "production-authorization",
       "status": "pending",
-      "evidence": [],
-      "reason": "T22 准备与 PR 审查不授权生产备份/迁移/上传/发布、开关或旧入口关闭。"
+      "evidence": [
+        "docs/station-cat-redesign/L01-first-launch-scope.md"
+      ],
+      "reason": "用户已确定正式上线阶段和旧内容关闭目标；继续执行一批一 PR 审查流程，尚需完成精确执行包审查、维护窗口及生产验收。"
     }
-  ]
+  ],
+  "launchPhase": "L01",
+  "launchScope": "ops/station-first-launch.json"
 }
