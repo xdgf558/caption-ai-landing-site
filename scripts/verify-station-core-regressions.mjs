@@ -15,6 +15,9 @@ const plan = [
   ['build', ['npm', 'run', 'build'], { ALLOW_EMPTY_SERIAL_CONTENT: '1' }],
   ['legacy', ['npm', 'test']],
   ['acceptance', ['npm', 'run', 'test:redesign:acceptance']],
+  ['release', ['npm', 'run', 'test:redesign:release']],
+  ['release-readiness', ['npm', 'run', 'check:redesign:release']],
+  ['release-rehearsal', ['npm', 'run', 'rehearse:redesign:release']],
   ['clip-home-build', ['node', 'scripts/build-station-clip-home-preview.mjs']],
   ['game-preview-build', ['npm', 'run', 'build:redesign:game-session']],
   ['member-preview-build', ['npm', 'run', 'build:redesign:member']],
@@ -39,7 +42,7 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const baseline = await capture(['git', 'rev-parse', 'HEAD']);
 const branch = await capture(['git', 'branch', '--show-current']);
 const inventory = (await capture(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'])).split('\0');
-const relevant = inventory.filter(path => /^(?:src\/redesign\/|src\/scripts\/station|src\/worker\.js$|src\/layouts\/Station|src\/components\/Station|src\/pages\/(?:music|games|member)\/site-shell\/|public\/games\/cat-life\/|migrations(?:-music)?\/|scripts\/(?:test-station|test-mobile-music|test-mobile-library|helpers\/station|verify-station-core|serve-station-core)|(?:package(?:-lock)?\.json|wrangler\.toml|astro\.config\.mjs)$)/.test(path));
+const relevant = inventory.filter(path => /^(?:src\/redesign\/|src\/scripts\/station|src\/worker\.js$|src\/layouts\/Station|src\/components\/Station|src\/pages\/(?:music|games|member)\/site-shell\/|public\/games\/cat-life\/|migrations(?:-music)?\/|scripts\/(?:test-station|test-mobile-music|test-mobile-library|helpers\/station|verify-station-core|serve-station-core|build-station-release|rehearse-station-release|verify-station-release)|ops\/station-release-|\.github\/workflows\/ci\.yml$|(?:package(?:-lock)?\.json|wrangler\.toml|astro\.config\.mjs)$)/.test(path));
 const anchors = await Promise.all(relevant.map(async path => ({ path, sha256: sha(await readFile(join(root, path))) })));
 const configuration = parse(await readFile(join(root, 'wrangler.toml'), 'utf8'));
 const selected = plan.filter(([id]) => !only || only.includes(id));

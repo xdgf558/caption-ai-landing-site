@@ -1,0 +1,93 @@
+{
+  "observedAt": "2026-10-10T12:51:41.397Z",
+  "scope": "authenticated Cloudflare control-plane metadata and MUSIC_DB schema-only SELECTs",
+  "accountId": "3f5394e0ef5a531c63c0ceaa74262e0d",
+  "worker": "caption-ai-landing-site",
+  "latestDeployment": {
+    "id": "038582b5-b641-4780-addb-e3b5d8f4e280",
+    "createdOn": "2026-09-16T10:58:22.445582Z",
+    "versions": [
+      {
+        "version_id": "67d6e6b0-42f5-4696-8ed5-bc1096a49ebf",
+        "percentage": 100
+      }
+    ]
+  },
+  "version": {
+    "id": "67d6e6b0-42f5-4696-8ed5-bc1096a49ebf",
+    "createdOn": "2026-09-16T10:58:20.920919Z"
+  },
+  "bindings": [
+    {
+      "name": "CONTENT_BUCKET",
+      "type": "r2_bucket",
+      "bucketName": "station-cat-content"
+    },
+    {
+      "name": "DOWNLOADS_BUCKET",
+      "type": "r2_bucket",
+      "bucketName": "station-cat-downloads"
+    },
+    {
+      "name": "MUSIC_BUCKET",
+      "type": "r2_bucket",
+      "bucketName": "station-cat-music-production-private"
+    },
+    {
+      "name": "MUSIC_DB",
+      "type": "d1",
+      "id": "876b9acd-fee6-4919-8c50-4ea6f7ab9372"
+    },
+    {
+      "name": "WAITLIST_DB",
+      "type": "d1",
+      "id": "c4a8cb1a-6a94-4e8f-a6fb-a734afafca63"
+    }
+  ],
+  "plainTextFlagAllowlist": [
+    {
+      "name": "MUSIC_PUBLIC_ENABLED",
+      "value": "true"
+    },
+    {
+      "name": "MUSIC_VIP_DELIVERY_ENABLED",
+      "value": "true"
+    }
+  ],
+  "musicSchema": {
+    "ledger": [
+      "0001_music_foundation.sql",
+      "0002_music_publication.sql",
+      "0003_music_uploads.sql",
+      "0004_music_cleanup.sql",
+      "0005_music_rate_limits.sql",
+      "0006_music_analytics.sql",
+      "0007_music_albums.sql",
+      "0008_music_featured.sql",
+      "0009_music_album_covers.sql",
+      "0010_music_limited_free.sql",
+      "0011_music_share_rate_limits.sql"
+    ],
+    "stationSchemaNames": [],
+    "assetReferencesView": "CREATE VIEW music_asset_references AS\nSELECT a.id,\n  EXISTS (SELECT 1 FROM music_track_revisions r WHERE a.id IN\n    (r.audio_asset_id,r.preview_asset_id,r.cover_asset_id,r.lyrics_asset_id)) AS revision_ref,\n  EXISTS (SELECT 1 FROM music_rights_evidence e WHERE e.asset_id=a.id) AS evidence_ref,\n  EXISTS (SELECT 1 FROM music_rights_reviews r,json_tree(r.review_json) j WHERE j.atom=a.id) AS rights_ref,\n  EXISTS (SELECT 1 FROM music_assets d WHERE d.derived_from_asset_id=a.id\n    AND NOT EXISTS (SELECT 1 FROM music_upload_cleanup c WHERE c.asset_id=d.id)) AS derived_ref,\n  EXISTS (SELECT 1 FROM music_admin_audit_logs l WHERE l.action NOT IN\n    ('music.upload.reserve','music.upload.start','music.upload.reject','music.upload.complete',\n     'music.cleanup.claim','music.cleanup.prove','music.cleanup.release')\n    AND (l.target_id=a.id OR EXISTS (SELECT 1 FROM json_tree(l.summary_json) j WHERE j.atom=a.id))) AS audit_ref\nFROM music_assets a",
+    "redesignMigrationsPresent": false,
+    "missingRequiredPrefixes": [
+      "0012",
+      "0013",
+      "0014",
+      "0015",
+      "0016",
+      "0017",
+      "0018"
+    ]
+  },
+  "mutations": 0,
+  "productionBackupPerformed": false,
+  "limits": [
+    "Observation at one time is not future resource identity or deployment approval",
+    "No business rows, credentials, private variables, request logs or R2 object bytes were read into this report",
+    "No Access policy, real rights, merchant callbacks, cloud conflicts or production build were verified",
+    "Plain-text flags do not establish the full secret/runtime configuration",
+    "Worker-first production router settings were not returned by versions view and remain unverified"
+  ]
+}

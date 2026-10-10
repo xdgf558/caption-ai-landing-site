@@ -4,7 +4,7 @@
 
 ## 当前执行约定
 
-用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01 至 T20 已审查通过并在各自审查头 CI 通过后合并。T06 原头 `8ac1d499` 的销户审计失败已通过只读清单修订解决；修订头 `31e19a6` 经用户复审及托管 CI 通过后合并。本轮仅执行 **T21 核心回归与设备验证**，独立 PR 审查后才进入 T22。T21 本机证据有歌曲性能、原始导出与真机/生产未验收项，不作为发布通过。
+用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01 至 T21 已审查通过并在各自审查头 CI 通过后合并。T06 原头 `8ac1d499` 的销户审计失败已通过只读清单修订解决；修订头 `31e19a6` 经用户复审及托管 CI 通过后合并。本轮仅执行 **T22 灰度与回退准备**，提交独立 PR，不自动进行生产执行。T21 歌曲性能、原始导出、真机与生产验收缺项仍保留，不作为发布通过。
 
 这项约定优先于基线文档中建议的 R0–R7 批次及启动指令中的连续推进方式；三份规范正文已按本次审查同步逐项执行要求。PR 创建、构建通过与生产发布是独立状态；本轮没有生产发布授权，待用户审查的 PR 不自动合并。
 
@@ -30,8 +30,8 @@
 | T18 事件接收与去重 | 用户审查通过，精确头完整 CI 通过，已合并 | [PR #203](https://github.com/xdgf558/caption-ai-landing-site/pull/203)；头 `42cd0b30` 的 CI `37904880728`（40 步）成功，squash 为 `cd1ea339`，新加坡时间 2026-10-09 16:59:07 合并；0016 未远程执行，生产统计关闭 |
 | T19 聚合与运营报表 | 两项 P2 已修订，复审通过，已合并 | [PR #204](https://github.com/xdgf558/caption-ai-landing-site/pull/204)，精确头 `f0299029` 完整 CI 通过，合并为 `062ee924`；[合同](T19-reports-and-cohort-conversion.md)、[修订证据](evidence/T19-review/verification-summary.json)；0017/0018 未远程执行，报表、聚合与清理未启用 |
 | T20 旧地址退出与搜索配置 | 用户审查通过，精确头完整 CI 通过，已合并 | [PR #205](https://github.com/xdgf558/caption-ai-landing-site/pull/205)，头 `661e93e9` 的 CI `38011585239`（42 步）成功，squash 为 `2cf2bf2d`，新加坡时间 2026-10-10 18:29:26；[说明](T20-legacy-exits-and-search.md)、[合并事实](T21-evidence/T20-merge-result.json)；生产配置未切换 |
-| T21 核心回归与设备验证 | 本机证据与焦点修复交付，待独立 PR 审查 | [报告](T21-core-regression-and-device-verification.md)、[A01–A22 矩阵](T21-acceptance-matrix.md)、[最终本机回归](T21-evidence/final-core/verification-summary.json)；歌曲 LCP、原始导出落盘、真机与生产仍待验收 |
-| T22 灰度与回退准备 | 未开始 | T21 审查后单独授权；生产启用、部署和旧入口关闭另行核验 |
+| T21 核心回归与设备验证 | 用户审查通过，精确头完整 CI 通过，已合并 | [PR #206](https://github.com/xdgf558/caption-ai-landing-site/pull/206)，头 `8cf0b4ae` 的 CI `38047071665`（43 步）成功，squash 为 `07088e00`，新加坡时间 2026-10-10 20:35:16；[报告](T21-core-regression-and-device-verification.md)、[验收矩阵](T21-acceptance-matrix.md)；歌曲性能、真机与生产缺项保留 |
+| T22 灰度与回退准备 | 准备材料、本机演练交付，待独立 PR 审查 | [报告](T22-release-and-compatible-rollback.md)、[执行说明](T22-execution-runbook.md)、[本机证据](T22-evidence/README.md)；已只读确认生产仅有 0001–0011 账本，新版生产条件未满足；发布和旧入口关闭未执行 |
 
 ## 需求基线
 

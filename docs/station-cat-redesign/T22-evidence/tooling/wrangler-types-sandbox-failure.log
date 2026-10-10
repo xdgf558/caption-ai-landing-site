@@ -1,0 +1,65 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+
+ ⛅️ wrangler 4.131.1
+────────────────────
+Generating project types...
+
+interface __BaseEnv_Env {
+	MUSIC_BUCKET: R2Bucket;
+	CONTENT_BUCKET: R2Bucket;
+	DOWNLOADS_BUCKET: R2Bucket;
+	WAITLIST_DB: D1Database;
+	MUSIC_DB: D1Database;
+	ASSETS: Fetcher;
+	STATION_ROUTE_MIGRATIONS_ENABLED: "false";
+	STATION_CONTENT_PUBLIC_ENABLED: "false";
+	STATION_MUSIC_PAGES_ENABLED: "false";
+	STATION_GAME_PAGES_ENABLED: "false";
+	STATION_MEMBER_PAGES_ENABLED: "false";
+	STATION_SEARCH_INDEXING_ENABLED: "false";
+	STATION_MEDIA_UPLOADS_ENABLED: "false";
+	STATION_CONTENT_ADMIN_ENABLED: "false";
+	STATION_CONTENT_SCHEDULES_ENABLED: "false";
+	STATION_CAMPAIGNS_ENABLED: "false";
+	STATION_EVENTS_ENABLED: "false";
+	STATION_EVENTS_RETENTION_ENABLED: "false";
+	STATION_REPORTS_ENABLED: "false";
+	STATION_REPORT_AGGREGATION_ENABLED: "false";
+	STATION_REPORT_RETENTION_ENABLED: "false";
+	MUSIC_PUBLIC_ENABLED: "false";
+	MUSIC_UPLOADS_ENABLED: "false";
+	MUSIC_VIP_DELIVERY_ENABLED: "false";
+	MUSIC_ANALYTICS_ENABLED: "false";
+	MUSIC_CLEANUP_ENABLED: "false";
+	MOBILE_AUTH_ENABLED: "false";
+	MOBILE_MUSIC_ENABLED: "false";
+	MOBILE_PERSONAL_SYNC_ENABLED: "false";
+	MOBILE_ACCOUNT_DELETION_ENABLED: "false";
+}
+declare namespace Cloudflare {
+	interface GlobalProps {
+		mainModule: typeof import("../src/worker");
+	}
+	interface Env extends __BaseEnv_Env {}
+}
+interface Env extends __BaseEnv_Env {}
+
+Generating runtime types...
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mA permission error occurred while accessing the file system.[0m
+
+  
+  Error: listen EPERM: operation not permitted 127.0.0.1
+  
+  This is typically caused by:
+    - Insufficient file or directory permissions
+    - Files or directories being locked by another process
+    - Antivirus or security software blocking access
+  
+  Please check the file permissions and try again.
+
+
+🪵  Logs were written to "/private/tmp/station-cat-t22-wrangler-logs/wrangler-2026-10-10_12-47-34_849.log"

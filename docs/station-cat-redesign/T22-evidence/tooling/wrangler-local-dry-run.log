@@ -1,0 +1,42 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+
+ ⛅️ wrangler 4.131.1
+────────────────────
+✨ Read 767 files from the assets directory /Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/dist
+Total Upload: 6410.55 KiB / gzip: 2095.71 KiB
+Your Worker has access to the following bindings:
+Binding                                                                       Resource                  
+env.WAITLIST_DB (station-cat-t22-local-readers)                               D1 Database               
+env.MUSIC_DB (station-cat-t22-local-music)                                    D1 Database               
+env.MUSIC_BUCKET (station-cat-t22-local-music)                                R2 Bucket                 
+env.CONTENT_BUCKET (station-cat-t22-local-content)                            R2 Bucket                 
+env.DOWNLOADS_BUCKET (station-cat-t22-local-downloads)                        R2 Bucket                 
+env.ASSETS                                                                    Assets                    
+env.STATION_ROUTE_MIGRATIONS_ENABLED ("false")                                Environment Variable      
+env.STATION_CONTENT_PUBLIC_ENABLED ("false")                                  Environment Variable      
+env.STATION_MUSIC_PAGES_ENABLED ("false")                                     Environment Variable      
+env.STATION_GAME_PAGES_ENABLED ("false")                                      Environment Variable      
+env.STATION_MEMBER_PAGES_ENABLED ("false")                                    Environment Variable      
+env.STATION_SEARCH_INDEXING_ENABLED ("false")                                 Environment Variable      
+env.STATION_MEDIA_UPLOADS_ENABLED ("false")                                   Environment Variable      
+env.STATION_CONTENT_ADMIN_ENABLED ("false")                                   Environment Variable      
+env.STATION_CONTENT_SCHEDULES_ENABLED ("false")                               Environment Variable      
+env.STATION_CAMPAIGNS_ENABLED ("false")                                       Environment Variable      
+env.STATION_EVENTS_ENABLED ("false")                                          Environment Variable      
+env.STATION_EVENTS_RETENTION_ENABLED ("false")                                Environment Variable      
+env.STATION_REPORTS_ENABLED ("false")                                         Environment Variable      
+env.STATION_REPORT_AGGREGATION_ENABLED ("false")                              Environment Variable      
+env.STATION_REPORT_RETENTION_ENABLED ("false")                                Environment Variable      
+env.MUSIC_PUBLIC_ENABLED ("false")                                            Environment Variable      
+env.MUSIC_UPLOADS_ENABLED ("false")                                           Environment Variable      
+env.MUSIC_VIP_DELIVERY_ENABLED ("false")                                      Environment Variable      
+env.MUSIC_ANALYTICS_ENABLED ("false")                                         Environment Variable      
+env.MUSIC_CLEANUP_ENABLED ("false")                                           Environment Variable      
+env.MOBILE_AUTH_ENABLED ("false")                                             Environment Variable      
+env.MOBILE_MUSIC_ENABLED ("false")                                            Environment Variable      
+env.MOBILE_PERSONAL_SYNC_ENABLED ("false")                                    Environment Variable      
+env.MOBILE_ACCOUNT_DELETION_ENABLED ("false")                                 Environment Variable      
+
+--dry-run: exiting now.

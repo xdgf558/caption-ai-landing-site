@@ -1,0 +1,18 @@
+{
+  "launchReady": false,
+  "productionDeployed": false,
+  "legacyClosureVerified": false,
+  "unsatisfied": [
+    "exact-head-ci",
+    "production-schema",
+    "production-backup",
+    "real-promotion-rights",
+    "production-build",
+    "production-route-contract",
+    "performance",
+    "devices-accessibility",
+    "compatible-rollback-monitoring",
+    "production-authorization"
+  ],
+  "authority": "review checklist only; separate execution authorization required"
+}

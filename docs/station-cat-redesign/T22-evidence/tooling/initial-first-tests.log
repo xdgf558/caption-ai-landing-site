@@ -1,0 +1,50 @@
+
+> landing-site@0.1.0 test:redesign:release
+> node --test --test-timeout=120000 scripts/test-station-release.mjs
+
+✔ candidate closes every Station flag and covers the complete routing contract without altering its source (0.627167ms)
+✔ candidate rejects wrong worker (0.150583ms)
+✔ candidate rejects wrong account (0.049416ms)
+✔ candidate rejects preview exposure (0.044ms)
+✔ candidate rejects hidden environment overrides (0.056334ms)
+✔ candidate rejects wrong assets (0.050083ms)
+✔ candidate rejects missing music binding (0.054917ms)
+✔ candidate rejects staging database (0.0565ms)
+✔ candidate rejects duplicate bindings (0.098333ms)
+✔ candidate rejects reader mistaken for music (0.119167ms)
+✔ candidate rejects wrong bucket (0.068583ms)
+✔ private writer requires the exact baseline, never overwrites and does not follow an output symlink (4.1955ms)
+✔ release readiness keeps preparation, deployment and closure separate and refuses missing gates (0.282041ms)
+✖ native release rehearsal restores into clones and retains post-migration orders, saves and revisions (4328.82275ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 13
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4503.995333
+
+✖ failing tests:
+
+test at scripts/test-station-release.mjs:65:1
+✖ native release rehearsal restores into clones and retains post-migration orders, saves and revisions (4328.82275ms)
+  AssertionError [ERR_ASSERTION]: schema, quoted rows and sequences must match
+  + actual - expected
+  
+  + '3bd2add1357b81dcc787ecbb8ab4e98c905fca02b8eb17fdcfb73af8290595a9'
+  - 'b65b06f84a56d551979df57f63869989f4a7e78160378dbc686039e8a817d4e1'
+  
+      at restoreFixtureClone (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/helpers/station-release-backup.mjs:56:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async rehearseStationRelease (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/helpers/station-release-rehearsal.mjs:85:15)
+      at async TestContext.<anonymous> (file:///Users/shaola/Downloads/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/%E5%A4%9A%E5%93%81%E7%89%8C%E7%BD%91%E7%AB%99%E5%BC%80%E5%8F%91%E7%9B%B8%E5%85%B3/station-cat-redesign/scripts/test-station-release.mjs:66:22)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '3bd2add1357b81dcc787ecbb8ab4e98c905fca02b8eb17fdcfb73af8290595a9',
+    expected: 'b65b06f84a56d551979df57f63869989f4a7e78160378dbc686039e8a817d4e1',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

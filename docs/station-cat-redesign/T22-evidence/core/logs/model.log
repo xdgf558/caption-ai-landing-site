@@ -1,0 +1,38 @@
+
+> landing-site@0.1.0 test:redesign:model
+> node --test --test-timeout=90000 scripts/test-station-redesign-model.mjs
+
+✔ populated migration, repeated application and old-reader rollback retain both old and new data (64.479792ms)
+✔ empty migration seeds only an unpublished home draft with no selected materials (19.747292ms)
+✔ backfill preserves stable IDs, exact legacy slugs and existing policy sources without promotion inference (21.43525ms)
+✔ legacy-accepted noncanonical slugs are retained verbatim, while new managed routes use the normalized format (36.166833ms)
+✔ old music table definitions and five cleanup reference columns remain compatible (33.281917ms)
+✔ old administrator create, draft save, revision conflict and idempotency receipts still work after migration (46.230333ms)
+✔ a website publication can have no site audio or external release, and a later draft does not replace its sealed snapshot (23.900417ms)
+✔ old guarded publication and replay still seal the original audio revision after the additive migration (25.34175ms)
+✔ full-audio modes and covers must point to the same owner; mode labels never add an entitlement (22.954208ms)
+✔ station_track_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected (22.614416ms)
+✔ station_game_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected (22.776167ms)
+✔ station_clip_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected (22.393208ms)
+✔ station_promotion_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected (22.201791ms)
+✔ station_home_revisions: wrong-state pointers, sealed mutation/delete/replace and stale head writes are rejected (22.352875ms)
+✔ slug changes keep the old alias and cannot reassign or reclaim another track address (33.105625ms)
+✔ platform regions are canonical sets and live links require a URL and verification timestamp (22.107209ms)
+✔ promotion previews, platform selections and clips cannot borrow another song or an audio master (21.847916ms)
+✔ home selections use stable existing IDs with bounded, duplicate-free arrays (21.914541ms)
+✔ game introduction slug cannot occupy the runtime directory and a runtime key grants no new save capability (21.2985ms)
+✔ clip assets and posters belong to the clip and media type, with immutable validated bytes and terminal revocation (21.670084ms)
+✔ rights start pending, require review metadata and cannot change resource identity or scope (21.603125ms)
+✔ new cover, lyrics, preview and rights references block the old cleanup before any storage call (23.7795ms)
+✔ assets already claimed by the old cleaner cannot gain a new website, preview or rights reference (22.647167ms)
+✔ clip platform publications are independent records, campaigns cannot borrow another track clip, and routes remain proposals (21.804834ms)
+✔ new event IDs are immutable and deduplicated while the old preview threshold remains unchanged (21.653541ms)
+✔ native local D1 batches replay safely, retain new writes, and roll back wrong-binding or late failures (6728.279125ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7436.76325

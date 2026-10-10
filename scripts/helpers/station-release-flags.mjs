@@ -1,0 +1,7 @@
+import { migrationFlags } from '../../src/redesign/routeMigrationPaths.js';
+export const closedStationVariables = Object.freeze(Object.fromEntries([
+  ...migrationFlags, 'STATION_SEARCH_INDEXING_ENABLED', 'STATION_MEDIA_UPLOADS_ENABLED',
+  'STATION_CONTENT_ADMIN_ENABLED', 'STATION_CONTENT_SCHEDULES_ENABLED', 'STATION_CAMPAIGNS_ENABLED',
+  'STATION_EVENTS_ENABLED', 'STATION_EVENTS_RETENTION_ENABLED', 'STATION_REPORTS_ENABLED',
+  'STATION_REPORT_AGGREGATION_ENABLED', 'STATION_REPORT_RETENTION_ENABLED',
+].map(key => [key, 'false'])));

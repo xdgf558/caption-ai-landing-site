@@ -1,0 +1,41 @@
+
+> landing-site@0.1.0 test:redesign:release
+> node --test --test-timeout=120000 scripts/test-station-release.mjs
+
+✔ candidate closes every Station flag and covers the complete routing contract without altering its source (0.615917ms)
+✔ candidate rejects wrong worker (0.147583ms)
+✔ candidate rejects wrong account (0.050166ms)
+✔ candidate rejects preview exposure (0.04525ms)
+✔ candidate rejects hidden environment overrides (0.055959ms)
+✔ candidate rejects wrong assets (0.05ms)
+✔ candidate rejects missing music binding (0.056708ms)
+✔ candidate rejects staging database (0.053083ms)
+✔ candidate rejects duplicate bindings (0.061333ms)
+✔ candidate rejects reader mistaken for music (0.081375ms)
+✔ candidate rejects wrong bucket (0.06175ms)
+✔ private writer requires the exact baseline, never overwrites and does not follow an output symlink (4.1175ms)
+✔ release readiness keeps preparation, deployment and closure separate and refuses missing gates (0.33025ms)
+▶ native release rehearsal restores into clones and retains post-migration orders, saves and revisions
+  ✔ preMigrationBackupRestores (0.155084ms)
+  ✔ objectBytesAndMetadataRestore (0.037458ms)
+  ✔ legacyRowsAndReadsRetained (0.028459ms)
+  ✔ backfillStillUnpublished (0.031125ms)
+  ✔ newOrdersAndBalanceRetained (0.024667ms)
+  ✔ oldEntitlementsAndMembershipRetained (0.028292ms)
+  ✔ newCloudRevisionRetainedAndWritableAfterRollback (0.024708ms)
+  ✔ newDraftPlatformAndEventRetained (0.022708ms)
+  ✔ contentRollbackAppendsRevision (0.025792ms)
+  ✔ currentRightsRechecked (0.023291ms)
+  ✔ liveBackupOverwriteRefused (0.023416ms)
+  ✔ partialActivationKeepsOldHome (0.021958ms)
+  ✔ statisticsOffKeepsMusicAndRuntime (0.040917ms)
+  ✔ runtimeBytesPreserved (0.022125ms)
+✔ native release rehearsal restores into clones and retains post-migration orders, saves and revisions (13233.89025ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13406.002417

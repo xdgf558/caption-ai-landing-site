@@ -102,7 +102,10 @@
     "preview:redesign:routes": "npm run build && node scripts/serve-station-route-preview.mjs",
     "test:redesign:acceptance": "node --test --test-timeout=90000 scripts/test-station-core-acceptance.mjs scripts/test-station-music-focus.mjs",
     "verify:redesign:core": "node scripts/verify-station-core-regressions.mjs",
-    "preview:redesign:core": "node scripts/serve-station-core-preview.mjs"
+    "preview:redesign:core": "node scripts/serve-station-core-preview.mjs",
+    "test:redesign:release": "node --test --test-timeout=120000 scripts/test-station-release.mjs",
+    "rehearse:redesign:release": "node scripts/rehearse-station-release.mjs",
+    "check:redesign:release": "node scripts/verify-station-release-readiness.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",
