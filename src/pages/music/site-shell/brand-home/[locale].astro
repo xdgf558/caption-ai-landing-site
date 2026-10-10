@@ -1,0 +1,11 @@
+---
+import StationBrandHome from '../../../../components/redesign/StationBrandHome.astro';
+import { buildHomeView } from '../../../../redesign/home.js';
+import { stationHomeConfig } from '../../../../data/station-home.js';
+export function getStaticPaths() {
+  return ['zh-Hant', 'zh-Hans', 'en', 'ja'].map(locale => ({ params: { locale }, props: { locale } }));
+}
+const { locale } = Astro.props;
+const home = buildHomeView({ config: stationHomeConfig, content: {}, locale });
+---
+<StationBrandHome home={home} heroImage="/images/station-gentle/hero.webp" preview />

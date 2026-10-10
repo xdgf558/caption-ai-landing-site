@@ -65,6 +65,8 @@ import { isMusicShareCardPath, handleMusicShareCard } from './music/shareCardHtt
 import { handleMusicAnalytics, isMusicAnalyticsPath, runMusicAnalyticsRetention } from './music/analytics.js';
 import { handleStationContent, isStationContentPath } from './redesign/publicHttp.js';
 import { handleStationMusicPage } from './redesign/musicPages.js';
+import { handleStationRouteMigration } from './redesign/routeMigrations.js';
+import { applyMigrationMetadata } from './redesign/searchMetadata.js';
 import { handleStationGamePage } from './redesign/gamePages.js';
 import { handleStationGameRuntime } from './redesign/gameRuntime.js';
 import { handleStationMemberPage } from './redesign/memberPages.js';
@@ -22872,6 +22874,7 @@ export const __readerTotpTestHooks = {
 
 export default {
   async fetch(request, env, ctx) {
+    const dispatch = async () => {
     const url = new URL(request.url);
     if (isMobilePath(url.pathname)) return handleMobile(request, env, mobileReaderIdentity);
     if (url.pathname === productionAssociationPath) return productionAssociation(request, env);
@@ -22902,6 +22905,10 @@ export default {
     }
 
     if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
+    const migratedPage = await handleStationRouteMigration(request, env, {
+      readerIdentity: (incoming, runtime) => getReaderFromSession(incoming, runtime, { touch: false })
+    });
+    if (migratedPage) return migratedPage;
     const stationMemberPage = await handleStationMemberPage(request, env);
     if (stationMemberPage) return stationMemberPage;
     const stationGameRuntime = await handleStationGameRuntime(request, env);
@@ -23397,6 +23404,8 @@ export default {
     }
 
     return new Response('Not found', { status: 404 });
+    };
+    return applyMigrationMetadata(request, env, await dispatch());
   },
 
   async scheduled(controller, env) {

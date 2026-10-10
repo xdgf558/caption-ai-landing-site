@@ -1,0 +1,71 @@
+{
+  "production": false,
+  "fixtureHome": "draft",
+  "home": {
+    "activeElement": "搜尋小站",
+    "canonical": "http://127.0.0.1:4220/",
+    "clientWidth": 1265,
+    "dpr": 2,
+    "innerHeight": 720,
+    "innerWidth": 1280,
+    "media": 0,
+    "robots": "noindex,nofollow",
+    "scrollWidth": 1265,
+    "url": "http://127.0.0.1:4220/"
+  },
+  "aboutWidths": [
+    {
+      "clientWidth": 305,
+      "dpr": 1,
+      "innerHeight": 844,
+      "innerWidth": 320,
+      "scrollWidth": 305,
+      "url": "http://127.0.0.1:4220/en/about/"
+    },
+    {
+      "clientWidth": 753,
+      "dpr": 1,
+      "innerHeight": 844,
+      "innerWidth": 768,
+      "scrollWidth": 753,
+      "url": "http://127.0.0.1:4220/en/about/"
+    }
+  ],
+  "matchedHome": {
+    "viewport": {
+      "width": 1356,
+      "height": 996
+    },
+    "dpr": 1,
+    "clientWidth": 1356,
+    "scrollWidth": 1356
+  },
+  "mobileHome": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "dpr": 1,
+    "clientWidth": 375,
+    "scrollWidth": 375
+  },
+  "languageLinks": {
+    "zh-Hant": "/about/",
+    "zh-Hans": "/zh-hans/about/",
+    "en": "/en/about/",
+    "ja": "/ja/about/"
+  },
+  "interactions": [
+    "mobile about link navigated to /about/",
+    "language EN navigated to /en/about/",
+    "search focused searchbox",
+    "search query 關於 showed only About link",
+    "Escape closed dialog and returned focus to search trigger"
+  ],
+  "console": [],
+  "limits": [
+    "viewport simulation, not real iOS/Android or VoiceOver",
+    "default pending-material home; fixture catalogs do not prove real releases"
+  ],
+  "temporaryViewportReset": true
+}

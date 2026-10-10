@@ -1,5 +1,5 @@
 ---
-import { ArrowRight, Play } from '@lucide/astro';
+import { ArrowRight, Play, Music2, Headphones } from '@lucide/astro';
 import StationBrandLayout from '../../layouts/StationBrandLayout.astro';
 import Glyph from './Glyph.astro';
 import ClipDialog from './ClipDialog.astro';
@@ -33,8 +33,8 @@ const pillars = [
       <h1 class="sc-heading" id="station-title">{copy.headline[0]}<br />{' ' + copy.headline[1]}</h1>
       <p class="gentle-lede">{copy.intro.map(line => <span>{line}<br /></span>)}</p>
       <div class="gentle-hero-actions">
-        <a class="sc-button" href={music?.href || stationHref(lang, 'music')}><Glyph name="music" size={22} />{copy.goMusic}<ArrowRight size={16} aria-hidden="true" /></a>
-        <a class="sc-button sc-button-secondary" href={game?.href || stationHref(lang, 'games')}><Glyph name="games" size={23} />{copy.goGames}<ArrowRight size={16} aria-hidden="true" /></a>
+        <a class="sc-button" data-home-hero-music href={music?.href || stationHref(lang, 'music')}><Glyph name="music" size={22} />{copy.goMusic}<ArrowRight size={16} aria-hidden="true" /></a>
+        <a class="sc-button sc-button-secondary" data-home-hero-game href={game?.href || stationHref(lang, 'games')}><Glyph name="games" size={23} />{copy.goGames}<ArrowRight size={16} aria-hidden="true" /></a>
       </div>
     </div>
   </section>
@@ -42,7 +42,7 @@ const pillars = [
     <div class="gentle-features">
       <section class="gentle-feature gentle-music" aria-labelledby="station-music-title">
         <div class="gentle-section-header"><Glyph name="music" size={34} /><h2 id="station-music-title">{copy.music}</h2><p>{copy.musicTagline}</p><a class="gentle-more" href={stationHref(lang, 'music')}>{copy.moreMusic}<ArrowRight size={15} aria-hidden="true" /></a></div>
-        {music ? <div class={'gentle-feature-body home-feature-body' + (music.preview ? ' has-preview' : '')} data-home-track={music.id}>
+        <div class="home-runtime-slot" data-home-slot="music">{music ? <div class={'gentle-feature-body home-feature-body' + (music.preview ? ' has-preview' : '')} data-home-track={music.id}>
           <a class="home-cover-link" href={music.href} aria-label={state.details + ' · ' + music.title}><img class="gentle-cover" src={music.coverUrl} width="1024" height="1024" alt={music.title} /></a>
           <div class="gentle-work-copy">
             <span class="gentle-badge">{home.fixture ? state.sample : state.featured}</span>
@@ -53,27 +53,31 @@ const pillars = [
             {music.platforms.length ? music.platforms.map(link => <a href={link.href} target={home.fixture ? undefined : '_blank'} rel={home.fixture ? undefined : 'noopener noreferrer'} data-home-platform={link.id} data-sc-platform-link={home.fixture ? undefined : true} data-track-id={music.id} data-link-id={link.id} data-provider={link.provider}><Glyph name={link.icon} size={21} /><span>{providers[link.provider]}{home.fixture && <small>{state.platformSample}</small>}</span></a>) : <p class="home-platform-empty">{state.noPlatforms}</p>}
             {!home.fixture && <Fragment set:html={renderPlatformBackup(music, lang)} />}
           </div>
-        </div> : <div class="home-empty" data-home-empty="music"><h3>{state.musicEmpty}</h3><p>{state.musicEmptyText}</p><a class="sc-button sc-button-secondary" href={stationHref(lang, 'music')}>{copy.moreMusic}<ArrowRight size={16} aria-hidden="true" /></a></div>}
+        </div> : <div class="home-empty" data-home-empty="music"><h3>{state.musicEmpty}</h3><p>{state.musicEmptyText}</p><a class="sc-button sc-button-secondary" href={stationHref(lang, 'music')}>{copy.moreMusic}<ArrowRight size={16} aria-hidden="true" /></a></div>}</div>
       </section>
       <section class="gentle-feature gentle-games" aria-labelledby="station-games-title">
         <div class="gentle-section-header"><Glyph name="games" size={36} /><h2 id="station-games-title">{copy.games}</h2><p>{copy.gamesTagline}</p><a class="gentle-more" href={stationHref(lang, 'games')}>{copy.moreGames}<ArrowRight size={15} aria-hidden="true" /></a></div>
-        {game ? <div class="gentle-feature-body home-game-body" data-home-game={game.id}>
+        <div class="home-runtime-slot" data-home-slot="game">{game ? <div class="gentle-feature-body home-game-body" data-home-game={game.id}>
           <a class="home-cover-link" href={game.href} aria-label={copy.viewGame + ' · ' + game.title}><img class="gentle-cover" src={game.screenshotUrl} width="1254" height="1254" alt={home.fixture ? copy.gameAlt : game.title} /></a>
           <div class="gentle-work-copy"><span class="gentle-badge">{home.fixture ? state.sample : state.gameFeatured}</span><h3><a href={game.href}>{game.title}</a></h3><p>{game.summary}</p><Glyph name="paw" size={48} class="gentle-paw" /></div>
           <div class="gentle-game-actions"><a class="sc-button" href={game.href}>{copy.viewGame}<ArrowRight size={16} aria-hidden="true" /></a><slot name="game-actions" /></div>
-        </div> : <div class="home-empty" data-home-empty="game"><h3>{state.gameEmpty}</h3><p>{state.gameEmptyText}</p><a class="sc-button sc-button-secondary" href={stationHref(lang, 'games')}>{copy.moreGames}<ArrowRight size={16} aria-hidden="true" /></a></div>}
+        </div> : <div class="home-empty" data-home-empty="game"><h3>{state.gameEmpty}</h3><p>{state.gameEmptyText}</p><a class="sc-button sc-button-secondary" href={stationHref(lang, 'games')}>{copy.moreGames}<ArrowRight size={16} aria-hidden="true" /></a></div>}</div>
       </section>
     </div>
     <section class="gentle-promotion" aria-labelledby="station-promotion-title">
       <div class="gentle-promotion-intro"><Glyph name="chart" size={33} /><div><h2 id="station-promotion-title">{copy.promotion}</h2><p>{copy.promotionText}</p></div></div>
-      {pillars.map(pillar => <a class={'gentle-pillar gentle-pillar-' + pillar.icon} href={pillar.href} data-astro-reload={pillar.icon === 'crown' ? true : undefined}><span class="gentle-pillar-icon"><Glyph name={pillar.icon} size={25} /></span><span><strong>{pillar.title}</strong><small>{pillar.text}</small></span></a>)}
+      {pillars.map(pillar => <a class={'gentle-pillar gentle-pillar-' + pillar.icon} data-home-pillar={pillar.icon} href={pillar.href} data-astro-reload={pillar.icon === 'crown' ? true : undefined}><span class="gentle-pillar-icon"><Glyph name={pillar.icon} size={25} /></span><span><strong>{pillar.title}</strong><small>{pillar.text}</small></span></a>)}
       <span class="gentle-promotion-paw" aria-hidden="true"><Glyph name="paw" size={30} /></span>
     </section>
-    {home.selectedTracks.length > 0 && <section class="home-selected" aria-labelledby="station-selected-title"><h2 id="station-selected-title">{state.selected}</h2><div class="home-selected-grid">{home.selectedTracks.map(track => <a class="home-selected-item" href={track.href} data-selected-track={track.id}><img src={track.coverUrl} width="72" height="72" alt="" loading="lazy" /><span><strong>{track.title}</strong><small>{track.artist}</small></span><ArrowRight size={16} aria-hidden="true" /></a>)}</div></section>}
-    {home.clips.length > 0 && <section class="home-clips" data-sc-home-clips id="station-clips" aria-labelledby="station-clips-title"><div class="gentle-section-header"><h2 id="station-clips-title">{state.clips}</h2><p>{state.clipsText}</p></div><div class="home-clip-grid">{home.clips.map(clip => <a class="home-clip-card" href={clip.href} data-home-clip={clip.id} data-sc-clip={clipModel.clips.some(item => item.id === clip.id) ? clip.id : undefined}><img src={clip.posterUrl} width="1024" height="1024" alt="" loading="lazy" /><span class="home-clip-duration">{Math.ceil(clip.durationSec)}s</span><strong>{clip.title}</strong><span class="home-clip-action"><Play size={15} aria-hidden="true" />{state.watch}{home.fixture && <small> · {state.sample}</small>}</span></a>)}</div></section>}
+    <div class="home-runtime-slot" data-home-slot="selected">{home.selectedTracks.length > 0 && <section class="home-selected" aria-labelledby="station-selected-title"><h2 id="station-selected-title">{state.selected}</h2><div class="home-selected-grid">{home.selectedTracks.map(track => <a class="home-selected-item" href={track.href} data-selected-track={track.id}><img src={track.coverUrl} width="72" height="72" alt="" loading="lazy" /><span><strong>{track.title}</strong><small>{track.artist}</small></span><ArrowRight size={16} aria-hidden="true" /></a>)}</div></section>}</div>
+    <div class="home-runtime-slot" data-home-slot="clips">{home.clips.length > 0 && <section class="home-clips" data-sc-home-clips id="station-clips" aria-labelledby="station-clips-title"><div class="gentle-section-header"><h2 id="station-clips-title">{state.clips}</h2><p>{state.clipsText}</p></div><div class="home-clip-grid">{home.clips.map(clip => <a class="home-clip-card" href={clip.href} data-home-clip={clip.id} data-sc-clip={clipModel.clips.some(item => item.id === clip.id) ? clip.id : undefined}><img src={clip.posterUrl} width="1024" height="1024" alt="" loading="lazy" /><span class="home-clip-duration">{Math.ceil(clip.durationSec)}s</span><strong>{clip.title}</strong><span class="home-clip-action"><Play size={15} aria-hidden="true" />{state.watch}{home.fixture && <small> · {state.sample}</small>}</span></a>)}</div></section>}</div>
     {home.updates.length > 0 && <section class="gentle-news" aria-labelledby="station-news-title"><div class="gentle-section-header"><h2 id="station-news-title">{copy.latest}</h2><p>{copy.latestText}</p></div><div class="gentle-news-grid">{home.updates.map(item => <article class="gentle-news-item" data-home-update={item.id}><img src={item.imageUrl} width="100" height="100" alt="" loading="lazy" /><div><span class={'gentle-badge gentle-badge-' + (item.kind === 'life' ? 'paw' : item.kind)}><Glyph name={item.kind === 'life' ? 'paw' : item.kind} size={12} />{home.fixture ? state.sample : state.update}</span><h3>{item.title}</h3><p>{item.summary}</p></div><a class="sc-icon-button" href={item.href} aria-label={copy.view + ' · ' + item.title}><ArrowRight size={18} aria-hidden="true" /></a></article>)}</div></section>}
   </div>
   <Fragment slot="fixture-controls"><slot name="fixture-controls" /><ClipDialog lang={lang} /><script id="sc-home-clips-bootstrap" type="application/json" set:html={musicBootstrap({ home: { locale: lang, music, clips: home.clips }, clips: clipModel.clips })} /></Fragment>
+  <svg slot="fixture-controls" width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
+    <symbol id="sc-icon-play" viewBox="0 0 24 24"><Play size={24} /></symbol><symbol id="sc-icon-arrow" viewBox="0 0 24 24"><ArrowRight size={24} /></symbol>
+    <symbol id="sc-icon-music" viewBox="0 0 24 24"><Music2 size={24} /></symbol><symbol id="sc-icon-headphones" viewBox="0 0 24 24"><Headphones size={24} /></symbol>
+  </defs></svg>
 </StationBrandLayout>
 <script>
   import { mountStationPlatforms } from '../../redesign/platformClient.js';
@@ -93,6 +97,7 @@ const pillars = [
   document.addEventListener('astro:page-load', mount);
 </script>
 <style is:global>
+  .home-runtime-slot { display: contents; }
   .home-feature-body .home-cover-link, .home-game-body .home-cover-link { grid-row: 1 / 3; }
   .home-cover-link .gentle-cover { grid-row: auto; }
   .home-feature-body .gentle-work-copy { padding-right: 0; }

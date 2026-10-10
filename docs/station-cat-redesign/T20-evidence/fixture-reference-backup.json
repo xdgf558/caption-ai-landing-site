@@ -1,0 +1,421 @@
+{
+  "production": false,
+  "createdAt": "2026-10-10T00:46:44.834Z",
+  "routes": [
+    {
+      "slug": "archived-no-audio",
+      "track_id": "ca760000-0000-4000-8000-000000000080",
+      "role": "canonical",
+      "origin": "legacy_backfill",
+      "created_at": 1791158380000
+    },
+    {
+      "slug": "draft-no-audio",
+      "track_id": "ca760000-0000-4000-8000-000000000070",
+      "role": "canonical",
+      "origin": "legacy_backfill",
+      "created_at": 1791158380000
+    },
+    {
+      "slug": "early-access",
+      "track_id": "ca760000-0000-4000-8000-000000000050",
+      "role": "canonical",
+      "origin": "legacy_backfill",
+      "created_at": 1791158370000
+    },
+    {
+      "slug": "limited-active",
+      "track_id": "ca760000-0000-4000-8000-000000000030",
+      "role": "canonical",
+      "origin": "legacy_backfill",
+      "created_at": 1791158370000
+    },
+    {
+      "slug": "limited-expired",
+      "track_id": "ca760000-0000-4000-8000-000000000040",
+      "role": "canonical",
+      "origin": "legacy_backfill",
+      "created_at": 1791158370000
+    },
+    {
+      "slug": "local-sample-1",
+      "track_id": "ca760000-0000-4000-8000-000000001010",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-10",
+      "track_id": "ca760000-0000-4000-8000-000000001100",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-11",
+      "track_id": "ca760000-0000-4000-8000-000000001110",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-12",
+      "track_id": "ca760000-0000-4000-8000-000000001120",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-13",
+      "track_id": "ca760000-0000-4000-8000-000000001130",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-14",
+      "track_id": "ca760000-0000-4000-8000-000000001140",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-15",
+      "track_id": "ca760000-0000-4000-8000-000000001150",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-16",
+      "track_id": "ca760000-0000-4000-8000-000000001160",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-17",
+      "track_id": "ca760000-0000-4000-8000-000000001170",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-18",
+      "track_id": "ca760000-0000-4000-8000-000000001180",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-2",
+      "track_id": "ca760000-0000-4000-8000-000000001020",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-3",
+      "track_id": "ca760000-0000-4000-8000-000000001030",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-4",
+      "track_id": "ca760000-0000-4000-8000-000000001040",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-5",
+      "track_id": "ca760000-0000-4000-8000-000000001050",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-6",
+      "track_id": "ca760000-0000-4000-8000-000000001060",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-7",
+      "track_id": "ca760000-0000-4000-8000-000000001070",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-8",
+      "track_id": "ca760000-0000-4000-8000-000000001080",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "local-sample-9",
+      "track_id": "ca760000-0000-4000-8000-000000001090",
+      "role": "canonical",
+      "origin": "managed",
+      "created_at": 1791158400000
+    },
+    {
+      "slug": "permanent-free",
+      "track_id": "ca760000-0000-4000-8000-000000000010",
+      "role": "canonical",
+      "origin": "legacy_backfill",
+      "created_at": 1791158370000
+    },
+    {
+      "slug": "unpublished",
+      "track_id": "ca760000-0000-4000-8000-000000000060",
+      "role": "canonical",
+      "origin": "legacy_backfill",
+      "created_at": 1791158370000
+    },
+    {
+      "slug": "vip",
+      "track_id": "ca760000-0000-4000-8000-000000000020",
+      "role": "canonical",
+      "origin": "legacy_backfill",
+      "created_at": 1791158370000
+    }
+  ],
+  "routeProposals": [],
+  "publications": [
+    {
+      "track_id": "ca760000-0000-4000-8000-000000000010",
+      "status": "published",
+      "published_revision": 3
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000000020",
+      "status": "published",
+      "published_revision": 3
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000000030",
+      "status": "published",
+      "published_revision": 3
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000000040",
+      "status": "published",
+      "published_revision": 3
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000000050",
+      "status": "published",
+      "published_revision": 3
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000000060",
+      "status": "published",
+      "published_revision": 3
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000000070",
+      "status": "published",
+      "published_revision": 2
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000000080",
+      "status": "draft",
+      "published_revision": null
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001010",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001020",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001030",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001040",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001050",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001060",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001070",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001080",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001090",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001100",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001110",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001120",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001130",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001140",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001150",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001160",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001170",
+      "status": "published",
+      "published_revision": 1
+    },
+    {
+      "track_id": "ca760000-0000-4000-8000-000000001180",
+      "status": "published",
+      "published_revision": 1
+    }
+  ],
+  "reading": [
+    {
+      "id": 1,
+      "entry_type": "novel_series",
+      "locale": "zh-Hant",
+      "slug": "t20-history",
+      "parent_slug": "",
+      "access_level": "free"
+    },
+    {
+      "id": 2,
+      "entry_type": "novel_chapter",
+      "locale": "zh-Hant",
+      "slug": "chapter-one",
+      "parent_slug": "t20-history",
+      "access_level": "free"
+    },
+    {
+      "id": 3,
+      "entry_type": "novel_chapter",
+      "locale": "zh-Hant",
+      "slug": "paid-chapter",
+      "parent_slug": "t20-history",
+      "access_level": "paid"
+    },
+    {
+      "id": 4,
+      "entry_type": "blog_post",
+      "locale": "zh-Hant",
+      "slug": "t20-old-dynamic",
+      "parent_slug": "",
+      "access_level": "free"
+    },
+    {
+      "id": 5,
+      "entry_type": "signal_brief",
+      "locale": "zh-Hant",
+      "slug": "t20-old-signal",
+      "parent_slug": "",
+      "access_level": "free"
+    },
+    {
+      "id": 6,
+      "entry_type": "novel_series",
+      "locale": "en",
+      "slug": "t20-history",
+      "parent_slug": "",
+      "access_level": "free"
+    },
+    {
+      "id": 7,
+      "entry_type": "novel_chapter",
+      "locale": "en",
+      "slug": "chapter-one",
+      "parent_slug": "t20-history",
+      "access_level": "free"
+    },
+    {
+      "id": 8,
+      "entry_type": "novel_chapter",
+      "locale": "en",
+      "slug": "paid-chapter",
+      "parent_slug": "t20-history",
+      "access_level": "paid"
+    },
+    {
+      "id": 9,
+      "entry_type": "blog_post",
+      "locale": "en",
+      "slug": "t20-old-dynamic",
+      "parent_slug": "",
+      "access_level": "free"
+    },
+    {
+      "id": 10,
+      "entry_type": "signal_brief",
+      "locale": "en",
+      "slug": "t20-old-signal",
+      "parent_slug": "",
+      "access_level": "free"
+    }
+  ],
+  "entitlements": [
+    {
+      "account_id": 2,
+      "series_slug": "t20-history",
+      "scope": "series",
+      "access_level": "all"
+    }
+  ],
+  "saves": [
+    {
+      "account_id": 2,
+      "game_key": "cat-life",
+      "save_json": "{\"fixture\":\"t20-preserved\"}",
+      "save_hash": "t20-local-save-only",
+      "save_bytes": 27,
+      "revision": 4
+    }
+  ]
+}
