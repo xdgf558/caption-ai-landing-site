@@ -1,0 +1,34 @@
+18:34:45 [content] Syncing content
+18:34:45 [content] Synced content
+18:34:45 [types] Generated 13ms
+18:34:45 [build] output: "static"
+18:34:45 [build] mode: "static"
+18:34:45 [build] directory: /Users/shaola/Downloads/软件开发/多品牌网站开发相关/station-cat-redesign/.generated/station-clip-home-preview/
+18:34:45 [build] Collecting build info...
+18:34:45 [build] ✓ Completed in 22ms.
+18:34:45 [build] Building static entrypoints...
+18:34:46 [vite] ✓ built in 767ms
+18:34:46 [build] ✓ Completed in 778ms.
+
+ building client (vite) 
+18:34:46 [vite] transforming...
+18:34:46 [vite] ✓ 39 modules transformed.
+18:34:46 [vite] rendering chunks...
+18:34:46 [vite] computing gzip size...
+18:34:46 [vite] .generated/station-clip-home-preview/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BrJj5Ure.js      1.53 kB │ gzip:  0.66 kB
+18:34:46 [vite] .generated/station-clip-home-preview/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.DA3ChMHJ.js   1.54 kB │ gzip:  0.72 kB
+18:34:46 [vite] .generated/station-clip-home-preview/_astro/routes.BY-pTpGp.js                                                    1.72 kB │ gzip:  0.79 kB
+18:34:46 [vite] .generated/station-clip-home-preview/_astro/analyticsControls.CD5hl7BZ.js                                        11.30 kB │ gzip:  4.60 kB
+18:34:46 [vite] .generated/station-clip-home-preview/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.C-zQ1NSQ.js    26.00 kB │ gzip: 10.10 kB
+18:34:46 [vite] ✓ built in 38ms
+
+ generating static routes 
+18:34:46 ▶ scripts/fixtures/station-clips/site/pages/[locale].astro
+18:34:46   ├─ /zh-Hant/index.html (+7ms) 
+18:34:46   ├─ /zh-Hans/index.html (+4ms) 
+18:34:46   ├─ /en/index.html (+1ms) 
+18:34:46   └─ /ja/index.html (+1ms) 
+18:34:46 ✓ Completed in 17ms.
+
+18:34:46 [build] 4 page(s) built in 861ms
+18:34:46 [build] Complete!

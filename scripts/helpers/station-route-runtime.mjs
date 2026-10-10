@@ -10,7 +10,7 @@ import { memberFixtureMigrations } from './station-member-runtime.mjs';
 import { migrationFlags } from '../../src/redesign/routeMigrationPaths.js';
 
 export const routeFixtureCookie = id => 'station_cat_reader_session=t20-local-session-' + id;
-export async function createStationRouteRuntime() {
+export async function createStationRouteRuntime({ videoCases = false, bindings = {} } = {}) {
   const output = await build({ entryPoints: [fileURLToPath(new URL('station-route-runtime-worker.js', import.meta.url))],
     bundle: true, format: 'esm', platform: 'browser', write: false, loader: { '.wasm': 'binary' } });
   const mf = new Miniflare({ modules: true, script: output.outputFiles[0].text, compatibilityDate: '2026-05-17', host: '127.0.0.1', port: 0,
@@ -19,7 +19,7 @@ export async function createStationRouteRuntime() {
     r2Buckets: { MUSIC_BUCKET: 't20-local-music', CONTENT_BUCKET: 't20-local-novels' },
     bindings: { ...Object.fromEntries(migrationFlags.map(key => [key, 'true'])), STATION_SEARCH_INDEXING_ENABLED: 'false',
       MUSIC_PUBLIC_ENABLED: 'true', MUSIC_VIP_DELIVERY_ENABLED: 'true', MUSIC_RATE_LIMIT_SECRET: 't20-synthetic-secret-only-at-least-32-characters',
-      ALLOW_LOCAL_ADMIN: 'false', MOBILE_PRODUCTION_ASSOCIATION_ENABLED: 'false' },
+      ALLOW_LOCAL_ADMIN: 'false', MOBILE_PRODUCTION_ASSOCIATION_ENABLED: 'false', ...bindings },
     // Actual Workers asset router, not a filesystem handler approximation.
     // It parses the built _redirects/_headers and uses the real asset manifest.
     assets: { directory: fileURLToPath(new URL('../../dist/', import.meta.url)), binding: 'ASSETS',
@@ -39,7 +39,7 @@ export async function createStationRouteRuntime() {
       }
     } finally { parser.close(); }
     for (const group of migrationStatements().slice(0, -1)) await db.batch(group.statements.map(sql => db.prepare(sql)));
-    const content = await seedStationMusicPages(db, bucket, { gameCases: true });
+    const content = await seedStationMusicPages(db, bucket, { gameCases: true, videoCases });
     const time = Date.now(), iso = value => new Date(value).toISOString();
     for (const id of [1,2,3]) {
       await insertFixture(reader, 'reader_accounts', { id, email: 't20-' + id + '@example.test', normalized_email: 't20-' + id + '@example.test', display_name: 'Local T20 ' + id });

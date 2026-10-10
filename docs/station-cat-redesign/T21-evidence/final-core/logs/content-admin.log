@@ -1,0 +1,50 @@
+
+> landing-site@0.1.0 test:redesign:content-admin
+> node --test --test-timeout=90000 scripts/test-station-content-admin.mjs scripts/test-station-content-client.mjs scripts/test-station-content-admin-runtime.mjs
+
+▶ actual Worker Access, native D1/R2, flags and guarded publication workflow
+  ✔ forged and expired identities never reach the content binding (8.42475ms)
+  ✔ admin flag must be explicit; wrong or unmigrated MUSIC_DB closes without writes (15.775333ms)
+  ✔ CSRF, methods, query ambiguity and editor publish restrictions remain server side (7.484417ms)
+  ✔ register, approve and publish through actual native transactions, replaying the original receipt (29.375208ms)
+  ✔ one concurrent save wins; stale mutation and publication never change current pointer (15.431542ms)
+  ✔ promotion and homepage are separate; stop updates fresh public no-store response (32.9835ms)
+  ✔ real fixture MP4 and image uploads become controlled clip/game publications, with current rights rechecked (127.822875ms)
+  ✔ bounded schedule run disabled by either flag and never falls back to a production binding (4.602458ms)
+  ✔ HEAD and admin recovery responses are private and cannot leak raw auth or media identities (6.275916ms)
+✔ actual Worker Access, native D1/R2, flags and guarded publication workflow (1864.218083ms)
+✔ 0014 ledger and actual schema are required; missing schema does not backfill or write (19.467083ms)
+✔ default-off content namespace checks the flag before bindings after admin authorization (8.703375ms)
+✔ website registration never publishes, changes old policies or generates promotions (21.700334ms)
+✔ new website song keeps the original music workspace editable without granting full audio (17.376208ms)
+✔ unready or unapproved cover blocks publication with a concrete field, then old operation replays once (19.602625ms)
+✔ concurrent saves accept one revision and leave the published version untouched (20.136084ms)
+✔ a concurrent rights block invalidates the final publication batch and does not seal its draft (18.3545ms)
+✔ current bound R2 object identity is checked, and failure does not write a public version (16.915167ms)
+✔ publishing site_audio_mode cannot turn a VIP legacy record into a free grant (18.5175ms)
+✔ platform verification is independent of song publication and validates the provider target (21.500958ms)
+✔ promotion preview requires an owned independent ready clip and rights; disabling clears every reference (28.201541ms)
+✔ cross-owner previews and clips cannot be bound to a promotion (19.557042ms)
+✔ homepage reads current enabled promotion; stopping it and taking the song down removes fresh references (25.212917ms)
+✔ rollback copies the sealed snapshot to a new immutable version, then revalidates current resources (18.719334ms)
+✔ two publishers cannot seal competing versions; a late failed batch rolls back audit and pointer (17.392875ms)
+✔ scheduled validation failure retains editable draft and a bounded reason without public exposure (91.071625ms)
+✔ scheduled success is idempotent and actor privilege is rechecked, while disabled scheduler reads nothing (94.790417ms)
+✔ editing cancels an approved schedule atomically and leaves the existing published revision visible (21.332458ms)
+✔ editor may save drafts but cannot publish, approve rights or edit a live platform (19.813542ms)
+✔ game draft cannot occupy the runtime directory; preflight refuses missing screenshots and invented runtime (17.017083ms)
+✔ content lists and asset choices are bounded, preserve ID ordering and do not expose storage keys (16.043834ms)
+✔ lost acknowledgement survives reload and only replays the original body, revision and operation key (1.359959ms)
+✔ pending operation prevents a new publication and refresh never sends writes (0.474125ms)
+✔ actor changes before a write prevent it and keep the old actor journal scoped (0.166292ms)
+✔ a late acknowledgement after actor change remains recoverable and is not applied to a new editor (0.134959ms)
+✔ unavailable or malformed journal closes writes before a request (0.102209ms)
+✔ a terminal revision conflict clears only its own pending command; bounded routes reject injection (1.216166ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2039.635625

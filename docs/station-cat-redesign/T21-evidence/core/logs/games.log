@@ -1,0 +1,64 @@
+
+> landing-site@0.1.0 test:redesign:games
+> node --test --test-timeout=90000 scripts/test-station-game-saves.mjs scripts/test-station-game-pages.mjs scripts/test-station-game-client.mjs scripts/test-station-game-runtime.mjs
+
+✔ entry missing offers only the appropriate action without writes (11.4ms)
+✔ entry valid offers only the appropriate action without writes (8.475ms)
+✔ entry corrupt offers only the appropriate action without writes (7.079084ms)
+✔ entry unsupported offers only the appropriate action without writes (5.18ms)
+✔ member missing is local-only evidence; unreadable storage is not a new game (7.432833ms)
+✔ late successful session cannot re-enable launch after a newer failed check or disposal (3.992ms)
+✔ zh-Hant: canonical catalog, safe detail and reserved runtime (10.612667ms)
+✔ zh-Hans: canonical catalog, safe detail and reserved runtime (0.284333ms)
+✔ en: canonical catalog, safe detail and reserved runtime (0.252125ms)
+✔ ja: canonical catalog, safe detail and reserved runtime (0.251709ms)
+✔ closed page ownership before method, query and binding: {} (0.789292ms)
+✔ closed page ownership before method, query and binding: {"STATION_GAME_PAGES_ENABLED":"true"} (0.273791ms)
+✔ closed page ownership before method, query and binding: {"STATION_CONTENT_PUBLIC_ENABLED":"true"} (0.259041ms)
+✔ closed page ownership before method, query and binding: {"STATION_GAME_PAGES_ENABLED":"true","STATION_CONTENT_PUBLIC_ENABLED":"false"} (0.221792ms)
+✔ internal shells are never directly published and unknown descendants remain with existing handler (0.584917ms)
+✔ rendered DTO is escaped, has no unconfirmed continue button and unregistered launch paths cannot navigate (0.5155ms)
+✔ zh-Hant: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (3596.013125ms)
+✔ zh-Hans: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (12.109208ms)
+✔ en: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (12.363541ms)
+✔ ja: actual Worker/D1/R2 renders catalog, intro, language links and original runtime (12.35325ms)
+✔ half-enabled rollout does not own new game paths; registered runtime remains reachable under every mode (6.279167ms)
+✔ actual Worker only enables same-origin runtime framing for gated valid launch requests (9.488583ms)
+✔ canonical alias/no-slash redirects, unmapped detail and method/query errors (17.720042ms)
+✔ screenshots are actual prior runtime capture bytes and go through controlled assets with revocation (25.750416ms)
+✔ read-only classifier: corrupt (5.136ms)
+✔ read-only classifier: unsupported (4.795125ms)
+✔ read-only classifier: missing (4.342834ms)
+✔ read-only classifier: valid (5.8415ms)
+✔ empty strings, empty objects, null, arrays, incomplete state and malformed cats are corrupt, never missing (10.343583ms)
+✔ unavailable storage is distinct from missing and cannot be created (4.170666ms)
+✔ legacy schema 0, 1 and 2 are detected without writes and migrate real progress only when loaded (20.571958ms)
+✔ legacy empty cat arrays retain currency and volume through the established repair migration (20.619875ms)
+✔ corrupt is preserved through load, create, save, autosave and rejected import (3.222875ms)
+✔ unsupported is preserved through load, create, save, autosave and rejected import (2.956542ms)
+✔ fresh game writes only a missing slot and a quota error does not report a successful save (4.572833ms)
+✔ valid slot changed by another tab is not overwritten, including another compatible save (9.425417ms)
+✔ explicit recovery backs up exact damaged bytes then imports compatible progress (7.099916ms)
+✔ backup denial, backup verification failure and target race all refuse replacement (18.498459ms)
+✔ guest claim and account slot selection are read-only and never use a cached ID as authentication (7.795ms)
+✔ actual main startup and lifecycle retain corrupt guest (4.765166ms)
+✔ actual main startup and lifecycle retain future guest (4.555583ms)
+✔ actual main startup and lifecycle retain unreadable storage (5.158708ms)
+✔ actual main startup and lifecycle retain corrupt member (3.233833ms)
+✔ actual main startup and lifecycle retain unknown session (3.898583ms)
+✔ actual account activation refuses corrupt destination and never copies member A to missing member B (12.353041ms)
+✔ existing duplicate cat identities use the established repair migration without rewriting during detection (6.952041ms)
+✔ explicit restore refuses an already-observed target changed before file selection completes (10.159875ms)
+✔ original export Blob contains exact input bytes and causes no save writes (3.951042ms)
+✔ actual cloud client rechecks session after-cloud-read (7.419958ms)
+✔ actual cloud client rechecks session before-upload (11.332125ms)
+✔ actual cloud client rechecks session same-account (11.243416ms)
+✔ malformed known progress blocks are preserved instead of being normalised into fresh defaults (24.236208ms)
+ℹ tests 52
+ℹ suites 0
+ℹ pass 52
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3864.950083

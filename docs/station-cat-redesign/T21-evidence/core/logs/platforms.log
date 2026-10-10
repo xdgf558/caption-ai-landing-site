@@ -1,0 +1,28 @@
+
+> landing-site@0.1.0 test:redesign:platforms
+> node --test --test-timeout=90000 scripts/test-station-platforms.mjs scripts/test-station-platform-runtime.mjs
+
+✔ actual Worker and D1 produce all five release states, withholding every unavailable URL (3797.894209ms)
+✔ all four SSR locales keep a real HTTPS anchor plus a manual no-JS path; public pages have no full source or iframe (24.101833ms)
+✔ untrusted destination/country claims do not choose a link or change availability (9.309375ms)
+✔ all providers use verified HTTPS entries in the operator order, independent of device preference (1.21025ms)
+✔ ambiguous IDs and oversized public arrays cannot render or copy a first matching target (0.157333ms)
+✔ public status distinguishes upcoming, withdrawn, confirmed regional exclusion and unknown country without URLs (0.39875ms)
+✔ four languages retain ordinary anchors and readable no-JS manual fallback, without an app-open claim (0.469417ms)
+✔ URL attacks, unknown note fields and withdrawn-only data never become clickable links or copy inputs (0.147667ms)
+✔ clipboard invocation happens in the gesture, only resolution claims success, denial or absence preserves manual use (0.159917ms)
+✔ sync/rejected/hanging statistics never throw or retain control of navigation and only receive public dimensions (1.845458ms)
+✔ delegated native click with offline observer does not prevent navigation; copy denial selects its readable URL (0.411333ms)
+✔ a late clipboard result cannot overwrite a newer attempt or an unloaded page (0.27175ms)
+✔ confirmed middle-button intent is observed once; synthetic clicks and copying do not claim navigation (0.111166ms)
+✔ real local queries preserve operator order and never forward unpublished/withdrawn/unverified targets (39.831208ms)
+✔ country comes only from trusted cf; a spoofed country header cannot enable a regional anchor (30.130958ms)
+✔ withdrawal changes the next projection and no raw platform URL remains in the DTO or HTML (28.188166ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3994.259375

@@ -13,6 +13,18 @@ import { mountStationClips } from './clipClient.js';
 import { mountCampaignAttribution } from './attributionSession.js';
 import { observeStationEvent } from './analyticsControls.js';
 
+// Native disabled buttons lose focus while the access request is pending.
+// Restore only the original gesture's focus, without taking it from a later
+// keyboard/mouse action or from another page/dialog.
+export function prepareStationFullWithFocus(button, prepare, isDisposed = () => false) {
+  const owner = button.ownerDocument, focused = owner.activeElement === button;
+  const restore = () => {
+    if (focused && !isDisposed() && button.isConnected && !button.disabled &&
+      (owner.activeElement === owner.body || owner.activeElement === owner.documentElement)) button.focus();
+  };
+  return Promise.resolve(prepare()).then(restore, restore);
+}
+
 export function mountStationMusic() {
   const root = document.querySelector('[data-sc-music-page]'), bootstrap = document.getElementById('sc-music-bootstrap');
   if (!root || root.dataset.mounted || !bootstrap || bootstrap.textContent.length > 512 * 1024) return () => {};
@@ -133,7 +145,7 @@ export function mountStationMusic() {
       rememberStationMusicTrigger(button);
       const state = session.snapshot();
       if (session.isPrepared(dto) || (state.activeTrackId === dto.id && state.activeVariant === 'full' && ['playing', 'loading', 'buffering'].includes(state.status))) session.play(dto, 'full');
-      else void session.prepareFull(dto);
+      else void prepareStationFullWithFocus(button, () => session.prepareFull(dto), () => disposed);
     } else if (button.hasAttribute('data-sc-more')) { event.preventDefault(); if (!root.querySelector('[data-sc-catalog-results]')?.hasAttribute('aria-busy')) void loadCatalog({ append: true, cursor: model.nextCursor }); }
     else if (button.hasAttribute('data-sc-page-retry') && model.mode === 'catalog') { event.preventDefault(); void loadCatalog({ append: Boolean(model.items?.length), cursor: model.items?.length ? model.nextCursor : null }); }
   });

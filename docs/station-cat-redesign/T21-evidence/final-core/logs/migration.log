@@ -1,0 +1,49 @@
+
+> landing-site@0.1.0 test:redesign:migration
+> node scripts/build-station-legacy-inventory.mjs --check && node --test --test-timeout=90000 scripts/test-station-route-migrations.mjs scripts/test-station-route-runtime.mjs
+
+Pinned legacy inventory verified: 71 retired static entries, 25 download roots; HTTP not inferred.
+✔ missing STATION_ROUTE_MIGRATIONS_ENABLED preserves legacy dispatch without binding/method inspection (9.3415ms)
+✔ missing STATION_CONTENT_PUBLIC_ENABLED preserves legacy dispatch without binding/method inspection (0.258458ms)
+✔ missing STATION_MUSIC_PAGES_ENABLED preserves legacy dispatch without binding/method inspection (0.115791ms)
+✔ missing STATION_GAME_PAGES_ENABLED preserves legacy dispatch without binding/method inspection (0.109792ms)
+✔ missing STATION_MEMBER_PAGES_ENABLED preserves legacy dispatch without binding/method inspection (0.106792ms)
+✔ migration path normalization excludes nested encodings and control/query injection (0.122417ms)
+✔ service priority retains runtime resources, accounts, downloads and policies (0.145958ms)
+✔ chapter aliases preserve the actual root/en reading address (0.093459ms)
+✔ localized about applies only to the migration profile; canonical has four corresponding entities (0.335459ms)
+✔ proposal soft associations cannot authorize a runtime redirect or credential transfer (0.211833ms)
+✔ preview hosts never enable indexing even with the search switch (0.056208ms)
+✔ upstream Assets routing is a separate release dependency, not implicit in runtime flags (0.221ms)
+✔ zh-Hant: new home/about and music/game navigation use actual Worker + native Assets (4028.959375ms)
+✔ en: new home/about and music/game navigation use actual Worker + native Assets (49.937459ms)
+✔ ja: new home/about and music/game navigation use actual Worker + native Assets (47.176583ms)
+✔ zh-Hans: new home/about and music/game navigation use actual Worker + native Assets (42.869959ms)
+✔ all inventoried retired static introductions exit directly; policy/download exceptions stay services (139.622541ms)
+✔ dynamic retirees, missing paths and encoded descendants never become a soft 200 or unrelated redirect (15.147958ms)
+✔ mapped UUID/slug shares reach the same published entity; unpublished mappings remain unavailable (72.076208ms)
+✔ novel bookmarks keep root/en addresses, require login and preserve old purchase checks (21.449084ms)
+✔ service methods, auth boundaries, AASA and runtime bytes remain owned by their original handlers (44.647167ms)
+✔ search sitemap enumerates every shard beyond the first page and excludes old/private/runtime routes (67.723375ms)
+✔ index activation requires the production host; production sitemap/robots do not hide retirees from crawlers (3.707916ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ unpublished home stays empty, synthetic configuration remains explicit and resource failure fails closed (31.501291ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4734.493667
