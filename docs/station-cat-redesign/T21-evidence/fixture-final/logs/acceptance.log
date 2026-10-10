@@ -1,0 +1,27 @@
+
+> landing-site@0.1.0 test:redesign:acceptance
+> node --test --test-timeout=90000 scripts/test-station-core-acceptance.mjs scripts/test-station-music-focus.mjs
+
+▶ T21 integrated native Assets/Worker/D1/R2 fixture and collection boundaries
+  ✔ isolated current migrations are in order and both cleanup prerequisites are healthy (33.719625ms)
+  ✔ A01 pending homepage stays silent while the unrelated synthetic catalog exists (8.88675ms)
+  ✔ A02 public DTO permits separate preview but still requires old full-playback access (20.708959ms)
+  ✔ A11 registered exact tuple stays local while malicious attribution loses all raw fields (34.97575ms)
+  ✔ A12 accepted event retry and ten-second qualification append once through HTTP (14.446459ms)
+  ✔ A19 collector outage leaves guest preview and navigation usable (11.709916ms)
+  ✔ A17 isolated retirees are real 410 and original runtime is still available (7.111125ms)
+  ✔ preview accepts no admin/financial/cloud mutations or rollout headers from the browser (6.569708ms)
+  ✔ fixture scenario choices are bounded and do not authorize remote access (1.033083ms)
+✔ T21 integrated native Assets/Worker/D1/R2 fixture and collection boundaries (5710.301666ms)
+✔ T21 network profile rejects arbitrary proxy/configuration targets (0.140375ms)
+✔ full access completion restores the focused button after native disabling (0.363209ms)
+✔ late access completion preserves a newer user focus or open dialog (0.053209ms)
+✔ detached, disposed, still-disabled and originally unfocused buttons cannot claim focus (0.075834ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5874.461916

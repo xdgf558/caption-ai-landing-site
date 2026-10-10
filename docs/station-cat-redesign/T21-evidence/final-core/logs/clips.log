@@ -1,0 +1,44 @@
+
+> landing-site@0.1.0 test:redesign:clips
+> node --test --test-timeout=90000 scripts/test-station-clips.mjs scripts/test-station-clip-runtime.mjs
+
+✔ separate four-language homepage graph only binds selected T07 clip DTOs, keeps native detail fallback, and contains no video/audio (3794.71075ms)
+✔ final built four-language detail shell has associated cards, empty accessible dialog, lazy posters and no video source/iframe (50.512042ms)
+✔ native D1/R2 returns actual pinned MP4 bytes and poster via current public asset checks (18.785417ms)
+✔ video range and HEAD agree with the same pinned media; invalid range never streams the full object (12.627083ms)
+✔ both ordinary flag pairs remain closed for pages, and a disabled public service never streams these videos (7.488083ms)
+✔ intentional bad codec fixture retains only a safe synthetic original link; it cannot masquerade as decoded media evidence (6.801917ms)
+✔ revoked poster rights immediately remove the associated clip and deny its already-known video URL (29.698541ms)
+✔ missing R2 media removes the clip and refuses a stale URL without altering its publication (35.330166ms)
+✔ unpublished parent cannot expose a clip/video, and requesting clip bytes never grants full song entitlement (26.545917ms)
+✔ home player DTOs cannot add cards outside the published home/promotion selection or replace its owned poster (1.02725ms)
+✔ end-of-video navigation only returns the owning localized song and currently live verified platforms (0.370542ms)
+✔ cards require published, bounded, unambiguous clips associated with this exact song (0.155459ms)
+✔ media and poster only use exact controlled asset paths, never foreign URLs or private query strings (0.079834ms)
+✔ fallback URLs are past, verified provider HTTPS addresses; ambiguity and oversized arrays cannot leak targets (0.161125ms)
+✔ four languages render escaped posters/durations and no-JS original links without any video or eager media source (0.847416ms)
+✔ nothing creates or plays media before a gesture; music pauses before video construction and play (0.522708ms)
+✔ playing, buffering, pause and end reflect native events, not a fulfilled play promise (3.15725ms)
+✔ rapid switching tears down all previous elements; late promises/events cannot revive or overwrite the latest video (0.434167ms)
+✔ closing immediately clears source, aborts listeners, and does not resume audio when a pending play resolves (0.249375ms)
+✔ codec and browser denial show distinct recoverable errors; retry makes a fresh element and retires the failed attempt (0.343042ms)
+✔ synchronous music pause/video construction/play failure stays recoverable without a live element (0.122667ms)
+✔ destroy is final and ignores late events, retries and new open attempts (0.230458ms)
+✔ video cancels a real T09 pending private handshake; its late successful response cannot prepare or play full audio (9.496458ms)
+✔ video stops an actual T09 audio source before starting; closing leaves the music paused (0.747834ms)
+✔ dialog escape stops immediately and returns focus to the exact triggering card (0.615791ms)
+✔ game entry closes the actual T11 dialog immediately, clears media and cannot return focus behind the game (0.16025ms)
+✔ validated home card uses the same click player; unsupported dialog leaves ordinary navigation intact (0.186041ms)
+✔ HTML action boundaries keep Tab in the dialog while native video controls retain their own sequence (0.174625ms)
+✔ close animation never owns media; rapid re-open and an old native close event cannot destroy the new attempt (201.0195ms)
+✔ a new music intent closes video synchronously, while paused/error music cannot close a new video (0.549333ms)
+✔ pagehide and view disposal unload video without resuming audio or letting detached clicks re-open it (0.18925ms)
+✔ removed trigger falls back to main focus, and unsupported native dialog keeps inert play controls hidden (0.131166ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4148.643208

@@ -1,0 +1,2020 @@
+{
+  "production": false,
+  "network": "loopback",
+  "profile": {
+    "latencyMs": 0,
+    "bytesPerSecondPerResponse": null,
+    "cpuThrottle": false,
+    "sharedLinkSimulation": false
+  },
+  "statisticsFailure": false,
+  "media": {
+    "fullMs": 4049,
+    "previewMs": 1045,
+    "coverBytes": 242694,
+    "audioIsSynthetic": true,
+    "videoBytesAreMetadataOnly": false
+  },
+  "migrationLedger": [
+    "0012_station_redesign.sql",
+    "0013_station_media_uploads.sql",
+    "0014_station_content_operations.sql",
+    "0015_station_campaign_links.sql",
+    "0016_station_event_collection.sql",
+    "0017_station_reports.sql",
+    "0018_station_report_window_seals.sql"
+  ],
+  "events": [
+    {
+      "name": "game_launch_request",
+      "count": 1
+    }
+  ],
+  "records": [
+    {
+      "method": "GET",
+      "path": "/games/cat-life-game/",
+      "variant": null,
+      "status": 200,
+      "bytes": 28333,
+      "elapsedMs": 23
+    },
+    {
+      "method": "GET",
+      "path": "/__fixture/options.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15897,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/__fixture/control.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6841,
+      "elapsedMs": 1
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15362,
+      "elapsedMs": 18
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/_locale_.DwGlYgIp.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 11425,
+      "elapsedMs": 16
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/index.CdwIK2GI.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 9886,
+      "elapsedMs": 18
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/_locale_._9r6jtBV.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 4254,
+      "elapsedMs": 22
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1607,
+      "elapsedMs": 18
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1560,
+      "elapsedMs": 22
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/GameShell.astro_astro_type_script_index_0_lang.DrN6SN-2.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 17720,
+      "elapsedMs": 20
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000601",
+      "variant": null,
+      "status": 200,
+      "bytes": 421384,
+      "elapsedMs": 20
+    },
+    {
+      "method": "GET",
+      "path": "/images/station-gentle/cat-mark.webp",
+      "variant": null,
+      "status": 200,
+      "bytes": 7334,
+      "elapsedMs": 32
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/campaignLinks.hVtZubDL.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2072,
+      "elapsedMs": 32
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/routes.Cqv8BySH.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1110,
+      "elapsedMs": 29
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicResponse.kb_2zO3V.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 547,
+      "elapsedMs": 32
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/analyticsControls.BJn8lemT.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 10373,
+      "elapsedMs": 36
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/pagePaths.Adk3jqEz.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 818,
+      "elapsedMs": 29
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/saveStatus.paMg3Qau.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2447,
+      "elapsedMs": 17
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicLocalData.rQlht5YK.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3513,
+      "elapsedMs": 16
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6605,
+      "elapsedMs": 17
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1236,
+      "elapsedMs": 16
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 29674,
+      "elapsedMs": 24
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/navigation.-iYZuZPj.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2077,
+      "elapsedMs": 17
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/events/config",
+      "variant": null,
+      "status": 200,
+      "bytes": 165,
+      "elapsedMs": 17
+    },
+    {
+      "method": "GET",
+      "path": "/api/readers/session",
+      "variant": null,
+      "status": 200,
+      "bytes": 33,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/tracks/vip",
+      "variant": null,
+      "status": 200,
+      "bytes": 4317,
+      "elapsedMs": 14
+    },
+    {
+      "method": "GET",
+      "path": "/__fixture/select",
+      "variant": null,
+      "status": 200,
+      "bytes": 32,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life-game/",
+      "variant": null,
+      "status": 200,
+      "bytes": 28333,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/__fixture/options.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15897,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/__fixture/control.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6841,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15362,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1560,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1607,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/index.CdwIK2GI.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 9886,
+      "elapsedMs": 10
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/_locale_._9r6jtBV.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 4254,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/_locale_.DwGlYgIp.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 11425,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/GameShell.astro_astro_type_script_index_0_lang.DrN6SN-2.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 17720,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000601",
+      "variant": null,
+      "status": 200,
+      "bytes": 421384,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/images/station-gentle/cat-mark.webp",
+      "variant": null,
+      "status": 200,
+      "bytes": 7334,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/routes.Cqv8BySH.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1110,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicResponse.kb_2zO3V.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 547,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/pagePaths.Adk3jqEz.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 818,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/campaignLinks.hVtZubDL.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2072,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/saveStatus.paMg3Qau.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2447,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/analyticsControls.BJn8lemT.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 10373,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 29674,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6605,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/navigation.-iYZuZPj.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2077,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicLocalData.rQlht5YK.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3513,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1236,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/api/readers/session",
+      "variant": null,
+      "status": 200,
+      "bytes": 33,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/events/config",
+      "variant": null,
+      "status": 200,
+      "bytes": 165,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/tracks/vip",
+      "variant": null,
+      "status": 200,
+      "bytes": 4317,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/",
+      "variant": null,
+      "status": 200,
+      "bytes": 12237,
+      "elapsedMs": 2
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/reset.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 375,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/layout.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 2855,
+      "elapsedMs": 11
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/cat-interactions.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 5612,
+      "elapsedMs": 10
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/share-card.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 3595,
+      "elapsedMs": 10
+    },
+    {
+      "method": "GET",
+      "path": "/__fixture/options.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15897,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/main.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 30741,
+      "elapsedMs": 12
+    },
+    {
+      "method": "GET",
+      "path": "/__fixture/control.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6841,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/broadsheet.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 171114,
+      "elapsedMs": 14
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/cat-motion.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 961,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/save-safety.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 714,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/host-bridge.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2356,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/site-integration.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3721,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/site-integration.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 10369,
+      "elapsedMs": 13
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/core/namespace.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 18465,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/content-manifest.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3410,
+      "elapsedMs": 2
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/random.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 342,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/storage.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 525,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/format.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3027,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/bitcoinApi.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4001,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/core/i18n.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 187679,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/catMotion.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2263,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/catArt.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7781,
+      "elapsedMs": 11
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/catsData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2389,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/jobsData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6829,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/itemsData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15632,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/diseasesData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2108,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/tasksData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4162,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/saveMigrations.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3129,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/catMemoryState.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1686,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/careLearningState.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2248,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/communityData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 13918,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/saveStatus.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4096,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/gameState.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 30410,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/saveSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7033,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/timeSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 5134,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/careSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 5040,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/workSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 11018,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/bankSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15687,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/playerSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 12550,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/onboardingSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 11030,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/memorySystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3153,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/catInteractionSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2239,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/shopSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7831,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/collectionSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 8845,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/homeSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15180,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/catSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 25866,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/communitySystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 12228,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/taskSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3677,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/arcadeSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4064,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/musicSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7340,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/hospitalSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2373,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderHeader.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4919,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/lotterySystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 20456,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderNavigation.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3727,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCareSupport.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1648,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderMorePanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3073,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCareJourney.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4838,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCatMemories.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3242,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderHome.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 14327,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderRoomPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7153,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCommunityPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 13567,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderWorkPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 18696,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCollectionPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 9088,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderBankPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 14957,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCatPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 30995,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderShopPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 8286,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderHospitalPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 22884,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderArcadePanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 26170,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderTaskPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3674,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderInventoryPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7588,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderMemberStorePanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 582,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderVersionPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3557,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/shareDialog.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 8774,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/shareCard.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 9972,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderSavePanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3673,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/cloud-sync-policy.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 888,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderSettingsPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6896,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/main.js",
+      "variant": null,
+      "status": 503,
+      "bytes": 35,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/cloud-sync.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 28627,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/saveRecovery.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 8408,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/commerce.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 34595,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/",
+      "variant": null,
+      "status": 200,
+      "bytes": 12237,
+      "elapsedMs": 3
+    },
+    {
+      "method": "POST",
+      "path": "/api/station/events",
+      "variant": null,
+      "status": 200,
+      "bytes": 24,
+      "elapsedMs": 47
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/",
+      "variant": null,
+      "status": 200,
+      "bytes": 12237,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/reset.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 375,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/layout.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 2855,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/main.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 30741,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/share-card.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 3595,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/cat-interactions.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 5612,
+      "elapsedMs": 11
+    },
+    {
+      "method": "GET",
+      "path": "/__fixture/options.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15897,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/__fixture/control.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6841,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/broadsheet.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 171114,
+      "elapsedMs": 14
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/site-integration.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 10369,
+      "elapsedMs": 11
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/cat-motion.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 961,
+      "elapsedMs": 10
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/host-bridge.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2356,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/site-integration.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3721,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/styles/save-safety.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 714,
+      "elapsedMs": 10
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/core/namespace.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 18465,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/content-manifest.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3410,
+      "elapsedMs": 2
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/random.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 342,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/storage.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 525,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/format.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3027,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/bitcoinApi.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4001,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/core/i18n.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 187679,
+      "elapsedMs": 9
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/catMotion.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2263,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/catArt.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7781,
+      "elapsedMs": 10
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/catsData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2389,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/itemsData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15632,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/jobsData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6829,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/diseasesData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2108,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/tasksData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4162,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/catMemoryState.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1686,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/saveMigrations.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3129,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/data/communityData.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 13918,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/careLearningState.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2248,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/gameState.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 30410,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/saveStatus.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4096,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/saveSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7033,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/timeSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 5134,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/careSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 5040,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/workSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 11018,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/playerSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 12550,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/bankSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15687,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/onboardingSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 11030,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/memorySystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3153,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/catInteractionSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2239,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/shopSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7831,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/collectionSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 8845,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/catSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 25866,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/communitySystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 12228,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/homeSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15180,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/taskSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3677,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/arcadeSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4064,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/musicSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7340,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/lotterySystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 20456,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/systems/hospitalSystem.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2373,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderHeader.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4919,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderNavigation.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3727,
+      "elapsedMs": 2
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCareSupport.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1648,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderMorePanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3073,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCatMemories.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3242,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCareJourney.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 4838,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderRoomPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7153,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderHome.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 14327,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCommunityPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 13567,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCollectionPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 9088,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderBankPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 14957,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderWorkPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 18696,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderCatPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 30995,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderHospitalPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 22884,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderArcadePanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 26170,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderShopPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 8286,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderInventoryPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 7588,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderMemberStorePanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 582,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderVersionPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3557,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderTaskPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3674,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/utils/shareCard.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 9972,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderSavePanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3673,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/shareDialog.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 8774,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/main.js",
+      "variant": null,
+      "status": 503,
+      "bytes": 35,
+      "elapsedMs": 0
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/ui/renderSettingsPanel.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6896,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/cloud-sync-policy.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 888,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/src/js/state/saveRecovery.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 8408,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/cloud-sync.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 28627,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/games/cat-life/commerce.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 34595,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/music/tracks/vip/",
+      "variant": null,
+      "status": 200,
+      "bytes": 37657,
+      "elapsedMs": 14
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 15362,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1560,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/index.CdwIK2GI.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 9886,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/_locale_.CyLhD4gI.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 4338,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/_locale_.DwGlYgIp.css",
+      "variant": null,
+      "status": 200,
+      "bytes": 11425,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000024",
+      "variant": null,
+      "status": 200,
+      "bytes": 242694,
+      "elapsedMs": 11
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1607,
+      "elapsedMs": 11
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/MusicShell.astro_astro_type_script_index_0_lang.fahdOygU.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 8305,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/pagePaths.Adk3jqEz.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 818,
+      "elapsedMs": 4
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/routes.Cqv8BySH.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1110,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/images/station-gentle/cat-mark.webp",
+      "variant": null,
+      "status": 200,
+      "bytes": 7334,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicResponse.kb_2zO3V.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 547,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/campaignLinks.hVtZubDL.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2072,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/analyticsControls.BJn8lemT.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 10373,
+      "elapsedMs": 8
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/navigation.-iYZuZPj.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2077,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicLyrics.By8ik3ey.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 2433,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 29674,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/clipClient.B6wkw9Tl.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 10391,
+      "elapsedMs": 3
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 1236,
+      "elapsedMs": 5
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicLocalData.rQlht5YK.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 3513,
+      "elapsedMs": 6
+    },
+    {
+      "method": "GET",
+      "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+      "variant": null,
+      "status": 200,
+      "bytes": 6605,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/events/config",
+      "variant": null,
+      "status": 200,
+      "bytes": 165,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000502",
+      "variant": null,
+      "status": 200,
+      "bytes": 414809,
+      "elapsedMs": 7
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000014",
+      "variant": null,
+      "status": 200,
+      "bytes": 242694,
+      "elapsedMs": 20
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000034",
+      "variant": null,
+      "status": 200,
+      "bytes": 242694,
+      "elapsedMs": 20
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000044",
+      "variant": null,
+      "status": 200,
+      "bytes": 242694,
+      "elapsedMs": 21
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/tracks/vip",
+      "variant": null,
+      "status": 200,
+      "bytes": 4317,
+      "elapsedMs": 22
+    },
+    {
+      "method": "GET",
+      "path": "/api/station/content/tracks/vip/audio",
+      "variant": "preview",
+      "status": 206,
+      "bytes": 12897,
+      "elapsedMs": 4
+    }
+  ],
+  "createdAt": "2026-10-10T10:48:06.703Z"
+}

@@ -1,0 +1,1230 @@
+
+> landing-site@0.1.0 pretest
+> npm run test:music:wav && npm run test:music:foundation && npm run test:music:membership && npm run test:music:publication && npm run test:music:mp3 && npm run test:music:storage && npm run test:music:media && npm run test:music:public && npm run test:music:admin && npm run test:music:collections && npm run test:music:albums && npm run test:music:album-batch && npm run test:music:featured && npm run test:music:cleanup && npm run test:music:rate-limits && npm run test:music:staging && npm run test:music:player && npm run test:music:queue && npm run test:music:access-lifecycle && npm run test:music:system-controls && npm run test:music:library && npm run test:music:panels && npm run test:music:lyrics-local && npm run test:music:sharing-return && npm run test:music:share-cards && npm run test:music:analytics && node scripts/test-membership-safety.mjs && node scripts/test-membership-refund-review.mjs && node scripts/test-signal-articles.mjs && node scripts/test-cat-life-interactions.mjs && node scripts/test-cat-life-gentle-care.mjs && node scripts/test-cat-life-onboarding.mjs && node scripts/test-cat-life-memories.mjs && node scripts/test-cat-life-release-history.mjs && node scripts/test-cat-life-music.mjs && node scripts/test-cat-life-share.mjs && node scripts/test-cat-life-motion.mjs && npm run test:music:role-preview && npm run test:music:production-candidate
+
+
+> landing-site@0.1.0 test:music:wav
+> node --test scripts/test-music-wav.mjs
+
+✔ real encoder 16/1/2/44100: deterministic, bounded and accepted by server MP3 parser (87.851292ms)
+✔ real encoder 24/1/2/48000: deterministic, bounded and accepted by server MP3 parser (53.804875ms)
+✔ real encoder 32/1/1/32000: deterministic, bounded and accepted by server MP3 parser (28.74925ms)
+✔ real encoder 32/3/2/48000: deterministic, bounded and accepted by server MP3 parser (36.013084ms)
+✔ signed PCM conversion preserves channel separation, limits float amplitude and rejects nonfinite samples (0.586167ms)
+✔ malformed, compressed, over-budget and ambiguous WAV inputs fail before encoding (128.7345ms)
+✔ odd metadata chunks and data before fmt are scanned without decoding metadata (2.339125ms)
+✔ controller terminates on cancel, ignores late success, retries fresh, and fails closed on worker errors/timeouts (53.362375ms)
+✔ independent LGPL module and exact source archive remain pinned, with no codec in page bundle (2.716125ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 439.086875
+
+> landing-site@0.1.0 test:music:foundation
+> node --test scripts/test-music-foundation.mjs
+
+✔ independent fresh schema, no account seeds, one-time migration and integrity (2.623ms)
+✔ new drafts default VIP; explicit free publication stays free while editing (2.688667ms)
+✔ foreign keys/kind guards reject cross-track publication/media and evidence-as-audio (1.950292ms)
+✔ sealed revisions, assets, rights, evidence and public slug are retained and immutable (1.42875ms)
+✔ database policy combinations, JSON and integer dates fail closed (1.520709ms)
+✔ completed uploads cannot reopen; append-only audits and scoped mutation uniqueness (1.303ms)
+✔ strict UTC and exact millisecond early-access end boundary (0.239875ms)
+✔ unknown policies and implicit variants never authorize full playback (0.208625ms)
+✔ policy editing retains historical early window and versions actual changes (0.138416ms)
+✔ real database rows project four locales with original fallback and no private fields (4.314917ms)
+✔ ETag changes at natural expiry without a database write; remains stable otherwise (1.812083ms)
+✔ malformed published records cannot poison catalog; preview metadata fails closed (2.534875ms)
+✔ collections filter hidden tracks, preserve order and cannot unlock VIP (6.208875ms)
+✔ 500-track limit, deterministic order and ETag, duplicate rejection (12.639917ms)
+✔ OR REPLACE cannot bypass immutable publication, assets or append-only audit (1.768875ms)
+✔ private evidence belongs to the same draft; unvalidated files cannot be sealed (1.628375ms)
+✔ analytics models reject arbitrary attributes and cannot become a VIP ledger (1.161833ms)
+✔ limited free ends at its exact deadline and cannot create a permanent free promise (0.151833ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 83.374
+
+> landing-site@0.1.0 test:music:membership
+> node --test scripts/test-music-membership.mjs
+
+✔ anonymous and invalid cookies never query private data; claims cannot grant VIP (8.744416ms)
+✔ duplicate reader cookies match the existing first-cookie rule, never fall through to a later valid token (3.46425ms)
+✔ invalid clocks and budgets return private 503 instead of throwing or granting access (3.115625ms)
+✔ query rejection after timeout is consumed, and a clock throwing after lookup never leaks (63.962083ms)
+✔ trusted session hash + joined account + real membership only; absolutely no writes (2.976125ms)
+✔ expired, revoked, missing and future sessions fail; restricted accounts do not get an upsell (1.696292ms)
+✔ membership [start,end) milliseconds, SQL UTC, future and equal-period boundaries (1.323375ms)
+✔ unknown level, corrupt dates and purported lifetime never become VIP or a purchase prompt (1.540958ms)
+✔ duplicate grants, mismatched owner and malformed query results are unavailable (1.265958ms)
+✔ missing binding/table/session API and database errors return 503, not none (1.583041ms)
+✔ timeout denies; late completion cannot mutate result or database (53.223292ms)
+✔ query completion time is used; session expiry bounds capability recheck (1.368875ms)
+✔ no cross-request cache: logout, account switch, expiry, renewal and disable take effect (1.567458ms)
+✔ balances and work-specific grants cannot enable or disable site-wide membership (1.56325ms)
+✔ capabilities use real localized paths and minimal fields; VIP flag defaults closed (3.261083ms)
+✔ free full and independent preview bypass membership DB even when broken or VIP delivery disabled (1.34625ms)
+✔ VIP full differentiates unauthenticated, none, expired, restricted, unavailable and disabled (1.796083ms)
+✔ content/version/variant guards run first; unknown policy cannot fall back to full (1.172208ms)
+✔ early access exact expiry honors both post-period policies without a write (1.262041ms)
+✔ HEAD/Range/conditional headers cannot bypass eligibility; every response is private no-store (1.460875ms)
+✔ real redemption and manual refund functions change next read; remaining renewal is preserved (3.768708ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 202.851292
+
+> landing-site@0.1.0 test:music:publication
+> node --test scripts/test-music-publication.mjs
+
+✔ absent or pending source materials allow technical review and publication without creating approval (70.278875ms)
+✔ optional pending evidence is retained and still validates ownership and current resources (8.695209ms)
+✔ optional documentation cannot bypass a block, stale technical review, missing preview or resource failure (16.582417ms)
+✔ first documentation or pending-to-blocked changes race atomically with technical review and publication (32.039833ms)
+✔ append-only migration preserves legacy data and blocks mutation UPDATE/REPLACE/DELETE (9.300125ms)
+✔ publish atomically seals revision, switches pointers, bumps versions and writes one audit/receipt (7.748208ms)
+✔ real MP3 resource verifier blocks corrupted bytes before any publication write (13.482ms)
+✔ same key replays exact result, changed payload conflicts, lost commit response recovers (8.094666ms)
+✔ identical concurrent requests share one receipt and audit (7.859542ms)
+✔ replacement failure retains old public revision; success switches without losing first publication time (9.594209ms)
+✔ concurrent different tracks cannot lose catalogVersion updates; loser can retry same key (9.006208ms)
+✔ unpublish zero-write failures roll back status, versions, audit and receipt (9.366375ms)
+✔ early-to-free promise expiring between validation and SQL cannot acquire a VIP paywall (8.747417ms)
+✔ actor-scoped keys and stale If-Match never overwrite the winner (8.444417ms)
+✔ every business zero-write is forced to roll back all preceding writes (46.313958ms)
+✔ SQL failures at all steps roll back; retry can safely complete (68.563875ms)
+✔ racing unversioned metadata, review, evidence and settings edits fail the transaction snapshot guard (39.328375ms)
+✔ rights are commercial + official + version-specific, not an approved boolean alone (62.779833ms)
+✔ free-origin/remix exceptions require a specific permission document and explanation (8.703583ms)
+✔ approval fingerprints become stale after edits and cannot be copied to new revisions (10.134541ms)
+✔ slug and metadata limits share public projection checks; invalid drafts stay private (24.011667ms)
+✔ protected tracks require a separate preview and configurable half-length/limit validation (8.532958ms)
+✔ missing verifier/metadata-only duration/missing object/stale proof never publishes (8.414583ms)
+✔ publication count guard enforces 500 even when another publisher takes the last slot (74.0605ms)
+✔ unpublish is atomic, retains sealed media and works with verifier offline; old publish receipt cannot republish (9.2405ms)
+✔ previously free publication cannot acquire a paywall; explicit policy version must match (8.568042ms)
+✔ early-access expired window survives a copy edit; policy change requires a future end (9.246375ms)
+✔ invalid command, absent migration and missing bindings fail closed (7.587875ms)
+✔ missing title/summary/tags are publication validation errors, never an uncaught TypeError (31.480917ms)
+✔ limited free is included in fingerprints, deadline guards and sealed revision immutability (8.102958ms)
+✔ limited-free deadline and concurrent deadline edits are checked again inside publication transaction (16.737916ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 698.736375
+
+> landing-site@0.1.0 test:music:mp3
+> node --test scripts/test-music-mp3.mjs
+
+✔ native streaming digest matches fallback measurements and bounds outstanding writes (6.029709ms)
+✔ real cbr-stereo.mp3: exact independent packet samples, streamed hash and bounded carry (1.390375ms)
+✔ real vbr-stereo.mp3: exact independent packet samples, streamed hash and bounded carry (0.616333ms)
+✔ real mpeg2-mono.mp3: exact independent packet samples, streamed hash and bounded carry (0.383208ms)
+✔ real preview.mp3: exact independent packet samples, streamed hash and bounded carry (0.181292ms)
+✔ real raw.mp3: exact independent packet samples, streamed hash and bounded carry (0.178583ms)
+✔ VBR is traversed frame by frame, CBR padding does not alter samples (1.379958ms)
+✔ arbitrary boundaries including one-byte chunks produce identical measurements (57.663042ms)
+✔ ID3v2.3/v2.4 payload is skipped with a bound; ID3v1 trailer and v2.4 footer are validated (11.054042ms)
+✔ forged Xing counts/byte lengths cannot shorten measurement; LAME trim fields are never subtracted (1.361041ms)
+✔ partial last frames and complete-frame truncation with Xing fail closed (1.706209ms)
+✔ junk, midstream bad sync, concatenated info tags and trailing payload are not resynchronized away (0.981584ms)
+✔ unsupported MPEG2.5/layers/CRC/reserved/free-format and inconsistent streams are rejected (0.680041ms)
+✔ ID3 invalid syncsafe, excessive metadata, unsupported versions, missing body and zero audio fail (0.491125ms)
+✔ byte, frame, read, chunk and timeout budgets cannot be increased by caller (0.31625ms)
+✔ abort, stalled read, late rejection and malformed clock clean up without a successful proof (13.407375ms)
+✔ mid-read abort, stream errors and invalid chunks release the parser lock (0.597334ms)
+✔ measured objects bind exact bytes, ETag, hash and duration to publication verifier contract (2.404584ms)
+✔ real independent preview binds current full resource; changed identity/hash/source cannot reuse proof (1.209208ms)
+✔ preview 45 seconds, half length and 250ms tolerance are inclusive only at exact valid boundaries (0.189417ms)
+✔ fixture audio and generator binaries are never in deployable public assets (0.172666ms)
+✔ 32 MiB full and 4 MiB preview byte ceilings are parsed with fixed carry, not whole-object buffering (159.772125ms)
+ℹ audio: 33554432 bytes, 107202 frames, 142ms; fixed carry 67584 bytes
+ℹ preview: 4194304 bytes, 13400 frames, 17ms; fixed carry 67584 bytes
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 302.472459
+
+> landing-site@0.1.0 test:music:storage
+> node --test scripts/test-music-storage.mjs
+
+✔ runtime fails closed for missing/aliased bindings; all flags default false (0.6705ms)
+✔ database readiness normalizes missing schema and invalid settings without writes (0.274ms)
+✔ five fixtures use conditional GET and bounded BYOB reads with exact measurements (7.855709ms)
+✔ invalid source identities and options are rejected before touching the bucket (0.225625ms)
+✔ missing object and failed ETag precondition never yield a proof (0.170333ms)
+✔ size, MIME, key, ETag and unexpected ranged bodies are cancelled unread (0.777667ms)
+✔ default-only streams are rejected, never silently buffered or rechunked (0.222667ms)
+✔ corruption, truncated actual body and forged hash/duration fail closed (1.569042ms)
+✔ deadline includes pending GET and disposes late bodies/rejections (24.53275ms)
+✔ abort and stalled/read-error bodies release their reader (23.333291ms)
+✔ parser resource ceilings cannot be loosened; budget failure cleans up storage (0.612709ms)
+✔ bucket errors expose only stable codes, never private keys or backend messages (0.109291ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 98.621709
+
+> landing-site@0.1.0 test:music:media
+> node --test scripts/test-music-media.mjs
+
+✔ media route and input are exact; disabled public flag touches no database or storage (9.809417ms)
+✔ preview and free full stream without membership lookup and use only their canonical object (4.319583ms)
+✔ VIP denial and service failures never touch R2 or reveal media metadata (2.339625ms)
+✔ published version, lifecycle and dedicated preview guards run before R2 (0.730167ms)
+✔ single byte, open, suffix, clipped and oversized suffix ranges return exact 206 bytes (1.328167ms)
+✔ invalid and multi-ranges are ignored; authorized out-of-range is 416 after object validation (1.003458ms)
+✔ If-Range accepts only matching strong ETag or fresh HTTP date; other validators never produce 304 (0.892291ms)
+✔ HEAD ignores Range, returns full headers and cancels storage body (1.441166ms)
+✔ changed, missing or malformed storage stays a private generic 503 (1.01725ms)
+✔ range parser boundaries and production wiring keep a versioned non-generic route (1.502125ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 61.832583
+
+> landing-site@0.1.0 test:music:public
+> node --test scripts/test-music-public.mjs
+
+✔ route matching, methods, inputs and the public flag fail before database or storage access (16.29375ms)
+✔ catalog is anonymous, localized and conditional while hiding corrupt tracks and empty collections (20.775167ms)
+✔ natural policy expiry changes the catalog projection and ETag without a catalogVersion write (8.576583ms)
+✔ catalog publishes anonymous effective-play totals, refreshes its ETag and degrades without blocking music (9.613667ms)
+✔ track detail adds the public story and collection detail preserves order without changing access (10.276209ms)
+✔ direct collection lookup is not limited by the 500-item catalog window (26.895583ms)
+✔ VIP cover and lyrics stay anonymous while full audio access remains protected (10.441709ms)
+✔ changed storage and database failures stay generic and never disclose private identifiers (8.021ms)
+✔ capabilities and access are wired as private UI hints and never act as media grants (7.781375ms)
+✔ production worker wiring keeps public content separate from the versioned audio handler (1.403125ms)
+✔ display cover is small, shares cached encoding, and revalidates browser bytes without a body (20.307167ms)
+✔ warm cache and If-None-Match cannot bypass shutdown, downlisting, version, storage or DB failures (16.507041ms)
+✔ display selector is bounded and applies only to cover routes (14.025417ms)
+✔ missing display files and newly uploaded covers fall back to the original without runtime encoding (16.745083ms)
+✔ album display cover stays tied to the live album version and independent cover (17.147459ms)
+✔ display route cannot expose the generated files directly or import an image encoder (0.705542ms)
+✔ native static assets serve a small cover while direct and escaped asset paths stay private (411.334959ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 706.435875
+
+> landing-site@0.1.0 test:music:admin
+> node --test scripts/test-music-admin.mjs
+
+✔ no verifier identity, binding alias, missing migrations and missing settings fail closed (56.900166ms)
+✔ strict origin, custom CSRF header and JSON required before every write, including HEAD/OPTIONS probes (12.345209ms)
+✔ stream-counted 64KiB body limit, malformed JSON, unknown fields and invalid schemas do not write (11.682334ms)
+✔ new draft is VIP, response is private and creation retry recovers one audit and revision (12.518042ms)
+✔ role preview reads both saved revisions with server time and safe asset measurements, no R2 or reader writes (20.537542ms)
+✔ stalled or invalid UTF-8 request streams are cancelled without writes (3013.953125ms)
+✔ identical concurrent creations return one track and receipt; slug and actor conflicts do not duplicate (12.485083ms)
+✔ PATCH requires explicit matching version, creates a new revision and discards old review approvals (10.478334ms)
+✔ editing a published song keeps old sealed public content and permanent slug intact (11.629083ms)
+✔ cross-track or wrong-kind assets, forged fingerprints and invalid policy versions are refused (11.022625ms)
+✔ rights review uses verified actor and server fingerprint, clears technical stamp and requires same-track evidence (11.5ms)
+✔ publishing requires real private objects; flags or client proof cannot bless synthetic assets (11.062917ms)
+✔ downlisting and archiving work with flags off, retain media and audit, and cannot be used to republish (10.026375ms)
+✔ every zero-write/failure rolls back draft, version, audit and receipt; original key can retry (58.892375ms)
+✔ concurrent different draft edits and review-vs-save never overwrite the winning version (10.027792ms)
+✔ rights zero-write or audit failure rolls back evidence, fingerprints and version as a unit (69.174875ms)
+✔ list and audit pagination are bounded, reject ambiguous query and do not expose object locators (24.212667ms)
+✔ shared Access input parsing rejects insecure domains and malformed cookies (0.425708ms)
+✔ music actor contract requires a signed JWT and preserves fail-closed status codes (3.071542ms)
+✔ music actor rejects non-signing or malformed RSA keys before importKey (1.13775ms)
+admin_access_denied { message: 'Invalid JWT audience' }
+admin_access_denied { message: 'Invalid JWT issuer' }
+admin_access_denied { message: 'JWT expired' }
+admin_access_denied { message: 'Invalid JWT signature' }
+✔ actual Worker route checks Access signature, audience, issuer, expiry and allowlist before music DB (14.16125ms)
+✔ spoofed Host/email/local bypass and malformed Access cookie cannot bypass the music-specific actor check (8.423833ms)
+✔ actual Worker write attributes audit to the verified JWT, not the forwarded email (8.800167ms)
+✔ production imports never include fixture verifier; music bindings, switches, payment and schema config remain untouched (2.63025ms)
+✔ quota controls require Access and same-origin writes; validate integer MiB and strict fields (8.4465ms)
+✔ quota save replays once, preserves stale-edit protection and leaves accounting/content unchanged (11.365792ms)
+✔ quota shrink rechecks concurrent upload reservations in the write transaction (21.117458ms)
+✔ quota concurrent editors and audit failures roll back; lost acknowledgement replays exact receipt (15.304792ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3657.968833
+
+> landing-site@0.1.0 test:music:collections
+> node --test scripts/test-music-collections.mjs
+
+✔ collection creation, list, detail and replay are private, bounded and side-effect free (22.520334ms)
+✔ collection input rejects unknown fields, bad locale, slug, translations and ambiguous query (9.4125ms)
+✔ published collection lifecycle and order update catalogVersion without changing track access (19.353459ms)
+✔ empty, duplicate, unknown and archived track sets fail closed (11.428334ms)
+✔ collection identity, If-Match and Origin protections reject writes before mutation (8.294542ms)
+✔ collection order transaction rolls back every zero-write and can retry the same key (48.801542ms)
+✔ competing collection saves never overwrite the winning version (8.921041ms)
+✔ collection publish rechecks visible tracks inside the transaction guard (10.272375ms)
+✔ collection pagination stays at 50 and audit records lifecycle and exact order (19.574292ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 209.835375
+
+> landing-site@0.1.0 test:music:albums
+> node --test scripts/test-music-albums.mjs scripts/test-music-album-cover-client.mjs
+
+✔ lost PUT receipt recovers without another PUT, keeps metadata only and does not attach itself (2.296375ms)
+✔ actor change or failed journal storage prevents new writes (0.249125ms)
+✔ reserved recovery needs the same file and cannot cross album ownership (0.238333ms)
+✔ 0007 preserves existing playlist identity and rejects type changes and invalid album fields (2.751875ms)
+✔ album may publish before all songs; released member policies still match without rewriting songs (36.421458ms)
+✔ album cover is independent, scoped to its album, and never falls back to member artwork (14.745458ms)
+✔ album filters downlisted members but still hides on conflicting released policy transition (13.779209ms)
+✔ album publication guard catches a member downlist even when another published member remains (10.969417ms)
+✔ album policy save rolls back zero-write and lost receipt replays without a second edit or audit (9.523ms)
+✔ collection recovery is actor scoped, storage failure keeps old receipt and order operations do not mutate input (0.326833ms)
+✔ simplified collection text preserves hidden saved translations and original objects (0.073958ms)
+✔ all-draft album publishes metadata only; catalog and direct view never expose draft identity or audio (13.913083ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 151.074417
+
+> landing-site@0.1.0 test:music:album-batch
+> node --test scripts/test-music-album-batch.mjs scripts/test-music-album-publication.mjs
+
+✔ selection is bounded, requires explicit per-track modes and does no IO or album-derived policy updates (2.2995ms)
+✔ one file at a time; explicit ordered membership; no publish, rights, preview or policy rewrite (2.609583ms)
+✔ lost create receipt survives reload, never auto-retries, original key only (0.928333ms)
+✔ lost reserve receipt survives reload, never auto-retries, original key only (0.835416ms)
+✔ lost complete receipt survives reload, never auto-retries, original key only (0.939666ms)
+✔ lost save receipt survives reload, never auto-retries, original key only (0.771458ms)
+✔ unknown PUT is queried/completed after reload, never resends bytes; even reserved does not prove absence (1.29ms)
+✔ reserved recovery requires the same generated MP3 hash and size; never a replacement reservation (1.057083ms)
+✔ identity changes during conversion stop all writes; storage failure blocks the next mutation (0.365709ms)
+✔ cancel conversion creates no draft; stop during PUT finishes its proof but never starts the next file (1.129458ms)
+✔ partial success is explicit; remaining retry preserves original batch order and a lost order receipt replays once (2.032875ms)
+✔ concurrent album edits are not overwritten; explicit rebase keeps server order without duplicate tracks (1.411875ms)
+✔ changed track version is never replaced with a fresh snapshot; unresolved journals cannot be discarded (0.6285ms)
+✔ journal refuses media, unknown commands, foreign album and unsafe replay paths (0.365875ms)
+✔ cancel remaining items never discards created or uncertain work and cannot cancel a pending receipt (0.996333ms)
+✔ confirmed publication appends ready batch tracks after saved members, deduplicates retries and never publishes tracks (1.180959ms)
+✔ publication only appends completed rows from this actor and album; waiting rows do not upload (0.604917ms)
+✔ publication append retains uncertain order receipt and refuses another write until original batch recovery (1.164917ms)
+✔ publication append rejects changed identity, stale album snapshot and a full album without overwriting members (1.124834ms)
+✔ one confirmation reviews and publishes songs serially, retaining policies and existing published revisions (2.127833ms)
+✔ missing listening confirmation, later missing audio, blocked review or policy mismatch prevent all writes (0.347417ms)
+✔ lost technical-review receipt survives reload and only replays original command (0.457083ms)
+✔ lost publish receipt survives reload and only replays original command (0.287833ms)
+✔ known member failure stops at that song and preserves earlier success (0.179167ms)
+✔ changed identity, album version or unavailable storage cannot silently continue writes (0.172ms)
+✔ recovery schema rejects foreign paths, unknown fields and malformed policy IDs (0.195083ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 60.556166
+
+> landing-site@0.1.0 test:music:featured
+> node --test scripts/test-music-featured.mjs
+
+✔ 0008 bounds slots and rejects targets that were never published (9.232666ms)
+✔ one CAS mutation saves all slots, bumps catalog, audits once and replays exactly (20.797083ms)
+✔ VIP primary and stale targets fail without partial placement, catalog or audit writes (10.017667ms)
+✔ bounded input rejects duplicates, overlap and a seventh placement before writes (7.982542ms)
+✔ competing saves cannot overwrite the winning featured version (8.708375ms)
+✔ featured journal is actor scoped and reorder is bounded (0.299542ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 105.597375
+
+> landing-site@0.1.0 test:music:cleanup
+> node --test scripts/test-music-cleanup.mjs
+
+✔ dry-run is read-only, bounded, private metadata with reference evidence and seven-day retention (28.846958ms)
+✔ never-started retirement releases quota once while retaining sessions, assets and audit receipts (9.100125ms)
+✔ started but absent object stays charged; a late committed object is proved then deleted on resume (8.753208ms)
+✔ completed unreferenced bytes can be reclaimed; retired assets cannot be downloaded or reattached (15.945791ms)
+✔ all historical revisions, rights JSON, evidence, derivatives and substantive audits retain bytes (39.448416ms)
+✔ a reference added between plan validation and claim wins without touching R2 (8.414083ms)
+✔ retirement wins against every new reference path and the old upload writer (8.140667ms)
+✔ stale writer snapshot, unknown input and mismatched plan cannot retire or touch storage (8.097708ms)
+✔ claim/proof/final accounting roll back on zero-write receipts and recover without duplicate release (9.647917ms)
+✔ lost delete acknowledgement keeps charge until a retry proves absence using persisted proof (8.596208ms)
+✔ deletion succeeds but accounting failure retains charge and retries the final transaction (8.431708ms)
+✔ four competing executors release once and no retry reuses a retired upload (10.6905ms)
+✔ unknown/mismatched objects, changed versions and failed HEAD never free quota or delete blindly (24.303167ms)
+✔ storage timeout leaves a recoverable retired reservation and consumes late promise errors (14.533291ms)
+✔ HTTP requires Access, same-origin, explicit execution flag and idempotency; dry-run stays read-only (12.318625ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 267.51725
+
+> landing-site@0.1.0 test:music:rate-limits
+> node --test scripts/test-music-rate-limits.mjs
+
+✔ atomic source and global budgets admit exactly their limits under competing requests (20.347667ms)
+✔ denied source attempts consume no global slots; independent categories and next minute work (8.391583ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'configuration',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'configuration',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'configuration',
+  reason: 'operation_failed'
+}
+✔ only window-scoped HMAC source keys are stored; canonical IPv6 cannot split a quota (7.998417ms)
+✔ missing source, forged forwarded headers, malformed limits or secrets fail before database writes (8.175542ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'database',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'database',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'database',
+  reason: 'operation_failed'
+}
+✔ global counter faults roll back the source increment and never authorize a request (15.387125ms)
+✔ bounded pruning removes only old counters; quiet-period retention does not require a new cron (6.922958ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'database',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'database',
+  reason: 'deadline_exceeded'
+}
+✔ limiter failures and timeouts are 503 with no fallback allowance and consume late rejection (12.832625ms)
+✔ failure logs distinguish deadlines using fixed fields without serializing private failures (13.62825ms)
+✔ logging failures cannot change 503 or touch protected media (8.076709ms)
+✔ default D1 budget admits a confirmed result after 1.5s but denies at 5s without retry (7.33275ms)
+✔ closed public flag causes zero database reads and writes, including rate counters (0.420333ms)
+✔ catalog, artwork, access and all audio methods enforce limits before catalog, member or R2 reads (8.649083ms)
+✔ diagnostics require Access and return aggregate readiness without identities, keys or mutations (7.709625ms)
+✔ successful catalog, conditional 304 and HEAD share a budget without positive cache expansion (8.570209ms)
+✔ share source/global budgets are independent from artwork, atomic and expire normally (28.441667ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'share',
+  stage: 'database',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'share',
+  stage: 'database',
+  reason: 'operation_failed'
+}
+✔ missing or broken share counters fail closed without affecting ordinary artwork (7.331792ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 217.217125
+
+> landing-site@0.1.0 test:music:staging
+> node --test scripts/test-music-staging-gate.mjs
+
+✔ staging cookies cannot inherit a production session, including duplicates (7.888666ms)
+✔ Access-protected responses stay private without changing streams, HEAD, 304 or ranges (0.988583ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ real Access verification precedes all bindings; shared limits precede isolated membership (38.989541ms)
+✔ only music admin, public read routes and exact static dependencies are allowed (0.562458ms)
+✔ main site, other admin surfaces, traversal variants and unsupported methods stay closed (0.21975ms)
+✔ only exact music page routes receive canonical trailing slash redirects (0.037834ms)
+✔ host and fail-closed responses are normalized and private (0.097541ms)
+✔ the deployed entrypoint blocks other hosts and keeps admin closed without Access config (0.638333ms)
+✔ staging config exposes only the Access-protected music host and isolated bindings (1.422667ms)
+✔ maintenance deployments derive the same isolated config with all music flags closed (0.5ms)
+✔ moving the maintenance config preserves source, asset and both migration directories (0.417208ms)
+▶ staging package validation checks exact HTML pages and their dependency closure
+  ✔ complete pages and dependencies pass; navigation is not a static dependency (5.360542ms)
+  ✔ missing HTML dependency fails: /_astro/music.astro_astro_type_script_index_0_lang.fixture.js (3.812167ms)
+  ✔ missing HTML dependency fails: /styles/admin-music.css (3.741583ms)
+  ✔ unexpected HTML fails: /en/library/index.html (4.4305ms)
+  ✔ unexpected HTML fails: /music/extra.html (3.971583ms)
+  ✔ missing transitive JS dependency fails (3.095542ms)
+  ✔ present but forbidden chunks fail (3.346625ms)
+✔ staging package validation checks exact HTML pages and their dependency closure (28.080625ms)
+✔ staging module graph includes only music, Access, membership and explicitly gated website content modules (6.059917ms)
+✔ maintenance generator rejects resource, Access, route and execution drift before producing a config (1.152875ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 135.014875
+
+> landing-site@0.1.0 test:music:player
+> node --test scripts/test-music-player.mjs
+
+✔ initialization and selection never set a media URL or play; one controller per element (0.707917ms)
+✔ play is synchronous, but playing state is driven by native events, not Promise resolution (2.449792ms)
+✔ A/B/C rapid replacement ignores old play failures and old resource events (0.343667ms)
+✔ pausing an unresolved play keeps silence and ignores its later rejection (0.186042ms)
+✔ an earlier play attempt cannot overwrite a later resume on the same source (0.177083ms)
+✔ buffering only while playback intended; genuine end stops with no automatic next song (0.123875ms)
+✔ blocked and unsupported playback produce recoverable, non-payment errors (0.322584ms)
+✔ seek uses native metadata and seekable ranges; invalid values cannot corrupt progress (0.17425ms)
+✔ pause event queued by media failure does not erase the error state (0.102583ms)
+✔ replacement clears progress and preview uses its own independent URL and duration (0.10375ms)
+✔ destroy unloads the source, removes listeners and invalidates pending work (0.345791ms)
+✔ volume and mute follow native properties; snapshots cannot mutate internal state (0.069167ms)
+✔ public catalog adapter canonicalizes media identity and fails closed on malformed policy (0.29875ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 35.938709
+
+> landing-site@0.1.0 test:music:queue
+> node --test scripts/test-music-queue.mjs
+
+✔ queue settings and catalog never load audio; one queue per controller (1.704334ms)
+✔ list playback freezes order/access metadata and tolerates subsequent browse reorder (1.916375ms)
+✔ current row toggles pause without replacing the queue or losing position (0.295292ms)
+✔ play-all, next and natural advance filter VIP without spending the failure budget (0.263ms)
+✔ qualified VIP permits full queue playback; later known eligibility narrows next selection (0.2125ms)
+✔ explicit preview naturally stops in every repeat mode; manual next chooses full free track (0.225542ms)
+✔ all VIP and empty queues stop with explanation even with repeat/shuffle enabled (0.13275ms)
+✔ previous rewinds only above three seconds and preserves pause; exactly three selects previous (0.180541ms)
+✔ repeat one applies only at natural full end; manual next escapes and repeat-all wraps (0.178583ms)
+✔ shuffle draws a finite round without repeats and crosses rounds without adjacent duplicates (0.224167ms)
+✔ shuffle previous uses history, next retraces forward; disabling returns to original index (0.137375ms)
+✔ new catalog availability/version affects future play without replacing snapshot order (0.100167ms)
+✔ dedupe, 500 cap and append leave the current audio untouched (1.543125ms)
+✔ removing pending does not affect sound; current removal requires an explicit action (0.139834ms)
+✔ removing the only playing entry cannot repeat it and clearing invalidates pending audio (2.763125ms)
+✔ third consecutive full failure stops; a new user play resets the budget (0.201166ms)
+✔ exhausted one-song shuffle stops after one failure; denied autoplay is not a skip loop (0.273625ms)
+✔ preview failures do not automatically launch another preview or full song (0.097334ms)
+✔ failure reset needs continuous real progress, not seek jumps, pauses or brief playing events (0.149791ms)
+✔ late A/B failures cannot advance the final C queue or spend its failure budget (0.690708ms)
+✔ destroyed queue removes auto-advance without owning or replacing the audio element (0.087125ms)
+✔ small native seeks also interrupt the ten-second success window (0.105291ms)
+✔ known removal of the active catalog item unloads it without replacing the queue (0.068958ms)
+✔ passive selection does not erase the previous actual shuffle history (0.063667ms)
+✔ queued ended/error after user pause must not silently resume the queue (0.077125ms)
+✔ mode changes and remove-and-stop do not reset an existing failure budget (0.077084ms)
+✔ manual repeat-all wrap and play-all restart a sole eligible song instead of retaining its position (0.072666ms)
+✔ previous with no current selection does not start an arbitrary repeat-all entry (0.044292ms)
+✔ a current playing entry always remains pausable after eligibility changes (0.068833ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 45.959875
+
+> landing-site@0.1.0 test:music:access-lifecycle
+> node --test scripts/test-music-access-lifecycle.mjs
+
+✔ initial reads do not load media; one lifecycle per audio controller (2.854917ms)
+✔ invalid capability timestamps and inconsistent authorization fail closed (0.124666ms)
+✔ capabilities failure preserves free full and explicit preview without VIP full (0.762791ms)
+✔ free catalog becomes available while the independent capability request is unresolved (1.781542ms)
+✔ expiry unloads protected full, preserves only in-memory full position and ignores late play rejection (0.967542ms)
+✔ renewal at expiry remains paused and can resume only after a new user action (0.553375ms)
+✔ a blocked timer cannot let a user play with an expired hint (0.388959ms)
+✔ account invalidation is immediate, rejects stale successful reads, and never inherits a previous full source (0.56975ms)
+✔ account changes leave free full and previews playing, while clearing old hints (0.460083ms)
+✔ upgrade does not switch an active preview; explicit full starts at zero (0.265958ms)
+✔ foreground events coalesce, pause protected full and do not resume after checking (0.641792ms)
+✔ page hidden does not interrupt ordinary playback; bfcache restore rechecks (0.321875ms)
+✔ fresh free policy permits full after expiry without assuming VIP is permanent (0.367292ms)
+✔ known free-to-VIP policy or version changes unload the previous resource (0.307791ms)
+✔ full media failure makes one access probe and handles 401/AUTH_REQUIRED without advancing (0.35625ms)
+✔ full media failure makes one access probe and handles 403/MEMBERSHIP_EXPIRED without advancing (0.240625ms)
+✔ full media failure makes one access probe and handles 403/ACCOUNT_RESTRICTED without advancing (0.292042ms)
+✔ full media failure makes one access probe and handles 503/MEMBERSHIP_UNAVAILABLE without advancing (0.437166ms)
+✔ full media failure makes one access probe and handles 409/VERSION_CONFLICT without advancing (0.185ms)
+✔ full media failure makes one access probe and handles 410/TRACK_UNAVAILABLE without advancing (0.197958ms)
+✔ healthy access preserves bounded three-failure media recovery, not a payment prompt (0.52075ms)
+✔ a preview error plus full access 403 stays a media error and never prompts payment (0.21875ms)
+✔ stale access denial cannot unload a later selected song; stale success cannot resume after pause (0.315625ms)
+✔ destroy aborts requests, timers and subscriptions without later playback or refresh (0.123125ms)
+✔ session notifications contain no identity, deduplicate transports and release listeners (0.121167ms)
+✔ session mutation signals invalidate before the request and settle on success or uncertainty (0.137834ms)
+✔ missing session-change completion can be recovered by explicit recheck (0.142792ms)
+✔ known unavailable versions stay out of subsequent full queue traversal until catalog refresh (0.742208ms)
+✔ long-lived hints use bounded timer chunks instead of overflowing into a refresh loop (0.296666ms)
+✔ an access timeout stops full playback without another probe or queue advance (0.372792ms)
+✔ notification transport failures cannot block the underlying account request (0.105458ms)
+✔ a stale access denial cannot affect a new failed attempt on the same source generation (0.371042ms)
+✔ limited-free expiry unloads anonymous full and stale catalog cannot restart it or create a timer loop (0.317625ms)
+✔ limited-free full requires a usable server clock but ordinary free tracks still play (0.152291ms)
+✔ promotion expiry immediately publishes VIP display state even when both refreshes fail (0.410917ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 52.036959
+
+> landing-site@0.1.0 test:music:system-controls
+> node --test scripts/test-music-system-controls.mjs
+
+✔ mount and passive selection do not load audio, register system actions or claim playback (1.654292ms)
+✔ accepted user play registers independent actions and canonical public artwork only (1.464792ms)
+✔ system play/pause/stop are idempotent and stop unloads without losing selection (0.358459ms)
+✔ system next and previous preserve queue permission filtering and the three-second rewind rule (0.393375ms)
+✔ system seeks clamp to seekable media ranges, reject invalid numbers, and never start playback (0.251458ms)
+✔ preview metadata and position describe the short resource, not full duration or source offset (0.262708ms)
+✔ position state waits for current metadata, throttles subsecond ticks, updates rate and clears on unload (0.246667ms)
+✔ a denied core guard does not announce ownership or bypass access through a system action (0.180875ms)
+✔ last user play pauses another music player; automatic advancement never reclaims (0.423291ms)
+✔ same-tick concurrent claims converge without a pause echo or stale claim undoing a later click (0.472709ms)
+✔ forged grant payloads, malformed claims and self echoes are ignored (0.175583ms)
+✔ remote takeover defeats pending errors and late play rejections without starting a third track (2.203ms)
+✔ missing channel and system API preserve basic playback (0.2035ms)
+✔ unsupported actions and position API failures do not disable other media controls (0.165833ms)
+✔ destroy clears owned handlers, metadata, positions and channel; captured callbacks become inert (0.113333ms)
+✔ a stale owner does not clear another component media session or act through old callbacks (0.080875ms)
+✔ volume readback detects ignored/throwing writes and mute failures without loading media (0.599334ms)
+✔ repeated mount/unmount and a virtual thirty-minute stream keep handles and broadcasts bounded (9.765125ms)
+✔ old media handlers stay inert after ownership is lost and acquired again (0.180833ms)
+✔ another component taking the session after our stop is preserved during cleanup (0.074292ms)
+✔ throwing BroadcastChannel post and close degrade once without interrupting the accepted play (0.103583ms)
+✔ an unsupported position API is not hammered by subsequent time updates (0.205292ms)
+✔ rewinding while paused and selecting a row never displaces another music tab (0.080333ms)
+✔ last-user coordination does not touch unrelated audio elements (0.122458ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 57.236292
+
+> landing-site@0.1.0 test:music:library
+> node --test scripts/test-music-library.mjs
+
+✔ browse normalization retains only static notice anchors, never a return or credential fragment (0.316208ms)
+✔ every HTML path, alias, slashless and nested asset path is gated with zero binding reads (5.591667ms)
+✔ alias and slashless redirects preserve only unique valid public identifiers (0.330834ms)
+✔ enabled HTML streams assets but is never positively cached; HEAD and method handling (0.4035ms)
+✔ music routes run before asset fallthrough, stay out of sitemap, and use explicit language mapping (3.040417ms)
+✔ 500-track catalog is bounded, rejects duplicate IDs and unsafe fields, and canonicalizes covers (0.209833ms)
+✔ search NFKC/case normalization, tag OR/group AND, access and stable latest order (5.136917ms)
+✔ collections preserve administrator order and cannot grant full access or inject private fields (0.295041ms)
+✔ featured catalog is bounded, references public rows only and orders free picks without granting access (0.265208ms)
+✔ 50-row presentation does not truncate play-all and browsing never rewrites the queue (2.36575ms)
+✔ album category separates playlists and opens ordered songs without changing playback (1.460709ms)
+✔ all UI dictionary entries have four translations and preserve placeholders (0.475167ms)
+✔ native asset router cannot serve encoded music HTML before the closed gate (196.428208ms)
+✔ metadata-only published album stays browsable with no available tracks (0.202291ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 409.292208
+
+> landing-site@0.1.0 test:music:panels
+> node --test scripts/test-music-panels.mjs
+
+✔ opening/closing a drawer leaves the URL and browse selection intact; back and forward restore presentation (0.657667ms)
+✔ switching from details to queue replaces the overlay entry instead of stacking players or history (0.080959ms)
+✔ now-playing children return to the same player; repeat open does not stack history (0.121875ms)
+✔ opening lyrics for the playing song preserves its parent presentation after an explicit browse change (0.075584ms)
+✔ song sharing adds one presentation step and Back returns to the same details without URL or account data (0.08475ms)
+✔ a new panel requested during asynchronous Back survives the late popstate; double close never navigates twice (0.135041ms)
+✔ closing filters commits edited browse state instead of undoing the selected filter (0.082792ms)
+✔ resize/reset removes this mount’s panel marker without altering catalog history (0.063292ms)
+✔ a fresh mount ignores stale panel markers from another mount (0.083458ms)
+✔ removing the playing song displays localized confirmation and does not remove it until an explicit choice (0.609417ms)
+✔ either queue opener receives focus again on close in the standalone preview (0.154542ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 40.14525
+
+> landing-site@0.1.0 test:music:lyrics-local
+> node --test scripts/test-music-lyrics-local.mjs
+
+✔ LRC supports multi-tags, centiseconds/milliseconds, stable order, duplicate times and signed offset (0.786125ms)
+✔ TXT and malformed LRC stay inert text; limits include UTF-8, line and expanded-tag budgets (1.554208ms)
+✔ lyrics requests reconstruct a versioned same-origin URL and reject wrong content, bad UTF-8 and streaming overflow (9.126375ms)
+✔ catalog validates lyric metadata and never imports identity, lyrics URLs or asset keys (0.106584ms)
+✔ v2 allowlist keeps favorites, strips identity/URLs, and separates versions and variants with 30-day expiry (0.316125ms)
+✔ legacy migrates only validated ID lists and settings; original stays exportable and old full progress cannot authorize (0.224625ms)
+✔ corrupt/unknown local schemas are retained and never overwritten; disabled storage remains usable in memory (0.171125ms)
+✔ quota errors do not throw or delete disk records; favorite/recent limits and unavailable IDs survive (2.62775ms)
+✔ saved/recent order intersects playlist and access filters without mutating stored IDs (0.102458ms)
+✔ restoration resolves fresh catalog IDs, stays paused without src/play, then seeks only after user play and metadata (1.509ms)
+✔ saved VIP full never restores into preview or grants playback; changed version does not reuse progress (0.287291ms)
+✔ a collection landing keeps its selection instead of restoring an unrelated saved current song (0.12425ms)
+✔ explicit user choice before initial reads finish wins over saved current/queue/settings (0.176708ms)
+✔ early volume or queue preferences win; matching preview progress stays paused and variant-bound (0.224042ms)
+✔ a successful foreground retry can restore after the initial catalog failed, without trusting saved VIP hints (1.589166ms)
+✔ progress writes at five seconds, pause and pagehide; recently played requires native playing (0.718042ms)
+✔ restored positions are discarded on source selection and cannot override already-loaded media (0.073375ms)
+✔ instrumental/missing lyrics do not fetch; progress never retries errors, explicit retry works and destruction rejects late responses (2.813334ms)
+✔ late lyric A never overwrites B; manual scrolling suspends follow and another song never highlights (1.696834ms)
+✔ inline player lyrics load on opening while paused, stay quiet, and cancel on close (0.453375ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 64.187834
+
+> landing-site@0.1.0 test:music:sharing-return
+> node --test scripts/test-music-sharing-return.mjs
+
+✔ now-playing share uses A while browsing B; later renders cannot redirect the open card to B (9.499583ms)
+✔ share links use canonical locale routes and public IDs only, with one target per link (0.242875ms)
+✔ music return allowlist rejects external, encoded, malformed and non-music paths; strips unrelated queries (0.242125ms)
+✔ membership paths round-trip four locales without identity, and reject duplicate navigation parameters (0.233625ms)
+✔ native share is invoked in the gesture; cancellation never copies; unsupported/failed clipboard exposes manual fallback (0.16775ms)
+✔ member return banner only offers a validated explicit link; checkout retains the same public navigation context (0.147666ms)
+✔ the member page preserves existing redemption safeguards and only changes navigation around login/checkout (2.040875ms)
+✔ a track beyond the catalog window is resolved from its own endpoint without replacing the base list (0.424917ms)
+✔ a shared collection reads its complete public order, including songs outside the current catalog (0.2825ms)
+✔ retained queue metadata does not stand in for the current active or requested track read (0.103416ms)
+✔ wrong identities, schema, collection membership and network failures never become valid shared targets (0.148833ms)
+✔ separate 500-row responses can form a bounded lookup while the queue still caps at 500 (3.330583ms)
+✔ browsing B outside the catalog keeps playing A and its queue; fresh metadata still uses the original playback guard (1.720584ms)
+✔ aborted return refresh rejects late VIP/cross-account responses without cancelling a newer refresh (0.482417ms)
+✔ a late B detail read cannot evict C after the user starts a new queue (0.296708ms)
+✔ browsing does not reset a media version rejected by access; explicit refresh can retry it (0.443167ms)
+✔ return sync has increasing delays, stops at sixty seconds and never starts a second automatic visit (0.287125ms)
+✔ manual verification after polling ends updates stale return notices without restarting automatic polling (0.030208ms)
+✔ return sync aborts an outstanding read at the deadline, ignores late completion and suspends hidden-page requests (0.465542ms)
+✔ valid membership ends syncing even when delivery is closed; anonymous visitors get login, with no repeated purchase or playback (0.096333ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 63.697959
+
+> landing-site@0.1.0 test:music:share-cards
+> node --test scripts/test-music-share-cards.mjs
+
+✔ invalid input and either disabled flag read no bindings, counters, media or fonts (2.711625ms)
+✔ PNG reads only current public cover, keeps VIP anonymous, QR links contain no identity (454.643125ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'share',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+music_rate_limit_failure {
+  version: 1,
+  category: 'share',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ HEAD/version/downlisting/limit failure precede R2 and renderer (10.632959ms)
+✔ bad source/secret/database fail closed, changed cover and missing font never yield an image (84.335292ms)
+✔ body and decoded image budgets reject truncation, overflow and oversized pixels (9.393083ms)
+✔ all supported raster formats render; titles/QR/XML cannot inject remote image URLs or credentials (288.648125ms)
+✔ card preparation is lazy, fresh revision wins, same-origin Access session never crosses redirects (0.813458ms)
+✔ late A response cannot replace B or revive a closed panel; failed refresh clears old blob (0.322084ms)
+✔ oversized/HTML/wrong-size responses do not become image object URLs (0.289125ms)
+✔ file share is invoked within the user gesture, unsupported/cancelled remains a local fallback (0.157042ms)
+✔ actual workerd renders PNG with D1/R2/ASSETS and rewrites one set of song metadata (1524.572917ms)
+✔ album card uses only the independent published cover and its QR opens the album (366.468333ms)
+✔ album cards reject stale revisions and drafts before storage, and never expose unpublished members (96.3485ms)
+✔ album share metadata escapes text and uses collection-only canonical and image URLs (0.317334ms)
+✔ album client re-reads current metadata/version and rejects a substituted collection (0.787791ms)
+✔ PNG covers bypass intermediate raster encoding while preserving the original bounded bytes (337.388083ms)
+✔ native PNG compression preserves RGBA pixels including transparency and rejects oversized rasters (0.75425ms)
+✔ loading ordinary covers cannot deny the first album or song share request (113.465375ms)
+✔ share Retry-After prevents immediate or format-switch retries without automatic requests (0.680542ms)
+✔ pasted paragraph separators render exactly like normal spaces in album cards (80.456333ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3699.894875
+
+> landing-site@0.1.0 test:music:analytics
+> node --test scripts/test-music-analytics.mjs scripts/test-music-analytics-client.mjs
+
+✔ default anonymous collection creates only a session id and never conditions playback (11.941917ms)
+✔ operator-off, storage failure and GPC keep collection off without affecting the player (0.831833ms)
+✔ playing milestones use actual accumulated time; pause/resume and refresh keep one play session (0.6075ms)
+✔ click/loading, seeks, stalls, buffering, paused late playing and long gaps do not qualify (0.690666ms)
+✔ natural preview completion stays preview and paused queued ended cannot complete (0.731042ms)
+✔ reentrant queue advance and single repeat each create a new play session after measuring ended (0.833ms)
+✔ withdraw clears session and queued/in-flight retries, retaining unrelated local preferences (0.630333ms)
+✔ 100-event memory cap, 20-event batches and at most two retries are finite (1.742791ms)
+✔ manual opt-out persists; re-enable measures from that point; expiry and GPC stop collection (0.538625ms)
+✔ integration stays outside audio authorization, local preference schema and member transactions (0.940709ms)
+✔ CTA starts a bounded keepalive request before navigation; page teardown never schedules a retry (0.395125ms)
+✔ explicit play-all restart on the same loaded source differs from pause/resume (0.419875ms)
+✔ disabled switches and absent privacy configuration perform zero D1/R2 reads (10.754708ms)
+✔ strict envelope, types, 20 events, time skew, credentials and server-only event rejection (13.155042ms)
+✔ real streamed body cap applies without Content-Length, including UTF-8 bytes (8.210417ms)
+✔ published revision/variant/duration are checked in the same event transaction (13.161875ms)
+✔ lost receipt replay, per-play milestones and rolling qualified dedupe increment daily once (9.647167ms)
+✔ preview completion and free/VIP full totals stay separate, with server-derived access policy (8.8865ms)
+✔ public popularity exposes retained qualified-play totals and reports healthy empty aggregates as zero (8.5275ms)
+✔ 60 event units per minute, source/global rollback and rotating sessions cannot bypass limits (14.755958ms)
+✔ counter or aggregate faults fail closed; event and daily insert roll back together (8.613958ms)
+✔ retention is bounded, runs with collection disabled, and stale/missing sweeps close admission (8.764167ms)
+✔ admin Access precedes analytics; no data is unavailable, never fabricated zero (9.697458ms)
+✔ retention backlog never marks an incomplete bounded pass healthy (10.577833ms)
+✔ limited-free analytics classify by server receipt time before and at expiry (9.038791ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 182.344833
+Membership safety passed: atomicity, zero-change guard, replay/concurrency, lost response, auth, dates, safe returns and persistent keys.
+Membership refund review tests passed: manual-only, audit atomicity, renewal preservation, replay, races and admin boundaries.
+Article Markdown rendering, safe URLs and lossless spacing tests passed.
+Article publishing request failed. { code: 'ARTICLE_INVALID' }
+Article publishing request failed. { code: 'ARTICLE_CONFLICT' }
+Article publishing request failed. { code: 'ARTICLE_INVALID' }
+Article publishing request failed. { code: 'ARTICLE_INVALID' }
+Signal articles: URL bounds, auth, preview, SQLite CAS, revision bodies, public routes, archive retirement, sitemap and uploads passed.
+✔ feeding displays actual capped deltas and the exact consumed inventory (18.769458ms)
+✔ pregnant food quantity, no-change receipt and no invented memory (13.845625ms)
+✔ double activation is ignored; deliberate next action and later same action work (4.007333ms)
+✔ failed and unavailable cats cannot retain a success receipt (3.691041ms)
+✔ feedback is pure, not serialized, and cannot cross save/account identity (4.404584ms)
+✔ animation clock survives rerenders and ends; other cats keep their own artwork (3.971375ms)
+✔ all seven actions stay available through the tray and additional care (4.524167ms)
+✔ localized feedback and hostile names are safe in all supported languages (4.658417ms)
+✔ memory reads and latest selection do not reorder saved entries (4.271208ms)
+✔ veteran and novice guidance point to one real control without duplicate care actions (4.357958ms)
+✔ additional care guidance and all localized completion labels resolve safely (4.49175ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75.568
+Gentle care checks passed: away windows, hidden timers, rescue, legacy backups, identity, schema and 3-language UI.
+✔ P2: short focus/visibility/reload syncs preserve partial decay and disease periods (14.740042ms)
+✔ P2: real twin births in the same millisecond survive normalize, export and import (0.713583ms)
+✔ P2: existing colliding twin records retain both cats with stable repaired IDs (0.809833ms)
+✔ P2: same-clock litters avoid a pre-existing sparse ID collision (0.1925ms)
+✔ P2: a fresh global meta timestamp cannot hide 24-hour-old v2 cat trackers (0.412875ms)
+✔ P3: emergency meal uses real-time hunger before the next timer sync (0.151709ms)
+✔ P3: current v3 build preserves a future v4 save through repeated loads, saves and rejected imports (0.597084ms)
+✔ P3: 1.28.0 release version and three-language notes appear for a 1.24.0 save (3.485166ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23.227083
+✔ first-care path: real cat → supplies → effective feed → play → settled job (10.10025ms)
+✔ supply claims survive reload/import; renders, failed actions and no-op feeds never add care days (6.118333ms)
+✔ three non-consecutive UTC dates; repeat care, time away and rollback do not consume opportunities (3.79875ms)
+✔ first clinic aid is charged once, survives reload, and no treatment is granted by a render (10.938625ms)
+✔ unclaimed packages remain available after graduation, with the oldest package first and no duplicates after reload (4.890833ms)
+✔ a later learning day allows missed packages but never unlocks a fourth or an unearned stage (3.048667ms)
+✔ zero resources, both hungry: rescue → player meal → meet/supplies → useful care; no fabricated rewards (3.382583ms)
+✔ legacy saves resume honest counters without inventing dates, veteran saves skip lessons, future learning versions are retained (3.825334ms)
+✔ missing, locked, deceased, sheltered and multi-cat recommendations target only the actual companion (3.493083ms)
+✔ realtime hunger and stamina guide the player to food or sleep; pregnancy and premium stock are respected (2.846209ms)
+✔ global recommendations scan every rescue reason, including missing litter and deceased companions among living cats (3.099375ms)
+✔ journey landmarks describe learning, returning and rescue states in every locale (3.124459ms)
+✔ learning prevents new infections, not existing illness or the permanent gentle-care safety system (3.197667ms)
+✔ all three languages resolve new literal and dynamic keys; one primary action and semantic progress (3.442459ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 69.442584
+✔ real greeting, feeding and play are recorded once; failed and no-op care is not a memory (10.347208ms)
+✔ veterans record effective care independently from the learning path, with no added rewards (3.894542ms)
+✔ legacy bond is undated, no aggregate counters fabricate a first feed; normalization is idempotent (4.183167ms)
+✔ timestamps and per-cat identity survive rename, local save and import; duplicate IDs retain separate journals (4.458917ms)
+✔ actual treatment and recovery record after success, failed legacy backup changes nothing (3.482209ms)
+✔ same-millisecond actions across cats and clock rollback still show the latest actual interaction (3.421334ms)
+✔ invalid/duplicate records are bounded and future journal versions are preserved without writing (3.692958ms)
+✔ all event and stage copy is localized; escaped names, locked cats and complete bond have honest UI (9.865208ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 45.665083
+✔ zh-CN: latest only; all archived notes retained and collapsed (3.496166ms)
+✔ en: latest only; all archived notes retained and collapsed (1.67475ms)
+✔ ja: latest only; all archived notes retained and collapsed (1.138917ms)
+✔ view-only expansion, empty history, language fallback and escaping (1.153916ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9.883667
+✔ approved soft loop is present unchanged, without shipping WAV or soundbank (1.287667ms)
+✔ init/render are lazy; repeated unlock, page changes and renders share one loop (1.827792ms)
+✔ muting, volume zero and background pause; cached loop resumes at its position (0.488ms)
+✔ disabled or invalid volume never starts music, including first gesture (0.945458ms)
+✔ late download cannot restart muted or hidden playback (0.849666ms)
+✔ failed loads stay quiet, do not retry on render, and recover after a gesture (0.432958ms)
+✔ custom music wins over an in-flight default download; pages do not restart it (0.431084ms)
+✔ selecting custom audio stops the default; clearing returns to the cached position (0.374875ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8.315417
+✔ zh-CN: public latest release only, translated UI, no state mutations (3.510209ms)
+✔ en: public latest release only, translated UI, no state mutations (1.427917ms)
+✔ ja: public latest release only, translated UI, no state mutations (1.609917ms)
+✔ current notes are snapshotted and the share text keeps all notes, never old history (1.118625ms)
+✔ untrusted locale cannot leak current origin, extra parameters or a fragment (1.000291ms)
+✔ wrapping is bounded, prefers word boundaries, and preserves graphemes (8.030333ms)
+✔ illustration and font stay lean and local; QR vendor matches the licensed dependency (2.215542ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 20.397959
+✔ only healthy ordinary orange cats receive the rig; queries do not mutate saves (0.710458ms)
+✔ lazy loader avoids file URLs and reduced motion, deduplicates loads and never retries errors on each render (0.315666ms)
+✔ existing live tick reacts only to preference changes and reuses the runtime (0.501958ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3.542542
+
+> landing-site@0.1.0 test:music:role-preview
+> node --test scripts/test-music-role-preview.mjs
+
+✔ four roles reuse public full/preview semantics; ordinary and expired accounts are not VIP (1.775083ms)
+✔ current mode preserves publication and both actual gates; released is explicit UI fiction (0.236792ms)
+✔ server snapshot clock and exact early-access boundary, including post-VIP (0.18525ms)
+✔ saved revisions are independent; locales fall back to original and projection drops private data (0.207666ms)
+✔ missing audio is not a playable release, invalid saved metadata fails closed (0.339709ms)
+✔ fresh reader uses only existing admin GETs and rejects identity changes before reading content (0.094959ms)
+✔ switching tracks, leaving tab or newer refresh invalidates late responses and late errors (0.11625ms)
+✔ failed refresh clears prior view; invalid target or response is not accepted (0.117459ms)
+✔ limited-free role preview switches to VIP exactly at its chosen deadline (0.077ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 38.480667
+
+> landing-site@0.1.0 test:music:production-candidate
+> node --test scripts/test-music-production-candidate.mjs
+
+✔ closed candidate preserves original production identity, payments, routing, scheduling and complete assets (1.224167ms)
+✔ any baseline drift requires explicit review, including staging Access, secret, env, cron or assets (0.265375ms)
+✔ resource inputs reject staging, existing identity DB, extra bindings and secret/override fields (1.315917ms)
+✔ candidate checker rejects a single open flag or changed binding/path/identity/secret (1.797791ms)
+✔ real production handler denies closed HTML/media/catalog/cards/analytics before any data binding (9.545583ms)
+✔ private writer never overwrites source, resources, prior output, or a symlink; CLI errors omit input (34.01625ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 223.373958
+
+> landing-site@0.1.0 test
+> npm run audit:xml-supply-chain && node scripts/test-site-foundation.mjs && node scripts/test-cat-life-game-integration.mjs && node scripts/test-cat-life-commerce-contract.mjs && node scripts/test-cat-life-commerce-release.mjs && node scripts/test-cat-life-commerce-storage.mjs && node scripts/test-cat-life-commerce-api.mjs && node scripts/test-cat-life-commerce-admin.mjs && node scripts/test-cat-life-cloud-saves.mjs && node scripts/test-reader-totp.mjs && node scripts/test-reader-bookmark-shortcut.mjs && node scripts/test-reader-library-locales.mjs && node scripts/test-station-points.mjs && node scripts/test-creem-payments.mjs && node scripts/test-serials-hub-latest.mjs && node scripts/test-admin-import-delete.mjs && node scripts/test-admin-v2-workspace.mjs && node scripts/test-content-import-review.mjs && node scripts/test-novel-v2-reader-routes.mjs && node scripts/test-novel-reading-events.mjs && node scripts/test-reader-comments.mjs && node scripts/test-product-feedback.mjs && node scripts/test-privatepinyin-release.mjs && node scripts/test-novelforge-product-release.mjs && node scripts/test-product-catalog.mjs && node scripts/test-novel-analytics-stats.mjs && node scripts/test-novel-ai-insights.mjs && node scripts/test-novelforge-writing-api.mjs && node scripts/test-novel-english-translation.mjs && node scripts/test-signal-strip.mjs && node scripts/test-signal-automation-phase1.mjs && node scripts/test-signal-automation-phase2.mjs && node scripts/test-signal-automation-phase3.mjs && node scripts/test-signal-automation-phase4.mjs && node scripts/test-signal-automation-phase5.mjs && node scripts/test-signal-automation-phase6.mjs && node scripts/test-signal-source-archival.mjs && node scripts/test-signal-deepseek-adapter.mjs && node scripts/test-signal-deepseek-generation.mjs && node scripts/test-signal-deepseek-rollout.mjs
+
+
+> landing-site@0.1.0 audit:xml-supply-chain
+> node scripts/audit-fast-xml-parser-supply-chain.mjs
+
+fast-xml-parser supply-chain audit passed (8 exact packages).
+Site foundation tests passed.
+Cat Life Game content manifest tests passed.
+Cat Life Game website integration tests passed.
+Cat Life Game commerce contract tests passed.
+Cat Life Game commerce release configuration tests passed.
+Cat Life Game commerce storage tests passed.
+Cat Life Game commerce API tests passed.
+Cat Life Game commerce Admin tests passed.
+Cat Life Game cloud save tests passed.
+reader TOTP tests passed
+reader bookmark shortcut tests passed
+reader library locale checks passed
+Station Points pricing and compatibility checks passed.
+Creem checkout, event idempotency, mode isolation, and credit reversal checks passed.
+serials hub latest chapter tests passed
+admin import delete tests passed
+admin v2 workspace redesign tests passed
+content import review query and migration tests passed
+novel v2 reader route tests passed
+novel reading event tests passed
+Reader comments tests passed.
+Product feedback tests passed.
+PrivatePinyin release entry tests passed.
+NovelForge AI product release tests passed.
+Product catalog retirement, homepage, and MindBudget tests passed.
+novel analytics stats tests passed
+novel AI insights tests passed
+NovelForge writing API tests passed
+novel English translation tests passed
+Legacy Signal route parsing, render helpers, and admin import checks passed.
+Signal automation phase 1 migration, source management, and queue API checks passed.
+Signal automation phase 2 collection, SSRF protection, migration, queue, and Admin checks passed.
+Signal automation phase 3 scoring, duplicate merging, clustering, review, auth, migration, and Admin checks passed.
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_FACTUAL_INVALID',
+  factualViolations: [
+    {
+      candidateId: 'candidate-ai',
+      allowedFacts: [Array],
+      unsupportedFacts: [Array]
+    }
+  ],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal automation phase 4 draft generation, storage, auth, and publication-gate checks passed.
+Signal automation phase 5 review, archive, approval payload, auth, and candidate-window checks passed.
+{"component":"signal_automation","event":"cron_completed","alreadyRunning":false,"queued":0,"runId":""}
+{"component":"signal_automation","event":"dead_letter_received","marked":true,"runId":"dlq-run","sourceId":"github-changelog"}
+{"component":"signal_automation","event":"queue_message_failed","attempts":1,"code":"SIGNAL_COLLECTION_MESSAGE_INVALID","message":"资讯采集队列消息无效。","runId":"","sourceId":""}
+Signal automation phase 6 operations, heartbeat, retry, DLQ, migration, and Admin checks passed.
+Signal source archival migration and history-preservation checks passed.
+Signal DeepSeek adapter request limits, metadata, retry, and error checks passed.
+Signal DeepSeek phase 2 provider routing, quality gate, metadata, and Admin checks passed.
+Signal DeepSeek controlled-rollout tests passed.

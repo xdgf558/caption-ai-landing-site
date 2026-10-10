@@ -1,0 +1,1218 @@
+{
+  "production": false,
+  "physicalDevice": false,
+  "profile": {
+    "latencyMs": 150,
+    "bytesPerSecondPerResponse": 200000,
+    "cpuThrottle": false,
+    "sharedLinkSimulation": false,
+    "compression": false
+  },
+  "runs": [
+    {
+      "page": "home",
+      "run": 1,
+      "profile": "mobile-lab",
+      "metrics": {
+        "lcpMs": 1588,
+        "cls": 0,
+        "unsupported": [],
+        "atMs": 148060.80000000005,
+        "resources": [
+          {
+            "path": "/_astro/index.CdwIK2GI.css",
+            "type": "link",
+            "durationMs": 214.80000000004657,
+            "transferBytes": 10186
+          },
+          {
+            "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+            "type": "script",
+            "durationMs": 176.69999999995343,
+            "transferBytes": 1860
+          },
+          {
+            "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+            "type": "script",
+            "durationMs": 177.0999999998603,
+            "transferBytes": 1907
+          },
+          {
+            "path": "/_astro/_locale_.CyLhD4gI.css",
+            "type": "link",
+            "durationMs": 190.39999999990687,
+            "transferBytes": 4638
+          },
+          {
+            "path": "/_astro/_locale_.BWMT5TJ9.css",
+            "type": "link",
+            "durationMs": 238.80000000004657,
+            "transferBytes": 14243
+          },
+          {
+            "path": "/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.CF2-hvS8.js",
+            "type": "script",
+            "durationMs": 338.69999999995343,
+            "transferBytes": 1706
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "img",
+            "durationMs": 432.89999999990687,
+            "transferBytes": 7634
+          },
+          {
+            "path": "/images/station-gentle/hero.webp",
+            "type": "img",
+            "durationMs": 1234.5,
+            "transferBytes": 211886
+          },
+          {
+            "path": "/_astro/routes.Cqv8BySH.js",
+            "type": "script",
+            "durationMs": 159.60000000009313,
+            "transferBytes": 1410
+          },
+          {
+            "path": "/_astro/pagePaths.Adk3jqEz.js",
+            "type": "script",
+            "durationMs": 161.69999999995343,
+            "transferBytes": 1118
+          },
+          {
+            "path": "/_astro/analyticsControls.BJn8lemT.js",
+            "type": "script",
+            "durationMs": 209.80000000004657,
+            "transferBytes": 10673
+          },
+          {
+            "path": "/_astro/campaignLinks.hVtZubDL.js",
+            "type": "script",
+            "durationMs": 258.69999999995343,
+            "transferBytes": 2372
+          },
+          {
+            "path": "/_astro/musicResponse.kb_2zO3V.js",
+            "type": "script",
+            "durationMs": 318.80000000004657,
+            "transferBytes": 847
+          },
+          {
+            "path": "/_astro/clipClient.B6wkw9Tl.js",
+            "type": "script",
+            "durationMs": 274.30000000004657,
+            "transferBytes": 10691
+          },
+          {
+            "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+            "type": "script",
+            "durationMs": 303.19999999995343,
+            "transferBytes": 6905
+          },
+          {
+            "path": "/_astro/musicLocalData.rQlht5YK.js",
+            "type": "script",
+            "durationMs": 336.80000000004657,
+            "transferBytes": 3813
+          },
+          {
+            "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+            "type": "script",
+            "durationMs": 396.80000000004657,
+            "transferBytes": 29974
+          },
+          {
+            "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+            "type": "script",
+            "durationMs": 384.80000000004657,
+            "transferBytes": 1536
+          },
+          {
+            "path": "/_astro/navigation.-iYZuZPj.js",
+            "type": "script",
+            "durationMs": 438.5,
+            "transferBytes": 2377
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "other",
+            "durationMs": 191.19999999995343,
+            "transferBytes": 7634
+          }
+        ],
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "page": "home",
+      "run": 2,
+      "profile": "mobile-lab",
+      "metrics": {
+        "lcpMs": 1628,
+        "cls": 0,
+        "unsupported": [],
+        "atMs": 8589.899999999907,
+        "resources": [
+          {
+            "path": "/_astro/index.CdwIK2GI.css",
+            "type": "link",
+            "durationMs": 216.89999999990687,
+            "transferBytes": 10186
+          },
+          {
+            "path": "/_astro/_locale_.CyLhD4gI.css",
+            "type": "link",
+            "durationMs": 191.60000000009313,
+            "transferBytes": 4638
+          },
+          {
+            "path": "/_astro/_locale_.BWMT5TJ9.css",
+            "type": "link",
+            "durationMs": 240.29999999981374,
+            "transferBytes": 14243
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "img",
+            "durationMs": 435.39999999990687,
+            "transferBytes": 7634
+          },
+          {
+            "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+            "type": "script",
+            "durationMs": 177.29999999981374,
+            "transferBytes": 1860
+          },
+          {
+            "path": "/images/station-gentle/hero.webp",
+            "type": "img",
+            "durationMs": 1234.6000000000931,
+            "transferBytes": 211886
+          },
+          {
+            "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+            "type": "script",
+            "durationMs": 181.09999999962747,
+            "transferBytes": 1907
+          },
+          {
+            "path": "/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.CF2-hvS8.js",
+            "type": "script",
+            "durationMs": 344.09999999962747,
+            "transferBytes": 1706
+          },
+          {
+            "path": "/_astro/routes.Cqv8BySH.js",
+            "type": "script",
+            "durationMs": 165.1999999997206,
+            "transferBytes": 1410
+          },
+          {
+            "path": "/_astro/pagePaths.Adk3jqEz.js",
+            "type": "script",
+            "durationMs": 165.39999999990687,
+            "transferBytes": 1118
+          },
+          {
+            "path": "/_astro/analyticsControls.BJn8lemT.js",
+            "type": "script",
+            "durationMs": 212.79999999981374,
+            "transferBytes": 10673
+          },
+          {
+            "path": "/_astro/campaignLinks.hVtZubDL.js",
+            "type": "script",
+            "durationMs": 261.20000000018626,
+            "transferBytes": 2372
+          },
+          {
+            "path": "/_astro/musicResponse.kb_2zO3V.js",
+            "type": "script",
+            "durationMs": 323.20000000018626,
+            "transferBytes": 847
+          },
+          {
+            "path": "/_astro/clipClient.B6wkw9Tl.js",
+            "type": "script",
+            "durationMs": 281.20000000018626,
+            "transferBytes": 10691
+          },
+          {
+            "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+            "type": "script",
+            "durationMs": 309.60000000009313,
+            "transferBytes": 6905
+          },
+          {
+            "path": "/_astro/musicLocalData.rQlht5YK.js",
+            "type": "script",
+            "durationMs": 343.39999999990687,
+            "transferBytes": 3813
+          },
+          {
+            "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+            "type": "script",
+            "durationMs": 395.29999999981374,
+            "transferBytes": 29974
+          },
+          {
+            "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+            "type": "script",
+            "durationMs": 394.39999999990687,
+            "transferBytes": 1536
+          },
+          {
+            "path": "/_astro/navigation.-iYZuZPj.js",
+            "type": "script",
+            "durationMs": 448.6999999997206,
+            "transferBytes": 2377
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "other",
+            "durationMs": 196,
+            "transferBytes": 7634
+          }
+        ],
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "page": "home",
+      "run": 3,
+      "profile": "mobile-lab",
+      "metrics": {
+        "lcpMs": 1604,
+        "cls": 0,
+        "unsupported": [],
+        "atMs": 19076.100000000093,
+        "resources": [
+          {
+            "path": "/_astro/index.CdwIK2GI.css",
+            "type": "link",
+            "durationMs": 222.70000000018626,
+            "transferBytes": 10186
+          },
+          {
+            "path": "/_astro/_locale_.CyLhD4gI.css",
+            "type": "link",
+            "durationMs": 198.60000000009313,
+            "transferBytes": 4638
+          },
+          {
+            "path": "/_astro/_locale_.BWMT5TJ9.css",
+            "type": "link",
+            "durationMs": 248.60000000009313,
+            "transferBytes": 14243
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "img",
+            "durationMs": 6408.700000000186,
+            "transferBytes": 300
+          },
+          {
+            "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+            "type": "script",
+            "durationMs": 185.10000000009313,
+            "transferBytes": 1860
+          },
+          {
+            "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+            "type": "script",
+            "durationMs": 186.1999999997206,
+            "transferBytes": 1907
+          },
+          {
+            "path": "/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.CF2-hvS8.js",
+            "type": "script",
+            "durationMs": 343.29999999981374,
+            "transferBytes": 300
+          },
+          {
+            "path": "/images/station-gentle/hero.webp",
+            "type": "img",
+            "durationMs": 1238.2999999998137,
+            "transferBytes": 211886
+          },
+          {
+            "path": "/_astro/pagePaths.Adk3jqEz.js",
+            "type": "script",
+            "durationMs": 169.60000000009313,
+            "transferBytes": 1118
+          },
+          {
+            "path": "/_astro/routes.Cqv8BySH.js",
+            "type": "script",
+            "durationMs": 169.29999999981374,
+            "transferBytes": 1410
+          },
+          {
+            "path": "/_astro/analyticsControls.BJn8lemT.js",
+            "type": "script",
+            "durationMs": 215.6999999997206,
+            "transferBytes": 10673
+          },
+          {
+            "path": "/_astro/campaignLinks.hVtZubDL.js",
+            "type": "script",
+            "durationMs": 248,
+            "transferBytes": 2372
+          },
+          {
+            "path": "/_astro/musicResponse.kb_2zO3V.js",
+            "type": "script",
+            "durationMs": 328.79999999981374,
+            "transferBytes": 847
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "other",
+            "durationMs": 206,
+            "transferBytes": 7634
+          }
+        ],
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "page": "song",
+      "run": 1,
+      "profile": "mobile-lab",
+      "metrics": {
+        "lcpMs": 3432,
+        "cls": 0,
+        "unsupported": [],
+        "atMs": 11626.69999999972,
+        "resources": [
+          {
+            "path": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+            "type": "script",
+            "durationMs": 249.10000000009313,
+            "transferBytes": 15662
+          },
+          {
+            "path": "/_astro/index.CdwIK2GI.css",
+            "type": "link",
+            "durationMs": 229.70000000018626,
+            "transferBytes": 10186
+          },
+          {
+            "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+            "type": "script",
+            "durationMs": 189.6999999997206,
+            "transferBytes": 1860
+          },
+          {
+            "path": "/_astro/_locale_.CyLhD4gI.css",
+            "type": "link",
+            "durationMs": 201.89999999990687,
+            "transferBytes": 4638
+          },
+          {
+            "path": "/_astro/_locale_.DwGlYgIp.css",
+            "type": "link",
+            "durationMs": 239.10000000009313,
+            "transferBytes": 11725
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "img",
+            "durationMs": 454.5,
+            "transferBytes": 7634
+          },
+          {
+            "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+            "type": "script",
+            "durationMs": 356.1999999997206,
+            "transferBytes": 1907
+          },
+          {
+            "path": "/_astro/MusicShell.astro_astro_type_script_index_0_lang.fahdOygU.js",
+            "type": "script",
+            "durationMs": 400.5,
+            "transferBytes": 8605
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000024",
+            "type": "img",
+            "durationMs": 1405.1999999997206,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000502",
+            "type": "img",
+            "durationMs": 2741.899999999907,
+            "transferBytes": 415109
+          },
+          {
+            "path": "/_astro/pagePaths.Adk3jqEz.js",
+            "type": "script",
+            "durationMs": 163.39999999990687,
+            "transferBytes": 1118
+          },
+          {
+            "path": "/_astro/routes.Cqv8BySH.js",
+            "type": "script",
+            "durationMs": 164.1999999997206,
+            "transferBytes": 1410
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000014",
+            "type": "img",
+            "durationMs": 1977.2999999998137,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000034",
+            "type": "img",
+            "durationMs": 1987.6999999997206,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000044",
+            "type": "img",
+            "durationMs": 2525,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/_astro/analyticsControls.BJn8lemT.js",
+            "type": "script",
+            "durationMs": 206,
+            "transferBytes": 10673
+          },
+          {
+            "path": "/_astro/campaignLinks.hVtZubDL.js",
+            "type": "script",
+            "durationMs": 208.89999999990687,
+            "transferBytes": 2372
+          },
+          {
+            "path": "/_astro/musicResponse.kb_2zO3V.js",
+            "type": "script",
+            "durationMs": 233.60000000009313,
+            "transferBytes": 847
+          },
+          {
+            "path": "/_astro/musicLyrics.By8ik3ey.js",
+            "type": "script",
+            "durationMs": 193.10000000009313,
+            "transferBytes": 2733
+          },
+          {
+            "path": "/_astro/navigation.-iYZuZPj.js",
+            "type": "script",
+            "durationMs": 214.10000000009313,
+            "transferBytes": 2377
+          },
+          {
+            "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+            "type": "script",
+            "durationMs": 460.3000000002794,
+            "transferBytes": 29974
+          },
+          {
+            "path": "/_astro/musicLocalData.rQlht5YK.js",
+            "type": "script",
+            "durationMs": 364.10000000009313,
+            "transferBytes": 3813
+          },
+          {
+            "path": "/_astro/clipClient.B6wkw9Tl.js",
+            "type": "script",
+            "durationMs": 363.70000000018626,
+            "transferBytes": 10691
+          },
+          {
+            "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+            "type": "script",
+            "durationMs": 371.39999999990687,
+            "transferBytes": 6905
+          },
+          {
+            "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+            "type": "script",
+            "durationMs": 374.39999999990687,
+            "transferBytes": 1536
+          },
+          {
+            "path": "/api/station/events/config",
+            "type": "fetch",
+            "durationMs": 160,
+            "transferBytes": 465
+          }
+        ],
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "page": "song",
+      "run": 2,
+      "profile": "mobile-lab",
+      "metrics": {
+        "lcpMs": 3392,
+        "cls": 0,
+        "unsupported": [],
+        "atMs": 26604.100000000093,
+        "resources": [
+          {
+            "path": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+            "type": "script",
+            "durationMs": 241.20000000018626,
+            "transferBytes": 15662
+          },
+          {
+            "path": "/_astro/index.CdwIK2GI.css",
+            "type": "link",
+            "durationMs": 221.79999999981374,
+            "transferBytes": 10186
+          },
+          {
+            "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+            "type": "script",
+            "durationMs": 178.1999999997206,
+            "transferBytes": 1860
+          },
+          {
+            "path": "/_astro/_locale_.CyLhD4gI.css",
+            "type": "link",
+            "durationMs": 192.39999999990687,
+            "transferBytes": 4638
+          },
+          {
+            "path": "/_astro/_locale_.DwGlYgIp.css",
+            "type": "link",
+            "durationMs": 228.79999999981374,
+            "transferBytes": 11725
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "img",
+            "durationMs": 434.60000000009313,
+            "transferBytes": 7634
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000024",
+            "type": "img",
+            "durationMs": 1390.5,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+            "type": "script",
+            "durationMs": 343.6999999997206,
+            "transferBytes": 1907
+          },
+          {
+            "path": "/_astro/MusicShell.astro_astro_type_script_index_0_lang.fahdOygU.js",
+            "type": "script",
+            "durationMs": 390.1999999997206,
+            "transferBytes": 8605
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000014",
+            "type": "img",
+            "durationMs": 1992,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000034",
+            "type": "img",
+            "durationMs": 2017.5,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000502",
+            "type": "img",
+            "durationMs": 2741.2000000001863,
+            "transferBytes": 415109
+          },
+          {
+            "path": "/_astro/pagePaths.Adk3jqEz.js",
+            "type": "script",
+            "durationMs": 165.10000000009313,
+            "transferBytes": 1118
+          },
+          {
+            "path": "/_astro/routes.Cqv8BySH.js",
+            "type": "script",
+            "durationMs": 165.20000000018626,
+            "transferBytes": 1410
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000044",
+            "type": "img",
+            "durationMs": 2528.100000000093,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/_astro/analyticsControls.BJn8lemT.js",
+            "type": "script",
+            "durationMs": 206.89999999990687,
+            "transferBytes": 10673
+          },
+          {
+            "path": "/_astro/campaignLinks.hVtZubDL.js",
+            "type": "script",
+            "durationMs": 211.79999999981374,
+            "transferBytes": 2372
+          },
+          {
+            "path": "/_astro/musicResponse.kb_2zO3V.js",
+            "type": "script",
+            "durationMs": 216.1999999997206,
+            "transferBytes": 847
+          },
+          {
+            "path": "/_astro/musicLyrics.By8ik3ey.js",
+            "type": "script",
+            "durationMs": 179.39999999990687,
+            "transferBytes": 2733
+          },
+          {
+            "path": "/_astro/navigation.-iYZuZPj.js",
+            "type": "script",
+            "durationMs": 208.89999999990687,
+            "transferBytes": 2377
+          },
+          {
+            "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+            "type": "script",
+            "durationMs": 465.5,
+            "transferBytes": 29974
+          },
+          {
+            "path": "/_astro/musicLocalData.rQlht5YK.js",
+            "type": "script",
+            "durationMs": 351.10000000009313,
+            "transferBytes": 3813
+          },
+          {
+            "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+            "type": "script",
+            "durationMs": 356.39999999990687,
+            "transferBytes": 6905
+          },
+          {
+            "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+            "type": "script",
+            "durationMs": 369.60000000009313,
+            "transferBytes": 1536
+          },
+          {
+            "path": "/_astro/clipClient.B6wkw9Tl.js",
+            "type": "script",
+            "durationMs": 370.60000000009313,
+            "transferBytes": 10691
+          },
+          {
+            "path": "/api/station/events/config",
+            "type": "fetch",
+            "durationMs": 158.29999999981374,
+            "transferBytes": 465
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "other",
+            "durationMs": 196.1999999997206,
+            "transferBytes": 7634
+          }
+        ],
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "page": "song",
+      "run": 3,
+      "profile": "mobile-lab",
+      "metrics": {
+        "lcpMs": 3372,
+        "cls": 0,
+        "unsupported": [],
+        "atMs": 23583.799999999814,
+        "resources": [
+          {
+            "path": "/_astro/index.CdwIK2GI.css",
+            "type": "link",
+            "durationMs": 211.20000000018626,
+            "transferBytes": 10186
+          },
+          {
+            "path": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+            "type": "script",
+            "durationMs": 235,
+            "transferBytes": 15662
+          },
+          {
+            "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+            "type": "script",
+            "durationMs": 167.5,
+            "transferBytes": 1860
+          },
+          {
+            "path": "/_astro/_locale_.CyLhD4gI.css",
+            "type": "link",
+            "durationMs": 183.39999999990687,
+            "transferBytes": 4638
+          },
+          {
+            "path": "/_astro/_locale_.DwGlYgIp.css",
+            "type": "link",
+            "durationMs": 218.10000000009313,
+            "transferBytes": 11725
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "img",
+            "durationMs": 419.60000000009313,
+            "transferBytes": 7634
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000024",
+            "type": "img",
+            "durationMs": 1379.6000000000931,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+            "type": "script",
+            "durationMs": 332.10000000009313,
+            "transferBytes": 1907
+          },
+          {
+            "path": "/_astro/MusicShell.astro_astro_type_script_index_0_lang.fahdOygU.js",
+            "type": "script",
+            "durationMs": 379.29999999981374,
+            "transferBytes": 8605
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000014",
+            "type": "img",
+            "durationMs": 1996.6999999997206,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000034",
+            "type": "img",
+            "durationMs": 1996.7999999998137,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000044",
+            "type": "img",
+            "durationMs": 2529.7999999998137,
+            "transferBytes": 242994
+          },
+          {
+            "path": "/api/station/content/assets/ca760000-0000-4000-8000-000000000502",
+            "type": "img",
+            "durationMs": 2742.399999999907,
+            "transferBytes": 415109
+          },
+          {
+            "path": "/_astro/routes.Cqv8BySH.js",
+            "type": "script",
+            "durationMs": 164.6999999997206,
+            "transferBytes": 1410
+          },
+          {
+            "path": "/_astro/pagePaths.Adk3jqEz.js",
+            "type": "script",
+            "durationMs": 170.79999999981374,
+            "transferBytes": 1118
+          },
+          {
+            "path": "/_astro/analyticsControls.BJn8lemT.js",
+            "type": "script",
+            "durationMs": 204.60000000009313,
+            "transferBytes": 10673
+          },
+          {
+            "path": "/_astro/musicResponse.kb_2zO3V.js",
+            "type": "script",
+            "durationMs": 212.10000000009313,
+            "transferBytes": 847
+          },
+          {
+            "path": "/_astro/campaignLinks.hVtZubDL.js",
+            "type": "script",
+            "durationMs": 212.10000000009313,
+            "transferBytes": 2372
+          },
+          {
+            "path": "/_astro/musicLyrics.By8ik3ey.js",
+            "type": "script",
+            "durationMs": 180.79999999981374,
+            "transferBytes": 2733
+          },
+          {
+            "path": "/_astro/navigation.-iYZuZPj.js",
+            "type": "script",
+            "durationMs": 206.79999999981374,
+            "transferBytes": 2377
+          },
+          {
+            "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+            "type": "script",
+            "durationMs": 356,
+            "transferBytes": 6905
+          },
+          {
+            "path": "/_astro/clipClient.B6wkw9Tl.js",
+            "type": "script",
+            "durationMs": 371.6999999997206,
+            "transferBytes": 10691
+          },
+          {
+            "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+            "type": "script",
+            "durationMs": 460.1999999997206,
+            "transferBytes": 29974
+          },
+          {
+            "path": "/_astro/musicLocalData.rQlht5YK.js",
+            "type": "script",
+            "durationMs": 352.29999999981374,
+            "transferBytes": 3813
+          },
+          {
+            "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+            "type": "script",
+            "durationMs": 365.79999999981374,
+            "transferBytes": 1536
+          },
+          {
+            "path": "/api/station/events/config",
+            "type": "fetch",
+            "durationMs": 158.70000000018626,
+            "transferBytes": 465
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "other",
+            "durationMs": 197.70000000018626,
+            "transferBytes": 7634
+          }
+        ],
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        }
+      }
+    }
+  ],
+  "excludedDesktopPreflight": [
+    {
+      "page": "home",
+      "run": 1,
+      "observedAt": "2026-10-10T10:49:49.765Z",
+      "lcpMs": 1616,
+      "cls": 0,
+      "unsupported": [],
+      "atMs": 14591.399999999907,
+      "resources": [
+        {
+          "path": "/_astro/index.CdwIK2GI.css",
+          "type": "link",
+          "durationMs": 221.79999999981374,
+          "transferBytes": 10186
+        },
+        {
+          "path": "/_astro/_locale_.BWMT5TJ9.css",
+          "type": "link",
+          "durationMs": 247.69999999995343,
+          "transferBytes": 14243
+        },
+        {
+          "path": "/_astro/_locale_.CyLhD4gI.css",
+          "type": "link",
+          "durationMs": 199.19999999995343,
+          "transferBytes": 4638
+        },
+        {
+          "path": "/images/station-gentle/cat-mark.webp",
+          "type": "img",
+          "durationMs": 445.39999999990687,
+          "transferBytes": 7634
+        },
+        {
+          "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+          "type": "script",
+          "durationMs": 184.60000000009313,
+          "transferBytes": 1860
+        },
+        {
+          "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+          "type": "script",
+          "durationMs": 185.60000000009313,
+          "transferBytes": 1907
+        },
+        {
+          "path": "/images/station-gentle/hero.webp",
+          "type": "img",
+          "durationMs": 1236.2000000001863,
+          "transferBytes": 211886
+        },
+        {
+          "path": "/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.CF2-hvS8.js",
+          "type": "script",
+          "durationMs": 349.19999999995343,
+          "transferBytes": 1706
+        },
+        {
+          "path": "/_astro/routes.Cqv8BySH.js",
+          "type": "script",
+          "durationMs": 160.5,
+          "transferBytes": 1410
+        },
+        {
+          "path": "/_astro/pagePaths.Adk3jqEz.js",
+          "type": "script",
+          "durationMs": 160.89999999990687,
+          "transferBytes": 1118
+        },
+        {
+          "path": "/_astro/analyticsControls.BJn8lemT.js",
+          "type": "script",
+          "durationMs": 208.10000000009313,
+          "transferBytes": 10673
+        },
+        {
+          "path": "/_astro/campaignLinks.hVtZubDL.js",
+          "type": "script",
+          "durationMs": 208,
+          "transferBytes": 2372
+        },
+        {
+          "path": "/_astro/musicResponse.kb_2zO3V.js",
+          "type": "script",
+          "durationMs": 297.39999999990687,
+          "transferBytes": 847
+        },
+        {
+          "path": "/_astro/clipClient.B6wkw9Tl.js",
+          "type": "script",
+          "durationMs": 323.10000000009313,
+          "transferBytes": 10691
+        },
+        {
+          "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+          "type": "script",
+          "durationMs": 422.20000000018626,
+          "transferBytes": 29974
+        },
+        {
+          "path": "/_astro/musicLocalData.rQlht5YK.js",
+          "type": "script",
+          "durationMs": 336.80000000004657,
+          "transferBytes": 3813
+        },
+        {
+          "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+          "type": "script",
+          "durationMs": 352.69999999995343,
+          "transferBytes": 6905
+        },
+        {
+          "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+          "type": "script",
+          "durationMs": 414.89999999990687,
+          "transferBytes": 1536
+        },
+        {
+          "path": "/_astro/navigation.-iYZuZPj.js",
+          "type": "script",
+          "durationMs": 491.30000000004657,
+          "transferBytes": 2377
+        },
+        {
+          "path": "/images/station-gentle/cat-mark.webp",
+          "type": "other",
+          "durationMs": 192.10000000009313,
+          "transferBytes": 7634
+        }
+      ],
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "dpr": 2,
+        "clientWidth": 1280,
+        "scrollWidth": 1280
+      }
+    },
+    {
+      "page": "home",
+      "run": 2,
+      "observedAt": "2026-10-10T10:49:51.167Z",
+      "lcpMs": 620,
+      "cls": 0,
+      "unsupported": [],
+      "atMs": 1130.3000000000466,
+      "resources": [
+        {
+          "path": "/_astro/index.CdwIK2GI.css",
+          "type": "link",
+          "durationMs": 216.89999999990687,
+          "transferBytes": 10186
+        },
+        {
+          "path": "/_astro/_locale_.BWMT5TJ9.css",
+          "type": "link",
+          "durationMs": 239.4000000001397,
+          "transferBytes": 14243
+        },
+        {
+          "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+          "type": "script",
+          "durationMs": 179.19999999995343,
+          "transferBytes": 1860
+        },
+        {
+          "path": "/_astro/_locale_.CyLhD4gI.css",
+          "type": "link",
+          "durationMs": 192.30000000004657,
+          "transferBytes": 4638
+        },
+        {
+          "path": "/images/station-gentle/cat-mark.webp",
+          "type": "img",
+          "durationMs": 434.80000000004657,
+          "transferBytes": 7634
+        },
+        {
+          "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+          "type": "script",
+          "durationMs": 180.70000000018626,
+          "transferBytes": 1907
+        },
+        {
+          "path": "/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.CF2-hvS8.js",
+          "type": "script",
+          "durationMs": 346.80000000004657,
+          "transferBytes": 1706
+        },
+        {
+          "path": "/_astro/routes.Cqv8BySH.js",
+          "type": "script",
+          "durationMs": 164.79999999981374,
+          "transferBytes": 1410
+        },
+        {
+          "path": "/_astro/pagePaths.Adk3jqEz.js",
+          "type": "script",
+          "durationMs": 165.29999999981374,
+          "transferBytes": 1118
+        },
+        {
+          "path": "/_astro/analyticsControls.BJn8lemT.js",
+          "type": "script",
+          "durationMs": 213.10000000009313,
+          "transferBytes": 10673
+        },
+        {
+          "path": "/_astro/campaignLinks.hVtZubDL.js",
+          "type": "script",
+          "durationMs": 262,
+          "transferBytes": 2372
+        },
+        {
+          "path": "/_astro/musicResponse.kb_2zO3V.js",
+          "type": "script",
+          "durationMs": 323.80000000004657,
+          "transferBytes": 847
+        },
+        {
+          "path": "/_astro/clipClient.B6wkw9Tl.js",
+          "type": "script",
+          "durationMs": 280.30000000004657,
+          "transferBytes": 10691
+        },
+        {
+          "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+          "type": "script",
+          "durationMs": 306.60000000009313,
+          "transferBytes": 6905
+        },
+        {
+          "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+          "type": "script",
+          "durationMs": 391.19999999995343,
+          "transferBytes": 29974
+        },
+        {
+          "path": "/_astro/musicLocalData.rQlht5YK.js",
+          "type": "script",
+          "durationMs": 341.39999999990687,
+          "transferBytes": 3813
+        },
+        {
+          "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+          "type": "script",
+          "durationMs": 392.69999999995343,
+          "transferBytes": 1536
+        },
+        {
+          "path": "/_astro/navigation.-iYZuZPj.js",
+          "type": "script",
+          "durationMs": 448.19999999995343,
+          "transferBytes": 2377
+        }
+      ],
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "dpr": 2,
+        "clientWidth": 1280,
+        "scrollWidth": 1280
+      }
+    }
+  ],
+  "limitations": [
+    "Codex IAB viewport only",
+    "Per-response delay is not a shared cellular link",
+    "No CPU throttle, Lighthouse trace, INP or field p75",
+    "Synthetic pending media only",
+    "Song LCP exceeds the 2500 ms target"
+  ]
+}

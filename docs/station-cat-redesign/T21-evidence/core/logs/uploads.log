@@ -1,0 +1,48 @@
+
+> landing-site@0.1.0 test:redesign:uploads
+> node --test --test-timeout=90000 scripts/test-station-media-uploads.mjs scripts/test-station-media-client.mjs scripts/test-station-media-runtime.mjs
+
+✔ client only admits bounded supported files and treats extension as a local hint (0.475959ms)
+✔ ordinary upload persists each phase before its mutation and uses three stable keys (0.955792ms)
+✔ lost reservation receipt is recovered with the original key after a reload, without duplicate assets (0.493ms)
+✔ lost PUT receipt is only queried/confirmed after reload, never resent to the stored object (0.317209ms)
+✔ transient confirmation failure preserves its key and retries the same asset (0.7195ms)
+✔ another file cannot resume a reserved upload, while a confirmed rejection allows a fresh version (0.66375ms)
+✔ a session switch after reservation blocks body upload without rebinding the journal to another actor (0.238834ms)
+✔ unavailable or malformed local recovery storage prevents mutations and is not silently reset (0.081625ms)
+✔ actual Worker Access JWT checks signature, issuer, audience, expiry and allowed email before bindings (1194.044875ms)
+✔ default flags stay closed, empty/wrong bindings fail safely, and cross-origin/DELETE cannot mutate (14.155875ms)
+✔ native streaming PUT and confirmation measures MP4, uses version key, and identical body retries do not overwrite (64.04725ms)
+✔ native image body and measured game screenshot dimensions use a separate owner and file (20.64175ms)
+✔ another allowed administrator cannot read/write/confirm an upload reserved by this actor (14.119459ms)
+✔ native interrupted short body fails without releasing charge or overwriting the next version (39.013875ms)
+✔ corrupt video with its own matching digest is rejected after upload and remains private/charged (26.861916ms)
+✔ wrong MIME is refused before the writer, and a short native stream is rejected and retained (17.396167ms)
+✔ 0013 preserves native legacy full MP3 and separate derived preview uploads without granting promotion or rights (55.225208ms)
+✔ real pinned H.264/AAC fixture has measured duration and SPS dimensions across tiny stream boundaries (13.066459ms)
+✔ valid tail-moov file relocates every chunk offset and keeps the same measurement (0.911917ms)
+✔ forged containers, missing/truncated payloads, oversized metadata and unsupported fragmentation fail (0.49ms)
+✔ duration, table counts, offsets, external data references and false pixel dimensions are rejected (0.71675ms)
+✔ missing 0013 schema or stale quota view closes uploads without modifying old rows (16.329875ms)
+✔ reservations require a matching editable owner and reject format/size/hash/key injection before writes (14.440208ms)
+✔ reserve idempotency recovers a lost D1 acknowledgement, scopes actor, and rejects changed input (12.45275ms)
+✔ shared quota counts old audio, album covers, new media and failed/unknown reservations atomically (12.221958ms)
+✔ legacy station media without a receipt is charged once, unknown size at full limit (10.748041ms)
+✔ migration prevents identity replacement, another writer, incomplete ready state and physical deletion (11.691875ms)
+✔ complete measures immutable R2 bytes, reports validating during I/O, stores audit once and never approves or publishes (17.249125ms)
+✔ two concurrent confirmations with distinct keys produce one ready asset and one completion audit (15.015875ms)
+✔ real JPEG/PNG/WebP images measure dimensions for posters and game screenshots (21.219125ms)
+✔ wrong hash, corrupt structure and stored identity reject, remain charged and never delete (17.98575ms)
+✔ a storage outage leaves recoverable validating state, and retry completes the same object (15.183834ms)
+✔ timeout disposes a late R2 body and never commits ready state (50.097083ms)
+✔ historical sealed revisions retain ready assets and their reserved charge (13.484292ms)
+✔ disabled flag combinations return before touching bindings, and writes require same origin (7.716292ms)
+✔ owners and sessions paginate equal timestamps without skipping ties or exposing another actor (24.082083ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1601.485583

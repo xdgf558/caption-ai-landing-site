@@ -1,0 +1,30 @@
+
+> landing-site@0.1.0 test:mobile:music
+> node --test --test-timeout=90000 scripts/test-mobile-music.mjs
+
+✔ isolated gates stay closed unless explicitly enabled; config accurately reports music (2589.590125ms)
+✔ free catalog/search/detail project no storage keys or credentials; pagination rejects stale cursor (55.800625ms)
+✔ free grant and separate preview stream GET HEAD Range with object identity checks (102.604333ms)
+✔ VIP grants require same account AND same session on every request, never Cookie fallback (123.490916ms)
+✔ invalid Bearer does not silently become anonymous, even for free/preview/catalog (34.885917ms)
+✔ free and preview remain public; non-VIP cannot mint full VIP grant (67.597959ms)
+✔ expiry, revocation, blocked account, password changes deny before R2 (298.849ms)
+✔ membership expiry, VIP delivery off, publication withdrawn are checked every Range (127.131584ms)
+✔ limited free expires at boundary; old grant cannot deliver free bytes afterwards (1643.385458ms)
+✔ token rotation in same session retains grant binding; old bearer fails (92.746667ms)
+✔ entitlements are music projection only and do not mutate site membership (58.796334ms)
+✔ missing membership DB table fails closed without R2 access (86.714667ms)
+✔ lyrics retain Unicode, offset, multi-timestamps and audio version (59.368ms)
+✔ album order and pagination use only visible published members (87.857208ms)
+✔ replaced storage object is rejected; malformed mode and version never authorize (41.961917ms)
+✔ featured preserves configured primary/secondary/collection order and never invents empty recommendations (402.441333ms)
+✔ rotation fixture uses real refresh route and preserves family absolute expiry (70.4265ms)
+✔ offline permits are isolated, revision-bound permanent-free full audio only (105.174708ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6191.680292

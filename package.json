@@ -99,7 +99,10 @@
     "preview:redesign:reports": "npm run build && node scripts/serve-station-report-preview.mjs",
     "test:redesign:migration": "node scripts/build-station-legacy-inventory.mjs --check && node --test --test-timeout=90000 scripts/test-station-route-migrations.mjs scripts/test-station-route-runtime.mjs",
     "rehearse:redesign:routes": "node scripts/rehearse-station-route-migrations.mjs",
-    "preview:redesign:routes": "npm run build && node scripts/serve-station-route-preview.mjs"
+    "preview:redesign:routes": "npm run build && node scripts/serve-station-route-preview.mjs",
+    "test:redesign:acceptance": "node --test --test-timeout=90000 scripts/test-station-core-acceptance.mjs scripts/test-station-music-focus.mjs",
+    "verify:redesign:core": "node scripts/verify-station-core-regressions.mjs",
+    "preview:redesign:core": "node scripts/serve-station-core-preview.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

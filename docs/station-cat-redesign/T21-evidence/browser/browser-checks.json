@@ -1,0 +1,232 @@
+[
+  {
+    "id": "A01",
+    "environment": "Codex IAB desktop; loopback; synthetic fixture",
+    "mediaElements": 0,
+    "homeState": "pending",
+    "observedAt": "2026-10-10T10:39:10.411Z"
+  },
+  {
+    "id": "A22-search",
+    "dialogOpen": false,
+    "focusedLabel": "搜尋小站",
+    "observedAt": "2026-10-10T10:39:15.207Z"
+  },
+  {
+    "id": "A02/A04",
+    "previewState": {
+      "audioSrc": "http://127.0.0.1:4221/api/station/content/tracks/vip/audio?variant=preview&v=3&p=1",
+      "notice": "播放完畢",
+      "state": "ended"
+    },
+    "observedAt": "2026-10-10T10:41:55.313Z"
+  },
+  {
+    "id": "A06-open",
+    "audioState": "paused",
+    "nativeVideoCount": 1,
+    "videoStatus": "影片播放中",
+    "observedAt": "2026-10-10T10:42:17.029Z"
+  },
+  {
+    "id": "A06-close/A22-clip",
+    "audioState": "paused",
+    "focusTrigger": "ca760000-0000-4000-8000-000000000500",
+    "videoCount": 0,
+    "observedAt": "2026-10-10T10:42:17.286Z"
+  },
+  {
+    "id": "A22-full-access-fixed",
+    "audioSource": null,
+    "focusedLabel": "ca760000-0000-4000-8000-000000000020",
+    "focusedText": "確認完整收聽權限",
+    "notice": "完整收聽需要現有帳號與有效權益。查看會員與帳號",
+    "observedAt": "2026-10-10T10:44:37.814Z"
+  },
+  {
+    "id": "A07-game-ready",
+    "frameCount": 1,
+    "loadedSaveGold": 87,
+    "websiteAudioState": "paused",
+    "nativeRuntime": "cat-life v1.28.0",
+    "observedAt": "2026-10-10T10:45:18.857Z"
+  },
+  {
+    "id": "A07-game-return",
+    "audioState": "paused",
+    "focusedText": "繼續遊戲",
+    "frameCount": 0,
+    "observedAt": "2026-10-10T10:45:19.147Z"
+  },
+  {
+    "id": "A13-corrupt-introduction",
+    "originalPreserved": "true",
+    "recoveryAction": "查看恢復選項",
+    "observedAt": "2026-10-10T10:45:30.964Z"
+  },
+  {
+    "id": "A13-original-export",
+    "status": "unverified",
+    "reason": "Codex IAB download event was not observed within 10 seconds; no file acceptance claimed",
+    "observedAt": "2026-10-10T10:46:30.067Z"
+  },
+  {
+    "id": "A13-future",
+    "originalPreserved": "true",
+    "observedAt": "2026-10-10T10:46:30.594Z"
+  },
+  {
+    "id": "A08-boot-failure-retry",
+    "audioState": "paused",
+    "focusedText": "重新啟動遊戲",
+    "frameCount": 0,
+    "intentionallyFailedResource": "/games/cat-life/src/js/main.js",
+    "observedAt": "2026-10-10T10:47:48.560Z"
+  },
+  {
+    "id": "A16-five-widths",
+    "widths": [
+      {
+        "requestedWidth": 375,
+        "requestedHeight": 844,
+        "clientWidth": 375,
+        "dock": {
+          "bottom": 780,
+          "height": 128.6875,
+          "left": 0,
+          "right": 375,
+          "top": 651.3125,
+          "width": 375
+        },
+        "nav": {
+          "bottom": 844,
+          "height": 64,
+          "left": 0,
+          "right": 375,
+          "top": 780,
+          "width": 375
+        },
+        "playerState": "ended",
+        "rootStyle": null,
+        "scrollWidth": 375
+      },
+      {
+        "requestedWidth": 390,
+        "requestedHeight": 844,
+        "clientWidth": 390,
+        "dock": {
+          "bottom": 780,
+          "height": 128.6875,
+          "left": 0,
+          "right": 390,
+          "top": 651.3125,
+          "width": 390
+        },
+        "nav": {
+          "bottom": 844,
+          "height": 64,
+          "left": 0,
+          "right": 390,
+          "top": 780,
+          "width": 390
+        },
+        "playerState": "ended",
+        "rootStyle": null,
+        "scrollWidth": 390
+      },
+      {
+        "requestedWidth": 768,
+        "requestedHeight": 844,
+        "clientWidth": 768,
+        "dock": {
+          "bottom": 844,
+          "height": 99.59375,
+          "left": 0,
+          "right": 768,
+          "top": 744.40625,
+          "width": 768
+        },
+        "nav": {
+          "bottom": 0,
+          "height": 0,
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "width": 0
+        },
+        "playerState": "ended",
+        "rootStyle": null,
+        "scrollWidth": 768
+      },
+      {
+        "requestedWidth": 1280,
+        "requestedHeight": 844,
+        "clientWidth": 1280,
+        "dock": {
+          "bottom": 844,
+          "height": 99.59375,
+          "left": 0,
+          "right": 1280,
+          "top": 744.40625,
+          "width": 1280
+        },
+        "nav": {
+          "bottom": 0,
+          "height": 0,
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "width": 0
+        },
+        "playerState": "ended",
+        "rootStyle": null,
+        "scrollWidth": 1280
+      },
+      {
+        "requestedWidth": 1440,
+        "requestedHeight": 844,
+        "clientWidth": 1440,
+        "dock": {
+          "bottom": 844,
+          "height": 99.59375,
+          "left": 0,
+          "right": 1440,
+          "top": 744.40625,
+          "width": 1440
+        },
+        "nav": {
+          "bottom": 0,
+          "height": 0,
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "width": 0
+        },
+        "playerState": "ended",
+        "rootStyle": null,
+        "scrollWidth": 1440
+      }
+    ],
+    "observedAt": "2026-10-10T10:49:16.089Z"
+  },
+  {
+    "id": "A13-future-final-screenshot",
+    "originalPreserved": true,
+    "observedAt": "2026-10-10T10:59:30.922Z"
+  },
+  {
+    "id": "A12-natural-ended-after-consent",
+    "status": "observed",
+    "previewStart": 1,
+    "previewQualified": 1,
+    "previewDurationMs": 1045,
+    "evidence": "native-ended-event-observations.json",
+    "observedAt": "2026-10-10T10:59:30.922Z"
+  },
+  {
+    "id": "desktop-Chrome-connection",
+    "status": "unverified",
+    "reason": "Browser is not available: chrome",
+    "observedAt": "2026-10-10T10:59:30.922Z"
+  }
+]

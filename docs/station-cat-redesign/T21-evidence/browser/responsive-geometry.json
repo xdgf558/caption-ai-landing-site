@@ -1,0 +1,122 @@
+[
+  {
+    "requestedWidth": 375,
+    "requestedHeight": 844,
+    "clientWidth": 375,
+    "dock": {
+      "bottom": 780,
+      "height": 128.6875,
+      "left": 0,
+      "right": 375,
+      "top": 651.3125,
+      "width": 375
+    },
+    "nav": {
+      "bottom": 844,
+      "height": 64,
+      "left": 0,
+      "right": 375,
+      "top": 780,
+      "width": 375
+    },
+    "playerState": "ended",
+    "rootStyle": null,
+    "scrollWidth": 375
+  },
+  {
+    "requestedWidth": 390,
+    "requestedHeight": 844,
+    "clientWidth": 390,
+    "dock": {
+      "bottom": 780,
+      "height": 128.6875,
+      "left": 0,
+      "right": 390,
+      "top": 651.3125,
+      "width": 390
+    },
+    "nav": {
+      "bottom": 844,
+      "height": 64,
+      "left": 0,
+      "right": 390,
+      "top": 780,
+      "width": 390
+    },
+    "playerState": "ended",
+    "rootStyle": null,
+    "scrollWidth": 390
+  },
+  {
+    "requestedWidth": 768,
+    "requestedHeight": 844,
+    "clientWidth": 768,
+    "dock": {
+      "bottom": 844,
+      "height": 99.59375,
+      "left": 0,
+      "right": 768,
+      "top": 744.40625,
+      "width": 768
+    },
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "width": 0
+    },
+    "playerState": "ended",
+    "rootStyle": null,
+    "scrollWidth": 768
+  },
+  {
+    "requestedWidth": 1280,
+    "requestedHeight": 844,
+    "clientWidth": 1280,
+    "dock": {
+      "bottom": 844,
+      "height": 99.59375,
+      "left": 0,
+      "right": 1280,
+      "top": 744.40625,
+      "width": 1280
+    },
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "width": 0
+    },
+    "playerState": "ended",
+    "rootStyle": null,
+    "scrollWidth": 1280
+  },
+  {
+    "requestedWidth": 1440,
+    "requestedHeight": 844,
+    "clientWidth": 1440,
+    "dock": {
+      "bottom": 844,
+      "height": 99.59375,
+      "left": 0,
+      "right": 1440,
+      "top": 744.40625,
+      "width": 1440
+    },
+    "nav": {
+      "bottom": 0,
+      "height": 0,
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "width": 0
+    },
+    "playerState": "ended",
+    "rootStyle": null,
+    "scrollWidth": 1440
+  }
+]

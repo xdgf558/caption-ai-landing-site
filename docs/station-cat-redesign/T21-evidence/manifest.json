@@ -1,0 +1,628 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-10T11:02:25.890708+00:00",
+  "task": "T21",
+  "baseline": "2cf2bf2d2c2e678fb7dfa646cdfb5d745d3dc5b7",
+  "branch": "codex/station-cat-redesign-t21",
+  "productionAccepted": false,
+  "productionConfigurationChanged": false,
+  "remoteMigrationsExecuted": false,
+  "oldEntriesClosed": false,
+  "T22Started": false,
+  "environment": {
+    "hostOS": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434",
+    "node": "v24.15.0",
+    "manualBrowser": "Codex IAB, UA Chrome/155.0.0.0",
+    "automatedBrowser": "Playwright Chrome Headless Shell 151.0.7922.34 v1234",
+    "timezone": "Asia/Singapore"
+  },
+  "localCommands": [
+    {
+      "path": "docs/station-cat-redesign/T21-evidence/final-core/verification-summary.json",
+      "checks": 29,
+      "sourceAnchors": 387,
+      "sha256": "4f92dd6a0e4fa8952dee836b20f4364268aa57463c3427fcc3c1d511aa7d9161"
+    },
+    {
+      "path": "docs/station-cat-redesign/T21-evidence/fixture-final/verification-summary.json",
+      "checks": 2,
+      "sourceAnchors": 387,
+      "sha256": "7ecf01936c3ba77d6a368cded90fcf0edcca37d08a556fc3dbe0d8f262a493f2"
+    },
+    {
+      "path": "docs/station-cat-redesign/T21-evidence/instrumentation-final/verification-summary.json",
+      "checks": 1,
+      "sourceAnchors": 387,
+      "sha256": "7af5bdf384e54a7362c83d103317d6bef7bdbc542f3069f5eb904cd93a0a7b8e"
+    },
+    {
+      "path": "docs/station-cat-redesign/T21-evidence/tooling-final/verification-summary.json",
+      "checks": 1,
+      "sourceAnchors": 392,
+      "sha256": "e3df65a49e3819fb1066661a730ae68bf92e3f2112182e99e1d901b447ff075a"
+    }
+  ],
+  "browserRegression": {
+    "command": "npm run test:browser",
+    "exitCode": 0,
+    "passed": 148,
+    "log": "browser-regression-final.log",
+    "firstAttempt": "browser-regression.log",
+    "firstAttemptReason": "Required pinned Chromium headless shell executable was absent"
+  },
+  "sourceFiles": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "606f008bee6ed97c1fecd70cf59a1ee763d9e4a8ee75061a9bf93abf7531bf3a"
+    },
+    {
+      "path": "package.json",
+      "sha256": "75c994bf3798ef8df5fca696a3e3c533fa295b2bf0a29727140fa68883a798e1"
+    },
+    {
+      "path": "scripts/helpers/station-route-runtime.mjs",
+      "sha256": "92e6e136584deedc407a045109fb99770e71f4272ca532f03b645a8fc840bdad"
+    },
+    {
+      "path": "scripts/helpers/station-core-preview.mjs",
+      "sha256": "2fbc2011c41d4808d0fd642a35881c72801f0de6bc243d80f6c003714cc89ad9"
+    },
+    {
+      "path": "scripts/serve-station-core-preview.mjs",
+      "sha256": "9e6e5ad27a6b3baf18705dcaa8a6d618a106a214949c931d72017c9437e5113f"
+    },
+    {
+      "path": "scripts/test-station-core-acceptance.mjs",
+      "sha256": "09ddda4067417675e8b0fb76bfc77529dbdc58731516787ebf97c9efe9a0d811"
+    },
+    {
+      "path": "scripts/test-station-music-focus.mjs",
+      "sha256": "cfbef4cffb8d54691db155c56930af11be08e6dc6588d4f01004773cdcbb0d28"
+    },
+    {
+      "path": "scripts/verify-station-core-regressions.mjs",
+      "sha256": "2889a3a8fd8452ed956d0db7d6804a78a01c3f2f44d948542c21e41418ae2cfd"
+    },
+    {
+      "path": "src/redesign/musicClient.js",
+      "sha256": "8a6c8643a05866b49201d29465f51b5c55494184e8f5f3113c2f111f5cddfdf0"
+    },
+    {
+      "path": "wrangler.toml",
+      "sha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "b81e63fc2580e6e768dcfe5d799eb5944e95bf1fb51a056b8697ece1e6c9d4b0"
+    }
+  ],
+  "reports": [
+    {
+      "path": "docs/station-cat-redesign/T21-core-regression-and-device-verification.md",
+      "sha256": "1559055f8ac30d370a02468ba0f7cc17cd39fc8476e43e4c06662dee1ccad09f"
+    },
+    {
+      "path": "docs/station-cat-redesign/T21-acceptance-matrix.md",
+      "sha256": "abdf6fb5af0c0fea56e4fa1a24a5dfd4d9372a5de5386cfaa41e65b36ddf60c8"
+    },
+    {
+      "path": "docs/station-cat-redesign/T21-evidence/design-qa.md",
+      "sha256": "ec845a65963e82f716fbe8f4f788dea6985051c59dd41b8fe9283e8f6e1c2549"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "T20-approved-head-ci.json",
+      "bytes": 8286,
+      "sha256": "7db0af2ce1b0caf90b4e145bb392a6b3c71ac666348a216c3935a154432cfad4"
+    },
+    {
+      "path": "T20-merge-result.json",
+      "bytes": 255,
+      "sha256": "7ba4dabbc6710566010284a39fb8ea09e2890ef8dc728782443ed2af88145a8c"
+    },
+    {
+      "path": "browser/01-home-pending.png",
+      "bytes": 149137,
+      "sha256": "94aac7f5e4ef8618b1a8323a837e2fc325cced315ffe6f346e87622c04f56ee2"
+    },
+    {
+      "path": "browser/02-search-keyboard.png",
+      "bytes": 82179,
+      "sha256": "51a1e4254d24db6bd7ee26f8c1b3a8f3d539384c311b7125de26f83ffba34d9f"
+    },
+    {
+      "path": "browser/03-preview-native.png",
+      "bytes": 64777,
+      "sha256": "fa9b80f0c609d1ab3e40b135149d9855164a5cc8fef7c74dcea30a4c2fdedc75"
+    },
+    {
+      "path": "browser/04-preview-ended.png",
+      "bytes": 63528,
+      "sha256": "60e7b1efa064af7a41684faf78297b370e8b063d65d31a9306ebfbd3e9148592"
+    },
+    {
+      "path": "browser/05-clip-native.png",
+      "bytes": 71731,
+      "sha256": "4b60ab52b2d6005ac07aa9e149a9d4c5847b7509b0b74c54b21ac22696a98723"
+    },
+    {
+      "path": "browser/06-access-focus-fixed.png",
+      "bytes": 64325,
+      "sha256": "407cbefd7fd0a8334d94dc71c5c9948155d215607c90afa6d5254a5e07e57c59"
+    },
+    {
+      "path": "browser/07-game-ready.png",
+      "bytes": 94548,
+      "sha256": "b2a58c0e44c6ebb2f70179a4fae9b6e87ca360947f1c460e98583134e7c18ba6"
+    },
+    {
+      "path": "browser/08-corrupt-save-preserved.png",
+      "bytes": 176081,
+      "sha256": "75a9eff26415249d785b1a49e7c90feef3f876e7c04d310aec51ba2c975e923e"
+    },
+    {
+      "path": "browser/09-runtime-recovery.png",
+      "bytes": 50102,
+      "sha256": "2b0d9d514e89974883539ac4174f1b8db326bddcc82d0bfb7019842f2938959e"
+    },
+    {
+      "path": "browser/10-future-save.png",
+      "bytes": 112395,
+      "sha256": "97831665d40fb88034fdc819c8afc3c6c2008a9846a32e384788cb2ce9e40f6b"
+    },
+    {
+      "path": "browser/11-game-boot-failure.png",
+      "bytes": 93404,
+      "sha256": "094c849527a0cc9925df636fc9d1012a23fc353aa450dcec2b5d1d4358ffd134"
+    },
+    {
+      "path": "browser/12-music-selected-1280.png",
+      "bytes": 72640,
+      "sha256": "0b27b6597492176039290fa3b6b7e8a400bcfb9489fd8dd4c0771a5165d75a2a"
+    },
+    {
+      "path": "browser/12-music-selected-1440.png",
+      "bytes": 73679,
+      "sha256": "123b357bf18aeaa11bf6224eb6af8dc4d31b663300c8c29545cb8924d69716c8"
+    },
+    {
+      "path": "browser/12-music-selected-375.png",
+      "bytes": 35230,
+      "sha256": "275268a8e54eec04c43a20665c3ffb46d16a66329f68818d3a8c2987c7af424d"
+    },
+    {
+      "path": "browser/12-music-selected-390.png",
+      "bytes": 35508,
+      "sha256": "2cb3b80aa4e6a70a69aadf1e47623cc5e2f458c06d9806b2b7734471f29b3203"
+    },
+    {
+      "path": "browser/12-music-selected-768.png",
+      "bytes": 58553,
+      "sha256": "9b7aab7450b9b09eb15f8c9438b9a828d78b997955d1de31da6f866d0062dad7"
+    },
+    {
+      "path": "browser/13-mobile-footer-controls.png",
+      "bytes": 29100,
+      "sha256": "f36a40926bcfbaa8fdc52427684a0374d98eecc0dbd4aff6583a1b57b1bd93be"
+    },
+    {
+      "path": "browser/14-network-desktop-preflight.png",
+      "bytes": 125512,
+      "sha256": "9efc0e008cf375cf5b1e000d71ee0c27516b39707df5213e628d63c9e4ed4d01"
+    },
+    {
+      "path": "browser/15-excluded-desktop-incomplete.png",
+      "bytes": 73303,
+      "sha256": "5b37e50709dafd85876becfcdd34d1a659c9f06d346bdc70f1affc402c5b91a8"
+    },
+    {
+      "path": "browser/16-phone-lab-home-1.png",
+      "bytes": 94884,
+      "sha256": "0e7ea50e59ee91aafff3976559bfdc7a6b34ee5b8529022db7a31313f26c2486"
+    },
+    {
+      "path": "browser/17-phone-lab-song-1.png",
+      "bytes": 90855,
+      "sha256": "9999464d42f6e02d8ccdeb46966b10d97c31ca7336ede4a20086b1a6051595ec"
+    },
+    {
+      "path": "browser/boot-failure-and-optout-observations.json",
+      "bytes": 45697,
+      "sha256": "e4b75f28cef8fb52ca105a9bba441af5d07639a1f835d24e865f9cb37b8d6474"
+    },
+    {
+      "path": "browser/browser-checks.json",
+      "bytes": 5740,
+      "sha256": "927bc9d7c1ef870f7b95300e7994cfa1a61cdcc50d7540d2d9a0b1718abbdb0d"
+    },
+    {
+      "path": "browser/game-and-access-observations.json",
+      "bytes": 60821,
+      "sha256": "d16b07ebe73d10b31f51c7cbe4ec6af7ee98efc09c8ae44f2b3b9eacae20af75"
+    },
+    {
+      "path": "browser/mobile-lab-runs.json",
+      "bytes": 38423,
+      "sha256": "8c8db62264970832c799d67ae68e1c3e3ccdb9934903b3b1e8f30438bd2da3e4"
+    },
+    {
+      "path": "browser/native-end-after-consent.json",
+      "bytes": 4313,
+      "sha256": "337ab32188c80634637bd7fa7295df44c713e2a7e7d03824b2dbb1afb95739a5"
+    },
+    {
+      "path": "browser/native-ended-event-observations.json",
+      "bytes": 31520,
+      "sha256": "5f1e9c2030f1274d8c206ebfd419b69fa39032c2ab09a67cce772090787e32a0"
+    },
+    {
+      "path": "browser/responsive-geometry.json",
+      "bytes": 2208,
+      "sha256": "42a06b27450100a5037c7344bc47ac72dd149d8913fce4957276c6c280adbe20"
+    },
+    {
+      "path": "browser/song-lcp-diagnostic.json",
+      "bytes": 4874,
+      "sha256": "821e18190fbb5c9659b0a444fe9baefacd2ac9434fc22ccaa57bacb05fd971a7"
+    },
+    {
+      "path": "browser-regression-final.log",
+      "bytes": 24007,
+      "sha256": "c950886b1ddb361089bc8de8c686922a7f682fa965701a3a5deaaa2bd2595051"
+    },
+    {
+      "path": "browser-regression.log",
+      "bytes": 254858,
+      "sha256": "65c9b64354d37707a0a5b4dfa87ae442d013f4c25c50ee722528365beb263675"
+    },
+    {
+      "path": "browser-runtime-install.log",
+      "bytes": 6844,
+      "sha256": "5998db718e845b38f720b58c0fe2a2e23333d01d5fd1897a68cc3fdf3c4c549d"
+    },
+    {
+      "path": "core/logs/build.log",
+      "bytes": 27160,
+      "sha256": "e7fe6d76f17831b4506d4bf99293f2ac786dd7170b9f8e0b15e864deb6819024"
+    },
+    {
+      "path": "core/logs/campaigns.log",
+      "bytes": 4337,
+      "sha256": "ff3d49106a97047c6a31eedb57285dd0b23ae2970b2d8714899ce5db19f5c69c"
+    },
+    {
+      "path": "core/logs/clip-home-build.log",
+      "bytes": 1895,
+      "sha256": "ebfd1e991f442ff0477f27f72daf76aae39ca4b4528b3113c677566fe6bb9d26"
+    },
+    {
+      "path": "core/logs/clips.log",
+      "bytes": 4086,
+      "sha256": "a39404ea6b0a372c73ed7b37edab80c8b50449a0e45a146527f8e3e93932ba96"
+    },
+    {
+      "path": "core/logs/content-admin.log",
+      "bytes": 4365,
+      "sha256": "31ae3a2a866cbc99b2fea806c3f73b6ad48551bbe5d44b4550b001a1975dac02"
+    },
+    {
+      "path": "core/logs/deletion-audit.log",
+      "bytes": 1190,
+      "sha256": "7269ec7e0d043ebc3845a57541b25f2192cc197cd862a46bc69d9f025d514b4e"
+    },
+    {
+      "path": "core/logs/events.log",
+      "bytes": 4496,
+      "sha256": "06412ac259656121b7e1bcec96a71e559ed6a96e115c1f2854a035a63162416f"
+    },
+    {
+      "path": "core/logs/game-preview-build.log",
+      "bytes": 3259,
+      "sha256": "a16ff6be34599a0018a53fdd34d70b3a0e122fb1078f06568a2ac41a815866a5"
+    },
+    {
+      "path": "core/logs/game-session.log",
+      "bytes": 1609,
+      "sha256": "9401ed23d9d0e33ccee3ac8ea4b282c2197b6d099a61d29633d891857991d566"
+    },
+    {
+      "path": "core/logs/games.log",
+      "bytes": 5162,
+      "sha256": "5a967e6120a484ea73a93ca06f3ebef7645e1ed1ee113cd1f02513a0828ac4c6"
+    },
+    {
+      "path": "core/logs/home.log",
+      "bytes": 2002,
+      "sha256": "09a15bc3f2e905cc6154ee06eb599e477c86bd33546521b4a4e5897e7b27765b"
+    },
+    {
+      "path": "core/logs/legacy.log",
+      "bytes": 76611,
+      "sha256": "cdb1b75b248bc102d1d62a3b6eff914611695a236505faa990b97022c6d8ce30"
+    },
+    {
+      "path": "core/logs/member-preview-build.log",
+      "bytes": 5080,
+      "sha256": "806189154f830c45bf35a1cce934e7655436acc53ddad284d297ef9af35ebf7e"
+    },
+    {
+      "path": "core/logs/member.log",
+      "bytes": 3543,
+      "sha256": "674e97e700053e1920db29a9a9d756691c2524421e617e0df17e10a52e0db9c9"
+    },
+    {
+      "path": "core/logs/migration.log",
+      "bytes": 3249,
+      "sha256": "55d4f29124b3248b313edc84e5633370f4aadcc65fa887c4790992bf7cef7565"
+    },
+    {
+      "path": "core/logs/model.log",
+      "bytes": 3341,
+      "sha256": "8b23b23cc887ffb4775c8c266dc8f44f4ee4a266960f049620c98d87a13a7bf3"
+    },
+    {
+      "path": "core/logs/music.log",
+      "bytes": 3469,
+      "sha256": "47ed93a438e6cf5dd9a84ba008248b27714410ea9b813e0fa03cf905543ae8cf"
+    },
+    {
+      "path": "core/logs/native-library.log",
+      "bytes": 2255,
+      "sha256": "2173123ccaf30345f017ad5be244199070ec2bd6574b8e098f37922f666a553d"
+    },
+    {
+      "path": "core/logs/native-music.log",
+      "bytes": 1959,
+      "sha256": "5766281c6e5fcc4bc052608961d706b7f039dbb9b8dc60531beb209ea459f6b2"
+    },
+    {
+      "path": "core/logs/native-production.log",
+      "bytes": 8022,
+      "sha256": "57178d9296ceeb9a3dd8b6b90078d0beb225dd42af1d1558f81320a7fd67f48c"
+    },
+    {
+      "path": "core/logs/platforms.log",
+      "bytes": 2138,
+      "sha256": "61704d6ccc1747ca1685c5d8ec4a7fabaa0c0c286e1204faa221500fdbf829e7"
+    },
+    {
+      "path": "core/logs/player.log",
+      "bytes": 15874,
+      "sha256": "0fad0bf1f4607c7c259ec6901d8d760d6282bbb35965e4697091bc0ec1a9aed8"
+    },
+    {
+      "path": "core/logs/public.log",
+      "bytes": 4605,
+      "sha256": "04b090237ad48631864c0bcd69388b6e74c6af02780b0884adb0d048e3ed40dc"
+    },
+    {
+      "path": "core/logs/reports.log",
+      "bytes": 7063,
+      "sha256": "e449853a1785e47bbd870ed36563fdc4a51e5be9d2ddf2b6513a9a7ddcb7eedf"
+    },
+    {
+      "path": "core/logs/routes.log",
+      "bytes": 922,
+      "sha256": "a34372b7817c57ce5d7befa1871763b5b0f97ff6799e3913934f97fd34400dfb"
+    },
+    {
+      "path": "core/logs/staging-build.log",
+      "bytes": 71,
+      "sha256": "55f7ae71fdb373ec8a8e0a6119034a02f1f655ecbe23a3781476e0add2af3892"
+    },
+    {
+      "path": "core/logs/staging-check.log",
+      "bytes": 51,
+      "sha256": "6c85a9cf933779b71186ad71bb4b89f469773aabb76b0c5e8a19001a50d43658"
+    },
+    {
+      "path": "core/logs/uploads.log",
+      "bytes": 4284,
+      "sha256": "8102e797620501e1df4fc2edeeb893bc471d1f4e3855f7b34674f2abc2c541b4"
+    },
+    {
+      "path": "core/verification-summary.json",
+      "bytes": 82220,
+      "sha256": "a48655ebd4ff144d41c07add4c68879165ba86da9f773f489eeaeefeed9dcfa2"
+    },
+    {
+      "path": "design-qa.md",
+      "bytes": 2386,
+      "sha256": "ec845a65963e82f716fbe8f4f788dea6985051c59dd41b8fe9283e8f6e1c2549"
+    },
+    {
+      "path": "final-core/logs/acceptance.log",
+      "bytes": 1703,
+      "sha256": "078ed686127b86b56acfc13b029f2bc7bb914d7793397c95d78757db2c83683a"
+    },
+    {
+      "path": "final-core/logs/build.log",
+      "bytes": 27160,
+      "sha256": "686061cb0898a6ed83db25ca39b515f29de6a694f75b7d0ad111543643834630"
+    },
+    {
+      "path": "final-core/logs/campaigns.log",
+      "bytes": 4325,
+      "sha256": "95b96addbf61d2b53a3aaf1217b7a80e03c403e5491d5e6ec96992153d8358a1"
+    },
+    {
+      "path": "final-core/logs/clip-home-build.log",
+      "bytes": 1895,
+      "sha256": "74ff2a2e56947aeb0f2f3feee01a66ab720afb066748dbe2e88545f0a28a33e5"
+    },
+    {
+      "path": "final-core/logs/clips.log",
+      "bytes": 4094,
+      "sha256": "3297a8509bed9b2a5d7a9c7058ee1c3935c158fca52d57c201f6f1931fe962cd"
+    },
+    {
+      "path": "final-core/logs/content-admin.log",
+      "bytes": 4372,
+      "sha256": "96021c3f46ab7b5e71d34a9aa700b0dd094d9e4e0e33f65f71d92056d7273a05"
+    },
+    {
+      "path": "final-core/logs/deletion-audit.log",
+      "bytes": 1190,
+      "sha256": "e9f08e1b2257037e416d95b996cdd5cfa0cf574dae9cd378126b720e93b3460b"
+    },
+    {
+      "path": "final-core/logs/events.log",
+      "bytes": 4497,
+      "sha256": "c938480fa5e055067ed02f40f962dc63d1dcd3ec662d3f6e45beacdb02bb975f"
+    },
+    {
+      "path": "final-core/logs/game-preview-build.log",
+      "bytes": 3260,
+      "sha256": "0a92a3a1da10e76e3e0e7d5dcccc870ccbc56e8e76f1f2572721488d6008b267"
+    },
+    {
+      "path": "final-core/logs/game-session.log",
+      "bytes": 1607,
+      "sha256": "033afb5034401c65dff0eefa91958c4079daf8506ae857936f5f34f8c8190d19"
+    },
+    {
+      "path": "final-core/logs/games.log",
+      "bytes": 5172,
+      "sha256": "40bd4d6c5a613021fe7f0f11d621d009b8f47e9c2475edc1537700914853d006"
+    },
+    {
+      "path": "final-core/logs/home.log",
+      "bytes": 1993,
+      "sha256": "193544148ca0dd8612c766b27a79df16af48963d3eb95d1e32bc779f97c6639d"
+    },
+    {
+      "path": "final-core/logs/legacy.log",
+      "bytes": 76609,
+      "sha256": "46bdbbe10096ea4a28d52f763613d6eea6079c3b7b75fe57df040bc0b71a1e14"
+    },
+    {
+      "path": "final-core/logs/member-preview-build.log",
+      "bytes": 5079,
+      "sha256": "3d95070624c1e39af43322a1e42f32bbee93a1b745d094ce73b66272c666775c"
+    },
+    {
+      "path": "final-core/logs/member.log",
+      "bytes": 3542,
+      "sha256": "9bdccdb0f51b89410fc73295421227b13016a9a579d0c93421c86149c7ce57ab"
+    },
+    {
+      "path": "final-core/logs/migration.log",
+      "bytes": 3250,
+      "sha256": "e323ca0037bbb42fabcaf4bd6bb348402b623ebad6503274d4545df614d56ff6"
+    },
+    {
+      "path": "final-core/logs/model.log",
+      "bytes": 3340,
+      "sha256": "3d594fbf79e48b3f5a1222769933ddd4322c06ca724f5bdeec44960c7f008da3"
+    },
+    {
+      "path": "final-core/logs/music.log",
+      "bytes": 3464,
+      "sha256": "ca47a11b94f8f1dd85c15d27bf2e3fa8af98ce658faf3ed6393a6c40a95b3352"
+    },
+    {
+      "path": "final-core/logs/native-library.log",
+      "bytes": 2258,
+      "sha256": "2e2269f06655fcaa98676bfa866a8a2ac292791623dec9944fd9a7140e120b27"
+    },
+    {
+      "path": "final-core/logs/native-music.log",
+      "bytes": 1957,
+      "sha256": "1729c91878e9bec0b998c3f908a51d536d726b21d99e64af78db8c9f40a4d1d0"
+    },
+    {
+      "path": "final-core/logs/native-production.log",
+      "bytes": 8017,
+      "sha256": "c4df38fad71abfc034bc708cfb6dc9bd4e1b4dd45e178ba11333ede4796e42a3"
+    },
+    {
+      "path": "final-core/logs/platforms.log",
+      "bytes": 2138,
+      "sha256": "e37bbeee978472ff7b0a12c83e4ca2e9b144f53074a37083743aa9dee6c0d244"
+    },
+    {
+      "path": "final-core/logs/player.log",
+      "bytes": 15880,
+      "sha256": "eb079ccad529f3d3d05fe427499b7793262d86007258b4f3ea72cfd72635e84d"
+    },
+    {
+      "path": "final-core/logs/public.log",
+      "bytes": 4601,
+      "sha256": "dfc0c0c78004a4dc48368c3513d0de8d686583ec068b09508ba2846b1f60cf79"
+    },
+    {
+      "path": "final-core/logs/reports.log",
+      "bytes": 7055,
+      "sha256": "a80623059701c9bfb92d16aa837bad67571106e634123e90b0ae08c7d7b18f12"
+    },
+    {
+      "path": "final-core/logs/routes.log",
+      "bytes": 921,
+      "sha256": "83ee7b6f041ede1c75eece96704acc0cc3ce9f413e59893366e0fa770d9cbbb8"
+    },
+    {
+      "path": "final-core/logs/staging-build.log",
+      "bytes": 71,
+      "sha256": "55f7ae71fdb373ec8a8e0a6119034a02f1f655ecbe23a3781476e0add2af3892"
+    },
+    {
+      "path": "final-core/logs/staging-check.log",
+      "bytes": 51,
+      "sha256": "6c85a9cf933779b71186ad71bb4b89f469773aabb76b0c5e8a19001a50d43658"
+    },
+    {
+      "path": "final-core/logs/uploads.log",
+      "bytes": 4282,
+      "sha256": "42705cedcca52c045fe5acf70a835e15ca962e8d4618ad88e01a3b157f6322a0"
+    },
+    {
+      "path": "final-core/verification-summary.json",
+      "bytes": 82667,
+      "sha256": "4f92dd6a0e4fa8952dee836b20f4364268aa57463c3427fcc3c1d511aa7d9161"
+    },
+    {
+      "path": "fixture-final/logs/acceptance.log",
+      "bytes": 1703,
+      "sha256": "eca1b0983d8990c3d00d10bcda03455c6237239cb93378d8ff04680a2e340b18"
+    },
+    {
+      "path": "fixture-final/logs/migration.log",
+      "bytes": 3246,
+      "sha256": "33caf11534514ef35fcac9dbfe84ef0e7a62c118ba321b4ef078d2fec731757e"
+    },
+    {
+      "path": "fixture-final/verification-summary.json",
+      "bytes": 62350,
+      "sha256": "7ecf01936c3ba77d6a368cded90fcf0edcca37d08a556fc3dbe0d8f262a493f2"
+    },
+    {
+      "path": "instrumentation-final/logs/acceptance.log",
+      "bytes": 1702,
+      "sha256": "600e232d13b57125c6fe18ec346fe7b7ed6964dd0543e3f67b220ec3d7cce32f"
+    },
+    {
+      "path": "instrumentation-final/verification-summary.json",
+      "bytes": 61709,
+      "sha256": "7af5bdf384e54a7362c83d103317d6bef7bdbc542f3069f5eb904cd93a0a7b8e"
+    },
+    {
+      "path": "tooling-final/logs/acceptance.log",
+      "bytes": 1701,
+      "sha256": "a992a0a1becb9505057c3579ae6506d85e6edcaf60b4685dbf55e843229eab75"
+    },
+    {
+      "path": "tooling-final/verification-summary.json",
+      "bytes": 62560,
+      "sha256": "e3df65a49e3819fb1066661a730ae68bf92e3f2112182e99e1d901b447ff075a"
+    }
+  ],
+  "knownUnmetConditions": [
+    "Song LCP exceeds 2500ms in limited per-response mobile laboratory",
+    "Original save export download was not observed on disk",
+    "Physical iPhone/Android, Safari/Chrome/Edge stable and Douyin/WeChat not verified",
+    "VoiceOver not tested",
+    "Actual promotion/media/platform rights and production schema/bindings/HTTP not verified"
+  ],
+  "exactHeadHostedCI": "Must be checked on the created PR; not inferred from local results or T20 CI"
+}

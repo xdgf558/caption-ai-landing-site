@@ -1,0 +1,48 @@
+
+> landing-site@0.1.0 test:redesign:campaigns
+> node --test --test-timeout=90000 scripts/test-station-campaigns.mjs scripts/test-station-attribution-session.mjs scripts/test-station-campaign-runtime.mjs
+
+✔ same visit retains its first Campaign while new lawful landing changes only later snapshots (0.665625ms)
+✔ pause-like activity and same Campaign retain context; clean internal navigation and lyrics carry no query (0.099334ms)
+✔ refresh resumes only a bounded valid session in same storage, no long lived or cross-device ID (0.125417ms)
+✔ 30 minutes of inactivity, future clock, or corrupt state starts a new visit and forgets old context (0.096291ms)
+✔ unknown landing changes current context without poisoning first valid source or serializing URL values (0.106167ms)
+✔ blocked reads or writes and absent storage use in-memory identifiers with explicit scope limits (0.104291ms)
+✔ privacy withdrawal stops ID allocation, clears state, and re-enabling starts a fresh visit (0.27725ms)
+✔ normalized browser context whitelists registered-shaped IDs and never trusts arbitrary dimensions (0.038208ms)
+▶ actual Worker: Access, native transactions, registered landing and attribution isolation
+  ✔ authorization precedes mutations; one flag, CSRF and editor cannot activate (41.969167ms)
+  ✔ 0015 ledger mismatch closes new API and never writes or installs schema (20.270708ms)
+  ✔ native original receipt replay creates one active row and guarded alias (32.858708ms)
+  ✔ attribution schema failure becomes unknown and leaves content available instead of replaying old dimensions (28.890583ms)
+  ✔ actual Astro single page accepts registered tuple and keeps canonical/language links clean (11.694042ms)
+  ✔ mapped UUID share and alias normalize to the same composed URL; no open redirect (17.332208ms)
+  ✔ unknown, repeated, too long and mixed inputs normalize to bounded unknown with no injected dimensions (30.707917ms)
+  ✔ direct, external referrer and disabled attribution distinguish only known categories (9.879083ms)
+  ✔ concurrent native status updates preserve one edit version and invalidate old src and URL (15.469209ms)
+  ✔ stopping promotion blocks fresh activation; no new events, memberships, audio grants or old route retirement (24.478042ms)
+✔ actual Worker: Access, native transactions, registered landing and attribution isolation (4287.4535ms)
+✔ 0015 requires both actual columns and migration ledger, does not provision or backfill (16.782625ms)
+✔ either missing admin or campaign switch rejects writes before binding reads (1.988042ms)
+✔ same registered clip on two channels creates independent immutable dimensions and exact links (29.597625ms)
+✔ four languages use canonical destinations and caller cannot set host, redirect, path or content (30.582333ms)
+✔ QR independently decodes to exactly the copy URL with quiet zone and no intermediate redirect (67.091083ms)
+✔ legacy src is explicit and globally unique; old arbitrary source is unknown (23.856959ms)
+✔ exact UTM tuple and song ownership required; forged channels or borrowed material are unknown (23.782833ms)
+✔ duplicate, mixed, encoded control, unknown UTM and oversize queries never produce arbitrary dimensions (23.76775ms)
+✔ direct entry and explicit disabled resolver use no database, preserve no raw referrer/query (0.105625ms)
+✔ draft links cannot be copied or resolved; activation freshly rechecks promotion and current resources (24.801166ms)
+✔ stopped promotion, missing object, revoked clip rights and removed associations invalidate fresh resolution (22.908458ms)
+✔ archived Campaign cannot attribute its old URL or src but history and alias are retained (23.940125ms)
+✔ original lost acknowledgement and same command replay once without duplicate Campaigns or audit records (21.800625ms)
+✔ concurrent status changes accept one CAS; a concurrent rights change rejects creation transaction (22.351833ms)
+✔ immutable link dimensions reject direct rewrite and existing unverified records are never silently activated (21.431625ms)
+✔ bounded admin list exposes current effective links and cursor without credentials or media storage details (38.060042ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4444.674167

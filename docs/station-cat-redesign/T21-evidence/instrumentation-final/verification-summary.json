@@ -1,0 +1,1601 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-10T10:55:36.022Z",
+  "baseline": "2cf2bf2d2c2e678fb7dfa646cdfb5d745d3dc5b7",
+  "branch": "codex/station-cat-redesign-t21",
+  "runtime": {
+    "node": "v24.15.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "production": false,
+  "productionBuild": false,
+  "remoteMigration": false,
+  "productionConfigurationSha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2",
+  "productionStationFlags": {},
+  "emptySerialContentBuild": true,
+  "selectedChecks": [
+    "acceptance"
+  ],
+  "sourceAnchors": [
+    {
+      "path": "astro.config.mjs",
+      "sha256": "865c2ba9a0996af387a0b1b6b6cb40264945d0e134b15682e4fd3c760e694d7f"
+    },
+    {
+      "path": "migrations-music/0001_music_foundation.sql",
+      "sha256": "d63ea6a4f2870d7a15c49f2c5af5c7c75a8a4fef14821cd8041995a0d4d70008"
+    },
+    {
+      "path": "migrations-music/0002_music_publication.sql",
+      "sha256": "8b301c3a1d13be40eb574ce7d950531ed39492dc321f95627b2cb0c9c061e3b9"
+    },
+    {
+      "path": "migrations-music/0003_music_uploads.sql",
+      "sha256": "fb0cc9eafa2bee35cb2ba6efacfd0125837a812fdc809a174e330c950d5f83b3"
+    },
+    {
+      "path": "migrations-music/0004_music_cleanup.sql",
+      "sha256": "c23f1b218d4e43a11c1d2c1c88c53a809814f9d99560759b6c54a66027c28c92"
+    },
+    {
+      "path": "migrations-music/0005_music_rate_limits.sql",
+      "sha256": "013ea8db47ff0c217bc5c7d244c27b1cfa047d029048ea19263e2367062466be"
+    },
+    {
+      "path": "migrations-music/0006_music_analytics.sql",
+      "sha256": "40cf617fef180deb882192b7b0fffeb3d4f3b53a027067825f1d9d42c27bc780"
+    },
+    {
+      "path": "migrations-music/0007_music_albums.sql",
+      "sha256": "89daadecae0b8ed59a60577a78694252977de71e7fb7359e13ac67e2a6dae9ea"
+    },
+    {
+      "path": "migrations-music/0008_music_featured.sql",
+      "sha256": "1dc063cff7d806254516af1572b1bf69acc7d30535cb5e22f4de60f6faaf7bd4"
+    },
+    {
+      "path": "migrations-music/0009_music_album_covers.sql",
+      "sha256": "6c0f7f616d40e95514f019b964ca7d6e26e0d020a1c9fda48f40487d56c549f8"
+    },
+    {
+      "path": "migrations-music/0010_music_limited_free.sql",
+      "sha256": "6acfbaebe38ec0831696ce6e321561d4ea8b3f35410596fbc7a653afefd86b24"
+    },
+    {
+      "path": "migrations-music/0011_music_share_rate_limits.sql",
+      "sha256": "05d0be34b289df948c9eb92ffcecb22c2d75f716a8ebfff49e12c7defd3bbfa1"
+    },
+    {
+      "path": "migrations-music/0012_station_redesign.sql",
+      "sha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498"
+    },
+    {
+      "path": "migrations-music/0013_station_media_uploads.sql",
+      "sha256": "fca37ba533ddd2821335aa44749e699da546f145182a5f5886ebdac02c637021"
+    },
+    {
+      "path": "migrations-music/0014_station_content_operations.sql",
+      "sha256": "c457774b05fa286fa8ec51f7ddc08db4eba3893902df44e359b288153954c0dd"
+    },
+    {
+      "path": "migrations-music/0015_station_campaign_links.sql",
+      "sha256": "c530d98acc09ab6806e136970eb36d6611f7b30dd0716103d78e6072c077232f"
+    },
+    {
+      "path": "migrations-music/0016_station_event_collection.sql",
+      "sha256": "feaeed6ac1dc78aba311c9a40532289f2b8acffc233f670415e6b5bab5131ceb"
+    },
+    {
+      "path": "migrations-music/0017_station_reports.sql",
+      "sha256": "c54f66b828d253c5b9045f9cf12434a6e85d08c53a86ff30bae560c0ebb541e6"
+    },
+    {
+      "path": "migrations-music/0018_station_report_window_seals.sql",
+      "sha256": "ce9517d0549ed33026d02a56ebc57f4b3f58f8a0c3467f198d66fce6f239e186"
+    },
+    {
+      "path": "migrations-music/README.md",
+      "sha256": "d4b02ede08a2923952eb8cbb868fc6da599a3b6c621af0c8505dc7d180ae2959"
+    },
+    {
+      "path": "migrations/0001_waitlist.sql",
+      "sha256": "9834ce3b7e12c217db2196742150046bf58f3fa759fbef505d5ee8dcb9dcb7c5"
+    },
+    {
+      "path": "migrations/0002_download_rate_limits.sql",
+      "sha256": "50f9e00a7360c5ed3cf259520314bc15e6609bfdc54e3a3e8844bc94a3f2ce62"
+    },
+    {
+      "path": "migrations/0003_reader_accounts.sql",
+      "sha256": "49eb30c6d38f11bb458911af2c66591b8ad800cb43674b4855d70715f98fb5b0"
+    },
+    {
+      "path": "migrations/0004_novel_entitlements.sql",
+      "sha256": "2ba8b9e57a1ea888776c294e9615fbd4be5aa35e1fb942edee02d5e2bd39d2ae"
+    },
+    {
+      "path": "migrations/0005_novel_payments.sql",
+      "sha256": "5246a24004579863c1a9394e7d7359d932f103e68cedfcc87a1da612155f0856"
+    },
+    {
+      "path": "migrations/0006_reader_credits.sql",
+      "sha256": "b7e4bea9b57fac3e1546ccf9b8e925da31a67fb9211238148f115e5e676555f1"
+    },
+    {
+      "path": "migrations/0007_backend_content_platform.sql",
+      "sha256": "c174517367bf8874ebdd7b66eb5f29cad7ee9a176b69e302028fe0d8ef60dcfb"
+    },
+    {
+      "path": "migrations/0008_admin_content_settings.sql",
+      "sha256": "c7b67595eb1874703274891675d674f5a51608252a81a1b94ef32102a2ba7ab4"
+    },
+    {
+      "path": "migrations/0009_reader_memberships.sql",
+      "sha256": "9584450be399df6dbd233541b3bf640b97a1a6ba90f16694800dce7e4c506f43"
+    },
+    {
+      "path": "migrations/0010_reader_bookmarks.sql",
+      "sha256": "1eb2b1b4ba5fde5699ec058f20f37ee4d9335a292bf5c4c33345940308ee3837"
+    },
+    {
+      "path": "migrations/0011_reader_password_credentials.sql",
+      "sha256": "55d4f627346a1b6dc896132d0b7dc27ace6c890dc89beaac377b51318c11d663"
+    },
+    {
+      "path": "migrations/0012_reader_totp_credentials.sql",
+      "sha256": "c1eeb055a807f5a511e46ccd618fdcbd4d5f717c0ea7d3c1b1c4d5bfc9666b2a"
+    },
+    {
+      "path": "migrations/0013_reader_totp_reset_attempts.sql",
+      "sha256": "17f9d73814af92340aec6c32c374f1541858d8973b982f9666b408df6d11fc23"
+    },
+    {
+      "path": "migrations/0014_reading_events.sql",
+      "sha256": "a163af85548b36fc60e3c88fe962ba9f7e0f63e51858e995cd2c6e9264c3d5a1"
+    },
+    {
+      "path": "migrations/0015_chapter_stats.sql",
+      "sha256": "3ffaab11f0a2b6dae46a73a67fbda71d65967b5c9fc720a2c69133a87e78eb90"
+    },
+    {
+      "path": "migrations/0016_ai_insights.sql",
+      "sha256": "80c7268d4fbcfa68c9e9590775d3d7625d2523a215fb8ff70e245da3a1f01026"
+    },
+    {
+      "path": "migrations/0017_reader_comments.sql",
+      "sha256": "de786764d8286153a9ec6e6d340d7225909111c30b4d1e29f93cc789efc1a247"
+    },
+    {
+      "path": "migrations/0018_product_feedback.sql",
+      "sha256": "d952c5d5305087d757880fa5a1221b295a7754133f8343bd94ac4c6924eaeaf3"
+    },
+    {
+      "path": "migrations/0019_signal_automation.sql",
+      "sha256": "f37ecde19fbaebae7d57e720fcf5bf82a4686b81f64d2f9d23a300b6022c0aa6"
+    },
+    {
+      "path": "migrations/0020_signal_collection.sql",
+      "sha256": "ebf22836312c95ee518614062f7620c06b492d3062e7e9acd1fbb5e9bae8fb7f"
+    },
+    {
+      "path": "migrations/0021_signal_candidate_triage.sql",
+      "sha256": "615080e3ac443a7fab1bf19d10bf6e2918cc919c0dd3a17a4cd3274669bcb182"
+    },
+    {
+      "path": "migrations/0022_signal_source_adapters.sql",
+      "sha256": "460ade3cc1e9d78c744436adcb22add4e2636a275bc2e95b396e37aa32d366f0"
+    },
+    {
+      "path": "migrations/0023_signal_candidate_deduplication.sql",
+      "sha256": "d74c8046cc2a0e40d69254120a458ea5f2df676a57ff49f1c12880aef9b29546"
+    },
+    {
+      "path": "migrations/0024_signal_operations.sql",
+      "sha256": "ba13024d261c788b45d83e07b9f3affcb3edba035fcf07bbfa8d5a8104c51adc"
+    },
+    {
+      "path": "migrations/0025_signal_model_rollout.sql",
+      "sha256": "e918bcc56c96d00bc0ebf5dc400df9f423fe49c5a122e2827ad377eb3b51fc22"
+    },
+    {
+      "path": "migrations/0026_archive_paused_signal_sources.sql",
+      "sha256": "263e818818d17b6273e6a3c2de77a966310d831db1eff5c64eea63d88da38816"
+    },
+    {
+      "path": "migrations/0027_content_import_review_indexes.sql",
+      "sha256": "3256ea8d4ca0209e477b08763c27fdcaee24b391ff48340f05e88419e96b3cf6"
+    },
+    {
+      "path": "migrations/0028_station_points.sql",
+      "sha256": "07592a7fb9b994f25545a32a80d3db7b61d6c3cfd18f6993b10eff17e84b1ebe"
+    },
+    {
+      "path": "migrations/0029_creem_credit_topup_idempotency.sql",
+      "sha256": "880b7fd8aec712ae9687dada631cfcc4ec0f6bbfcf311bfaa131b10215668a85"
+    },
+    {
+      "path": "migrations/0030_creem_reversals_and_event_ids.sql",
+      "sha256": "5aae0f645d543e6e945816995786ee4385b2de0c61c2462a9a5dd0697a549b72"
+    },
+    {
+      "path": "migrations/0031_reader_game_saves.sql",
+      "sha256": "fe47874df69798b4aa11d48861ac3f318aa0ad9178527e3bf88afea97d7d0bae"
+    },
+    {
+      "path": "migrations/0032_reader_game_save_recovery.sql",
+      "sha256": "44267eca8c9a83bf3384080570fada7318d6c0e617baa4b4c762984a874d2045"
+    },
+    {
+      "path": "migrations/0033_cat_life_game_commerce.sql",
+      "sha256": "7bd11508ff80dadb9d8c0a246f87ecc177b9fb30d7ed8d86f21682c7b6612d86"
+    },
+    {
+      "path": "migrations/0034_cat_life_game_commerce_api.sql",
+      "sha256": "7f1651968dd0b6d14f62ab4fb6e3a50c40b245d96fcfa32f19ca0effe10f436f"
+    },
+    {
+      "path": "migrations/0035_cat_life_game_commerce_admin.sql",
+      "sha256": "fcc129eeb5b4c98c7c1d395162d1942a6973598351dfe7d670be4241dbfb8b58"
+    },
+    {
+      "path": "migrations/0036_reader_membership_redemptions.sql",
+      "sha256": "5da3296aab5535c123fd007805cd0f9aa4faeb4926ac775783198c6c3765e9cd"
+    },
+    {
+      "path": "migrations/0037_membership_refund_reviews.sql",
+      "sha256": "c572ac43dc4b8248aa71534399711019e1cf5f708b44bd80fabb9f6876c6f8f4"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "b81e63fc2580e6e768dcfe5d799eb5944e95bf1fb51a056b8697ece1e6c9d4b0"
+    },
+    {
+      "path": "package.json",
+      "sha256": "75c994bf3798ef8df5fca696a3e3c533fa295b2bf0a29727140fa68883a798e1"
+    },
+    {
+      "path": "public/games/cat-life/cloud-sync-policy.js",
+      "sha256": "4f9bad338f0cb9088c07da466be1c8bb6273dac6f9bfd7bede74d9a64351e8d6"
+    },
+    {
+      "path": "public/games/cat-life/cloud-sync.js",
+      "sha256": "dc662a2a80dba0b41de2864c5389fe9d4e0d102f3a1da353e99688031da55860"
+    },
+    {
+      "path": "public/games/cat-life/commerce.js",
+      "sha256": "47226cd51a3d5567e357d291b5b3eee48e6c75b81c4722306c7014b76af5dda5"
+    },
+    {
+      "path": "public/games/cat-life/content-manifest.js",
+      "sha256": "54cc7ec506fca802ba1589a2b2a9212efd6dcbe4716c749e135bc3fd5b4f5149"
+    },
+    {
+      "path": "public/games/cat-life/host-bridge.js",
+      "sha256": "796280096b95cb5ccd5fd3bba919c041ca4403fc119783eacf3854e2c1750314"
+    },
+    {
+      "path": "public/games/cat-life/index.html",
+      "sha256": "3935e0e9589625dda0ac49034ee22b72e81dbe556e3d703a53ee079dbdbbb775"
+    },
+    {
+      "path": "public/games/cat-life/site-integration.css",
+      "sha256": "039ef227359823d83721efa16bd682ee70188823f725cba8330950405c8f5714"
+    },
+    {
+      "path": "public/games/cat-life/site-integration.js",
+      "sha256": "9f11206673d49f95db0f4d54c27da3a903e52034cea017b6b97c5a042aa6d327"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/arcade/slot-machine-cabinet.webp",
+      "sha256": "8a68a09d0b1acad97f5a42e9e226d4a6987022369c2cb65df432933562ce2cd4"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/audio/moonlight-tiptoes-soft.m4a",
+      "sha256": "2e853e7d5eaa5673053a442a9ec257e470488a0a909f311e25bd22279285aba2"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/bank/bank-counter-clerk.webp",
+      "sha256": "e7715c096b12226f15f7a00251b5ca207d6c988dcdde32317ff5360e47f030ef"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/cats/blue-cat-walk.png",
+      "sha256": "e67ad5c56b586f22e6197921d8a5e214e0bee728d8c5e64eedba396f48c05800"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/cats/blue-cat.png",
+      "sha256": "cfaceb31fa0c124a359cc0d72024bc86ae33c9b1650ad183a4a614dc913b2fdd"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/cats/cow-cat-walk.png",
+      "sha256": "77940ec86b7a1e74a04249f5fa100a8f3714caed65c76515584ff1941fd0dc7a"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/cats/cow-cat.png",
+      "sha256": "30f9e37cc70fdb27afd28f2b46e8cf5efbc4b46add5fcd0507a7ecc0750c81f8"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/cats/moonlit-tabby-walk.png",
+      "sha256": "7d195ceb064edb368d61a48197afe57445807e7ec4e86e40db639324ba15985c"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/cats/orange-tabby-walk.png",
+      "sha256": "25310b652da3c8c046baf142250c5e352ea9a523b331d7cf5a2170abe9424604"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/cats/orange-tabby.png",
+      "sha256": "2a3278d51df58226b324bd40ee636309bb32efd1c78c7ceec23609dd8e666ede"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/community/npc-cat-sprites.png",
+      "sha256": "4b44e86dffd3dde7dad648d61c9d99968d7a6de8276537bba35ed7e7fb5a4b77"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/home/home-house-scene.webp",
+      "sha256": "ab6633bf7d409a48972c6793978579d075df846210a11b47336492464748a002"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/jobs/LICENSE-phosphor.txt",
+      "sha256": "ddbe6082ec3cf979db47e5af549d2849c5d6182b3e005ef91ce1dbb9eb122f11"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/jobs/job-cat-cafe.svg",
+      "sha256": "f8285e75660c4ed9830ed42416bf3a839cb52c30a3bf2f19ba303e9ed6fb05a1"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/jobs/job-flyer.svg",
+      "sha256": "83e7fec383ff54efa0cb4be17fe5439392e3c18e6137b228c02ce8a8dea2e339"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/jobs/job-it-engineer.svg",
+      "sha256": "bab36fb27f0ff542611a7ea52fdb5fe3df51a0cf65579f014985298d6b7b1123"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/jobs/job-petshop.svg",
+      "sha256": "8462e1aca5a4be2a2a28178f65b91e4f51756aeae36648d94550fa706431844a"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/jobs/job-store.svg",
+      "sha256": "9e755963f1672b9d45a199797cfb3479dd13517690b08f76bb013a08043cc2b3"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/angry.png",
+      "sha256": "7045518dda912f0f575e707b039dc28e57a4e61af3f6bb293142282c96b30e3f"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/celebrate.png",
+      "sha256": "5239eed7e8d743c4908de6657814ad4552363b26a7679211ecb92225495a15c3"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/cry.png",
+      "sha256": "43923b4c96120574cffdfe994e4007adabe0a57af46f7d8d63a34c13bf7e259c"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/eating-bowl.webp",
+      "sha256": "454e39c991b66976476c4dd20fd778f7b721411c27fe85a76549d0d6c31a08e8"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/fish.png",
+      "sha256": "94e2916fa07fca977a78950101d9399e121af63d62d25fdcfe95a9e35df1156e"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/happy.png",
+      "sha256": "124fb7b650bbdb5df26261248ec6c00ad98a3e10ec99e0152c689596e42639ac"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/heart.png",
+      "sha256": "d9a390f62478bf3737e83a429d22c7cfbc7fc9704754d449c9747086b76fc61a"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/joy.png",
+      "sha256": "f68db606477b1860545718426c883589e617012106939f717c3bc02db0bcd613"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/nap.png",
+      "sha256": "d1c385b7c2ffc54c5eec69941d74bd1227ffe658831f5794df00bca14fad5f3a"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/pounce.png",
+      "sha256": "4d0316f981492aa3f865cbccd1835de8cc714128aafb951a588de4caee8c3ea4"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/question.png",
+      "sha256": "35569857fc18e06a4c8174250631bea2fe6f7a0682ded22dc48438653e1f4f86"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/shy.png",
+      "sha256": "223c84db47c0a06ddd4a1dfeee7e51fa7cf05cee0200cb0db1e8215a0bc03dbf"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/sleep.png",
+      "sha256": "c1b85cfd905a392d15f1aca61e86aaca2d77ee4217643ce924851adb753ec92e"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/surprised.png",
+      "sha256": "81a16788f4e1ded1b1750fde1672be086e4f2eed62296ab332e5104d6c4b12b8"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/poses/wave.png",
+      "sha256": "2f0307c038933eff93fa7915bdcaa0d6d3ef3a904a83e94e21c88cf79d26f6b2"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/premium/moonlit-tabby.png",
+      "sha256": "a4dd6d8de2ce12cd68f97dc3f6e4fc80e57eb4374daa3bdc480765d55d86cca5"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/premium/station-bench.png",
+      "sha256": "55a4040eb5f6aa1a11535cb990f15374bf09c40dc12d32a603c8b388bebde456"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/premium/station-clock-board.png",
+      "sha256": "1bad6c7e595cb9b171b1839b5f161aeca066793f494a8670c9b16dc7af0cff23"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/premium/station-room-preview.webp",
+      "sha256": "e1f1ffecdfa33fd386df9549a8a2d9e023c4f626adfdba239ae21c8e6107a6d6"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/premium/station-room-set.jpg",
+      "sha256": "2238099a15f5e464d13d2065382927ac7a100f8091b51b73b4a6f115750edc8b"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/premium/station-signal-lamp.png",
+      "sha256": "6034055c7f8233c8f89ef8a04f9c45a81f9dd131300a54ea16358390e2e52c75"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/rooms/decor-lanterns.webp",
+      "sha256": "444e80498e5a9f1f450fa853e63a7968c287bab7475cebc3bedc7035b84b282a"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/rooms/decor-plants.webp",
+      "sha256": "175322c30dab0b801f24beb777ee36feff5cce98127112d808bf8edc87c04a5e"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/rooms/decor-poster.webp",
+      "sha256": "e8c6736622a580b4c117c54c51a6331e04cc12f5512fc5ec8aa255179a2d533c"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/rooms/furniture-bed.png",
+      "sha256": "b31ff39c5af2a16aa236357287ec21943ed7da5bb87881f4dc63a0b0fa0e2127"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/rooms/furniture-bowl.png",
+      "sha256": "96974bcf96cb96c1f685dbff0c1758d9f3246bbb6a3138dd9e9189f93427630c"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/rooms/furniture-rug.png",
+      "sha256": "cbd45d64dd31c10f2b2325a0b86205f555fb7bd9b494a8419c3709dd227f30bf"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/rooms/furniture-tree.png",
+      "sha256": "12aa6e1cae7078affc5553669de3d58af4893c81aa63d01c2b0c2e2ae557739f"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/rooms/furniture-window.png",
+      "sha256": "8fa92a33e2b6d23b9af18de2fb30b72e7c11821c6a4eeb9de97df3f7821762b4"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/rooms/room-storybook-empty.webp",
+      "sha256": "858335bd3cc0e39270b0b8510c5db9fa0fdd72369c7a150e8695cd40dc1b28e2"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/share/OFL.txt",
+      "sha256": "5e0da210fb04058a8c0087985d2d456b931c2579811a49655721d3cf0c36b6d6"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/share/letter-title.ttf",
+      "sha256": "df72e50e1338f258b71e728368041e3d910bcdf3301044ec9ccf8903a5fef178"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/share/station-letter.webp",
+      "sha256": "b6a810a4a02a3750a87e15c50a7676c6b842ce6179390beb6f445b4215a06dff"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-bed.jpg",
+      "sha256": "bd1c2f73d06bd26a4265ab329c02a0db6932b7e2bd43db6f9f38d969232f07b1"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-beer.jpg",
+      "sha256": "93dfbc7e3a3e91f0b157241c065a68d15bd0f42cfb8b432a4b3392e1eb7595e4"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-bowl.jpg",
+      "sha256": "6bd051b43a23d8f34b5bf7011278e5f42a28261916eb7399d93c96920e053b70"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-bread.jpg",
+      "sha256": "9be1816063356c75b551b62bd981c680d664b287fd092ae31ee11e84b13848d2"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-coffee.jpg",
+      "sha256": "cb8c821a25159852cc0ce4c2b532bc4b5c535326d1325e19f90e91f782565c95"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-dessert.jpg",
+      "sha256": "e33d422db5c769e1d4cb976609afce193f9f1fc0e9e5f75453b1de0d59e9986d"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-energy.jpg",
+      "sha256": "2db3b0d6df86bc850efd8a53ec92e7f5f6e8255cb695b61cab682e3dbaee33b1"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-food.jpg",
+      "sha256": "37cafad2bb28c39c5716dfdc8cc9475f53b4f5527e1ea1a7d5d0b929992e9971"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-grass.jpg",
+      "sha256": "7ee24ae6fa11859dcdf923dc25b6d3bd7ffcf04581d72e5d2ecd7c81fabf39b3"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-lamp.jpg",
+      "sha256": "5a258dcd027da6d21348795899e7a48b556867012c92b36bc87497150c3c9ee5"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-litter.jpg",
+      "sha256": "17e5d9b957ddaf72f00f56a82fcea121d34a39786f34afd3d7f4c4e602db9204"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-med.jpg",
+      "sha256": "54ebb508589b8e0c16012961078d0b010245b67a5fa8c37c75ac8d49975d415f"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-noodle.jpg",
+      "sha256": "d51effc35d90cf648966848d4aa87e26ba2d4d695f734985d4585cacc2ec39cd"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-premium.jpg",
+      "sha256": "44ca9b8fb869c681d483b2dbcce43674218b73f1aa407b817e3a194e0f2dd0e7"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-rice.jpg",
+      "sha256": "003766597d18d4638e23f570372a49fd134d49b56ea7b0ed62e35c00d3222933"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-rug.jpg",
+      "sha256": "ee6e759af22af853ebd27c46149b9562c50eacbac7551abd944bfc45825d3140"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-toys.jpg",
+      "sha256": "a87ba4c5c6962d10b3e3837a07b1835004b1fedfb7f9ebf99ef07d48639d729f"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-tree.jpg",
+      "sha256": "2dd3caf60459b84b949bedb63796de94387b1ad3c775d4cbc140fea7eeb7bff1"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-water.jpg",
+      "sha256": "48c3049f97c8957974c2728bad89cf9d278ec84db1f84502019fab28a663e7f4"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/shop/shop-window.jpg",
+      "sha256": "13f2f4fd005af0727c2ddea364549935868984ba8cf6ec8bb7fe6e2ab5219f61"
+    },
+    {
+      "path": "public/games/cat-life/src/assets/work/work-shift-flyer.webp",
+      "sha256": "33d102df49c6f1f3ae51d84aeb474eb45af6c4187ee42deff72615f740de6a75"
+    },
+    {
+      "path": "public/games/cat-life/src/js/core/i18n.js",
+      "sha256": "43bf00b02434715134f4543ab56bf11954c1475c82cf9ff3f2e9eb674eebb5ef"
+    },
+    {
+      "path": "public/games/cat-life/src/js/core/namespace.js",
+      "sha256": "2c05aa2809629347d34b6d7866c6014f3493c0c58288ed26c76a053c2d3a0a6d"
+    },
+    {
+      "path": "public/games/cat-life/src/js/data/catsData.js",
+      "sha256": "1ee5c2728bdfb31207afd7fad5ffe4e15c66dafb4b6e457b9834f93535a120c9"
+    },
+    {
+      "path": "public/games/cat-life/src/js/data/communityData.js",
+      "sha256": "878e5ad6e447f26a17579ab3e3955f4e102b8c9aec784330e7cd9d488601b05f"
+    },
+    {
+      "path": "public/games/cat-life/src/js/data/diseasesData.js",
+      "sha256": "57bc0e830fd58c5a0ac0ef9d305b505c815bead8473b87d95633f5b5e2bfa327"
+    },
+    {
+      "path": "public/games/cat-life/src/js/data/itemsData.js",
+      "sha256": "c3738bee1efa4d5432c6118291fd56b97b42e89b7f255289a956acb3432d6e44"
+    },
+    {
+      "path": "public/games/cat-life/src/js/data/jobsData.js",
+      "sha256": "221b238eb9a4d2e063e0e8d41e6d4b5ed2d87dd10907831c08aff64880389198"
+    },
+    {
+      "path": "public/games/cat-life/src/js/data/tasksData.js",
+      "sha256": "660ed3ae64ee56314304e649df16a3ca32b7eed8b43a38965cca1c2cc84307c8"
+    },
+    {
+      "path": "public/games/cat-life/src/js/main.js",
+      "sha256": "25b3e0b289c2f2aee5a895905901c3d52d34a183becea3efdd0beb4ce67fbdfe"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/careLearningState.js",
+      "sha256": "4fc8557d022a126647188336d0b5dc22a2c98a2137d3b44d2e2eadd0e56151a1"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/catMemoryState.js",
+      "sha256": "1bbeaae64204096addd85a96155819616d05d615b9ca156de9eafd8df1f0f2ac"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/gameState.js",
+      "sha256": "f18858b816c4ab149aff294300d03ce0c6c7bb3388108f48fb1ba6b445dd33c9"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/saveMigrations.js",
+      "sha256": "1c6f96f3b2a9df1594a20e19e31bc74a5d67f5c203a2c151d6d08980f0117e59"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/saveRecovery.js",
+      "sha256": "faf82204cc6ea0a0882f4708bafe09b2239cf6707d5437d8ff2244ffa8d2dfaa"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/saveStatus.js",
+      "sha256": "478e5e7c831701d13d4cc4d356d1ed9a714df129cc40531f2d97c6bee0e7f4ee"
+    },
+    {
+      "path": "public/games/cat-life/src/js/state/saveSystem.js",
+      "sha256": "77e0295ae27f4e7e4f222ee13d6f0a1142e4a9f9ab97945b6ba96121010c1db7"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/arcadeSystem.js",
+      "sha256": "535c4040e4511adbb891029895d076a2488452660f092b0fbe19c1a578e29bf3"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/bankSystem.js",
+      "sha256": "6180db97378c7122cb53e344aa19dd8815791b3b9f0a8a23d1f044ec93125bd5"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/careSystem.js",
+      "sha256": "63ee1e344837fff8a20052aa2c35dd088130cb9837c1621c4183be5e6b7dc5ec"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/catInteractionSystem.js",
+      "sha256": "a8cae1e51d59062f2c7a95a471c476877220f7dee1e2dfb3793a6e53c0bb19f2"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/catSystem.js",
+      "sha256": "86391d07a5fed55247852c9052cec811cbbc12de08fd72183b8bfcd7829b740e"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/collectionSystem.js",
+      "sha256": "3129c9ef32ee847341691d3d8a0251c67d12fed1d93f758ffacc7b14a6f6088c"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/communitySystem.js",
+      "sha256": "c340bce01a923286fc4373e82385698ff3e23e506e3ccc56defe5349a2bf3b88"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/homeSystem.js",
+      "sha256": "f0c3d31ad624b51b4daea7de23e92bbd9ce66899136bd8b59a2c27a129eb0370"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/hospitalSystem.js",
+      "sha256": "836fa3e9c259f5e41dee46f5dba7c8d7212fea803690c18219f3c655cf20ca8f"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/lotterySystem.js",
+      "sha256": "a5cc10d6a0e3f606de876aa7500144e10d3b2013de240b536101b3e81c735d80"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/memorySystem.js",
+      "sha256": "c45a6fa9b8f2f449b90c5f6670e6ad0963c579262f0fe6544baeae551098c3e1"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/musicSystem.js",
+      "sha256": "f61b9a3be87e1080d6eb6979dd3c0a0576ddac011ff66724392ac7e6cbca213a"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/onboardingSystem.js",
+      "sha256": "a33d64b32fcdfc8cbf0b0a888f8da900b84d132614845948bf9f5e2d4c8298b8"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/playerSystem.js",
+      "sha256": "d935c9074a62e2fd794ff7a86e5316e2d6b378c7dccf5a0f116ef03c4c7e614c"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/shopSystem.js",
+      "sha256": "1fe46ca1ae2200aa555b673345569c9cc73fd8c650c6a04315dc1e936453791c"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/taskSystem.js",
+      "sha256": "7f9f5cb7040517b17cc22906034fe8c3eaf07110f377d26914fdab9da15f485f"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/timeSystem.js",
+      "sha256": "5bc125d79361536d404e857bdc56143b69a452c2d03375efd01e3cfe5f7ecbce"
+    },
+    {
+      "path": "public/games/cat-life/src/js/systems/workSystem.js",
+      "sha256": "774d7fd156655fcd4a42667a9068436001da395e57ddc770905e3656be6a8178"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderArcadePanel.js",
+      "sha256": "514c6fd37e4b19f99606a36187ed906a7eeee1c3b611b7ed5af2e4bf4290a867"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderBankPanel.js",
+      "sha256": "41ce2a795712e368e60bea12e298abd7bb72d5c07bee8e53bd4bd44f0e1596f2"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderCareJourney.js",
+      "sha256": "b7a72a0f1b46e1de610fd2ab66820523892597dfc5d7ee419740603b15b460c5"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderCareSupport.js",
+      "sha256": "bbf9ed3c156bfe6754ed901c2bad6d91b341486d8fcff65007a1596a4c58419e"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderCatMemories.js",
+      "sha256": "71f10a64ef908f2ba1d18967e3586913507e5422581f4843755a29a38df04aa4"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderCatPanel.js",
+      "sha256": "b58939c4f8653841f0ddb99f0dc4f9dd3443a539393c07bff062288907ddd3ff"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderCollectionPanel.js",
+      "sha256": "0ee42e94c28407e5246a5dda184e8c409061a73398c76dff20e063687a92f6dd"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderCommunityPanel.js",
+      "sha256": "e41a5985084eb8764943cfe8d51737c916774fe90d2b90daab6820f8bcbbdf7a"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderHeader.js",
+      "sha256": "15d5c6e05606f50cdbec4fdec571221edee120383da01146e3858a49c061b517"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderHome.js",
+      "sha256": "96dfe9afdd1772a174c16bb4dde598d15fedb9edab98af55cf088b2c4ae8bc55"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderHospitalPanel.js",
+      "sha256": "a6b6a07d7e8af54479276ccadba67249cdb1d60f2f18fb6a969cb0849a5fb7b3"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderInventoryPanel.js",
+      "sha256": "46b80dfc65ab08401b59f4fe91d51f4e1c27ce3a280bdf84d5055f5ad0bd5442"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderMemberStorePanel.js",
+      "sha256": "4292fbce6f0be97cc82f716d690bc622b6f1b8bca6a2bf258c5d9ead17fdabf8"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderMorePanel.js",
+      "sha256": "c637b1baa7f4e367e9cda1c0bb3f6c38321dc34bcb25a13652ed0eb25b246a03"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderNavigation.js",
+      "sha256": "f8614777c4018265629499d35da93106f654458f383cbe74825e1df32f77adb3"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderRoomPanel.js",
+      "sha256": "4c67e663d7651ca32638e33b4212ba7e6a30225df91e3ce94d2deca99e5bb620"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderSavePanel.js",
+      "sha256": "bf420604ba264d6a07d2882364e16aa3f93228ae9ff52d87214b1d132b9cdbd7"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderSettingsPanel.js",
+      "sha256": "7134e9f8e62a8189e37b34c97830807562d1261e5b641dcbfff30404d6dbb640"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderShopPanel.js",
+      "sha256": "fd2792db7fe9399d991f800b7120e5b9e9595b577f60b10a7219356c3b4939a0"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderTaskPanel.js",
+      "sha256": "e2b71afc0f4010eac25aa7d17220c8e002192c7a6a45e452392ada771addbd95"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderVersionPanel.js",
+      "sha256": "ceeb008a02e5f1cda9426dee9ecad3178afec29f4744ac489dbac4d245f160af"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/renderWorkPanel.js",
+      "sha256": "d9fc8c703eee4970dfde52d1f572c092430061b321bf4643ea8ecc7a686060c0"
+    },
+    {
+      "path": "public/games/cat-life/src/js/ui/shareDialog.js",
+      "sha256": "3983547dadb7134e3fc36f278b7b0c89861388af2946ca95cc376134a5f4bbce"
+    },
+    {
+      "path": "public/games/cat-life/src/js/utils/bitcoinApi.js",
+      "sha256": "a0da7edd6786e4f997996a1e21fbcc4b4ea09d3a9eb5332545c60eb93cdbf2ba"
+    },
+    {
+      "path": "public/games/cat-life/src/js/utils/catArt.js",
+      "sha256": "0a23fa80cb4f9df9b81f389f5d5fda7f2675ad2c49d7503505aa271d30926379"
+    },
+    {
+      "path": "public/games/cat-life/src/js/utils/catMotion.js",
+      "sha256": "b20a36a9a4a2b19e4b710eeb76a4b1496267d5ebcb0ede525bd9b6af2e65ac84"
+    },
+    {
+      "path": "public/games/cat-life/src/js/utils/format.js",
+      "sha256": "83aa9d324bf1ee2656d3cb07c0e7bf0f6e481f7db187f34f2b00377867be4a84"
+    },
+    {
+      "path": "public/games/cat-life/src/js/utils/random.js",
+      "sha256": "bfdf19bf42c9cdaf4b2aa959ca510d87d98450b07a771a8e71c4cd76575a8796"
+    },
+    {
+      "path": "public/games/cat-life/src/js/utils/shareCard.js",
+      "sha256": "423ab55c371887564db8138e9098d6b799d27ec6bc3c76b7edf2b8244103e394"
+    },
+    {
+      "path": "public/games/cat-life/src/js/utils/storage.js",
+      "sha256": "20bb0f940d87cf5833cd6d32df734fbcc4c2ad7bd006ca96f1c7435dbe142fd4"
+    },
+    {
+      "path": "public/games/cat-life/src/js/vendor/qrcode.js",
+      "sha256": "18ae399f81182bc9de916e9c77b195df20cc58d6f2d55a62b085a299f1bf1780"
+    },
+    {
+      "path": "public/games/cat-life/src/styles/broadsheet.css",
+      "sha256": "8e56c3969249d184104b2bf8f5b41536e1c63253f24ea27fbed65c84fd0cdea4"
+    },
+    {
+      "path": "public/games/cat-life/src/styles/cat-interactions.css",
+      "sha256": "f35887990a2b939540618848e4ab70995269886b1ff9d4a97b50a4b12ef2f97c"
+    },
+    {
+      "path": "public/games/cat-life/src/styles/cat-motion.css",
+      "sha256": "a6be31ad9cfe1b0522be2f7aa505d532adf771861868a29a9b95361a9a70f8a7"
+    },
+    {
+      "path": "public/games/cat-life/src/styles/layout.css",
+      "sha256": "158cdc2e6afc88f3d9cfb1de4662755a7fcf78ce8dc3cd610df3613d5fb14353"
+    },
+    {
+      "path": "public/games/cat-life/src/styles/main.css",
+      "sha256": "f99d40b7f509f09339452dcef7d1b0c750d37548c319eb18b1d3bff761299205"
+    },
+    {
+      "path": "public/games/cat-life/src/styles/reset.css",
+      "sha256": "16ea0c8d731775dfa3915c7f204dd6a88c8c85860131b2c8155cbbc54a925b78"
+    },
+    {
+      "path": "public/games/cat-life/src/styles/save-safety.css",
+      "sha256": "a63458e9663e3b24dc5f093e232d1a180e05ccca066526856772d0e36b8f5c0e"
+    },
+    {
+      "path": "public/games/cat-life/src/styles/share-card.css",
+      "sha256": "cccac089d08d8244fb4112b36b47ba671337f45bb8a53665fe22aee0dcc0192b"
+    },
+    {
+      "path": "public/games/cat-life/src/vendor/cat-motion/PIXI-LICENSE.txt",
+      "sha256": "5ce7447bc57f7349ffc48338782fbcabe613696e00712b20d66bc58e780f9473"
+    },
+    {
+      "path": "public/games/cat-life/src/vendor/cat-motion/back-leg.webp",
+      "sha256": "d9d4e032c13659ebd8fd4206711e5f7a2d634c4bf7f710f3427bee02bcd7c84d"
+    },
+    {
+      "path": "public/games/cat-life/src/vendor/cat-motion/front-leg.webp",
+      "sha256": "487aa5a2a9c762121f3d8f8d23d266b79c629965de4fd07fe39231fca0965a7c"
+    },
+    {
+      "path": "public/games/cat-life/src/vendor/cat-motion/head.webp",
+      "sha256": "73893479092c01c805a53f4bc1b474b21ac8ac2308b89ee7e8d2ee7624697a79"
+    },
+    {
+      "path": "public/games/cat-life/src/vendor/cat-motion/kibble.webp",
+      "sha256": "3c7fa379df95f9a9875aeb899d81f5d20e3f9674c02125845d724f9073bb77c6"
+    },
+    {
+      "path": "public/games/cat-life/src/vendor/cat-motion/mouth-open.webp",
+      "sha256": "f40c228ac57609800c6045c1790ddbe2754f979c2fd775e52180a63a68b4d705"
+    },
+    {
+      "path": "public/games/cat-life/src/vendor/cat-motion/runtime.js",
+      "sha256": "8df95f0ea63d57cbec3e3a848f29bb9283c33fe151e0c7035079f5189618e25a"
+    },
+    {
+      "path": "public/games/cat-life/src/vendor/cat-motion/tail.webp",
+      "sha256": "707a71ed4ca166e1f674f9f3b0c8d6f1b523dae1c2f1d374e45f8ba2bd57ff37"
+    },
+    {
+      "path": "public/games/cat-life/src/vendor/cat-motion/torso.webp",
+      "sha256": "e84b60bfd5cf0f9759bfa3d13a5cb00845d163d281f0535c014cb4c852f627cb"
+    },
+    {
+      "path": "scripts/helpers/station-campaign-fixture.mjs",
+      "sha256": "ea391dfa06cda45d5f8af34766543c543f0f0a4cfa97dbe3f2e8431c6d5d747e"
+    },
+    {
+      "path": "scripts/helpers/station-content-admin-fixture.mjs",
+      "sha256": "e270f8d897b236b026a776ec11dfb3354fe8bda253b645528f802143be8d9a02"
+    },
+    {
+      "path": "scripts/helpers/station-content-admin-runtime-worker.js",
+      "sha256": "6b6c93c04bba8f8437143261388e75f7e46c7eb4322e2be2f07d4abca7b39daa"
+    },
+    {
+      "path": "scripts/helpers/station-content-admin-runtime.mjs",
+      "sha256": "44e64c4c25f3ab9f0add9a3a8743b067d3345d2caf37363cb5fe3b02c83fd0e5"
+    },
+    {
+      "path": "scripts/helpers/station-content-fixture.mjs",
+      "sha256": "12702c75335300755d010393d20bf03e927b631ce80a6be243c9b2e8d64dcb05"
+    },
+    {
+      "path": "scripts/helpers/station-content-runtime-worker.js",
+      "sha256": "cf65404446c7897bd341284ad3ca56dd664640bb4eccd41bcb8fdce08270cd78"
+    },
+    {
+      "path": "scripts/helpers/station-event-fixture.mjs",
+      "sha256": "c61416db3763debb76aed221790204d8bb2dafef6889b5b0f5af165471a1b63c"
+    },
+    {
+      "path": "scripts/helpers/station-event-runtime-worker.js",
+      "sha256": "6fa6ae6e5c3a934f8aae2fc55ac103fe08c689c44f3edfb497d0693f0f9a0221"
+    },
+    {
+      "path": "scripts/helpers/station-game-assets.mjs",
+      "sha256": "4ec881a0c1285b225da892294615660ed0fe287d3d70290b7e8c8418248acb90"
+    },
+    {
+      "path": "scripts/helpers/station-game-fixture.mjs",
+      "sha256": "b27152d55cd50890ec526be025fc2be0e9c895876bdac8fdb8d72e1b1bfb3748"
+    },
+    {
+      "path": "scripts/helpers/station-game-runtime-worker.js",
+      "sha256": "59dfdea52fc22582c80ebde246bfe476d3a8792821d43e0a2ba22b0d4c3cfe45"
+    },
+    {
+      "path": "scripts/helpers/station-media-fixture.mjs",
+      "sha256": "3be7885b6845192f1b6029912e620946f4026fd3c0398f7e3b0f24ba3f1cdb5b"
+    },
+    {
+      "path": "scripts/helpers/station-media-runtime-worker.js",
+      "sha256": "834fe9705dcbbce58432e2e4a00b215d04a9d14b31b5cc284d2cc8d15f494784"
+    },
+    {
+      "path": "scripts/helpers/station-media-runtime.mjs",
+      "sha256": "e3d0a2f9354b003be575c9eb76a09fe795d6cddb97adb5faabfe4dd840fcc1d8"
+    },
+    {
+      "path": "scripts/helpers/station-member-runtime-worker.js",
+      "sha256": "8c1af3eea0cc8e25a641ca98046027241b0366bcf370e3bdeacaaa33bbcb120d"
+    },
+    {
+      "path": "scripts/helpers/station-member-runtime.mjs",
+      "sha256": "4e24df4e5edc007f87a5856170ef49d2da39243f230f09546d19752c03708189"
+    },
+    {
+      "path": "scripts/helpers/station-music-fixture.mjs",
+      "sha256": "03e58ccd2fe4803d05222dc829f17b1fcd88d901eae1540c9b5dd8c418d9b699"
+    },
+    {
+      "path": "scripts/helpers/station-music-runtime-worker.js",
+      "sha256": "2bd009f5163c8618297aea405c12d435849c2a966e4c415e2116cc512c98ea7f"
+    },
+    {
+      "path": "scripts/helpers/station-music-runtime.mjs",
+      "sha256": "0e245ad8579b6acf88b9fb80f17321662e30e63075004950571ed4a89283f4bd"
+    },
+    {
+      "path": "scripts/helpers/station-platform-fixture.mjs",
+      "sha256": "4ef7a1d8b7a376ece00d71ffcb216fd530a0665bdfc02797010b03f0e4b9997c"
+    },
+    {
+      "path": "scripts/helpers/station-redesign-database.mjs",
+      "sha256": "c9a55cb4702746a3f42b13de575b77b35dba3e40f6b40d32744d41e3485c3320"
+    },
+    {
+      "path": "scripts/helpers/station-report-assets.mjs",
+      "sha256": "8dc76613aea097e2abeba0f239031cd401d1784de8ffdceb21c66928e2f2c422"
+    },
+    {
+      "path": "scripts/helpers/station-report-fixture.mjs",
+      "sha256": "5013532118610fb2561bee49debb3d5a17fe8510b9e4e37019b300849cc986c1"
+    },
+    {
+      "path": "scripts/helpers/station-report-runtime-worker.js",
+      "sha256": "11372bf94c1c6970afaccf7cf0180898edb5cf54f7d3aada0ea7088b51b1dad8"
+    },
+    {
+      "path": "scripts/helpers/station-route-runtime-worker.js",
+      "sha256": "b4962535492885f550c07434b8e61493bb060923ba1e5fa338ad098a67e79de3"
+    },
+    {
+      "path": "scripts/helpers/station-route-runtime.mjs",
+      "sha256": "92e6e136584deedc407a045109fb99770e71f4272ca532f03b645a8fc840bdad"
+    },
+    {
+      "path": "scripts/helpers/station-video-fixture.mjs",
+      "sha256": "0fadfaf7aadc05c8756d55d31f078463bffaf8bf72f6973389b567f1aba49ee1"
+    },
+    {
+      "path": "scripts/test-mobile-library.mjs",
+      "sha256": "a60f92d1f33bd8f6fb105307e59c233f22ac1b469eaa0d0cc1533929abdd8667"
+    },
+    {
+      "path": "scripts/test-mobile-music.mjs",
+      "sha256": "13c832f97b56a25f25b1ac2f27aa36007ccdf7ffb0edda4d543562474e15cb08"
+    },
+    {
+      "path": "scripts/test-station-attribution-session.mjs",
+      "sha256": "7861ee9719a8fc268fc2a01d1a797442c576d66f24141dd1f16a4e8fda5416e7"
+    },
+    {
+      "path": "scripts/test-station-campaign-runtime.mjs",
+      "sha256": "90626d8ea9c9e4426ac7f54d59ecd606fe2428aa1bcff65a17630ef5000c0ea1"
+    },
+    {
+      "path": "scripts/test-station-campaigns.mjs",
+      "sha256": "3184d579728386a86b887fb609e33df9135897550cf63a3ce8dbefca35e9e0c8"
+    },
+    {
+      "path": "scripts/test-station-clip-runtime.mjs",
+      "sha256": "f1fef1dc52b14d2fe52f517cb0af690d66b6bd419ad2ad29790fa33d43941c4d"
+    },
+    {
+      "path": "scripts/test-station-clips.mjs",
+      "sha256": "9fc5c547f79aa208a878a171f6812b44c592e6f3723aba2b4bdd9c1ab7c99482"
+    },
+    {
+      "path": "scripts/test-station-content-admin-runtime.mjs",
+      "sha256": "9f98975e6841eb712faf68e7ff04c33fd1069e277cb52b28950d55a1d6d7cac8"
+    },
+    {
+      "path": "scripts/test-station-content-admin.mjs",
+      "sha256": "3b7cfaa6107e394c6f0d96e8d082bb0c473e2af29d9fa1293bcfc561c8f33c16"
+    },
+    {
+      "path": "scripts/test-station-content-client.mjs",
+      "sha256": "e7547868ba23414d132b552f13f6c5dd246e963ee1b2f872c7b33c5acd877956"
+    },
+    {
+      "path": "scripts/test-station-content-public.mjs",
+      "sha256": "81ea1172b887d8987a917910e4d5929e0ba969cff5ecfc9366dc4556488e058c"
+    },
+    {
+      "path": "scripts/test-station-content-runtime.mjs",
+      "sha256": "6389a79c70156a2e291e0fe8ca2133de768797292c7621079fbd5fb0d814a08d"
+    },
+    {
+      "path": "scripts/test-station-event-client.mjs",
+      "sha256": "44ae29fbb3ef33cdc2715b3a4257c70316d960231fd6bd605085238ac1ce347a"
+    },
+    {
+      "path": "scripts/test-station-event-runtime.mjs",
+      "sha256": "fc14b8601c66a04d4d8e43734a1993b53f12f9ce3cae5f92745041cdae50fd29"
+    },
+    {
+      "path": "scripts/test-station-events.mjs",
+      "sha256": "0fa0747fe522956c791cfe34202787efbe75096078756ebe1ac77739b8c701ea"
+    },
+    {
+      "path": "scripts/test-station-game-client.mjs",
+      "sha256": "25503d0f59b1a287508468524bb3fd9172c392c6fcf58e4ed02f8e33c01513fc"
+    },
+    {
+      "path": "scripts/test-station-game-pages.mjs",
+      "sha256": "26f9d7e52a958b7e61ba1157aa62464a4736a6f5a91d8829f772e421a8fb92b1"
+    },
+    {
+      "path": "scripts/test-station-game-runtime.mjs",
+      "sha256": "e00902d7fa832f84b762eb50483e11c525530a612a37d37b63b2c34ac9bb3db3"
+    },
+    {
+      "path": "scripts/test-station-game-saves.mjs",
+      "sha256": "65fc8e556076721c8c4013618c9859770695041d498ede17ad55c252b07e31b7"
+    },
+    {
+      "path": "scripts/test-station-game-session.mjs",
+      "sha256": "aecb3803b942d0ccf84eaeb012525a90421a74d93367ef1d6ccb0982303416fd"
+    },
+    {
+      "path": "scripts/test-station-media-client.mjs",
+      "sha256": "bbc4b02136078a1f357d058dc186ef9379efe54de106514172417896496df914"
+    },
+    {
+      "path": "scripts/test-station-media-runtime.mjs",
+      "sha256": "11e109c205a8e6b71db32e2978f4e2cb752316395a7d0f56703ad313c3e53b60"
+    },
+    {
+      "path": "scripts/test-station-media-uploads.mjs",
+      "sha256": "06df6687c8dd9d0b399b78684fc6564988c1e9140c222be18830d0ed2b252024"
+    },
+    {
+      "path": "scripts/test-station-member-readouts.mjs",
+      "sha256": "91e86f7e0049ecbe7be2088cda78fe66ffedcc247075db5c982dba6ef099b953"
+    },
+    {
+      "path": "scripts/test-station-member-runtime.mjs",
+      "sha256": "a0359b5e4407f46399ea7103282b55cedd28eedbef04e6ddfa01c7d980f31dcd"
+    },
+    {
+      "path": "scripts/test-station-music-pages.mjs",
+      "sha256": "07e78964a570b37042b4b53a1f1c7e032fdc72ca0e023cf260028f6d92de9c1b"
+    },
+    {
+      "path": "scripts/test-station-music-runtime.mjs",
+      "sha256": "2a167bfc7facb0ce9c0d9284a18b8aec82ea7daf3c78f38646d826ac4aadec1b"
+    },
+    {
+      "path": "scripts/test-station-music-session.mjs",
+      "sha256": "9cbae215111a7977c1408d056ec596bdb5e66e4bc3e86da3851fd7541e8e8e7f"
+    },
+    {
+      "path": "scripts/test-station-platform-runtime.mjs",
+      "sha256": "852025f95723691a47bfd19e5ff3a812df7f12b3805a7edf2c26cb051823da03"
+    },
+    {
+      "path": "scripts/test-station-platforms.mjs",
+      "sha256": "a0eec9d6af0cce2954679d477307041fe6d4c487136745cee70dd9f4b0d6380b"
+    },
+    {
+      "path": "scripts/test-station-points.mjs",
+      "sha256": "26da35bea0e197416c29e521e74b16292634b81f0a3dcf2fb3e890186644478b"
+    },
+    {
+      "path": "scripts/test-station-redesign-home.mjs",
+      "sha256": "f90dd146ea3c112942de094669727062d72fb6757cb0b18f62069313a3c769a0"
+    },
+    {
+      "path": "scripts/test-station-redesign-model.mjs",
+      "sha256": "d6bc46851b45d2d7318385109e323c510f023e92009787afac05d436014314a7"
+    },
+    {
+      "path": "scripts/test-station-redesign-routes.mjs",
+      "sha256": "eef41d667455624046b6ada711d59ac92fa04aaee6caafc74eca448bcc39bcdb"
+    },
+    {
+      "path": "scripts/test-station-report-boundaries.mjs",
+      "sha256": "a75421d75d0d50cb913db02df5cd956ec2a8e02dae119df9511bbe33b89d230a"
+    },
+    {
+      "path": "scripts/test-station-report-client.mjs",
+      "sha256": "7935d0aa8c51ede1d795128fa2d1ed77e1ac8030e1c672b4b024c99dc22a500e"
+    },
+    {
+      "path": "scripts/test-station-report-runtime.mjs",
+      "sha256": "20d541096a28387cd45ea8a74d58da972e9739e2a8c599e2e3e862a8122eed18"
+    },
+    {
+      "path": "scripts/test-station-reports.mjs",
+      "sha256": "f0279f0798d64cae72c3425f90951e71f203faf20880c04eee60cf11b7938ac9"
+    },
+    {
+      "path": "scripts/test-station-route-migrations.mjs",
+      "sha256": "6902f6eeb8d8d399150dc067fffb14a041268bc2d828f120909e28bee3dd80fb"
+    },
+    {
+      "path": "scripts/test-station-route-runtime.mjs",
+      "sha256": "e29a63bb0af2f423f36f4552fb3f820dfa04088eb85d1d8e7795937c7e50486c"
+    },
+    {
+      "path": "src/components/StationHome.astro",
+      "sha256": "faf5dc13f0a4013e16770230ea11b6b63e3573941e63b112ed3c450d7fd6b398"
+    },
+    {
+      "path": "src/components/StationPointsPage.astro",
+      "sha256": "22d46c5c79336cfae47b0e95d7e300b3efb2c7aac69b891cd27bf1203f5b561d"
+    },
+    {
+      "path": "src/layouts/StationBrandLayout.astro",
+      "sha256": "f1cfcd4828d9d73a22817e146086d48923a55b89d6f342e97efc21d917cea6fd"
+    },
+    {
+      "path": "src/pages/games/site-shell/[locale].astro",
+      "sha256": "86a172ca7441b480904023188c8f579a294659cf60556521e033435f1ae1e714"
+    },
+    {
+      "path": "src/pages/member/site-shell/[locale].astro",
+      "sha256": "77b288fc94fb091107a715367f938524c53c33e2027bf995ebe73afaf1e11f4d"
+    },
+    {
+      "path": "src/pages/music/site-shell/[locale].astro",
+      "sha256": "4b453c6816ac7971bfbf9b6958127dbf1c617c1d3fec9d7624e9ddf2797b018c"
+    },
+    {
+      "path": "src/pages/music/site-shell/brand-about/[locale].astro",
+      "sha256": "1c3245b0eba52226a1740c7d1b8df9dc8978666b5237ffa8498ea7b02947e8c6"
+    },
+    {
+      "path": "src/pages/music/site-shell/brand-home/[locale].astro",
+      "sha256": "c8ab1301f304b00ec4ce1a296e601789dcb2d9eaaaf05d88b3b7f1ab18638349"
+    },
+    {
+      "path": "src/redesign/aboutCopy.js",
+      "sha256": "707e090cf830fbf887c7f8fbb6a1291466084b3b53bb821b1cd95fd665c78bcb"
+    },
+    {
+      "path": "src/redesign/analyticsClient.js",
+      "sha256": "84333b66651554896ab8793d060c1b9cf054af02109ced8c856fa7cb72a75b9b"
+    },
+    {
+      "path": "src/redesign/analyticsControls.js",
+      "sha256": "2b7b20cfd9dd44d8c6f9f13b7a2a1eed44a8d9542b663c100579b0545e85d7f7"
+    },
+    {
+      "path": "src/redesign/analyticsHttp.js",
+      "sha256": "d2b469272acb79d3713a060202eb86675ae9ed2f97820adc819760e18ba62616"
+    },
+    {
+      "path": "src/redesign/analyticsMedia.js",
+      "sha256": "49df951c000a24d8a6ede75e54a118f3b5b79309a53fa175b4931e452087488d"
+    },
+    {
+      "path": "src/redesign/analyticsModel.js",
+      "sha256": "3c113bd094605abe15d3776973b67c4950bfecd9fd2c9fc50d5f34d409513b0a"
+    },
+    {
+      "path": "src/redesign/analyticsStore.js",
+      "sha256": "6e202323b04015bea0b32bcd7dd51a837459fb6ac916b532b9bc341239972d5f"
+    },
+    {
+      "path": "src/redesign/attributionSession.js",
+      "sha256": "75f866e054cd71695ef9eec67485f4f379ab5187b66426bfcefe0384cd308060"
+    },
+    {
+      "path": "src/redesign/brandHomeRender.js",
+      "sha256": "bf8ebf5b2ab9bfeb3b7374eca239fc16c417a5f0fde0922ebf1e15d08da03f87"
+    },
+    {
+      "path": "src/redesign/brandPages.js",
+      "sha256": "26bb78efba4295cb1c91e24102f5a2144961db3eae1bc1e4cc6c9b3171c6e164"
+    },
+    {
+      "path": "src/redesign/campaignAttribution.js",
+      "sha256": "fee8e1ba448c6fab6d91985154114948523edce8a1e801e45008761c10fe2350"
+    },
+    {
+      "path": "src/redesign/campaignLinks.js",
+      "sha256": "d1df89e47b5a687171beb016d3884eb8c0166852b4c941d47f393273a5685678"
+    },
+    {
+      "path": "src/redesign/campaignQr.js",
+      "sha256": "5dcadb27380985479ba30bcfe2ff01c830c34cdab33351f5e446aa87a79f3bb1"
+    },
+    {
+      "path": "src/redesign/campaignStore.js",
+      "sha256": "d5a91adf19a2cffeb7864a186883a56120789040450b5970e678080a52afeb6c"
+    },
+    {
+      "path": "src/redesign/chrome.js",
+      "sha256": "69e8cfb7eb390050f93c406b3c3716321835920413839d1eeff6a6c78a38a739"
+    },
+    {
+      "path": "src/redesign/clipClient.js",
+      "sha256": "64ced667d7829983463c056663464e2d26c0d9a320f7cbbfef08aec86fc16424"
+    },
+    {
+      "path": "src/redesign/clipSession.js",
+      "sha256": "a128ecf4436c318c4d3d7e4a09cb909c3b9b86120031d152261b2eeb4946b78a"
+    },
+    {
+      "path": "src/redesign/clipView.js",
+      "sha256": "45ecc11deb95288f1bf3474a0669a145a7230fb9d812453775c546a05fc43799"
+    },
+    {
+      "path": "src/redesign/clips.css",
+      "sha256": "c85c49a815d7f3e9fecb322f0b9bebfcd21e2aca47f588e3be99b36cc8521634"
+    },
+    {
+      "path": "src/redesign/contentAdmin.js",
+      "sha256": "b0fcec2ffe2f3ee0882b1a46dce740e1504a1b6668e1c13fd19238b9f39a483c"
+    },
+    {
+      "path": "src/redesign/contentAdminHttp.js",
+      "sha256": "f4fef72f2c88d72160a05d79a92721582b0212d7d90bad1dfb238191b3bfc7d1"
+    },
+    {
+      "path": "src/redesign/contentAdminModel.js",
+      "sha256": "846d83f844c29665e7d0be68d1d033947664f134fcb687f06af48a63fa11b526"
+    },
+    {
+      "path": "src/redesign/contentAdminStore.js",
+      "sha256": "97384da425ae126e138fee003762bd93e4f748cbf70bd34bf4edf6ba34530f8b"
+    },
+    {
+      "path": "src/redesign/contentAdminValidation.js",
+      "sha256": "cf998dca6ff3eb9f0ae9eab9d97ba69b0ba6fd85a2cbc03bf18bd83b631bbff5"
+    },
+    {
+      "path": "src/redesign/contentSchedule.js",
+      "sha256": "de9c2b8e2041b35696030ab67b5225deff55ea2c729dc2cd9dc7f5554d411ab9"
+    },
+    {
+      "path": "src/redesign/gameClient.js",
+      "sha256": "3972c07a5a81f610777ca04e3185f59e4dd1121f31e765b3cbc7840c9c055a01"
+    },
+    {
+      "path": "src/redesign/gameCopy.js",
+      "sha256": "f87b034c93661af02e454fe86a252077917a89296d79ea7532715d947637b956"
+    },
+    {
+      "path": "src/redesign/gameHost.js",
+      "sha256": "efa41e69963b4ef2d1672a00c7e2f3b473977cd1df4f9d67b515e406b5fe0cfb"
+    },
+    {
+      "path": "src/redesign/gameHostCopy.js",
+      "sha256": "9120b5298e1dac286d00ca38b315918c113010e9fd024385db41f975afd71ad7"
+    },
+    {
+      "path": "src/redesign/gamePages.js",
+      "sha256": "5e09473594062b66cfc07fe0e0598f648c541d8f3c7dbda53b7d555a5d7bcc48"
+    },
+    {
+      "path": "src/redesign/gameProtocol.js",
+      "sha256": "d1d06939ee052e642296fcfdb18f18760007d09daabb4de1d0933bfbbe12ca88"
+    },
+    {
+      "path": "src/redesign/gameRender.js",
+      "sha256": "5803b26cddceb0bf480021cadc8eee1d9a6383c4e55d5e92ee824048b48a846a"
+    },
+    {
+      "path": "src/redesign/gameRuntime.js",
+      "sha256": "5cec76e01c71fa8fddec3bea527aadc5ccb3b72de925465f4e35bd1242e2a720"
+    },
+    {
+      "path": "src/redesign/gameSession.js",
+      "sha256": "84fb4a5e2e8313e12b6e1cffd49892709fbd61bbf7065f1928d0ebd663bd87c0"
+    },
+    {
+      "path": "src/redesign/games.css",
+      "sha256": "ddbd4e5917e4af696f35b80ec3b53c7688a5762a2c6ceeb39f7e6235bf548ed0"
+    },
+    {
+      "path": "src/redesign/gentle.css",
+      "sha256": "cbed64a16d1d11952c93ab87d703bde9f9d39c208376fc1cfadea3e51be8461d"
+    },
+    {
+      "path": "src/redesign/home-copy.js",
+      "sha256": "16d6d22dc77af74c252a1ccfd383c3a6fc4fe23ba3f411c4ce330825dc37e6a6"
+    },
+    {
+      "path": "src/redesign/home-state-copy.js",
+      "sha256": "4b4f7135706ac48bd6c649ac7a87aec07db616dfd375cf3816619e9c61258e49"
+    },
+    {
+      "path": "src/redesign/home.css",
+      "sha256": "dc6e32955de077527355e71d9deee174621c7cecdf6d7588ac44bcd4c452155d"
+    },
+    {
+      "path": "src/redesign/home.js",
+      "sha256": "f85ffdaa288643126aa342086d036cb165c22cef0c369f7d3c0d5651a6e06205"
+    },
+    {
+      "path": "src/redesign/homeClipClient.js",
+      "sha256": "6ce4044224474b4627bd384fb4e882fd0d24b5649f2f9e49007a957018eef209"
+    },
+    {
+      "path": "src/redesign/legacyRouteStore.js",
+      "sha256": "98f0b12c0819c4a46b79c7b8f030b6bc6dfc9533531fd3d8ff2df90a66564164"
+    },
+    {
+      "path": "src/redesign/mediaFormats.js",
+      "sha256": "bbdd104dabcb6564e006ccbb8d092bc4f532d9aa79fc4d239b5d73bcfe5b4855"
+    },
+    {
+      "path": "src/redesign/mediaResources.js",
+      "sha256": "cda8607c1abcc8676c51c2a82e43e813fb8e2735c59eeaf0a3823a9b75d98e37"
+    },
+    {
+      "path": "src/redesign/mediaUploads.js",
+      "sha256": "66403923b6a586fd2ddf0dbed2e6e88cf0b18ff77bf11377da61fc05c8430ef3"
+    },
+    {
+      "path": "src/redesign/member.css",
+      "sha256": "2d85e19818077761c39a23921a158b49240a4a6dcfc9b4f35e8fb8e7e5bc484b"
+    },
+    {
+      "path": "src/redesign/memberClient.js",
+      "sha256": "68f35eda297a6f976c35a1c2e1788937332b631a0def4b8d77befb2c864d73ef"
+    },
+    {
+      "path": "src/redesign/memberCopy.js",
+      "sha256": "aa3ddffab6ac2dd482bf5c10ef43649787c3c4b13ff4ef05a0542b6e1774a8e3"
+    },
+    {
+      "path": "src/redesign/memberPages.js",
+      "sha256": "f618361b6d4c46114ced18063aa61b1e22c07da75c148a2145560ba65542500b"
+    },
+    {
+      "path": "src/redesign/memberPrivacy.js",
+      "sha256": "894b0a7462f58dba20e29d786d78073ea49486717b391671a13972471ec08139"
+    },
+    {
+      "path": "src/redesign/memberReaderEpoch.js",
+      "sha256": "36b60fe5808c70be3356fdd8eb02466ee9130887bc83850ea823017ecc27648d"
+    },
+    {
+      "path": "src/redesign/memberReadouts.js",
+      "sha256": "d623b133c9f7869537b2db49fe258ad1e1292eb2be021bb5318f399d96c03d0c"
+    },
+    {
+      "path": "src/redesign/mp4Validation.js",
+      "sha256": "52ebc70e213066ad8c717a881a2479fbbc74b60d60579c42a537c0776ac715a9"
+    },
+    {
+      "path": "src/redesign/music.css",
+      "sha256": "a8b53dadfe813094deddb3de6d10e02955fc79f9bca90167ce45d42d14ae9a26"
+    },
+    {
+      "path": "src/redesign/musicClient.js",
+      "sha256": "8a6c8643a05866b49201d29465f51b5c55494184e8f5f3113c2f111f5cddfdf0"
+    },
+    {
+      "path": "src/redesign/musicCopy.js",
+      "sha256": "2c0960972ce6e0b4ee5faa8f21063645b43f9c5e850c6771b235276b12e4e3ec"
+    },
+    {
+      "path": "src/redesign/musicCursor.js",
+      "sha256": "29b0c47e716676b89aa4cb92ed66c7877e728cdb72fccef2c96a4e3027ddf294"
+    },
+    {
+      "path": "src/redesign/musicPages.js",
+      "sha256": "05707e0d32687e38929018c8a7da254b2cbc0d4cc36389ca89f56cb083570632"
+    },
+    {
+      "path": "src/redesign/musicPlayback.js",
+      "sha256": "efdf8560bd38f46dfa8fe67a396940d1b146bc0e3ed263dbc4b8176f6c470cc5"
+    },
+    {
+      "path": "src/redesign/musicPlayerView.js",
+      "sha256": "7a8dbc361e32d7aa266a7e7dc4e0d1cb4bb26c57a90f0a9e8ceb2151ea5e8d92"
+    },
+    {
+      "path": "src/redesign/musicRender.js",
+      "sha256": "f81f0d065d022b21e16e30689d49bb51bec4ac4b8567665451fdb38910416262"
+    },
+    {
+      "path": "src/redesign/musicRequest.js",
+      "sha256": "8cf69fc988a32577eff0566f3bdec968c43e73236b1e93439275ed2856e7c7df"
+    },
+    {
+      "path": "src/redesign/musicResponse.js",
+      "sha256": "f4d7a46f86f2658cd42a597ac99d9bed6c4831edd5ed6324569597b8a713f1b0"
+    },
+    {
+      "path": "src/redesign/musicResume.js",
+      "sha256": "49426d22022fb32cf90fa1321120c76190be07ff93dab9bdd75080c9977b5a3a"
+    },
+    {
+      "path": "src/redesign/musicSession.js",
+      "sha256": "e33e5cd36f8646a25f54362f78c4ee31930e1806be6da5117dce8bae668b78d9"
+    },
+    {
+      "path": "src/redesign/platformClient.js",
+      "sha256": "64f69049f417bd5e5a053f05407687d8869bdad028c6b903a076d67171f47812"
+    },
+    {
+      "path": "src/redesign/platformRender.js",
+      "sha256": "a7f23f915ca3a6f1ff2398b23c3585f8e9cd170f82821e4dccdff9b7cb9302a8"
+    },
+    {
+      "path": "src/redesign/platformView.js",
+      "sha256": "1ec60674b9595d52e06a69c02a99264480b9d844b8ac3a53e61bac9f100f5fc4"
+    },
+    {
+      "path": "src/redesign/platforms.css",
+      "sha256": "3a1fbc49d341cd710bdc7465f7327546ddf543f4dd1f1bba6e36487ba38d0fac"
+    },
+    {
+      "path": "src/redesign/publicContent.js",
+      "sha256": "1a4d459783386d852ca6fd61f061b6ec01683585a9f6ee6307116d8f984e4569"
+    },
+    {
+      "path": "src/redesign/publicHttp.js",
+      "sha256": "c123a49ae9bce1ea0b3f9cceebc027cc2043ea80b01f3ad070650243760fb6cf"
+    },
+    {
+      "path": "src/redesign/publicResources.js",
+      "sha256": "ad7813797ad1422dd877669617ab7f1041abb3b36bd3c6fb72e997b71c252252"
+    },
+    {
+      "path": "src/redesign/publicStore.js",
+      "sha256": "dd5a40aab37a9a444830a529ac55707be388ce601f73f30571131448292b7a4e"
+    },
+    {
+      "path": "src/redesign/publicValidation.js",
+      "sha256": "a92471da74957ad731043ab638eab6965212e098cd84b1f2603999a03c398a09"
+    },
+    {
+      "path": "src/redesign/reportSealing.js",
+      "sha256": "c541dc7ed2b02af181712afa7026e53ed05f253e48135679995e9aeb207e3da6"
+    },
+    {
+      "path": "src/redesign/reportsHttp.js",
+      "sha256": "7edfbfb90ca7f9768db5232372cc9b1bf7d6b3c02a4a7696f2e7c3b161f0fe59"
+    },
+    {
+      "path": "src/redesign/reportsModel.js",
+      "sha256": "8a51fc481e84cb0a5518580cf60a35746b50318a675d292c5a90ef4c88a52186"
+    },
+    {
+      "path": "src/redesign/reportsQuery.js",
+      "sha256": "0166f8687dd5fa493b5cc4cfbcee958bc58ff74a5efbb039becec3c3714bd2dd"
+    },
+    {
+      "path": "src/redesign/reportsSchedule.js",
+      "sha256": "e66685d17e962f3c800b3bb18bce3f7a4a0d24d589cf7bfd496d92c46628f2e1"
+    },
+    {
+      "path": "src/redesign/reportsStore.js",
+      "sha256": "b8d4b2a465d23fbc2cb628f968a85f7de16cd1c4649c78efe30382d6acac6313"
+    },
+    {
+      "path": "src/redesign/routeMigrationPaths.js",
+      "sha256": "5fdd4fcd6e8211d993610000311305fecb5dddec80f98bea2e1328c6882522f5"
+    },
+    {
+      "path": "src/redesign/routeMigrationProfile.js",
+      "sha256": "c77c9aff7bb5bc5c1e1645be38b2b26a33b9cf8f52bc0ac52e94c69ed0a010db"
+    },
+    {
+      "path": "src/redesign/routeMigrations.js",
+      "sha256": "4692092794211b85dcdad666808e707b5851ff2b3dfe599e542bf862fb8a722a"
+    },
+    {
+      "path": "src/redesign/routes.js",
+      "sha256": "0264fe9feefcbea1b228b4e42f2bb012eeb9eac4c03569d572488ee58bc03002"
+    },
+    {
+      "path": "src/redesign/searchIndex.js",
+      "sha256": "ae793f838969df513237cd6ddeaefe058849f4c6036d0041e85ad688eee63081"
+    },
+    {
+      "path": "src/redesign/searchMetadata.js",
+      "sha256": "214d2beb4bd98eae7a853c8e8382b5bef443d983428a4a1f31ff555f72fef4e0"
+    },
+    {
+      "path": "src/scripts/stationContentClient.js",
+      "sha256": "c385346db492a0f60a634a05d6e63afb24180b8df3c735cfa2dd1136f7253e45"
+    },
+    {
+      "path": "src/scripts/stationMediaUploader.js",
+      "sha256": "a1b911bd8728be3d3d5d985ccda354583017d3d88a26708a1580656027e1cd5b"
+    },
+    {
+      "path": "src/scripts/stationReportsClient.js",
+      "sha256": "f2203a47c8881859de8fb7e3f1a6f494b19a6709e1abcd6210929a6ab5028993"
+    },
+    {
+      "path": "src/worker.js",
+      "sha256": "d0af5f6377ae612c2aad197052646ac1e6d9ff1c3f456e4c7f18b7225993eca1"
+    },
+    {
+      "path": "wrangler.toml",
+      "sha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2"
+    }
+  ],
+  "checks": [
+    {
+      "id": "acceptance",
+      "command": [
+        "npm",
+        "run",
+        "test:redesign:acceptance"
+      ],
+      "environmentOverrides": {},
+      "exitCode": 0,
+      "signal": null,
+      "startedAt": "2026-10-10T10:55:36.023Z",
+      "finishedAt": "2026-10-10T10:55:42.123Z",
+      "elapsedMs": 6100,
+      "log": "logs/acceptance.log",
+      "bytes": 1702,
+      "sha256": "600e232d13b57125c6fe18ec346fe7b7ed6964dd0543e3f67b220ec3d7cce32f",
+      "tapRuns": [
+        {
+          "tests": 14,
+          "suites": 0,
+          "pass": 14,
+          "fail": 0
+        }
+      ],
+      "tapTests": 14
+    }
+  ],
+  "sourceUnchangedDuringRun": true,
+  "completedAt": "2026-10-10T10:55:42.136Z",
+  "allSelectedChecksPassed": true
+}
