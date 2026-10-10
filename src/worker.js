@@ -66,6 +66,7 @@ import { handleMusicAnalytics, isMusicAnalyticsPath, runMusicAnalyticsRetention 
 import { handleStationContent, isStationContentPath } from './redesign/publicHttp.js';
 import { handleStationMusicPage } from './redesign/musicPages.js';
 import { handleStationRouteMigration } from './redesign/routeMigrations.js';
+import { legacyContentClosed, closedLegacyCheckout, legacyContentGone } from './redesign/legacyClosure.js';
 import { applyMigrationMetadata } from './redesign/searchMetadata.js';
 import { handleStationGamePage } from './redesign/gamePages.js';
 import { handleStationGameRuntime } from './redesign/gameRuntime.js';
@@ -9607,6 +9608,8 @@ const handleNovelCheckout = async (request, env) => {
   } catch {
     return json({ ok: false, message: 'Invalid request body.' }, { status: 400 });
   }
+
+  if (closedLegacyCheckout(env, payload)) return legacyContentGone(request);
 
   const session = await getReaderFromSession(request, env);
   let checkout;
@@ -23410,7 +23413,7 @@ export default {
 
   async scheduled(controller, env) {
     const [signal, analytics, mobile, stationContent, stationEvents, stationReports] = await Promise.allSettled([
-      handleSignalCollectionSchedule(env, {
+      legacyContentClosed(env) ? Promise.resolve({ skipped: true, reason: 'LEGACY_CONTENT_CLOSED' }) : handleSignalCollectionSchedule(env, {
         cron: cleanText(controller?.cron, 120), scheduledTime: controller?.scheduledTime
       }),
       runMusicAnalyticsRetention(env),

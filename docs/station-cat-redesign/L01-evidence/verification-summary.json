@@ -1,0 +1,69 @@
+{
+  "recordedAt": "2026-10-10T15:07:44.249322+00:00",
+  "baseline": "6a334ab11bc0e0a542923e7b016babfa0800f4f1",
+  "scope": "local candidate package and isolated fixtures; not production acceptance",
+  "candidatePackage": {
+    "profile": "brand-games",
+    "htmlCount": 55,
+    "fileCount": 402,
+    "removedHtmlCount": 126,
+    "staticRedirectsRemoved": true,
+    "compatibility": [
+      {
+        "path": "src/generated/novelPaymentConfig.js",
+        "sha256": "109a49708060bf985f07f1ac3517622b20d7645eebd2f5e2495c4f5511c90648"
+      },
+      {
+        "path": "src/generated/protectedSerialContent.js",
+        "sha256": "038d0bc3eb620649e7ccef200bf9e4eae02d2c55ccf286c21112625e769ed591"
+      }
+    ],
+    "manifestSha256": "30145510d7b12f28094124da8b4124e744b2f0864c6f1ed8ef4f5427b871dee0"
+  },
+  "verification": [
+    {
+      "command": "build:station:first-launch",
+      "exitCode": 0,
+      "localLogSha256": "7c00eb1f8b0ec2e4cd0129a1962a6b46fbfb43cb9a6c333ac697aa1b8a8c02f4"
+    },
+    {
+      "command": "test:station:first-launch",
+      "exitCode": 0,
+      "localLogSha256": "2a08bfd89f83e4b75a8da7a9dc1db2dd29990dbf07fdcb92f0572f608be9ae13",
+      "testsPassed": 11
+    },
+    {
+      "command": "test:redesign:migration",
+      "exitCode": 0,
+      "localLogSha256": "abb2a2331f8299fec547f277c3745dc48700ba5443539bfbe1d7725bb246981d",
+      "testsPassed": 24
+    },
+    {
+      "command": "test:redesign:release",
+      "exitCode": 0,
+      "localLogSha256": "d78af189575b94e4392f589eb4484606e1c9ba7e3ad741681a32a2bffa36dd7b",
+      "testsPassed": 30
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "localLogSha256": "f447b0220e4b6835a7ae53f7ec58b92dff51dc2756192d5d7aa34f51a8c3abfc"
+    },
+    {
+      "command": "wrangler deploy --dry-run; synthetic offline config",
+      "exitCode": 0,
+      "localLogSha256": "9a848a2735caae85f58c68c23b9477c72eefb15d208e5645f9be050ff20c5998"
+    },
+    {
+      "command": "wrangler types; synthetic offline config",
+      "exitCode": 0,
+      "localLogSha256": "b9f256efc1ab463bebc1b7f0f0ed5bcd1fab3e22d895615ce1b45706ee870f63"
+    }
+  ],
+  "exactHeadCi": "pending at evidence creation; verify current GitHub PR head independently",
+  "productionWrites": 0,
+  "productionDeployed": false,
+  "legacyClosureVerified": false,
+  "deviceAcceptance": false,
+  "productionMediaRightsVerified": false
+}

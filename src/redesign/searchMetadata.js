@@ -1,6 +1,7 @@
 import { routeMigrationEnabled, migrationPath, migrationServicePath, publicSearchRoute, brandHref, routeParts, flagOn, legacyFamily, chapterRoute } from './routeMigrationPaths.js';
 import { stationCopy, stationSections, stationLanguageHref, stationHref } from './routes.js';
 import { escapeMusicHtml as e } from './musicRender.js';
+import { legacyContentClosed, closedLegacyExtraPage } from './legacyClosure.js';
 
 export const searchOrigin = url => ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) ? url.origin : 'https://wwwstationcat.org';
 // The real production host and a separately reviewed switch are both required.
@@ -44,6 +45,9 @@ export function applyMigrationMetadata(request, env, response) {
       const parts = routeParts(targetPath);
       if (parts.segments.length === 1 && parts.segments[0] === 'about') node.setAttribute('href', brandHref(locale, 'about'));
       const family = legacyFamily(targetPath);
+      if (legacyContentClosed(env) && (chapterRoute(targetPath) || closedLegacyExtraPage(targetPath))) {
+        node.removeAndKeepContent(); return;
+      }
       if (family && !migrationServicePath(targetPath) && !chapterRoute(targetPath)) {
         if (family.game) node.setAttribute('href', brandHref(family.explicit ? family.locale : 'en', 'games') + 'cat-life-game/');
         else node.removeAndKeepContent();

@@ -10,6 +10,7 @@ import { handleStationContent } from './publicHttp.js';
 import { requestDeadline } from './publicStore.js';
 import { readMusicResponse } from './musicResponse.js';
 import { musicSelection } from '../music/pagePaths.js';
+import { legacyContentClosed, closedLegacyApi, closedLegacyExtraPage, legacyContentGone } from './legacyClosure.js';
 import { escapeMusicHtml as e } from './musicRender.js';
 const headers = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store',
   'X-Robots-Tag': 'noindex, nofollow', 'X-Content-Type-Options': 'nosniff' };
@@ -33,6 +34,9 @@ export async function handleStationRouteMigration(request, env, { readerIdentity
   if (!routeMigrationEnabled(env)) return null;
   const url = new URL(request.url), path = migrationPath(url.pathname);
   if (!path) return migrationFailure(request, 400);
+  const closed = legacyContentClosed(env);
+  if (closed && closedLegacyApi(path)) return legacyContentGone(request);
+  if (closed && closedLegacyExtraPage(path)) return migrationFailure(request, 410);
   if (migrationServicePath(path) || isStationMusicTemplate(path) || isStationGameTemplate(path) || isStationMemberTemplate(path)) return null;
   const chapter = chapterRoute(path), family = legacyFamily(path), brand = brandRoute(path), parts = routeParts(path);
   const music = parts.segments[0] === 'music', games = parts.segments[0] === 'games', search = isStationSearchPath(path);
@@ -43,6 +47,7 @@ export async function handleStationRouteMigration(request, env, { readerIdentity
     if (chapter) {
       const exists = await run(() => legacyChapterExists(request, env, chapter));
       if (!exists) return migrationFailure(request, 404);
+      if (closed) return migrationFailure(request, 410);
       if (typeof env.WAITLIST_DB?.prepare !== 'function') return migrationFailure(request, 503);
       // Novel member means signed in, not music VIP. The existing chapter
       // renderer and protected-content API retain their actual purchase checks.
@@ -81,6 +86,7 @@ export async function handleStationRouteMigration(request, env, { readerIdentity
       const route = stationMusicRoute(path), selection = musicSelection(url.search);
       if (route?.kind === 'catalog' && url.searchParams.has('collection')) {
         if (!selection.has('collection') || url.searchParams.has('track')) return migrationFailure(request, 400);
+        if (closed) return migrationFailure(request, 410);
         const target = brandHref(route.locale, 'music') + '?collection=' + selection.get('collection');
         const query = cleanMigrationQuery(url.search);
         if (url.pathname + url.search !== target + (query ? '&' + query : '')) return redirect(target + (query ? '&' + query : ''));
@@ -93,13 +99,14 @@ export async function handleStationRouteMigration(request, env, { readerIdentity
         return response;
       }
       if (route?.kind === 'catalog' && selection.has('track')) {
-        // Published in the old system but lacking a published new entity is an
-        // unavailable migration target, never proof that the song disappeared.
-        return migrationFailure(request, await run(() => legacyTrackExists(env, selection.get('track'))) ? 503 : 404);
+        // Existing old songs retain their stored records. The explicit first
+        // launch closure retires their unmapped public share; earlier rollout
+        // profiles still report an unavailable target instead of disappearance.
+        return migrationFailure(request, await run(() => legacyTrackExists(env, selection.get('track'))) ? (closed ? 410 : 503) : 404);
       }
       if (route?.kind === 'legacy') {
         const row = await run(() => env.MUSIC_DB.prepare("SELECT id FROM music_tracks WHERE slug=? AND lifecycle='published' LIMIT 1").bind(route.slug).first());
-        if (row) return migrationFailure(request, 503);
+        if (row) return migrationFailure(request, closed ? 410 : 503);
       }
       return migrationFailure(request, 404);
     }

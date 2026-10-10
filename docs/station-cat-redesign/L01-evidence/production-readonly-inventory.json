@@ -1,0 +1,125 @@
+{
+  "recordedAt": "2026-10-10T15:03:14.069759+00:00",
+  "scope": "Authenticated control-plane, schema-only D1 SELECT and R2 metadata; no object bodies or business rows",
+  "productionWrites": 0,
+  "latestDeployment": {
+    "id": "038582b5-b641-4780-addb-e3b5d8f4e280",
+    "created_on": "2026-09-16T10:58:22.445582Z",
+    "versions": [
+      {
+        "version_id": "67d6e6b0-42f5-4696-8ed5-bc1096a49ebf",
+        "percentage": 100
+      }
+    ]
+  },
+  "versionId": "67d6e6b0-42f5-4696-8ed5-bc1096a49ebf",
+  "compatibilityDate": "2026-05-17",
+  "bindings": [
+    {
+      "name": "CONTENT_BUCKET",
+      "type": "r2_bucket",
+      "bucket_name": "station-cat-content"
+    },
+    {
+      "name": "DOWNLOADS_BUCKET",
+      "type": "r2_bucket",
+      "bucket_name": "station-cat-downloads"
+    },
+    {
+      "name": "MUSIC_BUCKET",
+      "type": "r2_bucket",
+      "bucket_name": "station-cat-music-production-private"
+    },
+    {
+      "name": "MUSIC_DB",
+      "type": "d1",
+      "id": "876b9acd-fee6-4919-8c50-4ea6f7ab9372"
+    },
+    {
+      "name": "WAITLIST_DB",
+      "type": "d1",
+      "id": "c4a8cb1a-6a94-4e8f-a6fb-a734afafca63"
+    }
+  ],
+  "productionStationFlags": {},
+  "existingMusicFlags": {
+    "MUSIC_PUBLIC_ENABLED": "true",
+    "MUSIC_VIP_DELIVERY_ENABLED": "true"
+  },
+  "musicLedger": [
+    "0001_music_foundation.sql",
+    "0002_music_publication.sql",
+    "0003_music_uploads.sql",
+    "0004_music_cleanup.sql",
+    "0005_music_rate_limits.sql",
+    "0006_music_analytics.sql",
+    "0007_music_albums.sql",
+    "0008_music_featured.sql",
+    "0009_music_album_covers.sql",
+    "0010_music_limited_free.sql",
+    "0011_music_share_rate_limits.sql"
+  ],
+  "stationTables": [],
+  "actualRunWorkerFirst": [
+    "/api/*",
+    "/music",
+    "/music/*",
+    "/*%*",
+    "/admin",
+    "/admin/*",
+    "/admin-v2",
+    "/admin-v2/*",
+    "/downloads/*",
+    "/sitemap.xml",
+    "/about",
+    "/android",
+    "/download",
+    "/en",
+    "/en/*",
+    "/ja",
+    "/ja/*",
+    "/zh-hans",
+    "/zh-hans/*",
+    "/zh-hant",
+    "/zh-hant/*",
+    "/novel",
+    "/novel/*",
+    "/signal",
+    "/signal/*",
+    "/devlog/*",
+    "/works",
+    "/works/*"
+  ],
+  "buckets": [
+    {
+      "bucket": "station-cat-content",
+      "observedObjects": 326,
+      "bytes": 311151276,
+      "metadataSha256": "69e26fefaf14078847154ac99b3811a8dfa9e6274c2f60bc13e09d7a265b9dd9",
+      "traversalReachedEmptyPage": true,
+      "objectBodiesRead": false,
+      "backupComplete": false
+    },
+    {
+      "bucket": "station-cat-music-production-private",
+      "observedObjects": 37,
+      "bytes": 113910767,
+      "metadataSha256": "3f2f7c729d66311aadf42bab3e43775161368d39cdbe8f895a91ed8e4e8ad1bc",
+      "traversalReachedEmptyPage": true,
+      "objectBodiesRead": false,
+      "backupComplete": false
+    },
+    {
+      "bucket": "station-cat-downloads",
+      "firstResponseObjects": 140,
+      "firstResponseBytes": 8436915956,
+      "traversalComplete": false,
+      "problem": "INVALID_R2_ORDER",
+      "objectBodiesRead": false,
+      "backupComplete": false
+    }
+  ],
+  "productionBackupComplete": false,
+  "productionDeployed": false,
+  "legacyClosureVerified": false
+}
