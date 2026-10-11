@@ -1,12 +1,16 @@
 import http from 'node:http';
+import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
 import { createStationRouteRuntime } from './helpers/station-route-runtime.mjs';
 import { homeFixture } from './helpers/station-content-fixture.mjs';
 import { firstLaunchAssets } from './build-station-first-launch.mjs';
 
 // GET/HEAD-only, loopback and disposable D1/R2. Production never imports this.
-const port = 4224, origin = 'http://127.0.0.1:' + port;
+const args = process.argv.slice(2), rollback = args[0] === '--content-rollback';
+if (args.length && (args.length !== 1 || !rollback)) throw new Error('STATION_PREVIEW_ARGUMENTS');
+const port = rollback ? 4225 : 4224, origin = 'http://127.0.0.1:' + port;
 const runtime = await createStationRouteRuntime({ assetsDirectory: firstLaunchAssets,
+  ...(rollback ? { entrypoint: fileURLToPath(new URL('../src/stationContentRollback.js', import.meta.url)) } : {}),
   bindings: { STATION_LEGACY_CONTENT_CLOSED: 'true' } });
 await runtime.db.batch([
   runtime.db.prepare("UPDATE station_track_publications SET status='draft'"),
@@ -32,7 +36,8 @@ const server = http.createServer(async (incoming, outgoing) => {
     delete headers['content-length']; delete headers['etag']; delete headers['set-cookie'];
     if (response.headers.get('content-type')?.includes('text/html') && incoming.method !== 'HEAD') {
       const html = (await response.text()).replace(/<body([^>]*)>/i,
-        '<body$1><aside style="padding:8px 18px;font:12px/1.5 system-ui;background:#f1f0fa;color:#465271">首发范围本机预览 · 临时 D1/R2 · 音乐为空，试听与视频关闭 · 不是生产验收</aside>');
+        '<body$1><aside style="padding:8px 18px;font:12px/1.5 system-ui;background:#f1f0fa;color:#465271">' +
+        (rollback ? '回退包本机预览 · 临时 D1/R2 · 旧公开内容继续关闭 · 不是生产验收' : '首发范围本机预览 · 临时 D1/R2 · 音乐为空，试听与视频关闭 · 不是生产验收') + '</aside>');
       outgoing.writeHead(response.status, headers); outgoing.end(html); return;
     }
     outgoing.writeHead(response.status, headers);
@@ -41,5 +46,5 @@ const server = http.createServer(async (incoming, outgoing) => {
   } catch { if (!outgoing.headersSent) outgoing.writeHead(503); outgoing.end('Local preview unavailable'); }
 });
 await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
-console.log('First-launch local preview: ' + origin + '/ (GET/HEAD only; no production data)');
+console.log((rollback ? 'Content-rollback' : 'First-launch') + ' local preview: ' + origin + '/ (GET/HEAD only; no production data)');
 for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => server.close(() => { void runtime.close().finally(() => process.exit(0)); }));

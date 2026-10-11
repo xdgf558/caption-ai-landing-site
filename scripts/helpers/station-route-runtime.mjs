@@ -11,8 +11,9 @@ import { migrationFlags } from '../../src/redesign/routeMigrationPaths.js';
 
 export const routeFixtureCookie = id => 'station_cat_reader_session=t20-local-session-' + id;
 export async function createStationRouteRuntime({ videoCases = false, bindings = {},
+  entrypoint = fileURLToPath(new URL('station-route-runtime-worker.js', import.meta.url)),
   assetsDirectory = fileURLToPath(new URL('../../dist/', import.meta.url)) } = {}) {
-  const output = await build({ entryPoints: [fileURLToPath(new URL('station-route-runtime-worker.js', import.meta.url))],
+  const output = await build({ entryPoints: [entrypoint],
     bundle: true, format: 'esm', platform: 'browser', write: false, loader: { '.wasm': 'binary' } });
   const mf = new Miniflare({ modules: true, script: output.outputFiles[0].text, compatibilityDate: '2026-05-17', host: '127.0.0.1', port: 0,
     log: new Log(LogLevel.ERROR),

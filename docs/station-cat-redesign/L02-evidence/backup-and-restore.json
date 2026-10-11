@@ -1,0 +1,284 @@
+{
+  "task": "L02",
+  "baseline": "41a4ff62f4c71016b2ecb7ac750079f035ff2c34",
+  "capturedAt": "2026-10-11",
+  "timezone": "Asia/Singapore",
+  "productionDeployed": false,
+  "remoteMigrationExecuted": false,
+  "productionDataModified": false,
+  "legacyClosureVerified": false,
+  "userAuthorizedBlockingD1Export": true,
+  "privateDataCommitted": false,
+  "location": "repository-external local private backup job L02-20261011-v1",
+  "directoryMode": "0700",
+  "fileMode": "0600",
+  "databases": [
+    {
+      "binding": "WAITLIST_DB",
+      "sqlBytes": 19985743,
+      "sha256": "3ecab2b534afdfc6bd7b2197c9e9d42132b2ca2aa99ca53d36918ee0cf007b8d",
+      "capturedAt": "2026-10-11T08:53:02.308Z",
+      "restoreSqlSha256": "0cf0c6c47221c1777d25fd40d5b9030188abc1a67299ca1f5afa90f5f1cec3c0",
+      "nativeLocalD1": true,
+      "isolated": true,
+      "overwrittenProduction": false,
+      "schemaSha256": "61c174bfa56055a8c063ddc97d79fc9da88d89242f0d4406214f7b15e2d7dcd8",
+      "schemaComparison": "SQLite tokens excluding format/comments plus table columns and FK definitions",
+      "rows": 18545,
+      "tableCount": 51,
+      "fingerprint": "692b20a4655504203968343e0ef727bf4578f7fba110855a48c3caec0ec0bd01",
+      "integrity": "ok",
+      "foreignKeys": "ok"
+    },
+    {
+      "binding": "MUSIC_DB",
+      "sqlBytes": 383482,
+      "sha256": "3089e35cd613ef9e215863e1d4308acbd9d59f7e8cb7a2b745fbf4b49e49dfce",
+      "capturedAt": "2026-10-11T08:53:07.182Z",
+      "restoreSqlSha256": "8f8f365a1b761e27cadb5b4aca9f42132447208a0448d68d858bf7973d3b1f33",
+      "nativeLocalD1": true,
+      "isolated": true,
+      "overwrittenProduction": false,
+      "schemaSha256": "fbf0e95b6f359f0c6020ee90672ddb7297ad995ee28e4a96dd7795f4785cde24",
+      "schemaComparison": "SQLite tokens excluding format/comments plus table columns and FK definitions",
+      "rows": 758,
+      "tableCount": 28,
+      "fingerprint": "48e0ec44afc7c42a6d7756340b1f94d0913da471961323a5903ccb9563591706",
+      "integrity": "ok",
+      "foreignKeys": "ok"
+    }
+  ],
+  "objects": {
+    "complete": true,
+    "objectCount": 503,
+    "bytes": 8861977999,
+    "buckets": [
+      {
+        "binding": "CONTENT_BUCKET",
+        "objects": 326,
+        "bytes": 311151276,
+        "nativeLocalR2": true,
+        "allBytesAndHttpCustomMetadataVerified": true,
+        "verifiedSinglePartEtags": 326,
+        "storageClassVerified": false,
+        "sourceManifestSha256": "16de8bf3c395d0a19b96ad53e8a2029d3c02366b7894b44ce0e77d42ebb5f7d0",
+        "restoredObjectsSha256": "9b7e3c9641600a02e0c7639b62fd1e7648cd4716a0a4989d092173658c739140",
+        "metadataSha256": "cf7a2a10b5a26c21b744c53b5987625f0e123e1851bbd2773e61d4223d65829c"
+      },
+      {
+        "binding": "DOWNLOADS_BUCKET",
+        "objects": 140,
+        "bytes": 8436915956,
+        "nativeLocalR2": true,
+        "allBytesAndHttpCustomMetadataVerified": true,
+        "verifiedSinglePartEtags": 139,
+        "storageClassVerified": false,
+        "sourceManifestSha256": "ba0a92d8cea750017b64b3e75be3cdd9fb8328f46417b5d0530fdf8829581a72",
+        "restoredObjectsSha256": "fb0e62bccf0ca4f9dbf3b20149c0e46c4cc70d60337733ad0933883008da197a",
+        "metadataSha256": "14445bbfc0580ed98beb73b02573d5174598913359e18c23aec7138e31a59f6a"
+      },
+      {
+        "binding": "MUSIC_BUCKET",
+        "objects": 37,
+        "bytes": 113910767,
+        "nativeLocalR2": true,
+        "allBytesAndHttpCustomMetadataVerified": true,
+        "verifiedSinglePartEtags": 37,
+        "storageClassVerified": false,
+        "sourceManifestSha256": "2d14b49e06ec079662b609f84f7c85e0cff5df184ee7555d2e4be3fdba7dde38",
+        "restoredObjectsSha256": "da0e3eba999e4dd777a995ea292257afccb026e970b319948a1bb257e76cdab9",
+        "metadataSha256": "5b1b0d17e868b1b729e7e105ee3dffdffa6bfccebe1656662ee0ec875493803f"
+      }
+    ],
+    "verifiedAt": "2026-10-11T09:45:22.522Z",
+    "verifiedSinglePartEtags": 502,
+    "sourceMultipartEtagsUploadTimesAndStorageClassesNotReproduced": true
+  },
+  "sourceManifests": {
+    "d1": "b996342e96b20d05b69b58e8728b4610ad088f54a5439b551e023701422b738d",
+    "d1Restore": "3230d8a0958872e27187c9c80c2775b321a7f07426e5a29953f794d215ab3476",
+    "r2Restore": "23ee0aaf16899969f5acef05c2fedcfd94c43c513ad242c0ebb42f2547223398"
+  },
+  "referenceAudit": {
+    "allReferencesPresent": true,
+    "groups": [
+      {
+        "binding": "WAITLIST_DB",
+        "table": "content_entries",
+        "column": "markdown_r2_key",
+        "references": 115,
+        "present": 115,
+        "missing": 0,
+        "assetIdentityChecked": 0,
+        "identityMismatches": 0
+      },
+      {
+        "binding": "WAITLIST_DB",
+        "table": "content_entries",
+        "column": "html_r2_key",
+        "references": 115,
+        "present": 115,
+        "missing": 0,
+        "assetIdentityChecked": 0,
+        "identityMismatches": 0
+      },
+      {
+        "binding": "WAITLIST_DB",
+        "table": "content_entries",
+        "column": "import_r2_key",
+        "references": 47,
+        "present": 47,
+        "missing": 0,
+        "assetIdentityChecked": 0,
+        "identityMismatches": 0
+      },
+      {
+        "binding": "WAITLIST_DB",
+        "table": "content_entries",
+        "column": "cover_r2_key",
+        "references": 8,
+        "present": 8,
+        "missing": 0,
+        "assetIdentityChecked": 0,
+        "identityMismatches": 0
+      },
+      {
+        "binding": "WAITLIST_DB",
+        "table": "content_revisions",
+        "column": "markdown_r2_key",
+        "references": 258,
+        "present": 258,
+        "missing": 0,
+        "assetIdentityChecked": 0,
+        "identityMismatches": 0
+      },
+      {
+        "binding": "WAITLIST_DB",
+        "table": "content_revisions",
+        "column": "html_r2_key",
+        "references": 258,
+        "present": 258,
+        "missing": 0,
+        "assetIdentityChecked": 0,
+        "identityMismatches": 0
+      },
+      {
+        "binding": "WAITLIST_DB",
+        "table": "content_imports",
+        "column": "r2_key",
+        "references": 51,
+        "present": 51,
+        "missing": 0,
+        "assetIdentityChecked": 0,
+        "identityMismatches": 0
+      },
+      {
+        "binding": "MUSIC_DB",
+        "table": "music_assets",
+        "column": "object_key",
+        "references": 35,
+        "present": 35,
+        "missing": 0,
+        "assetIdentityChecked": 35,
+        "identityMismatches": 0
+      },
+      {
+        "binding": "MUSIC_DB",
+        "table": "music_collection_assets",
+        "column": "object_key",
+        "references": 2,
+        "present": 2,
+        "missing": 0,
+        "assetIdentityChecked": 2,
+        "identityMismatches": 0
+      }
+    ],
+    "totalReferences": 889,
+    "issues": 0,
+    "checkedAt": "2026-10-11T09:49:08.343Z",
+    "reportSha256": "f7c427498b2e92f318881bce81e84edf1aa08f7a1e413b7a66a7b40d012df382"
+  },
+  "compatibility": {
+    "baseline": "41a4ff62f4c71016b2ecb7ac750079f035ff2c34",
+    "files": [
+      {
+        "file": "src/generated/novelPaymentConfig.js",
+        "bytes": 201,
+        "sha256": "109a49708060bf985f07f1ac3517622b20d7645eebd2f5e2495c4f5511c90648"
+      },
+      {
+        "file": "src/generated/protectedSerialContent.js",
+        "bytes": 295,
+        "sha256": "038d0bc3eb620649e7ccef200bf9e4eae02d2c55ccf286c21112625e769ed591"
+      }
+    ]
+  },
+  "finalReadOnlyBoundary": {
+    "complete": true,
+    "versionId": "67d6e6b0-42f5-4696-8ed5-bc1096a49ebf",
+    "databases": [
+      {
+        "binding": "MUSIC_DB",
+        "schemaUnchanged": true
+      },
+      {
+        "binding": "WAITLIST_DB",
+        "schemaUnchanged": true
+      }
+    ],
+    "buckets": [
+      {
+        "binding": "CONTENT_BUCKET",
+        "objects": 326,
+        "bytes": 311151276,
+        "metadataUnchanged": true
+      },
+      {
+        "binding": "DOWNLOADS_BUCKET",
+        "objects": 140,
+        "bytes": 8436915956,
+        "metadataUnchanged": true
+      },
+      {
+        "binding": "MUSIC_BUCKET",
+        "objects": 37,
+        "bytes": 113910767,
+        "metadataUnchanged": true
+      }
+    ],
+    "checkedAt": "2026-10-11T09:49:15.283Z",
+    "productionWrites": 0,
+    "crossResourceAtomic": false,
+    "databaseDataFrozen": false,
+    "authority": "read-only resource/schema/list comparison; not a cutover authorization"
+  },
+  "musicLedger": [
+    "0001_music_foundation.sql",
+    "0002_music_publication.sql",
+    "0003_music_uploads.sql",
+    "0004_music_cleanup.sql",
+    "0005_music_rate_limits.sql",
+    "0006_music_analytics.sql",
+    "0007_music_albums.sql",
+    "0008_music_featured.sql",
+    "0009_music_album_covers.sql",
+    "0010_music_limited_free.sql",
+    "0011_music_share_rate_limits.sql"
+  ],
+  "limitations": {
+    "crossResourceAtomic": false,
+    "databaseDataFrozen": false,
+    "offsiteCopyVerified": false,
+    "productionRestoreExecuted": false,
+    "accessPoliciesVerified": false,
+    "realMediaRightsVerified": false,
+    "applicationsRecoveredInProduction": false
+  },
+  "localStorage": {
+    "fileVaultObserved": "On",
+    "verifiedOn": "2026-10-11",
+    "offsiteCopyVerified": false,
+    "retention": "until at least 30 days after launch and rollback acceptance; removal requires maintainer confirmation",
+    "automaticDeletionEnabled": false
+  }
+}

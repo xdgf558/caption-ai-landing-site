@@ -1,0 +1,36 @@
+
+> landing-site@0.1.0 test:station:backup
+> node --test --test-timeout=120000 scripts/test-station-production-backup.mjs scripts/test-station-production-restore.mjs
+
+✔ UTF-8 pagination keeps case and punctuation in storage order and reaches an empty page without result_info (1.184375ms)
+✔ a short response without pagination metadata must be followed, not silently declared complete (0.160708ms)
+✔ documented cursor pagination requires a advancing cursor and rejects duplicate or incomplete pages (0.324583ms)
+✔ unordered arrays are sorted locally; unsupported encrypted, malformed and traversal-like records fail before copying (0.182958ms)
+✔ streaming computes hashes over exact stored bytes and never leaves a truncated file eligible for backup (16.099166ms)
+✔ private files cannot be written inside the repository, follow symlinks or expose customer data through permissions (8.481834ms)
+✔ a failed exclusive open preserves the existing backup; native streams retain exact compressed bytes (4.9135ms)
+✔ HTTP weak ETags match the listed opaque tag while length and byte hash remain independently checked (21.339458ms)
+✔ gateway weak gzip suffixes require exact single-part MD5; semantic tags cannot hide altered bytes (24.915958ms)
+✔ full object backup retains metadata, raw binary and immutable completion manifest (42.680792ms)
+✔ interrupted backup resumes only recorded and rehashed bytes; partial success is not a complete backup (43.251792ms)
+✔ changed ETag or post-copy inventory cannot produce a complete backup (24.054291ms)
+✔ a transient interrupted body is retried from byte zero and only its verified copy is committed (532.837833ms)
+✔ D1 export requires a bounded, current, explicit request-blocking maintenance window for the exact production snapshot (0.84975ms)
+✔ the repository root itself is not a private backup directory regardless of its permissions (2.010625ms)
+✔ final read-only boundary check requires the exact deployment, schema and complete object metadata (36.004958ms)
+✔ full fingerprints preserve >1000 rows, 64-bit integers, blobs, NUL text, generated columns and deleted-ID high-water marks (16.388333ms)
+✔ local import arguments fix the local binding and cannot include remote flags or a production account (0.060917ms)
+✔ schema comparison removes formatting/comments but preserves quoted text, identifiers and trigger logic (0.059709ms)
+✔ linear SQL framing keeps semicolons in quotes, comments and trigger CASE bodies intact (0.307542ms)
+✔ complete SQL restore handles interleaved FK tables and triggers referencing later views without splitting quoted semicolons (1.05275ms)
+✔ isolated restore checks all hashes and full typed values; an existing clone or corrupted SQL is refused (89.292833ms)
+✔ a native restore that changes a generated sequence cannot pass the complete fingerprint (13.226708ms)
+✔ native local R2 restores streamed bytes and all HTTP/custom metadata into new isolated buckets (246.215083ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 799.854458

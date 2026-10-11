@@ -1,0 +1,21 @@
+
+> landing-site@0.1.0 test:station:content-rollback
+> node --test --test-timeout=120000 scripts/test-station-content-rollback.mjs
+
+✔ rollback stays closed under every incoming page flag and neither queries bindings nor modifies the deployment environment (3912.852458ms)
+✔ delegation preserves request credentials, method, bindings and original status; closure is not a permission grant (0.415583ms)
+✔ rollback closes novel checkout while general points still receive the existing checkout authentication and validation (0.885042ms)
+✔ scheduled rollback skips new Signal collection and independent Station work; existing queues are delegated (0.096625ms)
+✔ private rollback configuration fixes the dedicated entry and pruned assets while preserving business bindings (2.415541ms)
+✔ rollback file writer requires private paths and exact input hash and refuses overwrite or output symlinks (10.794416ms)
+✔ real pruned Assets serve four branded maintenance states and reachable member forms without public station queries (31.129333ms)
+✔ actual rollback keeps existing game framing and save writes and retains orders, credits, accounts and historical entitlements (51.49625ms)
+✔ real retired APIs and all legacy namespaces stay closed for signed-in historical purchasers (7.08625ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4192.092042

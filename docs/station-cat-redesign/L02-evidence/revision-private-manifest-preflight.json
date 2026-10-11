@@ -1,0 +1,15 @@
+{
+  "task": "L02",
+  "check": "existing-private-backup-manifest-preflight",
+  "completedAt": "2026-10-11T11:03:12.934Z",
+  "buckets": 3,
+  "objects": 503,
+  "bytes": 8861977999,
+  "sourceSummarySha256": "5e2e8d2a0ac0f37dcc6a9f6eebb327e86bc7bd4e4849bf8e900b074740fcb621",
+  "manifestSetAndCompletionHashesValidated": true,
+  "objectBodiesRehashedInThisRevision": false,
+  "objectRestorationRepeatedInThisRevision": false,
+  "productionRequests": 0,
+  "productionWrites": 0,
+  "backupFilesModified": false
+}
