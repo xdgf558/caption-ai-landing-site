@@ -1,0 +1,211 @@
+{
+  "task": "L02",
+  "node": "v24.15.0",
+  "wrangler": "4.131.1",
+  "miniflare": "4.20260730.0",
+  "checks": [
+    {
+      "name": "backup-restore-tests",
+      "file": "backup-restore-tests.log",
+      "sha256": "7a9e367d9a6bd09031409f2daba9a9233e3e2ead8a0bbdb272dfb0b389e92cce",
+      "bytes": 3115
+    },
+    {
+      "name": "rollback-tests",
+      "file": "rollback-tests.log",
+      "sha256": "a3a14667f65198b348230fec6664958b9c4bb5b1cbb4231a6a3c7da20425a00f",
+      "bytes": 1413
+    },
+    {
+      "name": "first-launch-build",
+      "file": "first-launch-build.log",
+      "sha256": "38f04f027f9650049b614e56aea95372623203919e26c9b69bf6046a905a19ed",
+      "bytes": 27863
+    },
+    {
+      "name": "first-launch-tests",
+      "file": "first-launch-tests.log",
+      "sha256": "2ce0c560394c9df92119c42302839e7c7bdf048f0deeeffae11b9c2bd4098e34",
+      "bytes": 1544
+    },
+    {
+      "name": "full-project-tests",
+      "file": "full-project-tests.log",
+      "sha256": "82be4a53bb97be7a6f7fb7c406900bb9eefbaab28eae7a5ae5fe8c2a348fad31",
+      "bytes": 76549
+    },
+    {
+      "name": "release-tests",
+      "file": "release-tests.log",
+      "bytes": 2154,
+      "sha256": "96d0ac9a79d53716243bf153ca116c277a7e1558966047c09239a33a11290059"
+    }
+  ],
+  "backupRestoreTests": {
+    "passed": 24,
+    "failed": 0
+  },
+  "rollbackTests": {
+    "passed": 9,
+    "failed": 0
+  },
+  "fullNpmTest": {
+    "exitCode": 0,
+    "includesPretest": true,
+    "finalToolGuardRevisionsCoveredBy": "33 final backup/restore and rollback tests; existing production worker unchanged"
+  },
+  "firstLaunchBuild": {
+    "emptyContentOverrideUsed": false,
+    "productionDeployed": false
+  },
+  "rollbackDryRun": {
+    "passed": true,
+    "syntheticBaseline": true,
+    "productionBaselineVerified": false,
+    "remoteDeployExecuted": false,
+    "files": [
+      {
+        "file": "a53137fb0ae8aa1649a103b7fb379bc97522c937-photon_rs_bg.wasm",
+        "bytes": 1566855,
+        "sha256": "f477b87cbea0445c65fc7e580e89050190600379fcd44821cec67403483872b1"
+      },
+      {
+        "file": "dd4dd8881e2df4e64203b5c0ae65e1648ab55207-resvg.wasm",
+        "bytes": 2478606,
+        "sha256": "22bf6e9f9a100d972da0411a69c5ba504367fc1fa87b3b64e3f35e53926d2d70"
+      },
+      {
+        "file": "stationContentRollback.js",
+        "bytes": 2517064,
+        "sha256": "56fda4ae64e78b89b32c4dbe2bc55dee6ed5280b723cd6572fc94e092141909d"
+      },
+      {
+        "file": "stationContentRollback.js.map",
+        "bytes": 4301796,
+        "sha256": "443040a7585fa84332d75342743e01c86c73b4c83a0cbd8ea4734b337e99d481"
+      }
+    ]
+  },
+  "browser": {
+    "tool": "Codex in-app browser through cua_repl",
+    "desktopViewport": {
+      "width": 1448,
+      "height": 1086
+    },
+    "mobileViewport": {
+      "width": 390,
+      "height": 844
+    },
+    "japaneseViewport": {
+      "width": 375,
+      "height": 812
+    },
+    "maintenanceMediaElements": 0,
+    "mainActionsMinHeight": 44,
+    "mainGameNavigation": "/games/cat-life/",
+    "memberNavigation": "/zh-hant/library/",
+    "keyboardNextAction": "会員情報",
+    "focusOutline": "solid",
+    "consoleErrorsWarnings": [],
+    "physicalDeviceValidation": false,
+    "voiceOverValidation": false
+  },
+  "hostedCi": {
+    "exactHeadStatus": "pending",
+    "priorL01Ci": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/38062491558",
+    "priorHeadNotCurrentProof": true
+  },
+  "firstLaunchTests": {
+    "passed": 11,
+    "failed": 0
+  },
+  "releaseTests": {
+    "passed": 30,
+    "failed": 0
+  },
+  "finalSourceHashes": [
+    {
+      "file": ".github/workflows/ci.yml",
+      "sha256": "f631bc89f88b7f8ce0be0cb4a74c030fc605acf9f2cdaef1ca628f953311e7c6"
+    },
+    {
+      "file": "package.json",
+      "sha256": "354f398f786132bc7bd8fcfac0c07822b9c1b3993fa42566ede4f538bc2fdca6"
+    },
+    {
+      "file": "ops/station-release-readiness.json",
+      "sha256": "0d9c7be1926be59f3af5a08d1f3db281de1402ef3081c26714b61ffaeb9eb063"
+    },
+    {
+      "file": "scripts/build-station-content-rollback-config.mjs",
+      "sha256": "3d72811ac98d03eb4cb51000c6a72ff5f54286dfaa213a0c0458d3f5928da984"
+    },
+    {
+      "file": "scripts/helpers/station-backup-cloudflare.mjs",
+      "sha256": "91053e4423ad6e51bd862c934511434880d0d9711468eff798075f3763dc78fc"
+    },
+    {
+      "file": "scripts/helpers/station-production-backup.mjs",
+      "sha256": "1226b2d85fb1bf7f11152150d844612bfa2bf90e803eb46ad85aa769769d4b5d"
+    },
+    {
+      "file": "scripts/helpers/station-production-restore.mjs",
+      "sha256": "d09b254047b1751f771b9bd94d31423fc9435cf9d4f8c1b93c0839d17bc29eb9"
+    },
+    {
+      "file": "scripts/station-production-backup.mjs",
+      "sha256": "fdaf6e1f22eb57acb63c6ebf73d0110b1940560333a96fac4f5fac921b111fc1"
+    },
+    {
+      "file": "scripts/station-production-restore.mjs",
+      "sha256": "1e5dc238c1bb3a04c05cb4cf411e6a3d6a4a3ac1ce054c0d76dbe430f801bee5"
+    },
+    {
+      "file": "scripts/test-station-content-rollback.mjs",
+      "sha256": "bf0174efc9835b6d2cab758a1cd501e868e9d2861fb2601562576d469a837a4c"
+    },
+    {
+      "file": "scripts/test-station-production-backup.mjs",
+      "sha256": "6f445d699234064d60c0732032743f3420f3411ec72cfade4c4a60d03c1e0809"
+    },
+    {
+      "file": "scripts/test-station-production-restore.mjs",
+      "sha256": "b40a28381afa7a66e55ecad596b59ccaa68681eb18d13f3605048824cb86b336"
+    },
+    {
+      "file": "scripts/helpers/station-route-runtime.mjs",
+      "sha256": "c1fc04c0d89e56ae97e2aa7b27e8f8bdc5ee434ef8e4bc2a9b4340fd75122520"
+    },
+    {
+      "file": "scripts/serve-station-first-launch-preview.mjs",
+      "sha256": "63721ded8ee860c6bb93c54172a9164e54763d920bda43bb9d03b072f7f00781"
+    },
+    {
+      "file": "src/pages/music/site-shell/brand-maintenance/[locale].astro",
+      "sha256": "454fcfb921e0c5a3b7656107291f2e1e0d94a26256f7e1a7427935be52cfceab"
+    },
+    {
+      "file": "src/redesign/contentRollback.js",
+      "sha256": "3943449435cb7063eea8cc3034c834c62c960a6a1c03e0978e6e8ddd59e9e9a1"
+    },
+    {
+      "file": "src/stationContentRollback.js",
+      "sha256": "968a6aae23b928ded65666432858db087eb60125a169fecda8b3277fac4e795c"
+    }
+  ],
+  "readiness": {
+    "launchReady": false,
+    "productionDeployed": false,
+    "legacyClosureVerified": false,
+    "realBackupRestored": true
+  },
+  "priorL01": {
+    "url": "https://github.com/xdgf558/caption-ai-landing-site/pull/208",
+    "mergedCommit": "41a4ff62f4c71016b2ecb7ac750079f035ff2c34",
+    "headSha": "9670a4a390af22c4bd40275c931d90cc5a9f4ed5",
+    "ci": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/38062491558",
+    "conclusion": "success",
+    "steps": 45
+  },
+  "logNormalization": "workspace paths redacted and trailing formatting whitespace removed; raw command logs remain local"
+}

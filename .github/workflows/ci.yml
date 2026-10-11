@@ -93,6 +93,11 @@ jobs:
           npm run build:station:first-launch
           npm run test:station:first-launch
 
+      - name: Verify offline backup guards and isolated content rollback
+        run: |
+          npm run test:station:backup
+          npm run test:station:content-rollback
+
       - name: Verify integrated Station Cat core acceptance fixture and HTTP boundaries
         run: npm run test:redesign:acceptance
 

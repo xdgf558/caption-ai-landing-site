@@ -1,0 +1,35 @@
+---
+import StationBrandLayout from '../../../../layouts/StationBrandLayout.astro';
+import { stationHref } from '../../../../redesign/routes.js';
+import '../../../../redesign/home.css';
+export function getStaticPaths() {
+  return ['zh-Hant', 'zh-Hans', 'en', 'ja'].map(locale => ({ params: { locale }, props: { locale } }));
+}
+const { locale } = Astro.props;
+const copy = {
+  'zh-Hant': { title: '小站正在整理', text: '音樂與作品頁暫時休息一下。你可以繼續遊戲，或查看會員資料。', game: '繼續遊戲', member: '會員資料', alt: '戴著耳機的小貓在傍晚的小站窗邊休息' },
+  'zh-Hans': { title: '小站正在整理', text: '音乐与作品页暂时休息一下。你可以继续游戏，或查看会员资料。', game: '继续游戏', member: '会员资料', alt: '戴着耳机的小猫在傍晚的小站窗边休息' },
+  en: { title: 'A little pause at the station', text: 'Music and work pages are taking a short break. You can continue your game or visit your member account.', game: 'Continue game', member: 'Member account', alt: 'A cat wearing headphones rests by the station window at dusk' },
+  ja: { title: '小さな駅を整えています', text: '音楽と作品のページは少しお休み中です。ゲームを続けたり、会員情報を確認したりできます。', game: 'ゲームを続ける', member: '会員情報', alt: '夕暮れの駅の窓辺でヘッドホンをつけて休む猫' },
+}[locale];
+---
+<StationBrandLayout lang={locale} title={copy.title} preview activeSection="home">
+  <section class="gentle-hero" id="station-work" aria-labelledby="station-maintenance-title" data-station-maintenance>
+    <img class="gentle-hero-image" src="/images/station-gentle/hero.webp" width="2172" height="724" alt={copy.alt} fetchpriority="high" />
+    <div class="gentle-hero-content">
+      <p class="gentle-eyebrow">CATS, IDEAS, A KINDER TOMORROW</p>
+      <h1 class="sc-heading" id="station-maintenance-title">{copy.title}</h1>
+      <p class="gentle-lede">{copy.text}</p>
+      <div class="gentle-hero-actions">
+        <a class="sc-button" href="/games/cat-life/" data-astro-reload>{copy.game}</a>
+        <a class="sc-button sc-button-secondary" href={stationHref(locale, 'member')} data-astro-reload>{copy.member}</a>
+      </div>
+    </div>
+  </section>
+</StationBrandLayout>
+<style>
+  .gentle-hero-content { max-width: 640px; }
+  .gentle-lede { max-width: 31em; }
+  .gentle-hero-actions { flex-wrap: wrap; }
+  @media (max-width: 767px) { .gentle-hero-content { max-width: none; } }
+</style>
