@@ -58,6 +58,65 @@ function validateObject(row) {
   check(Object.values(row.custom_metadata || {}).every(value => typeof value === 'string'), 'OBJECT_METADATA');
   return row;
 }
+export function validateBackupBucketManifest(manifest, bucket) {
+  check(manifest?.schemaVersion === 1 && manifest.complete === true && manifest.bucket === bucket &&
+    Array.isArray(manifest.objects) && Number.isSafeInteger(manifest.bytes) && manifest.bytes >= 0 &&
+    /^[0-9a-f]{64}$/.test(manifest.metadataSha256 || ''), 'OBJECT_MANIFEST');
+  const keys = new Set(), metadata = []; let bytes = 0;
+  for (const row of manifest.objects) {
+    check(row && typeof row.key === 'string' && row.metadata?.key === row.key &&
+      row.file === backupHash(row.key) + '.bin' && row.bytes === row.metadata.size &&
+      /^[0-9a-f]{64}$/.test(row.sha256 || ''), 'OBJECT_MANIFEST_RECORD');
+    validateObject(row.metadata);
+    check(!keys.has(row.key), 'OBJECT_MANIFEST_DUPLICATE');
+    keys.add(row.key); metadata.push(row.metadata); bytes += row.bytes;
+    check(Number.isSafeInteger(bytes), 'OBJECT_TOTAL_SIZE');
+  }
+  metadata.sort((a, b) => compareObjectKeys(a.key, b.key));
+  check(bytes === manifest.bytes, 'OBJECT_MANIFEST_BYTES');
+  check(backupHash(stableBackupJson(metadata)) === manifest.metadataSha256, 'OBJECT_MANIFEST_METADATA');
+  return { count: keys.size, bytes, metadataSha256: manifest.metadataSha256 };
+}
+async function readPrivateBackupJson(path) {
+  const actual = await hashBackupFile(path), source = await readFile(path);
+  check(actual.bytes === source.length && actual.sha256 === backupHash(source), 'MANIFEST_CHANGED');
+  let value; try { value = JSON.parse(source); } catch { fail('MANIFEST_JSON'); }
+  return { value, sha256: actual.sha256 };
+}
+export async function readBackupBucketSummary(root, plan, { required = true } = {}) {
+  const source = await readPrivateBackupJson(join(root, 'buckets', 'summary.json')).catch(error => {
+    if (!required && error.code === 'ENOENT') return null;
+    throw error;
+  });
+  if (!source) return null;
+  const summary = source.value;
+  check(Array.isArray(plan.buckets) && plan.buckets.length > 0 &&
+    new Set(plan.buckets.map(row => row.bucket)).size === plan.buckets.length &&
+    new Set(plan.buckets.map(row => row.binding)).size === plan.buckets.length &&
+    summary?.complete === true && Array.isArray(summary.buckets) &&
+    summary.buckets.length === plan.buckets.length, 'BUCKET_SUMMARY');
+  const entries = new Map();
+  for (const row of summary.buckets) {
+    check(row?.complete === true && plan.buckets.some(target => target.bucket === row.bucket) &&
+      !entries.has(row.bucket) && Number.isSafeInteger(row.objects) && row.objects >= 0 &&
+      Number.isSafeInteger(row.bytes) && row.bytes >= 0 && /^[0-9a-f]{64}$/.test(row.metadataSha256 || '') &&
+      /^[0-9a-f]{64}$/.test(row.manifestSha256 || ''), 'BUCKET_SUMMARY_RECORD');
+    entries.set(row.bucket, row);
+  }
+  return { entries, sha256: source.sha256 };
+}
+export async function readCompletedBucketBackup(root, target, expected) {
+  const source = await readPrivateBackupJson(join(root, 'buckets', target.binding, 'manifest.json'));
+  const manifest = source.value, inventory = validateBackupBucketManifest(manifest, target.bucket);
+  if (expected) check(source.sha256 === expected.manifestSha256 && inventory.count === expected.objects &&
+    inventory.bytes === expected.bytes && inventory.metadataSha256 === expected.metadataSha256, 'OBJECT_MANIFEST_HASH');
+  return { target, manifest, manifestSha256: source.sha256, ...inventory };
+}
+export async function readCompletedBucketBackups(root, plan) {
+  const summary = await readBackupBucketSummary(root, plan), buckets = [];
+  for (const target of plan.buckets) buckets.push(await readCompletedBucketBackup(root, target, summary.entries.get(target.bucket)));
+  return { buckets, summarySha256: summary.sha256 };
+}
 export async function inventoryBackupObjects(cloud, bucket, { perPage = 1000 } = {}) {
   check(/^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/.test(bucket) && Number.isSafeInteger(perPage) && perPage > 0 && perPage <= 1000, 'BUCKET');
   const objects = [], keys = new Set(), cursors = new Set();
@@ -171,6 +230,7 @@ export async function backupProductionBucket(cloud, bucket, directory, onProgres
   check(after.metadataSha256 === snapshot.metadataSha256, 'BUCKET_CHANGED');
   state.complete = true; state.completedAt = new Date().toISOString(); state.bytes = snapshot.bytes;
   state.inventoryPages = snapshot.pages; state.pagination = snapshot.pagination;
+  validateBackupBucketManifest(state, bucket);
   await privateBackupJson(join(root, 'manifest.json'), state);
   await privateBackupJson(statePath, state, { replace: true });
   return { bucket, complete: true, objects: snapshot.count, bytes: snapshot.bytes, metadataSha256: snapshot.metadataSha256,

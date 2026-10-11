@@ -3,7 +3,8 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { backupCloudflare } from './helpers/station-backup-cloudflare.mjs';
 import { backupHash, backupSinglePartMd5, stableBackupJson, privateBackupDirectory, privateBackupJson,
-  hashBackupFile, backupProductionBucket, inventoryBackupObjects } from './helpers/station-production-backup.mjs';
+  hashBackupFile, backupProductionBucket, inventoryBackupObjects, readBackupBucketSummary,
+  readCompletedBucketBackup, readCompletedBucketBackups } from './helpers/station-production-backup.mjs';
 import { PRODUCTION_ACCOUNT_ID, PRODUCTION_READER_DATABASE_ID, PRODUCTION_MUSIC_BUCKET } from '../src/mobile/environment.js';
 
 const fail = code => { throw new Error('STATION_BACKUP_' + code); };
@@ -75,11 +76,8 @@ export async function verifyProductionBackupBoundary(cloud, root, plan) {
     check(saved && backupHash(stableBackupJson(await cloud.schema(target.id))) === saved.schemaSha256, 'SCHEMA_CHANGED');
     databaseResults.push({ binding: target.binding, schemaUnchanged: true });
   }
-  const buckets = [];
-  for (const target of plan.buckets) {
-    const path = join(root, 'buckets', target.binding, 'manifest.json');
-    await hashBackupFile(path);
-    const saved = JSON.parse(await readFile(path));
+  const savedBuckets = await readCompletedBucketBackups(root, plan), buckets = [];
+  for (const { target, manifest: saved } of savedBuckets.buckets) {
     const current = await inventoryBackupObjects(cloud, target.bucket);
     check(saved.complete === true && saved.bucket === target.bucket && saved.objects.length === current.count &&
       saved.bytes === current.bytes && saved.metadataSha256 === current.metadataSha256, 'COMPLETED_BUCKET_CHANGED');
@@ -88,7 +86,8 @@ export async function verifyProductionBackupBoundary(cloud, root, plan) {
   await checkBackupDeployment(cloud, plan);
   const result = { complete: true, versionId: plan.versionId, databases: databaseResults, buckets,
     checkedAt: new Date().toISOString(), productionWrites: 0, crossResourceAtomic: false,
-    databaseDataFrozen: false, authority: 'read-only resource/schema/list comparison; not a cutover authorization' };
+    databaseDataFrozen: false, sourceSummarySha256: savedBuckets.summarySha256,
+    authority: 'read-only resource/schema/list comparison; not a cutover authorization' };
   await privateBackupJson(join(root, 'final-boundary-' + Date.now() + '.json'), result);
   return result;
 }
@@ -147,11 +146,16 @@ export async function exportProductionDatabases(cloud, root, plan, windowPath, e
 export async function backupAllProductionBuckets(cloud, root, plan, progress = () => {}) {
   await checkBackupDeployment(cloud, plan);
   const directory = join(root, 'buckets'); await privateBackupDirectory(directory, { create: true });
+  const summary = await readBackupBucketSummary(root, plan, { required: false });
   const results = [];
   for (const target of plan.buckets) {
     const destination = join(directory, target.binding); await privateBackupDirectory(destination, { create: true });
-    const previous = await readFile(join(destination, 'manifest.json'), 'utf8').then(JSON.parse).catch(error => error.code === 'ENOENT' ? null : Promise.reject(error));
-    if (previous) {
+    const completed = await readCompletedBucketBackup(root, target, summary?.entries.get(target.bucket)).catch(error => {
+      if (!summary && error.code === 'ENOENT') return null;
+      throw error;
+    });
+    if (completed) {
+      const previous = completed.manifest;
       const inventory = await inventoryBackupObjects(cloud, target.bucket);
       check(previous.complete === true && previous.bucket === target.bucket && previous.objects.length === inventory.count &&
         previous.metadataSha256 === inventory.metadataSha256, 'COMPLETED_BUCKET_CHANGED');
@@ -161,7 +165,7 @@ export async function backupAllProductionBuckets(cloud, root, plan, progress = (
         check(actual.bytes === item.bytes && actual.sha256 === item.sha256, 'COMPLETED_BUCKET_HASH');
       }
       results.push({ bucket: target.bucket, complete: true, objects: inventory.count, bytes: inventory.bytes,
-        metadataSha256: inventory.metadataSha256, manifestSha256: (await hashBackupFile(join(destination, 'manifest.json'))).sha256 });
+        metadataSha256: inventory.metadataSha256, manifestSha256: completed.manifestSha256 });
     } else results.push(await backupProductionBucket(cloud, target.bucket, destination, progress));
   }
   await checkBackupDeployment(cloud, plan);

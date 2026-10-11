@@ -1,0 +1,145 @@
+{
+  "task": "L02",
+  "revision": "PR #209 manifest integrity and TOTP test rollover",
+  "reviewedHeadSha": "035f8a12cdfea1d764598f9ea230420572c8e6b9",
+  "recordedAt": "2026-10-11T11:05:41.525169+00:00",
+  "node": "v24.15.0",
+  "miniflare": "4.20260730.0",
+  "checks": [
+    {
+      "name": "backup-restore",
+      "command": "node --test --test-timeout=120000 scripts/test-station-production-backup.mjs scripts/test-station-production-restore.mjs",
+      "exitCode": 0,
+      "file": "revision-backup-restore.log",
+      "bytes": 3702,
+      "sha256": "a630689c3ea69b61ed5858d3d7e6ee9c90bdfcb2322a9e4fffe2ed3296ee7b0f",
+      "passed": 33,
+      "failed": 0
+    },
+    {
+      "name": "content-rollback",
+      "command": "npm run test:station:content-rollback",
+      "exitCode": 0,
+      "file": "revision-content-rollback.log",
+      "bytes": 1414,
+      "sha256": "3b765154cb9613d2a45ad1fc8d7ce35189bb51dd1391bf5c3f29ad024c3f5c60",
+      "passed": 9,
+      "failed": 0
+    },
+    {
+      "name": "first-launch",
+      "command": "npm run test:station:first-launch",
+      "exitCode": 0,
+      "file": "revision-first-launch.log",
+      "bytes": 1540,
+      "sha256": "04f04ee3ebccb7bd720db1a72cc53136b55a8e8c732ba28798425ff91a7d6edd",
+      "passed": 11,
+      "failed": 0
+    },
+    {
+      "name": "mobile-production",
+      "command": "npm run test:mobile:production",
+      "exitCode": 0,
+      "file": "revision-mobile-production.log",
+      "bytes": 8138,
+      "sha256": "01fdb3a4e2f9817134e1a7a4ff7d2b4345a025465bebd3f32c8a8d5d1368a876",
+      "passed": 116,
+      "failed": 0,
+      "migrationTests": {
+        "passed": 12,
+        "failed": 0
+      }
+    },
+    {
+      "name": "first-launch-build",
+      "command": "npm run build:station:first-launch",
+      "exitCode": 0,
+      "file": "revision-first-launch-build.log",
+      "bytes": 27863,
+      "sha256": "f771f1fcf10520a8649951ada1e61dddb9f5e48579849ab298d0cd767f0a109c",
+      "emptyContentOverrideUsed": false,
+      "productionDeployed": false
+    }
+  ],
+  "coveredBoundaries": [
+    "Duplicate keys, missing records, changed metadata and incorrect total bytes fail shared completed-manifest validation",
+    "A self-consistent subset or empty replacement fails the recorded manifest SHA in the all-bucket completion summary",
+    "Every bucket is validated against the completed summary before any native R2 clone is created",
+    "Completed-bucket resume and final read-only boundary verification reject replaced manifests",
+    "A partial backup without the all-bucket summary can still resume after checking source metadata and all copied bytes",
+    "Deterministic before/after TOTP rollover and replay checks retain production verifier semantics"
+  ],
+  "existingPrivateBackupPreflight": {
+    "file": "revision-private-manifest-preflight.json",
+    "sha256": "89fcd4fff72a080345b85e31ab2adf02d588acfa4323f9689c133535d1c207b5",
+    "onlyManifestSetAndCompletionHashes": true,
+    "buckets": 3,
+    "objects": 503,
+    "bytes": 8861977999,
+    "actualBackupOrBodyRestorationRepeated": false
+  },
+  "hostedCi": {
+    "localRecordDoesNotClaimHostedSuccess": true,
+    "currentHeadResultAuthority": "https://github.com/xdgf558/caption-ai-landing-site/pull/209/checks",
+    "priorReviewedHead": "035f8a12cdfea1d764598f9ea230420572c8e6b9",
+    "priorConclusion": "failure",
+    "priorRun": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/38130732349",
+    "priorFailure": "TOTP previous-step login could expire across the 30-second rollover; 401 instead of 302"
+  },
+  "fullNpmTest": {
+    "rerunForThisRevision": false,
+    "priorResultIsHistorical": true
+  },
+  "sourceFileHashes": [
+    {
+      "file": "scripts/helpers/station-production-backup.mjs",
+      "sha256": "bcf5da740a7903f2971a41038ced65321ae4de339baa9230e37a58d81574cced"
+    },
+    {
+      "file": "scripts/helpers/station-production-restore.mjs",
+      "sha256": "df7ab761f1e15e69c542e426d079b036ec4539d9b40d3b226d70150f00bf94c0"
+    },
+    {
+      "file": "scripts/station-production-backup.mjs",
+      "sha256": "135e96e668a9250b3d35c0466950ba25a0b6ea6d267a7837058b48520ca4d8fa"
+    },
+    {
+      "file": "scripts/test-station-production-backup.mjs",
+      "sha256": "26c3db49d64e4f8c87af21812d97ba46e5c919be8be57449fa8cf161e6736da0"
+    },
+    {
+      "file": "scripts/test-station-production-restore.mjs",
+      "sha256": "77bbbc3d7c07ace96f2eb1f4820fdebafcc81d56f97901831a514810cc2b6dcd"
+    },
+    {
+      "file": "scripts/test-mobile-production.mjs",
+      "sha256": "1fe9d748e34d888bb866224d11cc990ec17935d86ce209b9ada21f09c8a3bf4b"
+    },
+    {
+      "file": "src/worker.js",
+      "sha256": "27172e09e1b799750d992bc60d7150077566893148e638af358e0fe1c3fb8aa6"
+    },
+    {
+      "file": "wrangler.toml",
+      "sha256": "f07e5c66f09c809acd53f6e6de223ba8ea01f03c0fed261c4733085b0edabad2"
+    },
+    {
+      "file": "scripts/build-station-first-launch.mjs",
+      "sha256": "abc4249ac9f6af1ffa7e304a29dd7bd2f1e746035a6516cb2a81454c67a8f833"
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "sha256": "f631bc89f88b7f8ce0be0cb4a74c030fc605acf9f2cdaef1ca628f953311e7c6"
+    }
+  ],
+  "production": {
+    "workerSourceAndMainConfigurationUnchanged": true,
+    "requests": 0,
+    "writes": 0,
+    "migrationExecuted": false,
+    "deployed": false,
+    "switchesOpened": false,
+    "legacyClosureExecuted": false
+  },
+  "logNormalization": "workspace paths redacted and trailing formatting whitespace removed; synthetic test output only"
+}

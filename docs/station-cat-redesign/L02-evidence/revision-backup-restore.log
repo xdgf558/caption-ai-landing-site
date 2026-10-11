@@ -1,0 +1,42 @@
+✔ UTF-8 pagination keeps case and punctuation in storage order and reaches an empty page without result_info (1.055041ms)
+✔ a short response without pagination metadata must be followed, not silently declared complete (0.12475ms)
+✔ documented cursor pagination requires a advancing cursor and rejects duplicate or incomplete pages (0.310875ms)
+✔ unordered arrays are sorted locally; unsupported encrypted, malformed and traversal-like records fail before copying (0.156125ms)
+✔ streaming computes hashes over exact stored bytes and never leaves a truncated file eligible for backup (16.495208ms)
+✔ private files cannot be written inside the repository, follow symlinks or expose customer data through permissions (9.276125ms)
+✔ a failed exclusive open preserves the existing backup; native streams retain exact compressed bytes (4.881584ms)
+✔ HTTP weak ETags match the listed opaque tag while length and byte hash remain independently checked (22.174458ms)
+✔ gateway weak gzip suffixes require exact single-part MD5; semantic tags cannot hide altered bytes (26.238833ms)
+✔ full object backup retains metadata, raw binary and immutable completion manifest (49.383291ms)
+✔ completed object sets reject duplicate keys, omissions, metadata substitutions and incorrect total bytes (37.854375ms)
+✔ interrupted backup resumes only recorded and rehashed bytes; partial success is not a complete backup (58.207292ms)
+✔ changed ETag or post-copy inventory cannot produce a complete backup (24.033292ms)
+✔ a transient interrupted body is retried from byte zero and only its verified copy is committed (528.824541ms)
+✔ D1 export requires a bounded, current, explicit request-blocking maintenance window for the exact production snapshot (0.610583ms)
+✔ the repository root itself is not a private backup directory regardless of its permissions (0.676667ms)
+✔ final read-only boundary check requires the exact deployment, schema and complete object metadata (108.022541ms)
+✔ a completed bucket can resume after interruption before the all-bucket summary exists (29.92375ms)
+✔ full fingerprints preserve >1000 rows, 64-bit integers, blobs, NUL text, generated columns and deleted-ID high-water marks (16.459417ms)
+✔ local import arguments fix the local binding and cannot include remote flags or a production account (0.065167ms)
+✔ schema comparison removes formatting/comments but preserves quoted text, identifiers and trigger logic (0.07025ms)
+✔ linear SQL framing keeps semicolons in quotes, comments and trigger CASE bodies intact (0.301125ms)
+✔ complete SQL restore handles interleaved FK tables and triggers referencing later views without splitting quoted semicolons (1.2685ms)
+✔ isolated restore checks all hashes and full typed values; an existing clone or corrupted SQL is refused (120.356291ms)
+✔ a native restore that changes a generated sequence cannot pass the complete fingerprint (30.318834ms)
+✔ native local R2 restores streamed bytes and all HTTP/custom metadata into new isolated buckets (252.051959ms)
+▶ native R2 restore rejects duplicate, missing and self-consistent substituted sets before creating a clone
+  ✔ duplicate (4.226625ms)
+  ✔ missing (4.252667ms)
+  ✔ missing-with-adjusted-bytes (5.041208ms)
+  ✔ substituted-set (4.835791ms)
+  ✔ substituted-empty-set (3.960291ms)
+✔ native R2 restore rejects duplicate, missing and self-consistent substituted sets before creating a clone (56.207875ms)
+✔ all bucket manifests must match the completed summary before any native R2 restoration starts (78.123375ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 961.000375

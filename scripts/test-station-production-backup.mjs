@@ -6,8 +6,9 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { createHash } from 'node:crypto';
 import { backupHash, stableBackupJson, compareObjectKeys, inventoryBackupObjects, streamBackupFile,
-  privateBackupDirectory, privateBackupJson, hashBackupFile, backupProductionBucket, backupRoot } from './helpers/station-production-backup.mjs';
-import { checkMaintenanceWindow, verifyProductionBackupBoundary } from './station-production-backup.mjs';
+  privateBackupDirectory, privateBackupJson, hashBackupFile, backupProductionBucket, backupRoot,
+  validateBackupBucketManifest } from './helpers/station-production-backup.mjs';
+import { checkMaintenanceWindow, verifyProductionBackupBoundary, backupAllProductionBuckets } from './station-production-backup.mjs';
 
 const metadata = (key, bytes = Buffer.from(key)) => ({ key, size: bytes.length, etag: backupHash(bytes),
   last_modified: '2026-10-11T00:00:00Z', custom_metadata: { fixture: 'test-only' }, http_metadata: { contentType: 'application/octet-stream' } });
@@ -118,6 +119,22 @@ test('full object backup retains metadata, raw binary and immutable completion m
   }
   await assert.rejects(backupProductionBucket(cloud, 'test-bucket', directory), /EEXIST/);
 }));
+test('completed object sets reject duplicate keys, omissions, metadata substitutions and incorrect total bytes', async () => temporary(async directory => {
+  await backupProductionBucket(cloudFixture([['a', 'alpha'], ['b', 'bravo']]), 'test-bucket', directory);
+  const manifest = JSON.parse(await readFile(join(directory, 'manifest.json')));
+  assert.deepEqual(validateBackupBucketManifest(manifest, 'test-bucket'), {
+    count: 2, bytes: 10, metadataSha256: manifest.metadataSha256,
+  });
+  assert.equal(validateBackupBucketManifest({ ...manifest, objects: [...manifest.objects].reverse() }, 'test-bucket').count, 2);
+  for (const [changed, error] of [
+    [{ ...manifest, objects: [manifest.objects[0], manifest.objects[0]] }, /OBJECT_MANIFEST_DUPLICATE/],
+    [{ ...manifest, objects: [manifest.objects[0]] }, /OBJECT_MANIFEST_BYTES/],
+    [{ ...manifest, objects: [manifest.objects[0]], bytes: 5 }, /OBJECT_MANIFEST_METADATA/],
+    [{ ...manifest, bytes: 11 }, /OBJECT_MANIFEST_BYTES/],
+    [{ ...manifest, objects: manifest.objects.map(row => ({ ...row, metadata: { ...row.metadata, key: 'other' } })) }, /OBJECT_MANIFEST_RECORD/],
+    [{ ...manifest, objects: manifest.objects.map(row => ({ ...row, metadata: { ...row.metadata, custom_metadata: { changed: 'yes' } } })) }, /OBJECT_MANIFEST_METADATA/],
+  ]) assert.throws(() => validateBackupBucketManifest(changed, 'test-bucket'), error);
+}));
 test('interrupted backup resumes only recorded and rehashed bytes; partial success is not a complete backup', async () => temporary(async directory => {
   const cloud = cloudFixture([['a', 'one'], ['b', 'two']]), original = cloud.object;
   cloud.object = async (bucket, key) => { if (key === 'b') throw new Error('fixture stop'); return original(bucket, key); };
@@ -169,18 +186,35 @@ test('final read-only boundary check requires the exact deployment, schema and c
   const schema=[{type:'table',name:'fixture',sql:'CREATE TABLE fixture(id INTEGER)'}], rows=[metadata('fixture')];
   await mkdir(join(directory,'databases'),{mode:0o700});
   await privateBackupJson(join(directory,'databases','manifest.json'),{complete:true,databases:plan.databases.map(row=>({binding:row.binding,databaseId:row.id,schemaSha256:backupHash(stableBackupJson(schema))}))});
-  await mkdir(join(directory,'buckets'),{mode:0o700});
-  for(const target of plan.buckets){await mkdir(join(directory,'buckets',target.binding),{mode:0o700});await privateBackupJson(join(directory,'buckets',target.binding,'manifest.json'),
-    {complete:true,bucket:target.bucket,objects:rows,bytes:rows[0].size,metadataSha256:backupHash(stableBackupJson(rows))});}
   let changedSchema=false,changedDeployment=false,changedObjects=false;
   const cloud={async schema(){return changedSchema?[]:schema;},async json(path,{query}={}){
     if(path.endsWith('/deployments'))return{result:[{id:changedDeployment?'changed':plan.deploymentId,created_on:'2026-10-11T00:00:00Z',versions:[{version_id:plan.versionId,percentage:100}]}]};
     if(path.includes('/versions/'))return{result:{resources:{bindings:[...plan.databases.map(row=>({type:'d1',name:row.binding,id:row.id})),...plan.buckets.map(row=>({type:'r2_bucket',name:row.binding,bucket_name:row.bucket}))]}}};
     return{result:query.start_after?[]:rows.map(row=>changedObjects?{...row,etag:'changed'}:row)};
-  }};
+  }, async object() { return new Response('fixture', { headers: { ETag: rows[0].etag } }); }};
+  await backupAllProductionBuckets(cloud, directory, plan);
   const result=await verifyProductionBackupBoundary(cloud,directory,plan);
   assert.equal(result.complete,true);assert.equal(result.productionWrites,0);assert.equal(result.crossResourceAtomic,false);assert.equal(result.databaseDataFrozen,false);
   changedObjects=true;await assert.rejects(verifyProductionBackupBoundary(cloud,directory,plan),/STATION_BACKUP_COMPLETED_BUCKET_CHANGED/);
   changedObjects=false;changedSchema=true;await assert.rejects(verifyProductionBackupBoundary(cloud,directory,plan),/STATION_BACKUP_SCHEMA_CHANGED/);
   changedSchema=false;changedDeployment=true;await assert.rejects(verifyProductionBackupBoundary(cloud,directory,plan),/STATION_BACKUP_DEPLOYMENT_CHANGED/);
+  changedDeployment=false;
+  const manifestPath=join(directory,'buckets','CONTENT_BUCKET','manifest.json');
+  const manifest=JSON.parse(await readFile(manifestPath));
+  await privateBackupJson(manifestPath,{...manifest,objects:[],bytes:0,metadataSha256:backupHash(stableBackupJson([]))},{replace:true});
+  await assert.rejects(verifyProductionBackupBoundary(cloud,directory,plan),/STATION_BACKUP_OBJECT_MANIFEST_HASH/);
+  await assert.rejects(backupAllProductionBuckets(cloud,directory,plan),/STATION_BACKUP_OBJECT_MANIFEST_HASH/);
+}));
+test('a completed bucket can resume after interruption before the all-bucket summary exists', async () => temporary(async directory => {
+  const target = { binding: 'CONTENT_BUCKET', bucket: 'test-bucket' }, plan = { deploymentId: 'fixture', versionId: 'fixture', databases: [], buckets: [target] };
+  const cloud = cloudFixture([['a', 'alpha']]), objectJson = cloud.json;
+  cloud.json = async (path, options) => path.endsWith('/deployments') ? { result: [{ id: 'fixture', versions: [{ version_id: 'fixture', percentage: 100 }] }] } :
+    path.includes('/versions/') ? { result: { resources: { bindings: [{ type: 'r2_bucket', name: target.binding, bucket_name: target.bucket }] } } } : objectJson(path, options);
+  await mkdir(join(directory, 'buckets'), { mode: 0o700 });
+  await mkdir(join(directory, 'buckets', target.binding), { mode: 0o700 });
+  await backupProductionBucket(cloud, target.bucket, join(directory, 'buckets', target.binding));
+  const copied = cloud.requests.length;
+  assert.equal((await backupAllProductionBuckets(cloud, directory, plan)).objectBackupsComplete, true);
+  assert.equal(cloud.requests.length, copied, 'completed bytes are rehashed, not downloaded again');
+  assert.equal(JSON.parse(await readFile(join(directory, 'buckets', 'summary.json'))).buckets[0].objects, 1);
 }));

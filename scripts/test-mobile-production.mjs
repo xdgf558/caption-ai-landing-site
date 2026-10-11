@@ -8,7 +8,7 @@ import {randomBytes,randomUUID,createHash,pbkdf2Sync,createHmac} from 'node:cryp
 import {DatabaseSync} from 'node:sqlite';
 import {build} from 'esbuild';
 import {Miniflare} from 'miniflare';
-import worker from '../src/worker.js';
+import worker, { __readerTotpTestHooks as totpHooks } from '../src/worker.js';
 import {configuration} from '../src/mobile/security.js';
 import {PRODUCTION_MOBILE_PROFILE as profile,PRODUCTION_ACCOUNT_ID,PRODUCTION_READER_DATABASE_ID,PRODUCTION_MUSIC_BUCKET,
   NONPRODUCTION_DATABASE_IDS,PRODUCTION_BINDING_MARKER_KEY} from '../src/mobile/environment.js';
@@ -354,17 +354,32 @@ test('existing website password session survives native login and the two creden
 });
 
 const totpAt=step=>{const bytes=Buffer.alloc(8);bytes.writeBigUInt64BE(BigInt(step));const digest=createHmac('sha1','12345678901234567890').update(bytes).digest(),offset=digest.at(-1)&15;return String((digest.readUInt32BE(offset)&0x7fffffff)%1000000).padStart(6,'0');};
+test('TOTP rollover rejects the previous-step login code while current login and fresh reset codes remain valid',async t=>{
+  const step=60_000_000;let now=(step+1)*30000-1;
+  t.mock.method(Date,'now',()=>now);
+  const stale=totpAt(step-1),current=totpAt(step),next=totpAt(step+1);
+  assert.equal((await totpHooks.verifyTotpCode('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ',stale)).ok,true);
+  for(const clock of [now,now+2]) {
+    now=clock;
+    const login=await totpHooks.verifyTotpCode('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ',current);
+    assert.equal(login.ok,true);assert.equal(login.step,step);
+    const reset=await totpHooks.verifyTotpCode('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ',next,{lastUsedStep:login.step});
+    assert.equal(reset.ok,true);assert.equal(reset.step,step+1);
+    assert.equal((await totpHooks.verifyTotpCode('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ',next,{lastUsedStep:reset.step})).reason,'reused-code');
+  }
+  assert.equal((await totpHooks.verifyTotpCode('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ',stale)).reason,'invalid-code');
+});
 test('TOTP password reset preserves account and membership but invalidates previous web and native credentials',async()=>{
   const a=await account(true);
   await reader.prepare('INSERT INTO reader_totp_credentials(account_id,secret_base32,verified_at,enabled_at) VALUES(?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)').bind(a.id,'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ').run();
-  const step=Math.floor(Date.now()/30000),{t}=await login(a,totpAt(step-1));
+  const step=Math.floor(Date.now()/30000),{t}=await login(a,totpAt(step));
   const webLogin=await call('/api/readers/login',{body:{identifier:a.name,password:pass}});assert.equal(webLogin.status,200);const cookie=webLogin.headers.get('set-cookie').split(';')[0];
   const before=await call('/api/mobile/v1/me',{headers:auth(t)});assert.equal(before.status,200);
   const membership=await reader.prepare('SELECT * FROM reader_memberships WHERE account_id=?').bind(a.id).first();
   const flow=await browser(a);assert.equal(flow.post.status,401);const password='Replacement-Production-Fixture!';
   const reset=await mf.dispatchFetch(profile.origin+'/auth/mobile/reset',{method:'POST',headers:{Origin:profile.origin,Cookie:flow.cookie,
     'CF-Connecting-IP':'192.0.2.'+(++ip),'Content-Type':'application/x-www-form-urlencoded'},
-    body:new URLSearchParams({flow:flow.flow,locale:'en',identifier:a.name,password,totpCode:totpAt(Math.floor(Date.now()/30000))}).toString()});
+    body:new URLSearchParams({flow:flow.flow,locale:'en',identifier:a.name,password,totpCode:totpAt(Math.max(step+1,Math.floor(Date.now()/30000)))}).toString()});
   assert.equal(reset.status,200,await reset.clone().text());assert.equal(reset.headers.get('set-cookie'),null);
   assert.equal((await call('/api/mobile/v1/me',{headers:auth(t)})).status,401);
   assert.equal((await call('/api/mobile/v1/auth/refresh',{body:{clientId:'station-cat-ios',refreshToken:t.refreshToken,refreshRequestId:randomUUID(),generation:t.generation}})).status,401);

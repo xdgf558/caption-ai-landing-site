@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
-import { mkdtemp, chmod, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, chmod, mkdir, readFile, readdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { backupHash, privateBackupJson, backupProductionBucket } from './helpers/station-production-backup.mjs';
+import { backupHash, stableBackupJson, privateBackupJson, backupProductionBucket } from './helpers/station-production-backup.mjs';
 import { databaseBackupFingerprint, localDatabaseRestoreArguments, restoreProductionDatabases,
   restoreProductionObjects, prepareDatabaseBackupRestore, canonicalBackupSql, splitBackupSql } from './helpers/station-production-restore.mjs';
 
@@ -113,8 +113,9 @@ test('native local R2 restores streamed bytes and all HTTP/custom metadata into 
     etag: createHash('md5').update(bytes).digest('hex'), http_metadata: { contentType: 'application/octet-stream', cacheControl: 'private, no-store' },
     custom_metadata: { label: '原始资料' }, storage_class: 'Standard' };
   let count = 0;
-  await backupProductionBucket({ async json() { return { result: count++ % 2 === 0 ? [metadata] : [] }; },
+  const saved = await backupProductionBucket({ async json() { return { result: count++ % 2 === 0 ? [metadata] : [] }; },
     async object() { return new Response(bytes, { headers: { ETag: metadata.etag } }); } }, 'test-bucket', destination);
+  await privateBackupJson(join(bucketDirectory, 'summary.json'), { complete: true, buckets: [saved] });
   const report = await restoreProductionObjects(directory, plan, join(directory, 'clone'));
   assert.equal(report.complete, true); assert.equal(report.buckets[0].bytes, bytes.length);
   assert.equal(report.buckets[0].allBytesAndHttpCustomMetadataVerified, true);
@@ -122,4 +123,48 @@ test('native local R2 restores streamed bytes and all HTTP/custom metadata into 
   assert.equal(report.buckets[0].verifiedSinglePartEtags, 1);
   assert.equal(report.sourceMultipartEtagsUploadTimesAndStorageClassesNotReproduced, true);
   await assert.rejects(restoreProductionObjects(directory, plan, join(directory, 'clone')), /EEXIST/);
+}));
+async function objectFixture(directory, bindings = ['CONTENT_BUCKET']) {
+  const root = join(directory, 'buckets'); await mkdir(root, { mode: 0o700 });
+  const plan = { buckets: bindings.map((binding, i) => ({ binding, bucket: 'restore-fixture-' + i })) }, summaries = [], manifests = [];
+  const bodies = new Map([['a.bin', Buffer.from('alpha')], ['b.bin', Buffer.from('bravo')]]);
+  const rows = [...bodies].map(([key, body]) => ({ key, size: body.length, etag: createHash('md5').update(body).digest('hex') }));
+  for (const target of plan.buckets) {
+    const destination = join(root, target.binding); await mkdir(destination, { mode: 0o700 });
+    summaries.push(await backupProductionBucket({ async json(path, { query }) { return { result: query.start_after ? [] : rows }; },
+      async object(bucket, key) { return new Response(bodies.get(key), { headers: { ETag: rows.find(row => row.key === key).etag } }); } }, target.bucket, destination));
+    manifests.push(JSON.parse(await readFile(join(destination, 'manifest.json'))));
+  }
+  await privateBackupJson(join(root, 'summary.json'), { complete: true, buckets: summaries });
+  return { plan, manifests, summaries };
+}
+test('native R2 restore rejects duplicate, missing and self-consistent substituted sets before creating a clone', async t => temporary(async directory => {
+  const { plan, manifests: [manifest] } = await objectFixture(directory);
+  const one = [manifest.objects[0]];
+  for (const [name, changed, error] of [
+    ['duplicate', { ...manifest, objects: [one[0], one[0]] }, /OBJECT_MANIFEST_DUPLICATE/],
+    ['missing', { ...manifest, objects: one }, /OBJECT_MANIFEST_BYTES/],
+    ['missing-with-adjusted-bytes', { ...manifest, objects: one, bytes: 5 }, /OBJECT_MANIFEST_METADATA/],
+    ['substituted-set', { ...manifest, objects: one, bytes: 5, metadataSha256: backupHash(stableBackupJson(one.map(row => row.metadata))) }, /OBJECT_MANIFEST_HASH/],
+    ['substituted-empty-set', { ...manifest, objects: [], bytes: 0, metadataSha256: backupHash(stableBackupJson([])) }, /OBJECT_MANIFEST_HASH/],
+  ]) await t.test(name, async () => {
+    await privateBackupJson(join(directory, 'buckets', 'CONTENT_BUCKET', 'manifest.json'), changed, { replace: true });
+    const clone = join(directory, name);
+    await assert.rejects(restoreProductionObjects(directory, plan, clone), error);
+    await assert.rejects(readFile(join(clone, 'manifest.json')), { code: 'ENOENT' });
+    await assert.rejects(readdir(clone), { code: 'ENOENT' });
+  });
+}));
+test('all bucket manifests must match the completed summary before any native R2 restoration starts', async () => temporary(async directory => {
+  const { plan, manifests, summaries } = await objectFixture(directory, ['CONTENT_BUCKET', 'DOWNLOADS_BUCKET']);
+  const path = join(directory, 'buckets', 'DOWNLOADS_BUCKET', 'manifest.json'), clone = join(directory, 'clone');
+  await privateBackupJson(path, { ...manifests[1], objects: [manifests[1].objects[0]] }, { replace: true });
+  await assert.rejects(restoreProductionObjects(directory, plan, clone), /OBJECT_MANIFEST_BYTES/);
+  await assert.rejects(readdir(clone), { code: 'ENOENT' });
+  await privateBackupJson(path, manifests[1], { replace: true });
+  for (const buckets of [[summaries[0]], [summaries[0], summaries[0]]]) {
+    await privateBackupJson(join(directory, 'buckets', 'summary.json'), { complete: true, buckets }, { replace: true });
+    await assert.rejects(restoreProductionObjects(directory, plan, clone), /BUCKET_SUMMARY/);
+    await assert.rejects(readdir(clone), { code: 'ENOENT' });
+  }
 }));

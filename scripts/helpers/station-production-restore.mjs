@@ -7,7 +7,8 @@ import { Readable } from 'node:stream';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { Miniflare, Log, LogLevel } from 'miniflare';
-import { backupHash, backupSinglePartMd5, stableBackupJson, hashBackupFile, privateBackupDirectory, privateBackupJson } from './station-production-backup.mjs';
+import { backupHash, backupSinglePartMd5, stableBackupJson, hashBackupFile, privateBackupDirectory,
+  privateBackupJson, readCompletedBucketBackups } from './station-production-backup.mjs';
 
 const run = promisify(execFile);
 const fail = code => { throw new Error('STATION_RESTORE_' + code); };
@@ -273,6 +274,9 @@ export async function hashBackupBody(body, expectedBytes) {
   check(bytes === expectedBytes, 'OBJECT_SIZE'); return { bytes, sha256: hash.digest('hex') };
 }
 export async function restoreProductionObjects(root, plan, cloneDirectory, progress = () => {}) {
+  // Validate every bucket and the recorded completion hashes before creating a
+  // clone. A valid subset or repeated object cannot become a complete restore.
+  const backups = await readCompletedBucketBackups(root, plan);
   const clone = await privateBackupDirectory(cloneDirectory, { create: true, fresh: true });
   const persistence = await privateBackupDirectory(join(clone, 'native-r2'), { create: true, fresh: true });
   const secret = randomUUID();
@@ -282,11 +286,8 @@ export async function restoreProductionObjects(root, plan, cloneDirectory, progr
     bindings: { RECOVERY_SECRET: secret }, outboundService: () => new Response(null, { status: 403 }) });
   try {
     const results = [];
-    for (const target of plan.buckets) {
-      const sourceDirectory = join(root, 'buckets', target.binding), manifestPath = join(sourceDirectory, 'manifest.json');
-      const manifestHash = (await hashBackupFile(manifestPath)).sha256;
-      const manifest = JSON.parse(await readFile(manifestPath));
-      check(manifest.complete === true && manifest.bucket === target.bucket && Array.isArray(manifest.objects), 'OBJECT_MANIFEST');
+    for (const { target, manifest, manifestSha256: manifestHash } of backups.buckets) {
+      const sourceDirectory = join(root, 'buckets', target.binding);
       check((await (await mf.getR2Bucket(target.binding)).list()).objects.length === 0, 'LOCAL_BUCKET_NOT_EMPTY');
       let bytes = 0, verifiedSinglePartEtags = 0; const verifiedObjects = [];
       for (const row of manifest.objects) {
@@ -313,6 +314,7 @@ export async function restoreProductionObjects(root, plan, cloneDirectory, progr
         verifiedObjects.push({ key: row.key, ...actual }); bytes += actual.bytes;
         progress({ binding: target.binding, completed: verifiedObjects.length, total: manifest.objects.length, bytes });
       }
+      check(verifiedObjects.length === manifest.objects.length && bytes === manifest.bytes, 'NATIVE_R2_TOTAL');
       const result = { binding: target.binding, objects: verifiedObjects.length, bytes, nativeLocalR2: true,
         allBytesAndHttpCustomMetadataVerified: true, verifiedSinglePartEtags, storageClassVerified: false, sourceManifestSha256: manifestHash,
         restoredObjectsSha256: backupHash(stableBackupJson(verifiedObjects)) };
@@ -320,7 +322,8 @@ export async function restoreProductionObjects(root, plan, cloneDirectory, progr
       await privateBackupJson(join(clone, target.binding + '.json'), { ...result, objects: verifiedObjects });
     }
     const result = { complete: true, productionWrites: 0, buckets: results, verifiedAt: new Date().toISOString(),
-      crossResourceAtomic: false, sourceMultipartEtagsUploadTimesAndStorageClassesNotReproduced: true };
+      crossResourceAtomic: false, sourceSummarySha256: backups.summarySha256,
+      sourceMultipartEtagsUploadTimesAndStorageClassesNotReproduced: true };
     await privateBackupJson(join(clone, 'manifest.json'), result); return result;
   } finally { await mf.dispose(); }
 }

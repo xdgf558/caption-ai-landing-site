@@ -1,0 +1,23 @@
+
+> landing-site@0.1.0 test:station:first-launch
+> node --test --test-timeout=120000 scripts/test-station-first-launch.mjs
+
+✔ launch scope leaves music promotion, preview and video empty and never deletes stored business data (3908.758208ms)
+✔ new activation proposal preserves old bindings/vars and enables no independent publishing/media/analytics switch (0.652625ms)
+✔ package allows only required templates, actual game, admin and account/legal surfaces (0.23325ms)
+✔ shared checkout retires all novel products but preserves general Station Points (0.125875ms)
+✔ old chapters and aliases are gone for both guests and historical purchasers without redirecting to login (27.157084ms)
+✔ old content APIs and unlocks cannot expose data or create purchases, including encoded aliases and HEAD (24.200958ms)
+✔ old products, downloads and display entrances retire while general site policies and actual game keep their handlers (15.2405ms)
+✔ partial activation hands old content back to its actual handler; closure never enables its own replacements (2.905667ms)
+✔ account, historical order lookup, callbacks, native library and game saves are not retired or modified (24.239459ms)
+✔ scope check rejects existing example publications and malformed or duplicated check rows (5.773333ms)
+✔ actual pruned Assets and game-only local publications produce four language homes without music or media (89.655208ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4293.267
