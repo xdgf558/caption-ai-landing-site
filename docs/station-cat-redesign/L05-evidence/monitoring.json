@@ -1,0 +1,156 @@
+{
+  "recordedAt": "2026-10-11T16:49:35.477Z",
+  "versionId": "cf69fe92-f8cd-45ff-a2a8-87cac1546814",
+  "percentage": 100,
+  "checks": [
+    {
+      "sample": 1,
+      "path": "/",
+      "status": 200,
+      "elapsedMs": 969,
+      "recordedAt": "2026-10-11T16:48:57.270Z",
+      "passed": true
+    },
+    {
+      "sample": 1,
+      "path": "/games/cat-life-game/",
+      "status": 200,
+      "elapsedMs": 401,
+      "recordedAt": "2026-10-11T16:48:57.671Z",
+      "passed": true
+    },
+    {
+      "sample": 1,
+      "path": "/games/cat-life/",
+      "status": 200,
+      "elapsedMs": 175,
+      "recordedAt": "2026-10-11T16:48:57.846Z",
+      "passed": true
+    },
+    {
+      "sample": 1,
+      "path": "/api/readers/session",
+      "status": 200,
+      "elapsedMs": 151,
+      "recordedAt": "2026-10-11T16:48:57.997Z",
+      "passed": true
+    },
+    {
+      "sample": 1,
+      "path": "/api/readers/game-saves/cat-life",
+      "status": 200,
+      "elapsedMs": 736,
+      "recordedAt": "2026-10-11T16:48:58.733Z",
+      "passed": true
+    },
+    {
+      "sample": 1,
+      "path": "/novel/",
+      "status": 410,
+      "elapsedMs": 153,
+      "recordedAt": "2026-10-11T16:48:58.886Z",
+      "passed": true
+    },
+    {
+      "sample": 2,
+      "path": "/",
+      "status": 200,
+      "elapsedMs": 996,
+      "recordedAt": "2026-10-11T16:49:14.882Z",
+      "passed": true
+    },
+    {
+      "sample": 2,
+      "path": "/games/cat-life-game/",
+      "status": 200,
+      "elapsedMs": 419,
+      "recordedAt": "2026-10-11T16:49:15.301Z",
+      "passed": true
+    },
+    {
+      "sample": 2,
+      "path": "/games/cat-life/",
+      "status": 200,
+      "elapsedMs": 164,
+      "recordedAt": "2026-10-11T16:49:15.465Z",
+      "passed": true
+    },
+    {
+      "sample": 2,
+      "path": "/api/readers/session",
+      "status": 200,
+      "elapsedMs": 150,
+      "recordedAt": "2026-10-11T16:49:15.615Z",
+      "passed": true
+    },
+    {
+      "sample": 2,
+      "path": "/api/readers/game-saves/cat-life",
+      "status": 200,
+      "elapsedMs": 709,
+      "recordedAt": "2026-10-11T16:49:16.324Z",
+      "passed": true
+    },
+    {
+      "sample": 2,
+      "path": "/novel/",
+      "status": 410,
+      "elapsedMs": 151,
+      "recordedAt": "2026-10-11T16:49:16.475Z",
+      "passed": true
+    },
+    {
+      "sample": 3,
+      "path": "/",
+      "status": 200,
+      "elapsedMs": 1130,
+      "recordedAt": "2026-10-11T16:49:32.607Z",
+      "passed": true
+    },
+    {
+      "sample": 3,
+      "path": "/games/cat-life-game/",
+      "status": 200,
+      "elapsedMs": 511,
+      "recordedAt": "2026-10-11T16:49:33.118Z",
+      "passed": true
+    },
+    {
+      "sample": 3,
+      "path": "/games/cat-life/",
+      "status": 200,
+      "elapsedMs": 180,
+      "recordedAt": "2026-10-11T16:49:33.298Z",
+      "passed": true
+    },
+    {
+      "sample": 3,
+      "path": "/api/readers/session",
+      "status": 200,
+      "elapsedMs": 154,
+      "recordedAt": "2026-10-11T16:49:33.452Z",
+      "passed": true
+    },
+    {
+      "sample": 3,
+      "path": "/api/readers/game-saves/cat-life",
+      "status": 200,
+      "elapsedMs": 691,
+      "recordedAt": "2026-10-11T16:49:34.143Z",
+      "passed": true
+    },
+    {
+      "sample": 3,
+      "path": "/novel/",
+      "status": 410,
+      "elapsedMs": 155,
+      "recordedAt": "2026-10-11T16:49:34.298Z",
+      "passed": true
+    }
+  ],
+  "activeVersionUnchanged": true,
+  "productionBusinessWrites": 0,
+  "limitations": [
+    "Short HTTP and deployment observation only, not incident alert delivery, production cloud conflicts or a long-duration monitoring acceptance"
+  ]
+}

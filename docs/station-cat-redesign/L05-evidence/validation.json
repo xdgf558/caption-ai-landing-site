@@ -1,0 +1,39 @@
+{
+  "recordedAt": "2026-10-11T16:50:40.597Z",
+  "runtimeHead": "38ed5f7c7519b8f4fe8bc6cc8e005d69c584ca37",
+  "completeHostedCi": {
+    "runId": 38154398558,
+    "headRevision": "38ed5f7c7519b8f4fe8bc6cc8e005d69c584ca37",
+    "jobs": [
+      {
+        "id": 114514260720,
+        "head_sha": "38ed5f7c7519b8f4fe8bc6cc8e005d69c584ca37",
+        "name": "test",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "url": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/38154398558"
+  },
+  "local": {
+    "gameSessionAndRelated": 34,
+    "firstLaunchAndContentRollback": 20,
+    "brandGamesProductionBuild": true,
+    "emptySerialOptionUsed": false,
+    "optionalBeaconBrowserRehearsal": true,
+    "localHttpAndRealScreenshotChecks": 25,
+    "publicationReplayIdempotent": true,
+    "finalDeployDryRun": true,
+    "finalReadinessAndFirstLaunch": 41,
+    "finalBrandGamesBuild": {
+      "passed": true,
+      "files": 406,
+      "html": 59,
+      "emptySerialOptionUsed": false
+    }
+  },
+  "finalEvidenceCommitCi": "Pending at recording time; review the exact current head in PR checks separately",
+  "productionDeployed": true,
+  "legacyClosureVerified": true,
+  "launchReady": false
+}

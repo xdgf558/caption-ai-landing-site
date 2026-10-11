@@ -1,0 +1,25 @@
+{
+  "recordedAt": "2026-10-11T16:48:20.556Z",
+  "browserVersion": "151.0.7922.34",
+  "source": "real production URL in fresh desktop headless Chromium; not real-phone/VoiceOver acceptance",
+  "home": {
+    "status": 200,
+    "nav": []
+  },
+  "game": {
+    "saveStatus": "missing",
+    "gameState": "ready",
+    "realFramePath": "/games/cat-life/",
+    "exitState": {
+      "frameRemoved": true,
+      "gameRuntime": "false"
+    }
+  },
+  "pageErrors": [],
+  "failedSameOriginResponses": [],
+  "optionalAnalyticsCspErrorRetained": true,
+  "attemptedBusinessRequests": 0,
+  "realDevice": false,
+  "voiceOver": false,
+  "stoppedAcknowledgementObserved": false
+}

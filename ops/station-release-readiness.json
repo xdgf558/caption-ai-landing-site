@@ -1,16 +1,16 @@
 {
   "task": "T22",
-  "reviewBaseline": "b2ba1205855f65e609d1efb9b1de21fee0db0cc6",
-  "productionDeployed": false,
-  "legacyClosureVerified": false,
+  "reviewBaseline": "38ed5f7c7519b8f4fe8bc6cc8e005d69c584ca37",
+  "productionDeployed": true,
+  "legacyClosureVerified": true,
   "gates": [
     {
       "id": "exact-head-ci",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L04-evidence/validation.json"
+        "docs/station-cat-redesign/L05-evidence/validation.json"
       ],
-      "reason": "已审查 L03 精确头的完整 CI 38140010738 成功；L04 当前记录、后验收兼容性修复及回归的精确头完整 CI 待独立核对。"
+      "reason": "部署使用的运行时修复头 38ed5f7c 完整 CI 38154398558 成功；状态记录时最终证据/检查表提交尚未生成，须按 PR 当前头独立核对，不能用运行时头代替。"
     },
     {
       "id": "production-schema",
@@ -24,67 +24,77 @@
       "id": "production-backup",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L02-evidence/backup-and-restore.json",
-        "docs/station-cat-redesign/L04-evidence/fresh-music-backup.json"
+        "docs/station-cat-redesign/L05-evidence/content-publication.json",
+        "docs/station-cat-redesign/L05-evidence/recovery.json"
       ],
-      "reason": "L04 MUSIC_DB 新完整备份、恢复锚点与新 SQL 本机迁移验证通过；原 L02 全站备份保留。仅音乐库为本次刷新，全站部署前仍需复核其他资源的新鲜度；非跨 D1/R2 原子快照，异地副本未确认。"
+      "reason": "复核 503 个旧 R2 对象元数据及本机备份哈希、两个 D1 新恢复锚点；仅增加一个已核对游戏截图。L04 音乐库完整备份保留；非跨 D1/R2 原子快照，异地副本仍未确认。"
     },
     {
       "id": "real-promotion-rights",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L01-first-launch-scope.md"
+        "docs/station-cat-redesign/L05-evidence/content-publication.json",
+        "docs/station-cat-redesign/L05-evidence/production-http.json"
       ],
-      "reason": "用户已选择品牌与游戏首发，音乐主推/试听/视频留空；需发布真实游戏与空音乐首页并核对游戏/品牌资源权限，不能使用合成夹具代替。"
+      "reason": "真实游戏和空音乐首页已发布，实际截图字节和公开受控路径通过。权利依据站点所有者授权复用已有品牌/游戏，不构成独立第三方许可证或后续音乐素材验收。"
     },
     {
       "id": "production-build",
-      "status": "pending",
+      "status": "passed",
       "evidence": [
-        "docs/station-cat-redesign/L04-evidence/validation.json"
+        "docs/station-cat-redesign/L05-evidence/package.json",
+        "docs/station-cat-redesign/L05-evidence/validation.json",
+        "docs/station-cat-redesign/L05-evidence/production-launch.json"
       ],
-      "reason": "L04 品牌/游戏首发构建通过且未使用空正文选项；真实首发内容、完整生产部署配置和最终发布包仍待后续审核。"
+      "reason": "品牌与游戏生产包拒绝空正文选项；406 个文件/59 HTML 冻结核对，实际部署只替换经过 CI 的桥接脚本，Worker 与 dry-run 字节一致。"
     },
     {
       "id": "production-route-contract",
       "status": "pending",
-      "evidence": [],
-      "reason": "候选 Worker-first 覆盖须经实际部署版本和 HTTP/身份/方法核对；源码 CSV 不是生产合同。"
+      "evidence": [
+        "docs/station-cat-redesign/L05-evidence/production-launch.json",
+        "docs/station-cat-redesign/L05-evidence/production-http.json"
+      ],
+      "reason": "实际版本 Worker-first 与新页、旧小说/正文/API/下载关闭、匿名账号/订单/存档及无签名回调拒绝已核对。原生音乐/AASA 原为静态 404，配置缺失时现为 503；真实身份/原生合同仍未验收。"
     },
     {
       "id": "performance",
       "status": "failed",
       "evidence": [
-        "docs/station-cat-redesign/T21-evidence/browser/mobile-lab-runs.json",
-        "docs/station-cat-redesign/T21-evidence/browser/song-lcp-diagnostic.json"
+        "docs/station-cat-redesign/L05-evidence/performance.json"
       ],
-      "reason": "T21 歌曲页 3.37–3.43 秒失败保留，不因首发音乐关闭而记通过；实际品牌/游戏首发页面需性能复测。"
+      "reason": "真实首发页面受限共享网络/4倍 CPU 冷缓存实验为 home#1 3.33s、home#2 3.34s、game#1 2.50s、game#2 2.38s；见完整记录。T21 歌曲页 3.37–3.43 秒失败保留；不同采样条件及关闭音乐都不能替代该失败或证明真实设备。"
     },
     {
       "id": "devices-accessibility",
       "status": "pending",
-      "evidence": [],
-      "reason": "iPhone/Android、稳定 Safari/Chrome/Edge、抖音/微信、VoiceOver、安全区域及原始存档导出落盘未验收。"
+      "evidence": [
+        "docs/station-cat-redesign/L05-evidence/game-browser.json",
+        "docs/station-cat-redesign/L05-evidence/performance.json"
+      ],
+      "reason": "真实 URL 的桌面 Chromium 启动/退出、390×844 视口和可访问性树已采集；iPhone/Android、稳定 Safari/Chrome/Edge、内置浏览器、VoiceOver 和原始导出落盘未验收。"
     },
     {
       "id": "compatible-rollback-monitoring",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L02-production-backup-and-content-rollback.md",
-        "docs/station-cat-redesign/L02-evidence/validation.json"
+        "docs/station-cat-redesign/L05-evidence/recovery.json",
+        "docs/station-cat-redesign/L05-evidence/monitoring.json"
       ],
-      "reason": "真实备份与本机恢复完成；独立维护入口在合成 Worker/Assets 中保持旧内容关闭且保留原账号/订单/游戏接口，打包 dry-run 通过。完整生产基线、实际回退部署/HTTP与监控、Access、在途写入和云冲突仍未验收。"
+      "reason": "已实际部署关闭内容维护包，验证维护 503、旧小说/正文 410、原游戏与匿名业务服务可用，并恢复修复后的新版；短时 HTTP/版本观测通过。生产云冲突、在途写入、长期告警与真机仍未验收。"
     },
     {
       "id": "production-authorization",
-      "status": "pending",
+      "status": "passed",
       "evidence": [
-        "docs/station-cat-redesign/L04-production-migration-execution.md",
-        "docs/station-cat-redesign/L04-evidence/production-migration.json"
+        "docs/station-cat-redesign/L05-evidence/production-launch.json",
+        "docs/station-cat-redesign/L05-evidence/recovery.json"
       ],
-      "reason": "本次 MUSIC_DB 新备份与七份迁移获用户明确授权并已完成，维护窗口操作已结束；授权不包含部署、Station 开关启用或旧入口关闭。继续一批一 PR。"
+      "reason": "用户在本聊天将部署包、执行方案、部署新版与关闭旧小说合并为一个执行任务。本次已实际部署并关闭旧公开内容，未删除历史业务数据或执行数据库恢复；该授权不授予新的独立功能或未来部署。"
     }
   ],
-  "launchPhase": "L04",
-  "launchScope": "ops/station-first-launch.json"
+  "launchPhase": "L05",
+  "launchScope": "ops/station-first-launch.json",
+  "validatedRuntimeRevision": "38ed5f7c7519b8f4fe8bc6cc8e005d69c584ca37",
+  "productionVersion": "cf69fe92-f8cd-45ff-a2a8-87cac1546814"
 }
