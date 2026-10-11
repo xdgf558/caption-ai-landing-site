@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "task": "L04",
+  "complete": true,
+  "checkedAt": "2026-10-11T13:51:41.169Z",
+  "scope": "anonymous legacy catalog GET and existing game/home HEAD only",
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/api/music/catalog?locale=zh-Hant",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bodySha256": "8237040c7829230faaebfb4082ee40341789ea4962d05c6d50bcda588e7fec81",
+      "publicTracks": 11
+    },
+    {
+      "method": "HEAD",
+      "path": "/games/cat-life/",
+      "status": 200,
+      "contentType": "text/html",
+      "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "method": "HEAD",
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html",
+      "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "newRouteAcceptance": false,
+  "authenticatedAcceptance": false,
+  "gameStartupVerified": false,
+  "productionDeployed": false,
+  "legacyClosureVerified": false
+}

@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "task": "L04",
+  "sourceRevision": "b2ba1205855f65e609d1efb9b1de21fee0db0cc6",
+  "reviewedExecutionPacket": {
+    "pullRequest": "https://github.com/xdgf558/caption-ai-landing-site/pull/210",
+    "head": "098481848ff1fe164e464819205649ebf80f72ad",
+    "ciRun": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/38140010738",
+    "ciConclusion": "success"
+  },
+  "targetSha256": "10e65e786e32e7024c929d1a111de14a572a2d8a851d31be4e839194b5eef4dd",
+  "migrationSetSha256": "65b3c13b9e7302736c837a7a8a9f061da15af797169bb82978a8ad43900b4943",
+  "maintenance": {
+    "userConfirmed": true,
+    "bindings": [
+      "MUSIC_DB"
+    ],
+    "requestBlockingAccepted": true,
+    "startsAt": "2026-10-11T13:44:17.000Z",
+    "endsAt": "2026-10-11T14:14:17.000Z",
+    "validationCompletedAt": "2026-10-11T13:54:40.677Z",
+    "completedAt": "2026-10-11T13:59:20.482Z",
+    "authorizationConsumed": true,
+    "windowSha256": "d1409a2294c91a5c60de7db64c99c983e1de4a3742d072ca58fe8c25bf3a2c92"
+  },
+  "steps": [
+    {
+      "name": "0012_station_redesign.sql",
+      "bytes": 53788,
+      "sqlSha256": "6e5a31d58a33d3e8c5520becf1aa5f4f7e4adac4c2d5e31ceb10a2e3e7ed3498",
+      "verifiedAt": "2026-10-11T13:45:15.106Z",
+      "ledgerEntries": 12,
+      "schemaSha256": "c3f08973a29943ccb53aea43974ae199929b18075ad5faf88d9cc1a51ca3a59d",
+      "cliLogSha256": "a5ec5d421761a797803ff8b2a9448256dddf1e2ace22844af190a303e49229d7"
+    },
+    {
+      "name": "0013_station_media_uploads.sql",
+      "bytes": 4928,
+      "sqlSha256": "fca37ba533ddd2821335aa44749e699da546f145182a5f5886ebdac02c637021",
+      "verifiedAt": "2026-10-11T13:45:56.256Z",
+      "ledgerEntries": 13,
+      "schemaSha256": "1e0ab8a8d5e06776292ddce7925941c725ebb2abb249d7564f016a2e0af3a5bb",
+      "cliLogSha256": "2d3d6517597ec199fd730f88c777c651e9e0f1010a3e11fb777d80d48afc663b"
+    },
+    {
+      "name": "0014_station_content_operations.sql",
+      "bytes": 1928,
+      "sqlSha256": "c457774b05fa286fa8ec51f7ddc08db4eba3893902df44e359b288153954c0dd",
+      "verifiedAt": "2026-10-11T13:46:32.833Z",
+      "ledgerEntries": 14,
+      "schemaSha256": "7040281f6332c4ceef7078ee53d0a7193f5895a8d9d2fefa048a88933b587228",
+      "cliLogSha256": "56e3b9a986adde476c3160fc5c6e70974d81ef1d8e0654064cc329ffb43be0ff"
+    },
+    {
+      "name": "0015_station_campaign_links.sql",
+      "bytes": 1581,
+      "sqlSha256": "c530d98acc09ab6806e136970eb36d6611f7b30dd0716103d78e6072c077232f",
+      "verifiedAt": "2026-10-11T13:47:09.581Z",
+      "ledgerEntries": 15,
+      "schemaSha256": "0b44fd7e1dea1b9344dafb1f8d6337f831afebaa410b945bed4a0813f1e9e31f",
+      "cliLogSha256": "d54ab29d48d988b95331588de4843862813885e39e80935940bfca6e3f62d900"
+    },
+    {
+      "name": "0016_station_event_collection.sql",
+      "bytes": 3769,
+      "sqlSha256": "feaeed6ac1dc78aba311c9a40532289f2b8acffc233f670415e6b5bab5131ceb",
+      "verifiedAt": "2026-10-11T13:47:47.364Z",
+      "ledgerEntries": 16,
+      "schemaSha256": "5c0c102462a85ab19ee324d95ed965d7663cc0e7eedcf1ae4009366edc14a919",
+      "cliLogSha256": "3197961eec4acc16efc38554e129edede08aa9353949ade538ce1fed97e46171"
+    },
+    {
+      "name": "0017_station_reports.sql",
+      "bytes": 6299,
+      "sqlSha256": "c54f66b828d253c5b9045f9cf12434a6e85d08c53a86ff30bae560c0ebb541e6",
+      "verifiedAt": "2026-10-11T13:48:24.148Z",
+      "ledgerEntries": 17,
+      "schemaSha256": "9d978eb62219918c292aca6fcdc4cb977d65480494c3f2ad2e14af70330bb8ef",
+      "cliLogSha256": "45c921bcf12c7f00ef7f7cd14824536473a91d0dea1323e2e155fb5c164c975d"
+    },
+    {
+      "name": "0018_station_report_window_seals.sql",
+      "bytes": 3453,
+      "sqlSha256": "ce9517d0549ed33026d02a56ebc57f4b3f58f8a0c3467f198d66fce6f239e186",
+      "verifiedAt": "2026-10-11T13:50:29.538Z",
+      "ledgerEntries": 18,
+      "schemaSha256": "2b10c808242f37f2c4610427493a865575bf38995f5f4abca64c3f498628ff87",
+      "cliLogSha256": "214e96d861ab7ca27b048dab86ae5e82a32363eb537b2688e310f1029495706a"
+    }
+  ],
+  "ledger": [
+    {
+      "id": 1,
+      "name": "0001_music_foundation.sql",
+      "appliedAt": "2026-09-13 12:10:58"
+    },
+    {
+      "id": 2,
+      "name": "0002_music_publication.sql",
+      "appliedAt": "2026-09-13 12:10:59"
+    },
+    {
+      "id": 3,
+      "name": "0003_music_uploads.sql",
+      "appliedAt": "2026-09-13 12:10:59"
+    },
+    {
+      "id": 4,
+      "name": "0004_music_cleanup.sql",
+      "appliedAt": "2026-09-13 12:10:59"
+    },
+    {
+      "id": 5,
+      "name": "0005_music_rate_limits.sql",
+      "appliedAt": "2026-09-13 12:11:00"
+    },
+    {
+      "id": 6,
+      "name": "0006_music_analytics.sql",
+      "appliedAt": "2026-09-13 12:11:00"
+    },
+    {
+      "id": 7,
+      "name": "0007_music_albums.sql",
+      "appliedAt": "2026-09-13 12:11:01"
+    },
+    {
+      "id": 8,
+      "name": "0008_music_featured.sql",
+      "appliedAt": "2026-09-13 12:11:01"
+    },
+    {
+      "id": 9,
+      "name": "0009_music_album_covers.sql",
+      "appliedAt": "2026-09-13 22:58:05"
+    },
+    {
+      "id": 10,
+      "name": "0010_music_limited_free.sql",
+      "appliedAt": "2026-09-14 01:17:01"
+    },
+    {
+      "id": 11,
+      "name": "0011_music_share_rate_limits.sql",
+      "appliedAt": "2026-09-14 04:11:10"
+    },
+    {
+      "id": 12,
+      "name": "0012_station_redesign.sql",
+      "appliedAt": "2026-10-11 13:45:10"
+    },
+    {
+      "id": 13,
+      "name": "0013_station_media_uploads.sql",
+      "appliedAt": "2026-10-11 13:45:54"
+    },
+    {
+      "id": 14,
+      "name": "0014_station_content_operations.sql",
+      "appliedAt": "2026-10-11 13:46:30"
+    },
+    {
+      "id": 15,
+      "name": "0015_station_campaign_links.sql",
+      "appliedAt": "2026-10-11 13:47:07"
+    },
+    {
+      "id": 16,
+      "name": "0016_station_event_collection.sql",
+      "appliedAt": "2026-10-11 13:47:45"
+    },
+    {
+      "id": 17,
+      "name": "0017_station_reports.sql",
+      "appliedAt": "2026-10-11 13:48:22"
+    },
+    {
+      "id": 18,
+      "name": "0018_station_report_window_seals.sql",
+      "appliedAt": "2026-10-11 13:50:26"
+    }
+  ],
+  "pre0018": {
+    "checkedAt": "2026-10-11T13:50:13.210Z",
+    "ledgerEntries": 17,
+    "counts": {
+      "snapshots": 0,
+      "jobs": 0,
+      "aggregate_receipts": 0,
+      "events": 0,
+      "guards": 0,
+      "active_health": 0
+    },
+    "sqlSha256": "0a84518224805bb68ab637d834e2af4c9dfa3308c777e39230856a0163649a15"
+  },
+  "postcheck": {
+    "complete": true,
+    "checkedAt": "2026-10-11T13:54:40.677Z",
+    "targetSha256": "10e65e786e32e7024c929d1a111de14a572a2d8a851d31be4e839194b5eef4dd",
+    "ledgerEntries": 18,
+    "stationTables": 32,
+    "counts": {
+      "tracks": 12,
+      "revisions": 49,
+      "assets": 35
+    },
+    "draftTracks": 12,
+    "homeDrafts": 1,
+    "publishedContent": 0,
+    "promotions": 0,
+    "platformLinks": 0,
+    "games": 0,
+    "clips": 0,
+    "analyticsEvents": 0,
+    "reports": 0,
+    "inflightEvents": 0,
+    "quickCheck": "ok",
+    "foreignKeys": "ok",
+    "fullIntegrityCheck": "rejected-by-production-D1-SQL-API",
+    "integrityEquivalentToFullSqliteCheck": false,
+    "legacySchemaPreserved": true,
+    "cleanupViewExpanded": true,
+    "storageViewExpanded": true,
+    "schemaSha256": "2b10c808242f37f2c4610427493a865575bf38995f5f4abca64c3f498628ff87",
+    "sqlSha256": "a3a56d7eb97682e80d3212dfa1d564b94308f1071d27a88bc1c6486cc1552fdc",
+    "activeVersionId": "67d6e6b0-42f5-4696-8ed5-bc1096a49ebf",
+    "stationSwitchesEnabled": 0,
+    "remoteMigrationExecuted": true,
+    "productionDeployed": false,
+    "legacyClosureVerified": false,
+    "legacyValueEqualityClaimed": false,
+    "statementCount": 28,
+    "responseSha256": "5e36a81534dc2822917bf25132877fcc5d39edae0f945b5c40cc2208bdd321ed",
+    "initialAttempt": {
+      "statement": "PRAGMA integrity_check",
+      "httpStatus": 400,
+      "productionWrites": 0
+    },
+    "supportedCheckReference": "https://developers.cloudflare.com/d1/sql-api/sql-statements/#pragma-quick_check"
+  },
+  "scope": {
+    "musicMigrationExecuted": true,
+    "waitlistMigrated": false,
+    "r2Written": false,
+    "workerDeployed": false,
+    "stationSwitchesChanged": false,
+    "publishedContent": 0,
+    "legacyClosureVerified": false,
+    "launchReady": false
+  },
+  "limitations": [
+    "Seven migrations commit independently; no automatic whole-database rollback was executed.",
+    "Legacy schema and immediate counts were compared; concurrent legacy row values were not frozen or proven identical.",
+    "Production quick_check is not a full SQLite integrity_check."
+  ]
+}

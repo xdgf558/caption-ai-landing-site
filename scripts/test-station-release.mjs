@@ -60,7 +60,8 @@ test('release readiness keeps preparation, deployment and closure separate and r
   const status = JSON.parse(await readFile(new URL('../ops/station-release-readiness.json', import.meta.url)));
   const result = assessReleaseReadiness(status);
   assert.equal(result.launchReady, false); assert.equal(result.productionDeployed, false); assert.equal(result.legacyClosureVerified, false);
-  assert.ok(result.unsatisfied.includes('performance')); assert.ok(result.unsatisfied.includes('production-schema'));
+  assert.ok(result.unsatisfied.includes('performance')); assert.ok(result.unsatisfied.includes('production-route-contract'));
+  assert.ok(!result.unsatisfied.includes('production-schema'));
   const incomplete = structuredClone(status); incomplete.gates.pop(); assert.throws(() => assessReleaseReadiness(incomplete), /GATE_SET/);
   const forged = structuredClone(status); forged.gates[0].status = 'passed'; forged.gates[0].evidence = []; assert.throws(() => assessReleaseReadiness(forged), /EVIDENCE/);
 });

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "task": "L04",
+  "binding": "MUSIC_DB",
+  "targetSha256": "10e65e786e32e7024c929d1a111de14a572a2d8a851d31be4e839194b5eef4dd",
+  "complete": true,
+  "capturedAt": "2026-10-11T13:44:35.913Z",
+  "bytes": 383771,
+  "sha256": "b6af24eb47ecd7f3a3f2b3a7452278358b1538580dde464054ff0796134e3070",
+  "export": "wrangler-4.131.1-full-schema-and-data",
+  "originalL02BackupPreserved": true,
+  "crossResourceAtomic": false,
+  "offsiteCopyConfirmed": false,
+  "waitlistRefreshed": false,
+  "r2Refreshed": false,
+  "rehearsal": {
+    "engine": "local SQLite using the fresh MUSIC_DB SQL",
+    "recordedAt": "2026-10-11T13:44:37.345Z",
+    "legacyTablesPreserved": 27,
+    "legacyRowsPreserved": 748,
+    "legacyDataSha256": "0319a78a9f40585d4319c4aa79a31d7b5446ed293b93839d646c2e2645455d29",
+    "ledgerEntries": 18,
+    "stationTables": 32,
+    "draftTracks": 12,
+    "homeDrafts": 1,
+    "publishedContent": 0,
+    "integrity": "ok",
+    "foreignKeys": "ok",
+    "cleanupViewExpanded": true,
+    "storageViewExpanded": true,
+    "legacyChargesUnchanged": true
+  },
+  "recoveryAnchor": {
+    "capturedAt": "2026-10-11T13:45:09.021Z",
+    "captured": true,
+    "privateFileSha256": "8b7ab1da46727d2f9b9e2456717f3f02e7511ae45765a99a2909399002f32f76",
+    "restoreExecuted": false
+  },
+  "storage": {
+    "permissions": "directories 0700, files 0600",
+    "rawDataCommitted": false
+  }
+}
