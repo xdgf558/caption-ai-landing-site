@@ -1,0 +1,2301 @@
+{
+  "recordedAt": "2026-10-11T16:49:25.053Z",
+  "production": true,
+  "browserVersion": "151.0.7922.34",
+  "tool": "project Playwright 1.62.1 with Chromium CDP; Chrome DevTools MCP unavailable",
+  "profile": {
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "dpr": 1
+    },
+    "latencyMs": 150,
+    "downloadBytesPerSecond": 200000,
+    "uploadBytesPerSecond": 100000,
+    "cpuThrottle": 4,
+    "coldBrowserCache": true,
+    "sharedLinkSimulation": true,
+    "thirdPartyRequestsBlocked": true
+  },
+  "runs": [
+    {
+      "name": "home",
+      "path": "/",
+      "run": 1,
+      "metrics": {
+        "lcpMs": 3328,
+        "lcpElement": {
+          "tag": "IMG",
+          "className": "gentle-hero-image",
+          "path": "/images/station-gentle/hero.webp",
+          "size": 78000
+        },
+        "cls": 0,
+        "longTasks": [],
+        "unsupported": [],
+        "paints": [
+          {
+            "name": "first-paint",
+            "startTime": 1980
+          },
+          {
+            "name": "first-contentful-paint",
+            "startTime": 1980
+          }
+        ],
+        "navigation": [
+          {
+            "ttfbMs": 598.8000000007451,
+            "domContentLoadedMs": 2476.699999999255,
+            "loadMs": 3317.800000000745
+          }
+        ],
+        "resources": [
+          {
+            "path": "/_astro/index.CdwIK2GI.css",
+            "type": "link",
+            "durationMs": 186.30000000074506,
+            "transferBytes": 3279,
+            "encodedBodyBytes": 2979
+          },
+          {
+            "path": "/_astro/_locale_.7i0bvHxd.css",
+            "type": "link",
+            "durationMs": 336.5999999977648,
+            "transferBytes": 3094,
+            "encodedBodyBytes": 2794
+          },
+          {
+            "path": "/_astro/_locale_.CyLhD4gI.css",
+            "type": "link",
+            "durationMs": 814,
+            "transferBytes": 1685,
+            "encodedBodyBytes": 1385
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "img",
+            "durationMs": 881.3999999985099,
+            "transferBytes": 7634,
+            "encodedBodyBytes": 7334
+          },
+          {
+            "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+            "type": "script",
+            "durationMs": 757.0999999977648,
+            "transferBytes": 1016,
+            "encodedBodyBytes": 716
+          },
+          {
+            "path": "/images/station-gentle/hero.webp",
+            "type": "img",
+            "durationMs": 2205,
+            "transferBytes": 211886,
+            "encodedBodyBytes": 211586
+          },
+          {
+            "path": "/api/station/content/assets/ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+            "type": "img",
+            "durationMs": 2105.60000000149,
+            "transferBytes": 105984,
+            "encodedBodyBytes": 105684
+          },
+          {
+            "path": "/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+            "type": "script",
+            "durationMs": 2.300000000745058,
+            "transferBytes": 0,
+            "encodedBodyBytes": 0
+          },
+          {
+            "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+            "type": "script",
+            "durationMs": 755.6000000014901,
+            "transferBytes": 1092,
+            "encodedBodyBytes": 792
+          },
+          {
+            "path": "/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.CF2-hvS8.js",
+            "type": "script",
+            "durationMs": 770.8000000007451,
+            "transferBytes": 1003,
+            "encodedBodyBytes": 703
+          },
+          {
+            "path": "/_astro/routes.Cqv8BySH.js",
+            "type": "script",
+            "durationMs": 184.19999999925494,
+            "transferBytes": 868,
+            "encodedBodyBytes": 568
+          },
+          {
+            "path": "/_astro/pagePaths.Adk3jqEz.js",
+            "type": "script",
+            "durationMs": 275,
+            "transferBytes": 785,
+            "encodedBodyBytes": 485
+          },
+          {
+            "path": "/_astro/campaignLinks.hVtZubDL.js",
+            "type": "script",
+            "durationMs": 287.30000000074506,
+            "transferBytes": 1402,
+            "encodedBodyBytes": 1102
+          },
+          {
+            "path": "/_astro/analyticsControls.BJn8lemT.js",
+            "type": "script",
+            "durationMs": 457.5,
+            "transferBytes": 4609,
+            "encodedBodyBytes": 4309
+          },
+          {
+            "path": "/_astro/musicResponse.kb_2zO3V.js",
+            "type": "script",
+            "durationMs": 293.30000000074506,
+            "transferBytes": 674,
+            "encodedBodyBytes": 374
+          },
+          {
+            "path": "/_astro/clipClient.B6wkw9Tl.js",
+            "type": "script",
+            "durationMs": 452.5999999977648,
+            "transferBytes": 4525,
+            "encodedBodyBytes": 4225
+          },
+          {
+            "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+            "type": "script",
+            "durationMs": 577.5999999977648,
+            "transferBytes": 12806,
+            "encodedBodyBytes": 12506
+          },
+          {
+            "path": "/_astro/navigation.-iYZuZPj.js",
+            "type": "script",
+            "durationMs": 315.3999999985099,
+            "transferBytes": 1350,
+            "encodedBodyBytes": 1050
+          },
+          {
+            "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+            "type": "script",
+            "durationMs": 328.5,
+            "transferBytes": 978,
+            "encodedBodyBytes": 678
+          },
+          {
+            "path": "/_astro/musicLocalData.rQlht5YK.js",
+            "type": "script",
+            "durationMs": 369.3999999985099,
+            "transferBytes": 1956,
+            "encodedBodyBytes": 1656
+          },
+          {
+            "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+            "type": "script",
+            "durationMs": 422,
+            "transferBytes": 3105,
+            "encodedBodyBytes": 2805
+          }
+        ],
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        "interactive": [
+          {
+            "tag": "A",
+            "text": "跳至主要內容",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "Station Cat 一座深夜還亮著的小站。",
+            "aria": "Station Cat · 首頁"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "搜尋小站"
+          },
+          {
+            "tag": "A",
+            "text": "繁中",
+            "aria": "繁體中文"
+          },
+          {
+            "tag": "A",
+            "text": "简中",
+            "aria": "简体中文"
+          },
+          {
+            "tag": "A",
+            "text": "EN",
+            "aria": "English"
+          },
+          {
+            "tag": "A",
+            "text": "日本語",
+            "aria": "日本語"
+          },
+          {
+            "tag": "A",
+            "text": "首頁",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "關於",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "前往音樂小站",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "探索遊戲世界",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "探索更多音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "探索更多音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "探索更多遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "",
+            "aria": "查看遊戲 · 打工養貓日記"
+          },
+          {
+            "tag": "A",
+            "text": "打工養貓日記",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "查看遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "完整歌曲原創作品與創作分享",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "平台收聽串連各大音樂平台",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "短影片推廣用影像留住音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員內容支持創作，解鎖更多",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "Station CatMusic, Games, and a kinder tomorrow.",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "首頁",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "關於",
+            "aria": null
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "Spotify · 平台連結待更新"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "YouTube · 平台連結待更新"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "Instagram · 平台連結待更新"
+          },
+          {
+            "tag": "A",
+            "text": "",
+            "aria": "Station Cat on X"
+          },
+          {
+            "tag": "A",
+            "text": "隱私政策",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "服務條款",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "聯絡我們",
+            "aria": null
+          }
+        ]
+      },
+      "network": [
+        {
+          "path": "/",
+          "type": "Document",
+          "status": 200,
+          "mimeType": "text/html",
+          "cacheControl": "private, no-store",
+          "contentEncoding": "zstd",
+          "encodedBytes": 10180
+        },
+        {
+          "path": "/_astro/index.CdwIK2GI.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3410
+        },
+        {
+          "path": "/_astro/_locale_.7i0bvHxd.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3088
+        },
+        {
+          "path": "/images/station-gentle/hero.webp",
+          "type": "Image",
+          "status": 200,
+          "mimeType": "image/webp",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "contentEncoding": null,
+          "encodedBytes": 212143
+        },
+        {
+          "path": "/images/station-gentle/cat-mark.webp",
+          "type": "Image",
+          "status": 200,
+          "mimeType": "image/webp",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "contentEncoding": null,
+          "encodedBytes": 7633
+        },
+        {
+          "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1026
+        },
+        {
+          "path": "/_astro/_locale_.CyLhD4gI.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1681
+        },
+        {
+          "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1114
+        },
+        {
+          "path": "/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.CF2-hvS8.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1054
+        },
+        {
+          "path": "/api/station/content/assets/ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+          "type": "Image",
+          "status": 200,
+          "mimeType": "image/jpeg",
+          "cacheControl": "no-store",
+          "contentEncoding": null,
+          "encodedBytes": 106283
+        },
+        {
+          "path": "/_astro/routes.Cqv8BySH.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 977
+        },
+        {
+          "path": "/_astro/pagePaths.Adk3jqEz.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 777
+        },
+        {
+          "path": "/_astro/campaignLinks.hVtZubDL.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1396
+        },
+        {
+          "path": "/_astro/musicResponse.kb_2zO3V.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 667
+        },
+        {
+          "path": "/_astro/navigation.-iYZuZPj.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1400
+        },
+        {
+          "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 985
+        },
+        {
+          "path": "/_astro/musicLocalData.rQlht5YK.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1974
+        },
+        {
+          "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3100
+        },
+        {
+          "path": "/_astro/analyticsControls.BJn8lemT.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 4624
+        },
+        {
+          "path": "/_astro/clipClient.B6wkw9Tl.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 4578
+        },
+        {
+          "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 12938
+        }
+      ],
+      "pageErrors": [],
+      "blocked": [
+        {
+          "origin": "https://static.cloudflareinsights.com",
+          "path": "/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+          "method": "GET"
+        }
+      ],
+      "ariaSnapshotCaptured": true,
+      "physicalDevice": false,
+      "voiceOver": false
+    },
+    {
+      "name": "home",
+      "path": "/",
+      "run": 2,
+      "metrics": {
+        "lcpMs": 3340,
+        "lcpElement": {
+          "tag": "IMG",
+          "className": "gentle-hero-image",
+          "path": "/images/station-gentle/hero.webp",
+          "size": 78000
+        },
+        "cls": 0,
+        "longTasks": [],
+        "unsupported": [],
+        "paints": [
+          {
+            "name": "first-paint",
+            "startTime": 1360
+          },
+          {
+            "name": "first-contentful-paint",
+            "startTime": 1360
+          }
+        ],
+        "navigation": [
+          {
+            "ttfbMs": 536.8000000007451,
+            "domContentLoadedMs": 2297.699999999255,
+            "loadMs": 3329.800000000745
+          }
+        ],
+        "resources": [
+          {
+            "path": "/_astro/index.CdwIK2GI.css",
+            "type": "link",
+            "durationMs": 200.90000000223517,
+            "transferBytes": 3279,
+            "encodedBodyBytes": 2979
+          },
+          {
+            "path": "/_astro/_locale_.CyLhD4gI.css",
+            "type": "link",
+            "durationMs": 230.69999999925494,
+            "transferBytes": 1685,
+            "encodedBodyBytes": 1385
+          },
+          {
+            "path": "/_astro/_locale_.7i0bvHxd.css",
+            "type": "link",
+            "durationMs": 256.19999999925494,
+            "transferBytes": 3094,
+            "encodedBodyBytes": 2794
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "img",
+            "durationMs": 286.19999999925494,
+            "transferBytes": 7634,
+            "encodedBodyBytes": 7334
+          },
+          {
+            "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+            "type": "script",
+            "durationMs": 234.40000000223517,
+            "transferBytes": 1016,
+            "encodedBodyBytes": 716
+          },
+          {
+            "path": "/images/station-gentle/hero.webp",
+            "type": "img",
+            "durationMs": 2272.39999999851,
+            "transferBytes": 211886,
+            "encodedBodyBytes": 211586
+          },
+          {
+            "path": "/api/station/content/assets/ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+            "type": "img",
+            "durationMs": 2104.199999999255,
+            "transferBytes": 105984,
+            "encodedBodyBytes": 105684
+          },
+          {
+            "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+            "type": "script",
+            "durationMs": 289.9000000022352,
+            "transferBytes": 1092,
+            "encodedBodyBytes": 792
+          },
+          {
+            "path": "/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+            "type": "script",
+            "durationMs": 1,
+            "transferBytes": 0,
+            "encodedBodyBytes": 0
+          },
+          {
+            "path": "/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.CF2-hvS8.js",
+            "type": "script",
+            "durationMs": 299.0999999977648,
+            "transferBytes": 1003,
+            "encodedBodyBytes": 703
+          },
+          {
+            "path": "/_astro/pagePaths.Adk3jqEz.js",
+            "type": "script",
+            "durationMs": 622.8000000007451,
+            "transferBytes": 785,
+            "encodedBodyBytes": 485
+          },
+          {
+            "path": "/_astro/routes.Cqv8BySH.js",
+            "type": "script",
+            "durationMs": 644.1999999992549,
+            "transferBytes": 868,
+            "encodedBodyBytes": 568
+          },
+          {
+            "path": "/_astro/campaignLinks.hVtZubDL.js",
+            "type": "script",
+            "durationMs": 163.90000000223517,
+            "transferBytes": 1402,
+            "encodedBodyBytes": 1102
+          },
+          {
+            "path": "/_astro/analyticsControls.BJn8lemT.js",
+            "type": "script",
+            "durationMs": 637.3000000007451,
+            "transferBytes": 4536,
+            "encodedBodyBytes": 4236
+          },
+          {
+            "path": "/_astro/musicResponse.kb_2zO3V.js",
+            "type": "script",
+            "durationMs": 658.2999999970198,
+            "transferBytes": 674,
+            "encodedBodyBytes": 374
+          },
+          {
+            "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+            "type": "script",
+            "durationMs": 769.3000000007451,
+            "transferBytes": 3105,
+            "encodedBodyBytes": 2805
+          },
+          {
+            "path": "/_astro/clipClient.B6wkw9Tl.js",
+            "type": "script",
+            "durationMs": 800.1999999992549,
+            "transferBytes": 4525,
+            "encodedBodyBytes": 4225
+          },
+          {
+            "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+            "type": "script",
+            "durationMs": 922.0999999977648,
+            "transferBytes": 12643,
+            "encodedBodyBytes": 12343
+          },
+          {
+            "path": "/_astro/musicLocalData.rQlht5YK.js",
+            "type": "script",
+            "durationMs": 746.9000000022352,
+            "transferBytes": 1956,
+            "encodedBodyBytes": 1656
+          },
+          {
+            "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+            "type": "script",
+            "durationMs": 696.9000000022352,
+            "transferBytes": 978,
+            "encodedBodyBytes": 678
+          },
+          {
+            "path": "/_astro/navigation.-iYZuZPj.js",
+            "type": "script",
+            "durationMs": 701.5,
+            "transferBytes": 1350,
+            "encodedBodyBytes": 1050
+          }
+        ],
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        "interactive": [
+          {
+            "tag": "A",
+            "text": "跳至主要內容",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "Station Cat 一座深夜還亮著的小站。",
+            "aria": "Station Cat · 首頁"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "搜尋小站"
+          },
+          {
+            "tag": "A",
+            "text": "繁中",
+            "aria": "繁體中文"
+          },
+          {
+            "tag": "A",
+            "text": "简中",
+            "aria": "简体中文"
+          },
+          {
+            "tag": "A",
+            "text": "EN",
+            "aria": "English"
+          },
+          {
+            "tag": "A",
+            "text": "日本語",
+            "aria": "日本語"
+          },
+          {
+            "tag": "A",
+            "text": "首頁",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "關於",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "前往音樂小站",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "探索遊戲世界",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "探索更多音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "探索更多音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "探索更多遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "",
+            "aria": "查看遊戲 · 打工養貓日記"
+          },
+          {
+            "tag": "A",
+            "text": "打工養貓日記",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "查看遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "完整歌曲原創作品與創作分享",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "平台收聽串連各大音樂平台",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "短影片推廣用影像留住音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員內容支持創作，解鎖更多",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "Station CatMusic, Games, and a kinder tomorrow.",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "首頁",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "關於",
+            "aria": null
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "Spotify · 平台連結待更新"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "YouTube · 平台連結待更新"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "Instagram · 平台連結待更新"
+          },
+          {
+            "tag": "A",
+            "text": "",
+            "aria": "Station Cat on X"
+          },
+          {
+            "tag": "A",
+            "text": "隱私政策",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "服務條款",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "聯絡我們",
+            "aria": null
+          }
+        ]
+      },
+      "network": [
+        {
+          "path": "/",
+          "type": "Document",
+          "status": 200,
+          "mimeType": "text/html",
+          "cacheControl": "private, no-store",
+          "contentEncoding": "zstd",
+          "encodedBytes": 10130
+        },
+        {
+          "path": "/_astro/index.CdwIK2GI.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3405
+        },
+        {
+          "path": "/_astro/_locale_.7i0bvHxd.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3090
+        },
+        {
+          "path": "/_astro/_locale_.CyLhD4gI.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1680
+        },
+        {
+          "path": "/images/station-gentle/cat-mark.webp",
+          "type": "Image",
+          "status": 200,
+          "mimeType": "image/webp",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "contentEncoding": null,
+          "encodedBytes": 7670
+        },
+        {
+          "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1027
+        },
+        {
+          "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1087
+        },
+        {
+          "path": "/_astro/StationBrandHome.astro_astro_type_script_index_0_lang.CF2-hvS8.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1023
+        },
+        {
+          "path": "/_astro/campaignLinks.hVtZubDL.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1461
+        },
+        {
+          "path": "/images/station-gentle/hero.webp",
+          "type": "Image",
+          "status": 200,
+          "mimeType": "image/webp",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "contentEncoding": null,
+          "encodedBytes": 212269
+        },
+        {
+          "path": "/_astro/pagePaths.Adk3jqEz.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 807
+        },
+        {
+          "path": "/_astro/routes.Cqv8BySH.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 861
+        },
+        {
+          "path": "/api/station/content/assets/ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+          "type": "Image",
+          "status": 200,
+          "mimeType": "image/jpeg",
+          "cacheControl": "no-store",
+          "contentEncoding": null,
+          "encodedBytes": 106185
+        },
+        {
+          "path": "/_astro/analyticsControls.BJn8lemT.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 4530
+        },
+        {
+          "path": "/_astro/musicResponse.kb_2zO3V.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 706
+        },
+        {
+          "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 973
+        },
+        {
+          "path": "/_astro/navigation.-iYZuZPj.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1343
+        },
+        {
+          "path": "/_astro/musicLocalData.rQlht5YK.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 2040
+        },
+        {
+          "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3113
+        },
+        {
+          "path": "/_astro/clipClient.B6wkw9Tl.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 4580
+        },
+        {
+          "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 12717
+        }
+      ],
+      "pageErrors": [],
+      "blocked": [
+        {
+          "origin": "https://static.cloudflareinsights.com",
+          "path": "/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+          "method": "GET"
+        }
+      ],
+      "ariaSnapshotCaptured": true,
+      "physicalDevice": false,
+      "voiceOver": false
+    },
+    {
+      "name": "game",
+      "path": "/games/cat-life-game/",
+      "run": 1,
+      "metrics": {
+        "lcpMs": 2500,
+        "lcpElement": {
+          "tag": "IMG",
+          "className": "",
+          "path": "/api/station/content/assets/ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+          "size": 87481
+        },
+        "cls": 0,
+        "longTasks": [],
+        "unsupported": [],
+        "paints": [
+          {
+            "name": "first-paint",
+            "startTime": 1548
+          },
+          {
+            "name": "first-contentful-paint",
+            "startTime": 1548
+          }
+        ],
+        "navigation": [
+          {
+            "ttfbMs": 529.1999999992549,
+            "domContentLoadedMs": 2289.800000000745,
+            "loadMs": 2484
+          }
+        ],
+        "resources": [
+          {
+            "path": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+            "type": "script",
+            "durationMs": 210.19999999925494,
+            "transferBytes": 5981,
+            "encodedBodyBytes": 5681
+          },
+          {
+            "path": "/_astro/index.CdwIK2GI.css",
+            "type": "link",
+            "durationMs": 176.19999999925494,
+            "transferBytes": 3354,
+            "encodedBodyBytes": 3054
+          },
+          {
+            "path": "/_astro/_locale_._9r6jtBV.css",
+            "type": "link",
+            "durationMs": 425.80000000074506,
+            "transferBytes": 1796,
+            "encodedBodyBytes": 1496
+          },
+          {
+            "path": "/_astro/_locale_.DwGlYgIp.css",
+            "type": "link",
+            "durationMs": 456.30000000074506,
+            "transferBytes": 3282,
+            "encodedBodyBytes": 2982
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "img",
+            "durationMs": 522.9000000022352,
+            "transferBytes": 7634,
+            "encodedBodyBytes": 7334
+          },
+          {
+            "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+            "type": "script",
+            "durationMs": 471.6000000014901,
+            "transferBytes": 1016,
+            "encodedBodyBytes": 716
+          },
+          {
+            "path": "/api/station/content/assets/ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+            "type": "img",
+            "durationMs": 1423.199999999255,
+            "transferBytes": 105984,
+            "encodedBodyBytes": 105684
+          },
+          {
+            "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+            "type": "script",
+            "durationMs": 442.20000000298023,
+            "transferBytes": 1092,
+            "encodedBodyBytes": 792
+          },
+          {
+            "path": "/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+            "type": "script",
+            "durationMs": 1.5,
+            "transferBytes": 0,
+            "encodedBodyBytes": 0
+          },
+          {
+            "path": "/_astro/GameShell.astro_astro_type_script_index_0_lang.DrN6SN-2.js",
+            "type": "script",
+            "durationMs": 521.6999999992549,
+            "transferBytes": 8380,
+            "encodedBodyBytes": 8080
+          },
+          {
+            "path": "/_astro/campaignLinks.hVtZubDL.js",
+            "type": "script",
+            "durationMs": 203.69999999925494,
+            "transferBytes": 1402,
+            "encodedBodyBytes": 1102
+          },
+          {
+            "path": "/_astro/analyticsControls.BJn8lemT.js",
+            "type": "script",
+            "durationMs": 228.5,
+            "transferBytes": 4536,
+            "encodedBodyBytes": 4236
+          },
+          {
+            "path": "/_astro/musicResponse.kb_2zO3V.js",
+            "type": "script",
+            "durationMs": 187.5,
+            "transferBytes": 674,
+            "encodedBodyBytes": 374
+          },
+          {
+            "path": "/_astro/routes.Cqv8BySH.js",
+            "type": "script",
+            "durationMs": 198,
+            "transferBytes": 868,
+            "encodedBodyBytes": 568
+          },
+          {
+            "path": "/_astro/pagePaths.Adk3jqEz.js",
+            "type": "script",
+            "durationMs": 217.09999999776483,
+            "transferBytes": 785,
+            "encodedBodyBytes": 485
+          },
+          {
+            "path": "/_astro/saveStatus.paMg3Qau.js",
+            "type": "script",
+            "durationMs": 527.5999999977648,
+            "transferBytes": 1508,
+            "encodedBodyBytes": 1208
+          },
+          {
+            "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+            "type": "script",
+            "durationMs": 555.8000000007451,
+            "transferBytes": 978,
+            "encodedBodyBytes": 678
+          },
+          {
+            "path": "/_astro/musicLocalData.rQlht5YK.js",
+            "type": "script",
+            "durationMs": 585.1999999992549,
+            "transferBytes": 1956,
+            "encodedBodyBytes": 1656
+          },
+          {
+            "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+            "type": "script",
+            "durationMs": 594.3000000007451,
+            "transferBytes": 3105,
+            "encodedBodyBytes": 2805
+          },
+          {
+            "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+            "type": "script",
+            "durationMs": 692.3000000007451,
+            "transferBytes": 12806,
+            "encodedBodyBytes": 12506
+          },
+          {
+            "path": "/_astro/navigation.-iYZuZPj.js",
+            "type": "script",
+            "durationMs": 561.3999999985099,
+            "transferBytes": 1350,
+            "encodedBodyBytes": 1050
+          },
+          {
+            "path": "/api/readers/session",
+            "type": "fetch",
+            "durationMs": 162.5,
+            "transferBytes": 333,
+            "encodedBodyBytes": 33
+          }
+        ],
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        "interactive": [
+          {
+            "tag": "A",
+            "text": "跳至主要內容",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "Station Cat 一座深夜還亮著的小站。",
+            "aria": "Station Cat · 首頁"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "搜尋小站"
+          },
+          {
+            "tag": "A",
+            "text": "繁中",
+            "aria": "繁體中文"
+          },
+          {
+            "tag": "A",
+            "text": "简中",
+            "aria": "简体中文"
+          },
+          {
+            "tag": "A",
+            "text": "EN",
+            "aria": "English"
+          },
+          {
+            "tag": "A",
+            "text": "日本語",
+            "aria": "日本語"
+          },
+          {
+            "tag": "A",
+            "text": "首頁",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "關於",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "所有遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "",
+            "aria": "遊戲畫面 1"
+          },
+          {
+            "tag": "A",
+            "text": "開始遊戲",
+            "aria": null
+          },
+          {
+            "tag": "BUTTON",
+            "text": "重新核對",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員中心",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "Station CatMusic, Games, and a kinder tomorrow.",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "首頁",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "關於",
+            "aria": null
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "Spotify · 平台連結待更新"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "YouTube · 平台連結待更新"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "Instagram · 平台連結待更新"
+          },
+          {
+            "tag": "A",
+            "text": "",
+            "aria": "Station Cat on X"
+          },
+          {
+            "tag": "A",
+            "text": "隱私政策",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "服務條款",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "聯絡我們",
+            "aria": null
+          }
+        ]
+      },
+      "network": [
+        {
+          "path": "/games/cat-life-game/",
+          "type": "Document",
+          "status": 200,
+          "mimeType": "text/html",
+          "cacheControl": "private, no-store",
+          "contentEncoding": "zstd",
+          "encodedBytes": 8719
+        },
+        {
+          "path": "/_astro/index.CdwIK2GI.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3489
+        },
+        {
+          "path": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 5989
+        },
+        {
+          "path": "/_astro/_locale_._9r6jtBV.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1785
+        },
+        {
+          "path": "/_astro/_locale_.DwGlYgIp.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3274
+        },
+        {
+          "path": "/images/station-gentle/cat-mark.webp",
+          "type": "Image",
+          "status": 200,
+          "mimeType": "image/webp",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "contentEncoding": null,
+          "encodedBytes": 7667
+        },
+        {
+          "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1089
+        },
+        {
+          "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1043
+        },
+        {
+          "path": "/_astro/GameShell.astro_astro_type_script_index_0_lang.DrN6SN-2.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 8433
+        },
+        {
+          "path": "/_astro/musicResponse.kb_2zO3V.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 686
+        },
+        {
+          "path": "/_astro/routes.Cqv8BySH.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 860
+        },
+        {
+          "path": "/_astro/campaignLinks.hVtZubDL.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1401
+        },
+        {
+          "path": "/_astro/pagePaths.Adk3jqEz.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 779
+        },
+        {
+          "path": "/_astro/analyticsControls.BJn8lemT.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 4715
+        },
+        {
+          "path": "/api/station/content/assets/ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+          "type": "Image",
+          "status": 200,
+          "mimeType": "image/jpeg",
+          "cacheControl": "no-store",
+          "contentEncoding": null,
+          "encodedBytes": 106190
+        },
+        {
+          "path": "/_astro/saveStatus.paMg3Qau.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1579
+        },
+        {
+          "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 972
+        },
+        {
+          "path": "/_astro/navigation.-iYZuZPj.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1347
+        },
+        {
+          "path": "/_astro/musicLocalData.rQlht5YK.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1953
+        },
+        {
+          "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3265
+        },
+        {
+          "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 12825
+        },
+        {
+          "path": "/api/readers/session",
+          "type": "Fetch",
+          "status": 200,
+          "mimeType": "application/json",
+          "cacheControl": "private, no-store",
+          "contentEncoding": null,
+          "encodedBytes": 388
+        }
+      ],
+      "pageErrors": [],
+      "blocked": [
+        {
+          "origin": "https://static.cloudflareinsights.com",
+          "path": "/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+          "method": "GET"
+        }
+      ],
+      "ariaSnapshotCaptured": true,
+      "physicalDevice": false,
+      "voiceOver": false
+    },
+    {
+      "name": "game",
+      "path": "/games/cat-life-game/",
+      "run": 2,
+      "metrics": {
+        "lcpMs": 2380,
+        "lcpElement": {
+          "tag": "IMG",
+          "className": "",
+          "path": "/api/station/content/assets/ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+          "size": 87481
+        },
+        "cls": 0,
+        "longTasks": [],
+        "unsupported": [],
+        "paints": [
+          {
+            "name": "first-paint",
+            "startTime": 1396
+          },
+          {
+            "name": "first-contentful-paint",
+            "startTime": 1396
+          }
+        ],
+        "navigation": [
+          {
+            "ttfbMs": 507.5999999977648,
+            "domContentLoadedMs": 2144.699999999255,
+            "loadMs": 2377.10000000149
+          }
+        ],
+        "resources": [
+          {
+            "path": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+            "type": "script",
+            "durationMs": 191.30000000074506,
+            "transferBytes": 5911,
+            "encodedBodyBytes": 5611
+          },
+          {
+            "path": "/_astro/index.CdwIK2GI.css",
+            "type": "link",
+            "durationMs": 325.69999999925494,
+            "transferBytes": 3279,
+            "encodedBodyBytes": 2979
+          },
+          {
+            "path": "/_astro/_locale_._9r6jtBV.css",
+            "type": "link",
+            "durationMs": 341.69999999925494,
+            "transferBytes": 1796,
+            "encodedBodyBytes": 1496
+          },
+          {
+            "path": "/_astro/_locale_.DwGlYgIp.css",
+            "type": "link",
+            "durationMs": 354.80000000074506,
+            "transferBytes": 3282,
+            "encodedBodyBytes": 2982
+          },
+          {
+            "path": "/images/station-gentle/cat-mark.webp",
+            "type": "img",
+            "durationMs": 490.69999999925494,
+            "transferBytes": 7634,
+            "encodedBodyBytes": 7334
+          },
+          {
+            "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+            "type": "script",
+            "durationMs": 406.5,
+            "transferBytes": 1016,
+            "encodedBodyBytes": 716
+          },
+          {
+            "path": "/api/station/content/assets/ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+            "type": "img",
+            "durationMs": 1371.199999999255,
+            "transferBytes": 105984,
+            "encodedBodyBytes": 105684
+          },
+          {
+            "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+            "type": "script",
+            "durationMs": 456.4000000022352,
+            "transferBytes": 1092,
+            "encodedBodyBytes": 792
+          },
+          {
+            "path": "/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+            "type": "script",
+            "durationMs": 1.1000000014901161,
+            "transferBytes": 0,
+            "encodedBodyBytes": 0
+          },
+          {
+            "path": "/_astro/GameShell.astro_astro_type_script_index_0_lang.DrN6SN-2.js",
+            "type": "script",
+            "durationMs": 489.69999999925494,
+            "transferBytes": 8300,
+            "encodedBodyBytes": 8000
+          },
+          {
+            "path": "/_astro/routes.Cqv8BySH.js",
+            "type": "script",
+            "durationMs": 177.39999999850988,
+            "transferBytes": 868,
+            "encodedBodyBytes": 568
+          },
+          {
+            "path": "/_astro/pagePaths.Adk3jqEz.js",
+            "type": "script",
+            "durationMs": 171.29999999701977,
+            "transferBytes": 785,
+            "encodedBodyBytes": 485
+          },
+          {
+            "path": "/_astro/campaignLinks.hVtZubDL.js",
+            "type": "script",
+            "durationMs": 432.5,
+            "transferBytes": 1402,
+            "encodedBodyBytes": 1102
+          },
+          {
+            "path": "/_astro/musicResponse.kb_2zO3V.js",
+            "type": "script",
+            "durationMs": 445.30000000074506,
+            "transferBytes": 674,
+            "encodedBodyBytes": 374
+          },
+          {
+            "path": "/_astro/analyticsControls.BJn8lemT.js",
+            "type": "script",
+            "durationMs": 543,
+            "transferBytes": 4536,
+            "encodedBodyBytes": 4236
+          },
+          {
+            "path": "/_astro/saveStatus.paMg3Qau.js",
+            "type": "script",
+            "durationMs": 480.30000000074506,
+            "transferBytes": 1508,
+            "encodedBodyBytes": 1208
+          },
+          {
+            "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+            "type": "script",
+            "durationMs": 526.8000000007451,
+            "transferBytes": 3105,
+            "encodedBodyBytes": 2805
+          },
+          {
+            "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+            "type": "script",
+            "durationMs": 630.6000000014901,
+            "transferBytes": 12806,
+            "encodedBodyBytes": 12506
+          },
+          {
+            "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+            "type": "script",
+            "durationMs": 458.8999999985099,
+            "transferBytes": 978,
+            "encodedBodyBytes": 678
+          },
+          {
+            "path": "/_astro/navigation.-iYZuZPj.js",
+            "type": "script",
+            "durationMs": 464.19999999925494,
+            "transferBytes": 1350,
+            "encodedBodyBytes": 1050
+          },
+          {
+            "path": "/_astro/musicLocalData.rQlht5YK.js",
+            "type": "script",
+            "durationMs": 518.8999999985099,
+            "transferBytes": 1956,
+            "encodedBodyBytes": 1656
+          },
+          {
+            "path": "/api/readers/session",
+            "type": "fetch",
+            "durationMs": 174.69999999925494,
+            "transferBytes": 333,
+            "encodedBodyBytes": 33
+          }
+        ],
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        "interactive": [
+          {
+            "tag": "A",
+            "text": "跳至主要內容",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "Station Cat 一座深夜還亮著的小站。",
+            "aria": "Station Cat · 首頁"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "搜尋小站"
+          },
+          {
+            "tag": "A",
+            "text": "繁中",
+            "aria": "繁體中文"
+          },
+          {
+            "tag": "A",
+            "text": "简中",
+            "aria": "简体中文"
+          },
+          {
+            "tag": "A",
+            "text": "EN",
+            "aria": "English"
+          },
+          {
+            "tag": "A",
+            "text": "日本語",
+            "aria": "日本語"
+          },
+          {
+            "tag": "A",
+            "text": "首頁",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "關於",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "所有遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "",
+            "aria": "遊戲畫面 1"
+          },
+          {
+            "tag": "A",
+            "text": "開始遊戲",
+            "aria": null
+          },
+          {
+            "tag": "BUTTON",
+            "text": "重新核對",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員中心",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "Station CatMusic, Games, and a kinder tomorrow.",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "首頁",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "音樂",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "遊戲",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "會員",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "關於",
+            "aria": null
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "Spotify · 平台連結待更新"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "YouTube · 平台連結待更新"
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "aria": "Instagram · 平台連結待更新"
+          },
+          {
+            "tag": "A",
+            "text": "",
+            "aria": "Station Cat on X"
+          },
+          {
+            "tag": "A",
+            "text": "隱私政策",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "服務條款",
+            "aria": null
+          },
+          {
+            "tag": "A",
+            "text": "聯絡我們",
+            "aria": null
+          }
+        ]
+      },
+      "network": [
+        {
+          "path": "/games/cat-life-game/",
+          "type": "Document",
+          "status": 200,
+          "mimeType": "text/html",
+          "cacheControl": "private, no-store",
+          "contentEncoding": "zstd",
+          "encodedBytes": 8822
+        },
+        {
+          "path": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 6044
+        },
+        {
+          "path": "/_astro/index.CdwIK2GI.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3280
+        },
+        {
+          "path": "/_astro/_locale_._9r6jtBV.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1791
+        },
+        {
+          "path": "/_astro/_locale_.DwGlYgIp.css",
+          "type": "Stylesheet",
+          "status": 200,
+          "mimeType": "text/css",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3276
+        },
+        {
+          "path": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1013
+        },
+        {
+          "path": "/images/station-gentle/cat-mark.webp",
+          "type": "Image",
+          "status": 200,
+          "mimeType": "image/webp",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "contentEncoding": null,
+          "encodedBytes": 7663
+        },
+        {
+          "path": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1150
+        },
+        {
+          "path": "/_astro/GameShell.astro_astro_type_script_index_0_lang.DrN6SN-2.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 8320
+        },
+        {
+          "path": "/_astro/pagePaths.Adk3jqEz.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 978
+        },
+        {
+          "path": "/_astro/routes.Cqv8BySH.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 863
+        },
+        {
+          "path": "/api/station/content/assets/ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+          "type": "Image",
+          "status": 200,
+          "mimeType": "image/jpeg",
+          "cacheControl": "no-store",
+          "contentEncoding": null,
+          "encodedBytes": 106182
+        },
+        {
+          "path": "/_astro/campaignLinks.hVtZubDL.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1401
+        },
+        {
+          "path": "/_astro/musicResponse.kb_2zO3V.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 691
+        },
+        {
+          "path": "/_astro/readerSessionEvents.w3_YrQMX.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 973
+        },
+        {
+          "path": "/_astro/navigation.-iYZuZPj.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1347
+        },
+        {
+          "path": "/_astro/saveStatus.paMg3Qau.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1559
+        },
+        {
+          "path": "/_astro/analyticsControls.BJn8lemT.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 4532
+        },
+        {
+          "path": "/_astro/musicLocalData.rQlht5YK.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 1954
+        },
+        {
+          "path": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 3280
+        },
+        {
+          "path": "/_astro/musicPlayerView.C6MbSfTo.js",
+          "type": "Script",
+          "status": 200,
+          "mimeType": "text/javascript",
+          "cacheControl": "public, max-age=31536000, immutable",
+          "contentEncoding": "zstd",
+          "encodedBytes": 12809
+        },
+        {
+          "path": "/api/readers/session",
+          "type": "Fetch",
+          "status": 200,
+          "mimeType": "application/json",
+          "cacheControl": "private, no-store",
+          "contentEncoding": null,
+          "encodedBytes": 387
+        }
+      ],
+      "pageErrors": [],
+      "blocked": [
+        {
+          "origin": "https://static.cloudflareinsights.com",
+          "path": "/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+          "method": "GET"
+        }
+      ],
+      "ariaSnapshotCaptured": true,
+      "physicalDevice": false,
+      "voiceOver": false
+    }
+  ],
+  "limitations": [
+    "Controlled lab samples, not production field 75th percentiles or real phones",
+    "No interaction sample for INP",
+    "Different from T21 per-response, uncompressed synthetic server profile; no replacement of its song failure"
+  ]
+}

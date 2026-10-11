@@ -1,0 +1,55 @@
+{
+  "recordedAt": "2026-10-11T15:49:56.353Z",
+  "gameId": "9ebac4ee-0bc7-4dd4-82b7-b211f9d5e758",
+  "screenshotId": "ce33f7ba-d3a2-4d72-bf3b-c9e85b292ce0",
+  "gameRevision": 2,
+  "homeRevision": 2,
+  "operations": 7,
+  "counts": {
+    "published_tracks": 0,
+    "published_promotions": 0,
+    "published_clips": 0,
+    "published_games": 1,
+    "game_contract": 1,
+    "published_homes": 1,
+    "home_contract": 1
+  },
+  "ledger": 18,
+  "publicationGuardResidue": 0,
+  "receipts": 7,
+  "productionD1BatchRollbackVerified": true,
+  "rightsBasis": "Owner-authorized reuse of existing Station Cat game and brand; not independent third-party license verification",
+  "screenshot": {
+    "width": 1100,
+    "height": 760,
+    "bytes": 105684,
+    "sha256": "7c03d6da36e45fee88a11e6246ebc07fec5a8b1434fe7dbaac95449ec81fc025"
+  },
+  "oldR2Objects": 503,
+  "oldObjectsMetadataUnchanged": true,
+  "buckets": [
+    {
+      "binding": "CONTENT_BUCKET",
+      "oldObjectsUnchanged": 326,
+      "newObjects": 0,
+      "totalObjects": 326,
+      "totalBytes": 311151276
+    },
+    {
+      "binding": "DOWNLOADS_BUCKET",
+      "oldObjectsUnchanged": 140,
+      "newObjects": 0,
+      "totalObjects": 140,
+      "totalBytes": 8436915956
+    },
+    {
+      "binding": "MUSIC_BUCKET",
+      "oldObjectsUnchanged": 37,
+      "newObjects": 1,
+      "totalObjects": 38,
+      "totalBytes": 114016451
+    }
+  ],
+  "noHistoricalBusinessDataDeletion": true,
+  "noDatabaseRestore": true
+}

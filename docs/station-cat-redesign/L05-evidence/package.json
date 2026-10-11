@@ -1,0 +1,2046 @@
+{
+  "sourceRevision": "38ed5f7c7519b8f4fe8bc6cc8e005d69c584ca37",
+  "reviewedWorkerRevision": "9a2673e067ff313fe2dc3ea1462a0d9eee8bf8ae",
+  "workerBundleUnchanged": true,
+  "manifestSha256": "d0e7a2a28a5a3527fc1fb9ae15d3f66d63bb39d89a4390a286ddcfcef8140dfe",
+  "configurationSha256": "a9f08864cd8fa02cfb0eb1720bf3c116e896f285f23aaff532ed56840b1ccc52",
+  "files": 406,
+  "html": 59,
+  "onlyChangedAsset": "games/cat-life/host-bridge.js",
+  "bridgeSha256": "720df5faf733b8c4400b16afb1f375264da5b6abf98001b8c3fbd7efdf700566",
+  "workerSha256": "9261839e60fd591d25e9f10d9bfa1eb8c058ce9d38d5e0d3d87b559fb6be13c9",
+  "noBundleDryRunByteEquality": true,
+  "assetManifest": [
+    {
+      "path": "404.html",
+      "bytes": 5354,
+      "sha256": "a311f03310395fde95cc4d5afd2bcb3c169abb148dde07495e812e710955c116"
+    },
+    {
+      "path": "_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+      "bytes": 1560,
+      "sha256": "da47780ecdd4fd1e9d1e9d3f2dd756f30127c55caa3304b372c0e44617592b6a"
+    },
+    {
+      "path": "_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+      "bytes": 15362,
+      "sha256": "0365757cd28f21fb3224bbbadcbdde39e37659595005c2a7a2049d8661086e13"
+    },
+    {
+      "path": "_astro/GameShell.astro_astro_type_script_index_0_lang.DrN6SN-2.js",
+      "bytes": 17720,
+      "sha256": "1cb80022cee6007b0b7b606b93f839b1e21b5187f24e88b87f206c64822ee163"
+    },
+    {
+      "path": "_astro/LanguageSwitcher.astro_astro_type_script_index_0_lang.0w10PJ6o.js",
+      "bytes": 277,
+      "sha256": "d8bfca61be12c28e3a3fd7b5408dc31d0d9d29851d0fd89be72dfbce1a7c3087"
+    },
+    {
+      "path": "_astro/MemberServices.astro_astro_type_script_index_0_lang.XzYe-rch.js",
+      "bytes": 10123,
+      "sha256": "5123266cee47bf98f55364fa482fb4ddd67c0cd5cc9fa812711bf26aa6a86004"
+    },
+    {
+      "path": "_astro/MusicPlayer.astro_astro_type_script_index_0_lang.BxOYtGLt.js",
+      "bytes": 163842,
+      "sha256": "288f6578eee4be2f6c9dfaf20f8ec875cdc21bc526c68db2d731f07e477afd52"
+    },
+    {
+      "path": "_astro/MusicShell.astro_astro_type_script_index_0_lang.fahdOygU.js",
+      "bytes": 8305,
+      "sha256": "73dbe9f70c3c5d790bff9ef2c300fbb78de910f276f8dc481463f2f3577f2953"
+    },
+    {
+      "path": "_astro/ReaderLibraryPage.astro_astro_type_script_index_0_lang.CFkOrzKZ.js",
+      "bytes": 30894,
+      "sha256": "609d1470362683cc075bb0dfa321b79803d6c0758428df706dca147d3b4f26d5"
+    },
+    {
+      "path": "_astro/StationBrandHome.astro_astro_type_script_index_0_lang.CF2-hvS8.js",
+      "bytes": 1406,
+      "sha256": "ee988c567132b793c3d44c9bd80bafbc010077e99d780158a763d8d92e864c5c"
+    },
+    {
+      "path": "_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.2H4pW3B0.js",
+      "bytes": 1607,
+      "sha256": "7f3fd630927ddf9aa16ce4c1824aa5d9eab51f0bd54c35720cdd39851b45101f"
+    },
+    {
+      "path": "_astro/_locale_.7i0bvHxd.css",
+      "bytes": 10499,
+      "sha256": "f7d01dee50f697ebac0a8ea75135334a9e48b76191ee71c12ca56db8430afe58"
+    },
+    {
+      "path": "_astro/_locale_.CyLhD4gI.css",
+      "bytes": 4338,
+      "sha256": "0e4e8258048ae72ac5800bb06e4d1f283081400ebe24db23f14687e29e335897"
+    },
+    {
+      "path": "_astro/_locale_.DwGlYgIp.css",
+      "bytes": 11425,
+      "sha256": "f595e8e6daa5f6fe753a1352de471632c5a3e9e718398c359c43f2c52041e65a"
+    },
+    {
+      "path": "_astro/_locale_._9r6jtBV.css",
+      "bytes": 4254,
+      "sha256": "27c3b60e4ffd5d1781e40f47801cd6417454cd6964944710d649f443b1807b26"
+    },
+    {
+      "path": "_astro/analyticsControls.BJn8lemT.js",
+      "bytes": 10373,
+      "sha256": "900af260c879626fa4916595cb3c16f09777285313afc065a959ac9ce411e684"
+    },
+    {
+      "path": "_astro/articles.astro_astro_type_script_index_0_lang.BcPitxtp.js",
+      "bytes": 139695,
+      "sha256": "5aea03f73729db91519f22b285c9790ba20ec240c76a6f51f773d6b4f3be1ccb"
+    },
+    {
+      "path": "_astro/campaignLinks.hVtZubDL.js",
+      "bytes": 2072,
+      "sha256": "7d181a9b3a74fefae5524133559a289271a6c19460e5982ed7a97240f306f4a1"
+    },
+    {
+      "path": "_astro/clipClient.B6wkw9Tl.js",
+      "bytes": 10391,
+      "sha256": "d63969aa6d8bbbff76801212a1d5b23bcf8735675653fba89068ca010c399b50"
+    },
+    {
+      "path": "_astro/collections.astro_astro_type_script_index_0_lang.SalP22CK.js",
+      "bytes": 26091,
+      "sha256": "b9d27058f11c827d9ca320236772de7141c51466f8104aa619fd2e884fb81551"
+    },
+    {
+      "path": "_astro/featured.astro_astro_type_script_index_0_lang.9lllj_vQ.js",
+      "bytes": 9906,
+      "sha256": "cc96c3edeee99e3dcc9cd8c77db08d7fdbcc95b3df859b622508e3f4dac13a87"
+    },
+    {
+      "path": "_astro/index.B13cjt__.css",
+      "bytes": 172789,
+      "sha256": "cba6513014bf70e0a7c065daef1e14f3ca2e912557581c12757223b00fd9f8e6"
+    },
+    {
+      "path": "_astro/index.BC5PmhFe.css",
+      "bytes": 30935,
+      "sha256": "4e3d963db63864567f327670bb54ef97a55505f8172fa2325a6a7f315c788ee4"
+    },
+    {
+      "path": "_astro/index.BQ-U66xI.css",
+      "bytes": 15527,
+      "sha256": "46e5d201f94c22a444eec33a57b474c74c9941a244711eb6d5912732a4ac1573"
+    },
+    {
+      "path": "_astro/index.Bb78C3mm.css",
+      "bytes": 23538,
+      "sha256": "da662a5e25ab5e68395646f70aade527526f34c5608e745d166002848d582256"
+    },
+    {
+      "path": "_astro/index.CFyluDmR.css",
+      "bytes": 89089,
+      "sha256": "d05524d0b7c22ee4cdeadfb1daf5822f784ce8426aca6daaba22cf92a7fabf16"
+    },
+    {
+      "path": "_astro/index.CXGe94Jd.css",
+      "bytes": 7281,
+      "sha256": "8fe0df1a3efbf2ec23d7d283cdf0e61b2681a1fe3b2e45b26675ae2598b2bc3f"
+    },
+    {
+      "path": "_astro/index.CdwIK2GI.css",
+      "bytes": 9886,
+      "sha256": "cc1a41ea72dc48670afb68440af46fe215bc2b38f4e2c40ed24c24d4cf4833b6"
+    },
+    {
+      "path": "_astro/index.Y14Hy3Mf.css",
+      "bytes": 14980,
+      "sha256": "c9951824074e0844e2c84838a9992f538bd24abdb3c740736c418c3d0f24fce3"
+    },
+    {
+      "path": "_astro/index.astro_astro_type_script_index_0_lang.5IBzK03E.js",
+      "bytes": 32895,
+      "sha256": "c2cbfae0d30b6ff3e4b2b8e6b67b41a3a486e91e806e8c558cd0855c764d54ff"
+    },
+    {
+      "path": "_astro/index.astro_astro_type_script_index_0_lang.BIBxllzU.js",
+      "bytes": 13882,
+      "sha256": "c53df960d3b040931c541e7e71c9e63088e7d7214642f2b05a479f340f8cb478"
+    },
+    {
+      "path": "_astro/index.astro_astro_type_script_index_0_lang.DZQEQz7I.js",
+      "bytes": 13167,
+      "sha256": "eac8e526c31941da535a3f89c19c52b392ebf264d877c5f3dc9d4baac9dc8013"
+    },
+    {
+      "path": "_astro/index.astro_astro_type_script_index_0_lang.Xv1FVccK.js",
+      "bytes": 9317,
+      "sha256": "280595e894abc133234dc748d3b356edc87109c1e414af2574a301b8d08f577a"
+    },
+    {
+      "path": "_astro/index.nYHnvLPX.css",
+      "bytes": 15401,
+      "sha256": "f4ace386302e5c9a88f7abca1cf15ac3d0b1f08ebc2faf5b4b7e53a7f7e246d4"
+    },
+    {
+      "path": "_astro/memberCopy.C4PFFiz1.js",
+      "bytes": 14267,
+      "sha256": "04f7c46248b8caaf2adac94b7e4fade21ef141cbdf741102892df1a526ab8d06"
+    },
+    {
+      "path": "_astro/membership-refunds.astro_astro_type_script_index_0_lang.D5AVE-_i.js",
+      "bytes": 7877,
+      "sha256": "389e26799134d2d1b45731e3b07265ca709a08c149c6d921eef297676d89184d"
+    },
+    {
+      "path": "_astro/music.astro_astro_type_script_index_0_lang.CN8dmllE.js",
+      "bytes": 37605,
+      "sha256": "9e781ead81fcd6182d4ca7ef82074c86d17759a69175bf0020eb0a4060edb220"
+    },
+    {
+      "path": "_astro/musicAdminClient.BLC09QBl.js",
+      "bytes": 8853,
+      "sha256": "557579299abd3bbe6f3b42cc1ba8ce7a05c528eb5d35ac98fbc1f3ac27f3c32b"
+    },
+    {
+      "path": "_astro/musicAlbumBatch.QkRFDoVg.js",
+      "bytes": 14159,
+      "sha256": "48afcbe77b2ebd96c5c0c425a84ad183cc7572c7c4417454cab257ad1bbe8ec6"
+    },
+    {
+      "path": "_astro/musicLocalData.rQlht5YK.js",
+      "bytes": 3513,
+      "sha256": "ff99868edec4dad065f785f13756c96f55957473a664e2eae2eb475ff558cc72"
+    },
+    {
+      "path": "_astro/musicLyrics.By8ik3ey.js",
+      "bytes": 2433,
+      "sha256": "b804701fa497fa6cb14f2d9e27151aa071b9060bd74580c34216612775b5c6e6"
+    },
+    {
+      "path": "_astro/musicMessages.CEK1zCWu.js",
+      "bytes": 35417,
+      "sha256": "282a9b84eac99a1e87efa3c9841d51203952729d2c0968ea21b603dc437d31d4"
+    },
+    {
+      "path": "_astro/musicPlayerCatalog.CpHbaAqm.js",
+      "bytes": 5619,
+      "sha256": "8c6263614d0df1e89fb735c71a90b1987a981880ed6bbdd0784d6ab03b0766b0"
+    },
+    {
+      "path": "_astro/musicPlayerCore.BLCSmwrZ.js",
+      "bytes": 6605,
+      "sha256": "8dacd95c3e36324de04903c19f03a4175d17d46ff46219be68a5570944fc8e50"
+    },
+    {
+      "path": "_astro/musicPlayerView.C6MbSfTo.js",
+      "bytes": 29674,
+      "sha256": "e957b334c13cf6ab9398588efa4af657dcd51ad79b52e9c9f151ebf2c7ea58ab"
+    },
+    {
+      "path": "_astro/musicResponse.kb_2zO3V.js",
+      "bytes": 547,
+      "sha256": "fa7fe1b3114082a14dcbc9fd9cbafde2d239f1c3e0f44f32333ad5c6154c6e71"
+    },
+    {
+      "path": "_astro/musicWav.9BdbpA8K.js",
+      "bytes": 220,
+      "sha256": "b77cfc7c11ffaa9dd68b0f2d056347a12585b219159bd4dc41e97fae2329f123"
+    },
+    {
+      "path": "_astro/musicWavClient.B5OSgJBY.js",
+      "bytes": 1618,
+      "sha256": "d21644434ff6e755c520a4958fec2dfbfd6a252512159224cef82df1aa9b4789"
+    },
+    {
+      "path": "_astro/musicWavWorker-C01nK5QT.js",
+      "bytes": 3915,
+      "sha256": "9bf2cd84035c450476bff8af4aee420b73a05bc9f6a90e30e03fab7c691f8f11"
+    },
+    {
+      "path": "_astro/navigation.-iYZuZPj.js",
+      "bytes": 2077,
+      "sha256": "623410f340747a3f4373fb34edff5d02fbb3ac491a9138106818d37a6ed65cb3"
+    },
+    {
+      "path": "_astro/pagePaths.Adk3jqEz.js",
+      "bytes": 818,
+      "sha256": "60688b11b984ce50807e8cc2330d9f2070d739ad1dc01f3b9573b6fb38375f05"
+    },
+    {
+      "path": "_astro/points.CHjNTfb2.css",
+      "bytes": 15804,
+      "sha256": "146c186020126644d82b520c9350aea5a6bd36e1b956b3c836576487f2088429"
+    },
+    {
+      "path": "_astro/policy.CSOL2T9S.js",
+      "bytes": 1748,
+      "sha256": "8ca82dd7567150b9837a011cd3194e6f68727d31abaca38968a6e20b08b5b0e7"
+    },
+    {
+      "path": "_astro/publicationValidation.BOKpSznb.js",
+      "bytes": 5491,
+      "sha256": "0e0c181f9e2dff9e8740721499f3001b61336d9c13185160b7d9cb4ce7e8e44d"
+    },
+    {
+      "path": "_astro/qrcode.CWKHzRGU.js",
+      "bytes": 21407,
+      "sha256": "b5846ea13763fad11d02851d07642447aa546022834247da91de25487a340c21"
+    },
+    {
+      "path": "_astro/readerSessionEvents.w3_YrQMX.js",
+      "bytes": 1236,
+      "sha256": "521fc937360f4647886d476663dc36c3ab5bf25c283665a353128c0f5c4d5b0d"
+    },
+    {
+      "path": "_astro/routes.Cqv8BySH.js",
+      "bytes": 1110,
+      "sha256": "e540fa0350e6a7ea5d93c02e9914817a5bce180022eca85309d420949be60f63"
+    },
+    {
+      "path": "_astro/saveStatus.paMg3Qau.js",
+      "bytes": 2447,
+      "sha256": "1f068525d120617c767e7ce3e4e29be6bb4fce5774322e47fb1fd7f38e658f96"
+    },
+    {
+      "path": "_astro/stationContentClient.BNxweSPD.js",
+      "bytes": 3886,
+      "sha256": "9b948f91189b14d6c80cbe112b96b755837f1a8124b0ac272a6394151baa1578"
+    },
+    {
+      "path": "_astro/vip-badge.C99Fh2OO_2mebGa.webp",
+      "bytes": 3668,
+      "sha256": "ed4c6f096b85fdc53d6111d3a833a4e454ad66f672f0a9df711bf16e647299ca"
+    },
+    {
+      "path": "_astro/vip-badge.C99Fh2OO_N0rVQ.webp",
+      "bytes": 14192,
+      "sha256": "69440fcbbf9ad85b981b49dfb974647ae1a6ea37a035fe6cfa27042892a4d93d"
+    },
+    {
+      "path": "_astro/vip-badge.C99Fh2OO_na9Ih.webp",
+      "bytes": 8650,
+      "sha256": "7f1820c627578c76206635d7208c314eb835e6843c7d0a3ee765749536c69ada"
+    },
+    {
+      "path": "_headers",
+      "bytes": 1284,
+      "sha256": "a3f8168e2f304598ad81a21c75ea2fe77ab5d5482aa2462bf349b7eb2278f3dd"
+    },
+    {
+      "path": "admin-v2/index.html",
+      "bytes": 261431,
+      "sha256": "fa82d0e37939eef43c593f28548c37f40d3f88b2edff13d3b07f0b57a185e605"
+    },
+    {
+      "path": "admin/articles/index.html",
+      "bytes": 8787,
+      "sha256": "ec5df358b51a82b2c001accb2bd1e93ce5babe861af8987771e7e241fdca8c92"
+    },
+    {
+      "path": "admin/index.html",
+      "bytes": 5876,
+      "sha256": "cd84f061c75c4d95e5e68cdb84d9d3c57b7eede0d8335174ac38835f37199080"
+    },
+    {
+      "path": "admin/membership-refunds/index.html",
+      "bytes": 5331,
+      "sha256": "7c3f8a637d67b78c619db22c0954ba7000684d2fece54724423d46baa534c543"
+    },
+    {
+      "path": "admin/music/collections/index.html",
+      "bytes": 8829,
+      "sha256": "cc3b17258ef0817e95eabb86fe2827c60c95ae28cc5659f5138cb58096035524"
+    },
+    {
+      "path": "admin/music/collections/upload/index.html",
+      "bytes": 5375,
+      "sha256": "773df8b9e63a1d1554f4bbc7b778b119538e46eeae78cec6a76c6cb2e9ad63e3"
+    },
+    {
+      "path": "admin/music/content/index.html",
+      "bytes": 17900,
+      "sha256": "95a4800fe7e6059997db72ad05f4db23eea71162387604092b92547f709d9df6"
+    },
+    {
+      "path": "admin/music/featured/index.html",
+      "bytes": 6062,
+      "sha256": "1d3667a49dac18bff98e4437b5812d76ba7278712acd78e8ea1a6db461b2a3fa"
+    },
+    {
+      "path": "admin/music/index.html",
+      "bytes": 27780,
+      "sha256": "447b4c5893baf5d97a72262477b3e82eabc4d3ecfa5f1c07edef3faa9ded34a2"
+    },
+    {
+      "path": "admin/music/media/index.html",
+      "bytes": 6843,
+      "sha256": "99bf042a8d4f5a282a3370ab0a9de9d0f5765dac6b2386ce82f2027946524528"
+    },
+    {
+      "path": "admin/music/reports/index.html",
+      "bytes": 14310,
+      "sha256": "b23ce82663276536a27122bc562aeacb9008b1ffee7ed56ab623f2876c221430"
+    },
+    {
+      "path": "admin/waitlist/index.html",
+      "bytes": 10327,
+      "sha256": "fe9c8007f87f5b198452b46134ab2e06624ff4e35971d1bb2b0f216d0199880b"
+    },
+    {
+      "path": "api/music/__cover-files/0095ddbba163ccde116e17b2bd7eeb2918630f33db064cfc9642aa03b519f748.jpg",
+      "bytes": 89682,
+      "sha256": "0095ddbba163ccde116e17b2bd7eeb2918630f33db064cfc9642aa03b519f748"
+    },
+    {
+      "path": "api/music/__cover-files/2c3799a1c3a1d7c58ede726f0b52748106c88bb3e37cf87a57d8c0309fb5db65.jpg",
+      "bytes": 90565,
+      "sha256": "2c3799a1c3a1d7c58ede726f0b52748106c88bb3e37cf87a57d8c0309fb5db65"
+    },
+    {
+      "path": "api/music/__cover-files/3e9309b2c43d04c6142d3047b5cab74b27e6baeff6bfa285a8b8a00c9f99870e.jpg",
+      "bytes": 87173,
+      "sha256": "3e9309b2c43d04c6142d3047b5cab74b27e6baeff6bfa285a8b8a00c9f99870e"
+    },
+    {
+      "path": "api/music/__cover-files/8a13ef5ee1e67373108127b8eeeef953f082aa1db33e5df3410e83f34c88853a.jpg",
+      "bytes": 71917,
+      "sha256": "8a13ef5ee1e67373108127b8eeeef953f082aa1db33e5df3410e83f34c88853a"
+    },
+    {
+      "path": "api/music/__cover-files/9eb950178930259dd68bd7239107ff92415e39641a4177c132c7de4edceb84a8.jpg",
+      "bytes": 146095,
+      "sha256": "9eb950178930259dd68bd7239107ff92415e39641a4177c132c7de4edceb84a8"
+    },
+    {
+      "path": "api/music/__cover-files/aea4449c7880d163e2b2852f1aafd045aa8444aef8b232d18751cb8dd3280c89.jpg",
+      "bytes": 89530,
+      "sha256": "aea4449c7880d163e2b2852f1aafd045aa8444aef8b232d18751cb8dd3280c89"
+    },
+    {
+      "path": "api/music/__cover-files/be9333d5aa555e40c55004ffe5394f36aae6bfdf9d714efc01589df8bd72f9dc.jpg",
+      "bytes": 93619,
+      "sha256": "be9333d5aa555e40c55004ffe5394f36aae6bfdf9d714efc01589df8bd72f9dc"
+    },
+    {
+      "path": "api/music/__cover-files/d7fadb52cdd90fe7d95ab5936e8ceafdaffcefa5b9cbffb1638768b1587ba5da.jpg",
+      "bytes": 125863,
+      "sha256": "d7fadb52cdd90fe7d95ab5936e8ceafdaffcefa5b9cbffb1638768b1587ba5da"
+    },
+    {
+      "path": "apple-touch-icon.png",
+      "bytes": 67274,
+      "sha256": "439e6be1ea859df8d55f460140a7b97cde053f09f7cd72a656adc8875676234b"
+    },
+    {
+      "path": "en/404.html",
+      "bytes": 5273,
+      "sha256": "fc83f6b35d34638d4a692bd86c635ad630dc57e5e8da2f782ee7b8a7c4fcd49a"
+    },
+    {
+      "path": "en/404/index.html",
+      "bytes": 5273,
+      "sha256": "fc83f6b35d34638d4a692bd86c635ad630dc57e5e8da2f782ee7b8a7c4fcd49a"
+    },
+    {
+      "path": "en/points/index.html",
+      "bytes": 20404,
+      "sha256": "7712d803eca6ce5ebab79931884711043ac9ac7125ac4c53c55686d6b93720e3"
+    },
+    {
+      "path": "en/privacy/index.html",
+      "bytes": 8256,
+      "sha256": "3009b97556a3c23feeb1b6dd906ac305cc0ba250294e1f99839aabfa3eec204a"
+    },
+    {
+      "path": "en/support/index.html",
+      "bytes": 5021,
+      "sha256": "25156d1fb15d3b00b2bce824909825e421b1e08a71595e8d7bfbba7bcf865a73"
+    },
+    {
+      "path": "en/terms/index.html",
+      "bytes": 7999,
+      "sha256": "36b68603ebf59d2b78e284f5c40ec8af4b4aa8b81cb11bb85a8f213c543c6de1"
+    },
+    {
+      "path": "favicon-64.png",
+      "bytes": 11215,
+      "sha256": "21e372277c12ac6d4fe71c3721502d1f5b2d22720ebca93a8d58ce387b26db41"
+    },
+    {
+      "path": "favicon.ico",
+      "bytes": 11237,
+      "sha256": "d48855ca4858278ee7459f88294ee4b2a934605bdc7a7329438b5dafe5953ae6"
+    },
+    {
+      "path": "fonts/cat-life-night/OFL.txt",
+      "bytes": 4301,
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+    },
+    {
+      "path": "fonts/cat-life-night/README.md",
+      "bytes": 300,
+      "sha256": "a3550c5d5a83fc2185e455f096a65cb91125c2e8670e884bf966d9e3756db149"
+    },
+    {
+      "path": "fonts/cat-life-night/heading.woff2",
+      "bytes": 39988,
+      "sha256": "8cb35cd016148b2ba8c8b9117a94e2925970f8b570433db05e1249085c00c360"
+    },
+    {
+      "path": "fonts/music/NotoSerifSC-Bold.otf",
+      "bytes": 12094336,
+      "sha256": "24693d48bdb9152f0a06b02af625638a1097abd6de4010ebba027f6e82710527"
+    },
+    {
+      "path": "fonts/music/OFL.txt",
+      "bytes": 4301,
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+    },
+    {
+      "path": "fonts/music/README.md",
+      "bytes": 743,
+      "sha256": "458afc9bbf42376a12182577ee107bb148a4d96e1511c7e27c54b66813283487"
+    },
+    {
+      "path": "fonts/points-night/OFL.txt",
+      "bytes": 4301,
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+    },
+    {
+      "path": "fonts/points-night/README.md",
+      "bytes": 186,
+      "sha256": "25bca49a43cd12c07a0251ba674df88cc33a1035a4de70afc3ef32779c65a8a2"
+    },
+    {
+      "path": "fonts/points-night/heading.woff2",
+      "bytes": 245772,
+      "sha256": "8eb56aaf1f34c2b428d25d37dd4ba07a46405ac4f574c97700ad20b35191b8d1"
+    },
+    {
+      "path": "games/cat-life/cloud-sync-policy.js",
+      "bytes": 888,
+      "sha256": "4f9bad338f0cb9088c07da466be1c8bb6273dac6f9bfd7bede74d9a64351e8d6"
+    },
+    {
+      "path": "games/cat-life/cloud-sync.js",
+      "bytes": 28627,
+      "sha256": "dc662a2a80dba0b41de2864c5389fe9d4e0d102f3a1da353e99688031da55860"
+    },
+    {
+      "path": "games/cat-life/commerce.js",
+      "bytes": 34595,
+      "sha256": "47226cd51a3d5567e357d291b5b3eee48e6c75b81c4722306c7014b76af5dda5"
+    },
+    {
+      "path": "games/cat-life/content-manifest.js",
+      "bytes": 3410,
+      "sha256": "54cc7ec506fca802ba1589a2b2a9212efd6dcbe4716c749e135bc3fd5b4f5149"
+    },
+    {
+      "path": "games/cat-life/host-bridge.js",
+      "bytes": 2957,
+      "sha256": "720df5faf733b8c4400b16afb1f375264da5b6abf98001b8c3fbd7efdf700566"
+    },
+    {
+      "path": "games/cat-life/index.html",
+      "bytes": 10665,
+      "sha256": "3935e0e9589625dda0ac49034ee22b72e81dbe556e3d703a53ee079dbdbbb775"
+    },
+    {
+      "path": "games/cat-life/site-integration.css",
+      "bytes": 10369,
+      "sha256": "039ef227359823d83721efa16bd682ee70188823f725cba8330950405c8f5714"
+    },
+    {
+      "path": "games/cat-life/site-integration.js",
+      "bytes": 3721,
+      "sha256": "9f11206673d49f95db0f4d54c27da3a903e52034cea017b6b97c5a042aa6d327"
+    },
+    {
+      "path": "games/cat-life/src/assets/arcade/slot-machine-cabinet.webp",
+      "bytes": 66382,
+      "sha256": "8a68a09d0b1acad97f5a42e9e226d4a6987022369c2cb65df432933562ce2cd4"
+    },
+    {
+      "path": "games/cat-life/src/assets/audio/moonlight-tiptoes-soft.m4a",
+      "bytes": 1193494,
+      "sha256": "2e853e7d5eaa5673053a442a9ec257e470488a0a909f311e25bd22279285aba2"
+    },
+    {
+      "path": "games/cat-life/src/assets/bank/bank-counter-clerk.webp",
+      "bytes": 18580,
+      "sha256": "e7715c096b12226f15f7a00251b5ca207d6c988dcdde32317ff5360e47f030ef"
+    },
+    {
+      "path": "games/cat-life/src/assets/cats/blue-cat-walk.png",
+      "bytes": 140014,
+      "sha256": "e67ad5c56b586f22e6197921d8a5e214e0bee728d8c5e64eedba396f48c05800"
+    },
+    {
+      "path": "games/cat-life/src/assets/cats/blue-cat.png",
+      "bytes": 95415,
+      "sha256": "cfaceb31fa0c124a359cc0d72024bc86ae33c9b1650ad183a4a614dc913b2fdd"
+    },
+    {
+      "path": "games/cat-life/src/assets/cats/cow-cat-walk.png",
+      "bytes": 167749,
+      "sha256": "77940ec86b7a1e74a04249f5fa100a8f3714caed65c76515584ff1941fd0dc7a"
+    },
+    {
+      "path": "games/cat-life/src/assets/cats/cow-cat.png",
+      "bytes": 105375,
+      "sha256": "30f9e37cc70fdb27afd28f2b46e8cf5efbc4b46add5fcd0507a7ecc0750c81f8"
+    },
+    {
+      "path": "games/cat-life/src/assets/cats/moonlit-tabby-walk.png",
+      "bytes": 209855,
+      "sha256": "7d195ceb064edb368d61a48197afe57445807e7ec4e86e40db639324ba15985c"
+    },
+    {
+      "path": "games/cat-life/src/assets/cats/orange-tabby-walk.png",
+      "bytes": 187398,
+      "sha256": "25310b652da3c8c046baf142250c5e352ea9a523b331d7cf5a2170abe9424604"
+    },
+    {
+      "path": "games/cat-life/src/assets/cats/orange-tabby.png",
+      "bytes": 137705,
+      "sha256": "2a3278d51df58226b324bd40ee636309bb32efd1c78c7ceec23609dd8e666ede"
+    },
+    {
+      "path": "games/cat-life/src/assets/community/npc-cat-sprites.png",
+      "bytes": 1529311,
+      "sha256": "4b44e86dffd3dde7dad648d61c9d99968d7a6de8276537bba35ed7e7fb5a4b77"
+    },
+    {
+      "path": "games/cat-life/src/assets/home/home-house-scene.webp",
+      "bytes": 96546,
+      "sha256": "ab6633bf7d409a48972c6793978579d075df846210a11b47336492464748a002"
+    },
+    {
+      "path": "games/cat-life/src/assets/jobs/LICENSE-phosphor.txt",
+      "bytes": 1092,
+      "sha256": "ddbe6082ec3cf979db47e5af549d2849c5d6182b3e005ef91ce1dbb9eb122f11"
+    },
+    {
+      "path": "games/cat-life/src/assets/jobs/job-cat-cafe.svg",
+      "bytes": 660,
+      "sha256": "f8285e75660c4ed9830ed42416bf3a839cb52c30a3bf2f19ba303e9ed6fb05a1"
+    },
+    {
+      "path": "games/cat-life/src/assets/jobs/job-flyer.svg",
+      "bytes": 779,
+      "sha256": "83e7fec383ff54efa0cb4be17fe5439392e3c18e6137b228c02ce8a8dea2e339"
+    },
+    {
+      "path": "games/cat-life/src/assets/jobs/job-it-engineer.svg",
+      "bytes": 477,
+      "sha256": "bab36fb27f0ff542611a7ea52fdb5fe3df51a0cf65579f014985298d6b7b1123"
+    },
+    {
+      "path": "games/cat-life/src/assets/jobs/job-petshop.svg",
+      "bytes": 943,
+      "sha256": "8462e1aca5a4be2a2a28178f65b91e4f51756aeae36648d94550fa706431844a"
+    },
+    {
+      "path": "games/cat-life/src/assets/jobs/job-store.svg",
+      "bytes": 805,
+      "sha256": "9e755963f1672b9d45a199797cfb3479dd13517690b08f76bb013a08043cc2b3"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/angry.png",
+      "bytes": 99816,
+      "sha256": "7045518dda912f0f575e707b039dc28e57a4e61af3f6bb293142282c96b30e3f"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/celebrate.png",
+      "bytes": 84344,
+      "sha256": "5239eed7e8d743c4908de6657814ad4552363b26a7679211ecb92225495a15c3"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/cry.png",
+      "bytes": 92738,
+      "sha256": "43923b4c96120574cffdfe994e4007adabe0a57af46f7d8d63a34c13bf7e259c"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/eating-bowl.webp",
+      "bytes": 47682,
+      "sha256": "454e39c991b66976476c4dd20fd778f7b721411c27fe85a76549d0d6c31a08e8"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/fish.png",
+      "bytes": 100715,
+      "sha256": "94e2916fa07fca977a78950101d9399e121af63d62d25fdcfe95a9e35df1156e"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/happy.png",
+      "bytes": 111473,
+      "sha256": "124fb7b650bbdb5df26261248ec6c00ad98a3e10ec99e0152c689596e42639ac"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/heart.png",
+      "bytes": 87333,
+      "sha256": "d9a390f62478bf3737e83a429d22c7cfbc7fc9704754d449c9747086b76fc61a"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/joy.png",
+      "bytes": 94983,
+      "sha256": "f68db606477b1860545718426c883589e617012106939f717c3bc02db0bcd613"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/nap.png",
+      "bytes": 78416,
+      "sha256": "d1c385b7c2ffc54c5eec69941d74bd1227ffe658831f5794df00bca14fad5f3a"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/pounce.png",
+      "bytes": 91746,
+      "sha256": "4d0316f981492aa3f865cbccd1835de8cc714128aafb951a588de4caee8c3ea4"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/question.png",
+      "bytes": 93375,
+      "sha256": "35569857fc18e06a4c8174250631bea2fe6f7a0682ded22dc48438653e1f4f86"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/shy.png",
+      "bytes": 83710,
+      "sha256": "223c84db47c0a06ddd4a1dfeee7e51fa7cf05cee0200cb0db1e8215a0bc03dbf"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/sleep.png",
+      "bytes": 90546,
+      "sha256": "c1b85cfd905a392d15f1aca61e86aaca2d77ee4217643ce924851adb753ec92e"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/surprised.png",
+      "bytes": 86456,
+      "sha256": "81a16788f4e1ded1b1750fde1672be086e4f2eed62296ab332e5104d6c4b12b8"
+    },
+    {
+      "path": "games/cat-life/src/assets/poses/wave.png",
+      "bytes": 110381,
+      "sha256": "2f0307c038933eff93fa7915bdcaa0d6d3ef3a904a83e94e21c88cf79d26f6b2"
+    },
+    {
+      "path": "games/cat-life/src/assets/premium/moonlit-tabby.png",
+      "bytes": 304646,
+      "sha256": "a4dd6d8de2ce12cd68f97dc3f6e4fc80e57eb4374daa3bdc480765d55d86cca5"
+    },
+    {
+      "path": "games/cat-life/src/assets/premium/station-bench.png",
+      "bytes": 526881,
+      "sha256": "55a4040eb5f6aa1a11535cb990f15374bf09c40dc12d32a603c8b388bebde456"
+    },
+    {
+      "path": "games/cat-life/src/assets/premium/station-clock-board.png",
+      "bytes": 406400,
+      "sha256": "1bad6c7e595cb9b171b1839b5f161aeca066793f494a8670c9b16dc7af0cff23"
+    },
+    {
+      "path": "games/cat-life/src/assets/premium/station-room-preview.webp",
+      "bytes": 42514,
+      "sha256": "e1f1ffecdfa33fd386df9549a8a2d9e023c4f626adfdba239ae21c8e6107a6d6"
+    },
+    {
+      "path": "games/cat-life/src/assets/premium/station-room-set.jpg",
+      "bytes": 174720,
+      "sha256": "2238099a15f5e464d13d2065382927ac7a100f8091b51b73b4a6f115750edc8b"
+    },
+    {
+      "path": "games/cat-life/src/assets/premium/station-signal-lamp.png",
+      "bytes": 131405,
+      "sha256": "6034055c7f8233c8f89ef8a04f9c45a81f9dd131300a54ea16358390e2e52c75"
+    },
+    {
+      "path": "games/cat-life/src/assets/rooms/decor-lanterns.webp",
+      "bytes": 52186,
+      "sha256": "444e80498e5a9f1f450fa853e63a7968c287bab7475cebc3bedc7035b84b282a"
+    },
+    {
+      "path": "games/cat-life/src/assets/rooms/decor-plants.webp",
+      "bytes": 29850,
+      "sha256": "175322c30dab0b801f24beb777ee36feff5cce98127112d808bf8edc87c04a5e"
+    },
+    {
+      "path": "games/cat-life/src/assets/rooms/decor-poster.webp",
+      "bytes": 17494,
+      "sha256": "e8c6736622a580b4c117c54c51a6331e04cc12f5512fc5ec8aa255179a2d533c"
+    },
+    {
+      "path": "games/cat-life/src/assets/rooms/furniture-bed.png",
+      "bytes": 223764,
+      "sha256": "b31ff39c5af2a16aa236357287ec21943ed7da5bb87881f4dc63a0b0fa0e2127"
+    },
+    {
+      "path": "games/cat-life/src/assets/rooms/furniture-bowl.png",
+      "bytes": 140518,
+      "sha256": "96974bcf96cb96c1f685dbff0c1758d9f3246bbb6a3138dd9e9189f93427630c"
+    },
+    {
+      "path": "games/cat-life/src/assets/rooms/furniture-rug.png",
+      "bytes": 272606,
+      "sha256": "cbd45d64dd31c10f2b2325a0b86205f555fb7bd9b494a8419c3709dd227f30bf"
+    },
+    {
+      "path": "games/cat-life/src/assets/rooms/furniture-tree.png",
+      "bytes": 235244,
+      "sha256": "12aa6e1cae7078affc5553669de3d58af4893c81aa63d01c2b0c2e2ae557739f"
+    },
+    {
+      "path": "games/cat-life/src/assets/rooms/furniture-window.png",
+      "bytes": 170658,
+      "sha256": "8fa92a33e2b6d23b9af18de2fb30b72e7c11821c6a4eeb9de97df3f7821762b4"
+    },
+    {
+      "path": "games/cat-life/src/assets/rooms/room-storybook-empty.webp",
+      "bytes": 169204,
+      "sha256": "858335bd3cc0e39270b0b8510c5db9fa0fdd72369c7a150e8695cd40dc1b28e2"
+    },
+    {
+      "path": "games/cat-life/src/assets/share/OFL.txt",
+      "bytes": 4350,
+      "sha256": "5e0da210fb04058a8c0087985d2d456b931c2579811a49655721d3cf0c36b6d6"
+    },
+    {
+      "path": "games/cat-life/src/assets/share/letter-title.ttf",
+      "bytes": 10628,
+      "sha256": "df72e50e1338f258b71e728368041e3d910bcdf3301044ec9ccf8903a5fef178"
+    },
+    {
+      "path": "games/cat-life/src/assets/share/station-letter.webp",
+      "bytes": 158472,
+      "sha256": "b6a810a4a02a3750a87e15c50a7676c6b842ce6179390beb6f445b4215a06dff"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-bed.jpg",
+      "bytes": 66165,
+      "sha256": "bd1c2f73d06bd26a4265ab329c02a0db6932b7e2bd43db6f9f38d969232f07b1"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-beer.jpg",
+      "bytes": 49750,
+      "sha256": "93dfbc7e3a3e91f0b157241c065a68d15bd0f42cfb8b432a4b3392e1eb7595e4"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-bowl.jpg",
+      "bytes": 42780,
+      "sha256": "6bd051b43a23d8f34b5bf7011278e5f42a28261916eb7399d93c96920e053b70"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-bread.jpg",
+      "bytes": 51011,
+      "sha256": "9be1816063356c75b551b62bd981c680d664b287fd092ae31ee11e84b13848d2"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-coffee.jpg",
+      "bytes": 50313,
+      "sha256": "cb8c821a25159852cc0ce4c2b532bc4b5c535326d1325e19f90e91f782565c95"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-dessert.jpg",
+      "bytes": 59862,
+      "sha256": "e33d422db5c769e1d4cb976609afce193f9f1fc0e9e5f75453b1de0d59e9986d"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-energy.jpg",
+      "bytes": 39179,
+      "sha256": "2db3b0d6df86bc850efd8a53ec92e7f5f6e8255cb695b61cab682e3dbaee33b1"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-food.jpg",
+      "bytes": 79154,
+      "sha256": "37cafad2bb28c39c5716dfdc8cc9475f53b4f5527e1ea1a7d5d0b929992e9971"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-grass.jpg",
+      "bytes": 90042,
+      "sha256": "7ee24ae6fa11859dcdf923dc25b6d3bd7ffcf04581d72e5d2ecd7c81fabf39b3"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-lamp.jpg",
+      "bytes": 41864,
+      "sha256": "5a258dcd027da6d21348795899e7a48b556867012c92b36bc87497150c3c9ee5"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-litter.jpg",
+      "bytes": 90053,
+      "sha256": "17e5d9b957ddaf72f00f56a82fcea121d34a39786f34afd3d7f4c4e602db9204"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-med.jpg",
+      "bytes": 43299,
+      "sha256": "54ebb508589b8e0c16012961078d0b010245b67a5fa8c37c75ac8d49975d415f"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-noodle.jpg",
+      "bytes": 73221,
+      "sha256": "d51effc35d90cf648966848d4aa87e26ba2d4d695f734985d4585cacc2ec39cd"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-premium.jpg",
+      "bytes": 68580,
+      "sha256": "44ca9b8fb869c681d483b2dbcce43674218b73f1aa407b817e3a194e0f2dd0e7"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-rice.jpg",
+      "bytes": 62217,
+      "sha256": "003766597d18d4638e23f570372a49fd134d49b56ea7b0ed62e35c00d3222933"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-rug.jpg",
+      "bytes": 96144,
+      "sha256": "ee6e759af22af853ebd27c46149b9562c50eacbac7551abd944bfc45825d3140"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-toys.jpg",
+      "bytes": 61954,
+      "sha256": "a87ba4c5c6962d10b3e3837a07b1835004b1fedfb7f9ebf99ef07d48639d729f"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-tree.jpg",
+      "bytes": 62758,
+      "sha256": "2dd3caf60459b84b949bedb63796de94387b1ad3c775d4cbc140fea7eeb7bff1"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-water.jpg",
+      "bytes": 40704,
+      "sha256": "48c3049f97c8957974c2728bad89cf9d278ec84db1f84502019fab28a663e7f4"
+    },
+    {
+      "path": "games/cat-life/src/assets/shop/shop-window.jpg",
+      "bytes": 60210,
+      "sha256": "13f2f4fd005af0727c2ddea364549935868984ba8cf6ec8bb7fe6e2ab5219f61"
+    },
+    {
+      "path": "games/cat-life/src/assets/work/work-shift-flyer.webp",
+      "bytes": 116750,
+      "sha256": "33d102df49c6f1f3ae51d84aeb474eb45af6c4187ee42deff72615f740de6a75"
+    },
+    {
+      "path": "games/cat-life/src/js/core/i18n.js",
+      "bytes": 187679,
+      "sha256": "43bf00b02434715134f4543ab56bf11954c1475c82cf9ff3f2e9eb674eebb5ef"
+    },
+    {
+      "path": "games/cat-life/src/js/core/namespace.js",
+      "bytes": 18465,
+      "sha256": "2c05aa2809629347d34b6d7866c6014f3493c0c58288ed26c76a053c2d3a0a6d"
+    },
+    {
+      "path": "games/cat-life/src/js/data/catsData.js",
+      "bytes": 2389,
+      "sha256": "1ee5c2728bdfb31207afd7fad5ffe4e15c66dafb4b6e457b9834f93535a120c9"
+    },
+    {
+      "path": "games/cat-life/src/js/data/communityData.js",
+      "bytes": 13918,
+      "sha256": "878e5ad6e447f26a17579ab3e3955f4e102b8c9aec784330e7cd9d488601b05f"
+    },
+    {
+      "path": "games/cat-life/src/js/data/diseasesData.js",
+      "bytes": 2108,
+      "sha256": "57bc0e830fd58c5a0ac0ef9d305b505c815bead8473b87d95633f5b5e2bfa327"
+    },
+    {
+      "path": "games/cat-life/src/js/data/itemsData.js",
+      "bytes": 15632,
+      "sha256": "c3738bee1efa4d5432c6118291fd56b97b42e89b7f255289a956acb3432d6e44"
+    },
+    {
+      "path": "games/cat-life/src/js/data/jobsData.js",
+      "bytes": 6829,
+      "sha256": "221b238eb9a4d2e063e0e8d41e6d4b5ed2d87dd10907831c08aff64880389198"
+    },
+    {
+      "path": "games/cat-life/src/js/data/tasksData.js",
+      "bytes": 4162,
+      "sha256": "660ed3ae64ee56314304e649df16a3ca32b7eed8b43a38965cca1c2cc84307c8"
+    },
+    {
+      "path": "games/cat-life/src/js/main.js",
+      "bytes": 56640,
+      "sha256": "25b3e0b289c2f2aee5a895905901c3d52d34a183becea3efdd0beb4ce67fbdfe"
+    },
+    {
+      "path": "games/cat-life/src/js/state/careLearningState.js",
+      "bytes": 2248,
+      "sha256": "4fc8557d022a126647188336d0b5dc22a2c98a2137d3b44d2e2eadd0e56151a1"
+    },
+    {
+      "path": "games/cat-life/src/js/state/catMemoryState.js",
+      "bytes": 1686,
+      "sha256": "1bbeaae64204096addd85a96155819616d05d615b9ca156de9eafd8df1f0f2ac"
+    },
+    {
+      "path": "games/cat-life/src/js/state/gameState.js",
+      "bytes": 30410,
+      "sha256": "f18858b816c4ab149aff294300d03ce0c6c7bb3388108f48fb1ba6b445dd33c9"
+    },
+    {
+      "path": "games/cat-life/src/js/state/saveMigrations.js",
+      "bytes": 3129,
+      "sha256": "1c6f96f3b2a9df1594a20e19e31bc74a5d67f5c203a2c151d6d08980f0117e59"
+    },
+    {
+      "path": "games/cat-life/src/js/state/saveRecovery.js",
+      "bytes": 8408,
+      "sha256": "faf82204cc6ea0a0882f4708bafe09b2239cf6707d5437d8ff2244ffa8d2dfaa"
+    },
+    {
+      "path": "games/cat-life/src/js/state/saveStatus.js",
+      "bytes": 4096,
+      "sha256": "478e5e7c831701d13d4cc4d356d1ed9a714df129cc40531f2d97c6bee0e7f4ee"
+    },
+    {
+      "path": "games/cat-life/src/js/state/saveSystem.js",
+      "bytes": 7033,
+      "sha256": "77e0295ae27f4e7e4f222ee13d6f0a1142e4a9f9ab97945b6ba96121010c1db7"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/arcadeSystem.js",
+      "bytes": 4064,
+      "sha256": "535c4040e4511adbb891029895d076a2488452660f092b0fbe19c1a578e29bf3"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/bankSystem.js",
+      "bytes": 15687,
+      "sha256": "6180db97378c7122cb53e344aa19dd8815791b3b9f0a8a23d1f044ec93125bd5"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/careSystem.js",
+      "bytes": 5040,
+      "sha256": "63ee1e344837fff8a20052aa2c35dd088130cb9837c1621c4183be5e6b7dc5ec"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/catInteractionSystem.js",
+      "bytes": 2239,
+      "sha256": "a8cae1e51d59062f2c7a95a471c476877220f7dee1e2dfb3793a6e53c0bb19f2"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/catSystem.js",
+      "bytes": 25866,
+      "sha256": "86391d07a5fed55247852c9052cec811cbbc12de08fd72183b8bfcd7829b740e"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/collectionSystem.js",
+      "bytes": 8845,
+      "sha256": "3129c9ef32ee847341691d3d8a0251c67d12fed1d93f758ffacc7b14a6f6088c"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/communitySystem.js",
+      "bytes": 12228,
+      "sha256": "c340bce01a923286fc4373e82385698ff3e23e506e3ccc56defe5349a2bf3b88"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/homeSystem.js",
+      "bytes": 15180,
+      "sha256": "f0c3d31ad624b51b4daea7de23e92bbd9ce66899136bd8b59a2c27a129eb0370"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/hospitalSystem.js",
+      "bytes": 2373,
+      "sha256": "836fa3e9c259f5e41dee46f5dba7c8d7212fea803690c18219f3c655cf20ca8f"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/lotterySystem.js",
+      "bytes": 20456,
+      "sha256": "a5cc10d6a0e3f606de876aa7500144e10d3b2013de240b536101b3e81c735d80"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/memorySystem.js",
+      "bytes": 3153,
+      "sha256": "c45a6fa9b8f2f449b90c5f6670e6ad0963c579262f0fe6544baeae551098c3e1"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/musicSystem.js",
+      "bytes": 7340,
+      "sha256": "f61b9a3be87e1080d6eb6979dd3c0a0576ddac011ff66724392ac7e6cbca213a"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/onboardingSystem.js",
+      "bytes": 11030,
+      "sha256": "a33d64b32fcdfc8cbf0b0a888f8da900b84d132614845948bf9f5e2d4c8298b8"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/playerSystem.js",
+      "bytes": 12550,
+      "sha256": "d935c9074a62e2fd794ff7a86e5316e2d6b378c7dccf5a0f116ef03c4c7e614c"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/shopSystem.js",
+      "bytes": 7831,
+      "sha256": "1fe46ca1ae2200aa555b673345569c9cc73fd8c650c6a04315dc1e936453791c"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/taskSystem.js",
+      "bytes": 3677,
+      "sha256": "7f9f5cb7040517b17cc22906034fe8c3eaf07110f377d26914fdab9da15f485f"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/timeSystem.js",
+      "bytes": 5134,
+      "sha256": "5bc125d79361536d404e857bdc56143b69a452c2d03375efd01e3cfe5f7ecbce"
+    },
+    {
+      "path": "games/cat-life/src/js/systems/workSystem.js",
+      "bytes": 11018,
+      "sha256": "774d7fd156655fcd4a42667a9068436001da395e57ddc770905e3656be6a8178"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderArcadePanel.js",
+      "bytes": 26170,
+      "sha256": "514c6fd37e4b19f99606a36187ed906a7eeee1c3b611b7ed5af2e4bf4290a867"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderBankPanel.js",
+      "bytes": 14957,
+      "sha256": "41ce2a795712e368e60bea12e298abd7bb72d5c07bee8e53bd4bd44f0e1596f2"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderCareJourney.js",
+      "bytes": 4838,
+      "sha256": "b7a72a0f1b46e1de610fd2ab66820523892597dfc5d7ee419740603b15b460c5"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderCareSupport.js",
+      "bytes": 1648,
+      "sha256": "bbf9ed3c156bfe6754ed901c2bad6d91b341486d8fcff65007a1596a4c58419e"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderCatMemories.js",
+      "bytes": 3242,
+      "sha256": "71f10a64ef908f2ba1d18967e3586913507e5422581f4843755a29a38df04aa4"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderCatPanel.js",
+      "bytes": 30995,
+      "sha256": "b58939c4f8653841f0ddb99f0dc4f9dd3443a539393c07bff062288907ddd3ff"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderCollectionPanel.js",
+      "bytes": 9088,
+      "sha256": "0ee42e94c28407e5246a5dda184e8c409061a73398c76dff20e063687a92f6dd"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderCommunityPanel.js",
+      "bytes": 13567,
+      "sha256": "e41a5985084eb8764943cfe8d51737c916774fe90d2b90daab6820f8bcbbdf7a"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderHeader.js",
+      "bytes": 4919,
+      "sha256": "15d5c6e05606f50cdbec4fdec571221edee120383da01146e3858a49c061b517"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderHome.js",
+      "bytes": 14327,
+      "sha256": "96dfe9afdd1772a174c16bb4dde598d15fedb9edab98af55cf088b2c4ae8bc55"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderHospitalPanel.js",
+      "bytes": 22884,
+      "sha256": "a6b6a07d7e8af54479276ccadba67249cdb1d60f2f18fb6a969cb0849a5fb7b3"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderInventoryPanel.js",
+      "bytes": 7588,
+      "sha256": "46b80dfc65ab08401b59f4fe91d51f4e1c27ce3a280bdf84d5055f5ad0bd5442"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderMemberStorePanel.js",
+      "bytes": 582,
+      "sha256": "4292fbce6f0be97cc82f716d690bc622b6f1b8bca6a2bf258c5d9ead17fdabf8"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderMorePanel.js",
+      "bytes": 3073,
+      "sha256": "c637b1baa7f4e367e9cda1c0bb3f6c38321dc34bcb25a13652ed0eb25b246a03"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderNavigation.js",
+      "bytes": 3727,
+      "sha256": "f8614777c4018265629499d35da93106f654458f383cbe74825e1df32f77adb3"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderRoomPanel.js",
+      "bytes": 7153,
+      "sha256": "4c67e663d7651ca32638e33b4212ba7e6a30225df91e3ce94d2deca99e5bb620"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderSavePanel.js",
+      "bytes": 3673,
+      "sha256": "bf420604ba264d6a07d2882364e16aa3f93228ae9ff52d87214b1d132b9cdbd7"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderSettingsPanel.js",
+      "bytes": 6896,
+      "sha256": "7134e9f8e62a8189e37b34c97830807562d1261e5b641dcbfff30404d6dbb640"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderShopPanel.js",
+      "bytes": 8286,
+      "sha256": "fd2792db7fe9399d991f800b7120e5b9e9595b577f60b10a7219356c3b4939a0"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderTaskPanel.js",
+      "bytes": 3674,
+      "sha256": "e2b71afc0f4010eac25aa7d17220c8e002192c7a6a45e452392ada771addbd95"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderVersionPanel.js",
+      "bytes": 3557,
+      "sha256": "ceeb008a02e5f1cda9426dee9ecad3178afec29f4744ac489dbac4d245f160af"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/renderWorkPanel.js",
+      "bytes": 18696,
+      "sha256": "d9fc8c703eee4970dfde52d1f572c092430061b321bf4643ea8ecc7a686060c0"
+    },
+    {
+      "path": "games/cat-life/src/js/ui/shareDialog.js",
+      "bytes": 8774,
+      "sha256": "3983547dadb7134e3fc36f278b7b0c89861388af2946ca95cc376134a5f4bbce"
+    },
+    {
+      "path": "games/cat-life/src/js/utils/bitcoinApi.js",
+      "bytes": 4001,
+      "sha256": "a0da7edd6786e4f997996a1e21fbcc4b4ea09d3a9eb5332545c60eb93cdbf2ba"
+    },
+    {
+      "path": "games/cat-life/src/js/utils/catArt.js",
+      "bytes": 7781,
+      "sha256": "0a23fa80cb4f9df9b81f389f5d5fda7f2675ad2c49d7503505aa271d30926379"
+    },
+    {
+      "path": "games/cat-life/src/js/utils/catMotion.js",
+      "bytes": 2263,
+      "sha256": "b20a36a9a4a2b19e4b710eeb76a4b1496267d5ebcb0ede525bd9b6af2e65ac84"
+    },
+    {
+      "path": "games/cat-life/src/js/utils/format.js",
+      "bytes": 3027,
+      "sha256": "83aa9d324bf1ee2656d3cb07c0e7bf0f6e481f7db187f34f2b00377867be4a84"
+    },
+    {
+      "path": "games/cat-life/src/js/utils/random.js",
+      "bytes": 342,
+      "sha256": "bfdf19bf42c9cdaf4b2aa959ca510d87d98450b07a771a8e71c4cd76575a8796"
+    },
+    {
+      "path": "games/cat-life/src/js/utils/shareCard.js",
+      "bytes": 9972,
+      "sha256": "423ab55c371887564db8138e9098d6b799d27ec6bc3c76b7edf2b8244103e394"
+    },
+    {
+      "path": "games/cat-life/src/js/utils/storage.js",
+      "bytes": 525,
+      "sha256": "20bb0f940d87cf5833cd6d32df734fbcc4c2ad7bd006ca96f1c7435dbe142fd4"
+    },
+    {
+      "path": "games/cat-life/src/js/vendor/qrcode.js",
+      "bytes": 56694,
+      "sha256": "18ae399f81182bc9de916e9c77b195df20cc58d6f2d55a62b085a299f1bf1780"
+    },
+    {
+      "path": "games/cat-life/src/styles/broadsheet.css",
+      "bytes": 171114,
+      "sha256": "8e56c3969249d184104b2bf8f5b41536e1c63253f24ea27fbed65c84fd0cdea4"
+    },
+    {
+      "path": "games/cat-life/src/styles/cat-interactions.css",
+      "bytes": 5612,
+      "sha256": "f35887990a2b939540618848e4ab70995269886b1ff9d4a97b50a4b12ef2f97c"
+    },
+    {
+      "path": "games/cat-life/src/styles/cat-motion.css",
+      "bytes": 961,
+      "sha256": "a6be31ad9cfe1b0522be2f7aa505d532adf771861868a29a9b95361a9a70f8a7"
+    },
+    {
+      "path": "games/cat-life/src/styles/layout.css",
+      "bytes": 2855,
+      "sha256": "158cdc2e6afc88f3d9cfb1de4662755a7fcf78ce8dc3cd610df3613d5fb14353"
+    },
+    {
+      "path": "games/cat-life/src/styles/main.css",
+      "bytes": 30741,
+      "sha256": "f99d40b7f509f09339452dcef7d1b0c750d37548c319eb18b1d3bff761299205"
+    },
+    {
+      "path": "games/cat-life/src/styles/reset.css",
+      "bytes": 375,
+      "sha256": "16ea0c8d731775dfa3915c7f204dd6a88c8c85860131b2c8155cbbc54a925b78"
+    },
+    {
+      "path": "games/cat-life/src/styles/save-safety.css",
+      "bytes": 714,
+      "sha256": "a63458e9663e3b24dc5f093e232d1a180e05ccca066526856772d0e36b8f5c0e"
+    },
+    {
+      "path": "games/cat-life/src/styles/share-card.css",
+      "bytes": 3595,
+      "sha256": "cccac089d08d8244fb4112b36b47ba671337f45bb8a53665fe22aee0dcc0192b"
+    },
+    {
+      "path": "games/cat-life/src/vendor/cat-motion/PIXI-LICENSE.txt",
+      "bytes": 1092,
+      "sha256": "5ce7447bc57f7349ffc48338782fbcabe613696e00712b20d66bc58e780f9473"
+    },
+    {
+      "path": "games/cat-life/src/vendor/cat-motion/back-leg.webp",
+      "bytes": 49972,
+      "sha256": "d9d4e032c13659ebd8fd4206711e5f7a2d634c4bf7f710f3427bee02bcd7c84d"
+    },
+    {
+      "path": "games/cat-life/src/vendor/cat-motion/front-leg.webp",
+      "bytes": 34136,
+      "sha256": "487aa5a2a9c762121f3d8f8d23d266b79c629965de4fd07fe39231fca0965a7c"
+    },
+    {
+      "path": "games/cat-life/src/vendor/cat-motion/head.webp",
+      "bytes": 62132,
+      "sha256": "73893479092c01c805a53f4bc1b474b21ac8ac2308b89ee7e8d2ee7624697a79"
+    },
+    {
+      "path": "games/cat-life/src/vendor/cat-motion/kibble.webp",
+      "bytes": 3964,
+      "sha256": "3c7fa379df95f9a9875aeb899d81f5d20e3f9674c02125845d724f9073bb77c6"
+    },
+    {
+      "path": "games/cat-life/src/vendor/cat-motion/mouth-open.webp",
+      "bytes": 3690,
+      "sha256": "f40c228ac57609800c6045c1790ddbe2754f979c2fd775e52180a63a68b4d705"
+    },
+    {
+      "path": "games/cat-life/src/vendor/cat-motion/runtime.js",
+      "bytes": 602955,
+      "sha256": "8df95f0ea63d57cbec3e3a848f29bb9283c33fe151e0c7035079f5189618e25a"
+    },
+    {
+      "path": "games/cat-life/src/vendor/cat-motion/tail.webp",
+      "bytes": 30936,
+      "sha256": "707a71ed4ca166e1f674f9f3b0c8d6f1b523dae1c2f1d374e45f8ba2bd57ff37"
+    },
+    {
+      "path": "games/cat-life/src/vendor/cat-motion/torso.webp",
+      "bytes": 80794,
+      "sha256": "e84b60bfd5cf0f9759bfa3d13a5cb00845d163d281f0535c014cb4c852f627cb"
+    },
+    {
+      "path": "games/site-shell/en/index.html",
+      "bytes": 23680,
+      "sha256": "072fe7a988a63ee13c8dbe6df1a1aaa89c17dc26c6a706f4f1cad54cde5f8069"
+    },
+    {
+      "path": "games/site-shell/ja/index.html",
+      "bytes": 24311,
+      "sha256": "902d0972af117103a970ed0e424f74e6dd83fb8d84c8e3347f45cacfea1ab7a1"
+    },
+    {
+      "path": "games/site-shell/zh-Hans/index.html",
+      "bytes": 23519,
+      "sha256": "772f56c83523668fafbc4e05bc7d29f55ad69948afd358cbe988abef2f20a712"
+    },
+    {
+      "path": "games/site-shell/zh-Hant/index.html",
+      "bytes": 23390,
+      "sha256": "a95b20bd8cbe46e9a86c163e4b3811202d69f9ca04a9cd3ec4584e1db2f639d7"
+    },
+    {
+      "path": "images/anytls-desktop-manager-preview.svg",
+      "bytes": 2492,
+      "sha256": "06f158186b1907ad42f8d8f218a7ac469368e46baf4c4efc3f711c9640e7b79a"
+    },
+    {
+      "path": "images/apps-daylight/banner.webp",
+      "bytes": 36142,
+      "sha256": "803cd637ae31df471c07090a58448158be6a03ad8dd23ae89b8b8dd0163ae142"
+    },
+    {
+      "path": "images/apps-daylight/cat-life-icon.webp",
+      "bytes": 8460,
+      "sha256": "4738a933e5cb23dbb1b2cc923d57df3b55aaa5bab843de70d41e4d64f69d7d20"
+    },
+    {
+      "path": "images/apps-daylight/cat-life.webp",
+      "bytes": 57118,
+      "sha256": "06930e60a115510c313f9d35f1679e128e5a565248cbada4613d86f6d07ddbaa"
+    },
+    {
+      "path": "images/apps-daylight/hero.webp",
+      "bytes": 65436,
+      "sha256": "f6273de6410475df5b97aab045099776c5f489d62ee7f270c439c6566e81a7e6"
+    },
+    {
+      "path": "images/apps-daylight/mindbudget.webp",
+      "bytes": 28632,
+      "sha256": "1365c739d8d9799d569573f60583326a6830cd4857087fb13f15f651af116143"
+    },
+    {
+      "path": "images/apps-daylight/snapcopy.webp",
+      "bytes": 37094,
+      "sha256": "399673c21e296ad9317cc2e0d34e62a29affedcc213cd774da7399679d89a1fb"
+    },
+    {
+      "path": "images/apps/anytls-desktop-manager-icon.png",
+      "bytes": 53192,
+      "sha256": "fd4176dfc035eae6ffe4cb5ba1696fb5ebd5e91ed5d85a09d618b5a90883fd5b"
+    },
+    {
+      "path": "images/apps/mindbudget/ask-zh-hans.png",
+      "bytes": 3580382,
+      "sha256": "6a6f6f982cea35084962c4d58e1c1684dc7842ff9892bd96496d0401ff0ae68e"
+    },
+    {
+      "path": "images/apps/mindbudget/dashboard-zh-hans.png",
+      "bytes": 3077794,
+      "sha256": "65fddded4a3c0995ebc1003ce3ffc9fa461e9ce3da8bddb9a1409c897c2b9b23"
+    },
+    {
+      "path": "images/apps/mindbudget/icon.png",
+      "bytes": 313219,
+      "sha256": "3bd310007b3ad5bcbc4773239a6653e7e4c6d60951ec65e20bb371bfc9522ba6"
+    },
+    {
+      "path": "images/apps/mindbudget/insights-en.png",
+      "bytes": 2622629,
+      "sha256": "bcdfaede7809d90b2a1e4318ca5d0c92e418b66bbed80b16ff14d98a0e5e3d02"
+    },
+    {
+      "path": "images/apps/mindbudget/warm-botanical.png",
+      "bytes": 1668702,
+      "sha256": "bf4b14d3c177511ff9e6aac36a57e7dd737abe647b568944d75ff86b9400d5d8"
+    },
+    {
+      "path": "images/apps/novelforge-ai-icon.png",
+      "bytes": 36355,
+      "sha256": "05ef05b9266cab3c43f3eeed49cec89be48be28c732eee5c7602d623c36a0e42"
+    },
+    {
+      "path": "images/apps/privatepinyin-icon.png",
+      "bytes": 16496,
+      "sha256": "6c79dbfe8f7f1cdab324b78093683986bd8f4b9989ac598a9f76e4fc1f8af2a4"
+    },
+    {
+      "path": "images/apps/simplecut-pro-icon.png",
+      "bytes": 1147960,
+      "sha256": "0268e7674e3612180f893806632b9f0103efe1d145c1065c6b4a25a1d91e3726"
+    },
+    {
+      "path": "images/apps/snapcopy-app-icon.png",
+      "bytes": 167150,
+      "sha256": "91491f7cfb66cd8b077fc0e632de1f456b873b92461b3dfc1be68c7658460802"
+    },
+    {
+      "path": "images/brand-hero-placeholder.svg",
+      "bytes": 1599,
+      "sha256": "d4f87fc9708dc5898efb63dbbf1f742eca85b5b09aa3bc182a15f8090fbb0202"
+    },
+    {
+      "path": "images/caption-ai-hero-phone-placeholder.svg",
+      "bytes": 1373,
+      "sha256": "ece14cdb069bef457196ebb3048efe30e53dbed917e635d4ea6fe44a599ce25f"
+    },
+    {
+      "path": "images/caption-ai-screenshot-placeholder.svg",
+      "bytes": 1093,
+      "sha256": "82b4a8949f6c6f0abf38b2971d51c4a032bd795830f134b1fb61b9e92809ae31"
+    },
+    {
+      "path": "images/cat-life-night/account.webp",
+      "bytes": 11828,
+      "sha256": "d199651962e81d1539f509119e465e446093bae5807e21b1ab3328aba510f976"
+    },
+    {
+      "path": "images/cat-life-night/cta.webp",
+      "bytes": 23702,
+      "sha256": "26ba749efc0635c85f8198385c4a941fdb4e41edf7ef7dfdf4f4339fcf8cdb4b"
+    },
+    {
+      "path": "images/cat-life-night/hero-960.webp",
+      "bytes": 37518,
+      "sha256": "24cfb7bf0bbbac6065936124f54da14ae971ce8c267b620d8e886f61e480209a"
+    },
+    {
+      "path": "images/cat-life-night/hero.webp",
+      "bytes": 89810,
+      "sha256": "e65ffaacc4ab94be4fbd59fa0d96c33ee1c38c614905e15a8a97ac315fffdfcb"
+    },
+    {
+      "path": "images/cat-life-night/icons/LICENSE.txt",
+      "bytes": 1071,
+      "sha256": "b5b1f1da112d18ea2147decfd48ddc1bf2b5aeb6c265381579340e95b15a2bb2"
+    },
+    {
+      "path": "images/cat-life-night/icons/README.md",
+      "bytes": 191,
+      "sha256": "0d63102877b3b268dabb91bbef0f164ba16b67cc486987acfd0d9c08ffff7e8f"
+    },
+    {
+      "path": "images/cat-life-night/icons/calendar-dots.svg",
+      "bytes": 521,
+      "sha256": "f6e9a8f86591a46278cdb96e4e37f5ff3bda16637589058df6e49013ee4712fa"
+    },
+    {
+      "path": "images/cat-life-night/icons/cat.svg",
+      "bytes": 762,
+      "sha256": "59baa6878c8e8d60280fc4bff95b4d0f520e616f70317c0f5bc57dc01cc04522"
+    },
+    {
+      "path": "images/cat-life-night/icons/floppy-disk.svg",
+      "bytes": 385,
+      "sha256": "b563078386597ecf3d13c6281a53df68903ea66c99bc35015b641ce9c59e4c60"
+    },
+    {
+      "path": "images/cat-life-night/icons/gift.svg",
+      "bytes": 870,
+      "sha256": "8d213a7c75e88e22226cbfae8d863129dba6c2d4242c3e7574ebe1864a4888b4"
+    },
+    {
+      "path": "images/cat-life-night/icons/heart.svg",
+      "bytes": 287,
+      "sha256": "2f95930d362d5911399183474eb78ae2b311bbde7aaffe07a05bd5020bee3b24"
+    },
+    {
+      "path": "images/cat-life-night/icons/house.svg",
+      "bytes": 288,
+      "sha256": "f370411facd5837ddbcde8e8db6e1f1edbb80feec8c275c5100557d9996dc463"
+    },
+    {
+      "path": "images/cat-life-night/icons/star.svg",
+      "bytes": 351,
+      "sha256": "8537b26d6d74fe3dd134f28f18bee245cc6fb8f36ad1b19c9fb836c727d7733b"
+    },
+    {
+      "path": "images/cat-life-night/shop.webp",
+      "bytes": 128228,
+      "sha256": "c3bb93b12836dceaef0f3e4806077b8409a07768275c682bc62b5ef9ae8f76e4"
+    },
+    {
+      "path": "images/cat-life-night/town.webp",
+      "bytes": 159252,
+      "sha256": "7100140f1e35381224aa363791453eb4690852d9c22626c62ab0c0da383b3edb"
+    },
+    {
+      "path": "images/home-night/cat-mark.webp",
+      "bytes": 6302,
+      "sha256": "697deb636f419f090e1194c48454ac11c0c3b91df67a94488aa2195495b7d49d"
+    },
+    {
+      "path": "images/home-night/hero-1200.webp",
+      "bytes": 37946,
+      "sha256": "71c1eb43727cf3e5b215d2f5a5246eec7fe00c7381a29c59f9c77018f4d1317e"
+    },
+    {
+      "path": "images/home-night/hero.webp",
+      "bytes": 97488,
+      "sha256": "62579bcffd758b4e07fe4ebece8961b15c1318ae9a4946a5fa28e8e00a557ce0"
+    },
+    {
+      "path": "images/home-night/late-confession.webp",
+      "bytes": 57162,
+      "sha256": "e7d1703e2b733d7d2cd93bbda94306becf3a362139cfd544416f50dd02b97994"
+    },
+    {
+      "path": "images/home-night/music.webp",
+      "bytes": 42934,
+      "sha256": "f96c362b36dd3af362b790d71285df136dc7e56bdf179cb5bd7322c17bfade7f"
+    },
+    {
+      "path": "images/home-night/novel.webp",
+      "bytes": 135072,
+      "sha256": "321cffd67d7e1fc03f1c798de3098b2a19ec0a6f4cb985119b3f57664f34af2e"
+    },
+    {
+      "path": "images/home/station-cat-dog.png",
+      "bytes": 771530,
+      "sha256": "3c0997d771f2e0702be15ac63535806d221481cfd9e7efb9fce8e6cd44e1f273"
+    },
+    {
+      "path": "images/music-home-shelf.webp",
+      "bytes": 182496,
+      "sha256": "d9c94a022de473d7365c468d10c5edbb704f0b6b896efd9ae534719e394692d1"
+    },
+    {
+      "path": "images/music-night-hero.webp",
+      "bytes": 118736,
+      "sha256": "6d322a30d93dd7843a3a0e2b1ef956b1f6f37ca7b8bf262b27e0af3ddc4ae473"
+    },
+    {
+      "path": "images/music-turntable-silver.webp",
+      "bytes": 101716,
+      "sha256": "82c6a4f8023869986a2352ccf558b73d31fc1badc4ceae4030db80e0b25335d5"
+    },
+    {
+      "path": "images/optimized/mindbudget-icon-3bd31000-256.webp",
+      "bytes": 928,
+      "sha256": "2e6f4c30076849a6198961f2ff8aca2b6fffd69d93a55e2fe623882033241cad"
+    },
+    {
+      "path": "images/optimized/mindbudget-icon-3bd31000-512.webp",
+      "bytes": 2224,
+      "sha256": "3b11de1fa0ee38ec34d8e5323df7dcbd7ef2df92efd7a62873287940d68e1e06"
+    },
+    {
+      "path": "images/optimized/nodepilot-icon-fd4176df-256.webp",
+      "bytes": 6366,
+      "sha256": "7db51b34661fad73c45bd5fb112cf18f07206c90bd41df93d58b7b6b5a306a05"
+    },
+    {
+      "path": "images/optimized/nodepilot-icon-fd4176df-512.webp",
+      "bytes": 13200,
+      "sha256": "c7edc4861b7c47edd4b86d1cc2d3ecd1df8a1bf8aa5971f270c889aa753208ff"
+    },
+    {
+      "path": "images/optimized/novelforge-icon-05ef05b9-256.webp",
+      "bytes": 2700,
+      "sha256": "5aec7e22d3dd413cde404472390e7c5f5130b376c2fc44885a553b4fe18feaec"
+    },
+    {
+      "path": "images/optimized/novelforge-icon-05ef05b9-512.webp",
+      "bytes": 5362,
+      "sha256": "8d31d7fe54eed444ba1c02acaf8a4f94f98b2718351737874b55be6ea60dd6ae"
+    },
+    {
+      "path": "images/optimized/offline-future-cover-96c3c463-360.webp",
+      "bytes": 23622,
+      "sha256": "9397779bdc526640ab8fe75aba6de9bd4851180b0a64ae25ec1117145e621fe8"
+    },
+    {
+      "path": "images/optimized/offline-future-cover-96c3c463-720.webp",
+      "bytes": 72310,
+      "sha256": "627fdb1bb2969c1ead1d00dc7c6b63807cd9e411e3e927ac2b69b5b6d2776a2d"
+    },
+    {
+      "path": "images/optimized/privatepinyin-icon-6c79dbfe-256.webp",
+      "bytes": 6194,
+      "sha256": "dbd7d07526f01f727694198127e2973508f479ee644a156c72fcea6fd4e0f9b1"
+    },
+    {
+      "path": "images/optimized/privatepinyin-icon-6c79dbfe-512.webp",
+      "bytes": 6846,
+      "sha256": "8cfa19517e43e47180e50f011cf85c94a0d5a4a75396c6567fedad152c79f076"
+    },
+    {
+      "path": "images/optimized/simplecut-icon-0268e767-256.webp",
+      "bytes": 6266,
+      "sha256": "834a03bbd80d0e42a34bb9a9c6bf2b400715e357bff9fb26b2eb9e77827c7a18"
+    },
+    {
+      "path": "images/optimized/simplecut-icon-0268e767-512.webp",
+      "bytes": 15046,
+      "sha256": "90a2886c8c9f8303aa60d77e8770d1a5cbcbf9147dc15c256a124ba44b893221"
+    },
+    {
+      "path": "images/optimized/snapcopy-icon-91491f7c-256.webp",
+      "bytes": 3016,
+      "sha256": "4b5e921abe2bf520d55d12792c7037f843992d6592ef434eb879019ca9e1e1d9"
+    },
+    {
+      "path": "images/optimized/snapcopy-icon-91491f7c-512.webp",
+      "bytes": 6864,
+      "sha256": "133fbd36cdf206f5f5fa144ce5bd43d22ce44ef42edf132ef93311a9cf1a7f89"
+    },
+    {
+      "path": "images/optimized/station-cat-logo-1668c2e5-160.webp",
+      "bytes": 13508,
+      "sha256": "99c75c14c70cd60af61c56a5e5f58d5463702724bdd7c2f26f62b443a33db7dd"
+    },
+    {
+      "path": "images/optimized/station-cat-logo-1668c2e5-320.webp",
+      "bytes": 32610,
+      "sha256": "995d493ad13582cc91430a588f3522294a17b9458d8292050048fb260bd47a01"
+    },
+    {
+      "path": "images/points-night/README.md",
+      "bytes": 312,
+      "sha256": "e966bbe0b85add16320546bdced05b28e06d5298286ac4523b15099626eae00b"
+    },
+    {
+      "path": "images/points-night/coins.webp",
+      "bytes": 12846,
+      "sha256": "2a0ad8f26837bfc3d6c5478bea673cb7f6016b301f4888811b0c31dc5500cbf2"
+    },
+    {
+      "path": "images/points-night/cta.webp",
+      "bytes": 31994,
+      "sha256": "2d3d5afe9344e45fe27b7082df26f03951db8f8201c4bd861562039220a9654b"
+    },
+    {
+      "path": "images/points-night/hero-960.webp",
+      "bytes": 38486,
+      "sha256": "01c7e2c5e57f4b95df10bdf433c27353705036a46f0c0ad647d2394db571bd3e"
+    },
+    {
+      "path": "images/points-night/hero.webp",
+      "bytes": 92696,
+      "sha256": "de6070a929c023ff52c4fecdda287040303b1f2d63c048672855743d2908b3ef"
+    },
+    {
+      "path": "images/points-night/icons/LICENSE.txt",
+      "bytes": 1071,
+      "sha256": "b5b1f1da112d18ea2147decfd48ddc1bf2b5aeb6c265381579340e95b15a2bb2"
+    },
+    {
+      "path": "images/points-night/icons/README.md",
+      "bytes": 100,
+      "sha256": "e8a4a527ca77e3448895380064afe3e3e88cb751c594ada01d372b7d422441df"
+    },
+    {
+      "path": "images/points-night/icons/book-open.svg",
+      "bytes": 351,
+      "sha256": "da4439d40d3a1fa5b45454cebae6f6304cd39a751a3eeaa915e0ad5c3c01e94f"
+    },
+    {
+      "path": "images/points-night/icons/check-circle.svg",
+      "bytes": 263,
+      "sha256": "8983838aa3b53869359cd046fc2d3059357231999aa8255600bdbfc9c08e482b"
+    },
+    {
+      "path": "images/points-night/icons/clock.svg",
+      "bytes": 217,
+      "sha256": "faee1ed9ee803f25008f8dc4992e9aba49e47e09dd09cba580533e4971a0edd6"
+    },
+    {
+      "path": "images/points-night/icons/coins.svg",
+      "bytes": 811,
+      "sha256": "e8383d06c53d82470c7719e0089e847bb5c8c38b2834a95024a739f5253e7cc4"
+    },
+    {
+      "path": "images/points-night/icons/credit-card.svg",
+      "bytes": 296,
+      "sha256": "d18e9815b243c37085814921aff668b7bd4bd949c9152da38377cdf6b321155b"
+    },
+    {
+      "path": "images/points-night/icons/crown.svg",
+      "bytes": 435,
+      "sha256": "5cd294ddeab236d967d22775d0ab577767bc81ce6b6a4996e37f2c9c2176d858"
+    },
+    {
+      "path": "images/points-night/icons/cube.svg",
+      "bytes": 361,
+      "sha256": "4635b2deb713ea5633cc6f4b003a16f130a9630a13be15a10a6b5ba1bc33825c"
+    },
+    {
+      "path": "images/points-night/icons/download-simple.svg",
+      "bytes": 287,
+      "sha256": "63505831a54bad252780060bd6285172c978c04d30d5073bbb59bc8e680993b5"
+    },
+    {
+      "path": "images/points-night/icons/file-text.svg",
+      "bytes": 327,
+      "sha256": "9311746c45a0f6ca485d58b7196955c053c57928b77b169db20591aa827efa4a"
+    },
+    {
+      "path": "images/points-night/icons/music-notes.svg",
+      "bytes": 250,
+      "sha256": "e2351ef6e99353eb0b48d66b2ccf1d72947779eaff181712cf44d4a77ddd688d"
+    },
+    {
+      "path": "images/points-night/icons/shopping-cart.svg",
+      "bytes": 481,
+      "sha256": "f4ec57b9c91a2e642e8f638b93710c0580f59e19907d5154b3d222ad8b197f29"
+    },
+    {
+      "path": "images/scene-breakfast-placeholder.svg",
+      "bytes": 871,
+      "sha256": "5c6d1420f5c58fa11d578d65d7f58508952624f1c057565a8a9d8fdc0f4c35b0"
+    },
+    {
+      "path": "images/scene-cafe-placeholder.svg",
+      "bytes": 834,
+      "sha256": "b4a2c2169550e1d9264c3ba0dadb9254619b575d355c9912d21344d88e099fc9"
+    },
+    {
+      "path": "images/scene-walking-placeholder.svg",
+      "bytes": 919,
+      "sha256": "36b19a40d6ecf3a080b90f56d302f1cac9875e96863a0c327c74b255ba3f1fd7"
+    },
+    {
+      "path": "images/social/station-cat-og.png",
+      "bytes": 170409,
+      "sha256": "92867d185d934244dc7b6d2ccfd2ce6dd5b757fa0db0a45c09df8f5c2a989ed3"
+    },
+    {
+      "path": "images/station-gentle/cat-mark.webp",
+      "bytes": 7334,
+      "sha256": "2115e55b0a14dd80b1fed50dea645ac6ae4012a87ea83af5d7374e0619571aaa"
+    },
+    {
+      "path": "images/station-gentle/hero.webp",
+      "bytes": 211586,
+      "sha256": "71c0c665caa5110849e5f29718152a0a8e3158c278325072977cb710f54c05b7"
+    },
+    {
+      "path": "images/station-gentle/member-hero.webp",
+      "bytes": 211586,
+      "sha256": "71c0c665caa5110849e5f29718152a0a8e3158c278325072977cb710f54c05b7"
+    },
+    {
+      "path": "ja/404.html",
+      "bytes": 5562,
+      "sha256": "bbc3aff7c3e77d12309b07c010e4ed7e08afab61c2b65fd3c5130cd023e4154e"
+    },
+    {
+      "path": "ja/404/index.html",
+      "bytes": 5562,
+      "sha256": "bbc3aff7c3e77d12309b07c010e4ed7e08afab61c2b65fd3c5130cd023e4154e"
+    },
+    {
+      "path": "ja/points/index.html",
+      "bytes": 21513,
+      "sha256": "7f4d2f67a838913285f81e9491845400b42f51d0d0def23fe8eaf6216e239806"
+    },
+    {
+      "path": "ja/privacy/index.html",
+      "bytes": 8890,
+      "sha256": "f1d87efb14815745d0897fd61f17fc667e911bc3e102b2a4c37b2a261bf4f56c"
+    },
+    {
+      "path": "ja/terms/index.html",
+      "bytes": 8664,
+      "sha256": "4f85889459681ce53fc41207bf219d25d299d164ef0e1cb7aa715de037ceebe4"
+    },
+    {
+      "path": "member/site-shell/en/index.html",
+      "bytes": 78784,
+      "sha256": "ffe841b437f17c28e44f50c54aea60cc4fcea0f6432c238073483d7cbf5f2fac"
+    },
+    {
+      "path": "member/site-shell/ja/index.html",
+      "bytes": 83653,
+      "sha256": "bb456d166c59443d26d7cb9d50d2404adf6b51ab2a075286bf9777d04f08b83f"
+    },
+    {
+      "path": "member/site-shell/zh-Hans/index.html",
+      "bytes": 77588,
+      "sha256": "a912b5bc81804e78fe3b3614c4266180f8cbd66bbc457892f7713f72e965c9b3"
+    },
+    {
+      "path": "member/site-shell/zh-Hant/index.html",
+      "bytes": 77471,
+      "sha256": "f22bf58db0d283b09ad30bad2f3afb62fc74092176d3efaed4db79078ba043a6"
+    },
+    {
+      "path": "music/site-shell/brand-about/en/index.html",
+      "bytes": 20326,
+      "sha256": "92cbdd81eaf7e302e0266af7c7e7c6fa96dfc46c9a0cf751e30245335854eff0"
+    },
+    {
+      "path": "music/site-shell/brand-about/ja/index.html",
+      "bytes": 20710,
+      "sha256": "5ff8d94d6109c09117124a18e5f32967dda162badc170ec3bdd6fcd41a244273"
+    },
+    {
+      "path": "music/site-shell/brand-about/zh-Hans/index.html",
+      "bytes": 20429,
+      "sha256": "fba58f1b5e9e5ccd982442c588b9d81417204102769dacf60c3745be3fc6eeeb"
+    },
+    {
+      "path": "music/site-shell/brand-about/zh-Hant/index.html",
+      "bytes": 20285,
+      "sha256": "64c899d3dff9e2b7cefd1228aecb67d41c10c3e3331f685b23784a5f2a7900f4"
+    },
+    {
+      "path": "music/site-shell/brand-home/en/index.html",
+      "bytes": 32899,
+      "sha256": "1db2acc009991bb657e01d2de224c92110b0fe32474e26db922b8801897a065d"
+    },
+    {
+      "path": "music/site-shell/brand-home/ja/index.html",
+      "bytes": 33478,
+      "sha256": "73e21f25f023f469f70a2a31f01ddf9cbe553f33ff523d4aefd36b519f073ea8"
+    },
+    {
+      "path": "music/site-shell/brand-home/zh-Hans/index.html",
+      "bytes": 33115,
+      "sha256": "a2b905bb2aafc5bfe08000071c357b59e0c635285271af53c592e99ee1bbc2ea"
+    },
+    {
+      "path": "music/site-shell/brand-home/zh-Hant/index.html",
+      "bytes": 32923,
+      "sha256": "aefa4232e0744c7b2543a3b5a4e8240b0ebd030e18108836818dfde20ee88f23"
+    },
+    {
+      "path": "music/site-shell/brand-maintenance/en/index.html",
+      "bytes": 17018,
+      "sha256": "d0e99c5de16006e8eb8b61e92727c33e832b7ec1513b5a273fe50a9db6a5641a"
+    },
+    {
+      "path": "music/site-shell/brand-maintenance/ja/index.html",
+      "bytes": 17280,
+      "sha256": "e3a82a4464a16ee664feb81669a15f4dac4b82887515eeb69f813b36ae066019"
+    },
+    {
+      "path": "music/site-shell/brand-maintenance/zh-Hans/index.html",
+      "bytes": 17077,
+      "sha256": "dffd89c3d5b65c75b971092d1027f18c8783c3945aad439ed5c8fe2268236a88"
+    },
+    {
+      "path": "music/site-shell/brand-maintenance/zh-Hant/index.html",
+      "bytes": 16957,
+      "sha256": "2b4e96a572caac817003c7fd8aeccf4f6337398bf5285d4d7e7ef2ccd70415ba"
+    },
+    {
+      "path": "music/site-shell/en/index.html",
+      "bytes": 26178,
+      "sha256": "af8266ad4f421248453e1310154aec8b4dd4584949dbea10a913e6c16fc5b3ed"
+    },
+    {
+      "path": "music/site-shell/ja/index.html",
+      "bytes": 26874,
+      "sha256": "b75060a35f765ba1bdc036a50be56d58df5e60c4f02d02693b56ab5ff9fc2af3"
+    },
+    {
+      "path": "music/site-shell/zh-Hans/index.html",
+      "bytes": 26043,
+      "sha256": "09dfba12562f3577f010870d49a68861881ba8cd0abef53e07ac9e863049b4df"
+    },
+    {
+      "path": "music/site-shell/zh-Hant/index.html",
+      "bytes": 25914,
+      "sha256": "df0b149d71947fece6c6e393ae02edac50689353e877bca28c963db5371e68fd"
+    },
+    {
+      "path": "robots.txt",
+      "bytes": 26,
+      "sha256": "331ea9090db0c9f6f597bd9840fd5b171830f6e0b3ba1cb24dfa91f0c95aedc1"
+    },
+    {
+      "path": "scripts/article-share.js",
+      "bytes": 6919,
+      "sha256": "48f2a165d0da5468343d8e87346b0131928e1c41229adf1fb94a43ab0c9ade38"
+    },
+    {
+      "path": "styles/admin-articles.css",
+      "bytes": 6239,
+      "sha256": "a0bd3b84b7c819f46095b7b5b83ce71a8ce5015d7f66b58dff753f1d395c6ff7"
+    },
+    {
+      "path": "styles/admin-music-batch.css",
+      "bytes": 1079,
+      "sha256": "711039e612629d684d970fa50d204761537338c20d6dedca5f87380ee8595837"
+    },
+    {
+      "path": "styles/admin-music-collections.css",
+      "bytes": 1490,
+      "sha256": "c624daeb47ccd1b3c4c024b215124d9253792582b7c88794afad40582a20d5da"
+    },
+    {
+      "path": "styles/admin-music-featured.css",
+      "bytes": 1721,
+      "sha256": "74164ea597b62638d88b8d86e16e1b5e6185c996ee875a758542980243ac61db"
+    },
+    {
+      "path": "styles/admin-music.css",
+      "bytes": 8891,
+      "sha256": "cd9ab09f6d1f7471b38516d0c7a9252669de6f0f89838e9d2b979e7f0d534c3f"
+    },
+    {
+      "path": "styles/admin-station-content.css",
+      "bytes": 5375,
+      "sha256": "55fbff2de5b26bdc74100c0ff2cc76cd7cd86f5929d07e5bfa80c56393194366"
+    },
+    {
+      "path": "styles/admin-station-media.css",
+      "bytes": 2268,
+      "sha256": "9b4255e7098144780b3dce4b2679641d7661e920e386ce093b52813d25453a51"
+    },
+    {
+      "path": "styles/admin-station-reports.css",
+      "bytes": 5816,
+      "sha256": "fbee228eb4df7cfeba9c8346ac539c5bfcdd2f6b3f0e38655a0958e09362d64e"
+    },
+    {
+      "path": "styles/signal-articles.css",
+      "bytes": 17548,
+      "sha256": "90787b9939b0822696473d3d2e182d1256282d88acce994f3767e37c89f383d9"
+    },
+    {
+      "path": "updates/private-pinyin/macos/stable.json",
+      "bytes": 1122,
+      "sha256": "1ccd631e558758256e3d87a1e48bf1b92d665796feb2e8bbf72b8fc634832a65"
+    },
+    {
+      "path": "vendor/music-mp3/GPL-3.0.txt",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    {
+      "path": "vendor/music-mp3/LGPL-3.0.txt",
+      "bytes": 7652,
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+    },
+    {
+      "path": "vendor/music-mp3/NOTICE.txt",
+      "bytes": 1452,
+      "sha256": "410d056c4187a2d6ddd4530d72a26f73473b0cc75fd3d99b18aaeaf488209c9b"
+    },
+    {
+      "path": "vendor/music-mp3/UPSTREAM-NOTICE.txt",
+      "bytes": 424,
+      "sha256": "cd144ca132e3842b01f5ed2d6f3a32141e24a1cc15e115aa5f19a2294ce0a379"
+    },
+    {
+      "path": "vendor/music-mp3/lamejs-1.2.7.js",
+      "bytes": 259508,
+      "sha256": "1c5f944911ccf2f6e29ab36c2e568363210ab16f50c0d76077060f40ecf91d28"
+    },
+    {
+      "path": "vendor/music-mp3/source-1.2.7.tar.gz",
+      "bytes": 2930497,
+      "sha256": "af8f08f0ff9a13777f2ffff737b48e40019b53a4b21db270dd62e829574e2b83"
+    },
+    {
+      "path": "zh-hans/404.html",
+      "bytes": 5402,
+      "sha256": "47ab1ba90203a42d6083b717bcecb9c0c355b7641d0739567986a38aabe92fce"
+    },
+    {
+      "path": "zh-hans/404/index.html",
+      "bytes": 5402,
+      "sha256": "47ab1ba90203a42d6083b717bcecb9c0c355b7641d0739567986a38aabe92fce"
+    },
+    {
+      "path": "zh-hans/points/index.html",
+      "bytes": 20424,
+      "sha256": "7c3690e0c60d85c99a03ae23e2ec631b4ceeee8250c1cf709e9f5a71a7a844d7"
+    },
+    {
+      "path": "zh-hans/privacy/index.html",
+      "bytes": 7959,
+      "sha256": "2ebecf87c8fa2ad6ce6fea13c098b4322d50b1ef8c6288df173e16df1d9aaaa9"
+    },
+    {
+      "path": "zh-hans/terms/index.html",
+      "bytes": 7911,
+      "sha256": "014ef047fee50721808eebdaf9a5299dfb7f3cdb2eb87b0876085d5d62f6e483"
+    },
+    {
+      "path": "zh-hant/404.html",
+      "bytes": 5370,
+      "sha256": "2705148e55bd9a01f4b19f68b9a96b10b7e200cba3fa427a2c4748013057a5d4"
+    },
+    {
+      "path": "zh-hant/404/index.html",
+      "bytes": 5370,
+      "sha256": "2705148e55bd9a01f4b19f68b9a96b10b7e200cba3fa427a2c4748013057a5d4"
+    },
+    {
+      "path": "zh-hant/points/index.html",
+      "bytes": 20378,
+      "sha256": "ad6ce51e61fcd48ca91234a9fd32346c737d8488aac2b17e369651abdbb42eed"
+    },
+    {
+      "path": "zh-hant/privacy/index.html",
+      "bytes": 7939,
+      "sha256": "c33767ee85906072393cdec17f9d6843eb31d0a17c86ebca773348cb340216e2"
+    },
+    {
+      "path": "zh-hant/terms/index.html",
+      "bytes": 7879,
+      "sha256": "4c8fd09cf09fe411c3a56e0ccf08b1c5a638e1f20b8c1daddf997731f2278629"
+    }
+  ],
+  "privateExecutionConfigurationNotInRepository": true
+}

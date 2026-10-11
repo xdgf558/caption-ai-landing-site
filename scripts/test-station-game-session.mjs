@@ -112,6 +112,26 @@ test('actual runtime bridge refuses foreign/old exits and emits only fixed ident
   h.context.CatGameHostBridge.ready(); assert.equal(sent.length, 2); assert.equal(sent[1].data.type, 'stopped');
   for (const value of sent) { assert.equal(value.origin, 'http://localhost'); assert.deepEqual(Object.keys(value.data).sort(), ['game_id', 'launch_id', 'protocol', 'type']); }
 });
+test('blocked optional analytics never fails startup or claims ready before the game confirms it', () => {
+  const h = catLifeSaveHarness(), sent = bridge(h); h.context.URL = URL;
+  h.context.location.href = 'http://localhost/games/cat-life/?sc_entry=1&sc_launch_id=' + id(1);
+  const onError = h.listeners.get('error')[0];
+  for (const src of ['https://static.cloudflareinsights.com/beacon.min.js',
+    'http://localhost/cdn-cgi/optional-beacon.js', 'http://localhost/games/cat-life-other/optional.js']) {
+    onError({ target: { tagName: 'SCRIPT', src } });
+  }
+  assert.equal(sent.length, 0); assert(!h.context.CatGameHostBridge.isStopped());
+  h.context.CatGameHostBridge.ready(); assert.deepEqual(sent.map(x => x.data.type), ['ready']);
+});
+test('a required game script or runtime exception still fails startup', () => {
+  for (const event of [{ target: { tagName: 'SCRIPT', src: 'http://localhost/games/cat-life/src/js/main.js' } },
+    { target: { tagName: 'SCRIPT', src: './src/js/state/saveSystem.js' } }, { error: new Error('runtime failed') }]) {
+    const h = catLifeSaveHarness(), sent = bridge(h); h.context.URL = URL;
+    h.context.location.href = 'http://localhost/games/cat-life/?sc_entry=1&sc_launch_id=' + id(1);
+    h.listeners.get('error')[0](event);
+    assert.deepEqual(sent.map(x => x.data.type), ['failed']);
+  }
+});
 test('actual main emits recovery rather than ready and never writes a damaged slot on exit', async () => {
   const raw = ' {broken original '; const h = catLifeSaveHarness({ main: true, entry: true, initial: { catGameSaveV1: raw } }); const sent = bridge(h);
   await h.fire('DOMContentLoaded'); assert(sent.some(value => value.data.type === 'recovery')); assert(!sent.some(value => value.data.type === 'ready'));

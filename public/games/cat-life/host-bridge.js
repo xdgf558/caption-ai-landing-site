@@ -26,7 +26,18 @@
     finally { send("stopped"); }
   });
   window.addEventListener("error", function (event) {
-    if (!stopped && !ready && (event.error || event.target && event.target.tagName === "SCRIPT")) send("failed");
+    if (stopped || ready) return;
+    var target = event.target, requiredScript = false;
+    if (target && target.tagName === "SCRIPT" && target.src) {
+      try {
+        var source = new URL(target.src, window.location.href);
+        requiredScript = source.origin === origin && source.pathname.indexOf("/games/cat-life/") === 0;
+      } catch (error) { /* A non-game script cannot establish runtime failure. */ }
+    }
+    // Cloudflare can inject an optional analytics script which the game's CSP
+    // blocks. Only runtime exceptions and required game-script load failures
+    // invalidate startup; the bridge still waits for the game's explicit ready.
+    if (event.error || requiredScript) send("failed");
   }, true);
   window.addEventListener("DOMContentLoaded", function () {
     document.body.setAttribute("data-station-embedded", "true");

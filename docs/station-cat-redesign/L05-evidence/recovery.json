@@ -1,0 +1,54 @@
+{
+  "maintenance": {
+    "recordedAt": "2026-10-11T16:07:26.782Z",
+    "versionId": "e85f8c41-7a47-4e37-9492-bff659ad30ab",
+    "deployedAt": "2026-10-11T16:05:19.971931Z",
+    "legacyClosed": true,
+    "bindingsPreserved": true,
+    "checks": [
+      {
+        "path": "/",
+        "status": 503,
+        "maintenance": true
+      },
+      {
+        "path": "/novel/",
+        "status": 410
+      },
+      {
+        "path": "/api/content/body",
+        "status": 410
+      },
+      {
+        "path": "/games/cat-life/",
+        "status": 200
+      },
+      {
+        "path": "/api/readers/session",
+        "status": 200
+      },
+      {
+        "path": "/api/readers/game-saves/cat-life",
+        "status": 200
+      },
+      {
+        "path": "/api/mobile/v1/me/music/likes",
+        "status": 503,
+        "code": "SERVICE_UNAVAILABLE"
+      },
+      {
+        "path": "/.well-known/apple-app-site-association",
+        "status": 503
+      }
+    ]
+  },
+  "restoredVersion": "cf69fe92-f8cd-45ff-a2a8-87cac1546814",
+  "restoredAt": "2026-10-11T16:47:18.861763Z",
+  "legacyNeverReopened": true,
+  "businessDataRestored": false,
+  "reason": "Optional injected analytics script was blocked by CSP and previously misclassified as a fatal game startup error",
+  "limitations": [
+    "No cancellation or atomic rollback of in-flight cloud writes",
+    "No full database restore or long-duration incident monitoring acceptance"
+  ]
+}
