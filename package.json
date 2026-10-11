@@ -109,7 +109,8 @@
     "build:station:first-launch": "node scripts/build-station-first-launch.mjs",
     "test:station:first-launch": "node --test --test-timeout=120000 scripts/test-station-first-launch.mjs",
     "test:station:backup": "node --test --test-timeout=120000 scripts/test-station-production-backup.mjs scripts/test-station-production-restore.mjs",
-    "test:station:content-rollback": "node --test --test-timeout=120000 scripts/test-station-content-rollback.mjs"
+    "test:station:content-rollback": "node --test --test-timeout=120000 scripts/test-station-content-rollback.mjs",
+    "test:station:production-migration": "node --test --test-timeout=120000 scripts/test-station-production-migration.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

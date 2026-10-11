@@ -1,0 +1,50 @@
+{
+  "task": "L03",
+  "recordedAt": "2026-10-11T12:20:30.220Z",
+  "versionId": "67d6e6b0-42f5-4696-8ed5-bc1096a49ebf",
+  "sourceSnapshotSha256": "33e41c3463753c2194793fc0ee21fba60f7054eb65ee1e68dea91b18c0cff5aa",
+  "schemaSha256": "fae2c57cb0857b9dc8f20e0cba249affc5c04162382e6d2822f36e9137b4e5df",
+  "schemaMatchesBackup": true,
+  "ledger": [
+    "0001_music_foundation.sql",
+    "0002_music_publication.sql",
+    "0003_music_uploads.sql",
+    "0004_music_cleanup.sql",
+    "0005_music_rate_limits.sql",
+    "0006_music_analytics.sql",
+    "0007_music_albums.sql",
+    "0008_music_featured.sql",
+    "0009_music_album_covers.sql",
+    "0010_music_limited_free.sql",
+    "0011_music_share_rate_limits.sql"
+  ],
+  "ledgerEntries": 11,
+  "stationObjects": 0,
+  "counts": {
+    "tracks": 12,
+    "revisions": 49,
+    "assets": 35
+  },
+  "stationSwitchesEnabled": 0,
+  "targetSha256": "10e65e786e32e7024c929d1a111de14a572a2d8a851d31be4e839194b5eef4dd",
+  "packetSha256": "d3dffe5f2f7ff10975cbbdafe5a999cf6561748c8a21c0b95a235a4c0d920621",
+  "configurationSha256": "5c2068da561d056e7db5ffa75babddb6ea8e04990dee7bf1d62f5a23509fecd3",
+  "backup": {
+    "sha256": "3089e35cd613ef9e215863e1d4308acbd9d59f7e8cb7a2b745fbf4b49e49dfce",
+    "bytes": 383482,
+    "capturedAt": "2026-10-11T08:53:07.182Z",
+    "schemaSha256": "fae2c57cb0857b9dc8f20e0cba249affc5c04162382e6d2822f36e9137b4e5df",
+    "manifestSha256": "b996342e96b20d05b69b58e8728b4610ad088f54a5439b551e023701422b738d",
+    "ageMs": 12986182,
+    "dataFrozen": false,
+    "freshnessAcceptedForExecution": false
+  },
+  "productionWrites": 0,
+  "remoteMigrationExecuted": false,
+  "executionEnabled": false,
+  "executionReady": false,
+  "productionDeployed": false,
+  "legacyClosureVerified": false,
+  "sourceRawDataPublic": false,
+  "authority": "read-only metadata, ledger and counts; not a current-data freeze or execution approval"
+}

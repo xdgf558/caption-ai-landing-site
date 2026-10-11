@@ -98,6 +98,9 @@ jobs:
           npm run test:station:backup
           npm run test:station:content-rollback
 
+      - name: Verify closed production migration packet and local D1 transaction boundaries
+        run: npm run test:station:production-migration
+
       - name: Verify integrated Station Cat core acceptance fixture and HTTP boundaries
         run: npm run test:redesign:acceptance
 
