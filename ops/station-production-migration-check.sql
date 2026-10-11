@@ -28,5 +28,7 @@ SELECT singleton,sealed_before,updated_at FROM station_report_window_seal;
 SELECT count(*) AS retention_guards FROM station_report_retention_guard;
 SELECT count(*) AS asset_reference_view FROM sqlite_master WHERE type='view' AND name='music_asset_references' AND instr(sql,'station_track_revisions')>0 AND instr(sql,'station_asset_rights')>0;
 SELECT count(*) AS storage_charges_view FROM sqlite_master WHERE type='view' AND name='music_storage_charges' AND instr(sql,'station_media_upload_sessions')>0 AND instr(sql,'station_media_assets')>0;
-PRAGMA integrity_check;
+-- Remote D1 accepts quick_check; integrity_check is rejected by its SQL API.
+-- This checks record/page consistency, not full SQLite integrity equivalence.
+PRAGMA quick_check;
 PRAGMA foreign_key_check;

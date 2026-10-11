@@ -110,6 +110,31 @@ test('all seven migrations preserve seeded legacy rows, sequences and charges an
     }
   } finally { fixture.sql.close(); }
 });
+test('production postcheck runs through native D1 with supported consistency and foreign-key checks', async () => {
+  const mf = new Miniflare({ modules: true, script: 'export default { fetch() { return new Response("local postcheck"); } };',
+    compatibilityDate: '2026-05-17', host: '127.0.0.1', port: 0, log: new Log(LogLevel.NONE),
+    d1Databases: { POSTCHECK_DB: 'station-l04-postcheck-local-only' },
+    outboundService: () => new Response('Network disabled', { status: 403 }) });
+  try {
+    const db = await mf.getD1Database('POSTCHECK_DB');
+    await db.prepare('CREATE TABLE d1_migrations(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT UNIQUE,applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)').run();
+    for (const name of [...legacyMigrationNames, ...stationMigrationNames]) {
+      const sql = await readFile(join(migrationRoot, 'migrations-music', name), 'utf8');
+      await db.batch([...splitBackupSql(sql).map(statement => db.prepare(statement)),
+        db.prepare('INSERT INTO d1_migrations(name) VALUES(?)').bind(name)]);
+    }
+    const sql = await readFile(join(migrationRoot, 'ops/station-production-migration-check.sql'), 'utf8');
+    const statements = splitBackupSql(sql);
+    const pragmas = statements.map(statement => statement.replace(/^(?:\s|--[^\n]*(?:\n|$))+/, ''))
+      .filter(statement => /^PRAGMA\b/i.test(statement));
+    assert.deepEqual(pragmas.map(statement => statement.trim()), ['PRAGMA quick_check;', 'PRAGMA foreign_key_check;']);
+    const results = [];
+    for (const statement of statements) { const result = await db.prepare(statement).all(); assert.equal(result.success, true); results.push(result.results); }
+    assert.equal(results.length, 28); assert.equal(results[0].length, 18);
+    assert.equal(results[1][0].station_tables, 32);
+    assert.deepEqual(results[26], [{ quick_check: 'ok' }]); assert.deepEqual(results[27], []);
+  } finally { await mf.dispose(); }
+});
 test('a failed file rolls back its DDL and ledger while retaining the prior successful migration', async () => {
   const fixture = fixtureDatabase(), { sources } = await readMigrationSources();
   try {

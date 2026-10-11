@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "task": "L04",
+  "sourceRevision": "b2ba1205855f65e609d1efb9b1de21fee0db0cc6",
+  "recordedAt": "2026-10-11T14:05:23.901Z",
+  "nodeVersion": "v24.15.0",
+  "tests": {
+    "productionMigration": {
+      "passed": 12,
+      "failed": 0,
+      "logSha256": "43cae2a76faffe7a406b1599319c575e1e5c18dc5fcc7857c4743acb77bcfd11"
+    },
+    "releaseRegression": {
+      "passed": 30,
+      "failed": 0,
+      "logSha256": "12585500366c13c8f358b84d27b1555cb42224f70803e26acd01eb5112e410db"
+    }
+  },
+  "totalTestsPassed": 42,
+  "totalTestsFailed": 0,
+  "nativeD1Postcheck": true,
+  "firstLaunchBuild": {
+    "passed": true,
+    "emptyContentOverride": false,
+    "profile": "brand-games",
+    "productionDeployed": false,
+    "htmlCount": 59,
+    "removedHtmlCount": 126,
+    "fileCount": 406,
+    "compatibilityPreserved": true,
+    "logSha256": "ea00de4554042fa9b76b5b863834a057270ebf544d94efcd19329002b789be70",
+    "manifestSha256": "9cc73a1de4899787dfd4094ab45cf25d16cd80d195a4f1b72fcfc97002001d74"
+  },
+  "reviewedMigrationCi": {
+    "head": "098481848ff1fe164e464819205649ebf80f72ad",
+    "runId": 38140010738,
+    "conclusion": "success"
+  },
+  "currentHeadHostedCi": {
+    "required": true,
+    "result": "pending-at-recording",
+    "localTestsDoNotSubstitute": true
+  },
+  "sourceHashes": [
+    {
+      "path": "ops/station-production-migration-check.sql",
+      "sha256": "a3a56d7eb97682e80d3212dfa1d564b94308f1071d27a88bc1c6486cc1552fdc"
+    },
+    {
+      "path": "ops/station-release-readiness.json",
+      "sha256": "e972cca6c22371b537e1b26fe357c9fec2589be87c4306535a3d6de98a9e6f31"
+    },
+    {
+      "path": "scripts/test-station-production-migration.mjs",
+      "sha256": "0e2907924235e5e7845111961787d002676572438024ade642ad518aea534cd3"
+    },
+    {
+      "path": "scripts/test-station-release.mjs",
+      "sha256": "adbf5d97c440e55049cd03f997fe4ed2fa11398d0ec4135a8fbc5f2f17a99a1d"
+    },
+    {
+      "path": "docs/station-cat-redesign/L04-production-migration-execution.md",
+      "sha256": "8bf4a4c16d2d68b5ef9f7b19a5e882d5e659bfa9144333fa870d62e395077716"
+    }
+  ],
+  "remoteMigrationExecuted": true,
+  "productionDeployed": false,
+  "legacyClosureVerified": false,
+  "launchReady": false
+}

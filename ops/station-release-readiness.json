@@ -1,6 +1,6 @@
 {
   "task": "T22",
-  "reviewBaseline": "8b8a5b3facc5decb6f1989bcf54f0096bd5b431b",
+  "reviewBaseline": "b2ba1205855f65e609d1efb9b1de21fee0db0cc6",
   "productionDeployed": false,
   "legacyClosureVerified": false,
   "gates": [
@@ -8,27 +8,26 @@
       "id": "exact-head-ci",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L03-evidence/validation.json"
+        "docs/station-cat-redesign/L04-evidence/validation.json"
       ],
-      "reason": "L02 精确头 c4df6255 的完整 CI 38134357787 已通过并合并；L03 精确头完整托管 CI 需独立核对。"
+      "reason": "已审查 L03 精确头的完整 CI 38140010738 成功；L04 当前记录、后验收兼容性修复及回归的精确头完整 CI 待独立核对。"
     },
     {
       "id": "production-schema",
-      "status": "pending",
+      "status": "passed",
       "evidence": [
-        "docs/station-cat-redesign/L03-evidence/production-readonly.json",
-        "docs/station-cat-redesign/L03-evidence/real-backup-rehearsal.json"
+        "docs/station-cat-redesign/L04-evidence/production-migration.json"
       ],
-      "reason": "L03 生产只读核对仍为 0001–0011，无 station_*；真实 MUSIC_DB 备份的本机七份迁移通过，未远程执行。"
+      "reason": "L04 在用户新确认的窗口内逐份执行 MUSIC_DB 0012–0018；生产账本 18 条、新表 32 张、旧结构及 12/49/35 计数、草稿/空发布、quick_check 与外键核对通过。quick_check 不等同完整 SQLite integrity_check。"
     },
     {
       "id": "production-backup",
       "status": "pending",
       "evidence": [
         "docs/station-cat-redesign/L02-evidence/backup-and-restore.json",
-        "docs/station-cat-redesign/L03-production-migration-preparation.md"
+        "docs/station-cat-redesign/L04-evidence/fresh-music-backup.json"
       ],
-      "reason": "L02 全量真实备份与本机恢复已通过；L03 只读结构一致不能证明数据冻结，执行前须确认备份新鲜度、当前维护窗口与恢复选择。异地副本未确认。"
+      "reason": "L04 MUSIC_DB 新完整备份、恢复锚点与新 SQL 本机迁移验证通过；原 L02 全站备份保留。仅音乐库为本次刷新，全站部署前仍需复核其他资源的新鲜度；非跨 D1/R2 原子快照，异地副本未确认。"
     },
     {
       "id": "real-promotion-rights",
@@ -42,9 +41,9 @@
       "id": "production-build",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L03-evidence/validation.json"
+        "docs/station-cat-redesign/L04-evidence/validation.json"
       ],
-      "reason": "L03 品牌/游戏专用本机构建通过且未使用空正文选项；实际内容、完整生产部署配置和最终发布包仍待后续审核。"
+      "reason": "L04 品牌/游戏首发构建通过且未使用空正文选项；真实首发内容、完整生产部署配置和最终发布包仍待后续审核。"
     },
     {
       "id": "production-route-contract",
@@ -80,11 +79,12 @@
       "id": "production-authorization",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L03-production-migration-preparation.md"
+        "docs/station-cat-redesign/L04-production-migration-execution.md",
+        "docs/station-cat-redesign/L04-evidence/production-migration.json"
       ],
-      "reason": "用户已授权本批迁移准备，继续一批一 PR；本批没有执行器，实际生产迁移仍需本 PR 审查、精确头 CI 和当前维护窗口，不包含部署或旧入口关闭。"
+      "reason": "本次 MUSIC_DB 新备份与七份迁移获用户明确授权并已完成，维护窗口操作已结束；授权不包含部署、Station 开关启用或旧入口关闭。继续一批一 PR。"
     }
   ],
-  "launchPhase": "L03",
+  "launchPhase": "L04",
   "launchScope": "ops/station-first-launch.json"
 }
