@@ -1,6 +1,6 @@
 {
   "task": "T22",
-  "reviewBaseline": "41a4ff62f4c71016b2ecb7ac750079f035ff2c34",
+  "reviewBaseline": "8b8a5b3facc5decb6f1989bcf54f0096bd5b431b",
   "productionDeployed": false,
   "legacyClosureVerified": false,
   "gates": [
@@ -8,27 +8,27 @@
       "id": "exact-head-ci",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L02-evidence/validation.json"
+        "docs/station-cat-redesign/L03-evidence/validation.json"
       ],
-      "reason": "L01 精确头 9670a4a3 的完整 CI 已通过并合并；L02 本 PR 精确头完整托管 CI 尚需独立核对。"
+      "reason": "L02 精确头 c4df6255 的完整 CI 38134357787 已通过并合并；L03 精确头完整托管 CI 需独立核对。"
     },
     {
       "id": "production-schema",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L01-evidence/production-readonly-inventory.json",
-        "docs/station-cat-redesign/L02-evidence/backup-and-restore.json"
+        "docs/station-cat-redesign/L03-evidence/production-readonly.json",
+        "docs/station-cat-redesign/L03-evidence/real-backup-rehearsal.json"
       ],
-      "reason": "L02 真实导出及最终只读结构复核仍为 0001–0011，无 station_* 表；0012–0018 未远程执行，实际生产合同未验收。"
+      "reason": "L03 生产只读核对仍为 0001–0011，无 station_*；真实 MUSIC_DB 备份的本机七份迁移通过，未远程执行。"
     },
     {
       "id": "production-backup",
-      "status": "passed",
+      "status": "pending",
       "evidence": [
         "docs/station-cat-redesign/L02-evidence/backup-and-restore.json",
-        "docs/station-cat-redesign/L02-production-backup-and-content-rollback.md"
+        "docs/station-cat-redesign/L03-production-migration-preparation.md"
       ],
-      "reason": "已获维护窗口授权并完整导出两个真实生产 D1，备份三个 R2 桶全部 503 对象，恢复到全新本机原生 D1/R2 后核对全部数据、结构、序列、字节与 HTTP/custom 元数据。889 条对象引用存在；不证明跨资源原子快照、异地备份或生产恢复。"
+      "reason": "L02 全量真实备份与本机恢复已通过；L03 只读结构一致不能证明数据冻结，执行前须确认备份新鲜度、当前维护窗口与恢复选择。异地副本未确认。"
     },
     {
       "id": "real-promotion-rights",
@@ -42,9 +42,9 @@
       "id": "production-build",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L02-evidence/validation.json"
+        "docs/station-cat-redesign/L03-evidence/validation.json"
       ],
-      "reason": "L01 品牌/游戏专用候选构建及 L02 回退 dry-run 通过，未使用空正文开关；回退 dry-run 只用合成完整基线，实际完整生产基线和最终执行包仍需审核。"
+      "reason": "L03 品牌/游戏专用本机构建通过且未使用空正文选项；实际内容、完整生产部署配置和最终发布包仍待后续审核。"
     },
     {
       "id": "production-route-contract",
@@ -80,11 +80,11 @@
       "id": "production-authorization",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L01-first-launch-scope.md"
+        "docs/station-cat-redesign/L03-production-migration-preparation.md"
       ],
-      "reason": "用户已确定正式上线阶段和旧内容关闭目标；继续执行一批一 PR 审查流程，尚需完成精确执行包审查、维护窗口及生产验收。"
+      "reason": "用户已授权本批迁移准备，继续一批一 PR；本批没有执行器，实际生产迁移仍需本 PR 审查、精确头 CI 和当前维护窗口，不包含部署或旧入口关闭。"
     }
   ],
-  "launchPhase": "L02",
+  "launchPhase": "L03",
   "launchScope": "ops/station-first-launch.json"
 }

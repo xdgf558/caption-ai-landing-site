@@ -1,0 +1,104 @@
+{
+  "task": "L03",
+  "recordedAt": "2026-10-11T12:36:38.890Z",
+  "baseline": "8b8a5b3facc5decb6f1989bcf54f0096bd5b431b",
+  "evidence": "local validation; exact PR-head hosted CI must be read independently",
+  "tests": [
+    {
+      "command": "npm run test:station:production-migration",
+      "passed": 11,
+      "failed": 0,
+      "logSha256": "7c6cd7a3fbab8ca1de83fd8e9c77d85cad59751129008e5d169e54e75c3999c3"
+    },
+    {
+      "command": "npm run test:station:backup",
+      "passed": 33,
+      "failed": 0,
+      "logSha256": "76565a89abf48d11c14fe2c17c9a373d0ddb6fb371be6a6bc212af778d9cec48"
+    },
+    {
+      "command": "npm run test:station:content-rollback",
+      "passed": 9,
+      "failed": 0,
+      "logSha256": "d26f1b027a5ba052f36b2d211e29ba039fbd5aba5d99ea6a687a0f4695a63813"
+    },
+    {
+      "command": "npm run test:redesign:release",
+      "passed": 30,
+      "failed": 0,
+      "logSha256": "37a74b1bbc4e0b0dc61823663a7e3f8d01f411c469c5c67b1ec0c8b2bc9c1744"
+    }
+  ],
+  "totalPassed": 83,
+  "build": {
+    "command": "npm run build:station:first-launch",
+    "emptyContentOverride": false,
+    "profile": "brand-games",
+    "productionDeployed": false,
+    "htmlCount": 59,
+    "removedHtmlCount": 126,
+    "fileCount": 406,
+    "compatibilityPreserved": true,
+    "logSha256": "786d60e243ae6ca1ad271abfba67036852a96bb252de6f0f98bb564b16c7b3e2"
+  },
+  "readiness": {
+    "launchReady": false,
+    "productionDeployed": false,
+    "legacyClosureVerified": false
+  },
+  "sources": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 6332,
+      "sha256": "7341048dd1535a23cac722469e444db4f9cd1c86b9560e531589e352d355b603"
+    },
+    {
+      "path": "package.json",
+      "bytes": 15642,
+      "sha256": "4b33d50326e8b90fafd8cdab16526a4349fcd8142e23d3e387add7e494f1f908"
+    },
+    {
+      "path": "ops/station-production-migration.json",
+      "bytes": 1464,
+      "sha256": "b6af2d7de2900e6faf861b0be8e5172659d2b47379f4efee35cbf148c02d41b9"
+    },
+    {
+      "path": "ops/station-production-migration-check.sql",
+      "bytes": 2585,
+      "sha256": "22f7b9d1c9f49ee00f1d62f9f494093034baf7f4c4f55a9d07334161904c5888"
+    },
+    {
+      "path": "ops/station-release-readiness.json",
+      "bytes": 3943,
+      "sha256": "af84bd2fcb62d6012842a89acfe0cb8caefc3fcdca9f395236dead86c0eaa2c0"
+    },
+    {
+      "path": "scripts/helpers/station-production-migration.mjs",
+      "bytes": 19038,
+      "sha256": "2d968bfa8d77383393d75bbeb9b06af454e2c3a6b2f900b6f3af997ab6f5f01d"
+    },
+    {
+      "path": "scripts/station-production-migration.mjs",
+      "bytes": 3415,
+      "sha256": "0e28f2c7d5882752e5e1149eef203dfc90adad9f429120de6e135c7312f910b5"
+    },
+    {
+      "path": "scripts/rehearse-station-production-migration.mjs",
+      "bytes": 8196,
+      "sha256": "da84ac64f7a82e4953fbbd3ebda0c2bda6779926920f6f6d7718823e8f39a567"
+    },
+    {
+      "path": "scripts/test-station-production-migration.mjs",
+      "bytes": 15561,
+      "sha256": "fa9901a6bdf5dd760ea474e820b2fc8e7ac8d10f678b2a0f0d80f7103c85a390"
+    },
+    {
+      "path": "docs/station-cat-redesign/L03-production-migration-preparation.md",
+      "bytes": 8249,
+      "sha256": "bbd898445b89743fa2f32acf8b88f1f3b7cd2e707823c17accf4533e7299b2c3"
+    }
+  ],
+  "productionWrites": 0,
+  "remoteMigrationExecuted": false,
+  "promotedContentConfigured": false
+}
