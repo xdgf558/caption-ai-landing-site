@@ -62,7 +62,7 @@ const [readerMigration, creditMigration, contentMigration, storageMigration, api
     read('../migrations/0033_cat_life_game_commerce.sql'),
     read('../migrations/0034_cat_life_game_commerce_api.sql'),
     read('../migrations/0035_cat_life_game_commerce_admin.sql'),
-    read('../src/pages/admin-v2/index.astro')
+    read('../src/pages/admin-v2/services/index.astro')
   ]);
 
 const createDatabase = ({ withAdmin = true } = {}) => {

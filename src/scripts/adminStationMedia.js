@@ -18,6 +18,11 @@ const errors = {
   UPLOAD_WRITE_UNCONFIRMED: '上传结果尚未确认，请查询原操作。', STATION_MEDIA_VALIDATION_UNCONFIRMED: '校验结果尚未确认，请继续查询并校验。',
   STATION_MEDIA_STORAGE_TIMEOUT: '文件校验暂时超时，请继续查询并校验。', STATION_MEDIA_STORAGE_UNAVAILABLE: '存储服务暂不可用，请保留记录后重试。'
 };
+const requestedMedia=new URLSearchParams(location.search),requestedOwner=requestedMedia.get('owner');
+if(['short_video','mv','poster','game_screenshot'].includes(requestedMedia.get('kind')))el('media-kind').value=requestedMedia.get('kind');
+// The URL supplies the initial preference only. User changes replace it, and
+// pagination/refresh may restore only that current preference, never the URL.
+let preferredOwner=requestedOwner, preferredOwnerKind=el('media-kind').value;
 let controller, actorId, enabled = false, ownerCursor = null, historyCursor = null, recent = [], ownersEpoch = 0, ownersBusy = false, loading = false, recovering = false;
 function notice(message, error = false) { el('media-status').textContent = message; el('media-status').dataset.error = String(error); }
 const errorText = error => errors[error?.code || error] || (typeof error?.message === 'string' && !/^[A-Z_]+$/.test(error.message) ? error.message : '结果暂时无法确认，请保留记录并查询原操作。');
@@ -41,8 +46,9 @@ function render() {
   for (const job of records) {
     const row = document.createElement('li'), header = document.createElement('header'), title = document.createElement('strong'), badge = document.createElement('span');
     title.textContent = job.fileName || mediaKindNames[job.command.kind]; badge.className = 'badge';
-    badge.textContent = (job.error || job.result?.errorCode) && !['completed','rejected','expired'].includes(job.stage) ? '需要核对' : labels[job.stage] || '等待查询';
+    badge.textContent = (job.error || job.result?.errorCode) && !['completed','rejected','expired'].includes(job.stage) ? '需要核对' : (job.stage==='completed'?'技术校验就绪':labels[job.stage]) || '等待查询';
     badge.dataset.phase = job.error || ['rejected','expired'].includes(job.stage) ? 'failed' : job.result?.phase || 'uploading'; header.append(title, badge); row.append(header);
+    if(job.stage==='completed'){const rights=document.createElement('a');rights.href='/admin-v2/?view=assets'+(job.command.ownerId?'&owner='+job.command.ownerId:'');rights.textContent='查看当前权利登记';row.append(rights);}
     const description = document.createElement('p'); description.className = 'muted';
     description.textContent = [mediaKindNames[job.command.kind], bytes(job.command.byteSize), job.result?.width && `${job.result.width} × ${job.result.height}`, job.result?.durationMs && `${(job.result.durationMs/1000).toFixed(1)} 秒`].filter(Boolean).join(' · '); row.append(description);
     if (job.assetId || job.result?.assetId) { const id = document.createElement('p'); id.className = 'muted'; id.textContent = '素材编号：' + (job.assetId || job.result.assetId); row.append(id); }
@@ -77,9 +83,11 @@ async function loadOwners(append = false) {
     if (epoch !== ownersEpoch) return;
     if (!append) el('media-owner').replaceChildren(new Option('请选择作品草稿', ''));
     for (const owner of data.items) el('media-owner').append(new Option(owner.title + (owner.parentTitle ? ' · ' + owner.parentTitle : ''), owner.id));
-    if (el('media-owner').options.length === 2) el('media-owner').selectedIndex = 1;
+    if(preferredOwner){el('media-owner').value=[...el('media-owner').options].some(o=>o.value===preferredOwner)?preferredOwner:'';}
+    else if (!append && el('media-owner').options.length === 2) {el('media-owner').selectedIndex = 1;preferredOwner=el('media-owner').value;}
     ownerCursor = data.nextCursor; el('media-more-owners').hidden = !ownerCursor;
-    el('media-owner-empty').hidden = el('media-owner').options.length > 1;
+    el('media-owner-empty').textContent=preferredOwner&&!el('media-owner').value?'尚未在已读取的草稿中找到当前选择的作品。可加载更多作品，或先回到作品内容保存草稿。':'还没有可选择的作品草稿，请先回到作品内容保存草稿。';
+    el('media-owner-empty').hidden = preferredOwner ? Boolean(el('media-owner').value) : el('media-owner').options.length > 1;
   } catch (error) { if (epoch === ownersEpoch) notice(errorText(error), true); throw error; }
   finally { if (epoch === ownersEpoch) { ownersBusy = false; gate(); } }
 }
@@ -89,7 +97,7 @@ async function initialize() {
   try {
     const status = await request('/site-uploads/status');
     if (actorId && actorId !== status.actorId) { notice('管理员身份已变化，请刷新页面重新核对。', true); return; }
-    actorId = status.actorId; el('media-actor').textContent = actorId;
+    actorId = status.actorId; el('media-actor').textContent = '管理员已核对';
     el('media-quota').textContent = `已计入 ${bytes(status.storage.chargedBytes)} / 总配额 ${bytes(status.storage.quotaBytes)}`;
     enabled = status.enabled;
     if (!controller) controller = createStationMediaUploader({ actorId, journal: createStationMediaJournal(sessionStorage, actorId), onChange: render });
@@ -122,6 +130,7 @@ el('media-form').addEventListener('submit', async event => {
   } catch (error) { notice(errorText(error), true); render(); }
 });
 el('media-kind').addEventListener('change', () => {
+  if(preferredOwnerKind!==el('media-kind').value){preferredOwner=null;preferredOwnerKind=el('media-kind').value;}
   const video = ['short_video','mv'].includes(el('media-kind').value);
   el('media-file').value = ''; el('media-file-name').textContent = '还没有选择文件。'; el('media-file').accept = video ? '.mp4' : '.jpg,.jpeg,.png,.webp';
   el('media-file-limit').textContent = video ? 'MP4 · 最大 256 MiB · 最长 30 分钟' : 'JPEG / PNG / WebP · 最大 10 MiB · 最大 4096 × 4096';
@@ -131,9 +140,10 @@ el('media-file').addEventListener('change', () => {
   const file = el('media-file').files?.[0]; el('media-file-name').textContent = file ? file.name + ' · ' + bytes(file.size) : '还没有选择文件。';
   if (file) try { mediaFileFormat(el('media-kind').value, file); } catch (error) { notice(errorText(error), true); }
 });
-el('media-owner').addEventListener('change', gate);
+el('media-owner').addEventListener('change',()=>{preferredOwner=el('media-owner').value||null;el('media-owner-empty').hidden=el('media-owner').options.length>1;gate();});
 el('media-more-owners').addEventListener('click', () => { void loadOwners(true).catch(() => {}); });
 el('media-more-history').addEventListener('click', () => { void history(true).catch(error => notice(errorText(error), true)); });
 el('media-reload').addEventListener('click', () => { void initialize(); });
 window.addEventListener('beforeunload', event => { if (controller?.busy()) { event.preventDefault(); event.returnValue = ''; } });
+const initialVideo=['short_video','mv'].includes(el('media-kind').value);el('media-file').accept=initialVideo?'.mp4':'.jpg,.jpeg,.png,.webp';el('media-file-limit').textContent=initialVideo?'MP4 · 最大 256 MiB · 最长 30 分钟':'JPEG / PNG / WebP · 最大 10 MiB · 最大 4096 × 4096';el('media-format-help').textContent=initialVideo?'视频需使用 H.264 画面，可搭配 AAC 音频。请保留本机原文件。':'请选择静态图片，最大 4096 × 4096。';
 void initialize();

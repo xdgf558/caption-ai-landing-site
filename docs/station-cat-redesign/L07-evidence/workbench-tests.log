@@ -1,0 +1,13 @@
+✔ all-work pagination keeps per-model cursors and puts dormant legacy rows last (0.5295ms)
+✔ technical metadata, revoked rights and missing selected assets cannot look approved (0.134875ms)
+✔ the editor keeps publication disabled for pending commands, dirty forms, wrong role and incomplete references (0.1ms)
+✔ root and service boot cannot load the retired novel publishing workspace (1.9625ms)
+✔ private image review requires genuine fixture Access, explicit admin flag and unchanged validated R2 identity (1801.164375ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1944.5175

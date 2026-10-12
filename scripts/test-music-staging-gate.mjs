@@ -20,6 +20,15 @@ import stagingWorker from '../src/music/stagingEntrypoint.js';
 
 const request = (path, method = 'GET') => new Request(`https://music-staging.wwwstationcat.org${path}`, { method });
 
+test('the reviewed admin shell assets allow only exact GET/HEAD paths', () => {
+  for (const path of ['/styles/admin-station-content.css', '/styles/station-admin.css', '/images/station-gentle/cat-mark.webp']) {
+    for (const method of ['GET', 'HEAD']) assert.equal(isMusicStagingRequest(request(path, method)), true);
+    for (const method of ['POST', 'PUT', 'DELETE']) assert.equal(isMusicStagingRequest(request(path, method)), false);
+    assert.equal(isMusicStagingRequest(request(path + '.other')), false);
+  }
+  for (const path of ['/admin-v2/', '/admin-v2/services/', '/styles/admin-station-media.css', '/images/station-gentle/private.webp']) assert.equal(isMusicStagingRequest(request(path)), false);
+});
+
 test('staging cookies cannot inherit a production session, including duplicates', () => {
   for (const [cookie, expected] of [
     ['station_cat_reader_session=production; CF_Authorization=access', null],
@@ -368,7 +377,7 @@ test('staging module graph includes only music, Access, membership and explicitl
   const allowedShared = new Set(['adminAccess.js', 'readerMembership.js', 'data/reader-library-client.js',
     'redesign/mediaUploads.js', 'redesign/mediaResources.js', 'redesign/mediaFormats.js', 'redesign/mp4Validation.js',
     'data/station-home.js', 'redesign/contentAdmin.js', 'redesign/contentAdminHttp.js', 'redesign/contentAdminModel.js',
-    'redesign/contentAdminStore.js', 'redesign/contentAdminValidation.js', 'redesign/contentSchedule.js',
+    'redesign/contentAdminStore.js', 'redesign/contentAdminValidation.js', 'redesign/contentSchedule.js', 'redesign/adminContentImages.js',
     'redesign/campaignStore.js', 'redesign/campaignLinks.js',
     'redesign/reportsHttp.js', 'redesign/reportsStore.js', 'redesign/reportsModel.js', 'redesign/reportsQuery.js', 'redesign/reportSealing.js',
     'redesign/musicCursor.js', 'redesign/publicResources.js', 'redesign/publicStore.js', 'redesign/publicValidation.js', 'redesign/routes.js']);

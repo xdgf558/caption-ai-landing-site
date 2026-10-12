@@ -814,7 +814,7 @@ const protectedResponse = await worker.fetch(
 );
 assert.equal(protectedResponse.status, 401);
 
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 assert.match(adminSource, /id="signal-collection-start"/);
 assert.match(adminSource, /\/admin\/api\/signal\/collect/);
 assert.match(adminSource, /采集到的资讯会先进入这里，不会直接发布/);

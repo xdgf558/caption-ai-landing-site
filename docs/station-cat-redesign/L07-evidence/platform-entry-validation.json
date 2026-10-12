@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-12",
+  "baseRevision": "a1c362fc8fe240901311e45317532522bafc551c",
+  "scope": "Local synthetic fixtures, no production writes or deployment. CI must be verified for the pushed head.",
+  "sources": {
+    "src/layouts/StationAdminLayout.astro": "b8cad4c277a90eb6597d92c1bf6e634e16e783b0acaa8996f2643d3619b2ef00",
+    "src/components/redesign/StationAdminWorkbench.astro": "beba4164d6b4bbf58fe4697219aa2917dc6de218c76c5832cc385df258ba64d9",
+    "src/scripts/adminStationContent.js": "6ca4de71b7abc788e5d796861c614b36ed868c340267ba5fa11e6d22fedf91af",
+    "public/styles/station-admin.css": "2f58f6622d57bbe4997dcd0e00f100c48e4433e31981324609659a11e6b2316b",
+    "scripts/helpers/station-admin-dom.mjs": "dbc3bbe0626818e3f47c84f2de916c6ccdd0e992e575a854ede2d1225b811065",
+    "scripts/test-station-admin-navigation.mjs": "84f565af9bc6ed1a953f22996274d96fd2661719f66b55078c1fc713d4b31dd6"
+  },
+  "checks": [
+    {
+      "command": "npm run test:redesign:content-admin",
+      "exitCode": 0,
+      "tests": 58,
+      "stdoutSha256": "79db771f1b53c508fb540f3739a532b9f52f4f2d534ba97cfd78ccadd1d51a20",
+      "lastLines": [
+        "✔ actor changes before a write prevent it and keep the old actor journal scoped (0.396292ms)",
+        "✔ a late acknowledgement after actor change remains recoverable and is not applied to a new editor (0.54425ms)",
+        "✔ unavailable or malformed journal closes writes before a request (0.141125ms)",
+        "✔ a terminal revision conflict clears only its own pending command; bounded routes reject injection (1.310791ms)",
+        "ℹ tests 58",
+        "ℹ suites 0",
+        "ℹ pass 58",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 2317.142042"
+      ]
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "tests": null,
+      "stdoutSha256": "b41ef6faf6c79c7ea308f83835018c52756b3e562be676b4e9a8c26a5d82b602",
+      "lastLines": [
+        "  provider: 'workers-ai'",
+        "}",
+        "Signal automation phase 4 draft generation, storage, auth, and publication-gate checks passed.",
+        "Signal automation phase 5 review, archive, approval payload, auth, and candidate-window checks passed.",
+        "{\"component\":\"signal_automation\",\"event\":\"cron_completed\",\"alreadyRunning\":false,\"queued\":0,\"runId\":\"\"}",
+        "{\"component\":\"signal_automation\",\"event\":\"dead_letter_received\",\"marked\":true,\"runId\":\"dlq-run\",\"sourceId\":\"github-changelog\"}",
+        "{\"component\":\"signal_automation\",\"event\":\"queue_message_failed\",\"attempts\":1,\"code\":\"SIGNAL_COLLECTION_MESSAGE_INVALID\",\"message\":\"资讯采集队列消息无效。\",\"runId\":\"\",\"sourceId\":\"\"}",
+        "Signal automation phase 6 operations, heartbeat, retry, DLQ, migration, and Admin checks passed.",
+        "Signal source archival migration and history-preservation checks passed.",
+        "Signal DeepSeek adapter request limits, metadata, retry, and error checks passed.",
+        "Signal DeepSeek phase 2 provider routing, quality gate, metadata, and Admin checks passed.",
+        "Signal DeepSeek controlled-rollout tests passed."
+      ]
+    },
+    {
+      "command": "npm run build:station:first-launch",
+      "exitCode": 0,
+      "tests": null,
+      "stdoutSha256": "f975f41bf8b9dd0c1a661b9e2af75e965c947764c48dcec63975a886024b4d1f",
+      "lastLines": [
+        "19:15:52   └─ /index.html (+3ms) ",
+        "19:15:52 ✓ Completed in 186ms.",
+        "",
+        " generating optimized images ",
+        "19:15:52   ▶ /_astro/vip-badge.C99Fh2OO_2mebGa.webp (reused cache entry) (+1ms) (1/3)",
+        "19:15:52   ▶ /_astro/vip-badge.C99Fh2OO_na9Ih.webp (reused cache entry) (+0ms) (2/3)",
+        "19:15:52   ▶ /_astro/vip-badge.C99Fh2OO_N0rVQ.webp (reused cache entry) (+0ms) (3/3)",
+        "19:15:52 ✓ Completed in 2ms.",
+        "",
+        "19:15:52 [build] 181 page(s) built in 2.66s",
+        "19:15:52 [build] Complete!",
+        "{\"profile\":\"brand-games\",\"productionDeployed\":false,\"htmlCount\":60,\"removedHtmlCount\":126,\"fileCount\":408,\"compatibilityPreserved\":true}"
+      ]
+    }
+  ]
+}

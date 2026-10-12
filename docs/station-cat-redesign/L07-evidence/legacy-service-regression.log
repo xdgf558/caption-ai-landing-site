@@ -1,0 +1,89 @@
+admin import delete tests passed
+admin v2 workspace redesign tests passed
+Cat Life Game commerce Admin tests passed.
+novel AI insights tests passed
+novel analytics stats tests passed
+Product feedback tests passed.
+Reader comments tests passed.
+Signal automation phase 1 migration, source management, and queue API checks passed.
+Signal automation phase 2 collection, SSRF protection, migration, queue, and Admin checks passed.
+Signal automation phase 3 scoring, duplicate merging, clustering, review, auth, migration, and Admin checks passed.
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_EDITORIAL_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_FACTUAL_INVALID',
+  factualViolations: [
+    {
+      candidateId: 'candidate-ai',
+      allowedFacts: [Array],
+      unsupportedFacts: [Array]
+    }
+  ],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_LANGUAGE_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal draft model output failed validation after retry. {
+  candidateCount: 3,
+  code: 'SIGNAL_DRAFT_AI_OUTPUT_INVALID',
+  factualViolations: [],
+  finishReason: null,
+  model: '@cf/test/draft-model',
+  provider: 'workers-ai'
+}
+Signal automation phase 4 draft generation, storage, auth, and publication-gate checks passed.
+Signal automation phase 5 review, archive, approval payload, auth, and candidate-window checks passed.
+{"component":"signal_automation","event":"cron_completed","alreadyRunning":false,"queued":0,"runId":""}
+{"component":"signal_automation","event":"dead_letter_received","marked":true,"runId":"dlq-run","sourceId":"github-changelog"}
+{"component":"signal_automation","event":"queue_message_failed","attempts":1,"code":"SIGNAL_COLLECTION_MESSAGE_INVALID","message":"资讯采集队列消息无效。","runId":"","sourceId":""}
+Signal automation phase 6 operations, heartbeat, retry, DLQ, migration, and Admin checks passed.
+Signal DeepSeek phase 2 provider routing, quality gate, metadata, and Admin checks passed.
+Signal DeepSeek controlled-rollout tests passed.
+Legacy Signal route parsing, render helpers, and admin import checks passed.

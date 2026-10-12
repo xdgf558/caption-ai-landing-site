@@ -1,4 +1,5 @@
 ---
+import StationAdminLayout from '../../layouts/StationAdminLayout.astro';
 import { Plus, RefreshCw, ArrowLeft, ArrowRight, Save, Search, History, X, Upload, Music2 } from '@lucide/astro';
 const locales = [['zh-Hans', '简体中文'], ['zh-Hant', '繁體中文'], ['en', 'English'], ['ja', '日本語']];
 const kinds = [['audio', '完整音频', '.mp3,.wav', 'MP3 ≤ 32 MiB · WAV ≤ 256 MiB'], ['preview', '独立试听', '.mp3,.wav', 'MP3 ≤ 4 MiB · WAV ≤ 32 MiB'],
@@ -6,14 +7,8 @@ const kinds = [['audio', '完整音频', '.mp3,.wav', 'MP3 ≤ 32 MiB · WAV ≤
 const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', '商业使用授权依据'], ['lyricsRightsNotes', '歌词权利说明'],
   ['coverRightsNotes', '封面权利说明'], ['audioInputRightsNotes', '音频输入权利说明']];
 ---
-<!doctype html>
-<html lang="zh-Hans">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><meta name="robots" content="noindex,nofollow" />
-  <title>音乐管理 | Station Cat</title><link rel="icon" href="/favicon.ico" /><link rel="stylesheet" href="/styles/admin-music.css" /></head>
-<body class="music-admin">
-<header class="music-topbar"><a href="/admin-v2/"><img src="/images/optimized/station-cat-logo-1668c2e5-160.webp" width="32" height="32" alt="" />Station Cat <span>/ 后台</span></a><div class="music-topbar-actions"><a href="/admin/music/featured/">首页推荐</a><a href="/admin/music/collections/">专辑与歌单</a><button id="analytics-open" type="button">收听统计</button><button id="audit-open" type="button"><History size={16} />操作记录</button></div></header>
-<main class="music-shell">
-  <header class="music-heading"><div><p class="eyebrow">内容工作区</p><h1>音乐</h1></div><button id="track-new" class="primary" type="button" disabled><Plus size={18} />新建曲目</button></header>
+<StationAdminLayout title="音频与歌曲素材" active="media"><div class="admin-audio-tools"><a href="/admin-v2/">返回作品内容</a><button id="analytics-open" type="button">收听统计</button><button id="audit-open" type="button"><History size={16} />操作记录</button></div><div class="admin-content-page">
+  <header class="music-heading"><div><p class="eyebrow">素材库 / 音乐</p><h1>音频与歌曲素材</h1></div><button id="track-new" class="primary" type="button" disabled><Plus size={18} />新建曲目</button></header>
   <div class="music-health"><span id="environment">正在连接音乐服务</span><div class="music-storage-control"><span id="storage">配额待查询</span><button id="quota-open" type="button" disabled>调整总配额</button></div></div>
   <p class="muted"><a href="/admin/music/media/">管理视频、海报与游戏截图</a> · <a href="/admin/music/content/">编辑网站作品与推广配置</a></p>
   <div class="music-feedback"><p id="music-status" role="status" aria-live="polite">正在读取曲库。</p><button id="music-reload" type="button" title="重新读取服务状态" aria-label="重新读取服务状态"><RefreshCw size={17} /></button><button id="mutation-retry" type="button" hidden>核对并重试原操作</button></div>
@@ -126,7 +121,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
       </div>
     </section>
   </div>
-</main>
+</div>
 <dialog id="quota-dialog" aria-labelledby="quota-title"><form id="quota-form">
   <header><h2 id="quota-title">调整音乐总配额</h2></header>
   <p id="quota-usage" class="muted"></p>
@@ -145,4 +140,4 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
   <p class="muted">有效收听：真实累计时长达到 30 秒或音频时长的 50%，取较短者。同一统计会话、曲目与音频版本类型在 30 分钟内最多一次。自然完成还需累计收听至少 90%。这些是本站口径。</p>
   <p>会员中心到达、付费激活与续费归因：不可用。入口点击只表示意向，不代表开通或收入。</p>
 </dialog>
-</body></html>
+</StationAdminLayout>

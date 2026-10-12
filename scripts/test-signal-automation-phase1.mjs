@@ -188,7 +188,7 @@ try {
   rmSync(sqliteDirectory, { force: true, recursive: true });
 }
 
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 assert.match(adminSource, /id="signal-source-form" novalidate/);
 assert.match(adminSource, /id="signal-sources-list"/);
 assert.match(adminSource, /\/admin\/api\/signal\/sources/);

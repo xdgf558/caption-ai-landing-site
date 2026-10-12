@@ -1,0 +1,41 @@
+
+> landing-site@0.1.0 test:music:staging
+> node --test scripts/test-music-staging-gate.mjs
+
+✔ the reviewed admin shell assets allow only exact GET/HEAD paths (8.42ms)
+✔ staging cookies cannot inherit a production session, including duplicates (0.513541ms)
+✔ Access-protected responses stay private without changing streams, HEAD, 304 or ranges (0.996625ms)
+music_rate_limit_failure {
+  version: 1,
+  category: 'catalog',
+  stage: 'source',
+  reason: 'operation_failed'
+}
+✔ real Access verification precedes all bindings; shared limits precede isolated membership (46.489917ms)
+✔ only music admin, public read routes and exact static dependencies are allowed (0.375291ms)
+✔ main site, other admin surfaces, traversal variants and unsupported methods stay closed (0.21475ms)
+✔ only exact music page routes receive canonical trailing slash redirects (0.039792ms)
+✔ host and fail-closed responses are normalized and private (0.10475ms)
+✔ the deployed entrypoint blocks other hosts and keeps admin closed without Access config (0.596125ms)
+✔ staging config exposes only the Access-protected music host and isolated bindings (1.291333ms)
+✔ maintenance deployments derive the same isolated config with all music flags closed (0.394334ms)
+✔ moving the maintenance config preserves source, asset and both migration directories (0.337ms)
+▶ staging package validation checks exact HTML pages and their dependency closure
+  ✔ complete pages and dependencies pass; navigation is not a static dependency (5.881417ms)
+  ✔ missing HTML dependency fails: /_astro/music.astro_astro_type_script_index_0_lang.fixture.js (3.957625ms)
+  ✔ missing HTML dependency fails: /styles/admin-music.css (3.726166ms)
+  ✔ unexpected HTML fails: /en/library/index.html (4.9045ms)
+  ✔ unexpected HTML fails: /music/extra.html (3.686166ms)
+  ✔ missing transitive JS dependency fails (3.104ms)
+  ✔ present but forbidden chunks fail (3.268ms)
+✔ staging package validation checks exact HTML pages and their dependency closure (28.887708ms)
+✔ staging module graph includes only music, Access, membership and explicitly gated website content modules (6.140375ms)
+✔ maintenance generator rejects resource, Access, route and execution drift before producing a config (1.054458ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 154.187209

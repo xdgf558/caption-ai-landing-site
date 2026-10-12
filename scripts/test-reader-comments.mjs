@@ -191,7 +191,7 @@ assert.match(workerSource, /handlePublicNovelComments/);
 assert.match(workerSource, /handleAdminModerateReaderComment/);
 assert.match(workerSource, /'comment_submit'/);
 
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 assert.match(adminSource, /data-admin-v2-tab="comments"/);
 assert.match(adminSource, /admin\/api\/novels\/comments\/moderate/);
 assert.match(adminSource, /章节评论审核/);

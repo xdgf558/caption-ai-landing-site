@@ -8,7 +8,7 @@ const read = (path) => readFileSync(join(root, path), 'utf8');
 
 const signalDraftSource = read('src/signalDraft.js');
 const workerSource = read('src/worker.js');
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 const wranglerSource = read('wrangler.toml');
 const phaseTwoDoc = read('docs/signal-deepseek-provider-phase-2.md');
 const phaseThreeDoc = read('docs/signal-deepseek-provider-phase-3.md');

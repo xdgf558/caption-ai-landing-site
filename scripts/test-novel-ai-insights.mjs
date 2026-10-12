@@ -160,7 +160,7 @@ assert.match(workerSource, /admin\/api\/novels\/analytics\/insights\/generate/);
 assert.match(workerSource, /INSERT INTO ai_insights/);
 assert.match(workerSource, /ON CONFLICT\(series_slug, chapter_slug, locale, window_days\)/);
 
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 assert.match(adminSource, /analytics-generate-insights/);
 assert.match(adminSource, /AI Insight/);
 assert.match(adminSource, /admin\/api\/novels\/analytics\/insights\/generate/);

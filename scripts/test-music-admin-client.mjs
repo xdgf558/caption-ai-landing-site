@@ -58,7 +58,7 @@ test('requests preserve original key/version and fail closed on redirected or un
 });
 test('admin shell remains private, explicit publish and no unsupported entrypoints',() => {
   const html = readFileSync(new URL('../src/pages/admin/music.astro',import.meta.url),'utf8');
-  assert.match(html,/noindex,nofollow/); assert.match(html,/id="track-publish" type="button"/);
+  assert.match(readFileSync(new URL('../src/layouts/StationAdminLayout.astro',import.meta.url),'utf8'),/noindex,nofollow/); assert.match(html,/id="track-publish" type="button"/);
   assert.match(html,/role="tablist"/); assert.match(html,/aria-controls/);
   const client = readFileSync(new URL('../src/scripts/adminMusic.js',import.meta.url),'utf8');
   assert.doesNotMatch(client,/innerHTML|localStorage|canPlayFull/);

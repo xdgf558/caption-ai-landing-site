@@ -1,0 +1,15 @@
+✔ asset paths reject external URLs and non-UUID identifiers (0.629083ms)
+✔ file hashing is incremental and exact; extension does not authorize the server (3.385875ms)
+✔ policy versions follow the published policy, never the draft counter (0.077708ms)
+✔ journal survives reload, isolates actors and refuses unavailable storage (0.104041ms)
+✔ requests preserve original key/version and fail closed on redirected or uncertain replies (7.344375ms)
+✔ admin shell remains private, explicit publish and no unsupported entrypoints (0.354333ms)
+✔ limited-free editor preserves the deadline and versions actual policy changes (0.493792ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 46.515

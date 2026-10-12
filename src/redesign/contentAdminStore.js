@@ -51,19 +51,28 @@ export async function listContentObjects(db,type,query={}) {
   const s=primary(db);
   if(type==='tracks') {
     const items=rows(await s.prepare(`SELECT t.rowid AS cursor,t.id,t.slug,COALESCE(h.status,'unregistered') AS status,h.edit_version,
-      COALESCE(r.metadata_json,o.metadata_json,'{}') AS metadata_json FROM music_tracks t
+      COALESCE(r.metadata_json,o.metadata_json,'{}') AS metadata_json,t.lifecycle AS legacy_lifecycle,r.cover_asset_id AS image_id,1+(CASE WHEN r.lyrics_asset_id IS NULL THEN 0 ELSE 1 END) AS expected_assets,
+      (SELECT json_group_array(json_object('id',a.id,'kind',a.kind,'state',a.state,'rightsStatus',COALESCE(w.status,'pending')))
+        FROM music_assets a LEFT JOIN station_asset_rights w ON w.music_asset_id=a.id AND w.scope=a.kind
+        WHERE a.owner_track_id=t.id AND a.id IN(r.cover_asset_id,r.lyrics_asset_id) AND NOT EXISTS(SELECT 1 FROM music_upload_cleanup c WHERE c.asset_id=a.id)) AS assets_json
+      FROM music_tracks t
       LEFT JOIN station_track_publications h ON h.track_id=t.id
       LEFT JOIN station_track_revisions r ON r.track_id=t.id AND r.revision=COALESCE(h.draft_revision,h.published_revision)
       LEFT JOIN music_track_revisions o ON o.id=COALESCE(t.draft_revision_id,t.published_revision_id)
       WHERE t.rowid<? AND (?='' OR instr(lower(t.slug),lower(?))>0 OR instr(lower(COALESCE(r.metadata_json,o.metadata_json,'')),lower(?))>0)
       ORDER BY t.rowid DESC LIMIT 21`).bind(before,q,q,q).all());
-    return listView(items);
+    return listView(items,type);
   }
   const title=type==='promotions'?"COALESCE((SELECT metadata_json FROM station_track_revisions WHERE track_id=h.track_id AND revision=(SELECT COALESCE(draft_revision,published_revision) FROM station_track_publications WHERE track_id=h.track_id)),'{}')":type==='home'?"'{}'":'r.metadata_json';
-  const items=rows(await s.prepare(`SELECT h.rowid AS cursor,h.${d.key} AS id,h.status,h.edit_version,${type==='clips'||type==='promotions'?'h.track_id':'NULL'} AS track_id,${title} AS metadata_json FROM ${d.table} h
+  const image = type==='games'?"json_extract(r.screenshot_ids_json,'$[0]')":type==='clips'?'r.poster_asset_id':'NULL';
+  const expected = type==='games'?"MAX(1,json_array_length(r.screenshot_ids_json))":type==='clips'?'2':'0';
+  const assets = type==='games'||type==='clips'?`(SELECT json_group_array(json_object('id',a.id,'kind',a.kind,'state',a.state,'rightsStatus',COALESCE(w.status,'pending')))
+    FROM station_media_assets a LEFT JOIN station_asset_rights w ON w.media_asset_id=a.id AND w.scope=a.kind
+    WHERE ${type==='games'?"a.owner_game_id=h.id AND a.id IN(SELECT value FROM json_each(r.screenshot_ids_json))":"a.owner_clip_id=h.id AND a.id IN(r.poster_asset_id,r.media_asset_id)"})`:"'[]'";
+  const items=rows(await s.prepare(`SELECT h.rowid AS cursor,h.${d.key} AS id,h.status,h.edit_version,${image} AS image_id,${expected} AS expected_assets,${assets} AS assets_json,${type==='clips'||type==='promotions'?'h.track_id':'NULL'} AS track_id,${title} AS metadata_json FROM ${d.table} h
     LEFT JOIN ${d.revisions} r ON r.${d.key}=h.${d.key} AND r.revision=COALESCE(h.draft_revision,h.published_revision)
     WHERE h.rowid<? AND (?='' OR instr(lower(${title}),lower(?))>0) ${type==='clips'?'AND (? IS NULL OR h.track_id=?)':''} ORDER BY h.rowid DESC LIMIT 21`).bind(before,q,q,...(type==='clips'?[trackId,trackId]:[])).all());
-  return listView(items);
+  return listView(items,type);
 }
 export async function contentRevisionHistory(db,type,id,query={}) {
   const d=model(type);id=objectId(type,id);fields(query,['before']);
@@ -72,7 +81,7 @@ export async function contentRevisionHistory(db,type,id,query={}) {
   const result=rows(await primary(db).prepare(`SELECT revision,state,created_at FROM ${d.revisions} WHERE ${d.key}=? AND revision<? ORDER BY revision DESC LIMIT 26`).bind(id,before).all());
   return {items:result.slice(0,25).map(r=>({revision:r.revision,state:r.state,createdAt:r.created_at})),nextBefore:result.length>25?result[24].revision:null};
 }
-function listView(items) { return {items:items.slice(0,20).map(r=>{ let m={};try{m=JSON.parse(r.metadata_json);}catch{} return {id:r.id,trackId:r.track_id??null,slug:r.slug??null,status:r.status,editVersion:r.edit_version??null,title:m.title?.[m.originalLocale]??r.slug??(r.id==='ca710000-0000-4000-8000-000000000001'?'首页配置':'尚未填写标题')}; }),nextBefore:items.length>20?items[19].cursor:null}; }
+function listView(items,type) { return {items:items.slice(0,20).map(r=>{ let m={};try{m=JSON.parse(r.metadata_json);}catch{} return {id:r.id,type,legacyLifecycle:r.legacy_lifecycle??null,imageId:r.image_id??null,expectedAssetCount:r.expected_assets??0,assetDetails:JSON.parse(r.assets_json??'[]'),trackId:r.track_id??null,slug:r.slug??null,status:r.status,editVersion:r.edit_version??null,title:m.title?.[m.originalLocale]??r.slug??(r.id==='ca710000-0000-4000-8000-000000000001'?'首页配置':'尚未填写标题')}; }),nextBefore:items.length>20?items[19].cursor:null}; }
 
 // A bounded dependency graph is compared in the SAME D1 batch as publication.
 // One JSON fingerprint parameter per row keeps guards below D1's bind limit.

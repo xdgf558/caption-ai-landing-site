@@ -128,7 +128,7 @@ assert.match(productSource, /data-product-feedback-form/);
 assert.match(productSource, /\/api\/product-feedback/);
 assert.match(productSource, /提交 Bug 回饋/);
 
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 assert.match(adminSource, /data-admin-v2-tab="feedback"/);
 assert.match(adminSource, /\/admin\/api\/product-feedback\/update/);
 assert.match(adminSource, /产品 Bug 反馈/);

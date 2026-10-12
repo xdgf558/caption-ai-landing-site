@@ -446,8 +446,9 @@ async function boot() {
   if (params.getAll('track').length === 1 && uuid(target) && target !== track?.id) {
     if (journal.get().pending) { status('请先核对此标签页的原操作，再打开目标曲目。',true); return; }
     if (!await canLeave()) { status('已保留原编辑内容，未切换到目标曲目。'); return; }
-    await loadTrack(target); status('已载入目标曲目，请逐首补齐素材和审核。'); return;
+    await loadTrack(target); if(params.getAll('tab').length===1&&params.get('tab')==='assets'){tab(1);persist();} status('已载入目标曲目，请逐首补齐素材和审核。'); return;
   }
+  if(params.getAll('track').length===1&&uuid(target)&&target===track?.id&&params.getAll('tab').length===1&&params.get('tab')==='assets'&&!journal.get().pending){tab(1);persist();}
   status(journal.get().pending ? '有一笔结果待确认的操作。请核对并重试原操作。' : saved ? '已恢复此标签页的编辑内容。' : '曲库已载入。');
 }
 $('music-reload').onclick = () => run(async () => {

@@ -1,0 +1,55 @@
+---
+import { House, Music2, Link, Image, PanelsTopLeft, UserRound, ShoppingBag, History, Settings, ArrowLeft, Menu, X } from '@lucide/astro';
+const { title = '创作后台', active = 'content', services = false } = Astro.props;
+const primary = [
+  ['dashboard', House, '工作台', '/admin-v2/?view=dashboard'],
+  ['content', Music2, '作品内容', '/admin-v2/'],
+  ['platforms', Link, '发行平台', '/admin-v2/?view=platforms'],
+  ['media', Image, '素材库', '/admin/music/media/'],
+  ['home', PanelsTopLeft, '首页配置', '/admin-v2/?view=home'],
+];
+const secondary = [
+  ['accounts', UserRound, '账号与会员', '/admin-v2/services/#accounts'],
+  ['commerce', ShoppingBag, '订单与权益', '/admin-v2/services/#commerce'],
+  ['audit', History, '发布记录', '/admin-v2/?view=audit'],
+  ['settings', Settings, '设置', '/admin-v2/?view=settings'],
+];
+---
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>{title} | Station Cat</title>
+    <link rel="stylesheet" href="/styles/admin-music.css" />
+    <link rel="stylesheet" href="/styles/admin-station-content.css" />
+    <slot name="head" />
+    <link rel="stylesheet" href="/styles/station-admin.css" />
+  </head>
+  <body class:list={['music-admin', 'station-admin', services && 'station-admin-services admin-v2-page']}>
+    <a class="admin-skip" href="#admin-main">跳到工作区</a>
+    <header class="admin-mobile-bar"><a href="/admin-v2/">Station Cat / 创作后台</a><button id="admin-menu" type="button" aria-controls="admin-rail" aria-expanded="false" aria-label="打开后台导航"><Menu size={22} /></button></header>
+    <aside id="admin-rail" class="admin-rail" aria-label="创作后台导航">
+      <a class="admin-brand" href="/admin-v2/"><img src="/images/station-gentle/cat-mark.webp" width="42" height="42" alt="" /><span><strong>Station Cat</strong><span>创作后台</span></span></a>
+      <button id="admin-menu-close" type="button" class="admin-menu-close" aria-label="关闭后台导航"><X size={22} /></button>
+      <nav class="admin-primary" aria-label="创作管理">{primary.map(([key, Icon, label, href]) => <a data-admin-nav={key} href={href as string} aria-current={active === key ? 'page' : undefined}><Icon size={22} strokeWidth={1.8} /><span>{label}</span></a>)}</nav>
+      <nav class="admin-secondary" aria-label="站点服务">{secondary.map(([key, Icon, label, href]) => <a data-admin-nav={key} href={href as string} aria-current={active === key ? 'page' : undefined}><Icon size={22} strokeWidth={1.8} /><span>{label}</span></a>)}</nav>
+      <footer class="admin-rail-footer"><a href="/"><ArrowLeft size={22} /><span>返回小站</span></a><p>Music, Games,<br />and a kinder tomorrow.</p></footer>
+    </aside>
+    <main id="admin-main" class="admin-main"><slot /></main>
+    <script>
+      const menu = document.getElementById('admin-menu');
+      const close = document.getElementById('admin-menu-close');
+      const rail = document.getElementById('admin-rail');
+      const small = matchMedia('(max-width: 760px)');
+      const main = document.getElementById('admin-main');
+      function sync() {const open=small.matches&&document.body.classList.contains('admin-nav-open');if(rail){rail.inert=small.matches&&!open;if(open){rail.setAttribute('role','dialog');rail.setAttribute('aria-modal','true');}else{rail.removeAttribute('role');rail.removeAttribute('aria-modal');}if(small.matches&&!open)rail.setAttribute('aria-hidden','true');else rail.removeAttribute('aria-hidden');}if(main)main.inert=open;}
+      small.addEventListener('change', sync);sync();
+      function toggle(open) { document.body.classList.toggle('admin-nav-open', open); menu?.setAttribute('aria-expanded', String(open)); sync(); if (open) close?.focus(); else menu?.focus(); }
+      menu?.addEventListener('click', () => toggle(true)); close?.addEventListener('click', () => toggle(false));
+      document.addEventListener('keydown', e => {if(e.key==='Tab'&&small.matches&&document.body.classList.contains('admin-nav-open')){const focusable=Array.from(rail?.querySelectorAll<HTMLElement>('a,button')??[]).filter(n=>n.offsetParent!==null),first=focusable[0],last=focusable.at(-1);if(!rail?.contains(document.activeElement)||(e.shiftKey&&document.activeElement===first)||(!e.shiftKey&&document.activeElement===last)){e.preventDefault();(e.shiftKey?last:first)?.focus();}} if (e.key === 'Escape' && document.body.classList.contains('admin-nav-open')) toggle(false); });
+      rail?.addEventListener('click', e => { if ((e.target as Element).closest('a') && matchMedia('(max-width: 760px)').matches) toggle(false); });
+    </script>
+  </body>
+</html>

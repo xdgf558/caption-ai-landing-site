@@ -7,6 +7,7 @@ import { runStationContentSchedule } from './contentSchedule.js';
 import { campaignEnabled } from './campaignLinks.js';
 import { campaignReadiness, listCampaigns, createCampaign, readCampaign, setCampaignStatus } from './campaignStore.js';
 import { handleReportAdmin } from './reportsHttp.js';
+import { readAdminContentImage } from './adminContentImages.js';
 
 export async function handleContentAdmin(request,env,actor,query,readBody) {
   if(env.STATION_CONTENT_ADMIN_ENABLED!==true&&env.STATION_CONTENT_ADMIN_ENABLED!=='true')fail('STATION_CONTENT_ADMIN_DISABLED',503);
@@ -18,8 +19,10 @@ export async function handleContentAdmin(request,env,actor,query,readBody) {
   const runtime=await contentAdminReadiness(env);
   const read=['GET','HEAD'].includes(request.method),context={actorId:actor,key:request.headers.get('idempotency-key'),ifMatch:request.headers.get('if-match')};
   if(!read)mutationKey(context.key);
-  if(path==='/status'&&read){fields(query,[]);return {actorId:actor,role:contentRole(env,actor),enabled:true,campaignsEnabled:campaignEnabled(env.STATION_CAMPAIGNS_ENABLED),schedulesEnabled:env.STATION_CONTENT_SCHEDULES_ENABLED===true||env.STATION_CONTENT_SCHEDULES_ENABLED==='true',cachePolicy:'no-store'};}
+  if(path==='/status'&&read){fields(query,[]);return {actorId:actor,role:contentRole(env,actor),enabled:true,reportsEnabled:env.STATION_REPORTS_ENABLED===true||env.STATION_REPORTS_ENABLED==='true',campaignsEnabled:campaignEnabled(env.STATION_CAMPAIGNS_ENABLED),schedulesEnabled:env.STATION_CONTENT_SCHEDULES_ENABLED===true||env.STATION_CONTENT_SCHEDULES_ENABLED==='true',cachePolicy:'no-store'};}
   if(path==='/assets'&&read)return contentAssets(runtime.db,query);
+  const image=/^\/assets\/([^/]+)\/image$/.exec(path);
+  if(image){fields(query,[]);if(!read)fail('METHOD_NOT_ALLOWED',405);return readAdminContentImage(request,runtime,image[1]);}
   if(path==='/audit'&&read) {
     fields(query,['before']);const before=query.before===undefined?Number.MAX_SAFE_INTEGER:Number(query.before);if(!Number.isSafeInteger(before)||before<1)fail('INVALID_INPUT',400);
     const result=rows(await primary(runtime.db).prepare("SELECT rowid AS cursor,actor_id,action,target_id,summary_json,created_at FROM music_admin_audit_logs WHERE action LIKE 'station.%' AND rowid<? ORDER BY rowid DESC LIMIT 21").bind(before).all());

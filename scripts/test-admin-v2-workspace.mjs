@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const adminSource = await readFile(new URL('../src/pages/admin-v2/index.astro', import.meta.url), 'utf8');
+const adminSource = await readFile(new URL('../src/pages/admin-v2/services/index.astro', import.meta.url), 'utf8');
 const stylesSource = await readFile(new URL('../src/styles/global.css', import.meta.url), 'utf8');
 
 for (const label of ['发布', '运营', '反馈', '数据']) {

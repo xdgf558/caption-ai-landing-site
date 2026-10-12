@@ -207,7 +207,7 @@ assert.match(workerSource, /CHAPTER_STATS_NOT_READY/);
 assert.match(workerSource, /INSERT INTO chapter_stats/);
 assert.match(workerSource, /ON CONFLICT\(series_slug, chapter_slug, locale, window_days\)/);
 
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 assert.match(adminSource, /data-admin-v2-tab="analytics"/);
 assert.match(adminSource, /admin\/api\/novels\/analytics\/aggregate/);
 assert.match(adminSource, /admin\/api\/novels\/analytics\/stats/);
