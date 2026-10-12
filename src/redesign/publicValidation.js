@@ -95,8 +95,19 @@ export function platformUrl(value, provider) {
   try {
     if (!plain(value, 2048) || /[\s\\]/.test(value)) return null;
     const url = new URL(value);
-    if (url.protocol !== 'https:' || url.username || url.password || url.port || url.hash ||
-      !providerHosts[provider]?.includes(url.hostname) || url.pathname === '/' ||
+    if (url.protocol !== 'https:' || url.username || url.password || url.port ||
+      !providerHosts[provider]?.includes(url.hostname)) return null;
+    // NetEase's web player puts its song route in the fragment. Accept only
+    // this exact route and a single decimal ID; never discard extra parameters.
+    if (url.hash) {
+      const song = provider === 'netease' && url.hostname === 'music.163.com' &&
+        url.pathname === '/' && !url.search && /^#\/song\?id=([1-9]\d{0,19})$/.exec(url.hash);
+      if (!song) return null;
+      url.pathname = '/song';
+      url.search = '?id=' + song[1];
+      url.hash = '';
+    }
+    if (url.pathname === '/' ||
       /^\/(?:redirect|login|oauth|auth)(?:\/|$)/i.test(url.pathname) ||
       [...url.searchParams.keys()].some(key => /token|secret|credential|signature|authorization|x-amz|redirect|target|return|^next$|^url$/i.test(key))) return null;
     return url.href;

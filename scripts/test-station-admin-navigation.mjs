@@ -80,11 +80,11 @@ test('the primary platform destination selects a later-page song and submits lin
   assert.equal(f.node('content-platform-editor').hidden, false); assert.equal(f.node('content-editor-heading').textContent, '目标作品');
   const form = f.node('content-platform-editor').children.find(n => n.tagName === 'FORM');
   const field = name => form.children.find(n => n.tagName === 'LABEL' && n.textContent === name).children[0];
-  field('真实作品网址').value = 'https://music.163.com/song?id=123456'; field('发行状态').value = 'live';
+  field('真实作品网址').value = 'https://music.163.com/#/song?id=3438977672'; field('发行状态').value = 'live';
   field('人工核对时间（新加坡 UTC+8）').value = '2026-10-12T10:00';
   await form.fire('submit'); await f.idle();
   assert.deepEqual(reads, [target, target]); assert.equal(writes.length, 1); assert.equal(writes[0].trackId, target);
-  assert.equal(writes[0].url, 'https://music.163.com/song?id=123456'); assert.equal(writes[0].status, 'live');
+  assert.equal(writes[0].url, 'https://music.163.com/#/song?id=3438977672'); assert.equal(writes[0].status, 'live');
   assert.equal(writes[0].verifiedAt, Date.parse('2026-10-12T10:00+08:00')); assert.equal(f.state().pending, null);
 });
 test('the visible song shortcut carries the current owner and blocks navigation while edits are unsaved', async () => {
