@@ -1,0 +1,8 @@
+{"component":"signal_automation","event":"cron_completed","alreadyRunning":false,"queued":0,"runId":""}
+{"component":"signal_automation","event":"dead_letter_received","marked":true,"runId":"dlq-run","sourceId":"github-changelog"}
+{"component":"signal_automation","event":"queue_message_failed","attempts":1,"code":"SIGNAL_COLLECTION_MESSAGE_INVALID","message":"资讯采集队列消息无效。","runId":"","sourceId":""}
+Signal automation phase 6 operations, heartbeat, retry, DLQ, migration, and Admin checks passed.
+Signal source archival migration and history-preservation checks passed.
+Signal DeepSeek adapter request limits, metadata, retry, and error checks passed.
+Signal DeepSeek phase 2 provider routing, quality gate, metadata, and Admin checks passed.
+Signal DeepSeek controlled-rollout tests passed.

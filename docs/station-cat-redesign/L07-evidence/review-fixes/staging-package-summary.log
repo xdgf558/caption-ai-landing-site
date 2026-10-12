@@ -1,0 +1,12 @@
+
+> landing-site@0.1.0 postbuild
+> node scripts/generate-static-redirects.mjs && node scripts/generate-sitemap.mjs && node scripts/test-built-site-foundation.mjs
+
+Static trailing-slash redirects are resolved by the Worker after asset lookup.
+Generated 4 localized 404.html fallbacks.
+Generated sitemap.xml with 115 public routes and lastmod 2026-10-12.
+Built site foundation tests passed.
+Built music notices and scoped footer links passed for all four locales.
+Built music launch entry checks passed for all four locales.
+Prepared 8 pages and 40 exact dependencies for isolated music staging.
+Verified 8 staging pages and 40 exact asset files.

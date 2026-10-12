@@ -10,6 +10,7 @@ import { Music2, Radio, Link, Film, Gamepad2, PanelsTopLeft, ShieldCheck, Histor
     <div class="work-list-head" aria-hidden="true"><span id="content-list-heading">作品</span><span>类型</span><span>状态</span><span>素材</span><span></span></div>
     <ol id="content-list" class="work-list" aria-label="作品列表"><li class="muted">正在读取作品…</li></ol><button id="content-more" type="button" hidden>查看更早作品</button><p id="work-count" class="work-count"></p>
     <div class="music-feedback work-feedback"><p id="content-status" role="status" aria-live="polite">正在连接内容服务。</p><button id="content-reload" type="button" aria-label="重新核对工作区"><RefreshCw size={17} /></button></div>
+    <section id="content-reload-confirm" class="notice" hidden aria-labelledby="content-reload-heading"><strong id="content-reload-heading">重新读取当前作品？</strong><p>这会丢弃当前未保存的修改，并读取最新版本。可以先复制修改内容供核对。</p><div class="music-actions"><button id="content-reload-cancel" type="button">保留修改</button><button id="content-reload-discard" type="button">丢弃修改并重新读取</button></div></section>
     <div id="content-recovery" class="notice" hidden><span>有一项操作的结果尚未确认，已保留原版本和操作编号。</span><button id="content-retry" type="button">核对原操作</button></div>
     <section id="work-static" hidden></section>
   </section>

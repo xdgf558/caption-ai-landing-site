@@ -20,6 +20,9 @@ const errors = {
 };
 const requestedMedia=new URLSearchParams(location.search),requestedOwner=requestedMedia.get('owner');
 if(['short_video','mv','poster','game_screenshot'].includes(requestedMedia.get('kind')))el('media-kind').value=requestedMedia.get('kind');
+// The URL supplies the initial preference only. User changes replace it, and
+// pagination/refresh may restore only that current preference, never the URL.
+let preferredOwner=requestedOwner, preferredOwnerKind=el('media-kind').value;
 let controller, actorId, enabled = false, ownerCursor = null, historyCursor = null, recent = [], ownersEpoch = 0, ownersBusy = false, loading = false, recovering = false;
 function notice(message, error = false) { el('media-status').textContent = message; el('media-status').dataset.error = String(error); }
 const errorText = error => errors[error?.code || error] || (typeof error?.message === 'string' && !/^[A-Z_]+$/.test(error.message) ? error.message : '结果暂时无法确认，请保留记录并查询原操作。');
@@ -80,10 +83,11 @@ async function loadOwners(append = false) {
     if (epoch !== ownersEpoch) return;
     if (!append) el('media-owner').replaceChildren(new Option('请选择作品草稿', ''));
     for (const owner of data.items) el('media-owner').append(new Option(owner.title + (owner.parentTitle ? ' · ' + owner.parentTitle : ''), owner.id));
-    if(requestedOwner){el('media-owner').value=[...el('media-owner').options].some(o=>o.value===requestedOwner)?requestedOwner:'';if(!el('media-owner').value){el('media-owner-empty').textContent='尚未在已读取的草稿中找到当前作品。可加载更多作品，或先回到作品内容保存草稿。';el('media-owner-empty').hidden=false;}}
-    else if (el('media-owner').options.length === 2) el('media-owner').selectedIndex = 1;
+    if(preferredOwner){el('media-owner').value=[...el('media-owner').options].some(o=>o.value===preferredOwner)?preferredOwner:'';}
+    else if (!append && el('media-owner').options.length === 2) {el('media-owner').selectedIndex = 1;preferredOwner=el('media-owner').value;}
     ownerCursor = data.nextCursor; el('media-more-owners').hidden = !ownerCursor;
-    if(!requestedOwner||el('media-owner').value)el('media-owner-empty').hidden = el('media-owner').options.length > 1;
+    el('media-owner-empty').textContent=preferredOwner&&!el('media-owner').value?'尚未在已读取的草稿中找到当前选择的作品。可加载更多作品，或先回到作品内容保存草稿。':'还没有可选择的作品草稿，请先回到作品内容保存草稿。';
+    el('media-owner-empty').hidden = preferredOwner ? Boolean(el('media-owner').value) : el('media-owner').options.length > 1;
   } catch (error) { if (epoch === ownersEpoch) notice(errorText(error), true); throw error; }
   finally { if (epoch === ownersEpoch) { ownersBusy = false; gate(); } }
 }
@@ -126,6 +130,7 @@ el('media-form').addEventListener('submit', async event => {
   } catch (error) { notice(errorText(error), true); render(); }
 });
 el('media-kind').addEventListener('change', () => {
+  if(preferredOwnerKind!==el('media-kind').value){preferredOwner=null;preferredOwnerKind=el('media-kind').value;}
   const video = ['short_video','mv'].includes(el('media-kind').value);
   el('media-file').value = ''; el('media-file-name').textContent = '还没有选择文件。'; el('media-file').accept = video ? '.mp4' : '.jpg,.jpeg,.png,.webp';
   el('media-file-limit').textContent = video ? 'MP4 · 最大 256 MiB · 最长 30 分钟' : 'JPEG / PNG / WebP · 最大 10 MiB · 最大 4096 × 4096';
@@ -135,7 +140,7 @@ el('media-file').addEventListener('change', () => {
   const file = el('media-file').files?.[0]; el('media-file-name').textContent = file ? file.name + ' · ' + bytes(file.size) : '还没有选择文件。';
   if (file) try { mediaFileFormat(el('media-kind').value, file); } catch (error) { notice(errorText(error), true); }
 });
-el('media-owner').addEventListener('change', gate);
+el('media-owner').addEventListener('change',()=>{preferredOwner=el('media-owner').value||null;el('media-owner-empty').hidden=el('media-owner').options.length>1;gate();});
 el('media-more-owners').addEventListener('click', () => { void loadOwners(true).catch(() => {}); });
 el('media-more-history').addEventListener('click', () => { void history(true).catch(error => notice(errorText(error), true)); });
 el('media-reload').addEventListener('click', () => { void initialize(); });

@@ -30,6 +30,8 @@ state: 简中、浅色工作区、左侧深色导航、全部类型、第一首�
 
 桌面、手机证据分别为 `admin-desktop-final.jpg`、`admin-mobile-list.jpg`、`admin-mobile-editor.jpg`；`local-publish-result.jpg` 与 `local-media-result.jpg` 是合成流程证据。保留旧系统的账号/订单合同，未以空夹具声称生产会员、订单或云存档验收。
 
-无剩余 P0/P1/P2。P3：图标笔画及系统字体的细微差异；真实内容比生成示意拥有更多语言、说明和回退选项，位于次要详情中。尚无真机或 VoiceOver 证据。
+上述视觉检查未发现剩余 P0/P1/P2，但没有覆盖完整 CI 和全部交互边界。PR #214 对 `6095729` 的代码审查另确认 1 项 P1、4 项 P2、1 项 P3，已按 `docs/station-cat-redesign/L07-unified-admin-and-music.md` 的审查修订补齐隔离清单、指定作品定位、上传选择保留、新建保护、冲突恢复与服务标签 URL。新增 13 项真实脚本事件回归；浏览器另验证新建保护及页内确认的保留/重新读取，截图为 `L07-evidence/review-fix-dirty-protection.png`。先前的局部通过记录不替代修订头完整 CI。
+
+视觉 P3：图标笔画及系统字体的细微差异；真实内容比生成示意拥有更多语言、说明和回退选项，位于次要详情中。尚无真机或 VoiceOver 证据。
 
 final result: passed

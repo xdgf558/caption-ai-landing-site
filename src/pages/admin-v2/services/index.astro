@@ -5432,6 +5432,7 @@ import '../../../styles/global.css';
     const serviceTabs = new Set(['accounts','commerce','game-commerce','access','audit']);
     const switchTab = async (name) => {
       if (!serviceTabs.has(name)) return;
+      if (location.hash !== '#' + name) history.replaceState(history.state, '', '#' + name);
       for (const link of document.querySelectorAll('[data-admin-nav]')) link.setAttribute('aria-current', link.dataset.adminNav === (name === 'accounts' ? 'accounts' : 'commerce') ? 'page' : 'false');
       elements.tabs.forEach((tab) => {
         const isActive = tab.dataset.adminV2Tab === name;

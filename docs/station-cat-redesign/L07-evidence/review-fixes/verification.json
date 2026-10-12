@@ -1,0 +1,55 @@
+{
+  "content-admin.log": {
+    "originalStdoutSha256": "dcbcaf07c8d8d21282e3db7afca1cc6b80c38a92e9891bb69b67456cb073521b",
+    "exitCode": 0,
+    "excerpt": false
+  },
+  "uploads.log": {
+    "originalStdoutSha256": "4a7c1c9f0e19df9deafc4acab6f04aaa75b4927ddc6c113f20b4bb9c3decb027",
+    "exitCode": 0,
+    "excerpt": false
+  },
+  "staging-gate.log": {
+    "originalStdoutSha256": "b0e8111a5ec0aa833f9fa014a35eb1856476fe579433ae5972eb6341998590e5",
+    "exitCode": 0,
+    "excerpt": false
+  },
+  "staging-package-summary.log": {
+    "originalStdoutSha256": "803cd22f1c3a4fdf146ae8ad239c847c3d8b43e6ff09680bf7f1473265b27cb6",
+    "exitCode": 0,
+    "excerpt": true
+  },
+  "first-launch-summary.log": {
+    "originalStdoutSha256": "e9a4baf3abf343a4c444c960d5abe4c5597eb8fcb308ae168e09c8771ee0766e",
+    "exitCode": 0,
+    "excerpt": true
+  },
+  "full-test-summary.log": {
+    "originalStdoutSha256": "8d479b92a3a8a4287672f20574246d553425b4b1fd05283c135657dec9c4fe03",
+    "exitCode": 0,
+    "excerpt": true
+  },
+  "sourceSha256": {
+    "src/scripts/adminStationContent.js": "cd4be973657f03e42cb17b7af2c32c8810d84d5b6e400e75adafc2bd28a3ef4e",
+    "src/scripts/adminStationMedia.js": "91bd864eddb42b05a2b42a9fc73c527464d28724990f0da7440a0d8c8edc9cff",
+    "src/scripts/stationWorkbenchState.js": "3f31160a14c9117855faaf95595c9884f421f71a5debe1fdae0dc89aefde8a37",
+    "src/music/stagingGate.js": "a78dbb5c45323db30e2401765ccb23d5dffb241819bf3d1ed7a651c02d75ff0b",
+    "src/components/redesign/StationAdminWorkbench.astro": "9c604d112eb76b4df6ba4ad38886d17034048ec464e1befead3c20e2411260cf",
+    "src/pages/admin-v2/services/index.astro": "46778f4240e5db137a0458c2fc59bf207c51ef24b84142f60435fdb593153b67",
+    "scripts/test-station-admin-navigation.mjs": "42a76c8682a7a2036a08db4a97f37016c9ba2abba29fadb3a2ed80efb1132eb2",
+    "scripts/helpers/station-admin-dom.mjs": "55cd66f9548b12df3b49be415d455d152e4b56ff3aae018b2a913a99f34c6702",
+    "scripts/test-music-staging-gate.mjs": "a4f645cf89c8d250367f2d96aaf5c163300245c9dfb49e2639570d34abb31e69",
+    ".github/workflows/ci.yml": "add19be27aa74688f37b552146517e1337378684c6b7f231b664514c82bab8b1",
+    "package.json": "8ab0089646556cbebe1a4ca323ec8c6cc17fa0bdf8f30034d30f5a26e351fc47"
+  },
+  "reviewedHead": "6095729faa150502a367fb6febcc85ac43feec6e",
+  "commands": {
+    "content-admin.log": "npm run test:redesign:content-admin",
+    "uploads.log": "npm run test:redesign:uploads",
+    "staging-gate.log": "npm run test:music:staging",
+    "staging-package-summary.log": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build:music:staging-assets",
+    "first-launch-summary.log": "npm run build:station:first-launch",
+    "full-test-summary.log": "npm test"
+  },
+  "scope": "Local-only evidence. CI must be checked for the pushed repair head separately; no production writes or deployment in this repair."
+}
