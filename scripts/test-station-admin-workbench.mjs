@@ -19,7 +19,9 @@ test('technical metadata, revoked rights and missing selected assets cannot look
   assert.equal(listAssetState({assetDetails:[asset],expectedAssetCount:1}),'approved');
   assert.equal(adminImagePath('tracks','../../private'),null);assert.equal(adminImagePath('games',asset.id),'/admin/api/music/site-content/assets/'+asset.id+'/image');
   assert.equal(adminListImage({imageId:asset.id,assetDetails:[{...asset,kind:'audio'}]},'tracks'),null);
-  assert.equal(adminListImage({imageId:asset.id,assetDetails:[{...asset,kind:'cover'}]},'tracks'),'/admin/api/music/assets/'+asset.id);
+  assert.equal(adminListImage({imageId:asset.id,assetDetails:[{...asset,kind:'cover'}]},'tracks'),'/admin/api/music/site-content/assets/'+asset.id+'/thumbnail');
+  assert.equal(adminImagePath('tracks',asset.id),'/admin/api/music/assets/'+asset.id);
+  assert.equal(adminListImage({imageId:'../invalid',assetDetails:[{id:'../invalid',kind:'cover',state:'validated'}]},'tracks'),null);
 });
 test('the editor keeps publication disabled for pending commands, dirty forms, wrong role and incomplete references', () => {
   const id=fixtureId(1),options={identity:{role:'publisher'},busy:false,pending:false,dirty:false,type:'tracks',assets:[{id,state:'validated',rightsStatus:'approved'}],current:{draft:{data:{coverAssetId:id}}}};

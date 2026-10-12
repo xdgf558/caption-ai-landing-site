@@ -662,11 +662,18 @@ test('native analytics global failure rolls back all admission rows; daily failu
     revisionNo:1,variant:'full',occurredAt:Date.now(),listenedMs:0,entrySource:'player'};
   const send=()=>call('/fixture-analytics/api/music/events',{consentVersion:'music-analytics-v1',events:[event]},
     {Origin:'http://music.local.test','X-Requested-With':'StationCatMusicAnalytics','CF-Connecting-IP':'192.0.2.202'});
-  const before=(await db.prepare('SELECT * FROM music_analytics_rates ORDER BY scope,window_start,subject').all()).results;
-  await db.prepare("CREATE TRIGGER analytics_global_fault BEFORE UPDATE ON music_analytics_rates WHEN NEW.scope='global' BEGIN SELECT RAISE(IGNORE); END").run();
-  try { assert.equal((await send()).status,503); }
-  finally { await db.prepare('DROP TRIGGER analytics_global_fault').run(); }
-  assert.deepEqual((await db.prepare('SELECT * FROM music_analytics_rates ORDER BY scope,window_start,subject').all()).results,before);
+  for (const freshGlobal of [false,true]) {
+    // Explicitly exercise a missing global row without waiting for a real minute
+    // boundary. This only deletes counters in the disposable local D1 fixture.
+    if (freshGlobal) await db.prepare("DELETE FROM music_analytics_rates WHERE scope='global'").run();
+    const before=(await db.prepare('SELECT * FROM music_analytics_rates ORDER BY scope,window_start,subject').all()).results;
+    // Admission is an INSERT ... ON CONFLICT UPDATE. An UPDATE-only fault stops
+    // firing when the wall clock rolls over; the INSERT entry covers both paths.
+    await db.prepare("CREATE TRIGGER analytics_global_fault BEFORE INSERT ON music_analytics_rates WHEN NEW.scope='global' BEGIN SELECT RAISE(IGNORE); END").run();
+    try { assert.equal((await send()).status,503); }
+    finally { await db.prepare('DROP TRIGGER analytics_global_fault').run(); }
+    assert.deepEqual((await db.prepare('SELECT * FROM music_analytics_rates ORDER BY scope,window_start,subject').all()).results,before);
+  }
   await db.prepare('CREATE TRIGGER analytics_daily_fault BEFORE INSERT ON music_analytics_daily BEGIN SELECT RAISE(IGNORE); END').run();
   try { assert.equal((await send()).status,503); }
   finally { await db.prepare('DROP TRIGGER analytics_daily_fault').run(); }

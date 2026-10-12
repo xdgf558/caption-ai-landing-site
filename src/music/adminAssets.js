@@ -2,13 +2,32 @@ import { loadAssets, primary, rows } from './adminStore.js';
 import { musicId, fail } from './adminValidation.js';
 import { checkAssetIdentity, checkStoredObject } from './resources.js';
 import { cancelBody } from './storage.js';
+import { musicDisplayCover } from './coverDisplay.js';
 
-// Caller must authenticate each GET/HEAD. No public route or signed capability is issued.
-export async function readAdminMusicAsset(db, bucket, id, request) {
+async function adminAsset(db, id) {
   const asset = (await loadAssets(db, [musicId(id)]))[0];
   if (!asset || asset.state !== 'validated') fail('NOT_FOUND', 404);
   if (rows(await primary(db).prepare('SELECT upload_id FROM music_upload_cleanup WHERE asset_id=?').bind(asset.id).all()).length) fail('NOT_FOUND', 404);
+  return asset;
+}
+
+// Caller must authenticate each GET/HEAD. No public route or signed capability is issued.
+export async function readAdminMusicAsset(db, bucket, id, request) {
+  const asset = await adminAsset(db, id);
   return readMusicAssetObject(bucket, asset, request);
+}
+
+// Access and the content-admin flag are checked before this route, including
+// conditional requests. Private inspection does not publish a draft or its rights.
+export async function readAdminMusicThumbnail(db, bucket, id, request, assets) {
+  const asset = await adminAsset(db, id);
+  if (asset.kind !== 'cover') fail('NOT_FOUND', 404);
+  const result = await musicDisplayCover(request, bucket, asset, { assets, thumbnailOnly: true });
+  result.headers.set('Vary', 'Cookie, Cf-Access-Jwt-Assertion');
+  result.headers.set('Accept-Ranges', 'none');
+  result.headers.set('Content-Security-Policy', "default-src 'none'; sandbox");
+  result.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  return result;
 }
 
 // Internal caller must authorize publication or administrator access before invoking.

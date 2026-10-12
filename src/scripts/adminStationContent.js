@@ -22,6 +22,7 @@ const field=(name,input)=>{const label=el('label',name);label.append(input);retu
 const input=(type,value='')=>{const n=document.createElement('input');n.type=type;n.value=value;return n;};
 const select=(pairs,value)=>{const n=document.createElement('select');for(const [v,name]of pairs){const o=el('option',name);o.value=v;n.append(o);}n.value=value;return n;};
 const workbench=document.querySelector('[data-station-workbench]');
+const workListRows=new Map();
 const initialParams=new URLSearchParams(location.search),initialView=initialParams.get('view');
 let catalogActive=Boolean(workbench)&&(!initialView||workTypes.includes(initialView)),catalogFilter=workTypes.includes(initialView)?initialView:'all',catalogPages={};
 let historyBefore=null;
@@ -79,22 +80,53 @@ async function listPage(append=false){const token=++epoch;let result;
  if(module==='audit'){renderAudit(listItems);status('已读取发布与操作记录。');}
 }
 function icon(name){const template=$('work-icon-'+name);return template?.content.cloneNode(true)??document.createDocumentFragment();}
+function workRow(key,item,type){
+ let row=workListRows.get(key);
+ if(!row){
+  const li=el('li'),button=el('button'),title=el('span',undefined,'work-row-title'),label=el('strong'),image=el('span');
+  const typeNode=el('span',undefined,'work-row-type'),stateNode=el('span',undefined,'badge work-row-state'),assetNode=el('span',undefined,'work-row-assets'),arrow=el('span',undefined,'work-row-arrow');
+  button.type='button';title.append(image,label);arrow.append(icon('arrow'));button.append(title,typeNode,stateNode,assetNode,arrow);li.append(button);
+  row={li,button,label,image,typeNode,stateNode,assetNode};workListRows.set(key,row);
+  button.addEventListener('click',()=>{if(dirty){status('有未保存的修改，请先保存草稿。');return;}if(busy)return;workbench.dataset.editorClosed='false';void work(async()=>{await openObject(row.item);if(matchMedia('(max-width:900px)').matches)$('content-editor-heading').scrollIntoView({block:'start'});});});
+ }
+ row.item=item;row.button.dataset.workId=item.id??item.targetId;
+ row.button.setAttribute('aria-current',String(current?.id===item.id&&(!catalogActive||module===item.type)));
+ const title=item.title??item.action;if(row.label.textContent!==title)row.label.textContent=title;
+ const path=adminListImage(item,item.type??module);
+ if(row.imagePath!==path){
+  row.imagePath=path;let image;
+  if(path){
+   image=document.createElement('img');image.width=64;image.height=64;image.alt='';image.loading='lazy';image.decoding='async';
+   image.addEventListener('error',()=>{if(row.image!==image)return;const missing=el('span','预览暂不可用','work-no-cover');missing.title='可在素材管理中查看原图';image.replaceWith(missing);row.image=missing;},{once:true});
+   image.src=path;
+  }else{image=el('span','尚无封面','work-no-cover');image.hidden=!catalogActive;}
+  row.image.replaceWith(image);row.image=image;
+ }else if(!path)row.image.hidden=!catalogActive;
+ if(row.typeNode.dataset.type!==type){row.typeNode.dataset.type=type;row.typeNode.replaceChildren(icon(type==='games'?'game':type==='clips'?'clip':'song'),el('span',type==='games'?'游戏':type==='clips'?'视频':'歌曲'));}
+ const state=item.legacyLifecycle==='archived'?'legacy_archived':item.status??'';
+ if(row.stateNode.dataset.state!==state){row.stateNode.dataset.state=state;row.stateNode.textContent=state==='legacy_archived'?'旧版封存':states[state]??'记录';}
+ const assetState=listAssetState(item);
+ if(row.assetNode.dataset.state!==assetState){row.assetNode.dataset.state=assetState;row.assetNode.replaceChildren(icon(assetState==='approved'?'ready':'pending'),el('span',{approved:'登记已确认',pending:'权利待确认',blocked:'权利已阻止',missing:'素材待准备'}[assetState]));}
+ return row.li;
+}
 function renderList(){
  if(!workbench){const list=$('content-list');list.replaceChildren();text('content-list-heading',names[module]);show('content-more',Boolean(nextBefore));show('content-new',!['home','assets','platforms','audit'].includes(module));show('content-search-label',module!=='audit');show('content-search-submit',module!=='audit');
  for(const i of listItems){const li=el('li'),button=el('button');button.type='button';button.setAttribute('aria-current',String(current?.id===i.id));button.append(el('span',i.title??i.action),el('small',states[i.status]??(i.createdAt?date(i.createdAt):i.status)));button.addEventListener('click',()=>{if(dirty){status('有未保存的修改，请先保存草稿。');return;}void work(()=>openObject(i));});li.append(button);list.append(li);}
  if(!listItems.length)list.append(el('li','还没有记录，可从新建开始。','muted'));
 ;return;}
- const list=$('content-list');list.replaceChildren();text('content-list-heading',catalogActive?'作品':names[module]);show('content-more',Boolean(nextBefore));show('content-new',catalogActive||module==='promotions');show('content-search-label',module!=='audit');show('content-search-submit',module!=='audit');
- for(const item of listItems){const li=el('li'),button=el('button');button.type='button';button.setAttribute('aria-current',String(current?.id===item.id&&(!catalogActive||module===item.type)));button.dataset.workId=item.id??item.targetId;
-  const title=el('span',undefined,'work-row-title'),path=adminListImage(item,item.type??module);
-  if(path){const image=document.createElement('img');image.src=path;image.width=64;image.height=64;image.alt='';image.loading='lazy';image.addEventListener('error',()=>{const missing=el('span','封面待核对','work-no-cover');image.replaceWith(missing);},{once:true});title.append(image);}else if(catalogActive)title.append(el('span','尚无封面','work-no-cover'));
-  title.append(el('strong',item.title??item.action));button.append(title);
-  const type=item.type??(module==='assets'||module==='platforms'?'tracks':module),typeNode=el('span',undefined,'work-row-type');typeNode.dataset.type=type;typeNode.append(icon(type==='games'?'game':type==='clips'?'clip':'song'),el('span',type==='games'?'游戏':type==='clips'?'视频':'歌曲'));button.append(typeNode);
-  const state=item.legacyLifecycle==='archived'?'legacy_archived':item.status,stateNode=el('span',state==='legacy_archived'?'旧版封存':states[state]??'记录','badge work-row-state');stateNode.dataset.state=state;button.append(stateNode);
-  const assetState=listAssetState(item),assetNode=el('span',undefined,'work-row-assets');assetNode.dataset.state=assetState;assetNode.append(icon(assetState==='approved'?'ready':'pending'),el('span',{approved:'登记已确认',pending:'权利待确认',blocked:'权利已阻止',missing:'素材待准备'}[assetState]));button.append(assetNode);
-  const arrow=el('span',undefined,'work-row-arrow');arrow.append(icon('arrow'));button.append(arrow);
-  button.addEventListener('click',()=>{if(dirty){status('有未保存的修改，请先保存草稿。');return;}if(busy)return;workbench.dataset.editorClosed='false';void work(async()=>{await openObject(item);if(matchMedia('(max-width:900px)').matches)$('content-editor-heading').scrollIntoView({block:'start'});});});li.append(button);list.append(li);
+ const list=$('content-list');text('content-list-heading',catalogActive?'作品':names[module]);show('content-more',Boolean(nextBefore));show('content-new',catalogActive||module==='promotions');show('content-search-label',module!=='audit');show('content-search-submit',module!=='audit');
+ const keys=new Set();let next=list.firstChild;
+ for(const [index,item]of listItems.entries()){
+  const type=item.type??(module==='assets'||module==='platforms'?'tracks':module),base=type+':'+(item.id??item.targetId);
+  const key=module==='audit'||keys.has(base)?base+':'+index:base;keys.add(key);
+  const li=workRow(key,item,type);
+  // Selection-only updates leave every existing image attached and its src
+  // untouched. Pagination inserts just the new rows; changed covers replace
+  // only their own image, and event handlers read the current item.
+  if(li===next)next=next.nextSibling;else list.insertBefore(li,next);
  }
+ while(next){const old=next;next=next.nextSibling;old.remove();}
+ for(const key of workListRows.keys())if(!keys.has(key))workListRows.delete(key);
  if(!listItems.length)list.append(el('li','没有找到作品。可以调整搜索或新建资料。','muted'));
  text('work-count',catalogActive?(catalogFilter==='all'?'已读取 '+listItems.filter(i=>i.type==='tracks').length+' 首歌曲 · '+listItems.filter(i=>i.type==='games').length+' 款游戏 · '+listItems.filter(i=>i.type==='clips').length+' 条视频':'已读取 '+listItems.length+' 份作品')+(nextBefore?' · 还有更早记录':''):'已读取 '+listItems.length+' 条记录');
 }

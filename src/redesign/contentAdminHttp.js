@@ -8,6 +8,7 @@ import { campaignEnabled } from './campaignLinks.js';
 import { campaignReadiness, listCampaigns, createCampaign, readCampaign, setCampaignStatus } from './campaignStore.js';
 import { handleReportAdmin } from './reportsHttp.js';
 import { readAdminContentImage } from './adminContentImages.js';
+import { readAdminMusicThumbnail } from '../music/adminAssets.js';
 
 export async function handleContentAdmin(request,env,actor,query,readBody) {
   if(env.STATION_CONTENT_ADMIN_ENABLED!==true&&env.STATION_CONTENT_ADMIN_ENABLED!=='true')fail('STATION_CONTENT_ADMIN_DISABLED',503);
@@ -21,6 +22,8 @@ export async function handleContentAdmin(request,env,actor,query,readBody) {
   if(!read)mutationKey(context.key);
   if(path==='/status'&&read){fields(query,[]);return {actorId:actor,role:contentRole(env,actor),enabled:true,reportsEnabled:env.STATION_REPORTS_ENABLED===true||env.STATION_REPORTS_ENABLED==='true',campaignsEnabled:campaignEnabled(env.STATION_CAMPAIGNS_ENABLED),schedulesEnabled:env.STATION_CONTENT_SCHEDULES_ENABLED===true||env.STATION_CONTENT_SCHEDULES_ENABLED==='true',cachePolicy:'no-store'};}
   if(path==='/assets'&&read)return contentAssets(runtime.db,query);
+  const thumbnail=/^\/assets\/([^/]+)\/thumbnail$/.exec(path);
+  if(thumbnail){fields(query,[]);if(!read)fail('METHOD_NOT_ALLOWED',405);return readAdminMusicThumbnail(runtime.db,runtime.bucket,thumbnail[1],request,env.ASSETS);}
   const image=/^\/assets\/([^/]+)\/image$/.exec(path);
   if(image){fields(query,[]);if(!read)fail('METHOD_NOT_ALLOWED',405);return readAdminContentImage(request,runtime,image[1]);}
   if(path==='/audit'&&read) {
