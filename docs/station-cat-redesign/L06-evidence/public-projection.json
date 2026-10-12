@@ -1,0 +1,30 @@
+{
+  "recordedAt": "2026-10-12T00:51:16.074Z",
+  "requests": 4,
+  "checks": [
+    {
+      "path": "/api/station/content/games/cat-life-game?locale=zh-Hans",
+      "status": 200,
+      "containsNewScreenshot": true,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/home?locale=zh-Hans",
+      "status": 200,
+      "containsNewScreenshot": true,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "containsNewScreenshot": true,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/games/cat-life-game/",
+      "status": 200,
+      "containsNewScreenshot": true,
+      "cacheControl": "private, no-store"
+    }
+  ]
+}
