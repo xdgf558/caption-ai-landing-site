@@ -51,8 +51,8 @@ export function adminImagePath(type, id) {
 }
 export function adminListImage(item, type) {
   const kind = { tracks: 'cover', games: 'game_screenshot', clips: 'poster' }[type];
-  return item.assetDetails?.some(asset => asset.id === item.imageId && asset.kind === kind && asset.state === 'validated')
-    ? adminImagePath(type, item.imageId) : null;
+  return adminImagePath(type, item.imageId) && item.assetDetails?.some(asset => asset.id === item.imageId && asset.kind === kind && asset.state === 'validated')
+    ? (type === 'tracks' ? '/admin/api/music/site-content/assets/' + item.imageId + '/thumbnail' : adminImagePath(type, item.imageId)) : null;
 }
 export function publicationFormReady({ identity, busy, pending, dirty, current, assets, type }) {
   if (!identity || identity.role !== 'publisher' || busy || pending || dirty || !current?.draft) return false;

@@ -15,9 +15,13 @@ export class AdminNode {
   set selectedIndex(index) { this.options.forEach((node, i) => { node.selected = i === index; }); }
   get value() { return this.tagName === 'SELECT' ? this.selectedOptions[0]?.value ?? '' : this._value; }
   set value(value) { this._value = String(value); if (this.tagName === 'SELECT') this.options.forEach(node => { node.selected = node.value === this._value; }); }
-  append(...children) { for (const child of children) { child.parentElement = this; this.children.push(child); if (this.tagName === 'SELECT' && child.tagName === 'OPTION' && this.options.length === 1) child.selected = true; } }
-  replaceChildren(...children) { this.children = []; this.append(...children); }
-  remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter(node => node !== this); }
+  get firstChild() { return this.children[0] ?? null; }
+  get nextSibling() { const children = this.parentElement?.children ?? []; return children[children.indexOf(this) + 1] ?? null; }
+  append(...children) { for (const child of children) { child.remove(); child.parentElement = this; this.children.push(child); if (this.tagName === 'SELECT' && child.tagName === 'OPTION' && this.options.length === 1) child.selected = true; } }
+  insertBefore(child, before) { if (child === before) return child; child.remove(); if (before === null) this.append(child); else { const index = this.children.indexOf(before); assert.ok(index >= 0); child.parentElement = this; this.children.splice(index, 0, child); } return child; }
+  replaceChildren(...children) { for (const child of this.children) child.parentElement = null; this.children = []; this.append(...children); }
+  replaceWith(child) { if (!this.parentElement) return; this.parentElement.insertBefore(child, this); this.remove(); }
+  remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter(node => node !== this); this.parentElement = null; }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
   removeAttribute(name) { this.attributes.delete(name); }
   addEventListener(type, listener) { if (!this.listeners.has(type)) this.listeners.set(type, []); this.listeners.get(type).push(listener); }

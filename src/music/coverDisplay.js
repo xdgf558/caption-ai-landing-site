@@ -10,9 +10,9 @@ const validVariant = (variant, asset) => variant && variant.sourceBytes === asse
   variant.path === `/api/music/__cover-files/${variant.sha256}.${variant.contentType === 'image/jpeg' ? 'jpg' : 'webp'}` &&
   Number.isSafeInteger(variant.bytes) && variant.bytes > 0 && variant.bytes < asset.byte_size;
 
-// Callers establish live publication/version first. Raw generated files are
+// Callers establish live publication/version or administrator access first. Raw generated files are
 // blocked at the Worker boundary, including when the public music gate is off.
-export async function musicDisplayCover(request, bucket, asset, { assets, manifest = musicDisplayCoverManifest, size = 'display' } = {}) {
+export async function musicDisplayCover(request, bucket, asset, { assets, manifest = musicDisplayCoverManifest, size = 'display', thumbnailOnly = false } = {}) {
   checkAssetIdentity(asset);
   if (asset.kind !== 'cover' || asset.state !== 'validated') throw new Error('COVER_INVALID');
   let object, response, stopped = false, timer;
@@ -24,7 +24,7 @@ export async function musicDisplayCover(request, bucket, asset, { assets, manife
     })]);
     clearTimeout(timer); checkStoredObject(object, asset);
     const display = manifest[asset.sha256];
-    const variant = size === 'card' && validVariant(display?.card, asset) ? display.card : display;
+    const variant = thumbnailOnly ? display?.card : size === 'card' && validVariant(display?.card, asset) ? display.card : display;
     if (assets?.fetch && validVariant(variant, asset)) {
       const etag = `"music-display-static-v1-${variant.sha256}"`;
       if (matches(request.headers.get('If-None-Match'), etag)) return new Response(null, { status: 304, headers: { ...headers, ETag: etag } });
@@ -41,6 +41,9 @@ export async function musicDisplayCover(request, bucket, asset, { assets, manife
       } catch { /* Missing generated assets never make the original cover unusable. */ }
       cancelBody(response); response = null;
     }
+    // Admin lists must never silently download a full original when a card has
+    // not been generated. The authenticated original-review route stays usable.
+    if (thumbnailOnly) throw Object.assign(new Error('MUSIC_THUMBNAIL_UNAVAILABLE'), { code: 'MUSIC_THUMBNAIL_UNAVAILABLE', status: 404 });
     // New artwork remains visible until the next release generates its display
     // asset. No image decoding or encoding runs in the request-serving Worker.
     const body = request.method === 'HEAD' ? null : object.body;
