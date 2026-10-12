@@ -103,7 +103,7 @@ function workRow(key,item,type){
   row.image.replaceWith(image);row.image=image;
  }else if(!path)row.image.hidden=!catalogActive;
  if(row.typeNode.dataset.type!==type){row.typeNode.dataset.type=type;row.typeNode.replaceChildren(icon(type==='games'?'game':type==='clips'?'clip':'song'),el('span',type==='games'?'游戏':type==='clips'?'视频':'歌曲'));}
- const state=item.legacyLifecycle==='archived'?'legacy_archived':item.status;
+ const state=item.legacyLifecycle==='archived'?'legacy_archived':item.status??'';
  if(row.stateNode.dataset.state!==state){row.stateNode.dataset.state=state;row.stateNode.textContent=state==='legacy_archived'?'旧版封存':states[state]??'记录';}
  const assetState=listAssetState(item);
  if(row.assetNode.dataset.state!==assetState){row.assetNode.dataset.state=assetState;row.assetNode.replaceChildren(icon(assetState==='approved'?'ready':'pending'),el('span',{approved:'登记已确认',pending:'权利待确认',blocked:'权利已阻止',missing:'素材待准备'}[assetState]));}

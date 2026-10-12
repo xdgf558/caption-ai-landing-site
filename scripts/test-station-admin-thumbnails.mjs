@@ -104,6 +104,14 @@ function listApi() {
   return { request, calls, first, second, update(patch) { items = [patch(items[0]), items[1]]; } };
 }
 const imageIn = row => row.children[0].children[0].children[0];
+test('audit rows without publication status preserve their record label after list reconciliation', async () => {
+  const f = await adminScriptFixture('adminStationContent.js', { search: '?view=audit', request: async path => {
+    if (path === '/status') return { actorId: 'fixture@example.test', role: 'publisher' };
+    if (path === '/audit') return { items: [{ id: fixtureId(940), targetId: fixtureId(941), action: 'save', actorId: 'fixture@example.test', createdAt: Date.now(), summary: {} }], nextBefore: null };
+    throw new Error('Unexpected request ' + path);
+  } });
+  assert.equal(f.node('content-list').children[0].children[0].children[2].textContent, '记录');
+});
 test('actual admin entry preserves image nodes across selection, metadata refresh and appended pages, and uses the latest row data', async () => {
   const api = listApi(), f = await adminScriptFixture('adminStationContent.js', { search: '?view=platforms', request: api.request });
   const list = f.node('content-list'), rows = [...list.children], images = rows.map(imageIn);
