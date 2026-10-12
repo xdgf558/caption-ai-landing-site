@@ -67,6 +67,11 @@
       "sha256": "d7805a20830c498c9867651c117907a49b7f92fe28dad2c1983f552dde211226"
     },
     {
+      "path": "screenshot-privacy.json",
+      "bytes": 2187,
+      "sha256": "e08b763c32d5f13974912485e69f11ad8cb5a0e53c7f85c49e83bc14fd1ceac7"
+    },
+    {
       "path": "upload-proof.json",
       "bytes": 502,
       "sha256": "a247472512ec46e19307000e88dd3133e49dfdc6954990ddf74851552b02c75b"
