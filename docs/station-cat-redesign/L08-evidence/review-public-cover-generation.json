@@ -1,0 +1,174 @@
+{
+  "generatedAt": "2026-10-12T11:33:50.987Z",
+  "method": "Anonymous current website covers and versioned legacy track/collection covers; offline resize, no production writes.",
+  "items": [
+    {
+      "publicSource": "/api/station/content/assets/487a3197-ceed-4ed7-a1ea-aec7db64bab0",
+      "sourceSha256": "ed75682a4c9565bbdaa92e4796db94599efea87ef97f9a5b6d5baf8a6c31d531",
+      "sourceBytes": 2413049,
+      "displayBytes": 125863,
+      "cardBytes": 9578
+    },
+    {
+      "publicSource": "/api/station/content/assets/c0bc665e-0fe7-450e-b13e-407b9dfa9785",
+      "sourceSha256": "cfc3ddecdce790babebc36750482fd5ae5df9025bb669137acd0f534a64291cc",
+      "sourceBytes": 1970711,
+      "displayBytes": 71917,
+      "cardBytes": 5688
+    },
+    {
+      "publicSource": "/api/station/content/assets/7bb1428c-6483-42aa-93f5-6ae90cb709bb",
+      "sourceSha256": "54b38557349315b23898f7d24278a7a4762e1429746c872aba3cb5cf47e0e06a",
+      "sourceBytes": 2546928,
+      "displayBytes": 146095,
+      "cardBytes": 11574
+    },
+    {
+      "publicSource": "/api/station/content/assets/defb0969-b9ce-4c35-9358-022d2ed2a015",
+      "sourceSha256": "3fa7e2ff7a2973e2d206b4984b74c077bf13439b9f9d39d5bf3a03697b036303",
+      "sourceBytes": 2222157,
+      "displayBytes": 89530,
+      "cardBytes": 6166
+    },
+    {
+      "publicSource": "/api/station/content/assets/a2b4494f-c62d-4891-83cb-cd0368058b65",
+      "sourceSha256": "ed654775fb5f9c8f383ba3eeda74980ee968f57c5e52a0de119ffdf1d6347ccf",
+      "sourceBytes": 1958295,
+      "displayBytes": 87173,
+      "cardBytes": 6416
+    },
+    {
+      "publicSource": "/api/station/content/assets/e2f4a591-3d04-4192-b380-747e12b61e76",
+      "sourceSha256": "cd7b7ceb8181cc1b001cf190de8d086c92db829d8025bd1d2d876c2cb643c90e",
+      "sourceBytes": 1897879,
+      "displayBytes": 89682,
+      "cardBytes": 7306
+    },
+    {
+      "publicSource": "/api/station/content/assets/ef3695fc-342f-4723-aa39-be3c8ed081b6",
+      "sourceSha256": "a0c56db23c24efc3eaeb0fa0bda8ba62ed96a8fc28efa478d30f1f2098ef9c32",
+      "sourceBytes": 2020974,
+      "displayBytes": 90565,
+      "cardBytes": 7988
+    },
+    {
+      "publicSource": "/api/station/content/assets/bbdca5c7-fabd-44f7-a03e-c688f9120e11",
+      "sourceSha256": "c406732da263a45beacd9f40c4f16b50a9c9837962d949c8ed62bbf8d099b9b0",
+      "sourceBytes": 1831989,
+      "displayBytes": 59784,
+      "cardBytes": 5414
+    },
+    {
+      "publicSource": "/api/station/content/assets/259b1373-730d-4dad-bf63-10f96229d09a",
+      "sourceSha256": "caf4de9fa56c9cb728571f8748d67fa74f61e467845897833d598f8bae8d7fd9",
+      "sourceBytes": 1891157,
+      "displayBytes": 66316,
+      "cardBytes": 4972
+    },
+    {
+      "publicSource": "/api/station/content/assets/27759dfc-a27e-4fbf-9fea-e5a9249eed9f",
+      "sourceSha256": "84c2cf8a47cd15f72874c86f1392b2e8d6cf320c6f2ad0134ea95ad442d6d0f8",
+      "sourceBytes": 1735899,
+      "displayBytes": 72697,
+      "cardBytes": 6766
+    },
+    {
+      "publicSource": "/api/station/content/assets/9cb301ae-931b-401b-bcb5-bc3df3ae04e3",
+      "sourceSha256": "372be7f61ffc7cb0c36d289b6a0f9dd293239984b0d65680a70f3e5ba02cc760",
+      "sourceBytes": 2232981,
+      "displayBytes": 107278,
+      "cardBytes": 7686
+    },
+    {
+      "publicSource": "/api/music/tracks/6a009e51-f7e1-454b-83cf-f37c7ca98d9b/cover?v=4",
+      "sourceSha256": "372be7f61ffc7cb0c36d289b6a0f9dd293239984b0d65680a70f3e5ba02cc760",
+      "sourceBytes": 2232981,
+      "displayBytes": 107278,
+      "cardBytes": 7686
+    },
+    {
+      "publicSource": "/api/music/tracks/32b0adb4-0419-496c-86e2-81fb1bdd81c1/cover?v=4",
+      "sourceSha256": "84c2cf8a47cd15f72874c86f1392b2e8d6cf320c6f2ad0134ea95ad442d6d0f8",
+      "sourceBytes": 1735899,
+      "displayBytes": 72697,
+      "cardBytes": 6766
+    },
+    {
+      "publicSource": "/api/music/tracks/a60a76c3-dd52-4dba-b17c-2432fab7ab52/cover?v=4",
+      "sourceSha256": "caf4de9fa56c9cb728571f8748d67fa74f61e467845897833d598f8bae8d7fd9",
+      "sourceBytes": 1891157,
+      "displayBytes": 66316,
+      "cardBytes": 4972
+    },
+    {
+      "publicSource": "/api/music/tracks/bf649e30-87ac-463f-8d8e-a7de75f426c8/cover?v=2",
+      "sourceSha256": "c406732da263a45beacd9f40c4f16b50a9c9837962d949c8ed62bbf8d099b9b0",
+      "sourceBytes": 1831989,
+      "displayBytes": 59784,
+      "cardBytes": 5414
+    },
+    {
+      "publicSource": "/api/music/tracks/cae8ef9b-a808-4669-b907-c07cdbeec1c0/cover?v=4",
+      "sourceSha256": "a0c56db23c24efc3eaeb0fa0bda8ba62ed96a8fc28efa478d30f1f2098ef9c32",
+      "sourceBytes": 2020974,
+      "displayBytes": 90565,
+      "cardBytes": 7988
+    },
+    {
+      "publicSource": "/api/music/tracks/45a38be6-40a9-4174-b419-e0102ec6c3d9/cover?v=5",
+      "sourceSha256": "cd7b7ceb8181cc1b001cf190de8d086c92db829d8025bd1d2d876c2cb643c90e",
+      "sourceBytes": 1897879,
+      "displayBytes": 89682,
+      "cardBytes": 7306
+    },
+    {
+      "publicSource": "/api/music/tracks/61555a31-a459-4907-86e7-6643d9c1effa/cover?v=5",
+      "sourceSha256": "ed654775fb5f9c8f383ba3eeda74980ee968f57c5e52a0de119ffdf1d6347ccf",
+      "sourceBytes": 1958295,
+      "displayBytes": 87173,
+      "cardBytes": 6416
+    },
+    {
+      "publicSource": "/api/music/tracks/a37561f9-8b58-445e-8cda-edd0d8d5dee0/cover?v=5",
+      "sourceSha256": "3fa7e2ff7a2973e2d206b4984b74c077bf13439b9f9d39d5bf3a03697b036303",
+      "sourceBytes": 2222157,
+      "displayBytes": 89530,
+      "cardBytes": 6166
+    },
+    {
+      "publicSource": "/api/music/tracks/d845bba1-a9e3-46e6-afcc-19b11d575e6f/cover?v=5",
+      "sourceSha256": "54b38557349315b23898f7d24278a7a4762e1429746c872aba3cb5cf47e0e06a",
+      "sourceBytes": 2546928,
+      "displayBytes": 146095,
+      "cardBytes": 11574
+    },
+    {
+      "publicSource": "/api/music/tracks/2b4edeb5-cd15-4730-8a2e-e125bf3ff95d/cover?v=5",
+      "sourceSha256": "cfc3ddecdce790babebc36750482fd5ae5df9025bb669137acd0f534a64291cc",
+      "sourceBytes": 1970711,
+      "displayBytes": 71917,
+      "cardBytes": 5688
+    },
+    {
+      "publicSource": "/api/music/tracks/02954c60-e46c-43ec-8d2e-fa9310f6f59c/cover?v=4",
+      "sourceSha256": "ed75682a4c9565bbdaa92e4796db94599efea87ef97f9a5b6d5baf8a6c31d531",
+      "sourceBytes": 2413049,
+      "displayBytes": 125863,
+      "cardBytes": 9578
+    },
+    {
+      "publicSource": "/api/music/collections/wydgb/cover?v=6",
+      "sourceSha256": "79ad0b79278e6c764e2e2c0d61329295dccbb7840d5c8a352f44f41fa417f1b5",
+      "sourceBytes": 1996676,
+      "displayBytes": 93619,
+      "cardBytes": 7244
+    },
+    {
+      "publicSource": "/api/music/collections/ylyjzmy/cover?v=5",
+      "sourceSha256": "fbbbd544086bf49e0d7ecbbf4ded04e5c8e49bf03213b6feca8bc6452d3c77db",
+      "sourceBytes": 2050903,
+      "displayBytes": 81625,
+      "cardBytes": 6718
+    }
+  ]
+}

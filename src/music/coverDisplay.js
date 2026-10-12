@@ -12,7 +12,7 @@ const validVariant = (variant, asset) => variant && variant.sourceBytes === asse
 
 // Callers establish live publication/version first. Raw generated files are
 // blocked at the Worker boundary, including when the public music gate is off.
-export async function musicDisplayCover(request, bucket, asset, { assets, manifest = musicDisplayCoverManifest } = {}) {
+export async function musicDisplayCover(request, bucket, asset, { assets, manifest = musicDisplayCoverManifest, size = 'display' } = {}) {
   checkAssetIdentity(asset);
   if (asset.kind !== 'cover' || asset.state !== 'validated') throw new Error('COVER_INVALID');
   let object, response, stopped = false, timer;
@@ -23,7 +23,8 @@ export async function musicDisplayCover(request, bucket, asset, { assets, manife
       timer = setTimeout(() => reject(new Error('COVER_STORAGE_TIMEOUT')), 5000);
     })]);
     clearTimeout(timer); checkStoredObject(object, asset);
-    const variant = manifest[asset.sha256];
+    const display = manifest[asset.sha256];
+    const variant = size === 'card' && validVariant(display?.card, asset) ? display.card : display;
     if (assets?.fetch && validVariant(variant, asset)) {
       const etag = `"music-display-static-v1-${variant.sha256}"`;
       if (matches(request.headers.get('If-None-Match'), etag)) return new Response(null, { status: 304, headers: { ...headers, ETag: etag } });

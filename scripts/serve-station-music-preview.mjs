@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url';
 
 const port = Number(process.env.STATION_MUSIC_PREVIEW_PORT || 4208);
 if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid local preview port');
-const runtime = await createStationMusicRuntime({ platformCases: process.env.STATION_MUSIC_PREVIEW_PLATFORM_CASES === '1', videoCases: process.env.STATION_MUSIC_PREVIEW_VIDEO_CASES === '1' }), records = [];
+const coverPreview = process.env.STATION_MUSIC_PREVIEW_COVERS === '1';
+const runtime = await createStationMusicRuntime({ coverPreview, platformCases: process.env.STATION_MUSIC_PREVIEW_PLATFORM_CASES === '1', videoCases: process.env.STATION_MUSIC_PREVIEW_VIDEO_CASES === '1' }), records = [];
 const banner = '<aside class="sc-container" style="padding:10px 14px;background:var(--sc-promo-surface);border-radius:8px;font-size:12px;color:var(--sc-muted);margin-top:14px" data-preview-only>本地預覽 · 示例作品與合成測試音，不代表真實發行或推廣配置。平台素材仍待確認。</aside>';
 const platformBanner = runtime.platformScenarios ? '<aside class="sc-container" style="font-size:12px;line-height:1.8;margin-top:8px" data-preview-platform-cases>平台互動夾具：全部外鏈是不存在作品的合成地址，不代表真實發行。' +
   Object.entries(runtime.platformScenarios).map(([state, name]) => '<a style="margin-left:12px" href="/music/tracks/' + name + '/">' + state + '</a>').join('') + '</aside>' : '';
@@ -42,14 +43,16 @@ const server = http.createServer(async (incoming, outgoing) => {
   for (const name of ['range', 'if-range', 'if-none-match', 'if-modified-since', 'accept', 'user-agent']) if (incoming.headers[name]) forwarded.set(name, incoming.headers[name]);
   try {
     let response = await localHome(incoming, publicPath) || await runtime.mf.dispatchFetch(url, { method: incoming.method, headers: forwarded, redirect: 'manual' });
-    records.push({ method: incoming.method, pathname: publicPath, variant: url.searchParams.get('variant'), status: response.status });
+    records.push({ method: incoming.method, pathname: publicPath, variant: url.searchParams.get('variant'), status: response.status,
+      ...(coverPreview ? { size: url.searchParams.get('size'), bytes: response.headers.get('content-length'), cacheControl: response.headers.get('cache-control') } : {}) });
     if (records.length > 1000) records.shift();
     if (incoming.method === 'GET' && response.headers.get('content-type')?.includes('text/html') && response.status !== 302) {
       const text = await readMusicResponse(response, 1024 * 1024), output = new Headers(response.headers);
       output.delete('Content-Length'); output.delete('ETag');
       response = new Response(text.replace(/(<main\b[^>]*>)/, '$1' + banner + platformBanner + videoBanner), { status: response.status, headers: output });
     }
-    const output = Object.fromEntries(response.headers); output['x-robots-tag'] = 'noindex, nofollow'; output['cache-control'] = 'private, no-store';
+    const output = Object.fromEntries(response.headers); output['x-robots-tag'] = 'noindex, nofollow';
+    if (!coverPreview || !publicPath.startsWith('/api/station/content/assets/')) output['cache-control'] = 'private, no-store';
     outgoing.writeHead(response.status, output);
     if (incoming.method === 'HEAD' || !response.body) { await response.body?.cancel(); outgoing.end(); }
     else Readable.fromWeb(response.body).on('error', () => outgoing.destroy()).pipe(outgoing);

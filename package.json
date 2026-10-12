@@ -72,7 +72,7 @@
     "preview:redesign": "npm run build:redesign:preview && node scripts/serve-station-redesign-preview.mjs",
     "test:redesign:home": "node --test scripts/test-station-redesign-home.mjs",
     "test:redesign:model": "node --test --test-timeout=90000 scripts/test-station-redesign-model.mjs",
-    "test:redesign:public": "node --test --test-timeout=90000 scripts/test-station-content-public.mjs scripts/test-station-content-runtime.mjs",
+    "test:redesign:public": "node --test --test-timeout=90000 scripts/test-station-content-public.mjs scripts/test-station-content-runtime.mjs scripts/test-station-cover-display.mjs scripts/test-music-display-generation.mjs",
     "test:redesign:music": "node --test --test-timeout=90000 scripts/test-station-music-pages.mjs scripts/test-station-music-runtime.mjs",
     "test:redesign:player": "node --test --test-timeout=90000 scripts/test-station-music-session.mjs scripts/test-music-player.mjs scripts/test-music-queue.mjs scripts/test-music-lyrics-local.mjs scripts/test-music-library.mjs scripts/test-music-analytics-client.mjs scripts/test-music-access-lifecycle.mjs",
     "test:redesign:platforms": "node --test --test-timeout=90000 scripts/test-station-platforms.mjs scripts/test-station-platform-runtime.mjs",

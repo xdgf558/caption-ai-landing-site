@@ -8,6 +8,7 @@ import { contentBase, uuid, slug, positive, millis, metadata, strictJson, reques
 import { promotion, projectTrack, projectClip, projectGame, publicHome } from './publicContent.js';
 import { previewIdentity, resourceReady, streamContentAsset } from './publicResources.js';
 import { musicCursorFor } from './musicCursor.js';
+import { musicDisplayCover } from '../music/coverDisplay.js';
 
 export const isStationContentPath = pathname => pathname === contentBase || pathname.startsWith(contentBase + '/');
 const messages = Object.freeze({
@@ -54,9 +55,14 @@ async function page(request, runtime, rows, projector, options, context) {
   const { limit } = options, items = [];
   // One bounded source page; filtered rows may yield an empty page with a cursor.
   // Advance by the scanned source rows so invalid content cannot create a loop.
-  for (const row of rows.slice(0, limit)) {
-    const projection = await projector(runtime, row, options);
-    if (projection) items.push(projection.dto);
+  const source = rows.slice(0, limit);
+  // Keep catalogue order and the source cursor while overlapping at most three
+  // independent cover HEAD checks. There is no shared authorization cache.
+  const concurrency = projector === projectTrack ? 3 : 1;
+  for (let index = 0; index < source.length; index += concurrency) {
+    const projections = await Promise.all(source.slice(index, index + concurrency)
+      .map(row => projector(runtime, row, options)));
+    for (const projection of projections) if (projection) items.push(projection.dto);
   }
   return json(request, { schemaVersion: 1, locale: options.locale, items,
     nextCursor: rows.length > limit ? (projector === projectTrack && options.sort !== 'published'
@@ -105,7 +111,7 @@ async function playbackAsset(request, env, runtime, row, variant, options) {
   if (!await resourceReady(runtime, asset, run)) throw contentFailure('CONTENT_MEDIA_UNAVAILABLE');
   return { asset };
 }
-export async function handleStationContent(request, env, { clock = Date.now, timeoutMs = 1500, deadlineMs = 10000 } = {}) {
+export async function handleStationContent(request, env, { clock = Date.now, timeoutMs = 1500, deadlineMs = 10000, coverManifest } = {}) {
   const url = new URL(request.url), currentRoute = route(url.pathname);
   const context = { requestId: crypto.randomUUID(), privateResponse: ['audio', 'playback'].includes(currentRoute?.kind) };
   if (!currentRoute) return error(request, 'NOT_FOUND', 404, context);
@@ -115,9 +121,10 @@ export async function handleStationContent(request, env, { clock = Date.now, tim
     const allowed = ['tracks', 'games'].includes(currentRoute.kind) ? ['locale', 'limit', 'cursor', ...(currentRoute.kind === 'tracks' ? ['q', 'sort'] : [])] :
       currentRoute.kind === 'clips' ? ['locale', 'limit', 'cursor'] :
       ['audio', 'playback'].includes(currentRoute.kind) ? ['variant', ...(currentRoute.kind === 'audio' ? ['v', 'p'] : ['locale'])] :
-      currentRoute.kind === 'asset' ? [] : ['locale'];
+      currentRoute.kind === 'asset' ? ['size'] : ['locale'];
     input = requestInput(url, allowed);
     if ((currentRoute.slug && !slug(currentRoute.slug)) || (currentRoute.id && !uuid(currentRoute.id))) throw new TypeError('path');
+    if (currentRoute.kind === 'asset' && url.searchParams.has('size') && !['card', 'display'].includes(url.searchParams.get('size'))) throw new TypeError('size');
     if (['audio', 'playback'].includes(currentRoute.kind)) {
       variant = url.searchParams.get('variant');
       if (!['preview', 'full'].includes(variant)) throw new TypeError('variant');
@@ -167,6 +174,13 @@ export async function handleStationContent(request, env, { clock = Date.now, tim
         owner.type === 'clip' ? await projectClip(runtime, row, options) : await projectGame(runtime, row, options);
       const asset = projected?.ready.get(id);
       if (!asset) throw contentFailure('NOT_FOUND', 404);
+      if (url.searchParams.has('size')) {
+        if (asset.kind !== 'cover') throw contentFailure('INVALID_INPUT', 400);
+        // Publication, ownership, rights and R2 readiness are checked above on
+        // every request, including one that will return a private 304.
+        return await run(() => musicDisplayCover(request, runtime.bucket, asset,
+          { assets: env.ASSETS, manifest: coverManifest, size: url.searchParams.get('size') }));
+      }
       return await streamContentAsset(request, runtime, asset, row.published_at, run);
     }
     const row = await run(() => contentTrack(runtime.session, now, { slug: currentRoute.slug }));
