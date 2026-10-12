@@ -1,0 +1,578 @@
+{
+  "recordedAt": "2026-10-12T23:40:35.324Z",
+  "production": false,
+  "browser": "Codex in-app browser",
+  "viewport": {
+    "width": 1280,
+    "scrollWidth": 1265
+  },
+  "platformButtonsDisplayed": [
+    "apple_music",
+    "qishui",
+    "netease"
+  ],
+  "externalLinksClicked": false,
+  "fullListeningButtonRemoved": true,
+  "listeningAccessHintRemoved": true,
+  "previewObserved": {
+    "variant": "preview",
+    "paused": false
+  },
+  "mvObserved": {
+    "paused": false,
+    "audioPaused": true
+  },
+  "refreshedPreviewObserved": {
+    "audioSrc": null,
+    "paused": true,
+    "fullButtons": 0
+  },
+  "fullAudioRequests": 0,
+  "consoleErrorsOrWarnings": [],
+  "limitations": [
+    "Synthetic songs, media and platform links in disposable local D1/R2.",
+    "No production changes, real device or VoiceOver acceptance."
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "pathname": "/music/tracks/vip/",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/index.CdwIK2GI.css",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/_locale_.CTuAIOZb.css",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/_locale_.CyLhD4gI.css",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000000024",
+      "variant": null,
+      "status": 200,
+      "size": "display",
+      "bytes": "58414",
+      "cacheControl": "private, max-age=0, must-revalidate"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.BDIT9GL6.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/pagePaths.Adk3jqEz.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/MusicShell.astro_astro_type_script_index_0_lang.BX-z6skU.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/routes.Cqv8BySH.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/images/station-gentle/cat-mark.webp",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "7334",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000000502",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "414809",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000008012",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "414809",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000008002",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "414809",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000000014",
+      "variant": null,
+      "status": 200,
+      "size": "card",
+      "bytes": "7684",
+      "cacheControl": "private, max-age=0, must-revalidate"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000000034",
+      "variant": null,
+      "status": 200,
+      "size": "card",
+      "bytes": "7684",
+      "cacheControl": "private, max-age=0, must-revalidate"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000000044",
+      "variant": null,
+      "status": 200,
+      "size": "card",
+      "bytes": "7684",
+      "cacheControl": "private, max-age=0, must-revalidate"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/analyticsControls.S3hjcwat.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/campaignLinks.D1ij-sUq.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/musicResponse.kb_2zO3V.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/musicLyrics.By8ik3ey.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/musicPlayerView.Fel6pJpJ.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/clipClient.CNaAinjH.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/musicLocalData.rQlht5YK.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/images/station-gentle/cat-mark.webp",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "7334",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/tracks/vip/audio",
+      "variant": "preview",
+      "status": 206,
+      "size": null,
+      "bytes": "12897",
+      "cacheControl": "private, no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000008001",
+      "variant": null,
+      "status": 206,
+      "size": null,
+      "bytes": "239372",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/music/tracks/vip/",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/index.CdwIK2GI.css",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/_locale_.CTuAIOZb.css",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/_locale_.CyLhD4gI.css",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/BrandNavigation.astro_astro_type_script_index_0_lang.BJJQvYqb.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/StationBrandLayout.astro_astro_type_script_index_0_lang.BDIT9GL6.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000000024",
+      "variant": null,
+      "status": 304,
+      "size": "display",
+      "bytes": null,
+      "cacheControl": "private, max-age=0, must-revalidate"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/MusicShell.astro_astro_type_script_index_0_lang.BX-z6skU.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000000014",
+      "variant": null,
+      "status": 304,
+      "size": "card",
+      "bytes": null,
+      "cacheControl": "private, max-age=0, must-revalidate"
+    },
+    {
+      "method": "GET",
+      "pathname": "/images/station-gentle/cat-mark.webp",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "7334",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/routes.Cqv8BySH.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/pagePaths.Adk3jqEz.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/analyticsControls.S3hjcwat.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/campaignLinks.D1ij-sUq.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/musicResponse.kb_2zO3V.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/musicLyrics.By8ik3ey.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/musicPlayerView.Fel6pJpJ.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/clipClient.CNaAinjH.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000008012",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "414809",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000000502",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "414809",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/musicPlayerCore.BLCSmwrZ.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/_astro/musicLocalData.rQlht5YK.js",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000008002",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "414809",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/tracks/vip",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000000044",
+      "variant": null,
+      "status": 304,
+      "size": "card",
+      "bytes": null,
+      "cacheControl": "private, max-age=0, must-revalidate"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000000034",
+      "variant": null,
+      "status": 304,
+      "size": "card",
+      "bytes": null,
+      "cacheControl": "private, max-age=0, must-revalidate"
+    },
+    {
+      "method": "GET",
+      "pathname": "/images/station-gentle/cat-mark.webp",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "7334",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/music/tracks/local-sample-1/",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": null,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/images/station-gentle/cat-mark.webp",
+      "variant": null,
+      "status": 200,
+      "size": null,
+      "bytes": "7334",
+      "cacheControl": "no-store"
+    },
+    {
+      "method": "GET",
+      "pathname": "/api/station/content/assets/ca760000-0000-4000-8000-000000001011",
+      "variant": null,
+      "status": 200,
+      "size": "display",
+      "bytes": "58414",
+      "cacheControl": "private, max-age=0, must-revalidate"
+    }
+  ]
+}

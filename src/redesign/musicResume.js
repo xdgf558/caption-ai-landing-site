@@ -11,7 +11,9 @@ export function readStationPlayback(raw, now = Date.now()) {
     !['preview', 'full'].includes(value.variant) || (value.variant === 'preview' ? !positive(value.previewRevision) : value.previewRevision !== null) ||
     !Number.isFinite(value.positionSec) || value.positionSec < 0 || value.positionSec > 86400 ||
     !Number.isSafeInteger(value.savedAt) || value.savedAt > now) throw new Error('INVALID_SELECTION');
-  return value.savedAt < now - MAX_AGE ? null : value;
+  // Old full-song selections must not resurrect a listening-access prompt.
+  // Leave their original bytes intact until a new preview selection is saved.
+  return value.variant === 'full' || value.savedAt < now - MAX_AGE ? null : value;
 }
 // A per-tab public selector, separate from legacy v2 audio revision positions.
 // No audio URL, private handshake, entitlement, identity or playback ID persists.
@@ -25,6 +27,7 @@ export function createStationPlaybackStore({ storage = () => globalThis.sessionS
       let next;
       try { next = readStationPlayback(JSON.stringify({ schemaVersion: 1, ...selection, savedAt: now() }), now()); }
       catch { return false; } // Unexpected media progress cannot break playback.
+      if (!next) return false;
       value = next;
       if (writable) try { backend.setItem(STATION_PLAYBACK_KEY, JSON.stringify(next)); } catch { writable = false; }
       return writable;

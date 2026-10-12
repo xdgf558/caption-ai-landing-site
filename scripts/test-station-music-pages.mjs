@@ -3,7 +3,7 @@ import { afterEach, test } from 'node:test';
 import { handleStationContent } from '../src/redesign/publicHttp.js';
 import { handleStationMusicPage, stationMusicRoute, isStationMusicTemplate } from '../src/redesign/musicPages.js';
 import { musicBootstrap, renderMusicPage, renderSongHero, musicPlatforms } from '../src/redesign/musicRender.js';
-import { stationMusicSource, previewPlayerTrack, fullPlayerTrack, indexStationMusicTracks } from '../src/redesign/musicPlayback.js';
+import { stationMusicSource, previewPlayerTrack, indexStationMusicTracks } from '../src/redesign/musicPlayback.js';
 import { readMusicResponse } from '../src/redesign/musicResponse.js';
 import { musicCopy } from '../src/redesign/musicCopy.js';
 import { createMusicPlayer, musicSource } from '../src/scripts/musicPlayerCore.js';
@@ -70,11 +70,11 @@ test('new cursors bind sort, search and locale while v1 no-sort callers continue
   assert.deepEqual(await ids(f, 'release', 'no-such-title'), []);
 });
 
-test('stale legacy audio hint cannot publish a full source; the hint never contains a private audio URL', async () => {
+test('published website DTO never advertises legacy full audio while explicit previews remain available', async () => {
   const f = await fixture(), vip = f.content.tracks[1];
   let dto = (await body(f, '/tracks/vip')).track;
-  assert.equal(dto.fullPlayback.playbackPath, base + '/tracks/vip/playback?variant=full');
-  assert.equal(dto.fullPlayback.requiresAccessCheck, true);
+  assert.equal(dto.fullPlayback, null);
+  assert((await body(f, '/tracks?limit=20')).items.every(track => track.fullPlayback === null));
   assert(!JSON.stringify(dto).includes('audio?'));
   f.music.sql.prepare("UPDATE music_tracks SET lifecycle='draft',published_revision_id=NULL WHERE id=?").run(vip.id);
   dto = (await body(f, '/tracks/vip')).track; assert.equal(dto.fullPlayback, null);
@@ -118,26 +118,26 @@ const dto = { id: fixtureId(1), slug: 'a-song', revision: 2, href: '/en/music/tr
   durationMs: 120000, summary: '', platforms: [], coverUrl: null,
   preview: { revision: 1, durationMs: 30000, playbackPath: base + '/tracks/a-song/playback?variant=preview' } };
 
-test('a public full-playback hint is rendered as unchecked access in every language, without ready or entitlement claims', () => {
+test('every locale ignores stale full-playback hints and prioritizes real platforms while retaining preview/favorites', () => {
   const fullPlayback = { playbackPath: base + '/tracks/a-song/playback?variant=full', requiresAccessCheck: true };
   for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
-    const track = { ...dto, href: ({ 'zh-Hant': '', 'zh-Hans': '/zh-hans', en: '/en', ja: '/ja' })[locale] + '/music/tracks/a-song/', fullPlayback };
-    const html = renderSongHero(track, locale, { detail: true }), copy = musicCopy[locale];
-    assert(html.includes(copy.full)); assert(html.includes(copy.fullAccessHint)); assert(!html.includes(copy.ready));
-    assert.match(html, /aria-describedby="sc-full-access-note" data-sc-full-check=/);
-    assert(!html.includes('data-ready=')); assert(!html.includes('isVip'));
-    assert(!renderSongHero({ ...track, fullPlayback: { playbackPath: fullPlayback.playbackPath } }, locale).includes('data-sc-full-check='));
-    assert(!renderSongHero({ ...track, fullPlayback: null }, locale).includes('sc-full-access-note'));
+    const track = { ...dto, href: ({ 'zh-Hant': '', 'zh-Hans': '/zh-hans', en: '/en', ja: '/ja' })[locale] + '/music/tracks/a-song/', fullPlayback,
+      platforms: [{ id: fixtureId(440), verifiedAt: new Date(now - 1).toISOString(), provider: 'netease', status: 'live', href: 'https://music.163.com/song?id=123' }] };
+    const html = renderSongHero(track, locale, { detail: true });
+    assert.doesNotMatch(html, /data-sc-full-check|sc-full-access-note|variant=full|確認完整|确认完整|Check full|フル再生/);
+    assert.match(html, /data-sc-preview=/); assert.match(html, /data-sc-favorite=/);
+    assert.match(html, /https:\/\/music\.163\.com\/song\?id=123/);
+    assert(html.indexOf('data-sc-platform-link') < html.indexOf('data-sc-preview='));
+    const noPreview = renderSongHero({ ...track, preview: null }, locale);
+    assert.doesNotMatch(noPreview, /data-sc-preview=|data-sc-full-check/); assert.match(noPreview, /data-sc-platform-link/);
+    assert(html.includes(musicCopy[locale].platforms));
   }
 });
-test('public preview adapter controls both versions, and full adapter needs an exact private handshake', () => {
+
+test('website source adapter accepts only versioned previews even with a genuine old full handshake', () => {
   const preview = previewPlayerTrack(dto);
   assert.equal(stationMusicSource(preview, 'preview'), base + '/tracks/a-song/audio?variant=preview&v=2&p=1');
-  const handshake = { trackId: dto.id, revision: 2, variant: 'full', durationMs: 120000,
-    audioPath: base + '/tracks/a-song/audio?variant=full&v=2' };
-  assert.equal(stationMusicSource(fullPlayerTrack(dto, handshake), 'full'), handshake.audioPath);
-  for (const patch of [{ revision: 1 }, { trackId: fixtureId(2) }, { variant: 'preview' },
-    { audioPath: 'https://evil.test/audio' }, { audioPath: handshake.audioPath + '&isVip=true' }]) assert.throws(() => fullPlayerTrack(dto, { ...handshake, ...patch }));
+  assert.throws(() => stationMusicSource({ ...preview, authorizedPath: base + '/tracks/a-song/audio?variant=full&v=2' }, 'full'));
   assert.throws(() => stationMusicSource(preview, 'full'));
   assert.throws(() => previewPlayerTrack({ ...dto, preview: { ...dto.preview, playbackPath: '/api/evil' } }));
 });

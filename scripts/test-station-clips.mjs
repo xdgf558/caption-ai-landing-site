@@ -144,17 +144,20 @@ test('destroy is final and ignores late events, retries and new open attempts', 
   f.session.destroy(); done(); v.event('playing'); await tick();
   assert.equal(v.src, ''); assert(v.paused && v.removed); assert.equal(f.session.retry(), false); assert.equal(f.session.open(second.id), false);
 });
-test('video cancels a real T09 pending private handshake; its late successful response cannot prepare or play full audio', async () => {
+test('opening a video cancels pending preview restoration and never starts audio from its late response', async () => {
   const audio = new Audio(), data = new Map(), storage = { getItem: k => data.get(k) ?? null, setItem: (k, v) => data.set(k, v), removeItem: k => data.delete(k) };
   let respond;
-  const song = { ...track, fullPlayback: { requiresAccessCheck: true, playbackPath: base + '/tracks/a-song/playback?variant=full' } };
+  const song = { ...track, preview: { revision: 1, durationMs: 30000, playbackPath: base + '/tracks/a-song/playback?variant=preview' } };
+  const store = createStationPlaybackStore({ storage: () => storage });
+  store.save({ trackId: song.id, slug: song.slug, revision: song.revision, variant: 'preview', previewRevision: 1, positionSec: 5 });
   const music = createStationMusicSession(audio, { origin: 'https://station.example.test', local: createMusicLocalData({ storage: () => storage }),
-    store: createStationPlaybackStore({ storage: () => storage }), fetcher: () => new Promise(resolve => { respond = resolve; }) });
-  const checking = music.prepareFull(song), video = setup([], () => music.pause()); video.session.open(clip.id);
-  respond(new Response(JSON.stringify({ trackId: song.id, variant: 'full', revision: 1, durationMs: song.durationMs, audioPath: base + '/tracks/a-song/audio?variant=full&v=1' }), { headers: { 'Content-Type': 'application/json' } }));
-  assert.equal(await checking, false); assert.equal(music.isPrepared(song), false); assert.equal(audio.src, ''); assert.equal(audio.plays.length, 0);
+    store, fetcher: () => new Promise(resolve => { respond = resolve; }) });
+  const restoring = music.restore(), video = setup([], () => music.pause()); video.session.open(clip.id);
+  respond(new Response(JSON.stringify({ schemaVersion: 1, locale: 'zh-Hant', track: song }), { headers: { 'Content-Type': 'application/json' } }));
+  await restoring; assert.equal(music.snapshot().track, null); assert.equal(audio.src, ''); assert.equal(audio.plays.length, 0);
   video.session.close(); assert.equal(audio.plays.length, 0); video.session.destroy(); music.destroy();
 });
+
 test('video stops an actual T09 audio source before starting; closing leaves the music paused', () => {
   const audio = new Audio(), storage = { getItem: () => null, setItem() {}, removeItem() {} };
   const music = createStationMusicSession(audio, { origin: 'https://station.example.test', local: createMusicLocalData({ storage: () => storage }), store: createStationPlaybackStore({ storage: () => storage }) });

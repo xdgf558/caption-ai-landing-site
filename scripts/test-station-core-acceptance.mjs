@@ -21,11 +21,11 @@ test('T21 integrated native Assets/Worker/D1/R2 fixture and collection boundarie
     assert.match(html, /主推作品確定後/); assert.doesNotMatch(html, /<(?:audio|video|iframe)\b/); assert.doesNotMatch(html, /晚一點告白/);
     assert.match(response.headers.get('x-robots-tag'), /noindex/);
   });
-  await t.test('A02 public DTO permits separate preview but still requires old full-playback access', async () => {
+  await t.test('A02 public website offers preview only and preserves old private access enforcement', async () => {
     const dto = await (await get('/api/station/content/tracks/vip?locale=zh-Hant')).json();
-    assert.equal(dto.track.preview.durationMs, 1045); assert.equal(dto.track.fullPlayback.requiresAccessCheck, true);
+    assert.equal(dto.track.preview.durationMs, 1045); assert.equal(dto.track.fullPlayback, null);
     assert.doesNotMatch(JSON.stringify(dto), /object_key|session_hash|music\/(?:audio|preview)\//);
-    const full = await get(dto.track.fullPlayback.playbackPath); assert.equal(full.status, 401); assert.doesNotMatch(await full.text(), /object_key|music\/audio\//);
+    const full = await get('/api/station/content/tracks/vip/playback?variant=full'); assert.equal(full.status, 401); assert.doesNotMatch(await full.text(), /object_key|music\/audio\//);
     const previewResponse = await get(dto.track.preview.playbackPath); assert.equal(previewResponse.status, 200);
     const grant = await previewResponse.json(); assert.equal(grant.variant, 'preview'); assert.equal(grant.requiresAccessCheck, undefined);
     assert.match(grant.audioPath, /^\/api\/station\/content\/tracks\/vip\/audio\?variant=preview&v=\d+&p=\d+$/);

@@ -1,6 +1,5 @@
 import { parseMusicLyrics, LYRICS_BYTES } from '../scripts/musicLyrics.js';
 import { stationLocales } from './routes.js';
-import { musicMembershipHref } from '../music/navigation.js';
 import { contentBase, uuid, slug, positive } from './publicValidation.js';
 import { musicCopy } from './musicCopy.js';
 import { musicIcon, musicTime, musicCatalogHref, renderCatalogResults } from './musicRender.js';
@@ -12,18 +11,6 @@ import { mountStationPlatforms } from './platformClient.js';
 import { mountStationClips } from './clipClient.js';
 import { mountCampaignAttribution } from './attributionSession.js';
 import { observeStationEvent } from './analyticsControls.js';
-
-// Native disabled buttons lose focus while the access request is pending.
-// Restore only the original gesture's focus, without taking it from a later
-// keyboard/mouse action or from another page/dialog.
-export function prepareStationFullWithFocus(button, prepare, isDisposed = () => false) {
-  const owner = button.ownerDocument, focused = owner.activeElement === button;
-  const restore = () => {
-    if (focused && !isDisposed() && button.isConnected && !button.disabled &&
-      (owner.activeElement === owner.body || owner.activeElement === owner.documentElement)) button.focus();
-  };
-  return Promise.resolve(prepare()).then(restore, restore);
-}
 
 export function mountStationMusic() {
   const root = document.querySelector('[data-sc-music-page]'), bootstrap = document.getElementById('sc-music-bootstrap');
@@ -48,15 +35,9 @@ export function mountStationMusic() {
     session.observeTracks(tracks.values());
   }
   remember();
-  function feedback(message, login = false, trackId = '') {
+  function feedback(message) {
     const node = $('[data-sc-music-feedback]');
     node.hidden = !message; node.textContent = message || '';
-    if (login) {
-      const link = document.createElement('a');
-      link.href = musicMembershipHref(model.locale, new URLSearchParams(uuid(trackId) ? { track: trackId } : {}));
-      link.setAttribute('data-astro-reload', ''); link.textContent = copy.login;
-      node.append(link);
-    }
   }
   async function getResponse(path, controller = new AbortController()) {
     requests.add(controller);
@@ -82,16 +63,10 @@ export function mountStationMusic() {
       button.innerHTML = musicIcon(playing ? 'pause' : 'play') + (button.classList.contains('sc-button')
         ? '<span>' + (playing ? copy.pause : copy.preview + ' ' + musicTime(dto?.preview?.durationMs)) + '</span>' : '');
     }
-    for (const button of root.querySelectorAll('[data-sc-full-check]')) {
-      const dto = tracks.get(button.dataset.scFullCheck);
-      button.disabled = state.pendingTrackId === dto?.id;
-      const playing = active && state.activeVariant === 'full' && state.activeTrackId === dto?.id;
-      button.querySelector('span').textContent = button.disabled ? copy.prepare : playing ? copy.pause : session.isPrepared(dto) ? copy.ready : copy.full;
-    }
   }
   const playerSubscription = session.subscribe(state => {
     renderPlayerButtons(state);
-    feedback(state.notice ? stationMusicNotice(state, copy) : '', state.notice?.code === 'denied', state.notice?.trackId || state.track?.id);
+    feedback(state.notice ? stationMusicNotice(state, copy) : '');
   });
   async function loadCatalog({ append = false, cursor = null, updateHistory = true } = {}) {
     if (model.mode !== 'catalog' || disposed) return;
@@ -140,13 +115,7 @@ export function mountStationMusic() {
     const button = event.target.closest('button, a'); if (!button) return;
     if (button.hasAttribute('data-sc-favorite')) local.toggleFavorite(button.dataset.scFavorite);
     else if (button.hasAttribute('data-sc-preview')) { const dto = tracks.get(button.dataset.scPreview); if (dto) { rememberStationMusicTrigger(button); session.play(dto, 'preview'); } }
-    else if (button.hasAttribute('data-sc-full-check')) {
-      const dto = tracks.get(button.dataset.scFullCheck); if (!dto) return;
-      rememberStationMusicTrigger(button);
-      const state = session.snapshot();
-      if (session.isPrepared(dto) || (state.activeTrackId === dto.id && state.activeVariant === 'full' && ['playing', 'loading', 'buffering'].includes(state.status))) session.play(dto, 'full');
-      else void prepareStationFullWithFocus(button, () => session.prepareFull(dto), () => disposed);
-    } else if (button.hasAttribute('data-sc-more')) { event.preventDefault(); if (!root.querySelector('[data-sc-catalog-results]')?.hasAttribute('aria-busy')) void loadCatalog({ append: true, cursor: model.nextCursor }); }
+    else if (button.hasAttribute('data-sc-more')) { event.preventDefault(); if (!root.querySelector('[data-sc-catalog-results]')?.hasAttribute('aria-busy')) void loadCatalog({ append: true, cursor: model.nextCursor }); }
     else if (button.hasAttribute('data-sc-page-retry') && model.mode === 'catalog') { event.preventDefault(); void loadCatalog({ append: Boolean(model.items?.length), cursor: model.items?.length ? model.nextCursor : null }); }
   });
   const form = root.querySelector('[data-sc-music-search]');

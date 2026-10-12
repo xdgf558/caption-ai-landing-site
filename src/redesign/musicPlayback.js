@@ -9,14 +9,12 @@ export function indexStationMusicTracks(model, index = new Map()) {
   return index;
 }
 
+// Website music is preview-only. The shared legacy/native player keeps its
+// own source resolver; a stale website DTO cannot opt this one into full audio.
 export function stationMusicSource(track, variant) {
-  if (!uuid(track?.id) || !slug(track.slug) || !positive(track.audioVersion) || !['preview', 'full'].includes(variant)) throw new TypeError('Invalid source');
-  let path = contentBase + '/tracks/' + track.slug + '/audio?variant=' + variant + '&v=' + track.audioVersion;
-  if (variant === 'preview') {
-    if (!positive(track.previewRevision)) throw new TypeError('Invalid promotion version');
-    path += '&p=' + track.previewRevision;
-  } else if (track.authorizedPath !== path) throw new TypeError('Missing private playback handshake');
-  return path;
+  if (!uuid(track?.id) || !slug(track.slug) || !positive(track.audioVersion) || variant !== 'preview') throw new TypeError('Invalid source');
+  if (!positive(track.previewRevision)) throw new TypeError('Invalid promotion version');
+  return contentBase + '/tracks/' + track.slug + '/audio?variant=preview&v=' + track.audioVersion + '&p=' + track.previewRevision;
 }
 export function previewPlayerTrack(dto) {
   if (!positive(dto?.preview?.revision) || !positive(dto.preview.durationMs) || dto.preview.playbackPath !==
@@ -25,13 +23,5 @@ export function previewPlayerTrack(dto) {
     previewRevision: dto.preview.revision, durationSec: dto.durationMs / 1000,
     previewDurationSec: dto.preview.durationMs / 1000, previewSourceStartSec: 0 };
   stationMusicSource(track, 'preview');
-  return track;
-}
-export function fullPlayerTrack(dto, handshake) {
-  if (handshake?.trackId !== dto.id || handshake.revision !== dto.revision || handshake.variant !== 'full' ||
-    !positive(handshake.durationMs)) throw new TypeError('Stale private playback handshake');
-  const track = { id: dto.id, slug: dto.slug, audioVersion: dto.revision, policyVersion: dto.revision,
-    durationSec: handshake.durationMs / 1000, authorizedPath: handshake.audioPath };
-  stationMusicSource(track, 'full');
   return track;
 }

@@ -11,8 +11,6 @@ const id = letter => `${letter.repeat(8)}-${letter.repeat(4)}-4${letter.repeat(3
 const dto = (letter, patch = {}) => ({ id: id(letter), slug: 'song-' + letter, revision: 2, title: 'Song ' + letter, artist: 'Station Cat', durationMs: 200000,
   fullPlayback: { requiresAccessCheck: true, playbackPath: base + '/tracks/song-' + letter + '/playback?variant=full' },
   preview: { revision: 3, durationMs: 30000, playbackPath: base + '/tracks/song-' + letter + '/playback?variant=preview' }, ...patch });
-const grant = track => ({ trackId: track.id, variant: 'full', revision: track.revision, durationMs: track.durationMs,
-  audioPath: base + '/tracks/' + track.slug + '/audio?variant=full&v=' + track.revision });
 const response = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 const memory = () => {
   const values = new Map(), writes = [];
@@ -42,12 +40,12 @@ test('game handoff unloads real preview audio, locks background intents and retu
   assert.equal(f.audio.plays.length, plays); f.session.toggle(); assert.equal(f.audio.plays.length, plays + 1);
   f.audio.metadata(30); assert.equal(f.audio.currentTime, 11); f.session.destroy();
 });
-test('game handoff cancels a pending real private handshake; late responses and new checks cannot prepare audio', async () => {
-  const p = pendingFetch(), f = setup(p.fetcher), song = dto('a');
-  const checking = f.session.prepareFull(song); f.session.setGameActive(true);
-  assert(p.calls[0].options.signal.aborted); assert.equal(await f.session.prepareFull(song), false);
-  p.calls[0].resolve(response(grant(song))); assert.equal(await checking, false);
-  assert.equal(f.session.isPrepared(song), false); assert.equal(f.audio.src, ''); assert.equal(f.audio.plays.length, 0);
+test('game handoff cancels pending preview restoration and ignores late responses', async () => {
+  const p = pendingFetch(), storage = memory(); storage.values.set(STATION_PLAYBACK_KEY, saved(dto('a')));
+  const f = setup(p.fetcher, storage), restoring = f.session.restore(); f.session.setGameActive(true);
+  assert(p.calls[0].options.signal.aborted);
+  p.calls[0].resolve(response({ schemaVersion: 1, locale: 'zh-Hant', track: dto('a') })); await restoring;
+  assert.equal(f.session.snapshot().track, null); assert.equal(f.audio.src, ''); assert.equal(f.audio.plays.length, 0);
   f.session.setGameActive(false); assert.equal(f.audio.plays.length, 0); f.session.destroy();
 });
 
@@ -85,31 +83,27 @@ test('rapid A/B/C source switches and late native play failures cannot start or 
   assert.equal(events.length, 0); assert.equal(session.snapshot().activeTrackId, id('c')); assert.notEqual(current, first);
   assert.equal(session.snapshot().lastError, null); audio.metadata(30); audio.playing(); assert.equal(events.length, 1); session.destroy();
 });
-test('late A permission response is ignored after B, even when fetch ignores abort', async () => {
-  const network = pendingFetch(), { audio, session } = setup(network.fetcher);
-  const a = session.prepareFull(dto('a')), b = session.prepareFull(dto('b'));
-  assert.equal(network.calls[0].options.signal.aborted, true);
-  network.calls[1].resolve(response(grant(dto('b')))); assert.equal(await b, true);
-  network.calls[0].resolve(response(grant(dto('a')))); assert.equal(await a, false);
-  assert.equal(session.isPrepared(dto('a')), false); assert.equal(session.isPrepared(dto('b')), true);
-  assert.equal(audio.src, ''); assert.equal(audio.plays.length, 0);
-  session.play(dto('b'), 'full'); assert.equal(session.snapshot().activeTrackId, id('b')); session.destroy();
+test('website rejects full and unknown playback intents without requests, media or recent-play writes', () => {
+  let requests = 0; const { audio, session, local, store } = setup(async () => { requests++; return response({}); });
+  for (const variant of ['full', 'audio', undefined]) assert.equal(session.play(dto('a'), variant), false);
+  assert.equal(requests, 0); assert.equal(audio.src, ''); assert.equal(audio.plays.length, 0);
+  assert.equal(session.snapshot().track, null); assert.equal(store.read(), null); assert.deepEqual(local.snapshot().recent, []);
+  session.play(dto('b'), 'preview'); audio.metadata(30); audio.playing(); const active = session.snapshot();
+  assert.equal(session.play(dto('a'), 'full'), false); assert.equal(session.snapshot().playbackId, active.playbackId);
+  assert.equal(session.snapshot().activeTrackId, id('b')); assert.equal(audio.paused, false); session.destroy();
 });
-test('switching to preview cancels private check; late ready cannot replace playback', async () => {
-  const network = pendingFetch(), { audio, session } = setup(network.fetcher);
-  const checking = session.prepareFull(dto('a')); session.play(dto('b'), 'preview');
-  network.calls[0].resolve(response(grant(dto('a')))); assert.equal(await checking, false);
-  assert.equal(session.snapshot().activeTrackId, id('b')); assert.match(audio.src, /song-b\/audio\?variant=preview/);
-  assert.equal(session.isPrepared(dto('a')), false); session.destroy();
-});
-test('401/403, stale grant, missing resource and malformed handshake never assign full src', async () => {
-  for (const [status, body, code] of [[401, {}, 'denied'], [403, {}, 'denied'], [409, {}, 'stale'], [404, {}, 'failed'],
-    [200, { ...grant(dto('a')), audioPath: 'https://evil.test/full.mp3' }, 'failed'], [200, { ...grant(dto('a')), revision: 1 }, 'failed']]) {
-    const { audio, session } = setup(async () => response(body, status));
-    assert.equal(await session.prepareFull(dto('a')), false); assert.equal(session.snapshot().notice.code, code);
-    assert.equal(session.play(dto('a'), 'full'), false); assert.equal(audio.src, ''); assert.equal(audio.plays.length, 0); session.destroy();
+
+test('failed or malformed public restoration stays empty and never falls back to full audio', async () => {
+  for (const [status, body] of [[401, {}], [403, {}], [409, {}], [404, {}], [503, {}],
+    [200, { schemaVersion: 1, locale: 'zh-Hant', track: dto('a', { preview: null }) }],
+    [200, { schemaVersion: 1, locale: 'zh-Hant', track: dto('b') }]]) {
+    const storage = memory(); storage.values.set(STATION_PLAYBACK_KEY, saved(dto('a')));
+    const { audio, session } = setup(async () => response(body, status), storage);
+    await session.restore(); assert.equal(session.snapshot().track, null);
+    session.toggle(); assert.equal(audio.src, ''); assert.equal(audio.plays.length, 0); session.destroy();
   }
 });
+
 test('blocked play stays paused without start/recent; user retry begins once', async () => {
   const { audio, session, local } = setup(), events = starts(session.player);
   session.play(dto('a'), 'preview'); const first = session.snapshot().playbackId;
@@ -123,23 +117,7 @@ test('native resource error is recoverable; a late pause cannot hide it', () => 
   audio.error = { code: 4 }; audio.emit('error'); audio.emit('pause');
   assert.equal(session.snapshot().status, 'error'); assert.equal(session.snapshot().lastError.code, 'MEDIA_4'); assert.equal(audio.paused, true); session.destroy();
 });
-test('full pause unloads buffer; fresh handshake and explicit click resume position with same playback ID', async () => {
-  let requests = 0; const { audio, session } = setup(async () => { requests++; return response(grant(dto('a'))); }), events = starts(session.player);
-  assert.equal(await session.prepareFull(dto('a')), true); assert.equal(audio.src, ''); session.play(dto('a'), 'full'); audio.metadata(200); audio.playing();
-  audio.currentTime = 45; audio.emit('timeupdate'); const first = session.snapshot().playbackId;
-  session.pause(); assert.equal(audio.src, ''); assert.equal(session.isPrepared(dto('a')), false);
-  assert.equal(await session.prepareFull(dto('a')), true); assert.equal(audio.plays.length, 1);
-  session.play(dto('a'), 'full'); audio.metadata(200); audio.playing();
-  assert.equal(requests, 2); assert.equal(audio.currentTime, 45); assert.equal(session.snapshot().playbackId, first); assert.equal(events.length, 1); session.destroy();
-});
-test('account invalidation unloads full audio and cancels pending grants; it cannot confer access', async () => {
-  const network = pendingFetch(), { audio, session } = setup(network.fetcher);
-  let check = session.prepareFull(dto('a')); network.calls[0].resolve(response(grant(dto('a')))); await check;
-  session.play(dto('a'), 'full'); audio.metadata(200); audio.playing(); session.invalidateAccess();
-  assert.equal(audio.src, ''); assert.equal(audio.paused, true); assert.equal(session.snapshot().playbackId, null);
-  check = session.prepareFull(dto('a')); session.invalidateAccess(); network.calls[1].resolve(response(grant(dto('a'))));
-  assert.equal(await check, false); assert.equal(session.isPrepared(dto('a')), false); assert.equal(audio.src, ''); session.destroy();
-});
+
 test('refresh restore queries current public DTO and keeps selection paused without source/start', async () => {
   const storage = memory(); storage.values.set(STATION_PLAYBACK_KEY, saved(dto('a')));
   const { audio, session, local } = setup(async () => response({ schemaVersion: 1, locale: 'zh-Hant', track: dto('a') }), storage);
@@ -149,14 +127,17 @@ test('refresh restore queries current public DTO and keeps selection paused with
   assert.equal(audio.src, ''); assert.equal(audio.plays.length, 0); assert.equal(events.length, 0); assert.deepEqual(local.snapshot().recent, []);
   session.toggle(); audio.metadata(30); audio.playing(); assert.equal(audio.currentTime, 12); assert.equal(events.length, 1); session.destroy();
 });
-test('full refresh restores public selector only and requires a new private grant plus explicit play', async () => {
-  const storage = memory(); storage.values.set(STATION_PLAYBACK_KEY, saved(dto('a'), 'full', 45));
-  let requests = 0; const { audio, session } = setup(async path => { requests++; return response(path.includes('/playback?') ? grant(dto('a')) : { schemaVersion: 1, locale: 'zh-Hant', track: dto('a') }); }, storage);
-  await session.restore(); assert.equal(session.snapshot().status, 'paused'); assert.equal(session.snapshot().currentTimeSec, 45);
-  assert.equal(audio.src, ''); assert.equal(session.play(dto('a'), 'full'), false); assert.equal(requests, 1);
-  assert.equal(await session.prepareFull(dto('a')), true); assert.equal(audio.src, '');
-  session.play(dto('a'), 'full'); audio.metadata(200); assert.equal(audio.currentTime, 45); session.destroy();
+test('old full selections are ignored without a request, prompt, autoplay, or changes to legacy local data', async () => {
+  const storage = memory(), original = saved(dto('a'), 'full', 45); storage.values.set(STATION_PLAYBACK_KEY, original);
+  let requests = 0; const { audio, session, store, localStorage } = setup(async () => { requests++; return response({}); }, storage);
+  assert.equal(store.read(), null); assert.equal(readStationPlayback(original, time), null);
+  await session.restore(); session.toggle();
+  assert.equal(session.snapshot().track, null); assert.equal(session.snapshot().notice, null);
+  assert.equal(audio.src, ''); assert.equal(audio.plays.length, 0); assert.equal(requests, 0);
+  assert.equal(storage.values.get(STATION_PLAYBACK_KEY), original); assert.equal(localStorage.writes.length, 0);
+  session.play(dto('b'), 'preview'); assert.equal(store.read().variant, 'preview'); session.destroy();
 });
+
 test('restoration response cannot replace a new user selection', async () => {
   const storage = memory(); storage.values.set(STATION_PLAYBACK_KEY, saved(dto('a')));
   const network = pendingFetch(), { audio, session } = setup(network.fetcher, storage);
@@ -171,13 +152,20 @@ test('changed public revisions reset saved position; withdrawn/preview-disabled 
     assert.equal(Boolean(session.snapshot().track), Boolean(track?.preview)); session.destroy();
   }
 });
-test('close/destroy cancels old check; BFCache suspension keeps paused selection and unloads media', async () => {
-  const network = pendingFetch(), { audio, session, store } = setup(network.fetcher);
+test('close/destroy cancel restoration; BFCache suspension keeps the preview paused with its progress', async () => {
+  const { audio, session, store } = setup();
   session.play(dto('a'), 'preview'); audio.metadata(30); audio.playing(); audio.currentTime = 8; audio.emit('timeupdate');
   session.suspend(); assert.equal(audio.src, ''); assert.equal(session.snapshot().status, 'paused'); assert.equal(store.read().positionSec, 8);
-  const check = session.prepareFull(dto('b')); session.close(); network.calls[0].resolve(response(grant(dto('b')))); await check;
-  assert.equal(session.snapshot().track, null); assert.equal(store.read(), null); assert.equal(audio.src, ''); session.destroy();
+  session.close(); assert.equal(session.snapshot().track, null); assert.equal(store.read(), null); session.destroy();
+  for (const action of ['close', 'destroy']) {
+    const storage = memory(); storage.values.set(STATION_PLAYBACK_KEY, saved(dto('a')));
+    const network = pendingFetch(), f = setup(network.fetcher, storage), restoring = f.session.restore();
+    f.session[action](); assert(network.calls[0].options.signal.aborted);
+    network.calls[0].resolve(response({ schemaVersion: 1, locale: 'zh-Hant', track: dto('a') })); await restoring;
+    assert.equal(f.session.snapshot().track, null); assert.equal(f.audio.src, ''); assert.equal(f.audio.plays.length, 0); f.session.destroy();
+  }
 });
+
 test('corrupt, oversized, future-schema and inaccessible storage preserve originals while playback works', () => {
   for (const raw of ['{broken', 'x'.repeat(1025), JSON.stringify({ schemaVersion: 99 })]) {
     const storage = memory(); storage.values.set(STATION_PLAYBACK_KEY, raw); const { audio, session, store } = setup(undefined, storage);
@@ -205,17 +193,10 @@ test('known locale metadata updates display only; known publication/promotion ch
     assert.equal(session.snapshot().notice.code, 'stale'); session.destroy();
   }
 });
-test('full natural replay rechecks access, stays silent during check, and starts a new ID', async () => {
-  const { audio, session } = setup(async () => response(grant(dto('a')))), events = starts(session.player);
-  await session.prepareFull(dto('a')); session.play(dto('a'), 'full'); audio.metadata(200); audio.playing();
-  const first = session.snapshot().playbackId; audio.currentTime = 200; audio.ended = true; audio.paused = true; audio.emit('ended');
-  await session.prepareFull(dto('a')); assert.equal(audio.src, ''); assert.equal(audio.plays.length, 1);
-  session.play(dto('a'), 'full'); audio.metadata(200); audio.playing();
-  assert.notEqual(session.snapshot().playbackId, first); assert.equal(audio.currentTime, 0); assert.equal(events.length, 2); session.destroy();
-});
+
 test('invalid native position cannot make optional persistence interrupt playback', () => {
   const store = createStationPlaybackStore({ storage: () => memory(), now: () => time });
-  assert.equal(store.save({ trackId: id('a'), slug: 'song-a', revision: 2, variant: 'full', previewRevision: null, positionSec: Infinity }), false);
+  assert.equal(store.save({ trackId: id('a'), slug: 'song-a', revision: 2, variant: 'preview', previewRevision: 3, positionSec: Infinity }), false);
 });
 test('leaving or refreshing after natural end restores at zero rather than an unplayable end position', () => {
   const { audio, session, store } = setup(); session.play(dto('a'), 'preview'); audio.metadata(30); audio.playing();

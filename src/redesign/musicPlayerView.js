@@ -1,17 +1,13 @@
 import { createStationMusicSession } from './musicSession.js';
-import { watchReaderSession } from '../scripts/readerSessionEvents.js';
 import { musicCopy } from './musicCopy.js';
 import { musicIcon, musicTime } from './musicRender.js';
-import { musicMembershipHref } from '../music/navigation.js';
 
 let mounted = null;
 export const peekStationMusicSession = () => mounted?.session || null;
 const active = state => ['playing', 'loading', 'buffering'].includes(state.status);
 export function stationMusicNotice(state, copy) {
-  if (state.notice) return ({ checking: copy.prepare, ready: copy.ready, denied: copy.denied, stale: copy.stale,
-    failed: copy.playbackFailed, recheck: copy.fullAccessHint })[state.notice.code] || '';
-  if (state.lastError) return state.lastError.code === 'PLAY_NOT_ALLOWED' ? copy.blocked :
-    state.lastError.code === 'ACCESS_CHANGED' ? copy.fullAccessHint : copy.playbackFailed;
+  if (state.notice) return state.notice.code === 'stale' ? copy.stale : copy.playbackFailed;
+  if (state.lastError) return state.lastError.code === 'PLAY_NOT_ALLOWED' ? copy.blocked : copy.playbackFailed;
   return state.status === 'ended' ? copy.ended : state.status === 'buffering' ? copy.buffering :
     state.status === 'loading' ? copy.loading : state.status === 'paused' ? copy.paused : '';
 }
@@ -25,14 +21,13 @@ export function getStationMusicSession(locale) {
     let trigger = null;
     const listen = (target, event, fn) => target.addEventListener(event, fn, { signal: handlers.signal });
     const unsubscribe = session.subscribe(state => {
-      const copy = musicCopy[state.locale], fullCheck = state.selectedVariant === 'full' && !active(state) && !session.isPrepared(state.track);
+      const copy = musicCopy[state.locale];
       dock.hidden = !state.track; dock.dataset.playbackState = state.status;
       dock.dataset.playbackId = state.playbackId || '';
       $('.sc-music-player').setAttribute('aria-label', copy.player);
       const toggle = $('[data-sc-play-toggle]');
-      toggle.innerHTML = musicIcon(active(state) ? 'pause' : fullCheck ? 'headphones' : 'play');
-      toggle.setAttribute('aria-label', active(state) ? copy.pause : fullCheck ? copy.full : copy.play);
-      toggle.disabled = Boolean(state.pendingTrackId && state.pendingTrackId === state.track?.id);
+      toggle.innerHTML = musicIcon(active(state) ? 'pause' : 'play');
+      toggle.setAttribute('aria-label', active(state) ? copy.pause : copy.play);
       $('[data-sc-now-title]').textContent = state.track?.title || '';
       $('[data-sc-now-artist]').textContent = state.track?.artist || '';
       $('[data-sc-current-time]').textContent = musicTime(Math.floor(state.currentTimeSec * 1000)) || '00:00';
@@ -46,9 +41,6 @@ export function getStationMusicSession(locale) {
       $('[data-sc-player-close]').setAttribute('aria-label', copy.close);
       const ownNotice = state.notice?.trackId === state.track?.id ? state.notice : null;
       $('[data-sc-player-status]').textContent = stationMusicNotice({ ...state, notice: ownNotice }, copy);
-      const account = $('[data-sc-account-help]'); account.href = musicMembershipHref(state.locale,
-        new URLSearchParams(state.track ? { track: state.track.id } : {})); account.textContent = copy.login;
-      account.hidden = ownNotice?.code !== 'denied';
     });
     listen($('[data-sc-play-toggle]'), 'click', () => session.toggle());
     listen($('[data-sc-seek]'), 'input', event => session.seek(Number(event.target.value)));
@@ -57,8 +49,7 @@ export function getStationMusicSession(locale) {
       session.close(); if (trigger?.isConnected) trigger.focus(); else document.getElementById('station-main')?.focus();
     });
     listen(window, 'pagehide', () => session.suspend());
-    const unwatch = watchReaderSession(() => session.invalidateAccess());
-    mounted = { audio, session, dispose() { handlers.abort(); unsubscribe(); unwatch(); session.destroy(); }, rememberTrigger(node) { trigger = node; } };
+    mounted = { audio, session, dispose() { handlers.abort(); unsubscribe(); session.destroy(); }, rememberTrigger(node) { trigger = node; } };
   }
   mounted.session.setLocale(locale);
   void mounted.session.restore();

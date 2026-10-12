@@ -148,9 +148,10 @@ test('real synthetic cover/audio bytes match sealed metadata, Range is correct, 
   assert.notEqual(vip.preview, vip.audio); assert(runtime.content.mediaProof.audioIsSynthetic);
 });
 
-test('full playback hint is not an authorization; guest, ordinary account, expired member and active member still use old policy', async () => {
-  const text = await html('/music/tracks/vip/'); assert.equal(model(text).track.fullPlayback.requiresAccessCheck, true);
-  assert.match(text, /確認完整收聽權限/); assert.match(text, /完整播放前，需確認/); assert(!text.includes('已準備好，點擊播放'));
+test('website hides full listening; protected compatibility endpoints still enforce the old account policy', async () => {
+  const text = await html('/music/tracks/vip/'); assert.equal(model(text).track.fullPlayback, null);
+  assert.doesNotMatch(text, /data-sc-full-check|完整播放前|確認完整收聽權限|variant=full/);
+  assert.match(text, /data-sc-preview=/);
   const path = base + '/tracks/vip/playback?variant=full';
   for (const [account, status] of [[null, 401], [2, 403], [3, 403]]) {
     const response = await call(path, { account }); assert.equal(response.status, status); await response.json();

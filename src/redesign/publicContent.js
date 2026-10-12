@@ -66,11 +66,10 @@ export async function projectTrack(runtime, row, options, { detailed = false } =
     href: localizedPath(locale, 'music/tracks', row.slug),
     coverUrl: ready.has(row.cover_asset_id) ? assetPath(ready.get(row.cover_asset_id)) : null,
     preview,
-    // This is only a permission handshake, never an audio URL or a free/VIP
-    // grant. The private endpoint rechecks the existing reader policy and R2.
-    fullPlayback: runtime.flags.public && row.existing_full_reference === 1 &&
-      ['free_full', 'existing_entitlement'].includes(row.site_audio_mode)
-      ? { playbackPath: contentBase + '/tracks/' + row.slug + '/playback?variant=full', requiresAccessCheck: true } : null,
+    // Retain the nullable DTO field for old clients, but the website now
+    // promotes external listening and offers only configured previews/MVs.
+    // Existing account/native full-audio APIs keep their original policy.
+    fullPlayback: null,
     platformAvailability: platformAvailability(rawLinks, row.id, country, now),
     platforms: links.map(link => ({ id: link.id, provider: link.provider, status: link.status, href: link.href,
       verifiedAt: link.verifiedAt, releasedAt: link.releasedAt }))
