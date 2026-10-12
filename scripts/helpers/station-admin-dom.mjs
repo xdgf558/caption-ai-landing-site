@@ -38,7 +38,7 @@ export async function adminScriptFixture(entry, { search = '', request, mediaUpl
   const nodes = new Map(), localeTitles = [], localeSummaries = [], creates = [], filters = [], nav = [], modules = [];
   const node = id => {
     if (!nodes.has(id)) {
-      const selectIds = ['content-locale', 'content-cover', 'content-lyrics', 'content-audio-mode', 'content-related', 'content-rollback-version', 'content-parent', 'content-screenshots', 'media-kind', 'media-owner'];
+      const selectIds = ['content-featured-track', 'content-featured-game', 'content-selected-tracks', 'content-selected-clips', 'content-locale', 'content-cover', 'content-lyrics', 'content-audio-mode', 'content-related', 'content-rollback-version', 'content-parent', 'content-screenshots', 'media-kind', 'media-owner'];
       const n = new AdminNode(selectIds.includes(id) ? 'select' : id.endsWith('form') ? 'form' : 'div'); n.id = id; n.parentElement = new AdminNode(); nodes.set(id, n);
       if (id.startsWith('work-icon-')) n.content = { cloneNode: () => new AdminNode('fragment') };
     }

@@ -1,7 +1,7 @@
 import { primary, rows } from '../music/adminStore.js';
 import { fields, fail, mutationKey, musicId } from '../music/adminValidation.js';
-import { contentAdminReadiness, contentRole, requirePublisher, readContentObject, listContentObjects, contentAssets, contentRevisionHistory } from './contentAdminStore.js';
-import { createContentObject, saveContentObject, contentPublication, contentPreflight, saveContentPlatform, saveContentRights, addClipPublication } from './contentAdmin.js';
+import { contentAdminReadiness, contentRole, requirePublisher, readContentObject, listContentObjects, contentAssets, contentRevisionHistory, listHomeTracks } from './contentAdminStore.js';
+import { createContentObject, saveContentObject, contentPublication, contentPreflight, saveContentPlatform, saveContentRights, addClipPublication, applyHomeSelection } from './contentAdmin.js';
 import { platformData } from './contentAdminModel.js';
 import { runStationContentSchedule } from './contentSchedule.js';
 import { campaignEnabled } from './campaignLinks.js';
@@ -22,6 +22,7 @@ export async function handleContentAdmin(request,env,actor,query,readBody) {
   if(!read)mutationKey(context.key);
   if(path==='/status'&&read){fields(query,[]);return {actorId:actor,role:contentRole(env,actor),enabled:true,reportsEnabled:env.STATION_REPORTS_ENABLED===true||env.STATION_REPORTS_ENABLED==='true',campaignsEnabled:campaignEnabled(env.STATION_CAMPAIGNS_ENABLED),schedulesEnabled:env.STATION_CONTENT_SCHEDULES_ENABLED===true||env.STATION_CONTENT_SCHEDULES_ENABLED==='true',cachePolicy:'no-store'};}
   if(path==='/assets'&&read)return contentAssets(runtime.db,query);
+  if(path==='/home-tracks'){if(!read)fail('METHOD_NOT_ALLOWED',405);return listHomeTracks(runtime.db,query);}
   const thumbnail=/^\/assets\/([^/]+)\/thumbnail$/.exec(path);
   if(thumbnail){fields(query,[]);if(!read)fail('METHOD_NOT_ALLOWED',405);return readAdminMusicThumbnail(runtime.db,runtime.bucket,thumbnail[1],request,env.ASSETS);}
   const image=/^\/assets\/([^/]+)\/image$/.exec(path);
@@ -53,7 +54,7 @@ export async function handleContentAdmin(request,env,actor,query,readBody) {
     }
     return saveContentPlatform(runtime,platform[1]??null,input,{...context,role:contentRole(env,actor)});
   }
-  const match=/^\/(tracks|promotions|clips|games|home)(?:\/([^/]+)(?:\/(publish|unpublish|rollback|schedule|cancel-schedule|preflight|publications|campaigns|revisions))?)?$/.exec(path);
+  const match=/^\/(tracks|promotions|clips|games|home)(?:\/([^/]+)(?:\/(apply|publish|unpublish|rollback|schedule|cancel-schedule|preflight|publications|campaigns|revisions))?)?$/.exec(path);
   if(!match)fail('NOT_FOUND',404);
   const [,type,rawId,action]=match;const id=rawId?musicId(rawId):null;
   if(!id) {
@@ -61,6 +62,11 @@ export async function handleContentAdmin(request,env,actor,query,readBody) {
     if(request.method!=='POST')fail('METHOD_NOT_ALLOWED',405);fields(query,[]);return createContentObject(runtime,type,await readBody(request),context);
   }
   musicId(id);
+  if(action==='apply') {
+    if(type!=='home')fail('NOT_FOUND',404);fields(query,[]);
+    if(request.method!=='POST')fail('METHOD_NOT_ALLOWED',405);requirePublisher(env,actor);
+    return applyHomeSelection(runtime,id,await readBody(request),context);
+  }
   if(action==='revisions'&&read)return contentRevisionHistory(runtime.db,type,id,query);
   if(action==='campaigns'){
     if(type!=='promotions')fail('NOT_FOUND',404);

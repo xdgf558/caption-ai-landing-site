@@ -48,3 +48,24 @@ body.station-admin{margin:0;background:var(--admin-paper);color:var(--admin-ink)
 .work-platform-section p{margin:8px 0;color:var(--admin-muted);font-size:13px;line-height:1.6}
 .work-platform-section a{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;font-weight:600}
 .work-filters button{white-space:nowrap}
+
+/* Homepage settings are one form, with no redundant object list or editor drawer. */
+.workbench[data-home=true]{display:block;max-width:1020px;margin:0 auto;padding-bottom:40px;min-height:100vh}
+.workbench[data-home=true] .work-catalog{padding-bottom:0}
+.workbench[data-home=true] .work-heading>div>.badge{position:static}
+.workbench[data-home=true] :is(.work-toolbar,.work-list-head,#content-list,#content-more,#work-count,#work-close-editor){display:none!important}
+.workbench[data-home=true] .work-feedback{margin:0 0 16px;border:0;padding:0}
+.workbench[data-home=true] .work-editor{display:block;position:static;height:auto;overflow:visible;margin:0 29px;padding:26px 30px;border:1px solid var(--admin-line);border-radius:12px}
+.workbench[data-home=true] .workspace-heading h2{display:none}
+.workbench[data-home=true] .work-save-actions{display:flex!important;margin:20px 0 0!important}
+.workbench[data-home=true] #content-save{min-width:170px}
+.workbench[data-home=true] .field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.workbench[data-home=true] #content-home-fields{padding-bottom:0;gap:18px}
+.workbench[data-home=true] .home-current{margin:0;font-size:18px;font-weight:650}
+.workbench[data-home=true] .home-help{font-size:13px;line-height:1.7;margin:0}
+.workbench[data-home=true] .home-extras{border-top:1px solid var(--admin-line);padding-top:16px}
+.workbench[data-home=true] .home-extras summary{font-size:14px;min-height:32px;cursor:pointer}
+.workbench[data-home=true] .home-feedback{font-size:14px;margin:0;color:var(--admin-accent)}
+.workbench[data-home=true] .home-feedback[data-error=true]{color:#ae353a}
+.workbench[data-home=true] .home-view-link{display:inline-flex;align-items:center;gap:8px;font-size:14px;width:fit-content;min-height:34px}
+@media(max-width:650px){.workbench[data-home=true] .work-editor{margin:0 18px;padding:22px 18px}.workbench[data-home=true] .field-grid{grid-template-columns:1fr}.workbench[data-home=true] #content-save{width:100%}}

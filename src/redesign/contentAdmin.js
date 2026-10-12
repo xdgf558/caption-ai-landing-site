@@ -4,7 +4,7 @@ import { model, objectId, draftData, viewData, requestedVersion, revisionNumber,
 import { snapshot, readContentObject, mutateContent, rowGuard, combineGuards, revisionInsert, pendingJobs, cancelJobs } from './contentAdminStore.js';
 import { validateContentPublication } from './contentAdminValidation.js';
 import { stationHomeConfig } from '../data/station-home.js';
-import { platformUrl } from './publicValidation.js';
+import { platformUrl, millis } from './publicValidation.js';
 
 const route=(type,id,action='')=>'/admin/api/music/site-content/'+type+(id?'/'+id:'')+(action?'/'+action:'');
 const checked=(x,v)=>{if(x.h.edit_version!==v)fail('STATION_EDIT_CONFLICT',409);return rowGuard(x.d.table,x.h);};
@@ -94,6 +94,47 @@ export async function contentPreflight(runtime,type,id,revision) {
   revisionNumber(revision);const x=await snapshot(runtime.db,type,id),r=rows(await primary(runtime.db).prepare(`SELECT * FROM ${x.d.revisions} WHERE ${x.d.key}=? AND revision=? LIMIT 2`).bind(id,revision).all())[0];
   if(!r)fail('NOT_FOUND',404);await validateContentPublication(runtime,x,r,Date.now());
   return {type,id,revision,editVersion:x.h.edit_version,ready:true,data:viewData(type,r),previewScope:'private-metadata',cachePolicy:'no-store'};
+}
+
+// One explicit homepage action: validate the selected public works, prepare any
+// missing basic promotion, then commit all pointers, audit and receipt together.
+// Unpublished promotion edits are retained; they never enable audio implicitly.
+export async function applyHomeSelection(runtime,id,input,context) {
+  objectId('home',id);fields(input,['revision','data']);revisionNumber(input.revision);
+  const data=draftData('home',input.data),v=requestedVersion(context);
+  return mutateContent(runtime.db,{...context,route:route('home',id,'apply'),command:{input,version:v}},async(s,now)=>{
+    const x=await snapshot(runtime.db,'home',id),guards=[checked(x,v)],writes=[],prepared=[],homePromotions=new Map();
+    if((x.draft??x.published)?.revision!==input.revision)fail('STATION_EDIT_CONFLICT',409);
+    const trackIds=[...new Set([data.featured_track_id,...JSON.parse(data.selected_track_ids_json)].filter(Boolean))];
+    for(const trackId of trackIds) {
+      let p;try{p=await snapshot(runtime.db,'promotions',trackId);}catch(e){if(e.status!==404)throw e;}
+      // Existing published promotion settings remain exactly as reviewed.
+      if(p?.h.status==='published'&&p.published?.enabled===1)continue;
+      const d=model('promotions'),target=p??{id:trackId,d};
+      guards.push(p?rowGuard(d.table,p.h):{condition:'NOT EXISTS(SELECT 1 FROM station_promotions WHERE track_id=?)',params:[trackId]});
+      const links=rows(await s.prepare('SELECT * FROM station_platform_links WHERE track_id=? ORDER BY sort_order,id LIMIT 26').bind(trackId).all());
+      if(links.length>25)fail('STATION_REFERENCE_BUDGET',422);
+      const linkIds=links.filter(link=>link.status==='live'&&millis(link.verified_at)&&link.verified_at<=now&&platformUrl(link.url,link.provider)).map(link=>link.id);
+      const promotion=draftData('promotions',{enabled:true,previewEnabled:false,selectedPlatformIds:linkIds});
+      const number=(p?.maximum??0)+1,jobs=p?await pendingJobs(runtime.db,'promotions',trackId):[];
+      guards.push(...jobs.map(j=>rowGuard('station_publish_jobs',j)));
+      if(!p)writes.push(s.prepare('INSERT INTO station_promotions(track_id,created_at,updated_at) VALUES(?,?,?)').bind(trackId,now,now));
+      writes.push(revisionInsert(s,target,number,promotion,now,'sealed'),...cancelJobs(s,jobs,now),
+        s.prepare("UPDATE station_promotions SET status='published',published_revision=?,published_at=?,scheduled_at=NULL,edit_version=edit_version+1,updated_at=? WHERE track_id=? AND edit_version=?")
+          .bind(number,now,now,trackId,p?.h.edit_version??1));
+      homePromotions.set(trackId,{published:promotion});
+      prepared.push({trackId,revision:number,previousRevision:p?.h.published_revision??null,retainedDraft:p?.h.draft_revision??null,cancelledJobs:jobs.map(j=>j.id)});
+    }
+    const dependencies=await validateContentPublication(runtime,x,{...data},now,{homePromotions});
+    const jobs=await pendingJobs(runtime.db,'home',id),number=x.maximum+1;
+    const guard=combineGuards(...guards,dependencies,...jobs.map(j=>rowGuard('station_publish_jobs',j)));
+    if(guard.params.length>90)fail('STATION_REFERENCE_BUDGET',422);
+    writes.push(revisionInsert(s,x,number,data,now,'sealed'),...cancelJobs(s,jobs,now),
+      s.prepare("UPDATE station_home_configs SET status='published',published_revision=?,published_at=?,draft_revision=NULL,scheduled_at=NULL,edit_version=edit_version+1,updated_at=? WHERE id=? AND edit_version=?").bind(number,now,now,id,v));
+    return {...guard,writes,action:'station.home.apply',targetId:id,
+      summary:{type:'home',revision:number,previousRevision:x.h.published_revision,featuredTrackId:data.featured_track_id,preparedPromotions:prepared,cancelledJobs:jobs.map(j=>j.id)},
+      result:{...commandResult('home',id,number,v+1),status:'published'}};
+  });
 }
 export async function saveContentPlatform(runtime,id,input,context) {
   const v=id?requestedVersion(context):null,data=platformData(input,Date.now());if(id)id=musicId(id);

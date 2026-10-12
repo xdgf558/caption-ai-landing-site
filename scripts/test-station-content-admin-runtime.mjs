@@ -54,6 +54,23 @@ test('actual Worker Access, native D1/R2, flags and guarded publication workflow
   const home=await send('/api/station/content/home');assert.equal(home.body.home.music.id,track.id);assert.equal(home.r.headers.get('cache-control'),'no-store');
   await send(base+'/promotions/'+track.id+'/unpublish',{method:'POST',version:2,body:{revision:1}});assert.equal((await send('/api/station/content/home')).body.home.music,null);
  });
+ await t.test('one guarded homepage update saves selection and publishes its basic promotion in native D1',async()=>{
+  const path=base+'/home/'+homeId+'/apply',home=(await send(base+'/home/'+homeId)).body;
+  const command={method:'POST',version:home.editVersion,key:randomUUID(),body:{revision:(home.draft??home.published).revision,data:{featuredTrackId:track.id}}};
+  assert.equal((await send('/fixture-off'+path,command)).body.code,'STATION_CONTENT_ADMIN_DISABLED');
+  assert.equal((await send('/fixture-editor'+path,command)).r.status,403);
+  assert.equal((await send(path,{...command,origin:'https://wrong.test'})).r.status,403);
+  assert.equal((await send(path)).r.status,405);
+  assert.equal((await send(base+'/tracks/'+track.id+'/apply',command)).r.status,404);
+  const saved=await send(path,command);assert.equal(saved.r.status,200,JSON.stringify(saved.body));
+  assert.equal((await send(path,command)).body.replayed,true);
+  const current=(await send(base+'/home/'+homeId)).body;assert.equal(current.draft,null);assert.equal(current.published.data.featuredTrackId,track.id);
+  assert.equal((await send('/api/station/content/home')).body.home.music.id,track.id);
+  assert.equal((await send(base+'/promotions/'+track.id)).body.published.data.previewEnabled,false);
+  assert((await send(base+'/home-tracks')).body.items.some(item=>item.id===track.id));
+  assert.equal((await send(base+'/home-tracks',{method:'POST',body:{}})).r.status,405);
+  assert.equal((await send(path,{...command,key:randomUUID()})).r.status,409);
+ });
  await t.test('real fixture MP4 and image uploads become controlled clip/game publications, with current rights rechecked',async()=>{
   const metadata={originalLocale:'zh-Hans',title:{'zh-Hans':'本机合成发布测试'},summary:{'zh-Hans':'仅供验收'},story:''};
   const clip=(await send(base+'/clips',{method:'POST',body:{trackId:track.id,clipType:'short_video',data:{metadata}}})).body;
