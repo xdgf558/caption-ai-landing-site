@@ -10,6 +10,9 @@ import { seedStationPlatformCases } from './station-platform-fixture.mjs';
 import { seedStationVideoCases } from './station-video-fixture.mjs';
 import { stationGameMaterials } from './station-game-fixture.mjs';
 import { stationGameAssets } from './station-game-assets.mjs';
+import { createHash } from 'node:crypto';
+import sharp from 'sharp';
+import { homeFixture } from './station-content-fixture.mjs';
 
 const dist = fileURLToPath(new URL('../../dist/', import.meta.url));
 export async function stationMusicAssets(request) {
@@ -26,21 +29,42 @@ export async function stationMusicAssets(request) {
     return new Response(bytes, { headers: { 'Content-Type': type + (type.startsWith('text/') ? '; charset=utf-8' : ''), 'Content-Length': String(bytes.length), 'Cache-Control': 'no-store' } });
   } catch { return new Response(null, { status: 404 }); }
 }
-export async function createStationMusicRuntime({ platformCases = false, videoCases = false, gameCases = false, gameAssets = request => stationGameAssets(request) } = {}) {
+export async function createStationMusicRuntime({ platformCases = false, videoCases = false, gameCases = false, coverPreview = false, gameAssets = request => stationGameAssets(request) } = {}) {
+  // Local preview only: derivatives of the existing synthetic artwork, injected
+  // into the disposable Worker bundle. Never merge these into a release manifest.
+  const overlay = {}, files = new Map();
+  if (coverPreview) {
+    const source = await readFile(new URL('../fixtures/station-redesign/assets/gentle-station/music-cover.webp', import.meta.url));
+    const fingerprint = bytes => createHash('sha256').update(bytes).digest('hex');
+    const variants = [];
+    for (const width of [768, 192]) {
+      const bytes = await sharp(source).resize({ width, height: width, fit: 'inside', withoutEnlargement: true }).webp({ quality: 75 }).toBuffer();
+      const sha256 = fingerprint(bytes), path = '/api/music/__cover-files/' + sha256 + '.webp';
+      files.set(path, bytes); variants.push({ path, sha256, bytes: bytes.length, sourceBytes: source.length, contentType: 'image/webp' });
+    }
+    overlay[fingerprint(source)] = { ...variants[0], card: variants[1] };
+  }
+  const coverAssets = request => {
+    const bytes = files.get(new URL(request.url).pathname);
+    return bytes ? new Response(request.method === 'HEAD' ? null : bytes, { headers: { 'Content-Type': 'image/webp', 'Content-Length': String(bytes.length) } }) : stationMusicAssets(request);
+  };
   const output = await build({ entryPoints: [fileURLToPath(new URL(gameCases ? 'station-game-runtime-worker.js' : 'station-music-runtime-worker.js', import.meta.url))],
-    bundle: true, format: 'esm', platform: 'browser', write: false, loader: { '.wasm': 'binary' } });
+    bundle: true, format: 'esm', platform: 'browser', write: false, loader: { '.wasm': 'binary' },
+    plugins: coverPreview ? [{ name: 'local-cover-preview-only', setup(b) { b.onLoad({ filter: /displayCoverManifest\.js$/ }, () =>
+      ({ contents: 'export const musicDisplayCoverManifest=' + JSON.stringify(overlay), loader: 'js' })); } }] : [] });
   const mf = new Miniflare({ modules: true, script: output.outputFiles[0].text,
     compatibilityDate: '2026-05-17', host: '127.0.0.1', port: 0,
     d1Databases: { MUSIC_DB: 'station-music-pages-only', WAITLIST_DB: 'station-music-pages-readers-only', EMPTY_DB: 'station-music-pages-empty' },
     r2Buckets: { MUSIC_BUCKET: 'station-music-pages-only' },
     bindings: { MUSIC_PUBLIC_ENABLED: 'true', MUSIC_VIP_DELIVERY_ENABLED: 'true',
       MUSIC_RATE_LIMIT_SECRET: 'station-music-pages-local-test-secret-no-production' },
-    serviceBindings: { ASSETS: gameCases ? gameAssets : stationMusicAssets },
+    serviceBindings: { ASSETS: gameCases ? gameAssets : coverPreview ? coverAssets : stationMusicAssets },
     outboundService: () => new Response('Outbound network disabled in local music preview', { status: 403 }) });
   try {
     const db = await mf.getD1Database('MUSIC_DB'), reader = await mf.getD1Database('WAITLIST_DB'), bucket = await mf.getR2Bucket('MUSIC_BUCKET');
     for (const group of migrationStatements().slice(0, -1)) await db.batch(group.statements.map(sql => db.prepare(sql)));
     const content = await seedStationMusicPages(db, bucket, { videoCases, gameCases });
+    if (coverPreview) await homeFixture(db);
     const gameScenarios = gameCases ? { ...content.game, ...await stationGameMaterials() } : null;
     const videoScenarios = videoCases ? await seedStationVideoCases(db, bucket, content) : null;
     const platformScenarios = platformCases ? await seedStationPlatformCases(db, content) : null;
