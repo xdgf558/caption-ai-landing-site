@@ -138,6 +138,50 @@ test('revision conflict can be cancelled or explicitly discarded, reloading the 
   assert.equal(f.state().current.editVersion, 3); assert.equal(f.state().dirty, false);
   assert.equal(api.calls.filter(call => call.method === 'PATCH').at(-1).etag, '"edit-2"');
 });
+for (const failure of ['network', 'unavailable']) test('workspace retry establishes the first identity after initial status ' + failure, async () => {
+  const api = contentApi(), calls = []; let available = false;
+  const request = async (path, options = {}) => {
+    calls.push({ path, ...options });
+    if (path === '/status' && !available) throw failure === 'network'
+      ? Object.assign(new Error('network unavailable'), { uncertain: true })
+      : Object.assign(new Error('STATION_CONTENT_UNAVAILABLE'), { code: 'STATION_CONTENT_UNAVAILABLE', status: 503, uncertain: true });
+    return api.request(path, options);
+  };
+  const f = await adminScriptFixture('adminStationContent.js', { search: '?view=tracks&owner=' + target, request });
+  assert.equal(f.state().current, null); assert.equal(f.node('content-fields').disabled, true);
+  assert.equal(f.node('content-status').dataset.error, 'true'); assert.equal(f.node('content-reload').disabled, false);
+  assert.equal(f.storageData.size, 0); assert.deepEqual(calls.map(c => c.path), ['/status']);
+  // A failed retry must stay recoverable without navigating away or reloading.
+  await f.node('content-reload').click(); await f.idle();
+  assert.equal(f.state().current, null); assert.equal(f.node('content-fields').disabled, true);
+  assert.equal(f.node('content-reload').disabled, false); assert.deepEqual(calls.map(c => c.path), ['/status', '/status']);
+  available = true; await f.node('content-reload').click(); await f.idle();
+  assert.equal(calls.filter(c => c.path === '/status').length, 3);
+  assert(calls.some(c => c.path === '/tracks/' + target)); assert(calls.some(c => c.path.startsWith('/assets?ownerId=' + target)));
+  assert.equal(f.state().current.id, target); assert.equal(f.state().dirty, false);
+  assert.equal(f.node('content-title').value, '目标作品'); assert.equal(f.node('content-fields').disabled, false);
+  assert.equal(f.node('content-status').dataset.error, 'false'); assert.match(f.node('content-status').textContent, /服务已就绪/);
+  assert.equal(f.node('content-reload-confirm').hidden, true); assert.equal(f.node('content-reload').focused, true);
+  assert.equal(f.storageData.size, 1); assert.equal(f.state().pending, null); assert(calls.every(c => !c.method || c.method === 'GET'));
+});
+test('connected workspace reload still rejects a changed actor before discarding local edits or reading content', async () => {
+  const api = contentApi(), calls = []; let actor = 'test@example.test';
+  const request = async (path, options = {}) => {
+    calls.push({ path, ...options });
+    return path === '/status' ? { actorId: actor, role: 'publisher' } : api.request(path, options);
+  };
+  const f = await adminScriptFixture('adminStationContent.js', { search: '?view=tracks&owner=' + target, request });
+  f.node('content-title').value = '原管理员的未保存修改'; await f.node('content-form').fire('input', { target: f.node('content-title') });
+  const previousCalls = calls.length, previousJournal = [...f.storageData];
+  actor = 'other@example.test'; await f.node('content-reload').click(); await f.node('content-reload-discard').click(); await f.idle();
+  assert.deepEqual(calls.slice(previousCalls).map(c => c.path), ['/status']);
+  assert.equal(f.state().current.id, target); assert.equal(f.state().dirty, true);
+  assert.equal(f.node('content-title').value, '原管理员的未保存修改'); assert.equal(f.node('content-status').dataset.error, 'true');
+  assert.equal(f.node('content-reload-confirm').hidden, false); assert.deepEqual([...f.storageData], previousJournal);
+  actor = 'test@example.test'; await f.node('content-reload-discard').click(); await f.idle();
+  assert.equal(f.state().dirty, false); assert.equal(f.node('content-title').value, '目标作品');
+  assert.equal(f.node('content-status').dataset.error, 'false'); assert.equal(f.node('content-reload-confirm').hidden, true);
+});
 test('uncertain writes keep their original journal and cannot be discarded through reload', async () => {
   const api = contentApi(), f = await adminScriptFixture('adminStationContent.js', { search: '?view=tracks&owner=' + target, request: api.request });
   api.uncertain(); f.node('content-reason').value = '回执丢失夹具'; await f.node('content-form').fire('input', { target: f.node('content-title') });

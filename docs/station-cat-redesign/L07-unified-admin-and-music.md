@@ -69,3 +69,11 @@ staging 共享模块只补入已审查的 `redesign/adminContentImages.js`，静
 新增 3 项真实脚本事件回归覆盖：首批之外的歌曲定位与平台提交归属、明显入口的当前歌曲和未保存保护、未知 owner 不读取其他歌曲的平台。后台专项合计 58 项、完整 npm test、品牌与游戏候选构建均通过。验证摘要与源文件哈希见 `L07-evidence/platform-entry-validation.json`；旧审查修订的日志继续只代表其原提交。
 
 桌面与手机视口验证主导航及歌曲直达链接，控制台未记录 error。截图为 `platform-entry-desktop.png`、`platform-entry-mobile.png`；图中数据为本机夹具，未向生产登记平台链接。当前提交的托管 CI 另以 PR 检查结果为准。
+
+## 首次连接失败后的工作区重试
+
+针对 `38f54e9` 的复审，先用实际入口脚本和原内容控制器复现：首次 `/status` 网络失败或返回 503 后，服务恢复仍只核对身份、不读取内容。原因是未完成 `connect()` 时控制器尚无管理员身份，不能使用 `verifyActor()` 比较。`reloadEditor()` 现在仅在工作区已成功建立身份时执行原身份核验；首次连接未成功时，按钮继续走 `connect()`，恢复原管理员及操作日志后再读取作品。已经连接的工作区仍须核对同一管理员，才能丢弃修改并读取当前版本。
+
+新增 3 项实际按钮事件回归：首次网络失败、首次 503（均包括一次仍失败的重试，随后服务恢复）、已有连接后身份变化阻止丢弃草稿与内容读取。补丁前前两项失败、身份保护项通过；修复后 3 项全部通过。测试核对目标作品、字段解锁、只读请求、恢复日志、错误状态与焦点，原版本冲突及未知写入保护也继续通过。
+
+本次 `npm run test:redesign:content-admin` 共 **61 项通过**（含 19 项导航入口回归）；`npm run build:station:first-launch` 无空正文选项通过，60 个 HTML、408 个文件，兼容清单保留。完整日志为 `L07-evidence/workspace-retry-tests.log` 与 `L07-evidence/workspace-retry-build.log`。本次未重复上传素材、发布歌曲或部署后台；当前头完整托管 CI 单独核对，之前的完整 npm test 和 CI 记录仍只代表各自提交。

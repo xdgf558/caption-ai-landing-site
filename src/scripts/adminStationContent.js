@@ -214,7 +214,12 @@ for(const [id,actionName]of [['content-publish','publish'],['content-unpublish',
 $('content-preflight').addEventListener('click',()=>{void work(async()=>{const revision=(current.draft??current.published).revision;const result=await request('/'+module+'/'+current.id+'/preflight?revision='+revision);renderPreview(result);status('当前关联与资源已核对。正式公开时仍会重新校验。');});});
 $('content-preview-width').addEventListener('change',()=>{$('content-preview').dataset.width=$('content-preview-width').value;});
 $('content-add-publication').addEventListener('click',()=>{void work(async()=>{await controller.mutate('/clips/'+current.id+'/publications','POST',{channel:$('content-publication-channel').value,postId:$('content-post-id').value,url:$('content-post-url').value,publishedAt:sgTime($('content-post-time').value),reason:operationReason()},current.editVersion);await reloadObject();status('外部发布记录已登记。');});});
-async function reloadEditor(){identity=await controller.verifyActor();if(current&&!newObject){await reloadObject(current.id);status('已重新读取此作品的最新版本，请核对后继续编辑。');}else{dirty=false;await connect();}show('content-reload-confirm',false);}
+async function reloadEditor(){
+ // A failed initial /status has no actor to compare against. Reconnect below;
+ // an established workspace must still verify its actor before discarding edits.
+ if(identity)identity=await controller.verifyActor();
+ if(current&&!newObject){await reloadObject(current.id);status('已重新读取此作品的最新版本，请核对后继续编辑。');}else{dirty=false;await connect();}show('content-reload-confirm',false);
+}
 $('content-reload').addEventListener('click',()=>{if(busy)return;if(controller?.pending()){status('请先核对原操作的结果，再重新读取。',true);return;}if(dirty){show('content-reload-confirm',true);$('content-reload-cancel').focus();return;}void work(reloadEditor);});
 $('content-reload-cancel').addEventListener('click',()=>{if(busy)return;show('content-reload-confirm',false);$('content-reload').focus();});
 $('content-reload-discard').addEventListener('click',()=>{if(busy||controller?.pending())return;void work(reloadEditor);});
