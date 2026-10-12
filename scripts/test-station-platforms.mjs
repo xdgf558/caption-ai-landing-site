@@ -7,12 +7,48 @@ import { mountStationPlatforms, observeStationPlatform, copyStationPlatform } fr
 import { handleStationContent } from '../src/redesign/publicHttp.js';
 import { contentFixture, platformFixture, now, base } from './helpers/station-content-fixture.mjs';
 import { fixtureId } from './helpers/station-redesign-database.mjs';
+import { platformUrl } from '../src/redesign/publicValidation.js';
 
 const fixtures = [];
 afterEach(() => fixtures.splice(0).forEach(f => f.close()));
 const link = { id: fixtureId(7200), provider: 'apple_music', status: 'live', href: 'https://music.apple.com/sg/album/synthetic-fixture/0', verifiedAt: new Date(now - 1).toISOString() };
 const track = { id: fixtureId(7201), platforms: [link] };
 const row = { id: link.id, track_id: track.id, provider: link.provider, status: link.status, url: link.href, verified_at: now - 1, territories_json: '["*"]', sort_order: 0 };
+
+test('NetEase hash song links retain the exact ID in canonical anchors and copied URLs', async () => {
+  for (const id of ['1', '3438977672', '9007199254740993', '99999999999999999999']) {
+    const source = 'https://music.163.com/#/song?id=' + id, canonical = 'https://music.163.com/song?id=' + id;
+    assert.equal(platformUrl(source, 'netease'), canonical);
+    assert.equal(platformUrl(canonical, 'netease'), canonical);
+    const entry = { ...link, provider: 'netease', href: source }, view = { ...track, platforms: [entry] };
+    assert.equal(stationPlatformLinks(view, now)[0].href, canonical);
+    const html = musicPlatforms(view, 'en');
+    assert(html.includes('href="' + canonical + '"')); assert(!html.includes('/#/song'));
+    let copied;
+    assert.equal((await copyStationPlatform(source, 'netease', { clipboard: { writeText: value => { copied = value; return Promise.resolve(); } } })).status, 'copied');
+    assert.equal(copied, canonical);
+  }
+});
+test('NetEase fragment compatibility rejects ambiguous routes, extra parameters and unsafe origins', () => {
+  for (const url of [
+    'http://music.163.com/#/song?id=3438977672', '//music.163.com/#/song?id=3438977672',
+    'https://music.163.com.evil.test/#/song?id=3438977672', 'https://user:pass@music.163.com/#/song?id=3438977672',
+    'https://music.163.com:8443/#/song?id=3438977672', 'https://music.163.com/login#/song?id=3438977672',
+    'https://music.163.com/?id=1#/song?id=3438977672', 'https://music.163.com/?token=secret#/song?id=3438977672',
+    'https://music.163.com/#/song?id=1&id=3438977672', 'https://music.163.com/#/song?id=3438977672&redirect=https://evil.test',
+    'https://music.163.com/#/song?id=3438977672&token=secret', 'https://music.163.com/#/song?id=3438977672&unused=value',
+    'https://music.163.com/#/song?id=3438977672#extra', 'https://music.163.com/#/playlist?id=3438977672',
+    'https://music.163.com/#/song?id=', 'https://music.163.com/#/song?id=0', 'https://music.163.com/#/song?id=01',
+    'https://music.163.com/#/song?id=-1', 'https://music.163.com/#/song?id=1e5', 'https://music.163.com/#/song?id=%31',
+    'https://music.163.com/#/song?id=999999999999999999999', 'https://music.163.com/#/song?id=1\n',
+    'https://music.163.com/#/song?id=1%26redirect=evil', 'https://music.163.com/#/song?id=1\\evil',
+    'https://music.163.com/#//evil.test/song?id=1', 'https://music.163.com/#/song?%69d=1',
+    'https://music.163.com/song?id=3438977672#extra', 'https://y.music.163.com/#/song?id=3438977672'
+  ]) assert.equal(platformUrl(url, 'netease'), null, url);
+  assert.equal(platformUrl('https://music.163.com/#/song?id=3438977672', 'spotify'), null);
+  assert.equal(platformUrl('https://open.spotify.com/#/song?id=3438977672', 'spotify'), null);
+  assert.equal(platformUrl('https://music.163.com/song?id=3438977672&token=secret', 'netease'), null);
+});
 
 test('all providers use verified HTTPS entries in the operator order, independent of device preference', () => {
   const links = [link, { ...link, id: fixtureId(7202), provider: 'qishui', href: 'https://music.douyin.com/track/synthetic' },

@@ -25,6 +25,22 @@ test('actual Worker Access, native D1/R2, flags and guarded publication workflow
   const key=randomUUID(),command={method:'POST',key,body:{revision:1,reason:'本机公开'}};const published=await send(base+'/tracks/'+track.id+'/publish',command);assert.equal(published.r.status,200);const replay=await send(base+'/tracks/'+track.id+'/publish',command);assert.equal(replay.body.replayed,true);assert.equal(replay.body.editVersion,2);
   const publicTrack=await send('/api/station/content/tracks/'+track.slug);assert.equal(publicTrack.r.status,200);assert.equal(publicTrack.body.track.preview,null);assert.doesNotMatch(JSON.stringify(publicTrack.body),/object_key|sha256|rights_basis/);
  });
+ await t.test('NetEase pasted hash links save canonically through Access and D1, retaining verification and replay guards',async()=>{
+  const canonical='https://music.163.com/song?id=3438977672',body={trackId:track.id,provider:'netease',status:'live',url:'https://music.163.com/#/song?id=3438977672',verifiedAt:Date.now()-1000};
+  assert.equal((await send(base+'/platforms',{method:'POST',body:{...body,verifiedAt:null}})).body.code,'STATION_PLATFORM_VERIFICATION_REQUIRED');
+  assert.equal((await send('/fixture-editor'+base+'/platforms',{method:'POST',body})).r.status,403);
+  const command={method:'POST',key:randomUUID(),body},saved=await send(base+'/platforms',command);
+  assert.equal(saved.r.status,200,JSON.stringify(saved.body));
+  const replay=await send(base+'/platforms',command);assert.equal(replay.body.id,saved.body.id);assert.equal(replay.body.replayed,true);
+  const entries=(await send(base+'/platforms?trackId='+track.id)).body.items;
+  assert.equal(entries.length,1);assert.equal(entries[0].url,canonical);assert.equal(entries[0].verifiedAt,body.verifiedAt);
+  assert.equal((await send('/api/station/content/tracks/'+track.slug)).body.track.platforms[0].href,canonical);
+  const invalid=await send(base+'/platforms/'+saved.body.id,{method:'PATCH',body:{...body,url:body.url+'&redirect=https://evil.test'}});
+  assert.equal(invalid.r.status,422);assert.equal(invalid.body.code,'STATION_PLATFORM_URL_INVALID');
+  assert.equal((await send(base+'/platforms?trackId='+track.id)).body.items[0].url,canonical);
+  assert.equal((await send(base+'/platforms/'+saved.body.id,{method:'PATCH',body:{...body,status:'removed'}})).r.status,200);
+  assert.deepEqual((await send('/api/station/content/tracks/'+track.slug)).body.track.platforms,[]);
+ });
  await t.test('one concurrent save wins; stale mutation and publication never change current pointer',async()=>{
   const command={method:'PATCH',version:2,body:{revision:1,data,reason:'本机编辑'}};const race=await Promise.all([send(base+'/tracks/'+track.id,command),send(base+'/tracks/'+track.id,command)]);assert.deepEqual(race.map(r=>r.r.status).sort(),[200,409]);
   const current=await send(base+'/tracks/'+track.id);assert.equal(current.body.draft.revision,2);assert.equal(current.body.published.revision,1);
