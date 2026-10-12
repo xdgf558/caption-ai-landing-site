@@ -119,7 +119,8 @@ test('initial catalogue covers load eagerly with one priority image; detail uses
 test('generated card/display files match their fingerprints and source identity, with card dimensions limited to 192px', async () => {
   assert(Object.values(musicDisplayCoverManifest).length >= 11);
   for (const row of Object.values(musicDisplayCoverManifest)) {
-    for (const [size, item] of [['display', row], ['card', row.card]]) {
+    assert(row.path || row.card, 'at least one beneficial variant');
+    for (const [size, item] of [...(row.path ? [['display', row]] : []), ...(row.card ? [['card', row.card]] : [])]) {
       assert(item); const bytes = await readFile(new URL('../public' + item.path, import.meta.url));
       assert.equal(hash(bytes), item.sha256); assert.equal(bytes.length, item.bytes); assert(item.bytes < item.sourceBytes);
       const metadata = await sharp(bytes).metadata(); assert(metadata.width <= (size === 'card' ? 192 : 768));
