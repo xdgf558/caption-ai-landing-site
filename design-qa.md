@@ -1,15 +1,35 @@
-# L02 品牌维护页视觉核对
+# Station Cat 清晰编辑台 — 设计 QA
+
+source visual truth: `docs/station-cat-redesign/L07-evidence/selected-admin-design.png`，本轮第 3 个显示结果，原始 1487 × 1058。
+
+implementation: `http://127.0.0.1:4224/admin-v2/`，Codex in-app browser。最终截图 `docs/station-cat-redesign/L07-evidence/admin-desktop-final.jpg`。
+
+viewport: desktop CSS 1440 × 1024，输出 1440 × 1024，密度 1；参考归一到相同尺寸。来源为生成图，没有浏览器 DPR，横/纵缩放约 0.968/0.968。早期 getScreenshot 捕获了 999 像素高的可见区；最终比较改用完整 1024 像素捕获，不据早期底部裁剪判断设计漂移。手机 CSS 390 × 844，输出 390 × 844，使用正常 viewport capture 保留滚动状态。
+
+state: 简中、浅色工作区、左侧深色导航、全部类型、第一首选中，五份歌曲草稿、一个公开游戏。夹具不连接生产。示意的 12 首计数、猫咪示意封面、500 MB 和混合文件类型不作为真实运营规则；示例画面复用仓库艺术素材，真实页面按关联资产读取原作品封面。当前线上 11 首已公开与本机草稿状态分开。
+
+## 比较与修正记录
+
+第一轮 `comparison-first.png` 把来源与实现放在同一输入中比较，随后检查实际尺寸。P1：继承的 label 布局令搜索框折成两层；P2：编辑器标签 margin、标题栏 padding、折叠区间距令保存按钮落到 y=1219；P2：logo 的 brightness 处理抹掉了眼睛。修正搜索 flex、输入字体与间距、去掉继承 padding/margin，次要语言/播放设置收进详情，保留真实操作说明；logo 采用提供的品牌图并保留眼睛。
+
+第二轮 `comparison-second.png` 确认三栏与首屏操作恢复，继续放大检查字重、状态色和右侧行距。导航/状态字号补齐，技术提示和权利状态分别着色；长标题最多两行。运行检查另修复控制函数作用域及缺少 jobs/revisions 的报错。手机检查发现顶部导航可能遮住滚动目标，补 scroll-margin；菜单 hover/focus 保持深色背景，关闭导航为 inert，预览提示改为手机整行。空说明的焦点在控件解锁后进入文本域。
+
+最终 `comparison-final.png` 是相同尺寸、相同选择状态的并排输入，已打开检查。另打开 `comparison-rail.png`、`comparison-catalog.png`、`comparison-editor.png` 同一输入中的局部配对；单独查看图片不被记作并排比较。
+
+## 五项保真检查
+
+- 字体：Noto Sans SC / PingFang SC / 系统 CJK 回退，主标题 36px、编辑标题 26px、作品标题 17px；层级、行高和换行与来源接近。生成图的具体字体无法识别，光学字重差异为 P3。
+- 间距：220px 导航、约 800px 中区、420px 编辑区；64px 方形缩略图、90px 列表行、44px 表单控件，首屏保存/公开按钮可见，移动端选择后标题约 y=80，无横向溢出。没有用浏览器外框或密度差异作为缺陷。
+- 颜色：深蓝导航、纸色背景、紫色选中/主按钮、音乐/游戏类别色和绿色公开态保持原意。权利状态与技术记录分开，禁用/焦点态可识别。
+- 图像：品牌标记来自已有素材，作品图片来自既有图像和受控资源，清晰方形裁切；图中的猫咪示意封面不替代原作品。图标选用匹配线条风格的既有 Lucide 包，未手绘 SVG、div 画图或用 emoji 代替素材。参考了 [Lucide](https://lucide.dev/icons)、[Phosphor](https://phosphoricons.com/) 与 [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)，沿用现有依赖。
+- 文案：保留作品内容、资料与素材、标题、艺名等主要文案；计数按已读取记录，文件规则按真实用途。完整音频沿用旧权限，试听独立配置，技术校验不等同权利或公开。保存的新草稿与仍公开的旧版明确区分。
+
+## 功能与残余边界
+
+搜索、类型筛选、空态、未保存切换保护、说明必填、草稿保存、素材登记、预检、公开、截图上传和对应音乐素材标签已在浏览器操作。手机菜单、Escape、横向溢出与说明焦点验证通过；最终权利视图与素材深链接控制台无错误。
+
+桌面、手机证据分别为 `admin-desktop-final.jpg`、`admin-mobile-list.jpg`、`admin-mobile-editor.jpg`；`local-publish-result.jpg` 与 `local-media-result.jpg` 是合成流程证据。保留旧系统的账号/订单合同，未以空夹具声称生产会员、订单或云存档验收。
+
+无剩余 P0/P1/P2。P3：图标笔画及系统字体的细微差异；真实内容比生成示意拥有更多语言、说明和回退选项，位于次要详情中。尚无真机或 VoiceOver 证据。
 
 final result: passed
-
-核对范围是用户已选温柔小站壳的维护状态；维护文案、短页面和继续游戏/会员按钮是本批有意新增的状态，不把它宣称为首页全部内容的 1:1 复刻。参考图使用 T04 保存的原用户附件 `T04-evidence/gentle-station/source.png`（1448×1086）。浏览器实际打开独立本机回退 Worker 和 L01 精简 Assets，页面有合成环境标识。
-
-打开参考图和最终截图，按同样的 1448×1086 视口比较共同的顶栏与 hero；[并排图](shared-header-hero-comparison.jpg)仅去除用户原图的浏览器外框及本机预览标识，不调整组件比例。五项导航、品牌标志、共享字体、按钮、图片位置与原已审查壳一致；沿用 T04 重建的同一插画，没有为维护状态重新生成素材。
-
-最初发现两项 P2：维护页沿用默认音乐高亮，顶部“進入小站”缺少对应 anchor。已指定首页高亮并补 `station-work`，重新构建、重启本机预览、观察 DOM 和截图确认修复。未留下新的 P0/P1/P2。
-
-[桌面截图](maintenance-desktop.jpg)、[390px 手机截图](maintenance-mobile.jpg)和[375px 日语截图](maintenance-ja-375.jpg)均为当前源码的 CUA 完整页面捕获。桌面与两种手机视口未出现横向溢出，手机两个主要按钮高 44px。会员按钮实际进入原账号表单；游戏按钮实际进入 `/games/cat-life/` 运行页。日语“继续游戏”按 Tab 后焦点进入“会员信息”，outline 为 solid。维护页没有 audio/video/iframe，最后检查的维护页控制台无错误或警告。
-
-语言菜单展开后显示四个真实地址。第一次通过原标签切换日语遇到浏览器调试连接超时；在同一浏览器创建新标签、打开已观察到的日语地址后核对通过，不把原标签的失败记录当成成功。临时 viewport 覆盖已重置，最终保留繁中预览标签。
-
-原 T04 插画笔触及局部构图差异继续作为已记录 P3；真机、VoiceOver 和生产页面性能仍需单独验收。本报告只覆盖新增维护页，不重复认定 T14/T21 的生产账号、游戏云冲突或可访问性通过。

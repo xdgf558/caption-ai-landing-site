@@ -357,7 +357,7 @@ assert.match(workerSource, /triggerType: 'retry'/);
 assert.match(workerSource, /source\.consecutive_failures, 0\) > 0/);
 assert.match(workerSource, /syncSignalRetrySuccessAlert\(options\.env, run\)/);
 
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 assert.match(adminSource, /Automation phase 6/);
 assert.match(adminSource, /id="signal-operations-health"/);
 assert.match(adminSource, /id="signal-alerts-list"/);

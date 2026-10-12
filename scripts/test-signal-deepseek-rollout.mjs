@@ -291,7 +291,7 @@ try {
     globalThis.fetch = originalFetch;
   }
 
-  const adminPage = read('src/pages/admin-v2/index.astro');
+  const adminPage = read('src/pages/admin-v2/services/index.astro');
   const workerSource = read('src/worker.js');
   assert.match(adminPage, /id="signal-model-rollout-title"/);
   assert.match(adminPage, /测试所选候选/);

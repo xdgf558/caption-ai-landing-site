@@ -813,7 +813,7 @@ for (const method of ['GET', 'POST']) {
   assert.equal(protectedResponse.status, 401);
 }
 
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 assert.match(adminSource, /id="signal-candidate-filters"/);
 assert.match(adminSource, /id="signal-candidates-rescore"/);
 assert.match(adminSource, /action: 'rescore'/);

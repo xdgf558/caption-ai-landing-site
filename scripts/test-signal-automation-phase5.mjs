@@ -284,7 +284,7 @@ assert.equal(todayCandidatePayload.date, '2026-07-23');
 assert.equal(todayCandidatePayload.windowHours, 0);
 assert.ok(todayCandidateDb.boundParams.some((params) => params.filter((value) => value === '2026-07-23').length === 2));
 
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 assert.match(adminSource, /<h3 id="signal-candidates-title">今日候选<\/h3>/);
 assert.doesNotMatch(adminSource, /id="signal-candidate-window"/);
 assert.match(adminSource, /params\.set\('date', todayDateInput\(\)\)/);

@@ -94,6 +94,7 @@ export async function handleMusicAdmin(request, env, authorize) {
     }
     if(path==='/admin/api/music/site-content'||path.startsWith('/admin/api/music/site-content/')) {
       const result=await handleContentAdmin(request,env,actorId,query,readBody);
+      if(result instanceof Response)return result;
       return response(request,200,{ok:true,...result},result.editVersion?{ETag:`"edit-${result.editVersion}"`}:{});
     }
     const siteUpload = path === '/admin/api/music/site-uploads' || path.startsWith('/admin/api/music/site-uploads/');

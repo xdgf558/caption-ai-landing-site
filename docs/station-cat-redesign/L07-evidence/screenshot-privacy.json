@@ -1,0 +1,80 @@
+{
+  "checks" : [
+    {
+      "bytes" : 1433175,
+      "emailMatches" : 0,
+      "jwtMatches" : 0,
+      "path" : "selected-admin-design.png",
+      "sha256" : "750203e4d8b661b9f4410fda5a1af9aaa0704c3d121cedf09ba359242fb30985",
+      "visuallyReviewed" : true
+    },
+    {
+      "bytes" : 114886,
+      "emailMatches" : 0,
+      "jwtMatches" : 0,
+      "path" : "admin-desktop-first.jpg",
+      "sha256" : "1d1e94c3972fb1400394094506e1b011140fc0ff09d69b44da09baa939e5990d",
+      "visuallyReviewed" : true
+    },
+    {
+      "bytes" : 119901,
+      "emailMatches" : 0,
+      "jwtMatches" : 0,
+      "path" : "admin-desktop-second.jpg",
+      "sha256" : "2ed156b4209732c19ccfb6fba7db9a403aa6de9589a4276722a01eca5b53d38d",
+      "visuallyReviewed" : true
+    },
+    {
+      "bytes" : 120538,
+      "emailMatches" : 0,
+      "jwtMatches" : 0,
+      "path" : "admin-desktop-final.jpg",
+      "sha256" : "59744e2f0149badf45a31d42a948658af54be327285da27a37521ff555eac14c",
+      "visuallyReviewed" : true
+    },
+    {
+      "bytes" : 33457,
+      "emailMatches" : 0,
+      "jwtMatches" : 0,
+      "path" : "admin-mobile-list.jpg",
+      "sha256" : "63ad98521a19827e685b3e07ab73ab493e72092aabfaf1558e4c78ab05c4563f",
+      "visuallyReviewed" : true
+    },
+    {
+      "bytes" : 34849,
+      "emailMatches" : 0,
+      "jwtMatches" : 0,
+      "path" : "admin-mobile-editor.jpg",
+      "sha256" : "bd750a020d26cd2ad9675f504a41e9495bf018cec85d07165f6c8fc309b5cb89",
+      "visuallyReviewed" : true
+    },
+    {
+      "bytes" : 115637,
+      "emailMatches" : 0,
+      "jwtMatches" : 0,
+      "path" : "local-publish-result.jpg",
+      "sha256" : "db9c75487e2d81d688c694cbbb98e03233c10c00fd322dbc5ae9d409d070c1b7",
+      "visuallyReviewed" : true
+    },
+    {
+      "bytes" : 90422,
+      "emailMatches" : 0,
+      "jwtMatches" : 0,
+      "path" : "local-media-result.jpg",
+      "sha256" : "fc88328ba8bede083c34e943f7d3bfb15df55019d48c91f96c538ea9b6683220",
+      "visuallyReviewed" : true
+    },
+    {
+      "bytes" : 79288,
+      "emailMatches" : 0,
+      "jwtMatches" : 0,
+      "path" : "production-music-catalog.jpg",
+      "sha256" : "1ba77b0bf9e82d237a90eafc84aba08305293e652ac7113490c0c5e54ed1a7e2",
+      "visuallyReviewed" : true
+    }
+  ],
+  "containsActualAccountsOrdersOrSaves" : false,
+  "method" : "Exact-image visual review plus offline Apple Vision OCR; recognized text is not logged or uploaded.",
+  "rawProductionAdminScreenshotExcluded" : true,
+  "recordedAt" : "2026-10-12T04:25:07Z"
+}

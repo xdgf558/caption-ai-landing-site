@@ -1,0 +1,575 @@
+{
+  "recordedAt": "2026-10-12T03:05:00.529Z",
+  "checks": 80,
+  "songs": 11,
+  "fourLocaleCataloguesPassed": true,
+  "controlledResourcesPassed": true,
+  "anonymousExistingFreeHandshakesPassed": true,
+  "boundedAudioRangeBytes": 128,
+  "homepageMusicStillEmpty": true,
+  "previewAndVideoStillDisabled": true,
+  "archivedSongExcluded": true,
+  "legacyEntrypointsStillClosed": true,
+  "results": [
+    {
+      "path": "/api/station/content/tracks",
+      "method": "GET",
+      "status": 200,
+      "bytes": 7905,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/music/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 44676,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks",
+      "method": "GET",
+      "status": 200,
+      "bytes": 7993,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 45125,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks",
+      "method": "GET",
+      "status": 200,
+      "bytes": 7933,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/en/music/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 45052,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks",
+      "method": "GET",
+      "status": 200,
+      "bytes": 7933,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/ja/music/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 45907,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-accbd4b2-a1e9-41fa-a345-6a60d49bfc31",
+      "method": "GET",
+      "status": 200,
+      "bytes": 1221,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/track-accbd4b2-a1e9-41fa-a345-6a60d49bfc31/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 31554,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/9cb301ae-931b-401b-bcb5-bc3df3ae04e3",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/207bbcd8-e7b0-48ba-a287-e18ba1aff259",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-accbd4b2-a1e9-41fa-a345-6a60d49bfc31/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 208,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-accbd4b2-a1e9-41fa-a345-6a60d49bfc31/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-ac39c3ba-dd4c-4d27-acea-528e29bf2cad",
+      "method": "GET",
+      "status": 200,
+      "bytes": 1164,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/track-ac39c3ba-dd4c-4d27-acea-528e29bf2cad/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 31428,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/27759dfc-a27e-4fbf-9fea-e5a9249eed9f",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/ea4b3ae7-7fca-46aa-8e38-1d44599aa743",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-ac39c3ba-dd4c-4d27-acea-528e29bf2cad/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 208,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-ac39c3ba-dd4c-4d27-acea-528e29bf2cad/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-e5711d15-f3e9-4444-929e-3ce2f763c175",
+      "method": "GET",
+      "status": 200,
+      "bytes": 1149,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/track-e5711d15-f3e9-4444-929e-3ce2f763c175/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 31404,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/259b1373-730d-4dad-bf63-10f96229d09a",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/cf9ef349-73f8-4d59-a452-eb3f2d9ce802",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-e5711d15-f3e9-4444-929e-3ce2f763c175/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 208,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-e5711d15-f3e9-4444-929e-3ce2f763c175/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/zhe-ci-zuo-zai-tai-xia",
+      "method": "GET",
+      "status": 200,
+      "bytes": 1122,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/zhe-ci-zuo-zai-tai-xia/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 31154,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/bbdca5c7-fabd-44f7-a03e-c688f9120e11",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/b011daff-6b47-4c90-916f-82f7a4df8d88",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/zhe-ci-zuo-zai-tai-xia/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 188,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/zhe-ci-zuo-zai-tai-xia/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-3b1b564f-081b-4a6e-8acc-dba77fbb1de1",
+      "method": "GET",
+      "status": 200,
+      "bytes": 865,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/track-3b1b564f-081b-4a6e-8acc-dba77fbb1de1/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 30540,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/ef3695fc-342f-4723-aa39-be3c8ed081b6",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/92d5c7e4-9456-46d5-8f52-2a0a3abcef4f",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-3b1b564f-081b-4a6e-8acc-dba77fbb1de1/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 208,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-3b1b564f-081b-4a6e-8acc-dba77fbb1de1/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-281e0775-bf07-486b-b9fb-ef5be09867a3",
+      "method": "GET",
+      "status": 200,
+      "bytes": 862,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/track-281e0775-bf07-486b-b9fb-ef5be09867a3/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 30522,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/e2f4a591-3d04-4192-b380-747e12b61e76",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/67a7cb04-b864-4ff4-9027-646e2d5de8a9",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-281e0775-bf07-486b-b9fb-ef5be09867a3/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 208,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-281e0775-bf07-486b-b9fb-ef5be09867a3/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-8327e659-949e-4a77-beb6-2d14e1657529",
+      "method": "GET",
+      "status": 200,
+      "bytes": 862,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/track-8327e659-949e-4a77-beb6-2d14e1657529/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 30522,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/a2b4494f-c62d-4891-83cb-cd0368058b65",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/ea5b3b56-1647-487f-88d9-dd3d8170b65a",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-8327e659-949e-4a77-beb6-2d14e1657529/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 208,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-8327e659-949e-4a77-beb6-2d14e1657529/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-f10274be-4832-4cfe-9e79-99253f6d0d70",
+      "method": "GET",
+      "status": 200,
+      "bytes": 853,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/track-f10274be-4832-4cfe-9e79-99253f6d0d70/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 30468,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/defb0969-b9ce-4c35-9358-022d2ed2a015",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/9f748354-39e5-42bd-bfa3-3e9c548c02d3",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-f10274be-4832-4cfe-9e79-99253f6d0d70/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 208,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-f10274be-4832-4cfe-9e79-99253f6d0d70/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-c09666c0-0f2a-4aad-9450-80cf8afed0dc",
+      "method": "GET",
+      "status": 200,
+      "bytes": 859,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/track-c09666c0-0f2a-4aad-9450-80cf8afed0dc/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 30504,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/7bb1428c-6483-42aa-93f5-6ae90cb709bb",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/be04468c-427e-4ccc-aebe-3e0b7627565f",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-c09666c0-0f2a-4aad-9450-80cf8afed0dc/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 208,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-c09666c0-0f2a-4aad-9450-80cf8afed0dc/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-399bd124-59eb-4a94-b99f-cf62d5f7b9ec",
+      "method": "GET",
+      "status": 200,
+      "bytes": 859,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/track-399bd124-59eb-4a94-b99f-cf62d5f7b9ec/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 30504,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/c0bc665e-0fe7-450e-b13e-407b9dfa9785",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/b09985d3-e263-4511-8202-22b1526248af",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-399bd124-59eb-4a94-b99f-cf62d5f7b9ec/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 208,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-399bd124-59eb-4a94-b99f-cf62d5f7b9ec/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-750e2837-02e2-4ac4-85e2-9e145b25fd2d",
+      "method": "GET",
+      "status": 200,
+      "bytes": 859,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/track-750e2837-02e2-4ac4-85e2-9e145b25fd2d/",
+      "method": "GET",
+      "status": 200,
+      "bytes": 30504,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/assets/487a3197-ceed-4ed7-a1ea-aec7db64bab0",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/assets/79fb9b11-11cf-450c-9994-74fb4162faf0",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-750e2837-02e2-4ac4-85e2-9e145b25fd2d/playback",
+      "method": "GET",
+      "status": 200,
+      "bytes": 208,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/tracks/track-750e2837-02e2-4ac4-85e2-9e145b25fd2d/audio",
+      "method": "GET",
+      "status": 206,
+      "bytes": 128,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/station/content/home",
+      "method": "GET",
+      "status": 200,
+      "bytes": 481,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/novel/",
+      "method": "GET",
+      "status": 410,
+      "bytes": 388,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/devlog/",
+      "method": "GET",
+      "status": 410,
+      "bytes": 388,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/signal/",
+      "method": "GET",
+      "status": 410,
+      "bytes": 388,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/apps/",
+      "method": "GET",
+      "status": 410,
+      "bytes": 388,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/zh-hans/music/tracks/deng-hai-liang-zhe/",
+      "method": "GET",
+      "status": 404,
+      "bytes": 364,
+      "cacheControl": "private, no-store"
+    }
+  ]
+}

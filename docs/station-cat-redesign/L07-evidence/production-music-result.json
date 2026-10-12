@@ -1,0 +1,114 @@
+{
+  "recordedAt": "2026-10-12T02:55:50.572Z",
+  "activeVersion": "1f3fb556-0b91-4946-b524-0ebe83223619",
+  "legacyTracks": 12,
+  "legacyRevisions": 49,
+  "legacyAssets": 35,
+  "publishedWebsiteSongs": 11,
+  "promotions": 0,
+  "clips": 0,
+  "platformLinks": 0,
+  "migrations": 18,
+  "guards": 0,
+  "expectedSongCount": 11,
+  "legacyTracksAndPublishedSnapshotsUnchanged": true,
+  "originalAssetsUnchanged": true,
+  "homepageUnchanged": true,
+  "rightsRecords": 22,
+  "rightsAuditWrites": 23,
+  "publicationAuditWrites": 11,
+  "archivedSongStillExcluded": true,
+  "newAdminUiDeployed": false,
+  "tracks": [
+    {
+      "id": "6a009e51-f7e1-454b-83cf-f37c7ca98d9b",
+      "title": "原来已经这么远",
+      "slug": "track-accbd4b2-a1e9-41fa-a345-6a60d49bfc31",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/track-accbd4b2-a1e9-41fa-a345-6a60d49bfc31/"
+    },
+    {
+      "id": "32b0adb4-0419-496c-86e2-81fb1bdd81c1",
+      "title": "改天是哪一天",
+      "slug": "track-ac39c3ba-dd4c-4d27-acea-528e29bf2cad",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/track-ac39c3ba-dd4c-4d27-acea-528e29bf2cad/"
+    },
+    {
+      "id": "a60a76c3-dd52-4dba-b17c-2432fab7ab52",
+      "title": "那天我说了什么",
+      "slug": "track-e5711d15-f3e9-4444-929e-3ce2f763c175",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/track-e5711d15-f3e9-4444-929e-3ce2f763c175/"
+    },
+    {
+      "id": "bf649e30-87ac-463f-8d8e-a7de75f426c8",
+      "title": "这次坐在台下",
+      "slug": "zhe-ci-zuo-zai-tai-xia",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/zhe-ci-zuo-zai-tai-xia/"
+    },
+    {
+      "id": "cae8ef9b-a808-4669-b907-c07cdbeec1c0",
+      "title": "把那年还给风",
+      "slug": "track-3b1b564f-081b-4a6e-8acc-dba77fbb1de1",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/track-3b1b564f-081b-4a6e-8acc-dba77fbb1de1/"
+    },
+    {
+      "id": "45a38be6-40a9-4174-b419-e0102ec6c3d9",
+      "title": "差一句喜欢",
+      "slug": "track-281e0775-bf07-486b-b9fb-ef5be09867a3",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/track-281e0775-bf07-486b-b9fb-ef5be09867a3/"
+    },
+    {
+      "id": "61555a31-a459-4907-86e7-6643d9c1effa",
+      "title": "城市另一端",
+      "slug": "track-8327e659-949e-4a77-beb6-2d14e1657529",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/track-8327e659-949e-4a77-beb6-2d14e1657529/"
+    },
+    {
+      "id": "a37561f9-8b58-445e-8cda-edd0d8d5dee0",
+      "title": "回忆",
+      "slug": "track-f10274be-4832-4cfe-9e79-99253f6d0d70",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/track-f10274be-4832-4cfe-9e79-99253f6d0d70/"
+    },
+    {
+      "id": "d845bba1-a9e3-46e6-afcc-19b11d575e6f",
+      "title": "假装顺路",
+      "slug": "track-c09666c0-0f2a-4aad-9450-80cf8afed0dc",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/track-c09666c0-0f2a-4aad-9450-80cf8afed0dc/"
+    },
+    {
+      "id": "2b4edeb5-cd15-4730-8a2e-e125bf3ff95d",
+      "title": "无人接听",
+      "slug": "track-399bd124-59eb-4a94-b99f-cf62d5f7b9ec",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/track-399bd124-59eb-4a94-b99f-cf62d5f7b9ec/"
+    },
+    {
+      "id": "02954c60-e46c-43ec-8d2e-fa9310f6f59c",
+      "title": "再走一站",
+      "slug": "track-750e2837-02e2-4ac4-85e2-9e145b25fd2d",
+      "publishedWebsiteRevision": 1,
+      "audioMode": "free_full",
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/track-750e2837-02e2-4ac4-85e2-9e145b25fd2d/"
+    }
+  ],
+  "publishingAuditAction": "station.content.publish",
+  "extraRightsReviewExplanation": "同一封面登记被保存两次；只保留一条权利记录，11 首网站歌曲各公开一次。"
+}

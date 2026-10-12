@@ -1365,7 +1365,7 @@ const savedAutomation = JSON.parse(publicationDb.savedEntry.metadata_json).autom
 assert.deepEqual(savedAutomation.candidateIds, ['candidate-ai', 'candidate-tech']);
 assert.deepEqual(savedAutomation.excludedCandidateIds, ['candidate-economy']);
 
-const adminSource = read('src/pages/admin-v2/index.astro');
+const adminSource = read('src/pages/admin-v2/services/index.astro');
 assert.match(adminSource, /选择 3–10 条已入选候选/);
 assert.match(adminSource, /\/admin\/api\/signal\/drafts\/generate/);
 assert.match(adminSource, /elements\.signal\.status\.value = 'draft'/);
