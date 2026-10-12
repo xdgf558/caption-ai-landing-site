@@ -64,6 +64,50 @@ test('unregistered native track assets remain reachable by an exact bounded cata
   assert.equal(result.id, target); assert.equal(result.type, 'tracks'); assert(calls.includes('/tracks?before=20'));
 });
 
+test('the primary platform destination selects a later-page song and submits links only for that song', async () => {
+  const api = contentApi(), reads = [], writes = [];
+  const request = async (path, options = {}) => {
+    if (path.startsWith('/platforms')) {
+      if (options.method) { writes.push(options.body); return { id: asset }; }
+      reads.push(new URL(path, 'http://fixture.test').searchParams.get('trackId')); return { items: [] };
+    }
+    return api.request(path, options);
+  };
+  const f = await adminScriptFixture('adminStationContent.js', { search: '?view=platforms&owner=' + target, request });
+  assert.equal(f.node('work-heading').textContent, '发行平台');
+  assert.equal(f.nav.find(n => n.dataset.adminNav === 'platforms').attributes.get('aria-current'), 'page');
+  assert.equal(f.nav.find(n => n.dataset.adminNav === 'content').attributes.has('aria-current'), false);
+  assert.equal(f.node('content-platform-editor').hidden, false); assert.equal(f.node('content-editor-heading').textContent, '目标作品');
+  const form = f.node('content-platform-editor').children.find(n => n.tagName === 'FORM');
+  const field = name => form.children.find(n => n.tagName === 'LABEL' && n.textContent === name).children[0];
+  field('真实作品网址').value = 'https://music.163.com/song?id=123456'; field('发行状态').value = 'live';
+  field('人工核对时间（新加坡 UTC+8）').value = '2026-10-12T10:00';
+  await form.fire('submit'); await f.idle();
+  assert.deepEqual(reads, [target, target]); assert.equal(writes.length, 1); assert.equal(writes[0].trackId, target);
+  assert.equal(writes[0].url, 'https://music.163.com/song?id=123456'); assert.equal(writes[0].status, 'live');
+  assert.equal(writes[0].verifiedAt, Date.parse('2026-10-12T10:00+08:00')); assert.equal(f.state().pending, null);
+});
+test('the visible song shortcut carries the current owner and blocks navigation while edits are unsaved', async () => {
+  const api = contentApi(), f = await adminScriptFixture('adminStationContent.js', { search: '?view=tracks&owner=' + target, request: api.request });
+  assert.equal(f.node('work-platform-section').hidden, false);
+  assert.equal(f.node('work-platform-link').href, '/admin-v2/?view=platforms&owner=' + target);
+  let prevented = false;
+  await f.node('work-platform-link').fire('click', { preventDefault() { prevented = true; } }); assert.equal(prevented, false);
+  f.node('content-title').value = '尚未保存的标题'; await f.node('content-form').fire('input', { target: f.node('content-title') });
+  const calls = api.calls.length;
+  await f.node('work-platform-link').fire('click', { preventDefault() { prevented = true; } });
+  assert.equal(prevented, true); assert.equal(f.node('content-title').value, '尚未保存的标题'); assert.equal(api.calls.length, calls);
+  assert.match(f.node('content-status').textContent, /请先保存草稿/);
+  const game = contentApi({ type: 'games' }), gameUi = await adminScriptFixture('adminStationContent.js', { search: '?view=games&owner=' + target, request: game.request });
+  assert.equal(gameUi.node('work-platform-section').hidden, true);
+});
+test('a missing explicit platform owner never opens or reads another song\'s platform editor', async () => {
+  const api = contentApi({ targetExists: false });
+  const f = await adminScriptFixture('adminStationContent.js', { search: '?view=platforms&owner=' + target, request: api.request });
+  assert.equal(f.state().current, null); assert.equal(f.node('content-platform-editor').hidden, true);
+  assert.equal(f.node('content-status').dataset.error, 'true'); assert(!api.calls.some(call => call.path.startsWith('/platforms')));
+});
+
 test('opening the new menu before editing cannot bypass dirty protection at the actual type button', async () => {
   const api = contentApi(), f = await adminScriptFixture('adminStationContent.js', { search: '?view=tracks&owner=' + target, request: api.request });
   await f.node('content-new').click(); assert.equal(f.node('work-new-menu').hidden, false);

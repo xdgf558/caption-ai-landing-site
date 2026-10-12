@@ -192,11 +192,12 @@ function renderAudit(items){hideEditors();show('content-audit',true);text('conte
 async function connect(){if(!controller)return;
  if(workbench&&['dashboard','settings'].includes(initialView)){identity=await controller.connect();text('content-role',identity.role==='publisher'?'可发布管理员':'内容编辑');renderStaticWork(initialView);return;}
  if(workbench&&!catalogActive&&names[initialView])module=initialView;
+ if(workbench)renderWorkNavigation();
 identity=await controller.connect();text('content-role',identity.role==='publisher'?'可发布管理员':'内容编辑');choices={};await listPage();
 if(module==='home')await openObject({id:homeId});else if(initialOwnerPending&&module!=='audit'){
  current=null;hideEditors();show('content-empty',true);
  if(initialParams.getAll('owner').length!==1)throw new Error('指定作品参数重复，已停止编辑。');
- const types=module==='assets'||catalogActive&&catalogFilter==='all'?workTypes:[module==='platforms'?'tracks':module];
+ const types=catalogActive?(catalogFilter==='all'?workTypes:[catalogFilter]):module==='assets'?workTypes:[module==='platforms'?'tracks':module];
  const target=await resolveAdminOwner(request,initialParams.get('owner'),{types,listed:listItems});
  await openObject(target);initialOwnerPending=false;
 }else if(listItems.length&&module!=='audit')await openObject(listItems.find(i=>i.status!=='unregistered'&&i.legacyLifecycle!=='archived')??listItems[0]);else{hideEditors();show('content-empty',true);}status(controller.pending()?'请先核对原操作的结果。':'内容服务已就绪。选择作品开始编辑。');}
@@ -219,15 +220,15 @@ $('content-reload-cancel').addEventListener('click',()=>{if(busy)return;show('co
 $('content-reload-discard').addEventListener('click',()=>{if(busy||controller?.pending())return;void work(reloadEditor);});
 $('content-retry').addEventListener('click',()=>{void work(async()=>{await controller.retry();await connect();status('原操作已核对，请检查当前版本。');});});
 function renderWorkNavigation(){
- if(!workbench)return;const heading=catalogActive?'作品内容':names[module];text('work-heading',heading);text('work-breadcrumb',heading);text('work-intro',catalogActive?'资料与素材，一起整理。':'每次公开前，核对资料、关联和素材。');
- show('work-new-menu',false);document.querySelector('.work-filters').hidden=!catalogActive;document.querySelector('.work-modules').hidden=catalogActive||['home','audit'].includes(module);
+ if(!workbench)return;const heading=catalogActive?'作品内容':names[module];text('work-heading',heading);text('work-breadcrumb',heading);text('work-intro',catalogActive?'资料与素材，一起整理。':module==='platforms'?'选择歌曲，管理各大音乐平台的链接与上线状态。':'每次公开前，核对资料、关联和素材。');
+ show('work-new-menu',false);document.querySelector('.work-filters').hidden=!catalogActive;document.querySelector('.work-modules').hidden=catalogActive||['home','audit','platforms'].includes(module);
  for(const filter of document.querySelectorAll('[data-work-filter]'))filter.setAttribute('aria-pressed',String(filter.dataset.workFilter===catalogFilter));
- for(const nav of document.querySelectorAll('[data-admin-nav]')){const active=module==='home'?'home':module==='audit'?'audit':'content';if(nav.dataset.adminNav===active)nav.setAttribute('aria-current','page');else nav.removeAttribute('aria-current');}
+ for(const nav of document.querySelectorAll('[data-admin-nav]')){const active=!catalogActive&&['home','audit','platforms'].includes(module)?module:'content';if(nav.dataset.adminNav===active)nav.setAttribute('aria-current','page');else nav.removeAttribute('aria-current');}
 }
 function renderWorkAssets(data){
- const owner=current?.id??existingTrackId,visible=Boolean(owner)&&workTypes.includes(module);show('work-assets-section',visible);show('work-owner-management',Boolean(owner)&&module==='tracks');if(!visible)return;
+ const owner=current?.id??existingTrackId,visible=Boolean(owner)&&workTypes.includes(module);show('work-assets-section',visible);show('work-owner-management',Boolean(owner)&&module==='tracks');show('work-platform-section',Boolean(owner)&&module==='tracks');if(owner&&module==='tracks')$('work-platform-link').href='/admin-v2/?view=platforms&owner='+encodeURIComponent(owner);else $('work-platform-link').removeAttribute('href');if(!visible)return;
  const title=data.metadata?.title?.[data.metadata.originalLocale]??'当前作品',assets=$('work-assets-list');assets.replaceChildren();
- const links=$('work-owner-links');links.replaceChildren();for(const [label,view]of [['推广与试听','promotions'],['发行平台','platforms'],['素材权利','assets']]){const a=el('a',label);a.href='/admin-v2/?view='+view+'&owner='+owner;links.append(a);}if(identity.reportsEnabled){const report=el('a','推广报表');report.href='/admin/music/reports/';links.append(report);}else links.append(el('span','推广报表 · 未启用','muted'));show('work-owner-management',module==='tracks');
+ const links=$('work-owner-links');links.replaceChildren();for(const [label,view]of [['推广与试听','promotions'],['素材权利','assets']]){const a=el('a',label);a.href='/admin-v2/?view='+view+'&owner='+owner;links.append(a);}if(identity.reportsEnabled){const report=el('a','推广报表');report.href='/admin/music/reports/';links.append(report);}else links.append(el('span','推广报表 · 未启用','muted'));show('work-owner-management',module==='tracks');
  const rightsUrl='/admin-v2/?view=assets&owner='+owner;$('work-assets-link').href=module==='tracks'?'/admin/music/?track='+owner+'&tab=assets':'/admin/music/media/?owner='+owner+'&kind='+(module==='games'?'game_screenshot':'poster');
  const entries=module==='tracks'?[['cover','封面',data.coverAssetId],['lyrics','歌词',data.lyricsAssetId],['audio','完整音频',null],['preview','独立试听',null]]:module==='games'?(data.screenshotIds?.length?data.screenshotIds.map(id=>['cover','游戏截图',id]):[['cover','游戏截图',null]]):[['clip','视频文件',data.mediaAssetId],['cover','封面海报',data.posterAssetId]];
  for(const [kind,label,id]of entries){const li=el('li'),symbol=el('span',undefined,'work-asset-icon');symbol.append(icon(kind));li.append(symbol);const copy=el('span',undefined,'work-asset-copy');copy.append(el('strong',label));const a=ownerAssets.find(a=>a.id===id),small=el('small');
@@ -245,6 +246,7 @@ function renderStaticWork(view){
  status('已核对当前管理员和内容服务。');for(const nav of document.querySelectorAll('[data-admin-nav]')){if(nav.dataset.adminNav===view)nav.setAttribute('aria-current','page');else nav.removeAttribute('aria-current');}
 }
 if(workbench){
+ $('work-platform-link').addEventListener('click',e=>{if(dirty||busy||controller?.pending()){e.preventDefault();status(controller?.pending()?'请先核对原操作的结果，再管理平台链接。':dirty?'有未保存的修改，请先保存草稿，再管理平台链接。':'正在读取作品，请稍后再管理平台链接。',true);}});
  renderWorkNavigation();$('content-title').addEventListener('input',()=>{document.querySelector('[data-title="'+$('content-locale').value+'"]').value=$('content-title').value;});for(const n of document.querySelectorAll('[data-title]'))n.addEventListener('input',()=>{if(n.dataset.title===$('content-locale').value)$('content-title').value=n.value;});$('content-locale').addEventListener('change',()=>{$('content-title').value=document.querySelector('[data-title="'+$('content-locale').value+'"]').value;});
  $('work-close-editor').addEventListener('click',()=>{if(dirty||controller?.pending()){status('请先保存草稿或核对原操作，再收起编辑。');return;}workbench.dataset.editorClosed='true';});$('content-search').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('content-search-submit').click();}});
  for(const button of document.querySelectorAll('[data-work-filter]'))button.addEventListener('click',()=>{if(dirty){status('请先保存当前草稿。');return;}catalogActive=true;catalogFilter=button.dataset.workFilter;catalogPages={};renderWorkNavigation();void work(async()=>{await listPage();if(listItems.length)await openObject(listItems[0]);else{hideEditors();show('content-empty',true);}});});

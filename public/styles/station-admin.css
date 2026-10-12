@@ -42,3 +42,11 @@ body.station-admin{margin:0;background:var(--admin-paper);color:var(--admin-ink)
 .station-admin-services .button-primary{background:var(--admin-accent);border-color:var(--admin-accent);color:white}
 
 .station-admin .admin-mobile-bar button:hover,.station-admin .admin-mobile-bar button:focus{background:#303652;color:white}
+
+.admin-rail{overflow-y:auto;overscroll-behavior:contain}.admin-rail>*{flex-shrink:0}
+.work-platform-section{padding:16px 0;border-bottom:1px solid var(--admin-line)}
+.work-platform-section>header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.work-platform-section h3{display:flex;align-items:center;gap:8px;margin:0;font-size:16px;font-weight:650}
+.work-platform-section p{margin:8px 0;color:var(--admin-muted);font-size:13px;line-height:1.6}
+.work-platform-section a{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;font-weight:600}
+.work-filters button{white-space:nowrap}

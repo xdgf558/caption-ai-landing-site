@@ -1,9 +1,10 @@
 ---
-import { House, Music2, Image, PanelsTopLeft, UserRound, ShoppingBag, History, Settings, ArrowLeft, Menu, X } from '@lucide/astro';
+import { House, Music2, Link, Image, PanelsTopLeft, UserRound, ShoppingBag, History, Settings, ArrowLeft, Menu, X } from '@lucide/astro';
 const { title = '创作后台', active = 'content', services = false } = Astro.props;
 const primary = [
   ['dashboard', House, '工作台', '/admin-v2/?view=dashboard'],
   ['content', Music2, '作品内容', '/admin-v2/'],
+  ['platforms', Link, '发行平台', '/admin-v2/?view=platforms'],
   ['media', Image, '素材库', '/admin/music/media/'],
   ['home', PanelsTopLeft, '首页配置', '/admin-v2/?view=home'],
 ];

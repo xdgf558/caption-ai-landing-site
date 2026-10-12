@@ -48,7 +48,7 @@ export async function adminScriptFixture(entry, { search = '', request, mediaUpl
   for (const locale of ['zh-Hans', 'zh-Hant', 'en', 'ja']) { localeTitles.push(new AdminNode('input', { title: locale })); localeSummaries.push(new AdminNode('textarea', { summary: locale })); }
   for (const type of workbenchState.workTypes) creates.push(new AdminNode('button', { workCreate: type }));
   for (const type of ['all', ...workbenchState.workTypes]) filters.push(new AdminNode('button', { workFilter: type }));
-  for (const type of ['content', 'home', 'audit']) nav.push(new AdminNode('a', { adminNav: type }));
+  for (const type of ['content', 'platforms', 'home', 'audit']) nav.push(new AdminNode('a', { adminNav: type }));
   for (const type of ['tracks', 'games', 'clips', 'assets', 'platforms', 'promotions']) modules.push(new AdminNode('button', { module: type }));
   const workbench = new AdminNode(), workFilters = new AdminNode(), workModules = new AdminNode();
   const document = {
@@ -87,5 +87,5 @@ export async function adminScriptFixture(entry, { search = '', request, mediaUpl
   const state = () => vm.runInContext(entry === 'adminStationContent.js' ? '({dirty,busy,module,current,newObject,pending:controller?.pending()})' : '({loading,recovering,ownersBusy,preferredOwner})', context);
   async function idle() { for (let attempt = 0; attempt < 100; attempt++) { const s = state(); if (!s.busy && !s.loading && !s.recovering && !s.ownersBusy) return; await new Promise(resolve => setImmediate(resolve)); } assert.fail('admin controller did not settle'); }
   await idle();
-  return { node, creates, filters, modules, state, idle, storageData, context, document };
+  return { node, creates, filters, modules, nav, state, idle, storageData, context, document };
 }
