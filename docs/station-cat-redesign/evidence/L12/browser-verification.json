@@ -1,0 +1,17 @@
+{
+  "recordedAt": "2026-10-12T23:02:00.323Z",
+  "scope": "local disposable D1/R2 fixture",
+  "editorState": "已公开",
+  "manualNoteNodes": 0,
+  "manualNoteText": false,
+  "status": "这一版已公开。",
+  "url": "http://127.0.0.1:4234/admin-v2/?view=home",
+  "consoleErrors": [],
+  "steps": [
+    "select published fixture game",
+    "save draft",
+    "preflight",
+    "publish"
+  ],
+  "productionBusinessWrites": 0
+}

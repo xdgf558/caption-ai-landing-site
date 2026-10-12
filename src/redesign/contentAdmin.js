@@ -8,7 +8,8 @@ import { platformUrl } from './publicValidation.js';
 
 const route=(type,id,action='')=>'/admin/api/music/site-content/'+type+(id?'/'+id:'')+(action?'/'+action:'');
 const checked=(x,v)=>{if(x.h.edit_version!==v)fail('STATION_EDIT_CONFLICT',409);return rowGuard(x.d.table,x.h);};
-const reason=input=>text(input.reason,1000,false,true);
+// Older clients may still send a note; current forms rely on the automatic audit fields.
+const reason=input=>input.reason===undefined?undefined:text(input.reason,1000,false,true);
 const draftGuard=x=>x.draft?rowGuard(x.d.revisions,x.draft):{condition:'1',params:[]};
 const commandResult=(type,id,number,version)=>({type,id,revision:number,editVersion:version,cachePolicy:'no-store'});
 

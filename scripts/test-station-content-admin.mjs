@@ -28,6 +28,29 @@ test('default-off content namespace checks the flag before bindings after admin 
  const r=await handleMusicAdmin(edit('tracks',null,'POST',{bad:true}),{MUSIC_DB:db,MUSIC_BUCKET:{}},async()=>actor);
  assert.equal(r.status,503);assert.equal((await r.json()).code,'STATION_CONTENT_ADMIN_DISABLED');assert.equal(reads,0);
 });
+test('homepage saves, scheduling, cancellation, publication, withdrawal and rollback need no manual note',async()=>{
+ const f=await fixture();let version=1;
+ await saveContentObject(f.runtime,'home',homeId,{revision:1,data:{}},ctx(version++));
+ await contentPublication(f.runtime,'home',homeId,'schedule',{revision:2,dueAt:Date.now()+60000},ctx(version++));
+ await contentPublication(f.runtime,'home',homeId,'cancel-schedule',{revision:2},ctx(version++));
+ await contentPublication(f.runtime,'home',homeId,'publish',{revision:2},ctx(version++));
+ await contentPublication(f.runtime,'home',homeId,'unpublish',{revision:2},ctx(version++));
+ const context=ctx(version),body={revision:2};
+ const restored=await contentPublication(f.runtime,'home',homeId,'rollback',body,context);
+ const replay=await contentPublication(f.runtime,'home',homeId,'rollback',body,context);
+ assert.equal(restored.revision,3);assert.equal(replay.replayed,true);
+ const logs=f.sql.prepare('SELECT actor_id,action,target_id,summary_json,created_at FROM music_admin_audit_logs WHERE target_id=? ORDER BY rowid').all(homeId);
+ assert.deepEqual(logs.map(r=>r.action),['save','schedule','cancel-schedule','publish','unpublish','rollback'].map(action=>'station.content.'+action));
+ for(const row of logs){assert.equal(row.actor_id,actor);assert(row.created_at>0);const summary=JSON.parse(row.summary_json);assert.equal(summary.type,'home');assert(summary.revision>0);assert.equal(Object.hasOwn(summary,'reason'),false);}
+});
+test('older valid notes remain compatible while invalid supplied notes are rejected without writes',async()=>{
+ const f=await fixture(),data={},before=f.dump();
+ for(const reason of ['',null,123,'x'.repeat(1001),'bad\u0000note'])await assert.rejects(saveContentObject(f.runtime,'home',homeId,{revision:1,data,reason},ctx()),{code:'INVALID_INPUT'});
+ assert.equal((await readContentObject(f.db,'home',homeId)).editVersion,1);
+ assert.deepEqual(f.dump(),before);
+ await saveContentObject(f.runtime,'home',homeId,{revision:1,data,reason:'较早打开的编辑页'},ctx());
+ assert.equal(JSON.parse(f.sql.prepare('SELECT summary_json FROM music_admin_audit_logs WHERE target_id=?').get(homeId).summary_json).reason,'较早打开的编辑页');
+});
 test('website registration never publishes, changes old policies or generates promotions',async()=>{
  const f=await fixture(),old=f.sql.prepare('SELECT * FROM music_tracks ORDER BY id').all(),t=await register(f);
  assert.deepEqual(f.sql.prepare('SELECT * FROM music_tracks ORDER BY id').all(),old);assert.equal(f.sql.prepare('SELECT COUNT(*) AS n FROM station_promotions').get().n,0);

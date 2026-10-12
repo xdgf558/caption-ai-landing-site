@@ -15,14 +15,14 @@ test('actual Worker Access, native D1/R2, flags and guarded publication workflow
  await t.test('CSRF, methods, query ambiguity and editor publish restrictions remain server side',async()=>{
   assert.equal((await send(base+'/tracks',{method:'POST',origin:'https://wrong.test',body:{}})).r.status,403);
   assert.equal((await send(base+'/tracks',{method:'DELETE'})).r.status,405);assert.equal((await send(base+'/status?a=1&a=2')).r.status,400);
-  assert.equal((await send('/fixture-editor'+base+'/tracks/'+track.id+'/publish',{method:'POST',body:{revision:1,reason:'测试'}})).r.status,403);
+  assert.equal((await send('/fixture-editor'+base+'/tracks/'+track.id+'/publish',{method:'POST',body:{revision:1}})).r.status,403);
  });
  let created;
- await t.test('register, approve and publish through actual native transactions, replaying the original receipt',async()=>{
-  created=await send(base+'/tracks',{method:'POST',body:{trackId:track.id,data,reason:'本机登记'}});assert.equal(created.r.status,200);
-  const blocked=await send(base+'/tracks/'+track.id+'/publish',{method:'POST',body:{revision:1,reason:'测试'}});assert.equal(blocked.r.status,422);assert.equal(blocked.body.field,'track.coverAssetId');
-  assert.equal((await send(base+'/assets/'+track.cover+'/rights',{method:'PUT',body:{scope:'cover',status:'approved',basis:'合成测试授权，不代表真实权利',reason:'本机测试'}})).r.status,200);
-  const key=randomUUID(),command={method:'POST',key,body:{revision:1,reason:'本机公开'}};const published=await send(base+'/tracks/'+track.id+'/publish',command);assert.equal(published.r.status,200);const replay=await send(base+'/tracks/'+track.id+'/publish',command);assert.equal(replay.body.replayed,true);assert.equal(replay.body.editVersion,2);
+ await t.test('register, approve and publish without manual notes, replaying the original receipt',async()=>{
+  created=await send(base+'/tracks',{method:'POST',body:{trackId:track.id,data}});assert.equal(created.r.status,200);
+  const blocked=await send(base+'/tracks/'+track.id+'/publish',{method:'POST',body:{revision:1}});assert.equal(blocked.r.status,422);assert.equal(blocked.body.field,'track.coverAssetId');
+  assert.equal((await send(base+'/assets/'+track.cover+'/rights',{method:'PUT',body:{scope:'cover',status:'approved',basis:'合成测试授权，不代表真实权利'}})).r.status,200);
+  const key=randomUUID(),command={method:'POST',key,body:{revision:1}};const published=await send(base+'/tracks/'+track.id+'/publish',command);assert.equal(published.r.status,200);const replay=await send(base+'/tracks/'+track.id+'/publish',command);assert.equal(replay.body.replayed,true);assert.equal(replay.body.editVersion,2);
   const publicTrack=await send('/api/station/content/tracks/'+track.slug);assert.equal(publicTrack.r.status,200);assert.equal(publicTrack.body.track.preview,null);assert.doesNotMatch(JSON.stringify(publicTrack.body),/object_key|sha256|rights_basis/);
  });
  await t.test('NetEase pasted hash links save canonically through Access and D1, retaining verification and replay guards',async()=>{
@@ -42,44 +42,51 @@ test('actual Worker Access, native D1/R2, flags and guarded publication workflow
   assert.deepEqual((await send('/api/station/content/tracks/'+track.slug)).body.track.platforms,[]);
  });
  await t.test('one concurrent save wins; stale mutation and publication never change current pointer',async()=>{
-  const command={method:'PATCH',version:2,body:{revision:1,data,reason:'本机编辑'}};const race=await Promise.all([send(base+'/tracks/'+track.id,command),send(base+'/tracks/'+track.id,command)]);assert.deepEqual(race.map(r=>r.r.status).sort(),[200,409]);
+  const command={method:'PATCH',version:2,body:{revision:1,data}};const race=await Promise.all([send(base+'/tracks/'+track.id,command),send(base+'/tracks/'+track.id,command)]);assert.deepEqual(race.map(r=>r.r.status).sort(),[200,409]);
   const current=await send(base+'/tracks/'+track.id);assert.equal(current.body.draft.revision,2);assert.equal(current.body.published.revision,1);
-  assert.equal((await send(base+'/tracks/'+track.id+'/publish',{method:'POST',version:2,body:{revision:2,reason:'测试'}})).r.status,409);
+  assert.equal((await send(base+'/tracks/'+track.id+'/publish',{method:'POST',version:2,body:{revision:2}})).r.status,409);
  });
  await t.test('promotion and homepage are separate; stop updates fresh public no-store response',async()=>{
-  const p=await send(base+'/promotions',{method:'POST',body:{trackId:track.id,data:{enabled:true,previewEnabled:false},reason:'本机推广'}});assert.equal(p.r.status,200);
-  assert.equal((await send(base+'/promotions/'+track.id+'/publish',{method:'POST',body:{revision:1,reason:'本机公开推广'}})).r.status,200);
-  assert.equal((await send(base+'/home/'+homeId,{method:'PATCH',body:{revision:1,data:{featuredTrackId:track.id},reason:'本机主推'}})).r.status,200);
-  assert.equal((await send(base+'/home/'+homeId+'/publish',{method:'POST',version:2,body:{revision:2,reason:'本机公开首页'}})).r.status,200);
+  const p=await send(base+'/promotions',{method:'POST',body:{trackId:track.id,data:{enabled:true,previewEnabled:false}}});assert.equal(p.r.status,200);
+  assert.equal((await send(base+'/promotions/'+track.id+'/publish',{method:'POST',body:{revision:1}})).r.status,200);
+  assert.equal((await send(base+'/home/'+homeId,{method:'PATCH',body:{revision:1,data:{featuredTrackId:track.id}}})).r.status,200);
+  assert.equal((await send(base+'/home/'+homeId+'/publish',{method:'POST',version:2,body:{revision:2}})).r.status,200);
   const home=await send('/api/station/content/home');assert.equal(home.body.home.music.id,track.id);assert.equal(home.r.headers.get('cache-control'),'no-store');
-  await send(base+'/promotions/'+track.id+'/unpublish',{method:'POST',version:2,body:{revision:1,reason:'本机停止推广'}});assert.equal((await send('/api/station/content/home')).body.home.music,null);
+  await send(base+'/promotions/'+track.id+'/unpublish',{method:'POST',version:2,body:{revision:1}});assert.equal((await send('/api/station/content/home')).body.home.music,null);
  });
  await t.test('real fixture MP4 and image uploads become controlled clip/game publications, with current rights rechecked',async()=>{
   const metadata={originalLocale:'zh-Hans',title:{'zh-Hans':'本机合成发布测试'},summary:{'zh-Hans':'仅供验收'},story:''};
-  const clip=(await send(base+'/clips',{method:'POST',body:{trackId:track.id,clipType:'short_video',data:{metadata},reason:'本机视频草稿'}})).body;
-  const game=(await send(base+'/games',{method:'POST',body:{slug:'fixture-game-intro',data:{metadata,launchUrl:'/games/cat-life/',supportedDevices:['desktop']},reason:'本机介绍草稿'}})).body;
+  const clip=(await send(base+'/clips',{method:'POST',body:{trackId:track.id,clipType:'short_video',data:{metadata}}})).body;
+  const game=(await send(base+'/games',{method:'POST',body:{slug:'fixture-game-intro',data:{metadata,launchUrl:'/games/cat-life/',supportedDevices:['desktop']}}})).body;
   const upload=async(ownerId,kind,format,bytes)=>{
    const root='/admin/api/music/site-uploads',reserved=await send(root,{method:'POST',body:{ownerId,kind,format,byteSize:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')}});assert.equal(reserved.r.status,200,JSON.stringify(reserved.body));
    const body=await f.mf.dispatchFetch('http://content.local.test'+root+'/'+reserved.body.uploadId+'/body',{method:'PUT',headers:{'Cf-Access-Jwt-Assertion':f.actorToken,Origin:'http://content.local.test','X-Requested-With':'StationCatMusicAdmin','Idempotency-Key':randomUUID(),'Content-Type':format==='mp4'?'video/mp4':'image/png'},body:bytes});assert.equal(body.status,200,await body.text());
    const ready=await send(root+'/'+reserved.body.uploadId+'/complete',{method:'POST',body:{}});assert.equal(ready.r.status,200,JSON.stringify(ready.body));
-   const approved=await send(base+'/assets/'+reserved.body.assetId+'/rights',{method:'PUT',body:{scope:kind,status:'approved',basis:'合成夹具，无真实素材授权结论',reason:'本机验收'}});assert.equal(approved.r.status,200);return reserved.body.assetId;
+   const approved=await send(base+'/assets/'+reserved.body.assetId+'/rights',{method:'PUT',body:{scope:kind,status:'approved',basis:'合成夹具，无真实素材授权结论'}});assert.equal(approved.r.status,200);return reserved.body.assetId;
   };
   const png=await sharp({create:{width:320,height:180,channels:3,background:'#426553'}}).png().toBuffer();
   const video=await upload(clip.id,'short_video','mp4',stationVideoBytes().bytes),poster=await upload(clip.id,'poster','png',png),screen=await upload(game.id,'game_screenshot','png',png);
   const clipData={metadata,mediaAssetId:video,posterAssetId:poster,durationMs:30000,subtitles:{'zh-Hans':'本机字幕','en':'Local fixture'}};
-  assert.equal((await send(base+'/clips/'+clip.id,{method:'PATCH',body:{revision:1,data:clipData,reason:'素材就绪'}})).r.status,200);
-  assert.equal((await send(base+'/clips/'+clip.id+'/publish',{method:'POST',version:2,body:{revision:2,reason:'公开测试'}})).r.status,200);
+  assert.equal((await send(base+'/clips/'+clip.id,{method:'PATCH',body:{revision:1,data:clipData}})).r.status,200);
+  assert.equal((await send(base+'/clips/'+clip.id+'/publish',{method:'POST',version:2,body:{revision:2}})).r.status,200);
   const publicClip=await send('/api/station/content/tracks/'+track.slug+'/clips');assert.equal(publicClip.r.status,200);assert(publicClip.body.items.some(c=>c.id===clip.id));assert.doesNotMatch(JSON.stringify(publicClip.body),/station\/media|sha256|object_key/);
-  assert.equal((await send(base+'/games/'+game.id,{method:'PATCH',body:{revision:1,data:{metadata,launchUrl:'/games/cat-life/',supportedDevices:['desktop'],screenshotIds:[screen]},reason:'截图就绪'}})).r.status,200);
-  assert.equal((await send(base+'/games/'+game.id+'/publish',{method:'POST',version:2,body:{revision:2,reason:'公开介绍'}})).r.status,200);
+  assert.equal((await send(base+'/games/'+game.id,{method:'PATCH',body:{revision:1,data:{metadata,launchUrl:'/games/cat-life/',supportedDevices:['desktop'],screenshotIds:[screen]}}})).r.status,200);
+  assert.equal((await send(base+'/games/'+game.id+'/publish',{method:'POST',version:2,body:{revision:2}})).r.status,200);
   const publicGame=await send('/api/station/content/games/fixture-game-intro');assert.equal(publicGame.r.status,200);assert.equal(publicGame.body.game.launchPath,'/games/cat-life/');
   const history=await send(base+'/clips/'+clip.id+'/revisions?before=3');assert.deepEqual(history.body.items.map(r=>r.revision),[2,1]);
-  await send(base+'/assets/'+video+'/rights',{method:'PUT',body:{scope:'short_video',status:'blocked',basis:'本机撤销',reason:'本机撤销'}});
+  assert.equal((await send(base+'/clips/'+clip.id+'/publications',{method:'POST',version:3,body:{channel:'youtube',postId:'abcdefghijk',url:'https://www.youtube.com/watch?v=abcdefghijk',publishedAt:Date.now()-1000}})).r.status,200);
+  await send(base+'/assets/'+video+'/rights',{method:'PUT',body:{scope:'short_video',status:'blocked',basis:'本机撤销'}});
   assert(!(await send('/api/station/content/tracks/'+track.slug+'/clips')).body.items.some(c=>c.id===clip.id));
-  assert.equal((await send(base+'/clips/'+clip.id+'/rollback',{method:'POST',version:3,body:{revision:2,reason:'撤销后禁止回退'}})).r.status,422);
+  assert.equal((await send(base+'/clips/'+clip.id+'/rollback',{method:'POST',version:4,body:{revision:2}})).r.status,422);
  });
  await t.test('bounded schedule run disabled by either flag and never falls back to a production binding',async()=>{
   assert.equal((await send('/fixture-admin-only'+base+'/jobs/run',{method:'POST',body:{}})).body.reason,'SCHEDULE_DISABLED');assert.equal((await send('/fixture-scheduler-only'+base+'/jobs/run',{method:'POST',body:{}})).body.code,'STATION_CONTENT_ADMIN_DISABLED');
+ });
+ await t.test('note-free changes still record actor, time, target and action in the audit log',async()=>{
+  const actor=(await send(base+'/status')).body.actorId,entries=[];let before;
+  do{const page=(await send(base+'/audit'+(before?'?before='+before:''))).body;entries.push(...page.items);before=page.nextBefore;}while(before);
+  for(const action of ['station.content.create','station.content.save','station.content.publish','station.content.unpublish','station.rights.review','station.clip.publication'])assert(entries.some(row=>row.action===action),action);
+  for(const row of entries){assert.equal(row.actorId,actor);assert(row.targetId);assert(Number.isSafeInteger(row.createdAt)&&row.createdAt>0);assert.equal(Object.hasOwn(row.summary,'reason'),false);}
  });
  await t.test('HEAD and admin recovery responses are private and cannot leak raw auth or media identities',async()=>{const head=await send(base+'/status',{method:'HEAD'});assert.equal(head.r.status,200);assert.equal(head.r.headers.get('cache-control'),'private, no-store');const view=await send(base+'/tracks/'+track.id);assert.equal(view.r.headers.get('cache-control'),'private, no-store');assert.doesNotMatch(JSON.stringify(view.body),/object_key|sha256|Cf-Access|eyJ/);});
 });

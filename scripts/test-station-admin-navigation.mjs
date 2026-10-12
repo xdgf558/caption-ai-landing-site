@@ -122,7 +122,7 @@ test('opening the new menu before editing cannot bypass dirty protection at the 
 test('revision conflict can be cancelled or explicitly discarded, reloading the same work and permitting a current-version save', async () => {
   const api = contentApi();
   const f = await adminScriptFixture('adminStationContent.js', { search: '?view=tracks&owner=' + target, request: api.request });
-  api.update(); f.node('content-reason').value = '合成冲突回归'; f.node('content-title').value = '当前本机修改'; await f.node('content-form').fire('input', { target: f.node('content-title') });
+  api.update(); f.node('content-title').value = '当前本机修改'; await f.node('content-form').fire('input', { target: f.node('content-title') });
   await f.node('content-form').fire('submit'); await f.idle();
   assert.equal(f.state().dirty, true); assert.equal(f.state().current.editVersion, 1); assert.equal(f.state().pending, null);
   assert.match(f.node('content-status').textContent, /版本已变化/);
@@ -137,6 +137,23 @@ test('revision conflict can be cancelled or explicitly discarded, reloading the 
   await f.node('content-form').fire('submit'); await f.idle();
   assert.equal(f.state().current.editVersion, 3); assert.equal(f.state().dirty, false);
   assert.equal(api.calls.filter(call => call.method === 'PATCH').at(-1).etag, '"edit-2"');
+  assert(api.calls.filter(call => call.method === 'PATCH').every(call => !Object.hasOwn(call.body, 'reason')));
+});
+test('the rights editor submits its real authorization basis without a separate operation-note field', async () => {
+  const api = contentApi(), writes = [];
+  const request = async (path, options = {}) => {
+    if (options.method === 'PUT') { writes.push({ path, ...options }); return { id: asset }; }
+    return api.request(path, options);
+  };
+  const f = await adminScriptFixture('adminStationContent.js', { search: '?view=assets&owner=' + target, request });
+  const form = f.node('content-rights-editor').children.at(-1).children[0];
+  const fields = form.children.filter(node => node.tagName === 'LABEL');
+  assert.deepEqual(fields.map(node => node.textContent), ['使用状态', '授权依据与允许的使用范围（单行）']);
+  fields[0].children[0].value = 'approved'; fields[1].children[0].value = '夹具授权依据';
+  await form.fire('submit'); await f.idle();
+  assert.equal(writes.length, 1); assert.equal(writes[0].path, '/assets/' + asset + '/rights');
+  assert.equal(writes[0].body.basis, '夹具授权依据'); assert.equal(Object.hasOwn(writes[0].body, 'reason'), false);
+  assert.match(f.node('content-status').textContent, /权利登记已保存/);
 });
 for (const failure of ['network', 'unavailable']) test('workspace retry establishes the first identity after initial status ' + failure, async () => {
   const api = contentApi(), calls = []; let available = false;
@@ -184,7 +201,7 @@ test('connected workspace reload still rejects a changed actor before discarding
 });
 test('uncertain writes keep their original journal and cannot be discarded through reload', async () => {
   const api = contentApi(), f = await adminScriptFixture('adminStationContent.js', { search: '?view=tracks&owner=' + target, request: api.request });
-  api.uncertain(); f.node('content-reason').value = '回执丢失夹具'; await f.node('content-form').fire('input', { target: f.node('content-title') });
+  api.uncertain(); await f.node('content-form').fire('input', { target: f.node('content-title') });
   await f.node('content-form').fire('submit'); await f.idle();
   const pending = JSON.stringify(f.state().pending), calls = api.calls.length;
   assert.notEqual(pending, 'null'); assert.equal(f.node('content-reload').disabled, true);
