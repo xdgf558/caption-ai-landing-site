@@ -296,12 +296,23 @@ function renderWorkAssets(data){
  text('work-upload-help',module==='tracks'?'封面、歌词、完整音频与试听分别核对':'图片 ≤ 10 MiB · MP4 ≤ 256 MiB');text('work-upload-owner','文件将归属于当前作品：'+title);
 }
 function renderStaticWork(view){
- workbench.dataset.static='true';show('work-static',true);for(const id of ['content-list','work-count','work-new-menu'])show(id,false);document.querySelector('.work-toolbar').hidden=true;document.querySelector('.work-modules').hidden=true;document.querySelector('.work-list-head').hidden=true;
- const title=view==='dashboard'?'工作台':'设置';text('work-heading',title);text('work-breadcrumb',title);text('work-intro',view==='dashboard'?'把今天的作品，稳妥地准备好。':'当前后台服务与管理入口。');const panel=$('work-static');panel.replaceChildren(el('h2',view==='dashboard'?'开始整理':'服务状态'));
- for(const [label,path]of [['整理作品资料','/admin-v2/'],['上传与核对素材','/admin/music/media/'],['推广歌曲与试听','/admin-v2/?view=promotions'],['发行平台链接','/admin-v2/?view=platforms'],['视频与 MV','/admin-v2/?view=clips'],['素材权利','/admin-v2/?view=assets'],['配置首页','/admin-v2/?view=home'],['完整音频与独立试听','/admin/music/'],['账号与会员','/admin-v2/services/#accounts'],['订单与权益','/admin-v2/services/#commerce'],['VIP 退款审核','/admin/membership-refunds/']]){const a=el('a',label);a.href=path;panel.append(a);}
- if(view==='settings')panel.append(el('p','内容服务已启用 · '+(identity.schedulesEnabled?'定时公开已启用':'定时公开关闭')+' · '+(identity.campaignsEnabled?'推广链接已启用':'推广链接关闭'),'muted'));
+ workbench.dataset.static='true';workbench.dataset.staticView=view;show('work-static',true);for(const id of ['content-list','work-count','work-new-menu'])show(id,false);document.querySelector('.work-toolbar').hidden=true;document.querySelector('.work-modules').hidden=true;document.querySelector('.work-list-head').hidden=true;
+ const title=view==='dashboard'?'工作台':'设置';document.title=title+' | Station Cat';text('work-heading',title);text('work-breadcrumb',title);text('work-intro',view==='dashboard'?'把今天的作品，稳妥地准备好。':'常用管理入口与当前服务状态。');const panel=$('work-static');panel.replaceChildren();
+ const groups=[['作品与素材',[
+  ['作品资料','管理歌曲、游戏与视频','/admin-v2/'],['素材库','上传图片、试听与视频文件','/admin/music/media/'],['视频与 MV','整理影片与关联作品','/admin-v2/?view=clips'],['素材权利','核对素材的使用依据','/admin-v2/?view=assets'],['音频资料','完整音频与独立试听的原有管理入口','/admin/music/']
+ ]],['发行与展示',[
+  ['发行平台','歌曲的正式收听链接','/admin-v2/?view=platforms'],['推广歌曲与试听','管理推广和试听配置','/admin-v2/?view=promotions'],['首页配置','选择首页主推与展示内容','/admin-v2/?view=home']
+ ]],['账号与交易',[
+  ['账号与会员','查询账号、余额与会员状态','/admin-v2/services/#accounts'],['订单与权益','查看支付和履约详情','/admin-v2/services/#commerce'],['退款审核','处理现有 VIP 退款申请','/admin/membership-refunds/']
+ ]]];
+ if(view==='settings'){
+  for(const [heading,links]of groups){const section=el('section',null,'settings-group');section.append(el('h2',heading));for(const [label,description,path]of links){const a=el('a',null,'settings-link'),copy=el('span');a.href=path;copy.append(el('strong',label),el('small',description));const arrow=el('span',null,'settings-arrow');arrow.setAttribute('aria-hidden','true');arrow.append(icon('arrow'));a.append(copy,arrow);section.append(a);}panel.append(section);}
+  const state=el('section',null,'settings-group settings-status');state.append(el('h2','服务状态'),el('p','由服务端提供，供核对当前可用功能。','muted'));
+  for(const [label,enabled]of [['内容管理',true],['定时公开',identity.schedulesEnabled],['推广链接',identity.campaignsEnabled]]){const row=el('div',null,'settings-status-row'),badge=el('span',enabled?'已启用':'未启用','badge');badge.dataset.enabled=String(Boolean(enabled));row.append(el('span',label),badge);state.append(row);}panel.append(state);
+ }else{panel.append(el('h2','开始整理'));for(const [,links]of groups)for(const [label,,path]of links){const a=el('a',label);a.href=path;panel.append(a);}}
  status('已核对当前管理员和内容服务。');for(const nav of document.querySelectorAll('[data-admin-nav]')){if(nav.dataset.adminNav===view)nav.setAttribute('aria-current','page');else nav.removeAttribute('aria-current');}
 }
+
 if(workbench){
  $('work-platform-link').addEventListener('click',e=>{if(dirty||busy||controller?.pending()){e.preventDefault();status(controller?.pending()?'请先核对原操作的结果，再管理平台链接。':dirty?'有未保存的修改，请先保存草稿，再管理平台链接。':'正在读取作品，请稍后再管理平台链接。',true);}});
  renderWorkNavigation();$('content-title').addEventListener('input',()=>{document.querySelector('[data-title="'+$('content-locale').value+'"]').value=$('content-title').value;});for(const n of document.querySelectorAll('[data-title]'))n.addEventListener('input',()=>{if(n.dataset.title===$('content-locale').value)$('content-title').value=n.value;});$('content-locale').addEventListener('change',()=>{$('content-title').value=document.querySelector('[data-title="'+$('content-locale').value+'"]').value;});

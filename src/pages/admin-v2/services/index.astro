@@ -1,23 +1,21 @@
 ---
+import { RefreshCw, Undo2, Search, ListFilter, ChevronDown, CircleCheck, CircleX } from '@lucide/astro';
 import StationAdminLayout from '../../../layouts/StationAdminLayout.astro';
 import '../../../styles/global.css';
 ---
 
 <StationAdminLayout title="账号与站点服务" active="accounts" services>
   <section class="admin-v2-shell">
-    <header class="admin-v2-heading">
-      <div>
-        <p class="station-kicker">Station Cat Admin</p>
-        <h1>账号与站点服务</h1>
-        <div class="admin-v2-status" id="admin-v2-status" role="status" aria-live="polite">
-          正在连接站点服务。
-        </div>
-      </div>
-      <div class="admin-v2-heading__actions"><a class="button button-secondary" href="/admin-v2/">返回作品内容</a><a class="button button-secondary" href="/admin/membership-refunds/">VIP 退款审核</a></div>
+    <header class="admin-v2-heading service-heading">
+      <div><p class="service-breadcrumb">创作后台 <span>/</span> <span id="service-breadcrumb">账号与会员</span></p><h1 id="service-title">账号与会员</h1><p id="service-intro">找到账号，展开查看会员、余额与记录。</p></div>
+      <div class="admin-v2-heading__actions"><button class="button button-primary" id="service-refresh" type="button"><RefreshCw size={19} /><span id="service-refresh-label">刷新账号</span></button><a class="button button-secondary" href="/admin/membership-refunds/"><Undo2 size={19} />退款审核</a></div>
     </header>
+    <template id="service-chevron"><ChevronDown size={20} /></template>
+    <template id="service-status-success"><CircleCheck size={16} /></template><template id="service-status-error"><CircleX size={16} /></template><template id="service-status-refund"><Undo2 size={16} /></template>
+
 
     <div class="admin-v2-grid">
-      <aside class="admin-v2-panel admin-v2-sidebar" data-admin-v2-scroll-panel>
+      <aside class="admin-v2-panel admin-v2-sidebar service-tools">
         <nav class="admin-v2-tabs" aria-label="后台模块">
           <div class="admin-v2-nav-group" role="group" aria-labelledby="admin-nav-publish">
             <span class="admin-v2-nav-label" id="admin-nav-publish">发布</span>
@@ -30,10 +28,10 @@ import '../../../styles/global.css';
           <div class="admin-v2-nav-group" role="group" aria-labelledby="admin-nav-operations">
             <span class="admin-v2-nav-label" id="admin-nav-operations">运营</span>
             <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="commerce">订单</button>
-            <a class="admin-v2-tab" href="/admin/membership-refunds/">VIP 退款审核</a>
+
             <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="game-commerce">游戏商品</button>
-            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="accounts">账户</button>
-            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="access">读者授权</button>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="accounts">账号与会员</button>
+            <button class="admin-v2-tab" type="button" aria-pressed="false" data-admin-v2-tab="access">授权记录</button>
           </div>
           <div class="admin-v2-nav-group" role="group" aria-labelledby="admin-nav-response">
             <span class="admin-v2-nav-label" id="admin-nav-response">反馈</span>
@@ -193,44 +191,12 @@ import '../../../styles/global.css';
           <div class="admin-v2-list" id="signal-list" aria-label="Signal strip briefs"></div>
         </section>
 
-        <section class="admin-v2-sidebar-section" data-admin-v2-panel="commerce-sidebar" hidden>
-          <div class="admin-v2-filter-grid">
-            <label>
-              订单状态
-              <select id="orders-status">
-                <option value="">全部</option>
-                <option value="draft">draft</option>
-                <option value="waiting">waiting</option>
-                <option value="confirming">confirming</option>
-                <option value="confirmed">confirmed</option>
-                <option value="finished">finished</option>
-                <option value="failed">failed</option>
-                <option value="expired">expired</option>
-                <option value="refunded">refunded</option>
-                <option value="unknown">unknown</option>
-              </select>
-            </label>
-            <label>
-              订单类型
-              <select id="orders-type">
-                <option value="">全部</option>
-                <option value="chapter">chapter</option>
-                <option value="chapter-bundle">chapter-bundle</option>
-                <option value="supporter">supporter</option>
-                <option value="credit-pack">credit-pack</option>
-                <option value="tip">tip</option>
-              </select>
-            </label>
-          </div>
-          <label>
-            读者 Email
-            <input id="orders-email" type="email" placeholder="reader@example.com" />
-          </label>
-          <label>
-            seriesSlug
-            <input id="orders-series" placeholder="deng-hai-liang-zhe" />
-          </label>
-          <button class="button button-primary" id="orders-refresh" type="button">刷新订单</button>
+        <section class="admin-v2-sidebar-section service-filters" data-admin-v2-panel="commerce-sidebar" hidden>
+          <label class="service-search"><Search size={19} /><span class="sr-only">搜索已读取的订单号或邮箱</span><input id="orders-search" type="search" placeholder="搜索已读取的订单号或邮箱" /></label>
+          <label><span class="sr-only">订单状态</span><select id="orders-status"><option value="">全部状态</option><option value="draft">待提交</option><option value="waiting">待支付</option><option value="confirming">确认中</option><option value="confirmed">支付已确认</option><option value="finished">已完成</option><option value="failed">失败</option><option value="expired">已过期</option><option value="refunded">已退款</option><option value="unknown">待核对</option></select></label>
+          <label><span class="sr-only">订单类型</span><select id="orders-type"><option value="">全部类型</option><option value="chapter">历史章节</option><option value="chapter-bundle">历史章节包</option><option value="supporter">支持者</option><option value="credit-pack">积分充值</option><option value="tip">打赏</option></select></label>
+          <button class="button button-secondary" id="orders-refresh" type="button"><ListFilter size={18} />筛选</button>
+          <details class="service-more-filters"><summary>更多筛选</summary><div><label>按完整邮箱查询<input id="orders-email" type="email" placeholder="reader@example.com" /></label><label>历史作品标识<input id="orders-series" placeholder="可选" /></label><p>每次最多读取 80 笔。查找更早的记录时，可按邮箱或状态筛选后重新读取。</p></div></details>
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="game-commerce-sidebar" hidden>
@@ -265,20 +231,10 @@ import '../../../styles/global.css';
           <button class="button button-primary" id="game-commerce-refresh" type="button">刷新游戏商品</button>
         </section>
 
-        <section class="admin-v2-sidebar-section" data-admin-v2-panel="accounts-sidebar" hidden>
-          <label>
-            读者 Email
-            <input id="accounts-email-filter" type="email" placeholder="reader@example.com" />
-          </label>
-          <label>
-            账户状态
-            <select id="accounts-status">
-              <option value="">全部</option>
-              <option value="active">active</option>
-              <option value="disabled">disabled</option>
-            </select>
-          </label>
-          <button class="button button-primary" id="accounts-refresh" type="button">刷新账户</button>
+        <section class="admin-v2-sidebar-section service-filters service-account-filters" data-admin-v2-panel="accounts-sidebar" hidden>
+          <label class="service-search"><Search size={19} /><span class="sr-only">按完整邮箱查询账号</span><input id="accounts-email-filter" type="email" placeholder="按完整邮箱查询账号" /></label>
+          <label><span class="sr-only">账户状态</span><select id="accounts-status"><option value="">全部状态</option><option value="active">正常</option><option value="disabled">已停用</option></select></label>
+          <button class="button button-secondary" id="accounts-refresh" type="button"><ListFilter size={18} />筛选</button>
         </section>
 
         <section class="admin-v2-sidebar-section" data-admin-v2-panel="analytics-sidebar" data-retired-admin hidden inert>
@@ -1118,19 +1074,10 @@ import '../../../styles/global.css';
           </form>
         </section>
 
-        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="commerce-main" hidden>
-          <div class="admin-v2-section-heading">
-            <div>
-              <p class="station-kicker">Orders</p>
-              <h2>订单与收入排查</h2>
-            </div>
-          </div>
-          <div class="admin-commerce-grid">
-            <div class="admin-v2-table-list" id="orders-list"></div>
-            <section class="admin-v2-subpanel admin-detail-panel" id="order-detail">
-              <p class="admin-empty-list">选择一笔订单查看支付事件、履约状态和排查信息。</p>
-            </section>
-          </div>
+        <section class="admin-v2-panel admin-v2-workspace service-records-panel" data-admin-v2-panel="commerce-main" hidden aria-label="订单列表">
+          <div class="service-records" id="orders-list"></div>
+          <section class="service-detail" id="order-detail" role="region" hidden></section>
+          <p class="service-count" id="commerce-count"></p>
         </section>
 
         <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="game-commerce-main" hidden>
@@ -1207,19 +1154,10 @@ import '../../../styles/global.css';
           </section>
         </section>
 
-        <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="accounts-main" hidden>
-          <div class="admin-v2-section-heading">
-            <div>
-              <p class="station-kicker">Reader Accounts</p>
-              <h2>读者账户、余额与流水</h2>
-            </div>
-          </div>
-          <div class="admin-commerce-grid">
-            <div class="admin-v2-table-list" id="accounts-list"></div>
-            <section class="admin-v2-subpanel admin-detail-panel" id="account-detail">
-              <p class="admin-empty-list">选择读者账户后查看余额、流水、订单和授权。</p>
-            </section>
-          </div>
+        <section class="admin-v2-panel admin-v2-workspace service-records-panel" data-admin-v2-panel="accounts-main" hidden aria-label="账号列表">
+          <div class="service-records" id="accounts-list"></div>
+          <section class="service-detail" id="account-detail" role="region" hidden></section>
+          <p class="service-count" id="accounts-count"></p>
         </section>
 
         <section class="admin-v2-panel admin-v2-workspace" data-admin-v2-panel="analytics-main" data-retired-admin hidden inert>
@@ -1338,6 +1276,7 @@ import '../../../styles/global.css';
 
       </div>
     </div>
+    <div class="admin-v2-status service-feedback" id="admin-v2-status" role="status" aria-live="polite">正在连接站点服务。</div>
   </section>
 
   <script is:inline>
@@ -4268,39 +4207,60 @@ import '../../../styles/global.css';
       setSaveStatus('Markdown 已导入，检查字段后即可保存。', 'success');
     };
 
+    // The shared detail node stays mounted when a list is refreshed, so an
+    // in-progress account form is not replaced by a summary/list request.
+    const serviceUi = { orderRequest: 0, accountRequest: 0, orderListRequest: 0, accountListRequest: 0, orderOpen: false, accountOpen: false, accountDirty: false, orderBusy: false, accountBusy: false };
+    const serviceStatusLabel = value => ({ draft: '待提交', waiting: '待支付', confirming: '确认中', confirmed: '支付已确认', finished: '已完成', failed: '失败', expired: '已过期', refunded: '已退款', unknown: '待核对', active: '正常', disabled: '已停用' })[value] || value || '待核对';
+    const serviceTypeLabel = value => ({ 'credit-pack': '积分充值', chapter: '历史章节', 'chapter-bundle': '历史章节包', supporter: '支持者', tip: '打赏' })[value] || value || '未登记类型';
+    const serviceStatusIcon = status => { const icon = status === 'refunded' ? 'refund' : ['finished','confirmed','active'].includes(status) ? 'success' : ['failed','disabled'].includes(status) ? 'error' : ''; return icon ? '<span aria-hidden="true">' + $('#service-status-' + icon).innerHTML + '</span>' : ''; };
+    const orderKey = order => String(order.orderToken || order.id);
+    const runServiceAction = action => Promise.resolve().then(action).catch(error => setStatus(error.message || '读取失败，请重试。', 'error'));
+    const mountServiceDetail = (list, detail, selected, open) => {
+      const row = Array.from(list.children).find(item => item.dataset.recordKey === String(selected));
+      for (const item of list.children) {
+        const button = item.firstElementChild;
+        const active = item === row && open;
+        if (button?.tagName === 'BUTTON') button.setAttribute('aria-expanded', String(active));
+        item.dataset.expanded = String(active);
+      }
+      detail.hidden = !row || !open;
+      if (row && open) { row.append(detail); detail.setAttribute('aria-labelledby', row.firstElementChild.id); }
+    };
+    const renderServiceRecords = (list, detail, rows, keyOf, summary, selected, open, select) => {
+      list.parentElement.append(detail);
+      list.replaceChildren();
+      rows.forEach((record, index) => {
+        const row = document.createElement('article'); row.className = 'service-record'; row.dataset.recordKey = keyOf(record);
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'service-summary'; button.id = list.id + '-row-' + index;
+        button.setAttribute('aria-controls', detail.id); button.innerHTML = summary(record);
+        const chevron = document.createElement('span'); chevron.className = 'service-chevron'; chevron.setAttribute('aria-hidden', 'true'); chevron.append($('#service-chevron').content.cloneNode(true)); button.append(chevron);
+        button.addEventListener('click', () => runServiceAction(() => select(keyOf(record)))); row.append(button); list.append(row);
+      });
+      if (!rows.length) renderEmpty(list, '没有符合条件的记录。调整筛选后再试。');
+      mountServiceDetail(list, detail, selected, open);
+    };
+    const renderOrders = () => {
+      const query = $('#orders-search').value.trim().toLowerCase();
+      const orders = state.orders.filter(order => !query || [orderTitle(order), order.accountEmail, order.customerEmail].some(value => String(value || '').toLowerCase().includes(query)));
+      renderServiceRecords(elements.ordersList, elements.orderDetail, orders, orderKey, order => `
+        <span class="service-identity"><strong>${escapeHtml(serviceTypeLabel(order.orderType))}</strong><small>${escapeHtml(order.accountEmail || order.customerEmail || '无账户')}</small></span>
+        <span class="service-reference"><span>${escapeHtml(orderTitle(order))}</span><small>${escapeHtml(formatDate(order.createdAt) || '未登记时间')}</small></span>
+        <strong class="service-amount">${escapeHtml(formatMoney(order.priceAmount, order.priceCurrency))}</strong>
+        <span class="admin-status-pill" data-state="${escapeHtml(order.status)}" data-tone="${statusTone(order.status)}">${serviceStatusIcon(order.status)}${escapeHtml(serviceStatusLabel(order.status))}</span>`, state.selectedOrderToken, serviceUi.orderOpen, loadOrderDetail);
+      $('#commerce-count').textContent = `显示 ${orders.length} 笔 · 本次读取 ${state.orders.length} 笔订单`;
+    };
     const loadOrders = async () => {
+      const request = ++serviceUi.orderListRequest;
       const params = new URLSearchParams({ limit: '80' });
       if (elements.filters.orderStatus.value) params.set('status', elements.filters.orderStatus.value);
       if (elements.filters.orderType.value) params.set('orderType', elements.filters.orderType.value);
       if (elements.filters.orderEmail.value.trim()) params.set('email', elements.filters.orderEmail.value.trim());
       if (elements.filters.orderSeries.value.trim()) params.set('series', elements.filters.orderSeries.value.trim());
       const payload = await apiJson(`/admin/api/novels/payments/orders?${params.toString()}`);
-      const orders = payload.orders || [];
+      if (request !== serviceUi.orderListRequest) return;
+      state.orders = payload.orders || []; renderOrders();
       const cleanup = payload.cleanup || {};
-      const cleanupMessage = cleanup.deleted
-        ? `，已自动清理 ${cleanup.deleted} 笔超过 ${cleanup.olderThanHours || 12} 小时的未完成订单。`
-        : '';
-      state.orders = orders;
-      if (!orders.length) {
-        renderEmpty(elements.ordersList, '暂无订单。');
-        elements.orderDetail.innerHTML = '<p class="admin-empty-list">没有可查看的订单详情。</p>';
-        setStatus(`暂无订单${cleanupMessage}`, 'success');
-        return;
-      }
-      elements.ordersList.innerHTML = '';
-      orders.forEach((order) => {
-        const button = document.createElement('button');
-        button.className = `admin-v2-entry${order.orderToken === state.selectedOrderToken ? ' is-active' : ''}`;
-        button.type = 'button';
-        button.innerHTML = `
-          <span>${escapeHtml(orderTitle(order))}</span>
-          <small>${escapeHtml(order.status)} · ${escapeHtml(order.orderType)} · ${escapeHtml(formatMoney(order.priceAmount, order.priceCurrency))}</small>
-          <small>${escapeHtml(order.accountEmail || order.customerEmail || '无账户')} · ${escapeHtml(order.seriesSlug || '')}${order.chapterSlug ? `/${escapeHtml(order.chapterSlug)}` : ''}</small>
-        `;
-        button.addEventListener('click', () => loadOrderDetail(order.orderToken || order.id));
-        elements.ordersList.append(button);
-      });
-      setStatus(`已载入 ${orders.length} 笔订单${cleanupMessage}`, 'success');
+      setStatus(`已读取 ${state.orders.length} 笔订单。${cleanup.deleted ? `已自动清理 ${cleanup.deleted} 笔超过 ${cleanup.olderThanHours || 12} 小时的未完成订单。` : ''}`, 'success');
     };
 
     const renderOrderDetail = (detail) => {
@@ -4309,64 +4269,60 @@ import '../../../styles/global.css';
       const events = detail.events || [];
       const canFulfill = ['confirmed', 'finished'].includes(order.status) && !fulfillment.complete && order.orderType !== 'tip';
       elements.orderDetail.innerHTML = `
-        <div class="admin-v2-section-heading">
-          <div>
-            <p class="station-kicker">Order Detail</p>
-            <h3>${escapeHtml(orderTitle(order))}</h3>
-          </div>
-          <span class="admin-status-pill" data-tone="${statusTone(order.status)}">${escapeHtml(order.status)}</span>
+        <div class="service-order-facts">
+          <dl><dt>订单号</dt><dd>${escapeHtml(orderTitle(order))}</dd><dt>创建时间</dt><dd>${escapeHtml(formatDate(order.createdAt) || '未登记')}</dd></dl>
+          <dl><dt>支付状态</dt><dd>${escapeHtml(serviceStatusLabel(order.status))}</dd><dt>履约状态</dt><dd>${fulfillment.complete ? '已完成' : fulfillment.needsReview ? '需排查' : fulfillment.pending ? '等待中' : '未完成'}</dd></dl>
+          <dl><dt>账号</dt><dd>${escapeHtml(order.accountEmail || order.customerEmail || '无账户')}</dd><dt>支付金额</dt><dd>${escapeHtml(order.payAmount || '未登记')} ${escapeHtml(order.payCurrency || '')}</dd></dl>
         </div>
-        <div class="admin-detail-grid">
-          <article><span>类型</span><strong>${escapeHtml(order.orderType)}</strong></article>
-          <article><span>金额</span><strong>${escapeHtml(formatMoney(order.priceAmount, order.priceCurrency))}</strong></article>
-          <article><span>支付</span><strong>${escapeHtml(order.payAmount || '-')} ${escapeHtml(order.payCurrency || '')}</strong></article>
-          <article><span>履约</span><strong>${fulfillment.complete ? '已完成' : fulfillment.needsReview ? '需排查' : fulfillment.pending ? '等待中' : '未完成'}</strong></article>
-        </div>
-        <div class="admin-pricing-lines">
-          <p><strong>读者：</strong>${escapeHtml(order.accountEmail || order.customerEmail || '无账户')}</p>
-          <p><strong>内容：</strong>${escapeHtml(order.seriesSlug || '-')}${order.chapterSlug ? ` / ${escapeHtml(order.chapterSlug)}` : ''}</p>
-          <p><strong>Provider：</strong>${escapeHtml(order.providerStatus || '-')} · ${escapeHtml(order.providerPaymentId || order.providerInvoiceId || '-')}</p>
-          <p><strong>创建 / 更新：</strong>${escapeHtml(formatDate(order.createdAt))} / ${escapeHtml(formatDate(order.updatedAt))}</p>
-          <p><strong>履约原因：</strong>${escapeHtml(fulfillment.reason || '-')}</p>
-        </div>
-        <div class="button-row">
-          ${canFulfill ? '<button class="button button-primary" id="order-fulfill" type="button">重跑履约</button>' : ''}
-          ${order.paymentUrl ? `<a class="button button-secondary" href="${escapeHtml(order.paymentUrl)}" target="_blank" rel="noreferrer">打开支付页</a>` : ''}
-        </div>
-        <section class="admin-detail-section">
-          <h4>支付事件</h4>
-          ${events.length ? events.map((event) => `
-            <article class="admin-v2-row">
-              <strong>${escapeHtml(event.status || event.eventType)}</strong>
-              <span>${event.signatureValid ? '签名有效' : '签名未确认'} · ${escapeHtml(event.providerPaymentId || '')}</span>
-              <small>${escapeHtml(formatDate(event.receivedAt))}</small>
-            </article>
-          `).join('') : '<p class="admin-empty-list">暂无 IPN 事件。</p>'}
+        <section class="service-events" aria-label="支付事件">
+          <ol><li><strong>订单创建</strong><small>${escapeHtml(formatDate(order.createdAt) || '未登记时间')}</small></li>${events.map(event => `<li><strong>${escapeHtml(serviceStatusLabel(event.status || event.eventType))}</strong><small>${escapeHtml(formatDate(event.receivedAt) || '未登记时间')}</small></li>`).join('')}</ol>
+          ${events.length ? '' : '<p class="admin-empty-list">暂无支付回调记录。</p>'}
         </section>
+        <details class="service-disclosure"><summary>更多订单信息</summary><div class="admin-pricing-lines">
+          <p><strong>内容：</strong>${escapeHtml(order.seriesSlug || '无关联内容')}${order.chapterSlug ? ` / ${escapeHtml(order.chapterSlug)}` : ''}</p>
+          <p><strong>支付服务：</strong>${escapeHtml(order.providerStatus || '-')} · ${escapeHtml(order.providerPaymentId || order.providerInvoiceId || '-')}</p>
+          <p><strong>更新时间：</strong>${escapeHtml(formatDate(order.updatedAt))}</p><p><strong>履约原因：</strong>${escapeHtml(fulfillment.reason || '-')}</p>
+          ${events.map(event => `<p>${escapeHtml(event.providerPaymentId || '')} · ${escapeHtml(event.status || event.eventType)} · ${escapeHtml(formatDate(event.receivedAt))} · ${event.signatureValid ? '签名有效' : '签名未确认'}</p>`).join('')}
+        </div></details>
+        ${canFulfill || order.paymentUrl ? `<div class="button-row">${canFulfill ? '<button class="button button-primary" id="order-fulfill" type="button">重跑履约</button>' : ''}${order.paymentUrl ? `<a class="button button-secondary" href="${escapeHtml(order.paymentUrl)}" target="_blank" rel="noreferrer">打开支付页</a>` : ''}</div>` : ''}
       `;
       const fulfillButton = $('#order-fulfill');
-      if (fulfillButton) fulfillButton.addEventListener('click', () => fulfillOrder(order));
+      if (fulfillButton) fulfillButton.addEventListener('click', () => runServiceAction(() => fulfillOrder(order)));
     };
 
     const loadOrderDetail = async (orderTokenOrId) => {
       const value = String(orderTokenOrId || '');
-      if (!value) return;
-      const params = new URLSearchParams(Number.isFinite(Number(value)) ? { id: value } : { order: value });
-      state.selectedOrderToken = value;
-      elements.orderDetail.innerHTML = '<p class="admin-empty-list">正在读取订单详情。</p>';
-      const detail = await apiJson(`/admin/api/novels/payments/order?${params.toString()}`);
-      renderOrderDetail(detail);
-      await loadOrders();
+      if (!value || serviceUi.orderBusy) return;
+      if (state.selectedOrderToken === value && serviceUi.orderOpen) {
+        serviceUi.orderOpen = false; serviceUi.orderRequest++; mountServiceDetail(elements.ordersList, elements.orderDetail, value, false); return;
+      }
+      if (state.selectedOrderToken === value && elements.orderDetail.dataset.loaded === value) {
+        serviceUi.orderOpen = true; mountServiceDetail(elements.ordersList, elements.orderDetail, value, true); return;
+      }
+      state.selectedOrderToken = value; serviceUi.orderOpen = true;
+      const request = ++serviceUi.orderRequest;
+      elements.orderDetail.dataset.loaded = ''; elements.orderDetail.innerHTML = '<p class="admin-empty-list">正在读取订单详情…</p>';
+      mountServiceDetail(elements.ordersList, elements.orderDetail, value, true);
+      try {
+        const params = new URLSearchParams(Number.isFinite(Number(value)) ? { id: value } : { order: value });
+        const detail = await apiJson(`/admin/api/novels/payments/order?${params.toString()}`);
+        if (request !== serviceUi.orderRequest || state.selectedOrderToken !== value) return;
+        if (!detail.order || orderKey(detail.order) !== value) throw new Error('订单详情与所选记录不一致，请重新读取。');
+        renderOrderDetail(detail); elements.orderDetail.dataset.loaded = value;
+      } catch (error) {
+        if (request !== serviceUi.orderRequest) return;
+        elements.orderDetail.innerHTML = '<p class="admin-empty-list">详情读取失败。收起后再次展开可重试。</p>'; throw error;
+      }
     };
 
     const fulfillOrder = async (order) => {
-      const result = await apiJson('/admin/api/novels/payments/orders/fulfill', {
-        method: 'POST',
-        body: JSON.stringify({ id: order.id, orderToken: order.orderToken })
-      });
-      renderOrderDetail(result);
-      await Promise.all([loadOrders(), loadAuditLogs()]);
-      setStatus('订单履约已重跑。', 'success');
+      if (serviceUi.orderBusy) return;
+      serviceUi.orderBusy = true; const button = $('#order-fulfill'); if (button) button.disabled = true;
+      try {
+        const result = await apiJson('/admin/api/novels/payments/orders/fulfill', { method: 'POST', body: JSON.stringify({ id: order.id, orderToken: order.orderToken }) });
+        if (state.selectedOrderToken === orderKey(order)) renderOrderDetail(result);
+        await Promise.all([loadOrders(), loadAuditLogs()]); setStatus('订单履约已重跑。', 'success');
+      } finally { serviceUi.orderBusy = false; if (button) button.disabled = false; }
     };
 
     const gameLifecycleLabel = (status) => ({
@@ -4735,31 +4691,20 @@ import '../../../styles/global.css';
     };
 
     const loadAccounts = async () => {
+      const request = ++serviceUi.accountListRequest;
       const params = new URLSearchParams({ limit: '80' });
       if (elements.filters.accountEmail.value.trim()) params.set('email', elements.filters.accountEmail.value.trim());
       if (elements.filters.accountStatus.value) params.set('status', elements.filters.accountStatus.value);
       const payload = await apiJson(`/admin/api/novels/readers/accounts?${params.toString()}`);
-      const accounts = payload.accounts || [];
-      state.accounts = accounts;
-      if (!accounts.length) {
-        renderEmpty(elements.accountsList, '暂无读者账户。');
-        elements.accountDetail.innerHTML = '<p class="admin-empty-list">没有可查看的账户详情。</p>';
-        return;
-      }
-      elements.accountsList.innerHTML = '';
-      accounts.forEach((account) => {
-        const button = document.createElement('button');
-        button.className = `admin-v2-entry${account.id === state.selectedAccountId ? ' is-active' : ''}`;
-        button.type = 'button';
-        button.innerHTML = `
-          <span>${escapeHtml(account.email)}</span>
-          <small>${escapeHtml(account.status)} · 余额 ${escapeHtml(String(account.creditAccount?.balanceCredits || 0))} ${escapeHtml(account.creditAccount?.unitLabel || 'Station Points')}</small>
-          <small>订单 ${escapeHtml(String(account.stats?.orderCount || 0))} · 授权 ${escapeHtml(String(account.stats?.activeEntitlementCount || 0))} · 最近订单 ${escapeHtml(formatDate(account.stats?.latestOrderAt) || '-')}</small>
-        `;
-        button.addEventListener('click', () => loadAccountDetail(account.id));
-        elements.accountsList.append(button);
-      });
-      setStatus(`已载入 ${accounts.length} 个读者账户。`, 'success');
+      if (request !== serviceUi.accountListRequest) return;
+      state.accounts = payload.accounts || [];
+      renderServiceRecords(elements.accountsList, elements.accountDetail, state.accounts, account => String(account.id), account => `
+        <span class="service-identity"><strong>${escapeHtml(account.email)}</strong><small>账号 #${escapeHtml(String(account.id))}</small></span>
+        <span class="service-reference"><span>订单 ${escapeHtml(String(account.stats?.orderCount || 0))} · 授权 ${escapeHtml(String(account.stats?.activeEntitlementCount || 0))}</span><small>最近订单 ${escapeHtml(formatDate(account.stats?.latestOrderAt) || '暂无')}</small></span>
+        <span class="service-amount"><strong>${escapeHtml(String(account.creditAccount?.balanceCredits || 0))}</strong><small>${escapeHtml(account.creditAccount?.unitLabel || 'Station Points')}</small></span>
+        <span class="admin-status-pill" data-tone="${statusTone(account.status)}">${serviceStatusIcon(account.status)}${escapeHtml(serviceStatusLabel(account.status))}</span>`, state.selectedAccountId, serviceUi.accountOpen, loadAccountDetail);
+      $('#accounts-count').textContent = `本次读取 ${state.accounts.length} 个账号 · 最多 80 个`;
+      setStatus(`已读取 ${state.accounts.length} 个账号。${serviceUi.accountDirty ? '未提交的积分调整已保留。' : ''}`, 'success');
     };
 
     const renderAccountDetail = (detail) => {
@@ -4773,10 +4718,10 @@ import '../../../styles/global.css';
       elements.accountDetail.innerHTML = `
         <div class="admin-v2-section-heading">
           <div>
-            <p class="station-kicker">Reader Detail</p>
-            <h3>${escapeHtml(account.email || '')}</h3>
+            <p class="station-kicker">账号概况</p>
+            <h2>${escapeHtml(account.email || '')}</h2>
           </div>
-          <span class="admin-status-pill" data-tone="${statusTone(account.status)}">${escapeHtml(account.status || '')}</span>
+          <span class="admin-status-pill" data-tone="${statusTone(account.status)}">${serviceStatusIcon(account.status)}${escapeHtml(serviceStatusLabel(account.status))}</span>
         </div>
         <div class="admin-detail-grid">
           <article><span>余额</span><strong>${escapeHtml(String(credits.balanceCredits || 0))}</strong></article>
@@ -4785,7 +4730,7 @@ import '../../../styles/global.css';
           <article><span>会员</span><strong>${escapeHtml(membership?.active ? '有效' : '未开通')}</strong><small>${escapeHtml(membership?.expiresAt ? `至 ${formatDate(membership.expiresAt)}` : `${membershipSettings.membershipCreditCost || 10} 点/月`)}</small></article>
           <article><span>有效授权</span><strong>${escapeHtml(String(account.stats?.activeEntitlementCount || entitlements.filter((item) => !item.revokedAt).length))}</strong></article>
         </div>
-        <form class="admin-v2-form admin-credit-form" id="credit-adjust-form">
+        <details class="service-disclosure"><summary>调整积分</summary><form class="admin-v2-form admin-credit-form" id="credit-adjust-form">
           <div class="admin-v2-form-grid">
             <label>
               调整点数
@@ -4809,9 +4754,9 @@ import '../../../styles/global.css';
             <textarea id="credit-adjust-note" rows="3" required placeholder="必须写清楚补点、扣点或客服处理原因。"></textarea>
           </label>
           <button class="button button-primary" type="submit">保存余额调整</button>
-        </form>
-        <section class="admin-detail-section">
-          <h4>余额流水</h4>
+        </form></details>
+        <details class="service-disclosure">
+          <summary>余额流水</summary>
           ${ledger.length ? ledger.map((item) => `
             <article class="admin-v2-row">
               <strong>${escapeHtml(formatCredits(item.creditsDelta))} · ${escapeHtml(item.entryType)}</strong>
@@ -4819,9 +4764,9 @@ import '../../../styles/global.css';
               <small>${escapeHtml(item.note || '')} · ${escapeHtml(formatDate(item.createdAt))}</small>
             </article>
           `).join('') : '<p class="admin-empty-list">暂无余额流水。</p>'}
-        </section>
-        <section class="admin-detail-section">
-          <h4>授权</h4>
+        </details>
+        <details class="service-disclosure">
+          <summary>授权</summary>
           ${entitlements.length ? entitlements.slice(0, 12).map((item) => `
             <article class="admin-v2-row">
               <strong>${escapeHtml(item.seriesSlug)}${item.chapterSlug ? `/${escapeHtml(item.chapterSlug)}` : ''}</strong>
@@ -4829,9 +4774,9 @@ import '../../../styles/global.css';
               <small>${escapeHtml(item.source || '')} · ${escapeHtml(formatDate(item.grantedAt))}</small>
             </article>
           `).join('') : '<p class="admin-empty-list">暂无授权。</p>'}
-        </section>
-        <section class="admin-detail-section">
-          <h4>最近订单</h4>
+        </details>
+        <details class="service-disclosure">
+          <summary>最近订单</summary>
           ${orders.length ? orders.slice(0, 12).map((order) => `
             <article class="admin-v2-row">
               <strong>${escapeHtml(orderTitle(order))}</strong>
@@ -4839,21 +4784,41 @@ import '../../../styles/global.css';
               <small>${escapeHtml(formatDate(order.updatedAt))}</small>
             </article>
           `).join('') : '<p class="admin-empty-list">暂无订单。</p>'}
-        </section>
+        </details>
       `;
-      $('#credit-adjust-form').addEventListener('submit', (event) => adjustCredits(event, account));
+      serviceUi.accountDirty = false;
+      $('#credit-adjust-form').addEventListener('input', () => { serviceUi.accountDirty = true; });
+      $('#credit-adjust-form').addEventListener('submit', (event) => { event.preventDefault(); void runServiceAction(() => adjustCredits(event, account)); });
     };
 
     const loadAccountDetail = async (accountId) => {
-      state.selectedAccountId = Number(accountId) || 0;
-      elements.accountDetail.innerHTML = '<p class="admin-empty-list">正在读取账户详情。</p>';
-      const payload = await apiJson(`/admin/api/novels/readers/account?id=${encodeURIComponent(state.selectedAccountId)}`);
-      renderAccountDetail(payload);
-      await loadAccounts();
+      const value = Number(accountId) || 0;
+      if (!value || serviceUi.accountBusy) return;
+      if (state.selectedAccountId === value && serviceUi.accountOpen) {
+        serviceUi.accountOpen = false; serviceUi.accountRequest++; mountServiceDetail(elements.accountsList, elements.accountDetail, value, false); return;
+      }
+      if (state.selectedAccountId === value && elements.accountDetail.dataset.loaded === String(value)) {
+        serviceUi.accountOpen = true; mountServiceDetail(elements.accountsList, elements.accountDetail, value, true); return;
+      }
+      if (serviceUi.accountDirty && !window.confirm('当前积分调整尚未提交。放弃这些输入并查看另一个账号？')) return;
+      state.selectedAccountId = value; serviceUi.accountOpen = true; serviceUi.accountDirty = false;
+      const request = ++serviceUi.accountRequest;
+      elements.accountDetail.dataset.loaded = ''; elements.accountDetail.innerHTML = '<p class="admin-empty-list">正在读取账号详情…</p>';
+      mountServiceDetail(elements.accountsList, elements.accountDetail, value, true);
+      try {
+        const payload = await apiJson(`/admin/api/novels/readers/account?id=${encodeURIComponent(value)}`);
+        if (request !== serviceUi.accountRequest || state.selectedAccountId !== value) return;
+        if (Number(payload.account?.id) !== value) throw new Error('账号详情与所选记录不一致，请重新读取。');
+        renderAccountDetail(payload); elements.accountDetail.dataset.loaded = String(value);
+      } catch (error) {
+        if (request !== serviceUi.accountRequest) return;
+        elements.accountDetail.innerHTML = '<p class="admin-empty-list">详情读取失败。收起后再次展开可重试。</p>'; throw error;
+      }
     };
 
     const adjustCredits = async (event, account) => {
       event.preventDefault();
+      if (serviceUi.accountBusy) return;
       const payload = {
         accountId: account.id,
         creditsDelta: Number($('#credit-adjust-delta').value || 0),
@@ -4863,13 +4828,28 @@ import '../../../styles/global.css';
         note: $('#credit-adjust-note').value.trim(),
         reason: 'admin-v2-manual-adjustment'
       };
-      const result = await apiJson('/admin/api/novels/readers/credits/adjust', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      renderAccountDetail(result);
-      await Promise.all([loadAccounts(), loadAuditLogs()]);
-      setStatus('Station 积分余额已调整。', 'success');
+      serviceUi.accountBusy = true;
+      const button = $('#credit-adjust-form').querySelector('button[type="submit"]'); if (button) button.disabled = true;
+      try {
+        const result = await apiJson('/admin/api/novels/readers/credits/adjust', { method: 'POST', body: JSON.stringify(payload) });
+        if (state.selectedAccountId === account.id) renderAccountDetail(result);
+        await Promise.all([loadAccounts(), loadAuditLogs()]); setStatus('Station 积分余额已调整。', 'success');
+      } finally { serviceUi.accountBusy = false; if (button) button.disabled = false; }
+    };
+
+    const refreshServiceWorkspace = async () => {
+      const tab = location.hash.slice(1);
+      if (tab === 'accounts') {
+        const selected = state.selectedAccountId; await loadAccounts();
+        if (selected && selected === state.selectedAccountId && serviceUi.accountOpen && !serviceUi.accountDirty && !serviceUi.accountBusy && state.accounts.some(account => account.id === selected)) {
+          elements.accountDetail.dataset.loaded = ''; serviceUi.accountOpen = false; await loadAccountDetail(selected);
+        }
+      } else if (tab === 'commerce') {
+        const selected = state.selectedOrderToken; await loadOrders();
+        if (selected && selected === state.selectedOrderToken && serviceUi.orderOpen && !serviceUi.orderBusy && state.orders.some(order => orderKey(order) === selected)) {
+          elements.orderDetail.dataset.loaded = ''; serviceUi.orderOpen = false; await loadOrderDetail(selected);
+        }
+      } else await switchTab(tab);
     };
 
     const currentAnalyticsWindowDays = () => Number(elements.filters.analyticsDays.value || 30);
@@ -5432,6 +5412,10 @@ import '../../../styles/global.css';
     const serviceTabs = new Set(['accounts','commerce','game-commerce','access','audit']);
     const switchTab = async (name) => {
       if (!serviceTabs.has(name)) return;
+      const heading = ({ accounts: ['账号与会员', '找到账号，展开查看会员、余额与记录。', '刷新账号'], commerce: ['订单与权益', '找到订单，展开查看处理详情。', '刷新订单'], 'game-commerce': ['游戏商品', '管理商品与游戏权益。', '刷新商品'], access: ['授权记录', '查看与管理已有授权。', '刷新授权'], audit: ['审计日志', '按时间核对站点服务操作。', '刷新日志'] })[name];
+      $('#service-title').textContent = heading[0]; $('#service-breadcrumb').textContent = heading[0]; $('#service-intro').textContent = heading[1]; $('#service-refresh-label').textContent = heading[2];
+      document.title = heading[0] + ' | Station Cat';
+      setStatus('正在读取' + heading[0] + '…');
       if (location.hash !== '#' + name) history.replaceState(history.state, '', '#' + name);
       for (const link of document.querySelectorAll('[data-admin-nav]')) link.setAttribute('aria-current', link.dataset.adminNav === (name === 'accounts' ? 'accounts' : 'commerce') ? 'page' : 'false');
       elements.tabs.forEach((tab) => {
@@ -5466,14 +5450,14 @@ import '../../../styles/global.css';
     };
 
     elements.tabs.forEach((tab, index) => {
-      tab.addEventListener('click', () => switchTab(tab.dataset.adminV2Tab));
+      tab.addEventListener('click', () => runServiceAction(() => switchTab(tab.dataset.adminV2Tab)));
       tab.addEventListener('keydown', (event) => {
         if (!['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'].includes(event.key)) return;
         event.preventDefault();
         const direction = ['ArrowDown', 'ArrowRight'].includes(event.key) ? 1 : -1;
         const target = elements.tabs[(index + direction + elements.tabs.length) % elements.tabs.length];
         target.focus();
-        switchTab(target.dataset.adminV2Tab);
+        void runServiceAction(() => switchTab(target.dataset.adminV2Tab));
       });
     });
     elements.contentForm.addEventListener('submit', saveContent);
@@ -5506,9 +5490,12 @@ import '../../../styles/global.css';
       elements.signalAutomationPanel.open = true;
       elements.signalAutomationPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
-    $('#orders-refresh').addEventListener('click', loadOrders);
+    $('#orders-refresh').addEventListener('click', () => runServiceAction(loadOrders));
+    $('#orders-search').addEventListener('input', renderOrders);
+    $('#service-refresh').addEventListener('click', () => runServiceAction(refreshServiceWorkspace));
+    window.addEventListener('beforeunload', event => { if (serviceUi.accountDirty || serviceUi.accountBusy || serviceUi.orderBusy) { event.preventDefault(); event.returnValue = ''; } });
     $('#game-commerce-refresh').addEventListener('click', loadGameCommerce);
-    $('#accounts-refresh').addEventListener('click', loadAccounts);
+    $('#accounts-refresh').addEventListener('click', () => runServiceAction(loadAccounts));
     $('#analytics-refresh').addEventListener('click', loadAnalyticsStats);
     $('#analytics-aggregate').addEventListener('click', aggregateAnalytics);
     $('#analytics-generate-insights').addEventListener('click', generateAnalyticsInsights);
@@ -5552,7 +5539,7 @@ import '../../../styles/global.css';
         await switchTab(serviceTabs.has(location.hash.slice(1)) ? location.hash.slice(1) : 'accounts');
       } catch (error) { setStatus(error.message, 'error'); }
     };
-    window.addEventListener('hashchange', () => { void switchTab(location.hash.slice(1)); });
+    window.addEventListener('hashchange', () => { void runServiceAction(() => switchTab(location.hash.slice(1))); });
 
     boot();
   </script>

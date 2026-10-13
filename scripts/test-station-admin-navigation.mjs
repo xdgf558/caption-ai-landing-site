@@ -251,7 +251,8 @@ test('real service tab clicks/keyboard synchronize hash so the same sidebar dest
   const window = new AdminNode(), location = { hash: '#accounts' }, state = { keep: 'existing-history' }, changes = [], loaded = [];
   const names = ['accounts', 'commerce', 'game-commerce', 'access', 'audit'], tabs = names.map(name => { const n = new AdminNode('button', { adminV2Tab: name }); n.classList = { toggle() {} }; return n; });
   const panels = names.map(name => new AdminNode('section', { adminV2Panel: name + '-list' }));
-  const context = vm.createContext({ window, location, history: { state, replaceState(value, _, hash) { assert.equal(value, state); location.hash = hash; changes.push(hash); } }, elements: { tabs, panels }, document: { querySelectorAll: () => [] },
+  const headingNodes = new Map();
+  const context = vm.createContext({ setStatus() {}, $: id => { if (!headingNodes.has(id)) headingNodes.set(id, new AdminNode()); return headingNodes.get(id); }, runServiceAction: action => action(), window, location, history: { state, replaceState(value, _, hash) { assert.equal(value, state); location.hash = hash; changes.push(hash); } }, elements: { tabs, panels }, document: { querySelectorAll: () => [] },
     loadAccounts: async () => loaded.push('accounts'), loadOrders: async () => loaded.push('commerce'), loadGameCommerce: async () => loaded.push('game-commerce'), loadEntitlements: async () => loaded.push('access'), loadAuditLogs: async () => loaded.push('audit') });
   vm.runInContext(source.slice(start, end) + "\nwindow.addEventListener('hashchange', () => { void switchTab(location.hash.slice(1)); });", context);
   await vm.runInContext("switchTab('accounts')", context);

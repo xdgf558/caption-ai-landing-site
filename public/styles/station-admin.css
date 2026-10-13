@@ -69,3 +69,116 @@ body.station-admin{margin:0;background:var(--admin-paper);color:var(--admin-ink)
 .workbench[data-home=true] .home-feedback[data-error=true]{color:#ae353a}
 .workbench[data-home=true] .home-view-link{display:inline-flex;align-items:center;gap:8px;font-size:14px;width:fit-content;min-height:34px}
 @media(max-width:650px){.workbench[data-home=true] .work-editor{margin:0 18px;padding:22px 18px}.workbench[data-home=true] .field-grid{grid-template-columns:1fr}.workbench[data-home=true] #content-save{width:100%}}
+
+/* Service workspace: one navigation rail, inline record details. */
+body.station-admin.station-admin-services{--admin-accent:#4443b2;--admin-accent-strong:#363593;--admin-ink:#151a36;--admin-line:#e0dff1;--admin-muted:#606995;--admin-bg:#faf9ff;background:var(--admin-paper)}
+.station-admin.station-admin-services .admin-v2-shell{display:block;max-width:1600px;padding:32px 36px 48px;margin:0 auto}
+.station-admin.station-admin-services .service-heading{background:none;border:0;box-shadow:none;padding:0;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:0 0 28px}
+.station-admin.station-admin-services .service-heading>div:first-child{display:block;min-width:0}
+.station-admin.station-admin-services .service-breadcrumb{font-size:13px;margin:0 0 20px;color:var(--admin-muted)}
+.station-admin.station-admin-services .service-breadcrumb>span:first-child{padding:0 10px;color:#9399b3}
+.station-admin.station-admin-services .service-heading h1{font-size:38px;line-height:1.25;letter-spacing:-1px;margin:0 0 10px;font-weight:750}
+.station-admin.station-admin-services #service-intro{font-size:17px;line-height:1.6;color:var(--admin-muted);margin:0}
+.station-admin.station-admin-services .admin-v2-heading__actions{display:flex;flex-wrap:wrap;gap:12px;max-width:none;flex-shrink:0}
+.station-admin.station-admin-services .button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border:1px solid #dadaed;border-radius:6px;padding:10px 18px;font-size:15px;line-height:1.5;font-weight:550;box-shadow:none;white-space:normal}
+.station-admin.station-admin-services .button-secondary{background:white;color:var(--admin-accent);border-color:#dadaed}
+.station-admin.station-admin-services .button-primary{background:var(--admin-accent);color:white;border-color:var(--admin-accent)}
+.station-admin.station-admin-services .button-primary:hover:not(:disabled){background:var(--admin-accent-strong);border-color:var(--admin-accent-strong);color:white}
+.station-admin.station-admin-services :is(a,button,input,select,textarea,summary):focus-visible{outline:3px solid #9493e8;outline-offset:2px}
+.station-admin.station-admin-services .button:hover{transform:none}
+.station-admin.station-admin-services .admin-v2-grid{display:block;min-height:0;height:auto;max-height:none;overflow:visible}
+.station-admin.station-admin-services .service-tools{position:static;display:block;background:none;border:0;box-shadow:none;max-height:none;height:auto;padding:0;margin:0;overflow:visible;color:var(--admin-ink);cursor:auto}
+.station-admin.station-admin-services .admin-v2-tabs{display:flex;flex-wrap:wrap;gap:0;border:0;border-bottom:1px solid var(--admin-line);margin:0 0 24px;padding:0;background:none}
+.station-admin.station-admin-services .admin-v2-nav-group{display:contents}
+.station-admin.station-admin-services .admin-v2-nav-label{display:none}
+.station-admin.station-admin-services .admin-v2-tab{min-height:50px;padding:12px 24px;border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;font-size:16px;font-weight:550;color:var(--admin-muted)}
+.station-admin.station-admin-services .admin-v2-tab.is-active{color:var(--admin-accent);border-bottom-color:var(--admin-accent);background:transparent}
+.station-admin.station-admin-services .admin-v2-tab:hover:not(:disabled){background:#f1effb}
+.station-admin.station-admin-services .admin-v2-sidebar-section{border:0;margin:0 0 20px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;align-items:end}
+.station-admin.station-admin-services .service-filters{grid-template-columns:minmax(240px,1fr) 150px 150px auto;gap:12px;align-items:center}
+.station-admin.station-admin-services .service-account-filters{grid-template-columns:minmax(240px,1fr) 190px auto}
+.station-admin.station-admin-services .admin-v2-sidebar label{font-size:14px;color:var(--admin-muted);display:block;margin:0;min-width:0}
+.station-admin.station-admin-services .admin-v2-shell :is(input,select,textarea){font:inherit;min-height:46px;border:1px solid #dadaed;border-radius:5px;background:#fff;color:var(--admin-ink);padding:10px 12px;box-shadow:none}
+.station-admin.station-admin-services .service-search{position:relative;display:flex!important;align-items:center;gap:12px;background:#fff;border:1px solid #dadaed;border-radius:5px;padding:0 14px!important}
+.station-admin.station-admin-services .service-search svg{flex-shrink:0;color:var(--admin-muted)}
+.station-admin.station-admin-services .service-search input{padding:10px 0;border:0;min-width:0;background:transparent;outline:0}
+.station-admin.station-admin-services .service-search:focus-within{outline:3px solid #9493e8;outline-offset:2px}
+.station-admin.station-admin-services input::placeholder{color:#727ba2;opacity:1}
+.station-admin.station-admin-services .service-more-filters{border:0;padding:0;grid-column:1/-1;color:var(--admin-muted);font-size:13px;margin-top:-5px}
+.station-admin.station-admin-services .service-more-filters>summary{cursor:pointer;padding:0;min-height:28px;line-height:28px;width:fit-content}
+.station-admin.station-admin-services .service-more-filters>div{display:grid;grid-template-columns:1fr 1fr;gap:14px;background:#f1effa;padding:18px;border-radius:5px}
+.station-admin.station-admin-services .service-more-filters p{grid-column:1/-1;margin:0}
+.station-admin.station-admin-services .admin-v2-main{display:block;overflow:visible;min-width:0;height:auto;max-height:none}
+.station-admin.station-admin-services .admin-v2-panel{box-shadow:none}
+.station-admin.station-admin-services .service-records-panel{padding:0;border:0;background:none}
+.station-admin.station-admin-services .service-records{display:block;border:1px solid var(--admin-line);border-radius:5px;overflow:clip;background:white;min-width:0}
+.station-admin.station-admin-services .service-record{border:0;border-bottom:1px solid var(--admin-line);margin:0;min-width:0}
+.station-admin.station-admin-services .service-record:last-child{border-bottom:0}
+.station-admin.station-admin-services .service-summary{display:grid;width:100%;grid-template-columns:minmax(180px,1.2fr) minmax(180px,1fr) minmax(90px,.5fr) 110px 24px;gap:22px;align-items:center;justify-content:normal;border:0;border-radius:0;background:transparent;min-height:86px;padding:17px 26px;text-align:left;font-weight:450;color:var(--admin-ink)}
+.station-admin.station-admin-services .service-summary>span{min-width:0}
+.station-admin.station-admin-services .service-summary strong{font-size:16px;font-weight:650;line-height:1.5}
+.station-admin.station-admin-services .service-identity,.station-admin.station-admin-services .service-reference{display:grid;gap:2px;overflow-wrap:anywhere}
+.station-admin.station-admin-services .service-summary small{display:block;font-size:14px;color:var(--admin-muted);line-height:1.55;overflow-wrap:anywhere}
+.station-admin.station-admin-services .service-reference>span{overflow-wrap:anywhere;font-size:14px}
+.station-admin.station-admin-services .service-amount{justify-self:end;text-align:right;white-space:normal}
+.station-admin.station-admin-services .service-summary[aria-expanded=true]{background:#f0edfc}
+.station-admin.station-admin-services .service-summary:hover:not(:disabled){background:#f6f4fd}
+.station-admin.station-admin-services .service-summary:focus-visible{outline-offset:-4px;position:relative;z-index:1}
+.station-admin.station-admin-services .service-chevron{display:flex;justify-content:center;color:var(--admin-ink)}
+.station-admin.station-admin-services [aria-expanded=true] .service-chevron{transform:rotate(180deg);color:var(--admin-accent)}
+.station-admin.station-admin-services .admin-status-pill{display:inline-flex;justify-content:center;justify-self:start;padding:5px 10px;border:0;border-radius:5px;background:#edecf5;color:#5e6685;line-height:1.5;font-size:13px;font-weight:600;white-space:normal;overflow-wrap:anywhere}
+.station-admin.station-admin-services .admin-status-pill[data-tone=success]{background:#def2eb;color:#18745d}
+.station-admin.station-admin-services .admin-status-pill[data-tone=error]{background:#fce7eb;color:#b03348}
+.station-admin.station-admin-services .admin-status-pill[data-tone=warning]{background:#fff1df;color:#92611c}
+.station-admin.station-admin-services .service-detail{padding:20px 26px;background:white;min-height:0;min-width:0;overflow-wrap:anywhere}
+.station-admin.station-admin-services .service-order-facts{display:grid;grid-template-columns:1.2fr 1fr 1.2fr;gap:28px}
+.station-admin.station-admin-services .service-order-facts dl{display:grid;grid-template-columns:auto minmax(0,1fr);align-content:start;gap:8px 18px;margin:0;padding:0 24px 0 0;border-right:1px solid var(--admin-line);font-size:14px}
+.station-admin.station-admin-services .service-order-facts dl:last-child{border:0;padding:0}
+.station-admin.station-admin-services .service-order-facts dt{color:var(--admin-muted)}
+.station-admin.station-admin-services .service-order-facts dd{margin:0;color:var(--admin-ink);min-width:0}
+.station-admin.station-admin-services .service-events ol{display:flex;padding:20px 0 6px;list-style:none;margin:0;overflow-x:auto}
+.station-admin.station-admin-services .service-events li{position:relative;flex:1;min-width:150px;text-align:center;padding:22px 12px 0;line-height:1.6}
+.station-admin.station-admin-services .service-events li:before{content:'';position:absolute;width:12px;height:12px;border:4px solid var(--admin-accent);background:white;box-sizing:border-box;border-radius:50%;top:0;left:calc(50% - 6px);z-index:1}
+.station-admin.station-admin-services .service-events li:not(:last-child):after{content:'';position:absolute;height:1px;top:5px;left:calc(50% + 12px);width:calc(100% - 24px);background:#c9c2f8}
+.station-admin.station-admin-services .service-events strong{display:block;font-size:14px;font-weight:600}
+.station-admin.station-admin-services .service-events small{display:block;color:var(--admin-muted);font-size:13px}
+.station-admin.station-admin-services .service-disclosure{border:0;border-top:1px solid var(--admin-line);border-radius:0;background:none;padding:0;margin:6px 0 0;color:var(--admin-ink)}
+.station-admin.station-admin-services .service-disclosure>summary{min-height:44px;line-height:1.5;padding:10px 0;cursor:pointer;font-size:14px;color:var(--admin-accent);font-weight:550}
+.station-admin.station-admin-services .service-disclosure .admin-pricing-lines{margin:4px 0 16px}
+.station-admin.station-admin-services .admin-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:20px}
+.station-admin.station-admin-services .admin-detail-grid article{background:none;border:0;border-right:1px solid var(--admin-line);padding:0 16px 0 0;border-radius:0;min-height:0;box-shadow:none}
+.station-admin.station-admin-services .admin-detail-grid article:last-child{border:0}
+.station-admin.station-admin-services .admin-detail-grid span,.station-admin.station-admin-services .admin-detail-grid small{color:var(--admin-muted)}
+.station-admin.station-admin-services .admin-detail-grid strong{font-size:21px}
+.station-admin.station-admin-services .admin-credit-form{border:0;background:none;padding:12px 0}
+.station-admin.station-admin-services .admin-v2-main .admin-v2-row{display:grid;grid-template-columns:1fr;gap:4px;border:0;border-bottom:1px solid var(--admin-line);border-radius:0;padding:12px 0;overflow-wrap:anywhere}
+.station-admin.station-admin-services .admin-v2-main .admin-v2-entry{display:grid;grid-template-columns:1fr;text-align:left;overflow-wrap:anywhere;min-width:0}
+.station-admin.station-admin-services .admin-v2-subpanel,.station-admin.station-admin-services .admin-detail-panel{background:white;color:var(--admin-ink)}
+.station-admin.station-admin-services .admin-empty-list{color:var(--admin-muted);padding:18px;margin:0;background:none}
+.station-admin.station-admin-services .service-count{font-size:13px;margin:16px 0;color:var(--admin-muted)}
+.station-admin.station-admin-services .service-feedback{font-size:13px;font-weight:450;line-height:1.7;margin-top:20px;padding:12px 0;border-top:1px solid var(--admin-line);color:var(--admin-muted)}
+.station-admin.station-admin-services .service-feedback:before{display:none}
+/* Settings uses the same quiet rows and labels without an extra navigation layer. */
+.workbench[data-static-view=settings] .work-catalog{max-width:1400px;padding:32px 36px 48px;width:100%;margin:0 auto}
+.workbench[data-static-view=settings] .work-heading>div>.badge{position:static}
+.workbench[data-static-view=settings] #work-static{display:grid;grid-template-columns:1fr 1fr;gap:32px 48px;padding-top:12px}
+.workbench[data-static-view=settings] .settings-group h2{font-size:19px;margin:0 0 12px;font-weight:650}
+.workbench[data-static-view=settings] .settings-link{display:flex!important;align-items:center;justify-content:space-between;gap:20px;margin:0!important;padding:16px 0!important;border-bottom:1px solid var(--admin-line);min-height:74px;color:var(--admin-ink)}
+.settings-link>span:first-child{display:grid;gap:4px;min-width:0}
+.settings-link strong{font-size:15px;font-weight:550}
+.settings-link small{font-size:13px;color:var(--admin-muted);line-height:1.6}
+.settings-link:hover strong{color:var(--admin-accent)}
+.settings-arrow{color:var(--admin-accent);flex-shrink:0;display:flex}
+.settings-status>p{font-size:13px}
+.settings-status-row{display:flex;gap:20px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--admin-line);padding:15px 0;min-height:58px}
+.settings-status-row .badge[data-enabled=true]{background:#e1f2e9;color:#18815c}
+@media(max-width:1150px){.station-admin.station-admin-services .admin-v2-shell{padding:28px 24px}.station-admin.station-admin-services .service-summary{grid-template-columns:minmax(140px,1fr) minmax(140px,1fr) 95px 90px 20px;gap:15px;padding:17px 20px}.station-admin.station-admin-services .service-order-facts{gap:18px}.station-admin.station-admin-services .service-order-facts dl{display:block;padding-right:18px}.station-admin.station-admin-services .service-order-facts dd{margin:3px 0 10px}.station-admin.station-admin-services .service-filters{grid-template-columns:minmax(160px,1fr) 120px 120px auto}.station-admin.station-admin-services .service-account-filters{grid-template-columns:minmax(160px,1fr) 150px auto}}
+@media(max-width:900px){.station-admin.station-admin-services .service-heading{align-items:flex-start;flex-direction:column;gap:16px}.station-admin.station-admin-services .service-summary{grid-template-columns:minmax(140px,1fr) 100px 90px 20px}.station-admin.station-admin-services .service-reference{grid-column:1;grid-row:2;font-size:12px}.station-admin.station-admin-services .service-identity{grid-column:1}.station-admin.station-admin-services .service-amount{grid-column:2;grid-row:1}.station-admin.station-admin-services .service-summary>.admin-status-pill{grid-column:3;grid-row:1}.station-admin.station-admin-services .service-chevron{grid-column:4;grid-row:1}.station-admin.station-admin-services .service-filters{grid-template-columns:1fr 1fr auto}.station-admin.station-admin-services .service-search{grid-column:1/-1}.station-admin.station-admin-services .service-account-filters{grid-template-columns:1fr auto}.station-admin.station-admin-services .admin-v2-tab{padding:10px 15px;font-size:14px}.workbench[data-static-view=settings] #work-static{gap:28px}}
+@media(max-width:600px){.station-admin.station-admin-services .admin-v2-shell{padding:24px 18px 36px}.station-admin.station-admin-services .service-heading h1{font-size:30px}.station-admin.station-admin-services #service-intro{font-size:15px}.station-admin.station-admin-services .service-breadcrumb{margin-bottom:14px}.station-admin.station-admin-services .admin-v2-heading__actions{width:100%}.station-admin.station-admin-services .admin-v2-heading__actions>*{flex:1;font-size:14px;padding:10px}.station-admin.station-admin-services .admin-v2-tabs{flex-wrap:nowrap;overflow-x:auto}.station-admin.station-admin-services .admin-v2-tab{flex-shrink:0;padding:10px 16px}.station-admin.station-admin-services .service-summary{grid-template-columns:minmax(0,1fr) 85px 18px;gap:8px 12px;padding:16px}.station-admin.station-admin-services .service-summary strong{font-size:15px}.station-admin.station-admin-services .service-summary small,.station-admin.station-admin-services .service-reference>span{font-size:12px}.station-admin.station-admin-services .service-reference{grid-column:1;grid-row:2/4}.station-admin.station-admin-services .service-amount{grid-column:2;grid-row:1}.station-admin.station-admin-services .service-summary>.admin-status-pill{grid-column:2;grid-row:2;justify-self:end;font-size:12px;padding:4px 7px}.station-admin.station-admin-services .service-chevron{grid-column:3;grid-row:1/3}.station-admin.station-admin-services .service-detail{padding:18px 16px}.station-admin.station-admin-services .service-order-facts{grid-template-columns:1fr;gap:0}.station-admin.station-admin-services .service-order-facts dl{display:grid;grid-template-columns:75px minmax(0,1fr);border:0;padding:0;gap:8px 10px;margin-bottom:8px}.station-admin.station-admin-services .service-order-facts dd{margin:0}.station-admin.station-admin-services .service-events ol{display:block;padding-top:20px;overflow:visible}.station-admin.station-admin-services .service-events li{text-align:left;min-width:0;padding:0 0 18px 27px}.station-admin.station-admin-services .service-events li:before{left:0;top:5px}.station-admin.station-admin-services .service-events li:not(:last-child):after{left:5px;top:22px;width:1px;height:calc(100% - 22px)}.station-admin.station-admin-services .service-more-filters>div{grid-template-columns:1fr}.station-admin.station-admin-services .service-filters{gap:10px}.station-admin.station-admin-services .admin-detail-grid{grid-template-columns:1fr 1fr;gap:18px}.station-admin.station-admin-services .admin-v2-form-grid{grid-template-columns:1fr}.station-admin.station-admin-services .admin-commerce-grid{grid-template-columns:1fr}.workbench[data-static-view=settings] .work-catalog{padding:24px 18px}.workbench[data-static-view=settings] #work-static{grid-template-columns:1fr;gap:28px}.workbench[data-static-view=settings] .work-heading>div>.badge{font-size:11px;padding:5px 7px}}
+.station-admin.station-admin-services .service-detail>.admin-v2-section-heading{display:flex;flex-direction:row;align-items:flex-start;gap:16px;margin:0 0 20px}
+.station-admin.station-admin-services .service-detail>.admin-v2-section-heading>div{min-width:0;flex:1}
+.station-admin.station-admin-services .service-detail>.admin-v2-section-heading :is(h2,h3){font-size:18px;line-height:1.5;margin:2px 0 0}
+.station-admin.station-admin-services .service-detail>.admin-v2-section-heading>.admin-status-pill{flex:0 0 auto;width:auto}
+.station-admin.station-admin-services .admin-status-pill{align-items:center;gap:6px}
+.station-admin.station-admin-services .admin-status-pill>span{display:flex;flex-shrink:0}
+.station-admin.station-admin-services .admin-status-pill[data-state=refunded]{background:#fff1df;color:#92611c}
