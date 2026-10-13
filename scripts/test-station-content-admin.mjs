@@ -3,8 +3,8 @@ import { test, afterEach } from 'node:test';
 import { randomUUID } from 'node:crypto';
 import { contentAdminFixture } from './helpers/station-content-admin-fixture.mjs';
 import { homeId, insertFixture } from './helpers/station-redesign-database.mjs';
-import { createContentObject, saveContentObject, contentPublication, saveContentPlatform, saveContentRights, contentPreflight } from '../src/redesign/contentAdmin.js';
-import { readContentObject, contentAdminReadiness, listContentObjects, contentAssets } from '../src/redesign/contentAdminStore.js';
+import { createContentObject, saveContentObject, contentPublication, saveContentPlatform, saveContentRights, contentPreflight, applyHomeSelection } from '../src/redesign/contentAdmin.js';
+import { readContentObject, contentAdminReadiness, listContentObjects, contentAssets, listHomeTracks } from '../src/redesign/contentAdminStore.js';
 import { runStationContentSchedule } from '../src/redesign/contentSchedule.js';
 import { handleStationContent } from '../src/redesign/publicHttp.js';
 import { handleMusicAdmin } from '../src/music/adminHttp.js';
@@ -27,6 +27,29 @@ test('default-off content namespace checks the flag before bindings after admin 
  let reads=0;const db={withSession(){reads++;throw new Error('closed');}};
  const r=await handleMusicAdmin(edit('tracks',null,'POST',{bad:true}),{MUSIC_DB:db,MUSIC_BUCKET:{}},async()=>actor);
  assert.equal(r.status,503);assert.equal((await r.json()).code,'STATION_CONTENT_ADMIN_DISABLED');assert.equal(reads,0);
+});
+test('homepage saves, scheduling, cancellation, publication, withdrawal and rollback need no manual note',async()=>{
+ const f=await fixture();let version=1;
+ await saveContentObject(f.runtime,'home',homeId,{revision:1,data:{}},ctx(version++));
+ await contentPublication(f.runtime,'home',homeId,'schedule',{revision:2,dueAt:Date.now()+60000},ctx(version++));
+ await contentPublication(f.runtime,'home',homeId,'cancel-schedule',{revision:2},ctx(version++));
+ await contentPublication(f.runtime,'home',homeId,'publish',{revision:2},ctx(version++));
+ await contentPublication(f.runtime,'home',homeId,'unpublish',{revision:2},ctx(version++));
+ const context=ctx(version),body={revision:2};
+ const restored=await contentPublication(f.runtime,'home',homeId,'rollback',body,context);
+ const replay=await contentPublication(f.runtime,'home',homeId,'rollback',body,context);
+ assert.equal(restored.revision,3);assert.equal(replay.replayed,true);
+ const logs=f.sql.prepare('SELECT actor_id,action,target_id,summary_json,created_at FROM music_admin_audit_logs WHERE target_id=? ORDER BY rowid').all(homeId);
+ assert.deepEqual(logs.map(r=>r.action),['save','schedule','cancel-schedule','publish','unpublish','rollback'].map(action=>'station.content.'+action));
+ for(const row of logs){assert.equal(row.actor_id,actor);assert(row.created_at>0);const summary=JSON.parse(row.summary_json);assert.equal(summary.type,'home');assert(summary.revision>0);assert.equal(Object.hasOwn(summary,'reason'),false);}
+});
+test('older valid notes remain compatible while invalid supplied notes are rejected without writes',async()=>{
+ const f=await fixture(),data={},before=f.dump();
+ for(const reason of ['',null,123,'x'.repeat(1001),'bad\u0000note'])await assert.rejects(saveContentObject(f.runtime,'home',homeId,{revision:1,data,reason},ctx()),{code:'INVALID_INPUT'});
+ assert.equal((await readContentObject(f.db,'home',homeId)).editVersion,1);
+ assert.deepEqual(f.dump(),before);
+ await saveContentObject(f.runtime,'home',homeId,{revision:1,data,reason:'较早打开的编辑页'},ctx());
+ assert.equal(JSON.parse(f.sql.prepare('SELECT summary_json FROM music_admin_audit_logs WHERE target_id=?').get(homeId).summary_json).reason,'较早打开的编辑页');
 });
 test('website registration never publishes, changes old policies or generates promotions',async()=>{
  const f=await fixture(),old=f.sql.prepare('SELECT * FROM music_tracks ORDER BY id').all(),t=await register(f);
@@ -138,4 +161,177 @@ test('game draft cannot occupy the runtime directory; preflight refuses missing 
 test('content lists and asset choices are bounded, preserve ID ordering and do not expose storage keys',async()=>{
  const f=await fixture(),t=await register(f),list=await listContentObjects(f.db,'tracks');assert.equal(list.items.length,8);const a=await contentAssets(f.db,{ownerId:t.id});assert.equal(a.items.length,4);assert.doesNotMatch(JSON.stringify(a),/object_key|sha256|etag/);
  await assert.rejects(listContentObjects(f.db,'tracks',{before:'NaN'}),{code:'INVALID_INPUT'});
+});
+
+
+test('one homepage command publishes a missing basic promotion and home, with verified platforms and no new audio grant',async()=>{
+ const f=await fixture(),t=await register(f);await publish(f,t);
+ const link=await saveContentPlatform(f.runtime,null,{trackId:t.id,provider:'netease',status:'live',url:'https://music.163.com/song?id=3438977672',verifiedAt:Date.now()-1000},ctx());
+ await saveContentPlatform(f.runtime,null,{trackId:t.id,provider:'spotify',status:'planned'},ctx());
+ const old=f.sql.prepare('SELECT * FROM music_tracks ORDER BY id').all(),context=ctx(),body={revision:1,data:{featuredTrackId:t.id}};
+ f.sqlState.lose=true;
+ const result=await applyHomeSelection(f.runtime,homeId,body,context),replay=await applyHomeSelection(f.runtime,homeId,body,context);
+ assert.equal(result.status,'published');assert.equal(replay.replayed,true);assert.equal(replay.revision,result.revision);
+ const home=await readContentObject(f.db,'home',homeId),p=await readContentObject(f.db,'promotions',t.id);
+ assert.equal(home.draft,null);assert.equal(home.published.data.featuredTrackId,t.id);
+ assert.equal(p.draft,null);assert.equal(p.published.data.enabled,true);assert.equal(p.published.data.previewEnabled,false);assert.equal(p.published.data.previewAssetId,null);
+ assert.deepEqual(p.published.data.selectedPlatformIds,[link.id]);assert.deepEqual(p.published.data.selectedClipIds,[]);
+ assert.deepEqual(f.sql.prepare('SELECT * FROM music_tracks ORDER BY id').all(),old);
+ assert.equal((await publicGet(f,'home')).data.home.music.id,t.id);
+ assert.equal((await publicGet(f,'tracks/'+t.slug)).data.track.preview,null);
+ const logs=f.sql.prepare("SELECT * FROM music_admin_audit_logs WHERE action='station.home.apply'").all();assert.equal(logs.length,1);assert.equal(logs[0].actor_id,actor);
+ assert.equal(JSON.parse(logs[0].summary_json).preparedPromotions[0].trackId,t.id);
+ await applyHomeSelection(f.runtime,homeId,{revision:2,data:{}},ctx(2));
+ assert.equal((await publicGet(f,'home')).data.home.music,null);assert.equal((await readContentObject(f.db,'promotions',t.id)).status,'published');
+});
+test('home selection keeps an unpublished promotion draft untouched and never publishes its preview settings',async()=>{
+ const f=await fixture(),t=await register(f);await publish(f,t);
+ await createContentObject(f.runtime,'promotions',{trackId:t.id,data:{enabled:true,previewEnabled:true,previewAssetId:t.preview}},ctx());
+ const before=await readContentObject(f.db,'promotions',t.id);
+ await applyHomeSelection(f.runtime,homeId,{revision:1,data:{featuredTrackId:t.id}},ctx());
+ const after=await readContentObject(f.db,'promotions',t.id);
+ assert.deepEqual(after.draft,before.draft);assert.equal(after.published.revision,2);assert.equal(after.published.data.previewEnabled,false);assert.equal(after.editVersion,2);
+ assert.equal((await publicGet(f,'home')).data.home.music.id,t.id);
+});
+test('home selection reuses reviewed live promotion including preview, without publishing later edits',async()=>{
+ const f=await fixture(),t=await register(f);await publish(f,t);await rights(f,t,'preview');
+ const data={enabled:true,previewEnabled:true,previewAssetId:t.preview};
+ await createContentObject(f.runtime,'promotions',{trackId:t.id,data},ctx());await contentPublication(f.runtime,'promotions',t.id,'publish',{revision:1},ctx());
+ await saveContentObject(f.runtime,'promotions',t.id,{revision:1,data:{enabled:false,previewEnabled:false}},ctx(2));
+ const before=await readContentObject(f.db,'promotions',t.id);
+ await applyHomeSelection(f.runtime,homeId,{revision:1,data:{featuredTrackId:t.id}},ctx());
+ assert.deepEqual(await readContentObject(f.db,'promotions',t.id),before);
+ assert.equal((await publicGet(f,'home')).data.home.music.id,t.id);
+ assert((await publicGet(f,'tracks/'+t.slug)).data.track.preview);
+});
+test('home command validates every selected track before committing any promotion or home pointer',async()=>{
+ const f=await fixture(),t=await register(f),other=await register(f,1);await publish(f,t);
+ const before=f.dump();
+ await assert.rejects(applyHomeSelection(f.runtime,homeId,{revision:1,data:{featuredTrackId:t.id,selectedTrackIds:[other.id]}},ctx()),{code:'STATION_REFERENCE_NOT_PUBLIC'});
+ assert.deepEqual(f.dump(),before);
+ await publish(f,other);
+ const result=await applyHomeSelection(f.runtime,homeId,{revision:1,data:{featuredTrackId:t.id,selectedTrackIds:[t.id,other.id]}},ctx());
+ assert.equal(result.status,'published');assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM station_promotions').get().n,2);
+});
+test('a failed final homepage write rolls back already planned promotion writes, audit and receipt',async()=>{
+ const f=await fixture(),t=await register(f);await publish(f,t);const before=f.dump();
+ f.sqlState.fail=/UPDATE station_home_configs/;
+ await assert.rejects(applyHomeSelection(f.runtime,homeId,{revision:1,data:{featuredTrackId:t.id}},ctx()),{code:'MUSIC_DATABASE_UNAVAILABLE'});
+ assert.deepEqual(f.dump(),before);
+});
+test('home application checks resource identity and current rights before publication',async()=>{
+ for(const failure of ['rights','object']){
+  const f=await fixture(),t=await register(f);await publish(f,t);
+  if(failure==='rights')await saveContentRights(f.runtime,t.cover,{scope:'cover',status:'blocked',basis:'测试撤销'},ctx());
+  else f.objects.delete(f.sql.prepare('SELECT object_key FROM music_assets WHERE id=?').get(t.cover).object_key);
+  const before=f.dump();await assert.rejects(applyHomeSelection(f.runtime,homeId,{revision:1,data:{featuredTrackId:t.id}},ctx()),{code:failure==='rights'?'STATION_ASSET_NOT_READY':'STATION_ASSET_OBJECT_CHANGED'});assert.deepEqual(f.dump(),before);
+ }
+});
+test('concurrent rights, track, promotion and platform changes invalidate the atomic home command',async()=>{
+ for(const change of ['rights','track','promotion','platform']){
+  const f=await fixture(),t=await register(f);await publish(f,t);
+  const link=await saveContentPlatform(f.runtime,null,{trackId:t.id,provider:'netease',status:'live',url:'https://music.163.com/song?id=3438977672',verifiedAt:Date.now()-1000},ctx());
+  await createContentObject(f.runtime,'promotions',{trackId:t.id,data:{enabled:false,previewEnabled:false}},ctx());
+  f.sqlState.beforeWrite=()=>{
+   if(change==='rights')f.sql.prepare("UPDATE station_asset_rights SET status='blocked',edit_version=edit_version+1 WHERE music_asset_id=?").run(t.cover);
+   if(change==='track')f.sql.prepare("UPDATE station_track_publications SET status='archived',edit_version=edit_version+1 WHERE track_id=?").run(t.id);
+   if(change==='promotion')f.sql.prepare('UPDATE station_promotions SET edit_version=edit_version+1 WHERE track_id=?').run(t.id);
+   if(change==='platform')f.sql.prepare("UPDATE station_platform_links SET status='removed',version=version+1 WHERE id=?").run(link.id);
+  };
+  await assert.rejects(applyHomeSelection(f.runtime,homeId,{revision:1,data:{featuredTrackId:t.id}},ctx()),{code:'STATION_EDIT_CONFLICT'});
+  assert.equal((await readContentObject(f.db,'home',homeId)).published,null);assert.equal((await readContentObject(f.db,'promotions',t.id)).published,null);
+ }
+});
+test('two homepage editors cannot overwrite each other and each result has one receipt',async()=>{
+ const f=await fixture(),t=await register(f),other=await register(f,1);await publish(f,t);await publish(f,other);
+ const results=await Promise.allSettled([t,other].map(track=>applyHomeSelection(f.runtime,homeId,{revision:1,data:{featuredTrackId:track.id}},ctx())));
+ assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal(results.find(r=>r.status==='rejected').reason.code,'STATION_EDIT_CONFLICT');
+ assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM station_promotions').get().n,1);
+});
+test('home choices read published website titles without needing a promotion; follow bounded pages',async()=>{
+ const f=await fixture(),t=await register(f),unpublished=await register(f,1);await publish(f,t);
+ await saveContentObject(f.runtime,'tracks',t.id,{revision:1,data:{...website(t),metadata:{...t.metadata,title:{[t.metadata.originalLocale]:'未公开改名'}}}},ctx(2));
+ let list=await listHomeTracks(f.db);assert.deepEqual(list.items.map(x=>x.id),[t.id]);assert.equal(list.items[0].title,t.metadata.title[t.metadata.originalLocale]);
+ assert(!list.items.some(x=>x.id===unpublished.id));
+ for(let i=0;i<21;i++){
+  const r=await createContentObject(f.runtime,'tracks',{slug:'website-choice-'+i,data:{metadata:t.metadata,siteAudioMode:'none'}},ctx());
+  // Candidate enumeration fixture only. Resource validation remains at apply.
+  f.sql.prepare("UPDATE station_track_revisions SET state='sealed' WHERE track_id=?").run(r.id);
+  f.sql.prepare("UPDATE station_track_publications SET status='published',published_revision=1,draft_revision=NULL,published_at=? WHERE track_id=?").run(Date.now()-1,r.id);
+ }
+ list=await listHomeTracks(f.db);assert.equal(list.items.length,20);assert(list.nextBefore);
+ const next=await listHomeTracks(f.db,{before:String(list.nextBefore)});assert.equal(next.items.length,2);assert.equal(next.nextBefore,null);assert.equal(new Set([...list.items,...next.items].map(x=>x.id)).size,22);
+ const ui=await homeEditor(f),featuredMore=ui.node('content-featured-track').parentElement.querySelector('[data-choice-more]'),selectedMore=ui.node('content-selected-tracks').parentElement.querySelector('[data-choice-more]');
+ assert(featuredMore&&selectedMore);await featuredMore.click();await ui.idle();await selectedMore.click();await ui.idle();
+ assert.equal(ui.node('content-featured-track').options.filter(o=>o.value).length,22);assert.equal(ui.node('content-selected-tracks').options.length,22);
+ assert(!ui.calls.some(c=>c.path.includes('before=null')));await ui.choose(t.id);await ui.submit();assert.equal((await publicGet(f,'home')).data.home.music.id,t.id);
+
+});
+
+async function homeEditor(f,{actorId=actor,loseApply=false,failReadAfterApply=false}={}) {
+ const {adminScriptFixture}=await import('./helpers/station-admin-dom.mjs');const calls=[];let lost=false,acting=actorId,committed=false,readFailed=false;
+ const request=async(path,options={})=>{
+  calls.push({path,...options});const method=options.method??'GET';
+  if(failReadAfterApply&&committed&&!readFailed&&method==='GET'&&path.startsWith('/home?')){readFailed=true;throw Object.assign(new Error('读取失败'),{uncertain:true});}
+  const response=await handleMusicAdmin(new Request('https://content.local.test/admin/api/music/site-content'+path,{method,
+   headers:{Origin:'https://content.local.test','X-Requested-With':'StationCatMusicAdmin','Content-Type':'application/json',...(options.key?{'Idempotency-Key':options.key}:{}),...(options.etag?{'If-Match':options.etag}:{})},
+   ...(options.body===undefined?{}:{body:JSON.stringify(options.body)})}),env(f),async()=>acting);
+  const data=await response.json();if(!response.ok)throw Object.assign(new Error(data.code),{code:data.code,field:data.field,status:response.status,uncertain:response.status>=500});
+  if(path.endsWith('/apply'))committed=true;
+  if(loseApply&&!lost&&path.endsWith('/apply')){lost=true;throw Object.assign(new Error('回执丢失'),{uncertain:true});}return data;
+ };
+ const ui=await adminScriptFixture('adminStationContent.js',{search:'?view=home',request});
+ const choose=async id=>{ui.node('content-featured-track').value=id;await ui.node('content-form').fire('input',{target:ui.node('content-featured-track')});};
+ const submit=async()=>{await ui.node('content-form').fire('submit');await ui.idle();};
+ return {...ui,calls,choose,submit,setActor(value){acting=value;}};
+}
+test('actual homepage entry selects a published song without a promotion and updates it with one button',async()=>{
+ const f=await fixture(),t=await register(f);await publish(f,t);const ui=await homeEditor(f);
+ assert.equal(ui.node('content-save').textContent,'更新首页');assert.equal(ui.node('content-publish').hidden,true);assert.equal(ui.node('content-preflight').hidden,true);assert.equal(ui.node('content-language-details').hidden,true);
+ assert(ui.node('content-featured-track').options.some(o=>o.value===t.id));
+ await ui.choose(t.id);assert.equal(ui.state().dirty,true);assert.equal(ui.node('content-save').disabled,false);
+ await ui.submit();assert.equal(ui.state().dirty,false);assert.equal(ui.state().current.published.data.featuredTrackId,t.id);
+ assert.match(ui.node('content-home-feedback').textContent,/首页已更新/);assert.equal((await publicGet(f,'home')).data.home.music.id,t.id);
+ const writes=ui.calls.filter(c=>c.method&&c.method!=='GET');assert.equal(writes.length,1);assert.equal(writes[0].path,'/home/'+homeId+'/apply');assert.equal(writes[0].etag,'"edit-1"');
+});
+test('homepage conflict retains selection and can be reloaded through the existing discard flow',async()=>{
+ const f=await fixture(),t=await register(f);await publish(f,t);const ui=await homeEditor(f);await ui.choose(t.id);
+ await applyHomeSelection(f.runtime,homeId,{revision:1,data:{}},ctx());
+ await ui.submit();assert.equal(ui.state().dirty,true);assert.match(ui.node('content-home-feedback').textContent,/版本已变化/);assert.equal(ui.node('content-featured-track').value,t.id);
+ await ui.node('content-reload').click();assert.equal(ui.node('content-reload-confirm').hidden,false);
+ await ui.node('content-reload-cancel').click();assert.equal(ui.node('content-featured-track').value,t.id);
+ await ui.node('content-reload').click();await ui.node('content-reload-discard').click();await ui.idle();
+ assert.equal(ui.state().current.editVersion,2);await ui.choose(t.id);await ui.submit();assert.equal((await publicGet(f,'home')).data.home.music.id,t.id);
+});
+test('homepage uncertain result retries the exact command once without losing its saved selection',async()=>{
+ const f=await fixture(),t=await register(f);await publish(f,t);const ui=await homeEditor(f,{loseApply:true});await ui.choose(t.id);await ui.submit();
+ const first=ui.calls.find(c=>c.path.endsWith('/apply'));assert(ui.state().pending);assert.equal(ui.node('content-save').disabled,true);assert.equal((await publicGet(f,'home')).data.home.music.id,t.id);
+ await ui.node('content-retry').click();await ui.idle();
+ const retry=ui.calls.filter(c=>c.path.endsWith('/apply'))[1];assert.equal(retry.key,first.key);assert.deepEqual(retry.body,first.body);
+ assert.equal(ui.state().pending,null);assert.equal(ui.state().current.published.data.featuredTrackId,t.id);
+ assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM music_admin_audit_logs WHERE action='station.home.apply'").get().n,1);
+});
+test('homepage actor change and editor role cannot publish, retaining the selected song',async()=>{
+ const f=await fixture(),t=await register(f);await publish(f,t);const ui=await homeEditor(f);await ui.choose(t.id);ui.setActor(editor);await ui.submit();
+ assert.equal(ui.state().dirty,true);assert.equal(ui.node('content-featured-track').value,t.id);assert.equal(ui.calls.filter(c=>c.path.endsWith('/apply')).length,0);
+ const editorUi=await homeEditor(f,{actorId:editor});await editorUi.choose(t.id);assert.equal(editorUi.node('content-save').disabled,true);await editorUi.submit();assert.equal(editorUi.calls.filter(c=>c.path.endsWith('/apply')).length,0);
+ assert.equal((await readContentObject(f.db,'home',homeId)).published,null);
+});
+
+test('confirmed homepage update is not reported as a failed publication when its workspace reload fails',async()=>{
+ const f=await fixture(),t=await register(f);await publish(f,t);const ui=await homeEditor(f,{failReadAfterApply:true});await ui.choose(t.id);await ui.submit();
+ assert.equal(ui.state().pending,null);assert.equal(ui.state().dirty,false);assert.match(ui.node('content-home-feedback').textContent,/首页更新已确认/);
+ assert.equal((await publicGet(f,'home')).data.home.music.id,t.id);
+ await ui.node('content-reload').click();await ui.idle();assert.equal(ui.state().current.published.data.featuredTrackId,t.id);
+ assert.equal(ui.calls.filter(c=>c.path.endsWith('/apply')).length,1);
+});
+test('immediate homepage publication cancels older schedules but keeps the promotion draft intact',async()=>{
+ const f=await fixture(),t=await register(f);await publish(f,t);
+ await createContentObject(f.runtime,'promotions',{trackId:t.id,data:{enabled:true,previewEnabled:false}},ctx());
+ await contentPublication(f.runtime,'promotions',t.id,'schedule',{revision:1,dueAt:Date.now()+60000},ctx());
+ await contentPublication(f.runtime,'home',homeId,'schedule',{revision:1,dueAt:Date.now()+60000},ctx());
+ const before=await readContentObject(f.db,'promotions',t.id);
+ await applyHomeSelection(f.runtime,homeId,{revision:1,data:{featuredTrackId:t.id}},ctx(2));
+ const p=await readContentObject(f.db,'promotions',t.id),home=await readContentObject(f.db,'home',homeId);
+ assert.deepEqual(p.draft,before.draft);assert.equal(p.jobs[0].status,'cancelled');assert.equal(home.jobs[0].status,'cancelled');assert.equal(home.scheduledAt,null);
 });

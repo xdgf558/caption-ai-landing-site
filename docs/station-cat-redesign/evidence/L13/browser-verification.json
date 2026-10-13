@@ -1,0 +1,19 @@
+{
+  "environment": "loopback-only synthetic D1/R2 fixture",
+  "productionWrites": false,
+  "admin": {
+    "disabled": false,
+    "feedback": "首页已更新，可以直接查看效果。",
+    "operationNote": false,
+    "scrollWidth": 1265,
+    "selectedSong": "原来已经这么远 · 已公开",
+    "viewport": 1280
+  },
+  "publicHome": {
+    "featuredMusic": "\n      \n      主推作品原来已经这么远創作 · Station Cat\n      \n      網易雲音樂打不開平台？複製連結可複製網址，在系統瀏覽器中開啟；也可以選取下方網址手動複製。網易雲音樂複製",
+    "hasAudio": false
+  },
+  "console": [],
+  "mobileViewportVerified": false,
+  "mobileLimitation": "Requested 390px override did not change actual innerWidth (1280px); excluded from verification."
+}

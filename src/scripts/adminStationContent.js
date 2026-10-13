@@ -7,7 +7,7 @@ const locales=['zh-Hans','zh-Hant','en','ja'],homeId='ca710000-0000-4000-8000-00
 const names={tracks:'歌曲资料',promotions:'推广歌曲',platforms:'发行平台',clips:'视频与 MV',games:'游戏介绍',home:'首页配置',assets:'素材权利',audit:'发布记录'};
 const states={draft:'草稿',scheduled:'已安排定时',published:'已公开',archived:'已下架',unregistered:'待登记',pending:'待审核',approved:'已确认',blocked:'已阻止'};
 const providers={netease:'网易云音乐',qishui:'汽水音乐',apple_music:'Apple Music',youtube:'YouTube',spotify:'Spotify'};
-const errors={MUSIC_INVALID_METADATA:'新歌曲的标题最多 120 字、艺名最多 80 字。',STATION_CONTENT_ADMIN_DISABLED:'内容服务尚未启用。',STATION_CONTENT_SCHEMA_UNAVAILABLE:'内容服务尚未准备就绪。',STATION_EDIT_CONFLICT:'版本已变化。请重新读取，再核对你的修改。',STATION_ASSET_RIGHTS_REQUIRED:'关联素材缺少使用权利登记。',STATION_ASSET_NOT_READY:'素材尚未就绪，或使用权利已失效。',STATION_PREVIEW_NOT_INDEPENDENT:'试听必须使用同一歌曲的独立剪辑。',STATION_ASSET_OBJECT_CHANGED:'存储中的素材已变化，请重新核对。',STATION_REFERENCE_NOT_PUBLIC:'关联作品尚未公开。',STATION_PLATFORM_NOT_VERIFIED:'所选平台尚未上线或未完成网址核对。',STATION_METADATA_REQUIRED:'请补齐作品资料。',STATION_ASSET_REQUIRED:'请选择必需的素材。',STATION_PUBLISHER_REQUIRED:'此操作需要可发布管理员。',STATION_FULL_REFERENCE_NOT_CURRENT:'完整资源必须引用现有的公开封存版本。',STATION_FULL_POLICY_MISMATCH:'原版本当前的免费规则与所选模式不一致。',STATION_GAME_DETAILS_REQUIRED:'请补齐设备与就绪截图。',STATION_HOME_CLIP_PARENT_REQUIRED:'首页短视频须属于主推歌曲，并同时在推广模块选中。',STATION_PROMOTION_NOT_ENABLED:'所选歌曲的推广尚未启用。',STATION_SCHEDULE_ACTOR_REVOKED:'安排定时的管理员已不具备发布权限。',STATION_PLATFORM_URL_INVALID:'网址不属于所选平台的有效作品地址。',STATION_PLATFORM_VERIFICATION_REQUIRED:'上线入口需要真实网址与人工核对时间。',INVALID_INPUT:'请核对填写的格式和必填项。'};
+const errors={MUSIC_INVALID_METADATA:'新歌曲的标题最多 120 字、艺名最多 80 字。',STATION_REFERENCE_BUDGET:'关联的素材或平台过多，请减少精选歌曲或短视频后重试。',STATION_CONTENT_ADMIN_DISABLED:'内容服务尚未启用。',STATION_CONTENT_SCHEMA_UNAVAILABLE:'内容服务尚未准备就绪。',STATION_EDIT_CONFLICT:'版本已变化。请重新读取，再核对你的修改。',STATION_ASSET_RIGHTS_REQUIRED:'关联素材缺少使用权利登记。',STATION_ASSET_NOT_READY:'素材尚未就绪，或使用权利已失效。',STATION_PREVIEW_NOT_INDEPENDENT:'试听必须使用同一歌曲的独立剪辑。',STATION_ASSET_OBJECT_CHANGED:'存储中的素材已变化，请重新核对。',STATION_REFERENCE_NOT_PUBLIC:'关联作品尚未公开。',STATION_PLATFORM_NOT_VERIFIED:'所选平台尚未上线或未完成网址核对。',STATION_METADATA_REQUIRED:'请补齐作品资料。',STATION_ASSET_REQUIRED:'请选择必需的素材。',STATION_PUBLISHER_REQUIRED:'此操作需要可发布管理员。',STATION_FULL_REFERENCE_NOT_CURRENT:'完整资源必须引用现有的公开封存版本。',STATION_FULL_POLICY_MISMATCH:'原版本当前的免费规则与所选模式不一致。',STATION_GAME_DETAILS_REQUIRED:'请补齐设备与就绪截图。',STATION_HOME_CLIP_PARENT_REQUIRED:'首页短视频须属于主推歌曲，并同时在推广模块选中。',STATION_PROMOTION_NOT_ENABLED:'所选歌曲的推广尚未启用。',STATION_SCHEDULE_ACTOR_REVOKED:'安排定时的管理员已不具备发布权限。',STATION_PLATFORM_URL_INVALID:'网址不属于所选平台的有效作品地址。',STATION_PLATFORM_VERIFICATION_REQUIRED:'上线入口需要真实网址与人工核对时间。',INVALID_INPUT:'请核对填写的格式和必填项。'};
 const fieldNames={metadata:'作品资料',coverAssetId:'歌曲封面',lyricsAssetId:'歌词素材',legacyRevisionId:'完整播放版本',siteAudioMode:'站内音频模式',previewAssetId:'独立试听素材',trackId:'所属歌曲',mediaAssetId:'视频资源',posterAssetId:'视频海报',durationMs:'媒体时长',launchUrl:'游戏运行地址',screenshotIds:'游戏截图',selectedPlatformIds:'平台入口',selectedClipIds:'关联视频',tracks:'首页歌曲',promotion:'推广配置',references:'关联数量'};
 Object.assign(errors,{STATION_CAMPAIGNS_DISABLED:'推广链接服务尚未启用。',STATION_CAMPAIGN_SCHEMA_UNAVAILABLE:'推广链接资料尚未准备就绪。',STATION_CAMPAIGN_PROMOTION_REQUIRED:'请先公开有效的推广配置。',STATION_CAMPAIGN_CLIP_REQUIRED:'素材必须是当前推广配置中已公开的关联视频。',STATION_CAMPAIGN_ID_EXISTS:'Campaign 编号已登记，请使用新的编号。',STATION_CAMPAIGN_ALIAS_EXISTS:'这个旧 src 已有映射，请核对原 Campaign。',STATION_CAMPAIGN_UNVERIFIED:'旧记录缺少完整的链接登记，请创建新的 Campaign。'});
 const message=e=>(errors[e.code]??(e.code?'操作未完成，请核对资料或重新读取当前版本。':e.message)??'服务暂时不可用。')+(e.field?' · '+(fieldNames[e.field.split('.').at(-1)]??'关联资料'):'');
@@ -33,6 +33,7 @@ function controls(){
   const locked=!identity||busy||Boolean(controller?.pending());$('content-fields').disabled=locked;
   for(const b of document.querySelectorAll('.content-tabs button,[data-work-filter],[data-work-create],#content-new,#content-search-submit,#content-more'))b.disabled=locked;
   const publisher=identity?.role==='publisher',r=current?.draft??current?.published;
+  $('content-save').disabled=locked||(module==='home'&&(!publisher||!r));
   $('content-publish').disabled=workbench?!publicationFormReady({identity,busy,pending:Boolean(controller?.pending()),dirty,current,assets:ownerAssets,type:module}):locked||!publisher||dirty||!current?.draft;
   $('content-preflight').disabled=locked||dirty||!r;
   $('content-unpublish').disabled=locked||!publisher||!current||dirty||current.status==='archived';
@@ -45,7 +46,7 @@ function controls(){
   $('content-reload-cancel').disabled=busy;$('content-reload-discard').disabled=busy||Boolean(controller?.pending());
   for(const n of document.querySelectorAll('#content-platform-editor input,#content-platform-editor select,#content-platform-editor button,#content-rights-editor input,#content-rights-editor select,#content-rights-editor textarea,#content-rights-editor button'))n.disabled=locked||n.dataset.identityLocked==='true'||(n.dataset.publisherOnly==='true'&&!publisher);
 }
-async function work(task){if(busy)return;busy=true;let focusId;controls();try{await task();}catch(e){focusId=e.focusId;status(message(e),true);}finally{busy=false;controls();if(focusId==='content-reason')$(focusId).focus();else if(task===reloadEditor)$('content-reload').focus();}}
+async function work(task){if(busy)return;busy=true;controls();try{await task();}catch(e){status(message(e),true);}finally{busy=false;controls();if(task===reloadEditor)$('content-reload').focus();}}
 async function loadChoices(type){
  if(!choices[type])choices[type]=await request('/'+type);
  return choices[type].items;
@@ -54,7 +55,7 @@ function moreChoices(node,type,values,empty,path='/'+type){
  const old=node.parentElement.querySelector('[data-choice-more]');old?.remove();
  if(!choices[type].nextBefore)return;
  const button=el('button','读取更多可选作品');button.type='button';button.dataset.choiceMore=type;
- button.addEventListener('click',()=>{void work(async()=>{const page=await request(path+(path.includes('?')?'&':'?')+'before='+choices[type].nextBefore),selectedValues=[...node.selectedOptions].map(o=>o.value);choices[type]={items:[...choices[type].items,...page.items],nextBefore:page.nextBefore};options(node,choices[type].items.map(i=>({...i,title:i.title+' · '+(states[i.status]??i.status)})),selectedValues,empty);moreChoices(node,type,selectedValues,empty,path);});});node.parentElement.append(button);
+ button.addEventListener('click',()=>{void work(async()=>{const selectedValues=[...node.selectedOptions].map(o=>o.value),page=choices[type].nextBefore?await request(path+(path.includes('?')?'&':'?')+'before='+choices[type].nextBefore):{items:[],nextBefore:null};choices[type]={items:[...new Map([...choices[type].items,...page.items].map(i=>[i.id,i])).values()],nextBefore:page.nextBefore};options(node,choices[type].items.map(i=>({...i,title:i.title+' · '+(states[i.status]??i.status)})),selectedValues,empty);moreChoices(node,type,selectedValues,empty,path);});});node.parentElement.append(button);
 }
 async function ownerChoices(id){
  if(!id)return [];let result=await request('/assets?ownerId='+encodeURIComponent(id)),items=result.items;
@@ -63,7 +64,7 @@ async function ownerChoices(id){
  for(let page=1;result.nextBefore&&page<20;page++){result=await request('/assets?ownerId='+encodeURIComponent(id)+'&before='+encodeURIComponent(result.nextBefore));items.push(...result.items);}
  if(result.nextBefore)throw new Error('此作品超过 1,000 份素材，请先通过素材类型筛选读取。');return items;
 }
-async function allChoices(type,node,values=[],empty=true){const data=await loadChoices(type);options(node,data.map(i=>({...i,title:i.title+' · '+(states[i.status]??i.status)})),values,empty);moreChoices(node,type,values,empty);}
+async function allChoices(type,node,values=[],empty=true){const data=await loadChoices(type);if(type==='home-tracks'){for(const id of values.filter(Boolean)){if(data.some(t=>t.id===id))continue;const track=await request('/tracks/'+id),m=track.published?.data.metadata;data.push({id,title:m?.title?.[m.originalLocale]??'已选歌曲暂不可用',status:track.status});}}options(node,data.map(i=>({...i,title:i.title+' · '+(states[i.status]??i.status)})),values,empty);moreChoices(node,type,values,empty);}
 function assetOptions(id,kind,value,multiple=false){const records=ownerAssets.filter(a=>a.kind===kind).map(a=>({id:a.id,title:(states[a.rightsStatus]??a.rightsStatus)+' · '+(a.state==='validated'?'就绪':a.state)+' · '+a.id.slice(0,8)+(a.durationMs?' · '+a.durationMs/1000+' 秒':'')}));options($(id),records,multiple?value:[value],!multiple);}
 async function listPage(append=false){const token=++epoch;let result;
  if(workbench&&catalogActive){
@@ -146,7 +147,10 @@ async function renderForm(data){
  const r=current?.draft??current?.published;const title=data.metadata?.title?.[data.metadata.originalLocale]??(module==='promotions'&&current?((listItems.find(i=>i.id===current.id)?.title??'歌曲')+' · 推广配置'):names[module]);text('content-editor-heading',newObject?'新建'+names[module]:title);text('content-state',current?.draft&&current?.published?'新草稿 · 旧版公开':states[current?.status??'draft']??'草稿');text('content-version',current?'草稿 '+(current.draft?.revision??'—')+' / '+(current.status==='archived'?'历史公开 ':'公开 ')+(current.published?.revision??'—')+' · 编辑版本 '+current.editVersion:'尚未保存 · 不会自动公开');
  show('content-metadata',['tracks','clips','games'].includes(module));show('content-artist-wrap',module==='tracks');show('content-related-wrap',module==='tracks');show('content-slug-wrap',newObject&&!existingTrackId&&['tracks','games'].includes(module));show('content-parent-wrap',newObject&&['promotions','clips'].includes(module));show('content-type-wrap',newObject&&module==='clips');
  for(const [id,type]of [['content-track-fields','tracks'],['content-promotion-fields','promotions'],['content-clip-fields','clips'],['content-game-fields','games'],['content-home-fields','home']])show(id,module===type);
- show('content-schedule-wrap',Boolean(current));
+ show('content-schedule-wrap',Boolean(current)&&module!=='home');
+ for(const id of ['content-preflight','content-publish','content-unpublish','work-publish-help'])show(id,module!=='home');
+ text('content-save',module==='home'?'更新首页':'保存草稿');
+ show('content-language-details',['tracks','clips','games'].includes(module));show('content-home-view',module==='home');
  const m=data.metadata??{};if(workbench){$('content-title').value=m.title?.[m.originalLocale]??'';$('content-title').maxLength=module==='tracks'&&newObject&&!existingTrackId?120:200;}for(const n of document.querySelectorAll('[data-title]'))n.maxLength=module==='tracks'&&newObject&&!existingTrackId?120:200;$('content-artist').maxLength=newObject&&!existingTrackId?80:120;$('content-locale').value=m.originalLocale??'zh-Hans';$('content-artist').value=m.creatorName??'';$('content-story').value=m.story??'';
  for(const locale of locales){document.querySelector('[data-title="'+locale+'"]').value=m.title?.[locale]??'';document.querySelector('[data-summary="'+locale+'"]').value=m.summary?.[locale]??'';}
  if(newObject&&['promotions','clips'].includes(module)){await allChoices('tracks',$('content-parent'));if(workbench&&[...$('content-parent').options].some(o=>o.value===initialParams.get('owner')))$('content-parent').value=initialParams.get('owner');}
@@ -162,7 +166,14 @@ async function renderForm(data){
  }else if(module==='games'){
    $('content-launch').value=data.launchUrl??'';for(const n of document.querySelectorAll('[data-device]'))n.checked=(data.supportedDevices??[]).includes(n.dataset.device);ownerAssets=await ownerChoices(current?.id);assetOptions('content-screenshots','game_screenshot',data.screenshotIds??[],true);
  }else{
-   await allChoices('promotions',$('content-featured-track'),[data.featuredTrackId]);await allChoices('games',$('content-featured-game'),[data.featuredGameId]);await allChoices('promotions',$('content-selected-tracks'),data.selectedTrackIds??[],false);await allChoices('clips',$('content-selected-clips'),data.selectedClipIds??[],false);
+   await allChoices('home-tracks',$('content-featured-track'),[data.featuredTrackId]);await allChoices('games',$('content-featured-game'),[data.featuredGameId]);await allChoices('home-tracks',$('content-selected-tracks'),data.selectedTrackIds??[],false);await allChoices('clips',$('content-selected-clips'),data.selectedClipIds??[],false);
+   text('content-state',current?.draft?'尚有草稿未更新':current?.status==='published'?'已同步到首页':'尚未公开');
+   const publicId=current?.status==='published'?current.published?.data.featuredTrackId:null;
+   let title=choices['home-tracks'].items.find(t=>t.id===publicId)?.title;
+   if(publicId&&!title){const track=await request('/tracks/'+publicId);const m=track.published?.data.metadata;title=m?.title?.[m.originalLocale]??'已选歌曲';}
+   text('content-home-current',publicId?'首页当前主推：'+title:'首页当前未设置主推歌曲');
+   text('content-home-feedback',current?.draft?'下面是尚未生效的选择，点击“更新首页”即可发布。':'选择歌曲后，点击“更新首页”即可生效。');
+   $('content-home-feedback').dataset.error='false';
  }
  historyBefore=current?.hasOlderRevisions?current.revisions.at(-1).revision:null;show('content-history-more',Boolean(historyBefore));
  const sealed=current?.revisions.filter(r=>r.state==='sealed')??[];options($('content-rollback-version'),sealed.map(r=>({id:String(r.revision),title:'版本 '+r.revision+' · '+date(r.createdAt)})),[],false);
@@ -183,15 +194,24 @@ function dataFromForm(){if(module==='tracks')return {metadata:metadata(),siteAud
  if(module==='games')return {metadata:metadata(),launchUrl:nullable('content-launch'),supportedDevices:[...document.querySelectorAll('[data-device]:checked')].map(n=>n.dataset.device),screenshotIds:selected('content-screenshots')};
  return {featuredTrackId:nullable('content-featured-track'),featuredGameId:nullable('content-featured-game'),selectedTrackIds:selected('content-selected-tracks'),selectedClipIds:selected('content-selected-clips'),selectedUpdateIds:[]};
 }
-function operationReason(){const r=$('content-reason').value.trim();if(!r){if(workbench)$('work-operation-note').open=true;throw Object.assign(new Error('请填写本次操作说明。'),{focusId:'content-reason'});}return r;}
 async function reloadObject(id=current?.id){choices={};dirty=false;await listPage();if(id)await openObject({id});}
-async function save(){const reason=operationReason(),data=dataFromForm();let result;
- if(newObject)result=await controller.mutate('/'+module,'POST',{data,reason,...(existingTrackId?{trackId:existingTrackId}:{}),...(['tracks','games'].includes(module)&&!existingTrackId?{slug:$('content-slug').value}:{}),...(['promotions','clips'].includes(module)?{trackId:$('content-parent').value}:{}),...(module==='clips'?{clipType:$('content-clip-type').value}: {})});
- else result=await controller.mutate('/'+module+'/'+current.id,'PATCH',{revision:(current.draft??current.published).revision,data,reason},current.editVersion);
+async function applyHome(){
+ if(!current||identity?.role!=='publisher')throw new Error('此操作需要可发布管理员。');
+ text('content-home-feedback','正在核对并更新首页…');$('content-home-feedback').dataset.error='false';
+ let committed=false;
+ try{
+  await controller.mutate('/home/'+current.id+'/apply','POST',{revision:(current.draft??current.published).revision,data:dataFromForm()},current.editVersion);
+  committed=true;dirty=false;
+  await reloadObject();text('content-home-feedback','首页已更新，可以直接查看效果。');status('首页已更新。');
+ }catch(e){const copy=committed?'首页更新已确认，但工作区刷新未完成。请重新核对工作区。':message(e);text('content-home-feedback',copy);$('content-home-feedback').dataset.error='true';if(committed){status(copy,true);return;}throw e;}
+}
+async function save(){const data=dataFromForm();let result;
+ if(newObject)result=await controller.mutate('/'+module,'POST',{data,...(existingTrackId?{trackId:existingTrackId}:{}),...(['tracks','games'].includes(module)&&!existingTrackId?{slug:$('content-slug').value}:{}),...(['promotions','clips'].includes(module)?{trackId:$('content-parent').value}:{}),...(module==='clips'?{clipType:$('content-clip-type').value}: {})});
+ else result=await controller.mutate('/'+module+'/'+current.id,'PATCH',{revision:(current.draft??current.published).revision,data},current.editVersion);
  await reloadObject(result.id);status('草稿已保存。公开版本仍由发布操作更新。');
 }
-async function action(name){if(!current||dirty)throw new Error('请先保存当前修改。');const reason=operationReason(),revision=name==='rollback'?Number($('content-rollback-version').value):(current.draft??current.published).revision;
- const body={revision,reason,...(name==='schedule'?{dueAt:sgTime($('content-due').value)}:{})};await controller.mutate('/'+module+'/'+current.id+'/'+name,'POST',body,current.editVersion);await reloadObject();status({publish:'这一版已公开。',unpublish:'已下架或停止推广。',rollback:'已恢复为新版本并公开。',schedule:'定时公开已安排。','cancel-schedule':'定时公开已取消。'}[name]);
+async function action(name){if(!current||dirty)throw new Error('请先保存当前修改。');const revision=name==='rollback'?Number($('content-rollback-version').value):(current.draft??current.published).revision;
+ const body={revision,...(name==='schedule'?{dueAt:sgTime($('content-due').value)}:{})};await controller.mutate('/'+module+'/'+current.id+'/'+name,'POST',body,current.editVersion);await reloadObject();status({publish:'这一版已公开。',unpublish:'已下架或停止推广。',rollback:'已恢复为新版本并公开。',schedule:'定时公开已安排。','cancel-schedule':'定时公开已取消。'}[name]);
 }
 function renderPreview(result){show('content-preview',true);const card=$('content-preview-card');card.replaceChildren();const d=result.data,m=d.metadata;
  if(m){card.append(el('p',m.title?.[m.originalLocale]??names[module],'content-preview-card-title'));if(m.creatorName)card.append(el('p',m.creatorName));if(m.summary?.[m.originalLocale])card.append(el('p',m.summary[m.originalLocale]));if(m.story)card.append(el('p',m.story));}
@@ -214,9 +234,9 @@ async function renderRights(item){hideEditors();show('content-rights-editor',tru
   if(!choices[type].nextBefore)continue;const button=el('button',label);button.type='button';
   button.addEventListener('click',()=>{void work(async()=>{const page=await request('/'+type+'?before='+choices[type].nextBefore);choices[type]={items:[...choices[type].items,...page.items],nextBefore:page.nextBefore};const selectedOwner=owner.value;options(owner,ownerRows(),[selectedOwner],false);if(!page.nextBefore)button.remove();});});panel.append(button);
  }
- const records=el('div');panel.append(records);async function load(){records.replaceChildren();const data=await ownerChoices(owner.value);for(const a of data.filter(a=>a.kind!=='audio')){const block=el('form',undefined,'content-rights-record'),basis=document.createElement('textarea'),state=select([['pending','待审核'],['approved','确认允许使用'],['blocked','阻止公开']],a.rightsStatus),note=document.createElement('textarea'),button=el('button','保存权利登记');basis.value=a.basis;basis.maxLength=8000;basis.rows=4;note.maxLength=1000;note.required=true;button.type='submit';button.disabled=identity.role!=='publisher';
-   button.dataset.publisherOnly='true';block.append(el('h3',a.kind+' · '+a.id.slice(0,8)),el('p',(a.state==='validated'?'技术校验就绪':a.state)+' · '+(states[a.rightsStatus]??a.rightsStatus),'muted'),field('使用状态',state),field('授权依据与允许的使用范围（单行）',basis),field('本次操作说明',note),button);
-   block.addEventListener('submit',e=>{e.preventDefault();void work(async()=>{await controller.mutate('/assets/'+a.id+'/rights','PUT',{scope:a.kind,status:state.value,basis:basis.value,reason:note.value},a.rightsVersion||1);await load();status('权利登记已保存。');});});records.append(block);
+ const records=el('div');panel.append(records);async function load(){records.replaceChildren();const data=await ownerChoices(owner.value);for(const a of data.filter(a=>a.kind!=='audio')){const block=el('form',undefined,'content-rights-record'),basis=document.createElement('textarea'),state=select([['pending','待审核'],['approved','确认允许使用'],['blocked','阻止公开']],a.rightsStatus),button=el('button','保存权利登记');basis.value=a.basis;basis.maxLength=8000;basis.rows=4;button.type='submit';button.disabled=identity.role!=='publisher';
+   button.dataset.publisherOnly='true';block.append(el('h3',a.kind+' · '+a.id.slice(0,8)),el('p',(a.state==='validated'?'技术校验就绪':a.state)+' · '+(states[a.rightsStatus]??a.rightsStatus),'muted'),field('使用状态',state),field('授权依据与允许的使用范围（单行）',basis),button);
+   block.addEventListener('submit',e=>{e.preventDefault();void work(async()=>{await controller.mutate('/assets/'+a.id+'/rights','PUT',{scope:a.kind,status:state.value,basis:basis.value},a.rightsVersion||1);await load();status('权利登记已保存。');});});records.append(block);
   }if(!records.children.length)records.append(el('p','这份作品还没有可登记的素材。请先在素材工作区准备文件。','notice'));}
  owner.addEventListener('change',()=>{void work(load);});await load();
 }
@@ -232,11 +252,11 @@ if(module==='home')await openObject({id:homeId});else if(initialOwnerPending&&mo
  const types=catalogActive?(catalogFilter==='all'?workTypes:[catalogFilter]):module==='assets'?workTypes:[module==='platforms'?'tracks':module];
  const target=await resolveAdminOwner(request,initialParams.get('owner'),{types,listed:listItems});
  await openObject(target);initialOwnerPending=false;
-}else if(listItems.length&&module!=='audit')await openObject(listItems.find(i=>i.status!=='unregistered'&&i.legacyLifecycle!=='archived')??listItems[0]);else{hideEditors();show('content-empty',true);}status(controller.pending()?'请先核对原操作的结果。':'内容服务已就绪。选择作品开始编辑。');}
+}else if(listItems.length&&module!=='audit')await openObject(listItems.find(i=>i.status!=='unregistered'&&i.legacyLifecycle!=='archived')??listItems[0]);else{hideEditors();show('content-empty',true);}status(controller.pending()?'请先核对原操作的结果。':module==='home'?'已读取首页配置。':'内容服务已就绪。选择作品开始编辑。');}
 for(const button of document.querySelectorAll('[data-module]'))button.addEventListener('click',()=>{if(dirty){status('有未保存的修改，请先保存草稿。');return;}module=button.dataset.module;if(workbench){catalogActive=workTypes.includes(module);catalogFilter=module;catalogPages={};renderWorkNavigation();}current=null;newObject=false;existingTrackId=null;$('content-search').value='';for(const n of document.querySelectorAll('[data-module]')){if(n===button)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');}void work(async()=>{await listPage();if(module==='home')await openObject({id:homeId});else if(listItems.length&&module!=='audit')await openObject(listItems.find(i=>i.status!=='unregistered')??listItems[0]);else if(module!=='audit'){hideEditors();show('content-empty',true);}});});
 $('content-history-more').addEventListener('click',()=>{void work(async()=>{const page=await request('/'+module+'/'+current.id+'/revisions?before='+historyBefore);current.revisions.push(...page.items);historyBefore=page.nextBefore;show('content-history-more',Boolean(historyBefore));options($('content-rollback-version'),current.revisions.filter(r=>r.state==='sealed').map(r=>({id:String(r.revision),title:'版本 '+r.revision+' · '+date(r.createdAt)})),[$('content-rollback-version').value],false);});});
-$('content-form').addEventListener('submit',e=>{e.preventDefault();void work(save);});
-$('content-form').addEventListener('input',e=>{if(e.target.closest('[data-campaign-ui]')||['content-reason','content-due','content-rollback-version','content-publication-channel','content-post-id','content-post-url','content-post-time'].includes(e.target.id))return;dirty=true;show('content-preview',false);text('content-version','有未保存的修改 · 请先保存草稿');controls();});
+$('content-form').addEventListener('submit',e=>{e.preventDefault();void work(module==='home'?applyHome:save);});
+$('content-form').addEventListener('input',e=>{if(e.target.closest('[data-campaign-ui]')||['content-due','content-rollback-version','content-publication-channel','content-post-id','content-post-url','content-post-time'].includes(e.target.id))return;dirty=true;show('content-preview',false);text('content-version','有未保存的修改 · 请先保存草稿');if(module==='home'){text('content-state','待更新首页');text('content-home-feedback','选择已更改，点击“更新首页”后生效。');$('content-home-feedback').dataset.error='false';}controls();});
 $('content-parent').addEventListener('change',()=>{if(module==='promotions')void work(()=>promotionChoices($('content-parent').value));});
 $('content-video').addEventListener('change',()=>{const a=ownerAssets.find(a=>a.id===$('content-video').value);if(a?.durationMs)$('content-clip-duration').value=a.durationMs/1000;});
 $('content-subtitles').addEventListener('input',()=>{subtitleEdits[$('content-locale').value]=$('content-subtitles').value;});$('content-locale').addEventListener('change',()=>{if(module==='clips')$('content-subtitles').value=subtitleEdits[$('content-locale').value]??'';});
@@ -245,7 +265,7 @@ $('content-search-submit').addEventListener('click',()=>{if(dirty){status('请�
 for(const [id,actionName]of [['content-publish','publish'],['content-unpublish','unpublish'],['content-rollback','rollback'],['content-schedule','schedule'],['content-cancel-schedule','cancel-schedule']])$(id).addEventListener('click',()=>{void work(()=>action(actionName));});
 $('content-preflight').addEventListener('click',()=>{void work(async()=>{const revision=(current.draft??current.published).revision;const result=await request('/'+module+'/'+current.id+'/preflight?revision='+revision);renderPreview(result);status('当前关联与资源已核对。正式公开时仍会重新校验。');});});
 $('content-preview-width').addEventListener('change',()=>{$('content-preview').dataset.width=$('content-preview-width').value;});
-$('content-add-publication').addEventListener('click',()=>{void work(async()=>{await controller.mutate('/clips/'+current.id+'/publications','POST',{channel:$('content-publication-channel').value,postId:$('content-post-id').value,url:$('content-post-url').value,publishedAt:sgTime($('content-post-time').value),reason:operationReason()},current.editVersion);await reloadObject();status('外部发布记录已登记。');});});
+$('content-add-publication').addEventListener('click',()=>{void work(async()=>{await controller.mutate('/clips/'+current.id+'/publications','POST',{channel:$('content-publication-channel').value,postId:$('content-post-id').value,url:$('content-post-url').value,publishedAt:sgTime($('content-post-time').value)},current.editVersion);await reloadObject();status('外部发布记录已登记。');});});
 async function reloadEditor(){
  // A failed initial /status has no actor to compare against. Reconnect below;
  // an established workspace must still verify its actor before discarding edits.
@@ -257,7 +277,7 @@ $('content-reload-cancel').addEventListener('click',()=>{if(busy)return;show('co
 $('content-reload-discard').addEventListener('click',()=>{if(busy||controller?.pending())return;void work(reloadEditor);});
 $('content-retry').addEventListener('click',()=>{void work(async()=>{await controller.retry();await connect();status('原操作已核对，请检查当前版本。');});});
 function renderWorkNavigation(){
- if(!workbench)return;const heading=catalogActive?'作品内容':names[module];text('work-heading',heading);text('work-breadcrumb',heading);text('work-intro',catalogActive?'资料与素材，一起整理。':module==='platforms'?'选择歌曲，管理各大音乐平台的链接与上线状态。':'每次公开前，核对资料、关联和素材。');
+ if(!workbench)return;workbench.dataset.home=String(module==='home'&&!catalogActive);if(module==='home')workbench.dataset.editorClosed='false';const heading=catalogActive?'作品内容':names[module];text('work-heading',heading);text('work-breadcrumb',heading);text('work-intro',catalogActive?'资料与素材，一起整理。':module==='home'?'选一首歌，更新到小站首页。':module==='platforms'?'选择歌曲，管理各大音乐平台的链接与上线状态。':'每次公开前，核对资料、关联和素材。');
  show('work-new-menu',false);document.querySelector('.work-filters').hidden=!catalogActive;document.querySelector('.work-modules').hidden=catalogActive||['home','audit','platforms'].includes(module);
  for(const filter of document.querySelectorAll('[data-work-filter]'))filter.setAttribute('aria-pressed',String(filter.dataset.workFilter===catalogFilter));
  for(const nav of document.querySelectorAll('[data-admin-nav]')){const active=!catalogActive&&['home','audit','platforms'].includes(module)?module:'content';if(nav.dataset.adminNav===active)nav.setAttribute('aria-current','page');else nav.removeAttribute('aria-current');}

@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { seedLegacyFixture, insertFixture, fixtureId } from './station-redesign-database.mjs';
-import { createContentObject, saveContentRights, contentPublication } from '../../src/redesign/contentAdmin.js';
+import { createContentObject, saveContentRights, contentPublication, saveContentPlatform } from '../../src/redesign/contentAdmin.js';
 import { contentAdminActor } from './station-content-admin-runtime.mjs';
 import { stationMediaKey } from '../../src/redesign/mediaFormats.js';
 import sharp from 'sharp';
@@ -36,4 +36,15 @@ export async function seedWorkbenchFixture(db, bucket) {
   await saveContentObject(runtime, 'games', game.id, { revision: 1, data: { metadata: { originalLocale: 'zh-Hans', title: { 'zh-Hans': '打工养猫日记' } }, launchUrl: '/games/cat-life/', supportedDevices: ['desktop'], screenshotIds: [a.id] }, reason: '本机夹具' }, { ...context(), ifMatch: '"edit-1"' });
   await contentPublication(runtime, 'games', game.id, 'publish', { revision: 2, reason: '本机公开态夹具' }, { ...context(), ifMatch: '"edit-2"' });
   return { tracks, game: { ...game, screenshotId } };
+}
+
+export async function seedHomeWorkbenchFixture(db,bucket) {
+  const content=await seedWorkbenchFixture(db,bucket),runtime={db,bucket};
+  const context=()=>({actorId:contentAdminActor,key:crypto.randomUUID(),ifMatch:'"edit-1"'});
+  for(const track of content.tracks.slice(0,5)) {
+    for(const scope of ['cover','lyrics'])await saveContentRights(runtime,track[scope],{scope,status:'approved',basis:'仅供本机隔离流程测试，不代表生产授权。'},context());
+    await contentPublication(runtime,'tracks',track.id,'publish',{revision:1},context());
+  }
+  await saveContentPlatform(runtime,null,{trackId:content.tracks[4].id,provider:'netease',status:'live',url:'https://music.163.com/song?id=123',verifiedAt:Date.now()-1000},context());
+  return content;
 }

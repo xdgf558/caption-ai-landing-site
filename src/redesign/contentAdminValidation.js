@@ -7,11 +7,14 @@ import { snapshot, rowGuard, combineGuards } from './contentAdminStore.js';
 import { effectivePolicy, policyFromRevision } from '../music/policy.js';
 
 export function fieldFailure(code,field) { try { fail(code,422); } catch(e) { e.field=field; throw e; } }
-export async function validateContentPublication(runtime,x,r,now) {
+export async function validateContentPublication(runtime,x,r,now,{homePromotions=new Map()}={}) {
   const guards=[],seen=new Set(),run=requestDeadline(10000),s=primary(runtime.db);
   const add=(table,row)=>{ const key=table+':'+JSON.stringify(row); if(!seen.has(key)){seen.add(key);guards.push(rowGuard(table,row));} };
   const one=async(table,id)=>rows(await run(()=>s.prepare(`SELECT * FROM ${table} WHERE id=? LIMIT 2`).bind(id).all()))[0];
   const published=async(type,id,field)=>{
+    // Only the internal, atomic homepage command supplies proposed promotions.
+    // It guards their actual stored state before committing this entire graph.
+    if(x.type==='home'&&type==='promotions'&&homePromotions.has(id))return homePromotions.get(id);
     let record; try{record=await run(()=>snapshot(runtime.db,type,id));}catch(e){if(e.status===404)fieldFailure('STATION_REFERENCE_NOT_PUBLIC',field);throw e;}
     if(record.h.status!=='published'||!record.published||!millis(record.h.published_at)||record.h.published_at>now) fieldFailure('STATION_REFERENCE_NOT_PUBLIC',field);
     add(record.d.table,record.h);add(record.d.revisions,record.published); return record;

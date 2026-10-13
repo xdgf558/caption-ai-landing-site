@@ -81,6 +81,15 @@ export async function contentRevisionHistory(db,type,id,query={}) {
   const result=rows(await primary(db).prepare(`SELECT revision,state,created_at FROM ${d.revisions} WHERE ${d.key}=? AND revision<? ORDER BY revision DESC LIMIT 26`).bind(id,before).all());
   return {items:result.slice(0,25).map(r=>({revision:r.revision,state:r.state,createdAt:r.created_at})),nextBefore:result.length>25?result[24].revision:null};
 }
+export async function listHomeTracks(db,query={},now=Date.now()) {
+  fields(query,['before']);const before=query.before===undefined?Number.MAX_SAFE_INTEGER:integer(Number(query.before),1,Number.MAX_SAFE_INTEGER);
+  // Read the actual website publication, including website-only songs. Neither
+  // legacy lifecycle nor an unrelated title edit decides the homepage choices.
+  const items=rows(await primary(db).prepare(`SELECT h.rowid AS cursor,h.track_id AS id,r.metadata_json
+    FROM station_track_publications h JOIN station_track_revisions r ON r.track_id=h.track_id AND r.revision=h.published_revision
+    WHERE h.status='published' AND r.state='sealed' AND h.published_at>0 AND h.published_at<=? AND h.rowid<? ORDER BY h.rowid DESC LIMIT 21`).bind(now,before).all());
+  return {items:items.slice(0,20).map(r=>{const m=JSON.parse(r.metadata_json);return {id:r.id,title:m.title[m.originalLocale],status:'published'};}),nextBefore:items.length>20?items[19].cursor:null};
+}
 function listView(items,type) { return {items:items.slice(0,20).map(r=>{ let m={};try{m=JSON.parse(r.metadata_json);}catch{} return {id:r.id,type,legacyLifecycle:r.legacy_lifecycle??null,imageId:r.image_id??null,expectedAssetCount:r.expected_assets??0,assetDetails:JSON.parse(r.assets_json??'[]'),trackId:r.track_id??null,slug:r.slug??null,status:r.status,editVersion:r.edit_version??null,title:m.title?.[m.originalLocale]??r.slug??(r.id==='ca710000-0000-4000-8000-000000000001'?'首页配置':'尚未填写标题')}; }),nextBefore:items.length>20?items[19].cursor:null}; }
 
 // A bounded dependency graph is compared in the SAME D1 batch as publication.
