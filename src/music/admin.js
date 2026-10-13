@@ -1,7 +1,7 @@
 import { effectivePolicy, isoTime, policyFromRevision, utcMillis, validatePolicyTransition } from './policy.js';
 import { checkRights, publicationFingerprint } from './publicationValidation.js';
 import { draftInput, rightsInput, editVersion, fail, fields, musicId, text } from './adminValidation.js';
-import { primary, rows, loadTrack, loadAssets, mutate, trackGuard } from './adminStore.js';
+import { primary, rows, loadTrack, loadAssets, mutate, trackGuard, trackNotRemovedSql } from './adminStore.js';
 
 const assetIds = r => r ? [r.audio_asset_id, r.preview_asset_id, r.cover_asset_id, r.lyrics_asset_id] : [];
 function revisionView(r) {
@@ -28,7 +28,7 @@ export async function listAdminMusicTracks(db, { before = Number.MAX_SAFE_INTEGE
     p.state AS published_state,p.access_mode,p.free_until,p.early_access_until,p.post_early_access_mode,p.policy_version
     FROM music_tracks t LEFT JOIN music_track_revisions r ON r.id=COALESCE(t.draft_revision_id,t.published_revision_id)
     LEFT JOIN music_track_revisions p ON p.id=t.published_revision_id
-    WHERE t.rowid<? AND (?='' OR t.lifecycle=?) AND (?='' OR instr(lower(t.slug),lower(?))>0 OR instr(lower(r.metadata_json),lower(?))>0)
+    WHERE ${trackNotRemovedSql('t.id')} AND t.rowid<? AND (?='' OR t.lifecycle=?) AND (?='' OR instr(lower(t.slug),lower(?))>0 OR instr(lower(r.metadata_json),lower(?))>0)
     ORDER BY t.rowid DESC LIMIT 51`).bind(before, status, status, q, q, q).all());
   const now = Date.now();
   const items = result.slice(0, 50).map(r => {

@@ -1,4 +1,4 @@
-import { primary, rows } from '../music/adminStore.js';
+import { primary, rows, trackRemovalGuard, assertTrackNotRemoved } from '../music/adminStore.js';
 import { fields, fail, musicId, text } from '../music/adminValidation.js';
 import { model, objectId, draftData, viewData, requestedVersion, revisionNumber, cleanSlug, platformData, integer, cleanText } from './contentAdminModel.js';
 import { snapshot, readContentObject, mutateContent, rowGuard, combineGuards, revisionInsert, pendingJobs, cancelJobs } from './contentAdminStore.js';
@@ -7,7 +7,7 @@ import { stationHomeConfig } from '../data/station-home.js';
 import { platformUrl, millis } from './publicValidation.js';
 
 const route=(type,id,action='')=>'/admin/api/music/site-content/'+type+(id?'/'+id:'')+(action?'/'+action:'');
-const checked=(x,v)=>{if(x.h.edit_version!==v)fail('STATION_EDIT_CONFLICT',409);return rowGuard(x.d.table,x.h);};
+const checked=(x,v)=>{if(x.h.edit_version!==v)fail('STATION_EDIT_CONFLICT',409);return combineGuards(rowGuard(x.d.table,x.h),...(['tracks','promotions'].includes(x.type)?[trackRemovalGuard(x.id)]:[]));};
 // Older clients may still send a note; current forms rely on the automatic audit fields.
 const reason=input=>input.reason===undefined?undefined:text(input.reason,1000,false,true);
 const draftGuard=x=>x.draft?rowGuard(x.d.revisions,x.draft):{condition:'1',params:[]};
@@ -23,7 +23,8 @@ export async function createContentObject(runtime,type,input,context) {
   if(type==='games'&&slug==='cat-life')fail('STATION_RUNTIME_DIRECTORY_RESERVED',422);
   return mutateContent(runtime.db,{...context,route:route(type),command:{type,input}},async(s,now)=>{
     const id=type==='promotions'||(type==='tracks'&&trackId)?trackId:crypto.randomUUID(), x={id,d};
-    const guard={condition:`NOT EXISTS(SELECT 1 FROM ${d.table} WHERE ${d.key}=?)`,params:[id]},writes=[];
+    let guard={condition:`NOT EXISTS(SELECT 1 FROM ${d.table} WHERE ${d.key}=?)`,params:[id]};const writes=[];
+    if(trackId){await assertTrackNotRemoved(runtime.db,trackId);guard=combineGuards(guard,trackRemovalGuard(trackId));}
     if(type==='tracks') {
       if(!trackId) {
         const legacyId=crypto.randomUUID(),m=JSON.parse(data.metadata_json);
@@ -139,6 +140,7 @@ export async function applyHomeSelection(runtime,id,input,context) {
 export async function saveContentPlatform(runtime,id,input,context) {
   const v=id?requestedVersion(context):null,data=platformData(input,Date.now());if(id)id=musicId(id);
   return mutateContent(runtime.db,{...context,route:route('platforms',id),command:{input,version:v}},async(s,now)=>{
+    await assertTrackNotRemoved(runtime.db,data.track_id);
     const target=id??crypto.randomUUID(),keys=Object.keys(data),old=id?rows(await s.prepare('SELECT * FROM station_platform_links WHERE id=? LIMIT 2').bind(id).all())[0]:null;
     if(id&&(!old||old.version!==v))fail('STATION_EDIT_CONFLICT',409);
     if(old&&(old.track_id!==data.track_id||old.provider!==data.provider))fail('STATION_OBJECT_IDENTITY',409);
@@ -146,7 +148,7 @@ export async function saveContentPlatform(runtime,id,input,context) {
     if(!id&&rows(await s.prepare('SELECT COUNT(*) AS n FROM station_platform_links WHERE track_id=?').bind(data.track_id).all())[0].n>=25)fail('STATION_REFERENCE_BUDGET',422);
     const writes=id?[s.prepare(`UPDATE station_platform_links SET ${keys.filter(k=>!['track_id','provider'].includes(k)).map(k=>k+'=?').join(',')},version=version+1,updated_at=? WHERE id=? AND version=?`).bind(...keys.filter(k=>!['track_id','provider'].includes(k)).map(k=>data[k]),now,id,v)]:
       [s.prepare(`INSERT INTO station_platform_links(id,${keys.join(',')},created_at,updated_at) VALUES(${Array(keys.length+3).fill('?').join(',')})`).bind(target,...keys.map(k=>data[k]),now,now)];
-    return {...(old?rowGuard('station_platform_links',old):{condition:'(SELECT COUNT(*) FROM station_platform_links WHERE track_id=?)<25',params:[data.track_id]}),writes,action:'station.platform.save',targetId:target,
+    return {...combineGuards(trackRemovalGuard(data.track_id),old?rowGuard('station_platform_links',old):{condition:'(SELECT COUNT(*) FROM station_platform_links WHERE track_id=?)<25',params:[data.track_id]}),writes,action:'station.platform.save',targetId:target,
       summary:{trackId:data.track_id,provider:data.provider,status:data.status,previousStatus:old?.status??null},result:{id:target,editVersion:(v??0)+1,cachePolicy:'no-store'}};
   });
 }
