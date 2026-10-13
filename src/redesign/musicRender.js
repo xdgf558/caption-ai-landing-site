@@ -13,6 +13,8 @@ const e = escapeMusicHtml;
 const icons = new Set(['play', 'pause', 'heart', 'arrow', 'music', 'headphones', 'apple', 'youtube', 'spotify', 'search', 'close']);
 export const musicIcon = name => icons.has(name) ? `<svg class="sc-music-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#sc-icon-${name}"></use></svg>` : '';
 const imagePath = path => typeof path === 'string' && /^\/api\/station\/content\/assets\/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(path);
+// Only controlled music covers support these variants; keep static preview assets intact.
+export const musicCoverUrl = (path, size = 'display') => imagePath(path) ? `${path}?size=${size === 'card' ? 'card' : 'display'}` : path;
 const songHref = (track, locale) => {
   if (!uuid(track?.id) || !plain(track.title, 200) || !track.title.trim() || !plain(track.artist, 120) || !track.artist.trim()) return null;
   const name = track.slug || track.href?.split('/').at(-2);
@@ -32,7 +34,7 @@ export function musicCatalogHref(locale, { q = '', sort = 'default', cursor = nu
 }
 function cover(track, { card = false, eager = false, priority = 'auto' } = {}) {
   const width = card ? 192 : 768;
-  return imagePath(track.coverUrl) ? `<img class="sc-song-cover" src="${e(track.coverUrl)}?size=${card ? 'card' : 'display'}" alt="" width="${width}" height="${width}" loading="${eager ? 'eager' : 'lazy'}" decoding="async"${priority === 'high' ? ' fetchpriority="high"' : ''}>` : '';
+  return imagePath(track.coverUrl) ? `<img class="sc-song-cover" src="${e(musicCoverUrl(track.coverUrl, card ? 'card' : 'display'))}" alt="" width="${width}" height="${width}" loading="${eager ? 'eager' : 'lazy'}" decoding="async"${priority === 'high' ? ' fetchpriority="high"' : ''}>` : '';
 }
 function favorite(track, copy) {
   return `<button type="button" class="sc-button sc-button-secondary sc-song-favorite" data-sc-favorite="${e(track.id)}" aria-pressed="false" aria-label="${e(copy.favorite + ' · ' + track.title)}">${musicIcon('heart')}<span data-sc-favorite-label>${copy.favorite}</span></button>`;

@@ -8,8 +8,9 @@ import { Miniflare } from 'miniflare';
 import sharp from 'sharp';
 import { handleStationContent } from '../src/redesign/publicHttp.js';
 import { renderMusicCatalog, renderSongHero } from '../src/redesign/musicRender.js';
+import { renderBrandHomeSlots } from '../src/redesign/brandHomeRender.js';
 import { musicDisplayCoverManifest } from '../src/music/displayCoverManifest.js';
-import { contentFixture, base, now, seedContent } from './helpers/station-content-fixture.mjs';
+import { contentFixture, base, now, seedContent, homeFixture, promotionFixture } from './helpers/station-content-fixture.mjs';
 import { migrationStatements } from './helpers/station-redesign-database.mjs';
 
 const fixtures = [];
@@ -127,6 +128,35 @@ test('generated card/display files match their fingerprints and source identity,
       assert.equal(item.sourceBytes, row.sourceBytes);
     }
   }
+});
+
+test('published homepage artwork uses controlled derivatives and revalidates before honoring a cached image', async () => {
+  const f = await fixture(), featured = f.content.tracks[1], selected = f.content.tracks[0];
+  await promotionFixture(f.music.db, selected);
+  await homeFixture(f.music.db, { track: featured.id, tracks: [selected.id], game: f.content.game.id });
+  for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
+    const { home } = await (await call(f, '/home?locale=' + locale)).json();
+    const slots = renderBrandHomeSlots(home);
+    const featuredSrc = slots.music.match(/<img[^>]+src="([^"]+)"/)?.[1];
+    const selectedSrc = slots.selected.match(/<img[^>]+src="([^"]+)"/)?.[1];
+    assert.equal(featuredSrc, base + '/assets/' + featured.cover + '?size=display');
+    assert.equal(selectedSrc, base + '/assets/' + selected.cover + '?size=card');
+    assert.match(slots.music, /loading="eager" decoding="async"/);
+    assert.match(slots.selected, /loading="lazy" decoding="async"/);
+    assert(slots.game.includes('src="' + home.game.screenshotUrl + '"'), 'game screenshots retain their own asset contract');
+    for (const [src, bytes] of [[featuredSrc, display], [selectedSrc, card]]) {
+      const path = src.slice(base.length), response = await call(f, path), tag = response.headers.get('etag');
+      assert.equal(response.status, 200); assert.deepEqual(new Uint8Array(await response.arrayBuffer()), bytes);
+      const cached = await call(f, path, { headers: { 'If-None-Match': tag } });
+      assert.equal(cached.status, 304); assert.equal(await cached.text(), '');
+    }
+  }
+  const path = '/assets/' + featured.cover + '?size=display';
+  const response = await call(f, path), tag = response.headers.get('etag'); await response.arrayBuffer();
+  f.music.sql.prepare("UPDATE station_asset_rights SET status='blocked' WHERE music_asset_id=?").run(featured.cover);
+  assert.equal((await call(f, path, { headers: { 'If-None-Match': tag } })).status, 404);
+  const { home } = await (await call(f, '/home')).json();
+  assert.equal(home.music, null); assert.doesNotMatch(renderBrandHomeSlots(home).music, /<img/);
 });
 
 test('native Worker, D1 and R2 return controlled 304 only while publication/rights remain live; raw files stay blocked', async () => {
