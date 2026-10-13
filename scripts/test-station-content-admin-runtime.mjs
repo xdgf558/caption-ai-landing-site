@@ -17,6 +17,22 @@ test('actual Worker Access, native D1/R2, flags and guarded publication workflow
   assert.equal((await send(base+'/tracks',{method:'DELETE'})).r.status,405);assert.equal((await send(base+'/status?a=1&a=2')).r.status,400);
   assert.equal((await send('/fixture-editor'+base+'/tracks/'+track.id+'/publish',{method:'POST',body:{revision:1}})).r.status,403);
  });
+ await t.test('title and artist create a server-generated address once through the real guarded Worker',async()=>{
+  const body={data:{metadata:{originalLocale:'zh-Hans',title:{'zh-Hans':'只填歌名与艺名'},creatorName:'站猫'}}},command={method:'POST',key:randomUUID(),body};
+  assert.equal((await send('/fixture-off'+base+'/tracks',command)).body.code,'STATION_CONTENT_ADMIN_DISABLED');
+  assert.equal((await send(base+'/tracks',{...command,origin:'https://wrong.test'})).r.status,403);
+  const saved=await send(base+'/tracks',command);assert.equal(saved.r.status,200,JSON.stringify(saved.body));
+  const replay=await send(base+'/tracks',command);assert.equal(replay.body.replayed,true);assert.equal(replay.body.id,saved.body.id);
+  const id=saved.body.id,slug='track-'+id,stored=await f.db.prepare('SELECT slug FROM music_tracks WHERE id=?').bind(id).first();
+  assert.equal(stored.slug,slug);
+  const canonical=await f.db.prepare("SELECT slug FROM station_track_routes WHERE track_id=? AND role='canonical'").bind(id).first();assert.equal(canonical.slug,slug);
+  const detail=(await send(base+'/tracks/'+id)).body;assert.equal(detail.status,'draft');assert.equal(detail.published,null);assert.equal(detail.draft.data.siteAudioMode,'none');
+  assert.equal((await send('/api/station/content/tracks/'+slug)).r.status,404);
+  const renamed={metadata:{...body.data.metadata,title:{'zh-Hans':'改名后地址保持稳定'}}};
+  assert.equal((await send(base+'/tracks/'+id,{method:'PATCH',body:{revision:1,data:renamed}})).r.status,200);
+  assert.equal((await f.db.prepare('SELECT slug FROM station_track_routes WHERE track_id=?').bind(id).first()).slug,slug);
+  assert.equal((await send(base+'/tracks/'+id+'/publish',{method:'POST',version:2,body:{revision:2}})).r.status,422);
+ });
  let created;
  await t.test('register, approve and publish without manual notes, replaying the original receipt',async()=>{
   created=await send(base+'/tracks',{method:'POST',body:{trackId:track.id,data}});assert.equal(created.r.status,200);

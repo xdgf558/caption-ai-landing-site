@@ -155,6 +155,27 @@ test('a missing explicit platform owner never opens or reads another song\'s pla
   assert.equal(f.node('content-status').dataset.error, 'true'); assert(!api.calls.some(call => call.path.startsWith('/platforms')));
 });
 
+test('new songs hide the address and submit only song data while game addresses remain available', async () => {
+  const api = contentApi(); let submitted;
+  const f = await adminScriptFixture('adminStationContent.js', { search: '?view=tracks&owner=' + target, request: async (path, options = {}) => {
+    if (path === '/tracks' && options.method === 'POST') { submitted = options.body; return { id: other }; }
+    if (path === '/tracks/' + other) return object(other, 'tracks', submitted.data.metadata.title['zh-Hans']);
+    return api.request(path, options);
+  } });
+  await f.creates.find(node => node.dataset.workCreate === 'tracks').click(); await f.idle();
+  assert.equal(f.state().newObject, true); assert.equal(f.node('content-slug-wrap').hidden, true); assert.equal(f.node('content-identity').hidden, true);
+  f.node('content-title').value = '晚一点告白'; f.node('content-artist').value = '站猫';
+  // Even a value left by a previous game form must not become a song address.
+  f.node('content-slug').value = 'previous-game-address';
+  await f.node('content-form').fire('input', { target: f.node('content-title') });
+  await f.node('content-form').fire('submit'); await f.idle();
+  assert(submitted, f.node('content-status').textContent); assert.deepEqual(Object.keys(submitted), ['data']);
+  assert.equal(submitted.data.metadata.title['zh-Hans'], '晚一点告白'); assert.equal(submitted.data.metadata.creatorName, '站猫');
+  assert.equal(f.state().current.id, other); assert.equal(f.state().dirty, false); assert.equal(f.state().pending, null);
+  await f.creates.find(node => node.dataset.workCreate === 'games').click(); await f.idle();
+  assert.equal(f.node('content-slug-wrap').hidden, false); assert.equal(f.node('content-identity').hidden, false);
+});
+
 test('opening the new menu before editing cannot bypass dirty protection at the actual type button', async () => {
   const api = contentApi(), f = await adminScriptFixture('adminStationContent.js', { search: '?view=tracks&owner=' + target, request: api.request });
   await f.node('content-new').click(); assert.equal(f.node('work-new-menu').hidden, false);

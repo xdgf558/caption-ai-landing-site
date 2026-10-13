@@ -62,6 +62,40 @@ test('new website song keeps the original music workspace editable without grant
  const t=f.sql.prepare('SELECT * FROM music_tracks WHERE id=?').get(r.id);assert.equal(t.lifecycle,'draft');assert.ok(t.draft_revision_id);assert.equal(t.published_revision_id,null);
  assert.equal(f.sql.prepare('SELECT audio_asset_id FROM music_track_revisions WHERE id=?').get(t.draft_revision_id).audio_asset_id,null);
 });
+test('title and artist alone create a stable song address, including identical Chinese titles',async()=>{
+ const f=await fixture(),before=f.sql.prepare('SELECT id,slug FROM music_tracks ORDER BY id').all();
+ const data={metadata:{originalLocale:'zh-Hans',title:{'zh-Hans':'晚一点告白'},creatorName:'站猫'}},body={data};
+ const created=await Promise.all([createContentObject(f.runtime,'tracks',body,ctx()),createContentObject(f.runtime,'tracks',body,ctx())]);
+ const slugs=[];
+ for(const result of created){
+  const song=f.sql.prepare('SELECT * FROM music_tracks WHERE id=?').get(result.id),slug=song.slug;slugs.push(slug);
+  assert.equal(slug,'track-'+result.id);assert.equal(song.lifecycle,'draft');assert.equal(song.published_revision_id,null);
+  const canonical=f.sql.prepare("SELECT slug FROM station_track_routes WHERE track_id=? AND role='canonical'").get(result.id);
+  assert.equal(canonical.slug,slug);assert.equal((await publicGet(f,'tracks/'+slug)).response.status,404);
+  const saved=await readContentObject(f.db,'tracks',result.id);assert.equal(saved.draft.data.siteAudioMode,'none');assert.equal(saved.published,null);
+  await saveContentObject(f.runtime,'tracks',result.id,{revision:1,data:{metadata:{...data.metadata,title:{'zh-Hans':'修改后的歌名'}}}},ctx());
+  assert.equal(f.sql.prepare('SELECT slug FROM music_tracks WHERE id=?').get(result.id).slug,slug);
+  assert.equal(f.sql.prepare("SELECT slug FROM station_track_routes WHERE track_id=? AND role='canonical'").get(result.id).slug,slug);
+ }
+ assert.equal(new Set(slugs).size,2);
+ for(const row of before)assert.equal(f.sql.prepare('SELECT slug FROM music_tracks WHERE id=?').get(row.id).slug,row.slug);
+});
+test('automatic song address replays one creation after a lost acknowledgement and concurrent retries',async()=>{
+ const f=await fixture(),body={data:{metadata:{originalLocale:'zh-Hans',title:{'zh-Hans':'重试同一首歌'},creatorName:'Station Cat'}}},context=ctx();
+ f.sqlState.lose=true;
+ const results=await Promise.all([createContentObject(f.runtime,'tracks',body,context),createContentObject(f.runtime,'tracks',body,context)]);
+ const again=await createContentObject(f.runtime,'tracks',body,context);
+ assert(results.every(result=>result.id===again.id));assert.equal(again.replayed,true);
+ assert.equal(f.sql.prepare("SELECT COUNT(*) AS n FROM music_admin_audit_logs WHERE action='station.content.create' AND target_id=?").get(again.id).n,1);
+ assert.equal(f.sql.prepare('SELECT COUNT(*) AS n FROM station_track_routes WHERE track_id=?').get(again.id).n,1);
+ assert.equal(f.sql.prepare('SELECT slug FROM music_tracks WHERE id=?').get(again.id).slug,'track-'+again.id);
+ await assert.rejects(createContentObject(f.runtime,'tracks',{data:{metadata:{...body.data.metadata,creatorName:'另一艺名'}}},context),{code:'IDEMPOTENCY_CONFLICT'});
+});
+test('explicit old-client slugs remain validated and games still require their own address',async()=>{
+ const f=await fixture(),data={metadata:{originalLocale:'zh-Hans',title:{'zh-Hans':'格式核对'},creatorName:'Station Cat'}};
+ for(const slug of ['',null,'中文地址','UpperCase','two--hyphens','../other'])await assert.rejects(createContentObject(f.runtime,'tracks',{slug,data},ctx()),{code:'INVALID_INPUT'});
+ await assert.rejects(createContentObject(f.runtime,'games',{data:{metadata:{originalLocale:'en',title:{en:'Game'}}}},ctx()),{code:'INVALID_INPUT'});
+});
 test('unready or unapproved cover blocks publication with a concrete field, then old operation replays once',async()=>{
  const f=await fixture(),t=await register(f);await assert.rejects(contentPublication(f.runtime,'tracks',t.id,'publish',{revision:1,reason:'测试'},ctx()),{code:'STATION_ASSET_RIGHTS_REQUIRED',field:'track.coverAssetId'});
  await rights(f,t);const c=ctx(),body={revision:1,reason:'测试'};f.sqlState.lose=true;
