@@ -61,6 +61,7 @@ export async function adminScriptFixture(entry, { search = '', request, mediaUpl
       if (selector === '[data-station-workbench]') return workbench;
       if (selector === '.work-filters') return workFilters;
       if (selector === '.work-modules') return workModules;
+      if (selector === '.work-toolbar' || selector === '.work-list-head') return node(selector.slice(1));
       const match = /^\[data-(title|summary)="([^"]+)"\]$/.exec(selector);
       if (match) return (match[1] === 'title' ? localeTitles : localeSummaries).find(n => n.dataset[match[1]] === match[2]);
       throw new Error('Unhandled admin selector: ' + selector);
