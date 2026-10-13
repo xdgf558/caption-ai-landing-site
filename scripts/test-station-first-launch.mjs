@@ -131,6 +131,16 @@ test('scope check rejects existing example publications and malformed or duplica
   assert.throws(() => assessFirstLaunchContent(rows.slice(1)));
   assert.throws(() => assessFirstLaunchContent([rows[0], rows[0]]));
 });
+test('production home shell and Worker replacement keep optimized music covers in all four locales', async () => {
+  for (const prefix of ['', '/en', '/ja', '/zh-hans']) {
+    const response = await get(prefix + '/'); assert.equal(response.status, 200);
+    const html = await response.text();
+    const music = html.split('data-home-slot="music"')[1]?.split('data-home-slot="game"')[0];
+    assert(music); assert.match(music, /<img[^>]*src="\/api\/station\/content\/assets\/[a-f0-9-]+\?size=display"/);
+    assert.match(music, /loading="eager" decoding="async"/);
+    assert.doesNotMatch(music, /__cover-files/);
+  }
+});
 test('actual pruned Assets and game-only local publications produce four language homes without music or media', async () => {
   // Disposable fixture state only; operational publications go through T16.
   await runtime.db.batch([
