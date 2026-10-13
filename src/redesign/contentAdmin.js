@@ -19,10 +19,13 @@ export async function createContentObject(runtime,type,input,context) {
   const data=draftData(type,input.data);const trackId=input.trackId?musicId(input.trackId):null;
   if((type==='promotions'||type==='clips')&&!trackId)fail('INVALID_INPUT',400);
   if(type==='clips'&&!['short_video','mv'].includes(input.clipType))fail('INVALID_INPUT',400);
-  const slug=type==='games'||(type==='tracks'&&!trackId)?cleanSlug(input.slug):null;
-  if(type==='games'&&slug==='cat-life')fail('STATION_RUNTIME_DIRECTORY_RESERVED',422);
+  const requestedSlug=type==='games'||(type==='tracks'&&!trackId&&input.slug!==undefined)?cleanSlug(input.slug):null;
+  if(type==='games'&&requestedSlug==='cat-life')fail('STATION_RUNTIME_DIRECTORY_RESERVED',422);
   return mutateContent(runtime.db,{...context,route:route(type),command:{type,input}},async(s,now)=>{
     const id=type==='promotions'||(type==='tracks'&&trackId)?trackId:crypto.randomUUID(), x={id,d};
+    // Derive from the new object's ID after the idempotency receipt lookup.
+    // Retries reuse the original receipt; later title edits keep this address.
+    const slug=requestedSlug??(type==='tracks'&&!trackId?'track-'+id:null);
     let guard={condition:`NOT EXISTS(SELECT 1 FROM ${d.table} WHERE ${d.key}=?)`,params:[id]};const writes=[];
     if(trackId){await assertTrackNotRemoved(runtime.db,trackId);guard=combineGuards(guard,trackRemovalGuard(trackId));}
     if(type==='tracks') {

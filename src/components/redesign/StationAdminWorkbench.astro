@@ -16,7 +16,7 @@ import { Music2, Radio, Link, Film, Gamepad2, PanelsTopLeft, ShieldCheck, Histor
   </section>
   <section class="content-editor work-editor" aria-labelledby="content-editor-heading"><button id="work-close-editor" class="work-close-editor" type="button" aria-label="收起作品编辑"><X size={22} /></button><header class="workspace-heading"><div><h2 id="content-editor-heading">选择一份作品</h2><span id="content-state" class="badge">草稿</span></div></header><div id="content-empty" class="content-empty"><Music2 size={32} /><p>选择作品，开始整理资料和素材。</p></div>
 <form id="content-form" hidden><fieldset id="content-fields" disabled>
-<div id="content-identity" class="field-grid"><label id="content-slug-wrap">作品地址名称<input id="content-slug" maxlength="100" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="例如 gentle-night" /></label><label id="content-parent-wrap">所属歌曲<select id="content-parent"><option value="">选择歌曲</option></select></label><label id="content-type-wrap">素材类型<select id="content-clip-type"><option value="short_video">歌曲短片</option><option value="mv">音乐 MV</option></select></label></div>
+<div id="content-identity" class="field-grid" hidden><label id="content-slug-wrap" hidden>作品地址名称<input id="content-slug" maxlength="100" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="例如 gentle-night" /></label><label id="content-parent-wrap">所属歌曲<select id="content-parent"><option value="">选择歌曲</option></select></label><label id="content-type-wrap">素材类型<select id="content-clip-type"><option value="short_video">歌曲短片</option><option value="mv">音乐 MV</option></select></label></div>
 <section id="content-metadata" class="content-section">
   <label>作品标题<input id="content-title" maxlength="200" /></label>
   <label id="content-artist-wrap">艺名<input id="content-artist" maxlength="120" /></label>

@@ -145,7 +145,7 @@ async function openObject(item){if(workbench&&catalogActive&&item.type)module=it
 async function renderForm(data){
  hideEditors();show('content-form',true);$('content-form').reset();
  const r=current?.draft??current?.published;const title=data.metadata?.title?.[data.metadata.originalLocale]??(module==='promotions'&&current?((listItems.find(i=>i.id===current.id)?.title??'歌曲')+' · 推广配置'):names[module]);text('content-editor-heading',newObject?'新建'+names[module]:title);text('content-state',current?.draft&&current?.published?'新草稿 · 旧版公开':states[current?.status??'draft']??'草稿');text('content-version',current?'草稿 '+(current.draft?.revision??'—')+' / '+(current.status==='archived'?'历史公开 ':'公开 ')+(current.published?.revision??'—')+' · 编辑版本 '+current.editVersion:'尚未保存 · 不会自动公开');
- show('content-metadata',['tracks','clips','games'].includes(module));show('content-artist-wrap',module==='tracks');show('content-related-wrap',module==='tracks');show('content-slug-wrap',newObject&&!existingTrackId&&['tracks','games'].includes(module));show('content-parent-wrap',newObject&&['promotions','clips'].includes(module));show('content-type-wrap',newObject&&module==='clips');
+ show('content-metadata',['tracks','clips','games'].includes(module));show('content-artist-wrap',module==='tracks');show('content-related-wrap',module==='tracks');show('content-identity',newObject&&['games','promotions','clips'].includes(module));show('content-slug-wrap',newObject&&module==='games');show('content-parent-wrap',newObject&&['promotions','clips'].includes(module));show('content-type-wrap',newObject&&module==='clips');
  for(const [id,type]of [['content-track-fields','tracks'],['content-promotion-fields','promotions'],['content-clip-fields','clips'],['content-game-fields','games'],['content-home-fields','home']])show(id,module===type);
  show('content-schedule-wrap',Boolean(current)&&module!=='home');
  for(const id of ['content-preflight','content-publish','content-unpublish','work-publish-help'])show(id,module!=='home');
@@ -206,7 +206,7 @@ async function applyHome(){
  }catch(e){const copy=committed?'首页更新已确认，但工作区刷新未完成。请重新核对工作区。':message(e);text('content-home-feedback',copy);$('content-home-feedback').dataset.error='true';if(committed){status(copy,true);return;}throw e;}
 }
 async function save(){const data=dataFromForm();let result;
- if(newObject)result=await controller.mutate('/'+module,'POST',{data,...(existingTrackId?{trackId:existingTrackId}:{}),...(['tracks','games'].includes(module)&&!existingTrackId?{slug:$('content-slug').value}:{}),...(['promotions','clips'].includes(module)?{trackId:$('content-parent').value}:{}),...(module==='clips'?{clipType:$('content-clip-type').value}: {})});
+ if(newObject)result=await controller.mutate('/'+module,'POST',{data,...(existingTrackId?{trackId:existingTrackId}:{}),...(module==='games'?{slug:$('content-slug').value}:{}),...(['promotions','clips'].includes(module)?{trackId:$('content-parent').value}:{}),...(module==='clips'?{clipType:$('content-clip-type').value}: {})});
  else result=await controller.mutate('/'+module+'/'+current.id,'PATCH',{revision:(current.draft??current.published).revision,data},current.editVersion);
  await reloadObject(result.id);status('草稿已保存。公开版本仍由发布操作更新。');
 }
