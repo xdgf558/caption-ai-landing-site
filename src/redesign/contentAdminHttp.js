@@ -1,4 +1,4 @@
-import { primary, rows } from '../music/adminStore.js';
+import { primary, rows, assertTrackNotRemoved } from '../music/adminStore.js';
 import { fields, fail, mutationKey, musicId } from '../music/adminValidation.js';
 import { contentAdminReadiness, contentRole, requirePublisher, readContentObject, listContentObjects, contentAssets, contentRevisionHistory, listHomeTracks } from './contentAdminStore.js';
 import { createContentObject, saveContentObject, contentPublication, contentPreflight, saveContentPlatform, saveContentRights, addClipPublication, applyHomeSelection } from './contentAdmin.js';
@@ -42,6 +42,7 @@ export async function handleContentAdmin(request,env,actor,query,readBody) {
   if(platform) {
     if(platform[1]&&read)fail('METHOD_NOT_ALLOWED',405);
     if(read){fields(query,['trackId']);musicId(query.trackId);
+      await assertTrackNotRemoved(runtime.db,query.trackId);
       const items=rows(await primary(runtime.db).prepare('SELECT id,track_id,provider,territories_json,status,url,verified_at,external_released_at,sort_order,version FROM station_platform_links WHERE track_id=? ORDER BY sort_order,id LIMIT 26').bind(query.trackId).all());
       if(items.length>25)fail('STATION_REFERENCE_BUDGET',422);
       return {items:items.map(r=>({id:r.id,editVersion:r.version,trackId:r.track_id,provider:r.provider,territories:JSON.parse(r.territories_json),status:r.status,url:r.url,verifiedAt:r.verified_at,releasedAt:r.external_released_at,sortOrder:r.sort_order}))};

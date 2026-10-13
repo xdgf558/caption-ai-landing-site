@@ -10,10 +10,20 @@ export function rows(result) {
   if (result?.success !== true || !Array.isArray(result.results)) fail('MUSIC_DATABASE_UNAVAILABLE', 503);
   return result.results;
 }
+// Recoverable workspace deletion. Historical revisions/assets stay retained;
+// only an explicit per-track marker removes an archived work from editors.
+export const removedTrackKey = id => `adminRemovedTrack:${id}`;
+export function trackNotRemovedSql(idExpression) {
+  return `NOT EXISTS (SELECT 1 FROM music_settings WHERE key='adminRemovedTrack:' || ${idExpression})`;
+}
+export const trackRemovalGuard = id => ({condition:'NOT EXISTS (SELECT 1 FROM music_settings WHERE key=?)',params:[removedTrackKey(id)]});
+export async function assertTrackNotRemoved(db,id) {
+  if(rows(await primary(db).prepare('SELECT key FROM music_settings WHERE key=?').bind(removedTrackKey(id)).all()).length) fail('NOT_FOUND',404);
+}
 export async function loadTrack(db, id) {
   const s = primary(db);
   const data = (await s.batch([
-    s.prepare('SELECT * FROM music_tracks WHERE id=?').bind(id),
+    s.prepare(`SELECT * FROM music_tracks WHERE id=? AND ${trackNotRemovedSql('music_tracks.id')}`).bind(id),
     s.prepare(`SELECT * FROM music_track_revisions WHERE id IN
       (SELECT COALESCE(draft_revision_id,published_revision_id) FROM music_tracks WHERE id=?
        UNION SELECT published_revision_id FROM music_tracks WHERE id=?)`).bind(id, id),

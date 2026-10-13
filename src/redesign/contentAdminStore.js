@@ -1,4 +1,4 @@
-import { primary, rows, mutate } from '../music/adminStore.js';
+import { primary, rows, mutate, trackNotRemovedSql, assertTrackNotRemoved } from '../music/adminStore.js';
 import { fail, fields, musicId } from '../music/adminValidation.js';
 import { checkedContentRuntime } from './publicStore.js';
 import { stationMediaReadiness } from './mediaUploads.js';
@@ -26,6 +26,7 @@ export function contentRole(env,actor) {
 export function requirePublisher(env,actor) { if(contentRole(env,actor)!=='publisher') fail('STATION_PUBLISHER_REQUIRED',403); }
 export async function snapshot(db,type,id) {
   const d=model(type); objectId(type,id); const s=primary(db);
+  if(type==='tracks'||type==='promotions') await assertTrackNotRemoved(db,id);
   const h=rows(await s.prepare(`SELECT * FROM ${d.table} WHERE ${d.key}=? LIMIT 2`).bind(id).all())[0];
   if(!h) fail('NOT_FOUND',404);
   const revisions=rows(await s.prepare(`SELECT * FROM ${d.revisions} WHERE ${d.key}=? ORDER BY revision DESC LIMIT 26`).bind(id).all());
@@ -59,7 +60,7 @@ export async function listContentObjects(db,type,query={}) {
       LEFT JOIN station_track_publications h ON h.track_id=t.id
       LEFT JOIN station_track_revisions r ON r.track_id=t.id AND r.revision=COALESCE(h.draft_revision,h.published_revision)
       LEFT JOIN music_track_revisions o ON o.id=COALESCE(t.draft_revision_id,t.published_revision_id)
-      WHERE t.rowid<? AND (?='' OR instr(lower(t.slug),lower(?))>0 OR instr(lower(COALESCE(r.metadata_json,o.metadata_json,'')),lower(?))>0)
+      WHERE ${trackNotRemovedSql('t.id')} AND t.rowid<? AND (?='' OR instr(lower(t.slug),lower(?))>0 OR instr(lower(COALESCE(r.metadata_json,o.metadata_json,'')),lower(?))>0)
       ORDER BY t.rowid DESC LIMIT 21`).bind(before,q,q,q).all());
     return listView(items,type);
   }
@@ -87,7 +88,7 @@ export async function listHomeTracks(db,query={},now=Date.now()) {
   // legacy lifecycle nor an unrelated title edit decides the homepage choices.
   const items=rows(await primary(db).prepare(`SELECT h.rowid AS cursor,h.track_id AS id,r.metadata_json
     FROM station_track_publications h JOIN station_track_revisions r ON r.track_id=h.track_id AND r.revision=h.published_revision
-    WHERE h.status='published' AND r.state='sealed' AND h.published_at>0 AND h.published_at<=? AND h.rowid<? ORDER BY h.rowid DESC LIMIT 21`).bind(now,before).all());
+    WHERE ${trackNotRemovedSql('h.track_id')} AND h.status='published' AND r.state='sealed' AND h.published_at>0 AND h.published_at<=? AND h.rowid<? ORDER BY h.rowid DESC LIMIT 21`).bind(now,before).all());
   return {items:items.slice(0,20).map(r=>{const m=JSON.parse(r.metadata_json);return {id:r.id,title:m.title[m.originalLocale],status:'published'};}),nextBefore:items.length>20?items[19].cursor:null};
 }
 function listView(items,type) { return {items:items.slice(0,20).map(r=>{ let m={};try{m=JSON.parse(r.metadata_json);}catch{} return {id:r.id,type,legacyLifecycle:r.legacy_lifecycle??null,imageId:r.image_id??null,expectedAssetCount:r.expected_assets??0,assetDetails:JSON.parse(r.assets_json??'[]'),trackId:r.track_id??null,slug:r.slug??null,status:r.status,editVersion:r.edit_version??null,title:m.title?.[m.originalLocale]??r.slug??(r.id==='ca710000-0000-4000-8000-000000000001'?'首页配置':'尚未填写标题')}; }),nextBefore:items.length>20?items[19].cursor:null}; }
@@ -112,6 +113,7 @@ export async function contentAssets(db,query={}) {
   fields(query,['ownerId','before','kind']); const owner=musicId(query.ownerId), before=query.before??'z';
   if(typeof before!=='string'||before.length>40||!['','audio','preview','cover','lyrics','short_video','mv','poster','game_screenshot'].includes(query.kind??'')) fail('INVALID_INPUT',400);
   const kind=query.kind??'';
+  await assertTrackNotRemoved(db,owner);
   const items=rows(await primary(db).prepare(`SELECT a.id,a.kind,a.state,a.duration_ms,a.byte_size,a.created_at,w.status AS rights_status,w.edit_version AS rights_version,w.basis,w.reviewed_at
     FROM (SELECT id,kind,state,duration_ms,byte_size,created_at FROM music_assets WHERE owner_track_id=? AND kind IN ('audio','preview','cover','lyrics')
     UNION ALL SELECT id,kind,state,duration_ms,byte_size,created_at FROM station_media_assets WHERE owner_clip_id=? OR owner_game_id=?) a
