@@ -8,6 +8,53 @@ import { resolveAdminOwner } from '../src/scripts/stationWorkbenchState.js';
 
 const first = fixtureId(901), target = fixtureId(902), other = fixtureId(903), asset = fixtureId(904);
 const missing = () => Object.assign(new Error('NOT_FOUND'), { code: 'NOT_FOUND', status: 404 });
+
+test('dashboard connects and refreshes using status reads only', async () => {
+  const calls = [], f = await adminScriptFixture('adminStationContent.js', { search: '?view=dashboard', request: async (path, options = {}) => {
+    calls.push({ path, ...options }); assert.equal(path, '/status');
+    return { actorId: 'dashboard@example.test', role: 'editor' };
+  } });
+  assert.equal(f.node('work-heading').textContent, '工作台');
+  assert.equal(f.node('content-role').textContent, '内容编辑');
+  assert.equal(f.node('content-status').textContent, '服务连接正常');
+  assert.equal(f.document.querySelector('[data-station-workbench]').dataset.connection, 'connected');
+  await f.node('content-reload').click(); await f.idle();
+  assert.equal(f.node('content-status').dataset.error, 'false');
+  assert.equal(f.node('content-reload').focused, true);
+  assert(calls.length > 1); assert(calls.every(call => call.path === '/status' && !call.method));
+  assert.equal(f.state().current, null); assert.equal(f.state().pending, null);
+});
+
+test('dashboard initial status failures remain retryable and do not show a connected state', async () => {
+  for (const failure of [new Error('network unavailable'), Object.assign(new Error('503'), { code: 'STATION_CONTENT_ADMIN_DISABLED', status: 503 })]) {
+    let unavailable = true;
+    const f = await adminScriptFixture('adminStationContent.js', { search: '?view=dashboard', request: async path => {
+      assert.equal(path, '/status'); if (unavailable) throw failure;
+      return { actorId: 'dashboard@example.test', role: 'publisher' };
+    } });
+    const state = () => f.document.querySelector('[data-station-workbench]').dataset.connection;
+    assert.equal(state(), 'error'); assert.equal(f.node('content-status').dataset.error, 'true');
+    assert.equal(f.node('work-heading').textContent, '工作台'); assert.equal(f.node('content-reload').disabled, false);
+    await f.node('content-reload').click(); await f.idle(); assert.equal(state(), 'error');
+    unavailable = false; await f.node('content-reload').click(); await f.idle();
+    assert.equal(state(), 'connected'); assert.equal(f.node('content-status').textContent, '服务连接正常');
+    assert.equal(f.node('content-status').dataset.error, 'false'); assert.equal(f.node('content-role').textContent, '可发布管理员');
+  }
+});
+
+test('dashboard refresh rejects a changed administrator before reconnecting', async () => {
+  let actor = 'original@example.test', calls = 0;
+  const f = await adminScriptFixture('adminStationContent.js', { search: '?view=dashboard', request: async path => {
+    assert.equal(path, '/status'); calls++; return { actorId: actor, role: 'publisher' };
+  } });
+  actor = 'changed@example.test'; const before = calls;
+  await f.node('content-reload').click(); await f.idle();
+  assert.equal(calls, before + 1); assert.equal(f.node('content-status').dataset.error, 'true');
+  assert.equal(f.document.querySelector('[data-station-workbench]').dataset.connection, 'error');
+  await f.node('content-reload').click(); await f.idle();
+  assert.equal(calls, before + 2); assert.equal(f.node('content-status').dataset.error, 'true');
+});
+
 const object = (id, type = 'tracks', title = '目标作品', editVersion = 1) => ({ id, type, title, status: 'published', editVersion, jobs: [], revisions: [],
   draft: { revision: editVersion, data: { metadata: { originalLocale: 'zh-Hans', title: { 'zh-Hans': title }, creatorName: 'Station Cat' }, siteAudioMode: 'none' } }, published: null });
 function contentApi({ type = 'tracks', targetExists = true } = {}) {

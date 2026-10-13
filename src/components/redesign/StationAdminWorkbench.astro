@@ -1,5 +1,5 @@
 ---
-import { Music2, Radio, Link, Film, Gamepad2, PanelsTopLeft, ShieldCheck, History, Plus, Eye, RefreshCw, Search, X, ArrowRight, Upload, Info, Image, FileText, Headphones, CircleAlert, CircleCheck } from '@lucide/astro';
+import { Music2, Radio, Link, Film, Gamepad2, PanelsTopLeft, ShieldCheck, History, Plus, Eye, RefreshCw, Search, X, ArrowRight, ArrowUpRight, House, Circle, Upload, Info, Image, FileText, Headphones, CircleAlert, CircleCheck } from '@lucide/astro';
 ---
 <div class="workbench" data-station-workbench>
   <section class="work-catalog" aria-labelledby="work-heading">
@@ -9,7 +9,7 @@ import { Music2, Radio, Link, Film, Gamepad2, PanelsTopLeft, ShieldCheck, Histor
     <nav class="content-tabs work-modules" aria-label="内容模块">{[['tracks',Music2,'作品资料'],['promotions',Radio,'推广歌曲'],['platforms',Link,'发行平台'],['clips',Film,'视频与 MV'],['games',Gamepad2,'游戏介绍'],['home',PanelsTopLeft,'首页配置'],['assets',ShieldCheck,'素材权利'],['audit',History,'发布记录']].map(([type,Icon,label])=><button type="button" data-module={type}><Icon size={17} />{label}</button>)}</nav>
     <div class="work-list-head" aria-hidden="true"><span id="content-list-heading">作品</span><span>类型</span><span>状态</span><span>素材</span><span></span></div>
     <ol id="content-list" class="work-list" aria-label="作品列表"><li class="muted">正在读取作品…</li></ol><button id="content-more" type="button" hidden>查看更早作品</button><p id="work-count" class="work-count"></p>
-    <div class="music-feedback work-feedback"><p id="content-status" role="status" aria-live="polite">正在连接内容服务。</p><button id="content-reload" type="button" aria-label="重新核对工作区"><RefreshCw size={17} /></button></div>
+    <div class="music-feedback work-feedback"><Circle class="dashboard-status-icon" size={10} aria-hidden="true" /><p id="content-status" role="status" aria-live="polite">正在连接内容服务。</p><button id="content-reload" type="button" aria-label="重新核对工作区"><RefreshCw size={17} /><span class="dashboard-only">刷新</span></button><p class="dashboard-only dashboard-signoff">用音乐与游戏，连接更温柔的明天。</p></div>
     <section id="content-reload-confirm" class="notice" hidden aria-labelledby="content-reload-heading"><strong id="content-reload-heading">重新读取当前作品？</strong><p>这会丢弃当前未保存的修改，并读取最新版本。可以先复制修改内容供核对。</p><div class="music-actions"><button id="content-reload-cancel" type="button">保留修改</button><button id="content-reload-discard" type="button">丢弃修改并重新读取</button></div></section>
     <div id="content-recovery" class="notice" hidden><span>有一项操作的结果尚未确认，已保留原版本和操作编号。</span><button id="content-retry" type="button">核对原操作</button></div>
     <section id="work-static" hidden></section>
@@ -51,5 +51,6 @@ import { Music2, Radio, Link, Film, Gamepad2, PanelsTopLeft, ShieldCheck, Histor
 
 </section>
 <template id="work-icon-song"><Music2 size={20} /></template><template id="work-icon-game"><Gamepad2 size={21} /></template><template id="work-icon-clip"><Film size={20} /></template><template id="work-icon-cover"><Image size={24} /></template><template id="work-icon-lyrics"><FileText size={24} /></template><template id="work-icon-audio"><Music2 size={24} /></template><template id="work-icon-preview"><Headphones size={24} /></template><template id="work-icon-pending"><CircleAlert size={19} /></template><template id="work-icon-ready"><CircleCheck size={19} /></template><template id="work-icon-arrow"><ArrowRight size={20} /></template>
+<template id="work-icon-link"><Link size={40} strokeWidth={1.8} /></template><template id="work-icon-home"><House size={40} strokeWidth={1.8} /></template><template id="work-icon-external"><ArrowUpRight size={22} strokeWidth={1.8} /></template>
 </div>
 <script>import '../../scripts/adminStationContent.js';</script>

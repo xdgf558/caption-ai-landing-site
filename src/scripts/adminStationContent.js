@@ -11,7 +11,7 @@ const errors={MUSIC_INVALID_METADATA:'新歌曲的标题最多 120 字、艺名�
 const fieldNames={metadata:'作品资料',coverAssetId:'歌曲封面',lyricsAssetId:'歌词素材',legacyRevisionId:'完整播放版本',siteAudioMode:'站内音频模式',previewAssetId:'独立试听素材',trackId:'所属歌曲',mediaAssetId:'视频资源',posterAssetId:'视频海报',durationMs:'媒体时长',launchUrl:'游戏运行地址',screenshotIds:'游戏截图',selectedPlatformIds:'平台入口',selectedClipIds:'关联视频',tracks:'首页歌曲',promotion:'推广配置',references:'关联数量'};
 Object.assign(errors,{STATION_CAMPAIGNS_DISABLED:'推广链接服务尚未启用。',STATION_CAMPAIGN_SCHEMA_UNAVAILABLE:'推广链接资料尚未准备就绪。',STATION_CAMPAIGN_PROMOTION_REQUIRED:'请先公开有效的推广配置。',STATION_CAMPAIGN_CLIP_REQUIRED:'素材必须是当前推广配置中已公开的关联视频。',STATION_CAMPAIGN_ID_EXISTS:'Campaign 编号已登记，请使用新的编号。',STATION_CAMPAIGN_ALIAS_EXISTS:'这个旧 src 已有映射，请核对原 Campaign。',STATION_CAMPAIGN_UNVERIFIED:'旧记录缺少完整的链接登记，请创建新的 Campaign。'});
 const message=e=>(errors[e.code]??(e.code?'操作未完成，请核对资料或重新读取当前版本。':e.message)??'服务暂时不可用。')+(e.field?' · '+(fieldNames[e.field.split('.').at(-1)]??'关联资料'):'');
-const status=(value,error=false)=>{text('content-status',value);$('content-status').dataset.error=String(error);if(error)$('content-status').scrollIntoView({block:'nearest',behavior:'auto'});};
+const status=(value,error=false)=>{text('content-status',value);$('content-status').dataset.error=String(error);if(error){if(workbench?.dataset.staticView==='dashboard'){workbench.dataset.connection='error';text('content-role','待重新核对');}$('content-status').scrollIntoView({block:'nearest',behavior:'auto'});}};
 const date=value=>value==null?'—':new Intl.DateTimeFormat('zh-Hans',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(value)+' UTC+8';
 const sgTime=value=>value?Date.parse(value+'+08:00'):null;
 const localTime=value=>value==null?'':new Date(value+8*3600000).toISOString().slice(0,16);
@@ -46,7 +46,7 @@ function controls(){
   $('content-reload-cancel').disabled=busy;$('content-reload-discard').disabled=busy||Boolean(controller?.pending());
   for(const n of document.querySelectorAll('#content-platform-editor input,#content-platform-editor select,#content-platform-editor button,#content-rights-editor input,#content-rights-editor select,#content-rights-editor textarea,#content-rights-editor button'))n.disabled=locked||n.dataset.identityLocked==='true'||(n.dataset.publisherOnly==='true'&&!publisher);
 }
-async function work(task){if(busy)return;busy=true;controls();try{await task();}catch(e){status(message(e),true);}finally{busy=false;controls();if(task===reloadEditor)$('content-reload').focus();}}
+async function work(task){if(busy)return;busy=true;controls();if(controller&&workbench?.dataset.staticView==='dashboard'&&(task===connect||task===reloadEditor)){workbench.dataset.connection='checking';status('正在核对服务连接…');}try{await task();}catch(e){status(message(e),true);}finally{busy=false;controls();if(task===reloadEditor)$('content-reload').focus();}}
 async function loadChoices(type){
  if(!choices[type])choices[type]=await request('/'+type);
  return choices[type].items;
@@ -242,7 +242,7 @@ async function renderRights(item){hideEditors();show('content-rights-editor',tru
 }
 function renderAudit(items){hideEditors();show('content-audit',true);text('content-editor-heading','发布与操作记录');text('content-version','新加坡时间 UTC+8 · 记录原操作人和版本');text('content-state','审计');$('content-audit').replaceChildren(...items.map(r=>{const n=el('article',undefined,'content-audit-record');n.append(el('strong',r.action),el('p',r.actorId+' · '+date(r.createdAt)),el('p','对象 '+r.targetId+' · 版本 '+(r.summary.revision??'—')),el('p',r.summary.reason??r.summary.errorCode??'', 'muted'));return n;}));}
 async function connect(){if(!controller)return;
- if(workbench&&['dashboard','settings'].includes(initialView)){identity=await controller.connect();text('content-role',identity.role==='publisher'?'可发布管理员':'内容编辑');renderStaticWork(initialView);return;}
+ if(workbench&&['dashboard','settings'].includes(initialView)){identity=await controller.connect();text('content-role',identity.role==='publisher'?'可发布管理员':'内容编辑');renderStaticWork(initialView);if(initialView==='dashboard'){workbench.dataset.connection=controller.pending()?'attention':'connected';status(controller.pending()?'请先核对原操作的结果。':'服务连接正常');}return;}
  if(workbench&&!catalogActive&&names[initialView])module=initialView;
  if(workbench)renderWorkNavigation();
 identity=await controller.connect();text('content-role',identity.role==='publisher'?'可发布管理员':'内容编辑');choices={};await listPage();
@@ -295,9 +295,33 @@ function renderWorkAssets(data){
  $('work-upload-link').href=module==='tracks'?'/admin/music/?track='+owner+'&tab=assets':'/admin/music/media/?owner='+owner+'&kind='+(module==='games'?'game_screenshot':'poster');
  text('work-upload-help',module==='tracks'?'封面、歌词、完整音频与试听分别核对':'图片 ≤ 10 MiB · MP4 ≤ 256 MiB');text('work-upload-owner','文件将归属于当前作品：'+title);
 }
+function dashboardLink(label,path,{className='',symbol='arrow',external=false}={}){
+ const link=el('a',undefined,className);link.href=path;link.append(el('span',label));const mark=el('span',undefined,'dashboard-link-icon');mark.setAttribute('aria-hidden','true');mark.append(icon(symbol));link.append(mark);
+ if(external){link.target='_blank';link.rel='noopener';link.append(el('span','（新标签页）','sr-only'));}return link;
+}
+function renderDashboard(panel){
+ const actions=el('section',undefined,'dashboard-actions'),heading=el('header',undefined,'dashboard-section-heading'),title=el('h2','常用操作');title.id='dashboard-actions-heading';actions.setAttribute('aria-labelledby',title.id);
+ heading.append(title,dashboardLink('进入作品内容','/admin-v2/'));actions.append(heading);
+ const rows=el('ul',undefined,'dashboard-action-list');
+ for(const [symbol,label,description,cta,path]of [
+  ['link','更新发行链接','把歌曲连接到网易云、Apple Music 等平台。','去更新','/admin-v2/?view=platforms'],
+  ['home','调整首页主推','选择想展示的歌曲与游戏。','去配置','/admin-v2/?view=home'],
+  ['cover','上传创作素材','准备封面、试听片段与 MV 文件。','去上传','/admin/music/media/']
+ ]){
+  const row=el('li',undefined,'dashboard-action-row'),mark=el('span',undefined,'dashboard-action-icon'),copy=el('div',undefined,'dashboard-action-copy');mark.setAttribute('aria-hidden','true');mark.append(icon(symbol));copy.append(el('h3',label),el('p',description));
+  if(symbol==='link')row.className+=' dashboard-action-featured';
+  row.append(mark,copy,dashboardLink(cta,path,{className:'dashboard-action-cta'}));rows.append(row);
+ }
+ actions.append(rows);
+ const visit=el('section',undefined,'dashboard-visit'),visitHeading=el('header',undefined,'dashboard-section-heading'),visitTitle=el('h2','查看小站');visitTitle.id='dashboard-visit-heading';visit.setAttribute('aria-labelledby',visitTitle.id);
+ visitHeading.append(visitTitle,dashboardLink('管理视频与 MV','/admin-v2/?view=clips'));visit.append(visitHeading);
+ const destinations=el('div',undefined,'dashboard-destinations');for(const [label,path]of [['网站首页','/'],['音乐页面','/music/']])destinations.append(dashboardLink(label,path,{symbol:'external',external:true}));visit.append(destinations);
+ panel.append(actions,visit);
+}
 function renderStaticWork(view){
  workbench.dataset.static='true';workbench.dataset.staticView=view;show('work-static',true);for(const id of ['content-list','work-count','work-new-menu'])show(id,false);document.querySelector('.work-toolbar').hidden=true;document.querySelector('.work-modules').hidden=true;document.querySelector('.work-list-head').hidden=true;
- const title=view==='dashboard'?'工作台':'设置';document.title=title+' | Station Cat';text('work-heading',title);text('work-breadcrumb',title);text('work-intro',view==='dashboard'?'把今天的作品，稳妥地准备好。':'常用管理入口与当前服务状态。');const panel=$('work-static');panel.replaceChildren();
+ const title=view==='dashboard'?'工作台':'设置';document.title=title+' | Station Cat';text('work-heading',title);text('work-breadcrumb',title);text('work-intro',view==='dashboard'?'想做的事，一步进入。':'常用管理入口与当前服务状态。');const panel=$('work-static');panel.replaceChildren();
+ if(view==='dashboard'){const feedback=$('content-status').closest('.work-feedback');if(feedback)feedback.parentElement.insertBefore(panel,feedback);}
  const groups=[['作品与素材',[
   ['作品资料','管理歌曲、游戏与视频','/admin-v2/'],['素材库','上传图片、试听与视频文件','/admin/music/media/'],['视频与 MV','整理影片与关联作品','/admin-v2/?view=clips'],['素材权利','核对素材的使用依据','/admin-v2/?view=assets'],['音频资料','完整音频与独立试听的原有管理入口','/admin/music/']
  ]],['发行与展示',[
@@ -309,8 +333,9 @@ function renderStaticWork(view){
   for(const [heading,links]of groups){const section=el('section',null,'settings-group');section.append(el('h2',heading));for(const [label,description,path]of links){const a=el('a',null,'settings-link'),copy=el('span');a.href=path;copy.append(el('strong',label),el('small',description));const arrow=el('span',null,'settings-arrow');arrow.setAttribute('aria-hidden','true');arrow.append(icon('arrow'));a.append(copy,arrow);section.append(a);}panel.append(section);}
   const state=el('section',null,'settings-group settings-status');state.append(el('h2','服务状态'),el('p','由服务端提供，供核对当前可用功能。','muted'));
   for(const [label,enabled]of [['内容管理',true],['定时公开',identity.schedulesEnabled],['推广链接',identity.campaignsEnabled]]){const row=el('div',null,'settings-status-row'),badge=el('span',enabled?'已启用':'未启用','badge');badge.dataset.enabled=String(Boolean(enabled));row.append(el('span',label),badge);state.append(row);}panel.append(state);
- }else{panel.append(el('h2','开始整理'));for(const [,links]of groups)for(const [label,,path]of links){const a=el('a',label);a.href=path;panel.append(a);}}
- status('已核对当前管理员和内容服务。');for(const nav of document.querySelectorAll('[data-admin-nav]')){if(nav.dataset.adminNav===view)nav.setAttribute('aria-current','page');else nav.removeAttribute('aria-current');}
+  status('已核对当前管理员和内容服务。');
+ }else renderDashboard(panel);
+ for(const nav of document.querySelectorAll('[data-admin-nav]')){if(nav.dataset.adminNav===view)nav.setAttribute('aria-current','page');else nav.removeAttribute('aria-current');}
 }
 
 if(workbench){
@@ -322,4 +347,5 @@ if(workbench){
  window.addEventListener('beforeunload',e=>{if(dirty||controller?.pending()){e.preventDefault();e.returnValue='';}});
 }
 
+if(workbench&&initialView==='dashboard')renderStaticWork('dashboard');
 void work(connect);
