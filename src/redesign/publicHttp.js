@@ -116,15 +116,19 @@ export async function handleStationContent(request, env, { clock = Date.now, tim
   const context = { requestId: crypto.randomUUID(), privateResponse: ['audio', 'playback'].includes(currentRoute?.kind) };
   if (!currentRoute) return error(request, 'NOT_FOUND', 404, context);
   if (!['GET', 'HEAD'].includes(request.method)) return error(request, 'METHOD_NOT_ALLOWED', 405, context, { Allow: 'GET, HEAD' });
-  let input, variant = null, expectedRevision = null, expectedPromotion = null;
+  let input, variant = null, expectedRevision = null, expectedPromotion = null, coverCacheVersion = null;
   try {
     const allowed = ['tracks', 'games'].includes(currentRoute.kind) ? ['locale', 'limit', 'cursor', ...(currentRoute.kind === 'tracks' ? ['q', 'sort'] : [])] :
       currentRoute.kind === 'clips' ? ['locale', 'limit', 'cursor'] :
       ['audio', 'playback'].includes(currentRoute.kind) ? ['variant', ...(currentRoute.kind === 'audio' ? ['v', 'p'] : ['locale'])] :
-      currentRoute.kind === 'asset' ? ['size'] : ['locale'];
+      currentRoute.kind === 'asset' ? ['size', 'v'] : ['locale'];
     input = requestInput(url, allowed);
     if ((currentRoute.slug && !slug(currentRoute.slug)) || (currentRoute.id && !uuid(currentRoute.id))) throw new TypeError('path');
     if (currentRoute.kind === 'asset' && url.searchParams.has('size') && !['card', 'display'].includes(url.searchParams.get('size'))) throw new TypeError('size');
+    if (currentRoute.kind === 'asset' && url.searchParams.has('v')) {
+      coverCacheVersion = url.searchParams.get('v');
+      if (!url.searchParams.has('size') || !/^[a-f0-9]{64}$/.test(coverCacheVersion)) throw new TypeError('cover version');
+    }
     if (['audio', 'playback'].includes(currentRoute.kind)) {
       variant = url.searchParams.get('variant');
       if (!['preview', 'full'].includes(variant)) throw new TypeError('variant');
@@ -176,10 +180,11 @@ export async function handleStationContent(request, env, { clock = Date.now, tim
       if (!asset) throw contentFailure('NOT_FOUND', 404);
       if (url.searchParams.has('size')) {
         if (asset.kind !== 'cover') throw contentFailure('INVALID_INPUT', 400);
+        if (coverCacheVersion !== null && coverCacheVersion !== asset.sha256) throw contentFailure('NOT_FOUND', 404);
         // Publication, ownership, rights and R2 readiness are checked above on
         // every request, including one that will return a private 304.
         return await run(() => musicDisplayCover(request, runtime.bucket, asset,
-          { assets: env.ASSETS, manifest: coverManifest, size: url.searchParams.get('size') }));
+          { assets: env.ASSETS, manifest: coverManifest, size: url.searchParams.get('size'), coverCacheVersion }));
       }
       return await streamContentAsset(request, runtime, asset, row.published_at, run);
     }
