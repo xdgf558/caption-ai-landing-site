@@ -1,4 +1,4 @@
-import { request, createJournal, hashFile, fileFormat, assetUrl, bytes, policyForSave, uuid } from './musicAdminClient.js';
+import { request, createJournal, hashFile, inspectUploadFile, assetUrl, bytes, policyForSave, uuid } from './musicAdminClient.js';
 import { mountMusicAdminAnalytics } from './musicAdminAnalytics.js';
 import { createWavConverter } from './musicWavClient.js';
 import { isWav, WAV_PROFILE } from './musicWav.js';
@@ -49,6 +49,7 @@ const errorMessages = {
   MUSIC_STORAGE_QUOTA:'存储配额不足；失败和过期上传仍占用额度。', MUSIC_UPLOADS_DISABLED:'上传尚未开放。',
   MUSIC_UPLOADS_NOT_CONFIGURED:'上传配额或迁移尚未配置。', MUSIC_ASSET_REFERENCE:'素材与当前曲目或原曲不匹配。',
   UPLOAD_EXPIRED:'上传会话已过期；预留额度尚未回收。', UPLOAD_REJECTED:'文件已被拒绝，预留额度尚未回收。',
+  MUSIC_FILE_STRUCTURE_INVALID:'文件内容未通过格式检查。请重新导出文件；原上传可通过“查询并恢复”核对结果。',
   MUSIC_INVALID_PUBLICATION:'发布资料不完整，请核对标题、分类、音频和试听。'
 };
 function persist() {
@@ -331,7 +332,8 @@ all('[data-upload-kind]').forEach(button => { button.onclick = () => run(async (
   }
   const { file,conversion,seconds } = await prepareUploadFile(source,kind);
   if (kind === 'preview' && conversion && Math.abs(seconds * 1000 - (input.sourceEndMs - input.sourceStartMs)) > 250) throw new Error('试听 WAV 时长与填写的来源区间不一致，请核对后重试。');
-  const { format,type } = fileFormat(kind,file); Object.assign(input,{ format,byteSize:file.size });
+  status('正在检查文件格式…');
+  const { format,type } = await inspectUploadFile(kind,file); Object.assign(input,{ format,byteSize:file.size });
   input.sha256 = await hashFile(file,p => status('正在校验文件 ' + p + '%'));
   const job = { localId:crypto.randomUUID(),trackId:track.id,kind,name:file.name,size:file.size,sha256:input.sha256,type,writeKey:crypto.randomUUID(), ...(conversion ? { conversion } : {}) };
   const result = await mutate('/uploads','POST',input,'reserve',{ job });

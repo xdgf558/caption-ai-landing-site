@@ -21,12 +21,13 @@ import stagingWorker from '../src/music/stagingEntrypoint.js';
 const request = (path, method = 'GET') => new Request(`https://music-staging.wwwstationcat.org${path}`, { method });
 
 test('the reviewed admin shell assets allow only exact GET/HEAD paths', () => {
-  for (const path of ['/styles/admin-station-content.css', '/styles/station-admin.css', '/images/station-gentle/cat-mark.webp']) {
+  for (const path of ['/styles/admin-station-content.css', '/styles/station-admin.css', '/images/station-gentle/cat-mark.webp', '/_astro/assetFormats.fixture.js']) {
     for (const method of ['GET', 'HEAD']) assert.equal(isMusicStagingRequest(request(path, method)), true);
     for (const method of ['POST', 'PUT', 'DELETE']) assert.equal(isMusicStagingRequest(request(path, method)), false);
     assert.equal(isMusicStagingRequest(request(path + '.other')), false);
   }
-  for (const path of ['/admin-v2/', '/admin-v2/services/', '/styles/admin-station-media.css', '/images/station-gentle/private.webp']) assert.equal(isMusicStagingRequest(request(path)), false);
+  for (const path of ['/admin-v2/', '/admin-v2/services/', '/styles/admin-station-media.css', '/images/station-gentle/private.webp',
+    '/_astro/assetFormats.js', '/_astro/assetFormats.fixture.css', '/_astro/assetFormats-private.fixture.js']) assert.equal(isMusicStagingRequest(request(path)), false);
 });
 
 test('staging cookies cannot inherit a production session, including duplicates', () => {

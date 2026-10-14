@@ -2,7 +2,54 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { assetUrl, hashFile, fileFormat, policyForSave, createJournal, request } from '../src/scripts/musicAdminClient.js';
+import sharp from 'sharp';
+import { assetUrl, hashFile, fileFormat, inspectUploadFile, limits, policyForSave, createJournal, request } from '../src/scripts/musicAdminClient.js';
+
+const picture = sharp({ create: { width: 177, height: 177, channels: 4, background: '#729284' } });
+const images = { png: await picture.clone().png().toBuffer(), jpeg: await picture.clone().jpeg().toBuffer(), webp: await picture.clone().webp().toBuffer() };
+
+test('cover format follows validated bytes instead of the filename or browser MIME', async () => {
+  for (const [format, content] of Object.entries(images)) {
+    for (const [name, type] of [['cover.jpg', 'image/jpeg'], ['cover.PNG', 'image/png'], ['cover', ''], ['cover.bin', 'application/octet-stream']]) {
+      const file = new File([content], name, { type });
+      assert.deepEqual(await inspectUploadFile('cover', file), { format, type: 'image/' + format });
+      assert.equal(await hashFile(file), createHash('sha256').update(content).digest('hex'));
+      assert.deepEqual(Buffer.from(await file.arrayBuffer()), content);
+    }
+  }
+});
+test('image inspection rejects unsupported, corrupt, oversized and unreadable files before upload', async () => {
+  const badCrc = Buffer.from(images.png); badCrc[29] ^= 1;
+  const tooWide = await sharp({ create: { width: 4097, height: 1, channels: 3, background: '#729284' } }).png().toBuffer();
+  const animated = await sharp(Buffer.concat([Buffer.alloc(8 * 8 * 3), Buffer.alloc(8 * 8 * 3, 255)]),
+    { raw: { width: 8, height: 16, pageHeight: 8, channels: 3 } }).webp().toBuffer();
+  assert.equal((await sharp(animated, { animated: true }).metadata()).pages, 2);
+  for (const content of [Buffer.from('<svg></svg>'), Buffer.from('not an image'),
+    images.png.subarray(0, 20), images.jpeg.subarray(0, -2), images.webp.subarray(0, -1), badCrc, tooWide, animated]) {
+    await assert.rejects(inspectUploadFile('cover', new File([content], 'cover.jpg', { type: 'image/jpeg' })), /封面/);
+  }
+  for (const kind of ['cover', 'evidence']) {
+    for (const size of [0, limits[kind] + 1, NaN]) {
+      await assert.rejects(inspectUploadFile(kind, { size, slice() { assert.fail('invalid size must not read bytes'); } }), /不能为空/);
+    }
+  }
+  await assert.rejects(inspectUploadFile('cover', { size: 10, slice() { throw Error('unavailable'); } }), /无法读取文件/);
+  await assert.rejects(inspectUploadFile('cover', { size: 10, slice() { return new Blob(['partial']); } }), /未完整读取/);
+});
+test('evidence keeps its narrower formats and non-image uploads retain their existing contract', async () => {
+  for (const format of ['png', 'jpeg']) {
+    assert.deepEqual(await inspectUploadFile('evidence', new File([images[format]], 'evidence.pdf', { type: 'application/pdf' })), { format, type: 'image/' + format });
+  }
+  const pdf = new File(['%PDF-1.7\nfixture\nstartxref\n9\n%%EOF\n'], 'evidence.jpg', { type: 'image/jpeg' });
+  assert.deepEqual(await inspectUploadFile('evidence', pdf), { format: 'pdf', type: 'application/pdf' });
+  await assert.rejects(inspectUploadFile('cover', pdf), /封面格式/);
+  await assert.rejects(inspectUploadFile('evidence', new File([images.webp], 'evidence.png')), /PDF、JPEG 或 PNG/);
+  await assert.rejects(inspectUploadFile('evidence', new File(['%PDF-1.7\ntruncated'], 'evidence.pdf')), /不完整/);
+  for (const [kind, name, format, type] of [['audio', 'audio.mp3', 'mp3', 'audio/mpeg'], ['preview', 'preview.mp3', 'mp3', 'audio/mpeg'], ['lyrics', 'lyrics.lrc', 'lrc', 'text/plain']]) {
+    assert.deepEqual(await inspectUploadFile(kind, new File(['existing contract'], name)), { format, type });
+  }
+  await assert.rejects(inspectUploadFile('audio', new File([images.png], 'cover.png')));
+});
 
 test('asset paths reject external URLs and non-UUID identifiers',() => {
   assert.throws(() => assetUrl('https://evil.test/file'));

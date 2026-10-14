@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 import { wavFixture } from '../helpers/music-wav-fixture.mjs';
 const fixture = name => fileURLToPath(new URL('../../tests/fixtures/music-mp3/' + name,import.meta.url));
@@ -41,6 +42,51 @@ async function rights(page) {
   await page.locator('#confirm-accept').click();
   await expect(page.locator('#rights-state')).toHaveText('已通过');
 }
+test('PNG named JPG uploads as PNG and the real isolated server accepts unchanged bytes',async ({page}) => {
+  await create(page); await page.getByRole('tab',{name:'素材',exact:true}).click();
+  const content=await sharp({create:{width:177,height:177,channels:4,background:'#729284'}}).png().toBuffer();
+  const writes=[];
+  page.on('request',r=>{if(r.method()!=='GET'&&r.url().includes('/admin/api/music/'))writes.push(r);});
+  await upload(page,'cover',{name:'download.jpg',mimeType:'image/jpeg',buffer:content});
+  const reserve=writes.find(r=>r.url().endsWith('/uploads'));
+  expect(reserve.postDataJSON()).toMatchObject({kind:'cover',format:'png',byteSize:content.length,sha256:createHash('sha256').update(content).digest('hex')});
+  const puts=writes.filter(r=>r.url().endsWith('/body'));
+  expect(puts).toHaveLength(1);expect(puts[0].headers()['content-type']).toBe('image/png');
+  const completed=await (await writes.find(r=>r.url().endsWith('/complete')).response()).json();
+  const stored=await page.request.get('/admin/api/music/assets/'+completed.assetId);
+  expect(stored.status()).toBe(200);expect(stored.headers()['content-type']).toBe('image/png');
+  expect(await stored.body()).toEqual(content);
+  await expect(page.locator('#upload-sessions')).toContainText('已验证');
+  await expect(page.locator('#assets-save')).toBeEnabled();
+  await page.locator('#assets-save').click();await expect(page.locator('#track-version')).toHaveText('编辑版本 2');
+});
+test('invalid covers show a readable error and make no reservation or recovery job',async ({page}) => {
+  await create(page);await page.getByRole('tab',{name:'素材',exact:true}).click();
+  const writes=[];page.on('request',r=>{if(r.method()!=='GET'&&r.url().includes('/admin/api/music/'))writes.push(r);});
+  const png=await sharp({create:{width:16,height:16,channels:3,background:'#729284'}}).png().toBuffer();
+  for(const [content,message] of [[Buffer.from('<svg></svg>'),'无法识别封面格式'],[png.subarray(0,30),'封面图片不完整']]) {
+    await page.locator('#file-cover').setInputFiles({name:'cover.jpg',mimeType:'image/jpeg',buffer:content});
+    await page.locator('[data-upload-kind=cover]').click();
+    await expect(page.locator('#music-status')).toContainText(message);
+    await expect(page.locator('[data-upload-kind=cover]')).toBeEnabled();
+    await expect(page.locator('#upload-recovery')).toBeHidden();
+    expect(writes).toHaveLength(0);
+  }
+});
+test('misnamed cover with an unknown PUT receipt recovers once using its original format',async ({page}) => {
+  await create(page);await page.getByRole('tab',{name:'素材',exact:true}).click();
+  const content=await sharp({create:{width:177,height:177,channels:4,background:'#729284'}}).png().toBuffer();
+  let puts=0,reserves=0;
+  page.on('request',r=>{if(r.method()==='POST'&&r.url().endsWith('/uploads'))reserves++;});
+  await page.route('**/uploads/*/body',async route=>{puts++;expect(route.request().headers()['content-type']).toBe('image/png');await route.fetch();await route.abort();});
+  await page.locator('#file-cover').setInputFiles({name:'cover.jpg',mimeType:'image/jpeg',buffer:content});
+  await page.locator('[data-upload-kind=cover]').click();
+  await expect(page.locator('#music-status')).toContainText('无法确认');
+  await page.reload();await page.getByRole('tab',{name:'素材',exact:true}).click();
+  await page.getByRole('button',{name:'查询并恢复',exact:true}).click();
+  await expect(page.locator('#music-status')).toContainText('文件已验证');
+  expect(puts).toBe(1);expect(reserves).toBe(1);
+});
 test('Enter saves a draft; full upload, review, publish, revision, unpublish and archive use real isolated API',async ({page}) => {
   const errors = []; page.on('pageerror',e => errors.push(e.message));
   const slug = await create(page);
