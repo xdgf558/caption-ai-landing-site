@@ -10,8 +10,8 @@ import { handleStationContent } from '../src/redesign/publicHttp.js';
 import { renderMusicCatalog, renderSongHero } from '../src/redesign/musicRender.js';
 import { renderBrandHomeSlots } from '../src/redesign/brandHomeRender.js';
 import { musicDisplayCoverManifest } from '../src/music/displayCoverManifest.js';
-import { contentFixture, base, now, seedContent, homeFixture, promotionFixture } from './helpers/station-content-fixture.mjs';
-import { migrationStatements } from './helpers/station-redesign-database.mjs';
+import { contentFixture, base, now, seedContent, homeFixture, promotionFixture, approve, publishTrack } from './helpers/station-content-fixture.mjs';
+import { migrationStatements, insertFixture, fixtureId } from './helpers/station-redesign-database.mjs';
 
 const fixtures = [];
 afterEach(() => fixtures.splice(0).forEach(f => f.close()));
@@ -30,9 +30,123 @@ const asset = request => {
 async function fixture() {
   const f = await contentFixture(); fixtures.push(f); f.env.ASSETS = { fetch: asset }; return f;
 }
-const call = (f, path, input = {}) => handleStationContent(new Request('https://wwwstationcat.org' + base + path,
+const call = (f, path, input = {}, options = {}) => handleStationContent(new Request('https://wwwstationcat.org' + base + path,
   { ...input, headers: { 'CF-Connecting-IP': '192.0.2.89', ...input.headers } }), f.env,
-  { clock: () => now, coverManifest: manifest });
+  { clock: () => now, coverManifest: manifest, ...options });
+
+const assertVersionedCache = response => {
+  assert.equal(response.headers.get('cache-control'), 'private, max-age=86400, must-revalidate');
+  assert.equal(response.headers.get('cdn-cache-control'), 'no-store');
+  assert.equal(response.headers.get('cloudflare-cdn-cache-control'), 'no-store');
+};
+
+test('fresh public cover DTO fingerprints support only strict versioned image variants and leave old URLs unchanged', async () => {
+  const f = await fixture(), track = f.content.tracks[0];
+  const listing = await (await call(f, '/tracks')).json();
+  const dto = listing.items.find(item => item.id === track.id);
+  assert.equal(dto.coverUrl, base + '/assets/' + track.cover);
+  assert.equal(dto.coverCacheVersion, hash(source));
+  assert.equal((await (await call(f, '/tracks/permanent-free')).json()).track.coverCacheVersion, hash(source));
+  f.music.sql.prepare("UPDATE station_asset_rights SET status='blocked' WHERE music_asset_id=?").run(track.cover);
+  const revoked = (await (await call(f, '/tracks/permanent-free')).json()).track;
+  assert.equal(revoked.coverUrl, null); assert.equal(revoked.coverCacheVersion, null);
+  f.music.sql.prepare("UPDATE station_asset_rights SET status='approved' WHERE music_asset_id=?").run(track.cover);
+  for (const query of ['v=' + hash(source), 'size=card&v=', 'size=card&v=' + hash(source).toUpperCase(),
+    'size=card&v=' + 'a'.repeat(63), 'size=card&v=' + hash(source) + '&v=' + hash(source),
+    'size=card&v=' + hash(source) + '&token=secret']) {
+    const response = await call(f, '/assets/' + track.cover + '?' + query);
+    assert.equal(response.status, 400, query); assert.equal(response.headers.get('cache-control'), 'no-store');
+  }
+  for (const id of [track.lyrics, f.content.clip.poster, f.content.game.screenshot]) {
+    const response = await call(f, '/assets/' + id + '?size=card&v=' + hash(source));
+    assert.equal(response.status, 400); assert.equal(response.headers.get('cache-control'), 'no-store');
+  }
+  for (const id of [track.audio, track.preview]) {
+    assert.equal((await call(f, '/assets/' + id + '?size=card&v=' + hash(source))).status, 404);
+  }
+});
+
+test('version-matched generated card/display images reuse private cache; 304 still reads current controlled resources', async () => {
+  const f = await fixture(), track = f.content.tracks[0];
+  let generatedReads = 0; f.env.ASSETS = { fetch(request) { generatedReads++; return asset(request); } };
+  for (const [size, bytes] of [['card', card], ['display', display]]) {
+    const path = '/assets/' + track.cover + '?size=' + size + '&v=' + hash(source);
+    const response = await call(f, path), tag = response.headers.get('etag');
+    assert.equal(response.status, 200); assertVersionedCache(response);
+    assert.deepEqual(new Uint8Array(await response.arrayBuffer()), bytes);
+    const before = f.r2.state.reads.length, generatedBefore = generatedReads;
+    const cached = await call(f, path, { headers: { 'If-None-Match': 'W/' + tag } });
+    assert.equal(cached.status, 304); assertVersionedCache(cached); assert.equal(await cached.text(), '');
+    assert.equal(generatedReads, generatedBefore + 1);
+    const reads = f.r2.state.reads.slice(before);
+    assert(reads.some(read => read.method === 'head'));
+    assert(reads.some(read => read.method === 'get' && read.options.onlyIf.etagMatches));
+    const head = await call(f, path, { method: 'HEAD' });
+    assert.equal(head.status, 200); assertVersionedCache(head); assert.equal(await head.text(), '');
+  }
+  const old = await call(f, '/assets/' + track.cover + '?size=card');
+  assert.equal(old.headers.get('cache-control'), 'private, max-age=0, must-revalidate'); await old.body.cancel();
+  const original = await call(f, '/assets/' + track.cover);
+  assert.equal(original.headers.get('cache-control'), 'no-store'); await original.body.cancel();
+});
+
+test('a new published cover has a distinct version URL and the old published image no longer resolves', async () => {
+  const f = await fixture(), track = f.content.tracks[0], oldPath = '/assets/' + track.cover + '?size=card&v=' + hash(source);
+  const first = await call(f, oldPath), tag = first.headers.get('etag'); await first.body.cancel();
+  const old = f.music.sql.prepare('SELECT * FROM music_assets WHERE id=?').get(track.cover);
+  const id = fixtureId(971), bytes = new Uint8Array(100).fill(38), sha256 = hash(bytes);
+  const object_key = 'music/covers/' + track.id + '/' + id + '.' + old.format;
+  const object = await f.r2.bucket.put(object_key, bytes, { httpMetadata: { contentType: old.content_type } });
+  await insertFixture(f.music.db, 'music_assets', { ...old, id, object_key, sha256, etag: object.etag });
+  await approve(f.music.db, id, 'cover'); await publishTrack(f.music.db, track, { cover_asset_id: id });
+  const dto = (await (await call(f, '/tracks/permanent-free')).json()).track;
+  assert.equal(dto.coverUrl, base + '/assets/' + id); assert.equal(dto.coverCacheVersion, sha256);
+  const obsolete = await call(f, oldPath, { headers: { 'If-None-Match': tag } });
+  assert.equal(obsolete.status, 404); assert.equal(obsolete.headers.get('cache-control'), 'no-store');
+  const staleVersion = await call(f, '/assets/' + id + '?size=card&v=' + hash(source));
+  assert.equal(staleVersion.status, 404); assert.equal(staleVersion.headers.get('cache-control'), 'no-store');
+  const fresh = await call(f, '/assets/' + id + '?size=card&v=' + sha256, {}, { coverManifest: { [sha256]: entry } });
+  assert.equal(fresh.status, 200); assertVersionedCache(fresh); await fresh.body.cancel();
+});
+
+test('versioned conditional images cannot bypass rights, publication, shutdown or R2 checks', async () => {
+  const f = await fixture(), track = f.content.tracks[0], path = '/assets/' + track.cover + '?size=card&v=' + hash(source);
+  const first = await call(f, path), tag = first.headers.get('etag'); await first.body.cancel();
+  const cached = () => call(f, path, { headers: { 'If-None-Match': tag } });
+  const denied = async status => { const response = await cached();
+    assert.equal(response.status, status); assert.equal(response.headers.get('cache-control'), 'no-store'); };
+  f.music.sql.prepare("UPDATE station_asset_rights SET status='blocked' WHERE music_asset_id=?").run(track.cover); await denied(404);
+  f.music.sql.prepare("UPDATE station_asset_rights SET status='approved' WHERE music_asset_id=?").run(track.cover);
+  f.music.sql.prepare("UPDATE station_track_publications SET status='archived' WHERE track_id=?").run(track.id); await denied(404);
+  f.music.sql.prepare("UPDATE station_track_publications SET status='published' WHERE track_id=?").run(track.id);
+  f.env.STATION_CONTENT_PUBLIC_ENABLED = false; await denied(503); f.env.STATION_CONTENT_PUBLIC_ENABLED = true;
+  f.music.sql.prepare('DELETE FROM d1_migrations').run(); await denied(503);
+  f.music.sql.prepare("INSERT INTO d1_migrations(name) VALUES('0012_station_redesign.sql')").run();
+  f.r2.state.failGet = true; await denied(503); f.r2.state.failGet = false;
+  const row = f.music.sql.prepare('SELECT object_key,content_type FROM music_assets WHERE id=?').get(track.cover);
+  await f.r2.bucket.put(row.object_key, new Uint8Array(100).fill(99), { httpMetadata: { contentType: row.content_type } }); await denied(404);
+});
+
+test('versioned missing or malformed generated files, including conditional requests, never acquire reusable cache', async () => {
+  const f = await fixture(), track = f.content.tracks[0], path = '/assets/' + track.cover + '?size=card&v=' + hash(source);
+  const first = await call(f, path), tag = first.headers.get('etag'); await first.body.cancel();
+  const services = [undefined, { fetch: () => new Response(null, { status: 404 }) },
+    { fetch: () => new Response('oops', { headers: { 'Content-Type': 'text/html' } }) },
+    { fetch: () => new Response(card, { headers: { 'Content-Type': 'image/webp', 'Content-Length': '99' } }) }];
+  for (const service of services) {
+    f.env.ASSETS = service;
+    for (const headers of [{}, { 'If-None-Match': tag }]) {
+      const response = await call(f, path, { headers });
+      assert.equal(response.status, 200); assert.equal(response.headers.get('cache-control'), 'no-store');
+      assert.equal(response.headers.get('cdn-cache-control'), 'no-store');
+      assert.equal(response.headers.get('cloudflare-cdn-cache-control'), 'no-store');
+      assert.deepEqual(new Uint8Array(await response.arrayBuffer()), source);
+    }
+  }
+  f.env.ASSETS = { fetch: asset };
+  const unknown = await call(f, path, {}, { coverManifest: {} });
+  assert.equal(unknown.headers.get('cache-control'), 'no-store'); await unknown.body.cancel();
+});
 
 test('card and detail variants stay on the controlled asset route; original and Range contracts remain intact', async () => {
   const f = await fixture(), cover = '/assets/' + f.content.tracks[0].cover;
@@ -159,7 +273,7 @@ test('published homepage artwork uses controlled derivatives and revalidates bef
   assert.equal(home.music, null); assert.doesNotMatch(renderBrandHomeSlots(home).music, /<img/);
 });
 
-test('native Worker, D1 and R2 return controlled 304 only while publication/rights remain live; raw files stay blocked', async () => {
+test('native Worker, D1 and R2 return versioned private cache and 304 only while publication/rights remain live; raw files stay blocked', async () => {
   const output = await build({ entryPoints: [fileURLToPath(new URL('../src/worker.js', import.meta.url))],
     bundle: true, format: 'esm', platform: 'browser', write: false, loader: { '.wasm': 'binary' },
     plugins: [{ name: 'local-cover-manifest-only', setup(b) { b.onLoad({ filter: /displayCoverManifest\.js$/ }, () =>
@@ -173,14 +287,16 @@ test('native Worker, D1 and R2 return controlled 304 only while publication/righ
     for (const group of migrationStatements().slice(0, -1)) await db.batch(group.statements.map(sql => db.prepare(sql)));
     const content = await seedContent(db, bucket), track = content.tracks[0];
     const native = (path, headers) => mf.dispatchFetch('https://wwwstationcat.org' + path, { headers: { 'CF-Connecting-IP': '192.0.2.88', ...headers } });
-    let response = await native(base + '/assets/' + track.cover + '?size=card');
+    const path = base + '/assets/' + track.cover + '?size=card&v=' + hash(source);
+    let response = await native(path);
     assert.equal(response.status, 200, await response.clone().text()); const tag = response.headers.get('etag');
+    assertVersionedCache(response);
     assert.deepEqual(new Uint8Array(await response.arrayBuffer()), card);
-    response = await native(base + '/assets/' + track.cover + '?size=card', { 'If-None-Match': tag });
-    assert.equal(response.status, 304); assert.equal(await response.text(), '');
+    response = await native(path, { 'If-None-Match': tag });
+    assert.equal(response.status, 304); assertVersionedCache(response); assert.equal(await response.text(), '');
     assert.equal((await native(entry.card.path)).status, 404);
     await db.prepare("UPDATE station_asset_rights SET status='blocked' WHERE music_asset_id=?").bind(track.cover).run();
-    response = await native(base + '/assets/' + track.cover + '?size=card', { 'If-None-Match': tag });
+    response = await native(path, { 'If-None-Match': tag });
     assert.equal(response.status, 404); assert.equal(response.headers.get('cache-control'), 'no-store');
   } finally { await mf.dispose(); }
 });

@@ -105,6 +105,8 @@ test('public fields are allowlisted; platform-only works and locale fallback nev
   assert.equal(value.track.title, 'vip'); assert.equal(value.track.href, '/ja/music/tracks/vip/');
   assert.equal(value.track.preview.durationMs, 30000);
   assert.match(value.track.lyricsUrl, /\/assets\//);
+  assert.match(value.track.coverCacheVersion, /^[a-f0-9]{64}$/);
+  assert.equal(value.track.coverCacheVersion, f.music.sql.prepare('SELECT sha256 FROM music_assets WHERE id=?').get(vip.cover).sha256);
   assert.doesNotMatch(JSON.stringify(value), /object_key|site_audio_mode|legacy_revision|sha256|etag|rights_|technical_|audioPath|audio_asset_id|storage|private/);
   assert(!JSON.stringify(value).includes(vip.audio));
   const platformOnly = (await body(f, '/tracks/draft-no-audio?locale=en')).track;
@@ -424,7 +426,8 @@ test('game detail preserves the real runtime directory; unregistered stored laun
 test('asset IDs colliding across music/media domains are omitted rather than resolved by arrival order', async () => {
   const f = await fixture(), { game, tracks } = f.content, cover = tracks[1].cover;
   await mediaFixture(f.music.db, f.r2.bucket, game.id, 'game_screenshot', cover);
-  assert.equal((await body(f, '/tracks/vip')).track.coverUrl, null);
+  const track = (await body(f, '/tracks/vip')).track;
+  assert.equal(track.coverUrl, null); assert.equal(track.coverCacheVersion, null);
   assert.equal((await body(f, '/home')).home.music, null);
   await denied(await call(f, '/assets/' + cover), 404, 'NOT_FOUND');
 });

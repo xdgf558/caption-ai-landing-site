@@ -65,6 +65,9 @@ export async function projectTrack(runtime, row, options, { detailed = false } =
     durationMs: positive(row.duration_ms) ? row.duration_ms : null,
     href: localizedPath(locale, 'music/tracks', row.slug),
     coverUrl: ready.has(row.cover_asset_id) ? assetPath(ready.get(row.cover_asset_id)) : null,
+    // This public cover fingerprint is a cache identity only. It never bypasses
+    // fresh publication, rights or storage checks on the controlled asset route.
+    coverCacheVersion: ready.get(row.cover_asset_id)?.sha256 || null,
     preview,
     // Retain the nullable DTO field for old clients, but the website now
     // promotes external listening and offers only configured previews/MVs.

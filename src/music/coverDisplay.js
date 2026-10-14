@@ -3,6 +3,7 @@ import { checkAssetIdentity, checkStoredObject } from './resources.js';
 import { cancelBody } from './storage.js';
 
 const headers = { 'Cache-Control': 'private, max-age=0, must-revalidate',
+  'CDN-Cache-Control': 'no-store', 'Cloudflare-CDN-Cache-Control': 'no-store',
   'Cross-Origin-Resource-Policy': 'same-origin', 'X-Content-Type-Options': 'nosniff' };
 const matches = (value, etag) => value?.split(',').some(part => ['*', etag, `W/${etag}`].includes(part.trim()));
 const validVariant = (variant, asset) => variant && variant.sourceBytes === asset.byte_size &&
@@ -12,9 +13,10 @@ const validVariant = (variant, asset) => variant && variant.sourceBytes === asse
 
 // Callers establish live publication/version or administrator access first. Raw generated files are
 // blocked at the Worker boundary, including when the public music gate is off.
-export async function musicDisplayCover(request, bucket, asset, { assets, manifest = musicDisplayCoverManifest, size = 'display', thumbnailOnly = false } = {}) {
+export async function musicDisplayCover(request, bucket, asset, { assets, manifest = musicDisplayCoverManifest, size = 'display', thumbnailOnly = false, coverCacheVersion = null } = {}) {
   checkAssetIdentity(asset);
   if (asset.kind !== 'cover' || asset.state !== 'validated') throw new Error('COVER_INVALID');
+  if (coverCacheVersion !== null && (!/^[a-f0-9]{64}$/.test(coverCacheVersion) || coverCacheVersion !== asset.sha256)) throw new Error('COVER_VERSION_INVALID');
   let object, response, stopped = false, timer;
   try {
     const pending = Promise.resolve().then(() => bucket.get(asset.object_key, { onlyIf: { etagMatches: asset.etag } }));
@@ -27,15 +29,25 @@ export async function musicDisplayCover(request, bucket, asset, { assets, manife
     const variant = thumbnailOnly ? display?.card : size === 'card' && validVariant(display?.card, asset) ? display.card : display;
     if (assets?.fetch && validVariant(variant, asset)) {
       const etag = `"music-display-static-v1-${variant.sha256}"`;
-      if (matches(request.headers.get('If-None-Match'), etag)) return new Response(null, { status: 304, headers: { ...headers, ETag: etag } });
+      const variantHeaders = { ...headers, ...(coverCacheVersion !== null ?
+        { 'Cache-Control': 'private, max-age=86400, must-revalidate' } : {}) };
+      if (coverCacheVersion === null && matches(request.headers.get('If-None-Match'), etag)) {
+        return new Response(null, { status: 304, headers: { ...headers, ETag: etag } });
+      }
       try {
         response = await assets.fetch(new Request(new URL(variant.path, request.url), { method: request.method }));
         if (response.status === 200 && response.headers.get('Content-Type')?.split(';')[0] === variant.contentType &&
           (response.headers.get('Content-Length') === null || Number(response.headers.get('Content-Length')) === variant.bytes)) {
+          // A fingerprint is not proof that the generated file still exists.
+          // Check its response before accepting even a conditional cache hit.
+          if (matches(request.headers.get('If-None-Match'), etag)) {
+            cancelBody(response); response = null;
+            return new Response(null, { status: 304, headers: { ...variantHeaders, ETag: etag } });
+          }
           const body = request.method === 'HEAD' ? null : response.body;
           if (request.method === 'HEAD') cancelBody(response);
           response = null;
-          return new Response(body, { headers: { ...headers, 'Content-Type': variant.contentType,
+          return new Response(body, { headers: { ...variantHeaders, 'Content-Type': variant.contentType,
             'Content-Length': String(variant.bytes), ETag: etag } });
         }
       } catch { /* Missing generated assets never make the original cover unusable. */ }
