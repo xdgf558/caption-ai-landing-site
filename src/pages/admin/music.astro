@@ -7,8 +7,9 @@ const kinds = [['audio', '完整音频', '.mp3,.wav', 'MP3 ≤ 32 MiB · WAV ≤
 const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', '商业使用授权依据'], ['lyricsRightsNotes', '歌词权利说明'],
   ['coverRightsNotes', '封面权利说明'], ['audioInputRightsNotes', '音频输入权利说明']];
 ---
-<StationAdminLayout title="音频与歌曲素材" active="media"><div class="admin-audio-tools"><a href="/admin-v2/">返回作品内容</a><button id="analytics-open" type="button">收听统计</button><button id="audit-open" type="button"><History size={16} />操作记录</button></div><div class="admin-content-page">
-  <header class="music-heading"><div><p class="eyebrow">素材库 / 音乐</p><h1>音频与歌曲素材</h1></div><button id="track-new" class="primary" type="button" disabled><Plus size={18} />新建曲目</button></header>
+<StationAdminLayout title="音频与歌曲素材" active="media"><div class="admin-audio-tools"><a href="/admin-v2/">返回作品内容</a><button id="analytics-open" type="button">收听统计</button><button id="audit-open" type="button"><History size={16} />操作记录</button></div><div class="admin-content-page" id="audio-materials-page" data-mode="website">
+  <header class="music-heading"><div><p class="eyebrow">素材库 / 音乐</p><h1 id="audio-page-title">歌曲素材</h1></div><button id="track-new" class="primary" type="button" disabled><Plus size={18} />新建曲目</button></header>
+  <section id="website-publish-bridge" class="notice"><h2>发布歌曲，请回到作品内容</h2><p>歌名、艺名和封面在同一处编辑，点击“发布歌曲”即可。这里此前保存的封面可以继续选用。</p><a id="website-song-editor" class="primary" href="/admin-v2/?view=tracks">编辑歌曲并发布 →</a></section>
   <div class="music-health"><span id="environment">正在连接音乐服务</span><div class="music-storage-control"><span id="storage">配额待查询</span><button id="quota-open" type="button" disabled>调整总配额</button></div></div>
   <p class="muted"><a href="/admin/music/media/">管理视频、海报与游戏截图</a> · <a href="/admin/music/content/">编辑网站作品与推广配置</a></p>
   <div class="music-feedback"><p id="music-status" role="status" aria-live="polite">正在读取曲库。</p><button id="music-reload" type="button" title="重新读取服务状态" aria-label="重新读取服务状态"><RefreshCw size={17} /></button><button id="mutation-retry" type="button" hidden>核对并重试原操作</button></div>
@@ -24,7 +25,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
       <div id="workspace" hidden>
         <header class="workspace-heading"><div><h2 id="track-heading">新曲目</h2><p id="track-version" class="muted">未保存</p></div><span id="track-state" class="badge">草稿</span></header>
         <div role="tablist" aria-label="曲目工作区" class="music-tabs">
-          {['基本资料', '素材', '审核发布', '角色预览'].map((name, i) => <button type="button" id={`step-${i}`} role="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`panel-${i}`} tabindex={i === 0 ? 0 : -1}>{name}</button>)}
+          {['基本资料', '素材', '整曲播放审核', '角色预览'].map((name, i) => <button type="button" id={`step-${i}`} role="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`panel-${i}`} tabindex={i === 0 ? 0 : -1}>{name}</button>)}
         </div>
         <section id="panel-0" role="tabpanel" aria-labelledby="step-0">
           <form id="track-form">
@@ -50,7 +51,7 @@ const rightsText = [['sourceSongId', '来源歌曲 ID'], ['authorizationBasis', 
         </section>
         <section id="panel-1" role="tabpanel" aria-labelledby="step-1" hidden>
           <p id="upload-availability" class="notice">保存曲目后可上传素材。</p>
-          <div class="upload-rows">{kinds.map(([kind, name, accept, limit]) => <section class="upload-row" aria-label={name}>
+          <div class="upload-rows">{kinds.map(([kind, name, accept, limit]) => <section class="upload-row" data-material-kind={kind} aria-label={name}>
             <header><h3>{name}</h3><span class="muted">{limit}</span></header>
             <div data-asset-kind={kind} class="asset-view"></div>
             {kind === 'preview' && <div class="field-grid"><label>原曲起点（秒）<input id="preview-start" type="number" min="0" step="0.001" value="0" /></label><label>原曲终点（秒）<input id="preview-end" type="number" min="0.001" step="0.001" /></label></div>}

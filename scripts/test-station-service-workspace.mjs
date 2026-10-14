@@ -61,7 +61,7 @@ test('account detail race does not show another account and an in-flight adjustm
 test('settings groups keep all destinations and use read-only service flags',async()=>{
  const f=await adminScriptFixture('adminStationContent.js',{search:'?view=settings',request:async()=>({ok:true,actorId:'fixture-admin',role:'publisher',schedulesEnabled:false,campaignsEnabled:true})});
  const panel=f.node('work-static');assert.deepEqual(panel.children.map(s=>s.children[0].textContent),['作品与素材','发行与展示','账号与交易','服务状态']);
- const links=panel.children.flatMap(s=>s.children).filter(n=>n.tagName==='A');assert.equal(links.length,11);assert(links.some(n=>n.href==='/admin/music/'));assert(links.some(n=>n.href==='/admin-v2/services/#accounts'));assert(links.some(n=>n.href==='/admin/membership-refunds/'));
+ const links=panel.children.flatMap(s=>s.children).filter(n=>n.tagName==='A');assert.equal(links.length,11);assert(links.some(n=>n.href==='/admin-v2/?view=tracks'));assert(!links.some(n=>n.href==='/admin/music/'));assert(links.some(n=>n.href==='/admin-v2/services/#accounts'));assert(links.some(n=>n.href==='/admin/membership-refunds/'));
  const states=panel.children.at(-1).children.filter(n=>n.className==='settings-status-row');assert.deepEqual(states.map(n=>n.children[1].textContent),['已启用','未启用','已启用']);assert(states.every(n=>n.children[1].tagName==='SPAN'));
 });
 

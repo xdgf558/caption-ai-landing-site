@@ -38,7 +38,10 @@ export async function snapshot(db,type,id) {
 export async function readContentObject(db,type,id) {
   const x=await snapshot(db,type,id);
   const jobs=rows(await primary(db).prepare('SELECT * FROM station_publish_jobs WHERE object_type=? AND object_id=? ORDER BY created_at DESC,id LIMIT 20').bind(type,id).all());
-  return {type,id,editVersion:x.h.edit_version,status:x.h.status,slug:x.h.slug??null,trackId:x.h.track_id??(type==='tracks'||type==='promotions'?id:null),clipType:x.h.type??null,
+  const saved=type==='tracks'?rows(await primary(db).prepare(`SELECT r.cover_asset_id,r.lyrics_asset_id,(SELECT slug FROM station_track_routes WHERE track_id=t.id AND role='canonical' LIMIT 1) AS slug FROM music_tracks t
+    LEFT JOIN music_track_revisions r ON r.id=COALESCE(t.draft_revision_id,t.published_revision_id) AND r.track_id=t.id WHERE t.id=?`).bind(id).all())[0]:null;
+  return {type,id,editVersion:x.h.edit_version,status:x.h.status,slug:(type==='tracks'?saved?.slug:x.h.slug)??null,trackId:x.h.track_id??(type==='tracks'||type==='promotions'?id:null),clipType:x.h.type??null,
+    ...(type==='tracks'?{savedMusicAssets:{cover:saved?.cover_asset_id??null,lyrics:saved?.lyrics_asset_id??null}}:{}),
     publishedAt:x.h.published_at,scheduledAt:x.h.scheduled_at,
     draft:x.draft?{revision:x.draft.revision,data:viewData(type,x.draft)}:null,
     published:x.published?{revision:x.published.revision,data:viewData(type,x.published)}:null,
