@@ -1,4 +1,4 @@
-import { request, fileFormat, hashFile, uuid } from './musicAdminClient.js';
+import { request, inspectUploadFile, hashFile, uuid } from './musicAdminClient.js';
 
 // Persist metadata before every mutating request. Never persist image bytes.
 export function createAlbumCoverUploader({ journal, checkActor, api=request }) {
@@ -31,7 +31,7 @@ export function createAlbumCoverUploader({ journal, checkActor, api=request }) {
     async upload(collectionId,file){
       if(!uuid(collectionId))throw new Error('请先保存专辑资料。');
       if(jobs().some(j=>j.body.collectionId===collectionId&&!['completed','failed'].includes(j.stage)))throw new Error('请先查询并恢复原封面上传。');
-      const {format,type}=fileFormat('cover',file),sha256=await hashFile(file);
+      const {format,type}=await inspectUploadFile('cover',file),sha256=await hashFile(file);
       const job={key:crypto.randomUUID(),writeKey:crypto.randomUUID(),completeKey:crypto.randomUUID(),type,stage:'new',body:{collectionId,format,byteSize:file.size,sha256}};
       // Bound completed history; unresolved requests are never removed.
       const retained=jobs().filter(j=>!['completed','failed'].includes(j.stage));

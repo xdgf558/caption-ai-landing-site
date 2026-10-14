@@ -1,4 +1,5 @@
 import { sha256 } from '@noble/hashes/sha2.js';
+import { assetType, inspectSmallAsset } from '../music/assetFormats.js';
 
 export const API = '/admin/api/music';
 export const limits = { audio: 32 * 1048576, preview: 4 * 1048576, cover: 5 * 1048576, lyrics: 131072, evidence: 10 * 1048576 };
@@ -11,6 +12,34 @@ export function fileFormat(kind, file) {
   const allowed = { audio: ['mp3'], preview: ['mp3'], cover: ['jpeg', 'png', 'webp'], lyrics: ['txt', 'lrc'], evidence: ['jpeg', 'png', 'pdf'] };
   if (!allowed[kind]?.includes(format) || file.size < 1 || file.size > limits[kind]) throw new Error('文件格式或大小不符合限制。');
   return { format, type: ({ mp3:'audio/mpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp', txt:'text/plain', lrc:'text/plain', pdf:'application/pdf' })[format] };
+}
+// Names and browser MIME types can disagree with the bytes (e.g. a PNG named
+// cover.jpg). Inspect bounded small files before reserving quota; the server
+// still independently verifies the stored object before accepting it.
+export async function inspectUploadFile(kind, file) {
+  if (!['cover', 'evidence'].includes(kind)) return fileFormat(kind, file);
+  if (!Number.isSafeInteger(file.size) || file.size < 1 || file.size > limits[kind]) {
+    throw new Error(kind === 'cover' ? '封面不能为空，且不能超过 5 MiB。' : '权利凭证不能为空，且不能超过 10 MiB。');
+  }
+  let content;
+  try { content = new Uint8Array(await file.slice(0, file.size).arrayBuffer()); }
+  catch { throw new Error('无法读取文件，请重新选择后再上传。'); }
+  if (content.length !== file.size) throw new Error('文件未完整读取，请重新选择后再上传。');
+  const matches = (signature, offset = 0) => signature.every((byte, i) => content[offset + i] === byte);
+  const format = matches([137, 80, 78, 71, 13, 10, 26, 10]) ? 'png'
+    : matches([255, 216, 255]) ? 'jpeg'
+    : matches([82, 73, 70, 70]) && matches([87, 69, 66, 80], 8) ? 'webp'
+    : matches([37, 80, 68, 70, 45]) ? 'pdf' : null;
+  let type;
+  try { type = assetType(kind, format); }
+  catch { throw new Error(kind === 'cover' ? '无法识别封面格式，请选择 JPEG、PNG 或 WebP 图片。' : '权利凭证请使用 PDF、JPEG 或 PNG 文件。'); }
+  try { inspectSmallAsset({ kind, format }, content); }
+  catch {
+    throw new Error(kind === 'cover'
+      ? '封面图片不完整或不符合要求，请重新导出静态 JPEG、PNG 或 WebP（宽高不超过 4096 像素）后上传。'
+      : '权利凭证不完整或不符合要求，请重新导出 PDF 或静态 JPEG、PNG（宽高不超过 4096 像素）后上传。');
+  }
+  return { format, type };
 }
 export async function hashFile(file, progress = () => {}) {
   const hash = sha256.create();
