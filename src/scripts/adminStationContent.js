@@ -282,6 +282,10 @@ async function reloadEditor(){
  // A failed initial /status has no actor to compare against. Reconnect below;
  // an established workspace must still verify its actor before discarding edits.
  if(identity)identity=await controller.verifyActor();
+ // Explicit refresh retries failed previews only; successful image nodes stay
+ // in place through list reconciliation and do not download again.
+ for(const row of workListRows.values())if(row.imagePath&&row.image.tagName!=='IMG')row.imagePath=undefined;
+ const failedPreview=$('song-cover-preview');if(failedPreview.dataset.failedSource){delete failedPreview.dataset.failedSource;failedPreview.removeAttribute('src');}
  if(current&&!newObject){await reloadObject(current.id);status('已重新读取此作品的最新版本，请核对后继续编辑。');}else{dirty=false;await connect();}show('content-reload-confirm',false);
 }
 $('content-reload').addEventListener('click',()=>{if(busy)return;if(songUploader?.pending()){status('请先核对原上传，再重新读取。',true);return;}if(controller?.pending()){status('请先核对原操作的结果，再重新读取。',true);return;}if(dirty){show('content-reload-confirm',true);$('content-reload-cancel').focus();return;}void work(reloadEditor);});

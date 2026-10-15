@@ -3,6 +3,7 @@ import { musicId, fail } from './adminValidation.js';
 import { checkAssetIdentity, checkStoredObject } from './resources.js';
 import { cancelBody } from './storage.js';
 import { musicDisplayCover } from './coverDisplay.js';
+import { generatedAdminThumbnail } from './adminThumbnail.js';
 
 async function adminAsset(db, id) {
   const asset = (await loadAssets(db, [musicId(id)]))[0];
@@ -22,7 +23,7 @@ export async function readAdminMusicAsset(db, bucket, id, request) {
 export async function readAdminMusicThumbnail(db, bucket, id, request, assets) {
   const asset = await adminAsset(db, id);
   if (asset.kind !== 'cover') fail('NOT_FOUND', 404);
-  const result = await musicDisplayCover(request, bucket, asset, { assets, thumbnailOnly: true });
+  const result = await musicDisplayCover(request, bucket, asset, { assets, thumbnailOnly: true, thumbnailFallback: generatedAdminThumbnail });
   result.headers.set('Vary', 'Cookie, Cf-Access-Jwt-Assertion');
   result.headers.set('Accept-Ranges', 'none');
   result.headers.set('Content-Security-Policy', "default-src 'none'; sandbox");
