@@ -2,7 +2,7 @@ import { primary, rows, mutate, trackNotRemovedSql, assertTrackNotRemoved } from
 import { fail, fields, musicId } from '../music/adminValidation.js';
 import { checkedContentRuntime } from './publicStore.js';
 import { stationMediaReadiness } from './mediaUploads.js';
-import { model, objectId, viewData, integer } from './contentAdminModel.js';
+import { model, objectId, viewData, integer, platformReleaseState } from './contentAdminModel.js';
 
 export async function contentAdminReadiness(env) {
   try {
@@ -58,7 +58,10 @@ export async function listContentObjects(db,type,query={}) {
       COALESCE(r.metadata_json,o.metadata_json,'{}') AS metadata_json,t.lifecycle AS legacy_lifecycle,r.cover_asset_id AS image_id,1+(CASE WHEN r.lyrics_asset_id IS NULL THEN 0 ELSE 1 END) AS expected_assets,
       (SELECT json_group_array(json_object('id',a.id,'kind',a.kind,'state',a.state,'rightsStatus',COALESCE(w.status,'pending')))
         FROM music_assets a LEFT JOIN station_asset_rights w ON w.music_asset_id=a.id AND w.scope=a.kind
-        WHERE a.owner_track_id=t.id AND a.id IN(r.cover_asset_id,r.lyrics_asset_id) AND NOT EXISTS(SELECT 1 FROM music_upload_cleanup c WHERE c.asset_id=a.id)) AS assets_json
+        WHERE a.owner_track_id=t.id AND a.id IN(r.cover_asset_id,r.lyrics_asset_id) AND NOT EXISTS(SELECT 1 FROM music_upload_cleanup c WHERE c.asset_id=a.id)) AS assets_json,
+      (SELECT json_group_array(json_object('id',p.id,'track_id',p.track_id,'provider',p.provider,'status',p.status,'url',p.url,
+        'verified_at',p.verified_at,'territories_json',p.territories_json,'sort_order',p.sort_order))
+        FROM (SELECT * FROM station_platform_links WHERE track_id=t.id ORDER BY sort_order,id LIMIT 26) p) AS platforms_json
       FROM music_tracks t
       LEFT JOIN station_track_publications h ON h.track_id=t.id
       LEFT JOIN station_track_revisions r ON r.track_id=t.id AND r.revision=COALESCE(h.draft_revision,h.published_revision)
@@ -94,7 +97,7 @@ export async function listHomeTracks(db,query={},now=Date.now()) {
     WHERE ${trackNotRemovedSql('h.track_id')} AND h.status='published' AND r.state='sealed' AND h.published_at>0 AND h.published_at<=? AND h.rowid<? ORDER BY h.rowid DESC LIMIT 21`).bind(now,before).all());
   return {items:items.slice(0,20).map(r=>{const m=JSON.parse(r.metadata_json);return {id:r.id,title:m.title[m.originalLocale],status:'published'};}),nextBefore:items.length>20?items[19].cursor:null};
 }
-function listView(items,type) { return {items:items.slice(0,20).map(r=>{ let m={};try{m=JSON.parse(r.metadata_json);}catch{} return {id:r.id,type,legacyLifecycle:r.legacy_lifecycle??null,imageId:r.image_id??null,expectedAssetCount:r.expected_assets??0,assetDetails:JSON.parse(r.assets_json??'[]'),trackId:r.track_id??null,slug:r.slug??null,status:r.status,editVersion:r.edit_version??null,title:m.title?.[m.originalLocale]??r.slug??(r.id==='ca710000-0000-4000-8000-000000000001'?'首页配置':'尚未填写标题')}; }),nextBefore:items.length>20?items[19].cursor:null}; }
+function listView(items,type) { return {items:items.slice(0,20).map(r=>{ let m={};try{m=JSON.parse(r.metadata_json);}catch{} return {id:r.id,type,legacyLifecycle:r.legacy_lifecycle??null,imageId:r.image_id??null,expectedAssetCount:r.expected_assets??0,assetDetails:JSON.parse(r.assets_json??'[]'),trackId:r.track_id??null,slug:r.slug??null,status:r.status,...(type==='tracks'?{platformStatus:platformReleaseState(JSON.parse(r.platforms_json??'[]'))}:{}),editVersion:r.edit_version??null,title:m.title?.[m.originalLocale]??r.slug??(r.id==='ca710000-0000-4000-8000-000000000001'?'首页配置':'尚未填写标题')}; }),nextBefore:items.length>20?items[19].cursor:null}; }
 
 // A bounded dependency graph is compared in the SAME D1 batch as publication.
 // One JSON fingerprint parameter per row keeps guards below D1's bind limit.

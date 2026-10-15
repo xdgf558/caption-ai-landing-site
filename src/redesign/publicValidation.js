@@ -97,14 +97,14 @@ export function platformUrl(value, provider) {
     const url = new URL(value);
     if (url.protocol !== 'https:' || url.username || url.password || url.port ||
       !providerHosts[provider]?.includes(url.hostname)) return null;
-    // NetEase's web player puts its song route in the fragment. Accept only
-    // this exact route and a single decimal ID; never discard extra parameters.
+    // NetEase's web player puts song and album routes in the fragment. Keep
+    // the resource type and exact decimal ID; never discard extra parameters.
     if (url.hash) {
-      const song = provider === 'netease' && url.hostname === 'music.163.com' &&
-        url.pathname === '/' && !url.search && /^#\/song\?id=([1-9]\d{0,19})$/.exec(url.hash);
-      if (!song) return null;
-      url.pathname = '/song';
-      url.search = '?id=' + song[1];
+      const work = provider === 'netease' && url.hostname === 'music.163.com' &&
+        url.pathname === '/' && !url.search && /^#\/(song|album)\?id=([1-9]\d{0,19})$/.exec(url.hash);
+      if (!work) return null;
+      url.pathname = '/' + work[1];
+      url.search = '?id=' + work[2];
       url.hash = '';
     }
     if (url.pathname === '/' ||

@@ -9,6 +9,8 @@ const locales=['zh-Hans','zh-Hant','en','ja'],homeId='ca710000-0000-4000-8000-00
 const names={tracks:'歌曲资料',promotions:'推广歌曲',platforms:'发行平台',clips:'视频与 MV',games:'游戏介绍',home:'首页配置',assets:'素材权利',audit:'发布记录'};
 const states={draft:'草稿',scheduled:'已安排定时',published:'已公开',archived:'已下架',unregistered:'待登记',pending:'待审核',approved:'已确认',blocked:'已阻止'};
 const providers={netease:'网易云音乐',qishui:'汽水音乐',apple_music:'Apple Music',youtube:'YouTube',spotify:'Spotify'};
+const platformStates={unconfigured:'未添加',planned:'待发行',live:'已上线',unavailable:'暂不可用',removed:'已下架',unverified:'待核对'};
+const platformState=item=>Object.hasOwn(platformStates,item.platformStatus)?item.platformStatus:'unverified';
 const errors={MUSIC_INVALID_METADATA:'新歌曲的标题最多 120 字、艺名最多 80 字。',STATION_REFERENCE_BUDGET:'关联的素材或平台过多，请减少精选歌曲或短视频后重试。',STATION_CONTENT_ADMIN_DISABLED:'内容服务尚未启用。',STATION_CONTENT_SCHEMA_UNAVAILABLE:'内容服务尚未准备就绪。',STATION_EDIT_CONFLICT:'版本已变化。请重新读取，再核对你的修改。',STATION_ASSET_RIGHTS_REQUIRED:'关联素材缺少使用权利登记。',STATION_ASSET_NOT_READY:'素材尚未就绪，或使用权利已失效。',STATION_PREVIEW_NOT_INDEPENDENT:'试听必须使用同一歌曲的独立剪辑。',STATION_ASSET_OBJECT_CHANGED:'存储中的素材已变化，请重新核对。',STATION_REFERENCE_NOT_PUBLIC:'关联作品尚未公开。',STATION_PLATFORM_NOT_VERIFIED:'所选平台尚未上线或未完成网址核对。',STATION_METADATA_REQUIRED:'请补齐作品资料。',STATION_ASSET_REQUIRED:'请选择必需的素材。',STATION_PUBLISHER_REQUIRED:'此操作需要可发布管理员。',STATION_FULL_REFERENCE_NOT_CURRENT:'完整资源必须引用现有的公开封存版本。',STATION_FULL_POLICY_MISMATCH:'原版本当前的免费规则与所选模式不一致。',STATION_GAME_DETAILS_REQUIRED:'请补齐设备与就绪截图。',STATION_HOME_CLIP_PARENT_REQUIRED:'首页短视频须属于主推歌曲，并同时在推广模块选中。',STATION_PROMOTION_NOT_ENABLED:'所选歌曲的推广尚未启用。',STATION_SCHEDULE_ACTOR_REVOKED:'安排定时的管理员已不具备发布权限。',STATION_PLATFORM_URL_INVALID:'网址不属于所选平台的有效作品地址。',STATION_PLATFORM_VERIFICATION_REQUIRED:'上线入口需要真实网址与人工核对时间。',INVALID_INPUT:'请核对填写的格式和必填项。'};
 const fieldNames={metadata:'作品资料',coverAssetId:'歌曲封面',lyricsAssetId:'歌词素材',legacyRevisionId:'完整播放版本',siteAudioMode:'站内音频模式',previewAssetId:'独立试听素材',trackId:'所属歌曲',mediaAssetId:'视频资源',posterAssetId:'视频海报',durationMs:'媒体时长',launchUrl:'游戏运行地址',screenshotIds:'游戏截图',selectedPlatformIds:'平台入口',selectedClipIds:'关联视频',tracks:'首页歌曲',promotion:'推广配置',references:'关联数量'};
 Object.assign(errors,{STATION_CAMPAIGNS_DISABLED:'推广链接服务尚未启用。',STATION_CAMPAIGN_SCHEMA_UNAVAILABLE:'推广链接资料尚未准备就绪。',STATION_CAMPAIGN_PROMOTION_REQUIRED:'请先公开有效的推广配置。',STATION_CAMPAIGN_CLIP_REQUIRED:'素材必须是当前推广配置中已公开的关联视频。',STATION_CAMPAIGN_ID_EXISTS:'Campaign 编号已登记，请使用新的编号。',STATION_CAMPAIGN_ALIAS_EXISTS:'这个旧 src 已有映射，请核对原 Campaign。',STATION_CAMPAIGN_UNVERIFIED:'旧记录缺少完整的链接登记，请创建新的 Campaign。'});
@@ -108,15 +110,15 @@ function workRow(key,item,type){
   row.image.replaceWith(image);row.image=image;
  }else if(!path)row.image.hidden=!catalogActive;
  if(row.typeNode.dataset.type!==type){row.typeNode.dataset.type=type;row.typeNode.replaceChildren(icon(type==='games'?'game':type==='clips'?'clip':'song'),el('span',type==='games'?'游戏':type==='clips'?'视频':'歌曲'));}
- const state=item.legacyLifecycle==='archived'?'legacy_archived':item.status??'';
- if(row.stateNode.dataset.state!==state){row.stateNode.dataset.state=state;row.stateNode.textContent=state==='legacy_archived'?'旧版封存':states[state]??'记录';}
+ const state=module==='platforms'?'platform-'+platformState(item):item.legacyLifecycle==='archived'?'legacy_archived':item.status??'';
+ if(row.stateNode.dataset.state!==state){row.stateNode.dataset.state=state;row.stateNode.textContent=module==='platforms'?platformStates[platformState(item)]:state==='legacy_archived'?'旧版封存':states[state]??'记录';}
  const assetState=listAssetState(item);
  if(row.assetNode.dataset.state!==assetState){row.assetNode.dataset.state=assetState;row.assetNode.replaceChildren(icon(assetState==='approved'?'ready':'pending'),el('span',{approved:'登记已确认',pending:'权利待确认',blocked:'权利已阻止',missing:'素材待准备'}[assetState]));}
  return row.li;
 }
 function renderList(){
  if(!workbench){const list=$('content-list');list.replaceChildren();text('content-list-heading',names[module]);show('content-more',Boolean(nextBefore));show('content-new',!['home','assets','platforms','audit'].includes(module));show('content-search-label',module!=='audit');show('content-search-submit',module!=='audit');
- for(const i of listItems){const li=el('li'),button=el('button');button.type='button';button.setAttribute('aria-current',String(current?.id===i.id));button.append(el('span',i.title??i.action),el('small',states[i.status]??(i.createdAt?date(i.createdAt):i.status)));button.addEventListener('click',()=>{if(dirty){status('有未保存的修改，请先保存草稿。');return;}void work(()=>openObject(i));});li.append(button);list.append(li);}
+ for(const i of listItems){const li=el('li'),button=el('button');button.type='button';button.setAttribute('aria-current',String(current?.id===i.id));button.append(el('span',i.title??i.action),el('small',module==='platforms'?platformStates[platformState(i)]:states[i.status]??(i.createdAt?date(i.createdAt):i.status)));button.addEventListener('click',()=>{if(dirty){status('有未保存的修改，请先保存草稿。');return;}void work(()=>openObject(i));});li.append(button);list.append(li);}
  if(!listItems.length)list.append(el('li','还没有记录，可从新建开始。','muted'));
 ;return;}
  const list=$('content-list');text('content-list-heading',catalogActive?'作品':names[module]);show('content-more',Boolean(nextBefore));show('content-new',catalogActive||module==='promotions');show('content-search-label',module!=='audit');show('content-search-submit',module!=='audit');
@@ -224,12 +226,17 @@ function renderPreview(result){show('content-preview',true);const card=$('conten
  else card.append(el('p','首页引用已核对','content-preview-card-title'),el('p','主推歌曲 '+(d.featuredTrackId?'已选择':'留空')+' · 游戏 '+(d.featuredGameId?'已选择':'留空')));
  card.append(el('p','版本 '+result.revision+' · 当前资源与关联校验通过','content-version-note'));$('content-preview').scrollIntoView({block:'nearest',behavior:'auto'});
 }
-async function renderPlatforms(item){hideEditors();show('content-platform-editor',true);const panel=$('content-platform-editor');panel.replaceChildren();text('content-editor-heading',item.title??'发行平台');text('content-version','外部发行状态独立于网站作品公开。');text('content-state','平台入口');const records=(await request('/platforms?trackId='+item.id)).items;
+function updatePlatformState(id,value){for(const row of listItems)if(row.id===id)row.platformStatus=value;renderList();}
+async function renderPlatforms(item){item=listItems.find(row=>row.id===item.id)??item;hideEditors();show('content-platform-editor',true);const panel=$('content-platform-editor');panel.replaceChildren();text('content-editor-heading',item.title??'发行平台');text('content-version','外部发行状态独立于网站作品公开。');text('content-state','平台入口');const result=await request('/platforms?trackId='+item.id),records=result.items;
+ updatePlatformState(item.id,result.platformStatus);text('content-state',platformStates[platformState(result)]);
  for(const record of [...records,{id:null,trackId:item.id,provider:'netease',territories:['*'],status:'planned',url:null,verifiedAt:null,releasedAt:null,sortOrder:0}]){
   const block=el('form',undefined,'content-platform-record'),provider=select(Object.entries(providers),record.provider),state=select([['planned','待发行'],['live','已上线'],['unavailable','暂不可用'],['removed','已下架']],record.status),url=input('url',record.url??''),territories=input('text',record.territories.join(',')),verified=input('datetime-local',localTime(record.verifiedAt)),released=input('datetime-local',localTime(record.releasedAt)),sort=input('number',record.sortOrder),button=el('button',record.id?'保存平台状态':'添加平台入口');
   provider.dataset.identityLocked=String(Boolean(record.id));provider.disabled=Boolean(record.id);url.maxLength=2048;territories.maxLength=1000;sort.min='0';button.type='submit';if(record.status==='live')button.dataset.publisherOnly='true';if(identity.role==='editor'&&record.status==='live')button.disabled=true;
-  block.append(el('h3',record.id?providers[record.provider]:'添加发行入口'),field('平台',provider),field('发行状态',state),field('真实作品网址',url),el('p','网易云的 /#/song?id=歌曲ID 链接可直接粘贴，保存时会自动转换为直达地址。','muted'),field('地区（* 为全球，多个地区用逗号分隔）',territories),field('人工核对时间（新加坡 UTC+8）',verified),field('外部发行时间（新加坡 UTC+8）',released),field('排序',sort),el('p','只登记人工核对的真实状态。未发行或下架状态不会输出可点击网址。','muted'),button);
-  block.addEventListener('submit',e=>{e.preventDefault();void work(async()=>{await controller.mutate('/platforms'+(record.id?'/'+record.id:''),record.id?'PATCH':'POST',{trackId:item.id,provider:provider.value,status:state.value,url:url.value||null,territories:territories.value.split(',').map(v=>v.trim()).filter(Boolean),verifiedAt:sgTime(verified.value),releasedAt:sgTime(released.value),sortOrder:Number(sort.value)},record.id?record.editVersion:null);await renderPlatforms(item);status('平台状态已保存。');});});panel.append(block);
+  block.append(el('h3',record.id?providers[record.provider]:'添加发行入口'),field('平台',provider),field('发行状态',state),field('真实作品网址',url),el('p','网易云歌曲和专辑链接均可直接粘贴，带 /#/ 的链接会自动转换为对应的直达地址。','muted'),field('地区（* 为全球，多个地区用逗号分隔）',territories),field('人工核对时间（新加坡 UTC+8）',verified),field('外部发行时间（新加坡 UTC+8）',released),field('排序',sort),el('p','只登记人工核对的真实状态。未发行或下架状态不会输出可点击网址。','muted'),button);
+  block.addEventListener('submit',e=>{e.preventDefault();void work(async()=>{await controller.mutate('/platforms'+(record.id?'/'+record.id:''),record.id?'PATCH':'POST',{trackId:item.id,provider:provider.value,status:state.value,url:url.value||null,territories:territories.value.split(',').map(v=>v.trim()).filter(Boolean),verifiedAt:sgTime(verified.value),releasedAt:sgTime(released.value),sortOrder:Number(sort.value)},record.id?record.editVersion:null);
+    try{await renderPlatforms(item);status('平台状态已保存。');}
+    catch{updatePlatformState(item.id,'unverified');text('content-state','待核对');status('平台状态已保存，但最新状态读取失败。请重新核对工作区。',true);}
+  });});panel.append(block);
  }
 }
 async function renderRights(item){hideEditors();show('content-rights-editor',true);const panel=$('content-rights-editor');panel.replaceChildren();text('content-editor-heading',item.title??'素材权利');text('content-version','技术就绪与使用权利分别确认。');text('content-state','权利登记');
@@ -282,6 +289,7 @@ $('content-reload-cancel').addEventListener('click',()=>{if(busy)return;show('co
 $('content-reload-discard').addEventListener('click',()=>{if(busy||controller?.pending()||songUploader?.pending())return;void work(reloadEditor);});
 $('content-retry').addEventListener('click',()=>{void work(async()=>{await controller.retry();await connect();status('原操作已核对，请检查当前版本。');});});
 function renderWorkNavigation(){
+ if(workbench)text('work-status-heading',module==='platforms'?'发行状态':'状态');
  if(!workbench)return;workbench.dataset.home=String(module==='home'&&!catalogActive);if(module==='home')workbench.dataset.editorClosed='false';const heading=catalogActive?'作品内容':names[module];text('work-heading',heading);text('work-breadcrumb',heading);text('work-intro',catalogActive?'资料与素材，一起整理。':module==='home'?'选一首歌，更新到小站首页。':module==='platforms'?'选择歌曲，管理各大音乐平台的链接与上线状态。':'每次公开前，核对资料、关联和素材。');
  show('work-new-menu',false);document.querySelector('.work-filters').hidden=!catalogActive;document.querySelector('.work-modules').hidden=catalogActive||['home','audit','platforms'].includes(module);
  for(const filter of document.querySelectorAll('[data-work-filter]'))filter.setAttribute('aria-pressed',String(filter.dataset.workFilter===catalogFilter));
