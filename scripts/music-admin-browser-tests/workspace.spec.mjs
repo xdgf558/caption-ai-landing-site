@@ -6,7 +6,7 @@ import { wavFixture } from '../helpers/music-wav-fixture.mjs';
 const fixture = name => fileURLToPath(new URL('../../tests/fixtures/music-mp3/' + name,import.meta.url));
 const unique = () => 'ui-' + crypto.randomUUID();
 async function create(page, slug = unique()) {
-  await page.goto('/admin/music/');
+  await page.goto('/admin/music/?mode=audio');
   await page.getByRole('button',{name:'新建曲目',exact:true}).click();
   await page.getByLabel('曲目链接标识',{exact:true}).fill(slug);
   await page.getByLabel('曲名',{exact:true}).fill('本地测试曲目');
@@ -31,7 +31,7 @@ async function playMuted(audio) {
   await expect.poll(() => audio.evaluate(a => !a.paused && a.currentTime > 0)).toBe(true);
 }
 async function rights(page) {
-  await page.getByRole('tab',{name:'审核发布',exact:true}).click();
+  await page.getByRole('tab',{name:'整曲播放审核',exact:true}).click();
   if (!await page.locator('#rights-details').evaluate(e => e.open)) await page.locator('#rights-details > summary').click();
   const values = {sourcePlatform:'suno',planAtGeneration:'pro',planAtDownload:'pro',outputKind:'standard',downloadMethod:'official',permittedUse:'commercial'};
   for (const [key,v] of Object.entries(values)) await page.locator('[data-right="' + key + '"]').selectOption(v);
@@ -42,6 +42,25 @@ async function rights(page) {
   await page.locator('#confirm-accept').click();
   await expect(page.locator('#rights-state')).toHaveText('已通过');
 }
+test('default song materials keeps the same song handoff and hides the full audio publishing flow',async ({page}) => {
+  await create(page);
+  await expect(page.locator('#music-status')).toContainText('草稿已保存。');
+  const destination=await page.locator('#website-song-editor').getAttribute('href');
+  const owner=new URL(destination,'http://127.0.0.1').searchParams.get('owner');
+  expect(owner).toMatch(/^[0-9a-f-]{36}$/);
+  const writes=[];page.on('request',r=>{if(r.method()!=='GET'&&r.url().includes('/admin/api/music/'))writes.push(r.url());});
+  await page.goto('/admin/music/?track='+owner+'&tab=assets');
+  await expect(page.getByRole('heading',{name:'歌曲素材',exact:true})).toBeVisible();
+  await expect(page.locator('#file-cover')).toBeVisible();
+  await expect(page.locator('#file-lyrics')).toBeVisible();
+  for(const id of ['track-new','file-audio','file-preview','file-evidence','panel-0','panel-2','panel-3'])await expect(page.locator('#'+id)).toBeHidden();
+  await expect(page.locator('#website-song-editor')).toHaveAttribute('href',destination);
+  await page.reload();
+  await expect(page.locator('#file-cover')).toBeVisible();
+  await expect(page.locator('#track-publish')).toBeHidden();
+  await expect(page.locator('#website-song-editor')).toHaveAttribute('href',destination);
+  expect(writes).toEqual([]);
+});
 test('PNG named JPG uploads as PNG and the real isolated server accepts unchanged bytes',async ({page}) => {
   await create(page); await page.getByRole('tab',{name:'素材',exact:true}).click();
   const content=await sharp({create:{width:177,height:177,channels:4,background:'#729284'}}).png().toBuffer();
@@ -128,7 +147,7 @@ test('Enter saves a draft; full upload, review, publish, revision, unpublish and
   await page.getByRole('tab',{name:'基本资料',exact:true}).click();
   await page.getByLabel('曲名',{exact:true}).fill('新版草稿'); await page.getByLabel('修改说明',{exact:true}).fill('改稿');
   await page.getByRole('button',{name:'保存草稿',exact:true}).click();
-  await page.getByRole('tab',{name:'审核发布',exact:true}).click();
+  await page.getByRole('tab',{name:'整曲播放审核',exact:true}).click();
   await expect(page.locator('#track-publish')).toBeDisabled();
   await page.locator('#track-unpublish').click(); await page.locator('#confirm-reason').fill('回归下架'); await page.locator('#confirm-accept').click();
   await expect(page.locator('#track-state')).toHaveText('已下架');
@@ -144,7 +163,7 @@ test('source materials are optional through upload, technical review and explici
   await upload(page,'audio',fixture('cbr-stereo.mp3'));
   await page.locator('#preview-end').fill('1'); await upload(page,'preview',fixture('preview.mp3'));
   await page.locator('#assets-save').click(); await expect(page.locator('#track-version')).toHaveText('编辑版本 2');
-  await page.getByRole('tab',{name:'审核发布',exact:true}).click();
+  await page.getByRole('tab',{name:'整曲播放审核',exact:true}).click();
   await expect(page.locator('#rights-state')).toHaveText('未提供（可选）');
   await expect(page.locator('#technical-fields button')).toBeEnabled();
   await expect(page.locator('#track-publish')).toBeDisabled();
@@ -161,7 +180,7 @@ test('source materials are optional through upload, technical review and explici
   await expect(page.locator('#track-version')).toHaveText('编辑版本 4'); expect(rightsWrites).toBe(0);
 });
 test('explicit blocked decision disables technical review and publication; pending is not approval',async ({page}) => {
-  await create(page); await page.getByRole('tab',{name:'审核发布',exact:true}).click();
+  await create(page); await page.getByRole('tab',{name:'整曲播放审核',exact:true}).click();
   await page.locator('#rights-details > summary').click();
   await page.locator('#rights-decision').selectOption('blocked'); await page.locator('#rights-reason').fill('本地明确阻止回归');
   await page.getByRole('button',{name:'提交权利核对',exact:true}).click(); await page.locator('#confirm-accept').click();
@@ -180,7 +199,7 @@ test('lost create response survives reload and replays the exact key only on exp
     if (count === 1) { originalKey = route.request().headers()['idempotency-key']; await route.fetch(); await route.abort(); }
     else { replayKey = route.request().headers()['idempotency-key']; await route.continue(); }
   });
-  await page.goto('/admin/music/'); await page.locator('#track-new').click();
+  await page.goto('/admin/music/?mode=audio'); await page.locator('#track-new').click();
   await page.locator('#track-slug').fill(unique()); await page.locator('#track-title').fill('丢响应');
   await page.locator('#track-language').fill('无人声'); await page.locator('#track-save').click();
   await expect(page.locator('#mutation-retry')).toBeVisible();
@@ -305,7 +324,7 @@ test('keyboard tabs and desktop/mobile have no horizontal overflow; music servic
   await page.keyboard.press('End'); await expect(page.getByRole('tab',{name:'角色预览',exact:true})).toBeFocused();
   for (const width of [1280,390]) {
     await page.setViewportSize({width,height:900});
-    for (const name of ['基本资料','素材','审核发布','角色预览']) {
+    for (const name of ['基本资料','素材','整曲播放审核','角色预览']) {
       await page.getByRole('tab',{name,exact:true}).click();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }

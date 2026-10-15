@@ -6,6 +6,9 @@ import { mountAdminMusicRolePreview } from './adminMusicRolePreview.js';
 
 const $ = id => document.getElementById(id), all = selector => [...document.querySelectorAll(selector)];
 const quotaErrors = { MUSIC_QUOTA_CONFLICT:'配额或占用已变化，请重新打开“调整总配额”后再保存。', MUSIC_QUOTA_BELOW_USAGE:'总配额不能低于已占用及已预留容量，请重新读取。' };
+const audioMode=new URLSearchParams(location.search).get('mode')==='audio';
+$('audio-materials-page').dataset.mode=audioMode?'audio':'website';
+$('audio-page-title').textContent=audioMode?'音频与歌曲素材':'歌曲素材';
 const names = { draft:'草稿', published:'已发布', unpublished:'已下架', archived:'已归档', audio:'完整音频', preview:'独立试听', cover:'封面', lyrics:'歌词', evidence:'权利凭证' };
 let quotaSnapshot;
 let service, journal, actor, track = null, assets = {}, evidence = [], busy = false, locked = false, dirty = false, assetsDirty = false, reviewDirty = false;
@@ -64,18 +67,19 @@ function persist() {
 }
 function stopAudio() { all('audio').forEach(a => { a.onerror = null; a.pause(); a.removeAttribute('src'); a.load(); }); }
 function sync() {
+  $('website-song-editor').href='/admin-v2/?view=tracks'+(track?'&owner='+encodeURIComponent(track.id):'');
   const blocked = busy || locked || !!journal?.get().pending || !service;
   const archived = track?.lifecycle === 'archived', unsaved = dirty || assetsDirty;
   $('track-new').disabled = blocked;
   $('quota-open').disabled = blocked; $('quota-save').disabled = blocked;
   $('metadata-fields').disabled = blocked || archived;
   $('rights-fields').disabled = blocked || !track?.draft || unsaved || archived;
-  $('technical-fields').disabled = blocked || !track?.draft || unsaved || reviewDirty || track?.rights?.status === 'blocked' || archived;
+  $('technical-fields').disabled = !audioMode || blocked || !track?.draft || unsaved || reviewDirty || track?.rights?.status === 'blocked' || archived;
   all('[data-upload-kind], .upload-control input, #preview-start, #preview-end').forEach(e => { e.disabled = blocked || !track?.draft || !service?.capabilities.uploads || dirty || archived ||
     (!!e.dataset.uploadKind && journal?.get().jobs.some(j => j.trackId === track?.id && j.kind === e.dataset.uploadKind && ['reserved','writing'].includes(j.stage))); });
   all('[data-remove-asset]').forEach(e => { e.disabled = blocked || archived; });
   $('assets-save').disabled = blocked || !track || !assetsDirty || dirty || archived;
-  $('track-publish').disabled = blocked || unsaved || reviewDirty || !track?.draft || !track.draft.technicalReviewedAt || track?.rights?.status === 'blocked';
+  $('track-publish').disabled = !audioMode || blocked || unsaved || reviewDirty || !track?.draft || !track.draft.technicalReviewedAt || track?.rights?.status === 'blocked';
   $('track-unpublish').disabled = blocked || unsaved || track?.lifecycle !== 'published';
   $('track-archive').disabled = blocked || unsaved || track?.lifecycle !== 'unpublished';
   all('#search-form input, #search-form button, #track-filter, .track-row').forEach(e => { e.disabled = blocked; });
@@ -122,6 +126,7 @@ function ask(title, description, reason = false) {
 $('confirm-reason').onkeydown = e => { if (e.key === 'Enter') e.preventDefault(); };
 async function canLeave() { return !(dirty || assetsDirty || reviewDirty) || !!await ask('放弃未保存的修改？', '已上传的文件仍保留在上传会话中，不会被删除。'); }
 function tab(index, focus = false) {
+  if(!audioMode)index=1;
   index = Number.isInteger(index) && index >= 0 && index < 4 ? index : 0;
   const previousStep = activeStep;
   activeStep = index;
@@ -169,7 +174,7 @@ function fill(row) {
   $('post-early').value = r?.policy.postEarlyAccessMode || 'vip';
   all('[data-right]').forEach(e => { const v = row?.rights?.review?.[e.dataset.right]; e.value = e.type === 'datetime-local' ? localTime(v) : v || ''; });
   $('rights-decision').value = row?.rights?.status || 'pending';
-  dirty = false; assetsDirty = false; reviewDirty = false; renderAssets();
+  dirty = false; assetsDirty = false; reviewDirty = false;if(!audioMode)tab(1); renderAssets();
   document.querySelector('[data-right="exceptionEvidenceAssetId"]').value = row?.rights?.review?.exceptionEvidenceAssetId || '';
   renderReview(); renderList(); renderJobs(); sync();
 }
@@ -268,7 +273,7 @@ function renderAssets() {
   select.replaceChildren(new Option('未选择',''),...evidence.map((id,i) => new Option('凭证 ' + (i+1),id))); select.value = selected;
   $('evidence-count').textContent = '当前关联凭证：' + evidence.length + ' 份';
   $('upload-availability').textContent = !track ? '请先保存曲目草稿。' : !track.draft ? '已发布版本不可直接上传，请先保存一份新草稿。' :
-    !service?.capabilities.uploads ? '上传尚未开放或未配置正配额。' : '文件验证通过后，保存素材到草稿。VIP 试听不得超过 45 秒或原曲一半，以较短者为准。';
+    !service?.capabilities.uploads ? '上传尚未开放或未配置正配额。' : audioMode?'文件验证通过后，保存素材到草稿。VIP 试听不得超过 45 秒或原曲一半，以较短者为准。':'上传后保存素材，再点击“编辑歌曲并发布”。';
   if (activeStep === 3) stopAudio();
 }
 function renderReview() {
@@ -448,11 +453,18 @@ async function boot() {
   if (params.getAll('track').length === 1 && uuid(target) && target !== track?.id) {
     if (journal.get().pending) { status('请先核对此标签页的原操作，再打开目标曲目。',true); return; }
     if (!await canLeave()) { status('已保留原编辑内容，未切换到目标曲目。'); return; }
-    await loadTrack(target); if(params.getAll('tab').length===1&&params.get('tab')==='assets'){tab(1);persist();} status('已载入目标曲目，请逐首补齐素材和审核。'); return;
+    await loadTrack(target); if(params.getAll('tab').length===1&&params.get('tab')==='assets'){tab(1);persist();} status(audioMode?'已载入目标曲目。':'已载入歌曲素材。点击上方“编辑歌曲并发布”继续。'); return;
   }
   if(params.getAll('track').length===1&&uuid(target)&&target===track?.id&&params.getAll('tab').length===1&&params.get('tab')==='assets'&&!journal.get().pending){tab(1);persist();}
   status(journal.get().pending ? '有一笔结果待确认的操作。请核对并重试原操作。' : saved ? '已恢复此标签页的编辑内容。' : '曲库已载入。');
 }
+$('website-song-editor').addEventListener('click',async e=>{
+ if(busy||journal?.get().pending){e.preventDefault();status('请先核对原操作。',true);return;}
+ if(!(dirty||assetsDirty||reviewDirty))return;
+ e.preventDefault();const destination=$('website-song-editor').href;let leave=false;
+ await run(async()=>{await checkActor();if(!await canLeave())return;journal.update({workspace:null});dirty=false;assetsDirty=false;reviewDirty=false;leave=true;});
+ if(leave)location.assign(destination);
+});
 $('music-reload').onclick = () => run(async () => {
   if (journal?.get().pending) { await checkActor(); status('请使用“核对并重试原操作”，避免重复写入。'); return; }
   if (!await canLeave()) return;

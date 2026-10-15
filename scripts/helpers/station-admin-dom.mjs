@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { createContentController } from '../../src/scripts/stationContentClient.js';
+import {publishWebsiteSong,savedSongCover} from '../../src/scripts/stationSongPublishing.js';
+import {createSongUploader} from '../../src/scripts/stationSongUploader.js';
 import * as workbenchState from '../../src/scripts/stationWorkbenchState.js';
 
 // Small DOM for the actual admin entry scripts, not a reimplementation of their
@@ -23,6 +25,7 @@ export class AdminNode {
   replaceWith(child) { if (!this.parentElement) return; this.parentElement.insertBefore(child, this); this.remove(); }
   remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter(node => node !== this); this.parentElement = null; }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
+  getAttribute(name) { return this.attributes.get(name) ?? (name==='src'?this.src??null:null); }
   removeAttribute(name) { this.attributes.delete(name); }
   addEventListener(type, listener) { if (!this.listeners.has(type)) this.listeners.set(type, []); this.listeners.get(type).push(listener); }
   async fire(type, extra = {}) { await Promise.all((this.listeners.get(type) ?? []).map(listener => listener({ target: this, preventDefault() {}, ...extra }))); }
@@ -34,7 +37,7 @@ export class AdminNode {
   focus() { if (!this.disabled) this.focused = true; }
 }
 
-export async function adminScriptFixture(entry, { search = '', request, mediaUploader } = {}) {
+export async function adminScriptFixture(entry, { search = '', request, mediaUploader, songRequest, sharedStorage } = {}) {
   const nodes = new Map(), localeTitles = [], localeSummaries = [], creates = [], filters = [], nav = [], modules = [];
   const node = id => {
     if (!nodes.has(id)) {
@@ -80,17 +83,17 @@ export async function adminScriptFixture(entry, { search = '', request, mediaUpl
       throw new Error('Unhandled admin selectors: ' + selector);
     }
   };
-  const storageData = new Map(), storage = { getItem: key => storageData.get(key) ?? null, setItem: (key, value) => storageData.set(key, value) };
+  const storageData = sharedStorage??new Map(), storage = { getItem: key => storageData.get(key) ?? null, setItem: (key, value) => storageData.set(key, value) };
   const window = new AdminNode();
   window.sessionStorage = storage;
-  const context = vm.createContext({ document, window, location: { search }, URLSearchParams, Date, Intl, console, crypto, sessionStorage: storage,
-    request, ...workbenchState, createContentController: options => createContentController({ ...options, request }), renderStationCampaigns: async () => {},
+  const context = vm.createContext({ document, window, location: { search }, URL, URLSearchParams, Date, Intl, console, crypto, sessionStorage: storage,
+    request, publishWebsiteSong,savedSongCover,createSongUploader:options=>createSongUploader({...options,...(songRequest?{requester:songRequest}:{})}),...workbenchState, createContentController: options => createContentController({ ...options, request }), renderStationCampaigns: async () => {},
     matchMedia: () => ({ matches: false }), Option: function(label, value) { return option(label, value); }, musicBytes: value => value + ' B',
     createStationMediaJournal: () => ({}), createStationMediaUploader: () => mediaUploader, mediaKindNames: { game_screenshot: '游戏截图', poster: '海报' }, mediaFileFormat: () => 'webp' });
   const source = (await readFile(new URL('../../src/scripts/' + entry, import.meta.url), 'utf8')).replace(/^import .+;\n/gm, '');
   vm.runInContext(source, context, { filename: entry });
   const state = () => vm.runInContext(entry === 'adminStationContent.js' ? '({dirty,busy,module,current,newObject,pending:controller?.pending()})' : '({loading,recovering,ownersBusy,preferredOwner})', context);
-  async function idle() { for (let attempt = 0; attempt < 100; attempt++) { const s = state(); if (!s.busy && !s.loading && !s.recovering && !s.ownersBusy) return; await new Promise(resolve => setImmediate(resolve)); } assert.fail('admin controller did not settle'); }
+  async function idle() { for (let attempt = 0; attempt < 1000; attempt++) { const s = state(); if (!s.busy && !s.loading && !s.recovering && !s.ownersBusy) return; await new Promise(resolve => setTimeout(resolve, 2)); } assert.fail('admin controller did not settle'); }
   await idle();
   return { node, creates, filters, modules, nav, state, idle, storageData, context, document };
 }
