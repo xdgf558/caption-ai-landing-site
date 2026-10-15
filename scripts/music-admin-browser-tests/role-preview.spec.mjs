@@ -19,7 +19,7 @@ async function setup(page) {
     if (path.endsWith('/tracks/' + id(1))) return route.fulfill({status:state.fail ? 503 : 200,json:state.fail ? {ok:false,code:'MUSIC_DATABASE_UNAVAILABLE'} : state.row});
     return route.fulfill({status:404,json:{ok:false,code:'UNEXPECTED_READ'}});
   });
-  await page.goto('/admin/music/?track=' + id(1));
+  await page.goto('/admin/music/?mode=audio&track=' + id(1));
   await expect(page.locator('#track-version')).toHaveText('编辑版本 3');
   return state;
 }
