@@ -5,13 +5,13 @@ import { fileURLToPath } from 'node:url';
 import { resolve, sep, extname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { Readable } from 'node:stream';
-import { build } from 'esbuild';
+import { bundleWasmWorker } from './helpers/wasm-worker-bundle.mjs';
 import { Miniflare } from 'miniflare';
 
 const root = fileURLToPath(new URL('../',import.meta.url)), dist = resolve(root,'dist');
 const port = Number(process.env.MUSIC_ADMIN_PREVIEW_PORT || 4197), origin = 'http://127.0.0.1:' + port;
-const bundle = await build({ entryPoints:[resolve(root,'scripts/helpers/music-runtime-worker.js')],bundle:true,format:'esm',platform:'browser',write:false });
-const mf = new Miniflare({ modules:true,script:bundle.outputFiles[0].text,compatibilityDate:'2026-07-30',host:'127.0.0.1',port:0,
+const bundle = await bundleWasmWorker({ entryPoints:[resolve(root,'scripts/helpers/music-runtime-worker.js')] });
+const mf = new Miniflare({ ...bundle,compatibilityDate:'2026-07-30',host:'127.0.0.1',port:0,
   d1Databases:{ MUSIC_DB:'ui-fixture-music',WAITLIST_DB:'ui-fixture-readers' },r2Buckets:{ MUSIC_BUCKET:'ui-fixture-private' },
   outboundService:() => new Response('External network disabled',{status:403}) });
 const db = await mf.getD1Database('MUSIC_DB'), parser = new DatabaseSync(':memory:');
