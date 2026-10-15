@@ -146,17 +146,17 @@ test('all UI dictionary entries have four translations and preserve placeholders
 
 test('native asset router cannot serve encoded music HTML before the closed gate', async () => {
   const { Miniflare } = await import('miniflare');
-  const { build } = await import('esbuild');
+  const { bundleWasmWorker } = await import('./helpers/wasm-worker-bundle.mjs');
   const { mkdtemp, mkdir, writeFile, rm } = await import('node:fs/promises');
   const { tmpdir } = await import('node:os');
   const { join } = await import('node:path');
   const directory = await mkdtemp(join(tmpdir(), 'music-html-assets-'));
   for (const path of ['music', 'en/music']) { await mkdir(join(directory, path), { recursive: true }); await writeFile(join(directory, path, 'index.html'), 'music shell'); }
   await writeFile(join(directory, 'plain.txt'), 'ordinary asset');
-  const compiled = await build({ stdin: { contents: `import {isMusicPagePath} from './src/music/pagePaths.js'; import {handleMusicPage} from './src/music/pageHttp.js'; export default {fetch(r,e){return isMusicPagePath(new URL(r.url).pathname)?handleMusicPage(r,e):e.ASSETS.fetch(r)}}`, resolveDir: process.cwd() }, bundle: true, format: 'esm', write: false });
+  const compiled = await bundleWasmWorker({ stdin: { contents: `import {isMusicPagePath} from './src/music/pagePaths.js'; import {handleMusicPage} from './src/music/pageHttp.js'; export default {fetch(r,e){return isMusicPagePath(new URL(r.url).pathname)?handleMusicPage(r,e):e.ASSETS.fetch(r)}}`, resolveDir: process.cwd() } });
   const config = await readFile(new URL('../wrangler.toml', import.meta.url), 'utf8');
   const patterns = [...config.match(/run_worker_first = \[([\s\S]*?)\]/)[1].matchAll(/"([^"]+)"/g)].map(match => match[1]);
-  const mf = new Miniflare({ modules: true, script: compiled.outputFiles[0].text, compatibilityDate: '2026-08-01', assets: { directory, binding: 'ASSETS', routerConfig: { has_user_worker: true, static_routing: { user_worker: patterns } } } });
+  const mf = new Miniflare({ ...compiled, compatibilityDate: '2026-08-01', assets: { directory, binding: 'ASSETS', routerConfig: { has_user_worker: true, static_routing: { user_worker: patterns } } } });
   try {
     for (const path of ['/music/', '/music', '/music/index.html', '/%6dusic/', '/m%75sic/', '/music%2f', '/music%2findex.html', '/en/%6dusic/', '/en%2fmusic/', '/%2fmusic/']) {
       const response = await mf.dispatchFetch(`http://localhost${path}`, { redirect: 'manual' });

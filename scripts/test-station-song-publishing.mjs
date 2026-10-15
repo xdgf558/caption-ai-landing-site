@@ -90,7 +90,8 @@ test('the actual editor publishes cover-only website songs through Access and na
  const detail=await send('/tracks/'+create.id);assert.equal(detail.status,'published');assert.equal(detail.draft,null);assert.equal(detail.published.data.siteAudioMode,'none');assert.equal(detail.published.data.coverAssetId,job.assetId);
  const publicTrack=await send('/tracks/'+detail.slug,{},'/api/station/content');assert.equal(publicTrack.track.title,metadata.title['zh-Hans']);assert.equal(publicTrack.track.preview,null);
  assert.equal(ui.node('song-public-link').href,'/music/tracks/'+detail.slug+'/');
- ui.node('song-cover-preview').onerror();await ui.node('content-reload').click();await ui.idle();assert.equal(ui.node('song-cover-preview').hidden,true);assert.match(ui.node('song-cover-empty').textContent,/可查看原图/);
+ ui.node('song-cover-preview').onerror();assert.equal(ui.node('song-cover-preview').hidden,true);assert.match(ui.node('song-cover-empty').textContent,/可查看原图/);
+ await ui.node('content-reload').click();await ui.idle();assert.equal(ui.node('song-cover-preview').hidden,false);assert.equal(ui.node('song-cover-preview').getAttribute('src'),'/admin/api/music/site-content/assets/'+job.assetId+'/thumbnail');
  assert.equal((await f.db.prepare('SELECT lifecycle FROM music_tracks WHERE id=?').bind(create.id).first()).lifecycle,'draft');
  assert.equal((await f.db.prepare('SELECT audio_asset_id FROM music_track_revisions WHERE id=?').bind(legacy.draft_revision_id).first()).audio_asset_id,null);
  assert(!calls.some(c=>c.base==='/admin/api/music'&&/review|publish/.test(c.path)));

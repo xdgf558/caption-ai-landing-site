@@ -13,7 +13,7 @@ const validVariant = (variant, asset) => variant && variant.sourceBytes === asse
 
 // Callers establish live publication/version or administrator access first. Raw generated files are
 // blocked at the Worker boundary, including when the public music gate is off.
-export async function musicDisplayCover(request, bucket, asset, { assets, manifest = musicDisplayCoverManifest, size = 'display', thumbnailOnly = false, coverCacheVersion = null } = {}) {
+export async function musicDisplayCover(request, bucket, asset, { assets, manifest = musicDisplayCoverManifest, size = 'display', thumbnailOnly = false, thumbnailFallback = null, coverCacheVersion = null } = {}) {
   checkAssetIdentity(asset);
   if (asset.kind !== 'cover' || asset.state !== 'validated') throw new Error('COVER_INVALID');
   if (coverCacheVersion !== null && (!/^[a-f0-9]{64}$/.test(coverCacheVersion) || coverCacheVersion !== asset.sha256)) throw new Error('COVER_VERSION_INVALID');
@@ -55,9 +55,12 @@ export async function musicDisplayCover(request, bucket, asset, { assets, manife
     }
     // Admin lists must never silently download a full original when a card has
     // not been generated. The authenticated original-review route stays usable.
-    if (thumbnailOnly) throw Object.assign(new Error('MUSIC_THUMBNAIL_UNAVAILABLE'), { code: 'MUSIC_THUMBNAIL_UNAVAILABLE', status: 404 });
+    if (thumbnailOnly) {
+      if (thumbnailFallback) return await thumbnailFallback(request, object, asset);
+      throw Object.assign(new Error('MUSIC_THUMBNAIL_UNAVAILABLE'), { code: 'MUSIC_THUMBNAIL_UNAVAILABLE', status: 404 });
+    }
     // New artwork remains visible until the next release generates its display
-    // asset. No image decoding or encoding runs in the request-serving Worker.
+    // asset. Public requests do not run image decoding or encoding.
     const body = request.method === 'HEAD' ? null : object.body;
     if (request.method === 'HEAD') cancelBody(object);
     object = null;

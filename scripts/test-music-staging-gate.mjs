@@ -388,7 +388,14 @@ test('staging module graph includes only music, Access, membership and explicitl
     if (visited.has(file)) continue;
     visited.add(file);
 
-    const source = await readFile(file, 'utf8');
+    let source = await readFile(file, 'utf8');
+    // The bounded admin-only decoder is loaded after current Access/D1/R2
+    // checks. Traverse its one reviewed package import; reject all others.
+    if (relative(sourceRoot, file).replaceAll('\\', '/') === 'music/adminThumbnail.js') {
+      assert.equal(source.split("import('@cf-wasm/photon')").length, 2);
+      source = source.replace("import('@cf-wasm/photon')", 'reviewedThumbnailDecoder');
+      externalImports.add('@cf-wasm/photon');
+    }
     assert.doesNotMatch(source, /\bimport\s*\(/, `dynamic import is not allowed in ${relative(sourceRoot, file)}`);
     const imports = source.matchAll(/\b(?:import|export)\s+(?:[^'\"]*?\s+from\s+)?['\"]([^'\"]+)['\"]/g);
 
@@ -409,7 +416,7 @@ test('staging module graph includes only music, Access, membership and explicitl
   assert.ok(paths.includes('music/stagingEntrypoint.js'));
   assert.ok(!paths.includes('worker.js'));
   assert.deepEqual(paths.filter(path => path.startsWith('redesign/')), [...allowedShared].filter(path => path.startsWith('redesign/')).sort());
-  assert.deepEqual([...externalImports].sort(), ['@noble/hashes/sha2.js', 'mp3-parser/lib/lib.js']);
+  assert.deepEqual([...externalImports].sort(), ['@cf-wasm/photon', '@noble/hashes/sha2.js', 'mp3-parser/lib/lib.js']);
 });
 
 test('maintenance generator rejects resource, Access, route and execution drift before producing a config', async () => {

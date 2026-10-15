@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomUUID } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
-import { build } from 'esbuild';
+import { bundleWasmWorker } from './helpers/wasm-worker-bundle.mjs';
 import { Miniflare } from 'miniflare';
 import sharp from 'sharp';
 import { seedAnalyticsTrack } from './helpers/music-analytics-fixture.mjs';
@@ -33,9 +33,8 @@ function migrationStatements() {
 }
 
 before(async () => {
-  const bundle = await build({ entryPoints: [fileURLToPath(new URL('scripts/helpers/music-runtime-worker.js', root))],
-    bundle: true, format: 'esm', platform: 'browser', write: false });
-  mf = new Miniflare({ modules: true, script: bundle.outputFiles[0].text, compatibilityDate: '2026-07-30',
+  const bundle = await bundleWasmWorker({ entryPoints: [fileURLToPath(new URL('scripts/helpers/music-runtime-worker.js', root))] });
+  mf = new Miniflare({ ...bundle, compatibilityDate: '2026-07-30',
     host: '127.0.0.1', port: 0, d1Databases: { MUSIC_DB: 'music-test-only', WAITLIST_DB: 'reader-test-only' },
     r2Buckets: { MUSIC_BUCKET: 'music-test-only' }, bindings: { MUSIC_RATE_LIMIT_SECRET: 'runtime-fixture-secret-not-for-deployment' },
     outboundService: () => new Response('Network disabled in local music tests', { status: 403 }) });
