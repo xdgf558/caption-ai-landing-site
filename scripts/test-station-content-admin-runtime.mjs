@@ -57,6 +57,17 @@ test('actual Worker Access, native D1/R2, flags and guarded publication workflow
   assert.equal((await send(base+'/platforms/'+saved.body.id,{method:'PATCH',body:{...body,status:'removed'}})).r.status,200);
   assert.deepEqual((await send('/api/station/content/tracks/'+track.slug)).body.track.platforms,[]);
  });
+ await t.test('album hash links preserve resource type and drive the list status through native D1',async()=>{
+  const body={trackId:track.id,provider:'netease',status:'live',url:'https://music.163.com/#/album?id=398968221',verifiedAt:Date.now()-1000};
+  const old=(await send(base+'/platforms?trackId='+track.id)).body.items[0];
+  const saved=await send(base+'/platforms/'+old.id,{method:'PATCH',version:old.editVersion,body});assert.equal(saved.r.status,200,JSON.stringify(saved.body));
+  const records=(await send(base+'/platforms?trackId='+track.id)).body;assert.equal(records.platformStatus,'live');
+  assert.equal(records.items.find(row=>row.id===saved.body.id).url,'https://music.163.com/album?id=398968221');
+  assert.equal((await send('/api/station/content/tracks/'+track.slug)).body.track.platforms[0].href,'https://music.163.com/album?id=398968221');
+  let row=(await send(base+'/tracks')).body.items.find(row=>row.id===track.id);assert.equal(row.platformStatus,'live');assert.equal(row.status,'published');
+  assert.equal((await send(base+'/platforms/'+saved.body.id,{method:'PATCH',version:saved.body.editVersion,body:{...body,status:'removed'}})).r.status,200);
+  row=(await send(base+'/tracks')).body.items.find(row=>row.id===track.id);assert.equal(row.platformStatus,'removed');assert.equal(row.status,'published');
+ });
  await t.test('one concurrent save wins; stale mutation and publication never change current pointer',async()=>{
   const command={method:'PATCH',version:2,body:{revision:1,data}};const race=await Promise.all([send(base+'/tracks/'+track.id,command),send(base+'/tracks/'+track.id,command)]);assert.deepEqual(race.map(r=>r.r.status).sort(),[200,409]);
   const current=await send(base+'/tracks/'+track.id);assert.equal(current.body.draft.revision,2);assert.equal(current.body.published.revision,1);

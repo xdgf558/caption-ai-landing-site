@@ -1,5 +1,5 @@
 import { fields, fail, musicId, editVersion, isObject } from '../music/adminValidation.js';
-import { metadata, strictJson, idList, slug, platformUrl, plain, millis, positive } from './publicValidation.js';
+import { metadata, strictJson, idList, slug, platformUrl, platform, plain, millis, positive } from './publicValidation.js';
 import { stationHomeConfig } from '../data/station-home.js';
 
 export const contentModels = Object.freeze({
@@ -73,6 +73,20 @@ export function platformData(input,now) {
   const verifiedAt=date(input.verifiedAt??null,{optional:true,now}), releasedAt=date(input.releasedAt??null,{optional:true,now});
   if(input.status==='live'&&(!url||verifiedAt===null)) fail('STATION_PLATFORM_VERIFICATION_REQUIRED',422);
   return {track_id:trackId,provider,territories_json:JSON.stringify([...territories].sort()),status:input.status,url,verified_at:verifiedAt,external_released_at:releasedAt,sort_order:integer(input.sortOrder??0)};
+}
+export function platformReleaseState(records,now=Date.now()) {
+  if(!Array.isArray(records)||records.length>25)return 'unverified';
+  if(!records.length)return 'unconfigured';
+  // Admins see whether any verified entry is live in its registered regions,
+  // independently of website publication and the administrator's own location.
+  const live=records.some(record=>{
+    try{return Boolean(platform(record,strictJson(record.territories_json,1024)[0],now));}
+    catch{return false;}
+  });
+  if(live)return 'live';
+  if(records.some(record=>!['planned','unavailable','removed'].includes(record.status)))return 'unverified';
+  if(records.some(record=>record.status==='planned'))return 'planned';
+  return records.some(record=>record.status==='unavailable')?'unavailable':'removed';
 }
 export function requestedVersion(context) { return editVersion(context.ifMatch); }
 export function cleanSlug(value) { if(!slug(value)) fail('INVALID_INPUT',400); return value; }

@@ -15,15 +15,15 @@ const link = { id: fixtureId(7200), provider: 'apple_music', status: 'live', hre
 const track = { id: fixtureId(7201), platforms: [link] };
 const row = { id: link.id, track_id: track.id, provider: link.provider, status: link.status, url: link.href, verified_at: now - 1, territories_json: '["*"]', sort_order: 0 };
 
-test('NetEase hash song links retain the exact ID in canonical anchors and copied URLs', async () => {
-  for (const id of ['1', '3438977672', '9007199254740993', '99999999999999999999']) {
-    const source = 'https://music.163.com/#/song?id=' + id, canonical = 'https://music.163.com/song?id=' + id;
+test('NetEase hash song and album links retain the exact ID in canonical anchors and copied URLs', async () => {
+  for (const kind of ['song', 'album']) for (const id of ['1', '3438977672', '398968221', '9007199254740993', '99999999999999999999']) {
+    const source = 'https://music.163.com/#/' + kind + '?id=' + id, canonical = 'https://music.163.com/' + kind + '?id=' + id;
     assert.equal(platformUrl(source, 'netease'), canonical);
     assert.equal(platformUrl(canonical, 'netease'), canonical);
     const entry = { ...link, provider: 'netease', href: source }, view = { ...track, platforms: [entry] };
     assert.equal(stationPlatformLinks(view, now)[0].href, canonical);
     const html = musicPlatforms(view, 'en');
-    assert(html.includes('href="' + canonical + '"')); assert(!html.includes('/#/song'));
+    assert(html.includes('href="' + canonical + '"')); assert(!html.includes('/#/' + kind));
     let copied;
     assert.equal((await copyStationPlatform(source, 'netease', { clipboard: { writeText: value => { copied = value; return Promise.resolve(); } } })).status, 'copied');
     assert.equal(copied, canonical);
@@ -44,7 +44,7 @@ test('NetEase fragment compatibility rejects ambiguous routes, extra parameters 
     'https://music.163.com/#/song?id=1%26redirect=evil', 'https://music.163.com/#/song?id=1\\evil',
     'https://music.163.com/#//evil.test/song?id=1', 'https://music.163.com/#/song?%69d=1',
     'https://music.163.com/song?id=3438977672#extra', 'https://y.music.163.com/#/song?id=3438977672'
-  ]) assert.equal(platformUrl(url, 'netease'), null, url);
+  ]) { assert.equal(platformUrl(url, 'netease'), null, url); const album = url.replaceAll('/song', '/album'); assert.equal(platformUrl(album, 'netease'), null, album); }
   assert.equal(platformUrl('https://music.163.com/#/song?id=3438977672', 'spotify'), null);
   assert.equal(platformUrl('https://open.spotify.com/#/song?id=3438977672', 'spotify'), null);
   assert.equal(platformUrl('https://music.163.com/song?id=3438977672&token=secret', 'netease'), null);
