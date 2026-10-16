@@ -67,7 +67,7 @@ export function publicSearchRoute(path) {
   const brand = brandRoute(path);
   if (brand) return { ...brand, alternates: stationLocales.map(lang => [lang, brandHref(lang, brand.section)]) };
   const { segments: s, locale } = routeParts(path);
-  if ((s[0] === 'music' && (s.length === 1 || (s.length === 3 && s[1] === 'tracks' && chapterSlug(s[2])))) ||
+  if ((s[0] === 'music' && (s.length === 1 || (s.length === 2 && s[1] === 'iphone') || (s.length === 3 && s[1] === 'tracks' && chapterSlug(s[2])))) ||
       (s[0] === 'games' && (s.length === 1 || (s.length === 2 && chapterSlug(s[1]) && s[1] !== 'cat-life')))) {
     const tail = '/' + s.join('/') + '/';
     const href = lang => (lang === 'zh-Hant' ? '' : lang === 'zh-Hans' ? '/zh-hans' : '/' + lang) + tail;

@@ -17,7 +17,8 @@ import { homeFixture } from './station-content-fixture.mjs';
 const dist = fileURLToPath(new URL('../../dist/', import.meta.url));
 export async function stationMusicAssets(request) {
   const pathname = new URL(request.url).pathname;
-  const allowed = /^\/music\/site-shell\/(?:zh-Hant|zh-Hans|en|ja)\/$/.test(pathname) ||
+  const allowed = /^\/music\/site-shell\/(?:iphone\/)?(?:zh-Hant|zh-Hans|en|ja)\/$/.test(pathname) ||
+    /^\/images\/station-music-app\/(?:icon|discover)\.webp$/.test(pathname) ||
     /^\/_astro\/[A-Za-z0-9_.-]+\.(?:js|css)$/.test(pathname) || pathname === '/images/station-gentle/cat-mark.webp' ||
     /^\/(?:en\/|ja\/|zh-hans\/|zh-hant\/)?music\/$/.test(pathname);
   if (!allowed) return new Response('<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>本地預覽</title><p>此地址不屬於 T08 音樂交互預覽。帳號、遊戲與其他正式入口仍沿用現有網站。</p><a href="/music/">回到音樂預覽</a>',

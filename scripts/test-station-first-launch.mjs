@@ -66,6 +66,21 @@ after(async () => { await runtime?.close(); });
 const get = (path, options = {}) => runtime.mf.dispatchFetch('http://127.0.0.1' + path, {
   redirect: 'manual', ...options, headers: { 'CF-Connecting-IP': '192.0.2.' + (ip++ % 250 + 1), ...options.headers },
 });
+test('release package serves every iPhone introduction and its resources through the real route handler', async () => {
+  for (const prefix of ['', '/en', '/ja', '/zh-hans']) {
+    const path = prefix + '/music/iphone/';
+    const response = await get(path); assert.equal(response.status, 200, path);
+    const html = await response.text(); assert.match(html, /data-sc-iphone-page/);
+    assert(html.includes('https://testflight.apple.com/join/eEtSur8y'));
+    assert(html.includes('rel="canonical" href="http://127.0.0.1' + path + '"'));
+    const assets = new Set([...html.matchAll(/(?:src|href)="(\/(?:_astro|images)\/[^"?#]+)"/g)].map(match => match[1]));
+    for (const asset of assets) {
+      const file = await get(asset); assert.equal(file.status, 200, asset); await file.body?.cancel();
+    }
+    const head = await get(path, { method: 'HEAD' }); assert.equal(head.status, 200); assert.equal(await head.text(), '');
+  }
+  const template = await get('/music/site-shell/iphone/zh-Hant/'); assert.equal(template.status, 404); await template.body?.cancel();
+});
 test('old chapters and aliases are gone for both guests and historical purchasers without redirecting to login', async () => {
   for (const prefix of ['', '/en']) for (const path of [prefix + '/novel/t20-history/chapter/chapter-one/', prefix + '/works/t20-history/chapter-one/']) {
     for (const cookie of ['', routeFixtureCookie(2)]) {

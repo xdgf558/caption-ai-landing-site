@@ -12,7 +12,7 @@ const get = (path, { mode, cookie, ...options } = {}) => runtime.mf.dispatchFetc
   redirect: 'manual', ...options, headers: { 'CF-Connecting-IP': '192.0.' + Math.floor(ip / 250) + '.' + (ip++ % 250 + 1),
     ...(mode ? { 'x-sc-fixture-mode': mode } : {}), ...(cookie ? { Cookie: cookie } : {}), ...options.headers } });
 for (const [prefix, locale] of [['','zh-Hant'],['/en','en'],['/ja','ja'],['/zh-hans','zh-Hans']]) test(`${locale}: new home/about and music/game navigation use actual Worker + native Assets`, async () => {
-  for (const path of [prefix+'/', prefix+'/about/', prefix+'/music/', prefix+'/games/']) {
+  for (const path of [prefix+'/', prefix+'/about/', prefix+'/music/', prefix+'/music/iphone/', prefix+'/games/']) {
     const response = await get(path); assert.equal(response.status, 200, path);
     assert.equal(response.headers.get('Cache-Control'), 'private, no-store');
     assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow');

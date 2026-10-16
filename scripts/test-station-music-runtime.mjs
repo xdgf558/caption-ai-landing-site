@@ -19,6 +19,45 @@ async function html(path, options) {
 }
 const model = text => JSON.parse(/<script id="sc-music-bootstrap" type="application\/json">([^]*?)<\/script>/.exec(text)[1]);
 
+test('iPhone introduction serves the real beta link in all locales without music data or playback access', async () => {
+  for (const [locale, path, headline] of [
+    ['zh-Hant', '/music/iphone/', '喜歡的歌，'], ['zh-Hans', '/zh-hans/music/iphone/', '喜欢的歌，'],
+    ['en', '/en/music/iphone/', 'Your favorite songs,'], ['ja', '/ja/music/iphone/', '好きな曲を、'],
+  ]) {
+    const text = await html(path, { prefix: '/fixture-pages-no-db' });
+    assert(text.includes('data-sc-iphone-page'));
+    assert(text.includes(headline));
+    assert(text.includes('https://testflight.apple.com/join/eEtSur8y'));
+    assert(text.includes('https://apps.apple.com/us/app/testflight/id899247664?mt=8'));
+    assert(text.includes('href="#install"'));
+    assert.match(text, /href="\/ja\/music\/iphone\/"[^>]*data-sc-language="ja"/);
+    assert(text.includes('rel="canonical" href="https://wwwstationcat.org' + path + '"'));
+    assert.match(text, new RegExp('<html lang="' + locale + '"'));
+    assert(!/<(?:audio|video|iframe)\b/.test(text));
+    assert(!text.includes('sc-music-bootstrap'));
+    const head = await call(path, { method: 'HEAD' }); assert.equal(head.status, 200); assert.equal(await head.text(), '');
+  }
+  const music = await html('/en/music/');
+  assert.match(music, /href="\/en\/music\/iphone\/"/);
+  for (const path of ['/music/iphone', '/zh-hant/music/iphone/', '/music/iphone/?token=private&q=anything']) {
+    const response = await call(path); assert.equal(response.status, 302); assert.equal(response.headers.get('location'), '/music/iphone/');
+  }
+  const invalid = await call('/music/iphone/', { method: 'POST' }); assert.equal(invalid.status, 405); assert.equal(invalid.headers.get('allow'), 'GET, HEAD'); await invalid.text();
+  const noAssets = await call('/music/iphone/', { prefix: '/fixture-pages-no-assets' }); assert.equal(noAssets.status, 503); await noAssets.text();
+  for (const prefix of ['', '/fixture-pages-only', '/fixture-content-only']) {
+    const response = await call('/music/iphone/', { prefix }); assert.equal(response.status, 404); await response.text();
+  }
+  for (const path of ['/music/site-shell/iphone/en/', '/music/%73ite-shell/iphone/ja/']) {
+    const response = await call(path); assert.equal(response.status, 404); await response.text();
+  }
+  for (const path of ['/images/station-music-app/icon.webp', '/images/station-music-app/discover.webp']) {
+    const response = await call(path); assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type'), /image\/webp/);
+    const bytes = new Uint8Array(await response.arrayBuffer()); assert(bytes.length < 100000);
+    const metadata = await sharp(bytes).metadata(); assert(metadata.width > 0);
+  }
+});
+
 test('each incomplete flag pair preserves actual legacy HTTP behavior; internal templates cannot be requested directly, including aliases and encoded paths', async () => {
   const old = await call('/music/', { prefix: '' }); assert.equal(old.status, 200);
   const oldHtml = await old.text(); assert(!oldHtml.includes('sc-music-bootstrap'));
