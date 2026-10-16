@@ -47,6 +47,7 @@ export function stationLanguageHref(locale, pathname, search = '', context = {})
   const path = logicalPath(pathname);
   // The game's own controls manage its language. Never invent another runtime URL.
   if (/^\/games\/cat-life\/?$/.test(path)) return '/games/cat-life/';
+  if (/^\/music\/iphone\/?$/.test(path)) return `${localePrefixes[locale]}/music/iphone/`;
   // Preserve a future public track slug rather than treating the whole music namespace
   // as a root page. Entity mapping and legacy redirects remain T08/T20 responsibilities.
   if (/^\/music\/tracks\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/.test(path)) {

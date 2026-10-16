@@ -35,6 +35,9 @@ test('language changes retain valid public music selections, discarding private 
 });
 
 test('future single-song and game routes keep their entity when switching language', () => {
+  assert.equal(stationLanguageHref('en', '/music/iphone/', '?token=secret'), '/en/music/iphone/');
+  assert.equal(stationLanguageHref('zh-Hant', '/ja/music/iphone/'), '/music/iphone/');
+  assert.equal(stationSection('/zh-hans/music/iphone/'), 'music');
   assert.equal(stationLanguageHref('en', '/zh-hans/music/tracks/sample-song/', '?collection=quiet-days&token=secret'), '/en/music/tracks/sample-song/?collection=quiet-days');
   assert.equal(stationLanguageHref('zh-Hant', '/en/games/cat-life-game/'), '/games/cat-life-game/');
   assert.equal(stationLanguageHref('ja', '/zh-hant/library/'), '/ja/library/');

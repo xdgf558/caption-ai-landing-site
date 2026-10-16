@@ -10,6 +10,7 @@ import { readMusicResponse } from './musicResponse.js';
 import { campaignEnabled, campaignInput, campaignRedirectSearch } from './campaignLinks.js';
 import { resolveCampaignAttribution, publicAttribution } from './campaignAttribution.js';
 import { eventPageConfiguration } from './analyticsModel.js';
+import { renderIphoneAppPage } from './iphoneAppPage.js';
 
 const origin = 'https://wwwstationcat.org';
 const locales = { en: 'en', ja: 'ja', 'zh-hans': 'zh-Hans', 'zh-hant': 'zh-Hant' };
@@ -23,6 +24,8 @@ export function isStationMusicTemplate(pathname) {
   return /^\/(?:en\/|ja\/|zh-hans\/|zh-hant\/)?music\/site-shell(?:\/|$)/.test(normalizedPath(pathname));
 }
 export function stationMusicRoute(pathname) {
+  const app = /^\/(?:((?:en|ja|zh-hans|zh-hant))\/)?music\/iphone\/?$/.exec(normalizedPath(pathname));
+  if (app) return { locale: locales[app[1]] || 'zh-Hant', kind: 'iphone', slug: null };
   const match = /^\/(?:((?:en|ja|zh-hans|zh-hant))\/)?music(?:\/(tracks\/)?([a-z0-9]+(?:-[a-z0-9]+)*))?\/?$/.exec(normalizedPath(pathname));
   if (!match || (match[3] && !slug(match[3]))) return null;
   return { locale: locales[match[1]] || 'zh-Hant', kind: match[2] ? 'detail' : match[3] ? 'legacy' : 'catalog', slug: match[3] || null };
@@ -119,6 +122,7 @@ export async function handleStationMusicPage(request, env, { clock = Date.now, d
     return {search:campaignRedirectSearch(value),value:publicAttribution(value)};
   };
   try {
+    if (route.kind === 'iphone') return await run(() => renderIphoneAppPage(request, env, route));
     const legacy = musicSelection(url.search);
     if (route.kind === 'catalog' && (url.searchParams.has('track') || url.searchParams.has('collection'))) {
       if (legacy.has('collection') || !legacy.has('track')) return null;

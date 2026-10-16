@@ -4,6 +4,7 @@ import { contentBase, uuid, slug, positive, plain, localizedPath } from './publi
 import { stationPlatformLinks, stationPlatformNotes } from './platformView.js';
 import { renderPlatformBackup } from './platformRender.js';
 import { stationClips, clipOriginalLinks } from './clipView.js';
+import { iphoneAppHref, iphoneAppCopy } from './iphoneApp.js';
 
 export const escapeMusicHtml = value => String(value ?? '').replace(/[&<>"']/g,
   c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -72,8 +73,9 @@ export function renderCatalogResults(model) {
   return `<p class="sc-music-count" aria-live="polite">${copy.shown} ${items.length} ${copy.songs}</p><div class="sc-song-grid">${items.map((track, index) => renderSongCard(track, locale, { eager: index < 6, priority: index === 0 ? 'high' : 'auto' })).join('')}</div>${notice}<div class="sc-music-pagination">${nextCursor ? '<a class="sc-button sc-button-secondary" href="' + e(musicCatalogHref(locale, { ...query, cursor: nextCursor })) + '" data-sc-more>' + copy.more + musicIcon('arrow') + '</a>' : ''}${query.cursor ? '<a href="' + e(musicCatalogHref(locale, { ...query, cursor: null })) + '">' + copy.back + '</a>' : ''}</div>`;
 }
 function intro(locale) {
-  const copy = musicCopy[locale];
-  return `<header class="sc-music-intro"><p class="sc-music-eyebrow">STATION CAT · MUSIC</p><h1>${musicIcon('music')}${copy.title}</h1><p>${copy.tagline} <span>${copy.intro}</span></p></header>`;
+  const copy = musicCopy[locale], app = iphoneAppCopy[locale];
+  return `<header class="sc-music-intro"><p class="sc-music-eyebrow">STATION CAT · MUSIC</p><h1>${musicIcon('music')}${copy.title}</h1><p>${copy.tagline} <span>${copy.intro}</span></p></header>` +
+    `<nav class="sc-music-destinations" aria-label="${e(app.navigation)}"><a href="${stationHref(locale, 'music')}" aria-current="page">${e(app.explore)}</a><a href="${iphoneAppHref(locale)}"><img src="/images/station-music-app/icon.webp" alt="" width="24" height="24">iPhone App${musicIcon('arrow')}</a></nav>`;
 }
 export function renderMusicCatalog(model) {
   const { locale, query } = model, copy = musicCopy[locale];

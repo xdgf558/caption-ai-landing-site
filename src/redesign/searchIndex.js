@@ -6,6 +6,7 @@ import { searchOrigin, searchIndexing } from './searchMetadata.js';
 import { checkMusicRateLimit } from '../music/rateLimits.js';
 import { escapeMusicHtml as e } from './musicRender.js';
 import { localizedPath, uuid } from './publicValidation.js';
+import { iphoneAppHref } from './iphoneApp.js';
 const pageSize = 10;
 const namespace = 'http://www.sitemaps.org/schemas/sitemap/0.9';
 export const isStationSearchPath = path => path === '/robots.txt' || path === '/sitemap.xml' || /^\/sitemaps\//.test(path);
@@ -50,7 +51,10 @@ export async function handleStationSearch(request, env, { clock = Date.now, dead
     return reply(request, xml(`<sitemapindex xmlns="${namespace}">` + shards.map(path => `<sitemap><loc>${e(origin + path)}</loc></sitemap>`).join('') + '</sitemapindex>'), 'application/xml', indexing);
   }
   if (shard[1] === 'base' && (url.searchParams.has('from') || url.searchParams.has('until'))) throw Object.assign(new Error(), { status: 400 });
-  if (shard[1] === 'base') return reply(request, urls(['home','music','games','about'].map(section => stationLocales.map(lang => [lang, brandHref(lang, section)])), origin), 'application/xml', indexing);
+  if (shard[1] === 'base') return reply(request, urls([
+    ...['home','music','games','about'].map(section => stationLocales.map(lang => [lang, brandHref(lang, section)])),
+    stationLocales.map(lang => [lang, iphoneAppHref(lang)]),
+  ], origin), 'application/xml', indexing);
   const [kind, page] = shard[1].split('-'), from = url.searchParams.get('from'), until = url.searchParams.get('until');
   if (Number(page) > 1000) return new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } });
   if (!uuid(from) || (until !== null && (!uuid(until) || from >= until))) throw Object.assign(new Error(), { status: 400 });
