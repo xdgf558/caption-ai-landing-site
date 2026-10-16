@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song?utm_source=douyin",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song?utm_source=douyin&utm_medium=video&utm_campaign=release-01&utm_content=clip01",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?utm_source=douyin",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?utm_source=douyin&utm_medium=video&utm_campaign=release-01&utm_content=clip01",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hant/music/tracks/new-song",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hant/music/tracks/new-song?utm_source=douyin",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hant/music/tracks/new-song?utm_source=douyin&utm_medium=video&utm_campaign=release-01&utm_content=clip01",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hant/music/tracks/new-song/",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hant/music/tracks/new-song/?utm_source=douyin",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hant/music/tracks/new-song/?utm_source=douyin&utm_medium=video&utm_campaign=release-01&utm_content=clip01",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/new-song",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/new-song?utm_source=douyin",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/new-song?utm_source=douyin&utm_medium=video&utm_campaign=release-01&utm_content=clip01",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/new-song/",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/new-song/?utm_source=douyin",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/zh-hans/music/tracks/new-song/?utm_source=douyin&utm_medium=video&utm_campaign=release-01&utm_content=clip01",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/en/music/tracks/new-song",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/en/music/tracks/new-song?utm_source=douyin",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/en/music/tracks/new-song?utm_source=douyin&utm_medium=video&utm_campaign=release-01&utm_content=clip01",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/en/music/tracks/new-song/",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/en/music/tracks/new-song/?utm_source=douyin",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/en/music/tracks/new-song/?utm_source=douyin&utm_medium=video&utm_campaign=release-01&utm_content=clip01",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/ja/music/tracks/new-song",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/ja/music/tracks/new-song?utm_source=douyin",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/ja/music/tracks/new-song?utm_source=douyin&utm_medium=video&utm_campaign=release-01&utm_content=clip01",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/ja/music/tracks/new-song/",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/ja/music/tracks/new-song/?utm_source=douyin",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/ja/music/tracks/new-song/?utm_source=douyin&utm_medium=video&utm_campaign=release-01&utm_content=clip01",
+      "accepted": true,
+      "slug": "new-song"
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?next=https://evil.test",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?utm_source=a&utm_source=b",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?utm_source=",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?utm_source=a%0Ab",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?utm_source=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?utm_content=%252f",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?UTM_SOURCE=a",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?token=secret",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?track=11111111-1111-4111-8111-111111111111",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/#verse",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/?utm_source=x&x=1",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/UPPER/",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new-song/child/",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/%6eew-song/",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/new--song/",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/music/tracks/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/fr/music/tracks/new-song/",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/auth/mobile/callback",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org/api/station/content/tracks/new-song",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org//music/tracks/new-song/",
+      "accepted": false
+    },
+    {
+      "url": "http://wwwstationcat.org/music/tracks/new-song/",
+      "accepted": false
+    },
+    {
+      "url": "https://stationcat.org/music/tracks/new-song/",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org.evil.test/music/tracks/new-song/",
+      "accepted": false
+    },
+    {
+      "url": "https://name@wwwstationcat.org/music/tracks/new-song/",
+      "accepted": false
+    },
+    {
+      "url": "https://wwwstationcat.org:443/music/tracks/new-song/",
+      "accepted": false
+    }
+  ]
+}

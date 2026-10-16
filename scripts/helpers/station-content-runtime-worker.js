@@ -5,6 +5,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     for (const [prefix, overrides] of [
+      ['/fixture-app-links', { STATION_CONTENT_PUBLIC_ENABLED: 'true', STATION_PUBLIC_APP_LINKS_ENABLED: 'true', STATION_PUBLIC_APP_LINKS_PROFILE: 'station-cat-music-platform-links-v1' }],
       ['/fixture-enabled', { STATION_CONTENT_PUBLIC_ENABLED: 'true' }],
       ['/fixture-wrong', { STATION_CONTENT_PUBLIC_ENABLED: 'true', MUSIC_DB: env.WAITLIST_DB }],
       ['/fixture-missing-schema', { STATION_CONTENT_PUBLIC_ENABLED: 'true', MUSIC_DB: env.EMPTY_DB }]

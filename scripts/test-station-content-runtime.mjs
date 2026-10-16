@@ -58,6 +58,32 @@ test('explicit local fixture migration enables published queries only, with a se
   await jsonError(await call('/tracks', { prefix: '/fixture-missing-schema' }), 503, 'CONTENT_SCHEMA_UNAVAILABLE');
 });
 
+test('actual Worker/D1 bookmark metadata is privately cacheable and never includes platform or audio URLs', async () => {
+  for (const locale of ['en', 'zh-Hans', 'zh-Hant', 'ja']) {
+    const response = await call('/tracks/permanent-free/bookmark?locale=' + locale);
+    assert.equal(response.status, 200, await response.clone().text());
+    const body = await response.json();
+    assert.equal(body.bookmark.id, content.tracks[0].id);
+    assert.equal(body.locale, locale);
+    assert.deepEqual(Object.keys(body.bookmark).sort(), ['artist', 'id', 'revision', 'slug', 'title']);
+    assert.equal(response.headers.get('cache-control'), 'private, max-age=86400, must-revalidate');
+    for (const header of ['CDN-Cache-Control', 'Cloudflare-CDN-Cache-Control']) assert.equal(response.headers.get(header), 'no-store');
+  }
+  await jsonError(await call('/tracks/not-a-public-work/bookmark?locale=en'), 404, 'NOT_FOUND');
+  await jsonError(await call('/tracks/permanent-free/bookmark?locale=en', { enabled: false }), 503, 'CONTENT_DISABLED');
+  await jsonError(await call('/tracks/permanent-free/bookmark?locale=en', { method: 'POST' }), 405, 'METHOD_NOT_ALLOWED');
+});
+test('actual Worker serves opt-in public AASA without native auth activation', async () => {
+  const path = '/.well-known/apple-app-site-association';
+  const closed = await mf.dispatchFetch('https://wwwstationcat.org' + path);
+  assert.equal(closed.status, 503);
+  const ready = await mf.dispatchFetch('https://wwwstationcat.org/fixture-app-links' + path);
+  assert.equal(ready.status, 200);
+  const body = await ready.json(); assert.deepEqual(Object.keys(body), ['applinks']);
+  assert.deepEqual(body.applinks.details[0].appIDs, ['2AM5S7BM2N.org.stationcat.music']);
+  assert.doesNotMatch(JSON.stringify(body), /webcredentials|auth\/mobile|staging|workers\.dev/);
+});
+
 test('native D1 publication pointer coexists with drafts; clip/game/home DTO and actual R2 streaming agree', async () => {
   const detail = await call('/tracks/vip?locale=en'); assert.equal(detail.status, 200);
   const track = (await detail.json()).track;
