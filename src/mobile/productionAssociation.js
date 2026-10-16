@@ -1,5 +1,6 @@
 import {configuration} from './security.js';
 import {PRODUCTION_MOBILE_PROFILE, verifyMobileBindings} from './environment.js';
+import {platformAssociation} from '../redesign/platformAssociation.js';
 
 export const productionAssociationPath = '/.well-known/apple-app-site-association';
 const headers = {'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
@@ -13,6 +14,7 @@ export async function productionAssociation(request, env) {
   }
   if (!['GET','HEAD'].includes(request.method)) return new Response(null, {status:405,headers:{...headers,Allow:'GET, HEAD'}});
   try {
+    if (env.STATION_PUBLIC_APP_LINKS_ENABLED === 'true') return platformAssociation(request, env);
     const config = configuration(env);
     if (config.environment !== 'production') return new Response('Not found', {status:404,headers});
     await verifyMobileBindings(env,config);

@@ -30,7 +30,7 @@ const messages = Object.freeze({
 function route(pathname) {
   const path = pathname.slice(contentBase.length);
   if (['/tracks', '/clips', '/games', '/home'].includes(path)) return { kind: path.slice(1) };
-  const track = /^\/tracks\/([^/]+)(?:\/(playback|audio|clips))?$/.exec(path);
+  const track = /^\/tracks\/([^/]+)(?:\/(playback|audio|clips|bookmark))?$/.exec(path);
   if (track) return { kind: track[2] || 'track', slug: track[1] };
   const game = /^\/games\/([^/]+)$/.exec(path);
   if (game) return { kind: 'game', slug: game[1] };
@@ -189,6 +189,21 @@ export async function handleStationContent(request, env, { clock = Date.now, tim
       return await streamContentAsset(request, runtime, asset, row.published_at, run);
     }
     const row = await run(() => contentTrack(runtime.session, now, { slug: currentRoute.slug }));
+    if (currentRoute.kind === 'bookmark') {
+      // Explicit, device-private permission to retain a small display snapshot.
+      // It contains no artwork, media, platform URL, or availability assertion.
+      // Every detail/open action must still use the no-store track endpoint.
+      const meta = row && metadata(row.metadata_json, input.locale, { artist: true });
+      if (!row || !uuid(row.id) || !slug(row.slug) || !positive(row.published_revision) ||
+        !millis(row.published_at) || row.published_at > now || !meta) throw contentFailure('NOT_FOUND', 404);
+      return json(request, { schemaVersion: 1, locale: input.locale, bookmark: {
+        id: row.id, slug: row.slug, revision: row.published_revision, title: meta.title, artist: meta.artist
+      } }, { ...context, headers: {
+        'Cache-Control': 'private, max-age=86400, must-revalidate',
+        'CDN-Cache-Control': 'no-store', 'Cloudflare-CDN-Cache-Control': 'no-store',
+        Date: new Date(now).toUTCString()
+      } });
+    }
     if (currentRoute.kind === 'track') {
       const projected = await projectTrack(runtime, row, options, { detailed: true });
       if (!projected) throw contentFailure('NOT_FOUND', 404);
