@@ -1,0 +1,51 @@
+{
+  "checks": [
+    {
+      "bytes": 21749,
+      "emailMatches": 0,
+      "jwtMatches": 0,
+      "ocrTextCharacters": 68,
+      "path": "production-admin.jpg",
+      "review": "Content editor only; publisher badge, game data and module controls. No administrator email, cookie, JWT, Access challenge query, account/order/save data visible.",
+      "sha256": "62513c652a323d263d2aaa88b76afceecbd390fe6159d6c38fe593f801043fb1",
+      "visuallyReviewed": true,
+      "width": 497,
+      "height": 653,
+      "noExifXmpIptcMetadata": true
+    },
+    {
+      "bytes": 84063,
+      "emailMatches": 0,
+      "jwtMatches": 0,
+      "ocrTextCharacters": 128,
+      "path": "game-published.jpg",
+      "review": "Content editor only; publisher badge, game data and module controls. No administrator email, cookie, JWT, Access challenge query, account/order/save data visible.",
+      "sha256": "f355e9cadef10f8c80631ab0199c99ea187d8c39a67609769b4b2770290038f3",
+      "visuallyReviewed": true,
+      "width": 512,
+      "height": 2736,
+      "noExifXmpIptcMetadata": true
+    },
+    {
+      "bytes": 18099,
+      "emailMatches": 0,
+      "jwtMatches": 0,
+      "ocrTextCharacters": 39,
+      "path": "rights-gate.jpg",
+      "review": "Content editor only; publisher badge, game data and module controls. No administrator email, cookie, JWT, Access challenge query, account/order/save data visible.",
+      "sha256": "d7805a20830c498c9867651c117907a49b7f92fe28dad2c1983f552dde211226",
+      "visuallyReviewed": true,
+      "width": 497,
+      "height": 653,
+      "noExifXmpIptcMetadata": true
+    }
+  ],
+  "method": "Visual inspection of the exact three images plus local Apple Vision OCR; OCR text is neither logged nor uploaded.",
+  "publicScreenshotsHaveNoEmailOrJWT": true,
+  "recordedAt": "2026-10-12T00:59:50Z",
+  "scope": "Only the three inspected content-editor screenshots are in Git. Raw upload-workspace image and authenticated operator data stay in the private local directory.",
+  "uploadWorkspaceScreenshotExcludedFromGit": true,
+  "ocrIsAuxiliaryToVisualReview": true,
+  "uploadWorkspaceScreenshotOcrEmailMatchFound": false,
+  "privateScreenshotNeverUsedAsPublicEvidence": true
+}
