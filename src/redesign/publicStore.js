@@ -27,7 +27,9 @@ const schemaColumns = Object.freeze({
   station_home_revisions: 'id,revision,state,featured_track_id,featured_game_id,selected_track_ids_json,selected_clip_ids_json,selected_update_ids_json',
   station_campaigns: 'id,track_id,clip_id,status,landing_path',
   station_route_migrations: 'old_path,action,new_path,reason,approved_at',
-  station_analytics_events: 'event_id,event_name,session_id,track_id,clip_id,game_id,received_at'
+  station_analytics_events: 'event_id,event_name,session_id,track_id,clip_id,game_id,received_at',
+  music_collections: 'id,slug,original_locale,title_json,description_json,status,version,collection_type,updated_at',
+  music_collection_tracks: 'collection_id,track_id,position'
 });
 export async function checkedContentRuntime(env) {
   let runtime;
@@ -84,13 +86,24 @@ const platforms = `COALESCE((SELECT json_group_array(json_object(
   'id',a.id,'track_id',a.track_id,'provider',a.provider,'territories_json',a.territories_json,'status',a.status,
   'url',a.url,'verified_at',a.verified_at,'external_released_at',a.external_released_at,'sort_order',a.sort_order))
   FROM (SELECT * FROM station_platform_links WHERE track_id=p.track_id ORDER BY sort_order,id LIMIT 26) a),'[]') AS platforms_json`;
+// Public album membership is metadata only. Read the existing operator-managed
+// albums, never playlists, drafts or archived collections. The parent track
+// still has to pass the new website's publication and resource checks.
+// Only this track's position is returned; private sibling IDs are not selected.
+const albums = `COALESCE((SELECT json_group_array(json_object(
+  'id',a.id,'slug',a.slug,'originalLocale',a.original_locale,'title',json(a.title_json),
+  'summary',json(a.description_json),'version',a.version,'position',a.position,'updatedAt',a.updated_at))
+  FROM (SELECT c.id,c.slug,c.original_locale,c.title_json,c.description_json,c.version,c.updated_at,m.position
+    FROM music_collection_tracks m JOIN music_collections c ON c.id=m.collection_id
+    WHERE m.track_id=p.track_id AND c.status='published' AND c.collection_type='album'
+    ORDER BY c.id LIMIT 26) a),'[]') AS albums_json`;
 const trackSelect = `SELECT p.track_id AS id,p.published_at,p.published_revision,r.metadata_json,
   r.legacy_revision_id,r.site_audio_mode,r.duration_ms,r.cover_asset_id,r.lyrics_asset_id,c.slug,
   EXISTS(SELECT 1 FROM music_tracks old WHERE old.id=p.track_id AND old.lifecycle='published'
     AND old.published_revision_id=r.legacy_revision_id) AS existing_full_reference,
   pp.published_at AS promotion_at,pr.revision AS promotion_revision,pr.enabled,pr.preview_enabled,pr.preview_asset_id,
   pr.selected_platform_ids_json,pr.selected_clip_ids_json,pr.sort_order AS promotion_sort_order,
-  ${musicAssets},${platforms}
+  ${musicAssets},${platforms},${albums}
   FROM station_track_publications p JOIN station_track_revisions r
     ON r.track_id=p.track_id AND r.revision=p.published_revision AND r.state='sealed'
   JOIN station_track_routes c ON c.track_id=p.track_id AND c.role='canonical'

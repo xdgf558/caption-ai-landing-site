@@ -145,3 +145,16 @@ test('old UUID catalog and real game runtime address still dispatch separately; 
   assert.equal((await reader.prepare('SELECT count(*) AS n FROM reader_accounts').first()).n, 3);
   assert.equal((await db.prepare("SELECT count(*) AS n FROM station_route_migrations").first()).n, 0);
 });
+
+test('actual D1 album membership is metadata-only and respects publication on every request', async () => {
+  const album = fixtureId(9600), first = content.tracks[0], second = content.tracks[1];
+  await db.prepare(`INSERT INTO music_collections(id,slug,original_locale,title_json,description_json,status,version,created_at,updated_at,collection_type)
+    VALUES(?,?,'en',?,'{}','published',1,0,0,'album')`).bind(album,'runtime-album',JSON.stringify({en:'Runtime album','zh-Hans':'测试专辑'})).run();
+  await db.batch([db.prepare('INSERT INTO music_collection_tracks(collection_id,track_id,position) VALUES(?,?,9)').bind(album,first.id),
+    db.prepare('INSERT INTO music_collection_tracks(collection_id,track_id,position) VALUES(?,?,1)').bind(album,second.id)]);
+  let response = await call('/tracks/permanent-free?locale=zh-Hans'); assert.equal(response.status,200);
+  assert.deepEqual((await response.json()).track.albums,[{id:album,slug:'runtime-album',title:'测试专辑',summary:'',version:1,position:9}]);
+  await db.prepare("UPDATE music_collections SET status='archived',version=version+1 WHERE id=?").bind(album).run();
+  response = await call('/tracks/permanent-free?locale=en'); assert.equal(response.status,200);
+  assert.deepEqual((await response.json()).track.albums,[]);
+});

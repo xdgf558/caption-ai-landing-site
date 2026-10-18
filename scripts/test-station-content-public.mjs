@@ -475,3 +475,49 @@ test('existing UUID catalog retains its contract and old qualification metric af
   assert.equal(value.popularity.metric, 'qualified_play');
   assert.equal(f.music.sql.prepare('SELECT count(*) AS n FROM station_analytics_events').get().n, 0);
 });
+
+async function albumFixture(f, index, overrides = {}) {
+  const id = fixtureId(index);
+  await insertFixture(f.music.db, 'music_collections', { id, slug: 'public-album-' + index,
+    original_locale: 'en', title_json: JSON.stringify({ en: 'Night letters', 'zh-Hans': '夜窗来信' }),
+    description_json: JSON.stringify({ en: 'An ordered album.' }), status: 'published', collection_type: 'album',
+    created_at: now - 1000, updated_at: now - 500, ...overrides });
+  return id;
+}
+async function albumMember(f, id, track, position) {
+  await insertFixture(f.music.db, 'music_collection_tracks', { collection_id: id, track_id: track.id, position });
+}
+test('album membership uses published albums only, preserves source positions and localizes metadata', async () => {
+  const f = await fixture(), [first, second] = f.content.tracks;
+  const id = await albumFixture(f, 9100);
+  await albumMember(f, id, first, 8); await albumMember(f, id, second, 2);
+  for (const [index, overrides] of [[9101,{status:'draft'}], [9102,{status:'archived'}], [9103,{collection_type:'playlist'}]]) {
+    const hidden = await albumFixture(f, index, overrides); await albumMember(f, hidden, first, 0);
+  }
+  const track = (await body(f, '/tracks/permanent-free?locale=zh-Hans')).track;
+  assert.deepEqual(track.albums, [{ id, slug:'public-album-9100', title:'夜窗来信', summary:'An ordered album.', version:1, position:8 }]);
+  const catalog = await body(f, '/tracks?locale=ja&limit=50');
+  assert.equal(catalog.items.find(t=>t.id===second.id).albums[0].position, 2);
+  assert.equal(catalog.items.find(t=>t.id===first.id).albums[0].title, 'Night letters');
+  assert.deepEqual(catalog.items.find(t=>t.id===f.content.platformTrack.id).albums, []);
+  assert.doesNotMatch(JSON.stringify(track.albums), /cover|audio|rights|listening_mode|trackIds|object_key/);
+});
+test('album metadata cannot expose unpublished siblings; removing membership updates singles immediately', async () => {
+  const f = await fixture(), [first, second] = f.content.tracks, id = await albumFixture(f, 9110);
+  await albumMember(f,id,first,0); await albumMember(f,id,second,1);
+  f.music.sql.prepare("UPDATE station_track_publications SET status='archived' WHERE track_id=?").run(second.id);
+  const catalog = await body(f, '/tracks?limit=50');
+  assert(!catalog.items.some(t=>t.id===second.id));
+  assert(!JSON.stringify(catalog.items.find(t=>t.id===first.id).albums).includes(second.id));
+  f.music.sql.prepare("UPDATE music_collections SET status='archived',version=version+1 WHERE id=?").run(id);
+  assert.deepEqual((await body(f,'/tracks/permanent-free')).track.albums,[]);
+});
+test('damaged or excessive album membership is unknown, not a hidden song or a false single', async () => {
+  const f = await fixture(), first = f.content.tracks[0], id = await albumFixture(f, 9120, { title_json:'{"en":""}' });
+  await albumMember(f,id,first,0);
+  assert.equal((await body(f,'/tracks/permanent-free')).track.albums,null);
+  f.music.sql.prepare('DELETE FROM music_collection_tracks WHERE collection_id=?').run(id);
+  for(let i=0;i<26;i++) await albumMember(f,await albumFixture(f,9130+i),first,0);
+  const result = (await body(f,'/tracks/permanent-free')).track;
+  assert.equal(result.id,first.id); assert.equal(result.albums,null);
+});
