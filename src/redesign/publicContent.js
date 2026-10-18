@@ -18,6 +18,22 @@ function assetRows(source, max) {
   return rows && rows.every(row => uuid(row.id)) && new Set(rows.map(row => row.id.toLowerCase())).size === rows.length ? rows : null;
 }
 const current = (row, now) => row && uuid(row.id) && positive(row.published_revision) && millis(row.published_at) && row.published_at <= now;
+function publicAlbums(source, locale, now) {
+  const rows = jsonRows(source, 25);
+  // A damaged classification does not suppress a valid public song, or falsely
+  // classify it as a single. null means classification could not be verified.
+  if (!rows || new Set(rows.map(row => row.id?.toLowerCase?.())).size !== rows.length) return null;
+  const result = [];
+  for (const row of rows) {
+    if (!uuid(row.id) || !slug(row.slug) || !positive(row.version) || !millis(row.updatedAt) ||
+        !Number.isSafeInteger(row.position) || row.position < 0) return null;
+    const meta = metadata(JSON.stringify({ originalLocale: row.originalLocale, title: row.title, summary: row.summary }), locale);
+    if (!meta) return null;
+    if (row.updatedAt > now) continue;
+    result.push({ id: row.id, slug: row.slug, title: meta.title, summary: meta.summary, version: row.version, position: row.position });
+  }
+  return result;
+}
 export function promotion(row, now) {
   if (!positive(row?.promotion_revision) || !millis(row.promotion_at) || row.promotion_at > now || row.enabled !== 1) return null;
   try {
@@ -63,6 +79,7 @@ export async function projectTrack(runtime, row, options, { detailed = false } =
     publishedAt: iso(row.published_at), releasedAt: releases[0] || null,
     catalogReleasedAt: globalDates.length ? iso(Math.min(...globalDates)) : null,
     durationMs: positive(row.duration_ms) ? row.duration_ms : null,
+    albums: publicAlbums(row.albums_json, locale, now),
     href: localizedPath(locale, 'music/tracks', row.slug),
     coverUrl: ready.has(row.cover_asset_id) ? assetPath(ready.get(row.cover_asset_id)) : null,
     // This public cover fingerprint is a cache identity only. It never bypasses
