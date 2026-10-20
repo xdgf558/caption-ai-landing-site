@@ -1,0 +1,82 @@
+---
+import policy from '../data/station-cat-music-privacy.json';
+
+interface Props {
+  lang: 'zh-Hans' | 'zh-Hant' | 'en' | 'ja';
+}
+
+const { lang } = Astro.props;
+const text = policy.localizations[lang];
+const labels = {
+  'zh-Hans': {
+    draft: '准备稿，尚未生效',
+    effective: '生效日期',
+    prepared: '核对日期',
+    providers: '服务商与保留期限说明'
+  },
+  'zh-Hant': {
+    draft: '準備稿，尚未生效',
+    effective: '生效日期',
+    prepared: '核對日期',
+    providers: '服務商與保留期限說明'
+  },
+  en: {
+    draft: 'Draft — not yet in effect',
+    effective: 'Effective date',
+    prepared: 'Reviewed',
+    providers: 'Provider and retention information'
+  },
+  ja: {
+    draft: '確認用の草稿・未施行',
+    effective: '施行日',
+    prepared: '確認日',
+    providers: '提供者と保存期間の説明'
+  }
+}[lang];
+const references = [
+  ['Cloudflare Workers Logs', policy.references[0]],
+  ['Cloudflare D1 Time Travel', policy.references[1]],
+  ['Cloudflare Privacy Policy', policy.references[2]],
+  ['Proton Mail Privacy Policy', policy.references[3]]
+];
+---
+
+<section id="station-cat-music-privacy" class="app-privacy" aria-labelledby="station-cat-music-privacy-title">
+  <h2 id="station-cat-music-privacy-title">{text.title}</h2>
+  <p class="app-privacy-date">
+    {policy.effectiveDate
+      ? `${labels.effective}: ${policy.effectiveDate}`
+      : `${labels.draft} · ${labels.prepared}: ${policy.preparedAt}`}
+  </p>
+  {text.sections.map(section => (
+    <section aria-labelledby={`app-privacy-${section.id}`}>
+      <h3 id={`app-privacy-${section.id}`}>{section.title}</h3>
+      {section.paragraphs.map(paragraph => <p>{paragraph}</p>)}
+    </section>
+  ))}
+  <h3>{labels.providers}</h3>
+  <ul>
+    {references.map(([label, href]) => <li><a href={href}>{label}</a></li>)}
+  </ul>
+</section>
+
+<style>
+  .app-privacy {
+    max-width: 48rem;
+    margin-block: 3rem;
+    scroll-margin-top: 7rem;
+  }
+  .app-privacy p {
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+  }
+  .app-privacy section {
+    margin-block: 2rem;
+  }
+  .app-privacy-date {
+    font-size: 0.875rem;
+  }
+  .app-privacy li + li {
+    margin-top: 0.75rem;
+  }
+</style>
