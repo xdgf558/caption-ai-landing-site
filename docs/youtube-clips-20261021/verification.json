@@ -20,6 +20,21 @@
       "failed": 0,
       "logPath": "/tmp/station-youtube-public-regression-final.log",
       "logSHA256": "fbd5004df2871594612a71b0b0bd08d7bb9e725e3ff80e6c39e5a4e551e5be2f"
+    },
+    "stagingImportGate": {
+      "command": "npm run test:music:staging",
+      "exitCode": 0,
+      "logPath": "/tmp/station-youtube-staging-fix.log",
+      "logSHA256": "cdc5829d5337a90ed00442ac2743555a9ff2f6eb22f8366975a01b8ae7add6c2",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    "fullNpmTest": {
+      "command": "npm test",
+      "exitCode": 0,
+      "logPath": "/tmp/station-youtube-full-test-fix.log",
+      "logSHA256": "6b3c6bb7c062e863f1f6485a1f8a1217d58e11df2ad044e740feec4423d749b5"
     }
   },
   "build": {
@@ -48,13 +63,23 @@
     "src/scripts/adminStationContent.js": "6e9f49d62a696e49c754ed35be7a8c26644ce39633ab1f256c2c9ee110f0bd73",
     "src/scripts/stationWorkbenchState.js": "ab3a5631ca644fca34f55be453470a9e87998f7f82c1a597cec0bfbf673e27e5",
     "src/components/redesign/StationAdminWorkbench.astro": "e8759813853ca7bbbfc4445ee0cfcd678c3602128d29e717d652fbfde7f644dd",
-    "scripts/test-station-youtube-clips.mjs": "9de217223857c0dec124d8aa6bcc3da9d6933b0430a494e20c7f4cc9767058a6"
+    "scripts/test-station-youtube-clips.mjs": "9de217223857c0dec124d8aa6bcc3da9d6933b0430a494e20c7f4cc9767058a6",
+    "scripts/test-music-staging-gate.mjs": "ba4d498eb1175edf9c812c556a15568eb8f8a3945b1e866dea11ea990e8d7c09"
   },
   "notPerformed": [
-    "hosted CI",
+    "complete hosted CI for final PR head",
     "deployment",
     "production content publication",
     "real owner video playback",
     "Apple privacy publication"
-  ]
+  ],
+  "hostedCI": {
+    "initialHead": "8170d4f9a024398edadad4b7e1c7c5d54e641d7f",
+    "initialRun": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/39540369197",
+    "initialResult": "failed",
+    "failure": "Run tests: staging module graph rejected redesign/youtubeClip.js, a new pure validation helper missing from the explicit allowlist.",
+    "failedStepLogSHA256": "d7cb2d24f4279e86f5a40db6d133443d7ccf674ec9699cde68846a208e003af3",
+    "correction": "Add only redesign/youtubeClip.js to allowedShared; retain traversal, forbidden-module and external-import assertions. No product code changes.",
+    "correctionHostedResult": "pending-new-head-run"
+  }
 }

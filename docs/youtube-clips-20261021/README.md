@@ -19,9 +19,10 @@ Omitting `include` preserves the old file-only result. Global `/clips`, homepage
 - `npm run test:redesign:clips`: 35 passed, including real temporary Miniflare/D1 create/replay/draft/publication/unpublication/rollback/parent withdrawal, strict URL validation, admin publish eligibility and old-client filtering. Test IDs are synthetic; no YouTube call occurs.
 - `npm run test:redesign:content-admin`: 142 passed.
 - `npm run test:redesign:public`: 64 passed.
+- `npm run test:music:staging`: 22 passed; full `npm test` exited 0 after the explicit staging import allowlist correction.
 - `ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build`: 185 pages plus postbuild passed. This intentionally incomplete local content build is not a production deployment package.
 
-Raw logs and temporary DBs stay outside version control. Hosted CI has not run for this uncommitted candidate. Real operator URLs, actual HTTPS publication-to-device playback and embedding/region/age restrictions need separate acceptance before distribution.
+Raw logs and temporary DBs stay outside version control. Initial [hosted run 39540369197](https://github.com/xdgf558/caption-ai-landing-site/actions/runs/39540369197) at `8170d4f9a024398edadad4b7e1c7c5d54e641d7f` failed in `Run tests`: the staging module-graph allowlist omitted the newly imported pure `redesign/youtubeClip.js` helper. The fix lists only that module, preserving graph traversal and external-import restrictions; local staging and full npm tests pass. The original failure log digest is retained in `verification.json`; the new head still requires a complete hosted run. Real operator URLs, actual HTTPS publication-to-device playback and embedding/region/age restrictions need separate acceptance before distribution.
 
 ## Privacy and release boundary
 
