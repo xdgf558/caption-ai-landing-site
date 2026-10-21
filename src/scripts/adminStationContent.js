@@ -113,7 +113,7 @@ function workRow(key,item,type){
  const state=module==='platforms'?'platform-'+platformState(item):item.legacyLifecycle==='archived'?'legacy_archived':item.status??'';
  if(row.stateNode.dataset.state!==state){row.stateNode.dataset.state=state;row.stateNode.textContent=module==='platforms'?platformStates[platformState(item)]:state==='legacy_archived'?'旧版封存':states[state]??'记录';}
  const assetState=listAssetState(item);
- if(row.assetNode.dataset.state!==assetState){row.assetNode.dataset.state=assetState;row.assetNode.replaceChildren(icon(assetState==='approved'?'ready':'pending'),el('span',{approved:'登记已确认',pending:'权利待确认',blocked:'权利已阻止',missing:'素材待准备'}[assetState]));}
+ if(row.assetNode.dataset.state!==assetState){row.assetNode.dataset.state=assetState;row.assetNode.replaceChildren(icon(assetState==='approved'?'ready':'pending'),el('span',{approved:'登记已确认',pending:'权利待确认',blocked:'权利已阻止',missing:'素材待准备',external:'YouTube · 人工确认'}[assetState]));}
  return row.li;
 }
 function renderList(){
@@ -168,6 +168,7 @@ async function renderForm(data){
    $('content-promote').checked=data.enabled??false;$('content-preview-enable').checked=data.previewEnabled??false;$('content-sort').value=data.sortOrder??0;await promotionChoices(current?.id??$('content-parent').value,data);
    await renderStationCampaigns($('content-campaigns'),current?.id,{controller,identity,work,status});
  }else if(module==='clips'){
+   $('content-clip-source').value=data.youtubeURL?'youtube':'file';$('content-youtube-url').value=data.youtubeURL??'';$('content-youtube-confirm').checked=data.youtubeEmbeddingConfirmed===true;renderClipSource();
    ownerAssets=await ownerChoices(current?.id);assetOptions('content-video',current?.clipType??$('content-clip-type').value,data.mediaAssetId);assetOptions('content-poster','poster',data.posterAssetId);$('content-clip-duration').value=data.durationMs?data.durationMs/1000:'';$('content-subtitles').value=data.subtitles?.[$('content-locale').value]??'';
    subtitleEdits={...(data.subtitles??{})};const p=current?await request('/clips/'+current.id+'/publications'):{items:[]};$('content-publications').replaceChildren(...p.items.map(r=>el('p',r.channel+' · '+r.post_id+' · '+date(r.external_published_at))));
  }else if(module==='games'){
@@ -185,7 +186,7 @@ async function renderForm(data){
  historyBefore=current?.hasOlderRevisions?current.revisions.at(-1).revision:null;show('content-history-more',Boolean(historyBefore));
  const sealed=current?.revisions.filter(r=>r.state==='sealed')??[];options($('content-rollback-version'),sealed.map(r=>({id:String(r.revision),title:'版本 '+r.revision+' · '+date(r.createdAt)})),[],false);
  text('content-jobs',current?.jobs.length?current.jobs.slice(0,5).map(j=>date(j.dueAt)+' · '+({pending:'等待公开',succeeded:'已公开',failed:'失败，可继续编辑',cancelled:'已取消'}[j.status])+(j.errorCode?' · '+(errors[j.errorCode]??j.errorCode):'')).join('\n'):'尚未安排定时公开。');
- if(workbench)renderWorkAssets(data);
+ if(workbench)renderWorkAssets(data);if(module==='clips')renderClipSource();
  controls();
 }
 async function promotionChoices(id,data={}){ownerAssets=await ownerChoices(id);assetOptions('content-preview-asset','preview',data.previewAssetId);
@@ -197,6 +198,7 @@ const nullable=id=>$(id).value||null;
 const duration=id=>$(id).value?Math.round(Number($(id).value)*1000):null;
 function dataFromForm(){if(module==='tracks')return {metadata:metadata(),siteAudioMode:(current?.draft??current?.published)?.data.siteAudioMode==='preview'?'preview':'none',durationMs:duration('content-duration'),legacyRevisionId:null,coverAssetId:nullable('content-cover'),lyricsAssetId:nullable('content-lyrics')};
  if(module==='promotions')return {enabled:$('content-promote').checked,previewEnabled:$('content-preview-enable').checked,previewAssetId:nullable('content-preview-asset'),sortOrder:Number($('content-sort').value),selectedPlatformIds:selected('content-platform-ids'),selectedClipIds:selected('content-clip-ids')};
+ if(module==='clips'&&$('content-clip-source').value==='youtube')return {metadata:metadata(),youtubeURL:$('content-youtube-url').value.trim(),youtubeEmbeddingConfirmed:$('content-youtube-confirm').checked};
  if(module==='clips')return {metadata:metadata(),mediaAssetId:nullable('content-video'),posterAssetId:nullable('content-poster'),durationMs:duration('content-clip-duration'),subtitles:{...subtitleEdits,[$('content-locale').value]:$('content-subtitles').value}};
  if(module==='games')return {metadata:metadata(),launchUrl:nullable('content-launch'),supportedDevices:[...document.querySelectorAll('[data-device]:checked')].map(n=>n.dataset.device),screenshotIds:selected('content-screenshots')};
  return {featuredTrackId:nullable('content-featured-track'),featuredGameId:nullable('content-featured-game'),selectedTrackIds:selected('content-selected-tracks'),selectedClipIds:selected('content-selected-clips'),selectedUpdateIds:[]};
@@ -224,7 +226,7 @@ function renderPreview(result){show('content-preview',true);const card=$('conten
  if(m){card.append(el('p',m.title?.[m.originalLocale]??names[module],'content-preview-card-title'));if(m.creatorName)card.append(el('p',m.creatorName));if(m.summary?.[m.originalLocale])card.append(el('p',m.summary[m.originalLocale]));if(m.story)card.append(el('p',m.story));}
  else if(module==='promotions'){card.append(el('p',d.enabled?'推广已启用':'推广已停止','content-preview-card-title'),el('p',d.previewEnabled?'独立试听已核对':'不提供站内试听'),el('p','已选平台 '+d.selectedPlatformIds.length+' 个 · 视频 '+d.selectedClipIds.length+' 条'));}
  else card.append(el('p','首页引用已核对','content-preview-card-title'),el('p','主推歌曲 '+(d.featuredTrackId?'已选择':'留空')+' · 游戏 '+(d.featuredGameId?'已选择':'留空')));
- card.append(el('p','版本 '+result.revision+' · 当前资源与关联校验通过','content-version-note'));$('content-preview').scrollIntoView({block:'nearest',behavior:'auto'});
+ card.append(el('p','版本 '+result.revision+(d.youtubeURL?' · 关联与人工确认已核对，仍需实际核对 YouTube 播放':' · 当前资源与关联校验通过'),'content-version-note'));$('content-preview').scrollIntoView({block:'nearest',behavior:'auto'});
 }
 function updatePlatformState(id,value){for(const row of listItems)if(row.id===id)row.platformStatus=value;renderList();}
 async function renderPlatforms(item){item=listItems.find(row=>row.id===item.id)??item;hideEditors();show('content-platform-editor',true);const panel=$('content-platform-editor');panel.replaceChildren();text('content-editor-heading',item.title??'发行平台');text('content-version','外部发行状态独立于网站作品公开。');text('content-state','平台入口');const result=await request('/platforms?trackId='+item.id),records=result.items;
@@ -270,6 +272,9 @@ $('content-history-more').addEventListener('click',()=>{void work(async()=>{cons
 $('content-form').addEventListener('submit',e=>{e.preventDefault();void work(module==='home'?applyHome:save);});
 $('content-form').addEventListener('input',e=>{if(['song-cover-file','song-lyrics-file','song-rights-confirm'].includes(e.target.id))return;if(e.target.closest('[data-campaign-ui]')||['content-due','content-rollback-version','content-publication-channel','content-post-id','content-post-url','content-post-time'].includes(e.target.id))return;dirty=true;show('content-preview',false);text('content-version','有未保存的修改 · 请先保存草稿');if(module==='home'){text('content-state','待更新首页');text('content-home-feedback','选择已更改，点击“更新首页”后生效。');$('content-home-feedback').dataset.error='false';}controls();});
 $('content-parent').addEventListener('change',()=>{if(module==='promotions')void work(()=>promotionChoices($('content-parent').value));});
+function renderClipSource(){const youtube=$('content-clip-source').value==='youtube';if(workbench){show('work-assets-section',!youtube&&Boolean(current?.id));text('work-publish-help',youtube?'确认视频的展示权利与嵌入设置后，先保存草稿再核对公开内容。':'确认素材权利后，再核对公开内容。');}show('content-youtube-fields',youtube);show('content-local-clip-fields',!youtube);for(const n of document.querySelectorAll('#content-youtube-fields input'))n.disabled=!youtube;for(const n of document.querySelectorAll('#content-local-clip-fields input,#content-local-clip-fields select,#content-local-clip-fields textarea'))n.disabled=youtube;}
+$('content-clip-source').addEventListener('change',renderClipSource);
+$('content-youtube-url').addEventListener('input',()=>{$('content-youtube-confirm').checked=false;});
 $('content-video').addEventListener('change',()=>{const a=ownerAssets.find(a=>a.id===$('content-video').value);if(a?.durationMs)$('content-clip-duration').value=a.durationMs/1000;});
 $('content-subtitles').addEventListener('input',()=>{subtitleEdits[$('content-locale').value]=$('content-subtitles').value;});$('content-locale').addEventListener('change',()=>{if(module==='clips')$('content-subtitles').value=subtitleEdits[$('content-locale').value]??'';});
 $('content-new').addEventListener('click',()=>{if(workbench&&catalogActive){if(dirty){status('请先保存当前草稿。');return;}show('work-new-menu',$('work-new-menu').hidden);return;}if(dirty){status('请先保存当前草稿。');return;}current=null;newObject=true;existingTrackId=null;void work(()=>renderForm(['promotions','home'].includes(module)?{enabled:false,previewEnabled:false}:{metadata:{originalLocale:'zh-Hans',title:{'zh-Hans':''},creatorName:module==='tracks'?'Station Cat':undefined}}));});

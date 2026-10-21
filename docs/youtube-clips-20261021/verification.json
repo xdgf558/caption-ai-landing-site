@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-21",
+  "status": "local-verified-not-deployed",
+  "baseCommit": "d382c81d05569a1219077636a0318567016fd982",
+  "tests": {
+    "clips": {
+      "passed": 35,
+      "failed": 0,
+      "logPath": "/tmp/station-youtube-clips-regression-final.log",
+      "logSHA256": "ca4e1ae7d2d46cf0598c7f266e3e254741385bb14d2107bdcd7fdbd95be87efc"
+    },
+    "contentAdmin": {
+      "passed": 142,
+      "failed": 0,
+      "logPath": "/tmp/station-youtube-admin-regression-final.log",
+      "logSHA256": "a520d659b9a2a67ee461165a7a24f1016f7c79c0e818b56b42193f4c4a3c93d2"
+    },
+    "publicContent": {
+      "passed": 64,
+      "failed": 0,
+      "logPath": "/tmp/station-youtube-public-regression-final.log",
+      "logSHA256": "fbd5004df2871594612a71b0b0bd08d7bb9e725e3ff80e6c39e5a4e551e5be2f"
+    },
+    "stagingImportGate": {
+      "command": "npm run test:music:staging",
+      "exitCode": 0,
+      "logPath": "/tmp/station-youtube-staging-fix.log",
+      "logSHA256": "cdc5829d5337a90ed00442ac2743555a9ff2f6eb22f8366975a01b8ae7add6c2",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    "fullNpmTest": {
+      "command": "npm test",
+      "exitCode": 0,
+      "logPath": "/tmp/station-youtube-full-test-fix.log",
+      "logSHA256": "6b3c6bb7c062e863f1f6485a1f8a1217d58e11df2ad044e740feec4423d749b5"
+    }
+  },
+  "build": {
+    "pages": 185,
+    "postbuild": "passed",
+    "allowEmptySerialContent": true,
+    "productionDeploymentArtifact": false,
+    "logPath": "/tmp/station-youtube-build-final.log",
+    "logSHA256": "cf1305c6dc5fc0c54ac2eee9494547404b07a34a2ac214182402936c2fb315eb"
+  },
+  "adminUI": {
+    "savedAndReopenedCanonicalYouTubeDraft": true,
+    "removedShareQuery": true,
+    "embeddingConfirmationPersisted": true,
+    "localUploadRequirementsHidden": true,
+    "evidence": "admin-local-draft.png",
+    "data": "local synthetic only"
+  },
+  "sourceSHA256": {
+    "src/redesign/youtubeClip.js": "160ea9addae03755e13bb5b7b1d8daa686146eb83024d698740999b6e7181fcf",
+    "src/redesign/contentAdminModel.js": "0932339a64cd938edc4034e21ddd75e3692534380cf68f62e7f131ed0caaa566",
+    "src/redesign/contentAdminStore.js": "175229ad34342405c07397483f48a5def604fd152034b824f75859fa90f0a60c",
+    "src/redesign/contentAdminValidation.js": "c79997ce05dbf6412be404aaeed200e2ca71b2e886ef53fb651e39172c27436f",
+    "src/redesign/publicContent.js": "1d1113a1c97c2b1bfa0d6c2cc081d9134747e6fe512bdc7d9539b213609dad09",
+    "src/redesign/publicHttp.js": "829fc79fb14a85840889cb3651f5fe96d2de5e280501b5b313b2c31242aae772",
+    "src/scripts/adminStationContent.js": "6e9f49d62a696e49c754ed35be7a8c26644ce39633ab1f256c2c9ee110f0bd73",
+    "src/scripts/stationWorkbenchState.js": "ab3a5631ca644fca34f55be453470a9e87998f7f82c1a597cec0bfbf673e27e5",
+    "src/components/redesign/StationAdminWorkbench.astro": "e8759813853ca7bbbfc4445ee0cfcd678c3602128d29e717d652fbfde7f644dd",
+    "scripts/test-station-youtube-clips.mjs": "9de217223857c0dec124d8aa6bcc3da9d6933b0430a494e20c7f4cc9767058a6",
+    "scripts/test-music-staging-gate.mjs": "ba4d498eb1175edf9c812c556a15568eb8f8a3945b1e866dea11ea990e8d7c09"
+  },
+  "notPerformed": [
+    "complete hosted CI for final PR head",
+    "deployment",
+    "production content publication",
+    "real owner video playback",
+    "Apple privacy publication"
+  ],
+  "hostedCI": {
+    "initialHead": "8170d4f9a024398edadad4b7e1c7c5d54e641d7f",
+    "initialRun": "https://github.com/xdgf558/caption-ai-landing-site/actions/runs/39540369197",
+    "initialResult": "failed",
+    "failure": "Run tests: staging module graph rejected redesign/youtubeClip.js, a new pure validation helper missing from the explicit allowlist.",
+    "failedStepLogSHA256": "d7cb2d24f4279e86f5a40db6d133443d7ccf674ec9699cde68846a208e003af3",
+    "correction": "Add only redesign/youtubeClip.js to allowedShared; retain traversal, forbidden-module and external-import assertions. No product code changes.",
+    "correctionHostedResult": "pending-new-head-run"
+  }
+}

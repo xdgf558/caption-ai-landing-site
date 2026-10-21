@@ -1,5 +1,6 @@
 import { fields, fail, musicId, editVersion, isObject } from '../music/adminValidation.js';
 import { metadata, strictJson, idList, slug, platformUrl, platform, plain, millis, positive } from './publicValidation.js';
+import { youtubeIDFromURL, youtubeReference, youtubeWatchURL } from './youtubeClip.js';
 import { stationHomeConfig } from '../data/station-home.js';
 
 export const contentModels = Object.freeze({
@@ -41,7 +42,15 @@ export function draftData(type,input) {
       selected_platform_ids_json:JSON.stringify(ids(input.selectedPlatformIds??[])),selected_clip_ids_json:JSON.stringify(ids(input.selectedClipIds??[],4)),sort_order:integer(input.sortOrder??0)};
   }
   if(type==='clips') {
-    fields(input,['metadata','mediaAssetId','posterAssetId','durationMs','subtitles']);
+    fields(input,['metadata','mediaAssetId','posterAssetId','durationMs','subtitles','youtubeURL','youtubeEmbeddingConfirmed']);
+    const meta=cleanMetadata(input.metadata,type);
+    if(input.youtubeURL!=null) {
+      const videoId=youtubeIDFromURL(input.youtubeURL);
+      if(!videoId||input.youtubeEmbeddingConfirmed!==true||input.mediaAssetId!=null||input.posterAssetId!=null||input.durationMs!=null||!isObject(input.subtitles??{})||Object.keys(input.subtitles??{}).length) fail('INVALID_INPUT',400);
+      meta.youtube={videoId,embeddingConfirmed:true};
+      return {metadata_json:JSON.stringify(meta),media_asset_id:null,poster_asset_id:null,duration_ms:null,subtitles_json:'{}'};
+    }
+    if(input.youtubeEmbeddingConfirmed===true) fail('INVALID_INPUT',400);
     const subtitles=input.subtitles??{}; if(!isObject(subtitles)||JSON.stringify(subtitles).length>8000||Object.keys(subtitles).some(k=>!['zh-Hant','zh-Hans','en','ja'].includes(k)||!plain(subtitles[k],2000))) fail('INVALID_INPUT',400);
     return {metadata_json:JSON.stringify(cleanMetadata(input.metadata,type)),media_asset_id:ref('mediaAssetId'),poster_asset_id:ref('posterAssetId'),duration_ms:input.durationMs==null?null:integer(input.durationMs,1,1800000),subtitles_json:JSON.stringify(subtitles)};
   }
@@ -60,7 +69,11 @@ export function viewData(type,r) {
   const meta=()=>strictJson(r.metadata_json), list=k=>strictJson(r[k]);
   if(type==='tracks') return {metadata:meta(),legacyRevisionId:r.legacy_revision_id,siteAudioMode:r.site_audio_mode,durationMs:r.duration_ms,coverAssetId:r.cover_asset_id,lyricsAssetId:r.lyrics_asset_id};
   if(type==='promotions') return {enabled:r.enabled===1,previewEnabled:r.preview_enabled===1,previewAssetId:r.preview_asset_id,selectedPlatformIds:list('selected_platform_ids_json'),selectedClipIds:list('selected_clip_ids_json'),sortOrder:r.sort_order};
-  if(type==='clips') return {metadata:meta(),mediaAssetId:r.media_asset_id,posterAssetId:r.poster_asset_id,durationMs:r.duration_ms,subtitles:list('subtitles_json')};
+  if(type==='clips') {
+    const {youtube,...metadata}=meta(), reference=youtubeReference({youtube});
+    return {metadata,mediaAssetId:r.media_asset_id,posterAssetId:r.poster_asset_id,durationMs:r.duration_ms,subtitles:list('subtitles_json'),
+      youtubeURL:reference?youtubeWatchURL(reference.videoId):null,youtubeEmbeddingConfirmed:Boolean(reference)};
+  }
   if(type==='games') return {metadata:meta(),launchUrl:r.launch_url,supportedDevices:list('supported_devices_json'),screenshotIds:list('screenshot_ids_json')};
   return {featuredTrackId:r.featured_track_id,featuredGameId:r.featured_game_id,selectedTrackIds:list('selected_track_ids_json'),selectedClipIds:list('selected_clip_ids_json'),selectedUpdateIds:[]};
 }

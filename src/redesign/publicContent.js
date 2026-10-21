@@ -1,3 +1,4 @@
+import { youtubeReference, youtubeWatchURL } from './youtubeClip.js';
 import { stationHomeConfig } from '../data/station-home.js';
 import { buildHomeView } from './home.js';
 import { uuid, slug, positive, millis, metadata, strictJson, idList, platform, platformUrl, contentBase, localizedPath } from './publicValidation.js';
@@ -108,6 +109,17 @@ export async function projectClip(runtime, row, options) {
   const parent = metadata(row.parent_metadata_json, locale, { artist: true });
   const assets = assetRows(row.assets_json, 2), publications = jsonRows(row.publications_json, 10);
   if (!meta || !parent || !assets || !publications || !millis(row.parent_published_at) || row.parent_published_at > now) return null;
+  const rawMetadata = strictJson(row.metadata_json);
+  if (Object.hasOwn(rawMetadata, 'youtube')) {
+    const source = youtubeReference(rawMetadata);
+    if (!options.includeYouTube || !source || row.media_asset_id !== null || row.poster_asset_id !== null || row.duration_ms !== null ||
+        Object.keys(strictJson(row.subtitles_json)).length) return null;
+    return { dto: { id: row.id, trackId: row.track_id, revision: row.published_revision, type: row.type,
+      originalLocale: meta.originalLocale, title: meta.title, summary: meta.summary, publishedAt: iso(row.published_at),
+      provider: 'youtube', youtubeVideoId: source.videoId, watchUrl: youtubeWatchURL(source.videoId),
+      durationMs: null, posterUrl: null, mediaUrl: null,
+      track: { id: row.track_id, title: parent.title, href: localizedPath(locale, 'music/tracks', row.track_slug) } }, ready: new Map(), meta };
+  }
   const byId = new Map(assets.map(asset => [asset.id, asset]));
   const video = byId.get(row.media_asset_id), poster = byId.get(row.poster_asset_id);
   if (!publicAssetIdentity(video, { ownerId: row.id, kind: row.type, now, media: true }) ||

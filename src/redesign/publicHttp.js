@@ -119,10 +119,12 @@ export async function handleStationContent(request, env, { clock = Date.now, tim
   let input, variant = null, expectedRevision = null, expectedPromotion = null, coverCacheVersion = null;
   try {
     const allowed = ['tracks', 'games'].includes(currentRoute.kind) ? ['locale', 'limit', 'cursor', ...(currentRoute.kind === 'tracks' ? ['q', 'sort'] : [])] :
-      currentRoute.kind === 'clips' ? ['locale', 'limit', 'cursor'] :
+      currentRoute.kind === 'clips' ? ['locale', 'limit', 'cursor', ...(currentRoute.slug ? ['include'] : [])] :
       ['audio', 'playback'].includes(currentRoute.kind) ? ['variant', ...(currentRoute.kind === 'audio' ? ['v', 'p'] : ['locale'])] :
       currentRoute.kind === 'asset' ? ['size', 'v'] : ['locale'];
     input = requestInput(url, allowed);
+    if (url.searchParams.has('include') && url.searchParams.get('include') !== 'youtube') throw new TypeError('provider');
+    input.includeYouTube = currentRoute.kind === 'clips' && Boolean(currentRoute.slug) && url.searchParams.get('include') === 'youtube';
     if ((currentRoute.slug && !slug(currentRoute.slug)) || (currentRoute.id && !uuid(currentRoute.id))) throw new TypeError('path');
     if (currentRoute.kind === 'asset' && url.searchParams.has('size') && !['card', 'display'].includes(url.searchParams.get('size'))) throw new TypeError('size');
     if (currentRoute.kind === 'asset' && url.searchParams.has('v')) {
