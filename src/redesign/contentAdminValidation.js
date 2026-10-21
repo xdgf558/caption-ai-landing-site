@@ -1,3 +1,4 @@
+import { youtubeReference } from './youtubeClip.js';
 import { primary, rows } from '../music/adminStore.js';
 import { fail } from '../music/adminValidation.js';
 import { publicAssetIdentity, previewIdentity, resourceReady } from './publicResources.js';
@@ -60,6 +61,12 @@ export async function validateContentPublication(runtime,x,r,now,{homePromotions
     // never used as a new grant and is still rechecked by the old delivery API.
     if(!metadata(parent.published.metadata_json,'zh-Hans',{artist:true})) fieldFailure('STATION_REFERENCE_NOT_PUBLIC',field+'.trackId');
     await trackContent(parent.published,field+'.track');
+    if(Object.hasOwn(strictJson(cr.metadata_json),'youtube')) {
+      if(!youtubeReference(strictJson(cr.metadata_json))||cr.media_asset_id!==null||cr.poster_asset_id!==null||cr.duration_ms!==null||Object.keys(strictJson(cr.subtitles_json)).length) fieldFailure('INVALID_INPUT',field+'.youtubeURL');
+      // Website/home players only understand first-party video in this release.
+      if(x.type!=='clips') fieldFailure('STATION_REFERENCE_NOT_PUBLIC',field+'.youtubeURL');
+      return;
+    }
     const media=await asset(cr.media_asset_id,c.id,c.type,field+'.mediaAssetId',true);
     await asset(cr.poster_asset_id,c.id,'poster',field+'.posterAssetId',true);
     if(cr.duration_ms!==media.duration_ms) fieldFailure('STATION_DURATION_MISMATCH',field+'.durationMs');

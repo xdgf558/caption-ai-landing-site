@@ -1,3 +1,4 @@
+import { youtubeIDFromURL } from '../redesign/youtubeClip.js';
 export const workTypes = ['tracks', 'games', 'clips'];
 export async function resolveAdminOwner(request, id, { types = workTypes, listed = [] } = {}) {
   if (typeof id !== 'string' || !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id)) throw new Error('指定作品编号无效，请从作品内容重新进入。');
@@ -40,6 +41,7 @@ export function catalogHasMore(pages, filter = 'all') {
   return (filter === 'all' ? workTypes : workTypes.filter(type => type === filter)).some(type => Boolean(pages[type]?.nextBefore));
 }
 export function listAssetState(item) {
+  if (item.type === 'clips' && item.clipProvider === 'youtube' && item.expectedAssetCount === 0) return 'external';
   const assets = item.assetDetails ?? [];
   if (!assets.length || assets.length < item.expectedAssetCount || assets.some(asset => asset.state !== 'validated')) return 'missing';
   if (assets.some(asset => asset.rightsStatus === 'blocked')) return 'blocked';
@@ -57,6 +59,7 @@ export function adminListImage(item, type) {
 export function publicationFormReady({ identity, busy, pending, dirty, current, assets, type }) {
   if (!identity || identity.role !== 'publisher' || busy || pending || dirty || !current?.draft) return false;
   const data = current.draft.data;
+  if (type === 'clips' && data.youtubeURL != null) return Boolean(youtubeIDFromURL(data.youtubeURL)) && data.youtubeEmbeddingConfirmed === true && !data.mediaAssetId && !data.posterAssetId;
   const ids = type === 'tracks' ? [data.coverAssetId, data.lyricsAssetId].filter(Boolean)
     : type === 'games' ? data.screenshotIds ?? [] : type === 'clips' ? [data.mediaAssetId, data.posterAssetId].filter(Boolean) : [];
   if ((type==='tracks'&&!data.coverAssetId)||(type==='clips'&&(!data.mediaAssetId||!data.posterAssetId))||(['tracks', 'games', 'clips'].includes(type) && !ids.length)) return false;
