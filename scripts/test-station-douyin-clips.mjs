@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { randomUUID } from 'node:crypto';
-import { douyinIDFromURL } from '../src/redesign/douyinClip.js';
+import { douyinIDFromURL, douyinShortURL } from '../src/redesign/douyinClip.js';
 import { publicationFormReady, listAssetState } from '../src/scripts/stationWorkbenchState.js';
 import { draftData, viewData } from '../src/redesign/contentAdminModel.js';
 import { createContentAdminRuntime } from './helpers/station-content-admin-runtime.mjs';
@@ -52,10 +52,11 @@ test('real Worker/D1 publication, compatibility, replay, revocation and rollback
   assert.equal((await send(base + '/clips/' + clip + '/publish', { method: 'POST', body: { revision: 1 } })).status, 200);
   assert.deepEqual((await send(path)).body.items, []); // Existing clients/web pages stay file-only.
   assert.deepEqual((await send('/api/station/content/clips')).body.items, []);
-  for (const suffix of ['?include=all', '?include=douyin&include=douyin']) assert.equal((await send(path + suffix)).status, 400);
+  for (const suffix of ['?include=all', '?include=douyin&include=douyin', '?include=', '?include=douyin,douyin', '?include=youtube,douyin,youtube', '?include=douyin,', '?include=douyin,%20youtube', '?include=Douyin']) assert.equal((await send(path + suffix)).status, 400);
   assert.equal((await send('/api/station/content/clips?include=douyin')).status, 400);
   assert.deepEqual((await send(path + '?include=youtube')).body.items, []);
   assert.equal((await send(path + '?include=youtube,douyin')).body.items.length, 1);
+  assert.deepEqual((await send(path + '?include=douyin,youtube')).body.items, (await send(path + '?include=youtube,douyin')).body.items);
   const listed=await send(base+'/clips');assert.equal(listed.body.items[0].clipProvider,'douyin');assert.equal(listed.body.items[0].expectedAssetCount,0);
   const live = await send(path + '?include=douyin'); assert.equal(live.status, 200); assert.equal(live.headers.get('cache-control'), 'no-store');
   assert.equal(live.body.items.length, 1); const dto = live.body.items[0];
@@ -100,6 +101,34 @@ test('resolver failures are bounded and direct identity needs no request', async
   assert.equal(direct.videoId,id);assert.equal(requests,0);
   await assert.rejects(resolveDouyinURL('https://v.douyin.com/AbCd123/', {timeoutMs:10,transport:async(_,{signal})=>new Promise((_,reject)=>signal.addEventListener('abort',()=>reject(Error('aborted'))))}));
   await assert.rejects(resolveDouyinURL('https://v.douyin.com/AbCd123/', {transport:async()=>new Response('<html>challenge</html>')}));
+});
+
+test('short links canonicalize optional trailing slash and bounded share fields without widening hosts or paths', async () => {
+  const canonical='https://v.douyin.com/AbCd123/';
+  for (const value of ['https://v.douyin.com/AbCd123',canonical,canonical+'?region=CN&share_sign=test-token','https://v.douyin.com/AbCd123?utm_source=app']) {
+    assert.equal(douyinShortURL(value),canonical);
+    const seen=[];
+    const result=await resolveDouyinURL(value,{transport:async(url)=>{seen.push(url);return new Response(null,{status:302,headers:{location:`https://www.douyin.com/video/${id}`}});}});
+    assert.deepEqual(seen,[canonical]);assert.equal(result.videoId,id);
+  }
+  for (const value of [canonical+'?unknown=1',canonical+'?region=CN&region=US',canonical+'?region='+ 'a'.repeat(257),canonical+'?redirect=https%3A%2F%2Fevil.test',canonical+'?share_sign=a%0Ab',canonical+'#x','https://v.douyin.com:443/AbCd123','https://v.douyin.com.evil.test/AbCd123','https://user@v.douyin.com/AbCd123','https://v.douyin.com/AbCd123/extra','https://v.douyin.com/%41bCd123','https://v.douyin.com/a/../AbCd123']) {
+    assert.equal(douyinShortURL(value),null,value);
+    let calls=0;await assert.rejects(resolveDouyinURL(value,{transport:async()=>{calls++;throw Error('unexpected request');}}));assert.equal(calls,0);
+  }
+  let calls=0;
+  await assert.rejects(resolveDouyinURL(canonical,{transport:async()=>{calls++;return new Response(null,{status:302,headers:{location:'https://v.douyin.com/AbCd123?region=CN'}});}}));
+  assert.equal(calls,1,'Canonical aliases cannot extend a redirect loop');
+});
+
+test('only publishers may resolve canonical or short Douyin URLs', async t => {
+  const editor='second-content-fixture@example.test';
+  const f=await createContentAdminRuntime({bindings:{STATION_CONTENT_EDITOR_EMAILS:editor}});t.after(()=>f.close());
+  const token=await f.token({email:editor});
+  const send=(auth,url)=>f.mf.dispatchFetch('http://content.local.test/admin/api/music/site-content/clips/resolve-douyin',{method:'POST',body:JSON.stringify({url}),headers:{'Cf-Access-Jwt-Assertion':auth,'Content-Type':'application/json','X-Requested-With':'StationCatMusicAdmin','Idempotency-Key':randomUUID(),Origin:'http://content.local.test'}});
+  for (const url of [`https://www.douyin.com/video/${id}`,'https://v.douyin.com/AbCd123']) {
+    const response=await send(token,url);assert.equal(response.status,403);assert.match(await response.text(),/STATION_PUBLISHER_REQUIRED/);
+  }
+  const response=await send(f.actorToken,`https://www.douyin.com/video/${id}`);assert.equal(response.status,200);assert.equal((await response.json()).videoId,id);
 });
 
 import { contentRequest, createContentController } from '../src/scripts/stationContentClient.js';

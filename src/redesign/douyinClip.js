@@ -23,7 +23,11 @@ export function douyinIDFromURL(value) {
 }
 export function douyinShortURL(value) {
   const url = address(value);
-  return url?.hostname === 'v.douyin.com' && !url.search && /^\/[A-Za-z0-9_-]{4,64}\/$/.test(url.pathname) ? url.href : null;
+  if (url?.hostname !== 'v.douyin.com') return null;
+  const match = /^\/([A-Za-z0-9_-]{4,64})\/?$/.exec(url.pathname);
+  // The bounded share fields accepted by address() are attribution only.
+  // Strip them before any request; one canonical URL also bounds redirect loops.
+  return match ? `https://v.douyin.com/${match[1]}/` : null;
 }
 export function douyinReference(metadata) {
   const value = metadata?.douyin;

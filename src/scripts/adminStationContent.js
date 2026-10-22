@@ -38,6 +38,7 @@ function controls(){
   const upload=songUploader?.pending();const locked=!identity||busy||Boolean(controller?.pending())||Boolean(upload);$('content-fields').disabled=locked;
   for(const b of document.querySelectorAll('.content-tabs button,[data-work-filter],[data-work-create],#content-new,#content-search-submit,#content-more'))b.disabled=locked;
   const publisher=identity?.role==='publisher',r=current?.draft??current?.published;
+  $('content-douyin-resolve').disabled=locked||!publisher||$('content-clip-source').value!=='douyin';
   $('content-save').disabled=locked||(module==='home'&&(!publisher||!r));
   $('content-publish').disabled=workbench&&module==='tracks'?locked||!publisher:workbench?!publicationFormReady({identity,busy,pending:Boolean(controller?.pending()),dirty,current,assets:ownerAssets,type:module}):locked||!publisher||dirty||!current?.draft;
   $('content-preflight').disabled=locked||dirty||!r;
@@ -279,9 +280,11 @@ function renderClipSource(){
  for(const [kind,id] of [['youtube','content-youtube-fields'],['douyin','content-douyin-fields'],['file','content-local-clip-fields']]){
   show(id,source===kind);for(const n of document.querySelectorAll('#'+id+' input,#'+id+' select,#'+id+' textarea,#'+id+' button'))n.disabled=source!==kind;
  }
+ controls();
 }
 $('content-douyin-url').addEventListener('input',()=>{$('content-douyin-confirm').checked=false;});
 $('content-douyin-resolve').addEventListener('click',()=>{void work(async()=>{
+ if(identity?.role!=='publisher')throw new Error('此操作需要可发布管理员。');
  const value=$('content-douyin-url').value,owner=current?.id;
  const result=await request('/clips/resolve-douyin',{method:'POST',body:{url:value.trim()},key:crypto.randomUUID()});
  if(module!=='clips'||$('content-clip-source').value!=='douyin'||current?.id!==owner||$('content-douyin-url').value!==value)return;

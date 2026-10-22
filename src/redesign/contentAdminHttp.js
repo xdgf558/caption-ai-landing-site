@@ -23,6 +23,7 @@ export async function handleContentAdmin(request,env,actor,query,readBody) {
   if(!read)mutationKey(context.key);
   if(path==='/clips/resolve-douyin') {
     if(request.method!=='POST')fail('METHOD_NOT_ALLOWED',405);
+    requirePublisher(env,actor);
     fields(query,[]);const input=await readBody(request);fields(input,['url']);
     return resolveDouyinURL(input.url);
   }
