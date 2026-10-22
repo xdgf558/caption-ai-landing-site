@@ -1,0 +1,32 @@
+{
+  "recordedAt": "2026-10-11T23:55:13.402Z",
+  "activeVersion": "cf69fe92-f8cd-45ff-a2a8-87cac1546814",
+  "sourceRevision": "64e0f113ef9310242cad21bdf3abb667734f2575",
+  "baselineSnapshotSha256": "b25f7e4a048f2cf7907acf58312630c0de1d19abda9014addd2d6e0d8adfc9dc",
+  "ledger": 18,
+  "counts": {
+    "legacy_tracks": 12,
+    "legacy_assets": 35,
+    "website_tracks": 0,
+    "promotions": 0,
+    "clips": 0,
+    "games": 1,
+    "homes": 1,
+    "guards": 0
+  },
+  "quota": {
+    "quotaBytes": 943718400,
+    "chargedBytes": 114016451,
+    "availableBytes": 829701949
+  },
+  "accessConfigured": true,
+  "allowedAdminCount": 1,
+  "accessControlPlaneRead": false,
+  "accessPolicyCount": null,
+  "accessPolicyReadLimit": "Zone-level Access policy API returned 403 to the existing Wrangler credential. Account-level application list is empty. No Access configuration changes are authorized or performed.",
+  "authenticatedAdminPageObserved": true,
+  "stationAdminEnabled": false,
+  "stationUploadsEnabled": false,
+  "sharedMusicUploadsEnabled": true,
+  "productionWrites": 0
+}
