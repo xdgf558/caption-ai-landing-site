@@ -11,8 +11,8 @@ const states={draft:'草稿',scheduled:'已安排定时',published:'已公开',a
 const providers={netease:'网易云音乐',qishui:'汽水音乐',apple_music:'Apple Music',youtube:'YouTube',spotify:'Spotify'};
 const platformStates={unconfigured:'未添加',planned:'待发行',live:'已上线',unavailable:'暂不可用',removed:'已下架',unverified:'待核对'};
 const platformState=item=>Object.hasOwn(platformStates,item.platformStatus)?item.platformStatus:'unverified';
-const errors={MUSIC_INVALID_METADATA:'新歌曲的标题最多 120 字、艺名最多 80 字。',STATION_REFERENCE_BUDGET:'关联的素材或平台过多，请减少精选歌曲或短视频后重试。',STATION_CONTENT_ADMIN_DISABLED:'内容服务尚未启用。',STATION_CONTENT_SCHEMA_UNAVAILABLE:'内容服务尚未准备就绪。',STATION_EDIT_CONFLICT:'版本已变化。请重新读取，再核对你的修改。',STATION_ASSET_RIGHTS_REQUIRED:'关联素材缺少使用权利登记。',STATION_ASSET_NOT_READY:'素材尚未就绪，或使用权利已失效。',STATION_PREVIEW_NOT_INDEPENDENT:'试听必须使用同一歌曲的独立剪辑。',STATION_ASSET_OBJECT_CHANGED:'存储中的素材已变化，请重新核对。',STATION_REFERENCE_NOT_PUBLIC:'关联作品尚未公开。',STATION_PLATFORM_NOT_VERIFIED:'所选平台尚未上线或未完成网址核对。',STATION_METADATA_REQUIRED:'请补齐作品资料。',STATION_ASSET_REQUIRED:'请选择必需的素材。',STATION_PUBLISHER_REQUIRED:'此操作需要可发布管理员。',STATION_FULL_REFERENCE_NOT_CURRENT:'完整资源必须引用现有的公开封存版本。',STATION_FULL_POLICY_MISMATCH:'原版本当前的免费规则与所选模式不一致。',STATION_GAME_DETAILS_REQUIRED:'请补齐设备与就绪截图。',STATION_HOME_CLIP_PARENT_REQUIRED:'首页短视频须属于主推歌曲，并同时在推广模块选中。',STATION_PROMOTION_NOT_ENABLED:'所选歌曲的推广尚未启用。',STATION_SCHEDULE_ACTOR_REVOKED:'安排定时的管理员已不具备发布权限。',STATION_PLATFORM_URL_INVALID:'网址不属于所选平台的有效作品地址。',STATION_PLATFORM_VERIFICATION_REQUIRED:'上线入口需要真实网址与人工核对时间。',INVALID_INPUT:'请核对填写的格式和必填项。'};
-const fieldNames={metadata:'作品资料',coverAssetId:'歌曲封面',lyricsAssetId:'歌词素材',legacyRevisionId:'完整播放版本',siteAudioMode:'站内音频模式',previewAssetId:'独立试听素材',trackId:'所属歌曲',mediaAssetId:'视频资源',posterAssetId:'视频海报',durationMs:'媒体时长',launchUrl:'游戏运行地址',screenshotIds:'游戏截图',selectedPlatformIds:'平台入口',selectedClipIds:'关联视频',tracks:'首页歌曲',promotion:'推广配置',references:'关联数量'};
+const errors={STATION_DOUYIN_URL_INVALID:'请使用抖音单条视频地址，或先解析 v.douyin.com 短链接。',STATION_DOUYIN_RESOLVE_FAILED:'短链接未能解析，请打开抖音网页后复制完整视频地址。',MUSIC_INVALID_METADATA:'新歌曲的标题最多 120 字、艺名最多 80 字。',STATION_REFERENCE_BUDGET:'关联的素材或平台过多，请减少精选歌曲或短视频后重试。',STATION_CONTENT_ADMIN_DISABLED:'内容服务尚未启用。',STATION_CONTENT_SCHEMA_UNAVAILABLE:'内容服务尚未准备就绪。',STATION_EDIT_CONFLICT:'版本已变化。请重新读取，再核对你的修改。',STATION_ASSET_RIGHTS_REQUIRED:'关联素材缺少使用权利登记。',STATION_ASSET_NOT_READY:'素材尚未就绪，或使用权利已失效。',STATION_PREVIEW_NOT_INDEPENDENT:'试听必须使用同一歌曲的独立剪辑。',STATION_ASSET_OBJECT_CHANGED:'存储中的素材已变化，请重新核对。',STATION_REFERENCE_NOT_PUBLIC:'关联作品尚未公开。',STATION_PLATFORM_NOT_VERIFIED:'所选平台尚未上线或未完成网址核对。',STATION_METADATA_REQUIRED:'请补齐作品资料。',STATION_ASSET_REQUIRED:'请选择必需的素材。',STATION_PUBLISHER_REQUIRED:'此操作需要可发布管理员。',STATION_FULL_REFERENCE_NOT_CURRENT:'完整资源必须引用现有的公开封存版本。',STATION_FULL_POLICY_MISMATCH:'原版本当前的免费规则与所选模式不一致。',STATION_GAME_DETAILS_REQUIRED:'请补齐设备与就绪截图。',STATION_HOME_CLIP_PARENT_REQUIRED:'首页短视频须属于主推歌曲，并同时在推广模块选中。',STATION_PROMOTION_NOT_ENABLED:'所选歌曲的推广尚未启用。',STATION_SCHEDULE_ACTOR_REVOKED:'安排定时的管理员已不具备发布权限。',STATION_PLATFORM_URL_INVALID:'网址不属于所选平台的有效作品地址。',STATION_PLATFORM_VERIFICATION_REQUIRED:'上线入口需要真实网址与人工核对时间。',INVALID_INPUT:'请核对填写的格式和必填项。'};
+const fieldNames={douyinURL:'抖音视频网址',youtubeURL:'YouTube 视频网址',metadata:'作品资料',coverAssetId:'歌曲封面',lyricsAssetId:'歌词素材',legacyRevisionId:'完整播放版本',siteAudioMode:'站内音频模式',previewAssetId:'独立试听素材',trackId:'所属歌曲',mediaAssetId:'视频资源',posterAssetId:'视频海报',durationMs:'媒体时长',launchUrl:'游戏运行地址',screenshotIds:'游戏截图',selectedPlatformIds:'平台入口',selectedClipIds:'关联视频',tracks:'首页歌曲',promotion:'推广配置',references:'关联数量'};
 Object.assign(errors,{STATION_CAMPAIGNS_DISABLED:'推广链接服务尚未启用。',STATION_CAMPAIGN_SCHEMA_UNAVAILABLE:'推广链接资料尚未准备就绪。',STATION_CAMPAIGN_PROMOTION_REQUIRED:'请先公开有效的推广配置。',STATION_CAMPAIGN_CLIP_REQUIRED:'素材必须是当前推广配置中已公开的关联视频。',STATION_CAMPAIGN_ID_EXISTS:'Campaign 编号已登记，请使用新的编号。',STATION_CAMPAIGN_ALIAS_EXISTS:'这个旧 src 已有映射，请核对原 Campaign。',STATION_CAMPAIGN_UNVERIFIED:'旧记录缺少完整的链接登记，请创建新的 Campaign。'});
 const message=e=>(errors[e.code]??(e.code?'操作未完成，请核对资料或重新读取当前版本。':e.message)??'服务暂时不可用。')+(e.field?' · '+(fieldNames[e.field.split('.').at(-1)]??'关联资料'):'');
 const status=(value,error=false)=>{text('content-status',value);$('content-status').dataset.error=String(error);if(error){if(workbench?.dataset.staticView==='dashboard'){workbench.dataset.connection='error';text('content-role','待重新核对');}$('content-status').scrollIntoView({block:'nearest',behavior:'auto'});}};
@@ -38,6 +38,7 @@ function controls(){
   const upload=songUploader?.pending();const locked=!identity||busy||Boolean(controller?.pending())||Boolean(upload);$('content-fields').disabled=locked;
   for(const b of document.querySelectorAll('.content-tabs button,[data-work-filter],[data-work-create],#content-new,#content-search-submit,#content-more'))b.disabled=locked;
   const publisher=identity?.role==='publisher',r=current?.draft??current?.published;
+  $('content-douyin-resolve').disabled=locked||!publisher||$('content-clip-source').value!=='douyin';
   $('content-save').disabled=locked||(module==='home'&&(!publisher||!r));
   $('content-publish').disabled=workbench&&module==='tracks'?locked||!publisher:workbench?!publicationFormReady({identity,busy,pending:Boolean(controller?.pending()),dirty,current,assets:ownerAssets,type:module}):locked||!publisher||dirty||!current?.draft;
   $('content-preflight').disabled=locked||dirty||!r;
@@ -112,8 +113,8 @@ function workRow(key,item,type){
  if(row.typeNode.dataset.type!==type){row.typeNode.dataset.type=type;row.typeNode.replaceChildren(icon(type==='games'?'game':type==='clips'?'clip':'song'),el('span',type==='games'?'游戏':type==='clips'?'视频':'歌曲'));}
  const state=module==='platforms'?'platform-'+platformState(item):item.legacyLifecycle==='archived'?'legacy_archived':item.status??'';
  if(row.stateNode.dataset.state!==state){row.stateNode.dataset.state=state;row.stateNode.textContent=module==='platforms'?platformStates[platformState(item)]:state==='legacy_archived'?'旧版封存':states[state]??'记录';}
- const assetState=listAssetState(item);
- if(row.assetNode.dataset.state!==assetState){row.assetNode.dataset.state=assetState;row.assetNode.replaceChildren(icon(assetState==='approved'?'ready':'pending'),el('span',{approved:'登记已确认',pending:'权利待确认',blocked:'权利已阻止',missing:'素材待准备',external:'YouTube · 人工确认'}[assetState]));}
+ const assetState=listAssetState(item),assetLabelState=assetState+':'+(item.clipProvider??'');
+ if(row.assetNode.dataset.state!==assetLabelState){row.assetNode.dataset.state=assetLabelState;row.assetNode.replaceChildren(icon(assetState==='approved'?'ready':'pending'),el('span',{approved:'登记已确认',pending:'权利待确认',blocked:'权利已阻止',missing:'素材待准备',external:(item.clipProvider==='douyin'?'抖音':'YouTube')+' · 人工确认'}[assetState]));}
  return row.li;
 }
 function renderList(){
@@ -168,7 +169,7 @@ async function renderForm(data){
    $('content-promote').checked=data.enabled??false;$('content-preview-enable').checked=data.previewEnabled??false;$('content-sort').value=data.sortOrder??0;await promotionChoices(current?.id??$('content-parent').value,data);
    await renderStationCampaigns($('content-campaigns'),current?.id,{controller,identity,work,status});
  }else if(module==='clips'){
-   $('content-clip-source').value=data.youtubeURL?'youtube':'file';$('content-youtube-url').value=data.youtubeURL??'';$('content-youtube-confirm').checked=data.youtubeEmbeddingConfirmed===true;renderClipSource();
+   $('content-clip-source').value=data.douyinURL?'douyin':data.youtubeURL?'youtube':'file';$('content-douyin-url').value=data.douyinURL??'';$('content-douyin-confirm').checked=data.douyinEmbeddingConfirmed===true;$('content-youtube-url').value=data.youtubeURL??'';$('content-youtube-confirm').checked=data.youtubeEmbeddingConfirmed===true;renderClipSource();
    ownerAssets=await ownerChoices(current?.id);assetOptions('content-video',current?.clipType??$('content-clip-type').value,data.mediaAssetId);assetOptions('content-poster','poster',data.posterAssetId);$('content-clip-duration').value=data.durationMs?data.durationMs/1000:'';$('content-subtitles').value=data.subtitles?.[$('content-locale').value]??'';
    subtitleEdits={...(data.subtitles??{})};const p=current?await request('/clips/'+current.id+'/publications'):{items:[]};$('content-publications').replaceChildren(...p.items.map(r=>el('p',r.channel+' · '+r.post_id+' · '+date(r.external_published_at))));
  }else if(module==='games'){
@@ -198,6 +199,7 @@ const nullable=id=>$(id).value||null;
 const duration=id=>$(id).value?Math.round(Number($(id).value)*1000):null;
 function dataFromForm(){if(module==='tracks')return {metadata:metadata(),siteAudioMode:(current?.draft??current?.published)?.data.siteAudioMode==='preview'?'preview':'none',durationMs:duration('content-duration'),legacyRevisionId:null,coverAssetId:nullable('content-cover'),lyricsAssetId:nullable('content-lyrics')};
  if(module==='promotions')return {enabled:$('content-promote').checked,previewEnabled:$('content-preview-enable').checked,previewAssetId:nullable('content-preview-asset'),sortOrder:Number($('content-sort').value),selectedPlatformIds:selected('content-platform-ids'),selectedClipIds:selected('content-clip-ids')};
+ if(module==='clips'&&$('content-clip-source').value==='douyin')return {metadata:metadata(),douyinURL:$('content-douyin-url').value.trim(),douyinEmbeddingConfirmed:$('content-douyin-confirm').checked};
  if(module==='clips'&&$('content-clip-source').value==='youtube')return {metadata:metadata(),youtubeURL:$('content-youtube-url').value.trim(),youtubeEmbeddingConfirmed:$('content-youtube-confirm').checked};
  if(module==='clips')return {metadata:metadata(),mediaAssetId:nullable('content-video'),posterAssetId:nullable('content-poster'),durationMs:duration('content-clip-duration'),subtitles:{...subtitleEdits,[$('content-locale').value]:$('content-subtitles').value}};
  if(module==='games')return {metadata:metadata(),launchUrl:nullable('content-launch'),supportedDevices:[...document.querySelectorAll('[data-device]:checked')].map(n=>n.dataset.device),screenshotIds:selected('content-screenshots')};
@@ -226,7 +228,7 @@ function renderPreview(result){show('content-preview',true);const card=$('conten
  if(m){card.append(el('p',m.title?.[m.originalLocale]??names[module],'content-preview-card-title'));if(m.creatorName)card.append(el('p',m.creatorName));if(m.summary?.[m.originalLocale])card.append(el('p',m.summary[m.originalLocale]));if(m.story)card.append(el('p',m.story));}
  else if(module==='promotions'){card.append(el('p',d.enabled?'推广已启用':'推广已停止','content-preview-card-title'),el('p',d.previewEnabled?'独立试听已核对':'不提供站内试听'),el('p','已选平台 '+d.selectedPlatformIds.length+' 个 · 视频 '+d.selectedClipIds.length+' 条'));}
  else card.append(el('p','首页引用已核对','content-preview-card-title'),el('p','主推歌曲 '+(d.featuredTrackId?'已选择':'留空')+' · 游戏 '+(d.featuredGameId?'已选择':'留空')));
- card.append(el('p','版本 '+result.revision+(d.youtubeURL?' · 关联与人工确认已核对，仍需实际核对 YouTube 播放':' · 当前资源与关联校验通过'),'content-version-note'));$('content-preview').scrollIntoView({block:'nearest',behavior:'auto'});
+ card.append(el('p','版本 '+result.revision+(d.douyinURL?' · 关联与人工确认已核对，仍需实际核对抖音播放':d.youtubeURL?' · 关联与人工确认已核对，仍需实际核对 YouTube 播放':' · 当前资源与关联校验通过'),'content-version-note'));$('content-preview').scrollIntoView({block:'nearest',behavior:'auto'});
 }
 function updatePlatformState(id,value){for(const row of listItems)if(row.id===id)row.platformStatus=value;renderList();}
 async function renderPlatforms(item){item=listItems.find(row=>row.id===item.id)??item;hideEditors();show('content-platform-editor',true);const panel=$('content-platform-editor');panel.replaceChildren();text('content-editor-heading',item.title??'发行平台');text('content-version','外部发行状态独立于网站作品公开。');text('content-state','平台入口');const result=await request('/platforms?trackId='+item.id),records=result.items;
@@ -272,7 +274,23 @@ $('content-history-more').addEventListener('click',()=>{void work(async()=>{cons
 $('content-form').addEventListener('submit',e=>{e.preventDefault();void work(module==='home'?applyHome:save);});
 $('content-form').addEventListener('input',e=>{if(['song-cover-file','song-lyrics-file','song-rights-confirm'].includes(e.target.id))return;if(e.target.closest('[data-campaign-ui]')||['content-due','content-rollback-version','content-publication-channel','content-post-id','content-post-url','content-post-time'].includes(e.target.id))return;dirty=true;show('content-preview',false);text('content-version','有未保存的修改 · 请先保存草稿');if(module==='home'){text('content-state','待更新首页');text('content-home-feedback','选择已更改，点击“更新首页”后生效。');$('content-home-feedback').dataset.error='false';}controls();});
 $('content-parent').addEventListener('change',()=>{if(module==='promotions')void work(()=>promotionChoices($('content-parent').value));});
-function renderClipSource(){const youtube=$('content-clip-source').value==='youtube';if(workbench){show('work-assets-section',!youtube&&Boolean(current?.id));text('work-publish-help',youtube?'确认视频的展示权利与嵌入设置后，先保存草稿再核对公开内容。':'确认素材权利后，再核对公开内容。');}show('content-youtube-fields',youtube);show('content-local-clip-fields',!youtube);for(const n of document.querySelectorAll('#content-youtube-fields input'))n.disabled=!youtube;for(const n of document.querySelectorAll('#content-local-clip-fields input,#content-local-clip-fields select,#content-local-clip-fields textarea'))n.disabled=youtube;}
+function renderClipSource(){
+ const source=$('content-clip-source').value,external=source!=='file';
+ if(workbench){show('work-assets-section',!external&&Boolean(current?.id));text('work-publish-help',external?'确认视频的展示权利与嵌入设置后，先保存草稿再核对公开内容。':'确认素材权利后，再核对公开内容。');}
+ for(const [kind,id] of [['youtube','content-youtube-fields'],['douyin','content-douyin-fields'],['file','content-local-clip-fields']]){
+  show(id,source===kind);for(const n of document.querySelectorAll('#'+id+' input,#'+id+' select,#'+id+' textarea,#'+id+' button'))n.disabled=source!==kind;
+ }
+ controls();
+}
+$('content-douyin-url').addEventListener('input',()=>{$('content-douyin-confirm').checked=false;});
+$('content-douyin-resolve').addEventListener('click',()=>{void work(async()=>{
+ if(identity?.role!=='publisher')throw new Error('此操作需要可发布管理员。');
+ const value=$('content-douyin-url').value,owner=current?.id;
+ const result=await request('/clips/resolve-douyin',{method:'POST',body:{url:value.trim()},key:crypto.randomUUID()});
+ if(module!=='clips'||$('content-clip-source').value!=='douyin'||current?.id!==owner||$('content-douyin-url').value!==value)return;
+ $('content-douyin-url').value=result.url;$('content-douyin-confirm').checked=false;dirty=true;show('content-preview',false);
+ status('已取得单条视频地址；请实际核对播放并确认后保存草稿。');
+});});
 $('content-clip-source').addEventListener('change',renderClipSource);
 $('content-youtube-url').addEventListener('input',()=>{$('content-youtube-confirm').checked=false;});
 $('content-video').addEventListener('change',()=>{const a=ownerAssets.find(a=>a.id===$('content-video').value);if(a?.durationMs)$('content-clip-duration').value=a.durationMs/1000;});

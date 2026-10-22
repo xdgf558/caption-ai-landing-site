@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-22",
+  "scope": "local-development-only",
+  "node": "24.15.0",
+  "tests": [
+    {
+      "command": "npm run test:redesign:clips",
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npm run test:redesign:content-admin",
+      "passed": 142,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test scripts/test-music-staging-gate.mjs",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "build": {
+    "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+    "pages": 185,
+    "postbuild": "passed",
+    "productionArtifact": false,
+    "ordinaryBuild": "blocked-by-absent-private-novel-inputs"
+  },
+  "realDouyinLinksProvided": false,
+  "realDouyinNetworkTested": false,
+  "hostedCI": "follow-up-head-pending",
+  "productionDeploy": false,
+  "productionContentPublished": false,
+  "migrations": false,
+  "productionConfigurationChanged": false,
+  "reviewFollowUp": {
+    "reviewedHead": "e21e2b8901ef4c8892fbd6e6ddf31d83d5a8ba42",
+    "priorHeadHostedCI": {
+      "run": 39714452378,
+      "result": "success"
+    },
+    "publisherOnlyResolver": true,
+    "shortLinkCanonicalization": true,
+    "includeOrderIndependent": true,
+    "unknownShareFields": "rejected"
+  }
+}

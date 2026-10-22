@@ -123,8 +123,10 @@ export async function handleStationContent(request, env, { clock = Date.now, tim
       ['audio', 'playback'].includes(currentRoute.kind) ? ['variant', ...(currentRoute.kind === 'audio' ? ['v', 'p'] : ['locale'])] :
       currentRoute.kind === 'asset' ? ['size', 'v'] : ['locale'];
     input = requestInput(url, allowed);
-    if (url.searchParams.has('include') && url.searchParams.get('include') !== 'youtube') throw new TypeError('provider');
-    input.includeYouTube = currentRoute.kind === 'clips' && Boolean(currentRoute.slug) && url.searchParams.get('include') === 'youtube';
+    const providers = url.searchParams.has('include') ? url.searchParams.get('include').split(',') : [];
+    if (new Set(providers).size !== providers.length || providers.some(provider => !['youtube', 'douyin'].includes(provider))) throw new TypeError('provider');
+    input.includeYouTube = providers.includes('youtube');
+    input.includeDouyin = providers.includes('douyin');
     if ((currentRoute.slug && !slug(currentRoute.slug)) || (currentRoute.id && !uuid(currentRoute.id))) throw new TypeError('path');
     if (currentRoute.kind === 'asset' && url.searchParams.has('size') && !['card', 'display'].includes(url.searchParams.get('size'))) throw new TypeError('size');
     if (currentRoute.kind === 'asset' && url.searchParams.has('v')) {

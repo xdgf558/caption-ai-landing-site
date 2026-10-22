@@ -1,3 +1,4 @@
+import { douyinIDFromURL } from '../redesign/douyinClip.js';
 import { youtubeIDFromURL } from '../redesign/youtubeClip.js';
 export const workTypes = ['tracks', 'games', 'clips'];
 export async function resolveAdminOwner(request, id, { types = workTypes, listed = [] } = {}) {
@@ -41,7 +42,7 @@ export function catalogHasMore(pages, filter = 'all') {
   return (filter === 'all' ? workTypes : workTypes.filter(type => type === filter)).some(type => Boolean(pages[type]?.nextBefore));
 }
 export function listAssetState(item) {
-  if (item.type === 'clips' && item.clipProvider === 'youtube' && item.expectedAssetCount === 0) return 'external';
+  if (item.type === 'clips' && ['youtube','douyin'].includes(item.clipProvider) && item.expectedAssetCount === 0) return 'external';
   const assets = item.assetDetails ?? [];
   if (!assets.length || assets.length < item.expectedAssetCount || assets.some(asset => asset.state !== 'validated')) return 'missing';
   if (assets.some(asset => asset.rightsStatus === 'blocked')) return 'blocked';
@@ -59,6 +60,7 @@ export function adminListImage(item, type) {
 export function publicationFormReady({ identity, busy, pending, dirty, current, assets, type }) {
   if (!identity || identity.role !== 'publisher' || busy || pending || dirty || !current?.draft) return false;
   const data = current.draft.data;
+  if (type === 'clips' && data.douyinURL != null) return Boolean(douyinIDFromURL(data.douyinURL)) && data.douyinEmbeddingConfirmed === true && !data.youtubeURL && !data.mediaAssetId && !data.posterAssetId;
   if (type === 'clips' && data.youtubeURL != null) return Boolean(youtubeIDFromURL(data.youtubeURL)) && data.youtubeEmbeddingConfirmed === true && !data.mediaAssetId && !data.posterAssetId;
   const ids = type === 'tracks' ? [data.coverAssetId, data.lyricsAssetId].filter(Boolean)
     : type === 'games' ? data.screenshotIds ?? [] : type === 'clips' ? [data.mediaAssetId, data.posterAssetId].filter(Boolean) : [];
