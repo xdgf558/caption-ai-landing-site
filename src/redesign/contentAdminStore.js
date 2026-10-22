@@ -1,3 +1,4 @@
+import { douyinReference } from './douyinClip.js';
 import { youtubeReference } from './youtubeClip.js';
 import { primary, rows, mutate, trackNotRemovedSql, assertTrackNotRemoved } from '../music/adminStore.js';
 import { fail, fields, musicId } from '../music/adminValidation.js';
@@ -73,7 +74,7 @@ export async function listContentObjects(db,type,query={}) {
   }
   const title=type==='promotions'?"COALESCE((SELECT metadata_json FROM station_track_revisions WHERE track_id=h.track_id AND revision=(SELECT COALESCE(draft_revision,published_revision) FROM station_track_publications WHERE track_id=h.track_id)),'{}')":type==='home'?"'{}'":'r.metadata_json';
   const image = type==='games'?"json_extract(r.screenshot_ids_json,'$[0]')":type==='clips'?'r.poster_asset_id':'NULL';
-  const expected = type==='games'?"MAX(1,json_array_length(r.screenshot_ids_json))":type==='clips'?"CASE WHEN json_type(r.metadata_json,'$.youtube')='object' THEN 0 ELSE 2 END":'0';
+  const expected = type==='games'?"MAX(1,json_array_length(r.screenshot_ids_json))":type==='clips'?"CASE WHEN json_type(r.metadata_json,'$.youtube')='object' OR json_type(r.metadata_json,'$.douyin')='object' THEN 0 ELSE 2 END":'0';
   const assets = type==='games'||type==='clips'?`(SELECT json_group_array(json_object('id',a.id,'kind',a.kind,'state',a.state,'rightsStatus',COALESCE(w.status,'pending')))
     FROM station_media_assets a LEFT JOIN station_asset_rights w ON w.media_asset_id=a.id AND w.scope=a.kind
     WHERE ${type==='games'?"a.owner_game_id=h.id AND a.id IN(SELECT value FROM json_each(r.screenshot_ids_json))":"a.owner_clip_id=h.id AND a.id IN(r.poster_asset_id,r.media_asset_id)"})`:"'[]'";
@@ -98,7 +99,7 @@ export async function listHomeTracks(db,query={},now=Date.now()) {
     WHERE ${trackNotRemovedSql('h.track_id')} AND h.status='published' AND r.state='sealed' AND h.published_at>0 AND h.published_at<=? AND h.rowid<? ORDER BY h.rowid DESC LIMIT 21`).bind(now,before).all());
   return {items:items.slice(0,20).map(r=>{const m=JSON.parse(r.metadata_json);return {id:r.id,title:m.title[m.originalLocale],status:'published'};}),nextBefore:items.length>20?items[19].cursor:null};
 }
-function listView(items,type) { return {items:items.slice(0,20).map(r=>{ let m={};try{m=JSON.parse(r.metadata_json);}catch{} return {id:r.id,type,...(type==='clips'?{clipProvider:youtubeReference(m)?'youtube':'file'}:{}),legacyLifecycle:r.legacy_lifecycle??null,imageId:r.image_id??null,expectedAssetCount:r.expected_assets??0,assetDetails:JSON.parse(r.assets_json??'[]'),trackId:r.track_id??null,slug:r.slug??null,status:r.status,...(type==='tracks'?{platformStatus:platformReleaseState(JSON.parse(r.platforms_json??'[]'))}:{}),editVersion:r.edit_version??null,title:m.title?.[m.originalLocale]??r.slug??(r.id==='ca710000-0000-4000-8000-000000000001'?'首页配置':'尚未填写标题')}; }),nextBefore:items.length>20?items[19].cursor:null}; }
+function listView(items,type) { return {items:items.slice(0,20).map(r=>{ let m={};try{m=JSON.parse(r.metadata_json);}catch{} return {id:r.id,type,...(type==='clips'?{clipProvider:douyinReference(m)?'douyin':youtubeReference(m)?'youtube':'file'}:{}),legacyLifecycle:r.legacy_lifecycle??null,imageId:r.image_id??null,expectedAssetCount:r.expected_assets??0,assetDetails:JSON.parse(r.assets_json??'[]'),trackId:r.track_id??null,slug:r.slug??null,status:r.status,...(type==='tracks'?{platformStatus:platformReleaseState(JSON.parse(r.platforms_json??'[]'))}:{}),editVersion:r.edit_version??null,title:m.title?.[m.originalLocale]??r.slug??(r.id==='ca710000-0000-4000-8000-000000000001'?'首页配置':'尚未填写标题')}; }),nextBefore:items.length>20?items[19].cursor:null}; }
 
 // A bounded dependency graph is compared in the SAME D1 batch as publication.
 // One JSON fingerprint parameter per row keeps guards below D1's bind limit.

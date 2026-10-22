@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-22",
+  "scope": "local-development-only",
+  "node": "24.15.0",
+  "tests": [
+    {"command": "npm run test:redesign:clips", "passed": 42, "failed": 0, "skipped": 0},
+    {"command": "npm run test:redesign:content-admin", "passed": 142, "failed": 0, "skipped": 0},
+    {"command": "node --test scripts/test-music-staging-gate.mjs", "passed": 22, "failed": 0, "skipped": 0}
+  ],
+  "build": {
+    "command": "ALLOW_EMPTY_SERIAL_CONTENT=1 npm run build",
+    "pages": 185,
+    "postbuild": "passed",
+    "productionArtifact": false,
+    "ordinaryBuild": "blocked-by-absent-private-novel-inputs"
+  },
+  "realDouyinLinksProvided": false,
+  "realDouyinNetworkTested": false,
+  "hostedCI": "not-run-for-this-branch",
+  "productionDeploy": false,
+  "productionContentPublished": false,
+  "migrations": false,
+  "productionConfigurationChanged": false
+}

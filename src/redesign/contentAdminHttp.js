@@ -1,3 +1,4 @@
+import { resolveDouyinURL } from './douyinResolve.js';
 import { primary, rows, assertTrackNotRemoved } from '../music/adminStore.js';
 import { fields, fail, mutationKey, musicId } from '../music/adminValidation.js';
 import { contentAdminReadiness, contentRole, requirePublisher, readContentObject, listContentObjects, contentAssets, contentRevisionHistory, listHomeTracks } from './contentAdminStore.js';
@@ -20,6 +21,11 @@ export async function handleContentAdmin(request,env,actor,query,readBody) {
   const runtime=await contentAdminReadiness(env);
   const read=['GET','HEAD'].includes(request.method),context={actorId:actor,key:request.headers.get('idempotency-key'),ifMatch:request.headers.get('if-match')};
   if(!read)mutationKey(context.key);
+  if(path==='/clips/resolve-douyin') {
+    if(request.method!=='POST')fail('METHOD_NOT_ALLOWED',405);
+    fields(query,[]);const input=await readBody(request);fields(input,['url']);
+    return resolveDouyinURL(input.url);
+  }
   if(path==='/status'&&read){fields(query,[]);return {actorId:actor,role:contentRole(env,actor),enabled:true,reportsEnabled:env.STATION_REPORTS_ENABLED===true||env.STATION_REPORTS_ENABLED==='true',campaignsEnabled:campaignEnabled(env.STATION_CAMPAIGNS_ENABLED),schedulesEnabled:env.STATION_CONTENT_SCHEDULES_ENABLED===true||env.STATION_CONTENT_SCHEDULES_ENABLED==='true',cachePolicy:'no-store'};}
   if(path==='/assets'&&read)return contentAssets(runtime.db,query);
   if(path==='/home-tracks'){if(!read)fail('METHOD_NOT_ALLOWED',405);return listHomeTracks(runtime.db,query);}

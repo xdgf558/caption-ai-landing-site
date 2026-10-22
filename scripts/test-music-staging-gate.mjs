@@ -377,7 +377,7 @@ test('staging module graph includes only music, Access, membership and explicitl
   const externalImports = new Set();
   const allowedShared = new Set(['adminAccess.js', 'readerMembership.js', 'data/reader-library-client.js',
     'redesign/mediaUploads.js', 'redesign/mediaResources.js', 'redesign/mediaFormats.js', 'redesign/mp4Validation.js',
-    'redesign/youtubeClip.js',
+    'redesign/youtubeClip.js', 'redesign/douyinClip.js', 'redesign/douyinResolve.js',
     'data/station-home.js', 'redesign/contentAdmin.js', 'redesign/contentAdminHttp.js', 'redesign/contentAdminModel.js',
     'redesign/contentAdminStore.js', 'redesign/contentAdminValidation.js', 'redesign/contentSchedule.js', 'redesign/adminContentImages.js',
     'redesign/campaignStore.js', 'redesign/campaignLinks.js',
