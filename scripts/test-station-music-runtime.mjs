@@ -19,7 +19,7 @@ async function html(path, options) {
 }
 const model = text => JSON.parse(/<script id="sc-music-bootstrap" type="application\/json">([^]*?)<\/script>/.exec(text)[1]);
 
-test('iPhone introduction serves the real beta link in all locales without music data or playback access', async () => {
+test('iPhone introduction serves the App Store release in all locales without music data or playback access', async () => {
   for (const [locale, path, headline] of [
     ['zh-Hant', '/music/iphone/', '喜歡的歌，'], ['zh-Hans', '/zh-hans/music/iphone/', '喜欢的歌，'],
     ['en', '/en/music/iphone/', 'Your favorite songs,'], ['ja', '/ja/music/iphone/', '好きな曲を、'],
@@ -27,8 +27,9 @@ test('iPhone introduction serves the real beta link in all locales without music
     const text = await html(path, { prefix: '/fixture-pages-no-db' });
     assert(text.includes('data-sc-iphone-page'));
     assert(text.includes(headline));
-    assert(text.includes('https://testflight.apple.com/join/eEtSur8y'));
-    assert(text.includes('https://apps.apple.com/us/app/testflight/id899247664?mt=8'));
+    assert.match(text, /<a\b[^>]*href="https:\/\/apps\.apple\.com\/app\/id6822797145"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+    assert.doesNotMatch(text, /TestFlight|testflight\.apple\.com|id899247664|公測|公测|ベータ版|\bbeta\b/i);
+    assert(text.includes('iOS 18.0'));
     assert(text.includes('href="#install"'));
     assert.match(text, /href="\/ja\/music\/iphone\/"[^>]*data-sc-language="ja"/);
     assert(text.includes('rel="canonical" href="https://wwwstationcat.org' + path + '"'));
@@ -39,6 +40,7 @@ test('iPhone introduction serves the real beta link in all locales without music
   }
   const music = await html('/en/music/');
   assert.match(music, /href="\/en\/music\/iphone\/"/);
+  assert.match(music, /class="sc-music-app-status">Available now<\/span>/);
   for (const path of ['/music/iphone', '/zh-hant/music/iphone/', '/music/iphone/?token=private&q=anything']) {
     const response = await call(path); assert.equal(response.status, 302); assert.equal(response.headers.get('location'), '/music/iphone/');
   }
