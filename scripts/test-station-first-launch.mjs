@@ -71,7 +71,8 @@ test('release package serves every iPhone introduction and its resources through
     const path = prefix + '/music/iphone/';
     const response = await get(path); assert.equal(response.status, 200, path);
     const html = await response.text(); assert.match(html, /data-sc-iphone-page/);
-    assert(html.includes('https://testflight.apple.com/join/eEtSur8y'));
+    assert(html.includes('https://apps.apple.com/app/id6822797145'));
+    assert.doesNotMatch(html, /TestFlight|testflight\.apple\.com|id899247664|公測|公测|ベータ版|\bbeta\b/i);
     assert(html.includes('rel="canonical" href="http://127.0.0.1' + path + '"'));
     const assets = new Set([...html.matchAll(/(?:src|href)="(\/(?:_astro|images)\/[^"?#]+)"/g)].map(match => match[1]));
     for (const asset of assets) {

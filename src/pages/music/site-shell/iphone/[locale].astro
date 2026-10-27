@@ -1,7 +1,7 @@
 ---
 import { ArrowRight, ArrowUpRight, ArrowDown, Globe } from '@lucide/astro';
 import StationBrandLayout from '../../../../layouts/StationBrandLayout.astro';
-import { iphoneAppCopy, iphoneAppHref, stationTestFlightUrl, appleTestFlightUrl } from '../../../../redesign/iphoneApp.js';
+import { iphoneAppCopy, iphoneAppHref, stationAppStoreUrl } from '../../../../redesign/iphoneApp.js';
 import { stationLocales, stationHref } from '../../../../redesign/routes.js';
 import '../../../../redesign/iphoneApp.css';
 export function getStaticPaths() {
@@ -28,31 +28,30 @@ const canonical = 'https://wwwstationcat.org' + iphoneAppHref(locale);
     </nav>
     <nav class="sc-music-destinations" aria-label={copy.navigation}>
       <a href={stationHref(locale, 'music')}>{copy.explore}</a>
-      <a href={iphoneAppHref(locale)} aria-current="page">iPhone App</a>
+      <a href={iphoneAppHref(locale)} aria-current="page">iPhone App <span class="sc-music-app-status">{copy.available}</span></a>
     </nav>
     <section class="sc-iphone-hero" aria-labelledby="sc-iphone-title">
       <div class="sc-iphone-intro">
         <div class="sc-iphone-identity">
           <img src="/images/station-music-app/icon.webp" width="80" height="80" alt="" />
-          <div><p class="sc-iphone-name">Station Cat Music</p><p class="sc-iphone-beta">{copy.beta}</p></div>
+          <div><p class="sc-iphone-name">Station Cat Music</p><p class="sc-iphone-availability">{copy.availability}</p></div>
         </div>
         <h1 id="sc-iphone-title">{copy.headline.map(line => <span>{line}</span>)}</h1>
         <p class="sc-iphone-description">{copy.intro}</p>
         <div class="sc-iphone-actions">
-          <a class="sc-button sc-iphone-join" href={stationTestFlightUrl} target="_blank" rel="noopener noreferrer">{copy.join}<ArrowUpRight size={22} aria-hidden="true" /></a>
-          <a class="sc-iphone-steps-link" href="#install">{copy.stepsLink}<ArrowDown size={20} aria-hidden="true" /></a>
+          <a class="sc-button sc-iphone-download" href={stationAppStoreUrl} target="_blank" rel="noopener noreferrer">{copy.download}<ArrowUpRight size={22} aria-hidden="true" /></a>
+          <a class="sc-iphone-features-link" href="#install">{copy.featuresLink}<ArrowDown size={20} aria-hidden="true" /></a>
         </div>
-        <p class="sc-iphone-account">{copy.noAccount}</p>
+        <p class="sc-iphone-requirements">{copy.requirements}</p>
       </div>
       <div class="sc-iphone-preview">
         <div class="sc-iphone-screen"><img src="/images/station-music-app/discover.webp" alt={copy.screenshot} width="804" height="1748" fetchpriority="high" decoding="async" /></div>
       </div>
-      <section class="sc-iphone-install" id="install" aria-labelledby="sc-iphone-install-title">
-        <h2 id="sc-iphone-install-title">{copy.steps}</h2>
-        <ol>
-          <li><div><h3>{copy.first}</h3><p>{copy.firstText}</p><a class="sc-iphone-testflight" href={appleTestFlightUrl} target="_blank" rel="noopener noreferrer">{copy.getTestFlight}<ArrowUpRight size={16} aria-hidden="true" /></a></div></li>
-          <li><div><h3>{copy.second}</h3><p>{copy.secondText}</p></div></li>
-        </ol>
+      <section class="sc-iphone-features" id="install" aria-labelledby="sc-iphone-features-title">
+        <h2 id="sc-iphone-features-title">{copy.featuresTitle}</h2>
+        <ul role="list">
+          {copy.features.map(feature => <li><h3>{feature.title}</h3><p>{feature.text}</p></li>)}
+        </ul>
         <p class="sc-iphone-languages"><Globe size={20} aria-hidden="true" /><span>{copy.languages}</span><span lang="zh-Hant">繁體中文</span><span lang="zh-Hans">简体中文</span><span lang="en">English</span><span lang="ja">日本語</span></p>
       </section>
     </section>

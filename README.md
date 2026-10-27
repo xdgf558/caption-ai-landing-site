@@ -2,11 +2,11 @@
 
 一座深夜還亮著的小站。Station Cat 是分享原創音樂、遊戲與創作故事的個人品牌網站，使用 Astro 建置，運行於 Cloudflare Workers。
 
-**[造訪網站](https://wwwstationcat.org/) · [音樂小站](https://wwwstationcat.org/music/) · [遊戲世界](https://wwwstationcat.org/games/)**
+**[造訪網站](https://wwwstationcat.org/) · [音樂小站](https://wwwstationcat.org/music/) · [iPhone App](https://wwwstationcat.org/music/iphone/) · [App Store 下載](https://apps.apple.com/app/id6822797145) · [遊戲世界](https://wwwstationcat.org/games/)**
 
 目前網站以歌曲展示、外部平台收聽、站內試聽與 MV，以及《打工養貓日記》為核心。預設語言為繁體中文，另支援簡體中文、英文與日文。倉庫名稱沿用早期的 `caption-ai-landing-site`。
 
-本文依 2026-10-15 已合併的功能更新。
+網站與後台操作說明依 2026-10-15 已合併的功能整理；iPhone App 的正式上架資訊於 2026-10-27 更新。
 
 ## 網站與創作後台
 
@@ -14,6 +14,7 @@
 | --- | --- |
 | 首頁 | 主推歌曲、遊戲與精選內容，由後台配置 |
 | 音樂 | 歌曲目錄、封面、歌詞、創作故事、收藏與已核對的發行平台入口 |
+| iPhone App | Station Cat Music 已於 App Store 正式上架；提供作品探索、歌詞與故事、本機筆記、收藏及外部平台收聽入口 |
 | 試聽與影片 | 已配置並公開的獨立試聽、短影片與 MV；完整歌曲以外部平台收聽為主 |
 | 遊戲 | 遊戲介紹、截圖、《打工養貓日記》及既有存檔服務 |
 | 會員與站點服務 | 帳號、會員、Station Points、訂單與歷史權益 |
@@ -24,6 +25,12 @@
 舊小說、開發日誌和早期產品的公開入口已退役；相關程式碼、歷史資料與相容服務仍保留。重新建置或更新文件不應重新開放這些入口。
 
 ## 常用操作
+
+### 下載 iPhone App
+
+在 iPhone 開啟 [Station Cat Music 的 App Store 頁面](https://apps.apple.com/app/id6822797145)即可免費下載，需要 iOS 18.0 或以上版本，無需 Station Cat 帳號。從網站音樂頁的「iPhone App」入口也能查看介紹與下載連結。
+
+App 支援繁體中文、簡體中文、英文與日文介面，可閱讀已公開的歌詞和創作故事、按主題整理自己的筆記，以及收藏作品並前往音樂平台收聽。筆記可離線讀寫，僅儲存在本機；歌曲收聽使用外部平台入口。
 
 ### 發布一首歌
 

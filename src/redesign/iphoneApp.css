@@ -6,27 +6,22 @@
 .sc-iphone-identity { display: flex; align-items: center; gap: 24px; }
 .sc-iphone-identity img { flex: 0 0 auto; border-radius: 20px; }
 .sc-iphone-name { margin: 0; font-size: clamp(23px, 2.7vw, 30px); font-weight: 750; letter-spacing: -.6px; line-height: 1.3; }
-.sc-iphone-beta { margin: 6px 0 0; color: var(--sc-muted); font-size: 18px; }
+.sc-iphone-availability { margin: 6px 0 0; color: var(--sc-muted); font-size: 18px; }
 .sc-iphone-intro h1 { margin: 28px 0 20px; font-size: clamp(44px, 7vw, 78px); line-height: 1.2; letter-spacing: -.045em; font-weight: 800; }
 .sc-iphone-intro h1 span { display: block; }
 .sc-iphone-description { color: var(--sc-muted); font-size: clamp(18px, 2.2vw, 24px); line-height: 1.8; margin: 0; max-width: 27em; text-wrap: pretty; white-space: pre-line; }
 .sc-iphone-actions { display: flex; flex-wrap: wrap; gap: 18px 30px; align-items: center; margin-top: 28px; }
-.station-gentle .sc-iphone-join { min-height: 58px; font-size: 21px; padding: 14px 32px; }
-.station-gentle .sc-iphone-steps-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 18px; font-weight: 600; color: var(--sc-accent); text-underline-offset: 5px; }
-.sc-iphone-account { color: var(--sc-muted); margin: 12px 0 30px; font-size: 14px; }
+.station-gentle .sc-iphone-download { min-height: 58px; font-size: 21px; padding: 14px 32px; }
+.station-gentle .sc-iphone-features-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 18px; font-weight: 600; color: var(--sc-accent); text-underline-offset: 5px; }
+.sc-iphone-requirements { color: var(--sc-muted); margin: 12px 0 30px; font-size: 14px; line-height: 1.7; }
 .sc-iphone-preview { grid-column: 2; grid-row: 1 / 3; align-self: start; display: flex; justify-content: center; padding-top: 8px; }
 .sc-iphone-screen { width: min(100%, 360px); aspect-ratio: 402 / 824; overflow: hidden; border-radius: 26px; background: #101326; box-shadow: 0 20px 64px rgba(87, 54, 138, .14); }
 .sc-iphone-screen img { display: block; width: 100%; max-width: none; height: auto; margin-top: -12.44%; }
-.sc-iphone-install { grid-column: 1; border-top: 1px solid var(--sc-line); padding-top: 20px; scroll-margin-top: 28px; }
-.sc-iphone-install h2 { margin: 0 0 18px; font-size: 16px; line-height: 1.5; }
-.sc-iphone-install ol { list-style: none; counter-reset: install; margin: 0; padding: 0; display: grid; gap: 24px; }
-.sc-iphone-install li { counter-increment: install; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; }
-.sc-iphone-install li::before { content: counter(install); width: 40px; height: 40px; border-radius: 50%; background: #eeebfb; color: var(--sc-accent); display: grid; place-items: center; font-weight: 700; }
-.sc-iphone-install h3 { margin: 2px 0 4px; font-size: 18px; line-height: 1.5; }
-.sc-iphone-install li p { color: var(--sc-muted); margin: 0; font-size: 15px; line-height: 1.7; }
-.sc-iphone-install li > div { position: relative; }
-.sc-iphone-install li:first-child h3 { padding-right: 130px; }
-.station-gentle .sc-iphone-testflight { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; color: var(--sc-accent); font-size: 14px; text-underline-offset: 4px; position: absolute; right: 0; top: -6px; }
+.sc-iphone-features { grid-column: 1; border-top: 1px solid var(--sc-line); padding-top: 20px; scroll-margin-top: 28px; }
+.sc-iphone-features h2 { margin: 0 0 18px; font-size: 16px; line-height: 1.5; }
+.sc-iphone-features ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; }
+.sc-iphone-features h3 { margin: 2px 0 4px; font-size: 18px; line-height: 1.5; }
+.sc-iphone-features li p { color: var(--sc-muted); margin: 0; font-size: 15px; line-height: 1.7; }
 .sc-iphone-languages { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 24px 0 0; padding-top: 18px; border-top: 1px solid var(--sc-line); font-size: 12px; color: var(--sc-muted); }
 .sc-iphone-languages svg { flex-shrink: 0; }
 .sc-iphone-discover { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-top: 1px solid var(--sc-line); padding: 34px 16px 42px; }
@@ -37,11 +32,9 @@
   .sc-iphone-hero { padding-inline: 0; gap: 36px; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
   .sc-iphone-identity { gap: 14px; }
   .sc-iphone-identity img { width: 64px; height: 64px; border-radius: 16px; }
-  .sc-iphone-beta { font-size: 15px; }
+  .sc-iphone-availability { font-size: 15px; }
   .sc-iphone-intro h1 { font-size: 50px; }
-  .station-gentle .sc-iphone-join { font-size: 17px; }
-  .station-gentle .sc-iphone-testflight { position: static; }
-  .sc-iphone-install li:first-child h3 { padding-right: 0; }
+  .station-gentle .sc-iphone-download { font-size: 17px; }
 }
 @media (max-width: 767px) {
   .sc-iphone-page { padding-top: 8px; }
@@ -49,19 +42,17 @@
   .sc-iphone-identity { gap: 16px; }
   .sc-iphone-identity img { width: 60px; height: 60px; border-radius: 15px; }
   .sc-iphone-name { font-size: 22px; }
-  .sc-iphone-beta { font-size: 14px; }
+  .sc-iphone-availability { font-size: 14px; }
   .sc-iphone-intro h1 { font-size: clamp(40px, 11vw, 56px); margin-block: 24px 16px; }
   :lang(en) .sc-iphone-intro h1 { font-size: clamp(36px, 9vw, 48px); }
   .sc-iphone-description { font-size: 18px; }
   .sc-iphone-actions { gap: 8px 22px; margin-top: 24px; }
-  .station-gentle .sc-iphone-join { font-size: 17px; padding: 14px 24px; }
-  .station-gentle .sc-iphone-steps-link { font-size: 14px; }
-  .station-gentle .sc-iphone-testflight { position: static; }
-  .sc-iphone-install li:first-child h3 { padding-right: 0; }
-  .sc-iphone-account { margin-bottom: 28px; }
+  .station-gentle .sc-iphone-download { font-size: 17px; padding: 14px 24px; }
+  .station-gentle .sc-iphone-features-link { font-size: 14px; }
+  .sc-iphone-requirements { margin-bottom: 28px; }
   .sc-iphone-preview { grid-column: 1; grid-row: auto; padding: 0 14px; margin-bottom: 32px; }
   .sc-iphone-screen { width: min(100%, 320px); border-radius: 24px; }
-  .sc-iphone-install { grid-column: 1; }
+  .sc-iphone-features { grid-column: 1; }
   .sc-iphone-discover { align-items: flex-start; flex-direction: column; padding: 28px 0 32px; gap: 16px; }
   .sc-iphone-discover h2 { font-size: 24px; }
 }

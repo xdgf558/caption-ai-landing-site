@@ -75,7 +75,7 @@ export function renderCatalogResults(model) {
 function intro(locale) {
   const copy = musicCopy[locale], app = iphoneAppCopy[locale];
   return `<header class="sc-music-intro"><p class="sc-music-eyebrow">STATION CAT · MUSIC</p><h1>${musicIcon('music')}${copy.title}</h1><p>${copy.tagline} <span>${copy.intro}</span></p></header>` +
-    `<nav class="sc-music-destinations" aria-label="${e(app.navigation)}"><a href="${stationHref(locale, 'music')}" aria-current="page">${e(app.explore)}</a><a href="${iphoneAppHref(locale)}"><img src="/images/station-music-app/icon.webp" alt="" width="24" height="24">iPhone App${musicIcon('arrow')}</a></nav>`;
+    `<nav class="sc-music-destinations" aria-label="${e(app.navigation)}"><a href="${stationHref(locale, 'music')}" aria-current="page">${e(app.explore)}</a><a href="${iphoneAppHref(locale)}"><img src="/images/station-music-app/icon.webp" alt="" width="24" height="24">iPhone App<span class="sc-music-app-status">${e(app.available)}</span>${musicIcon('arrow')}</a></nav>`;
 }
 export function renderMusicCatalog(model) {
   const { locale, query } = model, copy = musicCopy[locale];
