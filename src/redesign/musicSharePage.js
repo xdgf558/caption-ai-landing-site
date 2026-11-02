@@ -35,7 +35,10 @@ async function loadShareTarget(request, env, kind, slug, locale, now, run) {
     const row = await run(() => contentTrack(runtime.session, now, { slug }));
     const result = await run(() => projectTrack(runtime, row, { locale, now, country:'US', run }));
     if (!result || result.dto.slug !== slug) return null;
-    return { title: result.dto.title, artist: result.dto.artist, description: safeDescription(result.dto.summary),
+    // The published summary takes precedence. Many releases have no summary
+    // but do have a published story, which is also an authentic introduction.
+    const description = safeDescription(result.dto.summary) || safeDescription(result.meta.story);
+    return { title: result.dto.title, artist: result.dto.artist, description,
       kind:'track', cover: result.ready.get(row.cover_asset_id) || null, bucket:runtime.bucket };
   }
   const snapshot = await run(() => loadPublicMusicCollectionSnapshot(runtime.db, slug, now));
