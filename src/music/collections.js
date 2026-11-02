@@ -2,6 +2,7 @@ import { MUSIC_LOCALES } from './policy.js';
 import { collectionType, albumTrackAccess, checkAlbum, guardAlbumTracks } from './albums.js';
 import { editVersion, fail, fields, musicId, text } from './adminValidation.js';
 import { mutate, primary, rows } from './adminStore.js';
+import { publicationHash } from './publicationValidation.js';
 
 const STATUSES = ['draft', 'published', 'archived'];
 const COLLECTION_FIELDS = ['id', 'slug', 'original_locale', 'title_json', 'description_json', 'status', 'version', 'created_at', 'updated_at', 'collection_type', 'listening_mode', 'cover_track_id', 'cover_asset_id'];
@@ -26,7 +27,7 @@ function translations(value, originalLocale, max, required) {
 function collectionInput(input, create = false) {
   fields(input, create
     ? ['slug', 'originalLocale', 'title', 'description', 'type', 'listeningMode', 'coverTrackId', 'coverAssetId']
-    : ['slug', 'originalLocale', 'title', 'description', 'status', 'reason', 'type', 'listeningMode', 'coverTrackId', 'coverAssetId']);
+    : ['slug', 'originalLocale', 'title', 'description', 'status', 'reason', 'type', 'listeningMode', 'coverTrackId', 'coverAssetId', 'confirmIgnoredCoverSnapshot']);
   if (!MUSIC_LOCALES.includes(input.originalLocale)) fail('MUSIC_INVALID_COLLECTION');
   const clean = {
     slug: slug(input.slug),
@@ -41,6 +42,10 @@ function collectionInput(input, create = false) {
   if (input.coverAssetId !== undefined) clean.coverAssetId = input.coverAssetId === null ? null : musicId(input.coverAssetId);
   if (!create) {
     if (!STATUSES.includes(input.status)) fail('MUSIC_INVALID_COLLECTION');
+    if (input.confirmIgnoredCoverSnapshot !== undefined) {
+      if (typeof input.confirmIgnoredCoverSnapshot !== 'string' || !/^[a-f0-9]{64}$/.test(input.confirmIgnoredCoverSnapshot)) fail('MUSIC_INVALID_COLLECTION');
+      clean.confirmIgnoredCoverSnapshot = input.confirmIgnoredCoverSnapshot;
+    }
     Object.assign(clean, { status: input.status, reason: text(input.reason, 1000) });
   }
   return clean;
@@ -160,8 +165,13 @@ export async function listAdminMusicCollections(db, { before = Number.MAX_SAFE_I
   return { items, nextBefore: result.length > 50 ? result[49].cursor : null };
 }
 
+async function validatedCovers(session, id) {
+  return rows(await session.prepare("SELECT id FROM music_collection_assets WHERE owner_collection_id=? AND kind='cover' AND state='validated' ORDER BY id")
+    .bind(id).all()).map(row => row.id);
+}
 export async function readAdminMusicCollection(db, id) {
-  return collectionView(await loadCollection(db, musicId(id)));
+  const snapshot = await loadCollection(db, musicId(id)), covers = await validatedCovers(primary(db), id);
+  return { ...collectionView(snapshot), coverReview: { count: covers.length, snapshot: await publicationHash(covers) } };
 }
 
 export async function createAdminMusicCollection(db, input, context) {
@@ -205,6 +215,21 @@ export async function saveAdminMusicCollection(db, id, input, context) {
     const affectsCatalog = current.status === 'published' || clean.status === 'published';
     const guard = snapshotCondition(snapshot, affectsCatalog);
     if (config.collection_type === 'album') guardAlbumTracks(guard,snapshot.tracks);
+    if (config.collection_type === 'album' && current.status === 'draft' && clean.status === 'published') {
+      const pending = `SELECT 1 FROM music_collection_upload_sessions u
+        JOIN music_collection_assets a ON a.id=u.asset_id
+        WHERE a.owner_collection_id=? AND u.status IN ('reserved','uploading') AND u.expires_at>?`;
+      if (rows(await session.prepare(pending).bind(id, now).all()).length) fail('MUSIC_ALBUM_COVER_UPLOAD_PENDING', 409);
+      // Reserve checks the album is still a draft in its own transaction.
+      guard.condition += ` AND NOT EXISTS (${pending})`;
+      guard.params.push(id, now);
+      const covers = await validatedCovers(session, id);
+      if (covers.some(cover => cover !== config.cover_asset_id) &&
+        clean.confirmIgnoredCoverSnapshot !== await publicationHash(covers)) fail('MUSIC_ALBUM_COVER_CONFIRM_REQUIRED', 409);
+      guard.condition += ` AND COALESCE((SELECT json_group_array(id) FROM
+        (SELECT id FROM music_collection_assets WHERE owner_collection_id=? AND kind='cover' AND state='validated' ORDER BY id)),'[]')=?`;
+      guard.params.push(id, JSON.stringify(covers));
+    }
     if (config.collection_type !== 'album' && clean.status === 'published') {
       guard.condition += ` AND EXISTS (SELECT 1 FROM music_collection_tracks ct JOIN music_tracks t ON t.id=ct.track_id
         WHERE ct.collection_id=? AND t.lifecycle='published')`;

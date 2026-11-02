@@ -1,4 +1,4 @@
-import { createAlbumCoverUpload, readAlbumCoverUpload, writeAlbumCoverUpload, completeAlbumCoverUpload } from './albumCoverUploads.js';
+import { createAlbumCoverUpload, readAlbumCoverUpload, writeAlbumCoverUpload, completeAlbumCoverUpload, abandonAlbumCoverUpload } from './albumCoverUploads.js';
 import { primary, rows } from './adminStore.js';
 import { readMusicStorageQuota, saveMusicStorageQuota } from './storageQuota.js';
 import { musicRuntime, checkMusicDatabase } from './runtime.js';
@@ -192,7 +192,7 @@ export async function handleMusicAdmin(request, env, authorize) {
       const track = /^\/admin\/api\/music\/tracks\/([^/]+)(?:\/(publish|unpublish|archive))?$/.exec(path);
       const rights = /^\/admin\/api\/music\/revisions\/([^/]+)\/rights-review$/.exec(path);
       const technical = /^\/admin\/api\/music\/revisions\/([^/]+)\/technical-review$/.exec(path);
-      const coverUpload = /^\/admin\/api\/music\/collection-uploads\/([^/]+)(?:\/(body|complete))?$/.exec(path);
+      const coverUpload = /^\/admin\/api\/music\/collection-uploads\/([^/]+)(?:\/(body|complete|abandon))?$/.exec(path);
       const coverAsset = /^\/admin\/api\/music\/collection-assets\/([^/]+)$/.exec(path);
       const upload = /^\/admin\/api\/music\/uploads\/([^/]+)(?:\/(body|complete))?$/.exec(path);
       const asset = /^\/admin\/api\/music\/assets\/([^/]+)$/.exec(path);
@@ -212,7 +212,8 @@ export async function handleMusicAdmin(request, env, authorize) {
           mutationKey(context.key);
           if (!runtime.flags.uploads) fail('MUSIC_UPLOADS_DISABLED',503);
           result=coverUpload[2]==='body' ? await writeAlbumCoverUpload(runtime.db,runtime.bucket,id,request,context)
-            : await completeAlbumCoverUpload(runtime.db,runtime.bucket,id,await readBody(request),context);
+            : coverUpload[2]==='abandon' ? await abandonAlbumCoverUpload(runtime.db,id,await readBody(request),context)
+              : await completeAlbumCoverUpload(runtime.db,runtime.bucket,id,await readBody(request),context);
         }
       } else if (cleanup) {
         if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED', 405);
