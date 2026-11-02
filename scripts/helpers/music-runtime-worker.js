@@ -40,7 +40,8 @@ export default {
       }
       if (new URL(request.url).pathname.startsWith('/fixture-uploads/admin/api/music/')) {
         const url = new URL(request.url); url.pathname = url.pathname.replace('/fixture-uploads', '');
-        return handleMusicAdmin(new Request(url, request), { ...env, MUSIC_UPLOADS_ENABLED: 'true' }, async () => 'fixture@example.test');
+        return handleMusicAdmin(new Request(url, request), { ...env, MUSIC_UPLOADS_ENABLED: 'true' },
+          async () => request.headers.get('x-fixture-actor') || 'fixture@example.test');
       }
       if (isMusicAdminPath(new URL(request.url).pathname)) {
         // Local fixture identity only; the real Worker verifies Access JWT and its email allowlist.

@@ -1,4 +1,6 @@
 import {test,expect} from '@playwright/test';
+import sharp from 'sharp';
+import {createHash} from 'node:crypto';
 import {tracks as fixtureTracks,demoWav} from '../fixtures/music-player/data.mjs';
 const unique=()=> 'album-ui-'+crypto.randomUUID();
 async function create(page){await page.goto('/admin/music/collections/');await page.locator('#collection-new-album').click();await page.locator('#collection-slug').fill(unique());await page.locator('[data-collection-title="zh-Hans"]').fill('隔离测试专辑');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 1');}
@@ -29,6 +31,68 @@ test('unknown create receipt survives reload, blocks duplicates, and retries onl
   await page.goto('/admin/music/collections/');await page.locator('#collection-new-album').click();await page.locator('#collection-slug').fill(unique());await page.locator('[data-collection-title="zh-Hans"]').fill('原键重试');await page.locator('#collection-save').click();
   await expect(page.locator('#collection-retry')).toBeVisible();await expect(page.locator('#collection-new-album')).toBeDisabled();await page.reload();expect(keys).toHaveLength(1);
   await page.locator('#collection-retry').click();expect(keys).toHaveLength(1);await confirm(page);await expect(page.locator('#collection-version')).toHaveText('编辑版本 1');expect(keys).toHaveLength(2);expect(keys[0]).toBe(keys[1]);
+});
+
+test('metadata-only publication uses saved members and replays the original request without publishing tracks',async({page})=>{
+  await create(page);await page.locator('#member-search-form button').click();await page.getByRole('button',{name:'添加 晚风经过车站',exact:true}).click();
+  await expect(page.locator('#collection-publish-metadata')).toBeDisabled();await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
+  await page.locator('[data-collection-description="zh-Hans"]').fill('保存后的介绍');await expect(page.locator('#collection-publish-metadata')).toBeDisabled();await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');
+  const attempts=[],songWrites=[];page.on('request',r=>{if(r.method()!=='GET'&&/\/tracks\/[^/]+\/publish(?:\?|$)/.test(r.url()))songWrites.push(r.url());});
+  await page.route('**/admin/api/music/collections/*',async route=>{const r=route.request();if(r.method()!=='PATCH'||r.postDataJSON()?.status!=='published')return route.continue();attempts.push({key:r.headers()['idempotency-key'],etag:r.headers()['if-match'],body:r.postData()});if(attempts.length===1){await route.fetch();await route.abort();}else await route.continue();});
+  await page.locator('#collection-publish-metadata').click();await expect(page.locator('#collection-confirm-text')).toContainText('不发布音频');await confirm(page);
+  await expect(page.locator('#collection-retry')).toBeVisible();await expect(page.locator('#collection-publish-metadata')).toBeDisabled();await page.reload();await page.locator('#collection-retry').click();await confirm(page);
+  await expect(page.locator('#collection-state')).toHaveText('专辑 · 已发布');expect(attempts).toHaveLength(2);expect(attempts[1]).toEqual(attempts[0]);expect(attempts[0].etag).toBe('"edit-3"');expect(songWrites).toEqual([]);
+});
+
+test('abandon unknown cover receipt survives reload and preserves unsaved album edits',async({page})=>{
+  await create(page);let puts=0;const keys=[];
+  await page.route('**/admin/api/music/collection-uploads/*/body',async route=>{puts++;await route.fetch();await route.abort();});
+  await page.route('**/admin/api/music/collection-uploads/*/abandon',async route=>{keys.push(route.request().headers()['idempotency-key']);if(keys.length===1){await route.fetch();await route.abort();}else await route.continue();});
+  const image=await sharp({create:{width:24,height:24,channels:3,background:'#444477'}}).png().toBuffer();
+  await page.locator('#album-cover-file').setInputFiles({name:'cover.png',mimeType:'image/png',buffer:image});await page.locator('#album-cover-upload').click();await expect(page.locator('#album-cover-abandon')).toBeVisible();
+  await page.locator('[data-collection-description="zh-Hans"]').fill('未保存的介绍');await page.locator('#album-cover-abandon').click();await confirm(page);
+  await expect(page.locator('#album-cover-recover')).toHaveText('核对放弃结果');await expect(page.locator('#album-cover-upload')).toBeDisabled();
+  await page.reload();await expect(page.locator('[data-collection-description="zh-Hans"]')).toHaveValue('未保存的介绍');await page.locator('#album-cover-recover').click();
+  await expect(page.locator('#album-cover-status')).toContainText('原上传已放弃');await expect(page.locator('[data-collection-description="zh-Hans"]')).toHaveValue('未保存的介绍');
+  expect(keys).toHaveLength(2);expect(keys[0]).toBe(keys[1]);expect(puts).toBe(1);await expect(page.locator('#album-cover-recover')).toBeHidden();
+});
+
+test('another tab abandoning an in-flight cover cannot complete or attach it',async({page})=>{
+  await create(page);let completions=0;
+  page.on('request',r=>{if(r.url().endsWith('/complete')&&r.method()==='POST')completions++;});
+  await page.route('**/admin/api/music/collection-uploads/*/body',async route=>{
+    const written=await route.fetch();expect(written.ok()).toBe(true);
+    const base=route.request().url().replace(/\/body$/,'');
+    const abandoned=await page.request.post(base+'/abandon',{headers:{Origin:new URL(base).origin,'X-Requested-With':'StationCatMusicAdmin','Idempotency-Key':crypto.randomUUID()},data:{}});
+    expect(abandoned.ok()).toBe(true);
+    const state=await page.request.get(base);expect(state.ok()).toBe(true);
+    await route.fulfill({json:await state.json()});
+  });
+  const image=await sharp({create:{width:24,height:24,channels:3,background:'#444477'}}).png().toBuffer();
+  await page.locator('#album-cover-file').setInputFiles({name:'cover.png',mimeType:'image/png',buffer:image});await page.locator('#album-cover-upload').click();
+  await expect(page.locator('#collection-status')).toContainText('这次封面上传已失效');await expect(page.locator('#album-cover-use')).toBeHidden();expect(completions).toBe(0);
+});
+
+for(const hasCurrentCover of [false,true])test(`unselected completed cover requires explicit snapshot confirmation (current cover: ${hasCurrentCover})`,async({page})=>{
+  await create(page);await page.locator('#member-search-form button').click();await page.getByRole('button',{name:'添加 晚风经过车站',exact:true}).click();await page.locator('#collection-order-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 2');
+  const image=await sharp({create:{width:177,height:177,channels:3,background:'#444477'}}).png().toBuffer();
+  if(hasCurrentCover){await page.locator('#album-cover-file').setInputFiles({name:'first.png',mimeType:'image/png',buffer:image});await page.locator('#album-cover-upload').click();await expect(page.locator('#album-cover-status')).toContainText('请保存资料');await page.locator('#collection-save').click();await expect(page.locator('#collection-version')).toHaveText('编辑版本 3');}
+  const albumId=await page.locator('#collection-list button[aria-current="true"]').getAttribute('data-collection-id');
+  const origin=new URL(page.url()).origin,headers={Origin:origin,'X-Requested-With':'StationCatMusicAdmin','Idempotency-Key':crypto.randomUUID()};
+  async function anotherTabUpload(){
+    const created=await page.request.post('/admin/api/music/collection-uploads',{headers:{...headers,'Idempotency-Key':crypto.randomUUID()},data:{collectionId:albumId,format:'png',byteSize:image.length,sha256:createHash('sha256').update(image).digest('hex')}});expect(created.ok()).toBe(true);const {uploadId}=await created.json();
+    const body=await page.request.put(`/admin/api/music/collection-uploads/${uploadId}/body`,{headers:{...headers,'Idempotency-Key':crypto.randomUUID(),'Content-Type':'image/png'},data:image});expect(body.ok()).toBe(true);
+    const completed=await page.request.post(`/admin/api/music/collection-uploads/${uploadId}/complete`,{headers:{...headers,'Idempotency-Key':crypto.randomUUID()},data:{}});expect(completed.ok()).toBe(true);
+  }
+  await anotherTabUpload();
+  const attempts=[];let dropped=false;await page.route('**/admin/api/music/collections/*',async route=>{const r=route.request();if(r.method()!=='PATCH'||r.postDataJSON()?.status!=='published')return route.continue();attempts.push({body:r.postDataJSON(),key:r.headers()['idempotency-key']});if(r.postDataJSON()?.confirmIgnoredCoverSnapshot&&!dropped){const result=await route.fetch();if(result.ok()){dropped=true;return route.abort();}return route.fulfill({response:result});}await route.continue();});
+  await page.locator('#collection-publish-metadata').click();await confirm(page);await expect(page.locator('#collection-publish-no-cover')).toBeVisible();expect(attempts[0].body.confirmIgnoredCoverSnapshot).toBeUndefined();
+  await page.locator('#collection-publish-no-cover').click();await expect(page.locator('#collection-confirm-text')).toContainText(hasCurrentCover?'使用已保存的封面':'没有封面');await page.locator('#collection-confirm button[value="cancel"]').click();expect(attempts).toHaveLength(1);
+  await page.locator('#collection-publish-no-cover').click();
+  await expect(page.locator('#collection-confirm')).toBeVisible();
+  if(!hasCurrentCover){await anotherTabUpload();await confirm(page);await expect(page.locator('#collection-publish-result')).toContainText('有已上传但未应用的封面');await expect(page.locator('#collection-state')).toHaveText('专辑 · 草稿');await expect(page.locator('#collection-publish-no-cover')).toBeEnabled({timeout:5000});await page.locator('#collection-publish-no-cover').click();await expect(page.locator('#collection-confirm-text')).toContainText('另有 2 张');}
+  await confirm(page);await expect(page.locator('#collection-retry')).toBeEnabled();expect(attempts.at(-1).body.confirmIgnoredCoverSnapshot).toMatch(/^[a-f0-9]{64}$/);const pending=attempts.at(-1);
+  await page.reload();await page.locator('#collection-retry').click();await confirm(page);await expect(page.locator('#collection-state')).toHaveText('专辑 · 已发布');expect(attempts.at(-1)).toEqual(pending);
 });
 
 test('narrow workspace stays usable and archive disables membership edits',async({page})=>{

@@ -24,6 +24,24 @@ function sessionView({ u, a }) {
     cleanupState: u.cleanup_released_at !== null ? 'released' : u.cleanup_claimed_at !== null ? 'retired' : null };
 }
 export async function readAlbumCoverUpload(db, id, actorId) { return sessionView(await session(db, id, actorId)); }
+export async function abandonAlbumCoverUpload(db, id, input, context) {
+  fields(input, []);
+  return mutate(db, { ...context, route: `/admin/api/music/collection-uploads/${id}/abandon`, command: {} }, async s => {
+    const { u, a } = await session(db, id, context.actorId);
+    if (u.status === 'completed') fail('UPLOAD_ALREADY_COMPLETED', 409);
+    if (u.status === 'rejected') fail('UPLOAD_REJECTED', 409);
+    if (u.status === 'expired') fail('UPLOAD_EXPIRED', 410);
+    return { condition: `EXISTS (SELECT 1 FROM music_collection_upload_sessions u
+        JOIN music_collection_assets a ON a.id=u.asset_id
+        WHERE u.id=? AND u.actor_id=? AND u.status=? AND a.state=?)`,
+      params: [u.id, context.actorId, u.status, u.status],
+      writes: [s.prepare("UPDATE music_collection_assets SET state='rejected' WHERE id=? AND state=?").bind(a.id, u.status),
+        s.prepare("UPDATE music_collection_upload_sessions SET status='rejected' WHERE id=? AND actor_id=? AND status=?")
+          .bind(u.id, context.actorId, u.status)],
+      action: 'music.upload.abandon', targetId: a.id, summary: {},
+      result: { uploadId: u.id, assetId: a.id, collectionId: a.owner_collection_id, status: 'rejected' } };
+  });
+}
 function live(u, now) {
   if (u.cleanup_claimed_at !== null) fail('UPLOAD_RETIRED', 410);
   if (u.expires_at <= now || u.status === 'expired') fail('UPLOAD_EXPIRED', 410);
@@ -119,7 +137,8 @@ export async function writeAlbumCoverUpload(db, bucket, id, request, context) {
       timer = setTimeout(() => reject(Object.assign(new Error('UPLOAD_TIMEOUT'), { code: 'UPLOAD_TIMEOUT', status: 503 })), 120000);
     })]);
     if (object.size !== u.declared_bytes) fail('UPLOAD_SIZE_MISMATCH', 413);
-    return { ...await readAlbumCoverUpload(db, id, context.actorId), readyToComplete: true };
+    const current = await readAlbumCoverUpload(db, id, context.actorId);
+    return current.status === 'uploading' ? { ...current, readyToComplete: true } : current;
   } catch (error) {
     // Do not release the reservation or delete an object after an ambiguous R2 acknowledgement.
     if (inputError) {

@@ -779,6 +779,138 @@ test('independent album cover upload retains quota, recovers one writer, and ser
   assert.deepEqual((await db.prepare('PRAGMA foreign_key_check').all()).results,[]);
 });
 
+test('album cover abandonment preserves charges and rejects late writes or competing completion', async () => {
+  await db.prepare("UPDATE music_settings SET value_json='268435456' WHERE key='storageQuotaBytes'").run();
+  const album=await adminCall('/collections','POST',{slug:'abandon-'+randomUUID(),type:'album',listeningMode:'mixed',
+    originalLocale:'en',title:{en:'Abandon fixture'},description:{en:''}});
+  assert.equal(album.status,200);
+  const image=await sharp({create:{width:32,height:32,channels:3,background:'#668877'}}).png().toBuffer();
+  const spec={collectionId:album.body.collectionId,format:'png',byteSize:image.length,sha256:createHash('sha256').update(image).digest('hex')};
+  const before=Number((await db.prepare('SELECT COALESCE(SUM(charged_bytes),0) n FROM music_storage_charges').first()).n);
+  const reserve=async()=>{const r=await uploadJson('/collection-uploads','POST',spec);assert.equal(r.status,200,JSON.stringify(r));return r.body;};
+  const first=await reserve(), path=`/collection-uploads/${first.uploadId}`;
+  assert.equal((await uploadJson(path+'/abandon','POST',{}, {'x-fixture-actor':'other@example.test'})).status,404);
+  assert.equal((await uploadJson(path+'/abandon','POST',{}, {Origin:'https://evil.example'})).status,403);
+  assert.equal((await uploadJson(path+'/abandon','POST',{extra:true})).status,400);
+  const key=randomUUID(), abandoned=await uploadJson(path+'/abandon','POST',{}, {'Idempotency-Key':key});
+  assert.equal(abandoned.status,200,JSON.stringify(abandoned));assert.equal(abandoned.body.status,'rejected');
+  assert.equal((await uploadJson(path+'/abandon','POST',{}, {'Idempotency-Key':key})).body.replayed,true);
+  assert.equal((await uploadJson(path+'/body','PUT',image,{'Content-Type':'image/png'},true)).body.code,'UPLOAD_REJECTED');
+  assert.equal((await uploadJson(path+'/complete','POST',{})).body.code,'UPLOAD_REJECTED');
+  assert.equal(Number((await db.prepare('SELECT COALESCE(SUM(charged_bytes),0) n FROM music_storage_charges').first()).n),before+image.length);
+  const late=await reserve(), latePath=`/collection-uploads/${late.uploadId}`;
+  assert.equal((await uploadJson(latePath+'/body','PUT',image,{'Content-Type':'image/png'},true)).status,200);
+  assert.equal((await uploadJson(latePath+'/abandon','POST',{})).status,200);
+  const row=await db.prepare('SELECT object_key,state FROM music_collection_assets WHERE id=?').bind(late.assetId).first();
+  assert.equal(row.state,'rejected');assert.ok(await bucket.head(row.object_key));
+  assert.equal((await uploadJson(latePath+'/complete','POST',{})).body.code,'UPLOAD_REJECTED');
+  assert.equal((await uploadApi('/collection-assets/'+late.assetId)).status,404);
+  // Simulate an R2 write that commits after the server accepted abandonment.
+  const pending=await reserve(), pendingPath=`/collection-uploads/${pending.uploadId}`;
+  await db.prepare("UPDATE music_collection_assets SET state='uploading' WHERE id=?").bind(pending.assetId).run();
+  await db.prepare("UPDATE music_collection_upload_sessions SET status='uploading',write_token=? WHERE id=?")
+    .bind(randomUUID(),pending.uploadId).run();
+  const pendingAsset=await db.prepare('SELECT object_key FROM music_collection_assets WHERE id=?').bind(pending.assetId).first();
+  assert.equal((await uploadJson(pendingPath+'/abandon','POST',{})).status,200);
+  await bucket.put(pendingAsset.object_key,image,{httpMetadata:{contentType:'image/png'},
+    customMetadata:{musicUpload:pending.uploadId,musicAsset:pending.assetId}});
+  assert.equal((await uploadJson(pendingPath+'/complete','POST',{})).body.code,'UPLOAD_REJECTED');
+  assert.equal((await uploadApi('/collection-assets/'+pending.assetId)).status,404);
+  for(let i=0;i<4;i++) {
+    const r=await reserve(), p=`/collection-uploads/${r.uploadId}`;
+    assert.equal((await uploadJson(p+'/body','PUT',image,{'Content-Type':'image/png'},true)).status,200);
+    const [done,drop]=await Promise.all([uploadJson(p+'/complete','POST',{}),uploadJson(p+'/abandon','POST',{})]);
+    assert.equal([done,drop].filter(x=>x.status===200).length,1,JSON.stringify([done,drop]));
+    const state=(await uploadJson(p)).body;
+    assert.ok(['completed','rejected'].includes(state.status));assert.equal(state.state,state.status==='completed'?'validated':'rejected');
+    assert.equal((await uploadApi('/collection-assets/'+r.assetId)).status,state.status==='completed'?200:404);
+    if(state.status==='completed') assert.equal((await uploadJson(p+'/abandon','POST',{})).body.code,'UPLOAD_ALREADY_COMPLETED');
+  }
+  assert.equal(Number((await db.prepare('SELECT COALESCE(SUM(charged_bytes),0) n FROM music_storage_charges').first()).n),before+7*image.length);
+});
+
+test('album publication and cover reservations cannot race past each other', async () => {
+  await db.prepare("UPDATE music_settings SET value_json='268435456' WHERE key='storageQuotaBytes'").run();
+  const image=await sharp({create:{width:32,height:32,channels:3,background:'#667788'}}).png().toBuffer();
+  const track=await adminCall('/tracks','POST',adminDraft());assert.equal(track.status,200);
+  async function album() {
+    const body={slug:'cover-guard-'+randomUUID(),type:'album',listeningMode:'mixed',originalLocale:'en',
+      title:{en:'Cover guard'},description:{en:''}};
+    const r=await adminCall('/collections','POST',body);assert.equal(r.status,200);
+    const id=r.body.collectionId;
+    assert.equal((await adminCall(`/collections/${id}/tracks`,'PUT',{trackIds:[track.body.trackId],reason:'Fixture'},{'If-Match':'"edit-1"'})).status,200);
+    return {id,body};
+  }
+  const spec=id=>({collectionId:id,format:'png',byteSize:image.length,sha256:createHash('sha256').update(image).digest('hex')});
+  const publish=({id,body})=>adminCall(`/collections/${id}`,'PATCH',{...body,status:'published',reason:'Fixture'},{'If-Match':'"edit-2"'});
+  const guarded=await album(), reserved=await uploadJson('/collection-uploads','POST',spec(guarded.id));assert.equal(reserved.status,200);
+  const blocked=await publish(guarded);assert.equal(blocked.status,409);assert.equal(blocked.body.code,'MUSIC_ALBUM_COVER_UPLOAD_PENDING');
+  const read=await adminCall(`/collections/${guarded.id}`);assert.equal(read.status,200);assert.equal(read.body.status,'draft');assert.equal(read.body.editVersion,2);
+  assert.equal((await uploadJson(`/collection-uploads/${reserved.body.uploadId}/body`,'PUT',image,{'Content-Type':'image/png'},true)).status,200);
+  assert.equal((await publish(guarded)).body.code,'MUSIC_ALBUM_COVER_UPLOAD_PENDING');
+  assert.equal((await uploadJson(`/collection-uploads/${reserved.body.uploadId}/abandon`,'POST',{})).status,200);
+  assert.equal((await publish(guarded)).status,200);
+  const stale=await album(), asset=randomUUID(), uid=randomUUID(), now=Date.now();
+  await db.prepare(`INSERT INTO music_collection_assets(id,owner_collection_id,kind,object_key,content_type,format,created_at)
+    VALUES(?,?,'cover',?,'image/png','png',?)`).bind(asset,stale.id,`fixture/${asset}.png`,now-3000).run();
+  await db.prepare(`INSERT INTO music_collection_upload_sessions(id,asset_id,actor_id,declared_bytes,expires_at,created_at,expected_sha256)
+    VALUES(?,?,?, ?,?,?,?)`).bind(uid,asset,'fixture@example.test',image.length,now-1000,now-3000,spec(stale.id).sha256).run();
+  assert.equal((await publish(stale)).status,200);
+  const unbound=await album(), completed=await uploadJson('/collection-uploads','POST',spec(unbound.id));
+  assert.equal(completed.status,200);
+  const completedPath=`/collection-uploads/${completed.body.uploadId}`;
+  assert.equal((await uploadJson(completedPath+'/body','PUT',image,{'Content-Type':'image/png'},true)).status,200);
+  assert.equal((await uploadJson(completedPath+'/complete','POST',{})).status,200);
+  const withoutConfirmation=await publish(unbound);
+  assert.equal(withoutConfirmation.status,409);assert.equal(withoutConfirmation.body.code,'MUSIC_ALBUM_COVER_CONFIRM_REQUIRED');
+  assert.equal((await adminCall(`/collections/${unbound.id}`)).body.status,'draft');
+  const reviewed=await adminCall(`/collections/${unbound.id}`);
+  assert.equal(reviewed.body.coverReview.count,1);
+  const explicit=await adminCall(`/collections/${unbound.id}`,'PATCH',
+    {...unbound.body,status:'published',reason:'No cover by choice',confirmIgnoredCoverSnapshot:reviewed.body.coverReview.snapshot},{'If-Match':'"edit-2"'});
+  assert.equal(explicit.status,200,JSON.stringify(explicit.body));
+  const selected=await album(), cover=await uploadJson('/collection-uploads','POST',spec(selected.id));
+  const coverPath=`/collection-uploads/${cover.body.uploadId}`;
+  assert.equal((await uploadJson(coverPath+'/body','PUT',image,{'Content-Type':'image/png'},true)).status,200);
+  assert.equal((await uploadJson(coverPath+'/complete','POST',{})).status,200);
+  assert.equal((await adminCall(`/collections/${selected.id}`,'PATCH',
+    {...selected.body,status:'published',reason:'Use cover',coverAssetId:cover.body.assetId},{'If-Match':'"edit-2"'})).status,200);
+  const old=await album(), oldUpload=await uploadJson('/collection-uploads','POST',spec(old.id));
+  let oldPath=`/collection-uploads/${oldUpload.body.uploadId}`;
+  assert.equal((await uploadJson(oldPath+'/body','PUT',image,{'Content-Type':'image/png'},true)).status,200);
+  assert.equal((await uploadJson(oldPath+'/complete','POST',{})).status,200);
+  assert.equal((await adminCall(`/collections/${old.id}`,'PATCH',
+    {...old.body,status:'draft',reason:'Select old cover',coverAssetId:oldUpload.body.assetId},{'If-Match':'"edit-2"'})).status,200);
+  const oldSnapshot=(await adminCall(`/collections/${old.id}`)).body.coverReview.snapshot;
+  const newer=await uploadJson('/collection-uploads','POST',spec(old.id));oldPath=`/collection-uploads/${newer.body.uploadId}`;
+  assert.equal((await uploadJson(oldPath+'/body','PUT',image,{'Content-Type':'image/png'},true)).status,200);
+  assert.equal((await uploadJson(oldPath+'/complete','POST',{})).status,200);
+  const oldPublish={...old.body,status:'published',reason:'Use selected cover',coverAssetId:oldUpload.body.assetId};
+  assert.equal((await adminCall(`/collections/${old.id}`,'PATCH',oldPublish,{'If-Match':'"edit-3"'})).body.code,'MUSIC_ALBUM_COVER_CONFIRM_REQUIRED');
+  assert.equal((await adminCall(`/collections/${old.id}`,'PATCH',
+    {...oldPublish,confirmIgnoredCoverSnapshot:oldSnapshot},{'If-Match':'"edit-3"'})).body.code,'MUSIC_ALBUM_COVER_CONFIRM_REQUIRED');
+  const newSnapshot=(await adminCall(`/collections/${old.id}`)).body.coverReview;
+  assert.equal(newSnapshot.count,2);
+  assert.equal((await adminCall(`/collections/${old.id}`,'PATCH',
+    {...oldPublish,confirmIgnoredCoverSnapshot:newSnapshot.snapshot},{'If-Match':'"edit-3"'})).status,200);
+  for(let i=0;i<3;i++) {
+    const candidate=await album(), upload=await uploadJson('/collection-uploads','POST',spec(candidate.id));
+    const p=`/collection-uploads/${upload.body.uploadId}`;
+    assert.equal((await uploadJson(p+'/body','PUT',image,{'Content-Type':'image/png'},true)).status,200);
+    const [done,published]=await Promise.all([uploadJson(p+'/complete','POST',{}),publish(candidate)]);
+    assert.equal(done.status,200,JSON.stringify(done));assert.notEqual(published.status,200,JSON.stringify(published));
+    assert.equal((await adminCall(`/collections/${candidate.id}`)).body.status,'draft');
+    assert.equal((await publish(candidate)).body.code,'MUSIC_ALBUM_COVER_CONFIRM_REQUIRED');
+  }
+  for(let i=0;i<5;i++) {
+    const candidate=await album();
+    const [created,published]=await Promise.all([uploadJson('/collection-uploads','POST',spec(candidate.id)),publish(candidate)]);
+    assert.equal([created,published].filter(r=>r.status===200).length,1,JSON.stringify([created,published]));
+    const state=(await adminCall(`/collections/${candidate.id}`)).body.status;
+    assert.equal(state,created.status===200?'draft':'published');
+  }
+});
+
 test('limited free expires on real D1/R2 full and Range requests, without a scheduled write', async () => {
   const end = Date.now() + 5000, { command } = await seed('vip', end);
   const published = await call('/publish', command); assert.equal(published.status, 200, JSON.stringify(published));

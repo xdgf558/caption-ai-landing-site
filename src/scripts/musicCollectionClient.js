@@ -24,7 +24,8 @@ export function createCollectionJournal(storage, actor) {
       !['jpeg','png','webp'].includes(j.body.format)||j.type!==({jpeg:'image/jpeg',png:'image/png',webp:'image/webp'}[j.body.format])||
       !Number.isSafeInteger(j.body.byteSize)||j.body.byteSize<1||j.body.byteSize>5242880||!/^[a-f0-9]{64}$/.test(j.body.sha256)||
       (j.uploadId!=null&&!uuid(j.uploadId))||(j.assetId!=null&&!uuid(j.assetId))||
-      Object.keys(j).some(k=>!['key','writeKey','completeKey','type','stage','body','uploadId','assetId'].includes(k))||
+      (j.abandonKey!=null&&(!uuid(j.abandonKey)||!uuid(j.uploadId)||!uuid(j.assetId)))||
+      Object.keys(j).some(k=>!['key','writeKey','completeKey','abandonKey','type','stage','body','uploadId','assetId'].includes(k))||
       Object.keys(j.body).some(k=>!['collectionId','format','byteSize','sha256'].includes(k))))) throw new Error('封面恢复记录不可读。');
     const w=value.workspace;
     if (w != null && (!w.current || !['album','playlist'].includes(w.current.type) || !w.form ||
