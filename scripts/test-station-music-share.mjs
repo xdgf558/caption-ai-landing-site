@@ -5,7 +5,7 @@ import sharp from 'sharp';
 import { afterEach, test } from 'node:test';
 import { handleStationMusicShare, isStationMusicSharePath, musicShareHtml } from '../src/redesign/musicSharePage.js';
 import { stationMusicShareSvg, renderStationMusicShareCard } from '../src/redesign/musicShareRender.js';
-import { contentFixture, now } from './helpers/station-content-fixture.mjs';
+import { contentFixture, now, publishTrack } from './helpers/station-content-fixture.mjs';
 import { fixtureId, insertFixture } from './helpers/station-redesign-database.mjs';
 
 const fixtures = [];
@@ -31,6 +31,51 @@ test('real published song provides metadata and a private no-store social image,
   assert.match(html,/music\/share\/tracks\/permanent-free\/card\.png\?locale=en/);
   response=await call(f,path+'card.png?locale=en','HEAD'); assert.equal(response.status,200); assert.equal(response.headers.get('content-type'),'image/png');
   f.music.sql.prepare("UPDATE station_track_publications SET status='draft' WHERE track_id=?").run(f.content.tracks[0].id);
+  assert.equal((await call(f,path)).status,404); assert.equal((await call(f,path+'card.png')).status,404);
+});
+test('published song uses its summary or story consistently in HTML, metadata and PNG', async () => {
+  const f=await fixture(), track=f.content.tracks[0], path='/music/share/tracks/permanent-free/';
+  f.env.ASSETS={async fetch(req){return new Response(readFileSync(new URL('../public'+new URL(req.url).pathname,import.meta.url)));}};
+  const publish = async (summary,story) => publishTrack(f.music.db,track,{
+    cover_asset_id:null,
+    metadata_json:JSON.stringify({originalLocale:'en',title:{en:'Fixture song'},summary:{en:summary},creatorName:'Fixture',story})
+  });
+  let svg='';
+  const render=async (target,copy,cover,font,icon)=>{
+    svg=stationMusicShareSvg(target,copy,cover,null);
+    return renderStationMusicShareCard(target,copy,cover,font,icon);
+  };
+  const image = async () => {
+    const r=await handleStationMusicShare(request(path+'card.png?locale=en'),f.env,{clock:()=>now,render});
+    assert.equal(r.status,200); return Buffer.from(await r.arrayBuffer());
+  };
+  const story='Story about <care> & return';
+  await publish('   ',story);
+  let r=await call(f,path+'?locale=en'); assert.equal(r.status,200); let html=await r.text();
+  assert.match(html,/property="og:description" content="Story about &lt;care&gt; &amp; return"/);
+  assert.match(html,/<p style="white-space:pre-wrap">Story about &lt;care&gt; &amp; return<\/p>/);
+  for (const locale of ['zh-Hans','zh-Hant','en','ja']) {
+    const localized=await call(f,path+'?locale='+locale); assert.equal(localized.status,200);
+    assert.match(await localized.text(),/property="og:description" content="Story about &lt;care&gt; &amp; return"/);
+  }
+  const withStory=await image(); assert.match(svg,/Story about &lt;care&gt; &amp; return/);
+  await publish('Actual summary','Other published story');
+  r=await call(f,path+'?locale=en'); assert.equal(r.status,200); html=await r.text();
+  assert.match(html,/property="og:description" content="Actual summary"/); assert.doesNotMatch(html,/Other published story/);
+  await image(); assert.match(svg,/Actual summary/); assert.doesNotMatch(svg,/Other published story/);
+  await publish('','');
+  r=await call(f,path+'?locale=en'); assert.equal(r.status,200); html=await r.text();
+  assert.doesNotMatch(html,/og:description|twitter:description|white-space:pre-wrap/);
+  const empty=await image(); assert.doesNotMatch(svg,/Story about|Actual summary/);
+  // The same real coverless PNG template is rasterised with and without the
+  // story. Pixels in the introduction region must change when text exists.
+  const region={left:75,top:1120,width:850,height:160};
+  const [withPixels,emptyPixels]=await Promise.all([withStory,empty].map(bytes=>sharp(bytes).extract(region).raw().toBuffer()));
+  assert.notDeepEqual(withPixels,emptyPixels);
+  await publish('  ',' \n ');
+  r=await call(f,path+'?locale=en'); assert.equal(r.status,200);
+  assert.doesNotMatch(await r.text(),/og:description|twitter:description|white-space:pre-wrap/);
+  f.music.sql.prepare("UPDATE station_track_publications SET status='draft' WHERE track_id=?").run(track.id);
   assert.equal((await call(f,path)).status,404); assert.equal((await call(f,path+'card.png')).status,404);
 });
 test('album share uses its published title and description, refuses drafts and playlists', async () => {
@@ -150,6 +195,23 @@ test('workerd with real D1, R2, asset bindings and wasm renders and withdraws a 
     let response=await fetch(path+'?locale=en'); assert.equal(response.status,200); assert.match(await response.text(),/Isolated fixture\./);
     response=await fetch(path+'card.png?locale=en'); assert.equal(response.status,200); const bytes=Buffer.from(await response.arrayBuffer());
     assert.equal((await sharp(bytes).metadata()).height,1500);
+    const publish = (summary,story) => publishTrack(db,content.tracks[0],{
+      cover_asset_id:null,
+      metadata_json:JSON.stringify({originalLocale:'en',title:{en:'Fixture song'},summary:{en:summary},creatorName:'Fixture',story})
+    });
+    await publish('  ','Published story & details');
+    response=await fetch(path+'?locale=en'); assert.equal(response.status,200);
+    const storyHTML=await response.text(); assert.match(storyHTML,/property="og:description" content="Published story &amp; details"/);
+    response=await fetch(path+'card.png?locale=en'); assert.equal(response.status,200); const storyPNG=Buffer.from(await response.arrayBuffer());
+    await publish('','');
+    response=await fetch(path+'?locale=en'); assert.equal(response.status,200); assert.doesNotMatch(await response.text(),/og:description/);
+    response=await fetch(path+'card.png?locale=en'); assert.equal(response.status,200); const emptyPNG=Buffer.from(await response.arrayBuffer());
+    const region={left:75,top:1120,width:850,height:160};
+    const [storyPixels,emptyPixels]=await Promise.all([storyPNG,emptyPNG].map(png=>sharp(png).extract(region).raw().toBuffer()));
+    assert.notDeepEqual(storyPixels,emptyPixels,'the real workerd PNG contains story text');
+    await publish('Actual summary','Other published story');
+    response=await fetch(path+'?locale=en'); assert.equal(response.status,200); const summaryHTML=await response.text();
+    assert.match(summaryHTML,/property="og:description" content="Actual summary"/); assert.doesNotMatch(summaryHTML,/Other published story/);
     const album=fixtureId(9801),asset=fixtureId(9802),key=`music/album-covers/${album}/${asset}.png`;
     const albumImage=await sharp({create:{width:640,height:640,channels:4,background:{r:10,g:140,b:70,alpha:0.5}}}).png().toBuffer();
     const saved=await bucket.put(key,albumImage,{httpMetadata:{contentType:'image/png'}});
