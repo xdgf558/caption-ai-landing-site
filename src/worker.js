@@ -65,6 +65,7 @@ import { isMusicShareCardPath, handleMusicShareCard } from './music/shareCardHtt
 import { handleMusicAnalytics, isMusicAnalyticsPath, runMusicAnalyticsRetention } from './music/analytics.js';
 import { handleStationContent, isStationContentPath } from './redesign/publicHttp.js';
 import { handleStationMusicPage } from './redesign/musicPages.js';
+import { isStationMusicSharePath, handleStationMusicShare } from './redesign/musicSharePage.js';
 import { handleStationRouteMigration } from './redesign/routeMigrations.js';
 import { legacyContentClosed, closedLegacyCheckout, legacyContentGone } from './redesign/legacyClosure.js';
 import { applyMigrationMetadata } from './redesign/searchMetadata.js';
@@ -22908,6 +22909,7 @@ export default {
     }
 
     if (isMusicAdminPath(url.pathname)) return handleMusicAdmin(request, env, musicAdminActor);
+    if (isStationMusicSharePath(url.pathname)) return handleStationMusicShare(request, env);
     const migratedPage = await handleStationRouteMigration(request, env, {
       readerIdentity: (incoming, runtime) => getReaderFromSession(incoming, runtime, { touch: false })
     });
