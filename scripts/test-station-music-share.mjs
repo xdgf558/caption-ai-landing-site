@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { mkdir, writeFile, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { resolve, dirname } from 'node:path';
 import { createHash, randomBytes } from 'node:crypto';
 import sharp from 'sharp';
 import { afterEach, test } from 'node:test';
-import { handleStationMusicShare, isStationMusicSharePath, musicShareHtml } from '../src/redesign/musicSharePage.js';
+import { handleStationMusicShare, isStationMusicSharePath, musicShareHtml, loadShareTarget, stationMusicShareLabels } from '../src/redesign/musicSharePage.js';
+import { stationMusicShareAssetPath, isStationMusicShareAssetPath } from '../src/redesign/musicShareAssets.js';
+import { normalizeMusicCardCover } from '../src/music/shareCardRender.js';
 import { stationMusicShareSvg, renderStationMusicShareCard } from '../src/redesign/musicShareRender.js';
 import { contentFixture, now, publishTrack } from './helpers/station-content-fixture.mjs';
 import { fixtureId, insertFixture } from './helpers/station-redesign-database.mjs';
@@ -13,6 +18,59 @@ afterEach(() => fixtures.splice(0).forEach(f => f.close()));
 const request = (path, method='GET') => new Request('https://wwwstationcat.org'+path, { method, headers:{'CF-Connecting-IP':'192.0.2.90'} });
 async function fixture() { const f = await contentFixture(); fixtures.push(f); f.env.STATION_MUSIC_SHARE_ENABLED='true'; f.env.STATION_CONTENT_PUBLIC_ENABLED='true'; return f; }
 const call = (f, path, method='GET') => handleStationMusicShare(request(path, method), f.env, { clock:() => now });
+const icon = readFileSync(new URL('../public/images/station-music-app/icon.webp',import.meta.url));
+const font = readFileSync(new URL('../public/fonts/music/NotoSerifSC-Bold.otf',import.meta.url));
+async function prepareCard(f, kind, slug, locale='en', render=renderStationMusicShareCard) {
+  const target = await loadShareTarget(request(`/music/share/${kind}/${slug}/`), f.env, kind, slug, locale, now, task=>task());
+  const bytes = target.cover ? f.r2.objects.get(target.cover.object_key).bytes : null;
+  const cover = bytes ? normalizeMusicCardCover(bytes,target.cover.content_type) : null;
+  const image = await render(target,stationMusicShareLabels[locale],cover,font,icon);
+  const path = await stationMusicShareAssetPath(target,kind,slug,locale);
+  f.env.ASSETS = {async fetch(req) {return new URL(req.url).pathname === path ?
+    new Response(image,{headers:{'Content-Type':'image/png','Content-Length':String(image.length)}}) : new Response(null,{status:404});}};
+  return {image,path};
+}
+
+test('fingerprints bind every visible field and raw asset aliases are denied', async () => {
+  const target={kind:'track',title:'Song',artist:'Artist',description:'Published introduction',cover:{sha256:'a'.repeat(64)}};
+  const path=await stationMusicShareAssetPath(target,'tracks','song','en');
+  assert.equal(path,await stationMusicShareAssetPath({...target,bucket:{}},'tracks','song','en'));
+  for(const change of [{title:'New title'},{artist:'Other artist'},{description:'Revised introduction'},{cover:{sha256:'b'.repeat(64)}},{cover:null}])
+    assert.notEqual(path,await stationMusicShareAssetPath({...target,...change},'tracks','song','en'));
+  assert.notEqual(path,await stationMusicShareAssetPath(target,'tracks','song','ja'));
+  for(const value of [path,path.replace('__','%5f%5f'),path.replace('__','%255f%255f'),path.replaceAll('/','\\')])
+    assert(isStationMusicShareAssetPath(value),value);
+  assert(!isStationMusicShareAssetPath('/music/share/tracks/song/card.png'));
+});
+
+test('card metadata remains readable to crawlers and browsers redirect only to the fixed App Store URL', async () => {
+  const f=await fixture(), r=await call(f,'/music/share/tracks/permanent-free/?locale=en');
+  assert.equal(r.status,200); const html=await r.text();
+  const script=html.match(/<script>([^<]+)<\/script>/)[1], opened=[];
+  new Function('location',script)({replace:url=>opened.push(url)});
+  assert.deepEqual(opened,['https://apps.apple.com/app/id6822797145']);
+  const digest=createHash('sha256').update(script).digest('base64');
+  assert(r.headers.get('content-security-policy').includes(`script-src 'sha256-${digest}'`));
+  assert(!r.headers.get('content-security-policy').includes("script-src 'unsafe-inline'"));
+  assert.match(html,/<noscript>[\s\S]*https:\/\/apps\.apple\.com\/app\/id6822797145/);
+  assert.match(html,/name="twitter:card" content="summary_large_image"/);
+  assert.match(html,/property="og:image"/);
+});
+
+test('offline generator retains template 3 and verifies cover source bytes', async () => {
+  const {generateStationMusicShareCards}=await import('./generate-station-music-share-cards.mjs');
+  const root=await mkdtemp(resolve(tmpdir(),'station-share-generation-'));
+  const entry={kind:'tracks',slug:'local-song',locale:'en',title:'Local song',artist:'Artist',description:'The published introduction.',cover:null};
+  try {
+    const [item]=await generateStationMusicShareCards([entry],root);
+    const bytes=readFileSync(resolve(root,'public'+item.path));
+    const image=await sharp(bytes).metadata();assert.equal(image.width,1200);assert.equal(image.height,1500);
+    assert.equal(item.sha256,createHash('sha256').update(bytes).digest('hex'));
+    assert.equal(item.path,await stationMusicShareAssetPath({...entry,kind:'track'},'tracks','local-song','en'));
+    await assert.rejects(generateStationMusicShareCards([{...entry,cover:{path:resolve(root,'public'+item.path),sha256:'0'.repeat(64),contentType:'image/png'}}],root),/Cover source differs/);
+  } finally {await rm(root,{recursive:true,force:true});}
+});
+
 
 test('strict routes and disabled gate require no DB, rejects unknown and duplicate queries', async () => {
   for (const path of ['/music/share/tracks/abc/', '/music/share/albums/xyz/card.png']) assert(isStationMusicSharePath(path));
@@ -46,7 +104,8 @@ test('published song uses its summary or story consistently in HTML, metadata an
     return renderStationMusicShareCard(target,copy,cover,font,icon);
   };
   const image = async () => {
-    const r=await handleStationMusicShare(request(path+'card.png?locale=en'),f.env,{clock:()=>now,render});
+    await prepareCard(f,'tracks','permanent-free','en',render);
+    const r=await handleStationMusicShare(request(path+'card.png?locale=en'),f.env,{clock:()=>now});
     assert.equal(r.status,200); return Buffer.from(await r.arrayBuffer());
   };
   const story='Story about <care> & return';
@@ -90,7 +149,7 @@ test('album share uses its published title and description, refuses drafts and p
 test('HTML and image layout escape text, show only real descriptions and use a 1200×1500 card', async () => {
   const target={title:'<script>alert(1)</script>',artist:'A & B',description:'实际的作品介绍',kind:'track'};
   const html=musicShareHtml(target,'tracks','example','zh-Hans');
-  assert.doesNotMatch(html,/<script>/); assert.match(html,/&lt;script&gt;/); assert.match(html,/实际的作品介绍/);
+  assert.doesNotMatch(html,/<script>alert/); assert.match(html,/&lt;script&gt;/); assert.match(html,/实际的作品介绍/);
   const svg=stationMusicShareSvg(target,{track:'单曲',download:'下载'},null,null); assert.match(svg,/width="1200" height="1500"/); assert.doesNotMatch(svg,/<script>/); assert.match(svg,/实际的作品介绍/);
   const font=readFileSync(new URL('../public/fonts/music/NotoSerifSC-Bold.otf',import.meta.url));
   const icon=readFileSync(new URL('../public/images/station-music-app/icon.webp',import.meta.url));
@@ -110,14 +169,14 @@ test('real PNG renders the published song cover and avoids a different song or p
     if (object) object.body = new Response(f.r2.objects.get(args[0]).bytes).body; return object; };
   f.env.ASSETS={async fetch(req){const path=new URL(req.url).pathname;
     return new Response(readFileSync(new URL('../public'+path,import.meta.url)));}};
+  await prepareCard(f,'tracks','permanent-free');
   const response=await call(f,'/music/share/tracks/permanent-free/card.png?locale=en');
   assert.equal(response.status,200); assert.equal(response.headers.get('cache-control'),'private, no-store');
   const png=Buffer.from(await response.arrayBuffer()); const decoded=await sharp(png).raw().toBuffer({resolveWithObject:true});
   assert.equal(decoded.info.width,1200); assert.equal(decoded.info.height,1500);
   const offset=(200*decoded.info.width+200)*decoded.info.channels;
   assert.ok(decoded.data[offset]>170 && decoded.data[offset+1]<80, 'cover shows the current red fixture');
-  const gets=f.r2.state.reads.filter(item=>item.method==='get'); assert.equal(gets.length,1);
-  assert.match(gets[0].key,new RegExp(f.content.tracks[0].id));
+  const gets=f.r2.state.reads.filter(item=>item.method==='get'); assert.equal(gets.length,0, 'precomputed card does not decode the R2 cover');
 });
 test('all four locales render, the supplied intro remains intact in metadata, and long card text ends in ellipsis', async()=>{
   const f=await fixture();
@@ -147,10 +206,11 @@ test('published album image uses its own verified cover; replacing or withdrawin
   await f.music.db.prepare("UPDATE music_collections SET cover_asset_id=?, status='published' WHERE id=?").bind(asset,id).run();
   const get=f.r2.bucket.get; f.r2.bucket.get=async (...args)=>{const object=await get(...args); if(object)object.body=new Response(f.r2.objects.get(args[0]).bytes).body;return object;};
   f.env.ASSETS={async fetch(req){return new Response(readFileSync(new URL('../public'+new URL(req.url).pathname,import.meta.url)));}};
+  await prepareCard(f,'albums','cover-album');
   const response=await call(f,'/music/share/albums/cover-album/card.png?locale=en'); assert.equal(response.status,200);
   const decoded=await sharp(Buffer.from(await response.arrayBuffer())).raw().toBuffer({resolveWithObject:true});
   const at=(200*decoded.info.width+200)*decoded.info.channels; assert.ok(decoded.data[at+1]>140 && decoded.data[at]<80,'green is the independent album cover');
-  assert.deepEqual(f.r2.state.reads.filter(r=>r.method==='get').map(r=>r.key),[key]);
+  assert.deepEqual(f.r2.state.reads.filter(r=>r.method==='get').map(r=>r.key),[], 'precomputed album card avoids runtime image work');
   const direct=await call(f,'/music/share/albums/cover-album/cover.png'); assert.equal(direct.status,200);
   assert.equal(direct.headers.get('cache-control'),'private, no-store');
   const thumbnail=Buffer.from(await direct.arrayBuffer()); assert.ok(thumbnail.length<=2*1024*1024);
@@ -171,14 +231,23 @@ test('workerd with real D1, R2, asset bindings and wasm renders and withdraws a 
   const wasm = new Map();
   const compiled=await build({ stdin:{resolveDir:process.cwd(),contents:`
     import {handleStationMusicShare} from './src/redesign/musicSharePage.js';
-    export default {fetch(request, env) {return handleStationMusicShare(request, env, {clock:()=>${now}});}}`},
+    import {isStationMusicShareAssetPath} from './src/redesign/musicShareAssets.js';
+    export default {fetch(request, env) {if(isStationMusicShareAssetPath(new URL(request.url).pathname))return new Response(null,{status:404});return handleStationMusicShare(request, env, {clock:()=>${now}});}}`},
     bundle:true,format:'esm',platform:'browser',conditions:['workerd'],write:false,
     plugins:[{name:'wasm-modules',setup(builder){builder.onResolve({filter:/\.wasm$/},args=>{
       const name=basename(args.path); wasm.set(name,readFileSync(resolve(args.resolveDir,args.path))); return {path:'./'+name,external:true};});}}] });
+  const assetRoot=await mkdtemp(resolve(tmpdir(),'station-share-assets-'));
+  const target={kind:'track',title:'permanent-free',artist:'Station Cat fixture',description:'Isolated fixture.',cover:{sha256:createHash('sha256').update(await sharp({create:{width:240,height:240,channels:3,background:'#cc2255'}}).png().toBuffer()).digest('hex')}};
+  const generated=await renderStationMusicShareCard(target,stationMusicShareLabels.en,null,font,icon);
+  const cardPath=await stationMusicShareAssetPath(target,'tracks','permanent-free','en');
+  await mkdir(dirname(resolve(assetRoot,'.'+cardPath)),{recursive:true});
+  await writeFile(resolve(assetRoot,'.'+cardPath),generated);
+  await mkdir(resolve(assetRoot,'images/station-music-app'),{recursive:true});
+  await writeFile(resolve(assetRoot,'images/station-music-app/icon.webp'),icon);
   const mf=new Miniflare({modulesRoot:'/music-sharing',modules:[{type:'ESModule',path:'/music-sharing/index.mjs',contents:compiled.outputFiles[0].text},
     ...[...wasm].map(([name,contents])=>({type:'CompiledWasm',path:'/music-sharing/'+name,contents}))],
     compatibilityDate:'2026-08-01',host:'127.0.0.1',port:0,d1Databases:{MUSIC_DB:'share-fixture-music',WAITLIST_DB:'share-fixture-reader'},
-    r2Buckets:{MUSIC_BUCKET:'share-fixture-bucket'},assets:{directory:resolve('public'),binding:'ASSETS',routerConfig:{has_user_worker:true,static_routing:{user_worker:['/*']}}},
+    r2Buckets:{MUSIC_BUCKET:'share-fixture-bucket'},assets:{directory:assetRoot,binding:'ASSETS',routerConfig:{has_user_worker:true,static_routing:{user_worker:['/*']}}},
     bindings:{STATION_MUSIC_SHARE_ENABLED:'true',STATION_CONTENT_PUBLIC_ENABLED:'true',MUSIC_RATE_LIMIT_SECRET:'station-share-fixture-not-for-production-123'},
     outboundService:()=>new Response('outbound disabled',{status:403})});
   try {
@@ -206,9 +275,10 @@ test('workerd with real D1, R2, asset bindings and wasm renders and withdraws a 
     await publish('','');
     response=await fetch(path+'?locale=en'); assert.equal(response.status,200); assert.doesNotMatch(await response.text(),/og:description/);
     response=await fetch(path+'card.png?locale=en'); assert.equal(response.status,200); const emptyPNG=Buffer.from(await response.arrayBuffer());
-    const region={left:75,top:1120,width:850,height:160};
-    const [storyPixels,emptyPixels]=await Promise.all([storyPNG,emptyPNG].map(png=>sharp(png).extract(region).raw().toBuffer()));
-    assert.notDeepEqual(storyPixels,emptyPixels,'the real workerd PNG contains story text');
+    assert.deepEqual(storyPNG,icon,'changed copy cannot reuse the old generated card');
+    assert.deepEqual(emptyPNG,icon,'new coverless copy uses a bounded readable fallback');
+    assert.equal((await fetch(cardPath)).status,404,'raw generated assets are not public');
+    assert.equal((await fetch(cardPath.replace('__share-card-files','%5f%5fshare-card-files'))).status,404);
     await publish('Actual summary','Other published story');
     response=await fetch(path+'?locale=en'); assert.equal(response.status,200); const summaryHTML=await response.text();
     assert.match(summaryHTML,/property="og:description" content="Actual summary"/); assert.doesNotMatch(summaryHTML,/Other published story/);
@@ -226,5 +296,5 @@ test('workerd with real D1, R2, asset bindings and wasm renders and withdraws a 
     assert.equal(thumb.info.width,512); assert.ok(thumb.data[3]<200);
     await db.prepare("UPDATE station_track_publications SET status='draft' WHERE track_id=?").bind(content.tracks[0].id).run();
     assert.equal((await fetch(path+'card.png')).status,404);
-  } finally {await mf.dispose();}
+  } finally {await mf.dispose();await rm(assetRoot,{recursive:true,force:true});}
 });
