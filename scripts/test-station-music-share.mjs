@@ -8,6 +8,10 @@ import sharp from 'sharp';
 import { afterEach, test } from 'node:test';
 import { handleStationMusicShare, isStationMusicSharePath, musicShareHtml, loadShareTarget, stationMusicShareLabels } from '../src/redesign/musicSharePage.js';
 import { stationMusicShareAssetPath, isStationMusicShareAssetPath } from '../src/redesign/musicShareAssets.js';
+import { stationRobotsResponse, handleStationSearch } from '../src/redesign/searchIndex.js';
+import { handleStationRouteMigration } from '../src/redesign/routeMigrations.js';
+import { migrationFlags } from '../src/redesign/routeMigrationPaths.js';
+import { createContentRollbackWorker } from '../src/redesign/contentRollback.js';
 import { normalizeMusicCardCover } from '../src/music/shareCardRender.js';
 import { stationMusicShareSvg, renderStationMusicShareCard } from '../src/redesign/musicShareRender.js';
 import { contentFixture, now, publishTrack } from './helpers/station-content-fixture.mjs';
@@ -20,6 +24,63 @@ async function fixture() { const f = await contentFixture(); fixtures.push(f); f
 const call = (f, path, method='GET') => handleStationMusicShare(request(path, method), f.env, { clock:() => now });
 const icon = readFileSync(new URL('../public/images/station-music-app/icon.webp',import.meta.url));
 const font = readFileSync(new URL('../public/fonts/music/NotoSerifSC-Bold.otf',import.meta.url));
+// Select the most specific matching agent group, then the longest path rule;
+// Allow wins an equal-length tie, as in the robots exclusion protocol.
+function robotsAllowed(body, agent, path) {
+  const groups=[]; let group;
+  for(const raw of body.split(/\r?\n/)) {
+    const line=raw.replace(/#.*$/,'').trim();
+    if(!line) {group=null;continue;}
+    const pair=/^(user-agent|allow|disallow):\s*(.*)$/i.exec(line);if(!pair)continue;
+    const key=pair[1].toLowerCase(),value=pair[2];
+    if(key==='user-agent') {if(!group||group.rules.length){group={agents:[],rules:[]};groups.push(group);}group.agents.push(value.toLowerCase());}
+    else if(group&&value)group.rules.push({path:value,allow:key==='allow'});
+  }
+  const matching=groups.map(group=>({...group,score:Math.max(-1,...group.agents.map(token=>token==='*'?0:agent.toLowerCase().includes(token)?token.length:-1))}));
+  const score=Math.max(-1,...matching.map(group=>group.score));
+  const rules=matching.filter(group=>group.score===score).flatMap(group=>group.rules).filter(rule=>path.startsWith(rule.path));
+  rules.sort((a,b)=>b.path.length-a.path.length||Number(b.allow)-Number(a.allow));
+  return rules[0]?.allow??true;
+}
+
+test('closed general indexing permits only Twitterbot share pages and images when public sharing is open', async () => {
+  const env={STATION_MUSIC_SHARE_ENABLED:'true',STATION_CONTENT_PUBLIC_ENABLED:'true'};
+  const body=await stationRobotsResponse(request('/robots.txt'),env).text();
+  for(const path of ['/music/share/tracks/a/','/music/share/albums/a/?locale=en','/music/share/albums/a/card.png?locale=en','/music/share/albums/a/cover.png']) {
+    assert.equal(robotsAllowed(body,'Twitterbot/1.0',path),true,path);
+    for(const agent of ['Googlebot','Bingbot','Safari'])assert.equal(robotsAllowed(body,agent,path),false,agent+path);
+  }
+  for(const path of ['/','/music/','/music/tracks/a/','/music/share-not-public/','/api/music/__share-card-files/a.png','/api/station/content/tracks','/admin/','/admin-v2/','/fonts/music/font.otf'])
+    assert.equal(robotsAllowed(body,'Twitterbot/1.0',path),false,path);
+  for(const closed of [{...env,STATION_MUSIC_SHARE_ENABLED:'false'},{...env,STATION_CONTENT_PUBLIC_ENABLED:'false'},{}])
+    assert.equal(await stationRobotsResponse(request('/robots.txt'),closed).text(),'User-agent: *\nDisallow: /\n');
+  assert.equal(await stationRobotsResponse(new Request('https://staging.example/robots.txt'),env).text(),'User-agent: *\nDisallow: /\n');
+});
+
+test('enabled search indexing keeps its original complete wildcard policy', async () => {
+  const env={STATION_SEARCH_INDEXING_ENABLED:'true',STATION_MUSIC_SHARE_ENABLED:'true',STATION_CONTENT_PUBLIC_ENABLED:'true'};
+  const body=await stationRobotsResponse(request('/robots.txt'),env).text();
+  assert.equal(body,'User-agent: *\nDisallow: /api/\nDisallow: /admin/\nDisallow: /admin-v2/\nDisallow: /music/site-shell/\nSitemap: https://wwwstationcat.org/sitemap.xml\n');
+  for(const agent of ['Twitterbot','Googlebot']) {
+    assert(robotsAllowed(body,agent,'/music/tracks/a/'));assert(robotsAllowed(body,agent,'/music/share/albums/a/card.png'));
+    assert(!robotsAllowed(body,agent,'/api/music/__share-card-files/a.png'));assert(!robotsAllowed(body,agent,'/admin/'));
+  }
+});
+
+test('actual migration robots route equals the shared policy and rollback intercepts it before delegation', async () => {
+  const env={...Object.fromEntries(migrationFlags.map(key=>[key,'true'])),STATION_MUSIC_SHARE_ENABLED:'true'};
+  for(const indexing of ['true','false']) {
+    const active={...env,STATION_SEARCH_INDEXING_ENABLED:indexing}, req=request('/robots.txt');
+    const expected=stationRobotsResponse(req,active), direct=await handleStationSearch(req,active), migrated=await handleStationRouteMigration(req,active);
+    assert.equal(migrated.status,200);assert.equal(await direct.text(),await expected.clone().text());assert.equal(await migrated.text(),await expected.text());
+    assert.equal(migrated.headers.get('cache-control'),'private, no-store');
+    assert.equal(await (await handleStationRouteMigration(request('/robots.txt','HEAD'),active)).text(),'');
+    let delegated=0;const rollback=createContentRollbackWorker({fetch(req,local){delegated++;return stationRobotsResponse(req,local);}});
+    const closed=await rollback.fetch(req,active,{});assert.equal(delegated,0);
+    const text=await closed.text();assert.equal(text,'User-agent: *\nDisallow: /\n');
+    assert.equal(robotsAllowed(text,'Twitterbot','/music/share/albums/a/card.png'),false);
+  }
+});
 async function prepareCard(f, kind, slug, locale='en', render=renderStationMusicShareCard) {
   const target = await loadShareTarget(request(`/music/share/${kind}/${slug}/`), f.env, kind, slug, locale, now, task=>task());
   const bytes = target.cover ? f.r2.objects.get(target.cover.object_key).bytes : null;

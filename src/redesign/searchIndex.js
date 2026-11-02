@@ -21,11 +21,21 @@ function urls(paths, origin) {
     group.map(([lang, href]) => `<url><loc>${e(origin + href)}</loc>` + group.map(([alternate, target]) =>
       `<xhtml:link rel="alternate" hreflang="${alternate}" href="${e(origin + target)}"/>`).join('') + '</url>').join('')).join('') + '</urlset>');
 }
+export function stationRobotsResponse(request, env) {
+  const url = new URL(request.url), origin = searchOrigin(url), indexing = searchIndexing(url, env);
+  // Share previews can be fetched while general search indexing stays closed.
+  // A specific agent group does not inherit the wildcard group's disallow.
+  const sharePreview = !indexing && url.origin === 'https://wwwstationcat.org' &&
+    env.STATION_MUSIC_SHARE_ENABLED === 'true' && [true, 'true'].includes(env.STATION_CONTENT_PUBLIC_ENABLED);
+  const previewRules = sharePreview ? 'User-agent: Twitterbot\nAllow: /music/share/\nDisallow: /\n\n' : '';
+  const generalRules = indexing ? `User-agent: *\nDisallow: /api/\nDisallow: /admin/\nDisallow: /admin-v2/\nDisallow: /music/site-shell/\nSitemap: ${origin}/sitemap.xml\n` : 'User-agent: *\nDisallow: /\n';
+  return reply(request, previewRules + generalRules, 'text/plain', indexing);
+}
 export async function handleStationSearch(request, env, { clock = Date.now, deadlineMs = 10000 } = {}) {
   const url = new URL(request.url), origin = searchOrigin(url), indexing = searchIndexing(url, env);
   if (url.pathname === '/robots.txt') {
     // Production retirees remain crawlable so their actual 404/410 can be seen.
-    return reply(request, indexing ? `User-agent: *\nDisallow: /api/\nDisallow: /admin/\nDisallow: /admin-v2/\nDisallow: /music/site-shell/\nSitemap: ${origin}/sitemap.xml\n` : 'User-agent: *\nDisallow: /\n', 'text/plain', indexing);
+    return stationRobotsResponse(request, env);
   }
   const shard = /^\/sitemaps\/(base|tracks-[1-9]\d{0,3}|games-[1-9]\d{0,3})\.xml$/.exec(url.pathname);
   if (url.pathname !== '/sitemap.xml' && !shard) return new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } });
