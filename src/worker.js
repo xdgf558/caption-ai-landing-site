@@ -66,6 +66,7 @@ import { handleMusicAnalytics, isMusicAnalyticsPath, runMusicAnalyticsRetention 
 import { handleStationContent, isStationContentPath } from './redesign/publicHttp.js';
 import { handleStationMusicPage } from './redesign/musicPages.js';
 import { isStationMusicSharePath, handleStationMusicShare } from './redesign/musicSharePage.js';
+import { isStationMusicShareAssetPath } from './redesign/musicShareAssets.js';
 import { handleStationRouteMigration } from './redesign/routeMigrations.js';
 import { legacyContentClosed, closedLegacyCheckout, legacyContentGone } from './redesign/legacyClosure.js';
 import { applyMigrationMetadata } from './redesign/searchMetadata.js';
@@ -22884,6 +22885,7 @@ export default {
     if (url.pathname === productionAssociationPath) return productionAssociation(request, env);
     // Generated thumbnails are private assets; public access must pass live music checks.
     if (isMusicDisplayAssetPath(url.pathname)) return new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } });
+    if (isStationMusicShareAssetPath(url.pathname)) return new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } });
     if (url.protocol === 'http:' && !isLocalRequest(request, env)) {
       url.protocol = 'https:';
       return Response.redirect(url.toString(), 301);
