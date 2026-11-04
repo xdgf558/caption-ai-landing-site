@@ -26,3 +26,15 @@ test('rendered DTO is escaped, has no unconfirmed continue button and unregister
   game.launchPath = '/games/cat-life/'; const registered = renderGamePage({ mode: 'detail', locale: 'en', game });
   assert.match(registered, /data-sc-game-launch hidden/); assert.ok(!registered.includes('Continue game'));
 });
+for (const [, locale] of locales) test(`${locale}: cat game beta invite is scoped to its public game, independently of browser launch`, () => {
+  const game = { slug: 'cat-life-game', title: 'Cat Life Diary', summary: 'daily', href: '/games/cat-life-game/', screenshots: [], supportedDevices: ['desktop'], launchPath: null };
+  const invite = 'href="https://testflight.apple.com/join/UV4nkZnA"';
+  for (const mode of ['catalog', 'detail']) {
+    const render = item => renderGamePage({ mode, locale, game: item, items: [item] });
+    const html = render(game);
+    assert.equal(html.split(invite).length - 1, 1);
+    assert.ok(!html.includes('data-sc-game-launch'));
+    assert.ok(!render({ ...game, slug: 'another-game', launchPath: '/games/cat-life/' }).includes(invite));
+    assert.ok(!renderGamePage({ mode, locale, game, items: [game], error: true }).includes(invite));
+  }
+});

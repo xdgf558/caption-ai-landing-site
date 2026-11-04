@@ -4,3 +4,26 @@ export const gameCopy = {
   en: { title: 'A world of games', intro: 'A little everyday life, a little adventure. Find a place for the small things you look forward to.', kicker: 'A LITTLE WORLD TO CALL HOME', featured: 'Games from the station', detail: 'Meet the game', back: 'All games', screen: 'Inside the game', screenPending: 'Game screenshots are not available yet.', alt: 'Actual game runtime screenshot', devices: 'Devices', desktop: 'Desktop browser', mobile: 'Mobile browser', deviceNote: 'Runs in a browser; the experience varies by device.', save: 'A place for your progress', saveNote: 'Guest progress stays in this browser. After sign-in, the game checks your account’s local slot and handles existing cloud sync and conflicts. Clearing site data or changing browsers may remove local progress that you have not exported.', checking: 'Checking your account and local save…', missing: 'No guest save was found in this browser. You can start a new day.', memberMissing: 'No usable local save was found for this account. The game will still check cloud progress.', valid: 'A readable, compatible local save was found.', corrupt: 'This save could not be recognised. Keep the original data and open recovery options.', unsupported: 'This save needs a compatible version. Its original data is retained; no separate progress is created automatically.', unavailable: 'Browser storage is unavailable. Check settings and retry.', identity: 'Your session could not be checked. Reconnect and retry.', continue: 'Continue game', start: 'Start game', enter: 'Enter game', recover: 'Recovery options', retry: 'Check again', member: 'Member center', empty: 'Another little game story is on its way.', failed: 'Games could not be loaded', next: 'More games', unavailableLaunch: 'Game entry is not available yet', language: 'Game interface: Simplified Chinese, English and Japanese. The Traditional Chinese website uses the Simplified Chinese game interface.', otherSave: 'If local and cloud progress differ, follow the game’s choice dialog. Exporting a save first is recommended.', moreSave: 'Local and cloud progress' },
   ja: { title: 'ゲームの世界', intro: '暮らしながら、冒険しながら。日々の小さな楽しみを、ゲームの中に。', kicker: 'A LITTLE WORLD TO CALL HOME', featured: '小さな駅のゲーム', detail: 'ゲームを知る', back: 'すべてのゲーム', screen: 'ゲーム画面', screenPending: 'ゲーム画面は準備中です。', alt: '実際に動作するゲームの画面', devices: '対応端末', desktop: 'デスクトップブラウザー', mobile: 'スマートフォンのブラウザー', deviceNote: 'ブラウザーで動作します。操作感は端末によって異なります。', save: '進行データを大切に', saveNote: 'ゲストの進行状況はこのブラウザーに保存されます。ログイン後はアカウントの端末セーブを確認し、ゲームが既存のクラウド同期と競合を処理します。サイトデータの削除やブラウザーの変更で、書き出していない進行状況を失う場合があります。', checking: 'アカウントと端末のセーブを確認中…', missing: 'このブラウザーにゲストのセーブはありません。新しい日常を始められます。', memberMissing: 'このアカウントの端末セーブはありません。ゲーム内でクラウドも確認します。', valid: '読み込み可能な対応セーブが見つかりました。', corrupt: 'セーブを認識できません。元のデータを保持して復元オプションへ進んでください。', unsupported: '対応するバージョンが必要です。元のデータを保持し、別の進行状況は自動作成しません。', unavailable: '保存領域にアクセスできません。設定を確認して再試行してください。', identity: 'ログイン状態を確認できません。接続を確認して再試行してください。', continue: 'ゲームを続ける', start: 'ゲームを始める', enter: 'ゲームへ', recover: '復元オプション', retry: '再確認', member: '会員センター', empty: '新しいゲームの物語を準備しています。', failed: 'ゲームを読み込めませんでした', next: 'もっと見る', unavailableLaunch: 'ゲームへの入口は準備中です', language: 'ゲーム画面は簡体字中国語・英語・日本語に対応。繁体字サイトからは簡体字のゲーム画面を使用します。', otherSave: '端末とクラウドの進行状況が異なる場合は、ゲーム内の選択画面に従ってください。先にセーブを書き出すことをおすすめします。', moreSave: '端末とクラウド' }
 };
+
+export const catLifeIosCopy = {
+  'zh-Hant': {
+    title: 'iPhone 測試版現已開放', intro: '把照顧小貓、經營日常的樂趣帶在身邊。',
+    join: '加入 iPhone 測試', steps: '先在 iPhone 安裝 TestFlight，再打開邀請連結，接受邀請並安裝遊戲。',
+    browser: '網頁版遊戲與存檔', devices: '網頁版適用裝置'
+  },
+  'zh-Hans': {
+    title: 'iPhone 测试版现已开放', intro: '把照顾小猫、经营日常的乐趣带在身边。',
+    join: '加入 iPhone 测试', steps: '先在 iPhone 安装 TestFlight，再打开邀请链接，接受邀请并安装游戏。',
+    browser: '网页版游戏与存档', devices: '网页版适用设备'
+  },
+  en: {
+    title: 'The iPhone beta is here', intro: 'Take a little everyday life with cats wherever you go.',
+    join: 'Join the iPhone beta', steps: 'Install TestFlight on your iPhone, then open the invite, accept it and install the game.',
+    browser: 'Browser game and saves', devices: 'Browser version: devices'
+  },
+  ja: {
+    title: 'iPhone ベータ版公開中', intro: '猫のお世話と小さな日常を、いつでも手元に。',
+    join: 'iPhone ベータ版に参加', steps: 'iPhone に TestFlight を入れ、招待リンクを開いて参加し、ゲームをインストールしてください。',
+    browser: 'ブラウザー版とセーブ', devices: 'ブラウザー版の対応端末'
+  }
+};
