@@ -181,5 +181,19 @@ export const musicDisplayCoverManifest = Object.freeze({
       "sourceBytes": 2050903,
       "contentType": "image/webp"
     }
+  },
+  "05e0e7385db57c46ac99bac4f89734ce1e7fb4bd1f1a5f161c5eccaf0f9a0a93": {
+    "sourceBytes": 1183897,
+    "path": "/api/music/__cover-files/25e663a6b757e740047da7648a564dc4595d6c0d577b14f7a8a2e68dae764d7e.jpg",
+    "sha256": "25e663a6b757e740047da7648a564dc4595d6c0d577b14f7a8a2e68dae764d7e",
+    "bytes": 91246,
+    "contentType": "image/jpeg",
+    "card": {
+      "path": "/api/music/__cover-files/c5cb28ee054bda5cc5abc2b4167ae73238daa54ae437fdbc8de392081eecf5b3.webp",
+      "sha256": "c5cb28ee054bda5cc5abc2b4167ae73238daa54ae437fdbc8de392081eecf5b3",
+      "bytes": 5792,
+      "sourceBytes": 1183897,
+      "contentType": "image/webp"
+    }
   }
 });

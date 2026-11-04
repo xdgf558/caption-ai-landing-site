@@ -241,7 +241,9 @@ export async function handleMusicPublic(request, env, { clock = Date.now, timeou
         const a=snapshot.collections.find(r=>r.collection.id===collection.id)?.coverAsset;
         if (url.searchParams.get('size') === 'display') {
           try {
-            return await musicDisplayCover(request, runtime.bucket, a, { assets: env.ASSETS, manifest: coverManifest });
+            // The exact album revision and its independent cover were checked above.
+            return await musicDisplayCover(request, runtime.bucket, a,
+              { assets: env.ASSETS, manifest: coverManifest, coverCacheVersion: a.sha256 });
           } catch { return errorResponse(request, 503, 'MEDIA_UNAVAILABLE', currentRoute); }
         }
         const media=await readMusicAssetObject(runtime.bucket,a,request);

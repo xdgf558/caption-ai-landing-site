@@ -113,7 +113,9 @@ test('website-only cover replacement is generated while legacy track and collect
   await assertCard(f, cover, manifest);
   for (const item of report.filter(item => item.publicSource.startsWith('/api/music/'))) {
     const response = await f.fetch(origin + item.publicSource + '&size=display', {}, manifest);
-    assert.equal(response.status, 200); assert.equal(response.headers.get('cache-control'), 'private, max-age=0, must-revalidate');
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), item.publicSource.startsWith('/api/music/collections/')
+      ? 'private, max-age=86400, must-revalidate' : 'private, max-age=0, must-revalidate');
     assert.equal(hash(Buffer.from(await response.arrayBuffer())), manifest[item.sourceSha256].sha256);
   }
 });
