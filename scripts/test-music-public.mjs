@@ -392,7 +392,7 @@ test('missing display files and newly uploaded covers fall back to the original 
   assert.equal(response.status, 200); assert.deepEqual(Buffer.from(await response.arrayBuffer()), f.bytes);
 });
 
-test('album display cover stays tied to the live album version and independent cover', async () => {
+async function albumDisplayFixture() {
   const f = await displayFixture(), album = f.seedCollection('display-album', [f.track.id], 'album'), aid = randomUUID();
   f.sql.prepare("UPDATE music_collections SET status='draft' WHERE id=?").run(album.id);
   const asset = { id: aid, owner_collection_id: album.id, kind: 'cover', state: 'validated',
@@ -401,15 +401,76 @@ test('album display cover stays tied to the live album version and independent c
   insert(f.sql, 'music_collection_assets', asset); f.objects.set(asset.object_key, { asset, bytes: f.bytes });
   f.sql.prepare("UPDATE music_collections SET cover_asset_id=?,status='published' WHERE id=?").run(aid, album.id);
   const path = `/api/music/collections/${album.slug}/cover?v=1&size=display`;
+  return { ...f, album, asset, path };
+}
+
+const assertAlbumCache = response => {
+  assert.equal(response.headers.get('cache-control'), 'private, max-age=86400, must-revalidate');
+  assert.equal(response.headers.get('cdn-cache-control'), 'no-store');
+  assert.equal(response.headers.get('cloudflare-cdn-cache-control'), 'no-store');
+  assert.equal(response.headers.get('vary'), null);
+  assert.equal(response.headers.get('set-cookie'), null);
+};
+
+test('album display cover earns device caching only after live album version and independent cover checks', async () => {
+  const f = await albumDisplayFixture(), { album, asset, path } = f;
   const first = await handleMusicPublic(request(path), f.env, f.options);
-  assert.equal(first.status, 200); await first.arrayBuffer();
+  assert.equal(first.status, 200); assertAlbumCache(first);
+  assert.deepEqual(Buffer.from(await first.arrayBuffer()), f.displayBytes);
   assert.equal(f.state.r2[0].key, asset.object_key);
   const init = { headers: { 'If-None-Match': first.headers.get('etag') } };
-  assert.equal((await handleMusicPublic(request(path, init), f.env, f.options)).status, 304);
+  const cached = await handleMusicPublic(request(path, init), f.env, f.options);
+  assert.equal(cached.status, 304); assertAlbumCache(cached); assert.equal(await cached.text(), '');
+  assert.equal(f.counts.hits, 2, 'A conditional cache grant still checks the generated file');
+  const head = await handleMusicPublic(request(path, { method: 'HEAD' }), f.env, f.options);
+  assert.equal(head.status, 200); assertAlbumCache(head); assert.equal(await head.text(), '');
+  assert.equal(Number(head.headers.get('content-length')), f.displayBytes.length);
+  const original = await handleMusicPublic(request(path.replace('&size=display', '')), f.env, f.options);
+  assert.equal(original.headers.get('cache-control'), 'no-store'); await original.body.cancel();
   f.sql.prepare('UPDATE music_collections SET version=2 WHERE id=?').run(album.id);
   assert.equal((await handleMusicPublic(request(path, init), f.env, f.options)).status, 409);
   f.sql.prepare("UPDATE music_collections SET status='draft' WHERE id=?").run(album.id);
   assert.equal((await handleMusicPublic(request(path.replace('v=1', 'v=2'), init), f.env, f.options)).status, 404);
+});
+
+test('album generated file failures and original fallbacks cannot retain a device-cache grant', async () => {
+  const f = await albumDisplayFixture();
+  const first = await handleMusicPublic(request(f.path), f.env, f.options);
+  const init = { headers: { 'If-None-Match': first.headers.get('etag') } }; await first.body.cancel();
+  for (const service of [undefined, { fetch: () => new Response(null, { status: 404 }) },
+    { fetch: () => new Response('wrong mime', { headers: { 'Content-Type': 'text/html' } }) },
+    { fetch: () => new Response(f.displayBytes, { headers: { 'Content-Type': 'image/jpeg', 'Content-Length': '1' } }) }]) {
+    f.env.ASSETS = service;
+    for (const input of [{}, init]) {
+      const response = await handleMusicPublic(request(f.path, input), f.env, f.options);
+      assert.equal(response.status, 200); assert.equal(response.headers.get('cache-control'), 'no-store');
+      assert.equal(response.headers.get('cdn-cache-control'), 'no-store');
+      assert.equal(response.headers.get('cloudflare-cdn-cache-control'), 'no-store');
+      assert.deepEqual(Buffer.from(await response.arrayBuffer()), f.bytes);
+    }
+  }
+});
+
+test('album conditional cache requests keep strict query, shutdown, publication and storage checks', async () => {
+  const f = await albumDisplayFixture();
+  const first = await handleMusicPublic(request(f.path), f.env, f.options);
+  const init = { headers: { 'If-None-Match': first.headers.get('etag') } }; await first.body.cancel();
+  const denied = async (path, status) => {
+    const response = await handleMusicPublic(request(path, init), f.env, f.options);
+    assert.equal(response.status, status); assert.equal(response.headers.get('cache-control'), 'no-store');
+    await response.body?.cancel();
+  };
+  for (const path of [f.path + '&v=1', f.path + '&size=display', f.path + '&token=secret',
+    f.path.replace('v=1', 'v=01'), f.path.replace('?v=1&', '?'), f.path.replace('size=display', 'size=card')]) {
+    await denied(path, 400);
+  }
+  await denied(f.path.replace('v=1', 'v=2'), 409);
+  f.env.MUSIC_PUBLIC_ENABLED = 'false'; await denied(f.path, 503); f.env.MUSIC_PUBLIC_ENABLED = 'true';
+  f.sql.prepare("UPDATE music_collections SET status='draft' WHERE id=?").run(f.album.id);
+  await denied(f.path, 404);
+  f.sql.prepare("UPDATE music_collections SET status='published' WHERE id=?").run(f.album.id);
+  f.state.objectPatch = object => ({ ...object, etag: 'replaced' }); await denied(f.path, 503);
+  assert.equal(f.counts.hits, 1, 'Rejected requests must not reach generated artwork');
 });
 
 test('display route cannot expose the generated files directly or import an image encoder', () => {
