@@ -1,0 +1,22 @@
+{
+  "recordedAt": "2026-10-11T23:56:13.519Z",
+  "sourceRevision": "64e0f113ef9310242cad21bdf3abb667734f2575",
+  "fromVersion": "cf69fe92-f8cd-45ff-a2a8-87cac1546814",
+  "changedFlags": [
+    "STATION_CONTENT_ADMIN_ENABLED",
+    "STATION_MEDIA_UPLOADS_ENABLED"
+  ],
+  "configurationSha256": "76de98b82e803ee83edc0ed33f85425480d76ecb1bb38503805ee39f8733a683",
+  "disableConfigurationSha256": "fb1b3cd662b31e4808505cae4e8c63b92d2ddfd18e1d870709ce9954ec47440a",
+  "assets": 406,
+  "html": 59,
+  "workerSha256": "9261839e60fd591d25e9f10d9bfa1eb8c058ce9d38d5e0d3d87b559fb6be13c9",
+  "workerRuntimeFiles": 3,
+  "workerAndAssetsUnchanged": true,
+  "typesGenerated": true,
+  "dryRunPassed": true,
+  "sharedUploadFlagAlreadyEnabled": true,
+  "accessConfigurationUnchanged": true,
+  "legacyClosed": true,
+  "productionWrites": 0
+}

@@ -1,0 +1,46 @@
+{
+  "recordedAt": "2026-10-11T23:57:51.879Z",
+  "startedAt": "2026-10-11T23:57:23.477Z",
+  "versionId": "1f3fb556-0b91-4946-b524-0ebe83223619",
+  "deployedAt": "2026-10-11T23:57:43.762933Z",
+  "percentage": 100,
+  "sourceRevision": "64e0f113ef9310242cad21bdf3abb667734f2575",
+  "workerSha256": "9261839e60fd591d25e9f10d9bfa1eb8c058ce9d38d5e0d3d87b559fb6be13c9",
+  "configurationSha256": "76de98b82e803ee83edc0ed33f85425480d76ecb1bb38503805ee39f8733a683",
+  "changedFlags": [
+    "STATION_CONTENT_ADMIN_ENABLED",
+    "STATION_MEDIA_UPLOADS_ENABLED"
+  ],
+  "workerAndAssetsUnchanged": true,
+  "workerFirst": true,
+  "preservedBindingIdentities": true,
+  "secretBindings": 9,
+  "accessConfigurationUnchanged": true,
+  "schedulePreserved": true,
+  "observabilityPreserved": true,
+  "domainPreserved": true,
+  "legacyClosed": true,
+  "enabledStationFlags": [
+    "STATION_CONTENT_ADMIN_ENABLED",
+    "STATION_CONTENT_PUBLIC_ENABLED",
+    "STATION_GAME_PAGES_ENABLED",
+    "STATION_LEGACY_CONTENT_CLOSED",
+    "STATION_MEDIA_UPLOADS_ENABLED",
+    "STATION_MEMBER_PAGES_ENABLED",
+    "STATION_MUSIC_PAGES_ENABLED",
+    "STATION_ROUTE_MIGRATIONS_ENABLED"
+  ],
+  "disabledStationFlags": [
+    "STATION_CAMPAIGNS_ENABLED",
+    "STATION_CONTENT_SCHEDULES_ENABLED",
+    "STATION_EVENTS_ENABLED",
+    "STATION_EVENTS_RETENTION_ENABLED",
+    "STATION_REPORT_AGGREGATION_ENABLED",
+    "STATION_REPORT_RETENTION_ENABLED",
+    "STATION_REPORTS_ENABLED",
+    "STATION_SEARCH_INDEXING_ENABLED"
+  ],
+  "remoteMigrations": 0,
+  "productionBusinessWrites": 0,
+  "adminAcceptancePending": true
+}

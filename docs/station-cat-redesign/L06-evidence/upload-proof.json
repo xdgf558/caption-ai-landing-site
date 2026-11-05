@@ -1,0 +1,16 @@
+{
+  "recordedAt": "2026-10-12T00:03:19.497Z",
+  "assetId": "27997fd1-9710-494a-b53b-2850d5b63064",
+  "uploadId": "ed138cf5-d615-4d6b-8b98-696efdd0727b",
+  "gameId": "9ebac4ee-0bc7-4dd4-82b7-b211f9d5e758",
+  "status": "completed",
+  "state": "validated",
+  "width": 1100,
+  "height": 760,
+  "bytes": 105684,
+  "sha256": "7c03d6da36e45fee88a11e6246ebc07fec5a8b1434fe7dbaac95449ec81fc025",
+  "realAllowlistedActor": true,
+  "rightsApproved": false,
+  "publicBeforePublication": 404,
+  "uploadsAdded": 1
+}

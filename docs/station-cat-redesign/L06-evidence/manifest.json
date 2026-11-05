@@ -1,0 +1,92 @@
+{
+  "recordedAt": "2026-10-12T00:55:04.655Z",
+  "files": [
+    {
+      "path": "content-admin-regression.log",
+      "bytes": 4374,
+      "sha256": "85fb48eb635767de519a80081eaac7b6fd7c246f4575423b685bc62c05541800"
+    },
+    {
+      "path": "deployment-result.json",
+      "bytes": 1573,
+      "sha256": "7414c034c36bc96c67dfccad8942a3e986b07e9e997504b838b67f31e8b35bd0"
+    },
+    {
+      "path": "draft-proof.json",
+      "bytes": 390,
+      "sha256": "97c965d23160cf57e7c1b2ac9c04af2e3e7bfbfff6e2726cc0ccd5abe47cb59d"
+    },
+    {
+      "path": "first-launch-build.log",
+      "bytes": 28085,
+      "sha256": "cf79e3b57a56c962e5f09b12cc58c4772259d891322104794d55ffdf48a23ede"
+    },
+    {
+      "path": "game-published.jpg",
+      "bytes": 84063,
+      "sha256": "f355e9cadef10f8c80631ab0199c99ea187d8c39a67609769b4b2770290038f3"
+    },
+    {
+      "path": "package-proof.json",
+      "bytes": 820,
+      "sha256": "05838af7996159660ee12b11a3d044959dbb3af2ad24414bd34bd3c94298ff4c"
+    },
+    {
+      "path": "preflight-summary.json",
+      "bytes": 1070,
+      "sha256": "1ec6ea337d1eeba36cf0fdd070c5b5b1c63d7d8dff4e6fc848acc06fb0ba0648"
+    },
+    {
+      "path": "production-acceptance.json",
+      "bytes": 6395,
+      "sha256": "4cacb2cf00b4fa9b62392450cff35f5b4741599f366ce1179602ec892780226c"
+    },
+    {
+      "path": "production-admin.jpg",
+      "bytes": 21749,
+      "sha256": "62513c652a323d263d2aaa88b76afceecbd390fe6159d6c38fe593f801043fb1"
+    },
+    {
+      "path": "production-http.json",
+      "bytes": 19572,
+      "sha256": "4168330b6e99c61ba863c4199b8b0672b37475a4cef5fc696226dbf273a43668"
+    },
+    {
+      "path": "public-projection.json",
+      "bytes": 705,
+      "sha256": "023c8ca3c7aec66b675a02ee987c90205180af94f4b631c5905b5fc3d8a56217"
+    },
+    {
+      "path": "rights-gate-proof.json",
+      "bytes": 382,
+      "sha256": "bad3e6f54ed3967110eeb3efe5aa345d78f908e9e4ffa9963093f656101b44b2"
+    },
+    {
+      "path": "rights-gate.jpg",
+      "bytes": 18099,
+      "sha256": "d7805a20830c498c9867651c117907a49b7f92fe28dad2c1983f552dde211226"
+    },
+    {
+      "path": "screenshot-privacy.json",
+      "bytes": 2187,
+      "sha256": "e08b763c32d5f13974912485e69f11ad8cb5a0e53c7f85c49e83bc14fd1ceac7"
+    },
+    {
+      "path": "upload-proof.json",
+      "bytes": 502,
+      "sha256": "a247472512ec46e19307000e88dd3133e49dfdc6954990ddf74851552b02c75b"
+    },
+    {
+      "path": "uploads-regression.log",
+      "bytes": 4291,
+      "sha256": "48218cc0760b49bbc4e7a071236810c1c1193804c706a0b3cef1fb795e68f45d"
+    },
+    {
+      "path": "validation.json",
+      "bytes": 2121,
+      "sha256": "67860a3df6c87f8774a1189568b29a57bc1faeac1b02253002e4d7e5a8708edc"
+    }
+  ],
+  "containsCredentials": false,
+  "privateOperatorFilesExcluded": true
+}

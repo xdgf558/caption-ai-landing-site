@@ -1,0 +1,68 @@
+{
+  "recordedAt": "2026-10-12T00:55:04.653Z",
+  "runtimeSourceRevision": "64e0f113ef9310242cad21bdf3abb667734f2575",
+  "baselineCI": {
+    "reviewedHead": "3872acbdeb43343034624954146804d9e13efe01",
+    "pullRequest": 212,
+    "runId": 38157647291,
+    "checkRunId": 114523817955,
+    "status": "completed",
+    "conclusion": "success",
+    "verifiedVia": "Codex PR checks",
+    "runtimeFilesUnchanged": true
+  },
+  "localTests": [
+    {
+      "command": "npm run test:redesign:content-admin",
+      "passed": 37,
+      "failed": 0,
+      "log": "content-admin-regression.log"
+    },
+    {
+      "command": "npm run test:redesign:uploads",
+      "passed": 36,
+      "failed": 0,
+      "log": "uploads-regression.log"
+    }
+  ],
+  "productionCandidateBuild": {
+    "command": "npm run build:station:first-launch",
+    "passed": true,
+    "allowEmptySerialContent": false,
+    "profile": "brand-games",
+    "productionDeployed": false,
+    "htmlCount": 59,
+    "removedHtmlCount": 126,
+    "fileCount": 406,
+    "compatibilityPreserved": true,
+    "log": "first-launch-build.log",
+    "deployed": false,
+    "logNormalization": {
+      "trailingWhitespaceRemoved": true,
+      "originalPrivateLogSha256": "1d3b4a871560e24017202052951d135cbada4a5f66a72d01473e51dcadfa0e32"
+    }
+  },
+  "configuration": {
+    "typesGenerated": true,
+    "dryRunPassed": true,
+    "runtimeBytesMatch": true,
+    "evidence": "package-proof.json"
+  },
+  "readinessAssessment": {
+    "launchReady": false,
+    "productionDeployed": true,
+    "legacyClosureVerified": true,
+    "unsatisfied": [
+      "exact-head-ci",
+      "production-backup",
+      "real-promotion-rights",
+      "production-route-contract",
+      "performance",
+      "devices-accessibility",
+      "compatible-rollback-monitoring"
+    ],
+    "authority": "review checklist only; separate execution authorization required"
+  },
+  "scope": "Live authenticated production content/media acceptance is separate from local tests, the candidate build and the current PR CI.",
+  "currentBatchCI": "Not yet available at evidence generation; verify the PR exact head independently."
+}

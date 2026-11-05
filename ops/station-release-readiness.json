@@ -8,9 +8,9 @@
       "id": "exact-head-ci",
       "status": "pending",
       "evidence": [
-        "docs/station-cat-redesign/L05-evidence/validation.json"
+        "docs/station-cat-redesign/L06-evidence/validation.json"
       ],
-      "reason": "部署使用的运行时修复头 38ed5f7c 完整 CI 38154398558 成功；状态记录时最终证据/检查表提交尚未生成，须按 PR 当前头独立核对，不能用运行时头代替。"
+      "reason": "L05 已审查最终头 3872acbd 的完整 CI 38157647291 已由 PR checks 独立核对成功，合并为 64e0f113；L06 不改变运行时、Assets 或迁移。本批文档/状态提交的当前头仍需独立托管 checks，不能用基线 CI 或本机检查代替。"
     },
     {
       "id": "production-schema",
@@ -88,13 +88,24 @@
       "status": "passed",
       "evidence": [
         "docs/station-cat-redesign/L05-evidence/production-launch.json",
-        "docs/station-cat-redesign/L05-evidence/recovery.json"
+        "docs/station-cat-redesign/L05-evidence/recovery.json",
+        "docs/station-cat-redesign/L06-evidence/deployment-result.json",
+        "docs/station-cat-redesign/L06-evidence/production-acceptance.json"
       ],
-      "reason": "用户在本聊天将部署包、执行方案、部署新版与关闭旧小说合并为一个执行任务。本次已实际部署并关闭旧公开内容，未删除历史业务数据或执行数据库恢复；该授权不授予新的独立功能或未来部署。"
+      "reason": "用户已授权 L05 新版上线和旧小说关闭，并明确要求 L06 启用、验收生产内容与素材后台且亲自完成既有 Access 登录。本批实际只开启两个后台开关，用同内容游戏及同字节截图验收；不授予音乐选择/公开、其他模块开启、未来部署或本批自动合并。"
     }
   ],
-  "launchPhase": "L05",
+  "launchPhase": "L06",
   "launchScope": "ops/station-first-launch.json",
   "validatedRuntimeRevision": "38ed5f7c7519b8f4fe8bc6cc8e005d69c584ca37",
-  "productionVersion": "cf69fe92-f8cd-45ff-a2a8-87cac1546814"
+  "productionVersion": "1f3fb556-0b91-4946-b524-0ebe83223619",
+  "productionAdmin": {
+    "contentEnabled": true,
+    "mediaUploadsEnabled": true,
+    "scopeAccepted": true,
+    "evidence": "docs/station-cat-redesign/L06-evidence/production-acceptance.json",
+    "accessPoliciesChanged": false,
+    "musicPublicationsAdded": 0,
+    "otherAdminFeatureFlagsEnabled": false
+  }
 }
