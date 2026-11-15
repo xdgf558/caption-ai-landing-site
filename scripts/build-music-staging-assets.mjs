@@ -11,9 +11,7 @@ const htmlPaths = [
   '/admin/music/collections/upload/index.html',
   '/admin/music/featured/index.html',
   '/music/index.html',
-  '/en/music/index.html',
-  '/ja/music/index.html',
-  '/zh-hans/music/index.html'
+  '/en/music/index.html'
 ];
 const dynamicAssets = new Set([
   '/vendor/music-mp3/lamejs-1.2.7.js'

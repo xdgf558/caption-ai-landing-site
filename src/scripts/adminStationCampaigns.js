@@ -17,7 +17,7 @@ export async function renderStationCampaigns(panel,trackId,{controller,identity,
   const controls=el('fieldset');controls.disabled=!page.creationAvailable;controls.className='campaign-create';
   const id=textInput('campaign-key','例如 local-douyin-01'),source=textInput('campaign-source','例如 douyin'),medium=textInput('campaign-medium','例如 short_video');
   const clip=select('campaign-clip',[['','作品资料（无视频）'],...(page.clipIds??[]).map(id=>[id,'推广关联视频 · '+id.slice(0,8)])]);
-  const locale=select('campaign-locale',[['zh-Hant','繁體中文'],['zh-Hans','简体中文'],['en','English'],['ja','日本語']]);
+  const locale=select('campaign-locale',[['zh-Hant','繁體中文'],['en','English']]);
   const state=select('campaign-state',publisher?[['active','启用并生成链接'],['draft','只登记草稿']]:[['draft','只登记草稿']]);
   const legacy=el('input');legacy.id='campaign-legacy';legacy.maxLength=324;legacy.placeholder='仅填写已使用的旧 src，多个值用逗号分隔';
   const reason=el('textarea');reason.id='campaign-reason';reason.rows=2;reason.maxLength=1000;

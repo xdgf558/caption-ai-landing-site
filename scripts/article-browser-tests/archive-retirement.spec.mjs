@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 for (const width of [1280, 390]) {
   test(`public archive is retired at ${width}px while articles and sharing remain available`, async ({ page, request, baseURL }) => {
     await page.setViewportSize({ width, height: 900 });
-    for (const path of ['/signal/', '/zh-hans/signal/', '/en/signal/', '/ja/signal/']) {
+    for (const path of ['/signal/', '/en/signal/']) {
       await page.goto(path + '?view=archive');
       await expect(page).toHaveURL(baseURL + path);
       await expect(page.locator('.articles-list-heading')).toBeVisible();
@@ -23,7 +23,7 @@ for (const width of [1280, 390]) {
     await expect(page.locator('[data-share-image]')).toBeVisible();
     expect(await page.locator('[data-share-image]').evaluate(img => img.naturalWidth)).toBe(1080);
     await page.locator('[data-share-close]').click();
-    await page.locator('.article-row h2 a[href^="/zh-hans/signal/"]').first().click();
+    await page.locator('.article-row h2 a[href^="/signal/x-article-"]').first().click();
     await expect(page.locator('.article-prose h2').first()).toBeVisible();
     await page.screenshot({ path: `test-results/archive-retirement-reader-${width}.png`, fullPage: true });
   });

@@ -2,9 +2,7 @@ import type { Locale } from './site';
 
 export const devlogLocales = [
   { lang: 'zh-Hant', pathLocale: 'zh-hant' },
-  { lang: 'zh-Hans', pathLocale: 'zh-hans' },
-  { lang: 'en', pathLocale: 'en' },
-  { lang: 'ja', pathLocale: 'ja' }
+  { lang: 'en', pathLocale: 'en' }
 ] as const;
 
 export const devlogCopy = {

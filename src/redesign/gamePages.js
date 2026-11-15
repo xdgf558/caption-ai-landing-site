@@ -7,7 +7,7 @@ import { escapeMusicHtml as e } from './musicRender.js';
 import { gameCopy } from './gameCopy.js';
 import { renderGamePage } from './gameRender.js';
 import { eventPageConfiguration } from './analyticsModel.js';
-const locales = { en: 'en', ja: 'ja', 'zh-hans': 'zh-Hans', 'zh-hant': 'zh-Hant' };
+const locales = { en: 'en', 'zh-hant': 'zh-Hant' };
 const enabled = value => value === true || value === 'true';
 const headers = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store',
   'X-Robots-Tag': 'noindex, nofollow', 'X-Content-Type-Options': 'nosniff' };

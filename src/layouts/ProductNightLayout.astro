@@ -78,9 +78,7 @@ const legalPrefix = `/${localePrefix}`;
 const productPath = currentPath.replace(/^\/(?:zh-hant|zh-hans|en|ja)(?=\/)/, '');
 const mobileLocales = [
   { lang: 'zh-Hant', label: '繁中', prefix: '/zh-hant' },
-  { lang: 'zh-Hans', label: '简中', prefix: '/zh-hans' },
-  { lang: 'en', label: 'EN', prefix: '/en' },
-  { lang: 'ja', label: '日本語', prefix: '/ja' }
+  { lang: 'en', label: 'EN', prefix: '/en' }
 ].map((locale) => ({
   ...locale,
   href: alternates.find((alternate) => alternate.hrefLang === locale.lang)?.href
@@ -97,7 +95,7 @@ const resolvedBodyClass = ['product-night', bodyClass].filter(Boolean).join(' ')
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
-    {alternates.map((alternate) => (
+    {alternates.filter((alternate) => !['zh-Hans', 'ja'].includes(alternate.hrefLang)).map((alternate) => (
       <link rel="alternate" hreflang={alternate.hrefLang} href={new URL(alternate.href, siteConfig.baseUrl).toString()} />
     ))}
     <meta property="og:type" content="website" />

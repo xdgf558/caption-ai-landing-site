@@ -127,12 +127,12 @@ test('public album browsing keeps one paused source until play and retains cards
     if(url.pathname.endsWith('/audio')){audioRequests++;return route.fulfill({status:200,contentType:'audio/wav',body:demoWav(tracks[2])});}
     return route.fulfill({status:503,json:{error:{code:'MUSIC_PUBLIC_DISABLED'}}});
   });
-  await page.goto('/zh-hans/music/');await expect(page.locator('[data-track-list] > li')).toHaveCount(3);
-  await page.getByRole('button',{name:'专辑',exact:true}).click();await page.locator('[data-album-list] button').click();
+  await page.goto('/music/');await expect(page.locator('[data-track-list] > li')).toHaveCount(3);
+  await page.getByRole('button',{name:'專輯',exact:true}).click();await page.locator('[data-album-list] button').click();
   await expect(page.locator('[data-track-list]')).toContainText('慢慢醒来');await expect(page.locator('[data-list-title]')).toHaveText('专辑夹具');
   expect(audioRequests).toBe(0);expect(await page.locator('audio').evaluate(a=>a.getAttribute('src'))).toBeNull();
   await page.locator('[data-play-all]').click();await expect.poll(()=>page.locator('audio').evaluate(a=>!a.paused)).toBe(true);
-  const source=await page.locator('audio').getAttribute('src');await page.getByRole('button',{name:'专辑',exact:true}).click();
+  const source=await page.locator('audio').getAttribute('src');await page.getByRole('button',{name:'專輯',exact:true}).click();
   const card=page.locator('[data-album-list] button');await card.evaluate(n=>n.dataset.testIdentity='retained');
   await page.locator('[data-featured-view]').click();await expect(page.locator('[data-detail-dialog]')).toBeVisible();
   await page.locator('[data-detail-favorite]').click();await page.locator('[data-panel-close="detail"]').click();
@@ -151,6 +151,6 @@ test('metadata-only album remains visible and opens with no songs or audio reque
     if(url.pathname.endsWith('/audio'))audioRequests++;
     return route.fulfill({status:503,json:{error:{code:'MUSIC_PUBLIC_DISABLED'}}});
   });
-  await page.goto('/zh-hans/music/');await page.getByRole('button',{name:'专辑',exact:true}).click();await expect(page.locator('[data-album-list] button')).toContainText('即将更新的专辑');await page.locator('[data-album-list] button').click();
+  await page.goto('/music/');await page.getByRole('button',{name:'專輯',exact:true}).click();await expect(page.locator('[data-album-list] button')).toContainText('即将更新的专辑');await page.locator('[data-album-list] button').click();
   await expect(page.locator('[data-list-title]')).toHaveText('即将更新的专辑');await expect(page.locator('[data-track-list] > li')).toHaveCount(0);expect(audioRequests).toBe(0);expect(await page.locator('audio').getAttribute('src')).toBeNull();
 });

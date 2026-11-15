@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const distRoot = resolve(projectRoot, 'dist');
-const localizedNotFoundLocales = ['en', 'ja', 'zh-hans', 'zh-hant'];
+const localizedNotFoundLocales = ['en', 'zh-hant'];
 
 for (const locale of localizedNotFoundLocales) {
   await copyFile(

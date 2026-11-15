@@ -1,7 +1,7 @@
 ---
 import { X } from '@lucide/astro';
 import { musicCopy } from '../../redesign/musicCopy.js';
-interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+interface Props { lang: 'zh-Hant' | 'en' }
 const { lang } = Astro.props; const copy = musicCopy[lang];
 ---
 <dialog id="sc-video-dialog" class="sc-video-dialog" data-sc-clip-dialog aria-labelledby="sc-video-title">

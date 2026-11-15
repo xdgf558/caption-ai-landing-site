@@ -27,9 +27,7 @@ const pagePaths = new Set([
   '/admin/music/collections/upload',
   '/admin/music/featured',
   '/music',
-  '/en/music',
-  '/ja/music',
-  '/zh-hans/music'
+  '/en/music'
 ]);
 
 const astroAssets = [

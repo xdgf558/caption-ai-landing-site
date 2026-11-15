@@ -37,19 +37,15 @@ const isStandalone = /^\/(?:points|library|terms|privacy)\/$/.test(standalonePat
 const standaloneEnglishPath = `/en${standalonePath}`;
 const isMusic = isMusicPagePath(path);
 const enPath = isMusic ? musicPageHref('en') : isStandalone ? standaloneEnglishPath : isApps ? `/en${appsPath}` : isDevlog ? `/en${devlogPath}` : isNovel ? `/en${novelPath}` : isWorks ? `/en${worksPath}` : '/en/';
-const jaPath = isMusic ? musicPageHref('ja') : isStandalone ? `/ja${standalonePath}` : isApps ? `/ja${appsPath}` : isDevlog ? `/ja${devlogPath}` : isWorks ? `/ja${worksPath}` : '/ja/';
 const zhHantPath = isMusic ? musicPageHref('zh-Hant') : isStandalone ? `/zh-hant${standalonePath}` : isApps ? `/zh-hant${appsPath}` : isDevlog ? devlogPath : isNovel ? novelPath : isWorks ? `/zh-hant${worksPath}` : '/';
-const zhHansPath = isMusic ? musicPageHref('zh-Hans') : isStandalone ? `/zh-hans${standalonePath}` : isApps ? `/zh-hans${appsPath}` : isDevlog ? `/zh-hans${devlogPath}` : isWorks ? `/zh-hans${worksPath}` : '/zh-hans/';
-const currentLabel = lang === 'zh-Hans' ? '简中' : lang === 'en' ? 'EN' : lang === 'ja' ? '日本語' : '繁中';
+const currentLabel = lang === 'en' ? 'EN' : '繁中';
 ---
 
 <div class="language-switcher language-switcher--select">
   <label class="sr-only" for="language-select">Language</label>
   <select id="language-select" class="language-select" aria-label="Language" title={currentLabel}>
     <option value={zhHantPath} selected={lang === 'zh-Hant'}>繁中</option>
-    <option value={zhHansPath} selected={lang === 'zh-Hans'}>简中</option>
     <option value={enPath} selected={lang === 'en'}>EN</option>
-    <option value={jaPath} selected={lang === 'ja'}>日本語</option>
   </select>
 </div>
 

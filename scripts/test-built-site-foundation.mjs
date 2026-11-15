@@ -11,8 +11,6 @@ const pageTitle = (html) => html.match(/<title>([^<]+)<\/title>/)?.[1] || '';
 
 const localizedNotFoundPages = [
   ['en', 'lang="en"', 'This stop is not on the map.'],
-  ['ja', 'lang="ja"', 'この停車駅は地図にありません。'],
-  ['zh-hans', 'lang="zh-Hans"', '这一站不在地图上。'],
   ['zh-hant', 'lang="zh-Hant"', '這一站不在地圖上。']
 ];
 
@@ -49,7 +47,11 @@ for (const legacyPage of [
   'library/index.html',
   'works/index.html',
   'en/works/index.html',
+  'ja/index.html',
+  'ja/404.html',
   'ja/works/index.html',
+  'zh-hans/index.html',
+  'zh-hans/404.html',
   'zh-hans/works/index.html',
   'zh-hant/works/index.html'
 ]) {
@@ -62,17 +64,15 @@ for (const route of [
   '/novel/',
   '/en/novel/',
   '/signal/',
-  '/ja/signal/',
   '/en/apps/',
   '/en/points/',
   '/zh-hant/apps/mindbudget/',
   '/en/apps/cat-life-game/',
-  '/ja/apps/cat-life-game/',
-  '/zh-hans/apps/cat-life-game/',
   '/zh-hant/apps/cat-life-game/'
 ]) {
   assert.ok(sitemap.includes(`<loc>https://wwwstationcat.org${route}</loc>`), `sitemap must include ${route}`);
 }
+assert.doesNotMatch(sitemap, /wwwstationcat\.org\/(?:ja|zh-hans)\//, 'retired locales must not appear in the sitemap');
 assert.doesNotMatch(
   sitemap,
   /\/devlog\/|\/admin-v2\/|\/library\/|\/games\/|https:\/\/wwwstationcat\.org\/(?:apps|points|privacy|support|terms|works)\//
@@ -84,8 +84,6 @@ assert.match(catLifeGame, /site-integration\.js/);
 
 const localizedAppsPages = [
   ['en/apps/index.html', 'Station Cat Apps | Independent Creative Tools', 'https://wwwstationcat.org/en/apps/'],
-  ['ja/apps/index.html', 'Station Cat Apps｜個人開発ツール', 'https://wwwstationcat.org/ja/apps/'],
-  ['zh-hans/apps/index.html', 'Station Cat Apps｜独立创作工具', 'https://wwwstationcat.org/zh-hans/apps/'],
   ['zh-hant/apps/index.html', 'Station Cat Apps｜獨立創作工具', 'https://wwwstationcat.org/zh-hant/apps/']
 ];
 const appsTitles = new Set();
@@ -104,7 +102,7 @@ for (const [path, expectedTitle, canonical] of localizedAppsPages) {
     `${path} must use the Traditional Chinese apps page as x-default`
   );
 }
-assert.equal(appsTitles.size, 4, 'localized Apps pages must not share the same title');
+assert.equal(appsTitles.size, 2, 'localized Apps pages must not share the same title');
 
 for (const [path, expectedTitle, canonical] of [
   ['en/apps/nodepilot/index.html', 'NodePilot for macOS and Windows | Station Cat', 'https://wwwstationcat.org/en/apps/nodepilot/'],
@@ -119,9 +117,7 @@ for (const [path, expectedTitle, canonical] of [
 const homepage = await readDist('index.html');
 for (const [path, label, href] of [
   ['index.html', '文章與觀察', '/signal/'],
-  ['zh-hans/index.html', '文章与观察', '/zh-hans/signal/'],
   ['en/index.html', 'Notes &amp; Essays', '/en/signal/'],
-  ['ja/index.html', '記事と思考', '/ja/signal/']
 ]) {
   const html = await readDist(path);
   assert.ok(html.match(/<title>([^<]*)<\/title>/)?.[1].includes(label), `${path}: homepage title uses the same article name as navigation`);
@@ -145,7 +141,7 @@ assert.doesNotMatch(homepage, /station-cat-logo\.png/);
 console.log('Built site foundation tests passed.');
 
 // Music notices must remain reachable inside the isolated eight-page staging surface.
-for (const [locale, route] of [['zh-hant', 'music'], ['zh-hans', 'zh-hans/music'], ['en', 'en/music'], ['ja', 'ja/music']]) {
+for (const [locale, route] of [['zh-hant', 'music'], ['en', 'en/music']]) {
   const html = await readDist(`${route}/index.html`);
   const footer = html.match(/<footer\b[\s\S]*?<\/footer>/)?.[0] || '';
   assert.match(html, /<details\b[^>]*id="music-listening"/);
@@ -161,7 +157,7 @@ for (const [locale, route] of [['zh-hant', 'music'], ['zh-hans', 'zh-hans/music'
   assert.match(terms, new RegExp(`href="/${locale}/apps/caption-ai/privacy/"`));
   assert.equal((html.match(/<audio\b/g) || []).length, 1);
 }
-console.log('Built music notices and scoped footer links passed for all four locales.');
+console.log('Built music notices and scoped footer links passed for both locales.');
 
 await checkMusicEntryAssets(new URL('../dist/', import.meta.url), process.env.PUBLIC_MUSIC_ENTRY_ENABLED === 'true');
-console.log('Built music launch entry checks passed for all four locales.');
+console.log('Built music launch entry checks passed for both locales.');

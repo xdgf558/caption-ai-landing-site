@@ -8,7 +8,7 @@ import { createStationMusicRuntime } from './helpers/station-music-runtime.mjs';
 const runtime = await createStationMusicRuntime({ videoCases: true });
 const models = {};
 try {
-  for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
+  for (const locale of ['zh-Hant', 'en']) {
     const get = async path => {
       const response = await runtime.mf.dispatchFetch('https://wwwstationcat.org/fixture-pages-on/api/station/content/' + path);
       assert.equal(response.status, 200); return response.json();

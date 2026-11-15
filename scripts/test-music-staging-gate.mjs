@@ -130,8 +130,6 @@ test('only music admin, public read routes and exact static dependencies are all
     ['/admin/music/featured/', 'GET'],
     ['/music/', 'GET'],
     ['/en/music', 'HEAD'],
-    ['/ja/music/', 'GET'],
-    ['/zh-hans/music/', 'HEAD'],
     ['/admin/api/music/status', 'GET'],
     ['/admin/api/music/tracks', 'POST'],
     ['/admin/api/music/tracks/track_1', 'PATCH'],
@@ -207,17 +205,20 @@ test('main site, other admin surfaces, traversal variants and unsupported method
     ['/admin/%2e%2e/api/music/status', 'GET'],
     ['/admin/music/', 'POST'],
     ['/styles/admin-music.css', 'POST'],
+    ['/ja/music/', 'GET'],
+    ['/zh-hans/music/', 'HEAD'],
     ['/admin/api/music/status', 'DELETE']
   ]) assert.equal(isMusicStagingRequest(request(path, method)), false, `${method} ${path}`);
 });
 
 test('only exact music page routes receive canonical trailing slash redirects', () => {
   for (const path of ['/admin/music', '/admin/music/collections', '/admin/music/collections/upload',
-    '/admin/music/featured', '/music', '/en/music', '/ja/music', '/zh-hans/music']) {
+    '/admin/music/featured', '/music', '/en/music']) {
     assert.equal(musicStagingCanonicalPath(path), `${path}/`);
     assert.equal(musicStagingCanonicalPath(`${path}/`), `${path}/`);
   }
-  for (const path of ['/', '/admin', '/admin/music/unknown', '/zh-hant/music', '/en/library']) {
+  // zh-Hans and ja music pages were retired with the two-language site (2026-11-15).
+  for (const path of ['/', '/admin', '/admin/music/unknown', '/zh-hant/music', '/en/library', '/ja/music', '/zh-hans/music/']) {
     assert.equal(musicStagingCanonicalPath(path), null);
   }
 });
@@ -332,7 +333,7 @@ test('staging package validation checks exact HTML pages and their dependency cl
       await writeFile(target, contents);
     };
     for (const page of ['/admin/music', '/admin/music/collections', '/admin/music/collections/upload',
-      '/admin/music/featured', '/music', '/en/music', '/ja/music', '/zh-hans/music']) {
+      '/admin/music/featured', '/music', '/en/music']) {
       await put(`${page}/index.html`, `<link rel="stylesheet" href="${stylesheet}?v=1"><script src="${script}"></script><a href="/en/library/">Account</a>`);
     }
     await put(script);
@@ -341,7 +342,7 @@ test('staging package validation checks exact HTML pages and their dependency cl
   }
   await t.test('complete pages and dependencies pass; navigation is not a static dependency', async t => {
     const { root } = await fixture(t);
-    assert.deepEqual(await checkMusicStagingAssets(root), { pages: 8, assets: 2 });
+    assert.deepEqual(await checkMusicStagingAssets(root), { pages: 6, assets: 2 });
   });
   for (const file of [script, stylesheet]) {
     await t.test(`missing HTML dependency fails: ${file}`, async t => {

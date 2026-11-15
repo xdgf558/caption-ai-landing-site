@@ -23,8 +23,8 @@ test('actual Worker and D1 produce all five release states, withholding every un
     assert(!text.includes('data-sc-platform-copy') && !text.includes('data-sc-platform-link'));
   }
 });
-test('all four SSR locales keep a real HTTPS anchor plus a manual no-JS path; public pages have no full source or iframe', async () => {
-  for (const prefix of ['', '/zh-hans', '/en', '/ja']) {
+test('both SSR locales keep a real HTTPS anchor plus a manual no-JS path; public pages have no full source or iframe', async () => {
+  for (const prefix of ['', '/en']) {
     const text = await html('live', prefix);
     assert.equal((text.match(/data-sc-platform-link /g) || []).length, 3);
     assert.equal((text.match(/data-sc-platform-url/g) || []).length, 3);

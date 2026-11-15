@@ -3,7 +3,7 @@ import { Heart, History, Gamepad2, ReceiptText, LifeBuoy, Smartphone, ArrowRight
 import { memberCopy } from '../../redesign/memberCopy.js';
 import { stationHref, stationPolicyHref } from '../../redesign/routes.js';
 import { siteConfig } from '../../data/site';
-interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+interface Props { lang: 'zh-Hant' | 'en' }
 const { lang } = Astro.props, copy = memberCopy[lang];
 const points = stationHref(lang, 'member').replace('/library/', '/points/');
 ---

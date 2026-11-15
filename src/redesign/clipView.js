@@ -1,6 +1,6 @@
 import { uuid, positive, plain, platformUrl, slug, localizedPath } from './publicValidation.js';
 import { stationPlatformLinks } from './platformView.js';
-import { stationLocales } from './routes.js';
+import { stationContentLocales } from './routes.js';
 
 const asset = value => typeof value === 'string' && /^\/api\/station\/content\/assets\/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
 const published = (value, now) => typeof value === 'string' && /^\d{4}-\d\d-\d\dT/.test(value) && Number.isFinite(Date.parse(value)) && Date.parse(value) >= 0 && Date.parse(value) <= now;
@@ -29,7 +29,7 @@ export function clipOriginalLinks(clip, now = Date.now()) {
 
 export function clipNextLinks(track, locale) {
   const name = track?.slug || track?.href?.split('/').at(-2);
-  if (!stationLocales.includes(locale) || !uuid(track?.id) || !plain(track.title, 200) || !slug(name) || track.href !== localizedPath(locale, 'music/tracks', name)) return { song: null, platforms: [] };
+  if (!stationContentLocales.includes(locale) || !uuid(track?.id) || !plain(track.title, 200) || !slug(name) || track.href !== localizedPath(locale, 'music/tracks', name)) return { song: null, platforms: [] };
   return { song: { href: track.href, title: track.title }, platforms: stationPlatformLinks(track) };
 }
 

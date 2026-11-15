@@ -4,7 +4,7 @@
 
 **[造訪網站](https://wwwstationcat.org/) · [音樂小站](https://wwwstationcat.org/music/) · [iPhone App](https://wwwstationcat.org/music/iphone/) · [App Store 下載](https://apps.apple.com/app/id6822797145) · [遊戲世界](https://wwwstationcat.org/games/)**
 
-目前網站以歌曲展示、外部平台收聽、站內試聽與 MV，以及《打工養貓日記》為核心。預設語言為繁體中文，另支援簡體中文、英文與日文。倉庫名稱沿用早期的 `caption-ai-landing-site`。
+目前網站以歌曲展示、外部平台收聽、站內試聽與 MV，以及《打工養貓日記》為核心。網站預設語言為繁體中文，另提供英文；簡體中文與日文頁面已於 2026-11-15 移除，舊的 `/zh-hans/`、`/ja/` 網址直接回應 404。倉庫名稱沿用早期的 `caption-ai-landing-site`。
 
 網站與後台操作說明依 2026-10-15 已合併的功能整理；iPhone App 的正式上架資訊於 2026-10-27 更新。
 

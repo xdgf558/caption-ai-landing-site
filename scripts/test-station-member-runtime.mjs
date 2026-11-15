@@ -20,7 +20,7 @@ const get = async (path, id = null, options = {}) => {
   return result;
 };
 const ownedServices = ['/api/readers/session', '/api/readers/credits', '/api/novels/library', '/api/readers/bookmarks', '/api/readers/totp/status', '/api/readers/game-saves/cat-life', '/api/games/cat-life/entitlements'];
-for (const [prefix, locale] of [['zh-hant', 'zh-Hant'], ['zh-hans', 'zh-Hans'], ['en', 'en'], ['ja', 'ja']]) test(`${locale}: actual opt-in shell retains account forms and manual music return without token metadata`, async () => {
+for (const [prefix, locale] of [['zh-hant', 'zh-Hant'], ['en', 'en']]) test(`${locale}: actual opt-in shell retains account forms and manual music return without token metadata`, async () => {
   const res = await get('/fixture-member-on/' + prefix + '/library/?source=music&resetToken=private-sample'); assert.equal(res.status, 200);
   const html = await res.text(); assert.match(html, new RegExp('lang="' + locale + '"')); assert.ok(html.includes('data-sc-member-services')); assert.ok(html.includes('id="reader-login-form"'));
   assert.ok(html.includes('href="/games/cat-life/"')); assert.ok(html.includes('data-music-member-return')); assert.ok(!html.includes('private-sample'));
@@ -34,7 +34,7 @@ test('flag-off uses the original Member page; internal templates stay hidden; wr
   assert.equal((await get('/fixture-member-on/en/library/', null, { method: 'POST' })).status, 405);
   assert.equal((await get('/fixture-member-no-assets/en/library/')).status, 503);
   const root = await get('/fixture-member-on/library/'); assert.equal(root.status, 301); assert.equal(root.headers.get('Location'), '/zh-hant/library/');
-  const noSlash = await get('/fixture-member-on/ja/library'); assert.equal(noSlash.status, 301); assert.equal(noSlash.headers.get('Location'), '/ja/library/');
+  const noSlash = await get('/fixture-member-on/en/library'); assert.equal(noSlash.status, 301); assert.equal(noSlash.headers.get('Location'), '/en/library/');
 });
 for (const id of [null, 1, 2, 3]) test(`actual reader HTTP permissions and cache policy for ${id === null ? 'visitor' : 'account ' + id}`, async () => {
   for (const path of ownedServices) {

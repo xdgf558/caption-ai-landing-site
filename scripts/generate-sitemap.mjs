@@ -13,14 +13,12 @@ export const requiredDynamicIndexRoutes = [
   '/en/novel/',
   '/signal/',
   '/en/signal/',
-  '/ja/signal/',
-  '/zh-hans/signal/',
   '/zh-hant/signal/'
 ];
 
 const excludedPrefixes = [
   // Music remains unlisted until release approval, including its language alias.
-  '/music/', '/en/music/', '/ja/music/', '/zh-hans/music/', '/zh-hant/music/',
+  '/music/', '/en/music/', '/zh-hant/music/',
   '/apps/',
   '/points/',
   '/privacy/',
@@ -31,24 +29,18 @@ const excludedPrefixes = [
   '/games/',
   '/devlog/',
   '/en/devlog/',
-  '/ja/devlog/',
-  '/zh-hans/devlog/',
   '/zh-hant/devlog/',
   '/works/',
   '/en/works/',
-  '/ja/works/',
-  '/zh-hans/works/',
   '/zh-hant/works/',
   '/library/',
   '/en/library/',
-  '/ja/library/',
-  '/zh-hans/library/',
   '/zh-hant/library/'
 ];
 
 export const shouldIncludeSitemapRoute = (route) => {
   if (!route || !route.startsWith('/')) return false;
-  if (route === '/404/' || /\/(?:en|ja|zh-hans|zh-hant)\/404\/$/.test(route)) return false;
+  if (route === '/404/' || /\/(?:en|zh-hant)\/404\/$/.test(route)) return false;
   return !excludedPrefixes.some(
     (prefix) => route === prefix || route === prefix.slice(0, -1) || route.startsWith(prefix)
   );

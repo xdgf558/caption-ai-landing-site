@@ -65,7 +65,7 @@ test('PNG reads only current public cover, keeps VIP anonymous, QR links contain
   assert.equal(response.headers.get('cache-control'), 'private, no-store');
   const png = new Uint8Array(await response.arrayBuffer()), decoded = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   assert.equal(decoded.info.width, 1080); assert.equal(decoded.info.height, 1800);
-  assert.equal(jsQR(new Uint8ClampedArray(decoded.data), decoded.info.width, decoded.info.height).data, `${origin}/zh-hans/music/?track=${id}`);
+  assert.equal(jsQR(new Uint8ClampedArray(decoded.data), decoded.info.width, decoded.info.height).data, `${origin}/music/?track=${id}`);
   assert.equal(f.state.r2.length, 1); assert.ok(f.state.r2[0].includes('/covers/')); assert.equal(f.state.assets.length, 1);
 });
 test('HEAD/version/downlisting/limit failure precede R2 and renderer', async () => {
@@ -174,7 +174,7 @@ test('actual workerd renders PNG with D1/R2/ASSETS and rewrites one set of song 
     statements.push(db.prepare("UPDATE music_tracks SET lifecycle='published',published_revision_id=?,published_at=?,first_published_at=? WHERE id=?").bind(f.revision, now - 1000, now - 1000, id));
     await db.batch(statements);
     const headers = { 'CF-Connecting-IP': '192.0.2.55' };
-    const html = await mf.dispatchFetch(`http://music.test/zh-hans/music/?track=${id}`, { headers });
+    const html = await mf.dispatchFetch(`http://music.test/music/?track=${id}`, { headers });
     const content = await html.text(); assert.equal(html.status, 200, content);
     assert.equal((content.match(/property="og:title"/g) || []).length, 1); assert.equal((content.match(/<title>/g) || []).length, 1);
     assert.match(content, /晚安，小城市/); assert.doesNotMatch(content, /wrong\.test|content="generic"|token=/);
@@ -183,7 +183,7 @@ test('actual workerd renders PNG with D1/R2/ASSETS and rewrites one set of song 
     await db.prepare(`INSERT INTO music_collections(id,slug,original_locale,title_json,description_json,status,version,created_at,updated_at,collection_type,listening_mode)
       VALUES(?,'runtime-album','zh-Hans',?,'{"zh-Hans":""}','published',1,?,?,'album','mixed')`).bind(albumId,JSON.stringify({'zh-Hans':'专辑测试'}),now,now).run();
     await db.prepare('INSERT INTO music_collection_tracks(collection_id,track_id,position) VALUES(?,?,0)').bind(albumId,id).run();
-    const albumHtml=await mf.dispatchFetch('http://music.test/zh-hans/music/?collection=runtime-album',{headers});
+    const albumHtml=await mf.dispatchFetch('http://music.test/music/?collection=runtime-album',{headers});
     assert.equal(albumHtml.status,200);const albumContent=await albumHtml.text();
     assert.match(albumContent,/专辑测试/);assert.match(albumContent,/collections\/runtime-album\/share\.png/);
     assert.equal((albumContent.match(/property="og:title"/g)||[]).length,1);
@@ -193,7 +193,7 @@ test('actual workerd renders PNG with D1/R2/ASSETS and rewrites one set of song 
     }
     await db.prepare("UPDATE music_tracks SET lifecycle='unpublished' WHERE id=?").bind(id).run();
     assert.equal((await mf.dispatchFetch('http://music.test' + musicShareCardPath(id, 1, 'zh-Hans'), { headers })).status, 410);
-    assert.equal((await mf.dispatchFetch(`http://music.test/zh-hans/music/?track=${id}`, { headers })).status, 410);
+    assert.equal((await mf.dispatchFetch(`http://music.test/music/?track=${id}`, { headers })).status, 410);
   } finally { parser.close(); await mf.dispose(); }
 });
 
@@ -216,7 +216,7 @@ test('album card uses only the independent published cover and its QR opens the 
   assert.equal(response.status,200);
   const decoded=await sharp(new Uint8Array(await response.arrayBuffer())).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   assert.equal(decoded.info.width,1080); assert.equal(decoded.info.height,1800);
-  assert.equal(jsQR(new Uint8ClampedArray(decoded.data),1080,1800).data,`${origin}/zh-hans/music/?collection=album-card`);
+  assert.equal(jsQR(new Uint8ClampedArray(decoded.data),1080,1800).data,`${origin}/music/?collection=album-card`);
   assert.deepEqual(f.state.r2,[f.key]);
 });
 test('album cards reject stale revisions and drafts before storage, and never expose unpublished members', async () => {

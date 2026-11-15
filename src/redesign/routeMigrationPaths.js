@@ -7,7 +7,7 @@ export const migrationFlags = Object.freeze(['STATION_ROUTE_MIGRATIONS_ENABLED',
 export const flagOn = value => value === true || value === 'true';
 // A partial activation never retires an entry before its replacement pages exist.
 export const routeMigrationEnabled = env => migrationFlags.every(key => flagOn(env[key]));
-export const localeSegments = Object.freeze({ en: 'en', ja: 'ja', 'zh-hans': 'zh-Hans', 'zh-hant': 'zh-Hant' });
+export const localeSegments = Object.freeze({ en: 'en', 'zh-hant': 'zh-Hant' });
 const retired = new Set(stationLegacyInventory.retiredStaticPaths);
 export function migrationPath(value) {
   try {

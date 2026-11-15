@@ -1,7 +1,7 @@
 ---
 import { ArrowLeft } from '@lucide/astro';
 import { gameHostCopy } from '../../redesign/gameHostCopy.js';
-interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+interface Props { lang: 'zh-Hant' | 'en' }
 const { lang } = Astro.props; const copy = gameHostCopy[lang];
 ---
 <dialog class="sc-game-dialog" data-sc-game-dialog aria-labelledby="sc-game-runtime-title">

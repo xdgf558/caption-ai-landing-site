@@ -58,7 +58,7 @@ test('latest release uses first global live verified date; unknowns follow, plan
 
 test('new cursors bind sort, search and locale while v1 no-sort callers continue to page', async () => {
   const f = await fixture(), page = await body(f, '/tracks?locale=en&sort=default&limit=1');
-  for (const path of ['/tracks?locale=ja&sort=default', '/tracks?locale=en&sort=release', '/tracks?locale=en&sort=default&q=vip']) {
+  for (const path of ['/tracks?locale=zh-Hant&sort=default', '/tracks?locale=en&sort=release', '/tracks?locale=en&sort=default&q=vip']) {
     assert.equal((await call(f, path + '&cursor=' + page.nextCursor)).status, 400);
   }
   const v1 = (await body(f, '/tracks?locale=en&limit=1')).nextCursor;
@@ -94,8 +94,8 @@ test('route boundaries retain aliases and refuse runtime/API namespaces; either 
     { STATION_MUSIC_PAGES_ENABLED: true }, { STATION_MUSIC_PAGES_ENABLED: true, STATION_CONTENT_PUBLIC_ENABLED: false },
     { STATION_MUSIC_PAGES_ENABLED: false, STATION_CONTENT_PUBLIC_ENABLED: true }
   ]) {
-    for (const path of ['/music/', '/music/?q=one&q=two', '/en/music?track=' + fixtureId(1), '/zh-hans/music/?collection=old-album',
-      '/music/tracks/vip/', '/ja/music/tracks/unknown', '/zh-hant/music/old-share/']) {
+    for (const path of ['/music/', '/music/?q=one&q=two', '/en/music?track=' + fixtureId(1), '/zh-hant/music/?collection=old-album',
+      '/music/tracks/vip/', '/en/music/tracks/unknown', '/zh-hant/music/old-share/']) {
       for (const method of ['GET', 'HEAD', 'POST']) assert.equal(await handleStationMusicPage(new Request('https://wwwstationcat.org' + path, { method }), { ...flags,
         get MUSIC_DB() { return env.MUSIC_DB; }, get MUSIC_BUCKET() { return env.MUSIC_BUCKET; }, get ASSETS() { return env.ASSETS; } }),
         null, JSON.stringify(flags) + ' ' + method + ' ' + path);
@@ -107,7 +107,7 @@ test('route boundaries retain aliases and refuse runtime/API namespaces; either 
 test('an enabled detail route must prove a published mapping before claiming an unknown or withdrawn address', async () => {
   const f = await fixture(), env = { ...f.env, STATION_MUSIC_PAGES_ENABLED: 'true', get ASSETS() { throw new Error('unmapped route must not read the shell'); } };
   const pageRequest = path => new Request('https://wwwstationcat.org' + path, { headers: { 'CF-Connecting-IP': '192.0.2.90' } });
-  for (const path of ['/music/tracks/not-mapped/', '/en/music/tracks/not-mapped?token=fixture-secret', '/ja/music/not-mapped/']) {
+  for (const path of ['/music/tracks/not-mapped/', '/en/music/tracks/not-mapped?token=fixture-secret', '/zh-hant/music/not-mapped/']) {
     assert.equal(await handleStationMusicPage(pageRequest(path), env, { clock: () => now }), null);
   }
   f.music.sql.prepare("UPDATE station_track_publications SET status='draft' WHERE track_id=?").run(f.content.tracks[1].id);
@@ -120,8 +120,8 @@ const dto = { id: fixtureId(1), slug: 'a-song', revision: 2, href: '/en/music/tr
 
 test('every locale ignores stale full-playback hints and prioritizes real platforms while retaining preview/favorites', () => {
   const fullPlayback = { playbackPath: base + '/tracks/a-song/playback?variant=full', requiresAccessCheck: true };
-  for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
-    const track = { ...dto, href: ({ 'zh-Hant': '', 'zh-Hans': '/zh-hans', en: '/en', ja: '/ja' })[locale] + '/music/tracks/a-song/', fullPlayback,
+  for (const locale of ['zh-Hant', 'en']) {
+    const track = { ...dto, href: ({ 'zh-Hant': '', en: '/en' })[locale] + '/music/tracks/a-song/', fullPlayback,
       platforms: [{ id: fixtureId(440), verifiedAt: new Date(now - 1).toISOString(), provider: 'netease', status: 'live', href: 'https://music.163.com/song?id=123' }] };
     const html = renderSongHero(track, locale, { detail: true });
     assert.doesNotMatch(html, /data-sc-full-check|sc-full-access-note|variant=full|確認完整|确认完整|Check full|フル再生/);

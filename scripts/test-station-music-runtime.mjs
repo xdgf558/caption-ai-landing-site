@@ -21,8 +21,8 @@ const model = text => JSON.parse(/<script id="sc-music-bootstrap" type="applicat
 
 test('iPhone introduction serves the App Store release in all locales without music data or playback access', async () => {
   for (const [locale, path, headline] of [
-    ['zh-Hant', '/music/iphone/', '喜歡的歌，'], ['zh-Hans', '/zh-hans/music/iphone/', '喜欢的歌，'],
-    ['en', '/en/music/iphone/', 'Your favorite songs,'], ['ja', '/ja/music/iphone/', '好きな曲を、'],
+    ['zh-Hant', '/music/iphone/', '喜歡的歌，'],
+    ['en', '/en/music/iphone/', 'Your favorite songs,'],
   ]) {
     const text = await html(path, { prefix: '/fixture-pages-no-db' });
     assert(text.includes('data-sc-iphone-page'));
@@ -31,7 +31,8 @@ test('iPhone introduction serves the App Store release in all locales without mu
     assert.doesNotMatch(text, /TestFlight|testflight\.apple\.com|id899247664|公測|公测|ベータ版|\bbeta\b/i);
     assert(text.includes('iOS 18.0'));
     assert(text.includes('href="#install"'));
-    assert.match(text, /href="\/ja\/music\/iphone\/"[^>]*data-sc-language="ja"/);
+    assert.match(text, /href="\/en\/music\/iphone\/"[^>]*data-sc-language="en"/);
+    assert.doesNotMatch(text, /data-sc-language="(?:ja|zh-Hans)"/);
     assert(text.includes('rel="canonical" href="https://wwwstationcat.org' + path + '"'));
     assert.match(text, new RegExp('<html lang="' + locale + '"'));
     assert(!/<(?:audio|video|iframe)\b/.test(text));
@@ -49,7 +50,7 @@ test('iPhone introduction serves the App Store release in all locales without mu
   for (const prefix of ['', '/fixture-pages-only', '/fixture-content-only']) {
     const response = await call('/music/iphone/', { prefix }); assert.equal(response.status, 404); await response.text();
   }
-  for (const path of ['/music/site-shell/iphone/en/', '/music/%73ite-shell/iphone/ja/']) {
+  for (const path of ['/music/site-shell/iphone/en/', '/music/%73ite-shell/iphone/zh-Hant/']) {
     const response = await call(path); assert.equal(response.status, 404); await response.text();
   }
   for (const path of ['/images/station-music-app/icon.webp', '/images/station-music-app/discover.webp']) {
@@ -70,8 +71,8 @@ test('each incomplete flag pair preserves actual legacy HTTP behavior; internal 
       const method = await call(path, { prefix, method: 'POST' }); assert.equal(method.status, 405); assert.equal((await method.json()).error.code, 'METHOD_NOT_ALLOWED');
     }
   }
-  for (const path of ['/music/', '/en/music', '/zh-hant/music/', '/ja/music/?q=one&q=two',
-    '/music/?track=' + runtime.content.tracks[1].id, '/zh-hans/music/?collection=old-album', '/music/vip/']) {
+  for (const path of ['/music/', '/en/music', '/zh-hant/music/', '/en/music/?q=one&q=two',
+    '/music/?track=' + runtime.content.tracks[1].id, '/zh-hant/music/?collection=old-album', '/music/vip/']) {
     for (const method of ['GET', 'HEAD', 'POST']) {
       const baseline = await call(path, { prefix: '', method }), baselineBody = await baseline.text();
       for (const prefix of ['/fixture-content-only', '/fixture-pages-only']) {
@@ -97,7 +98,8 @@ test('local metadata uses the actual loopback origin while public canonical and 
     const text = await html('/en/music/tracks/vip/', { origin, headers: { 'X-Forwarded-Host': 'evil.example', 'X-Forwarded-Proto': 'https' } });
     assert(text.includes('rel="canonical" href="' + expected + '/en/music/tracks/vip/"'));
     assert(text.includes('property="og:url" content="' + expected + '/en/music/tracks/vip/"'));
-    assert(text.includes('hreflang="ja" href="' + expected + '/ja/music/tracks/vip/"'));
+    assert(text.includes('hreflang="zh-Hant" href="' + expected + '/music/tracks/vip/"'));
+    assert(!text.includes('hreflang="ja"') && !text.includes('hreflang="zh-Hans"'));
     assert.match(text, /name="robots" content="noindex,nofollow"/);
     assert(!text.includes('evil.example'));
   }
@@ -114,7 +116,7 @@ test('actual Astro shell receives server-rendered songs and bounded bootstrap; m
   const detail = await html('/en/music/tracks/vip/'), detailValue = model(detail);
   assert.equal(detailValue.related.length, 3);
   assert.match(detail, /<h1 id="sc-song-title">A Little Late to Say<\/h1>/);
-  assert.match(detail, /href="\/ja\/music\/tracks\/vip\/"[^>]*data-sc-language="ja"/);
+  assert.match(detail, /href="\/en\/music\/tracks\/vip\/"[^>]*data-sc-language="en"/);
   assert.match(detail, /rel="canonical" href="https:\/\/wwwstationcat.org\/en\/music\/tracks\/vip\/"/);
   assert(!detail.includes('site-shell/en')); assert(!detail.includes('isVip'));
 });

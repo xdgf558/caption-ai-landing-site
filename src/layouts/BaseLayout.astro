@@ -68,7 +68,7 @@ const structuredDataScripts = (Array.isArray(structuredData) ? structuredData : 
     <meta name="description" content={description} />
     {robots && <meta name="robots" content={robots} />}
     <link rel="canonical" href={canonicalUrl} />
-    {alternates.map((alternate) => (
+    {alternates.filter((alternate) => !['zh-Hans', 'ja'].includes(alternate.hrefLang)).map((alternate) => (
       <link rel="alternate" hreflang={alternate.hrefLang} href={new URL(alternate.href, siteConfig.baseUrl).toString()} />
     ))}
     <meta property="og:type" content="website" />

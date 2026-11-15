@@ -140,22 +140,30 @@ env.WAITLIST_DB.prepare = prepare;
 assert.deepEqual(sqlite.prepare('SELECT * FROM content_entries WHERE id = ?').get(protectedEntry.id), before);
 assert.match(await (await publicPage('/signal/')).text(), /Making a small game/);
 
-const insertBrief = sqlite.prepare("INSERT INTO content_entries(entry_type,locale,slug,title,status,source_kind,visibility,featured,sort_order,published_at) VALUES('signal_brief','ja',?,?,'published','signal_brief',?,?,?,?)");
+const insertBrief = sqlite.prepare("INSERT INTO content_entries(entry_type,locale,slug,title,status,source_kind,visibility,featured,sort_order,published_at) VALUES('signal_brief','en',?,?,'published','signal_brief',?,?,?,?)");
 insertBrief.run('older', 'Archive older', 'public', 0, 0, '2026-01-01 00:00:00');
 insertBrief.run('unlisted', 'Archive pinned unlisted', 'unlisted', 1, 10, '2026-01-02 00:00:00');
 insertBrief.run('pinned', 'Archive first pinned', 'public', 1, 0, '2026-01-03 00:00:00');
-const articleBetween = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/888', locale: 'ja', status: 'published' })).json()).entry;
+const articleBetween = (await (await call({ ...data, sourceUrl: 'https://x.com/i/article/888', locale: 'en', status: 'published' })).json()).entry;
 sqlite.prepare('UPDATE content_entries SET published_at = ? WHERE id = ?').run('2026-01-02 12:00:00', articleBetween.id);
-assert.equal((await publicPage('/ja/signal/?view=archive')).status, 301);
-const adminBriefs = (await (await worker.fetch(request('/admin/api/content/entries?type=signal_brief&locale=ja'), env, {})).json()).entries;
+assert.equal((await publicPage('/en/signal/?view=archive')).status, 301);
+const adminBriefs = (await (await worker.fetch(request('/admin/api/content/entries?type=signal_brief&locale=en'), env, {})).json()).entries;
 assert.ok(['older', 'unlisted', 'pinned'].every(slug => adminBriefs.some(entry => entry.slug === slug)), 'retired public briefs stay available to Admin');
 assert.ok(adminBriefs.every(entry => entry.sourceKind !== 'x_article'));
 const middleBrief = sqlite.prepare("SELECT * FROM content_entries WHERE slug='unlisted'").get();
-const adjacent = await hooks.getAdjacentPublishedSignalBriefs(env.WAITLIST_DB, middleBrief, 'ja');
+const adjacent = await hooks.getAdjacentPublishedSignalBriefs(env.WAITLIST_DB, middleBrief, 'en');
 assert.equal(adjacent.previous.slug, 'older'); assert.equal(adjacent.next.slug, 'pinned');
 sqlite.prepare('UPDATE content_entries SET metadata_json = ? WHERE id = ?').run(JSON.stringify({ article: { hasBody: false, sourceUrl: 'javascript:alert(1)' } }), articleBetween.id);
-assert.equal((await publicPage('/ja/signal/')).status, 200);
-assert.doesNotMatch(await (await publicPage('/ja/signal/')).text(), /javascript:|x-article-888/);
+assert.equal((await publicPage('/en/signal/')).status, 200);
+assert.doesNotMatch(await (await publicPage('/en/signal/')).text(), /javascript:|x-article-888/);
+// zh-Hans/ja pages are retired: those languages can be saved as drafts or withdrawn, never published.
+for (const locale of ['zh-Hans', 'ja']) {
+  const refused = await call({ ...data, sourceUrl: 'https://x.com/i/article/' + (locale === 'ja' ? 991 : 992), locale, status: 'published' });
+  assert.equal(refused.status, 400, locale);
+  const draft = await call({ ...data, sourceUrl: 'https://x.com/i/article/' + (locale === 'ja' ? 993 : 994), locale, status: 'draft' });
+  assert.ok(draft.ok, locale + ' draft can still be saved');
+}
+assert.equal(normalizeArticleInput({ ...data, locale: undefined }).locale, 'zh-Hant');
 assert.match(renderArticleIndex('en', [{ metadata_json: '{invalid' }]), /New articles are on their way/);
 env.WAITLIST_DB.prepare = sql => {
   const statement = prepare(sql);
@@ -167,7 +175,12 @@ env.WAITLIST_DB.prepare = prepare;
 assert.match(await (await publicPage('/signal/?page=2&tracking=test')).text(), /rel="canonical" href="https:\/\/wwwstationcat.org\/signal\/\?page=2"/);
 
 // Retire all public archive surfaces without touching records, bodies or Admin access.
-for (const [locale, path] of [['zh-Hant', '/signal/'], ['zh-Hans', '/zh-hans/signal/'], ['en', '/en/signal/'], ['ja', '/ja/signal/']]) {
+// Simplified Chinese and Japanese site pages are retired outright; the Worker answers 404 before any archive handling.
+for (const path of ['/zh-hans/signal/?view=archive', '/ja/signal/retired-brief/', '/ja/signal/']) {
+  const retired = await worker.fetch(new Request(base + path), env, {});
+  assert.equal(retired.status, 404, path); assert.equal(retired.headers.get('location'), null); await retired.body?.cancel();
+}
+for (const [locale, path] of [['zh-Hant', '/signal/'], ['en', '/en/signal/']]) {
   for (const [source, visibility] of [['signal_brief', 'public'], ['backend', 'unlisted']]) {
     sqlite.prepare("INSERT INTO content_entries(entry_type,locale,slug,title,status,source_kind,visibility) VALUES('signal_brief',?,?,'Retired history','published',?,?)")
       .run(locale, source === 'signal_brief' ? 'retired-brief' : 'retired-backend', source, visibility);

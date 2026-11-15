@@ -49,7 +49,7 @@
         });
       }
       var note = document.createElement("p"); note.textContent = text.note; section.append(note);
-      var back = document.createElement("a"); back.href = { "zh-Hant": "/", "zh-CN": "/zh-hans/", en: "/en/", ja: "/ja/" }[language()] || "/"; back.textContent = text.back; section.append(back);
+      var back = document.createElement("a"); back.href = { "zh-Hant": "/", "zh-CN": "/", en: "/en/", ja: "/en/" }[language()] || "/"; back.textContent = text.back; section.append(back);
     }
     section.append(feedback); main.append(section); title.focus();
   }

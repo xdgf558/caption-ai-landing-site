@@ -22,7 +22,7 @@ test('Enter saves a draft and legacy editors cannot rewrite an article', async (
     expect(response.status()).toBe(409);
     expect((await response.json()).editUrl).toBe('/admin/articles/');
   }
-  for (const query of ['', '?type=signal_brief&locale=zh-Hans']) {
+  for (const query of ['', '?type=signal_brief&locale=zh-Hant']) {
     const legacy = (await (await request.get('/admin/api/content/entries' + query)).json()).entries;
     expect(legacy.some(entry => entry.sourceKind === 'x_article')).toBe(false);
   }
@@ -75,7 +75,7 @@ test('manual fallback, cover, draft, preview, publish, conflict and withdrawal',
   const reader = await context.newPage();
   await reader.goto('/signal/');
   await reader.getByRole('link', { name: 'Updated acceptance article', exact: true }).click();
-  await expect(reader).toHaveURL(/\/zh-hans\/signal\/x-article-2001\//);
+  await expect(reader).toHaveURL(/\/signal\/x-article-2001\//);
   await expect(reader.getByRole('heading', { name: 'Local body' })).toBeVisible();
   await page.getByRole('button', { name: '下架', exact: true }).click();
   await page.getByRole('button', { name: '确认', exact: true }).click();
@@ -87,7 +87,7 @@ test('manual fallback, cover, draft, preview, publish, conflict and withdrawal',
 for (const width of [390, 1280]) {
   test(`article and editor layout at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    for (const path of ['/signal/', '/en/signal/', '/ja/signal/', '/zh-hans/signal/', '/zh-hans/signal/x-article-1001/', '/admin/articles/']) {
+    for (const path of ['/signal/', '/en/signal/', '/signal/x-article-1001/', '/admin/articles/']) {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

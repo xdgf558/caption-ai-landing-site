@@ -1,4 +1,4 @@
-import { stationLocales } from './routes.js';
+import { stationLocales, stationContentLocales } from './routes.js';
 import { readMusicCursor } from './musicCursor.js';
 
 export const contentBase = '/api/station/content';
@@ -63,10 +63,10 @@ export function idList(source, max = 25) {
 export function metadata(source, locale, { artist = false } = {}) {
   try {
     const value = strictJson(source);
-    if (!object(value) || !stationLocales.includes(value.originalLocale)) return null;
+    if (!object(value) || !stationContentLocales.includes(value.originalLocale)) return null;
     const localized = (map, max, required = false) => {
       if (map === undefined && !required) return { text: '', map: {} };
-      if (!object(map) || Object.keys(map).some(key => !stationLocales.includes(key) || !plain(map[key], max))) return null;
+      if (!object(map) || Object.keys(map).some(key => !stationContentLocales.includes(key) || !plain(map[key], max))) return null;
       if (!required && Object.keys(map).length === 0) return { text: '', map: {} };
       const original = map[value.originalLocale];
       if (!plain(original, max) || (required && !original.trim())) return null;
@@ -133,7 +133,7 @@ export function platform(row, country, now) {
 export function requestInput(url, allowed) {
   if ([...url.searchParams.keys()].some(key => !allowed.includes(key) || url.searchParams.getAll(key).length !== 1)) throw new TypeError('Invalid query');
   const locale = url.searchParams.get('locale') || 'zh-Hant';
-  if (!stationLocales.includes(locale)) throw new TypeError('Invalid locale');
+  if (!stationContentLocales.includes(locale)) throw new TypeError('Invalid locale');
   const rawLimit = url.searchParams.get('limit'), limit = rawLimit === null ? 20 : Number(rawLimit);
   if ((rawLimit !== null && !/^[1-9]\d*$/.test(rawLimit)) || !positive(limit) || limit > 50) throw new TypeError('Invalid limit');
   const q = url.searchParams.get('q') || '';
