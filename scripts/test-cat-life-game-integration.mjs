@@ -89,8 +89,6 @@ for (const path of [
   'src/components/CatLifeGameLanding.astro',
   'src/data/products/cat-life-game.ts',
   'src/pages/en/apps/cat-life-game/index.astro',
-  'src/pages/ja/apps/cat-life-game/index.astro',
-  'src/pages/zh-hans/apps/cat-life-game/index.astro',
   'src/pages/zh-hant/apps/cat-life-game/index.astro'
 ]) {
   assert.equal(existsSync(join(root, path)), true, `${path} must be included in the website build`);
@@ -345,8 +343,6 @@ for (const pose of ['happy', 'cry', 'fish', 'pounce', 'nap']) {
 assert.equal(shouldIncludeSitemapRoute('/games/cat-life/'), false);
 for (const route of [
   '/en/apps/cat-life-game/',
-  '/ja/apps/cat-life-game/',
-  '/zh-hans/apps/cat-life-game/',
   '/zh-hant/apps/cat-life-game/'
 ]) {
   assert.equal(shouldIncludeSitemapRoute(route), true, `${route} must stay indexable`);

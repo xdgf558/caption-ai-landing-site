@@ -36,7 +36,7 @@ export async function buildFirstLaunch() {
   const compatibility = await Promise.all(compatibilityFiles.map(async path => ({ path, sha256: sha(await readFile(join(releaseRoot, path))) })));
   await runAstro();
   for (const row of compatibility) if (sha(await readFile(join(releaseRoot, row.path))) !== row.sha256) throw new Error('STATION_FIRST_LAUNCH_COMPATIBILITY_CHANGED');
-  for (const locale of ['en', 'ja', 'zh-hans', 'zh-hant']) {
+  for (const locale of ['en', 'zh-hant']) {
     await copyFile(join(firstLaunchAssets, locale, '404/index.html'), join(firstLaunchAssets, locale, '404.html'));
   }
   const removed = [];

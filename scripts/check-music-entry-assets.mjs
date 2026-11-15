@@ -9,8 +9,8 @@ import { getVipMembershipCopy } from '../src/data/vip-membership.js';
 export async function checkMusicEntryAssets(root, enabled = false) {
   if (root instanceof URL) root = fileURLToPath(root);
   for (const [locale, home, prefix] of [
-    ['zh-Hant', '', 'zh-hant'], ['zh-Hans', 'zh-hans', 'zh-hans'],
-    ['en', 'en', 'en'], ['ja', 'ja', 'ja']
+    ['zh-Hant', '', 'zh-hant'],
+    ['en', 'en', 'en']
   ]) {
     const homeHtml = await readFile(path.join(root, home, 'index.html'), 'utf8');
     assert.equal(/<section\b[^>]*id="music"/.test(homeHtml), enabled, `${locale}: homepage music section`);

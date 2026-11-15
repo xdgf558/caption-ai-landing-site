@@ -1,16 +1,14 @@
 ---
 import { Home, Music2, Gamepad2, UserRound, Info, Search, ArrowRight, X, ChevronDown, Check } from '@lucide/astro';
 import { stationLocales, stationSections, stationCopy, stationHref, stationSection, stationLanguageHref, stationLanguageNames, stationLanguageAccessibleNames } from '../../redesign/routes.js';
-interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja'; activeSection?: 'home' | 'music' | 'games' | 'member' | 'about' }
+interface Props { lang: 'zh-Hant' | 'en'; activeSection?: 'home' | 'music' | 'games' | 'member' | 'about' }
 const { lang, activeSection } = Astro.props;
 const copy = stationCopy[lang];
 const active = activeSection ?? stationSection(Astro.url.pathname);
 const icons = { home: Home, music: Music2, games: Gamepad2, member: UserRound, about: Info };
 const search = {
   'zh-Hant': { title: '搜尋小站', label: '找一個入口', placeholder: '音樂、遊戲、會員…', empty: '沒有找到相符的入口。', close: '關閉搜尋' },
-  'zh-Hans': { title: '搜索小站', label: '找一个入口', placeholder: '音乐、游戏、会员…', empty: '没有找到相符的入口。', close: '关闭搜索' },
   en: { title: 'Search the station', label: 'Find a destination', placeholder: 'Music, games, member…', empty: 'No matching destination.', close: 'Close search' },
-  ja: { title: '小さな駅を検索', label: '行き先を探す', placeholder: '音楽、ゲーム、会員…', empty: '一致する行き先がありません。', close: '検索を閉じる' },
 }[lang];
 ---
 <header class="sc-header sc-container" data-station-chrome>

@@ -61,9 +61,9 @@ test('fallback URLs are past, verified provider HTTPS addresses; ambiguity and o
   assert.equal(clipOriginalLinks({ ...clip, publications: [clip.publications[0], clip.publications[0]] }, time).length, 1);
   assert.deepEqual(clipOriginalLinks({ ...clip, publications: Array(11).fill(clip.publications[0]) }, time), []);
 });
-test('four languages render escaped posters/durations and no-JS original links without any video or eager media source', () => {
-  for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
-    const html = renderMusicDetail({ ...model([{ ...clip, title: '<script>alert("x")</script>' }, second]), locale, track: { ...track, href: (locale === 'zh-Hant' ? '/' : locale === 'zh-Hans' ? '/zh-hans/' : '/' + locale + '/') + 'music/tracks/a-song/' } });
+test('both languages render escaped posters/durations and no-JS original links without any video or eager media source', () => {
+  for (const locale of ['zh-Hant', 'en']) {
+    const html = renderMusicDetail({ ...model([{ ...clip, title: '<script>alert("x")</script>' }, second]), locale, track: { ...track, href: (locale === 'zh-Hant' ? '/' : '/' + locale + '/') + 'music/tracks/a-song/' } });
     assert.match(html, /data-sc-clip="[a-f0-9-]+"[^>]+hidden/); assert.match(html, /00:30/);
     assert.match(html, /&lt;script&gt;/); assert(!html.includes('<script>') || !html.includes('alert("x")'));
     assert.match(html, /target="_blank" rel="noopener noreferrer"/); assert.match(html, /loading="lazy"/);

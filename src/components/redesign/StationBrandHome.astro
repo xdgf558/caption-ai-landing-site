@@ -26,18 +26,29 @@ const pillars = [
 ];
 ---
 <StationBrandLayout lang={lang} title={state.title} preview={preview} activeSection="home">
-  <section class="gentle-hero" aria-labelledby="station-title" data-home-config={home.configId} data-home-revision={home.publishedRevision}>
-    <img class="gentle-hero-image" src={heroImage} width="2172" height="724" alt={copy.heroAlt} fetchpriority="high" />
-    <div class="gentle-hero-content">
-      <p class="gentle-eyebrow">CATS, IDEAS, A KINDER TOMORROW</p>
-      <h1 class="sc-heading" id="station-title">{copy.headline[0]}<br />{' ' + copy.headline[1]}</h1>
-      <p class="gentle-lede">{copy.intro.map(line => <span>{line}<br /></span>)}</p>
-      <div class="gentle-hero-actions">
-        <a class="sc-button" data-home-hero-music href={music?.href || stationHref(lang, 'music')}><Glyph name="music" size={22} />{copy.goMusic}<ArrowRight size={16} aria-hidden="true" /></a>
-        <a class="sc-button sc-button-secondary" data-home-hero-game href={game?.href || stationHref(lang, 'games')}><Glyph name="games" size={23} />{copy.goGames}<ArrowRight size={16} aria-hidden="true" /></a>
+  <section class="gentle-hero paper-hero sc-container" aria-labelledby="station-title" data-home-config={home.configId} data-home-revision={home.publishedRevision}>
+    <div class="paper-hero-inner">
+      <div class="gentle-hero-content">
+        <p class="gentle-eyebrow">CATS, IDEAS, A KINDER TOMORROW</p>
+        <h1 class="sc-heading" id="station-title">{copy.headline[0]}<br />{' '}<span class="paper-mark">{copy.headline[1]}</span></h1>
+        <p class="gentle-lede">{copy.intro.map(line => <span>{line}<br /></span>)}</p>
+        <div class="gentle-hero-actions">
+          <a class="sc-button" data-home-hero-music href={music?.href || stationHref(lang, 'music')}><Glyph name="music" size={22} />{copy.goMusic}<ArrowRight size={16} aria-hidden="true" /></a>
+          <a class="sc-button sc-button-secondary" data-home-hero-game href={game?.href || stationHref(lang, 'games')}><Glyph name="games" size={23} />{copy.goGames}<ArrowRight size={16} aria-hidden="true" /></a>
+        </div>
       </div>
+      <figure class="paper-hero-photo" data-sc-parallax="0.05">
+        <span class="paper-tape" aria-hidden="true"></span>
+        <img class="gentle-hero-image" src={heroImage} width="2172" height="724" alt={copy.heroAlt} fetchpriority="high" />
+        <figcaption>{copy.photoCaption}</figcaption>
+      </figure>
+      <span class="paper-doodle paper-doodle-star" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5l2.6 6.9 6.9 2.6-6.9 2.6L12 20.5l-2.6-6.9L2.5 11l6.9-2.6z"/></svg></span>
+      <span class="paper-doodle paper-doodle-note" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span>
+      <span class="paper-doodle paper-doodle-paw" aria-hidden="true"><Glyph name="paw" size={38} /></span>
+      <span class="paper-doodle paper-doodle-swirl" aria-hidden="true"><svg viewBox="0 0 70 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 30c10-18 22-22 28-12s-4 16-8 8 10-22 26-18 16 14 18 6"/></svg></span>
     </div>
   </section>
+  <div class="paper-ribbon" aria-hidden="true"><div class="paper-ribbon-track">{[0, 1].map(() => copy.ribbon.map(word => <span>{word}</span>))}</div></div>
   <div class="sc-container gentle-content" id="station-work">
     <div class="gentle-features">
       <section class="gentle-feature gentle-music" aria-labelledby="station-music-title">

@@ -18,25 +18,6 @@ export const musicCopy = Object.freeze({
     stale: '歌曲設定已更新，請重新載入作品。',
     blocked: '瀏覽器尚未開始播放，請再次點擊播放。', ended: '播放完畢', paused: '已暫停', buffering: '正在緩衝…', clipsFailed: '影片資訊暫時無法載入。'
   },
-  'zh-Hans': {
-    title: '音乐小站', tagline: '选一首，让日常慢下来。', intro: '音乐记录情绪，也陪你走过平凡的日子。',
-    featured: '本期主推', selected: '精选作品', all: '全部作品', search: '搜索歌名或艺名', searchAction: '搜索',
-    sort: '排序方式', default: '小站推荐顺序', release: '最新发行', more: '加载更多作品', clear: '清除搜索',
-    empty: '还没有找到这首歌。', emptyHelp: '试试其他歌名或艺名，或看看全部作品。', preparing: '小站正在准备新的音乐。',
-    failed: '作品暂时无法加载。', retry: '重新加载', notFound: '这首作品目前无法公开查看。', back: '回到音乐小站',
-    preview: '试听', play: '播放', pause: '暂停',
-    platforms: '选择收听平台', visit: '打开', pending: '平台链接将在确认后更新。', detail: '查看作品',
-    platformInfo: '平台发行信息', platformPlanned: '即将上线', platformRegion: '目前不适用于你的地区', platformRegionUnknown: '地区适用信息待确认', platformUnavailable: '目前没有可用的平台入口。', platformBackup: '打不开平台？复制链接', platformHelp: '可复制网址，在系统浏览器中打开；也可以选取下方网址手动复制。', platformUrl: '平台网址', platformCopy: '复制', platformCopying: '正在复制…', platformCopied: '链接已复制。', platformManual: '无法自动复制，请选取网址手动复制。',
-    favorite: '收藏', favorited: '已收藏', local: '收藏保存在此设备。', temporary: '存储暂时不可用；收藏仅在本次浏览保留。',
-    corrupt: '本机记录无法读取；原始数据已保留，本次使用暂存收藏。', limit: '最多收藏 500 首，请先移除部分收藏。',
-    lyrics: '歌词', readLyrics: '展开歌词', reading: '正在读取歌词…', lyricsFailed: '歌词暂时无法读取。', story: '关于这首歌',
-    short: '音乐短视频', mv: '音乐录影带', watch: '观看原视频', related: '也许你会喜欢',
-    clipPlay: '播放视频', clipClose: '关闭视频', clipRetry: '重试视频', clipChoose: '切换视频', clipLoading: '正在加载视频…', clipPlaying: '视频播放中', clipFailed: '视频暂时无法播放。请重试。', clipBlocked: '浏览器未允许播放。请点击重试。',
-    loading: '正在加载…', shown: '已显示', songs: '首作品', releaseDate: '发行日期', volume: '音量', seek: '播放进度',
-    close: '收起播放器', player: '小站播放器', playbackFailed: '暂时无法播放，请重试或选择收听平台。',
-    stale: '歌曲设置已更新，请重新加载作品。',
-    blocked: '浏览器尚未开始播放，请再次点击播放。', ended: '播放完毕', paused: '已暂停', buffering: '正在缓冲…', clipsFailed: '视频信息暂时无法加载。'
-  },
   en: {
     title: 'The music station', tagline: 'Pick a song. Let the day slow down.', intro: 'Songs for the feelings and the ordinary days we share.',
     featured: 'In the spotlight', selected: 'Selected songs', all: 'All songs', search: 'Search songs or artists', searchAction: 'Search',
@@ -56,25 +37,6 @@ export const musicCopy = Object.freeze({
     stale: 'Song settings changed. Reload the song.',
     blocked: 'Your browser has not started playback. Click play again.', ended: 'Finished', paused: 'Paused', buffering: 'Buffering…', clipsFailed: 'Video information could not be loaded.'
   },
-  ja: {
-    title: '音楽の小さな駅', tagline: '一曲選んで、日常をゆっくりと。', intro: '気持ちを記録する音楽。何気ない日々に寄り添う歌。',
-    featured: '今のおすすめ', selected: '選りすぐりの曲', all: 'すべての作品', search: '曲名・アーティストを検索', searchAction: '検索',
-    sort: '並べ替え', default: '小さな駅のおすすめ順', release: '最新リリース', more: 'さらに読み込む', clear: '検索をクリア',
-    empty: 'この曲はまだ見つかりません。', emptyHelp: '別の曲名やアーティストを試すか、すべての作品をご覧ください。', preparing: '新しい音楽を準備しています。',
-    failed: '作品を読み込めませんでした。', retry: '再読み込み', notFound: 'この作品は現在公開されていません。', back: '音楽の駅へ戻る',
-    preview: '試聴', play: '再生', pause: '一時停止',
-    platforms: '聴く場所を選ぶ', visit: '開く', pending: '配信リンクは確認後にご案内します。', detail: '作品を見る',
-    platformInfo: '配信情報', platformPlanned: '近日配信予定', platformRegion: 'お住まいの地域では利用できません', platformRegionUnknown: '地域の利用条件は未確認です', platformUnavailable: '現在利用できる配信リンクはありません。', platformBackup: '開けないときはリンクをコピー', platformHelp: 'リンクをコピーして標準ブラウザで開いてください。下のURLを選択して手動でコピーすることもできます。', platformUrl: '配信URL', platformCopy: 'コピー', platformCopying: 'コピー中…', platformCopied: 'リンクをコピーしました。', platformManual: '自動コピーは利用できません。URLを選択して手動でコピーしてください。',
-    favorite: 'お気に入り', favorited: '保存済み', local: 'この端末に保存されます。', temporary: '保存機能が使えないため、今回は一時的に保存します。',
-    corrupt: '端末の記録を読み込めません。元のデータは保持し、今回は一時的に保存します。', limit: '最大500曲です。先に一曲削除してください。',
-    lyrics: '歌詞', readLyrics: '歌詞を読む', reading: '歌詞を読み込み中…', lyricsFailed: '歌詞を読み込めませんでした。', story: 'この曲について',
-    short: '音楽ショート動画', mv: 'ミュージックビデオ', watch: '元の動画を見る', related: 'こちらの曲もおすすめ',
-    clipPlay: '動画を再生', clipClose: '動画を閉じる', clipRetry: '動画を再試行', clipChoose: '動画を切り替える', clipLoading: '動画を読み込み中…', clipPlaying: '動画を再生中', clipFailed: '動画を再生できません。再試行してください。', clipBlocked: 'ブラウザーが再生を許可しませんでした。再試行してください。',
-    loading: '読み込み中…', shown: '表示中', songs: '曲', releaseDate: 'リリース日', volume: '音量', seek: '再生位置',
-    close: 'プレーヤーを閉じる', player: '小さな駅のプレーヤー', playbackFailed: '再生できません。再試行するか配信サービスをお選びください。',
-    stale: '曲の設定が更新されました。再読み込みしてください。',
-    blocked: '再生が始まりませんでした。もう一度再生をクリックしてください。', ended: '再生終了', paused: '一時停止中', buffering: 'バッファリング中…', clipsFailed: '動画情報を読み込めませんでした。'
-  }
 });
 
 export const providerNames = Object.freeze({ netease: '網易雲音樂', qishui: '汽水音樂', apple_music: 'Apple Music', youtube: 'YouTube', spotify: 'Spotify' });

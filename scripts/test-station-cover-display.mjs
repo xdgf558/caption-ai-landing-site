@@ -248,7 +248,7 @@ test('published homepage artwork uses controlled derivatives and revalidates bef
   const f = await fixture(), featured = f.content.tracks[1], selected = f.content.tracks[0];
   await promotionFixture(f.music.db, selected);
   await homeFixture(f.music.db, { track: featured.id, tracks: [selected.id], game: f.content.game.id });
-  for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
+  for (const locale of ['zh-Hant', 'en']) {
     const { home } = await (await call(f, '/home?locale=' + locale)).json();
     const slots = renderBrandHomeSlots(home);
     const featuredSrc = slots.music.match(/<img[^>]+src="([^"]+)"/)?.[1];

@@ -44,9 +44,9 @@ test('new activation proposal preserves old bindings/vars and enables no indepen
   assert.equal(config.vars.MUSIC_PUBLIC_ENABLED, 'true'); assert.equal(config.vars.MUSIC_VIP_DELIVERY_ENABLED, 'true');
 });
 test('package allows only required templates, actual game, admin and account/legal surfaces', () => {
-  for (const path of ['/music/site-shell/en/', '/music/site-shell/brand-home/ja/', '/member/site-shell/zh-Hant/',
+  for (const path of ['/music/site-shell/en/', '/music/site-shell/brand-home/zh-Hant/', '/member/site-shell/zh-Hant/',
     '/games/site-shell/en/', '/games/cat-life/', '/admin/music/', '/en/points/', '/zh-hant/privacy/',
-    '/ja/404/']) assert.equal(firstLaunchHtmlAllowed(path), true, path);
+    '/en/404/']) assert.equal(firstLaunchHtmlAllowed(path), true, path);
   for (const path of ['/', '/en/', '/about/', '/music/', '/en/music/', '/novel/story/chapter/a/',
     '/works/story/', '/devlog/a/', '/signal/a/', '/apps/cat-life-game/', '/en/apps/caption-ai/',
     '/ja/apps/privatepinyin/download/', '/en/apps/caption-ai/terms/', '/android/', '/en/library/']) assert.equal(firstLaunchHtmlAllowed(path), false, path);
@@ -67,7 +67,7 @@ const get = (path, options = {}) => runtime.mf.dispatchFetch('http://127.0.0.1' 
   redirect: 'manual', ...options, headers: { 'CF-Connecting-IP': '192.0.2.' + (ip++ % 250 + 1), ...options.headers },
 });
 test('release package serves every iPhone introduction and its resources through the real route handler', async () => {
-  for (const prefix of ['', '/en', '/ja', '/zh-hans']) {
+  for (const prefix of ['', '/en']) {
     const path = prefix + '/music/iphone/';
     const response = await get(path); assert.equal(response.status, 200, path);
     const html = await response.text(); assert.match(html, /data-sc-iphone-page/);
@@ -147,8 +147,8 @@ test('scope check rejects existing example publications and malformed or duplica
   assert.throws(() => assessFirstLaunchContent(rows.slice(1)));
   assert.throws(() => assessFirstLaunchContent([rows[0], rows[0]]));
 });
-test('production home shell and Worker replacement keep optimized music covers in all four locales', async () => {
-  for (const prefix of ['', '/en', '/ja', '/zh-hans']) {
+test('production home shell and Worker replacement keep optimized music covers in both locales', async () => {
+  for (const prefix of ['', '/en']) {
     const response = await get(prefix + '/'); assert.equal(response.status, 200);
     const html = await response.text();
     const music = html.split('data-home-slot="music"')[1]?.split('data-home-slot="game"')[0];
@@ -157,7 +157,7 @@ test('production home shell and Worker replacement keep optimized music covers i
     assert.doesNotMatch(music, /__cover-files/);
   }
 });
-test('actual pruned Assets and game-only local publications produce four language homes without music or media', async () => {
+test('actual pruned Assets and game-only local publications produce both language homes without music or media', async () => {
   // Disposable fixture state only; operational publications go through T16.
   await runtime.db.batch([
     runtime.db.prepare("UPDATE station_track_publications SET status='draft'"),
@@ -168,7 +168,11 @@ test('actual pruned Assets and game-only local publications produce four languag
   const sql = await readFile(new URL('../ops/station-first-launch-content-check.sql', import.meta.url), 'utf8');
   const proof = assessFirstLaunchContent((await runtime.db.prepare(sql).all()).results);
   assert.equal(proof.contentScopeMatches, true); assert.equal(proof.rightsAndHttpVerified, false);
-  for (const [prefix, locale] of [['', 'zh-Hant'], ['/en', 'en'], ['/ja', 'ja'], ['/zh-hans', 'zh-Hans']]) {
+  for (const locale of ['zh-Hans', 'ja']) { // retired pages, but the content API still serves stored locales
+    const dto = await get('/api/station/content/home?locale=' + locale); assert.equal(dto.status, 200); await dto.body?.cancel();
+    const page = await get((locale === 'ja' ? '/ja' : '/zh-hans') + '/'); assert.equal(page.status, 404); await page.body?.cancel();
+  }
+  for (const [prefix, locale] of [['', 'zh-Hant'], ['/en', 'en']]) {
     const response = await get(prefix + '/'); assert.equal(response.status, 200);
     const body = await response.text(); assert.match(body, /data-home-game=/); assert.match(body, /games\/cat-life-game\//);
     assert.doesNotMatch(body, /data-home-track=|data-home-clip=|<audio\b|<video\b|<iframe\b|href="[^\"]*\/novel\//);

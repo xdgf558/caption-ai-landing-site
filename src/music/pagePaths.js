@@ -1,11 +1,11 @@
 // Shared route contract. Only public identifiers survive redirects/language changes.
-export const musicPagePaths = Object.freeze({ 'zh-Hant': '/music/', 'zh-Hans': '/zh-hans/music/', en: '/en/music/', ja: '/ja/music/' });
+export const musicPagePaths = Object.freeze({ 'zh-Hant': '/music/', en: '/en/music/' });
 export function isMusicPagePath(path) {
   try { path = decodeURIComponent(path); } catch { /* malformed paths cannot resolve an asset */ }
   path = path.replace(/\\/g, '/').replace(/\/+/g, '/');
-  return /^\/(?:en\/|ja\/|zh-hans\/|zh-hant\/)?music(?:\/|$)/.test(path);
+  return /^\/(?:en\/|zh-hant\/)?music(?:\/|$)/.test(path);
 }
-export const musicPageLocale = path => path.startsWith('/en/') ? 'en' : path.startsWith('/ja/') ? 'ja' : path.startsWith('/zh-hans/') ? 'zh-Hans' : 'zh-Hant';
+export const musicPageLocale = path => path.startsWith('/en/') ? 'en' : 'zh-Hant';
 export function musicSelection(search) {
   const params = new URLSearchParams(search), result = new URLSearchParams();
   for (const [key, pattern] of [['track', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i], ['collection', /^[a-z0-9]+(?:-[a-z0-9]+)*$/]]) {

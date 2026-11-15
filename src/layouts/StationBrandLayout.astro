@@ -4,15 +4,16 @@ import Glyph from '../components/redesign/Glyph.astro';
 import { stationCopy, stationSections, stationHref, stationPolicyHref } from '../redesign/routes.js';
 import { siteConfig } from '../data/site';
 import '../redesign/gentle.css';
+import '../redesign/paper.css';
 interface Props {
-  lang?: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja'; title: string; description?: string;
+  lang?: 'zh-Hant' | 'en'; title: string; description?: string;
   gameRuntime?: boolean; playerSelected?: boolean; preview?: boolean;
   persistentPlayer?: boolean;
   activeSection?: 'home' | 'music' | 'games' | 'member' | 'about';
 }
 const { lang = 'zh-Hant', title, description = '', gameRuntime = false, playerSelected = false, preview = false, persistentPlayer = false, activeSection } = Astro.props;
 const copy = stationCopy[lang];
-const pending = { 'zh-Hant': '平台連結待更新', 'zh-Hans': '平台链接待更新', en: 'Platform link coming soon', ja: '配信リンクは後日ご案内' }[lang];
+const pending = { 'zh-Hant': '平台連結待更新', en: 'Platform link coming soon' }[lang];
 ---
 <!doctype html>
 <html lang={lang}>
@@ -25,7 +26,7 @@ const pending = { 'zh-Hant': '平台連結待更新', 'zh-Hans': '平台链接�
     <link rel="icon" href="/images/station-gentle/cat-mark.webp" />
     <slot name="head" />
   </head>
-  <body class="station-gentle" data-station-shell data-game-runtime={String(gameRuntime)} transition:animate={persistentPlayer ? 'none' : undefined}>
+  <body class="station-gentle station-paper" data-station-shell data-game-runtime={String(gameRuntime)} transition:animate={persistentPlayer ? 'none' : undefined}>
     <a class="sc-skip" href="#station-main">{copy.skip}</a>
     <div class="sc-site-width">
       <BrandNavigation lang={lang} activeSection={activeSection} />
@@ -58,14 +59,17 @@ const pending = { 'zh-Hant': '平台連結待更新', 'zh-Hans': '平台链接�
 <script>
   import { mountStationChrome } from '../redesign/chrome.js';
   import { mountStationAnalytics } from '../redesign/analyticsControls.js';
+  import { mountStationMotion } from '../redesign/motion.js';
   let dispose = () => {};
+  let disposeMotion = () => {};
   let disposeAnalytics = () => {};
   function mountChrome() {
     if (!document.querySelector('[data-station-shell]')?.hasAttribute('data-chrome-mounted')) dispose = mountStationChrome();
     if (!document.querySelector('[data-sc-event-controls]')?.hasAttribute('data-mounted')) disposeAnalytics = mountStationAnalytics();
+    if (!document.body.hasAttribute('data-motion-mounted')) disposeMotion = mountStationMotion(document.body);
   }
   mountChrome();
-  document.addEventListener('astro:before-swap', () => { dispose(); disposeAnalytics(); dispose = () => {}; disposeAnalytics = () => {}; });
+  document.addEventListener('astro:before-swap', () => { dispose(); disposeAnalytics(); disposeMotion(); dispose = () => {}; disposeAnalytics = () => {}; disposeMotion = () => {}; });
   document.addEventListener('astro:after-swap', mountChrome);
   document.addEventListener('astro:page-load', mountChrome);
 </script>

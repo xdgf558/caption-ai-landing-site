@@ -126,10 +126,6 @@ for (const route of [
   'src/pages/en/apps/novelforge-ai/download.astro',
   'src/pages/zh-hant/apps/novelforge-ai/index.astro',
   'src/pages/zh-hant/apps/novelforge-ai/download.astro',
-  'src/pages/zh-hans/apps/novelforge-ai/index.astro',
-  'src/pages/zh-hans/apps/novelforge-ai/download.astro',
-  'src/pages/ja/apps/novelforge-ai/index.astro',
-  'src/pages/ja/apps/novelforge-ai/download.astro'
 ]) {
   assert.ok(existsSync(join(root, route)), `${route} should exist`);
 }

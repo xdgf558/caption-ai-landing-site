@@ -167,7 +167,12 @@ env.WAITLIST_DB.prepare = prepare;
 assert.match(await (await publicPage('/signal/?page=2&tracking=test')).text(), /rel="canonical" href="https:\/\/wwwstationcat.org\/signal\/\?page=2"/);
 
 // Retire all public archive surfaces without touching records, bodies or Admin access.
-for (const [locale, path] of [['zh-Hant', '/signal/'], ['zh-Hans', '/zh-hans/signal/'], ['en', '/en/signal/'], ['ja', '/ja/signal/']]) {
+// Simplified Chinese and Japanese site pages are retired outright; the Worker answers 404 before any archive handling.
+for (const path of ['/zh-hans/signal/?view=archive', '/ja/signal/retired-brief/', '/ja/signal/']) {
+  const retired = await worker.fetch(new Request(base + path), env, {});
+  assert.equal(retired.status, 404, path); assert.equal(retired.headers.get('location'), null); await retired.body?.cancel();
+}
+for (const [locale, path] of [['zh-Hant', '/signal/'], ['en', '/en/signal/']]) {
   for (const [source, visibility] of [['signal_brief', 'public'], ['backend', 'unlisted']]) {
     sqlite.prepare("INSERT INTO content_entries(entry_type,locale,slug,title,status,source_kind,visibility) VALUES('signal_brief',?,?,'Retired history','published',?,?)")
       .run(locale, source === 'signal_brief' ? 'retired-brief' : 'retired-backend', source, visibility);

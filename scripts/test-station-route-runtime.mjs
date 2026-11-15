@@ -11,24 +11,34 @@ after(async () => { await runtime?.close(); });
 const get = (path, { mode, cookie, ...options } = {}) => runtime.mf.dispatchFetch('http://127.0.0.1' + path, {
   redirect: 'manual', ...options, headers: { 'CF-Connecting-IP': '192.0.' + Math.floor(ip / 250) + '.' + (ip++ % 250 + 1),
     ...(mode ? { 'x-sc-fixture-mode': mode } : {}), ...(cookie ? { Cookie: cookie } : {}), ...options.headers } });
-for (const [prefix, locale] of [['','zh-Hant'],['/en','en'],['/ja','ja'],['/zh-hans','zh-Hans']]) test(`${locale}: new home/about and music/game navigation use actual Worker + native Assets`, async () => {
+for (const [prefix, locale] of [['','zh-Hant'],['/en','en']]) test(`${locale}: new home/about and music/game navigation use actual Worker + native Assets`, async () => {
   for (const path of [prefix+'/', prefix+'/about/', prefix+'/music/', prefix+'/music/iphone/', prefix+'/games/']) {
     const response = await get(path); assert.equal(response.status, 200, path);
     assert.equal(response.headers.get('Cache-Control'), 'private, no-store');
     assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow');
     const body = await response.text(); assert.match(body, new RegExp('lang="' + locale + '"')); assert.match(body, /data-sc-route-profile="brand"/);
     assert.match(body, new RegExp('rel="canonical" href="http://127.0.0.1' + path.replaceAll('/', '\\/') + '"'));
-    assert.equal((body.match(/<link rel="alternate" hreflang=/g)||[]).length, 4);
-    if (path.endsWith('/about/')) for (const [lang, href] of [['en','/en/about/'],['ja','/ja/about/'],['zh-Hans','/zh-hans/about/'],['zh-Hant','/about/']]) {
+    assert.equal((body.match(/<link rel="alternate" hreflang=/g)||[]).length, 2);
+    if (path.endsWith('/about/')) for (const [lang, href] of [['en','/en/about/'],['zh-Hant','/about/']]) {
       const tag = [...body.matchAll(/<a\b[^>]*data-sc-language="[^"]+"[^>]*>/g)].find(match => match[0].includes('data-sc-language="'+lang+'"'))?.[0];
       assert.ok(tag?.includes('href="'+href+'"'),lang + ' corresponding about link');
     }
     assert.ok(body.includes('href="' + prefix + '/about/"')); assert.ok(!body.includes('href="/signal/"'));
+    assert.doesNotMatch(body, /data-sc-language="(?:ja|zh-Hans)"|href="\/(?:ja|zh-hans)\//);
     const head = await get(path,{method:'HEAD'}); assert.equal(head.status,200); assert.equal(await head.text(),'');
   }
 });
+test('retired Simplified Chinese and Japanese pages return a plain 404 without redirects', async () => {
+  for (const path of ['/ja/','/zh-hans/','/ja/about/','/zh-hans/music/','/zh-hans/music/iphone/','/ja/games/','/zh-hans/library/','/ja/privacy/','/zh-hans/apps/privatepinyin/download/','/ZH-HANS/','/%7a%68-hans/music/']) {
+    const response = await get(path); assert.equal(response.status, 404, path); assert.equal(response.headers.get('Location'), null, path);
+    assert.equal(response.headers.get('X-Robots-Tag'), 'noindex', path); await response.body?.cancel();
+  }
+  const head = await get('/ja/', { method: 'HEAD' }); assert.equal(head.status, 404); assert.equal(await head.text(), '');
+  for (const path of ['/en/','/zh-hant/library/']) { const r = await get(path); assert.notEqual(r.status, 404, path); await r.body?.cancel(); }
+});
 test('all inventoried retired static introductions exit directly; policy/download exceptions stay services', async () => {
   for (const path of stationLegacyInventory.retiredStaticPaths) {
+    if (/^\/(?:ja|zh-hans)\//.test(path)) continue; // retired locales are covered by the 404 test above
     if (migrationServicePath(path)) continue;
     const family = legacyFamily(path), response = await get(path);
     assert.equal(response.status, family.game ? 301 : 410, path);
@@ -123,7 +133,7 @@ test('search sitemap enumerates every shard beyond the first page and excludes o
     for(const match of text.matchAll(/<loc>([^<]+)<\/loc>/g)) urls.push(new URL(match[1]).pathname);
     for(const match of text.matchAll(/hreflang="([^"]+)" href="([^"]+)"/g)) assert.ok(publicSearchRoute(new URL(match[2]).pathname));
   }
-  assert.ok(urls.length>16+20*4);assert.equal(new Set(urls).size,urls.length);
+  assert.ok(urls.length>16+20*2);assert.equal(new Set(urls).size,urls.length);
   for(const path of urls) assert.ok(publicSearchRoute(path),path);
   for(const fragment of ['/apps/','/signal/','/novel/','/library/','/games/cat-life/','/site-shell/']) assert.ok(!urls.some(path=>path.includes(fragment)));
   const first=locs.find(loc=>loc.pathname==='/sitemaps/tracks-1.xml');

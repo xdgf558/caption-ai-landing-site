@@ -26,20 +26,21 @@ test('migration path normalization excludes nested encodings and control/query i
 });
 test('service priority retains runtime resources, accounts, downloads and policies', () => {
   for (const path of ['/api/mobile/v1/me/music/likes','/api/payments/creem/webhook','/admin/api/music','/games/cat-life/index.html',
-    '/games/cat-life/src/js/main.js','/en/apps/caption-ai/android/','/apps/privatepinyin/support/','/ja/apps/simplecut-pro/download/','/zh-hant/library/']) assert.equal(migrationServicePath(path), true);
+    '/games/cat-life/src/js/main.js','/en/apps/caption-ai/android/','/apps/privatepinyin/support/','/en/apps/simplecut-pro/download/','/zh-hant/library/']) assert.equal(migrationServicePath(path), true);
   assert.equal(migrationServicePath('/en/apps/cat-life-game/'), false);
 });
 test('chapter aliases preserve the actual root/en reading address', () => {
   assert.equal(chapterRoute('/works/story/ch-one/').href, '/novel/story/chapter/ch-one/');
-  assert.equal(chapterRoute('/ja/works/story/ch-one/').href, '/novel/story/chapter/ch-one/');
+  assert.equal(chapterRoute('/zh-hant/works/story/ch-one/').href, '/novel/story/chapter/ch-one/');
   assert.equal(chapterRoute('/en/works/story/ch-one/').href, '/en/novel/story/chapter/ch-one/');
   assert.equal(chapterRoute('/ja/novel/story/chapter/ch-one/'), null);
 });
-test('localized about applies only to the migration profile; canonical has four corresponding entities', () => {
+test('localized about applies only to the migration profile; canonical has two corresponding entities', () => {
   assert.equal(stationLanguageHref('en','/about/'), '/about/');
   assert.equal(stationLanguageHref('en','/about/','',{brandRoutes:true}), '/en/about/');
   assert.equal(brandHref('zh-Hant','about'), '/about/');
-  assert.equal(publicSearchRoute('/en/music/tracks/a/').alternates.length, 4);
+  assert.equal(publicSearchRoute('/en/music/tracks/a/').alternates.length, 2);
+  assert.equal(publicSearchRoute('/ja/music/tracks/a/'), null);
   assert.equal(publicSearchRoute('/games/cat-life/'), null);
   assert.equal(publicSearchRoute('/novel/a/chapter/b/'), null);
 });

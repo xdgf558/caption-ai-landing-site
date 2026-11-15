@@ -154,11 +154,12 @@ assert.match(notFound, /aria-labelledby="not-found-heading"/);
 for (const page of [
   'src/pages/404.astro',
   'src/pages/en/404.astro',
-  'src/pages/ja/404.astro',
-  'src/pages/zh-hans/404.astro',
   'src/pages/zh-hant/404.astro'
 ]) {
   await access(resolve(projectRoot, page));
+}
+for (const retired of ['src/pages/ja', 'src/pages/zh-hans']) {
+  await assert.rejects(access(resolve(projectRoot, retired)), `${retired} pages were retired with the Simplified Chinese and Japanese site`);
 }
 
 for (const source of [privacy, support, terms]) {
@@ -242,7 +243,8 @@ const mergedSitemap = workerHooks.mergeSitemapXmlWithRows(
     { entry_type: 'blog_post', locale: 'zh-Hant', slug: 'retired-post', updated_at: '2026-08-24 10:00:00' }
   ]
 );
-assert.match(mergedSitemap, /\/ja\/signal\/full-article\//);
+// Japanese and Simplified Chinese pages are retired, so their articles never enter the sitemap.
+assert.doesNotMatch(mergedSitemap, /\/ja\/signal\/full-article\//);
 assert.doesNotMatch(mergedSitemap, /daily-brief|link-only/);
 assert.match(mergedSitemap, /\/novel\/book-one\//);
 assert.match(mergedSitemap, /\/en\/novel\/book-one\/chapter\/chapter-one\//);

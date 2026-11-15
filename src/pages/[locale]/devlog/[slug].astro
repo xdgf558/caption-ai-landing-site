@@ -4,11 +4,11 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { devlogCopy, devlogPath, devlogSlug, formatDevlogDate } from '../../../data/devlog';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('devlog', ({ data }) => !data.draft && data.language !== 'zh-Hant');
+  const posts = await getCollection('devlog', ({ data }) => !data.draft && data.language === 'en');
 
   return posts.map((post) => ({
     params: {
-      locale: post.data.language === 'zh-Hans' ? 'zh-hans' : post.data.language,
+      locale: post.data.language,
       slug: devlogSlug(post)
     },
     props: { post }

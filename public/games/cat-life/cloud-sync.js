@@ -205,8 +205,8 @@
   function getLibraryPath() {
     var locale = getLocale();
     if (locale === "en") return "/en/library/";
-    if (locale === "ja") return "/ja/library/";
-    if (locale === "zh-CN") return "/zh-hans/library/";
+    // The site only serves Traditional Chinese and English pages.
+    if (locale === "ja") return "/en/library/";
     return "/zh-hant/library/";
   }
 

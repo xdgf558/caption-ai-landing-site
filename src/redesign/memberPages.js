@@ -5,7 +5,7 @@ import { requestDeadline } from './publicStore.js';
 import { stationHref } from './routes.js';
 import { eventPageConfiguration } from './analyticsModel.js';
 
-const locales = { en: 'en', ja: 'ja', 'zh-hans': 'zh-Hans', 'zh-hant': 'zh-Hant' };
+const locales = { en: 'en', 'zh-hant': 'zh-Hant' };
 const headers = Object.freeze({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store',
   'X-Robots-Tag': 'noindex, nofollow', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin',
   'Content-Security-Policy': "frame-ancestors 'none'", 'X-Frame-Options': 'DENY' });

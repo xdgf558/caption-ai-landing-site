@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { handleStationGamePage, stationGameRoute } from '../src/redesign/gamePages.js';
 import { renderGamePage } from '../src/redesign/gameRender.js';
-const locales = [['', 'zh-Hant'], ['/zh-hans', 'zh-Hans'], ['/en', 'en'], ['/ja', 'ja']];
+const locales = [['', 'zh-Hant'], ['/en', 'en']];
 for (const [prefix, locale] of locales) test(`${locale}: canonical catalog, safe detail and reserved runtime`, async () => {
   assert.equal(stationGameRoute(prefix + '/games/').locale, locale);
   assert.equal(stationGameRoute(prefix + '/games/cat-life-game/').kind, 'detail');

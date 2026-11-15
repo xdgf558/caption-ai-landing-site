@@ -20,7 +20,7 @@
       member: "会员中心",
       languageNote: "",
       homeLabel: "Station Cat 首页",
-      paths: { home: "/zh-hans/", gameInfo: "/zh-hans/apps/cat-life-game/", apps: "/zh-hans/apps/", member: "/zh-hans/library/" }
+      paths: { home: "/", gameInfo: "/zh-hant/apps/cat-life-game/", apps: "/zh-hant/apps/", member: "/zh-hant/library/" }
     },
     en: {
       gameInfo: "Game info",
@@ -36,7 +36,7 @@
       member: "会員センター",
       languageNote: "",
       homeLabel: "Station Cat ホーム",
-      paths: { home: "/ja/", gameInfo: "/ja/apps/cat-life-game/", apps: "/ja/apps/", member: "/ja/library/" }
+      paths: { home: "/en/", gameInfo: "/en/apps/cat-life-game/", apps: "/en/apps/", member: "/en/library/" }
     }
   };
 

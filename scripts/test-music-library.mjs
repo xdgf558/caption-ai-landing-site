@@ -65,7 +65,8 @@ test('music routes run before asset fallthrough, stay out of sitemap, and use ex
   for (const pattern of ['/music', '/music/*', '/en/*', '/ja/*', '/zh-hans/*', '/zh-hant/*']) assert.ok(config.includes(`"${pattern}"`));
   for (const path of [...Object.values(musicPagePaths), '/zh-hant/music/']) assert.equal(shouldIncludeSitemapRoute(path), false);
   assert.equal(shouldIncludeSitemapRoute('/en/'), true);
-  for (const locale of musicLocales) assert.ok(musicPageHref(locale, `track=${tracks[0].id}`).startsWith(musicPagePaths[locale]));
+  for (const locale of Object.keys(musicPagePaths)) assert.ok(musicPageHref(locale, `track=${tracks[0].id}`).startsWith(musicPagePaths[locale]));
+  assert.deepEqual(Object.keys(musicPagePaths), ["zh-Hant", "en"]);
   assert.equal(musicPageHref('zh-Hant'), '/music/');
 });
 test('500-track catalog is bounded, rejects duplicate IDs and unsafe fields, and canonicalizes covers', () => {

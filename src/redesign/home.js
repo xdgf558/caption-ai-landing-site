@@ -1,4 +1,4 @@
-import { stationHref, stationLocales } from './routes.js';
+import { stationHref, stationLocales, stationContentLocales } from './routes.js';
 import { platformUrl } from './publicValidation.js';
 
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -10,7 +10,7 @@ const plain = (value, max) => typeof value === 'string' && value.trim() && value
 const providers = { netease: 'music', qishui: 'headphones', apple_music: 'apple', youtube: 'youtube', spotify: 'spotify' };
 
 function localized(value, locale, original, max, required = true) {
-  if (!object(value) || !stationLocales.includes(original)) return null;
+  if (!object(value) || !stationContentLocales.includes(original)) return null;
   const source = value[original];
   if (!plain(source, max) && (required || source !== '')) return null;
   return plain(value[locale], max) ? value[locale] : value[original];
@@ -54,7 +54,7 @@ function publicUrl(value, fixture, kind) {
  * Fixture-only URLs require BOTH an explicit option and a fixture-marked config.
  */
 export function buildHomeView({ config, content, locale = 'zh-Hant', now = new Date().toISOString(), fixture = false }) {
-  if (!stationLocales.includes(locale) || !time(now)) throw new TypeError('Invalid home locale or clock');
+  if (!stationContentLocales.includes(locale) || !time(now)) throw new TypeError('Invalid home locale or clock');
   const clock = Date.parse(now);
   const isFixture = fixture === true && config?.environment === 'fixture';
   const view = { locale, configId: uuid(config?.id) ? config.id : null, publishedRevision: null,

@@ -99,7 +99,7 @@
     .gentle-hero-image { position: static; order: 2; width: 100%; height: 220px; object-position: right center; }
     .gentle-hero-content { width: 100%; max-width: none; }
     .gentle-hero h1 { max-width: 640px; }
-    html[lang='en'] .gentle-hero h1, html[lang='ja'] .gentle-hero h1 { font-size: 28px; }
+    html[lang='en'] .gentle-hero h1 { font-size: 28px; }
     html[lang='en'] .gentle-hero h1 { text-wrap: balance; }
     html[lang='en'] .gentle-hero h1 br { display: none; }
   }

@@ -19208,7 +19208,7 @@ const mergeSitemapXmlWithRows = (baseXml, rows = []) => {
   const additions = [];
   for (const row of rows) {
     const path = dynamicSitemapPath(row);
-    if (!path) continue;
+    if (!path || isRetiredLocalePath(path)) continue;
     const location = absoluteStationUrl(path);
     if (!location || existing.has(location)) continue;
     existing.add(location);
@@ -22877,6 +22877,24 @@ export const __readerTotpTestHooks = {
   verifyTotpCode
 };
 
+const retiredLocalePathPattern = /^\/(?:zh-hans|ja)(?:\/|$)/i;
+
+function isRetiredLocalePath(pathname) {
+  let path = pathname;
+  try { path = decodeURIComponent(pathname); } catch { /* keep the raw path */ }
+  return retiredLocalePathPattern.test(path.replace(/\\/g, '/').replace(/\/+/g, '/'));
+}
+
+const retiredLocaleNotFoundHtml = `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>404 · Station Cat</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f7f1e5;color:#2c2620;font:16px/1.7 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;text-align:center}main{padding:32px}h1{font:700 40px/1.2 Georgia,"Songti TC",serif;margin:0 0 12px}p{margin:4px 0;color:#6c6155}nav{margin-top:24px;display:flex;gap:12px;justify-content:center}a{display:inline-block;padding:10px 20px;border-radius:999px;background:#2c2620;color:#fff8ec;text-decoration:none}a+a{background:#fffdf8;color:#2c2620;border:1px solid #d5c5aa}</style></head><body><main><h1>404</h1><p>這一站不在地圖上。</p><p lang="en">This stop is not on the map.</p><nav><a href="/">繁體中文</a><a href="/en/" lang="en">English</a></nav></main></body></html>`;
+
+// Answered without any binding so closed-service invariants (no ASSETS/DB reads) still hold.
+function retiredLocaleNotFound(request) {
+  return new Response(request.method === 'HEAD' ? null : retiredLocaleNotFoundHtml, {
+    status: 404,
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300', 'X-Robots-Tag': 'noindex' }
+  });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const dispatch = async () => {
@@ -22890,6 +22908,9 @@ export default {
       url.protocol = 'https:';
       return Response.redirect(url.toString(), 301);
     }
+
+    // Simplified Chinese and Japanese pages were retired on 2026-11-15; their URLs are gone, not redirected.
+    if (isRetiredLocalePath(url.pathname)) return retiredLocaleNotFound(request);
 
     const isAdminRequest = adminPathPattern.test(url.pathname);
     const downloadFile = downloadFiles[url.pathname];

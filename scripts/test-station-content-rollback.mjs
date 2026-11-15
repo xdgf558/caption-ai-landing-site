@@ -96,8 +96,9 @@ before(async()=>{runtime=await createStationRouteRuntime({assetsDirectory:firstL
 after(async()=>{await runtime?.close();});
 const get=(path,options={})=>runtime.mf.dispatchFetch('https://wwwstationcat.org'+path,{redirect:'manual',...options,
   headers:{'CF-Connecting-IP':'192.0.2.'+(ip++%250+1),...options.headers}});
-test('real pruned Assets serve four branded maintenance states and reachable member forms without public station queries',async()=>{
-  for(const [prefix,locale] of [['','zh-Hant'],['/en','en'],['/ja','ja'],['/zh-hans','zh-Hans']]){
+test('real pruned Assets serve two branded maintenance states and reachable member forms without public station queries',async()=>{
+  for(const prefix of ['/ja/','/zh-hans/']) assert.equal((await get(prefix)).status,404);
+  for(const [prefix,locale] of [['','zh-Hant'],['/en','en']]){
     const response=await get(prefix+'/'); assert.equal(response.status,503); const html=await response.text();
     assert.match(html,/data-station-maintenance/); assert.match(html,/href="\/games\/cat-life\/"/);
     assert.doesNotMatch(html,/<audio\b|<video\b|<iframe\b|data-home-track=/);

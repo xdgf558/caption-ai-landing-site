@@ -5,7 +5,7 @@ let runtime, ip = 1;
 before(async () => { runtime = await createStationMusicRuntime({ gameCases: true }); });
 after(async () => { await runtime?.close(); });
 const get = (path, options = {}) => runtime.mf.dispatchFetch('http://127.0.0.1' + path, { redirect: 'manual', headers: { 'CF-Connecting-IP': '192.0.2.' + ip++ }, ...options });
-for (const [prefix, locale] of [['', 'zh-Hant'], ['/zh-hans', 'zh-Hans'], ['/en', 'en'], ['/ja', 'ja']]) test(`${locale}: actual Worker/D1/R2 renders catalog, intro, language links and original runtime`, async () => {
+for (const [prefix, locale] of [['', 'zh-Hant'], ['/en', 'en']]) test(`${locale}: actual Worker/D1/R2 renders catalog, intro, language links and original runtime`, async () => {
   const catalog = await get('/fixture-pages-on' + prefix + '/games/'); assert.equal(catalog.status, 200); const html = await catalog.text();
   assert.match(html, new RegExp('lang="' + locale + '"')); assert.ok(html.includes('data-sc-game-page')); assert.ok(html.includes(prefix + '/games/cat-life-game/'));
   assert.ok(html.includes('href="https://testflight.apple.com/join/UV4nkZnA"'));
@@ -13,7 +13,7 @@ for (const [prefix, locale] of [['', 'zh-Hant'], ['/zh-hans', 'zh-Hans'], ['/en'
   const detail = await get('/fixture-pages-on' + prefix + '/games/cat-life-game/'); assert.equal(detail.status, 200); const body = await detail.text();
   assert.ok(body.includes('data-sc-game-launch hidden')); assert.ok(body.includes('http://127.0.0.1' + prefix + '/games/cat-life-game/'));
   assert.ok(body.includes('href="https://testflight.apple.com/join/UV4nkZnA"')); assert.ok(body.includes('aria-labelledby="sc-game-ios-title"'));
-  for (const lang of ['', '/zh-hans', '/en', '/ja']) assert.ok(body.includes('href="' + lang + '/games/cat-life-game/"'));
+  for (const lang of ['', '/en']) assert.ok(body.includes('href="' + lang + '/games/cat-life-game/"'));
   const old = await get('/fixture-pages-on/games/cat-life/?lang=en'); assert.equal(old.status, 200); assert.ok((await old.text()).includes('src/js/main.js'));
   const head = await get('/fixture-pages-on' + prefix + '/games/cat-life-game/', { method: 'HEAD' }); assert.equal(head.status, 200); assert.equal(await head.text(), '');
 });

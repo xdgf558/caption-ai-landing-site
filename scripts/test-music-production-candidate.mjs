@@ -61,7 +61,7 @@ test('candidate checker rejects a single open flag or changed binding/path/ident
 
 test('real production handler denies closed HTML/media/catalog/cards/analytics before any data binding', async () => {
   const id = '11111111-1111-4111-8111-111111111111';
-  const paths = ['/music', '/music/', '/music/index.html', '/en/music/', '/ja/music/', '/zh-hans/music/', '/zh-hant/music/',
+  const paths = ['/music', '/music/', '/music/index.html', '/en/music/', '/zh-hant/music/',
     '/%6dusic/', '/en%2fmusic/', '/music%2findex.html', '/api/music/catalog?locale=en', '/api/music/collections/album?locale=en', '/api/music/me/capabilities?locale=en',
     `/api/music/tracks/${id}/audio?v=1&variant=full`, `/api/music/tracks/${id}/audio?v=1&variant=preview`,
     `/api/music/tracks/${id}/cover?v=1`, `/api/music/tracks/${id}/lyrics?v=1`, `/api/music/tracks/${id}/access?v=1`, `/api/music/tracks/${id}/share.png?locale=en&v=1&format=card`];
@@ -73,6 +73,8 @@ test('real production handler denies closed HTML/media/catalog/cards/analytics b
   }
   const env = { ...musicProductionCandidate(source, resources()).vars };
   for (const key of ['MUSIC_DB', 'MUSIC_BUCKET', 'WAITLIST_DB', 'ASSETS']) Object.defineProperty(env, key, { get() { assert.fail('Unexpected binding read: '+key); } });
+  // Retired Simplified Chinese and Japanese pages are a plain 404, still without touching any binding.
+  for (const p of ['/ja/music/', '/zh-hans/music/']) assert.equal((await worker.fetch(new Request('https://wwwstationcat.org'+p), env, {})).status, 404, p);
   const analytics = await worker.fetch(new Request('https://wwwstationcat.org/api/music/analytics/config'), env, {});
   assert.equal(analytics.status, 200); assert.equal((await analytics.json()).available, false);
   assert.equal((await worker.fetch(new Request('https://wwwstationcat.org/api/music/events', {method:'POST',body:'{}'}), env, {})).status, 503);

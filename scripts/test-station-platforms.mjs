@@ -76,8 +76,8 @@ test('public status distinguishes upcoming, withdrawn, confirmed regional exclus
     assert.deepEqual(platformAvailability([{ ...row, ...patch }], track.id, 'SG', now), { state: 'unconfirmed', notes: [] });
   }
 });
-test('four languages retain ordinary anchors and readable no-JS manual fallback, without an app-open claim', () => {
-  for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
+test('both languages retain ordinary anchors and readable no-JS manual fallback, without an app-open claim', () => {
+  for (const locale of ['zh-Hant', 'en']) {
     const html = musicPlatforms(track, locale);
     assert.match(html, /target="_blank" rel="noopener noreferrer"/);
     assert.match(html, /<details[^>]+data-sc-platform-backup/);

@@ -8,7 +8,7 @@ import { ClientRouter } from 'astro:transitions';
 import '../../redesign/music.css';
 import { gameCopy } from '../../redesign/gameCopy.js';
 import '../../redesign/games.css';
-interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+interface Props { lang: 'zh-Hant' | 'en' }
 const { lang } = Astro.props;
 const copy = gameCopy[lang];
 ---

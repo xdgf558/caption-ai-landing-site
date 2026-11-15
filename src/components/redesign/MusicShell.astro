@@ -13,7 +13,7 @@ import '../../redesign/music.css';
 import '../../redesign/platforms.css';
 import '../../redesign/clips.css';
 import { ClientRouter } from 'astro:transitions';
-interface Props { lang: 'zh-Hant' | 'zh-Hans' | 'en' | 'ja' }
+interface Props { lang: 'zh-Hant' | 'en' }
 const { lang } = Astro.props;
 const copy = musicCopy[lang];
 const inner = (source: string) => source.slice(source.indexOf('>') + 1, source.lastIndexOf('</svg>'));

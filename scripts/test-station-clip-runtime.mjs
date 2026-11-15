@@ -15,8 +15,8 @@ const call = (path, { prefix = '/fixture-pages-on', method = 'GET', headers = {}
 const clips = async () => { const r = await call('/api/station/content/tracks/vip/clips?locale=en&limit=4'); assert.equal(r.status, 200); return (await r.json()).items; };
 const model = html => JSON.parse(/<script id="sc-music-bootstrap" type="application\/json">([^]*?)<\/script>/.exec(html)[1]);
 
-test('separate four-language homepage graph only binds selected T07 clip DTOs, keeps native detail fallback, and contains no video/audio', async () => {
-  for (const locale of ['zh-Hant', 'zh-Hans', 'en', 'ja']) {
+test('separate two-language homepage graph only binds selected T07 clip DTOs, keeps native detail fallback, and contains no video/audio', async () => {
+  for (const locale of ['zh-Hant', 'en']) {
     const html = await readFile(new URL('../.generated/station-clip-home-preview/' + locale + '/index.html', import.meta.url), 'utf8');
     const value = JSON.parse(/<script id="sc-home-clips-bootstrap" type="application\/json">([^]*?)<\/script>/.exec(html)[1]);
     assert.equal(stationHomeClipModel(value.home, value.clips).clips.length, 1);
@@ -26,8 +26,8 @@ test('separate four-language homepage graph only binds selected T07 clip DTOs, k
   }
 });
 
-test('final built four-language detail shell has associated cards, empty accessible dialog, lazy posters and no video source/iframe', async () => {
-  for (const prefix of ['', '/zh-hans', '/en', '/ja']) {
+test('final built two-language detail shell has associated cards, empty accessible dialog, lazy posters and no video source/iframe', async () => {
+  for (const prefix of ['', '/en']) {
     const r = await call(prefix + '/music/tracks/vip/'); assert.equal(r.status, 200); const html = await r.text(), value = model(html);
     assert.match(r.headers.get('x-robots-tag'), /noindex/); assert.match(r.headers.get('cache-control'), /no-store/);
     assert.equal(stationClips(value).length, 3); assert.equal((html.match(/class="sc-clip-card"/g) || []).length, 3);
