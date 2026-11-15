@@ -58,7 +58,7 @@ test('rich paste preserves structure, drops external resources and survives save
   await page.getByRole('button', { name: '发布文章', exact: true }).click();
   await expect(page.getByRole('status')).toHaveText('文章已发布。');
   const reader = await context.newPage();
-  await reader.goto('/zh-hans/signal/x-article-8101/');
+  await reader.goto('/signal/x-article-8101/');
   await expect(reader.locator('.article-prose td')).toHaveText(['A | B', 'x | y']);
   await expect(reader.locator('.article-prose strong')).toHaveText(['bold', 'Word emphasis']);
 });
@@ -125,7 +125,7 @@ test('encoded scheme links are removed on paste and never appear in preview or p
   await page.getByRole('button', { name: '发布文章', exact: true }).click();
   await expect(page.getByRole('status')).toHaveText('文章已发布。');
   const reader = await context.newPage();
-  await reader.goto('/zh-hans/signal/x-article-8104/');
+  await reader.goto('/signal/x-article-8104/');
   await expect(reader.locator('.article-prose a')).toHaveCount(allowed.length);
   for (const [label, , output] of allowed) await expect(reader.getByRole('link', { name: label, exact: true })).toHaveAttribute('href', output);
 });
@@ -164,10 +164,10 @@ for (const width of [390, 1280]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.locator('.body-tools').screenshot({ path: testInfo.outputPath(`toolbar-${width}.png`) });
     const response = await request.post('/admin/api/articles', { headers: { origin: baseURL }, data: {
-      sourceUrl: `https://x.com/i/article/${id}`, title: 'Enhanced article layout', description: 'Local typography fixture', locale: 'zh-Hans', markdown, status: 'published'
+      sourceUrl: `https://x.com/i/article/${id}`, title: 'Enhanced article layout', description: 'Local typography fixture', locale: 'zh-Hant', markdown, status: 'published'
     } });
     expect(response.ok()).toBe(true);
-    await page.goto(`/zh-hans/signal/x-article-${id}/`);
+    await page.goto(`/signal/x-article-${id}/`);
     await expect(page.locator('.article-prose table')).toBeVisible();
     const table = page.getByRole('region', { name: '表格', exact: true });
     if (width === 390) expect(await table.evaluate(el => el.scrollWidth > el.clientWidth)).toBe(true);

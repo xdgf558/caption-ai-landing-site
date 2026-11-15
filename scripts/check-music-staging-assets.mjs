@@ -11,9 +11,7 @@ const expectedPages = new Map([
   ['/admin/music/collections/upload/', '/admin/music/collections/upload/index.html'],
   ['/admin/music/featured/', '/admin/music/featured/index.html'],
   ['/music/', '/music/index.html'],
-  ['/en/music/', '/en/music/index.html'],
-  ['/ja/music/', '/ja/music/index.html'],
-  ['/zh-hans/music/', '/zh-hans/music/index.html']
+  ['/en/music/', '/en/music/index.html']
 ]);
 const assetExtension = /\.(?:css|ico|js|otf|png|txt|webp|woff2?)$/i;
 const references = [

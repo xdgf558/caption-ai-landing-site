@@ -6,17 +6,17 @@ for (const width of [390, 1280]) {
   test(`article share PNG, copy, QR and focus at ${width}px`, async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/zh-hans/signal/x-article-1001/');
+    await page.goto('/signal/x-article-1001/');
     const trigger = page.getByRole('button', { name: '分享卡片', exact: true });
     const expected = await trigger.evaluate(el => JSON.parse(el.dataset.articleShare));
     await trigger.click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole('status')).toHaveText('分享卡片已准备好');
+    await expect(dialog.getByRole('status')).toHaveText('分享卡片已準備好');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
     const downloadEvent = page.waitForEvent('download');
-    await dialog.getByRole('link', { name: '保存图片' }).click();
+    await dialog.getByRole('link', { name: '儲存圖片' }).click();
     const download = await downloadEvent;
     await download.saveAs(test.info().outputPath('article-card.png'));
     const bytes = await readFile(await download.path());
@@ -30,15 +30,15 @@ for (const width of [390, 1280]) {
       expect(pixel(x + (c + 4) * cell + 1, y + (r + 4) * cell + 1) < 100).toBe(expected.modules[r][c] === '1');
     }
     expect(pixel(x + 1, y + 1)).toBe(255);
-    await dialog.getByRole('button', { name: '复制链接' }).click();
-    await expect(dialog.getByRole('status')).toHaveText('链接已复制');
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('https://wwwstationcat.org/zh-hans/signal/x-article-1001/');
+    await dialog.getByRole('button', { name: '複製連結' }).click();
+    await expect(dialog.getByRole('status')).toHaveText('連結已複製');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('https://wwwstationcat.org/signal/x-article-1001/');
     await page.screenshot({ path: test.info().outputPath(`share-${width}.png`) });
     await page.keyboard.press('Escape');
     await expect(dialog).not.toBeVisible();
     await expect(trigger).toBeFocused();
     await trigger.click();
-    await expect(dialog.getByRole('status')).toHaveText('分享卡片已准备好');
+    await expect(dialog.getByRole('status')).toHaveText('分享卡片已準備好');
   });
 }
 
@@ -68,23 +68,23 @@ test('image failure can retry; closing during generation does not reopen or leak
       if (first) { first = false; callback(null); } else original.call(this, callback, ...args);
     };
   });
-  await page.goto('/zh-hans/signal/x-article-1001/');
+  await page.goto('/signal/x-article-1001/');
   await page.getByRole('button', { name: '分享卡片' }).click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog.getByRole('status')).toHaveText('卡片制作失败，请重试。');
-  await expect(dialog.getByRole('link', { name: '保存图片' })).not.toBeVisible();
-  await dialog.getByRole('button', { name: '重试' }).click();
-  await expect(dialog.getByRole('status')).toHaveText('分享卡片已准备好');
-  await dialog.getByRole('button', { name: '关闭', exact: true }).click();
+  await expect(dialog.getByRole('status')).toHaveText('卡片製作失敗，請重試。');
+  await expect(dialog.getByRole('link', { name: '儲存圖片' })).not.toBeVisible();
+  await dialog.getByRole('button', { name: '重試' }).click();
+  await expect(dialog.getByRole('status')).toHaveText('分享卡片已準備好');
+  await dialog.getByRole('button', { name: '關閉', exact: true }).click();
   await page.route('**/station-cat-logo-1668c2e5-160.webp', async route => { await new Promise(resolve => setTimeout(resolve, 300)); await route.abort(); });
   await page.getByRole('button', { name: '分享卡片' }).click();
-  await dialog.getByRole('button', { name: '关闭', exact: true }).click();
+  await dialog.getByRole('button', { name: '關閉', exact: true }).click();
   await expect(dialog).not.toBeVisible();
   await expect(page.locator('[data-article-share-dialog] img')).not.toHaveAttribute('src');
 });
 
 test('long mixed-language titles and summaries stay bounded in the PNG', async ({ page }) => {
-  await page.goto('/zh-hans/signal/x-article-1001/');
+  await page.goto('/signal/x-article-1001/');
   const sizes = await page.evaluate(async () => {
     const { createArticleCard, wrapCardText } = await import('/scripts/article-share.js?v=1');
     const data = JSON.parse(document.querySelector('[data-article-share]').dataset.articleShare);
@@ -101,7 +101,7 @@ test('long mixed-language titles and summaries stay bounded in the PNG', async (
   expect(sizes.bytes).toBeGreaterThan(20000);
 });
 
-for (const [path, open, ready] of [['/signal/', '分享卡片', '分享卡片已準備好'], ['/ja/signal/', 'シェアカード', 'シェアカードを作成しました']]) {
+for (const [path, open, ready] of [['/signal/', '分享卡片', '分享卡片已準備好'], ['/en/signal/', 'Share card', 'Share card ready']]) {
   test(`localized card controls on a short mobile viewport: ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 667 });
     await page.goto(path);

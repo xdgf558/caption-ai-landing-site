@@ -13,7 +13,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 320, height: 568 }
       if (path.endsWith('/lyrics')) return route.fulfill({ contentType: 'text/plain', body: '[00:00.00]测试歌词\n[00:05.00]下一行歌词' });
       return route.fulfill({ status: 404, json: { error: { code: 'NOT_FOUND' } } });
     });
-    await page.goto('/zh-hans/music/');
+    await page.goto('/music/');
     // A translated-offscreen skip link must not appear during Safari overscroll,
     // while remaining available to keyboard users before a modal is opened.
     await expect(page.locator('.skip-link')).toHaveCSS('clip-path', 'inset(50%)');

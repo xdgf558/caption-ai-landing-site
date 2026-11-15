@@ -82,7 +82,16 @@ const fill = (row = null, markdown = '') => {
   $('article-url').value = row?.metadata?.article?.sourceUrl || '';
   $('article-title').value = row?.title || '';
   $('article-description').value = row?.description || '';
-  $('article-locale').value = row?.locale || 'zh-Hans';
+  // Retired zh-Hans/ja articles stay editable so they can be withdrawn; the server refuses to republish them.
+  const localeSelect = $('article-locale');
+  localeSelect.querySelectorAll('option[data-retired]').forEach(option => option.remove());
+  const retired = { 'zh-Hans': '简体中文（已停用，仅可撤下）', ja: '日本語（已停用，仅可撤下）' }[row?.locale];
+  if (retired) {
+    const option = Object.assign(document.createElement('option'), { value: row.locale, textContent: retired });
+    option.setAttribute('data-retired', '');
+    localeSelect.append(option);
+  }
+  localeSelect.value = row?.locale || 'zh-Hant';
   $('article-body').value = markdown;
   bodyEditor.reset();
   $('article-body-section').open = Boolean(markdown);

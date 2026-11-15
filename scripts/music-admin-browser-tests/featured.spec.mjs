@@ -96,7 +96,7 @@ test('public featured cards use the one player and viewing another card keeps th
     if(path.endsWith('/audio')){audioRequests++;return route.fulfill({status:200,contentType:'audio/wav',body:demoWav(tracks[0])});}
     return route.fulfill({status:404,json:{error:{code:'NOT_FOUND'}}});
   });
-  await page.goto('/zh-hans/music/');
+  await page.goto('/music/');
   await expect(page.locator('[data-featured-home]')).toBeVisible();
   await expect(page.locator('[data-featured-primary-title]')).toHaveText(tracks[0].title);
   await expect(page.locator('[data-featured-secondary]')).toContainText('VIP');

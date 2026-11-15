@@ -21,7 +21,7 @@ async function setup(page, lyricsKind = 'lrc') {
     return route.fulfill({ status: 404, json: { error: { code: 'NOT_FOUND' } } });
   });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/zh-hans/music/');
+  await page.goto('/music/');
   await page.locator('[data-featured-play]').click();
   await expect.poll(() => page.locator('audio').evaluate(a => !a.paused)).toBe(true);
   await expect.poll(() => page.locator('[data-now-cover]').evaluate(i => i.complete && i.naturalWidth > 0)).toBe(true);

@@ -31,7 +31,7 @@ if (process.env.ARTICLE_PREVIEW_SNAPSHOT) {
     sqlite.prepare('UPDATE content_entries SET published_at = ? WHERE id = ?').run(row.date || '2026-09-01', entry.id);
   }
 } else for (const [id, title, description, markdown, locale] of [
-  ['1001', '本地示例：把一个想法慢慢做成游戏', '从第一张草图到一个可以散步的小家，记录创作过程中的选择与取舍。', '## 从一个小想法开始\n\n这是本地预览内容，不会发布到线上。\n\n## 留出日常的空间\n\n把复杂的操作藏在简单的界面后面，让玩家把注意力留给生活。', 'zh-Hans'],
+  ['1001', '本地示例：把一个想法慢慢做成游戏', '从第一张草图到一个可以散步的小家，记录创作过程中的选择与取舍。', '## 从一个小想法开始\n\n这是本地预览内容，不会发布到线上。\n\n## 留出日常的空间\n\n把复杂的操作藏在简单的界面后面，让玩家把注意力留给生活。', 'zh-Hant'],
   ['1002', 'Local preview: a quieter place to write', 'A small collection of thoughts about independent making, useful tools, and everyday life.', '', 'en']
 ]) {
   const result = await hooks.handleAdminArticles(new Request(base + '/admin/api/articles', { method: 'POST', headers: { origin: base, 'content-type': 'application/json' }, body: JSON.stringify({ sourceUrl: `https://x.com/i/article/${id}`, title, description, markdown, locale, status: 'published' }) }), env);

@@ -21529,8 +21529,9 @@ const handleDynamicFrontendContent = async (request, env, ctx) => {
   if (!db || !(await ensureContentTablesReady(db))) return null;
 
   if (route.kind === 'signal-index') {
+    // zh-Hans/ja article pages return 404 since 2026-11-15, so the index never links to them.
     const page = Math.min(10000, Math.max(1, Number.parseInt(url.searchParams.get('page'), 10) || 1));
-    const result = await db.prepare("SELECT * FROM content_entries WHERE entry_type = 'signal_brief' AND source_kind = 'x_article' AND status = 'published' AND visibility = 'public' ORDER BY COALESCE(published_at, updated_at) DESC, id DESC LIMIT 21 OFFSET ?").bind((page - 1) * 20).all();
+    const result = await db.prepare("SELECT * FROM content_entries WHERE entry_type = 'signal_brief' AND source_kind = 'x_article' AND status = 'published' AND visibility = 'public' AND locale IN ('zh-Hant', 'en') ORDER BY COALESCE(published_at, updated_at) DESC, id DESC LIMIT 21 OFFSET ?").bind((page - 1) * 20).all();
     const rows = result.results || [], copy = articleCopy(route.locale);
     return dynamicHtmlResponse(request, {
       body: request.method === 'HEAD' ? '' : renderArticleIndex(route.locale, rows.slice(0, 20), { page, hasMore: rows.length > 20 }),

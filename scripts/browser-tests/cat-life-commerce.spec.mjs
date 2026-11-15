@@ -262,9 +262,10 @@ test('bench avoidance repairs old full-room layouts visually, survives resize an
 
 for (const [locale, prefix, skinScope, roomScope, policy] of [
   ['en', 'en', 'Only for the starter orange cat', 'cannot be dragged independently', 'not cash'],
-  ['zh-CN', 'zh-hans', '仅适用初始橘猫', '不能独立拖动', '不等于现金退款'],
+  // In-game languages are unchanged; site links for zh-CN/ja go to the live zh-hant/en pages (2026-11-15).
+  ['zh-CN', 'zh-hant', '仅适用初始橘猫', '不能独立拖动', '不等于现金退款'],
   ['zh-Hant', 'zh-hant', '僅適用初始橘貓', '不能獨立拖動', '不等於現金退款'],
-  ['ja', 'ja', '最初の茶トラ猫', '個別にドラッグできません', '現金の返金ではありません']
+  ['ja', 'en', '最初の茶トラ猫', '個別にドラッグできません', '現金の返金ではありません']
 ]) {
   test(`localized offer scope and support links fit mobile: ${locale}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });

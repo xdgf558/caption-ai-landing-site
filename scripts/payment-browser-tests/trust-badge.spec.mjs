@@ -31,7 +31,8 @@ async function checkBadge(badge) {
   await expect(badge).toBeFocused();
 }
 
-for (const width of [390, 1280]) for (const locale of ['zh-hant', 'zh-hans', 'en', 'ja']) {
+// zh-hans and ja pages were retired on 2026-11-15.
+for (const width of [390, 1280]) for (const locale of ['zh-hant', 'en']) {
   test(`${locale} ${width}px: badge near recharge and confirmation, no payment side effects`, async ({ page, context }) => {
     await page.setViewportSize({ width, height: 900 });
     const errors = [];
@@ -108,7 +109,7 @@ test('touch badge keeps a 44px target and fits a narrow viewport', async ({ brow
   const context = await browser.newContext({ baseURL, hasTouch: true, viewport: { width: 320, height: 740 } });
   const page = await context.newPage();
   await mockPayments(page);
-  await page.goto('/ja/points/');
+  await page.goto('/en/points/');
   const badge = page.locator('#station-points-trust a');
   await checkBadge(badge);
   const box = await badge.boundingBox();

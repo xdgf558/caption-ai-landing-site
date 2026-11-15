@@ -12,7 +12,7 @@ async function music(page) {
     if (path.endsWith('/share.png')) return route.fulfill({ status: 503, json: { error: { code: 'LOCAL_PREVIEW' } } });
     return route.fulfill({ status: 404, json: { error: { code: 'NOT_FOUND' } } });
   });
-  await page.goto('/zh-hans/music/');
+  await page.goto('/music/');
   await expect(page.locator('[data-featured-play]')).toBeVisible();
   return tracks;
 }

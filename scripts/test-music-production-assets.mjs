@@ -14,8 +14,8 @@ test('complete built site and production-date Worker keep native music asset rou
     d1_databases: [{binding:'MUSIC_DB',database_name:'station-cat-music-production',database_id:'11111111-1111-4111-8111-111111111111',migrations_dir:path.join(productionRoot,'migrations-music')}],
     r2_buckets: [{binding:'MUSIC_BUCKET',bucket_name:'station-cat-music-production-private'}]
   });
-  for (const relative of ['index.html','en/index.html','ja/index.html','zh-hans/index.html',
-    'music/index.html','en/music/index.html','ja/music/index.html','zh-hans/music/index.html',
+  for (const relative of ['index.html','en/index.html',
+    'music/index.html','en/music/index.html',
     'admin/music/index.html','admin/music/collections/index.html','admin/music/collections/upload/index.html',
     'admin/music/featured/index.html','images/music-turntable-silver.webp']) {
     assert.ok((await stat(path.join(config.assets.directory,relative))).size>0,relative);
@@ -31,7 +31,7 @@ test('complete built site and production-date Worker keep native music asset rou
       static_routing:{user_worker:config.assets.run_worker_first},not_found_handling:config.assets.not_found_handling}},
     outboundService:()=>{outbound++;return new Response('External traffic disabled',{status:503})}});
   try {
-    for (const url of ['/music','/music/','/music/index.html','/en/music/','/ja/music/','/zh-hans/music/','/zh-hant/music/',
+    for (const url of ['/music','/music/','/music/index.html','/en/music/','/zh-hant/music/',
       '/%6dusic/','/m%75sic/','/music%2f','/music%2findex.html','/en/%6dusic/','/en%2fmusic/','/%2fmusic/']) {
       for (const method of ['GET','HEAD']) {
         const r=await mf.dispatchFetch('https://wwwstationcat.org'+url,{method,redirect:'manual'});
@@ -39,7 +39,11 @@ test('complete built site and production-date Worker keep native music asset rou
         if(method==='GET')assert.equal((await r.json()).error.code,'MUSIC_PUBLIC_DISABLED');else assert.equal(await r.text(),'');
       }
     }
-    for(const url of ['/','/en/','/ja/','/zh-hans/']) {
+    for(const url of ['/ja/','/zh-hans/','/ja/music/','/zh-hans/music/']) {
+      const r=await mf.dispatchFetch('https://wwwstationcat.org'+url,{redirect:'manual'});
+      assert.equal(r.status,404,url);assert.equal(r.headers.get('location'),null,url);
+    }
+    for(const url of ['/','/en/']) {
       const r=await mf.dispatchFetch('https://wwwstationcat.org'+url,{redirect:'manual'});
       assert.equal(r.status,200,url);assert.match(r.headers.get('content-type'),/text\/html/);
       assert.match(await r.text(),/Station Cat/);

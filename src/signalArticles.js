@@ -22,6 +22,8 @@ export function normalizeArticleUrl(value) {
   return { url: `https://x.com/${article ? 'i/article' : 'statiocat/status'}/${id}`, slug: `x-${kind}-${id}` };
 }
 
+export const publishableArticleLocales = Object.freeze(['zh-Hant', 'en']);
+
 export function normalizeArticleInput(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) fail('文章格式无效。');
   const source = normalizeArticleUrl(payload.sourceUrl);
@@ -29,10 +31,13 @@ export function normalizeArticleInput(payload) {
   const description = field(payload.description, 1200, '摘要');
   if (!title || !description) fail('请填写标题和摘要。');
   const markdown = field(payload.markdown, 120000, '正文');
-  const locale = payload.locale || 'zh-Hans';
+  const locale = payload.locale || 'zh-Hant';
   if (!['zh-Hant', 'zh-Hans', 'en', 'ja'].includes(locale)) fail('请选择文章语言。');
   const status = payload.status || 'draft';
   if (!['draft', 'published', 'archived'].includes(status)) fail('文章状态无效。');
+  // zh-Hans/ja pages were retired on 2026-11-15 and return 404. Older articles in those
+  // languages can still be edited or withdrawn, but never published to a dead URL.
+  if (status === 'published' && !publishableArticleLocales.includes(locale)) fail('简体中文和日文页面已停用，请改为繁體中文或 English 后再发布。');
   const coverR2Key = field(payload.coverR2Key, 500, '封面');
   if (coverR2Key && (!/^content\/media\/covers\/[A-Za-z0-9/_-]+\.(?:png|jpe?g|webp|gif|avif)$/.test(coverR2Key) || coverR2Key.includes('..'))) fail('请使用后台上传的封面。');
   return { ...source, title, description, markdown, locale, status, coverR2Key, coverAlt: field(payload.coverAlt, 300, '图片说明'), hasBody: Boolean(markdown) };
@@ -104,7 +109,7 @@ export function renderArticleIndex(locale, rows, { page = 1, hasMore = false } =
       <div class="articles-hero-actions"><a class="articles-primary" href="#articles">${e(journal.browse)} <span aria-hidden="true">→</span></a><a class="articles-follow" href="https://x.com/statiocat">${e(journal.follow)} <span aria-hidden="true">↗</span></a></div></div>
     </section>
     <div class="articles-section-heading" id="articles"><div><p class="articles-eyebrow">THE LATEST NOTES</p><h2 class="articles-list-heading">${e(copy.latest)}</h2><p>${e(journal.note)}</p></div>
-    <nav class="articles-languages" aria-label="${e(journal.languages)}">${[['zh-Hant', '繁中'], ['zh-Hans', '简中'], ['en', 'EN'], ['ja', '日本語']].map(([code, label]) => `<a href="${articleBasePath(code)}" lang="${code}"${code === locale ? ' aria-current="page"' : ''}>${label}</a>`).join('')}</nav></div>
+    <nav class="articles-languages" aria-label="${e(journal.languages)}">${[['zh-Hant', '繁中'], ['en', 'EN']].map(([code, label]) => `<a href="${articleBasePath(code)}" lang="${code}"${code === locale ? ' aria-current="page"' : ''}>${label}</a>`).join('')}</nav></div>
     <section class="articles-list" aria-label="${e(copy.latest)}">${visibleRows.length ? visibleRows.map(({row, meta, href}, index) => {
       return `<article class="article-row${index === 0 ? ' article-row--featured' : ''}${coverUrl(row) ? ' has-cover' : ''}" lang="${e(row.locale)}">
         ${coverUrl(row) ? `<a class="article-thumbnail" href="${e(href)}" tabindex="-1" aria-hidden="true"><img src="${e(coverUrl(row))}" alt="" width="480" height="320" loading="lazy"></a>` : ''}

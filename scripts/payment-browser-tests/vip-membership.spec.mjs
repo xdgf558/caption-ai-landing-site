@@ -33,7 +33,8 @@ async function mockMembership(page, options = {}) {
 }
 
 const musicEnabled = process.env.PUBLIC_MUSIC_ENTRY_ENABLED === 'true';
-const locales = { 'zh-hant': 'zh-Hant', 'zh-hans': 'zh-Hans', en: 'en', ja: 'ja' };
+// zh-hans and ja pages were retired on 2026-11-15.
+const locales = { 'zh-hant': 'zh-Hant', en: 'en' };
 async function expectVipBadge(root) {
   const mark = root.locator('.vip-mark');
   const image = mark.locator('img');
