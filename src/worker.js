@@ -22476,16 +22476,12 @@ const downloadLimitConfig = {
 };
 
 const pageRedirects = {
-  '/downloads/simplecut-pro': '/zh-hans/apps/simplecut-pro/download/',
-  '/downloads/simplecut-pro/': '/zh-hans/apps/simplecut-pro/download/',
+  '/downloads/simplecut-pro': '/zh-hant/apps/simplecut-pro/download/',
+  '/downloads/simplecut-pro/': '/zh-hant/apps/simplecut-pro/download/',
   '/apps/anytls-desktop-manager': '/en/apps/nodepilot/',
   '/apps/anytls-desktop-manager/': '/en/apps/nodepilot/',
   '/zh-hant/apps/anytls-desktop-manager': '/zh-hant/apps/nodepilot/',
-  '/zh-hant/apps/anytls-desktop-manager/': '/zh-hant/apps/nodepilot/',
-  '/zh-hans/apps/anytls-desktop-manager': '/zh-hans/apps/nodepilot/',
-  '/zh-hans/apps/anytls-desktop-manager/': '/zh-hans/apps/nodepilot/',
-  '/ja/apps/anytls-desktop-manager': '/ja/apps/nodepilot/',
-  '/ja/apps/anytls-desktop-manager/': '/ja/apps/nodepilot/'
+  '/zh-hant/apps/anytls-desktop-manager/': '/zh-hant/apps/nodepilot/'
 };
 
 const permanentTrailingSlashPatterns = [

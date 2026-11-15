@@ -95,6 +95,14 @@ test('novel bookmarks keep root/en addresses, require login and preserve old pur
   assert.equal(response.status,200);const access=await response.json();assert.equal(access.allowed,true);
   const guest=await get('/novel/t20-history/chapter/missing/');assert.equal(guest.status,404);
 });
+test('generic SimpleCut download entry lands on a live download page, not a retired locale', async () => {
+  for (const path of ['/downloads/simplecut-pro','/downloads/simplecut-pro/']) {
+    const response=await get(path); assert.equal(response.status,301,path);
+    const location=new URL(response.headers.get('Location'),'https://wwwstationcat.org');
+    assert.equal(location.pathname,'/zh-hant/apps/simplecut-pro/download/',path);
+    assert.equal((await get(location.pathname)).status,200,path);
+  }
+});
 test('service methods, auth boundaries, AASA and runtime bytes remain owned by their original handlers', async () => {
   for (const [path,options] of [
     ['/api/readers/session',{}], ['/api/readers/membership',{}], ['/api/readers/game-saves/cat-life',{cookie:routeFixtureCookie(2)}],
@@ -102,7 +110,7 @@ test('service methods, auth boundaries, AASA and runtime bytes remain owned by t
     ['/api/creem/webhook',{method:'POST',body:'{}',headers:{'Content-Type':'application/json'}}],
     ['/api/novels/access?access=all&series=t20-history',{cookie:routeFixtureCookie(2)}],
     ['/en/apps/privatepinyin/privacy/',{}],['/en/apps/privatepinyin/support/',{}],['/en/apps/caption-ai/android/',{}],
-    ['/zh-hans/apps/simplecut-pro/download/',{}], ['/downloads/nodepilot/no-such-file.pkg',{}]
+    ['/zh-hant/apps/simplecut-pro/download/',{}], ['/downloads/nodepilot/no-such-file.pkg',{}]
   ]) {
     const baseline=await get(path,{...options,mode:'closed'}), active=await get(path,options);
     assert.notEqual(baseline.status,500,path); assert.notEqual(active.status,500,path);

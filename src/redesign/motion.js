@@ -15,7 +15,7 @@ const maxStagger = 6, staggerMs = 80;
 export function mountStationMotion(body = document.body) {
   if (!body?.classList.contains('station-paper') || body.dataset.motionMounted) return () => {};
   body.dataset.motionMounted = 'true';
-  const listeners = new AbortController(), cleanups = [];
+  const listeners = new AbortController();
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
   // Header state works without motion too, so it stays outside the reduced-motion guard.
@@ -24,13 +24,24 @@ export function mountStationMotion(body = document.body) {
   addEventListener('scroll', () => { if (!headerFrame) headerFrame = requestAnimationFrame(syncHeader); }, { passive: true, signal: listeners.signal });
   syncHeader();
 
-  if (!reduced.matches && 'IntersectionObserver' in window) cleanups.push(mountReveal(body));
-  if (!reduced.matches) cleanups.push(mountParallax(body, listeners.signal));
-  if (!reduced.matches && matchMedia('(hover: hover) and (pointer: fine)').matches) mountTilt(body, listeners.signal);
+  // The preference can change while the page is open, so effects are torn down (and the
+  // continuous ones remounted) on every change rather than read once at mount.
+  let revealCleanup = null, effects = null;
+  const mountEffects = () => {
+    const controller = new AbortController(), parallax = mountParallax(body, controller.signal);
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) mountTilt(body, controller.signal);
+    return () => { controller.abort(); parallax(); for (const card of body.querySelectorAll(tiltSelectors)) card.style.removeProperty('rotate'); };
+  };
+  const stopMotion = () => { revealCleanup?.(); revealCleanup = null; effects?.(); effects = null; };
+  if (!reduced.matches) {
+    if ('IntersectionObserver' in window) revealCleanup = mountReveal(body);
+    effects = mountEffects();
+  }
+  // Entrances are one-shot: once the visitor opts out they are revealed for good and never re-hidden.
+  reduced.addEventListener('change', () => { if (reduced.matches) stopMotion(); else if (!effects) effects = mountEffects(); }, { signal: listeners.signal });
 
   return () => {
-    listeners.abort(); cancelAnimationFrame(headerFrame);
-    for (const cleanup of cleanups) cleanup();
+    listeners.abort(); cancelAnimationFrame(headerFrame); stopMotion();
     delete body.dataset.motionMounted;
   };
 }
@@ -84,11 +95,11 @@ function mountParallax(body, signal) {
       layer.style.setProperty('translate', `0 ${offset.toFixed(1)}px`);
     }
   };
-  const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+  const schedule = () => { if (!frame && !signal.aborted) frame = requestAnimationFrame(update); };
   addEventListener('scroll', schedule, { passive: true, signal });
   addEventListener('resize', schedule, { passive: true, signal });
   update();
-  return () => { cancelAnimationFrame(frame); for (const layer of layers) layer.style.removeProperty('translate'); };
+  return () => { cancelAnimationFrame(frame); frame = -1; for (const layer of layers) layer.style.removeProperty('translate'); };
 }
 
 function mountTilt(body, signal) {
@@ -106,5 +117,6 @@ function mountTilt(body, signal) {
       if (!frame) frame = requestAnimationFrame(apply);
     }, { signal });
     card.addEventListener('pointerleave', () => { cancelAnimationFrame(frame); frame = 0; card.style.removeProperty('rotate'); }, { signal });
+    signal.addEventListener('abort', () => cancelAnimationFrame(frame), { once: true });
   }
 }

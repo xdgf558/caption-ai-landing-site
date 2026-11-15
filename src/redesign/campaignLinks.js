@@ -4,7 +4,9 @@ export const stationCampaignOrigin = 'https://wwwstationcat.org';
 export const campaignEnabled = value => value === true || value === 'true';
 export const campaignToken = value => typeof value === 'string' && /^[a-z0-9][a-z0-9_-]{0,63}$/.test(value);
 export const campaignId = value => campaignToken(value) && !['unknown','direct_or_unknown'].includes(value);
-export const campaignLocales = Object.freeze(['zh-Hant','zh-Hans','en','ja']);
+// Only locales with a live page can mint or keep an effective campaign. Records stored for the
+// retired zh-Hans/ja pages (2026-11-15) still parse, but no longer count as effective or get a URL/QR.
+export const campaignLocales = Object.freeze(['zh-Hant','en']);
 const keys = ['utm_source','utm_medium','utm_campaign','utm_content'];
 
 export function campaignLandingPath(locale, trackSlug) {
