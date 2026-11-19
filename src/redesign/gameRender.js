@@ -39,9 +39,9 @@ function channelCopyFor(ch, copy, pCopy) {
   };
 }
 
-const coverImage = (game, copy, className = '') =>
-  game.screenshots?.[0]
-    ? `<img class="${className}" src="${e(game.screenshots[0].url)}" alt="${e(game.title + ' · ' + copy.alt)}" width="1280" height="900" loading="lazy">`
+const coverImage = (game, screenshots, copy, className = '') =>
+  screenshots?.[0]
+    ? `<img class="${className}" src="${e(screenshots[0].url)}" alt="${e(game.title + ' · ' + copy.alt)}" width="${screenshots[0].width || 1280}" height="${screenshots[0].height || 900}" loading="lazy">`
     : `<div class="${className} sc-game-cover-placeholder" aria-hidden="true">${icon('gamepad', 36)}</div>`;
 
 function renderCatalogCard(game, copy, pCopy) {
@@ -60,7 +60,7 @@ function renderCatalogCard(game, copy, pCopy) {
     .join('');
 
   return `<article class="sc-game-card" data-game-slug="${e(game.slug || '')}">
-    <a class="sc-game-cover-wrap" href="${e(game.href)}" aria-label="${e(game.title)}">${coverImage(game, copy, 'sc-game-cover')}</a>
+    <a class="sc-game-cover-wrap" href="${e(game.href)}" aria-label="${e(game.title)}">${coverImage(game, dist.screenshots, copy, 'sc-game-cover')}</a>
     <div class="sc-game-card-copy">
       ${badges}
       <h2><a href="${e(game.href)}">${e(game.title)}</a></h2>
@@ -165,8 +165,8 @@ export function renderGamePage(model) {
 
   const gallery = `<div class="sc-game-gallery">
     <h2>${copy.screen}</h2>
-    <div class="sc-game-gallery-grid${(game.screenshots?.length || 0) > 1 ? ' has-multi' : ''}">
-      ${(game.screenshots || []).map((shot, index) => `<a class="sc-game-shot${index === 0 ? ' is-lead' : ''}" href="${e(shot.url)}" target="_blank" rel="noopener" aria-label="${e(copy.screen + ' ' + (index + 1))}"><img src="${e(shot.url)}" alt="${e(game.title + ' · ' + copy.alt + ' ' + (index + 1))}" width="1280" height="900" loading="${index ? 'lazy' : 'eager'}"></a>`).join('') || `<p class="sc-game-empty">${copy.screenPending}</p>`}
+    <div class="sc-game-gallery-grid${dist.screenshots.length > 1 ? ' has-multi' : ''}">
+      ${dist.screenshots.map((shot, index) => `<a class="sc-game-shot${index === 0 ? ' is-lead' : ''}" href="${e(shot.url)}" target="_blank" rel="noopener" aria-label="${e(copy.screen + ' ' + (index + 1))}"><img src="${e(shot.url)}" alt="${e(game.title + ' · ' + copy.alt + ' ' + (index + 1))}" width="${shot.width || 1280}" height="${shot.height || 900}" loading="${index ? 'lazy' : 'eager'}"></a>`).join('') || `<p class="sc-game-empty">${copy.screenPending}</p>`}
     </div>
   </div>`;
 

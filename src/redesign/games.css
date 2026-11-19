@@ -15,8 +15,8 @@
 .sc-game-grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
 .sc-game-grid-single { grid-template-columns: minmax(0, 1fr); }
 .sc-game-grid-single .sc-game-card { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: stretch; }
-.sc-game-grid-single .sc-game-cover-wrap { height: 100%; }
-.sc-game-grid-single .sc-game-cover { height: 100%; object-fit: cover; }
+.sc-game-grid-single .sc-game-cover-wrap { height: 100%; display: flex; align-items: center; }
+.sc-game-grid-single .sc-game-cover { height: 100%; object-fit: contain; }
 .sc-game-grid-single .sc-game-card-copy { display: flex; flex-direction: column; justify-content: center; padding: 34px 36px; }
 
 .sc-game-card { overflow: hidden; background: linear-gradient(120deg, #edf9fc, #f4f7ff); border: 1px solid #e3eff4; border-radius: 16px; display: flex; flex-direction: column; }

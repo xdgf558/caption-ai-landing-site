@@ -51,6 +51,11 @@ const iosChannel = {
 export const GAME_RELEASES = {
   'cat-life-game': {
     webRetired: true,
+    screenshots: [
+      { url: '/images/games/cat-life-mac/home-front.jpg', width: 1000, height: 573 },
+      { url: '/images/games/cat-life-mac/home-side.jpg', width: 1000, height: 578 },
+      { url: '/images/games/cat-life-mac/title.jpg', width: 1000, height: 582 },
+    ],
     channels: MAC_TESTFLIGHT_OPEN ? [macChannel, iosChannel] : [iosChannel, macChannel],
   },
 };
@@ -60,7 +65,8 @@ export function resolveGameDistribution(game) {
   const channels = Array.isArray(game?.channels) && game.channels.length
     ? game.channels
     : (release?.channels || []);
+  const screenshots = release?.screenshots?.length ? release.screenshots : (game?.screenshots || []);
   const webRetired = Boolean(release?.webRetired);
   const supportsBrowserLaunch = !webRetired && game?.launchPath === '/games/cat-life/';
-  return { channels, webRetired, supportsBrowserLaunch };
+  return { channels, screenshots, webRetired, supportsBrowserLaunch };
 }

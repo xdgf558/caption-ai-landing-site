@@ -36,6 +36,11 @@ for (const [, locale] of locales) test(`${locale}: cat-life-game retires browser
     assert.equal(html.split(iosInvite).length - 1, 1);
     assert.ok(!html.includes(macInvite));
     assert.ok(html.includes('data-platform="macos"'));
+    assert.ok(html.includes('/images/games/cat-life-mac/home-front.jpg'));
+    if (mode === 'detail') {
+      assert.ok(html.includes('/images/games/cat-life-mac/home-side.jpg'));
+      assert.ok(html.includes('/images/games/cat-life-mac/title.jpg'));
+    }
     assert.ok(!html.includes('data-sc-game-launch'));
     assert.ok(!html.includes('data-sc-game-entry'));
     assert.ok(!render({ ...game, slug: 'another-game' }).includes(iosInvite));
