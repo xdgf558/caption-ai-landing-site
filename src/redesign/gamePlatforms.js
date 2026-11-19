@@ -48,13 +48,27 @@ const iosChannel = {
 // Extensible per-game release channels for the frontend layout.
 // Note: Content Admin publishing validation still expects browser runtime fields
 // today; backend support for publishing native-only games is a separate follow-up.
+const ART = '/images/games/cat-life-art/';
+
+// Shared hub artwork for the games catalog (CG illustration, not a device capture).
+export const GAMES_HUB_ART = {
+  panorama: { url: ART + 'street.webp', width: 2400, height: 480 },
+};
+
 export const GAME_RELEASES = {
   'cat-life-game': {
     webRetired: true,
-    screenshots: [
-      { url: '/images/games/cat-life-mac/home-front.jpg', width: 1000, height: 573 },
-      { url: '/images/games/cat-life-mac/home-side.jpg', width: 1000, height: 578 },
-      { url: '/images/games/cat-life-mac/title.jpg', width: 1000, height: 582 },
+    // Key art and feature sprites are promotional CG illustrations from the
+    // native game's art set; they intentionally replace device screenshots.
+    art: {
+      key: { url: ART + 'key-art.webp', small: ART + 'key-art-720.webp', width: 1200, height: 1200 },
+      panorama: GAMES_HUB_ART.panorama,
+    },
+    features: [
+      { key: 'care', image: ART + 'feature-care.webp', width: 480, height: 378 },
+      { key: 'home', image: ART + 'feature-home.webp', width: 400, height: 416 },
+      { key: 'work', image: ART + 'feature-work.webp', width: 400, height: 492 },
+      { key: 'town', image: ART + 'feature-town.webp', width: 400, height: 470 },
     ],
     channels: MAC_TESTFLIGHT_OPEN ? [macChannel, iosChannel] : [iosChannel, macChannel],
   },
@@ -65,8 +79,19 @@ export function resolveGameDistribution(game) {
   const channels = Array.isArray(game?.channels) && game.channels.length
     ? game.channels
     : (release?.channels || []);
-  const screenshots = release?.screenshots?.length ? release.screenshots : (game?.screenshots || []);
+  const screenshots = game?.screenshots || [];
+  // Prefer curated key art; fall back to the first published screenshot for other games.
+  const keyArt = release?.art?.key
+    || (screenshots[0] ? { url: screenshots[0].url, width: screenshots[0].width || 1280, height: screenshots[0].height || 900 } : null);
   const webRetired = Boolean(release?.webRetired);
   const supportsBrowserLaunch = !webRetired && game?.launchPath === '/games/cat-life/';
-  return { channels, screenshots, webRetired, supportsBrowserLaunch };
+  return {
+    channels,
+    screenshots,
+    keyArt,
+    panorama: release?.art?.panorama || null,
+    features: release?.features || [],
+    webRetired,
+    supportsBrowserLaunch,
+  };
 }

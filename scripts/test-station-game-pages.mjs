@@ -33,13 +33,17 @@ for (const [, locale] of locales) test(`${locale}: cat-life-game retires browser
   for (const mode of ['catalog', 'detail']) {
     const render = item => renderGamePage({ mode, locale, game: item, items: [item] });
     const html = render(game);
-    assert.equal(html.split(iosInvite).length - 1, 1);
+    assert.ok(html.includes(iosInvite));
     assert.ok(!html.includes(macInvite));
     assert.ok(html.includes('data-platform="macos"'));
-    assert.ok(html.includes('/images/games/cat-life-mac/home-front.jpg'));
+    // CG key art replaces device screenshots; no capture paths remain.
+    assert.ok(html.includes('/images/games/cat-life-art/key-art.webp'));
+    assert.ok(!html.includes('/images/games/cat-life-mac/'));
+    for (const feature of ['care', 'home', 'work', 'town']) assert.ok(html.includes(`/images/games/cat-life-art/feature-${feature}.webp`));
     if (mode === 'detail') {
-      assert.ok(html.includes('/images/games/cat-life-mac/home-side.jpg'));
-      assert.ok(html.includes('/images/games/cat-life-mac/title.jpg'));
+      assert.ok(html.includes('aria-labelledby="sc-game-features-title"'));
+      assert.ok(html.includes('data-channel-id="macos-testflight"'));
+      assert.ok(html.includes('/images/games/cat-life-art/street.webp'));
     }
     assert.ok(!html.includes('data-sc-game-launch'));
     assert.ok(!html.includes('data-sc-game-entry'));
@@ -57,9 +61,12 @@ test('catalog scales to multiple cat games across WeChat Mini Game and Steam cha
     ],
   };
   const singleHtml = renderGamePage({ mode: 'catalog', locale: 'en', items: [catLife] });
-  assert.ok(singleHtml.includes('sc-game-grid-single'));
+  assert.ok(singleHtml.includes('sc-game-spotlight'));
+  assert.ok(!singleHtml.includes('class="sc-game-grid"'));
   const multiHtml = renderGamePage({ mode: 'catalog', locale: 'en', items: [catLife, futureGame] });
-  assert.ok(!multiHtml.includes('sc-game-grid-single'));
+  assert.equal(multiHtml.split('class="sc-game-spotlight"').length - 1, 1);
+  assert.ok(multiHtml.includes('class="sc-game-grid"'));
+  assert.ok(multiHtml.includes('data-game-slug="cat-cafe-puzzle"'));
   assert.ok(multiHtml.includes('data-platform="wechat"'));
   assert.ok(multiHtml.includes('data-platform="steam"'));
   const detailHtml = renderGamePage({ mode: 'detail', locale: 'en', game: futureGame });

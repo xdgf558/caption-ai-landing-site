@@ -51,6 +51,14 @@ export const gameCopy = {
     openChannel: '前往體驗',
     comingSoonAction: '即將開放',
     closedAction: '暫未開放招募',
+    moreTitles: '更多作品',
+    featuresKicker: 'LIFE IN CAT TOWN',
+    featuresTitle: '在貓町的每一天',
+    allPlatforms: '查看所有平台',
+    factsTitle: '版本資訊',
+    closingTitle: '今天，先領一隻貓回家。',
+    closingText: '打開 TestFlight，從第一天開始陪牠慢慢長大。',
+    artAlt: '遊戲宣傳插畫',
   },
   en: {
     title: 'A world of games',
@@ -104,6 +112,14 @@ export const gameCopy = {
     openChannel: 'Open',
     comingSoonAction: 'Coming soon',
     closedAction: 'Not accepting testers yet',
+    moreTitles: 'More titles',
+    featuresKicker: 'LIFE IN CAT TOWN',
+    featuresTitle: 'A day in Cat Town',
+    allPlatforms: 'See all platforms',
+    factsTitle: 'Release notes',
+    closingTitle: 'Bring a cat home today.',
+    closingText: 'Open TestFlight and start looking after them from day one.',
+    artAlt: 'Promotional illustration',
   },
 };
 
@@ -183,6 +199,21 @@ export const gamePlatformCopy = {
         steps: 'Install TestFlight on your iPhone, then open the invite link to accept and install the game.',
       },
     },
+  },
+};
+
+export const gameFeatureCopy = {
+  'zh-Hant': {
+    care: { title: '照顧貓咪', text: '餵食、梳理、陪玩，每隻貓都有自己的心情與小習慣。' },
+    home: { title: '佈置小家', text: '買家具、換擺設，把空房間慢慢變成你和貓咪的家。' },
+    work: { title: '小鎮打工', text: '在貓町打工賺金幣，找到工作與休息的節奏。' },
+    town: { title: '探索貓町', text: '拜訪鄰居、逛交換市集，每天都有新的小事發生。' },
+  },
+  en: {
+    care: { title: 'Care for your cats', text: 'Feed, groom and play — every cat has its own moods and little habits.' },
+    home: { title: 'Make a home', text: 'Buy furniture and rearrange rooms until the empty space feels like yours.' },
+    work: { title: 'Work in town', text: 'Take shifts around Cat Town, earn coins and find your rhythm of work and rest.' },
+    town: { title: 'Explore Cat Town', text: 'Visit neighbours, browse the swap market and catch the day’s little events.' },
   },
 };
 
