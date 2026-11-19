@@ -26,20 +26,20 @@ test('rendered DTO is escaped, has no unconfirmed continue button and unregister
   game.launchPath = '/games/cat-life/'; const registered = renderGamePage({ mode: 'detail', locale: 'en', game });
   assert.match(registered, /data-sc-game-launch hidden/); assert.ok(!registered.includes('Continue game'));
 });
-for (const [, locale] of locales) test(`${locale}: cat-life-game retires browser launch and exposes Mac + iPhone TestFlight`, () => {
+for (const [, locale] of locales) test(`${locale}: cat-life-game retires browser launch, keeps iPhone TestFlight live and marks Mac closed until open`, () => {
   const game = { slug: 'cat-life-game', title: 'Cat Life Diary', summary: 'daily', href: '/games/cat-life-game/', screenshots: [], supportedDevices: ['desktop', 'mobile'], launchPath: '/games/cat-life/' };
   const macInvite = 'href="https://testflight.apple.com/join/vxUY5pqR"';
   const iosInvite = 'href="https://testflight.apple.com/join/UV4nkZnA"';
   for (const mode of ['catalog', 'detail']) {
     const render = item => renderGamePage({ mode, locale, game: item, items: [item] });
     const html = render(game);
-    assert.equal(html.split(macInvite).length - 1, 1);
     assert.equal(html.split(iosInvite).length - 1, 1);
+    assert.ok(!html.includes(macInvite));
+    assert.ok(html.includes('data-platform="macos"'));
     assert.ok(!html.includes('data-sc-game-launch'));
     assert.ok(!html.includes('data-sc-game-entry'));
-    assert.ok(!render({ ...game, slug: 'another-game' }).includes(macInvite));
     assert.ok(!render({ ...game, slug: 'another-game' }).includes(iosInvite));
-    assert.ok(!renderGamePage({ mode, locale, game, items: [game], error: true }).includes(macInvite));
+    assert.ok(!renderGamePage({ mode, locale, game, items: [game], error: true }).includes(iosInvite));
   }
 });
 test('catalog scales to multiple cat games across WeChat Mini Game and Steam channels', () => {

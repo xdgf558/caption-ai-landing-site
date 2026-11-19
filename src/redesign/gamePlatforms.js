@@ -9,31 +9,49 @@ export const GAME_PLATFORMS = {
 
 export const ECOSYSTEM_PLATFORMS = ['macos', 'ios', 'wechat', 'steam'];
 
-// Extensible per-game release channels. Future cat games (WeChat Mini Games, Steam,
-// App Store, etc.) can register their platform entries here or supply `game.channels`.
+// Flip to true once the Mac TestFlight public link in App Store Connect is
+// actively accepting new testers.
+export const MAC_TESTFLIGHT_OPEN = false;
+export const MAC_TESTFLIGHT_URL = 'https://testflight.apple.com/join/vxUY5pqR';
+export const IOS_TESTFLIGHT_URL = 'https://testflight.apple.com/join/UV4nkZnA';
+
+const macChannel = MAC_TESTFLIGHT_OPEN
+  ? {
+      id: 'macos-testflight',
+      platform: 'macos',
+      channel: 'TestFlight',
+      status: 'new',
+      primary: true,
+      href: MAC_TESTFLIGHT_URL,
+      copyKey: 'catLifeMac',
+    }
+  : {
+      id: 'macos-testflight',
+      platform: 'macos',
+      channel: 'TestFlight',
+      status: 'closed',
+      primary: false,
+      href: null,
+      copyKey: 'catLifeMacPending',
+    };
+
+const iosChannel = {
+  id: 'ios-testflight',
+  platform: 'ios',
+  channel: 'TestFlight',
+  status: 'beta',
+  primary: !MAC_TESTFLIGHT_OPEN,
+  href: IOS_TESTFLIGHT_URL,
+  copyKey: 'catLifeIos',
+};
+
+// Extensible per-game release channels for the frontend layout.
+// Note: Content Admin publishing validation still expects browser runtime fields
+// today; backend support for publishing native-only games is a separate follow-up.
 export const GAME_RELEASES = {
   'cat-life-game': {
     webRetired: true,
-    channels: [
-      {
-        id: 'macos-testflight',
-        platform: 'macos',
-        channel: 'TestFlight',
-        status: 'new',
-        primary: true,
-        href: 'https://testflight.apple.com/join/vxUY5pqR',
-        copyKey: 'catLifeMac',
-      },
-      {
-        id: 'ios-testflight',
-        platform: 'ios',
-        channel: 'TestFlight',
-        status: 'beta',
-        primary: false,
-        href: 'https://testflight.apple.com/join/UV4nkZnA',
-        copyKey: 'catLifeIos',
-      },
-    ],
+    channels: MAC_TESTFLIGHT_OPEN ? [macChannel, iosChannel] : [iosChannel, macChannel],
   },
 };
 

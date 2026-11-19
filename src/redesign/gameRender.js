@@ -101,9 +101,10 @@ function renderChannelSection(channels, copy, pCopy) {
     const meta = platformMeta(ch.platform);
     const c = channelCopyFor(ch, copy, pCopy);
     const statusText = ch.status && pCopy.statuses[ch.status] ? pCopy.statuses[ch.status] : '';
+    const unavailableLabel = ch.status === 'closed' ? copy.closedAction : copy.comingSoonAction;
     const action = ch.href
       ? `<a class="sc-button${ch.primary ? '' : ' sc-button-secondary'}" href="${e(ch.href)}" target="_blank" rel="noopener noreferrer">${e(c.cta)}${icon('external', 16)}</a>`
-      : `<span class="sc-game-channel-soon">${e(copy.comingSoonAction)}</span>`;
+      : `<span class="sc-game-channel-soon">${e(unavailableLabel)}</span>`;
     return `<article class="sc-game-channel-card sc-game-channel-${e(meta.tone)}${ch.primary ? ' is-primary' : ''}" data-channel-id="${e(ch.id || ch.platform)}">
       <div class="sc-game-channel-head">
         <span class="sc-game-channel-label">${icon(meta.icon, 18)}${e(channelLabel(ch, pCopy))}</span>
@@ -175,7 +176,7 @@ export function renderGamePage(model) {
         <h2 id="sc-game-info-title">${copy.releaseInfo}</h2>
         <dl class="sc-game-meta-list">
           <div><dt>${copy.availableOn}</dt><dd class="sc-game-badges">${channelPills(dist.channels, pCopy)}</dd></div>
-          <div><dt>${copy.languagesLabel}</dt><dd>${copy.language}</dd></div>
+          <div><dt>${copy.languagesLabel}</dt><dd>${copy.languageNative}</dd></div>
         </dl>
         <div class="sc-game-retired-note">
           <strong>${copy.webRetiredLabel}</strong>
