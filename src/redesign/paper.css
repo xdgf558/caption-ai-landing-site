@@ -232,13 +232,25 @@ body.station-paper .sc-game-card:hover { transform: translateY(-5px); box-shadow
 body.station-paper .sc-game-cover { background: #fffaf1; transition: transform .9s var(--sc-ease); }
 body.station-paper .sc-game-card:hover .sc-game-cover { transform: scale(1.03); }
 body.station-paper .sc-game-card h2 { font-family: var(--sc-serif); font-size: 28px; }
-body.station-paper .sc-game-ios { border-color: var(--sc-line); border-radius: var(--sc-radius-lg); background: linear-gradient(120deg, #eef3e4, #f7f0df); box-shadow: var(--sc-shadow); }
-body.station-paper .sc-game-ios-label, body.station-paper .sc-game-devices { color: var(--sc-game); }
+body.station-paper .sc-game-count { border-color: var(--sc-line); background: var(--sc-card); color: var(--sc-muted); }
+body.station-paper .sc-game-roadmap { border-color: var(--sc-line-strong); border-radius: var(--sc-radius-lg); background: #fffaf1b8; }
+body.station-paper .sc-game-roadmap h2, body.station-paper .sc-game-channels-head h2, body.station-paper .sc-game-channel-card h3 { font-family: var(--sc-serif); }
+body.station-paper .sc-game-eco-chip { border-color: var(--sc-line); background: var(--sc-raised); }
+body.station-paper .sc-game-eco-chip.is-active { border-color: #c8d9be; background: var(--sc-game-surface); color: var(--sc-game); }
+body.station-paper .sc-game-eco-chip.is-active strong { color: var(--sc-game); }
+body.station-paper .sc-game-channel-card { border-color: var(--sc-line); border-radius: var(--sc-radius-lg); background: linear-gradient(145deg, #f5f7ec, var(--sc-game-surface)); box-shadow: var(--sc-shadow); transition: transform .45s var(--sc-ease), box-shadow .45s var(--sc-ease); }
+body.station-paper .sc-game-channel-card:hover { transform: translateY(-3px); box-shadow: var(--sc-shadow-lift); }
+body.station-paper .sc-game-channel-card.is-primary { border-color: #e4c5ae; background: linear-gradient(145deg, #fdf3e8, #f4f6ea); }
+body.station-paper .sc-game-channel-label, body.station-paper .sc-game-devices { color: var(--sc-game); }
+body.station-paper .sc-game-channel-card.is-primary .sc-game-channel-label { color: var(--sc-accent); }
+body.station-paper .sc-game-status-new { color: var(--sc-accent); }
+body.station-paper .sc-game-status-beta { color: var(--sc-game); }
 body.station-paper .sc-game-save { border-color: var(--sc-line); border-radius: var(--sc-radius-lg); background: var(--sc-card); box-shadow: var(--sc-shadow); }
 body.station-paper .sc-game-save p { color: var(--sc-muted); }
 body.station-paper :is(.sc-game-save-icon, .sc-game-member, .sc-game-save summary) { color: var(--sc-game); }
 body.station-paper .sc-game-check { border-color: var(--sc-line); }
 body.station-paper .sc-game-check p { color: var(--sc-ink); }
+body.station-paper .sc-game-retired-note { border-color: var(--sc-line-strong); background: var(--sc-paper); }
 body.station-paper .sc-game-gallery img { border-color: var(--sc-line); border-radius: var(--sc-radius); box-shadow: var(--sc-shadow); }
 body.station-paper :is(.sc-game-device-note, .sc-game-empty) { border-color: var(--sc-line); border-radius: var(--sc-radius); background: #fffaf1b3; }
 
@@ -347,7 +359,7 @@ html.sc-motion body.station-paper .paper-hero-photo[data-sc-reveal].is-revealed 
   body.station-paper .sc-footer { margin-top: 36px; }
 }
 @media (hover: none) {
-  body.station-paper :is(.gentle-feature, .home-selected-item, .home-clip-card, .gentle-news-item, .sc-song-card, .sc-clip-card, .sc-game-card, .sc-about-card, .sc-member-card, .gentle-pillar):hover { transform: none; }
+  body.station-paper :is(.gentle-feature, .home-selected-item, .home-clip-card, .gentle-news-item, .sc-song-card, .sc-clip-card, .sc-game-card, .sc-game-channel-card, .sc-about-card, .sc-member-card, .gentle-pillar):hover { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   body.station-paper *, body.station-paper *::before, body.station-paper *::after { animation: none !important; }

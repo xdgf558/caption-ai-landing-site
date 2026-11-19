@@ -26,15 +26,38 @@ test('rendered DTO is escaped, has no unconfirmed continue button and unregister
   game.launchPath = '/games/cat-life/'; const registered = renderGamePage({ mode: 'detail', locale: 'en', game });
   assert.match(registered, /data-sc-game-launch hidden/); assert.ok(!registered.includes('Continue game'));
 });
-for (const [, locale] of locales) test(`${locale}: cat game beta invite is scoped to its public game, independently of browser launch`, () => {
-  const game = { slug: 'cat-life-game', title: 'Cat Life Diary', summary: 'daily', href: '/games/cat-life-game/', screenshots: [], supportedDevices: ['desktop'], launchPath: null };
-  const invite = 'href="https://testflight.apple.com/join/UV4nkZnA"';
+for (const [, locale] of locales) test(`${locale}: cat-life-game retires browser launch and exposes Mac + iPhone TestFlight`, () => {
+  const game = { slug: 'cat-life-game', title: 'Cat Life Diary', summary: 'daily', href: '/games/cat-life-game/', screenshots: [], supportedDevices: ['desktop', 'mobile'], launchPath: '/games/cat-life/' };
+  const macInvite = 'href="https://testflight.apple.com/join/vxUY5pqR"';
+  const iosInvite = 'href="https://testflight.apple.com/join/UV4nkZnA"';
   for (const mode of ['catalog', 'detail']) {
     const render = item => renderGamePage({ mode, locale, game: item, items: [item] });
     const html = render(game);
-    assert.equal(html.split(invite).length - 1, 1);
+    assert.equal(html.split(macInvite).length - 1, 1);
+    assert.equal(html.split(iosInvite).length - 1, 1);
     assert.ok(!html.includes('data-sc-game-launch'));
-    assert.ok(!render({ ...game, slug: 'another-game', launchPath: '/games/cat-life/' }).includes(invite));
-    assert.ok(!renderGamePage({ mode, locale, game, items: [game], error: true }).includes(invite));
+    assert.ok(!html.includes('data-sc-game-entry'));
+    assert.ok(!render({ ...game, slug: 'another-game' }).includes(macInvite));
+    assert.ok(!render({ ...game, slug: 'another-game' }).includes(iosInvite));
+    assert.ok(!renderGamePage({ mode, locale, game, items: [game], error: true }).includes(macInvite));
   }
+});
+test('catalog scales to multiple cat games across WeChat Mini Game and Steam channels', () => {
+  const catLife = { slug: 'cat-life-game', title: 'Cat Life Diary', summary: 'daily', href: '/games/cat-life-game/', screenshots: [] };
+  const futureGame = {
+    slug: 'cat-cafe-puzzle', title: 'Cat Cafe Puzzle', summary: 'cozy', href: '/games/cat-cafe-puzzle/', screenshots: [],
+    channels: [
+      { id: 'wechat-mini', platform: 'wechat', status: 'live', href: 'https://example.com/wechat', title: 'WeChat Mini Game' },
+      { id: 'steam-store', platform: 'steam', status: 'coming', title: 'Steam' },
+    ],
+  };
+  const singleHtml = renderGamePage({ mode: 'catalog', locale: 'en', items: [catLife] });
+  assert.ok(singleHtml.includes('sc-game-grid-single'));
+  const multiHtml = renderGamePage({ mode: 'catalog', locale: 'en', items: [catLife, futureGame] });
+  assert.ok(!multiHtml.includes('sc-game-grid-single'));
+  assert.ok(multiHtml.includes('data-platform="wechat"'));
+  assert.ok(multiHtml.includes('data-platform="steam"'));
+  const detailHtml = renderGamePage({ mode: 'detail', locale: 'en', game: futureGame });
+  assert.ok(detailHtml.includes('href="https://example.com/wechat"'));
+  assert.ok(detailHtml.includes('Coming soon'));
 });
