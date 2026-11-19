@@ -1,0 +1,222 @@
+{
+  "recordedAt": "2026-10-12T00:49:43.989Z",
+  "versionId": "1f3fb556-0b91-4946-b524-0ebe83223619",
+  "counts": {
+    "ledger": 18,
+    "legacy_tracks": 12,
+    "legacy_track_revisions": 49,
+    "legacy_assets": 35,
+    "public_tracks": 0,
+    "promotions": 0,
+    "clips": 0,
+    "games": 1,
+    "homes": 1,
+    "media_assets": 2,
+    "media_sessions": 1,
+    "completed_media_sessions": 1,
+    "guards": 0,
+    "new_mutation_receipts": 9
+  },
+  "game": {
+    "id": "9ebac4ee-0bc7-4dd4-82b7-b211f9d5e758",
+    "publishedRevision": 4,
+    "editVersion": 6,
+    "draftRevision": null,
+    "screenshotId": "27997fd1-9710-494a-b53b-2850d5b63064",
+    "metadataLaunchAndDevicesUnchanged": true,
+    "previousSealedRevisionRetained": true
+  },
+  "home": {
+    "id": "ca710000-0000-4000-8000-000000000001",
+    "publishedRevision": 2,
+    "unchanged": true,
+    "musicReferencesEmpty": true
+  },
+  "upload": {
+    "id": "27997fd1-9710-494a-b53b-2850d5b63064",
+    "sessionId": "ed138cf5-d615-4d6b-8b98-696efdd0727b",
+    "status": "completed",
+    "bytes": 105684,
+    "width": 1100,
+    "height": 760,
+    "sha256": "7c03d6da36e45fee88a11e6246ebc07fec5a8b1434fe7dbaac95449ec81fc025",
+    "rightsApproved": true,
+    "rightsBasisEqualsPreviouslyAuthorizedScreenshot": true
+  },
+  "quota": {
+    "totalBytes": 943718400,
+    "beforeChargedBytes": 114016451,
+    "afterChargedBytes": 114122135,
+    "increaseBytes": 105684
+  },
+  "realAllowlistedActorAudited": true,
+  "audit": [
+    {
+      "action": "station.content.save",
+      "targetId": "9ebac4ee-0bc7-4dd4-82b7-b211f9d5e758",
+      "createdAt": 1791763255808,
+      "summary": {
+        "type": "games",
+        "revision": 3,
+        "previousRevision": 2,
+        "reason": "L06 生产后台验收：保存已上线游戏的同内容草稿，验证真实管理员写入与版本隔离；音乐、试听、视频保持关闭。"
+      }
+    },
+    {
+      "action": "station.media.reserve",
+      "targetId": "27997fd1-9710-494a-b53b-2850d5b63064",
+      "createdAt": 1791763339407,
+      "summary": {
+        "kind": "game_screenshot",
+        "ownerId": "9ebac4ee-0bc7-4dd4-82b7-b211f9d5e758",
+        "byteSize": 105684
+      }
+    },
+    {
+      "action": "station.media.start",
+      "targetId": "27997fd1-9710-494a-b53b-2850d5b63064",
+      "createdAt": 1791763341302,
+      "summary": {}
+    },
+    {
+      "action": "station.media.stored",
+      "targetId": "27997fd1-9710-494a-b53b-2850d5b63064",
+      "createdAt": 1791763341705,
+      "summary": {}
+    },
+    {
+      "action": "station.media.validate",
+      "targetId": "27997fd1-9710-494a-b53b-2850d5b63064",
+      "createdAt": 1791763343349,
+      "summary": {}
+    },
+    {
+      "action": "station.media.complete",
+      "targetId": "27997fd1-9710-494a-b53b-2850d5b63064",
+      "createdAt": 1791763343630,
+      "summary": {
+        "measurement": "static-image-container-v1",
+        "durationMs": null,
+        "width": 1100,
+        "height": 760
+      }
+    },
+    {
+      "action": "station.content.save",
+      "targetId": "9ebac4ee-0bc7-4dd4-82b7-b211f9d5e758",
+      "createdAt": 1791763434158,
+      "summary": {
+        "type": "games",
+        "revision": 4,
+        "previousRevision": 3,
+        "reason": "L06 生产后台验收：复用同字节游戏截图的新上传版本；先验证未登记权利时的公开校验拒绝，再完成原授权范围的复核。"
+      }
+    },
+    {
+      "action": "station.rights.review",
+      "targetId": "27997fd1-9710-494a-b53b-2850d5b63064",
+      "createdAt": 1791763511097,
+      "summary": {
+        "scope": "game_screenshot",
+        "status": "approved",
+        "previousStatus": "pending",
+        "reason": "L06 生产后台验收：新上传截图与已授权上线的原截图 SHA-256 相同，仅沿用同一游戏与品牌网站的复用范围，未扩大授权。"
+      }
+    },
+    {
+      "action": "station.content.publish",
+      "targetId": "9ebac4ee-0bc7-4dd4-82b7-b211f9d5e758",
+      "createdAt": 1791763577409,
+      "summary": {
+        "type": "games",
+        "revision": 4,
+        "sourceRevision": 4,
+        "reason": "L06 生产后台验收：已通过真实管理员上传、同字节校验和既有权利复核；发布同内容游戏修订，仅更换截图资源版本，保留旧封存版本，音乐与旧小说状态不变。",
+        "jobId": null
+      }
+    }
+  ],
+  "buckets": [
+    {
+      "binding": "CONTENT_BUCKET",
+      "legacyObjectsUnchanged": 326,
+      "totalObjects": 326,
+      "mediaObjectsBeyondL05Legacy": 0
+    },
+    {
+      "binding": "DOWNLOADS_BUCKET",
+      "legacyObjectsUnchanged": 140,
+      "totalObjects": 140,
+      "mediaObjectsBeyondL05Legacy": 0
+    },
+    {
+      "binding": "MUSIC_BUCKET",
+      "legacyObjectsUnchanged": 37,
+      "totalObjects": 39,
+      "mediaObjectsBeyondL05Legacy": 2
+    }
+  ],
+  "http": [
+    {
+      "path": "/api/station/content/assets/27997fd1-9710-494a-b53b-2850d5b63064",
+      "status": 200,
+      "bytes": 105684,
+      "sha256": "7c03d6da36e45fee88a11e6246ebc07fec5a8b1434fe7dbaac95449ec81fc025",
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/games/cat-life-game/",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/games/cat-life/",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/music/",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/novel/",
+      "status": 410,
+      "expected": 410,
+      "passed": true
+    },
+    {
+      "path": "/api/content/body",
+      "status": 410,
+      "expected": 410,
+      "passed": true
+    },
+    {
+      "path": "/admin/api/music/site-content/status",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "path": "/admin/api/music/site-uploads/status",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    }
+  ],
+  "adminAccepted": true,
+  "oldMusicPublicationsAdded": 0,
+  "remoteMigrations": 0,
+  "accessPoliciesChanged": false,
+  "productionBusinessWrites": "Two game draft saves, one image reserve/body/complete flow, one rights review and one same-content game publication; 9 audit events. No direct control-plane content writes.",
+  "overallLaunchReady": false
+}

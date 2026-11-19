@@ -4,9 +4,9 @@
 
 ## 当前执行约定
 
-用户于 2026-10-05 要求从第一个任务开始，每个任务完成后提交 GitHub PR，由用户审查通过后再进入下一个任务。T01 至 T21 已审查通过并在各自审查头 CI 通过后合并。T06 原头 `8ac1d499` 的销户审计失败已通过只读清单修订解决；修订头 `31e19a6` 经用户复审及托管 CI 通过后合并。本轮仅执行 **T22 灰度与回退准备**，提交独立 PR，不自动进行生产执行。T21 歌曲性能、原始导出、真机与生产验收缺项仍保留，不作为发布通过。
+用户于 2026-10-05 要求逐任务开发并提交 GitHub PR，由用户审查通过后再进入下一项；该约定优先于规范中的连续批次建议。T01–T22 的开发与后续上线工作已沿这项约定推进，历史交付状态见下表及各批记录。
 
-这项约定优先于基线文档中建议的 R0–R7 批次及启动指令中的连续推进方式；三份规范正文已按本次审查同步逐项执行要求。PR 创建、构建通过与生产发布是独立状态；本轮没有生产发布授权，待用户审查的 PR 不自动合并。
+L04 已实际迁移 MUSIC_DB，L05 已上线品牌与游戏并关闭旧公开内容；[PR #212](https://github.com/xdgf558/caption-ai-landing-site/pull/212) 的最终头 `3872acbd` 完整 CI 通过后，经用户授权 squash 为 `64e0f113`。用户进一步要求先启用并验收生产后台。本轮 **L06 内容与素材后台** 已在生产启用、通过真实管理员读写验收，独立 PR 等用户审查，不自动合并或开启其他功能。生产执行、PR 合并和整体 `launchReady` 分别记录，已有性能、原生、真机与备份缺项没有因后台验收转为通过。
 
 | 任务 | 状态 | 交付或进入条件 |
 | --- | --- | --- |
@@ -31,7 +31,10 @@
 | T19 聚合与运营报表 | 两项 P2 已修订，复审通过，已合并 | [PR #204](https://github.com/xdgf558/caption-ai-landing-site/pull/204)，精确头 `f0299029` 完整 CI 通过，合并为 `062ee924`；[合同](T19-reports-and-cohort-conversion.md)、[修订证据](evidence/T19-review/verification-summary.json)；0017/0018 未远程执行，报表、聚合与清理未启用 |
 | T20 旧地址退出与搜索配置 | 用户审查通过，精确头完整 CI 通过，已合并 | [PR #205](https://github.com/xdgf558/caption-ai-landing-site/pull/205)，头 `661e93e9` 的 CI `38011585239`（42 步）成功，squash 为 `2cf2bf2d`，新加坡时间 2026-10-10 18:29:26；[说明](T20-legacy-exits-and-search.md)、[合并事实](T21-evidence/T20-merge-result.json)；生产配置未切换 |
 | T21 核心回归与设备验证 | 用户审查通过，精确头完整 CI 通过，已合并 | [PR #206](https://github.com/xdgf558/caption-ai-landing-site/pull/206)，头 `8cf0b4ae` 的 CI `38047071665`（43 步）成功，squash 为 `07088e00`，新加坡时间 2026-10-10 20:35:16；[报告](T21-core-regression-and-device-verification.md)、[验收矩阵](T21-acceptance-matrix.md)；歌曲性能、真机与生产缺项保留 |
-| T22 灰度与回退准备 | 准备材料、本机演练交付，待独立 PR 审查 | [报告](T22-release-and-compatible-rollback.md)、[执行说明](T22-execution-runbook.md)、[本机证据](T22-evidence/README.md)；已只读确认生产仅有 0001–0011 账本，新版生产条件未满足；发布和旧入口关闭未执行 |
+| T22 灰度与回退准备 | 历史准备已交付，生产进展见 L04–L06 | [报告](T22-release-and-compatible-rollback.md)、[执行说明](T22-execution-runbook.md)保留当时 0001–0011 的只读基线，不作为当前生产状态 |
+| L04 生产迁移执行 | 已执行，后续源码已合并 | [记录](L04-production-migration-execution.md)、[生产证据](L04-evidence/production-migration.json)；0012–0018 已逐份执行，账本 18 条 |
+| L05 品牌、游戏上线与旧入口关闭 | 已执行，用户审查通过，已合并 | [PR #212](https://github.com/xdgf558/caption-ai-landing-site/pull/212)、[记录](L05-production-launch.md)；最终头完整 CI 成功，合并 `64e0f113`，原上线版本 `cf69fe92` |
+| L06 生产内容与素材后台 | 已启用并完成限定范围生产验收，待本批 PR 审查 | [记录](L06-production-admin-activation.md)、[证据](L06-evidence/)；实际版本 `1f3fb556`，真实 Access 管理员保存、上传、权利预检/登记及同内容游戏发布通过；旧音乐仍无网站公开版本 |
 
 ## 需求基线
 
